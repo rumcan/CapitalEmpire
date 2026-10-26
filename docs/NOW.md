@@ -39,9 +39,18 @@ Update this file **before** each edit and after each sub-step. If you are pickin
   suggested first, props diminishing by kind (80% each), upgrade upkeep monthly, the range's own presets "Range outfield" (stripes last) and
   "Range target green" (paint-presets.json, painted-surfaces.json), the stadium label fix, the car park counter, decor in Select, a T129 bay bug.
   Balance table and D30-D40 in P24.
-- **Running now (Opus 5.5):** T133 #252 World of Golf extras (high; branch arena/T133-wog-extras, port 5187: second tier, academy, kiosk,
-  ball picker, the range's own visit cars, caravan → cottage → house) and T134 #253 the dark, unbaked ground after a fresh start or a camera
-  jump (branch arena/T134-dark-ground, port 5188: root cause first, a fallback so unbaked ground is never black, a failing-then-passing test).
+- **T133 merged (#255, P24 Phase 4b):** coffee kiosk, ball picker cart, second tier (double-deck, `Drawable.lift`), golf academy, the home
+  growing caravan → cottage ($100k lifetime takings) → house ($400k); D41-D50 and the balance rows in P24. P24 is complete.
+- **T134 merged (#256):** the dark ground. Root cause: baked chunks drew nothing while the zoom crossfade waited for every visible chunk,
+  and an edge chunk was never requested (planting stopped one tile short of `CHUNK_CASTER_REACH`). Fix: `ground-layers.ts chunkLayers` (a
+  chunk always draws its older, new or planner picture), planting to the caster reach, planner pieces first and evictable, the builder worker
+  kept free while it saves the texture cache. Dark time over 40 jumps 28.1 s → 5.7 s; confirmed in a headed browser.
+- **Next (owner's call):**
+  - The owner's new grass paintings, when they arrive (prep-painted-families.mjs, then the studio).
+  - P24 follow-ups: a bigger range car park or parking with the second tier (D49); labels overlapping at the shop front; the putt, chip and
+    coaching clips; real art for every stand-in in GOLF-SPRITES.md's range, practice and props kits.
+  - The handover's list: known bugs (the new game's month, "growing · ready" in the status line, the top bar wrapping at stage 3, a Shadow
+    slider for painted areas, T099's sliver), T110's rest, P23 Phase 2 (one Streets tool, holes drawn like a road).
 - **Housekeeping:** each agent worktree with node_modules is ~4.3 GB. E: fell to 4.5 GB free on 2026-10-26 ~00:30; the lead removed this
   session's six merged worktrees (T119, T122, T128, T129/NOW, T130, T131). Remove each agent's worktree as soon as its PR merges.
 
