@@ -10,6 +10,17 @@
 > and keep this file current. Ask the owner before pushing or opening a PR.
 
 ## Now (the current work, newest first)
+- **At the account switch (2026-10-26):** (1) A coder was changing `scripts/assets/prep-sprites.mjs` (and `size-report.ts`) so each
+  four-view stand-in is packed for the largest size any old building drawn as it needs (the owner: "resized and rebuilt this house but it
+  is not getting any bigger": `variation:world-house_0-north-1dde6f56-plain:1` at x1.99 is drawn as a stand-in, `newart.ts` SWAP /
+  `standIn`, and prep-sprites packed the stand-in only for its own owner scale). It may be unfinished: check `git diff` on those two
+  files, finish or redo it (need_s = max(own scale, max over swapped buildings of S_b * span(b) / span(s)), capped at 3x source), then
+  Rebuild. (2) A studio Rebuild was running (`GET http://127.0.0.1:5242/api/status` shows it; never POST /api/rebuild to poll, a POST
+  after it finishes starts another). After it: check the Library pictures match (an earlier mid-edit Rebuild scrambled them; the fix
+  was restoring `src/assets/atlas`, `library.ts`, `sizes.ts`, `lots/scales.ts`, `lots/studio-base.ts` from git and clearing
+  `output/review/thumbs`). (3) About 108 Library cards have no visible picture in their atlas rect (e.g. `world:trashcan`): not
+  investigated. (4) `prep-cars.mjs`, `prep-views.mjs`, `prep-business-art.mjs` are not in the studio's Rebuild steps: run them by hand
+  when cars, four-view buildings or business art need repacking. The branch's last push was 51643a7: push the newer commits.
 - **Done (2026-10-26): cars resizable and business art re-packed (the owner: "repack and also do cars ... every single prop and decal
   should be resizable so it has a standard size for placement").** Cars: one studio size per model (`ext/car-art carOwnerScale`), applied
   parked, placed and on the roads (traffic, sim client, range host), footprints follow; the studio's car cards have Smaller/Bigger; the
