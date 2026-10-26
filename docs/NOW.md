@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-26 midday)
+## START HERE (kept current by the lead; last updated 2026-10-26 evening)
 
 **Paste-ready start prompts for every role are in `docs/START-PROMPTS.md`:** the lead, a coding ticket, and the other sessions in this
 repo. The weekly usage cap is close (2026-10-26), so any chat may stop at any moment.
@@ -27,10 +27,10 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 ### In flight
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |
-| T164 | (new) | `arena/T164-main-tests` | `.claude/worktrees/t157` | 5188 | Main's two test failures after the #353 Rebuild: the drawn shadow for `expansion:stationwagon-rear`, and compose's RES side yard (gen-house-ranch-long at 1.01 tiles after the owner's size change). |
+| T165 | #365 | `arena/T165-fairway-seams` | `.claude/worktrees/t165` | — | The fairway seam (the owner: "fix that seam in the fairway textures"). Redirected to the art session's new building-free paintings `scene-backgrounds/{fairway,putting-green}/*-background-anchored-v1.raw.png`: families `fairway-paint` / `putting-green-paint` like `rough-owner` (T162), fairway cropped to whole stripe periods, then the edge heal; fallback the shared-strip heal on the raw tiles. Agent: the T162 agent. |
+| T160 | #367 | `arena/T160-lots-on-the-fly` | `.claude/worktrees/t160` | 5186 | P25 step 5: house lots get their plants, props, cars and decals from the generator, seeded per lot; a shipped, versioned model (`lots/lot-models/v<N>.json`, `lotModel` in the save); `?oldlots` for the old way; owner presets stay exact overrides. Agent: the lot agent (T155/T158/T159). |
 | T154 | #330 | `arena/T154-new-art` | `.claude/worktrees/t154` | — | **Phase 1 merged (#345).** Phase 2 waits: the eight-heading contract (a building on a 45° road picks its cardinal view, `AXIS_SETS`); the new subjects' diagonal views are art work (listed in GOLF-SPRITES.md). |
 | T152 | #325 | `arena/T152-car-spacing` (d3bdbf1) | `.claude/worktrees/t152` | — | **Paused** for the art (the owner). Root cause: the range's own cars (`rangebiz.ts:803/832/723`) are placed by their own clock; fixed in rangebiz.ts only (overlaps -75-82% with the 44-bay lot, money identical). **Owner's decision needed:** at full demand the one-lane drive and the building's ramp cannot carry the cars at a car's gap (wider drive, second ramp, faster car-park speeds, or the queue limiting sales). Left: three gates, shots, PR. |
-| T159 | #348 | from origin/main | `.claude/worktrees/t155` | 5186 | P25 step 2: the existing presets as "kept here" samples + the 12-lot gallery (thumbs up/down, click one to fix it in the wizard). T163 merged (#359). |
 | T112 | #199 | `arena/T112-sharp` (1872f0e) | `.claude/worktrees/t112` | — | **Paused** for T153: sharp 0.35.5 in, all packed art identical (260 images byte-identical; 16 view PNGs only re-tagged), still to do: the KTX2 check, the studio check, audit/typecheck/suite/build, the PR. Resume from #199. |
 
 **Two coding agents at a time (the owner, 2026-10-26: first "maybe just too many background tasks?" after the studio tab died with the
@@ -58,6 +58,11 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
   lots on the fly"): hard rules + learned per-sector taste (T158 wizard, in flight) → T159 bootstrap from the existing presets + a 12-lot
   gallery → T160 the generator in the game, seeded per lot, model as data → T161 pairs, densities by state, a 50-seed exam sheet. The
   presets file stays (archive, one-off overrides). Same agent as T155/T158.
+- **Scene-background paintings (checked 2026-10-26 evening, main checkout, untracked):** `art/theme-consistency/generated/ground/scene-backgrounds/<material>/`
+  holds one building-free painting a level (`*-background-anchored-v1.raw.png`, ~1742x903) for fairway, putting-green, lake, sand-raked,
+  sand-ripples, golden-fescue and long-grass; desert and dirt only the version with the shop. `long-grass/*-uniform-background-v2` = the
+  owner's rough already in the game (#360, same sha256). Fairway and putting-green go in through T165; lake, sands and fescue keep the
+  art session's seam-repaired READY tiles unless the owner prefers the paintings.
 - **Texture art status (2026-10-26 15:30):** the art session (Codex; `art/theme-consistency/material-texture-batches/ACTIVE-WORK.json`)
   has finished 2 of its 14 families (golden fescue, lake: in the game). sand-ripples has raw variants, sand-raked 2/12, desert/dirt
   anchors only; fairway, putting-green, first-cut, long-grass and the rest have job files and no pictures yet. Each lands through
@@ -77,6 +82,11 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
    (the sharp bump). See the History sections below and `gh issue list --label arena --state open`.
 
 ### Done recently (newest first; details in each PR)
+- 2026-10-26 evening: **T164 #361 + #366 main's tests green after the Rebuild**: a frozen house preset's house keeps its yards at today's
+  sizes (`compose.ts houseYards`: moved along the frontage into its band; `pickedPreset` prefers presets whose house fits);
+  `draft-shadows.mjs` drops shadow entries for pictures the library no longer has; newart-default pins no stand-in count. **T159 #364**
+  the lab's "Learn from the presets" (every item on the owner's lab and edited presets a kept sample, learnt again in place) and the
+  **lot gallery** (a dozen generated lots, Good / Bad each, Space saves and lays the next, Fix opens one in the wizard).
 - 2026-10-26: **T162 #360 the owner's rough** (`art/owner-supplied/rough-20261026`, family `rough-owner`, one tile a level): edges healed once
   in the asset step (`scripts/assets/tile-heal.mjs`, wrap-bridge 48 px); `rough` and `lawnDeclined` wear it. **T163 #359 parked cars vs the
   studio size**: sizes always matched; a studio save now reaches the running dev game at once (`lots/scales-live.ts`), and cards past a
