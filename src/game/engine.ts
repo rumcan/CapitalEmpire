@@ -15,6 +15,7 @@ import { MIN_SEP, checkLegs, replaceCuts, ringStubs, segDist as segSeg, snapPoin
 import { STRUCT_COST, STRUCT_MAX, groundClass, highwayRoute, longestRun, splitByTerrain, structureLengths } from './structures';
 import { GLRenderer, POINT_STRIDE, SHADOW_STRIDE, SPRITE_STRIDE, VECTOR_STRIDE } from './gl';
 import { GroundCache } from './ground-cache';
+import { GAME_BOOT, clampCentre, flatTerrain, type BootOptions } from './boot';
 import { TILE_BANDS, TILES_REVISION, anchorAt, bandAt, bandRange, bandsAhead, cellOf, cellsIn, coverageOf, drawnScale, nearUntil, nextBand, tiledFamily, tileIndex, tilePermutation, tileScreenPx, tileSize, tileSpec } from './painted-tiles';
 import { paintedSurfaces } from './painted-surfaces-live';
 import { chunkLayers, pictureCurrent } from './ground-layers';
@@ -1157,16 +1158,20 @@ export class Game {
     this.emit();
   }
 
-  constructor(public canvas: HTMLCanvasElement, public overlay: HTMLCanvasElement) {
+  /** boot: what this engine boots with (boot.ts): the plain game's (GAME_BOOT), or a light boot (the lot lab's, T157: dev/lab-boot.ts) */
+  constructor(public canvas: HTMLCanvasElement, public overlay: HTMLCanvasElement, readonly boot: Readonly<BootOptions> = GAME_BOOT) {
     this.gl = new GLRenderer(canvas);
     this.ov = overlay.getContext('2d')!;
     this.paint.puckCursor = true;
     this.net.paintData = false;
-    this.ground = new GroundCache(this.gl);
-    this.traffic = new SimClient();
+    this.ground = new GroundCache(this.gl, boot.groundWorkers ?? undefined);
+    this.ground.budgetPx = boot.groundPx;
+    if (boot.kind !== 'game') this.ground.limits = { tiles: boot.tileSources, painted: boot.paintedSources, eager: boot.eagerPhotos ? [...boot.eagerPhotos] : null, saveCache: boot.saveTextureCache, soft: boot.softCanvases, lazy: boot.lazyTextures };
+    this.traffic = new SimClient(boot.sim);
     try { this.disastersEnabled = localStorage.getItem('capitalempire.disasters') !== 'false'; } catch { /* default on */ }
     try { this.showStandIns = localStorage.getItem('capitalempire.standins') !== 'false'; } catch { /* default on */ }
     try { this.showMoneyFloats = localStorage.getItem('capitalempire.moneyFloats') !== 'false'; } catch { /* default on */ }
+    if (!boot.moneyFloats) this.showMoneyFloats = false;
     // T147: the money floats' sources: every spend (placed ones float), the range's sales and lost golfers
     this.traffic.onSpend = (k, n) => this.spent(k, n);
     this.range.sim.onMoney = e => { const c = this.range.scene?.counter, f = rangeFloat(e, c ?? null); if (f) this.floatMoney(f); };
@@ -1241,7 +1246,7 @@ export class Game {
     // per display px, more than mip 1 holds; the owner, 2026-10-24: nothing painted blurry or pixelated)
     // the pages as GPU blocks (BC7 / ASTC / ETC2, transcoded from the build's KTX2) where the build has them and the GPU takes one, else RGBA8
     const ktx = ktx2Built() ? pickFormat(this.gl.gl) : null;
-    const atlas = this.gl.initAtlas(this.dpr, ktx ? [ktx2Source(ATLAS_PAGES, ktx), webpSource(ATLAS_PAGES)] : [webpSource(ATLAS_PAGES)]);
+    const atlas = this.gl.initAtlas(this.dpr, ktx ? [ktx2Source(ATLAS_PAGES, ktx), webpSource(ATLAS_PAGES)] : [webpSource(ATLAS_PAGES)], this.boot.atlasMB, this.boot.atlasKeep);
     // the alpha for picking, from mip 2 (the old mip-1 images halved): no page kept decoded as an image
     this.pageAlpha = await Promise.all(ATLAS_PAGES.map(async row => {
       try {
@@ -1253,7 +1258,9 @@ export class Game {
     }));
     tick(0.3);
     await atlas; this.perf.atlasMB = (this.gl.atlas?.bytes ?? 0) / 1048576; tick(0.5); if (this.dead) return;
-    const read = opts.bench ? null : await readSave(); if (this.dead) return;
+    // a light boot without a save (the lot lab) never reads one and never writes one
+    if (!this.boot.save) this.saveBlocked = true;
+    const read = opts.bench || !this.boot.save ? null : await readSave(); if (this.dead) return;
     const save = read?.save ?? null;
     // T042: an unreadable save is kept as a backup (then a new game starts); if the backup failed, the slot is never written over
     let readNote: { text: string; kind: Toast['kind'] } | null = null;
@@ -1265,6 +1272,7 @@ export class Game {
     if (read && read.status === 'none' && !read.backedUp) this.saveBlocked = true;
     let loaded: SaveV5 | null = null;
     if (opts.bench) { this.genTerrain(1); const { buildBenchmark } = await import('./bench'); buildBenchmark(this, opts.bench); }
+    else if (this.boot.map === 'flat') { this.golf = null; this.useTerrain(flatTerrain(), 0); } // a light boot's flat map: no town, course or range
     else if (!save && this.newGame()) { /* a new golf game: the range start's road and range, or the old start's town and course (see newGame) */ }
     else if (!save || !this.load(save)) {
       // a save that read fine but failed to load: keep its bytes before the new game's autosave (T042), or never save over it
@@ -1288,8 +1296,10 @@ export class Game {
     this.raf = requestAnimationFrame(this.frame);
   }
   /** generate the valley for a seed (about 0.3–0.6 s) */
-  private genTerrain(seed: number) {
-    this.seed = seed; this.terrain = generateTerrain(seed);
+  private genTerrain(seed: number) { this.useTerrain(generateTerrain(seed), seed); }
+  /** a map to play on (a generated valley, or a light boot's flat map), with the seed the save keeps */
+  private useTerrain(t: Terrain, seed: number) {
+    this.seed = seed; this.terrain = t;
     this.names = new Names(seed); this.townPts = townCentres(this.terrain); this.roadNames = new RoadNames(this.names, this.townPts);
     for (const ps of this.forest.values()) for (const p of ps) this.sprites.remove(p);
     this.forest.clear(); this.perf.forest = 0; this.slope = slopeField(this.terrain.height); this.clearing = makeNoise(this.terrain.seed ^ 0x5f0e);
@@ -1513,6 +1523,9 @@ export class Game {
       if (!this.townTrees.has(key)) { if (!todo) todo = []; todo.push(key + NN); }
     }
     if (!todo) return;
+    // a light boot (the lot lab, T157) plants no forest or town trees, its map is plain grass: the cells are planted empty, at once (the
+    // living ground bakes a chunk only once the cells round it are planted: casterReady)
+    if (!this.boot.trees) { for (const q of todo) { if (q >= NN) this.townTrees.set(q % NN, []); else this.forest.set(q, []); } return; }
     const m = tileOf((X0 + X1) / 2, (Y0 + Y1) / 2), mx = clamp(Math.floor(m.x / FOREST_CELL), 0, N - 1), my = clamp(Math.floor(m.y / FOREST_CELL), 0, N - 1);
     const dd = (q: number) => { const k = q % NN; return ((k % N) - mx) ** 2 + (Math.floor(k / N) - my) ** 2; };
     todo.sort((p, q) => dd(p) - dd(q));
@@ -3049,12 +3062,15 @@ export class Game {
     if (u >= 1) { this.camEase = null; this.emit(); }
   }
   zoomAt(z: number, mx = this.cssW / 2, my = this.cssH / 2) {
-    this.camEase = null;
+    this.camEase = null; z = this.zoomFloor(z);
     const wx = this.cam.X + (mx - this.cssW / 2) / this.cam.z, wy = this.cam.Y + (my - this.cssH / 2) / this.cam.z;
     this.cam.z = z;
     this.cam.X = wx - (mx - this.cssW / 2) / z; this.cam.Y = wy - (my - this.cssH / 2) / z; this.clampCam(); this.emit();
   }
-  clampCam() { this.cam.X = clamp(this.cam.X, -MAP * HW, MAP * HW); this.cam.Y = clamp(this.cam.Y, 0, MAP * HH * 2); }
+  /** the camera's centre held over the map (a light boot's: its box, boot.ts clampCentre), and its zoom to the boot's furthest */
+  clampCam() { const c = clampCentre(this.cam.X, this.cam.Y, this.boot.box); this.cam.X = c.X; this.cam.Y = c.Y; this.cam.z = this.zoomFloor(this.cam.z); }
+  /** a zoom held to the boot's furthest zoom (a light boot's; the game's range is clampZoom's) */
+  private zoomFloor(z: number) { return this.boot.zoomMin !== null && z < this.boot.zoomMin ? this.boot.zoomMin : z; }
   /** centres the camera on tile (x, y), zooms in to at least 0.2 (a closer zoom stays), shows the flow and pulses a ring there */
   jumpTo(x: number, y: number) {
     this.camEase = null;

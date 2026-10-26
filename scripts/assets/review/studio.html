@@ -47,7 +47,7 @@ select{background:#11130b;border:1px solid var(--line);color:var(--ink);border-r
 
 <div class="view" id="v-people"><div class="hint" style="padding:12px 16px 0">Click a frame to fix it: mirror it, use another frame (of any facing) in its place, or mark it as needing a new frame and drop the new picture in. Rebuild game sprites to put the fixes in the game. The strip on the right plays the walk as the game does (frames 1-8).</div><div id="needed" class="chips"></div><div id="people"></div></div>
 
-<div class="view" id="v-lots" style="overflow:hidden"><iframe id="labframe" title="Lot lab: the game itself (the dev server of this checkout) composes and draws the lot exactly as the game does" style="display:block;width:100%;flex:1;min-height:0;border:0;background:#1b2816"></iframe></div>
+<div class="view" id="v-lots" style="overflow:hidden"></div>
 <div class="view" id="v-holes"></div>
 <div class="view" id="v-painted"></div>
 <div class="view" id="v-ground"></div>
@@ -55,10 +55,17 @@ select{background:#11130b;border:1px solid var(--line);color:var(--ink);border-r
 <script>
 const $=s=>document.querySelector(s), el=(t,a={},...k)=>{const e=document.createElement(t);Object.assign(e,a);for(const c of k)if(c!=null)e.append(c);return e};
 const post=(u,b)=>fetch(u,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(b||{})}).then(r=>r.json());
-document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x===b));document.body.classList.toggle('lots',b.dataset.v==='lots');document.querySelectorAll('.view').forEach(v=>v.classList.toggle('on',v.id==='v-'+b.dataset.v));placeMan();if(b.dataset.v==='people'&&!peopleLoaded)loadPeople();if(b.dataset.v==='lots'&&!$('#labframe').src)loadLab();});
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x===b));document.body.classList.toggle('lots',b.dataset.v==='lots');document.querySelectorAll('.view').forEach(v=>v.classList.toggle('on',v.id==='v-'+b.dataset.v));placeMan();if(b.dataset.v==='people'&&!peopleLoaded)loadPeople();if(b.dataset.v==='lots')loadLab();else unloadLab();});
 // ---------------- lots: the game's lot lab (?lotlab) in a frame, from the game dev server the studio was started with (STUDIO_GAME_URL)
 // a helper on another computer reaches the game by the address it reached the studio by (a localhost game URL means this machine)
-async function loadLab(){const c=await fetch('/api/config').then(r=>r.json()),g=new URL(c.game),own=h=>h==='localhost'||h==='127.0.0.1'||h==='[::1]';if(own(g.hostname)&&!own(location.hostname))g.hostname=location.hostname;const u=g.origin+'/?lotlab&dev';$('#labopen').href=u;$('#labframe').src=u;}
+// the frame lives only while the Lots tab is open (T157, the owner: "the studio is taking too much ram to run the full game"): made when the tab
+// opens, removed (its page unloaded, its memory freed) when another tab is chosen; the Library never loads the game. The lab keeps its place
+// (type, state, size, road, the preset it shows) in sessionStorage, so it comes back where it was; an unsaved generated draft does not
+let labSeq=0;
+async function loadLab(){const n=++labSeq;if($('#labframe'))return;const c=await fetch('/api/config').then(r=>r.json()),g=new URL(c.game),own=h=>h==='localhost'||h==='127.0.0.1'||h==='[::1]';if(own(g.hostname)&&!own(location.hostname))g.hostname=location.hostname;const u=g.origin+'/?lotlab&dev';$('#labopen').href=u;
+ if(n!==labSeq||$('#labframe')||!$('#v-lots').classList.contains('on'))return;
+ $('#v-lots').append(el('iframe',{id:'labframe',title:'Lot lab: the game itself (the dev server of this checkout) composes and draws the lot exactly as the game does',src:u,style:'display:block;width:100%;flex:1;min-height:0;border:0;background:#1b2816'}));}
+function unloadLab(){labSeq++;const f=$('#labframe');if(!f)return;f.src='about:blank';f.remove();}
 
 // ---------------- library
 let all=[],removed={},walkers=[],me=null,cat='',q='',K=0.35,pointer=null;   // K: display px per native game px, the same for every sprite and the man
