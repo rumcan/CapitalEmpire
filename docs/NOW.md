@@ -24,7 +24,6 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 ### In flight
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |
-| **T150 (top priority)** | #315 | `arena/T150-tile-scale` | `.claude/worktrees/t150` | 5186 | The owner: the painted tiles are "too big", zooming out "they zoom in", at the furthest zoom "a zoomed in version of 1 of the texture images instead of 4 tiles at their max native size". New rule in the issue: one fixed world size per set, native at its anchor zoom (FAR at the furthest zoom, NEAR from the near-shop reference), never magnified, real zoom, switch at anchors. |
 | T148 | #309 | `arena/T148-lot-lab` | `.claude/worktrees/t148` | 5187 | The lot lab: multi-select with move/delete, Ctrl+C/V, Change house (H), Lot grid (L), Generate in place + "New lot ▶", Neighbours (N). Yields heavy steps to T150. |
 
 **Two coding agents at a time (the owner, 2026-10-26: first "maybe just too many background tasks?" after the studio tab died with the
@@ -68,6 +67,10 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
    (the sharp bump). See the History sections below and `gh issue list --label arena --state open`.
 
 ### Done recently (newest first; details in each PR)
+- 2026-10-26: **T150 #319 painted tiles at their true size**: one fixed world size per set, native at its anchor (NEAR 30% from the
+  near-shop reference, MID 10%, FAR at the furthest zoom 0.6%), never magnified, real zoom, switches only at anchors (4% hysteresis).
+  **Open, the owner's call:** at DPR 1 a FAR tile at native is wider than the map at the furthest zoom (2x2 tiles at DPR 2); MID shrinks
+  to tiny repeats just before FAR pops in 16x larger at the last zoom step; the alternative is FAR at its own reference scale (~5.5%).
 - 2026-10-26: **T147 #317 money floats**: green +$X where money comes in, red -$X where it goes out, red with a reason for lost sales
   (the treasury untouched); one per sale from zoom 0.2, merged per place 0.12-0.2, none further out; gear-menu "Money floats"
   (`src/game/moneyfloats.ts`; the range via `RangeSim.onMoney`, the worker's money buffer, purchases at the click point).
