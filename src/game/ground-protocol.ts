@@ -135,7 +135,9 @@ export type ToWorker =
   | { t: 'paint'; id: number; kind: TileKind; i: number; j: number; L: number; artL?: number };
 
 export type FromWorker =
-  | { t: 'ready'; ms: number }
+  /** saving: the builder still writes the textures to this browser's cache (a fresh profile), seconds in which its bakes wait; 'saved' when done */
+  | { t: 'ready'; ms: number; saving?: boolean }
+  | { t: 'saved' }
   | { t: 'texpack'; snaps: TexSnapshot[] }
   | { t: 'tile'; id: number; kind: TileKind; i: number; j: number; L: number; artL?: number; bmp: ImageBitmap; ms: number }
   | { t: 'error'; message: string }

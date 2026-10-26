@@ -38,6 +38,13 @@ export function casterBox(recs: ArrayLike<number>, k: number): Box {
 }
 /** the longest reach any caster has past the box it is indexed by (a tree's canopy radius is part of its box) */
 export const MAX_CASTER_REACH = 12;
+/** the reach (tiles) a ground chunk looks out for casters (a big tree's canopy past its trunk): it bakes only once the prop, forest and
+ *  town-tree cells within it are known (engine.ts casterReady) */
+export const CHUNK_CASTER_REACH = 9;
+/** how far past the chunks on screen (tiles) the engine plants the forest and town-tree cells with the living ground on (engine.ts plantForest):
+ *  the chunks' caster reach, so a chunk at the view's edge never waits for a cell nothing plants (T134, #253: it waited for ever, and the zoom
+ *  crossfade with it; forest.ts FOREST_VIEW_MARGIN, 8, was one tile short) */
+export const LIVING_PLANT_MARGIN = CHUNK_CASTER_REACH;
 
 /** a caster record's text (for the diff) */
 const recKey = (r: ArrayLike<number>, o: number) => { let s = ''; for (let k = 0; k < CASTER_STRIDE; k++) s += (k ? ',' : '') + r[o + k]; return s; };

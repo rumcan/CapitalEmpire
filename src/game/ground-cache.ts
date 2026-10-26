@@ -41,6 +41,9 @@ export class GroundCache {
   private workers: Worker[] = []; private inflight: number[] = []; private reqs = new Map<number, { t: Tile; gen: number; w: number }>();
   private nextId = 1; private want: { t: Tile; L: number; artL: number; pri: number }[] = [];
   ready = 0; private isReady: boolean[] = []; errors: string[] = []; bakeMs = 0; baked = 0;
+  /** the builder worker writes the textures to this browser's cache after a fresh start: seconds in which a bake sent to it waits (T134: the
+   *  planner pieces asked for first landed 5 s late), so it takes none while it has peers */
+  private saving: boolean[] = [];
   /** texture uploads in the last second, and the main-thread ms they cost */
   uploadsThisSecond = 0; uploadMsPerSecond = 0; private upCount = 0; private upMs = 0; private upT = 0;
   /** GPU pixel budget for baked chunks (RGBA, so x4 bytes) */
@@ -161,7 +164,10 @@ export class GroundCache {
     if (!this.ready) { this.want = []; return; }
     this.want.sort((a, b) => a.pri - b.pri);
     for (const w of this.want) {
-      let best = -1; for (let i = 0; i < this.workers.length; i++) if (this.isReady[i] && this.inflight[i] < 2 && (best < 0 || this.inflight[i] < this.inflight[best])) best = i;
+      // asked for twice this frame (the planner piece under several chunks): sent once, at its most urgent (T134: the copies filled every
+      // worker's slots at a fresh start)
+      if (w.t.pendingL === w.L && w.t.pendingArtL === w.artL) continue;
+      let best = -1; for (let i = 0; i < this.workers.length; i++) if (this.isReady[i] && this.inflight[i] < 2 && (!this.saving[i] || this.workers.length === 1) && (best < 0 || this.inflight[i] < this.inflight[best])) best = i;
       if (best < 0) break;
       const id = this.nextId++; w.t.pendingL = w.L; w.t.pendingArtL = w.artL; this.inflight[best]++;
       this.reqs.set(id, { t: w.t, gen: w.t.gen, w: best });
@@ -173,7 +179,8 @@ export class GroundCache {
   /** the hold on chunks a course edit re-stales (COURSE_HOLD_MS; the benchmark tries others) */
   courseHoldMs = COURSE_HOLD_MS;
   private onMessage(w: number, m: FromWorker) {
-    if (m.t === 'ready') { this.ready++; this.isReady[w] = true; return; }
+    if (m.t === 'ready') { this.ready++; this.isReady[w] = true; this.saving[w] = !!m.saving; return; }
+    if (m.t === 'saved') { this.saving[w] = false; return; }
     if (m.t === 'error') { this.errors.push(m.message); console.error('[ground worker]', m.message); return; }
     if (m.t === 'log') { console.log(`[ground worker ${w}]`, m.message); return; }
     if (m.t === 'texpack') { m.snaps.forEach((snap, k) => this.workers[k + 1]?.postMessage({ t: 'textures', snap } satisfies ToWorker, snap.bitmaps)); return; }
@@ -181,23 +188,27 @@ export class GroundCache {
     if (!r) { m.bmp.close(); return; }
     const t = r.t; t.pendingL = 0; t.pendingArtL = 0;
     this.bakeMs += m.ms; this.baked++;
-    if (r.gen !== t.gen) { m.bmp.close(); return; } // edited while baking: it will be asked for again
+    // edited while baking: it will be asked for again, and keeps the picture it has meanwhile; one with none shows this one (stale, so it is
+    // still asked for again: the ground before the edit for a bake, rather than nothing; T134, the startup's edits did this to the planner pieces)
+    const edited = r.gen !== t.gen;
+    if (edited && t.tex) { m.bmp.close(); return; }
     const u0 = performance.now();
     const old = t.tex, oldL = t.texL, oldPx = t.px, artL = m.artL ?? m.L, fade = old && (oldL !== m.L || t.texArtL !== artL) && !t.stale && t.kind !== 'p' && !t.prev;
     if (t.fadeFrom && t.fadeFrom !== old && t.fadeFrom !== t.prev) this.gl.deleteTexture(t.fadeFrom);
     t.fadeFrom = null; t.fadePx = 0;
-    t.tex = this.gl.textureFrom(m.bmp); t.texL = m.L; t.texArtL = artL; t.px = m.bmp.width * m.bmp.height; t.stale = false; t.baked = u0; m.bmp.close();
+    t.tex = this.gl.textureFrom(m.bmp); t.texL = m.L; t.texArtL = artL; t.px = m.bmp.width * m.bmp.height; t.stale = edited; t.baked = u0; m.bmp.close();
     if (fade) { t.fadeFrom = old; t.fadeStart = Infinity; t.fadePx = oldPx; }
     else if (old && old !== t.prev) this.gl.deleteTexture(old);
     const u1 = performance.now(); this.upCount++; this.upMs += u1 - u0;
     if (u1 - this.upT > 1000) { this.uploadsThisSecond = this.upCount; this.uploadMsPerSecond = this.upMs; this.upCount = 0; this.upMs = 0; this.upT = u1; }
   }
-  /** drop the least recently used pictures above the pixel budget */
+  /** drop the least recently used pictures above the pixel budget (planner pieces too: one is asked for first whenever a chunk on screen has
+   *  no picture, so each new place the camera goes keeps one, T134; one not drawn for a while is baked again in a millisecond or two) */
   evict(now: number) {
     let px = 0, held = 0; for (const t of this.tiles.values()) { px += (t.tex ? t.px : 0) + t.fadePx; if (t.prev && t.prev !== t.tex) held += t.px; }
     this.residentPx = px + held; this.peakPx = Math.max(this.peakPx, this.residentPx);
     if (px <= this.budgetPx) return;
-    const old = [...this.tiles.values()].filter(t => t.tex && t.used !== now && t.kind !== 'p').sort((a, b) => a.used - b.used);
+    const old = [...this.tiles.values()].filter(t => t.tex && t.used !== now).sort((a, b) => a.used - b.used);
     for (const t of old) { if (px <= this.budgetPx * 0.8) break; px -= t.px + t.fadePx; this.gl.deleteTexture(t.tex!); t.tex = null; if (t.prev) { this.gl.deleteTexture(t.prev); t.prev = null; } if (t.fadeFrom) { this.gl.deleteTexture(t.fadeFrom); t.fadeFrom = null; t.fadePx = 0; } }
   }
   /** release reveal pictures whose animation is over */
