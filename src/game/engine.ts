@@ -50,7 +50,7 @@ import { drawParkingOverlay, type ParkOverlayView } from './parking-overlay';
 import type { BayRowDef } from './event/rows';
 import { inQuad, type CurbDef } from './event/curb';
 import { SpriteTiles, spriteRect, VECTOR, type Drawable } from './sprites';
-import { releaseVectorMeshData, vectorMesh } from './shadow-vector';
+import { releaseVectorMeshData, vectorMeshData } from './shadow-vector';
 import { readSave, writeSave, clearSave, backupTownSlot, SAVE_VERSION, segRec, exportSaveBytes, importSaveBytes, listSaveBackups, readBackup, deleteBackup, type SaveV5 } from './save';
 import { CAR_COLOURS, parkedCar } from './traffic';
 import { carOwnerScale } from './ext/car-art';
@@ -1182,7 +1182,7 @@ export class Game {
     this.range.sim.onMoney = e => { const c = this.range.scene?.counter, f = rangeFloat(e, c ?? null); if (f) this.floatMoney(f); };
     try { const v = parseFloat(localStorage.getItem('capitalempire.shadows') ?? ''); if (Number.isFinite(v)) this.shadowStrength = Math.max(0, Math.min(2, v)); } catch { /* default 1.1 */ }
     try { this.vectorShadows = VECTOR.on = localStorage.getItem('capitalempire.vectorShadows') !== '0'; } catch { /* default on */ }
-    this.gl.initVector(vectorMesh()); releaseVectorMeshData(); // T172: the mesh's data is on the GPU now
+    this.gl.initVector(vectorMeshData()); releaseVectorMeshData(); // T172: the mesh's data is on the GPU now
     try { localStorage.removeItem('capitalempire.grassArt'); } catch { /* the old gear menu's Grass setting: gone, the painted art always */ }
     this.grassArt = import.meta.env.DEV && new URLSearchParams(location.search).get('grass') === 'photo' ? 'photo' : 'painted';
     this.ground.grassArt = this.grassArt;
