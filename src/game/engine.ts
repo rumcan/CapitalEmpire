@@ -4894,7 +4894,9 @@ export class Game {
       // the hand-drawn vector shadows (T142): each picture's contact and cast shapes, the cast following the sun and fading out by night
       if (vecOn) {
         const sh = this.cast.on ? castShear(this.cast) : { sx: 0, sy: 0 }, castMul = this.cast.on ? this.cast.strength * (1 - this.nightAmount()) : 0;
-        f.vec.forEach((v, k) => gl.drawVector(vAt[k]!, v.floats / VECTOR_STRIDE, v.verts, sh.sx, sh.sy, this.shadowStrength, castMul));
+        // (at the district zoom a shadow is a few px: the meshes' far copies, a few points a ring and no soft rim)
+        const far = tier === 'district';
+        f.vec.forEach((v, k) => gl.drawVector(vAt[k]!, v.floats / VECTOR_STRIDE, far ? v.far : v.verts, sh.sx, sh.sy, this.shadowStrength, castMul, far));
       }
       gl.drawSprites(pAt, f.floats / SPRITE_STRIDE, tier === 'district' ? 7 * this.dpr : 0);
       if (lt) { gl.drawPoints(lAt, lt.small, Math.max(2, 0.55 * 64 * ze), true); gl.drawPoints(lAt + lt.small * POINT_STRIDE, lt.beams, Math.max(4, 2.6 * 64 * ze), true); }

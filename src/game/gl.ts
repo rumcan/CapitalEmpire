@@ -14,7 +14,7 @@ export const SPRITE_STRIDE = 20;
  *  lean (a multiplier of the common lean, shadow-shape.ts contactShadow), clip x0 y0 x1 y1 (world px) */
 export const SHADOW_STRIDE = 12;
 /** floats per vector-shadow instance (T142, shadow-vector.ts): the anchor x y (world px), the scale signed by the mirror and the scale; the
- *  mesh's first index and index count, 2 spare; clip x0 y0 x1 y1 (world px); the picture's rect x0 y0 x1 y1 (world px) */
+ *  mesh's first index and index count, and its far copy's; clip x0 y0 x1 y1 (world px); the picture's rect x0 y0 x1 y1 (world px) */
 export const VECTOR_STRIDE = 16;
 /** the vector mesh textures' width (texels) */
 const MESH_W = 2048;
@@ -147,14 +147,14 @@ void main() {
 const VS_VEC = `#version 300 es
 precision highp float; precision highp int; precision highp usampler2D;
 layout(location=0) in vec4 aA; layout(location=1) in vec4 aB; layout(location=2) in vec4 aClip; layout(location=3) in vec4 aRect;
-uniform vec4 uCam; uniform vec2 uScreen; uniform vec2 uShear; uniform vec2 uMul;
+uniform vec4 uCam; uniform vec2 uScreen; uniform vec2 uShear; uniform vec2 uMul; uniform int uFar;
 uniform highp sampler2D uVerts; uniform highp usampler2D uIdx;
 out vec2 vSrc; out float vCore; out float vEdge; flat out vec4 vClip; flat out vec4 vRect;
 void main() {
-  int id = gl_VertexID, count = int(aB.y + 0.5);
+  int id = gl_VertexID, count = int((uFar == 1 ? aB.w : aB.y) + 0.5);
   vClip = aClip; vRect = aRect; vSrc = vec2(0.0); vCore = 0.0; vEdge = 0.0;
   if (id >= count) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
-  int i = int(aB.x + 0.5) + id;
+  int i = int((uFar == 1 ? aB.z : aB.x) + 0.5) + id;
   int v = int(texelFetch(uIdx, ivec2(i % ${MESH_W}, i / ${MESH_W}), 0).r) * 2;
   vec4 A = texelFetch(uVerts, ivec2(v % ${MESH_W}, v / ${MESH_W}), 0), B = texelFetch(uVerts, ivec2((v + 1) % ${MESH_W}, (v + 1) / ${MESH_W}), 0);
   float mul = A.w > 0.5 ? uMul.y : uMul.x;
@@ -215,7 +215,7 @@ export class GLRenderer {
     this.quad = this.program(VS_QUAD, FS_QUAD, ['uRect', 'uCam', 'uScreen', 'uUV', 'uTex', 'uMask', 'uMode', 'uAlpha']);
     this.shadow = this.program(VS_SHADOW, FS_SHADOW, ['uCam', 'uScreen', 'uStrength', 'uShift']);
     this.point = this.program(VS_POINT, FS_POINT, ['uCam', 'uScreen', 'uSize', 'uSoft']);
-    this.vec = this.program(VS_VEC, FS_VEC, ['uCam', 'uScreen', 'uShear', 'uMul', 'uVerts', 'uIdx']);
+    this.vec = this.program(VS_VEC, FS_VEC, ['uCam', 'uScreen', 'uShear', 'uMul', 'uFar', 'uVerts', 'uIdx']);
     this.dyn = gl.createBuffer()!;
     this.maskTex = gl.createTexture()!; this.emptyTex = gl.createTexture()!;
     for (const t of [this.maskTex, this.emptyTex]) { gl.bindTexture(gl.TEXTURE_2D, t); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 255])); this.texParams(gl.TEXTURE_2D, false); }
@@ -354,10 +354,11 @@ export class GLRenderer {
   }
   get vectorReady() { return !!this.vecVerts; }
   /** vector-shadow instances at float offset `firstFloat` (VECTOR_STRIDE each), each drawing up to `verts` mesh vertices (its count; the rest
-   *  fold away); (sx, sy) the sun's shear per px of height (none when the cast shadows are off), contact and cast their strengths */
-  drawVector(firstFloat: number, count: number, verts: number, sx: number, sy: number, contact: number, cast: number) {
+   *  fold away); (sx, sy) the sun's shear per px of height (none when the cast shadows are off), contact and cast their strengths; far: the
+   *  meshes' far copies (the district zoom) */
+  drawVector(firstFloat: number, count: number, verts: number, sx: number, sy: number, contact: number, cast: number, far = false) {
     if (!count || !verts || !this.vecVerts || (contact <= 0 && cast <= 0)) return; const gl = this.gl, pr = this.vec;
-    gl.useProgram(pr.p); this.camUniforms(pr); gl.uniform2f(pr.u.uShear, sx, sy); gl.uniform2f(pr.u.uMul, contact, cast);
+    gl.useProgram(pr.p); this.camUniforms(pr); gl.uniform2f(pr.u.uShear, sx, sy); gl.uniform2f(pr.u.uMul, contact, cast); gl.uniform1i(pr.u.uFar, far ? 1 : 0);
     gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, this.vecVerts); gl.uniform1i(pr.u.uVerts, 0);
     gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, this.vecIdx); gl.uniform1i(pr.u.uIdx, 1);
     gl.activeTexture(gl.TEXTURE0);

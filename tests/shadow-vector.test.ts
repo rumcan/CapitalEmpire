@@ -10,7 +10,7 @@ import { VECTOR_SHADOWS, VECTOR_FALLBACK, VERTEX_FLOATS, buildVectorMesh, triang
 import { draftItems, SHADOW_HINTS } from '../src/game/dev/shadow-draft-items';
 import { draftShadow, type DraftPicture } from '../src/game/dev/shadow-draft';
 import { CAST, castShear } from '../src/game/cast-shadow';
-import { VECTOR, contactOf, packVector, spriteRect, vecOf, type Drawable } from '../src/game/sprites';
+import { VECTOR, contactOf, packVector, spriteAnchor, spriteRect, vecOf, type Drawable } from '../src/game/sprites';
 import { VECTOR_STRIDE } from '../src/game/gl';
 
 const BY = new Map(LIBRARY.map((it, i) => [it.id, i] as const));
@@ -33,6 +33,8 @@ test('the mesh: a contact ring and a cast ring with a hole are filled and rimmed
   assert.deepEqual(m.at.get('b'), m.at.get('a'));
   assert.equal(m.at.get('flat')!.count, 0, 'an entry with no shapes draws none (a flat picture)');
   const r = m.at.get('a')!; assert.equal(r.count % 3, 0); assert.equal(r.mcount, r.count, 'the mirrored copy has as many triangles');
+  // the far copy: no holes, no rims (2 triangles for the contact, 2 for the cast square)
+  assert.equal(r.fcount / 3, 4); assert.equal(r.fmcount, r.fcount);
   // the mirrored copy: x negated, the same heights
   assert.equal(m.verts[m.idx[r.mfirst]! * VERTEX_FLOATS + 3], m.verts[m.idx[r.first]! * VERTEX_FLOATS + 3]);
   for (let i = r.first; i < r.first + r.count; i++) assert.ok(m.idx[i]! < m.nVerts);
@@ -120,7 +122,8 @@ test('the sprites: a picture with a shape packs one instance (mirrored with its 
   const i = BY.get(id)!, d: Drawable = { item: i, x: 100.5, y: 100.5, flip: false, scale: 1.5, x0: 100, y0: 100, x1: 101, y1: 101 }, out = new Float32Array(VECTOR_STRIDE);
   VECTOR.on = true;
   assert.ok(vecOf(i) && packVector(d, out, 0, 0, 0, spriteRect(d)), id);
-  assert.equal(out[2], 1.5); assert.equal(out[3], 1.5); assert.equal(out[5], vecOf(i)!.count);
+  // (its drawn scale: the placed scale, held to the pixels its atlas holds)
+  assert.ok(out[3]! > 0 && Math.abs(out[3]! - spriteAnchor(d)!.k) < 1e-6 && out[2] === out[3]); assert.equal(out[5], vecOf(i)!.count);
   assert.equal(contactOf(d), null, 'no T141 contact shape under a drawn one');
   assert.ok(packVector({ ...d, flip: true }, out, 0, 0, 0, spriteRect({ ...d, flip: true })) && out[4] === vecOf(i)!.mfirst && out[5] === vecOf(i)!.mcount, 'mirrored: its mirrored mesh');
   assert.equal(packVector({ ...d, lift: 40 }, out, 0, 0, 0, spriteRect(d)), false, 'a lifted sprite casts none');

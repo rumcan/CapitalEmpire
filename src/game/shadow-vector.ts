@@ -43,7 +43,9 @@ export const VECTOR_FALLBACK: readonly { id: string; why: string }[] = [
 /** a built mesh: vertices (VERTEX_FLOATS each) and triangle indices, and each picture's range in the indices */
 /** a picture's two ranges in the indices: as drawn, and mirrored (a mirrored sprite: its x mirrored, the sun's side kept, so its rings are
  *  filled where they land then) */
-export interface VectorRange { first: number; count: number; mfirst: number; mcount: number }
+export interface VectorRange { first: number; count: number; mfirst: number; mcount: number;
+  /** the far copies (the district zoom, where a shadow is a few px: each ring cut to a few points, no holes, no rim), drawn and mirrored */
+  ffirst: number; fcount: number; fmfirst: number; fmcount: number }
 export interface VectorMesh { verts: Float32Array; idx: Uint32Array; nVerts: number; nIdx: number; at: Map<string, VectorRange> }
 /** floats per mesh vertex: x, y, h (display px), kind (0 contact, 1 cast), core (darkness), edge (1 on the shape, 0 at the rim's outside), 2 spare */
 export const VERTEX_FLOATS = 8;
@@ -113,8 +115,8 @@ export function triangulate(pts: P[], outer: number[], holes: number[][]): numbe
 export const DRAFT_SHEAR = castShear(CAST);
 
 /** add one entry's triangles to the growing mesh: its contact rings, then its cast rings (outer rings and holes by winding), each filled and
- *  rimmed outward with its feather */
-function addEntry(e: VectorShadow, V: number[], I: number[], mirror: boolean) {
+ *  rimmed outward with its feather; far: the far copy (each ring cut to FAR_POINTS, no holes, no rim) */
+function addEntry(e: VectorShadow, V: number[], I: number[], mirror: boolean, far = false) {
   const sx = DRAFT_SHEAR.sx, sy = DRAFT_SHEAR.sy;
   // mirrored: every x negated and every ring reversed (so outer rings and holes keep their winding)
   const mir = (rings: number[][], stride: number) => !mirror ? rings : rings.map(r => { const o: number[] = []; for (let i = r.length - stride; i >= 0; i -= stride) { o.push(-r[i]!); for (let k = 1; k < stride; k++) o.push(r[i + k]!); } return o; });
@@ -124,7 +126,8 @@ function addEntry(e: VectorShadow, V: number[], I: number[], mirror: boolean) {
     // the ground rings as drawn under the draft sun (x, y), with each vertex's base and height
     const R = rings.map(fl => { const out: { p: P; x: number; y: number; h: number }[] = []; for (let i = 0; i + stride - 1 < fl.length; i += stride) { const x = fl[i]!, y = fl[i + 1]!, h = kind ? fl[i + 2]! : (e.cl ?? D.cl); out.push({ p: [x + h * sx, y + h * sy], x, y, h }); }
       // (a contact ring is always filled: wound positive whichever way it was drawn)
-      return !kind && area(out.map(v => v.p)) < 0 ? out.reverse() : out; }).filter(r => r.length >= 3 && Math.abs(area(r.map(v => v.p))) > 0.5);
+      return !kind && area(out.map(v => v.p)) < 0 ? out.reverse() : out; }).filter(r => r.length >= 3 && Math.abs(area(r.map(v => v.p))) > 0.5)
+      .filter(r => !far || area(r.map(v => v.p)) > 0).map(r => far ? cut(r, FAR_POINTS) : r);
     if (!R.length) continue;
     const hMax = Math.max(1, ...R.flatMap(r => r.map(v => v.h)));
     // contact: its rim from its size (a post's spot stays tight, a building's base soft)
@@ -143,8 +146,9 @@ function addEntry(e: VectorShadow, V: number[], I: number[], mirror: boolean) {
       const op = o.map(i => pts[i]!), mine = holes.filter(h => inside(pts[h[0]!]!, op));
       for (const t of triangulate(pts, o, mine)) I.push(base + t);
     }
-    // the rim: each ring's vertices pushed outward (away from the filled side) along the mitred normal by the feather, edge 0
-    for (const ring of ringIdx) {
+    // the rim: each ring's vertices pushed outward (away from the filled side) along the mitred normal by the feather, edge 0 (none far off:
+    // a few px of shadow need no soft edge)
+    if (!far) for (const ring of ringIdx) {
       const n = ring.length, rimAt = V.length / VERTEX_FLOATS;
       for (let i = 0; i < n; i++) {
         const a = pts[ring[(i + n - 1) % n]!]!, b = pts[ring[i]!]!, c = pts[ring[(i + 1) % n]!]!;
@@ -161,6 +165,29 @@ function addEntry(e: VectorShadow, V: number[], I: number[], mirror: boolean) {
   }
 }
 const norm = (x: number, y: number): P => { const l = Math.hypot(x, y); return l > 1e-9 ? [x / l, y / l] : [0, 0]; };
+/** the far copy's points a ring */
+const FAR_POINTS = 8;
+/** a ring cut to at most n of its points (Douglas-Peucker on where they land, the tolerance raised until it fits) */
+function cut<T extends { p: P }>(r: T[], n: number): T[] {
+  if (r.length <= n) return r;
+  const keep = (tol: number) => {
+    const k = new Uint8Array(r.length); let i0 = 0, i1 = 0, best = -1;
+    for (let i = 0; i < r.length; i++) for (let j = i + 1; j < r.length; j++) { const d = (r[i]!.p[0] - r[j]!.p[0]) ** 2 + (r[i]!.p[1] - r[j]!.p[1]) ** 2; if (d > best) { best = d; i0 = i; i1 = j; } }
+    const dp = (a: number, b: number) => { // a..b along the ring (b may wrap past the end)
+      let far = -1, at = -1; const A = r[a % r.length]!.p, B = r[b % r.length]!.p;
+      for (let q = a + 1; q < b; q++) { const Q = r[q % r.length]!.p, d = segDist(Q, A, B); if (d > far) { far = d; at = q; } }
+      if (far > tol) { k[at % r.length] = 1; dp(a, at); dp(at, b); }
+    };
+    k[i0] = 1; k[i1] = 1; dp(i0, i1); dp(i1, i0 + r.length);
+    return r.filter((_, i) => k[i]);
+  };
+  let tol = 1, out = keep(tol); while (out.length > n) { tol *= 1.4; out = keep(tol); }
+  return out.length >= 3 ? out : r.slice(0, 3);
+}
+function segDist(p: P, a: P, b: P) {
+  const dx = b[0] - a[0], dy = b[1] - a[1], l = dx * dx + dy * dy; if (!l) return Math.hypot(p[0] - a[0], p[1] - a[1]);
+  const t = Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / l)); return Math.hypot(p[0] - a[0] - t * dx, p[1] - a[1] - t * dy);
+}
 
 /** build the mesh of every entry (each `same` entry shares its source's range) */
 export function buildVectorMesh(shapes: Readonly<Record<string, VectorShadow>> = VECTOR_SHADOWS): VectorMesh {
@@ -169,7 +196,8 @@ export function buildVectorMesh(shapes: Readonly<Record<string, VectorShadow>> =
     if (e.same) continue;
     // (an entry with no shapes draws none: a flat picture)
     const first = I.length; addEntry(e, V, I, false); const mfirst = I.length; addEntry(e, V, I, true);
-    at.set(id, { first, count: mfirst - first, mfirst, mcount: I.length - mfirst });
+    const ffirst = I.length; addEntry(e, V, I, false, true); const fmfirst = I.length; addEntry(e, V, I, true, true);
+    at.set(id, { first, count: mfirst - first, mfirst, mcount: ffirst - mfirst, ffirst, fcount: fmfirst - ffirst, fmfirst, fmcount: I.length - fmfirst });
   }
   for (const [id, e] of Object.entries(shapes)) if (e.same) { const r = at.get(e.same); if (r) at.set(id, r); }
   return { verts: Float32Array.from(V), idx: Uint32Array.from(I), nVerts: V.length / VERTEX_FLOATS, nIdx: I.length, at };

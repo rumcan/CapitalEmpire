@@ -23,7 +23,7 @@ export { CAR_SCALE };
 interface DTile { i: number; j: number; props: Set<Prop>; order: Prop[] | null; packed: Float32Array; shadows: Float32Array; rects: Float32Array; buckets: Map<number, number[]>;
   /** the vector shadows (T142) of its props, in sets by their meshes' size (VECTOR_SETS: gl.ts drawVector runs each set to its largest
    *  count), and those counts */
-  vsets: Float32Array[]; vmax: number[] }
+  vsets: Float32Array[]; vmax: number[]; vfar: number[] }
 export interface TileDraw { i: number; j: number; shadows: number; sprites: number }
 
 /** the vector shadows (T142, shadow-vector.ts): on, every picture with an entry draws its own contact and cast shapes instead of T141's shape
@@ -112,7 +112,7 @@ export function packVector(d: Drawable, out: Float32Array, o: number, i: number,
   const v = vecOf(a.item); if (!v || !v.count) return false;
   // (a mirrored sprite draws its mirrored mesh)
   out[o] = a.X; out[o + 1] = a.Y; out[o + 2] = a.flip ? -a.k : a.k; out[o + 3] = a.k;
-  out[o + 4] = a.flip ? v.mfirst : v.first; out[o + 5] = a.flip ? v.mcount : v.count; out[o + 6] = 0; out[o + 7] = 0;
+  out[o + 4] = a.flip ? v.mfirst : v.first; out[o + 5] = a.flip ? v.mcount : v.count; out[o + 6] = a.flip ? v.fmfirst : v.ffirst; out[o + 7] = a.flip ? v.fmcount : v.fcount;
   clip(out, o + 8, i, j);
   out[o + 12] = rect[0]!; out[o + 13] = rect[1]!; out[o + 14] = rect[2]!; out[o + 15] = rect[3]!;
   return true;
@@ -166,7 +166,7 @@ export class SpriteTiles {
     const r = spriteRect(p, this.tmp), keys: number[] = [];
     for (let j = Math.floor(r[1] / CHUNK_H); j <= Math.floor(r[3] / CHUNK_H); j++) for (let i = Math.floor(r[0] / CHUNK_W); i <= Math.floor(r[2] / CHUNK_W); i++) {
       const k = tkey(i, j); let t = this.tiles.get(k);
-      if (!t) { t = { i, j, props: new Set(), order: null, packed: new Float32Array(0), shadows: new Float32Array(0), rects: new Float32Array(0), buckets: new Map(), vsets: [], vmax: [] }; this.tiles.set(k, t); }
+      if (!t) { t = { i, j, props: new Set(), order: null, packed: new Float32Array(0), shadows: new Float32Array(0), rects: new Float32Array(0), buckets: new Map(), vsets: [], vmax: [], vfar: [] }; this.tiles.set(k, t); }
       t.props.add(p); t.order = null; keys.push(k);
     }
     this.where.set(p, keys); this.count++;
@@ -193,15 +193,15 @@ export class SpriteTiles {
     t.order = topoOrder(props, rects);
     const n = t.order.length; t.packed = new Float32Array(n * SPRITE_STRIDE); t.rects = new Float32Array(n * 4);
     const sh: number[] = [];
-    t.order.forEach((p, i) => { packSprite(p, t.packed, i * SPRITE_STRIDE, t.i, t.j); t.rects.set(t.packed.subarray(i * SPRITE_STRIDE, i * SPRITE_STRIDE + 4), i * 4); if (SHADOWED(LIBRARY[p.item]) && !p.lift) sh.push(i); });
+    t.order.forEach((p, i) => { packSprite(p, t.packed, i * SPRITE_STRIDE, t.i, t.j); t.rects.set(t.packed.subarray(i * SPRITE_STRIDE, i * SPRITE_STRIDE + 4), i * 4); if (SHADOWED(LIBRARY[p.item]) && !p.lift && !(VECTOR.on && vecOf(lookOf(p).item))) sh.push(i); });
     t.shadows = new Float32Array(sh.length * SHADOW_STRIDE); sh.forEach((i, k) => packShadow(t.order![i], t.shadows, k * SHADOW_STRIDE, t.i, t.j, t.rects.subarray(i * 4, i * 4 + 4)));
     // the vector shadows (T142), small meshes and big ones
-    const vs = VECTOR_SETS.map(() => new Float32Array(n * VECTOR_STRIDE)), vn = VECTOR_SETS.map(() => 0); t.vmax = VECTOR_SETS.map(() => 0);
+    const vs = VECTOR_SETS.map(() => new Float32Array(n * VECTOR_STRIDE)), vn = VECTOR_SETS.map(() => 0); t.vmax = VECTOR_SETS.map(() => 0); t.vfar = VECTOR_SETS.map(() => 0);
     for (let i = 0; i < n; i++) {
       const p = t.order[i]!, l = lookOf(p), v = SHADOWED(LIBRARY[p.item]!) ? vecOf(l.item) : null, c = v ? (l.flip ? v.mcount : v.count) : 0; if (!c) continue;
       const k = setOf(c);
       if (!packVector(p, vs[k]!, vn[k]! * VECTOR_STRIDE, t.i, t.j, t.rects.subarray(i * 4, i * 4 + 4))) continue;
-      vn[k]!++; t.vmax[k] = Math.max(t.vmax[k]!, c);
+      t.vfar[k] = Math.max(t.vfar[k]!, vs[k]![vn[k]! * VECTOR_STRIDE + 7]!); vn[k]!++; t.vmax[k] = Math.max(t.vmax[k]!, c);
     }
     t.vsets = vs.map((a, k) => a.slice(0, vn[k]! * VECTOR_STRIDE));
     t.buckets = new Map();
@@ -237,7 +237,7 @@ export class SpriteTiles {
     }
     let at = 0, sat = 0; const draws: TileDraw[] = [];
     // the vector shadows: small and big sets, their floats and their largest counts
-    const vat = VECTOR_SETS.map(() => 0), vmax = VECTOR_SETS.map(() => 0), vput = (set: number, src: Float32Array, n: number) => {
+    const vat = VECTOR_SETS.map(() => 0), vmax = VECTOR_SETS.map(() => 0), vfar = VECTOR_SETS.map(() => 0), vput = (set: number, src: Float32Array, n: number) => {
       let b = this.vecStream[set]!; if (vat[set]! + n > b.length) { const g = new Float32Array(Math.max(vat[set]! + n, b.length * 2)); g.set(b); this.vecStream[set] = b = g; }
       b.set(n === src.length ? src : src.subarray(0, n), vat[set]); vat[set]! += n;
     }, vone = this.vone;
@@ -249,11 +249,12 @@ export class SpriteTiles {
       this.ensure(at + (nProps + nMv) * SPRITE_STRIDE, sat + (t ? t.shadows.length : 0) + nMv * SHADOW_STRIDE);
       const s = this.stream, ss = this.shadowStream, d: TileDraw = { i, j, shadows: 0, sprites: 0 };
       if (t) { ss.set(t.shadows, sat); sat += t.shadows.length; d.shadows += t.shadows.length / SHADOW_STRIDE; }
-      if (mv) for (const m of mv) { packShadow(m.d, ss, sat, i, j, m.r); sat += SHADOW_STRIDE; d.shadows++; }
-      if (t) t.vsets.forEach((a, k) => { if (a.length) { vput(k, a, a.length); vmax[k] = Math.max(vmax[k]!, t.vmax[k]!); } });
+      // (a mover with a vector shadow packs no T141 shape: packVector below)
+      if (mv) for (const m of mv) { if (VECTOR.on && vecOf(lookOf(m.d).item)) continue; packShadow(m.d, ss, sat, i, j, m.r); sat += SHADOW_STRIDE; d.shadows++; }
+      if (t) t.vsets.forEach((a, k) => { if (a.length) { vput(k, a, a.length); vmax[k] = Math.max(vmax[k]!, t.vmax[k]!); vfar[k] = Math.max(vfar[k]!, t.vfar[k]!); } });
       if (mv) for (const m of mv) {
         if (!packVector(m.d, vone, 0, i, j, m.r)) continue;
-        const c = vone[5]!, set = setOf(c); vput(set, vone, VECTOR_STRIDE); vmax[set] = Math.max(vmax[set]!, c);
+        const c = vone[5]!, set = setOf(c); vput(set, vone, VECTOR_STRIDE); vmax[set] = Math.max(vmax[set]!, c); vfar[set] = Math.max(vfar[set]!, vone[7]!);
       }
       if (!mv) { if (t) { s.set(t.packed, at); at += t.packed.length; d.sprites = nProps; } }
       else {
@@ -277,6 +278,6 @@ export class SpriteTiles {
       draws.push(d);
     }
     return { stream: this.stream, floats: at, shadows: this.shadowStream, shadowFloats: sat, draws,
-      vec: this.vecStream.map((data, k) => ({ data, floats: vat[k]!, verts: vmax[k]! })) };
+      vec: this.vecStream.map((data, k) => ({ data, floats: vat[k]!, verts: vmax[k]!, far: vfar[k]! })) };
   }
 }
