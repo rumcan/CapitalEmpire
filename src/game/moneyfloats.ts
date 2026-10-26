@@ -4,7 +4,7 @@
 // or giving up a queue: the sale it would have made; the treasury is not charged). Readable, not noisy: one float per transaction at the street
 // zoom, merged per place at the mid zoom (a running "+$1,240" over the range), none at the district and overview zooms; capped per frame. The
 // engine feeds it (the range's onMoney, the purchases placed, the city worker's money with its place) and draws it on its 2D overlay.
-import { DISTRICT_Z, HH } from './iso';
+import { DISTRICT_Z, HH, HW } from './iso';
 import type { RangeMoneyEvent } from './golf/rangebiz';
 
 /** one float per transaction at this zoom and closer (the street view; the galleries' "n watching" shows from here too) */
@@ -13,16 +13,20 @@ export const FLOAT_STREET_Z = 0.2;
 export const FLOAT_MID_Z = DISTRICT_Z;
 /** a float's life (wall-clock s): it rises and fades over it */
 export const FLOAT_LIFE = 1.5;
-/** at the mid zoom a place's float takes in the money of this long after it began (wall-clock s: its running total), then rises away */
-export const MERGE_WINDOW = 0.6;
-/** at most this many new floats a frame and on screen at once: more money is added to the newest float at its spot (and kind), else dropped */
+/** the rise over a float's life (screen px at dpr 1): steady, so floats a line apart stay a line apart as they rise */
+export const RISE_PX = 40;
+/** a line of floats (screen px at dpr 1: an amount and a lost sale's caption): a float born where another is still within a line of it is
+ *  drawn a line above it (the first free line), up to MAX_LIFT; past that its money is added to the float of its kind there */
+export const LINE = 26, MAX_LIFT = 3 * LINE;
+/** at the mid zoom a place's float takes in the money of this long after it began (wall-clock s: its running total; by then it has risen a
+ *  line, so the next total starts below it), then rises away */
+export const MERGE_WINDOW = LINE / RISE_PX * FLOAT_LIFE;
+/** at most this many new floats a frame and on screen at once: more money is added to the newest float of its kind at its spot, else dropped */
 export const FLOAT_NEW_MAX = 8, FLOAT_LIVE_MAX = 60;
-/** a float born within this long (s) of another at its spot is drawn a line above it, up to STACK_MAX lines (more: added to that one) */
-export const STACK_GAP = 0.4, STACK_MAX = 3;
+/** at the street zoom, money this close on screen (px at dpr 1, along the map's x) is one column of floats over the newest one's point */
+export const NEAR_PX = 60;
 /** the mid zoom's place, for money with no place group: this cell (tiles) */
 export const MID_CELL = 32;
-/** the rise (screen px at dpr 1) over a float's life */
-const RISE_PX = 30;
 
 /** in: money came in (green); out: money went out at a place (red); lost: a sale we lost (red with a caption, the treasury not charged) */
 export type FloatKind = 'in' | 'out' | 'lost';
@@ -34,9 +38,9 @@ export interface MoneyEvent {
   /** a small caption under the amount (a lost sale's reason); a lost sale without one says 'lost sale' */
   note?: string;
 }
-/** a float: its point (tiles), $ and kind, birth (s), the spot it stacks at (street: its half tile; mid: its place), the line it is drawn on above
- *  its point, its caption, the money events in it, and whether it is a mid-zoom place total */
-export interface MoneyFloat { x: number; y: number; amount: number; kind: FloatKind; born: number; spot: string; stack: number; note: string; n: number; merged: boolean }
+/** a float: its point (tiles), $ and kind, birth (s), its place (a mid-zoom total's group or cell; '' at the street zoom), how far above its
+ *  rising point it is drawn (px at dpr 1: its line in a column), its caption, the money events in it, and whether it is a mid-zoom place total */
+export interface MoneyFloat { x: number; y: number; amount: number; kind: FloatKind; born: number; place: string; lift: number; note: string; n: number; merged: boolean }
 export type FloatTier = 'street' | 'mid' | 'none';
 /** the floats at a zoom (the camera's CSS zoom): one per transaction, merged per place, or none */
 export const floatTier = (zoom: number): FloatTier => zoom >= FLOAT_STREET_Z ? 'street' : zoom >= FLOAT_MID_Z ? 'mid' : 'none';
@@ -59,7 +63,7 @@ export function floatNote(f: Pick<MoneyFloat, 'kind' | 'note' | 'n' | 'merged'>)
 export class MoneyFloats {
   /** the floats on screen (oldest first) */
   readonly live: MoneyFloat[] = [];
-  /** the money events dropped by the caps (none at their spot to add to) since the start */
+  /** the money events dropped by the caps (none of their kind at their spot to add to) since the start */
   dropped = 0;
   private fresh = 0;
 
@@ -76,59 +80,64 @@ export class MoneyFloats {
   add(e: MoneyEvent, now: number, zoom: number): MoneyFloat | null {
     if (!(e.amount > 0) || !Number.isFinite(e.amount) || !Number.isFinite(e.x) || !Number.isFinite(e.y)) return null;
     const tier = floatTier(zoom); if (tier === 'none') return null;
-    return tier === 'street' ? this.street(e, now) : this.mid(e, now);
+    return tier === 'street' ? this.street(e, now, zoom) : this.mid(e, now);
   }
 
-  /** the newest live float at spot (of kind, if given) */
-  private newest(spot: string, kind?: FloatKind): MoneyFloat | null {
-    for (let i = this.live.length - 1; i >= 0; i--) { const f = this.live[i]!; if (f.spot === spot && (!kind || f.kind === kind)) return f; }
-    return null;
-  }
   private full(): boolean { return this.fresh >= FLOAT_NEW_MAX || this.live.length >= FLOAT_LIVE_MAX; }
   private into(f: MoneyFloat | null, e: MoneyEvent): MoneyFloat | null {
     if (!f) { this.dropped++; return null; }
     f.amount += e.amount; f.n++; return f;
   }
-  private push(e: MoneyEvent, x: number, y: number, spot: string, stack: number, now: number, merged: boolean): MoneyFloat {
-    const f: MoneyFloat = { x, y, amount: e.amount, kind: e.kind, born: now, spot, stack, note: e.note ?? '', n: 1, merged };
+  private push(e: MoneyEvent, x: number, y: number, place: string, lift: number, now: number, merged: boolean): MoneyFloat {
+    const f: MoneyFloat = { x, y, amount: e.amount, kind: e.kind, born: now, place, lift, note: e.note ?? '', n: 1, merged };
     this.live.push(f); this.fresh++; return f;
   }
-  /** street: a float of its own at its point, a line above a float just born at its spot */
-  private street(e: MoneyEvent, now: number): MoneyFloat | null {
-    const spot = `s${Math.round(e.x * 2)},${Math.round(e.y * 2)}`;
-    if (this.full()) return this.into(this.newest(spot, e.kind), e);
-    const prev = this.newest(spot); let stack = prev && now - prev.born < STACK_GAP ? prev.stack + 1 : 0;
-    if (stack > STACK_MAX) { const same = this.newest(spot, e.kind); if (same) return this.into(same, e); stack = 0; }
-    return this.push(e, e.x, e.y, spot, stack, now, false);
+  /** street: a float of its own; in a column with the floats near it on screen (over the newest one's point), on the first line free of them */
+  private street(e: MoneyEvent, now: number, zoom: number): MoneyFloat | null {
+    const near = NEAR_PX / (HW * zoom), col: MoneyFloat[] = [];
+    let last: MoneyFloat | null = null, same: MoneyFloat | null = null;
+    for (const f of this.live) if (!f.merged && Math.hypot(f.x - e.x, f.y - e.y) < near) { col.push(f); last = f; if (f.kind === e.kind) same = f; }
+    if (this.full()) return this.into(same, e);
+    const lift = freeLine(col, now);
+    if (lift > MAX_LIFT && same) return this.into(same, e);
+    return this.push(e, last ? last.x : e.x, last ? last.y : e.y, '', lift, now, false);
   }
-  /** mid: added to its place's float of its kind while that is in its merge window; else a new one at the place's point, a line above the place's
-   *  other floats still in theirs (in, out and lost apart) */
+  /** mid: added to its place's float of its kind while that is in its merge window; else a new one at the place's point, on the first line free
+   *  of the place's other floats */
   private mid(e: MoneyEvent, now: number): MoneyFloat | null {
-    const place = e.group !== undefined ? `g${e.group}` : `c${Math.floor(e.x / MID_CELL)},${Math.floor(e.y / MID_CELL)}`;
-    const same = this.newest(place, e.kind);
+    const place = e.group !== undefined ? `g${e.group}` : `c${Math.floor(e.x / MID_CELL)},${Math.floor(e.y / MID_CELL)}`, col: MoneyFloat[] = [];
+    let same: MoneyFloat | null = null;
+    for (const f of this.live) if (f.place === place) { col.push(f); if (f.kind === e.kind) same = f; }
     if (same && now - same.born < MERGE_WINDOW) return this.into(same, e);
     if (this.full()) return this.into(same, e);
-    let stack = 0;
-    for (const f of this.live) if (f.spot === place && now - f.born < MERGE_WINDOW) stack = Math.max(stack, f.stack + 1);
-    return this.push(e, e.gx ?? e.x, e.gy ?? e.y, place, Math.min(stack, STACK_MAX), now, true);
+    const lift = freeLine(col, now);
+    if (lift > MAX_LIFT && same) return this.into(same, e);
+    return this.push(e, e.gx ?? e.x, e.gy ?? e.y, place, lift, now, true);
   }
 }
+/** how high a float is drawn above its point now (px at dpr 1): its line and its rise */
+export const floatHeight = (f: Pick<MoneyFloat, 'born' | 'lift'>, now: number): number => f.lift + RISE_PX * Math.min(1, Math.max(0, (now - f.born) / FLOAT_LIFE));
+/** the lowest line (px above the point, at dpr 1) a line clear of every float of a column now; floats rise at one speed, so they stay clear */
+function freeLine(col: readonly MoneyFloat[], now: number): number {
+  const hs = col.map(f => floatHeight(f, now)).sort((a, b) => a - b);
+  let h = 0; for (const o of hs) if (Math.abs(o - h) < LINE) h = o + LINE;
+  return h;
+}
 
-/** a float's rise (0..1, eased out) and opacity at now: in over its first 8%, full to 55%, then fading out */
+/** a float's rise (0..1 of its life: steady) and opacity at now: in over its first 8%, full to 55%, then fading out */
 export function floatPose(f: Pick<MoneyFloat, 'born'>, now: number): { rise: number; alpha: number } {
   const k = Math.min(1, Math.max(0, (now - f.born) / FLOAT_LIFE));
-  return { rise: 1 - (1 - k) * (1 - k), alpha: k >= 1 ? 0 : k < 0.08 ? k / 0.08 : k > 0.55 ? 1 - (k - 0.55) / 0.45 : 1 };
+  return { rise: k, alpha: k >= 1 ? 0 : k < 0.08 ? k / 0.08 : k > 0.55 ? 1 - (k - 0.55) / 0.45 : 1 };
 }
 
 /** the colours: green in, red out and lost (the caption a paler red), on a dark outline that reads on any ground */
 const FILL: Readonly<Record<FloatKind, string>> = { in: '#4ade80', out: '#f87171', lost: '#f87171' };
 const NOTE = '#fecaca', OUTLINE = 'rgba(2,6,23,0.92)';
 
-/** the floats on the 2D overlay (canvas px): each above its point (a walker's height up at the street zoom), risen and faded by its age, its line
- *  in the stack above that; three passes (the street amounts, the place totals, the captions) so the font is set three times a frame */
+/** the floats on the 2D overlay (canvas px): each above its point (a walker's height up), on its line and risen and faded by its age; three passes (the street amounts, the place totals, the captions) so the font is set three times a frame */
 export function drawMoneyFloats(ctx: CanvasRenderingContext2D, floats: readonly MoneyFloat[], now: number, screen: (x: number, y: number) => { x: number; y: number }, ze: number, dpr: number, w: number, h: number): void {
   if (!floats.length) return;
-  const lift = Math.max(10 * dpr, 1.3 * 0.9 * HH * 2 * ze), line = 16 * dpr, rise = RISE_PX * dpr;
+  const base = Math.max(10 * dpr, 1.3 * 0.9 * HH * 2 * ze);
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic'; ctx.lineJoin = 'round'; ctx.strokeStyle = OUTLINE;
   const pass = (merged: boolean | null, px: number) => {
@@ -136,13 +145,13 @@ export function drawMoneyFloats(ctx: CanvasRenderingContext2D, floats: readonly 
     for (const f of floats) {
       if (merged === null ? !floatNote(f) : f.merged !== merged) continue;
       const p = screen(f.x, f.y), o = floatPose(f, now);
-      const y = p.y - lift - o.rise * rise - f.stack * line + (merged === null ? 11 * dpr : 0);
+      const y = p.y - base - floatHeight(f, now) * dpr + (merged === null ? 11 * dpr : 0);
       if (p.x < -80 * dpr || p.x > w + 80 * dpr || y < -40 * dpr || y > h + 40 * dpr || o.alpha <= 0) continue;
       const t = merged === null ? floatNote(f) : moneyText(f);
       ctx.globalAlpha = o.alpha; ctx.strokeText(t, p.x, y); ctx.fillStyle = merged === null ? NOTE : FILL[f.kind]; ctx.fillText(t, p.x, y);
     }
   };
-  pass(false, 14); pass(true, 16); pass(null, 10);
+  pass(false, 14); pass(true, 16); pass(null, 11);
   ctx.globalAlpha = 1; ctx.textAlign = 'left';
 }
 

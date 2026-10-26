@@ -693,9 +693,9 @@ export class City {
     // the parking fees of the cars parked since the last step (sim.parkedNow holds a pair per car, read before it is cleared): the books take them,
     // and a round under way counts them (as it counts its tolls)
     const pk = this.sim.parkedNow.length >> 1, rs0 = this.round.stage;
-    if (pk && this.parkFee > 0 && !this.golf) {
-      const y = pk * this.parkFee; this.budget.parking(y); if (rs0 === 'build' || rs0 === 'surge') this.round.parking += y;
-      // T147: each car's fee floats up at its car park's entrance
+    if (pk && this.parkFee > 0 && !this.golf) { const y = pk * this.parkFee; this.budget.parking(y); if (rs0 === 'build' || rs0 === 'surge') this.round.parking += y; }
+    // T147: each car's fee floats up at its car park's entrance (golf: the tournament's cars, whose fees the close books)
+    if (pk && this.parkFee > 0 && (!this.golf || rs0 === 'build' || rs0 === 'surge')) {
       const pn = this.sim.parkedNow; for (let k = 0; k < pn.length; k += 2) { const P = this.parks[pn[k]!], e = P?.entrances[0]; if (e) this.cashAt(e.x, e.y, this.parkFee); }
     }
     this.sim.parkedNow.length = 0;
@@ -730,7 +730,7 @@ export class City {
     }
     this.sim.tollAt.length = 0;
     // T147: a car park that turned cars away (full) lost their fees: red at its entrance (the treasury is not charged)
-    if (this.parkFee > 0 && !this.golf) this.lostParking();
+    if (this.parkFee > 0 && (!this.golf || rs === 'build' || rs === 'surge')) this.lostParking();
     // the surge: its due cars spawn, then the party cars' exits are counted; kick-off (the round's last step of the surge) gives the result
     if (this.surge && rs === 'surge') this.surge.step(this.sim, this.g, this.busWalk);
     this.drainParty();

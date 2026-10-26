@@ -5,10 +5,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  FLOAT_LIFE, FLOAT_LIVE_MAX, FLOAT_MID_Z, FLOAT_NEW_MAX, FLOAT_STREET_Z, LOST_WHY, MERGE_WINDOW, MID_CELL, MoneyFloats, STACK_GAP, addCash, drawMoneyFloats,
-  floatNote, floatPose, floatTier, moneyText, rangeFloat, type MoneyEvent,
+  FLOAT_LIFE, FLOAT_LIVE_MAX, FLOAT_MID_Z, FLOAT_NEW_MAX, FLOAT_STREET_Z, LOST_WHY, LINE, MAX_LIFT, MERGE_WINDOW, MID_CELL, MoneyFloats, NEAR_PX, RISE_PX, addCash, drawMoneyFloats,
+  floatHeight, floatNote, floatPose, floatTier, moneyText, rangeFloat, type MoneyEvent,
 } from '../src/game/moneyfloats';
-import { DISTRICT_Z, MAP } from '../src/game/iso';
+import { DISTRICT_Z, HW, MAP } from '../src/game/iso';
 import { RangeSim, defaultRangeBiz, rangeScene, withUpgrade, type CarSlot, type RangeBizSave, type RangeMoneyEvent, type RangeUpgradeId } from '../src/game/golf/rangebiz';
 import { bayGrid } from '../src/game/event/carpark';
 import type { Rect } from '../src/game/golf/mode';
@@ -52,18 +52,27 @@ test('the zoom tiers: one float per transaction from the street zoom in, merged 
   assert.equal(fl.live.length, 0);
 });
 
-test('street zoom: each money event is one float with its sign, amount and place; floats born together at a spot stack, apart they do not', () => {
+test('street zoom: each money event is one float with its sign, amount and place; floats together on screen make a column a line apart, apart they do not', () => {
   const fl = new MoneyFloats(); fl.frame(0);
   const a = fl.add(ev(10, 20, 8), 0, STREET)!, b = fl.add(ev(40, 50, 300, 'out'), 0, STREET)!, c = fl.add(ev(60, 70, 12, 'lost', { note: 'lost · gave up waiting' }), 0, STREET)!;
   assert.equal(fl.live.length, 3);
   assert.deepEqual([a.kind, a.amount, a.x, a.y, a.merged], ['in', 8, 10, 20, false]);
   assert.deepEqual([b.kind, b.amount, b.x, b.y], ['out', 300, 40, 50]);
   assert.deepEqual([c.kind, c.amount, c.note], ['lost', 12, 'lost · gave up waiting']);
-  // a coffee and a lesson at the same counter at once: two floats, the second a line up; a while later back on the first line
-  const d = fl.add(ev(10, 20, 6), 0.1, STREET)!;
-  assert.notEqual(d, a); assert.equal(d.stack, 1);
-  const e2 = fl.add(ev(10.1, 20.1, 6), 0.1 + STACK_GAP + 0.01, STREET)!;
-  assert.equal(e2.stack, 0);
+  assert.ok([a, b, c].every(f => f.lift === 0), 'apart: each on its own point\'s first line');
+  // a coffee and a lesson at the same counter at once: two floats, the second a line above the first, over the first one's point
+  const d = fl.add(ev(10.5, 20.5, 6), 0.1, STREET)!;
+  assert.notEqual(d, a); assert.deepEqual([d.x, d.y], [10, 20]);
+  assert.ok(Math.abs(floatHeight(d, 0.1) - floatHeight(a, 0.1) - LINE) < 1e-9, 'a line above it');
+  // the column rises at one speed: still a line apart later
+  assert.ok(Math.abs(floatHeight(d, 1) - floatHeight(a, 1) - LINE) < 1e-9);
+  // once the first has risen a line, the next starts on the first line again
+  const e2 = fl.add(ev(10, 20, 6), LINE / RISE_PX * FLOAT_LIFE + 0.2, STREET)!;
+  assert.equal(e2.lift, 0);
+  // a burst at one spot past the column's lines is added to the float of its kind there
+  const g = new MoneyFloats(); g.frame(0); const fs = Array.from({ length: 6 }, () => g.add(ev(10, 20, 5), 0, STREET)!);
+  assert.equal(g.live.length, MAX_LIFT / LINE + 1); assert.ok(g.live.every(f => f.lift <= MAX_LIFT));
+  assert.equal(g.live.reduce((a2, f) => a2 + f.amount, 0), 30, 'the money still adds up'); void fs;
   // no money, or no place: no float
   assert.equal(fl.add(ev(1, 1, 0), 1, STREET), null);
   assert.equal(fl.add(ev(NaN, 1, 5), 1, STREET), null);
@@ -78,10 +87,11 @@ test('mid zoom: the money of a place in its merge window is one running total at
   assert.equal(ins.length, 1, 'one green float over the range'); assert.equal(lost.length, 1, 'one red lost float over the range');
   assert.deepEqual([ins[0]!.amount, ins[0]!.n, ins[0]!.x, ins[0]!.y, ins[0]!.merged], [48, 6, 500, 600, true]);
   assert.equal(lost[0]!.amount, 16); assert.equal(floatNote(lost[0]!), '2 sales lost');
-  assert.notEqual(ins[0]!.stack, lost[0]!.stack, 'the lost total is drawn on its own line');
+  assert.ok(Math.abs(floatHeight(ins[0]!, t) - floatHeight(lost[0]!, t)) >= LINE - 1e-9, 'the lost total is drawn on its own line');
   // after the window the next money starts a new total
   const next = fl.add(ev(505, 610, 8, 'in', range), MERGE_WINDOW + 0.01, MID)!;
   assert.notEqual(next, ins[0]); assert.equal(next.amount, 8);
+  for (const f of fl.live) if (f !== next) assert.ok(Math.abs(floatHeight(f, MERGE_WINDOW + 0.01) - floatHeight(next, MERGE_WINDOW + 0.01)) >= LINE - 1e-9, 'the new total clear of the others');
   // with no group, money in one MID_CELL cell merges at its first point; another cell is another place
   const g = new MoneyFloats(); g.frame(0);
   const p = g.add(ev(MID_CELL * 3 + 1, MID_CELL * 2 + 1, 5), 0, MID)!; g.add(ev(MID_CELL * 3 + 9, MID_CELL * 2 + 9, 5), 0.1, MID);
@@ -91,7 +101,7 @@ test('mid zoom: the money of a place in its merge window is one running total at
 
 test('the caps: at most FLOAT_NEW_MAX new floats a frame and FLOAT_LIVE_MAX on screen; money over them is added to the float at its spot, else dropped', () => {
   const fl = new MoneyFloats(); fl.frame(0);
-  for (let k = 0; k < 20; k++) fl.add(ev(10 + 3 * k, 10, 5), 0, STREET);
+  for (let k = 0; k < 20; k++) fl.add(ev(10 + 10 * k, 10, 5), 0, STREET);
   assert.equal(fl.live.length, FLOAT_NEW_MAX, 'capped this frame');
   assert.equal(fl.dropped, 20 - FLOAT_NEW_MAX, 'the rest had no float at their spot');
   // money at a spot with a float is added to it, so what floats up still adds up
@@ -99,7 +109,7 @@ test('the caps: at most FLOAT_NEW_MAX new floats a frame and FLOAT_LIVE_MAX on s
   assert.equal(first.amount, 12); assert.equal(first.n, 2);
   // the next frame takes new floats again, up to the live cap
   let t = 0;
-  for (let f = 0; f < 20; f++) { t += 0.01; fl.frame(t); for (let k = 0; k < FLOAT_NEW_MAX; k++) fl.add(ev(500 + 3 * (f * FLOAT_NEW_MAX + k), 500, 5), t, STREET); }
+  for (let f = 0; f < 20; f++) { t += 0.01; fl.frame(t); for (let k = 0; k < FLOAT_NEW_MAX; k++) fl.add(ev(500 + 10 * (f * FLOAT_NEW_MAX + k), 500, 5), t, STREET); }
   assert.equal(fl.live.length, FLOAT_LIVE_MAX);
   // their life over, they are gone
   fl.frame(t + FLOAT_LIFE); assert.equal(fl.live.length, 0);
@@ -133,7 +143,7 @@ const GROWN: RangeUpgradeId[] = ['bays8', 'bays12', 'bays24', 'targets', 'covere
 const grown = { tier: 1, exits: 2, residents: 2000, propsAppeal: 0.4, practiceAppeal: 0.21 };
 const DAY = 600, HOUR = DAY / 24;
 
-test('the range: each sale, coffee, lesson and lost golfer floats up once where it happened, green with its takings or red with the bucket it would have bought', () => {
+test('the range: each sale, coffee, lesson and lost golfer floats up once where it happened, green with its takings or red with the bucket it would have bought', t => {
   const s: RangeBizSave = GROWN.reduce((q, id) => withUpgrade(q, id), defaultRangeBiz()); s.price = 8;
   const sc = rangeScene(P, 2, s), sim = new RangeSim(11, 10), slots: CarSlot[] = bayGrid({ id: 1, x: LOT44[0], y: LOT44[1], w: LOT44[2], h: LOT44[3] }, 0, [entrance]);
   sim.setScene(sc, slots, entrance);
@@ -141,18 +151,20 @@ test('the range: each sale, coffee, lesson and lost golfer floats up once where 
   const fl = new MoneyFloats(); let now = 0;
   sim.onMoney = e => { events.push(e); const m = rangeFloat(e, sc.counter); floats.push({ e, f: m ? fl.add(m, now, STREET) : null }); };
   let booked = 0;
-  for (let h = 12; h < 20; h++) for (let t = 0; t < HOUR; t += 0.1) { now += 0.1; fl.frame(now); booked += sim.step(0.1, { hour: h + t / HOUR, day: 1 }, s, grown, DAY); }
+  for (let h = 12; h < 20; h++) for (let u = 0; u < HOUR; u += 0.1) { now += 0.1; fl.frame(now); booked += sim.step(0.1, { hour: h + u / HOUR, day: 1 }, s, grown, DAY); }
   const kinds = new Set(events.map(e => e.kind)); for (const k of ['bucket', 'coffee', 'lesson', 'lost'] as const) assert.ok(kinds.has(k), `a ${k} happened`);
-  // each event floats once at its place with its sign: a float of its own, or (a burst at one spot past STACK_MAX lines: cars turned away together)
+  // each event floats once at its place with its sign: a float of its own, or (a burst at one spot past the column's lines: cars turned away together)
   // added to the newest float of its kind there, so the money still adds up
   assert.ok(floats.every(({ f }) => f), 'no money event dropped');
   for (const { e, f } of floats) {
-    assert.equal(f!.x, e.at!.x); assert.equal(f!.y, e.at!.y);
+    assert.ok(Math.hypot(f!.x - e.at!.x, f!.y - e.at!.y) < 2 * NEAR_PX / (HW * STREET), 'at its place (a column over a float near it)');
     if (e.kind === 'lost') { assert.equal(f!.kind, 'lost'); assert.ok(e.missed! > 0 && e.amount === 0, 'a lost golfer is not charged'); assert.equal(f!.note, LOST_WHY[e.why!]); }
     else assert.equal(f!.kind, 'in');
   }
   const uniq = [...new Set(floats.map(({ f }) => f!))], own = floats.filter(({ f }) => f!.n === 1).length;
-  assert.ok(own > 0.8 * floats.length, `most events have a float of their own (${own} of ${floats.length})`);
+  const ownIn = floats.filter(({ e, f }) => e.kind !== 'lost' && f!.n === 1).length, nIn = floats.filter(({ e }) => e.kind !== 'lost').length;
+  t.diagnostic(`own floats: ${own} of ${floats.length}; the sales ${ownIn} of ${nIn} (the rest added to a float at their spot: bursts of cars turned away)`);
+  assert.ok(ownIn > 0.8 * nIn && own > 0.5 * floats.length, `most events have a float of their own (${own} of ${floats.length}, the sales ${ownIn} of ${nIn})`);
   const sum = (k: string) => uniq.filter(f => f.kind === k).reduce((a, f) => a + f.amount, 0);
   assert.ok(Math.abs(sum('in') - booked) < 1e-6, `the green floats add up to the takings booked ($${booked.toFixed(0)})`);
   assert.ok(Math.abs(sum('lost') - events.reduce((a, e) => a + (e.missed ?? 0), 0)) < 1e-6, 'the red floats add up to the sales lost');
