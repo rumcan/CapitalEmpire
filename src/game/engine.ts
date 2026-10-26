@@ -4850,7 +4850,7 @@ export class Game {
   private groundTs = -1; private groundCut = false;
   /** the tile set families' coverage step (T145, painted-tiles.ts nextStep: from the CSS zoom with hysteresis; saved with the camera) */
   tileStep: number | null = null;
-  /** the dev readout of the tile set families (T145; App.tsx under ?dev): the camera's step and band, and for each tile set family a surface
+  /** the dev readout of the tile set families (T145; App.tsx TilesPanel, shown with the Developer panel: ?debug, F3 or the gear menu): the camera's step and band, and for each tile set family a surface
    *  wears, its set, the tiles in view and how many whole tiles the view shows; under the pointer, the course surface there and, when it wears
    *  a tile set, the tile and its grid cell */
   tilesReadout() {
