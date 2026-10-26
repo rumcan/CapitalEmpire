@@ -78,11 +78,16 @@ function cats(){const c=[...new Set(all.filter(s=>!removed[s.id]).map(s=>s.cat))
 /** the picture the game draws for a sprite (an old building's new-art stand-in) and its drawn scale: its scale times the stand-in's fill, never past
  *  its pixels (the game draws it at its cap there: newart.ts lookOf) */
 const drawnOf=s=>s.drawn?{id:s.drawn.id,quad:s.drawn.quad,k:Math.min(s.scale*s.drawn.fill,s.drawn.cap)}:{id:s.id,quad:s.quad,k:s.scale*(s.carScale||1)};
+// a card's picture is a WebP sized for the card (T144, server.mjs sized()): its long side at the next size step above what the card shows in device px
+// (the steps of scripts/assets/review/thumb-size.mjs, repeated here: this script cannot import), so the slider reuses the server's cache and the
+// browser never decodes more pixels than the card shows. The picture is loaded only while its card is near the view (near, below): data-src holds the URL
+const thumbStep=px=>!(px>0)?128:([128,256,384,512].find(s=>s>=px)??512);
+const pic=(id,px,a)=>{const i=el('img',a);i.dataset.src='/thumb/'+encodeURIComponent(id)+'?s='+thumbStep(px*(devicePixelRatio||1));return i;};
 function stage(s){
   // the trimmed picture at the size the game draws it: (quad) x drawn scale x K
   const d=drawnOf(s),q=d.quad, w=(q[2]-q[0])*d.k*K, h=(q[3]-q[1])*d.k*K;
   // a lot decal (a leaf drift, a stain) is drawn over grass, so its edges show as they do in the yard
-  return el('div',{className:'stage'+(s.kind==='decal'?' grass':'')},el('img',{src:'/thumb/'+encodeURIComponent(d.id),loading:'lazy',style:`width:${w}px;height:${h}px`}));
+  return el('div',{className:'stage'+(s.kind==='decal'?' grass':'')},pic(d.id,Math.max(w,h),{loading:'lazy',style:`width:${w}px;height:${h}px`}));
 }
 /** past its own picture's pixels (the studio allows it, server.mjs /api/scale soft): a Rebuild packs a bigger picture from the source, a little softer. A stand-in's pixels are its stand-ins' (size-report.ts native) */
 const softOf=s=>s.native!=null&&s.scale>s.native*1.001;
@@ -99,8 +104,12 @@ function sizeLine(s){
 const more=el('div',{className:'more',style:'flex-basis:100%;height:1px'});
 let shown=[],shownAt=0;
 const io=new IntersectionObserver(es=>{if(es.some(e=>e.isIntersecting))addBatch();});
-function draw(){$('#grid').innerHTML='';shown=all.filter(s=>!removed[s.id]&&(!cat||s.cat===cat)&&(!q||(s.id+' '+s.name).toLowerCase().includes(q)));shownAt=0;addBatch();}
-function addBatch(){const g=$('#grid'),end=Math.min(shown.length,shownAt+200);for(;shownAt<end;shownAt++)g.append(card(shown[shownAt]));
+// a card's pictures are loaded when the card comes within a few screens of the view and dropped again when it scrolls past them (T144): each <img>
+// keeps its size with no src, so the layout and the scroll position hold, and the browser holds only the near cards' pictures decoded (a picture it
+// loads again is a 304 from the server, server.mjs /thumb). The root is the Library's own scroller, so the margin is measured in its screens
+const near=new IntersectionObserver(es=>{for(const e of es)for(const i of e.target.querySelectorAll('img[data-src]')){if(e.isIntersecting){if(!i.hasAttribute('src'))i.src=i.dataset.src;}else if(i.hasAttribute('src'))i.removeAttribute('src');}},{root:$('#v-lib'),rootMargin:'250% 0px'});
+function draw(){near.disconnect();$('#grid').innerHTML='';shown=all.filter(s=>!removed[s.id]&&(!cat||s.cat===cat)&&(!q||(s.id+' '+s.name).toLowerCase().includes(q)));shownAt=0;addBatch();}
+function addBatch(){const g=$('#grid'),end=Math.min(shown.length,shownAt+200);for(;shownAt<end;shownAt++){const c=card(shown[shownAt]);g.append(c);near.observe(c);}
  io.disconnect();if(shownAt<shown.length){g.append(more);io.observe(more);}else more.remove();
  $('#count').textContent=`${shown.length} shown`;}
 function card(s){
@@ -113,7 +122,7 @@ function card(s){
   const fixed=s.cat==='Lots'||s.kind==='walker';
   // a four-view building: its four views in a row under the picture (the same /thumb route; sizing it sizes all four); a car (s.model): every picture
   // of the model (its facings, their views, its eight headings), all sized together (T143)
-  const views=s.views?el('div',{className:'views'},...s.views.map(v=>el('img',{src:'/thumb/'+encodeURIComponent(v.id),title:`${v.dir} · ${v.id}`,loading:'lazy'}))):null;
+  const views=s.views?el('div',{className:'views'},...s.views.map(v=>pic(v.id,52,{title:`${v.dir} · ${v.id}`,loading:'lazy'}))):null;
   return el('div',{className:'card'},stage(s),views,el('div',{className:'meta'},el('div',{className:'name',textContent:s.name}),el('div',{className:'cat',textContent:s.cat+' · '+s.kind}),el('div',{className:'id',textContent:s.model?`${s.model} · ${s.views.length} pictures, one size`:s.id}),s.dupes?.length?el('div',{className:'cat',textContent:`also: ${s.dupes.length} ${s.dupes.length===1?'copy':'copies'}`,title:s.dupes.join(', ')}):null),
    fixed||s.kind==='decal'?null:sizeLine(s),
    fixed||s.kind==='decal'||!softOf(s)?null:el('div',{className:'size warn',textContent:'past its pixels: Rebuild upscales it (a little softer until higher-res art)'}),
