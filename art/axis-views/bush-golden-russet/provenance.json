@@ -1,0 +1,599 @@
+{
+  "id": "landscape:bush-golden-russet",
+  "slug": "bush-golden-russet",
+  "details": "ONE irregular autumn deciduousshrub, broadpaintedgoldenochre/orange/russet leaves, threeunequalfoliagelobes and smallvisiblebranchgap, 1mhigh 1.6mwide. Silhouette clearlydifferentfromroundboxwood. Realplantstructure notcolourfilteredball. No pot,planter,fallenleafcarpet,soilplatformorflowers.",
+  "kind": "bush",
+  "category": "landscaping",
+  "requiresLibraryRegistration": true,
+  "source": "art/theme-consistency/references/horizontal-road-parking-landscaping-v1.png",
+  "output": "art/theme-consistency/generated/landscaping/bush-golden-russet-screen-axis-4views-v1.png",
+  "provenance": "art/theme-consistency/generated/landscaping/bush-golden-russet-screen-axis-4views-v1.provenance.json",
+  "references": [
+    "art/theme-consistency/references/theme-authoritative.png",
+    "art/theme-consistency/references/horizontal-road-parking-landscaping-v1.png"
+  ],
+  "prompt": "DeriveONE standalone placeablelandscapingobject matchingthereferenceworld. Image1 THEMEONLY: detailedstylized hand-painted MapleFalls townart, broadconfidentpainted leafclusters, readableminiatureform, warmupperrightlateafternoonlight andsoftlowerleftshade, nophotographicnoise. Image2 APPROVEDdesigncontextandCAMERASCALE: smallgardenbesidehead-onparkinggarage. Isolateonlyspecifiedplant/bed concept, no garageorotherassets. ONE irregular autumn deciduousshrub, broadpaintedgoldenochre/orange/russet leaves, threeunequalfoliagelobes and smallvisiblebranchgap, 1mhigh 1.6mwide. Silhouette clearlydifferentfromroundboxwood. Realplantstructure notcolourfilteredball. No pot,planter,fallenleafcarpet,soilplatformorflowers.\nReturn one SQUARE trueRGBAtransparentPNG strict2x2equalcells, fourgenuinerigidrotations ofSAMEasymmetricobject rowmajor N FRONT towardSCREENDOWN, E RIGHTSIDE, S BACK towardSCREENUP, W LEFTSIDE. Consistent elevatedorthographic35degreecamera withroof/topfoliagevisible, no perspective, maintainexactsamephysicalsize andshapethroughallviews. Rectangularborders/groundcontacts useSCREENHORIZONTALandVERTICALaxes forhorizontalroadlayout, notusualdiagonalisometricfootprint. Rotateplantstructure/border, keepSUNfixedSCREENUPPERRIGHT; nevermirrorlight orduplicatefrontasback. Everycutoutwith15percenttransparentpaddinginsideeachquarter, no crosscelloverlap. NOTascene orsurfacegrasspainting. No otherplants,outsidegroundpatch,grassapron,greyfloor,broadshadowdisc,backdrop,checkerboard,UI,words,caption,frame,people orgarlands. Intrinsicflowerbedsoil/borderispartofasset; barebushhasfoliage/stemsonly. Onlytinycontactocclusion.",
+  "generator": "built-in image_gen",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-be7207cf-e9a0-4c9d-9d1d-63ccd0b8b7a5.png",
+  "date": "2026-10-26",
+  "viewSet": "screen-axis-4",
+  "viewsOrder": [
+    "N",
+    "E",
+    "S",
+    "W"
+  ],
+  "lighting": "upper-right toward lower-left",
+  "integrationStatus": "pending-not-full-eight-view-source",
+  "alphaReview": "pending",
+  "processing": "Native generator output copied byte-for-byte. Crops pending; no resize or pixel repaint.",
+  "screenAxisExport": {
+    "schema": 1,
+    "id": "landscape:bush-golden-russet",
+    "viewSet": "screen-axis-4",
+    "viewsOrder": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "sheet": "art/theme-consistency/generated/landscaping/bush-golden-russet-screen-axis-4views-v1.png",
+    "sheetSha256": "de2d0ce3ef4a1fe723e593307f5453a7304feec38a101fecaf325896b7383dc9",
+    "nativeSheetPixels": [
+      1254,
+      1254
+    ],
+    "processing": "Exact source-rectangle pixel crops only. No resize, alpha repaint, recolour, transform or mirroring. Alpha thresholds are diagnostic only; not a visual approval or alpha edit.",
+    "rectangleSelection": {
+      "file": "art/theme-consistency/generated/landscaping/bush-golden-russet-screen-axis-4views-v1.source-rects-v2.json",
+      "review": {
+        "reviewer": "horizontal_crop_pack",
+        "method": "Manually inspected complete source; opaque component extents show unequal-sized column arrangement. Nonoverlapping rectangle crops retain complete plants/beds; native pixels unchanged.",
+        "evidence": "art/theme-consistency/generated/landscaping/bush-golden-russet-screen-axis-4views-v1.png",
+        "acceptanceScope": "Rectangle selection only; not genuine physical-rotation or game-integration approval."
+      }
+    },
+    "fileContractStatus": "passed-with-alpha-residue-warnings",
+    "visualReviewStatus": "pending",
+    "integrationStatus": "pending-not-full-eight-view-source",
+    "axisLineCounts": {
+      "vertical": 1249,
+      "horizontal": 51,
+      "verticalAtLeast16": 955,
+      "horizontalAtLeast16": 0,
+      "verticalAtLeast128": 912,
+      "horizontalAtLeast128": 0
+    },
+    "issues": [],
+    "warnings": [
+      "N: cell edge contains only low-alpha1..15 residue",
+      "E: cell edge contains only low-alpha1..15 residue",
+      "S: corner contains only low-alpha1..15 residue",
+      "S: cell edge contains only low-alpha1..15 residue",
+      "W: cell edge contains only low-alpha1..15 residue"
+    ],
+    "views": {
+      "N": {
+        "sourceRect": {
+          "left": 0,
+          "top": 0,
+          "width": 775,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/landscaping/bush-golden-russet-screen-axis-4views-v1-crops-v2/N.native.png",
+        "nativeSha256": "d83c672e3668cfb2a200ad063455e50eb3f3919d62b5958fadfdb8e58d993f88",
+        "pixelSha256": "97df5bf01ee1f5a3eb9c30811b9c31338475815934c33e5035566404a89cb73e",
+        "trimmedPixelSha256": "cf4918debffdd48d261d62fc6002a199770ae398c0c9254a62a7e7680c3ef187",
+        "nativePixels": [
+          775,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 248600,
+          "transparent": 237325,
+          "transparentFraction": 0.488398415393322,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 0,
+            "top": 4,
+            "width": 775,
+            "height": 623
+          },
+          "padding": {
+            "left": 0,
+            "top": 4,
+            "right": 0,
+            "bottom": 0
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 237325,
+            "oneTo15": 26215,
+            "sixteenTo127": 6542,
+            "one28To254": 215607,
+            "opaque255": 236
+          },
+          "edge": {
+            "nonzero": 55,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 222385,
+            "transparent": 263540,
+            "transparentFraction": 0.5423470700210938,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 39,
+              "top": 79,
+              "width": 717,
+              "height": 505
+            },
+            "padding": {
+              "left": 39,
+              "top": 79,
+              "right": 19,
+              "bottom": 43
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 215843,
+            "transparent": 270082,
+            "transparentFraction": 0.5558100529917168,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 40,
+              "top": 80,
+              "width": 715,
+              "height": 503
+            },
+            "padding": {
+              "left": 40,
+              "top": 80,
+              "right": 20,
+              "bottom": 44
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 220679,
+          "transparent": 265246,
+          "transparentFraction": 0.545857899881669,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 39,
+            "top": 79,
+            "width": 717,
+            "height": 504
+          },
+          "padding": {
+            "left": 39,
+            "top": 79,
+            "right": 19,
+            "bottom": 44
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      },
+      "E": {
+        "sourceRect": {
+          "left": 775,
+          "top": 0,
+          "width": 479,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/landscaping/bush-golden-russet-screen-axis-4views-v1-crops-v2/E.native.png",
+        "nativeSha256": "32f37c43cfc0da2e4dee9e4a55d87a296d96469e19ea878635f8c5ff6f104d2d",
+        "pixelSha256": "f682d737e426e05e6c965c4e71d89918988c6d62fd31d2fe324edd086df9ff42",
+        "trimmedPixelSha256": "15fc56b426087991ac5739ad426366e22c2ab156f5057e17a9be6eaedf0d66bc",
+        "nativePixels": [
+          479,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 157875,
+          "transparent": 142458,
+          "transparentFraction": 0.4743334898262928,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 0,
+            "top": 14,
+            "width": 451,
+            "height": 613
+          },
+          "padding": {
+            "left": 0,
+            "top": 14,
+            "right": 28,
+            "bottom": 0
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 142458,
+            "oneTo15": 16557,
+            "sixteenTo127": 4145,
+            "one28To254": 137006,
+            "opaque255": 167
+          },
+          "edge": {
+            "nonzero": 86,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 141318,
+            "transparent": 159015,
+            "transparentFraction": 0.529462296850496,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 33,
+              "top": 74,
+              "width": 407,
+              "height": 510
+            },
+            "padding": {
+              "left": 33,
+              "top": 74,
+              "right": 39,
+              "bottom": 43
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 137173,
+            "transparent": 163160,
+            "transparentFraction": 0.5432636440218025,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 34,
+              "top": 75,
+              "width": 405,
+              "height": 508
+            },
+            "padding": {
+              "left": 34,
+              "top": 75,
+              "right": 40,
+              "bottom": 44
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 140218,
+          "transparent": 160115,
+          "transparentFraction": 0.5331248980298535,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 34,
+            "top": 74,
+            "width": 406,
+            "height": 510
+          },
+          "padding": {
+            "left": 34,
+            "top": 74,
+            "right": 39,
+            "bottom": 43
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      },
+      "S": {
+        "sourceRect": {
+          "left": 0,
+          "top": 627,
+          "width": 770,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/landscaping/bush-golden-russet-screen-axis-4views-v1-crops-v2/S.native.png",
+        "nativeSha256": "06bbfa775bfd7bdbced927003beb0f9c0c40750878f0e3e4cfad18e8aded1665",
+        "pixelSha256": "75b71317b3dae41bea8f2745b6d454cc1b21bbd024447870d1c4196f5e083208",
+        "trimmedPixelSha256": "75b71317b3dae41bea8f2745b6d454cc1b21bbd024447870d1c4196f5e083208",
+        "nativePixels": [
+          770,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 242573,
+          "transparent": 240217,
+          "transparentFraction": 0.49756001574183395,
+          "cornersAlpha": [
+            0,
+            0,
+            1,
+            0
+          ],
+          "bounds": {
+            "left": 0,
+            "top": 0,
+            "width": 770,
+            "height": 627
+          },
+          "padding": {
+            "left": 0,
+            "top": 0,
+            "right": 0,
+            "bottom": 0
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 240217,
+            "oneTo15": 30381,
+            "sixteenTo127": 6161,
+            "one28To254": 205780,
+            "opaque255": 251
+          },
+          "edge": {
+            "nonzero": 52,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 212192,
+            "transparent": 270598,
+            "transparentFraction": 0.5604879968516332,
+            "cornersAlpha": [
+              0,
+              0,
+              1,
+              0
+            ],
+            "bounds": {
+              "left": 42,
+              "top": 24,
+              "width": 706,
+              "height": 494
+            },
+            "padding": {
+              "left": 42,
+              "top": 24,
+              "right": 22,
+              "bottom": 109
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 206031,
+            "transparent": 276759,
+            "transparentFraction": 0.5732492387994781,
+            "cornersAlpha": [
+              0,
+              0,
+              1,
+              0
+            ],
+            "bounds": {
+              "left": 43,
+              "top": 25,
+              "width": 704,
+              "height": 492
+            },
+            "padding": {
+              "left": 43,
+              "top": 25,
+              "right": 23,
+              "bottom": 110
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 210593,
+          "transparent": 272197,
+          "transparentFraction": 0.5637999958574121,
+          "cornersAlpha": [
+            0,
+            0,
+            1,
+            0
+          ],
+          "bounds": {
+            "left": 42,
+            "top": 25,
+            "width": 706,
+            "height": 493
+          },
+          "padding": {
+            "left": 42,
+            "top": 25,
+            "right": 22,
+            "bottom": 109
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      },
+      "W": {
+        "sourceRect": {
+          "left": 770,
+          "top": 627,
+          "width": 484,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/landscaping/bush-golden-russet-screen-axis-4views-v1-crops-v2/W.native.png",
+        "nativeSha256": "28e5e0561d434b74aa0acbd2fd8a64cb9694bee97903e89c2072c6ec78512e50",
+        "pixelSha256": "118ea6de72c72fb539072b6d37935600b47e91eb79c1388549f31f73d20b0d7b",
+        "trimmedPixelSha256": "3588aca4d8fca23e8b932bdb751301f129a9b89a417d09ff8226dd724f2844f1",
+        "nativePixels": [
+          484,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 162050,
+          "transparent": 141418,
+          "transparentFraction": 0.46600630049955843,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 0,
+            "top": 0,
+            "width": 466,
+            "height": 609
+          },
+          "padding": {
+            "left": 0,
+            "top": 0,
+            "right": 18,
+            "bottom": 18
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 141418,
+            "oneTo15": 14844,
+            "sixteenTo127": 4134,
+            "one28To254": 142920,
+            "opaque255": 152
+          },
+          "edge": {
+            "nonzero": 11,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 147206,
+            "transparent": 156262,
+            "transparentFraction": 0.514920848326677,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 23,
+              "top": 45,
+              "width": 423,
+              "height": 499
+            },
+            "padding": {
+              "left": 23,
+              "top": 45,
+              "right": 38,
+              "bottom": 83
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 143072,
+            "transparent": 160396,
+            "transparentFraction": 0.5285433719535503,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 24,
+              "top": 46,
+              "width": 421,
+              "height": 497
+            },
+            "padding": {
+              "left": 24,
+              "top": 46,
+              "right": 39,
+              "bottom": 84
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 146152,
+          "transparent": 157316,
+          "transparentFraction": 0.5183940316606693,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 23,
+            "top": 45,
+            "width": 423,
+            "height": 499
+          },
+          "padding": {
+            "left": 23,
+            "top": 45,
+            "right": 38,
+            "bottom": 83
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      }
+    }
+  },
+  "visualReviewStatus": "pending"
+}

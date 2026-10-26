@@ -331,6 +331,9 @@ export const BRUSH_PRESETS: { kind: BrushKind; name: string; r: number; style: O
   { kind: 'path', name: 'Cart path', r: 1, style: clampStyle({ ...DEFAULT_STYLE, tex: S('path', 'asphalt'), border: 0 }) },
 ];
 
+/** the textures the Course tool's brushes lay (fills and borders): the ground workers make them ahead when the tool opens (T168) */
+export function brushTextures(): string[] { return [...new Set(BRUSH_PRESETS.flatMap(b => [b.style.tex, ...(b.style.border > 0 ? [b.style.btex] : [])]))]; }
+
 const r3 = (v: number) => Math.round(v * 1000) / 1000;
 
 /** a painted area as its save tuple (scale, angle, radius and strength to 3 decimals) */

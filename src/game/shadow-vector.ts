@@ -114,6 +114,9 @@ export function triangulate(pts: P[], outer: number[], holes: number[][]): numbe
 /** the shear the shapes were drafted for (cast-shadow.json's sun): a cast ring is triangulated and rimmed where it lies under this sun */
 export const DRAFT_SHEAR = castShear(CAST);
 
+/** the extra soft rim every contact (blob) shadow gets, display px (the owner, 2026-10-26: "make the blob shadows more blurry across the
+ *  board. like 2px") */
+export const BLOB_BLUR = 2;
 /** add one entry's triangles to the growing mesh: its contact rings, then its cast rings (outer rings and holes by winding), each filled and
  *  rimmed outward with its feather; far: the far copy (each ring cut to FAR_POINTS, no holes, no rim) */
 function addEntry(e: VectorShadow, V: number[], I: number[], mirror: boolean, far = false) {
@@ -132,7 +135,7 @@ function addEntry(e: VectorShadow, V: number[], I: number[], mirror: boolean, fa
     const hMax = Math.max(1, ...R.flatMap(r => r.map(v => v.h)));
     // contact: its rim from its size (a post's spot stays tight, a building's base soft)
     let size = 0; if (!kind) { const xs = R.flatMap(r => r.map(v => v.p[0])), ys = R.flatMap(r => r.map(v => v.p[1])); size = Math.min(Math.max(...xs) - Math.min(...xs), 2 * (Math.max(...ys) - Math.min(...ys))); }
-    const fc = e.fc ?? Math.max(1.5, Math.min(8, size * 0.12));
+    const fc = (e.fc ?? Math.max(1.5, Math.min(8, size * 0.12))) + BLOB_BLUR;
     const pts: P[] = [], base = V.length / VERTEX_FLOATS, ringIdx: number[][] = [];
     const vertex = (x: number, y: number, h: number, core: number, edge: number) => { V.push(x, y, h, kind, core, edge, 0, 0); };
     for (const r of R) {

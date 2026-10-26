@@ -1,0 +1,598 @@
+{
+  "id": "town:pharmacy",
+  "slug": "town-pharmacy",
+  "identity": "town-pharmacy-4views-v2.png",
+  "details": "Identity: Maple Pharmacy, TWO storeys buff brick/cream trim, dark flat roof with brick chimney and small HVAC, burgundy-red paneled shopfront, PHARMACY sign, central entrance between lit display windows, hanging mortar sign at front corner. Rear has small service stairs/door, no pharmacy shopfront. Preserve roof asymmetry under physical turns.",
+  "category": "buildings",
+  "viewOrder": [
+    "N",
+    "E",
+    "S",
+    "W"
+  ],
+  "source": "art/theme-consistency/generated/buildings/town-pharmacy-4views-v2.png",
+  "output": "art/theme-consistency/generated/buildings/town-pharmacy-screen-axis-4views-v1.png",
+  "provenance": "art/theme-consistency/generated/buildings/town-pharmacy-screen-axis-4views-v1.provenance.json",
+  "references": [
+    "art/theme-consistency/references/theme-authoritative.png",
+    "art/theme-consistency/generated/buildings/town-pharmacy-4views-v2.png",
+    "art/theme-consistency/references/road-diagonal-head-on-side-template-v1.png"
+  ],
+  "prompt": "Create a NEW missing orientation set of ONE existing game building. Image 1 is THEME ONLY: match its detailed hand-painted stylized miniature town materials, warm autumn dusk palette, soft confident painted forms and warm lit windows. Image 2 is DESIGN IDENTITY: preserve this exact building's footprint proportions, storeys, roof type, chimney/vent arrangement, facade materials and entrance design. Image 3 is CAMERA GEOMETRY ONLY, never copy its colours/lines. IMPORTANT this is NOT the usual diagonal three-quarter isometric turntable. We need the intermediate 45-degree WORLD headings for roads that are perfectly HORIZONTAL or VERTICAL ON SCREEN. Fixed orthographic elevated camera about35degrees above horizontal, NO perspective. Every primary wall-footing line is exactly HORIZONTAL in screen coordinates; footprint depth goes straight vertically on the image. Roof is visible from above, with roof edges horizontal/vertical; vertical walls stay vertical. NO sloping +/-26.565degree footprint edges. No glimpse of a second major wall at a diagonal corner. Reconstruct true rigid quarter turns, never mirror lighting or reuse a front as a rear.\nReturn one SQUARE RGBA PNG with real transparent background and strict2x2 equal independent cells; no captions. ROW-MAJOR VIEW ORDER: TOP LEFT=N, entrance facade A seen exactly head-on, door faces screen DOWN; TOP RIGHT=E, building's physical right-hand side D seen exactly square-on, entrance facade at the right-hand end out of sight; BOTTOM LEFT=S, real REAR wall C seen exactly head-on, front entrance hidden on far side; BOTTOM RIGHT=W, building's physical left-hand side B seen square-on, front at left end out of sight. All four show matching elevation/scale and the SAME physical roof/vents. Building stays upright, not flat2D elevation: roofs still visible, natural elevated game view. Keep all geometry parallel to horizontal/vertical road layout. Use fixed SCREEN UPPER RIGHT sunlight, darker LOWER LEFT contact, enough dusk daylight for readable materials. All outside silhouette pixels transparent, NO grey floor, NO street, terrain, lawn, tiled square, vignette, backdrop, checkerboard, scene, parked cars, separate props or people. Only integral doorsteps/porch allowed; miniscule contact occlusion, no broad ground shadow cloud. Leave at least15percent transparent padding on every side of EACH quadrant; fit whole roof, steps and all details well inside cell. No overlap across centre gutters, no frame, labels or guide graphics. Four real distinct facades, never two duplicated images.\nIdentity: Maple Pharmacy, TWO storeys buff brick/cream trim, dark flat roof with brick chimney and small HVAC, burgundy-red paneled shopfront, PHARMACY sign, central entrance between lit display windows, hanging mortar sign at front corner. Rear has small service stairs/door, no pharmacy shopfront. Preserve roof asymmetry under physical turns.",
+  "generator": "built-in image_gen",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-5a32e893-8b03-492f-a1ca-bc143e0b1dbf.png",
+  "date": "2026-10-26",
+  "viewSet": "screen-axis-4",
+  "viewsOrder": [
+    "N",
+    "E",
+    "S",
+    "W"
+  ],
+  "lighting": "upper-right toward lower-left",
+  "integrationStatus": "pending-not-full-eight-view-source",
+  "alphaReview": "pending",
+  "processing": "Native generator output copied byte-for-byte. Crops pending; no resize or pixel repaint.",
+  "screenAxisExport": {
+    "schema": 1,
+    "id": "town:pharmacy",
+    "viewSet": "screen-axis-4",
+    "viewsOrder": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "sheet": "art/theme-consistency/generated/buildings/town-pharmacy-screen-axis-4views-v1.png",
+    "sheetSha256": "402946cbe67c10667fb596ec4fa773e7cca1e61f648a56096df919fdc78da901",
+    "nativeSheetPixels": [
+      1254,
+      1254
+    ],
+    "processing": "Exact half-cell pixel crops only. No resize, alpha repaint, recolour, transform or mirroring. Alpha thresholds are diagnostic only; not a visual approval or alpha edit.",
+    "fileContractStatus": "passed-with-alpha-residue-warnings",
+    "visualReviewStatus": "pending",
+    "integrationStatus": "pending-not-full-eight-view-source",
+    "axisLineCounts": {
+      "vertical": 45,
+      "horizontal": 25,
+      "verticalAtLeast16": 0,
+      "horizontalAtLeast16": 0,
+      "verticalAtLeast128": 0,
+      "horizontalAtLeast128": 0
+    },
+    "issues": [],
+    "warnings": [
+      "Only low-alpha1..15 residue on middle cell boundaries; exact pixels preserved",
+      "N: corner contains only low-alpha1..15 residue",
+      "N: cell edge contains only low-alpha1..15 residue",
+      "E: cell edge contains only low-alpha1..15 residue",
+      "S: corner contains only low-alpha1..15 residue",
+      "S: cell edge contains only low-alpha1..15 residue",
+      "W: cell edge contains only low-alpha1..15 residue"
+    ],
+    "views": {
+      "N": {
+        "sourceRect": {
+          "left": 0,
+          "top": 0,
+          "width": 627,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/buildings/town-pharmacy-screen-axis-4views-v1/N.native.png",
+        "nativeSha256": "93a028b984af39382553ed29fc9e0198722b69965af4fa183f5c68866d480018",
+        "pixelSha256": "5559ba96e66801bb20f82a3401c1f9aea6c3dcf26dc19ff796319cd4887bf46c",
+        "trimmedPixelSha256": "5559ba96e66801bb20f82a3401c1f9aea6c3dcf26dc19ff796319cd4887bf46c",
+        "nativePixels": [
+          627,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 190987,
+          "transparent": 202142,
+          "transparentFraction": 0.5141874550084069,
+          "cornersAlpha": [
+            1,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 0,
+            "top": 0,
+            "width": 627,
+            "height": 627
+          },
+          "padding": {
+            "left": 0,
+            "top": 0,
+            "right": 0,
+            "bottom": 0
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 202142,
+            "oneTo15": 9928,
+            "sixteenTo127": 1646,
+            "one28To254": 179083,
+            "opaque255": 330
+          },
+          "edge": {
+            "nonzero": 28,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 181059,
+            "transparent": 212070,
+            "transparentFraction": 0.5394412521080867,
+            "cornersAlpha": [
+              1,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 105,
+              "top": 64,
+              "width": 441,
+              "height": 508
+            },
+            "padding": {
+              "left": 105,
+              "top": 64,
+              "right": 81,
+              "bottom": 55
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 179413,
+            "transparent": 213716,
+            "transparentFraction": 0.5436281729406887,
+            "cornersAlpha": [
+              1,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 106,
+              "top": 64,
+              "width": 439,
+              "height": 507
+            },
+            "padding": {
+              "left": 106,
+              "top": 64,
+              "right": 82,
+              "bottom": 56
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 180852,
+          "transparent": 212277,
+          "transparentFraction": 0.5399677968300481,
+          "cornersAlpha": [
+            1,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 105,
+            "top": 64,
+            "width": 441,
+            "height": 508
+          },
+          "padding": {
+            "left": 105,
+            "top": 64,
+            "right": 81,
+            "bottom": 55
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      },
+      "E": {
+        "sourceRect": {
+          "left": 627,
+          "top": 0,
+          "width": 627,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/buildings/town-pharmacy-screen-axis-4views-v1/E.native.png",
+        "nativeSha256": "19538271f56794ec0c3cd77aec62636902cc5d3e4176388a7694562ce2b821c6",
+        "pixelSha256": "634b50eb29a912e0ae132ce2751bf06896f5181b580c24c3cdf6f99db5254284",
+        "trimmedPixelSha256": "c3a36e9cbaeeec3418b96f7d044d72a55d000126ef96de08e697c3f95cde036d",
+        "nativePixels": [
+          627,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 188947,
+          "transparent": 204182,
+          "transparentFraction": 0.519376591398752,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 0,
+            "top": 23,
+            "width": 611,
+            "height": 604
+          },
+          "padding": {
+            "left": 0,
+            "top": 23,
+            "right": 16,
+            "bottom": 0
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 204182,
+            "oneTo15": 8660,
+            "sixteenTo127": 1511,
+            "one28To254": 178564,
+            "opaque255": 212
+          },
+          "edge": {
+            "nonzero": 16,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 180287,
+            "transparent": 212842,
+            "transparentFraction": 0.541404984114629,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 94,
+              "top": 78,
+              "width": 438,
+              "height": 488
+            },
+            "padding": {
+              "left": 94,
+              "top": 78,
+              "right": 95,
+              "bottom": 61
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 178776,
+            "transparent": 214353,
+            "transparentFraction": 0.545248506215517,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 95,
+              "top": 79,
+              "width": 436,
+              "height": 487
+            },
+            "padding": {
+              "left": 95,
+              "top": 79,
+              "right": 96,
+              "bottom": 61
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 180063,
+          "transparent": 213066,
+          "transparentFraction": 0.5419747716398434,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 94,
+            "top": 78,
+            "width": 438,
+            "height": 488
+          },
+          "padding": {
+            "left": 94,
+            "top": 78,
+            "right": 95,
+            "bottom": 61
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      },
+      "S": {
+        "sourceRect": {
+          "left": 0,
+          "top": 627,
+          "width": 627,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/buildings/town-pharmacy-screen-axis-4views-v1/S.native.png",
+        "nativeSha256": "e76793e4e0080c14b383ab14e1e33666d791ea5eee952f587c2429efd02c21df",
+        "pixelSha256": "bdee6524aec137e94997c92832beb91521bfada7fe041dae62547e389cb0ad0e",
+        "trimmedPixelSha256": "bdee6524aec137e94997c92832beb91521bfada7fe041dae62547e389cb0ad0e",
+        "nativePixels": [
+          627,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 192042,
+          "transparent": 201087,
+          "transparentFraction": 0.5115038575124196,
+          "cornersAlpha": [
+            0,
+            0,
+            1,
+            0
+          ],
+          "bounds": {
+            "left": 0,
+            "top": 0,
+            "width": 627,
+            "height": 627
+          },
+          "padding": {
+            "left": 0,
+            "top": 0,
+            "right": 0,
+            "bottom": 0
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 201087,
+            "oneTo15": 14263,
+            "sixteenTo127": 1646,
+            "one28To254": 175933,
+            "opaque255": 200
+          },
+          "edge": {
+            "nonzero": 34,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 177779,
+            "transparent": 215350,
+            "transparentFraction": 0.5477845694415828,
+            "cornersAlpha": [
+              0,
+              0,
+              1,
+              0
+            ],
+            "bounds": {
+              "left": 131,
+              "top": 49,
+              "width": 413,
+              "height": 512
+            },
+            "padding": {
+              "left": 131,
+              "top": 49,
+              "right": 83,
+              "bottom": 66
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 176133,
+            "transparent": 216996,
+            "transparentFraction": 0.5519714902741848,
+            "cornersAlpha": [
+              0,
+              0,
+              1,
+              0
+            ],
+            "bounds": {
+              "left": 132,
+              "top": 50,
+              "width": 412,
+              "height": 493
+            },
+            "padding": {
+              "left": 132,
+              "top": 50,
+              "right": 83,
+              "bottom": 84
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 177253,
+          "transparent": 215876,
+          "transparentFraction": 0.5491225526481129,
+          "cornersAlpha": [
+            0,
+            0,
+            1,
+            0
+          ],
+          "bounds": {
+            "left": 131,
+            "top": 49,
+            "width": 413,
+            "height": 511
+          },
+          "padding": {
+            "left": 131,
+            "top": 49,
+            "right": 83,
+            "bottom": 67
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      },
+      "W": {
+        "sourceRect": {
+          "left": 627,
+          "top": 627,
+          "width": 627,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/buildings/town-pharmacy-screen-axis-4views-v1/W.native.png",
+        "nativeSha256": "aa674f498c9c2d4aaa9946464be55242498dc95f495a0a249e9854e92d4fb99a",
+        "pixelSha256": "f17107f74f78241e8f9d313274636436639c21d7ecee7a19e6e0cb5e79dd7903",
+        "trimmedPixelSha256": "42f4829ce11091e577df0d91d3ca9e680343a9c1fe7b4bba0bae6c41e5a46a78",
+        "nativePixels": [
+          627,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 184908,
+          "transparent": 208221,
+          "transparentFraction": 0.5296505727127737,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 0,
+            "top": 0,
+            "width": 607,
+            "height": 627
+          },
+          "padding": {
+            "left": 0,
+            "top": 0,
+            "right": 20,
+            "bottom": 0
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 208221,
+            "oneTo15": 14552,
+            "sixteenTo127": 1488,
+            "one28To254": 168617,
+            "opaque255": 251
+          },
+          "edge": {
+            "nonzero": 31,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 170356,
+            "transparent": 222773,
+            "transparentFraction": 0.5666664122972358,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 99,
+              "top": 53,
+              "width": 401,
+              "height": 507
+            },
+            "padding": {
+              "left": 99,
+              "top": 53,
+              "right": 127,
+              "bottom": 67
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 168868,
+            "transparent": 224261,
+            "transparentFraction": 0.5704514294290169,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 99,
+              "top": 54,
+              "width": 400,
+              "height": 474
+            },
+            "padding": {
+              "left": 99,
+              "top": 54,
+              "right": 128,
+              "bottom": 99
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 169919,
+          "transparent": 223210,
+          "transparentFraction": 0.5677780067102656,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 99,
+            "top": 54,
+            "width": 401,
+            "height": 475
+          },
+          "padding": {
+            "left": 99,
+            "top": 54,
+            "right": 127,
+            "bottom": 98
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      }
+    }
+  },
+  "visualReviewStatus": "pending"
+}

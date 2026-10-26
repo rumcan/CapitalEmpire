@@ -5,7 +5,8 @@
 //   ?newart: the preview: buildings AND trees are drawn as new art (the owner, 2026-10-23: "see what the game looks like with only the new corrected images").
 //   ?oldart: the old pictures of the buildings without their four views, for comparison only.
 // Only the picture changes: the props keep their ids, footprints, collisions and saves, so none of this alters a game.
-//   new art: the four-view buildings (views-library.ts: VIEW_ART and view:*) and the generated trees (trees-library.ts: gen:tree-*)
+//   new art: the four-view buildings (views-library.ts: VIEW_ART and view:*), the generated trees (trees-library.ts: gen:tree-*) and the screen-axis
+//   pictures (axis-library.ts: the new car parks, plants and props, and the shops' and houses' extra headings)
 //   sizes (the owner, 2026-10-24: "Some are even placed so big they pixelate"): no picture is drawn above the pixels its atlas rect holds at the
 //   closest zoom (sizes.ts PIXEL_LIMIT), whatever asked for the size (a stand-in filling a bigger footprint, the player's resize, a studio size
 //   above what the atlas holds): it is drawn at its limit instead. Only the drawing: the footprint, collisions and saves keep the prop's scale.
@@ -13,6 +14,7 @@
 import { LIBRARY } from './library';
 import { isBuilding } from './mirror';
 import { BUILDING_IDS, VIEW_ART, unmirror } from './views-library';
+import { AXIS_HEADING } from './axis-library';
 import { OWNER_SCALE } from './lots/scales';
 import { CAR_SCALE } from './ext/car-art';
 import { PIXEL_LIMIT, PIXEL_SLACK } from './sizes';
@@ -30,7 +32,8 @@ export const NEW_BUILDINGS_ONLY = !OLD_ART;
  *  (tiles) when that is not the prop's own (a stand-in is centred on its building's footprint) */
 export interface Look { item: number; flip: boolean; scale: number; hidden?: boolean; x?: number; y?: number }
 
-const isNew = (id: string) => VIEW_ART.has(id) || id.startsWith('view:') || id.startsWith('gen:tree-');
+/** new art: the four-view buildings, their views, the generated trees and the screen-axis pictures (axis-library.ts, T154: the car parks and plants are new subjects) */
+const isNew = (id: string) => VIEW_ART.has(id) || id.startsWith('view:') || id.startsWith('gen:tree-') || AXIS_HEADING[id] !== undefined;
 /** a baked lot (kind 'lot': a whole house lot as one picture, the studio's Lots presets) is never swapped for a building: it is baked from the
  *  library's current art (the studio's Rebuild), and one building stretched over a whole lot would not be a house lot */
 const BAKED_LOT = (it: LibItem) => it.kind === 'lot';

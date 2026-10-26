@@ -1,6 +1,6 @@
 import { CHUNK_H, CHUNK_W, HH, HW, MAP, MID_K, PLAN_H, PLAN_W, mulberry, tileOf } from './iso';
 import { SK, add, linePath, mul, offsetPolyline, perp, roundPieces, roundedPath, sub, vlen, type BBox, type Decal, type Feature, type FxView, type LineRec, type Pt, type RoadNetwork, type SlabRun } from './network';
-import { MOSAIC_TILES, canvas, ctx2d, type C2D, type Cnv, type Textures, type TexName, type TiledPick } from './textures';
+import { MOSAIC_TILES, PLACEHOLDER, canvas, ctx2d, type C2D, type Cnv, type Textures, type TexName, type TiledPick } from './textures';
 import { fbm, maskFrom, smooth } from './canvas2d';
 import { EAGER_PHOTO } from './grass-art';
 import { PAINT_TEXES, isPaintPhoto, type PaintTex } from './paint';
@@ -28,7 +28,7 @@ import { HEIGHT_LIGHT_STRENGTH, HL_MASK, LUMA_SIGMA_PER_L, heightLightGrid, heig
 import { PaintedGround, type LayLevel } from './painted-ground';
 import { coversMap } from './painted-families';
 import { bandOf, cellsIn, snappedCell, tileIndex, tileKey, tilePermutation, tileSize } from './painted-tiles';
-import { WOODLAND, lawnSlot, lawnTex } from './painted-surfaces';
+import { WOODLAND, lawnTexFor } from './painted-surfaces';
 import { BLEND_WAVES, blendAlpha, blendNoise, trimLru } from './painted-grass-lod';
 import { CasterStore, COURSE_GRASSY, COURSE_WATER, SHADOW_DIR, debugImage, grassyTex, influence, livingMasks, livingQueryBox, livingRes, livingSignature, waterTex, type Box, type InfluenceGrid, type LivingMasks, type RoadPiece, type WaterLine } from './living-ground';
 /** the bytes of painted compositions a worker keeps (a chunk's look is about 3 MB at the closest zoom; the bake in progress keeps all of its own) */
@@ -334,8 +334,10 @@ export class GroundPainter {
       // a painted texture: its look's mean colour (painted-families.ts lookColour, from the registry: the same in every worker)
       const pm = this.tex.paintedMean(name);
       if (pm) { const r = parseInt(pm.slice(1, 3), 16), g = parseInt(pm.slice(3, 5), 16), b = parseInt(pm.slice(5, 7), 16), y = 0.3 * r + 0.59 * g + 0.11 * b, lift = (v: number) => Math.round(Math.min(255, (v * 0.8 + y * 0.2) * 1.05)); c = `rgb(${lift(r)},${lift(g)},${lift(b)})`; this.planCols.set(name, c); return c; }
-      const img = name === 'lotAsphalt' ? this.tex.mosaicFor('lot', 0.035) : EAGER_PHOTO.has(name) && !GROUND_PHOTO.has(name) ? this.tex.mosaicFor(name, 0.035) : this.tex.mips.has(name + '@0.035') ? this.tex.image(name as TexName, 0.035) : null;
-      if (!img) return PAINT_COL.get(name) ?? '#808080';
+      // (a photo or a procedural texture a light boot has not made yet, T157: its Paint swatch, as a lazy photo's: never made for a colour; the
+      // game's lazy ones, T166, are made for it: the same colour as ever)
+      const img = name === 'lotAsphalt' ? this.tex.mosaicFor('lot', 0.035) : EAGER_PHOTO.has(name) && !GROUND_PHOTO.has(name) ? ((this.tex.makeForColour ? this.tex.built(name) : this.tex.mosaics.has(name)) ? this.tex.mosaicFor(name, 0.035) : null) : (this.tex.makeForColour ? this.tex.hasImage(name, 0.035) : this.tex.mips.has(name + '@0.035')) ? this.tex.image(name as TexName, 0.035) : null;
+      if (!img || img === PLACEHOLDER) return PAINT_COL.get(name) ?? '#808080'; // (not kept: a texture being made, T168)
       const d = ctx2d(img).getImageData(0, 0, img.width, img.height).data, n = d.length / 4;
       let r = 0, g = 0, b = 0; for (let k = 0; k < d.length; k += 4) { r += d[k]; g += d[k + 1]; b += d[k + 2]; }
       const y = (0.3 * r + 0.59 * g + 0.11 * b) / n, lift = (s: number) => Math.round(Math.min(255, (s / n * 0.8 + y * 0.2) * 1.05));
@@ -566,7 +568,7 @@ export class GroundPainter {
     else { base = { buf: canvas(c.W, c.H), cells: new Uint8Array(cw * chh), bytes: c.W * c.H * 4 }; this.composed.set(ck, base); this.composedBytes += base.bytes; }
     this.bakeKeys.add(ck); this.tilesUsed = true;
     for (const [k, v] of this.composed) { if (this.composedBytes <= COMPOSED_BYTES) break; if (this.bakeKeys.has(k)) continue; this.composed.delete(k); this.composedBytes -= v.bytes; }
-    const band = bandOf(ts), lv = tp.fam.levels[band], urls = tp.urls[band], [w, h] = tileSize(lv, ts), perm = tilePermutation(tp.fam.id, band);
+    const band = bandOf(ts), lv = tp.fam.levels[band], urls = tp.urls[band], [w, h] = tileSize(lv, ts), perm = tilePermutation(tp.fam.id, band, urls.length);
     // the chunk's origin in its raster px (a whole number at every cache level) and its raster scale (px per world px)
     const L = c.L, ox = -c.M.e, oy = -c.M.f;
     return this.fillCells(base, want, (g, rect) => {
@@ -1127,7 +1129,8 @@ export class GroundPainter {
       // with the painted art on, every town lawn wears one of the painted lawns (painted-surfaces.ts lawnSlot: picked by where it lies, so
       // neighbouring lots and blocks differ, and it stays put), else its preset's own painted look, else the map grass's; with the Grass
       // setting 'photo', the preset's picture as before
-      const slot = this.tex.paintedOn ? lawnSlot(p.pts, this.tex.surfaces.lawns) : -1, lt = slot >= 0 ? lawnTex(slot) : '';
+      // T155: a lot's lawn wears its look state's lawn (painted-surfaces.ts lawnTexFor: built the fairway, upgraded the putting green, declined the rough)
+      const lt = this.tex.paintedOn ? lawnTexFor(p.lawn, p.pts, this.tex.surfaces) : '';
       const t = lt && this.tex.isPainted(lt) ? lt : this.tex.isPainted(p.tex) || !this.tex.isPainted('grass') ? p.tex : 'grass';
       const lw = p.lawn!, pb = quadBox(p.pts), r = [Math.max(pb[0], box[0]) - 1, Math.max(pb[1], box[1]) - 1, Math.min(pb[2], box[2]) + 1, Math.min(pb[3], box[3]) + 1];
       if (r[2] <= r[0] || r[3] <= r[1] || !isPaintPhoto(p.tex) || !this.tex.has(t)) continue;
@@ -1153,7 +1156,7 @@ export class GroundPainter {
     if (painted) style = painted;
     else if (isPaintPhoto(t)) { if (this.tex.has(t)) { const src = this.tex.sourceFor(t, L * sx); style = src ? this.groundPattern(g, src.img, G, src.period) : this.groundPattern(g, this.tex.mosaicFor(t, L * sx), G, this.tex.periodOf(t)); } }
     else if (t === 'asphaltDark' || t === 'lotAsphalt') style = this.groundPattern(g, this.tex.mosaicFor(t === 'lotAsphalt' ? 'lot' : 'base', L * sx), G);
-    else if (this.tex.mips.has(t + '@' + L)) style = this.screenPattern(g, t as TexName, L, X0, Y0, Minv, G);
+    else if (this.tex.hasImage(t, L)) style = this.screenPattern(g, t as TexName, L, X0, Y0, Minv, G);
     g.fillStyle = style; g.fillRect(r[0], r[1], r[2] - r[0], r[3] - r[1]);
     if (m.s < 1) {
       const nm = this.noiseMask(r, m, L);
@@ -2132,8 +2135,9 @@ export class GroundPainter {
     if ((!this.grassStrength && !this.grassHeat) || !this.grassCells.size) return;
     for (const p of patches) {
       // Fresh seed/sod keeps its original grow-in texture and timing.
-      // a hand-painted tile set (T145) is laid as authored: no condition picture mixed inside it
-      if (!grassSurface(p.tex, !!p.lawn, surfaceOfTex(p.tex as PaintTex)) || p.tex === 'golfSod' || this.tex.paintedOf(p.tex)?.tiled) continue;
+      // a hand-painted tile set (T145) is laid as authored: no condition picture mixed inside it; the Grass panel's health colours (a view the
+      // player turns on, not art) still show over it, now that the fairway, greens and rough wear tile sets (T153)
+      if (!grassSurface(p.tex, !!p.lawn, surfaceOfTex(p.tex as PaintTex)) || p.tex === 'golfSod' || (!this.grassHeat && this.tex.paintedOf(p.tex)?.tiled)) continue;
       const b = quadBox(p.pts); ctx.save(); ctx.clip(polyPath(p.pts));
       for (let y = Math.max(0, Math.floor(Math.max(b[1], box[1]) / 4) * 4); y < Math.min(MAP, b[3], box[3]); y += 4) for (let x = Math.max(0, Math.floor(Math.max(b[0], box[0]) / 4) * 4); x < Math.min(MAP, b[2], box[2]); x += 4) {
         const v = this.grassCells.get(y / 4 * (MAP / 4) + x / 4); if (!v) continue;

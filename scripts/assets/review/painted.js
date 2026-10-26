@@ -71,7 +71,7 @@ function draw() {
   for (const p of D.presets) { const o = lookOf('preset:' + p.id); item('preset:' + p.id, p.name, o.look, o.own ? familyLabel(o.look) : o.follow ? `follows ${D.surfaces.find(s => s.key === o.follow)?.name.split(' (')[0]}` : 'photo'); }
   editor();
 }
-const familyLabel = l => { const f = FAMILIES.find(x => x.id === l.family); return f ? `${f.name}${f.tiled ? ' (tile set)' : ''}${l.version ? ' ' + l.version : ''}${l.scale !== 1 ? ` ×${l.scale}` : ''}` : l.family; };
+const familyLabel = l => { const f = FAMILIES.find(x => x.id === l.family); return f ? `${f.name}${f.tiled ? (f.provisional ? ' (tile set, provisional)' : ' (tile set)') : ''}${l.version ? ' ' + l.version : ''}${l.scale !== 1 ? ` ×${l.scale}` : ''}` : l.family; };
 /** a tile set family's sets (T145): its revisions, near to far */
 const tiledSets = f => LEVEL_NAMES.map(l => f.pick[l]).join(', ');
 
@@ -96,7 +96,7 @@ function editor() {
     const r = resolveFamily({ family: f.id, version: f.id === look.family ? look.version : null, scale: 1 });
     const c = el('div', { className: 'card', style: `min-width:0;width:236px;cursor:pointer;${f.id === look.family ? 'border-color:var(--gold);box-shadow:0 0 0 1px var(--gold)' : ''}`, title: `${f.name}: ${LEVEL_NAMES.map(l => `${l} ${r[l].version} (${Math.round(f.coverage[l])} m)`).join(', ')}` },
       el('div', { style: 'display:flex;gap:2px;background:#0d0f08' }, ...LEVEL_NAMES.map(l => el('div', { style: 'position:relative' }, el('img', { src: art(r[l].file, 96), width: 76, height: 76, style: 'display:block' }), el('span', { style: 'position:absolute;left:2px;bottom:1px;font-size:10px;color:#fff;text-shadow:0 0 2px #000', textContent: `${l} ${Math.round(f.coverage[l])} m` })))),
-      el('div', { className: 'meta', style: 'padding:4px 8px' }, el('div', { className: 'name', textContent: f.name }), el('div', { className: 'cat', textContent: `${KIND_NAME[f.kind] ?? f.kind}${f.legacy ? ' · first draft' : ''} · ${f.tiled ? 'hand-painted tile sets ' + tiledSets(f) : familyVersions(f).join(', ')}` })));
+      el('div', { className: 'meta', style: 'padding:4px 8px' }, el('div', { className: 'name', textContent: f.name }), el('div', { className: 'cat', textContent: `${KIND_NAME[f.kind] ?? f.kind}${f.legacy ? ' · first draft' : ''} · ${f.tiled ? (f.provisional ? 'PROVISIONAL tile sets ' : 'hand-painted tile sets ') + tiledSets(f) : familyVersions(f).join(', ')}` })));
     c.onclick = () => change({ family: f.id, version: null });
     return c;
   }));
@@ -134,12 +134,14 @@ function editor() {
  *  one world size a tile takes (T150: its native pixels at the band's anchor zoom, on a DPR 1 screen) */
 async function tiledPreview(f) {
   const t = TILED_FAMILIES.find(x => x.id === f.id); if (!t) return;
-  side.append(hint(`A hand-painted tile set (${t.materialId}, selection ${t.revision}): three independently authored sets, four whole tiles each, laid exactly as authored. No version, scale, tint or tone: the camera picks the set; each set has one world size, drawn at its native pixels at its anchor zoom and smaller as the camera zooms out, never larger.`));
+  if (t.owner) side.append(el('div', { className: 'hint', style: 'color:var(--gold);font-weight:600', textContent: `PROVISIONAL (T162, T165): made from supplied paintings (${t.owner}), one a level, shipped as they were supplied except their outer edges, healed once in the asset step (scripts/assets/tile-heal.mjs) so each tiles with itself; one tile a level repeats (accepted for now). A level may instead be the raw provisional tiles healed with one shared strip (its status says why).` }));
+  else if (t.provisional) side.append(el('div', { className: 'hint', style: 'color:var(--gold);font-weight:600', textContent: `PROVISIONAL (T153): the art session's newest raw tiles, shipped before its handoff (no canonical selection or visual decision yet; seams not repaired). Re-running scripts/assets/prep-painted-tiles.mjs once READY-MATERIALS lists ${t.materialId} switches it to the accepted selection.` }));
+  side.append(hint(`A hand-painted tile set (${t.materialId}, ${t.provisional ? 'provisional tiles' : 'selection'} ${t.revision}): three independently authored sets, ${t.levels.near.tiles.length === 1 ? 'one whole tile' : `${t.levels.near.tiles.length} whole tiles`} each, laid exactly as authored. No version, scale, tint or tone: the camera picks the set; each set has one world size, drawn at its native pixels at its anchor zoom and smaller as the camera zooms out, never larger.`));
   const box = el('div', { style: 'display:flex;flex-direction:column;gap:12px;margin-top:10px' }); side.append(box);
   for (const band of LEVEL_NAMES) {
-    const lv = t.levels[band], perm = tilePermutation(t.id, band), k = 0.2, w = Math.round(lv.native[0] * k), h = Math.round(lv.native[1] * k);
+    const lv = t.levels[band], perm = tilePermutation(t.id, band, lv.tiles.length), k = 0.2, w = Math.round(lv.native[0] * k), h = Math.round(lv.native[1] * k);
     const c = el('canvas', { width: 2 * w, height: 2 * h, style: 'display:block;max-width:100%' }), g = c.getContext('2d');
-    box.append(el('div', {}, el('div', { className: 'hint', textContent: `${band}: ${lv.revision} · ${lv.native.join(' x ')} px · tiles ${lv.tiles.map(x => x.id).join(', ')} · one tile ${Math.round(tileMetres(lv, TILE_BANDS.indexOf(band)))} m wide (native at zoom ${(ANCHORS[band] * 100).toFixed(1)}% on a DPR 1 screen)` }), c));
+    box.append(el('div', {}, el('div', { className: 'hint', textContent: `${band}: ${lv.revision} · ${lv.native.join(' x ')} px · tiles ${lv.tiles.map(x => x.id).join(', ')} · one tile ${Math.round(tileMetres(lv, TILE_BANDS.indexOf(band)))} m wide (native at zoom ${(ANCHORS[band] * 100).toFixed(2)}% on a DPR 1 screen)${lv.status ? ` · ${lv.status}` : ''}` }), c));
     for (let iy = 0; iy < 2; iy++) for (let ix = 0; ix < 2; ix++) {
       const img = await pic(lv.tiles[tileIndex(perm, ix, iy)].file); if (img) g.drawImage(img, ix * w, iy * h, w, h);
     }

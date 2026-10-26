@@ -13,6 +13,7 @@
     "assets:scales": "node scripts/assets/prep-scales.mjs",
     "lots:freeze": "node scripts/assets/freeze-lot-presets.mjs",
     "lots:check": "node scripts/assets/freeze-lot-presets.mjs --check",
+    "lots:exam": "node scripts/lots/exam.mjs",
     "typecheck": "tsc --noEmit -p .",
     "bench": "node scripts/perf/bench.mjs",
     "worker:test": "bash scripts/worker/run.sh \"npm test\"",

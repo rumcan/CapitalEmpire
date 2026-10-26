@@ -37,6 +37,8 @@ interface Level { key: number; promise: Promise<LevelData | null>; data: LevelDa
 
 export class AtlasGL {
   readonly plan: AtlasPlan;
+  /** decoded page levels kept for the next loads (KEEP_LEVELS; a light boot's fewer, T157) */
+  keepLevels = KEEP_LEVELS;
   readonly pages: AtlasPages;
   private low: WebGLTexture; private tiers: WebGLTexture[]; private cells: WebGLTexture;
   private levels = new Map<number, Level>();
@@ -61,12 +63,14 @@ export class AtlasGL {
     this.flushLookup();
   }
 
-  /** plan the atlas for this screen, allocate it and load the low set (every page from mip lowBase down) before the first frame */
-  static async create(gl: WebGL2RenderingContext, o: { dpr: number; pages: number; size: number; levels: number; finest: number; source: AtlasSource }) {
+  /** plan the atlas for this screen, allocate it and load the low set (every page from mip lowBase down) before the first frame; budget: a
+   *  light boot's own (compressed bytes, T157: the lot lab's), else GAME-PLAN's for the screen */
+  static async create(gl: WebGL2RenderingContext, o: { dpr: number; pages: number; size: number; levels: number; finest: number; source: AtlasSource; budget?: number; keep?: number }) {
     const fmt = o.source.format, maxLayers = gl.getParameter(gl.MAX_ARRAY_TEXTURE_LAYERS) as number;
     // the budget is GAME-PLAN's in compressed bytes; an RGBA8 fallback keeps the same cells resident at 4x the bytes
-    const plan = planAtlas({ pages: o.pages, size: o.size, levels: o.levels, bpp: fmt.bpp, budget: atlasBudget(o.dpr) * fmt.bpp, finest: o.finest, maxLayers });
+    const plan = planAtlas({ pages: o.pages, size: o.size, levels: o.levels, bpp: fmt.bpp, budget: (o.budget ?? atlasBudget(o.dpr)) * fmt.bpp, finest: o.finest, maxLayers });
     const a = new AtlasGL(gl, o.source, plan);
+    if (o.keep !== undefined) a.keepLevels = o.keep;
     await a.loadLow();
     // a compressed source missing pages (a build without its KTX2 files) is no use: the caller falls back to the WebP pages
     if (a.stats.failed && fmt.compressed) { a.dispose(); throw new Error(`atlas: ${a.stats.failed} ${fmt.name} page levels failed to load`); }
@@ -149,9 +153,9 @@ export class AtlasGL {
   private pumpDecodes() { while (this.decoding < DECODES && this.decodeQueue.length) { this.decoding++; this.decodeQueue.shift()!(); } }
   /** drop decoded levels no load is waiting for, beyond the few kept */
   private trimLevels() {
-    if (this.levels.size <= KEEP_LEVELS) return;
+    if (this.levels.size <= this.keepLevels) return;
     const idle = [...this.levels.values()].filter(l => l.refs === 0 && l.data).sort((a, b) => a.last - b.last);
-    for (const l of idle.slice(0, this.levels.size - KEEP_LEVELS)) { l.data!.close(); this.levels.delete(l.key); }
+    for (const l of idle.slice(0, this.levels.size - this.keepLevels)) { l.data!.close(); this.levels.delete(l.key); }
   }
 
   /** this frame's wants: update the residency and start the loads it asks for */

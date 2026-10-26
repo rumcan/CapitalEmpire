@@ -36,13 +36,17 @@ function db(): Promise<IDBDatabase> { return new Promise((res, rej) => { const r
 function hash(s: string) { let h = 0x811c9dc5; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193); } return (h >>> 0).toString(36); }
 export const cacheKey = (art: unknown) => TEX_VERSION + ':' + hash(JSON.stringify(art));
 interface Stored { names: string[]; blobs: Blob[]; curb: CurbColours; stampAngle: number }
-export async function loadCached(key: string): Promise<TexSnapshot | null> {
+/** the cached pack under key, or null; `keep` (a light boot's, T157) leaves out the pictures it refuses before they are decoded */
+export async function loadCached(key: string, keep?: (name: string) => boolean): Promise<TexSnapshot | null> {
   try {
     const d = await db(), v = await new Promise<Stored | undefined>((res, rej) => { const q = d.transaction('t').objectStore('t').get(key); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); });
     if (!v) return null;
-    return { names: v.names, bitmaps: await Promise.all(v.blobs.map(b => createImageBitmap(b))), curb: v.curb, stampAngle: v.stampAngle };
+    const ix = v.names.map((_, i) => i).filter(i => !keep || keep(v.names[i]!));
+    return { names: ix.map(i => v.names[i]!), bitmaps: await Promise.all(ix.map(i => createImageBitmap(v.blobs[i]!))), curb: v.curb, stampAngle: v.stampAngle };
   } catch { return null; }
 }
+/** T166: the cached pack deleted (the game no longer keeps one: boot.ts readTextureCache); a lab open beside it only finds none and builds */
+export function dropCache() { try { indexedDB.deleteDatabase('capital-empire-textures'); } catch { /* none */ } }
 export async function saveCached(key: string, t: Textures) {
   try {
     const e = entries(t), blobs = await Promise.all(e.map(x => x[1].convertToBlob({ type: 'image/png' })));

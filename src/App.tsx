@@ -7,7 +7,7 @@ import { CLASS, CLASSES, COURSE_TYPES, FLAG_COST, JUNCTIONS, KEY_CLASSES, RING_L
 import { SIGNAL_TIER_YEAR, SPEED_TIER_YEAR } from './game/event/round';
 import { GREEN_CAP, MIN_GREEN } from './game/sim/signals';
 import { isLights, junctionCorners, slipRule } from './game/junctions';
-import { PLANNER_Z, ZOOM_MAX, ZOOM_MIN } from './game/iso';
+import { PLANNER_Z, ZOOM_STEP, clampZoom } from './game/iso';
 import { GROWTH_OPTIONS } from './game/lots/town';
 import { shortName } from './game/ext/names';
 import { parkPanelControls, busHowTo, tollHowTo } from './game/ext/progressive-ui';
@@ -21,6 +21,7 @@ import { BUSINESS_IMAGE } from './game/business/art';
 import { BUSINESS_THUMBS } from './game/business-library';
 import type { SurgeView } from './game/event/surge';
 import { BUILD } from './game/save';
+import { bootFor } from './game/dev/lab-boot';
 import { PaintPanel } from './PaintPanel';
 import { CoursePanel } from './ui/course/CoursePanel';
 import { BuildingsPanel } from './ui/course/BuildingsPanel';
@@ -73,6 +74,9 @@ export default function App() {
   const overlayRef = useRef<HTMLCanvasElement>(null);
   const [fatal, setFatal] = useState('');
   const [game, setGame] = useState<Game | null>(null);
+  /** what the engine boots with (T157): the lot lab's light boot under ?lotlab (dev builds), else the game's; the lab draws no HUD or minimap */
+  const [boot] = useState(() => bootFor(location.search, import.meta.env.DEV));
+  const lab = boot.kind === 'lab';
   const [, bump] = useReducer((x: number) => x + 1, 0);
   const [help, setHelp] = useState(false);
   /** the settings menu (Save, New game, Empty map) open under its gear */
@@ -119,7 +123,7 @@ export default function App() {
   useEffect(() => {
     const canvas = overlayRef.current!;
     let g: Game;
-    try { g = new Game(canvasRef.current!, canvas); } catch (e) { setFatal((e as Error).message); return; }
+    try { g = new Game(canvasRef.current!, canvas, boot); } catch (e) { setFatal((e as Error).message); return; }
     // debug and headless-screenshot hooks
     Object.assign(window as unknown as Record<string, unknown>, { __game: g, __CLASSES: CLASSES });
     // the road builder's stress test (dev only): __roadFuzz(seed, steps) drives the road tools at random and reports what broke (on the live
@@ -201,7 +205,7 @@ export default function App() {
         </div>
       )}
 
-      {game && game.ready && (
+      {game && game.ready && !lab && (
         <>
           <div ref={topBar} className="pointer-events-none absolute left-0 right-0 top-0 z-30 flex flex-wrap items-start justify-between gap-2 p-3">
             <div className="pointer-events-auto glass flex items-center gap-2 px-4 py-2 min-[1600px]:gap-3">
@@ -255,8 +259,8 @@ export default function App() {
                 {game.night.mode === 'clock' && game.clockNight() > 0 && <button className="chip" onClick={() => game.skipNight()} title="Skip this night: daylight until the next one (how often nights come: gear menu, Night)"><Icon name="sun" size={16} /> Skip night</button>}
               </div>
               <div className="glass flex items-center gap-1 px-2 py-1.5">
-                <button className="btn-icon" onClick={() => game.zoomAt(Math.max(ZOOM_MIN, game.cam.z / 1.25))} title="Zoom out (-)"><Icon name="zoom-out" size={20} /></button>
-                <button className="btn-icon" onClick={() => game.zoomAt(Math.min(ZOOM_MAX, game.cam.z * 1.25))} title="Zoom in (+)"><Icon name="zoom-in" size={20} /></button>
+                <button className="btn-icon" onClick={() => game.zoomAt(clampZoom(game.cam.z / ZOOM_STEP))} title="Zoom out (-)"><Icon name="zoom-out" size={20} /></button>
+                <button className="btn-icon" onClick={() => game.zoomAt(clampZoom(game.cam.z * ZOOM_STEP))} title="Zoom in (+)"><Icon name="zoom-in" size={20} /></button>
               </div>
               <button className={`btn ${game.grassPanel ? 'on' : ''}`} onClick={() => game.toggleGrassPanel()} title="Inspect and maintain course and town grass">Grass</button>
               <div className="relative">
@@ -532,10 +536,10 @@ function TilesPanel({ game }: { game: Game }) {
     <div className="absolute bottom-[10.5rem] right-3 z-20 w-72 glass p-2 text-[11px] tabular-nums" data-testid="tiles-readout">
       <div className="flex justify-between"><span className="font-semibold">Painted tiles · {r.band.toUpperCase()}</span><span>zoom {(r.zoom * 100).toFixed(2)}% · dpr {r.dpr}</span></div>
       <div className={r.scale > 1.0005 ? 'text-amber-300' : 'text-slate-300'} data-testid="tiles-scale">anchor {(r.anchor * 100).toFixed(2)}% · drawn {r.scale.toFixed(3)}x native</div>
-      <div className="text-slate-400">band shows {(r.zRange[0] * 100).toFixed(2)}-{(r.zRange[1] * 100).toFixed(2)}% · rev {r.revision}</div>
+      <div className="text-slate-400">band shows {(r.zRange[0] * 100).toFixed(2)}-{(r.zRange[1] * 100).toFixed(2)}% · near until {(r.nearUntil * 100).toFixed(2)}% · rev {r.revision}</div>
       {r.fams.map(f => (
         <div key={f.id} className="mt-1">
-          <div className="flex justify-between"><span>{f.materialId} <span className="text-slate-400">({f.surfaces.join(', ')})</span></span><span>{f.set}</span></div>
+          <div className="flex justify-between"><span>{f.materialId} <span className="text-slate-400">({f.surfaces.join(', ')})</span></span><span>{f.provisional && <span className="text-amber-300" data-testid="tiles-provisional">provisional </span>}{f.set}</span></div>
           <div className="flex justify-between text-slate-400"><span>in view: {f.ids.join(' ')}</span><span>{f.cells} cells</span></div>
           <div className="text-slate-300" data-testid="tiles-px">tile {Math.round(f.screenPx)} px on screen (native {f.native[0]}) · {f.across.toFixed(2)} across × {f.down.toFixed(2)} down</div>
         </div>

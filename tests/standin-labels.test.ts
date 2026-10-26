@@ -28,7 +28,8 @@ test('the labels name the building plainly', () => {
   // the owner's example, the church: its four views landed on 2026-10-26 (world-church-44e76535-plain-1-4views-v2), so it is drawn as itself now
   assert.equal(label('variation:world-church-44e76535-plain:1'), null);
   assert.equal(label('golf:clubhouse-shanty'), 'Stand In for Starter clubhouse');
-  assert.equal(label('town:firestation'), 'Stand In for Maple Falls Fire House');
+  // (the fire house, the earlier example here, was removed in the studio: removed.json; the next Rebuild left it out of the library, T154)
+  assert.equal(label('world:watertower'), 'Stand In for Watertower');
   assert.equal(label('world:gazebo'), 'Stand In for Gazebo');
   assert.equal(label('variation:expansion-garage-rear-91bcbe45:1'), 'Stand In for Timber garage');
   // real art and props: none

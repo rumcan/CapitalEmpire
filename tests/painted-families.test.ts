@@ -79,13 +79,16 @@ test('a look is clamped, keyed without its tint and tone, and coloured by its ti
 test('every surface of the game wears a painted family: golf, map, town lawns, living ground, course walls', () => {
   const f = clampSurfaces(file);
   for (const s of SURFACES) assert.ok(f.surfaces[s.key], `${s.key} has a look`);
-  // the golf logic: greens and tees the shortest emerald at the finest scale, the fairway short emerald, the collars medium, the rough sage,
-  // the fescue the hand-painted golden fescue tiles (T145), the bunker raked sand, waste rippled sand, water the hand-painted lake tiles (T145)
+  // the golf logic: tees the shortest emerald at the finest scale; the fescue the hand-painted golden fescue tiles (T145), water the
+  // hand-painted lake tiles (T145); the bunker raked sand. T153 (#327): the fairway, the greens and their fringes, the rough and the waste
+  // areas wear the hand-painted tile sets (fairway, putting green: provisional until their handoff; sand ripples), as authored
   const S = f.surfaces;
-  for (const k of ['green', 'tee', 'fairway']) assert.equal(S[k]!.family, 'emerald-short', k);
-  assert.ok(S.green!.scale <= S.fairway!.scale && S.tee!.scale <= S.fairway!.scale);
-  assert.ok(S.rough!.family.startsWith('sage-')); assert.equal(S.fescue!.family, 'golden-fescue');
-  assert.equal(S.bunker!.family, 'sand-raked'); assert.equal(S.waste!.family, 'sand-ripples'); assert.equal(S.water!.family, 'lake');
+  assert.equal(S.tee!.family, 'emerald-short'); assert.ok(S.tee!.scale < 1, 'tees keep the old green until a family is chosen for them');
+  // T165 (#365): the fairway and the greens wear the art session's paintings, healed to tile (the provisional sets stay as the old option)
+  assert.equal(S.fairway!.family, 'fairway-paint'); assert.equal(S.green!.family, 'putting-green-paint'); assert.equal(S.fringe!.family, 'putting-green-paint');
+  // T162 (#350): the rough and the decrepit lots' lawns (which follow the rough, T155) wear the owner's rough paintings, edges healed to tile
+  assert.equal(S.rough!.family, 'rough-owner'); assert.equal(S.lawnDeclined!.family, 'rough-owner'); assert.equal(S.fescue!.family, 'golden-fescue');
+  assert.equal(S.bunker!.family, 'sand-raked'); assert.equal(S.waste!.family, 'sand-ripples-tiles'); assert.equal(S.water!.family, 'lake');
   // the map's open grass draws golden fescue and rivers draw lake (the owner, 2026-10-26: "all the map water and grass needs to be replaced
   // aswell"; main 003153a)
   assert.equal(S.river!.family, 'lake', 'rivers draw the lake');

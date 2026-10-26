@@ -4,9 +4,12 @@
 import { LIBRARY } from '../library';
 import type { LibItem } from '../types';
 import { VIEW_ART, unmirror } from '../views-library';
+import { AXIS_SETS } from '../axis-library';
 import { OWNER_SCALE } from './scales';
 import { hasLettering } from './lettering';
 import { CAR_DIRECTIONS, CAR_SCALE, carFootprint, carOwnerScale } from '../ext/car-art';
+import { isBuilding } from '../mirror';
+import { roadOf } from './preset-frame';
 
 const BY = new Map<string, LibItem>(LIBRARY.map(i => [i.id, i]));
 /** a footprint relative to its anchor (tiles): x0, y0, x1, y1 */
@@ -28,10 +31,48 @@ export function fourViews(id: string): Views | null {
   return out;
 }
 
+/** the screen-axis pictures (axis-library.ts, T154): each one's set [N, E, S, W] (the front facing screen down, right, up, left: one quarter turn
+ *  each, the same way round as NE, SE, SW, NW) and its place in it */
+const AXIS = new Map<string, Views>();
+for (const views of Object.values(AXIS_SETS)) if (views.every(v => BY.has(v))) views.forEach((v, at) => AXIS.set(v, { views: [...views] as Views['views'], at }));
+/** the screen-axis set of a picture (any of its four), or null */
+export const axisViews = (id: string): Views | null => AXIS.get(id) ?? null;
+const AXIS_OF = new Map<string, string>(Object.entries(AXIS_SETS).flatMap(([s, views]) => views.map(v => [v, s] as const)));
+/** the id a picture's studio size is kept under (its Library card): a four-view building's NE view, a screen-axis picture's subject (T154) */
+export const sizeKey = (id: string): string => AXIS_OF.get(id) ?? fourViews(id)?.views[0] ?? id;
+/** every picture one studio size (sizeKey) draws: the subject's four views (or itself) and its screen-axis set */
+export const sizeViews = (key: string): string[] => [...new Set([...(fourViews(key)?.views ?? [key]), ...(AXIS_SETS[key] ?? [])])];
+
 /** a drawn sprite as a preset stores it: its base id (the NE view for four-view art, else itself) and the view it is turned to (0..3) */
 export function baseView(id: string): { id: string; view: 0 | 1 | 2 | 3 } {
-  const v = fourViews(id);
+  const v = fourViews(id) ?? axisViews(id);
   return v ? { id: v.views[0], view: v.at as 0 | 1 | 2 | 3 } : { id, view: 0 };
+}
+
+// ---------- T154 Phase 2: the eight-heading contract (art/theme-consistency/HANDOVER.md: NE, SE, SW, NW, N, E, S, W)
+/** whether the roads at 45 degrees take the screen-axis views (on; ?oldheadings, or setRoadHeadings(false), draws every building as before) */
+let HEADINGS = !(typeof location !== 'undefined' && /[?&]oldheadings(&|=|$)/.test(location.search ?? ''));
+export function setRoadHeadings(on: boolean): void { HEADINGS = on; }
+export const roadHeadings = () => HEADINGS;
+/** a subject's screen-axis set [N, E, S, W] from any of its pictures (a four-view building's views, the set's own views), or null */
+export function axisSetOf(id: string): readonly [string, string, string, string] | null {
+  const s = AXIS_OF.get(id) ?? fourViews(id)?.views[0] ?? id, set = AXIS_SETS[s];
+  return set && set.every(v => BY.has(v)) ? set : null;
+}
+/** the picture a building with a screen-axis set is drawn in on a road at 45 degrees (an odd road r): the view whose front faces its street (a
+ *  lot's front faces -n: N, screen down, on road 1; E on 3; S on 5; W on 7), turned on by the prop's own view (0: its front to the street), one
+ *  genuine quarter turn a step, never mirrored; null on an axis road, for anything but a building, or for a building with no set (it keeps its
+ *  view: turned) */
+export function roadView(id: string, road: number, view: number): string | null {
+  if (!HEADINGS || road % 2 !== 1) return null;
+  const it = BY.get(baseView(id).id) ?? BY.get(id), set = it && isBuilding(it) ? axisSetOf(id) : null;
+  return set ? set[((((road - 1) / 2 + view) % 4) + 4) % 4]! : null;
+}
+/** the picture a lot's prop is drawn with: on a road at 45 degrees a building with a screen-axis set faces its street (roadView; diag: its footing
+ *  runs along the lot's own axes, its footprint the turned square inside its world box), else its view turned by the frame's quarter (turned) */
+export function drawnView(id: string, f: { q: number; n: { x: number; y: number } }, view: number): { id: string; flip: boolean; diag: boolean } {
+  const rv = roadView(id, roadOf(f.n), view);
+  return rv ? { id: rv, flip: false, diag: true } : { ...turned(id, f.q + view), diag: false };
 }
 
 /** the props whose picture lies along one world axis and is drawn mirrored on the other (as the composer flips them with the lot's axis): wheel
@@ -46,12 +87,12 @@ const LETTER = /_([nsew])(-v2)?$/;
 const NEXT_LETTER: Record<string, string> = { s: 'e', e: 'n', n: 'w', w: 's' };
 
 /** a sprite turned q quarter turns (the lot's facing plus the prop's view; any integer): the sprite and flip it is drawn with. Four-view art
- *  takes its turned view; an eight-way car its turned heading; an old vehicle its turned facing letter when the library has it; a fence its x or
+ *  and a screen-axis set (N, E, S, W) take their turned view; an eight-way car its turned heading; an old vehicle its turned facing letter when the library has it; a fence its x or
  *  y run; an axis prop (AXIS_PROPS) is mirrored on odd turns; anything else, lettered signs among them, keeps its picture unflipped */
 export function turned(id: string, q: number): { id: string; flip: boolean } {
   const t = ((Math.round(q) % 4) + 4) % 4;
   if (!t) return { id, flip: false };
-  const v = fourViews(id);
+  const v = fourViews(id) ?? axisViews(id);
   if (v) return { id: v.views[(v.at + t) % 4], flip: false };
   const car = CAR8.exec(id);
   if (car) { const h = CAR_DIRECTIONS.indexOf(car[2] as typeof CAR_DIRECTIONS[number]), n = `cars:${car[1]}:${CAR_DIRECTIONS[((h - 2 * t) % 8 + 8) % 8]}`; return { id: BY.has(n) ? n : id, flip: false }; }

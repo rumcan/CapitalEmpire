@@ -1,0 +1,596 @@
+{
+  "id": "cars:navy-wood-panel-wagon",
+  "slug": "cars-navy-wood-panel-wagon",
+  "source": "art/theme-consistency/exports/cars/cars-navy-wood-panel-wagon-E.native.png",
+  "details": "1980s navy blue stationwagon with tan woodpaneled sides, chrome roofrack/chromebumpers, silver wheels, angular bonnet and rectangular headlights. Exactlysamevehicle notmodernSUV.",
+  "category": "cars",
+  "output": "art/theme-consistency/generated/cars/cars-navy-wood-panel-wagon-screen-axis-4views-v1.png",
+  "provenance": "art/theme-consistency/generated/cars/cars-navy-wood-panel-wagon-screen-axis-4views-v1.provenance.json",
+  "references": [
+    "art/theme-consistency/references/theme-authoritative.png",
+    "art/theme-consistency/exports/cars/cars-navy-wood-panel-wagon-E.native.png"
+  ],
+  "prompt": "One EMPTY vehicle only. Image1 THEME reference: coherent detailed stylized hand-painted Maple Falls town, warmupper-right lateafternoon/earlydusk light, softpaintedmaterials notphotography. Image2 EXACT vehicle identity, enlarge/reconstructpaintedquality butpreservebodytype,paint,roofrack/bed,wheelbase,windowlayout and trim. 1980s navy blue stationwagon with tan woodpaneled sides, chrome roofrack/chromebumpers, silver wheels, angular bonnet and rectangular headlights. Exactlysamevehicle notmodernSUV.\nGenerate SAME car in FOUR missing SCREEN-AXIS directions, genuine quarterturns underfixedlight. SQUARE transparent RGBA PNG, strict2x2cell sheet, rowmajor TOPLEFT=N nose points exactly SCREEN DOWN, raised orthographic head-onfront with visiblebonnet/roof, frontbumper horizontal; TOPRIGHT=E nose points exactly SCREEN RIGHT, perfectly horizontal longbody sideview fromelevatedcamera, roofvisible, wheelcontactlinehorizontal; BOTTOMLEFT=S nosepoints exactly SCREEN UP, true REAR visible with taillights, frontgrillehidden, bodyextendsvertically; BOTTOMRIGHT=W nose exactly SCREEN LEFT, oppositeside profile, elevatedroofvisible. All cameraelevation35degrees, parallelprojection, NO perspective, NO usualdiagonalisometric±26degree noseheadings. Keepmatchingphysicalscale, narrowfront/rearversuslongside naturally. SunalwaysSCREENUPPERRIGHT, tinycontactshade lowerleft, no mirroring to fakeanotherheading. Emptywindows, nodriver/passengers. Fourindependent completecutouts with15percent transparentmargin percell, centre guttersclear. TRUE ALPHA outsidevehicle, NO greyfloor, shadowdisc, parkingbay, road, scene, label, backdrop, checkerboard or whiteplate. No extraobjects. Headlampswarmwhiteandtaillightsred inphysicalpositions.",
+  "generator": "built-in image_gen",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-c06fe76f-11ad-4e4e-aad6-18dc8196b43c.png",
+  "date": "2026-10-26",
+  "viewSet": "screen-axis-4",
+  "viewsOrder": [
+    "N",
+    "E",
+    "S",
+    "W"
+  ],
+  "lighting": "upper-right toward lower-left",
+  "integrationStatus": "pending-not-full-eight-view-source",
+  "alphaReview": "pending",
+  "processing": "Native generator output copied byte-for-byte. Crops pending; no resize or pixel repaint.",
+  "screenAxisExport": {
+    "schema": 1,
+    "id": "cars:navy-wood-panel-wagon",
+    "viewSet": "screen-axis-4",
+    "viewsOrder": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "sheet": "art/theme-consistency/generated/cars/cars-navy-wood-panel-wagon-screen-axis-4views-v1.png",
+    "sheetSha256": "a9d4dc6f6983370cc57b1a2952fc92f54fc4c020f9db05aca4b4f57ccfc3580a",
+    "nativeSheetPixels": [
+      1254,
+      1254
+    ],
+    "processing": "Exact source-rectangle pixel crops only. No resize, alpha repaint, recolour, transform or mirroring. Alpha thresholds are diagnostic only; not a visual approval or alpha edit.",
+    "rectangleSelection": {
+      "file": "art/theme-consistency/generated/cars/cars-navy-wood-panel-wagon-screen-axis-4views-v1.source-rects-v2.json",
+      "review": {
+        "reviewer": "horizontal_crop_pack",
+        "method": "Manually inspected full source and alpha>=128 connected-component extents. Unequal nonoverlapping regions contain complete subjects. Source pixels unchanged; object and padding not rescaled.",
+        "evidence": "art/theme-consistency/generated/cars/cars-navy-wood-panel-wagon-screen-axis-4views-v1.png",
+        "acceptanceScope": "Source rectangle selection only, not physical-angle or live game approval"
+      }
+    },
+    "fileContractStatus": "passed-with-alpha-residue-warnings",
+    "visualReviewStatus": "pending",
+    "integrationStatus": "pending-not-full-eight-view-source",
+    "axisLineCounts": {
+      "vertical": 964,
+      "horizontal": 4,
+      "verticalAtLeast16": 888,
+      "horizontalAtLeast16": 0,
+      "verticalAtLeast128": 880,
+      "horizontalAtLeast128": 0
+    },
+    "issues": [],
+    "warnings": [
+      "N: cell edge contains only low-alpha1..15 residue",
+      "E: cell edge contains only low-alpha1..15 residue",
+      "S: cell edge contains only low-alpha1..15 residue",
+      "W: cell edge contains only low-alpha1..15 residue"
+    ],
+    "views": {
+      "N": {
+        "sourceRect": {
+          "left": 0,
+          "top": 0,
+          "width": 480,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/cars/cars-navy-wood-panel-wagon-screen-axis-4views-v1-crops-v2/N.native.png",
+        "nativeSha256": "4d8f244b7f677026e5a9bf71cee8a696ad2900dbfcae95e35a431b2c4dbd9c1e",
+        "pixelSha256": "5117b12575be46d9623e8be82325b6cfb54ba44055034f6ea5a306ac5f990af7",
+        "trimmedPixelSha256": "cab72b08e9f92b4b66fb5c2da6c38df0bdffa624523ca0dc74eb5c647649b5bc",
+        "nativePixels": [
+          480,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 134796,
+          "transparent": 166164,
+          "transparentFraction": 0.5521132376395534,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 0,
+            "top": 21,
+            "width": 478,
+            "height": 606
+          },
+          "padding": {
+            "left": 0,
+            "top": 21,
+            "right": 2,
+            "bottom": 0
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 166164,
+            "oneTo15": 7881,
+            "sixteenTo127": 1419,
+            "one28To254": 125367,
+            "opaque255": 129
+          },
+          "edge": {
+            "nonzero": 23,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 126915,
+            "transparent": 174045,
+            "transparentFraction": 0.5782994417862839,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 81,
+              "top": 149,
+              "width": 365,
+              "height": 412
+            },
+            "padding": {
+              "left": 81,
+              "top": 149,
+              "right": 34,
+              "bottom": 66
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 125496,
+            "transparent": 175464,
+            "transparentFraction": 0.5830143540669857,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 82,
+              "top": 150,
+              "width": 363,
+              "height": 410
+            },
+            "padding": {
+              "left": 82,
+              "top": 150,
+              "right": 35,
+              "bottom": 67
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 126595,
+          "transparent": 174365,
+          "transparentFraction": 0.5793627060074429,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 81,
+            "top": 150,
+            "width": 364,
+            "height": 411
+          },
+          "padding": {
+            "left": 81,
+            "top": 150,
+            "right": 35,
+            "bottom": 66
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      },
+      "E": {
+        "sourceRect": {
+          "left": 480,
+          "top": 0,
+          "width": 774,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/cars/cars-navy-wood-panel-wagon-screen-axis-4views-v1-crops-v2/E.native.png",
+        "nativeSha256": "f52cd45132c6fd64f050641966175f33f7e42e1aba38d31ed5ac6378e63a16b1",
+        "pixelSha256": "28224ecec18a4370b423e3c4f7fe27aa167af96ff1a21f26ac4c190a3c83242a",
+        "trimmedPixelSha256": "2be58ffa0cfb1d365840886a4cc0f89b5ffeef75a79d8c74b6a59107b77e87c2",
+        "nativePixels": [
+          774,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 163638,
+          "transparent": 321660,
+          "transparentFraction": 0.6628092429806016,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 1,
+            "top": 29,
+            "width": 759,
+            "height": 598
+          },
+          "padding": {
+            "left": 1,
+            "top": 29,
+            "right": 14,
+            "bottom": 0
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 321660,
+            "oneTo15": 13983,
+            "sixteenTo127": 1795,
+            "one28To254": 147691,
+            "opaque255": 169
+          },
+          "edge": {
+            "nonzero": 3,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 149655,
+            "transparent": 335643,
+            "transparentFraction": 0.6916224670202639,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 46,
+              "top": 235,
+              "width": 703,
+              "height": 291
+            },
+            "padding": {
+              "left": 46,
+              "top": 235,
+              "right": 25,
+              "bottom": 101
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 147860,
+            "transparent": 337438,
+            "transparentFraction": 0.6953212253089854,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 47,
+              "top": 237,
+              "width": 701,
+              "height": 288
+            },
+            "padding": {
+              "left": 47,
+              "top": 237,
+              "right": 26,
+              "bottom": 102
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 149117,
+          "transparent": 336181,
+          "transparentFraction": 0.6927310642120924,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 46,
+            "top": 236,
+            "width": 702,
+            "height": 290
+          },
+          "padding": {
+            "left": 46,
+            "top": 236,
+            "right": 26,
+            "bottom": 101
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      },
+      "S": {
+        "sourceRect": {
+          "left": 0,
+          "top": 627,
+          "width": 480,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/cars/cars-navy-wood-panel-wagon-screen-axis-4views-v1-crops-v2/S.native.png",
+        "nativeSha256": "c494bd88fbc3a7859261021a58c3d3990902f1cc719a0fcfad54a2c618a06b2b",
+        "pixelSha256": "0c81e72504d44688541dbcad555daa714546b7f2771eb38f74e36fe603cf3955",
+        "trimmedPixelSha256": "77d7520e4761d1d2b991ae123d9d1ea644858e624b99c01741bb7e882564b23e",
+        "nativePixels": [
+          480,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 120716,
+          "transparent": 180244,
+          "transparentFraction": 0.5988968633705476,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 43,
+            "top": 1,
+            "width": 437,
+            "height": 626
+          },
+          "padding": {
+            "left": 43,
+            "top": 1,
+            "right": 0,
+            "bottom": 0
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 180244,
+            "oneTo15": 7700,
+            "sixteenTo127": 1332,
+            "one28To254": 111560,
+            "opaque255": 124
+          },
+          "edge": {
+            "nonzero": 64,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 113016,
+            "transparent": 187944,
+            "transparentFraction": 0.624481658692185,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 89,
+              "top": 92,
+              "width": 347,
+              "height": 370
+            },
+            "padding": {
+              "left": 89,
+              "top": 92,
+              "right": 44,
+              "bottom": 165
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 111684,
+            "transparent": 189276,
+            "transparentFraction": 0.6289074960127592,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 90,
+              "top": 94,
+              "width": 345,
+              "height": 367
+            },
+            "padding": {
+              "left": 90,
+              "top": 94,
+              "right": 45,
+              "bottom": 166
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 112707,
+          "transparent": 188253,
+          "transparentFraction": 0.6255083732057416,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 89,
+            "top": 93,
+            "width": 347,
+            "height": 369
+          },
+          "padding": {
+            "left": 89,
+            "top": 93,
+            "right": 44,
+            "bottom": 165
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      },
+      "W": {
+        "sourceRect": {
+          "left": 480,
+          "top": 627,
+          "width": 774,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/cars/cars-navy-wood-panel-wagon-screen-axis-4views-v1-crops-v2/W.native.png",
+        "nativeSha256": "444d8f05d033f238f7c40e34fc0d0d3bc999064f88699eb06cac699d5dd50615",
+        "pixelSha256": "8bd2460ced49fb2d52ff6e3478b3eeed89410632b8ce629f357cb16b4ce1a061",
+        "trimmedPixelSha256": "dddc9d071e94140a432455621dbbf1209b02810d61875735f386d3b2f2b20d29",
+        "nativePixels": [
+          774,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 162565,
+          "transparent": 322733,
+          "transparentFraction": 0.665020255595531,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 0,
+            "top": 1,
+            "width": 771,
+            "height": 626
+          },
+          "padding": {
+            "left": 0,
+            "top": 1,
+            "right": 3,
+            "bottom": 0
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 322733,
+            "oneTo15": 12449,
+            "sixteenTo127": 1841,
+            "one28To254": 148203,
+            "opaque255": 72
+          },
+          "edge": {
+            "nonzero": 22,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 150116,
+            "transparent": 335182,
+            "transparentFraction": 0.6906725352257788,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 31,
+              "top": 162,
+              "width": 702,
+              "height": 296
+            },
+            "padding": {
+              "left": 31,
+              "top": 162,
+              "right": 41,
+              "bottom": 169
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 148275,
+            "transparent": 337023,
+            "transparentFraction": 0.6944660806349913,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 32,
+              "top": 164,
+              "width": 700,
+              "height": 293
+            },
+            "padding": {
+              "left": 32,
+              "top": 164,
+              "right": 42,
+              "bottom": 170
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 149636,
+          "transparent": 335662,
+          "transparentFraction": 0.6916616182222057,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 31,
+            "top": 163,
+            "width": 702,
+            "height": 295
+          },
+          "padding": {
+            "left": 31,
+            "top": 163,
+            "right": 41,
+            "bottom": 169
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      }
+    }
+  },
+  "visualReviewStatus": "pending"
+}

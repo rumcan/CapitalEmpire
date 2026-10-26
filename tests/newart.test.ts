@@ -5,10 +5,12 @@ import assert from 'node:assert/strict';
 import { LIBRARY } from '../src/game/library';
 import { NEW_ART_ONLY, lookOf } from '../src/game/newart';
 import { VIEW_ART } from '../src/game/views-library';
+import { AXIS_HEADING } from '../src/game/axis-library';
 import { TREE_MIRROR } from '../src/game/tree-sun';
 import { PIXEL_LIMIT } from '../src/game/sizes';
 
-const isNew = (id: string) => VIEW_ART.has(id) || id.startsWith('view:') || id.startsWith('gen:tree-');
+// new art (newart.ts isNew): the four-view buildings and their views, the generated trees, the screen-axis pictures (T154: the car parks among them)
+const isNew = (id: string) => VIEW_ART.has(id) || id.startsWith('view:') || id.startsWith('gen:tree-') || AXIS_HEADING[id] !== undefined;
 const span = (i: number) => { const b = LIBRARY[i]!.boxes[0]!; return b.hx + b.hy; };
 
 test('?newart draws only new art for buildings, shops and trees, on the same footprint', () => {

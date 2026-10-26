@@ -7,12 +7,13 @@ import type { VectorShadow } from '../shadow-vector';
 import { DRAFT_SOLID, draftShadow, type DraftHint } from './shadow-draft';
 import { draftItems, draftKindOf, hintOf } from './shadow-draft-items';
 
-interface DraftState { ready: boolean; shapes: Record<string, VectorShadow>; stats: Record<string, number>; error?: string; done: number; total: number }
+/** library: every library id (T164: draft-shadows.mjs drops the file's entries for pictures the library no longer has) */
+interface DraftState { ready: boolean; shapes: Record<string, VectorShadow>; stats: Record<string, number>; library: string[]; error?: string; done: number; total: number }
 const W = window as unknown as { __shadowDraft: DraftState };
 
 export async function startShadowDraft(root: HTMLElement) {
   const q = new URLSearchParams(location.search), only = q.get('only')?.split(',');
-  const st: DraftState = W.__shadowDraft = { ready: false, shapes: {}, stats: {}, done: 0, total: 0 };
+  const st: DraftState = W.__shadowDraft = { ready: false, shapes: {}, stats: {}, library: LIBRARY.map(i => i.id), done: 0, total: 0 };
   root.textContent = 'drafting shadows...';
   try {
     const items = draftItems().filter(i => !only || only.includes(LIBRARY[i]!.id));

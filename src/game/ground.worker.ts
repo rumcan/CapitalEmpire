@@ -5,18 +5,22 @@ import { RoadNetwork } from './network';
 import type { FromWorker, ToWorker } from './ground-protocol';
 import { applyOps } from './netops';
 import { GroundPainter } from './renderer';
-import { Textures } from './textures';
+import { GRASS_TINTS, PAINTED_NAMES, Textures } from './textures';
 import { EAGER_PHOTO } from './grass-art';
 import { isPaintPhoto } from './paint';
-import { cacheKey, loadCached, restore, saveCached, snapshot } from './texture-share';
+import { cacheKey, dropCache, loadCached, restore, saveCached, snapshot } from './texture-share';
+import { lightPack } from './boot';
 import { WOODLAND_TEX } from './terrain-paint';
 import { VARIANT_IDS } from './living-ground';
 import { WALL_TEX } from './ext/course-walls';
-import { WOODLAND, lawnSlot, lawnTex } from './painted-surfaces';
+import { softCanvases } from './canvas2d';
+import { WOODLAND, lawnTexFor } from './painted-surfaces';
+import type { LotPatch } from './ground-protocol';
 
 const scope = self as unknown as DedicatedWorkerGlobalScope;
 const terrain = new Uint8Array(MAP * MAP), net = new RoadNetwork(), tex = new Textures();
 const painter = new GroundPainter(terrain, net, tex);
+tex.onMade = (what, work, wall) => post({ t: 'log', message: `made ${what} in ${work.toFixed(0)} ms (over ${wall.toFixed(0)} ms)` });
 // URL discovery is cheap; image bytes are decoded only when a changed cell needs that generated asset.
 const grassAssets = import.meta.glob('../assets/ground/grass-management/**/*.{webp,png}', { eager: true, query: '?url', import: 'default' }) as Record<string, string>;
 const grassLoads = new Set<string>();
@@ -36,6 +40,10 @@ const hasTextures = new Promise<void>(res => { texReady = res; });
 const post = (m: FromWorker, transfer: Transferable[] = []) => scope.postMessage(m, transfer);
 /** the woodland floor's Fescue (terrain-paint.ts WOODLAND_TEX), a lazy photo: built once, before this worker's first full bake */
 let woods: Promise<void> | null = null;
+/** the photo textures this worker builds up front (a light boot's few, T157: init's limits); the others are built on first use */
+let eager: ReadonlySet<string> = EAGER_PHOTO;
+/** a light boot's: the screen-space textures are made on first use (Textures.lazy), also after a restore */
+let lazyTex = false;
 
 /** one message: init and the texture pack run on arrival (init waits for the pack); every other message runs after the one before it */
 const handle = async (m: ToWorker) => {
@@ -48,21 +56,36 @@ const handle = async (m: ToWorker) => {
       }
       case 'init': {
         painter.setTerrain(m.terrain, m.height, m.waters);
+        // a light boot's limits (T157, boot.ts): smaller decode caches, fewer photos built up front, the texture cache only read
+        const lim = m.limits;
+        if (lim?.tiles != null) tex.tileLimit = lim.tiles;
+        if (lim?.painted != null) tex.paintedLimit = lim.painted;
+        if (lim?.eager) eager = new Set(lim.eager);
+        if (lim?.soft) softCanvases(true);
+        lazyTex = !!lim?.lazy;
+        // T168: a lazy worker's photos built on first use leave their mosaics for first use too, and its bakes put aside a chunk that meets a
+        // texture not made yet (it is made in slices meanwhile) rather than making it at once
+        tex.lazyPhotoMosaics = lazyTex; deferring = lazyTex;
+        tex.makeForColour = !(lim?.lazy && lim.tints !== false); // a light boot's (its tints lazy too) keeps T157's swatch colours
         // every worker (the builder, and the peers that restore its snapshot) takes the presets and the grass's angle and tilt from the art
         tex.configure(m.art);
         const t0 = performance.now();
         if (!m.build) { ready = new Promise<void>(res => { gotTextures = res; }); await ready; post({ t: 'ready', ms: performance.now() - t0 }); break; }
         // the builder: textures from the cache if this browser has them, else built (and cached for next time)
-        const key = cacheKey(m.art), cached = await loadCached(key);
-        ready = cached ? Promise.resolve(restore(tex, cached)) : tex.build(m.art);
+        const lazyTints = !!lim?.lazy && lim.tints !== false;
+        // T166: the game neither reads nor writes the browser's cache (ground-protocol.ts WorkerLimits.readCache): the old one is deleted
+        if (lim?.readCache === false && lim.saveCache === false) dropCache();
+        const key = cacheKey(m.art), cached = lim?.readCache === false ? null : await loadCached(key, lim ? lightPack(EAGER_PHOTO, eager, lim.lazy ? new Set([...PAINTED_NAMES, ...(lazyTints ? GRASS_TINTS.map(t => t[0]) : [])]) : undefined, lim.lazy) : undefined);
+        ready = cached ? Promise.resolve(restore(tex, cached)) : tex.build(m.art, undefined, eager, !!lim?.lazy, lazyTints);
+        if (cached && lazyTex) tex.lazyMissing();
         await ready; texReady();
         post({ t: 'log', message: `textures ${cached ? 'from cache' : 'built'} in ${(performance.now() - t0).toFixed(0)} ms` });
         post({ t: 'ready', ms: performance.now() - t0, saving: !cached });
         if (m.peers) { const snaps = await Promise.all(Array.from({ length: m.peers }, () => snapshot(tex))); post({ t: 'texpack', snaps }, snaps.flatMap(s => s.bitmaps)); }
-        if (!cached) void saveCached(key, tex).finally(() => post({ t: 'saved' }));
+        if (!cached && lim?.saveCache !== false) void saveCached(key, tex).finally(() => post({ t: 'saved' }));
         break;
       }
-      case 'textures': restore(tex, m.snap); texReady(); gotTextures?.(); break;
+      case 'textures': restore(tex, m.snap); if (lazyTex) tex.lazyMissing(); texReady(); gotTextures?.(); break;
       case 'grassArt': tex.setPaintedOn(m.art !== 'photo'); painter.resetPlanColours(); break;
       case 'surfaces': tex.setSurfaces(m.file); painter.resetPainted(); break;
       case 'net': { const t0 = performance.now(); applyOps(net, m.ops); const ms = performance.now() - t0; if (ms > 50) post({ t: 'log', message: `net ops ${m.ops.length} in ${ms.toFixed(0)} ms` }); break; }
@@ -80,15 +103,27 @@ const handle = async (m: ToWorker) => {
       case 'living': painter.living = { on: m.on, debug: m.debug }; break;
       case 'slopeLight': painter.slopeLight = m.strength; break;
       case 'lotground': {
-        // the lazy photo textures the edit's paint areas use (fill and border) are built first, so the chunks baked after it see them
+        // the lazy photo textures the edit's paint areas use (fill and border, course surfaces and collars, wall art): built first, so the
+        // chunks baked after it see them. T168, a deferring worker: started now, not waited for here; a chunk that lays one waits for it
+        // alone (paint: missingPhotos), so the other chunks go on
         const need = new Set<string>();
-        for (const [, ps] of m.set) for (const p of ps) if (p.lawn && isPaintPhoto(p.tex) && !EAGER_PHOTO.has(p.tex) && !tex.built(p.tex)) need.add(p.tex); else if (p.paint) for (const t of [p.tex, ...(p.paint.b > 0 ? [p.paint.bt] : []), ...(p.paint.m ? [p.paint.m.t] : [])]) if (isPaintPhoto(t) && !EAGER_PHOTO.has(t) && !tex.built(t)) need.add(t);
-        // a course chunk's surfaces and collars (T078)
-        for (const [, ps] of m.set) for (const p of ps) if (p.course) for (const l of p.course.layers) for (const t of [l.tex, ...(l.collar ? [l.collar.tex] : [])]) if (isPaintPhoto(t) && !EAGER_PHOTO.has(t) && !tex.built(t)) need.add(t);
-        // and the wall art its walls wear (T099 WALL_TEX slots; nothing until a slot is registered in grass-art PHOTO_TEX)
-        for (const [, ps] of m.set) for (const p of ps) if (p.course?.walls?.length) for (const t of WALL_TEX) if (isPaintPhoto(t) && !EAGER_PHOTO.has(t) && !tex.built(t)) need.add(t);
-        await Promise.all([...need].map(t => tex.ensure(t).catch(err => post({ t: 'error', message: String(err) }))));
+        for (const [, ps] of m.set) for (const p of ps) for (const t of patchPhotos(p)) need.add(t);
+        const built = Promise.all([...need].map(t => tex.ensure(t).catch(err => post({ t: 'error', message: String(err) }))));
+        if (!deferring) await built;
         painter.setLotGround(m.set, m.drop);
+        break;
+      }
+      case 'prewarm': {
+        // T168: textures the open tool can lay (the Course tool's brushes), made ahead: photos decoded now, procedural textures and mosaics in
+        // slices while the worker is idle; nothing waits for them
+        const painted: string[] = [];
+        for (const t of m.tex) {
+          if (tex.isPainted(t)) painted.push(t); // a painted family: its pictures at the current art level decoded ahead
+          else if (isPaintPhoto(t) && !eager.has(t) && !tex.built(t)) void tex.ensure(t).catch(err => post({ t: 'error', message: String(err) }));
+          else if (tex.isLazy(t)) tex.queueBuild(t);
+        }
+        if (painted.length) void tex.preparePainted(tex.paintedArtLevel, painted).catch(err => post({ t: 'error', message: String(err) }));
+        kick();
         break;
       }
       case 'paint': {
@@ -110,7 +145,8 @@ const handle = async (m: ToWorker) => {
             if (p.paint?.m) need.add(p.paint.m.t);
             if (p.course) { for (const l of p.course.layers) for (const t of [l, ...(l.collar ? [l.collar] : [])]) { need.add(t.tex); if (t.m) need.add(t.m.t); } if (p.course.walls?.length) for (const w of WALL_TEX) near.add(w); }
             // a town lawn wears one of the painted lawns (painted-surfaces.ts lawnSlot), picked by where it lies
-            if (p.lawn && tex.paintedOn) { const k = lawnSlot(p.pts, tex.surfaces.lawns); if (k >= 0) need.add(lawnTex(k)); }
+            // (a lot's lawn wears its look state's, T155: lawnTexFor)
+            if (p.lawn && tex.paintedOn) { const t = lawnTexFor(p.lawn, p.pts, tex.surfaces); if (t) need.add(t); }
           }
           if (painter.grassStrength > 0 && !painter.grassHeat) {
             for (let y = Math.max(0, Math.floor(box[1] / 4)); y < Math.min(MAP / 4, Math.ceil(box[3] / 4)); y++) for (let x = Math.max(0, Math.floor(box[0] / 4)); x < Math.min(MAP / 4, Math.ceil(box[2] / 4)); x++) {
@@ -125,6 +161,16 @@ const handle = async (m: ToWorker) => {
           for (const p of painter.lotsIn(box)) if (p.course) for (const l of p.course.layers) for (const t of [l, ...(l.collar ? [l.collar] : [])]) course.add(t.tex);
           await tex.prepareTiles(course);
         }
+        // T168: the photos this chunk's lots and course lay, not built yet: the chunk is put aside until they are, the others go on
+        if (deferring && m.kind !== 'p') {
+          const k = m.kind === 'm' ? MID_K : 1, w = CHUNK_W * k, h = CHUNK_H * k, miss = new Set<string>();
+          for (const p of painter.lotsIn(GroundPainter.tileBox(m.i * w, m.j * h, (m.i + 1) * w, (m.j + 1) * h))) for (const t of patchPhotos(p)) miss.add(t);
+          if (miss.size) {
+            const built = Promise.all([...miss].map(t => tex.ensure(t).catch(err => post({ t: 'error', message: String(err) }))));
+            if (!probing(m)) putAside(m, built);
+            break;
+          }
+        }
         // Decode only artwork used by the requested visible chunk, never all registered course/town cells.
         if (m.kind !== 'p' && painter.grassStrength > 0 && !painter.grassHeat) {
           const k = m.kind === 'm' ? MID_K : 1, w = CHUNK_W * k, h = CHUNK_H * k;
@@ -136,7 +182,17 @@ const handle = async (m: ToWorker) => {
           if (painter.grassMowing) ids.add('mowing-stripes'); await Promise.all([...ids].map(loadGrass));
         }
         const t0 = performance.now();
-        const cv = m.kind === 'p' ? painter.paintPlan(m.i, m.j, m.L) : painter.paint(m.i, m.j, m.L, m.kind === 'm');
+        let cv: OffscreenCanvas;
+        // T168: textures not made yet: the bake goes on with placeholders to learn them all, is thrown away, and the chunk waits aside until
+        // they are made in slices; the other chunks are baked meanwhile
+        // (a probe, T168: a chunk near the view baked ahead in idle time only to learn the textures it lacks: they are made ahead, the bake
+        // is thrown away)
+        tex.deferMakes = deferring; tex.deferNeed = !probing(m); tex.missing.clear();
+        try { cv = m.kind === 'p' ? painter.paintPlan(m.i, m.j, m.L) : painter.paint(m.i, m.j, m.L, m.kind === 'm'); }
+        finally { tex.deferMakes = false; tex.deferNeed = true; }
+        if (probing(m)) { tex.missing.clear(); cv.width = cv.height = 0; kick(); break; }
+        if (tex.missing.size) { const keys = [...tex.missing]; tex.missing.clear(); putAside(m, Promise.all(keys.map(k => tex.whenMade(k)))); break; }
+        lastBake = performance.now(); if (deferring && m.kind !== 'p') aheadOf(m);
         const bmp = cv.transferToImageBitmap();
         post({ t: 'tile', id: m.id, kind: m.kind, i: m.i, j: m.j, L: m.L, artL: m.artL ?? m.L, ts: m.ts, tiled: painter.tilesUsed, bmp, ms: performance.now() - t0 }, [bmp]);
         break;
@@ -144,10 +200,87 @@ const handle = async (m: ToWorker) => {
     }
   } catch (err) { post({ t: 'error', message: (err as Error).stack || String(err) }); }
 };
-/** the messages after init, one at a time in arrival order (a bake never overtakes the lot edit sent before it); the chain never rejects (handle catches) */
+/** the messages after init, one at a time in arrival order (a bake never overtakes the lot edit sent before it, but one put aside for a texture
+ *  being made is baked after the messages that came meanwhile, T168); the chain never rejects (handle catches) */
 let queue: Promise<void> = Promise.resolve();
+/** messages waiting in the chain (T168: the slicer makes textures ahead only when none waits) */
+let pending = 0;
+const enqueue = (m: ToWorker) => {
+  pending++;
+  queue = queue.then(() => { const t0 = performance.now(); return handle(m).finally(() => { lastMsgMs = performance.now() - t0; }); }).finally(() => { pending--; kick(); });
+};
 scope.onmessage = (e: MessageEvent<ToWorker>) => {
   const m = e.data;
   if (m.t === 'init' || m.t === 'textures') void handle(m);
-  else queue = queue.then(() => handle(m));
+  else enqueue(m);
 };
+
+/* ---- T168: the lazy textures made in slices, between bakes ----
+ * The worker's bakes put a chunk aside when it meets textures not made yet (procedural ones, photos' mosaics: Textures.missing, the bake
+ * going on with placeholders to learn them all and then thrown away; photos its lots lay: patchPhotos). The textures are made SLICE_MS at a
+ * time, one slice after each message (longer while the chunk waits and messages keep coming), and the chunk goes back in the queue when they
+ * are made. The chunk keeps its place in flight (the main thread sends no more for it), so the worker's other chunk goes on meanwhile and
+ * the texture is not starved by a flood of new chunks that would need it too. Textures made ahead (the probes', the Course tool's) get slices
+ * only when no message waits and no chunk was baked for IDLE_MS. */
+const SLICE_MS = 5, IDLE_MS = 50;
+let deferring = false, slicing = false, lastBake = 0, lastMsgMs = 0;
+/* the probes (T168): after each chunk it bakes, the worker notes its neighbours; in idle time it bakes them ahead, thrown away, to learn the
+ * textures they will lack (the map's own: never one the map does not lay), made ahead in slices. The newest first, at most PROBES waiting. */
+const PROBES = 48;
+type Paint = ToWorker & { t: 'paint' };
+const probes: Paint[] = [], known = new Set<string>();
+let probeId = -1;
+const probing = (m: Paint) => m.id < 0;
+const chunkKey = (m: { kind: string; i: number; j: number; L: number; ts?: number }) => `${m.kind}${m.i},${m.j}@${m.L}#${m.ts ?? 0}`;
+function aheadOf(m: Paint) {
+  known.add(chunkKey(m));
+  for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) {
+    if (!di && !dj) continue;
+    const q: Paint = { ...m, id: probeId--, i: m.i + di, j: m.j + dj }, k = chunkKey(q);
+    if (known.has(k)) continue; known.add(k); probes.push(q);
+  }
+  if (probes.length > PROBES) probes.splice(0, probes.length - PROBES);
+  if (known.size > 20000) known.clear();
+  idleSoon();
+}
+let idleTimer = 0;
+/** the worker's idle work: ahead builds' slices (kick), else the next probe */
+function idleSoon() { if (!idleTimer) idleTimer = setTimeout(idleWork, IDLE_MS) as unknown as number; }
+function idleWork() {
+  idleTimer = 0;
+  if (pending || performance.now() - lastBake < IDLE_MS || asideIds.size) { if (probes.length || tex.pendingBuilds(true)) idleSoon(); return; }
+  if (tex.pendingBuilds(true)) { kick(); idleSoon(); return; }
+  const q = probes.pop(); if (q) { enqueue(q); idleSoon(); }
+}
+const asideIds = new Set<number>();
+/** the chunk m waits for `ready` (its textures made, its photos built): put aside, queued again once ready */
+function putAside(m: ToWorker & { t: 'paint' }, ready: Promise<unknown>) {
+  asideIds.add(m.id);
+  void ready.then(() => { asideIds.delete(m.id); enqueue(m); });
+  kick();
+}
+function kick() {
+  if (slicing) return;
+  const ahead = pending === 0 && performance.now() - lastBake > IDLE_MS;
+  if (!tex.pendingBuilds(ahead)) { if (tex.pendingBuilds(true) || probes.length) idleSoon(); return; }
+  slicing = true; tick.port2.postMessage(0);
+}
+/** a slice: SLICE_MS, longer (up to 4x) when a bake waits aside and messages keep coming, so the texture it waits for gets about as much time
+ *  as the bakes going on meanwhile */
+const sliceMs = () => (pending && asideIds.size ? Math.min(4 * SLICE_MS, Math.max(SLICE_MS, lastMsgMs)) : SLICE_MS);
+/** a zero-delay turn of the event loop (setTimeout(0) is held to 4 ms once nested): the messages that came meanwhile run first */
+const tick = new MessageChannel();
+tick.port1.onmessage = () => {
+  slicing = false;
+  try { tex.step(performance.now() + sliceMs(), pending === 0 && performance.now() - lastBake > IDLE_MS); } catch (err) { post({ t: 'error', message: (err as Error).stack || String(err) }); }
+  kick();
+};
+/** the photo textures (lazy, not built yet) a lot patch lays: a lawn's photo, a painted area's fill, border and mix, a course chunk's surfaces
+ *  and collars (T078) and the wall art its walls wear (T099 WALL_TEX slots) */
+function patchPhotos(p: LotPatch): string[] {
+  // has: ensure's own test; a painted texture (its family's pictures, decoded before the bake) needs no photo (T168: never built)
+  const out: string[] = [], add = (t: string | undefined) => { if (t && isPaintPhoto(t) && !eager.has(t) && !tex.isPainted(t) && !tex.has(t)) out.push(t); };
+  if (p.lawn) add(p.tex); else if (p.paint) { add(p.tex); if (p.paint.b > 0) add(p.paint.bt); if (p.paint.m) add(p.paint.m.t); }
+  if (p.course) { for (const l of p.course.layers) { add(l.tex); if (l.collar) add(l.collar.tex); } if (p.course.walls?.length) for (const t of WALL_TEX) add(t); }
+  return out;
+}

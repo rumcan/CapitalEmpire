@@ -1,0 +1,87 @@
+{
+ "id": "variation:industrial-corrugated-warehouse-69aeee07:1",
+ "slug": "variation-industrial-corrugated-warehouse-69aeee07-1",
+ "category": "buildings",
+ "version": "variation-industrial-corrugated-warehouse-69aeee07-1-screen-axis-4views-v1",
+ "crops": "crops-v2",
+ "sheetSha256": "f7701ccd0c5af88802d0d41d4d235ddd64b053e05c3350dc6b5fc42fde54d7ce",
+ "status": "passed-with-alpha-residue-warnings",
+ "views": {
+  "N": {
+   "file": "N.png",
+   "sha256": "ad758676a35d633ceda43eb96f4c9f78b2d89150846342fec14c2cf175b4e19c",
+   "nativeSha256": "ad758676a35d633ceda43eb96f4c9f78b2d89150846342fec14c2cf175b4e19c",
+   "pixelSha256": "c98c0df515a2ee1d867349802ff6889dcdadb53c68a8a442767176593d392264",
+   "sheetRect": {
+    "left": 0,
+    "top": 0,
+    "width": 670,
+    "height": 627
+   },
+   "trim": [
+    86,
+    149,
+    569,
+    416
+   ],
+   "heading": "front faces screen down"
+  },
+  "E": {
+   "file": "E.png",
+   "sha256": "a09d6eebcf877c755151006dde17abd9da30174cd86464e3373fa9cdf7914ca3",
+   "nativeSha256": "a09d6eebcf877c755151006dde17abd9da30174cd86464e3373fa9cdf7914ca3",
+   "pixelSha256": "d82ac5574c1157bcab998c92d57788b35b2a40e6e5e6bb263441ed9ef99b79d7",
+   "sheetRect": {
+    "left": 670,
+    "top": 0,
+    "width": 584,
+    "height": 627
+   },
+   "trim": [
+    15,
+    248,
+    497,
+    315
+   ],
+   "heading": "front faces screen right (its right side to the camera)"
+  },
+  "S": {
+   "file": "S.png",
+   "sha256": "d5ec97adf9061abd80018f4bdde797afbe8fd06957a0de1ea28bac4a40818104",
+   "nativeSha256": "d5ec97adf9061abd80018f4bdde797afbe8fd06957a0de1ea28bac4a40818104",
+   "pixelSha256": "47daf03906dd149fbaabd0f89d6a11b19efe79e1da631d45e97c6fd649a044f1",
+   "sheetRect": {
+    "left": 0,
+    "top": 627,
+    "width": 600,
+    "height": 627
+   },
+   "trim": [
+    80,
+    75,
+    490,
+    411
+   ],
+   "heading": "front faces screen up (its rear to the camera)"
+  },
+  "W": {
+   "file": "W.png",
+   "sha256": "fab7537b292a954f654db94956c52bb7d2fd2010dcb17b862acc72a3737d2476",
+   "nativeSha256": "fab7537b292a954f654db94956c52bb7d2fd2010dcb17b862acc72a3737d2476",
+   "pixelSha256": "b609ce7c00e8601ea4e861863afb1f8f3af5c9b36b32ea7d0fc429f2e268f06e",
+   "sheetRect": {
+    "left": 600,
+    "top": 627,
+    "width": 654,
+    "height": 627
+   },
+   "trim": [
+    26,
+    174,
+    568,
+    308
+   ],
+   "heading": "front faces screen left (its left side to the camera)"
+  }
+ }
+}

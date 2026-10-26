@@ -1,0 +1,87 @@
+{
+ "id": "ce:parking-entry",
+ "slug": "ce-parking-entry",
+ "category": "props",
+ "version": "ce-parking-entry-screen-axis-4views-v1",
+ "crops": "crops-v2",
+ "sheetSha256": "516609e3eea490509eaed23b60716d3286c4395efb0973a36baee8770d4b26cd",
+ "status": "passed-with-alpha-residue-warnings",
+ "views": {
+  "N": {
+   "file": "N.png",
+   "sha256": "8f9713b459363d091ec995e8cf53a366142dce0a8538ef62c1a00b37edff2660",
+   "nativeSha256": "8f9713b459363d091ec995e8cf53a366142dce0a8538ef62c1a00b37edff2660",
+   "pixelSha256": "5d77fb70bff8394bbef8a25f6c64d4b9fec68409291c244b561893b8354a09ed",
+   "sheetRect": {
+    "left": 0,
+    "top": 0,
+    "width": 835,
+    "height": 627
+   },
+   "trim": [
+    143,
+    338,
+    643,
+    224
+   ],
+   "heading": "front faces screen down"
+  },
+  "E": {
+   "file": "E.png",
+   "sha256": "a55c0e6315b2793dcf4fd8eec396354e7fc93d171b8330197c2e8763669c92b2",
+   "nativeSha256": "a55c0e6315b2793dcf4fd8eec396354e7fc93d171b8330197c2e8763669c92b2",
+   "pixelSha256": "61021ee01b500719757f1c68c311350e9a507c53091ed1ebeba47d22ffbba11c",
+   "sheetRect": {
+    "left": 835,
+    "top": 0,
+    "width": 419,
+    "height": 627
+   },
+   "trim": [
+    65,
+    117,
+    110,
+    463
+   ],
+   "heading": "front faces screen right (its right side to the camera)"
+  },
+  "S": {
+   "file": "S.png",
+   "sha256": "88fe73470fdf033fc1e8b0d812effe4550753e5435046b1fed4125c1e0405ea5",
+   "nativeSha256": "88fe73470fdf033fc1e8b0d812effe4550753e5435046b1fed4125c1e0405ea5",
+   "pixelSha256": "641aa95eb95e9377ec5527c9d44998508ba1a04eb6f6b2971f3e424fc0c156a3",
+   "sheetRect": {
+    "left": 0,
+    "top": 627,
+    "width": 815,
+    "height": 627
+   },
+   "trim": [
+    100,
+    203,
+    612,
+    235
+   ],
+   "heading": "front faces screen up (its rear to the camera)"
+  },
+  "W": {
+   "file": "W.png",
+   "sha256": "b53da80ba527b8f4d363937f33512072c95a2f5cd86178d35f634ab922015114",
+   "nativeSha256": "b53da80ba527b8f4d363937f33512072c95a2f5cd86178d35f634ab922015114",
+   "pixelSha256": "a06ee60e277f8e06724a96cbf6f6a5cc5ee5d15351ca7127a02d0ca2c1744dac",
+   "sheetRect": {
+    "left": 815,
+    "top": 627,
+    "width": 439,
+    "height": 627
+   },
+   "trim": [
+    101,
+    144,
+    119,
+    345
+   ],
+   "heading": "front faces screen left (its left side to the camera)"
+  }
+ }
+}

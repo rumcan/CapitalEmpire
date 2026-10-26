@@ -9,8 +9,15 @@ export const MAP = 2048;
 export const CELL = 64;
 /** The builder's 30% zoom is the closest the game camera gets. */
 export const ZOOM_MAX = 0.3;
-/** far enough out to see the whole 4 km map */
-export const ZOOM_MIN = 0.006;
+/** one zoom step: a zoom button press or a + / - key (the wheel zooms smoothly, about 1.15 a notch) */
+export const ZOOM_STEP = 1.25;
+/** The furthest zoom: one ZOOM_STEP closer than the old 0.006 (T153, #327; the owner, 2026-10-26: "remove the final furthest zoom out
+ *  level"). The 4 km map is then 1966 CSS px wide and 983 tall. FAR's tile set is native here (painted-tiles.json anchors.far). */
+/** T156 (the owner, 2026-10-26: "just dont let the player zoom out that far actually"): the furthest zoom is 1.25%, where FAR's tiles are a
+ *  quarter of their native size (about four across a 1920 px screen); the whole map no longer fits on screen there (the minimap shows it) */
+export const ZOOM_MIN = 0.0125;
+/** a camera zoom held to the game's range (a save, a jump or a key; a zoom that is no number: the closest zoom) */
+export const clampZoom = (z: number): number => (Number.isFinite(z) ? Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, z)) : ZOOM_MAX);
 /** zoom tiers (CSS zoom): below DISTRICT_Z small props are culled, below PLANNER_Z the planner map replaces the art */
 export const DISTRICT_Z = 0.12;
 export const PLANNER_Z = 0.035;
