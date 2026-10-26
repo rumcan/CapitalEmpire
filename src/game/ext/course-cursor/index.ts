@@ -12,12 +12,14 @@
 //   with the ground painter's own photo, its tone and its side wall, lit by the one sun at the upper right, with a soft shadow; it eases after
 //   the pointer, bobs a little and squashes on a click, which also splashes lightly on the map.
 // T118 (plan P23 4.9, P1-C): the chip says what a click lays.
-// - a mark per surface on the disc, so surfaces read without colour (MARKS): a flag on green, mowing stripes on fairway, a ball on its tee peg
-//   on tee, tufts on rough, wisps on fescue, grains on bunker, pebbles on waste, ripples on water, lanes on a cart path; light glyphs on a dark
-//   halo (they hold in every colour-blind view), standing marks cast a small shadow down the one sun's line (145°);
+// - a mark per surface, so surfaces read without colour (MARKS): a flag for green, mowing stripes for fairway, a ball on its tee peg for tee,
+//   a tuft for rough, wisps for fescue, grains for bunker, pebbles for waste, ripples for water, lanes for a cart path; light glyphs on a small
+//   dark badge at the disc's upper right (BADGE, paintBadge), outside its top face: T138, the owner, 2026-10-26: the face is the preview of the
+//   texture and border a click lays, so nothing is drawn over it;
 // - the states (CursorState): ready (the tint and a crisp edge), dragging, protected (dotted outline on the cells a higher surface keeps),
 //   refused (muted red, hatched, a small ✕: off your land or on the driving range, landWhy's words), erase (a dashed edge in the colour you
-//   get back; the chip is the surface you get back, its rim dashed), no change (outline only: nothing new to lay), money short;
+//   get back; the chip is the surface you get back, a dashed line round it, outside its face), no change (outline only: nothing new to lay),
+//   money short;
 // - words: none by the disc at rest; only the drag total ("6 cells · $12"), a refusal with its reason, or money short sit beside it. The
 //   hint pill (CourseCursor.hint) says what a click does ("Painting Fairway · Hole 1 · $2 a cell", or "starts Hole 2" when that hole has
 //   nothing yet), then the state's words; the App adds the switch and stop keys (1–7, Esc) and the same disc mark (ui/course/SurfaceMark).
@@ -461,7 +463,7 @@ export class RunFootprint {
 
 // ---- the chip sprite (the 3D surface disc, T081's puck art) ----
 
-/** a cached puck: the sprite (top face centre at (pad + rx, top + pad + ry), the wall below it; top: room above for a standing mark), its contact shadow, and the sizes it was drawn at */
+/** a cached puck: the sprite (top face centre at (pad + rx, top + pad + ry), the wall below it; top: room above for the mark's badge), its contact shadow, and the sizes it was drawn at */
 interface Sprite { key: string; c: SpriteCanvas; sh: SpriteCanvas; rx: number; ry: number; thick: number; pad: number; top: number }
 
 /** the wall's thickness for a puck ry device px tall */
@@ -471,7 +473,7 @@ const rgba = (c: readonly number[], a: number) => `rgba(${c[0]},${c[1]},${c[2]},
 
 /** paints a puck sprite for a brush of R tiles whose top face is rx, ry device px across (so s = rx / (R sqrt2 HW) device px per world px:
  *  the map scale it was bucketed at): the wall, the top face in the brush's photo with its tone and border band, the sun's light and shade,
- *  and the rim lights */
+ *  the rim lights, then outside the face erase's dashed line and the surface's mark on its badge (T138: nothing over the face) */
 function paintPuck(g: CanvasRenderingContext2D, st: PuckStyle, kind: string, erase: boolean, withBand: boolean, R: number, rx: number, ry: number, thick: number, pad: number, d: number, tex: CursorTexture | null | undefined, top = 0) {
   const cx = pad + rx, cy = top + pad + ry, look = LOOKS[kind] ?? LOOKS.fairway!, s = rx / (R * SQ2 * HW), E = R + 2, mark = markOf(kind);
   const profile: EdgeProfile = edgeProfileOf(kind === 'path' ? null : kind, st.tex, st.border > 0 ? st.btex : undefined);
@@ -539,8 +541,6 @@ function paintPuck(g: CanvasRenderingContext2D, st: PuckStyle, kind: string, era
     g.globalAlpha = 0.5; g.lineWidth = 2 * bw * 1.35; g.stroke(); g.globalAlpha = 1;
   }
   g.restore();
-  // the surface's mark laid flat on the face (stripes, grains, pebbles, ripples, lanes), under the sun's rim light like the surface itself
-  paintMark(g, mark, 'flat', cx, cy, rx, ry, R, s);
 
   // ---- the sun on the top face: a light rim on the sun's side and shade on the far side (reversed for a sunken bunker and water),
   //      laid like paint-edges' bevel; a soft sheen toward the sun
@@ -571,165 +571,128 @@ function paintPuck(g: CanvasRenderingContext2D, st: PuckStyle, kind: string, era
   g.beginPath(); g.ellipse(cx, cy, rx, ry, 0, 0, Math.PI); g.stroke();
   g.beginPath(); g.ellipse(cx, cy, rx, ry, 0, -Math.PI * 0.62, -Math.PI * 0.02); g.globalAlpha = 0.7; g.stroke(); g.globalAlpha = 1;
 
-  // ---- the standing marks (the flag, the tee peg, tufts, wisps), on top
-  paintMark(g, mark, 'stand', cx, cy, rx, ry, R, s);
-
-  // ---- rub out (T118): the puck is the surface you get back; its rim is dashed (one meaning per line style: dashed = erase)
+  // ---- rub out (T118): the puck is the surface you get back, with a dashed line round it (one meaning per line style: dashed = erase); T138:
+  //      the line runs outside the face (its back edge, down its sides and along its foot), so the preview stays clear
+  const u = rx / (CHIP_CSS / 2);
   if (erase) {
-    const u = rx / 20;
+    const o = ERASE_GAP * u, a = rx + o, b = ry + o;
     g.setTransform(1, 0, 0, 1, 0, 0); g.setLineDash([3 * u, 2.2 * u]); g.lineCap = 'butt';
-    g.beginPath(); g.ellipse(cx, cy, rx - 0.6 * u, ry - 0.6 * u, 0, 0, Math.PI * 2);
-    g.strokeStyle = 'rgba(12,16,10,0.7)'; g.lineWidth = 2.8 * u; g.stroke();
-    g.strokeStyle = '#fff6ee'; g.lineWidth = 1.4 * u; g.stroke();
+    g.beginPath(); g.ellipse(cx, cy, a, b, 0, Math.PI, Math.PI * 2); g.lineTo(cx + a, cy + thick); g.ellipse(cx, cy + thick, a, b, 0, 0, Math.PI); g.closePath();
+    g.strokeStyle = 'rgba(12,16,10,0.7)'; g.lineWidth = 2.4 * u; g.stroke();
+    g.strokeStyle = '#fff6ee'; g.lineWidth = 1.2 * u; g.stroke();
     g.setLineDash([]); g.lineCap = 'round';
   }
+  // ---- the surface's mark on its badge, at the upper right outside the face
+  paintBadge(g, mark, cx + BADGE.dx * u, cy + BADGE.dy * u, u);
 }
 
-/** the marks' dark halo (it keeps a light glyph legible on any surface and in every colour-blind view) and the standing marks' shadow */
-const HALO = 'rgba(10,16,8,0.62)', MARK_SHADOW = rgba(SHADOW_RGB, 0.34);
-/** strokes the current path as a light glyph on a dark halo: the halo w2 css px wide under the glyph w1 wide (u: device px a css px) */
-function haloStroke(g: CanvasRenderingContext2D, light: string, u: number, w1 = 1.2, w2 = 2.7, halo = HALO) {
-  g.strokeStyle = halo; g.lineWidth = w2 * u; g.stroke();
-  g.strokeStyle = light; g.lineWidth = w1 * u; g.stroke();
-}
+/** the mark's badge (T138): its centre from the top face's centre and its radius, css px at the chip's CHIP_CSS (they scale with the chip):
+ *  at the face's upper right, outside it with a gap of about 2 px (the face is the preview), clear of the pointer at the upper left and of
+ *  the words, which start 8 px right of the face */
+export const BADGE = { dx: 17, dy: -16.5, r: 7 } as const;
+/** erase's dashed line: how far outside the face's edge it runs, css px */
+const ERASE_GAP = 2;
+/** the badge's dark fill and light ring (dark as the words' pills) */
+const BADGE_FILL = 'rgba(22,20,24,0.88)', BADGE_RING = 'rgba(255,246,236,0.85)';
 /** point i of n on a sunflower spiral inside the unit disc (an even scatter with no clumps), into out */
 function sunflower(i: number, n: number, out: { x: number; y: number }) {
   const r = Math.sqrt((i + 0.5) / n), a = i * 2.399963; out.x = r * Math.cos(a); out.y = r * Math.sin(a);
 }
 const SPOT = { x: 0, y: 0 };
 
-/** paints a surface's mark on a chip whose top face is the ellipse (cx, cy, rx, ry) in device px; pass 'flat' (marks lying on the face:
- *  stripes, grains, pebbles, ripples, lanes) or 'stand' (marks standing on it: the flag, the tee peg, tufts, wisps); R is the face's radius in
- *  tiles and s the device px a world px (the iso transform of the face). Light glyphs on a dark halo, sized in css px (u), so each reads at
- *  the chip's 40 css px; a standing mark casts a small shadow down the one sun's line (145°, held to half length to stay on the face) */
-export function paintMark(g: CanvasRenderingContext2D, mark: MarkKind, pass: 'flat' | 'stand', cx: number, cy: number, rx: number, ry: number, R: number, s: number) {
-  const u = rx / 20, flat = mark === 'stripes' || mark === 'grains' || mark === 'pebbles' || mark === 'ripples' || mark === 'lanes';
-  if (mark === 'none' || flat !== (pass === 'flat')) return;
-  g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.lineCap = 'round'; g.lineJoin = 'round'; g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
-  g.beginPath(); g.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2); g.clip();
-  // the face's tile axes on screen: along a mowing line (tile y) and across it (tile x)
-  const L = Math.hypot(HW, HH), ax = -HW / L, ay = HH / L, bx = HW / L, by = HH / L;
-  /** the shadow of a point h device px above the face point (x, y), held to half length */
-  const shX = (x: number, h: number) => x + SHEAR.sx * h * 0.5, shY = (y: number, h: number) => y + SHEAR.sy * h * 0.5;
+/** paints a surface's mark on its badge, a small dark disc of BADGE.r css px centred at (X, Y) device px (u: device px a css px), every
+ *  glyph inside it: a flag (green), mowing stripes (fairway), a ball on its tee peg (tee), a tuft (rough), wisps (fescue), grains (bunker),
+ *  pebbles (waste), ripples (water), lanes (a cart path); light on the dark disc, so each reads at 14 px and in every colour-blind view.
+ *  Nothing for plain grass ('none') */
+export function paintBadge(g: CanvasRenderingContext2D, mark: MarkKind, X: number, Y: number, u: number) {
+  if (mark === 'none') return;
+  g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1; g.globalCompositeOperation = 'source-over'; g.setLineDash([]); g.lineCap = 'round'; g.lineJoin = 'round';
+  const r = BADGE.r * u, ri = r - 1.6 * u;
+  g.beginPath(); g.arc(X, Y, r - 0.5 * u, 0, Math.PI * 2); g.fillStyle = BADGE_FILL; g.fill(); g.strokeStyle = BADGE_RING; g.lineWidth = u; g.stroke();
+  // the iso tile y axis on screen (a mowing line, a cart path), and a chord of the inner circle along it, o across its middle
+  const L = Math.hypot(HW, HH), ax = -HW / L, ay = HH / L;
+  const chord = (o: number) => { const h = Math.sqrt(Math.max(0, ri * ri - o * o)), px = X - ay * o, py = Y + ax * o; g.moveTo(px - ax * h, py - ay * h); g.lineTo(px + ax * h, py + ay * h); };
   switch (mark) {
+    case 'flag': {
+      // the pin: the hole, a white pole and a yellow pennant flying to the right
+      const px = X - 1.2 * u, f0 = Y - 4.6 * u, f1 = Y - 1.4 * u;
+      g.beginPath(); g.ellipse(px, Y + 4 * u, 2.3 * u, 0.95 * u, 0, 0, Math.PI * 2); g.fillStyle = 'rgba(251,250,242,0.45)'; g.fill();
+      g.beginPath(); g.moveTo(px, Y + 4 * u); g.lineTo(px, f0); g.strokeStyle = '#fbfaf2'; g.lineWidth = 1.2 * u; g.stroke();
+      g.beginPath(); g.moveTo(px + 0.4 * u, f0); g.lineTo(X + 4.3 * u, (f0 + f1) / 2); g.lineTo(px + 0.4 * u, f1); g.closePath(); g.fillStyle = '#ffd23f'; g.fill();
+      break;
+    }
     case 'stripes': {
-      // mowing stripes: broad bands along the tile y axis, light (overlay: the grass's darks stay dark) and dark (multiply) in turn
-      g.setTransform(HW * s, HH * s, -HW * s, HH * s, cx, cy);
-      const w = (2 * R) / 5;
-      for (let k = 0; k < 6; k++) {
-        g.globalCompositeOperation = k & 1 ? 'multiply' : 'overlay';
-        g.fillStyle = k & 1 ? 'rgba(58,86,36,0.5)' : 'rgba(255,255,232,0.75)';
-        g.fillRect(-R - 0.5 * w + k * w, -R, w, 2 * R);
-      }
-      // the crisp line where two bands meet, so the stripes read even in grey
-      g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = 'source-over';
+      // mowing stripes: three light bands along the mowing line
+      g.beginPath(); for (const o of [-3.2, 0, 3.2]) chord(o * u);
+      g.lineCap = 'butt'; g.strokeStyle = '#e4f4c0'; g.lineWidth = 1.8 * u; g.stroke();
+      break;
+    }
+    case 'peg': {
+      // the tee: a white ball on its peg
+      g.beginPath(); g.moveTo(X - 1.3 * u, Y + 0.9 * u); g.lineTo(X + 1.3 * u, Y + 0.9 * u); g.lineTo(X + 0.5 * u, Y + 4.6 * u); g.lineTo(X - 0.5 * u, Y + 4.6 * u); g.closePath();
+      g.fillStyle = '#e8dcc4'; g.fill();
+      g.beginPath(); g.arc(X, Y - 1.5 * u, 2.5 * u, 0, Math.PI * 2); g.fillStyle = '#fdfdf9'; g.fill();
+      break;
+    }
+    case 'tufts': {
+      // rough: one tuft of three leaves on a wide base (grass, never an arrow)
+      const x = X, y = Y + 3.6 * u, k = 1.15 * u;
       g.beginPath();
-      for (let k = 0; k < 6; k++) {
-        const o = (-R - 0.5 * w + k * w) * s * L, px = cx + bx * o, py = cy + by * o;
-        g.moveTo(px - ax * 40 * u, py - ay * 40 * u); g.lineTo(px + ax * 40 * u, py + ay * 40 * u);
+      g.moveTo(x - 1.9 * k, y); g.quadraticCurveTo(x - 2.3 * k, y - 2.6 * k, x - 3.5 * k, y - 4.4 * k); g.quadraticCurveTo(x - 1.4 * k, y - 2.9 * k, x - 0.7 * k, y); g.closePath();
+      g.moveTo(x - 0.65 * k, y); g.quadraticCurveTo(x - 0.4 * k, y - 3.4 * k, x + 0.2 * k, y - 6.2 * k); g.quadraticCurveTo(x + 0.6 * k, y - 3.2 * k, x + 0.75 * k, y); g.closePath();
+      g.moveTo(x + 0.8 * k, y); g.quadraticCurveTo(x + 1.6 * k, y - 2.7 * k, x + 3.5 * k, y - 4.2 * k); g.quadraticCurveTo(x + 2.3 * k, y - 2.3 * k, x + 2 * k, y); g.closePath();
+      g.fillStyle = '#f4f0c4'; g.fill();
+      break;
+    }
+    case 'wisps': {
+      // fescue: a cluster of tall wispy blades with seed heads
+      const x = X - 0.5 * u, y = Y + 4 * u, k = 0.72 * u, tips: number[] = [];
+      g.beginPath();
+      for (const [dx, h, bend] of [[-1.6, 9, -2.6], [-0.4, 11, -0.6], [0.8, 10, 2.2], [1.8, 8, 3.6]] as const) {
+        const x1 = x + dx * k + bend * k, y1 = y - h * k;
+        g.moveTo(x + dx * 0.4 * k, y); g.quadraticCurveTo(x + dx * 0.4 * k + bend * 0.15 * k, y - h * 0.6 * k, x1, y1); tips.push(x1, y1);
       }
-      g.strokeStyle = 'rgba(20,34,12,0.35)'; g.lineWidth = 0.8 * u; g.stroke();
+      g.strokeStyle = '#fbeec4'; g.lineWidth = u; g.stroke();
+      g.beginPath();
+      for (let i = 0; i < tips.length; i += 2) { g.moveTo(tips[i]! + 0.85 * u, tips[i + 1]!); g.ellipse(tips[i]!, tips[i + 1]!, 0.85 * u, 1.25 * u, 0.4, 0, Math.PI * 2); }
+      g.fillStyle = '#f6dc8a'; g.fill();
       break;
     }
     case 'grains': {
-      // sand grains: an even stipple of dark grains, each with a light speck on its sun side
-      const n = 26;
+      // sand: an even stipple of light grains
+      const n = 7;
       g.beginPath();
-      for (let i = 0; i < n; i++) { sunflower(i, n, SPOT); const x = cx + SPOT.x * rx * 0.82, y = cy + SPOT.y * ry * 0.8; g.moveTo(x + 1.05 * u, y); g.arc(x, y, 1.05 * u, 0, Math.PI * 2); }
-      g.fillStyle = 'rgba(84,56,24,0.92)'; g.fill();
-      g.beginPath();
-      for (let i = 0; i < n; i++) { sunflower(i, n, SPOT); const x = cx + SPOT.x * rx * 0.82 + 0.5 * u, y = cy + SPOT.y * ry * 0.8 - 0.5 * u; g.moveTo(x + 0.45 * u, y); g.arc(x, y, 0.45 * u, 0, Math.PI * 2); }
-      g.fillStyle = 'rgba(255,250,226,0.95)'; g.fill();
+      for (let i = 0; i < n; i++) { sunflower(i, n, SPOT); const x = X + SPOT.x * 4.2 * u, y = Y + SPOT.y * 4.2 * u; g.moveTo(x + 0.95 * u, y); g.arc(x, y, 0.95 * u, 0, Math.PI * 2); }
+      g.fillStyle = '#f0d9a0'; g.fill();
       break;
     }
     case 'pebbles': {
-      // waste ground: a few stones, outlined, lit on the upper right
-      const n = 7;
+      // waste ground: a few stones, lit on the upper right
+      const n = 4;
       g.beginPath();
-      for (let i = 0; i < n; i++) { sunflower(i, n, SPOT); const x = cx + SPOT.x * rx * 0.72, y = cy + SPOT.y * ry * 0.7; g.moveTo(x + 2 * u, y); g.ellipse(x, y, 2 * u, 1.3 * u, 0, 0, Math.PI * 2); }
-      g.fillStyle = '#a9a294'; g.fill(); g.strokeStyle = 'rgba(30,24,16,0.85)'; g.lineWidth = 0.9 * u; g.stroke();
+      for (let i = 0; i < n; i++) { sunflower(i, n, SPOT); const x = X + SPOT.x * 3.3 * u, y = Y + SPOT.y * 3.3 * u; g.moveTo(x + 1.8 * u, y); g.ellipse(x, y, 1.8 * u, 1.2 * u, 0, 0, Math.PI * 2); }
+      g.fillStyle = '#b4ad9e'; g.fill();
       g.beginPath();
-      for (let i = 0; i < n; i++) { sunflower(i, n, SPOT); const x = cx + SPOT.x * rx * 0.72 + 0.6 * u, y = cy + SPOT.y * ry * 0.7 - 0.45 * u; g.moveTo(x + 0.8 * u, y); g.ellipse(x, y, 0.8 * u, 0.45 * u, 0, 0, Math.PI * 2); }
+      for (let i = 0; i < n; i++) { sunflower(i, n, SPOT); const x = X + SPOT.x * 3.3 * u + 0.6 * u, y = Y + SPOT.y * 3.3 * u - 0.4 * u; g.moveTo(x + 0.6 * u, y); g.arc(x, y, 0.6 * u, 0, Math.PI * 2); }
       g.fillStyle = 'rgba(255,250,236,0.9)'; g.fill();
       break;
     }
     case 'ripples': {
-      // water: three short wave lines
-      const wave = (x0: number, y0: number, len: number, amp: number) => {
-        g.moveTo(x0, y0);
-        for (let t = 1; t <= 16; t++) g.lineTo(x0 + (len * t) / 16, y0 - Math.sin((t / 16) * Math.PI * 2) * amp);
-      };
+      // water: two short wave lines
       g.beginPath();
-      wave(cx - 10 * u, cy - 3.6 * u, 11 * u, 1.3 * u); wave(cx - 3 * u, cy + 0.2 * u, 12 * u, 1.3 * u); wave(cx - 11 * u, cy + 4.2 * u, 10 * u, 1.3 * u);
-      haloStroke(g, '#eaf7ff', u, 1.2, 2.8, 'rgba(4,20,40,0.62)');
+      for (const y0 of [Y - 1.7 * u, Y + 1.9 * u]) {
+        const x0 = X - 4.5 * u;
+        g.moveTo(x0, y0);
+        for (let t = 1; t <= 16; t++) g.lineTo(x0 + (9 * u * t) / 16, y0 - Math.sin((t / 16) * Math.PI * 2) * 1.1 * u);
+      }
+      g.strokeStyle = '#eaf7ff'; g.lineWidth = 1.2 * u; g.stroke();
       break;
     }
     case 'lanes': {
       // a cart path: its two edges along the tile y axis and a dashed centre line
-      g.beginPath();
-      for (const o of [-4.2 * u, 4.2 * u]) { const px = cx + bx * o, py = cy + by * o; g.moveTo(px - ax * 30 * u, py - ay * 30 * u); g.lineTo(px + ax * 30 * u, py + ay * 30 * u); }
-      haloStroke(g, '#fff4e4', u);
-      g.beginPath(); g.moveTo(cx - ax * 30 * u, cy - ay * 30 * u); g.lineTo(cx + ax * 30 * u, cy + ay * 30 * u);
-      g.setLineDash([2.4 * u, 2.4 * u]); haloStroke(g, '#fff4e4', u, 1, 2.4); g.setLineDash([]);
-      break;
-    }
-    case 'flag': {
-      // the pin: a cup, a white pole and a yellow pennant flying to the right; their shadow falls down the sun's line
-      const px = cx - 2 * u, py = cy + 3 * u, H = 15 * u, t = py - H, f0 = t + 0.2 * u, f1 = t + 5.6 * u, fx = px + 8.8 * u;
-      g.beginPath(); g.moveTo(px, py); g.lineTo(shX(px, H), shY(py, H));
-      g.moveTo(shX(px, py - f0), shY(py, py - f0)); g.lineTo(shX(fx, py - (f0 + f1) / 2), shY(py, py - (f0 + f1) / 2)); g.lineTo(shX(px, py - f1), shY(py, py - f1));
-      g.strokeStyle = MARK_SHADOW; g.lineWidth = 1.6 * u; g.stroke();
-      g.beginPath(); g.ellipse(px, py, 2.5 * u, 1.25 * u, 0, 0, Math.PI * 2); g.fillStyle = 'rgba(16,24,12,0.88)'; g.fill();
-      g.restore(); g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.lineCap = 'round'; g.lineJoin = 'round'; // the pole and pennant rise past the face
-      g.beginPath(); g.moveTo(px, py); g.lineTo(px, t); haloStroke(g, '#fbfaf2', u, 1.25, 2.9);
-      g.beginPath(); g.moveTo(px + 0.4 * u, f0); g.lineTo(fx, (f0 + f1) / 2); g.lineTo(px + 0.4 * u, f1); g.closePath();
-      g.fillStyle = '#ffd23f'; g.fill();
-      g.beginPath(); g.moveTo(px + 0.4 * u, (f0 + f1) / 2); g.lineTo(fx, (f0 + f1) / 2); g.lineTo(px + 0.4 * u, f1); g.closePath();
-      g.fillStyle = 'rgba(176,96,0,0.38)'; g.fill();
-      g.beginPath(); g.moveTo(px + 0.4 * u, f0); g.lineTo(fx, (f0 + f1) / 2); g.lineTo(px + 0.4 * u, f1); g.closePath();
-      g.strokeStyle = 'rgba(46,28,0,0.9)'; g.lineWidth = 0.9 * u; g.stroke();
-      break;
-    }
-    case 'peg': {
-      // the tee: a white ball on its peg; the shadow falls down the sun's line
-      const px = cx + 1 * u, py = cy + 3 * u, hp = 5.6 * u, br = 3.5 * u, bcy = py - hp - br + 0.6 * u;
-      g.beginPath(); g.moveTo(px, py); g.lineTo(shX(px, hp), shY(py, hp)); g.strokeStyle = MARK_SHADOW; g.lineWidth = 1.6 * u; g.stroke();
-      g.beginPath(); g.ellipse(shX(px, py - bcy), shY(py, py - bcy), br, br * 0.55, 0, 0, Math.PI * 2); g.fillStyle = MARK_SHADOW; g.fill();
-      g.restore(); g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.lineCap = 'round'; g.lineJoin = 'round';
-      g.beginPath(); g.moveTo(px - 0.6 * u, py); g.lineTo(px + 0.6 * u, py); g.lineTo(px + 1.6 * u, py - hp); g.lineTo(px - 1.6 * u, py - hp); g.closePath();
-      g.fillStyle = '#f2ece0'; g.fill(); g.strokeStyle = 'rgba(20,18,14,0.85)'; g.lineWidth = 0.9 * u; g.stroke();
-      g.beginPath(); g.arc(px, bcy, br, 0, Math.PI * 2); g.fillStyle = '#fdfdf9'; g.fill();
-      g.save(); g.clip(); g.beginPath(); g.rect(px - 2 * br, bcy - 2 * br, 4 * br, 4 * br); g.arc(px + 1.3 * u, bcy - 1.3 * u, br, 0, Math.PI * 2, true);
-      g.fillStyle = 'rgba(64,74,100,0.38)'; g.fill(); g.restore();
-      g.beginPath(); g.arc(px, bcy, br, 0, Math.PI * 2); g.strokeStyle = 'rgba(20,18,14,0.9)'; g.lineWidth = 1 * u; g.stroke();
-      break;
-    }
-    case 'tufts': case 'wisps': {
-      // rough: three short tufts of three leaves on a wide base (grass, never an arrow); fescue: two tall clusters of wispy blades with seed
-      // heads
-      const tuft = (x: number, y: number, k: number) => {
-        g.moveTo(x - 1.9 * k, y); g.quadraticCurveTo(x - 2.3 * k, y - 2.6 * k, x - 3.5 * k, y - 4.4 * k); g.quadraticCurveTo(x - 1.4 * k, y - 2.9 * k, x - 0.7 * k, y); g.closePath();
-        g.moveTo(x - 0.65 * k, y); g.quadraticCurveTo(x - 0.4 * k, y - 3.4 * k, x + 0.2 * k, y - 6.2 * k); g.quadraticCurveTo(x + 0.6 * k, y - 3.2 * k, x + 0.75 * k, y); g.closePath();
-        g.moveTo(x + 0.8 * k, y); g.quadraticCurveTo(x + 1.6 * k, y - 2.7 * k, x + 3.5 * k, y - 4.2 * k); g.quadraticCurveTo(x + 2.3 * k, y - 2.3 * k, x + 2 * k, y); g.closePath();
-      };
-      const tips: number[] = [];
-      const wisp = (x: number, y: number, k: number) => {
-        for (const [dx, h, bend] of [[-1.6, 9, -2.6], [-0.4, 11, -0.6], [0.8, 10, 2.2], [1.8, 8, 3.6]] as const) {
-          const x1 = x + dx * k + bend * k, y1 = y - h * k;
-          g.moveTo(x + dx * 0.4 * k, y); g.quadraticCurveTo(x + dx * 0.4 * k + bend * 0.15 * k, y - h * 0.6 * k, x1, y1); tips.push(x1, y1);
-        }
-      };
-      g.restore(); g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.lineCap = 'round'; g.lineJoin = 'round';
-      g.beginPath();
-      if (mark === 'tufts') { tuft(cx - 8.5 * u, cy + 2.4 * u, 1.15 * u); tuft(cx + 0.5 * u, cy - 1.4 * u, 1.15 * u); tuft(cx + 8.5 * u, cy + 3.6 * u, 1.05 * u); }
-      else { wisp(cx - 5 * u, cy + 3.5 * u, u); wisp(cx + 5.5 * u, cy + 1.5 * u, 0.9 * u); }
-      if (mark === 'tufts') { g.strokeStyle = HALO; g.lineWidth = 1.6 * u; g.stroke(); g.fillStyle = '#f4f0c4'; g.fill(); }
-      else haloStroke(g, '#fbeec4', u, 1.2, 2.8);
-      if (tips.length) {
-        g.beginPath();
-        for (let i = 0; i < tips.length; i += 2) { g.moveTo(tips[i]! + 1.1 * u, tips[i + 1]!); g.ellipse(tips[i]!, tips[i + 1]!, 1.1 * u, 1.6 * u, 0.4, 0, Math.PI * 2); }
-        g.fillStyle = '#f6dc8a'; g.fill(); g.strokeStyle = HALO; g.lineWidth = 0.8 * u; g.stroke();
-      }
+      g.beginPath(); chord(-2.6 * u); chord(2.6 * u);
+      g.strokeStyle = '#fff4e4'; g.lineWidth = u; g.stroke();
+      g.beginPath(); chord(0); g.setLineDash([1.3 * u, 1.5 * u]); g.lineCap = 'butt'; g.lineWidth = 0.9 * u; g.stroke(); g.setLineDash([]);
       break;
     }
   }
@@ -1238,9 +1201,11 @@ export class CourseCursor {
     const key = `${kind}|${st.tex}|${st.scale}|${st.angle}|${st.border}|${st.btex}|${st.bscale}|${st.bangle}|${st.tone}|${st.toneAmt}|${st.tint}|${erase ? 1 : 0}|${band ? 1 : 0}|${d}|${rev}`;
     let sp = this.sprites.get(key);
     if (sp) { this.sprites.delete(key); this.sprites.set(key, sp); return (this.spr = sp); }
-    const sr = (CHIP_CSS / 2) * d, sry = sr * (HH / HW), thick = thickOf(sry, d), pad = Math.ceil(3 * d + 2), top = Math.ceil(4 * d);
+    const sr = (CHIP_CSS / 2) * d, sry = sr * (HH / HW), thick = thickOf(sry, d), pad = Math.ceil(3 * d + 2);
+    // room above the face and to its right for the mark's badge (T138: it sits outside the face)
+    const top = Math.max(Math.ceil(4 * d), Math.ceil((BADGE.r - BADGE.dy + 0.5) * d - sry - pad)), wide = Math.max(2 * sr + 2 * pad, pad + sr + (BADGE.dx + BADGE.r + 0.5) * d);
     const make = this.env.canvas ?? domCanvas;
-    const c = make(Math.ceil(2 * sr + 2 * pad), Math.ceil(2 * sry + thick + 2 * pad + top)), g = c.getContext('2d');
+    const c = make(Math.ceil(wide), Math.ceil(2 * sry + thick + 2 * pad + top)), g = c.getContext('2d');
     if (g) paintPuck(g, st, kind, erase, band, CHIP_R, sr, sry, thick, pad, d, this.env.texture, top);
     const sh = make(Math.ceil(2 * sr * 1.3 + 4), Math.ceil(2 * sry * 1.3 + 4)), gs = sh.getContext('2d');
     if (gs) paintShadow(gs, sr, sry);

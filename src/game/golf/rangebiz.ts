@@ -556,6 +556,10 @@ export class RangeSim {
     this.visits = []; this.queue = []; this.balls = []; this.serving = -1; this.nLying = 0; this.bayBusy.fill(false); this.slotBusy.fill(false); this.spotBusy.putting.fill(false); this.spotBusy.chipping.fill(false); this.used.length = 0;
     this.kq = []; this.kServing = -1; this.pickT = -1; this.picked = false; this.pro.coach = -1; this.pro.placed = false; this.lyingAt = 0;
   }
+  /** today's counts start again with the next step (a new game or a load: the town day starts again, maybe on the same day number: T135) */
+  newDay(): void {
+    this.day = -1; this.today = { golfers: 0, lost: 0, queue: 0, playing: 0, coffees: 0, lessons: 0, kioskQueue: 0, upstairs: 0 }; this.practiceToday = { putting: 0, chipping: 0 };
+  }
 
   /** a car turns in off the county road from either side, along the drive and into car-park bay `slot` */
   private arrive(slot: number): void {
