@@ -3,7 +3,7 @@
 // (ownerScaleOf). A decal's studio size is packed into its strip (prep-decals.mjs), so it is not tested here. Headless: npm test.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { CAR_DIRECTIONS, CAR_SCALE, carOwnerScale, carSizeId } from '../src/game/ext/car-art';
+import { CAR_DIRECTIONS, CAR_SCALE, carModelSize, carOwnerScale, carSizeId } from '../src/game/ext/car-art';
 import { facings } from '../src/game/traffic';
 import { LIBRARY } from '../src/game/library';
 import { STUDIO_SCALE } from '../src/game/lots/scales';
@@ -21,20 +21,26 @@ const moving = (item: number, s: number): Drawable => ({ ...parked(item, CAR_SCA
 /** the picture's width in world px */
 const width = (d: Drawable) => { const r = spriteRect(d); return r[2] - r[0]; };
 
-test('a car takes its model\'s size: the eight headings share one key, any other id is its own', () => {
+test('a car takes its model\'s size: the eight headings share one key, a town car\'s facings and views share its model\'s (T143), a world car is its own', () => {
   for (const d of CAR_DIRECTIONS) assert.equal(carSizeId(`${MODEL}:${d}`), MODEL);
   assert.equal(carSizeId(OTHER), 'cars:navy-wood-panel-wagon');
-  assert.equal(carSizeId('static:compact_e'), 'static:compact_e');
+  assert.equal(carSizeId('static:compact_e'), 'static:compact');
+  assert.equal(carSizeId('variation:static-compact_n-v2-ea89d6fd:3'), 'static:compact');
   assert.equal(carSizeId('world:schoolbus'), 'world:schoolbus');
+  assert.equal(carSizeId('variation:world-schoolbus-6df6411d:1'), 'world:schoolbus');
 });
 
-test('a car\'s owner size is its studio size for its key, 1 when unset; the table\'s car sizes are not used', () => {
-  assert.equal(carOwnerScale(CAR), STUDIO_SCALE[MODEL] ?? 1);
-  assert.equal(carOwnerScale('world:car_0'), STUDIO_SCALE['world:car_0'] ?? 1, 'OWNER_SCALE holds 1.371 for world:car_0; a car never takes it');
+test('a car\'s owner size is its studio size for its model, 1 when unset; the table\'s car sizes are not used', () => {
+  assert.equal(carOwnerScale(CAR), carModelSize(STUDIO_SCALE, MODEL) ?? 1);
+  assert.equal(carOwnerScale('world:car_0'), carModelSize(STUDIO_SCALE, 'world:car_0') ?? 1, 'OWNER_SCALE holds 1.371 for world:car_0; a car never takes it');
   const sizes = { [MODEL]: 1.25 };
   for (const d of CAR_DIRECTIONS) assert.equal(carOwnerScale(`${MODEL}:${d}`, sizes), 1.25, `${d}: every heading of the model`);
   assert.equal(carOwnerScale(OTHER, sizes), 1, 'another model keeps its own size');
-  assert.equal(carOwnerScale('static:compact_e', { 'static:compact_e': 1.19 }), 1.19, 'a single car is keyed by its own id');
+  assert.equal(carOwnerScale('static:compact_e', { 'static:compact': 1.19 }), 1.19, 'a town car is keyed by its model');
+  assert.equal(carOwnerScale('variation:static-compact_w-3465d046:2', { 'static:compact': 1.19 }), 1.19, 'its views too');
+  // a size kept under a facing's or a view's own key before T143 still counts, the largest of them, until the studio folds them into the model's key
+  const old = { 'static:compact_e': 1.166, 'static:compact_w': 1.259, 'variation:static-compact_n-82988799:1': 1.08, 'static:compact': 1.1 };
+  for (const id of ['static:compact_n', 'static:compact_e', 'static:compact_w', 'variation:static-compact_s-0c90743f:4']) assert.equal(carOwnerScale(id, old), 1.259, `${id}: the largest of the model's keys`);
 });
 
 test('traffic: every facing carries its model\'s owner size, so the cars on the road are drawn at it', () => {
@@ -62,7 +68,7 @@ test('a studio size set for a car is what the game draws: its owner scale, its p
     studio[MODEL] = BIG;
     assert.equal(ownerScaleOf(CAR), BIG);
     assert.equal(ownerScaleOf(`${MODEL}:N`), BIG, 'every heading of the model');
-    assert.equal(ownerScaleOf(OTHER), STUDIO_SCALE[OTHER] ?? 1, 'another model is not resized');
+    assert.equal(ownerScaleOf(OTHER), carModelSize(STUDIO_SCALE, 'cars:navy-wood-panel-wagon') ?? 1, 'another model is not resized (it keeps its own studio size)');
     const item = INDEX.get(CAR)!;
     assert.ok(Math.abs(width(parked(item, ownerScaleOf(CAR))) / width(parked(item, 1)) - BIG) < 1e-9, 'the picture');
     assert.ok(Math.abs(footprintOf(CAR, ownerScaleOf(CAR), false)[2] / footprintOf(CAR, 1, false)[2] - BIG) < 1e-9, 'the footprint');

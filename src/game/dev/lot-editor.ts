@@ -21,7 +21,7 @@ import { ATLAS_PAGES, ATLAS_SIZE, LIBRARY } from '../library';
 import { spriteRect, type Drawable } from '../sprites';
 import { worldX, worldY } from '../iso';
 import { OWNER_SCALE, TABLE_SCALE } from '../lots/scales';
-import { carSizeId } from '../ext/car-art';
+import { carOwnerScale, carSizeId, foldCarSizes } from '../ext/car-art';
 import { lookOf, maxDrawScale } from '../newart';
 import { compose, lotPreset, lotPresets, lotPresetsMeta, onLotPresetsReload, setLotPresets, type PresetDrop } from '../lots/compose';
 import { formatPresets, type LotPreset } from '../lots/presets';
@@ -51,6 +51,8 @@ const GROW = 1.05, STEP = 0.25, STEP_BIG = 1;
 /** a removal is read when the assets are generated (scales.ts REMOVED_IDS, by prep-scales.mjs); the sizes are read at runtime */
 const REMOVED_NOTE = 'the sprite leaves the game at the next asset rebuild (the studio\'s Rebuild), which reads removed.json';
 const INDEX = new Map(LIBRARY.map((it, i) => [it.id, i] as const));
+/** the game's car ids (what foldCarSizes folds into their models' keys) */
+const CAR_IDS = LIBRARY.filter(it => it.kind === 'car').map(it => it.id);
 /** the largest drawn scale a sprite's art allows (newart.ts maxDrawScale: its picture's pixels at the closest zoom); four-view art takes the
  *  smallest of its four views, since a preset or a library size draws it in any of them; Infinity for a stand-in (it fills any footprint) */
 const artLimit = (id: string) => Math.min(...(fourViews(id)?.views ?? [id]).map(v => { const i = INDEX.get(v); return i === undefined ? Infinity : maxDrawScale(i); }));
@@ -300,10 +302,12 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
     const it = LIBRARY[item]!, car = isCar(it.id), id = car ? carSizeId(it.id) : fourViews(it.id)?.views[0] ?? it.id;
     if (a === 'bigger' || a === 'smaller') {
       // the studio's rule (server.mjs /api/scale): its size, else the table's (a car's: 1, the size of its model), times the step; never past the pixels of any of its views
-      const text = await load('scale-overrides.json'), sizes = JSON.parse(text) as Record<string, number>, base = car ? 1 : TABLE_SCALE[id] ?? OWNER_SCALE[id] ?? 1, cur = sizes[id] ?? base;
+      // a car's size is its model's (carOwnerScale: a size the studio kept under one of its pictures' own keys before T143 counts, the largest), and the
+      // save folds those keys into the model's (foldCarSizes), as the studio's save does
+      const text = await load('scale-overrides.json'), sizes = JSON.parse(text) as Record<string, number>, base = car ? 1 : TABLE_SCALE[id] ?? OWNER_SCALE[id] ?? 1, cur = car ? carOwnerScale(it.id, sizes) : sizes[id] ?? base;
       const lim = artLimit(car ? it.id : id), next = growWithin(cur, a === 'bigger' ? GROW : 1 / GROW, lim);
       if (next === null) return say(refused(id, lim));
-      const out = scaleOverride(sizes, id, base, next / cur), views = fourViews(id)?.views ?? [id], before = views.map(v => [v, OWNER_SCALE[v]] as const);
+      const out = car ? { ...foldCarSizes(sizes, CAR_IDS), [id]: +next.toFixed(3) } : scaleOverride(sizes, id, base, next / cur), views = fourViews(id)?.views ?? [id], before = views.map(v => [v, OWNER_SCALE[v]] as const);
       await save('scale-overrides.json', studioJson(out));
       // a car's size is read from the studio file when the game loads (ext/car-art carOwnerScale), so it shows after a reload
       if (car) { undo.push({ kind: 'file', file: 'scale-overrides.json', text }); return say(`${id}: size ${out[id]} saved to scale-overrides.json; every car of this model is drawn at that size after a reload of the game`); }

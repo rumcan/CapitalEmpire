@@ -400,7 +400,7 @@ test('compositions are pinned: digests of fixed seeds, drawn at the table sizes 
   // (carOwnerScale reads STUDIO_SCALE, not OWNER_SCALE) is set aside the same way, and put back after
   const live = { ...OWNER_SCALE }, use = (to: Record<string, number>) => { for (const k of Object.keys(OWNER_SCALE)) delete OWNER_SCALE[k]; Object.assign(OWNER_SCALE, to); };
   const studio = STUDIO_SCALE as Record<string, number>, studioLive = { ...studio };
-  for (const i of LIBRARY) if (i.kind === 'car') delete studio[carSizeId(i.id)];
+  for (const i of LIBRARY) if (i.kind === 'car') { delete studio[carSizeId(i.id)]; delete studio[i.id]; }
   use(TABLE_SCALE);
   try { assert.deepEqual(CASES.map(([i, st]) => digest(compose(LOTS[i], st))), CASES.map(c => c[2])); } finally { use(live); Object.assign(studio, studioLive); }
 });
