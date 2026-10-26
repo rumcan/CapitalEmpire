@@ -7,6 +7,7 @@ Update this file **before** each edit and after each sub-step. If you are pickin
   ground painted, saved and approved into `lot-presets.json`; approved presets replace the frozen ones on matching lots (type, state, size,
   road angle 0..7) and give diagonal-road lots a building; farms are a lot type. Design and rules: `docs/plans/P20.md` "The lot lab".
 - Dev servers for it: game 5241, studio 5242 (`.claude/launch.json` `lot-presets-game`, `lot-presets-studio`).
+- **Handover for the next chat: `docs/LOT-LAB-HANDOVER.md`** (where it is, what runs, what is verified, the open requests).
 
 ## Owner-requested integration (2026-10-23)
 - Branch: `lead/merge-outstanding-20261023`, isolated checkout `worktrees/outstanding-merge-20261023`, from main `72317a9`.
