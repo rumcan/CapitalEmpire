@@ -30,8 +30,7 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 | T164 | (new) | `arena/T164-main-tests` | `.claude/worktrees/t157` | 5188 | Main's two test failures after the #353 Rebuild: the drawn shadow for `expansion:stationwagon-rear`, and compose's RES side yard (gen-house-ranch-long at 1.01 tiles after the owner's size change). |
 | T154 | #330 | `arena/T154-new-art` | `.claude/worktrees/t154` | — | **Phase 1 merged (#345).** Phase 2 waits: the eight-heading contract (a building on a 45° road picks its cardinal view, `AXIS_SETS`); the new subjects' diagonal views are art work (listed in GOLF-SPRITES.md). |
 | T152 | #325 | `arena/T152-car-spacing` (d3bdbf1) | `.claude/worktrees/t152` | — | **Paused** for the art (the owner). Root cause: the range's own cars (`rangebiz.ts:803/832/723`) are placed by their own clock; fixed in rangebiz.ts only (overlaps -75-82% with the 44-bay lot, money identical). **Owner's decision needed:** at full demand the one-lane drive and the building's ramp cannot carry the cars at a car's gap (wider drive, second ramp, faster car-park speeds, or the queue limiting sales). Left: three gates, shots, PR. |
-| T163 → T159 | (T163 new), #348 | from origin/main | `.claude/worktrees/t155` | 5186 | T158 merged (#352). Next: T163 parked cars on lots vs the studio car size (the owner; measure, fix if real), then T159 (P25: presets as samples + the 12-lot gallery). |
-| T162 | #350 | `arena/T162-rough-owner` | `.claude/worktrees/t162` | 5187 | The owner's three rough paintings (NEAR/MID/FAR, from Codex's generated_images) as the rough and decrepit lawns, edges healed once in the asset step so each tiles. |
+| T159 | #348 | from origin/main | `.claude/worktrees/t155` | 5186 | P25 step 2: the existing presets as "kept here" samples + the 12-lot gallery (thumbs up/down, click one to fix it in the wizard). T163 merged (#359). |
 | T112 | #199 | `arena/T112-sharp` (1872f0e) | `.claude/worktrees/t112` | — | **Paused** for T153: sharp 0.35.5 in, all packed art identical (260 images byte-identical; 16 view PNGs only re-tagged), still to do: the KTX2 check, the studio check, audit/typecheck/suite/build, the PR. Resume from #199. |
 
 **Two coding agents at a time (the owner, 2026-10-26: first "maybe just too many background tasks?" after the studio tab died with the
@@ -78,6 +77,10 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
    (the sharp bump). See the History sections below and `gh issue list --label arena --state open`.
 
 ### Done recently (newest first; details in each PR)
+- 2026-10-26: **T162 #360 the owner's rough** (`art/owner-supplied/rough-20261026`, family `rough-owner`, one tile a level): edges healed once
+  in the asset step (`scripts/assets/tile-heal.mjs`, wrap-bridge 48 px); `rough` and `lawnDeclined` wear it. **T163 #359 parked cars vs the
+  studio size**: sizes always matched; a studio save now reaches the running dev game at once (`lots/scales-live.ts`), and cards past a
+  picture's pixels show the size the lots draw. **#357 tests never block a merge** (merge on review + typecheck; fix forward).
 - 2026-10-26: **T157 #354 the lot lab runs light** (the owner: "the studio is taking too much ram"): boot options (`src/game/boot.ts`; the game
   unchanged), the lab's light boot under `?lotlab` (one CPU-canvas ground worker, no sim/save/town/golf, lazy textures, a small atlas, a
   320-tile box; `?lotlab&fullboot` for the old way); the studio's Lots frame only while open. Lab memory 4,179 → ~1,340 MB, VRAM 1,898 → ~290
