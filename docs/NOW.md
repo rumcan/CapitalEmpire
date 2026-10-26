@@ -25,7 +25,7 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |
 | **T145 (top priority)** | #300 | `arena/T145-painted-terrain` | `.claude/worktrees/t145` | 5186 | The owner's brief (in the issue): the accepted golden fescue and lake tiles in the game, three authored sets NEAR/MID/FAR of four large tiles each, hash-checked from `eight-tiles/READY-MATERIALS.json`, on main's T128 painted-families runtime. Brief: `E:/ClaudeTemp/lead/t145-brief.md`. |
-| T146 | #303 | `arena/T146-range-parking` | an agent worktree under `.claude/worktrees` | 5187 | P24 D49: a "Bigger car park" upgrade on the range card (sized so a full 36-bay range turns no car away) and the skip counting parking. Opus, high effort (range work). **Paused** (the owner, 2026-10-26: "highest priority is the new textures please"): resume it from #303's "To resume" when T145 lands. |
+| T146 | #303 | `arena/T146-range-parking` | an agent worktree under `.claude/worktrees` | 5187 | Resumed with the owner's new scope (2026-10-26: "lets add a carpark building. server the golfers in parallel"): a multi-storey car park building as the range's parking upgrade (stand-in + art request), the pro shop serving in parallel so a full range fills its bays, the skip counting parking. Yields heavy steps to T145. Opus, high effort. |
 
 **Two coding agents at a time (the owner, 2026-10-26: first "maybe just too many background tasks?" after the studio tab died with the
 PC at 1.5 GB free, then "start up two coding agents"):** keep two coding agents running, start the next queue ticket when one lands, no
@@ -48,6 +48,9 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
 `docs/START-PROMPTS.md`.
 
 ### Queue (in order)
+0. **T147 #306 money floats up where it is made** (the owner, 2026-10-26: "show green +$400 ... float up from a customer when we make
+   money and -$300 when we dont in red"): next when an agent slot frees. Decisions in the issue (green in, red out, red for a lost sale
+   without charging the treasury; merged at mid zoom, none at overview; a setting to hide them).
 1. **The nightly.** The owner should allow the nightly session's commands so it runs unattended. fix:gate's new default (seed 1 day 60)
    passes by 1.8 points only: if it flips, retune the scenario (#298's header has the scan table), do not touch traffic.
 2. **The owner's new grass paintings**, when they arrive. Import them with `scripts/assets/prep-painted-families.mjs` (the families list
