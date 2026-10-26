@@ -7,6 +7,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { LIBRARY } from '../src/game/library';
 import { AXIS_HEADING, AXIS_NEW, AXIS_SETS, AXIS_TURN } from '../src/game/axis-library';
+import { GARAGE_VIEW_SETS } from '../src/game/garage-views-library';
 import { drawnAs } from '../src/game/mirror';
 import { axisViews, baseView, footprintOf, sizeKey, sizeViews, turned } from '../src/game/lots/preset-art';
 import { drawnAsStandIn, lookOf, standInLabel } from '../src/game/newart';
@@ -80,7 +81,7 @@ test('sizes: a set is sized with its subject (one studio size, its card), a car 
   assert.equal(sizeKey('view:town:bakery:e'), 'town:bakery');
   assert.equal(sizeKey('view:town:bakery:sw'), 'town:bakery');
   assert.equal(sizeKey('view:ce:parking-garage-6storey:s'), 'ce:parking-garage-6storey');
-  assert.deepEqual(sizeViews('ce:parking-garage-6storey'), [...AXIS_SETS['ce:parking-garage-6storey']!]);
+  assert.deepEqual(sizeViews('ce:parking-garage-6storey'), [...AXIS_SETS['ce:parking-garage-6storey']!, ...(GARAGE_VIEW_SETS['ce:parking-garage-6storey'] ?? [])]);
   const bakery = sizeViews('town:bakery'); assert.equal(bakery.length, 8, 'the bakery: its four diagonal views and its four screen-axis views');
   for (const v of AXIS_SETS['world:bench']!) assert.equal(OWNER_SCALE[v], OWNER_SCALE['world:bench'], `${v} takes the bench's size`);
   for (const v of AXIS_SETS['static:pickup_n']!) { assert.equal(carModel(v), 'static:pickup'); assert.equal(LIBRARY[BY.get(v)!]!.kind, 'car'); }

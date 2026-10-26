@@ -1,5 +1,12 @@
 # NOW: the live work log
 
+## Art follow-up: parking garage diagonal views (2026-10-26)
+- Branch `lead/garage-eight-views-20261026`, isolated worktree `worktrees/garage-eight-views-20261026`, based on main `fffca10`.
+- Implemented: scoped `prep-garage-views.mjs` (also called by `prep-views.mjs`), append-only `garage-views-library`, shared Studio sizing/eight labelled thumbnails, explicit diagonal picker IDs and lot-lab NE-set entry; R turns within that diagonal set. Original base/N/E/S/W IDs and indices stay intact. Automatic selection for arbitrary road angles remains T154 Phase 2.
+- Checks before artwork: typecheck PASS, 8 focused importer/axis checks PASS (including execution of the generated append function on a fixture: existing base object/index unchanged, four records appended, atlas offset applied, no duplicate IDs), production build PASS (38.8 s). Full `npm test` could not start: Node semi-space allocation failed at ~8 MB (machine-memory exhaustion, exit 134); no test result is claimed for it.
+- Next action: await primary's reviewed v2 (v1 diagonal sheets rejected for duplicate corners/slopes/clipping), import only provenance `integrationStatus: ready` with all four native crops and matching storey count. Inspect actual game and Studio after packing; no art is integrated or on main from this branch yet.
+- Do not ship unreviewed PNGs. Existing axis garage 4/5/6-storey floor counts are disputed and retained as a known art issue; no silent relabelling in this code change. Rough v2 art remains the primary art session's priority.
+
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 

@@ -20,6 +20,8 @@ import { lookOf, standInCandidates } from '../../../src/game/newart';
 import { PIXEL_LIMIT, PIXEL_SLACK, atlasRes } from '../../../src/game/sizes';
 import { VIEW_ART } from '../../../src/game/views-library';
 import { AXIS_SETS } from '../../../src/game/axis-library';
+import { GARAGE_NATIVE_WIDTH } from '../../../src/game/garage-views-library';
+import { GARAGE_VIEW_BASE } from '../../../src/game/garage-views';
 import { CAR_SCALE, carModelSize, carOwnerScale, carSizeId } from '../../../src/game/ext/car-art';
 import { STUDIO_SCALE } from '../../../src/game/lots/scales';
 import type { LibItem } from '../../../src/game/types';
@@ -32,10 +34,11 @@ const isCar = (id: string) => LIBRARY[INDEX.get(id) ?? -1]?.kind === 'car';
 /** the screen-axis pictures' subjects (axis-library.ts, T154): a subject's four N, E, S, W pictures take its size */
 const AXIS_OF = new Map<string, string>(Object.entries(AXIS_SETS).flatMap(([s, views]) => views.map(v => [v, s] as const)));
 /** the id whose studio size a sprite takes: a view's or an east view's building, a screen-axis picture's subject, a car's model (carSizeId, for cars only: a building's variation views are their own) */
-const sizeIdOf = (id: string) => { const a = AXIS_OF.get(id); if (a !== undefined && !isCar(id)) return a; const v = /^view:(.+):(se|sw|nw)$/.exec(id); return v ? v[1]! : id.startsWith('east:') && INDEX.has(id.slice(5)) ? id.slice(5) : isCar(id) ? carSizeId(id) : id; };
+const sizeIdOf = (id: string) => { const garage = GARAGE_VIEW_BASE.get(id); if (garage) return garage; const a = AXIS_OF.get(id); if (a !== undefined && !isCar(id)) return a; const v = /^view:(.+):(se|sw|nw)$/.exec(id); return v ? v[1]! : id.startsWith('east:') && INDEX.has(id.slice(5)) ? id.slice(5) : isCar(id) ? carSizeId(id) : id; };
 const scaleOf = (id: string) => isCar(id) ? carOwnerScale(id) : OWNER_SCALE[sizeIdOf(id)] ?? OWNER_SCALE[id] ?? 1;
 /** the four-view sources' native widths (art/building-views/<slug>/<DIR>.png) by the library id each view is drawn as */
 const NATIVE_W = new Map<string, number>(), STORE = path.join(ROOT, 'art/building-views');
+for (const [id, width] of Object.entries(GARAGE_NATIVE_WIDTH)) if (INDEX.has(id)) NATIVE_W.set(id, width);
 if (fs.existsSync(STORE)) for (const slug of fs.readdirSync(STORE)) {
   const src = path.join(STORE, slug, 'source.json'); if (!fs.existsSync(src)) continue;
   const { id } = JSON.parse(fs.readFileSync(src, 'utf8')) as { id: string };

@@ -37,6 +37,7 @@ import { onStudioScales } from '../lots/scales-live';
 import { resetFacings } from '../traffic';
 import { toFrame, toWorld, type PresetFrame } from '../lots/preset-frame';
 import { footprintOf, ownerScaleOf, sizeKey, sizeViews, turned } from '../lots/preset-art';
+import { GARAGE_VIEW_BASE } from '../garage-views';
 import { applyEdit, clampToLot, fit1, growWithin, placeInPreset, presetToWorld, removeSprite, replacePreset, scaleOverride, snap, studioJson, worldToPreset, type PresetEdit } from './lot-edit';
 import { copySel, count, deleteSel, has, inBox, mainBuilding, moveSel, NONE, pasteClip, scaleSel, selOf, swapHouse, toggle as toggleSel, turnSel, union, within, type Clip, type Kind, type ScreenPt, type Selection } from './lot-select';
 import { artLimit, classWords, frameHalf, isHouseLike, nextHouse, type HouseOk } from './lot-houses';
@@ -232,7 +233,7 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
     <div data-k="msg" style="margin-top:6px;color:#fcd34d;white-space:pre-wrap"></div>`;
   const $ = <T extends HTMLElement>(k: string) => panel.querySelector(`[data-k="${k}"]`) as T;
   const list = panel.querySelector('datalist')!;
-  for (const it of LIBRARY) if (!it.id.startsWith('view:') && !it.id.startsWith('east:') && it.kind !== 'walker') { const o = document.createElement('option'); o.value = it.id; o.label = it.name; list.appendChild(o); }
+  for (const it of LIBRARY) if ((!it.id.startsWith('view:') || GARAGE_VIEW_BASE.has(it.id)) && !it.id.startsWith('east:') && it.kind !== 'walker') { const o = document.createElement('option'); o.value = it.id; o.label = it.name; list.appendChild(o); }
   document.body.append(outline, lost, ghostEl, boxEl, panel);
   const pick = $<HTMLInputElement>('pick');
   /** the picker's library id: the id typed, or the one whose name was typed */

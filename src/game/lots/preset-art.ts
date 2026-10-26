@@ -5,6 +5,8 @@ import { LIBRARY } from '../library';
 import type { LibItem } from '../types';
 import { VIEW_ART, unmirror } from '../views-library';
 import { AXIS_SETS } from '../axis-library';
+import { GARAGE_VIEW_SETS } from '../garage-views-library';
+import { GARAGE_VIEW_BASE } from '../garage-views';
 import { OWNER_SCALE } from './scales';
 import { hasLettering } from './lettering';
 import { CAR_DIRECTIONS, CAR_SCALE, carFootprint, carOwnerScale } from '../ext/car-art';
@@ -20,6 +22,11 @@ const viewCache = new Map<string, Views | null>();
  *  view:<id>:nw), from any one of them; null when the library lacks any of the four */
 export function fourViews(id: string): Views | null {
   const c = viewCache.get(id); if (c !== undefined) return c;
+  const garage = GARAGE_VIEW_BASE.get(id), diagonal = garage ? GARAGE_VIEW_SETS[garage] : undefined;
+  if (diagonal) {
+    const out = diagonal.every(v => BY.has(v)) ? { views: [...diagonal] as Views['views'], at: diagonal.indexOf(id) } : null;
+    viewCache.set(id, out); return out;
+  }
   const base = id.startsWith('view:') ? id.slice(5, id.lastIndexOf(':')) : id.startsWith('east:') && VIEW_ART.has(id) ? id.slice(5) : id;
   const se = unmirror(base, true)[0], sw = `view:${base}:sw`, nw = `view:${base}:nw`;
   const views: [string, string, string, string] = [base, se, sw, nw];
@@ -37,9 +44,9 @@ for (const views of Object.values(AXIS_SETS)) if (views.every(v => BY.has(v))) v
 export const axisViews = (id: string): Views | null => AXIS.get(id) ?? null;
 const AXIS_OF = new Map<string, string>(Object.entries(AXIS_SETS).flatMap(([s, views]) => views.map(v => [v, s] as const)));
 /** the id a picture's studio size is kept under (its Library card): a four-view building's NE view, a screen-axis picture's subject (T154) */
-export const sizeKey = (id: string): string => AXIS_OF.get(id) ?? fourViews(id)?.views[0] ?? id;
+export const sizeKey = (id: string): string => GARAGE_VIEW_BASE.get(id) ?? AXIS_OF.get(id) ?? fourViews(id)?.views[0] ?? id;
 /** every picture one studio size (sizeKey) draws: the subject's four views (or itself) and its screen-axis set */
-export const sizeViews = (key: string): string[] => [...new Set([...(fourViews(key)?.views ?? [key]), ...(AXIS_SETS[key] ?? [])])];
+export const sizeViews = (key: string): string[] => [...new Set([...(fourViews(key)?.views ?? [key]), ...(AXIS_SETS[key] ?? []), ...(GARAGE_VIEW_SETS[key] ?? [])])];
 
 /** a drawn sprite as a preset stores it: its base id (the NE view for four-view art, else itself) and the view it is turned to (0..3) */
 export function baseView(id: string): { id: string; view: 0 | 1 | 2 | 3 } {
