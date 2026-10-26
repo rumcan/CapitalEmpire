@@ -7,8 +7,9 @@
 //           drawn scale per scale of the sprite below the cap (a stand-in fills the old footprint), cap: the drawn scale it never exceeds
 //   sharp   the largest scale it is drawn at without stretching its atlas pixels at the closest zoom (null: drawn as nothing)
 //   native  the largest scale its source picture's own pixels allow: the four-view art (art/building-views, the smallest of its views); a sprite the
-//           game draws as itself and prep-sprites.mjs packs, from its painted source's width (the same lookup prep-sprites uses). Above it the studio
-//           refuses a size. null: unknown, or a stand-in (an old building drawn as new art: its own picture is never drawn, sharp is the stand-in's)
+//           game draws as itself and prep-sprites.mjs packs, from its painted source's width (the same lookup prep-sprites uses); a business picture
+//           (prep-business-art.mjs) from its capital-v1 master's width. Above it the studio refuses a size. null: unknown, or a stand-in (an old
+//           building drawn as new art: its own picture is never drawn, sharp is the stand-in's)
 import fs from 'node:fs';
 import path from 'node:path';
 import { ATLAS_MIP0, ATLAS_PAGES, LIBRARY } from '../../../src/game/library';
@@ -53,6 +54,10 @@ function pixelWidth(file: string): number | null {
   } catch { w = null; }
   WIDTH.set(file, w); return w;
 }
+/** a business picture's capital-v1 master (manifest.json), the largest real source of the business pack (prep-business-art.mjs) */
+const BUSINESS_MASTER = new Map<string, string>();
+for (const m of (JSON.parse(fs.readFileSync(path.join(ROOT, 'src/assets/businesses/capital-v1/manifest.json'), 'utf8')) as { items: { id: string; file: string }[] }).items)
+  BUSINESS_MASTER.set('business:' + m.id, path.join(ROOT, 'src/assets/businesses/capital-v1', m.file));
 /** the painted source of each sprite prep-sprites.mjs packs, found as it finds it (later wins, as there): the TrickOrTreat library's file, the
  *  TrickOrTreat export's hd picture, the Capital art, the repo's own art/<set>/items.json local entries. Local checkouts only (no network) */
 async function sourceFiles(): Promise<Map<string, string>> {
@@ -97,6 +102,7 @@ LIBRARY.forEach((it, i) => {
   let native: number | null = null;
   const views = [...NATIVE_W.keys()].filter(v => sizeIdOf(v) === sizeIdOf(it.id)), atlasSprite = /assets\/atlas\/sprites-/.test(String(ATLAS_PAGES[it.tex[0]]?.[0] ?? '').replaceAll('\\', '/'));
   if (self && views.length) native = Math.min(...views.map(v => { const x = LIBRARY[INDEX.get(v)!]!; return NATIVE_W.get(v)! / (ATLAS_MIP0 * (x.quad[2] - x.quad[0])); }));
+  else if (self && BUSINESS_MASTER.has(it.id)) { const px = pixelWidth(BUSINESS_MASTER.get(it.id)!); native = px ? px / (ATLAS_MIP0 * it.w) : null; }
   else if (self && atlasSprite) {
     const px = sourcePx(it.id);
     // no source found: a town sprite packed short of its largest drawn scale is short of its atlas (the old limit)
