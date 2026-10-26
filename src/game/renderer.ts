@@ -28,7 +28,7 @@ import { HEIGHT_LIGHT_STRENGTH, HL_MASK, LUMA_SIGMA_PER_L, heightLightGrid, heig
 import { PaintedGround, type LayLevel } from './painted-ground';
 import { coversMap } from './painted-families';
 import { bandOf, cellsIn, snappedCell, tileIndex, tileKey, tilePermutation, tileSize } from './painted-tiles';
-import { WOODLAND, lawnSlot, lawnTex } from './painted-surfaces';
+import { WOODLAND, lawnTexFor } from './painted-surfaces';
 import { BLEND_WAVES, blendAlpha, blendNoise, trimLru } from './painted-grass-lod';
 import { CasterStore, COURSE_GRASSY, COURSE_WATER, SHADOW_DIR, debugImage, grassyTex, influence, livingMasks, livingQueryBox, livingRes, livingSignature, waterTex, type Box, type InfluenceGrid, type LivingMasks, type RoadPiece, type WaterLine } from './living-ground';
 /** the bytes of painted compositions a worker keeps (a chunk's look is about 3 MB at the closest zoom; the bake in progress keeps all of its own) */
@@ -1127,7 +1127,8 @@ export class GroundPainter {
       // with the painted art on, every town lawn wears one of the painted lawns (painted-surfaces.ts lawnSlot: picked by where it lies, so
       // neighbouring lots and blocks differ, and it stays put), else its preset's own painted look, else the map grass's; with the Grass
       // setting 'photo', the preset's picture as before
-      const slot = this.tex.paintedOn ? lawnSlot(p.pts, this.tex.surfaces.lawns) : -1, lt = slot >= 0 ? lawnTex(slot) : '';
+      // T155: a lot's lawn wears its look state's lawn (painted-surfaces.ts lawnTexFor: built the fairway, upgraded the putting green, declined the rough)
+      const lt = this.tex.paintedOn ? lawnTexFor(p.lawn, p.pts, this.tex.surfaces) : '';
       const t = lt && this.tex.isPainted(lt) ? lt : this.tex.isPainted(p.tex) || !this.tex.isPainted('grass') ? p.tex : 'grass';
       const lw = p.lawn!, pb = quadBox(p.pts), r = [Math.max(pb[0], box[0]) - 1, Math.max(pb[1], box[1]) - 1, Math.min(pb[2], box[2]) + 1, Math.min(pb[3], box[3]) + 1];
       if (r[2] <= r[0] || r[3] <= r[1] || !isPaintPhoto(p.tex) || !this.tex.has(t)) continue;

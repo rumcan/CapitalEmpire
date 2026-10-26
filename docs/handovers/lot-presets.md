@@ -10,6 +10,29 @@
 > and keep this file current. Ask the owner before pushing or opening a PR.
 
 ## Now (the current work, newest first)
+- **Done (2026-10-26, T155 #333 PR 1): a roomier lab, house allocations, lawns by state** (the owner: "make the lot building UIX area better ...
+  move some of that stuff out of the side drawer"; "Each house needs an allocation that says it will only work on which road angles and if its a
+  build. upgraded or decrepit house"; "green grass for upgraded house lawns, fairway for the built ones and rough for the decrepit ones").
+  - The screen (`src/game/dev/lot-lab-ui.ts`): the left drawer holds only the lot choice (type, state, size + W/D, road compass, New lot's
+    locks); a toolbar over the map (◀ Variant, Generate ▶, New lot ▶, the draft chip, Save draft, Approve, Approve & next gap, Discard, Undo,
+    Lot grid, Neighbours, Person, ?); a status line under it; a floating selection bar beside the selection (count, Turn, Change house,
+    Smaller, Bigger, Copy, Paste, Duplicate, Delete: the editor's `editorSel()` gives the items and their screen box); the bottom palette strip
+    (`lot-lab-palette.ts`: search, group chips All / Plants / Props / Buildings / Vehicles / Decals / Ground, category chips, large thumbnails
+    scrolling sideways; data-driven from LIBRARY, so new art appears by itself); the right inspector (the selection: picture, id, size,
+    footprint, a house's allocation; the lot: preset id, source, Next gap, Review drafts, Change house, Paste, the lot's house allocation, the
+    presets here, the coverage); "?" the keys overlay. Every panel folds (its edge button; a rail opens it); sizes follow the window (roomy from
+    1600 x 950, compact at 1366 x 768); the folds are kept in `ce-lotlab`. The studio's Lots tab frame fills the view (its "open in its own tab"
+    link moved to the header).
+  - House allocations: `src/game/lots/house-alloc.ts` (pure), data `src/game/lots/house-allocations.json` (`{ v, houses: { <base id>: { roads,
+    states } } }`; a house not listed suits everything), saved per house through `POST /__dev/allocations` (vite.config.ts, `mergeAllocations`,
+    one request at a time; `GET` reads it back), held in the lab by `src/game/dev/house-alloc-store.ts` (hot reload). Generate (`otherHouse`), New
+    lot and the variants (`allowedHouse`) and Change house (`nextHouse(..., ok)` through `setHouseFilter`) deal only houses that suit the lot's
+    road and state; the inspector's compass toggles them and says how many of the pool and family suit (`suitCounts`).
+  - Lawns by state: `painted-surfaces.ts STATE_LAWN` / `lawnTexFor`; surfaces `lawnBuilt` (fairway), `lawnUpgraded` (putting-green),
+    `lawnDeclined` (sage-long, as rough on main, until the long-grass tiles are repaired and handed off) in `painted-surfaces.json`, tunable in
+    Studio › Painted; `lotLawn(key, g, ids, state)`; the engine's `placeLot` passes `stateOf(level, decline)`, so every game lot uses them.
+  - Tests `tests/house-alloc.test.ts`, `tests/lawns-by-state.test.ts`, `tests/lot-lab-palette.test.ts`; screenshots in `E:/ClaudeTemp/T155/`.
+  - Next (PR 2): auto-sized lots from a master on the largest size of a (type, state, road angle).
 - **Done (2026-10-26, T148 #309): multi-select, copy/paste, Change house, Lot grid, Generate in place, Neighbours** (the owner: "add multiple
   select and move/delete ... cntr c for copy and v for paste ... a shortcut button to change the house ... a grid that shows you where the Lot
   boundries are"; "click generate it should stay on that lot"; "a on and off toggle where you unhide or hide houses around the lot").
