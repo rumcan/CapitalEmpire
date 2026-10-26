@@ -123,10 +123,11 @@ test('the sprites: a picture with a shape packs one instance (mirrored with its 
   VECTOR.on = true;
   assert.ok(vecOf(i) && packVector(d, out, 0, 0, 0, spriteRect(d)), id);
   // (its drawn scale: the placed scale, held to the pixels its atlas holds)
-  assert.ok(out[3]! > 0 && Math.abs(out[3]! - spriteAnchor(d)!.k) < 1e-6 && out[2] === out[3]); assert.equal(out[5], vecOf(i)!.count);
+  assert.ok(out[3]! > 0 && Math.abs(out[3]! - spriteAnchor(d)!.k) < 1e-6 && out[2] === 0, "its scale, no lift"); assert.equal(out[5], vecOf(i)!.count);
   assert.equal(contactOf(d), null, 'no T141 contact shape under a drawn one');
   assert.ok(packVector({ ...d, flip: true }, out, 0, 0, 0, spriteRect({ ...d, flip: true })) && out[4] === vecOf(i)!.mfirst && out[5] === vecOf(i)!.mcount, 'mirrored: its mirrored mesh');
-  assert.equal(packVector({ ...d, lift: 40 }, out, 0, 0, 0, spriteRect(d)), false, 'a lifted sprite casts none');
+  // a lifted sprite (the range's upper deck) casts from its ground spot, its lift higher
+  const ground = out[1]!; assert.ok(packVector({ ...d, lift: 40 }, out, 0, 0, 0, spriteRect({ ...d, lift: 40 })) && out[2] === 40 && Math.abs(out[1]! - ground) < 1e-3, 'a lifted sprite casts from its ground spot, 40 px higher');
   VECTOR.on = false;
   assert.equal(packVector(d, out, 0, 0, 0, spriteRect(d)), false);
   VECTOR.on = true;

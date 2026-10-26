@@ -25,9 +25,15 @@ try {
       page.on('pageerror', e => console.log('[pageerror]', e.message));
       await page.goto(`${base}?start=${start}&stamp=0`);
       await page.waitForFunction(() => window.__game?.ready, null, { timeout: 180000 });
+      // the panels and toasts hidden: the game's canvases alone
+      await page.addStyleTag({ content: '* { visibility: hidden !important } canvas { visibility: visible !important }' });
       // the views: [name, how to put the camera there]
       const views = start === 'range'
-        ? [['range', () => { const g = window.__game, d = g.bizDefs.find(b => b.type === 'range'); if (d) g.lookAt(d.x + d.w / 2, d.y + d.h / 2, 0.3); }]]
+        ? [['range', () => {
+          // the range fully built (every upgrade, the last home stage: the bays, the shop, the leaderboard, the caravan), then looked at
+          const g = window.__game, b = g.golf.range; b.owned = g.range.view().upgrades.map(u => u.id); b.total.takings = 1e7; g.range.sync(true);
+          const d = g.bizDefs.find(b => b.type === 'range'); if (d) g.lookAt(d.x + d.w / 2, d.y + d.h / 2, 0.3);
+        }]]
         : [['street', () => { const g = window.__game; g.cam.z = 0.3; g.emit?.(); }], ['hole', () => { const g = window.__game; g.goToHole(1); g.cam.z = 0.3; }]];
       for (const [name, place] of views) {
         await page.evaluate(place);

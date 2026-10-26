@@ -13,7 +13,8 @@ export const SPRITE_STRIDE = 20;
 /** floats per shadow instance: centre x y (world px), half extents hx hy (metres along the map's axes), core, feather (metres), round (0 / 1),
  *  lean (a multiplier of the common lean, shadow-shape.ts contactShadow), clip x0 y0 x1 y1 (world px) */
 export const SHADOW_STRIDE = 12;
-/** floats per vector-shadow instance (T142, shadow-vector.ts): the anchor x y (world px), the scale signed by the mirror and the scale; the
+/** floats per vector-shadow instance (T142, shadow-vector.ts): the anchor's ground spot x y (world px), the lift (world px: a lifted sprite
+ *  casts from its ground spot that much higher, with no contact shape) and the scale; the
  *  mesh's first index and index count, and its far copy's; clip x0 y0 x1 y1 (world px); the picture's rect x0 y0 x1 y1 (world px) */
 export const VECTOR_STRIDE = 16;
 /** the vector mesh textures' width (texels) */
@@ -157,10 +158,11 @@ void main() {
   int i = int((uFar == 1 ? aB.z : aB.x) + 0.5) + id;
   int v = int(texelFetch(uIdx, ivec2(i % ${MESH_W}, i / ${MESH_W}), 0).r) * 2;
   vec4 A = texelFetch(uVerts, ivec2(v % ${MESH_W}, v / ${MESH_W}), 0), B = texelFetch(uVerts, ivec2((v + 1) % ${MESH_W}, (v + 1) / ${MESH_W}), 0);
-  float mul = A.w > 0.5 ? uMul.y : uMul.x;
+  float mul = A.w > 0.5 ? uMul.y : aA.z > 0.0 ? 0.0 : uMul.x;
   if (mul <= 0.0) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
-  vec2 w = aA.xy + vec2(A.x, A.y) * aA.w + A.z * aA.w * uShear;
-  vSrc = aA.xy + vec2(A.x, A.y - A.z) * aA.w; vCore = B.x * mul; vEdge = B.y;
+  float h = A.z * aA.w + aA.z;
+  vec2 w = aA.xy + vec2(A.x, A.y) * aA.w + h * uShear;
+  vSrc = aA.xy + vec2(A.x * aA.w, A.y * aA.w - h); vCore = B.x * mul; vEdge = B.y;
   vec2 s = (w - uCam.xy) * uCam.z + uScreen * 0.5;
   gl_Position = vec4(s.x / uScreen.x * 2.0 - 1.0, 1.0 - s.y / uScreen.y * 2.0, 0.0, 1.0);
 }`;

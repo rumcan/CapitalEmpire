@@ -105,13 +105,16 @@ export function contactOf(d: Drawable, rect: ArrayLike<number> = spriteRect(d)):
   const l = lookOf(d);
   return d.lift || l.hidden || (VECTOR.on && vecOf(l.item)) ? null : contactShadow(LIBRARY[l.item]!, spotOf(d, l), rect);
 }
-/** a drawable's vector shadow instance (gl.ts VECTOR_STRIDE) into `out` at `o`: false when it has none (off, no entry, lifted, hidden) */
+/** a drawable's vector shadow instance (gl.ts VECTOR_STRIDE) into `out` at `o`: false when it has none (off, no entry, hidden). A lifted one
+ *  (T133: the range's upper deck) casts from its ground spot, every point of it its lift higher, and has no contact shape (what holds it up
+ *  has its own), so a double deck casts a two-storey shadow */
 export function packVector(d: Drawable, out: Float32Array, o: number, i: number, j: number, rect: ArrayLike<number>): boolean {
-  if (!VECTOR.on || d.lift) return false;
+  if (!VECTOR.on) return false;
   const a = spriteAnchor(d); if (!a) return false;
   const v = vecOf(a.item); if (!v || !v.count) return false;
   // (a mirrored sprite draws its mirrored mesh)
-  out[o] = a.X; out[o + 1] = a.Y; out[o + 2] = a.flip ? -a.k : a.k; out[o + 3] = a.k;
+  const lift = d.lift ?? 0;
+  out[o] = a.X; out[o + 1] = a.Y + lift; out[o + 2] = lift; out[o + 3] = a.k;
   out[o + 4] = a.flip ? v.mfirst : v.first; out[o + 5] = a.flip ? v.mcount : v.count; out[o + 6] = a.flip ? v.fmfirst : v.ffirst; out[o + 7] = a.flip ? v.fmcount : v.fcount;
   clip(out, o + 8, i, j);
   out[o + 12] = rect[0]!; out[o + 13] = rect[1]!; out[o + 14] = rect[2]!; out[o + 15] = rect[3]!;
