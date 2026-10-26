@@ -330,11 +330,11 @@ export class SimClient {
    *  Writes POINT_STRIDE floats per point into out (world px, rgba; at most 7 points per car); returns the counts in
    *  points, in a reused object. blink: show the turn signals. _ze is unused (the sizes are the caller's). */
   lights(x0: number, y0: number, x1: number, y1: number, _ze: number, blink: boolean, out: Float32Array): LightCounts {
-    let k = 0;
+    let k = 0; const F = facings();
     for (let i = 0; i < this.n; i++) {
       if (!this.alive[i] || this.tunnel[i]) continue;
       const x = this.px[i], y = this.py[i]; if (x < x0 || x > x1 || y < y0 || y > y1) continue;
-      const a = this.ang[i], hx = Math.cos(a), hy = Math.sin(a), rx = -hy, ry = hx, hl = HALF[this.kind[i] % HALF.length]! * CAR_SCALE, w = CAR_SCALE; // lamps sit on the scaled car
+      const a = this.ang[i], hx = Math.cos(a), hy = Math.sin(a), rx = -hy, ry = hx, w = CAR_SCALE * F[this.kind[i] % F.length]![carHeading(a)]!.size, hl = HALF[this.kind[i] % HALF.length]! * w; // lamps sit on the car as drawn (its size)
       const fx = x + hx * hl, fy = y + hy * hl, bx = x - hx * hl, by = y - hy * hl;
       k = put(out, k, fx + rx * 0.28 * w, fy + ry * 0.28 * w, 1, 0.93, 0.75, 0.9);
       k = put(out, k, fx - rx * 0.28 * w, fy - ry * 0.28 * w, 1, 0.93, 0.75, 0.9);
@@ -367,8 +367,9 @@ export class SimClient {
       const x = this.px[i], y = this.py[i]; if (x < x0 || x > x1 || y < y0 || y > y1) continue;
       const f = F[this.kind[i] % F.length][carHeading(this.ang[i])];
       let d = this.pool[k]; if (!d) this.pool.push((d = { item: 0, x: 0, y: 0, flip: false, scale: CAR_SCALE, x0: 0, y0: 0, x1: 0, y1: 0, moving: true }));
-      // drawn at CAR_SCALE about the car's centre: the anchor and footprint offsets scale with it
-      d.item = f.item; d.flip = f.flip; d.scale = CAR_SCALE; d.x = x - f.ox * CAR_SCALE; d.y = y - f.oy * CAR_SCALE; d.x0 = x - f.hx * CAR_SCALE; d.x1 = x + f.hx * CAR_SCALE; d.y0 = y - f.hy * CAR_SCALE; d.y1 = y + f.hy * CAR_SCALE;
+      // drawn at its size (CAR_SCALE times the car's owner size) about the car's centre: the anchor and footprint offsets scale with it
+      const z = CAR_SCALE * f.size;
+      d.item = f.item; d.flip = f.flip; d.scale = z; d.x = x - f.ox * z; d.y = y - f.oy * z; d.x0 = x - f.hx * z; d.x1 = x + f.hx * z; d.y0 = y - f.hy * z; d.y1 = y + f.hy * z;
       out.push(d); k++;
     }
     return out;

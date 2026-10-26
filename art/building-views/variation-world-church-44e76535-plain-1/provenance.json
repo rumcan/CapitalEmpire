@@ -1,0 +1,148 @@
+{
+  "id": "variation:world-church-44e76535-plain:1",
+  "generator": "image_gen",
+  "generated": "2026-10-24",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-33b57bf5-7424-49b1-ab21-ed1d8e37e49c.png",
+  "prompt": "SQUARE 1:1 CANVAS 2048x2048, exactly four SMALL complete building cutouts in 2x2 cells. Transparent RGBA alpha=0 outside the physical building. Each building occupies at most 60% of cell height; 100 pixels of fully clear padding around all sprites and canvas. Reference1 is STYLE ONLY: the Maple Bean street miniature 3D illustration, softly textured matte materials, restrained rich colours, charcoal roofs, warm amber lamps, readable fine detail, early dusk with remaining daylight. Reference2 shows IDENTITY ONLY: preserve architecture, not old rendering or blue night cast. All assets must belong beside reference1. Fixed orthographic 2:1 isometric camera, vertical walls vertical, ground axes +/-26.565deg, SCREEN UPPER RIGHT SUN in EVERY view; right planes warm, left planes cooler. Four TRUE rigid quarterturns: top-left NE=Afront+Bphysicalright, top-right SE=Bright+Crear, bottom-left SW=Crear+Dleft, bottom-right NW=Dleft+Afront. Afront appears on SCREEN LEFT in NE and SCREEN RIGHT in NW. Roof/chimney/doors/windows/equipment stay at fixed physical corners; reconstruct plain rear, NEVER fourfronts or samecorner repeated. Same scale each cell. NO FLOOR/BACKDROP/grey surface/terrain/paving/yard/leaves/broad shadow/haze/gradient/checkerboard/caption/label/divider/frame. No people, vehicles, Halloween or garlands. Only building and integral structural parts.  Subject library ID variation:world-church-44e76535-plain:1. Preserve exact building massing, floor count and roof in the identity reference. If source shows a rear wall, keep it as physical rear and construct a sensible front, not four duplicate rear walls. Signs and unique front entrances visible in exactlytwo of4true quarterturns. No paved surface or invented floor, no cropping.",
+  "references": [
+    {
+      "role": "authoritative-theme",
+      "file": "art/theme-consistency/references/theme-authoritative.png",
+      "sha256": "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2"
+    },
+    {
+      "role": "existing-subject-identity",
+      "id": "variation:world-church-44e76535-plain:1",
+      "direction": null,
+      "file": "art/theme-consistency/exports/buildings/variation-world-church-44e76535-plain-1.configured@2x.png",
+      "sha256": "5f5bdea8bddfb19f80bf7ceff27d09437454c99d44ea548b6c4b1193112a4d21"
+    }
+  ],
+  "integrationStatus": "ready",
+  "integrationReason": "White clapboard church has opposite entrance/steeple corners and distinct blank rear gable views; three nave lancet windows, bell tower and cross stay physically fixed. Only two faint bottom fringe pixels alpha17/12 touch canvas, with intact foundation; salvage layout without generation.",
+  "layoutCorrection": {
+    "method": "Disconnected alpha>8 silhouette extraction with nearest-silhouette assignment of all remaining fringe pixels; exact source RGBA pixel copies only, no resize, repaint or deletion.",
+    "seedAlphaThresholdExclusive": 8,
+    "originalSheet": "art/theme-consistency/generated/buildings/variation-world-church-44e76535-plain-1-4views-v1.png",
+    "originalSheetSha256": "7287ae57df386af5ca0d6e5463c09c0a05540913a03debcd191fbc97ae8264a4",
+    "outputSheetSha256": "bacf8b574616f4f81c0c0fdcb758edc93ed2a08c751b320e0324ff7a2b7e92f1",
+    "originalDimensions": [
+      1254,
+      1254
+    ],
+    "outputDimensions": [
+      2304,
+      2304
+    ],
+    "cellSize": 1152,
+    "nonzeroAlphaPixels": 775675,
+    "nonzeroAndVisiblePixelConservation": true,
+    "exactVisibleRgbaConservation": true,
+    "assignmentPolicy": "Every alpha>8 dominant component remains intact. Multi-source orthogonal nearest-silhouette flood fills assign fringe and tiny detached components; every nonzero source tuple is copied exactly once.",
+    "views": [
+      {
+        "direction": "NE",
+        "dominantComponent": {
+          "label": 2,
+          "pixels": 201148,
+          "bounds": [
+            52,
+            7,
+            633,
+            606
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 0,
+          "y0": 0,
+          "x1": 663,
+          "y1": 760,
+          "count": 211628
+        },
+        "translation": {
+          "x": 244,
+          "y": 195
+        }
+      },
+      {
+        "direction": "SE",
+        "dominantComponent": {
+          "label": 1,
+          "pixels": 171440,
+          "bounds": [
+            696,
+            2,
+            1209,
+            653
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 604,
+          "y0": 0,
+          "x1": 1235,
+          "y1": 692,
+          "count": 179768
+        },
+        "translation": {
+          "x": 808,
+          "y": 229
+        }
+      },
+      {
+        "direction": "SW",
+        "dominantComponent": {
+          "label": 15,
+          "pixels": 167337,
+          "bounds": [
+            49,
+            623,
+            577,
+            1253
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 25,
+          "y0": 614,
+          "x1": 666,
+          "y1": 1253,
+          "count": 176945
+        },
+        "translation": {
+          "x": 230,
+          "y": 794
+        }
+      },
+      {
+        "direction": "NW",
+        "dominantComponent": {
+          "label": 14,
+          "pixels": 198679,
+          "bounds": [
+            656,
+            622,
+            1219,
+            1229
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 604,
+          "y0": 618,
+          "x1": 1233,
+          "y1": 1239,
+          "count": 207334
+        },
+        "translation": {
+          "x": 809,
+          "y": 799
+        }
+      }
+    ],
+    "visualReviewRequired": true
+  },
+  "sourceReview": {
+    "reviewed": "2026-10-24",
+    "actualAlphaComposite": "output/building-priority/newest-review-2.png",
+    "theme": "Matte Maple Bean timber/brick/cream, charcoal roofs, amber dusk lamps, fixed upper-right key coherent across these sources; holds below are concrete camera/geometry/facade-continuity faults, not backgrounds.",
+    "corrections": []
+  }
+}

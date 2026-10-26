@@ -1,8 +1,8 @@
 // Freeze today's lots into presets (P20 / T063), the bundled half of scripts/assets/freeze-lot-presets.mjs (run that, not this):
 //   freeze.mjs --freeze <curated.json> <lot-presets.json> [--note "<text>"]... [--refreeze-curated]   the freeze, then the check
 //   freeze.mjs --check  <curated.json> <lot-presets.json>   the check alone
-// A freeze keeps the file's curated presets (curated: true) exactly as they are, and its header notes; the check compares the curated presets
-// with the last commit's (git HEAD) and warns about the changed ones (the owner's uncommitted edits); the freeze stops if it would change one.
+// A freeze keeps the file's curated presets (curated: true) exactly as they are, and its header notes; its lot-lab presets (road set) too, kept at the end.
+// The check compares the curated presets with the last commit's (git HEAD) and warns about the changed ones (the owner's uncommitted edits); the freeze stops if it would change one.
 // The freeze runs the game's own composer (legacy-layout.ts layoutOfUse, the old use layouts kept for it) on a canonical lot (the street on +y, so nothing turned or flipped) for
 // every use (res, com, park, tour, ind, civic) x state (built, upgraded, declined) x size bucket of a real town, with 4 fixed seeds each, and
 // converts each layout into a preset in the lot frame: props as { id, x, y, scale, view } (x, y the footprint centre; four-view art by its base
@@ -244,6 +244,9 @@ if (mode === '--freeze') {
     list.forEach((p, i) => { const o = oldCurated.get(p.id); if (o) { list[i] = o; kept.push(p.id); } });
     for (const [id, o] of oldCurated) if (!kept.includes(id)) { list.push(o); kept.push(id); }
   }
+  // the lot lab's presets (road set) are always kept from the file exactly as they are, at the end, even with --refreeze-curated (a curated one is kept above)
+  const labs = old.presets.filter(p => p.road !== undefined && !kept.includes(p.id)), labIds = new Set(labs.map(p => p.id));
+  list.splice(0, list.length, ...list.filter(p => !labIds.has(p.id)), ...labs);
   const notes = [...(old.meta?.notes ?? []), ...opts.flatMap((o, i) => (o === '--note' && opts[i + 1] ? [opts[i + 1]!] : []))];
   const text = formatPresets(list, notes.length ? { notes } : undefined);
   const block = (p: LotPreset) => formatPresets([p]);
@@ -252,6 +255,7 @@ if (mode === '--freeze') {
   fs.writeFileSync(presetFile, text);
   console.log(`wrote ${presetFile}`);
   console.log(`curated presets kept exactly as they were: ${kept.length}${opts.includes('--refreeze-curated') ? ' (--refreeze-curated: laid out again)' : ''}`);
+  console.log(`lot lab presets kept exactly as they were, at the end: ${labs.length}`);
   const byUse = new Map<string, number>(); for (const p of changed) byUse.set(p.use, (byUse.get(p.use) ?? 0) + 1);
   console.log(`presets that differ from the file before: ${changed.length} (${[...byUse].map(([u, n]) => `${u} ${n}`).join(', ') || 'none'}); new: ${list.filter(p => !oldText.has(p.id)).length}; gone: ${old.presets.filter(p => !list.some(q => q.id === p.id)).length}`);
   console.log(`left out: ${[...dropped].map(([k, n]) => `\n  ${k}: ${n}`).join('')}`);

@@ -17,7 +17,7 @@ import { hasLettering, EAST_FACING } from './lettering';
 import { drawnAs } from '../mirror';
 import { LOT_DECALS } from '../lot-decals';
 import { parkedCar } from '../traffic';
-import { CAR_SCALE, carFootprint, carHeading } from '../ext/car-art';
+import { CAR_SCALE, carFootprint, carHeading, carOwnerScale } from '../ext/car-art';
 
 /** a placed prop; street is set (true) only for an item on the sidewalk in front of the lot (a lay-by's bays take none: see engine placeLot);
  *  from: the preset it was drawn from and its prop index there (compose.ts; the dev editor maps an edit back to the preset by it) */
@@ -27,7 +27,7 @@ export interface Composition { props: Placed[]; ground: LotPatch[] }
  *  NN%, the fit, the decline) */
 export interface PresetDrop { preset: string; prop: number; id: string; why: string }
 /** the lot state a composition depends on (the seed is the lot's own) */
-export interface ComposeState { use: number; level: number; decline: number; seed: number }
+export interface ComposeState { use: number; level: number; decline: number; seed: number; /** the lot lab's forced preset id (dev only): the lot draws that preset, approved or not */ preset?: string }
 
 export type Pt = { x: number; y: number };
 export type Box4 = [number, number, number, number];
@@ -163,9 +163,9 @@ export class Build {
     // a flipped front with east-facing art is that art, unflipped (faced)
     const [sid, flip] = faced(id, !!o.flip);
     if (!BY.has(sid)) return null;
-    // cars at 1: the engine draws a parked car at CAR_SCALE (its footprint too), the size of the cars on the road
-    const car = BY.get(sid)!.cat === 'Vehicles', s = car ? 1 : (OWNER_SCALE[id] ?? 1) * (o.mul ?? 1) * (1 + 0.05 * (2 * this.r() - 1));
-    return { id: sid, s, flip, h: boxOf(sid, car ? CAR_SCALE : s, flip) };
+    // a car at its owner size: the engine draws a parked car at CAR_SCALE times it (its footprint too), the size of the cars on the road
+    const car = BY.get(sid)!.cat === 'Vehicles', s = car ? carOwnerScale(sid) : (OWNER_SCALE[id] ?? 1) * (o.mul ?? 1) * (1 + 0.05 * (2 * this.r() - 1));
+    return { id: sid, s, flip, h: boxOf(sid, car ? CAR_SCALE * s : s, flip) };
   }
   /** the half extent of a spec along the lot's u (ea) and n (eb) */
   ea(g: Spec): number { return (Math.abs(this.u.x) * (g.h[2] - g.h[0]) + Math.abs(this.u.y) * (g.h[3] - g.h[1])) / 2; }
@@ -300,19 +300,20 @@ export class Build {
     const span = 2 * this.eb(g), it = this.at(g, a, b0 + span / 2, { plant: false });
     return it ? { it, span } : null;
   }
-  /** the length of a parked car along the lot's n: its eight-way art's footprint at CAR_SCALE, nosed away from the road (away) or towards it */
+  /** the length of a parked car along the lot's n: its eight-way art's footprint at CAR_SCALE times its owner size (the longer of the two models,
+   *  as a bay takes either), nosed away from the road (away) or towards it */
   carLen(away: boolean): number {
-    const q = carFootprint(carHeading(dirOf(away ? this.n : this.F) * Math.PI / 2));
-    return 2 * (Math.abs(this.n.x) * q.hx + Math.abs(this.n.y) * q.hy) * CAR_SCALE / 2;
+    const dir = dirOf(away ? this.n : this.F), q = carFootprint(carHeading(dir * Math.PI / 2)), z = CAR_SCALE * Math.max(parkedCar(0, dir).size, parkedCar(1, dir).size);
+    return 2 * (Math.abs(this.n.x) * q.hx + Math.abs(this.n.y) * q.hy) * z / 2;
   }
   /** a parked car from the eight-way art (the car parks' cars, as the engine draws them): model 0 or 1, its footprint centre at lot-frame (a, c),
-   *  nosed away from the road (away: its heading is +n) or towards it. Props of kind car are drawn at CAR_SCALE by the engine, so the prop is at scale 1. */
+   *  nosed away from the road (away: its heading is +n) or towards it. Props of kind car are at their owner size (f.size); the engine draws them at CAR_SCALE times it. */
   parked(a: number, c: number, away: boolean, type: number): Item | null {
     if (this.noCars) return null;
     const dir = dirOf(away ? this.n : this.F), f = parkedCar(type, dir), id = LIBRARY[f.item]!.id;
     // the art's anchor offsets are zero (its boxes are centred), so the anchor is the footprint centre, as client.ts visible() places a moving car
-    const q = carFootprint(carHeading(dir * Math.PI / 2)), k = CAR_SCALE / 2, h: Box4 = [-q.hx * k, -q.hy * k, q.hx * k, q.hy * k];
-    return this.atW({ id, s: 1, flip: false, h }, this.P(a, c), { plant: false });
+    const q = carFootprint(carHeading(dir * Math.PI / 2)), k = CAR_SCALE * f.size / 2, h: Box4 = [-q.hx * k, -q.hy * k, q.hx * k, q.hy * k];
+    return this.atW({ id, s: f.size, flip: false, h }, this.P(a, c), { plant: false });
   }
   /** n sprites from a pool at seeded points of a lot-frame rectangle */
   scatter(pool: string[], a0: number, b0: number, a1: number, b1: number, n: number, o: Opt = {}) {
@@ -349,6 +350,8 @@ export class Build {
     return false;
   }
   /** the composition: candidates in order, the first that fits wins; plants stop at the cap */
+  /** a lot the owner laid out (a whole or farm preset): every prop is drawn where it stands, overlapping another or not (only the lot line holds) */
+  keepAll = false;
   done(): Composition {
     const props: Placed[] = [], acc: Item[] = []; let ups = 0;
     // a preset prop left out is told to the drops sink, with why (the dev editor shows them: nothing in a preset goes unseen)
@@ -358,11 +361,11 @@ export class Build {
       if (!this.inside(it)) { drop(it, 'past the lot line'); continue; }
       if (!it.boundary && !it.paved && !it.from && this.onPatch(it)) continue;
       // two cars never share ground (a car is kept only if it shares none with an earlier car)
-      const car = it.car ? acc.find(a => a.car && share(a.fp, it.fp) > 0) : undefined;
+      const car = it.car && !this.keepAll ? acc.find(a => a.car && share(a.fp, it.fp) > 0) : undefined;
       if (car) { drop(it, `overlaps the car ${car.id}`); continue; }
       if (!it.fence && !it.wheel) {
         if (it.plant && !it.from && ups >= this.cap) continue;
-        const over = acc.find(a => !a.fence && !a.wheel && share(a.fp, it.fp) > OVERLAP);
+        const over = this.keepAll ? undefined : acc.find(a => !a.fence && !a.wheel && share(a.fp, it.fp) > OVERLAP);
         if (over) { drop(it, `overlaps ${over.id} ${Math.round(100 * share(over.fp, it.fp))}%`); continue; }
         ups++;
       }

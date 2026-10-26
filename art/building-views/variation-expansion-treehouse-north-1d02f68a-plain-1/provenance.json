@@ -1,0 +1,264 @@
+{
+  "id": "variation:expansion-treehouse-north-1d02f68a-plain:1",
+  "generator": "image_gen",
+  "generated": "2026-10-24",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-831a654e-d22e-4f8f-a7eb-c446db824ff6.png",
+  "prompt": "ONE GAME ASSET CUTOUT on EMPTY TRANSPARENT ALPHA, RGBA PNG. Reference1 is STYLE ONLY: the Maple Bean street's coherent miniature 3D illustration, softly textured matte materials, restrained rich colours, charcoal roofs, warm amber lamps, readable fine detail, early dusk with remaining daylight. Reference2 shows IDENTITY ONLY: preserve this building's architecture, not its old rendering or blue night cast. It must look natural beside the buildings in reference1. Fixed 2:1 isometric camera and SCREEN UPPER RIGHT SUN in every view; right-facing planes warm, left-facing planes cooler. Exactly four true rigid quarter turns of the SAME physical object on a square 2x2 sheet: NE front+right, SE right+back, SW back+left, NW left+front. Same roof, windows, equipment and physical scale throughout; reconstruct hidden sides, never mirror a front. Centre each complete sprite within its own cell with20% blank margins on every side. Empty alpha in corners, gutters and gaps, zero clipping. NO BACKDROP OR FLOOR: no stage, ground surface, paving, terrain tile, foliage, leaves, broad shadow, haze, gradient, checkerboard, caption, divider, view label or frame. No people, vehicles, Halloween, pumpkins, skulls, cobwebs, spooky signage or decorative garlands. Only the physical building and integral structural parts, no attached landscape.  Subject library ID variation:expansion-treehouse-north-1d02f68a-plain:1. One integral treehouse assembly: weathered small timber cabin high on a single oak trunk, timber deck/rail and zigzag access stairs, tire swing on one fixed branch. Preserve support trunk/branches and attached small autumn canopy because they are STRUCTURAL identity; no ground island or detached foliage/trees.",
+  "references": [
+    {
+      "role": "authoritative-theme",
+      "file": "art/theme-consistency/references/theme-authoritative.png",
+      "sha256": "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2"
+    },
+    {
+      "role": "existing-subject-identity",
+      "id": "variation:expansion-treehouse-north-1d02f68a-plain:1",
+      "direction": null,
+      "file": "art/theme-consistency/exports/buildings/variation-expansion-treehouse-north-1d02f68a-plain-1.configured@2x.png",
+      "sha256": "b4ba3e0bc78368d7d7b440673069f4d438ee62fd7c1c60f3ff25320fcd64b33a"
+    }
+  ],
+  "integrationStatus": "ready",
+  "integrationReason": "Full4-viewpostassemblyinspectionovermagenta atvisible-boundzoom confirms true distinctquarterturns, sharedfixed2:1camera/upper-rightdusk/mastermaterials/no surroundingfloor. AlphaPASS0warnings; unchanged3PNGbytesverified ateachreplacementstep. Physicalbuildingheightretained, doormeasurementnotcertified.",
+  "sourceVisualReview": {
+    "reviewer": "source_review_resume",
+    "actualAlphaBackground": "magenta #ff00c8",
+    "theme": "references/theme-authoritative.png",
+    "sourceOnly": true,
+    "geometry": "correction required",
+    "gameScaleNotCertified": true
+  },
+  "layoutCorrection": {
+    "method": "Disconnected alpha>128 silhouette extraction with nearest-silhouette assignment of all remaining fringe pixels; exact source RGBA pixel copies only, no resize, repaint or deletion.",
+    "seedAlphaThresholdExclusive": 128,
+    "originalSheet": "art/theme-consistency/generated/buildings/variation-expansion-treehouse-north-1d02f68a-plain-1-4views-v1.png",
+    "originalSheetSha256": "a7e7b2c41bd8ac2375661ebc07af6788660cc45f9bbc116863bc8ec874bb2b67",
+    "outputSheetSha256": "2fd48c9d96e36f1db908df7b9c829fadfc80b79fafebbe82bac9c3756a71ff99",
+    "originalDimensions": [
+      1774,
+      887
+    ],
+    "outputDimensions": [
+      2560,
+      2560
+    ],
+    "cellSize": 1280,
+    "nonzeroAlphaPixels": 528021,
+    "nonzeroAndVisiblePixelConservation": true,
+    "exactVisibleRgbaConservation": true,
+    "assignmentPolicy": "Every alpha>128 dominant component remains intact. Multi-source orthogonal nearest-silhouette flood fills assign fringe and tiny detached components; every nonzero source tuple is copied exactly once.",
+    "views": [
+      {
+        "direction": "NE",
+        "dominantComponent": {
+          "label": 2,
+          "pixels": 118580,
+          "bounds": [
+            290,
+            6,
+            762,
+            446
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 53,
+          "y0": 0,
+          "x1": 902,
+          "y1": 455,
+          "count": 137601
+        },
+        "translation": {
+          "x": 162,
+          "y": 412
+        }
+      },
+      {
+        "direction": "SE",
+        "dominantComponent": {
+          "label": 1,
+          "pixels": 117102,
+          "bounds": [
+            1039,
+            4,
+            1525,
+            443
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 890,
+          "y0": 0,
+          "x1": 1729,
+          "y1": 455,
+          "count": 133317
+        },
+        "translation": {
+          "x": 610,
+          "y": 412
+        }
+      },
+      {
+        "direction": "SW",
+        "dominantComponent": {
+          "label": 4,
+          "pixels": 112331,
+          "bounds": [
+            323,
+            445,
+            791,
+            870
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 25,
+          "y0": 411,
+          "x1": 892,
+          "y1": 873,
+          "count": 129306
+        },
+        "translation": {
+          "x": 181,
+          "y": 1277
+        }
+      },
+      {
+        "direction": "NW",
+        "dominantComponent": {
+          "label": 3,
+          "pixels": 111332,
+          "bounds": [
+            1017,
+            442,
+            1473,
+            871
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 912,
+          "y0": 435,
+          "x1": 1731,
+          "y1": 874,
+          "count": 127797
+        },
+        "translation": {
+          "x": 598,
+          "y": 1265
+        }
+      }
+    ],
+    "visualReviewRequired": true
+  },
+  "singleViewCorrection": {
+    "sourceSheet": "art/theme-consistency/generated/buildings/variation-expansion-treehouse-north-1d02f68a-plain-1-4views-v2.png",
+    "sourceSheetSha256": "2fd48c9d96e36f1db908df7b9c829fadfc80b79fafebbe82bac9c3756a71ff99",
+    "direction": "NW",
+    "copiedOriginalDirection": null,
+    "newGeneratedSingle": "art/theme-consistency/generated/buildings/variation-expansion-treehouse-north-1d02f68a-plain-1-single-corrections-v2/NW.png",
+    "newGeneratedSingleSha256": "35aa7afebf8d6b6040b655632f9dd6f31ac9e5e0354200e9ad677d171e4b3d4d",
+    "newGeneratedSingleProvenance": {
+      "id": "variation:expansion-treehouse-north-1d02f68a-plain:1",
+      "direction": "NW",
+      "generator": "image_gen",
+      "generated": "2026-10-24",
+      "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-71daf94a-73ed-45ef-afed-b1d7fc9b4fc6.png",
+      "prompt": "ONE SINGLE ISOLATED BUILDING SPRITE, NOT A FOUR-VIEW SHEET. The reference is this SAME existing building shown from several corners; preserve its exact architecture and matte Maple Bean miniature style. We need a genuinely different rigid rotation, direction NW. NW repeats NE treehouse entry/stair corner (stairs RIGHT, tire LEFT). Reconstruct opposite front corner with stairs LEFT and tire on its physically consistent far/right side. Preserve trunk/canopy/house/railings and other3views. Inspect outer canopy tips for complete silhouette rather than adding any terrain. TARGET NW ONLY: draw the opposite front corner described above, not the NE corner again. Maintain roof/ridge and chimney on the same physical wall; front-facing lettering remains legible, never mirrored. Output ONE isolated complete building cutout for this target direction, not a sheet or montage. Preserve existing Maple-master palette/materials/details and fixed screen-upper-right dusk light. Orthographic2:1 ground axes approximately +/-26.565degrees, verticalwallsvertical, no perspective vanishing point. No grey floor/terrain/haze/broad shadow; genuinely transparent alpha with generous canvas margins. Fixed orthographic2:1 camera: both ground axes at +/-26.565degrees, wallsvertical, no head-on elevation/perspective vanishingpoint. CRITICAL: fixed SCREEN UPPER RIGHT DUSK SUN and warm amber practical lights; right roof/wall planes warm, leftplanes cooler even though buildingturns. Reconstructhiddenfaces; NEVER mirror sourcepixels or lighting or copy the samecorner. Square1:1PNG with onecompleteSMALLbuilding occupying60%canvasheight, generous100pxfullyclear margins, truealpha0outsidephysicalbuilding. No other view, no grid, no label, no ground surface/floor/paving/yard/greybackdrop/broadshadow/haze/gradient/checkerboard/people. Only physical building and integralporch/steps/supports.",
+      "references": [
+        {
+          "role": "identity-style-and-physical-geometry-reference",
+          "file": "art/theme-consistency/generated/buildings/variation-expansion-treehouse-north-1d02f68a-plain-1-4views-v1.png"
+        }
+      ],
+      "integrationStatus": "blocked",
+      "integrationReason": "Single actual-turn correction; inspect before four-view assembly."
+    },
+    "newViewScale": {
+      "factor": 0.48954895489548955,
+      "method": "median visible building height of unchanged three views; source scale retained, not certified door calibration",
+      "targetHeight": 445,
+      "oldDoor": null,
+      "newDoor": null,
+      "resizeKernel": "lanczos3; new view only"
+    },
+    "unchangedViewsPreservedByteForByte": [
+      "NE",
+      "SE",
+      "SW"
+    ],
+    "originalViewEvidence": [
+      {
+        "direction": "NE",
+        "canonicalRejected": null,
+        "sourceCellSafeMargin": true,
+        "originalNativeSha256": "a408c0b1d0784eb89d622c32ecd5a8688948a3e2dfd410911ff155be190bb1a6",
+        "originalVisibleHeight": 446,
+        "nonzeroAlphaPixels": 137601,
+        "rgbaSha256": "f51259affb62cfeee1edebc63885ef13c3a2252e95d16edd9bd110d262a9b130"
+      },
+      {
+        "direction": "SE",
+        "canonicalRejected": null,
+        "sourceCellSafeMargin": true,
+        "originalNativeSha256": "6fc7ff32ff3a8029748a72fc95795ce40035111e3b8250ac1901e536b1f76773",
+        "originalVisibleHeight": 445,
+        "nonzeroAlphaPixels": 133317,
+        "rgbaSha256": "64aae1aff5ac66b7aab6e6497cd0d59a15e0ba0350ef6f945768fa070637c0de"
+      },
+      {
+        "direction": "SW",
+        "canonicalRejected": null,
+        "sourceCellSafeMargin": true,
+        "originalNativeSha256": "86f4942bd6d00ebd2b108ccd1cab2f33e8507c1bc2c9021c8e9074016984a777",
+        "originalVisibleHeight": 428,
+        "nonzeroAlphaPixels": 129306,
+        "rgbaSha256": "2830c2080fd2b49df3b9e3bb6748290d9dd360b60a920995e4103365f0532ee7"
+      },
+      {
+        "direction": "NW",
+        "canonicalRejected": null,
+        "sourceCellSafeMargin": true,
+        "originalNativeSha256": "ce6f6deb4b359a0f7e5ce8e77686a1d2bdb2385273526f5fb6d6d3d390789471",
+        "originalVisibleHeight": 433,
+        "nonzeroAlphaPixels": 127797,
+        "rgbaSha256": "a1c58545c5b6d81c5a07ce00a6aa1f9cc8f0606dbe592bca0e3a8a0a81c3cb6b"
+      }
+    ],
+    "placements": [
+      {
+        "direction": "NE",
+        "left": 275,
+        "top": 472,
+        "width": 858,
+        "height": 464,
+        "nativeSha256": "a408c0b1d0784eb89d622c32ecd5a8688948a3e2dfd410911ff155be190bb1a6",
+        "unchangedOriginalNative": true
+      },
+      {
+        "direction": "SE",
+        "left": 1688,
+        "top": 472,
+        "width": 848,
+        "height": 464,
+        "nativeSha256": "6fc7ff32ff3a8029748a72fc95795ce40035111e3b8250ac1901e536b1f76773",
+        "unchangedOriginalNative": true
+      },
+      {
+        "direction": "SW",
+        "left": 266,
+        "top": 1876,
+        "width": 876,
+        "height": 471,
+        "nativeSha256": "86f4942bd6d00ebd2b108ccd1cab2f33e8507c1bc2c9021c8e9074016984a777",
+        "unchangedOriginalNative": true
+      },
+      {
+        "direction": "NW",
+        "left": 1808,
+        "top": 1809,
+        "width": 607,
+        "height": 606,
+        "nativeSha256": "9459b1614a8d47beb8e3e33a346a88fb7ff83edf6a51302c1a1db5d812b61a2a",
+        "unchangedOriginalNative": false
+      }
+    ],
+    "outputSha256": "999424b4df95da9f79fd71d73c01ba80059296da10be35fbdf8f299e41f86d4b"
+  }
+}

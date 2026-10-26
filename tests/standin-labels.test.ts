@@ -25,7 +25,8 @@ test('every stand-in gets "Stand In for <its plain name>", and nothing drawn as 
 
 test('the labels name the building plainly', () => {
   const label = (id: string) => standInLabel(INDEX.get(id)!);
-  assert.equal(label('variation:world-church-44e76535-plain:1'), 'Stand In for Church');
+  // the owner's example, the church: its four views landed on 2026-10-26 (world-church-44e76535-plain-1-4views-v2), so it is drawn as itself now
+  assert.equal(label('variation:world-church-44e76535-plain:1'), null);
   assert.equal(label('golf:clubhouse-shanty'), 'Stand In for Starter clubhouse');
   assert.equal(label('town:firestation'), 'Stand In for Maple Falls Fire House');
   assert.equal(label('world:gazebo'), 'Stand In for Gazebo');

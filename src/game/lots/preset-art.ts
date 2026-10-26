@@ -6,7 +6,7 @@ import type { LibItem } from '../types';
 import { VIEW_ART, unmirror } from '../views-library';
 import { OWNER_SCALE } from './scales';
 import { hasLettering } from './lettering';
-import { CAR_DIRECTIONS, CAR_SCALE, carFootprint } from '../ext/car-art';
+import { CAR_DIRECTIONS, CAR_SCALE, carFootprint, carOwnerScale } from '../ext/car-art';
 
 const BY = new Map<string, LibItem>(LIBRARY.map(i => [i.id, i]));
 /** a footprint relative to its anchor (tiles): x0, y0, x1, y1 */
@@ -67,12 +67,12 @@ export function turned(id: string, q: number): { id: string; flip: boolean } {
 }
 
 /** the footprint of a sprite drawn at scale s and flip, relative to its anchor (tiles): the union of its boxes as the engine draws it; an
- *  eight-way car's is its 4.5 x 1.8 m body along its heading at CAR_SCALE (compose.ts parked), another vehicle's its boxes at CAR_SCALE */
+ *  eight-way car's is its 4.5 x 1.8 m body along its heading, and another vehicle's its boxes, both at CAR_SCALE times s (a car's s is its owner size: ownerScaleOf) */
 export function footprintOf(id: string, s: number, flip: boolean): Box4 {
   const car = CAR8.exec(id);
-  if (car) { const q = carFootprint(CAR_DIRECTIONS.indexOf(car[2] as typeof CAR_DIRECTIONS[number])), k = CAR_SCALE / 2; return [-q.hx * k, -q.hy * k, q.hx * k, q.hy * k]; }
+  if (car) { const q = carFootprint(CAR_DIRECTIONS.indexOf(car[2] as typeof CAR_DIRECTIONS[number])), k = CAR_SCALE * s / 2; return [-q.hx * k, -q.hy * k, q.hx * k, q.hy * k]; }
   const it = BY.get(id); if (!it) return [-0.5, -0.5, 0.5, 0.5];
-  const k = it.cat === 'Vehicles' ? CAR_SCALE : s;
+  const k = it.cat === 'Vehicles' ? CAR_SCALE * s : s;
   let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
   for (const b of it.boxes) {
     const hx = (flip ? b.hy : b.hx) * k / 2, hy = (flip ? b.hx : b.hy) * k / 2, dx = (flip ? b.dy : b.dx) * k / 2, dy = (flip ? b.dx : b.dy) * k / 2;
@@ -81,10 +81,10 @@ export function footprintOf(id: string, s: number, flip: boolean): Box4 {
   return Number.isFinite(x0) ? [x0, y0, x1, y1] : [-0.5, -0.5, 0.5, 0.5];
 }
 
-/** the scale a preset's scale multiplies (unitless): the sprite's owner scale (scales.ts OWNER_SCALE), 1 for vehicles (the engine draws a
- *  parked car at CAR_SCALE whatever its prop scale) and for sprites the owner never scaled */
+/** the scale a preset's scale multiplies (unitless): the sprite's owner scale (scales.ts OWNER_SCALE), the car's owner size for a vehicle (its
+ *  studio size, carOwnerScale: the engine draws a parked car at CAR_SCALE times it), and 1 for sprites the owner never scaled */
 export function ownerScaleOf(id: string): number {
-  return BY.get(id)?.cat === 'Vehicles' || CAR8.test(id) ? 1 : OWNER_SCALE[id] ?? 1;
+  return BY.get(id)?.cat === 'Vehicles' || CAR8.test(id) ? carOwnerScale(id) : OWNER_SCALE[id] ?? 1;
 }
 
 /** is a library id known to the game (the preset checks) */

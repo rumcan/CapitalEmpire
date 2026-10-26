@@ -1,0 +1,130 @@
+{
+  "id": "variation:ref-building-farm-shed-0280794d-plain:1",
+  "generator": "image_gen",
+  "generated": "2026-10-24",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-6e95b7f5-630a-4941-81dd-90e3a36755fb.png",
+  "prompt": "Edit this existing transparent game sprite sheet, maintaining EXACT shared matte miniature theme, material colours, physical building identity, early dusk and fixed SCREEN UPPER RIGHT SUN. Concrete correction: NW repeats NE front at screen right and same lean-to right. NW must show opposite front+left corner with entrance plane left and opposite side plane right; retain lean-to physical side. Preserve every other correct cell and all physical architecture/equipment. Never mirror text, geometry or lighting; draw actual opposite corner. Keep 2x2 NEtop-left,SEtop-right,SWbottom-left,NWbottom-right. Output SQUARE 1:1 CANVAS with four SMALL complete sprites, each only60% cellheight, full roof/chimney/cross withincanvasand100pxclear gutters. Actual transparentalpha=0 outsidephysicalbuilding. No floor/greybackground/terrain/shadow/haze/labels/captions. Reference1 is EDIT TARGET, preserve its artwork rather than invent a new building. ",
+  "references": [
+    {
+      "role": "edit-target",
+      "file": "art/theme-consistency/generated/buildings/variation-ref-building-farm-shed-0280794d-plain-1-4views-v1.png"
+    }
+  ],
+  "integrationStatus": "ready",
+  "integrationReason": "Single NW now has front slidingdoor/hay LEFT, long side RIGHT, lean-to receding farLEFT, opposite retained NE. Matte red timber/metal roof, amber lamp and fixed right sun coherent; other3PNGbytes retained.",
+  "singleViewCorrection": {
+    "sourceSheet": "art/theme-consistency/generated/buildings/variation-ref-building-farm-shed-0280794d-plain-1-4views-v2.png",
+    "sourceSheetSha256": "210eafdc949172f99bc235a9b5d90e1742dc2ba3e5dcaebca587a4da844a8aa4",
+    "direction": "NW",
+    "copiedOriginalDirection": null,
+    "newGeneratedSingle": "art/theme-consistency/generated/buildings/variation-ref-building-farm-shed-0280794d-plain-1-single-corrections-v3/NW.png",
+    "newGeneratedSingleSha256": "008904400015cd172a66e55fff300ffa8c52c3173e5399c0bbbeee1f4d088c07",
+    "newGeneratedSingleProvenance": {
+      "id": "variation:ref-building-farm-shed-0280794d-plain:1",
+      "direction": "NW",
+      "generator": "image_gen",
+      "generated": "2026-10-24",
+      "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-5cbae23b-d5a5-48ce-b123-a7af6689eecb.png",
+      "prompt": "ONE SINGLE ISOLATED BUILDING SPRITE, NOT A FOUR-VIEW SHEET. The reference is this SAME existing building shown from several corners; preserve its exact architecture and matte Maple Bean miniature style. We need a genuinely different rigid rotation, direction NW. Show barn/slidingdoor FRONT on SCREEN LEFT (red half-open Dutch slidingdoor, visible haywindow andlight), opposite LONG SIDE on SCREEN RIGHT with originalsmallwindow. Rotate SAMEredtimbershed90degrees to oppositefrontcorner; currentNE/NWbothrepeatfrontRIGHTsideLEFT. Attached small lean-to isphysicalfront-right extension, so mustrecedeonfarLEFT/beoccluded ratherthanremainnearRIGHT. Samegable roof,cupola,barrel/toolsfixed, noyard. Fixed orthographic2:1 camera: both ground axes at +/-26.565degrees, wallsvertical, no head-on elevation/perspective vanishingpoint. CRITICAL: fixed SCREEN UPPER RIGHT DUSK SUN and warm amber practical lights; right roof/wall planes warm, leftplanes cooler even though buildingturns. Reconstructhiddenfaces; NEVER mirror sourcepixels or lighting or copy the samecorner. Square1:1PNG with onecompleteSMALLbuilding occupying60%canvasheight, generous100pxfullyclear margins, truealpha0outsidephysicalbuilding. No other view, no grid, no label, no ground surface/floor/paving/yard/greybackdrop/broadshadow/haze/gradient/checkerboard/people. Only physical building and integralporch/steps/supports.",
+      "references": [
+        {
+          "role": "identity-style-and-physical-geometry-reference",
+          "file": "art/theme-consistency/generated/buildings/variation-ref-building-farm-shed-0280794d-plain-1-4views-v2.png"
+        }
+      ],
+      "assemblySourceSheet": "art/theme-consistency/generated/buildings/variation-ref-building-farm-shed-0280794d-plain-1-4views-v2.png",
+      "integrationStatus": "blocked",
+      "integrationReason": "Single actual-turn correction; inspect before four-view assembly."
+    },
+    "newViewScale": {
+      "factor": 0.5040983606557377,
+      "method": "median visible building height of unchanged three views; source scale retained, not certified door calibration",
+      "targetHeight": 369,
+      "oldDoor": null,
+      "newDoor": null,
+      "resizeKernel": "lanczos3; new view only"
+    },
+    "unchangedViewsPreservedByteForByte": [
+      "NE",
+      "SE",
+      "SW"
+    ],
+    "originalViewEvidence": [
+      {
+        "direction": "NE",
+        "canonicalRejected": null,
+        "sourceCellSafeMargin": true,
+        "originalNativeSha256": "b56ca10d5dc3ab1a5fd43dccb08025a891de1470c0bf5936f368867c61d9c887",
+        "originalVisibleHeight": 358,
+        "nonzeroAlphaPixels": 122979,
+        "rgbaSha256": "95749a01a4dc1ad2dfbcd1d5ab4d864e8bfd5657dac5efc777891dc7390526ae"
+      },
+      {
+        "direction": "SE",
+        "canonicalRejected": null,
+        "sourceCellSafeMargin": true,
+        "originalNativeSha256": "d64caa802ad0a4740d7e656b92bf6433de1a6a92f42f0acfc00e2c3fd8aa5071",
+        "originalVisibleHeight": 369,
+        "nonzeroAlphaPixels": 117991,
+        "rgbaSha256": "8b17fbfe920bdfe4feafb7d4dbc0748af26b56a91800f63ac346a67fc9fafa6f"
+      },
+      {
+        "direction": "SW",
+        "canonicalRejected": null,
+        "sourceCellSafeMargin": true,
+        "originalNativeSha256": "74bebba37a2bc16e8f2b89fe3b1c5514f9a72101d0ddf00260a3a84c9b875682",
+        "originalVisibleHeight": 369,
+        "nonzeroAlphaPixels": 122220,
+        "rgbaSha256": "776fd3b7c8e99ffceafc020c60178d169d87a8389641dbcbdc81d56315d55486"
+      },
+      {
+        "direction": "NW",
+        "canonicalRejected": null,
+        "sourceCellSafeMargin": true,
+        "originalNativeSha256": "611475110fa8234ae8cff3c515bd3fd641fcbff6171c268aa39be21591d23c0f",
+        "originalVisibleHeight": 354,
+        "nonzeroAlphaPixels": 120884,
+        "rgbaSha256": "27e097d79aab3c30a44a4f3b5493d4b0a637cfaa2f0b49c23d3860b69b7222ac"
+      }
+    ],
+    "placements": [
+      {
+        "direction": "NE",
+        "left": 204,
+        "top": 207,
+        "width": 615,
+        "height": 610,
+        "nativeSha256": "b56ca10d5dc3ab1a5fd43dccb08025a891de1470c0bf5936f368867c61d9c887",
+        "unchangedOriginalNative": true
+      },
+      {
+        "direction": "SE",
+        "left": 1238,
+        "top": 207,
+        "width": 595,
+        "height": 610,
+        "nativeSha256": "d64caa802ad0a4740d7e656b92bf6433de1a6a92f42f0acfc00e2c3fd8aa5071",
+        "unchangedOriginalNative": true
+      },
+      {
+        "direction": "SW",
+        "left": 225,
+        "top": 1230,
+        "width": 574,
+        "height": 611,
+        "nativeSha256": "74bebba37a2bc16e8f2b89fe3b1c5514f9a72101d0ddf00260a3a84c9b875682",
+        "unchangedOriginalNative": true
+      },
+      {
+        "direction": "NW",
+        "left": 1221,
+        "top": 1238,
+        "width": 630,
+        "height": 596,
+        "nativeSha256": "53967927b1ecef9856019a361ca2a081e9b47837586d1f37a5cec4013b6b4aa9",
+        "unchangedOriginalNative": false
+      }
+    ],
+    "outputSha256": "750a53d4e6f52f71c4283c60936f38b62ec30d3d938e879c54b91a8916ba49dd"
+  }
+}

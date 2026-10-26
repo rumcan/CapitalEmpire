@@ -3,11 +3,16 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
+import { readScales } from './overrides.mjs';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const out = path.join(root, 'src/assets/cars');
 fs.mkdirSync(out, { recursive: true });
 const models = ['burgundy-wagon', 'navy-wood-panel-wagon'];
 const dirs = ['SE', 'S', 'SW', 'W', 'NW', 'N', 'NE', 'E'];
+// a car is drawn at its owner size x CAR_SCALE (src/game/ext/car-art, read as the size report reads it); the owner's size is keyed by its model
+// (scale-overrides.json, 1 when unset). Its cell is 512 px with a 16 px gutter each side
+const sizes = readScales(), CAR_SCALE = +(/export const CAR_SCALE = ([\d.]+)/.exec(fs.readFileSync(path.join(root, 'src/game/ext/car-art/index.ts'), 'utf8'))?.[1] ?? 1);
+const CELL = 512 - 32;
 const items = [], composite = [];
 for (const [modelIndex, model] of models.entries()) {
   const dir = path.join(root, 'art/cars', model);
@@ -18,7 +23,10 @@ for (const [modelIndex, model] of models.entries()) {
     const w = 64 * (2.25 * Math.abs(c - s) + 0.9 * Math.abs(s + c));
     const groundH = 32 * (2.25 * Math.abs(c + s) + 0.9 * Math.abs(c - s));
     const ratio = w / view.width, h = view.height * ratio;
-    const width = Math.round(w * 0.6), height = Math.round(h * 0.6);
+    // packed at 0.6 x its largest drawn size (the owner's size x CAR_SCALE, +5% jitter), as far as 3x its source's width and its cell go (upscaled past its pixels, softer)
+    const want = 0.6 * Math.max(1, (sizes[`cars:${model}`] ?? 1) * CAR_SCALE * 1.05), fit = Math.min(want, 3 * view.width / w, CELL / w, CELL / h);
+    if (fit < want * (1 - 1e-9)) console.warn(`${model} ${key}: packed at x${(fit / 0.6).toFixed(2)} of its size, capped by ${fit === 3 * view.width / w ? 'its 3x source' : 'its 512 px cell'}`);
+    const width = Math.round(w * fit), height = Math.round(h * fit);
     const cell = modelIndex * 8 + heading, left = (cell % 4) * 512 + 16, top = Math.floor(cell / 4) * 512 + 16;
     composite.push({ input: await sharp(path.join(dir, view.file)).resize(width, height, { kernel: 'lanczos3' }).sharpen({ sigma: 0.6 }).png().toBuffer(), left, top });
     const hx = 2.25 * Math.abs(c) + 0.9 * Math.abs(s), hy = 2.25 * Math.abs(s) + 0.9 * Math.abs(c);

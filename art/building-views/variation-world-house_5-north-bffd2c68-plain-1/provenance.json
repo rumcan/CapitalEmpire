@@ -19,5 +19,16 @@
     }
   ],
   "integrationStatus": "blocked",
-  "integrationReason": "Awaiting real alpha, four-view geometry, fixed camera/light and cohesive-theme review."
+  "integrationReason": "Rear SE/SW keep same visible corner and same off-centre chimney position despite nominal quarter turn; square similar window walls do not prove a changed viewpoint.",
+  "sourceReview": {
+    "reviewed": "2026-10-24",
+    "actualAlphaComposite": "output/building-priority/newest-review-4.png",
+    "theme": "Matte Maple Bean timber/brick/cream, charcoal roofs, amber dusk lamps, fixed upper-right key coherent across these sources; holds below are concrete camera/geometry/facade-continuity faults, not backgrounds.",
+    "corrections": [
+      {
+        "direction": "SW",
+        "brief": "Rotate the hip-roof cream two-storey house to the opposite rear corner from SE. Rear facade RIGHT, opposite side LEFT, chimney shifts to its physically correct far/right roof location. Four-sash rear/side window arrangement unchanged; gabled front entry hidden."
+      }
+    ]
+  }
 }

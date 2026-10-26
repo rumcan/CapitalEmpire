@@ -1,0 +1,283 @@
+{
+  "id": "variation:expansion-backyard-tent-a621b6c8:1",
+  "generator": "image_gen",
+  "generated": "2026-10-24",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-40345b42-64f7-43ea-afa7-8fa83b29ef60.png",
+  "prompt": "ONE GAME ASSET CUTOUT on EMPTY TRANSPARENT ALPHA, RGBA PNG. Reference1 is STYLE ONLY: the Maple Bean street's coherent miniature 3D illustration, softly textured matte materials, restrained rich colours, charcoal roofs, warm amber lamps, readable fine detail, early dusk with remaining daylight. Reference2 shows IDENTITY ONLY: preserve this building's architecture, not its old rendering or blue night cast. It must look natural beside the buildings in reference1. Fixed 2:1 isometric camera and SCREEN UPPER RIGHT SUN in every view; right-facing planes warm, left-facing planes cooler. Exactly four true rigid quarter turns of the SAME physical object on a square 2x2 sheet: NE front+right, SE right+back, SW back+left, NW left+front. Same roof, windows, equipment and physical scale throughout; reconstruct hidden sides, never mirror a front. Centre each complete sprite within its own cell with20% blank margins on every side. Empty alpha in corners, gutters and gaps, zero clipping. NO BACKDROP OR FLOOR: no stage, ground surface, paving, terrain tile, foliage, leaves, broad shadow, haze, gradient, checkerboard, caption, divider, view label or frame. No people, vehicles, Halloween, pumpkins, skulls, cobwebs, spooky signage or decorative garlands. Only the physical building and integral structural parts, no attached landscape.  Subject library ID variation:expansion-backyard-tent-a621b6c8:1. One small old orange canvas backyard tent with simple triangular ridge, open front flaps and plain poles/ropes. Preserve tent function and modest condition; no pumpkins, skulls, campsite, flooring or people. Only tent.",
+  "references": [
+    {
+      "role": "authoritative-theme",
+      "file": "art/theme-consistency/references/theme-authoritative.png",
+      "sha256": "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2"
+    },
+    {
+      "role": "existing-subject-identity",
+      "id": "variation:expansion-backyard-tent-a621b6c8:1",
+      "direction": null,
+      "file": "art/theme-consistency/exports/buildings/variation-expansion-backyard-tent-a621b6c8-1.configured@2x.png",
+      "sha256": "622fece1148324aaae6c214c60289aa3e7d6094d4d7a4941d13cd2923836ceb9"
+    }
+  ],
+  "integrationStatus": "ready",
+  "integrationReason": "Full4-viewpostassemblyinspectionovermagenta atvisible-boundzoom confirms true distinctquarterturns, sharedfixed2:1camera/upper-rightdusk/mastermaterials/no surroundingfloor. AlphaPASS0warnings; unchanged3PNGbytesverified ateachreplacementstep. Physicalbuildingheightretained, doormeasurementnotcertified.",
+  "sourceVisualReview": {
+    "reviewer": "source_review_resume",
+    "actualAlphaBackground": "magenta #ff00c8",
+    "theme": "references/theme-authoritative.png",
+    "sourceOnly": true,
+    "geometry": "correction required",
+    "gameScaleNotCertified": true
+  },
+  "layoutCorrection": {
+    "method": "Pixel-preserving clear-gap split and centred four-cell repack; no generation, resizing or repainting.",
+    "originalSheet": "art/theme-consistency/generated/buildings/variation-expansion-backyard-tent-a621b6c8-1-4views-v1.png",
+    "originalSheetSha256": "e3eea45ad98b7ee444fdde9b54de5faee1ba2fb54ef79e933fece4f82369a562",
+    "originalDimensions": [
+      1774,
+      887
+    ],
+    "outputDimensions": [
+      2560,
+      2560
+    ],
+    "outputSheetSha256": "bad5bfca9b8cdc54c3909974cd7cf4702bc4ad51c551ecfc6ee8444da3314725",
+    "cellSize": 1280,
+    "minimumCellMarginFraction": 0.15,
+    "padding": 4,
+    "partitionMode": "row-first",
+    "rowFirstFailure": null,
+    "rowGap": {
+      "start": 436,
+      "endExclusive": 462,
+      "midpoint": 449,
+      "alphaThreshold": 8
+    },
+    "columnGaps": [
+      {
+        "row": 0,
+        "start": 808,
+        "endExclusive": 979,
+        "midpoint": 893,
+        "alphaThreshold": 8
+      },
+      {
+        "row": 1,
+        "start": 796,
+        "endExclusive": 980,
+        "midpoint": 888,
+        "alphaThreshold": 8
+      }
+    ],
+    "globalColumnGap": null,
+    "columnRowGaps": [],
+    "extractionRects": [
+      {
+        "direction": "NE",
+        "row": 0,
+        "column": 0,
+        "extraction": {
+          "left": 19,
+          "top": 1,
+          "width": 874,
+          "height": 448
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 123655,
+        "visibleAlphaPixelsThreshold8": 115058,
+        "nonzeroRgbaSha256": "98f5090ed6b83bc6da1d42935bc04c1b8a806c5795cfdb1a07027d10fb89c113",
+        "destination": {
+          "left": 203,
+          "top": 416,
+          "width": 874,
+          "height": 448
+        }
+      },
+      {
+        "direction": "SE",
+        "row": 0,
+        "column": 1,
+        "extraction": {
+          "left": 893,
+          "top": 1,
+          "width": 863,
+          "height": 448
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 125281,
+        "visibleAlphaPixelsThreshold8": 116694,
+        "nonzeroRgbaSha256": "9ec6555d6e1849815cb4219d83934c51157b29613c9cc11bbd5df6811c432737",
+        "destination": {
+          "left": 1488,
+          "top": 416,
+          "width": 863,
+          "height": 448
+        }
+      },
+      {
+        "direction": "SW",
+        "row": 1,
+        "column": 0,
+        "extraction": {
+          "left": 45,
+          "top": 449,
+          "width": 843,
+          "height": 425
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 123263,
+        "visibleAlphaPixelsThreshold8": 114573,
+        "nonzeroRgbaSha256": "2be154e626ef83e0497438acdef26e2bf9a8131299e11e95a2a72315de6604fb",
+        "destination": {
+          "left": 218,
+          "top": 1707,
+          "width": 843,
+          "height": 425
+        }
+      },
+      {
+        "direction": "NW",
+        "row": 1,
+        "column": 1,
+        "extraction": {
+          "left": 888,
+          "top": 449,
+          "width": 860,
+          "height": 431
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 118219,
+        "visibleAlphaPixelsThreshold8": 110526,
+        "nonzeroRgbaSha256": "8e999120f8365f262b9ab35cc8ab14f5bf8511186a7aa4e1c05a4d38e9f267c6",
+        "destination": {
+          "left": 1490,
+          "top": 1704,
+          "width": 860,
+          "height": 431
+        }
+      }
+    ],
+    "sourcePixelCounts": {
+      "nonzeroAlphaPixels": 490418,
+      "visibleAlphaPixelsThreshold8": 456851,
+      "nonzeroRgbaSha256": "90d3ac40653b7e6d0feedbd93a56751d72fc37553368c3ffb15de6426b6a09be"
+    },
+    "nonzeroAndVisiblePixelConservation": true,
+    "exactVisibleRgbaConservation": true,
+    "visualReviewRequired": true,
+    "warnings": []
+  },
+  "singleViewCorrection": {
+    "sourceSheet": "art/theme-consistency/generated/buildings/variation-expansion-backyard-tent-a621b6c8-1-4views-v2.png",
+    "sourceSheetSha256": "bad5bfca9b8cdc54c3909974cd7cf4702bc4ad51c551ecfc6ee8444da3314725",
+    "direction": "NW",
+    "copiedOriginalDirection": null,
+    "newGeneratedSingle": "art/theme-consistency/generated/buildings/variation-expansion-backyard-tent-a621b6c8-1-single-corrections-v2/NW.png",
+    "newGeneratedSingleSha256": "c2d8c923a404849ff74e80d0b370a22cd4d195292488fecd4279d74c680af021",
+    "newGeneratedSingleProvenance": {
+      "id": "variation:expansion-backyard-tent-a621b6c8:1",
+      "direction": "NW",
+      "generator": "image_gen",
+      "generated": "2026-10-24",
+      "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-4fd119f0-0d15-4666-954b-e130d2ff086b.png",
+      "prompt": "ONE SINGLE ISOLATED BUILDING SPRITE, NOT A FOUR-VIEW SHEET. The reference is this SAME existing building shown from several corners; preserve its exact architecture and matte Maple Bean miniature style. We need a genuinely different rigid rotation, direction NW. NW repeats NE tent entry corner. Reconstruct NW from the opposite front corner so the entry opening faces screen RIGHT and the physical left canvas side faces screen LEFT. Preserve guy ropes, pegs and roof identity; preserve NE/SE/SW. TARGET NW ONLY: draw the opposite front corner described above, not the NE corner again. Maintain roof/ridge and chimney on the same physical wall; front-facing lettering remains legible, never mirrored. Output ONE isolated complete building cutout for this target direction, not a sheet or montage. Preserve existing Maple-master palette/materials/details and fixed screen-upper-right dusk light. Orthographic2:1 ground axes approximately +/-26.565degrees, verticalwallsvertical, no perspective vanishing point. No grey floor/terrain/haze/broad shadow; genuinely transparent alpha with generous canvas margins. Fixed orthographic2:1 camera: both ground axes at +/-26.565degrees, wallsvertical, no head-on elevation/perspective vanishingpoint. CRITICAL: fixed SCREEN UPPER RIGHT DUSK SUN and warm amber practical lights; right roof/wall planes warm, leftplanes cooler even though buildingturns. Reconstructhiddenfaces; NEVER mirror sourcepixels or lighting or copy the samecorner. Square1:1PNG with onecompleteSMALLbuilding occupying60%canvasheight, generous100pxfullyclear margins, truealpha0outsidephysicalbuilding. No other view, no grid, no label, no ground surface/floor/paving/yard/greybackdrop/broadshadow/haze/gradient/checkerboard/people. Only physical building and integralporch/steps/supports.",
+      "references": [
+        {
+          "role": "identity-style-and-physical-geometry-reference",
+          "file": "art/theme-consistency/generated/buildings/variation-expansion-backyard-tent-a621b6c8-1-4views-v1.png"
+        }
+      ],
+      "integrationStatus": "blocked",
+      "integrationReason": "Single actual-turn correction; inspect before four-view assembly."
+    },
+    "newViewScale": {
+      "factor": 0.5294855708908407,
+      "method": "median visible building height of unchanged three views; source scale retained, not certified door calibration",
+      "targetHeight": 422,
+      "oldDoor": null,
+      "newDoor": null,
+      "resizeKernel": "lanczos3; new view only"
+    },
+    "unchangedViewsPreservedByteForByte": [
+      "NE",
+      "SE",
+      "SW"
+    ],
+    "originalViewEvidence": [
+      {
+        "direction": "NE",
+        "canonicalRejected": null,
+        "sourceCellSafeMargin": true,
+        "originalNativeSha256": "f62ca96df50a245f6743670baa5c5f7d2413de7ec8f9608a66959a02eb36b4b5",
+        "originalVisibleHeight": 422,
+        "nonzeroAlphaPixels": 123655,
+        "rgbaSha256": "98f5090ed6b83bc6da1d42935bc04c1b8a806c5795cfdb1a07027d10fb89c113"
+      },
+      {
+        "direction": "SE",
+        "canonicalRejected": null,
+        "sourceCellSafeMargin": true,
+        "originalNativeSha256": "86491d06162027828e1af11f17c52bfd4336b4ee8d60931230edd16e82cc313a",
+        "originalVisibleHeight": 423,
+        "nonzeroAlphaPixels": 125281,
+        "rgbaSha256": "9ec6555d6e1849815cb4219d83934c51157b29613c9cc11bbd5df6811c432737"
+      },
+      {
+        "direction": "SW",
+        "canonicalRejected": null,
+        "sourceCellSafeMargin": true,
+        "originalNativeSha256": "8b37eb65aad0641a29a340a170aaa481a8b5dcd60e2c5ca020c4ea05138a289e",
+        "originalVisibleHeight": 406,
+        "nonzeroAlphaPixels": 123263,
+        "rgbaSha256": "2be154e626ef83e0497438acdef26e2bf9a8131299e11e95a2a72315de6604fb"
+      },
+      {
+        "direction": "NW",
+        "canonicalRejected": null,
+        "sourceCellSafeMargin": true,
+        "originalNativeSha256": "b61c7fa8b9d08dfc1d2bb34678cb9bab7cdca32f633155a0d8c33d8b2ce8c1df",
+        "originalVisibleHeight": 412,
+        "nonzeroAlphaPixels": 118219,
+        "rgbaSha256": "8e999120f8365f262b9ab35cc8ab14f5bf8511186a7aa4e1c05a4d38e9f267c6"
+      }
+    ],
+    "placements": [
+      {
+        "direction": "NE",
+        "left": 265,
+        "top": 478,
+        "width": 878,
+        "height": 452,
+        "nativeSha256": "f62ca96df50a245f6743670baa5c5f7d2413de7ec8f9608a66959a02eb36b4b5",
+        "unchangedOriginalNative": true
+      },
+      {
+        "direction": "SE",
+        "left": 1679,
+        "top": 478,
+        "width": 866,
+        "height": 452,
+        "nativeSha256": "86491d06162027828e1af11f17c52bfd4336b4ee8d60931230edd16e82cc313a",
+        "unchangedOriginalNative": true
+      },
+      {
+        "direction": "SW",
+        "left": 282,
+        "top": 1897,
+        "width": 844,
+        "height": 429,
+        "nativeSha256": "8b37eb65aad0641a29a340a170aaa481a8b5dcd60e2c5ca020c4ea05138a289e",
+        "unchangedOriginalNative": true
+      },
+      {
+        "direction": "NW",
+        "left": 1789,
+        "top": 1788,
+        "width": 646,
+        "height": 648,
+        "nativeSha256": "ca75367a76ab16a1e3a97d17ee661a69e357102db131a10b657660e5728807b2",
+        "unchangedOriginalNative": false
+      }
+    ],
+    "outputSha256": "075f01749425a6209b0664178c87fab8bfb08bac1905608125eff87d61f45e71"
+  }
+}

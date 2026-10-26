@@ -1,0 +1,10 @@
+{
+ "id": "variation:ref-building-drive-in-screen-b0bccc2a-plain:1",
+ "version": "variation-ref-building-drive-in-screen-b0bccc2a-plain-1-4views-v4",
+ "files": {
+  "NE": "ba01a8c50c66711ed946fa3583a1814eb223f2ee9b7a30e202cab2b004d45b27",
+  "SE": "6dfa7b9744ca8649a4473d3c5df36572e4397d9d070186406f908b7c4f9505ca",
+  "SW": "c92400a1b16f539e6182b5cf220cec2b615688d3fc63460e2caabfea0cd7ce22",
+  "NW": "a52c14b05293efd2b556ecd3619ea038b430e5e21534c1af3a664b58d7a2a207"
+ }
+}

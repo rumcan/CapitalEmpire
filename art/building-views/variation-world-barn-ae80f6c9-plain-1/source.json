@@ -1,10 +1,10 @@
 {
  "id": "variation:world-barn-ae80f6c9-plain:1",
- "version": "variation-world-barn-ae80f6c9-plain-1-4views-v1",
+ "version": "variation-world-barn-ae80f6c9-plain-1-4views-v2",
  "files": {
-  "NE": "7d02f0c5fcc5b02578deb727e08ae3597e0a5c68171785336717781d4b402748",
-  "SE": "77493036b4d7d7e75d10d79362248a06cda28e84750c07f153591414fe7b0db0",
-  "SW": "4603911c5305e9f1746f099f536e460b04783a55e42421f47715bf6b4204b2ae",
-  "NW": "2f6d421de1d8cac2420125c329704841ad1d20be409a6f925a6e78e487676294"
+  "NE": "1db49273f997731d9f91f710f9286d4ff0f34c4e57cb84d01dcd090da9217124",
+  "SE": "cfce52bc5762b8c8e75ec047fd064349737b135fc3a5e866330cb4ab71703545",
+  "SW": "8079c00b3441a332e44c524f34e693e906a41401843d203eb88085626a1e184b",
+  "NW": "d408a40ffbeb1b4bca74f5f907f0b5fa846daa6ae4bcf4805e0ab65dda7a2af6"
  }
 }

@@ -1,5 +1,5 @@
 // The in-game dev editor (P20 / T071; dev builds only: App.tsx loads it behind import.meta.env.DEV). On with ?dev in the URL or the I key.
-// Click a sprite to select it (topmost under the cursor: Game.propAt over the sprites' rects); [ and ] resize 5%, the arrows move 0.25 tile
+// Click a sprite to select it (topmost under the cursor: Game.propAt over the sprites' rects), or drag it to move it (past 4 px; Esc cancels); [ and ] resize 5%, the arrows move 0.25 tile
 // along the map axes (Shift: 1 tile; a lot prop stops at its lot's edge), R turns it, Delete removes it, Ctrl+D duplicates it, Esc deselects,
 // Ctrl+Z undoes. The panel's picker (a library id, with a thumbnail) arms placing: a ghost of the sprite follows the cursor, a click puts it on
 // the lot under it (into that lot's preset) or, off the lots, as a player's prop; Shift+click keeps placing, Esc stops; Insert or A (with the
@@ -12,14 +12,16 @@
 //     scale-overrides.json (read at runtime: the size shows at once) and removed.json (read at the next asset rebuild); a size never grows past
 //     the picture's pixels (newart.ts maxDrawScale), here or in a preset or the save, as the studio and the game's own resize refuse it;
 //   a player's prop: the prop in the game save, as the game's own tools do.
-// The dev server writes the files (vite.config.ts: POST /__dev/save, whitelisted, own pages only) and hot-reloads the presets with no page
-// reload or rebuild.
+// The dev server writes the files (vite.config.ts: POST /__dev/save, whitelisted, own pages only; the lot presets merge per preset through
+// POST /__dev/presets, so two people's saves do not overwrite each other) and hot-reloads them with no page reload or rebuild.
+// The lot lab (src/game/dev/lot-lab.ts) drives the panel through armPlacing and editorAct, saves with saveLotPresets, and draws its palette with thumb.
 import type { Game } from '../engine';
 import type { LibItem, Prop } from '../types';
 import { ATLAS_PAGES, ATLAS_SIZE, LIBRARY } from '../library';
 import { spriteRect, type Drawable } from '../sprites';
 import { worldX, worldY } from '../iso';
 import { OWNER_SCALE, TABLE_SCALE } from '../lots/scales';
+import { carSizeId } from '../ext/car-art';
 import { lookOf, maxDrawScale } from '../newart';
 import { compose, lotPreset, lotPresets, lotPresetsMeta, onLotPresetsReload, setLotPresets, type PresetDrop } from '../lots/compose';
 import { formatPresets, type LotPreset } from '../lots/presets';
@@ -68,6 +70,12 @@ function paint(el: HTMLElement, it: LibItem, w: number, h: number) {
   const [page, u0, v0, u1, v1] = it.tex, P = ATLAS_SIZE / 2, kx = w / Math.max(1e-6, (u1 - u0) * P), ky = h / Math.max(1e-6, (v1 - v0) * P);
   Object.assign(el.style, { backgroundImage: `url(${ATLAS_PAGES[page]![1]})`, backgroundSize: `${P * kx}px ${P * ky}px`, backgroundPosition: `${-u0 * P * kx}px ${-v0 * P * ky}px`, backgroundRepeat: 'no-repeat' });
 }
+/** draws a library sprite's look (the picture the lots draw, lookOf) fitted into size x size css px on el's background; clears it for an unknown id */
+export function thumb(el: HTMLElement, id: string, size: number): void {
+  const item = INDEX.get(id); if (item === undefined) { el.style.backgroundImage = ''; return; }
+  const look = LIBRARY[lookOf({ item, flip: false, scale: 1, x: 0, y: 0 }).item] ?? LIBRARY[item]!, [, u0, v0, u1, v1] = look.tex, a = (u1 - u0) / Math.max(1e-6, v1 - v0);
+  paint(el, look, a >= 1 ? size : size * a, a >= 1 ? size / a : size);
+}
 
 /** a whitelisted file's text: the newest the editor is about to write (behind the write in flight), else the dev server's copy, read once
  *  no write is in flight (so a library edit never starts from a text an earlier save is replacing) */
@@ -87,25 +95,50 @@ async function post(file: string, json: string): Promise<void> {
  *  text, so the file never ends on an older state than the editor holds */
 const waiting = new Map<string, string>();
 let writing: Promise<void> | null = null;
-/** a text's fingerprint (two FNV-1a passes, 64 bits as a string) */
-const fingerprint = (s: string) => { let a = 0x811c9dc5, b = 0x01000193 ^ s.length; for (let i = 0; i < s.length; i++) { const c = s.charCodeAt(i); a = Math.imul(a ^ c, 16777619); b = Math.imul(b ^ c, 2246822519) ^ (b >>> 13); } return `${(a >>> 0).toString(36)}.${(b >>> 0).toString(36)}`; };
-/** every text the editor gave a file this session: a hot reload of any of them is the echo of its own save (an earlier one can land after a
- *  later write), never applied, so memory never falls behind disk */
-const written = new Set<string>();
 async function save(file: string, json: string): Promise<void> {
-  waiting.set(file, json); written.add(fingerprint(json));
+  waiting.set(file, json);
   while (writing) await writing.catch(() => undefined);
   if (!waiting.has(file)) return;   // a later call wrote this file's newest text already
   const text = waiting.get(file)!; waiting.delete(file);
   writing = post(file, text).finally(() => { writing = null; });
   await writing;
 }
+/** posts the presets with these ids (as held when the write starts) and the removed ids to /__dev/presets: the dev server merges them into lot-presets.json */
+async function postPresets(ids: string[], removed: string[]): Promise<void> {
+  const r = await fetch('/__dev/presets', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ upsert: lotPresets().filter(p => ids.includes(p.id)), remove: removed }) });
+  if (!r.ok) throw new Error(`save lot-presets.json: ${r.status} ${await r.text()}`);
+}
+/** saves the presets with these ids, and drops the removed ids, in lot-presets.json, one write at a time through the save queue: each preset replaces its
+ *  own entry on disk, so a preset someone else saved meanwhile stays as it is */
+async function savePresets(ids: string[], removed: string[] = []): Promise<void> {
+  while (writing) await writing.catch(() => undefined);
+  writing = postPresets(ids, removed).finally(() => { writing = null; });
+  await writing;
+}
+/** saves the lot presets with these ids (the lot lab's Save, Approve and edits: [id]) and drops the removed ids (a removal: [], [id]) in lot-presets.json */
+export function saveLotPresets(ids: string[], removed: string[] = []): Promise<void> { return savePresets(ids, removed); }
+/** the open editor's entries for the lot lab (set by installLotEditor, null while no editor is installed): arm a library id, run an action */
+let lab: { place: (id: string) => void; edit: (a: 'bigger' | 'smaller' | 'turn' | 'delete' | 'duplicate' | 'undo') => void } | null = null;
+/** what the editor's panel says now: the selection's line and the last message (the lot lab shows them in its own panel) */
+const text = { info: '', msg: '' };
+/** the editor panel's words now (the selection, the last message): the lot lab's panel shows them while it hides the editor's */
+export function editorText(): { info: string; msg: string } { return { ...text }; }
+/** arms placing the library sprite id (the editor turned on): the lot lab's palette; false when the editor is not installed */
+export function armPlacing(id: string): boolean { if (!lab) return false; lab.place(id); return true; }
+/** one editor action on the selection, as its key would do it: the lot lab's buttons; false when the editor is not installed */
+export function editorAct(a: 'bigger' | 'smaller' | 'turn' | 'delete' | 'duplicate' | 'undo'): boolean { if (!lab) return false; lab.edit(a); return true; }
+/** whether the editor's pointer handling is paused (the lot lab's ground painting) */
+let paused = false;
+/** pauses the editor's pointer handling (the lot lab's ground painting): its presses go to the lab */
+export function pauseEditor(v: boolean): void { paused = v; }
 
 /** installs the editor on a game and its overlay canvas (off until ?dev or the I key); returns the uninstall */
 export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => void {
   let on = false, sel: Prop | null = null, ghost: Ghost | null = null, everywhere = false, message = '';
   /** the cursor over the map (overlay px) and whether it is there now; the sprite being placed (a library id) */
   let cursor: { mx: number; my: number } | null = null, overMap = false, placing: string | null = null;
+  /** a press on a sprite (its prop, the overlay px and the tile under it), the snapped tile delta since, and whether it moved past 4 px (a drag) */
+  let drag: { p: Prop; mx: number; my: number; t: { x: number; y: number }; dx: number; dy: number; moved: boolean } | null = null;
   /** the props the selected lot leaves out (compose's drops), for the panel's list */
   let drops: PresetDrop[] = [], dropsLot: string | null = null;
   const undo: Undo[] = [];
@@ -121,6 +154,7 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
   const ghostEl = document.createElement('div');
   ghostEl.style.cssText = 'position:fixed;pointer-events:none;opacity:.6;outline:1px dashed #38bdf8;z-index:59;display:none';
   const panel = document.createElement('div');
+  panel.id = 'ce-dev-editor-panel';   // the lot lab hides it (its own panel has the tools) and shows editorText() instead
   panel.style.cssText = 'position:fixed;right:12px;bottom:12px;width:340px;max-width:calc(100vw - 24px);max-height:70vh;overflow:auto;z-index:61;display:none;background:rgba(12,18,28,.94);color:#e2e8f0;border:1px solid #38bdf8;border-radius:10px;padding:10px 12px;font:12px/1.45 ui-monospace,Consolas,monospace;box-shadow:0 6px 24px rgba(0,0,0,.5)';
   panel.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><b style="color:#7dd3fc">DEV LOT EDITOR</b><span style="opacity:.7">I closes</span></div>
@@ -128,7 +162,7 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
     <label style="display:flex;gap:6px;align-items:center;margin:6px 0;cursor:pointer"><input data-k="every" type="checkbox"> this sprite everywhere (size, remove)</label>
     <div style="display:flex;gap:6px;margin:6px 0;align-items:center"><div data-k="thumb" style="width:36px;height:36px;flex:none;border:1px solid #334155;border-radius:5px;background-color:#0f172a"></div><input data-k="pick" list="ce-dev-lib" placeholder="library id or name" style="flex:1;min-width:0;background:#0f172a;color:#e2e8f0;border:1px solid #334155;border-radius:5px;padding:3px 6px"><button data-k="add" style="background:#0369a1;color:#fff;border-radius:5px;padding:2px 8px">Place</button></div>
     <datalist id="ce-dev-lib"></datalist>
-    <div style="opacity:.75">[ ] size 5% · arrows move ¼ tile (Shift 1) · R turn · Del delete · Ctrl+D duplicate · Place / Enter: click to put (Shift+click: more, Esc stops) · Insert or A: at the cursor · Esc deselect · Ctrl+Z undo</div>
+    <div style="opacity:.75">[ ] size 5% · arrows move ¼ tile (Shift 1) · drag a sprite to move it · R turn · Del delete · Ctrl+D duplicate · Place / Enter: click to put (Shift+click: more, Esc stops) · Insert or A: at the cursor · Esc deselect · Ctrl+Z undo</div>
     <div data-k="drops" style="margin-top:6px"></div>
     <div data-k="msg" style="margin-top:6px;color:#fcd34d;white-space:pre-wrap"></div>`;
   const $ = <T extends HTMLElement>(k: string) => panel.querySelector(`[data-k="${k}"]`) as T;
@@ -138,7 +172,7 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
   const pick = $<HTMLInputElement>('pick');
   /** the picker's library id: the id typed, or the one whose name was typed */
   const pickedId = () => { const v = pick.value.trim(); return INDEX.has(v) ? v : LIBRARY.find(i => i.name.toLowerCase() === v.toLowerCase())?.id ?? null; };
-  const showThumb = () => { const id = pickedId(), el = $('thumb'); if (!id) { el.style.backgroundImage = ''; return; } const it = LIBRARY[INDEX.get(id)!]!, look = LIBRARY[lookOf({ item: INDEX.get(id)!, flip: false, scale: 1, x: 0, y: 0 }).item] ?? it, [, u0, v0, u1, v1] = look.tex, a = (u1 - u0) / Math.max(1e-6, v1 - v0); paint(el, look, a >= 1 ? 36 : 36 * a, a >= 1 ? 36 / a : 36); };
+  const showThumb = () => thumb($('thumb'), pickedId() ?? '', 36);
   pick.addEventListener('input', showThumb);
   pick.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); arm(); } else if (e.key === 'Escape') { e.preventDefault(); disarm(); } e.stopPropagation(); });
   $<HTMLInputElement>('every').addEventListener('change', e => { everywhere = (e.target as HTMLInputElement).checked; (e.target as HTMLInputElement).blur(); render(); });
@@ -165,7 +199,7 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
   function ghostDrawable(): Drawable | null {
     const s = ghost ? presetSource(ghost.lot, ghost.preset, ghost.index) : null; if (!s) return null;
     const q = s.preset.props[s.index]!, t = turned(q.id, s.frame.q + q.view), c = presetToWorld(s.frame, s.preset, q.x, q.y);
-    return drawable(t.id, c.x, c.y, isCar(t.id) ? 1 : q.scale * ownerScaleOf(q.id), t.flip);
+    return drawable(t.id, c.x, c.y, q.scale * ownerScaleOf(q.id), t.flip);
   }
   /** the props a lot leaves out now, with why (compose's drops) */
   function refreshDrops(lot: string | null) {
@@ -176,7 +210,8 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
 
   function render() {
     panel.style.display = on ? 'block' : 'none';
-    if (!on) { outline.style.display = lost.style.display = ghostEl.style.display = 'none'; return; }
+    // off, the words are cleared: the lot lab shows them (editorText), and a selection left from before would show there
+    if (!on) { text.info = text.msg = ''; outline.style.display = lost.style.display = ghostEl.style.display = 'none'; return; }
     let info = 'Click a sprite to select it.';
     const s = selSource();
     if (sel) {
@@ -189,7 +224,7 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
       const q = s?.kind === 'preset' ? s.preset.props[s.index] : undefined;
       info = q ? `${q.id}\nlot ${ghost.lot}\npreset ${ghost.preset}, prop ${ghost.index}\nLEFT OUT: ${ghost.why} (dashed). Move it (arrows), turn or resize it to bring it back, or Ctrl+Z` : `lot ${ghost.lot}: that preset prop is gone`;
     }
-    $('info').textContent = info;
+    $('info').textContent = text.info = info;
     const box = $('drops');
     box.innerHTML = '';
     const lot = selLot();
@@ -203,7 +238,7 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
         box.appendChild(b);
       }
     }
-    $('msg').textContent = (placing ? `placing ${placing}: click the map (Shift+click: more, Esc stops)\n` : '') + message;
+    $('msg').textContent = text.msg = (placing ? `placing ${placing}: click the map (Shift+click: more, Esc stops)\n` : '') + message;
   }
   const say = (m: string) => { message = m; render(); };
   function select(p: Prop | null) { sel = p; ghost = null; refreshDrops(selLot()); render(); }
@@ -234,16 +269,14 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
     // this lot at once, then only the other lots drawn from the same preset (not the whole town's ground on every key repeat)
     game.recomposeLots([lot], after.id);
     reselect(lot, after.id, index);
-    try { await save('lot-presets.json', formatPresets(lotPresets(), lotPresetsMeta())); say(`${what}: ${after.id} saved to lot-presets.json${after.curated ? ' (curated)' : ''}; every lot drawn from it follows${note}${ghost ? `. This lot leaves it out: ${ghost.why}` : ''}`); }
+    try { await savePresets([after.id]); say(`${what}: ${after.id} saved to lot-presets.json${after.curated ? ' (curated)' : ''}; every lot drawn from it follows${note}${ghost ? `. This lot leaves it out: ${ghost.why}` : ''}`); }
     catch (e) { say(`NOT SAVED: ${String(e)}`); }
   }
   async function presetEdit(s: Extract<Source, { kind: 'preset' }>, a: Act, dx: number, dy: number) {
     const q = s.preset.props[s.index]!, here = presetToWorld(s.frame, s.preset, q.x, q.y);
     let e: PresetEdit, note = '';
     if (a === 'bigger' || a === 'smaller') {
-      // a parked car is drawn at the road cars' size (CAR_SCALE) whatever its preset scale (compose: car ? 1)
-      if (isCar(q.id)) return say(`${q.id}: a parked car is drawn at the size of the cars on the road; its size is not the preset's`);
-      // the drawn size (the preset's scale x the owner scale) never past the picture's pixels in any of its views
+      // the drawn size (the preset's scale x the owner scale, a car's its owner size) never past the picture's pixels in any of its views
       const own = ownerScaleOf(q.id), lim = artLimit(q.id), next = growWithin(q.scale * own, a === 'bigger' ? GROW : 1 / GROW, lim);
       if (next === null) return say(refused(q.id, lim));
       e = { op: 'scale', prop: s.index, factor: next / (q.scale * own) };
@@ -264,15 +297,16 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
     if (r) await commitPreset(s.lot, s.preset, r.preset, r.prop, a, s.index, note);
   }
   async function libraryEdit(item: number, a: Act) {
-    const it = LIBRARY[item]!, id = fourViews(it.id)?.views[0] ?? it.id;
-    if ((a === 'bigger' || a === 'smaller') && isCar(id)) return say(`${id}: a parked car is drawn at the size of the cars on the road; it has no library size to set`);
+    const it = LIBRARY[item]!, car = isCar(it.id), id = car ? carSizeId(it.id) : fourViews(it.id)?.views[0] ?? it.id;
     if (a === 'bigger' || a === 'smaller') {
-      // the studio's rule (server.mjs /api/scale): its size, else the table's, times the step; never past the pixels of any of its views
-      const text = await load('scale-overrides.json'), sizes = JSON.parse(text) as Record<string, number>, base = TABLE_SCALE[id] ?? OWNER_SCALE[id] ?? 1, cur = sizes[id] ?? base;
-      const lim = artLimit(id), next = growWithin(cur, a === 'bigger' ? GROW : 1 / GROW, lim);
+      // the studio's rule (server.mjs /api/scale): its size, else the table's (a car's: 1, the size of its model), times the step; never past the pixels of any of its views
+      const text = await load('scale-overrides.json'), sizes = JSON.parse(text) as Record<string, number>, base = car ? 1 : TABLE_SCALE[id] ?? OWNER_SCALE[id] ?? 1, cur = sizes[id] ?? base;
+      const lim = artLimit(car ? it.id : id), next = growWithin(cur, a === 'bigger' ? GROW : 1 / GROW, lim);
       if (next === null) return say(refused(id, lim));
       const out = scaleOverride(sizes, id, base, next / cur), views = fourViews(id)?.views ?? [id], before = views.map(v => [v, OWNER_SCALE[v]] as const);
       await save('scale-overrides.json', studioJson(out));
+      // a car's size is read from the studio file when the game loads (ext/car-art carOwnerScale), so it shows after a reload
+      if (car) { undo.push({ kind: 'file', file: 'scale-overrides.json', text }); return say(`${id}: size ${out[id]} saved to scale-overrides.json; every car of this model is drawn at that size after a reload of the game`); }
       // scales.ts reads the studio sizes at runtime: the lots take the new size now (the dev server may reload the page to apply it everywhere)
       const apply = (s: (v: string) => number | undefined) => { for (const v of views) { const k = s(v); if (k === undefined) delete OWNER_SCALE[v]; else OWNER_SCALE[v] = k; } recomposeKeeping(); };
       apply(() => out[id]);
@@ -319,12 +353,12 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
     const item = INDEX.get(id); if (item === undefined) return say(`not a library id: ${id}`);
     const t = game.tileAt(mx, my), x = snap(t.x), y = snap(t.y), lot = game.lotKeyAt(x, y), at = lot ? game.lotOf(lot) : null, lp = at ? lotPreset(at.g, at.st) : null;
     if (lot && lp) {
-      const v = turned(id, lp.frame.q), fp = footprintOf(v.id, isCar(id) ? 1 : ownerScaleOf(id), v.flip), n = placeInPreset(lp.frame, lp.preset, x, y, (fp[2] - fp[0]) / 2, (fp[3] - fp[1]) / 2);
+      const v = turned(id, lp.frame.q), fp = footprintOf(v.id, ownerScaleOf(id), v.flip), n = placeInPreset(lp.frame, lp.preset, x, y, (fp[2] - fp[0]) / 2, (fp[3] - fp[1]) / 2);
       const r = applyEdit(lp.preset, { op: 'add', id, x: n.x, y: n.y });
       if (r) await commitPreset(lot, lp.preset, r.preset, r.prop, `added ${id}`, -1, n.clamped ? ' (at the lot edge)' : '');
       return;
     }
-    const s = isCar(id) ? 1 : ownerScaleOf(id), fp = footprintOf(id, s, false), p = game.addProp(item, x - (fp[0] + fp[2]) / 2, y - (fp[1] + fp[3]) / 2, false, s);
+    const s = ownerScaleOf(id), fp = footprintOf(id, s, false), p = game.addProp(item, x - (fp[0] + fp[2]) / 2, y - (fp[1] + fp[3]) / 2, false, s);
     undo.push({ kind: 'player-add', prop: p }); game.scheduleSave(); select(p); game.emit();
     say(`placed ${id} as a player's prop (the save)${lot ? ': that lot draws no preset' : ''}`);
   }
@@ -352,7 +386,7 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
       else { const p = live(u.prop); if (p) game.removeProp(p); game.scheduleSave(); select(null); game.emit(); say('undone: the copy removed (the save)'); }
     } catch (e) { say(`undo failed: ${String(e)}`); }
   }
-  function toggle(v = !on) { on = v; if (!on) { sel = null; ghost = null; placing = null; } message = on ? 'dev editor on: click a sprite' : ''; render(); }
+  function toggle(v = !on) { on = v; if (!on) { sel = null; ghost = null; placing = null; drag = null; } message = on ? 'dev editor on: click a sprite' : ''; render(); }
 
   // ---------- input: ahead of the game's own handlers (capture), only while on
   const stop = (e: Event) => { e.preventDefault(); e.stopImmediatePropagation(); };
@@ -365,6 +399,7 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
     if (!on) return;
     if (mod && (e.key === 'z' || e.key === 'Z')) { stop(e); void undoLast(); return; }
     if (e.key === 'Escape' && placing) { stop(e); disarm(); return; }
+    if (e.key === 'Escape' && drag) { stop(e); const d = drag; drag = null; say(d.moved ? 'move cancelled' : ''); return; }
     // Insert, or A with the mouse over the map: the sprite being placed (or the picker's) at the cursor
     const id = placing ?? pickedId();
     if ((e.key === 'Insert' || ((e.key === 'a' || e.key === 'A') && !mod && !e.altKey && overMap && id)) && cursor) { stop(e); if (id) void placeAt(id, cursor.mx, cursor.my); else say('pick a library id first'); return; }
@@ -386,22 +421,43 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
     stop(e);
   };
   const onDown = (e: PointerEvent) => {
-    if (!on || e.target !== canvas || e.button !== 0) return;
+    if (!on || paused || e.target !== canvas || e.button !== 0) return;
+    // the keys come here: stopping the press keeps a framed game (the studio's Lots tab) from taking the focus by itself, so Delete, R and the
+    // arrows would go to the page around it
+    window.focus();
     // the panel's fields let go of the keys (stopping the event keeps the focus where it was)
     if (document.activeElement instanceof HTMLElement && panel.contains(document.activeElement)) document.activeElement.blur();
     if (placing) { stop(e); const id = placing; if (!e.shiftKey) disarm(); void placeAt(id, e.offsetX, e.offsetY); return; }
     const p = game.propAt(e.offsetX, e.offsetY);
-    if (p) { select(p); stop(e); } else if (sel || ghost) select(null);
+    // a press on a sprite selects it and starts a drag (onMove, onRelease): a click alone only selects it
+    drag = null;
+    if (p) { select(p); stop(e); drag = { p, mx: e.offsetX, my: e.offsetY, t: game.tileAt(e.offsetX, e.offsetY), dx: 0, dy: 0, moved: false }; } else if (sel || ghost) select(null);
   };
-  const onMove = (e: PointerEvent) => { overMap = e.target === canvas; if (overMap) cursor = { mx: e.offsetX, my: e.offsetY }; };
+  /** a pointer event's overlay px (its client position: a drag may leave the canvas) */
+  const pxOf = (e: PointerEvent) => { const b = canvas.getBoundingClientRect(); return { mx: e.clientX - b.left, my: e.clientY - b.top }; };
+  const onMove = (e: PointerEvent) => {
+    overMap = e.target === canvas; if (overMap) cursor = { mx: e.offsetX, my: e.offsetY };
+    if (!drag) return;
+    // a press that moves past 4 px is a drag: the sprite follows the pointer by the snapped tile delta (the game does not pan meanwhile)
+    stop(e); const q = pxOf(e), d = drag;
+    if (!d.moved && Math.hypot(q.mx - d.mx, q.my - d.my) > 4) d.moved = true;
+    if (d.moved) { const t = game.tileAt(q.mx, q.my); d.dx = snap(t.x - d.t.x); d.dy = snap(t.y - d.t.y); }
+  };
+  /** a drag's release moves the sprite once by its snapped tile delta (a click, or no delta, changes nothing: the press selected it); a cancel moves nothing */
+  const onRelease = (e: PointerEvent) => {
+    if (!drag) return;
+    stop(e); const d = drag; drag = null;
+    if (e.type === 'pointerup' && (d.dx || d.dy)) void act('move', d.dx, d.dy);
+  };
   window.addEventListener('keydown', onKey, true);
   window.addEventListener('pointerdown', onDown, true);
   window.addEventListener('pointermove', onMove, true);
-  // a hot reload of lot-presets.json: any text this editor wrote this session is the echo of its own saves (an earlier one can land after a
-  // later write) and is never applied, nor is any reload while it writes (the editor holds the same or newer presets); any other (the studio,
-  // a hand edit) replaces the presets, every lot composes again, and the selection follows its preset prop
+  window.addEventListener('pointerup', onRelease, true); window.addEventListener('pointercancel', onRelease, true);
+  // a hot reload of lot-presets.json (the file on disk is the merged truth): a reload while a write is queued or in flight is skipped (the editor
+  // holds the same or a newer state); any other that differs from the presets held (another person's save, the studio, a hand edit) replaces
+  // them, every lot composes again, and the selection follows its preset prop. The echo of the editor's own save matches them: nothing changes
   const unReload = onLotPresetsReload((list, meta) => {
-    if (writing || waiting.size || written.has(fingerprint(formatPresets(list, meta)))) return;
+    if (writing || waiting.size || formatPresets(list, meta) === formatPresets(lotPresets(), lotPresetsMeta())) return;
     setLotPresets(list, meta); recomposeKeeping();
     say('lot-presets.json changed on disk: the lots were composed again');
   });
@@ -418,23 +474,30 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
     Object.assign(el.style, { display: 'block', left: `${x1 - x0 < min ? ax - min / 2 : x0}px`, top: `${y1 - y0 < min ? ay - min / 2 : y0}px`, width: `${w}px`, height: `${h}px` });
     return { w, h };
   };
+  /** the placing ghost: a drawable's picture at its place on the map (hidden for none) */
+  const drawGhost = (d: Drawable | null) => { if (!d) { ghostEl.style.display = 'none'; return; } const look = lookOf(d), { w, h } = place(ghostEl, d, 6); paint(ghostEl, LIBRARY[look.item]!, w, h); ghostEl.style.transform = look.flip ? 'scaleX(-1)' : ''; };
   const frame = () => {
     raf = requestAnimationFrame(frame);
     const g = on && ghost ? ghostDrawable() : null;
     if (on && sel && game.props.has(sel)) place(outline, sel, 14); else outline.style.display = 'none';
     if (g) place(lost, g, 14); else lost.style.display = 'none';
-    if (on && placing && overMap && cursor) {
+    // a drag shows the sprite where it would land (its footprint centre plus the snapped delta), else the placing ghost follows the cursor
+    const dr = on ? drag : null;
+    if (dr?.moved) drawGhost(drawable(LIBRARY[dr.p.item]!.id, (dr.p.x0 + dr.p.x1) / 2 + dr.dx, (dr.p.y0 + dr.p.y1) / 2 + dr.dy, dr.p.scale, dr.p.flip));
+    else if (on && placing && overMap && cursor) {
       const t = game.tileAt(cursor.mx, cursor.my), x = snap(t.x), y = snap(t.y), lot = game.lotKeyAt(x, y), at = lot ? game.lotOf(lot) : null, lp = at ? lotPreset(at.g, at.st) : null;
-      const v = lp ? turned(placing, lp.frame.q) : { id: placing, flip: false }, d = drawable(v.id, x, y, isCar(placing) ? 1 : ownerScaleOf(placing), v.flip);
-      if (d) { const look = lookOf(d), { w, h } = place(ghostEl, d, 6); paint(ghostEl, LIBRARY[look.item]!, w, h); ghostEl.style.transform = look.flip ? 'scaleX(-1)' : ''; }
+      const v = lp ? turned(placing, lp.frame.q) : { id: placing, flip: false }, d = drawable(v.id, x, y, ownerScaleOf(placing), v.flip);
+      drawGhost(d);
     } else ghostEl.style.display = 'none';
   };
   raf = requestAnimationFrame(frame);
   if (new URLSearchParams(location.search).has('dev')) toggle(true);
 
+  lab = { place: id => { if (!on) toggle(true); pick.value = id; showThumb(); arm(); }, edit: a => { if (a === 'undo') void undoLast(); else void act(a); } };
   return () => {
-    cancelAnimationFrame(raf); unReload();
+    cancelAnimationFrame(raf); unReload(); lab = null;
     window.removeEventListener('keydown', onKey, true); window.removeEventListener('pointerdown', onDown, true); window.removeEventListener('pointermove', onMove, true);
+    window.removeEventListener('pointerup', onRelease, true); window.removeEventListener('pointercancel', onRelease, true);
     outline.remove(); lost.remove(); ghostEl.remove(); panel.remove();
   };
 }

@@ -19,5 +19,20 @@
     }
   ],
   "integrationStatus": "blocked",
-  "integrationReason": "Awaiting real alpha, four-view geometry, fixed camera/light and cohesive-theme review."
+  "integrationReason": "Both front views are close to elevation: broad hardware front foundation almost horizontal and a very narrow side; inconsistent camera against rear views/master.",
+  "sourceReview": {
+    "reviewed": "2026-10-24",
+    "actualAlphaComposite": "output/building-priority/newest-review-2.png",
+    "theme": "Matte Maple Bean timber/brick/cream, charcoal roofs, amber dusk lamps, fixed upper-right key coherent across these sources; holds below are concrete camera/geometry/facade-continuity faults, not backgrounds.",
+    "corrections": [
+      {
+        "direction": "NE",
+        "brief": "Preserve hardware facade/windows/sign and all architecture; show front LEFT plus right side RIGHT with clearly diagonal two ground axes and equal isometric foreshortening. No nearly horizontal front foundation."
+      },
+      {
+        "direction": "NW",
+        "brief": "Preserve hardware facade/windows/sign; show opposite side LEFT plus front RIGHT at same isometric camera, both planes clearly exposed. No nearly horizontal front foundation."
+      }
+    ]
+  }
 }

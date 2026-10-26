@@ -1,10 +1,10 @@
 {
  "id": "gen:house-duplex",
- "version": "gen-house-duplex-4views-v3",
+ "version": "gen-house-duplex-4views-v2",
  "files": {
-  "NE": "c2ad67bf553810fa1b61024d206f02974947c087f7de3f9b47e0db3dd56922fd",
-  "SE": "aec668427ce8e7ab365120a23796ea60bd8274af0cc5c7299f6c34ab17bdd5b8",
-  "SW": "9c5d8b82853cb8f98cad462e838d11c0161611c376f1ad09ddc0cbcfe130b3a2",
-  "NW": "7c5080bdd5a1e8e3861d9c2ff1d74595bf457dbd5b49199a21b5533879829eb5"
+  "NE": "3a26467971eefdb541488318ec100967e29ae2cf916ec2572036985dc4ca9c85",
+  "SE": "25f2b6b5b59680d421dc30388c31e31d82431cd704b16c5ae644d8432bf5d0e2",
+  "SW": "9abde949302b294e7f75dc7019d6ba7b7a905b6e59bce3105dee97f64a5f3abd",
+  "NW": "8d5ea4b97997a5262351c2579609021368223bedc2de8f3994ca351dbd4ec815"
  }
 }

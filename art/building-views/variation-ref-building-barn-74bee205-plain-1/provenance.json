@@ -11,7 +11,7 @@
     }
   ],
   "integrationStatus": "ready",
-  "integrationReason": "Corrected v2 NW now has barn door-front on screenRIGHT and opposite long sideLEFT; lean-to properly recedes on far right. NE frontLEFT/lean-toRIGHT and distinct blankrear SE/SW follow rigid turns. Shared matte timber/slate and fixed upperright dusk preserved; no surrounding floor.",
+  "integrationReason": "Targeted v2 fixed opposite NW; pixel-preserving v3 layout adds required margin while retaining all679650 nonzero-alpha source RGBA tuples. Door/front and plainrear corners distinct; matte redtimber/slate/upperright dusk coherent.",
   "layoutCorrection": {
     "method": "Pixel-preserving clear-gap split and centred four-cell repack; no generation, resizing or repainting.",
     "originalSheet": "art/theme-consistency/generated/buildings/variation-ref-building-barn-74bee205-plain-1-4views-v2.png",

@@ -1,0 +1,10 @@
+{
+ "id": "variation:ref-building-house-large-20cb9f9e-plain:1",
+ "version": "variation-ref-building-house-large-20cb9f9e-plain-1-4views-v4",
+ "files": {
+  "NE": "5827fd40dc45c7758441472bc29899ff536b05ea3d9abf87bfe38813beefde1e",
+  "SE": "23ca1bc23e96e9646f65a3c978e6eb2e22316e9ffffe7d745aeb1b968c81f997",
+  "SW": "fd39d46a91e285f9f639dc4b51d14ac99e199037d87fcf051b185f5d4c641bba",
+  "NW": "8e0b6f377980adb988dcec03575fc1f90ecf04f4104ac970ed87ca14a2ba70c1"
+ }
+}

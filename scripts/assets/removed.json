@@ -357,6 +357,22 @@
    440.63
   ]
  },
+ "gen:back-bbq-deck": {
+  "at": "2026-10-26T06:26:08.081Z",
+  "name": "House back — deck & barbecue",
+  "cat": "Houses",
+  "kind": "building",
+  "w": 596.85,
+  "h": 602.09,
+  "quad": [
+   0,
+   0,
+   596.85,
+   602.09
+  ],
+  "ax": 284.97,
+  "ay": 457.01
+ },
  "gen:birdbath-gnome": {
   "at": "2026-10-21T16:47:19.469Z",
   "name": "Birdbath & gnome",
@@ -2115,6 +2131,38 @@
    138.33
   ]
  },
+ "variation:gen-back-bbq-deck-b546df1a-plain:1": {
+  "at": "2026-10-26T06:26:06.234Z",
+  "name": "House back — deck & barbecue — variation 1",
+  "cat": "Houses",
+  "kind": "building",
+  "w": 593.99,
+  "h": 599.21,
+  "quad": [
+   0,
+   0,
+   593.99,
+   599.21
+  ],
+  "ax": 221.67,
+  "ay": 449.99
+ },
+ "variation:gen-back-patio-pool-3b943d52-plain-corner:1": {
+  "at": "2026-10-26T06:26:10.337Z",
+  "name": "House back — patio & pool — variation 1",
+  "cat": "Houses",
+  "kind": "building",
+  "w": 577.9,
+  "h": 576.1902366863906,
+  "quad": [
+   1.94,
+   0.97,
+   578.35,
+   575.43
+  ],
+  "ax": 288.95,
+  "ay": 431.71523668639054
+ },
  "variation:gen-back-patio-pool-3b943d52-plain:1": {
   "at": "2026-10-20T16:13:39.299Z",
   "name": "House back — patio & pool — variation 1",
@@ -2129,6 +2177,54 @@
    566.67
   ]
  },
+ "variation:gen-back-screened-porch-8c31c391-plain:1": {
+  "at": "2026-10-26T06:26:14.239Z",
+  "name": "House back — screened porch — variation 1",
+  "cat": "Houses",
+  "kind": "building",
+  "w": 520.7,
+  "h": 527.6143003064352,
+  "quad": [
+   1.43,
+   1.43,
+   520.05,
+   527.2
+  ],
+  "ax": 260.35,
+  "ay": 397.4393003064352
+ },
+ "variation:gen-back-swingset-a10c81b7-plain-corner:1": {
+  "at": "2026-10-26T06:26:26.715Z",
+  "name": "House back — swing set & grill — variation 1",
+  "cat": "Houses",
+  "kind": "building",
+  "w": 594.43,
+  "h": 463.09,
+  "quad": [
+   0,
+   0,
+   594.43,
+   463.09
+  ],
+  "ax": 294.4,
+  "ay": 311.31
+ },
+ "variation:gen-back-swingset-a10c81b7-plain:1": {
+  "at": "2026-10-26T06:26:28.233Z",
+  "name": "House back — swing set & grill — variation 1",
+  "cat": "Houses",
+  "kind": "building",
+  "w": 595.9,
+  "h": 662.0383516483516,
+  "quad": [
+   1.35,
+   1.35,
+   593.89,
+   660.03
+  ],
+  "ax": 297.95,
+  "ay": 513.0633516483516
+ },
  "variation:gen-house-duplex-c39d1a23-plain:1": {
   "at": "2026-10-20T16:11:43.610Z",
   "name": "Duplex — variation 1",
@@ -2142,6 +2238,38 @@
    600,
    570
   ]
+ },
+ "variation:gen-house-l-ranch-north-2edc5f59-plain:1": {
+  "at": "2026-10-26T06:25:30.345Z",
+  "name": "Ranch — L-shape, corner porch — variation 1",
+  "cat": "Houses",
+  "kind": "building",
+  "w": 610.8,
+  "h": 596.1966735966736,
+  "quad": [
+   1.54,
+   1.54,
+   609.08,
+   595.24
+  ],
+  "ax": 305.4,
+  "ay": 443.4966735966736
+ },
+ "variation:gen-house-l-shape-e0e3b328-plain:1": {
+  "at": "2026-10-26T06:25:22.968Z",
+  "name": "Colonial — L-shape, double garage — variation 1",
+  "cat": "Houses",
+  "kind": "building",
+  "w": 587.02,
+  "h": 603.38,
+  "quad": [
+   0,
+   0,
+   587.02,
+   603.38
+  ],
+  "ax": 331.73,
+  "ay": 454.27
  },
  "variation:gen-house-ranch-long-north-3fbd61ce-plain:1": {
   "at": "2026-10-21T09:47:34.950Z",

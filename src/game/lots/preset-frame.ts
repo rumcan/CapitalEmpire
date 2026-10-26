@@ -2,6 +2,7 @@
 // A preset is authored facing its street on the world +y side: x along the street (0 at the left as seen from the street), y away from it.
 // A lot's frame (lots.ts: o + u a + n b) may run either way along its street, so the preset frame takes the along axis as n turned a quarter
 // (u' = (-n.y, n.x)) and its origin at whichever front corner that puts x = 0 on: every lot is then the canonical lot turned, never mirrored.
+import type { Road } from './presets';
 
 /** a point or direction in world tiles */
 export interface Pt { x: number; y: number }
@@ -15,6 +16,18 @@ export interface PresetFrame { o: Pt; u: Pt; n: Pt; w: number; d: number; q: 0 |
 export function facingOf(n: Pt): 0 | 1 | 2 | 3 {
   const fx = -n.x, fy = -n.y;
   return Math.abs(fx) > Math.abs(fy) ? (fx > 0 ? 1 : 3) : (fy > 0 ? 0 : 2);
+}
+
+/** a lot's road angle (presets.ts Road) from its away vector n: the street lies along -n, to the nearest eighth turn, so a lot a few degrees off an axis keeps it */
+export function roadOf(n: Pt): Road {
+  const angle = Math.atan2(-n.x, -n.y), r = Math.round(angle / (Math.PI / 4));
+  return (((r % 8) + 8) % 8) as Road;
+}
+
+/** the quarter turn a lab preset of a road is drawn and edited with (frameOf's q): an axis road's own quarter; a diagonal's is the quarter of the axis its
+ *  tie goes to (facingOf: 1 and 7 face +y, 3 and 5 -y), so a lot a few degrees off the diagonal keeps the preset's views */
+export function quarterOfRoad(r: Road): 0 | 1 | 2 | 3 {
+  return r % 2 ? (r === 1 || r === 7 ? 0 : 2) : ((r / 2) as 0 | 1 | 2 | 3);
 }
 
 /** a lot's preset frame (see the file head) */

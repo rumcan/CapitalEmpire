@@ -19,5 +19,16 @@
     }
   ],
   "integrationStatus": "blocked",
-  "integrationReason": "Awaiting real alpha, four-view geometry, fixed camera/light and cohesive-theme review."
+  "integrationReason": "Rear C has upper sash and boarded lower window on SE RIGHT, but SW LEFT is blank. SW needs actual opposite rear corner retaining C features.",
+  "sourceReview": {
+    "reviewed": "2026-10-24",
+    "actualAlphaComposite": "output/building-priority/newest-review-1.png",
+    "theme": "Matte Maple Bean timber/brick/cream, charcoal roofs, amber dusk lamps, fixed upper-right key coherent across these sources; holds below are concrete camera/geometry/facade-continuity faults, not backgrounds.",
+    "corrections": [
+      {
+        "direction": "SW",
+        "brief": "Show rearC on LEFT with its one upper sash and boarded lower window matching SE RIGHT. Show opposite plain sideD on RIGHT, matching NW LEFT. No front steel service door on C (it belongs A)."
+      }
+    ]
+  }
 }

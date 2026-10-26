@@ -9,8 +9,341 @@
     "C:/Work Admin/PERSONAL/Repos/CapitalEmpire/art/theme-consistency/references/rotation-guide-v1.png",
     "C:/Work Admin/PERSONAL/Repos/CapitalEmpire/art/theme-consistency/exports/buildings/business-fishing-lodge.configured@2x.png"
   ],
-  "generator": "built-in image_gen",
+  "generator": "pixel-conserving-view-reassignment",
   "generatedAt": "2026-10-23T16:35:47.476Z",
   "status": "generated-awaiting-visual-review",
-  "correction": "Remove ALL decorative garlands, greenery bands, beads and string lights from under every porch eave in ALL FOUR VIEWS. Replace them with clean plain wooden fascia boards and normal structural timber brackets. Keep practical wall-mounted lanterns and warm indoor windows. No wreaths, hanging floral ornaments or roof decorations."
+  "correction": "Remove ALL decorative garlands, greenery bands, beads and string lights from under every porch eave in ALL FOUR VIEWS. Replace them with clean plain wooden fascia boards and normal structural timber brackets. Keep practical wall-mounted lanterns and warm indoor windows. No wreaths, hanging floral ornaments or roof decorations.",
+  "integrationStatus": "ready",
+  "integrationReason": "2026-10-25 source review: all4physicalcorners inspected atvisible-boundzoom overmagenta, correctclockwisefacadecycle/fixed2:1camera, coherent MapleBeanmattepalette/detail/upper-rightdusk, no surroundingfloor/haze. Singleassembly preservesunchanged3nativePNGhashes, canonicalreassignments preserveall4nativebytes. Runtime scale stillrequires placementcheck.",
+  "layoutCorrection": {
+    "method": "Disconnected alpha>8 silhouette extraction with nearest-silhouette assignment of all remaining fringe pixels; exact source RGBA pixel copies only, no resize, repaint or deletion.",
+    "seedAlphaThresholdExclusive": 8,
+    "originalSheet": "art/theme-consistency/generated/buildings/business-fishing-lodge-4views-v2.png",
+    "originalSheetSha256": "fa85e52b6baddb40f6792af39dadb11135b2f7b02d97567817f117a9abb743ea",
+    "outputSheetSha256": "84a2c5915b131f3564204088f854d9989a40b5d43b8c852fa0e235e18266a91e",
+    "originalDimensions": [
+      1254,
+      1254
+    ],
+    "outputDimensions": [
+      2048,
+      2048
+    ],
+    "cellSize": 1024,
+    "nonzeroAlphaPixels": 898341,
+    "nonzeroAndVisiblePixelConservation": true,
+    "exactVisibleRgbaConservation": true,
+    "assignmentPolicy": "Every alpha>8 dominant component remains intact. Multi-source orthogonal nearest-silhouette flood fills assign fringe and tiny detached components; every nonzero source tuple is copied exactly once.",
+    "views": [
+      {
+        "direction": "NE",
+        "dominantComponent": {
+          "label": 2,
+          "pixels": 247253,
+          "bounds": [
+            16,
+            93,
+            648,
+            637
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 14,
+          "y0": 57,
+          "x1": 658,
+          "y1": 643,
+          "count": 254745
+        },
+        "translation": {
+          "x": 175,
+          "y": 161
+        }
+      },
+      {
+        "direction": "SE",
+        "dominantComponent": {
+          "label": 1,
+          "pixels": 196875,
+          "bounds": [
+            650,
+            74,
+            1206,
+            621
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 646,
+          "y0": 37,
+          "x1": 1209,
+          "y1": 625,
+          "count": 203514
+        },
+        "translation": {
+          "x": 608,
+          "y": 180
+        }
+      },
+      {
+        "direction": "SW",
+        "dominantComponent": {
+          "label": 8,
+          "pixels": 228398,
+          "bounds": [
+            23,
+            661,
+            643,
+            1204
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 17,
+          "y0": 659,
+          "x1": 658,
+          "y1": 1206,
+          "count": 234826
+        },
+        "translation": {
+          "x": 174,
+          "y": 603
+        }
+      },
+      {
+        "direction": "NW",
+        "dominantComponent": {
+          "label": 9,
+          "pixels": 199967,
+          "bounds": [
+            663,
+            678,
+            1225,
+            1195
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 660,
+          "y0": 676,
+          "x1": 1233,
+          "y1": 1237,
+          "count": 205256
+        },
+        "translation": {
+          "x": 589,
+          "y": 579
+        }
+      }
+    ],
+    "visualReviewRequired": true
+  },
+  "newImageGeneration": false,
+  "viewReassignment": {
+    "method": "Exact-native PNG permutation; no generation, resizing, mirroring or repainting.",
+    "sourceSheet": "art/theme-consistency/generated/buildings/business-fishing-lodge-4views-v3.png",
+    "sourceSheetSha256": "84a2c5915b131f3564204088f854d9989a40b5d43b8c852fa0e235e18266a91e",
+    "sourceProvenanceSha256": "2a9c182321f52cbe5d1ca34161a22896261759deb855fe69e3ea6b6596d6d99d",
+    "mapping": {
+      "NE": "NE",
+      "SE": "SW",
+      "NW": "SE",
+      "SW": "NW"
+    },
+    "originalViewEvidence": [
+      {
+        "direction": "NE",
+        "canonicalNative": null,
+        "canonicalRejected": null,
+        "originalNativeSha256": "e4cabb6c54a9984e96eb005297a00c7ef47e1a509869da4e152cd047a8f3efc5",
+        "bounds": [
+          645,
+          587
+        ],
+        "nonzeroAlphaPixels": 254745,
+        "normalisedNonzeroRgbaGeometrySha256": "f6f1e5bb5449ec0947d2cc9be2f41500c85de9f3306cb581d7319bd9e2aec901"
+      },
+      {
+        "direction": "SE",
+        "canonicalNative": null,
+        "canonicalRejected": null,
+        "originalNativeSha256": "4fb384baa5d84aa2452e769682c6496c19405a432deee25f8088466008750793",
+        "bounds": [
+          564,
+          589
+        ],
+        "nonzeroAlphaPixels": 203514,
+        "normalisedNonzeroRgbaGeometrySha256": "b74c388db2f73fd734cfabec5e4907d8e420dc77693923cb26b22d886a4b9e65"
+      },
+      {
+        "direction": "SW",
+        "canonicalNative": null,
+        "canonicalRejected": null,
+        "originalNativeSha256": "c8a7687ae08602b2fe9199d40cb3fc4d72f99af981761d9905658867ab7e0d65",
+        "bounds": [
+          642,
+          548
+        ],
+        "nonzeroAlphaPixels": 234826,
+        "normalisedNonzeroRgbaGeometrySha256": "b9b3e6fbd59738ec1b9a922a17312186e94a87ca8f9eb5b35f5dd72a8328ff71"
+      },
+      {
+        "direction": "NW",
+        "canonicalNative": null,
+        "canonicalRejected": null,
+        "originalNativeSha256": "54af1fd0d5435ad851f4b310cdfe6981e3566af3a900cacf4a18985ff384a1a6",
+        "bounds": [
+          574,
+          562
+        ],
+        "nonzeroAlphaPixels": 205256,
+        "normalisedNonzeroRgbaGeometrySha256": "221966164e75a6274bb762ab9b9fc3104c2336b37f51bb1d74f244644b3ac3d2"
+      }
+    ],
+    "hashMappings": [
+      {
+        "direction": "NE",
+        "sourceDirection": "NE",
+        "oldNativeSha256": "e4cabb6c54a9984e96eb005297a00c7ef47e1a509869da4e152cd047a8f3efc5",
+        "newNativeSha256": "e4cabb6c54a9984e96eb005297a00c7ef47e1a509869da4e152cd047a8f3efc5"
+      },
+      {
+        "direction": "SE",
+        "sourceDirection": "SW",
+        "oldNativeSha256": "c8a7687ae08602b2fe9199d40cb3fc4d72f99af981761d9905658867ab7e0d65",
+        "newNativeSha256": "c8a7687ae08602b2fe9199d40cb3fc4d72f99af981761d9905658867ab7e0d65"
+      },
+      {
+        "direction": "SW",
+        "sourceDirection": "NW",
+        "oldNativeSha256": "54af1fd0d5435ad851f4b310cdfe6981e3566af3a900cacf4a18985ff384a1a6",
+        "newNativeSha256": "54af1fd0d5435ad851f4b310cdfe6981e3566af3a900cacf4a18985ff384a1a6"
+      },
+      {
+        "direction": "NW",
+        "sourceDirection": "SE",
+        "oldNativeSha256": "4fb384baa5d84aa2452e769682c6496c19405a432deee25f8088466008750793",
+        "newNativeSha256": "4fb384baa5d84aa2452e769682c6496c19405a432deee25f8088466008750793"
+      }
+    ],
+    "allFourPngByteHashesConserved": true,
+    "fullRgbaPlacementConserved": true,
+    "outputSha256": "16493195039c6679e4e7b0a332ec82122ca876ccd3e7fc143678410db6ce5e57"
+  },
+  "singleViewCorrection": {
+    "sourceSheet": "art/theme-consistency/generated/buildings/business-fishing-lodge-4views-v4.png",
+    "sourceSheetSha256": "16493195039c6679e4e7b0a332ec82122ca876ccd3e7fc143678410db6ce5e57",
+    "direction": "SW",
+    "copiedOriginalDirection": null,
+    "newGeneratedSingle": "art/theme-consistency/generated/buildings/business-fishing-lodge-single-corrections-v3/SW.padded.png",
+    "newGeneratedSingleSha256": "05fa7e82ac4b7ef14ce36ba0b8a7b4b5b6efdb596ef6f7bc07b4bf3d4863441e",
+    "newGeneratedSingleProvenance": {
+      "id": "business:fishing-lodge",
+      "direction": "SW",
+      "generator": "image_gen",
+      "generated": "2026-10-24",
+      "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-c233a8d4-2d0a-4c9b-8ecf-fa8201f035dc.png",
+      "prompt": "ONE SINGLE ISOLATED BUILDING SPRITE, NOT A FOUR-VIEW SHEET. The reference is this SAME existing building shown from several corners; preserve its exact architecture and matte Maple Bean miniature style. We need a genuinely different rigid rotation, direction SW. Show rear gable C on image LEFT, matching service entry under small timber hood and roof structure seen in original SW, plus physical left long wall D on image RIGHT matching original SE left wall. Stone chimney stays on the same physical exterior wall/corner; preserve lodge cross-gables, dormers, warm window pattern and front verandah on far side. Front entrance and full front porch must not be copied onto rear C. ONE isolated complete target-view cutout ONLY, not a sheet. Fixed orthographic2:1 game camera, ground axes +/-26.565screen degrees, verticalwallsvertical. Preserve the original physical building and cohesive Maple-master palette/material detail, warm early dusk with sun SCREEN UPPER RIGHT. No mirroring, no grey floor/backdrop/haze/terrain/captions; alpha0 outside full silhouette, generous clear canvas margins. Fixed orthographic2:1 camera: both ground axes at +/-26.565degrees, wallsvertical, no head-on elevation/perspective vanishingpoint. CRITICAL: fixed SCREEN UPPER RIGHT DUSK SUN and warm amber practical lights; right roof/wall planes warm, leftplanes cooler even though buildingturns. Reconstructhiddenfaces; NEVER mirror sourcepixels or lighting or copy the samecorner. Square1:1PNG with onecompleteSMALLbuilding occupying60%canvasheight, generous100pxfullyclear margins, truealpha0outsidephysicalbuilding. No other view, no grid, no label, no ground surface/floor/paving/yard/greybackdrop/broadshadow/haze/gradient/checkerboard/people. Only physical building and integralporch/steps/supports.",
+      "references": [
+        {
+          "role": "identity-style-and-physical-geometry-reference",
+          "file": "art/theme-consistency/generated/buildings/business-fishing-lodge-4views-v2/SW.native.png"
+        }
+      ],
+      "assemblySourceSheet": "art/theme-consistency/generated/buildings/business-fishing-lodge-4views-v2.png",
+      "integrationStatus": "blocked",
+      "integrationReason": "Single actual-turn correction; inspect before four-view assembly.",
+      "layoutOnlyPadding": {
+        "original": "art/theme-consistency/generated/buildings/business-fishing-lodge-single-corrections-v3/SW.png",
+        "paddingPixels": 16,
+        "method": "Transparentcanvasextensiononly, originaldecodedRGBAunchanged; noresizing/repainting."
+      }
+    },
+    "newViewScale": {
+      "factor": 0.5235350624399616,
+      "method": "median visible building height of unchanged three views; source scale retained, not certified door calibration",
+      "targetHeight": 545,
+      "oldDoor": null,
+      "newDoor": null,
+      "resizeKernel": "lanczos3; new view only"
+    },
+    "unchangedViewsPreservedByteForByte": [
+      "NE",
+      "SE",
+      "NW"
+    ],
+    "originalViewEvidence": [
+      {
+        "direction": "NE",
+        "canonicalRejected": null,
+        "sourceCellSafeMargin": true,
+        "originalNativeSha256": "e4cabb6c54a9984e96eb005297a00c7ef47e1a509869da4e152cd047a8f3efc5",
+        "originalVisibleHeight": 545,
+        "nonzeroAlphaPixels": 254745,
+        "rgbaSha256": "67f6d37241032c473b840e899895c731de5467bf1a113d1cf80947d49793ec82"
+      },
+      {
+        "direction": "SE",
+        "canonicalRejected": null,
+        "sourceCellSafeMargin": true,
+        "originalNativeSha256": "c8a7687ae08602b2fe9199d40cb3fc4d72f99af981761d9905658867ab7e0d65",
+        "originalVisibleHeight": 544,
+        "nonzeroAlphaPixels": 234826,
+        "rgbaSha256": "9f83ffe20116a2a31e910862b1333d3d6347b59cff67ca26237aa46069af7f0d"
+      },
+      {
+        "direction": "SW",
+        "canonicalRejected": null,
+        "sourceCellSafeMargin": true,
+        "originalNativeSha256": "54af1fd0d5435ad851f4b310cdfe6981e3566af3a900cacf4a18985ff384a1a6",
+        "originalVisibleHeight": 518,
+        "nonzeroAlphaPixels": 205256,
+        "rgbaSha256": "fc875714300c4b272e2a783d3f8d5ee97770e19f8bc5acf8fceaab882fe22356"
+      },
+      {
+        "direction": "NW",
+        "canonicalRejected": null,
+        "sourceCellSafeMargin": true,
+        "originalNativeSha256": "4fb384baa5d84aa2452e769682c6496c19405a432deee25f8088466008750793",
+        "originalVisibleHeight": 548,
+        "nonzeroAlphaPixels": 203514,
+        "rgbaSha256": "826b3b9555af75178aef78f63b636d787a7b8051805263b51c8a455cd51f81c9"
+      }
+    ],
+    "placements": [
+      {
+        "direction": "NE",
+        "left": 185,
+        "top": 214,
+        "width": 653,
+        "height": 595,
+        "nativeSha256": "e4cabb6c54a9984e96eb005297a00c7ef47e1a509869da4e152cd047a8f3efc5",
+        "unchangedOriginalNative": true
+      },
+      {
+        "direction": "SE",
+        "left": 1211,
+        "top": 234,
+        "width": 650,
+        "height": 556,
+        "nativeSha256": "c8a7687ae08602b2fe9199d40cb3fc4d72f99af981761d9905658867ab7e0d65",
+        "unchangedOriginalNative": true
+      },
+      {
+        "direction": "SW",
+        "left": 179,
+        "top": 1229,
+        "width": 665,
+        "height": 613,
+        "nativeSha256": "8414fdc56c1f44d2a7b052340c412456f9b1d7d04f29c5f600bc65b6a8601b61",
+        "unchangedOriginalNative": false
+      },
+      {
+        "direction": "NW",
+        "left": 1250,
+        "top": 1237,
+        "width": 572,
+        "height": 597,
+        "nativeSha256": "4fb384baa5d84aa2452e769682c6496c19405a432deee25f8088466008750793",
+        "unchangedOriginalNative": true
+      }
+    ],
+    "outputSha256": "2f125bf824ff4592bf4e3735909f636817937e9e0e91fbe852a6fddf4f6cdd77"
+  }
 }
