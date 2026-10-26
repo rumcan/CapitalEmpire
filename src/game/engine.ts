@@ -15,7 +15,9 @@ import { MIN_SEP, checkLegs, replaceCuts, ringStubs, segDist as segSeg, snapPoin
 import { STRUCT_COST, STRUCT_MAX, groundClass, highwayRoute, longestRun, splitByTerrain, structureLengths } from './structures';
 import { GLRenderer, POINT_STRIDE, SHADOW_STRIDE, SPRITE_STRIDE, VECTOR_STRIDE } from './gl';
 import { GroundCache } from './ground-cache';
-import { chunkLayers } from './ground-layers';
+import { STEPS, TILES_REVISION, bandOf, cellOf, cellsIn, coverageOf, nextStep, stepAt, tiledFamily, tileIndex, tilePermutation, tileSize } from './painted-tiles';
+import { paintedSurfaces } from './painted-surfaces-live';
+import { chunkLayers, pictureCurrent } from './ground-layers';
 import { clampGrassArt, grassZoomLevels, type GrassArt } from './painted-grass-lod';
 import { lotBatch, type CourseTex, type LotPatch } from './ground-protocol';
 import { BLOCK_MAX_AREA, enclosedBlocks } from './blocks';
@@ -4118,7 +4120,7 @@ export class Game {
       segs: [...this.net.segs].map(segRec),
       nodes: [...this.net.nodes.values()].filter(n => n.type !== 'plain' || n.wide || n.tl).map(nodeEntry),
       props: [...this.props].filter(p => !p.auto).map(p => propTuple(LIBRARY[p.item].id, p)),
-      money: this.traffic.budget.money, day: this.day, cam: { ...this.cam },
+      money: this.traffic.budget.money, day: this.day, cam: { ...this.cam, ...(this.tileStep !== null ? { ts: this.tileStep } : {}) },
       lots: [...this.traffic.lots.values()].filter(l => l.level !== LV.EMPTY).map((l): LotTuple => [l.key, l.use, l.level, l.decline, l.seed, l.since]),
       simT: this.traffic.simTime(performance.now()), shift: this.traffic.stats.clock - this.traffic.stats.simT, townClock: this.traffic.town, budget: this.traffic.budget, career: this.traffic.career, round: this.traffic.round,
       parks: this.parkDefs.map((d): [number, number, number, number] => [d.x, d.y, d.w, d.h]),
@@ -4178,7 +4180,7 @@ export class Game {
       // the cards the save had applied are in its tolls and routes already: only the fields new gates and routes take are set from them
       const cards = d.round?.cards ?? [], n = Math.min(cards.length, d.cardsApplied ?? cards.length);
       this.cardsApplied = n; this.setCardFields(cards.slice(0, n));
-      if (d.cam) this.cam = { ...d.cam, z: clamp(d.cam.z, ZOOM_MIN, ZOOM_MAX) };
+      if (d.cam) { this.cam = { X: d.cam.X, Y: d.cam.Y, z: clamp(d.cam.z, ZOOM_MIN, ZOOM_MAX) }; this.tileStep = nextStep(this.cam.z, d.cam.ts); }
       return true;
     } catch (e) { console.error('load failed', e); return false; }
   }
@@ -4850,8 +4852,36 @@ export class Game {
   private groundTarget = '';
   private groundBlendAt = Infinity;
   private groundBlendOtherTier = false;
+  /** the last target's coverage step, and whether the zoom transition in progress is a step switch (cut once the whole view has it) */
+  private groundTs = -1; private groundCut = false;
+  /** the tile set families' coverage step (T145, painted-tiles.ts nextStep: from the CSS zoom with hysteresis; saved with the camera) */
+  tileStep: number | null = null;
+  /** the dev readout of the tile set families (T145; App.tsx TilesPanel, shown with the Developer panel: ?debug, F3 or the gear menu): the camera's step and band, and for each tile set family a surface
+   *  wears, its set, the tiles in view and how many whole tiles the view shows; under the pointer, the course surface there and, when it wears
+   *  a tile set, the tile and its grid cell */
+  tilesReadout() {
+    const z = this.cam.z, k = this.tileStep ?? stepAt(z), band = bandOf(k), file = paintedSurfaces();
+    const X0 = this.cam.X - this.cssW / 2 / z, Y0 = this.cam.Y - this.cssH / 2 / z, X1 = this.cam.X + this.cssW / 2 / z, Y1 = this.cam.Y + this.cssH / 2 / z;
+    const used = new Map<string, string[]>();
+    for (const [key, look] of Object.entries(file.surfaces)) if (tiledFamily(look.family)) used.set(look.family, [...(used.get(look.family) ?? []), key]);
+    const fams = [...used].map(([id, surfaces]) => {
+      const f = tiledFamily(id)!, lv = f.levels[band], size = tileSize(lv, k), perm = tilePermutation(f.id, band), cells = cellsIn(X0, Y0, X1, Y1, size[0], size[1]);
+      const ids = [...new Set(cells.map(c => lv.tiles[tileIndex(perm, c.ix, c.iy)]!.id))].sort(), cov = coverageOf(this.cssW, this.cssH, z, size);
+      return { id: f.id, materialId: f.materialId, name: f.name, surfaces, set: lv.revision, native: lv.native, ids, cells: cells.length, areas: cov.areas, across: cov.across, down: cov.down, tileW: size[0], tileH: size[1] };
+    });
+    let pointer: { surface: string; family: string | null; tile: string | null; cell: [number, number] | null } | null = null;
+    const h = this.hover, g = this.courseGrid;
+    if (h) {
+      const ci = g ? cellAt(g, h.x, h.y) : -1, code = ci >= 0 ? g!.surf[ci]! : 0, surface = (Object.keys(SURF) as (keyof typeof SURF)[]).find(n => SURF[n] === code && code !== 0) ?? (this.terrain.cls[Math.floor(h.y) * MAP + Math.floor(h.x)] === TC.WATER ? 'river' : 'map ground');
+      const look = file.surfaces[surface], f = look ? tiledFamily(look.family) : undefined;
+      if (f) { const lv = f.levels[band], [w, hh] = tileSize(lv, k), c = cellOf(worldX(h.x, h.y), worldY(h.x, h.y), w, hh); pointer = { surface, family: f.materialId, tile: lv.tiles[tileIndex(tilePermutation(f.id, band), c[0], c[1])]!.id, cell: c }; }
+      else pointer = { surface, family: look?.family ?? null, tile: null, cell: null };
+    }
+    return { step: k, steps: STEPS.length, band, zoom: z, dpr: this.dpr, metres: STEPS[k]!.metres, zRange: [STEPS[k]!.zLo, STEPS[k]!.zHi] as const, revision: TILES_REVISION, fams, pointer };
+  }
   private draw(now: number) {
     const z = this.cam.z, ze = z * this.dpr, gl = this.gl, cam = this.cam;
+    const ts = this.tileStep = nextStep(z, this.tileStep);
     const tier = z < PLANNER_Z ? 'planner' : z < DISTRICT_Z ? 'district' : 'street'; this.perf.tier = tier;
     // the golf round moves on before the movers (the golfers) and the overlay (the balls) read it
     this.updatePlay(now);
@@ -4862,7 +4892,7 @@ export class Game {
     const pL = planLevelFor(ze), pi0 = Math.floor(X0 / PLAN_W), pi1 = Math.floor(X1 / PLAN_W), pj0 = Math.floor(Y0 / PLAN_H), pj1 = Math.floor(Y1 / PLAN_H);
     const drawPlan = () => {
       for (let j = pj0; j <= pj1; j++) for (let i = pi0; i <= pi1; i++) {
-        const t = this.ground.tile('p', i, j); this.ground.need(t, pL, (tier === 'planner' ? 0 : 1e6) + dist((i + 0.5) * PLAN_W, (j + 0.5) * PLAN_H), now);
+        const t = this.ground.tile('p', i, j); this.ground.need(t, pL, (tier === 'planner' ? 0 : 1e6) + dist((i + 0.5) * PLAN_W, (j + 0.5) * PLAN_H), now, pL, ts);
         if (t.tex) gl.drawChunk(t.tex, i * PLAN_W, j * PLAN_H, (i + 1) * PLAN_W, (j + 1) * PLAN_H);
       }
     };
@@ -4879,12 +4909,13 @@ export class Game {
       // ---- ground: full chunks close up, district chunks (4 x 4, lite) further out
       const { district: mid, artL, rasterL: L } = grassZoomLevels(z, this.dpr), kind = mid ? 'm' : 'g', CW = mid ? MID_W : CHUNK_W, CH = mid ? MID_H : CHUNK_H;
       const i0 = Math.floor(X0 / CW), i1 = Math.floor(X1 / CW), j0 = Math.floor(Y0 / CH), j1 = Math.floor(Y1 / CH);
-      const target = kind + '@' + L + ':' + artL;
-      if (this.groundTarget !== target) { this.groundBlendOtherTier = this.groundTier !== kind; this.groundTier = kind; this.groundTarget = target; this.groundBlendAt = Infinity; }
+      const target = kind + '@' + L + ':' + artL + '#' + ts;
+      if (this.groundTarget !== target) { this.groundBlendOtherTier = this.groundTier !== kind; this.groundCut = this.groundTs >= 0 && this.groundTs !== ts; this.groundTier = kind; this.groundTarget = target; this.groundTs = ts; this.groundBlendAt = Infinity; }
       if (!Number.isFinite(this.groundBlendAt)) {
         let complete = true;
-        for (let j = j0; j <= j1 && complete; j++) for (let i = i0; i <= i1; i++) { const t = this.ground.tile(kind, i, j); if (!t.tex || t.texL !== L || t.texArtL !== artL || t.stale) { complete = false; break; } }
-        if (complete) this.groundBlendAt = now;
+        for (let j = j0; j <= j1 && complete; j++) for (let i = i0; i <= i1; i++) { const t = this.ground.tile(kind, i, j); if (!pictureCurrent(t, L, artL, ts) || t.stale) { complete = false; break; } }
+        // a step switch (T145: another tile set, or another tile size) cuts once every chunk on screen has it: never a crossfade of two sets
+        if (complete) this.groundBlendAt = this.groundCut ? now - 180 : now;
       }
       const zoomBlend = Number.isFinite(this.groundBlendAt) ? Math.max(0, Math.min(1, (now - this.groundBlendAt) / 180)) : 0;
       // a chunk not baked yet shows its piece of the planner map meanwhile, asked for before any chunk (one planner bake covers 8 x 8 chunks:
@@ -4892,24 +4923,24 @@ export class Game {
       for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
         const t = this.ground.tile(kind, i, j); if (t.tex || t.prev) continue;
         const X = i * CW, Y = j * CH, pi = Math.floor(X / PLAN_W), pj = Math.floor(Y / PLAN_H), p = this.ground.tile('p', pi, pj);
-        this.ground.need(p, pL, dist(X, Y) - 1e6, now);
+        this.ground.need(p, pL, dist(X, Y) - 1e6, now, pL, ts);
         if (p.tex) gl.drawChunk(p.tex, X, Y, X + CW, Y + CH, false, 1, [(X - pi * PLAN_W) / PLAN_W, (Y - pj * PLAN_H) / PLAN_H, (X + CW - pi * PLAN_W) / PLAN_W, (Y + CH - pj * PLAN_H) / PLAN_H]);
       }
       const mask = this.revealMask(now); if (mask) gl.setMask(mask);
       for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
         const t = this.ground.tile(kind, i, j);
-        if (!this.ground.livingActive || this.casterReady(i * CW, j * CH, (i + 1) * CW, (j + 1) * CH)) this.ground.need(t, L, dist((i + 0.5) * CW, (j + 0.5) * CH), now, artL);
+        if (!this.ground.livingActive || this.casterReady(i * CW, j * CH, (i + 1) * CW, (j + 1) * CH)) this.ground.need(t, L, dist((i + 0.5) * CW, (j + 0.5) * CH), now, artL, ts);
         const r = [i * CW, j * CH, (i + 1) * CW, (j + 1) * CH] as const;
         if (t.prev && now < t.prevUntil) { gl.drawChunk(t.prev, ...r); if (t.tex && t.tex !== t.prev && mask) gl.drawChunk(t.tex, ...r, true); continue; }
         // its picture (ground-layers.ts): while the zoom crossfade waits for the whole view, an older picture, or its new one when it has none
         // (a chunk that came into view: it drew nothing, the clear colour, until the last chunk on screen was baked, T134), the other tier's
         // pictures over it, and its new picture fading in
-        const lay = chunkLayers(t, L, artL, zoomBlend, this.groundBlendOtherTier);
+        const lay = chunkLayers(t, L, artL, zoomBlend, this.groundBlendOtherTier, ts);
         if (lay.base) gl.drawChunk(lay.base, ...r);
         const fallback = lay.fallback ? this.ground.zoomFallback(kind, r, now) : [];
         for (const picture of fallback) gl.drawChunk(picture.tex, ...picture.rect, false, 1, picture.uv);
         if (lay.top && (lay.top !== lay.base || fallback.length)) gl.drawChunk(lay.top, ...r, false, lay.topAlpha);
-        if (zoomBlend < 1 && t.fadeFrom && Number.isFinite(this.groundBlendAt)) t.fadeStart = this.groundBlendAt;
+        if (t.fadeFrom && Number.isFinite(this.groundBlendAt) && (zoomBlend < 1 || !Number.isFinite(t.fadeStart))) t.fadeStart = this.groundBlendAt;
       }
       // ---- the map grid and the course half grid (T100): over the ground and its paint, hidden on the roads, under every shadow and sprite
       if (this.gridLayer.draw(gl.gl, gl.view, z, this.dpr, gridShown(this.showGrid, this.tool), this.courseBuilding, this.gridLand(), this.net)) gl.stats.draws++;

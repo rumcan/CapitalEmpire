@@ -1,6 +1,6 @@
 import { CHUNK_H, CHUNK_W, HH, HW, MAP, MID_K, PLAN_H, PLAN_W, mulberry, tileOf } from './iso';
 import { SK, add, linePath, mul, offsetPolyline, perp, roundPieces, roundedPath, sub, vlen, type BBox, type Decal, type Feature, type FxView, type LineRec, type Pt, type RoadNetwork, type SlabRun } from './network';
-import { MOSAIC_TILES, canvas, ctx2d, type C2D, type Cnv, type Textures, type TexName } from './textures';
+import { MOSAIC_TILES, canvas, ctx2d, type C2D, type Cnv, type Textures, type TexName, type TiledPick } from './textures';
 import { fbm, maskFrom, smooth } from './canvas2d';
 import { EAGER_PHOTO } from './grass-art';
 import { PAINT_TEXES, isPaintPhoto, type PaintTex } from './paint';
@@ -27,6 +27,7 @@ import { faceShift, kerbFace, stepReach, upScreen } from './kerb-face';
 import { HEIGHT_LIGHT_STRENGTH, HL_MASK, LUMA_SIGMA_PER_L, heightLightGrid, heightLightPictures, heightLightRect, type HeightLightGrid } from './ext/course-height/light';
 import { PaintedGround, type LayLevel } from './painted-ground';
 import { coversMap } from './painted-families';
+import { bandOf, cellsIn, snappedCell, tileIndex, tileKey, tilePermutation, tileSize } from './painted-tiles';
 import { WOODLAND, lawnSlot, lawnTex } from './painted-surfaces';
 import { BLEND_WAVES, blendAlpha, blendNoise, trimLru } from './painted-grass-lod';
 import { CasterStore, COURSE_GRASSY, COURSE_WATER, SHADOW_DIR, debugImage, grassyTex, influence, livingMasks, livingQueryBox, livingRes, livingSignature, waterTex, type Box, type InfluenceGrid, type LivingMasks, type RoadPiece, type WaterLine } from './living-ground';
@@ -235,6 +236,8 @@ export class GroundPainter {
   private chunkNow: { key: string; L: number; box: BBox; M: DOMMatrix; Minv: DOMMatrix; W: number; H: number } | null = null;
   /** the tinted and toned copies the bake in progress made (by composition, tint and tone), and the compositions it uses (kept in the LRU) */
   private toned = new Map<string, PaintedEntry>(); private bakeKeys = new Set<string>();
+  /** the bake in progress laid a tile set family (T145): its chunk then depends on the coverage step (GroundCache re-bakes it on a step change) */
+  tilesUsed = false;
   /** the planner's painted pictures (a look's far painting, tinted and toned), by look */
   private planPics = new Map<string, Cnv>();
   /** the course walls' painted cut faces (a look's near painting at a mip, tinted and toned), by look and mip */
@@ -347,10 +350,12 @@ export class GroundPainter {
     const cv = canvas(W, H), ctx = ctx2d(cv);
     const M = new DOMMatrix([HW * L, HH * L, -HW * L, HH * L, -X0 * L, -Y0 * L]);
     const box = GroundPainter.tileBox(X0, Y0, X0 + PLAN_W, Y0 + PLAN_H, 2), [tx0, ty0, tx1, ty1] = box;
+    // the tile set families (T145) lay their tiles here as on the ground chunks (planTiled), so the overview shows their FAR sets
+    this.chunkNow = { key: `p${i},${j}@${L}`, L, box, M, Minv: M.inverse(), W, H }; this.toned.clear(); this.bakeKeys.clear(); this.tilesUsed = false;
     ctx.fillStyle = '#2c3a20'; ctx.fillRect(0, 0, W, H);
     ctx.setTransform(M);
     // the map grass: its look's far painting (it covers the map once, so it never repeats), else its flat colour
-    const planTex = (t: string): CanvasPattern | string => { const pp = this.planPicture(t); if (!pp) return this.planColour(t); const pat = ctx.createPattern(pp.img, 'repeat')!, k = pp.period / pp.img.width; pat.setTransform(new DOMMatrix([k, 0, 0, k, 0, 0])); return pat; };
+    const planTex = (t: string): CanvasPattern | string => { const tp = this.planTiled(ctx, t); if (tp) return tp; const pp = this.planPicture(t); if (!pp) return this.planColour(t); const pat = ctx.createPattern(pp.img, 'repeat')!, k = pp.period / pp.img.width; pat.setTransform(new DOMMatrix([k, 0, 0, k, 0, 0])); return pat; };
     ctx.fillStyle = planTex('grass'); ctx.fillRect(0, 0, MAP, MAP);
     // meadow and forest in 4 x 4 tile blocks (the planner never shows finer detail)
     const mx0 = Math.max(0, tx0), mx1 = Math.min(MAP, tx1), my0 = Math.max(0, ty0), my1 = Math.min(MAP, ty1), byType = new Map<number, Path2D>();
@@ -372,7 +377,7 @@ export class GroundPainter {
     const lotAll = this.lotsIn(box).filter(p => !p.top), paintsP = lotAll.filter(p => p.paint || p.course).sort((a, b) => paintZ(a) - paintZ(b));
     for (const p of [...lotAll.filter(p => !p.paint && !p.course && p.tex !== 'marks' && !(p.lawn && p.lawn.share < 1)), ...paintsP]) {
       // a course chunk: each surface's collar band and fill rings in their flat planner colours (even-odd)
-      if (p.course) { for (const l of p.course.layers) for (const [t, rings] of [...(l.collar ? [[l.collar.tex, l.collar.fill] as const] : []), [l.tex, l.fill] as const]) { if (!rings.length) continue; const path = new Path2D(); for (const q of rings) ringPath(path, q); ctx.fillStyle = this.planColour(t); ctx.fill(path, 'evenodd'); } this.planSeeded(ctx, p.course); continue; }
+      if (p.course) { for (const l of p.course.layers) for (const [t, rings] of [...(l.collar ? [[l.collar.tex, l.collar.fill] as const] : []), [l.tex, l.fill] as const]) { if (!rings.length) continue; const path = new Path2D(); for (const q of rings) ringPath(path, q); ctx.fillStyle = this.planTiled(ctx, t) ?? this.planColour(t); ctx.fill(path, 'evenodd'); } this.planSeeded(ctx, p.course); continue; }
       ctx.fillStyle = planFill(p.tex); ctx.fill(polyPath(p.pts));
     }
     // the course height's light over the painted course (T028b, T126): over the lot and paint fills, under the roads
@@ -519,6 +524,7 @@ export class GroundPainter {
   }
   private paintedBuf(t: string, need?: BBox, scale = 1): Cnv | null {
     const c = this.chunkNow!, p = this.tex.paintedOf(t, scale); if (!p) return null;
+    if (p.tiled) return this.tiledBuf(p.tiled, need);
     const want = this.cellsOf(need), cw = Math.ceil(c.W / PAINT_CELL), chh = Math.ceil(c.H / PAINT_CELL);
     // the composition depends only on where the chunk is, its level, the look and the art level, never on its roads or lots: an edited chunk (a
     // road, a lot, every send of a course stroke) is baked again over the one it composed before
@@ -547,6 +553,38 @@ export class GroundPainter {
       return true;
     });
     return tone.buf;
+  }
+  /** a tile set family (T145, painted-tiles.ts) over the part of the chunk being baked asked for: its band's four whole tiles at the coverage
+   *  step's world size, laid edge to edge on the world-anchored grid, axis-aligned in the chunk's own (screen) axes, each the tile its cell's
+   *  permutation names; edges snapped to whole px (every chunk at this level agrees: no gap, no overlap). As authored: no scale, tint, tone,
+   *  drift, mask or blend. null when a tile is not decoded */
+  private tiledBuf(tp: TiledPick, need?: BBox): Cnv | null {
+    const c = this.chunkNow!, step = this.tex.tileStep, want = this.cellsOf(need), cw = Math.ceil(c.W / PAINT_CELL), chh = Math.ceil(c.H / PAINT_CELL);
+    const ck = `${c.key}:tiles:${tp.fam.id}@${tileKey(step)}`;
+    let base = this.composed.get(ck);
+    if (base) { this.composed.delete(ck); this.composed.set(ck, base); }
+    else { base = { buf: canvas(c.W, c.H), cells: new Uint8Array(cw * chh), bytes: c.W * c.H * 4 }; this.composed.set(ck, base); this.composedBytes += base.bytes; }
+    this.bakeKeys.add(ck); this.tilesUsed = true;
+    for (const [k, v] of this.composed) { if (this.composedBytes <= COMPOSED_BYTES) break; if (this.bakeKeys.has(k)) continue; this.composed.delete(k); this.composedBytes -= v.bytes; }
+    const band = bandOf(step), lv = tp.fam.levels[band], urls = tp.urls[band], [w, h] = tileSize(lv, step), perm = tilePermutation(tp.fam.id, band);
+    // the chunk's origin in its raster px (a whole number at every cache level) and its raster scale (px per world px)
+    const L = c.L, ox = -c.M.e, oy = -c.M.f;
+    return this.fillCells(base, want, (g, rect) => {
+      const X0 = (rect[0] + ox) / L, Y0 = (rect[1] + oy) / L, X1 = (rect[0] + rect[2] + ox) / L, Y1 = (rect[1] + rect[3] + oy) / L;
+      // the mip drawn is at most twice the size it lands at (Textures.tileImage), so plain bilinear filtering keeps it sharp and cheap
+      g.setTransform(1, 0, 0, 1, 0, 0); g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'medium';
+      for (const q of cellsIn(X0, Y0, X1, Y1, w, h)) {
+        const [a, b, a2, b2] = snappedCell(q.ix, q.iy, w, h, L), img = this.tex.tileImage(urls[tileIndex(perm, q.ix, q.iy)]!, a2 - a);
+        if (!img) return false;
+        g.drawImage(img, a - ox, b - oy, a2 - a, b2 - b);
+      }
+      return true;
+    }) ? base.buf : null;
+  }
+  /** a tile set family's fill for the planner chunk being baked (its course surfaces), or null when the texture is no tile set */
+  private planTiled(g: C2D, t: string): CanvasPattern | null {
+    if (!this.tex.paintedOf(t)?.tiled) return null;
+    return this.paintedFill(g, t);
   }
   /** the tile box a device-px rectangle of the chunk being baked covers (plus a tile) */
   private rectTiles(rect: readonly number[]): BBox {
@@ -578,7 +616,7 @@ export class GroundPainter {
     const pats = new Map<TexName, CanvasPattern>();
     const pat = (n: TexName) => { let p = pats.get(n); if (!p) { p = this.photoFill(ctx, n, L) ?? this.screenPattern(ctx, n, L, X0, Y0, Minv); pats.set(n, p); } return p; };
     const box = GroundPainter.tileBox(X0, Y0, X0 + CW, Y0 + CH), [tx0, ty0, tx1, ty1] = box, vis = (b: BBox) => b[2] >= tx0 && b[0] <= tx1 && b[3] >= ty0 && b[1] <= ty1;
-    this.chunkNow = { key: `${lite ? 'm' : 'g'}${i},${j}@${L}`, L, box, M, Minv, W, H }; this.toned.clear(); this.bakeKeys.clear();
+    this.chunkNow = { key: `${lite ? 'm' : 'g'}${i},${j}@${L}`, L, box, M, Minv, W, H }; this.toned.clear(); this.bakeKeys.clear(); this.tilesUsed = false;
     const minW = 1 / (TILE_PX * L), net = this.net.view([tx0 - 8, ty0 - 8, tx1 + 8, ty1 + 8], !lite), tex = this.tex;
     const paint = (g: C2D, f: Feature) => { g.lineCap = f.cap; if (f.kind === 'stroke') { g.lineWidth = f.w; g.stroke(f.path); } else g.fill(f.path); };
     const ring = (g: C2D, f: Feature, extra: number) => { g.lineCap = f.cap; if (f.kind === 'stroke') { g.lineWidth = f.w + extra; g.stroke(f.path); } else { g.lineWidth = extra; g.stroke(f.path); } };
@@ -923,11 +961,12 @@ export class GroundPainter {
     const m = made.masks ??= livingMasks(grid);
     // ---- the ground the variety leaves alone: the lots' hard ground, painted areas that are no grass, the course's managed turf and its
     //      collars (the pond's bank keeps it), the course walls' faces (T099: their own light and shade), the rivers' and creeks' water
-    const ex: { path: Path2D; rule: CanvasFillRule }[] = [], walls: CourseWall[] = [];
+    //      a surface wearing a hand-painted tile set (T145) keeps its art too: it is its own layer, never mixed inside
+    const ex: { path: Path2D; rule: CanvasFillRule }[] = [], walls: CourseWall[] = [], tiled = (t: string) => !!this.tex.paintedOf(t)?.tiled;
     const rings = (rs: readonly ArrayLike<number>[]) => { const q = new Path2D(); for (const r of rs) ringPath(q, r); ex.push({ path: q, rule: 'evenodd' }); };
     for (const p of lots) {
-      if (p.course) { for (const l of p.course.layers) { if (!COURSE_GRASSY.has(l.s) && l.fill.length) rings(l.fill); if (l.collar && l.collar.n !== 'bank' && l.collar.fill.length) rings(l.collar.fill); } if (p.course.walls) walls.push(...p.course.walls); continue; }
-      if (p.top || p.layby || p.lawn || p.tex === 'marks' || grassyTex(p.tex)) continue;
+      if (p.course) { for (const l of p.course.layers) { if ((!COURSE_GRASSY.has(l.s) || tiled(l.tex)) && l.fill.length) rings(l.fill); if (l.collar && l.collar.n !== 'bank' && l.collar.fill.length) rings(l.collar.fill); } if (p.course.walls) walls.push(...p.course.walls); continue; }
+      if (p.top || p.layby || p.lawn || p.tex === 'marks' || (grassyTex(p.tex) && !tiled(p.tex))) continue;
       ex.push({ path: polyPath(p.pts), rule: 'nonzero' });
     }
     const wallPath = walls.length ? wallFaces(walls) : null;
@@ -2093,7 +2132,8 @@ export class GroundPainter {
     if ((!this.grassStrength && !this.grassHeat) || !this.grassCells.size) return;
     for (const p of patches) {
       // Fresh seed/sod keeps its original grow-in texture and timing.
-      if (!grassSurface(p.tex, !!p.lawn, surfaceOfTex(p.tex as PaintTex)) || p.tex === 'golfSod') continue;
+      // a hand-painted tile set (T145) is laid as authored: no condition picture mixed inside it
+      if (!grassSurface(p.tex, !!p.lawn, surfaceOfTex(p.tex as PaintTex)) || p.tex === 'golfSod' || this.tex.paintedOf(p.tex)?.tiled) continue;
       const b = quadBox(p.pts); ctx.save(); ctx.clip(polyPath(p.pts));
       for (let y = Math.max(0, Math.floor(Math.max(b[1], box[1]) / 4) * 4); y < Math.min(MAP, b[3], box[3]); y += 4) for (let x = Math.max(0, Math.floor(Math.max(b[0], box[0]) / 4) * 4); x < Math.min(MAP, b[2], box[2]); x += 4) {
         const v = this.grassCells.get(y / 4 * (MAP / 4) + x / 4); if (!v) continue;

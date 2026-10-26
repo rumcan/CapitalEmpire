@@ -512,10 +512,31 @@ export default function App() {
 
           <Minimap game={game} />
           {dev && <PerfPanel game={game} />}
+          {dev && <TilesPanel game={game} />}
           {help && <Help onClose={() => setHelp(false)} />}
         </>
       )}
         </div>
+  );
+}
+
+/** the hand-painted tile sets (T145, engine.ts tilesReadout): the camera's coverage step and band, each tile set family a surface wears (its
+ *  set, the tiles in view, how many whole tiles span the view) and, under the pointer, the surface and its tile */
+function TilesPanel({ game }: { game: Game }) {
+  const r = game.tilesReadout();
+  return (
+    <div className="absolute bottom-[10.5rem] right-3 z-20 w-72 glass p-2 text-[11px] tabular-nums" data-testid="tiles-readout">
+      <div className="flex justify-between"><span className="font-semibold">Painted tiles · {r.band.toUpperCase()}</span><span>step {r.step + 1}/{r.steps} · zoom {(r.zoom * 100).toFixed(1)}%</span></div>
+      <div className="text-slate-400">tile {r.metres} m wide · step zooms {(r.zRange[0] * 100).toFixed(1)}-{(r.zRange[1] * 100).toFixed(1)}% · dpr {r.dpr} · rev {r.revision}</div>
+      {r.fams.map(f => (
+        <div key={f.id} className="mt-1">
+          <div className="flex justify-between"><span>{f.materialId} <span className="text-slate-400">({f.surfaces.join(', ')})</span></span><span>{f.set}</span></div>
+          <div className="flex justify-between text-slate-400"><span>in view: {f.ids.join(' ')}</span><span>{f.cells} cells</span></div>
+          <div className={f.areas > 4.01 ? 'text-amber-300' : 'text-slate-300'}>whole tiles: {f.areas.toFixed(2)} areas · {f.across.toFixed(2)} across × {f.down.toFixed(2)} down</div>
+        </div>
+      ))}
+      {r.pointer && <div className="mt-1 text-slate-300">pointer: {r.pointer.surface}{r.pointer.family ? ` · ${r.pointer.family}` : ''}{r.pointer.tile ? ` · ${r.pointer.tile} @ cell ${r.pointer.cell![0]},${r.pointer.cell![1]}` : ''}</div>}
+    </div>
   );
 }
 
