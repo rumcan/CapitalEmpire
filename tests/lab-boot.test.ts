@@ -89,6 +89,8 @@ test('a light worker\'s cached pack: the eager photos it builds and the rest of 
     assert.ok(keep(n), `${n} kept`);
   for (const n of ['mosaic:golfFairway:0', 'photo:golfFairway', 'photo:waterDark', 'mosaic:field:3', 'mip:water@0.3', 'mip:meadow@0.035'])
     assert.ok(!keep(n), `${n} left out`);
+  const lazy = lightPack(EAGER_PHOTO, new Set(LAB_EAGER_PHOTOS), new Set(), true);
+  assert.ok(lazy('photo:chipSeal') && !lazy('mosaic:chipSeal:0') && lazy('mosaic:base:0') && lazy('mosaic:preset:first-cut:0'), 'lazy mosaics: only the sources of the eager photos');
   const all = lightPack(EAGER_PHOTO, EAGER_PHOTO);
   for (const n of ['photo:golfFairway', 'mip:water@0.3', 'mosaic:base:0']) assert.ok(all(n), `${n}: nothing is left out without a light boot's sets`);
 });

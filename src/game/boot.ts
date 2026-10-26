@@ -73,10 +73,11 @@ export function flatTerrain(): Terrain {
 
 /** a light boot's filter for a cached pack (T157): the cache holds the game's pack (every one of grass-art.ts EAGER_PHOTO and every procedural
  *  texture); left out are the photo textures outside the boot's eager set (their sources and mosaics: the worker builds one on first use,
- *  ensure) and, when `lazy` names them, the procedural textures' mips (made on first use, Textures.image) */
-export function lightPack(allPhotos: ReadonlySet<string>, eager: ReadonlySet<string>, lazy: ReadonlySet<string> = new Set()): (name: string) => boolean {
+ *  ensure), with lazyMosaics the eager photos' mosaics too (made from the source on first use, Textures.mosaicFor), and the procedural
+ *  textures `lazy` names (their mips: made on first use, Textures.image) */
+export function lightPack(allPhotos: ReadonlySet<string>, eager: ReadonlySet<string>, lazy: ReadonlySet<string> = new Set(), lazyMosaics = false): (name: string) => boolean {
   return name => {
-    const m = /^(?:photo|mosaic):([^:]+)/.exec(name); if (m) return !allPhotos.has(m[1]!) || eager.has(m[1]!);
+    const m = /^(photo|mosaic):([^:]+)/.exec(name); if (m) return !allPhotos.has(m[2]!) || eager.has(m[2]!) && !(lazyMosaics && m[1] === 'mosaic');
     const q = /^mip:([^@]+)@/.exec(name); return !q || !lazy.has(q[1]!);
   };
 }

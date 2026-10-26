@@ -414,7 +414,7 @@ export class Textures {
     const grass = mixGrass(toCanvas(grassA, pa, pa), toCanvas(grassB, pb, pb), gm?.mix ?? DEFAULT_MIX, BASE_W, BASE_H, AUTHOR);
     this.store('grass', grass);
     // ---- the Paint tool's photo textures that every worker needs (grasses, concrete): built here; the others are built by ensure() on first use
-    for (const p of PHOTO_TEX) if (eager.has(p.tex)) { await this.buildPhoto(p); await tick(); }
+    for (const p of PHOTO_TEX) if (eager.has(p.tex)) { await this.buildPhoto(p, lazy); await tick(); }
     if (lazy) this.lazyTinted();
     else for (const [name, tint] of GRASS_TINTS) { const c = canvas(BASE_W, BASE_H), g = ctx2d(c); g.drawImage(grass, 0, 0); g.globalCompositeOperation = 'multiply'; g.fillStyle = tint; g.fillRect(0, 0, BASE_W, BASE_H); this.store(name, c); }
     await tick();
@@ -473,6 +473,7 @@ export class Textures {
   private mipChain(c: Cnv) { const out = [c]; while (out[out.length - 1].width > 96) out.push(downscale(out[out.length - 1], 0.5)); return out; }
   /** the asphalt mosaic mip for a cache level (screen px per world px): never upsampled */
   mosaicFor(variant: string, L: number) {
+    this.makeMosaic(variant);
     const chain = this.mosaics.get(variant)!, period = this.periodOf(variant), want = 128 * L; let pick = chain[0];
     for (const m of chain) { if (m.width / period >= want) pick = m; else break; }
     return pick;
@@ -493,9 +494,13 @@ export class Textures {
   }
   /** true when a texture can be laid in this worker: its photo built (the eager ones always are; a lazy photo once ensure has run), or its painted
    *  family's pictures for the current art level decoded */
-  has(variant: string) { const p = this.paintedOf(variant); return !!p && (p.tiled ? p.tiled.urls[bandOf(this.tileTs)].every(u => this.tilePics.has(u)) : this.paintedWeights(p).every(w => this.paintedPics.has(p[w.detail].src))) || this.mosaics.has(variant); }
+  has(variant: string) { const p = this.paintedOf(variant); return !!p && (p.tiled ? p.tiled.urls[bandOf(this.tileTs)].every(u => this.tilePics.has(u)) : this.paintedWeights(p).every(w => this.paintedPics.has(p[w.detail].src))) || this.built(variant); }
   /** true when its photo (tile-space mosaic) is built, whatever the Grass setting */
-  built(variant: string) { return this.mosaics.has(variant); }
+  built(variant: string) { return this.mosaics.has(variant) || this.lazyMosaics.has(variant); }
+  /** a light boot's photo mosaics not made yet (T157: build's lazy): the photo's source is built (Paint areas draw it, sourceFor); its hex-mixed
+   *  mosaic, which only the ground photos of the terrain and a lot's concrete lay (mosaicFor), is made on first use */
+  private lazyMosaics = new Map<string, () => void>();
+  private makeMosaic(variant: string) { const f = this.lazyMosaics.get(variant); if (f) { this.lazyMosaics.delete(variant); f(); } }
   /** builds a lazy photo texture (grass-art.ts PHOTO_TEX) the first time an area uses it; concurrent calls share one build;
    *  a name that is not a photo, or is built already, resolves at once */
   ensure(variant: string): Promise<void> {
@@ -507,13 +512,18 @@ export class Textures {
     return b;
   }
   /** a photo texture's mip chain in tile space: hex-mixed over MOSAIC_TILES when p.mix > 0 (p.px pixels a tile, the photo's p.mix metres), else the plain photo as its period */
-  private async buildPhoto(p: PhotoTexEntry) {
+  private async buildPhoto(p: PhotoTexEntry, lazyMosaic = false) {
     const c = toCanvas(await loadImage(p.src));
+    this.photoSrc.set(p.tex, c);
+    const make = () => { this.mosaics.set(p.tex, this.photoMosaic(p, c)); };
+    if (lazyMosaic) this.lazyMosaics.set(p.tex, make); else make();
+  }
+  /** a photo's mosaic mip chain from its source c: hex-mixed when p.mix > 0 (p.px pixels per tile, 160 by default: 80 px/m over the 24 m
+   *  period, the photo's p.mix metres, PHOTO_SIZE bigger, scaled to that), else the plain photo as its period */
+  private photoMosaic(p: PhotoTexEntry, c: Cnv): Cnv[] {
     // mixed: the ground under the patches' feathered edges is the photo's own mean colour, not the asphalt's
     const mean = () => { const d = ctx2d(c).getImageData(0, 0, c.width, c.height).data, s = [0, 0, 0]; for (let i = 0; i < d.length; i += 4) { s[0] += d[i]; s[1] += d[i + 1]; s[2] += d[i + 2]; } return `rgb(${s.map(v => Math.round(v / (d.length / 4))).join(',')})`; };
-    // mixed: p.px pixels per tile (160 by default: 80 px/m over the 24 m period), the photo's p.mix metres (PHOTO_SIZE bigger) scaled to that; plain: the photo is the period
-    this.photoSrc.set(p.tex, c);
-    this.mosaics.set(p.tex, this.mipChain(p.mix > 0 ? this.mosaic(this.mosaicSeeds(), c, c, mean(), p.px ?? 160, c.width / (p.mix * PHOTO_SIZE)) : c));
+    return this.mipChain(p.mix > 0 ? this.mosaic(this.mosaicSeeds(), c, c, mean(), p.px ?? 160, c.width / (p.mix * PHOTO_SIZE)) : c);
   }
   image(name: TexName, L: number) { this.make(name); return this.mips.get(name + '@' + L)!; }
   /** whether texture name has a picture at cache level L (made now when it is a lazy one) */
@@ -534,6 +544,7 @@ export class Textures {
   /** after a light boot's restore from a pack without them (texture-share.ts lightPack): the screen-space textures it lacks are made on first use */
   lazyMissing() {
     for (const n of PAINTED) if (!this.mips.has(n + '@' + LEVELS[0]) && !this.lazy.has(n)) this.lazy.set(n, () => this.store(n, gen(n)));
+    for (const p of this.photos) { const c = this.photoSrc.get(p.tex); if (c && !this.mosaics.has(p.tex) && !this.lazyMosaics.has(p.tex)) this.lazyMosaics.set(p.tex, () => { this.mosaics.set(p.tex, this.photoMosaic(p, c)); }); }
     if (GRASS_TINTS.some(([n]) => !this.mips.has(n + '@' + LEVELS[0]))) this.lazyTinted();
   }
   /** town-scene.mjs pickLeaf: the smallest sprite that is at least 1.15x the wanted size, then one of the next few */
