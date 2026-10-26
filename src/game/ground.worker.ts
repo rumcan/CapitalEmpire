@@ -66,6 +66,7 @@ const handle = async (m: ToWorker) => {
       case 'grassArt': tex.setPaintedOn(m.art !== 'photo'); painter.resetPlanColours(); break;
       case 'surfaces': tex.setSurfaces(m.file); painter.resetPainted(); break;
       case 'net': { const t0 = performance.now(); applyOps(net, m.ops); const ms = performance.now() - t0; if (ms > 50) post({ t: 'log', message: `net ops ${m.ops.length} in ${ms.toFixed(0)} ms` }); break; }
+      case 'tilesAhead': tex.tilesAhead = m.bands; break;
       case 'lamps': { const t0 = performance.now(), pts = []; for (let i = 0; i + 1 < m.pts.length; i += 2) pts.push({ x: m.pts[i], y: m.pts[i + 1] }); net.setLamps(pts); const ms = performance.now() - t0; if (ms > 50) post({ t: 'log', message: `lamps ${pts.length} in ${ms.toFixed(0)} ms` }); break; }
       case 'terrain': painter.setTerrain(m.cls, m.height, m.waters); break;
       case 'blocks': painter.blocks = m.data; break;
@@ -92,8 +93,8 @@ const handle = async (m: ToWorker) => {
       }
       case 'paint': {
         await hasTextures;
-        // the coverage step the tile set families are laid at (T145, painted-tiles.ts): the camera's, with this bake
-        if (m.ts !== undefined) tex.tileStep = m.ts;
+        // the tile spec the tile set families are laid at (T145, T150, painted-tiles.ts tileSpec: the camera's band and the screen's DPR), with this bake
+        if (m.ts !== undefined) tex.tileTs = m.ts;
         if (m.kind !== 'p') await (woods ??= tex.ensure(WOODLAND_TEX).catch(err => post({ t: 'error', message: String(err) })));
         // the painted grass pictures this chunk needs at its art level (painted-grass-lod.ts): the base grass and its tints, and every texture
         // its lots, lawns, painted areas, course surfaces and managed turf use (a painted preset among them); never all of them
@@ -119,7 +120,7 @@ const handle = async (m: ToWorker) => {
           await tex.preparePainted(m.artL ?? m.L, need, near);
         } else {
           await tex.preparePainted(PLAN_LEVELS[PLAN_LEVELS.length - 1], ['grass', 'meadow', 'outside']); await tex.preparePlanner(['grass', 'meadow', WOODLAND_TEX, WOODLAND]);
-          // the tile set families the planner piece's course surfaces wear (their tiles at the camera's step: the overview's FAR tiles)
+          // the tile set families the planner piece's course surfaces wear (their tiles at the camera's band: FAR at the furthest zoom)
           const box = GroundPainter.tileBox(m.i * PLAN_W, m.j * PLAN_H, (m.i + 1) * PLAN_W, (m.j + 1) * PLAN_H, 2), course = new Set<string>(['grass', 'meadow', 'outside', WOODLAND_TEX, WOODLAND]);
           for (const p of painter.lotsIn(box)) if (p.course) for (const l of p.course.layers) for (const t of [l, ...(l.collar ? [l.collar] : [])]) course.add(t.tex);
           await tex.prepareTiles(course);

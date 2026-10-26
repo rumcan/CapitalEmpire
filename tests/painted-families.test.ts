@@ -86,9 +86,11 @@ test('every surface of the game wears a painted family: golf, map, town lawns, l
   assert.ok(S.green!.scale <= S.fairway!.scale && S.tee!.scale <= S.fairway!.scale);
   assert.ok(S.rough!.family.startsWith('sage-')); assert.equal(S.fescue!.family, 'golden-fescue');
   assert.equal(S.bunker!.family, 'sand-raked'); assert.equal(S.waste!.family, 'sand-ripples'); assert.equal(S.water!.family, 'lake');
-  assert.equal(S.river!.family, 'water-pond', 'the river keeps the pond water');
+  // the map's open grass draws golden fescue and rivers draw lake (the owner, 2026-10-26: "all the map water and grass needs to be replaced
+  // aswell"; main 003153a)
+  assert.equal(S.river!.family, 'lake', 'rivers draw the lake');
+  for (const k of ['base', 'outside', 'meadow', 'dry', 'worn', 'lush', 'patchy', 'woodland']) assert.equal(S[k]!.family, 'golden-fescue', k);
   for (const k of ['wallTurf', 'wallBank']) assert.equal(S[k]!.family, 'underground-earth'); assert.equal(S.wallSand!.family, 'underground-sand');
-  assert.ok(S.lush!.family.endsWith('-long')); assert.ok(S.patchy!.family.startsWith('straw-'));
   // the town lawns differ in palette and length
   assert.ok(f.lawns.length >= 4); assert.ok(new Set(f.lawns.map(l => l.family)).size >= 4);
   assert.ok(new Set(f.lawns.map(l => l.family.split('-')[0])).size >= 3, 'at least three palettes');

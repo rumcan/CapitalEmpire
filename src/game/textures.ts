@@ -6,7 +6,7 @@ import { paintedUrl, VARIANT_SETS } from './painted-grass-art';
 import { MAX_PAINTED_SOURCES, trimLru, type GrassArt, type GrassDetail, type GrassDetailWeight } from './painted-grass-lod';
 import { familyWeights, lookColour, lookKey, LOOK_RANGES, resolveFamily, type LevelArt, type PaintedKind } from './painted-families';
 import { clampSurfaces, lookOfTex, type PresetRef, type SurfacesFile } from './painted-surfaces';
-import { bandOf, STEPS, stepAt, tiledFamily, TILE_BANDS, TILES_REVISION, type TileBand, type TiledFamily } from './painted-tiles';
+import { bandOf, specBand, tiledFamily, tileSpec, TILE_BANDS, TILES_REVISION, type TileBand, type TiledFamily } from './painted-tiles';
 import { ASPHALT_MEAN, type GroundArt, LEAF_CELL, LEAF_COLS, LEAVES, LOT_ASPHALT_M, POOL_ANCHOR, PPM, SLAB_CELL, SLAB_COUNT, SLAB_TOP } from './ground-art';
 
 /** Ground materials, following the town builder's ground renderer (scripts/lib/town-scene.mjs):
@@ -224,8 +224,10 @@ export class Textures {
   private paintedPics = new Map<string, Cnv[]>();
   private paintedLoads = new Map<string, Promise<void>>();
   private paintedLevel = .3;
-  /** the coverage step the next bake lays the tile set families at (painted-tiles.ts nextStep: the camera's, sent with each bake) */
-  tileStep = stepAt(.3);
+  /** the tile spec the next bake lays the tile set families at (painted-tiles.ts tileSpec: the camera's band and the screen's DPR, sent with
+   *  each bake), and the other bands to decode ahead (painted-tiles.ts bandsAhead: the camera's, sent when they change) */
+  tileTs = tileSpec(0, 1);
+  tilesAhead: readonly number[] = [];
   /** the tile set families' decoded tiles (by URL, an LRU of MAX_TILE_SOURCES; the decoded bitmap itself, no canvas copy) with their mip
    *  chains, and the decodes in progress */
   private tilePics = new Map<string, (Cnv | ImageBitmap)[]>();
@@ -272,13 +274,13 @@ export class Textures {
   /** a painted texture's mean colour as its look shows it (the planner's colour, a swatch), or null */
   paintedMean(variant: string) { return this.paintedOf(variant)?.mean ?? null; }
   /** the levels a painted look blends at the current art level (painted-families.ts familyWeights) */
-  paintedWeights(p: PaintedPick): GrassDetailWeight[] { return p.tiled ? [{ detail: bandOf(this.tileStep), weight: 1 }] : familyWeights(p, this.paintedLevel); }
-  /** a tile set's URLs at a step: its band's four into `now`; the neighbouring steps' bands, when another, into `ahead` (decoded before the
-   *  camera switches to them) */
-  private tileUrlsAt(t: TiledPick, step: number, now: Set<string>, ahead: Set<string>) {
-    const band = bandOf(step);
-    for (const u of t.urls[band]) now.add(u);
-    for (const n of [step - 1, step + 1]) if (n >= 0 && n < STEPS.length && bandOf(n) !== band) for (const u of t.urls[bandOf(n)]) ahead.add(u);
+  paintedWeights(p: PaintedPick): GrassDetailWeight[] { return p.tiled ? [{ detail: bandOf(this.tileTs), weight: 1 }] : familyWeights(p, this.paintedLevel); }
+  /** a tile set's URLs at a tile spec: its band's four into `now`; the bands the camera is about to switch to (tilesAhead) into `ahead`
+   *  (decoded before the camera switches to them) */
+  private tileUrlsAt(t: TiledPick, ts: number, now: Set<string>, ahead: Set<string>) {
+    const b = specBand(ts);
+    for (const u of t.urls[TILE_BANDS[b]!]) now.add(u);
+    for (const n of this.tilesAhead) if (n !== b && TILE_BANDS[n]) for (const u of t.urls[TILE_BANDS[n]!]) ahead.add(u);
   }
   /** decodes tile pictures not decoded yet (the LRU keeps `keep` and the batch itself) */
   private async decodeTiles(urls: Set<string>, keep: ReadonlySet<string> = new Set()) {
@@ -294,12 +296,12 @@ export class Textures {
     }));
     trimLru(this.tilePics, new Set([...urls, ...keep]), MAX_TILE_SOURCES, chain => { for (const m of chain) if (m instanceof ImageBitmap) m.close(); });
   }
-  /** before a bake: the tile set families among `variants` at coverage step `step`: the band's tiles decoded (awaited), the next band's
-   *  started (when the camera is one step from it) */
-  async prepareTiles(variants: Iterable<string>, step = this.tileStep) {
-    this.tileStep = step;
+  /** before a bake: the tile set families among `variants` at tile spec `ts`: the band's tiles decoded (awaited), the next band's started
+   *  (when the camera is near its switch: tilesAhead) */
+  async prepareTiles(variants: Iterable<string>, ts = this.tileTs) {
+    this.tileTs = ts;
     const now = new Set<string>(), ahead = new Set<string>();
-    for (const v of variants) { const p = this.paintedOf(v); if (p?.tiled) this.tileUrlsAt(p.tiled, step, now, ahead); }
+    for (const v of variants) { const p = this.paintedOf(v); if (p?.tiled) this.tileUrlsAt(p.tiled, ts, now, ahead); }
     for (const u of now) ahead.delete(u);
     if (ahead.size) void this.decodeTiles(ahead, now);
     await this.decodeTiles(now, ahead);
@@ -482,7 +484,7 @@ export class Textures {
   }
   /** true when a texture can be laid in this worker: its photo built (the eager ones always are; a lazy photo once ensure has run), or its painted
    *  family's pictures for the current art level decoded */
-  has(variant: string) { const p = this.paintedOf(variant); return !!p && (p.tiled ? p.tiled.urls[bandOf(this.tileStep)].every(u => this.tilePics.has(u)) : this.paintedWeights(p).every(w => this.paintedPics.has(p[w.detail].src))) || this.mosaics.has(variant); }
+  has(variant: string) { const p = this.paintedOf(variant); return !!p && (p.tiled ? p.tiled.urls[bandOf(this.tileTs)].every(u => this.tilePics.has(u)) : this.paintedWeights(p).every(w => this.paintedPics.has(p[w.detail].src))) || this.mosaics.has(variant); }
   /** true when its photo (tile-space mosaic) is built, whatever the Grass setting */
   built(variant: string) { return this.mosaics.has(variant); }
   /** builds a lazy photo texture (grass-art.ts PHOTO_TEX) the first time an area uses it; concurrent calls share one build;
