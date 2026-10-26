@@ -24,6 +24,7 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 ### In flight
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |
+| **T157 (priority)** | #336 | `arena/T157-light-lab` | `.claude/worktrees/t157` | 5188 (studio 5194) | The owner: "the studio is taking too much ram to run the full game"; started as a **third agent** at the owner's word. Measure, then a light `?lotlab` boot (small map, no sim/traffic/golf, one ground worker, lazy atlases), the studio's Lots frame only while open; target under a third of today's lab memory. Stays out of T155's lab UI files. |
 | **T154 (top priority)** | #330 | `arena/T154-new-art` | `.claude/worktrees/t154` | 5187 (studio 5193) | The owner: "bringing the next art into the game ... new buildings and plants ... in the studio asap". Today's screen-axis four-view sets (parking garages 2-6 storey, bakery, grocery, pharmacy, 3 industrial, 3 houses; 3 bushes, 3 flowerbeds, hydrangea; bench, lamp, trash can, parking entry; 2 wagons, pickup) into the studio Library and the game; the parking garage replaces the car park building's stand-in. Phase 1 PR first; Phase 2 the eight headings. |
 | T152 | #325 | `arena/T152-car-spacing` (d3bdbf1) | `.claude/worktrees/t152` | — | **Paused** for the art (the owner). Root cause: the range's own cars (`rangebiz.ts:803/832/723`) are placed by their own clock; fixed in rangebiz.ts only (overlaps -75-82% with the 44-bay lot, money identical). **Owner's decision needed:** at full demand the one-lane drive and the building's ramp cannot carry the cars at a car's gap (wider drive, second ramp, faster car-park speeds, or the queue limiting sales). Left: three gates, shots, PR. |
 | T155 | #333 | `arena/T155-lot-lab-2` | `.claude/worktrees/t155` | 5186 | The lot lab, part 2 (the owner: ~1,500 lot combinations): PR 1 a roomier layout (drawer: lot choice only; top toolbar; floating selection bar; bottom palette; right inspector), house allocations (road angles + built/upgraded/decrepit per house), lawns by state (upgraded putting-green, built fairway, decrepit rough); PR 2 lots auto-sized from a master on the largest lot. |
@@ -31,7 +32,7 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 
 **Two coding agents at a time (the owner, 2026-10-26: first "maybe just too many background tasks?" after the studio tab died with the
 PC at 1.5 GB free, then "start up two coding agents"):** keep two coding agents running, start the next queue ticket when one lands, no
-more; each runs one heavy process at a time. Both stopped once at the usage limit (13:50) and were resumed: an agent that stops on a
+more (the owner allowed a third for T157 on 2026-10-26); each runs one heavy process at a time. Both stopped once at the usage limit (13:50) and were resumed: an agent that stops on a
 limit is resumed with a message, not restarted.
 
 **One studio (the owner, 2026-10-26: "when a studio is running it is the only studio and any changes made affect the actual game
@@ -50,8 +51,6 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
 `docs/START-PROMPTS.md`.
 
 ### Queue (in order)
-- **T157 #336 the lot lab runs light** (the owner: "the studio is taking too much ram to run the full game"): next when an agent slot frees
-  (after T154 or T155's PR 1). The studio's Lots tab runs a whole second game today.
 - **Texture art status (2026-10-26 15:30):** the art session (Codex; `art/theme-consistency/material-texture-batches/ACTIVE-WORK.json`)
   has finished 2 of its 14 families (golden fescue, lake: in the game). sand-ripples has raw variants, sand-raked 2/12, desert/dirt
   anchors only; fairway, putting-green, first-cut, long-grass and the rest have job files and no pictures yet. Each lands through
