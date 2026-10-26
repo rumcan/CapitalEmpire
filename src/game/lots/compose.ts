@@ -494,7 +494,8 @@ function layoutOf(lot: LotGeom, p: { preset: LotPreset; fit: Fitted; frame: Pres
     // nothing on a drive, a walk or the car park; no plant on paving but along the lot's fence (a paved yard: its props and ground marks stand
     // there, a tree does not grow out of the asphalt, a hedge lines its fence; a gravel yard keeps the bushes along its fence); no tree right in
     // front of the main building (FRONTAGE tiles before its face: its frontage stays in view; street trees nearer the road stay)
-    const plants = ['prop', 'car', 'decal'] as const, notTree = ['bush', 'flowerbed', 'prop', 'car', 'decal'] as const, F = FENCE_BAND + 0.2;
+    // (T171: a group laid by its places takes its fence band wider, 2 tiles: its hedge runs a bush's depth off the fence, on the paving)
+    const plants = ['prop', 'car', 'decal'] as const, notTree = ['bush', 'flowerbed', 'prop', 'car', 'decal'] as const, F = FENCE_BAND + (run.places ? 1 : 0.2);
     const inner = (b: Box): Box => [Math.max(b[0], F), b[1], Math.min(b[2], lot.w - F), Math.min(b[3], lot.d - F)];
     const off: { box: Box; but?: readonly ItemKind[] }[] = [
       ...p.fit.patches.filter(a => a.kind === 'drive' || a.kind === 'walk' || a.kind === 'lot').map(a => ({ box: box(a.pts) })),

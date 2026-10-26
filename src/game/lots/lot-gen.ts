@@ -15,6 +15,8 @@ import { lineLen, PLACE_MIN, placesOf, pointAt, rowOf, type Anchor, type PlaceLo
 const ROWY = 0.7;
 /** T171: a row kind's mean run (items) that makes it a hedge an inventory group still lays as rows */
 const HEDGE = 5;
+/** T171: how far (tiles) an item at a learnt place may reach past the lot's sides and back (compose-core REACH) */
+const PLACE_REACH = 0.3;
 
 /** a laid item: its kind, library (or decal) id and place (lot frame, tiles: the footprint's centre; a decal's centre) */
 export interface LaidItem { kind: ItemKind; id: string; x: number; y: number; /** a partner (T161): the index among the laid items of the item it goes with */ with?: number }
@@ -84,7 +86,8 @@ export function generateLayout(g: GenInput, r: () => number = mulberry(g.seed >>
   // model keeps it with its keep rate where it lands, as a sector's item); null when none fits
   const PL = g.places, known = new Map<string, ReturnType<typeof placesOf>>();
   const placesFor = (id: string) => { if (!known.has(id)) known.set(id, PL ? placesOf(PL.t, id) : null); return known.get(id)!; };
-  const fits = (box: Box, kind: ItemKind, verge: boolean) => box[0] >= 0 && box[2] <= lot.w && box[3] <= lot.d && box[1] >= (verge ? -VERGE : 0) && !boxes.some(q => overlap(q, box)) && !g.avoid?.some(v => !v.but?.includes(kind) && overlap(v.box, box));
+  // (a learnt place may reach PLACE_REACH past the lot's sides and back, as compose's lot line allows: the owner's hedge stands a bush's depth off the fence)
+  const fits = (box: Box, kind: ItemKind, verge: boolean) => box[0] >= -PLACE_REACH && box[2] <= lot.w + PLACE_REACH && box[3] <= lot.d + PLACE_REACH && box[1] >= (verge ? -VERGE : 0) && !boxes.some(q => overlap(q, box)) && !g.avoid?.some(v => !v.but?.includes(kind) && overlap(v.box, box));
   const anchored = (id: string, kind: ItemKind, h: Half, list: NonNullable<ReturnType<typeof placesOf>>): (LaidItem & { a: Anchor; along: number; off: number; p: number }) | null => {
     const P = PL!.lot, avail = list.filter(x => pointAt(P, x.a, 0.5, 0, 0) !== null);
     if (!avail.length) return null;
@@ -121,7 +124,8 @@ export function generateLayout(g: GenInput, r: () => number = mulberry(g.seed >>
       const u = it.along + dir * i * step; if (u < -0.05 || u > 1.05) break;
       const id = here[Math.floor(r() * here.length)]!, h = halfOf(id), pt = pointAt(PL!.lot, it.a, u, it.off + (r() - 0.5) * 0.1, it.p)!;
       const box: Box = [pt.x - h.ha, pt.y - h.hb, pt.x + h.ha, pt.y + h.hb];
-      if (!fits(box, it.kind, it.a === 'kerb')) break;
+      // a spot that is taken (a car, a building's corner) is skipped: the row runs on past it to its line's end
+      if (!fits(box, it.kind, it.a === 'kerb')) continue;
       boxes.push(box); out.push({ kind: it.kind, id, x: pt.x, y: pt.y }); laid.set(it.kind, (laid.get(it.kind) ?? 0) + 1); if (!whole) left--; n--;
     }
   };
@@ -139,20 +143,25 @@ export function generateLayout(g: GenInput, r: () => number = mulberry(g.seed >>
     const pool = g.pools[kind], n0 = Math.max(kind === 'car' || g.minOne === false ? 0 : 1, Math.round(PER_LOT[kind] * f * mult(kind) + (r() - 0.5)));
     const ry = PL && pool.length ? rowy(kind) : null, n = ry ? Math.floor((PER_LOT[kind] * f * mult(kind)) / ry.len + r()) : n0;
     // (a kind set in long runs keeps them: a hedge; a short run of a set's pieces, the kerb's bench, bike rack and bin, is the set, each at its place)
+    // the pool its sector tries draw from and how many (an inventory kind: its rare items, the rest of its count after its known ones' share)
+    // (an inventory group's hedge is tried on every lot: its presets set one wherever the fence is free; it stands where it fits)
+    let draw: readonly string[] = pool, tries = inv && ry && ry.len >= HEDGE ? Math.max(n, 1) : n;
     if (inv && !(ry && ry.len >= HEDGE) && kind !== 'car' && kind !== 'decal' && pool.length) {
-      cur = kind; turn.set(kind, 0);
+      let share = 0;
       for (const id of [...new Set(pool)]) {
         const list = placesFor(id); if (!list) continue;
-        const cnt = Math.floor((PL!.t.items.get(id)!.n / PL!.t.lots) * invSize + r()), h = halfOf(id);
+        const rate = (PL!.t.items.get(id)!.n / PL!.t.lots) * invSize, cnt = Math.floor(rate + r()), h = halfOf(id);
+        share += rate;
         for (let c = 0; c < cnt; c++) { const at = anchored(id, kind, h, list); if (at) { out.push({ kind, id, x: at.x, y: at.y }); laid.set(kind, (laid.get(kind) ?? 0) + 1); } }
       }
-      continue;
+      // rare items keep their kind's sectors (as before T171): the kind's count less its known items' share, from the pool's rare ones
+      draw = pool.filter(id => !placesFor(id)); tries = Math.max(0, Math.round(n - share));
     }
-    if (!pool.length) continue;
+    if (!draw.length || !tries) continue;
     // its tries: its count, less its partners laid already (with no pairs: its count)
-    cur = kind; turn.set(kind, n);
-    for (left = n - (early.get(kind) ?? 0); left > 0; left--) {
-      const id = pool[Math.floor(r() * pool.length)]!, decal = kind === 'decal';
+    cur = kind; turn.set(kind, tries);
+    for (left = tries - (early.get(kind) ?? 0); left > 0; left--) {
+      const id = draw[Math.floor(r() * draw.length)]!, decal = kind === 'decal';
       const h = decal ? DECAL_HALF : halfOf(id);
       // T171: an item the places know is laid at its anchors (and nowhere else: when none fits, its place stays free)
       const list = PL && !decal ? placesFor(id) : null;
