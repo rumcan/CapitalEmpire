@@ -21,8 +21,10 @@ A new AI on any account reads `CLAUDE.md`, then NOW.md "START HERE", then this f
    Opus 5.5 at high effort; other tickets use the default.
 4. **Review when it reports.** Check that the PR contains `origin/main` (`git merge-base --is-ancestor origin/main origin/<branch>`) and
    that `gh pr view <n> --json mergeable,mergeStateStatus` reads MERGEABLE CLEAN. Read the diff's risky parts and look at the
-   screenshots yourself. Then comment the review on the PR and merge (`gh pr merge <n> --merge`). The owner allows the lead to merge on
-   typecheck, the agent's own tests and this review; the full regression runs nightly.
+   screenshots yourself. Then comment the review on the PR and merge (`gh pr merge <n> --merge`). **Tests never block a merge** (the owner,
+   2026-10-26: "merge code waiting on tests, they can push fixes after the test run and finds somthig. Test should never slow dev. it should
+   run parallel"): the lead merges on this review and a clean typecheck; the agent's tests run after or in parallel, and what they find comes
+   back as a follow-up fix PR. The full regression runs nightly.
 5. **After the merge:**
    - Remove the agent's worktree (`git worktree remove --force -f <path>`; each is about 4.3 GB and E: is small).
    - Send the owner the key before/after screenshots.
@@ -94,7 +96,9 @@ full path with one line on what it shows; what is left; confirmation that every 
 - **Owner files:** never commit `lot-presets.json` or `scale-overrides.json` changes you did not make.
 - **Tests** run with node's runner on an esbuild bundle, not vitest:
   `npx esbuild tests/a.test.ts --bundle --platform=node --format=esm --loader:.webp=empty --loader:.png=empty --outdir=output/tests-t<nnn> --out-extension:.js=.mjs --log-level=warning && node --test output/tests-t<nnn>/*.mjs`.
-  Run `npm run typecheck`, your new tests and the neighbouring tests you touch. Never run the full suite, `npm run build` or the gates:
+  Run `npm run typecheck` before the PR (the one gate). Run your new tests and the neighbouring tests you touch **after opening the PR, or in
+  parallel**, never holding the PR for them; when they find something, push the fix as a follow-up PR (`[T<nnn>] fix: …`) and report it.
+  Never run the full suite, `npm run build` or the gates:
   the nightly regression does that (scheduled task "CapitalEmpire nightly regression", report in `E:/ClaudeTemp/nightly/<date>.md`,
   failures as `[nightly]` issues).
 - **Art:** the sun is at the upper right and shadows fall at 145°. Highlights are masked by the texture and inset from edges; shadows
@@ -103,7 +107,7 @@ full path with one line on what it shows; what is left; confirmation that every 
   into `docs/GOLF-SPRITES.md` as requests.
 - **Commits** start `[T<nnn>] …` and end with the `Co-Authored-By:` line the session's attribution names.
 - **PR:**
-  - Before opening it, `git fetch origin && git merge origin/main`, then re-run the typecheck and your tests.
+  - Before opening it, `git fetch origin && git merge origin/main`, then re-run the typecheck (tests come after the PR, see Tests above).
   - Push, then open a PR to main titled `[T<nnn>] …` with "Closes #<n>" in the body. For a bug, the body gives the root cause.
   - End the body with `🤖 Generated with [Claude Code](https://claude.com/claude-code)`.
   - Do not merge; the lead merges.
