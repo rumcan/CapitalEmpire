@@ -20,8 +20,9 @@ export interface PresetDecal { id: string; x: number; y: number; scale: number; 
  *  preset made in the lot lab, the road angle it was made for (absent: a frozen preset, drawn at any of the four axis facings, turned); approved: the
  *  owner approved a lab preset, so the game draws it on matching lots (a lab preset without it is a draft, drawn only in the lab); whole: a lab preset
  *  that holds everything its lot draws (fences, street items and decals included: compose adds nothing procedural to it); decals: its flat ground
- *  decals, drawn as the lot's ground marks */
-export interface LotPreset { id: string; use: PresetUse; state: PresetState; w: number; d: number; props: PresetProp[]; patches: PresetPatch[]; curated?: boolean; road?: Road; approved?: boolean; whole?: boolean; decals?: PresetDecal[] }
+ *  decals, drawn as the lot's ground marks; derived (T155): the id of the master it was derived from (lots/derive.ts: made again when the master
+ *  is saved); detached: the id of the master a derived preset was hand-edited away from (the master leaves its size alone) */
+export interface LotPreset { id: string; use: PresetUse; state: PresetState; w: number; d: number; props: PresetProp[]; patches: PresetPatch[]; curated?: boolean; road?: Road; approved?: boolean; whole?: boolean; decals?: PresetDecal[]; derived?: string; detached?: string }
 /** a preset fitted to a lot: its props, patches and decals as new objects (tiles of the lot), each prop's index in the preset's props (from), how
  *  many props were dropped for lying outside it, and its decals kept inside it */
 export interface Fitted { props: PresetProp[]; patches: PresetPatch[]; from: number[]; dropped: number; decals: PresetDecal[] }

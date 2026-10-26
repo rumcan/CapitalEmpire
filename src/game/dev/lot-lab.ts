@@ -45,6 +45,8 @@ import { allowedHouse, artLimit, baseOf, classWords, frameHalf, isHouseLike, oth
 import { neighbourLots, planInPlace, planNewLot, type Neighbour } from './lot-lab-plan';
 import { LotGridLayer, type GridLot } from './lot-grid';
 import { allocations, onAllocations, saveAllocation } from './house-alloc-store';
+import { detach, isMaster, largestSize, type DropCounts } from '../lots/derive';
+import { deriveMaster, mastersReport } from './lot-derive';
 import { BTN, DANGER, GO, ON, SEL, btn, check, drawHelp, el, heading, makeShell, mono, panelHead, typing, type Folds } from './lot-lab-ui';
 import { makePalette, type Swatch } from './lot-lab-palette';
 
@@ -192,11 +194,28 @@ export function installLotLab(game: Game): () => void {
   /** removes the unsaved draft from the presets (it is not kept); the draft is gone from the model */
   function dropDraft() { const d = draft; if (d && !draftSaved()) setLotPresets(lotPresets().filter(p => p.id !== d.id)); draft = null; }
   /** the sizes of this type and state: a farm's three (FARM_LIST); else the buckets of the frozen and lab presets, each with its lot size (the first frozen preset's, else the first lab preset's), by width then depth */
-  function sizes(): Size[] {
-    if (use === 'farm') return FARM_LIST;
+  function sizes(): Size[] { return sizesOf(use, state); }
+  /** the sizes of a type and state (sizes() for any pair: the masters report reads them all) */
+  function sizesOf(u: PresetUse, s: PresetState): Size[] {
+    if (u === 'farm') return FARM_LIST;
     const m = new Map<string, Size>();
-    for (const p of [...legacy(), ...lab()]) if (p.use === use && p.state === state) { const b = bucketOf(p.w, p.d), k = `${b.w}x${b.d}`; if (!m.has(k)) m.set(k, { key: k, bw: b.w, bd: b.d, w: p.w, d: p.d }); }
+    for (const p of [...legacy(), ...lab()]) if (p.use === u && p.state === s) { const b = bucketOf(p.w, p.d), k = `${b.w}x${b.d}`; if (!m.has(k)) m.set(k, { key: k, bw: b.w, bd: b.d, w: p.w, d: p.d }); }
     return [...m.values()].sort((a, b) => a.bw - b.bw || a.bd - b.bd);
+  }
+  /** the auto-size (T155 PR 2): when the preset is a master (a lab preset on the largest size of its type and state, not derived), every smaller
+   *  size of its type, state and road derived from it (lots/derive.ts) into the presets in memory: ids to save, ids to remove (sizes no longer
+   *  derived) and the words for the message; nothing for any other preset */
+  function deriveIfMaster(id: string): { ids: string[]; remove: string[]; words: string } {
+    const m = lotPresets().find(p => p.id === id), ss = m ? sizesOf(m.use, m.state) : [];
+    if (!m || !isMaster(m, ss)) return { ids: [], remove: [], words: '' };
+    const plan = deriveMaster(m, ss, lotPresets()), gone = new Set(plan.remove);
+    let list = lotPresets().filter(p => !gone.has(p.id));
+    for (const q of plan.upsert) list = list.some(p => p.id === q.id) ? replacePreset(list, q) : [...list, q];
+    setLotPresets(list);
+    const sum: DropCounts = { tree: 0, large: 0, small: 0, fence: 0, decal: 0 };
+    for (const c of plan.covered) for (const k of Object.keys(sum) as (keyof DropCounts)[]) sum[k] += c.dropped[k];
+    const dropped = (Object.keys(sum) as (keyof DropCounts)[]).filter(k => sum[k]).map(k => `${sum[k]} ${k === 'large' || k === 'small' ? `${k} props` : `${k}s`}`).join(', ');
+    return { ids: plan.upsert.map(p => p.id), remove: plan.remove, words: `\nderived ${plan.upsert.length} smaller size${plan.upsert.length === 1 ? '' : 's'} from this master${dropped ? ` (dropped across them: ${dropped})` : ''}${plan.skipped.length ? `; skipped ${plan.skipped.map(s => `${s.key} (${s.why})`).join(', ')}` : ''}${plan.remove.length ? `; removed ${plan.remove.length} no longer derived` : ''}` };
   }
   /** a size as the panel shows it: 'Small 40 × 60' for a farm, '10 × 16' for a lot */
   const sizeLabel = (s: Size) => `${s.name ? `${s.name} ` : ''}${s.bw} × ${s.bd}`;
@@ -393,12 +412,14 @@ export function installLotLab(game: Game): () => void {
     stage(p.w, p.d, { use: luOf(use), ...levelOf(state), seed: seedOf(use, 0), preset: id });
     message = `opened ${id} (${p.approved ? 'approved' : 'draft'})`; source = '';
   }
-  /** saves the presets (the draft included) to lot-presets.json: the draft is on disk now (the game draws it once approved) */
+  /** saves the presets (the draft included) to lot-presets.json: the draft is on disk now (the game draws it once approved); a master derives its
+   *  smaller sizes first (saved with it) */
   async function save(): Promise<void> {
     const id = current; if (!id) return;
-    await saveLotPresets([id]);
+    const dv = deriveIfMaster(id);
+    await saveLotPresets([id, ...dv.ids], dv.remove);
     const d = draft; if (d && d.id === id) d.saved = true;
-    message = `saved ${id} as a draft: the game draws it once it is approved`;
+    message = `saved ${id} as a draft: the game draws it once it is approved${dv.words}`;
   }
   /** approves or unapproves a lab preset (the game draws the approved ones on the matching lots) and saves the presets at once */
   async function approve(id: string, on: boolean): Promise<void> {
@@ -408,9 +429,11 @@ export function installLotLab(game: Game): () => void {
     if (on) next.approved = true; else delete next.approved;
     setLotPresets(replacePreset(lotPresets(), next));
     const d = draft; if (d && d.id === id) { d.obj = next; d.saved = true; }
-    await saveLotPresets([id]);
+    // a master derives its smaller sizes again: they follow its approval
+    const dv = deriveIfMaster(id);
+    await saveLotPresets([id, ...dv.ids], dv.remove);
     const b = bucketOf(p.w, p.d);
-    message = on ? `approved ${id}: the game draws it on ${USE_NAME[p.use]} ${p.state} lots of about ${b.w} x ${b.d} tiles facing ${ROAD_WORDS[p.road ?? road]!}` : `unapproved ${id}`;
+    message = (on ? `approved ${id}: the game draws it on ${USE_NAME[p.use]} ${p.state} lots of about ${b.w} x ${b.d} tiles facing ${ROAD_WORDS[p.road ?? road]!}` : `unapproved ${id}`) + dv.words;
   }
   /** Approve & next gap: approves the current lab preset, then moves to the next gap */
   async function approveNext(): Promise<void> {
@@ -440,10 +463,12 @@ export function installLotLab(game: Game): () => void {
   async function remove(id: string): Promise<void> {
     const p = lotPresets().find(q => q.id === id);
     if (!p) return;
-    if (p.approved && !confirm(`Remove the approved preset ${id}? The game stops drawing it on matching lots.`)) return;
+    // a master's derived sizes go with it (a detached one is the owner's own and stays)
+    const kids = lotPresets().filter(q => q.derived === id).map(q => q.id);
+    if ((p.approved || kids.length) && !confirm(`Remove the${p.approved ? ' approved' : ''} preset ${id}${kids.length ? ` and the ${kids.length} sizes derived from it` : ''}? The game stops drawing ${kids.length ? 'them' : 'it'} on matching lots.`)) return;
     const disk = !unsaved(id);
-    setLotPresets(lotPresets().filter(q => q.id !== id));
-    if (disk) await saveLotPresets([], [id]);
+    setLotPresets(lotPresets().filter(q => q.id !== id && !kids.includes(q.id)));
+    if (disk || kids.length) await saveLotPresets([], disk ? [id, ...kids] : kids);
     if (current === id) {
       current = null; draft = null;
       if (staged) stage(staged.w, staged.d, { use: luOf(use), ...levelOf(state), seed: seedOf(use, variant) });
@@ -459,7 +484,8 @@ export function installLotLab(game: Game): () => void {
   }
   /** a preset changed by the lab (painted, erased, a decal placed): set in the model (and the draft), curated (the owner edited it), the lot composed again with it, and the presets saved (the draft is on disk then) */
   async function commitLab(p: LotPreset, change: Partial<LotPreset>): Promise<void> {
-    const next: LotPreset = { ...p, ...change, curated: true };
+    // a hand edit detaches a derived preset from its master
+    const next: LotPreset = detach({ ...p, ...change, curated: true });
     setLotPresets(replacePreset(lotPresets(), next));
     const d = draft; if (d && d.id === p.id) { d.obj = next; d.saved = true; }
     if (staged) game.restageLab(staged.st);
@@ -480,7 +506,7 @@ export function installLotLab(game: Game): () => void {
   async function resize(w2: number, d2: number): Promise<void> {
     const p = curPreset();
     if (!p) { message = 'no lab preset to resize: Generate a lot first'; return; }
-    const f = fitPreset(p, w2, d2), next: LotPreset = { ...p, w: w2, d: d2, props: f.props, patches: f.patches, ...(p.decals ? { decals: f.decals } : {}), curated: true };
+    const f = fitPreset(p, w2, d2), next: LotPreset = detach({ ...p, w: w2, d: d2, props: f.props, patches: f.patches, ...(p.decals ? { decals: f.decals } : {}), curated: true });
     setLotPresets(replacePreset(lotPresets(), next));
     const d = draft; if (d && d.id === p.id) { d.obj = next; d.saved = true; }
     const b = bucketOf(w2, d2), k = `${b.w}x${b.d}`;
@@ -668,6 +694,7 @@ export function installLotLab(game: Game): () => void {
     else {
       out.push(mono(p.id), el('div', 'font-size:12px;opacity:.85', `${USE_NAME[p.use]} · ${STATE_WORDS[p.state]} · ${p.w} × ${p.d} tiles · ${p.props.length} props${p.decals ? ` · ${p.decals.length} decals` : ''}`));
       if (source) out.push(el('div', 'font-size:11px;opacity:.7;white-space:pre-wrap;margin-top:2px', source));
+      out.push(roleBox(p));
     }
     const tools = el('div', 'display:flex;flex-wrap:wrap;gap:5px;margin-top:6px');
     const ed = (a: LabAct) => () => act(() => { if (!editorAct(a)) message = 'the map editor is not on yet'; });
@@ -678,8 +705,47 @@ export function installLotLab(game: Game): () => void {
       const i = mainBuilding(p, q => isHouseLike(q.id), frameHalf(labFrame(geo)));
       if (i >= 0) out.push(allocBox(p.props[i]!.id, 'THE LOT\'S HOUSE: ALLOCATION'));
     }
-    out.push(heading('PRESETS HERE (THIS SIZE AND ROAD)'), hereList(), heading('COVERAGE (THIS TYPE AND STATE)'), coverage());
+    out.push(heading('PRESETS HERE (THIS SIZE AND ROAD)'), hereList(), heading('COVERAGE (THIS TYPE AND STATE)'), coverage(), heading('MASTERS (AUTO-SIZE)'), mastersBox());
     return out;
+  }
+  /** the preset's part in the auto-size: a master (Save or Approve derives the smaller sizes), derived (from which master; a hand edit detaches
+   *  it), detached, or hand-made at another size than the master's (a button to the master size) */
+  function roleBox(p: LotPreset): HTMLElement {
+    const box = el('div', 'border-radius:8px;padding:6px 8px;margin-top:6px;font-size:12px'), ss = sizesOf(p.use, p.state), L = largestSize(ss);
+    if (p.road === undefined || p.use === 'farm' || !L) return box;
+    const tag = (t: string, bg: string) => el('span', `border-radius:999px;padding:1px 8px;margin-right:6px;font-weight:700;background:${bg}`, t);
+    if (isMaster(p, ss)) {
+      const mb = bucketOf(p.w, p.d), of = ss.filter(z => z.bw <= mb.w && z.bd <= mb.d && z.key !== `${mb.w}x${mb.d}`).length, kids = lotPresets().filter(q => q.derived === p.id).length;
+      box.style.background = '#1e3a5f';
+      box.append(tag('MASTER', '#0369a1'), `the largest ${USE_NAME[p.use]} ${STATE_WORDS[p.state]} size: Save draft or Approve derives the ${of} smaller sizes on ${ARROW[p.road]} road ${p.road} (${kids} derived now)`);
+    } else if (p.derived) {
+      const m = p.derived;
+      box.style.background = '#3b2f12';
+      box.append(tag('DERIVED', '#a16207'), `from ${m.replace(`lab-${p.use}-${p.state}-`, '')}: made again when its master is saved; a hand edit here detaches it`, el('br'), btn('Open the master', `${BTN}margin-top:4px`, () => act(() => open(m)), m));
+    } else if (p.detached) {
+      box.style.background = '#1f2937';
+      box.append(tag('DETACHED', '#475569'), `hand-edited away from ${p.detached.replace(`lab-${p.use}-${p.state}-`, '')}: the master leaves this size alone`);
+    } else {
+      box.style.background = '#1f2937';
+      box.append(tag('HAND-MADE', '#475569'), `the master size of ${USE_NAME[p.use]} ${STATE_WORDS[p.state]} is ${sizeLabel(L)}: a lot laid out there derives this size and the others`, el('br'),
+        btn(`Go to ${sizeLabel(L)}`, `${BTN}margin-top:4px`, () => act(() => cellGo(L, road)), 'open (or generate) the master size on this road'));
+    }
+    return box;
+  }
+  /** the masters report: this type and state's master on each road and how many sizes it covers; then every type and state: the masters, the
+   *  derived presets, and the cells (type, state, size, road angle) with an approved preset of them all */
+  function mastersBox(): HTMLElement {
+    const box = el('div', 'font-size:12px'), all = lotPresets(), states = STATE_KEYS;
+    const rep = mastersReport(all, sizesOf, USES.filter(u => u !== 'farm'), states), here = rep.masters.filter(m => m.use === use && m.state === state);
+    const t = el('div', 'display:grid;grid-template-columns:22px 1fr auto;gap:2px 6px;align-items:center');
+    for (const r of ROADS) {
+      const m = here.filter(x => x.road === r);
+      t.append(el('span', 'color:#7dd3fc;text-align:center', ARROW[r]!), el('span', 'font:11px ui-monospace,Consolas,monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:.85', m.length ? m.map(x => x.id.replace(`lab-${use}-${state}-`, '')).join(', ') : '—'),
+        el('span', `white-space:nowrap;${m.length ? 'color:#86efac' : 'opacity:.5'}`, m.length ? m.map(x => `${x.covers}/${x.of}`).join(' ') : 'no master'));
+    }
+    const pct = rep.cells ? Math.round((100 * rep.covered) / rep.cells) : 0;
+    box.append(t, el('div', 'margin-top:5px;opacity:.9', `All types and states: ${rep.masters.length} master${rep.masters.length === 1 ? '' : 's'} · ${rep.derived} derived preset${rep.derived === 1 ? '' : 's'} · ${rep.covered} of ${rep.cells} cells (type × state × size × road) approved (${pct}%)`));
+    return box;
   }
   /** the INSPECTOR: the selection (when there is one), then the lot */
   function renderInspector() {
@@ -722,8 +788,10 @@ export function installLotLab(game: Game): () => void {
       const row = el('div', `display:flex;gap:6px;align-items:center;padding:2px 4px;border-radius:4px;font-size:12px;${p.id === current ? 'background:#0c4a6e;' : ''}`);
       const ck = el('input'); ck.type = 'checkbox'; ck.checked = !!p.approved; ck.title = 'approved: the game draws it on the matching lots';
       ck.addEventListener('change', () => { void act(() => approve(p.id, ck.checked)); });
-      const name = el('span', 'flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:ui-monospace,Consolas,monospace', p.id.replace(`lab-${use}-${state}-`, ''));
-      name.title = p.id;
+      // ★ a master, ↳ derived from one
+      const mark = isMaster(p, sizes()) ? '★ ' : p.derived ? '↳ ' : '';
+      const name = el('span', 'flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:ui-monospace,Consolas,monospace', mark + p.id.replace(`lab-${use}-${state}-`, ''));
+      name.title = `${p.id}${mark === '★ ' ? '\nthe master of this type, state and road' : p.derived ? `\nderived from ${p.derived}` : ''}`;
       row.append(ck, name, el('span', 'opacity:.7;white-space:nowrap', `${p.props.length}`), btn('Open', `${BTN}padding:1px 6px`, () => { void act(() => open(p.id)); }), btn('✕', `${BTN}padding:1px 6px`, () => { void act(() => remove(p.id)); }, 'remove'));
       box.append(row);
     }
