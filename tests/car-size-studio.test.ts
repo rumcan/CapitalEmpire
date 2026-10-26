@@ -11,7 +11,7 @@ import { spriteRect, type Drawable } from '../src/game/sprites';
 import { CAR_SCALE, carModel, carModelSize, carOwnerScale } from '../src/game/ext/car-art';
 import { PIXEL_LIMIT, PIXEL_SLACK } from '../src/game/sizes';
 import { footprintOf, ownerScaleOf, turned } from '../src/game/lots/preset-art';
-import { compose, lotPresets, setLotPresets } from '../src/game/lots/compose';
+import { compose, lotPresets } from '../src/game/lots/compose';
 import { LU, LV } from '../src/game/lots/town';
 import { OWNER_SCALE, STUDIO_SCALE, TABLE_SCALE } from '../src/game/lots/scales';
 import { applyStudioScales, onStudioScales } from '../src/game/lots/scales-live';
@@ -83,6 +83,6 @@ describe('parked cars on lots match the studio card (T163)', () => {
       applyStudioScales({ ...was, [id]: 2.5 }); assert.equal(OWNER_SCALE[id], 2.5);
       applyStudioScales({ ...was }); assert.equal(OWNER_SCALE[id], TABLE_SCALE[id], 'cleared: the table\'s size');
       assert.equal(applyStudioScales({ ...was }).length, 0, 'nothing changed: nobody is told');
-    } finally { un(); applyStudioScales(was); resetFacings(); setLotPresets(lotPresets()); }
+    } finally { un(); applyStudioScales(was); resetFacings(); }
   });
 });
