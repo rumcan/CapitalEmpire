@@ -105,12 +105,13 @@ export function makeExam(host: ExamHost) {
       street = host.stage(road, row, Math.floor((row.length - 1) / 2)); host.hold(true);
       return street;
     },
-    /** the camera over the row street staged (the zoom that fits it in the free area); the free area's rectangle (viewport px) */
+    /** the camera over the row street staged (the zoom that fits it in the free area); the row's rectangle on screen (viewport px) */
     fitStreet(): { x: number; y: number; w: number; h: number } | null {
       if (!street.length) return null;
       const b = street.map(shotBox).reduce((p, q) => ({ x0: Math.min(p.x0, q.x0), y0: Math.min(p.y0, q.y0), x1: Math.max(p.x1, q.x1), y1: Math.max(p.y1, q.y1) })), a = host.free();
-      host.centre((b.x0 + b.x1) / 2, (b.y0 + b.y1) / 2, Math.min((a.R - a.L - 24) / (b.x1 - b.x0), (a.B - a.T - 24) / (b.y1 - b.y0)));
-      return { x: Math.round(a.L), y: Math.round(a.T), w: Math.round(a.R - a.L), h: Math.round(a.B - a.T) };
+      const k = Math.min((a.R - a.L - 24) / (b.x1 - b.x0), (a.B - a.T - 24) / (b.y1 - b.y0)), w = Math.ceil((b.x1 - b.x0) * k) + 16, h = Math.ceil((b.y1 - b.y0) * k) + 16;
+      host.centre((b.x0 + b.x1) / 2, (b.y0 + b.y1) / 2, k);
+      return { x: Math.round((a.L + a.R - w) / 2), y: Math.round((a.T + a.B - h) / 2), w, h };
     },
     /** the exam done: the camera let go, the model the lab had */
     done(): void { host.hold(false); setLotModel(was); },
