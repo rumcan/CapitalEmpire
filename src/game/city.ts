@@ -674,9 +674,10 @@ export class City {
   step(n: number): { events: TownEvent[]; grow: Leg[] | null; ledger: Ledger | null; milestones: Milestone[]; won: boolean } {
     const t0 = performance.now();
     this.calls++;
-    // the parking fees of the cars parked since the last step (sim.parkedNow holds a pair per car, read before it is cleared): the books take them
-    const pk = this.sim.parkedNow.length >> 1;
-    if (pk && this.parkFee > 0 && !this.golf) this.budget.parking(pk * this.parkFee);
+    // the parking fees of the cars parked since the last step (sim.parkedNow holds a pair per car, read before it is cleared): the books take them,
+    // and a round under way counts them (as it counts its tolls)
+    const pk = this.sim.parkedNow.length >> 1, rs0 = this.round.stage;
+    if (pk && this.parkFee > 0 && !this.golf) { const y = pk * this.parkFee; this.budget.parking(y); if (rs0 === 'build' || rs0 === 'surge') this.round.parking += y; }
     this.sim.parkedNow.length = 0;
     const hr = Math.floor(this.sim.clock / GAME_HOUR);
     let milestones = NO_MILESTONES, won = false;

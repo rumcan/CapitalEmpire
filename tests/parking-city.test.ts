@@ -6,6 +6,7 @@ import assert from 'node:assert/strict';
 import { CLASS, RoadNetwork, keyOf, type Leg, type RoadClass } from '../src/game/network';
 import { NetEditor } from '../src/game/netops';
 import { City } from '../src/game/city';
+import { Round } from '../src/game/event/round';
 import { MAP } from '../src/game/iso';
 import { CURB_MIN_BAYS } from '../src/game/event/config';
 import { LOT_ID0, type BayRowDef } from '../src/game/event/rows';
@@ -80,4 +81,25 @@ test('the parking fee: each car parked since the last step pays parkFee (5 $), i
   assert.equal(city.budget.money - m0, 10, 'two cars at 5 $ each reach the treasury');
   assert.equal(city.budget.today.parking, 10, 'today.parking counts them');
   assert.equal(city.sim.parkedNow.length, 0, 'the log is cleared after the fee');
+});
+
+test('a round under way counts the parking fees paid while it runs (round.parking, then RoundResult.parking at kick-off), as it counts its tolls', () => {
+  const city = build(e => e.addLegs([leg(200, ROAD_Y, 800, ROAD_Y)], CLASS.street, 0));
+  city.setParking([], [], 5);
+  // no round: the books take the fee, the round does not
+  city.sim.parkedNow.push(0, 0);
+  city.step(1);
+  assert.equal(city.round.parking, 0, 'a free round counts nothing');
+  // a round in its build: three cars parked in the step
+  city.round.start([1]);
+  city.sim.parkedNow.push(0, 0, 0, 0, 0, 0);
+  city.step(1);
+  assert.equal(city.round.parking, 15, 'three cars at 5 $ each count in the round');
+  // the result at kick-off carries it (the net, set by City.kickOff, stays toll + tickets + payout - upkeep)
+  const r = new Round(); r.start([2]); r.parking = 15; r.stage = 'surge'; r.surgeLeft = 1;
+  assert.ok(r.sim(1), 'kick-off');
+  assert.equal(r.last?.parking, 15, 'the result books the fees');
+  const r2 = new Round(); r2.start([2]); r2.stage = 'surge'; r2.surgeLeft = 1; r2.sim(1);
+  assert.equal(r2.last?.parking, undefined, 'absent when none');
+  assert.equal(Round.from(r.view()).parking, 15, 'a save keeps it');
 });

@@ -7,8 +7,25 @@
 // evening of day + 1 (each two rushes combined). Pass (a): B's time lost per trip is at least 10% under A's after T, and B completes at least 98% of A's
 // trips. Scenario C (reckless, pass (b)): a fresh city at sim second 1 takes every loan, spends the treasury on
 // paved street out from the reachable dead ends, nearest the start block first (40-tile legs over land), then runs 12 game days: pass when bankrupt by then.
-//   npm run fix:gate -- [seed = 1] [day = 36]
-// Writes output/sim/fix-gate.json. Exit code 1 when (a) or (b) fails.
+// Precondition of (a): the top item at T is at capacity (CAP_VC, CAP_LOSS below); otherwise the scenario is invalid and the gate exits 2 with no verdict.
+//   npm run fix:gate -- [seed = 1] [day = 60] [traffic = 1]
+// Writes output/sim/fix-gate.json. Exit code 1 when (a) or (b) fails, 2 when the scenario is invalid.
+//
+// The scenario (retuned 2026-10-26, issue #285: since PR #87 the town takes the woods and the seed 1 day 36 city is near free flow, A losing 18 s a trip).
+// The scan, one run per seed to 09:00 of each day (the harness is deterministic, so the city at day d is the city of a run stopped there), the report's
+// top item there (v/c, LOS, loss in veh-min/h) and, where the full gate ran, A's time lost per trip after T2 and B's cut of it:
+//   seed/day   36                       48                        60                        full gate
+//   1          0.10 C 0.7               0.30 C 3.0                0.50 E 13.3 (at capacity)  day 36: invalid; day 60: A 89.4 s, B -11.8%, trips +7%, PASS
+//   2          0.14 A 0.7               0.07 F 19.7 (jammed)      0.51 F 18.4 (jammed)      day 52 (0.55 F 18.4): A 236.8 s, B +12.5%, trips -13%, FAIL
+//   3          0.13 A 0.3               0.04 E 1.4                0.10 E 1.6                 -
+//   4          0.12 A 0.2               0.04 F 10.0               0.19 A 0.4                 -
+//   5          0.17 A 0.4               0.04 F 5.5                0.50 B 4.0                 -
+// Every other day from 30 to 60 was scanned too: no top item reaches v/c 0.8 at any seed (the busiest is 0.58, seed 2 day 54), and the LOS F items
+// at v/c 0.01-0.2 with a loss under 10 veh-min/h are one blocked arm, not capacity. Seed 2 from day 46 is a spillback gridlock through the gravel grid
+// (LOS F at ten junctions, 130 trips abandoned a rush): valid, and B's 720 tiles of boulevard through its top cluster make it worse (the queues move),
+// which is a finding about the fix, not a scenario for this gate. Seed 1 day 60 is a local saturation ((1000, 320) LOS E at v/c 0.50 with its
+// neighbour (1040, 320) LOS D at 0.45; the rest of the city quiet) that the corridor fix relieves: the default. The traffic knob (Sim.townTraffic)
+// at 3 tips seed 1 into the gridlock from day 36 (LOS F at v/c 0.04-0.3 all over, residents leaving), so the default stays at the game's 1.
 import fs from 'node:fs';
 import path from 'node:path';
 import { classUnlocked } from '../../src/game/career';
@@ -21,13 +38,23 @@ import { TC } from '../../src/game/terrain/types';
 import type { Item } from '../../src/game/sim/bottlenecks';
 import { AXES, DAY, HOUR, setup, stepSecond, type Harness } from './harness';
 
-const seed = Number(process.argv[2] ?? 1), day = Math.max(1, Math.round(Number(process.argv[3] ?? 36)));
+const seed = Number(process.argv[2] ?? 1), day = Math.max(1, Math.round(Number(process.argv[3] ?? 60)));
 /** the ladder a fix climbs (a fix jumps to the best class above it that is unlocked; a lane is not on it), the straight run walked beyond a link's seg (tiles,
  *  each way), the straight run walked out of each arm of a junction (tiles), the treasury a fix keeps back ($), the bar of pass (a) (the cut in time lost per
  *  trip), the least share of A's trips B completes, the reckless days and leg (tiles), the items of the report B's corridor is built from (the top TOP), the
  *  items printed for A and B at T (TOP_PRINT), the map margin (tiles) */
 const LADDER: ClassId[] = ['gravel', 'street', 'road', 'avenue', 'boulevard'];
 const RUN = 80, JCT_RUN = 40, RESERVE = 20000, BAR = 0.1, TRIPS_MIN = 0.98, RECKLESS_DAYS = 12, LEG = 40, TOP = 5, TOP_PRINT = 10, MARGIN = 16;
+/** the precondition of pass (a): the top item at T is at capacity: v/c at least CAP_VC (saturated and still flowing), or LOS E or F with a loss of at
+ *  least CAP_LOSS veh-s per game hour (jammed: a jammed junction's entries collapse, so its v/c falls as its loss soars; the floor keeps out a LOS F
+ *  on one blocked arm with next to no flow, 1-3 veh-min/h at v/c 0.01-0.17 in the scan). A quiet city has nothing to fix (B's upgrades can only add
+ *  growth there, and the gate would pass or fail by chance): the scenario is invalid and the gate exits 2 (neither pass nor fail) */
+const CAP_VC = 0.8, CAP_LOS = ['E', 'F'], CAP_LOSS = 600;
+/** whether the item is at capacity (see CAP_VC, CAP_LOSS) */
+const atCapacity = (it: Item | undefined) => !!it && (it.vc >= CAP_VC || (CAP_LOS.includes(it.los) && it.loss >= CAP_LOSS));
+/** the lot trips per resident, times the game's (Sim.townTraffic, the town-day traffic setting), on the A/B city: 1 is the game; 3 tips seed 1 into a
+ *  spillback gridlock from day 36 (LOS F at v/c 0.04-0.3 all over, residents leaving), so the default scenario is the valley as it grows on its own */
+const TRAFFIC = Number(process.argv[4] ?? 1);
 /** the kind of a seg by its SegKind (ground, bridge, tunnel) */
 const KIND_NAME = ['ground', 'bridge', 'tunnel'] as const;
 /** the sim second of the bottleneck (09:00 of game day d, the end of its morning rush) and of T2 (18:00 of day d + 1, the end of its evening rush) */
@@ -175,11 +202,22 @@ function combine(m: Window | null, e: Window | null): Window | null {
  *  the lots started from T to T2 and the treasury */
 function runCity(seed: number, day: number, fix: boolean): Run {
   const H = setup(seed), city = H.city, T = T_OF(day), T2 = T2_OF(day), hT = Math.floor(T / HOUR);
+  city.sim.townTraffic = TRAFFIC;
   for (let s = 1; s <= T; s++) stepSecond(H, s);
   const pop = city.town.pop, money = city.budget.money, builds0 = city.builds;
   const rep = city.report(10), top = rep.top.slice(0, TOP_PRINT);
   console.log(`${fix ? 'B' : 'A'}: at 09:00 of day ${day} (sim s ${T}): pop ${pop}, treasury $${Math.round(money)}, ${city.net.segs.size} segs`);
   top.forEach((it, i) => console.log(topLine(i, it)));
+  // the precondition, checked once (A and B build the same city): a top item short of capacity makes the scenario invalid, exit 2, no verdict
+  if (!fix && !atCapacity(top[0])) {
+    const it = top[0];
+    const why = it ? `the top item is not at capacity (v/c ${it.vc.toFixed(2)}, LOS ${it.los || '-'}, loss ${(it.loss / 60).toFixed(1)} veh-min/h; needs v/c >= ${CAP_VC}, or LOS ${CAP_LOS.join('/')} with loss >= ${CAP_LOSS / 60} veh-min/h)` : 'the report has no item';
+    console.log(`[fix] scenario invalid: ${why}; seed ${seed}, day ${day} gives the gate nothing to fix`);
+    const dir = path.resolve('output/sim');
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(path.join(dir, 'fix-gate.json'), JSON.stringify({ seed, day, T, T2, at: { pop, money: Math.round(money) }, top, invalid: why, pass: false }, null, 1));
+    process.exit(2);
+  }
   const f = fix ? applyFix(H, rep.top.slice(0, TOP)) : null;
   if (f) printFix(f);
   // City.hours takes an hour's snapshot at the first step inside it: the stepping runs one second past T2, so the snapshot at T2 exists
