@@ -10,7 +10,7 @@ import { SHADOW_STRIDE, SPRITE_STRIDE, VECTOR_STRIDE } from './gl';
 import type { Prop } from './types';
 import { castsShadow, contactShadow, placeholderBoxes, type ContactShadow, type ShadowSpot } from './shadow-shape';
 import { lookOf } from './newart';
-import { vectorMesh } from './shadow-vector';
+import { vectorMesh, type VectorRange } from './shadow-vector';
 
 /** anything drawn like a prop: library item, anchor (tiles), flip, scale, footprint (tiles) */
 export interface Drawable { item: number; x: number; y: number; flip: boolean; scale: number; x0: number; y0: number; x1: number; y1: number; /** a moving car (SimClient.visible): already drawn at CAR_SCALE */ moving?: boolean;
@@ -31,7 +31,7 @@ export const VECTOR = { on: true };
 /** a mesh of at most this many indices draws in the small set (gl.ts drawVector runs every instance of a set to its largest count) */
 export const VECTOR_SMALL = 240;
 /** per library item: its vector mesh's range (null: none, T141's shadows); filled as items are first packed */
-const VEC: ({ first: number; count: number } | null)[] = [];
+const VEC: (VectorRange | null)[] = [];
 export const vecOf = (item: number) => VEC[item] !== undefined ? VEC[item]! : (VEC[item] = vectorMesh().at.get(LIBRARY[item]!.id) ?? null);
 
 const BUCKET = 256;
@@ -107,8 +107,9 @@ export function packVector(d: Drawable, out: Float32Array, o: number, i: number,
   if (!VECTOR.on || d.lift) return false;
   const a = spriteAnchor(d); if (!a) return false;
   const v = vecOf(a.item); if (!v || !v.count) return false;
+  // (a mirrored sprite draws its mirrored mesh)
   out[o] = a.X; out[o + 1] = a.Y; out[o + 2] = a.flip ? -a.k : a.k; out[o + 3] = a.k;
-  out[o + 4] = v.first; out[o + 5] = v.count; out[o + 6] = 0; out[o + 7] = 0;
+  out[o + 4] = a.flip ? v.mfirst : v.first; out[o + 5] = a.flip ? v.mcount : v.count; out[o + 6] = 0; out[o + 7] = 0;
   clip(out, o + 8, i, j);
   out[o + 12] = rect[0]!; out[o + 13] = rect[1]!; out[o + 14] = rect[2]!; out[o + 15] = rect[3]!;
   return true;
@@ -194,10 +195,10 @@ export class SpriteTiles {
     // the vector shadows (T142), small meshes and big ones
     const vs = new Float32Array(n * VECTOR_STRIDE), vb = new Float32Array(n * VECTOR_STRIDE); let ns = 0, nb = 0; t.vmax = [0, 0];
     for (let i = 0; i < n; i++) {
-      const p = t.order[i]!, v = SHADOWED(LIBRARY[p.item]!) ? vecOf(lookOf(p).item) : null; if (!v || !v.count) continue;
-      const big = v.count > VECTOR_SMALL, arr = big ? vb : vs, at = (big ? nb : ns) * VECTOR_STRIDE;
+      const p = t.order[i]!, l = lookOf(p), v = SHADOWED(LIBRARY[p.item]!) ? vecOf(l.item) : null, c = v ? (l.flip ? v.mcount : v.count) : 0; if (!c) continue;
+      const big = c > VECTOR_SMALL, arr = big ? vb : vs, at = (big ? nb : ns) * VECTOR_STRIDE;
       if (!packVector(p, arr, at, t.i, t.j, t.rects.subarray(i * 4, i * 4 + 4))) continue;
-      if (big) { nb++; t.vmax[1] = Math.max(t.vmax[1], v.count); } else { ns++; t.vmax[0] = Math.max(t.vmax[0], v.count); }
+      if (big) { nb++; t.vmax[1] = Math.max(t.vmax[1], c); } else { ns++; t.vmax[0] = Math.max(t.vmax[0], c); }
     }
     t.vsmall = vs.slice(0, ns * VECTOR_STRIDE); t.vbig = vb.slice(0, nb * VECTOR_STRIDE);
     t.buckets = new Map();

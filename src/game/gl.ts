@@ -141,7 +141,7 @@ void main() {
 }`;
 // the vector shadows (T142, shadow-vector.ts): one instance per sprite, its mesh's triangles fetched from the mesh textures by gl_VertexID
 // (vertices past its count fold away). A vertex (x, y, h) about the anchor, in the picture's px, lands at (x, y) + h * the sun's shear, times
-// the sprite's scale (x mirrored with it); contact vertices (kind 0) have a small h, their lean. Each tile's copy of a sprite draws only what
+// the sprite's scale (a mirrored sprite draws the mirrored copy of its mesh); contact vertices (kind 0) have a small h, their lean. Each tile's copy of a sprite draws only what
 // falls from its part of the picture (the point h px up the picture, held to the picture's rect), so a sprite over several tiles draws once.
 // Feathered by the rim's edge value (smoothstep), darkness per vertex times the contact or the cast strength; the same cool multiply
 const VS_VEC = `#version 300 es
@@ -159,8 +159,8 @@ void main() {
   vec4 A = texelFetch(uVerts, ivec2(v % ${MESH_W}, v / ${MESH_W}), 0), B = texelFetch(uVerts, ivec2((v + 1) % ${MESH_W}, (v + 1) / ${MESH_W}), 0);
   float mul = A.w > 0.5 ? uMul.y : uMul.x;
   if (mul <= 0.0) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
-  vec2 w = aA.xy + vec2(A.x * aA.z, A.y * aA.w) + A.z * aA.w * uShear;
-  vSrc = aA.xy + vec2(A.x * aA.z, (A.y - A.z) * aA.w); vCore = B.x * mul; vEdge = B.y;
+  vec2 w = aA.xy + vec2(A.x, A.y) * aA.w + A.z * aA.w * uShear;
+  vSrc = aA.xy + vec2(A.x, A.y - A.z) * aA.w; vCore = B.x * mul; vEdge = B.y;
   vec2 s = (w - uCam.xy) * uCam.z + uScreen * 0.5;
   gl_Position = vec4(s.x / uScreen.x * 2.0 - 1.0, 1.0 - s.y / uScreen.y * 2.0, 0.0, 1.0);
 }`;

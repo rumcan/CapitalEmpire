@@ -40,6 +40,8 @@ export interface DraftHint {
  *  texel (0, 0)'s centre and the display px per texel */
 export interface DraftPicture { rgba: ArrayLike<number>; w: number; h: number; x0: number; y0: number; rx: number; ry: number }
 
+/** the alpha (0..255) a pixel needs to cast (a thin pole's soft edges included) */
+export const DRAFT_SOLID = 72;
 const clamp = (v: number, a: number, b: number) => (v < a ? a : v > b ? b : v);
 const r1 = (v: number) => Math.round(v);
 
@@ -49,7 +51,7 @@ export function draftShadow(pic: DraftPicture, kind: DraftKind, shear: { sx: num
   kind = hint.kind ?? kind;
   if (hint.none) return { n: hint.n ?? 'no shadow' };
   const A = (x: number, y: number) => rgba[(y * w + x) * 4 + 3]!;
-  const SOLID = 110;
+  const SOLID = DRAFT_SOLID;
   const X = (tx: number) => x0 + tx * rx, Y = (ty: number) => y0 + ty * ry;
   // 1. each column's lowest and highest opaque pixel (texels), ignoring columns with a lone speck
   const bot = new Float64Array(w).fill(-1), top = new Float64Array(w).fill(-1);
@@ -82,6 +84,23 @@ export function draftShadow(pic: DraftPicture, kind: DraftKind, shear: { sx: num
     for (let x = 0; x < w; x++) g[x] = interp(feet, x);
     mode = 'iso';
   }
+  // 2b. a box's depth (iso ground with a V: a building's walls, a car's body). Its footprint is the diamond on the V's three corners (the far
+  // corner = left + right - near), so a column stands over ground from the near edge g up to the far edge gb. A pixel more than the box's
+  // height above the near edge is its roof, standing further back: its height is held to the box's (hcap) and its foot moves back with it,
+  // so the roof's shadow is the walls' height long, not the picture's whole height (the old silhouette shadows' fault at the back)
+  const gb = Float64Array.from(g); let hcap = Infinity;
+  if (mode === 'iso') {
+    const tx = cols.filter(x => touch[x]);
+    if (tx.length) {
+      const xl = tx[0]!, xr = tx[tx.length - 1]!; let xf = xl; for (const x of tx) if (g[x]! > g[xf]!) xf = x;
+      const yl = g[xl]!, yr = g[xr]!, yf = g[xf]!, xbk = xl + xr - xf, ybk = yl + yr - yf;
+      if ((xr - xl) * rx > 0.3 * Wd && yf - Math.max(yl, yr) > 0.12 * slope * (xr - xl)) {
+        for (let x = xl; x <= xr; x++) gb[x] = x <= xbk ? yl + (ybk - yl) * (x - xl) / Math.max(1e-6, xbk - xl) : ybk + (yr - ybk) * (x - xbk) / Math.max(1e-6, xr - xbk);
+        const hs: number[] = []; for (let x = xl; x <= xr; x++) if (top[x]! >= 0) hs.push(gb[x]! - top[x]!);
+        hs.sort((a, b) => a - b); if (hs.length) hcap = Math.max(hs[Math.floor(hs.length * 0.7)]!, 0.2 * H);
+      }
+    }
+  }
   const hk = hint.height ?? 1, minH = (hint.minH ?? 0), below = hint.groundBelow;
   const out: VectorShadow = {};
   // 3. the cast: land every opaque pixel on the ground, fill, trace
@@ -92,23 +111,35 @@ export function draftShadow(pic: DraftPicture, kind: DraftKind, shear: { sx: num
     for (const x of cols) for (let y = top[x]!; y <= bot[x]!; y++) {
       if (A(x, y) < SOLID) continue;
       const Yd = Y(y); if (below !== undefined && Yd > below) continue;
-      let hh = (g[x]! - y) * ry; if (hh < minH) continue; hh = Math.max(0, hh) * hk;
-      const gx = X(x), gy = Y(g[x]!), px = gx + hh * sx, py = gy + hh * sy;
+      // the pixel's foot (texel rows): its column's near ground, or further back for a box's roof (2b)
+      const foot = gb[x]! < g[x]! ? Math.min(g[x]!, Math.max(gb[x]!, y + hcap)) : g[x]!;
+      let hh = (foot - y) * ry; if ((g[x]! - y) * ry < minH) continue; hh = Math.max(0, hh) * hk;
+      const gx = X(x), gy = Y(foot), px = gx + hh * sx, py = gy + hh * sy;
       pts.push(px, py, hh); L = Math.min(L, px); R = Math.max(R, px); T = Math.min(T, py); B = Math.max(B, py);
     }
     if (pts.length >= 9) {
-      const cs = Math.max(rx, ry, (R - L) / 360, (B - T) / 360), GW = Math.ceil((R - L) / cs) + 5, GH = Math.ceil((B - T) / cs) + 5, ox = L - 2 * cs, oy = T - 2 * cs;
+      const leafy = kind === 'tree' || kind === 'plant', cs = Math.max(rx, ry, (R - L) / 360, (B - T) / 360);
+      const blur = leafy ? Math.max(2, Math.round(0.035 * Math.max(R - L, B - T) / cs)) : 0, pad = 2 + blur;
+      const GW = Math.ceil((R - L) / cs) + 1 + 2 * pad, GH = Math.ceil((B - T) / cs) + 1 + 2 * pad, ox = L - pad * cs, oy = T - pad * cs;
       const grid = new Uint8Array(GW * GH), hsum = new Float32Array(GW * GH), hn = new Uint16Array(GW * GH);
       for (let i = 0; i < pts.length; i += 3) { const c = Math.floor((pts[i + 1]! - oy) / cs) * GW + Math.floor((pts[i]! - ox) / cs); grid[c] = 1; hsum[c] += pts[i + 2]!; hn[c]++; }
       // close (dilate, fill small holes, erode), so the landed pixels make one shape
-      const closed = erode(fillSmallHoles(dilate(grid, GW, GH), GW, GH, Math.max(6, (GW * GH) / 2500)), GW, GH);
+      // (a tree's or a plant's twice: its leaves' shadow is one soft shape, not every twig's)
+      // (a tree's or a plant's blurred into one soft shape: its leaves' shadow, not every twig's and needle's)
+      const closed = leafy ? smooth(dilate(grid, GW, GH), GW, GH, blur)
+        : erode(fillSmallHoles(dilate(grid, GW, GH), GW, GH, Math.max(6, (GW * GH) / 2500)), GW, GH);
       const rings = traceRings(closed, GW, GH).map(r => ({ r, a: ringArea(r) }));
+      // see-through things (a chain-link mesh, a lattice) cast a lighter shadow: the share of the filled shape the pixels really landed on
+      let landed = 0, filled = 0; for (let c = 0; c < grid.length; c++) { landed += grid[c]!; filled += closed[c]!; }
+      const cover = filled ? landed / filled : 1;
+      if (cover < 0.8 && hint.ks === undefined) out.ks = Math.round(clamp(0.2 + cover, 0.45, 1) * 100) / 100;
       const biggest = Math.max(0, ...rings.map(r => Math.abs(r.a)));
-      const keep = rings.filter(r => (r.a > 0 ? r.a > Math.max(4, biggest * 0.004) : -r.a > Math.max(16, biggest * 0.02)));
+      // (specks far from the rest are a roof's ornament landing apart: dropped; holes only when they are big enough to see)
+      const keep = rings.filter(r => (r.a > 0 ? r.a > Math.max(6, biggest * 0.03) : -r.a > Math.max(24, biggest * 0.03)));
       // the height under each landed cell, for a vertex's foot (the nearest cells' mean)
       const hAt = (vx: number, vy: number) => {
         let s = 0, n = 0; const cx = vx, cy = vy;
-        for (let rad = 1; rad <= 4 && !n; rad++) for (let dy = -rad; dy < rad; dy++) for (let dx = -rad; dx < rad; dx++) {
+        for (let rad = 1; rad <= 6 + blur && !n; rad++) for (let dy = -rad; dy < rad; dy++) for (let dx = -rad; dx < rad; dx++) {
           const gx = Math.floor(cx) + dx, gy = Math.floor(cy) + dy; if (gx < 0 || gy < 0 || gx >= GW || gy >= GH) continue;
           const c = gy * GW + gx; if (hn[c]) { s += hsum[c]! / hn[c]!; n++; }
         }
@@ -116,9 +147,11 @@ export function draftShadow(pic: DraftPicture, kind: DraftKind, shear: { sx: num
       };
       const s: number[][] = [];
       for (const { r, a } of keep) {
-        const cap = a > 0 ? 40 : 14;
-        let tolDP = Math.max(1.0, 0.004 * Math.max(GW, GH)), simp = simplifyRing(r, tolDP);
+        const cap = a > 0 ? 26 : 10;
+        let tolDP = Math.max(1.2, 0.006 * Math.max(GW, GH)), simp = simplifyRing(r, tolDP);
         while (simp.length > cap) { tolDP *= 1.3; simp = simplifyRing(r, tolDP); }
+        // never a ring that crosses itself (it would fill wrong): simplify less until it does not
+        while (selfCrosses(simp) && tolDP > 0.6) { tolDP *= 0.75; simp = simplifyRing(r, tolDP); }
         if (simp.length < 3) continue;
         const fl: number[] = [];
         for (const [vx, vy] of simp) {
@@ -149,8 +182,15 @@ export function draftShadow(pic: DraftPicture, kind: DraftKind, shear: { sx: num
       // a tree: one soft pool at its trunk's foot (the canopy keeps the sky off the ground round it), a little wider than the trunk
       const run = merged.reduce((a, b) => (b[1] - b[0] > a[1] - a[0] ? b : a)), xc = (run[0] + run[1]) / 2;
       const rr = clamp(0.2 * Wd, Math.max(6, (run[1] - run[0] + 1) * rx), 70);
-      c.push(ellipse(X(xc), gY(xc), rr, rr * 0.5, 12));
-      out.kc = hint.kc ?? 0.42;
+      c.push(ellipse(X(xc), gY(xc), rr, rr * 0.5, 16));
+      out.kc = hint.kc ?? 0.38; out.fc = hint.fc ?? Math.round(clamp(0.45 * rr, 3, 24));
+      // (its canopy lets some light through)
+      if (hint.ks === undefined) out.ks = Math.min(out.ks ?? 1, 0.85);
+    } else if (kind === 'plant' && merged.length) {
+      // a plant: one pool under its base (its leaves touch the ground here and there: no spot under each)
+      const a = merged[0]![0], b = merged[merged.length - 1]![1], xc = (a + b) / 2, rr = Math.max(4, 0.45 * (b - a + 1) * rx);
+      c.push(ellipse(X(xc), gY(xc), rr, rr * 0.5, 14));
+      out.kc = hint.kc ?? 0.55; out.fc = hint.fc ?? Math.round(clamp(0.3 * rr, 2, 12));
     } else {
       for (const [a, b] of merged) {
         const W = (b - a + 1) * rx, xc = (a + b) / 2;
@@ -158,10 +198,10 @@ export function draftShadow(pic: DraftPicture, kind: DraftKind, shear: { sx: num
           const rr = Math.max(W * 0.75 + 2, 3.5); c.push(ellipse(X(xc), gY(xc), rr, rr * 0.5, 10));
         } else {
           // a band along the ground line: a little under the thing (hidden by it, so the rim reads as one shape) and a little out in front
-          const up = clamp(0.25 * Hd, 3, 14), dn = clamp(0.05 * W, 2.5, kind === 'vehicle' ? 9 : 7), e = dn;
-          const xs: number[] = []; const step = Math.max(1, Math.round((b - a) / 10));
+          const up = clamp(0.25 * Hd, 3, 14), dn = clamp(0.07 * W, 3, kind === 'vehicle' ? 10 : 9), e = dn;
+          const xs: number[] = []; const step = Math.max(1, Math.round((b - a) / 8));
           for (let x = a; x < b; x += step) xs.push(x); xs.push(b);
-          const line = simplifyOpen(xs.map(x => [X(x), gY(x)] as [number, number]), 1.2);
+          const line = simplifyOpen(xs.map(x => [X(x), gY(x)] as [number, number]), 2);
           const ring: number[] = [];
           ring.push(r1(line[0]![0] - e), r1(line[0]![1]));
           for (const [px, py] of line) ring.push(r1(px), r1(py - up));
@@ -176,6 +216,8 @@ export function draftShadow(pic: DraftPicture, kind: DraftKind, shear: { sx: num
   // the soft rims, from the size
   const size = Math.max(Wd, Hd);
   out.f = hint.f ?? Math.round(clamp(0.012 * size, 2, 6) * 2) / 2;
+  // a tree's shadow softens more with height (its canopy is high and lets light through at its edges)
+  if (kind === 'tree' && hint.p === undefined) out.p = 0.08;
   for (const k of ['p', 'fc', 'kc', 'cl', 'ks', 'fade'] as const) if (hint[k] !== undefined) out[k] = hint[k];
   if (hint.n) out.n = hint.n;
   return out;
@@ -190,6 +232,31 @@ function interp(pts: [number, number][], x: number) {
 /** an ellipse ring (display px), wound positive */
 function ellipse(cx: number, cy: number, ex: number, ey: number, n: number): number[] {
   const out: number[] = []; for (let i = 0; i < n; i++) { const a = (i / n) * Math.PI * 2; out.push(r1(cx + Math.cos(a) * ex), r1(cy + Math.sin(a) * ey)); } return out;
+}
+/** a box blur of radius r (separable, twice: near a Gaussian) then the half threshold: a smooth outline */
+function smooth(g: Uint8Array, W: number, H: number, r: number) {
+  let a = Float32Array.from(g);
+  const pass = (src: Float32Array, horiz: boolean) => {
+    const o = new Float32Array(W * H), n = 2 * r + 1;
+    if (horiz) for (let y = 0; y < H; y++) { let s = 0; for (let x = -r; x <= r; x++) s += x >= 0 && x < W ? src[y * W + x]! : 0; for (let x = 0; x < W; x++) { o[y * W + x] = s / n; const xa = x - r, xb = x + r + 1; if (xa >= 0) s -= src[y * W + xa]!; if (xb < W) s += src[y * W + xb]!; } }
+    else for (let x = 0; x < W; x++) { let s = 0; for (let y = -r; y <= r; y++) s += y >= 0 && y < H ? src[y * W + x]! : 0; for (let y = 0; y < H; y++) { o[y * W + x] = s / n; const ya = y - r, yb = y + r + 1; if (ya >= 0) s -= src[ya * W + x]!; if (yb < H) s += src[yb * W + x]!; } }
+    return o;
+  };
+  for (let k = 0; k < 2; k++) a = pass(pass(a, true), false);
+  const o = new Uint8Array(W * H); for (let i = 0; i < o.length; i++) o[i] = a[i]! >= 0.42 ? 1 : 0;
+  // (the grid's border stays empty, so every ring closes inside it)
+  for (let x = 0; x < W; x++) { o[x] = 0; o[(H - 1) * W + x] = 0; } for (let y = 0; y < H; y++) { o[y * W] = 0; o[y * W + W - 1] = 0; }
+  return o;
+}
+function selfCrosses(r: [number, number][]) {
+  const n = r.length, cr = (o: [number, number], a: [number, number], b: [number, number]) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+  for (let i = 0; i < n; i++) for (let j = i + 2; j < n; j++) {
+    if (i === 0 && j === n - 1) continue;
+    const a = r[i]!, b = r[(i + 1) % n]!, c = r[j]!, d = r[(j + 1) % n]!;
+    const d1 = cr(c, d, a), d2 = cr(c, d, b), d3 = cr(a, b, c), d4 = cr(a, b, d);
+    if (((d1 > 0 && d2 < 0) || (d1 < 0 && d2 > 0)) && ((d3 > 0 && d4 < 0) || (d3 < 0 && d4 > 0))) return true;
+  }
+  return false;
 }
 function dilate(g: Uint8Array, W: number, H: number) {
   const o = new Uint8Array(W * H);

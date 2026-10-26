@@ -10,7 +10,7 @@ import { join } from 'node:path';
 const args = process.argv.slice(2), opt = (k, d) => { const i = args.indexOf(`--${k}`); return i >= 0 ? args[i + 1] : d; };
 const base = opt('base', 'http://127.0.0.1:5186/'), out = opt('out', 'output/shadow-audit');
 const cats = opt('cats', 'trees,poles,props,golf,range,vehicles,walkers,buildings,fences').split(','), scales = opt('scales', '1,2').split(',').map(Number);
-const only = opt('pages', ''), measure = args.includes('--measure');
+const only = opt("pages", ""), measure = args.includes("--measure"), extra = opt("q", ""), tag = opt("tag", "");
 mkdirSync(out, { recursive: true });
 const browser = await chromium.launch({ channel: 'msedge', headless: true, args: ['--enable-gpu', '--ignore-gpu-blocklist', '--use-angle=d3d11'] });
 try {
@@ -22,7 +22,7 @@ try {
       let pages = 1;
       for (let n = 0; n < pages; n++) {
         if (only && !only.split(',').includes(String(n))) { if (n === 0) { /* still learn the page count */ } else continue; }
-        const url = `${base}?shadows=audit&cat=${cat}&page=${n}&w=${1600 / dpr}${measure && n === 0 && dpr === 1 ? '&measure=1' : ''}`;
+        const url = `${base}?shadows=audit&cat=${cat}&page=${n}&w=${1600 / dpr}${measure && n === 0 && dpr === 1 ? "&measure=1" : ""}${extra}`;
         await page.goto(url);
         await page.waitForFunction(() => window.__shadowAudit?.ready || window.__shadowAudit?.error, null, { timeout: 120000 });
         const st = await page.evaluate(() => window.__shadowAudit);
@@ -32,7 +32,7 @@ try {
         if (dpr === 1) writeFileSync(join(out, `items-${cat}-${n}.json`), JSON.stringify(st.items));
         if (only && !only.split(',').includes(String(n))) continue;
         const png = await page.locator('#root > div').screenshot({ type: 'png' });
-        const file = join(out, `${cat}-${String(n).padStart(2, '0')}-${dpr === 1 ? '30pct' : '2x'}.jpg`);
+        const file = join(out, `${cat}-${String(n).padStart(2, '0')}-${dpr === 1 ? '30pct' : '2x'}${tag}.jpg`);
         await sharp(png).jpeg({ quality: 80, mozjpeg: true }).toFile(file);
         console.log(file, `${st.items.length} items`, st.soft ? `(${st.soft} cells soft)` : '');
       }

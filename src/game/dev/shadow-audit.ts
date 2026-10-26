@@ -11,7 +11,7 @@ import { GLRenderer, SHADOW_STRIDE, SPRITE_STRIDE, VECTOR_STRIDE } from '../gl';
 import { webpSource } from '../atlas-gl';
 import { neededLevel, type PageWant } from '../atlas-pages';
 import { SpriteTiles, spriteRect, VECTOR, vecOf } from '../sprites';
-import { vectorMesh } from '../shadow-vector';
+import { VECTOR_SHADOWS, vectorMesh } from '../shadow-vector';
 import { HH, HW, SPR_H, SPR_W, worldX, worldY } from '../iso';
 import { CAST, castShear } from '../cast-shadow';
 import * as SHAPE from '../shadow-shape';
@@ -21,6 +21,8 @@ import type { Prop } from '../types';
 import { AUDIT_CATS, auditEntries, type AuditCat, type AuditEntry } from './shadow-audit-items';
 
 const MODES = ['both', 'contact', 'cast'] as const;
+/** the strips drawn: all three, or (&strips=both, T142's review sheets) the first alone */
+let NS = 3;
 /** engine.ts shadowStrength's default */
 const CONTACT_STRENGTH = 1.1;
 const GROUND: [number, number, number] = [150 / 255, 170 / 255, 118 / 255];
@@ -69,6 +71,12 @@ function extentsOf(e: AuditEntry) {
   let L = Math.min(r[0], r[0] + H * sh.sx), R = Math.max(r[2], r[2] + H * sh.sx), T = r[1], B = Math.max(r[3], fy + H * sh.sy);
   const corners = [[p.x0, p.y0], [p.x1, p.y0], [p.x1, p.y1], [p.x0, p.y1]] as const;
   for (const [x, y] of corners) { L = Math.min(L, worldX(x, y)); R = Math.max(R, worldX(x, y)); T = Math.min(T, worldY(x, y)); B = Math.max(B, worldY(x, y)); }
+  // the drawn shapes' reach (T142; whether drawn or not, so the sheets before and after share one layout)
+  const it = LIBRARY[lookOf(p).item]!, vs = VECTOR_SHADOWS[it.id], v = vs?.same ? VECTOR_SHADOWS[vs.same] : vs, k = e.scale, m = e.flip ? -1 : 1;
+  for (const ring of v?.s ?? []) for (let i = 0; i + 2 < ring.length; i += 3) {
+    const x = (m * ring[i]! + ring[i + 2]! * sh.sx) * k, y = (ring[i + 1]! + ring[i + 2]! * sh.sy) * k;
+    L = Math.min(L, x - 8); R = Math.max(R, x + 8); B = Math.max(B, y + 8);
+  }
   // the contact shadow lies within the footprint and the picture's width, give or take its feather and lean: a margin (the same layout before
   // and after a change to the shadows)
   L -= 40; R += 24; B += 24;
@@ -83,7 +91,7 @@ interface Page { rows: Row[]; h: number; n: number }
 function layout(entries: AuditEntry[], width: number, z: number, per: number, maxH: number): Page[] {
   const left = 26 / z, minW = 118 / z, gap = 6 / z, label = 40 / z, pages: Page[] = [];
   let page: Page = { rows: [], h: 8 / z, n: 0 }, row: Row | null = null, x = left;
-  const closeRow = () => { if (!row) return; row.h = row.strip * 3 + label + gap; page.h += row.h; row = null; };
+  const closeRow = () => { if (!row) return; row.h = row.strip * NS + label + gap; page.h += row.h; row = null; };
   for (const e of entries) {
     const ex = extentsOf(e), w = Math.max(minW, ex.R - ex.L), h = ex.B - ex.T;
     if (row && (x + w > width || page.n >= per)) closeRow();
@@ -128,7 +136,7 @@ async function measure(entries: AuditEntry[]) {
 export async function startShadowAudit(root: HTMLElement) {
   const q = new URLSearchParams(location.search), cat = (q.get('cat') ?? 'trees') as AuditCat, pageNo = +(q.get('page') ?? 0);
   // &old=1: T141's shadows (the rule shapes and the silhouettes) for every picture, for the before sheets (T142)
-  VECTOR.on = q.get('old') !== '1';
+  VECTOR.on = q.get('old') !== '1'; NS = q.get('strips') === 'both' ? 1 : 3;
   const z = +(q.get('z') ?? 0.3), wCss = +(q.get('w') ?? 1600), per = +(q.get('per') ?? 40), dpr = window.devicePixelRatio || 1, maxDev = +(q.get('h') ?? 3600);
   W.__shadowAudit = { ready: false, pages: 0, page: pageNo, cat, items: [] };
   document.title = `Shadow audit: ${cat} ${pageNo}`;
@@ -154,7 +162,7 @@ export async function startShadowAudit(root: HTMLElement) {
   for (let t = t0; t <= t1; t++) { g.beginPath(); g.moveTo(t, t0); g.lineTo(t, t1); g.moveTo(t0, t); g.lineTo(t1, t); g.stroke(); }
   g.restore();
   for (const row of page.rows) {
-    MODES.forEach((m, mi) => {
+    MODES.slice(0, NS).forEach((m, mi) => {
       const y0 = row.y + mi * row.strip;
       if (mi) { g.fillStyle = 'rgba(0,0,0,0.05)'; g.fillRect(0, y0 * z, wCss, 1); }
       for (const c of row.cells) {
@@ -178,12 +186,12 @@ export async function startShadowAudit(root: HTMLElement) {
   // the labels: each strip's mode down the left, each cell's id and shape under its strips
   const l = lab.getContext('2d')!; l.scale(dpr, dpr); l.textBaseline = 'top';
   for (const row of page.rows) {
-    MODES.forEach((m, mi) => {
+    MODES.slice(0, NS).forEach((m, mi) => {
       l.save(); l.translate(4, (row.y + mi * row.strip + row.strip / 2) * z); l.rotate(-Math.PI / 2); l.font = 'bold 11px sans-serif'; l.textAlign = 'center';
       l.fillStyle = 'rgba(0,0,0,0.65)'; l.fillText(m.toUpperCase(), 0, 0); l.restore();
     });
     for (const c of row.cells) {
-      const it = LIBRARY[c.e.item]!, x = c.x * z + 3, w = c.w * z - 6, y = (row.y + row.strip * 3) * z + 2, p = propOf(c.e, 0, 0), s = shapeOf(p);
+      const it = LIBRARY[c.e.item]!, x = c.x * z + 3, w = c.w * z - 6, y = (row.y + row.strip * NS) * z + 2, p = propOf(c.e, 0, 0), s = shapeOf(p);
       const vec = VECTOR.on ? vecOf(lookOf(p).item) : null;
       const line2 = vec ? `drawn ${vec.count / 3} tris${c.e.scale !== 1 ? ` s${c.e.scale.toFixed(2)}` : ""}` : s ? `${s.round ? "o" : "[]"} ${s.hx.toFixed(2)}x${s.hy.toFixed(2)} ${s.kind}${s.cast ? "" : " nocast"}${c.e.scale !== 1 ? ` s${c.e.scale.toFixed(2)}` : ""}` : "none";
       l.fillStyle = 'rgba(255,255,255,0.88)'; l.fillRect(x - 2, y - 1, w + 4, 38);

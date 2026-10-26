@@ -32,7 +32,9 @@ test('the mesh: a contact ring and a cast ring with a hole are filled and rimmed
   const m = buildVectorMesh({ a: e, b: { same: 'a' }, flat: {} });
   assert.deepEqual(m.at.get('b'), m.at.get('a'));
   assert.equal(m.at.get('flat')!.count, 0, 'an entry with no shapes draws none (a flat picture)');
-  const r = m.at.get('a')!; assert.equal(r.count % 3, 0);
+  const r = m.at.get('a')!; assert.equal(r.count % 3, 0); assert.equal(r.mcount, r.count, 'the mirrored copy has as many triangles');
+  // the mirrored copy: x negated, the same heights
+  assert.equal(m.verts[m.idx[r.mfirst]! * VERTEX_FLOATS + 3], m.verts[m.idx[r.first]! * VERTEX_FLOATS + 3]);
   for (let i = r.first; i < r.first + r.count; i++) assert.ok(m.idx[i]! < m.nVerts);
   // the fill: 2 triangles for the contact, 8 for the cast square with its hole bridged; the rims: 2 triangles an edge (4 + 4 + 4 edges)
   assert.equal(r.count / 3, 2 + 8 + 2 * 12);
@@ -120,7 +122,7 @@ test('the sprites: a picture with a shape packs one instance (mirrored with its 
   assert.ok(vecOf(i) && packVector(d, out, 0, 0, 0, spriteRect(d)), id);
   assert.equal(out[2], 1.5); assert.equal(out[3], 1.5); assert.equal(out[5], vecOf(i)!.count);
   assert.equal(contactOf(d), null, 'no T141 contact shape under a drawn one');
-  assert.ok(packVector({ ...d, flip: true }, out, 0, 0, 0, spriteRect({ ...d, flip: true })) && out[2] === -1.5, 'mirrored: x mirrored');
+  assert.ok(packVector({ ...d, flip: true }, out, 0, 0, 0, spriteRect({ ...d, flip: true })) && out[4] === vecOf(i)!.mfirst && out[5] === vecOf(i)!.mcount, 'mirrored: its mirrored mesh');
   assert.equal(packVector({ ...d, lift: 40 }, out, 0, 0, 0, spriteRect(d)), false, 'a lifted sprite casts none');
   VECTOR.on = false;
   assert.equal(packVector(d, out, 0, 0, 0, spriteRect(d)), false);

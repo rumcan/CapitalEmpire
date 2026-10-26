@@ -22,9 +22,9 @@ export interface VectorShadow {
   s?: number[][];
   /** the cast shape's soft rim at its foot (display px; default 3) and its growth per px of height (the penumbra; default 0.04) */
   f?: number; p?: number;
-  /** the contact shape's soft rim (display px; default from its size) and darkness (0..1; default 0.6) */
+  /** the contact shape's soft rim (display px; default from its size) and darkness (0..1; default 0.7) */
   fc?: number; kc?: number;
-  /** the contact shape's lean along the sun, as a height (display px; default 4): it moves like a point that high */
+  /** the contact shape's lean along the sun, as a height (display px; default 8): it moves like a point that high */
   cl?: number;
   /** the cast shape's darkness at its foot (0..1, times the gear menu's strength; default 1) and how much lighter it gets at its tip (default 0.3) */
   ks?: number; fade?: number;
@@ -41,11 +41,14 @@ export const VECTOR_FALLBACK: readonly { id: string; why: string }[] = [
 ];
 
 /** a built mesh: vertices (VERTEX_FLOATS each) and triangle indices, and each picture's range in the indices */
-export interface VectorMesh { verts: Float32Array; idx: Uint32Array; nVerts: number; nIdx: number; at: Map<string, { first: number; count: number }> }
+/** a picture's two ranges in the indices: as drawn, and mirrored (a mirrored sprite: its x mirrored, the sun's side kept, so its rings are
+ *  filled where they land then) */
+export interface VectorRange { first: number; count: number; mfirst: number; mcount: number }
+export interface VectorMesh { verts: Float32Array; idx: Uint32Array; nVerts: number; nIdx: number; at: Map<string, VectorRange> }
 /** floats per mesh vertex: x, y, h (display px), kind (0 contact, 1 cast), core (darkness), edge (1 on the shape, 0 at the rim's outside), 2 spare */
 export const VERTEX_FLOATS = 8;
 
-const D = { f: 3, p: 0.04, kc: 0.6, cl: 4, ks: 1, fade: 0.3 };
+const D = { f: 3, p: 0.04, kc: 0.7, cl: 8, ks: 1, fade: 0.3 };
 
 type P = [number, number];
 const area = (r: P[]) => { let a = 0; for (let i = 0, n = r.length; i < n; i++) { const p = r[i]!, q = r[(i + 1) % n]!; a += p[0] * q[1] - q[0] * p[1]; } return a / 2; };
@@ -111,9 +114,11 @@ export const DRAFT_SHEAR = castShear(CAST);
 
 /** add one entry's triangles to the growing mesh: its contact rings, then its cast rings (outer rings and holes by winding), each filled and
  *  rimmed outward with its feather */
-function addEntry(e: VectorShadow, V: number[], I: number[]) {
+function addEntry(e: VectorShadow, V: number[], I: number[], mirror: boolean) {
   const sx = DRAFT_SHEAR.sx, sy = DRAFT_SHEAR.sy;
-  const kinds: [0 | 1, number[][], number][] = [[0, e.c ?? [], 2], [1, e.s ?? [], 3]];
+  // mirrored: every x negated and every ring reversed (so outer rings and holes keep their winding)
+  const mir = (rings: number[][], stride: number) => !mirror ? rings : rings.map(r => { const o: number[] = []; for (let i = r.length - stride; i >= 0; i -= stride) { o.push(-r[i]!); for (let k = 1; k < stride; k++) o.push(r[i + k]!); } return o; });
+  const kinds: [0 | 1, number[][], number][] = [[0, mir(e.c ?? [], 2), 2], [1, mir(e.s ?? [], 3), 3]];
   for (const [kind, rings, stride] of kinds) {
     if (!rings.length) continue;
     // the ground rings as drawn under the draft sun (x, y), with each vertex's base and height
@@ -159,11 +164,12 @@ const norm = (x: number, y: number): P => { const l = Math.hypot(x, y); return l
 
 /** build the mesh of every entry (each `same` entry shares its source's range) */
 export function buildVectorMesh(shapes: Readonly<Record<string, VectorShadow>> = VECTOR_SHADOWS): VectorMesh {
-  const V: number[] = [], I: number[] = [], at = new Map<string, { first: number; count: number }>();
+  const V: number[] = [], I: number[] = [], at = new Map<string, VectorRange>();
   for (const [id, e] of Object.entries(shapes)) {
     if (e.same) continue;
     // (an entry with no shapes draws none: a flat picture)
-    const first = I.length; addEntry(e, V, I); at.set(id, { first, count: I.length - first });
+    const first = I.length; addEntry(e, V, I, false); const mfirst = I.length; addEntry(e, V, I, true);
+    at.set(id, { first, count: mfirst - first, mfirst, mcount: I.length - mfirst });
   }
   for (const [id, e] of Object.entries(shapes)) if (e.same) { const r = at.get(e.same); if (r) at.set(id, r); }
   return { verts: Float32Array.from(V), idx: Uint32Array.from(I), nVerts: V.length / VERTEX_FLOATS, nIdx: I.length, at };
