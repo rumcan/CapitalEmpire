@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-27 23:57)
+## START HERE (kept current by the lead; last updated 2026-10-27 00:07)
 
 **Paste-ready start prompts for every role are in `docs/START-PROMPTS.md`:** the lead, a coding ticket, and the other sessions in this
 repo. The weekly usage cap is close (2026-10-26), so any chat may stop at any moment.
@@ -27,9 +27,11 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 ### In flight
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |
-| T112 | #199 | `arena/T112-sharp` | `.claude/worktrees/t112` | 5193 (check studio, stopped after) | **Resumed overnight** by the ground agent: merge main, re-check the T162/T165 heals byte-identical with sharp 0.35.5, KTX2 compare, check studio, audit/typecheck/test/build, PR. Ships only if every shipped byte is identical. |
+| T170 | #395 | `arena/T170-red-tests-new-tiles` | `.claude/worktrees/t166` | 5187 | Main's two red tests (RangeSim.newDay noPark; the painted-tiles manifest test must skip, not fail, when the art folder moved) and the art session's newer tiles shipped (putting-green-paint MID from the finished mid-v1 set if it tiles cleanly; long-grass, putting-green). Agent: the ground agent. |
+| T112 | #199 | `arena/T112-sharp` (PR #394) | `.claude/worktrees/t112` | — | **Approved, merge HELD for the morning restart:** a lock change makes the 5174 auto-updater run `npm ci` in theme-consistency (the live 5191 studio holds sharp there; the lot agent's t160 uses it by junction). Morning order: stop 5191 → merge #394 → let npm ci finish → restart 5191 and 5174. All shipped bytes identical on 0.35.5; audit 0. |
 | T169 | #392 | `arena/T169-every-use` | `.claude/worktrees/t160` | 5186 | P25: lots on the fly for every use (shops, industry, parks/civic): use groups in the model (v3), pools per group, the exam per group; a group ships only if its exam row looks at least as good as `?oldlots`. Agent: the lot agent. |
-| T112 | #199 | `arena/T112-sharp` (1872f0e) | `.claude/worktrees/t112` | — | **Paused** for T153: sharp 0.35.5 in, all packed art identical (260 images byte-identical; 16 view PNGs only re-tagged), still to do: the KTX2 check, the studio check, audit/typecheck/suite/build, the PR. Resume from #199. |
+| T170 | #395 | `arena/T170-red-tests-new-tiles` | `.claude/worktrees/t166` | 5187 | Main's two red tests (RangeSim.newDay noPark; the painted-tiles manifest test must skip, not fail, when the art folder moved) and the art session's newer tiles shipped (putting-green-paint MID from the finished mid-v1 set if it tiles cleanly; long-grass, putting-green). Agent: the ground agent. |
+| T112 | #199 | `arena/T112-sharp` (PR #394) | `.claude/worktrees/t112` | — | **Approved, merge HELD for the morning restart:** a lock change makes the 5174 auto-updater run `npm ci` in theme-consistency (the live 5191 studio holds sharp there; the lot agent's t160 uses it by junction). Morning order: stop 5191 → merge #394 → let npm ci finish → restart 5191 and 5174. All shipped bytes identical on 0.35.5; audit 0. |
 
 **Two coding agents at a time (the owner, 2026-10-26: first "maybe just too many background tasks?" after the studio tab died with the
 PC at 1.5 GB free, then "start up two coding agents"):** keep two coding agents running, start the next queue ticket when one lands, no
