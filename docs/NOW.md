@@ -1,8 +1,62 @@
-# NOW: the live work log (read docs/LEAD.md first)
+# NOW: the live work log
 
-Update this file **before** each edit and after each sub-step. If you are picking up from someone else: follow LEAD.md section 7.
+Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
+"History" is older and kept for reference.
 
-## Owner-requested integration (2026-10-23)
+## START HERE (kept current by the lead; last updated 2026-10-26 morning)
+
+**If you are a new AI, maybe on another Claude account, after a switch-over or a crash:**
+1. Read `CLAUDE.md`, this section, then `docs/AGENT-BRIEF.md`. That file holds the agent rules, the brief template, the progress
+   protocol, the ports and the restart checklist.
+2. Restart the 5174 auto-updater (`bash E:/ClaudeTemp/autoupdate-5174.sh` in the background). If http://localhost:5174 is down, start the
+   `.claude/launch.json` config `lead-game`. **5174 must serve `worktrees/theme-consistency`, never the main checkout.**
+3. Read the newest `E:/ClaudeTemp/nightly/<date>.md` and any open `[nightly]` issue. Real failures come first.
+4. Resume every in-flight ticket below: read its issue's last progress comment, commit any WIP left in its worktree, and start an agent on
+   its branch with AGENT-BRIEF's template.
+5. Then take the queue in order. Ask the owner only the questions marked as theirs.
+
+**The owner tests on http://localhost:5174.** The owner pre-approves the lead's recommended decisions (state them in chat). The lead
+merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of every change.
+
+### In flight
+| Ticket | Issue | Branch | Worktree | Port | State |
+| --- | --- | --- | --- | --- | --- |
+| T140 Town roads' kerb gap at chunk borders | #270 | `arena/T140-road-kerb` | an agent worktree under `.claude/worktrees` | 5189 | agent working (the same fix T139 made for cart paths, `cart-bevel.ts`) |
+| T141 Audit every prop's shadow (blob and box) for the top-right sun | #271 | `arena/T141-prop-shadows` | an agent worktree under `.claude/worktrees` | 5186 | agent working: audit sheets, `docs/art/SHADOW-AUDIT.md`, rule fixes, an override table |
+
+Find a worktree with `git worktree list | grep T14`. Each agent pushes its branch and comments on its issue after every sub-step.
+
+### Queue (in order)
+1. **The full regression.** The 2026-10-26 nightly never ran: it waited for a permission approval, and then the app quit. About 25 PRs
+   since 2026-10-25 evening have had only their own tests. Run typecheck, the full suite, the build and the gates, one heavy step at a time,
+   and fix real failures. The owner should allow the nightly session's commands so it runs unattended.
+2. **The owner's new grass paintings**, when they arrive. Import them with `scripts/assets/prep-painted-families.mjs` (the families list
+   in the script), then map them per surface in Studio › Painted.
+3. **P24 follow-ups:**
+   - a bigger range car park, or parking with the second tier (D49);
+   - overlapping labels at the range's shop front;
+   - the putt, chip and coaching clips;
+   - real art for the stand-ins in `docs/GOLF-SPRITES.md` (the range, practice and props kits).
+4. **The owner's call:** the top bar's chip words are icons only below 2200 px (T135). Bring the words back at 1920 if the owner asks.
+5. **Older lists:** T110's rest of the game (paint-edges rims, water glints, prop and tree shadows: T141 covers the props); P23 Phase 2
+   (one Streets tool, holes drawn like a road, season and hole cards); P22 T090-T098; P21 T101 and T103-T107; M2/M3 leftovers; T112
+   (the sharp bump). See the History sections below and `gh issue list --label arena --state open`.
+
+### Done recently (newest first; details in each PR)
+- 2026-10-26: T139 #268 cart-path bevel; T136 #267 Shadow slider for painted areas; T137 #266 three-way wall junctions; T135 #264
+  the new game's month, one grow label, the top bar on one row, unknown business types; T138 #263 the puck's marks off its face.
+- 2026-10-26: T134 #256 dark unbaked ground; T133 #255 World of Golf extras; T132 #251 range to first hole; T119 #248 New hole
+  finished; T122 #247 Run; T130 #245 practice greens; T131 #244 Props tool.
+- 2026-10-25: T129 #240 the range business (P24); T128 #234 painted ground everywhere.
+
+### Machine facts
+- **Memory:** the PC has 16 GB shared by several Claude sessions, VS Code and Codex. With many open, git checkouts of the 2-3 GB packs
+  fail (use `git -c checkout.workers=1`). Run one heavy step at a time.
+- **Disk:** E: has about 30-45 GB free. Each agent worktree with node_modules is about 4.3 GB. Remove it as soon as its PR merges.
+- **Others in the repo:** other sessions work here too (branches `lead/golf-play`, the `lot-presets` worktree on ports 5241 and 5242,
+  `finite-atlas-runtime-20261026`). Do not touch their worktrees.
+
+## History: owner-requested integration (2026-10-23)
 - Branch: `lead/merge-outstanding-20261023`, isolated checkout `worktrees/outstanding-merge-20261023`, from main `72317a9`.
 - Request: merge every outstanding product branch/PR into main and document the image-creation workflow in the handover and main repository.
 - Integrated: PRs #13 (historical sprite sources), #12 (completed grass catalogue), #17 (dusk sprite library, through `27eb91e`), #16 (ghost preview module), plus local shadow commit `b941683`, all without conflicts.
@@ -10,7 +64,7 @@ Update this file **before** each edit and after each sub-step. If you are pickin
 - Other worktrees remain untouched. The dirty frosty parking files are already landed through `99840d6`; local launcher changes are machine settings. Do not copy those old files onto main.
 - This integration does not start M2.5 or generate new images. The existing milestone plan below remains unchanged.
 
-## Status (2026-10-25 late, the lead after a power cut) — read this, then the handover below
+## History: status log 2026-10-25 late to 2026-10-26 morning (superseded by START HERE)
 
 - **Main:** 61263c5 (after #240). 5174 runs main (auto-updater restarted after the power cut: `bash E:/ClaudeTemp/autoupdate-5174.sh`
   in the background; the 5174 server is `.claude/launch.json` config `lead-game`). No nightly report yet (the first run is 2026-10-26 02:06).
@@ -65,7 +119,7 @@ Update this file **before** each edit and after each sub-step. If you are pickin
 - **Housekeeping:** each agent worktree with node_modules is ~4.3 GB. E: fell to 4.5 GB free on 2026-10-26 ~00:30; the lead removed this
   session's six merged worktrees (T119, T122, T128, T129/NOW, T130, T131). Remove each agent's worktree as soon as its PR merges.
 
-## HANDOVER (2026-10-25 evening, lead chat ended for context size) — start here
+## History: HANDOVER 2026-10-25 evening (its rules are now in docs/AGENT-BRIEF.md; its open work is in START HERE)
 
 **Main:** 864b910 (after #236). The owner tests on **http://localhost:5174** (dev server from `worktrees/theme-consistency`, branch
 lead/live; never edit that checkout by hand). The studio runs on 5191 when started (`.claude/launch.json` config `studio`).
