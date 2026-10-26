@@ -113,9 +113,13 @@ export type NetOp =
 
 /** g = ground chunk, m = district chunk (MID_K x MID_K, lite), p = planner chunk */
 export type TileKind = 'g' | 'm' | 'p';
+/** a light boot's limits for a ground worker (T157, boot.ts): the decoded tile-set tiles and painted pictures it keeps (null: the game's),
+ *  the photo textures it builds up front (null: all of grass-art.ts EAGER_PHOTO), whether it may write the browser's texture cache, whether
+ *  it draws its canvases on the CPU (soft), and whether its procedural textures are made on first use (lazy) */
+export interface WorkerLimits { tiles: number | null; painted: number | null; eager: string[] | null; saveCache: boolean; soft: boolean; lazy: boolean }
 export type ToWorker =
   | { t: 'grass'; cells: GrassCellView[]; strength: number; heat: boolean; mowing: boolean }
-  | { t: 'init'; art: GroundArt & { grassMix?: BaseGrassArt; presets?: PhotoTexEntry[]; grassArt?: GrassArt }; terrain: Uint8Array; height: Float32Array; waters: Waterway[]; build: boolean; peers: number }
+  | { t: 'init'; art: GroundArt & { grassMix?: BaseGrassArt; presets?: PhotoTexEntry[]; grassArt?: GrassArt }; terrain: Uint8Array; height: Float32Array; waters: Waterway[]; build: boolean; peers: number; limits?: WorkerLimits }
   | { t: 'textures'; snap: TexSnapshot }
   /** the game's Grass setting changed (painted or photo): every chunk is baked again */
   | { t: 'grassArt'; art: GrassArt }

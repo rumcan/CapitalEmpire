@@ -21,6 +21,7 @@ import { BUSINESS_IMAGE } from './game/business/art';
 import { BUSINESS_THUMBS } from './game/business-library';
 import type { SurgeView } from './game/event/surge';
 import { BUILD } from './game/save';
+import { bootFor } from './game/dev/lab-boot';
 import { PaintPanel } from './PaintPanel';
 import { CoursePanel } from './ui/course/CoursePanel';
 import { BuildingsPanel } from './ui/course/BuildingsPanel';
@@ -73,6 +74,9 @@ export default function App() {
   const overlayRef = useRef<HTMLCanvasElement>(null);
   const [fatal, setFatal] = useState('');
   const [game, setGame] = useState<Game | null>(null);
+  /** what the engine boots with (T157): the lot lab's light boot under ?lotlab (dev builds), else the game's; the lab draws no HUD or minimap */
+  const [boot] = useState(() => bootFor(location.search, import.meta.env.DEV));
+  const lab = boot.kind === 'lab';
   const [, bump] = useReducer((x: number) => x + 1, 0);
   const [help, setHelp] = useState(false);
   /** the settings menu (Save, New game, Empty map) open under its gear */
@@ -119,7 +123,7 @@ export default function App() {
   useEffect(() => {
     const canvas = overlayRef.current!;
     let g: Game;
-    try { g = new Game(canvasRef.current!, canvas); } catch (e) { setFatal((e as Error).message); return; }
+    try { g = new Game(canvasRef.current!, canvas, boot); } catch (e) { setFatal((e as Error).message); return; }
     // debug and headless-screenshot hooks
     Object.assign(window as unknown as Record<string, unknown>, { __game: g, __CLASSES: CLASSES });
     // the road builder's stress test (dev only): __roadFuzz(seed, steps) drives the road tools at random and reports what broke (on the live
@@ -201,7 +205,7 @@ export default function App() {
         </div>
       )}
 
-      {game && game.ready && (
+      {game && game.ready && !lab && (
         <>
           <div ref={topBar} className="pointer-events-none absolute left-0 right-0 top-0 z-30 flex flex-wrap items-start justify-between gap-2 p-3">
             <div className="pointer-events-auto glass flex items-center gap-2 px-4 py-2 min-[1600px]:gap-3">

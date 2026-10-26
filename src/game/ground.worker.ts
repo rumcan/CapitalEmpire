@@ -5,13 +5,15 @@ import { RoadNetwork } from './network';
 import type { FromWorker, ToWorker } from './ground-protocol';
 import { applyOps } from './netops';
 import { GroundPainter } from './renderer';
-import { Textures } from './textures';
+import { GRASS_TINTS, PAINTED_NAMES, Textures } from './textures';
 import { EAGER_PHOTO } from './grass-art';
 import { isPaintPhoto } from './paint';
 import { cacheKey, loadCached, restore, saveCached, snapshot } from './texture-share';
+import { lightPack } from './boot';
 import { WOODLAND_TEX } from './terrain-paint';
 import { VARIANT_IDS } from './living-ground';
 import { WALL_TEX } from './ext/course-walls';
+import { softCanvases } from './canvas2d';
 import { WOODLAND, lawnTexFor } from './painted-surfaces';
 
 const scope = self as unknown as DedicatedWorkerGlobalScope;
@@ -36,6 +38,10 @@ const hasTextures = new Promise<void>(res => { texReady = res; });
 const post = (m: FromWorker, transfer: Transferable[] = []) => scope.postMessage(m, transfer);
 /** the woodland floor's Fescue (terrain-paint.ts WOODLAND_TEX), a lazy photo: built once, before this worker's first full bake */
 let woods: Promise<void> | null = null;
+/** the photo textures this worker builds up front (a light boot's few, T157: init's limits); the others are built on first use */
+let eager: ReadonlySet<string> = EAGER_PHOTO;
+/** a light boot's: the screen-space textures are made on first use (Textures.lazy), also after a restore */
+let lazyTex = false;
 
 /** one message: init and the texture pack run on arrival (init waits for the pack); every other message runs after the one before it */
 const handle = async (m: ToWorker) => {
@@ -48,21 +54,29 @@ const handle = async (m: ToWorker) => {
       }
       case 'init': {
         painter.setTerrain(m.terrain, m.height, m.waters);
+        // a light boot's limits (T157, boot.ts): smaller decode caches, fewer photos built up front, the texture cache only read
+        const lim = m.limits;
+        if (lim?.tiles != null) tex.tileLimit = lim.tiles;
+        if (lim?.painted != null) tex.paintedLimit = lim.painted;
+        if (lim?.eager) eager = new Set(lim.eager);
+        if (lim?.soft) softCanvases(true);
+        lazyTex = !!lim?.lazy;
         // every worker (the builder, and the peers that restore its snapshot) takes the presets and the grass's angle and tilt from the art
         tex.configure(m.art);
         const t0 = performance.now();
         if (!m.build) { ready = new Promise<void>(res => { gotTextures = res; }); await ready; post({ t: 'ready', ms: performance.now() - t0 }); break; }
         // the builder: textures from the cache if this browser has them, else built (and cached for next time)
-        const key = cacheKey(m.art), cached = await loadCached(key);
-        ready = cached ? Promise.resolve(restore(tex, cached)) : tex.build(m.art);
+        const key = cacheKey(m.art), cached = await loadCached(key, lim ? lightPack(EAGER_PHOTO, eager, lim.lazy ? new Set([...PAINTED_NAMES, ...GRASS_TINTS.map(t => t[0])]) : undefined, lim.lazy) : undefined);
+        ready = cached ? Promise.resolve(restore(tex, cached)) : tex.build(m.art, undefined, eager, !!lim?.lazy);
+        if (cached && lazyTex) tex.lazyMissing();
         await ready; texReady();
         post({ t: 'log', message: `textures ${cached ? 'from cache' : 'built'} in ${(performance.now() - t0).toFixed(0)} ms` });
         post({ t: 'ready', ms: performance.now() - t0, saving: !cached });
         if (m.peers) { const snaps = await Promise.all(Array.from({ length: m.peers }, () => snapshot(tex))); post({ t: 'texpack', snaps }, snaps.flatMap(s => s.bitmaps)); }
-        if (!cached) void saveCached(key, tex).finally(() => post({ t: 'saved' }));
+        if (!cached && lim?.saveCache !== false) void saveCached(key, tex).finally(() => post({ t: 'saved' }));
         break;
       }
-      case 'textures': restore(tex, m.snap); texReady(); gotTextures?.(); break;
+      case 'textures': restore(tex, m.snap); if (lazyTex) tex.lazyMissing(); texReady(); gotTextures?.(); break;
       case 'grassArt': tex.setPaintedOn(m.art !== 'photo'); painter.resetPlanColours(); break;
       case 'surfaces': tex.setSurfaces(m.file); painter.resetPainted(); break;
       case 'net': { const t0 = performance.now(); applyOps(net, m.ops); const ms = performance.now() - t0; if (ms > 50) post({ t: 'log', message: `net ops ${m.ops.length} in ${ms.toFixed(0)} ms` }); break; }
@@ -82,11 +96,11 @@ const handle = async (m: ToWorker) => {
       case 'lotground': {
         // the lazy photo textures the edit's paint areas use (fill and border) are built first, so the chunks baked after it see them
         const need = new Set<string>();
-        for (const [, ps] of m.set) for (const p of ps) if (p.lawn && isPaintPhoto(p.tex) && !EAGER_PHOTO.has(p.tex) && !tex.built(p.tex)) need.add(p.tex); else if (p.paint) for (const t of [p.tex, ...(p.paint.b > 0 ? [p.paint.bt] : []), ...(p.paint.m ? [p.paint.m.t] : [])]) if (isPaintPhoto(t) && !EAGER_PHOTO.has(t) && !tex.built(t)) need.add(t);
+        for (const [, ps] of m.set) for (const p of ps) if (p.lawn && isPaintPhoto(p.tex) && !eager.has(p.tex) && !tex.built(p.tex)) need.add(p.tex); else if (p.paint) for (const t of [p.tex, ...(p.paint.b > 0 ? [p.paint.bt] : []), ...(p.paint.m ? [p.paint.m.t] : [])]) if (isPaintPhoto(t) && !eager.has(t) && !tex.built(t)) need.add(t);
         // a course chunk's surfaces and collars (T078)
-        for (const [, ps] of m.set) for (const p of ps) if (p.course) for (const l of p.course.layers) for (const t of [l.tex, ...(l.collar ? [l.collar.tex] : [])]) if (isPaintPhoto(t) && !EAGER_PHOTO.has(t) && !tex.built(t)) need.add(t);
+        for (const [, ps] of m.set) for (const p of ps) if (p.course) for (const l of p.course.layers) for (const t of [l.tex, ...(l.collar ? [l.collar.tex] : [])]) if (isPaintPhoto(t) && !eager.has(t) && !tex.built(t)) need.add(t);
         // and the wall art its walls wear (T099 WALL_TEX slots; nothing until a slot is registered in grass-art PHOTO_TEX)
-        for (const [, ps] of m.set) for (const p of ps) if (p.course?.walls?.length) for (const t of WALL_TEX) if (isPaintPhoto(t) && !EAGER_PHOTO.has(t) && !tex.built(t)) need.add(t);
+        for (const [, ps] of m.set) for (const p of ps) if (p.course?.walls?.length) for (const t of WALL_TEX) if (isPaintPhoto(t) && !eager.has(t) && !tex.built(t)) need.add(t);
         await Promise.all([...need].map(t => tex.ensure(t).catch(err => post({ t: 'error', message: String(err) }))));
         painter.setLotGround(m.set, m.drop);
         break;
