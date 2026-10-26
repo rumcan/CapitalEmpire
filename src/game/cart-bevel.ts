@@ -36,11 +36,11 @@ export interface BevelCtx<I> {
   drawImage(image: I, dx: number, dy: number): void;
 }
 
-/** the features' coverage in black, drawn into g under the chunk transform M with the features stepped `step` tiles (the paths beyond the
- *  chunk's edge step in with the rest); leaves g's transform at the identity */
-export function drawPaths<I>(g: BevelCtx<I>, feats: readonly Feature[], M: Affine, step: Pt = { x: 0, y: 0 }) {
+/** the features' coverage in col (black by default), drawn into g under the chunk transform M with the features stepped `step` tiles (the
+ *  paths beyond the chunk's edge step in with the rest); leaves g's transform at the identity */
+export function drawPaths<I>(g: BevelCtx<I>, feats: readonly Feature[], M: Affine, step: Pt = { x: 0, y: 0 }, col = '#000') {
   g.setTransform(M.a, M.b, M.c, M.d, M.e + M.a * step.x + M.c * step.y, M.f + M.b * step.x + M.d * step.y);
-  g.lineJoin = 'round'; g.fillStyle = g.strokeStyle = '#000';
+  g.lineJoin = 'round'; g.fillStyle = g.strokeStyle = col;
   for (const f of feats) { g.lineCap = f.cap; if (f.kind === 'stroke') { g.lineWidth = f.w; g.stroke(f.path); } else g.fill(f.path); }
   g.setTransform(1, 0, 0, 1, 0, 0);
 }
