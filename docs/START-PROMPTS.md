@@ -41,13 +41,13 @@ Tickets in progress now (see NOW.md "START HERE" for the current list):
 Each keeps its own handover doc with a start prompt at the top. Paste that prompt into a new chat.
 - **Studio lot-preset editor** (branch `lot-presets`, worktree `E:\Repos\CapitalEmpire\.claude\worktrees\lot-presets`, game on 5241,
   studio on 5242; launch.json configs `lot-presets-game` and `lot-presets-studio`). Its handover is
-  `docs/handovers/lot-presets.md` in that worktree, with the start prompt at the top (WIP commit 62d1322). As of 2026-10-26 it is
-  **committed locally only**: the session asks the owner before pushing. Until it is pushed, open the doc from that worktree on this PC.
+  `docs/handovers/lot-presets.md` on branch `lot-presets`, with the start prompt at the top. It was pushed to GitHub on 2026-10-26 at
+  51643a7 (the owner approved), so any PC or account can read it: `git show origin/lot-presets:docs/handovers/lot-presets.md`.
 - **3D people, golf play and run.world.** This session made the 3D crowd and golfers (PR #238) and golf play (PR #258; its open items
   are under "Status" in `docs/GOLF-PLAY.md`).
   - **Handover:** `docs/HANDOVER-PEOPLE.md` section 0 "START HERE", with the start prompt at the top. It is on branch
-    `art/people-ground-20261024` (worktree `E:\Repos\CapitalEmpire\worktrees\people-ground`, commit 80da0db), **committed locally only**
-    until the owner approves its push. Until then, read it from that worktree on this PC.
+    `art/people-ground-20261024` (worktree `E:\Repos\CapitalEmpire\worktrees\people-ground`). It was pushed to GitHub on 2026-10-26 at
+    80da0db (the owner approved): `git show origin/art/people-ground-20261024:docs/HANDOVER-PEOPLE.md`.
   - **Batch loop:** a loop makes the last 12 people (`make-cast-loop.sh` in a hidden Git Bash, restarted 2026-10-26 05:37 UTC). It waits
     out RUN's daily cap and dies if the app or PC stops, so a new chat restarts it as the handover says.
 - **Nightly regression:** a scheduled task ("CapitalEmpire nightly regression", about 02:06). It needs no prompt, but it needs its
