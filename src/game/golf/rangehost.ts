@@ -4,18 +4,19 @@
 import type { Drawable } from '../sprites';
 import { CAR_SCALE } from '../sprites';
 import type { Prop } from '../types';
-import type { LotPatch } from '../ground-protocol';
+import type { LotPatch, MowStripes } from '../ground-protocol';
 import type { Pt } from '../network';
 import type { Rect } from './mode';
 import { GOLFER_BASE, GOLFER_FRAMES, GOLFER_PEOPLE, WALK_DIRS } from '../library';
 import { carHeading, facings } from '../traffic';
-import { surfacePreset } from '../paint-presets';
+import { PRESETS, presetTex, surfacePreset, type Stripes } from '../paint-presets';
 import { SURFACE_TEX } from './paintcourse';
 import type { GolfSurface } from './types';
 import { RangeSim, rangeScene, rangeStats, upgradeWhy, withPrice, withUpgrade, RANGE_UPGRADES, type CarSlot, type DemandCtx, type RangeBizSave, type RangeClock, type RangeScene, type RangeUpgradeId, type ScenePatch, type ScenePiece } from './rangebiz';
 import { CELL_T, type Grid, type GridDiff } from '../ext/course-grid';
 import { inPractice, practiceWords, scanPractice, type PracticeScan, type PracticeState } from './practice';
-import { PRACTICE_APPEAL, PRACTICE_FEE, PRACTICE_IDS, practiceAppeal, rangeScale, type PracticeId } from './rangesave';
+import { PRACTICE_APPEAL, PRACTICE_FEE, PRACTICE_IDS, practiceAppeal, rangeScale, rangeUpkeep, type PracticeId } from './rangesave';
+import { COFFEE, EXTRA_IDS, HOME_AT, HOME_NAME, KIOSK_SHARE, LESSON, LESSON_SHARE, homeStage, needsOf, type HomeStage } from './rangesave';
 
 /** what the host needs of the engine */
 export interface RangeHostCtx {
@@ -29,6 +30,9 @@ export interface RangeHostCtx {
   setGround(key: string, patches: LotPatch[] | null): void; layPaths(legs: { a: Pt; b: Pt }[]): void; clearTrees(box: [number, number, number, number]): void;
   /** the treasury, a spend ($, construction), takings booked ($, business income) */
   money(): number; spend(n: number): void; book(n: number): void;
+  /** the game month as an absolute count (Engine.golfMonthIndex), and the upgrades' upkeep paid ($, the ledger's upkeep: T132); missing: no
+   *  upkeep is paid */
+  month?(): number; payUpkeep?(n: number): void;
   /** the demand's inputs, the town day's length (sim s), the sim's time (s) and the town clock */
   demand(): DemandCtx; dayLen(): number; simT(): number; clock(): RangeClock;
   save(): void; toast(text: string, kind: 'good' | 'info' | 'warn'): void; emit(): void;
@@ -41,7 +45,19 @@ export interface RangeHostCtx {
 function patchTex(s: ScenePatch['surf']): LotPatch['tex'] {
   if (s === 'concrete') return 'pad'; // the Paint tool's concrete
   if (s === 'dirt' || s === 'grassDry' || s === 'asphaltDark' || s === 'gravel') return s;
+  // the range's own presets (T132: the owner tunes them in the studio), else the course's fairway and green as before
+  if (s === 'outfield' || s === 'target') { const own = rangePreset(s); return own ? presetTex(own.id) : patchTex(s === 'outfield' ? 'fairway' : 'green'); }
   return (surfacePreset(s) ?? SURFACE_TEX[s as GolfSurface].tex) as LotPatch['tex'];
+}
+/** the range's own texture presets (paint-presets.json, T132): the outfield (its mowing stripes) and the target greens */
+export const RANGE_PRESET: Readonly<Record<'outfield' | 'target', string>> = { outfield: 'range-outfield', target: 'range-green' };
+const rangePreset = (s: 'outfield' | 'target') => PRESETS.find(p => p.id === RANGE_PRESET[s]) ?? null;
+/** the outfield's mowing stripes (PatchPaint.mw) from its preset's Stripes, laid in the range's frame: 'x' bands across the line of play
+ *  (alternating down the range), 'y' bands down it (alternating across); null when the preset has them off */
+export function outfieldStripes(sc: Pick<RangeScene, 'aim' | 'roadDir' | 'mowFrom'>, s: Stripes | null | undefined): MowStripes | null {
+  if (!s?.on) return null;
+  const u = s.dir === 'y' ? sc.roadDir : sc.aim, n = Math.hypot(u.x, u.y) || 1;
+  return { ux: u.x / n, uy: u.y / n, ox: sc.mowFrom.x, oy: sc.mowFrom.y, w: s.width, l: s.light, k: s.dark, lc: s.lightCol, dc: s.darkCol, t: s.tint, f: s.soft };
 }
 /** the takings are booked this often (sim s), not on every sale; a frame this long (sim s) is a skip */
 const BOOK_EVERY = 2, SKIP_DT = 120;
@@ -56,6 +72,8 @@ export class RangeHost {
   /** the scene's auto props by key, and its stand-in labels (prop, text) */
   private props = new Map<string, Prop>(); labels: { p: Prop; text: string }[] = [];
   private key = ''; private lastT = -1; private owed = 0; private owedT = 0;
+  /** the home's stage laid now (T133; -1: none yet since the load) */
+  private home: HomeStage | -1 = -1;
   private movers: Drawable[] = []; private carDraw: Drawable[] = [];
   /** the balls in the air (x y h triples) */
   readonly flyingBuf = new Float32Array(3 * 160); nFlying = 0;
@@ -69,10 +87,15 @@ export class RangeHost {
   /** the scene laid again when the range's state, its plot or its car park changed (cheap to call every frame: a key compares them) */
   sync(force = false): void {
     const b = this.ctx.biz(), pl = this.ctx.plot(), cp = this.ctx.carPark();
-    const key = b && pl ? `${pl.rect.join(',')}:${pl.facing}:${b.owned.join(',')}:${cp ? cp.bays.length : -1}` : '';
+    // the home's stage (T133) re-lays the yard as the lifetime takings grow
+    const home = b ? homeStage(b) : 0;
+    const key = b && pl ? `${pl.rect.join(',')}:${pl.facing}:${b.owned.join(',')}:${cp ? cp.bays.length : -1}:${home}` : '';
     if (!force && key === this.key) return;
     this.key = key;
     if (!b || !pl) { this.drop(); return; }
+    // the player moved house (T133): toasted once, never on a load
+    if (this.home >= 0 && home > this.home) this.ctx.toast(`You moved into the ${HOME_NAME[home].toLowerCase()}: the range has taken $${HOME_AT[home - 1]!.toLocaleString()}`, 'good');
+    this.home = home;
     const sc = rangeScene(pl.rect, pl.facing, b);
     // the props: kept where the key and picture stay, the rest made again
     const want = new Map(sc.pieces.map(p => [p.key, p]));
@@ -80,7 +103,9 @@ export class RangeHost {
     for (const [k, w] of want) if (!this.props.has(k)) { const p = this.ctx.addPiece(w, 'range:' + k); if (p) this.props.set(k, p); }
     this.labels = sc.pieces.filter(p => p.label && this.props.has(p.key)).map(p => ({ p: this.props.get(p.key)!, text: p.label! }));
     // laid as painted areas (the Paint tool's path, which knows the presets), in the scene's order and under anything the player paints
-    this.ctx.setGround('range:ground', sc.patches.map((p, i) => ({ pts: p.pts, tex: patchTex(p.surf), paint: { s: 1, a: 0, b: 0, bt: 'kerb', z: -1e6 + i } })));
+    // (T132: the target greens raised with a sun-lit edge in feathered collars, the outfield's stripes laid on its top)
+    const mw = outfieldStripes(sc, rangePreset('outfield')?.stripes);
+    this.ctx.setGround('range:ground', sc.patches.map((p, i) => ({ pts: p.pts, tex: patchTex(p.surf), paint: { s: 1, a: 0, b: 0, bt: 'kerb', z: -1e6 + i, ...(p.edge ? { e: p.edge } : {}), ...(p.mow && mw ? { mw } : {}) } })));
     if (!this.scene) { this.ctx.clearTrees(sc.box); this.ctx.clearTrees(sc.practice.box); }
     if (!b.paths) { this.ctx.layPaths(sc.paths); b.paths = true; this.ctx.save(); }
     this.scene = sc;
@@ -90,7 +115,7 @@ export class RangeHost {
   drop(): void {
     for (const p of this.props.values()) this.ctx.removeProp(p);
     for (const p of this.cups.values()) this.ctx.removeProp(p);
-    this.props.clear(); this.cups.clear(); this.cupKey = ''; this.labels = []; this.scene = null; this.key = ''; this.lastT = -1; this.sim.clear();
+    this.props.clear(); this.cups.clear(); this.cupKey = ''; this.labels = []; this.scene = null; this.key = ''; this.lastT = -1; this.paidMonth = -1; this.home = -1; this.sim.clear();
     this.practice = null; this.scanG = null; this.scanRev = -1; this.sim.setPractice(null);
     this.ctx.setGround('range:ground', null);
   }
@@ -101,6 +126,7 @@ export class RangeHost {
     // the tee box into the course grid once (a new game, an old save's first load: T130), then the practice area read as it changes
     if (!b.tee && this.ctx.layTee(this.scene.teeBox)) { b.tee = true; this.ctx.save(); }
     this.scanPractice(b);
+    this.upkeep(b);
     const t = this.ctx.simT(), dt = this.lastT < 0 ? 0 : t - this.lastT; this.lastT = t;
     if (dt <= 0) return;
     // a long frame (a slow tab, 20x) is stepped in pieces of half a second, so the golfers walk on; only a skip (two minutes and more of sim
@@ -113,6 +139,19 @@ export class RangeHost {
     this.nFlying = this.sim.flying(this.flyingBuf);
   }
 
+  /** the month the upgrades' upkeep was last paid for (-1: not yet read since the load) */
+  private paidMonth = -1;
+  /** the upgrades' upkeep (T132): rangeUpkeep a game month, paid as each month begins (a skip pays every month it crossed), booked as upkeep and
+   *  counted in the range's season and lifetime upkeep. The month of a load or a new game is not charged again */
+  private upkeep(b: RangeBizSave): void {
+    if (!this.ctx.month || !this.ctx.payUpkeep) return;
+    const m = Math.floor(this.ctx.month());
+    if (this.paidMonth < 0 || m < this.paidMonth) { this.paidMonth = m; return; }
+    if (m === this.paidMonth) return;
+    const n = (m - this.paidMonth) * rangeUpkeep(b); this.paidMonth = m;
+    if (n <= 0) return;
+    this.ctx.payUpkeep(n); b.season.upkeep += n; b.total.upkeep += n; this.ctx.save(); if (this.cardOpen) this.ctx.emit();
+  }
   /** the golfers and cars in the tile box as movers (reused): the golfers' 3D frames, the cars at CAR_SCALE about their centres */
   movers_(x0: number, y0: number, x1: number, y1: number): Drawable[] {
     const out = this.movers; out.length = 0;
@@ -122,6 +161,8 @@ export class RangeHost {
       const p = d.people[k]!; if (p.x < x0 || p.x > x1 || p.y < y0 || p.y > y1) continue;
       const m = this.mover(out.length);
       m.item = GOLFER_BASE + (p.person * WALK_DIRS.length + p.row) * GOLFER_FRAMES + p.frame; m.x = p.x; m.y = p.y; m.flip = false; m.scale = 1; m.moving = false;
+      // on the upper deck (T133): drawn up there, its footprint (the painter's order) kept on its bay
+      m.lift = p.lift;
       m.x0 = p.x - 0.12; m.y0 = p.y - 0.12; m.x1 = p.x + 0.12; m.y1 = p.y + 0.12; out.push(m);
     }
     for (let k = 0; k < d.nCars; k++) {
@@ -162,6 +203,17 @@ export class RangeHost {
         const y = p.y - (t.low ? 1.2 : 2.6) * 32 * ze - (t.low ? 0 : px), tw = c.measureText(t.text).width + 8 * dpr;
         c.fillStyle = 'rgba(16,24,16,0.8)'; c.beginPath(); c.roundRect(p.x - tw / 2, y - px * 0.75, tw, px * 1.5, 3 * dpr); c.fill();
         c.fillStyle = '#f8fafc'; c.fillText(t.text, p.x, y + 0.5 * dpr);
+      }
+      // the ball picker cart's stand-in pill (T133: the eight-way wagon stands in for it)
+      const pk = this.sim.view().picker;
+      if (pk) {
+        const q = screen(pk.x, pk.y);
+        if (on(q)) {
+          const t = 'Stand In for Ball picker cart', fp = Math.round(dpr * 10);
+          c.font = `600 ${fp}px system-ui, sans-serif`; const tw = c.measureText(t).width + 10 * dpr, y = q.y - 40 * dpr;
+          c.fillStyle = 'rgba(15,23,42,0.78)'; c.beginPath(); c.roundRect(q.x - tw / 2, y - fp * 0.8, tw, fp * 1.6, 6 * dpr); c.fill();
+          c.fillStyle = '#fde68a'; c.fillText(t, q.x, y + 0.5 * dpr);
+        }
       }
       c.textAlign = 'start'; c.textBaseline = 'alphabetic';
     } else if (zoom >= 0.03) {
@@ -229,6 +281,8 @@ export class RangeHost {
   /** the practice area (T130): until something is built there a faint dashed outline with its "Practice area" label (brighter while the hint
    *  points at it: hint), and at the street tier the stand-in pills of the practice strokes once golfers use a facility */
   hint = false;
+  /** the practice area is not open yet (a range start's ramp, T132: it opens with the first range upgrade): its label says so */
+  practiceLocked = false;
   private drawPractice(c: CanvasRenderingContext2D, screen: (x: number, y: number) => { x: number; y: number }, zoom: number, dpr: number, on: (p: { x: number; y: number }, m?: number) => boolean): void {
     const sc = this.scene!, pa = sc.practice, p = this.practice;
     c.textAlign = 'center'; c.textBaseline = 'middle';
@@ -242,7 +296,7 @@ export class RangeHost {
       if (on(q, 200)) {
         const px = Math.round(dpr * 13);
         c.font = `700 ${px}px system-ui, sans-serif`; c.lineWidth = 3 * dpr; c.strokeStyle = 'rgba(10,30,10,0.85)'; c.strokeText('Practice area', q.x, q.y); c.fillStyle = '#ecfccb'; c.fillText('Practice area', q.x, q.y);
-        if (zoom >= 0.12) { c.font = `600 ${Math.round(px * 0.8)}px system-ui, sans-serif`; const t = 'Paint a putting green here'; c.strokeText(t, q.x, q.y + px * 1.3); c.fillStyle = '#d9f99d'; c.fillText(t, q.x, q.y + px * 1.3); }
+        if (zoom >= 0.12) { c.font = `600 ${Math.round(px * 0.8)}px system-ui, sans-serif`; const t = this.practiceLocked ? 'Opens with your first range upgrade' : 'Paint a putting green here'; c.strokeText(t, q.x, q.y + px * 1.3); c.fillStyle = '#d9f99d'; c.fillText(t, q.x, q.y + px * 1.3); }
       }
     }
     // the stand-in pills of the strokes (the 3D golfers have no putting or chipping clip yet: GOLF-SPRITES)
@@ -291,6 +345,14 @@ export class RangeHost {
         return { id, name: PRACTICE_NAME[id], state: f.state, words: practiceWords(f), appeal: PRACTICE_APPEAL[id], today: this.sim.practiceToday[id], golfers: s.season.golfers, takings: s.season.takings };
       }),
       practiceAppeal: practiceAppeal(b), fee: PRACTICE_FEE, feeEach: PRACTICE_FEE * rangeScale(this.ctx.dayLen()),
+      // the upgrades' upkeep (T132): a game month now, and paid this season
+      upkeep: rangeUpkeep(b), upkeepSeason: b.season.upkeep,
+      // the World of Golf extras (T133): what needs what, the kiosk's and the academy's season, the home and its next step
+      needs: Object.fromEntries(RANGE_UPGRADES.map(u => [u.id, needsOf(u).map(n => RANGE_UPGRADES.find(q => q.id === n)!.name)])) as Record<RangeUpgradeId, string[]>,
+      extras: EXTRA_IDS.map(id => ({ id, owned: b.owned.includes(id), season: b.extras[id].season, today: id === 'kiosk' ? this.sim.today.coffees : this.sim.today.lessons,
+        words: id === 'kiosk' ? `${Math.round(KIOSK_SHARE * 100)}% of golfers buy a $${COFFEE} coffee · ${this.sim.today.kioskQueue} in line` : `${Math.round(LESSON_SHARE * 100)}% of golfers take a $${LESSON} lesson on the academy's two bays` })),
+      home: { stage: homeStage(b), name: HOME_NAME[homeStage(b)], next: homeStage(b) < 2 ? { name: HOME_NAME[homeStage(b) + 1]!, at: HOME_AT[homeStage(b) as 0 | 1] } : null, total: b.total.takings },
+      upstairs: this.sim.today.upstairs,
     };
   }
 }

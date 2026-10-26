@@ -57,9 +57,9 @@ const handle = async (m: ToWorker) => {
         ready = cached ? Promise.resolve(restore(tex, cached)) : tex.build(m.art);
         await ready; texReady();
         post({ t: 'log', message: `textures ${cached ? 'from cache' : 'built'} in ${(performance.now() - t0).toFixed(0)} ms` });
-        post({ t: 'ready', ms: performance.now() - t0 });
+        post({ t: 'ready', ms: performance.now() - t0, saving: !cached });
         if (m.peers) { const snaps = await Promise.all(Array.from({ length: m.peers }, () => snapshot(tex))); post({ t: 'texpack', snaps }, snaps.flatMap(s => s.bitmaps)); }
-        if (!cached) void saveCached(key, tex);
+        if (!cached) void saveCached(key, tex).finally(() => post({ t: 'saved' }));
         break;
       }
       case 'textures': restore(tex, m.snap); texReady(); gotTextures?.(); break;

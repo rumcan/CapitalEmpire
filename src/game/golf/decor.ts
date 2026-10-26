@@ -15,39 +15,46 @@ export const DECOR_GROUPS: readonly { id: DecorGroup; name: string }[] = [
 /** a catalogue item: its key (saved with the prop), plain name, group, library picture (the NE view of four-view art), price ($), appeal (a
  *  fraction), its size (absent: the studio's or the library's own) and, for a stand-in picture, the real thing it stands in for (the card and the
  *  map's pill say "Stand In for <standIn>": the art is requested in docs/GOLF-SPRITES.md "Props kit") */
-export interface DecorItem { key: string; name: string; group: DecorGroup; id: string; price: number; appeal: number; scale?: number; standIn?: string; desc: string }
+export interface DecorItem { key: string; name: string; group: DecorGroup; kind: DecorKind; id: string; price: number; appeal: number; scale?: number; standIn?: string; desc: string }
 
-/** the appeal of each kind (plan P24 Phase 3): a plant +1%, a fountain +5%, a statue +3%, a pillar +1%, a bench +0.5% */
-export const APPEAL = { plant: 0.01, fountain: 0.05, statue: 0.03, pillar: 0.01, bench: 0.005 } as const;
+/** the kinds the diminishing returns count by (T132): each further prop of a kind near the range counts PROPS_DECAY of the one before, so a
+ *  row of one cheap plant cannot dress the whole front: plants (all nine), water (fountains, wells), statues, stonework (pillars, arches),
+ *  seats (benches, tables), small things (trolleys, bins, lamps) and signs (the welcome board, flag poles) */
+export type DecorKind = 'plant' | 'water' | 'statue' | 'stone' | 'seat' | 'small' | 'sign';
+/** what each further prop of the same kind counts, of the one before it (the best of a kind counts in full) */
+export const PROPS_DECAY = 0.8;
+
+/** the appeal of each item type (plan P24 Phase 3, rebalanced in T132 with the diminishing returns: a fountain is the front's centrepiece) */
+export const APPEAL = { plant: 0.01, fountain: 0.15, well: 0.03, statue: 0.08, pillar: 0.015, arch: 0.025, bench: 0.01, seatBig: 0.015, small: 0.005, board: 0.03, flagpole: 0.015 } as const;
 
 /** the catalogue: real library art (the Trees & plants, Street furniture, Yard and Landmarks categories, T113's golf props) and labelled stand-ins */
 export const DECOR: readonly DecorItem[] = [
-  // ---- plants: +1% each
-  { key: 'pot-terracotta', name: 'Terracotta pot plant', group: 'plants', id: 'town:planter_terracotta', price: 120, appeal: APPEAL.plant, desc: 'A clipped shrub in a terracotta pot: line the shop front' },
-  { key: 'pot-palm', name: 'Potted palm', group: 'plants', id: 'arcade:arcade_v2_clutter_plant', price: 90, appeal: APPEAL.plant, desc: 'A leafy palm in a pot, for doors and corners' },
-  { key: 'planter-stone', name: 'Stone planter box', group: 'plants', id: 'town:planter_square', price: 250, appeal: APPEAL.plant, desc: 'A square civic planter in stone' },
-  { key: 'shrub-hydrangea', name: 'Hydrangea shrub', group: 'plants', id: 'town:hydrangea', price: 60, appeal: APPEAL.plant, desc: 'An ornamental flowering shrub' },
-  { key: 'grass-ornamental', name: 'Ornamental grass', group: 'plants', id: 'town:ornamental_grass', price: 50, appeal: APPEAL.plant, desc: 'A tall clump of ornamental grass' },
-  { key: 'fern', name: 'Fern clump', group: 'plants', id: 'town:fern', price: 50, appeal: APPEAL.plant, desc: 'A soft green fern for shady beds' },
-  { key: 'hedge', name: 'Clipped hedge', group: 'plants', id: 'world:hedge', price: 80, appeal: APPEAL.plant, desc: 'A low box hedge: edge a path or a bed' },
-  { key: 'flower-bed', name: 'Flower bed', group: 'plants', id: 'world:bush_2', price: 150, appeal: APPEAL.plant, standIn: 'Flower bed', desc: 'A bed of seasonal flowers' },
-  { key: 'tree-maple', name: 'Ornamental maple', group: 'plants', id: 'ref:tree-maple-crimson', price: 300, appeal: APPEAL.plant, desc: 'A crimson maple for shade and colour' },
+  // ---- plants: +1% each, one kind (each more counts less)
+  { key: 'pot-terracotta', name: 'Terracotta pot plant', group: 'plants', kind: 'plant', id: 'town:planter_terracotta', price: 120, appeal: APPEAL.plant, desc: 'A clipped shrub in a terracotta pot: line the shop front' },
+  { key: 'pot-palm', name: 'Potted palm', group: 'plants', kind: 'plant', id: 'arcade:arcade_v2_clutter_plant', price: 90, appeal: APPEAL.plant, desc: 'A leafy palm in a pot, for doors and corners' },
+  { key: 'planter-stone', name: 'Stone planter box', group: 'plants', kind: 'plant', id: 'town:planter_square', price: 250, appeal: APPEAL.plant, desc: 'A square civic planter in stone' },
+  { key: 'shrub-hydrangea', name: 'Hydrangea shrub', group: 'plants', kind: 'plant', id: 'town:hydrangea', price: 60, appeal: APPEAL.plant, desc: 'An ornamental flowering shrub' },
+  { key: 'grass-ornamental', name: 'Ornamental grass', group: 'plants', kind: 'plant', id: 'town:ornamental_grass', price: 50, appeal: APPEAL.plant, desc: 'A tall clump of ornamental grass' },
+  { key: 'fern', name: 'Fern clump', group: 'plants', kind: 'plant', id: 'town:fern', price: 50, appeal: APPEAL.plant, desc: 'A soft green fern for shady beds' },
+  { key: 'hedge', name: 'Clipped hedge', group: 'plants', kind: 'plant', id: 'world:hedge', price: 80, appeal: APPEAL.plant, desc: 'A low box hedge: edge a path or a bed' },
+  { key: 'flower-bed', name: 'Flower bed', group: 'plants', kind: 'plant', id: 'world:bush_2', price: 150, appeal: APPEAL.plant, standIn: 'Flower bed', desc: 'A bed of seasonal flowers' },
+  { key: 'tree-maple', name: 'Ornamental maple', group: 'plants', kind: 'plant', id: 'ref:tree-maple-crimson', price: 300, appeal: APPEAL.plant, desc: 'A crimson maple for shade and colour' },
   // ---- water
-  { key: 'fountain', name: 'Plaza fountain', group: 'water', id: 'ref:landmark-fountain-v2', price: 12000, appeal: APPEAL.fountain, desc: 'A tiered stone fountain: the centrepiece of the front' },
-  { key: 'well', name: 'Wishing well', group: 'water', id: 'expansion:wooden-well', price: 1200, appeal: 0.02, desc: 'A covered garden well: golfers toss a coin for luck' },
+  { key: 'fountain', name: 'Plaza fountain', group: 'water', kind: 'water', id: 'ref:landmark-fountain-v2', price: 12000, appeal: APPEAL.fountain, desc: 'A tiered stone fountain: the centrepiece of the front' },
+  { key: 'well', name: 'Wishing well', group: 'water', kind: 'water', id: 'expansion:wooden-well', price: 1200, appeal: APPEAL.well, desc: 'A covered garden well: golfers toss a coin for luck' },
   // ---- stone
-  { key: 'statue', name: 'Golfer statue', group: 'stone', id: 'expansion:coin-horse-ride', price: 6000, appeal: APPEAL.statue, standIn: 'Bronze golfer statue', desc: 'A bronze golfer at the top of his swing, on a stone plinth' },
-  { key: 'pillar', name: 'Stone pillar', group: 'stone', id: 'world:grave_2', price: 400, appeal: APPEAL.pillar, standIn: 'Stone pillar', desc: 'A dressed stone column with a ball finial: pair them at a gate' },
-  { key: 'arch', name: 'Ivy garden arch', group: 'stone', id: 'expansion:ivy-arbor', price: 900, appeal: 0.02, desc: 'An arbor grown over with ivy: an entrance to walk through' },
-  // ---- furniture: +0.5% each (a flag pole +1%)
-  { key: 'bench', name: 'Park bench', group: 'furniture', id: 'world:bench', price: 300, appeal: APPEAL.bench, desc: 'A slatted bench to watch the golfers from' },
-  { key: 'bench-map', name: 'Course-map bench', group: 'furniture', id: 'business:golf-bench-course-map', price: 600, appeal: APPEAL.bench, desc: 'A bench beside a board with the course map' },
-  { key: 'picnic', name: 'Picnic table', group: 'furniture', id: 'town:picnic_table', price: 450, appeal: APPEAL.bench, desc: 'A timber table for the family day out' },
-  { key: 'trolley', name: 'Bag trolley', group: 'furniture', id: 'business:golf-bag-trolley', price: 150, appeal: APPEAL.bench, desc: 'A golf bag on its trolley, parked for show' },
-  { key: 'bin', name: 'Litter bin', group: 'furniture', id: 'world:trashcan', price: 80, appeal: APPEAL.bench, desc: 'A tidy front is a busy front' },
-  { key: 'lamp', name: 'Lamp post', group: 'furniture', id: 'world:streetlamp', price: 350, appeal: APPEAL.bench, desc: 'Lit at night' },
-  { key: 'board', name: 'Welcome board', group: 'furniture', id: 'golf:leaderboard', price: 2500, appeal: 0.01, scale: 0.45, desc: 'A tall board to greet golfers at the drive: four views' },
-  { key: 'flagpole', name: 'Flag pole', group: 'furniture', id: 'business:golf-pin-red', price: 500, appeal: 0.01, scale: 0.6, standIn: 'Club flag pole', desc: 'A tall white pole flying the club flag' },
+  { key: 'statue', name: 'Golfer statue', group: 'stone', kind: 'statue', id: 'expansion:coin-horse-ride', price: 6000, appeal: APPEAL.statue, standIn: 'Bronze golfer statue', desc: 'A bronze golfer at the top of his swing, on a stone plinth' },
+  { key: 'pillar', name: 'Stone pillar', group: 'stone', kind: 'stone', id: 'world:grave_2', price: 400, appeal: APPEAL.pillar, standIn: 'Stone pillar', desc: 'A dressed stone column with a ball finial: pair them at a gate' },
+  { key: 'arch', name: 'Ivy garden arch', group: 'stone', kind: 'stone', id: 'expansion:ivy-arbor', price: 900, appeal: APPEAL.arch, desc: 'An arbor grown over with ivy: an entrance to walk through' },
+  // ---- furniture: seats +1% (the map bench +1.5%), small things +0.5%, signs (the board +3%, a flag pole +1.5%)
+  { key: 'bench', name: 'Park bench', group: 'furniture', kind: 'seat', id: 'world:bench', price: 300, appeal: APPEAL.bench, desc: 'A slatted bench to watch the golfers from' },
+  { key: 'bench-map', name: 'Course-map bench', group: 'furniture', kind: 'seat', id: 'business:golf-bench-course-map', price: 600, appeal: APPEAL.seatBig, desc: 'A bench beside a board with the course map' },
+  { key: 'picnic', name: 'Picnic table', group: 'furniture', kind: 'seat', id: 'town:picnic_table', price: 450, appeal: APPEAL.bench, desc: 'A timber table for the family day out' },
+  { key: 'trolley', name: 'Bag trolley', group: 'furniture', kind: 'small', id: 'business:golf-bag-trolley', price: 150, appeal: APPEAL.small, desc: 'A golf bag on its trolley, parked for show' },
+  { key: 'bin', name: 'Litter bin', group: 'furniture', kind: 'small', id: 'world:trashcan', price: 80, appeal: APPEAL.small, desc: 'A tidy front is a busy front' },
+  { key: 'lamp', name: 'Lamp post', group: 'furniture', kind: 'small', id: 'world:streetlamp', price: 350, appeal: APPEAL.small, desc: 'Lit at night' },
+  { key: 'board', name: 'Welcome board', group: 'furniture', kind: 'sign', id: 'golf:leaderboard', price: 2500, appeal: APPEAL.board, scale: 0.45, desc: 'A tall board to greet golfers at the drive: four views' },
+  { key: 'flagpole', name: 'Flag pole', group: 'furniture', kind: 'sign', id: 'business:golf-pin-red', price: 500, appeal: APPEAL.flagpole, scale: 0.6, standIn: 'Club flag pole', desc: 'A tall white pole flying the club flag' },
 ];
 export const DECOR_BY_KEY: ReadonlyMap<string, DecorItem> = new Map(DECOR.map(d => [d.key, d]));
 
@@ -55,22 +62,47 @@ export const DECOR_BY_KEY: ReadonlyMap<string, DecorItem> = new Map(DECOR.map(d 
 export const sellBack = (d: DecorItem): number => Math.round(d.price / 2);
 /** a loaded prop's catalogue key, or null when it is not one (an old save, a renamed item) */
 export const decorKeyOf = (x: unknown): string | null => (typeof x === 'string' && DECOR_BY_KEY.has(x) ? x : null);
+/** the group names the panel and the Select panel use */
+const GROUP_NAME: Readonly<Record<DecorGroup, string>> = Object.fromEntries(DECOR_GROUPS.map(g => [g.id, g.name])) as Record<DecorGroup, string>;
+/** what the Select panel shows of a Props tool prop (T132: its catalogue name, not the library picture's), or null for any other prop */
+export function decorInfo(key: string | undefined): { name: string; group: string; price: number; sell: number; standIn?: string } | null {
+  const d = key ? DECOR_BY_KEY.get(key) : undefined; if (!d) return null;
+  return { name: d.name, group: GROUP_NAME[d.group], price: d.price, sell: sellBack(d), ...(d.standIn ? { standIn: d.standIn } : {}) };
+}
 
 // ---------------------------------------------------------------- appeal
 
 /** a prop counts for the range within this many tiles of its shop or any of its mats */
 export const PROPS_APPEAL_RADIUS = 15;
-/** the appeal the placed props add to the range (plan P24 Phase 3): each prop within PROPS_APPEAL_RADIUS of an anchor (the shop, the mats)
- *  counts its appeal once; the sum is capped at PROPS_APPEAL_CAP. Unknown keys count nothing */
+/** the appeal of a kind's props (their appeals, any order): the best counts in full, each further one PROPS_DECAY of the one before */
+export function kindAppeal(appeals: readonly number[]): number {
+  let sum = 0, k = 1;
+  for (const a of [...appeals].sort((x, y) => y - x)) { sum += a * k; k *= PROPS_DECAY; }
+  return sum;
+}
+/** the appeal the placed props add to the range (plan P24 Phase 3; the diminishing returns T132): each prop within PROPS_APPEAL_RADIUS of an
+ *  anchor (the shop, the mats) counts once, by kind with diminishing returns (kindAppeal); the sum is capped at PROPS_APPEAL_CAP. Unknown keys
+ *  count nothing */
 export function decorAppeal(placed: Iterable<{ key: string; x: number; y: number }>, anchors: readonly Pt[]): number {
+  return Math.min(PROPS_APPEAL_CAP, Math.round(decorAppealRaw(placed, anchors) * 1e6) / 1e6);
+}
+/** decorAppeal before its cap */
+function decorAppealRaw(placed: Iterable<{ key: string; x: number; y: number }>, anchors: readonly Pt[]): number {
   if (!anchors.length) return 0;
-  const r2 = PROPS_APPEAL_RADIUS * PROPS_APPEAL_RADIUS;
-  let sum = 0;
+  const r2 = PROPS_APPEAL_RADIUS * PROPS_APPEAL_RADIUS, byKind = new Map<DecorKind, number[]>();
   for (const p of placed) {
     const d = DECOR_BY_KEY.get(p.key); if (!d) continue;
-    if (anchors.some(a => (a.x - p.x) ** 2 + (a.y - p.y) ** 2 <= r2)) sum += d.appeal;
+    if (!anchors.some(a => (a.x - p.x) ** 2 + (a.y - p.y) ** 2 <= r2)) continue;
+    let l = byKind.get(d.kind); if (!l) byKind.set(d.kind, l = []); l.push(d.appeal);
   }
-  return Math.min(PROPS_APPEAL_CAP, Math.round(sum * 1e6) / 1e6);
+  let sum = 0; for (const l of byKind.values()) sum += kindAppeal(l);
+  return sum;
+}
+/** what one more prop of key would add near the range now (its share after the diminishing returns and the cap; 0 off the range's reach) */
+export function nextAppeal(placed: readonly { key: string; x: number; y: number }[], anchors: readonly Pt[], key: string, at?: Pt): number {
+  if (!anchors.length || !DECOR_BY_KEY.has(key)) return 0;
+  const p = at ?? anchors[0]!, now = decorAppeal(placed, anchors);
+  return Math.max(0, decorAppeal([...placed, { key, x: p.x, y: p.y }], anchors) - now);
 }
 /** an appeal as the card says it: +12%, +0.5% */
 export const appealText = (a: number): string => `+${Math.round(a * 1000) / 10}%`;

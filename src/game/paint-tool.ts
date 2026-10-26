@@ -13,11 +13,12 @@ import { edgeProfileOf } from './paint-edges';
 import { computeSnapPiecePlacement, type CoursePieceArchetype, type CoursePieceHeightOp, type SnapPiecePlacement, type SnapTargetRoad } from './ext/course-snap';
 import { PIECE_BUTTONS, piecePropsOf, pieceAreas, pieceCost, pieceWhy, snapTargets } from './ext/course-pieces';
 import { CourseHeightJournal, applyCourseHeightBrush, brushBox, estimateCourseBrushM3, unionBox, type CourseHeightBrushDab, type CourseHeightBrushMode, type CourseHeightField, type CourseHeightStep, type CourseTileBox } from './ext/course-height';
-import { CELL_T, SURF, applyDiff, cellAt, cellCentre, diffCost, fillPolygon, paintDisc, paintStroke, type Grid, type GridDiff, type PaintOpts } from './ext/course-grid';
+import { CELL_T, SURF, applyDiff, cellAt, cellCentre, diffCost, fillPolygon, paintCells, paintDisc, paintStroke, type Grid, type GridDiff, type PaintOpts } from './ext/course-grid';
 import { BLOB_STYLE } from './ext/course-blobs';
 import { BORDER_MAX_M, BORDER_MIN_M } from './ext/course-grid/patch';
 import { HEIGHT_RANGE, SURF_HEIGHT, defaultShadow } from './ext/course-walls';
 import { SQUARE_SIZES, snapDab, squarePoly, squareRun, squareStart } from './ext/course-cursor/snap';
+import { runCells, runPoint, straightTo } from './ext/course-cursor/run';
 import { SURF_SURFACE, mergeMany, plantMonth, polyCells, surfOfSurface, type GridArea } from './ext/course-grid/areas';
 import { unitBuildCost } from './golf/costs';
 import { GREEN_M2_STEP as GREEN_STEP, HoleWizard, decodePlans, encodePlans, withPlan, withoutPlan } from './ext/hole-wizard';
@@ -54,11 +55,10 @@ function loadPlant(): Record<PlantBrushKind, PlantSet> {
 export type PaintMode = 'draw' | 'pick' | 'erase' | 'hole' | 'brush' | 'plant' | 'piece' | 'height' | 'plan';
 /** the golf holes a course has (the Course tool's hole strip) */
 export const HOLE_COUNT = 18;
-/** why the course cannot take a cell of your land (PaintHost.landWhy): the brush footprint's reason, and the New hole wizard's place for a
- *  refused tee or green ("The tee is on the driving range") */
+/** why the course cannot take a cell of your land (PaintHost.landWhy): the brush footprint's reason, and the New hole wizard's for a
+ *  refused tee or green and the cells it leaves out (ext/hole-wizard says it in its own words) */
 export type LandRefusal = 'off' | 'range';
 export const LAND_WHY: Readonly<Record<LandRefusal, string>> = { off: 'Not your land', range: 'The driving range stands here' };
-export const LAND_WHERE: Readonly<Record<LandRefusal, string>> = { off: 'off your land', range: 'on the driving range' };
 /** why Rub out leaves a cell as it is when the land rules let it (T125): nothing above the base there, or (rubHoleOnly) another hole's cell */
 export const RUB_WHY = { nothing: 'Nothing to rub out', hole: 'Another hole' } as const;
 /** the studio's 18 preset holes (src/game/golf/hole-presets.json; null: an empty slot) */
@@ -152,6 +152,21 @@ export interface PaintHost { setLotGround(key: string, patches: LotPatch[] | nul
   setPlans?(p: unknown[]): void;
   /** hole n's pin (the New hole wizard's walk label), if it has one */
   pinOf?(hole: number): { x: number; y: number } | null;
+  /** New hole (P23 4.4, T119): the camera frames tiles pts beside the panel (after the tee and the green clicks, and Show me); zoomIn false
+   *  only eases out */
+  fitView?(pts: { x: number; y: number }[], zoomIn: boolean): void;
+  /** the practice area's box (tiles x0 y0 x1 y1; a range start), whose cells hold no hole (P24 D24); null: none */
+  practiceBox?(): readonly [number, number, number, number] | null;
+  /** why New hole is not open yet (a range start's ramp, P24 Phase 4a: the range card comes first), or null when it is */
+  planLock?(): string | null;
+  /** the length (m) New hole suggests for the hole it starts (a range start's first hole: a par-3), or 0: the player's click sets it */
+  suggestM?(): number;
+  /** the box round the golf game's land (tiles x0 y0 x1 y1): New hole's tee framing keeps to it */
+  landBox?(): readonly [number, number, number, number] | null;
+  /** the public roads near a box (tiles), with their names: New hole's road-across warning */
+  publicRoads?(box: readonly [number, number, number, number]): { ax: number; ay: number; bx: number; by: number; name: string }[];
+  /** the holes as lines from tee to pin: New hole's too-close warning */
+  holeLines?(): { hole: number; line: { x: number; y: number }[] }[];
   /** a course surface's look (a brush style) changed: the grid's chunks are drawn again in it */
   courseLook?(): void }
 /** the ghost's fill by texture (the hole preview): the green, fairway, water and sand; other areas are only outlined */
@@ -286,11 +301,17 @@ export class PaintTool {
     grid: () => this.courseGrid(),
     plans: () => decodePlans(this.host.plans?.()),
     allow: i => { const g = this.host.grid?.(), own = this.host.ownedAt; if (!g || !own) return true; const c = cellCentre(g, i); return own(c.x, c.y); },
-    whereAt: (x, y) => LAND_WHERE[this.host.landWhy?.(x, y) || 'off'],
+    landWhy: (x, y) => this.host.landWhy?.(x, y) || 'off',
     month: () => plantMonth(this.plantKind, this.host.currentMonth?.()),
     price: s => (this.host.golfMode?.() ? unitBuildCost(SURF_SURFACE[s] ?? 'other', this.plantKind) : 0),
+    priceAs: (s, sod) => (this.host.golfMode?.() ? unitBuildCost(SURF_SURFACE[s] ?? 'other', sod ? 'sod' : 'seed') : 0),
+    sod: () => this.plantKind === 'sod',
     money: () => (this.host.golfMode?.() ? this.host.money?.() ?? 0 : Infinity),
     pinOf: n => this.host.pinOf?.(n) ?? null,
+    practiceBox: () => this.host.practiceBox?.() ?? null,
+    landBox: () => this.host.landBox?.() ?? null,
+    roads: b => this.host.publicRoads?.(b) ?? [],
+    holeLines: () => this.host.holeLines?.() ?? [],
   });
   private pill: { x: number; y: number; w: number; h: number } | null = null;
   /** when plan mode last told the panel (ms; drags tell it at most every 150 ms) */
@@ -368,7 +389,76 @@ export class PaintTool {
   /** the Course brush on the course grid (T109): a square of brushCells x brushCells mini-grid cells (1 m each; 1 the default, 2 one town
    *  square, 3, 4), or the round brush of the surface's radius (0; under Advanced) */
   brushCells: number = loadCells();
-  setBrushCells(n: number) { this.brushCells = n > 0 ? Math.min(SQUARE_SIZES[SQUARE_SIZES.length - 1]!, Math.max(1, Math.round(n))) : 0; try { localStorage.setItem(CELLS_KEY, String(this.brushCells)); } catch { /* storage may be unavailable */ } this.host.emit(); }
+  setBrushCells(n: number) { this.brushCells = n > 0 ? Math.min(SQUARE_SIZES[SQUARE_SIZES.length - 1]!, Math.max(1, Math.round(n))) : 0; if (!this.brushCells) { this.brushRun = false; this.dropRun(); } try { localStorage.setItem(CELLS_KEY, String(this.brushCells)); } catch { /* storage may be unavailable */ } this.host.emit(); }
+
+  // ---------- Run (T122, plan P23 4.5): a road-like strip of cells ----------
+  /** the Course brush's method on the course grid (the panel's Brush | Run): false the brush (click a cell, drag a run of squares), true
+   *  Run (click a start, click each bend, finish with a double-click, Enter or a right-click; Shift keeps a leg straight). Run lays the
+   *  square brush swept along the line (ext/course-cursor/run.ts), with the brush's rules, ghost and price, as one undo step; it follows the
+   *  Erase toggle (Alt, the brush's erase for a moment, is not a run's) */
+  brushRun = false;
+  /** the run in progress: its bends so far (the square brush's middles, tiles, x y pairs; empty: none) */
+  runPts: number[] = [];
+  /** Shift was held at the last pointer move (the leg to the pointer is kept straight) */
+  private runShift = false;
+  /** a right press during a run (css px): its release finishes the run unless the press dragged (a right-drag pans; decision 4) */
+  private runRight: { mx: number; my: number } | null = null;
+  private runBuf: number[] = [];
+  /** whether Run is the brush in hand: the Course brush in Run on a course grid surface with the square brush (Run has no round brush) */
+  runOn(): boolean { return this.brushRun && this.mode === 'brush' && this.brushSquare() > 0; }
+  /** picks the brush's method (the panel's Brush | Run): the run in progress goes; Run takes the square brush (size 1 when the round one was in hand) */
+  setBrushRun(on: boolean) {
+    if (this.mode !== 'brush') this.setBrush(this.brushKind);
+    this.dropRun(); this.brushRun = on;
+    if (on && !this.brushCells) this.setBrushCells(1); else this.host.emit();
+  }
+  /** where a click lays the run's next bend with the pointer at tile t: the square brush's middle there, Shift straight from the last bend */
+  private runAim(t: { x: number; y: number }): { x: number; y: number } {
+    const n = this.brushSquare(), p = runPoint(t.x, t.y, n), P = this.runPts, k = P.length;
+    return this.runShift && k ? straightTo(P[k - 2]!, P[k - 1]!, p.x, p.y, n) : p;
+  }
+  /** the run as the cursor draws it: the bends placed, then where the next click lands (with no bend yet: that point alone, the square a click
+   *  starts with); a reused buffer, valid until the next call */
+  runPath(): number[] {
+    const b = this.runBuf, c = this.cursor; b.length = 0;
+    for (const v of this.runPts) b.push(v);
+    if (c && this.runOn()) { const p = this.runAim(c), k = b.length; if (!k || b[k - 2] !== p.x || b[k - 1] !== p.y) b.push(p.x, p.y); }
+    return b;
+  }
+  /** a click in Run: a bend at the pointer (the same bend again, a double-click's second press, adds nothing) */
+  private runClick(t: { x: number; y: number }) {
+    const p = this.runAim(t), P = this.runPts, k = P.length;
+    if (k && P[k - 2] === p.x && P[k - 1] === p.y) return;
+    P.push(p.x, p.y); this.host.emit();
+  }
+  /** takes back the run's last bend (Backspace, Ctrl+Z while a run is drawn); the last one drops the run */
+  runBack() { this.runPts.length = Math.max(0, this.runPts.length - 2); this.runRight = null; this.host.emit(); }
+  /** drops the run in progress (nothing was laid yet) */
+  private dropRun() { this.runPts.length = 0; this.runRight = null; }
+  /** finishes the run (a double-click, Enter, a right-click): the strip from its first bend to its last (the leg to the pointer is not laid:
+   *  click there first), the brush's rules and price, as one undo step; true when it laid. The treasury short: a toast, and the run stays to be
+   *  shortened (Backspace) or dropped (Esc) */
+  finishRun(): boolean {
+    const P = this.runPts, g = this.courseGrid(), s = g ? surfOfSurface(this.brushKind) : 0, n = this.brushSquare();
+    this.runRight = null;
+    if (!P.length || !g || !s || !n || this.mode !== 'brush') { this.dropRun(); this.host.emit(); return false; }
+    const cells = runCells(P, n), idx = new Uint32Array(cells.length >> 1), ox = Math.round(g.x0 / CELL_T), oy = Math.round(g.y0 / CELL_T);
+    let m = 0;
+    for (let k = 0; k < cells.length; k += 2) { const cx = cells[k]! - ox, cy = cells[k + 1]! - oy; if (cx >= 0 && cy >= 0 && cx < g.w && cy < g.h) idx[m++] = cy * g.w + cx; }
+    const erase = this.rubOut, nm = SURF_SURFACE[s] ?? 'surface', name = nm[0]!.toUpperCase() + nm.slice(1);
+    this.begin(erase ? 'rub out a run' : `run of ${nm}`);
+    const d = paintCells(g, idx, m, erase ? this.rubBase() : s, erase ? 0 : this.brushHole, erase ? 0 : plantMonth(this.plantKind, this.host.currentMonth?.()), this.gridOpts(g, erase));
+    const cost = !erase && this.host.golfMode?.() ? Math.round(diffCost(d, v => unitBuildCost(SURF_SURFACE[v] ?? 'other', this.plantKind))) : 0, money = this.host.money?.() ?? 0;
+    if (cost > 0 && money < cost) {
+      applyDiff(g, d, true); this.commit();
+      this.host.toast(`Not enough money: ${name} run · $${cost.toLocaleString()} · you have $${Math.round(money).toLocaleString()}`, 'warn'); this.host.emit(); return false;
+    }
+    if (cost > 0) { this.host.spend?.(cost); if (this.tx) this.tx.spent += cost; }
+    this.gridApply(d);
+    this.dropRun(); this.commit();
+    if (!erase && d.n) this.host.progress?.('piece');
+    this.host.save(); this.host.emit(); return true;
+  }
   /** the square brush's size in cells when it is the one that paints (the Course brush on a course grid surface), else 0 (the round brush) */
   brushSquare(): number { return this.brushCells > 0 && this.course && !!this.courseGrid() && surfOfSurface(this.brushKind) > 0 ? this.brushCells : 0; }
   /** what the stroke in progress has charged so far ($; 0 with none) */
@@ -453,7 +543,7 @@ export class PaintTool {
   private saveBrush() { try { localStorage.setItem(BRUSH_KEY, JSON.stringify(this.brush)); } catch { /* storage may be unavailable */ } }
 
   /** the golf brush: paints the kind (its preset's style, the panel shows it) for the brush hole; the outline and the selection are dropped */
-  setBrush(kind: BrushKind) { this.mode = 'brush'; this.brushKind = kind; this.style = { ...this.brush[kind].style }; this.cancel(); this.selected = 0; this.hover = 0; this.hoverH = null; this.host.emit(); }
+  setBrush(kind: BrushKind) { const run = this.runOn() ? this.runPts.slice() : null; this.mode = 'brush'; this.brushKind = kind; this.style = { ...this.brush[kind].style }; this.cancel(); if (run && this.runOn()) this.runPts = run; this.selected = 0; this.hover = 0; this.hoverH = null; this.host.emit(); } // a run in progress keeps its bends when only the surface changes (T122)
 
   /** the Course tool's Shape method: click corners (or lasso) to lay the kind for the current hole, in its preset's style */
   setShape(kind: BrushKind) { this.mode = 'draw'; this.brushKind = kind; this.style = { ...this.brush[kind].style }; this.cancel(); this.selected = 0; this.hover = 0; this.hoverH = null; this.host.emit(); }
@@ -468,10 +558,11 @@ export class PaintTool {
    *  (a classic game) or every hole is in use */
   setPlan(n?: number): boolean {
     if (!this.course || !this.host.golfMode?.() || !this.host.grid?.()) { this.host.toast('The hole wizard builds on a golf course', 'warn'); return false; }
+    const lock = this.host.planLock?.(); if (lock) { this.host.toast(`New hole: ${lock}`, 'info'); return false; }
     const h = n ?? this.nextFreeHole();
     if (!h) { this.host.toast(`All ${HOLE_COUNT} holes are in use: delete one first`, 'warn'); return false; }
     this.mode = 'plan'; this.cancel(); this.selected = 0; this.hover = 0; this.hoverH = null; this.pill = null;
-    this.wizard.start(h); this.host.emit(); return true;
+    this.wizard.start(h); this.wizard.suggestM = this.host.suggestM?.() ?? 0; this.host.emit(); return true;
   }
   /** whether hole n has a built plan */
   hasPlan(n: number): boolean { return !!this.wizard.planOf(n); }
@@ -498,6 +589,7 @@ export class PaintTool {
     this.commit();
     this.brushHole = hole;
     w.built(typeof performance !== 'undefined' ? performance.now() : 0, this.nextFreeHole());
+    w.suggestM = 0; // the par-3 suggestion is the first hole's only (T132)
     this.pill = null;
     this.host.save();
     this.host.toast(`Hole ${hole} ${editing ? 'replanned' : 'built'}: par ${gh.info.par}, ${gh.info.lengthM} m${gh.cost ? `, $${gh.cost.toLocaleString()}` : ''}`);
@@ -525,15 +617,15 @@ export class PaintTool {
     const A = this.A; this.host.affine(A);
     return (x, y) => ({ x: A[0]! + x * A[2]! + y * A[4]!, y: A[1]! + x * A[3]! + y * A[5]! });
   }
-  /** plan mode's keys: Enter builds, Esc drops the plan on screen (then leaves plan mode), R / Shift+R turn the green, [ ] size it,
-   *  Delete or Backspace over a bend takes it out */
+  /** plan mode's keys: Enter builds, Esc steps back one stage (P23 4.4: shaping → the green step, the tee kept → the tee step → out of
+   *  New hole, the panel staying), R / Shift+R turn the green, [ ] size it, Delete or Backspace over a bend takes it out */
   private planKey(e: KeyboardEvent): boolean {
     const w = this.wizard;
     switch (e.key) {
       case 'Enter': if (w.step !== 'shape') return false; this.buildPlan(); return true;
       case 'Escape':
-        if (w.step === 'tee') { this.setBrush(this.brushKind); return true; }
-        w.start(w.base ? this.nextFreeHole() || w.hole : w.hole); break;
+        if (w.back(this.nextFreeHole() || w.hole) === 'out') { this.setBrush(this.brushKind); return true; }
+        this.pill = null; break;
       case 'r': case 'R': if (w.step !== 'shape') return false; w.turnGreen(e.shiftKey ? -15 : 15); break;
       case '[': case ']': if (w.step !== 'shape') return false; w.sizeGreen(e.key === ']' ? GREEN_STEP : -GREEN_STEP); break;
       case 'Delete': case 'Backspace': if (w.hover?.k !== 'bend' || !w.removeBend(w.hover.i)) return false; break;
@@ -547,7 +639,50 @@ export class PaintTool {
     if (w.step === 'shape' && p && mx >= p.x && mx <= p.x + p.w && my >= p.y && my <= p.y + p.h) { this.buildPlan(); return; }
     const r = w.press(t, mx, my, this.toCss());
     if (r === 'open') this.brushHole = w.hole;
+    // the camera frames 450 m round the tee, then the plan (P23 4.4)
+    if (r === 'tee') this.host.fitView?.(w.teeView(), false);
+    if (r === 'green') this.host.fitView?.(w.planView(), true);
     if (r) this.host.emit();
+  }
+  /** Ctrl+Z on the course (P23 4.10): in New hole its own clicks and drags first; while it has something on screen never the course's
+   *  steps (Ctrl+Z takes back a drag, not the last hole); else the course's last step */
+  undoTop(): void {
+    if (this.mode === 'plan' && this.course) {
+      const w = this.wizard;
+      if (w.undo()) { this.pill = null; this.host.emit(); return; }
+      if (w.busy) { this.host.toast('Nothing more to take back in this plan: Esc steps back', 'info'); return; }
+    }
+    this.undo();
+  }
+  /** Ctrl+Y on the course: New hole's undone clicks and drags first, else the course's */
+  redoTop(): void {
+    if (this.mode === 'plan' && this.course) {
+      const w = this.wizard;
+      if (w.redo()) { this.pill = null; this.host.emit(); return; }
+      if (w.busy) return;
+    }
+    this.redo();
+  }
+  /** what Ctrl+Z / Ctrl+Y would take back or do again on the course ('' none), for the Holes panel's ↶ ↷ (P23 4.3) */
+  get topUndo(): string { if (this.mode === 'plan' && this.course) { const w = this.wizard; if (w.undoLabel || w.busy) return w.undoLabel; } return this.undoLabel; }
+  get topRedo(): string { if (this.mode === 'plan' && this.course) { const w = this.wizard; if (w.redoLabel || w.busy) return w.redoLabel; } return this.redoLabel; }
+  /** the numbers New hole offers (P23 4.4: "Number ▾"): the free numbers up to the highest in use, then the one after it; label as shown */
+  planNumbers(): { n: number; label: string }[] {
+    const used = this.usedHoles(), max = Math.max(0, ...used), out: { n: number; label: string }[] = [];
+    for (let n = 1; n <= Math.min(max, HOLE_COUNT); n++) if (!used.has(n)) out.push({ n, label: `Hole ${n}` });
+    if (max < HOLE_COUNT) out.push({ n: max + 1, label: max ? `After ${max}: hole ${max + 1}` : 'Hole 1' });
+    return out;
+  }
+  /** New hole takes number n (a free one) */
+  setPlanHole(n: number): void {
+    const w = this.wizard; if (this.mode !== 'plan' || w.base || this.usedHoles().has(n) || n < 1 || n > HOLE_COUNT) return;
+    w.renumber(n); this.host.emit();
+  }
+  /** a check's Show me (P23 4.4): the camera frames its points with 40 m round each */
+  showMe(pts: { x: number; y: number }[]): void {
+    if (!pts.length) return;
+    const r = 20, out = pts.flatMap(p => [{ x: p.x - r, y: p.y - r }, { x: p.x + r, y: p.y + r }]);
+    this.host.fitView?.(out, true);
   }
   /** the hole numbers that have painted areas */
   usedHoles(): Set<number> { const out = new Set<number>(); for (const a of this.areas) if (a.hole) out.add(a.hole); for (const a of this.host.gridAreas?.() ?? []) if (a.hole) out.add(a.hole); for (const p of this.wizard.plans()) out.add(p.hole); return out; }
@@ -711,7 +846,7 @@ export class PaintTool {
     if (u.props && this.host.journal) u.props = this.host.journal.undo(u.props);
     if (u.spent) this.host.spend?.(-u.spent);
     this.host.changed?.();
-    if (this.mode === 'plan') this.wizard.start(this.nextFreeHole() || this.wizard.hole); // the plans changed under the wizard
+    if (this.mode === 'plan') this.wizard.plansChanged(this.nextFreeHole(), n => this.usedHoles().has(n)); // the plans changed under the wizard
     this.redos.push(u); this.host.save(); this.host.toast(`Undone: ${u.label}`); this.host.emit();
   }
   /** redoes the last undone action */
@@ -724,7 +859,7 @@ export class PaintTool {
     if (u.props && this.host.journal) u.props = this.host.journal.redo(u.props);
     if (u.spent) this.host.spend?.(u.spent);
     this.host.changed?.();
-    if (this.mode === 'plan') this.wizard.start(this.nextFreeHole() || this.wizard.hole);
+    if (this.mode === 'plan') this.wizard.plansChanged(this.nextFreeHole(), n => this.usedHoles().has(n));
     this.undos.push(u); this.host.save(); this.host.toast(`Redone: ${u.label}`); this.host.emit();
   }
 
@@ -899,7 +1034,7 @@ export class PaintTool {
     if (this.planting) this.planting.n += n;
   }
   /** drops the outline being drawn (its corners, the lasso and the press) and a stroke in progress (not applied); a handle drag in progress ends (its shape is kept, or reverted when it cannot be placed) */
-  cancel() { if (this.drag) this.dragEnd(); this.pts = []; this.lasso = false; this.down = null; if (this.stroke) { this.stroke = null; this.commit(); } if (this.planting) { this.planting = null; this.commit(); } if (this.heighting) { this.heighting = null; this.commit(); } }
+  cancel() { if (this.drag) this.dragEnd(); this.pts = []; this.lasso = false; this.down = null; this.dropRun(); if (this.stroke) { this.stroke = null; this.commit(); } if (this.planting) { this.planting = null; this.commit(); } if (this.heighting) { this.heighting = null; this.commit(); } }
 
   /** the cursor over the overlay: a grab while dragging, a handle's own cursor over it, else the crosshair */
   get cursorStyle(): string {
@@ -926,7 +1061,7 @@ export class PaintTool {
     if (this.mode === 'hole') { this.placeHoleAt(t); return; }
     if (this.mode === 'piece') { this.placePiece(); return; }
     if (this.mode === 'height') { this.begin(this.heightMode + ' ground'); this.heighting = { last: { x: t.x, y: t.y }, broke: false }; this.heightDabAt(t); this.host.emit(); return; }
-    if (this.mode === 'brush') { this.strokeStart(t, alt); return; }
+    if (this.mode === 'brush') { if (this.runOn()) this.runClick(t); else this.strokeStart(t, alt); return; }
     if (this.mode === 'plant') { const erase = this.rubOut || alt; this.begin(erase ? 'rub out plants' : 'plant ' + this.plantBrush); this.planting = { erase, last: { x: t.x, y: t.y }, n: 0 }; this.plantDab(t, erase); this.host.emit(); return; }
     if (this.mode === 'draw') {
       if (this.selected) { this.selected = 0; this.hoverH = null; this.host.emit(); }
@@ -950,6 +1085,7 @@ export class PaintTool {
       if (h?.k === 'bend' && this.wizard.removeBend(h.i)) { this.host.emit(); return true; }
       return false;
     }
+    if (this.runOn() && this.runPts.length) { this.runRight = { mx, my }; return false; } // Run (T122): the release finishes it; a drag pans
     const sel = this.selectedArea();
     const g = sel ? this.grabAt(sel, t, mx, my) : null;
     if (!sel || g?.k !== 'corner') return false;
@@ -971,6 +1107,7 @@ export class PaintTool {
     if (this.mode === 'piece') { this.piece = t ? this.pieceAt(t) : null; return; }
     if (this.mode === 'height') { const h = this.heighting; if (h && t && Math.hypot(t.x - h.last.x, t.y - h.last.y) >= Math.max(0.5, this.heightR * 0.3)) { h.last = { x: t.x, y: t.y }; this.heightDabAt(t); } return; }
     if (this.mode === 'brush') {
+      if (this.runOn()) { this.runShift = shift; const r = this.runRight; if (r && Math.abs(mx - r.mx) + Math.abs(my - r.my) > 3) this.runRight = null; return; } // Run (T122): the cursor draws the leg to the pointer
       const s = this.stroke; if (!s || !t) return;
       // the square brush (T109): a square at every cell step from the last one to the one under the pointer (no gaps)
       const sg = s.grid;
@@ -1010,7 +1147,7 @@ export class PaintTool {
   pointerUp(tol: number) {
     if (this.mode === 'plan') { if (this.wizard.drag) { this.wizard.release(); this.host.emit(); } return; }
     if (this.drag) { this.dragEnd(); return; }
-    if (this.mode === 'brush') { this.strokeEnd(); return; }
+    if (this.mode === 'brush') { if (this.runRight) { this.finishRun(); return; } this.strokeEnd(); return; }
     if (this.mode === 'height') { if (this.heighting) { this.heighting = null; this.commit(); this.host.save(); } this.host.emit(); return; }
     if (this.mode === 'plant') { const pl = this.planting; this.planting = null; if (pl) this.commit(); if (pl && !pl.n && !pl.erase && !this.plantIds().length) this.host.toast('Pick at least one sprite for this brush', 'warn'); this.host.emit(); return; }
     if (this.mode !== 'draw') return;
@@ -1222,6 +1359,7 @@ export class PaintTool {
   doubleClick() {
     if (this.mode === 'plan') { const h = this.wizard.hover; if (h?.k === 'bend' && this.wizard.removeBend(h.i)) { this.wizard.release(); this.host.emit(); } return; }
     if (this.mode === 'draw' && this.pts.length >= 6) this.finish(false);
+    if (this.runOn() && this.runPts.length) this.finishRun();
   }
 
   /** a key press: true when the tool used it (Enter closes, Backspace undoes a corner, Esc drops what is in hand (false with nothing in hand: the
@@ -1229,8 +1367,9 @@ export class PaintTool {
   key(e: KeyboardEvent): boolean {
     if ((e.ctrlKey || e.metaKey) && !e.altKey) {
       const k = e.key.toLowerCase();
-      if (k === 'z' && !e.shiftKey) { e.preventDefault(); this.undo(); return true; }
-      if (k === 'y' || (k === 'z' && e.shiftKey)) { e.preventDefault(); this.redo(); return true; }
+      // a Run's last corner first (T122), then New hole's own clicks and drags (T119), then the course's last step
+      if (k === 'z' && !e.shiftKey) { e.preventDefault(); if (this.runOn() && this.runPts.length) this.runBack(); else this.undoTop(); return true; }
+      if (k === 'y' || (k === 'z' && e.shiftKey)) { e.preventDefault(); this.redoTop(); return true; }
       if (this.selected && (e.code === 'BracketRight' || e.code === 'BracketLeft')) { e.preventDefault(); const f = e.code === 'BracketRight'; this.moveLayer(e.shiftKey ? (f ? 'front' : 'back') : f ? 1 : -1); return true; }
       return false;
     }
@@ -1252,7 +1391,13 @@ export class PaintTool {
     // hand; with nothing in hand (the brush, or Shape with no corners) Esc is the engine's, out to Select, so Brush and Shape never flip
     if (this.course && e.key === 'Escape') {
       if (this.mode === 'hole' || this.mode === 'plant' || this.mode === 'height') { this.setBrush(this.brushKind); return true; }
-      if (this.mode === 'brush') { if (!this.stroke && !this.selected) return false; this.cancel(); this.selected = 0; this.hoverH = null; this.host.emit(); return true; }
+      if (this.mode === 'brush') { if (!this.stroke && !this.selected && !this.runPts.length) return false; this.cancel(); this.selected = 0; this.hoverH = null; this.host.emit(); return true; }
+    }
+    // Run (T122): Enter finishes it (as a road), Backspace takes back its last bend, Shift straightens the leg to the pointer at once
+    if (this.runOn()) {
+      if (e.key === 'Enter' && this.runPts.length) { this.finishRun(); return true; }
+      if (e.key === 'Backspace' && this.runPts.length) { this.runBack(); return true; }
+      if (e.key === 'Shift') { this.runShift = true; return false; }
     }
     switch (e.key) {
       case 'Enter': if (!this.pts.length) return false; this.finish(false); break;

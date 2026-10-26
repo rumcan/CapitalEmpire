@@ -12,7 +12,7 @@ import savedDecals from './map-decals.json';
 import { HS, TC, type Waterway } from './terrain/types';
 import { makeNoise } from './terrain/noise';
 import { WOODLAND_TEX, classAlpha, rockAlpha, shadeField, shadeRGBA, slopeField, waterBox, waterShape } from './terrain-paint';
-import { quadBox, type CourseLayer, type CoursePatch, type CourseRim, type CourseTex, type CourseWall, type LotPatch, type PatchTex } from './ground-protocol';
+import { quadBox, type CourseLayer, type CoursePatch, type CourseRim, type CourseTex, type CourseWall, type LotPatch, type MowStripes, type PatchTex } from './ground-protocol';
 import { DRAW_ORDER, FaceForm, GREEN_FACE, STAIR_TREAD, SURF_HEIGHT, SUN_DIR, WALL_DROP, WALL_PX_PER_M, WALL_TEX, WallMat, defaultShadow, faceLight, faceScale, isOverlay, layerCode, shadowOwner, slopeLight, stairSteps, wallShade, type Stair, type WallShade } from './ext/course-walls';
 import { SURF } from './ext/course-grid';
 import { SPROUT_PERIOD, growDraws, seedColour, seedSprouts, sproutRes, type GrowDraw } from './ext/course-fx/seed';
@@ -1986,6 +1986,8 @@ export class GroundPainter {
     // the tone filter: Multiply (darker) or Screen (lighter) of the tint over the fill, at its strength; the border is not toned
     if (st.t) { ctx.globalCompositeOperation = st.t === 1 ? 'multiply' : 'screen'; ctx.globalAlpha = st.ta ?? 0; ctx.fillStyle = st.tc ?? '#000000'; ctx.fillRect(r[0], r[1], r[2] - r[0], r[3] - r[1]); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; }
     this.drawManagedGrass(ctx, [p], box, L);
+    // the mowing stripes last on the fill (T132: the range's outfield), at every zoom
+    if (st.mw) this.mowStripes(ctx, st.mw, r);
     if (st.b > 0) {
       if (!soft) { ctx.strokeStyle = 'rgba(0,0,0,0.28)'; ctx.lineWidth = 2 * st.b + 0.08; ctx.stroke(path); }
       const ramp = soft > 0 && st.bt !== 'kerb' && st.bt !== 'slabs' ? bandRamp(st.b, soft) : [{ half: st.b, alpha: 1 }];
@@ -1995,6 +1997,24 @@ export class GroundPainter {
       if (st.bto) { ctx.globalCompositeOperation = st.bto === 1 ? 'multiply' : 'screen'; ctx.strokeStyle = st.btc ?? '#000000'; for (const s of ramp) { ctx.globalAlpha = (st.bta ?? 0) / ramp.length; ctx.lineWidth = 2 * s.half; ctx.stroke(path); } ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; }
     }
     else if (paved) { ctx.strokeStyle = asph ? 'rgba(12,10,8,0.5)' : 'rgba(0,0,0,0.3)'; ctx.lineWidth = asph ? 0.3 : 0.16; ctx.stroke(path); }
+    ctx.restore();
+  }
+  /** a painted area's mowing stripes (PatchPaint.mw, T132) over tile box r, under the area's clip and the chunk transform: alternate bands along
+   *  (ux, uy), the light ones screened with their colour, the dark ones multiplied, each band's edges softened by f (a gradient across it) */
+  private mowStripes(ctx: C2D, m: MowStripes, r: number[]) {
+    const w = Math.max(0.25, m.w), corners = [[r[0]!, r[1]!], [r[2]!, r[1]!], [r[0]!, r[3]!], [r[2]!, r[3]!]] as const;
+    let s0 = Infinity, s1 = -Infinity, t0 = Infinity, t1 = -Infinity;
+    for (const [x, y] of corners) { const dx = x - m.ox, dy = y - m.oy, s = dx * m.ux + dy * m.uy, t = -dx * m.uy + dy * m.ux; s0 = Math.min(s0, s); s1 = Math.max(s1, s); t0 = Math.min(t0, t); t1 = Math.max(t1, t); }
+    const rgba = (hex: string, a: number) => `rgba(${parseInt(hex.slice(1, 3), 16)},${parseInt(hex.slice(3, 5), 16)},${parseInt(hex.slice(5, 7), 16)},${Math.max(0, Math.min(1, a)).toFixed(3)})`;
+    const e = Math.min(0.49, Math.max(0.001, m.f * 0.5));
+    ctx.save(); ctx.transform(m.ux, m.uy, -m.uy, m.ux, m.ox, m.oy);
+    for (let k = Math.floor(s0 / w); k * w < s1; k++) {
+      const light = (k & 1) === 0, col = light ? m.lc : m.dc, a = (light ? m.l : m.k) + m.t * 0.5;
+      if (!(a > 0)) continue;
+      const g = ctx.createLinearGradient(k * w, 0, (k + 1) * w, 0);
+      g.addColorStop(0, rgba(col, 0)); g.addColorStop(e, rgba(col, a)); g.addColorStop(1 - e, rgba(col, a)); g.addColorStop(1, rgba(col, 0));
+      ctx.globalCompositeOperation = light ? 'screen' : 'multiply'; ctx.fillStyle = g; ctx.fillRect(k * w, t0, w, t1 - t0);
+    }
     ctx.restore();
   }
   /** sidewalk slab sprites in a running bond over the rectangle r (tiles), in texture space: a tile is G (u, v), so the

@@ -19,15 +19,15 @@ test('the catalogue: four groups of real library pictures, a price of $50 to $15
   for (const d of DECOR) {
     assert.ok(LIB.has(d.id), `${d.key}: ${d.id} is in the library`);
     assert.ok(d.price >= 50 && d.price <= 15000, `${d.key} price`);
-    assert.ok(d.appeal > 0 && d.appeal <= 0.05, `${d.key} appeal`);
+    assert.ok(d.appeal > 0 && d.appeal <= 0.15, `${d.key} appeal`);
     assert.ok(d.name && !/stand in/i.test(d.name) && d.desc, `${d.key}: a plain name`);
     assert.equal(sellBack(d), Math.round(d.price / 2));
   }
   // the owner's list: pot plants, shrubs, grasses, flower beds, fountains, statues, pillars, benches, bins, lamp posts, flag poles
   for (const k of ['pot-terracotta', 'shrub-hydrangea', 'grass-ornamental', 'flower-bed', 'fountain', 'statue', 'pillar', 'bench', 'bin', 'lamp', 'flagpole']) assert.ok(DECOR_BY_KEY.has(k), k);
   assert.equal(DECOR_BY_KEY.get('pot-terracotta')!.appeal, APPEAL.plant);
-  assert.equal(DECOR_BY_KEY.get('fountain')!.appeal, 0.05); assert.equal(DECOR_BY_KEY.get('statue')!.appeal, 0.03);
-  assert.equal(DECOR_BY_KEY.get('pillar')!.appeal, 0.01); assert.equal(DECOR_BY_KEY.get('bench')!.appeal, 0.005);
+  assert.equal(DECOR_BY_KEY.get('fountain')!.appeal, 0.15); assert.equal(DECOR_BY_KEY.get('statue')!.appeal, 0.08); // rebalanced with the diminishing returns (T132)
+  assert.equal(DECOR_BY_KEY.get('pillar')!.appeal, 0.015); assert.equal(DECOR_BY_KEY.get('bench')!.appeal, 0.01);
   for (const k of ['statue', 'pillar', 'flagpole']) assert.ok(DECOR_BY_KEY.get(k)!.standIn, `${k} is a labelled stand-in`);
   assert.ok(!DECOR_BY_KEY.get('fountain')!.standIn, 'the fountain is real art');
   // the fountain has four views, and turning never mirrors anything
@@ -68,9 +68,9 @@ test('appeal: each prop within 15 tiles of the shop or a mat counts once, capped
   const a = [{ x: 0, y: 0 }, { x: 30, y: 0 }];
   assert.equal(decorAppeal([], a), 0);
   assert.equal(decorAppeal([{ key: 'pot-terracotta', x: 3, y: 4 }], a), 0.01);
-  assert.equal(decorAppeal([{ key: 'fountain', x: 15, y: 0 }], a), 0.05, 'in reach of both anchors, counted once');
+  assert.equal(decorAppeal([{ key: 'fountain', x: 15, y: 0 }], a), 0.15, 'in reach of both anchors, counted once');
   assert.equal(decorAppeal([{ key: 'fountain', x: 0, y: PROPS_APPEAL_RADIUS + 0.1 }], a), 0, 'out of reach');
-  assert.equal(decorAppeal([{ key: 'nope', x: 0, y: 0 }, { key: 'bench', x: 1, y: 1 }], a), 0.005);
+  assert.equal(decorAppeal([{ key: 'nope', x: 0, y: 0 }, { key: 'bench', x: 1, y: 1 }], a), 0.01);
   assert.equal(decorAppeal([{ key: 'fountain', x: 0, y: 0 }], []), 0, 'no range, no appeal');
   const lots = Array.from({ length: 12 }, (_, i) => ({ key: 'fountain', x: i, y: 0 }));
   assert.equal(decorAppeal(lots, a), PROPS_APPEAL_CAP, 'twelve fountains are capped at +40%');
@@ -170,7 +170,8 @@ test('appeal on the map: the props near a range\'s front count, the labels name 
   assert.equal(t.appeal(), 0);
   t.pick('fountain'); t.down(shop.x + 8, shop.y); t.pick('statue'); t.down(shop.x - 6, shop.y); t.down(shop.x - 8, shop.y);
   t.pick('pot-terracotta'); t.down(shop.x + 300, shop.y + 300);
-  assert.ok(Math.abs(t.appeal() - 0.11) < 1e-9, `${t.appeal()}`); assert.equal(t.placed, 4);
+  // the second statue counts PROPS_DECAY of the first (T132's diminishing returns)
+  assert.ok(Math.abs(t.appeal() - (0.15 + 0.08 + 0.08 * 0.8)) < 1e-9, `${t.appeal()}`); assert.equal(t.placed, 4);
   assert.deepEqual(t.labels.map(l => l.text), ['Stand In for Bronze golfer statue']);
   assert.equal(new PropsTool(host(null).ctx).appeal(), 0, 'no range: no appeal');
   // the mats refuse a prop

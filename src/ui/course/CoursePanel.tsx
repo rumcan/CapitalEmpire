@@ -6,6 +6,7 @@ import { PIECE_BUTTONS } from '../../game/ext/course-pieces';
 import { SQUARE_SIZES } from '../../game/ext/course-cursor/snap';
 import { EARTHWORK_PER_M3 } from '../../game/golf/costs';
 import { PlantControls, plainName } from '../../PaintPanel';
+import { LockMark } from '../Rail';
 import { ToolHead } from '../ToolHead';
 import { SurfaceMark } from './SurfaceMark';
 import { HoleStrip, newHole } from './HoleStrip';
@@ -29,17 +30,19 @@ export const lookName = (tex: string) => plainName(PAINT_TEXES.find(t => t.id ==
  *  looks / onLooks: Holes > More options > My looks (the style editor's card beside the panel: App's state, so Esc closes it first) */
 export function CoursePanel({ game, looks = false, onLooks }: { game: Game; looks?: boolean; onLooks?: (open: boolean) => void }) {
   const p = game.paint, ui = game.toolUi();
-  const shape = !ui || ui.shapeByHand, plan = p.mode === 'plan';
+  const shape = !ui || ui.shapeByHand, plan = p.mode === 'plan', lock = ui?.newHoleLock ?? null;
+  // ↶ ↷ name what they take back (P23 4.3); in New hole its own clicks and drags come first (P23 4.4, T119)
+  const un = p.topUndo, re = p.topRedo;
   return (
     <div className="tp" data-panel="holes">
       <ToolHead icon="trophy" title="Holes" desc="Each hole is a park: build it, then shape it">
-        <button className="round-btn" disabled={!p.canUndo} aria-label={p.canUndo ? `Undo ${p.undoLabel}` : 'Nothing to undo'} title={p.canUndo ? `Undo: ${p.undoLabel} (Ctrl+Z)` : 'Nothing to undo'} onClick={() => p.undo()}>↶</button>
-        <button className="round-btn" disabled={!p.canRedo} aria-label={p.canRedo ? `Redo ${p.redoLabel}` : 'Nothing to redo'} title={p.canRedo ? `Redo: ${p.redoLabel} (Ctrl+Y)` : 'Nothing to redo'} onClick={() => p.redo()}>↷</button>
+        <button className="round-btn" disabled={!un} aria-label={un ? `Undo ${un}` : 'Nothing to undo'} title={un ? `Undo: ${un} (Ctrl+Z)` : 'Nothing to undo'} onClick={() => p.undoTop()}>↶</button>
+        <button className="round-btn" disabled={!re} aria-label={re ? `Redo ${re}` : 'Nothing to redo'} title={re ? `Redo: ${re} (Ctrl+Y)` : 'Nothing to redo'} onClick={() => p.redoTop()}>↷</button>
       </ToolHead>
       {plan ? <HoleWizardPanel game={game} /> : (
-        <button className="pill-gold" data-primary="new-hole" title="Click the tee, then the green: the whole hole is planned, ready to shape and build" onClick={() => newHole(game)}>
-          <span className="pill-plus" aria-hidden>+</span>
-          <span className="min-w-0"><span className="block">New hole</span>{!shape && <small>Click a tee, then a green</small>}</span>
+        <button className={`pill-gold ${lock ? 'opacity-50' : ''}`} data-primary="new-hole" aria-disabled={!!lock} title={lock ? `New hole: ${lock}` : 'Click the tee, then the green: the whole hole is planned, ready to shape and build'} onClick={() => newHole(game)}>
+          <span className="pill-plus" aria-hidden>{lock ? <LockMark size={12} /> : '+'}</span>
+          <span className="min-w-0"><span className="block">New hole</span>{lock ? <small data-testid="new-hole-lock">{lock}</small> : !shape && <small>Click a tee, then a green</small>}</span>
         </button>
       )}
       {!shape && !plan && (
@@ -73,7 +76,7 @@ function SizeGlyph({ k }: { k: number }) {
 function ShapeByHand({ game }: { game: Game }) {
   const p = game.paint, ui = game.toolUi(), brushOk = (k: string) => !ui || (ui.visibleCourseBrushes as string[]).includes(k);
   const keys = Math.max(1, ...BRUSH_PRESETS.map((b, i) => (brushOk(b.kind) ? i + 1 : 0)));
-  const brush = p.mode === 'brush', cells = p.brushCells, armed = brush || p.mode === 'draw' || p.mode === 'piece';
+  const brush = p.mode === 'brush', cells = p.brushCells, armed = brush || p.mode === 'draw' || p.mode === 'piece', run = brush && !!p.brushRun && cells > 0;
   const name = BRUSH_PRESETS.find(b => b.kind === p.brushKind)?.name ?? '';
   return (
     <section data-section="shape" className="mt-3">
@@ -99,8 +102,12 @@ function ShapeByHand({ game }: { game: Game }) {
         ))}
       </div>
       <div className="mt-2 flex flex-wrap items-center gap-1.5">
-        <button className={`chip ${brush && !p.rubOut ? 'chip-on' : ''}`} aria-pressed={brush && !p.rubOut} title={`Paint ${name} for hole ${p.brushHole}: click a cell, drag a run`} onClick={() => { p.rubOut = false; if (!brush) p.setBrush(p.brushKind); else game.emit(); }}>Brush</button>
-        <button className={`chip ${brush && p.rubOut ? 'chip-on' : ''}`} aria-pressed={brush && p.rubOut} title="Erase takes the top surface under the brush (hold Alt for a moment); no refund" onClick={() => { p.rubOut = !(brush && p.rubOut); if (!brush) p.setBrush(p.brushKind); else game.emit(); }}>Erase</button>
+        {/* Brush | Run (T122, P23 4.5): the brush paints where you click and drag; Run lays a strip like a road, from click to click */}
+        <div className="flex items-center gap-1.5" role="group" aria-label="Brush or Run" data-method={run ? 'run' : 'brush'}>
+          <button className={`chip ${brush && !run ? 'chip-on' : ''}`} aria-pressed={brush && !run} title={`Paint ${name} for hole ${p.brushHole}: click a cell, drag a run`} onClick={() => p.setBrushRun(false)}>Brush</button>
+          {game.golfMode && <button className={`chip ${run ? 'chip-on' : ''}`} aria-pressed={run} title={`Run: lay a strip of ${name} as wide as the size, like a road: click a start, click each bend, then double-click, Enter or right-click. Shift keeps a leg straight`} onClick={() => p.setBrushRun(true)}>Run</button>}
+        </div>
+        <button className={`chip ${brush && p.rubOut ? 'chip-on' : ''}`} aria-pressed={brush && p.rubOut} title={`Erase takes the top surface under the ${run ? 'run' : 'brush'} (hold Alt for a moment while brushing); no refund`} onClick={() => { p.rubOut = !(brush && p.rubOut); if (!brush) p.setBrush(p.brushKind); else game.emit(); }}>Erase</button>
       </div>
       {!game.golfMode && brush && <div className="sub-line mt-1.5">{`Click paints ${name} for hole ${p.brushHole}; drag paints a run. Alt-drag or Erase rubs out. [ ] size.`}</div>}
     </section>

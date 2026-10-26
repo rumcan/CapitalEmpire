@@ -171,7 +171,7 @@ so 1024 px is plenty (section 1).
 ## Course piece props (T030b)
 - Still missing: tee steps, a bunker rake, a pond waterfall, pond rocks, and pond reeds (reeds use the roadside ornamental grass for now). They plug into `PIECE_PROP_SPRITE` in `src/game/ext/course-pieces/index.ts` (a sprite id, or `null` until the art exists).
 
-## The range business kit (plan P24 Phase 1, T129: art requests)
+## The range business kit (plan P24 Phase 1, T129, and the World of Golf extras, T133: art requests)
 The opening range (`golf/rangebiz.ts rangeScene`) stands these in with labelled stand-ins ("Stand In for ..."); each goes in by its id in
 `rangeScene`. Four views (NE, SE, SW, NW as the building sheets: the front in NE and NW), sun at the upper right, shadows at 145°, early
 autumn dusk, no lettering in the art unless said.
@@ -186,7 +186,12 @@ autumn dusk, no lettering in the art unless said.
 | Hitting bay divider (`golf:range-bay-divider`) | 1.5 x 0.2 / 1.2 | none (the mats stand open) | a low green timber divider between two hitting mats, a club rack on it | P2 |
 | Range tee markers (`golf:tee-marker`, already requested) | 0.3 | none | the single red timber tee marker of T111 | P1 |
 | Gas bottle and plastic garden chairs (`golf:yard-gas-bottle`, `golf:yard-plastic-chair`) | 0.5 / 1 | the striped lawn chair | a dented grey LPG gas bottle on a braai stand; a white plastic garden chair | P2 |
-| Ball-picker cart (`golf:range-picker`, 8 facings) | 2.5 x 1.5 | none (Phase 4) | a small utility cart with a caged cab towing a gang of ball-picking discs | P2 |
+| Ball-picker cart (`golf:range-picker`, 8 facings as the cars: `cars:...:E..SE`) | 2.5 x 1.5 | the navy wood-panel wagon (T133, "Stand In for Ball picker cart" over it) | a small green utility cart with a wire-caged cab towing a gang of ball-picking discs, a basket of balls on its back; never mirrored, each facing its own picture | P1 |
+| Double-deck hitting stand section (`golf:range-deck`, four views, T133) | 20 x 7 / 7 (two storeys) | the covered-bay building drawn again a storey up (`business:golf-driving-range`, "Stand In for the double-deck hitting stand") | one section of a World of Golf style two-storey hitting stand: four open bays a storey, green mats with rubber tees, timber dividers with club racks, a steel stair at one end, a green steel roof, the upper deck's rail along its front; the rangebiz.ts deck draws one per four bays | P1 |
+| Coffee kiosk (`golf:range-coffee-kiosk`, four views, T133) | 3 x 2.5 / 3 | `business:fishing-rental-kiosk` ("Stand In for Coffee kiosk") | a small timber coffee kiosk with a serving hatch and counter, an espresso machine and paper cups, a chalk menu board (no lettering), a striped awning | P1 |
+| Golf academy sign (`golf:range-academy-sign`, T133) | 1.5 x 0.3 / 1.8 | `poi:fishing-board` ("Stand In for Golf academy sign") | a dark green timber sign on two posts with a gold crossed-clubs crest and a blank plate for the game's words | P2 |
+| The player's cottage (`golf:home-cottage`, four views, T133) | 6 x 5 / 5 | `world:house_4` ("Stand In for the player's cottage") | a modest whitewashed cottage with a corrugated-iron roof, a small stoep with a bench, a water tank on a stand at its side, a satellite dish | P2 |
+| Golf pro coaching pose (`golf_coach`, the 3D golfers' 8 facings, T133) | 1 / 1.8 | the golfer's idle frame and the drive clip | a coach standing side-on to the pupil, one hand out pointing at the ball, then miming a slow half swing; 8 frames | P2 |
 | Divot-scarred range tee (texture) | 16 m | the tee turf | listed in section 6 | P1 |
 
 ## Practice facilities (plan P24 Phase 2, T130: art requests)

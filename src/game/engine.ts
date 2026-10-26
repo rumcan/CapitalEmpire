@@ -15,6 +15,7 @@ import { MIN_SEP, checkLegs, replaceCuts, ringStubs, segDist as segSeg, snapPoin
 import { STRUCT_COST, STRUCT_MAX, groundClass, highwayRoute, longestRun, splitByTerrain, structureLengths } from './structures';
 import { GLRenderer, POINT_STRIDE, SHADOW_STRIDE, SPRITE_STRIDE } from './gl';
 import { GroundCache } from './ground-cache';
+import { chunkLayers } from './ground-layers';
 import { clampGrassArt, grassZoomLevels, type GrassArt } from './painted-grass-lod';
 import { lotBatch, type CourseTex, type LotPatch } from './ground-protocol';
 import { BLOCK_MAX_AREA, enclosedBlocks } from './blocks';
@@ -29,12 +30,12 @@ import { PIXEL_LIMIT, PIXEL_SLACK } from './sizes';
 import { RangeHost } from './golf/rangehost';
 import { PropsTool } from './golf/propstool';
 import { DECOR_BY_KEY, propTuple, sellBack, tupleMarks } from './golf/decor';
-import { defaultRangeBiz, practiceAppeal, rangeNewSeason, rangeScene, type RangeCounts, type RangeUpgradeId } from './golf/rangebiz';
+import { RANGE_LABEL_Z, defaultRangeBiz, parkLabel, practiceAppeal, rangeMapLabel, rangeNewSeason, rangeScene, rangeStats, type RangeCounts, type RangeUpgradeId } from './golf/rangebiz';
 import { areaAt, toTuple, type PaintTuple, type PaintTex } from './paint';
 import { CELL_T, SURF, cellAt, diffBox, encodeGrid, fillPolygon, fitGrid, landGridBox, makeGrid, paintStroke, type Grid as CourseGrid, type GridDiff, type GridSave } from './ext/course-grid';
 import { STAIR_REACH } from './ext/course-walls';
 import { SURFACE_TEX_ID, SURF_SURFACE, areaRank, growingHoles, ringArea, type GridArea } from './ext/course-grid/areas';
-import { aimsFromPlans, decodePlans } from './ext/hole-wizard';
+import { aimsFromPlans, decodePlans, frameView, type FreeRect } from './ext/hole-wizard';
 import { isCourseArea, loadCourseGrid, migrateAreas } from './ext/course-grid/migrate';
 import { COURSE_PATCH_REACH, courseChunksIn, courseEditReach, courseGrowKey, courseKey, courseStyles, growStatic, widestCollar, type CourseLooks } from './ext/course-grid/patch';
 import { CourseContour, type CourseChunkOut } from './course-contour';
@@ -64,8 +65,8 @@ import { plazaEdge, plazaIslands, plazaKey, plazaLocal, plazaOutline, plazaPoint
 import { buildPark, parkCost, parkValid, type CarPark, type CarParkDef, type ParkView } from './event/carpark';
 import { TC, classAt, generateTerrain, makeNoise, type Noise, type Terrain } from './terrain';
 import { slopeField } from './terrain-paint';
-import { CONIFER_IDS, FOREST_CELL, forestCell, type ForestTree } from './forest';
-import { casterKind, casterOf, doorToward, pxAcross, CK } from './living-ground';
+import { CONIFER_IDS, FOREST_CELL, FOREST_VIEW_MARGIN, forestCell, forestCellRange, type ForestTree } from './forest';
+import { CHUNK_CASTER_REACH, LIVING_PLANT_MARGIN, casterKind, casterOf, doorToward, pxAcross, CK } from './living-ground';
 import { townTreeCell } from './towntrees';
 import type { BendMode, LibItem, LineStyle, Prop, Tool } from './types';
 import { LK, LaneGraph, laneAt, laneOff } from './sim/lanes';
@@ -116,8 +117,10 @@ import { ktx2Built, ktx2Source, pickFormat } from './atlas-ktx2';
 import { neededLevel, type PageWant } from './atlas-pages';
 import { HALF_T, courseBuilding, gridShown, loadMapGrid, saveMapGrid } from './ext/map-grid';
 import { MapGridLayer } from './ext/map-grid/layer';
-import { STUCK_PLAY_SEC, advanceProgress, computeProgressiveUiState, emptyProgress, nextFirstRunHint, normalizeProgress, progressFacts, type PlayerProgressFacts, type ProgressiveUiState } from './ext/progressive-ui';
+import { FIRST_PAR3_M, RAMP_TOAST, RANGE_CARD_SEEN, STUCK_PLAY_SEC, advanceProgress, computeProgressiveUiState, emptyProgress, nextFirstRunHint, normalizeProgress, progressFacts, rampLock, type PlayerProgressFacts, type ProgressiveUiState } from './ext/progressive-ui';
 
+/** New hole's camera framing eases this long at most (ms; P23 4.4) */
+const CAM_EASE_MS = 400;
 /** the junction types in Tab order (Shift+Tab goes back): each roundabout ring-lane count is its own step */
 const VARIANTS: { type: NodeType; rl: 1 | 2 | 3 }[] = [{ type: 'plain', rl: 1 }, { type: 'stop', rl: 1 }, { type: 'mini', rl: 1 }, { type: 'signal', rl: 1 }, { type: 'slip', rl: 1 }, { type: 'roundabout', rl: 1 }, { type: 'roundabout', rl: 2 }, { type: 'roundabout', rl: 3 }];
 /** what the lights' upgrades cost, by the tier they reach (index = tier: 0 fixed-time is free, 1 actuated, 2 adaptive) */
@@ -270,8 +273,8 @@ function disasterText(n: DisasterNote): string {
   }
 }
 /** the living ground's prop caster cells (T111): CASTER_CELL tiles a side, CASTER_N a side of the map; and the reach (tiles) a chunk looks out
- *  for casters (a big tree's canopy past its trunk) */
-const CASTER_CELL = 32, CASTER_N = MAP / CASTER_CELL, CASTER_REACH = 9;
+ *  for casters (a big tree's canopy past its trunk; living-ground.ts) */
+const CASTER_CELL = 32, CASTER_N = MAP / CASTER_CELL, CASTER_REACH = CHUNK_CASTER_REACH;
 const casterCellOf = (x: number, y: number) => clamp(Math.floor(y / CASTER_CELL), 0, CASTER_N - 1) * CASTER_N + clamp(Math.floor(x / CASTER_CELL), 0, CASTER_N - 1);
 const BUILDING_KINDS: Record<string, number> = { house: 0, shop: 1, venue: 1, arcade: 1, landmark: 4, barn: 3 };
 /** a town lot's use as the player reads it in the toasts (index LU: NONE, RES, COM, IND, TOUR, GOV) */
@@ -406,12 +409,13 @@ export class Game {
       const t = turned(p.id, p.q), item = LIB_INDEX.get(t.id); if (item === undefined) return null;
       // the studio's size wins; never past the pixels its atlas holds (sizes.ts), so the footprint and shadow match what is drawn
       const it = LIBRARY[item]!, scale = Math.min(PIXEL_LIMIT[item]! * PIXEL_SLACK, STUDIO_SCALE[it.id] ?? (p.fit ? 64 * p.fit / it.w : p.scale ?? OWNER_SCALE[it.id] ?? 1));
-      return this.addProp(item, p.x, p.y, t.flip, scale, key);
+      return this.addProp(item, p.x, p.y, t.flip, scale, key, p.lift || p.foot ? { lift: p.lift, foot: p.foot } : undefined);
     },
     removeProp: p => this.removeProp(p), setGround: (k, p) => this.setLotGround(k, p),
     layPaths: legs => { this.edit.addLegs(legs, classOf('cart-slab'), 0, undefined, true); this.commitNetwork(); },
     clearTrees: b => this.dropTownTrees(b[0], b[1], b[2], b[3]),
     money: () => this.money, spend: n => this.traffic.spend('construction', n), book: n => this.traffic.spend('business', -n),
+    month: () => this.golfMonthIndex(), payUpkeep: n => this.traffic.spend('upkeep', n),
     demand: () => ({ tier: this.golf?.tier ?? 1, exits: this.golf?.exits?.length ?? 2, residents: this.traffic.pop, propsAppeal: this.decor.appeal(), practiceAppeal: this.golf?.range ? practiceAppeal(this.golf.range) : 0 }),
     dayLen: () => this.traffic.dayLen, simT: () => this.traffic.simTime(performance.now()),
     clock: () => { const c = this.clock(); return { hour: c.hour + c.minute / 60, day: c.day }; },
@@ -434,7 +438,12 @@ export class Game {
   private rangeMorning() { if (this.golf?.start === 'range') this.traffic.setTownClock({ t0: this.traffic.simTime(performance.now()), m0: 390, rate: 1440 / this.traffic.dayLen }); }
   /** the range card (null: closed, or not a range start) */
   rangeCard() { return this.range.cardOpen ? this.range.view() : null; }
-  openRangeCard(open = !this.range.cardOpen) { this.range.cardOpen = open && !!this.range.view(); this.emit(); }
+  openRangeCard(open = !this.range.cardOpen) {
+    this.range.cardOpen = open && !!this.range.view();
+    // the ramp's first hint moves on once the card has been seen (T132)
+    const p = this.golf?.progress; if (this.range.cardOpen && p && !p.seen.includes(RANGE_CARD_SEEN)) { p.seen.push(RANGE_CARD_SEEN); this.scheduleSave(); }
+    this.emit();
+  }
   buyRangeUpgrade(id: RangeUpgradeId) { this.range.buy(id); }
   setRangePrice(price: number) { this.range.setPrice(price); }
   /** the Props tool (plan P24 Phase 3, T131: golf/propstool.ts): the decor the player places, moves, turns and sells; its appeal feeds the range */
@@ -524,6 +533,14 @@ export class Game {
     // the course keeps off the driving range's own plot (its hut, mats, car park and the field its golfers hit into), the rest of your land is
     // the course's; the brush's footprint and the wizard say which refusal it is
     ownedAt: (x, y) => this.ownedAt(x, y) && !this.onRangePlot(x, y), landWhy: (x, y) => (this.onRangePlot(x, y) ? 'range' : this.ownedAt(x, y) ? '' : 'off'), plans: () => this.golf?.plans ?? [], setPlans: p => this.setGolfPlans(p), pinOf: n => this.golf?.pins.find(q => q.hole === n) ?? null,
+    // New hole (P23 4.4, T119): the camera framing, the practice area (P24 D24), and what its warnings measure against
+    fitView: (pts, zoomIn) => this.fitView(pts, zoomIn), practiceBox: () => (this.golf?.start === 'range' ? this.range.scene?.practice.box ?? null : null),
+    // a range start's ramp (P24 Phase 4a, T132): New hole waits for the range, and the first hole is suggested as a par-3
+    planLock: () => this.toolUi()?.newHoleLock ?? null,
+    suggestM: () => (this.golf?.start === 'range' && !(this.golf.plans ?? []).length && !this.courseHoleViews().some(h => h.par > 0) ? FIRST_PAR3_M : 0),
+    landBox: () => { const L = this.golf ? this.golfLand() : []; if (!L.length) return null; return [Math.min(...L.map(r => r[0])), Math.min(...L.map(r => r[1])), Math.max(...L.map(r => r[0] + r[2])), Math.max(...L.map(r => r[1] + r[3]))]; },
+    publicRoads: b => [...this.net.segsNear({ x: (b[0] + b[2]) / 2, y: (b[1] + b[3]) / 2 }, Math.hypot(b[2] - b[0], b[3] - b[1]) / 2 + 4)].filter(s => s.kind !== SK.TUNNEL && !isCourseClass(s.cls.id)).map(s => ({ ax: s.a.x, ay: s.a.y, bx: s.b.x, by: s.b.y, name: this.roadNameOfSeg(s) })),
+    holeLines: () => { const g = this.golf; if (!g) return []; return g.pins.flatMap(p => { const t = g.tees.find(q => q.hole === p.hole && q.kind === 'back') ?? g.tees.find(q => q.hole === p.hole); return t ? [{ hole: p.hole, line: [{ x: t.x, y: t.y }, { x: p.x, y: p.y }] }] : []; }); },
     courseLook: () => this.resendCourse() });
   /** the hole plans change (a wizard build, edit or delete, or their undo and redo; T102): golf.aims follow the plans' bends, so the holes'
    *  playing lines run through them (no dogleg warning) */
@@ -1238,12 +1255,13 @@ export class Game {
       const [fx, fy, fw, fh] = site.rangeFront, [px, py, pw, ph] = site.carpark;
       this.setBizDefs([{ id: 1, type: 'range', x: fx, y: fy, w: fw, h: fh }]);
       this.parkDefs = [{ id: 1, x: px, y: py, w: pw, h: ph }];
-      this.golf = s.save; this.golf.progress = emptyProgress();
+      // the ramp from the range to the first hole starts at the range card (P24 Phase 4a, T132)
+      this.golf = s.save; this.golf.progress = { ...emptyProgress(), ramp: 0 };
       // the range business (P24, T129): the starting range, and its cement cart paths laid with the road (the rest of its scene follows the frame)
       this.golf.range = defaultRangeBiz(); this.edit.addLegs(rangeScene(site.rangePlot, site.dir, this.golf.range).paths, classOf('cart-slab'), 0, undefined, true); this.golf.range.paths = true;
       const [hx, hy, hw, hh] = rangeLayout(site.rangePlot, site.dir).hut.rect, cx = hx + hw / 2, cy = hy + hh / 2;
       this.cam.X = worldX(cx, cy); this.cam.Y = worldY(cx, cy); this.cam.z = RANGE_CAM_ZOOM;
-      this.setTool('course');
+      this.setTool(this.toolLock('course') ? 'select' : 'course'); // the range card first: Holes opens with the first upgrade (T132)
       return true;
     }
     console.warn('golf: none of 8 seeds has a range start; the old start instead');
@@ -1393,14 +1411,17 @@ export class Game {
     for (const p of [...this.propGrid.query([x - r, y - r, x + r, y + r])]) if (p.plant && (p.x - x) ** 2 + (p.y - y) ** 2 <= r * r) { this.removeProp(p); n++; }
     if (n) this.scheduleSave(); return n;
   }
-  addProp(item: number, x: number, y: number, flip: boolean, scale: number, auto?: string): Prop {
+  /** o (T133, the range's scene): lift, drawn this high above its spot (world px); foot, its footprint (world tiles x0 y0 x1 y1) in place of its
+   *  library boxes' (business art's boxes are 1 x 1 placeholders, too small for the painter's order of what stands round it) */
+  addProp(item: number, x: number, y: number, flip: boolean, scale: number, auto?: string, o?: { lift?: number; foot?: readonly [number, number, number, number] }): Prop {
     // no building is ever mirrored (mirror.ts): a flip draws the four-view art turned (its partner view), any other building unflipped
     const [id, f0] = drawnAs(LIBRARY[item]!, flip); if (id !== LIBRARY[item]!.id) item = LIB_INDEX.get(id) ?? item; flip = f0;
     // no tree is mirrored at random: the sun comes from the right, so a tree is drawn mirrored only when its art is lit from the left (tree-sun.ts)
     if (LIBRARY[item]!.kind === 'tree') flip = TREE_MIRROR.has(LIBRARY[item]!.id);
-    const f = this.footprint(LIBRARY[item], x, y, flip, scale);
+    const f = o?.foot ? { x0: o.foot[0], y0: o.foot[1], x1: o.foot[2], y1: o.foot[3] } : this.footprint(LIBRARY[item], x, y, flip, scale);
     const p: Prop = { uid: this.nextUid++, item, x, y, flip, scale, ...f };
     if (auto) p.auto = auto;
+    if (o?.lift) p.lift = o.lift; // drawn above its spot (T133: the range's upper deck)
     this.props.add(p); this.propGrid.add(p, [p.x0, p.y0, p.x1, p.y1]); this.sprites.add(p); this.casterTouched(p);
     if (this.propLog) this.propLog.added.push(p);
     if (LIBRARY[item].kind === 'lamp') this.lampProps.add(p);
@@ -1416,12 +1437,10 @@ export class Game {
     if (LIBRARY[p.item].big && LIBRARY[p.item].kind !== 'car') this.scheduleBlocks(isLotProp(p));
   }
   /** after moving, flipping or scaling a prop */
-  /** plant the forest and town-tree cells near the view (world px rectangle): nearest to the view centre first, at most two cells per frame (forest and town together).
-   *  A town cell has key + N * N (N cells a side) */
-  private plantForest(X0: number, Y0: number, X1: number, Y1: number) {
-    const a = tileOf(X0, Y0), b = tileOf(X1, Y0), c = tileOf(X0, Y1), d = tileOf(X1, Y1), g = 8, N = MAP / FOREST_CELL, NN = N * N;
-    const ci0 = clamp(Math.floor((Math.min(a.x, b.x, c.x, d.x) - g) / FOREST_CELL), 0, N - 1), ci1 = clamp(Math.floor((Math.max(a.x, b.x, c.x, d.x) + g) / FOREST_CELL), 0, N - 1);
-    const cj0 = clamp(Math.floor((Math.min(a.y, b.y, c.y, d.y) - g) / FOREST_CELL), 0, N - 1), cj1 = clamp(Math.floor((Math.max(a.y, b.y, c.y, d.y) + g) / FOREST_CELL), 0, N - 1);
+  /** plant the forest and town-tree cells near the view (world px rectangle, grown by g tiles): nearest to the view centre first, at most two
+   *  cells per frame (forest and town together). A town cell has key + N * N (N cells a side) */
+  private plantForest(X0: number, Y0: number, X1: number, Y1: number, g = FOREST_VIEW_MARGIN) {
+    const N = MAP / FOREST_CELL, NN = N * N, [ci0, cj0, ci1, cj1] = forestCellRange(X0, Y0, X1, Y1, g);
     let todo: number[] | null = null;
     for (let cj = cj0; cj <= cj1; cj++) for (let ci = ci0; ci <= ci1; ci++) {
       const key = cj * N + ci;
@@ -1584,15 +1603,14 @@ export class Game {
     for (const c of this.casterDirty) { this.flushCasterCell(c); if (performance.now() - t0 > budgetMs) break; }
   }
   /** a ground chunk may bake with the living ground: its prop cells are sent (sent now when dirty) and the forest and town-tree cells within reach
-   *  are planted (plantForest plants them, nearest first), so it never bakes once without its trees and again with them */
+   *  are planted (plantForest plants them, nearest first, as far out as this reach: LIVING_PLANT_MARGIN), so it never bakes once without its
+   *  trees and again with them */
   private casterReady(X0: number, Y0: number, X1: number, Y1: number): boolean {
     const a = tileOf(X0, Y0), b = tileOf(X1, Y0), c = tileOf(X0, Y1), d = tileOf(X1, Y1), g = CASTER_REACH;
     const tx0 = Math.min(a.x, b.x, c.x, d.x) - g, tx1 = Math.max(a.x, b.x, c.x, d.x) + g, ty0 = Math.min(a.y, b.y, c.y, d.y) - g, ty1 = Math.max(a.y, b.y, c.y, d.y) + g;
     if (this.casterDirty.size) for (let cy = clamp(Math.floor(ty0 / CASTER_CELL), 0, CASTER_N - 1); cy <= clamp(Math.floor(ty1 / CASTER_CELL), 0, CASTER_N - 1); cy++) for (let cx = clamp(Math.floor(tx0 / CASTER_CELL), 0, CASTER_N - 1); cx <= clamp(Math.floor(tx1 / CASTER_CELL), 0, CASTER_N - 1); cx++) { const k = cy * CASTER_N + cx; if (this.casterDirty.has(k)) this.flushCasterCell(k); }
-    const N = MAP / FOREST_CELL;
-    for (let cj = clamp(Math.floor(ty0 / FOREST_CELL), 0, N - 1); cj <= clamp(Math.floor(ty1 / FOREST_CELL), 0, N - 1); cj++) for (let ci = clamp(Math.floor(tx0 / FOREST_CELL), 0, N - 1); ci <= clamp(Math.floor(tx1 / FOREST_CELL), 0, N - 1); ci++) {
-      const k = cj * N + ci; if (!this.forest.has(k) || !this.townTrees.has(k)) return false;
-    }
+    const N = MAP / FOREST_CELL, [ci0, cj0, ci1, cj1] = forestCellRange(X0, Y0, X1, Y1, g);
+    for (let cj = cj0; cj <= cj1; cj++) for (let ci = ci0; ci <= ci1; ci++) { const k = cj * N + ci; if (!this.forest.has(k) || !this.townTrees.has(k)) return false; }
     return true;
   }
   /** the living ground (T111): the gear menu's Ground variety (on by default, kept across reloads) and the dev debug view of its influence maps */
@@ -2786,6 +2804,7 @@ export class Game {
   // ---------- input ----------
   pointerDown(e: PointerEvent) {
   const mx = e.offsetX, my = e.offsetY;
+  this.camEase = null; // a press takes the camera back from New hole's framing (P23 4.4)
   // the owner's open shot (P4b) takes a left click on the course as its aim, before any tool does (a drag still pans; the aim is set on release)
   if (this.shot && e.button === 0 && !this.keys.has(' ')) { this.overlay.setPointerCapture(e.pointerId); this.dragging = { kind: 'pan', sx: mx, sy: my, camX: this.cam.X, camY: this.cam.Y, moved: false, aim: this.tileAt(mx, my) }; return; }
   // the side modes live in Select (P23 P1-A): the Grass panel, Land, Event and Holes never take a build tool's click
@@ -2926,7 +2945,40 @@ export class Game {
     const f = Math.exp(-e.deltaY * 0.0014);
     this.zoomAt(clamp(this.cam.z * f, ZOOM_MIN, ZOOM_MAX), e.offsetX, e.offsetY);
   }
+  /** the camera easing to a framing (New hole, P23 4.4): from, to, its start (ms) and length; any drag, wheel, zoom or key pan drops it */
+  private camEase: { a: Camera; b: Camera; t0: number; ms: number } | null = null;
+  /** the camera frames tiles pts in the free map beside the panel (New hole's tee and green clicks, a check's Show me): it eases there in
+   *  CAM_EASE_MS at most, or jumps under reduced motion; zoomIn false only eases out */
+  fitView(pts: { x: number; y: number }[], zoomIn: boolean) {
+    const to = frameView(pts, this.freeRect(), this.cssW, this.cssH, this.cam, zoomIn, ZOOM_MIN, ZOOM_MAX);
+    if (!to) return;
+    const c = this.cam;
+    if (Math.abs(to.z - c.z) < c.z * 0.01 && Math.abs(to.X - c.X) * c.z < 2 && Math.abs(to.Y - c.Y) * c.z < 2) return;
+    let reduce = false; try { reduce = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches; } catch { /* no media queries */ }
+    if (reduce) { this.camEase = null; this.cam = { X: to.X, Y: to.Y, z: to.z }; this.clampCam(); this.emit(); return; }
+    this.camEase = { a: { ...c }, b: { X: to.X, Y: to.Y, z: to.z }, t0: performance.now(), ms: CAM_EASE_MS };
+  }
+  /** the free map beside the tool panel, below the top bar and above the hint pill (css px over the map), where New hole frames what it
+   *  shows */
+  private freeRect(): FreeRect {
+    let l = 0, t = 0;
+    try {
+      const c = this.overlay.getBoundingClientRect(), p = typeof document !== 'undefined' ? document.querySelector('[data-tool]')?.getBoundingClientRect() : null;
+      if (p && p.width > 0) { l = Math.max(0, p.right - c.left); t = Math.max(0, p.top - c.top); }
+    } catch { /* no layout (a test) */ }
+    return { l: l + 8, t: t + 8, r: this.cssW - 8, b: this.cssH - 56 };
+  }
+  /** the camera's ease, once a frame: an ease out in X, Y and the zoom (the zoom in log steps, so it reads even) */
+  private stepCamEase(now: number) {
+    const e = this.camEase; if (!e) return;
+    const u = Math.min(1, Math.max(0, (now - e.t0) / e.ms)), k = 1 - (1 - u) ** 3;
+    this.cam.X = e.a.X + (e.b.X - e.a.X) * k; this.cam.Y = e.a.Y + (e.b.Y - e.a.Y) * k;
+    this.cam.z = Math.exp(Math.log(e.a.z) + (Math.log(e.b.z) - Math.log(e.a.z)) * k);
+    this.clampCam();
+    if (u >= 1) { this.camEase = null; this.emit(); }
+  }
   zoomAt(z: number, mx = this.cssW / 2, my = this.cssH / 2) {
+    this.camEase = null;
     const wx = this.cam.X + (mx - this.cssW / 2) / this.cam.z, wy = this.cam.Y + (my - this.cssH / 2) / this.cam.z;
     this.cam.z = z;
     this.cam.X = wx - (mx - this.cssW / 2) / z; this.cam.Y = wy - (my - this.cssH / 2) / z; this.clampCam(); this.emit();
@@ -2934,12 +2986,14 @@ export class Game {
   clampCam() { this.cam.X = clamp(this.cam.X, -MAP * HW, MAP * HW); this.cam.Y = clamp(this.cam.Y, 0, MAP * HH * 2); }
   /** centres the camera on tile (x, y), zooms in to at least 0.2 (a closer zoom stays), shows the flow and pulses a ring there */
   jumpTo(x: number, y: number) {
+    this.camEase = null;
     if (this.cam.z < 0.2) this.cam.z = 0.2;
     this.cam.X = worldX(x, y); this.cam.Y = worldY(x, y); this.clampCam();
     this.focus = { x, y, t: performance.now() }; this.setFlow(true); this.emit();
   }
   /** centres the camera on tile (x, y) as it is (the minimap, the town chip); a zoom z, when given, replaces the camera's (clamped) */
   lookAt(x: number, y: number, z?: number) {
+    this.camEase = null;
     if (z !== undefined) this.cam.z = clamp(z, ZOOM_MIN, ZOOM_MAX);
     this.cam.X = worldX(x, y); this.cam.Y = worldY(x, y); this.clampCam(); this.emit();
   }
@@ -3435,7 +3489,8 @@ export class Game {
         disc(ctx, b.x, b.y, 4 * dpr, '#ffbe3c');
       }
       const parked = this.traffic.parks.find(q => q.id === d.id)?.parked ?? 0, c = this.screen(d.x + d.w / 2, d.y + d.h / 2);
-      const label = `P · ${parked}/${pk ? pk.bays.length : 0}`;
+      // the range's car park also holds the range sim's cars, which the worker never sees (T132)
+      const label = parkLabel(parked, pk && pk === this.rangePk?.pk ? this.range.sim.parked() : 0, pk ? pk.bays.length : 0);
       ctx.font = `bold ${12 * dpr}px ui-sans-serif, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.lineJoin = 'round'; ctx.lineWidth = 3 * dpr; ctx.strokeStyle = 'rgba(2,6,23,0.9)'; ctx.strokeText(label, c.x, c.y);
       ctx.fillStyle = '#f8fafc'; ctx.fillText(label, c.x, c.y);
@@ -3844,8 +3899,10 @@ export class Game {
   /** the player's progress facts (T032; T117: the unlocks read the course: its holes with a par, the seasons played and the tour's invitation),
    *  null outside golf mode */
   playerProgressFacts(): PlayerProgressFacts | null {
-    const g = this.golf, p = g?.progress;
-    const f = p ? progressFacts(p, { holes: this.courseHoleViews().filter(h => h.par > 0).length, seasons: this.seasonsDone(), invited: !!g!.invited }) : null;
+    const g = this.golf, p = g?.progress, b = g?.start === 'range' ? g.range : undefined;
+    // a range start's ramp (P24 Phase 4a, T132): the upgrades bought, the season's takings, and a prop placed near the range
+    const range = b ? { upgrades: b.owned.length, seasonTakings: b.season.takings, propsPlaced: this.decor.appeal() > 0 } : undefined;
+    const f = p ? progressFacts(p, { holes: this.courseHoleViews().filter(h => h.par > 0).length, seasons: this.seasonsDone(), invited: !!g!.invited, range }) : null;
     const pr = f && this.range.practiceFacts(); if (f && pr) f.practice = pr; // a range start's practice facilities (T130): their hints and brushes
     return f;
   }
@@ -3854,11 +3911,27 @@ export class Game {
    *  opened (its NEW badge goes) */
   private progressCheck() {
     const p = this.golf?.progress; if (!p || ++this.progTick % 10) return;
-    const f = this.playerProgressFacts();
+    const f = this.playerProgressFacts(), was = p.ramp;
     if (f && advanceProgress(p, f, this.uiTool)) { this.scheduleSave(); this.emit(); }
+    if (was !== undefined && p.ramp !== undefined && p.ramp > was) this.toast(RAMP_TOAST[p.ramp]!, 'good'); // a ramp step opens (T132)
     this.range.hint = !!f && !!nextFirstRunHint(f)?.id.startsWith('hint-practice'); // the practice area's outline brightens while its hint is up
-    // a tool that is not open (a save loads with the road tool in hand; Show every tool now unticked) is put down for Holes (P23 P1-E)
-    if (this.toolLock(this.uiTool)) this.setTool('course');
+    this.range.practiceLocked = !!f && rampLock(f, 'course') !== null; // until the first upgrade the practice area says what opens it
+    // a tool that is not open (a save loads with the road tool in hand; Show every tool now unticked) is put down for Holes (P23 P1-E), or for
+    // Select while Holes waits for a range start's first upgrade (T132)
+    if (this.toolLock(this.uiTool)) this.setTool(this.toolLock('course') ? 'select' : 'course');
+  }
+  /** a hint's Show me (T130, T132): the camera on the spot it means and its tool in hand */
+  showHint(id: string) {
+    const sc = this.range.scene;
+    if (id.startsWith('hint-practice')) { this.showPracticeArea(); return; }
+    if ((id === 'hint-range-open' || id === 'hint-range-upgrade') && sc) { this.lookAt(sc.counter.x, sc.counter.y, RANGE_CAM_ZOOM); this.setTool('select'); this.openRangeCard(true); return; }
+    if (id === 'hint-range-props' && sc) { this.lookAt(sc.counter.x, sc.counter.y, 0.3); this.setTool('props'); return; }
+    if (id === 'hint-range-first-hole') {
+      // the land beyond the range's plot and practice area: the middle of your land's box, at a zoom that shows a par-3
+      const L = this.golf ? this.golfLand() : [];
+      if (L.length) { const x0 = Math.min(...L.map(r => r[0])), y0 = Math.min(...L.map(r => r[1])), x1 = Math.max(...L.map(r => r[0] + r[2])), y1 = Math.max(...L.map(r => r[1] + r[3])); this.lookAt((x0 + x1) / 2, (y0 + y1) / 2, 0.12); }
+      this.setTool('course'); this.paint.setPlan(); this.emit();
+    }
   }
   /** why tool t is not open yet under the unlocks (the rail shows it dimmed in place, P23 4.2), or null when it is open */
   toolLock(t: Tool): string | null { return this.toolUi()?.lockedTools.find(x => x.id === t)?.why ?? null; }
@@ -4593,7 +4666,8 @@ export class Game {
     const sp = 900 / this.cam.z * dt; let kx = 0, ky = 0;
     if (this.keys.has('ArrowLeft') || this.keys.has('a') || this.keys.has('A')) kx -= 1; if (this.keys.has('ArrowRight') || this.keys.has('d') || this.keys.has('D')) kx += 1;
     if (this.keys.has('ArrowUp') || this.keys.has('w') || this.keys.has('W')) ky -= 1; if (this.keys.has('ArrowDown') || this.keys.has('s') || this.keys.has('S')) ky += 1;
-    if (kx || ky) { this.cam.X += kx * sp * 0.6; this.cam.Y += ky * sp * 0.6; this.clampCam(); }
+    if (kx || ky) { this.camEase = null; this.cam.X += kx * sp * 0.6; this.cam.Y += ky * sp * 0.6; this.clampCam(); }
+    else this.stepCamEase(now);
     this.onFrame?.(now, dt);
     for (const b of this.builds) {
       const front = this.revealFront(b, now); if (front >= b.total) continue;
@@ -4712,11 +4786,12 @@ export class Game {
         if (complete) this.groundBlendAt = now;
       }
       const zoomBlend = Number.isFinite(this.groundBlendAt) ? Math.max(0, Math.min(1, (now - this.groundBlendAt) / 180)) : 0;
-      // a chunk not baked yet shows its piece of the planner map meanwhile
+      // a chunk not baked yet shows its piece of the planner map meanwhile, asked for before any chunk (one planner bake covers 8 x 8 chunks:
+      // after a jump or a fresh start the view is low-detail ground at once, never the clear colour; T134)
       for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
         const t = this.ground.tile(kind, i, j); if (t.tex || t.prev) continue;
         const X = i * CW, Y = j * CH, pi = Math.floor(X / PLAN_W), pj = Math.floor(Y / PLAN_H), p = this.ground.tile('p', pi, pj);
-        this.ground.need(p, pL, 1e6 + dist(X, Y), now);
+        this.ground.need(p, pL, dist(X, Y) - 1e6, now);
         if (p.tex) gl.drawChunk(p.tex, X, Y, X + CW, Y + CH, false, 1, [(X - pi * PLAN_W) / PLAN_W, (Y - pj * PLAN_H) / PLAN_H, (X + CW - pi * PLAN_W) / PLAN_W, (Y + CH - pj * PLAN_H) / PLAN_H]);
       }
       const mask = this.revealMask(now); if (mask) gl.setMask(mask);
@@ -4724,16 +4799,16 @@ export class Game {
         const t = this.ground.tile(kind, i, j);
         if (!this.ground.livingActive || this.casterReady(i * CW, j * CH, (i + 1) * CW, (j + 1) * CH)) this.ground.need(t, L, dist((i + 0.5) * CW, (j + 0.5) * CH), now, artL);
         const r = [i * CW, j * CH, (i + 1) * CW, (j + 1) * CH] as const;
-        if (t.prev && now < t.prevUntil) { gl.drawChunk(t.prev, ...r); if (t.tex && t.tex !== t.prev && mask) gl.drawChunk(t.tex, ...r, true); }
-        else if (zoomBlend < 1) {
-          const targetReady = t.texL === L && t.texArtL === artL, old = targetReady ? t.fadeFrom : t.tex;
-          const fallback = this.groundBlendOtherTier || !old ? this.ground.zoomFallback(kind, r, now) : [];
-          if (fallback.length) for (const picture of fallback) gl.drawChunk(picture.tex, ...picture.rect, false, 1, picture.uv);
-          else if (old) gl.drawChunk(old, ...r);
-          if (t.tex && targetReady && zoomBlend > 0) gl.drawChunk(t.tex, ...r, false, zoomBlend);
-          if (t.fadeFrom && Number.isFinite(this.groundBlendAt)) t.fadeStart = this.groundBlendAt;
-        }
-        else if (t.tex) gl.drawChunk(t.tex, ...r);
+        if (t.prev && now < t.prevUntil) { gl.drawChunk(t.prev, ...r); if (t.tex && t.tex !== t.prev && mask) gl.drawChunk(t.tex, ...r, true); continue; }
+        // its picture (ground-layers.ts): while the zoom crossfade waits for the whole view, an older picture, or its new one when it has none
+        // (a chunk that came into view: it drew nothing, the clear colour, until the last chunk on screen was baked, T134), the other tier's
+        // pictures over it, and its new picture fading in
+        const lay = chunkLayers(t, L, artL, zoomBlend, this.groundBlendOtherTier);
+        if (lay.base) gl.drawChunk(lay.base, ...r);
+        const fallback = lay.fallback ? this.ground.zoomFallback(kind, r, now) : [];
+        for (const picture of fallback) gl.drawChunk(picture.tex, ...picture.rect, false, 1, picture.uv);
+        if (lay.top && (lay.top !== lay.base || fallback.length)) gl.drawChunk(lay.top, ...r, false, lay.topAlpha);
+        if (zoomBlend < 1 && t.fadeFrom && Number.isFinite(this.groundBlendAt)) t.fadeStart = this.groundBlendAt;
       }
       // ---- the map grid and the course half grid (T100): over the ground and its paint, hidden on the roads, under every shadow and sprite
       if (this.gridLayer.draw(gl.gl, gl.view, z, this.dpr, gridShown(this.showGrid, this.tool), this.courseBuilding, this.gridLand(), this.net)) gl.stats.draws++;
@@ -4746,8 +4821,9 @@ export class Game {
       const cars: Drawable[] = this.traffic ? this.traffic.visible(bx0, by0, bx1, by1) : [];
       // at the street tier the townspeople and the crowd (the galleries' fans, the queues, the walking parties) are the movers, merged in by depth
       const movers = tier === 'street' ? cars.concat(this.peds.n ? this.pedMovers(bx0, by0, bx1, by1) : [], this.crowdMovers(bx0, by0, bx1, by1, now / 1000), this.range.movers_(bx0, by0, bx1, by1)) : cars;
-      // with the living ground the trees plant over every chunk on screen (a chunk bakes once its trees are known: casterReady)
-      if (this.ground.livingActive) { const CW2 = this.groundTier === 'm' ? MID_W : CHUNK_W, CH2 = this.groundTier === 'm' ? MID_H : CHUNK_H; this.plantForest(Math.floor(X0 / CW2) * CW2, Math.floor(Y0 / CH2) * CH2, (Math.floor(X1 / CW2) + 1) * CW2, (Math.floor(Y1 / CH2) + 1) * CH2); }
+      // with the living ground the trees plant over every chunk on screen and as far out as a chunk's caster reach (a chunk bakes once its trees
+      // are known: casterReady; a cell one tile short of that left an edge chunk unbaked for ever, T134)
+      if (this.ground.livingActive) { const CW2 = this.groundTier === 'm' ? MID_W : CHUNK_W, CH2 = this.groundTier === 'm' ? MID_H : CHUNK_H; this.plantForest(Math.floor(X0 / CW2) * CW2, Math.floor(Y0 / CH2) * CH2, (Math.floor(X1 / CW2) + 1) * CW2, (Math.floor(Y1 / CH2) + 1) * CH2, LIVING_PLANT_MARGIN); }
       else this.plantForest(X0, Y0, X1, Y1);
       const f = this.sprites.frame(vis, movers), shadows = this.shadowStrength > 0;
       this.streamAtlas(f.stream, f.floats, X0, Y0, X1, Y1);
@@ -5145,7 +5221,9 @@ export class Game {
 
   /** Stadium label; the planner retains a footprint while detail tiers use the sorted artwork. */
   private drawStadium(ctx: CanvasRenderingContext2D) {
-    const s = this.site; if (!s) return;
+    // only a real stadium (T132: the site falls back to a golf game's clubhouse or range, and its "STADIUM · L1" was drawn under the range's own
+    // label at the same spot: the stray glyph after "DRIVING RANGE")
+    const s = this.site; if (!s || !this.bizDefs.some(d => d.type === 'stadium')) return;
     if (this.cam.z < PLANNER_Z) this.drawSite(ctx, s, 'rgba(150,160,175,0.55)');
     const dpr = this.dpr, c = this.screen(s.c.x, s.c.y), label = `STADIUM · L${this.traffic.round.level}`;
     ctx.font = `bold ${13 * dpr}px ui-sans-serif, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
@@ -5173,9 +5251,14 @@ export class Game {
     const dpr = this.dpr;
     for (const d of this.bizDefs) {
       if (d.type === 'stadium') continue;
-      const B = BUSINESS[d.type], c = this.screen(d.x + d.w / 2, d.y + d.h / 2), label = `${B.name.toUpperCase()} · L${this.traffic.biz.find(v => v.id === d.id)?.level ?? 1}`;
+      // a range start's range (T132): its own name plate ("DRIVING RANGE · 4 BAYS", the worker's level means nothing there) on a dark plate, so
+      // the land's dashed edge never runs through its letters; at district zoom the range's own "Driving Range" label stands in its place
+      const range = d.type === 'range' && this.golf?.start === 'range' && this.golf.range;
+      if (range && this.cam.z < RANGE_LABEL_Z) continue;
+      const B = BUSINESS[d.type], c0 = this.screen(d.x + d.w / 2, d.y + d.h / 2), c = range ? { x: c0.x, y: c0.y + 16 * dpr } : c0, label = range ? rangeMapLabel(rangeStats(range).bays) : `${B.name.toUpperCase()} · L${this.traffic.biz.find(v => v.id === d.id)?.level ?? 1}`;
       if (this.cam.z < PLANNER_Z) this.drawBizRect(ctx, d.x, d.y, d.w, d.h, FAMILY_FILL[B.family]);
       ctx.font = `bold ${11 * dpr}px ui-sans-serif, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      if (range) { const w = ctx.measureText(label).width + 12 * dpr; ctx.fillStyle = 'rgba(2,6,23,0.82)'; ctx.beginPath(); ctx.roundRect(c.x - w / 2, c.y - 9 * dpr, w, 18 * dpr, 5 * dpr); ctx.fill(); }
       ctx.lineJoin = 'round'; ctx.lineWidth = 3 * dpr; ctx.strokeStyle = 'rgba(2,6,23,0.9)'; ctx.strokeText(label, c.x, c.y);
       ctx.fillStyle = '#f8fafc'; ctx.fillText(label, c.x, c.y);
       ctx.lineJoin = 'miter'; ctx.textAlign = 'start'; ctx.textBaseline = 'alphabetic';

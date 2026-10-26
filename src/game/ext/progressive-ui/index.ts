@@ -52,6 +52,25 @@ export interface PlayerProgressFacts {
   /** a range start's practice facilities (plan P24 Phase 2, T130: golf/practice.ts PracticeState); missing outside range starts. Their hints
    *  teach the brush before the first hole, and the Green and Bunker brushes are open from stage 1 to paint them */
   practice?: { putting: 'none' | 'small' | 'nobunker' | 'open'; chipping: 'none' | 'small' | 'nobunker' | 'open' };
+  /** a range start's ramp from the range to the first hole (plan P24 Phase 4a, T132); missing outside range starts */
+  ramp?: RampFacts;
+}
+
+/** a range start's ramp step (P24 Phase 4a): 0 the range card, 1 the practice area (after the first range upgrade), 2 Props (after the putting
+ *  green opens), 3 New hole and the course (once the range takes RAMP_TAKINGS in a season, or the second season starts, or a hole exists) */
+export type RampStep = 0 | 1 | 2 | 3;
+/** what the ramp reads (Engine.playerProgressFacts, range starts only) */
+export interface RampFacts {
+  /** the step reached so far (saved as GolfProgress.ramp; it never falls); an old range save has none: 3, every tool open */
+  reached: RampStep;
+  /** the range upgrades bought, and the range's takings this season ($) */
+  upgrades: number; seasonTakings: number;
+  /** the range card has been opened once (the first hint then moves on to the first upgrade) */
+  cardSeen: boolean;
+  /** a Props tool prop stands near the range (its hint is done) */
+  propsPlaced: boolean;
+  /** a new game's ramp: its tools carry NEW badges as they open (an old save's do not: it had them all) */
+  fresh: boolean;
 }
 
 /** a one-line contextual first-run hint banner */
@@ -62,6 +81,8 @@ export interface FirstRunHint {
   body: string;
   /** tool or button highlighted by the hint */
   targetTool: UiToolId | GolfChipId;
+  /** the hint bar offers Show me (Engine.showHint: the camera on the spot and the tool armed) */
+  show?: boolean;
 }
 
 /** a tool, rail group or course path class that is not open yet: the stage it opens at and the tooltip line that says so */
@@ -92,6 +113,10 @@ export interface ProgressiveUiState {
   stageLabel: string;
   /** active contextual hint for the player's current step (null when none or all dismissed) */
   activeHint: FirstRunHint | null;
+  /** a range start's ramp step in force (T132; null outside range starts, and with "Show every tool now": every step open) */
+  ramp: RampStep | null;
+  /** why New hole is not open yet (a range start before ramp step 3: the Holes panel shows the button locked with it), or null */
+  newHoleLock: string | null;
 }
 
 /** the stuck player's fallback (P23 4.2): with no hole after 20 minutes of play (or one season), stage 2 opens and the hint offers New hole */
@@ -178,6 +203,7 @@ export const PRACTICE_HINTS: readonly FirstRunHint[] = [
     title: 'Paint a putting green',
     body: 'Drag the Green brush in the Practice area beside the car park: 300 m² with its fringe opens it (+10% visitors, $2 a golfer).',
     targetTool: 'course',
+    show: true,
   },
   {
     id: 'hint-practice-chipping',
@@ -185,6 +211,7 @@ export const PRACTICE_HINTS: readonly FirstRunHint[] = [
     title: 'Now a chipping green and a bunker',
     body: 'Paint a second, smaller green in the Practice area (200 m²), then a bunker beside it with the Bunker brush.',
     targetTool: 'course',
+    show: true,
   },
 ];
 
@@ -197,9 +224,76 @@ export const STUCK_HINT: FirstRunHint = Object.freeze({
   targetTool: 'course',
 });
 
-/** whether the player is stuck (P23 4.2): no hole with a par after one season or STUCK_PLAY_SEC of play */
+/** whether the player is stuck (P23 4.2): no hole with a par after one season or STUCK_PLAY_SEC of play. Never in a range start (T132): the
+ *  range is the job until New hole opens, and the ramp's own hint then offers the first hole */
 export function isStuck(f: PlayerProgressFacts): boolean {
-  return f.playableHoles < 1 && (f.seasonsDone >= 1 || f.elapsedSeconds >= STUCK_PLAY_SEC);
+  return !f.ramp && f.playableHoles < 1 && (f.seasonsDone >= 1 || f.elapsedSeconds >= STUCK_PLAY_SEC);
+}
+
+// ---------------------------------------------------------------- a range start's ramp (plan P24 Phase 4a, T132)
+
+/** the range's takings in one season that open New hole ($) */
+export const RAMP_TAKINGS = 20000;
+/** the ramp step each tool opens at in a range start (the rest follow the stages): Holes and Paths with the first upgrade (to paint the
+ *  practice greens), Props once the putting green opens, Buildings (the clubhouse) with New hole */
+export const RAMP_TOOL_STEP: Readonly<Partial<Record<UiToolId, RampStep>>> = Object.freeze({ course: 1, path: 1, props: 2, buildings: 3 });
+/** what opens each ramp step, as a locked tool's tooltip says it */
+export const RAMP_WHY: Readonly<Record<RampStep, string>> = Object.freeze({
+  0: '',
+  1: 'Unlocks with your first range upgrade',
+  2: 'Unlocks when your putting green opens',
+  3: 'Unlocks when the range takes $20,000 in a season, or in season 2',
+});
+/** the toast as each ramp step opens */
+export const RAMP_TOAST: Readonly<Partial<Record<RampStep, string>>> = Object.freeze({
+  1: 'The Practice area is open: paint a putting green beside the car park (Holes)',
+  2: 'Props are open (Z): dress the range to draw more golfers',
+  3: 'New hole is open: build your first hole, a par-3',
+});
+/** the length the first hole's plan suggests in a range start (m): a par-3 (the wizard's short first hole) */
+export const FIRST_PAR3_M = 150;
+
+/** the step the range has earned now, without the step reached before: 3 with a hole, the second season or RAMP_TAKINGS this season; 2 with
+ *  the putting green open; 1 with a range upgrade; else 0 (outside range starts: 3) */
+export function rampEarned(f: PlayerProgressFacts): RampStep {
+  const r = f.ramp; if (!r) return 3;
+  if (f.playableHoles >= 1 || f.seasonsDone >= 1 || r.seasonTakings >= RAMP_TAKINGS) return 3;
+  if (f.practice?.putting === 'open') return 2;
+  if (r.upgrades >= 1) return 1;
+  return 0;
+}
+/** the ramp step in force: the earned one, never below the step reached (null outside range starts) */
+export function rampStep(f: PlayerProgressFacts): RampStep | null {
+  return f.ramp ? (Math.max(f.ramp.reached, rampEarned(f)) as RampStep) : null;
+}
+/** why tool t is held back by the ramp, or null (open, not a range start, or every tool shown) */
+export function rampLock(f: PlayerProgressFacts, t: UiToolId): string | null {
+  const s = rampStep(f), need = RAMP_TOOL_STEP[t];
+  return s === null || f.advancedMode || need === undefined || s >= need ? null : RAMP_WHY[need];
+}
+
+/** the ramp's hints (the hint bar's Show me does what each says: Engine.showHint) */
+export const RANGE_HINTS: Readonly<Record<'open' | 'upgrade' | 'props' | 'wait' | 'firstHole', FirstRunHint>> = Object.freeze({
+  open: { id: 'hint-range-open', stage: 1, title: 'Your driving range is open', body: 'Golfers are already driving in. Click the range (or the Range chip) to open its card: the takings, the bucket price and the upgrades.', targetTool: 'select', show: true },
+  upgrade: { id: 'hint-range-upgrade', stage: 1, title: 'Buy your first upgrade', body: 'More bays, target greens or a ball dispenser on the range card: the first one opens the Practice area beside the car park.', targetTool: 'select', show: true },
+  props: { id: 'hint-range-props', stage: 1, title: 'Props are open (Z)', body: 'Pot plants, a fountain, a statue: props within 15 tiles of the shop or the mats draw more golfers. Each more of a kind counts less.', targetTool: 'props', show: true },
+  wait: { id: 'hint-range-wait', stage: 1, title: 'Next: your first hole', body: 'New hole opens when the range takes $20,000 in a season, or in season 2. Grow the range meanwhile.', targetTool: 'select' },
+  firstHole: { id: 'hint-range-first-hole', stage: 1, title: 'New hole is open: start with a par-3', body: `Open Holes (C) and press New hole: click a tee and point the way, and a ${FIRST_PAR3_M} m par-3 is planned for you. Build when it looks right.`, targetTool: 'course', show: true },
+});
+/** a whole number of dollars as the hints say it: $20,000 */
+const dollars = (n: number) => '$' + Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+/** the ramp's hint for the facts until the first hole (null: none left, or every one dismissed) */
+function rampHint(f: PlayerProgressFacts, dismissed: ReadonlySet<string>): FirstRunHint | null {
+  const s = rampStep(f)!, r = f.ramp!, H = RANGE_HINTS, [pp, pc] = PRACTICE_HINTS, pr = f.practice;
+  const pick = (...hs: (FirstRunHint | false | undefined)[]) => hs.find((h): h is FirstRunHint => !!h && !dismissed.has(h.id)) ?? null;
+  const chip = pr?.putting === 'open' && pr.chipping !== 'open' && pc;
+  if (s === 0) return pick(!r.cardSeen && H.open, H.upgrade);
+  if (s === 1) return pick(pr?.putting !== 'open' && pp);
+  if (s === 2) {
+    const h = pick(!r.propsPlaced && H.props, chip, H.wait);
+    return h?.id === H.wait.id ? { ...h, body: `New hole opens when the range takes ${dollars(RAMP_TAKINGS)} in a season (${dollars(r.seasonTakings)} so far), or in season 2. Grow the range meanwhile.` } : h;
+  }
+  return pick(H.firstHole, pr && pr.putting !== 'open' && pp, chip);
 }
 
 /** the stage the course has earned now (P23 4.2's table), without the stage reached before: 3 with the tour's invitation, 3 holes or two seasons
@@ -219,9 +313,11 @@ export function resolveOnboardingStage(f: PlayerProgressFacts): OnboardingStage 
 export function nextFirstRunHint(f: PlayerProgressFacts): FirstRunHint | null {
   const dismissed = new Set(f.dismissedHints ?? []), stage = resolveOnboardingStage(f), [h1, h2, h3, h4] = FIRST_RUN_HINTS;
   if (isStuck(f) && !dismissed.has(STUCK_HINT.id)) return STUCK_HINT;
+  // a range start (T132): the ramp's hints until the first hole (never Step 1's: the range is the job), then the stages' as everywhere
+  if (f.ramp && f.playableHoles < 1) return rampHint(f, dismissed);
   // a range start's practice facilities first (T130): the putting green, then the chipping green and bunker
   const [pp, pc] = PRACTICE_HINTS;
-  if (f.practice && f.playableHoles < 1) {
+  if (!f.ramp && f.practice && f.playableHoles < 1) {
     if (f.practice.putting !== 'open' && !dismissed.has(pp!.id)) return pp!;
     if (f.practice.putting === 'open' && f.practice.chipping !== 'open' && !dismissed.has(pc!.id)) return pc!;
   }
@@ -244,17 +340,22 @@ function lockedAt<T extends string>(table: Readonly<Partial<Record<T, Onboarding
 
 /** computes the complete progressive-exposure UI state from player progress facts */
 export function computeProgressiveUiState(f: PlayerProgressFacts): ProgressiveUiState {
-  const stage = resolveOnboardingStage(f), adv = Boolean(f.advancedMode), seen = new Set(f.seen ?? []);
-  const visibleGroups = openAt(GROUP_STAGE, stage, adv), visibleTools = openAt(TOOL_STAGE, stage, adv);
-  const isNew = (id: string, s: OnboardingStage | undefined) => !adv && (s ?? 1) > 1 && !seen.has(id);
+  const stage = resolveOnboardingStage(f), adv = Boolean(f.advancedMode), seen = new Set(f.seen ?? []), ramp = adv ? null : rampStep(f);
+  const visibleGroups = openAt(GROUP_STAGE, stage, adv);
+  // a range start's ramp (T132) holds back Holes, Paths, Props and Buildings until their step: in place, with its why, besides the stages
+  const stageTools = openAt(TOOL_STAGE, stage, adv), visibleTools = stageTools.filter(id => !rampLock(f, id));
+  const lockedTools: LockedItem<UiToolId>[] = [...stageTools.filter(id => rampLock(f, id)).map(id => ({ id, stage: 1 as OnboardingStage, why: rampLock(f, id)! })), ...lockedAt(TOOL_STAGE, stage, adv)];
+  // a new range game's ramp tools carry NEW as they open (Holes opens with the first upgrade)
+  const rampNew = (id: string) => !!f.ramp?.fresh && RAMP_TOOL_STEP[id as UiToolId] !== undefined;
+  const isNew = (id: string, s: OnboardingStage | undefined) => !adv && ((s ?? 1) > 1 || rampNew(id)) && !seen.has(id);
   return {
     stage,
     advancedMode: adv,
     visibleGroups,
     lockedGroups: lockedAt(GROUP_STAGE, stage, adv),
     visibleTools,
-    lockedTools: lockedAt(TOOL_STAGE, stage, adv),
-    newGroups: visibleGroups.filter(id => isNew(id, GROUP_STAGE[id])),
+    lockedTools,
+    newGroups: visibleGroups.filter(id => !adv && (GROUP_STAGE[id] ?? 1) > 1 && !seen.has(id)),
     newTools: visibleTools.filter(id => isNew(id, TOOL_STAGE[id])),
     visibleGolfChips: openAt(CHIP_STAGE, stage, adv),
     // a range start paints its practice greens and bunker by hand from stage 1 (T130)
@@ -264,6 +365,8 @@ export function computeProgressiveUiState(f: PlayerProgressFacts): ProgressiveUi
     visibleFineControls: adv ? ALL_FINE_CONTROLS.slice() : [],
     stageLabel: adv ? 'Every tool shown (Settings)' : `Stage ${stage}: ${STAGE_NAME[stage]}`,
     activeHint: nextFirstRunHint(f),
+    ramp,
+    newHoleLock: ramp !== null && ramp < 3 ? RAMP_WHY[3] : null,
   };
 }
 
