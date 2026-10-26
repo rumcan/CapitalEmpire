@@ -3,7 +3,10 @@
 //            bigger or smaller everywhere it is placed (scripts/assets/removed.json, scale-overrides.json). Each card is the picture the game draws at the size it
 //            draws it (an old building as its new-art stand-in; review/size-report.ts runs the game's own code), with the size it is sharp to at the closest
 //            zoom: a size past its picture's own pixels is refused. The game reads scale-overrides.json at runtime: a size shows after a reload of the game.
-//   Lots:    the baked house lots: click any sprite in one to move, resize, flip or delete it there (lot-edits.json)
+//   Lots:    the game's lot lab (src/game/dev/lot-lab.ts) framed from the game dev server named by STUDIO_GAME_URL (default
+//            http://localhost:5174, which must run from this same checkout): one road and one lot composed as the game does at any type,
+//            size and road angle, edited, its ground painted, saved to src/game/lots/lot-presets.json and approved for the game. (The old
+//            baked house lots' tab is gone; its /api/lot* routes below are unused until the baked-lot pipeline retires, P20 T066.)
 //   People:  every townsperson's walk (art/people3d, 8 facings x idle + 8 walk frames), animated: fix any frame that faces the wrong way (mirror it, use another frame in its
 //            place, or drop in a new picture): walker-fixes.json, the pictures in scripts/assets/walker-frames (walker-fix.mjs)
 //   Holes:   the golf hole presets (src/game/golf/hole-presets.json, 18 slots): areas and props edited on a canvas, or a generated hole from a seed (holes.js)
@@ -337,6 +340,8 @@ http.createServer(async (req, res) => {
   const P = url.pathname;
   try {
     if (P === '/') { res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' }); return res.end(fs.readFileSync(path.join(ROOT, 'scripts/assets/review/studio.html'), 'utf8')); }
+    // the game dev server the Lot presets tab frames (its lot lab): STUDIO_GAME_URL, else the owner's usual 5174
+    if (P === '/api/config') return json({ game: process.env.STUDIO_GAME_URL || 'http://localhost:5174' });
     // library
     if (P === '/api/sprites') {
       const rep = await sizeReport(), list = library(), have = new Set(list.map(s => s.id)), rm = readRemoved(), sc = readScales();

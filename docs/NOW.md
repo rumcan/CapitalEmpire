@@ -2,6 +2,12 @@
 
 Update this file **before** each edit and after each sub-step. If you are picking up from someone else: follow LEAD.md section 7.
 
+## Lot lab (2026-10-26, branch `lot-presets`, a side session)
+- The studio's Lots tab is now the lot lab (`?lotlab&dev` on the game dev server): one road, one lot composed by the real game, edited,
+  ground painted, saved and approved into `lot-presets.json`; approved presets replace the frozen ones on matching lots (type, state, size,
+  road angle 0..7) and give diagonal-road lots a building; farms are a lot type. Design and rules: `docs/plans/P20.md` "The lot lab".
+- Dev servers for it: game 5241, studio 5242 (`.claude/launch.json` `lot-presets-game`, `lot-presets-studio`).
+
 ## Owner-requested integration (2026-10-23)
 - Branch: `lead/merge-outstanding-20261023`, isolated checkout `worktrees/outstanding-merge-20261023`, from main `72317a9`.
 - Request: merge every outstanding product branch/PR into main and document the image-creation workflow in the handover and main repository.

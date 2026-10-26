@@ -27,7 +27,7 @@ export interface Composition { props: Placed[]; ground: LotPatch[] }
  *  NN%, the fit, the decline) */
 export interface PresetDrop { preset: string; prop: number; id: string; why: string }
 /** the lot state a composition depends on (the seed is the lot's own) */
-export interface ComposeState { use: number; level: number; decline: number; seed: number }
+export interface ComposeState { use: number; level: number; decline: number; seed: number; /** the lot lab's forced preset id (dev only): the lot draws that preset, approved or not */ preset?: string }
 
 export type Pt = { x: number; y: number };
 export type Box4 = [number, number, number, number];

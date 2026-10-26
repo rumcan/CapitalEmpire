@@ -1,9 +1,10 @@
 // The Lot Composer (Phase 3 step 5c; P20 / T064): one lot's props and ground, deterministic from the lot, its use, level, decline and seed.
 // Every built or upgraded lot of a use (houses, shops, public car parks, tour shops, industrial yards, civic buildings) is drawn from a preset
 // (lot-presets.json, the owner tunes it): picked by use, state and size bucket and by the lot's slot along its street (neighbours differ),
-// fitted to the lot's size and turned to its facing (never mirrored). Procedural, because they are not one lot's to tune (P20 decision 2): the
-// vacant lots, the greens on angled lots, the building sites, the boundary fences and the house lots' fence planting, the industrial chain-link,
-// the street items, the leaf decals, and the decline touches (a third of the plants gone, junk; at decline 1 half the cars, at 3 none).
+// fitted to the lot's size and turned to its facing (never mirrored). An approved lot-lab preset (one with a road) wins over the frozen ones on its
+// road angle, and gives an angled lot its building. Procedural, because they are not one lot's to tune (P20 decision 2): the vacant lots, the
+// greens on angled lots, the building sites, the boundary fences and the house lots' fence planting, the industrial chain-link, the street items,
+// the leaf decals, and the decline touches (a third of the plants gone, junk; at decline 1 half the cars, at 3 none).
 // The candidate list and its checks are compose-core.ts's. Pure TS, no DOM.
 import type { LotPatch } from '../ground-protocol';
 import { mulberry } from '../iso';
@@ -11,11 +12,11 @@ import { isBuilding } from '../mirror';
 import { LU, LV } from './town';
 import {
   BUSHES, BY, Build, CHAIN, DEAD_TREES, JUNK, PARK_PIECES, PICKUPS, PRIVACY, SCHOOL_SIGNS, TREES, clamp, isCarPark, mix, names, pick, specFit, withVariations,
-  type Composition, type ComposeState, type LotGeom, type PresetDrop,
+  type Composition, type ComposeState, type LotGeom, type Pt, type PresetDrop,
 } from './compose-core';
-import { bucketOf, fitPreset, parsePresets, pickPreset, presetsFor, stateOf, type Fitted, type LotPreset, type PresetMeta, type PresetState, type PresetUse } from './presets';
+import { approvedFor, bucketOf, fitPreset, parsePresets, pickPreset, presetsFor, stateOf, type Fitted, type LotPreset, type PresetMeta, type PresetState, type PresetUse, type Road } from './presets';
 import { footprintOf, ownerScaleOf, turned } from './preset-art';
-import { frameOf, listToWorld, toWorld, type PresetFrame } from './preset-frame';
+import { frameOf, listToWorld, quarterOfRoad, roadOf, toWorld, type PresetFrame } from './preset-frame';
 import PRESET_JSON from './lot-presets.json';
 export { isCarPark, type Composition, type ComposeState, type LotGeom, type Placed, type PresetDrop } from './compose-core';
 
@@ -158,18 +159,26 @@ export function fenceOnly(lot: LotGeom, seed: number, lines: FenceLines = ALL_LI
 /** the lot presets the built lots are drawn from (lot-presets.json, read once), and the file's header (its dated notes: a save writes it back) */
 const FILE = parsePresets(PRESET_JSON);
 let PRESETS: LotPreset[] = FILE.presets, META: PresetMeta | undefined = FILE.meta;
+/** the frozen presets (no road): the pool a lot not on a lab road draws from (the lab's presets never reach it) */
+let LEGACY: LotPreset[] = PRESETS.filter(p => p.road === undefined);
 /** the presets the lots are drawn from now */
 export const lotPresets = (): readonly LotPreset[] => PRESETS;
 /** the preset file's header (formatPresets writes it first), or undefined for a file without one */
 export const lotPresetsMeta = (): PresetMeta | undefined => META;
 /** replaces the presets (the dev editor after a save, a hot reload of lot-presets.json), and the header when given; the caller composes the
  *  lots again */
-export function setLotPresets(list: LotPreset[], meta: PresetMeta | undefined = META) { PRESETS = list; META = meta; BUCKETS.clear(); }
-/** presetsFor's answer by use, state and size bucket for the presets now (every compose asks; setLotPresets clears it) */
+export function setLotPresets(list: LotPreset[], meta: PresetMeta | undefined = META) { PRESETS = list; LEGACY = list.filter(p => p.road === undefined); META = meta; BUCKETS.clear(); }
+/** presetsFor's answer by use, state and size bucket for the frozen presets now (every compose asks; setLotPresets clears it) */
 const BUCKETS = new Map<string, LotPreset[]>();
 function presetsOf(use: PresetUse, state: PresetState, w: number, d: number): LotPreset[] {
   const b = bucketOf(w, d), k = `${use}|${state}|${b.w}x${b.d}`;
-  let l = BUCKETS.get(k); if (!l) BUCKETS.set(k, (l = presetsFor(PRESETS, use, state, w, d)));
+  let l = BUCKETS.get(k); if (!l) BUCKETS.set(k, (l = presetsFor(LEGACY, use, state, w, d)));
+  return l;
+}
+/** approvedFor's answer by use, state, size bucket and road for the approved lab presets now (the same cache, cleared by setLotPresets) */
+function approvedOf(use: PresetUse, state: PresetState, w: number, d: number, road: Road): LotPreset[] {
+  const b = bucketOf(w, d), k = `A|${use}|${state}|${b.w}x${b.d}|${road}`;
+  let l = BUCKETS.get(k); if (!l) BUCKETS.set(k, (l = approvedFor(PRESETS, use, state, w, d, road)));
   return l;
 }
 /** who takes a hot reload of lot-presets.json in the dev server (the dev editor: it ignores the echo of its own saves, else sets the presets and
@@ -197,17 +206,35 @@ export const streetKey = (lot: LotGeom) => `${Math.round(lot.o.x * lot.n.x + lot
  *  0); the neighbours of one street take consecutive slots */
 export const streetSlot = (lot: LotGeom) => Math.round((lot.o.x * lot.u.x + lot.o.y * lot.u.y) / lot.w) + 4096;
 
-/** the preset a built lot draws (presetsFor by use, state and size; pickPreset by its street slot); null when the lot is not built or
- *  upgraded, is of no use, or no preset of its use and state exists */
+/** a lot whose frontage runs more than 20 degrees off both map axes: building sprites face the map axes only, so it is a green, not its use (compose) */
+export function isAngled(lot: LotGeom): boolean { return Math.max(Math.abs(lot.u.x), Math.abs(lot.u.y)) < Math.cos(Math.PI / 9); }
+
+/** the preset a lot draws, in this order: the lot lab's forced one (st.preset, when the presets have it, on any lot of any use and level); else, for a
+ *  built or upgraded lot, an approved lab preset for the lot's road (approvedFor: a diagonal road takes only its own, an angled lot on an axis road
+ *  none); else, on a lot the map axes fit, the frozen preset of its use, state and size bucket, picked by its street slot (pickPreset); null when no
+ *  preset fits (a lot not built or upgraded, or of no use, has none unless forced) */
 export function pickedPreset(lot: LotGeom, st: ComposeState): LotPreset | null {
+  if (st.preset !== undefined) { const forced = PRESETS.find(p => p.id === st.preset); if (forced) return forced; }
   const use = presetUse(st), state = stateOf(st.level, st.decline);
   if (!use || !state) return null;
+  const road = roadOf(lot.n), angled = isAngled(lot), ok = angled && road % 2 === 0 ? [] : approvedOf(use, state, lot.w, lot.d, road);
+  if (ok.length) return pickPreset(ok, streetSlot(lot), streetKey(lot)) ?? null;
+  if (angled) return null;
   return pickPreset(presetsOf(use, state, lot.w, lot.d), streetSlot(lot), streetKey(lot)) ?? null;
 }
-/** the preset a built lot draws (pickedPreset), fitted to the lot, and the lot's preset frame; null as pickedPreset */
+/** the preset a built lot draws (pickedPreset), fitted to the lot, and the lot's preset frame: frameOf, except that a lab preset of a diagonal road
+ *  is turned by its quarter (quarterOfRoad); null as pickedPreset */
 export function lotPreset(lot: LotGeom, st: ComposeState): { preset: LotPreset; fit: Fitted; frame: PresetFrame } | null {
   const preset = pickedPreset(lot, st);
-  return preset ? { preset, fit: fitPreset(preset, lot.w, lot.d), frame: frameOf(lot) } : null;
+  if (!preset) return null;
+  const frame = frameOf(lot);
+  return { preset, fit: fitPreset(preset, lot.w, lot.d), frame: preset.road !== undefined && preset.road % 2 ? { ...frame, q: quarterOfRoad(preset.road) } : frame };
+}
+/** the approved farm preset a farm parcel draws (use 'farm', built, at its size, on its road angle: approvedFor), picked by its key (pickPreset); null
+ *  when none fits: an angled parcel on an even road takes none, as pickedPreset gives a lot none */
+export function farmPreset(p: { o: Pt; u: Pt; n: Pt; w: number; d: number; key: string }): LotPreset | null {
+  const road = roadOf(p.n), ok = isAngled(p) && road % 2 === 0 ? [] : approvedOf('farm', 'built', p.w, p.d, road);
+  return pickPreset(ok, 0, p.key) ?? null;
 }
 
 /** the share of a preset's cars a lot at decline 1 keeps (its preset is the built one; decline 3 keeps none) */
@@ -287,14 +314,16 @@ export function compose(lot: LotGeom, st: ComposeState, drops?: PresetDrop[]): C
   const B = new Build(lot, mulberry(mix(st.seed, st.use, st.level, st.decline)));
   B.drops = drops ?? null;
   B.noCars = st.decline >= 3;
-  // building sprites face the map axes only: a lot whose frontage runs more than 20 degrees off both axes is a green, not its use
-  const angled = Math.max(Math.abs(lot.u.x), Math.abs(lot.u.y)) < Math.cos(Math.PI / 9);
+  // a forced farm preset (the lot lab's, or a farm parcel's approved one: farmPreset) draws alone: no street items, fences, leaf marks or decline touches
+  const forced = st.preset !== undefined ? lotPreset(lot, st) : null;
+  if (forced?.preset.use === 'farm') { fromPreset(B, lot, st, forced); return B.done(); }
+  const angled = isAngled(lot);
   // every lot but a house's and an industrial yard's draws the boundary fence on its own side lines (a shared line gets one fence); the drive's
   // mouth is left open
   const edge = () => { boundaryFence(B, lot); B.clearDrives(); };
-  const use = presetUse(st), p = angled || !use ? null : lotPreset(lot, st);
+  const use = presetUse(st), p = !use ? null : lotPreset(lot, st);
   if (st.use === LU.NONE || st.level === LV.EMPTY) { vacant(B); edge(); }
-  else if (angled) { green(B); edge(); }
+  else if (angled && !p) { green(B); edge(); }
   else if (st.level === LV.BUILDING) { site(B); edge(); }
   else if (!p || !use) { vacant(B); edge(); }
   else {

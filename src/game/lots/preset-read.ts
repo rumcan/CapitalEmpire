@@ -1,9 +1,9 @@
 // The lot presets' file reader (P20), apart from presets.ts so the dev server's save check (src/game/dev/dev-save.ts, loaded by vite.config.ts)
 // can validate a preset file without the game modules: no runtime imports, types only.
-import type { LotPreset, PresetMeta, PresetPatch, PresetProp, PresetState, PresetUse, View } from './presets';
+import type { LotPreset, PresetMeta, PresetPatch, PresetProp, PresetState, PresetUse, Road, View } from './presets';
 
 /** the uses, states and patch kinds a preset file may name */
-const USES: readonly string[] = ['res', 'com', 'park', 'ind', 'tour', 'civic'];
+const USES: readonly string[] = ['res', 'com', 'park', 'ind', 'tour', 'civic', 'farm'];
 const STATES: readonly string[] = ['built', 'upgraded', 'declined'];
 const KINDS: readonly string[] = ['drive', 'walk', 'lot', 'yard', 'bed'];
 /** a plain object (not null, not an array) */
@@ -31,17 +31,20 @@ function readPatch(v: unknown): PresetPatch | undefined {
   return out;
 }
 
-/** one preset read from JSON, or undefined when it is not valid (props and patches must all be valid) */
+/** one preset read from JSON, or undefined when it is not valid (props and patches must all be valid; road, when present, an integer 0..7) */
 function readPreset(v: unknown): LotPreset | undefined {
   if (!isObj(v)) return undefined;
-  const { id, use, state, w, d, props, patches, curated } = v;
+  const { id, use, state, w, d, props, patches, curated, road, approved } = v;
   if (typeof id !== 'string' || typeof use !== 'string' || !USES.includes(use) || typeof state !== 'string' || !STATES.includes(state)) return undefined;
   if (!fin(w) || !fin(d) || w <= 0 || d <= 0 || !Array.isArray(props) || !Array.isArray(patches)) return undefined;
+  if (road !== undefined && (!fin(road) || !Number.isInteger(road) || road < 0 || road > 7)) return undefined;
   const pr: PresetProp[] = [], pa: PresetPatch[] = [];
   for (const q of props) { const r = readProp(q); if (!r) return undefined; pr.push(r); }
   for (const a of patches) { const r = readPatch(a); if (!r) return undefined; pa.push(r); }
   const out: LotPreset = { id, use: use as PresetUse, state: state as PresetState, w, d, props: pr, patches: pa };
   if (curated === true) out.curated = true;
+  if (road !== undefined) out.road = road as Road;
+  if (approved === true) out.approved = true;
   return out;
 }
 
