@@ -10,6 +10,30 @@
 > and keep this file current. Ask the owner before pushing or opening a PR.
 
 ## Now (the current work, newest first)
+- **Done (2026-10-26, T148 #309): multi-select, copy/paste, Change house, Lot grid, Generate in place, Neighbours** (the owner: "add multiple
+  select and move/delete ... cntr c for copy and v for paste ... a shortcut button to change the house ... a grid that shows you where the Lot
+  boundries are"; "click generate it should stay on that lot"; "a on and off toggle where you unhide or hide houses around the lot").
+  - The selection lives in the editor (`lot-editor.ts`: `group` = one lot's preset props and decals by index; the pure edits in
+    `src/game/dev/lot-select.ts`). Shift+click adds or removes a sprite or decal; a drag on empty ground draws a box (in the lab a plain drag:
+    `editorOnly('lab')`; elsewhere Shift+drag); Esc clears. Drag any selected item or the arrows move the whole selection (the lot edge stops
+    it as one); Delete, R (a decal mirrors), [ ], Ctrl+D apply to each item; one undo step per group edit (the selection comes back with it).
+    Decals are selected by the editor now (the lab's old "Select decals" mode is gone; placing decals from the DECALS list stays in the lab).
+  - Ctrl+C copies the selection relative to its middle (sizes, views, decal mirrors); Ctrl+V pastes it with its middle at the pointer's last
+    point on the lot, on this lot or the next one opened (the clip is kept in sessionStorage `ce-lotlab-clip`), shifted in as one; the paste
+    stays selected.
+  - Change house (H, Shift+H back, the button next to Turn; Shift+click on the button goes back): the selected building, or with nothing
+    selected the lot's main building, for the next of its pool (`src/game/dev/lot-houses.ts`): its `newart.ts standInFamily` family, drawn as
+    itself, base views, front views only (no `-north-`, house backs, `*-rear`), in its size class (the family's owner-size footprint areas in
+    three: small, medium, large), in area order; never the same one; the street-side edge and the centre along the street kept, the view
+    kept, the scale never past the new picture's limit.
+  - Lot grid (L): `src/game/dev/lot-grid.ts`, a WebGL2 pass through the new `Game.devGround` hook (after the map grid, under shadows and
+    sprites): the lab lot's boundary and 1-tile cells, the neighbours' boundaries.
+  - Generate (▶) keeps the lot (type, state, size incl. the steppers' size, road angle) and rolls another variant, a new seed and a new building
+    of the same size class (`lot-lab-plan.ts planInPlace`); New lot ▶ is the old random Generate with the locks (`planNewLot`).
+  - Neighbours (N): `Game.stageLabNeighbours`, lots `lab-n0..6` (two each way along the street, three across: `neighbourLots`), of the lab's
+    type (a car park or tour shop among shops, a civic lot among houses) and state, composed as the game would (approved presets of the road,
+    else frozen); never selectable (`editorOnly`); none for a farm. The lab street is 90 tiles each way now. L and N are kept in `ce-lotlab`.
+  - Tests `tests/lot-lab-select.test.ts`; screenshots in `E:/ClaudeTemp/T148/`.
 - **Done (2026-10-26, after the account switch): the Library's sizes reach every pack, and stand-ins are packed for the buildings drawn as
   them (the owner: "these houses are still locked at a maximum size ... make it so I can make the building in the library the right size").**
   Root cause: the studio's Rebuild never ran `prep-views.mjs`, so a size set on a four-view building (most houses) was never packed: the card
