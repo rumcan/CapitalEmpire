@@ -67,7 +67,8 @@ describe('lots generated on the fly (T160)', () => {
     setGeneratedLots(false);
     const h = fnv(JSON.stringify(referenceLots().map(l => compose(l.g, l.st))));
     setGeneratedLots(true);
-    assert.equal(h, '9e414f77');
+    // main's hash at T160 was 9e414f77; T167 (#371) draws a stand-in for every picture the owner removed (the presets that place one), so today's is
+    assert.equal(h, 'c0ff5edb');
   });
   it('4. a town keeps its lot model: one saved with v1 composes with v1 after v2 ships; an unknown version falls back below it', () => {
     assert.ok(LOT_MODELS[1], 'v1 ships'); assert.ok(LATEST >= 1);

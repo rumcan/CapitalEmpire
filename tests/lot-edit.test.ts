@@ -97,7 +97,8 @@ describe('the dev editor (T071)', () => {
       const st = { use, level: LV.BUILT, decline: 0, seed: 50 }, lp = lotPreset(lot, st)!;
       qs.add(lp.frame.q);
       for (const q of compose(lot, st).props) {
-        if (!q.from || VEHICLE.has(q.id)) continue;   // a car may be moved inward off its lot's lines (compose-core fitCar)
+        // a car may be moved inward off its lot's lines (compose-core fitCar); a stand-in for a removed picture keeps that one's street edge, not its centre (T167)
+        if (!q.from || VEHICLE.has(q.id) || q.standIn) continue;
         const fp = footprintOf(q.id, q.scale, q.flip), src = lp.preset.props[q.from.prop]!;
         const back = worldToPreset(lp.frame, lp.preset, q.x + (fp[0] + fp[2]) / 2, q.y + (fp[1] + fp[3]) / 2, src);
         assert.ok(Math.abs(back.x - src.x) < 1e-6 && Math.abs(back.y - src.y) < 1e-6, `${lot.key} ${q.id}: (${src.x}, ${src.y}) came back (${back.x}, ${back.y})`);
