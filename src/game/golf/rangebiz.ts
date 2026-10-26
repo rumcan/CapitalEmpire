@@ -338,17 +338,81 @@ export interface CarSlot { x: number; y: number; hx: number; hy: number; inside?
 export function garageSlots(g: NonNullable<RangeScene['garage']>, n: number): CarSlot[] {
   return Array.from({ length: n }, () => ({ x: g.ramp.x, y: g.ramp.y, hx: g.into.x, hy: g.into.y, inside: true, door: g.door }));
 }
+/** T152: the lanes the range's cars are drawn in. The drive (a 4 m course drive: two tiles) carries its cars on its two halves, DRIVE_HALF tiles
+ *  either side of its line, keeping right as on the county road, so the cars in and out pass side by side. The car park building's ground floor
+ *  is open along its face: its cars drive in RAMP_LANES lanes and out in RAMP_LANES more beside them, RAMP_SPREAD tiles apart across its face (a
+ *  place's lane: its index, in turn), each from the drive to the ramp, so the line into it is not one car at a time through one door. Only the
+ *  cars as drawn keep to their lanes (drawnRoute): the golfers' timetable runs on the drive's line and to the ramp's point, as before */
+export const DRIVE_HALF = 0.5, RAMP_LANES = 2, RAMP_SPREAD = 1.2;
+/** T152: the route a car is drawn on for its golfer's route r (in: from, turn, onto the drive, the entrance, short of its place, its place; out:
+ *  the same the other way), d the county road's direction (the frame's +u): on the drive its own half (in: heading away from the road, its right
+ *  is -d; out: +d), and into or out of the car park building (its place sl, slot its index) its lane across the building's face from the drive on */
+function drawnRoute(r: Route, sl: CarSlot, slot: number, out: boolean, d: Pt): Route {
+  const pts = r.pts.map(p => ({ x: p.x, y: p.y }));
+  if (pts.length !== 6) return r;
+  const move = (i: number, x: number, y: number) => { pts[i]!.x += x; pts[i]!.y += y; }, k = out ? DRIVE_HALF : -DRIVE_HALF;
+  for (const i of out ? [2, 3, 4] : [1, 2, 3]) move(i, d.x * k, d.y * k);
+  if (sl.inside) {
+    const o = ((slot % RAMP_LANES) + (out ? RAMP_LANES : 0) - (2 * RAMP_LANES - 1) / 2) * RAMP_SPREAD;
+    for (const i of out ? [0, 1, 2, 3] : [2, 3, 4, 5]) move(i, -sl.hy * o, sl.hx * o);
+  }
+  return route(pts, r.v);
+}
 /** the range's money as it happens (T146, for the floating money over the customers, T147): what (a bucket sold, a practice fee, a coffee, a
  *  lesson, or a golfer lost), how many golfers it is (a skip books fractions), the takings ($; 0 for the lost) and where (world tiles: the counter,
  *  the practice facility, the kiosk, the car or the line; null for a skip) */
 export interface RangeMoneyEvent { kind: 'bucket' | 'practice' | 'coffee' | 'lesson' | 'lost'; n: number; amount: number; at: Pt | null; /** a lost golfer's reason */ why?: 'queue' | 'parking' | 'patience';
   /** a lost golfer's sale (T147: its red float): the buckets it would have bought ($; not charged, not in amount) */ missed?: number }
-/** a route: points and the speed of each leg (tiles/s), with the cumulative times */
-interface Route { pts: Pt[]; v: number[]; at: number[] }
+/** a route: points and the speed of each leg (tiles/s), with the cumulative times and lengths (tiles) */
+interface Route { pts: Pt[]; v: number[]; at: number[]; len: number[] }
 function route(pts: Pt[], v: number[]): Route {
-  const at = [0];
-  for (let i = 1; i < pts.length; i++) at.push(at[i - 1]! + Math.hypot(pts[i]!.x - pts[i - 1]!.x, pts[i]!.y - pts[i - 1]!.y) / (v[i - 1] ?? v[v.length - 1]!));
-  return { pts, v, at };
+  const at = [0], len = [0];
+  for (let i = 1; i < pts.length; i++) { const l = Math.hypot(pts[i]!.x - pts[i - 1]!.x, pts[i]!.y - pts[i - 1]!.y); len.push(len[i - 1]! + l); at.push(at[i - 1]! + l / (v[i - 1] ?? v[v.length - 1]!)); }
+  return { pts, v, at, len };
+}
+/** T152: a range car as drawn, beside its golfer's timetable (the visit's route and clock, which the money and the counts keep): its route, the
+ *  timetable's clock along it (due, s) and its own (c, never ahead of due nor more than LAG behind it), its point and heading (its route's leg's;
+ *  waiting at its start, its first leg's), and whether it is leaving (out) from the car park building (inside). See RangeSim.drive */
+interface RangeCar { r: Route; due: number; c: number; x: number; y: number; ang: number; out: boolean; inside: boolean }
+/** T152: a range car keeps CAR_GAP tiles (centre to centre: the longest car, 5.5 m, and half a metre) behind the car ahead in its lane (a car
+ *  within LANE_W tiles, a car's width, of its way ahead going its way), falling behind its timetable for it by at most LAG sim s: past that it
+ *  drives on, closing up as before T152. A lane that carries its cars (the county road; the drive and the car park below about 1.5 and 0.8 cars
+ *  a sim s) keeps them a car apart; the grown range's car park building takes up to 2 cars a sim s in and out through one drive and one ramp
+ *  (P24's demand), more than one lane carries at a car's gap, and there the cars close up as before */
+const CAR_GAP = 3, LANE_W = 0.9, LAG = 6;
+/** T152: the golfers a car brings to the car park building (its occupancy, seeded per visit: 1 to 4, a mean of about 2; the cumulative shares).
+ *  The building's golfers come at up to 2 a sim s (P24's demand), more than its drive, its entrance and its ramp carry at a car's gap one golfer
+ *  a car: so a car there stands for its golfers, the first of them its driver (the car drawn), the others its passengers (no car of their own).
+ *  Only the drawing changes: each golfer keeps its own visit, timetable, place in the building and takings. The surface lot's cars, drawn parked
+ *  in their bays, stay one golfer a car */
+export const SEATS: readonly number[] = [0.35, 0.7, 0.9, 1];
+/** a car's occupancy from its driver's seed (h in 0..1): 1 + the first SEATS share above h */
+export const seatsOf = (h: number): number => { let k = 0; while (k < SEATS.length - 1 && h >= SEATS[k]!) k++; return k + 1; };
+/** the distance (tiles) along route r at t seconds in */
+function arcAt(r: Route, t: number): number {
+  const n = r.pts.length; if (n < 2 || t <= 0) return 0; if (t >= r.at[n - 1]!) return r.len[n - 1]!;
+  let i = 1; while (i < n - 1 && r.at[i]! < t) i++;
+  return r.len[i - 1]! + (t - r.at[i - 1]!) * (r.v[i - 1] ?? r.v[r.v.length - 1]!);
+}
+/** the time (s) route r reaches s tiles along it */
+function timeAt(r: Route, s: number): number {
+  const n = r.pts.length; if (n < 2 || s <= 0) return 0; if (s >= r.len[n - 1]!) return r.at[n - 1]!;
+  let i = 1; while (i < n - 1 && r.len[i]! < s) i++;
+  return r.at[i - 1]! + (s - r.len[i - 1]!) / (r.v[i - 1] ?? r.v[r.v.length - 1]!);
+}
+/** where a car at (x, y) heading (hx, hy) stands in route r's lane between s0 and s1 tiles along it: the distance along r of the first leg it is
+ *  within LANE_W of going that leg's way (within 60 degrees: an oncoming or a crossing car is not in its lane), or up to CAR_GAP short of the
+ *  leg's start (a car merging into it there: the far side's arrival turning into the drive) or past its end (a car straight ahead still, though
+ *  this car turns off before it: the lanes into the car park building leave the drive a little apart); -1 off that stretch */
+function onRoute(r: Route, s0: number, s1: number, x: number, y: number, hx: number, hy: number): number {
+  const P = r.pts, L = r.len;
+  for (let k = 1; k < P.length; k++) {
+    const l = L[k]! - L[k - 1]!; if (L[k]! < s0 || l < 1e-9) continue; if (L[k - 1]! > s1) break;
+    const a = P[k - 1]!, ux = (P[k]!.x - a.x) / l, uy = (P[k]!.y - a.y) / l, u = (x - a.x) * ux + (y - a.y) * uy, s = L[k - 1]! + u;
+    if (u < -CAR_GAP || u > l + CAR_GAP || s < s0 || s > s1 || Math.abs((x - a.x) * uy - (y - a.y) * ux) >= LANE_W || hx * ux + hy * uy < 0.5) continue;
+    return s;
+  }
+  return -1;
 }
 /** the point and heading of a route t seconds in (the end after it); written into o */
 function along(r: Route, t: number, o: { x: number; y: number; ang: number }): boolean {
@@ -370,7 +434,9 @@ interface Visit { id: number; person: number; car: number; slot: number; stage: 
    *  the lift ramps on the stairs), and it went for a coffee */
   lesson?: boolean; taught?: boolean; up?: { x: number; y: number; h: number }; coffee?: boolean;
   /** T146: the counter it walks up to and is served at (index into the scene's counters), and when its car turned in (sim s) and whether it bought */
-  desk?: number; born: number; bought?: boolean }
+  desk?: number; born: number; bought?: boolean;
+  /** T152: its car as drawn while it is on the road (driving or waiting at its start; none while parked or gone) */
+  rc?: RangeCar }
 /** a ball in the air: from, to (tiles), launch time and flight time (s), and the arc's height (tiles); roll: a putt rolling on the green (it slows
  *  to the cup and is holed or picked up: it never lies) */
 interface Ball { x0: number; y0: number; x1: number; y1: number; t0: number; T: number; h: number; roll?: boolean; /** its start's height (units, T133: off the upper deck) */ h0?: number }
@@ -400,6 +466,8 @@ export class RangeSim {
   /** the lying balls, x y pairs (a ring of LYING_MAX) and how many */
   readonly lying = new Float32Array(LYING_MAX * 2); nLying = 0; private lyingAt = 0;
   private nextId = 1; private rnd: () => number; private t = 0; private bayBusy: boolean[] = [];
+  /** T152: the seats left in the car park building's last car drawn in, and in its last car drawn out (its next golfers ride in it: SEATS) */
+  private seatsIn = 0; private seatsOut = 0;
   /** the town day's length the last step ran at (sim s) */
   private dayLen = 0;
   /** the pro shop's counters (T146: serving in parallel): the golfer each serves (-1: free), its serve time left, and whether it has begun (the
@@ -565,7 +633,8 @@ export class RangeSim {
     this.desks.forEach((d, i) => { const v = d.id >= 0 ? this.visits.find(q => q.id === d.id) : undefined; if (v && v.stage === S.Queue) this.toward(v, sc.counters[i] ?? sc.counter, dt); });
     this.kq.forEach((id, k) => { const v = this.visits.find(q => q.id === id); if (v && v.stage === S.KioskQueue) this.toward(v, this.kioskSpot(k), dt); });
     this.balls = this.balls.filter(b => { if (this.t < b.t0 + b.T) return true; if (!b.roll) this.lie(b.x1, b.y1); return false; });
-    this.visits = this.visits.filter(v => v.stage !== S.Done);
+    // T152: a visit stays while its car is still on the road (it fell behind its timetable: drive)
+    this.visits = this.visits.filter(v => v.stage !== S.Done || v.rc);
     // the balls are picked once the range is closed and empty: at once (D15), or by the ball picker cart driving its lanes (T133)
     const empty = !isOpen && !this.visits.some(v => v.stage === S.Hit);
     if (!this.pick) { if (empty) this.nLying = 0; }
@@ -718,7 +787,7 @@ export class RangeSim {
   }
   clear(): void {
     this.visits = []; this.queue = []; this.balls = []; for (const d of this.desks) { d.id = -1; d.on = false; } this.nLying = 0; this.bayBusy.fill(false); this.slotBusy.fill(false); this.spotBusy.putting.fill(false); this.spotBusy.chipping.fill(false); this.used.length = 0;
-    this.kq = []; this.kServing = -1; this.pickT = -1; this.picked = false; this.pro.coach = -1; this.pro.placed = false; this.lyingAt = 0;
+    this.kq = []; this.kServing = -1; this.pickT = -1; this.picked = false; this.pro.coach = -1; this.pro.placed = false; this.lyingAt = 0; this.seatsIn = 0; this.seatsOut = 0;
   }
   /** today's counts start again with the next step (a new game or a load: the town day starts again, maybe on the same day number: T135) */
   newDay(): void {
@@ -736,7 +805,20 @@ export class RangeSim {
     // the academy (T133): a share of the golfers come for a lesson (drawn only with an academy, so a range without one plays as before)
     if (sc.academy && this.rnd() < LESSON_SHARE) v.lesson = true;
     v.r = route([from, turn, onDrive, e, back, { x: sl.x, y: sl.y }], [ROAD_V, DRIVE_V, DRIVE_V, PARK_V, PARK_V * 0.6]);
+    // T152: into the car park building a golfer rides in the last car's free seat, else drives its own (SEATS); elsewhere it drives
+    if (!this.rides(v, sl, false)) v.rc = carOn(drawnRoute(v.r, sl, slot, false, d), false, !!sl.inside);
     this.slotBusy[slot] = true; this.visits.push(v);
+  }
+  /** T152: whether golfer v, parked in slot sl, rides in another golfer's car (in or out of the car park building: a seat left in its last car,
+   *  seatsIn or seatsOut) rather than drawing its own; driving its own, it opens that car's other seats (seatsOf its seed). The sim's random
+   *  stream is not drawn on (a seed by the visit's id), so the timetable and the takings are those of one golfer a car */
+  private rides(v: Visit, sl: CarSlot | undefined, out: boolean): boolean {
+    if (!sl?.inside) return false;
+    const left = out ? this.seatsOut : this.seatsIn;
+    if (left > 0) { if (out) this.seatsOut--; else this.seatsIn--; return true; }
+    const k = seatsOf(hash(v.id, out ? 11 : 7)) - 1;
+    if (out) this.seatsOut = k; else this.seatsIn = k;
+    return false;
   }
   /** the car's way out: from its bay back through the entrance, down the drive and off along the road either way */
   private outRoute(v: Visit): Route {
@@ -832,12 +914,42 @@ export class RangeSim {
         if (prev < hit && lt >= hit) this.practiseShot(v, putt);
         break;
       }
-      case S.WalkCar: { const done = along(v.r!, v.t, this.tmp); v.x = this.tmp.x; v.y = this.tmp.y; v.ang = this.tmp.ang; if (done) { v.stage = S.CarOut; v.t = 0; v.r = this.outRoute(v); } break; }
+      case S.WalkCar: { const done = along(v.r!, v.t, this.tmp); v.x = this.tmp.x; v.y = this.tmp.y; v.ang = this.tmp.ang; if (done) { v.stage = S.CarOut; v.t = 0; v.r = this.outRoute(v); const sl = this.slots[v.slot]; if (!this.rides(v, sl, true)) v.rc = carOn(sl ? drawnRoute(v.r, sl, v.slot, true, sc.roadDir) : v.r, true, !!sl?.inside); } break; }
       // the bay is freed once, as the car pulls out (T132: it was freed again on every step of the drive out, so the next car's bay went free
       // under it and later cars piled into the same bay)
       case S.CarOut: { const done = along(v.r!, v.t, this.tmp); v.x = this.tmp.x; v.y = this.tmp.y; v.ang = this.tmp.ang; if (v.t > 1.5 && v.slot >= 0) { this.slotBusy[v.slot] = false; v.slot = -1; if (v.bought && this.dayLen > 0) { this.carStats.n++; this.carStats.hours += (this.t - v.born) / (this.dayLen / 24); } } if (done) v.stage = S.Done; break; }
       default: break;
     }
+    // T152: its car as drawn keeps its distance, up to LAG behind the timetable
+    if (v.rc) this.drive(v, v.rc, dt);
+  }
+  /** T152: car rc of visit v drawn on dt (its timetable's clock runs on dt): its own clock runs at the timetable's speeds, never ahead of it, and
+   *  stops where the car would come closer than CAR_GAP to the car ahead in its lane (onRoute: going its way; the cars crossing it, where the
+   *  drive meets the road and at the car park's entrance, and the oncoming ones on the one-lane drive pass as before: waiting for them locked the
+   *  queue in and the queue out), unless that puts it more than LAG behind its timetable. An older car level with it goes first (cars waiting at
+   *  one start: the road's end, the car park building's ramp), and of two merging cars each in the other's way the older goes first. A car waits
+   *  at its start for room (an arrival is not drawn until it moves). A car behind its timetable cannot catch it up: it drives on after it (to its
+   *  bay while its golfer gets out, down the road after its visit is done) and leaves the road (v.rc) at its route's end */
+  private drive(v: Visit, rc: RangeCar, dt: number): void {
+    rc.due += dt;
+    const r = rc.r, c0 = rc.c, c1 = Math.min(rc.due, c0 + dt), s0 = arcAt(r, c0), s1 = arcAt(r, c1), hx = Math.cos(rc.ang), hy = Math.sin(rc.ang), reach = s1 - s0 + CAR_GAP + LANE_W;
+    let lim = Infinity;
+    // a car of the car park building waiting at its start (inside it, leaving; or not yet on the map, arriving) is not drawn: it waits for room
+    // as long as it takes (its golfer's timetable runs on), so the building's line never closes up
+    const hidden = rc.inside && c0 === 0;
+    if (c1 > c0 && (hidden || c0 > rc.due - LAG)) for (const w of this.visits) {
+      const q = w.rc; if (!q || w === v || Math.abs(q.x - rc.x) > reach || Math.abs(q.y - rc.y) > reach) continue;
+      const s = onRoute(r, s0 - 1e-6, s1 + CAR_GAP, q.x, q.y, Math.cos(q.ang), Math.sin(q.ang));
+      if (s < 0 || s - CAR_GAP >= lim) continue;
+      if (w.id > v.id) {
+        if (s <= s0 + 1e-6) continue;
+        const sw = arcAt(q.r, q.c); if (onRoute(q.r, sw - 1e-6, sw + CAR_GAP, rc.x, rc.y, hx, hy) >= 0) continue;
+      }
+      lim = s - CAR_GAP;
+    }
+    const c = lim < s1 ? Math.min(c1, Math.max(c0, timeAt(r, lim), hidden ? 0 : rc.due - LAG)) : c1;
+    if (c >= r.at[r.at.length - 1]!) { v.rc = undefined; return; }
+    rc.c = c; if (c > 0) { along(r, c, this.tmp); rc.x = this.tmp.x; rc.y = this.tmp.y; rc.ang = this.tmp.ang; }
   }
   /** a practice shot from v toward its cup (T130): a putt rolls there (most drop, the rest stop short or run past), a chip flies a low arc and
    *  lands about the cup */
@@ -868,14 +980,15 @@ export class RangeSim {
     let np = 0, nc = 0;
     d.picker = null;
     if (sc) for (const v of this.visits) {
-      if (v.stage === S.CarIn || v.stage === S.CarOut || (v.stage >= S.WalkShop && v.stage <= S.WalkCar)) {
-        const sl = this.slots[v.slot], parked = v.stage !== S.CarIn && v.stage !== S.CarOut;
-        // parked in the car park building (T146): inside it, not drawn
-        if (!(parked && sl?.inside)) {
-        const c = C[nc] ?? (C[nc] = { x: 0, y: 0, ang: 0, type: 0 }); nc++;
-        if (parked && sl) { c.x = sl.x; c.y = sl.y; c.ang = Math.atan2(sl.hy, sl.hx); } else { c.x = v.x; c.y = v.y; c.ang = v.ang; }
-        c.type = v.car;
-        }
+      // T152: a car on the road as drawn (drive): driving, or waiting at its start (an arrival waiting for room at the road's end is not on the map
+      // yet; a car waiting to pull out stands parked, its first leg backing out of the bay, and in the car park building is not drawn)
+      const rc = v.rc;
+      if (rc) {
+        if (rc.c > 0 || (rc.out && !rc.inside)) { const c = C[nc] ?? (C[nc] = { x: 0, y: 0, ang: 0, type: 0 }); nc++; c.x = rc.x; c.y = rc.y; c.ang = rc.c > 0 ? rc.ang : rc.ang + Math.PI; c.type = v.car; }
+      } else if (v.stage >= S.WalkShop && v.stage <= S.WalkCar) {
+        // parked (in the car park building, T146: inside it, not drawn)
+        const sl = this.slots[v.slot];
+        if (sl && !sl.inside) { const c = C[nc] ?? (C[nc] = { x: 0, y: 0, ang: 0, type: 0 }); nc++; c.x = sl.x; c.y = sl.y; c.ang = Math.atan2(sl.hy, sl.hx); c.type = v.car; }
       }
       if (v.stage < S.WalkShop || v.stage > S.WalkCar) continue;
       const p = P[np] ?? (P[np] = { x: 0, y: 0, group: 1, person: 0, row: 0, frame: 0, lift: 0 }); np++;
@@ -925,6 +1038,11 @@ export class RangeSim {
   }
 }
 
+/** T152: a car on the road at route r's start (see RangeCar) */
+function carOn(r: Route, out: boolean, inside: boolean): RangeCar {
+  const a = r.pts[0]!, b = r.pts[1] ?? a;
+  return { r, due: 0, c: 0, x: a.x, y: a.y, ang: Math.atan2(b.y - a.y, b.x - a.x), out, inside };
+}
 /** a polyline's length (tiles) */
 function pathLen(pts: Pt[]): number { let L = 0; for (let i = 1; i < pts.length; i++) L += Math.hypot(pts[i]!.x - pts[i - 1]!.x, pts[i]!.y - pts[i - 1]!.y); return L; }
 /** the point of segment a-b nearest p */
