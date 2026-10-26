@@ -21,13 +21,14 @@ import {
   type Composition, type ComposeState, type LotGeom, type Pt, type PresetDrop,
 } from './compose-core';
 import { approvedFor, bucketOf, fitPreset, parsePresets, pickPreset, presetsFor, stateOf, type Fitted, type LotPreset, type PresetDecal, type PresetMeta, type PresetProp, type PresetState, type PresetUse, type Road } from './presets';
-import { drawnView, footprintOf, ownerScaleOf, roadView, turned } from './preset-art';
+import { AXIS_PROPS, drawnView, footprintOf, ownerScaleOf, roadView, turned } from './preset-art';
 import { frameOf, listToWorld, quarterOfRoad, roadOf, toWorld, type PresetFrame } from './preset-frame';
 import PRESET_JSON from './lot-presets.json';
-import { generateLayout, type LaidItem } from './lot-gen';
-import { kindPools } from './item-kinds';
-import { modelFrom, type Box, type HouseClass, type ItemKind, type Model, type SectorLot } from './learn';
-import { pairTable, stateKinds, tasteFrom, type Partner } from './taste';
+import { generateLayout, PER_LOT, type LaidItem } from './lot-gen';
+import { isFence, kindOfId, kindPools } from './item-kinds';
+import { groupsFrom } from './group-data';
+import { FENCE_BAND, ITEM_KINDS, groupOf, modelFrom, type Box, type HouseClass, type ItemKind, type Model, type SectorLot, type UseGroup } from './learn';
+import { pairTable, stateDensity, stateKinds, tasteFrom, type Partner } from './taste';
 import { CLASS_NAMES, frameHalf, houseFamilies, sizeClassOf } from './house-class';
 import { allows, parseAllocations } from './house-alloc';
 import ALLOC_JSON from './house-allocations.json';
@@ -369,6 +370,8 @@ function fromPreset(B: Build, lot: LotGeom, st: ComposeState, p: { preset: LotPr
 /** a frozen house preset: a house lot laid out by the old layouts and frozen (P20 T063), not one of the owner's own (curated, approved in the lab,
  *  or whole): its house keeps its yards at today's sizes (houseYards) */
 const frozenHouse = (p: LotPreset) => p.use === 'res' && !p.curated && !p.approved && !p.whole;
+/** a frozen preset of any use but a farm (T169): not the owner's (curated, approved, whole) */
+const frozenAny = (p: LotPreset) => p.use !== 'farm' && !p.curated && !p.approved && !p.whole;
 
 // ---------- T160: the house lots generated on the fly
 /** whether the house lots are generated (on; ?oldlots, or setGeneratedLots(false), composes them from their frozen presets' own items) */
@@ -382,7 +385,7 @@ const MODELS = new Map<number, Model>();
 export function setLotModel(v: number): void { MODEL_V = LOT_MODELS[v] ? v : Math.max(1, ...Object.keys(LOT_MODELS).map(Number).filter(n => n < v)); }
 export const lotModelVersion = () => MODEL_V;
 /** a model version known from now on without a reload (the tests; a dev session after shipping one): its data (lots/learn.ts ModelData) */
-export function addLotModel(v: number, data: unknown): void { (LOT_MODELS as Record<number, unknown>)[v] = data; MODELS.delete(v); TASTES.delete(v); }
+export function addLotModel(v: number, data: unknown): void { (LOT_MODELS as Record<number, unknown>)[v] = data; MODELS.delete(v); TASTES.delete(v); for (const k of [...GROUP_RUN.keys()]) if (k.startsWith(`${v}|`)) GROUP_RUN.delete(k); }
 function shippedModel(): Model { let m = MODELS.get(MODEL_V); if (!m) MODELS.set(MODEL_V, m = modelFrom(LOT_MODELS[MODEL_V] ?? LOT_MODELS[1])); return m; }
 /** the shipped model's taste (T161, lots/taste.ts: its pairs and its densities by state; v1 has neither, and lays as it did), read once per version:
  *  the generator's pair table and each state's count multiples */
@@ -396,6 +399,43 @@ function shippedTaste(state: PresetState): { pairs?: Map<string, Partner[]>; kin
   const kinds = t.kinds.get(state);
   return { ...(t.pairs ? { pairs: t.pairs } : {}), ...(kinds ? { kinds } : {}) };
 }
+// ---------- T169: the lots of every use generated on the fly (#392)
+/** whether a lot's item stays in the base of a generated lot of the other uses (lots/group-data.ts): a building, a fence, a car (parked in a bay of
+ *  the car park, or on the yard: a car stands only on paving), the car park's furniture (its wheel stops and pay boom; AXIS_PROPS: the trailers
+ *  too) and a street item (in front of the lot, y < 0); the generator lays the rest (the plants, the props, the ground marks) */
+export const groupBaseItem = (id: string, y: number): boolean => { const it = BY.get(id); return y < 0 || (!!it && isBuilding(it)) || isFence(id) || AXIS_PROPS.has(id) || kindOfId(id) === 'car'; };
+/** a use group as the shipped model lays its lots: its keep counts, pools, pairs and each state's densities (kept items per 160 tiles squared,
+ *  lots/taste.ts stateDensity); null while it is off (its lots draw their frozen presets, as before) or the model has no groups (v1, v2) */
+interface GroupRun { model: Model; pools: Record<ItemKind, string[]>; pairs: Map<string, Partner[]> | undefined; density: Map<PresetState, Record<ItemKind, number>> }
+const GROUP_RUN = new Map<string, GroupRun | null>();
+function shippedGroup(g: UseGroup | null): GroupRun | null {
+  if (!g || g === 'res') return null;
+  const key = `${MODEL_V}|${g}`; if (GROUP_RUN.has(key)) return GROUP_RUN.get(key)!;
+  const d = groupsFrom(LOT_MODELS[MODEL_V])[g];
+  let run: GroupRun | null = null;
+  if (d?.on) {
+    const taste = tasteFrom(d);
+    run = { model: modelFrom(d), pools: d.pools, pairs: pairTable(taste, d.pools), density: new Map((['built', 'upgraded', 'declined'] as const).map(s => [s, Object.fromEntries(ITEM_KINDS.map(k => [k, stateDensity(taste, s, k)])) as Record<ItemKind, number>])) };
+  }
+  GROUP_RUN.set(key, run);
+  return run;
+}
+/** the yard surfaces that are paving (T169: no plant grows on them) */
+const PAVED: ReadonlySet<string> = new Set(['asphalt', 'concrete', 'slabs', 'paving']);
+/** the band before a main building's face no tree stands in (tiles, T169) */
+const FRONTAGE = 2.5;
+/** whether a lot of the other uses draws generated (its frozen preset's base and the generator's items): its group on in the shipped model */
+const groupLot = (p: LotPreset) => GENERATED && p.use !== 'res' && frozenAny(p) && !!shippedGroup(groupOf(p.use));
+/** a fitted preset of the other uses' base (groupBaseItem: its buildings, fences, cars, car park furniture and street items, and every patch),
+ *  and the index of its main building, the widest (-1: none: a park) */
+function groupBase(p: { preset: LotPreset; fit: Fitted; frame: PresetFrame }): { base: { preset: LotPreset; fit: Fitted; frame: PresetFrame }; main: number } {
+  const half = frameHalf(p.frame), keep: number[] = [];
+  let k = -1, area = 0;
+  p.fit.props.forEach((q, i) => { if (!groupBaseItem(q.id, q.y)) return; keep.push(i); const it = BY.get(q.id); if (!it || !isBuilding(it)) return; const h = half(q), a = h.ha * h.hb; if (a > area) { area = a; k = keep.length - 1; } });
+  const fit: Fitted = { ...p.fit, props: keep.map(i => p.fit.props[i]!), from: keep.map(i => p.fit.from[i]!), decals: [], ...(p.fit.standIn ? { standIn: keep.map(i => p.fit.standIn![i]) } : {}) };
+  return { base: { ...p, fit }, main: k };
+}
+
 /** 32-bit FNV-1a of a string */
 const fnv = (s: string) => { let h = 0x811c9dc5; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193); } return h >>> 0; };
 /** a house lot's generator seed: its place on its street (streetKey, streetSlot: as the preset pick reads it) and its look state, so a lot never
@@ -417,9 +457,9 @@ function houseBase(p: { preset: LotPreset; fit: Fitted; frame: PresetFrame }): {
  *  lot, each item kept with the model's keep rate where it stands (the learned taste thins the generous set, as the owner does in the wizard);
  *  nothing on the house, the walk takes nothing and the drive only a car; the cars thinned by decline as a preset's are. Placed after the base,
  *  the street items and the fence, so those win any overlap */
-function generatedItems(B: Build, lot: LotGeom, st: ComposeState, p: { preset: LotPreset; fit: Fitted; frame: PresetFrame }, state: PresetState, hi: number) {
+function generatedItems(B: Build, lot: LotGeom, st: ComposeState, p: { preset: LotPreset; fit: Fitted; frame: PresetFrame }, state: PresetState, hi: number, group: UseGroup = 'res') {
   const f = p.frame;
-  for (const it of layoutOf(lot, p, state, hi)) {
+  for (const it of layoutOf(lot, p, state, hi, group)) {
     if (it.kind === 'decal') { decalMarks(B, f, [{ id: it.id, x: it.x, y: it.y, scale: 1, alpha: 1 }]); continue; }
     if (it.kind === 'car' && (B.noCars || (st.decline === 1 && B.r() >= CAR_KEEP_D1))) continue;
     const t = turned(it.id, f.q), s = ownerScaleOf(it.id);
@@ -427,8 +467,9 @@ function generatedItems(B: Build, lot: LotGeom, st: ComposeState, p: { preset: L
   }
 }
 /** the items the generator lays on a house lot's base (generatedItems; preset frame, tiles): seeded by the lot, with the shipped model and its taste
- *  (T161: the state's density, the pairs) */
-function layoutOf(lot: LotGeom, p: { preset: LotPreset; fit: Fitted; frame: PresetFrame }, state: PresetState, hi: number): LaidItem[] {
+ *  (T161: the state's density, the pairs); a lot of the other uses (T169, group) with its group's model, pools, pairs and densities (each kind's
+ *  count its density at the lot's area, none of a kind its lots have none of), nothing on a drive, a walk or the car park */
+function layoutOf(lot: LotGeom, p: { preset: LotPreset; fit: Fitted; frame: PresetFrame }, state: PresetState, hi: number, group: UseGroup = 'res'): LaidItem[] {
   const f = p.frame, half = frameHalf(f), hq = hi >= 0 ? p.fit.props[hi] : undefined, hh = hq ? half(hq) : null;
   const house: Box | null = hq && hh ? [hq.x - hh.ha, hq.y - hh.hb, hq.x + hh.ha, hq.y + hh.hb] : null;
   // nothing lands on any building of the base (the house, its garage, a shed)
@@ -437,14 +478,33 @@ function layoutOf(lot: LotGeom, p: { preset: LotPreset; fit: Fitted; frame: Pres
   const sl: SectorLot = { w: lot.w, d: lot.d, house, drives: p.fit.patches.filter(a => a.kind === 'drive').map(a => a.pts) };
   const avoid = p.fit.patches.filter(a => a.kind === 'drive' || a.kind === 'walk').map(a => ({ box: box(a.pts), ...(a.kind === 'drive' ? { but: ['car' as const] } : {}) }));
   const k = hq ? sizeClassOf(hq.id) : null, cls: HouseClass = hq ? CLASS_NAMES[k ?? 0] : 'none';
+  const run = group === 'res' ? null : shippedGroup(group);
+  if (run) {
+    const area = lot.w * lot.d, f = Math.min(2.2, Math.max(0.6, area / 160)), D = run.density.get(state)!;
+    const kinds = Object.fromEntries(ITEM_KINDS.map(kd => [kd, (D[kd] * area) / 160 / (PER_LOT[kd] * f)])) as Record<ItemKind, number>;
+    // nothing on a drive, a walk or the car park; no plant on paving but along the lot's fence (a paved yard: its props and ground marks stand
+    // there, a tree does not grow out of the asphalt, a hedge lines its fence; a gravel yard keeps the bushes along its fence); no tree right in
+    // front of the main building (FRONTAGE tiles before its face: its frontage stays in view; street trees nearer the road stay)
+    const plants = ['prop', 'car', 'decal'] as const, notTree = ['bush', 'flowerbed', 'prop', 'car', 'decal'] as const, F = FENCE_BAND + 0.2;
+    const inner = (b: Box): Box => [Math.max(b[0], F), b[1], Math.min(b[2], lot.w - F), Math.min(b[3], lot.d - F)];
+    const off: { box: Box; but?: readonly ItemKind[] }[] = [
+      ...p.fit.patches.filter(a => a.kind === 'drive' || a.kind === 'walk' || a.kind === 'lot').map(a => ({ box: box(a.pts) })),
+      ...p.fit.patches.filter(a => a.kind === 'yard' && PAVED.has(a.tex)).map(a => ({ box: inner(box(a.pts)), but: plants })),
+      ...(house ? [{ box: [house[0], house[1] - FRONTAGE, house[2], house[1]] as Box, but: notTree }] : []),
+    ];
+    return generateLayout({ lot: sl, cls, model: run.model, taken, pools: run.pools, half, seed: lotSeed(lot, state), avoid: off, keep: true, kinds, minOne: false, ...(run.pairs ? { pairs: run.pairs } : {}) });
+  }
   return generateLayout({ lot: sl, cls, model: shippedModel(), taken, pools: kindPools(), half, seed: lotSeed(lot, state), avoid, keep: true, ...shippedTaste(state) });
 }
 /** the items the generator lays on a lot the game generates (a built house lot of a frozen preset; preset frame, tiles), as compose draws them
  *  (but the cars a decline thins): the exam sheet and the tests read them; null for any other lot */
 export function lotLayout(lot: LotGeom, st: ComposeState): LaidItem[] | null {
-  if (!GENERATED || st.use === LU.NONE || st.level === LV.EMPTY || st.level === LV.BUILDING || presetUse(st) !== 'res') return null;
+  if (!GENERATED || st.use === LU.NONE || st.level === LV.EMPTY || st.level === LV.BUILDING || !presetUse(st)) return null;
   const p = lotPreset(lot, st), state = stateOf(st.level, st.decline);
-  if (!p || !state || p.preset.use === 'farm' || p.preset.whole || !frozenHouse(p.preset)) return null;
+  if (!p || !state || p.preset.use === 'farm' || p.preset.whole) return null;
+  // T169: a lot of the other uses whose group the model generates
+  if (presetUse(st) !== 'res') { if (!groupLot(p.preset)) return null; const gb = groupBase(p); return layoutOf(lot, gb.base, state, gb.main, groupOf(p.preset.use)!); }
+  if (!frozenHouse(p.preset)) return null;
   const hb = houseBase(p);
   return layoutOf(lot, hb.base, state, hb.house);
 }
@@ -573,6 +633,16 @@ export function compose(lot: LotGeom, st: ComposeState, drops?: PresetDrop[]): C
     streetItems(B, use, d);
     boundaryFence(B, lot);
     generatedItems(B, lot, st, hb.base, state, hb.house);
+    B.cap = Infinity;
+  }
+  else if (groupLot(p.preset)) {
+    // T169: a lot of the other uses whose group the model generates: its frozen preset's base (groupBase), its street items, leaves and fence as
+    // before; the rest (the plants, the props, the ground marks) from the generator with its group's model
+    const state = stateOf(st.level, st.decline)!, gb = groupBase(p), d = fromPreset(B, lot, st, gb.base);
+    streetItems(B, use, d);
+    B.marksIn('leaves', 0.8, 0.8, B.W - 0.8, B.D - 0.8, 1 + Math.floor(B.r() * 2));
+    if (use === 'ind') chainRing(B); else edge();
+    generatedItems(B, lot, st, gb.base, state, gb.main, groupOf(p.preset.use)!);
     B.cap = Infinity;
   }
   else {

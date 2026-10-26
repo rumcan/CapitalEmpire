@@ -5,8 +5,8 @@
 import type { Game } from '../engine';
 import type { ComposeState, LotGeom } from '../lots/compose-core';
 import type { PresetState, Road } from '../lots/presets';
-import { addLotModel, lotLayout, lotModelVersion, lotPresets, setLotModel } from '../lots/compose';
-import { LATEST } from '../lots/lot-models';
+import { addLotModel, lotLayout, lotModelVersion, lotPresets, setGeneratedLots, setLotModel } from '../lots/compose';
+import { LATEST, LOT_MODELS } from '../lots/lot-models';
 import { examLots, examRows, type ExamLot } from '../lots/lot-exam';
 import { ITEM_KINDS, learningStats, modelData, type ItemKind } from '../lots/learn';
 import { tasteData } from '../lots/taste';
@@ -48,22 +48,28 @@ function shotBox(g: LotGeom): { x0: number; y0: number; x1: number; y1: number }
 
 /** the exam (see the file head) */
 export function makeExam(host: ExamHost) {
-  const lots = examLots(lotPresets()), rows = examRows(lots), geos = new Map<number, LotGeom>(), was = lotModelVersion();
-  const st = (l: ExamLot): ComposeState => ({ use: LU.RES, ...levelOf(l.state), seed: 1, preset: l.preset });
+  let lots = examLots(lotPresets()), rows = examRows(lots);
+  const geos = new Map<number, LotGeom>(), was = lotModelVersion();
+  const luOf = (u: ExamLot['use']) => (u === 'com' || u === 'park' ? LU.COM : u === 'ind' ? LU.IND : u === 'tour' ? LU.TOUR : u === 'civic' ? LU.GOV : LU.RES);
+  const st = (l: ExamLot): ComposeState => ({ use: luOf(l.use), ...levelOf(l.state), seed: 1, preset: l.preset });
   // one zoom for every lot: the largest shot fits the cell; the cell's size at that zoom
   const unit = (l: ExamLot) => shotBox({ o: { x: 0, y: 0 }, u: { x: 1, y: 0 }, n: { x: 0, y: 1 }, w: l.w, d: l.d });
   const big = lots.map(unit).reduce((a, b) => ({ w: Math.max(a.w, b.x1 - b.x0), h: Math.max(a.h, b.y1 - b.y0) }), { w: 0, h: 0 });
   let z = Math.min(CELL.w / big.w, CELL.h / big.h), label = `v${was}`, street: LotGeom[] = [];
   const clip = () => ({ w: Math.ceil(big.w * z), h: Math.ceil(big.h * z) });
   return {
+    /** the exam narrowed to some use groups (T169: res, com, ind, open), its rows laid again */
+    only(groups: readonly string[]): number { lots = lots.filter(l => groups.includes(l.group ?? 'res')); rows = examRows(lots); return lots.length; },
     /** the lots and the rows they are staged in (lot numbers) */
     lots: () => lots,
     rows: () => rows.map(r => r.map(l => l.i)),
-    /** the model the lots compose with: 'learned' (the lab's samples now: the model Ship model would ship), 'shipped' (the latest) or a version
-     *  number; its label */
+    /** the model the lots compose with: 'learned' (the lab's samples now: the model Ship model would ship, with the latest's use groups), 'shipped'
+     *  (the latest), a version number, or 'old' (T169: ?oldlots, every lot its frozen preset's own items); its label */
     model(which: string): string {
+      setGeneratedLots(which !== 'old');
+      if (which === 'old') { label = 'oldlots'; return label; }
       if (which === 'learned') {
-        addLotModel(LEARNED_V, { ...modelData(learnedModel()), ...tasteData(learnedTaste()) });
+        addLotModel(LEARNED_V, { ...modelData(learnedModel()), ...tasteData(learnedTaste()), groups: (LOT_MODELS[LATEST] as { groups?: unknown } | undefined)?.groups });
         setLotModel(LEARNED_V); label = `learned now (${learnedSamples().length} samples)`;
       } else { setLotModel(which === 'shipped' ? LATEST : Number(which)); label = `v${lotModelVersion()}`; }
       return label;
@@ -114,6 +120,6 @@ export function makeExam(host: ExamHost) {
       return { x: Math.round((a.L + a.R - w) / 2), y: Math.round((a.T + a.B - h) / 2), w, h };
     },
     /** the exam done: the camera let go, the model the lab had */
-    done(): void { host.hold(false); setLotModel(was); },
+    done(): void { host.hold(false); setLotModel(was); setGeneratedLots(true); },
   };
 }

@@ -6,6 +6,7 @@ import { formatPresets, parsePresets } from '../lots/preset-read';
 export { mergeAllocations } from '../lots/house-alloc';
 export { mergeSamples } from '../lots/learn';
 import { tasteData, tasteFrom } from '../lots/taste';
+import { groupsBlock } from '../lots/group-data';
 
 /** the lot wizard's samples (T158: lots/learn.ts), appended only through their merge (POST /__dev/learning), never written whole */
 export const LEARN_PATH = 'src/game/lots/lot-learning.json';
@@ -27,7 +28,8 @@ export function modelFile(v: number, data: unknown, from: string): string | null
   // the taste (T161): one anchor, one anchor's partners, one state a line
   const t = tasteData(tasteFrom(d)), block = (name: string, o: Record<string, unknown>) => `,\n "${name}": {\n${Object.entries(o).map(([k, x]) => `  ${JSON.stringify(k)}: ${JSON.stringify(x)}`).join(',\n')}\n }`;
   const taste = Object.keys(t.pairs).length || Object.keys(t.density).length ? block('anchors', t.anchors) + block('pairs', t.pairs) + block('density', t.density) : '';
-  return `{\n "v": ${v},\n "prior": {"a":${a},"b":${b}},\n "from": ${JSON.stringify(from)},\n "counts": {\n${rows.join(',\n')}\n }${taste}\n}\n`;
+  // the other uses' groups (T169, lots/group-data.ts): one group's data a few lines
+  return `{\n "v": ${v},\n "prior": {"a":${a},"b":${b}},\n "from": ${JSON.stringify(from)},\n "counts": {\n${rows.join(',\n')}\n }${taste}${groupsBlock(d)}\n}\n`;
 }
 /** the shipped models' index (src/game/lots/lot-models/index.ts) for these versions: each imported, the latest the highest */
 export function modelsIndex(versions: readonly number[]): string {

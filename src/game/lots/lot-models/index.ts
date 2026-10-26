@@ -2,7 +2,8 @@
 // The game composes its house lots with a shipped model (lots/compose.ts): a new town with the latest, a saved town with its own (lotModel).
 import v1 from './v1.json';
 import v2 from './v2.json';
+import v3 from './v3.json';
 /** the shipped lot models by version (lots/learn.ts modelFrom reads each) */
-export const LOT_MODELS: Readonly<Record<number, unknown>> = { 1: v1, 2: v2 };
+export const LOT_MODELS: Readonly<Record<number, unknown>> = { 1: v1, 2: v2, 3: v3 };
 /** the version a new town composes with */
-export const LATEST = 2;
+export const LATEST = 3;

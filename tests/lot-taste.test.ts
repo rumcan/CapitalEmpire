@@ -100,11 +100,11 @@ describe('the lot generator\'s taste: pairs and densities by state (T161)', () =
   it('6. the exam: 50 fixed lots, every state on every axis road, frozen presets running small to large; rows fit the lab street', () => {
     const a = examLots(lotPresets()), b = examLots(lotPresets());
     assert.deepEqual(a, b);
-    assert.equal(a.length, EXAM_N);
-    for (const r of EXAM_ROADS) for (const s of EXAM_STATES) assert.ok(a.some(l => l.road === r && l.state === s), `road ${r} ${s}`);
+    assert.equal(a.filter(l => !l.group).length, EXAM_N, 'the houses\' 50 (T169: then each use group\'s rows)');
+    for (const r of EXAM_ROADS) for (const s of EXAM_STATES) assert.ok(a.some(l => !l.group && l.road === r && l.state === s), `road ${r} ${s}`);
     const byId = new Map(lotPresets().map(p => [p.id, p]));
-    for (const l of a) { const p = byId.get(l.preset)!; assert.ok(examPreset(p) && p.state === l.state && p.w === l.w && p.d === l.d); }
-    for (const s of EXAM_STATES) { const ar = a.filter(l => l.state === s).map(l => l.w * l.d); assert.ok(ar[ar.length - 1]! > ar[0]!, `${s} runs small to large`); }
+    for (const l of a.filter(q => !q.group)) { const p = byId.get(l.preset)!; assert.ok(examPreset(p) && p.state === l.state && p.w === l.w && p.d === l.d); }
+    for (const s of EXAM_STATES) { const ar = a.filter(l => !l.group && l.state === s).map(l => l.w * l.d); assert.ok(ar[ar.length - 1]! > ar[0]!, `${s} runs small to large`); }
     const rows = examRows(a);
     assert.deepEqual(rows.flat().map(l => l.i).sort((x, y) => x - y), a.map(l => l.i));
     for (const r of rows) { assert.ok(r.length <= 7 && r.every(l => l.road === r[0]!.road)); assert.ok(r.reduce((t, l) => t + l.w + 3, 0) <= 150 || r.length === 1); }

@@ -33,8 +33,9 @@ function pickWeighted(w: readonly number[], r: () => number): number {
  *  (1: as PER_LOT); avoid: ground no item may stand on but the kinds it lets (the game's lots, T160: the walk takes nothing, the drive only a car;
  *  a decal is flat ground and goes anywhere); keep: the model keeps each item it lays with its keep rate there (the game's lots: the wizard offers
  *  more than a lot needs for the owner to click off, the game lets the learned taste click them off); kinds: each kind's count scaled (a state's
- *  density, T161); pairs: per anchor id the partners it brings (T161) */
-export interface GenInput { lot: SectorLot; cls: HouseClass; model: Model; taken: readonly Box[]; pools: Readonly<Record<ItemKind, readonly string[]>>; half: (q: PresetProp) => Half; seed: number; density?: number; avoid?: readonly { box: Box; but?: readonly ItemKind[] }[]; keep?: boolean; kinds?: Readonly<Partial<Record<ItemKind, number>>>; pairs?: ReadonlyMap<string, readonly Partner[]> }
+ *  density, T161); pairs: per anchor id the partners it brings (T161); minOne (default true): at least one of each kind but cars (false, T169:
+ *  the other uses' lots, whose densities are their own, may have none of a kind) */
+export interface GenInput { lot: SectorLot; cls: HouseClass; model: Model; taken: readonly Box[]; pools: Readonly<Record<ItemKind, readonly string[]>>; half: (q: PresetProp) => Half; seed: number; density?: number; avoid?: readonly { box: Box; but?: readonly ItemKind[] }[]; keep?: boolean; kinds?: Readonly<Partial<Record<ItemKind, number>>>; pairs?: ReadonlyMap<string, readonly Partner[]>; minOne?: boolean }
 const overlap = (a: Box, b: Box) => Math.min(a[2], b[2]) - Math.max(a[0], b[0]) > TOUCH && Math.min(a[3], b[3]) - Math.max(a[1], b[1]) > TOUCH;
 /** the items laid on a lot (see the file head); r: the random stream (the seed's mulberry32 unless given, for a caller that draws more from it) */
 export function generateLayout(g: GenInput, r: () => number = mulberry(g.seed >>> 0)): LaidItem[] {
@@ -51,7 +52,7 @@ export function generateLayout(g: GenInput, r: () => number = mulberry(g.seed >>
   /** whether a partner of a kind fits the kind's count (a state's density sets how many, the pairs only how they stand): the kind laid now (a
    *  try of its own taken), one whose turn is to come (its count taken early, at most what its turn would draw) or one whose turn is gone (only
    *  what its tries left: those the model thinned, or found no room for) */
-  const room = (k: ItemKind) => k === cur ? left > 1 : turn.has(k) ? (laid.get(k) ?? 0) < turn.get(k)! : (early.get(k) ?? 0) < Math.max(k === 'car' ? 0 : 1, Math.round(PER_LOT[k] * f * mult(k)));
+  const room = (k: ItemKind) => k === cur ? left > 1 : turn.has(k) ? (laid.get(k) ?? 0) < turn.get(k)! : (early.get(k) ?? 0) < Math.max(k === 'car' || g.minOne === false ? 0 : 1, Math.round(PER_LOT[k] * f * mult(k)));
   /** the partners of the item laid at index i: each at its rate, when its kind has room, at one of its offsets (a little jitter), in the lot (on
    *  the verge only by an item on the verge), on nothing taken; a partner it cannot place is left out */
   const partners = (i: number) => {
@@ -73,7 +74,7 @@ export function generateLayout(g: GenInput, r: () => number = mulberry(g.seed >>
     }
   };
   for (const kind of ORDER) {
-    const pool = g.pools[kind], n = Math.max(kind === 'car' ? 0 : 1, Math.round(PER_LOT[kind] * f * mult(kind) + (r() - 0.5)));
+    const pool = g.pools[kind], n = Math.max(kind === 'car' || g.minOne === false ? 0 : 1, Math.round(PER_LOT[kind] * f * mult(kind) + (r() - 0.5)));
     if (!pool.length) continue;
     // its tries: its count, less its partners laid already (with no pairs: its count)
     cur = kind; turn.set(kind, n);
