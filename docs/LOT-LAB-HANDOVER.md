@@ -29,14 +29,19 @@ Read this to continue the lot lab work in a fresh chat. The design and the rules
 5. Do not slice off props at the lot's edge; no black background, the map's own grass instead (done: no mask; forest and farms
    are kept away from the lab lot, `Engine.labClear`).
 6. The cursor must be select, not the road tool (done: stageLab sets the select tool).
-7. **In progress:** the leaf decals cannot be selected; bring in TrickOrTreat's town builder tools to lay decals and props from a
-   list. Also: deleting a prop did not work. Found two causes: (a) in the studio frame the Delete key went to the studio page (fixed:
-   the editor focuses the frame on a press); (b) fences, bins, mailbox and decals are procedural, not part of the preset. Being built:
-   **whole lab presets** (`whole: true`, `decals: [...]`): Generate captures everything the game draws for the lot (fences, street
-   items, decals) into the draft, a whole preset draws alone (no procedural parts), and the lab gets a DECALS section (a list with
-   thumbnails from `lot-decals.webp`; place, select, move, scale, mirror, delete). Brief: the lead's scratch file `brief-whole.md`
-   (its content is the plan below in Next steps).
+7. Done: decals and props from a list, and delete for everything. Lab drafts are now **whole presets** (`whole: true`,
+   `decals: [...]`): Generate captures everything the game draws (fences, bins, mailbox, hydrant, leaf and litter decals), and a
+   whole preset draws alone, so every piece can be selected, moved and deleted. The DECALS list places decals; a click on any lot
+   decal selects it (no mode). In the studio frame the Delete key now reaches the editor. Leaves outside the lot are the map's own
+   grass decals, not the lot's. Lots made before this change are not whole: Generate again.
 8. Done: this handover (this file).
+9. **Open (needs art): the owner's rule "the house front door is perpendicular to the street. This is a standard for every single
+   house."** On axis roads every preset house already faces its street (view 0). On 45-degree roads (odd road angles, which run
+   screen-horizontal or screen-vertical) no house can: every house in the library is drawn in four views facing the map axes, which
+   are diagonals on screen, and the FRONTAL set (`lots/frontal.ts`) is flat elevations, not usable. Needed: each house in four more
+   views, its front facing screen down, right, up and left. Suggested ids `view:<base>:s`, `view:<base>:e`, `view:<base>:n`,
+   `view:<base>:w` next to the existing `:se`/`:sw`/`:nw`; then `preset-art.ts turned` and the lab's R take eight views on a diagonal
+   road. Until that art exists, the game keeps diagonal-road lots as greens unless the owner approves a preset there.
 
 ## Verified (browser, 2026-10-26)
 - The lab stages a lot on an axis road and on a diagonal road; Generate, variants, Save draft, Approve all work; an approved
@@ -44,8 +49,8 @@ Read this to continue the lot lab work in a fresh chat. The design and the rules
 - The studio's Lots tab frames the lab; no town shows; the map round the lot is plain grass; tall props show whole.
 - Typecheck clean; 85 lot and farm tests pass (`tests/lot-presets-lab.test.ts`, `tests/lot-presets-farm.test.ts`, the compose,
   preset, lot-edit, lettering, town-growth and farm tests). The full suite was not run (it runs nightly).
-- **Not yet checked in the browser:** ground painting (drag, erase), the Farm type, Review drafts, the camera fit on a farm,
-  sessionStorage restore after a reload.
+- Also checked: whole drafts (26 of 26 drawn props come from the preset, 18 decals), deleting sprites, trees and decals, Delete in
+  the studio frame. **Not yet checked in the browser:** ground painting, the Farm type, Review drafts, the camera fit on a farm.
 
 ## Files (what each does)
 - `src/game/dev/lot-lab.ts`: the lab panel (types, states, sizes, road compass, Generate, preset box, edit buttons, paint ground,
@@ -69,10 +74,7 @@ Read this to continue the lot lab work in a fresh chat. The design and the rules
   preset. Request 7 changes that for decals.
 
 ## Next steps
-1. Request 7, if not landed: whole lab presets as described in request 7 above (`presets.ts` PresetDecal, `whole`, `decals`;
-   `fitPreset` keeps a whole preset's props up to 1.5 tiles in front of the lot; `compose.ts` draws a whole or farm preset alone with
-   its decals pushed into Build.marks; `preset-from.ts` captures the 'marks' patch as decals; `lot-lab.ts` Generate composes the lot
-   from the source preset and stores it whole, plus the DECALS section). TrickOrTreat (`E:\Repos\TrickOrTreat`) is read-only.
+1. Request 9: the diagonal house views (art first: the owner's art chat or image pipeline; then the eight-view code path).
 2. Before committing, drop any lab presets you made yourself while testing (the owner's have moved sprites, `curated: true`, and
    were made in their tab; when unsure, ask). `scratchpad`-style helper: parse with `parsePresets`, filter by id, write with
    `formatPresets`.
