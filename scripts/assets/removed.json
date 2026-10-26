@@ -935,6 +935,22 @@
   "w": 91,
   "h": 44
  },
+ "town:firestation": {
+  "at": "2026-10-26T08:54:22.087Z",
+  "name": "Maple Falls Fire House",
+  "cat": "Shops & services",
+  "kind": "venue",
+  "w": 583.3,
+  "h": 500.2,
+  "quad": [
+   0,
+   0.97,
+   583.67,
+   499.87
+  ],
+  "ax": 290.4,
+  "ay": 307.4
+ },
  "town:hardware": {
   "at": "2026-10-20T16:16:41.170Z",
   "name": "Bellamy Hardware",
@@ -2239,6 +2255,22 @@
    570
   ]
  },
+ "variation:gen-house-l-ranch-18552ce5-plain-corner:1": {
+  "at": "2026-10-26T08:52:58.261Z",
+  "name": "Ranch — L-shape, corner porch — variation 1",
+  "cat": "Houses",
+  "kind": "building",
+  "w": 610.8,
+  "h": 463.468359375,
+  "quad": [
+   1.42,
+   1.42,
+   610.72,
+   462.67
+  ],
+  "ax": 305.4,
+  "ay": 310.768359375
+ },
  "variation:gen-house-l-ranch-north-2edc5f59-plain:1": {
   "at": "2026-10-26T06:25:30.345Z",
   "name": "Ranch — L-shape, corner porch — variation 1",
@@ -2254,22 +2286,6 @@
   ],
   "ax": 305.4,
   "ay": 443.4966735966736
- },
- "variation:gen-house-l-shape-e0e3b328-plain:1": {
-  "at": "2026-10-26T06:25:22.968Z",
-  "name": "Colonial — L-shape, double garage — variation 1",
-  "cat": "Houses",
-  "kind": "building",
-  "w": 587.02,
-  "h": 603.38,
-  "quad": [
-   0,
-   0,
-   587.02,
-   603.38
-  ],
-  "ax": 331.73,
-  "ay": 454.27
  },
  "variation:gen-house-ranch-long-north-3fbd61ce-plain:1": {
   "at": "2026-10-21T09:47:34.950Z",
@@ -2384,6 +2400,54 @@
   "kind": "decal",
   "w": 29,
   "h": 20
+ },
+ "variation:ref-building-corner-store-a89c59c0-plain:1": {
+  "at": "2026-10-26T08:55:26.178Z",
+  "name": "Corner Store — variation 1",
+  "cat": "Shops & services",
+  "kind": "building",
+  "w": 405.5,
+  "h": 395.9212598425197,
+  "quad": [
+   1.05,
+   0,
+   405,
+   395.51
+  ],
+  "ax": 202.75,
+  "ay": 294.5462598425197
+ },
+ "variation:ref-building-farmhouse-north-408a9ca6-plain:1": {
+  "at": "2026-10-26T08:52:03.943Z",
+  "name": "Farmhouse — variation 1",
+  "cat": "Houses",
+  "kind": "building",
+  "w": 469.5,
+  "h": 408.9039634146341,
+  "quad": [
+   0.79,
+   0.79,
+   468.49,
+   408.14
+  ],
+  "ax": 234.75,
+  "ay": 291.5289634146341
+ },
+ "variation:ref-building-house-large-north-24d21776-plain:1": {
+  "at": "2026-10-26T08:52:56.197Z",
+  "name": "House Large — variation 1",
+  "cat": "Houses",
+  "kind": "building",
+  "w": 533.5,
+  "h": 480.48837209302326,
+  "quad": [
+   0.93,
+   1.85,
+   532.5,
+   479.71
+  ],
+  "ax": 266.75,
+  "ay": 347.11337209302326
  },
  "variation:ref-building-school-ce21bf67-plain:1": {
   "at": "2026-10-21T05:01:20.651Z",
@@ -2580,6 +2644,22 @@
    581.67,
    548.33
   ]
+ },
+ "variation:world-house_1-ba13ed2e-plain:1": {
+  "at": "2026-10-26T08:51:02.979Z",
+  "name": "House 1 — variation 1",
+  "cat": "Houses",
+  "kind": "building",
+  "w": 494.79999999999995,
+  "h": 485.53215400624345,
+  "quad": [
+   0.83,
+   0.83,
+   493.9,
+   484.75
+  ],
+  "ax": 247.39999999999998,
+  "ay": 361.83215400624346
  },
  "variation:world-house_3-577a8e37-plain:1": {
   "at": "2026-10-20T16:08:15.039Z",
