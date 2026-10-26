@@ -26,6 +26,8 @@ export interface PaintedFamilyDef {
   /** a hand-painted tile set family (T145, painted-tiles.ts): three authored sets of four whole tiles, laid as authored (no scale, tint or tone;
    *  its levels here list each set's first tile, for the swatches and the studio's cards) */
   tiled?: boolean;
+  /** a tile set shipped before its handoff (T153, painted-tiles.ts TiledFamily.provisional): the studio and the readout say so */
+  provisional?: boolean;
 }
 /** a tile set family as the families list shows it: each level's set, its first tile under the set's revision (e.g. near-v3, the pick: the
  *  swatches, the cards) and the other three as `<revision>/<tile id>` (so the studio can show the whole set; a tile set has no version to
@@ -37,7 +39,7 @@ function fromTiles(t: TiledFamily): PaintedFamilyDef {
     levels[l] = Object.fromEntries(lv.tiles.map((x, i) => [i ? `${lv.revision}/${x.id}` : lv.revision, { file: x.file, mean: x.mean, px: lv.native[0], sha256: x.sha256 }])); pick[l] = lv.revision;
     coverage[l] = Math.round(tileMetres(lv, TILE_BANDS.indexOf(l)));
   }
-  return { id: t.id, name: t.name, kind: t.kind, coverage, levels, pick, tiled: true };
+  return { id: t.id, name: t.name, kind: t.kind, coverage, levels, pick, tiled: true, ...(t.provisional ? { provisional: true } : {}) };
 }
 export const FAMILIES: readonly PaintedFamilyDef[] = [...(REGISTRY as unknown as { families: PaintedFamilyDef[] }).families, ...TILED_FAMILIES.map(fromTiles)];
 const BY_ID = new Map(FAMILIES.map(f => [f.id, f]));

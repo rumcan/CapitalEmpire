@@ -2132,8 +2132,9 @@ export class GroundPainter {
     if ((!this.grassStrength && !this.grassHeat) || !this.grassCells.size) return;
     for (const p of patches) {
       // Fresh seed/sod keeps its original grow-in texture and timing.
-      // a hand-painted tile set (T145) is laid as authored: no condition picture mixed inside it
-      if (!grassSurface(p.tex, !!p.lawn, surfaceOfTex(p.tex as PaintTex)) || p.tex === 'golfSod' || this.tex.paintedOf(p.tex)?.tiled) continue;
+      // a hand-painted tile set (T145) is laid as authored: no condition picture mixed inside it; the Grass panel's health colours (a view the
+      // player turns on, not art) still show over it, now that the fairway, greens and rough wear tile sets (T153)
+      if (!grassSurface(p.tex, !!p.lawn, surfaceOfTex(p.tex as PaintTex)) || p.tex === 'golfSod' || (!this.grassHeat && this.tex.paintedOf(p.tex)?.tiled)) continue;
       const b = quadBox(p.pts); ctx.save(); ctx.clip(polyPath(p.pts));
       for (let y = Math.max(0, Math.floor(Math.max(b[1], box[1]) / 4) * 4); y < Math.min(MAP, b[3], box[3]); y += 4) for (let x = Math.max(0, Math.floor(Math.max(b[0], box[0]) / 4) * 4); x < Math.min(MAP, b[2], box[2]); x += 4) {
         const v = this.grassCells.get(y / 4 * (MAP / 4) + x / 4); if (!v) continue;

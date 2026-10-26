@@ -1,4 +1,4 @@
-import { CHUNK_H, CHUNK_W, DISTRICT_Z, HH, HW, MAP, MID_H, MID_W, PLANNER_Z, PLAN_H, PLAN_W, SPR_H, SPR_W, ZOOM_MAX, ZOOM_MIN, clamp, planLevelFor, tileOf, worldX, worldY, mulberry } from './iso';
+import { CHUNK_H, CHUNK_W, DISTRICT_Z, HH, HW, MAP, MID_H, MID_W, PLANNER_Z, PLAN_H, PLAN_W, SPR_H, SPR_W, ZOOM_MAX, ZOOM_MIN, ZOOM_STEP, clamp, clampZoom, planLevelFor, tileOf, worldX, worldY, mulberry } from './iso';
 import { ATLAS_PAGES, GOLFER_BASE, GOLFER_FRAMES, GOLFER_PEOPLE, LIBRARY, SPECTATOR_BASE, SPECTATOR_FRAMES, SPECTATOR_PEOPLE, WALKER_BASE, WALKER_PEOPLE, WALK_DIRS, WALK_FRAMES } from './library';
 import { galleryPeople, hash, queuePeople, walkerPeople, type CrowdPerson } from './crowdview';
 import { FACING_ROW, Pedestrians, sidewalks, type Door, type WalkerView } from './ext/pedestrians';
@@ -15,7 +15,7 @@ import { MIN_SEP, checkLegs, replaceCuts, ringStubs, segDist as segSeg, snapPoin
 import { STRUCT_COST, STRUCT_MAX, groundClass, highwayRoute, longestRun, splitByTerrain, structureLengths } from './structures';
 import { GLRenderer, POINT_STRIDE, SHADOW_STRIDE, SPRITE_STRIDE, VECTOR_STRIDE } from './gl';
 import { GroundCache } from './ground-cache';
-import { ANCHORS, TILE_BANDS, TILES_REVISION, anchorAt, bandAt, bandsAhead, cellOf, cellsIn, coverageOf, drawnScale, nextBand, tiledFamily, tileIndex, tilePermutation, tileScreenPx, tileSize, tileSpec } from './painted-tiles';
+import { TILE_BANDS, TILES_REVISION, anchorAt, bandAt, bandRange, bandsAhead, cellOf, cellsIn, coverageOf, drawnScale, nearUntil, nextBand, tiledFamily, tileIndex, tilePermutation, tileScreenPx, tileSize, tileSpec } from './painted-tiles';
 import { paintedSurfaces } from './painted-surfaces-live';
 import { chunkLayers, pictureCurrent } from './ground-layers';
 import { clampGrassArt, grassZoomLevels, type GrassArt } from './painted-grass-lod';
@@ -3012,7 +3012,7 @@ export class Game {
   wheel(e: WheelEvent) {
     e.preventDefault();
     const f = Math.exp(-e.deltaY * 0.0014);
-    this.zoomAt(clamp(this.cam.z * f, ZOOM_MIN, ZOOM_MAX), e.offsetX, e.offsetY);
+    this.zoomAt(clampZoom(this.cam.z * f), e.offsetX, e.offsetY);
   }
   /** the camera easing to a framing (New hole, P23 4.4): from, to, its start (ms) and length; any drag, wheel, zoom or key pan drops it */
   private camEase: { a: Camera; b: Camera; t0: number; ms: number } | null = null;
@@ -3063,7 +3063,7 @@ export class Game {
   /** centres the camera on tile (x, y) as it is (the minimap, the town chip); a zoom z, when given, replaces the camera's (clamped) */
   lookAt(x: number, y: number, z?: number) {
     this.camEase = null;
-    if (z !== undefined) this.cam.z = clamp(z, ZOOM_MIN, ZOOM_MAX);
+    if (z !== undefined) this.cam.z = clampZoom(z);
     this.cam.X = worldX(x, y); this.cam.Y = worldY(x, y); this.clampCam(); this.emit();
   }
   /** shows or hides the flow overlay (the Flow button, key F, a jump) and turns the worker's heat map on or off with it (see SimClient.heatOn); callers emit */
@@ -3112,8 +3112,8 @@ export class Game {
       case 'v': case 'V': this.setTool('select'); break;
       case 'z': case 'Z': if (!e.ctrlKey && !e.metaKey && this.golfMode) this.setTool('props'); break;
       case '1': case '2': case '3': case '4': case '5': case '6': { const c = KEY_CLASSES[+e.key - 1]; if (c && !this.refuseLocked('road')) { this.roadClass = c; this.setTool('road'); } break; }
-      case '+': case '=': this.zoomAt(clamp(this.cam.z * 1.25, ZOOM_MIN, ZOOM_MAX)); break;
-      case '-': case '_': this.zoomAt(clamp(this.cam.z / 1.25, ZOOM_MIN, ZOOM_MAX)); break;
+      case '+': case '=': this.zoomAt(clampZoom(this.cam.z * ZOOM_STEP)); break;
+      case '-': case '_': this.zoomAt(clampZoom(this.cam.z / ZOOM_STEP)); break;
       case ' ': e.preventDefault(); if (!e.repeat) this.spacePanned = false; break;
       case '.': case '>': { const k = this.speed || this.lastSpeed; this.setSpeed(SPEEDS.find(s => s > k) ?? SPEEDS[SPEEDS.length - 1]!); break; }
       case ',': case '<': { const k = this.speed || this.lastSpeed; this.setSpeed(SPEEDS.filter(s => s < k).pop() ?? SPEEDS[0]); break; }
@@ -4213,7 +4213,8 @@ export class Game {
       // the cards the save had applied are in its tolls and routes already: only the fields new gates and routes take are set from them
       const cards = d.round?.cards ?? [], n = Math.min(cards.length, d.cardsApplied ?? cards.length);
       this.cardsApplied = n; this.setCardFields(cards.slice(0, n));
-      if (d.cam) { this.cam = { X: d.cam.X, Y: d.cam.Y, z: clamp(d.cam.z, ZOOM_MIN, ZOOM_MAX) }; this.tileBand = nextBand(this.cam.z, d.cam.tb); }
+      // a save from before T153 may sit below the new furthest zoom: clamped to it (FAR there)
+      if (d.cam) { this.cam = { X: d.cam.X, Y: d.cam.Y, z: clampZoom(d.cam.z) }; this.tileBand = nextBand(this.cam.z, d.cam.tb); }
       return true;
     } catch (e) { console.error('load failed', e); return false; }
   }
@@ -4912,7 +4913,7 @@ export class Game {
     const fams = [...used].map(([id, surfaces]) => {
       const f = tiledFamily(id)!, lv = f.levels[band], size = tileSize(lv, k), perm = tilePermutation(f.id, band), cells = cellsIn(X0, Y0, X1, Y1, size[0], size[1]);
       const ids = [...new Set(cells.map(c => lv.tiles[tileIndex(perm, c.ix, c.iy)]!.id))].sort(), cov = coverageOf(this.cssW, this.cssH, z, size);
-      return { id: f.id, materialId: f.materialId, name: f.name, surfaces, set: lv.revision, native: lv.native, ids, cells: cells.length, areas: cov.areas, across: cov.across, down: cov.down, tileW: size[0], tileH: size[1], screenPx: tileScreenPx(lv, z, b) };
+      return { id: f.id, materialId: f.materialId, name: f.name, surfaces, set: lv.revision, provisional: !!f.provisional, native: lv.native, ids, cells: cells.length, areas: cov.areas, across: cov.across, down: cov.down, tileW: size[0], tileH: size[1], screenPx: tileScreenPx(lv, z, b) };
     });
     let pointer: { surface: string; family: string | null; tile: string | null; cell: [number, number] | null } | null = null;
     const h = this.hover, g = this.courseGrid;
@@ -4922,9 +4923,10 @@ export class Game {
       if (f) { const lv = f.levels[band], [w, hh] = tileSize(lv, k), c = cellOf(worldX(h.x, h.y), worldY(h.x, h.y), w, hh); pointer = { surface, family: f.materialId, tile: lv.tiles[tileIndex(tilePermutation(f.id, band), c[0], c[1])]!.id, cell: c }; }
       else pointer = { surface, family: look?.family ?? null, tile: null, cell: null };
     }
-    // the zooms this band shows over, zooming out: from its anchor (or the closest zoom) down to the coarser set's switch (or the furthest zoom)
-    const zRange = [b < TILE_BANDS.length - 1 ? Math.max(anchorAt(b + 1) / ANCHORS.hysteresis, ZOOM_MIN) : ZOOM_MIN, b > 0 ? anchorAt(b) : ZOOM_MAX] as const;
-    return { band, bandIndex: b, spec: k, anchor: anchorAt(b), scale: drawnScale(z, b), zoom: z, dpr: this.dpr, zRange, revision: TILES_REVISION, fams, pointer };
+    // the zooms this band shows over, zooming out: from its switch in (or the closest zoom) down to the coarser set's switch (or the furthest
+    // zoom); NEAR stays on down to nearUntil (T153)
+    const zRange = bandRange(b);
+    return { band, bandIndex: b, spec: k, anchor: anchorAt(b), scale: drawnScale(z, b), zoom: z, dpr: this.dpr, zRange, nearUntil: nearUntil(), revision: TILES_REVISION, fams, pointer };
   }
   private draw(now: number) {
     const z = this.cam.z, ze = z * this.dpr, gl = this.gl, cam = this.cam;
