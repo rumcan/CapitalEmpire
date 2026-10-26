@@ -24,9 +24,10 @@ import { approvedFor, bucketOf, fitPreset, parsePresets, pickPreset, presetsFor,
 import { footprintOf, ownerScaleOf, turned } from './preset-art';
 import { frameOf, listToWorld, quarterOfRoad, roadOf, toWorld, type PresetFrame } from './preset-frame';
 import PRESET_JSON from './lot-presets.json';
-import { generateLayout } from './lot-gen';
+import { generateLayout, type LaidItem } from './lot-gen';
 import { kindPools } from './item-kinds';
-import { modelFrom, type Box, type HouseClass, type Model, type SectorLot } from './learn';
+import { modelFrom, type Box, type HouseClass, type ItemKind, type Model, type SectorLot } from './learn';
+import { pairTable, stateKinds, tasteFrom, type Partner } from './taste';
 import { CLASS_NAMES, frameHalf, houseFamilies, sizeClassOf } from './house-class';
 import { allows, parseAllocations } from './house-alloc';
 import ALLOC_JSON from './house-allocations.json';
@@ -377,8 +378,20 @@ const MODELS = new Map<number, Model>();
 export function setLotModel(v: number): void { MODEL_V = LOT_MODELS[v] ? v : Math.max(1, ...Object.keys(LOT_MODELS).map(Number).filter(n => n < v)); }
 export const lotModelVersion = () => MODEL_V;
 /** a model version known from now on without a reload (the tests; a dev session after shipping one): its data (lots/learn.ts ModelData) */
-export function addLotModel(v: number, data: unknown): void { (LOT_MODELS as Record<number, unknown>)[v] = data; MODELS.delete(v); }
+export function addLotModel(v: number, data: unknown): void { (LOT_MODELS as Record<number, unknown>)[v] = data; MODELS.delete(v); TASTES.delete(v); }
 function shippedModel(): Model { let m = MODELS.get(MODEL_V); if (!m) MODELS.set(MODEL_V, m = modelFrom(LOT_MODELS[MODEL_V] ?? LOT_MODELS[1])); return m; }
+/** the shipped model's taste (T161, lots/taste.ts: its pairs and its densities by state; v1 has neither, and lays as it did), read once per version:
+ *  the generator's pair table and each state's count multiples */
+const TASTES = new Map<number, { pairs: Map<string, Partner[]> | undefined; kinds: Map<PresetState, Record<ItemKind, number> | undefined> }>();
+function shippedTaste(state: PresetState): { pairs?: Map<string, Partner[]>; kinds?: Record<ItemKind, number> } {
+  let t = TASTES.get(MODEL_V);
+  if (!t) {
+    const taste = tasteFrom(LOT_MODELS[MODEL_V] ?? LOT_MODELS[1]);
+    TASTES.set(MODEL_V, t = { pairs: pairTable(taste, kindPools()), kinds: new Map((['built', 'upgraded', 'declined'] as const).map(s => [s, stateKinds(taste, s)])) });
+  }
+  const kinds = t.kinds.get(state);
+  return { ...(t.pairs ? { pairs: t.pairs } : {}), ...(kinds ? { kinds } : {}) };
+}
 /** 32-bit FNV-1a of a string */
 const fnv = (s: string) => { let h = 0x811c9dc5; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193); } return h >>> 0; };
 /** a house lot's generator seed: its place on its street (streetKey, streetSlot: as the preset pick reads it) and its look state, so a lot never
@@ -392,7 +405,8 @@ function houseBase(p: { preset: LotPreset; fit: Fitted; frame: PresetFrame }): {
   const half = frameHalf(p.frame), keep: number[] = [];
   let k = -1, area = 0;
   p.fit.props.forEach((q, i) => { const it = BY.get(q.id); if (!it || !isBuilding(it)) return; keep.push(i); const h = half(q), a = h.ha * h.hb; if (a > area) { area = a; k = keep.length - 1; } });
-  const fit: Fitted = { ...p.fit, props: keep.map(i => p.fit.props[i]!), from: keep.map(i => p.fit.from[i]!), decals: [] };
+  // the stand-in marks (T167) follow the props kept, index for index
+  const fit: Fitted = { ...p.fit, props: keep.map(i => p.fit.props[i]!), from: keep.map(i => p.fit.from[i]!), decals: [], ...(p.fit.standIn ? { standIn: keep.map(i => p.fit.standIn![i]) } : {}) };
   return { base: { ...p, fit }, house: k };
 }
 /** the generated items of a house lot (its base drawn): lot-gen.ts generateLayout in the preset's frame, with the shipped model, seeded by the
@@ -400,6 +414,17 @@ function houseBase(p: { preset: LotPreset; fit: Fitted; frame: PresetFrame }): {
  *  nothing on the house, the walk takes nothing and the drive only a car; the cars thinned by decline as a preset's are. Placed after the base,
  *  the street items and the fence, so those win any overlap */
 function generatedItems(B: Build, lot: LotGeom, st: ComposeState, p: { preset: LotPreset; fit: Fitted; frame: PresetFrame }, state: PresetState, hi: number) {
+  const f = p.frame;
+  for (const it of layoutOf(lot, p, state, hi)) {
+    if (it.kind === 'decal') { decalMarks(B, f, [{ id: it.id, x: it.x, y: it.y, scale: 1, alpha: 1 }]); continue; }
+    if (it.kind === 'car' && (B.noCars || (st.decline === 1 && B.r() >= CAR_KEEP_D1))) continue;
+    const t = turned(it.id, f.q), s = ownerScaleOf(it.id);
+    B.atW({ id: t.id, s, flip: t.flip, h: footprintOf(t.id, s, t.flip) }, toWorld(f, it.x, it.y), { plant: it.kind === 'tree' || it.kind === 'bush' || it.kind === 'flowerbed', ...(it.kind === 'car' ? { paved: true } : {}) });
+  }
+}
+/** the items the generator lays on a house lot's base (generatedItems; preset frame, tiles): seeded by the lot, with the shipped model and its taste
+ *  (T161: the state's density, the pairs) */
+function layoutOf(lot: LotGeom, p: { preset: LotPreset; fit: Fitted; frame: PresetFrame }, state: PresetState, hi: number): LaidItem[] {
   const f = p.frame, half = frameHalf(f), hq = hi >= 0 ? p.fit.props[hi] : undefined, hh = hq ? half(hq) : null;
   const house: Box | null = hq && hh ? [hq.x - hh.ha, hq.y - hh.hb, hq.x + hh.ha, hq.y + hh.hb] : null;
   // nothing lands on any building of the base (the house, its garage, a shed)
@@ -408,13 +433,16 @@ function generatedItems(B: Build, lot: LotGeom, st: ComposeState, p: { preset: L
   const sl: SectorLot = { w: lot.w, d: lot.d, house, drives: p.fit.patches.filter(a => a.kind === 'drive').map(a => a.pts) };
   const avoid = p.fit.patches.filter(a => a.kind === 'drive' || a.kind === 'walk').map(a => ({ box: box(a.pts), ...(a.kind === 'drive' ? { but: ['car' as const] } : {}) }));
   const k = hq ? sizeClassOf(hq.id) : null, cls: HouseClass = hq ? CLASS_NAMES[k ?? 0] : 'none';
-  const items = generateLayout({ lot: sl, cls, model: shippedModel(), taken, pools: kindPools(), half, seed: lotSeed(lot, state), avoid, keep: true });
-  for (const it of items) {
-    if (it.kind === 'decal') { decalMarks(B, f, [{ id: it.id, x: it.x, y: it.y, scale: 1, alpha: 1 }]); continue; }
-    if (it.kind === 'car' && (B.noCars || (st.decline === 1 && B.r() >= CAR_KEEP_D1))) continue;
-    const t = turned(it.id, f.q), s = ownerScaleOf(it.id);
-    B.atW({ id: t.id, s, flip: t.flip, h: footprintOf(t.id, s, t.flip) }, toWorld(f, it.x, it.y), { plant: it.kind === 'tree' || it.kind === 'bush' || it.kind === 'flowerbed', ...(it.kind === 'car' ? { paved: true } : {}) });
-  }
+  return generateLayout({ lot: sl, cls, model: shippedModel(), taken, pools: kindPools(), half, seed: lotSeed(lot, state), avoid, keep: true, ...shippedTaste(state) });
+}
+/** the items the generator lays on a lot the game generates (a built house lot of a frozen preset; preset frame, tiles), as compose draws them
+ *  (but the cars a decline thins): the exam sheet and the tests read them; null for any other lot */
+export function lotLayout(lot: LotGeom, st: ComposeState): LaidItem[] | null {
+  if (!GENERATED || st.use === LU.NONE || st.level === LV.EMPTY || st.level === LV.BUILDING || presetUse(st) !== 'res') return null;
+  const p = lotPreset(lot, st), state = stateOf(st.level, st.decline);
+  if (!p || !state || p.preset.use === 'farm' || p.preset.whole || !frozenHouse(p.preset)) return null;
+  const hb = houseBase(p);
+  return layoutOf(lot, hb.base, state, hb.house);
 }
 
 /** a fitted house preset's house and its band (preset frame: x along the frontage, 0..f.w): the widest building (hw, hd its half extents along x

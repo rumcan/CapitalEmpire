@@ -5,6 +5,7 @@
 import { formatPresets, parsePresets } from '../lots/preset-read';
 export { mergeAllocations } from '../lots/house-alloc';
 export { mergeSamples } from '../lots/learn';
+import { tasteData, tasteFrom } from '../lots/taste';
 
 /** the lot wizard's samples (T158: lots/learn.ts), appended only through their merge (POST /__dev/learning), never written whole */
 export const LEARN_PATH = 'src/game/lots/lot-learning.json';
@@ -12,7 +13,8 @@ export const LEARN_PATH = 'src/game/lots/lot-learning.json';
 /** the shipped lot models (T160): src/game/lots/lot-models/v<N>.json and their index, written by the lab's Ship model (POST /__dev/lot-model) */
 export const MODELS_DIR = 'src/game/lots/lot-models';
 /** a shipped model's file text, checked: { counts: { "<class>|<kind>|<sector>": [offered, kept] } } with whole counts, kept <= offered; the
- *  version, the prior and a note (from) kept; null when it is not one */
+ *  version, the prior and a note (from) kept; its taste (T161, lots/taste.ts: anchors, pairs, density) read and written back clean when it has
+ *  one; null when it is not one */
 export function modelFile(v: number, data: unknown, from: string): string | null {
   const d = data as { prior?: { a?: unknown; b?: unknown }; counts?: unknown } | null;
   if (!d || typeof d !== 'object' || !d.counts || typeof d.counts !== 'object' || Array.isArray(d.counts)) return null;
@@ -22,7 +24,10 @@ export function modelFile(v: number, data: unknown, from: string): string | null
     rows.push(`  ${JSON.stringify(k)}: [${c[0]},${c[1]}]`);
   }
   const a = typeof d.prior?.a === 'number' ? d.prior.a : 1, b = typeof d.prior?.b === 'number' ? d.prior.b : 1;
-  return `{\n "v": ${v},\n "prior": {"a":${a},"b":${b}},\n "from": ${JSON.stringify(from)},\n "counts": {\n${rows.join(',\n')}\n }\n}\n`;
+  // the taste (T161): one anchor, one anchor's partners, one state a line
+  const t = tasteData(tasteFrom(d)), block = (name: string, o: Record<string, unknown>) => `,\n "${name}": {\n${Object.entries(o).map(([k, x]) => `  ${JSON.stringify(k)}: ${JSON.stringify(x)}`).join(',\n')}\n }`;
+  const taste = Object.keys(t.pairs).length || Object.keys(t.density).length ? block('anchors', t.anchors) + block('pairs', t.pairs) + block('density', t.density) : '';
+  return `{\n "v": ${v},\n "prior": {"a":${a},"b":${b}},\n "from": ${JSON.stringify(from)},\n "counts": {\n${rows.join(',\n')}\n }${taste}\n}\n`;
 }
 /** the shipped models' index (src/game/lots/lot-models/index.ts) for these versions: each imported, the latest the highest */
 export function modelsIndex(versions: readonly number[]): string {

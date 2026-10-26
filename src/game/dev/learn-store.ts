@@ -3,14 +3,17 @@
 // can train together. A save from elsewhere hot-reloads the file here (the samples still in flight kept over it).
 import FILE from '../lots/lot-learning.json';
 import { buildModel, learn, parseLearning, type Model, type Sample } from '../lots/learn';
+import { buildTaste, learnTaste, type Taste } from '../lots/taste';
 
-let samples: Sample[] = parseLearning(FILE).samples, model: Model = buildModel(samples);
+let samples: Sample[] = parseLearning(FILE).samples, model: Model = buildModel(samples), taste: Taste = buildTaste(samples);
 const pending = new Map<string, Sample>();
 let listener: (() => void) | null = null;
 
 /** the samples now, oldest first, and the model built from them */
 export const learnedSamples = (): readonly Sample[] => samples;
 export const learnedModel = (): Model => model;
+/** the pairs and densities by state learnt from them (T161, lots/taste.ts) */
+export const learnedTaste = (): Taste => taste;
 /** calls fn when the samples changed on disk (another person's save); one listener (the wizard); returns the unsubscribe */
 export function onLearning(fn: () => void): () => void { listener = fn; return () => { if (listener === fn) listener = null; }; }
 /** a sample added: here at once (the model learns it), then appended to lot-learning.json through the dev server */
@@ -21,7 +24,7 @@ export async function addSamples(list: readonly Sample[]): Promise<void> {
   if (!list.length) return;
   const ids = new Set(list.map(s => s.id)), again = samples.some(s => ids.has(s.id));
   samples = [...samples.filter(s => !ids.has(s.id)), ...list];
-  if (again) model = buildModel(samples); else for (const s of list) learn(model, s);
+  if (again) { model = buildModel(samples); taste = buildTaste(samples); } else for (const s of list) { learn(model, s); learnTaste(taste, s); }
   for (const s of list) pending.set(s.id, s);
   try {
     const r = await fetch('/__dev/learning', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ add: list }) });
@@ -33,5 +36,5 @@ if (import.meta.hot) import.meta.hot.accept('../lots/lot-learning.json', m => {
   if (!m) return;
   const list = parseLearning(m.default).samples, have = new Set(list.map(s => s.id));
   for (const s of pending.values()) if (!have.has(s.id)) list.push(s);
-  samples = list; model = buildModel(samples); listener?.();
+  samples = list; model = buildModel(samples); taste = buildTaste(samples); listener?.();
 });

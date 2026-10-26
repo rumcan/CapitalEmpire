@@ -51,6 +51,7 @@ import { BTN, DANGER, GO, ON, SEL, btn, check, drawHelp, el, heading, makeShell,
 import { makePalette, type Swatch } from './lot-lab-palette';
 import { makeWizard, WIZARD_ID } from './lot-wizard';
 import { makeGallery } from './lot-gallery';
+import { makeExam } from './lot-exam';
 
 /** the least zoom the lab keeps (Camera.z): the lot stays big enough to edit (a lot too big for it keeps its fit zoom, see keepCam) */
 const LAB_ZOOM = 0.12;
@@ -157,6 +158,8 @@ export function installLotLab(game: Game): () => void {
   let gridOn = false, neighOn = false, neighs: Neighbour[] = [], seedNum = 0;
   /** what the staged neighbours were made for (type, state, lot size, road, place; '' none): neighbours() stages them again only when it changed */
   let neighKey = '';
+  /** the exam holds the camera (T161, ?exam: dev/lot-exam.ts) */
+  let examHold = false;
   /** the Lot grid's layer and the lots it outlines (made again when the lot, the neighbours or the toggle change; the frame hook reads it) */
   const gridLayer = new LotGridLayer();
   let gridLots: GridLot[] = [];
@@ -198,6 +201,13 @@ export function installLotLab(game: Game): () => void {
     toScreen: (x, y) => { const c = game.cam, o = origin(); return { x: o.x + (worldX(x, y) - c.X) * c.z, y: o.y + (worldY(x, y) - c.Y) * c.z }; },
     leave: wizardLeave, say: m => { message = m; drawStatus(); }, redraw: () => render(),
   }, wizard);
+  // T161: the generator's exam (?exam): window.__lotExam, for scripts/lots/exam.mjs to stage its rows and shoot its lots
+  if (/[?&]exam(&|=|$)/.test(location.search)) (window as unknown as { __lotExam?: unknown }).__lotExam = makeExam({
+    game, stage: examStage, free: () => shell.free(),
+    screen: (x, y) => { const c = game.cam, o = origin(); return { x: o.x + (worldX(x, y) - c.X) * c.z, y: o.y + (worldY(x, y) - c.Y) * c.z }; },
+    hold: v => { examHold = v; badgeLayer.style.display = v ? 'none' : ''; },
+    centre: (wx, wy, z) => { game.cam.z = z; centreOn(wx, wy); game.emit(); },
+  });
   const personEl = el('div', 'position:fixed;left:0;top:0;display:none;pointer-events:none;z-index:58;background-repeat:no-repeat');
   /** T167: a badge on each prop drawn as a stand-in for a picture the owner removed (the lab lot and its neighbours), so the owner sees where to
    *  re-lay a preset: their world points (footprint centres) and the removed ids, found when the panels are drawn; placed each frame */
@@ -324,7 +334,7 @@ export function installLotLab(game: Game): () => void {
   /** the camera stays on the lot: its zoom never below the floor (LAB_ZOOM, or the fit zoom of a lot too big for it), and the lot centred back in the free area once its centre has left it */
   function keepCam() {
     const g = geo, c = game.cam;
-    if (!g) return;
+    if (!g || examHold) return;
     if (c.z < Math.min(LAB_ZOOM, fitZ)) c.z = Math.min(LAB_ZOOM, fitZ);
     const tx = g.o.x + (g.u.x * g.w + g.n.x * g.d) / 2, ty = g.o.y + (g.u.y * g.w + g.n.y * g.d) / 2, wx = worldX(tx, ty), wy = worldY(tx, ty);
     const a = shell.free(), o = origin(), sx = o.x + (wx - c.X) * c.z, sy = o.y + (wy - c.Y) * c.z;
@@ -623,6 +633,23 @@ export function installLotLab(game: Game): () => void {
     if (staged && lotSame(m.p.w, m.p.d)) { game.restageLab(st(m.p.id)); staged = { ...staged, st: st(m.p.id) }; } else stage(m.p.w, m.p.d, st(m.p.id));
     neighs = []; neighKey = 'gallery';
     game.stageLabNeighbours(slots.filter((_, k) => k !== mid).map((s, k) => ({ key: `lab-n-gal${k}`, g: s.g, st: st(s.p.id) })));
+  }
+  /** the exam's row staged (T161, dev/lot-exam.ts): the lab's road the row's, the middle lot on the lab lot and the others along the street at
+   *  their own sizes (a gap between; the exam's neighbours, keys lab-n-exam...), each composed with its own state and frozen preset */
+  function examStage(r: Road, row: readonly { w: number; d: number; st: ComposeState }[], mid: number): LotGeom[] {
+    if (draft && !draftSaved()) dropDraft();
+    draft = null; current = null; source = ''; fitList = null;
+    road = r;
+    const m = row[mid]!;
+    stage(m.w, m.d, m.st);
+    const g = geo!, GAP = 3, at: number[] = [];
+    at[mid] = 0;
+    for (let k = mid + 1; k < row.length; k++) at[k] = at[k - 1]! + row[k - 1]!.w + GAP;
+    for (let k = mid - 1; k >= 0; k--) at[k] = at[k + 1]! - row[k]!.w - GAP;
+    const gs = row.map((l, k): LotGeom => (k === mid ? g : { o: { x: g.o.x + g.u.x * at[k]!, y: g.o.y + g.u.y * at[k]! }, u: g.u, n: g.n, w: l.w, d: l.d }));
+    neighs = []; neighKey = 'exam';
+    game.stageLabNeighbours(gs.map((q, k) => ({ key: `lab-n-exam${k}`, g: q, st: row[k]!.st })).filter((_, k) => k !== mid));
+    return gs;
   }
   /** the wizard (or the gallery) is off: its lots go from the presets, and the lab shows the cell's first variant */
   function wizardLeave(): void {
@@ -1091,6 +1118,6 @@ export function installLotLab(game: Game): () => void {
     if (game.devGround === drawGrid) game.devGround = null;
     gridLayer.dispose(); game.stageLabNeighbours([]);
     wizard.dispose(); gallery.dispose();
-    style.remove(); mask.remove(); shell.remove(); personEl.remove(); badgeLayer.remove();
+    style.remove(); mask.remove(); shell.remove(); personEl.remove(); badgeLayer.remove(); delete (window as unknown as { __lotExam?: unknown }).__lotExam;
   };
 }

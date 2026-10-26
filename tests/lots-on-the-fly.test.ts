@@ -71,19 +71,30 @@ describe('lots generated on the fly (T160)', () => {
     // main's hash at T160 was 9e414f77; T167 (#371) draws a stand-in for every picture the owner removed (the presets that place one), so today's is
     assert.equal(h, 'c0ff5edb');
   });
-  it('4. a town keeps its lot model: one saved with v1 composes with v1 after v2 ships; an unknown version falls back below it', () => {
+  it('4. a town keeps its lot model: one saved with v1 composes with v1 after another ships; an unknown version falls back below it', () => {
     assert.ok(LOT_MODELS[1], 'v1 ships'); assert.ok(LATEST >= 1);
-    const lots = examLots().filter(frozenHouse).slice(0, 12), was = lotModelVersion();
+    const lots = examLots().filter(frozenHouse).slice(0, 12), was = lotModelVersion(), nv = LATEST + 1;
     setLotModel(1); const v1 = lots.map(l => JSON.stringify(compose(l.g, l.st)));
-    // v2: everything deleted in the front yard and kept at the back (another taste)
+    // the next version: everything deleted in the front yard and kept at the back (another taste)
     const counts: Record<string, [number, number]> = {};
     for (const c of ['small', 'medium', 'large', 'none']) for (const k of ['tree', 'bush', 'flowerbed', 'prop', 'car', 'decal']) { counts[`${c}|${k}|front`] = [40, 0]; counts[`${c}|${k}|back`] = [40, 40]; }
-    addLotModel(2, { v: 2, prior: { a: 1, b: 1 }, counts });
-    setLotModel(2); const v2 = lots.map(l => JSON.stringify(compose(l.g, l.st)));
-    assert.notDeepEqual(v2, v1, 'v2 lays the lots its own way');
+    addLotModel(nv, { v: nv, prior: { a: 1, b: 1 }, counts });
+    setLotModel(nv); const v2 = lots.map(l => JSON.stringify(compose(l.g, l.st)));
+    assert.notDeepEqual(v2, v1, 'the next version lays the lots its own way');
     setLotModel(1); assert.deepEqual(lots.map(l => JSON.stringify(compose(l.g, l.st))), v1, 'a v1 town still composes with v1');
-    setLotModel(99); assert.equal(lotModelVersion(), 2, 'a version not shipped: the nearest below');
+    setLotModel(nv + 50); assert.equal(lotModelVersion(), nv, 'a version not shipped: the nearest below');
     setLotModel(was);
+  });
+  it('7. a town saved with v1 composes its generated lots as it did before T161 (pairs and densities came with v2)', (t) => {
+    const sha = (f: string) => crypto.createHash('sha1').update(fs.readFileSync(f)).digest('hex').slice(0, 12);
+    const data = [sha('src/game/lots/lot-presets.json'), sha('scripts/assets/scale-overrides.json'), sha('scripts/assets/removed.json')].join(',');
+    if (data !== '86289001229b,83f0ac47e796,a083234bb6ef') { t.skip(`the owner's data changed since T160 (${data}): the reference hash no longer applies`); return; }
+    const was = lotModelVersion();
+    setGeneratedLots(true); setLotModel(1);
+    const h = fnv(JSON.stringify([...examLots(), ...referenceLots()].map(l => compose(l.g, l.st))));
+    setLotModel(was);
+    // measured on main at 2c18a47 (T167 merged), before T161
+    assert.equal(h, 'b7c7756c');
   });
   it('6. a generated lot keeps every building of its frozen preset (the house, a garage, a shed), and nothing generated stands on one', () => {
     setGeneratedLots(true);
