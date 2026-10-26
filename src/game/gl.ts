@@ -5,6 +5,7 @@ import { ATLAS_PAGES, ATLAS_SIZE } from './library';
 import { AtlasGL, type AtlasSource } from './atlas-gl';
 import { atlasMip0 } from './sizes';
 import { CONTACT_LEAN } from './shadow-shape';
+import { VERTEX_FLOATS, type VectorMesh } from './shadow-vector';
 
 /** floats per sprite instance: rect x0 y0 x1 y1 (world px), uv u0 v0 u1 v1, layer, alpha, cullable, foot line (world px; < 0: casts no shadow),
  *  clip x0 y0 x1 y1 (world px), foot: the footprint's near corner x y and its left and right corners' x (world px; the cast shadows stand on it) */
@@ -12,6 +13,11 @@ export const SPRITE_STRIDE = 20;
 /** floats per shadow instance: centre x y (world px), half extents hx hy (metres along the map's axes), core, feather (metres), round (0 / 1),
  *  lean (a multiplier of the common lean, shadow-shape.ts contactShadow), clip x0 y0 x1 y1 (world px) */
 export const SHADOW_STRIDE = 12;
+/** floats per vector-shadow instance (T142, shadow-vector.ts): the anchor x y (world px), the scale signed by the mirror and the scale; the
+ *  mesh's first index and index count, 2 spare; clip x0 y0 x1 y1 (world px); the picture's rect x0 y0 x1 y1 (world px) */
+export const VECTOR_STRIDE = 16;
+/** the vector mesh textures' width (texels) */
+const MESH_W = 2048;
 /** floats per point: x y (world px), rgba */
 export const POINT_STRIDE = 6;
 
@@ -133,6 +139,40 @@ void main() {
   a = clamp(a * uStrength, 0.0, 1.0); if (a < 0.002) discard;
   o = vec4(vec3(6.0, 8.0, 13.0) / 255.0 * a, a);
 }`;
+// the vector shadows (T142, shadow-vector.ts): one instance per sprite, its mesh's triangles fetched from the mesh textures by gl_VertexID
+// (vertices past its count fold away). A vertex (x, y, h) about the anchor, in the picture's px, lands at (x, y) + h * the sun's shear, times
+// the sprite's scale (x mirrored with it); contact vertices (kind 0) have a small h, their lean. Each tile's copy of a sprite draws only what
+// falls from its part of the picture (the point h px up the picture, held to the picture's rect), so a sprite over several tiles draws once.
+// Feathered by the rim's edge value (smoothstep), darkness per vertex times the contact or the cast strength; the same cool multiply
+const VS_VEC = `#version 300 es
+precision highp float; precision highp int; precision highp usampler2D;
+layout(location=0) in vec4 aA; layout(location=1) in vec4 aB; layout(location=2) in vec4 aClip; layout(location=3) in vec4 aRect;
+uniform vec4 uCam; uniform vec2 uScreen; uniform vec2 uShear; uniform vec2 uMul;
+uniform highp sampler2D uVerts; uniform highp usampler2D uIdx;
+out vec2 vSrc; out float vCore; out float vEdge; flat out vec4 vClip; flat out vec4 vRect;
+void main() {
+  int id = gl_VertexID, count = int(aB.y + 0.5);
+  vClip = aClip; vRect = aRect; vSrc = vec2(0.0); vCore = 0.0; vEdge = 0.0;
+  if (id >= count) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
+  int i = int(aB.x + 0.5) + id;
+  int v = int(texelFetch(uIdx, ivec2(i % ${MESH_W}, i / ${MESH_W}), 0).r) * 2;
+  vec4 A = texelFetch(uVerts, ivec2(v % ${MESH_W}, v / ${MESH_W}), 0), B = texelFetch(uVerts, ivec2((v + 1) % ${MESH_W}, (v + 1) / ${MESH_W}), 0);
+  float mul = A.w > 0.5 ? uMul.y : uMul.x;
+  if (mul <= 0.0) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
+  vec2 w = aA.xy + vec2(A.x * aA.z, A.y * aA.w) + A.z * aA.w * uShear;
+  vSrc = aA.xy + vec2(A.x * aA.z, (A.y - A.z) * aA.w); vCore = B.x * mul; vEdge = B.y;
+  vec2 s = (w - uCam.xy) * uCam.z + uScreen * 0.5;
+  gl_Position = vec4(s.x / uScreen.x * 2.0 - 1.0, 1.0 - s.y / uScreen.y * 2.0, 0.0, 1.0);
+}`;
+const FS_VEC = `#version 300 es
+precision highp float;
+in vec2 vSrc; in float vCore; in float vEdge; flat in vec4 vClip; flat in vec4 vRect; out vec4 o;
+void main() {
+  vec2 p = clamp(vSrc, vRect.xy, vRect.zw);
+  if (p.x < vClip.x || p.y < vClip.y || p.x >= vClip.z || p.y >= vClip.w) discard;
+  float a = clamp(vCore * smoothstep(0.0, 1.0, vEdge), 0.0, 1.0); if (a < 0.002) discard;
+  o = vec4(vec3(6.0, 8.0, 13.0) / 255.0 * a, a);
+}`;
 const VS_POINT = `#version 300 es
 layout(location=0) in vec2 aPos; layout(location=1) in vec4 aCol;
 uniform vec4 uCam; uniform vec2 uScreen; uniform float uSize;
@@ -156,7 +196,9 @@ type Prog = { p: WebGLProgram; u: Record<string, WebGLUniformLocation | null> };
 
 export class GLRenderer {
   gl: WebGL2RenderingContext;
-  private quad: Prog; private shadow: Prog; private point: Prog;
+  private quad: Prog; private shadow: Prog; private point: Prog; private vec: Prog;
+  /** the vector shadows' mesh textures (initVector) */
+  private vecVerts: WebGLTexture | null = null; private vecIdx: WebGLTexture | null = null;
   /** the sprite and cast-shadow programs: built with the atlas (initAtlas), whose residency plan their lookup is compiled for */
   private sprite: Prog | null = null; private cast: Prog | null = null;
   /** the sprite atlas (T080, atlas-gl.ts): the always-resident low set, the streamed cell tiers and the lookup */
@@ -173,6 +215,7 @@ export class GLRenderer {
     this.quad = this.program(VS_QUAD, FS_QUAD, ['uRect', 'uCam', 'uScreen', 'uUV', 'uTex', 'uMask', 'uMode', 'uAlpha']);
     this.shadow = this.program(VS_SHADOW, FS_SHADOW, ['uCam', 'uScreen', 'uStrength', 'uShift']);
     this.point = this.program(VS_POINT, FS_POINT, ['uCam', 'uScreen', 'uSize', 'uSoft']);
+    this.vec = this.program(VS_VEC, FS_VEC, ['uCam', 'uScreen', 'uShear', 'uMul', 'uVerts', 'uIdx']);
     this.dyn = gl.createBuffer()!;
     this.maskTex = gl.createTexture()!; this.emptyTex = gl.createTexture()!;
     for (const t of [this.maskTex, this.emptyTex]) { gl.bindTexture(gl.TEXTURE_2D, t); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 255])); this.texParams(gl.TEXTURE_2D, false); }
@@ -293,6 +336,35 @@ export class GLRenderer {
     for (let i = 0; i < 3; i++) { gl.enableVertexAttribArray(i); gl.vertexAttribPointer(i, 4, gl.FLOAT, false, SHADOW_STRIDE * 4, firstFloat * 4 + i * 16); gl.vertexAttribDivisor(i, 1); }
     gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, count);
     for (let i = 0; i < 3; i++) { gl.vertexAttribDivisor(i, 0); gl.disableVertexAttribArray(i); }
+    this.stats.draws++; this.stats.instances += count;
+  }
+  /** upload the vector shadows' mesh (shadow-vector.ts vectorMesh): its vertices, two RGBA32F texels each, and its indices (R32UI) */
+  initVector(m: VectorMesh) {
+    const gl = this.gl, up = (tex: WebGLTexture | null, data: ArrayBufferView, texels: number, ifmt: number, fmt: number, type: number, per: number) => {
+      const h = Math.max(1, Math.ceil(texels / MESH_W)), t = tex ?? gl.createTexture()!;
+      const buf = new (data.constructor as Float32ArrayConstructor | Uint32ArrayConstructor)(MESH_W * h * per); buf.set(data as Float32Array & Uint32Array);
+      gl.bindTexture(gl.TEXTURE_2D, t); gl.texImage2D(gl.TEXTURE_2D, 0, ifmt, MESH_W, h, 0, fmt, type, buf);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      return t;
+    };
+    this.vecVerts = up(this.vecVerts, m.verts.subarray(0, m.nVerts * VERTEX_FLOATS), m.nVerts * 2, gl.RGBA32F, gl.RGBA, gl.FLOAT, 4);
+    this.vecIdx = up(this.vecIdx, m.idx.subarray(0, m.nIdx), m.nIdx, gl.R32UI, gl.RED_INTEGER, gl.UNSIGNED_INT, 1);
+    gl.bindTexture(gl.TEXTURE_2D, null);
+  }
+  get vectorReady() { return !!this.vecVerts; }
+  /** vector-shadow instances at float offset `firstFloat` (VECTOR_STRIDE each), each drawing up to `verts` mesh vertices (its count; the rest
+   *  fold away); (sx, sy) the sun's shear per px of height (none when the cast shadows are off), contact and cast their strengths */
+  drawVector(firstFloat: number, count: number, verts: number, sx: number, sy: number, contact: number, cast: number) {
+    if (!count || !verts || !this.vecVerts || (contact <= 0 && cast <= 0)) return; const gl = this.gl, pr = this.vec;
+    gl.useProgram(pr.p); this.camUniforms(pr); gl.uniform2f(pr.u.uShear, sx, sy); gl.uniform2f(pr.u.uMul, contact, cast);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, this.vecVerts); gl.uniform1i(pr.u.uVerts, 0);
+    gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, this.vecIdx); gl.uniform1i(pr.u.uIdx, 1);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.dyn);
+    for (let i = 0; i < 4; i++) { gl.enableVertexAttribArray(i); gl.vertexAttribPointer(i, 4, gl.FLOAT, false, VECTOR_STRIDE * 4, firstFloat * 4 + i * 16); gl.vertexAttribDivisor(i, 1); }
+    gl.drawArraysInstanced(gl.TRIANGLES, 0, verts, count);
+    for (let i = 0; i < 4; i++) { gl.vertexAttribDivisor(i, 0); gl.disableVertexAttribArray(i); }
     this.stats.draws++; this.stats.instances += count;
   }
   /** points at float offset `firstFloat` of the uploaded stream; soft: additive glows instead of hard discs */

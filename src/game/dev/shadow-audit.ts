@@ -7,10 +7,11 @@
 // window.__shadowAudit: { ready, pages, page, items: the page's entries with their shapes, measure } for the capture script
 // (scripts/dev/shadow-audit.mjs).
 import { ATLAS_PAGES, LIBRARY } from '../library';
-import { GLRenderer, SHADOW_STRIDE, SPRITE_STRIDE } from '../gl';
+import { GLRenderer, SHADOW_STRIDE, SPRITE_STRIDE, VECTOR_STRIDE } from '../gl';
 import { webpSource } from '../atlas-gl';
 import { neededLevel, type PageWant } from '../atlas-pages';
-import { SpriteTiles, spriteRect } from '../sprites';
+import { SpriteTiles, spriteRect, VECTOR, vecOf } from '../sprites';
+import { vectorMesh } from '../shadow-vector';
 import { HH, HW, SPR_H, SPR_W, worldX, worldY } from '../iso';
 import { CAST, castShear } from '../cast-shadow';
 import * as SHAPE from '../shadow-shape';
@@ -126,6 +127,8 @@ async function measure(entries: AuditEntry[]) {
 
 export async function startShadowAudit(root: HTMLElement) {
   const q = new URLSearchParams(location.search), cat = (q.get('cat') ?? 'trees') as AuditCat, pageNo = +(q.get('page') ?? 0);
+  // &old=1: T141's shadows (the rule shapes and the silhouettes) for every picture, for the before sheets (T142)
+  VECTOR.on = q.get('old') !== '1';
   const z = +(q.get('z') ?? 0.3), wCss = +(q.get('w') ?? 1600), per = +(q.get('per') ?? 40), dpr = window.devicePixelRatio || 1, maxDev = +(q.get('h') ?? 3600);
   W.__shadowAudit = { ready: false, pages: 0, page: pageNo, cat, items: [] };
   document.title = `Shadow audit: ${cat} ${pageNo}`;
@@ -165,7 +168,7 @@ export async function startShadowAudit(root: HTMLElement) {
         }
         if (mi === 0) {
           const it = LIBRARY[c.e.item]!, s = shapeOf(p), box = [c.x * z, row.y * z, c.w * z, row.h * z].map(v => Math.round(v));
-          items.push({ id: it.id, kind: it.kind, cat: it.cat, scale: c.e.scale, note: c.e.note, foot: [p.x0 - p.x, p.y0 - p.y, p.x1 - p.x, p.y1 - p.y], shape: s, box });
+          items.push({ id: it.id, kind: it.kind, cat: it.cat, scale: c.e.scale, note: c.e.note, foot: [p.x0 - p.x, p.y0 - p.y, p.x1 - p.x, p.y1 - p.y], shape: s, box, vector: VECTOR.on && !!vecOf(lookOf(p).item) });
         }
       }
     });
@@ -181,7 +184,8 @@ export async function startShadowAudit(root: HTMLElement) {
     });
     for (const c of row.cells) {
       const it = LIBRARY[c.e.item]!, x = c.x * z + 3, w = c.w * z - 6, y = (row.y + row.strip * 3) * z + 2, p = propOf(c.e, 0, 0), s = shapeOf(p);
-      const line2 = s ? `${s.round ? "o" : "[]"} ${s.hx.toFixed(2)}x${s.hy.toFixed(2)} ${s.kind}${s.cast ? "" : " nocast"}${c.e.scale !== 1 ? ` s${c.e.scale.toFixed(2)}` : ""}` : "none";
+      const vec = VECTOR.on ? vecOf(lookOf(p).item) : null;
+      const line2 = vec ? `drawn ${vec.count / 3} tris${c.e.scale !== 1 ? ` s${c.e.scale.toFixed(2)}` : ""}` : s ? `${s.round ? "o" : "[]"} ${s.hx.toFixed(2)}x${s.hy.toFixed(2)} ${s.kind}${s.cast ? "" : " nocast"}${c.e.scale !== 1 ? ` s${c.e.scale.toFixed(2)}` : ""}` : "none";
       l.fillStyle = 'rgba(255,255,255,0.88)'; l.fillRect(x - 2, y - 1, w + 4, 38);
       l.fillStyle = '#111'; l.font = '10px sans-serif';
       const words = it.id.split(/(?<=[:_-])/); let line = '', ly = y;
@@ -194,6 +198,7 @@ export async function startShadowAudit(root: HTMLElement) {
   // the GL side: the game's renderer, its atlas (the WebP pages), the ground as one chunk
   const gl = new GLRenderer(cv);
   try { await gl.initAtlas(dpr, [webpSource(ATLAS_PAGES)]); } catch (e) { W.__shadowAudit.error = String(e); return; }
+  gl.initVector(vectorMesh());
   const groundTex = gl.textureFrom(await createImageBitmap(ground));
   const view = { X: Wworld / 2, Y: Hworld / 2, ze: z * dpr, cw: cv.width, ch: cv.height };
   const vis: { i: number; j: number }[] = [];
@@ -202,7 +207,8 @@ export async function startShadowAudit(root: HTMLElement) {
   const t0ms = performance.now(); let settled = 0;
   const frame = () => {
     const f = tiles.map(t => t.frame(vis, []));
-    const at = gl.uploadParts([[f[0]!.shadows, f[0]!.shadowFloats], [f[1]!.shadows, f[1]!.shadowFloats], [f[0]!.stream, f[0]!.floats], [f[1]!.stream, f[1]!.floats], [f[2]!.stream, f[2]!.floats]]);
+    const at = gl.uploadParts([[f[0]!.shadows, f[0]!.shadowFloats], [f[1]!.shadows, f[1]!.shadowFloats], [f[0]!.stream, f[0]!.floats], [f[1]!.stream, f[1]!.floats], [f[2]!.stream, f[2]!.floats],
+      ...f.flatMap(s => s.vec.map(v => [v.data, v.floats] as [Float32Array, number]))]);
     // the atlas cells every picture needs, at the view's level
     const mark = new Map<number, number>();
     for (const s of f) for (let o = 0; o < s.floats; o += SPRITE_STRIDE) {
@@ -219,6 +225,8 @@ export async function startShadowAudit(root: HTMLElement) {
     gl.drawCast(at[4]!, f[2]!.floats / SPRITE_STRIDE, sh.sx, sh.sy, CAST.strength);
     gl.drawShadows(at[0]!, f[0]!.shadowFloats / SHADOW_STRIDE, CONTACT_STRENGTH, lx, ly);
     gl.drawShadows(at[1]!, f[1]!.shadowFloats / SHADOW_STRIDE, CONTACT_STRENGTH, lx, ly);
+    // the vector shadows (T142): both in the first strip, the contact shapes alone in the second, the cast shapes alone in the third
+    f.forEach((s, m) => s.vec.forEach((v, b) => gl.drawVector(at[5 + m * 2 + b]!, v.floats / VECTOR_STRIDE, v.verts, sh.sx, sh.sy, m === 2 ? 0 : CONTACT_STRENGTH, m === 1 ? 0 : CAST.strength)));
     for (const k of [2, 3, 4]) gl.drawSprites(at[k]!, f[k - 2]!.floats / SPRITE_STRIDE, 0);
     const soft = wants.filter(w => a.pages.levelOf(w.unit) > need).length;
     settled = soft === 0 ? settled + 1 : 0;

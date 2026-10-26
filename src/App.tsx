@@ -299,6 +299,12 @@ export default function App() {
                       <input type="range" className="min-w-0 flex-1" min={0} max={2} step={0.05} value={game.shadowStrength} onChange={e => { game.setShadowStrength(+e.target.value); bump(); }} />
                       <span className="w-10 text-right tabular-nums">{Math.round(game.shadowStrength * 100)}%</span>
                     </label>
+                    {dev && (
+                      <label className="flex cursor-pointer items-center gap-2 px-2 py-1 text-xs" title="Developer: each picture's own hand-drawn shadow (T142); off shows the older rule shapes and silhouettes (T141) for comparison">
+                        <input type="checkbox" checked={game.vectorShadows} onChange={e => { game.setVectorShadows(e.target.checked); bump(); }} />
+                        Drawn shadows (T142)
+                      </label>
+                    )}
                     <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" title="The grass grows where it would: darker, bushier grass along fences, walls, hedges and water, patchy grass with bare dirt and leaves under trees, worn ground at doors and path edges, and soft shade at the foot of everything (T111)">
                       <input type="checkbox" checked={game.groundVariety} onChange={e => { game.setGroundVariety(e.target.checked); bump(); }} />
                       Ground variety

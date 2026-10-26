@@ -6,10 +6,11 @@
 import { SPR_H as CHUNK_H, SPR_W as CHUNK_W, worldX, worldY } from './iso';
 import { LIBRARY } from './library';
 import { CAR_SCALE } from './ext/car-art';
-import { SHADOW_STRIDE, SPRITE_STRIDE } from './gl';
+import { SHADOW_STRIDE, SPRITE_STRIDE, VECTOR_STRIDE } from './gl';
 import type { Prop } from './types';
 import { castsShadow, contactShadow, placeholderBoxes, type ContactShadow, type ShadowSpot } from './shadow-shape';
 import { lookOf } from './newart';
+import { vectorMesh } from './shadow-vector';
 
 /** anything drawn like a prop: library item, anchor (tiles), flip, scale, footprint (tiles) */
 export interface Drawable { item: number; x: number; y: number; flip: boolean; scale: number; x0: number; y0: number; x1: number; y1: number; /** a moving car (SimClient.visible): already drawn at CAR_SCALE */ moving?: boolean;
@@ -19,13 +20,32 @@ export interface Drawable { item: number; x: number; y: number; flip: boolean; s
 /** every car is drawn this much smaller than its art, parked (props of kind car, about the middle of their footprint) and moving (SimClient.visible,
  *  about the car's centre): the owner, 2026-10-19, "20% smaller", the parked cars too */
 export { CAR_SCALE };
-interface DTile { i: number; j: number; props: Set<Prop>; order: Prop[] | null; packed: Float32Array; shadows: Float32Array; rects: Float32Array; buckets: Map<number, number[]> }
+interface DTile { i: number; j: number; props: Set<Prop>; order: Prop[] | null; packed: Float32Array; shadows: Float32Array; rects: Float32Array; buckets: Map<number, number[]>;
+  /** the vector shadows (T142) of its props, small meshes and big ones (gl.ts drawVector draws each set up to its largest count), and those counts */
+  vsmall: Float32Array; vbig: Float32Array; vmax: [number, number] }
 export interface TileDraw { i: number; j: number; shadows: number; sprites: number }
+
+/** the vector shadows (T142, shadow-vector.ts): on, every picture with an entry draws its own contact and cast shapes instead of T141's shape
+ *  and silhouette; off, T141's everywhere (the gear menu's comparison; engine.ts setVectorShadows re-packs the tiles) */
+export const VECTOR = { on: true };
+/** a mesh of at most this many indices draws in the small set (gl.ts drawVector runs every instance of a set to its largest count) */
+export const VECTOR_SMALL = 240;
+/** per library item: its vector mesh's range (null: none, T141's shadows); filled as items are first packed */
+const VEC: ({ first: number; count: number } | null)[] = [];
+export const vecOf = (item: number) => VEC[item] !== undefined ? VEC[item]! : (VEC[item] = vectorMesh().at.get(LIBRARY[item]!.id) ?? null);
 
 const BUCKET = 256;
 const tkey = (i: number, j: number) => (j + 512) * 4096 + (i + 2048);
 const SHADOWED = (it: (typeof LIBRARY)[number]) => it.kind !== 'lot';
 
+/** where a drawable's picture hangs: its anchor (world px), its scale and mirror, and the picture drawn (newart.ts lookOf); null when hidden */
+export function spriteAnchor(d0: Drawable): { X: number; Y: number; k: number; flip: boolean; item: number } | null {
+  const l = lookOf(d0), it = LIBRARY[l.item]!;
+  if (l.hidden) return null;
+  const parked = it.kind === 'car' && !d0.moving, f = parked ? CAR_SCALE : 1, x = l.x ?? d0.x, y = l.y ?? d0.y;
+  const cx = (d0.x0 + d0.x1) / 2, cy = (d0.y0 + d0.y1) / 2, px = parked ? cx + (x - cx) * f : x, py = parked ? cy + (y - cy) * f : y;
+  return { X: worldX(px, py), Y: worldY(px, py) - (d0.lift ?? 0), k: l.scale * f, flip: l.flip, item: l.item };
+}
 /** the trimmed picture's rectangle in world px */
 export function spriteRect<T extends number[] | Float32Array>(d0: Drawable, out: T = [0, 0, 0, 0] as T, o = 0): T {
   // the picture drawn for it (newart.ts: a stand-in for an old building, the drawable itself otherwise); a hidden one is a zero-area rect at its anchor
@@ -68,7 +88,8 @@ function packSprite(d0: Drawable, out: Float32Array, o: number, i: number, j: nu
   out[o + 4] = l.flip ? t[3] : t[1]; out[o + 5] = t[2]; out[o + 6] = l.flip ? t[1] : t[3]; out[o + 7] = t[4];
   // w: the foot line (world px) the cast shadow hinges on; a baked lot casts none (its picture carries its own, baked), nor a sprite whose
   // override says so (shadow-overrides.json: a flat one); a hidden one draws nothing
-  out[o + 8] = t[0]; out[o + 9] = l.hidden ? 0 : alpha; out[o + 10] = it.big ? 0 : 1; out[o + 11] = it.kind === 'lot' || l.hidden || d0.lift || !casts(l.item) ? -1 : worldY(l.x ?? d0.x, l.y ?? d0.y);
+  // (a picture with a vector shadow casts its drawn shape instead: packVector)
+  out[o + 8] = t[0]; out[o + 9] = l.hidden ? 0 : alpha; out[o + 10] = it.big ? 0 : 1; out[o + 11] = it.kind === 'lot' || l.hidden || d0.lift || !casts(l.item) || (VECTOR.on && vecOf(l.item)) ? -1 : worldY(l.x ?? d0.x, l.y ?? d0.y);
   clip(out, o + 12, i, j);
   // the footprint's front edges, for the cast shadows (gl.ts VS_CAST): the near corner (x1, y1) and the left (x0, y1) and right (x1, y0)
   // corners; business art's placeholder footprint (a 2 x 2 m box under a whole building) gives way to its picture's base (T141)
@@ -79,7 +100,18 @@ function packSprite(d0: Drawable, out: Float32Array, o: number, i: number, j: nu
 /** a drawable's contact shadow as packShadow packs it (null: none), its picture's rect `rect` (spriteRect) when known */
 export function contactOf(d: Drawable, rect: ArrayLike<number> = spriteRect(d)): ContactShadow | null {
   const l = lookOf(d);
-  return d.lift || l.hidden ? null : contactShadow(LIBRARY[l.item]!, spotOf(d, l), rect);
+  return d.lift || l.hidden || (VECTOR.on && vecOf(l.item)) ? null : contactShadow(LIBRARY[l.item]!, spotOf(d, l), rect);
+}
+/** a drawable's vector shadow instance (gl.ts VECTOR_STRIDE) into `out` at `o`: false when it has none (off, no entry, lifted, hidden) */
+export function packVector(d: Drawable, out: Float32Array, o: number, i: number, j: number, rect: ArrayLike<number>): boolean {
+  if (!VECTOR.on || d.lift) return false;
+  const a = spriteAnchor(d); if (!a) return false;
+  const v = vecOf(a.item); if (!v || !v.count) return false;
+  out[o] = a.X; out[o + 1] = a.Y; out[o + 2] = a.flip ? -a.k : a.k; out[o + 3] = a.k;
+  out[o + 4] = v.first; out[o + 5] = v.count; out[o + 6] = 0; out[o + 7] = 0;
+  clip(out, o + 8, i, j);
+  out[o + 12] = rect[0]!; out[o + 13] = rect[1]!; out[o + 14] = rect[2]!; out[o + 15] = rect[3]!;
+  return true;
 }
 /** the sprite's contact shadow (shadow-shape.ts contactShadow): the drawn picture's (the look's) shape from the footprint (2 m tiles, so the
  *  half extents in metres are the tile spans) and the picture's rect `rect` (world px, spriteRect), a parked car's shrunk like its picture;
@@ -122,6 +154,7 @@ export class SpriteTiles {
   tiles = new Map<number, DTile>();
   private where = new Map<Prop, number[]>();
   private stream = new Float32Array(1 << 16); private shadowStream = new Float32Array(1 << 14);
+  private vecStream = [new Float32Array(1 << 14), new Float32Array(1 << 12)];
   private tmp = [0, 0, 0, 0];
   count = 0;
 
@@ -129,7 +162,7 @@ export class SpriteTiles {
     const r = spriteRect(p, this.tmp), keys: number[] = [];
     for (let j = Math.floor(r[1] / CHUNK_H); j <= Math.floor(r[3] / CHUNK_H); j++) for (let i = Math.floor(r[0] / CHUNK_W); i <= Math.floor(r[2] / CHUNK_W); i++) {
       const k = tkey(i, j); let t = this.tiles.get(k);
-      if (!t) { t = { i, j, props: new Set(), order: null, packed: new Float32Array(0), shadows: new Float32Array(0), rects: new Float32Array(0), buckets: new Map() }; this.tiles.set(k, t); }
+      if (!t) { t = { i, j, props: new Set(), order: null, packed: new Float32Array(0), shadows: new Float32Array(0), rects: new Float32Array(0), buckets: new Map(), vsmall: new Float32Array(0), vbig: new Float32Array(0), vmax: [0, 0] }; this.tiles.set(k, t); }
       t.props.add(p); t.order = null; keys.push(k);
     }
     this.where.set(p, keys); this.count++;
@@ -142,6 +175,8 @@ export class SpriteTiles {
   /** after a prop moved, flipped or scaled */
   update(p: Prop) { this.remove(p); this.add(p); }
   clear() { this.tiles.clear(); this.where.clear(); this.count = 0; }
+  /** re-pack every tile (the vector shadows turned on or off) */
+  repack() { for (const t of this.tiles.values()) t.order = null; }
   /** the props of the tiles touching a world-px point, front-most first (for picking) */
   at(X: number, Y: number): Prop[] {
     const t = this.tiles.get(tkey(Math.floor(X / CHUNK_W), Math.floor(Y / CHUNK_H))); if (!t) return [];
@@ -156,6 +191,15 @@ export class SpriteTiles {
     const sh: number[] = [];
     t.order.forEach((p, i) => { packSprite(p, t.packed, i * SPRITE_STRIDE, t.i, t.j); t.rects.set(t.packed.subarray(i * SPRITE_STRIDE, i * SPRITE_STRIDE + 4), i * 4); if (SHADOWED(LIBRARY[p.item]) && !p.lift) sh.push(i); });
     t.shadows = new Float32Array(sh.length * SHADOW_STRIDE); sh.forEach((i, k) => packShadow(t.order![i], t.shadows, k * SHADOW_STRIDE, t.i, t.j, t.rects.subarray(i * 4, i * 4 + 4)));
+    // the vector shadows (T142), small meshes and big ones
+    const vs = new Float32Array(n * VECTOR_STRIDE), vb = new Float32Array(n * VECTOR_STRIDE); let ns = 0, nb = 0; t.vmax = [0, 0];
+    for (let i = 0; i < n; i++) {
+      const p = t.order[i]!, v = SHADOWED(LIBRARY[p.item]!) ? vecOf(lookOf(p).item) : null; if (!v || !v.count) continue;
+      const big = v.count > VECTOR_SMALL, arr = big ? vb : vs, at = (big ? nb : ns) * VECTOR_STRIDE;
+      if (!packVector(p, arr, at, t.i, t.j, t.rects.subarray(i * 4, i * 4 + 4))) continue;
+      if (big) { nb++; t.vmax[1] = Math.max(t.vmax[1], v.count); } else { ns++; t.vmax[0] = Math.max(t.vmax[0], v.count); }
+    }
+    t.vsmall = vs.slice(0, ns * VECTOR_STRIDE); t.vbig = vb.slice(0, nb * VECTOR_STRIDE);
     t.buckets = new Map();
     for (let i = 0; i < n; i++) { const o = i * 4; for (let gx = Math.floor(t.rects[o] / BUCKET); gx <= Math.floor(t.rects[o + 2] / BUCKET); gx++) for (let gy = Math.floor(t.rects[o + 1] / BUCKET); gy <= Math.floor(t.rects[o + 3] / BUCKET); gy++) { const k = gx * 65536 + gy; let l = t.buckets.get(k); if (!l) t.buckets.set(k, (l = [])); l.push(i); } }
   }
@@ -173,6 +217,7 @@ export class SpriteTiles {
     if (shadows > this.shadowStream.length) { const s = new Float32Array(Math.max(shadows, this.shadowStream.length * 2)); s.set(this.shadowStream); this.shadowStream = s; }
   }
   private rbuf: number[][] = [];
+  private vone = new Float32Array(VECTOR_STRIDE);
 
   /** Pack this frame's streams for the visible tiles: the shadows, and the sprites in each tile's order with the movers
    *  merged in. Returns both streams and their lengths. */
@@ -187,6 +232,11 @@ export class SpriteTiles {
       }
     }
     let at = 0, sat = 0; const draws: TileDraw[] = [];
+    // the vector shadows: small and big sets, their floats and their largest counts
+    const vat = [0, 0], vmax = [0, 0], vput = (set: number, src: Float32Array, n: number) => {
+      let b = this.vecStream[set]!; if (vat[set]! + n > b.length) { const g = new Float32Array(Math.max(vat[set]! + n, b.length * 2)); g.set(b); this.vecStream[set] = b = g; }
+      b.set(n === src.length ? src : src.subarray(0, n), vat[set]); vat[set]! += n;
+    }, vone = this.vone;
     for (const { i, j } of visible) {
       const k = tkey(i, j), t = this.tiles.get(k), mv = byTile.get(k);
       if (!t && !mv) continue;
@@ -196,6 +246,11 @@ export class SpriteTiles {
       const s = this.stream, ss = this.shadowStream, d: TileDraw = { i, j, shadows: 0, sprites: 0 };
       if (t) { ss.set(t.shadows, sat); sat += t.shadows.length; d.shadows += t.shadows.length / SHADOW_STRIDE; }
       if (mv) for (const m of mv) { packShadow(m.d, ss, sat, i, j, m.r); sat += SHADOW_STRIDE; d.shadows++; }
+      if (t) { vput(0, t.vsmall, t.vsmall.length); vput(1, t.vbig, t.vbig.length); vmax[0] = Math.max(vmax[0]!, t.vmax[0]); vmax[1] = Math.max(vmax[1]!, t.vmax[1]); }
+      if (mv) for (const m of mv) {
+        if (!packVector(m.d, vone, 0, i, j, m.r)) continue;
+        const c = vone[5]!, set = c > VECTOR_SMALL ? 1 : 0; vput(set, vone, VECTOR_STRIDE); vmax[set] = Math.max(vmax[set]!, c);
+      }
       if (!mv) { if (t) { s.set(t.packed, at); at += t.packed.length; d.sprites = nProps; } }
       else {
         // each mover goes after the last prop behind it that its picture overlaps
@@ -217,6 +272,7 @@ export class SpriteTiles {
       }
       draws.push(d);
     }
-    return { stream: this.stream, floats: at, shadows: this.shadowStream, shadowFloats: sat, draws };
+    return { stream: this.stream, floats: at, shadows: this.shadowStream, shadowFloats: sat, draws,
+      vec: [{ data: this.vecStream[0]!, floats: vat[0]!, verts: vmax[0]! }, { data: this.vecStream[1]!, floats: vat[1]!, verts: vmax[1]! }] };
   }
 }
