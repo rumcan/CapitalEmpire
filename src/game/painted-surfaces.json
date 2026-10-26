@@ -7,7 +7,7 @@
   "firstCut": { "family": "emerald-medium", "version": null, "scale": 1, "tint": "#ffffff", "tone": -0.04 },
   "tee": { "family": "emerald-short", "version": null, "scale": 0.5, "tint": "#ffffff", "tone": 0.03 },
   "sod": { "family": "emerald-short", "version": "v1", "scale": 0.75, "tint": "#ffffff", "tone": 0 },
-  "rough": { "family": "long-grass", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
+  "rough": { "family": "sage-long", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0.02 },
   "fescue": { "family": "golden-fescue", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "bunker": { "family": "sand-raked", "version": null, "scale": 0.5, "tint": "#fff6ec", "tone": 0 },
   "waste": { "family": "sand-ripples-tiles", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
