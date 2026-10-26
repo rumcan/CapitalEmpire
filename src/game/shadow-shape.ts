@@ -158,9 +158,11 @@ export function contactShadow(it: LibItem, d: ShadowSpot, pic: ArrayLike<number>
     return { x: d.x + dx * d.scale / 2, y: d.y + dy * d.scale / 2, hx: s.hx, hy: s.hy, core: s.core, feather: s.feather, round: s.round, lean };
   }
   if (s.atAnchor) {
-    // a picture drawn wholly above its anchor (a stop sign, a traffic light, a utility pole): the spot goes up the screen to its foot
-    let x = d.x, y = d.y; const above = AY - py1;
-    if (above > 4 && pw > 0) { const t = above / 64; x -= t; y -= t; }
+    // a spot (a pole, a sign) stands on its picture's foot, up or down the screen from the anchor (a stop sign, a traffic light, a utility pole
+    // are drawn wholly above theirs); a pool (a tree, a bush) moves only up, to a picture drawn wholly above its anchor
+    let x = d.x, y = d.y; const off = py1 - AY, vh = 16 * Math.SQRT2 * s.hy;
+    if (pw > 0 && kind === 'pole' && Math.abs(off) > vh + 4) { const t = (off - vh) / 64; x += t; y += t; }
+    else if (pw > 0 && kind !== 'walker' && off < -4) { const t = -off / 64; x -= t; y -= t; }
     return { x, y, hx: s.hx, hy: s.hy, core: s.core, feather: s.feather, round: s.round, lean };
   }
   let cx = (d.x0 + d.x1) / 2, cy = (d.y0 + d.y1) / 2, hx = s.hx, hy = s.hy, placeholder = false;
@@ -203,7 +205,7 @@ export function castsShadow(it: LibItem): boolean { return it.kind !== 'lot' && 
 /** the lean uniform (gl.ts drawShadows uShift): the cast shadows' screen direction, times their length against the default; none when off */
 export function contactLean(c: { on: boolean; angle: number; length: number }): { x: number; y: number } {
   const k = c.on ? c.length / LEAN_LENGTH : 0, a = c.angle * Math.PI / 180;
-  return { x: Math.cos(a) * k, y: Math.sin(a) * k };
+  return k ? { x: Math.cos(a) * k, y: Math.sin(a) * k } : { x: 0, y: 0 };
 }
 /** the world px a contact shadow moves by (gl.ts VS_SHADOW computes the same per vertex; this copy is for tests and the audit): along the
  *  lean's direction on the ground by CONTACT_LEAN.frac of the shape's reach from its centre to its edge that way, at most CONTACT_LEAN.max m */

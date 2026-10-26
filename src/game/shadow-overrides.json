@@ -1,1 +1,6 @@
-{}
+{
+  "world:schoolbus": { "hx": 3.9, "hy": 1.0, "note": "the library box is 1.7x the bus's width: a box the bus's own length and width (T141)" },
+  "world:scoreboard": { "contact": false, "note": "a board on two posts: no slab on the ground under it, the cast shadow draws the posts (T141)" },
+  "business:golf-pond": { "contact": false, "cast": false, "note": "a flat pond picture laid on the ground (T141)" },
+  "business:golf-bunker-crescent": { "contact": false, "cast": false, "note": "a flat bunker picture laid on the ground (T141)" }
+}

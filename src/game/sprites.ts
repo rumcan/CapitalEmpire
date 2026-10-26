@@ -8,7 +8,7 @@ import { LIBRARY } from './library';
 import { CAR_SCALE } from './ext/car-art';
 import { SHADOW_STRIDE, SPRITE_STRIDE } from './gl';
 import type { Prop } from './types';
-import { castsShadow, contactShadow, placeholderBoxes, type ShadowSpot } from './shadow-shape';
+import { castsShadow, contactShadow, placeholderBoxes, type ContactShadow, type ShadowSpot } from './shadow-shape';
 import { lookOf } from './newart';
 
 /** anything drawn like a prop: library item, anchor (tiles), flip, scale, footprint (tiles) */
@@ -76,11 +76,16 @@ function packSprite(d0: Drawable, out: Float32Array, o: number, i: number, j: nu
   if (placeholder(l.item) && !l.hidden) { const f = contactShadow(it, spotOf(d0, l), out.subarray(o, o + 4))?.foot; if (f) [x0, y0, x1, y1] = f; }
   out[o + 16] = worldX(x1, y1); out[o + 17] = worldY(x1, y1); out[o + 18] = worldX(x0, y1); out[o + 19] = worldX(x1, y0);
 }
+/** a drawable's contact shadow as packShadow packs it (null: none), its picture's rect `rect` (spriteRect) when known */
+export function contactOf(d: Drawable, rect: ArrayLike<number> = spriteRect(d)): ContactShadow | null {
+  const l = lookOf(d);
+  return d.lift || l.hidden ? null : contactShadow(LIBRARY[l.item]!, spotOf(d, l), rect);
+}
 /** the sprite's contact shadow (shadow-shape.ts contactShadow): the drawn picture's (the look's) shape from the footprint (2 m tiles, so the
  *  half extents in metres are the tile spans) and the picture's rect `rect` (world px, spriteRect), a parked car's shrunk like its picture;
  *  none (a lifted or hidden sprite, a lot, an override's contact: false) packs as a zero-size shape */
 function packShadow(d: Drawable, out: Float32Array, o: number, i: number, j: number, rect: ArrayLike<number>) {
-  const l = lookOf(d), sh = d.lift || l.hidden ? null : contactShadow(LIBRARY[l.item]!, spotOf(d, l), rect);
+  const sh = contactOf(d, rect);
   out[o] = sh ? worldX(sh.x, sh.y) : 0; out[o + 1] = sh ? worldY(sh.x, sh.y) : 0; out[o + 2] = sh?.hx ?? 0; out[o + 3] = sh?.hy ?? 0;
   out[o + 4] = sh?.core ?? 0; out[o + 5] = sh?.feather ?? 0; out[o + 6] = sh?.round ? 1 : 0; out[o + 7] = sh?.lean ?? 0;
   clip(out, o + 8, i, j);
