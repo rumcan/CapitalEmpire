@@ -4,7 +4,7 @@
 // picked surface's look: a family (each card shows its three zoom levels: near 40 m, mid 320 m, far 4096 m a tile), the version, the scale,
 // the tint and the tone, previewed as the game lays it. Save writes the file; a game on a vite dev server from this checkout takes it at once
 // (no rebuild, no reload). Served by server.mjs.
-import { FAMILIES, LEVEL_NAMES, familyVersions, lookColour, resolveFamily, newLook, surfaceKinds } from '/painted-lib.js';
+import { FAMILIES, LEVEL_NAMES, familyVersions, lookColour, resolveFamily, newLook, surfaceKinds, TILED_FAMILIES, STEPS, TILES, tilePermutation, tileIndex } from '/painted-lib.js';
 
 const el = (t, a = {}, ...k) => { const e = document.createElement(t); Object.assign(e, a); for (const c of k) if (c != null) e.append(c); return e; };
 const btn = (t, fn, c = '') => el('button', { className: 'btn ' + c, textContent: t, onclick: fn });
@@ -71,7 +71,9 @@ function draw() {
   for (const p of D.presets) { const o = lookOf('preset:' + p.id); item('preset:' + p.id, p.name, o.look, o.own ? familyLabel(o.look) : o.follow ? `follows ${D.surfaces.find(s => s.key === o.follow)?.name.split(' (')[0]}` : 'photo'); }
   editor();
 }
-const familyLabel = l => { const f = FAMILIES.find(x => x.id === l.family); return f ? `${f.name}${l.version ? ' ' + l.version : ''}${l.scale !== 1 ? ` ×${l.scale}` : ''}` : l.family; };
+const familyLabel = l => { const f = FAMILIES.find(x => x.id === l.family); return f ? `${f.name}${f.tiled ? ' (tile set)' : ''}${l.version ? ' ' + l.version : ''}${l.scale !== 1 ? ` ×${l.scale}` : ''}` : l.family; };
+/** a tile set family's sets (T145): its revisions, near to far */
+const tiledSets = f => LEVEL_NAMES.map(l => f.pick[l]).join(', ');
 
 function editor() {
   side.innerHTML = '';
@@ -94,14 +96,17 @@ function editor() {
     const r = resolveFamily({ family: f.id, version: f.id === look.family ? look.version : null, scale: 1 });
     const c = el('div', { className: 'card', style: `min-width:0;width:236px;cursor:pointer;${f.id === look.family ? 'border-color:var(--gold);box-shadow:0 0 0 1px var(--gold)' : ''}`, title: `${f.name}: ${LEVEL_NAMES.map(l => `${l} ${r[l].version} (${Math.round(f.coverage[l])} m)`).join(', ')}` },
       el('div', { style: 'display:flex;gap:2px;background:#0d0f08' }, ...LEVEL_NAMES.map(l => el('div', { style: 'position:relative' }, el('img', { src: art(r[l].file, 96), width: 76, height: 76, style: 'display:block' }), el('span', { style: 'position:absolute;left:2px;bottom:1px;font-size:10px;color:#fff;text-shadow:0 0 2px #000', textContent: `${l} ${Math.round(f.coverage[l])} m` })))),
-      el('div', { className: 'meta', style: 'padding:4px 8px' }, el('div', { className: 'name', textContent: f.name }), el('div', { className: 'cat', textContent: `${KIND_NAME[f.kind] ?? f.kind}${f.legacy ? ' · first draft' : ''} · ${familyVersions(f).join(', ')}` })));
+      el('div', { className: 'meta', style: 'padding:4px 8px' }, el('div', { className: 'name', textContent: f.name }), el('div', { className: 'cat', textContent: `${KIND_NAME[f.kind] ?? f.kind}${f.legacy ? ' · first draft' : ''} · ${f.tiled ? 'hand-painted tile sets ' + tiledSets(f) : familyVersions(f).join(', ')}` })));
     c.onclick = () => change({ family: f.id, version: null });
     return c;
   }));
   side.append(el('div', { className: 'hint', textContent: 'Family (each card: the near, mid and far paintings and the ground one tile covers)' }), cards(fits));
   if (rest.length) { const d = el('details', {}, el('summary', { className: 'hint', style: 'cursor:pointer', textContent: `Other families (${rest.length})` }), cards(rest)); side.append(d); }
+  // ---- a hand-painted tile set (T145): laid as authored, nothing to set; its three sets of four whole tiles shown as the game butts them
+  const f = FAMILIES.find(x => x.id === look.family);
+  if (f.tiled) { tiledPreview(f); return; }
   // ---- version
-  const f = FAMILIES.find(x => x.id === look.family), vs = familyVersions(f);
+  const vs = familyVersions(f);
   side.append(el('div', { className: 'hint', textContent: 'Version (a level without it keeps its pick)' }), el('div', { className: 'chips', style: 'margin-bottom:8px' },
     ...[null, ...vs].map(v => { const c = el('span', { className: 'chip' + (look.version === v ? ' on' : ''), textContent: v ? `${v}: ${LEVEL_NAMES.filter(l => f.levels[l][v]).join(', ')}` : `Auto (${LEVEL_NAMES.map(l => `${l} ${f.pick[l] ?? '-'}`).join(', ')})` }); c.onclick = () => change({ version: v }); return c; })));
   // ---- scale, tint, tone (and a lawn's weight)
@@ -122,6 +127,24 @@ function editor() {
   }
   preview(look, true);
   if (r0) side.append(hint(`Mean colour as laid: ${lookColour(r0.near.mean, look)}`));
+}
+
+/** a tile set family (T145, src/game/painted-tiles.ts): each band's set of four whole tiles, two by two as the game's placement butts them
+ *  (its seeded permutation, cells 0..1), at their native aspect and light, never squashed, turned, mirrored, tinted or blended; and the world
+ *  size one tile takes at each coverage step of the band (the camera picks the step: 2 to 4 whole tiles in view) */
+async function tiledPreview(f) {
+  const t = TILED_FAMILIES.find(x => x.id === f.id); if (!t) return;
+  side.append(hint(`A hand-painted tile set (${t.materialId}, selection ${t.revision}): three independently authored sets, four whole tiles each, laid exactly as authored. No version, scale, tint or tone: the camera picks the set and the tile size (${TILES.coverage.areas.join(' to ')} whole tiles on a ${TILES.coverage.refViewport.join(' x ')} view).`));
+  const box = el('div', { style: 'display:flex;flex-direction:column;gap:12px;margin-top:10px' }); side.append(box);
+  for (const band of LEVEL_NAMES) {
+    const lv = t.levels[band], perm = tilePermutation(t.id, band), k = 0.2, w = Math.round(lv.native[0] * k), h = Math.round(lv.native[1] * k);
+    const steps = STEPS.map((s, i) => ({ ...s, i })).filter(s => s.band === band);
+    const c = el('canvas', { width: 2 * w, height: 2 * h, style: 'display:block;max-width:100%' }), g = c.getContext('2d');
+    box.append(el('div', {}, el('div', { className: 'hint', textContent: `${band}: ${lv.revision} · ${lv.native.join(' x ')} px · tiles ${lv.tiles.map(x => x.id).join(', ')} · one tile ${steps.map(s => s.metres).join(', ')} m wide (steps ${steps[0].i + 1}-${steps[steps.length - 1].i + 1}, zoom ${(steps[steps.length - 1].zLo * 100).toFixed(1)}-${(steps[0].zHi * 100).toFixed(1)}%)` }), c));
+    for (let iy = 0; iy < 2; iy++) for (let ix = 0; ix < 2; ix++) {
+      const img = await pic(lv.tiles[tileIndex(perm, ix, iy)].file); if (img) g.drawImage(img, ix * w, iy * h, w, h);
+    }
+  }
 }
 
 /** the look laid as the game does (tinted and toned): the near painting on the ground at the closest zoom (an iso diamond, 21 px a metre), and

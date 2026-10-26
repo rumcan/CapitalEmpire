@@ -16,6 +16,7 @@ import GroundWorker from './ground.worker?worker';
 import type { GrassCellView } from './ext/grass-management';
 import { casterChange } from './living-ground';
 import { onPaintedSurfaces, paintedSurfaces } from './painted-surfaces-live';
+import { pictureCurrent } from './ground-layers';
 
 export interface Tile {
   kind: TileKind; i: number; j: number;
@@ -25,6 +26,9 @@ export interface Tile {
   /** A short zoom-resolution crossfade; independent of the construction reveal picture. */
   fadeFrom: WebGLTexture | null; fadeStart: number; fadePx: number;
   gen: number; stale: boolean; pendingL: number; pendingArtL: number; used: number;
+  /** the tile set families' coverage step its picture was baked at and whether it laid any (T145: only such a chunk depends on the step), and
+   *  the step of the bake in flight */
+  texTs: number; texTiled: boolean; pendingTs: number;
   /** when its picture last landed (performance.now ms), and the earliest time it may be baked again while it still has a picture (a course
    *  stroke re-staling the same chunks every send: each is re-baked at most every COURSE_HOLD_MS, showing its last picture meanwhile) */
   baked: number; hold: number;
@@ -39,7 +43,7 @@ export class GroundCache {
   /** the lot patches last sent, by lot key (to find the old boxes of edits) */
   private lotPatches = new Map<string, LotPatch[]>();
   private workers: Worker[] = []; private inflight: number[] = []; private reqs = new Map<number, { t: Tile; gen: number; w: number }>();
-  private nextId = 1; private want: { t: Tile; L: number; artL: number; pri: number }[] = [];
+  private nextId = 1; private want: { t: Tile; L: number; artL: number; ts: number; pri: number }[] = [];
   ready = 0; private isReady: boolean[] = []; errors: string[] = []; bakeMs = 0; baked = 0;
   /** the builder worker writes the textures to this browser's cache after a fresh start: seconds in which a bake sent to it waits (T134: the
    *  planner pieces asked for first landed 5 s late), so it takes none while it has peers */
@@ -140,7 +144,7 @@ export class GroundCache {
 
   tile(kind: TileKind, i: number, j: number) {
     const k = key(kind, i, j); let t = this.tiles.get(k);
-    if (!t) { t = { kind, i, j, tex: null, texL: 0, texArtL: 0, px: 0, prev: null, prevUntil: 0, fadeFrom: null, fadeStart: 0, fadePx: 0, gen: 0, stale: false, pendingL: 0, pendingArtL: 0, used: 0, baked: 0, hold: 0 }; this.tiles.set(k, t); }
+    if (!t) { t = { kind, i, j, tex: null, texL: 0, texArtL: 0, px: 0, prev: null, prevUntil: 0, fadeFrom: null, fadeStart: 0, fadePx: 0, gen: 0, stale: false, pendingL: 0, pendingArtL: 0, used: 0, baked: 0, hold: 0, texTs: -1, texTiled: false, pendingTs: -1 }; this.tiles.set(k, t); }
     return t;
   }
   /** mark the chunks over a tile-space box stale; keepPrev keeps the current picture for the build reveal */
@@ -156,8 +160,10 @@ export class GroundCache {
     }
   }
   invalidateAll() { for (const t of this.tiles.values()) { t.gen++; t.stale = true; t.hold = 0; } }
-  /** ask for a tile at a level this frame (lower pri = sooner) */
-  need(t: Tile, L: number, pri: number, now: number, artL = L) { t.used = now; if ((t.tex && t.texL === L && t.texArtL === artL && (!t.stale || now < t.hold)) || t.pendingL === L && t.pendingArtL === artL) return; this.want.push({ t, L, artL, pri }); }
+  /** ask for a tile at a level this frame (lower pri = sooner); ts: the tile set families' coverage step (T145: a picture that laid one is
+   *  baked again at another step, so a stale chunk never keeps an old set) */
+  need(t: Tile, L: number, pri: number, now: number, artL = L, ts = 0) { t.used = now; if ((pictureCurrent(t, L, artL, ts) && (!t.stale || now < t.hold)) || t.pendingL === L && t.pendingArtL === artL && t.pendingTs === ts) return; this.want.push({ t, L, artL, ts, pri }); }
+
   /** send the most urgent requests to idle workers */
   pump() {
     this.flushCasters();
@@ -166,12 +172,12 @@ export class GroundCache {
     for (const w of this.want) {
       // asked for twice this frame (the planner piece under several chunks): sent once, at its most urgent (T134: the copies filled every
       // worker's slots at a fresh start)
-      if (w.t.pendingL === w.L && w.t.pendingArtL === w.artL) continue;
+      if (w.t.pendingL === w.L && w.t.pendingArtL === w.artL && w.t.pendingTs === w.ts) continue;
       let best = -1; for (let i = 0; i < this.workers.length; i++) if (this.isReady[i] && this.inflight[i] < 2 && (!this.saving[i] || this.workers.length === 1) && (best < 0 || this.inflight[i] < this.inflight[best])) best = i;
       if (best < 0) break;
-      const id = this.nextId++; w.t.pendingL = w.L; w.t.pendingArtL = w.artL; this.inflight[best]++;
+      const id = this.nextId++; w.t.pendingL = w.L; w.t.pendingArtL = w.artL; w.t.pendingTs = w.ts; this.inflight[best]++;
       this.reqs.set(id, { t: w.t, gen: w.t.gen, w: best });
-      this.workers[best].postMessage({ t: 'paint', id, kind: w.t.kind, i: w.t.i, j: w.t.j, L: w.L, artL: w.artL } satisfies ToWorker);
+      this.workers[best].postMessage({ t: 'paint', id, kind: w.t.kind, i: w.t.i, j: w.t.j, L: w.L, artL: w.artL, ts: w.ts } satisfies ToWorker);
     }
     this.want = [];
   }
@@ -186,17 +192,19 @@ export class GroundCache {
     if (m.t === 'texpack') { m.snaps.forEach((snap, k) => this.workers[k + 1]?.postMessage({ t: 'textures', snap } satisfies ToWorker, snap.bitmaps)); return; }
     const r = this.reqs.get(m.id); this.reqs.delete(m.id); this.inflight[w]--;
     if (!r) { m.bmp.close(); return; }
-    const t = r.t; t.pendingL = 0; t.pendingArtL = 0;
+    const t = r.t; t.pendingL = 0; t.pendingArtL = 0; t.pendingTs = -1;
     this.bakeMs += m.ms; this.baked++;
     // edited while baking: it will be asked for again, and keeps the picture it has meanwhile; one with none shows this one (stale, so it is
     // still asked for again: the ground before the edit for a bake, rather than nothing; T134, the startup's edits did this to the planner pieces)
     const edited = r.gen !== t.gen;
     if (edited && t.tex) { m.bmp.close(); return; }
     const u0 = performance.now();
-    const old = t.tex, oldL = t.texL, oldPx = t.px, artL = m.artL ?? m.L, fade = old && (oldL !== m.L || t.texArtL !== artL) && !t.stale && t.kind !== 'p' && !t.prev;
+    // a new step (T145) keeps the old picture until the whole view has the new one too (engine.ts: then a cut, never a crossfade between sets)
+    const ts = m.ts ?? 0, stepChanged = (t.texTiled || !!m.tiled) && t.texTs !== ts;
+    const old = t.tex, oldL = t.texL, oldPx = t.px, artL = m.artL ?? m.L, fade = old && (oldL !== m.L || t.texArtL !== artL || stepChanged) && !t.stale && t.kind !== 'p' && !t.prev;
     if (t.fadeFrom && t.fadeFrom !== old && t.fadeFrom !== t.prev) this.gl.deleteTexture(t.fadeFrom);
     t.fadeFrom = null; t.fadePx = 0;
-    t.tex = this.gl.textureFrom(m.bmp); t.texL = m.L; t.texArtL = artL; t.px = m.bmp.width * m.bmp.height; t.stale = edited; t.baked = u0; m.bmp.close();
+    t.tex = this.gl.textureFrom(m.bmp); t.texL = m.L; t.texArtL = artL; t.texTs = ts; t.texTiled = !!m.tiled; t.px = m.bmp.width * m.bmp.height; t.stale = edited; t.baked = u0; m.bmp.close();
     if (fade) { t.fadeFrom = old; t.fadeStart = Infinity; t.fadePx = oldPx; }
     else if (old && old !== t.prev) this.gl.deleteTexture(old);
     const u1 = performance.now(); this.upCount++; this.upMs += u1 - u0;

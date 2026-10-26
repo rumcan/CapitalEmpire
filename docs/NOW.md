@@ -24,8 +24,8 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 ### In flight
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |
-| **T145 (top priority)** | #300 | `arena/T145-painted-terrain` | `.claude/worktrees/t145` | 5186 | The owner's brief (in the issue): the accepted golden fescue and lake tiles in the game, three authored sets NEAR/MID/FAR of four large tiles each, hash-checked from `eight-tiles/READY-MATERIALS.json`, on main's T128 painted-families runtime. Brief: `E:/ClaudeTemp/lead/t145-brief.md`. |
-| T146 | #303 | `arena/T146-range-parking` | an agent worktree under `.claude/worktrees` | 5187 | Resumed with the owner's new scope (2026-10-26: "lets add a carpark building. server the golfers in parallel"): a multi-storey car park building as the range's parking upgrade (stand-in + art request), the pro shop serving in parallel so a full range fills its bays, the skip counting parking. Yields heavy steps to T145. Opus, high effort. |
+| **T150 (top priority)** | #315 | `arena/T150-tile-scale` | `.claude/worktrees/t150` | 5186 | The owner: the painted tiles are "too big", zooming out "they zoom in", at the furthest zoom "a zoomed in version of 1 of the texture images instead of 4 tiles at their max native size". New rule in the issue: one fixed world size per set, native at its anchor zoom (FAR at the furthest zoom, NEAR from the near-shop reference), never magnified, real zoom, switch at anchors. |
+| T147 | #306 | `arena/T147-money-floats` | `.claude/worktrees/t147` (made by hand: the agent worktree failed for memory) | 5187 | Green +$X / red -$X floating up where money moves; the range first via T146's `RangeSim.onMoney`. Yields heavy steps to T145. |
 
 **Two coding agents at a time (the owner, 2026-10-26: first "maybe just too many background tasks?" after the studio tab died with the
 PC at 1.5 GB free, then "start up two coding agents"):** keep two coding agents running, start the next queue ticket when one lands, no
@@ -48,15 +48,20 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
 `docs/START-PROMPTS.md`.
 
 ### Queue (in order)
-0. **T147 #306 money floats up where it is made** (the owner, 2026-10-26: "show green +$400 ... float up from a customer when we make
-   money and -$300 when we dont in red"): next when an agent slot frees. Decisions in the issue (green in, red out, red for a lost sale
-   without charging the treasury; merged at mid zoom, none at overview; a setting to hide them).
+- **Texture art status (2026-10-26 15:30):** the art session (Codex; `art/theme-consistency/material-texture-batches/ACTIVE-WORK.json`)
+  has finished 2 of its 14 families (golden fescue, lake: in the game). sand-ripples has raw variants, sand-raked 2/12, desert/dirt
+  anchors only; fairway, putting-green, first-cut, long-grass and the rest have job files and no pictures yet. Each lands through
+  READY-MATERIALS → `node scripts/assets/prep-painted-tiles.mjs` → a surface in Studio › Painted.
+0. **T148 #309 the lot lab** (the owner, 2026-10-26, "after the new textures"): multi-select with move/delete, Ctrl+C/V, a Change house
+   button, a lot-boundary grid, Generate staying on the current lot (type, size, angle) and re-rolling its layout and building, and a
+   Neighbours on/off toggle. T145 has landed: start it when memory allows (the PC was at 1.3 GB free at 15:07 with Codex making a worktree). Decisions in the issue.
+0b. **T149 #312 painted terrain follow-ups**: real game-vs-proof comparisons (T145's side-by-sides were invalid), the in-band zoom steps
+   (the owner's call), seams, DPR 2 softness, rivers.
 1. **The nightly.** The owner should allow the nightly session's commands so it runs unattended. fix:gate's new default (seed 1 day 60)
    passes by 1.8 points only: if it flips, retune the scenario (#298's header has the scan table), do not touch traffic.
 2. **The owner's new grass paintings**, when they arrive. Import them with `scripts/assets/prep-painted-families.mjs` (the families list
    in the script), then map them per surface in Studio › Painted.
 3. **P24 follow-ups:**
-   - a bigger range car park, or parking with the second tier (D49): T146 in flight;
    - overlapping labels at the range's shop front;
    - the putt, chip and coaching clips;
    - real art for the stand-ins in `docs/GOLF-SPRITES.md` (the range, practice and props kits).
@@ -66,6 +71,14 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
    (the sharp bump). See the History sections below and `gh issue list --label arena --state open`.
 
 ### Done recently (newest first; details in each PR)
+- 2026-10-26: **T145 #311 the hand-painted terrain tiles**: golden fescue (surface `fescue`) and lake (surface `water`), three authored
+  sets NEAR/MID/FAR of four 1742x902 tiles each, hash-verified by `scripts/assets/prep-painted-tiles.mjs` from
+  `eight-tiles/READY-MATERIALS.json` into `src/assets/ground/painted/tiles/` and `src/game/painted-tiles.json`; world-anchored seeded
+  permutation, 12 zoom steps with hysteresis, the step in the worker/chunk keys; readout under `?debug`. Next families: add to
+  READY-MATERIALS, re-run the script, map a surface. Follow-ups in T149.
+- 2026-10-26: **T146 #308 the range's car park building and parallel counters** (P24 D49-D55): a $36,000 multi-storey car park (180
+  cars, stand-in + art request `golf:range-carpark`), the pro shop's counters one per 9 bays, the skip capped by bays and parking. A full
+  36-bay range: bays taken at peak 19 → 36, live day 125 → 420 sold, no car turned away. `RangeSim.onMoney` for T147.
 - 2026-10-26: **T144 #302 the studio's Library page is light**: WebP card thumbs at four size steps, cards scrolled far away drop their
   pictures (decoded pictures held: 545 MB → at most 26 MB). The 5191 studio was restarted on it.
 - 2026-10-26: **#298 the gates retuned to the game as it is** (#285 closed; the bisect found intended features, not a regression: #87 woods
@@ -98,7 +111,8 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
 
 ### Machine facts
 - **Memory:** the PC has 16 GB shared by several Claude sessions, VS Code and Codex. With many open, git checkouts of the 2-3 GB packs
-  fail (use `git -c checkout.workers=1`). Run one heavy step at a time.
+  fail (use `git -c checkout.workers=1`); on 2026-10-26 the Agent tool's own worktree failed this way ("packed object ... is corrupt" is
+  the failed allocation, not real corruption: `git cat-file -s <sha>` reads it fine): make the worktree by hand with checkout.workers=1. Run one heavy step at a time.
 - **Disk:** E: has about 30-45 GB free. Each agent worktree with node_modules is about 4.3 GB. Remove it as soon as its PR merges.
 - **Others in the repo:** other sessions work here too (branches `lead/golf-play`, the people session's `worktrees/people-ground`,
   `finite-atlas-runtime-20261026`). Do not touch their worktrees.

@@ -134,13 +134,13 @@ export type ToWorker =
   | { t: 'living'; on: boolean; debug: boolean }
   /** the course height light's strength (T126: the gear menu's Slope light, 0 = off): every chunk is baked again */
   | { t: 'slopeLight'; strength: number }
-  | { t: 'paint'; id: number; kind: TileKind; i: number; j: number; L: number; artL?: number };
+  | { t: 'paint'; id: number; kind: TileKind; i: number; j: number; L: number; artL?: number; /** the tile set families' coverage step (T145) */ ts?: number };
 
 export type FromWorker =
   /** saving: the builder still writes the textures to this browser's cache (a fresh profile), seconds in which its bakes wait; 'saved' when done */
   | { t: 'ready'; ms: number; saving?: boolean }
   | { t: 'saved' }
   | { t: 'texpack'; snaps: TexSnapshot[] }
-  | { t: 'tile'; id: number; kind: TileKind; i: number; j: number; L: number; artL?: number; bmp: ImageBitmap; ms: number }
+  | { t: 'tile'; id: number; kind: TileKind; i: number; j: number; L: number; artL?: number; /** the step it was baked at, and whether it laid a tile set family (T145) */ ts?: number; tiled?: boolean; bmp: ImageBitmap; ms: number }
   | { t: 'error'; message: string }
   | { t: 'log'; message: string };

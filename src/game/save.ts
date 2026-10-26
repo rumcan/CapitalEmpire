@@ -65,7 +65,7 @@ export interface SaveV5 {
   /** library id, x, y, flip, scale, and 1 for a prop placed by a plant brush (optional); a Props tool prop (T131) has 0 there and its catalogue key after */
   props: [string, number, number, number, number, (0 | 1)?, string?][];
   /** the treasury and the game day, as before the books (kept so older readers still work; the books hold the truth) */
-  money: number; day: number; cam?: { X: number; Y: number; z: number };
+  money: number; day: number; /** ts: the tile set families' coverage step (T145), so a reload lays the same tiles */ cam?: { X: number; Y: number; z: number; ts?: number };
   /** the town's lots that are not EMPTY: key, use, level, decline, seed, since (v5; missing = none) */
   lots?: LotTuple[];
   /** the sim clock, s, so the construction timers go on (v5) */
