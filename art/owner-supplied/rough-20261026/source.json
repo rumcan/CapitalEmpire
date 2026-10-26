@@ -1,0 +1,16 @@
+{
+ "schema": 1,
+ "id": "owner:rough-20261026",
+ "what": "The owner's rough paintings, one per zoom level (T162, #350): owner-supplied source art, kept here unchanged. scripts/assets/prep-painted-tiles.mjs checks each file against its sha256 below, heals its edges once so it tiles with itself (the interior untouched; never mirrored, rotated, resized or regraded) and ships it as the tile family rough-owner.",
+ "family": { "id": "rough-owner", "name": "Rough (owner)", "kind": "grass", "provisional": true },
+ "owner": {
+  "date": "2026-10-26",
+  "words": ["here are the images to intergrate for rough", "here are better images for the roug. they should tile better"],
+  "issue": "https://github.com/rumcan/CapitalEmpire/issues/350"
+ },
+ "levels": {
+  "near": { "file": "near.png", "sha256": "b3c9cdd3b41f44fd1e3814084dac01434114e4410c896c5e881c9f3ce6020ed5", "size": [1742, 903], "from": "C:/Users/RAMPAGE/.codex/generated_images/01a16c0b-bcad-7e71-a5d0-0281b98562b9/exec-988807bd-b0d3-41b2-a296-95fe9fb43c9c.png" },
+  "mid": { "file": "mid.png", "sha256": "6605fd9d40226a54a834e231f129d630cc1edfa36bd6e5157b43f3871b31ca09", "size": [1744, 902], "from": "C:/Users/RAMPAGE/.codex/generated_images/01a16c0b-bcad-7e71-a5d0-0281b98562b9/exec-bdbeb078-31dc-498a-833c-f4f0e7752d3b.png" },
+  "far": { "file": "far.png", "sha256": "5bcc9981a3efeb10a18fcada96ee370a5e38a6ac43277ec90fee3809b7a731d8", "size": [1742, 903], "from": "C:/Users/RAMPAGE/.codex/generated_images/01a16c0b-bcad-7e71-a5d0-0281b98562b9/exec-a3d88a83-50ca-4a73-aa25-0a3cc3bbcae6.png" }
+ }
+}

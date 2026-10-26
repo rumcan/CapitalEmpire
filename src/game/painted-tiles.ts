@@ -24,6 +24,10 @@ import { HH, HW, ZOOM_MIN, mulberry } from './iso';
  *  - **Placement.** A world-anchored grid of whole tiles from the world origin; each cell shows one of the four tiles, chosen by a seeded stable
  *    permutation, `(ix + 2 iy) mod 4`, so no tile ever touches a copy of itself (all eight neighbours differ). The four tiles butt edge to edge
  *    along their common borders; no overlap, random offset, mosaic, mask, blend or crossfade.
+ *  - **The owner's paintings (T162, #350).** A family made from the owner's own paintings (`owner`: its source.json) has one tile a level:
+ *    the permutation runs over the level's tile count, so every cell shows that tile (the repetition is accepted for now). Its edges were
+ *    healed once in the asset step (scripts/assets/tile-heal.mjs; the level's `heal` records the wrap before and after), so it tiles with
+ *    itself; it is laid exactly like any other set.
  *  Pure: importable from node tests (the pictures' URLs are found by painted-grass-art.ts paintedUrl). */
 
 export type TileBand = 'near' | 'mid' | 'far';
@@ -32,7 +36,12 @@ export const TILE_BANDS: readonly TileBand[] = ['near', 'mid', 'far'];
 /** a tile; a provisional set's tile (T153) also names the PNG it was made from (source, under the art folder) */
 export interface TileRef { id: string; file: string; sha256: string; mean: string; source?: string }
 /** a level's set; a provisional one (T153) has no visual decision (file null) and carries the art session's own status for it */
-export interface TiledLevel { revision: string; folder: string; native: [number, number]; decision: { file: string | null; sha256: string | null }; tiles: TileRef[]; status?: string }
+export interface TiledLevel { revision: string; folder: string; native: [number, number]; decision: { file: string | null; sha256: string | null }; tiles: TileRef[]; status?: string;
+  /** T162: an owner's painting's edge heal (scripts/assets/tile-heal.mjs): its method and band (px), and the mean |RGB| difference across the
+   *  wrap (lr, tb) and between neighbouring columns and rows inside (h, v), before (the owner's file) and after (the WebP that ships) */
+  heal?: { method: string; band: number; before: WrapMismatch; after: WrapMismatch } }
+/** how well a picture tiles with itself (tile-heal.mjs wrapMismatch): mean |RGB| across the wrap and between neighbours inside */
+export interface WrapMismatch { lr: number; tb: number; h: number; v: number }
 export interface TiledFamily {
   /** the game's family id (painted-families.ts, painted-surfaces.json) and READY-MATERIALS' id */
   id: string; materialId: string; name: string; kind: 'grass' | 'sand' | 'water' | 'cut';
@@ -42,6 +51,8 @@ export interface TiledFamily {
   /** T153 (#327): shipped before its handoff: each level's newest complete set of four tiles as the art session left them (raw generator
    *  outputs, seams not repaired yet), hash-recorded; re-running the prep script after the handoff lands switches it to the canonical selection */
   provisional?: true;
+  /** T162 (#350): made from the owner's own paintings, one a level: the source.json under art/owner-supplied that names them and their hashes */
+  owner?: string;
 }
 /** each set's anchor (the CSS zoom at which it draws at its native pixels), the switch hysteresis (zooming out, a coarser set takes over this
  *  factor past its switch), the preload factor (the next set's tiles are decoded once the zoom is this close to its switch), the camera's
@@ -137,7 +148,8 @@ export function tileSize(level: Pick<TiledLevel, 'native'>, ts: number): [number
   return [level.native[0] / k, level.native[1] / k];
 }
 const fnv = (s: string) => { let h = 0x811c9dc5; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193); } return h >>> 0; };
-/** a family level's seeded stable permutation of its tile indices (the same in every worker, every session) */
+/** a family level's seeded stable permutation of its n tile indices (the same in every worker, every session); n is the level's tile count
+ *  (four; one for the owner's paintings, T162) */
 export function tilePermutation(familyId: string, band: TileBand, n = 4): number[] {
   const r = mulberry(fnv(`${familyId}:${band}`)), p = Array.from({ length: n }, (_, i) => i);
   for (let i = n - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [p[i], p[j]] = [p[j]!, p[i]!]; }

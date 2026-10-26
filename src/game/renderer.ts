@@ -566,7 +566,7 @@ export class GroundPainter {
     else { base = { buf: canvas(c.W, c.H), cells: new Uint8Array(cw * chh), bytes: c.W * c.H * 4 }; this.composed.set(ck, base); this.composedBytes += base.bytes; }
     this.bakeKeys.add(ck); this.tilesUsed = true;
     for (const [k, v] of this.composed) { if (this.composedBytes <= COMPOSED_BYTES) break; if (this.bakeKeys.has(k)) continue; this.composed.delete(k); this.composedBytes -= v.bytes; }
-    const band = bandOf(ts), lv = tp.fam.levels[band], urls = tp.urls[band], [w, h] = tileSize(lv, ts), perm = tilePermutation(tp.fam.id, band);
+    const band = bandOf(ts), lv = tp.fam.levels[band], urls = tp.urls[band], [w, h] = tileSize(lv, ts), perm = tilePermutation(tp.fam.id, band, urls.length);
     // the chunk's origin in its raster px (a whole number at every cache level) and its raster scale (px per world px)
     const L = c.L, ox = -c.M.e, oy = -c.M.f;
     return this.fillCells(base, want, (g, rect) => {
