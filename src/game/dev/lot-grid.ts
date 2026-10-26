@@ -1,5 +1,6 @@
 // The lot lab's Lot grid (T148, key L): the lab lot's boundary and its cells (1-tile squares in the lot's own frame), and the neighbouring lots'
-// boundaries when they are shown, drawn with WebGL2 in a light outline over the ground and under every shadow and sprite: the engine calls the
+// boundaries when they are shown, drawn with WebGL2 in a light outline (a faint dark halo round the boundary, so it reads on pale grass too)
+// over the ground and under every shadow and sprite: the engine calls the
 // lab's hook (Game.devGround) right after the map grid (ext/map-grid/layer.ts, the same full-screen pass and premultiplied colour). Per pixel:
 // the tile under it (the iso inverse), each lot's frame coordinates a (along u) and b (away, along n), the distance in device px to its edges and
 // cell lines (tiles over the tiles per px of that axis, from the camera's constant derivatives), box-filtered coverage. A frame allocates nothing.
@@ -26,7 +27,8 @@ void main() {
   vec2 t = vec2(0.5 * (a0 + b0), 0.5 * (b0 - a0));
   // the tile point's change per device px across and down the screen (constant: the iso map is linear)
   vec2 tx = vec2(0.5, -0.5) / (64.0 * uCam.z), ty = vec2(-0.5, -0.5) / (32.0 * uCam.z);
-  float al = 0.0;
+  // al: the light line's coverage; dk: the dark halo round the boundary (it reads on pale grass and on dark ground alike)
+  float al = 0.0, dk = 0.0;
   for (int i = 0; i < MAXL; i++) {
     if (i >= uN) break;
     vec2 org = uA[i].xy, u = uA[i].zw, n = uB[i].xy; float w = uB[i].z, d = uB[i].w;
@@ -39,15 +41,18 @@ void main() {
     float e = 1e9;
     if (b >= -pb && b <= d + pb) e = min(e, min(abs(a), abs(a - w)) / ga);
     if (a >= -pa && a <= w + pa) e = min(e, min(abs(b), abs(b - d)) / gb);
-    al = max(al, cover(e, 0.9) * uC[i].x);
+    al = max(al, cover(e, 1.0) * uC[i].x);
+    dk = max(dk, cover(e, 2.4) * 0.45 * uC[i].x);
     // the cells: 1-tile lines inside the lot
     if (uC[i].y > 0.0 && a > 0.0 && a < w && b > 0.0 && b < d) {
       float c = min(abs(fract(a + 0.5) - 0.5) / ga, abs(fract(b + 0.5) - 0.5) / gb);
-      al = max(al, cover(c, 0.45) * uC[i].y);
+      al = max(al, cover(c, 0.5) * uC[i].y);
     }
   }
-  if (al < 0.002) discard;
-  o = vec4(vec3(0.94, 0.98, 1.0) * al, al);
+  float tot = al + dk * (1.0 - al);
+  if (tot < 0.002) discard;
+  // premultiplied: the light line over its dark halo
+  o = vec4(vec3(0.86, 0.96, 1.0) * al + vec3(0.02, 0.05, 0.09) * dk * (1.0 - al), tot);
 }`;
 
 /** the Lot grid layer: its program, made on the first frame that draws */
@@ -65,7 +70,7 @@ export class LotGridLayer {
     if (!this.prog && !this.build(gl)) return false;
     for (let i = 0; i < n; i++) {
       const l = lots[i]!;
-      this.A.set([l.o.x, l.o.y, l.u.x, l.u.y], i * 4); this.B.set([l.n.x, l.n.y, l.w, l.d], i * 4); this.C.set([l.alpha, l.cells ? 0.32 * l.alpha : 0], i * 2);
+      this.A.set([l.o.x, l.o.y, l.u.x, l.u.y], i * 4); this.B.set([l.n.x, l.n.y, l.w, l.d], i * 4); this.C.set([l.alpha, l.cells ? 0.5 * l.alpha : 0], i * 2);
     }
     const u = this.u;
     gl.useProgram(this.prog);

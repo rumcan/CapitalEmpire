@@ -350,6 +350,8 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
     try { await savePresets([after.id]); say(`${what}: ${after.id} saved to lot-presets.json (curated); every lot drawn from it follows`); }
     catch (e) { say(`NOT SAVED: ${String(e)}`); }
   }
+  /** k things as words ("1 item", "3 items") */
+  const many = (k: number, w = 'item') => `${k} ${w}${k === 1 ? '' : 's'}`;
   /** whether a preset prop's picture shows another view a quarter on (a turn the picture cannot show changes nothing, so it is left) */
   const turnable = (f: PresetFrame) => (q: PresetProp) => { const k = f.q + q.view, a = turned(q.id, k), b = turned(q.id, k + 1); return a.id !== b.id || a.flip !== b.flip; };
   /** the largest preset scale a prop's picture allows (its art limit over its owner scale) */
@@ -364,18 +366,18 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
     if (a === 'move') {
       const r = moveSel(p, s, dx * f.u.x + dy * f.u.y, dx * f.n.x + dy * f.n.y, half);
       if (Math.abs(r.dx) < 1e-9 && Math.abs(r.dy) < 1e-9) return say('the lot edge stops the selection there');
-      return commitGroup(lot, p, r.preset, s, `moved ${n} items${r.clamped ? ' (to the lot edge)' : ''}`);
+      return commitGroup(lot, p, r.preset, s, `moved ${many(n)}${r.clamped ? ' (to the lot edge)' : ''}`);
     }
-    if (a === 'delete') return commitGroup(lot, p, deleteSel(p, s), NONE, `deleted ${n} items`);
+    if (a === 'delete') return commitGroup(lot, p, deleteSel(p, s), NONE, `deleted ${many(n)}`);
     if (a === 'turn') {
       const r = turnSel(p, s, turnable(f));
       if (!r.turned && !r.mirrored) return say('none of the selected sprites has another view');
-      return commitGroup(lot, p, r.preset, s, `turned ${r.turned} sprites${r.mirrored ? `, mirrored ${r.mirrored} decals` : ''}`);
+      return commitGroup(lot, p, r.preset, s, `turned ${many(r.turned, 'sprite')}${r.mirrored ? `, mirrored ${many(r.mirrored, 'decal')}` : ''}`);
     }
     if (a === 'bigger' || a === 'smaller') {
       const r = scaleSel(p, s, a === 'bigger' ? GROW : 1 / GROW, scaleLimit);
       if (!r.changed) return say('every selected sprite is as big as its picture allows: it pixelates above that');
-      return commitGroup(lot, p, r.preset, s, `${a} ${r.changed} items${r.refused ? ` (${r.refused} at their picture's limit)` : ''}`);
+      return commitGroup(lot, p, r.preset, s, `${a} ${many(r.changed)}${r.refused ? ` (${r.refused} at their picture's limit)` : ''}`);
     }
     if (a === 'duplicate') {
       const c = copySel(p, s); if (!c) return;
@@ -385,14 +387,14 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
       for (const i of s.decals) { const q = p.decals![i]!; x0 = Math.min(x0, q.x); x1 = Math.max(x1, q.x); }
       const pts = [...s.props.map(i => p.props[i]!), ...s.decals.map(i => p.decals![i]!)], cx = (Math.min(...pts.map(q => q.x)) + Math.max(...pts.map(q => q.x))) / 2, cy = (Math.min(...pts.map(q => q.y)) + Math.max(...pts.map(q => q.y))) / 2;
       const r = pasteClip(p, c, cx + (x1 - x0) + 0.25, cy, half);
-      return commitGroup(lot, p, r.preset, r.sel, `duplicated ${n} items${r.clamped ? ' (kept in the lot)' : ''}`);
+      return commitGroup(lot, p, r.preset, r.sel, `duplicated ${many(n)}${r.clamped ? ' (kept in the lot)' : ''}`);
     }
   }
   /** Ctrl+C: the selection (a preset's sprites and decals) copied, kept for the session; false when nothing of a preset is selected */
   function copy(): boolean {
     const g = groupSrc(), c = g ? copySel(g.preset, g.sel) : null;
     if (!c) return false;
-    keepClip(c); say(`copied ${c.props.length + c.decals.length} items: Ctrl+V pastes them at the pointer, on this lot or another`);
+    keepClip(c); say(`copied ${many(c.props.length + c.decals.length)}: Ctrl+V pastes them at the pointer, on this lot or another`);
     return true;
   }
   /** Ctrl+V: the copied items pasted with their middle at the pointer's last point on the map (the lot under it, or the lot the editor is kept to;
@@ -404,7 +406,7 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
     if (!lot || !lp) return say('paste: point at a lot drawn from a preset');
     const q = t ? worldToPreset(lp.frame, lp.preset, t.x, t.y) : { x: lp.preset.w / 2, y: lp.preset.d / 2 };
     const r = pasteClip(lp.preset, clip, q.x, q.y, frameHalf(lp.frame));
-    await commitGroup(lot, lp.preset, r.preset, r.sel, `pasted ${count(r.sel)} items${r.clamped ? ' (kept in the lot)' : ''}`);
+    await commitGroup(lot, lp.preset, r.preset, r.sel, `pasted ${many(count(r.sel))}${r.clamped ? ' (kept in the lot)' : ''}`);
   }
   /** H (dir 1) or Shift+H (dir -1): the selected building (the panel's sprite when it is one, else the selection's first building; with nothing
    *  selected, the lot the editor is kept to: its main building) changed for the next of its family and size class (lot-houses.ts), on its spot,
