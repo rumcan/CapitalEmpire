@@ -15,6 +15,7 @@ import { HH, HW, SPR_H, SPR_W, worldX, worldY } from '../iso';
 import { CAST, castShear } from '../cast-shadow';
 import * as SHAPE from '../shadow-shape';
 import { CAR_SCALE } from '../ext/car-art';
+import { lookOf } from '../newart';
 import type { Prop } from '../types';
 import { AUDIT_CATS, auditEntries, type AuditCat, type AuditEntry } from './shadow-audit-items';
 
@@ -25,16 +26,17 @@ const GROUND: [number, number, number] = [150 / 255, 170 / 255, 118 / 255];
 interface AuditState { ready: boolean; pages: number; page: number; cat: string; items: unknown[]; measure?: unknown[]; soft?: number; error?: string }
 const W = window as unknown as { __shadowAudit: AuditState };
 
-/** the contact shadow's lean in world px per metre of half extents (engine.ts draw; shadow-shape.ts contactLean once T141 lands) */
-function leanOf(): [number, number] {
-  const f = (SHAPE as unknown as { contactLean?: (c: typeof CAST) => { x: number; y: number } }).contactLean;
-  if (f) { const l = f(CAST); return [l.x, l.y]; }
-  const lean = CAST.on ? 6 * CAST.length : 0, a = CAST.angle * Math.PI / 180; return [lean * Math.cos(a), lean * Math.sin(a)];
-}
-/** the shape the game gives a drawable (sprites.ts packShadow's call), for the labels */
+/** the lean uniform drawShadows takes (engine.ts draw: shadow-shape.ts contactLean) */
+function leanOf(): [number, number] { const l = SHAPE.contactLean(CAST); return [l.x, l.y]; }
+/** the contact shadow the game gives a drawable (sprites.ts packShadow's call), for the labels and the review: its shape, its centre about
+ *  the anchor (tiles) and its lean (world px) */
 function shapeOf(p: Prop) {
-  const it = LIBRARY[p.item]!, f = it.kind === 'car' ? CAR_SCALE : 1;
-  return SHAPE.shadowShape(it, (p.x1 - p.x0) * f, (p.y1 - p.y0) * f, p.scale);
+  const l = lookOf(p), it = LIBRARY[l.item]!, f = it.kind === 'car' ? CAR_SCALE : 1, cx = (p.x0 + p.x1) / 2, cy = (p.y0 + p.y1) / 2, hw = (p.x1 - p.x0) * f / 2, hh = (p.y1 - p.y0) * f / 2;
+  if (l.hidden) return null;
+  const s = SHAPE.contactShadow(it, { x: l.x ?? p.x, y: l.y ?? p.y, x0: cx - hw, y0: cy - hh, x1: cx + hw, y1: cy + hh, scale: l.scale }, spriteRect(p));
+  if (!s) return null;
+  const [lx, ly] = leanOf(), sh = SHAPE.leanShift(s, { x: lx, y: ly });
+  return { ...s, cx: s.x - p.x, cy: s.y - p.y, shift: [sh.x, sh.y], kind: SHAPE.kindOf(it), cast: SHAPE.castsShadow(it) };
 }
 let uid = 1;
 /** a prop of an entry with its anchor at tile (x, y) */
@@ -71,7 +73,7 @@ function layout(entries: AuditEntry[], width: number, z: number, per: number, ma
   const closeRow = () => { if (!row) return; row.h = row.strip * 3 + label + gap; page.h += row.h; row = null; };
   for (const e of entries) {
     const ex = extentsOf(e), w = Math.max(minW, ex.R - ex.L), h = ex.B - ex.T;
-    if (row && x + w > width) closeRow();
+    if (row && (x + w > width || page.n >= per)) closeRow();
     if (!row) {
       if (page.n >= per || (page.rows.length && page.h + h * 3 + label > maxH)) { pages.push(page); page = { rows: [], h: 8 / z, n: 0 }; }
       row = { cells: [], y: page.h, strip: 0, h: 0 }; page.rows.push(row); x = left;
@@ -167,7 +169,7 @@ export async function startShadowAudit(root: HTMLElement) {
     });
     for (const c of row.cells) {
       const it = LIBRARY[c.e.item]!, x = c.x * z + 3, w = c.w * z - 6, y = (row.y + row.strip * 3) * z + 2, p = propOf(c.e, 0, 0), s = shapeOf(p);
-      const line2 = s ? `${s.round ? 'o' : '[]'} ${s.hx.toFixed(2)}x${s.hy.toFixed(2)} ${it.kind}${c.e.scale !== 1 ? ` s${c.e.scale.toFixed(2)}` : ''}` : 'none';
+      const line2 = s ? `${s.round ? "o" : "[]"} ${s.hx.toFixed(2)}x${s.hy.toFixed(2)} ${s.kind}${s.cast ? "" : " nocast"}${c.e.scale !== 1 ? ` s${c.e.scale.toFixed(2)}` : ""}` : "none";
       l.fillStyle = 'rgba(255,255,255,0.88)'; l.fillRect(x - 2, y - 1, w + 4, 38);
       l.fillStyle = '#111'; l.font = '10px sans-serif';
       const words = it.id.split(/(?<=[:_-])/); let line = '', ly = y;

@@ -103,6 +103,7 @@ import { deriveHoles, surfaceAt, validateMarkerPlacement } from './golf/holes';
 import { LiveGroup, OWNER_ADDRESS, OWNER_ART, OWNER_SKILL, POWER, PUTT_POWER, PlayView, allowedClubs, boardRows, carryM, championLine, makeCourseView, makeField, ownerGolfer, playRound, powerFor, startOwner, stateAt, standings, teeTimes, toParText, type BoardRow, type Club, type CourseView, type OwnerTurn, type RoundPlan, type Sex } from './golf/play';
 import { holeViews, markerPlan, tagByHole, type HoleView, type MarkerKind } from './golf/holeview';
 import { CAST, castShear, clampCast, type CastShadow } from './cast-shadow';
+import { contactLean } from './shadow-shape';
 import { MARKER_SCALE, OLD_TEE_IDS, PIN_RED_ID, PIN_YELLOW_ID, TEE_BACK_ID, TEE_FORWARD_ID, TEE_MIDDLE_ID } from './golf/dressing';
 import { FALLBACK_STRUCTURE_SPRITE, STRUCTURE_SPRITE, STRUCTURE_SPRITE_OLD } from './golf/structure-art';
 import { checkStructurePlacement, findStructureIndexAt, structureRect, structuresNeeds, type PlacedEventStructure, type StructurePlacementCheck } from './golf/eventtool';
@@ -4843,9 +4844,9 @@ export class Game {
       const [sAt, pAt, lAt] = gl.uploadParts([[f.shadows, shadows ? f.shadowFloats : 0], [f.stream, f.floats], [this.lightBuf, lt ? (lt.small + lt.beams) * POINT_STRIDE : 0]]);
       // the cast shadows (cast-shadow.ts), faded out by night, then the contact shadows, then the sprites
       if (this.cast.on) { const sh = castShear(this.cast); gl.drawCast(pAt, f.floats / SPRITE_STRIDE, sh.sx, sh.sy, this.cast.strength * (1 - this.nightAmount())); }
-      // the contact shadows lean toward the cast shadows' side (away from the sun): 6 px per metre of a shape's half extents at full length
-      const lean = this.cast.on ? 6 * this.cast.length : 0, la = this.cast.angle * Math.PI / 180;
-      if (shadows) gl.drawShadows(sAt, f.shadowFloats / SHADOW_STRIDE, this.shadowStrength, lean * Math.cos(la), lean * Math.sin(la));
+      // the contact shadows lean toward the cast shadows' side (away from the sun), blob and box alike (shadow-shape.ts contactLean, T141)
+      const lean = contactLean(this.cast);
+      if (shadows) gl.drawShadows(sAt, f.shadowFloats / SHADOW_STRIDE, this.shadowStrength, lean.x, lean.y);
       gl.drawSprites(pAt, f.floats / SPRITE_STRIDE, tier === 'district' ? 7 * this.dpr : 0);
       if (lt) { gl.drawPoints(lAt, lt.small, Math.max(2, 0.55 * 64 * ze), true); gl.drawPoints(lAt + lt.small * POINT_STRIDE, lt.beams, Math.max(4, 2.6 * 64 * ze), true); }
     }
