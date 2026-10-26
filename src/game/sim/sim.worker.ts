@@ -138,8 +138,10 @@ function frame() {
   const sig = sim.signalFrame();
   // the active traffic incidents go with every frame (3 floats each: see City.incidentBuf)
   const inc = city.incidentBuf();
-  if (walkers && stops && gallery) post({ t: 'frame', cap: sim.cap, buf, stats, sig, inc, walkers, stops, gallery }, [buf.buffer, sig.buffer, inc.buffer, walkers.buffer, stops.buffer, gallery.buffer]);
-  else post({ t: 'frame', cap: sim.cap, buf, stats, sig, inc }, [buf.buffer, sig.buffer, inc.buffer]);
+  // T147: the money moved at a place since the last frame (the money floats; none for a skip's money: the floats are money as you watch it)
+  const cash = city.takeCash(), money = cash && !skipping ? cash : undefined, mx: ArrayBuffer[] = money ? [money.buffer as ArrayBuffer] : [];
+  if (walkers && stops && gallery) post({ t: 'frame', cap: sim.cap, buf, stats, sig, inc, walkers, stops, gallery, money }, [buf.buffer, sig.buffer, inc.buffer, walkers.buffer, stops.buffer, gallery.buffer, ...mx]);
+  else post({ t: 'frame', cap: sim.cap, buf, stats, sig, inc, money }, [buf.buffer, sig.buffer, inc.buffer, ...mx]);
   // the inspected car goes with every frame; once it is gone (null), no more
   if (inspecting >= 0) { const info = city.inspect(inspecting); post({ t: 'car', info }); if (!info) inspecting = -1; }
 }
