@@ -45,6 +45,17 @@ Update this file **before** each edit and after each sub-step. If you are pickin
   and an edge chunk was never requested (planting stopped one tile short of `CHUNK_CASTER_REACH`). Fix: `ground-layers.ts chunkLayers` (a
   chunk always draws its older, new or planner picture), planting to the caster reach, planner pieces first and evictable, the builder worker
   kept free while it saves the texture cache. Dark time over 40 jumps 28.1 s → 5.7 s; confirmed in a headed browser.
+- **Known bugs done (2026-10-26):** T135 #264 (a new game's month: `Sim.restartClock` from `City.terrain`; one grow label
+  `golf/growlabel.ts`; the top bar on one row at 1366/1600/1920, chip words from 2200 px; unknown business types dropped on load),
+  T136 #267 (a Shadow slider for painted areas: `PaintArea.shadow`, `paint-edges.ts AREA_SHADE`, `renderer.ts areaLight`; area look
+  changes undoable), T137 #266 (clean three-way junctions in `ext/course-walls`), T138 #263 (the puck's marks moved to a badge beside
+  it), T139 #268 (cart-path bevel: rims drawn from the paths stepped by `SUN_TILE_DIR`, `cart-bevel.ts`, no chunk-seam bars). The
+  fringe's olive ring was fixed by T128.
+- **Follow-ups found:** the town roads' kerb face slides its chunk mask the same way T139 fixed for paths (a gap at a chunk's bottom
+  edge); the owner may want the top bar's chip words back at 1920.
+- **5174 note:** the `capital-empire` launch entry now serves `worktrees/theme-consistency` (it served the stale main checkout,
+  `arena/T026-course-height`, which showed the old three-town start). The machine runs short of RAM with many sessions open; git
+  checkouts of the 2-3 GB packs then fail (use `-c checkout.workers=1`).
 - **Next (owner's call):**
   - The owner's new grass paintings, when they arrive (prep-painted-families.mjs, then the studio).
   - P24 follow-ups: a bigger range car park or parking with the second tier (D49); labels overlapping at the shop front; the putt, chip and
