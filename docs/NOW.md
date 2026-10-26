@@ -28,7 +28,7 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |
 | T166 | #370 | `arena/T166-game-ram` | `.claude/worktrees/t166` | 5187 | The game's RAM: T157's lazy textures, CPU canvases, one shared pack and the pack cache for the game's three ground workers (~450-630 MB each), measured step by step with `scripts/perf/memory.mjs`. Agent: the ground agent (T162/T165). |
-| T167 | #371 | `arena/T160-keep-garages` then `arena/T167-removed-standins` | `.claude/worktrees/t160` | 5186 | The lot agent, in order: (1) T160 follow-up: keep the frozen preset's garages/sheds in the generated lots' base; (2) T167: removed pictures get seeded stand-ins (decrepit streets show no houses today: rundown house and derelict two-storey are removed); (3) T161 pairs, densities by state, the 50-seed exam sheet (issue to open). |
+| T161 | (agent opens it) | from origin/main | `.claude/worktrees/t160` | 5186 | P25 step 6: pairs that go together, densities by state, the 50-seed exam contact sheet. Agent: the lot agent. |
 | T154 | #330 | `arena/T154-new-art` | `.claude/worktrees/t154` | — | **Phase 1 merged (#345).** Phase 2 waits: the eight-heading contract (a building on a 45° road picks its cardinal view, `AXIS_SETS`); the new subjects' diagonal views are art work (listed in GOLF-SPRITES.md). |
 | T152 | #325 | `arena/T152-car-spacing` (d3bdbf1) | `.claude/worktrees/t152` | — | **Paused** for the art (the owner). Root cause: the range's own cars (`rangebiz.ts:803/832/723`) are placed by their own clock; fixed in rangebiz.ts only (overlaps -75-82% with the 44-bay lot, money identical). **Owner's decision needed:** at full demand the one-lane drive and the building's ramp cannot carry the cars at a car's gap (wider drive, second ramp, faster car-park speeds, or the queue limiting sales). Left: three gates, shots, PR. |
 | T112 | #199 | `arena/T112-sharp` (1872f0e) | `.claude/worktrees/t112` | — | **Paused** for T153: sharp 0.35.5 in, all packed art identical (260 images byte-identical; 16 view PNGs only re-tagged), still to do: the KTX2 check, the studio check, audit/typecheck/suite/build, the PR. Resume from #199. |
@@ -88,6 +88,13 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
    (the sharp bump). See the History sections below and `gh issue list --label arena --state open`.
 
 ### Done recently (newest first; details in each PR)
+- 2026-10-26 23:00: **#376 generated lots keep their garages and sheds** (every building of the frozen preset stays; nothing generated
+  lands on them). **T167 #377 removed pictures are never drawn**: the declined presets placed the removed rundown house (70), derelict
+  two-storey (35) and fire station (48), so decrepit streets had no houses; now the house is an allocated dwelling of its size class that
+  fits the band (seeded by the lot), another building one of its kind within 40% of its footprint, expansions and props left out; a badge in
+  the lot lab marks each stand-in; the owner's files only read. Decrepit streets now show ordinary houses: real decrepit house art is an
+  art request. Main typechecks with both, lot suites 42/42. The lead typechecks PRs in `.claude/worktrees/lead2-read` (node_modules is a
+  junction to theme-consistency's: remove it with [System.IO.Directory]::Delete before removing the worktree).
 - 2026-10-26 22:00: **T160 #374 lots generated on the fly**: a house lot whose preset is frozen (not the owner's own) keeps its house,
   drive, walk, street items and fence; its plants, props, cars and decals come from the generator (`lot-gen.ts`) with the shipped model
   `lots/lot-models/v1.json` (87 presets, 2,709 items), seeded by street key + slot + state; the save records `lotModel` (missing = v1);
