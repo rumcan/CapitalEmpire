@@ -54,7 +54,7 @@ import { townClockFor, townTimeOf } from './sim/townclock';
 import { zoneOf } from './sim/routing';
 import { lastRush, nextRush, windowOf, type Window } from './beforeafter';
 import { placeStadium, siteAt, siteWhy, type Site } from './event/site';
-import { BUSINESS, CLUBHOUSE_RANGE_COST, unlockedBy, unlockText, type BusinessId, type BusinessType, type Owned } from './business/catalogue';
+import { BUSINESS, CLUBHOUSE_RANGE_COST, knownBusinesses, unlockedBy, unlockText, type BusinessId, type BusinessType, type Owned } from './business/catalogue';
 import { snapFrontage, snapSegOf, type SnapSeg } from './ext/frontage-snap';
 import { freshStats, ownedOf, type BizDef, type BizStats } from './business/state';
 import { businessArt } from './business/art';
@@ -88,7 +88,8 @@ import { planGolfGame } from './golf/start';
 import { RANGE_CAM_ZOOM, planRangeStart } from './golf/rangestart';
 import { CLUB_REACH, clubhouseSpotWhy, plotOfFront, rangeLayout } from './golf/range';
 import { dressCourse } from './golf/dressing';
-import { FIRST_TEE, SEASON_START, monthIndexLabel, monthsLeft, seasonLabel, seasonMonth, yearOf } from './golf/calendar';
+import { FIRST_TEE, SEASON_START, monthsLeft, seasonLabel, seasonMonth, yearOf } from './golf/calendar';
+import { growReadyLabel, hintWithGrow } from './golf/growlabel';
 import { computeTournamentCloseBook, computeYearEnd, type YearEndResult } from './golf/yearend';
 import { countParkedCars } from './golf/parkingfee';
 import { parkRideNeeds } from './golf/parkride';
@@ -738,8 +739,9 @@ export class Game {
     }
     return this.growCache!.v;
   }
-  /** a hole's grow-in for the Course panel (P23 4.6): 'growing · ready Mar 1985', or '' once it is grown in */
-  holeGrowLabel(n: number): string { const r = this.holesGrowing().get(n); return r === undefined ? '' : `growing · ready ${monthIndexLabel(r)}`; }
+  /** a hole's grow-in (P23 4.6, T135): 'growing · ready Mar 1985', or '' once it is grown in. The one source of the badge's, the Holes panel's
+   *  status line's and the course hint pill's words (golf/growlabel.ts) */
+  holeGrowLabel(n: number): string { return growReadyLabel(this.holesGrowing().get(n)); }
   /** the effective game month for grow-in (the grow cards included) */
   private growMonth(): number { return this.golf ? effectiveGrowInClockMonth(this.golfMonthIndex(), this.golf.cards ?? this.traffic.round.cards) : 0; }
   /** the course grid, with both workers holding a copy of this very grid object (a new or grown grid goes to them whole first) */
@@ -957,7 +959,11 @@ export class Game {
   private courseCursor = new CourseCursor({ texture: browserCursorTexture(), why: () => this.paint.brushSkipWhy(), cost: () => this.paint.brushCellCost(), rev: () => (this.courseGrid?.rev ?? 0) * 64 + this.paint.brushHole * 2 + (this.paint.rubOut ? 1 : 0), money: () => this.money, zone: (x, y) => this.range.zoneAt(x, y) });
   private cursorView: CursorView = { ze: 1, camX: 0, camY: 0, cw: 1, ch: 1, dpr: 1 };
   /** the hint pill's words for the Course brush (T118: what a click does: the surface, the hole it joins or starts, the price a cell, and the state); '' otherwise */
-  courseHint(): string { const m = this.paint.mode; return this.tool === 'course' && this.paintOn && this.brushOpen && (m === 'brush' || m === 'draw') && !this.clubPlacing ? this.courseCursor.hint : ''; }
+  courseHint(): string {
+    const m = this.paint.mode; if (!(this.tool === 'course' && this.paintOn && this.brushOpen && (m === 'brush' || m === 'draw') && !this.clubPlacing)) return '';
+    // a growing hole's pill says so after the hole's name (P23 4.6, T135): 'Painting Fairway · Hole 1 · growing · ready Mar 1985 · $2 a cell'
+    const n = this.paint.brushHole; return hintWithGrow(this.courseCursor.hint, n, this.holeGrowLabel(n));
+  }
   /** whether the Paint tool or Holes may lay what is in hand: Holes at stage 1 is New hole only (P23 4.2, 4.3), so outside New hole its brush,
    *  hidden with Shape by hand, lays nothing and draws no footprint or disc */
   get brushOpen(): boolean { if (this.tool !== 'course' || this.paint.mode === 'plan') return true; const ui = this.toolUi(); return !ui || ui.shapeByHand; }
@@ -4127,7 +4133,8 @@ export class Game {
       if (this.golf) { if (this.golf.cards?.length && (!d.round || !d.round.cards?.length)) { if (d.round) d.round.cards = this.golf.cards.slice() as CardId[]; } else if (!this.golf.cards && d.round?.cards?.length) { this.golf.cards = d.round.cards.filter(isGolfCardId); } }
       if (this.golf?.town) { this.townPts = [this.golf.town]; this.roadNames = new RoadNames(this.names, this.townPts); }
       // a save with businesses has its list; an old one has its stadium as id 1 (or, with no stadium field either, the game's spot)
-      if (d.biz) this.setBizDefs(d.biz.map(([type, x, y, w, h], k): BizDef => ({ id: k + 1, type, x, y, w, h })));
+      // a type the catalogue does not have (a save from another branch) is dropped, so the rest of the save keeps working (T135)
+      if (d.biz) this.setBizDefs(knownBusinesses(d.biz.map(([type, x, y, w, h], k): BizDef => ({ id: k + 1, type, x, y, w, h })), 'load'));
       else { const at = d.stadium !== undefined ? d.stadium : this.gameSpot(); this.setBizDefs(at ? [{ id: 1, type: 'stadium', x: at[0], y: at[1], w: at[2], h: at[3] }] : []); }
       for (const [ax, ay, bx, by, cls, style, kind, town] of d.segs) this.edit.addLegs([{ a: { x: ax, y: ay }, b: { x: bx, y: by } }], classOf(cls), style as LineStyle, [(kind ?? 0) as SegKind], town ? true : undefined);
       if (d.speed) this.edit.setSpeedTier(Math.min(3, Math.max(0, d.speed | 0)) as 0 | 1 | 2 | 3);
@@ -4166,6 +4173,8 @@ export class Game {
     this.golf = null; this.townPts = []; this.golfProps.clear(); this.golfStructureProps.clear(); this.range.drop(); this.range.cardOpen = false;
     this.landMode = false; this.landHover = null; this.holesTool = false; this.selectedGolfMarker = null;
     this.eventTool = false; this.eventStructurePending = null; this.lastGolfMonth = -1;
+    // the last game's season card and calendar year do not carry over (T135: the new game's clock starts again in the city worker)
+    this.seasonReport = null; this.seenYear = 0; this.foundTick = 0;
     this.setBizDefs([]); this.bizHover = null; this.bizOpenSeen = null;
     // the new town's round has no cards: the mirror goes with it (a frame still in flight would otherwise apply the old cards again)
     this.cardsApplied = 0; this.setCardFields([]); this.traffic.round = new Round().view();

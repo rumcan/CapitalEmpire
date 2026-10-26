@@ -77,6 +77,8 @@ function terrainOps(m: Extract<ToSim, { t: 'terrain' }>) {
  const towns: Pt[] = [];
  for (let i = 0; i + 1 < m.towns.length; i += 2) towns.push({ x: m.towns[i]!, y: m.towns[i + 1]! });
  city.terrain(m.cls, { x: m.entry[0], y: m.entry[1] }, m.seed, towns, m.height, m.golf);
+ // the last game's skip (Skip to season end) does not run on into the new one, whose clock starts again (City.terrain)
+ skipUntil = -1; forcePost = true;
  post({ t: 'site', site: city.site });
  postTown([], true); postBudget(null);
 }
