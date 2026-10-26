@@ -81,7 +81,7 @@ const PAUSE = 256;
 function* once(f: () => void): Steps { f(); }
 /** what a bake gets for a lazy texture not made yet while its makes are deferred (Textures.deferMakes, T168): the bake goes on to learn every
  *  texture it lacks (Textures.missing), and is then thrown away and baked again once they are made */
-export const PLACEHOLDER: Cnv = canvas(1, 1);
+export const PLACEHOLDER: Cnv = typeof OffscreenCanvas === 'undefined' ? ({} as Cnv) : canvas(1, 1); // (node, the tests: no canvas, never drawn)
 function* patches(ctx: C2D, r: () => number, n: number, colors: string[], rmin: number, rmax: number): Steps {
   for (let i = 0; i < n; i++) {
     if (i % 16 === 15) yield;
