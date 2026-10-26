@@ -47,7 +47,7 @@ const LEVELS = ['near', 'mid', 'far'];
 const QUALITY = 90;
 /** the kind of family each material is (painted-families.ts PaintedKind: the studio lists a surface's fitting kinds first) */
 const KIND = { 'golden-fescue': 'grass', lake: 'water', 'pale-green-bushes': 'grass', 'pine-straw': 'cut', 'sand-ripples': 'sand', 'sand-raked': 'sand', desert: 'sand', dirt: 'cut', 'sand-long-grass': 'sand', 'long-grass': 'grass', swamp: 'water', fairway: 'grass', 'putting-green': 'grass', 'first-cut': 'grass' };
-const NAME = { 'golden-fescue': 'Golden fescue', lake: 'Lake water', 'sand-ripples': 'Sand ripples (tile set)', fairway: 'Fairway', 'putting-green': 'Putting green', 'long-grass': 'Long grass' };
+const NAME = { 'golden-fescue': 'Golden fescue', lake: 'Lake water', 'sand-ripples': 'Sand ripples', fairway: 'Fairway', 'putting-green': 'Putting green', 'long-grass': 'Long grass' };
 /** the families that ship provisionally until their handoff (T153, the lead's decision on #327): the course's fairway, green and rough */
 const PROVISIONAL = ['fairway', 'putting-green', 'long-grass'];
 const TILE_IDS = ['tile-01', 'tile-02', 'tile-03', 'tile-04'];

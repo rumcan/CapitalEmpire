@@ -296,7 +296,7 @@
   {
    "id": "sand-ripples-tiles",
    "materialId": "painted:sand-ripples",
-   "name": "Sand ripples (tile set)",
+   "name": "Sand ripples",
    "kind": "sand",
    "revision": "221393d5b1b1",
    "selection": {
