@@ -349,6 +349,8 @@ export class Build {
     return false;
   }
   /** the composition: candidates in order, the first that fits wins; plants stop at the cap */
+  /** a lot the owner laid out (a whole or farm preset): every prop is drawn where it stands, overlapping another or not (only the lot line holds) */
+  keepAll = false;
   done(): Composition {
     const props: Placed[] = [], acc: Item[] = []; let ups = 0;
     // a preset prop left out is told to the drops sink, with why (the dev editor shows them: nothing in a preset goes unseen)
@@ -358,11 +360,11 @@ export class Build {
       if (!this.inside(it)) { drop(it, 'past the lot line'); continue; }
       if (!it.boundary && !it.paved && !it.from && this.onPatch(it)) continue;
       // two cars never share ground (a car is kept only if it shares none with an earlier car)
-      const car = it.car ? acc.find(a => a.car && share(a.fp, it.fp) > 0) : undefined;
+      const car = it.car && !this.keepAll ? acc.find(a => a.car && share(a.fp, it.fp) > 0) : undefined;
       if (car) { drop(it, `overlaps the car ${car.id}`); continue; }
       if (!it.fence && !it.wheel) {
         if (it.plant && !it.from && ups >= this.cap) continue;
-        const over = acc.find(a => !a.fence && !a.wheel && share(a.fp, it.fp) > OVERLAP);
+        const over = this.keepAll ? undefined : acc.find(a => !a.fence && !a.wheel && share(a.fp, it.fp) > OVERLAP);
         if (over) { drop(it, `overlaps ${over.id} ${Math.round(100 * share(over.fp, it.fp))}%`); continue; }
         ups++;
       }

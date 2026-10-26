@@ -11,12 +11,16 @@
 
 ## Now (the current work, newest first)
 - **House sizes (the owner: "you have houses in the game that are at max size too small. i need those fixed ... the person wont even fit
-  through the door at max size of the house"; "waiting on your house size fixes before we can start making the presets").** Cause found:
-  the cap is the atlas picture's pixels at its last pack (`src/game/sizes.ts`, `prep-sprites.mjs` packs at `0.6 * max(1, ownerScale * 1.05)`),
-  not the art: the TrickOrTreat sources hold about x3.3. Bug: `scripts/assets/review/size-report.ts` (~line 63) takes the atlas limit as
-  the picture's own, so the studio refuses bigger sizes. Fix in progress (a coder): `native` from the source picture's real width, the
-  studio allowing sizes up to it with the "once packed again" hint. Then: the owner sizes the houses in the studio Library (person cursor),
-  then **Rebuild game sprites** packs them sharp at those sizes.
+  through the door at max size of the house").** Fixed in the studio: `scripts/assets/review/size-report.ts` now takes `native` from the
+  source picture's real width (TrickOrTreat library, the export's hd, Capital art), so the Library allows a sprite up to its source pixels
+  and shows "once packed again (Rebuild game sprites)" above what the atlas holds; Rebuild then packs it sharp. Caveat: 45 old houses
+  (e.g. House 1 north) are never drawn as themselves but as a four-view stand-in picked by position (`newart.ts` SWAP); their ceiling is
+  the stand-in's own pixels (about x2), and Rebuild raises a stand-in only through the stand-in's own size. The lab's palette leaves those
+  old houses out (`drawnAsStandIn`). **Next:** the owner sizes the self-drawn houses with the person cursor and clicks Rebuild; if a
+  stand-in house must be bigger than about x2, prep-sprites should pack each stand-in for the largest size any house drawn by it needs
+  (not done).
+- **Authored lots keep every prop:** a whole or farm preset draws every prop where the owner put it, overlapping or not (`Build.keepAll`):
+  before, a house moved onto a tree vanished (left out for overlap).
 - **Several helpers on the network (the owner: "setup the studio to run on the network and anyone with the IP can help create preset
   lots").** Done and live (2026-10-26): studio http://192.168.0.2:5242 and game http://192.168.0.2:5241 (both listen on 0.0.0.0; the
   studio frames the game at the address the visitor used). Saves merge per preset on the server (`POST /__dev/presets`,
@@ -28,8 +32,8 @@
   (fences, bins, decals all editable); decals select with a click.
 
 ## Exact next step
-1. When `size-report.ts` is fixed: restart the studio, open Library, check House 1 north (`variation:world-house_1-north-*`) now allows
-   about x3.3; tell the owner to size the houses, then run Rebuild (the studio's button; `STUDIO_DEV_GAME=1`, so no npm build).
+1. The owner sizes the houses in the studio Library, then Rebuild game sprites (the studio's button; `STUDIO_DEV_GAME=1`, so no npm
+   build). Check a rebuilt house in the lab at its new size with the person cursor.
 2. (Done: merge saves, network.) Optionally make `/__dev/save` refuse lot-presets.json so only merges write it.
 
 ## How to check
@@ -43,7 +47,8 @@ Read this to continue the lot lab work in a fresh chat. The design and the rules
 ## Where the work is
 - Worktree `E:\Repos\CapitalEmpire\.claude\worktrees\lot-presets`, branch `lot-presets`, from origin/main `9aa357b` (after #258).
   Its own `node_modules` (copied from `worktrees/theme-consistency`, without `.vite`). Never run Vite from another checkout's node_modules.
-- Commits are local only. **Not pushed, no PR yet**: ask the owner before pushing or opening the PR.
+- The branch is on origin (pushed at 51643a7 by the handover session with the owner's approval); later commits push fast-forward.
+  **No PR yet**: ask the owner before opening it.
 - Git on this machine needs `GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=safe.directory GIT_CONFIG_VALUE_0=*` in the environment.
 - Commit messages end with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
 

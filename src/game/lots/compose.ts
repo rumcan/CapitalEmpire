@@ -325,7 +325,7 @@ export function compose(lot: LotGeom, st: ComposeState, drops?: PresetDrop[]): C
   // a preset that draws alone (a farm's, and a whole preset's: the lot lab's forced one, or the approved one picked for the lot): no street items, fences,
   // leaf marks or decline touches; its decals are the lot's ground marks
   const use = presetUse(st), lp = st.preset !== undefined || use ? lotPreset(lot, st) : null;
-  if (lp && (lp.preset.use === 'farm' || lp.preset.whole)) { fromPreset(B, lot, st, lp); decalMarks(B, lp.frame, lp.fit.decals); return B.done(); }
+  if (lp && (lp.preset.use === 'farm' || lp.preset.whole)) { B.keepAll = true; fromPreset(B, lot, st, lp); decalMarks(B, lp.frame, lp.fit.decals); return B.done(); }
   const angled = isAngled(lot);
   // every lot but a house's and an industrial yard's draws the boundary fence on its own side lines (a shared line gets one fence); the drive's
   // mouth is left open

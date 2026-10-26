@@ -89,8 +89,9 @@ function sizeLine(s){
   if(s.sharp==null&&!s.drawn)return null;
   const stand=s.drawn&&s.drawn.id!==s.id&&s.drawn.id!==s.sizeId?`drawn as ${s.drawn.name} (its four views are not in the game yet) · `:'';
   const past=s.sharp!=null&&s.scale>s.sharp*1.001;
-  const more=s.native!=null&&s.sharp!=null&&s.native>s.sharp*1.01?` (×${s.native.toFixed(2)} once its art is packed again)`:'';
-  return el('div',{className:'size'+(past?' warn':'')},stand,past?`pixelates above ×${s.sharp.toFixed(2)}: drawn at its pixels, smaller than asked`:`sharp up to ×${(s.sharp??0).toFixed(2)}${more}`,s.sizeId&&s.sizeId!==s.id?el('b',{textContent:` · the size of ${s.sizeId}`}):'');
+  // drawn above its sharp size: its source picture allows more (native), which a Rebuild (Rebuild game sprites) packs in
+  const more=past&&s.native!=null&&s.native>s.sharp*1.01?` · ×${s.native.toFixed(2)} once packed again (Rebuild game sprites)`:'';
+  return el('div',{className:'size'+(past?' warn':'')},stand,past?`pixelates above ×${s.sharp.toFixed(2)}: drawn at its pixels, smaller than asked${more}`:`sharp up to ×${(s.sharp??0).toFixed(2)}`,s.sizeId&&s.sizeId!==s.id?el('b',{textContent:` · the size of ${s.sizeId}`}):'');
 }
 // every sprite is shown, in batches of 200: the sentinel at the end of the grid pulls in the next batch when it scrolls into view
 const more=el('div',{className:'more',style:'flex-basis:100%;height:1px'});
