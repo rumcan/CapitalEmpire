@@ -30,6 +30,8 @@ export const HEAL_METHOD = 'wrap-bridge-v1';
 export const HEAL_MATCH = 'wrap-bridge-match-v1';
 /** the shared-strip heal of a set of tiles (T165) */
 export const HEAL_SHARED = 'shared-strip-match-v1';
+/** no heal (T170): a finished set of tiles that already meet one another, shipped as the art session made it (its numbers still recorded) */
+export const HEAL_AS_MADE = 'finished-set-as-made';
 const smooth = t => (t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t));
 
 /** the bridge's weight at a seam-zone position p (-band .. band - 1; p < 0 the far edge's band, p >= 0 the near edge's): 0 at a band's inner
