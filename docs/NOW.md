@@ -5,6 +5,9 @@ Update this file **before** each edit and after each sub-step. The section below
 
 ## START HERE (kept current by the lead; last updated 2026-10-26 morning)
 
+**Paste-ready start prompts for every role are in `docs/START-PROMPTS.md`:** the lead, a coding ticket, and the other sessions in this
+repo. The weekly usage cap is close (2026-10-26), so any chat may stop at any moment.
+
 **If you are a new AI, maybe on another Claude account, after a switch-over or a crash:**
 1. Read `CLAUDE.md`, this section, then `docs/AGENT-BRIEF.md`. That file holds the agent rules, the brief template, the progress
    protocol, the ports and the restart checklist.
@@ -21,10 +24,12 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 ### In flight
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |
-| T140 Town roads' kerb gap at chunk borders | #270 | `arena/T140-road-kerb` | an agent worktree under `.claude/worktrees` | 5189 | agent working (the same fix T139 made for cart paths, `cart-bevel.ts`) |
-| T141 Audit every prop's shadow (blob and box) for the top-right sun | #271 | `arena/T141-prop-shadows` | an agent worktree under `.claude/worktrees` | 5186 | agent working: audit sheets, `docs/art/SHADOW-AUDIT.md`, rule fixes, an override table |
+| T140 Town roads' kerb gap at chunk borders | #270 | `arena/T140-road-kerb` | an agent worktree under `.claude/worktrees` | 5189 | agent working. Root cause confirmed (renderer step 4 slid `kerbMask`, empty at a chunk's bottom rows); fix in progress in a new `kerb-face.ts` on `cart-bevel.ts drawPaths` |
+| T141 Audit every prop's shadow (blob and box) for the top-right sun | #271 | `arena/T141-prop-shadows` | an agent worktree under `.claude/worktrees` | 5186 | agent working. Audit page `?shadows=audit` and before-sheets for 9 categories (1,102 entries); findings in `docs/art/SHADOW-AUDIT.md`; next: rule fixes and an override table |
 
-Find a worktree with `git worktree list | grep T14`. Each agent pushes its branch and comments on its issue after every sub-step.
+Find a worktree with `git worktree list | grep T14`. Each agent pushes its branch and comments on its issue after every sub-step,
+ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D spectators) keep their own handover docs; see
+`docs/START-PROMPTS.md`.
 
 ### Queue (in order)
 1. **The full regression.** The 2026-10-26 nightly never ran: it waited for a permission approval, and then the app quit. About 25 PRs
