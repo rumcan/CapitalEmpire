@@ -54,6 +54,8 @@ export interface SaveV5 {
   /** Optional managed turf grid; older saves retain their existing base/lawn/paint choices. */
   grass?: GrassSave;
   version: number; map: number;
+  /** the shipped lot model the town's house lots compose with (T160, lots/lot-models; optional, no version bump; missing = v1) */
+  lotModel?: number;
   /** the map seed: generateTerrain(seed) rebuilds the valley */
   seed: number;
   /** ax, ay, bx, by, class, line style, structure kind (0 ground, 1 bridge, 2 tunnel; missing = ground), and 1 when the towns' (Seg.town; optional 8th, missing = the player's) */

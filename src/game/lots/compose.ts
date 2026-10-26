@@ -6,6 +6,10 @@
 // greens on angled lots, the building sites, the boundary fences and the house lots' fence planting, the industrial chain-link, the street items,
 // the leaf decals, and the decline touches (a third of the plants gone, junk; at decline 1 half the cars, at 3 none). A whole preset (a lab preset that
 // holds all of them) draws alone, its decals included, as a farm does.
+// T160 (P25 #348 step 5): a house lot whose preset is a frozen one (not the owner's own: curated, approved or whole stay exact) keeps its base
+// from that preset (the house, its drive and walk), its boundary fence and street items, and gets its plants, props, cars and decals from the
+// learned generator (lot-gen.ts generateLayout), seeded by the lot's place on its street (a lot never changes on a reload, neighbours differ),
+// with a shipped model (lot-models/: a new town the latest, a saved town its own version, lotModel). ?oldlots composes as before.
 // The candidate list and its checks are compose-core.ts's. Pure TS, no DOM.
 import type { LotPatch } from '../ground-protocol';
 import { mulberry } from '../iso';
@@ -20,6 +24,11 @@ import { approvedFor, bucketOf, fitPreset, parsePresets, pickPreset, presetsFor,
 import { footprintOf, ownerScaleOf, turned } from './preset-art';
 import { frameOf, listToWorld, quarterOfRoad, roadOf, toWorld, type PresetFrame } from './preset-frame';
 import PRESET_JSON from './lot-presets.json';
+import { generateLayout } from './lot-gen';
+import { kindPools } from './item-kinds';
+import { modelFrom, type Box, type HouseClass, type Model, type SectorLot } from './learn';
+import { CLASS_NAMES, frameHalf, sizeClassOf } from './house-class';
+import { LATEST, LOT_MODELS } from './lot-models';
 export { isCarPark, type Composition, type ComposeState, type LotGeom, type Placed, type PresetDrop } from './compose-core';
 
 /** the fence grid of a house lot, drawn as its own layer (procedural: the presets hold no fences): wooden privacy panels on the
@@ -282,6 +291,54 @@ function fromPreset(B: Build, lot: LotGeom, st: ComposeState, p: { preset: LotPr
  *  or whole): its house keeps its yards at today's sizes (houseYards) */
 const frozenHouse = (p: LotPreset) => p.use === 'res' && !p.curated && !p.approved && !p.whole;
 
+// ---------- T160: the house lots generated on the fly
+/** whether the house lots are generated (on; ?oldlots, or setGeneratedLots(false), composes them from their frozen presets' own items) */
+let GENERATED = !(typeof location !== 'undefined' && /[?&]oldlots(&|=|$)/.test(location.search ?? ''));
+export function setGeneratedLots(on: boolean): void { GENERATED = on; }
+export const generatedLots = () => GENERATED;
+/** the shipped model the lots compose with (a new town: LATEST; a loaded town: its save's lotModel, v1 when it has none), and the models read */
+let MODEL_V = LATEST;
+const MODELS = new Map<number, Model>();
+/** the model version the town composes with: a version not shipped falls back to the nearest one below it (else v1) */
+export function setLotModel(v: number): void { MODEL_V = LOT_MODELS[v] ? v : Math.max(1, ...Object.keys(LOT_MODELS).map(Number).filter(n => n < v)); }
+export const lotModelVersion = () => MODEL_V;
+/** a model version known from now on without a reload (the tests; a dev session after shipping one): its data (lots/learn.ts ModelData) */
+export function addLotModel(v: number, data: unknown): void { (LOT_MODELS as Record<number, unknown>)[v] = data; MODELS.delete(v); }
+function shippedModel(): Model { let m = MODELS.get(MODEL_V); if (!m) MODELS.set(MODEL_V, m = modelFrom(LOT_MODELS[MODEL_V] ?? LOT_MODELS[1])); return m; }
+/** 32-bit FNV-1a of a string */
+const fnv = (s: string) => { let h = 0x811c9dc5; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193); } return h >>> 0; };
+/** a house lot's generator seed: its place on its street (streetKey, streetSlot: as the preset pick reads it) and its look state, so a lot never
+ *  changes on a reload, its neighbours differ, and an upgrade lays it anew */
+export const lotSeed = (lot: LotGeom, state: PresetState) => fnv(`${streetKey(lot)}#${streetSlot(lot)}#${state}`);
+/** a fitted house preset's base (what the wizard keeps of a lot: lot-wizard.ts makeLot): its patches and its house (the widest building); the
+ *  index of the house in the fit (-1: none) */
+function houseBase(p: { preset: LotPreset; fit: Fitted; frame: PresetFrame }): { base: { preset: LotPreset; fit: Fitted; frame: PresetFrame }; house: number } {
+  const half = frameHalf(p.frame);
+  let k = -1, area = 0;
+  p.fit.props.forEach((q, i) => { const it = BY.get(q.id); if (!it || !isBuilding(it)) return; const h = half(q), a = h.ha * h.hb; if (a > area) { area = a; k = i; } });
+  const fit: Fitted = { ...p.fit, props: k >= 0 ? [p.fit.props[k]!] : [], from: k >= 0 ? [p.fit.from[k]!] : [], decals: [] };
+  return { base: { ...p, fit }, house: k };
+}
+/** the generated items of a house lot (its base drawn): lot-gen.ts generateLayout in the preset's frame, with the shipped model, seeded by the
+ *  lot, each item kept with the model's keep rate where it stands (the learned taste thins the generous set, as the owner does in the wizard);
+ *  nothing on the house, the walk takes nothing and the drive only a car; the cars thinned by decline as a preset's are. Placed after the base,
+ *  the street items and the fence, so those win any overlap */
+function generatedItems(B: Build, lot: LotGeom, st: ComposeState, p: { preset: LotPreset; fit: Fitted; frame: PresetFrame }, state: PresetState) {
+  const f = p.frame, half = frameHalf(f), hq = p.fit.props[0], hh = hq ? half(hq) : null;
+  const house: Box | null = hq && hh ? [hq.x - hh.ha, hq.y - hh.hb, hq.x + hh.ha, hq.y + hh.hb] : null;
+  const box = (pts: readonly number[]): Box => { let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity; for (let i = 0; i + 1 < pts.length; i += 2) { x0 = Math.min(x0, pts[i]!); x1 = Math.max(x1, pts[i]!); y0 = Math.min(y0, pts[i + 1]!); y1 = Math.max(y1, pts[i + 1]!); } return [x0, y0, x1, y1]; };
+  const sl: SectorLot = { w: lot.w, d: lot.d, house, drives: p.fit.patches.filter(a => a.kind === 'drive').map(a => a.pts) };
+  const avoid = p.fit.patches.filter(a => a.kind === 'drive' || a.kind === 'walk').map(a => ({ box: box(a.pts), ...(a.kind === 'drive' ? { but: ['car' as const] } : {}) }));
+  const k = hq ? sizeClassOf(hq.id) : null, cls: HouseClass = hq ? CLASS_NAMES[k ?? 0] : 'none';
+  const items = generateLayout({ lot: sl, cls, model: shippedModel(), taken: house ? [house] : [], pools: kindPools(), half, seed: lotSeed(lot, state), avoid, keep: true });
+  for (const it of items) {
+    if (it.kind === 'decal') { decalMarks(B, f, [{ id: it.id, x: it.x, y: it.y, scale: 1, alpha: 1 }]); continue; }
+    if (it.kind === 'car' && (B.noCars || (st.decline === 1 && B.r() >= CAR_KEEP_D1))) continue;
+    const t = turned(it.id, f.q), s = ownerScaleOf(it.id);
+    B.atW({ id: t.id, s, flip: t.flip, h: footprintOf(t.id, s, t.flip) }, toWorld(f, it.x, it.y), { plant: it.kind === 'tree' || it.kind === 'bush' || it.kind === 'flowerbed', ...(it.kind === 'car' ? { paved: true } : {}) });
+  }
+}
+
 /** a fitted house preset's house and its band (preset frame: x along the frontage, 0..f.w): the widest building (hw, hd its half extents along x
  *  and y as the lot draws it: turned to the lot's facing, at its owner size), and the band the old layouts lay a house in (legacy-layout.ts res):
  *  from DRIVE_GAP past the drive, or from a building between the house and the drive in the house's depth (a garage), to SIDE_YARD short of the
@@ -400,6 +457,14 @@ export function compose(lot: LotGeom, st: ComposeState, drops?: PresetDrop[]): C
   else if (angled && !p) { green(B); edge(); }
   else if (st.level === LV.BUILDING) { site(B); edge(); }
   else if (!p || !use) { vacant(B); edge(); }
+  else if (GENERATED && use === 'res' && frozenHouse(p.preset)) {
+    // T160: the base of the frozen preset (its house, drive and walk), its street items and boundary fence; the yard from the generator
+    const state = stateOf(st.level, st.decline)!, base = houseBase(p).base, d = fromPreset(B, lot, st, base);
+    streetItems(B, use, d);
+    boundaryFence(B, lot);
+    generatedItems(B, lot, st, base, state);
+    B.cap = Infinity;
+  }
   else {
     const d = fromPreset(B, lot, st, p);
     streetItems(B, use, d);
