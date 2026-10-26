@@ -11,7 +11,8 @@ import type { LotPreset, PresetState, PresetUse, Road } from '../lots/presets';
 import type { PresetFrame } from '../lots/preset-frame';
 import { toFrame } from '../lots/preset-frame';
 import { CLASSES, ITEM_KINDS, SECTORS, SECTOR_NAMES, countOf, keepRate, learningStats, sampleItem, sectorArea, sectorOf, sectorRects, type Box, type HouseClass, type ItemKind, type Model, type Sample, type SectorLot } from '../lots/learn';
-import { addSample, addSamples, learnedModel, learnedSamples, onLearning } from './learn-store';
+import { addSample, addSamples, learnedModel, learnedSamples, learnedTaste, onLearning } from './learn-store';
+import { pairTable, stateKinds, tasteData, type Taste } from '../lots/taste';
 import { presetSamples, teaches } from './learn-presets';
 import { lotPresets } from '../lots/compose';
 import { LATEST } from '../lots/lot-models';
@@ -51,8 +52,8 @@ interface Item extends LaidItem { deleted: boolean }
  *  sector lot, its house, size class and footprint, and the generator's seed */
 export interface WizLot { base: LotPreset; items: Item[]; undo: number[]; lot: SectorLot; house: string | null; cls: HouseClass; hw: number; hd: number; seed: number }
 /** a wizard lot from a lot composed as the game composes it (raw): kept to its house, fences and street items, the offered items laid by the model
- *  (lots/lot-gen.ts, pure and seeded) round them */
-export function makeLot(raw: LotPreset, f: PresetFrame, model: Model, seed = Math.floor(Math.random() * 2147483647)): WizLot {
+ *  (lots/lot-gen.ts, pure and seeded) round them; with a taste (T161), its pairs and the lot's state's density too, so the owner judges them */
+export function makeLot(raw: LotPreset, f: PresetFrame, model: Model, seed = Math.floor(Math.random() * 2147483647), taste?: Taste): WizLot {
   const half = frameHalf(f), hi = mainBuilding(raw, q => isHouseLike(q.id), half), hq = hi >= 0 ? raw.props[hi]! : null, hh = hq ? half(hq) : null;
   // the base: the house, the fences and the street items (the verge); the plants, props, cars and decals are the wizard's to offer
   const base: LotPreset = { ...raw, props: raw.props.filter((q, i) => i === hi || isFence(q.id) || q.y < 0), decals: [] };
@@ -60,7 +61,8 @@ export function makeLot(raw: LotPreset, f: PresetFrame, model: Model, seed = Mat
   const lot: SectorLot = { w: base.w, d: base.d, house, drives: base.patches.filter(p => p.kind === 'drive').map(p => p.pts) };
   const taken: Box[] = base.props.map(q => { const h = half(q); return [q.x - h.ha, q.y - h.hb, q.x + h.ha, q.y + h.hb] as Box; });
   const k = hq ? sizeClassOf(hq.id) : null, cls: HouseClass = hq ? CLASS_NAMES[k ?? 0] : 'none';
-  const offers = generateLayout({ lot, cls, model, taken, pools: kindPools(), half, seed });
+  const pairs = taste ? pairTable(taste, kindPools()) : undefined, kinds = taste ? stateKinds(taste, raw.state) : undefined;
+  const offers = generateLayout({ lot, cls, model, taken, pools: kindPools(), half, seed, ...(pairs ? { pairs } : {}), ...(kinds ? { kinds } : {}) });
   return { base, items: offers.map(o => ({ ...o, deleted: false })), undo: [], lot, house: hq?.id ?? null, cls, hw: hh ? 2 * hh.ha : 0, hd: hh ? 2 * hh.hb : 0, seed };
 }
 /** a wizard lot as a preset (id): its base and the offered items not deleted */
@@ -107,7 +109,7 @@ export function makeWizard(host: WizardHost) {
     const raw = host.base(!same), f = host.frame();
     if (!raw || !f) { host.say('the wizard has no lot to compose here (no preset of this type and state near this size)'); return; }
     // the generator is pure and seeded (lots/lot-gen.ts): the sample keeps the seed, so the same lot can be made again
-    cur = makeLot(raw, f, learnedModel());
+    cur = makeLot(raw, f, learnedModel(), undefined, learnedTaste());
     host.show(build());
     heatKey = '';
     // timed to the frame that shows it
@@ -271,7 +273,7 @@ export function makeWizard(host: WizardHost) {
   /** ships the model learnt so far (POST /__dev/lot-model): the dev server writes it as the next version and the index */
   function ship(): void {
     const st = learningStats(learnedSamples()), from = `${st.total} samples (${st.bySrc.wizard} wizard, ${st.bySrc.preset} from presets, ${st.bySrc.gallery} gallery), shipped ${new Date().toISOString().slice(0, 10)}`;
-    void fetch('/__dev/lot-model', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data: modelData(learnedModel()), from }) })
+    void fetch('/__dev/lot-model', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data: { ...modelData(learnedModel()), ...tasteData(learnedTaste()) }, from }) })
       .then(async r => { if (!r.ok) throw new Error(`${r.status} ${await r.text()}`); const v = ((await r.json()) as { version: number }).version; shipped = v; host.say(`shipped lot model v${v}: new towns compose their house lots with it (after a reload)`); host.redraw(); })
       .catch(e => host.say(`the model was not shipped: ${String(e)}`));
   }
