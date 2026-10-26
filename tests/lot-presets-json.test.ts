@@ -4,6 +4,10 @@ import assert from 'node:assert/strict';
 import PRESET_JSON from '../src/game/lots/lot-presets.json';
 import { bucketOf, fitPreset, formatPresets, parsePresets, presetsFor, type PresetState, type PresetUse } from '../src/game/lots/presets';
 import { LIBRARY } from '../src/game/library';
+import REMOVED_JSON from '../scripts/assets/removed.json';
+
+/** the pictures the owner removed in the studio: a preset may still place one (the file is the owner's), compose draws a stand-in (T167) */
+const REMOVED = REMOVED_JSON as Record<string, { kind?: string }>;
 
 const { presets, invalid, meta } = parsePresets(PRESET_JSON);
 const USES: PresetUse[] = ['res', 'com', 'park', 'tour', 'ind', 'civic'], STATES: PresetState[] = ['built', 'upgraded', 'declined'];
@@ -23,9 +27,9 @@ describe('the lot presets file (T063)', () => {
     }
   });
 
-  it('3. every prop id is a library id the game has', () => {
+  it('3. every prop id is a library id the game has, or a picture the owner removed (compose draws a stand-in for it: T167)', () => {
     const ids = new Set(LIBRARY.map(i => i.id)), unknown = new Set<string>();
-    for (const p of presets) for (const q of p.props) if (!ids.has(q.id)) unknown.add(q.id);
+    for (const p of presets) for (const q of p.props) if (!ids.has(q.id) && !(q.id in REMOVED)) unknown.add(q.id);
     assert.deepEqual([...unknown], []);
   });
 
@@ -39,7 +43,8 @@ describe('the lot presets file (T063)', () => {
       assert.ok(p.state === 'built' || p.state === 'declined', p.id);
       assert.deepEqual(bucketOf(p.w, p.d), bucketOf(10, 15), p.id);
       assert.ok(p.props.length >= 6, `${p.id}: ${p.props.length} props`);
-      assert.ok(p.props.some(q => /houses/i.test(LIBRARY.find(i => i.id === q.id)?.cat ?? '') || /house/.test(q.id)), `${p.id}: no house`);
+      // a house the owner removed counts: compose draws a stand-in house for it (T167)
+      assert.ok(p.props.some(q => /houses/i.test(LIBRARY.find(i => i.id === q.id)?.cat ?? '') || /house/.test(q.id) || ['house', 'building'].includes(REMOVED[q.id]?.kind ?? '')), `${p.id}: no house`);
       assert.ok(p.patches.some(a => a.kind === 'drive'), `${p.id}: no drive`);
     }
     assert.equal(presets.filter(p => p.id.startsWith('curated-')).length, IDS.length, 'a curated-* preset the list does not know');
