@@ -124,6 +124,8 @@ const WALL_STEPS = 24, WALL_LIGHT_SPAN = 0.1;
 const WALL_LINE_FACING = 0.2;
 /** the shade colour every course shadow multiplies in (cool, so shade reads as sky light, T110) and the warm tint of the textured shines */
 const SHADE_TINT = 'rgb(112,120,152)', SHINE_TINT = 'rgb(255,232,176)', RIM_TINT = 'rgb(236,234,214)';
+/** a painted area's sun-side light (areaLight, T136) works in rows this many cache px tall, each over the lit band's span in it */
+const LIGHT_ROW = 16;
 /** a lit top edge (courseRims): its gap inside the edge, the width of its light and its soft ramp in, tiles (0.2 m, 0.44 m, 0.12 m) */
 const RIM_GAP = 0.1, RIM_W = 0.22, RIM_RAMP = 0.06;
 /** the wall art's shade per band in full shade (multiplied over the art: 1 is the art as painted), the top band being painted */
@@ -303,9 +305,19 @@ export class GroundPainter {
     return [...out];
   }
   private buffer(name: string, W: number, H: number) {
+    const c = this.bufferKeep(name, W, H); ctx2d(c).clearRect(0, 0, W, H); return c;
+  }
+  /** a named scratch buffer at least W x H (it only grows: no reallocation for each smaller box), its drawing state reset, its pixels kept */
+  private bufferAtLeast(name: string, W: number, H: number) {
+    const c = this.scratch.get(name);
+    return this.bufferKeep(name, Math.max(W, c?.width ?? 0), Math.max(H, c?.height ?? 0));
+  }
+  /** a named scratch buffer W x H with its drawing state reset but its pixels kept (a caller that uses only a box of it clears or overwrites
+   *  that box itself, rather than the whole chunk-sized canvas) */
+  private bufferKeep(name: string, W: number, H: number) {
     let c = this.scratch.get(name); if (!c) { c = canvas(W, H); this.scratch.set(name, c); }
     if (c.width !== W || c.height !== H) { c.width = W; c.height = H; }
-    const g = ctx2d(c); g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1; g.clearRect(0, 0, W, H); return c;
+    const g = ctx2d(c); g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1; return c;
   }
   /** the tile box a world-px rectangle covers (plus a margin) */
   static tileBox(X0: number, Y0: number, X1: number, Y1: number, pad = 1): BBox {
@@ -1790,19 +1802,39 @@ export class GroundPainter {
     g.restore();
     this.shine(ctx, box, RIM_TINT, 0.8, m => { m.setTransform(1, 0, 0, 1, 0, 0); m.drawImage(B, box[0], box[1], box[2], box[3], box[0], box[1], box[2], box[3]); });
   }
-  /** a painted area's light on its sun side (T136, paint-edges areaShadeImages; the owner's rule T110): its low-resolution mask (img, res px a
-   *  tile from tile (x0, y0)) stretched and clipped to the area, the gap inside its edge (e tiles in: paint-edges areaLightEdge) cut at full
-   *  resolution (none within AREA_SHADE.gap of it, half over the ramp after it: paint-edges areaLightGap), then laid on g as a shine textured
-   *  by the area's own colours, over the cache px of the tile box lb only */
+  /** a painted area's light on its sun side (T136, paint-edges areaShadeImages; the owner's rule T110): a shine textured by the area's own
+   *  colours (each px gains its own colour squared times RIM_TINT, through the mask, so its mid-tones and highlights brighten and its dark gaps
+   *  stay dark), its mask the low-resolution light image (res px a tile from tile (x0, y0)) stretched, with the gap inside the edge (e tiles
+   *  in: paint-edges areaLightEdge) cut at full resolution (none within AREA_SHADE.gap of it, half over the ramp after it: areaLightGap). It
+   *  works in a buffer the size of the light's box (the tile box lb) and only in the rows of LIGHT_ROW cache px the lit band crosses, each over
+   *  the band's span in it, so its cost follows the band, not the chunk (T136's bake cost) */
   private areaLight(g: C2D, img: EdgeImage, lb: readonly number[], path: Path2D, x0: number, y0: number, res: number, L: number, M: DOMMatrix, e: number) {
     const cb = this.cacheBox(M, lb[0]!, lb[1]!, lb[2]!, lb[3]!, g); if (!cb) return;
-    const B = this.buffer('areaLight', g.canvas.width, g.canvas.height), m = ctx2d(B), px = 1 / (TILE_PX * L);
+    const [bx, by, bw, bh] = cb;
+    // the rows: each lit image px (its centre on the canvas, grown by its bilinear footprint) widens the span of the rows it reaches
+    const fx = (Math.abs(M.a) + Math.abs(M.c)) / res, fy = (Math.abs(M.b) + Math.abs(M.d)) / res, rows = new Map<number, [number, number]>();
+    for (let v = 0; v < img.H; v++) for (let u = 0; u < img.W; u++) {
+      if (!img.data[4 * (v * img.W + u) + 3]) continue;
+      const tx = x0 + (u + 0.5) / res, ty = y0 + (v + 0.5) / res, X = M.a * tx + M.c * ty + M.e, Y = M.b * tx + M.d * ty + M.f;
+      for (let r = Math.floor((Y - fy) / LIGHT_ROW); r <= Math.floor((Y + fy) / LIGHT_ROW); r++) { const sp = rows.get(r); if (sp) { sp[0] = Math.min(sp[0], X - fx); sp[1] = Math.max(sp[1], X + fx); } else rows.set(r, [X - fx, X + fx]); }
+    }
+    const strips = new Path2D(); let any = false;
+    for (const [r, [a, b]] of rows) {
+      const sx0 = Math.max(bx, Math.floor(a) - 1), sx1 = Math.min(bx + bw, Math.ceil(b) + 1), sy0 = Math.max(by, r * LIGHT_ROW), sy1 = Math.min(by + bh, (r + 1) * LIGHT_ROW);
+      if (sx1 > sx0 && sy1 > sy0) { strips.rect(sx0, sy0, sx1 - sx0, sy1 - sy0); any = true; }
+    }
+    if (!any) return;
     const s = this.buffer('small', img.W, img.H); ctx2d(s).putImageData(new ImageData(img.data as Uint8ClampedArray<ArrayBuffer>, img.W, img.H), 0, 0);
-    m.save(); m.setTransform(M); m.clip(path); m.imageSmoothingEnabled = true; m.drawImage(s, x0, y0, img.W / res, img.H / res);
-    m.globalCompositeOperation = 'destination-out'; m.lineJoin = 'round';
-    for (const [w, a] of [[e + AREA_SHADE.gap + AREA_SHADE.ramp, 0.5], [e + AREA_SHADE.gap, 1]] as const) { m.strokeStyle = `rgba(0,0,0,${a})`; m.lineWidth = Math.max(px, 2 * w); m.stroke(path); }
-    m.restore();
-    this.shine(g, cb, RIM_TINT, 1, q => { q.setTransform(1, 0, 0, 1, 0, 0); q.drawImage(B, cb[0], cb[1], cb[2], cb[3], cb[0], cb[1], cb[2], cb[3]); });
+    // the light, in canvas px shifted by the box's corner: the area's colours squared, times the tint, through the mask, the gap cut out
+    const A = this.bufferAtLeast('areaLight', bw, bh), a = ctx2d(A), T = new DOMMatrix([1, 0, 0, 1, -bx, -by]), px = 1 / (TILE_PX * L);
+    a.save(); a.setTransform(T); a.clip(strips);
+    a.globalCompositeOperation = 'copy'; a.drawImage(g.canvas as CanvasImageSource, bx, by, bw, bh, bx, by, bw, bh);
+    a.globalCompositeOperation = 'multiply'; a.drawImage(g.canvas as CanvasImageSource, bx, by, bw, bh, bx, by, bw, bh); a.fillStyle = RIM_TINT; a.fillRect(bx, by, bw, bh);
+    a.setTransform(T.multiply(M)); a.globalCompositeOperation = 'destination-in'; a.imageSmoothingEnabled = true; a.drawImage(s, x0, y0, img.W / res, img.H / res);
+    a.globalCompositeOperation = 'destination-out'; a.lineJoin = 'round';
+    for (const [w, al] of [[e + AREA_SHADE.gap + AREA_SHADE.ramp, 0.5], [e + AREA_SHADE.gap, 1]] as const) { a.strokeStyle = `rgba(0,0,0,${al})`; a.lineWidth = Math.max(px, 2 * w); a.stroke(path); }
+    a.restore();
+    g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.clip(strips); g.globalCompositeOperation = 'lighter'; g.drawImage(A, 0, 0, bw, bh, bx, by, bw, bh); g.restore();
   }
   /** a shine laid on ctx inside a mask, textured by the ground under it (the owner's rule T110): the light added is the ground's own colour
    *  squared (so it lands on its mid-tones and highlights and leaves its dark gaps dark) times a warm tint and k, through the mask's alpha.
