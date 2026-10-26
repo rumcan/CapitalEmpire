@@ -5,7 +5,7 @@
 // of this type and state and the presets made here, and adds sprites from the library. Round the lot and its road lies the map's own grass (no
 // forest or farms near: stageLab), and the camera fits the lot and its road (zoom at least LAB_ZOOM, or the fit zoom of a lot too big for that). PAINT GROUND: a drag on the
 // lot paints a ground rectangle into its preset and Erase removes the patch under a click (the editor's pointer handling is paused meanwhile). DECALS: a
-// whole preset's flat ground decals (leaves, litter, stains): a thumbnail arms placing it on the lot, Select decals picks, moves, scales and mirrors them.
+// whole preset's flat ground decals (leaves, litter, stains): a thumbnail arms placing it on the lot; a click on a decal selects it (the editor, with the sprites: drag moves, [ ] scale, R mirrors).
 // A generated lot is whole: the game draws its fences, street items and decals from the preset alone (compose.ts).
 // SIZE: the W and D steppers under the size select resize the current preset (fitted, curated, staged again at the new size). PERSON CURSOR:
 // a townsperson stands at the pointer over the map, at the game's scale, for scale (its feet on the point under the pointer).
@@ -678,7 +678,7 @@ export function installLotLab(game: Game): () => void {
     row.append(btn('Erase', `${paint === 'erase' ? ON : BTN}padding:3px 6px`, () => { void act(() => setPaint('erase')); }, 'click a painted patch: removes the last one under it'), btn('Off', `${paint === null ? ON : BTN}padding:3px 6px`, () => { void act(() => setPaint(null)); }, 'Esc'));
     paintBox.append(row, el('div', 'opacity:.75;margin-top:4px', 'Drag on the lot to paint a rectangle. Erase: click a painted patch.'));
   }
-  /** draws the DECALS mode row: Select decals and Off (the mode lit), and the hint: what the mode does, the armed decal, the selected one */
+  /** draws the DECALS mode row: Off (lit when not placing), and the hint: the armed decal, or how decals are placed and selected */
   function renderDecals() {
     decalBar.replaceChildren();
     const row = el('div', 'display:flex;flex-wrap:wrap;gap:4px;margin-top:4px');
