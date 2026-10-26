@@ -6,16 +6,18 @@
 import { LIBRARY } from '../library';
 import { drawnAsStandIn, standInFamily } from '../newart';
 import { isBuilding } from '../mirror';
-import { footprintOf, fourViews, ownerScaleOf, turned } from './preset-art';
+import { drawnView, footprintOf, fourViews, ownerScaleOf } from './preset-art';
 import type { PresetProp } from './presets';
 
 const INDEX = new Map(LIBRARY.map((it, i) => [it.id, i] as const));
 /** a footprint's half extents in a lot's frame (tiles: ha along x, hb along y) */
 export interface Half { ha: number; hb: number }
-/** a preset prop's footprint half extents in a lot's frame (tiles: ha along x, hb along y), as the lot draws it: its view turned by the frame's
- *  quarter (q), at its drawn scale (its preset scale times its owner scale), the world box projected on the frame's axes */
+/** a preset prop's footprint half extents in a lot's frame (tiles: ha along x, hb along y), as the lot draws it (preset-art.ts drawnView): its view
+ *  turned by the frame's quarter (q), at its drawn scale (its preset scale times its owner scale), the world box projected on the frame's axes; a
+ *  building facing its road at 45 degrees (T154 Phase 2: a screen-axis view, its footing along the lot's axes) the square inside its world box */
 export const frameHalf = (f: { q: number; u: { x: number; y: number }; n: { x: number; y: number } }) => (q: PresetProp): Half => {
-  const t = turned(q.id, f.q + q.view), fp = footprintOf(t.id, q.scale * ownerScaleOf(q.id), t.flip), hx = (fp[2] - fp[0]) / 2, hy = (fp[3] - fp[1]) / 2;
+  const t = drawnView(q.id, f, q.view), fp = footprintOf(t.id, q.scale * ownerScaleOf(q.id), t.flip), hx = (fp[2] - fp[0]) / 2, hy = (fp[3] - fp[1]) / 2;
+  if (t.diag) { const h = Math.max(hx, hy) / Math.SQRT2; return { ha: h, hb: h }; }
   return { ha: Math.abs(f.u.x) * hx + Math.abs(f.u.y) * hy, hb: Math.abs(f.n.x) * hx + Math.abs(f.n.y) * hy };
 };
 /** a rear or back-of-house set (the old rear views and the house backs): never dealt as a lot's front building */

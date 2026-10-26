@@ -34,10 +34,10 @@ export type Pt = { x: number; y: number };
 export type Box4 = [number, number, number, number];
 /** a placed candidate: the anchor (ground point) and its footprint in world tiles; from: a preset prop's source (see Placed), which done()
  *  keeps off the patch check and the plant cap (the owner placed it) */
-export interface Item { id: string; x: number; y: number; flip: boolean; s: number; fp: Box4; car: boolean; wheel: boolean; fence: boolean; boundary: boolean; street: boolean; plant: boolean; /** stands on the paving (a drive's pay boom) */ paved?: boolean; from?: { preset: string; prop: number }; standIn?: string }
+export interface Item { id: string; x: number; y: number; flip: boolean; s: number; fp: Box4; car: boolean; wheel: boolean; fence: boolean; boundary: boolean; street: boolean; plant: boolean; /** stands on the paving (a drive's pay boom) */ paved?: boolean; from?: { preset: string; prop: number }; standIn?: string; /** T154 Phase 2: a building facing a road at 45 degrees: its footprint the square inside its world box (fp), turned 45 degrees */ diag?: boolean }
 /** a sprite at a size and orientation: its footprint relative to the anchor */
 export interface Spec { id: string; s: number; flip: boolean; h: Box4 }
-export interface Opt { flip?: boolean; mul?: number; street?: boolean; plant?: boolean; boundary?: boolean; paved?: boolean; from?: { preset: string; prop: number }; standIn?: string }
+export interface Opt { flip?: boolean; mul?: number; street?: boolean; plant?: boolean; boundary?: boolean; paved?: boolean; from?: { preset: string; prop: number }; standIn?: string; diag?: boolean }
 export interface Patch { kind: 'drive' | 'walk' | 'lot' | 'yard' | 'bed'; tex: LotPatch['tex']; quad: number[]; lines?: number[] }
 export interface Pair { x: string; y: string }
 
@@ -199,7 +199,7 @@ export class Build {
     const it = BY.get(g.id)!, car = it.cat === 'Vehicles', cc = car ? this.fitCar(g, c) : c;
     if (!cc) return null;
     const h = g.h, x = cc.x - (h[0] + h[2]) / 2, y = cc.y - (h[1] + h[3]) / 2;
-    const item: Item = { id: g.id, x, y, flip: g.flip, s: g.s, fp: [x + h[0], y + h[1], x + h[2], y + h[3]], car, wheel: g.id === WHEEL, fence: it.kind === 'fencex' || it.kind === 'fencey' || g.id === 'world:hedge', boundary: !!o.boundary, street: !!o.street, plant: !!o.plant, ...(o.paved ? { paved: true } : {}), ...(o.from ? { from: o.from } : {}), ...(o.standIn ? { standIn: o.standIn } : {}) };
+    const item: Item = { id: g.id, x, y, flip: g.flip, s: g.s, fp: [x + h[0], y + h[1], x + h[2], y + h[3]], car, wheel: g.id === WHEEL, fence: it.kind === 'fencex' || it.kind === 'fencey' || g.id === 'world:hedge', boundary: !!o.boundary, street: !!o.street, plant: !!o.plant, ...(o.paved ? { paved: true } : {}), ...(o.from ? { from: o.from } : {}), ...(o.standIn ? { standIn: o.standIn } : {}), ...(o.diag ? { diag: true } : {}) };
     this.items.push(item); return item;
   }
   /** a spec with its footprint centre at a lot-frame point (a along u, b along n) */
@@ -336,10 +336,11 @@ export class Build {
   clearDrives() {
     for (let i = this.items.length - 1; i >= 0; i--) { const it = this.items[i]!; if (it.boundary && this.patches.some(p => p.kind === 'drive' && hit(it.fp, p.quad))) this.items.splice(i, 1); }
   }
-  /** is the footprint inside the lot (REACH past the sides and the back, VERGE into the front for street items) */
+  /** is the footprint inside the lot (REACH past the sides and the back, VERGE into the front for street items): its corners (a building facing a
+   *  road at 45 degrees, diag: its turned square's, the midpoints of its world box's sides) */
   inside(it: Item): boolean {
-    const [x0, y0, x1, y1] = it.fp, minB = it.street ? -VERGE : -REACH;
-    for (const [x, y] of [[x0, y0], [x1, y0], [x1, y1], [x0, y1]]) {
+    const [x0, y0, x1, y1] = it.fp, minB = it.street ? -VERGE : -REACH, mx = (x0 + x1) / 2, my = (y0 + y1) / 2;
+    for (const [x, y] of it.diag ? [[mx, y0], [x1, my], [mx, y1], [x0, my]] : [[x0, y0], [x1, y0], [x1, y1], [x0, y1]]) {
       const dx = x - this.o.x, dy = y - this.o.y, a = dx * this.u.x + dy * this.u.y, b = dx * this.n.x + dy * this.n.y;
       if (a < -REACH || a > this.W + REACH || b < minB || b > this.D + REACH) return false;
     }

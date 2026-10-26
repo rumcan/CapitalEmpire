@@ -53,7 +53,7 @@ export function makeExam(host: ExamHost) {
   // one zoom for every lot: the largest shot fits the cell; the cell's size at that zoom
   const unit = (l: ExamLot) => shotBox({ o: { x: 0, y: 0 }, u: { x: 1, y: 0 }, n: { x: 0, y: 1 }, w: l.w, d: l.d });
   const big = lots.map(unit).reduce((a, b) => ({ w: Math.max(a.w, b.x1 - b.x0), h: Math.max(a.h, b.y1 - b.y0) }), { w: 0, h: 0 });
-  let z = Math.min(CELL.w / big.w, CELL.h / big.h), label = `v${was}`;
+  let z = Math.min(CELL.w / big.w, CELL.h / big.h), label = `v${was}`, street: LotGeom[] = [];
   const clip = () => ({ w: Math.ceil(big.w * z), h: Math.ceil(big.h * z) });
   return {
     /** the lots and the rows they are staged in (lot numbers) */
@@ -98,6 +98,19 @@ export function makeExam(host: ExamHost) {
       const L = lotLayout(g, st(l)) ?? [], kinds = Object.fromEntries(ITEM_KINDS.map(k => [k, 0])) as Record<ItemKind, number>;
       for (const it of L) kinds[it.kind]++;
       return { kinds, pairs: L.filter(it => it.with !== undefined).length, items: L.length };
+    },
+    /** a row of any lots on a road (dev shots, T154 Phase 2: a street at 45 degrees), staged as the exam's rows are (each lot's st forces its
+     *  preset); their geometries, kept for fitStreet */
+    street(road: Road, row: readonly { w: number; d: number; st: ComposeState }[]): LotGeom[] {
+      street = host.stage(road, row, Math.floor((row.length - 1) / 2)); host.hold(true);
+      return street;
+    },
+    /** the camera over the row street staged (the zoom that fits it in the free area); the free area's rectangle (viewport px) */
+    fitStreet(): { x: number; y: number; w: number; h: number } | null {
+      if (!street.length) return null;
+      const b = street.map(shotBox).reduce((p, q) => ({ x0: Math.min(p.x0, q.x0), y0: Math.min(p.y0, q.y0), x1: Math.max(p.x1, q.x1), y1: Math.max(p.y1, q.y1) })), a = host.free();
+      host.centre((b.x0 + b.x1) / 2, (b.y0 + b.y1) / 2, Math.min((a.R - a.L - 24) / (b.x1 - b.x0), (a.B - a.T - 24) / (b.y1 - b.y0)));
+      return { x: Math.round(a.L), y: Math.round(a.T), w: Math.round(a.R - a.L), h: Math.round(a.B - a.T) };
     },
     /** the exam done: the camera let go, the model the lab had */
     done(): void { host.hold(false); setLotModel(was); },

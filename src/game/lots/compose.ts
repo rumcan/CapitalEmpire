@@ -21,7 +21,7 @@ import {
   type Composition, type ComposeState, type LotGeom, type Pt, type PresetDrop,
 } from './compose-core';
 import { approvedFor, bucketOf, fitPreset, parsePresets, pickPreset, presetsFor, stateOf, type Fitted, type LotPreset, type PresetDecal, type PresetMeta, type PresetProp, type PresetState, type PresetUse, type Road } from './presets';
-import { footprintOf, ownerScaleOf, turned } from './preset-art';
+import { drawnView, footprintOf, ownerScaleOf, roadView, turned } from './preset-art';
 import { frameOf, listToWorld, quarterOfRoad, roadOf, toWorld, type PresetFrame } from './preset-frame';
 import PRESET_JSON from './lot-presets.json';
 import { generateLayout, type LaidItem } from './lot-gen';
@@ -283,7 +283,7 @@ export function standIns(fit: Fitted, preset: LotPreset, lot: LotGeom, f: Preset
     const r = rem[i];
     if (!r) { props.push(q); from.push(fit.from[i]!); mark.push(fit.standIn?.[i]); return; }
     const expansion = /(^|[:-])expansion[:-]/.test(q.id) && i !== main;
-    const id = expansion || !buildingAt(i) ? null : i === main && preset.use === 'res' ? standInHouse(q, r, fit, lot, f, road, state, seed) : standInBuilding(q, r, seed + i);
+    const id = expansion || !buildingAt(i) ? null : i === main && preset.use === 'res' ? standInHouse(q, r, fit, lot, f, road, state, seed) : standInBuilding(q, r, seed + i, road);
     if (!id) return;
     // the stand-in keeps the removed one's street edge (its front, a square base) and its spot along the street; houseYards then keeps its yards
     const hr = removedHalf(q.id, r, q.scale), h = half({ ...q, id, scale: 1 }), y = clamp(q.y - hr + h.hb, h.hb, Math.max(h.hb, lot.d - h.hb)), x = clamp(q.x, h.ha, Math.max(h.ha, lot.w - h.ha));
@@ -293,7 +293,8 @@ export function standIns(fit: Fitted, preset: LotPreset, lot: LotGeom, f: Preset
 }
 /** a stand-in house: a dwelling (house-class.ts) not removed, that suits the lot's road and state, of the removed one's size class, whose footprint
  *  fits the lot's house band (the drive side and the side yards, T164) and depth; among those one picked by the lot's seed; else the one of any
- *  class nearest the removed one's size that fits; null when none fits */
+ *  class nearest the removed one's size that fits; null when none fits. On a road at 45 degrees (T154 Phase 2) the houses with a screen-axis set
+ *  (they face the road: preset-art.ts roadView) come first: the others only when none of those fits */
 function standInHouse(q: PresetProp, r: RemovedPic, fit: Fitted, lot: LotGeom, f: PresetFrame, road: Road, state: PresetState, seed: number): string | null {
   const fam = houseFamilies().get('dwelling'); if (!fam) return null;
   const half = frameHalf(f), hr = removedHalf(q.id, r, q.scale), area = 4 * hr * hr, [lo, hi] = fam.bounds;
@@ -301,20 +302,22 @@ function standInHouse(q: PresetProp, r: RemovedPic, fit: Fitted, lot: LotGeom, f
   let d0 = Infinity, d1 = -Infinity; if (drive) for (let i = 0; i < drive.pts.length; i += 2) { d0 = Math.min(d0, drive.pts[i]!); d1 = Math.max(d1, drive.pts[i]!); }
   const left = drive ? (d0 + d1) / 2 < lot.w / 2 : true, band = drive ? (left ? lot.w - SIDE_YARD - (d1 + DRIVE_GAP) : d0 - DRIVE_GAP - SIDE_YARD) : lot.w - 2 * SIDE_YARD;
   const fits = (id: string) => { const h = half({ ...q, id, scale: 1 }); return 2 * h.ha <= band + 1e-6 && 2 * h.hb <= lot.d - 1; };
-  const ok = fam.ids.filter(id => !removedOf(id) && allows(ALLOC, id, road, state) && fits(id));
+  const all = fam.ids.filter(id => !removedOf(id) && allows(ALLOC, id, road, state) && fits(id)), faced = all.filter(id => roadView(id, road, 0)), ok = faced.length ? faced : all;
   const same = ok.filter(id => sizeClassOf(id) === cls);
   if (same.length) return same[seed % same.length]!;
   if (!ok.length) return null;
   return ok.reduce((a, b) => (Math.abs(fam.area.get(a)! - area) <= Math.abs(fam.area.get(b)! - area) ? a : b));
 }
 /** a stand-in building of another use (a fire station): one of the library's buildings of the removed one's kind (not removed, drawn as itself, a
- *  front view) within 40% of its footprint area, one of the three nearest picked by the seed; null when there is none */
-function standInBuilding(q: PresetProp, r: RemovedPic, seed: number): string | null {
+ *  front view) within 40% of its footprint area, one of the three nearest picked by the seed; null when there is none. On a road at 45 degrees
+ *  (T154 Phase 2) those with a screen-axis set come first */
+function standInBuilding(q: PresetProp, r: RemovedPic, seed: number, road: Road): string | null {
   const hr = removedHalf(q.id, r, q.scale), area = 4 * hr * hr;
   let pool = KIND_POOL.get(r.kind);
   if (!pool) KIND_POOL.set(r.kind, pool = LIBRARY.filter((it, i) => it.kind === r.kind && isBuilding(it) && !removedOf(it.id) && !drawnAsStandIn(i) && !it.id.startsWith('view:') && !it.id.startsWith('east:') && !/-north-|[-_]rear(?![a-z])/.test(it.id))
     .map(it => { const fp = footprintOf(it.id, OWNER_SCALE[it.id] ?? 1, false); return { id: it.id, a: (fp[2] - fp[0]) * (fp[3] - fp[1]) }; }));
-  const near = pool.filter(c => c.a >= area * 0.6 && c.a <= area * 1.4).sort((a, b) => Math.abs(a.a - area) - Math.abs(b.a - area) || (a.id < b.id ? -1 : 1)).slice(0, 3);
+  const all = pool.filter(c => c.a >= area * 0.6 && c.a <= area * 1.4).sort((a, b) => Math.abs(a.a - area) - Math.abs(b.a - area) || (a.id < b.id ? -1 : 1));
+  const faced = all.filter(c => roadView(c.id, road, 0)), near = (faced.length ? faced : all).slice(0, 3);
   return near.length ? near[seed % near.length]!.id : null;
 }
 /** the library's buildings of a kind with their footprint areas, made once per kind (standInBuilding) */
@@ -347,16 +350,17 @@ function fromPreset(B: Build, lot: LotGeom, st: ComposeState, p: { preset: LotPr
   }
   if (B.drops) { const kept = new Set(fit.from); preset.props.forEach((q, i) => { if (!kept.has(i)) B.drops!.push({ preset: preset.id, prop: i, id: q.id, why: 'outside the lot at this size (the fit)' }); }); }
   fit.props.forEach((q, k) => {
-    const t = turned(q.id, f.q + q.view), it = BY.get(t.id);
+    // T154 Phase 2: on a road at 45 degrees a building with a screen-axis set faces its street (preset-art.ts drawnView), else its view is turned
+    const t = drawnView(q.id, f, q.view), it = BY.get(t.id);
     if (!it) return;
     const car = it.cat === 'Vehicles';
     if (car && (B.noCars || (st.decline === 1 && B.r() >= CAR_KEEP_D1))) { B.drops?.push({ preset: preset.id, prop: fit.from[k]!, id: t.id, why: B.noCars ? 'no cars on a derelict lot' : 'cars thinned on a shabby lot' }); return; }
     // a car's scale is its owner size (ownerScaleOf), the engine draws it at CAR_SCALE times that
     const s = q.scale * ownerScaleOf(q.id);
     // a whole preset's prop in front of the lot is a street item (the verge: done() keeps it there, as it keeps a procedural one)
-    const item = B.atW({ id: t.id, s, flip: t.flip, h: footprintOf(t.id, s, t.flip) }, toWorld(f, q.x, q.y), { plant: it.kind === 'tree' || it.kind === 'bush', from: { preset: preset.id, prop: fit.from[k]! }, street: preset.whole === true && q.y < 0, ...(fit.standIn?.[k] ? { standIn: fit.standIn[k] } : {}) });
+    const item = B.atW({ id: t.id, s, flip: t.flip, h: footprintOf(t.id, s, t.flip) }, toWorld(f, q.x, q.y), { plant: it.kind === 'tree' || it.kind === 'bush', from: { preset: preset.id, prop: fit.from[k]! }, street: preset.whole === true && q.y < 0, ...(fit.standIn?.[k] ? { standIn: fit.standIn[k] } : {}), ...(t.diag ? { diag: true } : {}) });
     if (item && !item.fence && !item.wheel) ups++;
-    if (isBuilding(it)) { const fp = footprintOf(q.id, s, false), hw = (q.view % 2 ? fp[3] - fp[1] : fp[2] - fp[0]) / 2; if (hw > big) { big = hw; main = [q.x - hw, q.x + hw]; } }
+    if (isBuilding(it)) { const fp = footprintOf(t.diag ? t.id : q.id, s, false), hw = t.diag ? (fp[2] - fp[0]) / (2 * Math.SQRT2) : (q.view % 2 ? fp[3] - fp[1] : fp[2] - fp[0]) / 2; if (hw > big) { big = hw; main = [q.x - hw, q.x + hw]; } }
   });
   B.cap = ups + EXTRA_PLANTS;
   return { drive, main, same };
