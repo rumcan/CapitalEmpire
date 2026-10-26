@@ -19,5 +19,20 @@
     }
   ],
   "integrationStatus": "blocked",
-  "integrationReason": "Awaiting real alpha, four-view geometry, fixed camera/light and cohesive-theme review."
+  "integrationReason": "Laundry front views have nearly horizontal front base and compressed side plane, close to a frontal elevation unlike rear corners.",
+  "sourceReview": {
+    "reviewed": "2026-10-24",
+    "actualAlphaComposite": "output/building-priority/newest-review-2.png",
+    "theme": "Matte Maple Bean timber/brick/cream, charcoal roofs, amber dusk lamps, fixed upper-right key coherent across these sources; holds below are concrete camera/geometry/facade-continuity faults, not backgrounds.",
+    "corrections": [
+      {
+        "direction": "NE",
+        "brief": "Reconstruct teal LAUNDRY front LEFT plus physical right side RIGHT in genuine miniature isometric projection, two diagonal ground axes. Preserve projecting front-right utility annex, windows, vents and all roof fixtures."
+      },
+      {
+        "direction": "NW",
+        "brief": "Show opposite side LEFT plus teal LAUNDRY front RIGHT with clear two-face isometric camera. Preserve entrance/display/corner annex physical locations and rooftop chimney/HVAC."
+      }
+    ]
+  }
 }

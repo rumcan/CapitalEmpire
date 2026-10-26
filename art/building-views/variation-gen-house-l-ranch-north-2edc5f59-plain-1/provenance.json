@@ -1,0 +1,137 @@
+{
+  "id": "variation:gen-house-l-ranch-north-2edc5f59-plain:1",
+  "generator": "image_gen",
+  "generated": "2026-10-24",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-d450b4bb-fa17-43fc-afbd-71feb86f1941.png",
+  "prompt": "Edit this existing transparent game sprite sheet, maintaining EXACT shared matte miniature theme, material colours, physical building identity, early dusk and fixed SCREEN UPPER RIGHT SUN. Concrete correction: NE is a straight elevation, not the same 2:1 isometric camera as other cells; also source top edge touches alpha. Recreate NE proper front+right with same camera and generous clear margins. Preserve every other correct cell and all physical architecture/equipment. Never mirror text, geometry or lighting; draw actual opposite corner. Keep 2x2 NEtop-left,SEtop-right,SWbottom-left,NWbottom-right. Output SQUARE 1:1 CANVAS with four SMALL complete sprites, each only60% cellheight, full roof/chimney/cross withincanvasand100pxclear gutters. Actual transparentalpha=0 outsidephysicalbuilding. No floor/greybackground/terrain/shadow/haze/labels/captions. Reference1 is EDIT TARGET, preserve its artwork rather than invent a new building. ",
+  "references": [
+    {
+      "role": "edit-target",
+      "file": "art/theme-consistency/generated/buildings/variation-gen-house-l-ranch-north-2edc5f59-plain-1-4views-v1.png"
+    }
+  ],
+  "integrationStatus": "ready",
+  "integrationReason": "Camera-guided single NE now clearly exposes front LEFT and physical side RIGHT, coherent miniature isometric family instead of head-on elevation. Parent accepts residual stylized projection (~18degree front foundation), not a pixel-perfect26.565claim. Original SE/SW/NW PNG bytes retained, actual alpha clean, source scale matched by unaffected-height proxy.",
+  "singleViewCorrection": {
+    "sourceSheet": "art/theme-consistency/generated/buildings/variation-gen-house-l-ranch-north-2edc5f59-plain-1-4views-v3.png",
+    "sourceSheetSha256": "babfbef43b162c8bb1e2e0da7d6460d98739664e44e73194806073135d3c96cf",
+    "direction": "NE",
+    "copiedOriginalDirection": null,
+    "newGeneratedSingle": "art/theme-consistency/generated/buildings/variation-gen-house-l-ranch-north-2edc5f59-plain-1-single-corrections-v4/NE.png",
+    "newGeneratedSingleSha256": "d87eb69d4bc6aa4f2c4554f20ef9ac7694e10f0208678b5a2e4c4309ec501494",
+    "newGeneratedSingleProvenance": {
+      "id": "variation:gen-house-l-ranch-north-2edc5f59-plain:1",
+      "direction": "NE",
+      "generator": "image_gen",
+      "generated": "2026-10-24",
+      "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-bfb56fdf-2cc2-4067-98bc-fe0b6f22fde8.png",
+      "prompt": "ONE SINGLE ISOLATED BUILDING SPRITE, NOT A FOUR-VIEW SHEET. The reference is this SAME existing building shown from several corners; preserve its exact architecture and matte Maple Bean miniature style. We need a genuinely different rigid rotation, direction NE. Image1 is CAMERA/PROJECTION ONLY, do not copy its house. Image2 is SUBJECTIDENTITYONLY, shown from opposite NW corner. Draw the bluegrey L-shaped cottage fromNE: front gable with door and paired windows on SCREEN LEFT and RIGHT SIDEWALL on SCREEN RIGHT; porch turns tofar/rightside. Match image1 camera EXACTLY: frontfoundation diagonal26.565degdown-right, sidefoundation26.565degup-right, equalforeshorteningbothgroundaxes, nofrontalelevationorhorizontalfoundation. Turnbuilding90degreesfromimage2whilekeepingSUNSCREENUPPERRIGHT. Keep originalcrossedroof/chimney/windows/porch. Fixed orthographic2:1 camera: both ground axes at +/-26.565degrees, wallsvertical, no head-on elevation/perspective vanishingpoint. CRITICAL: fixed SCREEN UPPER RIGHT DUSK SUN and warm amber practical lights; right roof/wall planes warm, leftplanes cooler even though buildingturns. Reconstructhiddenfaces; NEVER mirror sourcepixels or lighting or copy the samecorner. Square1:1PNG with onecompleteSMALLbuilding occupying60%canvasheight, generous100pxfullyclear margins, truealpha0outsidephysicalbuilding. No other view, no grid, no label, no ground surface/floor/paving/yard/greybackdrop/broadshadow/haze/gradient/checkerboard/people. Only physical building and integralporch/steps/supports.",
+      "references": [
+        {
+          "role": "camera-projection-only",
+          "file": "art/theme-consistency/generated/buildings/world-house_2-4views-v2/NE.native.png"
+        },
+        {
+          "role": "identity-style-and-physical-geometry-reference",
+          "file": "art/theme-consistency/generated/buildings/variation-gen-house-l-ranch-north-2edc5f59-plain-1-4views-v3/NW.native.png"
+        }
+      ],
+      "integrationStatus": "blocked",
+      "integrationReason": "Single actual-turn correction; inspect before four-view assembly.",
+      "referenceMetadataCorrection": {
+        "date": "2026-10-24",
+        "reason": "Saved reference metadata corrected to the actual two image inputs documented in single-orchestration-v3 cameraJobs; generator prompt and pixels retained."
+      }
+    },
+    "newViewScale": {
+      "factor": 0.39204545454545453,
+      "method": "median visible building height of unchanged three views; source scale retained, not certified door calibration",
+      "targetHeight": 345,
+      "oldDoor": null,
+      "newDoor": null,
+      "resizeKernel": "lanczos3; new view only"
+    },
+    "unchangedViewsPreservedByteForByte": [
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "originalViewEvidence": [
+      {
+        "direction": "NE",
+        "canonicalRejected": null,
+        "sourceCellSafeMargin": true,
+        "originalNativeSha256": "f5c8b0509480c0975512f5c44df8d8b04719bab3d9581d02792585dcfcd5aa82",
+        "originalVisibleHeight": 346,
+        "nonzeroAlphaPixels": 125927,
+        "rgbaSha256": "1ecffc202c23b045bf47d208dc85af6b59991e338035fb20cee4fd89f73e0c41"
+      },
+      {
+        "direction": "SE",
+        "canonicalRejected": null,
+        "sourceCellSafeMargin": true,
+        "originalNativeSha256": "34c659946549837bccb3476a183362b4d18470a81d1b03fa790b100d475bead3",
+        "originalVisibleHeight": 370,
+        "nonzeroAlphaPixels": 139422,
+        "rgbaSha256": "317fb52f1519c22d75b7a46b8df509b555222651d2ac4e484f68e6c0cbbcdcd3"
+      },
+      {
+        "direction": "SW",
+        "canonicalRejected": null,
+        "sourceCellSafeMargin": true,
+        "originalNativeSha256": "87184b09e84f7cfed444f5cbdb131ada38e88a940b70026c8d70b69dd2109464",
+        "originalVisibleHeight": 333,
+        "nonzeroAlphaPixels": 143541,
+        "rgbaSha256": "f9f85d658bafecdeafdbe07c00549880546bb1087d45cd7a61b1287abde4648e"
+      },
+      {
+        "direction": "NW",
+        "canonicalRejected": null,
+        "sourceCellSafeMargin": true,
+        "originalNativeSha256": "78e7022dddc7d7d653813d57b4b8b7acf460028f03fb4e5c1442bc7262aaf646",
+        "originalVisibleHeight": 345,
+        "nonzeroAlphaPixels": 146917,
+        "rgbaSha256": "26b0a19ed3f7dcba1c92e4a878a16afd7feffdb1d8a952ad4c54705a1ede8b8f"
+      }
+    ],
+    "placements": [
+      {
+        "direction": "NE",
+        "left": 266,
+        "top": 277,
+        "width": 491,
+        "height": 469,
+        "nativeSha256": "8d36c41fd6f37d25f8c4ee4b3d63a22df6648635649f94ca24f97ecb855a9925",
+        "unchangedOriginalNative": false
+      },
+      {
+        "direction": "SE",
+        "left": 1227,
+        "top": 226,
+        "width": 617,
+        "height": 572,
+        "nativeSha256": "34c659946549837bccb3476a183362b4d18470a81d1b03fa790b100d475bead3",
+        "unchangedOriginalNative": true
+      },
+      {
+        "direction": "SW",
+        "left": 198,
+        "top": 1224,
+        "width": 627,
+        "height": 624,
+        "nativeSha256": "87184b09e84f7cfed444f5cbdb131ada38e88a940b70026c8d70b69dd2109464",
+        "unchangedOriginalNative": true
+      },
+      {
+        "direction": "NW",
+        "left": 1232,
+        "top": 1222,
+        "width": 607,
+        "height": 627,
+        "nativeSha256": "78e7022dddc7d7d653813d57b4b8b7acf460028f03fb4e5c1442bc7262aaf646",
+        "unchangedOriginalNative": true
+      }
+    ],
+    "outputSha256": "fc6bf47664b4e71bc1f4c4969b3323d5ee5ef14300bb4696156424b0bb2f6926"
+  }
+}

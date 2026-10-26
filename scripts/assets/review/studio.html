@@ -84,8 +84,8 @@ function stage(s){
   // a lot decal (a leaf drift, a stain) is drawn over grass, so its edges show as they do in the yard
   return el('div',{className:'stage'+(s.kind==='decal'?' grass':'')},el('img',{src:'/thumb/'+encodeURIComponent(d.id),loading:'lazy',style:`width:${w}px;height:${h}px`}));
 }
-/** past its own picture's pixels (the studio allows it, server.mjs /api/scale soft): a Rebuild packs a bigger picture from the source, a little softer. Not a stand-in: its picture is another sprite's */
-const softOf=s=>s.native!=null&&s.scale>s.native*1.001&&!(s.drawn&&s.drawn.id!==s.id);
+/** past its own picture's pixels (the studio allows it, server.mjs /api/scale soft): a Rebuild packs a bigger picture from the source, a little softer. A stand-in's pixels are its stand-ins' (size-report.ts native) */
+const softOf=s=>s.native!=null&&s.scale>s.native*1.001;
 /** what the game makes of the size: the stand-in it is drawn as, and the scale it is sharp to at the closest zoom (red when past it) */
 function sizeLine(s){
   if(s.sharp==null&&!s.drawn)return null;

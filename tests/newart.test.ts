@@ -30,5 +30,6 @@ test('?newart draws only new art for buildings, shops and trees, on the same foo
       if (look.item !== i) swapped++;
     }
   });
-  assert.ok(swapped > 100, `${swapped} pictures swapped`);
+  // fewer each time four-view art lands (92 on 2026-10-26, after 20 sheets synced)
+  assert.ok(swapped > 50, `${swapped} pictures swapped`);
 });

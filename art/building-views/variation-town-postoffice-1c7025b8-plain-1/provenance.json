@@ -18,6 +18,150 @@
       "sha256": "1008167808de36f6a2feb814357f6b553dd24f73d9639cf91f348df4ad576add"
     }
   ],
-  "integrationStatus": "blocked",
-  "integrationReason": "Awaiting real alpha, four-view geometry, fixed camera/light and cohesive-theme review."
+  "integrationStatus": "ready",
+  "integrationReason": "Post office clock/pediment/front steps occur in opposite front corners; rear sash wall and side wall are distinct with chimney following turns. Slight stylized foreshortening stays in the master miniature family; not a frontal elevation.",
+  "layoutCorrection": {
+    "method": "Pixel-preserving clear-gap split and centred four-cell repack; no generation, resizing or repainting.",
+    "originalSheet": "art/theme-consistency/generated/buildings/variation-town-postoffice-1c7025b8-plain-1-4views-v1.png",
+    "originalSheetSha256": "e56930caf9628357cf9e7e19e7ff5527c2137dcc7c3796ecadd9ea57f6615f24",
+    "originalDimensions": [
+      1254,
+      1254
+    ],
+    "outputDimensions": [
+      2048,
+      2048
+    ],
+    "outputSheetSha256": "51249c9c15a71245dc9356e5d54cebf6d54fb5d9a03e0a9b11cef920e7b535aa",
+    "cellSize": 1024,
+    "minimumCellMarginFraction": 0.15,
+    "padding": 4,
+    "partitionMode": "row-first",
+    "rowFirstFailure": null,
+    "rowGap": {
+      "start": 597,
+      "endExclusive": 642,
+      "midpoint": 619,
+      "alphaThreshold": 8
+    },
+    "columnGaps": [
+      {
+        "row": 0,
+        "start": 624,
+        "endExclusive": 648,
+        "midpoint": 636,
+        "alphaThreshold": 8
+      },
+      {
+        "row": 1,
+        "start": 608,
+        "endExclusive": 636,
+        "midpoint": 622,
+        "alphaThreshold": 8
+      }
+    ],
+    "globalColumnGap": null,
+    "columnRowGaps": [],
+    "extractionRects": [
+      {
+        "direction": "NE",
+        "row": 0,
+        "column": 0,
+        "extraction": {
+          "left": 0,
+          "top": 28,
+          "width": 636,
+          "height": 591
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 238005,
+        "visibleAlphaPixelsThreshold8": 231601,
+        "nonzeroRgbaSha256": "13bcc49469f424cad22cc036192c9b06c65e92d1665b428d6037dfbb09103ad5",
+        "destination": {
+          "left": 194,
+          "top": 216,
+          "width": 636,
+          "height": 591
+        }
+      },
+      {
+        "direction": "SE",
+        "row": 0,
+        "column": 1,
+        "extraction": {
+          "left": 636,
+          "top": 17,
+          "width": 596,
+          "height": 598
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 225906,
+        "visibleAlphaPixelsThreshold8": 220885,
+        "nonzeroRgbaSha256": "e02df037998f936be8936a5d60515d5fb546e14d4faf4e4af4d00d121261768e",
+        "destination": {
+          "left": 1238,
+          "top": 213,
+          "width": 596,
+          "height": 598
+        }
+      },
+      {
+        "direction": "SW",
+        "row": 1,
+        "column": 0,
+        "extraction": {
+          "left": 0,
+          "top": 619,
+          "width": 622,
+          "height": 635
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 223284,
+        "visibleAlphaPixelsThreshold8": 217646,
+        "nonzeroRgbaSha256": "bfbb5295048dbfc3a345b806fb987a06d64f90578ddfc693c9c94e89e3ecc644",
+        "destination": {
+          "left": 201,
+          "top": 1218,
+          "width": 622,
+          "height": 635
+        }
+      },
+      {
+        "direction": "NW",
+        "row": 1,
+        "column": 1,
+        "extraction": {
+          "left": 622,
+          "top": 626,
+          "width": 594,
+          "height": 600
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 231637,
+        "visibleAlphaPixelsThreshold8": 225945,
+        "nonzeroRgbaSha256": "6be49ee5e0fc2fc695711ff9c2725e7d9002d4b26cfe214c0f3e2c5b5c70b97b",
+        "destination": {
+          "left": 1239,
+          "top": 1236,
+          "width": 594,
+          "height": 600
+        }
+      }
+    ],
+    "sourcePixelCounts": {
+      "nonzeroAlphaPixels": 918832,
+      "visibleAlphaPixelsThreshold8": 896077,
+      "nonzeroRgbaSha256": "4b2b248e37db42b5c5a5387a6240ed10a197d9ee822723f87c8d788fc332a251"
+    },
+    "nonzeroAndVisiblePixelConservation": true,
+    "exactVisibleRgbaConservation": true,
+    "visualReviewRequired": true,
+    "warnings": []
+  },
+  "sourceReview": {
+    "reviewed": "2026-10-24",
+    "actualAlphaComposite": "output/building-priority/newest-review-2.png",
+    "theme": "Matte Maple Bean timber/brick/cream, charcoal roofs, amber dusk lamps, fixed upper-right key coherent across these sources; holds below are concrete camera/geometry/facade-continuity faults, not backgrounds.",
+    "corrections": []
+  }
 }

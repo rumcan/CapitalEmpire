@@ -19,5 +19,20 @@
     }
   ],
   "integrationStatus": "blocked",
-  "integrationReason": "Awaiting real alpha, four-view geometry, fixed camera/light and cohesive-theme review."
+  "integrationReason": "Rear/sides change window identities: NE rightB has paired sash while SE leftB has single; NW leftD single while SW rightD paired; rearC has one small sash SE but two SW.",
+  "sourceReview": {
+    "reviewed": "2026-10-24",
+    "actualAlphaComposite": "output/building-priority/newest-review-3.png",
+    "theme": "Matte Maple Bean timber/brick/cream, charcoal roofs, amber dusk lamps, fixed upper-right key coherent across these sources; holds below are concrete camera/geometry/facade-continuity faults, not backgrounds.",
+    "corrections": [
+      {
+        "direction": "SE",
+        "brief": "SideB LEFT must have paired adjacent sash matching NE RIGHT; rearC RIGHT has ONE small sash matching original SE rear. Preserve blank cream siding, roof/chimney and no front porch."
+      },
+      {
+        "direction": "SW",
+        "brief": "RearC LEFT has ONE small sash matching SE RIGHT; opposite sideD RIGHT has ONE larger single sash matching NW LEFT. No front gabled porch or red door visible."
+      }
+    ]
+  }
 }

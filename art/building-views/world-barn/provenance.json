@@ -1,6 +1,6 @@
 {
   "id": "world:barn",
-  "generator": "image_gen",
+  "generator": "pixel-conserving-view-reassignment",
   "generated": "2026-10-24",
   "generatorSource": "C:/Users/RAMPAGE/.codex/generated_images/01a16c0b-bcad-7e71-a5d0-0281b98562b9/exec-ace1f1e5-3533-4c2d-abfb-4d8b5f5bbdfc.png",
   "prompt": "Game sprite production, single subject in FOUR genuine 90-degree rotations on one SQUARE transparent RGBA PNG sheet. Reference1 ONLY style: warm early-dusk Maple Bean street, detailed coherent illustrated 3D miniature; reference2 original identity, preserve architecture, proportions, doors/windows/roof, do not copy Halloween. Reference3 rotation DIAGRAM only, no diagram text/colours. Strict row-major 2x2 NE front+right, SE right+back, SW back+left, NW left+front; same object, reconstruct hidden rear, never mirror front. Fixed parallel 2:1 isometric camera, verticals vertical. Sun FIXED SCREEN UPPER RIGHT in every cell, warm right-facing planes, cooler left-facing planes, contact shadows lower-left. Warm windows and exterior lamps already on, early dusk still detailed, not night. ACTUAL transparent alpha outside silhouettes: no backdrop, haze, checkerboard, terrain tile or broad shadow. At least 15% cell margin EVERY side, broad centre gutters, complete objects never clipped, consistent physical scale. No people, cars, neighbouring objects, trees, flags, pumpkins, cobwebs, bats, ghosts, Halloween decor or garlands; captions forbidden. Red timber barn, cream trim, gambrel charcoal shingle roof, broad front double cross-braced doors, small upper hayloft opening and rooster weather vane on ridge; side small warm windows, reconstruct rear smaller service doors. No hay hanging out of windows, no ivy or attached garden. Preserve red agricultural barn identity.",
@@ -11,5 +11,198 @@
   ],
   "review": "Four distinct front/rear facade views inspected; original identity retained and Halloween decoration omitted. Alpha/crop boundaries checked by preparation; game scale retains original width until door gauge is measured.",
   "integrationStatus": "ready",
-  "integrationReason": "Distinct front/rear views inspected; alpha and all four crop-boundary checks passed. Original-width scale pending door gauges."
+  "integrationReason": "Fivepure-reassignmentaudit: fourdistinctphysicalcornersalreadyexisted; canonicalclockwiseorderingcorrectedwithoutgeneration/resizing/mirroring. Actualmagentaalphaandpost-permutationgeometryreviewPASS; all4sourcePNGbytehashesconserved. RuntimecalibrationrequiresmatchingmeasurednativeSHA.",
+  "newImageGeneration": false,
+  "viewReassignment": {
+    "method": "Exact-native PNG permutation; no generation, resizing, mirroring or repainting.",
+    "sourceSheet": "art/theme-consistency/generated/buildings/world-barn-4views-v1.png",
+    "sourceSheetSha256": "477774298bb9bb268d9eaa4c39f12f07d2e6faaadcbf18e9dbd5421e60a721f5",
+    "sourceProvenanceSha256": "4b20030f8c5da87f295a567afe54f2797ac0ad7fb250a0fa84394bad7256d807",
+    "mapping": {
+      "NE": "NE",
+      "SE": "SW",
+      "SW": "SE",
+      "NW": "NW"
+    },
+    "originalViewEvidence": [
+      {
+        "direction": "NE",
+        "canonicalNative": "art/theme-consistency/generated/buildings/world-barn-4views-v1/NE.native.png",
+        "canonicalRejected": "Existing native omits/changes nonzero RGBA geometry from the intact source cell; recovered complete source cell instead.",
+        "originalNativeSha256": "1db49273f997731d9f91f710f9286d4ff0f34c4e57cb84d01dcd090da9217124",
+        "bounds": [
+          627,
+          604
+        ],
+        "nonzeroAlphaPixels": 177117,
+        "normalisedNonzeroRgbaGeometrySha256": "b5a307ce6a50673541b97daa6e03f0553de2c1df905447970c93852bb707818a"
+      },
+      {
+        "direction": "SE",
+        "canonicalNative": "art/theme-consistency/generated/buildings/world-barn-4views-v1/SE.native.png",
+        "canonicalRejected": "Existing native omits/changes nonzero RGBA geometry from the intact source cell; recovered complete source cell instead.",
+        "originalNativeSha256": "8079c00b3441a332e44c524f34e693e906a41401843d203eb88085626a1e184b",
+        "bounds": [
+          626,
+          604
+        ],
+        "nonzeroAlphaPixels": 173023,
+        "normalisedNonzeroRgbaGeometrySha256": "0c44f8f13cf0dde1804a6832f4461d29adec70419ab75b78a3bdb39a69ae3a97"
+      },
+      {
+        "direction": "SW",
+        "canonicalNative": "art/theme-consistency/generated/buildings/world-barn-4views-v1/SW.native.png",
+        "canonicalRejected": "Existing native omits/changes nonzero RGBA geometry from the intact source cell; recovered complete source cell instead.",
+        "originalNativeSha256": "cfce52bc5762b8c8e75ec047fd064349737b135fc3a5e866330cb4ab71703545",
+        "bounds": [
+          627,
+          627
+        ],
+        "nonzeroAlphaPixels": 191909,
+        "normalisedNonzeroRgbaGeometrySha256": "549b68f94bcfa079e9071684c7a8b130a147b66694226a3905d6b0ded4d1a6d6"
+      },
+      {
+        "direction": "NW",
+        "canonicalNative": "art/theme-consistency/generated/buildings/world-barn-4views-v1/NW.native.png",
+        "canonicalRejected": "Existing native omits/changes nonzero RGBA geometry from the intact source cell; recovered complete source cell instead.",
+        "originalNativeSha256": "d408a40ffbeb1b4bca74f5f907f0b5fa846daa6ae4bcf4805e0ab65dda7a2af6",
+        "bounds": [
+          613,
+          627
+        ],
+        "nonzeroAlphaPixels": 197784,
+        "normalisedNonzeroRgbaGeometrySha256": "3272790b5978924bf41290b43055d06b944ff3c1da874aea7026591a1e296e70"
+      }
+    ],
+    "hashMappings": [
+      {
+        "direction": "NE",
+        "sourceDirection": "NE",
+        "oldNativeSha256": "1db49273f997731d9f91f710f9286d4ff0f34c4e57cb84d01dcd090da9217124",
+        "newNativeSha256": "1db49273f997731d9f91f710f9286d4ff0f34c4e57cb84d01dcd090da9217124"
+      },
+      {
+        "direction": "SE",
+        "sourceDirection": "SW",
+        "oldNativeSha256": "cfce52bc5762b8c8e75ec047fd064349737b135fc3a5e866330cb4ab71703545",
+        "newNativeSha256": "cfce52bc5762b8c8e75ec047fd064349737b135fc3a5e866330cb4ab71703545"
+      },
+      {
+        "direction": "SW",
+        "sourceDirection": "SE",
+        "oldNativeSha256": "8079c00b3441a332e44c524f34e693e906a41401843d203eb88085626a1e184b",
+        "newNativeSha256": "8079c00b3441a332e44c524f34e693e906a41401843d203eb88085626a1e184b"
+      },
+      {
+        "direction": "NW",
+        "sourceDirection": "NW",
+        "oldNativeSha256": "d408a40ffbeb1b4bca74f5f907f0b5fa846daa6ae4bcf4805e0ab65dda7a2af6",
+        "newNativeSha256": "d408a40ffbeb1b4bca74f5f907f0b5fa846daa6ae4bcf4805e0ab65dda7a2af6"
+      }
+    ],
+    "allFourPngByteHashesConserved": true,
+    "fullRgbaPlacementConserved": true,
+    "outputSha256": "a4d0d46a4a61811cbcd59c8661be150f42b007e6fc3ab864c964a27b315073b7"
+  },
+  "singleViewCorrection": {
+    "sourceSheet": "art/theme-consistency/generated/buildings/world-barn-4views-v1.png",
+    "sourceSheetSha256": "477774298bb9bb268d9eaa4c39f12f07d2e6faaadcbf18e9dbd5421e60a721f5",
+    "direction": null,
+    "type": "exact-native-view-reassignment",
+    "unchangedViewsPreservedByteForByte": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "originalViewEvidence": [
+      {
+        "direction": "NE",
+        "canonicalNative": "art/theme-consistency/generated/buildings/world-barn-4views-v1/NE.native.png",
+        "canonicalRejected": "Existing native omits/changes nonzero RGBA geometry from the intact source cell; recovered complete source cell instead.",
+        "originalNativeSha256": "1db49273f997731d9f91f710f9286d4ff0f34c4e57cb84d01dcd090da9217124",
+        "bounds": [
+          627,
+          604
+        ],
+        "nonzeroAlphaPixels": 177117,
+        "normalisedNonzeroRgbaGeometrySha256": "b5a307ce6a50673541b97daa6e03f0553de2c1df905447970c93852bb707818a"
+      },
+      {
+        "direction": "SE",
+        "canonicalNative": "art/theme-consistency/generated/buildings/world-barn-4views-v1/SE.native.png",
+        "canonicalRejected": "Existing native omits/changes nonzero RGBA geometry from the intact source cell; recovered complete source cell instead.",
+        "originalNativeSha256": "8079c00b3441a332e44c524f34e693e906a41401843d203eb88085626a1e184b",
+        "bounds": [
+          626,
+          604
+        ],
+        "nonzeroAlphaPixels": 173023,
+        "normalisedNonzeroRgbaGeometrySha256": "0c44f8f13cf0dde1804a6832f4461d29adec70419ab75b78a3bdb39a69ae3a97"
+      },
+      {
+        "direction": "SW",
+        "canonicalNative": "art/theme-consistency/generated/buildings/world-barn-4views-v1/SW.native.png",
+        "canonicalRejected": "Existing native omits/changes nonzero RGBA geometry from the intact source cell; recovered complete source cell instead.",
+        "originalNativeSha256": "cfce52bc5762b8c8e75ec047fd064349737b135fc3a5e866330cb4ab71703545",
+        "bounds": [
+          627,
+          627
+        ],
+        "nonzeroAlphaPixels": 191909,
+        "normalisedNonzeroRgbaGeometrySha256": "549b68f94bcfa079e9071684c7a8b130a147b66694226a3905d6b0ded4d1a6d6"
+      },
+      {
+        "direction": "NW",
+        "canonicalNative": "art/theme-consistency/generated/buildings/world-barn-4views-v1/NW.native.png",
+        "canonicalRejected": "Existing native omits/changes nonzero RGBA geometry from the intact source cell; recovered complete source cell instead.",
+        "originalNativeSha256": "d408a40ffbeb1b4bca74f5f907f0b5fa846daa6ae4bcf4805e0ab65dda7a2af6",
+        "bounds": [
+          613,
+          627
+        ],
+        "nonzeroAlphaPixels": 197784,
+        "normalisedNonzeroRgbaGeometrySha256": "3272790b5978924bf41290b43055d06b944ff3c1da874aea7026591a1e296e70"
+      }
+    ],
+    "placements": [
+      {
+        "direction": "NE",
+        "left": 198,
+        "top": 208,
+        "width": 627,
+        "height": 608,
+        "nativeSha256": "1db49273f997731d9f91f710f9286d4ff0f34c4e57cb84d01dcd090da9217124",
+        "unchangedOriginalNative": true
+      },
+      {
+        "direction": "SE",
+        "left": 1222,
+        "top": 198,
+        "width": 627,
+        "height": 627,
+        "nativeSha256": "cfce52bc5762b8c8e75ec047fd064349737b135fc3a5e866330cb4ab71703545",
+        "unchangedOriginalNative": true
+      },
+      {
+        "direction": "SW",
+        "left": 198,
+        "top": 1232,
+        "width": 627,
+        "height": 608,
+        "nativeSha256": "8079c00b3441a332e44c524f34e693e906a41401843d203eb88085626a1e184b",
+        "unchangedOriginalNative": true
+      },
+      {
+        "direction": "NW",
+        "left": 1227,
+        "top": 1222,
+        "width": 617,
+        "height": 627,
+        "nativeSha256": "d408a40ffbeb1b4bca74f5f907f0b5fa846daa6ae4bcf4805e0ab65dda7a2af6",
+        "unchangedOriginalNative": true
+      }
+    ],
+    "outputSha256": "a4d0d46a4a61811cbcd59c8661be150f42b007e6fc3ab864c964a27b315073b7"
+  }
 }

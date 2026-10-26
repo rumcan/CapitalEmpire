@@ -1,0 +1,264 @@
+{
+  "id": "variation:industrial-freight-depot-a030c919:1",
+  "generator": "image_gen",
+  "generated": "2026-10-24",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-3700ae50-8281-4964-9ae2-fc0fcf36eaec.png",
+  "prompt": "ONE GAME ASSET CUTOUT on EMPTY TRANSPARENT ALPHA, RGBA PNG. Reference1 is STYLE ONLY: the Maple Bean street's coherent miniature 3D illustration, softly textured matte materials, restrained rich colours, charcoal roofs, warm amber lamps, readable fine detail, early dusk with remaining daylight. Reference2 shows IDENTITY ONLY: preserve this building's architecture, not its old rendering or blue night cast. It must look natural beside the buildings in reference1. Fixed 2:1 isometric camera and SCREEN UPPER RIGHT SUN in every view; right-facing planes warm, left-facing planes cooler. Exactly four true rigid quarter turns of the SAME physical object on a square 2x2 sheet: NE front+right, SE right+back, SW back+left, NW left+front. Same roof, windows, equipment and physical scale throughout; reconstruct hidden sides, never mirror a front. Centre each complete sprite within its own cell with20% blank margins on every side. Empty alpha in corners, gutters and gaps, zero clipping. NO BACKDROP OR FLOOR: no stage, ground surface, paving, terrain tile, foliage, leaves, broad shadow, haze, gradient, checkerboard, caption, divider, view label or frame. No people, vehicles, Halloween, pumpkins, skulls, cobwebs, spooky signage or decorative garlands. Only the physical building and integral structural parts, no attached landscape.  Subject library ID variation:industrial-freight-depot-a030c919:1. Long red-brick freight depot with integral two-storey office at one end, raised loading dock and continuous corrugated canopy, several blue-grey loading doors, clerestory strip, roof HVAC. MIDWESTERN FREIGHT sign; remove spooky posters, pumpkins, loose cargo and all yard.",
+  "references": [
+    {
+      "role": "authoritative-theme",
+      "file": "art/theme-consistency/references/theme-authoritative.png",
+      "sha256": "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2"
+    },
+    {
+      "role": "existing-subject-identity",
+      "id": "variation:industrial-freight-depot-a030c919:1",
+      "direction": null,
+      "file": "art/theme-consistency/exports/buildings/variation-industrial-freight-depot-a030c919-1.configured@2x.png",
+      "sha256": "c2bb2933c7c8c44665de787c9e34b4e84f785a1aa79999494bb2da0128a59456"
+    }
+  ],
+  "integrationStatus": "ready",
+  "integrationReason": "Full4-viewpostassemblyinspectionovermagenta atvisible-boundzoom confirms true distinctquarterturns, sharedfixed2:1camera/upper-rightdusk/mastermaterials/no surroundingfloor. AlphaPASS0warnings; unchanged3PNGbytesverified ateachreplacementstep. Physicalbuildingheightretained, doormeasurementnotcertified.",
+  "sourceVisualReview": {
+    "reviewer": "source_review_resume",
+    "actualAlphaBackground": "magenta #ff00c8",
+    "theme": "references/theme-authoritative.png",
+    "sourceOnly": true,
+    "geometry": "correction required",
+    "gameScaleNotCertified": true
+  },
+  "layoutCorrection": {
+    "method": "Disconnected alpha>8 silhouette extraction with nearest-silhouette assignment of all remaining fringe pixels; exact source RGBA pixel copies only, no resize, repaint or deletion.",
+    "seedAlphaThresholdExclusive": 8,
+    "originalSheet": "art/theme-consistency/generated/buildings/variation-industrial-freight-depot-a030c919-1-4views-v1.png",
+    "originalSheetSha256": "3eeb7633a7de000cc029cff4ad5e0f0709b523b4e8213cadfe82a124aeb38854",
+    "outputSheetSha256": "f9dc90694e4b752da979bb1d7d2d8083ce9e88fb5813b35451d793afa0919af1",
+    "originalDimensions": [
+      1774,
+      887
+    ],
+    "outputDimensions": [
+      2816,
+      2816
+    ],
+    "cellSize": 1408,
+    "nonzeroAlphaPixels": 916793,
+    "nonzeroAndVisiblePixelConservation": true,
+    "exactVisibleRgbaConservation": true,
+    "assignmentPolicy": "Every alpha>8 dominant component remains intact. Multi-source orthogonal nearest-silhouette flood fills assign fringe and tiny detached components; every nonzero source tuple is copied exactly once.",
+    "views": [
+      {
+        "direction": "NE",
+        "dominantComponent": {
+          "label": 1,
+          "pixels": 228075,
+          "bounds": [
+            112,
+            6,
+            823,
+            474
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 0,
+          "y0": 0,
+          "x1": 953,
+          "y1": 501,
+          "count": 233879
+        },
+        "translation": {
+          "x": 227,
+          "y": 453
+        }
+      },
+      {
+        "direction": "SE",
+        "dominantComponent": {
+          "label": 2,
+          "pixels": 225478,
+          "bounds": [
+            953,
+            6,
+            1705,
+            496
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 914,
+          "y0": 0,
+          "x1": 1714,
+          "y1": 505,
+          "count": 232627
+        },
+        "translation": {
+          "x": 797,
+          "y": 451
+        }
+      },
+      {
+        "direction": "SW",
+        "dominantComponent": {
+          "label": 5,
+          "pixels": 224736,
+          "bounds": [
+            108,
+            454,
+            869,
+            880
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 90,
+          "y0": 424,
+          "x1": 872,
+          "y1": 886,
+          "count": 231702
+        },
+        "translation": {
+          "x": 222,
+          "y": 1456
+        }
+      },
+      {
+        "direction": "NW",
+        "dominantComponent": {
+          "label": 4,
+          "pixels": 212674,
+          "bounds": [
+            1018,
+            451,
+            1720,
+            873
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 932,
+          "y0": 424,
+          "x1": 1757,
+          "y1": 875,
+          "count": 218585
+        },
+        "translation": {
+          "x": 767,
+          "y": 1462
+        }
+      }
+    ],
+    "visualReviewRequired": true
+  },
+  "singleViewCorrection": {
+    "sourceSheet": "art/theme-consistency/generated/buildings/variation-industrial-freight-depot-a030c919-1-4views-v4.png",
+    "sourceSheetSha256": "c748e9d25ed317a76d67701582ce105d3c4a0fba6ac86d63ed691460643742c3",
+    "direction": "SE",
+    "copiedOriginalDirection": null,
+    "newGeneratedSingle": "art/theme-consistency/generated/buildings/variation-industrial-freight-depot-a030c919-1-single-corrections-v2/SW.png",
+    "newGeneratedSingleSha256": "973c62b94ce2c23a825437b1684e77e1027f5514b525ad2a0782195d01dd54b7",
+    "newGeneratedSingleProvenance": {
+      "id": "variation:industrial-freight-depot-a030c919:1",
+      "direction": "SW",
+      "generator": "image_gen",
+      "generated": "2026-10-24",
+      "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-b3c59269-5cea-4c2f-b4b9-de6647e6947c.png",
+      "prompt": "ONE SINGLE ISOLATED BUILDING SPRITE, NOT A FOUR-VIEW SHEET. The reference is this SAME existing building shown from several corners; preserve its exact architecture and matte Maple Bean miniature style. We need a genuinely different rigid rotation, direction SW. All4views retain full loading-canopy/roller-door long facade. It is one physical front A, so preserve NE A-left+B-right and NW D-left+A-right; SE must B-left+rear C-right and SW C-left+D-right with a plausible distinct industrial rear, not four loading fronts. Keep office wing/roof equipment stable. TARGET SW ONLY: show genuine rear wall C on image LEFT and physical left wall D on image RIGHT. Front A entrance/deck/pool is on far side, mostly hidden by the house; do not move it onto rear C. Output ONE isolated complete building cutout for this target direction, not a sheet or montage. Preserve existing Maple-master palette/materials/details and fixed screen-upper-right dusk light. Orthographic2:1 ground axes approximately +/-26.565degrees, verticalwallsvertical, no perspective vanishing point. No grey floor/terrain/haze/broad shadow; genuinely transparent alpha with generous canvas margins. Fixed orthographic2:1 camera: both ground axes at +/-26.565degrees, wallsvertical, no head-on elevation/perspective vanishingpoint. CRITICAL: fixed SCREEN UPPER RIGHT DUSK SUN and warm amber practical lights; right roof/wall planes warm, leftplanes cooler even though buildingturns. Reconstructhiddenfaces; NEVER mirror sourcepixels or lighting or copy the samecorner. Square1:1PNG with onecompleteSMALLbuilding occupying60%canvasheight, generous100pxfullyclear margins, truealpha0outsidephysicalbuilding. No other view, no grid, no label, no ground surface/floor/paving/yard/greybackdrop/broadshadow/haze/gradient/checkerboard/people. Only physical building and integralporch/steps/supports.",
+      "references": [
+        {
+          "role": "identity-style-and-physical-geometry-reference",
+          "file": "art/theme-consistency/generated/buildings/variation-industrial-freight-depot-a030c919-1-4views-v1.png"
+        }
+      ],
+      "integrationStatus": "blocked",
+      "integrationReason": "Single actual-turn correction; inspect before four-view assembly."
+    },
+    "newViewScale": {
+      "factor": 0.6626180836707153,
+      "method": "median visible building height of unchanged three views; source scale retained, not certified door calibration",
+      "targetHeight": 491,
+      "oldDoor": null,
+      "newDoor": null,
+      "resizeKernel": "lanczos3; new view only"
+    },
+    "unchangedViewsPreservedByteForByte": [
+      "NE",
+      "SW",
+      "NW"
+    ],
+    "originalViewEvidence": [
+      {
+        "direction": "NE",
+        "canonicalRejected": null,
+        "sourceCellSafeMargin": true,
+        "originalNativeSha256": "f02d9c6e5ff8448e2a48ffb0b6829e5314100400f906f062c664f3c4a09d9aeb",
+        "originalVisibleHeight": 469,
+        "nonzeroAlphaPixels": 233879,
+        "rgbaSha256": "9db692d61e115586e4ec0f8e6b646df7b1e10828d65d6c07a152c4c8a610dd7f"
+      },
+      {
+        "direction": "SE",
+        "canonicalRejected": null,
+        "sourceCellSafeMargin": true,
+        "originalNativeSha256": "f88a0982911f7821730d0cad90ac3982c09cbcc61eed6748d49f63f614564993",
+        "originalVisibleHeight": 491,
+        "nonzeroAlphaPixels": 232627,
+        "rgbaSha256": "fa873f0f8fabc0b963083e0149f843a8e522d5b310a90e3a1d7f92204c49c5cb"
+      },
+      {
+        "direction": "SW",
+        "canonicalRejected": null,
+        "sourceCellSafeMargin": true,
+        "originalNativeSha256": "b3e5066747a59e7e29f0873d569194f0fb96a6a3785492bcc86aea1d08902c3f",
+        "originalVisibleHeight": 492,
+        "nonzeroAlphaPixels": 218100,
+        "rgbaSha256": "2b3f63cce089e63a8bc1b0dbb29de76945875fffbde0575fccfd64bcbbbe0408"
+      },
+      {
+        "direction": "NW",
+        "canonicalRejected": null,
+        "sourceCellSafeMargin": true,
+        "originalNativeSha256": "f88a0982911f7821730d0cad90ac3982c09cbcc61eed6748d49f63f614564993",
+        "originalVisibleHeight": 491,
+        "nonzeroAlphaPixels": 232627,
+        "rgbaSha256": "fa873f0f8fabc0b963083e0149f843a8e522d5b310a90e3a1d7f92204c49c5cb"
+      }
+    ],
+    "placements": [
+      {
+        "direction": "NE",
+        "left": 287,
+        "top": 513,
+        "width": 962,
+        "height": 510,
+        "nativeSha256": "f02d9c6e5ff8448e2a48ffb0b6829e5314100400f906f062c664f3c4a09d9aeb",
+        "unchangedOriginalNative": true
+      },
+      {
+        "direction": "SE",
+        "left": 1904,
+        "top": 381,
+        "width": 799,
+        "height": 773,
+        "nativeSha256": "a4d7215738c953193c7922f28c6599a088683cdc4bda82f3e2ff17b63b7fead8",
+        "unchangedOriginalNative": false
+      },
+      {
+        "direction": "SW",
+        "left": 377,
+        "top": 1931,
+        "width": 782,
+        "height": 745,
+        "nativeSha256": "b3e5066747a59e7e29f0873d569194f0fb96a6a3785492bcc86aea1d08902c3f",
+        "unchangedOriginalNative": true
+      },
+      {
+        "direction": "NW",
+        "left": 1899,
+        "top": 2047,
+        "width": 809,
+        "height": 514,
+        "nativeSha256": "f88a0982911f7821730d0cad90ac3982c09cbcc61eed6748d49f63f614564993",
+        "unchangedOriginalNative": true
+      }
+    ],
+    "outputSha256": "d1e44b866e517e4749e294b4f99b18c5f7f1bfe3d70bfe10291688c12794c5c0"
+  }
+}

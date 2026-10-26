@@ -1,10 +1,10 @@
 {
  "id": "town:bus_stop",
- "version": "town-bus_stop-4views-v1",
+ "version": "town-bus_stop-4views-v2",
  "files": {
-  "NE": "aa642945259dd3ce2a843828c1448fb5d334e479137bdcc47a8e8c3fbdaa031e",
-  "SE": "85fad51ecfeb29569025363c6cf30a4b884d9399ede3d034d864a365550da9ba",
-  "SW": "3bb3378babaf798b7c1a3906850e2a1635a0a062140e914b54127bad55c6436b",
-  "NW": "f62a608ff1a638ad0dab2e6190a5be03180bac9110e0991eb02565e85292ed23"
+  "NE": "7938b8cb392964c0d09e41e0624375db98c1745e2a5c9acbde3a256100a536d7",
+  "SE": "f44d34875ac24692fb6f03dff139c93e59c6c0895e10a4c0449d6d71cc5ea52b",
+  "SW": "46f3d423bed1401c4ecff6f13a1749788d573032398e580e43b2314a1a5c6224",
+  "NW": "93251ba80e53eca1f1a64a17e2f6414510b66b7ab5a7abdc34f5334f97693cff"
  }
 }

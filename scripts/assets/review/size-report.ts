@@ -9,13 +9,14 @@
 //   native  the largest scale its source picture's own pixels allow: the four-view art (art/building-views, the smallest of its views); a car's eight
 //           views (art/cars, the smallest of its model's, over CAR_SCALE); a sprite the game draws as itself and prep-sprites.mjs packs, from its painted
 //           source's width (the same lookup prep-sprites uses); a business picture (prep-business-art.mjs) from its capital-v1 master's width. Above it
-//           the studio warns (soft, a Rebuild upscales the picture) and never refuses. null: unknown, or a stand-in (an old
-//           building drawn as new art: its own picture is never drawn, sharp is the stand-in's)
+//           the studio warns (soft, a Rebuild upscales the picture) and never refuses. A stand-in (an old building drawn as new art: its own
+//           picture is never drawn) takes the smallest of its stand-ins' (newart.ts standInCandidates) as a scale of itself: what a Rebuild
+//           (prep-views.mjs) packs them for. null: unknown
 import fs from 'node:fs';
 import path from 'node:path';
 import { ATLAS_MIP0, ATLAS_PAGES, LIBRARY } from '../../../src/game/library';
 import { OWNER_SCALE, TABLE_SCALE } from '../../../src/game/lots/scales';
-import { lookOf } from '../../../src/game/newart';
+import { lookOf, standInCandidates } from '../../../src/game/newart';
 import { PIXEL_LIMIT, PIXEL_SLACK, atlasRes } from '../../../src/game/sizes';
 import { VIEW_ART } from '../../../src/game/views-library';
 import { CAR_SCALE, carSizeId } from '../../../src/game/ext/car-art';
@@ -86,6 +87,12 @@ const SOURCE = await sourceFiles();
 /** the pixel width of a sprite's painted source, null when none is found */
 const sourcePx = (id: string) => { const f = SOURCE.get(id); return f ? pixelWidth(f) : null; };
 
+/** the four views of one building (by its size id) as a scale of it: the smallest of their sources' pixels over their display width at mip 0 (the
+ *  largest the building is sharp to from its own art, whatever it is packed at); null for a sprite without views */
+const viewsNative = (sizeId: string): number | null => {
+  const views = [...NATIVE_W.keys()].filter(v => sizeIdOf(v) === sizeId);
+  return views.length ? Math.min(...views.map(v => { const x = LIBRARY[INDEX.get(v)!]!; return NATIVE_W.get(v)! / (ATLAS_MIP0 * (x.quad[2] - x.quad[0])); })) : null;
+};
 const at = (i: number, scale: number) => {
   const it = LIBRARY[i]!; let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
   for (const b of it.boxes) { const hx = b.hx * scale / 2, hy = b.hy * scale / 2, dx = b.dx * scale / 2, dy = b.dy * scale / 2; x0 = Math.min(x0, dx - hx); x1 = Math.max(x1, dx + hx); y0 = Math.min(y0, dy - hy); y1 = Math.max(y1, dy + hy); }
@@ -109,15 +116,20 @@ LIBRARY.forEach((it, i) => {
   // the source's limit: the four views of one building share the smallest; a sprite prep-sprites.mjs packs is as big as its painted source is
   // (its width over its display width at mip 0: prep-sprites packs it at min(0.6 x its largest scale, source px per display px)); a car is drawn CAR_SCALE smaller
   let native: number | null = null;
-  const views = [...NATIVE_W.keys()].filter(v => sizeIdOf(v) === sizeIdOf(it.id)), atlasSprite = /assets\/atlas\/sprites-/.test(String(ATLAS_PAGES[it.tex[0]]?.[0] ?? '').replaceAll('\\', '/'));
-  if (self && views.length) native = Math.min(...views.map(v => { const x = LIBRARY[INDEX.get(v)!]!; return NATIVE_W.get(v)! / (ATLAS_MIP0 * (x.quad[2] - x.quad[0])); })) / (it.kind === 'car' ? CAR_SCALE : 1);
+  const views = viewsNative(sizeIdOf(it.id)), atlasSprite = /assets\/atlas\/sprites-/.test(String(ATLAS_PAGES[it.tex[0]]?.[0] ?? '').replaceAll('\\', '/'));
+  if (self && views !== null) native = views / (it.kind === 'car' ? CAR_SCALE : 1);
   else if (self && BUSINESS_MASTER.has(it.id)) { const px = pixelWidth(BUSINESS_MASTER.get(it.id)!); native = px ? px / (ATLAS_MIP0 * it.w) : null; }
   else if (self && atlasSprite) {
     const px = sourcePx(it.id);
     // no source found: a town sprite packed short of its largest drawn scale is short of its atlas (the old limit)
     native = px ? px / (ATLAS_MIP0 * it.w) / (it.kind === 'car' ? CAR_SCALE : 1) : atlasRes(it) < ATLAS_MIP0 * packedFor(it.id) * 0.995 ? PIXEL_LIMIT[i]! : null;
   }
-  else if (!self) native = sharp;
+  else if (!self) {
+    // drawn as a stand-in: the smallest of its stand-ins' own pixels, as a scale of this building (a stand-in fills its footprint, span for span);
+    // prep-views packs each stand-in for what the buildings drawn as it need, so past this a Rebuild upscales (soft). Its sharp when unknown
+    const limits = standInCandidates(i, scale).map(s => { const n = LIBRARY[s]!, v = viewsNative(sizeIdOf(n.id)); return v === null ? null : v * span(n) / span(it); });
+    native = limits.length && limits.every(v => v !== null) ? Math.min(...(limits as number[])) : sharp;
+  }
   out[it.id] = {
     id: it.id, name: it.name, cat: it.cat, kind: it.kind, w: it.w, h: it.h, ax: it.ax, ay: it.ay, quad: it.quad, tex: it.tex, page: ATLAS_PAGES[it.tex[0]]?.[0] ?? null,
     scale, base: TABLE_SCALE[sizeIdOf(it.id)] ?? 1, sizeId: sizeIdOf(it.id),

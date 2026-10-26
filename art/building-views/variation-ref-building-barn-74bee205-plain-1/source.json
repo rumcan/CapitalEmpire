@@ -6,6 +6,5 @@
   "SE": "f6c0d4c948fc7f3d9d46e1e05f28f8f2b02f866e004f8f521d424fc7c171ed1a",
   "SW": "6e33479a552cc8a497cf0cd4b78139630af02a0709ebf4c5107abd6586dd1536",
   "NW": "a0c6d65589776a95730307f101931f734e9f90c4df57ba1147afa8a47ac9f572"
- },
- "cropsBy": "prep-views (four-view-cells.mjs)"
+ }
 }

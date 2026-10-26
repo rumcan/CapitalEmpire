@@ -372,7 +372,8 @@
      "sha256": "8d5ea4b97997a5262351c2579609021368223bedc2de8f3994ca351dbd4ec815",
      "door": 68
     }
-   }
+   },
+   "gaugeScale": 1.38
   },
   "gen:house-farmhouse-wrap": {
    "version": "gen-house-farmhouse-wrap-4views-v1",
@@ -411,7 +412,8 @@
      "sha256": "65c58a7e84a9ed93f3590f4d040aac06e13dd40c9373e0a1becf70540d01103c",
      "door": 70
     }
-   }
+   },
+   "gaugeScale": 1.352
   },
   "gen:house-ranch-long": {
    "version": "gen-house-ranch-long-4views-v1",

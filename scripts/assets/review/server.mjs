@@ -16,7 +16,8 @@
 //   Painted: which hand-painted family each surface wears (the golf surfaces, the map, the town lawns, the living ground, the course walls, any
 //            preset): a family picker with each family's three zoom levels, its version, scale, tint and tone; Save writes
 //            src/game/painted-surfaces.json, which a dev game from this checkout takes at once (painted.js)
-//   Rebuild: runs the asset steps again, then npm run build, so the game takes the changes.
+//   Rebuild: runs every pack the studio's sizes reach again (decals, map patches, town sprites, cars, business art, building site, four-view
+//            buildings and their stand-ins, the scale table; rebuild() below), then npm run build, so the game takes the changes.
 //   node scripts/assets/review/server.mjs [--port 5179]   then open http://127.0.0.1:5179/
 import { execFile, spawn } from 'node:child_process';
 import fs from 'node:fs';
@@ -185,7 +186,13 @@ async function frame(pid, d, k, asDrawn) {
 let job = null;
 function rebuild() {
   if (job && !job.done) return job;
-  const steps = ['scripts/assets/prep-decals.mjs', 'scripts/assets/nature-patches.mjs', 'scripts/assets/prep-sprites.mjs', 'scripts/assets/prep-scales.mjs', 'scripts/assets/prep-construction.mjs', 'scripts/assets/audit-sprites.mjs'];
+  // every pack the studio's sizes reach, in the order they feed each other: the decals and map patches; the town sprites (library.ts); the cars
+  // (cars-library.ts) and the business art (business-library.ts) at their sizes; the building site; then the four-view buildings (prep-views.mjs
+  // reads every library above, and packs each view at its size, and each stand-in for what the buildings drawn as it need: views-library.ts;
+  // with no folder given it syncs the art model's generated buildings from the main checkout, then packs the copies in art/building-views);
+  // the scale table last of the packs (it reads every library and what views-library appends); the audit after everything
+  const steps = ['scripts/assets/prep-decals.mjs', 'scripts/assets/nature-patches.mjs', 'scripts/assets/prep-sprites.mjs', 'scripts/assets/prep-cars.mjs', 'scripts/assets/prep-business-art.mjs',
+    'scripts/assets/prep-construction.mjs', 'scripts/assets/prep-views.mjs', 'scripts/assets/prep-scales.mjs', 'scripts/assets/audit-sprites.mjs'];
   job = { log: '', done: false, code: 0, step: '', started: Date.now() };
   const run = i => {
     if (i >= steps.length) return process.env.STUDIO_DEV_GAME ? devDone() : build();

@@ -1,6 +1,6 @@
 {
   "id": "town:bus_stop",
-  "generator": "image_gen",
+  "generator": "pixel-conserving-view-reassignment",
   "generated": "2026-10-24",
   "generatorSource": "C:/Users/RAMPAGE/.codex/generated_images/01a16c0b-bcad-7e71-a5d0-0281b98562b9/exec-f4e88677-b12c-4bf3-9cd1-b2c4b59bd3b1.png",
   "prompt": "Production game sprite asset, detailed illustrated 3D miniature matching first reference (Maple Bean street) for materials and warm early dusk. Second reference is ONLY object's existing identity; final reference is a GEOMETRY diagram only, never copy labels or colours. Create square transparent RGBA PNG, actual alpha empty background, exactly four independent views in a 2x2 sheet row-major NE front+right, SE right+back, SW back+left, NW left+front. Four true rigid quarter turns of SAME object, same details, proportions and scale; reconstruct hidden sides. Fixed parallel 2:1 isometric camera, axes +/-26.565 degrees, verticals vertical. Light from SCREEN UPPER RIGHT in ALL cells, warm right-facing planes, cool left-facing planes, tiny lower-left contact shadow. Early dusk, not night. No people, vehicles, scenery, ground tile, Halloween, pumpkins, garlands, checkerboard, backdrop, haze, labels or caption. Each complete silhouette centred WITHIN its own cell with 15% clear margins ON EVERY SIDE; very wide central gutter, no clipping. Preserve this small glass-sided bus shelter: dark charcoal flat gently sloped canopy, dark thin metal posts, clear glass rear and side panels, timber bench inside and its small integral timetable panel. Open front, bench along rear, reconstruct rear transparent glass face; no illuminated advertising scene or attached bus stop pole. Four turns must show bench and open front rotating with the shelter.",
@@ -11,5 +11,198 @@
   ],
   "review": "Four different front/rear views present; alpha and crop verification required.",
   "integrationStatus": "ready",
-  "integrationReason": "Distinct front/rear views inspected; alpha and all four crop-boundary checks passed. Original-width scale pending door gauges."
+  "integrationReason": "Fivepure-reassignmentaudit: fourdistinctphysicalcornersalreadyexisted; canonicalclockwiseorderingcorrectedwithoutgeneration/resizing/mirroring. Actualmagentaalphaandpost-permutationgeometryreviewPASS; all4sourcePNGbytehashesconserved. RuntimecalibrationrequiresmatchingmeasurednativeSHA.",
+  "newImageGeneration": false,
+  "viewReassignment": {
+    "method": "Exact-native PNG permutation; no generation, resizing, mirroring or repainting.",
+    "sourceSheet": "art/theme-consistency/generated/buildings/town-bus_stop-4views-v1.png",
+    "sourceSheetSha256": "0265b943d24011599090f696ffafb5876bad918391f07249ef454f3200be20ee",
+    "sourceProvenanceSha256": "484909aa2e5b01ffec65ffab3f97e02463fa825c42749f813d6345d31e558ddf",
+    "mapping": {
+      "NE": "NE",
+      "SE": "SW",
+      "SW": "SE",
+      "NW": "NW"
+    },
+    "originalViewEvidence": [
+      {
+        "direction": "NE",
+        "canonicalNative": "art/theme-consistency/generated/buildings/town-bus_stop-4views-v1/NE.native.png",
+        "canonicalRejected": "Existing native omits/changes nonzero RGBA geometry from the intact source cell; recovered complete source cell instead.",
+        "originalNativeSha256": "7938b8cb392964c0d09e41e0624375db98c1745e2a5c9acbde3a256100a536d7",
+        "bounds": [
+          627,
+          607
+        ],
+        "nonzeroAlphaPixels": 137920,
+        "normalisedNonzeroRgbaGeometrySha256": "7e3110b94bafcca48f938fe227ea071d3e85e331e875a939ad08bae04e04de92"
+      },
+      {
+        "direction": "SE",
+        "canonicalNative": "art/theme-consistency/generated/buildings/town-bus_stop-4views-v1/SE.native.png",
+        "canonicalRejected": "Existing native omits/changes nonzero RGBA geometry from the intact source cell; recovered complete source cell instead.",
+        "originalNativeSha256": "46f3d423bed1401c4ecff6f13a1749788d573032398e580e43b2314a1a5c6224",
+        "bounds": [
+          599,
+          603
+        ],
+        "nonzeroAlphaPixels": 147010,
+        "normalisedNonzeroRgbaGeometrySha256": "50584cb738969beed18838bb4b5902e042e97f96e98ffed1a1682bdac7702623"
+      },
+      {
+        "direction": "SW",
+        "canonicalNative": "art/theme-consistency/generated/buildings/town-bus_stop-4views-v1/SW.native.png",
+        "canonicalRejected": "Existing native omits/changes nonzero RGBA geometry from the intact source cell; recovered complete source cell instead.",
+        "originalNativeSha256": "f44d34875ac24692fb6f03dff139c93e59c6c0895e10a4c0449d6d71cc5ea52b",
+        "bounds": [
+          627,
+          627
+        ],
+        "nonzeroAlphaPixels": 146985,
+        "normalisedNonzeroRgbaGeometrySha256": "15e0e0a77d17a257a00a5a366cbd6c0450694a47c1ba88128744853b7abe8413"
+      },
+      {
+        "direction": "NW",
+        "canonicalNative": "art/theme-consistency/generated/buildings/town-bus_stop-4views-v1/NW.native.png",
+        "canonicalRejected": "Existing native omits/changes nonzero RGBA geometry from the intact source cell; recovered complete source cell instead.",
+        "originalNativeSha256": "93251ba80e53eca1f1a64a17e2f6414510b66b7ab5a7abdc34f5334f97693cff",
+        "bounds": [
+          610,
+          611
+        ],
+        "nonzeroAlphaPixels": 131785,
+        "normalisedNonzeroRgbaGeometrySha256": "785157aba413b54cf709dafd9eb15a750da5f04dd31851cc183e5394e4a0a2e7"
+      }
+    ],
+    "hashMappings": [
+      {
+        "direction": "NE",
+        "sourceDirection": "NE",
+        "oldNativeSha256": "7938b8cb392964c0d09e41e0624375db98c1745e2a5c9acbde3a256100a536d7",
+        "newNativeSha256": "7938b8cb392964c0d09e41e0624375db98c1745e2a5c9acbde3a256100a536d7"
+      },
+      {
+        "direction": "SE",
+        "sourceDirection": "SW",
+        "oldNativeSha256": "f44d34875ac24692fb6f03dff139c93e59c6c0895e10a4c0449d6d71cc5ea52b",
+        "newNativeSha256": "f44d34875ac24692fb6f03dff139c93e59c6c0895e10a4c0449d6d71cc5ea52b"
+      },
+      {
+        "direction": "SW",
+        "sourceDirection": "SE",
+        "oldNativeSha256": "46f3d423bed1401c4ecff6f13a1749788d573032398e580e43b2314a1a5c6224",
+        "newNativeSha256": "46f3d423bed1401c4ecff6f13a1749788d573032398e580e43b2314a1a5c6224"
+      },
+      {
+        "direction": "NW",
+        "sourceDirection": "NW",
+        "oldNativeSha256": "93251ba80e53eca1f1a64a17e2f6414510b66b7ab5a7abdc34f5334f97693cff",
+        "newNativeSha256": "93251ba80e53eca1f1a64a17e2f6414510b66b7ab5a7abdc34f5334f97693cff"
+      }
+    ],
+    "allFourPngByteHashesConserved": true,
+    "fullRgbaPlacementConserved": true,
+    "outputSha256": "cb3a2f93818c3396f4efb1738e1ee83125a0d6bc6b04443da7dacd402321bbbc"
+  },
+  "singleViewCorrection": {
+    "sourceSheet": "art/theme-consistency/generated/buildings/town-bus_stop-4views-v1.png",
+    "sourceSheetSha256": "0265b943d24011599090f696ffafb5876bad918391f07249ef454f3200be20ee",
+    "direction": null,
+    "type": "exact-native-view-reassignment",
+    "unchangedViewsPreservedByteForByte": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "originalViewEvidence": [
+      {
+        "direction": "NE",
+        "canonicalNative": "art/theme-consistency/generated/buildings/town-bus_stop-4views-v1/NE.native.png",
+        "canonicalRejected": "Existing native omits/changes nonzero RGBA geometry from the intact source cell; recovered complete source cell instead.",
+        "originalNativeSha256": "7938b8cb392964c0d09e41e0624375db98c1745e2a5c9acbde3a256100a536d7",
+        "bounds": [
+          627,
+          607
+        ],
+        "nonzeroAlphaPixels": 137920,
+        "normalisedNonzeroRgbaGeometrySha256": "7e3110b94bafcca48f938fe227ea071d3e85e331e875a939ad08bae04e04de92"
+      },
+      {
+        "direction": "SE",
+        "canonicalNative": "art/theme-consistency/generated/buildings/town-bus_stop-4views-v1/SE.native.png",
+        "canonicalRejected": "Existing native omits/changes nonzero RGBA geometry from the intact source cell; recovered complete source cell instead.",
+        "originalNativeSha256": "46f3d423bed1401c4ecff6f13a1749788d573032398e580e43b2314a1a5c6224",
+        "bounds": [
+          599,
+          603
+        ],
+        "nonzeroAlphaPixels": 147010,
+        "normalisedNonzeroRgbaGeometrySha256": "50584cb738969beed18838bb4b5902e042e97f96e98ffed1a1682bdac7702623"
+      },
+      {
+        "direction": "SW",
+        "canonicalNative": "art/theme-consistency/generated/buildings/town-bus_stop-4views-v1/SW.native.png",
+        "canonicalRejected": "Existing native omits/changes nonzero RGBA geometry from the intact source cell; recovered complete source cell instead.",
+        "originalNativeSha256": "f44d34875ac24692fb6f03dff139c93e59c6c0895e10a4c0449d6d71cc5ea52b",
+        "bounds": [
+          627,
+          627
+        ],
+        "nonzeroAlphaPixels": 146985,
+        "normalisedNonzeroRgbaGeometrySha256": "15e0e0a77d17a257a00a5a366cbd6c0450694a47c1ba88128744853b7abe8413"
+      },
+      {
+        "direction": "NW",
+        "canonicalNative": "art/theme-consistency/generated/buildings/town-bus_stop-4views-v1/NW.native.png",
+        "canonicalRejected": "Existing native omits/changes nonzero RGBA geometry from the intact source cell; recovered complete source cell instead.",
+        "originalNativeSha256": "93251ba80e53eca1f1a64a17e2f6414510b66b7ab5a7abdc34f5334f97693cff",
+        "bounds": [
+          610,
+          611
+        ],
+        "nonzeroAlphaPixels": 131785,
+        "normalisedNonzeroRgbaGeometrySha256": "785157aba413b54cf709dafd9eb15a750da5f04dd31851cc183e5394e4a0a2e7"
+      }
+    ],
+    "placements": [
+      {
+        "direction": "NE",
+        "left": 198,
+        "top": 206,
+        "width": 627,
+        "height": 611,
+        "nativeSha256": "7938b8cb392964c0d09e41e0624375db98c1745e2a5c9acbde3a256100a536d7",
+        "unchangedOriginalNative": true
+      },
+      {
+        "direction": "SE",
+        "left": 1222,
+        "top": 198,
+        "width": 627,
+        "height": 627,
+        "nativeSha256": "f44d34875ac24692fb6f03dff139c93e59c6c0895e10a4c0449d6d71cc5ea52b",
+        "unchangedOriginalNative": true
+      },
+      {
+        "direction": "SW",
+        "left": 210,
+        "top": 1232,
+        "width": 603,
+        "height": 607,
+        "nativeSha256": "46f3d423bed1401c4ecff6f13a1749788d573032398e580e43b2314a1a5c6224",
+        "unchangedOriginalNative": true
+      },
+      {
+        "direction": "NW",
+        "left": 1228,
+        "top": 1228,
+        "width": 615,
+        "height": 615,
+        "nativeSha256": "93251ba80e53eca1f1a64a17e2f6414510b66b7ab5a7abdc34f5334f97693cff",
+        "unchangedOriginalNative": true
+      }
+    ],
+    "outputSha256": "cb3a2f93818c3396f4efb1738e1ee83125a0d6bc6b04443da7dacd402321bbbc"
+  }
 }

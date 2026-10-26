@@ -1,0 +1,10 @@
+{
+ "id": "variation:expansion-backyard-tent-a621b6c8:1",
+ "version": "variation-expansion-backyard-tent-a621b6c8-1-4views-v3",
+ "files": {
+  "NE": "f62ca96df50a245f6743670baa5c5f7d2413de7ec8f9608a66959a02eb36b4b5",
+  "SE": "86491d06162027828e1af11f17c52bfd4336b4ee8d60931230edd16e82cc313a",
+  "SW": "8b37eb65aad0641a29a340a170aaa481a8b5dcd60e2c5ca020c4ea05138a289e",
+  "NW": "ca75367a76ab16a1e3a97d17ee661a69e357102db131a10b657660e5728807b2"
+ }
+}

@@ -10,7 +10,30 @@
 > and keep this file current. Ask the owner before pushing or opening a PR.
 
 ## Now (the current work, newest first)
-- **At the account switch (2026-10-26):** (1) A coder was changing `scripts/assets/prep-sprites.mjs` (and `size-report.ts`) so each
+- **Done (2026-10-26, after the account switch): the Library's sizes reach every pack, and stand-ins are packed for the buildings drawn as
+  them (the owner: "these houses are still locked at a maximum size ... make it so I can make the building in the library the right size").**
+  Root cause: the studio's Rebuild never ran `prep-views.mjs`, so a size set on a four-view building (most houses) was never packed: the card
+  stayed "pixelates above x1.02" for ever (92 sprites were drawn past their sharp size before; 0 after). Now `server.mjs rebuild()` runs, in
+  order: prep-decals, nature-patches, prep-sprites, prep-cars, prep-business-art, prep-construction, prep-views, prep-scales, audit-sprites
+  (the packs before the scale table, which reads what they write; the audit last). Stand-ins: `newart.ts standInCandidates / standInNeeds`
+  give the size each four-view building must be packed at for the old buildings drawn as it (max over them of S_b x span(b) / span(s));
+  `prep-views.mjs` runs that through `scripts/assets/stand-in-needs.ts` (esbuild, a child process) and packs each subject at
+  max(own size, that need), capped at 3x its pixels, and logs "Packed past their own size as stand-ins"; `size-report.ts` gives a swapped
+  building `native` = the smallest of its candidates' own pixels as a scale of it (so its card says what a Rebuild can reach), and the studio's
+  soft warning applies to stand-ins too. Test `tests/standin-needs.test.ts`. A full Rebuild (the studio's steps, run directly) took 714 s:
+  prep-sprites 584 s, prep-views 97 s, the rest under 20 s each. prep-views, run with no folders as the studio runs it, synced 20 sheets from
+  the main checkout's `art/theme-consistency/generated/buildings` (10 new subjects: the church 44e76535, the freight depot, the drive-in screen,
+  the farm shed, the grocery 79498713, the large house 20cb9f9e, the l-ranch 2edc5f59, the backyard tent, the treehouse north, the garden shed
+  ac94c81e; 10 newer versions: estate villa v4, fishing lodge v5, treehouse v2, back patio pool v2, duplex v2, l-shape v1, bus stop v2, post
+  office v2, barn v2 x2), so 9 fewer buildings are stand-ins (33 of them now, 19 distinct stand-ins) and the views atlas is 37 pages (was 25;
+  the game streams pages within its fixed budget, atlas-pages.ts). `tests/newart.test.ts` (> 50 swapped, was > 100) and
+  `tests/standin-labels.test.ts` (the church is drawn as itself now) follow the art. Checked in the studio on 5193 (shots in
+  `E:/ClaudeTemp/lotmerge/`): 51fa4b80 x1.46 sharp 1.57, 1dde6f56 x1.99 sharp 2.04 (Bigger accepted: x2.14, warns until the next Rebuild),
+  2521eca8 x1.77 drawn as the duplex c39d1a23 at exactly its size, sharp 2.29; trees, houses and landmarks cards match their names. Still
+  past its sharp size: `golf:clubhouse-shanty` only (its stand-in `business:golf-clubhouse` needs x4.25, capped at x4.04 = 3x its pixels:
+  higher-res art). Pre-existing, not mine: `tests/lot-presets-json.test.ts` "every prop id is a library id" fails because the owner removed
+  `variation:gen-house-l-shape-e0e3b328-plain:1` in the studio (removed.json) while 9 lot presets still place it. Not pushed.
+- (Superseded by the entry above.) **At the account switch (2026-10-26):** (1) A coder was changing `scripts/assets/prep-sprites.mjs` (and `size-report.ts`) so each
   four-view stand-in is packed for the largest size any old building drawn as it needs (the owner: "resized and rebuilt this house but it
   is not getting any bigger": `variation:world-house_0-north-1dde6f56-plain:1` at x1.99 is drawn as a stand-in, `newart.ts` SWAP /
   `standIn`, and prep-sprites packed the stand-in only for its own owner scale). It may be unfinished: check `git diff` on those two
@@ -55,8 +78,9 @@
   (fences, bins, decals all editable); decals select with a click.
 
 ## Exact next step
-0. The owner finishes sizing in the studio Library; then Rebuild game sprites and check the buildings and cars in the lab with the
-   Person cursor. Higher-res four-view art for the 19 swapped businesses and the old stand-in houses is an art job for the owner.
+0. The owner sizes in the studio Library and presses Rebuild game sprites (about 12 minutes; every pack now, prep-views included), then checks
+   the buildings and cars in the lab with the Person cursor. Higher-res four-view art for the 19 swapped businesses and the starter clubhouse's
+   stand-in is an art job for the owner. Ask the owner about `variation:gen-house-l-shape-e0e3b328-plain:1` (removed, still in 9 presets).
 1. The owner sizes the houses in the studio Library, then Rebuild game sprites (the studio's button; `STUDIO_DEV_GAME=1`, so no npm
    build). Check a rebuilt house in the lab at its new size with the person cursor.
 2. (Done: merge saves, network.) Optionally make `/__dev/save` refuse lot-presets.json so only merges write it.
@@ -75,7 +99,7 @@ Read this to continue the lot lab work in a fresh chat. The design and the rules
 - The branch is on origin (pushed at 51643a7 by the handover session with the owner's approval); later commits push fast-forward.
   **No PR yet**: ask the owner before opening it.
 - Git on this machine needs `GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=safe.directory GIT_CONFIG_VALUE_0=*` in the environment.
-- Commit messages end with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
+- Commit messages end with the session's `Co-Authored-By:` line (Claude Fable 5.1 on 2026-10-26, Claude Opus 5.5 before).
 
 ## What runs (the owner asked for these two to stay up)
 - Game dev server: http://localhost:5241 (`.claude/launch.json` config `lot-presets-game`).

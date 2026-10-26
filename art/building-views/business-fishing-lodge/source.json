@@ -1,10 +1,10 @@
 {
  "id": "business:fishing-lodge",
- "version": "business-fishing-lodge-4views-v2",
+ "version": "business-fishing-lodge-4views-v5",
  "files": {
-  "NE": "33462a52ae40438d81e6956c52bd1379e0b6ee124f4289121899e561a95f642e",
-  "SE": "4fbe7d6218797d5ff2f569589d0f013044053fca0f3d41092d7ca80b1d1709d3",
-  "SW": "2d2b2e3cb28f1d025b1dfeb5613e1e77bf740bb47c29f8d532b008550facbf57",
-  "NW": "1f29e440f89375f32c220128bcb8d6eaae80d38e74f0f47ecfdea5cd38725310"
+  "NE": "e4cabb6c54a9984e96eb005297a00c7ef47e1a509869da4e152cd047a8f3efc5",
+  "SE": "c8a7687ae08602b2fe9199d40cb3fc4d72f99af981761d9905658867ab7e0d65",
+  "SW": "8414fdc56c1f44d2a7b052340c412456f9b1d7d04f29c5f600bc65b6a8601b61",
+  "NW": "4fb384baa5d84aa2452e769682c6496c19405a432deee25f8088466008750793"
  }
 }

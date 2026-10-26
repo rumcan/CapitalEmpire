@@ -18,6 +18,12 @@
       "sha256": "ebec58db35c7e6f927e00a711b1ec028d003f71bdc0504baf4b0061c1cbb1dec"
     }
   ],
-  "integrationStatus": "blocked",
-  "integrationReason": "Awaiting real alpha, four-view geometry, fixed camera/light and cohesive-theme review."
+  "integrationStatus": "ready",
+  "integrationReason": "Integral green-cottage deck/barbecue/tables occur only at front-facing two corners; two opposite rear/gable combinations are distinct, chimney retained.",
+  "sourceReview": {
+    "reviewed": "2026-10-24",
+    "actualAlphaComposite": "output/building-priority/newest-review-3.png",
+    "theme": "Matte Maple Bean timber/brick/cream, charcoal roofs, amber dusk lamps, fixed upper-right key coherent across these sources; holds below are concrete camera/geometry/facade-continuity faults, not backgrounds.",
+    "corrections": []
+  }
 }

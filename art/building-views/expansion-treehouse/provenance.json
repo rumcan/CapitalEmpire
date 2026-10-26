@@ -25,5 +25,122 @@
   "generator": "built-in image_gen",
   "generatedAt": "2026-10-23T16:17:45.704Z",
   "status": "generated-awaiting-visual-review",
-  "implementation": "Other AI handles runtime integration"
+  "implementation": "Other AI handles runtime integration",
+  "integrationStatus": "ready",
+  "integrationReason": "2026-10-25 source review: all4physicalcorners inspected atvisible-boundzoom overmagenta, correctclockwisefacadecycle/fixed2:1camera, coherent MapleBeanmattepalette/detail/upper-rightdusk, no surroundingfloor/haze. Singleassembly preservesunchanged3nativePNGhashes, canonicalreassignments preserveall4nativebytes. Runtime scale stillrequires placementcheck.",
+  "singleViewCorrection": {
+    "sourceSheet": "art/theme-consistency/generated/buildings/expansion-treehouse-4views-v1.png",
+    "sourceSheetSha256": "9e43849d116070d23c2c1c58b7774b9f3cf30d16d8b22cc0ad16b79dbc05bb92",
+    "direction": "NW",
+    "copiedOriginalDirection": null,
+    "newGeneratedSingle": "art/theme-consistency/generated/buildings/expansion-treehouse-single-corrections-v2/NW.png",
+    "newGeneratedSingleSha256": "2c9bd9ed6759d38e991b52f9e5cece329ff3525712632e655e3bd2ae457974bb",
+    "newGeneratedSingleProvenance": {
+      "id": "expansion:treehouse",
+      "direction": "NW",
+      "generator": "image_gen",
+      "generated": "2026-10-24",
+      "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-f9072d21-be2b-4d40-b5e6-c6a57c3e2c6c.png",
+      "prompt": "ONE SINGLE ISOLATED BUILDING SPRITE, NOT A FOUR-VIEW SHEET. The reference is this SAME existing building shown from several corners; preserve its exact architecture and matte Maple Bean miniature style. We need a genuinely different rigid rotation, direction NW. Show treehouse front entry A on image LEFT and physical left long wall D with warm window on image RIGHT. Entry/ladder moves to opposite projected side because object actually turns; retain same small cabin, chimney, tree trunk/fork, deck rail and tire tied to original branch. Do not draw NE door-right/window-left corner again. No forest/ground tile. ONE isolated complete target-view cutout ONLY, not a sheet. Fixed orthographic2:1 game camera, ground axes +/-26.565screen degrees, verticalwallsvertical. Preserve the original physical building and cohesive Maple-master palette/material detail, warm early dusk with sun SCREEN UPPER RIGHT. No mirroring, no grey floor/backdrop/haze/terrain/captions; alpha0 outside full silhouette, generous clear canvas margins. Fixed orthographic2:1 camera: both ground axes at +/-26.565degrees, wallsvertical, no head-on elevation/perspective vanishingpoint. CRITICAL: fixed SCREEN UPPER RIGHT DUSK SUN and warm amber practical lights; right roof/wall planes warm, leftplanes cooler even though buildingturns. Reconstructhiddenfaces; NEVER mirror sourcepixels or lighting or copy the samecorner. Square1:1PNG with onecompleteSMALLbuilding occupying60%canvasheight, generous100pxfullyclear margins, truealpha0outsidephysicalbuilding. No other view, no grid, no label, no ground surface/floor/paving/yard/greybackdrop/broadshadow/haze/gradient/checkerboard/people. Only physical building and integralporch/steps/supports.",
+      "references": [
+        {
+          "role": "identity-style-and-physical-geometry-reference",
+          "file": "art/theme-consistency/generated/buildings/expansion-treehouse-4views-v1/NE.native.png"
+        }
+      ],
+      "assemblySourceSheet": "art/theme-consistency/generated/buildings/expansion-treehouse-4views-v1.png",
+      "integrationStatus": "blocked",
+      "integrationReason": "Single actual-turn correction; inspect before four-view assembly."
+    },
+    "newViewScale": {
+      "factor": 0.4521232306411324,
+      "method": "median visible building height of unchanged three views; source scale retained, not certified door calibration",
+      "targetHeight": 543,
+      "oldDoor": null,
+      "newDoor": null,
+      "resizeKernel": "lanczos3; new view only"
+    },
+    "unchangedViewsPreservedByteForByte": [
+      "NE",
+      "SE",
+      "SW"
+    ],
+    "originalViewEvidence": [
+      {
+        "direction": "NE",
+        "canonicalRejected": "Existing native PNG does not conserve the complete nonzero RGBA sequence from its source cell; re-extracted intact safe source cell instead.",
+        "sourceCellSafeMargin": true,
+        "originalNativeSha256": "31e04134ca85ca2df6978146b359ee32b9dee7c572cebd7ced4b385363fe0571",
+        "originalVisibleHeight": 561,
+        "nonzeroAlphaPixels": 174008,
+        "rgbaSha256": "c7e15906b9effa944517f3813f5f0405900cd8c2273bf56151750174513fa1f9"
+      },
+      {
+        "direction": "SE",
+        "canonicalRejected": "Existing native PNG does not conserve the complete nonzero RGBA sequence from its source cell; re-extracted intact safe source cell instead.",
+        "sourceCellSafeMargin": true,
+        "originalNativeSha256": "ab8a88aa13a1279d65dec40184515ae09856cd28861c5fc06aedd30ba154f468",
+        "originalVisibleHeight": 543,
+        "nonzeroAlphaPixels": 166150,
+        "rgbaSha256": "466751d59b3dc6ddebfdfd832e8ed55b187f8448e462ae51850554ac5424ce02"
+      },
+      {
+        "direction": "SW",
+        "canonicalRejected": "Existing native PNG does not conserve the complete nonzero RGBA sequence from its source cell; re-extracted intact safe source cell instead.",
+        "sourceCellSafeMargin": true,
+        "originalNativeSha256": "a4a95f53b9e7210cd30f0b25b9d7598a8b429fd50bca596cad50bf52fbd6dc26",
+        "originalVisibleHeight": 529,
+        "nonzeroAlphaPixels": 157629,
+        "rgbaSha256": "be800e01bcd2df6b0693237b83800a5076f9ae7bbd8a44e86166ecca93342f46"
+      },
+      {
+        "direction": "NW",
+        "canonicalRejected": "Existing native PNG does not conserve the complete nonzero RGBA sequence from its source cell; re-extracted intact safe source cell instead.",
+        "sourceCellSafeMargin": true,
+        "originalNativeSha256": "86e13f1225abe71596eee07559948f481bb5b2330f44bf810ef3ccde60c0f221",
+        "originalVisibleHeight": 529,
+        "nonzeroAlphaPixels": 169007,
+        "rgbaSha256": "cc2b3e692af117e61b51b674f9d552283c5269ea744f041203d3251e91c5142f"
+      }
+    ],
+    "placements": [
+      {
+        "direction": "NE",
+        "left": 198,
+        "top": 206,
+        "width": 627,
+        "height": 612,
+        "nativeSha256": "31e04134ca85ca2df6978146b359ee32b9dee7c572cebd7ced4b385363fe0571",
+        "unchangedOriginalNative": true
+      },
+      {
+        "direction": "SE",
+        "left": 1222,
+        "top": 207,
+        "width": 627,
+        "height": 610,
+        "nativeSha256": "ab8a88aa13a1279d65dec40184515ae09856cd28861c5fc06aedd30ba154f468",
+        "unchangedOriginalNative": true
+      },
+      {
+        "direction": "SW",
+        "left": 198,
+        "top": 1222,
+        "width": 627,
+        "height": 627,
+        "nativeSha256": "a4a95f53b9e7210cd30f0b25b9d7598a8b429fd50bca596cad50bf52fbd6dc26",
+        "unchangedOriginalNative": true
+      },
+      {
+        "direction": "NW",
+        "left": 1252,
+        "top": 1257,
+        "width": 568,
+        "height": 557,
+        "nativeSha256": "5d5c43954af405de1b6a342a969ae854561fb41e1f1103dcb84a2d7cf9010b21",
+        "unchangedOriginalNative": false
+      }
+    ],
+    "outputSha256": "abf0c6a74818528c25444b78b49f03183bc1931b306ae462e1190ab82926e26d"
+  }
 }
