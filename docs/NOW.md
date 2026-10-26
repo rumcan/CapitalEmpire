@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-26 23:55)
+## START HERE (kept current by the lead; last updated 2026-10-27 00:25)
 
 **Paste-ready start prompts for every role are in `docs/START-PROMPTS.md`:** the lead, a coding ticket, and the other sessions in this
 repo. The weekly usage cap is close (2026-10-26), so any chat may stop at any moment.
@@ -27,9 +27,11 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 ### In flight
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |
-| T112 | #199 | `arena/T112-sharp` | `.claude/worktrees/t112` | 5193 (check studio, stopped after) | **Resumed overnight** by the ground agent: merge main, re-check the T162/T165 heals byte-identical with sharp 0.35.5, KTX2 compare, check studio, audit/typecheck/test/build, PR. Ships only if every shipped byte is identical. |
-| T152 | #325 | `arena/T152-car-spacing` | `.claude/worktrees/t152` | 5186 | **Resumed overnight** by the lot agent: the fix (cars keep a car's gap in their lane, rangebiz.ts) is in; the lead's decision for the building at full demand: a wider drive / second entry lane if the art allows, else car occupancy (golfers and takings unchanged); not a queue cap. Then gates, shots, PR. |
-| T112 | #199 | `arena/T112-sharp` (1872f0e) | `.claude/worktrees/t112` | — | **Paused** for T153: sharp 0.35.5 in, all packed art identical (260 images byte-identical; 16 view PNGs only re-tagged), still to do: the KTX2 check, the studio check, audit/typecheck/suite/build, the PR. Resume from #199. |
+| T110 | #193 | `arena/T110-textured-light` | `.claude/worktrees/t166` | 5187 | The owner's art rule: highlights masked by the surface's texture and inset from edges, shadows that keep the texture (multiply, cool ambient, soft penumbra, occlusion at wall feet), one sun upper right; audit paint-edges rims, hillshade, collars/walls, kerbs, water glints, the cursor puck, tree contact shadows, chunk drop shadows. Agent: the ground agent. |
+| T112 | #199 | `arena/T112-sharp` (PR #394) | `.claude/worktrees/t112` | — | **Approved, merge HELD for the morning restart:** a lock change makes the 5174 auto-updater run `npm ci` in theme-consistency (the live 5191 studio holds sharp there; the lot agent's t160 uses it by junction). Morning order: stop 5191 → merge #394 → let npm ci finish → restart 5191 and 5174. All shipped bytes identical on 0.35.5; audit 0. |
+| T169 | #392 | `arena/T169-every-use` | `.claude/worktrees/t160` | 5186 | P25: lots on the fly for every use (shops, industry, parks/civic): use groups in the model (v3), pools per group, the exam per group; a group ships only if its exam row looks at least as good as `?oldlots`. Agent: the lot agent. |
+| T110 | #193 | `arena/T110-textured-light` | `.claude/worktrees/t166` | 5187 | The owner's art rule: highlights masked by the surface's texture and inset from edges, shadows that keep the texture (multiply, cool ambient, soft penumbra, occlusion at wall feet), one sun upper right; audit paint-edges rims, hillshade, collars/walls, kerbs, water glints, the cursor puck, tree contact shadows, chunk drop shadows. Agent: the ground agent. |
+| T112 | #199 | `arena/T112-sharp` (PR #394) | `.claude/worktrees/t112` | — | **Approved, merge HELD for the morning restart:** a lock change makes the 5174 auto-updater run `npm ci` in theme-consistency (the live 5191 studio holds sharp there; the lot agent's t160 uses it by junction). Morning order: stop 5191 → merge #394 → let npm ci finish → restart 5191 and 5174. All shipped bytes identical on 0.35.5; audit 0. |
 
 **Two coding agents at a time (the owner, 2026-10-26: first "maybe just too many background tasks?" after the studio tab died with the
 PC at 1.5 GB free, then "start up two coding agents"):** keep two coding agents running, start the next queue ticket when one lands, no
@@ -86,6 +88,15 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
    (the sharp bump). See the History sections below and `gh issue list --label arena --state open`.
 
 ### Done recently (newest first; details in each PR)
+- 2026-10-27 00:25: **T170 #397 main green again + the art session's newer tiles**: `RangeSim.newDay` test knows `noPark`/`taken`; the
+  painted-tiles manifest test skips with "art moved: re-run prep-painted-tiles" when the art folder moved (strict otherwise). Shipped:
+  long-grass canonical (no longer provisional; seams 38.7 → 18.7 NEAR), putting-green finished sets, and **putting-green-paint MID from the
+  finished mid-v1 set as made** (new heal method `finished-set-as-made`: it already tiles; T165's fallback grid bands gone). Suite 1888/1888.
+  For the owner's eye: the collar's inner cut shows as a faint angular tone edge inside each MID green tile (the art session's report too).
+- 2026-10-27 23:57: **T152 #391 range cars keep their distance**: cars keep a car's gap in their lane; building-bound golfers share cars
+  (1-4 a car, mean 2.05, seeded by the visit) and the drive's two halves and the building's two lanes in/out carry them; golfers,
+  takings and car hours identical. Overlapping moving cars a day: with the building 547k → 22.4k (−96%), 44-bay lot 31.7k → 6.9k (−78%).
+  sim/town/fix/event gates pass (fix:gate −11.8% as main). Not taken: a queue cap (−48% golfers), faster car-park speeds.
 - 2026-10-26 ~23:00: **T168 #389 no first-use stall**: lazy textures built in 5 ms slices; a chunk that meets an unmade texture waits aside
   while the others bake; idle test-bakes of the 8 chunks round the last one make ahead only what the map lays; the Course tool prewarms its
   brushes; a row-at-a-time noise 4.6x faster. Cold-start bake max 978 → 158 ms, memory idle 3,466 → 3,047 MB (all Edge), the ground

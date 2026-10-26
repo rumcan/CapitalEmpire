@@ -4,6 +4,7 @@ export interface Mismatch { lr: number; tb: number; h: number; v: number }
 export const HEAL_METHOD: string;
 export const HEAL_MATCH: string;
 export const HEAL_SHARED: string;
+export const HEAL_AS_MADE: string;
 export function bridgeWeight(p: number, band: number): number;
 export function healWrap(px: Px, w: number, h: number, ch: number, band: number): Uint8Array;
 export function healWrapWith(px: Px, w: number, h: number, ch: number, band: number, opts?: { bridge?: 'middle' | 'match' }): { pixels: Uint8Array; centre: { x: number; y: number } };

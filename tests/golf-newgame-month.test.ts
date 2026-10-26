@@ -85,7 +85,8 @@ test('a new game during the tournament day (the clock frozen at the season\'s en
 test("the range's today counts start again with a new game (RangeSim.newDay)", () => {
   const r = new RangeSim(1, 4);
   r.today.golfers = 12; r.today.lost = 3; r.today.coffees = 2; r.practiceToday.putting = 5;
+  r.today.noPark = 4; r.today.taken = 2; // T146: the cars the full car park turned away today, the bays taken now (T170: every counter starts again)
   r.newDay();
-  assert.deepEqual(r.today, { golfers: 0, lost: 0, queue: 0, playing: 0, coffees: 0, lessons: 0, kioskQueue: 0, upstairs: 0 });
+  assert.deepEqual(r.today, { golfers: 0, lost: 0, queue: 0, playing: 0, coffees: 0, lessons: 0, kioskQueue: 0, upstairs: 0, noPark: 0, taken: 0 });
   assert.deepEqual(r.practiceToday, { putting: 0, chipping: 0 });
 });
