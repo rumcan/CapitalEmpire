@@ -76,6 +76,7 @@ import type { BendMode, LibItem, LineStyle, Prop, Tool } from './types';
 import { LK, LaneGraph, laneAt, laneOff } from './sim/lanes';
 import { LU, LV, type LotTuple } from './lots/town';
 import { acrossLines, compose, farmPreset, fenceOnly, isCarPark, lotPresets, pickedPreset, type ComposeState, type FenceLines, type LotGeom, type Placed } from './lots/compose';
+import { stateOf } from './lots/presets';
 import { LotMap } from './lots/lots';
 import { TOWN_BLOCKS, TOWN_POP, townCentres, townGrid } from './lots/seedtowns';
 import { Names, RoadNames } from './ext/names';
@@ -1893,7 +1894,8 @@ export class Game {
     // a yard of its own only where a building stands (a big sprite that is not a car, as sendBlocks counts buildings, or a baked house lot); an
     // empty lot shows its block's grass
     const built = ps.some(p => { const it = LIBRARY[p.item]!; return !!it.block || (it.big && it.kind !== 'car'); });
-    const lawn = built ? lotLawn(key, g) : null; this.setLotGround(key, lawn ? [lawn, ...c.ground] : c.ground);
+    // the lawn wears its look state's (T155: built the fairway, upgraded the putting green, declined the rough)
+    const lawn = built ? lotLawn(key, g, undefined, stateOf(st.level, st.decline)) : null; this.setLotGround(key, lawn ? [lawn, ...c.ground] : c.ground);
   }
   /** the farms follow the network (ext/farms): the parcels of the changed country roads are derived again (all after a load or a
    *  new valley); the parcels that went lose their props and ground, the new ones queue to compose */

@@ -12,7 +12,7 @@ import { cacheKey, loadCached, restore, saveCached, snapshot } from './texture-s
 import { WOODLAND_TEX } from './terrain-paint';
 import { VARIANT_IDS } from './living-ground';
 import { WALL_TEX } from './ext/course-walls';
-import { WOODLAND, lawnSlot, lawnTex } from './painted-surfaces';
+import { WOODLAND, lawnTexFor } from './painted-surfaces';
 
 const scope = self as unknown as DedicatedWorkerGlobalScope;
 const terrain = new Uint8Array(MAP * MAP), net = new RoadNetwork(), tex = new Textures();
@@ -110,7 +110,8 @@ const handle = async (m: ToWorker) => {
             if (p.paint?.m) need.add(p.paint.m.t);
             if (p.course) { for (const l of p.course.layers) for (const t of [l, ...(l.collar ? [l.collar] : [])]) { need.add(t.tex); if (t.m) need.add(t.m.t); } if (p.course.walls?.length) for (const w of WALL_TEX) near.add(w); }
             // a town lawn wears one of the painted lawns (painted-surfaces.ts lawnSlot), picked by where it lies
-            if (p.lawn && tex.paintedOn) { const k = lawnSlot(p.pts, tex.surfaces.lawns); if (k >= 0) need.add(lawnTex(k)); }
+            // (a lot's lawn wears its look state's, T155: lawnTexFor)
+            if (p.lawn && tex.paintedOn) { const t = lawnTexFor(p.lawn, p.pts, tex.surfaces); if (t) need.add(t); }
           }
           if (painter.grassStrength > 0 && !painter.grassHeat) {
             for (let y = Math.max(0, Math.floor(box[1] / 4)); y < Math.min(MAP / 4, Math.ceil(box[3] / 4)); y++) for (let x = Math.max(0, Math.floor(box[0] / 4)); x < Math.min(MAP / 4, Math.ceil(box[2] / 4)); x++) {

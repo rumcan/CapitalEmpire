@@ -5,7 +5,7 @@ import { fileURLToPath, pathToFileURL } from "url";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig, type Plugin } from "vite";
-import { checkDevRequest, checkDevSave, devSavePath, mergePresets } from "./src/game/dev/dev-save";
+import { ALLOC_PATH, checkDevRequest, checkDevSave, devSavePath, mergeAllocations, mergePresets } from "./src/game/dev/dev-save";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -37,7 +37,7 @@ try { sha = execSync("git rev-parse --short HEAD", { cwd: __dirname, stdio: ["ig
  *  one of the whitelisted files (src/game/dev/dev-save.ts: lot-presets.json, scale-overrides.json, removed.json) whole and atomically (a temp
  *  file, then a rename), so the watcher hot-reloads the JSON once, complete; GET /__dev/load?file= reads one back. POST /__dev/presets { upsert,
  *  remove } merges the lot presets per preset into lot-presets.json (mergePresets: one request at a time, each reading the file the last wrote),
- *  so two people's saves never overwrite each other. Only the dev server's own pages may (dev-save.ts checkDevRequest: Origin, Sec-Fetch-Site,
+ *  so two people's saves never overwrite each other; POST /__dev/allocations { upsert } merges the house allocations per house (T155). Only the dev server's own pages may (dev-save.ts checkDevRequest: Origin, Sec-Fetch-Site,
  *  application/json); anything else is refused */
 function devSave(): Plugin {
   return {
@@ -87,6 +87,29 @@ function devSave(): Plugin {
             let text: string;
             try { text = fs.readFileSync(file, "utf8"); } catch (e) { reply(res, 500, { error: String(e) }); return done(); }
             const m = mergePresets(text, upsert, remove);
+            if (!m.ok) { reply(res, 403, { error: m.error }); return done(); }
+            writeAtomic(file, m.text, e => { if (e) reply(res, 500, { error: String(e) }); else reply(res, 200, { ok: true, count: m.count }); done(); });
+          })).catch(e => { if (!res.headersSent) reply(res, 500, { error: String(e) }); });
+        });
+      });
+      // the house allocations' merge (T155): per house, one request at a time, as the presets'; GET reads the file back
+      let allocs: Promise<void> = Promise.resolve();
+      server.middlewares.use("/__dev/allocations", (req, res) => {
+        const no = foreign(req); if (no) return reply(res, 403, { error: no });
+        const file = path.join(__dirname, ALLOC_PATH);
+        if (req.method === "GET") { try { res.setHeader("Content-Type", "application/json"); res.end(fs.readFileSync(file, "utf8")); } catch { reply(res, 404, { error: "missing" }); } return; }
+        if (req.method !== "POST") return reply(res, 405, { error: "GET or POST only" });
+        let raw = "";
+        req.setEncoding("utf8");
+        req.on("data", (c: string) => { raw += c; if (raw.length > 4 * 1024 * 1024) req.destroy(); });
+        req.on("end", () => {
+          let body: unknown;
+          try { body = JSON.parse(raw); } catch { return reply(res, 400, { error: "the body is not JSON" }); }
+          const { upsert } = (typeof body === "object" && body !== null ? body : {}) as { upsert?: unknown };
+          allocs = allocs.then(() => new Promise<void>(done => {
+            let text = "";
+            try { text = fs.existsSync(file) ? fs.readFileSync(file, "utf8") : ""; } catch (e) { reply(res, 500, { error: String(e) }); return done(); }
+            const m = mergeAllocations(text, upsert);
             if (!m.ok) { reply(res, 403, { error: m.error }); return done(); }
             writeAtomic(file, m.text, e => { if (e) reply(res, 500, { error: String(e) }); else reply(res, 200, { ok: true, count: m.count }); done(); });
           })).catch(e => { if (!res.headersSent) reply(res, 500, { error: String(e) }); });

@@ -28,8 +28,11 @@ export const CLASS_NAMES = ['small', 'medium', 'large'] as const;
 
 /** a sprite's footprint area at its owner size (tiles squared, as its base view stands) */
 function areaOf(id: string): number { const fp = footprintOf(id, ownerScaleOf(id), false); return (fp[2] - fp[0]) * (fp[3] - fp[1]); }
-/** the base (NE) id of a sprite: four-view art's first view, else itself */
-const baseOf = (id: string) => fourViews(id)?.views[0] ?? id;
+/** the base (NE) id of a sprite: four-view art's first view, else itself (the id presets store, and the house allocations' key) */
+export const baseOf = (id: string) => fourViews(id)?.views[0] ?? id;
+/** which houses may be dealt (T155: the house allocations for the lot's road angle and state, lots/house-alloc.ts allows); absent: every one */
+export type HouseOk = (id: string) => boolean;
+const ANY: HouseOk = () => true;
 
 /** each family's pool (every class) in area order, and its two class bounds (areas: below the first small, below the second medium) */
 let FAMILIES: Map<string, { ids: string[]; area: Map<string, number>; bounds: [number, number] }> | null = null;
@@ -71,16 +74,29 @@ export function housePool(id: string): string[] {
 }
 /** whether a sprite is a building Change house can swap */
 export const isHouseLike = (id: string) => housePool(id).length > 0;
-/** the next house for a building (dir 1: H) or the one before (dir -1: Shift+H), in its pool, wrapping; never the same one; null when its pool
- *  holds no other */
-export function nextHouse(id: string, dir: 1 | -1): string | null {
-  const b = baseOf(id), pool = housePool(b), e = families().get(houseFamily(b) ?? '');
-  return cycle(pool, b, dir, h => e?.area.get(h) ?? areaOf(h));
+/** the next house for a building (dir 1: H) or the one before (dir -1: Shift+H), in its pool, wrapping; never the same one; only houses ok allows
+ *  (T155: the allocations; the building itself need not be allowed: the next allowed one above or below it by area); null when its pool holds no
+ *  other allowed one */
+export function nextHouse(id: string, dir: 1 | -1, ok: HouseOk = ANY): string | null {
+  const b = baseOf(id), e = families().get(houseFamily(b) ?? '');
+  return cycle(housePool(b).filter(ok), b, dir, h => e?.area.get(h) ?? areaOf(h));
 }
-/** a random other house of a building's pool (Generate's new building): r() in [0, 1); null when the pool holds no other */
-export function otherHouse(id: string, r: () => number): string | null {
-  const b = baseOf(id), others = housePool(b).filter(h => h !== b);
+/** a random other house of a building's pool (Generate's new building), of the houses ok allows: r() in [0, 1); null when the pool holds no other
+ *  allowed one */
+export function otherHouse(id: string, r: () => number, ok: HouseOk = ANY): string | null {
+  const b = baseOf(id), others = housePool(b).filter(h => h !== b && ok(h));
   return others.length ? others[Math.floor(r() * others.length)]! : null;
+}
+/** the house a freshly dealt lot keeps (New lot, T155): the building itself when ok allows it, else a random allowed one of its pool; null when no
+ *  house of its pool is allowed (it stays, and the lab says so) */
+export function allowedHouse(id: string, r: () => number, ok: HouseOk = ANY): string | null {
+  const b = baseOf(id);
+  return ok(b) ? b : otherHouse(b, r, ok);
+}
+/** how many houses suit (ok): of a building's pool (its family and size class) and of its family (every class), with their sizes */
+export function suitCounts(id: string, ok: HouseOk): { pool: number; poolAll: number; family: number; familyAll: number } {
+  const b = baseOf(id), pool = housePool(b), e = families().get(houseFamily(b) ?? ''), fam = e?.ids ?? [];
+  return { pool: pool.filter(ok).length, poolAll: pool.length, family: fam.filter(ok).length, familyAll: fam.length };
 }
 /** a size class and family as words, for the messages ('small dwelling') */
 export function classWords(id: string): string {
