@@ -34,13 +34,24 @@ export type TileBand = 'near' | 'mid' | 'far';
 /** finest first: a band's index is its place here (0 NEAR, 1 MID, 2 FAR) */
 export const TILE_BANDS: readonly TileBand[] = ['near', 'mid', 'far'];
 /** a tile; a provisional set's tile (T153) also names the PNG it was made from (source, under the art folder) */
-export interface TileRef { id: string; file: string; sha256: string; mean: string; source?: string }
+export interface TileRef { id: string; file: string; sha256: string; mean: string; source?: string;
+  /** a provisional tile a few px larger than its set (T153: its right column / bottom row removed), or a painting cropped to whole stripe
+   *  periods (T165: the rectangle kept) */
+  crop?: { from: number[]; removedRight?: number; removedBottom?: number; x0?: number; y0?: number; w?: number; h?: number } }
 /** a level's set; a provisional one (T153) has no visual decision (file null) and carries the art session's own status for it */
 export interface TiledLevel { revision: string; folder: string; native: [number, number]; decision: { file: string | null; sha256: string | null }; tiles: TileRef[]; status?: string;
   /** T162: an owner's painting's edge heal (scripts/assets/tile-heal.mjs): its method and band (px), and the mean |RGB| difference across the
    *  wrap (lr, tb) and between neighbouring columns and rows inside (h, v): before (the owner's file), healed (its pixels after the heal) and
    *  after (the WebP that ships) */
-  heal?: { method: string; band: number; before: WrapMismatch; healed: WrapMismatch; after: WrapMismatch } }
+  heal?: { method: string; band: number; before: WrapMismatch; healed: WrapMismatch; after: WrapMismatch;
+    /** T165: the bridge's centre (px along x and y) when it is matched to the seam zone (wrap-bridge-match-v1) or shared (shared-strip-match-v1) */
+    centre?: { x: number; y: number };
+    /** T165: the mowing stripes (their periods, their phase step across the wrap in px, and the best whole-period crop: applied when it lines
+     *  them up at least a quarter better) */
+    stripes?: { found?: false; periodX?: number; periodY?: number; phase?: { x: number; y: number }; applied?: boolean;
+      bestCrop?: { x0: number; y0: number; w: number; h: number; periods: number[]; phase: { x: number; y: number } } };
+    /** T165: why this level is the raw provisional tiles healed with one shared strip instead of the painting */
+    fallback?: string } }
 /** how well a picture tiles with itself (tile-heal.mjs wrapMismatch): mean |RGB| across the wrap and between neighbours inside */
 export interface WrapMismatch { lr: number; tb: number; h: number; v: number }
 export interface TiledFamily {

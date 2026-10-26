@@ -1,0 +1,55 @@
+{
+ "schema": 1,
+ "id": "paint:fairway-20261026",
+ "what": "The art session's fairway paintings, one per zoom level (scene-backgrounds/fairway/*-background-anchored-v1, the town study with its building removed), brought in by T165 (#365) to replace the provisional fairway tiles whose seams the owner saw. Kept here unchanged; scripts/assets/prep-painted-tiles.mjs checks each file against its sha256 below, measures its mowing stripes (crops to whole stripe periods only where that lines the stripes up better), heals its edges once so it tiles with itself and ships it as the tile family fairway-paint.",
+ "family": {
+  "id": "fairway-paint",
+  "name": "Fairway (painting)",
+  "kind": "grass",
+  "provisional": true
+ },
+ "art": {
+  "date": "2026-10-26",
+  "session": "the art session (scene-backgrounds, remove-only-scale-anchor)",
+  "issue": "https://github.com/rumcan/CapitalEmpire/issues/365"
+ },
+ "light": "UPPER RIGHT toward LOWER LEFT",
+ "levels": {
+  "near": {
+   "file": "near.png",
+   "sha256": "14fcf2b2a1b4a848a46e23c98f92f2a5da11a62953d4d3c0dfadd7f564d0fc75",
+   "size": [
+    1742,
+    903
+   ],
+   "from": "art/theme-consistency/generated/ground/scene-backgrounds/fairway/near-background-anchored-v1.raw.png",
+   "generator": "C:/Users/RAMPAGE/.codex/generated_images/01a16c0b-bcad-7e71-a5d0-0281b98562b9/exec-4b16a9fe-5617-4c29-abe8-1927c6392480.png",
+   "lighting": "UPPER RIGHT → LOWER LEFT",
+   "reviewStatus": "pending reference appearance, object-removal and lighting review"
+  },
+  "mid": {
+   "file": "mid.png",
+   "sha256": "54743bfb086ca96e0d806832f6848d58732e25249cacdc6c20e1300d30089a1b",
+   "size": [
+    1743,
+    902
+   ],
+   "from": "art/theme-consistency/generated/ground/scene-backgrounds/fairway/mid-background-anchored-v1.raw.png",
+   "generator": "C:/Users/RAMPAGE/.codex/generated_images/01a16c0b-bcad-7e71-a5d0-0281b98562b9/exec-7bae7333-ea37-4869-bac7-05b6d78e9fc5.png",
+   "lighting": "UPPER RIGHT → LOWER LEFT",
+   "reviewStatus": "pending reference appearance, object-removal and lighting review"
+  },
+  "far": {
+   "file": "far.png",
+   "sha256": "da2925ecca80faca8399762f5143cd464a324cf07d7977dbaa8aa1375892b688",
+   "size": [
+    1742,
+    903
+   ],
+   "from": "art/theme-consistency/generated/ground/scene-backgrounds/fairway/far-background-anchored-v1.raw.png",
+   "generator": "C:/Users/RAMPAGE/.codex/generated_images/01a16c0b-bcad-7e71-a5d0-0281b98562b9/exec-2495ee3e-57b8-430f-b9ac-ed8f6e6f266b.png",
+   "lighting": "UPPER RIGHT → LOWER LEFT",
+   "reviewStatus": "pending reference appearance, object-removal and lighting review"
+  }
+ }
+}
