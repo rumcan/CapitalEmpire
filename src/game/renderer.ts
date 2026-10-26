@@ -960,11 +960,12 @@ export class GroundPainter {
     const m = made.masks ??= livingMasks(grid);
     // ---- the ground the variety leaves alone: the lots' hard ground, painted areas that are no grass, the course's managed turf and its
     //      collars (the pond's bank keeps it), the course walls' faces (T099: their own light and shade), the rivers' and creeks' water
-    const ex: { path: Path2D; rule: CanvasFillRule }[] = [], walls: CourseWall[] = [];
+    //      a surface wearing a hand-painted tile set (T145) keeps its art too: it is its own layer, never mixed inside
+    const ex: { path: Path2D; rule: CanvasFillRule }[] = [], walls: CourseWall[] = [], tiled = (t: string) => !!this.tex.paintedOf(t)?.tiled;
     const rings = (rs: readonly ArrayLike<number>[]) => { const q = new Path2D(); for (const r of rs) ringPath(q, r); ex.push({ path: q, rule: 'evenodd' }); };
     for (const p of lots) {
-      if (p.course) { for (const l of p.course.layers) { if (!COURSE_GRASSY.has(l.s) && l.fill.length) rings(l.fill); if (l.collar && l.collar.n !== 'bank' && l.collar.fill.length) rings(l.collar.fill); } if (p.course.walls) walls.push(...p.course.walls); continue; }
-      if (p.top || p.layby || p.lawn || p.tex === 'marks' || grassyTex(p.tex)) continue;
+      if (p.course) { for (const l of p.course.layers) { if ((!COURSE_GRASSY.has(l.s) || tiled(l.tex)) && l.fill.length) rings(l.fill); if (l.collar && l.collar.n !== 'bank' && l.collar.fill.length) rings(l.collar.fill); } if (p.course.walls) walls.push(...p.course.walls); continue; }
+      if (p.top || p.layby || p.lawn || p.tex === 'marks' || (grassyTex(p.tex) && !tiled(p.tex))) continue;
       ex.push({ path: polyPath(p.pts), rule: 'nonzero' });
     }
     const wallPath = walls.length ? wallFaces(walls) : null;
@@ -2130,7 +2131,8 @@ export class GroundPainter {
     if ((!this.grassStrength && !this.grassHeat) || !this.grassCells.size) return;
     for (const p of patches) {
       // Fresh seed/sod keeps its original grow-in texture and timing.
-      if (!grassSurface(p.tex, !!p.lawn, surfaceOfTex(p.tex as PaintTex)) || p.tex === 'golfSod') continue;
+      // a hand-painted tile set (T145) is laid as authored: no condition picture mixed inside it
+      if (!grassSurface(p.tex, !!p.lawn, surfaceOfTex(p.tex as PaintTex)) || p.tex === 'golfSod' || this.tex.paintedOf(p.tex)?.tiled) continue;
       const b = quadBox(p.pts); ctx.save(); ctx.clip(polyPath(p.pts));
       for (let y = Math.max(0, Math.floor(Math.max(b[1], box[1]) / 4) * 4); y < Math.min(MAP, b[3], box[3]); y += 4) for (let x = Math.max(0, Math.floor(Math.max(b[0], box[0]) / 4) * 4); x < Math.min(MAP, b[2], box[2]); x += 4) {
         const v = this.grassCells.get(y / 4 * (MAP / 4) + x / 4); if (!v) continue;
