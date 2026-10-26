@@ -22,8 +22,9 @@ test('a lot\'s lawn carries its look state (none: as before)', () => {
 });
 
 test('the state lawns: built the fairway, upgraded the putting green, decrepit the rough\'s painting; owner-tunable surfaces of the studio', () => {
-  assert.equal(file.surfaces[STATE_LAWN.built]!.family, 'fairway');
-  assert.equal(file.surfaces[STATE_LAWN.upgraded]!.family, 'putting-green');
+  // built lawns wear what the fairway wears and upgraded ones what the greens wear (T165: the fairway and putting-green paintings)
+  assert.equal(file.surfaces[STATE_LAWN.built]!.family, file.surfaces.fairway!.family); assert.equal(file.surfaces[STATE_LAWN.built]!.family, 'fairway-paint');
+  assert.equal(file.surfaces[STATE_LAWN.upgraded]!.family, file.surfaces.green!.family); assert.equal(file.surfaces[STATE_LAWN.upgraded]!.family, 'putting-green-paint');
   // the long-grass tiles are not handed off yet (the owner rejected them): decrepit wears what rough wears today
   assert.equal(file.surfaces[STATE_LAWN.declined]!.family, file.surfaces.rough!.family);
   for (const k of Object.values(STATE_LAWN)) assert.ok(SURFACES.some(s => s.key === k && s.group === 'Town'), `${k} is a studio surface`);
