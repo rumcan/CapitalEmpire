@@ -302,6 +302,8 @@ const MODELS = new Map<number, Model>();
 /** the model version the town composes with: a version not shipped falls back to the nearest one below it (else v1) */
 export function setLotModel(v: number): void { MODEL_V = LOT_MODELS[v] ? v : Math.max(1, ...Object.keys(LOT_MODELS).map(Number).filter(n => n < v)); }
 export const lotModelVersion = () => MODEL_V;
+/** a model version known from now on without a reload (the tests; a dev session after shipping one): its data (lots/learn.ts ModelData) */
+export function addLotModel(v: number, data: unknown): void { (LOT_MODELS as Record<number, unknown>)[v] = data; MODELS.delete(v); }
 function shippedModel(): Model { let m = MODELS.get(MODEL_V); if (!m) MODELS.set(MODEL_V, m = modelFrom(LOT_MODELS[MODEL_V] ?? LOT_MODELS[1])); return m; }
 /** 32-bit FNV-1a of a string */
 const fnv = (s: string) => { let h = 0x811c9dc5; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193); } return h >>> 0; };

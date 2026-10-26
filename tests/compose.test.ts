@@ -4,12 +4,14 @@ import assert from 'node:assert/strict';
 import { CLASS, RoadNetwork, type Leg } from '../src/game/network';
 import { NetEditor } from '../src/game/netops';
 import { LotMap, type Lot } from '../src/game/lots/lots';
-import { compose, isCarPark, lotPreset, setLotPresets, streetKey, streetSlot, type ComposeState, type Composition, type Placed } from '../src/game/lots/compose';
+import { compose, setGeneratedLots, isCarPark, lotPreset, setLotPresets, streetKey, streetSlot, type ComposeState, type Composition, type Placed } from '../src/game/lots/compose';
+// these pin the frozen presets' own composition (?oldlots); T160's generated house lots are tested in tests/lots-on-the-fly.test.ts
+setGeneratedLots(false);
 import { LU, LV } from '../src/game/lots/town';
 import { LIBRARY } from '../src/game/library';
 import { LOT_DECALS } from '../src/game/lot-decals';
 import { mulberry } from '../src/game/iso';
-import { CAR_SCALE, carSizeId } from '../src/game/ext/car-art';
+import { CAR_SCALE, carSizeId, forgetCarSizes } from '../src/game/ext/car-art';
 import { OWNER_SCALE, STUDIO_SCALE, TABLE_SCALE } from '../src/game/lots/scales';
 import { isBuilding } from '../src/game/mirror';
 import { footprintOf, turned } from '../src/game/lots/preset-art';
@@ -402,8 +404,9 @@ test('compositions are pinned: digests of fixed seeds, drawn at the table sizes 
   const live = { ...OWNER_SCALE }, use = (to: Record<string, number>) => { for (const k of Object.keys(OWNER_SCALE)) delete OWNER_SCALE[k]; Object.assign(OWNER_SCALE, to); };
   const studio = STUDIO_SCALE as Record<string, number>, studioLive = { ...studio };
   for (const i of LIBRARY) if (i.kind === 'car') { delete studio[carSizeId(i.id)]; delete studio[i.id]; }
-  use(TABLE_SCALE);
-  try { assert.deepEqual(CASES.map(([i, st]) => digest(compose(LOTS[i], st))), CASES.map(c => c[2])); } finally { use(live); Object.assign(studio, studioLive); }
+  // (T160: carOwnerScale keeps a memo of the studio's sizes: told when they are changed by hand, as lots/scales-live.ts tells it)
+  use(TABLE_SCALE); forgetCarSizes();
+  try { assert.deepEqual(CASES.map(([i, st]) => digest(compose(LOTS[i], st))), CASES.map(c => c[2])); } finally { use(live); Object.assign(studio, studioLive); forgetCarSizes(); }
 });
 
 test('about 15% of built commercial lots are public car parks: a car park has an asphalt bay patch and no building', () => {
