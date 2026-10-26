@@ -3,20 +3,23 @@
 // size, native at its anchor zoom (NEAR the closest zoom, MID the mid reference's camera, FAR the furthest zoom), never magnified at any zoom or
 // DPR, a real zoom inside a band; stable world-anchored whole-tile placement that panning, resizing and a reload never change; tiles edge to
 // edge without gaps at chunk borders; no mirror, turn or blend; separate gameplay layers; a stale chunk never keeps an old set.
+// T153 (#327): the furthest zoom one step closer (FAR follows it), NEAR on down to nearUntil (5%), sand ripples on the waste areas, and the
+// course's fairway, putting green and long grass in provisionally (the switch to their handoff: tests/painted-tiles-prep.test.ts).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import {
-  ANCHORS, TILES, TILED_FAMILIES, TILES_REVISION, TILE_BANDS, anchorAt, bandAt, bandOf, bandsAhead, cellOf, cellsIn, coverageOf, nextBand, snappedCell,
-  specBand, specDpr, tiledFamily, tileIndex, tileKey, tilePermutation, tileScreenPx, tileSize, tileSpec,
+  ANCHORS, TILES, TILED_FAMILIES, TILES_REVISION, TILE_BANDS, anchorAt, bandAt, bandOf, bandRange, bandsAhead, cellOf, cellsIn, coverageOf, drawnScale, nearUntil,
+  nextBand, snappedCell, specBand, specDpr, switchIn, switchOut, tiledFamily, tileIndex, tileKey, tilePermutation, tileScreenPx, tileSize, tileSpec,
+  type TiledFamily,
 } from '../src/game/painted-tiles';
 import { FAMILIES, clampLook, familyById, resolveFamily } from '../src/game/painted-families';
 import { clampSurfaces, lookOfTex } from '../src/game/painted-surfaces';
 import { chunkLayers, pictureCurrent, type ChunkPictures } from '../src/game/ground-layers';
 import { grassZoomLevels } from '../src/game/painted-grass-lod';
-import { CHUNK_H, CHUNK_W, LEVELS, MID_H, MID_LEVELS, MID_W, PLAN_H, PLAN_LEVELS, PLAN_W, ZOOM_MAX, ZOOM_MIN, mulberry, worldX, worldY } from '../src/game/iso';
+import { CHUNK_H, CHUNK_W, HW, LEVELS, MAP, MID_H, MID_LEVELS, MID_W, PLAN_H, PLAN_LEVELS, PLAN_W, ZOOM_MAX, ZOOM_MIN, ZOOM_STEP, clampZoom, mulberry, worldX, worldY } from '../src/game/iso';
 import { DRAW_ORDER, layerCode } from '../src/game/ext/course-walls';
 import { SURF } from '../src/game/ext/course-grid';
 import { PRESETS } from '../src/game/paint-presets';
@@ -37,16 +40,35 @@ function webpSize(buf: Buffer): [number, number] {
   throw new Error('not a webp: ' + kind);
 }
 
-test('the manifest ships only the ready families\' primary tiles: four a level, three authored sets each, files at native size', () => {
-  assert.deepEqual(TILED_FAMILIES.map(f => f.materialId), ['painted:golden-fescue', 'painted:lake']);
-  const ids = { 'golden-fescue': { near: ['tile-01', 'tile-03', 'tile-06', 'tile-08'], mid: ['tile-01', 'tile-02', 'tile-03', 'tile-04'], far: ['tile-01', 'tile-02', 'tile-03', 'tile-04'] }, lake: { near: ['tile-01', 'tile-02', 'tile-03', 'tile-04'], mid: ['tile-01', 'tile-02', 'tile-03', 'tile-04'], far: ['tile-01', 'tile-02', 'tile-03', 'tile-04'] } } as const;
-  const sets = { 'golden-fescue': { near: 'near-v3', mid: 'mid-v2', far: 'far-v4' }, lake: { near: 'near-v1', mid: 'mid-v1', far: 'far-v1' } } as const;
+/** the accepted families (READY-MATERIALS' canonical selections, in its order), then the provisional ones (T153: no handoff yet) */
+const ACCEPTED = ['painted:golden-fescue', 'painted:lake', 'painted:sand-ripples'];
+const PROVISIONAL = ['painted:fairway', 'painted:putting-green', 'painted:long-grass'];
+const FOUR = ['tile-01', 'tile-02', 'tile-03', 'tile-04'] as const;
+/** a family's part of the revision: its canonical selection's sha256, or a provisional family's tiles' hashes */
+const familyKey = (f: TiledFamily) => f.selection?.sha256 ?? sha256(TILE_BANDS.flatMap(b => f.levels[b].tiles.map(t => t.sha256)).join(':'));
+
+test('the manifest ships only the ready families\' primary tiles and the provisional families\' chosen four: four a level, three authored sets each, files at native size', () => {
+  assert.deepEqual(TILED_FAMILIES.map(f => f.materialId), [...ACCEPTED, ...PROVISIONAL]);
+  const ids = { 'golden-fescue': { near: ['tile-01', 'tile-03', 'tile-06', 'tile-08'], mid: FOUR, far: FOUR }, lake: { near: FOUR, mid: FOUR, far: FOUR }, 'sand-ripples-tiles': { near: FOUR, mid: FOUR, far: FOUR } } as const;
+  const sets = { 'golden-fescue': { near: 'near-v3', mid: 'mid-v2', far: 'far-v4' }, lake: { near: 'near-v1', mid: 'mid-v1', far: 'far-v1' }, 'sand-ripples-tiles': { near: 'near-v1', mid: 'mid-v1', far: 'far-v1' } } as const;
   for (const f of TILED_FAMILIES) {
-    const files = new Set<string>();
+    const files = new Set<string>(), material = f.materialId.replace(/^painted:/, '');
+    assert.equal(!!f.provisional, PROVISIONAL.includes(f.materialId), `${f.id}: provisional exactly while it has no handoff`);
+    if (f.provisional) assert.equal(f.selection, null, 'no canonical selection yet'); else assert.match(f.selection!.sha256, /^[0-9a-f]{64}$/);
     for (const b of TILE_BANDS) {
       const lv = f.levels[b];
-      assert.deepEqual(lv.tiles.map(t => t.id), ids[f.id as keyof typeof ids][b], `${f.id} ${b}: the primary tile ids, in order (never the extras)`);
-      assert.equal(lv.revision, sets[f.id as keyof typeof sets][b]);
+      if (f.provisional) {
+        // the newest complete set of four in the level's own folder, as the art session left it (raw generator outputs), hash-recorded
+        assert.deepEqual(lv.tiles.map(t => t.id), FOUR); assert.equal(lv.decision.file, null, 'no visual decision yet');
+        assert.match(lv.revision, new RegExp(`^${b}-v\\d+$`)); assert.equal(lv.folder, `art/theme-consistency/generated/ground/eight-tiles/${material}/${lv.revision}`);
+        assert.ok((lv.status ?? '').length > 10, `${f.id} ${b}: the art session's status for the set is recorded`);
+        for (const t of lv.tiles) assert.match(t.source!, new RegExp(`^${lv.folder}/${t.id}(-v\\d+\\.raw)?\\.png$`), `${f.id} ${b} ${t.id}: its source PNG, from the set's own folder`);
+        assert.ok(Math.abs(lv.native[0] - 1742) <= 8 && Math.abs(lv.native[1] - 902) <= 8, `${f.id} ${b}: ${lv.native.join('x')}, the files' own size (about 1742x902)`);
+      } else {
+        assert.deepEqual(lv.tiles.map(t => t.id), ids[f.id as keyof typeof ids][b], `${f.id} ${b}: the primary tile ids, in order (never the extras)`);
+        assert.equal(lv.revision, sets[f.id as keyof typeof sets][b]);
+        for (const t of lv.tiles) assert.equal(t.source, undefined);
+      }
       assert.equal(lv.native[0] > lv.native[1], true);
       for (const t of lv.tiles) {
         assert.equal(t.file, `tiles/${f.id}/${b}/${t.id}.webp`); assert.match(t.sha256, /^[0-9a-f]{64}$/); files.add(t.file);
@@ -56,22 +78,24 @@ test('the manifest ships only the ready families\' primary tiles: four a level, 
     assert.equal(files.size, 12, `${f.id}: twelve distinct pictures: NEAR, MID and FAR are separate paintings, never one another's mips`);
   }
   assert.deepEqual(tiledFamily('lake')!.levels.mid.native, [1744, 900], 'sizes read from the selection, never assumed');
+  // the legacy painted family `sand-ripples` keeps its id (still selectable): the tile set is `sand-ripples-tiles`
+  assert.ok(tiledFamily('sand-ripples-tiles') && !tiledFamily('sand-ripples')); assert.ok(familyById('sand-ripples') && !familyById('sand-ripples')!.tiled);
   // nothing else sits in the tiles folder: no proofs, extras, raw outputs or held versions
   const shipped = fs.readdirSync(path.join(PAINTED, 'tiles'), { recursive: true }).map(String).filter(p => p.endsWith('.webp') || p.endsWith('.png')).map(p => 'tiles/' + p.replace(/\\/g, '/')).sort();
   assert.deepEqual(shipped, TILED_FAMILIES.flatMap(f => TILE_BANDS.flatMap(b => f.levels[b].tiles.map(t => t.file))).sort());
-  // the revision is the selections' hashes
-  assert.equal(TILES_REVISION, sha256(TILED_FAMILIES.map(f => f.selection.sha256).join(':')).slice(0, 12));
-  for (const f of TILED_FAMILIES) assert.equal(f.revision, f.selection.sha256.slice(0, 12));
+  // the revision is the selections' hashes (and the provisional tiles' hashes)
+  assert.equal(TILES_REVISION, sha256(TILED_FAMILIES.map(familyKey).join(':')).slice(0, 12));
+  for (const f of TILED_FAMILIES) assert.equal(f.revision, familyKey(f).slice(0, 12));
 });
 
 test('the manifest is hash-bound to READY-MATERIALS and the canonical selections (when the art is on this PC)', t => {
   if (!ART) { t.skip('no art checkout here'); return; }
   const readyBuf = fs.readFileSync(path.join(ART, READY_REL)), ready = JSON.parse(readyBuf.toString());
   assert.equal(TILES.source.sha256, sha256(readyBuf), 'the manifest was made from this READY-MATERIALS');
-  assert.deepEqual(ready.ready.map((r: { id: string }) => r.id), TILED_FAMILIES.map(f => f.materialId), 'every ready family and only those');
+  assert.deepEqual(ready.ready.map((r: { id: string }) => r.id), TILED_FAMILIES.filter(f => !f.provisional).map(f => f.materialId), 'every ready family and only those (a provisional family READY lists now: re-run the prep script)');
   for (const r of ready.ready) {
     const f = TILED_FAMILIES.find(x => x.materialId === r.id)!, selBuf: Buffer = fs.readFileSync(path.join(ART, r.canonicalSelection.file)), sel = JSON.parse(selBuf.toString());
-    assert.equal(sha256(selBuf), r.canonicalSelection.sha256); assert.equal(f.selection.sha256, r.canonicalSelection.sha256);
+    assert.equal(sha256(selBuf), r.canonicalSelection.sha256); assert.equal(f.selection!.sha256, r.canonicalSelection.sha256);
     for (const b of TILE_BANDS) {
       const set = sel.sets[b], lv = f.levels[b];
       assert.deepEqual(lv.tiles.map(t => t.id), set.primaryTileIds); assert.deepEqual(lv.native, set.nativePixels); assert.equal(lv.folder, r.levels[b].folder);
@@ -82,6 +106,27 @@ test('the manifest is hash-bound to READY-MATERIALS and the canonical selections
       for (const x of set.optionalExtraTiles ?? []) assert.ok(!lv.tiles.some(t => t.sha256 === x.sha256), `${f.id} ${b}: optional extra ${x.id} never ships`);
     }
   }
+  // the provisional tiles are the PNGs they name (a source the art session has since removed is only reported: re-run the prep script)
+  for (const f of TILED_FAMILIES.filter(x => x.provisional)) for (const b of TILE_BANDS) for (const tl of f.levels[b].tiles) {
+    const p = path.join(ART, tl.source!);
+    if (!fs.existsSync(p)) { t.diagnostic(`${tl.source}: no longer in the art folder (re-run scripts/assets/prep-painted-tiles.mjs)`); continue; }
+    assert.equal(sha256(fs.readFileSync(p)), tl.sha256, `${tl.source}: the hash the manifest recorded`);
+  }
+});
+
+test('the zoom range (T153): the furthest zoom is one zoom step closer than before; a camera or a save below it is clamped to it', () => {
+  assert.equal(ZOOM_MIN, 0.0075); assert.equal(ZOOM_STEP, 1.25); assert.ok(Math.abs(ZOOM_MIN - 0.006 * ZOOM_STEP) < 1e-12, 'one button press closer than T150\'s 0.006');
+  // the zoom-out button from the closest zoom: one level fewer than before (the old last one, 0.006 after 0.00676, is gone)
+  const presses = (min: number) => { const out = [ZOOM_MAX]; for (let z = ZOOM_MAX; z > min;) { z = Math.max(min, z / ZOOM_STEP); out.push(z); } return out; };
+  assert.equal(presses(ZOOM_MIN).length, presses(0.006).length - 1); assert.equal(presses(ZOOM_MIN).at(-1), ZOOM_MIN);
+  // the clamp the wheel, the keys, the buttons, a jump and a save load use
+  for (const [z, want] of [[0.006, ZOOM_MIN], [0.001, ZOOM_MIN], [ZOOM_MIN, ZOOM_MIN], [0.05, 0.05], [0.31, ZOOM_MAX], [ZOOM_MAX, ZOOM_MAX], [NaN, ZOOM_MAX], [Infinity, ZOOM_MAX], [-1, ZOOM_MIN]] as const) assert.equal(clampZoom(z), want, `clampZoom(${z})`);
+  // a save from before T153 resting at the old furthest zoom (band FAR) comes back at the new one, still FAR (native there)
+  for (const tb of [2, 1, 0, undefined]) assert.equal(nextBand(clampZoom(0.006), tb), 2, `saved band ${tb}`);
+  assert.equal(drawnScale(clampZoom(0.006), 2), 1);
+  // the whole map at the furthest zoom: 1966 CSS px wide (it was 1573)
+  assert.ok(Math.abs(2 * MAP * HW * ZOOM_MIN - 1966.08) < 0.01);
+  assert.deepEqual(ANCHORS.zoom, [ZOOM_MIN, ZOOM_MAX]);
 });
 
 test('the anchors (T150): NEAR at the closest zoom, MID at the mid reference\'s camera, FAR at the furthest zoom; how each was found is recorded', () => {
@@ -92,9 +137,31 @@ test('the anchors (T150): NEAR at the closest zoom, MID at the mid reference\'s 
   assert.deepEqual(ANCHORS.zoom, [ZOOM_MIN, ZOOM_MAX]);
   assert.ok(ANCHORS.hysteresis > 1 && ANCHORS.hysteresis <= 1.1, 'a few % of hysteresis'); assert.ok(ANCHORS.preload > ANCHORS.hysteresis);
   for (const b of TILE_BANDS) assert.ok(ANCHORS.how[b].length > 40, `${b}: how its anchor was found`);
-  // a fresh start: the coarsest set not magnified at the zoom
-  assert.equal(bandAt(ZOOM_MAX), 0); assert.equal(bandAt(0.2), 0); assert.equal(bandAt(0.1001), 0); assert.equal(bandAt(0.1), 1); assert.equal(bandAt(0.05), 1);
+  assert.equal(ANCHORS.far, 0.0075, 'T153: FAR follows the new furthest zoom');
+  // a fresh start: NEAR down to nearUntil x the hysteresis (T153), then MID (below its native size), FAR at the furthest zoom
+  const u = ANCHORS.nearUntil!, H = ANCHORS.hysteresis;
+  assert.equal(u, 0.05, 'NEAR until 5%'); assert.equal(nearUntil(), u);
+  assert.equal(bandAt(ZOOM_MAX), 0); assert.equal(bandAt(0.2), 0); assert.equal(bandAt(0.1), 0, 'NEAR now stays past MID\'s anchor'); assert.equal(bandAt(0.06), 0);
+  assert.equal(bandAt(u * H * 1.001), 0); assert.equal(bandAt(u * H), 1); assert.equal(bandAt(u), 1); assert.equal(bandAt(0.02), 1);
   assert.equal(bandAt(ZOOM_MIN * 1.001), 1); assert.equal(bandAt(ZOOM_MIN), 2);
+  assert.equal(switchIn(0), Infinity); assert.ok(Math.abs(switchIn(1) - u * H) < 1e-15); assert.ok(Math.abs(switchOut(1) - u) < 1e-15); assert.equal(switchIn(2), ZOOM_MIN); assert.equal(switchOut(2), ZOOM_MIN);
+  for (const b of [1, 2]) assert.ok(switchIn(b) <= anchorAt(b), `band ${b} gives way before it would be magnified`);
+  assert.deepEqual(bandRange(0), [switchOut(1), ZOOM_MAX]); assert.deepEqual(bandRange(1), [ZOOM_MIN, switchIn(1)]); assert.deepEqual(bandRange(2), [ZOOM_MIN, ZOOM_MIN]);
+});
+
+test('nearUntil is the owner\'s number: the NEAR to MID switch follows it, held so MID is never magnified and FAR keeps the furthest zoom', () => {
+  const was = ANCHORS.nearUntil, H = ANCHORS.hysteresis;
+  try {
+    for (const u of [0.08, 0.05, 0.03, 0.012]) {
+      ANCHORS.nearUntil = u;
+      assert.equal(nearUntil(), u); assert.equal(nextBand(u * 1.001, 0), 0); assert.equal(nextBand(u, 0), 1, `zooming out, MID at ${u}`);
+      assert.equal(nextBand(u * H, 1), 1); assert.equal(nextBand(u * H * 1.001, 1), 0, 'zooming in, NEAR again just past the hysteresis');
+      assert.ok(drawnScale(u * H, 1) < 1, 'MID below its native size where it gives way');
+    }
+    ANCHORS.nearUntil = 0.5; assert.ok(Math.abs(nearUntil() - ANCHORS.mid / H) < 1e-15, 'held: MID gives way at its anchor at the latest (T150)'); assert.equal(switchIn(1), ANCHORS.mid);
+    ANCHORS.nearUntil = 0.0001; assert.ok(Math.abs(nearUntil() - ANCHORS.far * H) < 1e-15, 'held above FAR\'s anchor: MID always has a range');
+    ANCHORS.nearUntil = undefined; assert.ok(Math.abs(nearUntil() - ANCHORS.mid / H) < 1e-15, 'no nearUntil: T150\'s switch');
+  } finally { ANCHORS.nearUntil = was; }
 });
 
 test('one fixed world size per set: native / (anchor x DPR), so at its anchor a tile is its native pixels wide on screen (1742 device px) at any DPR', () => {
@@ -109,7 +176,9 @@ test('one fixed world size per set: native / (anchor x DPR), so at its anchor a 
       assert.ok(Math.abs(tileScreenPx(lv, a, b) - lv.native[0]) < 1e-9, 'the readout: native px on screen at the anchor');
     }
     // the same world size wherever the camera is in the band: the size reads the band and the DPR only, never the zoom
-    assert.deepEqual(tileSize(lv, tileSpec(b, 1)), tileSize(lv, tileSpec(nextBand(a, b), 1)));
+    // (T153: a zoom inside the band's range; MID's anchor itself is NEAR's now, NEAR staying on down to nearUntil)
+    const [lo, hi] = bandRange(b), inside = Math.sqrt(lo * hi);
+    assert.equal(nextBand(inside, b), b); assert.deepEqual(tileSize(lv, tileSpec(b, 1)), tileSize(lv, tileSpec(nextBand(inside, b), 1)));
   }
   assert.equal(tiledFamily('golden-fescue')!.levels.near.native[0], 1742);
   // FAR at the furthest zoom on a 1920 x 1080 CSS view: its native 1742 x 902 px, so 1.10 x 1.20 tiles at DPR 1 and 2.20 x 2.40 at DPR 2
@@ -137,9 +206,11 @@ test('never magnified: at every zoom, zooming out and in and jumping, at DPR 1, 
     for (let z = ZOOM_MIN; z < ZOOM_MAX; z *= 1.01) frame(z);
     frame(ZOOM_MAX);
     for (let i = 0; i < 2000; i++) frame(ZOOM_MIN * (ZOOM_MAX / ZOOM_MIN) ** rnd()); // camera jumps (a hole, the overview, a reload)
-    for (const a of [ANCHORS.near, ANCHORS.mid, ANCHORS.far]) for (const k of [0.97, 0.999, 1, 1.001, 1.03]) frame(Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, a * k)));
+    for (const a of [ANCHORS.near, ANCHORS.mid, ANCHORS.far, nearUntil(), switchIn(1)]) for (const k of [0.97, 0.999, 1, 1.001, 1.03]) frame(Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, a * k)));
     assert.ok(Math.abs(worst - 1) < 1e-9, `${f.id} dpr ${dpr}: native is reached (${worst}) and never passed`);
   }
+  // T153: at 5% NEAR (zooming out) is a sixth of its native size and MID (zooming in) about half of it
+  assert.ok(Math.abs(drawnScale(ANCHORS.nearUntil!, 0) - 1 / 6) < 1e-9); assert.ok(drawnScale(switchIn(1), 1) <= 0.53);
 });
 
 test('a real zoom inside a band: no re-lay; the tiles shrink smoothly as the camera zooms out and the set switches only at the anchors', () => {
@@ -155,36 +226,38 @@ test('a real zoom inside a band: no re-lay; the tiles shrink smoothly as the cam
       if (z === ZOOM_MIN) break;
     }
     assert.deepEqual(switches.map(s => [s.from, s.to]), [[0, 1], [1, 2]], 'NEAR to MID, MID to FAR, nothing else');
-    assert.ok(switches[0]!.z <= ANCHORS.mid / ANCHORS.hysteresis && switches[0]!.z > ANCHORS.mid / ANCHORS.hysteresis / 1.006, `NEAR to MID just past MID's anchor (${switches[0]!.z})`);
+    const u = ANCHORS.nearUntil!;
+    assert.ok(switches[0]!.z <= u * (1 + 1e-9) && switches[0]!.z > u / 1.006, `NEAR to MID at nearUntil (${switches[0]!.z}), T150's 9.6% is gone`);
     assert.equal(switches[1]!.z, ZOOM_MIN, 'MID to FAR at the furthest zoom, FAR\'s anchor');
   }
 });
 
-test('band hysteresis: zooming out a coarser set takes over a few % past its anchor, zooming in the finer one at once; a resting camera never flips', () => {
-  const H = ANCHORS.hysteresis, m = ANCHORS.mid;
-  assert.equal(nextBand(m, 0), 0, 'out: NEAR shrinks a little past MID\'s anchor'); assert.equal(nextBand(m / H * 1.001, 0), 0); assert.equal(nextBand(m / H, 0), 1, 'out: then MID');
-  assert.equal(nextBand(m, 1), 1, 'in: MID up to its anchor (native)'); assert.equal(nextBand(m * 1.0001, 1), 0, 'in: past it NEAR at once, MID never magnified');
+test('band hysteresis: zooming out a coarser set takes over at its switch, zooming in the finer one comes back a few % above it; a resting camera never flips', () => {
+  const H = ANCHORS.hysteresis, m = ANCHORS.mid, u = ANCHORS.nearUntil!;
+  assert.equal(nextBand(m, 0), 0, 'out: NEAR stays past MID\'s anchor (T153)'); assert.equal(nextBand(u * 1.001, 0), 0); assert.equal(nextBand(u, 0), 1, 'out: MID at nearUntil');
+  assert.equal(nextBand(u * H, 1), 1, 'in: MID up to nearUntil x the hysteresis'); assert.equal(nextBand(u * H * 1.0001, 1), 0, 'in: past it NEAR');
+  assert.equal(nextBand(m * 1.0001, 1), 0, 'in: MID is never magnified');
   assert.equal(nextBand(ZOOM_MIN * 1.0001, 1), 1); assert.equal(nextBand(ZOOM_MIN, 1), 2, 'out: FAR at the furthest zoom (its anchor: no room below it)');
   assert.equal(nextBand(ZOOM_MIN * 1.0001, 2), 1, 'in: FAR is left at once');
   assert.equal(nextBand(ZOOM_MIN, 0), 2, 'a jump from NEAR to the overview: FAR'); assert.equal(nextBand(0.05, 0), 1); assert.equal(nextBand(0.25, 2), 0, 'a jump in from FAR: NEAR');
   // jitter round MID's anchor and its switch: at most one switch, no flipping
   // (FAR is native at the furthest zoom itself, so it shows only there: a camera moving off the limit leaves it at once, never magnified)
-  for (const [z0, amp, start] of [[m, 0.03, 0], [m, 0.03, 1], [m / H, 0.01, 0], [m / H, 0.01, 1]] as const) {
+  for (const [z0, amp, start] of [[u, 0.03, 0], [u, 0.03, 1], [u * H, 0.01, 0], [u * H, 0.01, 1], [u * Math.sqrt(H), 0.015, 0], [u * Math.sqrt(H), 0.015, 1]] as const) {
     let b: number = start, flips = 0;
     for (let i = 0; i < 300; i++) { const z = z0 * (1 + amp * Math.sin(i * 0.7)); const n = nextBand(z, b); if (n !== b) flips++; b = n; }
     assert.ok(flips <= 1, `${flips} flips round ${z0} from ${start}`);
   }
   // a camera resting on an anchor stays in one band frame after frame
-  for (const [z, b] of [[m, 0], [m, 1], [m / H, 1], [ZOOM_MIN, 2], [ZOOM_MAX, 0]] as const) { let s: number = b; for (let i = 0; i < 50; i++) s = nextBand(z, s); assert.equal(s, nextBand(z, b)); }
+  for (const [z, b] of [[m, 0], [u, 1], [u * H, 1], [u * 1.02, 0], [ZOOM_MIN, 2], [ZOOM_MAX, 0]] as const) { let s: number = b; for (let i = 0; i < 50; i++) s = nextBand(z, s); assert.equal(s, nextBand(z, b)); }
   // a bad saved band is ignored; a saved band inside the hysteresis is kept (a reload lays the same tiles)
   assert.equal(nextBand(0.2, 99), bandAt(0.2)); assert.equal(nextBand(0.2, null), bandAt(0.2)); assert.equal(nextBand(0.2, 1.5), bandAt(0.2));
-  assert.equal(nextBand(m * 0.98, 0), 0); assert.equal(nextBand(m * 0.98, null), 1);
+  assert.equal(nextBand(u * 1.02, 0), 0); assert.equal(nextBand(u * 1.02, null), 1);
 });
 
 test('the next set is decoded ahead once the camera nears its switch, and only then', () => {
-  const P = ANCHORS.preload, m = ANCHORS.mid;
-  assert.deepEqual(bandsAhead(ZOOM_MAX, 0), []); assert.deepEqual(bandsAhead(m * P * 1.01, 0), []); assert.deepEqual(bandsAhead(m * P * 0.99, 0), [1]);
-  assert.deepEqual(bandsAhead(m / P * 1.01, 1), [0], 'MID near its anchor: NEAR ahead'); assert.deepEqual(bandsAhead(0.03, 1), []);
+  const P = ANCHORS.preload, u = ANCHORS.nearUntil!, H = ANCHORS.hysteresis;
+  assert.deepEqual(bandsAhead(ZOOM_MAX, 0), []); assert.deepEqual(bandsAhead(u * P * 1.01, 0), []); assert.deepEqual(bandsAhead(u * P * 0.99, 0), [1]);
+  assert.deepEqual(bandsAhead(u * H / P * 1.01, 1), [0], 'MID near its switch in: NEAR ahead'); assert.deepEqual(bandsAhead(u * H / P * 0.99, 1), []); assert.deepEqual(bandsAhead(0.03, 1), []);
   assert.deepEqual(bandsAhead(ZOOM_MIN * P * 0.99, 1), [2], 'MID near the furthest zoom: FAR ahead'); assert.deepEqual(bandsAhead(ZOOM_MIN, 2), [1]);
   // whenever a switch happens, the set switched to was ahead on the frame before
   let b: number | null = 0, ahead: number[] = [];
@@ -205,7 +278,7 @@ test('placement is world-anchored and stable: pan and resize never change a tile
   // the tile under a world point depends on the point, the band and the DPR only (T150: the DPR is part of a set's world size): the same for
   // any camera position and window
   const fam = tiledFamily('golden-fescue')!, x = 1030.4, y = 977.9, X = worldX(x, y), Y = worldY(x, y);
-  for (const z of [0.3, 0.12, 0.05, 0.02, 0.006]) for (const dpr of [1, 1.5, 2]) {
+  for (const z of [0.3, 0.12, 0.05, 0.02, ZOOM_MIN]) for (const dpr of [1, 1.5, 2]) {
     const k = tileSpec(bandAt(z), dpr), [w, h] = tileSize(fam.levels[bandOf(k)], k), cell = cellOf(X, Y, w, h);
     assert.ok(grassZoomLevels(z, dpr).rasterL > 0);
     for (const [vw, vh] of [[1920, 1080], [1280, 720], [2560, 1440], [800, 1200]]) {
@@ -233,15 +306,17 @@ test('whole tiles butt edge to edge at every chunk border and cache level: snapp
   }
 });
 
-test('the tile sets join the families, laid as authored; fescue, water, the map grass and rivers wear them; town lawns, course turf and every legacy family are unchanged', () => {
-  for (const id of ['golden-fescue', 'lake']) {
+test('the tile sets join the families, laid as authored; fescue, water, the map grass and rivers wear them; T153: fairway, greens, rough and waste too; town lawns, tees and every legacy family are unchanged', () => {
+  for (const id of ['golden-fescue', 'lake', 'sand-ripples-tiles', 'fairway', 'putting-green', 'long-grass']) {
     const f = familyById(id)!; assert.ok(f.tiled);
     assert.deepEqual(clampLook({ family: id, version: 'v9', scale: 2, tint: '#ff0000', tone: 0.4 }), { family: id, version: null, scale: 1, tint: '#ffffff', tone: 0 }, 'no scale, tint or tone over the art');
     const r = resolveFamily({ family: id, version: null, scale: 1 })!; assert.ok(r.tiled);
     assert.notEqual(r.near.file, r.mid.file); assert.notEqual(r.mid.file, r.far.file);
   }
-  assert.equal(familyById('golden-fescue')!.kind, 'grass'); assert.equal(familyById('lake')!.kind, 'water');
-  for (const id of ['emerald-short', 'sage-medium', 'straw-long', 'water-pond', 'sand-raked', 'underground-earth', 'first-painted']) { assert.ok(familyById(id) && !familyById(id)!.tiled, id); assert.ok(clampLook({ family: id, version: null, scale: 1, tint: '#ffffff', tone: 0 }), id); }
+  assert.equal(familyById('golden-fescue')!.kind, 'grass'); assert.equal(familyById('lake')!.kind, 'water'); assert.equal(familyById('sand-ripples-tiles')!.kind, 'sand');
+  for (const id of ['fairway', 'putting-green', 'long-grass']) { assert.equal(familyById(id)!.kind, 'grass'); assert.equal(familyById(id)!.provisional, true, `${id}: provisional (the studio says so)`); }
+  for (const id of ['golden-fescue', 'lake', 'sand-ripples-tiles']) assert.ok(!familyById(id)!.provisional, id);
+  for (const id of ['emerald-short', 'sage-medium', 'sage-long', 'straw-long', 'water-pond', 'sand-raked', 'sand-ripples', 'underground-earth', 'first-painted']) { assert.ok(familyById(id) && !familyById(id)!.tiled, id); assert.ok(clampLook({ family: id, version: null, scale: 1, tint: '#ffffff', tone: 0 }), id); }
   assert.equal(FAMILIES.filter(f => f.tiled).length, TILED_FAMILIES.length);
   const S = clampSurfaces(surfacesFile);
   assert.equal(lookOfTex('golfFescue', S)!.family, 'golden-fescue'); assert.equal(lookOfTex('preset:fescue', S, PRESETS)!.family, 'golden-fescue');
@@ -250,8 +325,17 @@ test('the tile sets join the families, laid as authored; fescue, water, the map 
   // aswell"; main 003153a); the course turf keeps its families
   assert.equal(lookOfTex('water', S)!.family, 'lake', 'rivers and creeks draw the lake');
   for (const t of ['grass', 'meadow']) assert.equal(lookOfTex(t, S)!.family, 'golden-fescue', `the map's ${t}`);
-  for (const t of ['golfRough', 'golfFairway', 'golfGreen']) assert.ok(!familyById(lookOfTex(t, S)!.family)!.tiled, `${t} keeps its family`);
-  for (const l of S.lawns) assert.ok(!familyById(l.family)!.tiled, 'no town lawn wears fescue');
+  // T153 (#327): the course's turf and waste areas wear the new sets, neutral (the tile sets are laid as authored)
+  const neutral = (family: string) => ({ family, version: null, scale: 1, tint: '#ffffff', tone: 0 });
+  for (const [t, key, fam] of [['golfFairway', 'fairway', 'fairway'], ['golfGreen', 'green', 'putting-green'], ['golfFringe', 'fringe', 'putting-green'], ['golfRough', 'rough', 'long-grass'], ['wasteSand', 'waste', 'sand-ripples-tiles']] as const) {
+    assert.equal(lookOfTex(t, S)!.family, fam, t); assert.deepEqual(S.surfaces[key], neutral(fam), `${key}: neutral tint, tone and scale`);
+    assert.deepEqual((surfacesFile.surfaces as Record<string, unknown>)[key], neutral(fam), `${key} in painted-surfaces.json`);
+  }
+  for (const [p, fam] of [['fairway', 'fairway'], ['green', 'putting-green'], ['fringe', 'putting-green'], ['rough', 'long-grass'], ['waste', 'sand-ripples-tiles']] as const) assert.equal(lookOfTex(`preset:${p}`, S, PRESETS)?.family ?? fam, fam, `the ${p} preset follows its surface`);
+  // tees keep the old green until a family is chosen for them; the first cut keeps its family too
+  for (const t of ['golfTee', 'golfFirstCut']) { const l = lookOfTex(t, S); if (l) assert.ok(!familyById(l.family)!.tiled, `${t} keeps its family`); }
+  assert.equal(S.surfaces.tee!.family, 'emerald-short');
+  for (const l of S.lawns) assert.ok(!familyById(l.family)!.tiled, 'no town lawn wears a tile set');
   assert.deepEqual(S.surfaces.fescue, { family: 'golden-fescue', version: null, scale: 1, tint: '#ffffff', tone: 0 });
   assert.deepEqual(S.surfaces.water, { family: 'lake', version: null, scale: 1, tint: '#ffffff', tone: 0 });
 });
