@@ -20,6 +20,7 @@
 //            buildings and their stand-ins, the scale table; rebuild() below), then npm run build, so the game takes the changes.
 //   node scripts/assets/review/server.mjs [--port 5179]   then open http://127.0.0.1:5179/
 import { execFile, spawn } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import http from 'node:http';
 import path from 'node:path';
@@ -37,6 +38,7 @@ import { boundsOf, lotVariants } from '../lot-variants.mjs';
 import { fixCode, newFramePath, parseFix } from '../walker-fix.mjs';
 import { averageHash, foldCopies } from './copies.mjs';
 import { carModel, carModelName, carModelSize, foldCarSizes } from '../../../src/game/ext/car-art/model.mjs';
+import { thumbStep } from './thumb-size.mjs';
 
 const PORT = +(process.argv[process.argv.indexOf('--port') + 1] || 5179) || 5179;
 const ATLAS = path.join(ROOT, 'src/assets/atlas'), CACHE = path.join(ROOT, 'output/review/thumbs');
@@ -130,8 +132,20 @@ async function picture(id, s) {
   const png = await sharp(page).extract({ left, top, width, height }).resize(1200, 1200, { fit: 'inside', withoutEnlargement: true }).png().toBuffer();
   fs.writeFileSync(f, png); fs.writeFileSync(stamp, version); return { png, version };
 }
-/** a sprite's picture for the thumbnail route: a sprite the game has (the library), else a view the four-view art appends (size-report.ts: its tex and page) */
-async function thumb(id) { return (await picture(id, library().find(x => x.id === id) ?? sizes.data[id])).png; }
+/** a sprite's spec for the thumbnail routes: a sprite the game has (the library), else a view the four-view art appends (size-report.ts: its tex and page) */
+const specOf = id => library().find(x => x.id === id) ?? sizes.data[id];
+/** a sprite's picture for the thumbnail route (PNG, up to 1200 px: the person cursor, the Lots tab, the removed snapshot) */
+async function thumb(id) { return (await picture(id, specOf(id))).png; }
+/** a Library card's picture (T144): WebP with its long side at most s device px (s one of thumb-size.mjs's steps), made from the PNG above and cached
+ *  beside it (<id>.<s>.webp, stamped with the PNG's version), so the browser decodes only the pixels the card shows. Returns { webp, tag }: tag names
+ *  the picture's version and size for the browser's revalidation (the ETag); null when there is no picture */
+async function sized(id, s) {
+  const { png, version } = await picture(id, specOf(id)); if (!png) return null;
+  const f = path.join(CACHE, `${safe(id)}.${s}.webp`), stamp = f + '.json', version2 = `${version ?? 'kept'}|${s}`, tag = createHash('sha1').update(version2).digest('hex').slice(0, 16);
+  if (fs.existsSync(f) && fs.existsSync(stamp) && fs.readFileSync(stamp, 'utf8') === version2) return { webp: fs.readFileSync(f), tag };
+  const webp = await sharp(png).resize(s, s, { fit: 'inside', withoutEnlargement: true }).webp({ quality: 90, alphaQuality: 100, effort: 4 }).toBuffer();
+  fs.writeFileSync(f, webp); fs.writeFileSync(stamp, version2); return { webp, tag };
+}
 /** each card's average hash (copies.mjs), by id, kept while its picture's version is the same */
 const HASHES = new Map();
 async function hashOf(id, s) {
@@ -413,7 +427,16 @@ http.createServer(async (req, res) => {
       const { cards: sprites } = await foldCopies(grid, s => (s.kind === 'walker' || s.kind === 'car' || rm[s.id] ? null : hashOf(s.id, pics.get(s.id) ?? sizes.data[s.id])));
       return json({ sprites, removed: rm, walkers });
     }
-    if (P.startsWith('/thumb/')) return png(await thumb(decodeURIComponent(P.slice(7))));
+    // /thumb/<id>: the PNG; /thumb/<id>?s=<px>: the Library card's WebP at a size step (T144), with an ETag so a card loading its picture again
+    // (the page drops the pictures of cards scrolled far away) is a 304, not a transfer
+    if (P.startsWith('/thumb/')) {
+      const id = decodeURIComponent(P.slice(7)), s = url.searchParams.get('s');
+      if (s == null) return png(await thumb(id));
+      const t = await sized(id, thumbStep(s)); if (!t) { res.writeHead(404); return res.end(); }
+      const etag = `"${t.tag}"`;
+      if (req.headers['if-none-match'] === etag) { res.writeHead(304, { etag }); return res.end(); }
+      res.writeHead(200, { 'content-type': 'image/webp', 'cache-control': 'no-cache', etag }); return res.end(t.webp);
+    }
     if (req.method === 'POST' && (P === '/api/remove' || P === '/api/restore')) {
       const { id } = await body(req), rm = readRemoved(), s = library().find(x => x.id === id);
       if (P === '/api/remove' && id) { await thumb(id).catch(() => null); rm[id] = { ...rm[id], at: new Date().toISOString(), ...Object.fromEntries(['name', 'cat', 'kind', 'w', 'h', 'quad', 'ax', 'ay'].filter(k => s?.[k] !== undefined).map(k => [k, s[k]])) }; }
