@@ -249,3 +249,22 @@ test('readBackup and deleteBackup work on a listed backup key and refuse the tow
   assert.equal(s.m.has('town-pre-v4'), false);
   assert.deepEqual(await listSaveBackups(), ['town-backup-corrupt-x-2000']);
 });
+
+test('the build stamp is informational: a save from another build reads ok, and an imported v4 save goes through the migration path', async () => {
+  const s = memStore(); setSaveStore(s);
+  s.m.set('town', await gzip(JSON.stringify({ ...v5, build: { app: '9.9.9', sha: 'zzzzzzz' } })));
+  const other = await readSave();
+  assert.equal(other.status, 'ok');
+  assert.equal(other.version, SAVE_VERSION);
+  assert.equal(SAVE_VERSION, 5, 'the stamp never bumps the save version');
+  // a v4 file loads like a v4 save in the slot: accepted by importSaveBytes, migrated (with its pre-v4 copy) by the next readSave
+  const old = s.m.get('town')!;
+  assert.deepEqual(await importSaveBytes(await gzip(JSON.stringify(v4))), { ok: true, version: 4 });
+  const k = [...s.m.keys()].find(x => x.startsWith('town-backup-import-'));
+  assert.deepEqual(bytesOf(s.m.get(k!)), bytesOf(old));
+  const r = await readSave();
+  assert.equal(r.status, 'ok');
+  assert.equal(r.migratedFrom, 4);
+  assert.equal(r.backup, 'town-pre-v4');
+  assert.equal(r.save!.seed, 7);
+});
