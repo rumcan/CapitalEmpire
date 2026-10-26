@@ -24,7 +24,7 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 ### In flight
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |
-| **T157 (priority)** | #336 | `arena/T157-light-lab` | `.claude/worktrees/t157` | 5188 (studio 5194) | The owner: "the studio is taking too much ram to run the full game"; started as a **third agent** at the owner's word. Measure, then a light `?lotlab` boot (small map, no sim/traffic/golf, one ground worker, lazy atlases), the studio's Lots frame only while open; target under a third of today's lab memory. Stays out of T155's lab UI files. |
+| T164 | (new) | `arena/T164-main-tests` | `.claude/worktrees/t157` | 5188 | Main's two test failures after the #353 Rebuild: the drawn shadow for `expansion:stationwagon-rear`, and compose's RES side yard (gen-house-ranch-long at 1.01 tiles after the owner's size change). |
 | T154 | #330 | `arena/T154-new-art` | `.claude/worktrees/t154` | — | **Phase 1 merged (#345).** Phase 2 waits: the eight-heading contract (a building on a 45° road picks its cardinal view, `AXIS_SETS`); the new subjects' diagonal views are art work (listed in GOLF-SPRITES.md). |
 | T152 | #325 | `arena/T152-car-spacing` (d3bdbf1) | `.claude/worktrees/t152` | — | **Paused** for the art (the owner). Root cause: the range's own cars (`rangebiz.ts:803/832/723`) are placed by their own clock; fixed in rangebiz.ts only (overlaps -75-82% with the 44-bay lot, money identical). **Owner's decision needed:** at full demand the one-lane drive and the building's ramp cannot carry the cars at a car's gap (wider drive, second ramp, faster car-park speeds, or the queue limiting sales). Left: three gates, shots, PR. |
 | T163 → T159 | (T163 new), #348 | from origin/main | `.claude/worktrees/t155` | 5186 | T158 merged (#352). Next: T163 parked cars on lots vs the studio car size (the owner; measure, fix if real), then T159 (P25: presets as samples + the 12-lot gallery). |
@@ -75,6 +75,11 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
    (the sharp bump). See the History sections below and `gh issue list --label arena --state open`.
 
 ### Done recently (newest first; details in each PR)
+- 2026-10-26: **T157 #354 the lot lab runs light** (the owner: "the studio is taking too much ram"): boot options (`src/game/boot.ts`; the game
+  unchanged), the lab's light boot under `?lotlab` (one CPU-canvas ground worker, no sim/save/town/golf, lazy textures, a small atlas, a
+  320-tile box; `?lotlab&fullboot` for the old way); the studio's Lots frame only while open. Lab memory 4,179 → ~1,340 MB, VRAM 1,898 → ~290
+  MB. `scripts/perf/memory.mjs` repeats the measurement. Follow-ups noted: the game's three ground workers hold ~450-630 MB of texture pack
+  each (the lazy textures could help); the owner's own Chrome GPU process held 10.3 GB.
 - 2026-10-26: **T158 #352 the lot wizard** (W in the lab: click deletes, Space saves + next in ~36 ms, S skips; 12 sectors, Beta keep
   rates, `lot-learning.json` via POST /__dev/learning; `lot-gen.ts` a pure seeded generator for P25). **#353** the studio Rebuild output
   (the owner's latest sizes over the new art; the studio now runs with VIPS_CONCURRENCY=1 in launch.json: the Rebuild failed for memory
