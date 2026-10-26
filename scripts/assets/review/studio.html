@@ -18,7 +18,7 @@ input{background:#11130b;border:1px solid var(--line);color:var(--ink);border-ra
 select{background:#11130b;border:1px solid var(--line);color:var(--ink);border-radius:6px;padding:5px 8px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:8px;overflow:hidden;display:flex;flex-direction:column;min-width:200px}
 .stage{display:flex;align-items:flex-end;justify-content:center;background:linear-gradient(#2b3120,#323a24);padding:10px;min-height:60px}
-.stage.grass{background:#4f6b2c}.stage img{display:block}.views{display:flex;gap:4px;justify-content:center;align-items:flex-end;background:#262c1b;padding:4px}.views img{width:52px;height:44px;object-fit:contain}.meta{padding:8px}.name{font-weight:600}.cat{font-size:11px;color:var(--gold)}.id{font:11px ui-monospace,monospace;color:var(--dim);word-break:break-all}
+.stage.grass{background:#4f6b2c}.stage img{display:block}.views{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;align-items:flex-end;background:#262c1b;padding:4px;max-width:260px}.views img{width:52px;height:44px;object-fit:contain}.meta{padding:8px}.name{font-weight:600}.cat{font-size:11px;color:var(--gold)}.id{font:11px ui-monospace,monospace;color:var(--dim);word-break:break-all}
 .size{padding:0 8px 6px;font-size:11px;color:var(--dim)}.size.warn{color:var(--red)}.size b{color:var(--ink);font-weight:600}
 .row{display:flex;gap:6px;padding:0 8px 8px;align-items:center}.row .btn{flex:1}.scale{font:12px ui-monospace,monospace;color:var(--ink);min-width:70px;text-align:center}
 .list{border-right:1px solid var(--line)}.li{padding:8px 12px;border-bottom:1px solid var(--line);cursor:pointer;font-size:13px}.li.on{background:#2a2e1c;color:var(--gold)}.li small{color:var(--dim)}
@@ -111,9 +111,10 @@ function card(s){
   const size=f=>async()=>{const rs=[];for(const id of [s.id,...(s.dupes??[])])rs.push(await post('/api/scale',f?{id,factor:f}:{id,reset:true}));for(const r of rs)for(const x of all)if((x.sizeId??x.id)===r.id)x.scale=r.scale;draw();};
   // the baked house lots (cat Lots) and the walkers keep their size; a decal has no report line (its size is packed into the decal strip)
   const fixed=s.cat==='Lots'||s.kind==='walker';
-  // a four-view building: its four views in a row under the picture (the same /thumb route; sizing it sizes all four)
+  // a four-view building: its four views in a row under the picture (the same /thumb route; sizing it sizes all four); a car (s.model): every picture
+  // of the model (its facings, their views, its eight headings), all sized together (T143)
   const views=s.views?el('div',{className:'views'},...s.views.map(v=>el('img',{src:'/thumb/'+encodeURIComponent(v.id),title:`${v.dir} · ${v.id}`,loading:'lazy'}))):null;
-  return el('div',{className:'card'},stage(s),views,el('div',{className:'meta'},el('div',{className:'name',textContent:s.name}),el('div',{className:'cat',textContent:s.cat+' · '+s.kind}),el('div',{className:'id',textContent:s.id}),s.dupes?.length?el('div',{className:'cat',textContent:`also: ${s.dupes.length} ${s.dupes.length===1?'copy':'copies'}`,title:s.dupes.join(', ')}):null),
+  return el('div',{className:'card'},stage(s),views,el('div',{className:'meta'},el('div',{className:'name',textContent:s.name}),el('div',{className:'cat',textContent:s.cat+' · '+s.kind}),el('div',{className:'id',textContent:s.model?`${s.model} · ${s.views.length} pictures, one size`:s.id}),s.dupes?.length?el('div',{className:'cat',textContent:`also: ${s.dupes.length} ${s.dupes.length===1?'copy':'copies'}`,title:s.dupes.join(', ')}):null),
    fixed||s.kind==='decal'?null:sizeLine(s),
    fixed||s.kind==='decal'||!softOf(s)?null:el('div',{className:'size warn',textContent:'past its pixels: Rebuild upscales it (a little softer until higher-res art)'}),
    fixed?null:el('div',{className:'row'},el('button',{className:'btn',textContent:'Smaller',onclick:size(1/1.08)}),sc,el('button',{className:'btn',textContent:'Bigger',onclick:size(1.08)})),
