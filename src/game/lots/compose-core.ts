@@ -76,6 +76,9 @@ export function boxOf(id: string, s: number, flip: boolean): Box4 {
 /** a seeded pick; '' from an empty list (put() ignores unknown ids) */
 export const pick = (r: () => number, a: string[]): string => a[Math.floor(r() * a.length)] ?? '';
 export const clamp = (v: number, a: number, b: number) => (v < a ? a : v > b ? b : v);
+/** the house band: the gap between the drive and the house (or its garage), and the side yard on the far side from the drive (tiles): the old
+ *  layouts lay a house in it (legacy-layout.ts res), and the runtime composer keeps a frozen preset's house in it (compose.ts houseYards) */
+export const DRIVE_GAP = 0.5, SIDE_YARD = 1.4;
 /** a pool for a sprite drawn flipped: lettering reads backwards when mirrored, so a flipped lot keeps only the plain sprites, and a lettering
  *  sprite with east-facing art (EAST_FACING) stays (it is drawn as that art, unflipped). Unflipped keeps the whole pool. */
 export const plain = (list: string[], flip: boolean | undefined) => (flip ? list.filter(id => EAST_FACING[id] !== undefined || !hasLettering(id, BY.get(id)?.name)) : list);

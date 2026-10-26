@@ -50,6 +50,7 @@ import { deriveMaster, mastersReport } from './lot-derive';
 import { BTN, DANGER, GO, ON, SEL, btn, check, drawHelp, el, heading, makeShell, mono, panelHead, typing, type Folds } from './lot-lab-ui';
 import { makePalette, type Swatch } from './lot-lab-palette';
 import { makeWizard, WIZARD_ID } from './lot-wizard';
+import { makeGallery } from './lot-gallery';
 
 /** the least zoom the lab keeps (Camera.z): the lot stays big enough to edit (a lot too big for it keeps its fit zoom, see keepCam) */
 const LAB_ZOOM = 0.12;
@@ -94,8 +95,8 @@ function decalThumb(t: HTMLElement, d: LotDecal, px: number) { const k = (px - 8
 const bkey = (w: number, d: number) => { const b = bucketOf(w, d); return `${b.w}x${b.d}`; };
 /** the frozen presets (no road): the pool a lot not made in the lab draws from */
 const legacy = () => lotPresets().filter(p => p.road === undefined);
-/** the lab presets (a road set): drafts and approved ones */
-const lab = () => lotPresets().filter(p => p.road !== undefined);
+/** the lab presets (a road set): drafts and approved ones; the wizard's and the gallery's lots (in memory only) are not among them */
+const lab = () => lotPresets().filter(p => p.road !== undefined && p.id !== 'lab-wizard' && !p.id.startsWith('lab-gallery-'));
 /** the compose use of a preset use (town.ts LU): a car park is a commercial lot; a farm draws alone (no use: its forced preset) */
 const luOf = (u: PresetUse) => (u === 'res' ? LU.RES : u === 'ind' ? LU.IND : u === 'tour' ? LU.TOUR : u === 'civic' ? LU.GOV : u === 'farm' ? LU.NONE : LU.COM);
 /** the compose level and decline of a look state (town.ts LV): declined is a built lot at decline 2 */
@@ -190,6 +191,13 @@ export function installLotLab(game: Game): () => void {
     game, lot: () => ({ use, state, road }), frame: () => (geo ? labFrame(geo) : null), base: wizardBase, show: wizardShow, leave: wizardLeave, keepDraft, toScreen,
     say: m => { message = m; drawStatus(); }, redraw: () => render(),
   });
+  /** the lot gallery (T159, lot-gallery.ts): a dozen generated lots along the street, judged Good or Bad, Fix one in the wizard */
+  const gallery = makeGallery({
+    game, lot: () => ({ use, state, road }), geo: () => geo, frame: () => (geo ? labFrame(geo) : null), base: () => wizardBase(false), stage: galleryStage,
+    fit: gs => { fitList = gs.length > 1 ? [...gs] : null; fitGeos(gs); },
+    toScreen: (x, y) => { const c = game.cam, o = origin(); return { x: o.x + (worldX(x, y) - c.X) * c.z, y: o.y + (worldY(x, y) - c.Y) * c.z }; },
+    leave: wizardLeave, say: m => { message = m; drawStatus(); }, redraw: () => render(),
+  }, wizard);
   const personEl = el('div', 'position:fixed;left:0;top:0;display:none;pointer-events:none;z-index:58;background-repeat:no-repeat');
 
   // ---------- the model's helpers
@@ -284,9 +292,15 @@ export function installLotLab(game: Game): () => void {
   /** the camera centred so a world point (px) sits at the free area's centre (the zoom kept) */
   function centreOn(wx: number, wy: number) { const a = shell.free(), o = origin(), z = game.cam.z; game.cam.X = wx - ((a.L + a.R) / 2 - o.x) / z; game.cam.Y = wy - ((a.T + a.B) / 2 - o.y) / z; }
   /** the camera on the lot and its road, after a fresh stage (or a panel folded): the largest zoom (at most ZOOM_MAX) at which the lot and its road fit the free area with FIT_MARGIN px to spare, and the hole's centre at the area's centre */
-  function fitCam() {
-    const g = geo; if (!g) return;
-    const h = holeBox(g), a = shell.free(), z = Math.min(ZOOM_MAX, (a.R - a.L - 2 * FIT_MARGIN) / (h.x1 - h.x0), (a.B - a.T - 2 * FIT_MARGIN) / (h.y1 - h.y0));
+  function fitCam() { if (fitList) fitGeos(fitList); else if (geo) fitGeos([geo]); }
+  /** the lots the camera keeps fitted instead of the lab lot alone (the gallery's row), or null */
+  let fitList: LotGeom[] | null = null;
+  /** the camera over these lots and their road (the lab lot; the gallery's row): the largest zoom (at most ZOOM_MAX) at which they fit the free area
+   *  with FIT_MARGIN px to spare, their middle at the area's centre */
+  function fitGeos(gs: readonly LotGeom[]) {
+    if (!gs.length) return;
+    const h = gs.map(holeBox).reduce((a, b) => ({ x0: Math.min(a.x0, b.x0), y0: Math.min(a.y0, b.y0), x1: Math.max(a.x1, b.x1), y1: Math.max(a.y1, b.y1) }));
+    const a = shell.free(), z = Math.min(ZOOM_MAX, (a.R - a.L - 2 * FIT_MARGIN) / (h.x1 - h.x0), (a.B - a.T - 2 * FIT_MARGIN) / (h.y1 - h.y0));
     fitZ = Math.max(ZOOM_MIN, z); game.cam.z = fitZ; centreOn((h.x0 + h.x1) / 2, (h.y0 + h.y1) / 2); game.emit();
   }
   /** the camera stays on the lot: its zoom never below the floor (LAB_ZOOM, or the fit zoom of a lot too big for it), and the lot centred back in the free area once its centre has left it */
@@ -578,9 +592,23 @@ export function installLotLab(game: Game): () => void {
     const st: ComposeState = { use: luOf(use), ...levelOf(state), seed: 1, preset: p.id };
     if (staged && lotSame(p.w, p.d)) { game.restageLab(st); staged = { ...staged, st }; } else stage(p.w, p.d, st);
   }
-  /** the wizard is off: its lot goes from the presets, and the lab shows the cell's first variant */
+  /** the gallery's lots staged (T159): each slot's preset in memory (lab-gallery-k), the middle one on the lab lot, the others along the street
+   *  (the neighbours' place: their keys lab-n-gal...); [] drops them, and the neighbours come back when they are on */
+  function galleryStage(slots: readonly { g: LotGeom; p: LotPreset }[], mid: number): void {
+    const list = lotPresets().filter(q => !q.id.startsWith('lab-gallery-'));
+    if (!slots.length) { fitList = null; setLotPresets(list); game.stageLabNeighbours([]); neighs = []; neighKey = ''; neighbours(); return; }
+    if (draft && !draftSaved()) dropDraft();
+    draft = null;
+    setLotPresets([...lotPresets().filter(q => !q.id.startsWith('lab-gallery-')), ...slots.map(s => s.p)]);
+    const st = (id: string): ComposeState => ({ use: luOf(use), ...levelOf(state), seed: 1, preset: id }), m = slots[mid]!;
+    current = m.p.id; source = '';
+    if (staged && lotSame(m.p.w, m.p.d)) { game.restageLab(st(m.p.id)); staged = { ...staged, st: st(m.p.id) }; } else stage(m.p.w, m.p.d, st(m.p.id));
+    neighs = []; neighKey = 'gallery';
+    game.stageLabNeighbours(slots.filter((_, k) => k !== mid).map((s, k) => ({ key: `lab-n-gal${k}`, g: s.g, st: st(s.p.id) })));
+  }
+  /** the wizard (or the gallery) is off: its lots go from the presets, and the lab shows the cell's first variant */
   function wizardLeave(): void {
-    setLotPresets(lotPresets().filter(q => q.id !== WIZARD_ID));
+    setLotPresets(lotPresets().filter(q => q.id !== WIZARD_ID && !q.id.startsWith('lab-gallery-')));
     if (draft?.id === WIZARD_ID) draft = null;
     current = null; variant = -1;
     void act(() => generate(1));
@@ -673,8 +701,9 @@ export function installLotLab(game: Game): () => void {
       btn('?', `${BTN}font-weight:800;padding:4px 11px`, () => toggleHelp(), 'the keys (?)')];
     // the wizard's own bar while it runs (its keys as buttons), the view toggles kept
     if (wizard.on()) { t.replaceChildren(...wizard.bar(), bar(), ...views); return; }
+    if (gallery.on()) { t.replaceChildren(...gallery.bar(), bar(), ...views); return; }
     t.replaceChildren(
-      wizard.toggleBtn(),
+      wizard.toggleBtn(), gallery.toggleBtn(),
       btn('◀ Variant', BTN, () => act(() => generate(-1)), 'the previous variant (Shift+G)'),
       btn('Generate ▶', ON, () => act(generateHere), 'this lot again (its type, size and road angle): a new layout, seed and building that suits its road and state'),
       btn('New lot ▶', BTN, () => act(newLot), 'a random size and road angle, as the drawer\'s locks allow; both locked: the next variant'),
@@ -815,7 +844,7 @@ export function installLotLab(game: Game): () => void {
   /** the INSPECTOR: the selection (when there is one), then the lot */
   function renderInspector() {
     const s = editorSel();
-    shell.inspector.replaceChildren(panelHead('INSPECTOR', '▸', () => shell.fold('inspector', true)), ...(wizard.on() ? wizard.panel() : []), ...selSection(s), ...lotSection(s));
+    shell.inspector.replaceChildren(panelHead('INSPECTOR', '▸', () => shell.fold('inspector', true)), ...(wizard.on() ? wizard.panel() : []), ...(gallery.on() ? gallery.panel() : []), ...selSection(s), ...lotSection(s));
   }
   /** the coverage of this type and state: a row per size, a column per road angle; the approved count (bold), the drafts (small), the colour, the current cell outlined; a click opens or generates it */
   function coverage(): HTMLElement {
@@ -966,7 +995,11 @@ export function installLotLab(game: Game): () => void {
     const mod = e.ctrlKey || e.metaKey;
     const plain = !mod && !e.altKey, k = e.key.toLowerCase(), helpOn = shell.help.style.display !== 'none';
     // the wizard owns its keys while it runs (Space, S, Backspace, W, Esc), and the lab's own lot keys rest (only ?, L and N stay)
-    if (wizard.on() && !helpOn) {
+    // the gallery owns its keys while it is open (Space, Esc), as the wizard does
+    if (gallery.on() && !helpOn) {
+      if (gallery.onKey(e)) { e.preventDefault(); e.stopImmediatePropagation(); render(); return; }
+      if (!(plain && (k === 'l' || e.key === '?'))) { if (plain || mod) { e.preventDefault(); e.stopImmediatePropagation(); } return; }
+    } else if (wizard.on() && !helpOn) {
       if (wizard.onKey(e)) { e.preventDefault(); e.stopImmediatePropagation(); render(); return; }
       if (!(plain && (k === 'l' || k === 'n' || e.key === '?'))) { if (plain || mod) { e.preventDefault(); e.stopImmediatePropagation(); } return; }
     } else if (k === 'w' && plain && !helpOn && use !== 'farm') { e.preventDefault(); e.stopImmediatePropagation(); wizard.toggle(true); return; }
@@ -1007,7 +1040,7 @@ export function installLotLab(game: Game): () => void {
     const s = editorSel();
     if (s.key !== selKey) { selKey = s.key; renderSelbar(s); renderInspector(); }
     placeSelbar(s);
-    wizard.frame();
+    wizard.frame(); gallery.frame();
   }
 
   /** the Lot grid's draw for the engine (Game.devGround): the lots syncGrid chose, none when the grid is off */
@@ -1039,7 +1072,7 @@ export function installLotLab(game: Game): () => void {
     pauseEditor(false); editorOnly(null); setHouseFilter(null);
     if (game.devGround === drawGrid) game.devGround = null;
     gridLayer.dispose(); game.stageLabNeighbours([]);
-    wizard.dispose();
+    wizard.dispose(); gallery.dispose();
     style.remove(); mask.remove(); shell.remove(); personEl.remove();
   };
 }

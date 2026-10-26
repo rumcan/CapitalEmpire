@@ -12,10 +12,11 @@ import { mulberry } from '../iso';
 import { isBuilding } from '../mirror';
 import { LU, LV } from './town';
 import {
-  BUSHES, BY, Build, CHAIN, DEAD_TREES, JUNK, MARK_ID, PARK_PIECES, PICKUPS, PRIVACY, SCHOOL_SIGNS, TREES, clamp, isCarPark, mix, names, pick, specFit, withVariations,
+  BUSHES, BY, Build, CHAIN, DEAD_TREES, DRIVE_GAP, JUNK, MARK_ID, PARK_PIECES, PICKUPS, PRIVACY, SCHOOL_SIGNS, SIDE_YARD, TREES, clamp, isCarPark, mix,
+  names, pick, specFit, withVariations,
   type Composition, type ComposeState, type LotGeom, type Pt, type PresetDrop,
 } from './compose-core';
-import { approvedFor, bucketOf, fitPreset, parsePresets, pickPreset, presetsFor, stateOf, type Fitted, type LotPreset, type PresetDecal, type PresetMeta, type PresetState, type PresetUse, type Road } from './presets';
+import { approvedFor, bucketOf, fitPreset, parsePresets, pickPreset, presetsFor, stateOf, type Fitted, type LotPreset, type PresetDecal, type PresetMeta, type PresetProp, type PresetState, type PresetUse, type Road } from './presets';
 import { footprintOf, ownerScaleOf, turned } from './preset-art';
 import { frameOf, listToWorld, quarterOfRoad, roadOf, toWorld, type PresetFrame } from './preset-frame';
 import PRESET_JSON from './lot-presets.json';
@@ -221,15 +222,18 @@ export function pickedPreset(lot: LotGeom, st: ComposeState): LotPreset | null {
   const road = roadOf(lot.n), angled = isAngled(lot), ok = angled && road % 2 === 0 ? [] : approvedOf(use, state, lot.w, lot.d, road);
   if (ok.length) return pickPreset(ok, streetSlot(lot), streetKey(lot)) ?? null;
   if (angled) return null;
-  return pickPreset(presetsOf(use, state, lot.w, lot.d), streetSlot(lot), streetKey(lot)) ?? null;
+  // the frozen preset of the lot's slot, among those whose house fits the lot's band at today's sizes (houseFits: a list where every one fits,
+  // nearly all, picks as before; neighbours still differ); none fits: among all, the house centred in its band
+  const list = presetsOf(use, state, lot.w, lot.d), fits = list.filter(q => houseFits(q, lot));
+  return pickPreset(fits.length ? fits : list, streetSlot(lot), streetKey(lot)) ?? null;
 }
 /** the preset a built lot draws (pickedPreset), fitted to the lot, and the lot's preset frame: frameOf, except that a lab preset of a diagonal road
  *  is turned by its quarter (quarterOfRoad); null as pickedPreset */
 export function lotPreset(lot: LotGeom, st: ComposeState): { preset: LotPreset; fit: Fitted; frame: PresetFrame } | null {
   const preset = pickedPreset(lot, st);
   if (!preset) return null;
-  const frame = frameOf(lot);
-  return { preset, fit: fitPreset(preset, lot.w, lot.d), frame: preset.road !== undefined && preset.road % 2 ? { ...frame, q: quarterOfRoad(preset.road) } : frame };
+  const frame0 = frameOf(lot), frame = preset.road !== undefined && preset.road % 2 ? { ...frame0, q: quarterOfRoad(preset.road) } : frame0, fit = fitPreset(preset, lot.w, lot.d);
+  return { preset, fit: frozenHouse(preset) ? houseYards(fit, frame) : fit, frame };
 }
 /** the approved farm preset a farm parcel draws (use 'farm', built, at its size, on its road angle: approvedFor), picked by its key (pickPreset); null
  *  when none fits: an angled parcel on an even road takes none, as pickedPreset gives a lot none */
@@ -272,6 +276,66 @@ function fromPreset(B: Build, lot: LotGeom, st: ComposeState, p: { preset: LotPr
   });
   B.cap = ups + EXTRA_PLANTS;
   return { drive, main, same };
+}
+
+/** a frozen house preset: a house lot laid out by the old layouts and frozen (P20 T063), not one of the owner's own (curated, approved in the lab,
+ *  or whole): its house keeps its yards at today's sizes (houseYards) */
+const frozenHouse = (p: LotPreset) => p.use === 'res' && !p.curated && !p.approved && !p.whole;
+
+/** a fitted house preset's house and its band (preset frame: x along the frontage, 0..f.w): the widest building (hw, hd its half extents along x
+ *  and y as the lot draws it: turned to the lot's facing, at its owner size), and the band the old layouts lay a house in (legacy-layout.ts res):
+ *  from DRIVE_GAP past the drive, or from a building between the house and the drive in the house's depth (a garage), to SIDE_YARD short of the
+ *  side line on the far side. null when the preset has no drive or no building */
+function houseBand(fit: Fitted, f: PresetFrame): { k: number; hw: number; hd: number; lo: number; hi: number } | null {
+  const W = f.w, drive = fit.patches.find(a => a.kind === 'drive');
+  if (!drive) return null;
+  let d0 = Infinity, d1 = -Infinity;
+  for (let i = 0; i < drive.pts.length; i += 2) { d0 = Math.min(d0, drive.pts[i]!); d1 = Math.max(d1, drive.pts[i]!); }
+  const left = (d0 + d1) / 2 < W / 2;
+  const half = (q: PresetProp): [number, number] => {
+    const t = turned(q.id, f.q + q.view), b = footprintOf(t.id, q.scale * ownerScaleOf(q.id), t.flip), w = b[2] - b[0], h = b[3] - b[1];
+    return [(Math.abs(f.u.x) * w + Math.abs(f.u.y) * h) / 2, (Math.abs(f.n.x) * w + Math.abs(f.n.y) * h) / 2];
+  };
+  let k = -1, hw = 0, hd = 0;
+  fit.props.forEach((q, i) => { const it = BY.get(q.id); if (!it || !isBuilding(it)) return; const [a, b] = half(q); if (a > hw) { k = i; hw = a; hd = b; } });
+  if (k < 0) return null;
+  const h = fit.props[k]!;
+  let near = left ? d1 + DRIVE_GAP : d0 - DRIVE_GAP;
+  fit.props.forEach((q, i) => {
+    const it = BY.get(q.id); if (i === k || !it || !isBuilding(it)) return;
+    const [a, b] = half(q);
+    if (q.y + b <= h.y - hd || q.y - b >= h.y + hd) return;
+    if (left && q.x < h.x) near = Math.max(near, q.x + a); else if (!left && q.x > h.x) near = Math.min(near, q.x - a);
+  });
+  return { k, hw, hd, lo: left ? near : SIDE_YARD, hi: left ? W - SIDE_YARD : near };
+}
+
+/** T164: a frozen house preset's house keeps its yards. The presets were frozen from the old layouts with the house in its band (houseBand), and
+ *  the owner sizes houses in the studio after the freeze: a house drawn bigger is wider, and stood on its frozen centre it ate its side yard (after
+ *  the studio Rebuild of 2026-10-26 the ranch-long house stood 1.01 tiles from the side line of a 12.5-tile lot). So the fit moves the house
+ *  along the frontage into its band (the least move), with its front walk and the props before its front (its porch and beds); a house wider
+ *  than its band is centred in it (pickedPreset picks only presets whose house fits the lot, when its bucket has one) */
+export function houseYards(fit: Fitted, f: PresetFrame): Fitted {
+  const band = houseBand(fit, f);
+  if (!band) return fit;
+  const { k, hw, hd, lo, hi } = band, h = fit.props[k]!;
+  const x = hi - lo >= 2 * hw - 1e-9 ? clamp(h.x, lo + hw, hi - hw) : (lo + hi) / 2, dx = x - h.x;
+  if (Math.abs(dx) < 1e-9) return fit;
+  const front = h.y - hd, before = (q: { x: number; y: number }) => q.y < front && q.x >= h.x - hw && q.x <= h.x + hw;
+  const props = fit.props.map((q, i) => (i === k || before(q) ? { ...q, x: q.x + dx } : q));
+  const patches = fit.patches.map(a => {
+    if (a.kind !== 'walk') return a;
+    let x0 = Infinity, x1 = -Infinity; for (let i = 0; i < a.pts.length; i += 2) { x0 = Math.min(x0, a.pts[i]!); x1 = Math.max(x1, a.pts[i]!); }
+    if ((x0 + x1) / 2 < h.x - hw || (x0 + x1) / 2 > h.x + hw) return a;
+    return { ...a, pts: a.pts.map((v, i) => (i % 2 ? v : clamp(v + dx, 0, f.w))) };
+  });
+  return { ...fit, props, patches };
+}
+/** whether a frozen house preset's house fits its band on a lot (any other preset does: the owner's are theirs to lay out) */
+function houseFits(p: LotPreset, lot: LotGeom): boolean {
+  if (!frozenHouse(p)) return true;
+  const band = houseBand(fitPreset(p, lot.w, lot.d), frameOf(lot));
+  return !band || band.hi - band.lo >= 2 * band.hw - 1e-9;
 }
 
 /** a whole preset's decals as the lot's ground marks (Build.marks: index, world x, y, scale, alpha, rounded as Build.mark rounds them); a decal id the game

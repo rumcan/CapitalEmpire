@@ -123,13 +123,17 @@ export function formatLearning(f: LearnFile): string {
   return f.samples.length ? `{\n "v": 1,\n "samples": [\n${f.samples.map(s => `  ${JSON.stringify(s)}`).join(',\n')}\n ]\n}\n` : '{\n "v": 1,\n "samples": []\n}\n';
 }
 /** the samples merged (POST /__dev/learning): the file's samples with each new one appended (one whose id the file has already is skipped), so
- *  two people's saves keep both. Refused: a file that does not parse, an add that is not a list of valid samples */
+ *  two people's saves keep both; a preset's sample (src 'preset', id preset:<preset id>) replaces its earlier one in place, so learning from the
+ *  presets again follows their edits without counting them twice. Refused: a file that does not parse, an add that is not a list of valid samples */
 export function mergeSamples(fileText: string, add: unknown): { ok: true; text: string; count: number } | { ok: false; error: string } {
   let file: LearnFile;
   try { file = parseLearning(fileText.trim() ? JSON.parse(fileText) : {}); } catch { return { ok: false, error: 'lot-learning.json on disk does not parse' }; }
   if (!Array.isArray(add)) return { ok: false, error: 'add must be a list of samples' };
   const have = new Set(file.samples.map(s => s.id)), out = file.samples.slice();
-  for (const v of add) { const s = readSample(v); if (!s) return { ok: false, error: 'add holds an invalid sample' }; if (!have.has(s.id)) { have.add(s.id); out.push(s); } }
+  for (const v of add) {
+    const s = readSample(v); if (!s) return { ok: false, error: 'add holds an invalid sample' };
+    if (!have.has(s.id)) { have.add(s.id); out.push(s); } else if (s.src === 'preset') { const i = out.findIndex(o => o.id === s.id); out[i] = s; }
+  }
   return { ok: true, text: formatLearning({ v: 1, samples: out }), count: out.length };
 }
 
@@ -177,11 +181,17 @@ export function drawSector(m: Model, c: HouseClass, k: ItemKind, l: SectorLot, r
   return SECTORS[SECTORS.length - 1]!;
 }
 
-/** the wizard's counter: the samples, by house class; each sample's share of offered items kept, in order (the trend), the mean of the first and
- *  the last ten */
-export function learningStats(samples: readonly Sample[]): { total: number; byClass: Record<HouseClass, number>; shares: number[]; first: number; last: number } {
-  const byClass = { small: 0, medium: 0, large: 0, none: 0 } as Record<HouseClass, number>, shares: number[] = [];
-  for (const s of samples) { byClass[s.ctx.cls]++; if (s.items.length) shares.push(s.items.filter(i => i.kept).length / s.items.length); }
+/** the wizard's counter: the samples, by house class and by source; each wizard sample's share of offered items kept, in order (the trend: the
+ *  presets keep everything and the gallery judges whole lots, so they are left out of it), the mean of the first and the last ten; the gallery's
+ *  lots judged and the share judged up */
+export function learningStats(samples: readonly Sample[]): { total: number; byClass: Record<HouseClass, number>; bySrc: Record<SampleSource, number>; shares: number[]; first: number; last: number; judged: number; up: number } {
+  const byClass = { small: 0, medium: 0, large: 0, none: 0 } as Record<HouseClass, number>, bySrc: Record<SampleSource, number> = { wizard: 0, preset: 0, gallery: 0 }, shares: number[] = [];
+  let judged = 0, up = 0;
+  for (const s of samples) {
+    byClass[s.ctx.cls]++; bySrc[s.src ?? 'wizard']++;
+    if ((s.src ?? 'wizard') === 'wizard' && s.items.length) shares.push(s.items.filter(i => i.kept).length / s.items.length);
+    if (s.verdict) { judged++; if (s.verdict === 'up') up++; }
+  }
   const mean = (a: number[]) => (a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0);
-  return { total: samples.length, byClass, shares, first: mean(shares.slice(0, 10)), last: mean(shares.slice(-10)) };
+  return { total: samples.length, byClass, bySrc, shares, first: mean(shares.slice(0, 10)), last: mean(shares.slice(-10)), judged, up: judged ? up / judged : 0 };
 }
