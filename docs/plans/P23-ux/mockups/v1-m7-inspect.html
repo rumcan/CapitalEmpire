@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>P23 m7: inspect and edit a hole</title>
+<link rel="stylesheet" href="kit.css"><script src="mock.js"></script>
+<style> .bar { height: 7px; border-radius: 999px; background: rgba(255,255,255,.1); overflow: hidden; margin-top: 5px; } .bar i { display: block; height: 100%; border-radius: 999px; }
+  .act { display: inline-flex; align-items: center; justify-content: center; gap: 5px; padding: 7px 0; border-radius: 999px; border: 1px solid var(--line); background: var(--panel-2); font-size: 12.5px; flex: 1; }
+  .act.del { color: #fca5a5; border-color: rgba(248,113,113,.35); } </style></head>
+<body><div class="stage" id="s">
+  <img class="bg" src="bg/hole1-12.webp">
+  <svg class="ov" id="ov"></svg>
+</div>
+<script>
+const M = MOCK, S = document.getElementById('s'), ov = document.getElementById('ov');
+const cam = { X: 31795.788635831224, Y: 83608.5867209195, z: 0.12, w: 1600, h: 900 }, P = M.iso(cam);
+const T = [1494.6, 1032], G = [1615, 1034];
+const line = M.spline([T, [1555, 1033], G], 0.5);
+const corridor = M.band(line, () => 17, -6, 1e9).concat();
+const pg = P(...G), pt = P(...T);
+M.svg(ov, `<defs><mask id="hl"><rect width="1600" height="900" fill="#fff"/><path d="${M.poly(P, M.band(line, () => 17))}" fill="#000"/><path d="${M.poly(P, M.circle(G[0], G[1], 17))}" fill="#000"/><path d="${M.poly(P, M.circle(T[0], T[1], 17))}" fill="#000"/></mask></defs>
+  <rect width="1600" height="900" fill="rgba(8,10,6,0.35)" mask="url(#hl)"/>
+  <path d="${M.line(P, line.map(p => [p[0], p[1]]))}" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="2" stroke-dasharray="8 6"/>
+  <circle cx="${pg[0]}" cy="${pg[1]}" r="6" fill="#fff" stroke="#1b1406" stroke-width="2"/><circle cx="${pt[0]}" cy="${pt[1]}" r="6" fill="#fff" stroke="#1b1406" stroke-width="2"/>`);
+M.chrome(S, { stage: 3, active: 'select', place: 'Golf club', money: '$462,050', season: { big: 'Founding season', small: 'Jan 1985 · 7 months to season end', done: 2, of: 9 } });
+M.pointer(S, 960, 360, null);
+const b = P(1500, 1012);
+S.insertAdjacentHTML('beforeend', `<div style="position:absolute;left:${b[0] - 20}px;top:${b[1] - 20}px;width:40px;height:40px;border-radius:50%;background:linear-gradient(#ffcd52,#f0a91e);color:#1b1406;display:grid;place-items:center;font-weight:900;font-size:18px;box-shadow:0 3px 10px rgba(0,0,0,.5)">1</div>
+  <div class="tag" style="left:${pg[0] - 70}px;top:${pg[1] + 36}px">Green · 540 m² · pin<span class="l2">drag the pin in Edit shape</span></div>`);
+// the Select tool's panel is the card of what you clicked: here, the hole
+S.insertAdjacentHTML('beforeend', `
+<div class="glass panel">
+  <div class="row"><div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(#ffcd52,#f0a91e);color:#1b1406;display:grid;place-items:center;font-weight:900;font-size:18px;flex:none">1</div>
+    <div><div class="display" style="font-size:21px;font-weight:700;line-height:1.1">The Long Pond</div><div class="muted" style="font-size:12px">Hole 1 · Par 4 · 239 m (261 yd)</div></div>
+    <span class="grow"></span><span class="ibtn" style="width:30px;height:30px;font-size:14px">✕</span></div>
+  <div class="box" style="margin-top:12px">
+    <div class="row"><span style="font-size:12.5px;font-weight:700">Growing in</span><span class="grow"></span><span class="warn" style="font-size:12px">playable Mar 1985</span></div>
+    <div class="bar"><i style="width:62%;background:linear-gradient(90deg,#fbbf24,#86efac)"></i></div>
+    <div class="row" style="margin-top:10px"><span style="font-size:12.5px;font-weight:700">Quality</span><span class="grow"></span><b>72</b><span class="muted" style="font-size:11px">&nbsp;/ 100</span></div>
+    <div class="bar"><i style="width:72%;background:linear-gradient(90deg,#86efac,#4ade80)"></i></div>
+    <div class="muted" style="font-size:11.5px;margin-top:6px;line-height:1.45">Good length for a par 4 · water in play · <span class="warn">no cart path (−5)</span></div>
+  </div>
+  <div class="sec"><div class="caps">Checks</div>
+    <div class="check"><span class="m ok">✓</span><span>Green, pin, tee and markers</span></div>
+    <div class="check"><span class="m ok">✓</span><span>The line is over fairway and rough</span></div>
+    <div class="check"><span class="m warn">!</span><span>No cart path to the next tee</span><span class="fix">Draw path</span></div>
+  </div>
+  <div class="sec"><div class="caps">Money</div>
+    <div class="stat"><span class="muted">Built for</span><b>$28,400</b></div>
+    <div class="stat"><span class="muted">Upkeep</span><b>$310 a month</b></div>
+    <div class="stat"><span class="muted">This season</span><b>212 golfers · $4,660</b></div>
+  </div>
+  <div class="sec row" style="gap:6px"><span class="act">✎ Edit shape</span><span class="act">✥ Move</span><span class="act del">Delete</span></div>
+  <div class="dim" style="font-size:11px;margin-top:8px;line-height:1.45">Edit shape brings back the tee, green, bend and width handles. Delete asks once, and <span class="kc">Ctrl</span>+<span class="kc">Z</span> brings it back.</div>
+</div>`);
+S.insertAdjacentHTML('beforeend', `
+  <div class="note" style="left:470px;top:650px;max-width:330px"><span class="n">1</span>A hole is <b>one thing</b>: click it anywhere with Select and it lights up; the rest of the map dims. Its card takes the panel's place, so there is one place to look.</div>
+  <div class="note" style="left:830px;top:650px;max-width:330px"><span class="n">2</span>Problems come with a <b>Fix</b> button that opens the right tool with the right item armed (here: Paths, starting at this green).</div>
+  <div class="title-strip">P23 mockup m7 · inspect and edit a hole</div>`);
+</script>
+</body></html>

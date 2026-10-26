@@ -29,8 +29,8 @@ test('rocky dirt saves keep both paintings and border styles when reloaded into 
   const reloaded = new PaintTool(host);
   reloaded.load(saved);
   assert.deepEqual(reloaded.save(), tuples.map(t => [...t, 0, 0, 0.35, '#000000'])); // the save carries a radius (0: sharp) and an untoned tone
-  assert.deepEqual(sent.get('paint:1'), [{ pts: SQUARE, tex: 'rockyDirt', paint: { s: 1.5, a: 30, b: 0.5, bt: 'rockyDirtAlt', z: 1 } }]);
-  assert.deepEqual(sent.get('paint:2'), [{ pts: L_SHAPE, tex: 'rockyDirtAlt', paint: { s: 0.5, a: -45, b: 0.25, bt: 'rockyDirt', z: 2 } }]);
+  assert.deepEqual(sent.get('paint:1'), [{ pts: SQUARE, tex: 'rockyDirt', paint: { s: 1.5, a: 30, b: 0.5, bt: 'rockyDirtAlt', z: 1, e: 'flat' } }]);
+  assert.deepEqual(sent.get('paint:2'), [{ pts: L_SHAPE, tex: 'rockyDirtAlt', paint: { s: 0.5, a: -45, b: 0.25, bt: 'rockyDirt', z: 2, e: 'flat' } }]);
 });
 
 test('polyArea: the sign follows the winding, the value is the area in tiles²', () => {
@@ -102,9 +102,11 @@ test('clampStyle: angles wrap into [-90, 90] (120 → -60, -100 → 80); 90 and 
 test('clampStyle: scale, border and textures are clamped or defaulted', () => {
   assert.equal(clampStyle({ ...DEFAULT_STYLE, scale: 0.01 }).scale, 0.25);
   assert.equal(clampStyle({ ...DEFAULT_STYLE, scale: 10 }).scale, 4);
-  assert.equal(clampStyle({ ...DEFAULT_STYLE, border: junk<BorderSize>(7) }).border, 3);
+  // the border is a continuous step since the Border slider (T123): clamped to 0..BORDER_STEP_MAX, a fraction kept (to 3 decimals)
+  assert.equal(clampStyle({ ...DEFAULT_STYLE, border: junk<BorderSize>(7) }).border, 6);
   assert.equal(clampStyle({ ...DEFAULT_STYLE, border: junk<BorderSize>(-1) }).border, 0);
-  assert.equal(clampStyle({ ...DEFAULT_STYLE, border: junk<BorderSize>(1.6) }).border, 2);
+  assert.equal(clampStyle({ ...DEFAULT_STYLE, border: junk<BorderSize>(1.6) }).border, 1.6);
+  assert.equal(clampStyle({ ...DEFAULT_STYLE, border: junk<BorderSize>('x') }).border, 0);
   assert.equal(clampStyle({ ...DEFAULT_STYLE, tex: junk<PaintTex>('lava') }).tex, 'paving');
   assert.equal(clampStyle({ ...DEFAULT_STYLE, btex: junk<BorderTex>('lava') }).btex, 'kerb');
   assert.equal(clampStyle({ ...DEFAULT_STYLE, btex: 'dirt' }).btex, 'dirt');

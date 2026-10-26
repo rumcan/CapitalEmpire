@@ -1,0 +1,10 @@
+{
+  "image": "art/spectators/pics/staff_security_m.png",
+  "look": "Event security man in his 30s, tall and broad, buzz-cut hair, a plain black polo shirt with no badge, no patches and no name tag, black trousers, black shoes",
+  "modelUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/threedgen/AFjPSjQH9kbcCl57sgO3/44e58b49-6619-4fc3-8381-c780a55772f9/model.compressed.glb",
+  "rigFrom": "base_man (local rig transfer, rig-local-person.mjs)",
+  "clipsFrom": {
+    "walk": "base_man",
+    "idle": "base_man"
+  }
+}

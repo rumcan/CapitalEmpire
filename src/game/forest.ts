@@ -1,15 +1,75 @@
 // Forest planting on the hills: pure TypeScript (no DOM, no library import), so the tests can run it in Node.
-import { MAP, mulberry } from './iso';
+import { MAP, mulberry, tileOf } from './iso';
 import { fbm, hash2, smoothstep, type Noise } from './terrain/noise';
 import { TC, sampleField } from './terrain/types';
+import { OWNER_SCALE } from './lots/scales';
 
 /** tiles per forest cell: the engine plants the trees of one cell at a time, as the camera reaches it */
 export const FOREST_CELL = 64;
-/** library ids of the forest trees */
-export const FOREST_BROAD = ['ref:tree-maple-crimson', 'world:tree_oak_0', 'world:tree_oak_1', 'world:tree_oak_2', 'ref:tree-birch-gold'];
-export const BROAD_W = [0.4, 0.15, 0.15, 0.15, 0.15];
-/** library ids of the conifers */
-export const FOREST_CONIFER = ['world:tree_pine_0', 'world:tree_pine_1', 'ref:tree-spruce-blue'];
+/** how far past the view (tiles) the engine plants the forest and town-tree cells: a tree standing just outside it shows */
+export const FOREST_VIEW_MARGIN = 8;
+/** the forest (and town-tree) cells under the world px box X0 Y0 X1 Y1 grown by g tiles, clamped to the map: ci0, cj0, ci1, cj1 */
+export function forestCellRange(X0: number, Y0: number, X1: number, Y1: number, g: number): [number, number, number, number] {
+  const a = tileOf(X0, Y0), b = tileOf(X1, Y0), c = tileOf(X0, Y1), d = tileOf(X1, Y1), N = MAP / FOREST_CELL;
+  const cl = (v: number) => Math.min(N - 1, Math.max(0, Math.floor(v / FOREST_CELL)));
+  return [cl(Math.min(a.x, b.x, c.x, d.x) - g), cl(Math.min(a.y, b.y, c.y, d.y) - g), cl(Math.max(a.x, b.x, c.x, d.x) + g), cl(Math.max(a.y, b.y, c.y, d.y) + g)];
+}
+/** one species of the tree pools: its library ids (the four views of a generated tree, the foliage stages of a capital tree, the numbered
+ *  pictures of an old one), dealt evenly; w, its share among the species of its pool; dead, a dead snag (the woods only, never the town) */
+export interface TreeSpecies { name: string; ids: readonly string[]; w: number; dead?: true }
+const views = (s: string) => ['ne', 'se', 'sw', 'nw'].map(d => `gen:tree-${s}:${d}`);
+const stages = (s: string) => ['open', 'moderate', 'patchy', 'near-bare'].map(k => `capital:tree-${s}-${k}`);
+/** the conifers: every pine, spruce and fir of the library (the owner, 2026-10-24: "it's not using all the trees in the generating") */
+export const FOREST_CONIFERS: readonly TreeSpecies[] = [
+  { name: 'pine', ids: stages('pine'), w: 1 },
+  { name: 'spruce', ids: stages('spruce'), w: 1 },
+  { name: 'old pine', ids: ['world:tree_pine_0', 'world:tree_pine_1', 'world:tree_pine_2'], w: 1 },
+  { name: 'blue spruce', ids: ['ref:tree-spruce-blue'], w: 0.5 },
+  { name: 'young spruce', ids: views('spruce-young'), w: 1 },
+  { name: 'tall fir', ids: views('fir-tall'), w: 1 },
+];
+/** the broadleaf trees: every maple, oak, birch and aspen of the library, and the dead snags (rare, the woods only) */
+export const FOREST_BROADLEAF: readonly TreeSpecies[] = [
+  { name: 'maple', ids: stages('maple'), w: 1 },
+  { name: 'birch', ids: stages('birch'), w: 1 },
+  { name: 'oak', ids: stages('oak'), w: 1 },
+  { name: 'old oak', ids: ['world:tree_oak_0', 'world:tree_oak_1', 'world:tree_oak_2'], w: 1 },
+  { name: 'crimson maple', ids: ['ref:tree-maple-crimson'], w: 0.5 },
+  { name: 'gold birch', ids: ['ref:tree-birch-gold'], w: 0.5 },
+  { name: 'scarlet maple', ids: views('maple-scarlet'), w: 1 },
+  { name: 'amber oak', ids: views('oak-amber'), w: 1 },
+  { name: 'young aspen', ids: views('aspen-young'), w: 1 },
+  { name: 'crimson oak', ids: views('oak-crimson'), w: 1 },
+  { name: 'ember maple', ids: views('maple-ember'), w: 1 },
+  { name: 'dead snag', ids: ['world:tree_dead_0', 'world:tree_dead_1', 'world:tree_dead_2'], w: 0.25, dead: true },
+];
+/** every library id the pools can deal (the tests hold it to the library's trees) */
+export const TREE_POOL_IDS: readonly string[] = [...FOREST_CONIFERS, ...FOREST_BROADLEAF].flatMap(s => s.ids);
+/** the conifer ids (the conifer share of a stand counts these) */
+export const CONIFER_IDS: ReadonlySet<string> = new Set(FOREST_CONIFERS.flatMap(s => s.ids));
+
+/** a weighted deal over species: each id carries its species' weight shared evenly among the species' ids */
+export interface TreeDeal { ids: string[]; cum: number[] }
+/** the deal of a list of species (the dead snags left out when live): ids and their cumulative weights, normalised to end at 1 */
+export function treeDeal(species: readonly TreeSpecies[], live = false): TreeDeal {
+  const ids: string[] = [], cum: number[] = []; let acc = 0;
+  for (const s of species) { if (live && s.dead) continue; for (const id of s.ids) { acc += s.w / s.ids.length; ids.push(id); cum.push(acc); } }
+  return { ids, cum: cum.map(c => c / acc) };
+}
+/** the id a uniform u in [0, 1) deals (deterministic: the same u, the same tree) */
+export function dealTree(d: TreeDeal, u: number): string {
+  let lo = 0, hi = d.ids.length - 1;
+  while (lo < hi) { const mid = (lo + hi) >> 1; if (u < d.cum[mid]!) hi = mid; else lo = mid + 1; }
+  return d.ids[lo]!;
+}
+/** the deals of the woods: every conifer, every broadleaf tree with the snags */
+export const FOREST_CONIFER_DEAL = treeDeal(FOREST_CONIFERS), FOREST_BROAD_DEAL = treeDeal(FOREST_BROADLEAF);
+/** the deals of the trees beside the town and the course (towntrees.ts, golf/dressing.ts): every live tree, no dead snags */
+export const LIVE_CONIFER_DEAL = treeDeal(FOREST_CONIFERS, true), LIVE_BROAD_DEAL = treeDeal(FOREST_BROADLEAF, true);
+/** a tree's size at owner scale (lots/scales.ts OWNER_SCALE: the size the owner set in the studio; 1, the art's own size, when unset) */
+export const ownerSize = (id: string) => (OWNER_SCALE as Record<string, number>)[id] ?? 1;
+/** the woods' trees stand at this share of their owner size (about the size the forest drew its old trees at), times 0.82..1.18 */
+export const FOREST_SIZE = 0.55;
 /** one planted tree: x, y is its ground point in tiles, id a library id, scale and flip as for a prop */
 export interface ForestTree { x: number; y: number; id: string; scale: number; flip: boolean }
 
@@ -39,14 +99,8 @@ export function forestCell(seed: number, cls: Uint8Array, height: Float32Array, 
       const fx = Math.floor(x), fy = Math.floor(y);
       if ((!hill(fx + 2, fy) || !hill(fx - 2, fy) || !hill(fx, fy + 2) || !hill(fx, fy - 2)) && r() < 0.3) continue;
       const h = sampleField(height, x, y), pc = Math.max(0.08 + 0.85 * smoothstep(150, 400, h), conifer(clearing, x, y));
-      let id: string;
-      if (r() < pc) id = FOREST_CONIFER[Math.floor(r() * 3)];
-      else {
-        const u = r(); let acc = 0, k = 0;
-        for (; k < BROAD_W.length - 1; k++) { acc += BROAD_W[k]; if (u < acc) break; }
-        id = FOREST_BROAD[k];
-      }
-      const scale = 1.05 + r() * 0.45, flip = r() < 0.5;
+      const id = dealTree(r() < pc ? FOREST_CONIFER_DEAL : FOREST_BROAD_DEAL, r());
+      const scale = ownerSize(id) * FOREST_SIZE * (0.82 + r() * 0.36), flip = r() < 0.5;
       out.push({ x, y, id, scale, flip });
     }
   }

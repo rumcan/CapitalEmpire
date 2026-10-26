@@ -1,0 +1,10 @@
+{
+ "id": "variation:ref-building-house-garage-a1d986d3-plain:1",
+ "version": "variation-ref-building-house-garage-a1d986d3-plain-1-4views-v2",
+ "files": {
+  "NE": "756031ccacf00b3f246770a69f6a50121036f0571c52fbe0b92d598496978d7d",
+  "SE": "5efecb4b640a253e1e83393f48cbdc3f04e1c5a66b74682cd5efb2d25109b3c4",
+  "SW": "9392bd9ebac85b313ae18357cfd329ad623270e32b146cff5ebeba5d37213443",
+  "NW": "11a2dcbfe83085c7491f789622806f69085b5e3ff4d0bd7659aaea0510afc8a7"
+ }
+}

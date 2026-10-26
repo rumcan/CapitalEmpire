@@ -1,0 +1,94 @@
+{
+  "id": "grass",
+  "family": "grass",
+  "condition": "base",
+  "detailLevel": "far",
+  "version": "v1",
+  "generator": "image_gen",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-5785a12a-e8f4-4fdf-bb0e-100147ace2f4.png",
+  "generatorSourceSha256": "36cb3380628714d99103ca951a42f9f50e4df08336067015ad4fbe03c7152043",
+  "prompt": "Paint a simple low-contrast warm green grass ground tile matching ONLY the broad flat painted turf in the provided crop. 1024x1024px square opaquePNG. Farthest zoom version. About95%calmflatgreenpaint, justsoftsubtleirregularbroadbrushstrokes with a very restrained2-3% lightnessdifference. No grass blades or tufts. No stripes, diagonal bands, ripples, waves or repetitive arranged shapes. No bushes, leaves, flowers, soil, objects, vignette, highlights atedges or frame. Directlyaboveorthographictopdown, no perspective. Uniformaveragebrightnessacrossthewholeimage. Subtlelocalupper-rightlight/lower-leftshade only; no castshadow. Seamlessperiodictexture: oppositeedgeswrapcontinuouslytop-bottomandleft-rightwithnoedgevaluejump. Represents8x8metres. Keepitsmacroshapeslowcontrastso4x4repetitionisnotobvious. HandpaintedBlizzardWorldofWarcraftgroundart, smoothbroadconfidentpaint, no photographicgrain. Copycrop's softness andgrassgreen, do notcopyits mowingbands.",
+  "promptSha256": "1cdcd140f771e9b17b5a01eb09a457ec3dc344ca3b1a35e0fa96e64b5671dc90",
+  "references": [
+    {
+      "role": "exact-owner-short-grass-style-crop",
+      "file": "art/theme-consistency/generated/ground/grass-owner-green-style-crop.png",
+      "original": "worktrees/theme-consistency/art/reference/grass-style-blizzard-20261024.webp",
+      "extraction": {
+        "left": 300,
+        "top": 280,
+        "width": 550,
+        "height": 220
+      },
+      "sha256": "b9bfa35507492af473d8197ba7fecff4e5ddf730850fcb2642a14cb15669d419"
+    }
+  ],
+  "metresPerRepeat": [
+    8,
+    8
+  ],
+  "requestedPixels": [
+    1024,
+    1024
+  ],
+  "raw": {
+    "file": "art/theme-consistency/generated/ground/painted-lod/grass-lod-v1/far.raw.png",
+    "sha256": "36cb3380628714d99103ca951a42f9f50e4df08336067015ad4fbe03c7152043",
+    "actualDimensions": [
+      1254,
+      1254
+    ]
+  },
+  "preparationState": "exported-awaiting-review",
+  "integrationStatus": "ready",
+  "integrationReason": "Agent visual/game review accepted the exact owner-short-turf painted style, three authored detail levels and tested far/mid/near runtime rendering. Authored source repeats8m; runtime uses48m translation-only soft overlap with no rotations/mirrors to suppress visible8m cadence. Sources remain approximately tileable (edge RGB error about4-5), not certified mathematically seamless. Independent updated runtime review accepted no obvious grid/hex pattern in inspected views; fixture scale capture remains separate.",
+  "ownerApproved": false,
+  "processing": "Only aspect-preserving resample to1024squarePNG; no edge repair, painting, recolouring, rotation or mirroring.",
+  "testOnly": false,
+  "final": {
+    "file": "art/theme-consistency/generated/ground/painted-lod/grass-lod-v1/far.png",
+    "sha256": "7634710f712f01ff4be0121932592f81038634a5bdacdf1f545702d879a12fd8",
+    "dimensions": [
+      1024,
+      1024
+    ],
+    "fullyOpaque": true,
+    "nonopaquePixels": 0,
+    "meanRgb": [
+      109.90138721466064,
+      139.97269821166992,
+      15.20108413696289
+    ],
+    "rgbStandardDeviation": [
+      8.942847946931131,
+      7.5414979725416025,
+      1.866996725397528
+    ],
+    "seamDiagnostics": {
+      "leftRightMeanAbsoluteRgbDifference": 3.8821614583333335,
+      "topBottomMeanAbsoluteRgbDifference": 4.180013020833333,
+      "policy": "Read-only diagnostic, not a seamlessness or visual approval claim."
+    }
+  },
+  "resampling": {
+    "method": "lanczos3 aspect-preserving square resample only",
+    "upscaled": false,
+    "nativeDetailClaim": "Actual generator dimensions retained; export size does not imply new generated detail."
+  },
+  "agentReview": {
+    "state": "agent-visual-and-game-reviewed",
+    "sourceArtRevision": "v3",
+    "review": "output/building-priority/painted-grass-v3-independent-review.json",
+    "verification": "output/building-priority/first-grass-verified.json",
+    "sourceMetresPerRepeat": [
+      8,
+      8
+    ],
+    "runtimeCompositeMetresPerRepeat": [
+      48,
+      48
+    ],
+    "exactSeamlessClaim": false,
+    "ownerApproved": false
+  }
+}

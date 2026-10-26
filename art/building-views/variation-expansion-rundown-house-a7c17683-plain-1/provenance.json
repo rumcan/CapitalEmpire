@@ -1,0 +1,150 @@
+{
+  "id": "variation:expansion-rundown-house-a7c17683-plain:1",
+  "generator": "image_gen",
+  "generated": "2026-10-24",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-9634c517-9a3b-46be-8c15-fbfec31dd356.png",
+  "prompt": "ONE GAME ASSET CUTOUT on EMPTY TRANSPARENT ALPHA, RGBA PNG. Reference1 is STYLE ONLY: the Maple Bean street's coherent miniature 3D illustration, softly textured matte materials, restrained rich colours, charcoal roofs, warm amber lamps, readable fine detail, early dusk with remaining daylight. Reference2 shows IDENTITY ONLY: preserve this building's architecture, not its old rendering or blue night cast. It must look natural beside the buildings in reference1. Fixed 2:1 isometric camera and SCREEN UPPER RIGHT SUN in every view; right-facing planes warm, left-facing planes cooler. Exactly four true rigid quarter turns of the SAME physical object on a square 2x2 sheet: NE front+right, SE right+back, SW back+left, NW left+front. Same roof, windows, equipment and physical scale throughout; reconstruct hidden sides, never mirror a front. Centre each complete sprite within its own cell with20% blank margins on every side. Empty alpha in corners, gutters and gaps, zero clipping. NO BACKDROP OR FLOOR: no stage, ground surface, paving, terrain tile, foliage, leaves, broad shadow, haze, gradient, checkerboard, caption, divider, view label or frame. No people, vehicles, Halloween, pumpkins, skulls, cobwebs, spooky signage or decorative garlands. Only the physical building and integral structural parts, no attached landscape.  Subject library ID variation:expansion-rundown-house-a7c17683-plain:1. Weathered pale-blue two-storey boarded house, charcoal gabled roof with small central front dormer, broad integral entrance porch, brick chimney, boarded windows and some missing shingles. Source is flat elevation; reconstruct coherent 3D isometric volume. No spooky signs, debris, Halloween or ground.",
+  "references": [
+    {
+      "role": "authoritative-theme",
+      "file": "art/theme-consistency/references/theme-authoritative.png",
+      "sha256": "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2"
+    },
+    {
+      "role": "existing-subject-identity",
+      "id": "variation:expansion-rundown-house-a7c17683-plain:1",
+      "direction": null,
+      "file": "art/theme-consistency/exports/buildings/variation-expansion-rundown-house-a7c17683-plain-1.configured@2x.png",
+      "sha256": "04dedd42ba1ac0e02392d042b0e422d9f8cdbc31af24ee17e4b0e0500083b53c"
+    }
+  ],
+  "integrationStatus": "ready",
+  "integrationReason": "All4 visible physical corners form front/right/back/left cycle; actual magenta alpha has no surrounding floor/haze. Matte timber/masonry/metal, charcoal roofs, amber practical lights and fixed screen-upper-right dusk are coherent with master. Layout-only repack preserves every nonzero source RGBA pixel without generation/repainting. Original low-alpha edge fringe does not truncate physical silhouette.",
+  "layoutCorrection": {
+    "method": "Disconnected alpha>8 silhouette extraction with nearest-silhouette assignment of all remaining fringe pixels; exact source RGBA pixel copies only, no resize, repaint or deletion.",
+    "seedAlphaThresholdExclusive": 8,
+    "originalSheet": "art/theme-consistency/generated/buildings/variation-expansion-rundown-house-a7c17683-plain-1-4views-v1.png",
+    "originalSheetSha256": "1feff35c830dd722fea3df0bf03acf895b533b2e60a54391d0c6d7cc3d204f73",
+    "outputSheetSha256": "c0eaecd01b8b670bbd8038d14fccab68d37d64567be901e60527450d1de12672",
+    "originalDimensions": [
+      1774,
+      887
+    ],
+    "outputDimensions": [
+      2816,
+      2816
+    ],
+    "cellSize": 1408,
+    "nonzeroAlphaPixels": 608423,
+    "nonzeroAndVisiblePixelConservation": true,
+    "exactVisibleRgbaConservation": true,
+    "assignmentPolicy": "Every alpha>8 dominant component remains intact. Multi-source orthogonal nearest-silhouette flood fills assign fringe and tiny detached components; every nonzero source tuple is copied exactly once.",
+    "views": [
+      {
+        "direction": "NE",
+        "dominantComponent": {
+          "label": 1,
+          "pixels": 151302,
+          "bounds": [
+            302,
+            5,
+            781,
+            451
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 146,
+          "y0": 0,
+          "x1": 908,
+          "y1": 454,
+          "count": 155998
+        },
+        "translation": {
+          "x": 176,
+          "y": 476
+        }
+      },
+      {
+        "direction": "SE",
+        "dominantComponent": {
+          "label": 2,
+          "pixels": 147601,
+          "bounds": [
+            1062,
+            6,
+            1557,
+            446
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 910,
+          "y0": 0,
+          "x1": 1640,
+          "y1": 449,
+          "count": 152909
+        },
+        "translation": {
+          "x": 836,
+          "y": 479
+        }
+      },
+      {
+        "direction": "SW",
+        "dominantComponent": {
+          "label": 7,
+          "pixels": 145308,
+          "bounds": [
+            281,
+            462,
+            774,
+            877
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 0,
+          "y0": 459,
+          "x1": 912,
+          "y1": 879,
+          "count": 149514
+        },
+        "translation": {
+          "x": 247,
+          "y": 1442
+        }
+      },
+      {
+        "direction": "NW",
+        "dominantComponent": {
+          "label": 6,
+          "pixels": 145609,
+          "bounds": [
+            1063,
+            445,
+            1535,
+            864
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 918,
+          "y0": 443,
+          "x1": 1574,
+          "y1": 868,
+          "count": 150002
+        },
+        "translation": {
+          "x": 865,
+          "y": 1456
+        }
+      }
+    ],
+    "visualReviewRequired": true
+  },
+  "sourceVisualReview": {
+    "reviewer": "source_review_resume",
+    "actualAlphaBackground": "magenta #ff00c8",
+    "theme": "references/theme-authoritative.png",
+    "sourceOnly": true,
+    "geometry": "four-corner cycle reviewed",
+    "gameScaleNotCertified": true
+  }
+}

@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>P23 v2 m5: Paths, the course's streets</title>
+<link rel="stylesheet" href="kit-v2.css"><script src="cameras-v2.js"></script><script src="mock-v2.js"></script></head>
+<body><div class="stage" id="s"><img class="bg" id="bg"><svg class="ov" id="ov"></svg></div>
+<script>
+const M = MOCK, S = document.getElementById('s'), ov = document.getElementById('ov');
+document.getElementById('bg').src = `bg/v2-grown-10-${M.W}.webp`;
+const c = M.cam('grown-10-bg'), P = M.iso(c), tee = M.cams.tee, green = M.cams.green;
+// a dirt cart path drawn like a road along the hole, outside its rough: legs at 0 and 45 degrees, as the road tool draws them
+const along = Math.abs(green.y - tee.y) > Math.abs(green.x - tee.x);           // the hole runs along y (1600) or x (1366)
+const side = 24, s = Math.sign(along ? green.y - tee.y : green.x - tee.x);
+const p0 = along ? [tee.x + side, tee.y + 30 * s] : [tee.x + 30 * s, tee.y + side];
+const p1 = along ? [tee.x + side, green.y - 14 * s] : [green.x - 14 * s, tee.y + side];
+const p2 = along ? [p1[0] - 4, p1[1] + 4 * s] : [p1[0] + 4 * s, p1[1] - 4];
+const leg = (a, b, hw) => { const dx = b[0] - a[0], dy = b[1] - a[1], d = Math.hypot(dx, dy), ux = -dy / d * hw, uy = dx / d * hw; return [[a[0] + ux, a[1] + uy], [b[0] + ux, b[1] + uy], [b[0] - ux, b[1] - uy], [a[0] - ux, a[1] - uy]]; };
+const lenM = Math.round((Math.hypot(p1[0] - p0[0], p1[1] - p0[1]) + Math.hypot(p2[0] - p1[0], p2[1] - p1[1])) * 2), cost = lenM * 4;
+const a = P(...p0), b = P(...p1), e = P(...p2);
+M.svg(ov, `
+  <path d="${M.poly(P, leg(p0, p1, 0.5))} ${M.poly(P, leg(p1, p2, 0.5))} ${M.poly(P, M.circle(p1[0], p1[1], 0.5, 16))}" fill="rgba(196,160,110,0.95)"/>
+  <path d="${M.line(P, [p0, p1, p2])}" fill="none" stroke="rgba(255,246,220,0.95)" stroke-width="5" stroke-linejoin="round" stroke-dasharray="10 6" opacity=".65"/>
+  <circle cx="${a[0]}" cy="${a[1]}" r="6" fill="#ffd166" stroke="#1b1406" stroke-width="2"/>
+  <circle cx="${b[0]}" cy="${b[1]}" r="6" fill="#ffd166" stroke="#1b1406" stroke-width="2"/>
+  <circle cx="${e[0]}" cy="${e[1]}" r="9" fill="none" stroke="#6ee7a0" stroke-width="2.5"/>`);
+M.topbar(S, { money: '$657,790', month: 'Sep 1985' });
+M.rail(S, { stage: 2, active: 'paths' });
+M.pointer(S, e[0] - 2, e[1] - 3, null);
+M.html(S, `<div class="tag gold" style="left:${e[0] + 22}px;top:${e[1] + 8}px">Dirt path · ${lenM} m · $${cost.toLocaleString('en-US')}<span class="l2">double-click, Enter or right-click builds</span></div>`);
+const card = (tex, nm, ds, pr, sm, cls = '') => `<div class="card ${cls}"><div class="th" style="background-image:url(tex2/${tex}.webp)"></div><div><div class="nm">${nm}</div><div class="ds">${ds}</div></div><div class="pr">${pr}<small>${sm}</small></div></div>`;
+M.html(S, `
+<div class="glass panel">
+  <div class="phead"><div class="badge"><img src="../../../../src/assets/ui/icons/sidewalk.webp"></div><div><h2>Paths</h2><div class="sub">The course's streets, built the way roads are</div></div>
+    <div class="undo"><span>↶</span><span class="off">↷</span></div></div>
+  <div class="sec row" style="gap:6px"><div class="primary" style="flex:1;padding:9px 14px"><div class="t">Build · $${cost.toLocaleString('en-US')}</div><span class="kc">Enter</span></div><span class="ghostbtn">Cancel</span></div>
+  <div class="box" style="margin-top:9px"><div class="stat"><span class="muted">Route</span><b>3 points · ${lenM} m</b></div><div class="stat"><span class="muted">Cost</span><b class="ok">$${cost.toLocaleString('en-US')}</b></div></div>
+  <div class="tabs"><span class="on">Cart paths</span><span>Drives</span></div>
+  <div class="sec" style="margin-top:9px"><div class="seg"><span class="on">Draw</span><span>Upgrade</span></div></div>
+  <div class="sec" style="margin-top:9px">
+    ${card('path', 'Walking path', '1.2 m · walkers only', '$2', 'a metre')}
+    ${card('dirt', 'Dirt path', '2 m · carts and walkers', '$4', 'a metre', 'on')}
+    ${card('concrete', 'Cement slab path', '2.5 m · carts and walkers', '$10', 'a metre')}
+    ${card('gravel', 'Paved cart path', '3 m · Tour level 2', '🔒', 'unlocks', 'lock')}
+  </div>
+  <div class="dim" style="font-size:12.5px;margin-top:4px;line-height:1.45">Click to start, click each bend; double-click, Enter or right-click builds · <span class="kc">Shift</span> straight · right-drag pans</div>
+  <div class="more"><div class="h">More options <span class="cnt">trees · bends · replace</span><span class="chev">▸</span></div></div>
+</div>`);
+M.minimap(S, `bg/v2-grown-10-${M.W}.webp`);
+M.html(S, `
+  <div class="note" style="left:${M.W - 520}px;top:${M.H - 210}px;max-width:300px"><span class="n">1</span>Drawn <b>exactly like a road</b>: click, click each bend, finish with double-click, Enter or the owner's right-click (decision 4). Prices <b>a metre</b>, as surfaces are a m².</div>
+  <div class="note" style="left:480px;top:120px;max-width:320px"><span class="n">2</span><b>Build is on top</b> with the route's length and price. Snapping to greens' and tees' path points, cart crossings and "Path after Build" come with T068/T070 (Phase 3).</div>
+  <div class="title-strip">P23 v2 · m5 Paths as streets (P1-E) · ${M.W} × ${M.H}</div>`);
+</script>
+</body></html>

@@ -1,0 +1,281 @@
+{
+  "id": "variation:gen-house-duplex-c39d1a23-plain-corner:1",
+  "generator": "reused-theme-art",
+  "deliveryType": "reuse-existing-four-view-art",
+  "newImageGeneration": false,
+  "sourceSubjectId": "gen:house-duplex",
+  "sourceSheet": "art/theme-consistency/generated/buildings/gen-house-duplex-4views-v3.png",
+  "sourceSha256": "4ef8e443685c3d9cc3e7c51ecc36b673002510bbbcae5aea81c731f4be415347",
+  "sourceProvenanceSha256": "df12a2cd051b8b2e94223c08f6339b0402306e6500a7a09c980c96613665477b",
+  "prompt": "Use case: precise-object-edit. Image 1 = authoritative full autumn dusk scene for STYLE. Image 2 = this single subject's four-view sheet to edit. Image 3 = camera rotation diagram only, never copy its boxes, colors or labels. Image 4 = original game building identity. Remove every WREATH from BOTH front doors and every holiday ornament in ALL FOUR VIEWS. Each front door must be plain painted wood with a normal door handle and glazing only. No rings or wreaths, no string lights. Retain ordinary potted shrubs, structural porch columns and practical wall-mounted lights.\nKeep the SAME single model, palette, architecture, material detail, fixed 2:1 isometric camera and four genuine quarter-turn views. Early dusk, warm low sun FIXED SCREEN UPPER RIGHT, shadows lower-left; architectural windows and lamps on. No night or moonlight, no people, NO Halloween: no pumpkins, cobwebs, wreaths, garlands, decorative string lights or spooky ornaments. Complete four sprites on SQUARE transparent PNG 2x2 sheet with very broad clear quadrant margins and center gutters; uniformly reduce the sprites rather than clipping roofs or contact shadows. Only this subject and its integral architecture, no terrain tile, border, text or diagram. Preserve alpha transparency and the unedited building details.",
+  "originalProvenance": {
+    "id": "gen:house-duplex",
+    "sheet": "art/theme-consistency/generated/buildings/gen-house-duplex-4views-v2.png",
+    "source": "C:\\Users\\Francois Smit\\.codex\\generated_images\\01a15fe8-e26f-72b1-94e3-874ef3d8db8b\\exec-e0250e2e-3074-4f24-858c-210b39a56a02.png",
+    "prompt": "Use case: precise-object-edit. Image 1 = authoritative full autumn dusk scene for STYLE. Image 2 = this single subject's four-view sheet to edit. Image 3 = camera rotation diagram only, never copy its boxes, colors or labels. Image 4 = original game building identity. Remove every WREATH from BOTH front doors and every holiday ornament in ALL FOUR VIEWS. Each front door must be plain painted wood with a normal door handle and glazing only. No rings or wreaths, no string lights. Retain ordinary potted shrubs, structural porch columns and practical wall-mounted lights.\nKeep the SAME single model, palette, architecture, material detail, fixed 2:1 isometric camera and four genuine quarter-turn views. Early dusk, warm low sun FIXED SCREEN UPPER RIGHT, shadows lower-left; architectural windows and lamps on. No night or moonlight, no people, NO Halloween: no pumpkins, cobwebs, wreaths, garlands, decorative string lights or spooky ornaments. Complete four sprites on SQUARE transparent PNG 2x2 sheet with very broad clear quadrant margins and center gutters; uniformly reduce the sprites rather than clipping roofs or contact shadows. Only this subject and its integral architecture, no terrain tile, border, text or diagram. Preserve alpha transparency and the unedited building details.",
+    "referencedImagePaths": [
+      "C:/Work Admin/PERSONAL/Repos/CapitalEmpire/art/theme-consistency/references/theme-authoritative.png",
+      "C:/Work Admin/PERSONAL/Repos/CapitalEmpire/art/theme-consistency/generated/buildings/gen-house-duplex-4views-v1.png",
+      "C:/Work Admin/PERSONAL/Repos/CapitalEmpire/art/theme-consistency/references/rotation-guide-v1.png",
+      "C:/Work Admin/PERSONAL/Repos/CapitalEmpire/art/theme-consistency/exports/buildings/gen-house-duplex.configured@2x.png"
+    ],
+    "generator": "built-in image_gen",
+    "generatedAt": "2026-10-23T16:37:54.258Z",
+    "status": "generated-awaiting-visual-review",
+    "correction": "Remove every WREATH from BOTH front doors and every holiday ornament in ALL FOUR VIEWS. Each front door must be plain painted wood with a normal door handle and glazing only. No rings or wreaths, no string lights. Retain ordinary potted shrubs, structural porch columns and practical wall-mounted lights.",
+    "layoutCorrection": {
+      "method": "Pixel-preserving clear-gap split and centred four-cell repack; no generation, resizing or repainting.",
+      "originalSheet": "art/theme-consistency/generated/buildings/gen-house-duplex-4views-v2.png",
+      "originalSheetSha256": "0111d2f25bd5a42b2404d9b4d93c860dd9b03419508b71f96f9a00283b149815",
+      "originalDimensions": [
+        1254,
+        1254
+      ],
+      "outputDimensions": [
+        2048,
+        2048
+      ],
+      "outputSheetSha256": "4ef8e443685c3d9cc3e7c51ecc36b673002510bbbcae5aea81c731f4be415347",
+      "cellSize": 1024,
+      "minimumCellMarginFraction": 0.15,
+      "padding": 4,
+      "partitionMode": "row-first",
+      "rowFirstFailure": null,
+      "rowGap": {
+        "start": 631,
+        "endExclusive": 666,
+        "midpoint": 648,
+        "alphaThreshold": 8
+      },
+      "columnGaps": [
+        {
+          "row": 0,
+          "start": 623,
+          "endExclusive": 643,
+          "midpoint": 633,
+          "alphaThreshold": 8
+        },
+        {
+          "row": 1,
+          "start": 600,
+          "endExclusive": 644,
+          "midpoint": 622,
+          "alphaThreshold": 8
+        }
+      ],
+      "globalColumnGap": null,
+      "columnRowGaps": [],
+      "extractionRects": [
+        {
+          "direction": "NE",
+          "row": 0,
+          "column": 0,
+          "extraction": {
+            "left": 49,
+            "top": 21,
+            "width": 584,
+            "height": 627
+          },
+          "sourceTouchesCanvasThreshold8": false,
+          "nonzeroAlphaPixels": 229765,
+          "visibleAlphaPixelsThreshold8": 220537,
+          "nonzeroRgbaSha256": "6343933a73b02966afcbdc34bccef0eb9e59f4729944d7b67f5754d43ebac060",
+          "destination": {
+            "left": 220,
+            "top": 198,
+            "width": 584,
+            "height": 627
+          }
+        },
+        {
+          "direction": "SE",
+          "row": 0,
+          "column": 1,
+          "extraction": {
+            "left": 633,
+            "top": 35,
+            "width": 611,
+            "height": 606
+          },
+          "sourceTouchesCanvasThreshold8": false,
+          "nonzeroAlphaPixels": 219309,
+          "visibleAlphaPixelsThreshold8": 211224,
+          "nonzeroRgbaSha256": "7b62e86dba2c388ecc9004f362ea4da840e54e92cfda3f64bef7bd43b712a75e",
+          "destination": {
+            "left": 1230,
+            "top": 209,
+            "width": 611,
+            "height": 606
+          }
+        },
+        {
+          "direction": "SW",
+          "row": 1,
+          "column": 0,
+          "extraction": {
+            "left": 37,
+            "top": 648,
+            "width": 585,
+            "height": 560
+          },
+          "sourceTouchesCanvasThreshold8": false,
+          "nonzeroAlphaPixels": 208015,
+          "visibleAlphaPixelsThreshold8": 199693,
+          "nonzeroRgbaSha256": "0c2506bfded0e9fc65627869662f66370a17e8af785f6936a58ff50f7df71ce2",
+          "destination": {
+            "left": 219,
+            "top": 1256,
+            "width": 585,
+            "height": 560
+          }
+        },
+        {
+          "direction": "NW",
+          "row": 1,
+          "column": 1,
+          "extraction": {
+            "left": 622,
+            "top": 655,
+            "width": 590,
+            "height": 579
+          },
+          "sourceTouchesCanvasThreshold8": false,
+          "nonzeroAlphaPixels": 212664,
+          "visibleAlphaPixelsThreshold8": 204045,
+          "nonzeroRgbaSha256": "d34ced45fc53e395681873d78709341982236f1daeef953440af89179770a49c",
+          "destination": {
+            "left": 1241,
+            "top": 1246,
+            "width": 590,
+            "height": 579
+          }
+        }
+      ],
+      "sourcePixelCounts": {
+        "nonzeroAlphaPixels": 869753,
+        "visibleAlphaPixelsThreshold8": 835499,
+        "nonzeroRgbaSha256": "a5833bccb23b48a99ec0c44e053a060ac78407e9b820361586f253926b838a73"
+      },
+      "nonzeroAndVisiblePixelConservation": true,
+      "exactVisibleRgbaConservation": true,
+      "visualReviewRequired": true,
+      "warnings": []
+    },
+    "integrationStatus": "ready",
+    "integrationReason": "Exact pixel-conserving layout correction of finished master-theme building, original four facades retained; post-repack actual alpha over magenta and geometry reviewed. No new image generation."
+  },
+  "physicalIdentityEvidence": "Same grey two-storey duplex with central front gable, long shared covered porch and repeating upstairs windows. Corner projection shows the same two building faces.",
+  "quarterTurnOffset": 0,
+  "pixelEdits": "none; raw sheet, four native crops and existing image previews copied byte-for-byte, without repainting, recolouring, resizing or mirroring",
+  "previewPolicy": "Source preview copies are identity comparisons; target scale/calibration must be prepared using the target game ID.",
+  "integrationStatus": "ready",
+  "integrationReason": "Approved physical-identity reuse of selected existing theme artwork; copied delivery explicitly recorded, not fresh generation.",
+  "freshVisualApproval": false,
+  "copiedFiles": [
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-duplex-4views-v3.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-duplex-c39d1a23-plain-corner-1-4views-v1.png",
+      "sha256": "4ef8e443685c3d9cc3e7c51ecc36b673002510bbbcae5aea81c731f4be415347"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-duplex-4views-v3/NE.configured.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-duplex-c39d1a23-plain-corner-1-4views-v1/NE.configured.png",
+      "sha256": "bc30c3c3bae50fc0fd3e7632e01d2e1c26b1b85c984ba5945461c3a3d9cce92d"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-duplex-4views-v3/NE.configured@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-duplex-c39d1a23-plain-corner-1-4views-v1/NE.configured@2x.png",
+      "sha256": "760f4fa8d270f21fb1c8dde1537cf380bfc3331acd8152775ef44368f50df5c3"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-duplex-4views-v3/NE.max.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-duplex-c39d1a23-plain-corner-1-4views-v1/NE.max.png",
+      "sha256": "ae0852a45a066642efff824edadd31250dca8f9d27dd59bd80ccd07a12ed3b20"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-duplex-4views-v3/NE.max@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-duplex-c39d1a23-plain-corner-1-4views-v1/NE.max@2x.png",
+      "sha256": "307abc333a3902282c49f2db19781b2964db2e6cc50cadf831cc76b586303249"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-duplex-4views-v3/NE.native.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-duplex-c39d1a23-plain-corner-1-4views-v1/NE.native.png",
+      "sha256": "c2ad67bf553810fa1b61024d206f02974947c087f7de3f9b47e0db3dd56922fd"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-duplex-4views-v3/NW.configured.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-duplex-c39d1a23-plain-corner-1-4views-v1/NW.configured.png",
+      "sha256": "d8d0d3222c330e42c1484e47a0bf3f72182c59a00dd63f4a8652561729dd954a"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-duplex-4views-v3/NW.configured@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-duplex-c39d1a23-plain-corner-1-4views-v1/NW.configured@2x.png",
+      "sha256": "ac6b86fc39826a3e4eb29a43de4db3690cf8bbeac066abfcb2094fbadf0858d9"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-duplex-4views-v3/NW.max.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-duplex-c39d1a23-plain-corner-1-4views-v1/NW.max.png",
+      "sha256": "1dd6c0a974acde1346b069c3caa02322822a1bc43614c9166eb22e370b4efec9"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-duplex-4views-v3/NW.max@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-duplex-c39d1a23-plain-corner-1-4views-v1/NW.max@2x.png",
+      "sha256": "1ed79b4b596d2256d7d05fb94a71ea05e0cea30aaf2611adf554d88291f9beb3"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-duplex-4views-v3/NW.native.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-duplex-c39d1a23-plain-corner-1-4views-v1/NW.native.png",
+      "sha256": "7c5080bdd5a1e8e3861d9c2ff1d74595bf457dbd5b49199a21b5533879829eb5"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-duplex-4views-v3/SE.configured.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-duplex-c39d1a23-plain-corner-1-4views-v1/SE.configured.png",
+      "sha256": "140b94249a21a48837fdb53ffb2e0364bc8df72dec4648d01a6b9d1dd599908f"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-duplex-4views-v3/SE.configured@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-duplex-c39d1a23-plain-corner-1-4views-v1/SE.configured@2x.png",
+      "sha256": "f2eb8b309a2122bfa61aad6633b68dfc391074aa7a4972d4c7bdc12ba4e08d6d"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-duplex-4views-v3/SE.max.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-duplex-c39d1a23-plain-corner-1-4views-v1/SE.max.png",
+      "sha256": "d34a4148e4ef980e269e0bc633afc96b85a97bdd8e51516b68d73e9c1e7eaa60"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-duplex-4views-v3/SE.max@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-duplex-c39d1a23-plain-corner-1-4views-v1/SE.max@2x.png",
+      "sha256": "69e46d76cc3cb2a1938cea55d11916ad4dddf83917d4fe92d0d57420fbbde4d4"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-duplex-4views-v3/SE.native.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-duplex-c39d1a23-plain-corner-1-4views-v1/SE.native.png",
+      "sha256": "aec668427ce8e7ab365120a23796ea60bd8274af0cc5c7299f6c34ab17bdd5b8"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-duplex-4views-v3/SW.configured.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-duplex-c39d1a23-plain-corner-1-4views-v1/SW.configured.png",
+      "sha256": "e23c6eff28de59eeddb4472de7d7c9ac6ecebed3623e444d4fb6a7537759bc72"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-duplex-4views-v3/SW.configured@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-duplex-c39d1a23-plain-corner-1-4views-v1/SW.configured@2x.png",
+      "sha256": "56109d907078a809943b6e1b36ea0f7f09b788a4d3409b5f9ff56c6b7667b638"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-duplex-4views-v3/SW.max.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-duplex-c39d1a23-plain-corner-1-4views-v1/SW.max.png",
+      "sha256": "d4d646edc210118b4dab53e76e1553ec3aa6b8a3d56d1f074befefb8fc35af9e"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-duplex-4views-v3/SW.max@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-duplex-c39d1a23-plain-corner-1-4views-v1/SW.max@2x.png",
+      "sha256": "3d08a37cea2c720ba45a811fcedf23f14c7fdaf37449bc8f5e6dcf2eb6525d38"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-duplex-4views-v3/SW.native.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-duplex-c39d1a23-plain-corner-1-4views-v1/SW.native.png",
+      "sha256": "9c5d8b82853cb8f98cad462e838d11c0161611c376f1ad09ddc0cbcfe130b3a2"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+ "id": "variation:ref-building-gas-canopy-543306a0-plain:1",
+ "version": "variation-ref-building-gas-canopy-543306a0-plain-1-4views-v2",
+ "files": {
+  "NE": "997fb209a41894f3ec65758758c042cdb091e795bbbdac4583c5fef84e0bf172",
+  "SE": "9cb2b92c5c9ffafc15ddddee7ac2041a596173d784d109cb2e6cc057b6f2c92c",
+  "SW": "435fdc5898beef04ca4fa6097513ff2797874ba0b5860b89f72192f0d00d6103",
+  "NW": "deade37ea190e4e93962d3051704b477bcabf3c46663fc981770a8075e4e3c0c"
+ }
+}

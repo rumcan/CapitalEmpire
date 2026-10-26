@@ -1,0 +1,10 @@
+{
+ "id": "variation:ref-building-gas-shop-3326e70f-plain:1",
+ "version": "variation-ref-building-gas-shop-3326e70f-plain-1-4views-v2",
+ "files": {
+  "NE": "02d640471b664bc17abe758dca9674c9aa11e92cd0113cc281bc4384ed3fc515",
+  "SE": "153e95d0bfedf935242118f5962f65d924e3b0660ef490e82af49b13d481b770",
+  "SW": "4c0b74ebecf6f9ac7d7146851e858c62d39bc905c1d3a00fa3a090c0a923de7f",
+  "NW": "fb51a66fcb13ef84e4b5209d8d4c6e95f65a485a0f7c61b015772b128665924d"
+ }
+}

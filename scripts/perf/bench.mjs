@@ -1,5 +1,5 @@
 // Runs the in-game benchmark (?bench) in a headless browser on the real GPU and prints the results.
-//   node scripts/perf/bench.mjs [url] [--size 1] [--dpr 1] [--shots] [--channel msedge|chrome] [--serve]
+//   node scripts/perf/bench.mjs [url] [--size 1] [--dpr 1] [--shots] [--channel msedge|chrome] [--serve] [--course] [--courseSend ms]
 // --serve starts `vite preview` on dist/ itself (run `npm run build` first); otherwise it needs a running dev or
 // preview server at the url. Screenshots (--shots stalls frames, so only for looking) and JSON go to output/bench/.
 import { chromium } from 'playwright-core';
@@ -27,7 +27,7 @@ const logs = [];
 page.on('console', m => { const t = m.text(); if (/\[bench\]|error|Error/.test(t)) { logs.push(t); console.log('[page]', t.slice(0, 300)); } });
 page.on('pageerror', e => console.log('[pageerror]', e.message));
 page.on('crash', () => console.log('[crash] the page crashed'));
-await page.goto(`${base}?bench=${size}`);
+await page.goto(`${base}?bench=${size}${args.includes("--course") ? "&course=1" : ""}${opt("courseSend", "") ? "&courseSend=" + opt("courseSend", "") : ""}${opt("courseHold", "") ? "&courseHold=" + opt("courseHold", "") : ""}`); // --course: the old nine laid as a course grid under the tour (T077)
 gpu = await page.evaluate(() => { const gl = document.createElement('canvas').getContext('webgl2'); const d = gl?.getExtension('WEBGL_debug_renderer_info'); return d ? gl.getParameter(d.UNMASKED_RENDERER_WEBGL) : 'unknown'; });
 }
 console.log('GPU:', gpu);

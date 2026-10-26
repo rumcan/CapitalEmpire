@@ -13,6 +13,8 @@ import type { Sim } from '../sim/sim';
 import { driveway, type Drive } from '../sim/trips';
 import { BUS_WALK, DEPART_END, PARTY, SURGE_S } from './config';
 import type { FanCounts } from './crowd';
+import { mulberry } from '../iso';
+import { departMinute, simAt, wantedArrivals } from '../golf/daytimeline';
 
 /** a home the crowd leaves from: its lot, its town, its residents (the weight), and the component of its frontage road (see City) */
 export interface SurgeHome { lot: Lot; town: number; pop: number; comp: number }
@@ -21,6 +23,8 @@ export interface SurgeHome { lot: Lot; town: number; pop: number; comp: number }
 export interface SurgePark { comp: number; bays: number; sinks: number[]; pts?: Pt[]; dirs?: Pt[] }
 /** a town's bus stop for the surge: the route (its index), the town, and the stop's point (tiles) */
 export interface SurgeStop { route: number; town: number; x: number; y: number }
+/** the tournament day's timeline for the departures (P02/T050): the day's start (sim s at 05:00), the seed, and a car's travel from its home to the gate (sim s = game minutes) */
+export interface SurgeTimeline { t0: number; seed: number; travel(home: SurgeHome, park: number, bus: number): number }
 
 /** the ordinal (into P.sinks) of the sink a car at o is sent to, the e-th car for this park: the sinks whose direction points from o toward
  *  their entrance (dot(entrance - o, dir) > 0), round-robin by e; none match: all of them, round-robin. No draws, no allocation */
@@ -83,13 +87,15 @@ export class Surge {
   private drives = new Map<string, Drive | null>(); private bySeg: Map<Seg, number[]> | null = null;
 
   /** plans the surge at t0 (sim s): crowd[k] cars from town k, homes[k] the homes of town k, parks the car parks, rnd the surge's own stream,
-   *  stops the town bus stops (none: every party drives).
+   *  stops the town bus stops (none: every party drives), timeline the tournament day's timeline (none: the old rule; see below).
    *  A home counts with a car park joined to its road (the same comp) or within BUS_WALK of a stop of its town (a bus party needs no car park: decided
    *  first); a town with no such home sends its whole crowd stranded (no draws).
    *  Each car: a home by population, a park by bays, and a departure at t0 + SURGE_S * DEPART_END * u, u the mean of three draws (a bell at the middle).
-   *  A car whose home is within BUS_WALK of a stop of its town (the nearest) is a bus party instead: the same draws, no entrance. */
-  plan(crowd: number[], homes: SurgeHome[][], parks: SurgePark[], rnd: () => number, t0: number, stops: SurgeStop[] = []): void {
-    const K = crowd.length;
+   *  A car whose home is within BUS_WALK of a stop of its town (the nearest) is a bus party instead: the same draws, no entrance.
+   *  With a timeline (P02/T050): no u draws; each car's travel comes from timeline.travel at its draw; the wanted arrivals (wantedArrivals, timeline.seed)
+   *  are dealt to the cars in a seeded random order (mulberry(seed + 1)), and each departs at its arrival less its travel (departMinute, from timeline.t0). */
+  plan(crowd: number[], homes: SurgeHome[][], parks: SurgePark[], rnd: () => number, t0: number, stops: SurgeStop[] = [], timeline?: SurgeTimeline): void {
+    const K = crowd.length, trav: number[] = [];
     this.parks = parks; this.rr = parks.map(() => 0);
     this.sent = crowd.slice(); this.departed = crowd.map(() => 0); this.parked = crowd.map(() => 0); this.turned = crowd.map(() => 0);
     this.lost = crowd.map(() => 0); this.stranded = crowd.map(() => 0); this.bus = crowd.map(() => 0);
@@ -110,9 +116,18 @@ export class Surge {
         const h = hs[pickCum(hc, rnd() * tot)]!, L = byComp.get(h.comp);
         // a bus party walks to its stop and needs no car park (no park draw); a car party's park is one joined to its home
         const park = L ? L.ids[pickCum(L.cum, rnd() * L.cum[L.cum.length - 1]!)]! : -1;
+        const bus = busStop(stops, k, h.lot);
+        if (timeline) { trav.push(timeline.travel(h, park, bus)); this.sched.push({ t: 0, town: k, lot: h.lot, park, e: 0, bus }); continue; }
         const u = (rnd() + rnd() + rnd()) / 3;
-        this.sched.push({ t: t0 + SURGE_S * DEPART_END * u, town: k, lot: h.lot, park, e: 0, bus: busStop(stops, k, h.lot) });
+        this.sched.push({ t: t0 + SURGE_S * DEPART_END * u, town: k, lot: h.lot, park, e: 0, bus });
       }
+    }
+    // the timeline (P02/T050): the wanted arrivals dealt to the cars by a seeded Fisher-Yates shuffle (its own stream, never rnd); each car sets off
+    // at its arrival less its travel (never before the day starts), in the day's clock
+    if (timeline) {
+      const N = this.sched.length, arr = wantedArrivals(N, timeline.seed), pr = mulberry(timeline.seed + 1), perm = Array.from({ length: N }, (_, i) => i);
+      for (let i = N - 1; i > 0; i--) { const j = Math.floor(pr() * (i + 1)); [perm[i], perm[j]] = [perm[j]!, perm[i]!]; }
+      for (let c = 0; c < N; c++) this.sched[c]!.t = simAt(departMinute(arr[perm[c]!]!, trav[c]!), timeline.t0);
     }
     // the entrances round-robin in departure order (the sort is stable: equal times keep their draw order); a bus party takes no entrance
     this.sched.sort((a, b) => a.t - b.t);
@@ -177,6 +192,8 @@ export class Surge {
 
   /** the departure times (sim s), in order: for the tests */
   times(): number[] { return this.sched.map(d => d.t); }
+  /** the planned departure times (sim s), in schedule order */
+  departTimes(): number[] { return this.sched.map(d => d.t); }
 
   /** the counts as the UI sees them: per town the cars sent, parked, on the road (departed, less those parked, turned away and lost), turned away, lost, stranded,
    *  and the fans by a town bus (the parties that took it, PARTY each) */

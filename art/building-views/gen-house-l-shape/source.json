@@ -1,10 +1,10 @@
 {
  "id": "gen:house-l-shape",
- "version": "gen-house-l-shape-4views-v1",
+ "version": "gen-house-l-shape-4views-v2",
  "files": {
-  "NE": "253966a487894e331e3ce9ea53550b730583ad0a7ca41cd42cd2cb65f8bbb272",
-  "SE": "e30d7bac5ec2b47884b4dc3e48800da8b0cb4d5d23263e7a37c911c2c4144c8d",
-  "SW": "6b728d0e8ff3d76a552d51bd25617ab67099533783d1c4be37df68b34266a17b",
-  "NW": "65c58a7e84a9ed93f3590f4d040aac06e13dd40c9373e0a1becf70540d01103c"
+  "NE": "0580a83a8244a81fb210ec7f9ca723d869aa3a8d9cb7b8521616fd95c6d33a2c",
+  "SE": "49ffd3c88ca6f5524498a440db92a26eb0211e1b700f8d9cd463c75b95dc6685",
+  "SW": "f0dd7f6f30d9962c0d636c694d0e7618b50024e807c0f011a5f9e683126420e8",
+  "NW": "3901c70a56c27926b1f3c947bd7f192dce3cdd24ca4b443ef6b5dcd6851be418"
  }
 }

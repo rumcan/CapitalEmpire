@@ -1,7 +1,9 @@
 // Road-tool snapping (pure: no DOM). snapPoint decides where a click lands (a node, a road or the tile grid); checkLegs refuses a
 // route that would build on top of a road, crowd a junction or make a sharp join. Tiles are 2 m; distances below are in tiles.
 import { MAP, clamp } from './iso';
-import { CLASS, type Leg, type Node, type PieceSel, type Pt, type RoadClass, type RoadNetwork, type Seg } from './network';
+import { CLASS, isCourseClass, type Leg, type Node, type PieceSel, type Pt, type RoadClass, type RoadNetwork, type Seg } from './network';
+import { COURSE_LAND_MSG, legsOnLand } from './golf/parcels';
+import type { Rect } from './golf/mode';
 
 /** where a road point lands: a node (kind 'node', or 'end' for a dead end), a point on a road ('road'), or the tile grid */
 export interface Snap { p: Pt; kind: 'node' | 'end' | 'road' | 'grid'; node?: Node; seg?: Seg }
@@ -22,6 +24,8 @@ const RING_NEAR = 22;
 const ringReach = (n: Node) => (n.rb > 0 ? n.rb + Math.max(0, ...n.arms.map(a => a.walk)) : 0);
 
 const dist = (a: Pt, b: Pt) => Math.hypot(a.x - b.x, a.y - b.y);
+/** v on the grid of step tiles (the nearest multiple of step) */
+export const snapTo = (v: number, step: number) => Math.round(v / step) * step;
 
 /** the distance from p to the segment ab */
 function ptSeg(p: Pt, a: Pt, b: Pt): number {
@@ -52,8 +56,9 @@ function projectOn(s: Seg, p: Pt): { q: Pt; d: number } {
 function nodeSnap(n: Node): Snap { return { p: { x: n.x, y: n.y }, kind: n.segs.length === 1 ? 'end' : 'node', node: n }; }
 
 /** where a road-tool click at p lands, within rTiles: the nearest node (exact position); else the nearest point on a road, pulled to the
- *  road's nearer end when that end is within MIN_SEP; else the tile grid (clamped to the map, as the road tool always did) */
-export function snapPoint(net: RoadNetwork, p: Pt, rTiles: number): Snap {
+ *  road's nearer end when that end is within MIN_SEP; else the grid of step tiles (clamped to the map, as the road tool always did): the map's
+ *  2 m tiles (step 1) for town roads, the course's 1 m half grid (step 0.5, T100) for its cart paths and drives */
+export function snapPoint(net: RoadNetwork, p: Pt, rTiles: number, step = 1): Snap {
   // a road's whole surface snaps to it: the reach is its half width and verge plus the pointer radius (a click on an arterial's kerb
   // joins its centre line; a T made at the kerb would stop short as a dead end), and a node's reach is that of its widest arm
   const wide = (s: Seg) => s.cls.h + s.cls.walk + rTiles, segs = net.segsNear(p, rTiles + 8);
@@ -70,11 +75,14 @@ export function snapPoint(net: RoadNetwork, p: Pt, rTiles: number): Snap {
   let seg: Seg | null = null, rd = Infinity, road: Pt = p;
   for (const s of segs) { const r = projectOn(s, p); if (r.d <= wide(s) && r.d < rd) { rd = r.d; seg = s; road = r.q; } }
   if (seg) {
+    // on the half grid (T100: a course path), the point along the road is the grid point's: a T on an axis-aligned road lands on the grid, so
+    // the path's next point on the grid meets it square (the cursor's own projection left a sliver of a leg, refused)
+    if (step < 1) road = projectOn(seg, { x: snapTo(p.x, step), y: snapTo(p.y, step) }).q;
     const near = dist(seg.a, road) <= dist(seg.b, road) ? seg.a : seg.b;
     if (dist(near, road) < MIN_SEP) return nodeSnap(near);
     return { p: road, kind: 'road', seg };
   }
-  return { p: { x: clamp(Math.round(p.x), 2, MAP - 2), y: clamp(Math.round(p.y), 2, MAP - 2) }, kind: 'grid' };
+  return { p: { x: clamp(snapTo(p.x, step), 2, MAP - 2), y: clamp(snapTo(p.y, step), 2, MAP - 2) }, kind: 'grid' };
 }
 
 /** true when q lies in the interior of a road (not on a node); a seg in skip (bulldozed by Replace) is not a road */
@@ -92,9 +100,14 @@ function onRoad(net: RoadNetwork, q: Pt, skip?: Set<Seg>): boolean {
  *  (5) a leg may not enter a roundabout's circle; (6) the route against itself: a join may not double back (under MIN_ANGLE with the leg
  *  before it), two legs that are not neighbours may not lie within two corridors of each other (a closed loop's first and last legs
  *  meet at its start, so there only the join's angle counts), and a new junction must be 2 tiles from every other route point.
- *  skip (Replace on): the segs the route bulldozes, which are judged as gone (no rule sees them) */
-export function checkLegs(net: RoadNetwork, legs: Leg[], from: Snap | null, to: Snap | null, cls: RoadClass = CLASS.street, skip?: Set<Seg>): string {
+ *  skip (Replace on): the segs the route bulldozes, which are judged as gone (no rule sees them). land (T124): the player's course land, where
+ *  only the course's cart paths and drives are built: a town road's corridor may not reach into it (it may end on the land's edge, where a
+ *  course drive or path meets it; the roads already on the land stay, but no town road is built further onto it) */
+export function checkLegs(net: RoadNetwork, legs: Leg[], from: Snap | null, to: Snap | null, cls: RoadClass = CLASS.street, skip?: Set<Seg>, land?: readonly Rect[]): string {
   const hw = cls.h + cls.walk;
+  // (a leg under 2 tiles, the split rule's least gap for a road with lanes, is refused below with that rule's reason: the jog of a few tenths
+  // where a route from a point on a road meets a node, at the land's edge, was said to be on the land)
+  if (land?.length && !isCourseClass(cls.id) && legsOnLand(land, legs.filter(l => dist(l.a, l.b) >= 2), hw)) return COURSE_LAND_MSG;
   /** the node a point sits on: the route's snapped node if it is one of the ends, else the node at that spot */
   const nodeOf = (q: Pt): Node | null => {
     if (from?.node && dist(q, from.p) < EPS) return from.node;
@@ -168,10 +181,12 @@ export function checkLegs(net: RoadNetwork, legs: Leg[], from: Snap | null, to: 
   // a new junction too close to a route corner or end left a road piece under a tile long (2 tiles, not MIN_SEP: a bend is no junction, and a
   // route that leaves a road and bends a few tiles on is fine)
   // the points the route will split the network at (its own points, the new junctions, the nodes it passes over) must be 2 tiles apart or one:
-  // closer, they left road pieces under a tile long (a route corner 0.9 tiles from a node on its line; a last leg 0.9 tiles long)
+  // closer, they left road pieces under a tile long (a route corner 0.9 tiles from a node on its line; a last leg 0.9 tiles long). A lane-less
+  // course path (T100: drawn on the 1 m half grid to bend finely round greens and tees) keeps them its own corridor apart, at least a tile
+  const minSplit = cls.noCars ? Math.max(1, Math.min(2, 2 * hw)) : 2;
   const splits: Pt[] = [...cand]; for (const l of legs) splits.push(l.a, l.b);
   for (const l of legs) for (const s of net.segsNear({ x: (l.a.x + l.b.x) / 2, y: (l.a.y + l.b.y) / 2 }, dist(l.a, l.b) / 2 + 2)) if (!skip?.has(s)) for (const n of [s.a, s.b]) if (ptSeg(n, l.a, l.b) <= EPS) splits.push(n);
-  for (let i = 0; i < splits.length; i++) for (let j = i + 1; j < splits.length; j++) { const d = dist(splits[i]!, splits[j]!); if (d > EPS && d < 2) return JUNCTION_MSG; }
+  for (let i = 0; i < splits.length; i++) for (let j = i + 1; j < splits.length; j++) { const d = dist(splits[i]!, splits[j]!); if (d > EPS && d < minSplit) return JUNCTION_MSG; }
   // (5) a leg may not enter a roundabout's circle (with its walk and the leg's corridor) except to end on its node
   for (const l of legs) {
     if (dist(l.a, l.b) < EPS) continue;

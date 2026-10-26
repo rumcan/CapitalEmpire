@@ -1,0 +1,19 @@
+{
+  "id": "ground:grass-painted-8m",
+  "detailLevel": "mid",
+  "generator": "image_gen",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-c56b6abd-fec6-49e3-8ea5-e24c7cd5f01e.png",
+  "prompt": "Create ONE 1024x1024 square SEAMLESS grass material tile, opaque PNG. Owner reference style is exactly the input: hand-painted Blizzard/WorldofWarcraft/Hearthstone golf ground. Focus on the SHORT PAINTED GRASS INSIDE THE GOLF GREEN in the reference, without copying its scene shape, stripes or shading. Use broad confident brush swathes, soft value gradients, saturated warm fresh greens with subtle golden upper-right edges. Broad flat interlocking softly painted patches like an artist's stylized turf, NOT hundreds of pointed grass blades. Almost no individual tufts: 90% is simple calm painted turf. No rosettes/clover/leaves, no herringbone, checker or regular diamond/diagonal repeatedtuft pattern. No obvious dominant swirl or blob. Make distribution irregular and non-directionally repetitive, no large dramatic dark patches. The square represents 8x8metres andmustremainbeautiful/readable at128px. DIRECTLY ABOVE ORTHOGRAPHIC TOPDOWN, no perspective/elevation/isometriccomposition. No golfgreenoutline, hole/bunker/path/rocks/objects/flowers/trees. ONE SUN atUPPERRIGHT: subtle illumination onupperright ofeachsoftclump, lowerleftsoftshade; evenwhole-imagebrightnesswithout overallcornergradient,vignette,spotlight,castshadows,border,frame,text. This is a PERIODIC texture: every form exiting LEFT must continue at RIGHT with matchingpixels/colours/values anddirection; TOPmustcontinueatBOTTOM. No seams in4x4 repetition, no edge bands, no obvious regularpattern. Allfourcorners jointlycontinuous. Paint ONLY one material square, notpreviewgrid. Precise output1024x1024.",
+  "reference": "worktrees/theme-consistency/art/reference/grass-style-blizzard-20261024.webp",
+  "metresPerRepeat": [
+    8,
+    8
+  ],
+  "pixels": [
+    1024,
+    1024
+  ],
+  "processing": "Lanczos3 resample only from1254x1254raw to requested1024x1024, original retained.",
+  "selected": false,
+  "seamReview": "Pending zoom-family and wrap review; no exact edge alteration performed."
+}

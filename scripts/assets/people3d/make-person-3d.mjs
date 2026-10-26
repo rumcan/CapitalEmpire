@@ -42,6 +42,10 @@ const rundot = async (...args) => {
   }
 };
 const note = async (k, v) => { const f = path.join(dir, 'receipt.json'), r = JSON.parse(await fs.readFile(f, 'utf8').catch(() => '{}')); r[k] = v; r.look = look; await fs.writeFile(f, JSON.stringify(r, null, 2) + '\n'); return r; };
+/** a threedgen generation's model in RUN's storage */
+const glbUrl = gen => `https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/threedgen/${game}/${gen}/model.compressed.glb`;
+/** the ids of RUN's latest threedgen generations (rundot assets list), in the order listed (newest first); it throws if RUN does not answer, so no paid call is made blind */
+const threedgenIds = async () => new Set((await rundot('assets', 'list', '--game-id', game, '--service', 'threedgen', '--limit', '40')).match(/[0-9a-f]{8}-[0-9a-f-]{27}/g) ?? []);
 /** the model of this prompt in RUN's library (rundot assets list: the newest 3D generation whose listed prompt start matches), polled every
  *  30 s for up to 20 min; its URL in RUN's storage */
 async function fromLibrary(prompt, tries = 40) {
@@ -53,7 +57,7 @@ async function fromLibrary(prompt, tries = 40) {
       // the listed start ends in '…' on a console and '.' when piped (2026-10-23: the '.' kept the first batch from finding its model)
       const start = m[2].trim().replace(/(…|\.{1,3})$/, '').trim();
       if (start.length < 12 || !prompt.startsWith(start)) continue;
-      const url = `https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/threedgen/${game}/${m[1]}/model.compressed.glb`;
+      const url = glbUrl(m[1]);
       if ((await fetch(url, { method: 'HEAD' })).ok) { await note('generationId', m[1]); return url; }
     }
     if (k < tries - 1) await new Promise(r => setTimeout(r, 30000));
@@ -61,22 +65,42 @@ async function fromLibrary(prompt, tries = 40) {
   if (tries === 1) return null;
   throw new Error(`${id}: the model never showed up in RUN's library`);
 }
+/** picture mode, after the CLI's timeout (no text to find it by): the first generation listed that was not listed before the paid call, polled
+ *  every 30 s for up to 25 min; then its model in RUN's storage, polled until it is there (up to 20 min). Its id goes to the receipt */
+async function newGeneration(before) {
+  for (let k = 0; k < 50; k++) {
+    const gen = [...await threedgenIds().catch(() => new Set())].find(g => !before.has(g));
+    if (gen) {
+      for (let j = 0; j < 40; j++) {
+        if ((await fetch(glbUrl(gen), { method: 'HEAD' }).catch(() => null))?.ok) { await note('generationId', gen); return glbUrl(gen); }
+        if (j < 39) await new Promise(r => setTimeout(r, 30000));
+      }
+      throw new Error(`${id}: generation ${gen} never reached RUN's storage`);
+    }
+    if (k < 49) await new Promise(r => setTimeout(r, 30000));
+  }
+  throw new Error(`${id}: no new 3D generation showed up in RUN's library`);
+}
 const receipt = JSON.parse(await fs.readFile(path.join(dir, 'receipt.json'), 'utf8').catch(() => '{}'));
 
 // 1. the model: from the A-pose picture, or from the text alone
 let model = receipt.modelUrl;
 if (!model || !(await have('model.glb'))) {
-  const pose = `${look}. Full body, standing upright in a neutral A-pose, both arms 45 degrees away from the body, hands open and empty, feet slightly apart, facing forward. Realistic proportions for the person's age, stylised hand-painted game look. No props, nothing in the hands, no logos. Nothing under the feet: no ground, no grass, no base, no stand, no golf balls.`;
-  let out = '';
-  // already in RUN's library (an earlier run that stopped after paying)? then no new generation
-  model = await fromLibrary(pose, 1);
+  const pose = `${look}. Full body, standing upright in a neutral A-pose, both arms 45 degrees away from the body, hands open and empty, feet slightly apart, facing forward. Realistic proportions for the person's age, stylised hand-painted game look. No props, nothing in the hands, no logos.`;
+  let out = '', before = null;
+  // a text is looked up in RUN's library first (an earlier run that stopped after paying: no new generation); a picture has no text to find
+  model = image ? null : await fromLibrary(pose, 1);
   if (model) console.log(`${id}: found in RUN's library, no new generation`);
-  else try { out = await rundot('game', 'generate-3d', '--game-id', game, ...(image ? ['--image-url', image] : ['--mode', 'text-to-3d', '--prompt', pose]), '--quality', 'standard', '--max-credits', cap, '--out', path.join(dir, 'model.glb'), '--force'); }
-  catch (error) {
-    // the CLI gives up after 600 s while RUN keeps going (2026-10-23: the models took about 10.5 min): find it in the library, never pay twice
-    if (!/HttpClient\.Timeout|TaskCanceled/i.test(error.message)) throw error;
-    console.log(`${id}: the CLI timed out; waiting for the model in RUN's library`);
-    model = await fromLibrary(pose);
+  else {
+    // a picture: the generations listed before this paid call, so the new one can be told apart after a timeout; the picture goes to the receipt
+    if (image) { before = await threedgenIds(); await note('image', path.relative(root, path.resolve(image)).replace(/\\/g, '/')); }
+    try { out = await rundot('game', 'generate-3d', '--game-id', game, ...(image ? ['--image-url', image] : ['--mode', 'text-to-3d', '--prompt', pose]), '--quality', 'standard', '--max-credits', cap, '--out', path.join(dir, 'model.glb'), '--force'); }
+    catch (error) {
+      // the CLI gives up after 600 s while RUN keeps going (2026-10-23: the models took about 10.5 min): find it in the library, never pay twice
+      if (!/HttpClient\.Timeout|TaskCanceled/i.test(error.message)) throw error;
+      console.log(`${id}: the CLI timed out; waiting for the model in RUN's library`);
+      model = image ? await newGeneration(before) : await fromLibrary(pose);
+    }
   }
   model ??= out.replace(/\n/g, '').match(/Model URL:\s*(https:\/\/\S+?\.glb)/)?.[1];
   if (!model) throw new Error(`${id}: 3D generation returned no model URL\n${out.slice(-600)}`);

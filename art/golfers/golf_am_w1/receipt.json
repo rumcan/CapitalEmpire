@@ -1,0 +1,11 @@
+{
+  "image": "art/golfers/pics/golf_am_w1.png",
+  "look": "Club lady golfer in her 50s, short set grey hair, a plain lemon-yellow short-sleeved polo shirt, a white knee-length golf skirt, a plain white visor, white golf shoes",
+  "modelUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/threedgen/AFjPSjQH9kbcCl57sgO3/14c2e53e-184e-4f94-9245-3c1de02f4bd8/model.compressed.glb",
+  "rigFrom": "base_woman (local rig transfer, rig-local-person.mjs)",
+  "clipsFrom": {
+    "walk": "base_woman",
+    "idle": "base_woman",
+    "golf_drive": "base_woman"
+  }
+}

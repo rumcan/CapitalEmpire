@@ -1,0 +1,14 @@
+{
+  "generationId": "26d4fb42-46f2-4427-9486-4fd5ce9ec482",
+  "prompt": "Full-body character for a 3D model: retired club golfer in his 60s, white hair, a plain sky-blue short-sleeved polo shirt, a white belt, kelly-green slacks, a plain white bucket hat, white golf shoes. Plain clothes with no logos, lettering or emblems. Standing in a neutral A-pose, both arms 45 degrees away from the body, hands open and empty, feet slightly apart, facing the viewer straight on, the whole body visible from head to toe. Match the painted style of the reference character. Plain flat light grey background, nothing else in the picture.",
+  "model": "gemini-3.1-flash-image-preview",
+  "seed": 636917507,
+  "imageUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/h5-imagegen/AFjPSjQH9kbcCl57sgO3/7r4388nXCvVG192gWNl54tkeGPz2/f3404abf-71c7-4bf8-b5cd-845127fe62de.png",
+  "requestPrompt": "Full-body character for a 3D model: retired club golfer in his 60s, white hair, a plain sky-blue short-sleeved polo shirt, a white belt, kelly-green slacks, a plain white bucket hat, white golf shoes. Plain clothes with no logos, lettering or emblems. Standing in a neutral A-pose, both arms 45 degrees away from the body, hands open and empty, feet slightly apart, facing the viewer straight on, the whole body visible from head to toe. Match the painted style of the reference character. Plain flat light grey background, nothing else in the picture.",
+  "requestModel": "gemini-3.1-flash-image-preview",
+  "aspectRatio": "2:3",
+  "gameId": "AFjPSjQH9kbcCl57sgO3",
+  "outputPath": "E:\\Repos\\CapitalEmpire\\worktrees\\people-ground\\art\\golfers\\pics\\golf_am_m2.png",
+  "status": "saved",
+  "sha256": "0e3e83c14b233056f1d5ec154a70b47a90c762424511b8a4134417b2ede6839e"
+}

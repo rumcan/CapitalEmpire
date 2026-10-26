@@ -1,0 +1,10 @@
+{
+ "id": "variation:industrial-printing-works-2be751ae:1",
+ "version": "variation-industrial-printing-works-2be751ae-1-4views-v2",
+ "files": {
+  "NE": "ca2ee10857acb3a4c5a5ee7a6d77e97baf1ec3d4a9f1edc12c30f1da85b8a9e6",
+  "SE": "7507ffaa42982f3d80ec618d0d7521817c57bb52272e1acb182556cb5a58b68f",
+  "SW": "4084673b0ae00ae277bd0c2846f1f115d3ab18558d133743b3a9e6ee816dde54",
+  "NW": "136646570686559b925e74cc44db70949126a047db62aedccf2eeef020bfc509"
+ }
+}

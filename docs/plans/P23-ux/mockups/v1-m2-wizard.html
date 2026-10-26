@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>P23 m2: the New hole wizard, mid-build</title>
+<link rel="stylesheet" href="kit.css"><script src="mock.js"></script></head>
+<body><div class="stage" id="s">
+  <img class="bg" src="bg/wide-08.webp">
+  <svg class="ov" id="ov"></svg>
+</div>
+<script>
+const M = MOCK, S = document.getElementById('s'), ov = document.getElementById('ov');
+const cam = { X: 31104, Y: 86848, z: 0.08, w: 1600, h: 900 }, P = M.iso(cam);
+// hole 2's plan (tiles): tee, one bend (a gentle dogleg right), green; hole 1 is the built hole at the top right
+const T = [1521.4, 1066.9], B = [1604.9, 1133.4], G = [1646.4, 1191.9], G1 = [1615, 1034];
+const line = M.spline([T, B, G], 0.5), L = line[line.length - 1][2];          // tiles
+const m = (s) => s * 2;                                                         // tiles -> metres
+// fairway widths (P21 3.3 defaults, metres): 30 at 100 m, 40 at the landing zone (210 m), 28 at 50 m before the green, 22 at the green front
+const greenR = 6.6, frontS = L - greenR, fwStart = 50;
+const knots = [[fwStart, 30], [105, 40], [frontS - 25, 28], [frontS, 22]];
+const width = (s) => { if (s < knots[0][0] || s > frontS + 1) return 0; for (let i = 1; i < knots.length; i++) if (s <= knots[i][0]) { const [a, wa] = knots[i - 1], [b, wb] = knots[i], t = (s - a) / (b - a), e = t * t * (3 - 2 * t); return wa + (wb - wa) * e; } return 22; };
+const swell = (s, side) => 1 + 0.06 * Math.sin(s / 23 + side * 1.7) * Math.min(1, (s - fwStart) / 20);
+const rough = M.band(line, () => 15, 0, L);                                    // the 60 m corridor
+const fwL = M.band(line, s => (width(s) / 4) * swell(s, 1), fwStart, frontS + 1);
+const green = M.blob(G[0], G[1], greenR, greenR * 0.85, 0.5, 2.1, 72, 0.06);
+const tee = M.band(line, () => 2.6, 0.2, 14);
+// the ghost: rough corridor, first-cut collar, fairway, green, tee; then the centre line, yardage ticks and handles
+let svg = `
+  <path d="${M.poly(P, rough)}" fill="rgba(160,190,90,0.18)" stroke="rgba(255,255,255,0.55)" stroke-width="1.4" stroke-dasharray="6 5"/>
+  <path d="${M.poly(P, M.band(line, s => (width(s) / 4) * swell(s, 1) + 1, fwStart - 1, frontS + 1))}" fill="rgba(150,200,90,0.35)"/>
+  <path d="${M.poly(P, fwL)}" fill="rgba(110,190,70,0.62)" stroke="rgba(235,255,210,0.95)" stroke-width="1.5"/>
+  <path d="${M.poly(P, green.map(([x, y]) => [x + (x - G[0]) * 0.12, y + (y - G[1]) * 0.12]))}" fill="rgba(150,200,90,0.4)"/>
+  <path d="${M.poly(P, green)}" fill="rgba(90,185,80,0.8)" stroke="rgba(235,255,210,0.95)" stroke-width="1.5"/>
+  <path d="${M.poly(P, tee)}" fill="rgba(120,195,85,0.85)" stroke="rgba(235,255,210,0.95)" stroke-width="1.5"/>
+  <path d="${M.line(P, line.map(p => [p[0], p[1]]))}" fill="none" stroke="#ffd166" stroke-width="2.2" stroke-dasharray="9 6"/>`;
+for (const yd of [100, 150, 200, 250, 300]) {
+  const a = M.at(line, yd / 2), p = P(a.x + a.nx * 3, a.y + a.ny * 3), q = P(a.x - a.nx * 3, a.y - a.ny * 3), t = P(a.x - a.nx * 17.5, a.y - a.ny * 17.5);
+  svg += `<line x1="${p[0]}" y1="${p[1]}" x2="${q[0]}" y2="${q[1]}" stroke="rgba(255,255,255,0.85)" stroke-width="1.5"/><text x="${t[0]}" y="${t[1] + 4}" fill="rgba(255,255,255,0.9)" font-size="11" font-weight="700" font-family="Segoe UI" text-anchor="middle">${yd} m</text>`;
+}
+// the walk from hole 1's green to this tee (over 150 m: amber)
+svg += `<path d="${M.line(P, [G1, [G1[0] - 20, G1[1] + 25], T])}" fill="none" stroke="#fbbf24" stroke-width="2" stroke-dasharray="2 5" stroke-linecap="round"/>`;
+// width handles at the landing zone, both edges
+const lz = M.at(line, 105), hw = (width(105) / 4) * swell(105, 1);
+for (const sd of [1, -1]) { const p = P(lz.x + lz.nx * hw * sd, lz.y + lz.ny * hw * sd); svg += `<rect x="${p[0] - 7}" y="${p[1] - 7}" width="14" height="14" transform="rotate(45 ${p[0]} ${p[1]})" fill="#fff" stroke="#1b1406" stroke-width="2"/>`; }
+// "+" points to add a bend, between the handles
+for (const s of [55, 145]) { const a = M.at(line, s), p = P(a.x, a.y); svg += `<circle cx="${p[0]}" cy="${p[1]}" r="8" fill="rgba(20,21,25,0.85)" stroke="#ffd166" stroke-width="1.5"/><text x="${p[0]}" y="${p[1] + 4.5}" fill="#ffd166" font-size="13" font-weight="900" text-anchor="middle" font-family="Segoe UI">+</text>`; }
+const pt = P(...T), pb = P(...B), pg = P(...G);
+svg += `<circle cx="${pt[0]}" cy="${pt[1]}" r="11" fill="#fff" stroke="#1b1406" stroke-width="2.5"/><text x="${pt[0]}" y="${pt[1] + 4}" font-size="11" font-weight="900" text-anchor="middle" fill="#1b1406" font-family="Segoe UI">T</text>
+  <circle cx="${pb[0]}" cy="${pb[1]}" r="14" fill="rgba(245,181,46,0.25)" stroke="none"/><circle cx="${pb[0]}" cy="${pb[1]}" r="10" fill="#f5b52e" stroke="#1b1406" stroke-width="2.5"/>
+  <circle cx="${pg[0]}" cy="${pg[1]}" r="11" fill="#fff" stroke="#1b1406" stroke-width="2.5"/>
+  <line x1="${pg[0] - 2}" y1="${pg[1] + 4}" x2="${pg[0] - 2}" y2="${pg[1] - 26}" stroke="#fff" stroke-width="2"/><path d="M${pg[0] - 1} ${pg[1] - 26} l13 4 l-13 5 z" fill="#e23b2e"/>`;
+M.svg(ov, svg);
+M.chrome(S, { stage: 2, active: 'holes', place: 'Golf club', money: '$548,120', season: { big: 'Founding season', small: 'Nov 1984 · 9 months to season end', done: 1, of: 9 } });
+// the cursor is dragging the bend handle
+M.pointer(S, pb[0] + 2, pb[1] + 2, null);
+S.insertAdjacentHTML('beforeend', `
+  <div class="tag big gold" style="left:${pg[0] + 44}px;top:${pg[1] - 14}px">Hole 2 · par 4 · 357 m<span class="l2">$31,600 · seeded: ready by Mar 1985</span></div>
+  <div class="tag" style="left:${pb[0] + 26}px;top:${pb[1] - 14}px">Bend · dogleg right<span class="l2">drag the line to bend it (up to 3)</span></div>
+  <div class="tag" style="left:${pt[0] + 20}px;top:${pt[1] - 44}px;border-color:rgba(251,191,36,.6)">Tee · hole 2<span class="l2 warn">198 m walk from hole 1's green</span></div>`);
+// the Holes panel in planning: a stepper, the hole card with the price split, seed or sod, the checks, Build
+S.insertAdjacentHTML('beforeend', `
+<div class="glass panel">
+  <div class="phead"><div class="badge"><img src="../../../../src/assets/ui/icons/trophy.webp"></div><div><h2>New hole</h2><div class="sub">Hole 2 · shape it, then Build</div></div>
+    <div class="undo"><span>↶</span><span class="off">↷</span></div></div>
+  <div class="row" style="margin-top:12px;gap:4px;font-size:11.5px">
+    <span class="pill" style="padding:4px 9px"><b class="ok">✓</b> Tee</span><span class="dim">—</span>
+    <span class="pill" style="padding:4px 9px"><b class="ok">✓</b> Green</span><span class="dim">—</span>
+    <span class="pill on" style="padding:4px 9px">3 Shape</span><span class="dim">—</span>
+    <span class="pill" style="padding:4px 9px">4 Build</span></div>
+  <div class="box" style="margin-top:12px">
+    <div class="row"><div class="display" style="font-size:22px;font-weight:700">Hole 2</div><span class="grow"></span><span style="font-size:18px;font-weight:800">Par 4</span></div>
+    <div class="muted" style="font-size:12px;margin-top:2px">357 m (390 yd) · dogleg right · landing zone at 210 m</div>
+    <div style="margin-top:8px">
+      <div class="stat"><span class="muted">Fairway · 7,600 m²</span><b>$15,200</b></div>
+      <div class="stat"><span class="muted">Green · 550 m²</span><b>$3,300</b></div>
+      <div class="stat"><span class="muted">Tee · 280 m²</span><b>$840</b></div>
+      <div class="stat"><span class="muted">Rough and collars · 14,100 m²</span><b>$12,260</b></div>
+      <div class="stat" style="border-top:1px solid var(--line);margin-top:4px;padding-top:6px"><span>Total</span><b class="gold">$31,600</b></div>
+    </div>
+  </div>
+  <div class="sec"><div class="caps">Planting</div>
+    <div class="seg"><span class="on">Seed · ready Mar 1985 · $31,600</span><span>Sod · ready now · $137,400</span></div></div>
+  <div class="sec"><div class="caps">Checks</div>
+    <div class="check"><span class="m ok">✓</span><span>On your land, clear of roads and buildings</span></div>
+    <div class="check"><span class="m ok">✓</span><span>70 m from hole 1: room to play both</span></div>
+    <div class="check"><span class="m warn">!</span><span>198 m walk from hole 1's green</span><span class="fix">Path after Build</span></div>
+  </div>
+  <div class="sec" style="display:flex;gap:8px;align-items:center"><div class="primary" style="flex:1;padding:9px 14px"><div class="t" style="font-size:14px">Build · $31,600</div><span class="kc">Enter</span></div><span class="ghostbtn">Cancel <span class="kc">Esc</span></span></div>
+  <div class="dim" style="font-size:11px;margin-top:8px;line-height:1.45">Drag the dashed line to bend it · drag ◆ to widen · drag T or the flag to move · <span class="kc">[</span><span class="kc">]</span> green size · <span class="kc">R</span> green shape</div>
+</div>`);
+S.insertAdjacentHTML('beforeend', `
+  <div class="glass guide"><span class="step">Hole 2</span><span>Nothing is built or paid until you press Build. Esc steps back: green, then tee, then out.</span></div>
+  <div class="note" style="left:960px;top:610px;max-width:250px"><span class="n">1</span>The whole hole is a <b>live ghost</b>: corridor, fairway with real widths, green, tee, yardage, and the price at the flag.</div>
+  <div class="note" style="left:1120px;top:420px;max-width:240px"><span class="n">2</span>Par snaps at 230 m and 430 m with a small pop; the label updates while you drag.</div>
+  <div class="note" style="left:102px;top:806px;max-width:336px"><span class="n">3</span><b>4 clicks</b> for a straight hole: New hole, tee, green, Build. Bends and widths are optional drags.</div>
+  <div class="title-strip">P23 mockup m2 · the New hole wizard mid-build (T102 + P23)</div>`);
+</script>
+</body></html>

@@ -1,0 +1,40 @@
+{
+  "id": "spectator:staff_marshal_w",
+  "name": "staff_marshal_w (3D template)",
+  "size": "adult",
+  "heightMetres": 1.66,
+  "frameWidth": 160,
+  "frameHeight": 257,
+  "anchor": {
+    "x": 80,
+    "y": 247
+  },
+  "directions": [
+    "S",
+    "SW",
+    "W",
+    "NW",
+    "N",
+    "NE",
+    "E",
+    "SE"
+  ],
+  "frames": [
+    "idle",
+    "walk1",
+    "walk2",
+    "walk3",
+    "walk4",
+    "walk5",
+    "walk6",
+    "walk7",
+    "walk8"
+  ],
+  "walkFps": 5.7,
+  "mirrored": {},
+  "source": "art/spectators/staff_marshal_w",
+  "clips": {
+    "walk": "Armature|Casual_Walk|baselayer 4.20s, stride 1.40s, body turned -2 deg",
+    "idle": "Armature|Idle|baselayer"
+  }
+}

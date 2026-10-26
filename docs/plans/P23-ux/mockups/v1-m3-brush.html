@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>P23 m3: the cell brush, the surface chip and the footprint</title>
+<link rel="stylesheet" href="kit.css"><script src="mock.js"></script></head>
+<body><div class="stage" id="s">
+  <img class="bg" src="bg/fairway-30.webp">
+  <svg class="ov" id="ov"></svg>
+</div>
+<script>
+const M = MOCK, S = document.getElementById('s'), ov = document.getElementById('ov');
+const cam = { X: 33395.788635831224, Y: 82808.5867209195, z: 0.3, w: 1600, h: 900 }, P = M.iso(cam), T = M.tileOf(cam);
+// the pointer at the lower left lip of hole 1's bunker; a 2 x 2 footprint on the nearest cell corner (T109)
+const ptr = [1186, 497], t = T(...ptr), cx = Math.round(t[0] * 2) / 2, cy = Math.round(t[1] * 2) / 2;
+const cells = [[cx * 2 - 1, cy * 2 - 1], [cx * 2, cy * 2 - 1], [cx * 2 - 1, cy * 2], [cx * 2, cy * 2]];
+const c = M.cells(P, cells);
+M.svg(ov, `<g>${M.halfGrid(P, cx, cy, 6.5, '255,250,230', 0.42)}</g>
+  <path d="${c.fill}" fill="rgba(238,226,196,0.72)"/>
+  <path d="${c.stroke}" fill="none" stroke="#fffbe8" stroke-width="2"/>`);
+M.chrome(S, { stage: 2, active: 'holes', place: 'Golf club', money: '$548,120', season: { big: 'Founding season', small: 'Nov 1984 · 9 months to season end', done: 1, of: 9 } });
+M.pointer(S, ptr[0], ptr[1], { tex: 'bunker', wall: '#8a6d45', l1: 'Bunker · 4 m² · $16', l2: 'hole 1 · sand: no grow-in' });
+const sw = (id, name, n, on) => `<div class="sw${on ? ' on' : ''}"><span class="n">${n}</span><div class="d" style="background-image:url(tex/${id}.webp)"></div>${name}</div>`;
+const glyph = (k) => `<span class="glyph" style="grid-template-columns:repeat(${k},4px)">${'<i></i>'.repeat(k * k)}</span>`;
+S.insertAdjacentHTML('beforeend', `
+<div class="glass panel">
+  <div class="phead"><div class="badge"><img src="../../../../src/assets/ui/icons/trophy.webp"></div><div><h2>Holes</h2><div class="sub">Each hole is a park: build it, then shape it</div></div>
+    <div class="undo"><span title="Undo: Fairway, 60 m²">↶</span><span class="off">↷</span></div></div>
+  <div class="sec"><div class="primary"><span class="plus">+</span><div><div class="t">New hole</div><div class="s">Click a tee, click a green, Build</div></div><span class="kc">N</span></div></div>
+  <div class="sec"><div class="caps">Shape by hand <span class="hint">1 m cells · keys 1–6</span></div>
+    <div class="swatches">${sw('fairway', 'Fairway', 1)}${sw('green', 'Green', 2)}${sw('tee', 'Tee', 3)}${sw('rough', 'Rough', 4)}${sw('bunker', 'Bunker', 5, true)}${sw('water', 'Water', 6)}</div>
+    <div class="row" style="margin-top:10px">
+      <span class="size">${glyph(1)}1</span><span class="size on">${glyph(2)}2×2</span><span class="size">${glyph(3)}3×3</span><span class="size">${glyph(4)}4×4</span>
+    </div>
+    <div class="row" style="margin-top:8px"><span class="pill">Erase <span class="kc" style="margin-left:2px">Alt</span></span><span class="dim" style="font-size:11px">Bunker · $4 a m² · sand needs no grow-in</span></div>
+  </div>
+  <div class="sec"><div class="caps">Your holes <span class="hint">1 of 9 for the tour</span></div>
+    <div class="holes"><div class="hb grow sel">1<small>par 4</small></div><div class="hb add">+</div></div>
+  </div>
+  <div class="more" style="margin-top:22px"><div class="h">More options <span class="cnt">stamps · fill tools · seed or sod · height</span><span class="chev">▸</span></div></div>
+</div>`);
+S.insertAdjacentHTML('beforeend', `
+  <div class="glass guide"><span class="kc">Click</span> a cell · <span class="kc">Drag</span> a run · <span class="kc">Alt</span> erase · <span class="kc">[</span><span class="kc">]</span> size · <span class="kc">Ctrl</span>+<span class="kc">Z</span> undo · <span class="kc">Esc</span> done</div>
+  <div class="note" style="left:1250px;top:655px;max-width:300px"><span class="n">1</span>The pointer stays a normal arrow. The <b>surface chip</b> sits beside it (T108) and names what a click does: surface, m², price, the hole and the grow-in.</div>
+  <div class="note" style="left:860px;top:250px;max-width:280px"><span class="n">2</span>The <b>footprint</b> is exactly the cells a click paints, on the 1 m half grid. The half grid shows only round the pointer (a spotlight), not over the whole map.</div>
+  <div class="note" style="left:102px;top:610px;max-width:336px"><span class="n">3</span>Picking a swatch arms the brush: no Method row. The hole is the one you paint in (hole 1 here); there is no "current hole" to set first.</div>
+  <div class="title-strip">P23 mockup m3 · shape by hand: the cell brush (T108 + T109 + P23)</div>`);
+</script>
+</body></html>

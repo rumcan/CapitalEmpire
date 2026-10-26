@@ -1,0 +1,10 @@
+{
+ "id": "golf:grandstand-s",
+ "version": "golf-grandstand-s-4views-v3",
+ "files": {
+  "NE": "405c5d55ed21f07d95a46a34ccc03321861f8e451a5123980114cd3b16afb573",
+  "SE": "b44eeb2194d480265e6d4d558f06a02bb01bbf052534b2e1f7106914aa605d09",
+  "SW": "33514846f256c6772ae575dbdc5d0fd47a88a827981fb55552740df872fd5fb5",
+  "NW": "26e80b0e0f8799bdd6b4e9a1888c6dd8413bdc9f7220cb4e0f2e7c3e8d59decf"
+ }
+}

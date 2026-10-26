@@ -10,13 +10,15 @@ output/
 src/assets/ground/grass-v1/webp/
 
 # the spectators' locally rigged models (24 MB each; scripts/assets/people3d/rig-local-person.mjs remakes them from model.glb, free)
-art/spectators/*/anim_walk.glb
-art/spectators/*/anim_idle.glb
+art/spectators/*/anim_*.glb
 art/spectators/*/rigged.glb
+art/golfers/*/anim_*.glb
+art/golfers/*/rigged.glb
 # the new townspeople's locally rigged models (the base_* people's RUN files stay tracked)
-art/people3d/town_*/anim_walk.glb
-art/people3d/town_*/anim_idle.glb
+art/people3d/town_*/anim_*.glb
 art/people3d/town_*/rigged.glb
+# a model with its fused ground plate cut off (cut-plate.mjs; about 18 MB uncompressed, remade free from model.glb, RUN's original)
+art/*/*/model-cut.glb
 
 # nested checkouts (git worktrees) made inside the repo: never committed
 worktrees/

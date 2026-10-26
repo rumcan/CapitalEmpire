@@ -1,7 +1,10 @@
 # CapitalEmpire: working rules for Claude
 
-> **Start here (2026-10-23):** Claude leads the coding side now. Read `docs/LEAD.md` (the game, the MVP milestones, how to work so
-> anyone can continue) and then `docs/NOW.md` (the live work log: the current branch and the exact next action, even mid-line).
+> **Start here, after any switch-over or crash (2026-10-26):** read `docs/NOW.md` section "START HERE". It is always current: what is
+> in flight, the queue, and how to get every agent back to work. Then read `docs/AGENT-BRIEF.md`: the agent rules, the brief template,
+> the progress protocol and the restart checklist. Every ticket is a GitHub issue. Its agent pushes the branch and comments on the
+> issue after every sub-step, so the work survives a lost chat or a change of Claude account (the owner, 2026-10-26).
+> Background on the game and how the lead works: `docs/LEAD.md`.
 > **Asked to make the spectator / crowd art or the 3D people?** Start with `docs/HANDOVER-PEOPLE.md` (the state and next steps), then `docs/SPECTATOR-ART.md`.
 
 Two agents share this repo (from 2026-10-21): the second agent writes the game code, the first chat does the art with the owner;
@@ -28,9 +31,15 @@ who owns which files and how to land work on main without clashing is in `docs/S
 - **Slow checks run on the LAN worker PC** (`scripts/worker/run.sh "<command>"`; setup in `docs/PROGRESS.md`). The
   worker clone is read-only: never commit or push from it.
 - **Since 2026-10-24 the Claude sessions run ON the worker PC** (PiskriekDesk, 192.168.0.5): there is no `cworker`
-  here, so `scripts/worker/run.sh` only applies from the old dev PC. Coders run typecheck and their own test files;
-  the leads run the full suite, builds, gates and the bench locally, **one heavy run at a time across all sessions**
+  here, so `scripts/worker/run.sh` only applies from the old dev PC. **One heavy run at a time across all sessions**
   (16 GB RAM: check no other `vite build` / `node --test` is running first).
+- **Testing during the day: your own code only; the full regression runs at night** (the owner, 2026-10-25, to speed up
+  development). A coder runs typecheck plus the test files for the code it touched (and their neighbours), and nothing
+  wider: no full `npm test`, no build, no gates, no bench, unless its ticket is about speed or the build. The lead merges a
+  PR on a clean typecheck, those tests passing and a review, after merging main into it. Every night a scheduled task
+  ("CapitalEmpire nightly regression", about 02:00) runs the full suite, typecheck, the build and the headless gates on
+  main in `.claude/worktrees/nightly`, writes `E:/ClaudeTemp/nightly/<date>.md`, and opens one `[nightly]` issue for a
+  real failure, naming the PRs merged since the last green night. Fix `[nightly]` issues first the next day.
 - **Update `docs/PROGRESS.md`** after every verified step: status table, numbers, decisions, next steps.
 - **Commit locally after each verified step** (message ends with the Co-Authored-By line). Push only when the owner
   says so.
@@ -42,12 +51,27 @@ scratchpad (it lives on C:). Worktrees go under `E:\Repos\CapitalEmpire\.claude\
 this already); temp and bulky files under `E:\ClaudeTemp`; the npm cache is `E:\npm-cache`. Remove your worktree
 (`git worktree remove`) once its PR is merged. D: and E: have room; check `df -h /c /d /e` before anything big.
 
+## Stop what you started when you are done (the owner, 2026-10-25)
+
+Every AI (lead, coders, runners, art and other sessions) stops its own background work the moment it no longer needs it, and before
+it reports back. This includes:
+- dev servers (`npm run dev`, `vite`, `vite preview`, static servers) and the `npm`/`cmd` and `esbuild --service` processes behind them;
+- `node --test`, builds, gates, the bench and headless browsers;
+- watch loops, and anything you started with `run_in_background` or a preview tool.
+Never leave a server idling for later.
+- **The owner's own servers** (the game on 5174 and the studio on 5191, from `worktrees/theme-consistency`) are theirs: leave them alone
+  unless they say otherwise.
+- **Before your final report:** list what you started, check nothing of yours is still listening (PowerShell
+  `Get-NetTCPConnection -State Listen` on your port, `Get-CimInstance Win32_Process -Filter "Name='node.exe'"`), and say in the
+  report that it is stopped.
+- **Finished worktrees** go too (`git worktree remove`) once their PR is merged.
+
 ## Project facts
 
 - **The game is a golf events manager** (the owner's pivot, 2026-10-21): the design is `docs/GOLF-PLAN.md`, the art list
   `docs/GOLF-SPRITES.md`. GAME-PLAN.md's systems sections still hold; where they differ, GOLF-PLAN.md wins.
 
-- Vite + React + TypeScript, single-file build. WebGL2 rendering, ground painting in Web Workers on OffscreenCanvas.
+- Vite + React + TypeScript; the build is `dist/index.html` plus hashed asset files (T080; served by `vite preview` or any static server). WebGL2 rendering, ground painting in Web Workers on OffscreenCanvas.
 - Map: 2048 x 2048 tiles of 2 m (4 x 4 km). Closest zoom 30% (`ZOOM_MAX`), art at 0.6x native as mip 0.
 - Keep the road builder's instant, pretty roads: edits rebuild incrementally and the ground re-bakes itself. Never
   add a manual "rebuild ground" step (the TrickOrTreat town builder has one; we deliberately do not).

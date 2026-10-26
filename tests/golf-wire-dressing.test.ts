@@ -39,7 +39,7 @@ test('dressCourse produces valid dressed props from plan layout deterministicall
   const redFlags = props1.filter(p => p.id === PIN_RED_ID);
   const yellowFlags = props1.filter(p => p.id === PIN_YELLOW_ID);
   assert.equal(redFlags.length, 8);
-  assert.equal(yellowFlags.length, 1 + plan.layout.tees.filter(t => t.kind === 'forward').length, 'one pin flag plus the forward tee markers, which reuse the yellow flag sprite');
+  assert.equal(yellowFlags.length, 1, 'one yellow flag, on the last pin (T111: the forward tee markers are no flags)');
 
   const benches = props1.filter(p => p.id === BENCH_ID);
   assert.equal(benches.length, 9);

@@ -28,9 +28,16 @@ export function dab(m: Mask, x: number, y: number, r: number, erase = false): vo
 }
 
 /** dabs along the segment from (x0, y0) to (x1, y1), spaced r / 3 apart (the end points included) */
-export function stroke(m: Mask, x0: number, y0: number, x1: number, y1: number, r: number, erase = false): void {
+export function stroke(m: Mask, x0: number, y0: number, x1: number, y1: number, r: number, erase = false, snap = 0): void {
   const n = Math.max(1, Math.ceil(Math.hypot(x1 - x0, y1 - y0) / Math.max(r / 3, 0.05)));
-  for (let i = 0; i <= n; i++) { const t = i / n; dab(m, x0 + (x1 - x0) * t, y0 + (y1 - y0) * t, r, erase); }
+  let px = NaN, py = NaN;
+  for (let i = 0; i <= n; i++) {
+    const t = i / n;
+    let x = x0 + (x1 - x0) * t, y = y0 + (y1 - y0) * t;
+    // snap > 0 (T108): each dab on a multiple of snap tiles (the half grid), the same spot twice only once
+    if (snap > 0) { x = Math.round(x / snap) * snap; y = Math.round(y / snap) * snap; if (x === px && y === py) continue; px = x; py = y; }
+    dab(m, x, y, r, erase);
+  }
 }
 
 /** the cells inside polygon pts (cell centre insidePoly), added to m (rebuilds a mask from saved areas) */

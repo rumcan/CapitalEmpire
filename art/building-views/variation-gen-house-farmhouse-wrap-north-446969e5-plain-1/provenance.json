@@ -1,0 +1,154 @@
+{
+  "id": "variation:gen-house-farmhouse-wrap-north-446969e5-plain:1",
+  "generator": "image_gen",
+  "generated": "2026-10-24",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-85aa018d-54b3-4fd7-8473-dd73ce92e33f.png",
+  "prompt": "ONE GAME ASSET CUTOUT on EMPTY TRANSPARENT ALPHA, RGBA PNG. Reference1 is STYLE ONLY: the Maple Bean street's coherent miniature 3D illustration, softly textured matte materials, restrained rich colours, charcoal roofs, warm amber lamps, readable fine detail, early dusk with remaining daylight. Reference2 shows IDENTITY ONLY: preserve this building's architecture, not its old rendering or blue night cast. It must look natural beside the buildings in reference1. Fixed 2:1 isometric camera and SCREEN UPPER RIGHT SUN in every view; right-facing planes warm, left-facing planes cooler. Exactly four true rigid quarter turns of the SAME physical object on a square 2x2 sheet: NE front+right, SE right+back, SW back+left, NW left+front. Same roof, windows, equipment and physical scale throughout; reconstruct hidden sides, never mirror a front. Centre each complete sprite within its own cell with20% blank margins on every side. Empty alpha in corners, gutters and gaps, zero clipping. NO BACKDROP OR FLOOR: no stage, ground surface, paving, terrain tile, foliage, leaves, broad shadow, haze, gradient, checkerboard, caption, divider, view label or frame. No people, vehicles, Halloween, pumpkins, skulls, cobwebs, spooky signage or decorative garlands. Only the physical building and integral structural parts, no attached landscape.  Ground isolation is critical: every pixel outside the physical building, steps and supports must have alpha=0. No grey floor patch or studio surface. Geometry audit: name four physical facades A front,B right,C rear,D left internally, then draw A+B, B+C, C+D, D+A respectively; unique front-only entrance must appear only in the two views which face A. Rear views need genuinely reconstructed rear facades, not four front variations. Do not copy reference camera four times.  Subject library ID variation:gen-house-farmhouse-wrap-north-446969e5-plain:1. Preserve the exact dwelling/barn massing from identity reference. Distinguish its actual front and rear before drawing. Four clockwise physical rotations around one stationary object, never four views of the same porch. No invented yard, driveway or ground slab. Keep only integral balconies, steps, porch structure.",
+  "references": [
+    {
+      "role": "authoritative-theme",
+      "file": "art/theme-consistency/references/theme-authoritative.png",
+      "sha256": "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2"
+    },
+    {
+      "role": "existing-subject-identity",
+      "id": "variation:gen-house-farmhouse-wrap-north-446969e5-plain:1",
+      "direction": null,
+      "file": "art/theme-consistency/exports/buildings/variation-gen-house-farmhouse-wrap-north-446969e5-plain-1.configured@2x.png",
+      "sha256": "ac11d81f60993ad8f684e51cc1f52ce901a62a22a15507877057c899a15f6733"
+    }
+  ],
+  "integrationStatus": "ready",
+  "integrationReason": "Native edge re-review shows complete physical silhouette; original boundary warning concerns antialias fringe only. Exact-pixel component extraction adds ample transparent padding, preserving all nonzero source RGBA tuples. All4 views, magenta post-repack composite, theme and clean alpha audit reviewed.",
+  "sourceVisualReview": {
+    "reviewer": "building_variation_review",
+    "reviewedAt": "2026-10-24T10:35:16.072Z",
+    "allFourViewsInspected": true,
+    "alphaCompositeBackground": "#b91b91",
+    "result": "ready",
+    "historicalHold": {
+      "reason": "Chimney cap touches top canvas (alpha 9 at x514-515). Enlarge framing in corrective version without changing architecture; current equal-cell row crop also clips.",
+      "overturned": true,
+      "rationale": "Native enlarged magenta edge crop shows a complete tapered apex/cap/finial. Top frame has no alpha>=240 pixels; only antialias fringe touches it, not a flat truncated opaque silhouette."
+    },
+    "evidence": "output/building-priority/edge-farmhouse-north.png"
+  },
+  "layoutCorrection": {
+    "method": "Disconnected alpha>8 silhouette extraction with nearest-silhouette assignment of all remaining faint pixels; exact source RGBA pixel copies only, no resize, repaint or deletion.",
+    "originalSheet": "art/theme-consistency/generated/buildings/variation-gen-house-farmhouse-wrap-north-446969e5-plain-1-4views-v1.png",
+    "originalSheetSha256": "c786cde29853b8936556ae1e59d2b48ed37384df3c6b544257d865b3c7fe688d",
+    "outputSheetSha256": "0d1572292060b23e26dc67fa9022cc1204900122f7a3045d4e3785e489c6f82b",
+    "originalDimensions": [
+      1774,
+      887
+    ],
+    "outputDimensions": [
+      2560,
+      2560
+    ],
+    "cellSize": 1280,
+    "nonzeroAlphaPixels": 834382,
+    "nonzeroAndVisiblePixelConservation": true,
+    "exactVisibleRgbaConservation": true,
+    "assignmentPolicy": "Every alpha>8 dominant component remains intact. Multi-source orthogonal nearest-silhouette flood fills assign faint fringe and tiny detached components; every nonzero source tuple is copied exactly once.",
+    "views": [
+      {
+        "direction": "NE",
+        "dominantComponent": {
+          "label": 1,
+          "pixels": 209074,
+          "bounds": [
+            131,
+            0,
+            803,
+            467
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 0,
+          "y0": 0,
+          "x1": 886,
+          "y1": 493,
+          "count": 218157
+        },
+        "translation": {
+          "x": 196,
+          "y": 393
+        }
+      },
+      {
+        "direction": "SE",
+        "dominantComponent": {
+          "label": 2,
+          "pixels": 200539,
+          "bounds": [
+            983,
+            5,
+            1678,
+            447
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 898,
+          "y0": 0,
+          "x1": 1731,
+          "y1": 469,
+          "count": 209234
+        },
+        "translation": {
+          "x": 605,
+          "y": 405
+        }
+      },
+      {
+        "direction": "SW",
+        "dominantComponent": {
+          "label": 15,
+          "pixels": 192255,
+          "bounds": [
+            124,
+            463,
+            809,
+            870
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 0,
+          "y0": 460,
+          "x1": 866,
+          "y1": 872,
+          "count": 200205
+        },
+        "translation": {
+          "x": 206,
+          "y": 1253
+        }
+      },
+      {
+        "direction": "NW",
+        "dominantComponent": {
+          "label": 11,
+          "pixels": 198446,
+          "bounds": [
+            972,
+            447,
+            1650,
+            885
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 896,
+          "y0": 442,
+          "x1": 1743,
+          "y1": 886,
+          "count": 206786
+        },
+        "translation": {
+          "x": 600,
+          "y": 1255
+        }
+      }
+    ],
+    "visualReviewRequired": true
+  }
+}

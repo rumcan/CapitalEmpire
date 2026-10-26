@@ -4,12 +4,18 @@ import assert from 'node:assert/strict';
 import { CLASS, RoadNetwork, type Leg } from '../src/game/network';
 import { NetEditor } from '../src/game/netops';
 import { LotMap, type Lot } from '../src/game/lots/lots';
-import { compose, type ComposeState } from '../src/game/lots/compose';
+import { compose, setLotPresets, type ComposeState } from '../src/game/lots/compose';
+import { parsePresets } from '../src/game/lots/presets';
+import PRESET_FIXTURE from './fixtures/lot-presets.json';
+// the lots draw from a committed copy of the presets (tests/fixtures/lot-presets.json), so the owner's edits to the live file cannot break the
+// turned-shop test below (it reads the frozen shops at view 0)
+{ const f = parsePresets(PRESET_FIXTURE); setLotPresets(f.presets, f.meta); }
 import { hasLettering, LETTERING_IDS, EAST_FACING } from '../src/game/lots/lettering';
 import { EAST_PAIRS } from '../src/game/east-library';
 import { VIEW_ART, unmirror } from '../src/game/views-library';
 import { REMOVED_IDS } from '../src/game/lots/scales';
 import { drawnAs, isBuilding } from '../src/game/mirror';
+import { fourViews } from '../src/game/lots/preset-art';
 /** the fronts of the 14 east pictures in art/east-facing */
 const EAST_FRONTS = ['ref:building-corner-shop', 'ref:building-corner-store', 'ref:building-gas-canopy', 'ref:building-grocery', 'town:bakery', 'town:barber', 'town:fish_tackle', 'town:grocery', 'town:laundromat', 'town:pharmacy', 'town:postoffice', 'world:diner', 'world:snack_bar', 'world:video'];
 import { LU, LV } from '../src/game/lots/town';
@@ -131,25 +137,22 @@ test('east-facing art is drawn only in place of a flipped front, unflipped; no p
   }
 });
 
-test('the east-facing hook: a flipped front with east-facing art draws that art unflipped, never the front flipped', () => {
-  // a stand-in: the grocery's east art is the diner sprite (any library sprite will do; the hook is what is tested)
-  const real = EAST_FACING['town:grocery'];
-  EAST_FACING['town:grocery'] = 'world:diner';
-  try {
-    const east = LOTS.filter(l => Math.abs(l.n.x) > Math.abs(l.n.y));
-    const rnd = mulberry(20261022);
-    let stand = 0;
-    for (const lot of east) for (let k = 0; k < 40; k++) {
-      const st: ComposeState = { use: LU.COM, level: LV.BUILT, decline: 0, seed: Math.floor(rnd() * 4294967296) >>> 0 };
-      for (const p of compose(lot, st).props) {
-        if (p.id === 'town:grocery') assert.fail(`${lot.key}: the grocery drawn with its front art on a flipped lot`);
-        if (p.id === 'world:diner') { stand++; assert.equal(p.flip, false, `${lot.key}: the east art is drawn flipped`); }
-      }
+test('a flipped lot (facing +X or -X) draws its preset\'s four-view shop fronts turned to their SE or NW view, unflipped, never the front flipped (P20: lots from presets, preset-art.ts turned)', () => {
+  const east = LOTS.filter(l => Math.abs(l.n.x) > Math.abs(l.n.y));
+  const rnd = mulberry(20261022);
+  let turnedViews = 0;
+  for (const lot of east) for (let k = 0; k < 40; k++) {
+    const st: ComposeState = { use: LU.COM, level: LV.BUILT, decline: 0, seed: Math.floor(rnd() * 4294967296) >>> 0 };
+    for (const p of compose(lot, st).props) {
+      const it = LIBRARY.find(i => i.id === p.id)!, v = fourViews(p.id);
+      if (!v || !isBuilding(it)) continue;
+      assert.equal(p.flip, false, `${lot.key}: ${p.id} is drawn flipped`);
+      // the frozen shop presets hold their fronts at view 0, so a quarter-turned lot draws the SE (1) or NW (3) view
+      assert.equal(v.at % 2, 1, `${lot.key}: ${p.id} is a front or back view on a flipped lot`);
+      turnedViews++;
     }
-    assert.ok(stand > 0, 'the east art was placed on a flipped lot');
-  } finally {
-    EAST_FACING['town:grocery'] = real;
   }
+  assert.ok(turnedViews > 0, 'no four-view shop drawn on a flipped lot');
 });
 
 test('a rotated business never mirrors a picture, lettering or plain (mirror.ts: no building is mirrored)', () => {

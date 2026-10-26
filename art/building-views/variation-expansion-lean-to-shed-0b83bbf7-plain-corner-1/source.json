@@ -1,0 +1,10 @@
+{
+ "id": "variation:expansion-lean-to-shed-0b83bbf7-plain-corner:1",
+ "version": "variation-expansion-lean-to-shed-0b83bbf7-plain-corner-1-4views-v2",
+ "files": {
+  "NE": "970af0cfcaabf35c482b822b98039bd340f8d366fe202987adf0a8c54e2e7637",
+  "SE": "fc6ac198503597e3c90018ecb5506b28e921d8b16a59edee5c355a712a1c516f",
+  "SW": "681e587ac227f05bfa13c6df716325c6365341844b16b30585d3b48c47178f8f",
+  "NW": "89ea0ef24fcad986254f1a1e5c23afef6e84b24456a65b423b362d249da88ada"
+ }
+}

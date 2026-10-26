@@ -19,7 +19,9 @@ const id = process.argv[2], arg = (k, d) => { const i = process.argv.indexOf(k);
 if (!id) throw new Error('Usage: node scripts/assets/people3d/rig-local-person.mjs <id> [--from base_man] [--root art/spectators] [--clips walk,idle] [--keep 0.025]');
 const from = arg('--from', 'base_man'), dir = path.join(root, arg('--root', 'art/spectators'), id), keep = +arg('--keep', '0.025');
 const clips = arg('--clips', 'walk,idle').split(',').map(c => c.trim()).filter(Boolean);
-const baseDir = path.join(root, 'art/people3d', from), model = await fs.readFile(path.join(dir, 'model.glb'));
+// model-cut.glb when RUN fused a ground plate to the model (cut-plate.mjs, via make-cast.mjs; git-ignored: model.glb stays RUN's small original)
+const modelFile = await fs.access(path.join(dir, 'model-cut.glb')).then(() => 'model-cut.glb', () => 'model.glb');
+const baseDir = path.join(root, 'art/people3d', from), model = await fs.readFile(path.join(dir, modelFile));
 const sources = [...clips.map(c => ({ name: `anim_${c}.glb`, file: path.join(baseDir, `anim_${c}.glb`) })), { name: 'rigged.glb', file: path.join(baseDir, 'rigged.glb') }];
 
 const html = `<!doctype html><html><body>

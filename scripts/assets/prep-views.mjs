@@ -4,13 +4,20 @@
 //    the art model delivers, then the theme-consistency worktree's and this checkout's; a version found in several is taken from the first):
 //    its <slug>-4views-v<n>/ crops and <slug>-4views-v<n>.provenance.json, whose id is the library id. The newest version with all four
 //    NE/SE/SW/NW.native.png crops and no integrationStatus "blocked" is copied to art/building-views/<slug>/, unless
-//    art/building-views/measures.json pins a version. Without the generated folders (a fresh clone) the copies already there are used.
+//    art/building-views/measures.json pins a version. The import review's verdicts live in measures.json too: "rejected" { version: reason }
+//    keeps a version out whatever the art model marked it, "accepted" { version: note } lets in a sheet the art model parked as awaiting review. A 'ready' version with no crops yet is cut from its sheet (<version>.png) in memory by
+//    four-view-cells.mjs (the art model's cell rules) and marked cropsBy in its source.json. Without the generated folders (a fresh clone) the copies already there are used.
 // 2. Scale: each view is sized by its doorway (measures.json: a plain door's height in native px, tied to the picture's sha256) so the door
-//    stands standardDoor game px tall at the building's owner scale. A view with no clear door takes the mean scale of its measured views;
-//    a subject with none measured keeps the original sprite's width (and is reported, to be measured).
+//    stands standardDoor game px tall at the building's gauge scale (measures.json gaugeScale: its owner scale when it was first gauged, written
+//    back then, so a size set later in the sprite studio scales the building and survives a re-import). A view with no clear door takes the
+//    mean scale of its measured views; a subject with none measured keeps the original sprite's width (and is reported, to be measured).
+//    No view is sized past its picture's own pixels at the closest zoom (0.6 device px per game px at its owner scale, the studio's size or the
+//    table's): such a view is drawn smaller, at its native size, and reported (the owner, 2026-10-24: "Some are even placed so big they
+//    pixelate"). Business artwork keeps its width (drawn at a share of its parcel); the game caps its drawing (newart.ts lookOf).
 // 3. Footprint: the original boxes grow or shrink with the art (the NE view against the original's width); SE and NW turn them (hx <-> hy).
 //    The ground point is the footprint's centre, found from the picture's lowest point (the near corner, +hx +hy).
-// 4. Pack: every view at 0.6 x display size on 2048 pages with five mips (src/assets/views/views-<page>-<mip>.webp), and write
+// 4. Pack: every view at 0.6 x display size times its owner scale (as big as it is drawn at the closest zoom), never past its picture's own
+//    pixels, on 2048 pages with five mips (src/assets/views/views-<page>-<mip>.webp), and write
 //    src/game/views-library.ts: appendViews puts NE in place of the original sprite and SE in place of its east art (east:<id>), keeping
 //    every saved index, and appends the other views as view:<id>:se|sw|nw. Night glows are found again on the new pictures.
 // 5. Coverage: art/building-views/COVERAGE.md lists every building of the game (art/theme-consistency/inventory.json, and any library sprite
@@ -23,6 +30,8 @@ import { fileURLToPath } from 'node:url';
 import { execSync } from 'node:child_process';
 import sharp from 'sharp';
 import { findGlows } from './find-glows.mjs';
+import { cropFourViews } from './four-view-cells.mjs';
+import { readScales } from './overrides.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const BUILDINGS = 'art/theme-consistency/generated/buildings', STORE = path.join(root, 'art/building-views');
@@ -45,21 +54,31 @@ if (GENS.length) {
     if (!m || seen.has(d)) continue;
     seen.add(d);
     const provenance = JSON.parse(fs.readFileSync(prov, 'utf8')), id = provenance.id;
-    if (provenance.integrationStatus === 'blocked') { withhold(id, d, provenance.integrationReason ?? 'blocked'); console.log(`withheld ${id} (${d}): ${provenance.integrationReason}`); continue; }
-    const missing = DIRS.filter(v => !fs.existsSync(path.join(GEN, d, `${v}.native.png`)));
-    if (missing.length) { withhold(id, d, `no ${missing.join('/')} crop yet`); continue; }
+    // a version the import review turned down (measures.json "rejected": { version: reason }) stays out, whatever the art model marked it
+    if (measures.rejected?.[d]) { withhold(id, d, `rejected at import: ${measures.rejected[d]}`); console.log(`rejected ${id} (${d}): ${measures.rejected[d]}`); continue; }
+    // a sheet the art model parked as awaiting review that the import review checked and approved (measures.json "accepted": { version: note }) counts as 'ready'
+    const ready = provenance.integrationStatus === 'ready' || !!measures.accepted?.[d];
+    if (provenance.integrationStatus === 'blocked' && !ready) { withhold(id, d, provenance.integrationReason ?? 'blocked'); console.log(`withheld ${id} (${d}): ${provenance.integrationReason}`); continue; }
+    // a reviewed ('ready') sheet with no crops yet is cut in memory by the art model's cell rules (four-view-cells.mjs)
+    let crops = null;
+    const missing = DIRS.filter(v => !fs.existsSync(path.join(GEN, d, `${v}.native.png`))), sheet = path.join(GEN, `${d}.png`);
+    if (missing.length && ready && fs.existsSync(sheet)) {
+      try { crops = await cropFourViews(fs.readFileSync(sheet)); }
+      catch (error) { withhold(id, d, `no ${missing.join('/')} crop yet; cutting its sheet failed: ${error.message}`); console.log(`withheld ${id} (${d}): cutting its sheet failed: ${error.message}`); continue; }
+    } else if (missing.length) { withhold(id, d, `no ${missing.join('/')} crop yet`); continue; }
     const b = best.get(id);
-    if (pinned.has(id) ? pinned.get(id) === d : !b || b.n < +m[2]) best.set(id, { slug: m[1], version: d, n: +m[2], GEN });
+    if (pinned.has(id) ? pinned.get(id) === d : !b || b.n < +m[2]) best.set(id, { slug: m[1], version: d, n: +m[2], GEN, crops });
   }
   console.log(`sources: ${GENS.map(d => path.relative(root, d) || '.').join(', ')}`);
-  for (const [id, { slug, version, GEN }] of best) {
+  for (const [id, { slug, version, GEN, crops }] of best) {
     const dir = path.join(STORE, slug), source = path.join(dir, 'source.json');
     const old = fs.existsSync(source) ? JSON.parse(fs.readFileSync(source, 'utf8')) : null, files = {};
     fs.mkdirSync(dir, { recursive: true });
-    for (const v of DIRS) { const buf = fs.readFileSync(path.join(GEN, version, `${v}.native.png`)); files[v] = sha(buf); if (old?.files?.[v] !== files[v]) fs.writeFileSync(path.join(dir, `${v}.png`), buf); }
+    for (const v of DIRS) { const buf = crops ? crops.views[v] : fs.readFileSync(path.join(GEN, version, `${v}.native.png`)); files[v] = sha(buf); if (old?.files?.[v] !== files[v]) fs.writeFileSync(path.join(dir, `${v}.png`), buf); }
     fs.copyFileSync(path.join(GEN, `${version}.provenance.json`), path.join(dir, 'provenance.json'));
-    fs.writeFileSync(source, JSON.stringify({ id, version, files }, null, 1) + '\n');
+    fs.writeFileSync(source, JSON.stringify({ id, version, files, ...(crops ? { cropsBy: 'prep-views (four-view-cells.mjs)' } : {}) }, null, 1) + '\n');
     if (old?.version !== version) console.log(`synced ${id}: ${version}`);
+    if (crops) { console.log(`cropped ${id} (${version}) from its reviewed sheet`); if (crops.warnings.length) console.warn(`crop warnings ${id} (${version}): ${crops.warnings.join('; ')}`); }
   }
 }
 
@@ -73,8 +92,9 @@ for (const f of ['library', 'east-library', 'business-library', 'construction-li
     const it = JSON.parse(text.slice(i, j + 1)); if (!items.has(it.id)) items.set(it.id, it); i = j;
   }
 }
-const scales = fs.readFileSync(path.join(root, 'src/game/lots/scales.ts'), 'utf8');
-const owner = id => +(new RegExp(`"${id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}": ([0-9.]+)`).exec(scales)?.[1] ?? 1);
+const scales = fs.readFileSync(path.join(root, 'src/game/lots/scales.ts'), 'utf8'), studio = readScales();
+// the scale a building is drawn at: the studio's size now (scale-overrides.json, read by the game at runtime), else the table's (scales.ts)
+const owner = id => studio[id] ?? +(new RegExp(`"${id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}": ([0-9.]+)`).exec(scales)?.[1] ?? 1);
 // the buildings of the game: the inventory's buildings and baked lots (east:<id> is its subject's east view), and any library sprite of a
 // building kind the inventory has not seen (not one it files elsewhere or leaves out, such as the golf equipment, nor a removed id)
 const inventory = JSON.parse(fs.readFileSync(path.join(root, 'art/theme-consistency/inventory.json'), 'utf8'));
@@ -85,23 +105,32 @@ for (const x of inventory.items) if (x.category === 'buildings' || x.category ==
 for (const [id, it] of items) if (BUILDING_KINDS.has(it.kind) && !removedIds.has(id) && !seenIds.has(id)) subjectOf.set(id, id.replace(/^east:/, ''));
 
 // 2-3. size, footprint and ground point of every view
-const subjects = [], unmeasured = [];
+const subjects = [], unmeasured = [], capped = [];
+let gauged = 0;
 for (const slug of fs.readdirSync(STORE).filter(d => fs.existsSync(path.join(STORE, d, 'source.json'))).sort()) {
   const { id, version, files } = JSON.parse(fs.readFileSync(path.join(STORE, slug, 'source.json'), 'utf8')), base = items.get(id);
   if (!base) { console.warn(`skipped ${id}: not in the library`); continue; }
   const k = owner(id), meas = measures.subjects[id], views = [];
+  // the gauge's scale: frozen at the first gauging (written back below), so the studio's size multiplies the gauged size from then on
+  const kg = meas?.gaugeScale ?? k;
   for (const v of DIRS) {
     const png = fs.readFileSync(path.join(STORE, slug, `${v}.png`)), { data, info } = await sharp(png).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
     // the lowest opaque row: the near corner of the footprint (+hx, +hy)
     let by = -1, bx = 0, n = 0;
     for (let y = info.height - 1; y >= 0 && by < 0; y--) { for (let x = 0; x < info.width; x++) if (data[(y * info.width + x) * 4 + 3] > 128) { bx += x; n++; } if (n) by = y; }
     const m = meas?.views?.[v], door = m?.door && m.sha256 === files[v] ? m.door : 0;
-    views.push({ dir: v, png, W: info.width, H: info.height, bx: bx / n, by: by + 1, door, s: door ? measures.standardDoor / (door * k) : 0 });
+    views.push({ dir: v, png, W: info.width, H: info.height, bx: bx / n, by: by + 1, door, s: door ? measures.standardDoor / (door * kg) : 0 });
   }
   // business artwork is drawn at a share of its parcel (business/art.ts), whatever its size here: it keeps the original width, no door gauge
   const business = base.kind === 'business', measured = business ? [] : views.filter(x => x.s);
   if (measured.length) { const mean = measured.reduce((a, x) => a + x.s, 0) / measured.length; for (const x of views) if (!x.s) x.s = mean; }
   else { if (!business && !meas?.noGauge) unmeasured.push(`${id} (${version})`); const s = (base.quad[2] - base.quad[0]) / views[0].W; for (const x of views) x.s = s; }
+  if (measured.length && meas && meas.gaugeScale === undefined) { meas.gaugeScale = +k.toFixed(3); gauged++; }
+  // never past the picture's own pixels at the closest zoom: drawn at k, a view is 0.6 x W x s x k device px wide from its W native px
+  if (!business) {
+    const cap = 1 / (MIP0 * k), over = Math.max(...views.map(x => x.s / cap));
+    if (over > 1.001) { for (const x of views) x.s = Math.min(x.s, cap); capped.push(`${id} (x${over.toFixed(2)} past its pixels at scale ${k.toFixed(2)}: drawn ${(100 / over).toFixed(0)}% as big)`); }
+  }
   const f = business ? 1 : views[0].W * views[0].s / (base.quad[2] - base.quad[0]);
   for (const x of views) {
     const turn = x.dir === 'SE' || x.dir === 'NW';
@@ -118,7 +147,10 @@ for (const slug of fs.readdirSync(STORE).filter(d => fs.existsSync(path.join(STO
 }
 
 // 4. shelf-pack onto as many 2048 pages as it takes
-const all = subjects.flatMap(sub => sub.views.map(x => ({ sub, x, width: Math.round(x.w * MIP0), height: Math.round(x.h * MIP0) }))).sort((a, b) => b.height - a.height);
+// each view at its drawn size at the closest zoom (0.6 x its owner scale, at least 1), as far as its picture's own pixels go; no headroom for
+// the Lot Composer's +5% (the GPU memory: the game caps those few draws at the picture's pixels, newart.ts lookOf)
+const packAt = (sub, x) => Math.min(x.W / x.w, MIP0 * Math.max(1, owner(sub.id)));
+const all = subjects.flatMap(sub => sub.views.map(x => ({ sub, x, width: Math.max(1, Math.round(x.w * packAt(sub, x))), height: Math.max(1, Math.round(x.h * packAt(sub, x))) }))).sort((a, b) => b.height - a.height);
 const pages = [[]];
 let px = GUT, py = GUT, rowH = 0;
 for (const p of all) {
@@ -198,6 +230,8 @@ let cx = 0, cy = 0, ch = 0; const placed = [];
 for (const t of tiles) { if (cx + t.w > 1600) { cx = 0; cy += ch + 8; ch = 0; } placed.push({ input: t.input, left: cx, top: cy }); cx += t.w + 8; ch = Math.max(ch, t.h); }
 await sharp({ create: { width: 1600, height: cy + ch, channels: 4, background: '#d8e0e3' } }).composite(placed).png().toFile(path.join(REVIEW, 'contact.png'));
 console.log(`Prepared ${all.length} views of ${subjects.length} buildings on ${pages.length} page(s); review: ${path.relative(root, REVIEW)}/contact.png`);
+if (capped.length) console.log(`Capped at their pixels (drawn smaller than the door gauge or the original width asks, never pixelated): ${capped.join(', ')}`);
+if (gauged) { fs.writeFileSync(path.join(STORE, 'measures.json'), `${JSON.stringify(measures, null, 1)}\n`); console.log(`Froze the gauge scale of ${gauged} subject(s) in art/building-views/measures.json`); }
 if (unmeasured.length) console.log(`Unmeasured (kept at the original width; add door gauges to art/building-views/measures.json): ${unmeasured.join(', ')}`);
 
 // 5. coverage: every building subject, done (its views in the game) or missing (withheld versions and why, or none generated yet)

@@ -1,0 +1,10 @@
+{
+ "id": "variation:static-garage_brick-v2-be1ee461-plain:1",
+ "version": "variation-static-garage_brick-v2-be1ee461-plain-1-4views-v1",
+ "files": {
+  "NE": "edc99e90d6d0bcdc6ab81ecf0c3603954ae767bdae57546f5c3e79e9d9272d0a",
+  "SE": "09c341cc93c34df6786dbdee0e1cd041af076ea66e692eca3eef2380cdc1f6d6",
+  "SW": "e6d1306631cbc64bbc7da550e5d2bad074bb1b9cacfca97cc217977670651d94",
+  "NW": "a4869861ebf0fb037f82a432101bdeadcf659bd847bda0c36114dfc2e8c7ee31"
+ }
+}

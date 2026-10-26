@@ -1,0 +1,313 @@
+{
+  "id": "variation:gen-back-swingset-a10c81b7-plain-corner:1",
+  "generator": "reused-theme-art",
+  "deliveryType": "reuse-existing-four-view-art",
+  "newImageGeneration": false,
+  "sourceSubjectId": "gen:back-swingset",
+  "sourceSheet": "art/theme-consistency/generated/buildings/gen-back-swingset-4views-v2.png",
+  "sourceSha256": "24edf63c8e883f1cd38553050735a199408855adf2c22ff4c1a0ccb81b6f52e2",
+  "sourceProvenanceSha256": "ee84a34b6a2458507fdeb384a0be02857ac9f93258e149b58bbbffa69da25825",
+  "prompt": "Subject ID: gen:back-swingset. Category: buildings. Existing name: House back ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â swing set & grill.\n\nONE SUBJECT PER CALL. Reference image 1 is the owner's AUTHORITATIVE full Maple Bean street scene: use it for all materials, camera and visual theme. Reference image 2 is this individual building at its actual maximum-zoom configured game size: preserve that building's architecture, footprint, storeys, roof/chimney shapes, doors, window rhythm and identity; only restyle/reconstruct hidden sides. Create ONE transparent PNG sheet with exactly FOUR true 90-degree world rotations of the SAME building in row-major order NE, SE, SW, NW. Include real rear facades; never mirror a front or turn the camera. Camera fixed parallel 2:1 isometric, ground axes +/-26.565 degrees, verticals vertical. TIME: EARLY DUSK, still enough warm low side sunlight to see fine siding/brick/shingles clearly; windows and practical porch/exterior lamps already warmly lit. Not night, no moon, moonlight, black nighttime rendering or harsh overhead midday light. CRITICAL LIGHT: fixed SCREEN UPPER RIGHT in every quadrant, shadows toward SCREEN LOWER LEFT. Rotate geometry only; keep world sun fixed, right-facing planes warmer and left-facing planes cooler regardless of which facade is visible. NO HALLOWEEN whatsoever: remove pumpkins/jack-o-lanterns, cobwebs, ghosts, bats, skulls, skeletons, spooky details, wreaths, Halloween signage and seasonal string-light garlands from original. Autumn leaf colours are allowed in the theme but do not attach yard trees or landscape to the building. No people, characters, cars, neighbor objects, foundation platform, lawn tile or street. Only this specified building or shelter and its integral architectural features. Preserve its actual building type; shops, factories, venues, kiosks and pavilions must remain those structures rather than becoming houses. No broad garden bed. Exactly one complete building per quadrant with at least64px transparent clearance from ALL quadrant edges; keep sizes consistent with generous centre gutters. True alpha outside silhouette, no background haze, broad cast shadow, checkerboard, captions or decorative frame. Fine detailed coherent 3D illustrated miniature style matching reference1. Native source sheet will be calibrated to the original game's size later; do not claim the sheet canvas is actual CSS size.\n\n\nONE SUBJECT PER GENERATION CALL. Image 1 is the owner-selected full Maple Bean street THEME MASTER; Later identity references show one subject; any final camera diagram is geometry guidance only, never subject art. Fixed parallel 2:1 isometric camera, ground axes +/-26.565 degrees, verticals vertical. FOUR genuine 90-degree world rotations in row-major order NE, SE, SW, NW. Keep sun fixed SCREEN UPPER RIGHT and tiny contact shadows SCREEN LOWER LEFT while geometry rotates; never mirror a front or rotate lighting with the object. EARLY DUSK, with warm low side sunlight and readable fine details, not night or moonlight and no overhead midday lighting. No people or characters. NO HALLOWEEN: no pumpkins, jack-o-lanterns, cobwebs, ghosts, bats, skulls, skeletons, spooky signs or decorative string-light garlands. Autumn foliage colours are permitted. Request a SQUARE transparent PNG sheet with strict 2x2 independent cells. Leave AT LEAST 15% of EACH quadrant's width and height clear on EVERY side of its sprite, producing generous central gutters. Shrink all four views uniformly to fit; never crop roofs, branches, wheels or shadows. Exactly one complete subject per cell, consistent physical scale across all views. True alpha outside silhouettes, no backdrop, haze, checkerboard, captions, frames, terrain tile, scene or attached unrelated props. Native generated pixels are source art, not exact registered CSS/game size.\n\nThe LAST image, identified as camera-rotation-guide-only, is a DIAGRAM of four exact quarter-turn projections. Use ONLY its geometry and visible face order to prevent duplicate angles: front+right, right+back, back+left, left+front. Do not copy the colored blocks, marker, text, palette or captions into the sprite. The owner-selected street scene remains the ONLY STYLE authority and the original subject images remain the ONLY IDENTITY authority. A full 360-degree rigid turntable must preserve the same physical chimneys, doors, windows and roof equipment. Uniformly shrink complete views to leave broad clear margins.\n\nExisting configured max-camera CSS bounds are measured references. Generated rotations require shared-density calibration and placement registration; hidden-side dimensions are estimates.\n\nMeasured existing source views: [{\"id\":\"gen:back-swingset\",\"direction\":null,\"configuredCSS\":{\"left\":-126.23772,\"top\":-157.06656,\"right\":119.00179200000004,\"bottom\":59.599679999999985,\"width\":245.23951200000005,\"height\":216.66624},\"normalMaxCSS\":{\"left\":-147.21599999999998,\"top\":-183.168,\"right\":138.77760000000004,\"bottom\":69.50399999999998,\"width\":285.9936,\"height\":252.67199999999997},\"configuredReference\":\"art/theme-consistency/exports/buildings/gen-back-swingset.configured@2x.png\"}].\n\nReference roles and order: [{\"role\":\"authoritative-theme\",\"file\":\"art/theme-consistency/references/theme-authoritative.png\",\"sha256\":\"23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2\"},{\"role\":\"existing-subject-identity\",\"id\":\"gen:back-swingset\",\"direction\":null,\"file\":\"art/theme-consistency/exports/buildings/gen-back-swingset.configured@2x.png\",\"sha256\":\"14ec4c790344b721cb56348744118eb6768adbb9fb2704b6898e86151f825a0f\"},{\"role\":\"camera-rotation-guide-only\",\"file\":\"art/theme-consistency/references/rotation-guide-v1.png\",\"sha256\":\"8d60d56c563159d06a052d472856e067366834957936b942a749934883fd2e3c\"}].",
+  "references": [
+    {
+      "role": "authoritative-theme",
+      "file": "art/theme-consistency/references/theme-authoritative.png",
+      "sha256": "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2"
+    },
+    {
+      "role": "existing-subject-identity",
+      "id": "gen:back-swingset",
+      "direction": null,
+      "file": "art/theme-consistency/exports/buildings/gen-back-swingset.configured@2x.png",
+      "sha256": "14ec4c790344b721cb56348744118eb6768adbb9fb2704b6898e86151f825a0f"
+    },
+    {
+      "role": "camera-rotation-guide-only",
+      "file": "art/theme-consistency/references/rotation-guide-v1.png",
+      "sha256": "8d60d56c563159d06a052d472856e067366834957936b942a749934883fd2e3c"
+    }
+  ],
+  "originalProvenance": {
+    "id": "gen:back-swingset",
+    "sheet": "art/theme-consistency/generated/buildings/gen-back-swingset-4views-v1.png",
+    "source": "C:\\Users\\Francois Smit\\.codex\\generated_images\\01a15fe8-e26f-72b1-94e3-874ef3d8db8b\\exec-613910a0-87a4-442e-bcaa-4733ea6b49a0.png",
+    "prompt": "Subject ID: gen:back-swingset. Category: buildings. Existing name: House back ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â swing set & grill.\n\nONE SUBJECT PER CALL. Reference image 1 is the owner's AUTHORITATIVE full Maple Bean street scene: use it for all materials, camera and visual theme. Reference image 2 is this individual building at its actual maximum-zoom configured game size: preserve that building's architecture, footprint, storeys, roof/chimney shapes, doors, window rhythm and identity; only restyle/reconstruct hidden sides. Create ONE transparent PNG sheet with exactly FOUR true 90-degree world rotations of the SAME building in row-major order NE, SE, SW, NW. Include real rear facades; never mirror a front or turn the camera. Camera fixed parallel 2:1 isometric, ground axes +/-26.565 degrees, verticals vertical. TIME: EARLY DUSK, still enough warm low side sunlight to see fine siding/brick/shingles clearly; windows and practical porch/exterior lamps already warmly lit. Not night, no moon, moonlight, black nighttime rendering or harsh overhead midday light. CRITICAL LIGHT: fixed SCREEN UPPER RIGHT in every quadrant, shadows toward SCREEN LOWER LEFT. Rotate geometry only; keep world sun fixed, right-facing planes warmer and left-facing planes cooler regardless of which facade is visible. NO HALLOWEEN whatsoever: remove pumpkins/jack-o-lanterns, cobwebs, ghosts, bats, skulls, skeletons, spooky details, wreaths, Halloween signage and seasonal string-light garlands from original. Autumn leaf colours are allowed in the theme but do not attach yard trees or landscape to the building. No people, characters, cars, neighbor objects, foundation platform, lawn tile or street. Only this specified building or shelter and its integral architectural features. Preserve its actual building type; shops, factories, venues, kiosks and pavilions must remain those structures rather than becoming houses. No broad garden bed. Exactly one complete building per quadrant with at least64px transparent clearance from ALL quadrant edges; keep sizes consistent with generous centre gutters. True alpha outside silhouette, no background haze, broad cast shadow, checkerboard, captions or decorative frame. Fine detailed coherent 3D illustrated miniature style matching reference1. Native source sheet will be calibrated to the original game's size later; do not claim the sheet canvas is actual CSS size.\n\n\nONE SUBJECT PER GENERATION CALL. Image 1 is the owner-selected full Maple Bean street THEME MASTER; Later identity references show one subject; any final camera diagram is geometry guidance only, never subject art. Fixed parallel 2:1 isometric camera, ground axes +/-26.565 degrees, verticals vertical. FOUR genuine 90-degree world rotations in row-major order NE, SE, SW, NW. Keep sun fixed SCREEN UPPER RIGHT and tiny contact shadows SCREEN LOWER LEFT while geometry rotates; never mirror a front or rotate lighting with the object. EARLY DUSK, with warm low side sunlight and readable fine details, not night or moonlight and no overhead midday lighting. No people or characters. NO HALLOWEEN: no pumpkins, jack-o-lanterns, cobwebs, ghosts, bats, skulls, skeletons, spooky signs or decorative string-light garlands. Autumn foliage colours are permitted. Request a SQUARE transparent PNG sheet with strict 2x2 independent cells. Leave AT LEAST 15% of EACH quadrant's width and height clear on EVERY side of its sprite, producing generous central gutters. Shrink all four views uniformly to fit; never crop roofs, branches, wheels or shadows. Exactly one complete subject per cell, consistent physical scale across all views. True alpha outside silhouettes, no backdrop, haze, checkerboard, captions, frames, terrain tile, scene or attached unrelated props. Native generated pixels are source art, not exact registered CSS/game size.\n\nThe LAST image, identified as camera-rotation-guide-only, is a DIAGRAM of four exact quarter-turn projections. Use ONLY its geometry and visible face order to prevent duplicate angles: front+right, right+back, back+left, left+front. Do not copy the colored blocks, marker, text, palette or captions into the sprite. The owner-selected street scene remains the ONLY STYLE authority and the original subject images remain the ONLY IDENTITY authority. A full 360-degree rigid turntable must preserve the same physical chimneys, doors, windows and roof equipment. Uniformly shrink complete views to leave broad clear margins.\n\nExisting configured max-camera CSS bounds are measured references. Generated rotations require shared-density calibration and placement registration; hidden-side dimensions are estimates.\n\nMeasured existing source views: [{\"id\":\"gen:back-swingset\",\"direction\":null,\"configuredCSS\":{\"left\":-126.23772,\"top\":-157.06656,\"right\":119.00179200000004,\"bottom\":59.599679999999985,\"width\":245.23951200000005,\"height\":216.66624},\"normalMaxCSS\":{\"left\":-147.21599999999998,\"top\":-183.168,\"right\":138.77760000000004,\"bottom\":69.50399999999998,\"width\":285.9936,\"height\":252.67199999999997},\"configuredReference\":\"art/theme-consistency/exports/buildings/gen-back-swingset.configured@2x.png\"}].\n\nReference roles and order: [{\"role\":\"authoritative-theme\",\"file\":\"art/theme-consistency/references/theme-authoritative.png\",\"sha256\":\"23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2\"},{\"role\":\"existing-subject-identity\",\"id\":\"gen:back-swingset\",\"direction\":null,\"file\":\"art/theme-consistency/exports/buildings/gen-back-swingset.configured@2x.png\",\"sha256\":\"14ec4c790344b721cb56348744118eb6768adbb9fb2704b6898e86151f825a0f\"},{\"role\":\"camera-rotation-guide-only\",\"file\":\"art/theme-consistency/references/rotation-guide-v1.png\",\"sha256\":\"8d60d56c563159d06a052d472856e067366834957936b942a749934883fd2e3c\"}].",
+    "references": [
+      {
+        "role": "authoritative-theme",
+        "file": "art/theme-consistency/references/theme-authoritative.png",
+        "sha256": "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2"
+      },
+      {
+        "role": "existing-subject-identity",
+        "id": "gen:back-swingset",
+        "direction": null,
+        "file": "art/theme-consistency/exports/buildings/gen-back-swingset.configured@2x.png",
+        "sha256": "14ec4c790344b721cb56348744118eb6768adbb9fb2704b6898e86151f825a0f"
+      },
+      {
+        "role": "camera-rotation-guide-only",
+        "file": "art/theme-consistency/references/rotation-guide-v1.png",
+        "sha256": "8d60d56c563159d06a052d472856e067366834957936b942a749934883fd2e3c"
+      }
+    ],
+    "generator": "built-in image_gen",
+    "generatedAt": "2026-10-23T16:23:27.122Z",
+    "status": "generated-awaiting-visual-review",
+    "implementation": "Other AI handles runtime integration",
+    "layoutCorrection": {
+      "method": "Pixel-preserving clear-gap split and centred four-cell repack; no generation, resizing or repainting.",
+      "originalSheet": "art/theme-consistency/generated/buildings/gen-back-swingset-4views-v1.png",
+      "originalSheetSha256": "f863f3637682ab8913c99e2226db0c93fe72357705cdf851997be2b45bcd2dcf",
+      "originalDimensions": [
+        1254,
+        1254
+      ],
+      "outputDimensions": [
+        2048,
+        2048
+      ],
+      "outputSheetSha256": "24edf63c8e883f1cd38553050735a199408855adf2c22ff4c1a0ccb81b6f52e2",
+      "cellSize": 1024,
+      "minimumCellMarginFraction": 0.15,
+      "padding": 4,
+      "partitionMode": "row-first",
+      "rowFirstFailure": null,
+      "rowGap": {
+        "start": 582,
+        "endExclusive": 707,
+        "midpoint": 644,
+        "alphaThreshold": 8
+      },
+      "columnGaps": [
+        {
+          "row": 0,
+          "start": 631,
+          "endExclusive": 646,
+          "midpoint": 638,
+          "alphaThreshold": 8
+        },
+        {
+          "row": 1,
+          "start": 622,
+          "endExclusive": 633,
+          "midpoint": 627,
+          "alphaThreshold": 8
+        }
+      ],
+      "globalColumnGap": null,
+      "columnRowGaps": [],
+      "extractionRects": [
+        {
+          "direction": "NE",
+          "row": 0,
+          "column": 0,
+          "extraction": {
+            "left": 0,
+            "top": 13,
+            "width": 638,
+            "height": 631
+          },
+          "sourceTouchesCanvasThreshold8": false,
+          "nonzeroAlphaPixels": 199462,
+          "visibleAlphaPixelsThreshold8": 181786,
+          "nonzeroRgbaSha256": "345e154d5c47e3377bd9f560f98a0171546129fb0d20f4f4471c465e508faa1c",
+          "destination": {
+            "left": 193,
+            "top": 196,
+            "width": 638,
+            "height": 631
+          }
+        },
+        {
+          "direction": "SE",
+          "row": 0,
+          "column": 1,
+          "extraction": {
+            "left": 638,
+            "top": 23,
+            "width": 610,
+            "height": 621
+          },
+          "sourceTouchesCanvasThreshold8": false,
+          "nonzeroAlphaPixels": 195332,
+          "visibleAlphaPixelsThreshold8": 176344,
+          "nonzeroRgbaSha256": "ae425f701043ad8b56e6c4528c741b82c5280d5f2890f20804ce4d8800ca491d",
+          "destination": {
+            "left": 1231,
+            "top": 201,
+            "width": 610,
+            "height": 621
+          }
+        },
+        {
+          "direction": "SW",
+          "row": 1,
+          "column": 0,
+          "extraction": {
+            "left": 0,
+            "top": 644,
+            "width": 627,
+            "height": 610
+          },
+          "sourceTouchesCanvasThreshold8": false,
+          "nonzeroAlphaPixels": 179821,
+          "visibleAlphaPixelsThreshold8": 164882,
+          "nonzeroRgbaSha256": "9971bc0ff2030c4518cd4f036a6c879496d05db081939f864b45dbe6e088a463",
+          "destination": {
+            "left": 198,
+            "top": 1231,
+            "width": 627,
+            "height": 610
+          }
+        },
+        {
+          "direction": "NW",
+          "row": 1,
+          "column": 1,
+          "extraction": {
+            "left": 627,
+            "top": 644,
+            "width": 615,
+            "height": 610
+          },
+          "sourceTouchesCanvasThreshold8": false,
+          "nonzeroAlphaPixels": 183701,
+          "visibleAlphaPixelsThreshold8": 165881,
+          "nonzeroRgbaSha256": "a89a2af55c59fe9044fcd4b7395230e37646971d04f8cc6bf323996bd0ccc2e8",
+          "destination": {
+            "left": 1228,
+            "top": 1231,
+            "width": 615,
+            "height": 610
+          }
+        }
+      ],
+      "sourcePixelCounts": {
+        "nonzeroAlphaPixels": 758316,
+        "visibleAlphaPixelsThreshold8": 688893,
+        "nonzeroRgbaSha256": "d1bc7b05db8c73790c2330581afa2a512f05c0a39acc7d966ec1c30e2054b186"
+      },
+      "nonzeroAndVisiblePixelConservation": true,
+      "exactVisibleRgbaConservation": true,
+      "visualReviewRequired": true,
+      "warnings": []
+    },
+    "integrationStatus": "ready",
+    "integrationReason": "Exact pixel-conserving layout correction of finished master-theme building, original four facades retained; post-repack actual alpha over magenta and geometry reviewed. No new image generation."
+  },
+  "physicalIdentityEvidence": "Same red house back with blue side wing, chimney on left, rear deck, swing frame on right and sandbox in front. Corner projection retains the same main roof/wing layout.",
+  "quarterTurnOffset": 0,
+  "pixelEdits": "none; raw sheet, four native crops and existing image previews copied byte-for-byte, without repainting, recolouring, resizing or mirroring",
+  "previewPolicy": "Source preview copies are identity comparisons; target scale/calibration must be prepared using the target game ID.",
+  "integrationStatus": "ready",
+  "integrationReason": "Approved physical-identity reuse of selected existing theme artwork; copied delivery explicitly recorded, not fresh generation.",
+  "freshVisualApproval": false,
+  "copiedFiles": [
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-back-swingset-4views-v2.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-back-swingset-a10c81b7-plain-corner-1-4views-v1.png",
+      "sha256": "24edf63c8e883f1cd38553050735a199408855adf2c22ff4c1a0ccb81b6f52e2"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-back-swingset-4views-v2/NE.configured.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-back-swingset-a10c81b7-plain-corner-1-4views-v1/NE.configured.png",
+      "sha256": "4b1d9122d822e5b941047abc0c168a6bb8264099cb020131626e5d5233aa2fab"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-back-swingset-4views-v2/NE.configured@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-back-swingset-a10c81b7-plain-corner-1-4views-v1/NE.configured@2x.png",
+      "sha256": "e701a961f04f9a7e23e775a0c97000f0c43bf60416fbaf85fc96e0a556760416"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-back-swingset-4views-v2/NE.max.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-back-swingset-a10c81b7-plain-corner-1-4views-v1/NE.max.png",
+      "sha256": "068f3aa916881b9c5773453708e373112b090e416fe9aa77332b3e191aadd3c8"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-back-swingset-4views-v2/NE.max@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-back-swingset-a10c81b7-plain-corner-1-4views-v1/NE.max@2x.png",
+      "sha256": "a8e89404f46c10d71a7882cd494d601dc0605d3066f96cf8f0964fbf8fa32bd8"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-back-swingset-4views-v2/NE.native.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-back-swingset-a10c81b7-plain-corner-1-4views-v1/NE.native.png",
+      "sha256": "51f7b0a4bc1ff0fc51a6645fec4bb334a06be3a20da2f0928ea7817ee817f8f6"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-back-swingset-4views-v2/NW.configured.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-back-swingset-a10c81b7-plain-corner-1-4views-v1/NW.configured.png",
+      "sha256": "509322a792564f5810253a99d19e3db285317761caff6c7e4c6b8ed1ff32b6e0"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-back-swingset-4views-v2/NW.configured@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-back-swingset-a10c81b7-plain-corner-1-4views-v1/NW.configured@2x.png",
+      "sha256": "f7b3830a2c3751e53159d9aa9043832fa23cac08c46baaf270de7cdd1796a338"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-back-swingset-4views-v2/NW.max.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-back-swingset-a10c81b7-plain-corner-1-4views-v1/NW.max.png",
+      "sha256": "2643374a44dc3811c918cd9ae777ab8f83b631ec69d6d852f65aa2982f6c8678"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-back-swingset-4views-v2/NW.max@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-back-swingset-a10c81b7-plain-corner-1-4views-v1/NW.max@2x.png",
+      "sha256": "78e2064def00696cfe53446f38696601bfa7a6c120111617836f7c08a3895ec8"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-back-swingset-4views-v2/NW.native.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-back-swingset-a10c81b7-plain-corner-1-4views-v1/NW.native.png",
+      "sha256": "8686c5035ef34f20b4f537d967fbf027044d11f6dfb0ebaa89625999a75bfd87"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-back-swingset-4views-v2/SE.configured.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-back-swingset-a10c81b7-plain-corner-1-4views-v1/SE.configured.png",
+      "sha256": "64d74b111449abf9ff1326587ff89575b4ec9cfef08a1d0d75093065a9f5fe7e"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-back-swingset-4views-v2/SE.configured@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-back-swingset-a10c81b7-plain-corner-1-4views-v1/SE.configured@2x.png",
+      "sha256": "f3ff8451a3a38a6b38d8652cc6961fd61ff1d6e2b8670ed08b61152590ec14ea"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-back-swingset-4views-v2/SE.max.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-back-swingset-a10c81b7-plain-corner-1-4views-v1/SE.max.png",
+      "sha256": "e679a5b564748eb713a55e6a0099055a4160f2e744a675fc7782c93a18a9e36c"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-back-swingset-4views-v2/SE.max@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-back-swingset-a10c81b7-plain-corner-1-4views-v1/SE.max@2x.png",
+      "sha256": "5e380314947f51238d10983271b86da1df8781a5facf2a0fbdfee168e779584d"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-back-swingset-4views-v2/SE.native.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-back-swingset-a10c81b7-plain-corner-1-4views-v1/SE.native.png",
+      "sha256": "7f8d2ed6cbb6e8fd7fc5a225bc50be47bd9e384015c336642886abe2f969a237"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-back-swingset-4views-v2/SW.configured.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-back-swingset-a10c81b7-plain-corner-1-4views-v1/SW.configured.png",
+      "sha256": "393e03cc0e8452ca2a43b65a3952a1694136bdfbd832acbb93d5533b3e9ff3b4"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-back-swingset-4views-v2/SW.configured@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-back-swingset-a10c81b7-plain-corner-1-4views-v1/SW.configured@2x.png",
+      "sha256": "ee97c3ea9763aef99e212e274e34bade062699563db8008a065a3ea7747c0c03"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-back-swingset-4views-v2/SW.max.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-back-swingset-a10c81b7-plain-corner-1-4views-v1/SW.max.png",
+      "sha256": "c325ad838b864a6b79182f9e8fc2b952a03ad162de55e0b7b4adb47528a2b62c"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-back-swingset-4views-v2/SW.max@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-back-swingset-a10c81b7-plain-corner-1-4views-v1/SW.max@2x.png",
+      "sha256": "31305e50edc7ae32b6b1c7a962241c12f1718e0b261aad4a4303e3983b787c7e"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-back-swingset-4views-v2/SW.native.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-back-swingset-a10c81b7-plain-corner-1-4views-v1/SW.native.png",
+      "sha256": "7239a4414f1eefa088e0bdf34f7a67761afb56294231a1d281682558e2521a1a"
+    }
+  ]
+}

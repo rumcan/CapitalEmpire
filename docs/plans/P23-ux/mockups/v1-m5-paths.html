@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>P23 m5: Paths (cart paths and drives), drawn like roads</title>
+<link rel="stylesheet" href="kit.css"><script src="mock.js"></script></head>
+<body><div class="stage" id="s">
+  <img class="bg" src="bg/hole1-17.webp">
+  <svg class="ov" id="ov"></svg>
+</div>
+<script>
+const M = MOCK, S = document.getElementById('s'), ov = document.getElementById('ov');
+const cam = { X: 34675.788635831224, Y: 85368.5867209195, z: 0.17, w: 1600, h: 900 }, P = M.iso(cam);
+// a dirt cart path from hole 1's green (its service point on the green's edge) to hole 2's planned tee: one 45° bend, on the 1 m half grid
+const P0 = [1609, 1043], P1 = [1609, 1070], P2 = [1624, 1085];
+const band = (a, b, hw) => { const dx = b[0] - a[0], dy = b[1] - a[1], d = Math.hypot(dx, dy), nx = -dy / d * hw, ny = dx / d * hw; return [[a[0] + nx, a[1] + ny], [b[0] + nx, b[1] + ny], [b[0] - nx, b[1] - ny], [a[0] - nx, a[1] - ny]]; };
+const seg1 = band(P0, P1, 0.5), seg2 = band(P1, P2, 0.5), joint = M.circle(P1[0], P1[1], 0.5, 20);
+// hole 2's planned tee (a blueprint: dashed, nothing paid yet) where the path ends
+const tee2 = [[P2[0] + 2.5, P2[1] + 3], [P2[0] + 7.5, P2[1] + 3], [P2[0] + 7.5, P2[1] + 17], [P2[0] + 2.5, P2[1] + 17]];
+const p0 = P(...P0), p1 = P(...P1), p2 = P(...P2);
+M.svg(ov, `<g>${M.halfGrid(P, P2[0], P2[1], 7, '255,250,230', 0.45)}</g>
+  <path d="${M.poly(P, tee2)}" fill="rgba(125,211,252,0.16)" stroke="#7dd3fc" stroke-width="2" stroke-dasharray="6 4"/>
+  <path d="${M.poly(P, seg1)} ${M.poly(P, seg2)} ${M.poly(P, joint)}" fill="rgba(196,160,110,0.82)"/>
+  <path d="${M.line(P, [seg1[0], seg1[1]])} ${M.line(P, [seg1[3], seg1[2]])} ${M.line(P, [seg2[0], seg2[1]])} ${M.line(P, [seg2[3], seg2[2]])}" fill="none" stroke="#fff6dc" stroke-width="1.5" stroke-dasharray="7 5"/>
+  <circle cx="${p0[0]}" cy="${p0[1]}" r="11" fill="none" stroke="#6ee7a0" stroke-width="2.5"/><circle cx="${p0[0]}" cy="${p0[1]}" r="4.5" fill="#6ee7a0"/>
+  <circle cx="${p1[0]}" cy="${p1[1]}" r="5" fill="#ffd166" stroke="#1b1406" stroke-width="2"/>
+  <circle cx="${p2[0]}" cy="${p2[1]}" r="11" fill="none" stroke="#6ee7a0" stroke-width="2.5"/><circle cx="${p2[0]}" cy="${p2[1]}" r="4.5" fill="#6ee7a0"/>`);
+M.chrome(S, { stage: 2, active: 'paths', place: 'Golf club', money: '$521,880', season: { big: 'Founding season', small: 'Dec 1984 · 8 months to season end', done: 1, of: 9 } });
+M.pointer(S, p2[0], p2[1], null);
+S.insertAdjacentHTML('beforeend', `
+  <div class="tag big gold" style="left:${p2[0] + 24}px;top:${p2[1] + 18}px">96 m of dirt path · $384<span class="l2">ends on hole 2's tee · double-click or Enter to build</span></div>
+  <div class="tag" style="left:${p0[0] + 18}px;top:${p0[1] - 2}px">Starts at hole 1's green<span class="l2">snapped to its path point</span></div>
+  <div class="tag" style="left:${P(P2[0] + 7, P2[1] + 12)[0] - 20}px;top:${P(P2[0] + 7, P2[1] + 12)[1] + 6}px;border-color:rgba(125,211,252,.6)">Hole 2 tee · planned</div>`);
+S.insertAdjacentHTML('beforeend', `
+<div class="glass panel">
+  <div class="phead"><div class="badge"><img src="../../../../src/assets/ui/icons/sidewalk.webp"></div><div><h2>Paths</h2><div class="sub">The course's streets: built the way roads are</div></div>
+    <div class="undo"><span>↶</span><span class="off">↷</span></div></div>
+  <div class="tabs"><span class="on">Cart paths</span><span>Drives</span></div>
+  <div class="sec" style="margin-top:10px"><div class="seg"><span class="on">Draw</span><span>Upgrade · U</span></div></div>
+  <div class="sec" style="margin-top:10px">
+    <div class="card"><div class="th" style="background-image:url(tex/path.webp)"></div><div><div class="nm">Walking path</div><div class="ds">1.2 m · walkers only</div></div><div class="pr">$2<small>a metre</small></div></div>
+    <div class="card on"><div class="th" style="background-image:url(tex/dirt.webp)"></div><div><div class="nm">Dirt cart path</div><div class="ds">2 m · carts and walkers</div></div><div class="pr">$4<small>a metre</small></div></div>
+    <div class="card"><div class="th" style="background-image:url(tex/concrete.webp)"></div><div><div class="nm">Cement slab path</div><div class="ds">2.5 m · carts and walkers</div></div><div class="pr">$10<small>a metre</small></div></div>
+    <div class="card lock"><div class="th" style="background-image:url(tex/gravel.webp);filter:grayscale(.6)"></div><div><div class="nm">Paved cart path</div><div class="ds">3 m · carts and walkers</div></div><div class="pr">🔒 Tour 2<small>level</small></div></div>
+  </div>
+  <div class="box" style="margin-top:4px">
+    <div class="stat"><span class="muted">Route</span><b>3 points · 96 m</b></div>
+    <div class="stat"><span class="muted">Cost</span><b class="ok">$384</b></div>
+  </div>
+  <div class="sec" style="display:flex;gap:6px;margin-top:10px"><div class="primary" style="flex:1;padding:8px 14px"><div class="t" style="font-size:14px">Build · $384</div><span class="kc">Enter</span></div><span class="ghostbtn">Undo point</span><span class="ghostbtn">Cancel</span></div>
+  <div class="dim" style="font-size:11px;margin-top:8px;line-height:1.45">Click to start, click each bend, double-click to finish · points snap to greens, tees, building fronts, paths and roads · <span class="kc">Shift</span> straight</div>
+  <div class="more"><div class="h">More options <span class="cnt">trees · bends · replace</span><span class="chev">▸</span></div></div>
+</div>`);
+S.insertAdjacentHTML('beforeend', `
+  <div class="glass guide"><span class="step">Paths</span><span>Green ends snap to tees and greens (green rings) · a path that crosses a road gets a cart crossing, never a junction</span></div>
+  <div class="note" style="left:1130px;top:520px;max-width:300px"><span class="n">1</span>Holes connect like parks on a street: a path's ends <b>snap to a green's or tee's path point</b>, building fronts, paths and roads.</div>
+  <div class="note" style="left:470px;top:150px;max-width:250px"><span class="n">2</span>Prices <b>per metre</b> (paths) and per m² (surfaces), the same units everywhere; the live total sits at the pointer.</div>
+  <div class="title-strip">P23 mockup m5 · Paths (cart paths and drives)</div>`);
+</script>
+</body></html>

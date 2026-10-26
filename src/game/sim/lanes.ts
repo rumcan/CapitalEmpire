@@ -363,14 +363,17 @@ export class LaneGraph {
     for (const id of this.nodeLanes.get(n) ?? []) this.killLane(id);
     for (const id of this.nodeMoves.get(n) ?? []) this.killMove(id);
     this.signals.delete(n);
-    const io: ArmIO[] = n.arms.map((a, i) => { const ids = this.segDs.get(a.seg)!, fwd = a.seg.a === n; return { a, i, inD: fwd ? ids[1] : ids[0], outD: fwd ? ids[0] : ids[1] }; });
+    // a cart path's arm (T084: no lanes) takes no part: a road it meets runs on through as if it were not there; a node of cart paths only builds
+    // nothing. (i is the place in io, which majorArms, twoArms and the phases index by)
+    const io: ArmIO[] = n.arms.filter(a => a.cls.laneCentres.length > 0).map((a, i) => { const ids = this.segDs.get(a.seg)!, fwd = a.seg.a === n; return { a, i, inD: fwd ? ids[1] : ids[0], outD: fwd ? ids[0] : ids[1] }; });
     for (const x of io) {
       this.dsegs[x.inD]!.out = [];
       for (const id of this.dsegs[x.inD]!.lanes) this.L(id).next = [];
       for (const id of this.dsegs[x.outD]!.lanes) this.L(id).prev = [];
     }
     const nl: number[] = [], mv: number[] = [];
-    if (n.rb > 0) this.ring(n, io, nl, mv);
+    if (!io.length) { /* cart paths only (T084): no lanes, no movements */ }
+    else if (n.rb > 0) this.ring(n, io, nl, mv);
     else if (io.length === 1) this.deadEnd(io, nl, mv, n);
     else if (io.length === 2) this.twoArms(io, nl, mv, n);
     else this.junction(n, io, nl, mv);
@@ -628,7 +631,7 @@ export function checkGraph(g: LaneGraph): string[] {
   }
   for (const d of g.dsegs) {
     if (!d) continue;
-    if (!d.lanes.length && !(d.seg.cls.oneway && d.dir === 1)) out.push(`${d.key}: no lanes`);
+    if (!d.lanes.length && !(d.seg.cls.oneway && d.dir === 1) && !d.seg.cls.noCars) out.push(`${d.key}: no lanes`);
     for (const id of d.lanes) if (!L[id]) out.push(`${d.key}: lane ${id} missing`);
   }
   return out;

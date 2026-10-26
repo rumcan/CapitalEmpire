@@ -1,0 +1,10 @@
+{
+ "id": "static:garage_brick",
+ "version": "static-garage_brick-4views-v2",
+ "files": {
+  "NE": "098f12c22bb7f32075ad0cd0a5cb65d0037ff45138565a9cd6e74dea1b5ca843",
+  "SE": "5734c89be5fdcb51b9a98b908c3d30ab70a9be050d94dfaec68bc16058e6040c",
+  "SW": "c3776651beb3b100fb73ca022afcbf6a743b7c908f4bec979add3e7d11f20a31",
+  "NW": "fd1ad7e21ca7e3162b536416a6e1a5449da18031b5f1d1b8039c33df54cb4675"
+ }
+}

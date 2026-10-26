@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>P23 m4: the Holes panel with More options open</title>
+<link rel="stylesheet" href="kit.css"><script src="mock.js"></script>
+<style>
+  .stamp { width: 31px; height: 30px; border-radius: 9px; border: 1px solid var(--line); background: rgba(255,255,255,.03); display: grid; place-items: center; }
+  .stamp svg { width: 26px; height: 20px; }
+  .seg span { white-space: nowrap; }
+  .drawer { max-height: 372px; overflow: hidden; position: relative; }
+  .drawer:after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 26px; background: linear-gradient(transparent, rgba(20,21,25,.95)); }
+  .opt .seg { flex: 1; }
+  .opt .seg span { padding: 4px 6px; font-size: 11.5px; }
+  input[type=range] { accent-color: #f5b52e; }
+</style></head>
+<body><div class="stage" id="s">
+  <img class="bg" src="bg/fairway-30.webp">
+  <svg class="ov" id="ov"></svg>
+</div>
+<script>
+const M = MOCK, S = document.getElementById('s'), ov = document.getElementById('ov');
+const cam = { X: 33395.788635831224, Y: 82808.5867209195, z: 0.3, w: 1600, h: 900 }, P = M.iso(cam);
+// a Box fill of water being dragged in the rough below the fairway: 10 x 6 cells (Advanced: Fill = Box)
+const cells = []; for (let i = 3132; i < 3142; i++) for (let j = 2078; j < 2084; j++) cells.push([i, j]);
+const c = M.cells(P, cells), A = P(1566, 1039), B = P(1571, 1042);
+M.svg(ov, `<g>${M.halfGrid(P, 1568.5, 1040.5, 8, '230,245,255', 0.38)}</g>
+  <path d="${c.fill}" fill="rgba(46,104,160,0.62)"/>
+  <path d="${c.stroke}" fill="none" stroke="#e8f6ff" stroke-width="1.8"/>
+  <circle cx="${A[0]}" cy="${A[1]}" r="5" fill="#fff" stroke="#1b1406" stroke-width="2"/>`);
+M.chrome(S, { stage: 3, active: 'holes', place: 'Golf club', money: '$512,410', season: { big: 'Founding season', small: 'Feb 1985 · 6 months to season end', done: 3, of: 9 } });
+M.pointer(S, B[0], B[1], { tex: 'water', wall: '#33465a', l1: 'Water · 60 m² · $600', l2: 'box 10 × 6 cells · release to fill' });
+const sw = (id, name, n, on) => `<div class="sw${on ? ' on' : ''}"><span class="n">${n}</span><div class="d" style="background-image:url(tex/${id}.webp)"></div>${name}</div>`;
+const glyph = (k) => `<span class="glyph" style="grid-template-columns:repeat(${k},4px)">${'<i></i>'.repeat(k * k)}</span>`;
+const blob = (fill, d) => `<svg viewBox="0 0 34 26"><path d="${d}" fill="${fill}" stroke="rgba(255,255,255,.6)" stroke-width="1"/></svg>`;
+S.insertAdjacentHTML('beforeend', `
+<div class="glass panel">
+  <div class="phead"><div class="badge"><img src="../../../../src/assets/ui/icons/trophy.webp"></div><div><h2>Holes</h2><div class="sub">Each hole is a park: build it, then shape it</div></div>
+    <div class="undo"><span>↶</span><span class="off">↷</span></div></div>
+  <div class="sec"><div class="primary" style="padding:8px 14px"><span class="plus">+</span><div><div class="t">New hole</div></div><span class="kc">N</span></div></div>
+  <div class="sec"><div class="caps">Shape by hand <span class="hint">1 m cells · keys 1–6</span></div>
+    <div class="swatches">${sw('fairway', 'Fairway', 1)}${sw('green', 'Green', 2)}${sw('tee', 'Tee', 3)}${sw('rough', 'Rough', 4)}${sw('bunker', 'Bunker', 5)}${sw('water', 'Water', 6, true)}</div>
+    <div class="row" style="margin-top:9px">
+      <span class="size">${glyph(1)}1</span><span class="size">${glyph(2)}2×2</span><span class="size">${glyph(3)}3×3</span><span class="size on">${glyph(4)}4×4</span><span class="pill" style="margin-left:auto">Erase <span class="kc">Alt</span></span>
+    </div>
+  </div>
+  <div class="more"><div class="h">More options <span class="cnt">remembered open</span><span class="chev">▾</span></div>
+    <div class="drawer">
+      <div class="opt"><span class="lbl">Fill</span><div class="seg"><span>Brush</span><span class="on">Box</span><span>Lasso</span></div></div>
+      <div class="opt"><span class="lbl">Over others</span><div class="seg"><span class="on">Slide past</span><span>Paint over · Shift</span></div></div>
+      <div class="opt"><span class="lbl">Which hole</span><div class="seg"><span class="on">Where I paint</span><span>Lock: hole 3</span></div></div>
+      <div class="opt"><span class="lbl">Planting</span><div class="seg"><span class="on">Seed · grows in</span><span>Sod · ready, ×4 $</span></div></div>
+      <div class="opt"><span class="lbl">Stamps</span><div class="row" style="gap:5px">
+        <div class="stamp" title="Kidney green">${blob('#5fb04a', 'M5 14 C5 5 15 4 18 9 C21 4 31 6 29 14 C28 22 8 23 5 14 Z')}</div>
+        <div class="stamp" title="Pot bunker">${blob('#e8dcc0', 'M9 13 a8 7 0 1 0 16 0 a8 7 0 1 0 -16 0')}</div>
+        <div class="stamp" title="Crescent bunker">${blob('#e8dcc0', 'M4 16 C8 6 26 6 30 16 C24 11 10 11 4 16 Z')}</div>
+        <div class="stamp" title="Pond">${blob('#2f6a9e', 'M4 13 C4 5 14 3 20 6 C28 8 31 14 27 19 C22 24 7 23 4 13 Z')}</div>
+        <div class="stamp" title="Creek">${blob('#2f6a9e', 'M2 18 C8 10 12 20 18 12 C23 6 27 14 32 8 L32 12 C27 18 23 10 18 16 C12 24 8 14 2 22 Z')}</div>
+        <div class="stamp" title="Tee box">${blob('#79b85a', 'M6 9 L28 9 Q30 9 30 11 L30 15 Q30 17 28 17 L6 17 Q4 17 4 15 L4 11 Q4 9 6 9 Z')}</div>
+      </div></div>
+      <div class="opt"><span class="lbl">Round brush</span><input type="range" min="1" max="20" value="6" style="flex:1"><span class="muted" style="width:34px;text-align:right">12 m</span></div>
+      <div class="opt"><span class="lbl">Mowing stripes</span><div class="seg"><span class="on">Along</span><span>Across</span><span>Checker</span><span>None</span></div></div>
+      <div class="opt"><span class="lbl">Collars</span><div class="seg"><span class="on">Automatic</span><span>Wider</span><span>Off</span></div></div>
+      <div class="opt"><span class="lbl">Ground height</span><div class="seg"><span>Raise</span><span>Lower</span><span>Smooth</span><span>Flatten</span></div></div>
+      <div class="opt"><span class="lbl">Saved holes</span><span class="ghostbtn" style="padding:4px 10px">From the studio · 3 ▸</span></div>
+    </div>
+  </div>
+</div>`);
+S.insertAdjacentHTML('beforeend', `
+  <div class="glass guide"><span class="step">Box fill</span><span>Drag a rectangle of cells · release to fill · <span class="kc">Esc</span> cancels the drag · the drawer stays open next time</span></div>
+  <div class="note" style="left:1040px;top:560px;max-width:330px"><span class="n">1</span>Advanced tools fill <b>cells too</b>: Box and Lasso snap to the 1 m grid, so stamps and fills merge with brushed cells as droplets.</div>
+  <div class="note" style="left:470px;top:380px;max-width:250px"><span class="n">2</span>One drawer per panel, <b>one level deep</b>: no tabs inside tabs. It remembers whether you left it open.</div>
+  <div class="title-strip">P23 mockup m4 · More options open (the Advanced drawer)</div>`);
+</script>
+</body></html>

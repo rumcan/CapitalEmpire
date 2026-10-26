@@ -1,0 +1,10 @@
+{
+ "id": "variation:town-postoffice-1c7025b8-plain:1",
+ "version": "variation-town-postoffice-1c7025b8-plain-1-4views-v1",
+ "files": {
+  "NE": "3aad5768ffcb16297d215a86b923bddaf708b45558d812b4e1d2af47546d2848",
+  "SE": "a32d16be538c4a1a4dd1f0db36bc2540b0d1909683c7e8529d18e6d7adb44c24",
+  "SW": "44b69358c4c9b9591e612bdb14affe66f9b80fbfc440c5fc9af22c6746fe65a0",
+  "NW": "4b850ad7306326ff64d4a40e5d4b9cee3b51e78cebf2bed0da52d506040ba94c"
+ }
+}
