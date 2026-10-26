@@ -1,0 +1,130 @@
+{
+  "id": "variation:ref-building-drive-in-screen-b0bccc2a-plain:1",
+  "generator": "image_gen",
+  "generated": "2026-10-24",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-e8c9edae-12f3-4d87-b3cd-762eb5d26fa0.png",
+  "prompt": "Edit this existing transparent game sprite sheet, maintaining EXACT shared matte miniature theme, material colours, physical building identity, early dusk and fixed SCREEN UPPER RIGHT SUN. Concrete correction: NE/NW both show identical front slant, SE/SW both identical back slant. Make real opposite-corner SE and NW views; keep projection screen, rear braces, ladder and control boxes physically fixed. Preserve every other correct cell and all physical architecture/equipment. Never mirror text, geometry or lighting; draw actual opposite corner. Keep 2x2 NEtop-left,SEtop-right,SWbottom-left,NWbottom-right. Output SQUARE 1:1 CANVAS with four SMALL complete sprites, each only60% cellheight, full roof/chimney/cross withincanvasand100pxclear gutters. Actual transparentalpha=0 outsidephysicalbuilding. No floor/greybackground/terrain/shadow/haze/labels/captions. Reference1 is EDIT TARGET, preserve its artwork rather than invent a new building. ",
+  "references": [
+    {
+      "role": "edit-target",
+      "file": "art/theme-consistency/generated/buildings/variation-ref-building-drive-in-screen-b0bccc2a-plain-1-4views-v1.png"
+    }
+  ],
+  "integrationStatus": "ready",
+  "integrationReason": "Two SINGLE corrections fix SE rear and NW front to opposite rising-right slants, complementing retained falling-right NEfront/SWrear. Readable unmirrored sign, physical truss/catwalk/control equipment, fixed upper-right dusk; other original views preserved through exact native hash chain. Actual alpha clean.",
+  "singleViewCorrection": {
+    "sourceSheet": "art/theme-consistency/generated/buildings/variation-ref-building-drive-in-screen-b0bccc2a-plain-1-4views-v3.png",
+    "sourceSheetSha256": "b8cc50150c82a4fd73b77c77aa368ec8d1c302c45388cc33a80dc331126c5b82",
+    "direction": "NW",
+    "copiedOriginalDirection": null,
+    "newGeneratedSingle": "art/theme-consistency/generated/buildings/variation-ref-building-drive-in-screen-b0bccc2a-plain-1-single-corrections-v3/NW.png",
+    "newGeneratedSingleSha256": "cb12fcf8c6d467b66b8dbc287008a2324a256ab24f88777510d44eb17e76ceb5",
+    "newGeneratedSingleProvenance": {
+      "id": "variation:ref-building-drive-in-screen-b0bccc2a-plain:1",
+      "direction": "NW",
+      "generator": "image_gen",
+      "generated": "2026-10-24",
+      "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-97497bb6-fe01-4286-88eb-638175cfef1e.png",
+      "prompt": "ONE SINGLE ISOLATED BUILDING SPRITE, NOT A FOUR-VIEW SHEET. The reference is this SAME existing building shown from several corners; preserve its exact architecture and matte Maple Bean miniature style. We need a genuinely different rigid rotation, direction NW. Show FRONT of drive-in projection screen from opposite front corner toexistingNE. Physical top edge MUST rise to RIGHT: screen LEFT edge SHORTER and LOWER, RIGHT edge TALLER and HIGHER. Readable MAPLE FALLS DRIVE-IN sign onfrontsamephysicalside, notmirrored. White movieprojectionface and perimeterbulbs, steeltrusslegs, controlboxes fixed. This mustNOT repeat lefttall/rightshortcorner. Fixed orthographic2:1 camera: both ground axes at +/-26.565degrees, wallsvertical, no head-on elevation/perspective vanishingpoint. CRITICAL: fixed SCREEN UPPER RIGHT DUSK SUN and warm amber practical lights; right roof/wall planes warm, leftplanes cooler even though buildingturns. Reconstructhiddenfaces; NEVER mirror sourcepixels or lighting or copy the samecorner. Square1:1PNG with onecompleteSMALLbuilding occupying60%canvasheight, generous100pxfullyclear margins, truealpha0outsidephysicalbuilding. No other view, no grid, no label, no ground surface/floor/paving/yard/greybackdrop/broadshadow/haze/gradient/checkerboard/people. Only physical building and integralporch/steps/supports.",
+      "references": [
+        {
+          "role": "identity-style-and-physical-geometry-reference",
+          "file": "art/theme-consistency/generated/buildings/variation-ref-building-drive-in-screen-b0bccc2a-plain-1-4views-v2.png"
+        }
+      ],
+      "assemblySourceSheet": "art/theme-consistency/generated/buildings/variation-ref-building-drive-in-screen-b0bccc2a-plain-1-4views-v2.png",
+      "integrationStatus": "blocked",
+      "integrationReason": "Single actual-turn correction; inspect before four-view assembly."
+    },
+    "newViewScale": {
+      "factor": 0.4301397205588822,
+      "method": "median visible building height of unchanged three views; source scale retained, not certified door calibration",
+      "targetHeight": 431,
+      "oldDoor": null,
+      "newDoor": null,
+      "resizeKernel": "lanczos3; new view only"
+    },
+    "unchangedViewsPreservedByteForByte": [
+      "NE",
+      "SE",
+      "SW"
+    ],
+    "originalViewEvidence": [
+      {
+        "direction": "NE",
+        "canonicalRejected": null,
+        "sourceCellSafeMargin": true,
+        "originalNativeSha256": "ba01a8c50c66711ed946fa3583a1814eb223f2ee9b7a30e202cab2b004d45b27",
+        "originalVisibleHeight": 417,
+        "nonzeroAlphaPixels": 118548,
+        "rgbaSha256": "b14a491159702e64285dbd4d61ffcdbf923a6844497bba9f2ccd2b9fb9b96bd7"
+      },
+      {
+        "direction": "SE",
+        "canonicalRejected": null,
+        "sourceCellSafeMargin": true,
+        "originalNativeSha256": "6dfa7b9744ca8649a4473d3c5df36572e4397d9d070186406f908b7c4f9505ca",
+        "originalVisibleHeight": 431,
+        "nonzeroAlphaPixels": 106396,
+        "rgbaSha256": "38716b512e0b88ce0bdbca7718735f63f6ee640913c8addeff93a54c660a2caa"
+      },
+      {
+        "direction": "SW",
+        "canonicalRejected": null,
+        "sourceCellSafeMargin": true,
+        "originalNativeSha256": "c92400a1b16f539e6182b5cf220cec2b615688d3fc63460e2caabfea0cd7ce22",
+        "originalVisibleHeight": 442,
+        "nonzeroAlphaPixels": 122622,
+        "rgbaSha256": "24f62e0d56e0f12a53c6a1f665741d8811c1ed25bd3418608bd858b4a0dee0b1"
+      },
+      {
+        "direction": "NW",
+        "canonicalRejected": null,
+        "sourceCellSafeMargin": true,
+        "originalNativeSha256": "0b305b9d981d18602727be206eacaadabb784392ccfc256519e3f55acf4b8c96",
+        "originalVisibleHeight": 431,
+        "nonzeroAlphaPixels": 121992,
+        "rgbaSha256": "b9ab8a768fe62beb9ce634cdc86894ed03fffb1579b72ec4cc21d6c4c671a0da"
+      }
+    ],
+    "placements": [
+      {
+        "direction": "NE",
+        "left": 198,
+        "top": 219,
+        "width": 627,
+        "height": 586,
+        "nativeSha256": "ba01a8c50c66711ed946fa3583a1814eb223f2ee9b7a30e202cab2b004d45b27",
+        "unchangedOriginalNative": true
+      },
+      {
+        "direction": "SE",
+        "left": 1243,
+        "top": 223,
+        "width": 586,
+        "height": 578,
+        "nativeSha256": "6dfa7b9744ca8649a4473d3c5df36572e4397d9d070186406f908b7c4f9505ca",
+        "unchangedOriginalNative": true
+      },
+      {
+        "direction": "SW",
+        "left": 198,
+        "top": 1224,
+        "width": 627,
+        "height": 624,
+        "nativeSha256": "c92400a1b16f539e6182b5cf220cec2b615688d3fc63460e2caabfea0cd7ce22",
+        "unchangedOriginalNative": true
+      },
+      {
+        "direction": "NW",
+        "left": 1285,
+        "top": 1267,
+        "width": 501,
+        "height": 538,
+        "nativeSha256": "a52c14b05293efd2b556ecd3619ea038b430e5e21534c1af3a664b58d7a2a207",
+        "unchangedOriginalNative": false
+      }
+    ],
+    "outputSha256": "df0c4d5d1cc5f90f82db30b5b20fe0cd73e5e3701c79d341277e0fa3318628bf"
+  }
+}

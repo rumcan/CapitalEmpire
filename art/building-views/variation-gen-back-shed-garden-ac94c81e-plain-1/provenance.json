@@ -1,0 +1,283 @@
+{
+  "id": "variation:gen-back-shed-garden-ac94c81e-plain:1",
+  "generator": "image_gen",
+  "generated": "2026-10-24",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-ea829208-3393-401b-b4d4-9651d99051c2.png",
+  "prompt": "ONE GAME ASSET CUTOUT on EMPTY TRANSPARENT ALPHA, RGBA PNG. Reference1 is STYLE ONLY: the Maple Bean street's coherent miniature 3D illustration, softly textured matte materials, restrained rich colours, charcoal roofs, warm amber lamps, readable fine detail, early dusk with remaining daylight. Reference2 shows IDENTITY ONLY: preserve this building's architecture, not its old rendering or blue night cast. It must look natural beside the buildings in reference1. Fixed 2:1 isometric camera and SCREEN UPPER RIGHT SUN in every view; right-facing planes warm, left-facing planes cooler. Exactly four true rigid quarter turns of the SAME physical object on a square 2x2 sheet: NE front+right, SE right+back, SW back+left, NW left+front. Same roof, windows, equipment and physical scale throughout; reconstruct hidden sides, never mirror a front. Centre each complete sprite within its own cell with20% blank margins on every side. Empty alpha in corners, gutters and gaps, zero clipping. NO BACKDROP OR FLOOR: no stage, ground surface, paving, terrain tile, foliage, leaves, broad shadow, haze, gradient, checkerboard, caption, divider, view label or frame. No people, vehicles, Halloween, pumpkins, skulls, cobwebs, spooky signage or decorative garlands. Only the physical building and integral structural parts, no attached landscape.  Subject library ID variation:gen-back-shed-garden-ac94c81e-plain:1. Grey timber house rear with tall central gable and lower side gable, rear timber deck/steps and warm door/window. One low timber shed alongside as this specific assembly identity; omit vegetable plot, laundry line, bins and detached yard objects. Source flat elevation must become proper 2:1 isometric volume.",
+  "references": [
+    {
+      "role": "authoritative-theme",
+      "file": "art/theme-consistency/references/theme-authoritative.png",
+      "sha256": "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2"
+    },
+    {
+      "role": "existing-subject-identity",
+      "id": "variation:gen-back-shed-garden-ac94c81e-plain:1",
+      "direction": null,
+      "file": "art/theme-consistency/exports/buildings/variation-gen-back-shed-garden-ac94c81e-plain-1.configured@2x.png",
+      "sha256": "f08d73d48fb877e96c9bccd18cb0cc35692c34a4014307e96dfd4040d3010594"
+    }
+  ],
+  "integrationStatus": "ready",
+  "integrationReason": "Full4-viewpostassemblyinspectionovermagenta atvisible-boundzoom confirms true distinctquarterturns, sharedfixed2:1camera/upper-rightdusk/mastermaterials/no surroundingfloor. AlphaPASS0warnings; unchanged3PNGbytesverified ateachreplacementstep. Physicalbuildingheightretained, doormeasurementnotcertified.",
+  "sourceVisualReview": {
+    "reviewer": "source_review_resume",
+    "actualAlphaBackground": "magenta #ff00c8",
+    "theme": "references/theme-authoritative.png",
+    "sourceOnly": true,
+    "geometry": "correction required",
+    "gameScaleNotCertified": true
+  },
+  "layoutCorrection": {
+    "method": "Pixel-preserving clear-gap split and centred four-cell repack; no generation, resizing or repainting.",
+    "originalSheet": "art/theme-consistency/generated/buildings/variation-gen-back-shed-garden-ac94c81e-plain-1-4views-v1.png",
+    "originalSheetSha256": "61c10c6a37bed8faa1bb02d7542ff2ee0ecd52debf55a87bd01d8e9b39a5637c",
+    "originalDimensions": [
+      1430,
+      1100
+    ],
+    "outputDimensions": [
+      2304,
+      2304
+    ],
+    "outputSheetSha256": "c8eaedd6d34735e9106c00d22d84a1ff1b1af41058c3451b1b84af4df821dcdd",
+    "cellSize": 1152,
+    "minimumCellMarginFraction": 0.15,
+    "padding": 4,
+    "partitionMode": "row-first",
+    "rowFirstFailure": null,
+    "rowGap": {
+      "start": 518,
+      "endExclusive": 543,
+      "midpoint": 530,
+      "alphaThreshold": 8
+    },
+    "columnGaps": [
+      {
+        "row": 0,
+        "start": 715,
+        "endExclusive": 729,
+        "midpoint": 722,
+        "alphaThreshold": 8
+      },
+      {
+        "row": 1,
+        "start": 677,
+        "endExclusive": 759,
+        "midpoint": 718,
+        "alphaThreshold": 8
+      }
+    ],
+    "globalColumnGap": null,
+    "columnRowGaps": [],
+    "extractionRects": [
+      {
+        "direction": "NE",
+        "row": 0,
+        "column": 0,
+        "extraction": {
+          "left": 17,
+          "top": 0,
+          "width": 705,
+          "height": 526
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 221004,
+        "visibleAlphaPixelsThreshold8": 209901,
+        "nonzeroRgbaSha256": "7109d74bf51f4ad18fd9e999e83d8d215f7a1e015eb79d7dcd0a534bd70a189c",
+        "destination": {
+          "left": 223,
+          "top": 313,
+          "width": 705,
+          "height": 526
+        }
+      },
+      {
+        "direction": "SE",
+        "row": 0,
+        "column": 1,
+        "extraction": {
+          "left": 722,
+          "top": 11,
+          "width": 699,
+          "height": 519
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 218135,
+        "visibleAlphaPixelsThreshold8": 207379,
+        "nonzeroRgbaSha256": "8dacec52039192b26fcf948a5e06ecb1dd3ae32eeb8400a2badfc45f1bdbc462",
+        "destination": {
+          "left": 1378,
+          "top": 316,
+          "width": 699,
+          "height": 519
+        }
+      },
+      {
+        "direction": "SW",
+        "row": 1,
+        "column": 0,
+        "extraction": {
+          "left": 0,
+          "top": 531,
+          "width": 718,
+          "height": 569
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 217074,
+        "visibleAlphaPixelsThreshold8": 203177,
+        "nonzeroRgbaSha256": "b30abf9d73815a026a2365b666fd9373725182a5eaf1cdd4abab3adb208cdc33",
+        "destination": {
+          "left": 217,
+          "top": 1443,
+          "width": 718,
+          "height": 569
+        }
+      },
+      {
+        "direction": "NW",
+        "row": 1,
+        "column": 1,
+        "extraction": {
+          "left": 718,
+          "top": 530,
+          "width": 698,
+          "height": 570
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 224306,
+        "visibleAlphaPixelsThreshold8": 211552,
+        "nonzeroRgbaSha256": "52a11898fb64fdd761bd7b503f513dc260ee1a15a7e594ae6004f359497043f1",
+        "destination": {
+          "left": 1379,
+          "top": 1443,
+          "width": 698,
+          "height": 570
+        }
+      }
+    ],
+    "sourcePixelCounts": {
+      "nonzeroAlphaPixels": 880519,
+      "visibleAlphaPixelsThreshold8": 832009,
+      "nonzeroRgbaSha256": "88b3bfe6cb0008b4cc6ceff1e6c6019b725ff7a027973af6c99b23aa17c582e3"
+    },
+    "nonzeroAndVisiblePixelConservation": true,
+    "exactVisibleRgbaConservation": true,
+    "visualReviewRequired": true,
+    "warnings": []
+  },
+  "singleViewCorrection": {
+    "sourceSheet": "art/theme-consistency/generated/buildings/variation-gen-back-shed-garden-ac94c81e-plain-1-4views-v2.png",
+    "sourceSheetSha256": "c8eaedd6d34735e9106c00d22d84a1ff1b1af41058c3451b1b84af4df821dcdd",
+    "direction": "NW",
+    "copiedOriginalDirection": null,
+    "newGeneratedSingle": "art/theme-consistency/generated/buildings/variation-gen-back-shed-garden-ac94c81e-plain-1-single-corrections-v2/NW.png",
+    "newGeneratedSingleSha256": "dfb3d3eb3570b3e15e554b0f61ffa532d6a95d9059cddd603da87d9f17b6e014",
+    "newGeneratedSingleProvenance": {
+      "id": "variation:gen-back-shed-garden-ac94c81e-plain:1",
+      "direction": "NW",
+      "generator": "image_gen",
+      "generated": "2026-10-24",
+      "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-d29c6d9a-b490-4bfe-a8ec-b06d7465903a.png",
+      "prompt": "ONE SINGLE ISOLATED BUILDING SPRITE, NOT A FOUR-VIEW SHEET. The reference is this SAME existing building shown from several corners; preserve its exact architecture and matte Maple Bean miniature style. We need a genuinely different rigid rotation, direction NW. NW repeats NE screened-front/deck-right/shed-left corner instead of opposite front corner. Reconstruct NW with front deck facade LEFT and opposite physical side RIGHT, keeping shed on original physical side. Preserve NE/SE/SW and roof/chimney. TARGET NW ONLY: draw the opposite front corner described above, not the NE corner again. Maintain roof/ridge and chimney on the same physical wall; front-facing lettering remains legible, never mirrored. Output ONE isolated complete building cutout for this target direction, not a sheet or montage. Preserve existing Maple-master palette/materials/details and fixed screen-upper-right dusk light. Orthographic2:1 ground axes approximately +/-26.565degrees, verticalwallsvertical, no perspective vanishing point. No grey floor/terrain/haze/broad shadow; genuinely transparent alpha with generous canvas margins. Fixed orthographic2:1 camera: both ground axes at +/-26.565degrees, wallsvertical, no head-on elevation/perspective vanishingpoint. CRITICAL: fixed SCREEN UPPER RIGHT DUSK SUN and warm amber practical lights; right roof/wall planes warm, leftplanes cooler even though buildingturns. Reconstructhiddenfaces; NEVER mirror sourcepixels or lighting or copy the samecorner. Square1:1PNG with onecompleteSMALLbuilding occupying60%canvasheight, generous100pxfullyclear margins, truealpha0outsidephysicalbuilding. No other view, no grid, no label, no ground surface/floor/paving/yard/greybackdrop/broadshadow/haze/gradient/checkerboard/people. Only physical building and integralporch/steps/supports.",
+      "references": [
+        {
+          "role": "identity-style-and-physical-geometry-reference",
+          "file": "art/theme-consistency/generated/buildings/variation-gen-back-shed-garden-ac94c81e-plain-1-4views-v1.png"
+        }
+      ],
+      "integrationStatus": "blocked",
+      "integrationReason": "Single actual-turn correction; inspect before four-view assembly."
+    },
+    "newViewScale": {
+      "factor": 0.6559278350515464,
+      "method": "median visible building height of unchanged three views; source scale retained, not certified door calibration",
+      "targetHeight": 509,
+      "oldDoor": null,
+      "newDoor": null,
+      "resizeKernel": "lanczos3; new view only"
+    },
+    "unchangedViewsPreservedByteForByte": [
+      "NE",
+      "SE",
+      "SW"
+    ],
+    "originalViewEvidence": [
+      {
+        "direction": "NE",
+        "canonicalRejected": null,
+        "sourceCellSafeMargin": true,
+        "originalNativeSha256": "d9b6001a76a7fd20561ff1906c2f610c545764388b7c96fb25f1c0c77783f272",
+        "originalVisibleHeight": 513,
+        "nonzeroAlphaPixels": 221004,
+        "rgbaSha256": "7109d74bf51f4ad18fd9e999e83d8d215f7a1e015eb79d7dcd0a534bd70a189c"
+      },
+      {
+        "direction": "SE",
+        "canonicalRejected": null,
+        "sourceCellSafeMargin": true,
+        "originalNativeSha256": "4af31578fa5faad0c84c68c6748f86a6ef98ddea3188e0d1702c155a9cc6e568",
+        "originalVisibleHeight": 499,
+        "nonzeroAlphaPixels": 218135,
+        "rgbaSha256": "8dacec52039192b26fcf948a5e06ecb1dd3ae32eeb8400a2badfc45f1bdbc462"
+      },
+      {
+        "direction": "SW",
+        "canonicalRejected": null,
+        "sourceCellSafeMargin": true,
+        "originalNativeSha256": "fea4c81f720a4706ecddd8734cc85c217dda752907f93bbe9a42c60e019a4f53",
+        "originalVisibleHeight": 509,
+        "nonzeroAlphaPixels": 217074,
+        "rgbaSha256": "b30abf9d73815a026a2365b666fd9373725182a5eaf1cdd4abab3adb208cdc33"
+      },
+      {
+        "direction": "NW",
+        "canonicalRejected": null,
+        "sourceCellSafeMargin": true,
+        "originalNativeSha256": "dc7df0ca0f02b5870330a9df8306c590b181ea6ddd8714b407ec83833d9e0878",
+        "originalVisibleHeight": 521,
+        "nonzeroAlphaPixels": 224306,
+        "rgbaSha256": "52a11898fb64fdd761bd7b503f513dc260ee1a15a7e594ae6004f359497043f1"
+      }
+    ],
+    "placements": [
+      {
+        "direction": "NE",
+        "left": 286,
+        "top": 375,
+        "width": 708,
+        "height": 530,
+        "nativeSha256": "d9b6001a76a7fd20561ff1906c2f610c545764388b7c96fb25f1c0c77783f272",
+        "unchangedOriginalNative": true
+      },
+      {
+        "direction": "SE",
+        "left": 1568,
+        "top": 378,
+        "width": 703,
+        "height": 523,
+        "nativeSha256": "4af31578fa5faad0c84c68c6748f86a6ef98ddea3188e0d1702c155a9cc6e568",
+        "unchangedOriginalNative": true
+      },
+      {
+        "direction": "SW",
+        "left": 277,
+        "top": 1633,
+        "width": 726,
+        "height": 573,
+        "nativeSha256": "fea4c81f720a4706ecddd8734cc85c217dda752907f93bbe9a42c60e019a4f53",
+        "unchangedOriginalNative": true
+      },
+      {
+        "direction": "NW",
+        "left": 1533,
+        "top": 1523,
+        "width": 774,
+        "height": 794,
+        "nativeSha256": "edf2419cf5d4b35952a9f26312f96463dd47f3393394d88b5e680fab5da771d6",
+        "unchangedOriginalNative": false
+      }
+    ],
+    "outputSha256": "bf5f764bda235594e414aa0f8500376c0fab66f328cf01775cf621ca9b3af9b5"
+  }
+}

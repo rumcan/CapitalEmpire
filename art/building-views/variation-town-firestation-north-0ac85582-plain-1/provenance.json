@@ -19,5 +19,20 @@
     }
   ],
   "integrationStatus": "blocked",
-  "integrationReason": "Awaiting real alpha, four-view geometry, fixed camera/light and cohesive-theme review."
+  "integrationReason": "SW sideD is blank although NW LEFT sideD has two upper/two lower sash windows. NE/SE sideB sash counts also drift; hold these physical facade mismatches.",
+  "sourceReview": {
+    "reviewed": "2026-10-24",
+    "actualAlphaComposite": "output/building-priority/newest-review-1.png",
+    "theme": "Matte Maple Bean timber/brick/cream, charcoal roofs, amber dusk lamps, fixed upper-right key coherent across these sources; holds below are concrete camera/geometry/facade-continuity faults, not backgrounds.",
+    "corrections": [
+      {
+        "direction": "SE",
+        "brief": "Show sideB LEFT with exactly two upper plus two lower sash windows matching NE RIGHT. RearC RIGHT has ONE upper sash, lower vent and utility boxes, no garage doors/bell."
+      },
+      {
+        "direction": "SW",
+        "brief": "Show rearC LEFT with ONE upper sash/lower vent/utility boxes matching SE RIGHT. SideD RIGHT has TWO upper and TWO lower sash windows matching NW LEFT. Garage doors/bell remain hidden."
+      }
+    ]
+  }
 }

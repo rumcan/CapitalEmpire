@@ -1,0 +1,136 @@
+{
+  "id": "variation:ref-building-house-large-20cb9f9e-plain:1",
+  "generator": "image_gen",
+  "generated": "2026-10-24",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-85fdc8bf-fa32-46b6-bfbe-0138f7e13de9.png",
+  "prompt": "Edit this existing transparent game sprite sheet, maintaining EXACT shared matte miniature theme, material colours, physical building identity, early dusk and fixed SCREEN UPPER RIGHT SUN. Concrete correction: Preserve SE/SW/NW exactly. Reconstruct NE at the same fixed orthographic 2:1 game camera: ground-plane axes at approximately +26.565 and -26.565 screen degrees, vertical walls vertical, no vanishing point. Show front A at screen left and physical right side B at screen right; expose both planes with the correct diagonal eave/foundation/deck edges. Rotate the existing building as one rigid object without changing its door/window/porch/deck/chimney locations. Retain master palette, scale, fixed screen-upper-right dusk light and actual transparent alpha. Preserve every other correct cell and all physical architecture/equipment. Never mirror text, geometry or lighting; draw actual opposite corner. Keep 2x2 NEtop-left,SEtop-right,SWbottom-left,NWbottom-right. Output SQUARE 1:1 CANVAS with four SMALL complete sprites, each only60% cellheight, full roof/chimney/cross withincanvasand100pxclear gutters. Actual transparentalpha=0 outsidephysicalbuilding. No floor/greybackground/terrain/shadow/haze/labels/captions. Reference1 is EDIT TARGET, preserve its artwork rather than invent a new building. ",
+  "references": [
+    {
+      "role": "edit-target",
+      "file": "art/theme-consistency/generated/buildings/variation-ref-building-house-large-20cb9f9e-plain-1-4views-v2.png"
+    }
+  ],
+  "integrationStatus": "ready",
+  "integrationReason": "Single NE presents actual opposite frontLEFT/right-sideRIGHT at a coherent isometric camera; original cream two-storey front porch, three upper sash windows, right dormer/wing, bay and chimney retained. Original SE/SW/NWnative PNG bytes preserved exactly; newview scaled to unaffected-height proxy, actualalpha/lighting/materials coherent.",
+  "singleViewCorrection": {
+    "sourceSheet": "art/theme-consistency/generated/buildings/variation-ref-building-house-large-20cb9f9e-plain-1-4views-v3.png",
+    "sourceSheetSha256": "74572254c8c3144f033ca40af5b64a2c787ff5a4bac49af625030b9ecfc361b4",
+    "direction": "NE",
+    "newGeneratedSingle": "art/theme-consistency/generated/buildings/variation-ref-building-house-large-20cb9f9e-plain-1-single-corrections-v4/NE.png",
+    "newGeneratedSingleSha256": "6da61d24cbf2eab01da2178bc19ffdae16f48e72f050b71ee8e40598a9b54b4d",
+    "newGeneratedSingleProvenance": {
+      "id": "variation:ref-building-house-large-20cb9f9e-plain:1",
+      "direction": "NE",
+      "generator": "image_gen",
+      "generated": "2026-10-24",
+      "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-0b080646-aa2e-4076-942d-c85fb76e7b8b.png",
+      "prompt": "ONE SINGLE ISOLATED BUILDING SPRITE, NOT A FOUR-VIEW SHEET. The reference is this SAME existing building shown from several corners; preserve its exact architecture and matte Maple Bean miniature style. We need a genuinely different rigid rotation, direction NE. Image1 is CAMERA PROJECTION ONLY; image2 is SUBJECTIDENTITY, do notcopyhouse1architecture. Preserve SE/SW/NW exactly. Reconstruct NE at the same fixed orthographic 2:1 game camera: ground-plane axes at approximately +26.565 and -26.565 screen degrees, vertical walls vertical, no vanishing point. Show front A at screen left and physical right side B at screen right; expose both planes with the correct diagonal eave/foundation/deck edges. Rotate the existing building as one rigid object without changing its door/window/porch/deck/chimney locations. Retain master palette, scale, fixed screen-upper-right dusk light and actual transparent alpha. Match image1 equallyprojected2:1isometriccamera EXACTLY. No horizontalfrontfoundation. Fixed orthographic2:1 camera: both ground axes at +/-26.565degrees, wallsvertical, no head-on elevation/perspective vanishingpoint. CRITICAL: fixed SCREEN UPPER RIGHT DUSK SUN and warm amber practical lights; right roof/wall planes warm, leftplanes cooler even though buildingturns. Reconstructhiddenfaces; NEVER mirror sourcepixels or lighting or copy the samecorner. Square1:1PNG with onecompleteSMALLbuilding occupying60%canvasheight, generous100pxfullyclear margins, truealpha0outsidephysicalbuilding. No other view, no grid, no label, no ground surface/floor/paving/yard/greybackdrop/broadshadow/haze/gradient/checkerboard/people. Only physical building and integralporch/steps/supports.",
+      "references": [
+        {
+          "role": "camera-projection-only",
+          "file": "art/theme-consistency/generated/buildings/world-house_2-4views-v2/NE.native.png"
+        },
+        {
+          "role": "identity-style-and-physical-geometry-reference",
+          "file": "art/theme-consistency/generated/buildings/variation-ref-building-house-large-20cb9f9e-plain-1-4views-v3.png"
+        }
+      ],
+      "integrationStatus": "blocked",
+      "integrationReason": "Single actual-turn correction; inspect before four-view assembly.",
+      "referenceMetadataCorrection": {
+        "date": "2026-10-24",
+        "reason": "Saved reference metadata corrected to the actual two image inputs documented in single-orchestration-v3 cameraJobs; generator prompt and pixels retained."
+      }
+    },
+    "newViewScale": {
+      "factor": 0.3949394939493949,
+      "method": "median visible building height of unchanged three views; source scale retained, not certified door calibration",
+      "targetHeight": 359,
+      "oldDoor": null,
+      "newDoor": null,
+      "resizeKernel": "lanczos3; new view only"
+    },
+    "unchangedViewsPreservedByteForByte": [
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "originalViewEvidence": [
+      {
+        "direction": "NE",
+        "canonicalRejected": null,
+        "sourceCellSafeMargin": true,
+        "originalNativeSha256": "fbe56d41151cecda8ff5805803a842f31a88fc17eaa70899f726d0bf809cb8d3",
+        "originalVisibleHeight": 357,
+        "nonzeroAlphaPixels": 111993,
+        "rgbaSha256": "ffde86e29d931b75046a4a7bcaf97a33c94e79837f1644d0a013a0ca7b5a6f2c"
+      },
+      {
+        "direction": "SE",
+        "canonicalRejected": null,
+        "sourceCellSafeMargin": true,
+        "originalNativeSha256": "23ca1bc23e96e9646f65a3c978e6eb2e22316e9ffffe7d745aeb1b968c81f997",
+        "originalVisibleHeight": 358,
+        "nonzeroAlphaPixels": 109581,
+        "rgbaSha256": "31cea1eadf1d8357f7780a35bbcba48e9fcff086bd89eb900a00ddd3e8a4a70e"
+      },
+      {
+        "direction": "SW",
+        "canonicalRejected": null,
+        "sourceCellSafeMargin": true,
+        "originalNativeSha256": "fd39d46a91e285f9f639dc4b51d14ac99e199037d87fcf051b185f5d4c641bba",
+        "originalVisibleHeight": 359,
+        "nonzeroAlphaPixels": 104964,
+        "rgbaSha256": "c229da06f8f93b58b184cb69bbee254a2b9a2e21922d4217c5e6b1799fcff42d"
+      },
+      {
+        "direction": "NW",
+        "canonicalRejected": null,
+        "sourceCellSafeMargin": true,
+        "originalNativeSha256": "8e0b6f377980adb988dcec03575fc1f90ecf04f4104ac970ed87ca14a2ba70c1",
+        "originalVisibleHeight": 365,
+        "nonzeroAlphaPixels": 116208,
+        "rgbaSha256": "c604658d7760cfb1a82fb118c1ac98230149605cc7beab566e63f98c8f1bd764"
+      }
+    ],
+    "placements": [
+      {
+        "direction": "NE",
+        "left": 271,
+        "top": 262,
+        "width": 482,
+        "height": 500,
+        "nativeSha256": "5827fd40dc45c7758441472bc29899ff536b05ea3d9abf87bfe38813beefde1e",
+        "unchangedOriginalNative": false
+      },
+      {
+        "direction": "SE",
+        "left": 1231,
+        "top": 207,
+        "width": 609,
+        "height": 610,
+        "nativeSha256": "23ca1bc23e96e9646f65a3c978e6eb2e22316e9ffffe7d745aeb1b968c81f997",
+        "unchangedOriginalNative": true
+      },
+      {
+        "direction": "SW",
+        "left": 199,
+        "top": 1224,
+        "width": 625,
+        "height": 624,
+        "nativeSha256": "fd39d46a91e285f9f639dc4b51d14ac99e199037d87fcf051b185f5d4c641bba",
+        "unchangedOriginalNative": true
+      },
+      {
+        "direction": "NW",
+        "left": 1233,
+        "top": 1228,
+        "width": 606,
+        "height": 616,
+        "nativeSha256": "8e0b6f377980adb988dcec03575fc1f90ecf04f4104ac970ed87ca14a2ba70c1",
+        "unchangedOriginalNative": true
+      }
+    ],
+    "outputSha256": "e5bf53d551b36a4d56f7b59651a074212c7b122829bc877a64ec526bc6c2fc09"
+  }
+}

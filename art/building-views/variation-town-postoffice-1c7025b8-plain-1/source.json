@@ -1,10 +1,10 @@
 {
  "id": "variation:town-postoffice-1c7025b8-plain:1",
- "version": "variation-town-postoffice-1c7025b8-plain-1-4views-v1",
+ "version": "variation-town-postoffice-1c7025b8-plain-1-4views-v2",
  "files": {
-  "NE": "3aad5768ffcb16297d215a86b923bddaf708b45558d812b4e1d2af47546d2848",
-  "SE": "a32d16be538c4a1a4dd1f0db36bc2540b0d1909683c7e8529d18e6d7adb44c24",
-  "SW": "44b69358c4c9b9591e612bdb14affe66f9b80fbfc440c5fc9af22c6746fe65a0",
-  "NW": "4b850ad7306326ff64d4a40e5d4b9cee3b51e78cebf2bed0da52d506040ba94c"
+  "NE": "c0686b817b349a1c1f10b76ef8117db2b93212a4ba0ef5a70f030326fa2181ee",
+  "SE": "3ce94cf8b454af4b3abc27e963f157c0167de9464cd8f891461728df36af9d12",
+  "SW": "6e76e0cd8dbbb20de0706688b439433390503de85ea6b06636a247a39153527f",
+  "NW": "3b4eb9f42fc31d7ad0f051a72bf191e5a194e1a3cafaaa787a4ef9b1d33682ab"
  }
 }

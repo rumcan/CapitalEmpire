@@ -1,0 +1,10 @@
+{
+ "id": "variation:ref-building-grocery-79498713-plain:1",
+ "version": "variation-ref-building-grocery-79498713-plain-1-4views-v4",
+ "files": {
+  "NE": "cdecd8027679340ac7c333f69617c2ec3d554665fd152fc8038b7b17fa0532fb",
+  "SE": "40543dbcccd83413b955bf982b40e5fe9225febc3bcb3f3ee0c673ba2bfd664c",
+  "SW": "3d17090f2a32f7b5cf8975c02918c1afeb523ee813ffbea071de4fd35ded1867",
+  "NW": "b1bc389d81144f10be803f17655b504dcf7c44d6789c1b253c9e023fb6d5b208"
+ }
+}

@@ -1,6 +1,6 @@
 {
   "id": "business:estate-villa",
-  "generator": "image_gen",
+  "generator": "pixel-conserving-view-reassignment",
   "generatorSource": "C:\\Users\\Francois Smit\\.codex\\generated_images\\01a15fe8-e26f-72b1-94e3-874ef3d8db8b\\exec-44e30c39-0bd1-4c8f-8a2d-d2ac00441419.png",
   "prompt": "Subject ID: business:estate-villa. Category: buildings. Existing name: estate villa.\n\nONE SUBJECT PER CALL. Reference image 1 is the owner's AUTHORITATIVE full Maple Bean street scene: use it for all materials, camera and visual theme. Reference image 2 is this individual building at its actual maximum-zoom configured game size: preserve that building's architecture, footprint, storeys, roof/chimney shapes, doors, window rhythm and identity; only restyle/reconstruct hidden sides. Create ONE transparent PNG sheet with exactly FOUR true 90-degree world rotations of the SAME building in row-major order NE, SE, SW, NW. Include real rear facades; never mirror a front or turn the camera. Camera fixed parallel 2:1 isometric, ground axes +/-26.565 degrees, verticals vertical. TIME: EARLY DUSK, still enough warm low side sunlight to see fine siding/brick/shingles clearly; windows and practical porch/exterior lamps already warmly lit. Not night, no moon, moonlight, black nighttime rendering or harsh overhead midday light. CRITICAL LIGHT: fixed SCREEN UPPER RIGHT in every quadrant, shadows toward SCREEN LOWER LEFT. Rotate geometry only; keep world sun fixed, right-facing planes warmer and left-facing planes cooler regardless of which facade is visible. NO HALLOWEEN whatsoever: remove pumpkins/jack-o-lanterns, cobwebs, ghosts, bats, skulls, skeletons, spooky details, wreaths, Halloween signage and seasonal string-light garlands from original. Autumn leaf colours are allowed in the theme but do not attach yard trees or landscape to the building. No people, characters, cars, neighbor objects, foundation platform, lawn tile or street. Only this specified building or shelter and its integral architectural features. Preserve its actual building type; shops, factories, venues, kiosks and pavilions must remain those structures rather than becoming houses. No broad garden bed. Exactly one complete building per quadrant with at least64px transparent clearance from ALL quadrant edges; keep sizes consistent with generous centre gutters. True alpha outside silhouette, no background haze, broad cast shadow, checkerboard, captions or decorative frame. Fine detailed coherent 3D illustrated miniature style matching reference1. Native source sheet will be calibrated to the original game's size later; do not claim the sheet canvas is actual CSS size.\n\n\nONE SUBJECT PER GENERATION CALL. Image 1 is the owner-selected full Maple Bean street THEME MASTER; all later images are different existing views of ONE subject for identity, never additional subjects. Fixed parallel 2:1 isometric camera, ground axes +/-26.565 degrees, verticals vertical. FOUR genuine 90-degree world rotations in row-major order NE, SE, SW, NW. Keep sun fixed SCREEN UPPER RIGHT and tiny contact shadows SCREEN LOWER LEFT while geometry rotates; never mirror a front or rotate lighting with the object. EARLY DUSK, with warm low side sunlight and readable fine details, not night or moonlight and no overhead midday lighting. No people or characters. NO HALLOWEEN: no pumpkins, jack-o-lanterns, cobwebs, ghosts, bats, skulls, skeletons, spooky signs or decorative string-light garlands. Autumn foliage colours are permitted. Request a SQUARE transparent PNG sheet with strict 2x2 independent cells. Leave AT LEAST 15% of EACH quadrant's width and height clear on EVERY side of its sprite, producing generous central gutters. Shrink all four views uniformly to fit; never crop roofs, branches, wheels or shadows. Exactly one complete subject per cell, consistent physical scale across all views. True alpha outside silhouettes, no backdrop, haze, checkerboard, captions, frames, terrain tile, scene or attached unrelated props. Native generated pixels are source art, not exact registered CSS/game size.\n\nExisting configured max-camera CSS bounds are measured references. Generated rotations require shared-density calibration and placement registration; hidden-side dimensions are estimates.\n\nMeasured existing source views: [{\"id\":\"business:estate-villa\",\"direction\":null,\"configuredCSS\":{\"left\":-336,\"top\":-351.1227495908347,\"right\":336,\"bottom\":168,\"width\":672,\"height\":519.1227495908347},\"normalMaxCSS\":{\"left\":-336,\"top\":-351.1227495908347,\"right\":336,\"bottom\":168,\"width\":672,\"height\":519.1227495908347},\"configuredReference\":\"art/theme-consistency/exports/buildings/business-estate-villa.configured@2x.png\"}].\n\nReference roles and order: [{\"role\":\"authoritative-theme\",\"file\":\"art/theme-consistency/references/theme-authoritative.png\",\"sha256\":\"23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2\"},{\"role\":\"existing-subject-identity\",\"id\":\"business:estate-villa\",\"direction\":null,\"file\":\"art/theme-consistency/exports/buildings/business-estate-villa.configured@2x.png\",\"sha256\":\"15d7080cd5975ecd8baeba0fbbbc45ac493edf9b161ed06d85d720c3f7553d7f\"}].\n\r\n",
   "references": [
@@ -19,5 +19,352 @@
   ],
   "generated": "2026-10-23",
   "status": "generated-awaiting-visual-review",
-  "implementation": "Other AI handles integration"
+  "implementation": "Other AI handles integration",
+  "integrationStatus": "ready",
+  "integrationReason": "2026-10-25 source review: all4physicalcorners inspected atvisible-boundzoom overmagenta, correctclockwisefacadecycle/fixed2:1camera, coherent MapleBeanmattepalette/detail/upper-rightdusk, no surroundingfloor/haze. Singleassembly preservesunchanged3nativePNGhashes, canonicalreassignments preserveall4nativebytes. Runtime scale stillrequires placementcheck.",
+  "layoutCorrection": {
+    "method": "Pixel-preserving clear-gap split and centred four-cell repack; no generation, resizing or repainting.",
+    "originalSheet": "art/theme-consistency/generated/buildings/business-estate-villa-4views-v1.png",
+    "originalSheetSha256": "26016c96332dff392acf4ff14981b6ac48d5beab3e21a154ffa8c40954dea318",
+    "originalDimensions": [
+      1254,
+      1254
+    ],
+    "outputDimensions": [
+      2048,
+      2048
+    ],
+    "outputSheetSha256": "266763bc4f337c090b98c57cd5bdcb402d2febb27e8fdb0efd1b6d27ff82707c",
+    "cellSize": 1024,
+    "minimumCellMarginFraction": 0.15,
+    "padding": 4,
+    "partitionMode": "row-first",
+    "rowFirstFailure": null,
+    "rowGap": {
+      "start": 582,
+      "endExclusive": 700,
+      "midpoint": 641,
+      "alphaThreshold": 8
+    },
+    "columnGaps": [
+      {
+        "row": 0,
+        "start": 631,
+        "endExclusive": 670,
+        "midpoint": 650,
+        "alphaThreshold": 8
+      },
+      {
+        "row": 1,
+        "start": 627,
+        "endExclusive": 674,
+        "midpoint": 650,
+        "alphaThreshold": 8
+      }
+    ],
+    "globalColumnGap": null,
+    "columnRowGaps": [],
+    "extractionRects": [
+      {
+        "direction": "NE",
+        "row": 0,
+        "column": 0,
+        "extraction": {
+          "left": 0,
+          "top": 51,
+          "width": 650,
+          "height": 590
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 198730,
+        "visibleAlphaPixelsThreshold8": 193710,
+        "nonzeroRgbaSha256": "7dfc1ed7c53fcf5f83009a7b4d5cebd2888dabb5b4811ded4ca3c3cf7a2f3c5f",
+        "destination": {
+          "left": 187,
+          "top": 217,
+          "width": 650,
+          "height": 590
+        }
+      },
+      {
+        "direction": "SE",
+        "row": 0,
+        "column": 1,
+        "extraction": {
+          "left": 650,
+          "top": 19,
+          "width": 595,
+          "height": 622
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 187787,
+        "visibleAlphaPixelsThreshold8": 181756,
+        "nonzeroRgbaSha256": "fd0f3bfd49219b36e8da3d39de8da6866328815bdf350e012a5fe29841d1ed51",
+        "destination": {
+          "left": 1238,
+          "top": 201,
+          "width": 595,
+          "height": 622
+        }
+      },
+      {
+        "direction": "SW",
+        "row": 1,
+        "column": 0,
+        "extraction": {
+          "left": 20,
+          "top": 656,
+          "width": 629,
+          "height": 578
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 204013,
+        "visibleAlphaPixelsThreshold8": 198119,
+        "nonzeroRgbaSha256": "0c3326de24d0a6d0574c626e0beca905ebf7029ce3b2f1d84b0fa3caed33e527",
+        "destination": {
+          "left": 197,
+          "top": 1247,
+          "width": 629,
+          "height": 578
+        }
+      },
+      {
+        "direction": "NW",
+        "row": 1,
+        "column": 1,
+        "extraction": {
+          "left": 652,
+          "top": 641,
+          "width": 598,
+          "height": 599
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 184351,
+        "visibleAlphaPixelsThreshold8": 177739,
+        "nonzeroRgbaSha256": "ef4b2394f478a3d7edafbe5ad3fa3ab03a0672c7a6eae6cc5358f083c0aad56a",
+        "destination": {
+          "left": 1237,
+          "top": 1236,
+          "width": 598,
+          "height": 599
+        }
+      }
+    ],
+    "sourcePixelCounts": {
+      "nonzeroAlphaPixels": 774881,
+      "visibleAlphaPixelsThreshold8": 751324,
+      "nonzeroRgbaSha256": "71a1708e636de0206ae66bde5395073098dc7ef82c64f9ce31fe8be51e613650"
+    },
+    "nonzeroAndVisiblePixelConservation": true,
+    "exactVisibleRgbaConservation": true,
+    "visualReviewRequired": true,
+    "warnings": []
+  },
+  "newImageGeneration": false,
+  "viewReassignment": {
+    "method": "Exact-native PNG permutation; no generation, resizing, mirroring or repainting.",
+    "sourceSheet": "art/theme-consistency/generated/buildings/business-estate-villa-4views-v2.png",
+    "sourceSheetSha256": "266763bc4f337c090b98c57cd5bdcb402d2febb27e8fdb0efd1b6d27ff82707c",
+    "sourceProvenanceSha256": "3bb7bc9f74f8450767a40599c4ddc91c0a325348ef635a0ee95594d926cdde2f",
+    "mapping": {
+      "NE": "NE",
+      "SW": "SW",
+      "NW": "SE",
+      "SE": "NW"
+    },
+    "originalViewEvidence": [
+      {
+        "direction": "NE",
+        "canonicalNative": null,
+        "canonicalRejected": null,
+        "originalNativeSha256": "2be38cb179cde97825c68fada101e669198f91cff1b537d39bd363792e04f434",
+        "bounds": [
+          649,
+          586
+        ],
+        "nonzeroAlphaPixels": 198730,
+        "normalisedNonzeroRgbaGeometrySha256": "d4d88b8727146324b6ef06404665fe01034519c6214eeef3cf0bbd08d4be007b"
+      },
+      {
+        "direction": "SE",
+        "canonicalNative": null,
+        "canonicalRejected": null,
+        "originalNativeSha256": "ded8a3f017a9517a9e6dbc8d97234f8f653d4f3f02aae6c04ef8420e52c17810",
+        "bounds": [
+          591,
+          618
+        ],
+        "nonzeroAlphaPixels": 187787,
+        "normalisedNonzeroRgbaGeometrySha256": "d9efc2d31727cd6358e58729b8493d39c768837c022fc17a9b9b0449fb6f2f3a"
+      },
+      {
+        "direction": "SW",
+        "canonicalNative": null,
+        "canonicalRejected": null,
+        "originalNativeSha256": "302bdff7285d22a704413d4ea838e867ca54896a937ddd92b8ea35549fa2a5e3",
+        "bounds": [
+          621,
+          570
+        ],
+        "nonzeroAlphaPixels": 204013,
+        "normalisedNonzeroRgbaGeometrySha256": "9afafde59d4345175dceaa5ad3f5f34cdba1bd7bce376a8a23bc2e0d75d93d03"
+      },
+      {
+        "direction": "NW",
+        "canonicalNative": null,
+        "canonicalRejected": null,
+        "originalNativeSha256": "52b588153a29e870b8dac439fd8ba20ff381d5c1792aab44b6cf3f303383fffd",
+        "bounds": [
+          590,
+          594
+        ],
+        "nonzeroAlphaPixels": 184351,
+        "normalisedNonzeroRgbaGeometrySha256": "59da608b3ffa89d1a0d4912c58535b169f60a974876487673394daf80691bb4c"
+      }
+    ],
+    "hashMappings": [
+      {
+        "direction": "NE",
+        "sourceDirection": "NE",
+        "oldNativeSha256": "2be38cb179cde97825c68fada101e669198f91cff1b537d39bd363792e04f434",
+        "newNativeSha256": "2be38cb179cde97825c68fada101e669198f91cff1b537d39bd363792e04f434"
+      },
+      {
+        "direction": "SE",
+        "sourceDirection": "NW",
+        "oldNativeSha256": "52b588153a29e870b8dac439fd8ba20ff381d5c1792aab44b6cf3f303383fffd",
+        "newNativeSha256": "52b588153a29e870b8dac439fd8ba20ff381d5c1792aab44b6cf3f303383fffd"
+      },
+      {
+        "direction": "SW",
+        "sourceDirection": "SW",
+        "oldNativeSha256": "302bdff7285d22a704413d4ea838e867ca54896a937ddd92b8ea35549fa2a5e3",
+        "newNativeSha256": "302bdff7285d22a704413d4ea838e867ca54896a937ddd92b8ea35549fa2a5e3"
+      },
+      {
+        "direction": "NW",
+        "sourceDirection": "SE",
+        "oldNativeSha256": "ded8a3f017a9517a9e6dbc8d97234f8f653d4f3f02aae6c04ef8420e52c17810",
+        "newNativeSha256": "ded8a3f017a9517a9e6dbc8d97234f8f653d4f3f02aae6c04ef8420e52c17810"
+      }
+    ],
+    "allFourPngByteHashesConserved": true,
+    "fullRgbaPlacementConserved": true,
+    "outputSha256": "aec66e31537e9bf3aa3f2660cbee1e0c3b6f105247aa660f4574de93c179c1b3"
+  },
+  "singleViewCorrection": {
+    "sourceSheet": "art/theme-consistency/generated/buildings/business-estate-villa-4views-v3.png",
+    "sourceSheetSha256": "aec66e31537e9bf3aa3f2660cbee1e0c3b6f105247aa660f4574de93c179c1b3",
+    "direction": "SE",
+    "copiedOriginalDirection": null,
+    "newGeneratedSingle": "art/theme-consistency/generated/buildings/business-estate-villa-single-corrections-v2/SE.png",
+    "newGeneratedSingleSha256": "f991ba26454e69e50d1399ac6b062c07d479889e40fbb928310139e2c264ba08",
+    "newGeneratedSingleProvenance": {
+      "id": "business:estate-villa",
+      "direction": "SE",
+      "generator": "image_gen",
+      "generated": "2026-10-24",
+      "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-ee430ef6-a9f8-4b2d-ab26-eccd8f58d6dd.png",
+      "prompt": "ONE SINGLE ISOLATED BUILDING SPRITE, NOT A FOUR-VIEW SHEET. The reference is this SAME existing building shown from several corners; preserve its exact architecture and matte Maple Bean miniature style. We need a genuinely different rigid rotation, direction SE. Show physical right side B on image LEFT and true rear C on image RIGHT. Rear C must retain the large patio/glazed doors, low terrace balustrade, rear arched dormer and roof/chimney structure already visible in original SW, viewed from its opposite corner. Preserve front garage/entry side from original NE; garage stays on physical original wing and is mostly on far side. Do not replace rear patio with an unrelated plain service wall. Retain villa L-shaped wings, two tall chimneys and roof dormers. ONE isolated complete target-view cutout ONLY, not a sheet. Fixed orthographic2:1 game camera, ground axes +/-26.565screen degrees, verticalwallsvertical. Preserve the original physical building and cohesive Maple-master palette/material detail, warm early dusk with sun SCREEN UPPER RIGHT. No mirroring, no grey floor/backdrop/haze/terrain/captions; alpha0 outside full silhouette, generous clear canvas margins. Fixed orthographic2:1 camera: both ground axes at +/-26.565degrees, wallsvertical, no head-on elevation/perspective vanishingpoint. CRITICAL: fixed SCREEN UPPER RIGHT DUSK SUN and warm amber practical lights; right roof/wall planes warm, leftplanes cooler even though buildingturns. Reconstructhiddenfaces; NEVER mirror sourcepixels or lighting or copy the samecorner. Square1:1PNG with onecompleteSMALLbuilding occupying60%canvasheight, generous100pxfullyclear margins, truealpha0outsidephysicalbuilding. No other view, no grid, no label, no ground surface/floor/paving/yard/greybackdrop/broadshadow/haze/gradient/checkerboard/people. Only physical building and integralporch/steps/supports.",
+      "references": [
+        {
+          "role": "identity-style-and-physical-geometry-reference",
+          "file": "art/theme-consistency/generated/buildings/business-estate-villa-4views-v1/SW.native.png"
+        }
+      ],
+      "assemblySourceSheet": "art/theme-consistency/generated/buildings/business-estate-villa-4views-v1.png",
+      "integrationStatus": "blocked",
+      "integrationReason": "Single actual-turn correction; inspect before four-view assembly."
+    },
+    "newViewScale": {
+      "factor": 0.4857142857142857,
+      "method": "median visible building height of unchanged three views; source scale retained, not certified door calibration",
+      "targetHeight": 476,
+      "oldDoor": null,
+      "newDoor": null,
+      "resizeKernel": "lanczos3; new view only"
+    },
+    "unchangedViewsPreservedByteForByte": [
+      "NE",
+      "SW",
+      "NW"
+    ],
+    "originalViewEvidence": [
+      {
+        "direction": "NE",
+        "canonicalRejected": null,
+        "sourceCellSafeMargin": true,
+        "originalNativeSha256": "2be38cb179cde97825c68fada101e669198f91cff1b537d39bd363792e04f434",
+        "originalVisibleHeight": 475,
+        "nonzeroAlphaPixels": 198730,
+        "rgbaSha256": "7dfc1ed7c53fcf5f83009a7b4d5cebd2888dabb5b4811ded4ca3c3cf7a2f3c5f"
+      },
+      {
+        "direction": "SE",
+        "canonicalRejected": null,
+        "sourceCellSafeMargin": true,
+        "originalNativeSha256": "52b588153a29e870b8dac439fd8ba20ff381d5c1792aab44b6cf3f303383fffd",
+        "originalVisibleHeight": 460,
+        "nonzeroAlphaPixels": 184351,
+        "rgbaSha256": "ef4b2394f478a3d7edafbe5ad3fa3ab03a0672c7a6eae6cc5358f083c0aad56a"
+      },
+      {
+        "direction": "SW",
+        "canonicalRejected": null,
+        "sourceCellSafeMargin": true,
+        "originalNativeSha256": "302bdff7285d22a704413d4ea838e867ca54896a937ddd92b8ea35549fa2a5e3",
+        "originalVisibleHeight": 476,
+        "nonzeroAlphaPixels": 204013,
+        "rgbaSha256": "0c3326de24d0a6d0574c626e0beca905ebf7029ce3b2f1d84b0fa3caed33e527"
+      },
+      {
+        "direction": "NW",
+        "canonicalRejected": null,
+        "sourceCellSafeMargin": true,
+        "originalNativeSha256": "ded8a3f017a9517a9e6dbc8d97234f8f653d4f3f02aae6c04ef8420e52c17810",
+        "originalVisibleHeight": 485,
+        "nonzeroAlphaPixels": 187787,
+        "rgbaSha256": "fd0f3bfd49219b36e8da3d39de8da6866328815bdf350e012a5fe29841d1ed51"
+      }
+    ],
+    "placements": [
+      {
+        "direction": "NE",
+        "left": 183,
+        "top": 215,
+        "width": 657,
+        "height": 594,
+        "nativeSha256": "2be38cb179cde97825c68fada101e669198f91cff1b537d39bd363792e04f434",
+        "unchangedOriginalNative": true
+      },
+      {
+        "direction": "SE",
+        "left": 1231,
+        "top": 210,
+        "width": 610,
+        "height": 603,
+        "nativeSha256": "83e93bbbb0d4ceaa6d5e6e20984fa2dbf488b63d9be854e937c39e8eccc1bbcd",
+        "unchangedOriginalNative": false
+      },
+      {
+        "direction": "SW",
+        "left": 197,
+        "top": 1247,
+        "width": 629,
+        "height": 578,
+        "nativeSha256": "302bdff7285d22a704413d4ea838e867ca54896a937ddd92b8ea35549fa2a5e3",
+        "unchangedOriginalNative": true
+      },
+      {
+        "direction": "NW",
+        "left": 1236,
+        "top": 1223,
+        "width": 599,
+        "height": 626,
+        "nativeSha256": "ded8a3f017a9517a9e6dbc8d97234f8f653d4f3f02aae6c04ef8420e52c17810",
+        "unchangedOriginalNative": true
+      }
+    ],
+    "outputSha256": "d77e59931f20494084db9e6c76cba959cc37bc27b1c0e619f525570193bbd444"
+  }
 }

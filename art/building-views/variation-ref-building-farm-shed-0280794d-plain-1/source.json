@@ -1,0 +1,10 @@
+{
+ "id": "variation:ref-building-farm-shed-0280794d-plain:1",
+ "version": "variation-ref-building-farm-shed-0280794d-plain-1-4views-v3",
+ "files": {
+  "NE": "b56ca10d5dc3ab1a5fd43dccb08025a891de1470c0bf5936f368867c61d9c887",
+  "SE": "d64caa802ad0a4740d7e656b92bf6433de1a6a92f42f0acfc00e2c3fd8aa5071",
+  "SW": "74bebba37a2bc16e8f2b89fe3b1c5514f9a72101d0ddf00260a3a84c9b875682",
+  "NW": "53967927b1ecef9856019a361ca2a081e9b47837586d1f37a5cec4013b6b4aa9"
+ }
+}

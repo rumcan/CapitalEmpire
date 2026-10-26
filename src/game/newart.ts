@@ -9,6 +9,7 @@
 //   sizes (the owner, 2026-10-24: "Some are even placed so big they pixelate"): no picture is drawn above the pixels its atlas rect holds at the
 //   closest zoom (sizes.ts PIXEL_LIMIT), whatever asked for the size (a stand-in filling a bigger footprint, the player's resize, a studio size
 //   above what the atlas holds): it is drawn at its limit instead. Only the drawing: the footprint, collisions and saves keep the prop's scale.
+//   The packs size the pictures for this: prep-views.mjs packs each stand-in for the largest size any building drawn as it needs (standInNeeds).
 import { LIBRARY } from './library';
 import { isBuilding } from './mirror';
 import { BUILDING_IDS, VIEW_ART, unmirror } from './views-library';
@@ -89,6 +90,25 @@ function standIn(it: LibItem, x: number, y: number, k: number): number | undefin
   } else { const best = Math.min(...over); near = ks.filter(n => over[n]! <= best * (1 + NEAR)); }
   return pool[near[Math.floor(hash(x, y) * near.length)]!];
 }
+/** the stand-ins a building (a library index) may be drawn as at scale k, by place: standIn's choice once every one of them is packed for it (the
+ *  new-art buildings of its family nearest its size, within NEAR of the nearest, their pixels not counted). [] for an item drawn as itself or a tree */
+export function standInCandidates(item: number, k: number): number[] {
+  const it = LIBRARY[item]; if (!it || !SWAP[item] || it.kind === 'tree') return [];
+  const c = classOf(it), pool = c ? POOL.get(c) : undefined; if (!pool?.length) return [];
+  const want = span(it) * k, dist = pool.map(i => Math.abs(Math.log(want / span(LIBRARY[i]!) / own(LIBRARY[i]!)))), best = Math.min(...dist);
+  return pool.filter((_, n) => dist[n]! <= best + NEAR);
+}
+/** the scale each new-art building must be packed at (prep-views.mjs, over its own owner scale) for every old building drawn as it, at its owner
+ *  scale, to fill its footprint without stretching: id -> the largest of those buildings' scale x span(building) / span(stand-in). Only the
+ *  stand-ins some building needs are listed */
+export function standInNeeds(): Record<string, number> {
+  const need: Record<string, number> = {};
+  LIBRARY.forEach((it, i) => {
+    const k = own(it);
+    for (const s of standInCandidates(i, k)) { const n = LIBRARY[s]!, want = k * span(it) / span(n); if (!(need[n.id]! >= want)) need[n.id] = want; }
+  });
+  return need;
+}
 /** the anchor that centres a picture (item, flip, scale) on a footprint (tiles): the footprint's centre less the picture's own box offset */
 function centred(n: LibItem, flip: boolean, k: number, d: { x0?: number; y0?: number; x1?: number; y1?: number }): { x: number; y: number } | null {
   if (d.x0 === undefined || d.y0 === undefined || d.x1 === undefined || d.y1 === undefined || !n.boxes.length) return null;
@@ -104,6 +124,8 @@ function centred(n: LibItem, flip: boolean, k: number, d: { x0?: number; y0?: nu
  *  ?newart); never a prop */
 const swaps = (it: LibItem) => !isNew(it.id) && (it.kind === 'tree' ? NEW_ART_ONLY : isBuilding(it) && inInventory(it) && !BAKED_LOT(it) && (NEW_BUILDINGS_ONLY || NEW_ART_ONLY));
 const SWAP = LIBRARY.map(swaps);
+/** a library item the game never draws as itself: an old building drawn as a new-art stand-in picked by where it stands (the lot lab's palette leaves these out: a placed one would look different on every lot) */
+export const drawnAsStandIn = (item: number): boolean => !!SWAP[item];
 
 const CAR = LIBRARY.map(it => it.kind === 'car');
 /** the largest scale a drawable's item is drawn at (sizes.ts PIXEL_LIMIT; a parked car is drawn CAR_SCALE smaller than its scale, sprites.ts) */

@@ -1,12 +1,12 @@
 /** Per vehicle type, eight painted headings in world-angle order (+x through +x-y).
  *  The cars themselves are simulated in the sim worker (sim/sim.worker.ts). */
 import { LIBRARY } from './library';
-import { CAR_DIRECTIONS, carHeading } from './ext/car-art';
+import { CAR_DIRECTIONS, carHeading, carOwnerScale } from './ext/car-art';
 export { carHeading } from './ext/car-art';
 
 const byId = (id: string) => LIBRARY.findIndex(i => i.id === id);
-/** Sprite, flip and tile footprint around the lane point. */
-interface Facing { item: number; flip: boolean; ox: number; oy: number; hx: number; hy: number }
+/** Sprite, flip and tile footprint around the lane point; size: the car's owner size (ext/car-art carOwnerScale), read when the facings are built */
+export interface Facing { item: number; flip: boolean; ox: number; oy: number; hx: number; hy: number; size: number }
 let FACINGS: Facing[][] = [];
 /** the car sprite sets, one per car type, each with a facing per heading (built once) */
 export function facings() {
@@ -19,7 +19,7 @@ export function facings() {
   FACINGS = sets.map(set => set.map(([item, flip]) => {
     if (item < 0) throw new Error('Missing directional vehicle art; rebuild supplemental cars atlas');
     const b = LIBRARY[item].boxes[0];
-    return { item, flip, ox: (flip ? b.dy : b.dx) / 2, oy: (flip ? b.dx : b.dy) / 2, hx: (flip ? b.hy : b.hx) / 2, hy: (flip ? b.hx : b.hy) / 2 };
+    return { item, flip, ox: (flip ? b.dy : b.dx) / 2, oy: (flip ? b.dx : b.dy) / 2, hx: (flip ? b.hy : b.hx) / 2, hy: (flip ? b.hx : b.hy) / 2, size: carOwnerScale(LIBRARY[item].id) };
   }));
   return FACINGS;
 }

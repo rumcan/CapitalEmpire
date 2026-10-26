@@ -128,6 +128,9 @@ export default function App() {
     // the dev lot editor (P20 T071, dev builds only: ?dev or the I key): select, resize, move, turn, delete, add; edits kept in the lot presets
     let lotEditorOff: (() => void) | undefined, disposed = false;
     if (import.meta.env.DEV) void import('./game/dev/lot-editor').then(m => { if (!disposed) lotEditorOff = m.installLotEditor(g, canvas); });
+    // the lot lab (dev builds only: ?lotlab, the studio's Lot presets tab frames it): one lot composed as the game does, edited and saved as a preset
+    let lotLabOff: (() => void) | undefined;
+    if (import.meta.env.DEV && new URLSearchParams(location.search).has('lotlab')) void import('./game/dev/lot-lab').then(m => { if (!disposed) lotLabOff = m.installLotLab(g); });
     setGame(g);
     const unsub = g.subscribe(bump);
     g.init({ bench: new URLSearchParams(location.search).has('bench') ? +(new URLSearchParams(location.search).get('bench') || 1) || 1 : 0 }).catch(e => setFatal(String(e)));
@@ -136,7 +139,7 @@ export default function App() {
     const kd = (e: KeyboardEvent) => g.keyDown(e), ku = (e: KeyboardEvent) => g.keyUp(e);
     window.addEventListener('keydown', kd); window.addEventListener('keyup', ku);
     const iv = window.setInterval(bump, 500);
-    return () => { disposed = true; lotEditorOff?.(); unsub(); g.destroy(); canvas.removeEventListener('wheel', wheel); window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku); clearInterval(iv); };
+    return () => { disposed = true; lotEditorOff?.(); lotLabOff?.(); unsub(); g.destroy(); canvas.removeEventListener('wheel', wheel); window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku); clearInterval(iv); };
   }, []);
 
   const toasts = game ? game.toasts.filter(t => performance.now() - t.t < 4000) : [];

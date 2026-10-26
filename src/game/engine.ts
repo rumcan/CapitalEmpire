@@ -49,6 +49,7 @@ import { inQuad, type CurbDef } from './event/curb';
 import { SpriteTiles, spriteRect, type Drawable } from './sprites';
 import { readSave, writeSave, clearSave, backupTownSlot, SAVE_VERSION, segRec, exportSaveBytes, importSaveBytes, listSaveBackups, readBackup, deleteBackup, type SaveV5 } from './save';
 import { CAR_COLOURS, parkedCar } from './traffic';
+import { carOwnerScale } from './ext/car-art';
 import { SimClient, type LotView } from './sim/client';
 import { townClockFor, townTimeOf } from './sim/townclock';
 import { zoneOf } from './sim/routing';
@@ -70,8 +71,8 @@ import { CHUNK_CASTER_REACH, LIVING_PLANT_MARGIN, casterKind, casterOf, doorTowa
 import { townTreeCell } from './towntrees';
 import type { BendMode, LibItem, LineStyle, Prop, Tool } from './types';
 import { LK, LaneGraph, laneAt, laneOff } from './sim/lanes';
-import { LV, type LotTuple } from './lots/town';
-import { acrossLines, compose, fenceOnly, isCarPark, pickedPreset, type ComposeState, type FenceLines, type LotGeom, type Placed } from './lots/compose';
+import { LU, LV, type LotTuple } from './lots/town';
+import { acrossLines, compose, farmPreset, fenceOnly, isCarPark, lotPresets, pickedPreset, type ComposeState, type FenceLines, type LotGeom, type Placed } from './lots/compose';
 import { LotMap } from './lots/lots';
 import { TOWN_BLOCKS, TOWN_POP, townCentres, townGrid } from './lots/seedtowns';
 import { Names, RoadNames } from './ext/names';
@@ -1495,7 +1496,9 @@ export class Game {
     const paints = this.paint.areas.filter(a => boxNear(ptsBox(a.pts), x0, y0, x1, y1, g));
     const cg = this.courseGrid, grid = !!cg && boxNear([cg.x0, cg.y0, cg.x0 + cg.w * CELL_T, cg.y0 + cg.h * CELL_T], x0, y0, x1, y1, g);
     const rb = this.range.scene?.box, pb = this.range.scene?.practice.box; // the driving range's plot and its practice area keep clear of trees (P24, T129, T130)
+    const lab = this.labClear; // the lot lab's lot and street keep clear of trees (stageLab): only the lot's own art shows round its props
     const free = (x: number, y: number, r: number) => {
+      if (lab && x > lab[0] - r && x < lab[2] + r && y > lab[1] - r && y < lab[3] + r) return false;
       if (rb && x > rb[0] - r && x < rb[2] + r && y > rb[1] - r && y < rb[3] + r) return false;
       if (pb && x > pb[0] - r && x < pb[2] + r && y > pb[1] - r && y < pb[3] + r) return false;
       for (const l of lots) if (lotGap(l, x, y) < r) return false;
@@ -1815,6 +1818,8 @@ export class Game {
       if (preset !== undefined) { const at = this.lotOf(k); if (!at || pickedPreset(at.g, at.st)?.id !== preset) continue; }
       this.lotQueue.add(k);
     }
+    // the farms too, for every lot or an edit to a farm preset: an approved farm preset replaces a parcel's procedural farm (farmPreset)
+    if (preset === undefined || lotPresets().find(p => p.id === preset)?.use === 'farm') for (const k of this.farmProps.keys()) this.farmQueue.add(k);
     this.flushLotGround(); this.emit();
   }
   /** a prop the dev editor moved, scaled or turned: its footprint, grids and sprites follow, and the game saves (player props) */
@@ -1870,7 +1875,7 @@ export class Game {
   private placeFarm(key: string) {
     const f = this.farmMap.farms.get(key); if (!f) return;
     this.dropFarm(key);
-    const c = composeFarm(f.p, f.seed), ps: Prop[] = [], pk = 'farm:' + key;
+    const fp = farmPreset(f.p), c = fp ? compose({ o: f.p.o, u: f.p.u, n: f.p.n, w: f.p.w, d: f.p.d }, { use: LU.NONE, level: LV.BUILT, decline: 0, seed: f.seed, preset: fp.id }) : composeFarm(f.p, f.seed), ps: Prop[] = [], pk = 'farm:' + key;
     for (const q of c.props) { const i = LIB_INDEX.get(q.id); if (i !== undefined) ps.push(this.addProp(i, q.x, q.y, q.flip, q.scale, pk)); }
     this.farmProps.set(key, ps); this.setLotGround(pk, c.ground);
   }
@@ -3468,7 +3473,7 @@ export class Game {
       const key = `park:${id}:${i}`, have = this.parkCars.get(key);
       if (have && this.props.has(have)) continue;
       const bay = pk!.bays[i]!, facing = parkedCar(i, bay.dir);
-      this.parkCars.set(key, this.addProp(facing.item, bay.x - facing.ox, bay.y - facing.oy, facing.flip, 1, key));
+      this.parkCars.set(key, this.addProp(facing.item, bay.x - facing.ox, bay.y - facing.oy, facing.flip, facing.size, key));
     }
     for (let i = want; ; i++) { const key = `park:${id}:${i}`, p = this.parkCars.get(key); if (!p) break; this.removeProp(p); this.parkCars.delete(key); }
   }
@@ -4181,7 +4186,7 @@ export class Game {
     this.cardsApplied = 0; this.setCardFields([]); this.traffic.round = new Round().view();
     for (const k of this.lotProps.keys()) this.setLotGround(k, null);
     for (const k of this.blockLawns) this.setLotGround(k, null); this.blockLawns.clear();
-    this.lotProps.clear(); this.lotQueue.clear(); this.staged.clear(); this.perf.lotProps = 0;
+    this.lotProps.clear(); this.lotQueue.clear(); this.staged.clear(); this.labLot = null; this.labClear = null; this.perf.lotProps = 0;
     this.dropAllFarms();
     this.traffic.setGolf(false, 1, 0);
     this.traffic.setBudget(null, null); this.showWin = false; this.route = []; this.selected = null; this.builds = [];
@@ -4244,6 +4249,43 @@ export class Game {
       this.staged.set(l.key, { g, st }); this.placeLot(l.key, g, st);
     });
   }
+  /** the lot lab's lot (stageLab): its key, geometry, road and size, so restageLab composes it again; null until a lab lot is staged and after a reset */
+  private labLot: { key: string; g: LotGeom; road: number; w: number; d: number } | null = null;
+  /** the box (tiles) the lot lab keeps clear of forest trees: the lab lot and its street with 70 tiles to spare past the road, so the view round it is the map's own grass (stageLab); null outside the lab */
+  private labClear: BBox | null = null;
+  /** debug (the lot lab, src/game/dev/lot-lab.ts): saving and farms off, an empty map, the sim paused, one straight street through the terrain's start at
+   *  the road angle (presets.ts Road: the side the street lies on, in eighth turns; even along a map axis, odd a 45-degree diagonal) and one lot
+   *  of w x d tiles fronting it on that side, staged with st (st.preset forces its preset); the camera on the lot. Returns its key and geometry */
+  stageLab(o: { road: number; w: number; d: number; st: ComposeState }): { key: string; g: LotGeom } {
+    // no farms either: their parcels would grow along the lab street
+    this.benchMode = true; this.farmsOn(false); this.reset(); this.afterLoad(); this.setSpeed(0);
+    // the street's side from the lot (by road), the lot's away vector n (from the street) and its along vector u
+    const h = Math.SQRT1_2, S: Pt[] = [{ x: 0, y: 1 }, { x: h, y: h }, { x: 1, y: 0 }, { x: h, y: -h }, { x: 0, y: -1 }, { x: -h, y: -h }, { x: -1, y: 0 }, { x: -h, y: h }];
+    const s = S[o.road]!, n = { x: -s.x, y: -s.y }, u = { x: -n.y, y: n.x }, t = this.terrain.start;
+    // the street's whole-tile direction (u on an axis, u / h on a diagonal), and the start rounded to tiles, kept 40 tiles inside the map with the leg (30 either way)
+    const D = o.road % 2 ? { x: Math.round(u.x / h), y: Math.round(u.y / h) } : u;
+    const R = { x: clamp(Math.round(t.x + t.size / 2), 40 + 30 * Math.abs(D.x), MAP - 40 - 30 * Math.abs(D.x)), y: clamp(Math.round(t.y + t.size / 2), 40 + 30 * Math.abs(D.y), MAP - 40 - 30 * Math.abs(D.y)) };
+    this.edit.addLegs([{ a: { x: R.x - 30 * D.x, y: R.y - 30 * D.y }, b: { x: R.x + 30 * D.x, y: R.y + 30 * D.y } }], CLASS.street, 0);
+    this.commitNetwork();
+    // the front edge sits at the verge: the origin lies h + walk off the centre line (lots.ts segLots, r0), with no clearance on top
+    const off = CLASS.street.h + CLASS.street.walk, C = { x: R.x - s.x * off, y: R.y - s.y * off };
+    const g: LotGeom = { o: { x: C.x - u.x * o.w / 2, y: C.y - u.y * o.w / 2 }, u, n, w: o.w, d: o.d };
+    this.staged.set('lab', { g, st: o.st }); this.placeLot('lab', g, o.st);
+    this.labLot = { key: 'lab', g, road: o.road, w: o.w, d: o.d };
+    // no forest round the lab lot and its street (the lab shows the lot on the map's plain grass); the cells there plant again without it
+    const b = lotBoxOf([g.o.x, g.o.y], [u.x, u.y], [n.x, n.y], o.w, o.d), m = 2 * off + 70;
+    this.labClear = [b[0]! - m, b[1]! - m, b[2]! + m, b[3]! + m]; this.dropTownTrees(this.labClear[0], this.labClear[1], this.labClear[2], this.labClear[3]);
+    this.setTool('select');
+    const c = { x: g.o.x + (u.x * o.w + n.x * o.d) / 2, y: g.o.y + (u.y * o.w + n.y * o.d) / 2 };
+    this.lookAt(c.x, c.y, ZOOM_MAX); this.emit();
+    return { key: 'lab', g };
+  }
+  /** debug (the lot lab): the staged lab lot composed again with a new state (a variant, another preset), the street and the lot kept; null when no lab lot is staged */
+  restageLab(st: ComposeState): { key: string; g: LotGeom } | null {
+    if (!this.labLot) return null;
+    const { key, g } = this.labLot; this.staged.set(key, { g, st }); this.placeLot(key, g, st); this.emit();
+    return { key, g };
+  }
 
   /** a new valley: the three towns' street grids (townGrid: the legs on buildable ground, the middle lines avenues), laid as one edit; the
    *  city worker stamps the towns to TOWN_POP residents after the network arrives (stampPending). No lamps yet: the net is rebuilt only by
@@ -4283,7 +4325,8 @@ export class Game {
     // helpers: a sprite facing +y with its front edge on frontY; flipped sprites face +x with their front edge on frontX
     const front = (id: string, cx: number, frontY: number, k = 1) => { const i = byId(id); if (i < 0) return; const it = LIBRARY[i], b = it.boxes[0], x = cx + Ox - b.dx * k / 2, y = frontY + Oy - (b.dy * k / 2 + b.hy * k / 2); if (!this.canPlace(it, x, y, false, k)) this.addProp(i, x, y, false, k); };
     const side = (id: string, frontX: number, cy: number, k = 1) => { const i = byId(id); if (i < 0) return; const it = LIBRARY[i], b = it.boxes[0], x = frontX + Ox - (b.dy * k / 2 + b.hy * k / 2), y = cy + Oy - b.dx * k / 2; if (!this.canPlace(it, x, y, true, k)) this.addProp(i, x, y, true, k); };
-    const put = (id: string, x: number, y: number, k = 1, flip = false) => { const i = byId(id); if (i >= 0 && !this.canPlace(LIBRARY[i], x + Ox, y + Oy, flip, k)) this.addProp(i, x + Ox, y + Oy, flip, k); };
+    // a car takes its owner size (carOwnerScale: the studio's, 1 unset) on top of k; the engine draws it at CAR_SCALE times that
+    const put = (id: string, x: number, y: number, k = 1, flip = false) => { const i = byId(id); if (i < 0) return; const s = LIBRARY[i].kind === 'car' ? k * carOwnerScale(id) : k; if (!this.canPlace(LIBRARY[i], x + Ox, y + Oy, flip, s)) this.addProp(i, x + Ox, y + Oy, flip, s); };
     front('town:postoffice', 45, 75.4); front('town:bakery', 54, 75.4); front('world:arcade', 63, 75.4);
     front('world:video_rental', 96, 75.4); front('town:grocery', 106, 75.4); front('world:diner', 115, 75.4); front('town:pharmacy', 123, 75.4);
     front('town:laundromat', 40, 118.9); front('town:fish_tackle', 128, 100);

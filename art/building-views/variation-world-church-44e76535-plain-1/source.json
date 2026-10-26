@@ -1,0 +1,10 @@
+{
+ "id": "variation:world-church-44e76535-plain:1",
+ "version": "variation-world-church-44e76535-plain-1-4views-v2",
+ "files": {
+  "NE": "e4ecf42b5732f95a604d5563d46464f345cad9ad484514491563133da6ceabed",
+  "SE": "4dcfb463d4df1d7f289d3b1443672fe5bd24672f4c0c565c1455e32bbb345b59",
+  "SW": "d184b00f664f2ec3e7fb48e8498e392d267d3fe60dc397ba7bc44e714d837c40",
+  "NW": "d0c3f579a33d0b64def1dd6b65c715b9160dfba010a2c923b00558d0d81e8252"
+ }
+}

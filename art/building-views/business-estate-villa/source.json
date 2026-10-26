@@ -1,10 +1,10 @@
 {
  "id": "business:estate-villa",
- "version": "business-estate-villa-4views-v1",
+ "version": "business-estate-villa-4views-v4",
  "files": {
-  "NE": "8e539cf15f4b959921656e6f5948292b98ae7d7b92841cc711037d7d3744f7f2",
-  "SE": "457be3ef5d8d96e63a4e45cc374b4c60774ee29c6b51d3c691fc1c1b124e99bd",
-  "SW": "44a6f71c06f46c72ccdd10e16b39515f9553e5ad898ff3ef19ee242f9b1fa819",
-  "NW": "868c724214bf1fc9d46729dbac8abac881f0750018c12200398ac4497fb2f21b"
+  "NE": "2be38cb179cde97825c68fada101e669198f91cff1b537d39bd363792e04f434",
+  "SE": "83e93bbbb0d4ceaa6d5e6e20984fa2dbf488b63d9be854e937c39e8eccc1bbcd",
+  "SW": "302bdff7285d22a704413d4ea838e867ca54896a937ddd92b8ea35549fa2a5e3",
+  "NW": "ded8a3f017a9517a9e6dbc8d97234f8f653d4f3f02aae6c04ef8420e52c17810"
  }
 }

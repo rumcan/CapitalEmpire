@@ -19,5 +19,16 @@
     }
   ],
   "integrationStatus": "blocked",
-  "integrationReason": "Awaiting real alpha, four-view geometry, fixed camera/light and cohesive-theme review."
+  "integrationReason": "Both rear views retain long rear wall LEFT and gabled end RIGHT; need an actual opposite rear corner.",
+  "sourceReview": {
+    "reviewed": "2026-10-24",
+    "actualAlphaComposite": "output/building-priority/newest-review-4.png",
+    "theme": "Matte Maple Bean timber/brick/cream, charcoal roofs, amber dusk lamps, fixed upper-right key coherent across these sources; holds below are concrete camera/geometry/facade-continuity faults, not backgrounds.",
+    "corrections": [
+      {
+        "direction": "SW",
+        "brief": "Show long plain rear wall RIGHT and opposite gabled end LEFT, opposite existing SE. Preserve two-storey olive siding, rear window counts and chimney fixed. Front entry deck must be hidden."
+      }
+    ]
+  }
 }

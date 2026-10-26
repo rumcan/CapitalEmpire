@@ -22,8 +22,203 @@
       "sha256": "8d60d56c563159d06a052d472856e067366834957936b942a749934883fd2e3c"
     }
   ],
-  "generator": "built-in image_gen",
+  "generator": "pixel-conserving-view-reassignment",
   "generatedAt": "2026-10-23T16:19:47.600Z",
   "status": "generated-awaiting-visual-review",
-  "implementation": "Other AI handles runtime integration"
+  "implementation": "Other AI handles runtime integration",
+  "integrationStatus": "ready",
+  "integrationReason": "Fivepure-reassignmentaudit: fourdistinctphysicalcornersalreadyexisted; canonicalclockwiseorderingcorrectedwithoutgeneration/resizing/mirroring. Actualmagentaalphaandpost-permutationgeometryreviewPASS; all4sourcePNGbytehashesconserved. RuntimecalibrationrequiresmatchingmeasurednativeSHA.",
+  "newImageGeneration": false,
+  "viewReassignment": {
+    "method": "Exact-native PNG permutation; no generation, resizing, mirroring or repainting.",
+    "sourceSheet": "art/theme-consistency/generated/buildings/gen-back-patio-pool-4views-v1.png",
+    "sourceSheetSha256": "bf9f773c00763dee7f4b184cbef4f5644c2ad8f1e45e0656dd9b9057fd392a20",
+    "sourceProvenanceSha256": "9fe634861209daf2a8d9f4c14771edd0581034e0ccf92ac8165b089a2c4a6a95",
+    "mapping": {
+      "NE": "NE",
+      "SE": "SW",
+      "SW": "SE",
+      "NW": "NW"
+    },
+    "originalViewEvidence": [
+      {
+        "direction": "NE",
+        "canonicalNative": "art/theme-consistency/generated/buildings/gen-back-patio-pool-4views-v1/NE.native.png",
+        "canonicalRejected": "Existing native omits/changes nonzero RGBA geometry from the intact source cell; recovered complete source cell instead.",
+        "originalNativeSha256": "d3dea6d17d1430f2991775efdaf271b4a54701965508349894a00dbfe461589d",
+        "bounds": [
+          627,
+          594
+        ],
+        "nonzeroAlphaPixels": 176040,
+        "normalisedNonzeroRgbaGeometrySha256": "74020b5b42992f248aff2a86cc6553d3c9f7492ec47705eea3a04957e3da967b"
+      },
+      {
+        "direction": "SE",
+        "canonicalNative": "art/theme-consistency/generated/buildings/gen-back-patio-pool-4views-v1/SE.native.png",
+        "canonicalRejected": "Existing native omits/changes nonzero RGBA geometry from the intact source cell; recovered complete source cell instead.",
+        "originalNativeSha256": "ca33f0d26f8235632d2710d9d61a06cfcc588af2b191068eca9895a0ec3219b4",
+        "bounds": [
+          603,
+          570
+        ],
+        "nonzeroAlphaPixels": 153031,
+        "normalisedNonzeroRgbaGeometrySha256": "5f83d2f4c0abb64ae07f843d72ee28c68a602e070af3ae73cafcd8a2e5a0bf9e"
+      },
+      {
+        "direction": "SW",
+        "canonicalNative": "art/theme-consistency/generated/buildings/gen-back-patio-pool-4views-v1/SW.native.png",
+        "canonicalRejected": "Existing native omits/changes nonzero RGBA geometry from the intact source cell; recovered complete source cell instead.",
+        "originalNativeSha256": "9e3266f55891f86de19d9a595c48aa2d34319bebb317431dbbab19f5762ecdfc",
+        "bounds": [
+          627,
+          627
+        ],
+        "nonzeroAlphaPixels": 159344,
+        "normalisedNonzeroRgbaGeometrySha256": "cfd0876991a2deebd7c516f41ac88a10f7305b774018bae2d76e2fe2a900f735"
+      },
+      {
+        "direction": "NW",
+        "canonicalNative": "art/theme-consistency/generated/buildings/gen-back-patio-pool-4views-v1/NW.native.png",
+        "canonicalRejected": "Existing native omits/changes nonzero RGBA geometry from the intact source cell; recovered complete source cell instead.",
+        "originalNativeSha256": "056676e8bf2a81f305d5dfebf3628720d1fa9e0275ed0a87798ec34a8e8e0f52",
+        "bounds": [
+          622,
+          626
+        ],
+        "nonzeroAlphaPixels": 155245,
+        "normalisedNonzeroRgbaGeometrySha256": "585a4cef794e670f3841dcfc378a18ac221e6aa8720c0c4b5aebb805c76ab856"
+      }
+    ],
+    "hashMappings": [
+      {
+        "direction": "NE",
+        "sourceDirection": "NE",
+        "oldNativeSha256": "d3dea6d17d1430f2991775efdaf271b4a54701965508349894a00dbfe461589d",
+        "newNativeSha256": "d3dea6d17d1430f2991775efdaf271b4a54701965508349894a00dbfe461589d"
+      },
+      {
+        "direction": "SE",
+        "sourceDirection": "SW",
+        "oldNativeSha256": "9e3266f55891f86de19d9a595c48aa2d34319bebb317431dbbab19f5762ecdfc",
+        "newNativeSha256": "9e3266f55891f86de19d9a595c48aa2d34319bebb317431dbbab19f5762ecdfc"
+      },
+      {
+        "direction": "SW",
+        "sourceDirection": "SE",
+        "oldNativeSha256": "ca33f0d26f8235632d2710d9d61a06cfcc588af2b191068eca9895a0ec3219b4",
+        "newNativeSha256": "ca33f0d26f8235632d2710d9d61a06cfcc588af2b191068eca9895a0ec3219b4"
+      },
+      {
+        "direction": "NW",
+        "sourceDirection": "NW",
+        "oldNativeSha256": "056676e8bf2a81f305d5dfebf3628720d1fa9e0275ed0a87798ec34a8e8e0f52",
+        "newNativeSha256": "056676e8bf2a81f305d5dfebf3628720d1fa9e0275ed0a87798ec34a8e8e0f52"
+      }
+    ],
+    "allFourPngByteHashesConserved": true,
+    "fullRgbaPlacementConserved": true,
+    "outputSha256": "5f6685785e3b3e61c847629bb7064de8f38e448dfc80a9daf1567bfce4dd376a"
+  },
+  "singleViewCorrection": {
+    "sourceSheet": "art/theme-consistency/generated/buildings/gen-back-patio-pool-4views-v1.png",
+    "sourceSheetSha256": "bf9f773c00763dee7f4b184cbef4f5644c2ad8f1e45e0656dd9b9057fd392a20",
+    "direction": null,
+    "type": "exact-native-view-reassignment",
+    "unchangedViewsPreservedByteForByte": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "originalViewEvidence": [
+      {
+        "direction": "NE",
+        "canonicalNative": "art/theme-consistency/generated/buildings/gen-back-patio-pool-4views-v1/NE.native.png",
+        "canonicalRejected": "Existing native omits/changes nonzero RGBA geometry from the intact source cell; recovered complete source cell instead.",
+        "originalNativeSha256": "d3dea6d17d1430f2991775efdaf271b4a54701965508349894a00dbfe461589d",
+        "bounds": [
+          627,
+          594
+        ],
+        "nonzeroAlphaPixels": 176040,
+        "normalisedNonzeroRgbaGeometrySha256": "74020b5b42992f248aff2a86cc6553d3c9f7492ec47705eea3a04957e3da967b"
+      },
+      {
+        "direction": "SE",
+        "canonicalNative": "art/theme-consistency/generated/buildings/gen-back-patio-pool-4views-v1/SE.native.png",
+        "canonicalRejected": "Existing native omits/changes nonzero RGBA geometry from the intact source cell; recovered complete source cell instead.",
+        "originalNativeSha256": "ca33f0d26f8235632d2710d9d61a06cfcc588af2b191068eca9895a0ec3219b4",
+        "bounds": [
+          603,
+          570
+        ],
+        "nonzeroAlphaPixels": 153031,
+        "normalisedNonzeroRgbaGeometrySha256": "5f83d2f4c0abb64ae07f843d72ee28c68a602e070af3ae73cafcd8a2e5a0bf9e"
+      },
+      {
+        "direction": "SW",
+        "canonicalNative": "art/theme-consistency/generated/buildings/gen-back-patio-pool-4views-v1/SW.native.png",
+        "canonicalRejected": "Existing native omits/changes nonzero RGBA geometry from the intact source cell; recovered complete source cell instead.",
+        "originalNativeSha256": "9e3266f55891f86de19d9a595c48aa2d34319bebb317431dbbab19f5762ecdfc",
+        "bounds": [
+          627,
+          627
+        ],
+        "nonzeroAlphaPixels": 159344,
+        "normalisedNonzeroRgbaGeometrySha256": "cfd0876991a2deebd7c516f41ac88a10f7305b774018bae2d76e2fe2a900f735"
+      },
+      {
+        "direction": "NW",
+        "canonicalNative": "art/theme-consistency/generated/buildings/gen-back-patio-pool-4views-v1/NW.native.png",
+        "canonicalRejected": "Existing native omits/changes nonzero RGBA geometry from the intact source cell; recovered complete source cell instead.",
+        "originalNativeSha256": "056676e8bf2a81f305d5dfebf3628720d1fa9e0275ed0a87798ec34a8e8e0f52",
+        "bounds": [
+          622,
+          626
+        ],
+        "nonzeroAlphaPixels": 155245,
+        "normalisedNonzeroRgbaGeometrySha256": "585a4cef794e670f3841dcfc378a18ac221e6aa8720c0c4b5aebb805c76ab856"
+      }
+    ],
+    "placements": [
+      {
+        "direction": "NE",
+        "left": 198,
+        "top": 213,
+        "width": 627,
+        "height": 598,
+        "nativeSha256": "d3dea6d17d1430f2991775efdaf271b4a54701965508349894a00dbfe461589d",
+        "unchangedOriginalNative": true
+      },
+      {
+        "direction": "SE",
+        "left": 1222,
+        "top": 198,
+        "width": 627,
+        "height": 627,
+        "nativeSha256": "9e3266f55891f86de19d9a595c48aa2d34319bebb317431dbbab19f5762ecdfc",
+        "unchangedOriginalNative": true
+      },
+      {
+        "direction": "SW",
+        "left": 208,
+        "top": 1249,
+        "width": 607,
+        "height": 574,
+        "nativeSha256": "ca33f0d26f8235632d2710d9d61a06cfcc588af2b191068eca9895a0ec3219b4",
+        "unchangedOriginalNative": true
+      },
+      {
+        "direction": "NW",
+        "left": 1222,
+        "top": 1222,
+        "width": 627,
+        "height": 627,
+        "nativeSha256": "056676e8bf2a81f305d5dfebf3628720d1fa9e0275ed0a87798ec34a8e8e0f52",
+        "unchangedOriginalNative": true
+      }
+    ],
+    "outputSha256": "5f6685785e3b3e61c847629bb7064de8f38e448dfc80a9daf1567bfce4dd376a"
+  }
 }

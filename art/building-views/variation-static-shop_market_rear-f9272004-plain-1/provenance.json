@@ -18,6 +18,12 @@
       "sha256": "6efbe40eb53094b7d084bd346d59f11ee55a8b2c16dd7e5068b90206c5fdb23e"
     }
   ],
-  "integrationStatus": "blocked",
-  "integrationReason": "Awaiting real alpha, four-view geometry, fixed camera/light and cohesive-theme review."
+  "integrationStatus": "ready",
+  "integrationReason": "Loading door/window/vent face occurs NE/NW opposite corners; blank rear and utility side faces SE/SW are distinct. Roof equipment follows turns, no grey floors.",
+  "sourceReview": {
+    "reviewed": "2026-10-24",
+    "actualAlphaComposite": "output/building-priority/newest-review-1.png",
+    "theme": "Matte Maple Bean timber/brick/cream, charcoal roofs, amber dusk lamps, fixed upper-right key coherent across these sources; holds below are concrete camera/geometry/facade-continuity faults, not backgrounds.",
+    "corrections": []
+  }
 }

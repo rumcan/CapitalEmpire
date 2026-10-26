@@ -19,5 +19,16 @@
     }
   ],
   "integrationStatus": "blocked",
-  "integrationReason": "Awaiting real alpha, four-view geometry, fixed camera/light and cohesive-theme review."
+  "integrationReason": "Both rear corners retain the same gable-left/long-rear-right orientation and similar chimney position.",
+  "sourceReview": {
+    "reviewed": "2026-10-24",
+    "actualAlphaComposite": "output/building-priority/newest-review-4.png",
+    "theme": "Matte Maple Bean timber/brick/cream, charcoal roofs, amber dusk lamps, fixed upper-right key coherent across these sources; holds below are concrete camera/geometry/facade-continuity faults, not backgrounds.",
+    "corrections": [
+      {
+        "direction": "SW",
+        "brief": "Show opposite back corner to SE: plain long rear wall LEFT and opposite gabled end RIGHT (reverse existing SE gable-left/rear-right). Front projecting gable porch hidden. Keep two-storey green siding/window positions and chimney physical side fixed."
+      }
+    ]
+  }
 }

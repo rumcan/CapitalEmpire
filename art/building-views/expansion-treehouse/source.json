@@ -1,10 +1,10 @@
 {
  "id": "expansion:treehouse",
- "version": "expansion-treehouse-4views-v1",
+ "version": "expansion-treehouse-4views-v2",
  "files": {
-  "NE": "953f7bbccb6e86666e23928b33a4fd3ebad8659c34c7b2dc6d4c914a5c33a5bd",
-  "SE": "ffbd5c4ab6d823ed09900b3eef31de1aae8257d6dc74d69ff4d2df5ef9b81d47",
-  "SW": "ab456ced5af1e9c0a67086e54e4075ea32e6ee48c61cb0d76a610d57decfe69d",
-  "NW": "a9c63e3699950a370c1dc7f7a119a417c2ad483e9778dcf8a86ff9328f373130"
+  "NE": "31e04134ca85ca2df6978146b359ee32b9dee7c572cebd7ced4b385363fe0571",
+  "SE": "ab8a88aa13a1279d65dec40184515ae09856cd28861c5fc06aedd30ba154f468",
+  "SW": "a4a95f53b9e7210cd30f0b25b9d7598a8b429fd50bca596cad50bf52fbd6dc26",
+  "NW": "5d5c43954af405de1b6a342a969ae854561fb41e1f1103dcb84a2d7cf9010b21"
  }
 }

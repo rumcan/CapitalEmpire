@@ -2,8 +2,11 @@
 //   Library: every sprite as the game has it (cut from the atlas) and every lot decal (leaf drifts, stains: the decal strip), beside a person for scale: remove it from the game, or make it
 //            bigger or smaller everywhere it is placed (scripts/assets/removed.json, scale-overrides.json). Each card is the picture the game draws at the size it
 //            draws it (an old building as its new-art stand-in; review/size-report.ts runs the game's own code), with the size it is sharp to at the closest
-//            zoom: a size past its picture's own pixels is refused. The game reads scale-overrides.json at runtime: a size shows after a reload of the game.
-//   Lots:    the baked house lots: click any sprite in one to move, resize, flip or delete it there (lot-edits.json)
+//            zoom: a size past its picture's own pixels is allowed and shown as soft (a Rebuild upscales the picture, a little softer). The game reads scale-overrides.json at runtime: a size shows after a reload of the game.
+//   Lots:    the game's lot lab (src/game/dev/lot-lab.ts) framed from the game dev server named by STUDIO_GAME_URL (default
+//            http://localhost:5174, which must run from this same checkout): one road and one lot composed as the game does at any type,
+//            size and road angle, edited, its ground painted, saved to src/game/lots/lot-presets.json and approved for the game. (The old
+//            baked house lots' tab is gone; its /api/lot* routes below are unused until the baked-lot pipeline retires, P20 T066.)
 //   People:  every townsperson's walk (art/people3d, 8 facings x idle + 8 walk frames), animated: fix any frame that faces the wrong way (mirror it, use another frame in its
 //            place, or drop in a new picture): walker-fixes.json, the pictures in scripts/assets/walker-frames (walker-fix.mjs)
 //   Holes:   the golf hole presets (src/game/golf/hole-presets.json, 18 slots): areas and props edited on a canvas, or a generated hole from a seed (holes.js)
@@ -13,7 +16,8 @@
 //   Painted: which hand-painted family each surface wears (the golf surfaces, the map, the town lawns, the living ground, the course walls, any
 //            preset): a family picker with each family's three zoom levels, its version, scale, tint and tone; Save writes
 //            src/game/painted-surfaces.json, which a dev game from this checkout takes at once (painted.js)
-//   Rebuild: runs the asset steps again, then npm run build, so the game takes the changes.
+//   Rebuild: runs every pack the studio's sizes reach again (decals, map patches, town sprites, cars, business art, building site, four-view
+//            buildings and their stand-ins, the scale table; rebuild() below), then npm run build, so the game takes the changes.
 //   node scripts/assets/review/server.mjs [--port 5179]   then open http://127.0.0.1:5179/
 import { execFile, spawn } from 'node:child_process';
 import fs from 'node:fs';
@@ -31,11 +35,16 @@ import { LIB, drawOrder, rectOf, render } from '../lot-render.mjs';
 import { mapScale } from '../lot-layout.mjs';
 import { boundsOf, lotVariants } from '../lot-variants.mjs';
 import { fixCode, newFramePath, parseFix } from '../walker-fix.mjs';
+import { averageHash, foldCopies } from './copies.mjs';
 
 const PORT = +(process.argv[process.argv.indexOf('--port') + 1] || 5179) || 5179;
 const ATLAS = path.join(ROOT, 'src/assets/atlas'), CACHE = path.join(ROOT, 'output/review/thumbs');
 fs.mkdirSync(CACHE, { recursive: true });
 const LOT_RES = 0.45;
+/** a car's size key (src/game/ext/car-art carSizeId, the same rule): the eight headings of one car model (cars:<model>:<heading>) share the model's size */
+const carKey = id => id.replace(/^(cars:.+):(?:SE|S|SW|W|NW|N|NE|E)$/, '$1');
+/** the road cars' size (src/game/ext/car-art CAR_SCALE): a car is drawn at it times its studio size, so its card shows that size */
+const CAR_SCALE = +(/export const CAR_SCALE = ([\d.]+)/.exec(fs.readFileSync(path.join(ROOT, 'src/game/ext/car-art/index.ts'), 'utf8'))?.[1] ?? 1);
 
 // ---------------------------------------------------------------- sizes: every sprite as the game draws it (review/size-report.ts)
 const SIZE_SRC = path.join(ROOT, 'scripts/assets/review/size-report.ts'), SIZE_OUT = path.join(ROOT, 'output/review/size-report.mjs');
@@ -101,20 +110,30 @@ const APPENDED = [
 const safe = id => id.replace(/[^a-z0-9_.-]/gi, '_');
 const DECAL_PAGE = path.join(ROOT, 'src/assets/ground/lot-decals.webp');
 /** a sprite's picture as the game has it, cut from the atlas, or a lot decal's from its strip (cached on disk, so a removed sprite still shows after a rebuild) */
-async function thumb(id) {
+/** a sprite's picture as the game has it (its spec: tex and quad, or a decal's rect), cut from its atlas page and cached on disk by the spec and the
+ *  page's version. Returns { png, version }: version null when there is no spec (a removed sprite's last picture is kept as it was) */
+async function picture(id, s) {
   const f = path.join(CACHE, safe(id) + '.png'), stamp = f + '.json';
-  const s = library().find(x => x.id === id);
   // Removed sprites and decals lose their entry; their last picture must survive a rebuild.
-  if (!s?.tex && !s?.rect) return fs.existsSync(f) ? fs.readFileSync(f) : null;
+  if (!s?.tex && !s?.rect) return { png: fs.existsSync(f) ? fs.readFileSync(f) : null, version: null };
   const page = s.rect ? DECAL_PAGE : s.page ?? path.join(ATLAS, `sprites-${s.tex[0]}-0.webp`), stat = fs.statSync(page);
   const version = JSON.stringify([s.rect ?? s.tex, s.quad, stat.size, stat.mtimeMs]);
-  if (fs.existsSync(f) && fs.existsSync(stamp) && fs.readFileSync(stamp, 'utf8') === version) return fs.readFileSync(f);
+  if (fs.existsSync(f) && fs.existsSync(stamp) && fs.readFileSync(stamp, 'utf8') === version) return { png: fs.readFileSync(f), version };
   const m = await sharp(page).metadata();
   let left, top, width, height;
   if (s.rect) [left, top, width, height] = s.rect;
   else { const [, u0, v0, u1, v1] = s.tex; left = Math.round(u0 * m.width); top = Math.round(v0 * m.height); width = Math.max(1, Math.round((u1 - u0) * m.width)); height = Math.max(1, Math.round((v1 - v0) * m.height)); }
   const png = await sharp(page).extract({ left, top, width, height }).resize(1200, 1200, { fit: 'inside', withoutEnlargement: true }).png().toBuffer();
-  fs.writeFileSync(f, png); fs.writeFileSync(stamp, version); return png;
+  fs.writeFileSync(f, png); fs.writeFileSync(stamp, version); return { png, version };
+}
+/** a sprite's picture for the thumbnail route: a sprite the game has (the library), else a view the four-view art appends (size-report.ts: its tex and page) */
+async function thumb(id) { return (await picture(id, library().find(x => x.id === id) ?? sizes.data[id])).png; }
+/** each card's average hash (copies.mjs), by id, kept while its picture's version is the same */
+const HASHES = new Map();
+async function hashOf(id, s) {
+  const { png, version } = await picture(id, s); if (!png) return null;
+  const h = HASHES.get(id); if (h && h.version === version) return h.bits;
+  const bits = await averageHash(png); HASHES.set(id, { version, bits }); return bits;
 }
 
 // ---------------------------------------------------------------- lots: the variants with the owner's edits, their pictures and hit boxes
@@ -167,7 +186,13 @@ async function frame(pid, d, k, asDrawn) {
 let job = null;
 function rebuild() {
   if (job && !job.done) return job;
-  const steps = ['scripts/assets/prep-decals.mjs', 'scripts/assets/nature-patches.mjs', 'scripts/assets/prep-sprites.mjs', 'scripts/assets/prep-scales.mjs', 'scripts/assets/prep-construction.mjs', 'scripts/assets/audit-sprites.mjs'];
+  // every pack the studio's sizes reach, in the order they feed each other: the decals and map patches; the town sprites (library.ts); the cars
+  // (cars-library.ts) and the business art (business-library.ts) at their sizes; the building site; then the four-view buildings (prep-views.mjs
+  // reads every library above, and packs each view at its size, and each stand-in for what the buildings drawn as it need: views-library.ts;
+  // with no folder given it syncs the art model's generated buildings from the main checkout, then packs the copies in art/building-views);
+  // the scale table last of the packs (it reads every library and what views-library appends); the audit after everything
+  const steps = ['scripts/assets/prep-decals.mjs', 'scripts/assets/nature-patches.mjs', 'scripts/assets/prep-sprites.mjs', 'scripts/assets/prep-cars.mjs', 'scripts/assets/prep-business-art.mjs',
+    'scripts/assets/prep-construction.mjs', 'scripts/assets/prep-views.mjs', 'scripts/assets/prep-scales.mjs', 'scripts/assets/audit-sprites.mjs'];
   job = { log: '', done: false, code: 0, step: '', started: Date.now() };
   const run = i => {
     if (i >= steps.length) return process.env.STUDIO_DEV_GAME ? devDone() : build();
@@ -337,22 +362,39 @@ http.createServer(async (req, res) => {
   const P = url.pathname;
   try {
     if (P === '/') { res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' }); return res.end(fs.readFileSync(path.join(ROOT, 'scripts/assets/review/studio.html'), 'utf8')); }
+    // the game dev server the Lot presets tab frames (its lot lab): STUDIO_GAME_URL, else the owner's usual 5174
+    if (P === '/api/config') return json({ game: process.env.STUDIO_GAME_URL || 'http://localhost:5174' });
     // library
     if (P === '/api/sprites') {
       const rep = await sizeReport(), list = library(), have = new Set(list.map(s => s.id)), rm = readRemoved(), sc = readScales();
       for (const id of Object.keys(rm)) if (!have.has(id)) list.push({ id, name: rm[id].name ?? id, cat: rm[id].cat ?? 'Removed', kind: rm[id].kind ?? '', tex: null, w: rm[id].w ?? 100, h: rm[id].h ?? 100, quad: rm[id].quad, ax: rm[id].ax, ay: rm[id].ay });
+      // each card's picture as the library has it, before the sizes below take its tex away: the copies' hashes read it (picture())
+      const pics = new Map(list.map(s => [s.id, { tex: s.tex, rect: s.rect, page: s.page, quad: s.quad }]));
       // every golf sprite under one heading: the tournament art (golf:) and the business art's course pieces and buildings (business:golf-)
       for (const s of list) if (/^(golf:|business:golf-)/.test(s.id)) s.cat = 'Golf';
-      for (const s of list) { s.base = s.kind === 'car' ? 0.8 : s.kind === 'walker' || s.kind === 'decal' || s.cat === 'Lots' ? 1 : mapScale(s.id); s.scale = s.kind === 'car' ? 0.8 : sc[s.id] ?? s.base; s.quad ??= [0, 0, s.w, s.h]; delete s.tex; delete s.page; }
+      // the display lists More houses with Houses (the game's library keeps its own category)
+      for (const s of list) if (s.cat === 'More houses') s.cat = 'Houses';
+      // a car is drawn at the road cars' size (CAR_SCALE) times its studio size, which its model shares (sizeId): 1 when unset
+      for (const s of list) { const car = s.kind === 'car'; s.base = car ? 1 : s.kind === 'walker' || s.kind === 'decal' || s.cat === 'Lots' ? 1 : mapScale(s.id); s.scale = car ? (sc[carKey(s.id)] ?? 1) : (sc[s.id] ?? s.base); if (car) Object.assign(s, { sizeId: carKey(s.id), carScale: CAR_SCALE }); s.quad ??= [0, 0, s.w, s.h]; delete s.tex; delete s.page; }
       // the game's sizes (size-report.ts): the scale it places each sprite at, what a reset falls back to, the id whose size it takes (a building's
       // views share one), what it is drawn as and how big, the scale it is sharp to at the closest zoom and the most its source pixels allow
       for (const s of list) {
-        const e = rep[s.id]; if (!e || s.kind === 'car' || s.kind === 'walker' || s.kind === 'decal') continue;
+        const e = rep[s.id]; if (!e || s.kind === 'walker' || s.kind === 'decal') continue;
+        // a car's scale and base are its own (above); the report's sharp size is in the same units (the scale, over CAR_SCALE)
+        if (s.kind === 'car') { s.sharp = e.sharp; s.native = e.native; continue; }
         Object.assign(s, { scale: e.scale, base: e.base, sizeId: e.sizeId, drawn: e.drawn, sharp: e.sharp, native: e.native });
       }
+      // a four-view building's views (size-report.ts sizeIdOf): its picture (NE), its east view (east:<id>, else view:<id>:se), view:<id>:sw and view:<id>:nw.
+      // The card shows all four as thumbnails (/thumb/<id>) and sizes all four; the views are not cards of their own, so the east one is left out of the grid
+      const viewsOf = id => { if (!rep[`view:${id}:sw`] || !rep[`view:${id}:nw`]) return null; const se = rep[`east:${id}`] ? `east:${id}` : `view:${id}:se`; return [{ dir: 'NE', id }, { dir: 'SE', id: se }, { dir: 'SW', id: `view:${id}:sw` }, { dir: 'NW', id: `view:${id}:nw` }]; };
+      for (const s of list) { if (s.id.startsWith('east:')) continue; const v = viewsOf(s.id); if (v) s.views = v; }
+      const grid = list.filter(s => !(s.id.startsWith('east:') && viewsOf(s.id.slice(5))));
       // the townspeople, for the cursor: each one's trimmed picture and where its feet are (the anchor) inside it, in native px
       const walkers = list.filter(s => s.kind === 'walker' && !rm[s.id]).map(s => ({ id: s.id, name: s.name, quad: s.quad, ax: s.ax, ay: s.ay }));
-      return json({ sprites: list, removed: rm, walkers });
+      // the copies: a card whose picture is the same as another's in its category is folded into it (copies.mjs), so each picture is listed once;
+      // walkers and removed sprites are never folded
+      const { cards: sprites } = await foldCopies(grid, s => (s.kind === 'walker' || rm[s.id] ? null : hashOf(s.id, pics.get(s.id) ?? sizes.data[s.id])));
+      return json({ sprites, removed: rm, walkers });
     }
     if (P.startsWith('/thumb/')) return png(await thumb(decodeURIComponent(P.slice(7))));
     if (req.method === 'POST' && (P === '/api/remove' || P === '/api/restore')) {
@@ -363,16 +405,16 @@ http.createServer(async (req, res) => {
     }
     if (req.method === 'POST' && P === '/api/scale') {
       const { id: asked, factor, reset } = await body(req), sc = readScales(), rep = await sizeReport(false), e = rep[asked];
-      // the size is the building's for any of its views (sizeId); a lot decal's base is 1 (prep-decals packs it at its scale), a sprite's is the
-      // game's own fallback (its table scale) when the game has it, else the owner's map scale
-      const id = e?.sizeId ?? asked, own = rep[id] ?? e;
-      const base = (library().find(x => x.id === asked)?.kind ?? readRemoved()[asked]?.kind) === 'decal' ? 1 : own?.base ?? mapScale(id);
-      const cur = sc[id] ?? own?.scale ?? base, next = reset ? base : +(cur * factor).toFixed(3);
-      // never past its picture's own pixels: the smallest limit of the pictures that take this size (a building's four views; a stand-in's atlas)
+      // the size is the building's for any of its views (sizeId); a car's is its model's (carKey) with base 1, the road cars' size; a lot decal's base
+      // is 1 (prep-decals packs it at its scale), a sprite's is the game's own fallback (its table scale) when the game has it, else the owner's map scale
+      const kind = library().find(x => x.id === asked)?.kind ?? readRemoved()[asked]?.kind, car = kind === 'car';
+      const id = car ? carKey(asked) : e?.sizeId ?? asked, own = rep[id] ?? e;
+      const base = car || kind === 'decal' ? 1 : own?.base ?? mapScale(id);
+      const cur = sc[id] ?? (car ? base : own?.scale ?? base), next = reset ? base : +(cur * factor).toFixed(3);
+      // past its picture's own pixels is allowed: soft says so (a Rebuild upscales the picture, a little softer). The limit is the smallest native of the pictures that take this size (a building's four views, a car's eight; a stand-in's atlas)
       const limit = Math.min(...Object.values(rep).filter(x => x.sizeId === id && x.native != null).map(x => x.native));
-      if (!reset && factor > 1 && next > limit * 1.001) return json({ id, scale: cur, base, refused: `pixelates above x${limit.toFixed(2)}: its picture has no more pixels` });
       if (reset) delete sc[id]; else sc[id] = next;
-      writeScales(sc); return json({ id, scale: sc[id] ?? base, base });
+      writeScales(sc); return json({ id, scale: sc[id] ?? base, base, soft: next > limit * 1.001 });
     }
     // lots
     if (P === '/api/lots') return json(lotVariants().map(v => ({ id: v.id, name: v.name, edits: Object.keys(readLotEdits()[v.id] ?? {}).length })));
@@ -533,4 +575,5 @@ http.createServer(async (req, res) => {
     if (P === '/holes.js') { res.writeHead(200, { 'content-type': 'text/javascript; charset=utf-8', 'cache-control': 'no-cache' }); return res.end(fs.readFileSync(path.join(ROOT, 'scripts/assets/review/holes.js'))); }
     res.writeHead(404); res.end();
   } catch (e) { res.writeHead(500); res.end(String(e.stack || e)); }
-}).listen(PORT, '127.0.0.1', () => console.log(`sprite studio: http://127.0.0.1:${PORT}/`));
+// STUDIO_HOST=0.0.0.0 serves the studio to the local network (helpers making lot presets), else this machine only
+}).listen(PORT, process.env.STUDIO_HOST || '127.0.0.1', () => console.log(`sprite studio: http://${process.env.STUDIO_HOST || '127.0.0.1'}:${PORT}/`));

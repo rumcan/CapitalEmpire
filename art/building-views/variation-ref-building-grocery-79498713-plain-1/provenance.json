@@ -1,0 +1,268 @@
+{
+  "id": "variation:ref-building-grocery-79498713-plain:1",
+  "generator": "image_gen",
+  "generated": "2026-10-24",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-623081f8-dfc9-40dc-93d0-7c268afbe54f.png",
+  "prompt": "Edit this existing transparent game sprite sheet, maintaining EXACT shared matte miniature theme, material colours, physical building identity, early dusk and fixed SCREEN UPPER RIGHT SUN. Concrete correction: NW repeats NE left side plus front facade on right: same two upper side windows/utility boxes left and grocery front right. NW must show opposite front+left corner, front facade left and other side right; keep roof HVAC on fixed physical slope and no mirrored lettering. Preserve every other correct cell and all physical architecture/equipment. Never mirror text, geometry or lighting; draw actual opposite corner. Keep 2x2 NEtop-left,SEtop-right,SWbottom-left,NWbottom-right. Output SQUARE 1:1 CANVAS with four SMALL complete sprites, each only60% cellheight, full roof/chimney/cross withincanvasand100pxclear gutters. Actual transparentalpha=0 outsidephysicalbuilding. No floor/greybackground/terrain/shadow/haze/labels/captions. Reference1 is EDIT TARGET, preserve its artwork rather than invent a new building. ",
+  "references": [
+    {
+      "role": "edit-target",
+      "file": "art/theme-consistency/generated/buildings/variation-ref-building-grocery-79498713-plain-1-4views-v1.png"
+    }
+  ],
+  "integrationStatus": "ready",
+  "integrationReason": "Single NW shows grocery gablefront LEFT and opposite longside RIGHT, complementary NE frontRIGHT; sign unmirrored, latest metal roof/HVAC/porch identity retained. Layout-only intermediate v3 conserved oldsheet; finalv4 changes NW alone, other3PNGs retained.",
+  "layoutCorrection": {
+    "method": "Pixel-preserving clear-gap split and centred four-cell repack; no generation, resizing or repainting.",
+    "originalSheet": "art/theme-consistency/generated/buildings/variation-ref-building-grocery-79498713-plain-1-4views-v2.png",
+    "originalSheetSha256": "857a91b343efd67a43638e9a59ef33533970834fc7ab25e499348fda49b2fa4b",
+    "originalDimensions": [
+      1254,
+      1254
+    ],
+    "outputDimensions": [
+      2048,
+      2048
+    ],
+    "outputSheetSha256": "5a1763bed72627248010aacd705e6ee494cd1d868e65079bec2d4e8139c86c50",
+    "cellSize": 1024,
+    "minimumCellMarginFraction": 0.15,
+    "padding": 4,
+    "partitionMode": "row-first",
+    "rowFirstFailure": null,
+    "rowGap": {
+      "start": 628,
+      "endExclusive": 668,
+      "midpoint": 648,
+      "alphaThreshold": 8
+    },
+    "columnGaps": [
+      {
+        "row": 0,
+        "start": 621,
+        "endExclusive": 680,
+        "midpoint": 650,
+        "alphaThreshold": 8
+      },
+      {
+        "row": 1,
+        "start": 602,
+        "endExclusive": 710,
+        "midpoint": 656,
+        "alphaThreshold": 8
+      }
+    ],
+    "globalColumnGap": null,
+    "columnRowGaps": [],
+    "extractionRects": [
+      {
+        "direction": "NE",
+        "row": 0,
+        "column": 0,
+        "extraction": {
+          "left": 0,
+          "top": 88,
+          "width": 629,
+          "height": 560
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 213496,
+        "visibleAlphaPixelsThreshold8": 206767,
+        "nonzeroRgbaSha256": "5237f5d468fa44ec6476c810e26234741facd814247bce3d3162aa1c6f5217d6",
+        "destination": {
+          "left": 197,
+          "top": 232,
+          "width": 629,
+          "height": 560
+        }
+      },
+      {
+        "direction": "SE",
+        "row": 0,
+        "column": 1,
+        "extraction": {
+          "left": 662,
+          "top": 69,
+          "width": 564,
+          "height": 570
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 206492,
+        "visibleAlphaPixelsThreshold8": 200500,
+        "nonzeroRgbaSha256": "486a9c3e0d94cf8543bca23d3413a70f5e1d37e91995fe70414a2d9da8ecf1d7",
+        "destination": {
+          "left": 1254,
+          "top": 227,
+          "width": 564,
+          "height": 570
+        }
+      },
+      {
+        "direction": "SW",
+        "row": 1,
+        "column": 0,
+        "extraction": {
+          "left": 0,
+          "top": 648,
+          "width": 656,
+          "height": 606
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 194612,
+        "visibleAlphaPixelsThreshold8": 188859,
+        "nonzeroRgbaSha256": "7d4243342aca3f85cffc2675a7b8c7493d303a703c9dfb83fb3d7aa83c9dd22f",
+        "destination": {
+          "left": 184,
+          "top": 1233,
+          "width": 656,
+          "height": 606
+        }
+      },
+      {
+        "direction": "NW",
+        "row": 1,
+        "column": 1,
+        "extraction": {
+          "left": 656,
+          "top": 658,
+          "width": 573,
+          "height": 596
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 205449,
+        "visibleAlphaPixelsThreshold8": 198242,
+        "nonzeroRgbaSha256": "71a312edc3c3668edbe4fa71021f61c278e347e756a102a58fefa7e2af9db7dd",
+        "destination": {
+          "left": 1249,
+          "top": 1238,
+          "width": 573,
+          "height": 596
+        }
+      }
+    ],
+    "sourcePixelCounts": {
+      "nonzeroAlphaPixels": 820049,
+      "visibleAlphaPixelsThreshold8": 794368,
+      "nonzeroRgbaSha256": "c909c65de02357469db9a8d7dfab81a27b6de607730f7beebe22cb6e0f039a7b"
+    },
+    "nonzeroAndVisiblePixelConservation": true,
+    "exactVisibleRgbaConservation": true,
+    "visualReviewRequired": true,
+    "warnings": []
+  },
+  "singleViewCorrection": {
+    "sourceSheet": "art/theme-consistency/generated/buildings/variation-ref-building-grocery-79498713-plain-1-4views-v3.png",
+    "sourceSheetSha256": "5a1763bed72627248010aacd705e6ee494cd1d868e65079bec2d4e8139c86c50",
+    "direction": "NW",
+    "copiedOriginalDirection": null,
+    "newGeneratedSingle": "art/theme-consistency/generated/buildings/variation-ref-building-grocery-79498713-plain-1-single-corrections-v3/NW.png",
+    "newGeneratedSingleSha256": "f9fb108bbfc1cb9ca1c9a9ec860637d790696b798206ea0e013d648b98c37ce1",
+    "newGeneratedSingleProvenance": {
+      "id": "variation:ref-building-grocery-79498713-plain:1",
+      "direction": "NW",
+      "generator": "image_gen",
+      "generated": "2026-10-24",
+      "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-4acf8d0a-739e-4a7e-b5d3-3508a68ead0c.png",
+      "prompt": "ONE SINGLE ISOLATED BUILDING SPRITE, NOT A FOUR-VIEW SHEET. The reference is this SAME existing building shown from several corners; preserve its exact architecture and matte Maple Bean miniature style. We need a genuinely different rigid rotation, direction NW. Oppositefrontcorner: grocery FRONT gable facade on SCREEN LEFT, previouslyunseen other SIDE WALL on SCREEN RIGHT. KeepMAPLEFALLSGROCERYsignlegible, greenawnedporchwithcentraldoor and displaywindows, two-storeybrick, pitched roof, HVACunitonfixedphysicalroofslope. DoNOT repeat frontRIGHTsideLEFT ascurrentNE/NW. No mirroredtextorlighting. Fixed orthographic2:1 camera: both ground axes at +/-26.565degrees, wallsvertical, no head-on elevation/perspective vanishingpoint. CRITICAL: fixed SCREEN UPPER RIGHT DUSK SUN and warm amber practical lights; right roof/wall planes warm, leftplanes cooler even though buildingturns. Reconstructhiddenfaces; NEVER mirror sourcepixels or lighting or copy the samecorner. Square1:1PNG with onecompleteSMALLbuilding occupying60%canvasheight, generous100pxfullyclear margins, truealpha0outsidephysicalbuilding. No other view, no grid, no label, no ground surface/floor/paving/yard/greybackdrop/broadshadow/haze/gradient/checkerboard/people. Only physical building and integralporch/steps/supports.",
+      "references": [
+        {
+          "role": "identity-style-and-physical-geometry-reference",
+          "file": "art/theme-consistency/generated/buildings/variation-ref-building-grocery-79498713-plain-1-4views-v2.png"
+        }
+      ],
+      "assemblySourceSheet": "art/theme-consistency/generated/buildings/variation-ref-building-grocery-79498713-plain-1-4views-v2.png",
+      "integrationStatus": "blocked",
+      "integrationReason": "Single actual-turn correction; inspect before four-view assembly."
+    },
+    "newViewScale": {
+      "factor": 0.5698924731182796,
+      "method": "median visible building height of unchanged three views; source scale retained, not certified door calibration",
+      "targetHeight": 530,
+      "oldDoor": null,
+      "newDoor": null,
+      "resizeKernel": "lanczos3; new view only"
+    },
+    "unchangedViewsPreservedByteForByte": [
+      "NE",
+      "SE",
+      "SW"
+    ],
+    "originalViewEvidence": [
+      {
+        "direction": "NE",
+        "canonicalRejected": null,
+        "sourceCellSafeMargin": true,
+        "originalNativeSha256": "cdecd8027679340ac7c333f69617c2ec3d554665fd152fc8038b7b17fa0532fb",
+        "originalVisibleHeight": 532,
+        "nonzeroAlphaPixels": 213496,
+        "rgbaSha256": "5237f5d468fa44ec6476c810e26234741facd814247bce3d3162aa1c6f5217d6"
+      },
+      {
+        "direction": "SE",
+        "canonicalRejected": null,
+        "sourceCellSafeMargin": true,
+        "originalNativeSha256": "40543dbcccd83413b955bf982b40e5fe9225febc3bcb3f3ee0c673ba2bfd664c",
+        "originalVisibleHeight": 530,
+        "nonzeroAlphaPixels": 206492,
+        "rgbaSha256": "486a9c3e0d94cf8543bca23d3413a70f5e1d37e91995fe70414a2d9da8ecf1d7"
+      },
+      {
+        "direction": "SW",
+        "canonicalRejected": null,
+        "sourceCellSafeMargin": true,
+        "originalNativeSha256": "3d17090f2a32f7b5cf8975c02918c1afeb523ee813ffbea071de4fd35ded1867",
+        "originalVisibleHeight": 507,
+        "nonzeroAlphaPixels": 194612,
+        "rgbaSha256": "7d4243342aca3f85cffc2675a7b8c7493d303a703c9dfb83fb3d7aa83c9dd22f"
+      },
+      {
+        "direction": "NW",
+        "canonicalRejected": null,
+        "sourceCellSafeMargin": true,
+        "originalNativeSha256": "081dd148e39c1b1d5916a908ea30eef327d1bf9d02521b0aae037de704f38f40",
+        "originalVisibleHeight": 524,
+        "nonzeroAlphaPixels": 205449,
+        "rgbaSha256": "71a312edc3c3668edbe4fa71021f61c278e347e756a102a58fefa7e2af9db7dd"
+      }
+    ],
+    "placements": [
+      {
+        "direction": "NE",
+        "left": 195,
+        "top": 230,
+        "width": 633,
+        "height": 564,
+        "nativeSha256": "cdecd8027679340ac7c333f69617c2ec3d554665fd152fc8038b7b17fa0532fb",
+        "unchangedOriginalNative": true
+      },
+      {
+        "direction": "SE",
+        "left": 1254,
+        "top": 227,
+        "width": 564,
+        "height": 570,
+        "nativeSha256": "40543dbcccd83413b955bf982b40e5fe9225febc3bcb3f3ee0c673ba2bfd664c",
+        "unchangedOriginalNative": true
+      },
+      {
+        "direction": "SW",
+        "left": 180,
+        "top": 1229,
+        "width": 664,
+        "height": 614,
+        "nativeSha256": "3d17090f2a32f7b5cf8975c02918c1afeb523ee813ffbea071de4fd35ded1867",
+        "unchangedOriginalNative": true
+      },
+      {
+        "direction": "NW",
+        "left": 1243,
+        "top": 1219,
+        "width": 585,
+        "height": 634,
+        "nativeSha256": "b1bc389d81144f10be803f17655b504dcf7c44d6789c1b253c9e023fb6d5b208",
+        "unchangedOriginalNative": false
+      }
+    ],
+    "outputSha256": "a6f0073ae82c9a235c1787e170b9d43690878d7c8fde10f19a9b6a410f9fcad7"
+  }
+}

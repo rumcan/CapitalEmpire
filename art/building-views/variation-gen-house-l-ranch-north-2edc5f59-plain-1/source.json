@@ -1,0 +1,10 @@
+{
+ "id": "variation:gen-house-l-ranch-north-2edc5f59-plain:1",
+ "version": "variation-gen-house-l-ranch-north-2edc5f59-plain-1-4views-v4",
+ "files": {
+  "NE": "8d36c41fd6f37d25f8c4ee4b3d63a22df6648635649f94ca24f97ecb855a9925",
+  "SE": "34c659946549837bccb3476a183362b4d18470a81d1b03fa790b100d475bead3",
+  "SW": "87184b09e84f7cfed444f5cbdb131ada38e88a940b70026c8d70b69dd2109464",
+  "NW": "78e7022dddc7d7d653813d57b4b8b7acf460028f03fb4e5c1442bc7262aaf646"
+ }
+}

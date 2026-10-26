@@ -11,13 +11,13 @@
 //    stands standardDoor game px tall at the building's gauge scale (measures.json gaugeScale: its owner scale when it was first gauged, written
 //    back then, so a size set later in the sprite studio scales the building and survives a re-import). A view with no clear door takes the
 //    mean scale of its measured views; a subject with none measured keeps the original sprite's width (and is reported, to be measured).
-//    No view is sized past its picture's own pixels at the closest zoom (0.6 device px per game px at its owner scale, the studio's size or the
-//    table's): such a view is drawn smaller, at its native size, and reported (the owner, 2026-10-24: "Some are even placed so big they
-//    pixelate"). Business artwork keeps its width (drawn at a share of its parcel); the game caps its drawing (newart.ts lookOf).
+//    A view may be sized past its picture's own pixels (its owner scale, the studio's size or the table's asks it): it is packed upscaled (lanczos3,
+//    softer) up to 3x its pixels, and reported past that. Business artwork keeps its width (drawn at a share of its parcel); the game caps its drawing (newart.ts lookOf).
 // 3. Footprint: the original boxes grow or shrink with the art (the NE view against the original's width); SE and NW turn them (hx <-> hy).
 //    The ground point is the footprint's centre, found from the picture's lowest point (the near corner, +hx +hy).
-// 4. Pack: every view at 0.6 x display size times its owner scale (as big as it is drawn at the closest zoom), never past its picture's own
-//    pixels, on 2048 pages with five mips (src/assets/views/views-<page>-<mip>.webp), and write
+// 4. Pack: every view at 0.6 x display size times its owner scale (as big as it is drawn at the closest zoom), or times the largest size any old
+//    building drawn as it as a stand-in needs (src/game/newart.ts standInNeeds, run through stand-in-needs.ts), up to 3x its picture's own
+//    pixels (upscaled past them), on 2048 pages with five mips (src/assets/views/views-<page>-<mip>.webp), and write
 //    src/game/views-library.ts: appendViews puts NE in place of the original sprite and SE in place of its east art (east:<id>), keeping
 //    every saved index, and appends the other views as view:<id>:se|sw|nw. Night glows are found again on the new pictures.
 // 5. Coverage: art/building-views/COVERAGE.md lists every building of the game (art/theme-consistency/inventory.json, and any library sprite
@@ -27,7 +27,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
-import { execSync } from 'node:child_process';
+import { execFileSync, execSync } from 'node:child_process';
+import { build } from 'esbuild';
 import sharp from 'sharp';
 import { findGlows } from './find-glows.mjs';
 import { cropFourViews } from './four-view-cells.mjs';
@@ -95,6 +96,20 @@ for (const f of ['library', 'east-library', 'business-library', 'construction-li
 const scales = fs.readFileSync(path.join(root, 'src/game/lots/scales.ts'), 'utf8'), studio = readScales();
 // the scale a building is drawn at: the studio's size now (scale-overrides.json, read by the game at runtime), else the table's (scales.ts)
 const owner = id => studio[id] ?? +(new RegExp(`"${id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}": ([0-9.]+)`).exec(scales)?.[1] ?? 1);
+// the stand-ins (src/game/newart.ts: a building of the art inventory without its four views is drawn as the new-art building of its family
+// nearest its size, filling its footprint): each is packed for the largest size any building drawn as it needs (that building's scale x their
+// footprints' ratio), so a swapped building is as sharp at its size as one with its own views. The game's own rule, run as the game runs it
+// (stand-in-needs.ts bundled, the libraries as they are now: a subject synced for the first time this run is counted from the next run)
+fs.mkdirSync(REVIEW, { recursive: true });
+const NEED = await (async () => {
+  const outfile = path.join(REVIEW, 'stand-in-needs.mjs');
+  try {
+    await build({ entryPoints: [path.join(root, 'scripts/assets/stand-in-needs.ts')], bundle: true, platform: 'node', format: 'esm', outfile, logLevel: 'silent', loader: { '.webp': 'empty', '.png': 'empty' } });
+    return JSON.parse(execFileSync(process.execPath, [outfile], { cwd: root, maxBuffer: 64 << 20 }).toString());
+  } catch (error) { console.warn(`stand-in sizes not read (every building packed for its own size only): ${error.message}`); return {}; }
+})();
+/** the scale a building's views are packed for: its own (the studio's size, else the table's), or more when a building drawn as it needs more */
+const packFor = id => Math.max(1, owner(id), NEED[id] ?? 0);
 // the buildings of the game: the inventory's buildings and baked lots (east:<id> is its subject's east view), and any library sprite of a
 // building kind the inventory has not seen (not one it files elsewhere or leaves out, such as the golf equipment, nor a removed id)
 const inventory = JSON.parse(fs.readFileSync(path.join(root, 'art/theme-consistency/inventory.json'), 'utf8'));
@@ -126,10 +141,10 @@ for (const slug of fs.readdirSync(STORE).filter(d => fs.existsSync(path.join(STO
   if (measured.length) { const mean = measured.reduce((a, x) => a + x.s, 0) / measured.length; for (const x of views) if (!x.s) x.s = mean; }
   else { if (!business && !meas?.noGauge) unmeasured.push(`${id} (${version})`); const s = (base.quad[2] - base.quad[0]) / views[0].W; for (const x of views) x.s = s; }
   if (measured.length && meas && meas.gaugeScale === undefined) { meas.gaugeScale = +k.toFixed(3); gauged++; }
-  // never past the picture's own pixels at the closest zoom: drawn at k, a view is 0.6 x W x s x k device px wide from its W native px
+  // never past 3x the picture's own pixels at the closest zoom: drawn at k, a view is 0.6 x W x s x k device px wide from its W native px
   if (!business) {
-    const cap = 1 / (MIP0 * k), over = Math.max(...views.map(x => x.s / cap));
-    if (over > 1.001) { for (const x of views) x.s = Math.min(x.s, cap); capped.push(`${id} (x${over.toFixed(2)} past its pixels at scale ${k.toFixed(2)}: drawn ${(100 / over).toFixed(0)}% as big)`); }
+    const cap = 3 / (MIP0 * k), over = Math.max(...views.map(x => x.s / cap));
+    if (over > 1.001) { for (const x of views) x.s = Math.min(x.s, cap); capped.push(`${id} (x${over.toFixed(2)} past 3x its pixels at scale ${k.toFixed(2)}: drawn ${(100 / over).toFixed(0)}% as big)`); }
   }
   const f = business ? 1 : views[0].W * views[0].s / (base.quad[2] - base.quad[0]);
   for (const x of views) {
@@ -147,9 +162,11 @@ for (const slug of fs.readdirSync(STORE).filter(d => fs.existsSync(path.join(STO
 }
 
 // 4. shelf-pack onto as many 2048 pages as it takes
-// each view at its drawn size at the closest zoom (0.6 x its owner scale, at least 1), as far as its picture's own pixels go; no headroom for
-// the Lot Composer's +5% (the GPU memory: the game caps those few draws at the picture's pixels, newart.ts lookOf)
-const packAt = (sub, x) => Math.min(x.W / x.w, MIP0 * Math.max(1, owner(sub.id)));
+// each view at its drawn size at the closest zoom (0.6 x its owner scale, at least 1, or the size the buildings drawn as it need), upscaled past
+// its picture's own pixels up to 3x them; no headroom for the Lot Composer's +5% (the GPU memory: the game caps those few draws at the picture's
+// pixels, newart.ts lookOf)
+const packAt = (sub, x) => Math.min(3 * x.W / x.w, MIP0 * packFor(sub.id));
+const standIns = subjects.filter(sub => (NEED[sub.id] ?? 0) > owner(sub.id) * 1.001).map(sub => { const x = sub.views[0], got = packAt(sub, x) / MIP0; return `${sub.id} x${NEED[sub.id].toFixed(2)} (own x${owner(sub.id).toFixed(2)}${got < NEED[sub.id] * 0.999 ? `, capped at x${got.toFixed(2)}: 3x its pixels` : ''})`; });
 const all = subjects.flatMap(sub => sub.views.map(x => ({ sub, x, width: Math.max(1, Math.round(x.w * packAt(sub, x))), height: Math.max(1, Math.round(x.h * packAt(sub, x))) }))).sort((a, b) => b.height - a.height);
 const pages = [[]];
 let px = GUT, py = GUT, rowH = 0;
@@ -230,7 +247,8 @@ let cx = 0, cy = 0, ch = 0; const placed = [];
 for (const t of tiles) { if (cx + t.w > 1600) { cx = 0; cy += ch + 8; ch = 0; } placed.push({ input: t.input, left: cx, top: cy }); cx += t.w + 8; ch = Math.max(ch, t.h); }
 await sharp({ create: { width: 1600, height: cy + ch, channels: 4, background: '#d8e0e3' } }).composite(placed).png().toFile(path.join(REVIEW, 'contact.png'));
 console.log(`Prepared ${all.length} views of ${subjects.length} buildings on ${pages.length} page(s); review: ${path.relative(root, REVIEW)}/contact.png`);
-if (capped.length) console.log(`Capped at their pixels (drawn smaller than the door gauge or the original width asks, never pixelated): ${capped.join(', ')}`);
+if (capped.length) console.log(`Capped at 3x their pixels (drawn smaller than the door gauge or the original width asks): ${capped.join(', ')}`);
+if (standIns.length) console.log(`Packed past their own size as stand-ins (the largest size a building drawn as them needs): ${standIns.join(', ')}`);
 if (gauged) { fs.writeFileSync(path.join(STORE, 'measures.json'), `${JSON.stringify(measures, null, 1)}\n`); console.log(`Froze the gauge scale of ${gauged} subject(s) in art/building-views/measures.json`); }
 if (unmeasured.length) console.log(`Unmeasured (kept at the original width; add door gauges to art/building-views/measures.json): ${unmeasured.join(', ')}`);
 

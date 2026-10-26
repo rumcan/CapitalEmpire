@@ -1,0 +1,10 @@
+{
+ "id": "variation:industrial-freight-depot-a030c919:1",
+ "version": "variation-industrial-freight-depot-a030c919-1-4views-v5",
+ "files": {
+  "NE": "f02d9c6e5ff8448e2a48ffb0b6829e5314100400f906f062c664f3c4a09d9aeb",
+  "SE": "a4d7215738c953193c7922f28c6599a088683cdc4bda82f3e2ff17b63b7fead8",
+  "SW": "b3e5066747a59e7e29f0873d569194f0fb96a6a3785492bcc86aea1d08902c3f",
+  "NW": "f88a0982911f7821730d0cad90ac3982c09cbcc61eed6748d49f63f614564993"
+ }
+}
