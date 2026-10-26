@@ -4,12 +4,14 @@ import assert from 'node:assert/strict';
 import { CLASS, RoadNetwork, type Leg } from '../src/game/network';
 import { NetEditor } from '../src/game/netops';
 import { LotMap, type Lot } from '../src/game/lots/lots';
-import { compose, isCarPark, lotPreset, setLotPresets, streetKey, streetSlot, type ComposeState, type Composition, type Placed } from '../src/game/lots/compose';
+import { compose, setGeneratedLots, isCarPark, lotPreset, setLotPresets, streetKey, streetSlot, type ComposeState, type Composition, type Placed } from '../src/game/lots/compose';
+// these pin the frozen presets' own composition (?oldlots); T160's generated house lots are tested in tests/lots-on-the-fly.test.ts
+setGeneratedLots(false);
 import { LU, LV } from '../src/game/lots/town';
 import { LIBRARY } from '../src/game/library';
 import { LOT_DECALS } from '../src/game/lot-decals';
 import { mulberry } from '../src/game/iso';
-import { CAR_SCALE, carSizeId } from '../src/game/ext/car-art';
+import { CAR_SCALE, carSizeId, forgetCarSizes } from '../src/game/ext/car-art';
 import { OWNER_SCALE, STUDIO_SCALE, TABLE_SCALE } from '../src/game/lots/scales';
 import { isBuilding } from '../src/game/mirror';
 import { footprintOf, turned } from '../src/game/lots/preset-art';
@@ -125,7 +127,8 @@ test('every built lot draws its preset: each preset prop is the picked preset\'s
     fitted += p.fit.props.filter(q => decline < 3 || !isCar(q.id)).length; kept += from.length;
     for (const q of from) {
       assert.equal(q.from!.preset, p.preset.id, `${lot.key}: a prop of another preset`);
-      const src: PresetProp = p.preset.props[q.from!.prop]!, t = turned(src.id, p.frame.q + src.view);
+      // a stand-in for a removed picture (T167) is the fitted prop's own (its id replaced), else the preset's
+      const src: PresetProp = q.standIn ? p.fit.props[p.fit.from.indexOf(q.from!.prop)]! : p.preset.props[q.from!.prop]!, t = turned(src.id, p.frame.q + src.view);
       assert.equal(q.id, t.id, `${lot.key}: ${src.id} view ${src.view} on a lot turned ${p.frame.q} drawn as ${q.id}`);
       assert.equal(q.flip, t.flip);
       if (isBuilding(byId.get(q.id)!)) assert.equal(q.flip, false, `${lot.key}: building ${q.id} mirrored`);
@@ -393,7 +396,8 @@ test('compositions are pinned: digests of fixed seeds, drawn at the table sizes 
     [30, { use: LU.COM, level: LV.BUILT, decline: 3, seed: 42 }, '46cbdf24'],
     [4, { use: LU.COM, level: LV.BUILDING, decline: 0, seed: 5 }, 'e9201342'],
     // re-pinned 2026-10-26 (T154): the studio's Rebuild applied the committed removals and sizes (removed.json, scale-overrides.json) to the library
-    [20, { use: LU.RES, level: LV.BUILT, decline: 0, seed: 555555 }, '1cf0f004'],
+    // re-pinned 2026-10-27 for T167: this lot's preset places a picture the owner removed, drawn now as its stand-in
+    [20, { use: LU.RES, level: LV.BUILT, decline: 0, seed: 555555 }, 'a11c59bb'],
     [22, { use: LU.IND, level: LV.BUILT, decline: 0, seed: 777777 }, '0887558a'],
   ];
   for (const [, st] of CASES) assert.ok(!isCarPark(st), `${JSON.stringify(st)} is a car park`);
@@ -402,8 +406,9 @@ test('compositions are pinned: digests of fixed seeds, drawn at the table sizes 
   const live = { ...OWNER_SCALE }, use = (to: Record<string, number>) => { for (const k of Object.keys(OWNER_SCALE)) delete OWNER_SCALE[k]; Object.assign(OWNER_SCALE, to); };
   const studio = STUDIO_SCALE as Record<string, number>, studioLive = { ...studio };
   for (const i of LIBRARY) if (i.kind === 'car') { delete studio[carSizeId(i.id)]; delete studio[i.id]; }
-  use(TABLE_SCALE);
-  try { assert.deepEqual(CASES.map(([i, st]) => digest(compose(LOTS[i], st))), CASES.map(c => c[2])); } finally { use(live); Object.assign(studio, studioLive); }
+  // (T160: carOwnerScale keeps a memo of the studio's sizes: told when they are changed by hand, as lots/scales-live.ts tells it)
+  use(TABLE_SCALE); forgetCarSizes();
+  try { assert.deepEqual(CASES.map(([i, st]) => digest(compose(LOTS[i], st))), CASES.map(c => c[2])); } finally { use(live); Object.assign(studio, studioLive); forgetCarSizes(); }
 });
 
 test('about 15% of built commercial lots are public car parks: a car park has an asphalt bay patch and no building', () => {

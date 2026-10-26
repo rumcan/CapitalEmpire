@@ -76,7 +76,8 @@ import { townTreeCell } from './towntrees';
 import type { BendMode, LibItem, LineStyle, Prop, Tool } from './types';
 import { LK, LaneGraph, laneAt, laneOff } from './sim/lanes';
 import { LU, LV, type LotTuple } from './lots/town';
-import { acrossLines, compose, farmPreset, fenceOnly, isCarPark, lotPresets, pickedPreset, type ComposeState, type FenceLines, type LotGeom, type Placed } from './lots/compose';
+import { acrossLines, compose, farmPreset, fenceOnly, isCarPark, lotModelVersion, lotPresets, pickedPreset, setLotModel, type ComposeState, type FenceLines, type LotGeom, type Placed } from './lots/compose';
+import { LATEST as LATEST_LOT_MODEL } from './lots/lot-models';
 import { stateOf } from './lots/presets';
 import { LotMap } from './lots/lots';
 import { TOWN_BLOCKS, TOWN_POP, townCentres, townGrid } from './lots/seedtowns';
@@ -1278,7 +1279,7 @@ export class Game {
     else if (!save || !this.load(save)) {
       // a save that read fine but failed to load: keep its bytes before the new game's autosave (T042), or never save over it
       if (save) { if (await backupTownSlot('loadfailed')) readNote = { text: 'The save could not be loaded. It is kept as a backup; a new game started.', kind: 'warn' }; else { this.saveBlocked = true; readNote = { text: 'The save could not be loaded or backed up: saving is off for this session so it is not overwritten.', kind: 'warn' }; } if (this.dead) return; }
-      this.golf = null; this.genTerrain(newSeed()); this.seedTowns();
+      setLotModel(LATEST_LOT_MODEL); this.golf = null; this.genTerrain(newSeed()); this.seedTowns();
     }
     else loaded = save;
     tick(0.7);
@@ -1311,6 +1312,8 @@ export class Game {
   /** a new game by the start mode (?start=): a range start, else (or with ?start=town) the old start; true when a golf game was laid. False
    *  (?start=valley, or no seed fits either) leaves the caller to make the classic valley */
   private newGame(): boolean {
+    // a new town composes its house lots with the latest shipped lot model (T160; the save records it: lotModel)
+    setLotModel(LATEST_LOT_MODEL);
     if (this.startMode === 'valley') return false;
     return (this.startMode === 'range' && this.newRangeGame()) || this.newGolfGame();
   }
@@ -4168,7 +4171,7 @@ export class Game {
   async save() {
     if (this.benchMode) return 0; if (this.saveBlocked) return 0;
     const d: SaveV5 = {
-      version: SAVE_VERSION, map: MAP, seed: this.seed,
+      version: SAVE_VERSION, map: MAP, seed: this.seed, lotModel: lotModelVersion(),
       segs: [...this.net.segs].map(segRec),
       nodes: [...this.net.nodes.values()].filter(n => n.type !== 'plain' || n.wide || n.tl).map(nodeEntry),
       props: [...this.props].filter(p => !p.auto).map(p => propTuple(LIBRARY[p.item].id, p)),
@@ -4198,6 +4201,8 @@ export class Game {
   }
   private load(d: SaveV5): boolean {
     try {
+      // the town's house lots compose with the lot model it was made with (T160: a save from before has none: v1)
+      setLotModel(d.lotModel ?? 1);
       this.bizOpenSeen = null;
       this.genTerrain(d.seed);
       // a golf game has one town (its centre, saved); a legacy save has none of these, and keeps the valley's three

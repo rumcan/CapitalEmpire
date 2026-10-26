@@ -14,6 +14,8 @@ import { CLASSES, ITEM_KINDS, SECTORS, SECTOR_NAMES, countOf, keepRate, learning
 import { addSample, addSamples, learnedModel, learnedSamples, onLearning } from './learn-store';
 import { presetSamples, teaches } from './learn-presets';
 import { lotPresets } from '../lots/compose';
+import { LATEST } from '../lots/lot-models';
+import { modelData } from '../lots/learn';
 import { generateLayout, type LaidItem } from '../lots/lot-gen';
 import { isFence, kindPools } from '../lots/item-kinds';
 import { CLASS_NAMES, frameHalf, isHouseLike, sizeClassOf } from './lot-houses';
@@ -238,6 +240,8 @@ export function makeWizard(host: WizardHost) {
     // T159: the owner's presets as a head start (every item on them kept), learnt again whenever they want (a preset's sample replaces its last)
     const n = lotPresets().filter(teaches).length;
     out.push(btn(`Learn from the presets (${n})`, BTN, () => learnPresets(), 'every item on the lab presets (approved and drafts) and on the frozen presets you edited counts as "kept here" with its lot; learning again replaces the last time'));
+    // T160: the game composes its house lots with a shipped model, never the live one: shipping freezes this one as the next version
+    out.push(btn(`Ship model (v${shipped + 1})`, GO, () => ship(), `freeze the model learnt so far as lot model v${shipped + 1} (src/game/lots/lot-models): new towns compose their house lots with it; a saved town keeps its own version`));
     out.push(el('div', 'font-size:13px;margin-top:6px;font-weight:700', `${st.total} sample${st.total === 1 ? '' : 's'}`),
       el('div', 'font-size:12px;opacity:.85', `${st.bySrc.wizard} wizard · ${st.bySrc.preset} from presets · ${st.bySrc.gallery} gallery${st.judged ? ` (${Math.round(st.up * 100)}% good)` : ''}`),
       el('div', 'font-size:12px;opacity:.85', CLASSES.filter(k => st.byClass[k]).map(k => `${k} ${st.byClass[k]}`).join(' · ') || 'none yet: delete what is wrong, then Space'),
@@ -261,6 +265,15 @@ export function makeWizard(host: WizardHost) {
       if (c.house) out.push(mono(c.house, 'opacity:.55;margin-top:3px'));
     }
     return out;
+  }
+  /** the latest shipped lot model (lot-models/index.ts LATEST, the ships of this session after it) */
+  let shipped = LATEST;
+  /** ships the model learnt so far (POST /__dev/lot-model): the dev server writes it as the next version and the index */
+  function ship(): void {
+    const st = learningStats(learnedSamples()), from = `${st.total} samples (${st.bySrc.wizard} wizard, ${st.bySrc.preset} from presets, ${st.bySrc.gallery} gallery), shipped ${new Date().toISOString().slice(0, 10)}`;
+    void fetch('/__dev/lot-model', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data: modelData(learnedModel()), from }) })
+      .then(async r => { if (!r.ok) throw new Error(`${r.status} ${await r.text()}`); const v = ((await r.json()) as { version: number }).version; shipped = v; host.say(`shipped lot model v${v}: new towns compose their house lots with it (after a reload)`); host.redraw(); })
+      .catch(e => host.say(`the model was not shipped: ${String(e)}`));
   }
   /** the presets' samples learnt (one save through the dev server's merge) */
   function learnPresets(): void {
