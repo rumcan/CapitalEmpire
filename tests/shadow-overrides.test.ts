@@ -45,9 +45,9 @@ test('a box never reaches wider than its picture, and sits under it', () => {
     const d = placed(i), s = contactOf(d); if (!s || s.round) return;
     const r = spriteRect(d), pw = r[2] - r[0]; if (pw <= 8) return;
     boxes++;
-    assert.ok(widthOf(s) <= pw * (k === 'vehicle' ? 1.12 : 0.98) + 1e-6, `${it.id}: box ${widthOf(s).toFixed(0)} px wide under a ${pw.toFixed(0)} px picture`);
+    assert.ok(widthOf(s) <= pw * (k === 'vehicle' ? 1.05 : 0.9) + 1e-6, `${it.id}: box ${widthOf(s).toFixed(0)} px wide under a ${pw.toFixed(0)} px picture`);
     const cx = wx(s.x, s.y), mid = (r[0] + r[2]) / 2;
-    assert.ok(Math.abs(cx - mid) <= pw / 6 + 1e-6, `${it.id}: box centre ${(cx - mid).toFixed(0)} px off the picture's middle`);
+    assert.ok(Math.abs(cx - mid) <= pw / 8 + 1e-6, `${it.id}: box centre ${(cx - mid).toFixed(0)} px off the picture's middle`);
   });
   assert.ok(boxes > 1000, `${boxes} boxes`);
 });

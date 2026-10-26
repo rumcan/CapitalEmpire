@@ -159,10 +159,12 @@ export function contactShadow(it: LibItem, d: ShadowSpot, pic: ArrayLike<number>
   }
   if (s.atAnchor) {
     // a spot (a pole, a sign) stands on its picture's foot, up or down the screen from the anchor (a stop sign, a traffic light, a utility pole
-    // are drawn wholly above theirs); a pool (a tree, a bush) moves only up, to a picture drawn wholly above its anchor
+    // are drawn wholly above theirs); a pool (a bush, a tree) goes up to a picture drawn wholly above its anchor
     let x = d.x, y = d.y; const off = py1 - AY, vh = 16 * Math.SQRT2 * s.hy;
     if (pw > 0 && kind === 'pole' && Math.abs(off) > vh + 4) { const t = (off - vh) / 64; x += t; y += t; }
     else if (pw > 0 && kind !== 'walker' && off < -4) { const t = -off / 64; x -= t; y -= t; }
+    // a tree drawn with its trunk's foot below its anchor (an old tree scaled up about a high anchor): the pool goes down to the foot
+    else if (pw > 0 && kind === 'tree' && off > 8) { const t = (off - 6) / 64; x += t; y += t; }
     return { x, y, hx: s.hx, hy: s.hy, core: s.core, feather: s.feather, round: s.round, lean };
   }
   let cx = (d.x0 + d.x1) / 2, cy = (d.y0 + d.y1) / 2, hx = s.hx, hy = s.hy, placeholder = false;
@@ -174,17 +176,17 @@ export function contactShadow(it: LibItem, d: ShadowSpot, pic: ArrayLike<number>
     // the picture's foot (a prop's narrow footprint under a wide picture is its real base: a rotary washing line, a sign on its post)
     if ((placeholderBoxes(it) || kind === 'building') && width() < 0.45 * pw) {
       // (a vehicle's pool: three quarters of its picture's width, its body seen across the corner)
-      const h = (kind === 'vehicle' ? 0.75 : 0.92) * pw / 128; hx = s.round ? h * Math.SQRT2 : h; hy = hx; placeholder = true;
+      const h = (kind === 'vehicle' ? 0.75 : 0.88) * pw / 128; hx = s.round ? h * Math.SQRT2 : h; hy = hx; placeholder = true;
       const mid = (px0 + px1) / 2, footY = py1 - 16 * (s.round ? 1.414 * hx : hx + hy);
       // the centre: on screen at (mid, footY), back to tiles
       const a = mid / 64, b = footY / 32; cx = (a + b) / 2; cy = (b - a) / 2;
     } else {
-      // never wider than the picture (a vehicle's pool may reach a little past its body)
-      const most = (kind === 'vehicle' ? 1.12 : 0.98) * pw, w = width();
+      // narrower than the picture (its widest point is often a roof's eaves or a canopy; a vehicle's pool may reach a little past its body)
+      const most = (kind === 'vehicle' ? 1.05 : 0.9) * pw, w = width();
       if (w > most) { const f = most / w; hx *= f; hy *= f; }
-      // under the picture's middle: a centre off it by more than a sixth of the picture's width slides across the screen to it
+      // under the picture's middle: a centre off it by more than an eighth of the picture's width slides across the screen to it
       const CX = WX(cx, cy), mid = (px0 + px1) / 2;
-      if (Math.abs(CX - mid) > pw / 6) { const t = (mid - CX) / 128; cx += t; cy -= t; }
+      if (Math.abs(CX - mid) > pw / 8) { const t = (mid - CX) / 128; cx += t; cy -= t; }
       // its front corner no lower than the picture's foot
       const front = WY(cx, cy) + 16 * (s.round ? 1.414 * Math.max(hx, hy) : hx + hy);
       if (front > py1 + 4) { const t = (front - py1 - 4) / 64; cx -= t; cy -= t; }
