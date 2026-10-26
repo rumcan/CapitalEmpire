@@ -24,6 +24,7 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 ### In flight
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |
+| **T150 (top priority)** | #315 | `arena/T150-tile-scale` | `.claude/worktrees/t150` | 5186 | The owner: the painted tiles are "too big", zooming out "they zoom in", at the furthest zoom "a zoomed in version of 1 of the texture images instead of 4 tiles at their max native size". New rule in the issue: one fixed world size per set, native at its anchor zoom (FAR at the furthest zoom, NEAR from the near-shop reference), never magnified, real zoom, switch at anchors. |
 | T147 | #306 | `arena/T147-money-floats` | `.claude/worktrees/t147` (made by hand: the agent worktree failed for memory) | 5187 | Green +$X / red -$X floating up where money moves; the range first via T146's `RangeSim.onMoney`. Yields heavy steps to T145. |
 
 **Two coding agents at a time (the owner, 2026-10-26: first "maybe just too many background tasks?" after the studio tab died with the
@@ -47,6 +48,10 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
 `docs/START-PROMPTS.md`.
 
 ### Queue (in order)
+- **Texture art status (2026-10-26 15:30):** the art session (Codex; `art/theme-consistency/material-texture-batches/ACTIVE-WORK.json`)
+  has finished 2 of its 14 families (golden fescue, lake: in the game). sand-ripples has raw variants, sand-raked 2/12, desert/dirt
+  anchors only; fairway, putting-green, first-cut, long-grass and the rest have job files and no pictures yet. Each lands through
+  READY-MATERIALS → `node scripts/assets/prep-painted-tiles.mjs` → a surface in Studio › Painted.
 0. **T148 #309 the lot lab** (the owner, 2026-10-26, "after the new textures"): multi-select with move/delete, Ctrl+C/V, a Change house
    button, a lot-boundary grid, Generate staying on the current lot (type, size, angle) and re-rolling its layout and building, and a
    Neighbours on/off toggle. T145 has landed: start it when memory allows (the PC was at 1.3 GB free at 15:07 with Codex making a worktree). Decisions in the issue.
