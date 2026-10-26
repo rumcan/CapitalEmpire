@@ -189,7 +189,7 @@ test('a skip books the extras\' expected coffees and lessons', () => {
   const s = buy(['bays8', 'proshop', 'academy', 'kiosk']), sim = new RangeSim(3, 10), sc = rangeScene(plots[2], 2, s);
   sim.setScene(sc, [{ x: 260, y: 210, hx: 0, hy: 1 }], { x: 269, y: 210 });
   // (T146: the skip counts the sim's car park, its one bay here)
-  const r = skippedVisits(s, start, 0, 600, 600, sim.skipLive(rangeStats(s, start), 600));
+  const r = skippedVisits(s, start, 0, 600, 600, sim.skipLive(rangeStats(s), 600));
   assert.ok(r.coffees > 0 && Math.abs(r.coffees - r.served * KIOSK_SHARE) < 1e-9);
   assert.ok(r.lessons > 0 && r.lessons <= r.served * LESSON_SHARE + 1e-9 && r.lessons <= ACADEMY_BAYS * 11 + 1e-9);
   const booked = sim.step(600, { hour: 0, day: 1 }, s, start, 600);
