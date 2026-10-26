@@ -10,6 +10,14 @@
 > and keep this file current. Ask the owner before pushing or opening a PR.
 
 ## Now (the current work, newest first)
+- **In flight (2026-10-26, two coders): the owner: "repack and also do cars. why cant i resize cars in the library. every single prop and
+  decal should be resizable so it has a standard size for placement."** (a) Business art re-packed from the largest source
+  (`art/theme-consistency/exports/buildings/business-*.max@2x.png`, else the master) at what each owner scale needs, and `size-report.ts`
+  reading that source as `native` (`prep-business-art.mjs`). (b) Cars and lot decals resizable: the studio's Library no longer treats
+  `kind car` and `cat Lots` as fixed; a car's override multiplies its drawn size everywhere (parked, placed, on the roads; footprint
+  follows); a decal's override multiplies its drawn scale; the dev editor resizes cars. If a chat ends mid-way: check `git status` in the
+  worktree, typecheck, run the tests named in the briefs, then verify in the studio (a car card and a decal card have Smaller/Bigger; the
+  stadium grows past x0.64) and in the lab.
 - **House sizes (the owner: "you have houses in the game that are at max size too small. i need those fixed ... the person wont even fit
   through the door at max size of the house").** Fixed in the studio: `scripts/assets/review/size-report.ts` now takes `native` from the
   source picture's real width (TrickOrTreat library, the export's hd, Capital art), so the Library allows a sprite up to its source pixels
