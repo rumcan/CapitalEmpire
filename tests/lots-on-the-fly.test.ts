@@ -51,9 +51,10 @@ describe('lots generated on the fly (T160)', () => {
     assert.notEqual(lotSeed(g, 'built'), lotSeed(g, 'upgraded'), 'an upgrade lays it anew');
     assert.equal(lotSeed(g, 'built'), lotSeed({ ...g }, 'built'));
   });
-  it('2. the owner\'s own presets (curated, approved, whole) and every other use compose exactly as with ?oldlots', () => {
-    const lots = referenceLots().filter(l => !frozenHouse(l));
-    assert.ok(lots.length > 100);
+  it('2. the owner\'s own presets (curated, approved, whole) and the uses the model does not generate compose exactly as with ?oldlots', () => {
+    // T169: v3 generates industry and the open uses from their frozen presets too (lots-every-use.test.ts); the shops and the owner's own stay
+    const lots = referenceLots().filter(l => { const p = pickedPreset(l.g, l.st); return !frozenHouse(l) && (!p || p.curated || p.approved || p.whole || p.use === 'com' || p.use === 'farm'); });
+    assert.ok(lots.length > 30, `${lots.length} lots`);
     setGeneratedLots(false); const old = lots.map(l => JSON.stringify(compose(l.g, l.st)));
     setGeneratedLots(true); const now = lots.map(l => JSON.stringify(compose(l.g, l.st)));
     assert.deepEqual(now, old);
