@@ -50,6 +50,8 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
 `docs/START-PROMPTS.md`.
 
 ### Queue (in order)
+- **T157 #336 the lot lab runs light** (the owner: "the studio is taking too much ram to run the full game"): next when an agent slot frees
+  (after T154 or T155's PR 1). The studio's Lots tab runs a whole second game today.
 - **Texture art status (2026-10-26 15:30):** the art session (Codex; `art/theme-consistency/material-texture-batches/ACTIVE-WORK.json`)
   has finished 2 of its 14 families (golden fescue, lake: in the game). sand-ripples has raw variants, sand-raked 2/12, desert/dirt
   anchors only; fairway, putting-green, first-cut, long-grass and the rest have job files and no pictures yet. Each lands through
@@ -69,6 +71,10 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
    (the sharp bump). See the History sections below and `gh issue list --label arena --state open`.
 
 ### Done recently (newest first; details in each PR)
+- 2026-10-26: **#337 fescue at half size up close, MID and FAR earlier, zoom-out stopped at 1.25%** (the owner): anchors near 0.6 / mid
+  0.2 / far 0.05, nearUntil 10%, new farFrom 2.5%, ZOOM_MIN 0.0125 (FAR 0.25x there, ~4.4 tiles across 1920 px). **#335 rough back on
+  sage-long** (the owner: the provisional long-grass "clearly not right").
+- 2026-10-26: the Claude app crashed twice; after each the lead restarted the auto-updater and the studio and resumed T154/T155 by message.
 - 2026-10-26: **T153 #332 zoom and golf textures**: ZOOM_MIN 0.0075 (one ZOOM_STEP 1.25 fewer; clampZoom), FAR native there, NEAR until 5%
   (`anchors.nearUntil`); sand-ripples (canonical, id sand-ripples-tiles) → waste; fairway, putting-green, long-grass **provisional** from
   the raw v1 tiles → fairway, green+fringe, rough (a re-run of prep-painted-tiles switches each to its canonical selection when
