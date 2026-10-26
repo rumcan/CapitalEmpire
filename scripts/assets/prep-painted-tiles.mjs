@@ -67,8 +67,12 @@ const gameId = material => (LEGACY.has(material) ? `${material}-tiles` : materia
  * rose one zoom step (1.25, a zoom button press) to 0.0075, and FAR follows it; NEAR stays on, shrinking, down to NEAR_UNTIL, where MID (then
  * at half its native size) takes over. NEAR_UNTIL is the owner's number to tune: edit anchors.nearUntil in painted-tiles.json (this script
  * keeps the manifest's value when it re-runs) or the default here. */
-const ZOOM_MAX = 0.3, ZOOM_MIN = 0.0075;
-const ANCHORS = { near: ZOOM_MAX, mid: 0.1, far: ZOOM_MIN }, HYSTERESIS = 1.04, PRELOAD = 1.414, NEAR_UNTIL = 0.05;
+// T156, the owner (2026-10-26): "half the size the fescue is displayed at, when fully zoomed in, bring in the next fescue earlier and the
+// final fescue even earlier and make the final fescue smaller and atleast 4 tiles", then "just dont let the player zoom out that far". Each
+// set comes in at half its native size: NEAR at the closest zoom (anchor 0.6, so 0.5x at 30%), MID at NEAR_UNTIL 10% (anchor 0.2), FAR at
+// FAR_FROM 2.5% (anchor 0.05); ZOOM_MIN 1.25% (iso.ts), where FAR is 0.25x, about four tiles across a 1920 px screen. Never above native.
+const ZOOM_MAX = 0.3, ZOOM_MIN = 0.0125;
+const ANCHORS = { near: 0.6, mid: 0.2, far: 0.05 }, HYSTERESIS = 1.04, PRELOAD = 1.414, NEAR_UNTIL = 0.1, FAR_FROM = 0.025;
 const ANCHOR_HOW = {
   near: "The near reference (material-screenshot-pipeline/references/owner-near.png, the camera near-shop-native.png comes from; its UI is the game's CSS size): the brick shop is 136 px wide; shop-sized buildings placed in the game at 30% and DPR 1 measure 131-138 px, and the boulevard's carriageway (69 px) gives 0.29: the camera was at the closest zoom, ZOOM_MAX 0.3.",
   mid: "The mid reference (owner-mid.png, the source of scene-backgrounds/golden-fescue/mid-anchored-v2): the same shop is 45.2 px (0.332 of NEAR) and the gas canopy 53.8 px (0.344): 0.3 x 0.338 = 0.1.",
@@ -89,6 +93,8 @@ if (!Array.isArray(ready.ready)) fail('READY-MATERIALS has no ready list');
 const prevManifest = fs.existsSync(MANIFEST) ? (() => { try { return JSON.parse(fs.readFileSync(MANIFEST, 'utf8')); } catch { return null; } })() : null;
 const prevUntil = prevManifest?.anchors?.nearUntil;
 const nearUntil = typeof prevUntil === 'number' && Number.isFinite(prevUntil) && prevUntil > 0 && prevUntil < 1 ? prevUntil : NEAR_UNTIL;
+const prevFar = prevManifest?.anchors?.farFrom;
+const farFrom = typeof prevFar === 'number' && Number.isFinite(prevFar) && prevFar > 0 && prevFar < 1 ? prevFar : FAR_FROM;
 
 // ---- check everything first: nothing is written unless every hash and size matches
 const plan = [];
@@ -187,7 +193,7 @@ const manifest = {
   source: { file: READY_REL, sha256: sha256(readyBuf), date: ready.date ?? null },
   revision: sha256(Buffer.from(plan.map(p => p.key).join(':'))).slice(0, 12),
   display: { minVisibleTiles: ready.displayContract?.minVisibleTiles ?? 2, maxVisibleTiles: ready.displayContract?.maxVisibleTiles ?? 4, allowMirror: false, allowRotate: false, allowFlip: false },
-  anchors: { ...ANCHORS, nearUntil, hysteresis: HYSTERESIS, preload: PRELOAD, zoom: [ZOOM_MIN, ZOOM_MAX], how: ANCHOR_HOW },
+  anchors: { ...ANCHORS, nearUntil, farFrom, hysteresis: HYSTERESIS, preload: PRELOAD, zoom: [ZOOM_MIN, ZOOM_MAX], how: ANCHOR_HOW },
   webp: { quality: QUALITY },
   families: [],
 };

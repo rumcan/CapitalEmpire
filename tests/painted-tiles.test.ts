@@ -11,7 +11,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import {
-  ANCHORS, TILES, TILED_FAMILIES, TILES_REVISION, TILE_BANDS, anchorAt, bandAt, bandOf, bandRange, bandsAhead, cellOf, cellsIn, coverageOf, drawnScale, nearUntil,
+  ANCHORS, TILES, TILED_FAMILIES, TILES_REVISION, TILE_BANDS, anchorAt, bandAt, bandOf, bandRange, bandsAhead, cellOf, cellsIn, coverageOf, drawnScale, farFrom, nearUntil,
   nextBand, snappedCell, specBand, specDpr, switchIn, switchOut, tiledFamily, tileIndex, tileKey, tilePermutation, tileScreenPx, tileSize, tileSpec,
   type TiledFamily,
 } from '../src/game/painted-tiles';
@@ -114,54 +114,62 @@ test('the manifest is hash-bound to READY-MATERIALS and the canonical selections
   }
 });
 
-test('the zoom range (T153): the furthest zoom is one zoom step closer than before; a camera or a save below it is clamped to it', () => {
-  assert.equal(ZOOM_MIN, 0.0075); assert.equal(ZOOM_STEP, 1.25); assert.ok(Math.abs(ZOOM_MIN - 0.006 * ZOOM_STEP) < 1e-12, 'one button press closer than T150\'s 0.006');
-  // the zoom-out button from the closest zoom: one level fewer than before (the old last one, 0.006 after 0.00676, is gone)
-  const presses = (min: number) => { const out = [ZOOM_MAX]; for (let z = ZOOM_MAX; z > min;) { z = Math.max(min, z / ZOOM_STEP); out.push(z); } return out; };
-  assert.equal(presses(ZOOM_MIN).length, presses(0.006).length - 1); assert.equal(presses(ZOOM_MIN).at(-1), ZOOM_MIN);
+test('the zoom range (T156): the player cannot zoom out past 1.25%; a camera or a save below it is clamped to it', () => {
+  assert.equal(ZOOM_MIN, 0.0125, 'the owner: "just dont let the player zoom out that far"'); assert.equal(ZOOM_STEP, 1.25);
   // the clamp the wheel, the keys, the buttons, a jump and a save load use
-  for (const [z, want] of [[0.006, ZOOM_MIN], [0.001, ZOOM_MIN], [ZOOM_MIN, ZOOM_MIN], [0.05, 0.05], [0.31, ZOOM_MAX], [ZOOM_MAX, ZOOM_MAX], [NaN, ZOOM_MAX], [Infinity, ZOOM_MAX], [-1, ZOOM_MIN]] as const) assert.equal(clampZoom(z), want, `clampZoom(${z})`);
-  // a save from before T153 resting at the old furthest zoom (band FAR) comes back at the new one, still FAR (native there)
-  for (const tb of [2, 1, 0, undefined]) assert.equal(nextBand(clampZoom(0.006), tb), 2, `saved band ${tb}`);
-  assert.equal(drawnScale(clampZoom(0.006), 2), 1);
-  // the whole map at the furthest zoom: 1966 CSS px wide (it was 1573)
-  assert.ok(Math.abs(2 * MAP * HW * ZOOM_MIN - 1966.08) < 0.01);
+  for (const [z, want] of [[0.006, ZOOM_MIN], [0.0075, ZOOM_MIN], [0.001, ZOOM_MIN], [ZOOM_MIN, ZOOM_MIN], [0.05, 0.05], [0.31, ZOOM_MAX], [ZOOM_MAX, ZOOM_MAX], [NaN, ZOOM_MAX], [Infinity, ZOOM_MAX], [-1, ZOOM_MIN]] as const) assert.equal(clampZoom(z), want, `clampZoom(${z})`);
+  // a save resting at an old furthest zoom (0.006, 0.0075) comes back at the new one, in FAR at a quarter of its native size
+  for (const tb of [2, 1, 0, undefined]) assert.equal(nextBand(clampZoom(0.0075), tb), 2, `saved band ${tb}`);
+  assert.ok(Math.abs(drawnScale(clampZoom(0.006), 2) - 0.25) < 1e-9);
+  // the whole map at the furthest zoom: 3277 CSS px wide (it was 1966): it no longer fits a 1920 px screen; the minimap shows it whole
+  assert.ok(Math.abs(2 * MAP * HW * ZOOM_MIN - 3276.8) < 0.01);
   assert.deepEqual(ANCHORS.zoom, [ZOOM_MIN, ZOOM_MAX]);
 });
 
-test('the anchors (T150): NEAR at the closest zoom, MID at the mid reference\'s camera, FAR at the furthest zoom; how each was found is recorded', () => {
+test('the anchors (T156): each set comes in at half its native size: NEAR at the closest zoom, MID at nearUntil, FAR at farFrom', () => {
   assert.deepEqual(TILE_BANDS, ['near', 'mid', 'far']);
-  assert.equal(ANCHORS.near, ZOOM_MAX, 'the near reference was taken at the closest zoom'); assert.equal(ANCHORS.far, ZOOM_MIN, 'FAR is native at the furthest zoom');
-  assert.equal(ANCHORS.mid, 0.1, 'the mid reference\'s camera'); assert.ok(ANCHORS.far < ANCHORS.mid && ANCHORS.mid < ANCHORS.near);
+  assert.equal(ANCHORS.near, 0.6, 'NEAR 0.5x at the closest zoom (the owner: "half the size ... when fully zoomed in")');
+  assert.equal(ANCHORS.mid, 0.2); assert.equal(ANCHORS.far, 0.05); assert.ok(ANCHORS.far < ANCHORS.mid && ANCHORS.mid < ANCHORS.near);
   assert.deepEqual(TILE_BANDS.map((_, b) => anchorAt(b)), [ANCHORS.near, ANCHORS.mid, ANCHORS.far]);
   assert.deepEqual(ANCHORS.zoom, [ZOOM_MIN, ZOOM_MAX]);
   assert.ok(ANCHORS.hysteresis > 1 && ANCHORS.hysteresis <= 1.1, 'a few % of hysteresis'); assert.ok(ANCHORS.preload > ANCHORS.hysteresis);
-  for (const b of TILE_BANDS) assert.ok(ANCHORS.how[b].length > 40, `${b}: how its anchor was found`);
-  assert.equal(ANCHORS.far, 0.0075, 'T153: FAR follows the new furthest zoom');
-  // a fresh start: NEAR down to nearUntil x the hysteresis (T153), then MID (below its native size), FAR at the furthest zoom
-  const u = ANCHORS.nearUntil!, H = ANCHORS.hysteresis;
-  assert.equal(u, 0.05, 'NEAR until 5%'); assert.equal(nearUntil(), u);
-  assert.equal(bandAt(ZOOM_MAX), 0); assert.equal(bandAt(0.2), 0); assert.equal(bandAt(0.1), 0, 'NEAR now stays past MID\'s anchor'); assert.equal(bandAt(0.06), 0);
-  assert.equal(bandAt(u * H * 1.001), 0); assert.equal(bandAt(u * H), 1); assert.equal(bandAt(u), 1); assert.equal(bandAt(0.02), 1);
-  assert.equal(bandAt(ZOOM_MIN * 1.001), 1); assert.equal(bandAt(ZOOM_MIN), 2);
-  assert.equal(switchIn(0), Infinity); assert.ok(Math.abs(switchIn(1) - u * H) < 1e-15); assert.ok(Math.abs(switchOut(1) - u) < 1e-15); assert.equal(switchIn(2), ZOOM_MIN); assert.equal(switchOut(2), ZOOM_MIN);
+  for (const b of TILE_BANDS) assert.ok(ANCHORS.how[b].length > 40, `${b}: how its anchor was set`);
+  const u = ANCHORS.nearUntil!, f = ANCHORS.farFrom!, H = ANCHORS.hysteresis;
+  assert.equal(u, 0.1, 'MID earlier (was 5%)'); assert.equal(nearUntil(), u); assert.equal(f, 0.025, 'FAR earlier still (was the furthest zoom)'); assert.equal(farFrom(), f);
+  // where each comes in: half its native size; at the furthest zoom FAR is a quarter of it (about four tiles across a 1920 px screen)
+  assert.ok(Math.abs(drawnScale(ZOOM_MAX, 0) - 0.5) < 1e-9); assert.ok(Math.abs(drawnScale(u, 1) - 0.5) < 1e-9); assert.ok(Math.abs(drawnScale(f, 2) - 0.5) < 1e-9);
+  assert.ok(Math.abs(drawnScale(ZOOM_MIN, 2) - 0.25) < 1e-9);
+  assert.equal(bandAt(ZOOM_MAX), 0); assert.equal(bandAt(0.2), 0); assert.equal(bandAt(u * H * 1.001), 0); assert.equal(bandAt(u * H), 1); assert.equal(bandAt(u), 1);
+  assert.equal(bandAt(0.05), 1); assert.equal(bandAt(f * H * 1.001), 1); assert.equal(bandAt(f * H), 2); assert.equal(bandAt(f), 2); assert.equal(bandAt(ZOOM_MIN), 2);
+  assert.equal(switchIn(0), Infinity); assert.ok(Math.abs(switchIn(1) - u * H) < 1e-15); assert.ok(Math.abs(switchOut(1) - u) < 1e-15);
+  assert.ok(Math.abs(switchIn(2) - f * H) < 1e-15); assert.ok(Math.abs(switchOut(2) - f) < 1e-15);
   for (const b of [1, 2]) assert.ok(switchIn(b) <= anchorAt(b), `band ${b} gives way before it would be magnified`);
-  assert.deepEqual(bandRange(0), [switchOut(1), ZOOM_MAX]); assert.deepEqual(bandRange(1), [ZOOM_MIN, switchIn(1)]); assert.deepEqual(bandRange(2), [ZOOM_MIN, ZOOM_MIN]);
+  assert.deepEqual(bandRange(0), [switchOut(1), ZOOM_MAX]); assert.deepEqual(bandRange(1), [switchOut(2), switchIn(1)]); assert.deepEqual(bandRange(2), [ZOOM_MIN, switchIn(2)]);
 });
 
-test('nearUntil is the owner\'s number: the NEAR to MID switch follows it, held so MID is never magnified and FAR keeps the furthest zoom', () => {
-  const was = ANCHORS.nearUntil, H = ANCHORS.hysteresis;
+test('nearUntil and farFrom are the owner\'s numbers: the switches follow them, held so no set is magnified and each band keeps a range', () => {
+  const wasU = ANCHORS.nearUntil, wasF = ANCHORS.farFrom, H = ANCHORS.hysteresis;
   try {
-    for (const u of [0.08, 0.05, 0.03, 0.012]) {
+    for (const u of [0.15, 0.1, 0.05, 0.03]) {
       ANCHORS.nearUntil = u;
       assert.equal(nearUntil(), u); assert.equal(nextBand(u * 1.001, 0), 0); assert.equal(nextBand(u, 0), 1, `zooming out, MID at ${u}`);
       assert.equal(nextBand(u * H, 1), 1); assert.equal(nextBand(u * H * 1.001, 1), 0, 'zooming in, NEAR again just past the hysteresis');
       assert.ok(drawnScale(u * H, 1) < 1, 'MID below its native size where it gives way');
     }
-    ANCHORS.nearUntil = 0.5; assert.ok(Math.abs(nearUntil() - ANCHORS.mid / H) < 1e-15, 'held: MID gives way at its anchor at the latest (T150)'); assert.equal(switchIn(1), ANCHORS.mid);
-    ANCHORS.nearUntil = 0.0001; assert.ok(Math.abs(nearUntil() - ANCHORS.far * H) < 1e-15, 'held above FAR\'s anchor: MID always has a range');
-    ANCHORS.nearUntil = undefined; assert.ok(Math.abs(nearUntil() - ANCHORS.mid / H) < 1e-15, 'no nearUntil: T150\'s switch');
-  } finally { ANCHORS.nearUntil = was; }
+    ANCHORS.nearUntil = 0.5; assert.ok(Math.abs(nearUntil() - ANCHORS.mid / H) < 1e-15, 'held: MID gives way at its anchor at the latest'); assert.equal(switchIn(1), ANCHORS.mid);
+    ANCHORS.nearUntil = 0.0001; assert.ok(Math.abs(nearUntil() - farFrom() * H * H) < 1e-15, 'held above FAR\'s switch: MID always has a range');
+    ANCHORS.nearUntil = undefined; assert.ok(Math.abs(nearUntil() - ANCHORS.mid / H) < 1e-15, 'no nearUntil: at MID\'s anchor');
+    ANCHORS.nearUntil = wasU;
+    for (const f of [0.04, 0.025, 0.015]) {
+      ANCHORS.farFrom = f;
+      assert.equal(farFrom(), f); assert.equal(nextBand(f * 1.001, 1), 1); assert.equal(nextBand(f, 1), 2, `zooming out, FAR at ${f}`);
+      assert.equal(nextBand(f * H, 2), 2); assert.equal(nextBand(f * H * 1.001, 2), 1, 'zooming in, MID again just past the hysteresis');
+      assert.ok(drawnScale(f * H, 2) < 1, 'FAR below its native size where it gives way');
+    }
+    ANCHORS.farFrom = 0.5; assert.ok(Math.abs(farFrom() - ANCHORS.far / H) < 1e-15, 'held: FAR never magnified');
+    ANCHORS.farFrom = 0.0001; assert.equal(farFrom(), ZOOM_MIN, 'held at the furthest zoom');
+    ANCHORS.farFrom = undefined; assert.ok(Math.abs(farFrom() - ANCHORS.far / H) < 1e-15, 'no farFrom: just inside FAR\'s anchor');
+  } finally { ANCHORS.nearUntil = wasU; ANCHORS.farFrom = wasF; }
 });
 
 test('one fixed world size per set: native / (anchor x DPR), so at its anchor a tile is its native pixels wide on screen (1742 device px) at any DPR', () => {
@@ -181,9 +189,9 @@ test('one fixed world size per set: native / (anchor x DPR), so at its anchor a 
     assert.equal(nextBand(inside, b), b); assert.deepEqual(tileSize(lv, tileSpec(b, 1)), tileSize(lv, tileSpec(nextBand(inside, b), 1)));
   }
   assert.equal(tiledFamily('golden-fescue')!.levels.near.native[0], 1742);
-  // FAR at the furthest zoom on a 1920 x 1080 CSS view: its native 1742 x 902 px, so 1.10 x 1.20 tiles at DPR 1 and 2.20 x 2.40 at DPR 2
+  // FAR at the furthest zoom on a 1920 x 1080 CSS view (T156): a quarter of its native 1742 x 902 px, so 4.4 x 4.8 tiles at DPR 1 (the owner: "atleast 4 tiles")
   const far = tiledFamily('golden-fescue')!.levels.far;
-  for (const dpr of [1, 2]) { const c = coverageOf(1920, 1080, ZOOM_MIN, tileSize(far, tileSpec(2, dpr))); assert.ok(Math.abs(c.across - 1920 * dpr / 1742) < 1e-6 && Math.abs(c.down - 1080 * dpr / 902) < 1e-6); }
+  for (const dpr of [1, 2]) { const c = coverageOf(1920, 1080, ZOOM_MIN, tileSize(far, tileSpec(2, dpr))); assert.ok(Math.abs(c.across - 1920 * dpr * 4 / 1742) < 1e-6 && Math.abs(c.down - 1080 * dpr * 4 / 902) < 1e-6); assert.ok(c.across >= 4); }
   // a junk or T145 spec reads as NEAR at DPR 1 (a chunk baked before T150 is simply stale)
   for (const junk of [0, 3, 11, -5, 1.5, NaN]) { assert.equal(specBand(junk), 0); assert.equal(specDpr(junk), 1); }
   assert.notEqual(tileSpec(0, 1), tileSpec(0, 2), 'a DPR change re-lays'); assert.notEqual(tileSpec(0, 1), tileSpec(1, 1));
@@ -206,10 +214,10 @@ test('never magnified: at every zoom, zooming out and in and jumping, at DPR 1, 
     for (let z = ZOOM_MIN; z < ZOOM_MAX; z *= 1.01) frame(z);
     frame(ZOOM_MAX);
     for (let i = 0; i < 2000; i++) frame(ZOOM_MIN * (ZOOM_MAX / ZOOM_MIN) ** rnd()); // camera jumps (a hole, the overview, a reload)
-    for (const a of [ANCHORS.near, ANCHORS.mid, ANCHORS.far, nearUntil(), switchIn(1)]) for (const k of [0.97, 0.999, 1, 1.001, 1.03]) frame(Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, a * k)));
-    assert.ok(Math.abs(worst - 1) < 1e-9, `${f.id} dpr ${dpr}: native is reached (${worst}) and never passed`);
+    for (const a of [ANCHORS.mid, ANCHORS.far, nearUntil(), switchIn(1), farFrom(), switchIn(2)]) for (const k of [0.97, 0.999, 1, 1.001, 1.03]) frame(Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, a * k)));
+    assert.ok(worst >= 0.5 - 1e-9 && worst <= 0.5 * ANCHORS.hysteresis + 1e-9, `${f.id} dpr ${dpr}: each set comes in at half its native size (worst ${worst}), never above`);
   }
-  // T153: at 5% NEAR (zooming out) is a sixth of its native size and MID (zooming in) about half of it
+  // T156: at nearUntil (10%) NEAR is a sixth of its native size and MID about half of it
   assert.ok(Math.abs(drawnScale(ANCHORS.nearUntil!, 0) - 1 / 6) < 1e-9); assert.ok(drawnScale(switchIn(1), 1) <= 0.53);
 });
 
@@ -227,8 +235,9 @@ test('a real zoom inside a band: no re-lay; the tiles shrink smoothly as the cam
     }
     assert.deepEqual(switches.map(s => [s.from, s.to]), [[0, 1], [1, 2]], 'NEAR to MID, MID to FAR, nothing else');
     const u = ANCHORS.nearUntil!;
-    assert.ok(switches[0]!.z <= u * (1 + 1e-9) && switches[0]!.z > u / 1.006, `NEAR to MID at nearUntil (${switches[0]!.z}), T150's 9.6% is gone`);
-    assert.equal(switches[1]!.z, ZOOM_MIN, 'MID to FAR at the furthest zoom, FAR\'s anchor');
+    assert.ok(switches[0]!.z <= u * (1 + 1e-9) && switches[0]!.z > u / 1.006, `NEAR to MID at nearUntil (${switches[0]!.z})`);
+    const f = ANCHORS.farFrom!;
+    assert.ok(switches[1]!.z <= f * (1 + 1e-9) && switches[1]!.z > f / 1.006, `MID to FAR at farFrom (${switches[1]!.z})`);
   }
 });
 
@@ -237,12 +246,12 @@ test('band hysteresis: zooming out a coarser set takes over at its switch, zoomi
   assert.equal(nextBand(m, 0), 0, 'out: NEAR stays past MID\'s anchor (T153)'); assert.equal(nextBand(u * 1.001, 0), 0); assert.equal(nextBand(u, 0), 1, 'out: MID at nearUntil');
   assert.equal(nextBand(u * H, 1), 1, 'in: MID up to nearUntil x the hysteresis'); assert.equal(nextBand(u * H * 1.0001, 1), 0, 'in: past it NEAR');
   assert.equal(nextBand(m * 1.0001, 1), 0, 'in: MID is never magnified');
-  assert.equal(nextBand(ZOOM_MIN * 1.0001, 1), 1); assert.equal(nextBand(ZOOM_MIN, 1), 2, 'out: FAR at the furthest zoom (its anchor: no room below it)');
-  assert.equal(nextBand(ZOOM_MIN * 1.0001, 2), 1, 'in: FAR is left at once');
+  const f = ANCHORS.farFrom!;
+  assert.equal(nextBand(f * 1.0001, 1), 1); assert.equal(nextBand(f, 1), 2, 'out: FAR at farFrom');
+  assert.equal(nextBand(f * H, 2), 2, 'in: FAR up to farFrom x the hysteresis'); assert.equal(nextBand(f * H * 1.0001, 2), 1, 'in: past it MID');
   assert.equal(nextBand(ZOOM_MIN, 0), 2, 'a jump from NEAR to the overview: FAR'); assert.equal(nextBand(0.05, 0), 1); assert.equal(nextBand(0.25, 2), 0, 'a jump in from FAR: NEAR');
   // jitter round MID's anchor and its switch: at most one switch, no flipping
-  // (FAR is native at the furthest zoom itself, so it shows only there: a camera moving off the limit leaves it at once, never magnified)
-  for (const [z0, amp, start] of [[u, 0.03, 0], [u, 0.03, 1], [u * H, 0.01, 0], [u * H, 0.01, 1], [u * Math.sqrt(H), 0.015, 0], [u * Math.sqrt(H), 0.015, 1]] as const) {
+  for (const [z0, amp, start] of [[u, 0.03, 0], [u, 0.03, 1], [u * H, 0.01, 0], [u * H, 0.01, 1], [u * Math.sqrt(H), 0.015, 0], [u * Math.sqrt(H), 0.015, 1], [f, 0.03, 1], [f, 0.03, 2], [f * Math.sqrt(H), 0.015, 2]] as const) {
     let b: number = start, flips = 0;
     for (let i = 0; i < 300; i++) { const z = z0 * (1 + amp * Math.sin(i * 0.7)); const n = nextBand(z, b); if (n !== b) flips++; b = n; }
     assert.ok(flips <= 1, `${flips} flips round ${z0} from ${start}`);
@@ -257,8 +266,9 @@ test('band hysteresis: zooming out a coarser set takes over at its switch, zoomi
 test('the next set is decoded ahead once the camera nears its switch, and only then', () => {
   const P = ANCHORS.preload, u = ANCHORS.nearUntil!, H = ANCHORS.hysteresis;
   assert.deepEqual(bandsAhead(ZOOM_MAX, 0), []); assert.deepEqual(bandsAhead(u * P * 1.01, 0), []); assert.deepEqual(bandsAhead(u * P * 0.99, 0), [1]);
-  assert.deepEqual(bandsAhead(u * H / P * 1.01, 1), [0], 'MID near its switch in: NEAR ahead'); assert.deepEqual(bandsAhead(u * H / P * 0.99, 1), []); assert.deepEqual(bandsAhead(0.03, 1), []);
-  assert.deepEqual(bandsAhead(ZOOM_MIN * P * 0.99, 1), [2], 'MID near the furthest zoom: FAR ahead'); assert.deepEqual(bandsAhead(ZOOM_MIN, 2), [1]);
+  assert.deepEqual(bandsAhead(u * H / P * 1.01, 1), [0], 'MID near its switch in: NEAR ahead'); assert.deepEqual(bandsAhead(u * H / P * 0.99, 1), []); assert.deepEqual(bandsAhead(0.05, 1), []);
+  const f = ANCHORS.farFrom!;
+  assert.deepEqual(bandsAhead(f * P * 0.99, 1), [2], 'MID near farFrom: FAR ahead'); assert.deepEqual(bandsAhead(f, 2), [1], 'FAR near its switch in: MID ahead'); assert.deepEqual(bandsAhead(ZOOM_MIN, 2), []);
   // whenever a switch happens, the set switched to was ahead on the frame before
   let b: number | null = 0, ahead: number[] = [];
   for (const z of [...Array.from({ length: 900 }, (_, i) => ZOOM_MAX / 1.005 ** i).filter(z => z > ZOOM_MIN), ZOOM_MIN, ...Array.from({ length: 900 }, (_, i) => ZOOM_MIN * 1.005 ** i).filter(z => z < ZOOM_MAX)]) {
@@ -327,11 +337,13 @@ test('the tile sets join the families, laid as authored; fescue, water, the map 
   for (const t of ['grass', 'meadow']) assert.equal(lookOfTex(t, S)!.family, 'golden-fescue', `the map's ${t}`);
   // T153 (#327): the course's turf and waste areas wear the new sets, neutral (the tile sets are laid as authored)
   const neutral = (family: string) => ({ family, version: null, scale: 1, tint: '#ffffff', tone: 0 });
-  for (const [t, key, fam] of [['golfFairway', 'fairway', 'fairway'], ['golfGreen', 'green', 'putting-green'], ['golfFringe', 'fringe', 'putting-green'], ['golfRough', 'rough', 'long-grass'], ['wasteSand', 'waste', 'sand-ripples-tiles']] as const) {
+  for (const [t, key, fam] of [['golfFairway', 'fairway', 'fairway'], ['golfGreen', 'green', 'putting-green'], ['golfFringe', 'fringe', 'putting-green'], ['wasteSand', 'waste', 'sand-ripples-tiles']] as const) {
     assert.equal(lookOfTex(t, S)!.family, fam, t); assert.deepEqual(S.surfaces[key], neutral(fam), `${key}: neutral tint, tone and scale`);
     assert.deepEqual((surfacesFile.surfaces as Record<string, unknown>)[key], neutral(fam), `${key} in painted-surfaces.json`);
   }
-  for (const [p, fam] of [['fairway', 'fairway'], ['green', 'putting-green'], ['fringe', 'putting-green'], ['rough', 'long-grass'], ['waste', 'sand-ripples-tiles']] as const) assert.equal(lookOfTex(`preset:${p}`, S, PRESETS)?.family ?? fam, fam, `the ${p} preset follows its surface`);
+  // the rough went back to its old painting (#335: the provisional long-grass tiles show raw seams) until the art session repairs them
+  assert.equal(lookOfTex('golfRough', S)!.family, 'sage-long');
+  for (const [p, fam] of [['fairway', 'fairway'], ['green', 'putting-green'], ['fringe', 'putting-green'], ['rough', 'sage-long'], ['waste', 'sand-ripples-tiles']] as const) assert.equal(lookOfTex(`preset:${p}`, S, PRESETS)?.family ?? fam, fam, `the ${p} preset follows its surface`);
   // tees keep the old green until a family is chosen for them; the first cut keeps its family too
   for (const t of ['golfTee', 'golfFirstCut']) { const l = lookOfTex(t, S); if (l) assert.ok(!familyById(l.family)!.tiled, `${t} keeps its family`); }
   assert.equal(S.surfaces.tee!.family, 'emerald-short');

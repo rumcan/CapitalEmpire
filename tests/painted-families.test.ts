@@ -85,7 +85,7 @@ test('every surface of the game wears a painted family: golf, map, town lawns, l
   const S = f.surfaces;
   assert.equal(S.tee!.family, 'emerald-short'); assert.ok(S.tee!.scale < 1, 'tees keep the old green until a family is chosen for them');
   assert.equal(S.fairway!.family, 'fairway'); assert.equal(S.green!.family, 'putting-green'); assert.equal(S.fringe!.family, 'putting-green');
-  assert.equal(S.rough!.family, 'long-grass'); assert.equal(S.fescue!.family, 'golden-fescue');
+  assert.equal(S.rough!.family, 'sage-long', 'rough stays on its old painting until the long-grass tiles are repaired (#335)'); assert.equal(S.fescue!.family, 'golden-fescue');
   assert.equal(S.bunker!.family, 'sand-raked'); assert.equal(S.waste!.family, 'sand-ripples-tiles'); assert.equal(S.water!.family, 'lake');
   // the map's open grass draws golden fescue and rivers draw lake (the owner, 2026-10-26: "all the map water and grass needs to be replaced
   // aswell"; main 003153a)
