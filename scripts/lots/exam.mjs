@@ -76,10 +76,10 @@ try {
     await sheet.setContent(`<html><body style="margin:14px;background:#0c121c;color:#e5e7eb;font:13px system-ui,sans-serif"><style>h1{font-size:20px;margin:0 0 6px}h2{font-size:16px;margin:14px 0 6px;color:#fbbf24}p{margin:3px 0;color:#cbd5e1}.g{display:flex;flex-wrap:wrap;gap:8px}figure{margin:0;background:#111827;border:1px solid #1f2937;border-radius:6px;padding:4px}figure svg{display:block}figcaption{font-size:11px;padding:3px 2px 0;color:#d1d5db;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}figcaption span{color:#6b7280}</style>${head}${body}</body></html>`);
     await sleep(500);
     const base = path.join(OUT, `exam-${String(label).split(' ')[0].replace(/[^a-z0-9]+/gi, '')}-${stamp}`);
-    await sheet.screenshot({ path: `${base}.png`, fullPage: true });
+    await sheet.screenshot({ path: `${base}.jpg`, fullPage: true, type: 'jpeg', quality: 88 });
     fs.writeFileSync(`${base}.json`, JSON.stringify({ model: label, at: new Date().toISOString(), stats, perState: per, lots: lots.map(l => ({ ...l, ...(shots.get(l.i)?.counts ?? {}) })) }, null, 1));
     await sheet.close();
-    console.log(`  sheet: ${base}.png`);
+    console.log(`  sheet: ${base}.jpg`);
   }
   await page.evaluate(() => window.__lotExam.done());
 } catch (e) { console.log('FAILED', String(e).slice(0, 600)); process.exitCode = 1; }
