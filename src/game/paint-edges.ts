@@ -8,6 +8,7 @@
 // Pure TypeScript, no DOM, deterministic. Units: tiles of 2 m; res = image px per tile; L = the ground cache level (cache px per world px).
 import { SUN_TILE_DIR } from './ext/course-height';
 import { HH, HW } from './iso';
+import { vnoise } from './living-ground';
 
 /** how a painted surface's edge is drawn: crisp (as before: paving, kerbs), flat (feather only), turf (fairway: a gentle bevel), raised
  *  (green, tee: a stronger bevel and cast shadow), sunken (bunker: the bevel reversed), water (feather only) */
@@ -263,4 +264,99 @@ export function edgeBox(pb: readonly number[], cb: readonly number[], reach: num
   const x0 = Math.max(cb[0]!, Math.floor(pb[0]! - reach) - 1), y0 = Math.max(cb[1]!, Math.floor(pb[1]! - reach) - 1);
   const x1 = Math.min(cb[2]!, Math.ceil(pb[2]! + reach) + 1), y1 = Math.min(cb[3]!, Math.ceil(pb[3]! + reach) + 1);
   return x1 > x0 && y1 > y0 ? [x0, y0, x1, y1] : null;
+}
+
+// ---- a painted area's edge shade (T136, the Shadow slider beside Border width) ----
+// The Paint tool's areas are flat (their edge profile only feathers, or stays crisp). Their Shadow (0..1) makes one read as slightly raised under
+// the sun at the upper right: a cool multiply inside the edges turned away from the sun (their outward side toward 145° on screen), strongest at
+// the edge and fading inward over a few metres, so the texture stays visible in it (T110: never a flat dark band); and a faint light on the
+// edges turned to the sun, a small gap inside the edge, laid by the renderer as a shine textured by the area's own colours (on its mid-tones
+// and highlights, never its dark gaps). Both stay inside the area: nothing is cast on the course, a road or another area beside it.
+// Depths are measured from where the edge reads: the outline for a crisp area; for a feathered one (its feather fades the outer part of the
+// surface into the ground under it, so a shade or a light there would be lost) the shade stays full out to three quarters of the feather band,
+// where the surface is nearly opaque, and the light's gap starts at its middle, where the edge is seen.
+// The images come from the same signed distance field as the edge profile (edgeField), baked when the area's chunk bakes, never per frame.
+
+/** the edge shade's numbers: its depth (how far in it fades out, tiles) at a faint and at a full Shadow, its strongest multiply alpha (an edge
+ *  turned straight away at Shadow 1), its cool shade colour (RGB 0..255: the course shadows' SHADE_TINT in renderer.ts, so one shadow colour
+ *  reads across the ground), how much a slow world-space noise varies the depth (so its inner edge is never one even band), and the light on
+ *  the sun side: its strongest mask alpha, the gap inside the edge, the ramp in after it and the band's width (tiles: 0.2 m, 0.16 m, 0.8 m),
+ *  drawn from cache level lightL up (its band about 3 cache px there; further out, and on district chunks, the shade alone) */
+export const AREA_SHADE = { len0: 1, len1: 1.75, max: 0.8, rgb: [112, 120, 152] as const, noise: 0.25, light: 0.5, gap: 0.1, ramp: 0.08, width: 0.4, lightL: 0.1 } as const;
+
+/** an area's Shadow as its bake uses it: 0 (none: absent, not a number, or not above 0) .. 1 */
+export function areaShadow(v: unknown): number { return typeof v === 'number' && v > 0 ? Math.min(1, v) : 0; }
+/** how far in the shade fades out at Shadow s, tiles past the edge (0 with none): 2 m when faint, 3.5 m at full */
+export function areaShadeLen(s: number): number { const v = areaShadow(s); return v > 0 ? AREA_SHADE.len0 + (AREA_SHADE.len1 - AREA_SHADE.len0) * v : 0; }
+/** where an area with a feather band of `feather` tiles has its edge for the shade, tiles inside the outline: the outline itself when crisp,
+ *  three quarters of the band in when feathered (the surface is nearly opaque there) */
+export function areaShadeEdge(feather: number): number { return feather > 0 ? 0.75 * feather : 0; }
+/** where it has its edge for the light: the outline when crisp, the middle of the feather band (where the edge is seen) when feathered */
+export function areaLightEdge(feather: number): number { return feather > 0 ? 0.5 * feather : 0; }
+/** how far from the outline the shade's images reach at Shadow s on an area with a feather band of `feather` tiles (its longest depth with the
+ *  noise past its edge, and a margin for the stretch), tiles; 0 with none */
+export function areaShadeReach(s: number, feather = 0): number { const len = areaShadeLen(s); return len > 0 ? areaShadeEdge(feather) + len * (1 + AREA_SHADE.noise) + 0.25 : 0; }
+/** how much an edge of sun facing f (sunFacing of its outward normal, -1 away .. 1 toward) is shaded: all of it turned straight away (its
+ *  outside toward 145° on screen), a little turned side-on (the shade wraps a touch past it, as light on a rounded edge does), none once it
+ *  turns to the sun */
+export function shadeFacing(f: number): number { const v = (0.2 - f) / 1.2; return v <= 0 ? 0 : v >= 1 ? 1 : v ** 1.2; }
+/** how much an edge of sun facing f takes the light on the sun side: none side-on or turned away (or only a little to the sun: the light is
+ *  for the edges that face it), all of it turned straight to the sun */
+export function lightFacing(f: number): number { const v = (f - 0.3) / 0.7; return v <= 0 ? 0 : v >= 1 ? 1 : v ** 0.8; }
+/** the shade's falloff at depth d tiles inside the outline over depth len past the edge e: 1 out to the edge, easing to 0 a depth further in
+ *  (a soft S-curve: no line where it stops), 0 outside the outline */
+export function shadeFalloff(d: number, len: number, e = 0): number { return d < 0 || !(len > 0) ? 0 : 1 - smooth01((d - e) / len); }
+/** the slow noise (0..1) that varies the shade's depth at tile (x, y): world-space value noise of about 6 m, never periodic, the same in
+ *  every chunk */
+export function shadeNoise(x: number, y: number): number { return vnoise(x / 3.1 + 17.3, y / 3.1 - 5.9, 71); }
+/** the shade's multiply alpha (0..1, of AREA_SHADE.rgb) at depth d tiles inside the outline, an edge of sun facing f, Shadow s, the noise n
+ *  there (0.5: none) and the edge e tiles in */
+export function areaShadeAlpha(d: number, f: number, s: number, n = 0.5, e = 0): number {
+  const v = areaShadow(s); if (!v) return 0;
+  return v * AREA_SHADE.max * shadeFacing(f) * shadeFalloff(d, areaShadeLen(v) * (1 + AREA_SHADE.noise * (2 * n - 1)), e);
+}
+/** the sun side's light band across the edge at depth d tiles (0..1) with the edge e tiles in: full from the outline through the gap and its
+ *  ramp, fading out over the band's width. The low-resolution mask the renderer stretches; it cuts the gap out at full resolution (areaLightGap) */
+export function lightBand(d: number, e = 0): number { return d < 0 ? 0 : 1 - smooth01((d - e - AREA_SHADE.gap - AREA_SHADE.ramp) / AREA_SHADE.width); }
+/** the light's inset (0..1) at depth d with the edge e tiles in: nothing within the gap inside the edge, ramping in over the next
+ *  AREA_SHADE.ramp (T110: a highlight starts a small gap inside the edge, never on the edge line) */
+export function areaLightGap(d: number, e = 0): number { return smooth01((d - e - AREA_SHADE.gap) / AREA_SHADE.ramp); }
+/** the light's mask alpha (0..1; the renderer's shine adds the area's own colour squared through it) at depth d, an edge of sun facing f,
+ *  Shadow s, the edge e tiles in */
+export function areaLightAlpha(d: number, f: number, s: number, e = 0): number {
+  const v = areaShadow(s); return v ? v * AREA_SHADE.light * lightFacing(f) * lightBand(d, e) * areaLightGap(d, e) : 0;
+}
+
+/** an area's edge shade images over a field's box: shade (AREA_SHADE.rgb in 'multiply', clipped to the area; null: none) and the light's mask
+ *  (white; its alpha the band times the facing and strength, the gap not yet cut: the renderer cuts it at full resolution; null: none), with
+ *  the tile box the light covers */
+export interface AreaShadeImages { shade: EdgeImage | null; light: EdgeImage | null; lightBox: [number, number, number, number] | null }
+/** the edge shade images of one field (edgeField over the area's outline, out to at least areaShadeReach(s, feather)) at Shadow s on an area
+ *  with a feather band of `feather` tiles (0: crisp); withLight false leaves the light out (far levels and district chunks, where its band is
+ *  under a cache px) */
+export function areaShadeImages(f: EdgeField, s: number, withLight = true, feather = 0): AreaShadeImages {
+  const v = areaShadow(s), N = f.W * f.H;
+  if (!v || !f.any) return { shade: null, light: null, lightBox: null };
+  const e = areaShadeEdge(feather), le = areaLightEdge(feather);
+  const [R, G, B] = AREA_SHADE.rgb, lenMax = e + areaShadeLen(v) * (1 + AREA_SHADE.noise), lightMax = le + AREA_SHADE.gap + AREA_SHADE.ramp + AREA_SHADE.width;
+  let shade: Uint8ClampedArray | null = null, light: Uint8ClampedArray | null = null, u0 = Infinity, v0 = Infinity, u1 = -Infinity, v1 = -Infinity;
+  for (let k = 0; k < N; k++) {
+    const d = f.d[k]!; if (d < 0 || d >= lenMax) continue;
+    const fc = f.sun[k]!, u = k % f.W, w = (k - u) / f.W;
+    if (shadeFacing(fc) > 0) {
+      const a = areaShadeAlpha(d, fc, v, shadeNoise(f.x0 + (u + 0.5) / f.res, f.y0 + (w + 0.5) / f.res), e);
+      if (a > 0.002) { shade ??= new Uint8ClampedArray(N * 4); const q = 4 * k; shade[q] = R; shade[q + 1] = G; shade[q + 2] = B; shade[q + 3] = a * 255; }
+    }
+    if (withLight && d < lightMax && lightFacing(fc) > 0) {
+      const a = v * AREA_SHADE.light * lightFacing(fc) * lightBand(d, le);
+      if (a > 0.002) {
+        light ??= new Uint8ClampedArray(N * 4); const q = 4 * k; light[q] = light[q + 1] = light[q + 2] = 255; light[q + 3] = a * 255;
+        if (u < u0) u0 = u; if (u > u1) u1 = u; if (w < v0) v0 = w; if (w > v1) v1 = w;
+      }
+    }
+  }
+  const img = (data: Uint8ClampedArray | null): EdgeImage | null => (data ? { data, W: f.W, H: f.H } : null);
+  // the light's box: its px grown by one (the bilinear stretch reaches half a px past them)
+  const lightBox: [number, number, number, number] | null = light ? [f.x0 + (u0 - 1) / f.res, f.y0 + (v0 - 1) / f.res, f.x0 + (u1 + 2) / f.res, f.y0 + (v1 + 2) / f.res] : null;
+  return { shade: img(shade), light: img(light), lightBox };
 }

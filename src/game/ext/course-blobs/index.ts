@@ -789,7 +789,8 @@ function surfacesNear(g: Grid, box: BlobBox, pad: number): number[] {
  * (draw order, none excluded), fill rings clipped to the box grown by FILL_GROW, edge polylines cut exactly at the box, and the
  * collar when the style has one. The field reads the global grid with a CHUNK_MARGIN-tile margin and the relax runs before the
  * cut, so neighbouring chunks' edges meet exactly. `styles` overrides BLOB_STYLE (indexed by surface id). cover: each outline also
- * carries the cells it was contoured from (SurfaceOutline.cover). */
+ * carries the cells it was contoured from (SurfaceOutline.cover), and a surface near the chunk that draws nothing in it is kept, empty,
+ * for its cells. */
 export function chunkOutlines(g: Grid, cx: number, cy: number, size = 64, styles: readonly BlobStyle[] = BLOB_STYLE, cover = false): SurfaceOutline[] {
   const box: BlobBox = { x0: cx * size, y0: cy * size, x1: (cx + 1) * size, y1: (cy + 1) * size };
   let maxCollar = 0;
@@ -810,7 +811,9 @@ export function chunkOutlines(g: Grid, cx: number, cy: number, size = 64, styles
       if (cfill.length) o.collar = { fill: cfill.concat(fill.map(reverseRing)), edges: edgeLines(g, sc.chainsC, cb, tol) };
     }
     if (cover) o.cover = { s: sc.oS, c: sc.oC };
-    if (fill.length || o.collar) out.push(o);
+    // with cover, a surface near the chunk that draws nothing in it is kept too (no rings, no edges): its cells still tell a wall at the
+    // chunk's border what lies just over it, as they tell the neighbour chunk (T137: a junction on a border met itself at two drops)
+    if (fill.length || o.collar || cover) out.push(o);
   }
   return out;
 }
