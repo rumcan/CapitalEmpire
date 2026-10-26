@@ -11,6 +11,7 @@ import type { HoleView } from '../src/game/golf/holeview';
 import { CoursePanel } from '../src/ui/course/CoursePanel';
 import { holeState } from '../src/ui/course/HoleStrip';
 import { plainName } from '../src/PaintPanel';
+import { growReadyLabel } from '../src/game/golf/growlabel';
 
 const facts = (over: Partial<PlayerProgressFacts> = {}): PlayerProgressFacts => ({
   advancedMode: false, playableHoles: 0, seasonsDone: 0, invited: false, elapsedSeconds: 30, roadsBuilt: 0, carParksBuilt: 0, eventStructuresPlaced: 0, ...over,
@@ -31,7 +32,7 @@ function fakeGame(o: { facts?: Partial<PlayerProgressFacts>; holes?: HoleView[];
   };
   return {
     golfMode: true, paint, toolUi: () => ui, courseHoleViews: () => views,
-    holesGrowing: () => new Map(Object.entries(o.growing ?? {}).map(([n, m]) => [+n, m])),
+    holeGrowLabel: (n: number) => growReadyLabel(o.growing?.[n]),
   } as unknown as Game;
 }
 const render = (g: Game) => renderToStaticMarkup(createElement(CoursePanel, { game: g }));
@@ -82,7 +83,7 @@ describe('the Holes panel after hole 1 (stage 2)', () => {
 
   it('a growing hole\'s status says when it is ready; a hole that needs attention says what it misses', () => {
     let h = render(fakeGame({ facts: { playableHoles: 2, stageReached: 2 }, holes, growing: { 2: 6 }, current: 2 }));
-    assert.match(h, /Hole 2 · par 3 · 150 m · growing, ready Mar 1985/);
+    assert.match(h, /Hole 2 · par 3 · 150 m · growing · ready Mar 1985/);
     h = render(fakeGame({ facts: { playableHoles: 2, stageReached: 2 }, holes, current: 3 }));
     assert.match(h, /Hole 3 · par 5 · 480 m · needs attention/);
     assert.match(h, /✗<\/span>Pin on the green/);
@@ -100,9 +101,9 @@ describe('the Holes panel after hole 1 (stage 2)', () => {
   });
 
   it('holeState: ✓ ready, ◔ growing with its month, ! needs attention first', () => {
-    assert.deepEqual(holeState(ready(1, 4, 300), null), { kind: 'ready', icon: '✓', word: 'ready' });
-    assert.deepEqual(holeState(ready(1, 4, 300), { growing: true, ready: 'Mar 1985' }), { kind: 'growing', icon: '◔', word: 'growing, ready Mar 1985' });
-    assert.equal(holeState({ ...ready(1, 4, 300), ok: false }, { growing: true, ready: 'Mar 1985' }).kind, 'attn');
+    assert.deepEqual(holeState(ready(1, 4, 300), ''), { kind: 'ready', icon: '✓', word: 'ready' });
+    assert.deepEqual(holeState(ready(1, 4, 300), 'growing · ready Mar 1985'), { kind: 'growing', icon: '◔', word: 'growing · ready Mar 1985' });
+    assert.equal(holeState({ ...ready(1, 4, 300), ok: false }, 'growing · ready Mar 1985').kind, 'attn');
   });
 });
 

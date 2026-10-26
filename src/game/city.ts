@@ -29,7 +29,7 @@ import { Round, type RoundSave, type RoundView } from './event/round';
 import { crowdFor, placeStadium, siteAt, type Site } from './event/site';
 import { freshStats, type BizDef, type BizStats, type BizView } from './business/state';
 import { Visits, ON_TIME_RATIO, type Door, type VisitBiz, type VisitHome } from './business/visits';
-import { BUSINESS, ESTATE_LOTS, ESTATE_SAT, GOOD_SAT, levelFromXp, satisfactionAfter } from './business/catalogue';
+import { BUSINESS, ESTATE_LOTS, ESTATE_SAT, GOOD_SAT, knownBusinesses, levelFromXp, satisfactionAfter } from './business/catalogue';
 import { driveway } from './sim/trips';
 import { buildPark, parkBox, type CarPark, type CarParkDef, type ParkView } from './event/carpark';
 import { lotPark, rowLots, rowQuad, type BayRowDef } from './event/rows';
@@ -383,6 +383,9 @@ export class City {
    *  heights (HS*HS metres, the terrain's height field: the disasters' flood and slope tests; none: flat); the town starts again, at the sim time (no lots yet) */
   terrain(cls: Uint8Array, entry: Pt, seed: number, towns: Pt[] = [], height?: Float32Array, golf = false): void {
   this.cls = cls; this.water = waterField(cls); this.ctx.entry = { x: entry.x, y: entry.y }; this.endTourneyDay();
+    // a new game starts at its own month (T135): the game clock at the season's first instant and the town day at day 1, not the last game's
+    // (the season month is read from the clock, so it carried over); the clock-keyed timers with it. A load sets its own clock after (restore)
+    this.sim.restartClock(); this.growAt = -Infinity; this.courseHour = -1;
     this.heightOf = height ? (x, y) => sampleField(height, x, y) : () => 0; this.segs = new WeakMap();
     this.centres = towns;
     this.town = new Town(seed); this.town.setCentres(towns); this.town.option = optionOf(this.optId); this.town.speed = this.growSpeed; this.town.tick(this.sim.clock, this.ctx); this.syncHour = -1;
@@ -414,6 +417,7 @@ export class City {
    *  and the site is siteAt of the stadium entry, else of the clubhouse (null: neither). While a round is under way the stadium and the clubhouse do not
    *  change: the current ones stay in place of whatever defs say about them */
   setBusinesses(defs: BizDef[]): void {
+    defs = knownBusinesses(defs, 'city'); // a type the catalogue does not have (an old save's) would throw in the visit plan every frame (T135)
     const cur = this.businesses.find(b => b.type === 'stadium'), club = this.businesses.find(b => b.type === 'clubhouse'), locked = this.round.stage !== 'free';
     const others = defs.filter(d => d.type !== 'stadium' && d.type !== 'clubhouse'), keep: BizDef[] = [cur, club].filter((b): b is BizView => !!b).map(b => ({ id: b.id, type: b.type, x: b.x, y: b.y, w: b.w, h: b.h }));
     const next: BizDef[] = locked ? [...keep, ...others] : defs;
