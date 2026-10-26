@@ -176,6 +176,11 @@ not saved. Old starts (`?start=town`) and classic games never see any of it.
 | D48 | The roofs' footprint (T133) | A scene piece can carry its own footprint (`foot`): the covered-bay roofs and the deck take their four bays' (behind the golfers), so the painter's order is right from every facing. |
 | D49 | The car park caps the live golfers (T133) | The range's car park (44 bays on the test maps) holds a car for a golfer's whole visit (two or three town hours with the walks), so a live busy range with 36 bays turns cars away for want of parking while the skip (which counts bays, not parking) books more. Left for a later ticket: a car park upgrade, or the second tier adding bays to the car park. |
 | D50 | The kiosk's numbers (T133) | 40% of golfers, $3 a coffee (first $4: it paid back in under a season on an 8-bay range, more than the bays). |
+| D51 | The car park building (T146, D49 settled; the owner, 2026-10-26: "lets add a carpark building") | A range card upgrade, "Car park building" ($36,000, $240 a month, needs the second tier). It is a multi-storey car park of 180 cars on the lot's far half (frame u 49..58, v 2..15); the lot keeps its near half beside the drive (u 58..69: 22 bays), so 202 in all. The cars drive into its ramp off the lot's aisle and are inside (not drawn); the golfers walk out of its door onto a cart path laid on round it once (`golf.range.garage`); the lot's walkers go round it. Sized by the bays held at peak, not the cars parked: a car holds its bay from its drive in until it has pulled out; a grown 36-bay range at the 10-minute day holds up to 171 with parking unbounded, 155 of the 202 with the building. A stand-in (`business:buscompany`) until its art (GOLF-SPRITES). |
+| D52 | The counters in parallel (T146; the owner: "server the golfers in parallel") | The pro shop has one counter per 9 bays (1, 1, 2, 3, 4 at 4, 8, 12, 24, 36 bays), side by side along its front. A free counter calls the line's head once a hitting bay is free. One counter served about 15 golfers a town hour, so a 36-bay range kept only 19 bays busy; three still capped it at 29 an hour; with four the bays fill (36) and about 33 sell an hour. |
+| D53 | The driver judges the line it will find (T146) | A car turns away when the line now plus the golfers driving in and walking up, less what the counters serve meanwhile, reaches qMax. Judging by the line alone, an hour before reaching it, overfilled the line and then let it run dry, so the bays stood half empty for a town hour at a time. The golfers join the line from the path's end by the car park. |
+| D54 | The skip counts the live range's limits (T146) | `skippedVisits(..., live)` caps each hour at the bays' turnover (`bays / bayHours`) and the car park (`parkBays / carHours`), and serves a golfer `inHours` after it arrives. carHours is a geometric model of a car's stay, a little over the live cars' (4.45 vs 3.79 hours), so the skip never books past the car park. A grown 36-bay range: the live day sold 125 against the skip's 539 before; now 420 against 467 (11%; 4% at a 20-minute day). |
+| D55 | The range's money as it happens (T146, for T147) | `RangeSim.onMoney`: one event per bucket, practice fee, coffee, lesson and lost golfer (why: queue, parking or patience), with its takings and where it happened (the counter, the facility, the kiosk, the junction, the line); null for a skip. They are booked in one block at the top of `RangeSim.step`. |
 
 ## 4. Phases and tickets
 
@@ -353,8 +358,21 @@ not saved. Old starts (`?start=town`) and classic games never see any of it.
   three stages and the host's move toast; golfers upstairs and drawn up there; coffees and their line; lessons and the pro beside the pupil;
   the cart picking the balls, and the old clearing without it; the skip's coffees and lessons).
 - **Left:** the art (GOLF-SPRITES "The range business kit": the double-deck stand, the coffee kiosk, the academy sign, the picker cart, the
-  cottage); a bigger car park for the grown range (D49); the putt and chip clips (D28), the studio bake of the two range presets' own pictures
+  cottage); a bigger car park for the grown range (D49: T146 below); the putt and chip clips (D28), the studio bake of the two range presets' own pictures
   (D35), live weather for the covered bays (D13).
+
+### T146 (#303): the car park grows with the range (built)
+- **The car park building** (D51): `rangesave.ts` `parking`, `GARAGE_CARS`. The scene's `garage` holds the box, ramp, door, the lot beside it and the path; `lotWalk` is the lot's walk round it. `garageSlots` gives its places. The engine's `fitPark` shrinks the range lot (the ground re-bakes) and the host lays the path once. Its "P · parked/180" label is drawn over it; the lot's label counts the lot's cars only.
+- **The counters in parallel** (D52), **the driver's judgement** (D53), **the skip** (D54), **the money events** (D55).
+- **The range card:** the header gains the counters, and there is a parking line, "Parking: parked/bays cars · building n/180 · N turned away today (car park full)" (`today.noPark`).
+- **Tests:** `tests/golf-range-parking.test.ts`:
+  - the upgrade: its cost, upkeep and prerequisites, and the counters by the bays;
+  - the save: its round trip and an old save loading;
+  - the scene for every facing: the building clear of the lot, shop, paths, bays and tee box;
+  - a 36-bay range at peak: it turns cars away on the 44-bay lot and none with the building, and the bays fill;
+  - the skip within 20% of the live range, never past the car park;
+  - the money events adding up to the takings;
+  - the host shrinking the lot and laying the path once, an old save too.
 
 ## 5. Risks
 - **Two money paths** (the worker's visit cars and the range sim): the worker's are switched off only in range starts; a test holds it.

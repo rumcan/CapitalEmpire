@@ -17,7 +17,7 @@ export function RangeCard({ view, onClose, onPrice, onBuy, onShowPractice, right
       <div className="flex items-center justify-between border-b border-white/10 pb-2">
         <div>
           <div className="font-semibold text-amber-200">Driving range</div>
-          <div className="text-[11px] text-slate-400">{st.proShop ? 'Pro shop' : 'The shack (a crappy pro shop)'} · {st.tier2 ? `${st.lowerBays} + ${st.bays - st.lowerBays} upstairs` : st.bays} bays · open {view.hours}</div>
+          <div className="text-[11px] text-slate-400">{st.proShop ? 'Pro shop' : 'The shack (a crappy pro shop)'} · {st.tier2 ? `${st.lowerBays} + ${st.bays - st.lowerBays} upstairs` : st.bays} bays · {st.counters} {st.counters === 1 ? 'counter' : 'counters'} · open {view.hours}</div>
         </div>
         <button className="btn-icon" onClick={onClose} title="Close"><Icon name="close" size={18} /></button>
       </div>
@@ -25,6 +25,10 @@ export function RangeCard({ view, onClose, onPrice, onBuy, onShowPractice, right
         <Tile label="Today" value={`${Math.round(today.golfers)}`} sub="golfers" />
         <Tile label="Hitting" value={`${today.playing}/${st.bays}`} sub={st.tier2 ? `${view.upstairs} upstairs · ${today.queue} queued` : `${today.queue} queued`} />
         <Tile label="Lost" value={`${Math.round(today.lost)}`} sub="drove on" tone={today.lost > 0 ? 'text-rose-300' : 'text-white'} />
+      </div>
+      <div className="flex items-center justify-between gap-2 rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-xs" data-testid="range-parking" title="The range's car park: its golfers' cars parked now of its bays (the lot's and the car park building's), and the cars that drove on today because it was full">
+        <span className="text-slate-300">Parking: <span className="font-semibold text-white">{view.parking.parked}/{view.parking.bays}</span> cars{view.parking.garage ? <span className="text-slate-500"> · building {view.parking.garage.parked}/{view.parking.garage.cars}</span> : null}</span>
+        <span className={view.parking.turned > 0 ? 'font-semibold text-rose-300' : 'text-slate-500'}>{view.parking.turned} turned away today{view.parking.turned > 0 && !st.parking ? ' (car park full)' : ''}</span>
       </div>
       <div className="grid grid-cols-2 gap-1.5 text-center">
         <Tile label="Season takings" value={money(biz.season.takings)} sub={`${Math.round(biz.season.buckets).toLocaleString()} buckets`} tone="text-emerald-300" />

@@ -32,7 +32,7 @@ test('a new range: 4 bays, $6, nothing bought, no counts; the save normalizes an
 });
 
 test('the upgrades: their order, their costs, and what each does to the stats', () => {
-  assert.equal(RANGE_UPGRADES.length, 12, 'the eight of Phase 1 and the four World of Golf extras (T133: golf-range-extras.test.ts)');
+  assert.equal(RANGE_UPGRADES.length, 13, 'the eight of Phase 1, the four World of Golf extras (T133: golf-range-extras.test.ts) and the car park building (T146: golf-range-parking.test.ts)');
   const d = defaultRangeBiz();
   assert.equal(upgradeWhy(d, 'bays12', 1e9), 'Build 8 hitting bays first');
   assert.match(upgradeWhy(d, 'proshop', 1000), /Not enough money/);
@@ -140,8 +140,9 @@ test('a crowd bigger than the bays makes a queue at the shop and turns cars away
 });
 
 test('a skip books the expected sales at once and clears the golfers', () => {
+  // (T146: the skip counts the car park and serves a golfer after its way in, so give it a car park of the test maps' size)
   const s = defaultRangeBiz(), sim = new RangeSim(3, 10), sc = rangeScene(plots[2], 2, s);
-  sim.setScene(sc, [{ x: 260, y: 210, hx: 0, hy: 1 }], { x: 269, y: 210 });
+  sim.setScene(sc, Array.from({ length: 44 }, (_, i) => ({ x: 250 + (i % 11) * 1.25, y: 205 + Math.floor(i / 11) * 2.5, hx: 0, hy: 1 })), { x: 272, y: 209 });
   const booked = sim.step(600, { hour: 0, day: 1 }, s, start, 600); // a skip: two minutes and more at once
-  assert.ok(s.season.golfers > 40 && s.season.golfers <= 44, `${s.season.golfers}`); assert.ok(Math.abs(booked - s.season.golfers * 240) < 1e-6); assert.equal(sim.onFoot, 0);
+  assert.ok(s.season.golfers > 34 && s.season.golfers <= 44, `${s.season.golfers}`); assert.ok(Math.abs(booked - s.season.golfers * 240) < 1e-6); assert.equal(sim.onFoot, 0);
 });

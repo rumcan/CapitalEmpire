@@ -409,6 +409,11 @@ export class Game {
     biz: () => (this.golf?.start === 'range' ? (this.golf.range ??= defaultRangeBiz()) : null),
     plot: () => { const g = this.golf, d = g?.start === 'range' ? this.bizDefs.find(b => b.type === 'range') : undefined; return g && d ? { rect: plotOfFront([d.x, d.y, d.w, d.h], g.dir), facing: g.dir } : null; },
     carPark: () => this.rangeCarPark(),
+    // the car park building (T146) takes the lot's far half: the lot keeps its near half (the bays under the building go, the ground re-bakes)
+    fitPark: r => {
+      const d = this.parkDefs.find(q => this.onRangePlot(q.x + q.w / 2, q.y + q.h / 2)); if (!d || (d.x === r[0] && d.y === r[1] && d.w === r[2] && d.h === r[3])) return;
+      d.x = r[0]; d.y = r[1]; d.w = r[2]; d.h = r[3]; this.syncParks(); this.scheduleSave();
+    },
     addPiece: (p, key) => {
       const t = turned(p.id, p.q), item = LIB_INDEX.get(t.id); if (item === undefined) return null;
       // the studio's size wins; never past the pixels its atlas holds (sizes.ts), so the footprint and shadow match what is drawn
@@ -3513,7 +3518,8 @@ export class Game {
       }
       const parked = this.traffic.parks.find(q => q.id === d.id)?.parked ?? 0, c = this.screen(d.x + d.w / 2, d.y + d.h / 2);
       // the range's car park also holds the range sim's cars, which the worker never sees (T132)
-      const label = parkLabel(parked, pk && pk === this.rangePk?.pk ? this.range.sim.parked() : 0, pk ? pk.bays.length : 0);
+      // (T146: the cars in the car park building are counted over it, not here)
+      const label = parkLabel(parked, pk && pk === this.rangePk?.pk ? this.range.sim.parked(false) : 0, pk ? pk.bays.length : 0);
       ctx.font = `bold ${12 * dpr}px ui-sans-serif, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.lineJoin = 'round'; ctx.lineWidth = 3 * dpr; ctx.strokeStyle = 'rgba(2,6,23,0.9)'; ctx.strokeText(label, c.x, c.y);
       ctx.fillStyle = '#f8fafc'; ctx.fillText(label, c.x, c.y);
