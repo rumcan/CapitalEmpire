@@ -18,6 +18,11 @@ export const ITEM_KINDS: readonly ItemKind[] = ['tree', 'bush', 'flowerbed', 'pr
 export type Sector = 'verge' | 'fence' | 'near' | 'drive' | 'front' | 'back' | 'left' | 'right' | 'front-left' | 'front-right' | 'back-left' | 'back-right';
 export const SECTORS: readonly Sector[] = ['verge', 'fence', 'near', 'drive', 'front', 'back', 'left', 'right', 'front-left', 'front-right', 'back-left', 'back-right'];
 export const SECTOR_NAMES: Readonly<Record<Sector, string>> = { verge: 'street verge', fence: 'fence line', near: 'near the house', drive: 'driveway strip', front: 'front yard', back: 'back yard', left: 'left side', right: 'right side', 'front-left': 'front-left corner', 'front-right': 'front-right corner', 'back-left': 'back-left corner', 'back-right': 'back-right corner' };
+/** T169: the use groups the lot model learns apart: houses (res), shops and offices (com), industry (ind), the open uses (park, civic, tour); a
+ *  farm draws its own preset whole (none) */
+export type UseGroup = 'res' | 'com' | 'ind' | 'open';
+export const USE_GROUPS: readonly UseGroup[] = ['res', 'com', 'ind', 'open'];
+export const groupOf = (use: PresetUse): UseGroup | null => (use === 'res' ? 'res' : use === 'com' ? 'com' : use === 'ind' ? 'ind' : use === 'farm' ? null : 'open');
 /** a house size class as the model keys it ('none': a lot with no house) */
 export type HouseClass = 'small' | 'medium' | 'large' | 'none';
 export const CLASSES: readonly HouseClass[] = ['small', 'medium', 'large', 'none'];

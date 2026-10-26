@@ -15,7 +15,7 @@ import { addSample, addSamples, learnedModel, learnedSamples, learnedTaste, onLe
 import { pairTable, stateKinds, tasteData, type Taste } from '../lots/taste';
 import { presetSamples, teaches } from './learn-presets';
 import { lotPresets } from '../lots/compose';
-import { LATEST } from '../lots/lot-models';
+import { LATEST, LOT_MODELS } from '../lots/lot-models';
 import { modelData } from '../lots/learn';
 import { generateLayout, type LaidItem } from '../lots/lot-gen';
 import { isFence, kindPools } from '../lots/item-kinds';
@@ -273,7 +273,7 @@ export function makeWizard(host: WizardHost) {
   /** ships the model learnt so far (POST /__dev/lot-model): the dev server writes it as the next version and the index */
   function ship(): void {
     const st = learningStats(learnedSamples()), from = `${st.total} samples (${st.bySrc.wizard} wizard, ${st.bySrc.preset} from presets, ${st.bySrc.gallery} gallery), shipped ${new Date().toISOString().slice(0, 10)}`;
-    void fetch('/__dev/lot-model', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data: { ...modelData(learnedModel()), ...tasteData(learnedTaste()) }, from }) })
+    void fetch('/__dev/lot-model', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data: { ...modelData(learnedModel()), ...tasteData(learnedTaste()), groups: (LOT_MODELS[LATEST] as { groups?: unknown } | undefined)?.groups }, from }) })
       .then(async r => { if (!r.ok) throw new Error(`${r.status} ${await r.text()}`); const v = ((await r.json()) as { version: number }).version; shipped = v; host.say(`shipped lot model v${v}: new towns compose their house lots with it (after a reload)`); host.redraw(); })
       .catch(e => host.say(`the model was not shipped: ${String(e)}`));
   }

@@ -9,7 +9,7 @@
 // state's density over the built lots' (stateKinds), so built lots keep the density they have.
 // Pure, with no runtime imports but learn.ts (vite.config.ts loads it through dev-save.ts).
 import type { PresetState } from './presets';
-import { ITEM_KINDS, type ItemKind, type Sample } from './learn';
+import { ITEM_KINDS, groupOf, type ItemKind, type Sample, type UseGroup } from './learn';
 
 /** how near (tiles, centre to centre) a partner stands to its anchor to go with it; the least times a pair is seen to be learnt; the least rate a
  *  partner is laid at; the most offsets a pair keeps (the first seen) */
@@ -37,10 +37,11 @@ export const emptyTaste = (): Taste => ({ anchors: new Map(), pairs: new Map(), 
 const dkey = (s: PresetState, k: ItemKind) => `${s}|${k}`;
 const r2 = (v: number) => Math.round(v * 100) / 100, r3 = (v: number) => Math.round(v * 1000) / 1000;
 
-/** the taste of a list of samples */
-export function buildTaste(samples: readonly Sample[]): Taste { const t = emptyTaste(); for (const s of samples) learnTaste(t, s); return t; }
-/** a taste with one more sample counted (a gallery lot judged Bad says something is wrong but not which item: it is not counted) */
-export function learnTaste(t: Taste, s: Sample): Taste {
+/** the taste of a list of samples (group: whose lots' densities it counts, T169: the houses' unless told) */
+export function buildTaste(samples: readonly Sample[], group: UseGroup = 'res'): Taste { const t = emptyTaste(); for (const s of samples) learnTaste(t, s, group); return t; }
+/** a taste with one more sample counted (a gallery lot judged Bad says something is wrong but not which item: it is not counted); its densities
+ *  only from the lots of group (T169: each use group learns its own) */
+export function learnTaste(t: Taste, s: Sample, group: UseGroup = 'res'): Taste {
   if (s.verdict === 'down') return t;
   const kept = s.items.filter(i => i.kept);
   // pairs: each kept anchor, and the nearest of each other id kept within PAIR_R of it
@@ -57,9 +58,9 @@ export function learnTaste(t: Taste, s: Sample): Taste {
     let m = t.pairs.get(a.id); if (!m) t.pairs.set(a.id, m = new Map());
     for (const [id, o] of near) { const c = m.get(id) ?? { n: 0, offs: [] }; c.n++; if (c.offs.length < 2 * PAIR_OFFS) c.offs.push(r2(o.dx), r2(o.dy)); m.set(id, c); }
   }
-  // densities: a house lot's kept items of each kind per 160 tiles squared
+  // densities: a lot of the group's (a house lot's) kept items of each kind per 160 tiles squared
   const st = s.ctx.state as PresetState;
-  if (s.ctx.use === 'res' && STATES.includes(st) && s.ctx.w > 0 && s.ctx.d > 0) {
+  if (groupOf(s.ctx.use) === group && STATES.includes(st) && s.ctx.w > 0 && s.ctx.d > 0) {
     const per = (160 / (s.ctx.w * s.ctx.d));
     for (const k of ITEM_KINDS) { const c = t.density.get(dkey(st, k)) ?? [0, 0]; c[0]++; c[1] += kept.filter(i => i.kind === k).length * per; t.density.set(dkey(st, k), c); }
   }
