@@ -165,7 +165,7 @@ test('the owner\'s paintings (T162): hash-checked against their source.json, one
   assert.equal(r.status, 0, r.stderr + r.stdout);
   const m = JSON.parse(manifestText());
   assert.deepEqual(m.families.map((f: Fam) => f.id), ['rough-owner']);
-  const f = m.families[0] as Fam & { name: string; kind: string; owner: string; levels: Record<string, Level & { heal: { method: string; band: number; before: Wrap; healed: Wrap; after: Wrap } }> };
+  const f = m.families[0] as Omit<Fam, 'levels'> & { name: string; kind: string; owner: string; levels: Record<'near' | 'mid' | 'far', Level & { heal: { method: string; band: number; before: Wrap; healed: Wrap; after: Wrap } }> };
   assert.equal(f.name, 'Rough (owner)'); assert.equal(f.kind, 'grass'); assert.equal(f.provisional, true); assert.equal(f.selection, null);
   assert.equal(f.materialId, 'owner:rough-20261026'); assert.equal(f.owner, `${DIR}/source.json`);
   assert.equal(f.revision, sha256(['near', 'mid', 'far'].map(b => hashes[b]).join(':') + '|wrap-bridge-v1/48').slice(0, 12), 'the paintings\' hashes and the heal');
