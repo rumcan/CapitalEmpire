@@ -60,7 +60,39 @@ all." House rule: the sun at the upper right, shadows at 145° on screen (to the
   `ref:tree-spruce-blue` 67, `ref:tree-birch-gold` 49, `world:tree_pine_*` 36 to 48, `world:tree_dead_*` about 30): to check whether the
   pool sits on the trunk's foot.
 
-(To be continued: the props, poles, vehicles, buildings and fences sheets, and the lean.)
+### The lean (every box and blob)
+- The lean was `6 * cast.length` screen px per metre of (hx + hy): a building's box (hx + hy about 10 m) slid 54 px down-left, so about 70
+  of the 122 buildings' contact boxes stick out 26 to 40 px in front of their pictures; a fence's strip (hx 3, hy 0.16) slid 17 px, about three
+  times its own depth, off its fence.
+
+### Props, poles, vehicles, buildings (from the measured pictures: `output/t141/analyze.mjs` in the worktree, not committed)
+- Boxes wider than their pictures (the box sticks out on the sun side too): the views of a variation set often keep a bigger box than their
+  base (`variation:world-trashcan-76186b58-ns:1` 1.17 m against the can's 0.41), the above-ground pools (2.2 to 2.9 m squares), the
+  trampoline (a 1.93 m square under a round trampoline), about 25 building variations (`variation:ref-building-*-plain:1`, garages,
+  `variation:town-hardware-*`, ... 17 to 121 px past the picture's right edge).
+- Boxes off the picture's middle by 130 to 380 px: `world:diner`, `variation:gen-house-ranch-long-*`, `variation:gen-house-farmhouse-wrap-*`,
+  `gen:back-patio-pool`, `variation:town-grocery-*`, the industrial variations (`bottling-plant`, `corrugated-warehouse`, `lumber-workshop`).
+- Pictures drawn wholly above their anchors: `town:stop_sign` (20 px), `town:traffic_light` (57), `town:utility_pole` (126), `town:street_sign`
+  (66): the spot sits on the ground below the pole's foot, detached.
+- Signs on two posts (the guide, recreation, local and assembly sign sets): a 0.19 m spot in the middle under the board.
+- `world:scoreboard` (a board on two posts): a 1.05 x 0.9 m box on the ground under the board, between the posts.
+- Round things with boxes: the trampoline, the above-ground pools, the fire pits, the cable spools.
+- Vehicles: `world:schoolbus`'s box is 1.7 times the bus's width (hy 2.84 m against a 2.5 m bus) and the 1.35 widening makes a big dark slab.
+- Fences: fine apart from the lean.
+
+(To be continued: the after sheets and the remaining per-item overrides.)
+
+## The fix (in progress)
+
+- `src/game/shadow-shape.ts`: whole-word name rules (`kindOf` / `ruleKind`), a `round` kind for small round things, the business art's
+  buildings by id, `contactShadow()` placing each shape with its picture (never wider than the picture, under its middle, its front corner no
+  lower than the picture's foot, a placeholder footprint replaced by the picture's base, a spot at the foot of a picture drawn above its
+  anchor), `overrideOf()` reading `src/game/shadow-overrides.json` (per id; a turned view shares its NE view's entry, turned; a variation set
+  shares `variation:<group>`), and one lean for blob and box (`CONTACT_LEAN`, `leanShift`: half the shape's reach toward the shadow side, at
+  most 0.8 m).
+- Still to do: gl.ts VS_SHADOW (the per-vertex lean, `aLook.w` the lean multiplier), sprites.ts (`contactShadow` with the picture rect, the
+  look's item, no shadow for a hidden look, the cast foot from a placeholder fit, `cast: false`), engine.ts (`contactLean(this.cast)`), the
+  overrides, the after sheets, `tests/shadow-overrides.test.ts`.
 
 ## Sheets
 
