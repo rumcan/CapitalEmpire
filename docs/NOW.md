@@ -24,7 +24,8 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 ### In flight
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |
-| T151 | #322 | `arena/T151-labels` | `.claude/worktrees/t151` | 5186 | World labels never overlap (the range's shop front first): one placement pass by priority, stable, hidden when crowded; money floats avoid them. |
+| T152 | #325 | `arena/T152-car-spacing` | `.claude/worktrees/t152` | 5187 | Cars keep a car-length gap in their lane (no piling up on the range drive and the county road); root cause first; all four gates on the branch. |
+| T112 | #199 | `arena/T112-sharp` | `.claude/worktrees/t112` | 5193 (studio check) | sharp 0.34.5 → 0.35 (high advisory); asset outputs proven unchanged by pixel diff; full suite and build allowed. |
 
 **Two coding agents at a time (the owner, 2026-10-26: first "maybe just too many background tasks?" after the studio tab died with the
 PC at 1.5 GB free, then "start up two coding agents"):** keep two coding agents running, start the next queue ticket when one lands, no
@@ -58,7 +59,6 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
 2. **The owner's new grass paintings**, when they arrive. Import them with `scripts/assets/prep-painted-families.mjs` (the families list
    in the script), then map them per surface in Studio › Painted.
 3. **P24 follow-ups:**
-   - overlapping labels at the range's shop front: T151 in flight;
    - the putt, chip and coaching clips;
    - real art for the stand-ins in `docs/GOLF-SPRITES.md` (the range, practice and props kits).
 4. **The owner's call:** the top bar's chip words are icons only below 2200 px (T135). Bring the words back at 1920 if the owner asks.
@@ -67,6 +67,8 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
    (the sharp bump). See the History sections below and `gh issue list --label arena --state open`.
 
 ### Done recently (newest first; details in each PR)
+- 2026-10-26: **T151 #324 world labels never overlap**: one placement pass a frame by priority (`label-place.ts`, `world-labels.ts`;
+  names 100, counts 90, stand-ins 10), slots kept while free, hidden when crowded; money float columns lifted clear.
 - 2026-10-26: **T148 #321 the lot lab's editing tools**: multi-select (Shift+click, box drag) with group move/delete/turn/size as one undo,
   Ctrl+C/V across lots, Change house (H, same family and size class), Lot grid (L), Generate in place + New lot ▶, Neighbours (N).
 - 2026-10-26: **T150 #319 painted tiles at their true size**: one fixed world size per set, native at its anchor (NEAR 30% from the
