@@ -44,8 +44,12 @@ const LAYOUTS: Layout[] = [
   { name: 'a run down the screen, along a seam', legs: [leg(P(1025.3, 994.1), P(1037.3, 1006.1))], seam: false },
   { name: 'a run across the screen, its far kerb on a seam', legs: [leg(P(1026.4, 1007.25), P(1038.4, 995.25))], seam: true },
   { name: 'a bend', legs: [leg(P(1024.3, 1000.2), P(1031.4, 1000.2)), leg(P(1031.4, 1000.2), P(1031.4, 1007.3))], seam: true },
-  { name: 'a junction, its spur up the screen', legs: [leg(P(1024.3, 1000.2), P(1031.4, 1000.2)), leg(P(1031.4, 1000.2), P(1038.3, 1000.2)), leg(P(1031.4, 1000.2), P(1031.4, 993.3))], seam: true },
-  { name: 'a crossing', legs: [leg(P(1024.3, 1000.2), P(1031.4, 1000.2)), leg(P(1031.4, 1000.2), P(1038.3, 1000.2)), leg(P(1031.4, 993.3), P(1031.4, 1000.2)), leg(P(1031.4, 1000.2), P(1031.4, 1007.1))], seam: true },
+  // a junction and a crossing on the chunk corner: the spur up the screen takes the far kerb where the bottom seam would cross it
+  { name: 'a junction, its spur up the screen', legs: [leg(P(1024.3, 1000.2), P(1031.4, 1000.2)), leg(P(1031.4, 1000.2), P(1038.3, 1000.2)), leg(P(1031.4, 1000.2), P(1031.4, 993.3))], seam: false },
+  { name: 'a crossing', legs: [leg(P(1024.3, 1000.2), P(1031.4, 1000.2)), leg(P(1031.4, 1000.2), P(1038.3, 1000.2)), leg(P(1031.4, 993.3), P(1031.4, 1000.2)), leg(P(1031.4, 1000.2), P(1031.4, 1007.1))], seam: false },
+  // and moved along the road so the bottom seam crosses the far kerb's corner, where it turns from the main road up the spur
+  { name: 'a junction, the seam through its far corner', legs: [leg(P(1024.3, 1000.2), P(1035.7, 1000.2)), leg(P(1035.7, 1000.2), P(1042.7, 1000.2)), leg(P(1035.7, 1000.2), P(1035.7, 993.3))], seam: true },
+  { name: 'a crossing, the seam through its far corner', legs: [leg(P(1024.3, 1000.2), P(1035.7, 1000.2)), leg(P(1035.7, 1000.2), P(1042.7, 1000.2)), leg(P(1035.7, 993.3), P(1035.7, 1000.2)), leg(P(1035.7, 1000.2), P(1035.7, 1007.1))], seam: true },
   { name: 'a dead end', legs: [leg(P(1021.3, 1000.2), P(1031.4, 1000.2))], seam: true },
 ];
 const LEVELS_CHECKED = [0.6, 0.3, 0.15];
@@ -63,7 +67,7 @@ function faceFaults(lay: Layout, L: number, draw: FaceDraw) {
   assert.ok(all.length, `${lay.name}: kerbed features`);
   const b = boxes.reduce((p, q) => [Math.min(p[0], q[0]), Math.min(p[1], q[1]), Math.max(p[2], q[2]), Math.max(p[3], q[3])]);
   const shift = faceShift(L), faults: string[] = [];
-  let chunks = 0, faced = 0, facePx = 0, atBottom = 0;
+  let chunks = 0, faced = 0, facePx = 0, atBottom = 0, total = 0;
   for (const [i, j] of chunksOver([b[0] - 1, b[1] - 1, b[2] + 1, b[3] + 1])) {
     const { M, W, H, box } = chunk(i, j, L), up = upScreen(M, shift);
     // the chunk's kerbed features as the painter takes them (renderer.ts step 4: the view round the chunk, those whose face reaches it)
@@ -75,7 +79,7 @@ function faceFaults(lay: Layout, L: number, draw: FaceDraw) {
     const xs = [b[0] - b[3], b[2] - b[1]].map(v => v * M.a + M.e), ys = [b[0] + b[1], b[2] + b[3]].map(v => v * M.b + M.f);
     const x0 = Math.max(0, Math.floor(xs[0]!) - 2), x1 = Math.min(W, Math.ceil(xs[1]!) + 2), y0 = Math.max(0, Math.floor(ys[0]! - shift) - 2), y1 = Math.min(H, Math.ceil(ys[1]!) + 2);
     const note = (what: string, x: number, y: number) => {
-      if (y >= H - 6) atBottom++;
+      total++; if (y >= H - 6) atBottom++;
       if (faults.length < 6) { const p = tileAtPx(M, x, y); faults.push(`${what} in chunk ${i},${j} at tile (${p.x.toFixed(2)}, ${p.y.toFixed(2)}), px (${x}, ${y})`); }
     };
     let px = 0;
@@ -94,7 +98,7 @@ function faceFaults(lay: Layout, L: number, draw: FaceDraw) {
     if (px) faced++;
     facePx += px;
   }
-  return { faults, chunks, faced, facePx, atBottom };
+  return { faults, chunks, faced, facePx, atBottom, total };
 }
 
 test('the face stands straight up the screen, FACE_WORLD world px tall (a pixel at least)', () => {
@@ -118,9 +122,17 @@ for (const lay of LAYOUTS) {
   });
 }
 
-test('the checks catch the slid face: a gap at the chunk\'s bottom edge wherever a far kerb crosses it', () => {
-  for (const lay of LAYOUTS.filter(l => l.seam)) for (const L of LEVELS_CHECKED) {
-    const { faults, atBottom } = faceFaults(lay, L, slidFace);
-    assert.ok(atBottom > 0 && faults.some(f => f.includes('a gap in the kerb face')), `${lay.name} at L ${L}: ${faults.join('; ') || 'no fault found'}`);
+test('the checks catch the slid face: a gap at the chunk\'s bottom edge wherever a far kerb crosses it, and nothing else', () => {
+  const caught = new Map<string, number[]>();
+  for (const lay of LAYOUTS) for (const L of LEVELS_CHECKED) {
+    const { faults, atBottom, total } = faceFaults(lay, L, slidFace);
+    // the slid face is right everywhere but along the chunk's bottom edge, so the checks fault nothing else of it
+    assert.equal(total, atBottom, `${lay.name} at L ${L}: a fault away from the chunk's bottom edge: ${faults.join('; ')}`);
+    if (atBottom > 0 && faults.some(f => f.includes('a gap in the kerb face'))) caught.set(lay.name, [...caught.get(lay.name) ?? [], L]);
   }
+  // the gap shows on every layout whose far kerb crosses a bottom edge (on a bend's and a dead end's round corners only near: their face
+  // crosses the seam in a few pixels' run), and at every level checked (a face of 1.1 px at 0.15)
+  for (const lay of LAYOUTS) assert.equal(caught.has(lay.name), lay.seam, `${lay.name}: the slid face's gap ${lay.seam ? 'missed' : 'found where no far kerb crosses a bottom edge'}`);
+  for (const L of LEVELS_CHECKED) assert.ok([...caught.values()].some(ls => ls.includes(L)), `the gap at L ${L}`);
+  for (const name of ['a straight run along x', 'a straight run along y', 'a run across the screen, its far kerb on a seam']) assert.deepEqual(caught.get(name), LEVELS_CHECKED, name);
 });
