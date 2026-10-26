@@ -1,7 +1,7 @@
 // The Paint tool's state and input (docs/PAINT-TOOL.md "The tool (UI)"): drawing outlines by clicks or a lasso, picking, erasing, the shape handles of the selected area, and the preview. No React; the engine and PaintPanel call it.
 import type { LotPatch } from './ground-protocol';
 import { lookChanged } from './course-look';
-import { BORDER_TEXES, BRUSH_PRESETS, borderW, drawZ, DEFAULT_STYLE, MAX_PTS, MAX_SIDE, PAINT_TEXES, areaAt, boxOf, checkArea, clampStyle, crossings, fromTuples, insertCorner, insidePoly, moveCorner, polyBox, removeCorner, roundCorners, rotatePts, scalePts, simplify, snapPt, toTuple, translatePts, type BrushKind, type PaintArea, type PaintBox, type PaintTuple } from './paint';
+import { BORDER_TEXES, BRUSH_PRESETS, assignStyle, borderW, drawZ, DEFAULT_STYLE, MAX_PTS, MAX_SIDE, PAINT_TEXES, areaAt, boxOf, checkArea, clampStyle, crossings, fromTuples, insertCorner, insidePoly, moveCorner, polyBox, removeCorner, roundCorners, rotatePts, scalePts, simplify, snapPt, toTuple, translatePts, type BrushKind, type PaintArea, type PaintBox, type PaintTuple } from './paint';
 import { dab, fillPoly, stroke as brushStroke, trace as traceMask, type Mask } from './brush';
 import { MAP } from './iso';
 import { holePreset, kindOfTex, placeHole, storedHolePreset, type HolePreset, type PresetProp, type StoredHole } from './golf/holepreset';
@@ -182,6 +182,8 @@ interface Drag { g: Grab; a: PaintArea; start: number[]; base: number[]; cand: n
 const HIT = 9, ROT_UP = 26, SCALE_OUT = 10;
 /** the least time between two bakes of an area during a drag, ms */
 const SEND_MS = 120;
+/** style changes to the same areas closer together than this (ms: a slider dragged) join one undo step */
+const RESTYLE_MS = 1500;
 
 const TEX_COL = new Map(PAINT_TEXES.map(t => [t.id as string, t.col] as [string, string]));
 const BTEX_COL = new Map(BORDER_TEXES.map(t => [t.id as string, t.col] as [string, string]));
@@ -258,7 +260,7 @@ export class PaintTool {
   /** undo and redo (Ctrl+Z, Ctrl+Y): the steps, and the action in progress (its depth: nested begins join one step) */
   private undos: UndoStep[] = [];
   private redos: UndoStep[] = [];
-  private tx: { before: AreaSnap; spent: number; depth: number; label: string; gd: GridDiff[]; plans: string } | null = null;
+  private tx: { before: AreaSnap; spent: number; depth: number; label: string; gd: GridDiff[]; plans: string; /** only looks changed (no shape: the holes' markers stay) */ looks?: boolean } | null = null;
   /** the course height blocks the action in progress touches, for undo (T027) */
   private hj = new CourseHeightJournal();
   /** the flag of the preset being placed (golf mode): the pin's spot for its hole, handed to the engine when the step commits */
@@ -319,8 +321,9 @@ export class PaintTool {
 
   constructor(host: PaintHost) { this.host = host; }
 
-  /** the ground patch of a painted area (outline, texture, scale, angle, border width, border texture, draw order; the tone only when it is on); a brush area draws above the layers below it */
-  static patch(a: PaintArea, mature = true): LotPatch { return { pts: roundCorners(a.pts, a.radius), tex: mature ? a.tex : 'golfSod', paint: { s: a.scale, a: a.angle, b: borderW(a.border), bt: a.btex, z: drawZ(a), ...(a.tone ? { t: a.tone, ta: a.toneAmt, tc: a.tint } : {}), ...(a.bscale !== DEFAULT_STYLE.bscale || a.bangle !== DEFAULT_STYLE.bangle ? { bs: a.bscale, ba: a.bangle } : {}), ...(a.btone ? { bto: a.btone, bta: a.btoneAmt, btc: a.btint } : {}), ...(a.mtex ? { m: { t: a.mtex, s: a.mshare ?? 0.5, f: a.msoft ?? 0.12, p: a.mpatch ?? 1 } } : {}), ...edgeOf(a) } }; }
+  /** the ground patch of a painted area (outline, texture, scale, angle, border width, border texture, draw order; the tone only when it is on,
+   *  the edge shade only above 0); a brush area draws above the layers below it */
+  static patch(a: PaintArea, mature = true): LotPatch { return { pts: roundCorners(a.pts, a.radius), tex: mature ? a.tex : 'golfSod', paint: { s: a.scale, a: a.angle, b: borderW(a.border), bt: a.btex, z: drawZ(a), ...(a.tone ? { t: a.tone, ta: a.toneAmt, tc: a.tint } : {}), ...(a.bscale !== DEFAULT_STYLE.bscale || a.bangle !== DEFAULT_STYLE.bangle ? { bs: a.bscale, ba: a.bangle } : {}), ...(a.btone ? { bto: a.btone, bta: a.btoneAmt, btc: a.btint } : {}), ...(a.mtex ? { m: { t: a.mtex, s: a.mshare ?? 0.5, f: a.msoft ?? 0.12, p: a.mpatch ?? 1 } } : {}), ...(a.shadow ? { sh: a.shadow } : {}), ...edgeOf(a) } }; }
 
   /** an area's outline with its corners rounded, cached per area until the radius or the corners change */
   private outlineOf(a: PaintArea): number[] {
@@ -363,21 +366,20 @@ export class PaintTool {
   /** switches between Draw, Pick and Erase, dropping the outline and the selection */
   setMode(m: PaintMode) { this.mode = m; this.cancel(); this.selected = 0; this.hover = 0; this.hoverH = null; this.host.emit(); }
 
-  /** changes the panel's style; a selected area takes the change at once (its ground re-bakes) */
+  /** changes the panel's style; a selected area takes the change at once (its ground re-bakes), as one undo step (a slider's drag joins one) */
   setStyle(p: Partial<Omit<PaintArea, 'id' | 'pts'>>) {
     this.style = clampStyle({ ...this.style, ...p });
     if (this.selected) {
       const a = this.areas.find(q => q.id === this.selected);
-      if (a) { Object.assign(a, this.style); if (!this.style.mtex) { delete a.mtex; delete a.mshare; delete a.msoft; delete a.mpatch; } this.send(a); this.host.save(); }
+      if (a) this.restyle([a], () => { assignStyle(a, this.style); this.send(a); this.host.save(); });
     }
     if (this.mode === 'brush' || (this.course && this.mode === 'draw')) {
       // the brush preset takes the change (the Course tool's Shape method paints with it too), and the areas of this hole and kind re-style at once
       const k = this.brushKind;
       const was = this.brush[k].style;
       this.brush[k] = { ...this.brush[k], style: { ...this.style } }; this.saveBrush();
-      let changed = false;
-      for (const a of this.areas) if (a.hole === this.brushHole && a.kind === k) { Object.assign(a, this.brush[k].style); this.send(a); changed = true; }
-      if (changed) this.host.save();
+      const mine = this.areas.filter(a => a.hole === this.brushHole && a.kind === k);
+      if (mine.length) this.restyle(mine, () => { for (const a of mine) { assignStyle(a, this.brush[k].style); this.send(a); } this.host.save(); });
       // the grid's surfaces wear the brush looks (course-look.ts: the fill's texture, scale, angle, tone and blend, the band's texture, scale,
       // angle and tone): its chunks are drawn again when one of those changed (throttled while a slider is dragged)
       if (this.courseGrid() && lookChanged(this.brush[k].style, was)) this.lookSoon();
@@ -701,10 +703,24 @@ export class PaintTool {
   /** hole mode: the preset placed next (0: a generated hole; 1..18: a studio slot; an empty slot means generated) */
   setHoleSlot(n: number) { this.holeSlot = n >= 1 && n <= HOLE_COUNT && STORED[n - 1] ? n : 0; this.ghost = null; this.host.emit(); }
 
+  /** the last restyle's undo step, the areas it changed (their ids, sorted, as text) and when (ms) */
+  private restyled: { u: UndoStep; ids: string; at: number } | null = null;
+  /** a style change of areas (the Shadow slider, the Border, every look control) as an undo step through begin and commit, the usual path:
+   *  run applies it. Changes to the same areas within RESTYLE_MS of the last (a slider dragged) join that step, so one undo takes the whole
+   *  drag back; any other step in between starts a new one */
+  private restyle(areas: readonly PaintArea[], run: () => void) {
+    const ids = areas.map(a => a.id).sort((x, y) => x - y).join(','), now = Date.now(), last = this.undos[this.undos.length - 1], r = this.restyled;
+    const join = !this.tx && !!last && r?.u === last && r.ids === ids && now - r.at < RESTYLE_MS && !this.redos.length;
+    this.begin(areas.length > 1 ? 'restyle areas' : 'restyle area', true); run(); this.commit();
+    const top = this.undos[this.undos.length - 1];
+    if (!top || top === last) { if (join) r!.at = now; return; } // nothing changed (or a nested step): the drag goes on
+    if (join) { top.before = last!.before; const i = this.undos.lastIndexOf(last!); if (i >= 0) this.undos.splice(i, 1); }
+    this.restyled = { u: top, ids, at: now };
+  }
   /** the areas now, for undo */
   private snapshot(): AreaSnap { const ts = this.areas.map(a => toTuple(a)); return { ids: this.areas.map(a => a.id), ts, keys: ts.map(t => JSON.stringify(t)), nextId: this.nextId }; }
   /** starts an undoable action (a nested begin joins the open one) */
-  private begin(label: string) { if (this.tx) { this.tx.depth++; return; } this.tx = { before: this.snapshot(), spent: 0, depth: 1, label, gd: [], plans: this.plansKey() }; this.host.journal?.begin(); this.hj.begin(); }
+  private begin(label: string, looks = false) { if (this.tx) { this.tx.depth++; return; } this.tx = { before: this.snapshot(), spent: 0, depth: 1, label, gd: [], plans: this.plansKey(), ...(looks ? { looks } : {}) }; this.host.journal?.begin(); this.hj.begin(); }
   /** the hole plans as text (undo compares and restores them) */
   private plansKey(): string { return JSON.stringify(this.host.plans?.() ?? []); }
   /** ends an undoable action: it becomes an undo step when it changed the areas or the props, or spent money (the redo steps are dropped) */
@@ -723,7 +739,7 @@ export class PaintTool {
     let cells = 0; for (const u of this.undos) cells += u.grid?.n ?? 0;
     while (cells > UNDO_CELLS && this.undos.length > 1) cells -= this.undos.shift()!.grid?.n ?? 0;
     this.redos = [];
-    const hint = this.pinHint; this.pinHint = undefined; this.host.changed?.(hint);
+    const hint = this.pinHint; this.pinHint = undefined; if (!t.looks) this.host.changed?.(hint); // a look changed no green or tee: no marker to re-fit
   }
   /** puts the areas back as a snapshot has them: an area whose id and tuple did not change is kept, the others re-bake */
   private restore(s: AreaSnap) {
@@ -1659,5 +1675,6 @@ export class PaintTool {
   }
 
   /** copies a picked area's look into the panel's style */
-  private take(a: PaintArea) { this.style = { tex: a.tex, scale: a.scale, angle: a.angle, border: a.border, btex: a.btex, radius: a.radius, tone: a.tone, toneAmt: a.toneAmt, tint: a.tint, bscale: a.bscale, bangle: a.bangle, btone: a.btone, btoneAmt: a.btoneAmt, btint: a.btint }; }
+  /** the panel shows a picked area's style: every look control, its blend and its edge shade (T136) too, so changing one control keeps the rest */
+  private take(a: PaintArea) { this.style = { tex: a.tex, scale: a.scale, angle: a.angle, border: a.border, btex: a.btex, radius: a.radius, tone: a.tone, toneAmt: a.toneAmt, tint: a.tint, bscale: a.bscale, bangle: a.bangle, btone: a.btone, btoneAmt: a.btoneAmt, btint: a.btint, ...(a.mtex ? { mtex: a.mtex, mshare: a.mshare, msoft: a.msoft, mpatch: a.mpatch } : {}), ...(a.shadow ? { shadow: a.shadow } : {}) }; }
 }

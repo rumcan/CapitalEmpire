@@ -20,7 +20,7 @@ import { courseImages, courseRes, lineField } from './ext/course-grid/field';
 import { grassSurface, type GrassCellView } from './ext/grass-management';
 import { surfaceOfTex } from './golf/costs';
 import { CELL as COURSE_CELL } from './golf/paintcourse';
-import { EDGE_LOOKS, bandRamp, edgeBox, edgeField, edgeImages, edgeReach, edgeRes, featherTiles, type EdgeImage } from './paint-edges';
+import { AREA_SHADE, EDGE_LOOKS, areaLightEdge, areaShadeImages, areaShadeReach, areaShadow, bandRamp, edgeBox, edgeField, edgeImages, edgeReach, edgeRes, featherTiles, type EdgeImage } from './paint-edges';
 import { CH_SIZE } from './ext/course-height';
 import { HEIGHT_LIGHT_STRENGTH, HL_MASK, LUMA_SIGMA_PER_L, heightLightGrid, heightLightPictures, heightLightRect, type HeightLightGrid } from './ext/course-height/light';
 import { PaintedGround, type LayLevel } from './painted-ground';
@@ -1125,9 +1125,11 @@ export class GroundPainter {
     // the samples sit on the picture's pixel centres: the picture spans half a step more on each side
     return { img, x0: x0 - st / 2, y0: y0 - st / 2, w: w * st, h: h * st };
   }
-  /** the painted areas of a chunk (the Paint tool), in id order. A crisp area (paving, kerbs: no edge profile) is drawn straight onto the
-   *  chunk, as before. Any other is drawn into a scratch layer, given its sun-lit light and dark rims and its feather (paint-edges.ts: images
-   *  from its outline, made when the chunk bakes, never per frame), and laid over the chunk after the shadow it casts on the ground below */
+  /** the painted areas of a chunk (the Paint tool), in id order. A crisp area (paving, kerbs: no edge profile) with no Shadow is drawn straight
+   *  onto the chunk, as before. Any other is drawn into a scratch layer, given its sun-lit light and dark rims, its edge shade (T136, the Shadow
+   *  slider: a cool multiply inside the edges turned from the sun and a textured light a gap inside those turned to it, both clipped to the area)
+   *  and its feather (paint-edges.ts: images from its outline, made when the chunk bakes, never per frame), and laid over the chunk after the
+   *  shadow it casts on the ground below */
   private drawPaints(ctx: C2D, paints: LotPatch[], L: number, X0: number, Y0: number, M: DOMMatrix, Minv: DOMMatrix, box: BBox, lite: boolean) {
     const res = edgeRes(L);
     let layer: Cnv | null = null;
@@ -1142,16 +1144,25 @@ export class GroundPainter {
       // the course chunks (all z 0, so side by side in the order) draw together, surface by surface, so a chunk's lower surface never
       // lands over its neighbour's higher one at a seam
       if (p.course) { if (!course) { course = true; this.drawCourses(ctx, paints.filter(q => q.course).map(q => q.course!), L, X0, Y0, M, Minv, box, lite); } continue; }
-      const look = p.paint!.e ? EDGE_LOOKS[p.paint!.e] ?? null : null;
-      if (!look) { this.drawPaint(ctx, p, L, X0, Y0, M, Minv, box, lite, 0); continue; }
-      const feather = featherTiles(look, L), reach = edgeReach(look, feather), eb = edgeBox(quadBox(p.pts), box, reach);
+      const look = p.paint!.e ? EDGE_LOOKS[p.paint!.e] ?? null : null, sh = areaShadow(p.paint!.sh);
+      if (!look && !sh) { this.drawPaint(ctx, p, L, X0, Y0, M, Minv, box, lite, 0); continue; }
+      const feather = look ? featherTiles(look, L) : 0, reach = Math.max(look ? edgeReach(look, feather) : 0, areaShadeReach(sh, feather)), eb = edgeBox(quadBox(p.pts), box, reach);
       if (!eb) continue;
-      const [ex0, ey0, ex1, ey1] = eb, im = edgeImages(edgeField(p.pts, ex0, ey0, ex1 - ex0, ey1 - ey0, res, reach, COURSE_CELL), look, feather);
-      put(ctx, im.shadow, ex0, ey0, 'source-over');
+      const [ex0, ey0, ex1, ey1] = eb, field = edgeField(p.pts, ex0, ey0, ex1 - ex0, ey1 - ey0, res, reach, COURSE_CELL);
+      const im = look ? edgeImages(field, look, feather) : null, sd = sh ? areaShadeImages(field, sh, !lite && L >= AREA_SHADE.lightL, feather) : null;
+      if (im) put(ctx, im.shadow, ex0, ey0, 'source-over');
       layer ??= this.buffer('paintEdge', ctx.canvas.width, ctx.canvas.height);
       const g = ctx2d(layer);
       this.drawPaint(g, p, L, X0, Y0, M, Minv, box, lite, feather);
-      put(g, im.light, ex0, ey0, 'screen'); put(g, im.dark, ex0, ey0, 'multiply'); put(g, im.cut, ex0, ey0, 'destination-out');
+      if (im) { put(g, im.light, ex0, ey0, 'screen'); put(g, im.dark, ex0, ey0, 'multiply'); }
+      if (sd && (sd.shade || sd.light)) {
+        // the edge shade (T136): multiplied in its cool colour inside the area only (a crisp area has no cut to trim what lands outside), then
+        // the light on the sun side
+        const path = polyPath(p.pts);
+        if (sd.shade) { g.save(); g.setTransform(M); g.clip(path); put(g, sd.shade, ex0, ey0, 'multiply'); g.restore(); }
+        if (sd.light && sd.lightBox) this.areaLight(g, sd.light, sd.lightBox, path, ex0, ey0, res, L, M, areaLightEdge(feather));
+      }
+      if (im) put(g, im.cut, ex0, ey0, 'destination-out');
       // only the canvas px under the image box: laid over the chunk, then cleared for the next area
       let sx0 = Infinity, sy0 = Infinity, sx1 = -Infinity, sy1 = -Infinity;
       for (const [x, y] of [[ex0, ey0], [ex1, ey0], [ex0, ey1], [ex1, ey1]]) { const X = M.a * x! + M.c * y! + M.e, Y = M.b * x! + M.d * y! + M.f; sx0 = Math.min(sx0, X); sx1 = Math.max(sx1, X); sy0 = Math.min(sy0, Y); sy1 = Math.max(sy1, Y); }
@@ -1778,6 +1789,20 @@ export class GroundPainter {
     for (const [w, a] of [[RG + RIM_RAMP * thin, 0.5], [RG, 1]] as const) { g.strokeStyle = `rgba(0,0,0,${a})`; g.lineWidth = Math.max(px, 2 * w); for (const q of steps) g.stroke(q); }
     g.restore();
     this.shine(ctx, box, RIM_TINT, 0.8, m => { m.setTransform(1, 0, 0, 1, 0, 0); m.drawImage(B, box[0], box[1], box[2], box[3], box[0], box[1], box[2], box[3]); });
+  }
+  /** a painted area's light on its sun side (T136, paint-edges areaShadeImages; the owner's rule T110): its low-resolution mask (img, res px a
+   *  tile from tile (x0, y0)) stretched and clipped to the area, the gap inside its edge (e tiles in: paint-edges areaLightEdge) cut at full
+   *  resolution (none within AREA_SHADE.gap of it, half over the ramp after it: paint-edges areaLightGap), then laid on g as a shine textured
+   *  by the area's own colours, over the cache px of the tile box lb only */
+  private areaLight(g: C2D, img: EdgeImage, lb: readonly number[], path: Path2D, x0: number, y0: number, res: number, L: number, M: DOMMatrix, e: number) {
+    const cb = this.cacheBox(M, lb[0]!, lb[1]!, lb[2]!, lb[3]!, g); if (!cb) return;
+    const B = this.buffer('areaLight', g.canvas.width, g.canvas.height), m = ctx2d(B), px = 1 / (TILE_PX * L);
+    const s = this.buffer('small', img.W, img.H); ctx2d(s).putImageData(new ImageData(img.data as Uint8ClampedArray<ArrayBuffer>, img.W, img.H), 0, 0);
+    m.save(); m.setTransform(M); m.clip(path); m.imageSmoothingEnabled = true; m.drawImage(s, x0, y0, img.W / res, img.H / res);
+    m.globalCompositeOperation = 'destination-out'; m.lineJoin = 'round';
+    for (const [w, a] of [[e + AREA_SHADE.gap + AREA_SHADE.ramp, 0.5], [e + AREA_SHADE.gap, 1]] as const) { m.strokeStyle = `rgba(0,0,0,${a})`; m.lineWidth = Math.max(px, 2 * w); m.stroke(path); }
+    m.restore();
+    this.shine(g, cb, RIM_TINT, 1, q => { q.setTransform(1, 0, 0, 1, 0, 0); q.drawImage(B, cb[0], cb[1], cb[2], cb[3], cb[0], cb[1], cb[2], cb[3]); });
   }
   /** a shine laid on ctx inside a mask, textured by the ground under it (the owner's rule T110): the light added is the ground's own colour
    *  squared (so it lands on its mid-tones and highlights and leaves its dark gaps dark) times a warm tint and k, through the mask's alpha.
