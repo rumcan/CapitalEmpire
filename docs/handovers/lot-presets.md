@@ -19,6 +19,18 @@
   old houses out (`drawnAsStandIn`). **Next:** the owner sizes the self-drawn houses with the person cursor and clicks Rebuild; if a
   stand-in house must be bigger than about x2, prep-sprites should pack each stand-in for the largest size any house drawn by it needs
   (not done).
+- **Sprites still refuse to grow (the owner, with a studio screenshot: "cant resize the images ... this issue is on all the images"; the
+  stadium: "pixelates above x0.64: its picture has no more pixels").** Not fixed yet; the owner has NOT finished sizing, so do not run
+  Rebuild until they say so. Found: business artwork goes through its own pack, `scripts/assets/prep-business-art.mjs`, which shrinks
+  every business picture to at most 512 px on its longest side (the stadium at its master's 1533 px) from the masters in
+  `src/assets/businesses/capital-v1` (39 of 45 masters are bigger than 512, but only a little: sportsbar 663, diner 602, buscompany 701).
+  Far bigger renders of the same buildings exist: `art/theme-consistency/exports/buildings/business-*.max@2x.png` (stadium 4056 x 2696)
+  and the four views in `art/building-views/business-*`. Plan: (1) in the studio, list which cards refuse below their best source's
+  pixels, family by family (houses from TrickOrTreat, business art, building views, Capital art), to confirm what "all the images" means;
+  check `/api/scale` does not refuse from a stale cached report (`server.mjs` `sizeReport(false)`); (2) re-pack business art from the
+  largest source (the `max@2x` export when there is one, else the master) at what each owner scale needs (`0.6 * ownerScale * 1.05 *`
+  display width, as prep-sprites does), and make `size-report.ts` read that source's width as `native` for business sprites; (3) check the
+  atlas page count and memory against GAME-PLAN section 2.3; (4) then the owner sizes, then Rebuild.
 - **Authored lots keep every prop:** a whole or farm preset draws every prop where the owner put it, overlapping or not (`Build.keepAll`):
   before, a house moved onto a tree vanished (left out for overlap).
 - **Several helpers on the network (the owner: "setup the studio to run on the network and anyone with the IP can help create preset
@@ -32,6 +44,8 @@
   (fences, bins, decals all editable); decals select with a click.
 
 ## Exact next step
+0. The "Sprites still refuse to grow" plan under Now (business art re-pack from the `max@2x` exports, the size report). Do not
+   Rebuild until the owner says the sizing is done.
 1. The owner sizes the houses in the studio Library, then Rebuild game sprites (the studio's button; `STUDIO_DEV_GAME=1`, so no npm
    build). Check a rebuilt house in the lab at its new size with the person cursor.
 2. (Done: merge saves, network.) Optionally make `/__dev/save` refuse lot-presets.json so only merges write it.
