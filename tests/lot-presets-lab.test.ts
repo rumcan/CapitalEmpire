@@ -3,8 +3,9 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { LU, LV } from '../src/game/lots/town';
-import { approvedFor, formatPresets, parsePresets, type LotPreset, type Road } from '../src/game/lots/presets';
-import { facingOf, quarterOfRoad, roadOf, type Pt } from '../src/game/lots/preset-frame';
+import { approvedFor, fitPreset, formatPresets, parsePresets, type LotPreset, type Road } from '../src/game/lots/presets';
+import { facingOf, frameOf, quarterOfRoad, roadOf, type Pt } from '../src/game/lots/preset-frame';
+import { presetFromComposition } from '../src/game/lots/preset-from';
 import { compose, lotPreset, pickedPreset, setLotPresets, type ComposeState } from '../src/game/lots/compose';
 import PRESET_FIXTURE from './fixtures/lot-presets.json';
 
@@ -125,6 +126,55 @@ describe('the lot lab presets (road set, approved)', () => {
       assert.equal(pickedPreset(near, RES)?.id, diag.id);
       assert.equal(lotPreset(near, RES)?.frame.q, 0);
       assert.ok(compose(near, RES).props.some(q => q.from?.preset === diag.id), 'a lot a few degrees off the diagonal is drawn');
+    } finally {
+      setLotPresets(FIXTURE.presets, FIXTURE.meta);
+    }
+  });
+
+  it('6. the file: whole and decals round trip, and a preset without them is written as before; a decal that is not valid makes the preset invalid', () => {
+    const decals = [{ id: 'decal:decal-06-orange-leaf-scatter', x: 2.5, y: -0.5, scale: -1.25, alpha: 0.75 }];
+    const w1: LotPreset = { id: 'lab-res-built-10x16-r0-whole', use: 'res', state: 'built', w: 10, d: 16, props: [], patches: [], road: 0, approved: true, whole: true, decals };
+    const text = formatPresets([w1]);
+    assert.ok(text.includes('"approved":true,"whole":true,"props":['), text);
+    assert.ok(text.includes('"patches":[],"decals":[\n{"id":"decal:decal-06-orange-leaf-scatter","x":2.5,"y":-0.5,"scale":-1.25,"alpha":0.75}\n]}'), text);
+    assert.deepEqual(parsePresets(JSON.parse(text)).presets, [w1]);
+    const plain: LotPreset = { id: 'plain', use: 'res', state: 'built', w: 10, d: 16, props: [], patches: [] };
+    assert.equal(formatPresets([plain]), '[\n{"id":"plain","use":"res","state":"built","w":10,"d":16,"props":[],"patches":[]}\n]\n');
+    const base = { id: 'bad', use: 'res', state: 'built', w: 10, d: 16, props: [], patches: [] };
+    for (const dc of [[{ id: 1, x: 0, y: 0, scale: 1, alpha: 1 }], [{ id: 'a', x: 0, y: 0, scale: 1 }], [{ id: 'a', x: 0, y: 'x', scale: 1, alpha: 1 }], [null], 'no']) assert.equal(parsePresets([{ ...base, decals: dc }]).invalid, 1, JSON.stringify(dc));
+    assert.equal(parsePresets([{ ...base, whole: 1 }]).presets[0]!.whole, undefined, 'whole is kept only when true');
+  });
+
+  it('7. fitPreset: a whole preset keeps its props and decals up to 1.5 tiles in front of the lot (the verge); a preset that is not whole drops them', () => {
+    const mailbox = { id: 'world:mailbox', x: 5, y: -0.4, scale: 1, view: 0 as const }, decal = { id: 'decal:decal-06-orange-leaf-scatter', x: 5, y: -0.4, scale: 1, alpha: 1 };
+    const whole: LotPreset = { id: 'whole', use: 'res', state: 'built', w: 10, d: 16, props: [mailbox], patches: [], whole: true, decals: [decal] };
+    const f = fitPreset(whole, 10, 16);
+    assert.deepEqual(f.props.map(q => [q.x, q.y]), [[5, -0.4]]);
+    assert.deepEqual(f.decals.map(q => [q.x, q.y]), [[5, -0.4]]);
+    assert.equal(f.dropped, 0);
+    const plain: LotPreset = { ...whole, id: 'plain' };
+    delete plain.whole;
+    const g = fitPreset(plain, 10, 16);
+    assert.equal(g.props.length, 0);
+    assert.equal(g.dropped, 1);
+    assert.equal(g.decals.length, 0);
+    assert.equal(fitPreset({ ...whole, props: [{ ...mailbox, y: -1.6 }], decals: [] }, 10, 16).props.length, 0, 'past 1.5 tiles: dropped');
+    assert.equal(fitPreset({ ...whole, props: [{ ...mailbox, y: -1.5 }], decals: [] }, 10, 16).props.length, 1, 'at 1.5 tiles: kept');
+  });
+
+  it('8. a whole capture: a composed lot becomes a whole preset with its decals; composed forced, it draws alone the same props (±1) and the same decals', () => {
+    try {
+      const c = compose(LOT_AXIS, RES), marks = c.ground.find(g => g.tex === 'marks')?.marks ?? [];
+      const cap = presetFromComposition(c, frameOf(LOT_AXIS), 10, 16, { whole: true });
+      assert.ok(marks.length > 0, 'the lot has leaf decals');
+      assert.equal(cap.decals.length, marks.length / 5, 'one decal per mark');
+      assert.ok(cap.props.some(q => q.y < 0), 'a street item stands in front of the lot');
+      const draft: LotPreset = { id: 'lab-res-built-10x16-r0-whole-test', use: 'res', state: 'built', w: 10, d: 16, props: cap.props, patches: cap.patches, decals: cap.decals, road: 0, whole: true };
+      setLotPresets([...FIXTURE.presets, draft], FIXTURE.meta);
+      const again = compose(LOT_AXIS, { ...RES, preset: draft.id });
+      assert.ok(Math.abs(again.props.length - c.props.length) <= 1, `${again.props.length} props drawn, ${c.props.length} composed`);
+      assert.ok(again.props.every(q => q.from?.preset === draft.id), 'drawn alone: every prop is the preset\'s own');
+      assert.equal(again.ground.find(g => g.tex === 'marks')?.marks?.length ?? 0, marks.length, 'the same decals');
     } finally {
       setLotPresets(FIXTURE.presets, FIXTURE.meta);
     }

@@ -4,17 +4,18 @@
 // fitted to the lot's size and turned to its facing (never mirrored). An approved lot-lab preset (one with a road) wins over the frozen ones on its
 // road angle, and gives an angled lot its building. Procedural, because they are not one lot's to tune (P20 decision 2): the vacant lots, the
 // greens on angled lots, the building sites, the boundary fences and the house lots' fence planting, the industrial chain-link, the street items,
-// the leaf decals, and the decline touches (a third of the plants gone, junk; at decline 1 half the cars, at 3 none).
+// the leaf decals, and the decline touches (a third of the plants gone, junk; at decline 1 half the cars, at 3 none). A whole preset (a lab preset that
+// holds all of them) draws alone, its decals included, as a farm does.
 // The candidate list and its checks are compose-core.ts's. Pure TS, no DOM.
 import type { LotPatch } from '../ground-protocol';
 import { mulberry } from '../iso';
 import { isBuilding } from '../mirror';
 import { LU, LV } from './town';
 import {
-  BUSHES, BY, Build, CHAIN, DEAD_TREES, JUNK, PARK_PIECES, PICKUPS, PRIVACY, SCHOOL_SIGNS, TREES, clamp, isCarPark, mix, names, pick, specFit, withVariations,
+  BUSHES, BY, Build, CHAIN, DEAD_TREES, JUNK, MARK_ID, PARK_PIECES, PICKUPS, PRIVACY, SCHOOL_SIGNS, TREES, clamp, isCarPark, mix, names, pick, specFit, withVariations,
   type Composition, type ComposeState, type LotGeom, type Pt, type PresetDrop,
 } from './compose-core';
-import { approvedFor, bucketOf, fitPreset, parsePresets, pickPreset, presetsFor, stateOf, type Fitted, type LotPreset, type PresetMeta, type PresetState, type PresetUse, type Road } from './presets';
+import { approvedFor, bucketOf, fitPreset, parsePresets, pickPreset, presetsFor, stateOf, type Fitted, type LotPreset, type PresetDecal, type PresetMeta, type PresetState, type PresetUse, type Road } from './presets';
 import { footprintOf, ownerScaleOf, turned } from './preset-art';
 import { frameOf, listToWorld, quarterOfRoad, roadOf, toWorld, type PresetFrame } from './preset-frame';
 import PRESET_JSON from './lot-presets.json';
@@ -263,12 +264,19 @@ function fromPreset(B: Build, lot: LotGeom, st: ComposeState, p: { preset: LotPr
     const car = it.cat === 'Vehicles';
     if (car && (B.noCars || (st.decline === 1 && B.r() >= CAR_KEEP_D1))) { B.drops?.push({ preset: preset.id, prop: fit.from[k]!, id: t.id, why: B.noCars ? 'no cars on a derelict lot' : 'cars thinned on a shabby lot' }); return; }
     const s = car ? 1 : q.scale * ownerScaleOf(q.id);
-    const item = B.atW({ id: t.id, s, flip: t.flip, h: footprintOf(t.id, s, t.flip) }, toWorld(f, q.x, q.y), { plant: it.kind === 'tree' || it.kind === 'bush', from: { preset: preset.id, prop: fit.from[k]! } });
+    // a whole preset's prop in front of the lot is a street item (the verge: done() keeps it there, as it keeps a procedural one)
+    const item = B.atW({ id: t.id, s, flip: t.flip, h: footprintOf(t.id, s, t.flip) }, toWorld(f, q.x, q.y), { plant: it.kind === 'tree' || it.kind === 'bush', from: { preset: preset.id, prop: fit.from[k]! }, street: preset.whole === true && q.y < 0 });
     if (item && !item.fence && !item.wheel) ups++;
     if (isBuilding(it)) { const fp = footprintOf(q.id, s, false), hw = (q.view % 2 ? fp[3] - fp[1] : fp[2] - fp[0]) / 2; if (hw > big) { big = hw; main = [q.x - hw, q.x + hw]; } }
   });
   B.cap = ups + EXTRA_PLANTS;
   return { drive, main, same };
+}
+
+/** a whole preset's decals as the lot's ground marks (Build.marks: index, world x, y, scale, alpha, rounded as Build.mark rounds them); a decal id the game
+ *  has no mark for is left out */
+function decalMarks(B: Build, f: PresetFrame, decals: readonly PresetDecal[]) {
+  for (const q of decals) { const i = MARK_ID.get(q.id); if (i === undefined) continue; const p = toWorld(f, q.x, q.y); B.marks.push(i, +p.x.toFixed(3), +p.y.toFixed(3), +q.scale.toFixed(3), +q.alpha.toFixed(2)); }
 }
 
 /** a lot's street items (they stay procedural: P20 decision 2), where the old layouts put them, by the preset's drive and main building: a
@@ -314,14 +322,15 @@ export function compose(lot: LotGeom, st: ComposeState, drops?: PresetDrop[]): C
   const B = new Build(lot, mulberry(mix(st.seed, st.use, st.level, st.decline)));
   B.drops = drops ?? null;
   B.noCars = st.decline >= 3;
-  // a forced farm preset (the lot lab's, or a farm parcel's approved one: farmPreset) draws alone: no street items, fences, leaf marks or decline touches
-  const forced = st.preset !== undefined ? lotPreset(lot, st) : null;
-  if (forced?.preset.use === 'farm') { fromPreset(B, lot, st, forced); return B.done(); }
+  // a preset that draws alone (a farm's, and a whole preset's: the lot lab's forced one, or the approved one picked for the lot): no street items, fences,
+  // leaf marks or decline touches; its decals are the lot's ground marks
+  const use = presetUse(st), lp = st.preset !== undefined || use ? lotPreset(lot, st) : null;
+  if (lp && (lp.preset.use === 'farm' || lp.preset.whole)) { fromPreset(B, lot, st, lp); decalMarks(B, lp.frame, lp.fit.decals); return B.done(); }
   const angled = isAngled(lot);
   // every lot but a house's and an industrial yard's draws the boundary fence on its own side lines (a shared line gets one fence); the drive's
   // mouth is left open
   const edge = () => { boundaryFence(B, lot); B.clearDrives(); };
-  const use = presetUse(st), p = !use ? null : lotPreset(lot, st);
+  const p = use ? lp : null;
   if (st.use === LU.NONE || st.level === LV.EMPTY) { vacant(B); edge(); }
   else if (angled && !p) { green(B); edge(); }
   else if (st.level === LV.BUILDING) { site(B); edge(); }

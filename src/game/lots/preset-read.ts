@@ -1,6 +1,6 @@
 // The lot presets' file reader (P20), apart from presets.ts so the dev server's save check (src/game/dev/dev-save.ts, loaded by vite.config.ts)
 // can validate a preset file without the game modules: no runtime imports, types only.
-import type { LotPreset, PresetMeta, PresetPatch, PresetProp, PresetState, PresetUse, Road, View } from './presets';
+import type { LotPreset, PresetDecal, PresetMeta, PresetPatch, PresetProp, PresetState, PresetUse, Road, View } from './presets';
 
 /** the uses, states and patch kinds a preset file may name */
 const USES: readonly string[] = ['res', 'com', 'park', 'ind', 'tour', 'civic', 'farm'];
@@ -31,20 +31,33 @@ function readPatch(v: unknown): PresetPatch | undefined {
   return out;
 }
 
-/** one preset read from JSON, or undefined when it is not valid (props and patches must all be valid; road, when present, an integer 0..7) */
+/** one decal read from JSON, or undefined when it is not valid (id a string; x, y, scale and alpha finite numbers) */
+function readDecal(v: unknown): PresetDecal | undefined {
+  if (!isObj(v)) return undefined;
+  const { id, x, y, scale, alpha } = v;
+  if (typeof id !== 'string' || !fin(x) || !fin(y) || !fin(scale) || !fin(alpha)) return undefined;
+  return { id, x, y, scale, alpha };
+}
+
+/** one preset read from JSON, or undefined when it is not valid (props, patches and decals must all be valid; road, when present, an integer 0..7;
+ *  whole is kept only when true, decals only when given as a list) */
 function readPreset(v: unknown): LotPreset | undefined {
   if (!isObj(v)) return undefined;
-  const { id, use, state, w, d, props, patches, curated, road, approved } = v;
+  const { id, use, state, w, d, props, patches, curated, road, approved, whole, decals } = v;
   if (typeof id !== 'string' || typeof use !== 'string' || !USES.includes(use) || typeof state !== 'string' || !STATES.includes(state)) return undefined;
   if (!fin(w) || !fin(d) || w <= 0 || d <= 0 || !Array.isArray(props) || !Array.isArray(patches)) return undefined;
   if (road !== undefined && (!fin(road) || !Number.isInteger(road) || road < 0 || road > 7)) return undefined;
-  const pr: PresetProp[] = [], pa: PresetPatch[] = [];
+  if (decals !== undefined && !Array.isArray(decals)) return undefined;
+  const pr: PresetProp[] = [], pa: PresetPatch[] = [], pd: PresetDecal[] = [];
   for (const q of props) { const r = readProp(q); if (!r) return undefined; pr.push(r); }
   for (const a of patches) { const r = readPatch(a); if (!r) return undefined; pa.push(r); }
+  for (const q of decals ?? []) { const r = readDecal(q); if (!r) return undefined; pd.push(r); }
   const out: LotPreset = { id, use: use as PresetUse, state: state as PresetState, w, d, props: pr, patches: pa };
   if (curated === true) out.curated = true;
   if (road !== undefined) out.road = road as Road;
   if (approved === true) out.approved = true;
+  if (whole === true) out.whole = true;
+  if (decals !== undefined) out.decals = pd;
   return out;
 }
 
