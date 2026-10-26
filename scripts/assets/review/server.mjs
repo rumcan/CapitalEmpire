@@ -408,8 +408,9 @@ http.createServer(async (req, res) => {
       // the townspeople, for the cursor: each one's trimmed picture and where its feet are (the anchor) inside it, in native px
       const walkers = list.filter(s => s.kind === 'walker' && !rm[s.id]).map(s => ({ id: s.id, name: s.name, quad: s.quad, ax: s.ax, ay: s.ay }));
       // the copies: a card whose picture is the same as another's in its category is folded into it (copies.mjs), so each picture is listed once;
-      // walkers and removed sprites are never folded
-      const { cards: sprites } = await foldCopies(grid, s => (s.kind === 'walker' || rm[s.id] ? null : hashOf(s.id, pics.get(s.id) ?? sizes.data[s.id])));
+      // walkers, removed sprites and the car model cards are never folded (two cars' average hashes are close: a small body on a plain ground; and a
+      // model's pictures are already one card)
+      const { cards: sprites } = await foldCopies(grid, s => (s.kind === 'walker' || s.kind === 'car' || rm[s.id] ? null : hashOf(s.id, pics.get(s.id) ?? sizes.data[s.id])));
       return json({ sprites, removed: rm, walkers });
     }
     if (P.startsWith('/thumb/')) return png(await thumb(decodeURIComponent(P.slice(7))));
