@@ -82,12 +82,15 @@ export interface ItemPlaces { n: number; at: Partial<Record<Anchor, { n: number;
  *  ROW_OFF across), the runs, their items in all and the sum of their gaps (tiles) */
 export interface RowCount { items: number; inRows: number; runs: number; len: number; gaps: number }
 export const ROW_MIN = 3, ROW_GAP = 2.6, ROW_OFF = 0.6;
-/** the places learnt: per item id, and per kind|anchor its rows */
-export interface Places { items: Map<string, ItemPlaces>; rows: Map<string, RowCount> }
-export const emptyPlaces = (): Places => ({ items: new Map(), rows: new Map() });
+/** the places learnt: per item id, and per kind|anchor its rows; the lots counted and their area (tiles squared, in all); inventory: the group's
+ *  lots are composed (each carries its set: a shop's bench, bin, dumpster and hvac), so the generator lays each known item by its own count per
+ *  lot (n / lots, at the lot's size) rather than drawing its kind's items at random */
+export interface Places { items: Map<string, ItemPlaces>; rows: Map<string, RowCount>; lots: number; area: number; inventory?: boolean }
+export const emptyPlaces = (): Places => ({ items: new Map(), rows: new Map(), lots: 0, area: 0 });
 const r2 = (v: number) => Math.round(v * 100) / 100;
 /** a lot's kept items counted into the places (each its anchor and place; each anchor's line read for runs) */
 export function learnPlaces(t: Places, l: PlaceLot, items: readonly { id: string; kind: ItemKind; x: number; y: number; kept: boolean }[]): Places {
+  t.lots++; t.area += l.w * l.d;
   const lines = new Map<string, { kind: ItemKind; pos: number; off: number }[]>();
   for (const it of items) {
     if (!it.kept || it.kind === 'decal' || it.kind === 'car') continue;
@@ -134,7 +137,7 @@ export function placesOf(t: Places, id: string): { a: Anchor; w: number; pts: re
 }
 
 /** the places as data (a model's places: items seen PLACE_MIN times or more, keys sorted) */
-export interface PlacesData { items: Record<string, { n: number; at: Partial<Record<Anchor, [number, ...number[]]>> }>; rows: Record<string, [number, number, number, number, number]> }
+export interface PlacesData { items: Record<string, { n: number; at: Partial<Record<Anchor, [number, ...number[]]>> }>; rows: Record<string, [number, number, number, number, number]>; lots: number; area: number; inventory?: boolean }
 export function placesData(t: Places): PlacesData {
   const items: PlacesData['items'] = {}, rows: PlacesData['rows'] = {};
   for (const [id, ip] of [...t.items].sort(([a], [b]) => (a < b ? -1 : 1))) {
@@ -144,7 +147,7 @@ export function placesData(t: Places): PlacesData {
     items[id] = { n: ip.n, at };
   }
   for (const [k, c] of [...t.rows].sort(([a], [b]) => (a < b ? -1 : 1))) if (c.runs) rows[k] = [c.items, c.inRows, c.runs, c.len, r2(c.gaps)];
-  return { items, rows };
+  return { items, rows, lots: t.lots, area: r2(t.area), ...(t.inventory ? { inventory: true } : {}) };
 }
 const fin = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
 const obj = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object' && !Array.isArray(v);
@@ -159,5 +162,8 @@ export function placesFrom(d: unknown): Places {
     t.items.set(id, { n: v.n, at });
   }
   if (obj(d.rows)) for (const [k, v] of Object.entries(d.rows)) if (/^[a-z]+\|[a-z-]+$/.test(k) && Array.isArray(v) && v.length === 5 && v.every(fin)) t.rows.set(k, { items: v[0]!, inRows: v[1]!, runs: v[2]!, len: v[3]!, gaps: v[4]! });
+  if (fin(d.lots) && d.lots >= 0) t.lots = d.lots;
+  if (fin(d.area) && d.area >= 0) t.area = d.area;
+  if (d.inventory === true) t.inventory = true;
   return t;
 }

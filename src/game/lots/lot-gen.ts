@@ -10,7 +10,11 @@ import { mulberry } from '../iso';
 import type { PresetProp } from './presets';
 import { keepRate, SECTORS, sectorOf, sectorRects, sectorWeights, VERGE, type Box, type HouseClass, type ItemKind, type Model, type SectorLot } from './learn';
 import type { Partner } from './taste';
-import { lineLen, placesOf, pointAt, rowOf, type Anchor, type PlaceLot, type Places } from './places';
+import { lineLen, PLACE_MIN, placesOf, pointAt, rowOf, type Anchor, type PlaceLot, type Places } from './places';
+/** T171: the share of a kind's items in rows that makes it a row kind (rowy) */
+const ROWY = 0.7;
+/** T171: a row kind's mean run (items) that makes it a hedge an inventory group still lays as rows */
+const HEDGE = 5;
 
 /** a laid item: its kind, library (or decal) id and place (lot frame, tiles: the footprint's centre; a decal's centre) */
 export interface LaidItem { kind: ItemKind; id: string; x: number; y: number; /** a partner (T161): the index among the laid items of the item it goes with */ with?: number }
@@ -96,24 +100,54 @@ export function generateLayout(g: GenInput, r: () => number = mulberry(g.seed >>
     }
     return null;
   };
+  /** T171: the pool's items seen at an anchor (by the pool's own weights: its repeats), else the pool; made once per kind and anchor */
+  const rowPools = new Map<string, readonly string[]>();
+  const rowPool = (kind: ItemKind, a: Anchor, pool: readonly string[]) => {
+    const key = `${kind}|${a}`; let rp = rowPools.get(key);
+    if (!rp) { const at = pool.filter(id => placesFor(id)?.some(x => x.a === a)); rowPools.set(key, rp = at.length ? at : pool); }
+    return rp;
+  };
   /** T171: the row an item laid at a line anchor runs on (its kind's habit there: its share of rows, their length and spacing): more of the kind
    *  along the line from it, a spacing apart, toward the line's longer side and, when the line ends or a place is taken, on the other side of it,
    *  while its kind has tries left and each fits */
   const row = (it: { kind: ItemKind; a: Anchor; along: number; off: number; p: number }, pool: readonly string[]) => {
-    const R = rowOf(PL!.t, it.kind, it.a), L = lineLen(PL!.lot, it.a, it.p);
+    const R = rowOf(PL!.t, it.kind, it.a), L = lineLen(PL!.lot, it.a, it.p), whole = !!rowy(it.kind);
     if (!R || L <= 0 || r() >= R.share) return;
     const step = R.gap / L, first = it.along > 0.5 ? -1 : 1;
+    // a row's items are those of the kind seen at its anchor (a kerb's bench and bin, not the hvac of the building's side)
+    const here = rowPool(it.kind, it.a, pool);
     let n = Math.round(R.len) - 1;
-    for (const dir of [first, -first]) for (let i = 1; n > 0 && left > 1; i++) {
+    for (const dir of [first, -first]) for (let i = 1; n > 0 && (whole || left > 1); i++) {
       const u = it.along + dir * i * step; if (u < -0.05 || u > 1.05) break;
-      const id = pool[Math.floor(r() * pool.length)]!, h = halfOf(id), pt = pointAt(PL!.lot, it.a, u, it.off + (r() - 0.5) * 0.1, it.p)!;
+      const id = here[Math.floor(r() * here.length)]!, h = halfOf(id), pt = pointAt(PL!.lot, it.a, u, it.off + (r() - 0.5) * 0.1, it.p)!;
       const box: Box = [pt.x - h.ha, pt.y - h.hb, pt.x + h.ha, pt.y + h.hb];
       if (!fits(box, it.kind, it.a === 'kerb')) break;
-      boxes.push(box); out.push({ kind: it.kind, id, x: pt.x, y: pt.y }); laid.set(it.kind, (laid.get(it.kind) ?? 0) + 1); left--; n--;
+      boxes.push(box); out.push({ kind: it.kind, id, x: pt.x, y: pt.y }); laid.set(it.kind, (laid.get(it.kind) ?? 0) + 1); if (!whole) left--; n--;
     }
   };
+  /** T171: a kind its lots mostly set in rows (ROWY of its items at the line anchors in a row: a shop's hedge): its count is of rows to start (its
+   *  count over a row's mean length, rounded at random), each run to its length; null for the others */
+  const rowy = (k: ItemKind): { len: number } | null => {
+    if (!PL) return null;
+    let items = 0, inRows = 0, runs = 0, len = 0;
+    for (const [key, c] of PL.t.rows) if (key.startsWith(k + '|')) { items += c.items; inRows += c.inRows; runs += c.runs; len += c.len; }
+    return items >= PLACE_MIN && runs && inRows / items >= ROWY ? { len: len / runs } : null;
+  };
+  // T171: a group whose lots are composed (inventory): each known item by its own count per lot, at the lot's size (no pairs: the set is the set)
+  const inv = !!PL?.t.inventory && PL.t.lots > 0, invSize = inv ? Math.min(1.6, Math.max(0.6, (lot.w * lot.d) / (PL!.t.area / PL!.t.lots))) : 1;
   for (const kind of ORDER) {
-    const pool = g.pools[kind], n = Math.max(kind === 'car' || g.minOne === false ? 0 : 1, Math.round(PER_LOT[kind] * f * mult(kind) + (r() - 0.5)));
+    const pool = g.pools[kind], n0 = Math.max(kind === 'car' || g.minOne === false ? 0 : 1, Math.round(PER_LOT[kind] * f * mult(kind) + (r() - 0.5)));
+    const ry = PL && pool.length ? rowy(kind) : null, n = ry ? Math.floor((PER_LOT[kind] * f * mult(kind)) / ry.len + r()) : n0;
+    // (a kind set in long runs keeps them: a hedge; a short run of a set's pieces, the kerb's bench, bike rack and bin, is the set, each at its place)
+    if (inv && !(ry && ry.len >= HEDGE) && kind !== 'car' && kind !== 'decal' && pool.length) {
+      cur = kind; turn.set(kind, 0);
+      for (const id of [...new Set(pool)]) {
+        const list = placesFor(id); if (!list) continue;
+        const cnt = Math.floor((PL!.t.items.get(id)!.n / PL!.t.lots) * invSize + r()), h = halfOf(id);
+        for (let c = 0; c < cnt; c++) { const at = anchored(id, kind, h, list); if (at) { out.push({ kind, id, x: at.x, y: at.y }); laid.set(kind, (laid.get(kind) ?? 0) + 1); } }
+      }
+      continue;
+    }
     if (!pool.length) continue;
     // its tries: its count, less its partners laid already (with no pairs: its count)
     cur = kind; turn.set(kind, n);
@@ -124,7 +158,7 @@ export function generateLayout(g: GenInput, r: () => number = mulberry(g.seed >>
       const list = PL && !decal ? placesFor(id) : null;
       if (list) {
         const at = anchored(id, kind, h, list);
-        if (at) { out.push({ kind, id, x: at.x, y: at.y }); laid.set(kind, (laid.get(kind) ?? 0) + 1); if (g.pairs) partners(out.length - 1); row(at, pool); }
+        if (at) { out.push({ kind, id, x: at.x, y: at.y }); laid.set(kind, (laid.get(kind) ?? 0) + 1); if (g.pairs && !inv) partners(out.length - 1); row(at, pool); }
         continue;
       }
       const w = weightsOf(kind).slice();
@@ -145,7 +179,7 @@ export function generateLayout(g: GenInput, r: () => number = mulberry(g.seed >>
           break;
         }
       }
-      if (placed) { out.push(placed); laid.set(kind, (laid.get(kind) ?? 0) + 1); if (g.pairs && !decal) partners(out.length - 1); }
+      if (placed) { out.push(placed); laid.set(kind, (laid.get(kind) ?? 0) + 1); if (g.pairs && !decal && !inv) partners(out.length - 1); }
     }
   }
   return out;
