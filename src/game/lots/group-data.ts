@@ -6,9 +6,10 @@
 // learn.ts and taste.ts (vite.config.ts loads it through dev-save.ts).
 import { ITEM_KINDS, USE_GROUPS, type ItemKind, type UseGroup } from './learn';
 import { tasteData, tasteFrom, type TasteData } from './taste';
+import { placesData, placesFrom, type PlacesData } from './places';
 
 /** a group's model data (see the file head) */
-export interface GroupData extends TasteData { on: boolean; counts: Record<string, [number, number]>; pools: Record<ItemKind, string[]> }
+export interface GroupData extends TasteData { on: boolean; counts: Record<string, [number, number]>; pools: Record<ItemKind, string[]>; /** T171: its items' places (lots/places.ts); absent: its kinds' sectors lay them */ places?: PlacesData }
 /** the groups a model holds (the houses' are its top level) */
 export type GroupsData = Partial<Record<Exclude<UseGroup, 'res'>, GroupData>>;
 const obj = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object' && !Array.isArray(v);
@@ -19,7 +20,7 @@ export function groupFrom(d: unknown): GroupData | null {
   const counts: Record<string, [number, number]> = {}, pools = Object.fromEntries(ITEM_KINDS.map(k => [k, [] as string[]])) as Record<ItemKind, string[]>;
   if (obj(d.counts)) for (const [k, v] of Object.entries(d.counts)) if (KEY.test(k) && Array.isArray(v) && v.length === 2 && v.every(n => Number.isInteger(n) && n >= 0) && v[1] <= v[0]) counts[k] = [v[0], v[1]];
   if (obj(d.pools)) for (const k of ITEM_KINDS) { const v = d.pools[k]; if (Array.isArray(v)) pools[k] = v.filter((x): x is string => typeof x === 'string' && x.length > 0).slice(0, 400); }
-  return { on: d.on === true, counts, pools, ...tasteData(tasteFrom(d)) };
+  return { on: d.on === true, counts, pools, ...tasteData(tasteFrom(d)), ...(obj(d.places) ? { places: placesData(placesFrom(d.places)) } : {}) };
 }
 /** a model's groups read back (only those that read) */
 export function groupsFrom(d: unknown): GroupsData {
@@ -31,6 +32,6 @@ export function groupsFrom(d: unknown): GroupsData {
 export function groupsBlock(d: unknown): string {
   const g = groupsFrom(d), keys = Object.keys(g) as (keyof GroupsData)[];
   if (!keys.length) return '';
-  const lines = keys.map(k => { const x = g[k]!; return `  ${JSON.stringify(k)}: {\n   "on": ${x.on},\n   "counts": ${JSON.stringify(x.counts)},\n   "anchors": ${JSON.stringify(x.anchors)},\n   "pairs": ${JSON.stringify(x.pairs)},\n   "density": ${JSON.stringify(x.density)},\n   "pools": ${JSON.stringify(x.pools)}\n  }`; });
+  const lines = keys.map(k => { const x = g[k]!; return `  ${JSON.stringify(k)}: {\n   "on": ${x.on},\n   "counts": ${JSON.stringify(x.counts)},\n   "anchors": ${JSON.stringify(x.anchors)},\n   "pairs": ${JSON.stringify(x.pairs)},\n   "density": ${JSON.stringify(x.density)},\n   "pools": ${JSON.stringify(x.pools)}${x.places ? `,\n   "places": ${JSON.stringify(x.places)}` : ''}\n  }`; });
   return `,\n "groups": {\n${lines.join(',\n')}\n }`;
 }

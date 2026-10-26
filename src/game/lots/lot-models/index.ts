@@ -3,7 +3,8 @@
 import v1 from './v1.json';
 import v2 from './v2.json';
 import v3 from './v3.json';
+import v4 from './v4.json';
 /** the shipped lot models by version (lots/learn.ts modelFrom reads each) */
-export const LOT_MODELS: Readonly<Record<number, unknown>> = { 1: v1, 2: v2, 3: v3 };
+export const LOT_MODELS: Readonly<Record<number, unknown>> = { 1: v1, 2: v2, 3: v3, 4: v4 };
 /** the version a new town composes with */
-export const LATEST = 3;
+export const LATEST = 4;

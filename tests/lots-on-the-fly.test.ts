@@ -55,8 +55,11 @@ describe('lots generated on the fly (T160)', () => {
     // T169: v3 generates industry and the open uses from their frozen presets too (lots-every-use.test.ts); the shops and the owner's own stay
     const lots = referenceLots().filter(l => { const p = pickedPreset(l.g, l.st); return !frozenHouse(l) && (!p || p.curated || p.approved || p.whole || p.use === 'com' || p.use === 'farm'); });
     assert.ok(lots.length > 30, `${lots.length} lots`);
+    // with v3 (T171: v4 generates the shops too; a v3 town keeps them on their frozen presets)
+    const was = lotModelVersion(); setLotModel(3);
     setGeneratedLots(false); const old = lots.map(l => JSON.stringify(compose(l.g, l.st)));
     setGeneratedLots(true); const now = lots.map(l => JSON.stringify(compose(l.g, l.st)));
+    setLotModel(was);
     assert.deepEqual(now, old);
     // a frozen house lot is generated: its own preset's yard items are gone (only its house is drawn from it)
     const fh = referenceLots().find(l => frozenHouse(l) && l.st.decline === 0)!, gen = compose(fh.g, fh.st), oldc = (setGeneratedLots(false), compose(fh.g, fh.st)); setGeneratedLots(true);

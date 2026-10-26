@@ -13,7 +13,7 @@ import { toFrame } from '../lots/preset-frame';
 import { CLASSES, ITEM_KINDS, SECTORS, SECTOR_NAMES, countOf, keepRate, learningStats, sampleItem, sectorArea, sectorOf, sectorRects, type Box, type HouseClass, type ItemKind, type Model, type Sample, type SectorLot } from '../lots/learn';
 import { addSample, addSamples, learnedModel, learnedSamples, learnedTaste, onLearning } from './learn-store';
 import { pairTable, stateKinds, tasteData, type Taste } from '../lots/taste';
-import { presetSamples, teaches } from './learn-presets';
+import { pavedBoxes, presetSamples, teaches } from './learn-presets';
 import { lotPresets } from '../lots/compose';
 import { LATEST, LOT_MODELS } from '../lots/lot-models';
 import { modelData } from '../lots/learn';
@@ -74,7 +74,7 @@ export function lotPreset(c: WizLot, id: string): LotPreset {
 /** a wizard lot's sample: its context and every offered item, kept or deleted (the wizard's); a gallery's judges the whole lot (src gallery, the
  *  verdict: its items as they stood) */
 export function lotSample(c: WizLot, l: { use: PresetUse; state: PresetState; road: Road }, verdict?: 'up' | 'down'): Sample {
-  return { id: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`, at: new Date().toISOString(), ctx: { use: l.use, state: l.state, w: c.base.w, d: c.base.d, road: l.road, house: c.house, cls: c.cls, hw: c.hw, hd: c.hd, seed: c.seed },
+  return { id: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`, at: new Date().toISOString(), ctx: { use: l.use, state: l.state, w: c.base.w, d: c.base.d, road: l.road, house: c.house, cls: c.cls, hw: c.hw, hd: c.hd, seed: c.seed, ...(c.lot.house ? { hb: c.lot.house } : {}), paved: pavedBoxes(c.base) },
     items: c.items.map(it => sampleItem(c.lot, it.id, it.kind, it.x, it.y, !it.deleted)), ...(verdict ? { src: 'gallery' as const, verdict } : {}) };
 }
 const SVGNS = 'http://www.w3.org/2000/svg';

@@ -43,7 +43,7 @@ describe('lots on the fly for every use (T169)', () => {
     assert.deepEqual((['res', 'com', 'ind', 'park', 'civic', 'tour', 'farm'] as const).map(groupOf), ['res', 'com', 'ind', 'open', 'open', 'open', null]);
   });
   it('2. v3 is the latest: it ships industry and the open uses, the shops stay on their frozen presets; its houses are v2\'s', () => {
-    assert.equal(LATEST, 3);
+    assert.ok(LATEST >= 3, 'v3 ships (T171: v4 is the latest since)');
     const g = groupsFrom(LOT_MODELS[3]);
     assert.equal(g.ind?.on, true); assert.equal(g.open?.on, true); assert.equal(g.com?.on, false);
     for (const k of ['counts', 'anchors', 'pairs', 'density'] as const) assert.deepEqual((LOT_MODELS[3] as Record<string, unknown>)[k], (LOT_MODELS[2] as Record<string, unknown>)[k], `the houses' ${k} as v2's`);
