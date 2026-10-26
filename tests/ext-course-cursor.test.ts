@@ -2,12 +2,14 @@
 // on the 1 m mini grid (the round brush on the nearest cell corner, the square brush of 1 to 4 cells, 2 x 2 being one town square), its edge is
 // the cells' own outline, the chip is small and beside the pointer, the pointer stays, a still frame makes nothing new, the painted cells equal
 // the footprint through the Paint tool (with the brush rules, the skipped cells and their reasons), a drag leaves no gap, and the price is
-// live. T118: the chip says what it lays: a mark per surface on the disc, the states (ready, dragging, protected, refused, erase, no change,
-// money short), no words by the disc at rest, and the hint pill's words. npm test (esbuild + node).
+// live. T118: the chip says what it lays: a mark per surface (T138: on a badge beside the disc, never over its face), the states (ready,
+// dragging, protected, refused, erase, no change, money short), no words by the disc at rest, and the hint pill's words. npm test (esbuild +
+// node).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { CHIP_CSS, CourseCursor, Footprints, MARKS, cellOutline, dabCells, isRefusal, markOf, paintMark, polyFootprint, snapDab, squareStart, type CursorView, type MarkKind, type Shape, type SpriteCanvas } from '../src/game/ext/course-cursor';
+import { BADGE, CHIP_CSS, CourseCursor, Footprints, MARKS, cellOutline, dabCells, isRefusal, markOf, paintBadge, polyFootprint, snapDab, squareStart, type CursorView, type MarkKind, type Shape, type SpriteCanvas } from '../src/game/ext/course-cursor';
 import { CELL_T, SURF, fillPolygon, makeGrid, paintDisc, type Grid } from '../src/game/ext/course-grid';
+import { HH, HW } from '../src/game/iso';
 import { gridAreas } from '../src/game/ext/course-grid/areas';
 import { CELL as BRUSH_CELL, dab, type Mask } from '../src/game/brush';
 import { LAND_WHY, PaintTool, type LandRefusal } from '../src/game/paint-tool';
@@ -71,7 +73,7 @@ function mockCanvases() {
 const view = (z: number, dpr = 1): CursorView => ({ ze: z * dpr, camX: 0, camY: 0, cw: 1600 * dpr, ch: 1000 * dpr, dpr });
 const HOST = { setLotGround() {}, emit() {}, save() {}, toast() {}, affine() {}, placeProps: () => 0, plant: () => 0, unplant: () => 0, plantPool: () => [] };
 /** a Paint tool on its Course brush (kind, radius r) with the cursor at (x, y): no course grid, so the round brush */
-function brushTool(kind: 'fairway' | 'green' | 'tee' | 'bunker' | 'water' | 'rough', r: number, x: number, y: number): PaintTool {
+function brushTool(kind: 'fairway' | 'green' | 'tee' | 'bunker' | 'water' | 'rough' | 'path', r: number, x: number, y: number): PaintTool {
   const tool = new PaintTool({ ...HOST });
   tool.course = true; tool.setBrush(kind); tool.setBrushR(r); tool.cursor = { x, y };
   return tool;
@@ -558,51 +560,89 @@ test('the footprint by state (T118): refused cells hatched with a small ✕, kep
   assert.equal(cur.state.kind, 'erase'); assert.ok(erase.dashed, 'erase: a dashed edge');
 });
 
-/** a 2D context that records each call by name and each property it is given, for the marks */
+/** a 2D context that records each call by name with its number arguments (and whether a line dash is set), and each property it is given */
 function recorder() {
-  const ops: string[] = [], sets: string[] = [];
+  const ops: string[] = [], sets: string[] = [], calls: { op: string; a: number[]; dash: boolean }[] = [];
+  let dash = false;
   const ctx = new Proxy({} as Record<string, unknown>, {
     get(o, p: string) {
       if (p in o) return o[p];
-      return () => { ops.push(p); return p === 'createLinearGradient' || p === 'createRadialGradient' ? { addColorStop() {} } : undefined; };
+      return (...a: unknown[]) => {
+        ops.push(p);
+        if (p === 'setLineDash') dash = (a[0] as number[]).length > 0;
+        calls.push({ op: p, a: a.filter((v): v is number => typeof v === 'number'), dash });
+        return p === 'createLinearGradient' || p === 'createRadialGradient' ? { addColorStop() {} } : undefined;
+      };
     },
     set(o, p: string, v) { o[p] = v; sets.push(`${p}=${String(v)}`); return true; },
   }) as unknown as CanvasRenderingContext2D;
-  return { ctx, ops, sets };
+  return { ctx, ops, sets, calls };
+}
+/** how far the points a recorded path reaches lie from (x, y) at most: line ends, curve points, arcs and ellipses with their radii */
+function reach(calls: { op: string; a: number[] }[], x: number, y: number): number {
+  let m = 0;
+  const at = (px: number, py: number, r = 0) => { m = Math.max(m, Math.hypot(px - x, py - y) + r); };
+  for (const { op, a } of calls) {
+    if (op === 'moveTo' || op === 'lineTo') at(a[0]!, a[1]!);
+    else if (op === 'quadraticCurveTo') { at(a[0]!, a[1]!); at(a[2]!, a[3]!); }
+    else if (op === 'arc') at(a[0]!, a[1]!, a[2]!);
+    else if (op === 'ellipse') at(a[0]!, a[1]!, Math.max(a[2]!, a[3]!));
+  }
+  return m;
 }
 
-test('marks by surface (T118): each of the six surfaces has its own mark, drawn on its disc', () => {
+test('marks by surface (T118, T138): each surface has its own mark, on a badge beside the disc, never over its face', () => {
   const SIX = ['green', 'fairway', 'tee', 'rough', 'bunker', 'water'] as const;
   assert.deepEqual(SIX.map(markOf), ['flag', 'stripes', 'peg', 'tufts', 'grains', 'ripples']);
   assert.equal(new Set(SIX.map(markOf)).size, 6, 'six different marks');
   assert.equal(markOf('path'), 'lanes'); assert.equal(markOf('grass'), 'none'); assert.equal(markOf('nonsense'), 'none');
-  // each mark draws something, in one pass only (flat marks lie under the sun's rim light, standing ones on top), and no two draw alike
+  // the badge sits outside the top face (the preview of the texture and border a click lays, the owner's T138) with a gap, clear of the words
+  const frx = CHIP_CSS / 2, fry = frx * (HH / HW);
+  let near = Infinity;
+  for (let i = 0; i < 3600; i++) { const t = (i / 3600) * 2 * Math.PI; near = Math.min(near, Math.hypot(BADGE.dx - frx * Math.cos(t), BADGE.dy - fry * Math.sin(t))); }
+  assert.ok(near - BADGE.r >= 2, `the badge clears the face by ${(near - BADGE.r).toFixed(2)} css px`);
+  assert.ok(BADGE.dx + BADGE.r + 2 <= frx + 8, 'and the words, which start 8 px right of the face');
+  // each mark draws something, all of it inside its badge, at dpr 1 and 2, and no two draw alike; plain grass has none
   const sigs = new Map<MarkKind, string>();
-  for (const mk of new Set(Object.values(MARKS))) {
-    const flat = recorder(), stand = recorder();
-    paintMark(flat.ctx, mk, 'flat', 30, 20, 20, 10, 3, 0.3);
-    paintMark(stand.ctx, mk, 'stand', 30, 20, 20, 10, 3, 0.3);
-    const drawn = (r: { ops: string[] }) => r.ops.some(o => o === 'fill' || o === 'stroke' || o === 'fillRect');
-    if (mk === 'none') { assert.equal(flat.ops.length + stand.ops.length, 0); continue; }
-    assert.ok(drawn(flat) !== drawn(stand), `${mk}: drawn in exactly one pass`);
-    sigs.set(mk, [...flat.ops, ...stand.ops, ...flat.sets, ...stand.sets].join(','));
+  for (const mk of new Set(Object.values(MARKS))) for (const u of [1, 2]) {
+    const r = recorder();
+    paintBadge(r.ctx, mk, 100, 60, u);
+    if (mk === 'none') { assert.equal(r.ops.length, 0, 'no badge for plain grass'); continue; }
+    assert.ok(r.ops.includes('fill'), `${mk}: drawn`);
+    assert.ok(reach(r.calls, 100, 60) <= BADGE.r * u + 1e-9, `${mk} at dpr ${u}: inside its badge (${reach(r.calls, 100, 60).toFixed(2)})`);
+    if (u === 1) sigs.set(mk, [...r.ops, ...r.sets].join(','));
   }
   assert.equal(new Set(sigs.values()).size, sigs.size, 'no two marks draw alike');
-  // the chip sprite carries its mark: a new sprite per surface, and the flag's yellow pennant on the green's
-  const sprites: { kind: string; sets: string[] }[] = [];
-  const make = (w: number, h: number): SpriteCanvas => { const r = recorder(); sprites.push({ kind: '', sets: r.sets }); return { width: w, height: h, getContext: () => r.ctx }; };
-  const cur = new CourseCursor({ canvas: make });
-  for (const k of SIX) {
-    const n = sprites.length, tool = brushTool(k, 3, 40.2, 50.7);
-    cur.draw(mockCtx({ width: 1600, height: 1000 }).ctx, view(0.3), tool, 1000);
-    assert.equal(sprites.length, n + 2, `${k}: its own chip and shadow`);
-    sprites[n]!.kind = k;
+  // the chip sprite: a new sprite per surface with its badge at the face's upper right, inside the sprite, the flag's yellow on the green's
+  for (const d of [1, 2]) {
+    const sprites: { kind: string; w: number; h: number; rec: ReturnType<typeof recorder> }[] = [];
+    const make = (w: number, h: number): SpriteCanvas => { const rec = recorder(); sprites.push({ kind: '', w, h, rec }); return { width: w, height: h, getContext: () => rec.ctx }; };
+    const cur = new CourseCursor({ canvas: make }), rx = frx * d, ry = fry * d;
+    /** the sprite's top face (the wall's first ellipse) and its badge (the arc of the badge's radius) */
+    const parts = (s: (typeof sprites)[number]) => {
+      const face = s.rec.calls.find(c => c.op === 'ellipse' && c.a[2] === rx && c.a[3] === ry)!, badge = s.rec.calls.find(c => c.op === 'arc' && Math.abs(c.a[2]! - (BADGE.r - 0.5) * d) < 1e-9);
+      return { fx: face.a[0]!, fy: face.a[1]!, badge };
+    };
+    for (const k of [...SIX, 'path'] as const) {
+      const n = sprites.length, tool = brushTool(k, 3, 40.2, 50.7);
+      cur.draw(mockCtx({ width: 1600 * d, height: 1000 * d }).ctx, view(0.3, d), tool, 1000);
+      assert.equal(sprites.length, n + 2, `${k}: its own chip and shadow`);
+      const s = sprites[n]!, { fx, fy, badge } = parts(s);
+      s.kind = k;
+      assert.ok(badge, `${k} at dpr ${d}: its badge`);
+      assert.ok(Math.abs(badge!.a[0]! - (fx + BADGE.dx * d)) < 1e-9 && Math.abs(badge!.a[1]! - (fy + BADGE.dy * d)) < 1e-9, `${k}: at the face's upper right`);
+      const R = BADGE.r * d;
+      assert.ok(badge!.a[0]! - R >= 0 && badge!.a[0]! + R <= s.w && badge!.a[1]! - R >= 0 && badge!.a[1]! + R <= s.h, `${k} at dpr ${d}: the badge fits on the sprite (${s.w} x ${s.h})`);
+    }
+    const green = sprites.find(s => s.kind === 'green')!, fairway = sprites.find(s => s.kind === 'fairway')!;
+    assert.ok(green.rec.sets.includes('fillStyle=#ffd23f'), 'the flag on the green');
+    assert.ok(!fairway.rec.sets.includes('fillStyle=#ffd23f'), 'no flag on the fairway');
+    // rub out: a chip of its own (the surface you get back) with a dashed line round it, every dashed curve outside the face
+    const tool = brushTool('fairway', 3, 40.2, 50.7), before = sprites.length;
+    tool.rubOut = true; cur.draw(mockCtx({ width: 1600 * d, height: 1000 * d }).ctx, view(0.3, d), tool, 1100);
+    assert.equal(sprites.length, before + 2, 'a rub-out chip of its own');
+    const dashed = sprites[before]!.rec.calls.filter(c => c.dash && c.op === 'ellipse');
+    assert.ok(dashed.length >= 2, 'erase: a dashed line round the puck');
+    for (const c of dashed) assert.ok(c.a[2]! >= rx + 2 * d && c.a[3]! >= ry + 2 * d, `the dashed line runs outside the face (${c.a[2]} x ${c.a[3]})`);
   }
-  assert.equal(cur.stats.sprites, 6);
-  assert.ok(sprites.find(s => s.kind === 'green')!.sets.includes('fillStyle=#ffd23f'), 'the flag on the green');
-  assert.ok(!sprites.find(s => s.kind === 'fairway')!.sets.includes('fillStyle=#ffd23f'), 'no flag on the fairway');
-  // rub out: a chip of its own (the surface you get back, its rim dashed)
-  const tool = brushTool('fairway', 3, 40.2, 50.7), before = sprites.length;
-  tool.rubOut = true; cur.draw(mockCtx({ width: 1600, height: 1000 }).ctx, view(0.3), tool, 1100);
-  assert.equal(sprites.length, before + 2, 'a rub-out chip of its own');
 });
