@@ -39,8 +39,10 @@ Tickets in progress now (see NOW.md "START HERE" for the current list):
 
 ## Other sessions working in this repo
 Each keeps its own handover doc with a start prompt at the top. Paste that prompt into a new chat.
-- **Studio lot-preset editor** (worktree `.claude/worktrees/lot-presets`, game on 5241, studio on 5242): asked on 2026-10-26 for
-  `docs/handovers/lot-presets.md`. The path will be added here when the session replies.
+- **Studio lot-preset editor** (branch `lot-presets`, worktree `E:\Repos\CapitalEmpire\.claude\worktrees\lot-presets`, game on 5241,
+  studio on 5242; launch.json configs `lot-presets-game` and `lot-presets-studio`). Its handover is
+  `docs/handovers/lot-presets.md` in that worktree, with the start prompt at the top (WIP commit 62d1322). As of 2026-10-26 it is
+  **committed locally only**: the session asks the owner before pushing. Until it is pushed, open the doc from that worktree on this PC.
 - **3D spectators and run.world** (the 3D people and crowd art): `docs/HANDOVER-PEOPLE.md`, then `docs/SPECTATOR-ART.md`. Asked on
   2026-10-26 to refresh it with a start prompt.
 - **Nightly regression:** a scheduled task ("CapitalEmpire nightly regression", about 02:06). It needs no prompt, but it needs its
