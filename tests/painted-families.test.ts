@@ -81,11 +81,12 @@ test('every surface of the game wears a painted family: golf, map, town lawns, l
   for (const s of SURFACES) assert.ok(f.surfaces[s.key], `${s.key} has a look`);
   // the golf logic: tees the shortest emerald at the finest scale; the fescue the hand-painted golden fescue tiles (T145), water the
   // hand-painted lake tiles (T145); the bunker raked sand. T153 (#327): the fairway, the greens and their fringes, the rough and the waste
-  // areas wear the hand-painted tile sets (fairway, putting green, long grass: provisional until their handoff; sand ripples), as authored
+  // areas wear the hand-painted tile sets (fairway, putting green: provisional until their handoff; sand ripples), as authored
   const S = f.surfaces;
   assert.equal(S.tee!.family, 'emerald-short'); assert.ok(S.tee!.scale < 1, 'tees keep the old green until a family is chosen for them');
   assert.equal(S.fairway!.family, 'fairway'); assert.equal(S.green!.family, 'putting-green'); assert.equal(S.fringe!.family, 'putting-green');
-  assert.equal(S.rough!.family, 'sage-long', 'rough stays on its old painting until the long-grass tiles are repaired (#335)'); assert.equal(S.fescue!.family, 'golden-fescue');
+  // T162 (#350): the rough and the decrepit lots' lawns (which follow the rough, T155) wear the owner's rough paintings, edges healed to tile
+  assert.equal(S.rough!.family, 'rough-owner'); assert.equal(S.lawnDeclined!.family, 'rough-owner'); assert.equal(S.fescue!.family, 'golden-fescue');
   assert.equal(S.bunker!.family, 'sand-raked'); assert.equal(S.waste!.family, 'sand-ripples-tiles'); assert.equal(S.water!.family, 'lake');
   // the map's open grass draws golden fescue and rivers draw lake (the owner, 2026-10-26: "all the map water and grass needs to be replaced
   // aswell"; main 003153a)

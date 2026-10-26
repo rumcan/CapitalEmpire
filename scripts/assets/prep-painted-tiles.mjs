@@ -100,6 +100,7 @@ const rel = p => path.join(ART, p);
 const fail = m => { console.error('prep-painted-tiles: ' + m); process.exit(1); };
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 const hex = m => '#' + m.map(v => Math.round(v).toString(16).padStart(2, '0')).join('');
+const r2 = v => Math.round(v * 100) / 100;
 const readJson = p => { try { return JSON.parse(fs.readFileSync(rel(p), 'utf8')); } catch { return null; } };
 
 const readyBuf = fs.existsSync(rel(READY_REL)) ? fs.readFileSync(rel(READY_REL)) : fail(`no ${READY_REL} under ${ART}`);
@@ -223,14 +224,16 @@ for (const folder of OWNER) {
     const healed = healWrap(data, w, ht, ch, HEAL_BAND);
     // the interior is the owner's pixels exactly: only the outer HEAL_BAND px of each edge may differ
     for (let y = HEAL_BAND; y < ht - HEAL_BAND; y++) for (let i = (y * w + HEAL_BAND) * ch, e = (y * w + w - HEAL_BAND) * ch; i < e; i++) if (healed[i] !== data[i]) fail(`${file}: the heal changed the interior at (${Math.floor(i / ch) % w}, ${y})`);
-    const tile = { id: TILE_IDS[0], sha256: h, source: file, raw: { data: healed, width: w, height: ht, channels: ch }, before: wrapMismatch(data, w, ht, ch) };
+    // the heal's own result is held to HEAL_LIMIT x the inside, on its pixels (the WebP's numbers are recorded as they ship)
+    const before = wrapMismatch(data, w, ht, ch), done = wrapMismatch(healed, w, ht, ch);
+    if (done.lr > HEAL_LIMIT * done.h || done.tb > HEAL_LIMIT * done.v) fail(`${file}: healed wrap LR ${r2(done.lr)} / TB ${r2(done.tb)} is more than ${HEAL_LIMIT}x the inside (${r2(done.h)} / ${r2(done.v)}): widen HEAL_BAND`);
+    const tile = { id: TILE_IDS[0], sha256: h, source: file, raw: { data: healed, width: w, height: ht, channels: ch }, before, healed: done };
     levels[level] = { folder, native: [w, ht], decision: { file: null, sha256: null }, tiles: [tile], revision: `${level}-${path.basename(folder)}`, status: null };
   }
   // the revision: the paintings' hashes and the heal (another heal re-bakes every chunk that laid it)
   const key = sha256(Buffer.from(LEVELS.map(l => levels[l].tiles[0].sha256).join(':') + `|${HEAL_METHOD}/${HEAL_BAND}`));
   plan.push({ material: fam.id, id: gameId(fam.id), materialId: src.id ?? `owner:${path.basename(folder)}`, name: fam.name, kind: fam.kind ?? 'grass', key, selection: null, provisional: fam.provisional !== false, owner: srcRel, light: src.light ?? null, levels });
 }
-const r2 = v => Math.round(v * 100) / 100;
 
 // ---- write the WebPs and the manifest
 const manifest = {
@@ -261,13 +264,13 @@ for (const p of plan) {
       const stats = await (t.raw ? pic() : sharp(t.crop ? await pic().png().toBuffer() : t.buf)).stats(), opaque = stats.isOpaque;
       const webp = () => (opaque ? pic().removeAlpha() : pic()).webp({ quality: QUALITY, effort: 6, smartSubsample: true });
       if (t.raw) {
-        // the healed painting: before, the owner's file; after, the WebP that ships (its wrap held to HEAL_LIMIT x its own inside difference:
-        // the lossy WebP raises every neighbour difference a little, so like is measured against like)
+        // the healed painting's numbers: before, the owner's file; healed, its pixels after the heal; after, the WebP that ships (each against
+        // its own inside difference: the lossy WebP's error, about 3 levels a pixel, is independent on the two sides of a tile edge, so it adds
+        // a level or two across any wrap, the other tile sets' edges alike)
         const buf = await webp().toBuffer(), dec = await sharp(buf).raw().toBuffer({ resolveWithObject: true });
         if (dec.info.width !== L.native[0] || dec.info.height !== L.native[1]) fail(`${file}: encoded ${dec.info.width}x${dec.info.height}`);
         const m2 = m => ({ lr: r2(m.lr), tb: r2(m.tb), h: r2(m.h), v: r2(m.v) }), a = wrapMismatch(dec.data, dec.info.width, dec.info.height, dec.info.channels);
-        heal = { method: HEAL_METHOD, band: HEAL_BAND, before: m2(t.before), after: m2(a) };
-        if (a.lr > HEAL_LIMIT * a.h || a.tb > HEAL_LIMIT * a.v) fail(`${file}: healed wrap LR ${r2(a.lr)} / TB ${r2(a.tb)} is more than ${HEAL_LIMIT}x the inside (${r2(a.h)} / ${r2(a.v)}): widen HEAL_BAND`);
+        heal = { method: HEAL_METHOD, band: HEAL_BAND, before: m2(t.before), healed: m2(t.healed), after: m2(a) };
         console.log(`${file}: wrap LR ${heal.before.lr} -> ${heal.after.lr} (inside ${heal.after.h}), TB ${heal.before.tb} -> ${heal.after.tb} (inside ${heal.after.v}); ${HEAL_METHOD}, ${HEAL_BAND} px`);
         if (!CHECK) { fs.mkdirSync(path.dirname(abs), { recursive: true }); fs.writeFileSync(abs, buf); }
       } else if (!CHECK) {

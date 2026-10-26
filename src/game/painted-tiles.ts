@@ -38,8 +38,9 @@ export interface TileRef { id: string; file: string; sha256: string; mean: strin
 /** a level's set; a provisional one (T153) has no visual decision (file null) and carries the art session's own status for it */
 export interface TiledLevel { revision: string; folder: string; native: [number, number]; decision: { file: string | null; sha256: string | null }; tiles: TileRef[]; status?: string;
   /** T162: an owner's painting's edge heal (scripts/assets/tile-heal.mjs): its method and band (px), and the mean |RGB| difference across the
-   *  wrap (lr, tb) and between neighbouring columns and rows inside (h, v), before (the owner's file) and after (the WebP that ships) */
-  heal?: { method: string; band: number; before: WrapMismatch; after: WrapMismatch } }
+   *  wrap (lr, tb) and between neighbouring columns and rows inside (h, v): before (the owner's file), healed (its pixels after the heal) and
+   *  after (the WebP that ships) */
+  heal?: { method: string; band: number; before: WrapMismatch; healed: WrapMismatch; after: WrapMismatch } }
 /** how well a picture tiles with itself (tile-heal.mjs wrapMismatch): mean |RGB| across the wrap and between neighbours inside */
 export interface WrapMismatch { lr: number; tb: number; h: number; v: number }
 export interface TiledFamily {
