@@ -744,7 +744,7 @@ export function installLotLab(game: Game): () => void {
         el('span', `white-space:nowrap;${m.length ? 'color:#86efac' : 'opacity:.5'}`, m.length ? m.map(x => `${x.covers}/${x.of}`).join(' ') : 'no master'));
     }
     const pct = rep.cells ? Math.round((100 * rep.covered) / rep.cells) : 0;
-    box.append(t, el('div', 'margin-top:5px;opacity:.9', `All types and states: ${rep.masters.length} masters · ${rep.derived} derived presets · ${rep.covered} of ${rep.cells} cells (type × state × size × road) approved (${pct}%)`));
+    box.append(t, el('div', 'margin-top:5px;opacity:.9', `All types and states: ${rep.masters.length} master${rep.masters.length === 1 ? '' : 's'} · ${rep.derived} derived preset${rep.derived === 1 ? '' : 's'} · ${rep.covered} of ${rep.cells} cells (type × state × size × road) approved (${pct}%)`));
     return box;
   }
   /** the INSPECTOR: the selection (when there is one), then the lot */
