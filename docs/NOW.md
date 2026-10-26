@@ -34,13 +34,14 @@ Update this file **before** each edit and after each sub-step. If you are pickin
 - **T122 merged (#247):** Run (Holes › Shape by hand › Brush | Run | Erase; `ext/course-cursor/run.ts`; a 200 m run 0.28 ms).
 - **T119 merged (#248):** New hole finished (its own undo, the Esc ladder, the 4.4 check table with practice-area rows, Seed default and the
   money line, the number picker, the camera fit; `TEE_VIEW_M` = a 450 m radius, kept by the lead so a par-5 green is in view).
-- **Running now: T132 #249 (P24 Phase 4a, Opus 5.5 high, branch arena/T132-range-to-course, port 5186):** the unlock order (range card →
-  practice after the first upgrade → Props after the putting green → New hole at $20k a season or season 2, a par-3 first), the onboarding
-  pill, props diminishing returns, upgrade upkeep, the range's greens and stripes clear again after the painted ground, the label glyph, the
-  car park counter, decor names in Select. **Then T133 (Phase 4b):** World of Golf extras (second tier, academy, coffee kiosk, ball picker,
-  caravan → house).
-- **Open bug for a ticket:** dark, unbaked ground patches after a fresh start or a camera jump (seen in T128 and T119 screenshots, headless
-  Edge, dpr 2; also on main before T128). Debug it as the lead (unknown cause).
+- **T132 merged (#251, P24 Phase 4a):** the range start's unlock order (minute zero: Select and Bulldoze → first upgrade: Holes' Green and
+  Bunker, Paths → putting green: Props → $20k a season or season 2: New hole and Buildings), the onboarding pill in that order, a 150 m par-3
+  suggested first, props diminishing by kind (80% each), upgrade upkeep monthly, the range's own presets "Range outfield" (stripes last) and
+  "Range target green" (paint-presets.json, painted-surfaces.json), the stadium label fix, the car park counter, decor in Select, a T129 bay bug.
+  Balance table and D30-D40 in P24.
+- **Running now (Opus 5.5):** T133 #252 World of Golf extras (high; branch arena/T133-wog-extras, port 5187: second tier, academy, kiosk,
+  ball picker, the range's own visit cars, caravan → cottage → house) and T134 #253 the dark, unbaked ground after a fresh start or a camera
+  jump (branch arena/T134-dark-ground, port 5188: root cause first, a fallback so unbaked ground is never black, a failing-then-passing test).
 - **Housekeeping:** each agent worktree with node_modules is ~4.3 GB. E: fell to 4.5 GB free on 2026-10-26 ~00:30; the lead removed this
   session's six merged worktrees (T119, T122, T128, T129/NOW, T130, T131). Remove each agent's worktree as soon as its PR merges.
 
