@@ -24,8 +24,11 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 ### In flight
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |
-| T143 | #293 | `arena/T143-car-cards` | an agent worktree under `.claude/worktrees` | 5193 / 5189 | The owner: "group cars in library together for resizing ... every car has its rotations": one Library card per car model with its rotations and views as thumbs, one size for all of them, in the studio, scale-overrides.json and the game. |
-| Gates | #285 | detached bisect | `.claude/worktrees/agent-a7002980f03663418` | — | Bisecting `fix:gate` (a) (green 2026-10-18 at -19.9%, now +23.9%) and `event:gate` (a), (b), (c); report and recommend, no src changes yet. |
+| T144 | #296 | `arena/T144-light-library` | an agent worktree under `.claude/worktrees` | 5193 | The owner: "studio crashed with ran out of memory" (the browser tab; the PC at 1.5 GB free). Thumbs as WebP at the card's size, off-screen cards release their images; memory measured before and after. |
+
+**One coding agent at a time (the owner, 2026-10-26: "maybe just too many background tasks?", after the studio tab died with the PC at
+1.5 GB free): the lead dispatches one coding agent at a time (a second only when it is one light process, such as a gate scan); the rest
+wait as tickets. Agents start only the servers they need and stop them before reporting.**
 
 **One studio (the owner, 2026-10-26: "when a studio is running it is the only studio and any changes made affect the actual game
 sprites"; "put the studio on the network for all pcs on network to edit").** The lot lab's branch is on main (#290): the only studio is
@@ -43,7 +46,8 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
 `docs/START-PROMPTS.md`.
 
 ### Queue (in order)
-1. **The gate failures (#285, see In flight).** The owner should allow the nightly session's commands so it runs unattended.
+1. **The nightly.** The owner should allow the nightly session's commands so it runs unattended. fix:gate's new default (seed 1 day 60)
+   passes by 1.8 points only: if it flips, retune the scenario (#298's header has the scan table), do not touch traffic.
 2. **The owner's new grass paintings**, when they arrive. Import them with `scripts/assets/prep-painted-families.mjs` (the families list
    in the script), then map them per surface in Studio › Painted.
 3. **P24 follow-ups:**
@@ -57,6 +61,13 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
    (the sharp bump). See the History sections below and `gh issue list --label arena --state open`.
 
 ### Done recently (newest first; details in each PR)
+- 2026-10-26: **#298 the gates retuned to the game as it is** (#285 closed; the bisect found intended features, not a regression: #87 woods
+  buildable, 78e5472 three-town growth, 0c58278 parking fees). fix:gate refuses a city not at capacity (exit 2) and defaults to seed 1
+  day 60; a round books its parking fees like its tolls (`Round.parking`); event:gate reconciles with them, (b) measured on the fixed
+  towns, (c) every car parked and >= 99%.
+- 2026-10-26: **T143 #297 one Library card per car** with every rotation, facing and view as thumbs and one size (`ext/car-art/model.mjs`
+  `carModel`, shared by the game and the pack scripts; old per-facing sizes folded keeping the largest; Vehicles 65 cards → 9). A
+  Rebuild packs the car pixels at the models' sizes when the owner is done sizing. The 5191 studio was restarted on it.
 - 2026-10-26: **T142 #292 a hand-drawn vector shadow for every asset view** (1,421 drawn shapes in `src/game/shadow-shapes.json`, drafted
   from each picture by `scripts/dev/draft-shadows.mjs` + hand hints in `shadow-hints.json`; T141 behind the gear-menu toggle "Drawn shadows
   (T142)"; a new picture needs an entry or `tests/shadow-vector.test.ts` fails: run the draft with `--only <ids>` against a dev server).
