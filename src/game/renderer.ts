@@ -1,6 +1,6 @@
 import { CHUNK_H, CHUNK_W, HH, HW, MAP, MID_K, PLAN_H, PLAN_W, mulberry, tileOf } from './iso';
 import { SK, add, linePath, mul, offsetPolyline, perp, roundPieces, roundedPath, sub, vlen, type BBox, type Decal, type Feature, type FxView, type LineRec, type Pt, type RoadNetwork, type SlabRun } from './network';
-import { MOSAIC_TILES, canvas, ctx2d, type C2D, type Cnv, type Textures, type TexName, type TiledPick } from './textures';
+import { MOSAIC_TILES, PLACEHOLDER, canvas, ctx2d, type C2D, type Cnv, type Textures, type TexName, type TiledPick } from './textures';
 import { fbm, maskFrom, smooth } from './canvas2d';
 import { EAGER_PHOTO } from './grass-art';
 import { PAINT_TEXES, isPaintPhoto, type PaintTex } from './paint';
@@ -337,7 +337,7 @@ export class GroundPainter {
       // (a photo or a procedural texture a light boot has not made yet, T157: its Paint swatch, as a lazy photo's: never made for a colour; the
       // game's lazy ones, T166, are made for it: the same colour as ever)
       const img = name === 'lotAsphalt' ? this.tex.mosaicFor('lot', 0.035) : EAGER_PHOTO.has(name) && !GROUND_PHOTO.has(name) ? ((this.tex.makeForColour ? this.tex.built(name) : this.tex.mosaics.has(name)) ? this.tex.mosaicFor(name, 0.035) : null) : (this.tex.makeForColour ? this.tex.hasImage(name, 0.035) : this.tex.mips.has(name + '@0.035')) ? this.tex.image(name as TexName, 0.035) : null;
-      if (!img) return PAINT_COL.get(name) ?? '#808080';
+      if (!img || img === PLACEHOLDER) return PAINT_COL.get(name) ?? '#808080'; // (not kept: a texture being made, T168)
       const d = ctx2d(img).getImageData(0, 0, img.width, img.height).data, n = d.length / 4;
       let r = 0, g = 0, b = 0; for (let k = 0; k < d.length; k += 4) { r += d[k]; g += d[k + 1]; b += d[k + 2]; }
       const y = (0.3 * r + 0.59 * g + 0.11 * b) / n, lift = (s: number) => Math.round(Math.min(255, (s / n * 0.8 + y * 0.2) * 1.05));

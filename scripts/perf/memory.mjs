@@ -12,6 +12,8 @@
 // run); --warm loads the page once, waits for the texture pack to be written to the browser's cache, and measures a second page (the cache
 // read). Each sample also gives the chunk bakes since the last one (worker ms: median and p95) and, for the first, the load's times: the
 // game ready, the builder's textures ready, the first chunk and the first view fully baked.
+// T168 (#381): each bake's wait too (from its request to its picture landing: a stall in the worker shows there), the textures the worker made
+// on first use (its log), and --course: a water pond and a bunker laid by the course grid beside the view (the Course tool's paint), measured.
 import { chromium } from 'playwright-core';
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -20,7 +22,7 @@ const args = process.argv.slice(2), url = args[0], label = args[1] ?? 'page';
 if (!url) { console.error('usage: node scripts/perf/memory.mjs <url> <label> [--idle s] [--generate n] [--dpr d]'); process.exit(2); }
 const opt = (k, d) => { const i = args.indexOf('--' + k); return i >= 0 ? args[i + 1] : d; };
 const gens = +opt('generate', '0'), idle = +opt('idle', '25'), dpr = +opt('dpr', '1.25'), W = +opt('w', '1600'), H = +opt('h', '900');
-const pan = +opt('pan', '0'), jumps = +opt('jumps', '0'), seed = opt('seed', null), warm = args.includes('--warm');
+const pan = +opt('pan', '0'), jumps = +opt('jumps', '0'), seed = opt('seed', null), warm = args.includes('--warm'), coursePaint = args.includes('--course');
 const MB = b => Math.round(b / 1048576 * 10) / 10, sleep = ms => new Promise(r => setTimeout(r, ms));
 const ps = cmd => execFileSync('powershell', ['-NoProfile', '-Command', cmd], { encoding: 'utf8' });
 
@@ -38,6 +40,8 @@ try {
   }
   const page = await ctx.newPage(), bcdp = await browser.newBrowserCDPSession(), pcdp = await ctx.newCDPSession(page);
   await pcdp.send('Performance.enable');
+  const made = []; page.on('console', m => { const q = /\[ground worker (\d+)\] made (\S+) in (\d+) ms/.exec(m.text()); if (q) made.push({ t: (Date.now() - t0) / 1000, w: +q[1], what: q[2], ms: +q[3] }); });
+  out.made = made;
   const t0 = Date.now();
   await page.goto(url, { waitUntil: 'load', timeout: 120000 });
   await page.waitForFunction(() => window.__game && window.__game.ready, null, { timeout: 180000, polling: 100 });
@@ -50,11 +54,11 @@ try {
   /** the bakes since the last sample: count, worker ms median and p95 */
   let bakedAt = 0;
   const bakes = async () => {
-    const { log, n } = await page.evaluate(() => ({ log: window.__game.ground.bakeLog, n: window.__game.ground.baked }));
-    const ms = []; for (let i = Math.max(bakedAt, n - log.length); i < n; i++) ms.push(log[i % log.length]);
-    bakedAt = n; ms.sort((a, b) => a - b);
-    const q = f => (ms.length ? +ms[Math.min(ms.length - 1, Math.floor(f * ms.length))].toFixed(1) : null);
-    return { n: ms.length, medianMs: q(0.5), p95Ms: q(0.95), maxMs: ms.length ? +ms[ms.length - 1].toFixed(1) : null };
+    const { log, wlog, n } = await page.evaluate(() => ({ log: window.__game.ground.bakeLog, wlog: window.__game.ground.waitLog ?? [], n: window.__game.ground.baked }));
+    const ms = [], wait = []; for (let i = Math.max(bakedAt, n - log.length); i < n; i++) { ms.push(log[i % log.length]); if (wlog.length) wait.push(wlog[i % wlog.length]); }
+    bakedAt = n; ms.sort((a, b) => a - b); wait.sort((a, b) => a - b);
+    const q = (a, f) => (a.length ? +a[Math.min(a.length - 1, Math.floor(f * a.length))].toFixed(1) : null);
+    return { n: ms.length, medianMs: q(ms, 0.5), p95Ms: q(ms, 0.95), maxMs: ms.length ? +ms[ms.length - 1].toFixed(1) : null, waitMedianMs: q(wait, 0.5), waitP95Ms: q(wait, 0.95), waitMaxMs: wait.length ? +wait[wait.length - 1].toFixed(1) : null };
   };
   /** s seconds, then until the ground cache has nothing wanted or in flight (30 s at most) */
   const settle = async s => {
@@ -96,7 +100,9 @@ try {
     out.samples.push(s);
     console.log(`${label} / ${name}: renderer ${s.rendererMB} MB + GPU process ${s.gpuMB} MB = ${Math.round(s.rendererMB + s.gpuMB)} MB private; VRAM ${s.vramMB} MB; all Edge processes ${s.totalMB} MB; main JS heap ${s.mainHeapMB} MB`);
     console.log(`  workers ${game.workers.length} (${game.workers.join(', ')}); atlas ${game.atlasMB.toFixed(0)} MB of ${game.atlasPages} pages; ground ${game.groundMB.toFixed(0)} MB, ${game.groundWorkers} ground workers, bake ${game.bakeMs.toFixed(0)} ms`);
-    console.log(`  bakes since the last sample: ${s.bakes.n}, worker ms median ${s.bakes.medianMs}, p95 ${s.bakes.p95Ms}, max ${s.bakes.maxMs}; browser process ${s.browserMB} MB`);
+    console.log(`  bakes since the last sample: ${s.bakes.n}, worker ms median ${s.bakes.medianMs}, p95 ${s.bakes.p95Ms}, max ${s.bakes.maxMs}; wait (request to picture) median ${s.bakes.waitMedianMs}, p95 ${s.bakes.waitP95Ms}, max ${s.bakes.waitMaxMs}; browser process ${s.browserMB} MB`);
+    const newly = made.filter(x => !x.shown); for (const x of newly) x.shown = true;
+    if (newly.length) console.log('  made on first use: ' + newly.map(x => `${x.what} ${x.ms} ms @${x.t.toFixed(1)}s`).join(', '));
     const w = Object.entries(s.infra).filter(([k]) => k.startsWith('renderer')).map(([, v]) => v.alloc['v8/workers/heap']).filter(Boolean);
     if (w.length) console.log(`  worker V8 heaps ${w.join(', ')} MB`);
     const r = Object.entries(s.infra).filter(([k]) => k.startsWith('renderer')).sort((a, b) => (b[1].footprintMB ?? 0) - (a[1].footprintMB ?? 0))[0]?.[1];
@@ -109,6 +115,18 @@ try {
     const steps = Math.round(pan * 20);
     for (let k = 0; k <= steps; k++) { const a = (2 * Math.PI * k) / steps; await page.evaluate(([x, y, z]) => window.__game.lookAt(x, y, z), [c.x + 120 * Math.sin(a), c.y + 120 * (1 - Math.cos(a)), c.z]); await sleep(50); }
     await settle(5); await sample(`after a ${pan} s pan`);
+  }
+  if (coursePaint) {
+    // the Course tool's paint, as its result reaches the ground: a course grid round the view with a water pond and a bunker in it
+    await page.evaluate(async () => {
+      const g = window.__game, X = g.cam.X, Y = g.cam.Y, cx = (X / 64 + Y / 32) / 2, cy = (Y / 32 - X / 64) / 2;
+      const CG = await import('/src/game/ext/course-grid/index.ts'), AR = await import('/src/game/ext/course-grid/areas.ts');
+      const blob = (x, y, r) => { const o = []; for (let k = 0; k < 12; k++) { const a = k * Math.PI / 6; o.push(x + r * Math.cos(a), y + r * Math.sin(a) * 0.7); } return o; };
+      const grid = CG.makeGrid(Math.floor(cx - 60), Math.floor(cy - 60), 240, 240);
+      AR.rasterAreas(grid, [{ pts: blob(cx - 12, cy, 10), surface: 'water', month: 0 }, { pts: blob(cx + 14, cy + 4, 6), surface: 'bunker', month: 0 }]);
+      g.courseGrid = grid; g.resendCourse();
+    });
+    await settle(8); await sample('after painting water and a bunker');
   }
   if (jumps) {
     // the ground's fill time after a jump to somewhere new (the bake throughput: a whole view of new chunks), at the closest zoom and at 8%

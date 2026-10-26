@@ -1,5 +1,5 @@
 import { LEVELS, MID_LEVELS, mulberry } from './iso';
-import { canvas, clamp, ctx2d, fbm, smooth, type C2D, type Cnv } from './canvas2d';
+import { canvas, clamp, ctx2d, fbm, fbmRows, smooth, type C2D, type Cnv } from './canvas2d';
 import { DEFAULT_MIX, mixGrass, type BaseGrassArt } from './base-grass';
 import { EAGER_PHOTO, PHOTO_SIZE, PHOTO_TEX, photoPeriod, type GrassTex, type PhotoTexEntry } from './grass-art';
 import { paintedUrl, VARIANT_SETS } from './painted-grass-art';
@@ -71,40 +71,55 @@ type Draw = (x: number, y: number) => void;
 function wrap(x: number, y: number, m: number, draw: Draw) {
   for (const ox of [-BASE_W, 0, BASE_W]) for (const oy of [-BASE_H, 0, BASE_H]) { const X = x + ox, Y = y + oy; if (X > -m && X < BASE_W + m && Y > -m && Y < BASE_H + m) draw(X, Y); }
 }
-function patches(ctx: C2D, r: () => number, n: number, colors: string[], rmin: number, rmax: number) {
+/** T168: the procedural textures are drawn by generators that pause (yield) every few hundred draws, so a texture can be made in slices
+ *  between a worker's bakes; drawn to the end at once (drain) they make the very same pixels */
+type Steps<T = void> = Generator<void, T, void>;
+/** runs a generator to its end, its result */
+export function drain<T>(it: Iterator<void, T>): T { let r = it.next(); while (!r.done) r = it.next(); return r.value; }
+const PAUSE = 256;
+/** a step-less build (a light boot's lazy grass tints): made in one go */
+function* once(f: () => void): Steps { f(); }
+/** what a bake gets for a lazy texture not made yet while its makes are deferred (Textures.deferMakes, T168): the bake goes on to learn every
+ *  texture it lacks (Textures.missing), and is then thrown away and baked again once they are made */
+export const PLACEHOLDER: Cnv = typeof OffscreenCanvas === 'undefined' ? ({} as Cnv) : canvas(1, 1); // (node, the tests: no canvas, never drawn)
+function* patches(ctx: C2D, r: () => number, n: number, colors: string[], rmin: number, rmax: number): Steps {
   for (let i = 0; i < n; i++) {
+    if (i % 16 === 15) yield;
     const x = r() * BASE_W, y = r() * BASE_H, rad = (rmin + r() * (rmax - rmin)) * K, col = colors[(r() * colors.length) | 0];
     wrap(x, y, rad * 1.2, (X, Y) => { ctx.save(); ctx.translate(X, Y); ctx.scale(1, 0.5); const g = ctx.createRadialGradient(0, 0, 0, 0, 0, rad); g.addColorStop(0, col); g.addColorStop(1, col.slice(0, 7) + '00'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, rad, 0, Math.PI * 2); ctx.fill(); ctx.restore(); });
   }
 }
-function speckle(ctx: C2D, r: () => number, n: number, cols: string[]) { for (let i = 0; i < n * K * K; i++) { ctx.fillStyle = cols[(r() * cols.length) | 0]; ctx.fillRect((r() * BASE_W) | 0, (r() * BASE_H) | 0, 1, 1); } }
-function blades(ctx: C2D, r: () => number, n: number, cols: string[]) {
-  for (let i = 0; i < n * K * K; i++) { const x = (r() * BASE_W) | 0, y = (r() * BASE_H) | 0, hgt = Math.round((2 + r() * 3) * K); ctx.fillStyle = cols[(r() * cols.length) | 0]; wrap(x, y, 8, (X, Y) => ctx.fillRect(X, Y - hgt, 1, hgt)); }
+function* speckle(ctx: C2D, r: () => number, n: number, cols: string[]): Steps { for (let i = 0; i < n * K * K; i++) { if (i % (PAUSE * 4) === PAUSE * 4 - 1) yield; ctx.fillStyle = cols[(r() * cols.length) | 0]; ctx.fillRect((r() * BASE_W) | 0, (r() * BASE_H) | 0, 1, 1); } }
+function* blades(ctx: C2D, r: () => number, n: number, cols: string[]): Steps {
+  for (let i = 0; i < n * K * K; i++) { if (i % PAUSE === PAUSE - 1) yield; const x = (r() * BASE_W) | 0, y = (r() * BASE_H) | 0, hgt = Math.round((2 + r() * 3) * K); ctx.fillStyle = cols[(r() * cols.length) | 0]; wrap(x, y, 8, (X, Y) => ctx.fillRect(X, Y - hgt, 1, hgt)); }
 }
 function leaf(ctx: C2D, x: number, y: number, rot: number, len: number, col: string) {
   const w = len * 0.45, shape = () => { ctx.beginPath(); ctx.moveTo(-len, 0); ctx.quadraticCurveTo(0, -w * 1.9, len, 0); ctx.quadraticCurveTo(0, w * 1.9, -len, 0); ctx.closePath(); };
   ctx.save(); ctx.translate(x + 1.4 * K, y + 1.6 * K); ctx.scale(1, 0.55); ctx.rotate(rot); ctx.fillStyle = 'rgba(5,5,15,0.4)'; shape(); ctx.fill(); ctx.restore();
   ctx.save(); ctx.translate(x, y); ctx.scale(1, 0.55); ctx.rotate(rot); ctx.fillStyle = col; shape(); ctx.fill(); ctx.restore();
 }
-function leaves(ctx: C2D, r: () => number, n: number) { for (let i = 0; i < n * K * K; i++) { const x = r() * BASE_W, y = r() * BASE_H, rot = r() * Math.PI, len = (6 + r() * 4) * K, col = LEAF[(r() * LEAF.length) | 0]; wrap(x, y, 16 * K, (X, Y) => leaf(ctx, X, Y, rot, len, col)); } }
-function pebbles(ctx: C2D, r: () => number, n: number, cols: string[], rmin: number, rmax: number) {
+function* leaves(ctx: C2D, r: () => number, n: number): Steps { for (let i = 0; i < n * K * K; i++) { if (i % 32 === 31) yield; const x = r() * BASE_W, y = r() * BASE_H, rot = r() * Math.PI, len = (6 + r() * 4) * K, col = LEAF[(r() * LEAF.length) | 0]; wrap(x, y, 16 * K, (X, Y) => leaf(ctx, X, Y, rot, len, col)); } }
+function* pebbles(ctx: C2D, r: () => number, n: number, cols: string[], rmin: number, rmax: number): Steps {
   for (let i = 0; i < n * K * K; i++) {
+    if (i % 64 === 63) yield;
     const x = r() * BASE_W, y = r() * BASE_H, rx = (rmin + r() * (rmax - rmin)) * K, ry = rx * (0.55 + r() * 0.25), col = cols[(r() * cols.length) | 0];
     wrap(x, y, 6, (X, Y) => { ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.beginPath(); ctx.ellipse(X + 0.5, Y + 0.7, rx, ry, 0, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = col; ctx.beginPath(); ctx.ellipse(X, Y, rx, ry, 0, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = 'rgba(255,255,255,0.18)'; ctx.beginPath(); ctx.ellipse(X - rx * 0.3, Y - ry * 0.3, rx * 0.4, ry * 0.35, 0, 0, Math.PI * 2); ctx.fill(); });
   }
 }
-function cracks(ctx: C2D, r: () => number, n: number, color: string, width: number) {
+function* cracks(ctx: C2D, r: () => number, n: number, color: string, width: number): Steps {
   ctx.strokeStyle = color; ctx.lineWidth = width * K; ctx.lineCap = 'round';
   for (let i = 0; i < n; i++) {
+    if (i % 32 === 31) yield;
     const x = r() * BASE_W, y = r() * BASE_H, segs = 5 + ((r() * 7) | 0), pts: [number, number][] = [[0, 0]]; let px = 0, py = 0, dir = r() * Math.PI * 2;
     for (let s = 0; s < segs; s++) { dir += (r() - 0.5) * 1.6; px += Math.cos(dir) * (6 + r() * 12) * K; py += Math.sin(dir) * (3 + r() * 6) * K; pts.push([px, py]); }
     wrap(x, y, 160, (X, Y) => { ctx.beginPath(); pts.forEach(([a, b], k) => (k ? ctx.lineTo(X + a, Y + b) : ctx.moveTo(X + a, Y + b))); ctx.stroke(); });
   }
 }
 /** water ripples: short, nearly horizontal light strokes */
-function ripples(ctx: C2D, r: () => number, n: number, cols: string[]) {
+function* ripples(ctx: C2D, r: () => number, n: number, cols: string[]): Steps {
   ctx.lineCap = 'round';
   for (let i = 0; i < n * K * K; i++) {
+    if (i % 128 === 127) yield;
     const x = r() * BASE_W, y = r() * BASE_H, len = (8 + r() * 34) * K, ang = (r() - 0.5) * 0.3, bow = (r() - 0.5) * 3 * K;
     ctx.strokeStyle = cols[(r() * cols.length) | 0]; ctx.lineWidth = (0.6 + r() * 0.9) * K;
     const dx = Math.cos(ang) * len / 2, dy = Math.sin(ang) * len / 2;
@@ -112,41 +127,41 @@ function ripples(ctx: C2D, r: () => number, n: number, cols: string[]) {
   }
 }
 function isoAuthor(ctx: C2D) { ctx.setTransform(64 * AUTHOR, 32 * AUTHOR, -64 * AUTHOR, 32 * AUTHOR, 0, 0); }
-function gen(name: TexName): Cnv {
+function* genSteps(name: TexName): Steps<Cnv> {
   const c = canvas(BASE_W, BASE_H), ctx = ctx2d(c), r = mulberry(PAINTED.indexOf(name) * 7919 + 17);
   switch (name) {
-    case 'dirt': ctx.fillStyle = '#56402f'; ctx.fillRect(0, 0, BASE_W, BASE_H); patches(ctx, r, 260, ['#2e201655', '#8a644044', '#3d2c2255'], 40, 120); speckle(ctx, r, 22000, ['#4a3628', '#624a36', '#3e2d22', '#6e5440', '#523c2d']); pebbles(ctx, r, 420, ['#7a7068', '#6b6058', '#8a8078'], 1.2, 2.6); leaves(ctx, r, 90); break;
-    case 'gravel': ctx.fillStyle = '#5b5752'; ctx.fillRect(0, 0, BASE_W, BASE_H); patches(ctx, r, 200, ['#3a373355', '#7c766e33'], 40, 110); pebbles(ctx, r, 9000, ['#6b6660', '#49453f', '#7c766e', '#3c3935', '#857f76', '#5d5953'], 0.9, 2.2); leaves(ctx, r, 60); break;
-    case 'roadgravel': ctx.fillStyle = '#62574a'; ctx.fillRect(0, 0, BASE_W, BASE_H); patches(ctx, r, 200, ['#8d7f6646', '#a0927644'], 40, 130); patches(ctx, r, 120, ['#3f362b55', '#4b41345a'], 30, 100); speckle(ctx, r, 26000, ['#574d40', '#74685a', '#4a4136', '#857865', '#6a5e4e']); pebbles(ctx, r, 5200, ['#8a7f6e', '#5e5446', '#a09482', '#4c4338', '#77695a'], 0.9, 2.4); leaves(ctx, r, 30); break;
-    case 'forest': ctx.fillStyle = '#3a2a1c'; ctx.fillRect(0, 0, BASE_W, BASE_H); patches(ctx, r, 240, ['#1e140c66', '#3c4a2244', '#6a4a2444'], 40, 140); speckle(ctx, r, 18000, ['#2e2016', '#4a3524', '#3a2c1c', '#55402a']); cracks(ctx, r, 120, 'rgba(30,20,12,0.55)', 0.9); pebbles(ctx, r, 120, ['#5a5048', '#6a6058'], 1.0, 2.0); leaves(ctx, r, 420); break;
-    case 'water': ctx.fillStyle = '#14283a'; ctx.fillRect(0, 0, BASE_W, BASE_H); patches(ctx, r, 160, ['#0c1a2a66', '#1e3a5044', '#24485a33'], 60, 200); ripples(ctx, r, 1400, ['rgba(120,160,190,0.10)', 'rgba(120,160,190,0.18)', 'rgba(150,185,210,0.25)', 'rgba(10,20,32,0.35)']); break;
-    case 'bank': ctx.fillStyle = '#3b3226'; ctx.fillRect(0, 0, BASE_W, BASE_H); patches(ctx, r, 220, ['#2a231a66', '#4e443455', '#2f3a2a44'], 40, 120); speckle(ctx, r, 20000, ['#342c22', '#463c2e', '#2c251c', '#524636']); pebbles(ctx, r, 900, ['#6a645c', '#57524a', '#7a746a'], 0.9, 2.2); blades(ctx, r, 1500, ['#4a5a2a', '#5e6a30', '#3a4622']); leaves(ctx, r, 80); break;
-    case 'creek': ctx.fillStyle = '#3a3832'; ctx.fillRect(0, 0, BASE_W, BASE_H); patches(ctx, r, 180, ['#24221e66', '#5a564c44'], 30, 90); speckle(ctx, r, 8000, ['#2e2c28', '#4a4740']); pebbles(ctx, r, 6000, ['#6e6a62', '#55514a', '#807a70', '#45423c', '#8e887c'], 1.0, 3.2); leaves(ctx, r, 40); break;
-    case 'rock': ctx.fillStyle = '#4a4640'; ctx.fillRect(0, 0, BASE_W, BASE_H); patches(ctx, r, 220, ['#2a272366', '#6a645a44', '#3e4a3044'], 30, 110); cracks(ctx, r, 260, 'rgba(20,18,16,0.6)', 1.1); cracks(ctx, r, 120, 'rgba(150,140,125,0.25)', 0.7); pebbles(ctx, r, 500, ['#6a655c', '#7c766a', '#55514a'], 1.2, 3.0); speckle(ctx, r, 12000, ['#3c3934', '#5a5650', '#46423c']); leaves(ctx, r, 60); break;
+    case 'dirt': ctx.fillStyle = '#56402f'; ctx.fillRect(0, 0, BASE_W, BASE_H); yield* patches(ctx, r, 260, ['#2e201655', '#8a644044', '#3d2c2255'], 40, 120); yield* speckle(ctx, r, 22000, ['#4a3628', '#624a36', '#3e2d22', '#6e5440', '#523c2d']); yield* pebbles(ctx, r, 420, ['#7a7068', '#6b6058', '#8a8078'], 1.2, 2.6); yield* leaves(ctx, r, 90); break;
+    case 'gravel': ctx.fillStyle = '#5b5752'; ctx.fillRect(0, 0, BASE_W, BASE_H); yield* patches(ctx, r, 200, ['#3a373355', '#7c766e33'], 40, 110); yield* pebbles(ctx, r, 9000, ['#6b6660', '#49453f', '#7c766e', '#3c3935', '#857f76', '#5d5953'], 0.9, 2.2); yield* leaves(ctx, r, 60); break;
+    case 'roadgravel': ctx.fillStyle = '#62574a'; ctx.fillRect(0, 0, BASE_W, BASE_H); yield* patches(ctx, r, 200, ['#8d7f6646', '#a0927644'], 40, 130); yield* patches(ctx, r, 120, ['#3f362b55', '#4b41345a'], 30, 100); yield* speckle(ctx, r, 26000, ['#574d40', '#74685a', '#4a4136', '#857865', '#6a5e4e']); yield* pebbles(ctx, r, 5200, ['#8a7f6e', '#5e5446', '#a09482', '#4c4338', '#77695a'], 0.9, 2.4); yield* leaves(ctx, r, 30); break;
+    case 'forest': ctx.fillStyle = '#3a2a1c'; ctx.fillRect(0, 0, BASE_W, BASE_H); yield* patches(ctx, r, 240, ['#1e140c66', '#3c4a2244', '#6a4a2444'], 40, 140); yield* speckle(ctx, r, 18000, ['#2e2016', '#4a3524', '#3a2c1c', '#55402a']); yield* cracks(ctx, r, 120, 'rgba(30,20,12,0.55)', 0.9); yield* pebbles(ctx, r, 120, ['#5a5048', '#6a6058'], 1.0, 2.0); yield* leaves(ctx, r, 420); break;
+    case 'water': ctx.fillStyle = '#14283a'; ctx.fillRect(0, 0, BASE_W, BASE_H); yield* patches(ctx, r, 160, ['#0c1a2a66', '#1e3a5044', '#24485a33'], 60, 200); yield* ripples(ctx, r, 1400, ['rgba(120,160,190,0.10)', 'rgba(120,160,190,0.18)', 'rgba(150,185,210,0.25)', 'rgba(10,20,32,0.35)']); break;
+    case 'bank': ctx.fillStyle = '#3b3226'; ctx.fillRect(0, 0, BASE_W, BASE_H); yield* patches(ctx, r, 220, ['#2a231a66', '#4e443455', '#2f3a2a44'], 40, 120); yield* speckle(ctx, r, 20000, ['#342c22', '#463c2e', '#2c251c', '#524636']); yield* pebbles(ctx, r, 900, ['#6a645c', '#57524a', '#7a746a'], 0.9, 2.2); yield* blades(ctx, r, 1500, ['#4a5a2a', '#5e6a30', '#3a4622']); yield* leaves(ctx, r, 80); break;
+    case 'creek': ctx.fillStyle = '#3a3832'; ctx.fillRect(0, 0, BASE_W, BASE_H); yield* patches(ctx, r, 180, ['#24221e66', '#5a564c44'], 30, 90); yield* speckle(ctx, r, 8000, ['#2e2c28', '#4a4740']); yield* pebbles(ctx, r, 6000, ['#6e6a62', '#55514a', '#807a70', '#45423c', '#8e887c'], 1.0, 3.2); yield* leaves(ctx, r, 40); break;
+    case 'rock': ctx.fillStyle = '#4a4640'; ctx.fillRect(0, 0, BASE_W, BASE_H); yield* patches(ctx, r, 220, ['#2a272366', '#6a645a44', '#3e4a3044'], 30, 110); yield* cracks(ctx, r, 260, 'rgba(20,18,16,0.6)', 1.1); yield* cracks(ctx, r, 120, 'rgba(150,140,125,0.25)', 0.7); yield* pebbles(ctx, r, 500, ['#6a655c', '#7c766a', '#55514a'], 1.2, 3.0); yield* speckle(ctx, r, 12000, ['#3c3934', '#5a5650', '#46423c']); yield* leaves(ctx, r, 60); break;
     case 'field': {
-      ctx.fillStyle = '#5a4a2e'; ctx.fillRect(0, 0, BASE_W, BASE_H); patches(ctx, r, 200, ['#3a2c1a55', '#8a743e3a'], 40, 120);
+      ctx.fillStyle = '#5a4a2e'; ctx.fillRect(0, 0, BASE_W, BASE_H); yield* patches(ctx, r, 200, ['#3a2c1a55', '#8a743e3a'], 40, 120);
       ctx.save(); isoAuthor(ctx);
-      for (let v = -21; v <= 21; v += 0.5) { ctx.strokeStyle = 'rgba(40,28,14,0.55)'; ctx.lineWidth = 0.14; ctx.beginPath(); ctx.moveTo(-1, v); ctx.lineTo(42, v); ctx.stroke(); ctx.strokeStyle = 'rgba(150,125,70,0.22)'; ctx.lineWidth = 0.1; ctx.beginPath(); ctx.moveTo(-1, v + 0.2); ctx.lineTo(42, v + 0.2); ctx.stroke(); }
-      ctx.restore(); speckle(ctx, r, 14000, ['#4e3f26', '#6a5634', '#3f3220', '#7a6640']); blades(ctx, r, 3000, ['#8a7a3a', '#a08a44', '#6a5a2a']); break;
+      for (let v = -21; v <= 21; v += 0.5) { if (v % 8 === 0) yield; ctx.strokeStyle = 'rgba(40,28,14,0.55)'; ctx.lineWidth = 0.14; ctx.beginPath(); ctx.moveTo(-1, v); ctx.lineTo(42, v); ctx.stroke(); ctx.strokeStyle = 'rgba(150,125,70,0.22)'; ctx.lineWidth = 0.1; ctx.beginPath(); ctx.moveTo(-1, v + 0.2); ctx.lineTo(42, v + 0.2); ctx.stroke(); }
+      ctx.restore(); yield* speckle(ctx, r, 14000, ['#4e3f26', '#6a5634', '#3f3220', '#7a6640']); yield* blades(ctx, r, 3000, ['#8a7a3a', '#a08a44', '#6a5a2a']); break;
     }
     case 'paving': {
       ctx.fillStyle = '#a89c8c'; ctx.fillRect(0, 0, BASE_W, BASE_H); ctx.save(); isoAuthor(ctx);
-      for (let u = -1; u <= 42; u++) for (let v = -22; v <= 22; v++) { const a = (((u + v) % 40) + 40) % 40, b = (((u - v) % 40) + 40) % 40, h = mulberry(a * 97 + b * 13 + 5)(); ctx.fillStyle = h < 0.33 ? 'rgba(255,245,230,0.10)' : h < 0.66 ? 'rgba(60,50,40,0.10)' : 'rgba(150,130,110,0.08)'; ctx.fillRect(u, v, 1, 1); }
+      for (let u = -1; u <= 42; u++) for (let v = -22; v <= 22; v++) { if (v === -22 && u % 4 === 3) yield; const a = (((u + v) % 40) + 40) % 40, b = (((u - v) % 40) + 40) % 40, h = mulberry(a * 97 + b * 13 + 5)(); ctx.fillStyle = h < 0.33 ? 'rgba(255,245,230,0.10)' : h < 0.66 ? 'rgba(60,50,40,0.10)' : 'rgba(150,130,110,0.08)'; ctx.fillRect(u, v, 1, 1); }
       ctx.strokeStyle = 'rgba(50,40,30,0.5)'; ctx.lineWidth = 0.035;
       for (let k = -24; k <= 44; k++) { ctx.beginPath(); ctx.moveTo(k, -25); ctx.lineTo(k, 25); ctx.stroke(); ctx.beginPath(); ctx.moveTo(-5, k); ctx.lineTo(45, k); ctx.stroke(); }
-      ctx.restore(); speckle(ctx, r, 9000, ['#9c9080', '#b4a898', '#8e8274']); leaves(ctx, r, 50); break;
+      ctx.restore(); yield* speckle(ctx, r, 9000, ['#9c9080', '#b4a898', '#8e8274']); yield* leaves(ctx, r, 50); break;
     }
-    case 'pad': ctx.fillStyle = '#b9ada0'; ctx.fillRect(0, 0, BASE_W, BASE_H); patches(ctx, r, 200, ['#8a7e7044', '#d0c4b633'], 40, 120); speckle(ctx, r, 12000, ['#ada194', '#c4b8aa', '#9e9286']); cracks(ctx, r, 10, 'rgba(70,60,50,0.35)', 0.8); leaves(ctx, r, 40); break;
+    case 'pad': ctx.fillStyle = '#b9ada0'; ctx.fillRect(0, 0, BASE_W, BASE_H); yield* patches(ctx, r, 200, ['#8a7e7044', '#d0c4b633'], 40, 120); yield* speckle(ctx, r, 12000, ['#ada194', '#c4b8aa', '#9e9286']); yield* cracks(ctx, r, 10, 'rgba(70,60,50,0.35)', 0.8); yield* leaves(ctx, r, 40); break;
     case 'grime': {
       // town-scene.mjs grime(): blots of fbm plus specks, as a multiply layer for the sidewalk slabs (STAIN = .84 .78 .72)
-      const blot = fbm(95, BASE_W, BASE_H, 14, 4), speck = fbm(97, BASE_W, BASE_H, 110, 2), d = ctx.createImageData(BASE_W, BASE_H), D = d.data;
-      for (let y = 0; y < BASE_H; y++) for (let x = 0; x < BASE_W; x++) { const st = clamp(smooth(0.36, 0.64, blot(x, y)) * 0.8 + smooth(0.5, 0.8, speck(x, y)) * 0.3, 0, 1), o = (y * BASE_W + x) * 4; D[o] = 255 * (1 - 0.16 * st); D[o + 1] = 255 * (1 - 0.22 * st); D[o + 2] = 255 * (1 - 0.28 * st); D[o + 3] = 255; }
+      const blot = fbmRows(95, BASE_W, BASE_H, 14, 4), speck = fbmRows(97, BASE_W, BASE_H, 110, 2), d = ctx.createImageData(BASE_W, BASE_H), D = d.data, bR = new Float64Array(BASE_W), sR = new Float64Array(BASE_W);
+      for (let y = 0; y < BASE_H; y++) for (let x = 0; x < BASE_W; x++) { if (x === 0) { if (y % 32 === 31) yield; blot(y, bR); speck(y, sR); } const st = clamp(smooth(0.36, 0.64, bR[x]!) * 0.8 + smooth(0.5, 0.8, sR[x]!) * 0.3, 0, 1), o = (y * BASE_W + x) * 4; D[o] = 255 * (1 - 0.16 * st); D[o + 1] = 255 * (1 - 0.22 * st); D[o + 2] = 255 * (1 - 0.28 * st); D[o + 3] = 255; }
       ctx.putImageData(d, 0, 0); break;
     }
     case 'wear': {
       // chipped paint for road markings: mostly opaque, with worn holes (town-scene.mjs wear())
-      const chip = fbm(61, BASE_W, BASE_H, 160, 3), gap = fbm(63, BASE_W, BASE_H, 18, 2), d = ctx.createImageData(BASE_W, BASE_H), D = d.data;
-      for (let y = 0; y < BASE_H; y++) for (let x = 0; x < BASE_W; x++) { const a = (0.35 + 0.65 * smooth(0.22, 0.4, chip(x, y))) * (0.55 + 0.45 * smooth(0.2, 0.3, gap(x, y))), o = (y * BASE_W + x) * 4; D[o] = D[o + 1] = D[o + 2] = 255; D[o + 3] = clamp(a, 0, 1) * 255; }
+      const chip = fbmRows(61, BASE_W, BASE_H, 160, 3), gap = fbmRows(63, BASE_W, BASE_H, 18, 2), d = ctx.createImageData(BASE_W, BASE_H), D = d.data, cR = new Float64Array(BASE_W), gR = new Float64Array(BASE_W);
+      for (let y = 0; y < BASE_H; y++) for (let x = 0; x < BASE_W; x++) { if (x === 0) { if (y % 32 === 31) yield; chip(y, cR); gap(y, gR); } const a = (0.35 + 0.65 * smooth(0.22, 0.4, cR[x]!)) * (0.55 + 0.45 * smooth(0.2, 0.3, gR[x]!)), o = (y * BASE_W + x) * 4; D[o] = D[o + 1] = D[o + 2] = 255; D[o + 3] = clamp(a, 0, 1) * 255; }
       ctx.putImageData(d, 0, 0); break;
     }
     default: break;
@@ -154,6 +169,9 @@ function gen(name: TexName): Cnv {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   return c;
 }
+
+/** a procedural texture's base picture, drawn to the end at once */
+function gen(name: TexName): Cnv { return drain(genSteps(name)); }
 
 /** bare-soil stamps (town-scene.mjs soil patches): an ellipse of radius SOIL_R world px across and half that down, ragged by
  *  noise and feathered, the soil painting at 80% inside; SOIL_W x SOIL_H each, at the authoring scale 1 world px per px */
@@ -370,7 +388,11 @@ export class Textures {
   curb: CurbColours = { joint: '#8a6a48', top: '#f0dfbe', face: ['#dcc29a', '#c8a876', '#a98652'], gutter: ['#1a1620', '#2a2430', '#3a3444'], faceHidden: '#d8c6a0' };
   leafSprites: LeafSprite[] = LEAVES.filter(l => !l.round).sort((a, b) => a.dim - b.dim);
   roundSprites: LeafSprite[] = LEAVES.filter(l => l.round).sort((a, b) => a.dim - b.dim);
-  private store(name: TexName, base: Cnv) { for (const L of [...LEVELS, ...MID_LEVELS]) if (!this.mips.has(name + '@' + L)) this.mips.set(name + '@' + L, downscale(base, L / AUTHOR)); }
+  private store(name: TexName, base: Cnv) { drain(this.storeSteps(name, base)); }
+  /** a texture's levels from its base picture, one a step (T168) */
+  private *storeSteps(name: TexName, base: Cnv): Steps { for (const L of [...LEVELS, ...MID_LEVELS]) { if (!this.mips.has(name + '@' + L)) this.mips.set(name + '@' + L, downscale(base, L / AUTHOR)); yield; } }
+  /** a procedural texture made in steps: its base picture, then its levels (T168) */
+  private *procSteps(name: TexName): Steps { const base = yield* genSteps(name); yield* this.storeSteps(name, base); }
 
   /** what every worker takes from the art, whether it builds the textures or restores them from a snapshot or the browser cache: the
    *  owner's texture presets and how the base grass lies (its angle and tilt) */
@@ -390,7 +412,7 @@ export class Textures {
     const [asA, asB, curbV, curbH, pool, slabs, grassA, grassB, leafImg, soilImg, decalImg, lotImg, lotDecalImg, natureImg, rockyDirtImg, rockyDirtAltImg] = await Promise.all([art.asphaltA, art.asphaltB, art.curbVisible, art.curbHidden, art.pool, art.slabs, art.grassA, art.grassB, art.leaves, art.soil, art.decals, art.lotAsphalt, art.lotDecals, art.nature, art.rockyDirt, art.rockyDirtAlt].map(loadImage));
     this.slabs = toCanvas(slabs); this.leaves = toCanvas(leafImg); this.decals = toCanvas(decalImg); this.soil = soilStamps(toCanvas(soilImg)); this.lotDecals = toCanvas(lotDecalImg); this.nature = toCanvas(natureImg);
     await tick();
-    for (const name of PAINTED) { if (lazy) this.lazy.set(name, () => this.store(name, gen(name))); else this.store(name, gen(name)); await tick(); }
+    for (const name of PAINTED) { if (lazy) this.lazy.set(name, () => this.procSteps(name)); else this.store(name, gen(name)); await tick(); }
     // The seamless square paintings are compressed vertically for the isometric ground plane.
     // Store every mip through the same path as other painted materials, including worker snapshots.
     this.store('rockyDirt', toCanvas(rockyDirtImg, Math.round(rockyDirtImg.width * AUTHOR), Math.round(rockyDirtImg.height * AUTHOR / 2))); await tick();
@@ -448,14 +470,18 @@ export class Textures {
     return out;
   }
   /** soft-edged, overlapping patches of the painting stamped in a staggered hex grid so neighbouring patches blend into each other rather than meeting at hard seams. All patches share the builder's flattened mean tone so overlaps never drift in brightness. */
-  private mosaic(seeds: ReturnType<Textures['mosaicSeeds']>, a: Cnv, b: Cnv, fill?: string, px = MOSAIC_PX, srcPPM = PPM) {
+  private mosaic(seeds: ReturnType<Textures['mosaicSeeds']>, a: Cnv, b: Cnv, fill?: string, px = MOSAIC_PX, srcPPM = PPM) { return drain(this.mosaicSteps(seeds, a, b, fill, px, srcPPM)); }
+  /** the mosaic in steps (T168): a few patches, then a band of the grain's rows, a step */
+  private *mosaicSteps(seeds: ReturnType<Textures['mosaicSeeds']>, a: Cnv, b: Cnv, fill?: string, px = MOSAIC_PX, srcPPM = PPM): Steps<Cnv> {
     const S = MOSAIC_TILES * px, c = canvas(S, S), g = ctx2d(c);
     // one patch covers ~1.6 tiles so neighbours overlap; feather spans most of the overlap band
     const R = 0.82 * px, feather = 0.5 * px, P = Math.ceil(R * 2) + 2;
     const patch = canvas(P, P), pg = ctx2d(patch), scale = px / 2 / srcPPM;
     const soft = canvas(P, P); { const sg = ctx2d(soft), gr = sg.createRadialGradient(P / 2, P / 2, 0, P / 2, P / 2, R); gr.addColorStop(0, 'rgba(0,0,0,1)'); gr.addColorStop(0.35, 'rgba(0,0,0,1)'); gr.addColorStop(0.35 + feather / R, 'rgba(0,0,0,0)'); sg.fillStyle = gr; sg.fillRect(0, 0, P, P); }
     g.fillStyle = fill ?? `rgb(${ASPHALT_MEAN.map(Math.round).join(',')})`; g.fillRect(0, 0, S, S);
+    let k = 0;
     for (const s of seeds) {
+      if (k++ % 8 === 7) yield;
       const img = s.b ? b : a, W = img.width * scale, H = img.height * scale, m = R + 2;
       const ox = m + s.u * Math.max(1, W - 2 * m), oy = m + s.v * Math.max(1, H - 2 * m);
       pg.globalCompositeOperation = 'source-over'; pg.clearRect(0, 0, P, P);
@@ -466,15 +492,17 @@ export class Textures {
     }
     // a whisper of extra grain over the whole period so adjacent patches feel like one painted surface
     const d = g.getImageData(0, 0, S, S), D = d.data, rr = mulberry(881);
-    for (let i = 0; i < D.length; i += 4) { const n = (rr() - 0.5) * 4; D[i] = clamp(D[i] + n, 0, 255); D[i + 1] = clamp(D[i + 1] + n * 0.75, 0, 255); D[i + 2] = clamp(D[i + 2] + n * 0.5, 0, 255); }
+    for (let i = 0; i < D.length; i += 4) { if (i % (S * 4 * 64) === 0 && i) yield; const n = (rr() - 0.5) * 4; D[i] = clamp(D[i] + n, 0, 255); D[i + 1] = clamp(D[i + 1] + n * 0.75, 0, 255); D[i + 2] = clamp(D[i + 2] + n * 0.5, 0, 255); }
     g.putImageData(d, 0, 0);
     return c;
   }
-  private mipChain(c: Cnv) { const out = [c]; while (out[out.length - 1].width > 96) out.push(downscale(out[out.length - 1], 0.5)); return out; }
+  private mipChain(c: Cnv) { return drain(this.mipChainSteps(c)); }
+  private *mipChainSteps(c: Cnv): Steps<Cnv[]> { const out = [c]; while (out[out.length - 1].width > 96) { out.push(downscale(out[out.length - 1], 0.5)); yield; } return out; }
   /** the asphalt mosaic mip for a cache level (screen px per world px): never upsampled */
   mosaicFor(variant: string, L: number) {
     this.makeMosaic(variant);
-    const chain = this.mosaics.get(variant)!, period = this.periodOf(variant), want = 128 * L; let pick = chain[0];
+    const chain = this.mosaics.get(variant); if (!chain) return PLACEHOLDER; // being made (T168: a deferring bake, thrown away)
+    const period = this.periodOf(variant), want = 128 * L; let pick = chain[0];
     for (const m of chain) { if (m.width / period >= want) pick = m; else break; }
     return pick;
   }
@@ -496,11 +524,66 @@ export class Textures {
    *  family's pictures for the current art level decoded */
   has(variant: string) { const p = this.paintedOf(variant); return !!p && (p.tiled ? p.tiled.urls[bandOf(this.tileTs)].every(u => this.tilePics.has(u)) : this.paintedWeights(p).every(w => this.paintedPics.has(p[w.detail].src))) || this.built(variant); }
   /** true when its photo (tile-space mosaic) is built, whatever the Grass setting */
-  built(variant: string) { return this.mosaics.has(variant) || this.lazyMosaics.has(variant); }
+  built(variant: string) { return this.mosaics.has(variant) || this.lazyMosaics.has(variant) || this.building.has('mosaic:' + variant); }
   /** a light boot's photo mosaics not made yet (T157: build's lazy): the photo's source is built (Paint areas draw it, sourceFor); its hex-mixed
    *  mosaic, which only the ground photos of the terrain and a lot's concrete lay (mosaicFor), is made on first use */
-  private lazyMosaics = new Map<string, () => void>();
-  private makeMosaic(variant: string) { const f = this.lazyMosaics.get(variant); if (f) { this.lazyMosaics.delete(variant); f(); } }
+  private lazyMosaics = new Map<string, () => Steps<unknown>>();
+  private makeMosaic(variant: string) { this.make('mosaic:' + variant); }
+  /** T168: told of each texture made on first use: its key, the ms of work its making took and the ms from its start to its end (made in
+   *  slices: the time it took in between bakes), for the worker's log */
+  onMade: ((what: string, workMs: number, wallMs: number) => void) | null = null;
+  /* ---- T168: the lazy textures made in slices ----
+   * A lazy texture (a procedural one: PAINTED; a photo's mosaic: 'mosaic:<photo>') is made by a generator that pauses every few ms of work.
+   * The worker runs the textures a waiting bake needs one slice at a time between its messages, and the others (made ahead) only while it
+   * is idle. A bake that meets a lazy texture not made yet either makes the rest of it at once (deferMakes off: as before) or, deferMakes on
+   * (the worker's bakes), gets PLACEHOLDER and the texture is noted in `missing`: the worker throws that bake away, puts the chunk aside until
+   * every texture it lacks is made, and bakes the others meanwhile. */
+  private building = new Map<string, { it: Steps<unknown>; need: boolean; t0: number; work: number; waiters: (() => void)[] }>();
+  /** a bake meeting a lazy texture not made yet gets PLACEHOLDER and notes it in `missing` instead of making it (T168: the worker's bakes) */
+  deferMakes = false;
+  /** the lazy textures the bakes since the last clear met while their makes were deferred (each now being made) */
+  missing = new Set<string>();
+  /** whether a texture met while deferring is needed by a waiting bake (false: a probe's, made ahead in idle time) */
+  deferNeed = true;
+  private factory(key: string, take: boolean): (() => Steps<unknown>) | undefined {
+    const mosaic = key.startsWith('mosaic:'), map = (mosaic ? this.lazyMosaics : this.lazy) as Map<string, () => Steps<unknown>>, k = mosaic ? key.slice(7) : key;
+    const f = map.get(k); if (f && take) map.delete(k); return f;
+  }
+  /** whether key (a procedural texture's name or 'mosaic:<photo>') is a lazy texture not made yet */
+  isLazy(key: string) { return this.building.has(key) || !!this.factory(key, false); }
+  /** starts key's making in slices (need: a waiting bake needs it; else it is made ahead, in idle time); false when there is nothing to make */
+  queueBuild(key: string, need = false): boolean {
+    const b = this.building.get(key); if (b) { if (need) b.need = true; return true; }
+    const f = this.factory(key, true); if (!f) return false;
+    this.building.set(key, { it: f(), need, t0: performance.now(), work: 0, waiters: [] }); return true;
+  }
+  /** how many textures are being made: the needed ones, and the ahead ones too when ahead */
+  pendingBuilds(ahead: boolean) { let n = 0; for (const b of this.building.values()) if (b.need || ahead) n++; return n; }
+  /** makes slices until deadline (performance.now ms): the textures a waiting bake needs first, the others only when ahead; true while any is
+   *  still being made */
+  step(deadline: number, ahead: boolean): boolean {
+    for (;;) {
+      let key: string | null = null; for (const [k, b] of this.building) if (b.need) { key = k; break; }
+      if (key === null && ahead) key = this.building.keys().next().value ?? null;
+      if (key === null) return this.building.size > 0;
+      const b = this.building.get(key)!, s0 = performance.now(); let done = false;
+      while (!done && performance.now() < deadline) done = !!b.it.next().done;
+      b.work += performance.now() - s0;
+      if (done) this.finish(key, b);
+      if (performance.now() >= deadline) return this.building.size > 0;
+    }
+  }
+  private finish(key: string, b: { work: number; t0: number; waiters: (() => void)[] }) { this.building.delete(key); this.onMade?.(key, b.work, performance.now() - b.t0); for (const w of b.waiters) w(); }
+  /** resolves when key is made (at once when it is not being made) */
+  whenMade(key: string): Promise<void> { const b = this.building.get(key); return b ? new Promise(res => b.waiters.push(res)) : Promise.resolve(); }
+  /** a bake needs key now: deferMakes, noted in `missing` (and its making goes on in slices); else the rest of it made at once */
+  private make(key: string) {
+    if (!this.building.has(key) && !this.factory(key, false)) return;
+    if (this.deferMakes) { this.queueBuild(key, this.deferNeed); this.missing.add(key); return; }
+    const b = this.building.get(key);
+    if (b) { const s0 = performance.now(); drain(b.it); b.work += performance.now() - s0; this.finish(key, b); return; }
+    const t0 = performance.now(); drain(this.factory(key, true)!()); this.onMade?.(key, performance.now() - t0, performance.now() - t0);
+  }
   /** builds a lazy photo texture (grass-art.ts PHOTO_TEX) the first time an area uses it; concurrent calls share one build;
    *  a name that is not a photo, or is built already, resolves at once */
   ensure(variant: string): Promise<void> {
@@ -508,46 +591,50 @@ export class Textures {
     const p = this.photos.find(q => q.tex === variant);
     if (!p) return Promise.resolve();
     let b = this.photoBuilds.get(variant);
-    if (!b) this.photoBuilds.set(variant, b = this.buildPhoto(p).finally(() => this.photoBuilds.delete(variant)));
+    if (!b) { const t0 = performance.now(); this.photoBuilds.set(variant, b = this.buildPhoto(p, this.lazyPhotoMosaics).finally(() => { this.photoBuilds.delete(variant); this.onMade?.(`photo:${variant}`, performance.now() - t0, performance.now() - t0); })); }
     return b;
   }
   /** a photo texture's mip chain in tile space: hex-mixed over MOSAIC_TILES when p.mix > 0 (p.px pixels a tile, the photo's p.mix metres), else the plain photo as its period */
+  /** T168: a photo built on first use (ensure) leaves its mosaic for first use too (a lazy worker's: the Paint areas lay the photo itself) */
+  lazyPhotoMosaics = false;
   private async buildPhoto(p: PhotoTexEntry, lazyMosaic = false) {
     const c = toCanvas(await loadImage(p.src));
     this.photoSrc.set(p.tex, c);
-    const make = () => { this.mosaics.set(p.tex, this.photoMosaic(p, c)); };
-    if (lazyMosaic) this.lazyMosaics.set(p.tex, make); else make();
+    if (lazyMosaic) this.lazyMosaics.set(p.tex, () => this.photoMosaicInto(p, c)); else this.mosaics.set(p.tex, this.photoMosaic(p, c));
   }
+  private *photoMosaicInto(p: PhotoTexEntry, c: Cnv): Steps { this.mosaics.set(p.tex, yield* this.photoMosaicSteps(p, c)); }
   /** a photo's mosaic mip chain from its source c: hex-mixed when p.mix > 0 (p.px pixels per tile, 160 by default: 80 px/m over the 24 m
    *  period, the photo's p.mix metres, PHOTO_SIZE bigger, scaled to that), else the plain photo as its period */
-  private photoMosaic(p: PhotoTexEntry, c: Cnv): Cnv[] {
+  private photoMosaic(p: PhotoTexEntry, c: Cnv): Cnv[] { return drain(this.photoMosaicSteps(p, c)); }
+  private *photoMosaicSteps(p: PhotoTexEntry, c: Cnv): Steps<Cnv[]> {
     // mixed: the ground under the patches' feathered edges is the photo's own mean colour, not the asphalt's
     const mean = () => { const d = ctx2d(c).getImageData(0, 0, c.width, c.height).data, s = [0, 0, 0]; for (let i = 0; i < d.length; i += 4) { s[0] += d[i]; s[1] += d[i + 1]; s[2] += d[i + 2]; } return `rgb(${s.map(v => Math.round(v / (d.length / 4))).join(',')})`; };
-    return this.mipChain(p.mix > 0 ? this.mosaic(this.mosaicSeeds(), c, c, mean(), p.px ?? 160, c.width / (p.mix * PHOTO_SIZE)) : c);
+    const base = p.mix > 0 ? yield* this.mosaicSteps(this.mosaicSeeds(), c, c, mean(), p.px ?? 160, c.width / (p.mix * PHOTO_SIZE)) : c;
+    yield;
+    return yield* this.mipChainSteps(base);
   }
-  image(name: TexName, L: number) { this.make(name); return this.mips.get(name + '@' + L)!; }
+  image(name: TexName, L: number) { this.make(name); return this.mips.get(name + '@' + L) ?? PLACEHOLDER; }
   /** whether texture name has a picture at cache level L (made now when it is a lazy one) */
-  hasImage(name: string, L: number) { this.make(name as TexName); return this.mips.has(name + '@' + L); }
+  hasImage(name: string, L: number) { this.make(name); return this.mips.has(name + '@' + L); }
   /** the screen-space textures not made yet (a light boot's, T157: build's lazy): the procedural ones (PAINTED_NAMES) and the grass's tints
    *  (GRASS_TINTS); each is made, every level, on first use */
-  lazy = new Map<TexName, () => void>();
+  lazy = new Map<TexName, () => Steps<unknown>>();
   /** T166: a lazy texture is made when the planner asks for its colour (the game's: the same colour as ever); a light boot's (T157) shows its
    *  Paint swatch's instead, never making a texture for a colour */
   makeForColour = true;
-  private make(name: TexName) { const f = this.lazy.get(name); if (f) { this.lazy.delete(name); f(); } }
   /** the grass's tints made on first use from the grass's own levels (a multiply by a flat colour is the same before or after the downscale) */
   private lazyTinted() {
-    for (const [name, tint] of GRASS_TINTS) this.lazy.set(name, () => {
+    for (const [name, tint] of GRASS_TINTS) this.lazy.set(name, () => once(() => {
       for (const L of [...LEVELS, ...MID_LEVELS]) {
         const k = name + '@' + L, src = this.mips.get('grass@' + L); if (!src || this.mips.has(k)) continue;
         const c = canvas(src.width, src.height), g = ctx2d(c); g.drawImage(src, 0, 0); g.globalCompositeOperation = 'multiply'; g.fillStyle = tint; g.fillRect(0, 0, c.width, c.height); this.mips.set(k, c);
       }
-    });
+    }));
   }
   /** after a light boot's restore from a pack without them (texture-share.ts lightPack): the screen-space textures it lacks are made on first use */
   lazyMissing() {
-    for (const n of PAINTED) if (!this.mips.has(n + '@' + LEVELS[0]) && !this.lazy.has(n)) this.lazy.set(n, () => this.store(n, gen(n)));
-    for (const p of this.photos) { const c = this.photoSrc.get(p.tex); if (c && !this.mosaics.has(p.tex) && !this.lazyMosaics.has(p.tex)) this.lazyMosaics.set(p.tex, () => { this.mosaics.set(p.tex, this.photoMosaic(p, c)); }); }
+    for (const n of PAINTED) if (!this.mips.has(n + '@' + LEVELS[0]) && !this.lazy.has(n) && !this.building.has(n)) this.lazy.set(n, () => this.procSteps(n));
+    for (const p of this.photos) { const c = this.photoSrc.get(p.tex); if (c && !this.mosaics.has(p.tex) && !this.lazyMosaics.has(p.tex) && !this.building.has('mosaic:' + p.tex)) this.lazyMosaics.set(p.tex, () => this.photoMosaicInto(p, c)); }
     if (GRASS_TINTS.some(([n]) => !this.mips.has(n + '@' + LEVELS[0]))) this.lazyTinted();
   }
   /** town-scene.mjs pickLeaf: the smallest sprite that is at least 1.15x the wanted size, then one of the next few */

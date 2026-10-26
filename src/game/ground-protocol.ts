@@ -145,6 +145,8 @@ export type ToWorker =
   | { t: 'slopeLight'; strength: number }
   /** the tile set bands to decode ahead (painted-tiles.ts bandsAhead: the camera is near their switch; T150), sent when they change */
   | { t: 'tilesAhead'; bands: number[] }
+  /** T168: textures the open tool can lay (the Course tool's brushes), made ahead while the worker is idle */
+  | { t: 'prewarm'; tex: string[] }
   | { t: 'paint'; id: number; kind: TileKind; i: number; j: number; L: number; artL?: number; /** the tile spec the tile set families are laid at (painted-tiles.ts tileSpec: the band and the DPR; T145, T150) */ ts?: number };
 
 export type FromWorker =
