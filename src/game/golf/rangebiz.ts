@@ -6,7 +6,7 @@
 import type { Pt } from '../network';
 import type { Rect } from './mode';
 import { RANGE_PLOT, plotPoint } from './range';
-import { arrivalRate, hourWeight, rangeScale, rangeStats, saleValue, skippedVisits, type DemandCtx, type RangeBizSave } from './rangesave';
+import { arrivalRate, hourWeight, practiceUsers, rangeScale, rangeStats, saleValue, skippedVisits, type DemandCtx, type RangeBizSave, type RangeStats, type SkipLive } from './rangesave';
 import { KIOSK_QMAX, KIOSK_SERVE, KIOSK_SHARE, LESSON_SHARE, TIER2_BAYS, extraValue, homeStage, type ExtraId, type HomeStage } from './rangesave';
 export * from './rangesave';
 import { NEAR } from './rangestart';
@@ -14,7 +14,7 @@ import { GOLFER_CLIPS } from '../library';
 import { clipFrame, golferRow, hash, rowToward, type CrowdPerson } from '../crowdview';
 import { mulberry } from '../iso';
 import { practiceArea, type PracticeArea, type PracticeScan } from './practice';
-import { PRACTICE_FEE, PRACTICE_IDS, PRACTICE_SHARE, practiceUsers, type PracticeId } from './rangesave';
+import { PRACTICE_FEE, PRACTICE_IDS, PRACTICE_SHARE, type PracticeId } from './rangesave';
 
 // ---------------------------------------------------------------- the scene
 
@@ -45,6 +45,16 @@ const PICK_HOME = { u: 65.6, v: 26.2 }, PICK_LANES = 12, PICK_U: [number, number
 export const PICK_SWATH = 3;
 /** the player's home and yard by stage (T133: the caravan, the cottage, the house; frame u0 u1 v0 v1): the yard widens for the house */
 const YARDS: readonly [number, number, number, number][] = [[4, 22, 3, 13], [4, 22, 3, 13], [3, 26, 2.2, 13]];
+/** the pro shop's counters (T146): side by side along the shop's front from the first one (COUNTER), this far apart (tiles) */
+const COUNTER_STEP = 1.3;
+/** the car park building (T146, P24 D49): its footprint on the lot's far half (frame u0 u1 v0 v1: the lot is u 49..69, v 2..18; a walk is left
+ *  between it and the tee box), its ramp off the lot's aisle (the cars drive in there and are inside), the door its walkers use (onto the cart
+ *  path behind it), the lot left beside it, and the corner the lot's walkers take round it to the path */
+const GARAGE: [number, number, number, number] = [49, 58, 2, 15], GARAGE_RAMP = { u: 58.4, v: 5 }, GARAGE_DOOR = { u: 53.5, v: 15.5 };
+const LOT_BESIDE: [number, number, number, number] = [58, 69, 2, 18], LOT_CORNER = { u: 59.4, v: PATH_V };
+/** the stand-in for the car park building (no art yet: GOLF-SPRITES "Car park building") and the footprint's W + D it spans (tiles) */
+export const GARAGE_ART = 'business:buscompany';
+const GARAGE_FIT = 22;
 
 /** a prop of the scene: its key (stable while it stays), library id, world point, quarter turns from the picture's base view (preset-art turned),
  *  scale (absent: the library's own size) or fit (the footprint's W + D in tiles the picture spans: business art), and its stand-in label */
@@ -81,8 +91,15 @@ export interface RangeScene {
   home: HomeStage;
   /** the way the golfers hit (unit, world) and the target greens */
   aim: Pt; targets: SceneTarget[];
-  /** the shop's counter (the queue's head), the queue's step (world, one golfer apart), the path at the shop, the path at the car park */
-  counter: Pt; queueStep: Pt; queueAt: Pt; shopJoin: Pt; carEdge: Pt;
+  /** the shop's first counter, the queue's step (world, one golfer apart), the line's head (the line steps back from it), the path at the shop,
+   *  the path at the car park; counters (T146): every counter open, serving in parallel (the first is counter) */
+  counter: Pt; queueStep: Pt; queueAt: Pt; shopJoin: Pt; carEdge: Pt; counters: Pt[];
+  /** the car park building (T146; null: not built): its footprint (world x0 y0 x1 y1), the ramp the cars drive into and the way in (unit, world),
+   *  the door its walkers use, the range car park's rect beside it (world: the lot shrinks to the near half), the cart path laid round it once,
+   *  where its "P" label stands */
+  garage: { box: [number, number, number, number]; ramp: Pt; into: Pt; door: Pt; lot: Rect; path: { a: Pt; b: Pt }; label: Pt } | null;
+  /** the lot's walkers' way between their cars and the path's end at the car park (carEdge): round the car park building (T146), else straight */
+  lotWalk: Pt[];
   /** the county road's junction with the drive, the drive's end, and the road's direction (unit, world, the frame's +u) and the side of the road
    *  toward the range (unit, world, the frame's +v) */
   J: Pt; driveEnd: Pt; roadDir: Pt; rangeSide: Pt;
@@ -130,6 +147,7 @@ export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave): 
   // the caravan's yard is dry lawn; the cottage's and the house's a mown lawn (T133)
   patches.push({ pts: quad(28, 41, 3, 15.4), surf: 'dirt' }, { pts: quad(Y[0], Y[1], Y[2], Y[3]), surf: home ? 'firstCut' : 'grassDry' });
   if (st.kiosk) patches.push({ pts: quad(PATIO[0], PATIO[1], PATIO[2], PATIO[3]), surf: 'concrete' });
+  if (st.parking) patches.push({ pts: quad(GARAGE[0], GARAGE[1], GARAGE[2], GARAGE[3]), surf: 'concrete' });
 
   // ---- the paths: the back of the mats from the car park's edge, and spurs to the shop's counter and the yard's gate
   const L = (u0: number, v0: number, u1: number, v1: number) => ({ a: P(u0, v0), b: P(u1, v1) });
@@ -210,6 +228,18 @@ export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave): 
     picker = { home: h0, ang: Math.atan2(h1.y - h0.y, h1.x - h0.x), lanes };
   }
 
+  // the car park building (T146): on the lot's far half, its ramp facing the lot's aisle, its door onto the path; a stand-in until its art
+  let garage: RangeScene['garage'] = null;
+  if (st.parking) {
+    const a = P(GARAGE[0], GARAGE[2]), b = P(GARAGE[1], GARAGE[3]), box: [number, number, number, number] = [Math.min(a.x, b.x), Math.min(a.y, b.y), Math.max(a.x, b.x), Math.max(a.y, b.y)];
+    put('garage', GARAGE_ART, (GARAGE[0] + GARAGE[1]) / 2, (GARAGE[2] + GARAGE[3]) / 2, (toRoad + 1) % 4, { fit: GARAGE_FIT, foot: box, label: 'Stand In for the car park building' });
+    const r0 = P(GARAGE_RAMP.u, GARAGE_RAMP.v), r1 = P(GARAGE_RAMP.u - 1, GARAGE_RAMP.v), l0 = P(LOT_BESIDE[0], LOT_BESIDE[2]), l1 = P(LOT_BESIDE[1], LOT_BESIDE[3]);
+    garage = {
+      box, ramp: r0, into: { x: r1.x - r0.x, y: r1.y - r0.y }, door: P(GARAGE_DOOR.u, GARAGE_DOOR.v),
+      lot: [Math.min(l0.x, l1.x), Math.min(l0.y, l1.y), Math.abs(l1.x - l0.x), Math.abs(l1.y - l0.y)],
+      path: { a: P(CAR_EDGE_U, PATH_V), b: P(LOT_BESIDE[0], PATH_V) }, label: P((GARAGE[0] + GARAGE[1]) / 2, (GARAGE[2] + GARAGE[3]) / 2),
+    };
+  }
   const bays: RangeScene['bays'] = open.map((k, i) => ({ stand: P(slotU(k), STAND_V), back: P(slotU(k), PATH_V), ...(academy && i < 2 ? { academy: true } : {}) }));
   // the upper deck's bays (T133): TIER2_BAYS shared among the deck's sections (four each over twelve bays, three over 24), set along each
   // section's own mats (the picture spans about DECK_SPAN tiles: a golfer past it would hang in the air), DECK_H up, reached from the path behind
@@ -222,6 +252,8 @@ export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave): 
   return {
     facing, pieces, patches, teeBox: quad(TEE[0], TEE[1], TEE[2], TEE[3]), practice: practiceArea(plot, facing), paths, bays, academy, kiosk, picker, home, aim: { x: dv.x - o.x, y: dv.y - o.y }, targets,
     counter: q0, queueStep: { x: q1.x - q0.x, y: q1.y - q0.y }, queueAt: P(COUNTER.u + 0.8, QUEUE_V), shopJoin: P(COUNTER.u, PATH_V), carEdge: P(CAR_EDGE_U, PATH_V),
+    // the counters side by side along the shop's front about its middle, the nearest to the line's head first (it calls the next golfer first)
+    counters: Array.from({ length: st.counters }, (_, i) => COUNTER.u + (i - (st.counters - 1) / 2) * COUNTER_STEP).sort((a, b) => Math.abs(a - COUNTER.u - 0.8) - Math.abs(b - COUNTER.u - 0.8)).map(u => P(u, COUNTER.v)), garage, lotWalk: garage ? [P(LOT_CORNER.u, LOT_CORNER.v)] : [],
     J: P(RANGE_PLOT[0] + 2, -NEAR), driveEnd: P(RANGE_PLOT[0] + 2, 16), roadDir: { x: du.x - o.x, y: du.y - o.y }, rangeSide: { x: dv.x - o.x, y: dv.y - o.y },
     numbers, label: P(35, 60), box: [Math.min(c0.x, c1.x), Math.min(c0.y, c1.y), Math.max(c0.x, c1.x), Math.max(c0.y, c1.y)],
     mowFrom: P(U_MID, TEE[3] + TEE_GAP + 0.6),
@@ -293,8 +325,17 @@ const STAIR = STAND_V - PATH_V;
 /** the ball picker cart drives its lanes in this many town hours (T133), whatever the day's length */
 const PICK_HOURS = 7;
 
-/** a car-park bay a range car parks in: its point and heading (unit), and the park's entrance */
-export interface CarSlot { x: number; y: number; hx: number; hy: number }
+/** a car-park bay a range car parks in: its point and heading (unit); inside (T146): a place in the car park building (the point is its ramp:
+ *  the car drives in there and is not drawn while parked), its golfer walking out of its door */
+export interface CarSlot { x: number; y: number; hx: number; hy: number; inside?: boolean; door?: Pt }
+/** the car park building's places as car slots (T146): GARAGE_CARS at its ramp, heading in, its walkers at its door */
+export function garageSlots(g: NonNullable<RangeScene['garage']>, n: number): CarSlot[] {
+  return Array.from({ length: n }, () => ({ x: g.ramp.x, y: g.ramp.y, hx: g.into.x, hy: g.into.y, inside: true, door: g.door }));
+}
+/** the range's money as it happens (T146, for the floating money over the customers, T147): what (a bucket sold, a practice fee, a coffee, a
+ *  lesson, or a golfer lost), how many golfers it is (a skip books fractions), the takings ($; 0 for the lost) and where (world tiles: the counter,
+ *  the practice facility, the kiosk, the car or the line; null for a skip) */
+export interface RangeMoneyEvent { kind: 'bucket' | 'practice' | 'coffee' | 'lesson' | 'lost'; n: number; amount: number; at: Pt | null; /** a lost golfer's reason */ why?: 'queue' | 'parking' | 'patience' }
 /** a route: points and the speed of each leg (tiles/s), with the cumulative times */
 interface Route { pts: Pt[]; v: number[]; at: number[] }
 function route(pts: Pt[], v: number[]): Route {
@@ -320,7 +361,9 @@ interface Visit { id: number; person: number; car: number; slot: number; stage: 
   fac?: PracticeId; spot?: number; aim?: Pt;
   /** T133: wants a lesson at the academy, got one (its bay is a lesson bay), its upper-deck bay's stand and lift (the golfer drawn up there:
    *  the lift ramps on the stairs), and it went for a coffee */
-  lesson?: boolean; taught?: boolean; up?: { x: number; y: number; h: number }; coffee?: boolean }
+  lesson?: boolean; taught?: boolean; up?: { x: number; y: number; h: number }; coffee?: boolean;
+  /** T146: the counter it walks up to and is served at (index into the scene's counters), and when its car turned in (sim s) and whether it bought */
+  desk?: number; born: number; bought?: boolean }
 /** a ball in the air: from, to (tiles), launch time and flight time (s), and the arc's height (tiles); roll: a putt rolling on the green (it slows
  *  to the cup and is holed or picked up: it never lies) */
 interface Ball { x0: number; y0: number; x1: number; y1: number; t0: number; T: number; h: number; roll?: boolean; /** its start's height (units, T133: off the upper deck) */ h0?: number }
@@ -340,16 +383,27 @@ export interface RangeClock { hour: number; day: number }
 /** today's counts (since the town's midnight): golfers who bought, golfers lost, and the queue now */
 export interface RangeToday { golfers: number; lost: number; queue: number; playing: number;
   /** T133: today's coffees and lessons, the kiosk's line now and the golfers hitting upstairs */
-  coffees: number; lessons: number; kioskQueue: number; upstairs: number }
+  coffees: number; lessons: number; kioskQueue: number; upstairs: number;
+  /** T146: today's cars turned away because the car park was full (also in lost), and the hitting bays taken now (from the sale to the bucket's end) */
+  noPark: number; taken: number }
 
 /** The golfers you see (plan 2.2). step() moves them on and returns the takings booked ($); the counts go into the save's season and total */
 export class RangeSim {
   private visits: Visit[] = []; private queue: number[] = []; private balls: Ball[] = [];
   /** the lying balls, x y pairs (a ring of LYING_MAX) and how many */
   readonly lying = new Float32Array(LYING_MAX * 2); nLying = 0; private lyingAt = 0;
-  private nextId = 1; private rnd: () => number; private t = 0; private serving = -1; private serveLeft = 0; private bayBusy: boolean[] = [];
+  private nextId = 1; private rnd: () => number; private t = 0; private bayBusy: boolean[] = [];
+  /** the town day's length the last step ran at (sim s) */
+  private dayLen = 0;
+  /** the pro shop's counters (T146: serving in parallel): the golfer each serves (-1: free), its serve time left, and whether it has begun (the
+   *  golfer has walked up to it) */
+  private desks: { id: number; left: number; on: boolean }[] = [];
+  /** the range's money as it happens (T146; T147 hangs the floating money on it): every sale, fee, coffee, lesson and lost golfer */
+  onMoney: ((e: RangeMoneyEvent) => void) | null = null;
+  /** the cars that left after a bucket (T146): how many and their town hours in the car park in all (a check on carHours) */
+  readonly carStats = { n: 0, hours: 0 };
   private scene: RangeScene | null = null; private slots: CarSlot[] = []; private entrance: Pt | null = null; private slotBusy: boolean[] = [];
-  today: RangeToday = { golfers: 0, lost: 0, queue: 0, playing: 0, coffees: 0, lessons: 0, kioskQueue: 0, upstairs: 0 }; private day = -1;
+  today: RangeToday = { golfers: 0, lost: 0, queue: 0, playing: 0, coffees: 0, lessons: 0, kioskQueue: 0, upstairs: 0, noPark: 0, taken: 0 }; private day = -1;
   private draw: RangeDraw = { people: [], nPeople: 0, cars: [], nCars: 0, picker: null };
   /** the coffee kiosk's line (T133), the golfer served and its time left */
   private kq: number[] = []; private kServing = -1; private kLeft = 0;
@@ -357,8 +411,8 @@ export class RangeSim {
   private pro = { x: 0, y: 0, ang: 0, walking: false, coach: -1, since: 0, placed: false };
   /** the ball picker cart (T133): its route, its time out on it (-1: parked), and it has picked tonight */
   private pick: Route | null = null; private pickT = -1; private picked = false; private pickAt = { x: 0, y: 0, ang: 0 };
-  /** the queue limit now, and the golfers who turned back at the shop this step (counted as lost by step) */
-  private qMax = 5; private lost = 0;
+  /** the queue limit now, and the golfers who turned back at the shop this step (counted as lost by step, where each turned back) */
+  private qMax = 5; private lost: Pt[] = [];
   private tmp = { x: 0, y: 0, ang: 0 };
   /** the practice facilities as the course grid holds them (T130: null, none read yet), each spot taken or free, and the golfers who began to
    *  practise this step (their fees are booked by step) */
@@ -369,12 +423,17 @@ export class RangeSim {
 
   /** the scene and the car park (its bays and entrance; none: no car park, no visitors): a new scene keeps the golfers, whose bays it keeps */
   setScene(scene: RangeScene, slots: CarSlot[], entrance: Pt | null): void {
-    this.scene = scene; this.slots = slots; this.entrance = entrance;
+    this.scene = scene; this.slots = slots; this.entrance = entrance; this.lag.key = '';
     const nb = scene.bays.length;
     this.bayBusy.length = nb; for (let i = 0; i < nb; i++) this.bayBusy[i] = this.visits.some(v => v.bay === i && v.stage >= S.WalkBay && v.stage <= S.Hit);
     // a golfer whose bay is gone (the bays never shrink, but a load can change them) finishes now
     for (const v of this.visits) if (v.bay >= nb && v.stage >= S.WalkBay && v.stage <= S.Hit) this.leave(v);
     this.slotBusy = slots.map((_, i) => this.visits.some(v => v.slot === i && v.stage !== S.Done));
+    // the counters (T146): more as the range grows; a golfer at a counter that went (a load) is served at the first
+    const nd = Math.max(1, scene.counters.length);
+    while (this.desks.length < nd) this.desks.push({ id: -1, left: 0, on: false });
+    for (let i = nd; i < this.desks.length; i++) { const v = this.visits.find(q => q.id === this.desks[i]!.id); if (v) { if (v.bay >= 0) this.bayBusy[v.bay] = false; v.bay = -1; v.desk = undefined; this.queue.unshift(v.id); } }
+    this.desks.length = nd;
     const low: number[] = [], up: number[] = [];
     scene.bays.forEach((b, i) => { if (b.lift) up.push(i); else if (!b.academy) low.push(i); });
     this.bayOrder = []; for (let k = 0; k < Math.max(low.length, up.length); k++) { if (k < low.length) this.bayOrder.push(low[k]!); if (k < up.length) this.bayOrder.push(up[k]!); }
@@ -412,26 +471,31 @@ export class RangeSim {
    *  Returns the takings booked ($) */
   step(dt: number, clock: RangeClock, s: RangeBizSave, c: DemandCtx, dayLen: number): number {
     const sc = this.scene; if (!sc || dt <= 0) return 0;
-    if (clock.day !== this.day) { this.day = clock.day; this.today.golfers = 0; this.today.lost = 0; this.today.coffees = 0; this.today.lessons = 0; this.practiceToday.putting = 0; this.practiceToday.chipping = 0; }
-    const st = rangeStats(s, c), value = saleValue(s, dayLen, st), scale = rangeScale(dayLen); this.qMax = st.qMax;
+    if (clock.day !== this.day) { this.day = clock.day; this.today.golfers = 0; this.today.lost = 0; this.today.coffees = 0; this.today.lessons = 0; this.today.noPark = 0; this.practiceToday.putting = 0; this.practiceToday.chipping = 0; }
+    const st = rangeStats(s, c), value = saleValue(s, dayLen, st), scale = rangeScale(dayLen); this.qMax = st.qMax; this.dayLen = dayLen;
+    // the range's money, all of it here (T146): each sale, fee, coffee, lesson and lost golfer is counted in the save and told to onMoney with
+    // where it happened (T147's floating money); booked is what step returns
     let booked = 0;
-    const sell = (n: number) => { const m = n * value; s.season.golfers += n; s.total.golfers += n; s.season.buckets += n * scale; s.total.buckets += n * scale; s.season.takings += m; s.total.takings += m; this.today.golfers += n; booked += m; };
-    const lose = (n: number) => { s.season.lost += n; s.total.lost += n; this.today.lost += n; };
+    const tell = (kind: RangeMoneyEvent['kind'], n: number, amount: number, at: Pt | null, why?: RangeMoneyEvent['why']) => { if (this.onMoney && n > 0) this.onMoney({ kind, n, amount, at, ...(why ? { why } : {}) }); };
+    const sell = (n: number, at: Pt | null) => { const m = n * value; s.season.golfers += n; s.total.golfers += n; s.season.buckets += n * scale; s.total.buckets += n * scale; s.season.takings += m; s.total.takings += m; this.today.golfers += n; booked += m; tell('bucket', n, m, at); };
+    const lose = (n: number, at: Pt | null, why: NonNullable<RangeMoneyEvent['why']>) => { s.season.lost += n; s.total.lost += n; this.today.lost += n; if (why === 'parking') this.today.noPark += n; tell('lost', n, 0, at, why); };
     // a practice facility's fees (T130): the business takings, as the buckets
-    const fee = (id: PracticeId, n: number) => {
+    const fee = (id: PracticeId, n: number, at: Pt | null) => {
       const m = n * PRACTICE_FEE * scale, f = s.practice?.[id]; if (!f || n <= 0) return;
-      f.season.golfers += n; f.total.golfers += n; f.season.takings += m; f.total.takings += m; s.season.takings += m; s.total.takings += m; booked += m;
+      f.season.golfers += n; f.total.golfers += n; f.season.takings += m; f.total.takings += m; s.season.takings += m; s.total.takings += m; booked += m; tell('practice', n, m, at);
     };
     // the extras' takings (T133): a coffee or a lesson, booked with the buckets as business takings and counted on the extra
-    const extra = (id: ExtraId, n: number) => {
+    const extra = (id: ExtraId, n: number, at: Pt | null) => {
       const m = extraValue(id, n, dayLen), e = s.extras?.[id]; if (!e || n <= 0) return;
       e.season.golfers += n; e.total.golfers += n; e.season.takings += m; e.total.takings += m; s.season.takings += m; s.total.takings += m; booked += m;
       if (id === 'kiosk') this.today.coffees += n; else this.today.lessons += n;
+      tell(id === 'kiosk' ? 'coffee' : 'lesson', n, m, at);
     };
     if (dt >= 120) {
-      const r = skippedVisits(s, c, clock.hour, dt, dayLen); sell(r.served); lose(r.lost);
-      const u = practiceUsers(s, r.served); for (const id of PRACTICE_IDS) fee(id, u[id]);
-      extra('kiosk', r.coffees); extra('academy', r.lessons);
+      // a skip (T146: the car park counts, as the live range's cars hold their bays)
+      const r = skippedVisits(s, c, clock.hour, dt, dayLen, this.skipLive(st, dayLen)); sell(r.served, null); lose(r.lost, null, 'queue');
+      const u = practiceUsers(s, r.served); for (const id of PRACTICE_IDS) fee(id, u[id], null);
+      extra('kiosk', r.coffees, null); extra('academy', r.lessons, null);
       this.clear(); this.t += dt; return booked;
     }
     this.t += dt;
@@ -440,25 +504,34 @@ export class RangeSim {
     const rate = arrivalRate(s, c, clock.hour, dayLen, st);
     if (rate > 0 && this.rnd() < 1 - Math.exp(-rate * dt)) {
       // the driver sees the line at the shop (a golfer who walks up to a line that grew meanwhile may still turn back: see move)
-      const waiting = this.queue.length;
+      // the driver judges the line it will find (T146): the line now and the golfers on their way to it, less those the counters will have
+      // served by the time it gets there (judging by the line alone, an hour before reaching it, overfilled it and then let it run dry)
+      const waiting = this.queue.length + this.inbound() - this.lagServed(st, dayLen);
       const slot = this.slotBusy.indexOf(false);
-      if (waiting >= st.qMax || slot < 0 || !this.entrance) lose(1);
+      // T146: a car turned away by a full car park is counted on its own (the card's parking line)
+      if (waiting >= st.qMax || !this.entrance) lose(1, sc.J, 'queue');
+      else if (slot < 0) lose(1, sc.J, 'parking');
       else this.arrive(slot);
     }
-    // the counter: the queue's head is served when a bay is free (its bay is held from the start of the sale)
-    if (this.serving < 0 && this.queue.length && isOpen) {
-      const head = this.visits.find(v => v.id === this.queue[0]), bay = head ? this.pickBay(head) : -1;
-      if (bay >= 0 && head && head.stage === S.Queue && this.atSpot(head)) { this.serving = head.id; this.serveLeft = st.serve; head.bay = bay; this.bayBusy[bay] = true; }
-    }
-    if (this.serving >= 0 && (this.serveLeft -= dt) <= 0) {
-      const v = this.visits.find(q => q.id === this.serving); this.serving = -1;
-      if (v) {
-        this.queue.shift(); sell(1); v.served = this.t - st.serve;
-        // the academy (T133): a golfer who wanted a lesson and got a lesson bay pays for it with the bucket
-        const b = sc.bays[v.bay]!; if (v.lesson && b.academy) { v.taught = true; extra('academy', 1); }
-        if (b.lift) v.up = { x: b.stand.x, y: b.stand.y, h: b.lift };
-        this.walk(v, S.WalkBay, [{ x: v.x, y: v.y }, sc.shopJoin, b.back, b.stand]);
+    // the counters (T146: in parallel): a free counter calls the line's head when a bay is free (its bay is held from then), the golfer walks up
+    // and is served there; the sale is booked at the counter
+    for (let i = 0; i < this.desks.length; i++) {
+      const d = this.desks[i]!, at = sc.counters[i] ?? sc.counter;
+      if (d.id < 0) {
+        if (!isOpen || !this.queue.length) continue;
+        const head = this.visits.find(v => v.id === this.queue[0]); if (!head || head.stage !== S.Queue || !this.atSpot(head)) continue;
+        const bay = this.pickBay(head); if (bay < 0) continue;
+        this.queue.shift(); d.id = head.id; d.left = st.serve; d.on = false; head.desk = i; head.bay = bay; this.bayBusy[bay] = true;
+        continue;
       }
+      const v = this.visits.find(q => q.id === d.id); if (!v) { d.id = -1; continue; }
+      if (!d.on) { if (Math.hypot(v.x - at.x, v.y - at.y) >= 0.15) continue; d.on = true; }
+      if ((d.left -= dt) > 0) continue;
+      d.id = -1; v.desk = undefined; v.bought = true; sell(1, at); v.served = this.t - st.serve;
+      // the academy (T133): a golfer who wanted a lesson and got a lesson bay pays for it with the bucket
+      const b = sc.bays[v.bay]!; if (v.lesson && b.academy) { v.taught = true; extra('academy', 1, at); }
+      if (b.lift) v.up = { x: b.stand.x, y: b.stand.y, h: b.lift };
+      this.walk(v, S.WalkBay, [{ x: v.x, y: v.y }, sc.shopJoin, b.back, b.stand]);
     }
     // the coffee kiosk (T133): its line's head is served, pays and goes on to the practice area or its car
     if (this.kServing < 0 && this.kq.length) {
@@ -467,20 +540,22 @@ export class RangeSim {
     }
     if (this.kServing >= 0 && (this.kLeft -= dt) <= 0) {
       const v = this.visits.find(q => q.id === this.kServing); this.kServing = -1; this.kq.shift();
-      if (v) { extra('kiosk', 1); if (!this.toPractice(v, sc)) this.walk(v, S.WalkCar, this.toCar(v, { x: v.x, y: v.y })); }
+      if (v) { extra('kiosk', 1, sc.kiosk ? sc.kiosk.counter : null); if (!this.toPractice(v, sc)) this.walk(v, S.WalkCar, this.toCar(v, { x: v.x, y: v.y })); }
     }
     // closing: the queue goes home (lost); patience: a golfer queued two town hours leaves
     const patience = PATIENCE_H * dayLen / 24;
     for (let i = this.queue.length - 1; i >= 0; i--) {
-      const v = this.visits.find(q => q.id === this.queue[i]); if (!v || v.id === this.serving) continue;
-      if (!isOpen || this.t - v.queued > patience) { this.queue.splice(i, 1); lose(1); this.walk(v, S.WalkCar, this.toCar(v, { x: v.x, y: v.y })); }
+      const v = this.visits.find(q => q.id === this.queue[i]); if (!v) continue;
+      if (!isOpen || this.t - v.queued > patience) { this.queue.splice(i, 1); lose(1, { x: v.x, y: v.y }, 'patience'); this.walk(v, S.WalkCar, this.toCar(v, { x: v.x, y: v.y })); }
     }
     for (const v of this.visits) this.move(v, dt, dayLen, sc);
-    if (this.lost) { lose(this.lost); this.lost = 0; }
-    for (const id of this.used) { fee(id, 1); this.practiceToday[id]++; }
+    for (const p of this.lost) lose(1, p, 'queue');
+    this.lost.length = 0;
+    for (const id of this.used) { fee(id, 1, this.practice?.[id]?.centre ?? null); this.practiceToday[id]++; }
     this.used.length = 0;
-    // the queue's spots: each queued golfer walks up to its place in the line
+    // the queue's spots: each queued golfer walks up to its place in the line, a golfer called to a counter (T146) up to it
     this.queue.forEach((id, k) => { const v = this.visits.find(q => q.id === id); if (v && v.stage === S.Queue) this.toward(v, this.queueSpot(k), dt); });
+    this.desks.forEach((d, i) => { const v = d.id >= 0 ? this.visits.find(q => q.id === d.id) : undefined; if (v && v.stage === S.Queue) this.toward(v, sc.counters[i] ?? sc.counter, dt); });
     this.kq.forEach((id, k) => { const v = this.visits.find(q => q.id === id); if (v && v.stage === S.KioskQueue) this.toward(v, this.kioskSpot(k), dt); });
     this.balls = this.balls.filter(b => { if (this.t < b.t0 + b.T) return true; if (!b.roll) this.lie(b.x1, b.y1); return false; });
     this.visits = this.visits.filter(v => v.stage !== S.Done);
@@ -492,6 +567,7 @@ export class RangeSim {
     this.today.queue = this.queue.length; this.today.kioskQueue = this.kq.length;
     let hit = 0, up = 0; for (const v of this.visits) if (v.stage === S.Hit) { hit++; if (v.up) up++; }
     this.today.playing = hit; this.today.upstairs = up;
+    let taken = 0; for (const b of this.bayBusy) if (b) taken++; this.today.taken = taken;
     return booked;
   }
   /** the ball picker cart (T133): out once the range is closed and empty, along its lanes at a speed that drives them in PICK_HOURS town hours,
@@ -548,17 +624,98 @@ export class RangeSim {
   /** the order the counter fills the bays in (T133): the tee box's (not the academy's) and the upper deck's taken in turn, so both decks fill
    *  together; without a second tier the tee box's in order, as before */
   private bayOrder: number[] = [];
+  /** the golfers on their way to the line (T146): driving in or walking up from their cars */
+  private inbound(): number { let n = 0; for (const v of this.visits) if (v.stage === S.CarIn || v.stage === S.WalkShop) n++; return n; }
+  /** the golfers the counters serve while a car turns in and its golfer walks up to the line (T146): the bays' turnover (bays / bayHours a town
+   *  hour) times the town hours of that way in (the mean over the car park's bays); kept until the scene, the car park or the day changes */
+  private lagServed(st: RangeStats, dayLen: number): number {
+    const k = `${st.bays}:${dayLen}`; if (this.lag.key !== k) this.lag = { key: k, n: st.bays / this.bayHours(dayLen) * this.inHours(dayLen) };
+    return this.lag.n;
+  }
+  private lag = { key: '', n: 0 };
+  /** the town hours from a car turning in off the county road to its golfer at the line (T146): the drive to its bay and the walk up, the mean
+   *  over the car park's bays (0 without one) */
+  inHours(dayLen: number): number {
+    const sc = this.scene, e = this.entrance, n = this.slots.length; let secs = 0;
+    if (sc && e && n) {
+      const d = sc.roadDir, onDrive = project(e, sc.J, sc.driveEnd), from = { x: sc.J.x - d.x * 46, y: sc.J.y - d.y * 46 };
+      for (const sl of this.slots) {
+        secs += route([from, sc.J, onDrive, e, { x: sl.x - sl.hx * 2.2, y: sl.y - sl.hy * 2.2 }, { x: sl.x, y: sl.y }], [ROAD_V, DRIVE_V, DRIVE_V, PARK_V, PARK_V * 0.6]).at[5]!;
+        secs += pathLen([this.carSide(sl), ...[...this.fromEdge(sl)].reverse(), sc.carEdge, sc.queueAt]) / WALK;
+      }
+      secs /= n;
+    }
+    return secs / (dayLen / 24);
+  }
   /** no golfers, cars or balls (a skip, a new game) */
   /** the range's cars standing in the car park now (their golfers out on the range, the practice area or the walk back: T132, the car park's
    *  P · parked/bays counts them) */
-  parked(): number { let n = 0; for (const v of this.visits) if (v.stage > S.CarIn && v.stage < S.CarOut) n++; return n; }
+  parked(inside?: boolean): number {
+    let n = 0;
+    for (const v of this.visits) if (v.stage > S.CarIn && v.stage < S.CarOut && (inside === undefined || !!this.slots[v.slot]?.inside === inside)) n++;
+    return n;
+  }
+  /** the car park's bays the range's cars use (T146: the lot's and the car park building's) */
+  get parkBays(): number { return this.slots.length; }
+  /** the town hours a golfer's car holds its bay on average (T146: the skip counts the car park with it), worked out as the live range's cars
+   *  spend them: the drive in off the county road (the bay is held from there) and out until the bay is freed, the walks between the car and the
+   *  path's end at the car park (round the car park building, or from its door), on to the shop, up to a counter and served, the bucket (the bay
+   *  is held a town hour from the sale, or the walk to it and two swings when they take longer) and the walk back; the kiosk's and the practice
+   *  facilities' shares of the golfers with their detours and their times. The mean over the bays and the hitting bays. 0 without a scene or a
+   *  car park */
+  carHours(st: RangeStats, dayLen: number): number {
+    const sc = this.scene, n = this.slots.length, e = this.entrance; if (!sc || !n || !e) return 0;
+    const hourS = dayLen / 24, len = pathLen;
+    const d = sc.roadDir, onDrive = project(e, sc.J, sc.driveEnd), from = { x: sc.J.x - d.x * 46, y: sc.J.y - d.y * 46 };
+    let car = 0;
+    for (const sl of this.slots) {
+      const back = { x: sl.x - sl.hx * 2.2, y: sl.y - sl.hy * 2.2 };
+      car += route([from, sc.J, onDrive, e, back, { x: sl.x, y: sl.y }], [ROAD_V, DRIVE_V, DRIVE_V, PARK_V, PARK_V * 0.6]).at[5]! + 1.5;
+      car += 2 * len([this.carSide(sl), ...[...this.fromEdge(sl)].reverse(), sc.carEdge]) / WALK;
+    }
+    car /= n;
+    const shop = len([sc.carEdge, sc.shopJoin, sc.queueAt, sc.counter]) / WALK + st.serve;
+    let back = 0;
+    for (const b of sc.bays) back += len([b.stand, b.back, sc.carEdge]) / WALK;
+    const bay = this.bayHours(dayLen) * hourS + back / Math.max(1, sc.bays.length);
+    // at the busy range the car parks (T146): the line it finds (about qMax long) is served at the bays' turnover
+    const rate = st.bays / this.bayHours(dayLen), wait = st.qMax / rate * hourS;
+    let extra = 0;
+    if (sc.kiosk) extra += KIOSK_SHARE * (2 * len([sc.carEdge, sc.kiosk.join, sc.kiosk.counter]) / WALK + KIOSK_SERVE);
+    const pr = this.practice;
+    if (pr) {
+      let left = 1;
+      for (const id of PRACTICE_IDS) {
+        const f = pr[id]; if (f.state !== 'open' || !f.centre || !f.stands.length) continue;
+        // a spot is held from the walk there to the last stroke, so the facility's spots take at most so many of the golfers an hour
+        const walk = len([sc.carEdge, sc.practice.behind, sc.practice.entry, f.centre]) / WALK, held = PRACTICE_H + walk / hourS;
+        const share = Math.min(left * PRACTICE_SHARE[id], f.stands.length / held / rate); left -= share;
+        extra += share * (PRACTICE_H * hourS + 2 * walk);
+      }
+    }
+    return (car + shop + wait + bay + extra) / hourS;
+  }
+  /** the town hours a golfer holds a hitting bay on average (T146): it is held from the sale for a town hour, or for the walk from the counter to
+   *  it and two swings when they take longer (the far bays at a short day); the mean over the bays. 1 without a scene */
+  bayHours(dayLen: number): number {
+    const sc = this.scene; if (!sc || !sc.bays.length) return 1;
+    const hourS = dayLen / 24, len = pathLen;
+    let h = 0; for (const b of sc.bays) h += Math.max(hourS, len([sc.counter, sc.shopJoin, b.back, b.stand]) / WALK + 2 * SWING);
+    return h / sc.bays.length / hourS;
+  }
+  /** what the live range's golfers take, as a skip counts it (T146): the car park's bays, carHours and bayHours (no car park: no bays, as the live
+   *  range then has no visitors) */
+  skipLive(st: RangeStats, dayLen: number): SkipLive {
+    const carHours = this.carHours(st, dayLen);
+    return { parkBays: carHours > 0 ? this.slots.length : 0, carHours: carHours > 0 ? carHours : 1, bayHours: this.bayHours(dayLen), inHours: this.inHours(dayLen) };
+  }
   clear(): void {
-    this.visits = []; this.queue = []; this.balls = []; this.serving = -1; this.nLying = 0; this.bayBusy.fill(false); this.slotBusy.fill(false); this.spotBusy.putting.fill(false); this.spotBusy.chipping.fill(false); this.used.length = 0;
+    this.visits = []; this.queue = []; this.balls = []; for (const d of this.desks) { d.id = -1; d.on = false; } this.nLying = 0; this.bayBusy.fill(false); this.slotBusy.fill(false); this.spotBusy.putting.fill(false); this.spotBusy.chipping.fill(false); this.used.length = 0;
     this.kq = []; this.kServing = -1; this.pickT = -1; this.picked = false; this.pro.coach = -1; this.pro.placed = false; this.lyingAt = 0;
   }
   /** today's counts start again with the next step (a new game or a load: the town day starts again, maybe on the same day number: T135) */
   newDay(): void {
-    this.day = -1; this.today = { golfers: 0, lost: 0, queue: 0, playing: 0, coffees: 0, lessons: 0, kioskQueue: 0, upstairs: 0 }; this.practiceToday = { putting: 0, chipping: 0 };
+    this.day = -1; this.today = { golfers: 0, lost: 0, queue: 0, playing: 0, coffees: 0, lessons: 0, kioskQueue: 0, upstairs: 0, noPark: 0, taken: 0 }; this.practiceToday = { putting: 0, chipping: 0 };
   }
 
   /** a car turns in off the county road from either side, along the drive and into car-park bay `slot` */
@@ -568,7 +725,7 @@ export class RangeSim {
     const lane = side > 0 ? 0.9 : -0.9, from = { x: sc.J.x - d.x * side * 46 + n.x * lane, y: sc.J.y - d.y * side * 46 + n.y * lane };
     const turn = { x: sc.J.x + n.x * lane, y: sc.J.y + n.y * lane };
     const onDrive = project(e, sc.J, sc.driveEnd), back = { x: sl.x - sl.hx * 2.2, y: sl.y - sl.hy * 2.2 };
-    const v: Visit = { id: this.nextId++, person: Math.floor(this.rnd() * this.golfers), car: Math.floor(this.rnd() * 5), slot, stage: S.CarIn, t: 0, r: null, bay: -1, swings: 0, queued: 0, served: 0, x: from.x, y: from.y, ang: 0 };
+    const v: Visit = { id: this.nextId++, person: Math.floor(this.rnd() * this.golfers), car: Math.floor(this.rnd() * 5), slot, stage: S.CarIn, t: 0, r: null, bay: -1, swings: 0, queued: 0, served: 0, x: from.x, y: from.y, ang: 0, born: this.t };
     // the academy (T133): a share of the golfers come for a lesson (drawn only with an academy, so a range without one plays as before)
     if (sc.academy && this.rnd() < LESSON_SHARE) v.lesson = true;
     v.r = route([from, turn, onDrive, e, back, { x: sl.x, y: sl.y }], [ROAD_V, DRIVE_V, DRIVE_V, PARK_V, PARK_V * 0.6]);
@@ -584,12 +741,16 @@ export class RangeSim {
   /** the golfer's walk from p back to its car: along the path to the car park's edge, then to its bay's side; from a practice facility (T130) out
    *  of the practice area and round the back of the car park */
   private toCar(v: Visit, p: Pt): Pt[] {
-    const sc = this.scene!, sl = this.slots[v.slot]!, side = { x: sl.x + sl.hy * 1.2, y: sl.y - sl.hx * 1.2 };
+    const sc = this.scene!, sl = this.slots[v.slot]!, side = this.carSide(sl), back = this.fromEdge(sl);
     if (v.fac && (v.stage === S.WalkPractice || v.stage === S.Practice)) return [p, sc.practice.entry, sc.practice.behind, side];
     // from the coffee kiosk's line (T133): out to the path in front of it
-    if (sc.kiosk && (v.stage === S.WalkKiosk || v.stage === S.KioskQueue)) return [p, sc.kiosk.join, sc.carEdge, side];
-    return [p, ...(v.stage === S.Hit || v.stage === S.WalkBay ? [sc.bays[v.bay]!.back] : [sc.shopJoin]), sc.carEdge, side];
+    if (sc.kiosk && (v.stage === S.WalkKiosk || v.stage === S.KioskQueue)) return [p, sc.kiosk.join, sc.carEdge, ...back, side];
+    return [p, ...(v.stage === S.Hit || v.stage === S.WalkBay ? [sc.bays[v.bay]!.back] : [sc.shopJoin]), sc.carEdge, ...back, side];
   }
+  /** where a car's golfer gets out and in (T146: the car park building's door, else beside its car) */
+  private carSide(sl: CarSlot): Pt { return sl.door ?? { x: sl.x + sl.hy * 1.2, y: sl.y - sl.hx * 1.2 }; }
+  /** the way from the path's end at the car park (carEdge) to a car (T146: the lot's walkers round the car park building; none from its door) */
+  private fromEdge(sl: CarSlot): Pt[] { return sl.door ? [] : this.scene!.lotWalk; }
   /** after its bucket (T130): a share of the golfers walk over to an open practice facility with a free spot (the putting green first, then the
    *  chipping green); true when this one does */
   private toPractice(v: Visit, sc: RangeScene): boolean {
@@ -611,7 +772,8 @@ export class RangeSim {
   private walk(v: Visit, stage: S, pts: Pt[]): void { v.stage = stage; v.t = 0; v.r = route(pts, [WALK]); }
   /** the visit's golfer done with its bucket (or its bay gone): it walks back to its car */
   private leave(v: Visit): void { if (v.bay >= 0) this.bayBusy[v.bay] = false; this.walk(v, S.WalkCar, this.toCar(v, { x: v.x, y: v.y })); v.bay = -1; }
-  private queueSpot(k: number): Pt { const sc = this.scene!; return k === 0 ? sc.counter : { x: sc.queueAt.x + sc.queueStep.x * (k - 1), y: sc.queueAt.y + sc.queueStep.y * (k - 1) }; }
+  /** the line's k-th spot (T146: its head stands at queueAt, a step from the counters, and walks up to the counter that calls it) */
+  private queueSpot(k: number): Pt { const sc = this.scene!; return { x: sc.queueAt.x + sc.queueStep.x * k, y: sc.queueAt.y + sc.queueStep.y * k }; }
   /** the coffee kiosk's line (T133): its k-th spot back from the counter, and whether v stands in its spot */
   private kioskSpot(k: number): Pt { const q = this.scene!.kiosk!; return { x: q.counter.x + q.queueStep.x * k, y: q.counter.y + q.queueStep.y * k }; }
   private atKiosk(v: Visit): boolean { const p = this.kioskSpot(this.kq.indexOf(v.id)); return Math.hypot(v.x - p.x, v.y - p.y) < 0.15; }
@@ -624,7 +786,7 @@ export class RangeSim {
     }
     if (!this.toPractice(v, sc)) this.leave(v);
   }
-  private atSpot(v: Visit): boolean { const p = this.queueSpot(this.queue.indexOf(v.id)); return Math.hypot(v.x - p.x, v.y - p.y) < 0.15; }
+  private atSpot(v: Visit): boolean { const k = this.queue.indexOf(v.id); if (k < 0) return false; const p = this.queueSpot(k); return Math.hypot(v.x - p.x, v.y - p.y) < 0.15; }
   /** a queued golfer steps toward p at walking speed */
   private toward(v: Visit, p: Pt, dt: number): void {
     const dx = p.x - v.x, dy = p.y - v.y, L = Math.hypot(dx, dy), m = WALK * dt;
@@ -637,11 +799,12 @@ export class RangeSim {
   private move(v: Visit, dt: number, dayLen: number, sc: RangeScene): void {
     v.t += dt;
     switch (v.stage) {
-      case S.CarIn: if (along(v.r!, v.t, this.tmp)) { v.x = this.tmp.x; v.y = this.tmp.y; const sl = this.slots[v.slot]!; v.ang = Math.atan2(sl.hy, sl.hx); this.walk(v, S.WalkShop, [{ x: sl.x + sl.hy * 1.2, y: sl.y - sl.hx * 1.2 }, sc.carEdge, sc.shopJoin, this.queueSpot(this.queue.length)]); } else { v.x = this.tmp.x; v.y = this.tmp.y; v.ang = this.tmp.ang; } break;
+      case S.CarIn: if (along(v.r!, v.t, this.tmp)) { v.x = this.tmp.x; v.y = this.tmp.y; const sl = this.slots[v.slot]!; v.ang = Math.atan2(sl.hy, sl.hx); this.walk(v, S.WalkShop, [this.carSide(sl), ...[...this.fromEdge(sl)].reverse(), sc.carEdge]); } else { v.x = this.tmp.x; v.y = this.tmp.y; v.ang = this.tmp.ang; } break;
       case S.WalkShop: {
         const done = along(v.r!, v.t, this.tmp); v.x = this.tmp.x; v.y = this.tmp.y; v.ang = this.tmp.ang;
-        // at the shop: a line two past the limit sends the golfer back to the car (lost); else it joins the line
-        if (done && this.queue.length >= this.qMax + 2) { this.lost++; this.walk(v, S.WalkCar, this.toCar(v, { x: v.x, y: v.y })); }
+        // at the path's end by the car park the golfer sees the line (T146: and joins it there, walking up to its place, so a line that moved up
+        // while it walked is not left empty at its head): a line two past the limit sends it back to the car (lost)
+        if (done && this.queue.length >= this.qMax + 2) { this.lost.push({ x: v.x, y: v.y }); this.walk(v, S.WalkCar, this.toCar(v, { x: v.x, y: v.y })); }
         else if (done) { v.stage = S.Queue; v.queued = this.t; this.queue.push(v.id); }
         break;
       }
@@ -665,7 +828,7 @@ export class RangeSim {
       case S.WalkCar: { const done = along(v.r!, v.t, this.tmp); v.x = this.tmp.x; v.y = this.tmp.y; v.ang = this.tmp.ang; if (done) { v.stage = S.CarOut; v.t = 0; v.r = this.outRoute(v); } break; }
       // the bay is freed once, as the car pulls out (T132: it was freed again on every step of the drive out, so the next car's bay went free
       // under it and later cars piled into the same bay)
-      case S.CarOut: { const done = along(v.r!, v.t, this.tmp); v.x = this.tmp.x; v.y = this.tmp.y; v.ang = this.tmp.ang; if (v.t > 1.5 && v.slot >= 0) { this.slotBusy[v.slot] = false; v.slot = -1; } if (done) v.stage = S.Done; break; }
+      case S.CarOut: { const done = along(v.r!, v.t, this.tmp); v.x = this.tmp.x; v.y = this.tmp.y; v.ang = this.tmp.ang; if (v.t > 1.5 && v.slot >= 0) { this.slotBusy[v.slot] = false; v.slot = -1; if (v.bought && this.dayLen > 0) { this.carStats.n++; this.carStats.hours += (this.t - v.born) / (this.dayLen / 24); } } if (done) v.stage = S.Done; break; }
       default: break;
     }
   }
@@ -700,9 +863,12 @@ export class RangeSim {
     if (sc) for (const v of this.visits) {
       if (v.stage === S.CarIn || v.stage === S.CarOut || (v.stage >= S.WalkShop && v.stage <= S.WalkCar)) {
         const sl = this.slots[v.slot], parked = v.stage !== S.CarIn && v.stage !== S.CarOut;
+        // parked in the car park building (T146): inside it, not drawn
+        if (!(parked && sl?.inside)) {
         const c = C[nc] ?? (C[nc] = { x: 0, y: 0, ang: 0, type: 0 }); nc++;
         if (parked && sl) { c.x = sl.x; c.y = sl.y; c.ang = Math.atan2(sl.hy, sl.hx); } else { c.x = v.x; c.y = v.y; c.ang = v.ang; }
         c.type = v.car;
+        }
       }
       if (v.stage < S.WalkShop || v.stage > S.WalkCar) continue;
       const p = P[np] ?? (P[np] = { x: 0, y: 0, group: 1, person: 0, row: 0, frame: 0, lift: 0 }); np++;
@@ -719,10 +885,12 @@ export class RangeSim {
         p.row = golferRow(v.aim.x - v.x, v.aim.y - v.y);
         if (v.fac === 'putting') { const lt = v.t % PUTT_T, D = G.golf_drive; p.frame = lt < PUTT_ADDR ? D.start : lt < PUTT_ADDR + PUTT_STROKE * 0.5 ? D.start + 1 : lt < PUTT_ADDR + PUTT_STROKE + 0.6 ? D.start + 5 : G.idle.start; }
         else { const lt = v.t % SWING; p.frame = lt < ADDRESS ? G.golf_drive.start : lt < ADDRESS + CLIP ? clipFrame(G.golf_drive, G.golf_drive.times[0]! + lt - ADDRESS) : G.idle.start; }
+      } else if (v.stage === S.Queue && v.desk !== undefined && this.desks[v.desk]?.on) {
+        // at a counter (T146): facing it (toward the road)
+        p.row = rowToward(-sc.aim.x, -sc.aim.y); p.frame = G.idle.start;
       } else if (v.stage === S.Queue && this.atSpot(v)) {
-        // the head faces the shop's counter (toward the road), the rest of the line faces up it
-        const head = this.queue[0] === v.id;
-        p.row = head ? rowToward(-sc.aim.x, -sc.aim.y) : rowToward(-sc.queueStep.x, -sc.queueStep.y); p.frame = G.idle.start;
+        // the line faces up it, toward the counters
+        p.row = rowToward(-sc.queueStep.x, -sc.queueStep.y); p.frame = G.idle.start;
       } else if (v.stage === S.KioskQueue && sc.kiosk && this.atKiosk(v)) {
         // the coffee line (T133) faces the kiosk's counter
         p.row = rowToward(-sc.kiosk.queueStep.x, -sc.kiosk.queueStep.y); p.frame = G.idle.start;
@@ -750,6 +918,8 @@ export class RangeSim {
   }
 }
 
+/** a polyline's length (tiles) */
+function pathLen(pts: Pt[]): number { let L = 0; for (let i = 1; i < pts.length; i++) L += Math.hypot(pts[i]!.x - pts[i - 1]!.x, pts[i]!.y - pts[i - 1]!.y); return L; }
 /** the point of segment a-b nearest p */
 function project(p: Pt, a: Pt, b: Pt): Pt {
   const dx = b.x - a.x, dy = b.y - a.y, L2 = dx * dx + dy * dy || 1, k = Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / L2));

@@ -5,7 +5,9 @@ import { RANGE_PASS_POP } from './range';
 /** the range's upgrades (plan P24 2.3) */
 export type RangeUpgradeId = 'bays8' | 'bays12' | 'bays24' | 'targets' | 'covered' | 'lights' | 'dispenser' | 'proshop'
   /** the World of Golf extras (plan P24 Phase 4b, T133): the second tier of bays, the academy, the coffee kiosk, the ball picker cart */
-  | 'tier2' | 'academy' | 'kiosk' | 'picker';
+  | 'tier2' | 'academy' | 'kiosk' | 'picker'
+  /** the car park building (T146, P24 D49): a multi-storey car park beside the range's car park */
+  | 'parking';
 /** a span's counts: the golfers who bought a bucket, the buckets (the customers they stand for), the lost (turned away or left the queue), the takings ($)
  *  and the upgrades' upkeep paid ($, T132) */
 export interface RangeCounts { golfers: number; buckets: number; lost: number; takings: number; upkeep: number }
@@ -22,7 +24,10 @@ export interface PracticeFacSave { open: boolean; season: PracticeCounts; total:
  *  course grid: an old save's first load lays it) and the practice facilities (T130; a save without them: none built) */
 export interface RangeBizSave { v: 1; owned: RangeUpgradeId[]; price: number; season: RangeCounts; total: RangeCounts; paths?: boolean; tee?: boolean; practice: Record<PracticeId, PracticeFacSave>;
   /** the extras' own counts (T133): the coffee kiosk's buyers and takings, the academy's lessons and fees (a save without them: zero) */
-  extras: Record<ExtraId, ExtraSave> }
+  extras: Record<ExtraId, ExtraSave>;
+  /** T146: the game has laid the car park building's cart path (from the path's end at the car park round the building); an old save's first
+   *  load with the building lays it */
+  garage?: boolean }
 /** the extras that keep their own counts (T133): the coffee kiosk (coffees sold) and the academy (lessons given) */
 export type ExtraId = 'kiosk' | 'academy';
 export const EXTRA_IDS: readonly ExtraId[] = ['kiosk', 'academy'];
@@ -41,6 +46,10 @@ export const OPEN_HOUR = 7, CLOSE_HOUR = 18, CLOSE_LIT = 22;
 export const DEMAND_RATE = 0.0183;
 /** the most appeal the player's props add to the range (plan P24 Phase 3, T131: golf/decor.ts decorAppeal) */
 export const PROPS_APPEAL_CAP = 0.4;
+/** the bays one counter at the pro shop keeps busy (T146: the counters serve in parallel, so a full range fills its bays at peak) */
+export const BAYS_A_COUNTER = 9;
+/** the cars the car park building holds (T146, P24 D49): with the lot beside it the measured peak of a fully grown range parks with room to spare */
+export const GARAGE_CARS = 180;
 
 /** an upgrade as the range card lists it: its id, name, cost ($), its upkeep ($ a game month, T132: twelve months a season), the upgrade it needs
  *  first, what it does (one line) */
@@ -59,6 +68,8 @@ export const RANGE_UPGRADES: readonly RangeUpgrade[] = [
   { id: 'picker', name: 'Ball picker cart', cost: 7000, upkeep: 60, needs: 'bays8', effect: 'A cart drives the outfield in lanes after closing and picks the balls: a clean range every morning, +5% visitors' },
   { id: 'tier2', name: 'Second tier of bays', cost: 60000, upkeep: 450, needs: ['bays12', 'covered'], effect: 'A double-deck stand over the mats: 12 more bays upstairs, the World of Golf look, +10% visitors' },
   { id: 'academy', name: 'Golf academy', cost: 30000, upkeep: 350, needs: 'proshop', effect: 'A pro teaches on two bays: 15% of golfers take a $15 lesson, +5% visitors' },
+  // T146 (P24 D49): the busy range's car park building, offered once the second tier makes parking the limit
+  { id: 'parking', name: 'Car park building', cost: 36000, upkeep: 240, needs: 'tier2', effect: `A multi-storey car park beside the lot: room for ${GARAGE_CARS} cars, so the busy range turns no car away` },
 ];
 /** an upgrade's prerequisites, all of them needed first */
 export function needsOf(u: Pick<RangeUpgrade, 'needs'>): readonly RangeUpgradeId[] { return !u.needs ? [] : typeof u.needs === 'string' ? [u.needs] : u.needs; }
@@ -109,6 +120,7 @@ export function normalizeRangeBiz(x: unknown): RangeBizSave {
   const out: RangeBizSave = { v: 1, owned, price: Math.min(PRICE_MAX, Math.max(PRICE_MIN, p)), season: counts(o.season), total: counts(o.total), practice: normalizePractice(o.practice), extras: normalizeExtras(o.extras) };
   if (o.paths === true) out.paths = true;
   if (o.tee === true) out.tee = true;
+  if (o.garage === true && owned.includes('parking')) out.garage = true;
   return out;
 }
 
@@ -124,6 +136,9 @@ export interface RangeStats {
   /** the extras (T133): the second tier (its bays are in bays: lowerBays stand on the tee box, TIER2_BAYS upstairs), the academy (two of the
    *  lower bays are its lesson bays), the coffee kiosk, the ball picker cart */
   tier2: boolean; academy: boolean; kiosk: boolean; picker: boolean; lowerBays: number;
+  /** T146: the pro shop's counters, serving golfers in parallel (one per BAYS_A_COUNTER bays: the second tier adds one), and the car park
+   *  building */
+  counters: number; parking: boolean;
 }
 export function rangeStats(s: RangeBizSave, x: RangeExtras = {}): RangeStats {
   const has = (id: RangeUpgradeId) => s.owned.includes(id);
@@ -141,6 +156,7 @@ export function rangeStats(s: RangeBizSave, x: RangeExtras = {}): RangeStats {
     bays, targets: has('targets') ? 5 : 2, covered, lights, dispenser, proShop, appeal, propsAppeal,
     ref: (PRICE_START + (covered ? 2 : 0) + (proShop ? 1 : 0)) * (1 + propsAppeal), extra: proShop ? 2 : 0, serve: dispenser ? 0.8 : proShop ? 2 : 3,
     open: OPEN_HOUR, close: lights ? CLOSE_LIT : CLOSE_HOUR, qMax: 4 + Math.floor(bays / 4), tier2, academy, kiosk, picker, lowerBays,
+    counters: Math.max(1, Math.ceil(bays / BAYS_A_COUNTER)), parking: has('parking'),
   };
 }
 /** the second tier's bays upstairs (T133), over the middle twelve of the tee box's slots */
@@ -211,15 +227,23 @@ export function arrivalRate(s: RangeBizSave, c: DemandCtx, h: number, dayLen: nu
 export function rangeScale(dayLen: number): number { return RANGE_SCALE_BASE * Math.max(24, dayLen) / 600; }
 /** what one golfer's visit books ($): the price plus the extra spend, times the scale */
 export function saleValue(s: RangeBizSave, dayLen: number, st = rangeStats(s)): number { return (s.price + st.extra) * rangeScale(dayLen); }
+/** what the live range's golfers take, as the skip counts it (T146, RangeSim skipLive): the car park's bays (the lot's and the building's) and
+ *  the town hours a car holds one (RangeSim carHours: the drive in, the walks, the bucket, the coffee and the practice), and the town hours a
+ *  golfer holds a hitting bay (RangeSim bayHours: an hour from the sale, or the walk to it and two swings when they take longer) */
+export interface SkipLive { parkBays: number; carHours: number; bayHours: number; /** the town hours from a car turning in to its golfer at the line
+ *  (RangeSim inHours): the skip serves a golfer that much after it arrives, so the bays stand empty that long after opening and the last
+ *  arrivals before closing find the shop shut, as at the live range */ inHours?: number }
 /** the expected visits of a span the player skipped (sim s, from town hour h0): the arrivals by the hour curve, the served capped by the bays
- *  (each plays a town hour); returns golfers served and lost, and (T133) the academy's lessons (LESSON_SHARE of the served, capped by its two bays
- *  an hour) and the kiosk's coffees (KIOSK_SHARE of the served) */
-export function skippedVisits(s: RangeBizSave, c: DemandCtx, h0: number, dt: number, dayLen: number): { served: number; lost: number; lessons: number; coffees: number } {
+ *  (each plays a town hour; T146 with live: bays / bayHours an hour) and (T146) by the car park (parkBays / carHours cars an hour); live absent:
+ *  neither is counted. Returns golfers served and lost, and (T133) the academy's lessons (LESSON_SHARE of the served, capped by its two bays an
+ *  hour) and the kiosk's coffees (KIOSK_SHARE of the served) */
+export function skippedVisits(s: RangeBizSave, c: DemandCtx, h0: number, dt: number, dayLen: number, live?: SkipLive | null): { served: number; lost: number; lessons: number; coffees: number } {
   const st = rangeStats(s, c), hourS = dayLen / 24;
+  const perHour = live ? Math.min(st.bays / Math.max(1, live.bayHours), live.carHours > 0 ? live.parkBays / live.carHours : 0) : st.bays;
   let served = 0, lost = 0, lessons = 0;
   for (let t = 0; t < dt; t += hourS) {
     const h = (h0 + t / hourS) % 24, span = Math.min(hourS, dt - t) / hourS, want = dayDemand(s, c, st) * hourWeight(h, st) / DAY_WEIGHT * span;
-    const cap = hourWeight(h, st) > 0 ? st.bays * span : 0, got = Math.min(want, cap);
+    const cap = hourWeight(h, st) > 0 && hourWeight((h + (live?.inHours ?? 0)) % 24, st) > 0 ? perHour * span : 0, got = Math.min(want, cap);
     served += got; lost += want - got;
     if (st.academy) lessons += Math.min(got * LESSON_SHARE, ACADEMY_BAYS * span);
   }
