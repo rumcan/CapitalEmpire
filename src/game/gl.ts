@@ -126,14 +126,15 @@ void main() {
   vOff = off; vW = w; vShape = aShape; vLook = aLook; vClip = aClip;
 }`;
 // TrickOrTreat's shadows.mjs render(): a rounded box or an ellipse in ground metres, darkest at the base and feathered both inside and
-// outside the edge, in the builder's shadow colour (6, 8, 13); premultiplied, times the owner's strength
+// outside the edge, in the builder's shadow colour (6, 8, 13); premultiplied, times the owner's strength. The feather is 2 px (0.0625 m: a
+// metre along an axis is 32 px across) softer than the shape's own, as every contact shadow is (shadow-vector.ts BLOB_BLUR)
 const FS_SHADOW = `#version 300 es
 precision highp float;
 in vec2 vOff; in vec2 vW; flat in vec4 vShape; flat in vec4 vLook; flat in vec4 vClip; out vec4 o;
 uniform float uStrength;
 void main() {
   if (vW.x < vClip.x || vW.y < vClip.y || vW.x >= vClip.z || vW.y >= vClip.w) discard;
-  float A = vOff.x / 32.0, B = vOff.y / 16.0, X = (A + B) * 0.5, Y = (B - A) * 0.5, hx = vShape.z, hy = vShape.w, f = vLook.y, d;
+  float A = vOff.x / 32.0, B = vOff.y / 16.0, X = (A + B) * 0.5, Y = (B - A) * 0.5, hx = vShape.z, hy = vShape.w, f = vLook.y + 0.0625, d;
   if (vLook.z > 0.5) d = (length(vec2(X / hx, Y / hy)) - 1.0) * min(hx, hy);
   else { float r = min(0.18, min(hx, hy) * 0.5); vec2 q = abs(vec2(X, Y)) - vec2(hx, hy) + r; d = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r; }
   float a = vLook.x * (1.0 - smoothstep(-f, f * 1.2, d)) * (0.82 + 0.18 * smoothstep(0.0, -min(hx, hy), d));
