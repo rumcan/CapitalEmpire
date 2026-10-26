@@ -24,7 +24,7 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 ### In flight
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |
-| T142 | #288 | `arena/T142-vector-shadows` | `.claude/worktrees/agent-a687f83d04c54c00a` | 5188 | The owner: "put a smart opus on the shadows to vector draw each shadow individually for all assets". Opus (high effort): a contact and a cast polygon per asset view in a data file, drafted from each picture then corrected by eye; range and golf first. T141's after sheets still show faults (the range bays' detached cast, the leaderboard's footprint). |
+| T143 | #293 | `arena/T143-car-cards` | an agent worktree under `.claude/worktrees` | 5193 / 5189 | The owner: "group cars in library together for resizing ... every car has its rotations": one Library card per car model with its rotations and views as thumbs, one size for all of them, in the studio, scale-overrides.json and the game. |
 | Gates | #285 | detached bisect | `.claude/worktrees/agent-a7002980f03663418` | — | Bisecting `fix:gate` (a) (green 2026-10-18 at -19.9%, now +23.9%) and `event:gate` (a), (b), (c); report and recommend, no src changes yet. |
 
 **One studio (the owner, 2026-10-26: "when a studio is running it is the only studio and any changes made affect the actual game
@@ -32,9 +32,8 @@ sprites"; "put the studio on the network for all pcs on network to edit").** The
 port 5191 from `worktrees/theme-consistency`, the checkout of the owner's 5174 game, both on the LAN (http://192.168.0.2:5191 and
 http://192.168.0.2:5174; launch configs `studio` with `STUDIO_HOST=0.0.0.0`, `lead-game` with `--host 0.0.0.0`). Never start a second
 studio for the owner; an agent's check studio (5193) is stopped before it reports. The old lot lab servers (5241, 5242) and its
-worktree `.claude/worktrees/lot-presets` are dead: the owner closes the servers, then the worktree goes. Open from #290: the owner's call on
-`variation:gen-house-l-shape-e0e3b328-plain:1` (removed in the studio, still placed by 9 lot presets: `tests/lot-presets-json.test.ts`
-fails until they restore it or the presets are re-pointed).
+worktree `.claude/worktrees/lot-presets` are dead: the owner closes the servers, then the worktree goes. The owner restored
+`variation:gen-house-l-shape-e0e3b328-plain:1` for its 9 lot presets (#294); `tests/lot-presets-json.test.ts` passes again.
 
 **2026-10-26 manual regression** (main `d750592`, `E:/ClaudeTemp/nightly/2026-10-26-manual.md`): typecheck, 1697/1697 tests, the build,
 sim, town, towns and biz gates PASS; fix and event gates FAIL (#285). towns/event/biz had not run for days (no .webp loader; fixed by #286).
@@ -58,6 +57,10 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
    (the sharp bump). See the History sections below and `gh issue list --label arena --state open`.
 
 ### Done recently (newest first; details in each PR)
+- 2026-10-26: **T142 #292 a hand-drawn vector shadow for every asset view** (1,421 drawn shapes in `src/game/shadow-shapes.json`, drafted
+  from each picture by `scripts/dev/draft-shadows.mjs` + hand hints in `shadow-hints.json`; T141 behind the gear-menu toggle "Drawn shadows
+  (T142)"; a new picture needs an entry or `tests/shadow-vector.test.ts` fails: run the draft with `--only <ids>` against a dev server).
+  #294 the l-shape house restored with its shadows and the Rebuild output.
 - 2026-10-26: **#290 the lot lab lands on main**: the lot presets and the lot lab (`?lotlab&dev`), cars and business art resizable, and the
   Library's locked sizes fixed: the studio's Rebuild never ran `prep-views.mjs` (nor prep-cars, prep-business-art), so a size set on a
   four-view building was never packed; now Rebuild runs every pack in dependency order and stand-ins are packed for the largest size
