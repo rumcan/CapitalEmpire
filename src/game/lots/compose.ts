@@ -27,7 +27,7 @@ import PRESET_JSON from './lot-presets.json';
 import { generateLayout, PER_LOT, type LaidItem } from './lot-gen';
 import { isFence, kindOfId, kindPools } from './item-kinds';
 import { groupsFrom } from './group-data';
-import { ITEM_KINDS, groupOf, modelFrom, type Box, type HouseClass, type ItemKind, type Model, type SectorLot, type UseGroup } from './learn';
+import { FENCE_BAND, ITEM_KINDS, groupOf, modelFrom, type Box, type HouseClass, type ItemKind, type Model, type SectorLot, type UseGroup } from './learn';
 import { pairTable, stateDensity, stateKinds, tasteFrom, type Partner } from './taste';
 import { CLASS_NAMES, frameHalf, houseFamilies, sizeClassOf } from './house-class';
 import { allows, parseAllocations } from './house-alloc';
@@ -420,6 +420,10 @@ function shippedGroup(g: UseGroup | null): GroupRun | null {
   GROUP_RUN.set(key, run);
   return run;
 }
+/** the yard surfaces that are paving (T169: no plant grows on them) */
+const PAVED: ReadonlySet<string> = new Set(['asphalt', 'concrete', 'slabs', 'paving']);
+/** the band before a main building's face no tree stands in (tiles, T169) */
+const FRONTAGE = 2.5;
 /** whether a lot of the other uses draws generated (its frozen preset's base and the generator's items): its group on in the shipped model */
 const groupLot = (p: LotPreset) => GENERATED && p.use !== 'res' && frozenAny(p) && !!shippedGroup(groupOf(p.use));
 /** a fitted preset of the other uses' base (groupBaseItem: its buildings, fences, cars, car park furniture and street items, and every patch),
@@ -478,7 +482,16 @@ function layoutOf(lot: LotGeom, p: { preset: LotPreset; fit: Fitted; frame: Pres
   if (run) {
     const area = lot.w * lot.d, f = Math.min(2.2, Math.max(0.6, area / 160)), D = run.density.get(state)!;
     const kinds = Object.fromEntries(ITEM_KINDS.map(kd => [kd, (D[kd] * area) / 160 / (PER_LOT[kd] * f)])) as Record<ItemKind, number>;
-    const off = p.fit.patches.filter(a => a.kind === 'drive' || a.kind === 'walk' || a.kind === 'lot').map(a => ({ box: box(a.pts) }));
+    // nothing on a drive, a walk or the car park; no plant on paving but along the lot's fence (a paved yard: its props and ground marks stand
+    // there, a tree does not grow out of the asphalt, a hedge lines its fence; a gravel yard keeps the bushes along its fence); no tree right in
+    // front of the main building (FRONTAGE tiles before its face: its frontage stays in view; street trees nearer the road stay)
+    const plants = ['prop', 'car', 'decal'] as const, notTree = ['bush', 'flowerbed', 'prop', 'car', 'decal'] as const, F = FENCE_BAND + 0.2;
+    const inner = (b: Box): Box => [Math.max(b[0], F), b[1], Math.min(b[2], lot.w - F), Math.min(b[3], lot.d - F)];
+    const off: { box: Box; but?: readonly ItemKind[] }[] = [
+      ...p.fit.patches.filter(a => a.kind === 'drive' || a.kind === 'walk' || a.kind === 'lot').map(a => ({ box: box(a.pts) })),
+      ...p.fit.patches.filter(a => a.kind === 'yard' && PAVED.has(a.tex)).map(a => ({ box: inner(box(a.pts)), but: plants })),
+      ...(house ? [{ box: [house[0], house[1] - FRONTAGE, house[2], house[1]] as Box, but: notTree }] : []),
+    ];
     return generateLayout({ lot: sl, cls, model: run.model, taken, pools: run.pools, half, seed: lotSeed(lot, state), avoid: off, keep: true, kinds, minOne: false, ...(run.pairs ? { pairs: run.pairs } : {}) });
   }
   return generateLayout({ lot: sl, cls, model: shippedModel(), taken, pools: kindPools(), half, seed: lotSeed(lot, state), avoid, keep: true, ...shippedTaste(state) });

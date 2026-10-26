@@ -1,7 +1,7 @@
 // The lot generator's exam sheet (T161, #379; P25 #348 step 6): the fixed 50 lots of src/game/lots/lot-exam.ts (sizes, the four axis road angles,
 // the three states), each composed as the game composes it with a model, shot in the lot lab (?lotlab&dev&exam: src/game/dev/lot-exam.ts) and
 // laid out as one contact sheet with the training measures in its head. Run it after each training session to see the progress.
-//   npm run lots:exam -- [--url http://localhost:5174] [--model learned|shipped|old|<version>[,...]] [--out output/lot-exam] [--rows n] [--only res,com,ind,open]
+//   npm run lots:exam -- [--url http://localhost:5174] [--model learned|shipped|old|<version>[,...]] [--out output/lot-exam] [--rows n] [--only res,com,ind,open] [--cells dir]
 // --model: learned (default: the lab's samples now, the model Ship model would ship), shipped (the latest shipped), a version; a comma list
 // makes a sheet for each (e.g. 1,2,learned to compare). Needs the dev server running (npm run dev) and Microsoft Edge. Nothing is saved but the
 // sheets: every dev save the page might make is answered here and never reaches the server. --rows n: the first n rows only (a quick look).
@@ -12,7 +12,7 @@ import path from 'node:path';
 import { chromium } from 'playwright-core';
 
 const args = process.argv.slice(2), opt = (k, d) => { const i = args.indexOf(`--${k}`); return i >= 0 && args[i + 1] ? args[i + 1] : d; };
-const URL_ = opt('url', 'http://localhost:5174').replace(/\/$/, ''), MODELS = opt('model', 'learned').split(',').filter(Boolean), OUT = opt('out', 'output/lot-exam'), ROWS = Number(opt('rows', '0')) || Infinity, ONLY = opt('only', '');
+const URL_ = opt('url', 'http://localhost:5174').replace(/\/$/, ''), MODELS = opt('model', 'learned').split(',').filter(Boolean), OUT = opt('out', 'output/lot-exam'), ROWS = Number(opt('rows', '0')) || Infinity, ONLY = opt('only', ''), CELLS = opt('cells', '');
 const STATE_NAMES = { built: 'Built', upgraded: 'Upgraded', declined: 'Decrepit' }, KINDS = ['tree', 'bush', 'flowerbed', 'prop', 'car', 'decal'];
 // T169: the use groups, each its rows of built, upgraded and decrepit lots
 const GROUP_NAMES = { res: 'Houses', com: 'Shops and offices', ind: 'Industry', open: 'Car parks, civic and tour' };
@@ -58,6 +58,8 @@ try {
         const png = await page.screenshot({ clip: { x: rect.x, y: rect.y, width: rect.w, height: rect.h } });
         const counts = await page.evaluate(n => window.__lotExam.counts(n), i);
         shots.set(i, { png: png.toString('base64'), counts, w: rect.w, h: rect.h, poly: rect.poly, up: rect.up });
+        // --cells dir: each lot's shot as its own picture too (dir/<model>-<lot>.png), to look at closely
+        if (CELLS) { fs.mkdirSync(CELLS, { recursive: true }); fs.writeFileSync(path.join(CELLS, `${String(label).split(' ')[0].replace(/[^a-z0-9]+/gi, '')}-${i}.png`), png); }
       }
       console.log(`  row ${k + 1}/${rows.length}: lots ${ids.join(', ')}`);
     }
