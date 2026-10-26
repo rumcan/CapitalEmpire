@@ -10,8 +10,10 @@ import type { Game } from '../engine';
 import type { LotPreset, PresetState, PresetUse, Road } from '../lots/presets';
 import type { PresetFrame } from '../lots/preset-frame';
 import { toFrame } from '../lots/preset-frame';
-import { CLASSES, ITEM_KINDS, SECTORS, SECTOR_NAMES, countOf, keepRate, learningStats, sampleItem, sectorArea, sectorOf, sectorRects, type Box, type HouseClass, type ItemKind, type Sample, type SectorLot } from '../lots/learn';
-import { addSample, learnedModel, learnedSamples, onLearning } from './learn-store';
+import { CLASSES, ITEM_KINDS, SECTORS, SECTOR_NAMES, countOf, keepRate, learningStats, sampleItem, sectorArea, sectorOf, sectorRects, type Box, type HouseClass, type ItemKind, type Model, type Sample, type SectorLot } from '../lots/learn';
+import { addSample, addSamples, learnedModel, learnedSamples, onLearning } from './learn-store';
+import { presetSamples, teaches } from './learn-presets';
+import { lotPresets } from '../lots/compose';
 import { generateLayout, type LaidItem } from '../lots/lot-gen';
 import { isFence, kindPools } from '../lots/item-kinds';
 import { CLASS_NAMES, frameHalf, isHouseLike, sizeClassOf } from './lot-houses';
@@ -43,6 +45,34 @@ export interface WizardHost {
 }
 /** an offered item on the wizard's lot: deleted or not */
 interface Item extends LaidItem { deleted: boolean }
+/** a wizard lot (the wizard's, a gallery's): its base (the house, fences, street items, patches), the offered items, the deletes to undo, its
+ *  sector lot, its house, size class and footprint, and the generator's seed */
+export interface WizLot { base: LotPreset; items: Item[]; undo: number[]; lot: SectorLot; house: string | null; cls: HouseClass; hw: number; hd: number; seed: number }
+/** a wizard lot from a lot composed as the game composes it (raw): kept to its house, fences and street items, the offered items laid by the model
+ *  (lots/lot-gen.ts, pure and seeded) round them */
+export function makeLot(raw: LotPreset, f: PresetFrame, model: Model, seed = Math.floor(Math.random() * 2147483647)): WizLot {
+  const half = frameHalf(f), hi = mainBuilding(raw, q => isHouseLike(q.id), half), hq = hi >= 0 ? raw.props[hi]! : null, hh = hq ? half(hq) : null;
+  // the base: the house, the fences and the street items (the verge); the plants, props, cars and decals are the wizard's to offer
+  const base: LotPreset = { ...raw, props: raw.props.filter((q, i) => i === hi || isFence(q.id) || q.y < 0), decals: [] };
+  const house: Box | null = hq && hh ? [hq.x - hh.ha, hq.y - hh.hb, hq.x + hh.ha, hq.y + hh.hb] : null;
+  const lot: SectorLot = { w: base.w, d: base.d, house, drives: base.patches.filter(p => p.kind === 'drive').map(p => p.pts) };
+  const taken: Box[] = base.props.map(q => { const h = half(q); return [q.x - h.ha, q.y - h.hb, q.x + h.ha, q.y + h.hb] as Box; });
+  const k = hq ? sizeClassOf(hq.id) : null, cls: HouseClass = hq ? CLASS_NAMES[k ?? 0] : 'none';
+  const offers = generateLayout({ lot, cls, model, taken, pools: kindPools(), half, seed });
+  return { base, items: offers.map(o => ({ ...o, deleted: false })), undo: [], lot, house: hq?.id ?? null, cls, hw: hh ? 2 * hh.ha : 0, hd: hh ? 2 * hh.hb : 0, seed };
+}
+/** a wizard lot as a preset (id): its base and the offered items not deleted */
+export function lotPreset(c: WizLot, id: string): LotPreset {
+  const props = [...c.base.props], decals = [...(c.base.decals ?? [])];
+  for (const it of c.items) if (!it.deleted) { if (it.kind === 'decal') decals.push({ id: it.id, x: it.x, y: it.y, scale: 1, alpha: 1 }); else props.push({ id: it.id, x: it.x, y: it.y, scale: 1, view: 0 }); }
+  return { ...c.base, id, props, decals };
+}
+/** a wizard lot's sample: its context and every offered item, kept or deleted (the wizard's); a gallery's judges the whole lot (src gallery, the
+ *  verdict: its items as they stood) */
+export function lotSample(c: WizLot, l: { use: PresetUse; state: PresetState; road: Road }, verdict?: 'up' | 'down'): Sample {
+  return { id: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`, at: new Date().toISOString(), ctx: { use: l.use, state: l.state, w: c.base.w, d: c.base.d, road: l.road, house: c.house, cls: c.cls, hw: c.hw, hd: c.hd, seed: c.seed },
+    items: c.items.map(it => sampleItem(c.lot, it.id, it.kind, it.x, it.y, !it.deleted)), ...(verdict ? { src: 'gallery' as const, verdict } : {}) };
+}
 const SVGNS = 'http://www.w3.org/2000/svg';
 const KIND_NAMES: Readonly<Record<ItemKind, string>> = { tree: 'trees', bush: 'bushes', flowerbed: 'flowerbeds', prop: 'props', car: 'cars', decal: 'decals' };
 
@@ -50,7 +80,7 @@ const KIND_NAMES: Readonly<Record<ItemKind, string>> = { tree: 'trees', bush: 'b
 export function makeWizard(host: WizardHost) {
   let on = false, same = true, keep = false, heat = true, heatKind: ItemKind = 'tree', hover: ItemKind | null = null, heatKey = '';
   /** the lot on screen: its base (the house, fences, street items, patches), the offered items, the deletes to undo, its sector lot, its context */
-  let cur: { base: LotPreset; items: Item[]; undo: number[]; lot: SectorLot; house: string | null; cls: HouseClass; hw: number; hd: number; seed: number } | null = null;
+  let cur: WizLot | null = null;
   /** the save-and-next times (ms), the last first */
   const times: number[] = [];
   const svg = document.createElementNS(SVGNS, 'svg') as SVGSVGElement;
@@ -59,17 +89,9 @@ export function makeWizard(host: WizardHost) {
   const unLearn = onLearning(() => { heatKey = ''; host.redraw(); });
 
   /** the wizard's lot as a preset: its base and the offered items not deleted */
-  function build(): LotPreset {
-    const c = cur!, props = [...c.base.props], decals = [...(c.base.decals ?? [])];
-    for (const it of c.items) if (!it.deleted) { if (it.kind === 'decal') decals.push({ id: it.id, x: it.x, y: it.y, scale: 1, alpha: 1 }); else props.push({ id: it.id, x: it.x, y: it.y, scale: 1, view: 0 }); }
-    return { ...c.base, id: WIZARD_ID, props, decals };
-  }
+  function build(): LotPreset { return lotPreset(cur!, WIZARD_ID); }
   /** the sample of the lot on screen: its context and every offered item, kept or deleted */
-  function sample(): Sample {
-    const c = cur!, l = host.lot();
-    return { id: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`, at: new Date().toISOString(), ctx: { use: l.use, state: l.state, w: c.base.w, d: c.base.d, road: l.road, house: c.house, cls: c.cls, hw: c.hw, hd: c.hd, seed: c.seed },
-      items: c.items.map(it => sampleItem(c.lot, it.id, it.kind, it.x, it.y, !it.deleted)) };
-  }
+  function sample(): Sample { return lotSample(cur!, host.lot()); }
   /** the next lot: the sample of this one recorded first (record), then a lot of this cell (or the next gap) with its house, fences and street
    *  items, and the offered items drawn by the model; shown at once and timed to its first frame */
   function next(record: boolean): void {
@@ -82,16 +104,8 @@ export function makeWizard(host: WizardHost) {
     }
     const raw = host.base(!same), f = host.frame();
     if (!raw || !f) { host.say('the wizard has no lot to compose here (no preset of this type and state near this size)'); return; }
-    const half = frameHalf(f), hi = mainBuilding(raw, q => isHouseLike(q.id), half), hq = hi >= 0 ? raw.props[hi]! : null, hh = hq ? half(hq) : null;
-    // the base: the house, the fences and the street items (the verge); the plants, props, cars and decals are the wizard's to offer
-    const base: LotPreset = { ...raw, id: WIZARD_ID, props: raw.props.filter((q, i) => i === hi || isFence(q.id) || q.y < 0), decals: [] };
-    const house: Box | null = hq && hh ? [hq.x - hh.ha, hq.y - hh.hb, hq.x + hh.ha, hq.y + hh.hb] : null;
-    const lot: SectorLot = { w: base.w, d: base.d, house, drives: base.patches.filter(p => p.kind === 'drive').map(p => p.pts) };
-    const taken: Box[] = base.props.map(q => { const h = half(q); return [q.x - h.ha, q.y - h.hb, q.x + h.ha, q.y + h.hb] as Box; });
-    const k = hq ? sizeClassOf(hq.id) : null, cls: HouseClass = hq ? CLASS_NAMES[k ?? 0] : 'none';
     // the generator is pure and seeded (lots/lot-gen.ts): the sample keeps the seed, so the same lot can be made again
-    const seed = Math.floor(Math.random() * 2147483647), offers = generateLayout({ lot, cls, model: learnedModel(), taken, pools: kindPools(), half, seed });
-    cur = { base, items: offers.map(o => ({ ...o, deleted: false })), undo: [], lot, house: hq?.id ?? null, cls, hw: hh ? 2 * hh.ha : 0, hd: hh ? 2 * hh.hb : 0, seed };
+    cur = makeLot(raw, f, learnedModel());
     host.show(build());
     heatKey = '';
     // timed to the frame that shows it
@@ -149,6 +163,12 @@ export function makeWizard(host: WizardHost) {
     on = v; pauseEditor(v); muteEditor(v); heatKey = ''; svg.style.display = v ? 'block' : 'none';
     if (v) next(false); else { cur = null; host.leave(); }
     host.redraw();
+  }
+  /** the wizard on with a given lot (the gallery's Fix: that lot to put right, item by item) */
+  function load(c: WizLot): void {
+    on = true; pauseEditor(true); muteEditor(true); heatKey = ''; svg.style.display = 'block';
+    cur = { ...c, items: c.items.map(it => ({ ...it })), undo: [] };
+    host.show(build()); host.redraw();
   }
   /** the wizard's keys (the lab calls it first while the wizard is on): Space save and next, S skip, Backspace undo, W or Esc leave; true when handled */
   function onKey(e: KeyboardEvent): boolean {
@@ -215,7 +235,11 @@ export function makeWizard(host: WizardHost) {
       check('heat map', heat, v => { heat = v; heatKey = ''; host.redraw(); }, 'each sector tinted by the keep rate of the kind under the pointer (or the one chosen); past samples kept green, deleted red'));
     out.push(tg);
     const ms = times.length ? [...times].sort((a, b) => a - b)[Math.floor(times.length / 2)]! : 0;
+    // T159: the owner's presets as a head start (every item on them kept), learnt again whenever they want (a preset's sample replaces its last)
+    const n = lotPresets().filter(teaches).length;
+    out.push(btn(`Learn from the presets (${n})`, BTN, () => learnPresets(), 'every item on the lab presets (approved and drafts) and on the frozen presets you edited counts as "kept here" with its lot; learning again replaces the last time'));
     out.push(el('div', 'font-size:13px;margin-top:6px;font-weight:700', `${st.total} sample${st.total === 1 ? '' : 's'}`),
+      el('div', 'font-size:12px;opacity:.85', `${st.bySrc.wizard} wizard · ${st.bySrc.preset} from presets · ${st.bySrc.gallery} gallery${st.judged ? ` (${Math.round(st.up * 100)}% good)` : ''}`),
       el('div', 'font-size:12px;opacity:.85', CLASSES.filter(k => st.byClass[k]).map(k => `${k} ${st.byClass[k]}`).join(' · ') || 'none yet: delete what is wrong, then Space'),
       el('div', 'font-size:12px;opacity:.85', st.shares.length ? `kept per lot: ${Math.round(st.first * 100)}% (first 10) → ${Math.round(st.last * 100)}% (last 10)` : ''),
       el('div', `font-size:12px;${ms > 500 ? 'color:#fca5a5' : 'opacity:.85'}`, times.length ? `next lot on screen: ${Math.round(times[0]!)} ms (median ${Math.round(ms)} ms of ${times.length})` : ''));
@@ -238,6 +262,12 @@ export function makeWizard(host: WizardHost) {
     }
     return out;
   }
+  /** the presets' samples learnt (one save through the dev server's merge) */
+  function learnPresets(): void {
+    const list = presetSamples(lotPresets()), items = list.reduce((a, s) => a + s.items.length, 0);
+    void addSamples(list).then(() => { heatKey = ''; host.say(`learned from ${list.length} presets: ${items} items kept where the owner put them`); host.redraw(); }).catch(e => host.say(`NOT SAVED to lot-learning.json: ${String(e)}`));
+    host.redraw();
+  }
   /** a sparkline of the share kept per lot (0..1), the newest on the right */
   function spark(v: readonly number[]): HTMLElement {
     const W = 260, H = 34, s = v.slice(-60), box = el('div', 'margin-top:4px'), g = document.createElementNS(SVGNS, 'svg'), line = document.createElementNS(SVGNS, 'polyline');
@@ -249,7 +279,7 @@ export function makeWizard(host: WizardHost) {
   /** the wizard's toolbar toggle for the lab's own toolbar (lit when on) */
   const toggleBtn = () => btn('Wizard (W)', on ? ON : BTN, () => toggle(), 'the lot wizard: generate, click off what is wrong, Space saves and shows the next; the generator learns where things go');
   return {
-    on: () => on, toggle, onKey, frame, bar, panel, toggleBtn, next,
+    on: () => on, toggle, onKey, frame, bar, panel, toggleBtn, next, load,
     dispose() { delete (window as unknown as { ceWizard?: unknown }).ceWizard; window.removeEventListener('pointerdown', onDown, true); window.removeEventListener('pointermove', onMove, true); unLearn(); svg.remove(); if (on) { pauseEditor(false); muteEditor(false); } },
   };
 }
