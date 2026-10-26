@@ -7,12 +7,18 @@
 // lot paints a ground rectangle into its preset and Erase removes the patch under a click (the editor's pointer handling is paused meanwhile). DECALS: a
 // whole preset's flat ground decals (leaves, litter, stains): a thumbnail arms placing it on the lot, Select decals picks, moves, scales and mirrors them.
 // A generated lot is whole: the game draws its fences, street items and decals from the preset alone (compose.ts).
+// SIZE: the W and D steppers under the size select resize the current preset (fitted, curated, staged again at the new size). PERSON CURSOR:
+// a townsperson stands at the pointer over the map, at the game's scale, for scale (its feet on the point under the pointer).
 // Farm: a farm parcel, the game's own farm for the variant's seed, or an approved farm preset. The lab's place (type, state, size, road, locks
-// and the current preset) is kept across a page reload (sessionStorage 'ce-lotlab'). Keys: g next variant, G previous, Ctrl+S save, Ctrl+Enter
+// and the current preset, and whether the person cursor is on) is kept across a page reload (sessionStorage 'ce-lotlab'). Keys: g next variant, G previous, Ctrl+S save, Ctrl+Enter
 // approve and next gap, Esc paint off; the editor's and the game's own keys are left alone.
 import type { Game } from '../engine';
 import { CLASS } from '../network';
-import { LIBRARY } from '../library';
+import { ATLAS_PAGES, ATLAS_SIZE, LIBRARY } from '../library';
+import type { LibItem } from '../types';
+import { lookOf } from '../newart';
+import { spriteRect, type Drawable } from '../sprites';
+import { footprintOf, ownerScaleOf } from '../lots/preset-art';
 import { worldX, worldY, ZOOM_MAX, ZOOM_MIN } from '../iso';
 import { composeFarm, type FarmParcel } from '../ext/farms/farms';
 import type { ComposeState, LotGeom } from '../lots/compose-core';
@@ -24,7 +30,7 @@ import { LU, LV } from '../lots/town';
 import { LOT_DECALS, type LotDecal } from '../lot-decals';
 import decalSheet from '../../assets/ground/lot-decals.webp';
 import { replacePreset, SCALE_MAX, SCALE_MIN, snap } from './lot-edit';
-import { armPlacing, editorAct, pauseEditor, saveLotPresets, thumb } from './lot-editor';
+import { armPlacing, editorAct, editorText, pauseEditor, saveLotPresets, thumb } from './lot-editor';
 
 /** the panel's width (px): the lot is composed right of it (the camera shifts by half of it) */
 const PANEL_W = 340;
@@ -52,6 +58,10 @@ const STATES: [PresetState, string][] = [['built', 'Built'], ['upgraded', 'Upgra
 const USES: PresetUse[] = [...TYPES.map(([u]) => u), ...MORE], ROADS: Road[] = [0, 1, 2, 3, 4, 5, 6, 7], STATE_KEYS: PresetState[] = STATES.map(([s]) => s);
 /** the sessionStorage key of the lab's place (type, state, size, road, locks, the current preset) */
 const SESSION = 'ce-lotlab';
+/** the editor's idle selection line (lot-editor.ts render): the lab shows no "Selected" line for it */
+const EDITOR_IDLE = 'Click a sprite to select it.';
+/** the editor's selection line for the lab's panel ("Selected: ..."), '' while the editor is off or nothing is selected */
+const selLine = (): string => { const i = editorText().info; return i && i !== EDITOR_IDLE ? `Selected: ${i}` : ''; };
 /** each road's arrow (where its street is on screen), by road (presets.ts Road) */
 const ARROW = ['↙', '↓', '↘', '→', '↗', '↑', '↖', '←'];
 /** each road's words, by road: the messages and the tooltips */
@@ -118,6 +128,18 @@ function holeBox(g: LotGeom): { x0: number; y0: number; x1: number; y1: number }
   return b;
 }
 
+/** the person cursor's sprite: an adult townsperson (the studio's own scale person, base_man; else the first adult 3d person, else the first walker; -1 when there is none), its owner scale, and its footprint (tiles from the anchor, as lot-editor.ts drawable builds it) */
+const PERSON_I = (() => { for (const f of [(id: string) => id === 'person:3d:base_man', (id: string) => id.startsWith('person:3d:') && !/kid|child|boy|girl/.test(id)]) { const i = LIBRARY.findIndex(it => f(it.id)); if (i >= 0) return i; } return LIBRARY.findIndex(it => it.kind === 'walker'); })();
+const PERSON_S = PERSON_I < 0 ? 1 : ownerScaleOf(LIBRARY[PERSON_I]!.id);
+const PERSON_FP: readonly number[] = PERSON_I < 0 ? [-0.5, -0.5, 0.5, 0.5] : footprintOf(LIBRARY[PERSON_I]!.id, PERSON_S, false);
+/** the person's Drawable and its screen-independent rectangle (world px): both reused each frame, so the frame allocates nothing for them */
+const personD: Drawable = { item: PERSON_I, x: 0, y: 0, flip: false, scale: PERSON_S, x0: 0, y0: 0, x1: 0, y1: 0 }, PERSON_R: number[] = [0, 0, 0, 0];
+/** paints a library sprite's atlas picture over an element of w x h px (lot-editor.ts paint: the picture's rectangle of its page, mip 1) */
+function paintPic(node: HTMLElement, it: LibItem, w: number, h: number) {
+  const [page, u0, v0, u1, v1] = it.tex, P = ATLAS_SIZE / 2, kx = w / Math.max(1e-6, (u1 - u0) * P), ky = h / Math.max(1e-6, (v1 - v0) * P);
+  Object.assign(node.style, { backgroundImage: `url(${ATLAS_PAGES[page]![1]})`, backgroundSize: `${P * kx}px ${P * ky}px`, backgroundPosition: `${-u0 * P * kx}px ${-v0 * P * ky}px`, backgroundRepeat: 'no-repeat' });
+}
+
 /** installs the lot lab on a game (dev builds, ?lotlab): the panel, the map mask, the keys, the ground painting; returns the uninstall (panel, style, mask, listeners, timers) */
 export function installLotLab(game: Game): () => void {
   /** the model: the type, state, size (a bucket key), road angle and variant the lot is composed with */
@@ -134,10 +156,14 @@ export function installLotLab(game: Game): () => void {
   /** the decal mode: 'place' (a press on the lot adds the armed decal decalId; Shift keeps placing), 'select' (a press picks a decal, drags it, the keys edit it), or null (off); the selected decal (its preset's id and index there), and the drag in progress (the point now, in the lot's frame, and the grab offset) */
   let decalMode: 'place' | 'select' | null = null, decalId = '', decalSelId: { pid: string; i: number } | null = null;
   let decalDrag: { dx: number; dy: number; x: number; y: number } | null = null;
+  /** the person cursor: on (a townsperson at the pointer over the map), and the pointer's last point (client px) while it is over the map (null off it) */
+  let personOn = false, pointer: { x: number; y: number } | null = null;
+  /** the editor's words as the lab last saw them (the selection line, the message): the refresh shows a change */
+  let emInfo = '', emMsg = '';
 
-  // ---------- the DOM: a style hiding the game's HUD, the map mask (an SVG: the hole and the paint preview), the panel on the left (plain DOM, as lot-editor.ts)
+  // ---------- the DOM: a style hiding the game's HUD and the editor's own panel (its words show under THIS PRESET), the map mask (an SVG: the hole and the paint preview), the panel on the left (plain DOM, as lot-editor.ts)
   const style = document.createElement('style');
-  style.textContent = '#root > div > :not(canvas){display:none!important}';
+  style.textContent = '#root > div > :not(canvas){display:none!important}#ce-dev-editor-panel{display:none!important}';
   // the paint layer: an SVG over the map for the paint drag's rectangle (the map round the lot is the map's own grass: stageLab clears the
   // forest and the farms there, so nothing else stands near the lot)
   const mask = document.createElementNS(SVGNS, 'svg'), preview = document.createElementNS(SVGNS, 'path');
@@ -169,6 +195,10 @@ export function installLotLab(game: Game): () => void {
   const edit = el('div', 'display:flex;flex-wrap:wrap;gap:4px');
   for (const [a, t] of [['turn', 'Turn (R)'], ['delete', 'Delete (Del)'], ['bigger', 'Bigger (])'], ['smaller', 'Smaller ([)'], ['duplicate', 'Duplicate (Ctrl+D)'], ['undo', 'Undo (Ctrl+Z)']] as const)
     edit.append(btn(t, `${BTN}padding:3px 6px`, () => act(() => { if (!editorAct(a)) message = 'the map editor is not on yet'; })));
+  /** the Person cursor toggle (drawn by renderPerson), and the person's sprite: a fixed element over the map (above the mask, under the panel), no pointer events */
+  const personBox = el('div', 'margin-top:4px'), personEl = el('div', 'position:fixed;left:0;top:0;display:none;pointer-events:none;z-index:58;background-repeat:no-repeat');
+  /** the editor's selection line, under THIS PRESET (drawn by render: selLine) */
+  const selBox = el('div', 'color:#94a3b8;font-size:11px;white-space:pre-wrap;margin-top:4px');
   /** the generate row: the previous variant, and Generate (random unless locked) */
   const gen = el('div', 'display:flex;gap:6px;margin-top:6px');
   gen.append(btn('◀ Variant', `flex:1;${BTN}`, () => act(() => generate(-1)), 'the previous variant (Shift+G)'), btn('Generate ▶', `flex:1;${ON}`, () => act(randomGen), 'a random size and road angle, as the locks allow; both locked: the next variant (g)'));
@@ -177,9 +207,10 @@ export function installLotLab(game: Game): () => void {
     el('div', 'font-weight:700;color:#7dd3fc;font-size:14px', 'LOTS'),
     el('div', 'opacity:.8', 'Compose a lot as the game would, edit it on the map, save it, approve it.'),
     el('div', 'opacity:.6;font-size:11px', 'g next variant · G previous · Ctrl+S save · Ctrl+Enter approve & next gap · Esc paint off'),
+    personBox,
     heading('TYPE AND STATE'), typeBox, heading('SIZE'), sizeBox, heading('ROAD ANGLE'), roadBox,
     heading('GENERATE'), gen, locks, genSrc,
-    heading('THIS PRESET'), curBox,
+    heading('THIS PRESET'), curBox, selBox,
     heading('EDIT THE SELECTED SPRITE'), edit,
     el('div', 'opacity:.75;margin-top:4px', 'Click a sprite on the lot to select it (fences, bins and mailbox too), or a leaf pile or other decal; drag to move, Delete removes. New decals: the DECALS list. (Leaves outside the lot belong to the map grass, not to the lot.)'),
     heading('PAINT GROUND'), paintBox, heading('DECALS'), decalBar, decalGroupSel, decalGrid,
@@ -337,7 +368,7 @@ export function installLotLab(game: Game): () => void {
   /** saves the presets (the draft included) to lot-presets.json: the draft is on disk now (the game draws it once approved) */
   async function save(): Promise<void> {
     const id = current; if (!id) return;
-    await saveLotPresets();
+    await saveLotPresets([id]);
     const d = draft; if (d && d.id === id) d.saved = true;
     message = `saved ${id} as a draft: the game draws it once it is approved`;
   }
@@ -349,7 +380,7 @@ export function installLotLab(game: Game): () => void {
     if (on) next.approved = true; else delete next.approved;
     setLotPresets(replacePreset(lotPresets(), next));
     const d = draft; if (d && d.id === id) { d.obj = next; d.saved = true; }
-    await saveLotPresets();
+    await saveLotPresets([id]);
     const b = bucketOf(p.w, p.d);
     message = on ? `approved ${id}: the game draws it on ${USE_NAME[p.use]} ${p.state} lots of about ${b.w} x ${b.d} tiles facing ${ROAD_WORDS[p.road ?? road]!}` : `unapproved ${id}`;
   }
@@ -384,7 +415,7 @@ export function installLotLab(game: Game): () => void {
     if (p.approved && !confirm(`Remove the approved preset ${id}? The game stops drawing it on matching lots.`)) return;
     const disk = !unsaved(id);
     setLotPresets(lotPresets().filter(q => q.id !== id));
-    if (disk) await saveLotPresets();
+    if (disk) await saveLotPresets([], [id]);
     if (current === id) {
       current = null; draft = null;
       if (staged) stage(staged.w, staged.d, { use: luOf(use), ...levelOf(state), seed: seedOf(use, variant) });
@@ -404,7 +435,7 @@ export function installLotLab(game: Game): () => void {
     setLotPresets(replacePreset(lotPresets(), next));
     const d = draft; if (d && d.id === p.id) { d.obj = next; d.saved = true; }
     if (staged) game.restageLab(staged.st);
-    await saveLotPresets();
+    await saveLotPresets([p.id]);
   }
   /** Erase: the last patch of the preset whose polygon holds the point (in its frame) is removed and the preset saved; else says so */
   async function eraseAt(p: LotPreset, q: Pt): Promise<void> {
@@ -424,8 +455,21 @@ export function installLotLab(game: Game): () => void {
     setLotPresets(replacePreset(lotPresets(), next));
     const d = draft; if (d && d.id === p.id) { d.obj = next; d.saved = true; }
     if (staged) game.restageLab(staged.st);
-    await saveLotPresets();
+    await saveLotPresets([p.id]);
     message = msg;
+  }
+  /** the current lab preset resized to w2 x d2 (tiles): fitted to the new size (fitPreset: the far side moves, props past the edge dropped), curated, set in the model (and the draft); the size select set to its bucket when this size has it; the lot staged again at the new size (the street fresh, the camera fitted); the presets saved */
+  async function resize(w2: number, d2: number): Promise<void> {
+    const p = current === null ? undefined : lotPresets().find(q => q.id === current);
+    if (!p) { message = 'no lab preset to resize: Generate a lot first'; return; }
+    const f = fitPreset(p, w2, d2), next: LotPreset = { ...p, w: w2, d: d2, props: f.props, patches: f.patches, ...(p.decals ? { decals: f.decals } : {}), curated: true };
+    setLotPresets(replacePreset(lotPresets(), next));
+    const d = draft; if (d && d.id === p.id) { d.obj = next; d.saved = true; }
+    const b = bucketOf(w2, d2), k = `${b.w}x${b.d}`;
+    if (sizes().some(s => s.key === k)) size = k;
+    staged = null; stage(w2, d2, { use: luOf(use), ...levelOf(state), seed: seedOf(use, variant), preset: p.id });
+    await saveLotPresets([p.id]);
+    message = `lot now ${w2} x ${d2} tiles: the game uses it on lots of about ${b.w} x ${b.d} tiles${f.dropped ? ` (${f.dropped} props fell outside and were dropped)` : ''}`;
   }
   /** the current preset when it is a whole lab preset (it holds decals), else null */
   function wholeNow(): LotPreset | null { const p = current === null ? undefined : lotPresets().find(q => q.id === current); return p?.whole ? p : null; }
@@ -545,7 +589,25 @@ export function installLotLab(game: Game): () => void {
     for (const s of ss) sel.append(new Option(`${sizeLabel(s)} · ${approvedIn(s.key, null)} approved`, s.key));
     sel.value = size;
     sel.addEventListener('change', () => { size = sel.value; void act(() => { variant = -1; return generate(1); }); });
-    sizeBox.append(sel);
+    sizeBox.append(sel, sizeSteps());
+  }
+  /** the W and D steppers of the current lab preset (under the size select): − and + take it a step smaller or larger (1 tile; a farm 4), kept in its range (lots 6..40 by 6..60, farms 20..120 by 30..200); disabled with no current preset or at a limit */
+  function sizeSteps(): HTMLElement {
+    const p = current === null ? undefined : lotPresets().find(q => q.id === current), k = use === 'farm' ? 4 : 1;
+    const [w0, w1, d0, d1] = use === 'farm' ? [20, 120, 30, 200] : [6, 40, 6, 60];
+    const row = el('div', 'display:flex;gap:4px;align-items:center;margin-top:6px;white-space:nowrap');
+    /** one axis: its label and its − and + (each takes the preset to the next size on that axis, within [lo, hi]) */
+    const axis = (name: 'w' | 'd', lo: number, hi: number) => {
+      const v = p ? p[name] : 0;
+      row.append(el('span', 'margin:0 2px 0 4px', `${name === 'w' ? 'W' : 'D'} ${p ? v : '-'}`));
+      for (const s of [-k, k]) {
+        const n = within(v + s, lo, hi), b = btn(s < 0 ? '−' : '+', `${BTN}padding:1px 7px`, () => { if (p) void act(() => resize(name === 'w' ? n : p.w, name === 'd' ? n : p.d)); }, `${s < 0 ? 'smaller' : 'larger'} ${name === 'w' ? 'width' : 'depth'}: ${k} tile${k > 1 ? 's' : ''}`);
+        b.disabled = !p || (s < 0 ? v <= lo : v >= hi);
+        row.append(b);
+      }
+    };
+    axis('w', w0, w1); axis('d', d0, d1);
+    return row;
   }
   /** draws the road angle compass: the current road lit, a green dot where this size has an approved preset on that road, a grey lot in the middle */
   function renderRoad() {
@@ -562,6 +624,8 @@ export function installLotLab(game: Game): () => void {
   }
   /** draws the Generate locks (the angle, the size), as the model holds them */
   function renderLocks() { locks.replaceChildren(check('Lock angle', lockAngle, v => { lockAngle = v; }), check('Lock size', lockSize, v => { lockSize = v; })); }
+  /** draws the Person cursor toggle (lit when on): a townsperson stands at the pointer over the map, for scale */
+  function renderPerson() { personBox.replaceChildren(btn('Person cursor', `${personOn ? ON : BTN}width:100%;padding:5px 8px`, () => act(() => { personOn = !personOn; }), 'a townsperson stands at the pointer over the map, for scale (its feet on the point under the pointer)')); }
   /** draws this preset: its id, its state as a chip (unsaved draft amber, saved draft sky, approved green), its props, and the actions on it */
   function renderCur() {
     curBox.replaceChildren();
@@ -656,15 +720,15 @@ export function installLotLab(game: Game): () => void {
   /** draws the panel's changing sections and the message; the place kept for a reload */
   function render() {
     if (!started) return;
-    renderType(); renderSize(); renderRoad(); renderLocks();
-    genSrc.textContent = source; renderCur(); renderPaint(); renderDecals(); renderCov(); renderHere();
+    renderType(); renderSize(); renderRoad(); renderLocks(); renderPerson();
+    genSrc.textContent = source; renderCur(); selBox.textContent = selLine(); renderPaint(); renderDecals(); renderCov(); renderHere();
     msgBox.textContent = message;
     sigLast = sig(); keep();
   }
   /** the lab's stored place (sessionStorage); null when there is none, it is unreadable, or storage is off */
   function stored(): Record<string, unknown> | null { try { const o: unknown = JSON.parse(sessionStorage.getItem(SESSION) ?? 'null'); return o && typeof o === 'object' ? o as Record<string, unknown> : null; } catch { return null; } }
-  /** keeps the lab's place (type, state, size, road, locks, the current preset) in sessionStorage; a blocked or full store only loses it */
-  function keep(): void { try { sessionStorage.setItem(SESSION, JSON.stringify({ use, state, size, road, lockAngle, lockSize, current })); } catch { /* the place is not kept */ } }
+  /** keeps the lab's place (type, state, size, road, locks, the current preset, the person cursor) in sessionStorage; a blocked or full store only loses it */
+  function keep(): void { try { sessionStorage.setItem(SESSION, JSON.stringify({ use, state, size, road, lockAngle, lockSize, current, person: personOn })); } catch { /* the place is not kept */ } }
 
   // ---------- start, the keys, the painting, the frame
   /** the game is ready: the panel shown, the palette drawn, the stored place restored (each field checked; a size the use and state lack falls back to the default) and its preset opened, else the first variant generated (residential, built, 10 x 16 when it exists, road 0 by default) */
@@ -672,7 +736,7 @@ export function installLotLab(game: Game): () => void {
     started = true; panel.style.display = 'block';
     const r = stored();
     use = valueOr(r?.use, USES, 'res'); state = use === 'farm' ? 'built' : valueOr(r?.state, STATE_KEYS, 'built');
-    road = valueOr(r?.road, ROADS, 0); lockAngle = r?.lockAngle === true; lockSize = r?.lockSize === true; variant = -1;
+    road = valueOr(r?.road, ROADS, 0); lockAngle = r?.lockAngle === true; lockSize = r?.lockSize === true; personOn = r?.person === true; variant = -1;
     const l = sizes(), sz = r?.size, want = typeof sz === 'string' ? sz : '';
     size = l.some(s => s.key === want) ? want : (l.some(s => s.key === '10x16') ? '10x16' : (l[0]?.key ?? ''));
     renderGrid(); showDecals();
@@ -681,7 +745,11 @@ export function installLotLab(game: Game): () => void {
       if (current && draft && draft.id === current && !draft.saved && !lotPresets().some(p => p.id === current)) {
         setLotPresets([...lotPresets(), draft.obj]); if (staged) game.restageLab(staged.st);
       } else if (current && !lotPresets().some(p => p.id === current)) { current = null; draft = null; message = 'the preset is gone from lot-presets.json (reloaded from disk): Generate again'; }
-      if (sig() !== sigLast) render();
+      // the editor's words (its panel is hidden here): its message becomes the lab's when it changed; its selection line is drawn by render
+      const ed = editorText(), moved = ed.info !== emInfo;
+      if (ed.msg !== emMsg) { emMsg = ed.msg; if (ed.msg) message = ed.msg; }
+      emInfo = ed.info;
+      if (moved || sig() !== sigLast) render();
     }, 1500);
     const cv = r?.current, cur = typeof cv === 'string' ? cv : null;
     if (cur && lab().some(p => p.id === cur)) void act(() => open(cur));
@@ -730,11 +798,29 @@ export function installLotLab(game: Game): () => void {
     if (!go) return;
     e.preventDefault(); e.stopImmediatePropagation(); void act(go);
   };
-  /** each frame: the camera kept on the lot, the mask drawn, the paint drag's rectangle while one is made */
-  function frame() { raf = requestAnimationFrame(frame); keepCam(); drawMask(); if (paintDrag) drawPaint(); if (decalMode === 'select') drawRing(); }
+  /** the pointer over the map (the game's canvas or the overlay on it) keeps its point for the person cursor; a move anywhere else (the panel, the editor's panel) clears it. Window capture and passive: it runs before the lab's own handlers, which stop the events */
+  const onMapMove = (e: PointerEvent) => { pointer = e.target === game.canvas || e.target === game.overlay ? { x: e.clientX, y: e.clientY } : null; };
+  /** the pointer left the window (no element takes it): the person goes */
+  const onMapOut = (e: PointerEvent) => { if (!e.relatedTarget) pointer = null; };
+  /** the person cursor: a townsperson at the pointer's point on the map, its feet (the footprint's centre) on that point, drawn as the game draws the sprite at the camera's zoom (spriteRect, lookOf) and mirrored when its look is flipped; hidden when it is off, the pointer is off the map or there is no sprite */
+  function drawPerson() {
+    const pt = pointer;
+    if (!personOn || !pt || PERSON_I < 0) { personEl.style.display = 'none'; return; }
+    const b = game.canvas.getBoundingClientRect(), t = game.tileAt(pt.x - b.left, pt.y - b.top), fp = PERSON_FP;
+    personD.x = t.x - (fp[0]! + fp[2]!) / 2; personD.y = t.y - (fp[1]! + fp[3]!) / 2;
+    personD.x0 = personD.x + fp[0]!; personD.y0 = personD.y + fp[1]!; personD.x1 = personD.x + fp[2]!; personD.y1 = personD.y + fp[3]!;
+    const lk = lookOf(personD);
+    if (lk.hidden) { personEl.style.display = 'none'; return; }
+    const r = spriteRect(personD, PERSON_R), c = game.cam, z = c.z, ox = b.left + game.cssW / 2, oy = b.top + game.cssH / 2, w = (r[2]! - r[0]!) * z, h = (r[3]! - r[1]!) * z;
+    Object.assign(personEl.style, { display: 'block', left: `${ox + (r[0]! - c.X) * z}px`, top: `${oy + (r[1]! - c.Y) * z}px`, width: `${w}px`, height: `${h}px`, transform: lk.flip ? 'scaleX(-1)' : '' });
+    paintPic(personEl, LIBRARY[lk.item]!, w, h);
+  }
+  /** each frame: the camera kept on the lot, the mask drawn, the paint drag's rectangle while one is made, the person cursor */
+  function frame() { raf = requestAnimationFrame(frame); keepCam(); drawMask(); if (paintDrag) drawPaint(); if (decalMode === 'select') drawRing(); drawPerson(); }
 
   document.head.append(style);
-  document.body.append(mask, panel);
+  document.body.append(mask, panel, personEl);
+  window.addEventListener('pointermove', onMapMove, { capture: true, passive: true }); window.addEventListener('pointerout', onMapOut, true);
   window.addEventListener('keydown', onKey, true);
   window.addEventListener('pointerdown', onPaintDown, true);
   window.addEventListener('pointermove', onPaintMove, true);
@@ -746,12 +832,13 @@ export function installLotLab(game: Game): () => void {
   const poll = window.setInterval(() => { if (!game.ready) return; window.clearInterval(poll); start(); }, 200);
   return () => {
     window.clearInterval(poll); window.clearInterval(live); cancelAnimationFrame(raf);
+    window.removeEventListener('pointermove', onMapMove, true); window.removeEventListener('pointerout', onMapOut, true);
     window.removeEventListener('keydown', onKey, true);
     window.removeEventListener('pointerdown', onPaintDown, true); window.removeEventListener('pointermove', onPaintMove, true);
     window.removeEventListener('pointerup', onPaintUp, true); window.removeEventListener('pointercancel', onPaintUp, true);
     window.removeEventListener('pointerdown', onDecalDown, true); window.removeEventListener('pointermove', onDecalMove, true);
     window.removeEventListener('pointerup', onDecalUp, true); window.removeEventListener('pointercancel', onDecalUp, true);
     pauseEditor(false);
-    style.remove(); mask.remove(); panel.remove();
+    style.remove(); mask.remove(); panel.remove(); personEl.remove();
   };
 }

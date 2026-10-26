@@ -4,15 +4,35 @@ import { fileURLToPath, pathToFileURL } from "url";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig, type Plugin } from "vite";
-import { checkDevRequest, checkDevSave, devSavePath } from "./src/game/dev/dev-save";
+import { checkDevRequest, checkDevSave, devSavePath, mergePresets } from "./src/game/dev/dev-save";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+/** writes a file whole and atomically: a temp file next to it, then a rename, so the watcher sees the old text or the new, never half. Windows
+ *  refuses the rename while another process (the watcher, an editor, a virus scan) has the file open, so it tries again for up to 2 s. done gets
+ *  the error, or null */
+function writeAtomic(file: string, text: string, done: (err: unknown) => void): void {
+  const tmp = `${file}.${process.pid}-${Date.now()}.tmp`;
+  try { fs.writeFileSync(tmp, text, "utf8"); } catch (e) { return done(e); }
+  const swap = (left: number): void => {
+    try { fs.renameSync(tmp, file); } catch (e) {
+      const code = (e as NodeJS.ErrnoException).code;
+      if (left > 0 && (code === "EPERM" || code === "EBUSY" || code === "EACCES")) { setTimeout(() => swap(left - 1), 100); return; }
+      try { fs.unlinkSync(tmp); } catch { /* gone */ }
+      return done(e);
+    }
+    done(null);
+  };
+  swap(20);
+}
+
 /** The in-game dev editor's save (P20 / T071), in the dev server only (apply 'serve': never in a build). POST /__dev/save { file, json } writes
  *  one of the whitelisted files (src/game/dev/dev-save.ts: lot-presets.json, scale-overrides.json, removed.json) whole and atomically (a temp
- *  file, then a rename), so the watcher hot-reloads the JSON once, complete; GET /__dev/load?file= reads one back. Only the dev server's own
- *  pages may (dev-save.ts checkDevRequest: Origin, Sec-Fetch-Site, application/json); anything else is refused */
+ *  file, then a rename), so the watcher hot-reloads the JSON once, complete; GET /__dev/load?file= reads one back. POST /__dev/presets { upsert,
+ *  remove } merges the lot presets per preset into lot-presets.json (mergePresets: one request at a time, each reading the file the last wrote),
+ *  so two people's saves never overwrite each other. Only the dev server's own pages may (dev-save.ts checkDevRequest: Origin, Sec-Fetch-Site,
+ *  application/json); anything else is refused */
 function devSave(): Plugin {
   return {
     name: "capitalempire-dev-save",
@@ -41,19 +61,29 @@ function devSave(): Plugin {
           try { body = JSON.parse(raw); } catch { return reply(res, 400, { error: "the body is not JSON" }); }
           const c = checkDevSave(body);
           if (!c.ok) return reply(res, 403, { error: c.error });
-          const file = path.join(__dirname, c.path), tmp = `${file}.${process.pid}-${Date.now()}.tmp`;
-          try { fs.writeFileSync(tmp, c.text, "utf8"); } catch (e) { return reply(res, 500, { error: String(e) }); }
-          // Windows refuses the rename while another process (the watcher, an editor, a virus scan) has the file open: try again for up to 2 s
-          const swap = (left: number) => {
-            try { fs.renameSync(tmp, file); reply(res, 200, { ok: true, path: c.path, bytes: Buffer.byteLength(c.text) }); }
-            catch (e) {
-              const code = (e as NodeJS.ErrnoException).code;
-              if (left > 0 && (code === "EPERM" || code === "EBUSY" || code === "EACCES")) { setTimeout(() => swap(left - 1), 100); return; }
-              try { fs.unlinkSync(tmp); } catch { /* gone */ }
-              reply(res, 500, { error: String(e) });
-            }
-          };
-          swap(20);
+          writeAtomic(path.join(__dirname, c.path), c.text, e => (e ? reply(res, 500, { error: String(e) }) : reply(res, 200, { ok: true, path: c.path, bytes: Buffer.byteLength(c.text) })));
+        });
+      });
+      // the lot presets' merge: one request at a time (a promise chain), each reading the file the one before it wrote
+      let presets: Promise<void> = Promise.resolve();
+      server.middlewares.use("/__dev/presets", (req, res) => {
+        if (req.method !== "POST") return reply(res, 405, { error: "POST only" });
+        const no = foreign(req); if (no) return reply(res, 403, { error: no });
+        let raw = "";
+        req.setEncoding("utf8");
+        req.on("data", (c: string) => { raw += c; if (raw.length > 40 * 1024 * 1024) req.destroy(); });
+        req.on("end", () => {
+          let body: unknown;
+          try { body = JSON.parse(raw); } catch { return reply(res, 400, { error: "the body is not JSON" }); }
+          const { upsert, remove } = (typeof body === "object" && body !== null ? body : {}) as { upsert?: unknown; remove?: unknown };
+          presets = presets.then(() => new Promise<void>(done => {
+            const file = path.join(__dirname, devSavePath("lot-presets.json")!);
+            let text: string;
+            try { text = fs.readFileSync(file, "utf8"); } catch (e) { reply(res, 500, { error: String(e) }); return done(); }
+            const m = mergePresets(text, upsert, remove);
+            if (!m.ok) { reply(res, 403, { error: m.error }); return done(); }
+            writeAtomic(file, m.text, e => { if (e) reply(res, 500, { error: String(e) }); else reply(res, 200, { ok: true, count: m.count }); done(); });
+          })).catch(e => { if (!res.headersSent) reply(res, 500, { error: String(e) }); });
         });
       });
     },

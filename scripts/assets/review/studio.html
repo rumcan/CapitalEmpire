@@ -57,7 +57,8 @@ const $=s=>document.querySelector(s), el=(t,a={},...k)=>{const e=document.create
 const post=(u,b)=>fetch(u,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(b||{})}).then(r=>r.json());
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x===b));document.querySelectorAll('.view').forEach(v=>v.classList.toggle('on',v.id==='v-'+b.dataset.v));placeMan();if(b.dataset.v==='people'&&!peopleLoaded)loadPeople();if(b.dataset.v==='lots'&&!$('#labframe').src)loadLab();});
 // ---------------- lots: the game's lot lab (?lotlab) in a frame, from the game dev server the studio was started with (STUDIO_GAME_URL)
-async function loadLab(){const c=await fetch('/api/config').then(r=>r.json()),u=c.game.replace(/\/$/,'')+'/?lotlab&dev';$('#labopen').href=u;$('#labframe').src=u;}
+// a helper on another computer reaches the game by the address it reached the studio by (a localhost game URL means this machine)
+async function loadLab(){const c=await fetch('/api/config').then(r=>r.json()),g=new URL(c.game),own=h=>h==='localhost'||h==='127.0.0.1'||h==='[::1]';if(own(g.hostname)&&!own(location.hostname))g.hostname=location.hostname;const u=g.origin+'/?lotlab&dev';$('#labopen').href=u;$('#labframe').src=u;}
 
 // ---------------- library
 let all=[],removed={},walkers=[],me=null,cat='',q='',K=0.35,pointer=null;   // K: display px per native game px, the same for every sprite and the man

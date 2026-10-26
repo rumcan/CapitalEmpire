@@ -12,8 +12,8 @@
 //     scale-overrides.json (read at runtime: the size shows at once) and removed.json (read at the next asset rebuild); a size never grows past
 //     the picture's pixels (newart.ts maxDrawScale), here or in a preset or the save, as the studio and the game's own resize refuse it;
 //   a player's prop: the prop in the game save, as the game's own tools do.
-// The dev server writes the files (vite.config.ts: POST /__dev/save, whitelisted, own pages only) and hot-reloads the presets with no page
-// reload or rebuild.
+// The dev server writes the files (vite.config.ts: POST /__dev/save, whitelisted, own pages only; the lot presets merge per preset through
+// POST /__dev/presets, so two people's saves do not overwrite each other) and hot-reloads them with no page reload or rebuild.
 // The lot lab (src/game/dev/lot-lab.ts) drives the panel through armPlacing and editorAct, saves with saveLotPresets, and draws its palette with thumb.
 import type { Game } from '../engine';
 import type { LibItem, Prop } from '../types';
@@ -94,23 +94,34 @@ async function post(file: string, json: string): Promise<void> {
  *  text, so the file never ends on an older state than the editor holds */
 const waiting = new Map<string, string>();
 let writing: Promise<void> | null = null;
-/** a text's fingerprint (two FNV-1a passes, 64 bits as a string) */
-const fingerprint = (s: string) => { let a = 0x811c9dc5, b = 0x01000193 ^ s.length; for (let i = 0; i < s.length; i++) { const c = s.charCodeAt(i); a = Math.imul(a ^ c, 16777619); b = Math.imul(b ^ c, 2246822519) ^ (b >>> 13); } return `${(a >>> 0).toString(36)}.${(b >>> 0).toString(36)}`; };
-/** every text the editor gave a file this session: a hot reload of any of them is the echo of its own save (an earlier one can land after a
- *  later write), never applied, so memory never falls behind disk */
-const written = new Set<string>();
 async function save(file: string, json: string): Promise<void> {
-  waiting.set(file, json); written.add(fingerprint(json));
+  waiting.set(file, json);
   while (writing) await writing.catch(() => undefined);
   if (!waiting.has(file)) return;   // a later call wrote this file's newest text already
   const text = waiting.get(file)!; waiting.delete(file);
   writing = post(file, text).finally(() => { writing = null; });
   await writing;
 }
-/** writes the lot presets now held (lotPresets()) to lot-presets.json through the editor's save queue (its hot reload echo is ignored): the lot lab's Save and Approve */
-export function saveLotPresets(): Promise<void> { return save('lot-presets.json', formatPresets(lotPresets(), lotPresetsMeta())); }
+/** posts the presets with these ids (as held when the write starts) and the removed ids to /__dev/presets: the dev server merges them into lot-presets.json */
+async function postPresets(ids: string[], removed: string[]): Promise<void> {
+  const r = await fetch('/__dev/presets', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ upsert: lotPresets().filter(p => ids.includes(p.id)), remove: removed }) });
+  if (!r.ok) throw new Error(`save lot-presets.json: ${r.status} ${await r.text()}`);
+}
+/** saves the presets with these ids, and drops the removed ids, in lot-presets.json, one write at a time through the save queue: each preset replaces its
+ *  own entry on disk, so a preset someone else saved meanwhile stays as it is */
+async function savePresets(ids: string[], removed: string[] = []): Promise<void> {
+  while (writing) await writing.catch(() => undefined);
+  writing = postPresets(ids, removed).finally(() => { writing = null; });
+  await writing;
+}
+/** saves the lot presets with these ids (the lot lab's Save, Approve and edits: [id]) and drops the removed ids (a removal: [], [id]) in lot-presets.json */
+export function saveLotPresets(ids: string[], removed: string[] = []): Promise<void> { return savePresets(ids, removed); }
 /** the open editor's entries for the lot lab (set by installLotEditor, null while no editor is installed): arm a library id, run an action */
 let lab: { place: (id: string) => void; edit: (a: 'bigger' | 'smaller' | 'turn' | 'delete' | 'duplicate' | 'undo') => void } | null = null;
+/** what the editor's panel says now: the selection's line and the last message (the lot lab shows them in its own panel) */
+const text = { info: '', msg: '' };
+/** the editor panel's words now (the selection, the last message): the lot lab's panel shows them while it hides the editor's */
+export function editorText(): { info: string; msg: string } { return { ...text }; }
 /** arms placing the library sprite id (the editor turned on): the lot lab's palette; false when the editor is not installed */
 export function armPlacing(id: string): boolean { if (!lab) return false; lab.place(id); return true; }
 /** one editor action on the selection, as its key would do it: the lot lab's buttons; false when the editor is not installed */
@@ -142,6 +153,7 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
   const ghostEl = document.createElement('div');
   ghostEl.style.cssText = 'position:fixed;pointer-events:none;opacity:.6;outline:1px dashed #38bdf8;z-index:59;display:none';
   const panel = document.createElement('div');
+  panel.id = 'ce-dev-editor-panel';   // the lot lab hides it (its own panel has the tools) and shows editorText() instead
   panel.style.cssText = 'position:fixed;right:12px;bottom:12px;width:340px;max-width:calc(100vw - 24px);max-height:70vh;overflow:auto;z-index:61;display:none;background:rgba(12,18,28,.94);color:#e2e8f0;border:1px solid #38bdf8;border-radius:10px;padding:10px 12px;font:12px/1.45 ui-monospace,Consolas,monospace;box-shadow:0 6px 24px rgba(0,0,0,.5)';
   panel.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><b style="color:#7dd3fc">DEV LOT EDITOR</b><span style="opacity:.7">I closes</span></div>
@@ -197,7 +209,8 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
 
   function render() {
     panel.style.display = on ? 'block' : 'none';
-    if (!on) { outline.style.display = lost.style.display = ghostEl.style.display = 'none'; return; }
+    // off, the words are cleared: the lot lab shows them (editorText), and a selection left from before would show there
+    if (!on) { text.info = text.msg = ''; outline.style.display = lost.style.display = ghostEl.style.display = 'none'; return; }
     let info = 'Click a sprite to select it.';
     const s = selSource();
     if (sel) {
@@ -210,7 +223,7 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
       const q = s?.kind === 'preset' ? s.preset.props[s.index] : undefined;
       info = q ? `${q.id}\nlot ${ghost.lot}\npreset ${ghost.preset}, prop ${ghost.index}\nLEFT OUT: ${ghost.why} (dashed). Move it (arrows), turn or resize it to bring it back, or Ctrl+Z` : `lot ${ghost.lot}: that preset prop is gone`;
     }
-    $('info').textContent = info;
+    $('info').textContent = text.info = info;
     const box = $('drops');
     box.innerHTML = '';
     const lot = selLot();
@@ -224,7 +237,7 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
         box.appendChild(b);
       }
     }
-    $('msg').textContent = (placing ? `placing ${placing}: click the map (Shift+click: more, Esc stops)\n` : '') + message;
+    $('msg').textContent = text.msg = (placing ? `placing ${placing}: click the map (Shift+click: more, Esc stops)\n` : '') + message;
   }
   const say = (m: string) => { message = m; render(); };
   function select(p: Prop | null) { sel = p; ghost = null; refreshDrops(selLot()); render(); }
@@ -255,7 +268,7 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
     // this lot at once, then only the other lots drawn from the same preset (not the whole town's ground on every key repeat)
     game.recomposeLots([lot], after.id);
     reselect(lot, after.id, index);
-    try { await save('lot-presets.json', formatPresets(lotPresets(), lotPresetsMeta())); say(`${what}: ${after.id} saved to lot-presets.json${after.curated ? ' (curated)' : ''}; every lot drawn from it follows${note}${ghost ? `. This lot leaves it out: ${ghost.why}` : ''}`); }
+    try { await savePresets([after.id]); say(`${what}: ${after.id} saved to lot-presets.json${after.curated ? ' (curated)' : ''}; every lot drawn from it follows${note}${ghost ? `. This lot leaves it out: ${ghost.why}` : ''}`); }
     catch (e) { say(`NOT SAVED: ${String(e)}`); }
   }
   async function presetEdit(s: Extract<Source, { kind: 'preset' }>, a: Act, dx: number, dy: number) {
@@ -440,11 +453,11 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
   window.addEventListener('pointerdown', onDown, true);
   window.addEventListener('pointermove', onMove, true);
   window.addEventListener('pointerup', onRelease, true); window.addEventListener('pointercancel', onRelease, true);
-  // a hot reload of lot-presets.json: any text this editor wrote this session is the echo of its own saves (an earlier one can land after a
-  // later write) and is never applied, nor is any reload while it writes (the editor holds the same or newer presets); any other (the studio,
-  // a hand edit) replaces the presets, every lot composes again, and the selection follows its preset prop
+  // a hot reload of lot-presets.json (the file on disk is the merged truth): a reload while a write is queued or in flight is skipped (the editor
+  // holds the same or a newer state); any other that differs from the presets held (another person's save, the studio, a hand edit) replaces
+  // them, every lot composes again, and the selection follows its preset prop. The echo of the editor's own save matches them: nothing changes
   const unReload = onLotPresetsReload((list, meta) => {
-    if (writing || waiting.size || written.has(fingerprint(formatPresets(list, meta)))) return;
+    if (writing || waiting.size || formatPresets(list, meta) === formatPresets(lotPresets(), lotPresetsMeta())) return;
     setLotPresets(list, meta); recomposeKeeping();
     say('lot-presets.json changed on disk: the lots were composed again');
   });

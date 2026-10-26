@@ -1,5 +1,43 @@
-# Lot lab: handover (2026-10-26)
+# Lot lab (lot presets): handover (2026-10-26, kept current)
 
+## Start prompt (paste into a fresh chat)
+> You are continuing the CapitalEmpire "lot lab" work (the studio's Lots tab: generate, edit, approve lot presets).
+> Work in the worktree `E:\Repos\CapitalEmpire\.claude\worktrees\lot-presets` (branch `lot-presets`); never use the main checkout.
+> Read `docs/handovers/lot-presets.md` there first (this file), then `docs/plans/P20.md` section "The lot lab". Git needs
+> `GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=safe.directory GIT_CONFIG_VALUE_0=*`. The game dev server is http://localhost:5241 and the studio
+> http://127.0.0.1:5242 (`.claude/launch.json` configs `lot-presets-game`, `lot-presets-studio`; start them with the browser preview tool
+> if they are down). Leave the owner's 5174/5191 servers alone. Do the "Exact next step" below, check it as "How to check" says, commit,
+> and keep this file current. Ask the owner before pushing or opening a PR.
+
+## Now (the current work, newest first)
+- **House sizes (the owner: "you have houses in the game that are at max size too small. i need those fixed ... the person wont even fit
+  through the door at max size of the house"; "waiting on your house size fixes before we can start making the presets").** Cause found:
+  the cap is the atlas picture's pixels at its last pack (`src/game/sizes.ts`, `prep-sprites.mjs` packs at `0.6 * max(1, ownerScale * 1.05)`),
+  not the art: the TrickOrTreat sources hold about x3.3. Bug: `scripts/assets/review/size-report.ts` (~line 63) takes the atlas limit as
+  the picture's own, so the studio refuses bigger sizes. Fix in progress (a coder): `native` from the source picture's real width, the
+  studio allowing sizes up to it with the "once packed again" hint. Then: the owner sizes the houses in the studio Library (person cursor),
+  then **Rebuild game sprites** packs them sharp at those sizes.
+- **Several helpers on the network (the owner: "setup the studio to run on the network and anyone with the IP can help create preset
+  lots").** Done in the files, not yet live: the studio listens on `STUDIO_HOST` (0.0.0.0 in launch.json), Vite gets `--host 0.0.0.0`,
+  the studio frames the game at the address the visitor used. In progress (a coder): saves merge per preset on the server
+  (`POST /__dev/presets`, `dev-save.ts mergePresets`) so two people saving at once never lose each other's work; the lab hides the dev
+  editor's floating panel (the owner: "remove this? we already have all the tools on the left") and shows its words in the lab panel.
+  Both servers must be restarted to listen on the network (this machine: 192.168.0.2, so http://192.168.0.2:5242). Windows may ask to
+  allow node through the firewall: the owner clicks Allow (never change firewall settings yourself).
+- Done today, after the first handover: lot size steppers (W/D) and the person cursor (an adult, base_man) in the lab; whole presets
+  (fences, bins, decals all editable); decals select with a click.
+
+## Exact next step
+1. When `size-report.ts` is fixed: restart the studio, open Library, check House 1 north (`variation:world-house_1-north-*`) now allows
+   about x3.3; tell the owner to size the houses, then run Rebuild (the studio's button; `STUDIO_DEV_GAME=1`, so no npm build).
+2. When the merge saves land: restart both servers (network), test two lab tabs saving different presets at once (both survive in
+   `lot-presets.json`), commit.
+
+## How to check
+- Typecheck: `npx tsc --noEmit -p .`. Lot tests: `npx esbuild tests/lot-presets-lab.test.ts tests/lot-presets-farm.test.ts tests/lot-presets.test.ts tests/lot-presets-json.test.ts tests/compose.test.ts tests/lot-edit.test.ts --bundle --platform=node --format=esm --loader:.webp=empty --loader:.png=empty --outdir=output/tests-check --out-extension:.js=.mjs --log-level=warning && node --test output/tests-check/*.mjs`.
+- Browser: http://localhost:5241/?lotlab&dev (or the studio's Lots tab): Generate, select a piece, Delete, Approve; `lot-presets.json` changes.
+
+## Background
 Read this to continue the lot lab work in a fresh chat. The design and the rules the game follows are in
 `docs/plans/P20.md`, section "The lot lab". This file says where the work is, what runs, what is verified and what is left.
 

@@ -110,26 +110,5 @@ export function fitPreset(p: LotPreset, w: number, d: number): Fitted {
 
 /** the preset file's header (an entry { "meta": ... } before the presets): dated notes on how the file was made, newest last */
 export interface PresetMeta { notes: string[] }
-/** the presets read from the file's JSON: preset-read.ts (dependency-free, for the dev server's save check too) */
-export { parsePresets } from './preset-read';
-
-/** a number as the preset file writes it: rounded to 3 decimals, never -0 */
-const num = (v: number) => { const r = Math.round(v * 1000) / 1000; return Object.is(r, -0) ? '0' : String(r); };
-/** a list of numbers as the preset file writes it */
-const nlist = (a: readonly number[]) => `[${a.map(num).join(',')}]`;
-
-/** the preset file's text (src/game/lots/lot-presets.json): a JSON array, one preset's header per line and each prop, patch and decal on its own line
- *  (an edit to one prop is a one-line diff), numbers rounded to 3 decimals (tiles); parsePresets reads it back. The freeze script and the dev
- *  editor's save both write with it; meta, when given, goes first, one note per line. Decals are written only when the preset has the list */
-export function formatPresets(list: readonly LotPreset[], meta?: PresetMeta): string {
-  const top = meta ? [`{"meta":{"notes":[${meta.notes.length ? `\n${meta.notes.map(n => JSON.stringify(n)).join(',\n')}\n` : ''}]}}`] : [];
-  const out = list.map(p => {
-    const head = `{"id":${JSON.stringify(p.id)},"use":"${p.use}","state":"${p.state}","w":${num(p.w)},"d":${num(p.d)}${p.curated ? ',"curated":true' : ''}${p.road !== undefined ? `,"road":${p.road}` : ''}${p.approved ? ',"approved":true' : ''}${p.whole ? ',"whole":true' : ''}`;
-    const props = p.props.map(q => `{"id":${JSON.stringify(q.id)},"x":${num(q.x)},"y":${num(q.y)},"scale":${num(q.scale)},"view":${q.view}}`);
-    const patches = p.patches.map(a => `{"kind":"${a.kind}","tex":${JSON.stringify(a.tex)},"pts":${nlist(a.pts)}${a.lines ? `,"lines":${nlist(a.lines)}` : ''}}`);
-    const decals = p.decals?.map(q => `{"id":${JSON.stringify(q.id)},"x":${num(q.x)},"y":${num(q.y)},"scale":${num(q.scale)},"alpha":${num(q.alpha)}}`);
-    const block = (rows: string[]) => (rows.length ? `\n${rows.join(',\n')}\n` : '');
-    return `${head},"props":[${block(props)}],"patches":[${block(patches)}]${decals ? `,"decals":[${block(decals)}]` : ''}}`;
-  });
-  return `[\n${[...top, ...out].join(',\n')}\n]\n`;
-}
+/** the presets read from and written to the file's JSON: preset-read.ts (dependency-free, for the dev server's save check and merge too) */
+export { formatPresets, parsePresets } from './preset-read';

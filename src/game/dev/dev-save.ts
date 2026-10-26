@@ -2,7 +2,7 @@
 // editor may write, the check of a request's origin (no other site may write them: a cross-site page can POST a "simple" request with no
 // preflight), and the check of a save's body. vite.config.ts loads it before the game's modules exist: its only import (preset-read.ts) has no
 // runtime imports of its own.
-import { parsePresets } from '../lots/preset-read';
+import { formatPresets, parsePresets } from '../lots/preset-read';
 
 /** the files the dev editor may write, by the name it sends, with their path in the repo: the lot presets, and the studio Library tab's
  *  sprite sizes and removals (the same JSON the studio writes) */
@@ -50,4 +50,22 @@ export function checkDevSave(body: unknown): { ok: true; path: string; text: str
     if (!r.presets.length) return { ok: false, error: 'lot-presets.json holds no preset' };
   } else if (typeof v !== 'object' || v === null || Array.isArray(v)) return { ok: false, error: `${String(file)} must hold an object` };
   return { ok: true, path, text: json };
+}
+
+/** the lot presets merged per preset (POST /__dev/presets): the file's presets with each upserted preset replaced in place by id (appended when
+ *  new), then the removed ids dropped (a removal wins over an upsert of the same id); the header kept. Refused: a file that does not parse, an upsert
+ *  that is not a list of valid presets, a remove that is not a list of strings, and a result with no preset (every lot would turn vacant). Invalid
+ *  entries on disk are dropped, as the game's reader drops them. ok: the text to write and the preset count */
+export function mergePresets(fileText: string, upsert: unknown, remove: unknown): { ok: true; text: string; count: number } | { ok: false; error: string } {
+  let file: ReturnType<typeof parsePresets>;
+  try { file = parsePresets(JSON.parse(fileText)); } catch { return { ok: false, error: 'lot-presets.json on disk does not parse' }; }
+  if (!Array.isArray(upsert)) return { ok: false, error: 'upsert must be a list of presets' };
+  const up = parsePresets(upsert);
+  if (up.invalid || up.presets.length !== upsert.length) return { ok: false, error: `upsert: ${upsert.length - up.presets.length} entries are not valid presets` };
+  if (!Array.isArray(remove) || !remove.every(id => typeof id === 'string')) return { ok: false, error: 'remove must be a list of preset ids' };
+  const list = file.presets.slice();
+  for (const p of up.presets) { const i = list.findIndex(q => q.id === p.id); if (i >= 0) list[i] = p; else list.push(p); }
+  const gone = new Set<string>(remove as string[]), out = list.filter(p => !gone.has(p.id));
+  if (!out.length) return { ok: false, error: 'the merge would leave no preset: refused (every lot would turn vacant)' };
+  return { ok: true, text: formatPresets(out, file.meta), count: out.length };
 }

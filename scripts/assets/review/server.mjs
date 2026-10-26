@@ -538,4 +538,5 @@ http.createServer(async (req, res) => {
     if (P === '/holes.js') { res.writeHead(200, { 'content-type': 'text/javascript; charset=utf-8', 'cache-control': 'no-cache' }); return res.end(fs.readFileSync(path.join(ROOT, 'scripts/assets/review/holes.js'))); }
     res.writeHead(404); res.end();
   } catch (e) { res.writeHead(500); res.end(String(e.stack || e)); }
-}).listen(PORT, '127.0.0.1', () => console.log(`sprite studio: http://127.0.0.1:${PORT}/`));
+// STUDIO_HOST=0.0.0.0 serves the studio to the local network (helpers making lot presets), else this machine only
+}).listen(PORT, process.env.STUDIO_HOST || '127.0.0.1', () => console.log(`sprite studio: http://${process.env.STUDIO_HOST || '127.0.0.1'}:${PORT}/`));
