@@ -6,6 +6,7 @@ import { LIBRARY } from '../library';
 import type { LibItem } from '../types';
 import { drawnAsStandIn } from '../newart';
 import { LOT_DECALS } from '../lot-decals';
+import { AXIS_SETS } from '../axis-library';
 import { footprintOf, ownerScaleOf } from './preset-art';
 import type { ItemKind } from './learn';
 
@@ -19,9 +20,12 @@ export function spriteGroup(it: Pick<LibItem, 'id' | 'kind' | 'cat' | 'big'>): '
   if (it.kind === 'building' || it.kind === 'house' || it.kind === 'venue' || it.kind === 'lot' || it.big) return 'buildings';
   return 'props';
 }
-/** whether a library sprite may be placed on a lot: not a turned view or an east copy, not a walker or one of the people, not an old building
- *  drawn as a stand-in */
-export const placeable = (it: LibItem, i: number) => !it.id.startsWith('view:') && !it.id.startsWith('east:') && it.kind !== 'walker' && !SKIP_CAT.has(it.cat) && !drawnAsStandIn(i);
+/** the screen-axis sets' first pictures (T154: the N view, the front facing screen down; R turns it through E, S, W): the lab offers a set once,
+ *  by it, the extra headings of the shops, houses and props among them (view:<id>:n) */
+const AXIS_FIRST: ReadonlySet<string> = new Set(Object.values(AXIS_SETS).map(v => v[0]));
+/** whether a library sprite may be placed on a lot in the lab: not a turned view (but a screen-axis set's first) or an east copy, not a walker or
+ *  one of the people, not an old building drawn as a stand-in */
+export const placeable = (it: LibItem, i: number) => (!it.id.startsWith('view:') || AXIS_FIRST.has(it.id)) && !it.id.startsWith('east:') && it.kind !== 'walker' && !SKIP_CAT.has(it.cat) && !drawnAsStandIn(i);
 /** a fence, a hedge or a wall piece (it follows the lot's edge) */
 export const isFence = (id: string) => { const it = LIBRARY[INDEX.get(id) ?? -1]; return /fence|hedge|wall|railing/i.test(id) || (!!it && (it.kind.startsWith('fence') || it.cat === 'Fences')); };
 /** a tree */
@@ -32,7 +36,8 @@ export function ownArea(id: string): number { const fp = footprintOf(id, ownerSc
 const MAX_AREA: Readonly<Record<ItemKind, number>> = { tree: 9, bush: 4, flowerbed: 6, prop: 4, car: 12, decal: Infinity };
 /** a library sprite's kind for the lot generator, or null for one it does not offer (buildings, fences, signs, the people) */
 export function itemKind(it: LibItem, i: number, area = ownArea(it.id)): ItemKind | null {
-  if (!placeable(it, i) || isFence(it.id)) return null;
+  // the town's lots leave the screen-axis art (view:...) to the Props tool and the lab (T154): the generator never offers it
+  if (!placeable(it, i) || it.id.startsWith('view:') || isFence(it.id)) return null;
   const g = spriteGroup(it), t = `${it.id} ${it.name}`.toLowerCase();
   if (g === 'vehicles') return it.kind === 'car' && area <= MAX_AREA.car ? 'car' : null;
   if (g === 'buildings') return null;

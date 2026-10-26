@@ -1,0 +1,63 @@
+{
+ "id": "town:bakery",
+ "slug": "town-bakery",
+ "category": "buildings",
+ "version": "town-bakery-screen-axis-4views-v1",
+ "crops": "half-cells",
+ "sheetSha256": "9b6f0ddab57fa6e1df11b9c4b4e913a5763ebabf748f1f1c0531c0e74b962396",
+ "status": "passed-with-alpha-residue-warnings",
+ "views": {
+  "N": {
+   "file": "N.png",
+   "sha256": "fc4fd9d85695d43a2ac975a6660dd0803c5bb0800074a7877e0aaf29cb91f827",
+   "nativeSha256": "fc4fd9d85695d43a2ac975a6660dd0803c5bb0800074a7877e0aaf29cb91f827",
+   "pixelSha256": "3a61138dcdc5bd754c3c0bdefabaf5b4eb90a2aeb231d2db7cc62dacc0ce6d48",
+   "trim": [
+    86,
+    55,
+    471,
+    510
+   ],
+   "heading": "front faces screen down"
+  },
+  "E": {
+   "file": "E.png",
+   "sha256": "9b998b7a825913a3e42c37859af2968f592c130b4c12d5824bbdfeb86b2bcffc",
+   "nativeSha256": "9b998b7a825913a3e42c37859af2968f592c130b4c12d5824bbdfeb86b2bcffc",
+   "pixelSha256": "766c486a39bc0a1d856c8da1a03e9e0266cdd56c88844fd63f754be6c5fffe01",
+   "trim": [
+    73,
+    75,
+    515,
+    474
+   ],
+   "heading": "front faces screen right (its right side to the camera)"
+  },
+  "S": {
+   "file": "S.png",
+   "sha256": "26b8d8a35eb7978c2088d62f5bccaaf1335d256b94465b62cda377a97b83ff34",
+   "nativeSha256": "26b8d8a35eb7978c2088d62f5bccaaf1335d256b94465b62cda377a97b83ff34",
+   "pixelSha256": "ea39bf03d80c25d3a3d296e34d1b8f6144210786fb25cbd8e0e6d41f642e6cd9",
+   "trim": [
+    89,
+    56,
+    465,
+    470
+   ],
+   "heading": "front faces screen up (its rear to the camera)"
+  },
+  "W": {
+   "file": "W.png",
+   "sha256": "967edc1e3edba9fe76e35eb144a949979565f3cc20e5b5447e092f209b387789",
+   "nativeSha256": "967edc1e3edba9fe76e35eb144a949979565f3cc20e5b5447e092f209b387789",
+   "pixelSha256": "382192ed07b51bc2b3732814e4e6e5dc76febe2fdfc4467984d2cfe67dc48116",
+   "trim": [
+    40,
+    55,
+    512,
+    466
+   ],
+   "heading": "front faces screen left (its left side to the camera)"
+  }
+ }
+}

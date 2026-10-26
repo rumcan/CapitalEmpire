@@ -34,7 +34,7 @@ import { compose, lotPreset, lotPresets, lotPresetsMeta, onLotPresetsReload, set
 import { formatPresets, type LotPreset, type PresetProp } from '../lots/presets';
 import { detach } from '../lots/derive';
 import { toFrame, toWorld, type PresetFrame } from '../lots/preset-frame';
-import { footprintOf, fourViews, ownerScaleOf, turned } from '../lots/preset-art';
+import { footprintOf, ownerScaleOf, sizeKey, sizeViews, turned } from '../lots/preset-art';
 import { applyEdit, clampToLot, fit1, growWithin, placeInPreset, presetToWorld, removeSprite, replacePreset, scaleOverride, snap, studioJson, worldToPreset, type PresetEdit } from './lot-edit';
 import { copySel, count, deleteSel, has, inBox, mainBuilding, moveSel, NONE, pasteClip, scaleSel, selOf, swapHouse, toggle as toggleSel, turnSel, union, within, type Clip, type Kind, type ScreenPt, type Selection } from './lot-select';
 import { artLimit, classWords, frameHalf, isHouseLike, nextHouse, type HouseOk } from './lot-houses';
@@ -485,7 +485,7 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
     if (r) await commitPreset(s.lot, s.preset, r.preset, r.prop, a, s.index, note);
   }
   async function libraryEdit(item: number, a: Act) {
-    const it = LIBRARY[item]!, car = isCar(it.id), id = car ? carSizeId(it.id) : fourViews(it.id)?.views[0] ?? it.id;
+    const it = LIBRARY[item]!, car = isCar(it.id), id = car ? carSizeId(it.id) : sizeKey(it.id);
     if (a === 'bigger' || a === 'smaller') {
       // the studio's rule (server.mjs /api/scale): its size, else the table's (a car's: 1, the size of its model), times the step; never past the pixels of any of its views
       // a car's size is its model's (carOwnerScale: a size the studio kept under one of its pictures' own keys before T143 counts, the largest), and the
@@ -493,7 +493,7 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
       const text = await load('scale-overrides.json'), sizes = JSON.parse(text) as Record<string, number>, base = car ? 1 : TABLE_SCALE[id] ?? OWNER_SCALE[id] ?? 1, cur = car ? carOwnerScale(it.id, sizes) : sizes[id] ?? base;
       const lim = artLimit(car ? it.id : id), next = growWithin(cur, a === 'bigger' ? GROW : 1 / GROW, lim);
       if (next === null) return say(refused(id, lim));
-      const out = car ? { ...foldCarSizes(sizes, CAR_IDS), [id]: +next.toFixed(3) } : scaleOverride(sizes, id, base, next / cur), views = fourViews(id)?.views ?? [id], before = views.map(v => [v, OWNER_SCALE[v]] as const);
+      const out = car ? { ...foldCarSizes(sizes, CAR_IDS), [id]: +next.toFixed(3) } : scaleOverride(sizes, id, base, next / cur), views = sizeViews(id), before = views.map(v => [v, OWNER_SCALE[v]] as const);
       await save('scale-overrides.json', studioJson(out));
       // a car's size is read from the studio file when the game loads (ext/car-art carOwnerScale), so it shows after a reload
       if (car) { undo.push({ kind: 'file', file: 'scale-overrides.json', text }); return say(`${id}: size ${out[id]} saved to scale-overrides.json; every car of this model is drawn at that size after a reload of the game`); }

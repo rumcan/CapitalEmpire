@@ -25,7 +25,7 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |
 | **T157 (priority)** | #336 | `arena/T157-light-lab` | `.claude/worktrees/t157` | 5188 (studio 5194) | The owner: "the studio is taking too much ram to run the full game"; started as a **third agent** at the owner's word. Measure, then a light `?lotlab` boot (small map, no sim/traffic/golf, one ground worker, lazy atlases), the studio's Lots frame only while open; target under a third of today's lab memory. Stays out of T155's lab UI files. |
-| **T154 (top priority)** | #330 | `arena/T154-new-art` | `.claude/worktrees/t154` | 5187 (studio 5193) | The owner: "bringing the next art into the game ... new buildings and plants ... in the studio asap". Today's screen-axis four-view sets (parking garages 2-6 storey, bakery, grocery, pharmacy, 3 industrial, 3 houses; 3 bushes, 3 flowerbeds, hydrangea; bench, lamp, trash can, parking entry; 2 wagons, pickup) into the studio Library and the game; the parking garage replaces the car park building's stand-in. Phase 1 PR first; Phase 2 the eight headings. |
+| T154 | #330 | `arena/T154-new-art` | `.claude/worktrees/t154` | — | **Phase 1 merged (#345).** Phase 2 waits: the eight-heading contract (a building on a 45° road picks its cardinal view, `AXIS_SETS`); the new subjects' diagonal views are art work (listed in GOLF-SPRITES.md). |
 | T152 | #325 | `arena/T152-car-spacing` (d3bdbf1) | `.claude/worktrees/t152` | — | **Paused** for the art (the owner). Root cause: the range's own cars (`rangebiz.ts:803/832/723`) are placed by their own clock; fixed in rangebiz.ts only (overlaps -75-82% with the 44-bay lot, money identical). **Owner's decision needed:** at full demand the one-lane drive and the building's ramp cannot carry the cars at a car's gap (wider drive, second ramp, faster car-park speeds, or the queue limiting sales). Left: three gates, shots, PR. |
 | T158 | #343 | `arena/T158-lot-wizard` | `.claude/worktrees/t155` | 5186 | The lot wizard (the owner): generate a lot, click off what's wrong, Space saves and the next one generates; every save teaches per-sector keep rates (Beta prior) the generator samples from; heat map and counter. Same agent as T155. |
 | T112 | #199 | `arena/T112-sharp` (1872f0e) | `.claude/worktrees/t112` | — | **Paused** for T153: sharp 0.35.5 in, all packed art identical (260 images byte-identical; 16 view PNGs only re-tagged), still to do: the KTX2 check, the studio check, audit/typecheck/suite/build, the PR. Resume from #199. |
@@ -51,6 +51,10 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
 `docs/START-PROMPTS.md`.
 
 ### Queue (in order)
+- **P25 #348 lots generated on the fly** (the owner: "start over with the lot presets we need a workflow that gets us to generating perfect
+  lots on the fly"): hard rules + learned per-sector taste (T158 wizard, in flight) → T159 bootstrap from the existing presets + a 12-lot
+  gallery → T160 the generator in the game, seeded per lot, model as data → T161 pairs, densities by state, a 50-seed exam sheet. The
+  presets file stays (archive, one-off overrides). Same agent as T155/T158.
 - **Texture art status (2026-10-26 15:30):** the art session (Codex; `art/theme-consistency/material-texture-batches/ACTIVE-WORK.json`)
   has finished 2 of its 14 families (golden fescue, lake: in the game). sand-ripples has raw variants, sand-raked 2/12, desert/dirt
   anchors only; fairway, putting-green, first-cut, long-grass and the rest have job files and no pictures yet. Each lands through
@@ -70,6 +74,13 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
    (the sharp bump). See the History sections below and `gh issue list --label arena --state open`.
 
 ### Done recently (newest first; details in each PR)
+- 2026-10-26: **T154 #345 the new art in the studio and the game**: 28 screen-axis sets (`sync-axis-views.mjs`, `prep-axis-views.mjs`,
+  `axis-library.ts`, both in the Rebuild): parking garages 2-6 storey (the 6-storey is the range's car park building), a Landscaping
+  category (3 bushes, 3 flowerbeds, hydrangea; in the lab palette and the Props tool), shops/industrials/houses with 8 views, bench/lamp/
+  bin/gate, the wagons' and pickup's views. **#346** saved the owner's uncommitted studio data first (lot presets +2,976 lines, sizes,
+  removals); the 5174 checkout's local Rebuild output was backed up to `E:/ClaudeTemp/lead/owner-rebuild-backup-20261026/` and the checkout
+  brought to main; a studio Rebuild then packs the owner's latest sizes on top. **Open, the owner's call:** lot presets still place three
+  removed ids (`town:firestation` and two variations): restore them or re-point the presets.
 - 2026-10-26: **T155 PR 2 #342 lots auto-sized from a master**: the largest size of a type/state is the master; Save/Approve derives every
   smaller size of its road (`src/game/lots/derive.ts`: the house keeps its street edge, yards shrink, trees then large then small props
   drop); derived ids `master~WxD`, a hand edit detaches; a masters report (3,744 type x state x size x road cells today).

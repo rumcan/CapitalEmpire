@@ -4,11 +4,13 @@
 //   variation:<prefix>-<name>-<hash>:<view>  a side/front/rear/corner view of the sprite <prefix>:<name> (the hash is 8 hex digits): its model's
 //   cars:<model>:<heading>                   one of the eight headings of an eight-way car (art/cars): cars:<model>
 //   static:<name>_<n|e|s|w>[-v<n>]           a facing of a town car (Compact N, Compact E, Compact N V2...): static:<name>
+//   view:<car id>:<n|e|s|w>                  a screen-axis heading of a car (axis-library.ts, T154: the pickup's): its car's model
 //   anything else                            its own model (world:car_0, world:schoolbus)
 // The rule is for car ids only (the library's kind car): a building's variation views are not folded by it (size-report.ts sizeIdOf, server.mjs).
-const VARIATION = /^variation:([a-z]+)-(.+)-[0-9a-f]{8}:\d+$/, EIGHT = /^(cars:.+):(?:SE|S|SW|W|NW|N|NE|E)$/, FOUR = /^(static:[a-z]+)_[nesw](?:-v\d+)?$/;
+const VIEW = /^view:(.+):(?:n|e|s|w)$/, VARIATION = /^variation:([a-z]+)-(.+)-[0-9a-f]{8}:\d+$/, EIGHT = /^(cars:.+):(?:SE|S|SW|W|NW|N|NE|E)$/, FOUR = /^(static:[a-z]+)_[nesw](?:-v\d+)?$/;
 /** the model of a car id (the key its studio size is kept by: scale-overrides.json) */
 export function carModel(id) {
+  const a = VIEW.exec(id); if (a) return carModel(a[1]);
   const v = VARIATION.exec(id); if (v) return carModel(`${v[1]}:${v[2]}`);
   return id.replace(EIGHT, '$1').replace(FOUR, '$1');
 }

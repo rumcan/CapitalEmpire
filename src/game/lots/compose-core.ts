@@ -15,6 +15,7 @@ import { OWNER_SCALE } from './scales';
 import { FRONTAL } from './frontal';
 import { hasLettering, EAST_FACING } from './lettering';
 import { drawnAs } from '../mirror';
+import { AXIS_HEADING } from '../axis-library';
 import { LOT_DECALS } from '../lot-decals';
 import { parkedCar } from '../traffic';
 import { CAR_SCALE, carFootprint, carHeading, carOwnerScale } from '../ext/car-art';
@@ -58,8 +59,10 @@ export const BAY = 2, BAY_DEPTH = 2.75, WHEEL = 'expansion:wheel-stop';
 
 export const BY = new Map<string, LibItem>(LIBRARY.map(i => [i.id, i]));
 export const names = (ids: string[]) => ids.filter(id => BY.has(id));
-/** the library ids of a filter, without the east-facing art (east:*: drawn only in place of a flipped front, EAST_FACING) and the other views (view:*) */
-export const cat = (f: (i: LibItem) => boolean) => LIBRARY.filter(i => !i.id.startsWith('east:') && !i.id.startsWith('view:') && f(i)).map(i => i.id);
+/** the library ids of a filter, without the east-facing art (east:*: drawn only in place of a flipped front, EAST_FACING), the other views (view:*)
+ *  and the screen-axis pictures (axis-library.ts, T154: their footings run along the screen, so the town's lots, which run along the map axes, do not
+ *  pick them; the Props tool, the lot lab and the roads at 45 degrees place them) */
+export const cat = (f: (i: LibItem) => boolean) => LIBRARY.filter(i => !i.id.startsWith('east:') && !i.id.startsWith('view:') && AXIS_HEADING[i.id] === undefined && f(i)).map(i => i.id);
 /** the footprint of a sprite at scale s, relative to its anchor (the union of its boxes, as the engine draws it) */
 export function boxOf(id: string, s: number, flip: boolean): Box4 {
   const it = BY.get(id)!;

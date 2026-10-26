@@ -1,0 +1,591 @@
+{
+  "id": "world:streetlamp",
+  "slug": "world-streetlamp",
+  "identity": "world-streetlamp",
+  "details": "ONE tall blackcastiron victorian townstreetlamp withsimplewarmamberglasstoplantern, slenderstraightpost, darkgreenaccentandsmallbasefoot. Samephysicallanternat4headings, glassfacetsandaccesspanelrotateproperly. WarmglassglowonlyWITHINandimmediatelytouchinglantern, no broadlightcloud, no floorpool or scene. Wholelanterntopandbase visiblewithgenerousmargin. No flags,vines,flowers,seasonaldecorations orotherlamps.",
+  "category": "props",
+  "source": "art/theme-consistency/exports/horizontal-identities/world-streetlamp.native.png",
+  "output": "art/theme-consistency/generated/props/world-streetlamp-screen-axis-4views-v1.png",
+  "provenance": "art/theme-consistency/generated/props/world-streetlamp-screen-axis-4views-v1.provenance.json",
+  "references": [
+    "art/theme-consistency/references/theme-authoritative.png",
+    "art/theme-consistency/references/horizontal-road-parking-landscaping-v1.png",
+    "art/theme-consistency/exports/horizontal-identities/world-streetlamp.native.png"
+  ],
+  "prompt": "ONE independentlyplaceable propONLY. Image1 = hand-painted stylized MapleFalls townTHEME; image2 = approved horizontal-screen-roadscene forstyle/camera; image3 = thisprop'sexisting gameidentity. Preservepractical1980sdesign, no fantasyembellishment. ONE tall blackcastiron victorian townstreetlamp withsimplewarmamberglasstoplantern, slenderstraightpost, darkgreenaccentandsmallbasefoot. Samephysicallanternat4headings, glassfacetsandaccesspanelrotateproperly. WarmglassglowonlyWITHINandimmediatelytouchinglantern, no broadlightcloud, no floorpool or scene. Wholelanterntopandbase visiblewithgenerousmargin. No flags,vines,flowers,seasonaldecorations orotherlamps.\nGenerate FOUR realrigidquarterturns ofthis SAMEobject. Orthographicelevated35degreecamera, no perspective; alignstructuralbaseaxes HORIZONTALLY/VERTICALLYonSCREEN fornewhorizontalroadlayout, not±26degree diagonalgroundedges. SQUARE RGBAtransparentPNG strict2x2 equalcells ROWMAJOR N FRONT headon facesSCREENDOWN, E RIGHTSIDE, S trueBACK, W LEFTSIDE. Rotatephysicaldetailscorrectly; nevermirror orrepeatfrontasrear. Light fixedSCREEN UPPERRIGHT shadeLOWERLEFT; no rotatinglight. Matchsamepalette,detailedreadablepaintedmaterials andphysicalsizeallviews. ALL fourcutoutswhollyinsideownquarterwith15percentcleartransparentmargin toALLsidesandcentresplits; shrinkALLuniformlytofitlongobject. NObackground,greyfloor,terrain,shadowdisc,checkerboard,labels,frames,UI,people orotherprops. Transparentoutsideexactobjectsilhouette, tinycontactocclusiononly.",
+  "generator": "built-in image_gen",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-9a2c7e1c-20ab-436b-bee6-1eca6d2e1a9a.png",
+  "date": "2026-10-26",
+  "viewSet": "screen-axis-4",
+  "viewsOrder": [
+    "N",
+    "E",
+    "S",
+    "W"
+  ],
+  "lighting": "upper-right toward lower-left",
+  "integrationStatus": "pending-not-full-eight-view-source",
+  "alphaReview": "pending",
+  "processing": "Native generator output copied byte-for-byte. Crops pending; no resize or pixel repaint.",
+  "screenAxisExport": {
+    "schema": 1,
+    "id": "world:streetlamp",
+    "viewSet": "screen-axis-4",
+    "viewsOrder": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "sheet": "art/theme-consistency/generated/props/world-streetlamp-screen-axis-4views-v1.png",
+    "sheetSha256": "760713d2332b84353660dd2e8ae505fd4e81933ccf43bc8acd0537d09e9e4c75",
+    "nativeSheetPixels": [
+      1254,
+      1254
+    ],
+    "processing": "Exact source-rectangle pixel crops only. No resize, alpha repaint, recolour, transform or mirroring. Alpha thresholds are diagnostic only; not a visual approval or alpha edit.",
+    "rectangleSelection": {
+      "method": "equal half-cells"
+    },
+    "fileContractStatus": "passed-with-alpha-residue-warnings",
+    "visualReviewStatus": "pending",
+    "integrationStatus": "pending-not-full-eight-view-source",
+    "axisLineCounts": {
+      "vertical": 10,
+      "horizontal": 0,
+      "verticalAtLeast16": 0,
+      "horizontalAtLeast16": 0,
+      "verticalAtLeast128": 0,
+      "horizontalAtLeast128": 0
+    },
+    "issues": [],
+    "warnings": [
+      "Only low-alpha1..15 residue on middle cell boundaries; exact pixels preserved",
+      "N: cell edge contains only low-alpha1..15 residue",
+      "S: cell edge contains only low-alpha1..15 residue"
+    ],
+    "views": {
+      "N": {
+        "sourceRect": {
+          "left": 0,
+          "top": 0,
+          "width": 627,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/props/world-streetlamp-screen-axis-4views-v1/N.native.png",
+        "nativeSha256": "b9d8285a8124d05ba754d7732ea3946cae79d237701d01334b9e9165ee52fb78",
+        "pixelSha256": "c9fcbf57e351c85340609c45c65706c4f6bc9c46bb478145e0b503a1284285d9",
+        "trimmedPixelSha256": "39cfe7c5cdcb2a82688d6fceb67471e3a5ecd9413a0770da708cd25eb47039e6",
+        "nativePixels": [
+          627,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 37274,
+          "transparent": 355855,
+          "transparentFraction": 0.9051863383266052,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 25,
+            "top": 19,
+            "width": 602,
+            "height": 592
+          },
+          "padding": {
+            "left": 25,
+            "top": 19,
+            "right": 0,
+            "bottom": 16
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 355855,
+            "oneTo15": 6722,
+            "sixteenTo127": 1065,
+            "one28To254": 29245,
+            "opaque255": 242
+          },
+          "edge": {
+            "nonzero": 5,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 30552,
+            "transparent": 362577,
+            "transparentFraction": 0.9222850514716543,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 253,
+              "top": 27,
+              "width": 121,
+              "height": 578
+            },
+            "padding": {
+              "left": 253,
+              "top": 27,
+              "right": 253,
+              "bottom": 22
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 29487,
+            "transparent": 363642,
+            "transparentFraction": 0.9249940859107316,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 253,
+              "top": 27,
+              "width": 120,
+              "height": 578
+            },
+            "padding": {
+              "left": 253,
+              "top": 27,
+              "right": 254,
+              "bottom": 22
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 30332,
+          "transparent": 362797,
+          "transparentFraction": 0.9228446642196327,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 253,
+            "top": 27,
+            "width": 121,
+            "height": 578
+          },
+          "padding": {
+            "left": 253,
+            "top": 27,
+            "right": 253,
+            "bottom": 22
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      },
+      "E": {
+        "sourceRect": {
+          "left": 627,
+          "top": 0,
+          "width": 627,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/props/world-streetlamp-screen-axis-4views-v1/E.native.png",
+        "nativeSha256": "d259d2108163f87f175c137f81e40d6d7b04768995e354d2130bf268c5d68e33",
+        "pixelSha256": "43b13e6a7ee7c904fae0be98a1a321774b51c40e559f115bf768cf2d594c449d",
+        "trimmedPixelSha256": "8d17c60306fc89ac97a922fa2a3a7fd687e8515e75fe2c712ab19275247abdfa",
+        "nativePixels": [
+          627,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 37211,
+          "transparent": 355918,
+          "transparentFraction": 0.9053465910680718,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 1,
+            "top": 21,
+            "width": 602,
+            "height": 598
+          },
+          "padding": {
+            "left": 1,
+            "top": 21,
+            "right": 24,
+            "bottom": 8
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 355918,
+            "oneTo15": 6443,
+            "sixteenTo127": 1079,
+            "one28To254": 29478,
+            "opaque255": 211
+          },
+          "edge": {
+            "nonzero": 0,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 30768,
+            "transparent": 362361,
+            "transparentFraction": 0.9217356135009119,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 252,
+              "top": 27,
+              "width": 119,
+              "height": 578
+            },
+            "padding": {
+              "left": 252,
+              "top": 27,
+              "right": 256,
+              "bottom": 22
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 29689,
+            "transparent": 363440,
+            "transparentFraction": 0.9244802596603151,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 252,
+              "top": 27,
+              "width": 118,
+              "height": 578
+            },
+            "padding": {
+              "left": 252,
+              "top": 27,
+              "right": 257,
+              "bottom": 22
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 30518,
+          "transparent": 362611,
+          "transparentFraction": 0.9223715370781601,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 252,
+            "top": 27,
+            "width": 119,
+            "height": 578
+          },
+          "padding": {
+            "left": 252,
+            "top": 27,
+            "right": 256,
+            "bottom": 22
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      },
+      "S": {
+        "sourceRect": {
+          "left": 0,
+          "top": 627,
+          "width": 627,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/props/world-streetlamp-screen-axis-4views-v1/S.native.png",
+        "nativeSha256": "9286ef7c5ec4998b7d3c352872a94477a1f90d80e74d98229143017c8aac231c",
+        "pixelSha256": "fb581d2b6a3a1e60a88d4ba966f5d8b58664351a0f0e7349573ca097bba12162",
+        "trimmedPixelSha256": "796126092b76e47a1089c1de867eb33bb38b6631fa114da6c94925d2303a4384",
+        "nativePixels": [
+          627,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 38068,
+          "transparent": 355061,
+          "transparentFraction": 0.903166645045265,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 0,
+            "top": 1,
+            "width": 627,
+            "height": 626
+          },
+          "padding": {
+            "left": 0,
+            "top": 1,
+            "right": 0,
+            "bottom": 0
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 355061,
+            "oneTo15": 7328,
+            "sixteenTo127": 1032,
+            "one28To254": 29426,
+            "opaque255": 282
+          },
+          "edge": {
+            "nonzero": 17,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 30740,
+            "transparent": 362389,
+            "transparentFraction": 0.9218068369415637,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 252,
+              "top": 28,
+              "width": 121,
+              "height": 577
+            },
+            "padding": {
+              "left": 252,
+              "top": 28,
+              "right": 254,
+              "bottom": 22
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 29708,
+            "transparent": 363421,
+            "transparentFraction": 0.9244319294684442,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 253,
+              "top": 29,
+              "width": 119,
+              "height": 575
+            },
+            "padding": {
+              "left": 253,
+              "top": 29,
+              "right": 255,
+              "bottom": 23
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 30501,
+          "transparent": 362628,
+          "transparentFraction": 0.922414779881413,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 252,
+            "top": 29,
+            "width": 121,
+            "height": 576
+          },
+          "padding": {
+            "left": 252,
+            "top": 29,
+            "right": 254,
+            "bottom": 22
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      },
+      "W": {
+        "sourceRect": {
+          "left": 627,
+          "top": 627,
+          "width": 627,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/props/world-streetlamp-screen-axis-4views-v1/W.native.png",
+        "nativeSha256": "dd5dd37fb18880ab5fa41023a71a44475b28da99b2d067a456db83b9af38a034",
+        "pixelSha256": "15e914d3383660b6dffda8cf784c98e28167303f341a88c8eac777203fc4e2f7",
+        "trimmedPixelSha256": "cff2a64e00a8f2af4876c22e3f33e8dde0999790738f0f33219ca71b7e55a68f",
+        "nativePixels": [
+          627,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 38227,
+          "transparent": 354902,
+          "transparentFraction": 0.9027621976501352,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 1,
+            "top": 3,
+            "width": 596,
+            "height": 608
+          },
+          "padding": {
+            "left": 1,
+            "top": 3,
+            "right": 30,
+            "bottom": 16
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 354902,
+            "oneTo15": 7893,
+            "sixteenTo127": 1081,
+            "one28To254": 29005,
+            "opaque255": 248
+          },
+          "edge": {
+            "nonzero": 0,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 30334,
+            "transparent": 362795,
+            "transparentFraction": 0.9228395768310148,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 254,
+              "top": 29,
+              "width": 119,
+              "height": 576
+            },
+            "padding": {
+              "left": 254,
+              "top": 29,
+              "right": 254,
+              "bottom": 22
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 29253,
+            "transparent": 363876,
+            "transparentFraction": 0.9255893103790359,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 254,
+              "top": 29,
+              "width": 118,
+              "height": 576
+            },
+            "padding": {
+              "left": 254,
+              "top": 29,
+              "right": 255,
+              "bottom": 22
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 30088,
+          "transparent": 363041,
+          "transparentFraction": 0.923465325631027,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 254,
+            "top": 29,
+            "width": 119,
+            "height": 576
+          },
+          "padding": {
+            "left": 254,
+            "top": 29,
+            "right": 254,
+            "bottom": 22
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      }
+    }
+  },
+  "visualReviewStatus": "pending"
+}
