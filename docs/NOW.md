@@ -27,7 +27,7 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 | **T157 (priority)** | #336 | `arena/T157-light-lab` | `.claude/worktrees/t157` | 5188 (studio 5194) | The owner: "the studio is taking too much ram to run the full game"; started as a **third agent** at the owner's word. Measure, then a light `?lotlab` boot (small map, no sim/traffic/golf, one ground worker, lazy atlases), the studio's Lots frame only while open; target under a third of today's lab memory. Stays out of T155's lab UI files. |
 | **T154 (top priority)** | #330 | `arena/T154-new-art` | `.claude/worktrees/t154` | 5187 (studio 5193) | The owner: "bringing the next art into the game ... new buildings and plants ... in the studio asap". Today's screen-axis four-view sets (parking garages 2-6 storey, bakery, grocery, pharmacy, 3 industrial, 3 houses; 3 bushes, 3 flowerbeds, hydrangea; bench, lamp, trash can, parking entry; 2 wagons, pickup) into the studio Library and the game; the parking garage replaces the car park building's stand-in. Phase 1 PR first; Phase 2 the eight headings. |
 | T152 | #325 | `arena/T152-car-spacing` (d3bdbf1) | `.claude/worktrees/t152` | — | **Paused** for the art (the owner). Root cause: the range's own cars (`rangebiz.ts:803/832/723`) are placed by their own clock; fixed in rangebiz.ts only (overlaps -75-82% with the 44-bay lot, money identical). **Owner's decision needed:** at full demand the one-lane drive and the building's ramp cannot carry the cars at a car's gap (wider drive, second ramp, faster car-park speeds, or the queue limiting sales). Left: three gates, shots, PR. |
-| T155 | #333 | `arena/T155-lot-lab-2` (PR 2 stacked) | `.claude/worktrees/t155` | 5186 | PR 1 merged (#340). PR 2 in flight: lots auto-sized from a master on the largest lot (house keeps its street edge, props dropped by priority as the lot shrinks, derived re-derived on master save, hand edit detaches, coverage report). |
+| T158 | #343 | `arena/T158-lot-wizard` | `.claude/worktrees/t155` | 5186 | The lot wizard (the owner): generate a lot, click off what's wrong, Space saves and the next one generates; every save teaches per-sector keep rates (Beta prior) the generator samples from; heat map and counter. Same agent as T155. |
 | T112 | #199 | `arena/T112-sharp` (1872f0e) | `.claude/worktrees/t112` | — | **Paused** for T153: sharp 0.35.5 in, all packed art identical (260 images byte-identical; 16 view PNGs only re-tagged), still to do: the KTX2 check, the studio check, audit/typecheck/suite/build, the PR. Resume from #199. |
 
 **Two coding agents at a time (the owner, 2026-10-26: first "maybe just too many background tasks?" after the studio tab died with the
@@ -70,6 +70,11 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
    (the sharp bump). See the History sections below and `gh issue list --label arena --state open`.
 
 ### Done recently (newest first; details in each PR)
+- 2026-10-26: **T155 PR 2 #342 lots auto-sized from a master**: the largest size of a type/state is the master; Save/Approve derives every
+  smaller size of its road (`src/game/lots/derive.ts`: the house keeps its street edge, yards shrink, trees then large then small props
+  drop); derived ids `master~WxD`, a hand edit detaches; a masters report (3,744 type x state x size x road cells today).
+- 2026-10-26: 5174 had died (the app's crash takes the lead-started servers with it); restarted. Suggested to the owner: start 5174/5191 from
+  their own terminal so a Claude crash does not stop them.
 - 2026-10-26: **T155 PR 1 #340 the lot lab's new layout**: drawer = lot choice only; toolbar over the map; floating selection bar; bottom
   palette strip (built from LIBRARY: new art shows up by itself); right inspector with **house allocations** (8-road compass, built /
   upgraded / decrepit; `src/game/lots/house-allocations.json`, POST `/__dev/allocations`; Generate, New lot, variants and Change house only
