@@ -25,6 +25,7 @@ test('only ?lotlab on a dev build boots light', () => {
   assert.equal(bootFor('', true).kind, 'game');
   assert.equal(bootFor('?dev', true).kind, 'game');
   assert.equal(bootFor('?bench=1', true).kind, 'game');
+  assert.equal(bootFor('?lotlab&dev&fullboot', true).kind, 'game', 'the lab on the whole game, as before, to compare');
   assert.deepEqual(bootFor('?dev', true), { ...GAME_BOOT });
 });
 

@@ -41,7 +41,9 @@ export function labBoot(): BootOptions {
   };
 }
 
-/** the boot for a page: the light boot for the lot lab (a dev build with ?lotlab), else the game's */
+/** the boot for a page: the light boot for the lot lab (a dev build with ?lotlab), else the game's; ?lotlab&fullboot boots the lab on the whole
+ *  game as before T157 (to compare, or if the light boot ever misses something) */
 export function bootFor(search: string, dev: boolean): BootOptions {
-  return dev && new URLSearchParams(search).has('lotlab') ? labBoot() : { ...GAME_BOOT };
+  const q = new URLSearchParams(search);
+  return dev && q.has('lotlab') && !q.has('fullboot') ? labBoot() : { ...GAME_BOOT };
 }
