@@ -8,6 +8,7 @@ import { bucketOf, type LotPreset, type PresetProp, type PresetState, type Prese
 import { facingOf, quarterOfRoad } from '../lots/preset-frame';
 import { deriveAll, isMaster, type DeriveInfo, type DeriveKind, type DeriveSize, type Half } from '../lots/derive';
 import { mainBuilding } from './lot-select';
+import { isFence, isTree } from '../lots/item-kinds';
 import { frameHalf, isHouseLike } from './lot-houses';
 
 const INDEX = new Map(LIBRARY.map((it, i) => [it.id, i] as const));
@@ -20,10 +21,8 @@ export function roadFrame(road: Road): { q: 0 | 1 | 2 | 3; u: { x: number; y: nu
   const n = { x: -S.x, y: -S.y }, u = { x: -n.y, y: n.x };
   return { q: road % 2 ? quarterOfRoad(road) : facingOf(n), u, n };
 }
-/** a fence, a hedge or a wall piece (it follows the lot's edge) */
-export const isFence = (id: string) => { const it = LIBRARY[INDEX.get(id) ?? -1]; return /fence|hedge|wall|railing/i.test(id) || (!!it && (it.kind.startsWith('fence') || it.cat === 'Fences')); };
-/** a tree (dropped first) */
-export const isTree = (id: string) => { const it = LIBRARY[INDEX.get(id) ?? -1]; return (!!it && it.kind === 'tree') || /(^|[:_\-/ ])(trees?|pines?|oaks?|maples?|birch(es)?|spruces?|firs?|palms?|willows?|elms?|cedars?|aspens?)(?![a-z])/i.test(id); };
+/** a fence and a tree (lots/item-kinds.ts) */
+export { isFence, isTree } from '../lots/item-kinds';
 /** what the derive needs of a master's props for its road: footprints and kinds (its main building the house) */
 export function deriveInfo(m: LotPreset): DeriveInfo {
   const half = frameHalf(roadFrame(m.road ?? 0)), house = m.use === 'farm' ? -1 : mainBuilding(m, q => isHouseLike(q.id), half);

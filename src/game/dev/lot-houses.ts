@@ -27,7 +27,7 @@ const REAR = /-north-|gen[:-]back-|[-_]rear(?![a-z])/;
 export const CLASS_NAMES = ['small', 'medium', 'large'] as const;
 
 /** a sprite's footprint area at its owner size (tiles squared, as its base view stands) */
-function areaOf(id: string): number { const fp = footprintOf(id, ownerScaleOf(id), false); return (fp[2] - fp[0]) * (fp[3] - fp[1]); }
+export function areaOf(id: string): number { const fp = footprintOf(id, ownerScaleOf(id), false); return (fp[2] - fp[0]) * (fp[3] - fp[1]); }
 /** the base (NE) id of a sprite: four-view art's first view, else itself (the id presets store, and the house allocations' key) */
 export const baseOf = (id: string) => fourViews(id)?.views[0] ?? id;
 /** which houses may be dealt (T155: the house allocations for the lot's road angle and state, lots/house-alloc.ts allows); absent: every one */
