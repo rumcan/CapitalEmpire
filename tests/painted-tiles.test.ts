@@ -26,7 +26,7 @@ import { DRAW_ORDER, layerCode } from '../src/game/ext/course-walls';
 import { SURF } from '../src/game/ext/course-grid';
 import { PRESETS } from '../src/game/paint-presets';
 import surfacesFile from '../src/game/painted-surfaces.json';
-import { HEAL_MATCH, HEAL_METHOD, HEAL_SHARED, bridgeWeight, cropPixels, crossMismatch, healShared, healWrap, healWrapWith, setMismatch, stripeCrop, stripePeriod, stripePhase, wrapMismatch } from '../scripts/assets/tile-heal.mjs';
+import { HEAL_AS_MADE, HEAL_MATCH, HEAL_METHOD, HEAL_SHARED, bridgeWeight, cropPixels, crossMismatch, healShared, healWrap, healWrapWith, setMismatch, stripeCrop, stripePeriod, stripePhase, wrapMismatch } from '../scripts/assets/tile-heal.mjs';
 
 const sha256 = (b: Buffer | string) => crypto.createHash('sha256').update(b).digest('hex');
 const READY_REL = 'art/theme-consistency/generated/ground/eight-tiles/READY-MATERIALS.json';
@@ -44,8 +44,9 @@ function webpSize(buf: Buffer): [number, number] {
 }
 
 /** the accepted families (READY-MATERIALS' canonical selections, in its order), then the provisional ones (T153: no handoff yet) */
-const ACCEPTED = ['painted:golden-fescue', 'painted:lake', 'painted:sand-ripples'];
-const PROVISIONAL = ['painted:fairway', 'painted:putting-green', 'painted:long-grass'];
+// T170 (#395): long grass is through the art session's handoff (its canonical selection in READY-MATERIALS): accepted, no longer provisional
+const ACCEPTED = ['painted:golden-fescue', 'painted:lake', 'painted:sand-ripples', 'painted:long-grass'];
+const PROVISIONAL = ['painted:fairway', 'painted:putting-green'];
 /** the owner's own paintings (T162) and the art session's fairway and putting-green paintings (T165): provisional too, one tile a level, from
  *  art/owner-supplied (committed in this repo); a level may instead be a provisional family's raw tiles healed with one shared strip (T165) */
 const OWNER = ['owner:rough-20261026', 'paint:fairway-20261026', 'paint:putting-green-20261026'];
@@ -60,7 +61,9 @@ const familyKey = (f: TiledFamily) => {
   const h0 = f.levels.near.heal!;
   if (h0.method === 'wrap-bridge-v1') return sha256(TILE_BANDS.map(b => f.levels[b].tiles[0]!.sha256).join(':') + `|${h0.method}/${h0.band}`);
   return sha256(TILE_BANDS.map(b => {
-    const lv = f.levels[b], h = lv.heal!, c = `${b}:${h.method}/${h.band}@${h.centre!.x},${h.centre!.y}`;
+    const lv = f.levels[b], h = lv.heal!;
+    if (h.method === HEAL_AS_MADE) return `${b}:${h.method}:${lv.tiles.map(t => t.sha256).join(',')}`; // T170: a finished set, as made
+    const c = `${b}:${h.method}/${h.band}@${h.centre!.x},${h.centre!.y}`;
     if (h.method === SHARED) return `${c}:${lv.tiles.map(t => t.sha256).join(',')}`;
     const t = lv.tiles[0]!, cr = t.crop?.x0 !== undefined ? `:crop ${t.crop.x0},${t.crop.y0},${t.crop.w}x${t.crop.h}` : '';
     return `${c}${cr}:${t.sha256}`;
@@ -69,8 +72,8 @@ const familyKey = (f: TiledFamily) => {
 
 test('the manifest ships only the ready families\' primary tiles and the provisional families\' chosen four: four a level, three authored sets each, files at native size', () => {
   assert.deepEqual(TILED_FAMILIES.map(f => f.materialId), [...ACCEPTED, ...PROVISIONAL, ...OWNER]);
-  const ids = { 'golden-fescue': { near: ['tile-01', 'tile-03', 'tile-06', 'tile-08'], mid: FOUR, far: FOUR }, lake: { near: FOUR, mid: FOUR, far: FOUR }, 'sand-ripples-tiles': { near: FOUR, mid: FOUR, far: FOUR } } as const;
-  const sets = { 'golden-fescue': { near: 'near-v3', mid: 'mid-v2', far: 'far-v4' }, lake: { near: 'near-v1', mid: 'mid-v1', far: 'far-v1' }, 'sand-ripples-tiles': { near: 'near-v1', mid: 'mid-v1', far: 'far-v1' } } as const;
+  const ids = { 'golden-fescue': { near: ['tile-01', 'tile-03', 'tile-06', 'tile-08'], mid: FOUR, far: FOUR }, lake: { near: FOUR, mid: FOUR, far: FOUR }, 'sand-ripples-tiles': { near: FOUR, mid: FOUR, far: FOUR }, 'long-grass': { near: FOUR, mid: FOUR, far: FOUR } } as const;
+  const sets = { 'golden-fescue': { near: 'near-v3', mid: 'mid-v2', far: 'far-v4' }, lake: { near: 'near-v1', mid: 'mid-v1', far: 'far-v1' }, 'sand-ripples-tiles': { near: 'near-v1', mid: 'mid-v1', far: 'far-v1' }, 'long-grass': { near: 'near-v3', mid: 'mid-v2', far: 'far-v2' } } as const;
   for (const f of TILED_FAMILIES) {
     const files = new Set<string>(), material = f.materialId.replace(/^painted:/, '');
     assert.equal(!!f.provisional, PROVISIONAL.includes(f.materialId) || OWNER.includes(f.materialId), `${f.id}: provisional exactly while it has no handoff`);
@@ -78,9 +81,10 @@ test('the manifest ships only the ready families\' primary tiles and the provisi
     if (f.provisional) assert.equal(f.selection, null, 'no canonical selection yet'); else assert.match(f.selection!.sha256, /^[0-9a-f]{64}$/);
     for (const b of TILE_BANDS) {
       const lv = f.levels[b];
-      if (f.owner && lv.heal?.method === SHARED) {
-        // T165: a level that falls back to a provisional family's raw tiles, healed with one shared strip (checked in its own test below)
-        assert.deepEqual(lv.tiles.map(t => t.id), FOUR); assert.equal(lv.decision.file, null); assert.ok(lv.revision.endsWith('-shared'), lv.revision);
+      if (f.owner && (lv.heal?.method === SHARED || lv.heal?.method === HEAL_AS_MADE)) {
+        // T165: a level that falls back to a provisional family's raw tiles, healed with one shared strip; T170: or to its finished tiles, as
+        // made (checked in its own test below)
+        assert.deepEqual(lv.tiles.map(t => t.id), FOUR); assert.equal(lv.decision.file, null); assert.ok(/-(shared|finished)$/.test(lv.revision), lv.revision);
         assert.ok(lv.folder.startsWith('art/theme-consistency/generated/ground/eight-tiles/'), lv.folder);
       } else if (f.owner) {
         // T162, T165: the painting of the level, one tile, from its own folder (hash-recorded; the heal is checked in its own test below)
@@ -366,8 +370,9 @@ test('the tile sets join the families, laid as authored; fescue, water, the map 
     assert.notEqual(r.near.file, r.mid.file); assert.notEqual(r.mid.file, r.far.file);
   }
   assert.equal(familyById('golden-fescue')!.kind, 'grass'); assert.equal(familyById('lake')!.kind, 'water'); assert.equal(familyById('sand-ripples-tiles')!.kind, 'sand');
-  for (const id of ['fairway', 'putting-green', 'long-grass', 'rough-owner', 'fairway-paint', 'putting-green-paint']) { assert.equal(familyById(id)!.kind, 'grass'); assert.equal(familyById(id)!.provisional, true, `${id}: provisional (the studio says so)`); }
-  for (const id of ['golden-fescue', 'lake', 'sand-ripples-tiles']) assert.ok(!familyById(id)!.provisional, id);
+  for (const id of ['fairway', 'putting-green', 'rough-owner', 'fairway-paint', 'putting-green-paint']) { assert.equal(familyById(id)!.kind, 'grass'); assert.equal(familyById(id)!.provisional, true, `${id}: provisional (the studio says so)`); }
+  for (const id of ['golden-fescue', 'lake', 'sand-ripples-tiles', 'long-grass']) assert.ok(!familyById(id)!.provisional, id);
+  assert.equal(familyById('long-grass')!.kind, 'grass'); // T170: through its handoff, accepted
   for (const id of ['emerald-short', 'sage-medium', 'sage-long', 'straw-long', 'water-pond', 'sand-raked', 'sand-ripples', 'underground-earth', 'first-painted']) { assert.ok(familyById(id) && !familyById(id)!.tiled, id); assert.ok(clampLook({ family: id, version: null, scale: 1, tint: '#ffffff', tone: 0 }), id); }
   assert.equal(FAMILIES.filter(f => f.tiled).length, TILED_FAMILIES.length);
   const S = clampSurfaces(surfacesFile);
@@ -534,7 +539,7 @@ test('the shared-strip heal (T165): four tiles cross-faded to one strip, so any 
   for (let y = 0; y < h; y += 5) { const v = res.tiles.map(t => t[(y * w + w - 1) * 3 + 1]!); assert.ok(Math.max(...v) - Math.min(...v) <= 2, `row ${y}: ${v}`); }
 });
 
-test('the fairway and putting-green paintings (T165, #365): unchanged in the repo, healed at their edges, stripes measured, green MID the shared-strip raw tiles', () => {
+test('the fairway and putting-green paintings (T165, #365): unchanged in the repo, healed at their edges, stripes measured, green MID the putting-green set', () => {
   const SHA = {
     'fairway-paint': { near: '14fcf2b2a1b4a848a46e23c98f92f2a5da11a62953d4d3c0dfadd7f564d0fc75', mid: '54743bfb086ca96e0d806832f6848d58732e25249cacdc6c20e1300d30089a1b', far: 'da2925ecca80faca8399762f5143cd464a324cf07d7977dbaa8aa1375892b688' },
     'putting-green-paint': { near: 'e61d1d0832558291773cdbfdbca7f39a69e02de9d15072a58f348cc76b3c16c4', mid: '489b6afd7f7226b334f1eb693c4b0fb885e768f381d1d7ceb1eb38f8fed419cd', far: '64ab32b0bfed474eb817c85009baf0c0934b95a15a674c68fd8015152feed06f' },
@@ -548,16 +553,23 @@ test('the fairway and putting-green paintings (T165, #365): unchanged in the rep
       // the source files as the art session made them: their sha256 never changes
       assert.equal(sha256(fs.readFileSync(path.join(process.cwd(), dir, `${b}.png`))), SHA[id][b], `${dir}/${b}.png unchanged`); assert.equal(src.levels[b].sha256, SHA[id][b]);
       for (const t of lv.tiles) assert.deepEqual(webpSize(fs.readFileSync(path.join(PAINTED, t.file))), lv.native, `${t.file}: its native size`);
-      assert.ok(h.centre && Number.isInteger(h.centre.x) && Number.isInteger(h.centre.y), `${id} ${b}: the bridge recorded`);
-      // healed: the wrap about its inside; as shipped: the lossy WebP adds about a level across any tile edge; the seams gone either way
+      // healed (or, a finished set shipped as made, T170: as made): the wrap about its inside; as shipped: the lossy WebP adds about a level
+      // across any tile edge; a healed level's seams gone
       assert.ok(h.healed.lr <= 1.25 * h.healed.h && h.healed.tb <= 1.25 * h.healed.v, `${id} ${b} healed ${JSON.stringify(h.healed)}`);
       assert.ok(h.after.lr <= h.after.h + 1.5 && h.after.tb <= h.after.v + 1.5, `${id} ${b} shipped ${JSON.stringify(h.after)}`);
-      assert.ok(h.after.lr < 0.5 * h.before.lr && h.after.tb < 0.5 * h.before.tb, `${id} ${b}: the seams gone`);
+      if (h.method === HEAL_AS_MADE) { assert.deepEqual(h.healed, h.before, `${id} ${b}: as made, no heal`); assert.equal(h.band, 0); }
+      else {
+        assert.ok(h.centre && Number.isInteger(h.centre.x) && Number.isInteger(h.centre.y), `${id} ${b}: the bridge recorded`);
+        assert.ok(h.after.lr < 0.5 * h.before.lr && h.after.tb < 0.5 * h.before.tb, `${id} ${b}: the seams gone`);
+      }
       if (id === 'putting-green-paint' && b === 'mid') {
-        // the MID painting's bright corner repeats when tiled: the level is the provisional putting green's raw MID tiles, shared-strip healed
-        const old = tiledFamily('putting-green')!.levels.mid;
-        assert.equal(h.method, HEAL_SHARED); assert.match(h.fallback!, /bright corner/); assert.equal(lv.tiles.length, 4);
-        assert.deepEqual(lv.tiles.map(t => [t.sha256, t.source]), old.tiles.map(t => [t.sha256, t.source]), 'the same raw tiles as the old option'); assert.deepEqual(lv.native, old.native);
+        // the MID painting's bright corner repeats when tiled: the level is the provisional putting green's MID set (the same tiles as the old
+        // option): its finished tiles shipped as made when they tile cleanly (T170, #395), else its raw tiles shared-strip healed (T165)
+        const old = tiledFamily('putting-green')!.levels.mid, finished = /^finished tiles/.test(old.status ?? '');
+        assert.equal(h.method, finished ? HEAL_AS_MADE : HEAL_SHARED); assert.equal(lv.revision, `${old.revision}-${finished ? 'finished' : 'shared'}`);
+        assert.match(h.fallback!, /bright corner/); assert.equal(lv.tiles.length, 4);
+        assert.deepEqual(lv.tiles.map(t => [t.sha256, t.source]), old.tiles.map(t => [t.sha256, t.source]), 'the same tiles as the old option'); assert.deepEqual(lv.native, old.native);
+        if (finished) for (const t of lv.tiles) assert.match(t.source!, /\/tile-0[1-4]\.png$/, 'the finished tiles, not the raw generator outputs');
       } else {
         assert.equal(h.method, HEAL_MATCH); assert.equal(lv.tiles.length, 1); assert.equal(lv.tiles[0]!.sha256, SHA[id][b]);
         assert.deepEqual(lv.native, src.levels[b].size, `${id} ${b}: uncropped, the painting's own size`);
@@ -572,6 +584,6 @@ test('the fairway and putting-green paintings (T165, #365): unchanged in the rep
       } else assert.equal(h.stripes, undefined);
     }
   }
-  // the old provisional sets are kept as they were (the old option): four raw tiles a level, no heal
+  // the old provisional sets are kept as they were (the old option): four tiles a level (the art session's newest set), no heal
   for (const id of ['fairway', 'putting-green']) for (const b of TILE_BANDS) { const lv = tiledFamily(id)!.levels[b]; assert.equal(lv.tiles.length, 4); assert.equal(lv.heal, undefined); }
 });

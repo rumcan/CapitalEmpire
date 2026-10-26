@@ -30,6 +30,8 @@
 // families fairway-paint and putting-green-paint), healed with the bridge matched to each seam zone; the fairway's mowing stripes are measured
 // and cropped to whole periods where that lines them up across the wrap; the putting green's MID level falls back to the raw provisional MID
 // tiles healed with one shared strip (see OWNER). The provisional fairway and putting-green families stay as they were, the old option.
+// T170 (#395): once the art session finishes that MID set (tile-0x.png, made with a common collar so any tile meets any tile), it ships as
+// made when it tiles cleanly as it is (across any two tiles within HEAL_LIMIT x the inside): the shared strip is kept for a raw set only.
 //
 // Adding the next family: its handoff lands in READY-MATERIALS (with its canonical selection), run this script, then map it to a surface in
 // src/game/painted-surfaces.json (or in the studio's Painted tab). KIND below names the kind of family each material is (the studio's picker).
@@ -45,7 +47,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import sharp from 'sharp';
 import { ROOT } from './source.mjs';
-import { HEAL_MATCH, HEAL_METHOD, HEAL_SHARED, cropPixels, healShared, healWrapWith, setMismatch, stripeCrop, wrapMismatch } from './tile-heal.mjs';
+import { HEAL_AS_MADE as HEAL_NONE, HEAL_MATCH, HEAL_METHOD, HEAL_SHARED, cropPixels, healShared, healWrapWith, setMismatch, stripeCrop, wrapMismatch } from './tile-heal.mjs';
 
 const EIGHT = 'art/theme-consistency/generated/ground/eight-tiles';
 const READY_REL = `${EIGHT}/READY-MATERIALS.json`;
@@ -244,14 +246,19 @@ for (const o of OWNER) {
       if (raws.some(r => r.ch !== ch || r.w - w > 8 || r.h - ht > 8)) fail(`${s.folder}: the four tiles are not one set`);
       // the set's common size, top-left anchored (as the provisional families ship it); nothing resampled
       const px = raws.map(r => (r.w === w && r.h === ht ? r.data : cropPixels(r.data, r.w, r.h, ch, { x0: 0, y0: 0, w, h: ht })));
-      const res = healShared(px, w, ht, ch, HEAL_BAND);
-      res.tiles.forEach((t, i) => sameInterior(t, px[i], w, ht, ch, raws[i].source));
-      const before = setMismatch(px, w, ht, ch), done = setMismatch(res.tiles, w, ht, ch);
-      withinLimit(done, `${folder} ${level} (shared strip)`);
-      const tiles = raws.map((r, i) => ({ id: r.id, sha256: r.sha256, source: r.source, raw: { data: res.tiles[i], width: w, height: ht, channels: ch }, ...(r.w !== w || r.h !== ht ? { crop: { from: [r.w, r.h], removedRight: r.w - w, removedBottom: r.h - ht } } : {}) }));
-      levels[level] = { folder: s.folder, native: [w, ht], decision: { file: null, sha256: null }, tiles, revision: `${s.revision}-shared`, status: null,
-        heal: { method: HEAL_SHARED, band: HEAL_BAND, centre: res.centre, fallback: `the painting ${src.levels[level]?.file ?? level} is not used (tiled, its bright corner repeats as a block pattern); ${sharedFrom}'s raw ${s.revision} tiles instead`, before: m2(before), healed: m2(done) } };
-      keyParts.push(`${level}:${HEAL_SHARED}/${HEAL_BAND}@${res.centre.x},${res.centre.y}:${tiles.map(t => t.sha256).join(',')}`);
+      // T170 (#395): a finished set (the art session's tiles, made to meet one another: a common collar) that already tiles cleanly across
+      // any two of its tiles ships as made; the shared strip would only add seams of its own (the putting green's MID: across any two tiles
+      // LR 1.88 / TB 2.45 as made, 3.21 / 3.26 healed, inside 2.5 / 3.2). A raw set, or a finished one that does not, is healed as T165 did
+      const before = setMismatch(px, w, ht, ch), asMade = s.stage === 'finished tiles' && before.lr <= HEAL_LIMIT * before.h && before.tb <= HEAL_LIMIT * before.v;
+      const res = asMade ? null : healShared(px, w, ht, ch, HEAL_BAND);
+      res?.tiles.forEach((t, i) => sameInterior(t, px[i], w, ht, ch, raws[i].source));
+      const pics = res ? res.tiles : px, done = res ? setMismatch(res.tiles, w, ht, ch) : before;
+      withinLimit(done, `${folder} ${level} (${res ? 'shared strip' : 'finished set'})`);
+      const tiles = raws.map((r, i) => ({ id: r.id, sha256: r.sha256, source: r.source, raw: { data: pics[i], width: w, height: ht, channels: ch }, ...(r.w !== w || r.h !== ht ? { crop: { from: [r.w, r.h], removedRight: r.w - w, removedBottom: r.h - ht } } : {}) }));
+      const fallback = `the painting ${src.levels[level]?.file ?? level} is not used (tiled, its bright corner repeats as a block pattern); ${sharedFrom}'s ${res ? `raw ${s.revision} tiles` : `finished ${s.revision} tiles, as the art session made them,`} instead`;
+      levels[level] = { folder: s.folder, native: [w, ht], decision: { file: null, sha256: null }, tiles, revision: `${s.revision}-${res ? 'shared' : 'finished'}`, status: null,
+        heal: res ? { method: HEAL_SHARED, band: HEAL_BAND, centre: res.centre, fallback, before: m2(before), healed: m2(done) } : { method: HEAL_NONE, band: 0, fallback, before: m2(before), healed: m2(done) } };
+      keyParts.push(res ? `${level}:${HEAL_SHARED}/${HEAL_BAND}@${res.centre.x},${res.centre.y}:${tiles.map(t => t.sha256).join(',')}` : `${level}:${HEAL_NONE}:${tiles.map(t => t.sha256).join(',')}`);
       continue;
     }
     const sl = src.levels[level];
@@ -339,12 +346,13 @@ for (const p of plan) {
     let heal = null, status = L.status;
     if (L.heal) {
       const [w, ht, ch] = [decoded[0].info.width, decoded[0].info.height, decoded[0].info.channels];
-      const a = L.heal.method === HEAL_SHARED ? setMismatch(decoded.map(d => d.data), w, ht, ch) : wrapMismatch(decoded[0].data, w, ht, ch);
+      const a = L.heal.method === HEAL_SHARED || L.heal.method === HEAL_NONE ? setMismatch(decoded.map(d => d.data), w, ht, ch) : wrapMismatch(decoded[0].data, w, ht, ch);
       heal = { ...L.heal, after: m2(a) };
       const nums = `wrap LR ${heal.before.lr} -> ${heal.after.lr} (inside ${heal.after.h}), TB ${heal.before.tb} -> ${heal.after.tb} (inside ${heal.after.v})`;
       const st = heal.stripes, stripeNote = !st ? '' : st.found === false ? '; no stripes found'
         : `; stripes ${st.periodX} x ${st.periodY} px, their phase step across the wrap ${st.phase.x} / ${st.phase.y} px, ${st.applied ? `cropped to ${st.bestCrop.periods.join(' x ')} periods (${st.bestCrop.phase.x} / ${st.bestCrop.phase.y} px)` : `uncropped (the best whole-period crop, ${st.bestCrop.periods.join(' x ')} periods, lines them up only to ${st.bestCrop.phase.x} / ${st.bestCrop.phase.y} px)`}`;
-      status = heal.method === HEAL_SHARED ? `${heal.fallback}: four tiles, every edge cross-faded to one shared strip (${heal.method}, ${heal.band} px, bridge at x ${heal.centre.x}, y ${heal.centre.y}); across any two tiles ${nums}`
+      status = heal.method === HEAL_NONE ? `${heal.fallback}: four tiles that meet one another as made (${heal.method}, no heal); across any two tiles ${nums}`
+        : heal.method === HEAL_SHARED ? `${heal.fallback}: four tiles, every edge cross-faded to one shared strip (${heal.method}, ${heal.band} px, bridge at x ${heal.centre.x}, y ${heal.centre.y}); across any two tiles ${nums}`
         : heal.method === HEAL_METHOD ? `the owner's painting (${p.materialId}), one tile; edges healed to tile with itself (${heal.method}, ${heal.band} px): ${nums}`
         : `the painting (${p.materialId}), one tile; edges healed to tile with itself (${heal.method}, ${heal.band} px, bridge at x ${heal.centre.x}, y ${heal.centre.y}): ${nums}${stripeNote}`;
       console.log(`${p.id} ${level}: ${status}`);
