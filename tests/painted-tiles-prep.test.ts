@@ -87,7 +87,7 @@ test('the prep script ships a family without a handoff provisionally, then its c
     assert.match(f.levels.near.status!, /prepare-report: AI-border-repairs-required \(master 12x5\); review: pending review/);
     assert.match(f.levels.far.status!, /^finished tiles/);
     assert.equal(f.revision, sha256((['near', 'mid', 'far'] as const).flatMap(b => f.levels[b].tiles.map(x => x.sha256)).join(':')).slice(0, 12));
-    assert.equal(m.anchors.far, 0.0075); assert.deepEqual(m.anchors.zoom, [0.0075, 0.3]); assert.equal(m.anchors.nearUntil, 0.05);
+    assert.equal(m.anchors.far, 0.05); assert.deepEqual(m.anchors.zoom, [0.0125, 0.3]); assert.equal(m.anchors.nearUntil, 0.1); assert.equal((m.anchors as { farFrom?: number }).farFrom, 0.025);
     const provisionalRevision = m.revision;
     // --check: current
     r = run('--check'); assert.equal(r.status, 0, r.stdout); assert.match(r.stdout, /the manifest is current/);
