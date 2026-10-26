@@ -24,10 +24,9 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 ### In flight
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |
-| T140 Town roads' kerb gap at chunk borders | #270 | `arena/T140-road-kerb` | an agent worktree under `.claude/worktrees` | 5189 | agent working. Root cause confirmed (renderer step 4 slid `kerbMask`, empty at a chunk's bottom rows); fix in progress in a new `kerb-face.ts` on `cart-bevel.ts drawPaths` |
 | T141 Audit every prop's shadow (blob and box) for the top-right sun | #271 | `arena/T141-prop-shadows` | an agent worktree under `.claude/worktrees` | 5186 | agent working. Audit page `?shadows=audit` and before-sheets for 9 categories (1,102 entries); findings in `docs/art/SHADOW-AUDIT.md`; next: rule fixes and an override table |
 
-Find a worktree with `git worktree list | grep T14`. Each agent pushes its branch and comments on its issue after every sub-step,
+Find the worktree with `git worktree list | grep T141`. Each agent pushes its branch and comments on its issue after every sub-step,
 ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D spectators) keep their own handover docs; see
 `docs/START-PROMPTS.md`.
 
@@ -48,6 +47,7 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
    (the sharp bump). See the History sections below and `gh issue list --label arena --state open`.
 
 ### Done recently (newest first; details in each PR)
+- 2026-10-26: T140 #277 the town roads' kerb face across chunk borders (`kerb-face.ts`; the leaf litter's square shade too; the shared test raster in `tests/helpers/soft-raster.ts`).
 - 2026-10-26: T139 #268 cart-path bevel; T136 #267 Shadow slider for painted areas; T137 #266 three-way wall junctions; T135 #264
   the new game's month, one grow label, the top bar on one row, unknown business types; T138 #263 the puck's marks off its face.
 - 2026-10-26: T134 #256 dark unbaked ground; T133 #255 World of Golf extras; T132 #251 range to first hole; T119 #248 New hole
