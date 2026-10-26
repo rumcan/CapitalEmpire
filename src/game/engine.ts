@@ -4929,7 +4929,7 @@ export class Game {
     const used = new Map<string, string[]>();
     for (const [key, look] of Object.entries(file.surfaces)) if (tiledFamily(look.family)) used.set(look.family, [...(used.get(look.family) ?? []), key]);
     const fams = [...used].map(([id, surfaces]) => {
-      const f = tiledFamily(id)!, lv = f.levels[band], size = tileSize(lv, k), perm = tilePermutation(f.id, band), cells = cellsIn(X0, Y0, X1, Y1, size[0], size[1]);
+      const f = tiledFamily(id)!, lv = f.levels[band], size = tileSize(lv, k), perm = tilePermutation(f.id, band, lv.tiles.length), cells = cellsIn(X0, Y0, X1, Y1, size[0], size[1]);
       const ids = [...new Set(cells.map(c => lv.tiles[tileIndex(perm, c.ix, c.iy)]!.id))].sort(), cov = coverageOf(this.cssW, this.cssH, z, size);
       return { id: f.id, materialId: f.materialId, name: f.name, surfaces, set: lv.revision, provisional: !!f.provisional, native: lv.native, ids, cells: cells.length, areas: cov.areas, across: cov.across, down: cov.down, tileW: size[0], tileH: size[1], screenPx: tileScreenPx(lv, z, b) };
     });
@@ -4938,7 +4938,7 @@ export class Game {
     if (h) {
       const ci = g ? cellAt(g, h.x, h.y) : -1, code = ci >= 0 ? g!.surf[ci]! : 0, surface = (Object.keys(SURF) as (keyof typeof SURF)[]).find(n => SURF[n] === code && code !== 0) ?? (this.terrain.cls[Math.floor(h.y) * MAP + Math.floor(h.x)] === TC.WATER ? 'river' : 'map ground');
       const look = file.surfaces[surface], f = look ? tiledFamily(look.family) : undefined;
-      if (f) { const lv = f.levels[band], [w, hh] = tileSize(lv, k), c = cellOf(worldX(h.x, h.y), worldY(h.x, h.y), w, hh); pointer = { surface, family: f.materialId, tile: lv.tiles[tileIndex(tilePermutation(f.id, band), c[0], c[1])]!.id, cell: c }; }
+      if (f) { const lv = f.levels[band], [w, hh] = tileSize(lv, k), c = cellOf(worldX(h.x, h.y), worldY(h.x, h.y), w, hh); pointer = { surface, family: f.materialId, tile: lv.tiles[tileIndex(tilePermutation(f.id, band, lv.tiles.length), c[0], c[1])]!.id, cell: c }; }
       else pointer = { surface, family: look?.family ?? null, tile: null, cell: null };
     }
     // the zooms this band shows over, zooming out: from its switch in (or the closest zoom) down to the coarser set's switch (or the furthest

@@ -197,8 +197,8 @@ export type PaintedPick = { key: string; kind: PaintedKind; legacy: boolean; tin
 /** a tile set family's pick (T145, painted-tiles.ts): the family and each band's four tile URLs, in the manifest's order */
 export interface TiledPick { fam: TiledFamily; urls: Record<TileBand, string[]> }
 /** decoded tile pictures a worker keeps (each about 6 MB): one band of the six tile set families a course hole shows since T153 (fescue,
- *  lake, sand ripples, fairway, putting green, long grass), so chunks wearing different families do not decode them again in turn; the
- *  least recently used past this go, never the current bake's or the band about to be needed */
+ *  lake, sand ripples, fairway, putting green; the rough: the owner's paintings since T162, one tile a band), so chunks wearing different
+ *  families do not decode them again in turn; the least recently used past this go, never the current bake's or the band about to be needed */
 export const MAX_TILE_SOURCES = 24;
 /** a tile set family's tile URLs by band, or null when the build lacks any of its pictures (then its surfaces keep their photo) */
 function tiledUrls(t: TiledFamily): Record<TileBand, string[]> | null {
