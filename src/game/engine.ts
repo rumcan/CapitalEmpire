@@ -1005,6 +1005,9 @@ export class Game {
   private hintSeen = 0; private hintEmitAt = 0;
   /** the map grid and the course half grid (T100), drawn between the ground and the sprites */
   private gridLayer = new MapGridLayer();
+  /** a dev tool's lines on the ground (the lot lab's Lot grid, T148: src/game/dev/lot-grid.ts), drawn after the map grid and before the shadows and
+   *  sprites with the frame's camera; true when it drew. Null outside the dev tools */
+  devGround: ((gl: WebGL2RenderingContext, v: { X: number; Y: number; ze: number; cw: number; ch: number }) => boolean) | null = null;
   /** the car park drag (the park tool, left button): the tile where it began and the one under the pointer (x1, y1), the rect it makes (def, id 0),
    *  its built park (null if not valid), the verdict (why: the reason it cannot be built, '' if it can) and the cost; mx, my: the cursor (CSS px) */
   private parkDrag: null | { x0: number; y0: number; x1: number; y1: number; def: CarParkDef; park: CarPark | null; why: string; cost: number; mx: number; my: number } = null;
@@ -4310,10 +4313,11 @@ export class Game {
     // the street's side from the lot (by road), the lot's away vector n (from the street) and its along vector u
     const h = Math.SQRT1_2, S: Pt[] = [{ x: 0, y: 1 }, { x: h, y: h }, { x: 1, y: 0 }, { x: h, y: -h }, { x: 0, y: -1 }, { x: -h, y: -h }, { x: -1, y: 0 }, { x: -h, y: h }];
     const s = S[o.road]!, n = { x: -s.x, y: -s.y }, u = { x: -n.y, y: n.x }, t = this.terrain.start;
-    // the street's whole-tile direction (u on an axis, u / h on a diagonal), and the start rounded to tiles, kept 40 tiles inside the map with the leg (30 either way)
-    const D = o.road % 2 ? { x: Math.round(u.x / h), y: Math.round(u.y / h) } : u;
-    const R = { x: clamp(Math.round(t.x + t.size / 2), 40 + 30 * Math.abs(D.x), MAP - 40 - 30 * Math.abs(D.x)), y: clamp(Math.round(t.y + t.size / 2), 40 + 30 * Math.abs(D.y), MAP - 40 - 30 * Math.abs(D.y)) };
-    this.edit.addLegs([{ a: { x: R.x - 30 * D.x, y: R.y - 30 * D.y }, b: { x: R.x + 30 * D.x, y: R.y + 30 * D.y } }], CLASS.street, 0);
+    // the street's whole-tile direction (u on an axis, u / h on a diagonal), and the start rounded to tiles, kept 40 tiles inside the map with the leg
+    // (LEG steps either way: long enough for the lab's neighbours, two lots each way: stageLabNeighbours)
+    const D = o.road % 2 ? { x: Math.round(u.x / h), y: Math.round(u.y / h) } : u, LEG = 90;
+    const R = { x: clamp(Math.round(t.x + t.size / 2), 40 + LEG * Math.abs(D.x), MAP - 40 - LEG * Math.abs(D.x)), y: clamp(Math.round(t.y + t.size / 2), 40 + LEG * Math.abs(D.y), MAP - 40 - LEG * Math.abs(D.y)) };
+    this.edit.addLegs([{ a: { x: R.x - LEG * D.x, y: R.y - LEG * D.y }, b: { x: R.x + LEG * D.x, y: R.y + LEG * D.y } }], CLASS.street, 0);
     this.commitNetwork();
     // the front edge sits at the verge: the origin lies h + walk off the centre line (lots.ts segLots, r0), with no clearance on top
     const off = CLASS.street.h + CLASS.street.walk, C = { x: R.x - s.x * off, y: R.y - s.y * off };
@@ -4321,7 +4325,7 @@ export class Game {
     this.staged.set('lab', { g, st: o.st }); this.placeLot('lab', g, o.st);
     this.labLot = { key: 'lab', g, road: o.road, w: o.w, d: o.d };
     // no forest round the lab lot and its street (the lab shows the lot on the map's plain grass); the cells there plant again without it
-    const b = lotBoxOf([g.o.x, g.o.y], [u.x, u.y], [n.x, n.y], o.w, o.d), m = 2 * off + 70;
+    const b = lotBoxOf([g.o.x, g.o.y], [u.x, u.y], [n.x, n.y], o.w, o.d), m = 2 * off + 110;
     this.labClear = [b[0]! - m, b[1]! - m, b[2]! + m, b[3]! + m]; this.dropTownTrees(this.labClear[0], this.labClear[1], this.labClear[2], this.labClear[3]);
     this.setTool('select');
     const c = { x: g.o.x + (u.x * o.w + n.x * o.d) / 2, y: g.o.y + (u.y * o.w + n.y * o.d) / 2 };
@@ -4333,6 +4337,13 @@ export class Game {
     if (!this.labLot) return null;
     const { key, g } = this.labLot; this.staged.set(key, { g, st }); this.placeLot(key, g, st); this.emit();
     return { key, g };
+  }
+  /** debug (the lot lab's Neighbours, T148): the lots round the lab lot, staged as given (keys 'lab-n...'; composed as the game composes a lot of
+   *  their state: no forced preset), the ones staged before dropped; [] drops them all. A fresh stageLab drops them too (its reset) */
+  stageLabNeighbours(list: readonly { key: string; g: LotGeom; st: ComposeState }[]) {
+    for (const k of [...this.staged.keys()]) if (k.startsWith('lab-n')) { this.staged.delete(k); this.dropLot(k); }
+    for (const l of list) { this.staged.set(l.key, { g: l.g, st: l.st }); this.placeLot(l.key, l.g, l.st); }
+    this.emit();
   }
 
   /** a new valley: the three towns' street grids (townGrid: the legs on buildable ground, the middle lines avenues), laid as one edit; the
@@ -4976,6 +4987,8 @@ export class Game {
       }
       // ---- the map grid and the course half grid (T100): over the ground and its paint, hidden on the roads, under every shadow and sprite
       if (this.gridLayer.draw(gl.gl, gl.view, z, this.dpr, gridShown(this.showGrid, this.tool), this.courseBuilding, this.gridLand(), this.net)) gl.stats.draws++;
+      // the dev tools' ground lines (the lot lab's Lot grid): the same place, under every shadow and sprite
+      if (this.devGround?.(gl.gl, gl.view)) gl.stats.draws++;
       // ---- sprites: every visible tile in one instanced draw (each instance clipped to its tile), vehicles merged in
       const vis: { i: number; j: number }[] = [];
       for (let j = Math.floor(Y0 / SPR_H); j <= Math.floor(Y1 / SPR_H); j++) for (let i = Math.floor(X0 / SPR_W); i <= Math.floor(X1 / SPR_W); i++) vis.push({ i, j });
