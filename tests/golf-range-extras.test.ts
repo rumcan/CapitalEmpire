@@ -16,7 +16,7 @@ const FACINGS = [0, 1, 2, 3] as const;
 const start = { tier: 1, exits: 2, residents: 0 }, busy = { tier: 5, exits: 2, residents: 20000 };
 const buy = (ids: RangeUpgradeId[], s = defaultRangeBiz()): RangeBizSave => ids.reduce((q, id) => withUpgrade(q, id), s);
 const BASE: RangeUpgradeId[] = ['bays8', 'bays12', 'targets', 'covered', 'dispenser', 'proshop'];
-const EVERY: RangeUpgradeId[] = [...BASE, 'bays24', 'lights', 'kiosk', 'picker', 'tier2', 'academy'];
+const EVERY: RangeUpgradeId[] = [...BASE, 'bays24', 'lights', 'kiosk', 'picker', 'tier2', 'academy', 'parking'];
 
 test('the extras are range card upgrades: their costs, upkeep and what each needs first', () => {
   const by = new Map(RANGE_UPGRADES.map(u => [u.id, u]));
@@ -188,11 +188,13 @@ test('the ball picker cart drives its lanes after closing and picks the balls; w
 test('a skip books the extras\' expected coffees and lessons', () => {
   const s = buy(['bays8', 'proshop', 'academy', 'kiosk']), sim = new RangeSim(3, 10), sc = rangeScene(plots[2], 2, s);
   sim.setScene(sc, [{ x: 260, y: 210, hx: 0, hy: 1 }], { x: 269, y: 210 });
-  const r = skippedVisits(s, start, 0, 600, 600);
+  // (T146: the skip counts the sim's car park, its one bay here)
+  const r = skippedVisits(s, start, 0, 600, 600, sim.skipLive(rangeStats(s), 600));
   assert.ok(r.coffees > 0 && Math.abs(r.coffees - r.served * KIOSK_SHARE) < 1e-9);
   assert.ok(r.lessons > 0 && r.lessons <= r.served * LESSON_SHARE + 1e-9 && r.lessons <= ACADEMY_BAYS * 11 + 1e-9);
   const booked = sim.step(600, { hour: 0, day: 1 }, s, start, 600);
   assert.ok(Math.abs(s.extras.kiosk.season.golfers - r.coffees) < 1e-9 && Math.abs(s.extras.academy.season.golfers - r.lessons) < 1e-9);
   assert.ok(Math.abs(booked - s.season.takings) < 1e-6);
   assert.equal(skippedVisits(defaultRangeBiz(), start, 0, 600, 600).lessons, 0);
+  assert.ok(skippedVisits(s, start, 0, 600, 600).lessons >= r.lessons, 'without the car park counted the skip books at least as many');
 });
