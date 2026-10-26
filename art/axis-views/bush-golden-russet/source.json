@@ -1,0 +1,87 @@
+{
+ "id": "landscape:bush-golden-russet",
+ "slug": "bush-golden-russet",
+ "category": "landscaping",
+ "version": "bush-golden-russet-screen-axis-4views-v1",
+ "crops": "crops-v2",
+ "sheetSha256": "de2d0ce3ef4a1fe723e593307f5453a7304feec38a101fecaf325896b7383dc9",
+ "status": "passed-with-alpha-residue-warnings",
+ "views": {
+  "N": {
+   "file": "N.png",
+   "sha256": "d83c672e3668cfb2a200ad063455e50eb3f3919d62b5958fadfdb8e58d993f88",
+   "nativeSha256": "d83c672e3668cfb2a200ad063455e50eb3f3919d62b5958fadfdb8e58d993f88",
+   "pixelSha256": "97df5bf01ee1f5a3eb9c30811b9c31338475815934c33e5035566404a89cb73e",
+   "sheetRect": {
+    "left": 0,
+    "top": 0,
+    "width": 775,
+    "height": 627
+   },
+   "trim": [
+    35,
+    75,
+    725,
+    512
+   ],
+   "heading": "front faces screen down"
+  },
+  "E": {
+   "file": "E.png",
+   "sha256": "32f37c43cfc0da2e4dee9e4a55d87a296d96469e19ea878635f8c5ff6f104d2d",
+   "nativeSha256": "32f37c43cfc0da2e4dee9e4a55d87a296d96469e19ea878635f8c5ff6f104d2d",
+   "pixelSha256": "f682d737e426e05e6c965c4e71d89918988c6d62fd31d2fe324edd086df9ff42",
+   "sheetRect": {
+    "left": 775,
+    "top": 0,
+    "width": 479,
+    "height": 627
+   },
+   "trim": [
+    30,
+    70,
+    414,
+    518
+   ],
+   "heading": "front faces screen right (its right side to the camera)"
+  },
+  "S": {
+   "file": "S.png",
+   "sha256": "06bbfa775bfd7bdbced927003beb0f9c0c40750878f0e3e4cfad18e8aded1665",
+   "nativeSha256": "06bbfa775bfd7bdbced927003beb0f9c0c40750878f0e3e4cfad18e8aded1665",
+   "pixelSha256": "75b71317b3dae41bea8f2745b6d454cc1b21bbd024447870d1c4196f5e083208",
+   "sheetRect": {
+    "left": 0,
+    "top": 627,
+    "width": 770,
+    "height": 627
+   },
+   "trim": [
+    38,
+    21,
+    714,
+    501
+   ],
+   "heading": "front faces screen up (its rear to the camera)"
+  },
+  "W": {
+   "file": "W.png",
+   "sha256": "28e5e0561d434b74aa0acbd2fd8a64cb9694bee97903e89c2072c6ec78512e50",
+   "nativeSha256": "28e5e0561d434b74aa0acbd2fd8a64cb9694bee97903e89c2072c6ec78512e50",
+   "pixelSha256": "118ea6de72c72fb539072b6d37935600b47e91eb79c1388549f31f73d20b0d7b",
+   "sheetRect": {
+    "left": 770,
+    "top": 627,
+    "width": 484,
+    "height": 627
+   },
+   "trim": [
+    19,
+    41,
+    431,
+    507
+   ],
+   "heading": "front faces screen left (its left side to the camera)"
+  }
+ }
+}

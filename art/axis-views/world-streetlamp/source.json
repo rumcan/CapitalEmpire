@@ -1,0 +1,63 @@
+{
+ "id": "world:streetlamp",
+ "slug": "world-streetlamp",
+ "category": "props",
+ "version": "world-streetlamp-screen-axis-4views-v1",
+ "crops": "half-cells",
+ "sheetSha256": "760713d2332b84353660dd2e8ae505fd4e81933ccf43bc8acd0537d09e9e4c75",
+ "status": "passed-with-alpha-residue-warnings",
+ "views": {
+  "N": {
+   "file": "N.png",
+   "sha256": "b9d8285a8124d05ba754d7732ea3946cae79d237701d01334b9e9165ee52fb78",
+   "nativeSha256": "b9d8285a8124d05ba754d7732ea3946cae79d237701d01334b9e9165ee52fb78",
+   "pixelSha256": "c9fcbf57e351c85340609c45c65706c4f6bc9c46bb478145e0b503a1284285d9",
+   "trim": [
+    249,
+    23,
+    129,
+    586
+   ],
+   "heading": "front faces screen down"
+  },
+  "E": {
+   "file": "E.png",
+   "sha256": "d259d2108163f87f175c137f81e40d6d7b04768995e354d2130bf268c5d68e33",
+   "nativeSha256": "d259d2108163f87f175c137f81e40d6d7b04768995e354d2130bf268c5d68e33",
+   "pixelSha256": "43b13e6a7ee7c904fae0be98a1a321774b51c40e559f115bf768cf2d594c449d",
+   "trim": [
+    248,
+    23,
+    127,
+    586
+   ],
+   "heading": "front faces screen right (its right side to the camera)"
+  },
+  "S": {
+   "file": "S.png",
+   "sha256": "9286ef7c5ec4998b7d3c352872a94477a1f90d80e74d98229143017c8aac231c",
+   "nativeSha256": "9286ef7c5ec4998b7d3c352872a94477a1f90d80e74d98229143017c8aac231c",
+   "pixelSha256": "fb581d2b6a3a1e60a88d4ba966f5d8b58664351a0f0e7349573ca097bba12162",
+   "trim": [
+    248,
+    25,
+    129,
+    584
+   ],
+   "heading": "front faces screen up (its rear to the camera)"
+  },
+  "W": {
+   "file": "W.png",
+   "sha256": "dd5dd37fb18880ab5fa41023a71a44475b28da99b2d067a456db83b9af38a034",
+   "nativeSha256": "dd5dd37fb18880ab5fa41023a71a44475b28da99b2d067a456db83b9af38a034",
+   "pixelSha256": "15e914d3383660b6dffda8cf784c98e28167303f341a88c8eac777203fc4e2f7",
+   "trim": [
+    250,
+    25,
+    127,
+    584
+   ],
+   "heading": "front faces screen left (its left side to the camera)"
+  }
+ }
+}

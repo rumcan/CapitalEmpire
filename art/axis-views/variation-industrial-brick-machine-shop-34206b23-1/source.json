@@ -1,0 +1,63 @@
+{
+ "id": "variation:industrial-brick-machine-shop-34206b23:1",
+ "slug": "variation-industrial-brick-machine-shop-34206b23-1",
+ "category": "buildings",
+ "version": "variation-industrial-brick-machine-shop-34206b23-1-screen-axis-4views-v1",
+ "crops": "half-cells",
+ "sheetSha256": "fbfb736c31dc2a500aed16ffd962ddb191621ba96a47f149ebdb24ab7eb102d6",
+ "status": "passed-with-alpha-residue-warnings",
+ "views": {
+  "N": {
+   "file": "N.png",
+   "sha256": "6da9846230589fe3bf587c022685127f55368bcba47a1d6b8d80e86522dd876a",
+   "nativeSha256": "6da9846230589fe3bf587c022685127f55368bcba47a1d6b8d80e86522dd876a",
+   "pixelSha256": "e4c1171e1de5a98c244e15d04ee1a23752e5ea44e7dc76949d3e3b79bdb177f7",
+   "trim": [
+    99,
+    129,
+    491,
+    401
+   ],
+   "heading": "front faces screen down"
+  },
+  "E": {
+   "file": "E.png",
+   "sha256": "7b8872aa3c46abb117fd1b56705ed619a618414001d559d4661ae6525e9919eb",
+   "nativeSha256": "7b8872aa3c46abb117fd1b56705ed619a618414001d559d4661ae6525e9919eb",
+   "pixelSha256": "00d3975f6a7d01289b8ed3e7341df82cade6a542d5a128dc94f63ff13535eb5a",
+   "trim": [
+    56,
+    123,
+    465,
+    401
+   ],
+   "heading": "front faces screen right (its right side to the camera)"
+  },
+  "S": {
+   "file": "S.png",
+   "sha256": "3fc6e3334ba83e7e9aef6d3bc990fccd421517ca10a4fe54da59a302a8176115",
+   "nativeSha256": "3fc6e3334ba83e7e9aef6d3bc990fccd421517ca10a4fe54da59a302a8176115",
+   "pixelSha256": "69bf8f7a0a2c9e89c867e7ede619b84c1b733712abb08a6f15cfa4e0b954ff7f",
+   "trim": [
+    99,
+    67,
+    485,
+    389
+   ],
+   "heading": "front faces screen up (its rear to the camera)"
+  },
+  "W": {
+   "file": "W.png",
+   "sha256": "de227fd1d853d80951f3f7d7e0098acd792341f5c4365f8ace1b461d7c0c2fb0",
+   "nativeSha256": "de227fd1d853d80951f3f7d7e0098acd792341f5c4365f8ace1b461d7c0c2fb0",
+   "pixelSha256": "29c93d64744c2231e3c53048e23bbc9c2b52366c2fe7f666075cea9939af8bc0",
+   "trim": [
+    60,
+    60,
+    468,
+    397
+   ],
+   "heading": "front faces screen left (its left side to the camera)"
+  }
+ }
+}

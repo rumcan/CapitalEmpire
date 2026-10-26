@@ -392,7 +392,8 @@ test('compositions are pinned: digests of fixed seeds, drawn at the table sizes 
     [15, { use: LU.COM, level: LV.BUILT, decline: 2, seed: 987654 }, '48f49438'],
     [30, { use: LU.COM, level: LV.BUILT, decline: 3, seed: 42 }, '46cbdf24'],
     [4, { use: LU.COM, level: LV.BUILDING, decline: 0, seed: 5 }, 'e9201342'],
-    [20, { use: LU.RES, level: LV.BUILT, decline: 0, seed: 555555 }, 'bc1a57fd'],
+    // re-pinned 2026-10-26 (T154): the studio's Rebuild applied the committed removals and sizes (removed.json, scale-overrides.json) to the library
+    [20, { use: LU.RES, level: LV.BUILT, decline: 0, seed: 555555 }, '1cf0f004'],
     [22, { use: LU.IND, level: LV.BUILT, decline: 0, seed: 777777 }, '0887558a'],
   ];
   for (const [, st] of CASES) assert.ok(!isCarPark(st), `${JSON.stringify(st)} is a car park`);

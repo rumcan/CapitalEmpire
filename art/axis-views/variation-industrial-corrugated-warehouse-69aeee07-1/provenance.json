@@ -1,0 +1,604 @@
+{
+  "id": "variation:industrial-corrugated-warehouse-69aeee07:1",
+  "slug": "variation-industrial-corrugated-warehouse-69aeee07-1",
+  "identity": "variation-industrial-corrugated-warehouse-69aeee07-1-4views-v2.png",
+  "details": "ONE-storey blue-grey corrugated warehouse with broad silver low gable roof, raised circularvent and pair of thinexhausts, attached low rectangular sideoffice with two warm windows/personneldor. Front A gableend has ONE wide rollerloadingbay and small VALLEY WAREHOUSING sign. N headongableloadingdoor; E sideprofile shows attachedoffice; S plainrear nofrontloadingbay; W oppositeside plaincorrugated. Keep office on same physicalside as modelturns. No pallets,cargo,yardorvehicles.",
+  "category": "buildings",
+  "viewOrder": [
+    "N",
+    "E",
+    "S",
+    "W"
+  ],
+  "source": "art/theme-consistency/generated/buildings/variation-industrial-corrugated-warehouse-69aeee07-1-4views-v2.png",
+  "output": "art/theme-consistency/generated/buildings/variation-industrial-corrugated-warehouse-69aeee07-1-screen-axis-4views-v1.png",
+  "provenance": "art/theme-consistency/generated/buildings/variation-industrial-corrugated-warehouse-69aeee07-1-screen-axis-4views-v1.provenance.json",
+  "references": [
+    "art/theme-consistency/references/theme-authoritative.png",
+    "art/theme-consistency/generated/buildings/variation-industrial-corrugated-warehouse-69aeee07-1-4views-v2.png",
+    "art/theme-consistency/references/road-diagonal-head-on-gable-template-v1.png"
+  ],
+  "prompt": "Create a NEW missing orientation set of ONE existing game building. Image 1 is THEME ONLY: match its detailed hand-painted stylized miniature town materials, warm autumn dusk palette, soft confident painted forms and warm lit windows. Image 2 is DESIGN IDENTITY: preserve this exact building's footprint proportions, storeys, roof type, chimney/vent arrangement, facade materials and entrance design. Image 3 is CAMERA GEOMETRY ONLY, never copy its colours/lines. IMPORTANT this is NOT the usual diagonal three-quarter isometric turntable. We need the intermediate 45-degree WORLD headings for roads that are perfectly HORIZONTAL or VERTICAL ON SCREEN. Fixed orthographic elevated camera about35degrees above horizontal, NO perspective. Every primary wall-footing line is exactly HORIZONTAL in screen coordinates; footprint depth goes straight vertically on the image. Roof is visible from above, with roof edges horizontal/vertical; vertical walls stay vertical. NO sloping +/-26.565degree footprint edges. No glimpse of a second major wall at a diagonal corner. Reconstruct true rigid quarter turns, never mirror lighting or reuse a front as a rear.\nReturn one SQUARE RGBA PNG with real transparent background and strict2x2 equal independent cells; no captions. ROW-MAJOR VIEW ORDER: TOP LEFT=N, entrance facade A seen exactly head-on, door faces screen DOWN; TOP RIGHT=E, building's physical right-hand side D seen exactly square-on, entrance facade at the right-hand end out of sight; BOTTOM LEFT=S, real REAR wall C seen exactly head-on, front entrance hidden on far side; BOTTOM RIGHT=W, building's physical left-hand side B seen square-on, front at left end out of sight. All four show matching elevation/scale and the SAME physical roof/vents. Building stays upright, not flat2D elevation: roofs still visible, natural elevated game view. Keep all geometry parallel to horizontal/vertical road layout. Use fixed SCREEN UPPER RIGHT sunlight, darker LOWER LEFT contact, enough dusk daylight for readable materials. All outside silhouette pixels transparent, NO grey floor, NO street, terrain, lawn, tiled square, vignette, backdrop, checkerboard, scene, parked cars, separate props or people. Only integral doorsteps/porch allowed; miniscule contact occlusion, no broad ground shadow cloud. Leave at least15percent transparent padding on every side of EACH quadrant; fit whole roof, steps and all details well inside cell. No overlap across centre gutters, no frame, labels or guide graphics. Four real distinct facades, never two duplicated images.\nONE-storey blue-grey corrugated warehouse with broad silver low gable roof, raised circularvent and pair of thinexhausts, attached low rectangular sideoffice with two warm windows/personneldor. Front A gableend has ONE wide rollerloadingbay and small VALLEY WAREHOUSING sign. N headongableloadingdoor; E sideprofile shows attachedoffice; S plainrear nofrontloadingbay; W oppositeside plaincorrugated. Keep office on same physicalside as modelturns. No pallets,cargo,yardorvehicles.",
+  "generator": "built-in image_gen",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-49b0d7c1-3d35-4e49-ae0a-0be2a6c684a1.png",
+  "date": "2026-10-26",
+  "viewSet": "screen-axis-4",
+  "viewsOrder": [
+    "N",
+    "E",
+    "S",
+    "W"
+  ],
+  "lighting": "upper-right toward lower-left",
+  "integrationStatus": "pending-not-full-eight-view-source",
+  "alphaReview": "pending",
+  "processing": "Native generator output copied byte-for-byte. Crops pending; no resize or pixel repaint.",
+  "screenAxisExport": {
+    "schema": 1,
+    "id": "variation:industrial-corrugated-warehouse-69aeee07:1",
+    "viewSet": "screen-axis-4",
+    "viewsOrder": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "sheet": "art/theme-consistency/generated/buildings/variation-industrial-corrugated-warehouse-69aeee07-1-screen-axis-4views-v1.png",
+    "sheetSha256": "f7701ccd0c5af88802d0d41d4d235ddd64b053e05c3350dc6b5fc42fde54d7ce",
+    "nativeSheetPixels": [
+      1254,
+      1254
+    ],
+    "processing": "Exact source-rectangle pixel crops only. No resize, alpha repaint, recolour, transform or mirroring. Alpha thresholds are diagnostic only; not a visual approval or alpha edit.",
+    "rectangleSelection": {
+      "file": "art/theme-consistency/generated/buildings/variation-industrial-corrugated-warehouse-69aeee07-1-screen-axis-4views-v1.source-rects-v2.json",
+      "review": {
+        "reviewer": "horizontal_crop_pack",
+        "method": "Manually inspected full source and alpha>=128 connected-component extents. Unequal nonoverlapping regions contain complete subjects. Source pixels unchanged; object and padding not rescaled.",
+        "evidence": "art/theme-consistency/generated/buildings/variation-industrial-corrugated-warehouse-69aeee07-1-screen-axis-4views-v1.png",
+        "acceptanceScope": "Source rectangle selection only, not physical-angle or live game approval"
+      }
+    },
+    "fileContractStatus": "passed-with-alpha-residue-warnings",
+    "visualReviewStatus": "pending",
+    "integrationStatus": "pending-not-full-eight-view-source",
+    "axisLineCounts": {
+      "vertical": 695,
+      "horizontal": 0,
+      "verticalAtLeast16": 376,
+      "horizontalAtLeast16": 0,
+      "verticalAtLeast128": 372,
+      "horizontalAtLeast128": 0
+    },
+    "issues": [],
+    "warnings": [
+      "N: corner contains only low-alpha1..15 residue",
+      "N: cell edge contains only low-alpha1..15 residue",
+      "S: cell edge contains only low-alpha1..15 residue",
+      "W: cell edge contains only low-alpha1..15 residue"
+    ],
+    "views": {
+      "N": {
+        "sourceRect": {
+          "left": 0,
+          "top": 0,
+          "width": 670,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/buildings/variation-industrial-corrugated-warehouse-69aeee07-1-screen-axis-4views-v1-crops-v2/N.native.png",
+        "nativeSha256": "ad758676a35d633ceda43eb96f4c9f78b2d89150846342fec14c2cf175b4e19c",
+        "pixelSha256": "c98c0df515a2ee1d867349802ff6889dcdadb53c68a8a442767176593d392264",
+        "trimmedPixelSha256": "b5c8e7eb050d270439fb46498402abfb35be3392fcf374dc92eba83d81909cf7",
+        "nativePixels": [
+          670,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 191841,
+          "transparent": 228249,
+          "transparentFraction": 0.543333571377562,
+          "cornersAlpha": [
+            1,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 0,
+            "top": 0,
+            "width": 661,
+            "height": 592
+          },
+          "padding": {
+            "left": 0,
+            "top": 0,
+            "right": 9,
+            "bottom": 35
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 228249,
+            "oneTo15": 9328,
+            "sixteenTo127": 1321,
+            "one28To254": 181043,
+            "opaque255": 149
+          },
+          "edge": {
+            "nonzero": 26,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 182513,
+            "transparent": 237577,
+            "transparentFraction": 0.5655383370230189,
+            "cornersAlpha": [
+              1,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 90,
+              "top": 153,
+              "width": 562,
+              "height": 409
+            },
+            "padding": {
+              "left": 90,
+              "top": 153,
+              "right": 18,
+              "bottom": 65
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 181192,
+            "transparent": 238898,
+            "transparentFraction": 0.5686829012830584,
+            "cornersAlpha": [
+              1,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 91,
+              "top": 154,
+              "width": 560,
+              "height": 407
+            },
+            "padding": {
+              "left": 91,
+              "top": 154,
+              "right": 19,
+              "bottom": 66
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 182230,
+          "transparent": 237860,
+          "transparentFraction": 0.5662120021900069,
+          "cornersAlpha": [
+            1,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 90,
+            "top": 153,
+            "width": 561,
+            "height": 408
+          },
+          "padding": {
+            "left": 90,
+            "top": 153,
+            "right": 19,
+            "bottom": 66
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      },
+      "E": {
+        "sourceRect": {
+          "left": 670,
+          "top": 0,
+          "width": 584,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/buildings/variation-industrial-corrugated-warehouse-69aeee07-1-screen-axis-4views-v1-crops-v2/E.native.png",
+        "nativeSha256": "a09d6eebcf877c755151006dde17abd9da30174cd86464e3373fa9cdf7914ca3",
+        "pixelSha256": "d82ac5574c1157bcab998c92d57788b35b2a40e6e5e6bb263441ed9ef99b79d7",
+        "trimmedPixelSha256": "de4b986e4201e004c6cd9ffddd06a1f255d5d2e01f4d3974ac98d799a52be2eb",
+        "nativePixels": [
+          584,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 150597,
+          "transparent": 215571,
+          "transparentFraction": 0.5887215704266894,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 6,
+            "top": 27,
+            "width": 562,
+            "height": 590
+          },
+          "padding": {
+            "left": 6,
+            "top": 27,
+            "right": 16,
+            "bottom": 10
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 215571,
+            "oneTo15": 9041,
+            "sixteenTo127": 1462,
+            "one28To254": 139741,
+            "opaque255": 353
+          },
+          "edge": {
+            "nonzero": 0,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 141556,
+            "transparent": 224612,
+            "transparentFraction": 0.6134124227130716,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 19,
+              "top": 251,
+              "width": 489,
+              "height": 308
+            },
+            "padding": {
+              "left": 19,
+              "top": 251,
+              "right": 76,
+              "bottom": 68
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 140094,
+            "transparent": 226074,
+            "transparentFraction": 0.6174051255161566,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 20,
+              "top": 252,
+              "width": 487,
+              "height": 307
+            },
+            "padding": {
+              "left": 20,
+              "top": 252,
+              "right": 77,
+              "bottom": 68
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 141490,
+          "transparent": 224678,
+          "transparentFraction": 0.6135926678464529,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 19,
+            "top": 252,
+            "width": 489,
+            "height": 307
+          },
+          "padding": {
+            "left": 19,
+            "top": 252,
+            "right": 76,
+            "bottom": 68
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      },
+      "S": {
+        "sourceRect": {
+          "left": 0,
+          "top": 627,
+          "width": 600,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/buildings/variation-industrial-corrugated-warehouse-69aeee07-1-screen-axis-4views-v1-crops-v2/S.native.png",
+        "nativeSha256": "d5ec97adf9061abd80018f4bdde797afbe8fd06957a0de1ea28bac4a40818104",
+        "pixelSha256": "47daf03906dd149fbaabd0f89d6a11b19efe79e1da631d45e97c6fd649a044f1",
+        "trimmedPixelSha256": "cb76559799a6afe094e103882d083d93498cb7615054cb00bf78c87dae51c6cc",
+        "nativePixels": [
+          600,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 175850,
+          "transparent": 200350,
+          "transparentFraction": 0.5325624667729931,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 0,
+            "top": 7,
+            "width": 600,
+            "height": 620
+          },
+          "padding": {
+            "left": 0,
+            "top": 7,
+            "right": 0,
+            "bottom": 0
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 200350,
+            "oneTo15": 11405,
+            "sixteenTo127": 1330,
+            "one28To254": 162778,
+            "opaque255": 337
+          },
+          "edge": {
+            "nonzero": 65,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 164445,
+            "transparent": 211755,
+            "transparentFraction": 0.5628787878787879,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 84,
+              "top": 79,
+              "width": 482,
+              "height": 403
+            },
+            "padding": {
+              "left": 84,
+              "top": 79,
+              "right": 34,
+              "bottom": 145
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 163115,
+            "transparent": 213085,
+            "transparentFraction": 0.5664141414141414,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 85,
+              "top": 80,
+              "width": 480,
+              "height": 402
+            },
+            "padding": {
+              "left": 85,
+              "top": 80,
+              "right": 35,
+              "bottom": 145
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 164175,
+          "transparent": 212025,
+          "transparentFraction": 0.5635964912280702,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 84,
+            "top": 79,
+            "width": 482,
+            "height": 403
+          },
+          "padding": {
+            "left": 84,
+            "top": 79,
+            "right": 34,
+            "bottom": 145
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      },
+      "W": {
+        "sourceRect": {
+          "left": 600,
+          "top": 627,
+          "width": 654,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/buildings/variation-industrial-corrugated-warehouse-69aeee07-1-screen-axis-4views-v1-crops-v2/W.native.png",
+        "nativeSha256": "fab7537b292a954f654db94956c52bb7d2fd2010dcb17b862acc72a3737d2476",
+        "pixelSha256": "b609ce7c00e8601ea4e861863afb1f8f3af5c9b36b32ea7d0fc429f2e268f06e",
+        "trimmedPixelSha256": "e2feb89af86eec904c6be7b1c81714d0d241a4329a63536d7ceb67f78e023186",
+        "nativePixels": [
+          654,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 166690,
+          "transparent": 243368,
+          "transparentFraction": 0.5934965297592047,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 0,
+            "top": 5,
+            "width": 638,
+            "height": 622
+          },
+          "padding": {
+            "left": 0,
+            "top": 5,
+            "right": 16,
+            "bottom": 0
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 243368,
+            "oneTo15": 14530,
+            "sixteenTo127": 1392,
+            "one28To254": 150682,
+            "opaque255": 86
+          },
+          "edge": {
+            "nonzero": 178,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 152160,
+            "transparent": 257898,
+            "transparentFraction": 0.628930541533149,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 29,
+              "top": 178,
+              "width": 562,
+              "height": 300
+            },
+            "padding": {
+              "left": 29,
+              "top": 178,
+              "right": 63,
+              "bottom": 149
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 150768,
+            "transparent": 259290,
+            "transparentFraction": 0.6323251832667574,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 30,
+              "top": 178,
+              "width": 560,
+              "height": 299
+            },
+            "padding": {
+              "left": 30,
+              "top": 178,
+              "right": 64,
+              "bottom": 150
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 151710,
+          "transparent": 258348,
+          "transparentFraction": 0.6300279472659965,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 30,
+            "top": 178,
+            "width": 560,
+            "height": 300
+          },
+          "padding": {
+            "left": 30,
+            "top": 178,
+            "right": 64,
+            "bottom": 149
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      }
+    }
+  },
+  "visualReviewStatus": "pending"
+}

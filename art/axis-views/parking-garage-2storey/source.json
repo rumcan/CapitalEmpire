@@ -1,0 +1,88 @@
+{
+ "id": "ce:parking-garage-2storey",
+ "slug": "parking-garage-2storey",
+ "category": "buildings",
+ "version": "parking-garage-2storey-screen-axis-4views-v1",
+ "crops": "crops-v2",
+ "sheetSha256": "ebb5607231d96109e639f307a9b80cb07137258a26b93b9250bb288a0fd50d45",
+ "status": "passed-with-alpha-residue-warnings",
+ "storeys": 2,
+ "views": {
+  "N": {
+   "file": "N.png",
+   "sha256": "379318a791e0666a3dc01b74013931453655a887fa84ff3fa73bbfefd1a1f6e2",
+   "nativeSha256": "379318a791e0666a3dc01b74013931453655a887fa84ff3fa73bbfefd1a1f6e2",
+   "pixelSha256": "d25602f048e42007bfefe0536255af96ea71642ff18843ca0596d9673a763ef0",
+   "sheetRect": {
+    "left": 0,
+    "top": 0,
+    "width": 810,
+    "height": 627
+   },
+   "trim": [
+    35,
+    158,
+    746,
+    384
+   ],
+   "heading": "front faces screen down"
+  },
+  "E": {
+   "file": "E.png",
+   "sha256": "719fe0e647ea662f685d8a30c948ac66b61b6f18bfa2fce85a9802053604d97d",
+   "nativeSha256": "719fe0e647ea662f685d8a30c948ac66b61b6f18bfa2fce85a9802053604d97d",
+   "pixelSha256": "a6a7bfc58d4b63bc317d8bfd362009b5dca68f1e9efa07ab426dca59e5f54614",
+   "sheetRect": {
+    "left": 810,
+    "top": 0,
+    "width": 444,
+    "height": 627
+   },
+   "trim": [
+    31,
+    173,
+    367,
+    403
+   ],
+   "heading": "front faces screen right (its right side to the camera)"
+  },
+  "S": {
+   "file": "S.png",
+   "sha256": "714b4da3c2ac805baee2dbc8626b3f516e14667c4e8526c3db6a0c13f0d9ef80",
+   "nativeSha256": "714b4da3c2ac805baee2dbc8626b3f516e14667c4e8526c3db6a0c13f0d9ef80",
+   "pixelSha256": "c4cc0c59c2fa01fad1a506d6e91dd74e76c4adeaa03860e5aa6181b951b29660",
+   "sheetRect": {
+    "left": 0,
+    "top": 627,
+    "width": 810,
+    "height": 627
+   },
+   "trim": [
+    32,
+    103,
+    752,
+    388
+   ],
+   "heading": "front faces screen up (its rear to the camera)"
+  },
+  "W": {
+   "file": "W.png",
+   "sha256": "02f00b30e008292d6879863e2e5e829079f51f37616ddabcf5ee74eeda62312d",
+   "nativeSha256": "02f00b30e008292d6879863e2e5e829079f51f37616ddabcf5ee74eeda62312d",
+   "pixelSha256": "a757362a3d0851159bf4a22c5187dce421b7128b92f5d21fc89efaf0681ba673",
+   "sheetRect": {
+    "left": 810,
+    "top": 627,
+    "width": 444,
+    "height": 627
+   },
+   "trim": [
+    33,
+    101,
+    381,
+    386
+   ],
+   "heading": "front faces screen left (its left side to the camera)"
+  }
+ }
+}

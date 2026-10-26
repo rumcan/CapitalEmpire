@@ -1,0 +1,596 @@
+{
+  "id": "cars:burgundy-wagon",
+  "slug": "cars-burgundy-wagon",
+  "source": "art/theme-consistency/exports/cars/cars-burgundy-wagon-E.native.png",
+  "details": "1980s long burgundy station wagon, darkwood sideinserts with chrome trim, silver roofrack, darkroof, squareheadlights, brown/chromebumpers, samewheelbase and glass onallviews.",
+  "category": "cars",
+  "output": "art/theme-consistency/generated/cars/cars-burgundy-wagon-screen-axis-4views-v1.png",
+  "provenance": "art/theme-consistency/generated/cars/cars-burgundy-wagon-screen-axis-4views-v1.provenance.json",
+  "references": [
+    "art/theme-consistency/references/theme-authoritative.png",
+    "art/theme-consistency/exports/cars/cars-burgundy-wagon-E.native.png"
+  ],
+  "prompt": "One EMPTY vehicle only. Image1 THEME reference: coherent detailed stylized hand-painted Maple Falls town, warmupper-right lateafternoon/earlydusk light, softpaintedmaterials notphotography. Image2 EXACT vehicle identity, enlarge/reconstructpaintedquality butpreservebodytype,paint,roofrack/bed,wheelbase,windowlayout and trim. 1980s long burgundy station wagon, darkwood sideinserts with chrome trim, silver roofrack, darkroof, squareheadlights, brown/chromebumpers, samewheelbase and glass onallviews.\nGenerate SAME car in FOUR missing SCREEN-AXIS directions, genuine quarterturns underfixedlight. SQUARE transparent RGBA PNG, strict2x2cell sheet, rowmajor TOPLEFT=N nose points exactly SCREEN DOWN, raised orthographic head-onfront with visiblebonnet/roof, frontbumper horizontal; TOPRIGHT=E nose points exactly SCREEN RIGHT, perfectly horizontal longbody sideview fromelevatedcamera, roofvisible, wheelcontactlinehorizontal; BOTTOMLEFT=S nosepoints exactly SCREEN UP, true REAR visible with taillights, frontgrillehidden, bodyextendsvertically; BOTTOMRIGHT=W nose exactly SCREEN LEFT, oppositeside profile, elevatedroofvisible. All cameraelevation35degrees, parallelprojection, NO perspective, NO usualdiagonalisometric±26degree noseheadings. Keepmatchingphysicalscale, narrowfront/rearversuslongside naturally. SunalwaysSCREENUPPERRIGHT, tinycontactshade lowerleft, no mirroring to fakeanotherheading. Emptywindows, nodriver/passengers. Fourindependent completecutouts with15percent transparentmargin percell, centre guttersclear. TRUE ALPHA outsidevehicle, NO greyfloor, shadowdisc, parkingbay, road, scene, label, backdrop, checkerboard or whiteplate. No extraobjects. Headlampswarmwhiteandtaillightsred inphysicalpositions.",
+  "generator": "built-in image_gen",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-295b8dda-d37a-4288-9ad3-c081388a7883.png",
+  "date": "2026-10-26",
+  "viewSet": "screen-axis-4",
+  "viewsOrder": [
+    "N",
+    "E",
+    "S",
+    "W"
+  ],
+  "lighting": "upper-right toward lower-left",
+  "integrationStatus": "pending-not-full-eight-view-source",
+  "alphaReview": "pending",
+  "processing": "Native generator output copied byte-for-byte. Crops pending; no resize or pixel repaint.",
+  "screenAxisExport": {
+    "schema": 1,
+    "id": "cars:burgundy-wagon",
+    "viewSet": "screen-axis-4",
+    "viewsOrder": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "sheet": "art/theme-consistency/generated/cars/cars-burgundy-wagon-screen-axis-4views-v1.png",
+    "sheetSha256": "ccbc0de762dc7cc163071f7540b218557e585cad68ef32424548f0bc71b64953",
+    "nativeSheetPixels": [
+      1254,
+      1254
+    ],
+    "processing": "Exact source-rectangle pixel crops only. No resize, alpha repaint, recolour, transform or mirroring. Alpha thresholds are diagnostic only; not a visual approval or alpha edit.",
+    "rectangleSelection": {
+      "file": "art/theme-consistency/generated/cars/cars-burgundy-wagon-screen-axis-4views-v1.source-rects-v2.json",
+      "review": {
+        "reviewer": "horizontal_crop_pack",
+        "method": "Manually inspected full source and alpha>=128 connected-component extents. Unequal nonoverlapping regions contain complete subjects. Source pixels unchanged; object and padding not rescaled.",
+        "evidence": "art/theme-consistency/generated/cars/cars-burgundy-wagon-screen-axis-4views-v1.png",
+        "acceptanceScope": "Source rectangle selection only, not physical-angle or live game approval"
+      }
+    },
+    "fileContractStatus": "passed-with-alpha-residue-warnings",
+    "visualReviewStatus": "pending",
+    "integrationStatus": "pending-not-full-eight-view-source",
+    "axisLineCounts": {
+      "vertical": 1063,
+      "horizontal": 9,
+      "verticalAtLeast16": 1030,
+      "horizontalAtLeast16": 0,
+      "verticalAtLeast128": 1021,
+      "horizontalAtLeast128": 0
+    },
+    "issues": [],
+    "warnings": [
+      "N: cell edge contains only low-alpha1..15 residue",
+      "E: cell edge contains only low-alpha1..15 residue",
+      "S: cell edge contains only low-alpha1..15 residue",
+      "W: cell edge contains only low-alpha1..15 residue"
+    ],
+    "views": {
+      "N": {
+        "sourceRect": {
+          "left": 0,
+          "top": 0,
+          "width": 450,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/cars/cars-burgundy-wagon-screen-axis-4views-v1-crops-v2/N.native.png",
+        "nativeSha256": "1988294bfab3e2f30040c0df54f96a7a6a31b2d02805a44ef16c855847e398ce",
+        "pixelSha256": "a6ea7f21552c7378ba4b15c07cb62b1855eb02ccf425cdee8ffc5499bb36215a",
+        "trimmedPixelSha256": "5dc4f6754ec75f3294b158606959dafa6b90de145a1f30e1e3681541c3520cfe",
+        "nativePixels": [
+          450,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 149525,
+          "transparent": 132625,
+          "transparentFraction": 0.47005139110402266,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 49,
+            "top": 48,
+            "width": 401,
+            "height": 571
+          },
+          "padding": {
+            "left": 49,
+            "top": 48,
+            "right": 0,
+            "bottom": 8
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 132625,
+            "oneTo15": 9749,
+            "sixteenTo127": 1283,
+            "one28To254": 138257,
+            "opaque255": 236
+          },
+          "edge": {
+            "nonzero": 44,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 139776,
+            "transparent": 142374,
+            "transparentFraction": 0.5046039340776183,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 81,
+              "top": 88,
+              "width": 333,
+              "height": 495
+            },
+            "padding": {
+              "left": 81,
+              "top": 88,
+              "right": 36,
+              "bottom": 44
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 138493,
+            "transparent": 143657,
+            "transparentFraction": 0.5091511607301081,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 82,
+              "top": 89,
+              "width": 331,
+              "height": 494
+            },
+            "padding": {
+              "left": 82,
+              "top": 89,
+              "right": 37,
+              "bottom": 44
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 139482,
+          "transparent": 142668,
+          "transparentFraction": 0.5056459330143541,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 81,
+            "top": 88,
+            "width": 332,
+            "height": 495
+          },
+          "padding": {
+            "left": 81,
+            "top": 88,
+            "right": 37,
+            "bottom": 44
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      },
+      "E": {
+        "sourceRect": {
+          "left": 450,
+          "top": 0,
+          "width": 804,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/cars/cars-burgundy-wagon-screen-axis-4views-v1-crops-v2/E.native.png",
+        "nativeSha256": "8a731740d4e2bf84189e9a714cf09ab65650b8f2b6747557f5804bbbbf3af55c",
+        "pixelSha256": "2c62f2987405a23e05f119acfe064e30e79cf93e977e47618fbc7c950346abe6",
+        "trimmedPixelSha256": "9b183bd89db06001ea35955ac42b67f20257107586c5ed03d337f56f38596763",
+        "nativePixels": [
+          804,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 184440,
+          "transparent": 319668,
+          "transparentFraction": 0.6341260206146302,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 0,
+            "top": 21,
+            "width": 786,
+            "height": 606
+          },
+          "padding": {
+            "left": 0,
+            "top": 21,
+            "right": 18,
+            "bottom": 0
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 319668,
+            "oneTo15": 13617,
+            "sixteenTo127": 1697,
+            "one28To254": 169017,
+            "opaque255": 109
+          },
+          "edge": {
+            "nonzero": 28,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 170823,
+            "transparent": 333285,
+            "transparentFraction": 0.6611380894570211,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 46,
+              "top": 208,
+              "width": 729,
+              "height": 310
+            },
+            "padding": {
+              "left": 46,
+              "top": 208,
+              "right": 29,
+              "bottom": 109
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 169126,
+            "transparent": 334982,
+            "transparentFraction": 0.6645044315900561,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 47,
+              "top": 209,
+              "width": 726,
+              "height": 308
+            },
+            "padding": {
+              "left": 47,
+              "top": 209,
+              "right": 31,
+              "bottom": 110
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 170432,
+          "transparent": 333676,
+          "transparentFraction": 0.6619137169019337,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 46,
+            "top": 208,
+            "width": 728,
+            "height": 309
+          },
+          "padding": {
+            "left": 46,
+            "top": 208,
+            "right": 30,
+            "bottom": 110
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      },
+      "S": {
+        "sourceRect": {
+          "left": 0,
+          "top": 627,
+          "width": 450,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/cars/cars-burgundy-wagon-screen-axis-4views-v1-crops-v2/S.native.png",
+        "nativeSha256": "638fc0a495f1a833fbd11c207a8def9ba4d2414e3acc0c79dd23717616043df1",
+        "pixelSha256": "560352a365776a55ea73b1ee6149d9fcb7b3a2f5b5ad159c3c625edba4a71900",
+        "trimmedPixelSha256": "2a58756a5dcc4354727c300e4306e10c7470e71e9d49e4d45fda0fa380158455",
+        "nativePixels": [
+          450,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 131444,
+          "transparent": 150706,
+          "transparentFraction": 0.5341343257132731,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 39,
+            "top": 23,
+            "width": 411,
+            "height": 604
+          },
+          "padding": {
+            "left": 39,
+            "top": 23,
+            "right": 0,
+            "bottom": 0
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 150706,
+            "oneTo15": 7506,
+            "sixteenTo127": 1381,
+            "one28To254": 122422,
+            "opaque255": 135
+          },
+          "edge": {
+            "nonzero": 46,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 123938,
+            "transparent": 158212,
+            "transparentFraction": 0.5607371965266702,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 95,
+              "top": 65,
+              "width": 317,
+              "height": 443
+            },
+            "padding": {
+              "left": 95,
+              "top": 65,
+              "right": 38,
+              "bottom": 119
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 122557,
+            "transparent": 159593,
+            "transparentFraction": 0.5656317561580719,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 96,
+              "top": 67,
+              "width": 315,
+              "height": 440
+            },
+            "padding": {
+              "left": 96,
+              "top": 67,
+              "right": 39,
+              "bottom": 120
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 123644,
+          "transparent": 158506,
+          "transparentFraction": 0.561779195463406,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 96,
+            "top": 66,
+            "width": 316,
+            "height": 442
+          },
+          "padding": {
+            "left": 96,
+            "top": 66,
+            "right": 38,
+            "bottom": 119
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      },
+      "W": {
+        "sourceRect": {
+          "left": 450,
+          "top": 627,
+          "width": 804,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/cars/cars-burgundy-wagon-screen-axis-4views-v1-crops-v2/W.native.png",
+        "nativeSha256": "ec6b49b68ffb6ae608a84d893e3fb5c87fcae95cc1990f0cb8e1539982bd1b68",
+        "pixelSha256": "46a33bdae7b64f05590cded61cd31136131166bed9a287703b602f2b4547da28",
+        "trimmedPixelSha256": "6052834d4604999dc774f51cc973687137e3a6d12b83b3d5752d22a5a5174f12",
+        "nativePixels": [
+          804,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 184976,
+          "transparent": 319132,
+          "transparentFraction": 0.6330627563934712,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 0,
+            "top": 0,
+            "width": 794,
+            "height": 627
+          },
+          "padding": {
+            "left": 0,
+            "top": 0,
+            "right": 10,
+            "bottom": 0
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 319132,
+            "oneTo15": 13690,
+            "sixteenTo127": 1827,
+            "one28To254": 169373,
+            "opaque255": 86
+          },
+          "edge": {
+            "nonzero": 46,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 171286,
+            "transparent": 332822,
+            "transparentFraction": 0.6602196354749379,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 31,
+              "top": 173,
+              "width": 744,
+              "height": 305
+            },
+            "padding": {
+              "left": 31,
+              "top": 173,
+              "right": 29,
+              "bottom": 149
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 169459,
+            "transparent": 334649,
+            "transparentFraction": 0.663843858855642,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 32,
+              "top": 174,
+              "width": 741,
+              "height": 303
+            },
+            "padding": {
+              "left": 32,
+              "top": 174,
+              "right": 31,
+              "bottom": 150
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 170866,
+          "transparent": 333242,
+          "transparentFraction": 0.6610527902750998,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 32,
+            "top": 173,
+            "width": 742,
+            "height": 305
+          },
+          "padding": {
+            "left": 32,
+            "top": 173,
+            "right": 30,
+            "bottom": 149
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      }
+    }
+  },
+  "visualReviewStatus": "pending"
+}

@@ -4,7 +4,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  BAYS_A_COUNTER, GARAGE_ART, GARAGE_CARS, RANGE_UPGRADES, RangeSim, defaultRangeBiz, garageSlots, normalizeRangeBiz, rangeScene, rangeStats, rangeUpkeep,
+  BAYS_A_COUNTER, GARAGE_ART, GARAGE_CARS, GARAGE_LEVELS, GARAGE_LEVEL_CARS, RANGE_UPGRADES, RangeSim, defaultRangeBiz, garageSlots, normalizeRangeBiz, rangeScene, rangeStats, rangeUpkeep,
   skippedVisits, upgradeWhy, withUpgrade, type CarSlot, type RangeBizSave, type RangeMoneyEvent, type RangeUpgradeId,
 } from '../src/game/golf/rangebiz';
 import { RangeHost, type RangeHostCtx } from '../src/game/golf/rangehost';
@@ -72,12 +72,18 @@ test('the save: the building round-trips, an old save loads without it, a buildi
   assert.equal(normalizeRangeBiz({ v: 1, owned: ['bays8'], price: 6, garage: true }).garage, undefined, 'no path flag without the building');
 });
 
+test('the car park building\'s art: the parking garage whose covered levels hold GARAGE_CARS (T154)', () => {
+  assert.equal(GARAGE_ART, 'ce:parking-garage-6storey');
+  assert.equal(GARAGE_LEVELS * GARAGE_LEVEL_CARS, GARAGE_CARS, 'its five covered levels at 36 cars a level hold the 180');
+});
+
 test('the scene: the building on the lot\'s far half for every facing, clear of the lot, the shop, the kiosk, the paths and the tee box', () => {
   for (const f of [0, 1, 2, 3] as const) {
     const p = plots[f], s = buy([...GROWN, 'parking']), sc = rangeScene(p, f, s), g = sc.garage!;
     const F = (u: number, v: number) => plotPoint(p, f, u, v), inBox = (q: { x: number; y: number }, b: number[], m = 0) => q.x > b[0]! - m && q.x < b[2]! + m && q.y > b[1]! - m && q.y < b[3]! + m;
     const piece = sc.pieces.find(q => q.key === 'carpark')!;
-    assert.ok(piece && piece.id === GARAGE_ART && piece.label === 'Stand In for the car park building' && piece.foot, `facing ${f}: the stand-in, labelled, with its footprint`);
+    // T154: the parking garage's own art (no stand-in, no label), at a size, with its footprint
+    assert.ok(piece && piece.id === GARAGE_ART && piece.label === undefined && piece.scale! > 0 && piece.fit === undefined && piece.foot, `facing ${f}: the parking garage, unlabelled, with its footprint`);
     assert.deepEqual(piece.foot, g.box);
     // on the old lot (u 49..69, v 2..18), its far half; the lot keeps the near half (u 58..69) beside the drive
     const a = F(49, 2), b = F(69, 18), old = [Math.min(a.x, b.x), Math.min(a.y, b.y), Math.max(a.x, b.x), Math.max(a.y, b.y)];

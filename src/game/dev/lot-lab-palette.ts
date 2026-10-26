@@ -6,6 +6,7 @@
 import { LIBRARY } from '../library';
 import type { LibItem } from '../types';
 import { drawnAsStandIn } from '../newart';
+import { AXIS_SETS } from '../axis-library';
 import { LOT_DECALS, type LotDecal } from '../lot-decals';
 import { thumb } from './lot-editor';
 import { BTN, chip, el, type Shell } from './lot-lab-ui';
@@ -22,9 +23,12 @@ export function spriteGroup(it: Pick<LibItem, 'id' | 'kind' | 'cat' | 'big'>): '
   if (it.kind === 'building' || it.kind === 'house' || it.kind === 'venue' || it.kind === 'lot' || it.big) return 'buildings';
   return 'props';
 }
-/** whether the lab's palette offers a library sprite: not a turned view or an east copy, not a walker or one of the people, not an old building
- *  drawn as a stand-in */
-export const placeable = (it: LibItem, i: number) => !it.id.startsWith('view:') && !it.id.startsWith('east:') && it.kind !== 'walker' && !SKIP_CAT.has(it.cat) && !drawnAsStandIn(i);
+/** the screen-axis sets' first pictures (T154: the N view, the front facing screen down; R turns it through E, S, W): the palette offers a set
+ *  once, by it, the extra headings of the shops, houses and props among them (view:<id>:n) */
+const AXIS_FIRST: ReadonlySet<string> = new Set(Object.values(AXIS_SETS).map(v => v[0]));
+/** whether the lab's palette offers a library sprite: not a turned view (but a screen-axis set's first) or an east copy, not a walker or one of the
+ *  people, not an old building drawn as a stand-in */
+export const placeable = (it: LibItem, i: number) => (!it.id.startsWith('view:') || AXIS_FIRST.has(it.id)) && !it.id.startsWith('east:') && it.kind !== 'walker' && !SKIP_CAT.has(it.cat) && !drawnAsStandIn(i);
 /** the sprites a group, category ('' every one) and search (id or name, any case) show, in library order */
 export function paletteSprites(group: PalGroup, cat: string, q: string): LibItem[] {
   const s = q.trim().toLowerCase();

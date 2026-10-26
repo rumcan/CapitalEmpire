@@ -1,10 +1,17 @@
-// Rebuild the supplemental car page from the checked-in eight-direction source PNGs.
+// Rebuild the supplemental car page from the checked-in eight-direction source PNGs (art/cars/<model>), the four cardinal headings (the nose
+// pointing screen up, right, down, left) from the model's screen-axis set when it has one (T154: art/axis-views/cars-<model>, synced by
+// sync-axis-views.mjs from the art model's cars-<model>-screen-axis-4views-v<n>: four genuine quarter turns, where the old W was the E view mirrored).
+// The two sets name their headings differently, so they are matched by where the nose points, never by label: the set's N (nose down) is the
+// manifest's S, its S (nose up) the manifest's N, E and W the same. A set's picture is trimmed to the car's own pixels (axis-cells.mjs, as the
+// manifest's pictures are), never resized here
+// but by the one rule below, never mirrored.
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 import { readScales } from './overrides.mjs';
 import { carModelSize } from '../../src/game/ext/car-art/model.mjs';
+import { trimmed } from './axis-cells.mjs';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const out = path.join(root, 'src/assets/cars');
 fs.mkdirSync(out, { recursive: true });
@@ -15,11 +22,19 @@ const dirs = ['SE', 'S', 'SW', 'W', 'NW', 'N', 'NE', 'E'];
 const sizes = readScales(), CAR_SCALE = +(/export const CAR_SCALE = ([\d.]+)/.exec(fs.readFileSync(path.join(root, 'src/game/ext/car-art/index.ts'), 'utf8'))?.[1] ?? 1);
 const CELL = 512 - 32;
 const items = [], composite = [];
+/** the screen-axis set's heading for a nose direction (sync-axis-views.mjs: N nose down, E right, S up, W left) */
+const AXIS_NOSE = { down: 'N', right: 'E', up: 'S', left: 'W' };
+const axis = model => { const f = path.join(root, 'art/axis-views', `cars-${model}`, 'source.json'); return fs.existsSync(f) ? { dir: path.dirname(f), ...JSON.parse(fs.readFileSync(f, 'utf8')) } : null; };
+const used = [];
 for (const [modelIndex, model] of models.entries()) {
   const dir = path.join(root, 'art/cars', model);
-  const manifest = JSON.parse(fs.readFileSync(path.join(dir, 'manifest.json'), 'utf8'));
+  const manifest = JSON.parse(fs.readFileSync(path.join(dir, 'manifest.json'), 'utf8')), set = axis(model);
   for (const [heading, key] of dirs.entries()) {
-    const view = manifest.views.find(v => v.key === key), a = heading * Math.PI / 4, c = Math.cos(a), s = Math.sin(a);
+    const old = manifest.views.find(v => v.key === key), a = heading * Math.PI / 4, c = Math.cos(a), s = Math.sin(a);
+    // the screen-axis set's picture for this nose direction, trimmed to the car, else the manifest's
+    const ax = set && AXIS_NOSE[old.screenNoseDirection], src = ax ? await trimmed(fs.readFileSync(path.join(set.dir, set.views[ax].file)), 0) : null;
+    const png = src ? src.png : fs.readFileSync(path.join(dir, old.file)), view = src ? { width: src.rect[2], height: src.rect[3] } : old;
+    if (src) used.push(`${model} ${key} <- ${set.version} ${ax}`);
     // Match one physical vehicle in every view. Native projection is 64 x 32 px per world tile (2 m).
     const w = 64 * (2.25 * Math.abs(c - s) + 0.9 * Math.abs(s + c));
     const groundH = 32 * (2.25 * Math.abs(c + s) + 0.9 * Math.abs(c - s));
@@ -29,7 +44,7 @@ for (const [modelIndex, model] of models.entries()) {
     if (fit < want * (1 - 1e-9)) console.warn(`${model} ${key}: packed at x${(fit / 0.6).toFixed(2)} of its size, capped by ${fit === 3 * view.width / w ? 'its 3x source' : 'its 512 px cell'}`);
     const width = Math.round(w * fit), height = Math.round(h * fit);
     const cell = modelIndex * 8 + heading, left = (cell % 4) * 512 + 16, top = Math.floor(cell / 4) * 512 + 16;
-    composite.push({ input: await sharp(path.join(dir, view.file)).resize(width, height, { kernel: 'lanczos3' }).sharpen({ sigma: 0.6 }).png().toBuffer(), left, top });
+    composite.push({ input: await sharp(png).resize(width, height, { kernel: 'lanczos3' }).sharpen({ sigma: 0.6 }).png().toBuffer(), left, top });
     const hx = 2.25 * Math.abs(c) + 0.9 * Math.abs(s), hy = 2.25 * Math.abs(s) + 0.9 * Math.abs(c);
     items.push({ id: `cars:${model}:${key}`, name: `${model.replaceAll('-', ' ')} ${key}`, cat: 'Vehicles', kind: 'car', w, h, ax: w / 2, ay: h - groundH / 2, boxes: [{ hx, hy, dx: 0, dy: 0 }], solid: 2, big: true, door: false, cost: 6300, tex: [0, left / 2048, top / 2048, (left + width) / 2048, (top + height) / 2048], quad: [0, 0, w, h] });
   }
@@ -50,3 +65,4 @@ fs.writeFileSync(path.join(root, 'src/game/cars-library.ts'), [
   '}', ''
 ].join('\n'));
 console.log(`Prepared ${items.length} directional car sprites on one supplemental atlas page.`);
+if (used.length) console.log(`From the screen-axis sets (by nose direction): ${used.join(', ')}`);

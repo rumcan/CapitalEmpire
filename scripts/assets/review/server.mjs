@@ -17,7 +17,7 @@
 //            preset): a family picker with each family's three zoom levels, its version, scale, tint and tone; Save writes
 //            src/game/painted-surfaces.json, which a dev game from this checkout takes at once (painted.js)
 //   Rebuild: runs every pack the studio's sizes reach again (decals, map patches, town sprites, cars, business art, building site, four-view
-//            buildings and their stand-ins, the scale table; rebuild() below), then npm run build, so the game takes the changes.
+//            buildings and their stand-ins, the screen-axis sets, the scale table; rebuild() below), then npm run build, so the game takes the changes.
 //   node scripts/assets/review/server.mjs [--port 5179]   then open http://127.0.0.1:5179/
 import { execFile, spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
@@ -54,7 +54,7 @@ const CAR_SCALE = +(/export const CAR_SCALE = ([\d.]+)/.exec(fs.readFileSync(pat
 
 // ---------------------------------------------------------------- sizes: every sprite as the game draws it (review/size-report.ts)
 const SIZE_SRC = path.join(ROOT, 'scripts/assets/review/size-report.ts'), SIZE_OUT = path.join(ROOT, 'output/review/size-report.mjs');
-const SIZE_INPUTS = [SIZE_SRC, path.join(ROOT, 'scripts/assets/scale-overrides.json'), ...['library', 'views-library', 'trees-library', 'cars-library', 'east-library', 'business-library',
+const SIZE_INPUTS = [SIZE_SRC, path.join(ROOT, 'scripts/assets/scale-overrides.json'), ...['library', 'views-library', 'axis-library', 'trees-library', 'cars-library', 'east-library', 'business-library',
   'construction-library', 'golf-library', 'newart', 'sizes', 'lots/scales', 'lots/studio-base'].map(f => path.join(ROOT, 'src/game', `${f}.ts`))];
 let sizes = { stamp: '', data: {} }, sizing = null;
 /** the size report: id -> { scale, base, sizeId, drawn: { id, name, quad, scale, fill, cap } | null, sharp, native, and the picture's atlas rect and page },
@@ -92,12 +92,13 @@ function library() {
     for (const e of JSON.parse(txt)) if (!have.has(e.id) && !gone[e.id] && !gone[e.id.replace(/^east:/, '')]) { have.add(e.id); out.push({ id: e.id, name: e.name, cat: e.cat, kind: e.kind, tex: e.tex, w: e.w, h: e.h, quad: e.quad, ax: e.ax, ay: e.ay, page: path.join(ROOT, a.page(e.tex[0])) }); }
   }
   // the game's own pictures (size-report.ts): the four-view art in place of the old pictures it replaced, and the libraries not listed above (the
-  // generated trees); a building's other views (view:<id>:se|sw|nw) are not cards of their own: they take their building's size and removal
+  // generated trees); a building's other views (view:<id>:se|sw|nw) and the screen-axis views (view:<id>:n|e|s|w, T154) are not cards of their own:
+  // they take their subject's size and removal (a car's screen-axis views are listed: they join their model's card below)
   const at = new Map(out.map((s, i) => [s.id, i]));
   for (const [id, e] of Object.entries(sizes.data)) {
     const i = at.get(id), pic = { tex: e.tex, w: e.w, h: e.h, quad: e.quad, ax: e.ax, ay: e.ay, page: e.page };
     if (i !== undefined) { if (!out[i].rect && e.page) Object.assign(out[i], pic); }
-    else if (!id.startsWith('view:') && !gone[id] && e.page) { out.push({ id, name: e.name, cat: e.cat, kind: e.kind, ...pic }); at.set(id, out.length - 1); }
+    else if ((!id.startsWith('view:') || e.kind === 'car') && !gone[id] && e.page) { out.push({ id, name: e.name, cat: e.cat, kind: e.kind, ...pic }); at.set(id, out.length - 1); }
   }
   const people = JSON.parse(/WALKER_PEOPLE[^=]*= (\[.*\]);/.exec(src)?.[1] ?? '[]'), wf = JSON.parse('[' + (/const WF = \[(.*)\];/.exec(src)?.[1] ?? '') + ']');
   // WF holds every frame of every person (per person: WALK_DIRS x WALK_FRAMES frames of 9 numbers); the first one (idle, facing S) is the picture
@@ -105,6 +106,8 @@ function library() {
   people.forEach((p, i) => { const o = i * perPerson * 9; if (perPerson && wf.length > o + 8) out.push({ id: p.id, name: p.id.replace(/^person:/, ''), cat: 'Townspeople', kind: 'walker', tex: wf.slice(o, o + 5), w: p.w, h: p.h, quad: wf.slice(o + 5, o + 9), ax: p.ax, ay: p.ay }); });
   return out;
 }
+/** the screen-axis sets (src/game/axis-library.ts AXIS_SETS, T154): subject id -> its [N, E, S, W] pictures; {} before the first pack */
+function axisSets() { try { return JSON.parse(/export const AXIS_SETS[^=]*= ({.*});/.exec(fs.readFileSync(path.join(ROOT, 'src/game/axis-library.ts'), 'utf8'))[1]); } catch { return {}; } }
 // the appended libraries: the item array (one line in cars and businesses, several in east) and the page file for a page index
 const APPENDED = [
   { file: 'src/game/cars-library.ts', re: /ITEMS: LibItem\[\] = (\[[\s\S]*?\]);\n/, page: p => `src/assets/cars/cars-${p}.webp` },
@@ -209,8 +212,10 @@ function rebuild() {
   // reads every library above, and packs each view at its size, and each stand-in for what the buildings drawn as it need: views-library.ts;
   // with no folder given it syncs the art model's generated buildings from the main checkout, then packs the copies in art/building-views);
   // the scale table last of the packs (it reads every library and what views-library appends); the audit after everything
-  const steps = ['scripts/assets/prep-decals.mjs', 'scripts/assets/nature-patches.mjs', 'scripts/assets/prep-sprites.mjs', 'scripts/assets/prep-cars.mjs', 'scripts/assets/prep-business-art.mjs',
-    'scripts/assets/prep-construction.mjs', 'scripts/assets/prep-views.mjs', 'scripts/assets/prep-scales.mjs', 'scripts/assets/audit-sprites.mjs'];
+  // T154: the screen-axis sets are synced from the art model's folders before the cars (prep-cars.mjs takes the eight-way cars' cardinal headings
+  // from them) and packed after the four-view buildings (prep-axis-views.mjs sizes a building's set by its NE view as prep-views drew it)
+  const steps = ['scripts/assets/prep-decals.mjs', 'scripts/assets/nature-patches.mjs', 'scripts/assets/prep-sprites.mjs', 'scripts/assets/sync-axis-views.mjs', 'scripts/assets/prep-cars.mjs', 'scripts/assets/prep-business-art.mjs',
+    'scripts/assets/prep-construction.mjs', 'scripts/assets/prep-views.mjs', 'scripts/assets/prep-axis-views.mjs', 'scripts/assets/prep-scales.mjs', 'scripts/assets/audit-sprites.mjs'];
   job = { log: '', done: false, code: 0, step: '', started: Date.now() };
   const run = i => {
     if (i >= steps.length) return process.env.STUDIO_DEV_GAME ? devDone() : build();
@@ -405,7 +410,14 @@ http.createServer(async (req, res) => {
       }
       // a four-view building's views (size-report.ts sizeIdOf): its picture (NE), its east view (east:<id>, else view:<id>:se), view:<id>:sw and view:<id>:nw.
       // The card shows all four as thumbnails (/thumb/<id>) and sizes all four; the views are not cards of their own, so the east one is left out of the grid
-      const viewsOf = id => { if (!rep[`view:${id}:sw`] || !rep[`view:${id}:nw`]) return null; const se = rep[`east:${id}`] ? `east:${id}` : `view:${id}:se`; return [{ dir: 'NE', id }, { dir: 'SE', id: se }, { dir: 'SW', id: `view:${id}:sw` }, { dir: 'NW', id: `view:${id}:nw` }]; };
+      // A subject with a screen-axis set (axis-library.ts AXIS_SETS, T154) shows its N, E, S, W pictures too (a new subject's N view is its own picture;
+      // a prop keeps its old picture as the card's, its four new views beside it), all sized together
+      const axis = axisSets();
+      const viewsOf = id => {
+        const se = rep[`east:${id}`] ? `east:${id}` : `view:${id}:se`, four = rep[`view:${id}:sw`] && rep[`view:${id}:nw`] ? [{ dir: 'NE', id }, { dir: 'SE', id: se }, { dir: 'SW', id: `view:${id}:sw` }, { dir: 'NW', id: `view:${id}:nw` }] : [];
+        const ax = (axis[id] ?? []).map((v, i) => ({ dir: 'NESW'[i], id: v })).filter(v => rep[v.id]), all = [...four, ...ax];
+        return all.length ? all : null;
+      };
       for (const s of list) { if (s.id.startsWith('east:')) continue; const v = viewsOf(s.id); if (v) s.views = v; }
       // one card per car model (T143, model.mjs carModel): its pictures the game has (every facing, view and heading; the removed ones are left out)
       // as thumbs (views, in the library's order), its first base picture (not a variation view) as the card's own; the card is named for the model,

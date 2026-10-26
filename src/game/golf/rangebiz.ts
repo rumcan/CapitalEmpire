@@ -52,9 +52,15 @@ const COUNTER_STEP = 1.3;
  *  path behind it), the lot left beside it, and the corner the lot's walkers take round it to the path */
 const GARAGE: [number, number, number, number] = [49, 58, 2, 15], GARAGE_RAMP = { u: 58.4, v: 5 }, GARAGE_DOOR = { u: 53.5, v: 15.5 };
 const LOT_BESIDE: [number, number, number, number] = [58, 69, 2, 18], LOT_CORNER = { u: 59.4, v: PATH_V };
-/** the stand-in for the car park building (no art yet: GOLF-SPRITES "Car park building") and the footprint's W + D it spans (tiles) */
-export const GARAGE_ART = 'business:buscompany';
-const GARAGE_FIT = 22;
+/** the car park building's art (T154: the art model's parking garage, axis-library.ts): the 6-storey set, whose five covered parking levels (its
+ *  flat roof is no deck) hold GARAGE_CARS at the art request's 36 cars a level (GOLF-SPRITES golf:range-carpark: 180 cars on five decks of 18 x 26 m);
+ *  the 2- to 5-storey sets hold 72 to 144. Drawn from its screen-axis views (N, E, S, W, one per quarter turn) until its diagonal views exist */
+export const GARAGE_ART = 'ce:parking-garage-6storey';
+/** the cars a covered level of the car park building holds, and the levels of GARAGE_ART (5 x 36 = GARAGE_CARS) */
+export const GARAGE_LEVEL_CARS = 36, GARAGE_LEVELS = 5;
+/** its size: a screen-axis picture's footprint is a rectangle along the screen, so a turned one (its front 26 m, its depth 19 m at scale 1) fits
+ *  the footprint's 9-tile side at about 0.6: (13 + 9.5) x 0.6 / sqrt 2 tiles each way */
+const GARAGE_SCALE = 0.6;
 
 /** a prop of the scene: its key (stable while it stays), library id, world point, quarter turns from the picture's base view (preset-art turned),
  *  scale (absent: the library's own size) or fit (the footprint's W + D in tiles the picture spans: business art), and its stand-in label */
@@ -228,11 +234,11 @@ export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave): 
     picker = { home: h0, ang: Math.atan2(h1.y - h0.y, h1.x - h0.x), lanes };
   }
 
-  // the car park building (T146): on the lot's far half, its ramp facing the lot's aisle, its door onto the path; a stand-in until its art
+  // the car park building (T146): on the lot's far half, its ramp facing the lot's aisle, its door onto the path (T154: the parking garage's art)
   let garage: RangeScene['garage'] = null;
   if (st.parking) {
     const a = P(GARAGE[0], GARAGE[2]), b = P(GARAGE[1], GARAGE[3]), box: [number, number, number, number] = [Math.min(a.x, b.x), Math.min(a.y, b.y), Math.max(a.x, b.x), Math.max(a.y, b.y)];
-    put('carpark', GARAGE_ART, (GARAGE[0] + GARAGE[1]) / 2, (GARAGE[2] + GARAGE[3]) / 2, (toRoad + 1) % 4, { fit: GARAGE_FIT, foot: box, label: 'Stand In for the car park building' });
+    put('carpark', GARAGE_ART, (GARAGE[0] + GARAGE[1]) / 2, (GARAGE[2] + GARAGE[3]) / 2, (toRoad + 1) % 4, { scale: GARAGE_SCALE, foot: box });
     const r0 = P(GARAGE_RAMP.u, GARAGE_RAMP.v), r1 = P(GARAGE_RAMP.u - 1, GARAGE_RAMP.v), l0 = P(LOT_BESIDE[0], LOT_BESIDE[2]), l1 = P(LOT_BESIDE[1], LOT_BESIDE[3]);
     garage = {
       box, ramp: r0, into: { x: r1.x - r0.x, y: r1.y - r0.y }, door: P(GARAGE_DOOR.u, GARAGE_DOOR.v),

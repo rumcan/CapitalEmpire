@@ -1,0 +1,598 @@
+{
+  "id": "world:bench",
+  "slug": "world-bench",
+  "identity": "world-bench",
+  "details": "ONE standard town parkbench, darkgreen painted timber seat and backrest with black castiron armrests/legs, wide two-person bench, no damage. N shows FRONT of backrest and seat, longbench perfectlyHORIZONTAL. E shows end-onrightprofile, narrowseatdepthgoesVERTICAL on image; S shows trueBACK rails/supports with seatmostlyhidden; W oppositeendprofile. All four samebench. FootlinehorizontalforlongN/S andfootprintorthogonalforE/W. NO plants or separate ground.",
+  "category": "props",
+  "source": "art/theme-consistency/exports/horizontal-identities/world-bench.native.png",
+  "output": "art/theme-consistency/generated/props/world-bench-screen-axis-4views-v1.png",
+  "provenance": "art/theme-consistency/generated/props/world-bench-screen-axis-4views-v1.provenance.json",
+  "references": [
+    "art/theme-consistency/references/theme-authoritative.png",
+    "art/theme-consistency/references/horizontal-road-parking-landscaping-v1.png",
+    "art/theme-consistency/exports/horizontal-identities/world-bench.native.png"
+  ],
+  "prompt": "ONE independentlyplaceable propONLY. Image1 = hand-painted stylized MapleFalls townTHEME; image2 = approved horizontal-screen-roadscene forstyle/camera; image3 = thisprop'sexisting gameidentity. Preservepractical1980sdesign, no fantasyembellishment. ONE standard town parkbench, darkgreen painted timber seat and backrest with black castiron armrests/legs, wide two-person bench, no damage. N shows FRONT of backrest and seat, longbench perfectlyHORIZONTAL. E shows end-onrightprofile, narrowseatdepthgoesVERTICAL on image; S shows trueBACK rails/supports with seatmostlyhidden; W oppositeendprofile. All four samebench. FootlinehorizontalforlongN/S andfootprintorthogonalforE/W. NO plants or separate ground.\nGenerate FOUR realrigidquarterturns ofthis SAMEobject. Orthographicelevated35degreecamera, no perspective; alignstructuralbaseaxes HORIZONTALLY/VERTICALLYonSCREEN fornewhorizontalroadlayout, not±26degree diagonalgroundedges. SQUARE RGBAtransparentPNG strict2x2 equalcells ROWMAJOR N FRONT headon facesSCREENDOWN, E RIGHTSIDE, S trueBACK, W LEFTSIDE. Rotatephysicaldetailscorrectly; nevermirror orrepeatfrontasrear. Light fixedSCREEN UPPERRIGHT shadeLOWERLEFT; no rotatinglight. Matchsamepalette,detailedreadablepaintedmaterials andphysicalsizeallviews. ALL fourcutoutswhollyinsideownquarterwith15percentcleartransparentmargin toALLsidesandcentresplits; shrinkALLuniformlytofitlongobject. NObackground,greyfloor,terrain,shadowdisc,checkerboard,labels,frames,UI,people orotherprops. Transparentoutsideexactobjectsilhouette, tinycontactocclusiononly.",
+  "generator": "built-in image_gen",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-356b185e-e17f-48f3-b97f-1b07deb2910f.png",
+  "date": "2026-10-26",
+  "viewSet": "screen-axis-4",
+  "viewsOrder": [
+    "N",
+    "E",
+    "S",
+    "W"
+  ],
+  "lighting": "upper-right toward lower-left",
+  "integrationStatus": "pending-not-full-eight-view-source",
+  "alphaReview": "pending",
+  "processing": "Native generator output copied byte-for-byte. Crops pending; no resize or pixel repaint.",
+  "screenAxisExport": {
+    "schema": 1,
+    "id": "world:bench",
+    "viewSet": "screen-axis-4",
+    "viewsOrder": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "sheet": "art/theme-consistency/generated/props/world-bench-screen-axis-4views-v1.png",
+    "sheetSha256": "1eed5d53fb9c8a580af29ad158bf72863ecacee254150d588dbcb4c762b7c886",
+    "nativeSheetPixels": [
+      1254,
+      1254
+    ],
+    "processing": "Exact source-rectangle pixel crops only. No resize, alpha repaint, recolour, transform or mirroring. Alpha thresholds are diagnostic only; not a visual approval or alpha edit.",
+    "rectangleSelection": {
+      "file": "art/theme-consistency/generated/props/world-bench-screen-axis-4views-v1.source-rects-v2.json",
+      "review": {
+        "reviewer": "horizontal_crop_pack",
+        "method": "Manually inspected full source and alpha>=128 component bounds. Unequal nonoverlapping regions contain complete subject silhouettes. Exact source pixel crops only.",
+        "evidence": "art/theme-consistency/generated/props/world-bench-screen-axis-4views-v1.png",
+        "acceptanceScope": "Source rectangles only; angle/ground anchors/live integration not approved."
+      }
+    },
+    "fileContractStatus": "passed-with-alpha-residue-warnings",
+    "visualReviewStatus": "pending",
+    "integrationStatus": "pending-not-full-eight-view-source",
+    "axisLineCounts": {
+      "vertical": 1177,
+      "horizontal": 143,
+      "verticalAtLeast16": 876,
+      "horizontalAtLeast16": 0,
+      "verticalAtLeast128": 862,
+      "horizontalAtLeast128": 0
+    },
+    "issues": [],
+    "warnings": [
+      "N: cell edge contains only low-alpha1..15 residue",
+      "E: cell edge contains only low-alpha1..15 residue",
+      "S: cell edge contains only low-alpha1..15 residue",
+      "W: cell edge contains only low-alpha1..15 residue"
+    ],
+    "views": {
+      "N": {
+        "sourceRect": {
+          "left": 0,
+          "top": 0,
+          "width": 850,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/props/world-bench-screen-axis-4views-v1-crops-v2/N.native.png",
+        "nativeSha256": "5c316523cbb54e927389665ae63f8e4ca3621a1af63da7cb3e5faefc730c4da6",
+        "pixelSha256": "5f48ea0a6a167e21996847a17bda389063119ac1c8421a5fe966d46a8b295590",
+        "trimmedPixelSha256": "851806a883780b91bd899d4177e6e1f5953bbae51d34df708653b129580bd41d",
+        "nativePixels": [
+          850,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 218832,
+          "transparent": 314118,
+          "transparentFraction": 0.5893948775682522,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 0,
+            "top": 8,
+            "width": 850,
+            "height": 619
+          },
+          "padding": {
+            "left": 0,
+            "top": 8,
+            "right": 0,
+            "bottom": 0
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 314118,
+            "oneTo15": 53609,
+            "sixteenTo127": 3341,
+            "one28To254": 161574,
+            "opaque255": 308
+          },
+          "edge": {
+            "nonzero": 91,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 165223,
+            "transparent": 367727,
+            "transparentFraction": 0.6899840510366826,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 82,
+              "top": 170,
+              "width": 684,
+              "height": 368
+            },
+            "padding": {
+              "left": 82,
+              "top": 170,
+              "right": 84,
+              "bottom": 89
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 161882,
+            "transparent": 371068,
+            "transparentFraction": 0.6962529317947275,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 83,
+              "top": 171,
+              "width": 682,
+              "height": 366
+            },
+            "padding": {
+              "left": 83,
+              "top": 171,
+              "right": 85,
+              "bottom": 90
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 164354,
+          "transparent": 368596,
+          "transparentFraction": 0.691614597992307,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 83,
+            "top": 170,
+            "width": 682,
+            "height": 368
+          },
+          "padding": {
+            "left": 83,
+            "top": 170,
+            "right": 85,
+            "bottom": 89
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      },
+      "E": {
+        "sourceRect": {
+          "left": 850,
+          "top": 0,
+          "width": 404,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/props/world-bench-screen-axis-4views-v1-crops-v2/E.native.png",
+        "nativeSha256": "e120bfa1cf546d5e0df966177fb757c4e1e43b60d19fc46fc07ff3b52a34074f",
+        "pixelSha256": "f9a042d4dd7b2ea94303a8d8dfa399f83f482046041b7f2bbade4c122887f82e",
+        "trimmedPixelSha256": "aa30fcf4b1fcb842c780e7288ac46cdb1eaaa4dda97136b11f4f066f094426cc",
+        "nativePixels": [
+          404,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 67958,
+          "transparent": 185350,
+          "transparentFraction": 0.7317179086329686,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 1,
+            "top": 23,
+            "width": 393,
+            "height": 604
+          },
+          "padding": {
+            "left": 1,
+            "top": 23,
+            "right": 10,
+            "bottom": 0
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 185350,
+            "oneTo15": 9802,
+            "sixteenTo127": 1465,
+            "one28To254": 56556,
+            "opaque255": 135
+          },
+          "edge": {
+            "nonzero": 3,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 58156,
+            "transparent": 195152,
+            "transparentFraction": 0.7704138834936125,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 91,
+              "top": 103,
+              "width": 244,
+              "height": 445
+            },
+            "padding": {
+              "left": 91,
+              "top": 103,
+              "right": 69,
+              "bottom": 79
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 56691,
+            "transparent": 196617,
+            "transparentFraction": 0.776197356577763,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 92,
+              "top": 105,
+              "width": 242,
+              "height": 442
+            },
+            "padding": {
+              "left": 92,
+              "top": 105,
+              "right": 70,
+              "bottom": 80
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 57808,
+          "transparent": 195500,
+          "transparentFraction": 0.7717877050862981,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 91,
+            "top": 104,
+            "width": 244,
+            "height": 444
+          },
+          "padding": {
+            "left": 91,
+            "top": 104,
+            "right": 69,
+            "bottom": 79
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      },
+      "S": {
+        "sourceRect": {
+          "left": 0,
+          "top": 627,
+          "width": 850,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/props/world-bench-screen-axis-4views-v1-crops-v2/S.native.png",
+        "nativeSha256": "3a1b13db4bb43b573822b51cafd11b75e37421417b91cf095ca1d475dd4f25ed",
+        "pixelSha256": "5c9d39cc4332bb9ea5e691c23667b922d5218a7cc37468656c60939e49d6f6dc",
+        "trimmedPixelSha256": "5c9d39cc4332bb9ea5e691c23667b922d5218a7cc37468656c60939e49d6f6dc",
+        "nativePixels": [
+          850,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 190809,
+          "transparent": 342141,
+          "transparentFraction": 0.6419757951027301,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 0,
+            "top": 0,
+            "width": 850,
+            "height": 627
+          },
+          "padding": {
+            "left": 0,
+            "top": 0,
+            "right": 0,
+            "bottom": 0
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 342141,
+            "oneTo15": 49993,
+            "sixteenTo127": 2053,
+            "one28To254": 138617,
+            "opaque255": 146
+          },
+          "edge": {
+            "nonzero": 123,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 140816,
+            "transparent": 392134,
+            "transparentFraction": 0.7357800919410826,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 86,
+              "top": 173,
+              "width": 670,
+              "height": 321
+            },
+            "padding": {
+              "left": 86,
+              "top": 173,
+              "right": 94,
+              "bottom": 133
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 138763,
+            "transparent": 394187,
+            "transparentFraction": 0.7396322356693874,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 86,
+              "top": 174,
+              "width": 670,
+              "height": 319
+            },
+            "padding": {
+              "left": 86,
+              "top": 174,
+              "right": 94,
+              "bottom": 134
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 140623,
+          "transparent": 392327,
+          "transparentFraction": 0.7361422272258186,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 86,
+            "top": 173,
+            "width": 670,
+            "height": 320
+          },
+          "padding": {
+            "left": 86,
+            "top": 173,
+            "right": 94,
+            "bottom": 134
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      },
+      "W": {
+        "sourceRect": {
+          "left": 850,
+          "top": 627,
+          "width": 404,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/props/world-bench-screen-axis-4views-v1-crops-v2/W.native.png",
+        "nativeSha256": "1715a3d63328383eb407f31fd5efae5c19c6aed9611470cc522c786c3943d388",
+        "pixelSha256": "54267c67d109f1657f6d7a0f9616ae7d408082513b7271db260c32ba97bb9e83",
+        "trimmedPixelSha256": "c611e2cf865d4ac7959daa60d36aaa195c06de6c4cb3a18b41c16a1697db1c5c",
+        "nativePixels": [
+          404,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 65656,
+          "transparent": 187652,
+          "transparentFraction": 0.7408056595133198,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 1,
+            "top": 1,
+            "width": 394,
+            "height": 626
+          },
+          "padding": {
+            "left": 1,
+            "top": 1,
+            "right": 9,
+            "bottom": 0
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 187652,
+            "oneTo15": 8096,
+            "sixteenTo127": 1450,
+            "one28To254": 55907,
+            "opaque255": 203
+          },
+          "edge": {
+            "nonzero": 4,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 57560,
+            "transparent": 195748,
+            "transparentFraction": 0.7727667503592465,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 110,
+              "top": 96,
+              "width": 243,
+              "height": 437
+            },
+            "padding": {
+              "left": 110,
+              "top": 96,
+              "right": 51,
+              "bottom": 94
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 56110,
+            "transparent": 197198,
+            "transparentFraction": 0.7784910069954364,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 111,
+              "top": 97,
+              "width": 241,
+              "height": 436
+            },
+            "padding": {
+              "left": 111,
+              "top": 97,
+              "right": 52,
+              "bottom": 94
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 57180,
+          "transparent": 196128,
+          "transparentFraction": 0.774266900374248,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 111,
+            "top": 96,
+            "width": 242,
+            "height": 437
+          },
+          "padding": {
+            "left": 111,
+            "top": 96,
+            "right": 51,
+            "bottom": 94
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      }
+    }
+  },
+  "visualReviewStatus": "pending"
+}
