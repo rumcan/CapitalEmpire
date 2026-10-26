@@ -36,11 +36,13 @@ function db(): Promise<IDBDatabase> { return new Promise((res, rej) => { const r
 function hash(s: string) { let h = 0x811c9dc5; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193); } return (h >>> 0).toString(36); }
 export const cacheKey = (art: unknown) => TEX_VERSION + ':' + hash(JSON.stringify(art));
 interface Stored { names: string[]; blobs: Blob[]; curb: CurbColours; stampAngle: number }
-export async function loadCached(key: string): Promise<TexSnapshot | null> {
+/** the cached pack under key, or null; `keep` (a light boot's, T157) leaves out the pictures it refuses before they are decoded */
+export async function loadCached(key: string, keep?: (name: string) => boolean): Promise<TexSnapshot | null> {
   try {
     const d = await db(), v = await new Promise<Stored | undefined>((res, rej) => { const q = d.transaction('t').objectStore('t').get(key); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); });
     if (!v) return null;
-    return { names: v.names, bitmaps: await Promise.all(v.blobs.map(b => createImageBitmap(b))), curb: v.curb, stampAngle: v.stampAngle };
+    const ix = v.names.map((_, i) => i).filter(i => !keep || keep(v.names[i]!));
+    return { names: ix.map(i => v.names[i]!), bitmaps: await Promise.all(ix.map(i => createImageBitmap(v.blobs[i]!))), curb: v.curb, stampAngle: v.stampAngle };
   } catch { return null; }
 }
 export async function saveCached(key: string, t: Textures) {
@@ -49,4 +51,13 @@ export async function saveCached(key: string, t: Textures) {
     const d = await db(), st = d.transaction('t', 'readwrite').objectStore('t');
     st.clear(); st.put({ names: e.map(x => x[0]), blobs, curb: t.curb, stampAngle: t.stampAngle } satisfies Stored, key);
   } catch { /* the cache is optional */ }
+}
+/** a light boot's filter for a cached pack (T157): the cache holds the game's pack (every one of grass-art.ts EAGER_PHOTO and every procedural
+ *  texture); left out are the photo textures outside the boot's eager set (their sources and mosaics: the worker builds one on first use,
+ *  ensure) and, when `lazy` names them, the procedural textures' mips (made on first use, Textures.image) */
+export function lightPack(allPhotos: ReadonlySet<string>, eager: ReadonlySet<string>, lazy: ReadonlySet<string> = new Set()): (name: string) => boolean {
+  return name => {
+    const m = /^(?:photo|mosaic):([^:]+)/.exec(name); if (m) return !allPhotos.has(m[1]!) || eager.has(m[1]!);
+    const q = /^mip:([^@]+)@/.exec(name); return !q || !lazy.has(q[1]!);
+  };
 }

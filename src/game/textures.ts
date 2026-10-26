@@ -16,7 +16,10 @@ import { ASPHALT_MEAN, type GroundArt, LEAF_CELL, LEAF_COLS, LEAVES, LOT_ASPHALT
  *  - grass: the two approved 256 px grass paintings mixed in hex patches and by low-frequency noise (screen space);
  *  - curbs and slabs: colours and sprites straight from the kit. */
 export type TexName = 'grass' | GrassTex | 'meadow' | 'dirt' | 'rockyDirt' | 'rockyDirtAlt' | 'gravel' | 'roadgravel' | 'field' | 'paving' | 'pad' | 'outside' | 'grime' | 'wear' | 'forest' | 'water' | 'bank' | 'creek' | 'rock';
-const PAINTED: TexName[] = ['dirt', 'gravel', 'field', 'paving', 'pad', 'grime', 'wear', 'forest', 'water', 'bank', 'creek', 'rock', 'roadgravel'];
+export const PAINTED_NAMES: readonly TexName[] = ['dirt', 'gravel', 'field', 'paving', 'pad', 'grime', 'wear', 'forest', 'water', 'bank', 'creek', 'rock', 'roadgravel'];
+const PAINTED = PAINTED_NAMES;
+/** the textures made from the base grass by a multiply: the meadow (PATCH ground) and the map's outside */
+export const GRASS_TINTS: readonly (readonly [TexName, string])[] = [['meadow', '#b9a98a'], ['outside', '#8c8c86']];
 /** screen-space textures are authored at 0.8 px per world px; mip-mapped per cache level */
 export const AUTHOR = 0.8;
 const K = AUTHOR / 0.6;
@@ -232,6 +235,8 @@ export class Textures {
   /** the tile set families' decoded tiles (by URL, an LRU of MAX_TILE_SOURCES; the decoded bitmap itself, no canvas copy) with their mip
    *  chains, and the decodes in progress */
   private tilePics = new Map<string, (Cnv | ImageBitmap)[]>();
+  /** how many decoded tile-set tiles and painted pictures this worker keeps (a light boot's are smaller, T157: ground-protocol.ts WorkerLimits) */
+  tileLimit = MAX_TILE_SOURCES; paintedLimit = MAX_PAINTED_SOURCES;
   private tileLoads = new Map<string, Promise<void>>();
   /** the art level the next bake is for (set by preparePainted) */
   get paintedArtLevel() { return this.paintedLevel; }
@@ -295,7 +300,7 @@ export class Textures {
       }
       return pending;
     }));
-    trimLru(this.tilePics, new Set([...urls, ...keep]), MAX_TILE_SOURCES, chain => { for (const m of chain) if (m instanceof ImageBitmap) m.close(); });
+    trimLru(this.tilePics, new Set([...urls, ...keep]), this.tileLimit, chain => { for (const m of chain) if (m instanceof ImageBitmap) m.close(); });
   }
   /** before a bake: the tile set families among `variants` at tile spec `ts`: the band's tiles decoded (awaited), the next band's started
    *  (when the camera is near its switch: tilesAhead) */
@@ -326,7 +331,7 @@ export class Textures {
       }
       return pending;
     }));
-    trimLru(this.paintedPics, urls, MAX_PAINTED_SOURCES);
+    trimLru(this.paintedPics, urls, this.paintedLimit);
   }
   /** before a bake at art level L (CSS zoom, painted-grass-lod.ts grassZoomLevels): decodes the pictures the given textures need at that level
    *  (one or two per look), never all of them; the `near` textures take their near painting whatever the level (the course walls' cut faces) */
@@ -375,14 +380,17 @@ export class Textures {
     this.paintedOn = art.grassArt !== 'photo'; this.picks.clear();
     this.grassLay = { angle: art.grassMix?.mix.angle ?? DEFAULT_MIX.angle, tilt: art.grassMix?.mix.tilt ?? DEFAULT_MIX.tilt };
   }
-  async build(art: GroundArt & { grassMix?: BaseGrassArt; presets?: PhotoTexEntry[] }, progress?: (p: number) => void) {
+  /** builds the texture pack; `eager` the photo textures built now (a light boot's few, T157), the others built by ensure() on first use */
+  /** builds the texture pack; `eager` the photo textures built now (a light boot's few, T157), the others built by ensure() on first use; lazy
+   *  (a light boot's): the procedural textures (PAINTED) are made on first use too (image), not now */
+  async build(art: GroundArt & { grassMix?: BaseGrassArt; presets?: PhotoTexEntry[] }, progress?: (p: number) => void, eager: ReadonlySet<string> = EAGER_PHOTO, lazy = false) {
     this.configure(art);
     const yieldNow = () => new Promise(res => setTimeout(res, 0));
-    const steps = PAINTED.length + 12 + EAGER_PHOTO.size; let done = 0; const tick = async () => { progress?.(++done / steps); await yieldNow(); };
+    const steps = PAINTED.length + 12 + eager.size; let done = 0; const tick = async () => { progress?.(++done / steps); await yieldNow(); };
     const [asA, asB, curbV, curbH, pool, slabs, grassA, grassB, leafImg, soilImg, decalImg, lotImg, lotDecalImg, natureImg, rockyDirtImg, rockyDirtAltImg] = await Promise.all([art.asphaltA, art.asphaltB, art.curbVisible, art.curbHidden, art.pool, art.slabs, art.grassA, art.grassB, art.leaves, art.soil, art.decals, art.lotAsphalt, art.lotDecals, art.nature, art.rockyDirt, art.rockyDirtAlt].map(loadImage));
     this.slabs = toCanvas(slabs); this.leaves = toCanvas(leafImg); this.decals = toCanvas(decalImg); this.soil = soilStamps(toCanvas(soilImg)); this.lotDecals = toCanvas(lotDecalImg); this.nature = toCanvas(natureImg);
     await tick();
-    for (const name of PAINTED) { this.store(name, gen(name)); await tick(); }
+    for (const name of PAINTED) { if (lazy) this.lazy.set(name, () => this.store(name, gen(name))); else this.store(name, gen(name)); await tick(); }
     // The seamless square paintings are compressed vertically for the isometric ground plane.
     // Store every mip through the same path as other painted materials, including worker snapshots.
     this.store('rockyDirt', toCanvas(rockyDirtImg, Math.round(rockyDirtImg.width * AUTHOR), Math.round(rockyDirtImg.height * AUTHOR / 2))); await tick();
@@ -406,9 +414,9 @@ export class Textures {
     const grass = mixGrass(toCanvas(grassA, pa, pa), toCanvas(grassB, pb, pb), gm?.mix ?? DEFAULT_MIX, BASE_W, BASE_H, AUTHOR);
     this.store('grass', grass);
     // ---- the Paint tool's photo textures that every worker needs (grasses, concrete): built here; the others are built by ensure() on first use
-    for (const p of PHOTO_TEX) if (EAGER_PHOTO.has(p.tex)) { await this.buildPhoto(p); await tick(); }
-    { const c = canvas(BASE_W, BASE_H), g = ctx2d(c); g.drawImage(grass, 0, 0); g.globalCompositeOperation = 'multiply'; g.fillStyle = '#b9a98a'; g.fillRect(0, 0, BASE_W, BASE_H); this.store('meadow', c); }
-    { const c = canvas(BASE_W, BASE_H), g = ctx2d(c); g.drawImage(grass, 0, 0); g.globalCompositeOperation = 'multiply'; g.fillStyle = '#8c8c86'; g.fillRect(0, 0, BASE_W, BASE_H); this.store('outside', c); }
+    for (const p of PHOTO_TEX) if (eager.has(p.tex)) { await this.buildPhoto(p); await tick(); }
+    if (lazy) this.lazyTinted();
+    else for (const [name, tint] of GRASS_TINTS) { const c = canvas(BASE_W, BASE_H), g = ctx2d(c); g.drawImage(grass, 0, 0); g.globalCompositeOperation = 'multiply'; g.fillStyle = tint; g.fillRect(0, 0, BASE_W, BASE_H); this.store(name, c); }
     await tick();
     // ---- curb colours from the kit's strips (rows: hidden 0.5-4 joint, 4-10.5 top; visible 10-20.5 face, 20.5+ gutter)
     const rows = (img: ImageBitmap) => { const c = toCanvas(img), g = ctx2d(c), d = g.getImageData(0, 0, c.width, c.height).data, out: number[][] = []; for (let y = 0; y < c.height; y++) { let r = 0, gg = 0, b = 0, n = 0; for (let x = 0; x < c.width; x++) { const o = (y * c.width + x) * 4; if (d[o + 3] < 128) continue; r += d[o]; gg += d[o + 1]; b += d[o + 2]; n++; } out.push(n ? [r / n, gg / n, b / n] : [0, 0, 0]); } return out; };
@@ -507,7 +515,27 @@ export class Textures {
     this.photoSrc.set(p.tex, c);
     this.mosaics.set(p.tex, this.mipChain(p.mix > 0 ? this.mosaic(this.mosaicSeeds(), c, c, mean(), p.px ?? 160, c.width / (p.mix * PHOTO_SIZE)) : c));
   }
-  image(name: TexName, L: number) { return this.mips.get(name + '@' + L)!; }
+  image(name: TexName, L: number) { this.make(name); return this.mips.get(name + '@' + L)!; }
+  /** whether texture name has a picture at cache level L (made now when it is a lazy one) */
+  hasImage(name: string, L: number) { this.make(name as TexName); return this.mips.has(name + '@' + L); }
+  /** the screen-space textures not made yet (a light boot's, T157: build's lazy): the procedural ones (PAINTED_NAMES) and the grass's tints
+   *  (GRASS_TINTS); each is made, every level, on first use */
+  lazy = new Map<TexName, () => void>();
+  private make(name: TexName) { const f = this.lazy.get(name); if (f) { this.lazy.delete(name); f(); } }
+  /** the grass's tints made on first use from the grass's own levels (a multiply by a flat colour is the same before or after the downscale) */
+  private lazyTinted() {
+    for (const [name, tint] of GRASS_TINTS) this.lazy.set(name, () => {
+      for (const L of [...LEVELS, ...MID_LEVELS]) {
+        const k = name + '@' + L, src = this.mips.get('grass@' + L); if (!src || this.mips.has(k)) continue;
+        const c = canvas(src.width, src.height), g = ctx2d(c); g.drawImage(src, 0, 0); g.globalCompositeOperation = 'multiply'; g.fillStyle = tint; g.fillRect(0, 0, c.width, c.height); this.mips.set(k, c);
+      }
+    });
+  }
+  /** after a light boot's restore from a pack without them (texture-share.ts lightPack): the screen-space textures it lacks are made on first use */
+  lazyMissing() {
+    for (const n of PAINTED) if (!this.mips.has(n + '@' + LEVELS[0]) && !this.lazy.has(n)) this.lazy.set(n, () => this.store(n, gen(n)));
+    if (GRASS_TINTS.some(([n]) => !this.mips.has(n + '@' + LEVELS[0]))) this.lazyTinted();
+  }
   /** town-scene.mjs pickLeaf: the smallest sprite that is at least 1.15x the wanted size, then one of the next few */
   pickLeaf(r: () => number, sizeM: number) {
     const want = sizeM * 45.25 * 1.15, pool = sizeM < 0.2 && r() < 0.7 ? this.roundSprites : this.leafSprites;

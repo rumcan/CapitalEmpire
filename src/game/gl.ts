@@ -245,10 +245,13 @@ export class GLRenderer {
    *  coarse mip down) and build the sprite programs for it. The finer mips stream in per cell as the view needs them (engine.ts streamAtlas,
    *  then pumpAtlas every frame). Mip 0 only on screens above 1x (sizes.ts atlasMip0). The sources are tried in order (the compressed KTX2
    *  pages, then the WebP pages as RGBA8): one that fails to load its low set gives way to the next. */
-  async initAtlas(dpr: number, sources: AtlasSource[]) {
+  /** budgetMB: a light boot's atlas budget (compressed MB, T157), null or none: GAME-PLAN's for the screen; keep: a light boot's decoded page
+   *  levels kept (null or none: atlas-gl.ts KEEP_LEVELS) */
+  async initAtlas(dpr: number, sources: AtlasSource[], budgetMB: number | null = null, keep: number | null = null) {
     let a: AtlasGL | null = null, err: unknown = null;
+    const budget = budgetMB === null ? undefined : budgetMB * 1024 * 1024;
     for (const source of sources) {
-      try { a = await AtlasGL.create(this.gl, { dpr, pages: ATLAS_PAGES.length, size: ATLAS_SIZE, levels: ATLAS_PAGES[0]!.length, finest: atlasMip0(dpr) ? 0 : 1, source }); break; }
+      try { a = await AtlasGL.create(this.gl, { dpr, pages: ATLAS_PAGES.length, size: ATLAS_SIZE, levels: ATLAS_PAGES[0]!.length, finest: atlasMip0(dpr) ? 0 : 1, source, budget, keep: keep ?? undefined }); break; }
       catch (e) { err = e; console.warn('[atlas]', String(e), '- trying the next source'); }
     }
     if (!a) throw err;
