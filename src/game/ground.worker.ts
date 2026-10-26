@@ -61,6 +61,7 @@ const handle = async (m: ToWorker) => {
         if (lim?.eager) eager = new Set(lim.eager);
         if (lim?.soft) softCanvases(true);
         lazyTex = !!lim?.lazy;
+        tex.makeForColour = !(lim?.lazy && lim.tints !== false); // a light boot's (its tints lazy too) keeps T157's swatch colours
         // every worker (the builder, and the peers that restore its snapshot) takes the presets and the grass's angle and tilt from the art
         tex.configure(m.art);
         const t0 = performance.now();

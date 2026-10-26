@@ -334,8 +334,9 @@ export class GroundPainter {
       // a painted texture: its look's mean colour (painted-families.ts lookColour, from the registry: the same in every worker)
       const pm = this.tex.paintedMean(name);
       if (pm) { const r = parseInt(pm.slice(1, 3), 16), g = parseInt(pm.slice(3, 5), 16), b = parseInt(pm.slice(5, 7), 16), y = 0.3 * r + 0.59 * g + 0.11 * b, lift = (v: number) => Math.round(Math.min(255, (v * 0.8 + y * 0.2) * 1.05)); c = `rgb(${lift(r)},${lift(g)},${lift(b)})`; this.planCols.set(name, c); return c; }
-      // (a photo or a procedural texture a light boot has not made yet, T157: its Paint swatch, as a lazy photo's: never made for a colour)
-      const img = name === 'lotAsphalt' ? this.tex.mosaicFor('lot', 0.035) : EAGER_PHOTO.has(name) && !GROUND_PHOTO.has(name) ? (this.tex.mosaics.has(name) ? this.tex.mosaicFor(name, 0.035) : null) : this.tex.mips.has(name + '@0.035') ? this.tex.image(name as TexName, 0.035) : null;
+      // (a photo or a procedural texture a light boot has not made yet, T157: its Paint swatch, as a lazy photo's: never made for a colour; the
+      // game's lazy ones, T166, are made for it: the same colour as ever)
+      const img = name === 'lotAsphalt' ? this.tex.mosaicFor('lot', 0.035) : EAGER_PHOTO.has(name) && !GROUND_PHOTO.has(name) ? ((this.tex.makeForColour ? this.tex.built(name) : this.tex.mosaics.has(name)) ? this.tex.mosaicFor(name, 0.035) : null) : (this.tex.makeForColour ? this.tex.hasImage(name, 0.035) : this.tex.mips.has(name + '@0.035')) ? this.tex.image(name as TexName, 0.035) : null;
       if (!img) return PAINT_COL.get(name) ?? '#808080';
       const d = ctx2d(img).getImageData(0, 0, img.width, img.height).data, n = d.length / 4;
       let r = 0, g = 0, b = 0; for (let k = 0; k < d.length; k += 4) { r += d[k]; g += d[k + 1]; b += d[k + 2]; }

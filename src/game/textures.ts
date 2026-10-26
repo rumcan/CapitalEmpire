@@ -531,6 +531,9 @@ export class Textures {
   /** the screen-space textures not made yet (a light boot's, T157: build's lazy): the procedural ones (PAINTED_NAMES) and the grass's tints
    *  (GRASS_TINTS); each is made, every level, on first use */
   lazy = new Map<TexName, () => void>();
+  /** T166: a lazy texture is made when the planner asks for its colour (the game's: the same colour as ever); a light boot's (T157) shows its
+   *  Paint swatch's instead, never making a texture for a colour */
+  makeForColour = true;
   private make(name: TexName) { const f = this.lazy.get(name); if (f) { this.lazy.delete(name); f(); } }
   /** the grass's tints made on first use from the grass's own levels (a multiply by a flat colour is the same before or after the downscale) */
   private lazyTinted() {
