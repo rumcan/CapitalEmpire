@@ -32,7 +32,20 @@
     `lawnDeclined` (sage-long, as rough on main, until the long-grass tiles are repaired and handed off) in `painted-surfaces.json`, tunable in
     Studio › Painted; `lotLawn(key, g, ids, state)`; the engine's `placeLot` passes `stateOf(level, decline)`, so every game lot uses them.
   - Tests `tests/house-alloc.test.ts`, `tests/lawns-by-state.test.ts`, `tests/lot-lab-palette.test.ts`; screenshots in `E:/ClaudeTemp/T155/`.
-  - Next (PR 2): auto-sized lots from a master on the largest size of a (type, state, road angle).
+  - **PR 2: auto-sized lots** (`src/game/lots/derive.ts`, pure; `src/game/dev/lot-derive.ts`, the library's footprints and kinds and the
+    masters report). A lab preset on the largest size of its type and state (the greatest area, `largestSize`) and not derived is a MASTER
+    (★ in the presets list, a MASTER box in the inspector). Save draft, Approve or Unapprove on a master derives every smaller size of its type,
+    state and road (each size whose bucket fits inside the master's): the house keeps its street edge and its spot along the street as a share
+    of the free width (centred stays centred), shifted forward only when the lot is shallower; fences on an edge follow it (back run forward,
+    right side in, along-edge places kept, segments past the corner dropped); every other prop keeps its distance from the house (the yards
+    shrink), shifted in up to 2 tiles when it pokes out; what no longer fits or would overlap something it did not overlap on the master goes,
+    trees first, then large props (buildings, footprints of 2.25 tiles² or more), then small props; decals go only when they leave the lot.
+    Derived presets are `<master id>~<bw>x<bd>`, carry `derived: <master id>` and the master's approval, and are made again on every master save
+    (a size no longer derived is removed). A hand edit (the editor's edits, the lab's paint, decals, W/D) detaches one (`detached: <master id>`,
+    curated) and the master then leaves that size alone. Discarding a master removes its derived sizes (confirmed). The inspector's MASTERS
+    (AUTO-SIZE) box lists this type and state's master per road and how many sizes it covers, and for every type and state the masters, derived
+    presets and approved cells of all (type x state x size x road). The preset format gained the optional `derived` / `detached`: old files read
+    and write unchanged (nothing to migrate). Tests `tests/lot-derive.test.ts`; screenshots `E:/ClaudeTemp/T155/master-and-derived.png`.
 - **Done (2026-10-26, T148 #309): multi-select, copy/paste, Change house, Lot grid, Generate in place, Neighbours** (the owner: "add multiple
   select and move/delete ... cntr c for copy and v for paste ... a shortcut button to change the house ... a grid that shows you where the Lot
   boundries are"; "click generate it should stay on that lot"; "a on and off toggle where you unhide or hide houses around the lot").

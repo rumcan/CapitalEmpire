@@ -40,14 +40,16 @@ function readDecal(v: unknown): PresetDecal | undefined {
 }
 
 /** one preset read from JSON, or undefined when it is not valid (props, patches and decals must all be valid; road, when present, an integer 0..7;
- *  whole is kept only when true, decals only when given as a list) */
+ *  whole is kept only when true, decals only when given as a list; derived and detached (T155), when present, a master's id). A file without the
+ *  T155 fields reads as before: nothing to migrate */
 function readPreset(v: unknown): LotPreset | undefined {
   if (!isObj(v)) return undefined;
-  const { id, use, state, w, d, props, patches, curated, road, approved, whole, decals } = v;
+  const { id, use, state, w, d, props, patches, curated, road, approved, whole, decals, derived, detached } = v;
   if (typeof id !== 'string' || typeof use !== 'string' || !USES.includes(use) || typeof state !== 'string' || !STATES.includes(state)) return undefined;
   if (!fin(w) || !fin(d) || w <= 0 || d <= 0 || !Array.isArray(props) || !Array.isArray(patches)) return undefined;
   if (road !== undefined && (!fin(road) || !Number.isInteger(road) || road < 0 || road > 7)) return undefined;
   if (decals !== undefined && !Array.isArray(decals)) return undefined;
+  if ((derived !== undefined && typeof derived !== 'string') || (detached !== undefined && typeof detached !== 'string')) return undefined;
   const pr: PresetProp[] = [], pa: PresetPatch[] = [], pd: PresetDecal[] = [];
   for (const q of props) { const r = readProp(q); if (!r) return undefined; pr.push(r); }
   for (const a of patches) { const r = readPatch(a); if (!r) return undefined; pa.push(r); }
@@ -58,6 +60,8 @@ function readPreset(v: unknown): LotPreset | undefined {
   if (approved === true) out.approved = true;
   if (whole === true) out.whole = true;
   if (decals !== undefined) out.decals = pd;
+  if (typeof derived === 'string') out.derived = derived;
+  if (typeof detached === 'string') out.detached = detached;
   return out;
 }
 
@@ -89,7 +93,7 @@ const nlist = (a: readonly number[]) => `[${a.map(num).join(',')}]`;
 export function formatPresets(list: readonly LotPreset[], meta?: PresetMeta): string {
   const top = meta ? [`{"meta":{"notes":[${meta.notes.length ? `\n${meta.notes.map(n => JSON.stringify(n)).join(',\n')}\n` : ''}]}}`] : [];
   const out = list.map(p => {
-    const head = `{"id":${JSON.stringify(p.id)},"use":"${p.use}","state":"${p.state}","w":${num(p.w)},"d":${num(p.d)}${p.curated ? ',"curated":true' : ''}${p.road !== undefined ? `,"road":${p.road}` : ''}${p.approved ? ',"approved":true' : ''}${p.whole ? ',"whole":true' : ''}`;
+    const head = `{"id":${JSON.stringify(p.id)},"use":"${p.use}","state":"${p.state}","w":${num(p.w)},"d":${num(p.d)}${p.curated ? ',"curated":true' : ''}${p.road !== undefined ? `,"road":${p.road}` : ''}${p.approved ? ',"approved":true' : ''}${p.whole ? ',"whole":true' : ''}${p.derived !== undefined ? `,"derived":${JSON.stringify(p.derived)}` : ''}${p.detached !== undefined ? `,"detached":${JSON.stringify(p.detached)}` : ''}`;
     const props = p.props.map(q => `{"id":${JSON.stringify(q.id)},"x":${num(q.x)},"y":${num(q.y)},"scale":${num(q.scale)},"view":${q.view}}`);
     const patches = p.patches.map(a => `{"kind":"${a.kind}","tex":${JSON.stringify(a.tex)},"pts":${nlist(a.pts)}${a.lines ? `,"lines":${nlist(a.lines)}` : ''}}`);
     const decals = p.decals?.map(q => `{"id":${JSON.stringify(q.id)},"x":${num(q.x)},"y":${num(q.y)},"scale":${num(q.scale)},"alpha":${num(q.alpha)}}`);

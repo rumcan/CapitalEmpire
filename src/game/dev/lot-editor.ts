@@ -32,6 +32,7 @@ import { carOwnerScale, carSizeId, foldCarSizes } from '../ext/car-art';
 import { lookOf, maxDrawScale } from '../newart';
 import { compose, lotPreset, lotPresets, lotPresetsMeta, onLotPresetsReload, setLotPresets, type PresetDrop } from '../lots/compose';
 import { formatPresets, type LotPreset, type PresetProp } from '../lots/presets';
+import { detach } from '../lots/derive';
 import { toFrame, toWorld, type PresetFrame } from '../lots/preset-frame';
 import { footprintOf, ownerScaleOf, sizeKey, sizeViews, turned } from '../lots/preset-art';
 import { applyEdit, clampToLot, fit1, growWithin, placeInPreset, presetToWorld, removeSprite, replacePreset, scaleOverride, snap, studioJson, worldToPreset, type PresetEdit } from './lot-edit';
@@ -350,7 +351,9 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
   }
 
   // ---------- the edits
-  async function commitPreset(lot: string, before: LotPreset, after: LotPreset, index: number, what: string, undoIndex: number | null = index, note = '') {
+  async function commitPreset(lot: string, before: LotPreset, after0: LotPreset, index: number, what: string, undoIndex: number | null = index, note = '') {
+    // a hand edit detaches a derived preset from its master (T155: lots/derive.ts); an undo puts back what was
+    const after = undoIndex !== null ? detach(after0) : after0;
     if (undoIndex !== null) undo.push({ kind: 'preset', before, lot, index: undoIndex });
     setLotPresets(replacePreset(lotPresets(), after));
     // this lot at once, then only the other lots drawn from the same preset (not the whole town's ground on every key repeat)
@@ -361,7 +364,8 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
   }
   /** a multi-selection's edit made (one undo step, the selection before kept with it): the preset replaced, its lot composed at once and the
    *  others drawn from it queued, the selection s on the new preset, the preset saved */
-  async function commitGroup(lot: string, before: LotPreset, after: LotPreset, s: Selection, what: string, pushUndo = true) {
+  async function commitGroup(lot: string, before: LotPreset, after0: LotPreset, s: Selection, what: string, pushUndo = true) {
+    const after = pushUndo ? detach(after0) : after0;
     if (pushUndo) undo.push({ kind: 'preset', before, lot, index: -1, sel: group && group.preset === before.id ? group.sel : NONE });
     setLotPresets(replacePreset(lotPresets(), after));
     game.recomposeLots([lot], after.id);
