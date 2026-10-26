@@ -13,7 +13,7 @@ import { NetEditor, applyNodeEntry, netToOps, nodeEntry, straightChain } from '.
 import { TIER_BADGE, flagRule, isLights, junctionCorners, slipPlan, slipsOn, type Corner } from './junctions';
 import { MIN_SEP, checkLegs, replaceCuts, ringStubs, segDist as segSeg, snapPoint, type Snap } from './snap';
 import { STRUCT_COST, STRUCT_MAX, groundClass, highwayRoute, longestRun, splitByTerrain, structureLengths } from './structures';
-import { GLRenderer, POINT_STRIDE, SHADOW_STRIDE, SPRITE_STRIDE } from './gl';
+import { GLRenderer, POINT_STRIDE, SHADOW_STRIDE, SPRITE_STRIDE, VECTOR_STRIDE } from './gl';
 import { GroundCache } from './ground-cache';
 import { chunkLayers } from './ground-layers';
 import { clampGrassArt, grassZoomLevels, type GrassArt } from './painted-grass-lod';
@@ -46,7 +46,8 @@ import { gateSpots } from './parking-props';
 import { drawParkingOverlay, type ParkOverlayView } from './parking-overlay';
 import type { BayRowDef } from './event/rows';
 import { inQuad, type CurbDef } from './event/curb';
-import { SpriteTiles, spriteRect, type Drawable } from './sprites';
+import { SpriteTiles, spriteRect, VECTOR, type Drawable } from './sprites';
+import { vectorMesh } from './shadow-vector';
 import { readSave, writeSave, clearSave, backupTownSlot, SAVE_VERSION, segRec, exportSaveBytes, importSaveBytes, listSaveBackups, readBackup, deleteBackup, type SaveV5 } from './save';
 import { CAR_COLOURS, parkedCar } from './traffic';
 import { carOwnerScale } from './ext/car-art';
@@ -1096,6 +1097,14 @@ export class Game {
     try { localStorage.setItem('capitalempire.shadows', String(this.shadowStrength)); } catch { /* storage may be unavailable */ }
     this.emit();
   }
+  /** the hand-drawn vector shadows (T142, shadow-vector.ts): on, every picture with a drawn shape casts it; off, T141's rule shapes and
+   *  silhouettes everywhere (the gear menu's comparison); survives reloads */
+  vectorShadows = true;
+  setVectorShadows(on: boolean) {
+    this.vectorShadows = VECTOR.on = on;
+    try { localStorage.setItem('capitalempire.vectorShadows', on ? '1' : '0'); } catch { /* storage may be unavailable */ }
+    this.sprites.repack(); this.emit();
+  }
   /** the ground art: 'painted', the hand-painted families on every surface (painted-surfaces.ts; the owner, 2026-10-25: "i dont want to see
    *  old textures anymore"), always; 'photo', the photo and procedural textures the game had before, only for comparisons on the dev server
    *  (?grass=photo, or window.__game.setGrassArt('photo') from the console); nothing the player sees offers it, and nothing remembers it */
@@ -1116,6 +1125,8 @@ export class Game {
     try { this.disastersEnabled = localStorage.getItem('capitalempire.disasters') !== 'false'; } catch { /* default on */ }
     try { this.showStandIns = localStorage.getItem('capitalempire.standins') !== 'false'; } catch { /* default on */ }
     try { const v = parseFloat(localStorage.getItem('capitalempire.shadows') ?? ''); if (Number.isFinite(v)) this.shadowStrength = Math.max(0, Math.min(2, v)); } catch { /* default 1.1 */ }
+    try { this.vectorShadows = VECTOR.on = localStorage.getItem('capitalempire.vectorShadows') !== '0'; } catch { /* default on */ }
+    this.gl.initVector(vectorMesh());
     try { localStorage.removeItem('capitalempire.grassArt'); } catch { /* the old gear menu's Grass setting: gone, the painted art always */ }
     this.grassArt = import.meta.env.DEV && new URLSearchParams(location.search).get('grass') === 'photo' ? 'photo' : 'painted';
     this.ground.grassArt = this.grassArt;
@@ -4915,12 +4926,21 @@ export class Game {
       const tr = this.traffic, lightOn = !!tr && cam.z >= 0.08;
       if (tr && lightOn && this.lightBuf.length < tr.n * 7 * POINT_STRIDE) this.lightBuf = new Float32Array(tr.n * 7 * POINT_STRIDE);
       const lt = tr && lightOn ? tr.lights(bx0, by0, bx1, by1, ze, Math.floor(now / 350) % 2 === 0, this.lightBuf) : null;
-      const [sAt, pAt, lAt] = gl.uploadParts([[f.shadows, shadows ? f.shadowFloats : 0], [f.stream, f.floats], [this.lightBuf, lt ? (lt.small + lt.beams) * POINT_STRIDE : 0]]);
+      const vecOn = shadows || this.cast.on;
+      const [sAt, pAt, lAt, ...vAt] = gl.uploadParts([[f.shadows, shadows ? f.shadowFloats : 0], [f.stream, f.floats], [this.lightBuf, lt ? (lt.small + lt.beams) * POINT_STRIDE : 0],
+        ...f.vec.map(v => [v.data, vecOn ? v.floats : 0] as [Float32Array, number])]);
       // the cast shadows (cast-shadow.ts), faded out by night, then the contact shadows, then the sprites
       if (this.cast.on) { const sh = castShear(this.cast); gl.drawCast(pAt, f.floats / SPRITE_STRIDE, sh.sx, sh.sy, this.cast.strength * (1 - this.nightAmount())); }
       // the contact shadows lean toward the cast shadows' side (away from the sun), blob and box alike (shadow-shape.ts contactLean, T141)
       const lean = contactLean(this.cast);
       if (shadows) gl.drawShadows(sAt, f.shadowFloats / SHADOW_STRIDE, this.shadowStrength, lean.x, lean.y);
+      // the hand-drawn vector shadows (T142): each picture's contact and cast shapes, the cast following the sun and fading out by night
+      if (vecOn) {
+        const sh = this.cast.on ? castShear(this.cast) : { sx: 0, sy: 0 }, castMul = this.cast.on ? this.cast.strength * (1 - this.nightAmount()) : 0;
+        // (at the district zoom a shadow is a few px: the meshes' far copies, a few points a ring and no soft rim)
+        const far = tier === 'district';
+        f.vec.forEach((v, k) => gl.drawVector(vAt[k]!, v.floats / VECTOR_STRIDE, far ? v.far : v.verts, sh.sx, sh.sy, this.shadowStrength, castMul, far));
+      }
       gl.drawSprites(pAt, f.floats / SPRITE_STRIDE, tier === 'district' ? 7 * this.dpr : 0);
       if (lt) { gl.drawPoints(lAt, lt.small, Math.max(2, 0.55 * 64 * ze), true); gl.drawPoints(lAt + lt.small * POINT_STRIDE, lt.beams, Math.max(4, 2.6 * 64 * ze), true); }
     }

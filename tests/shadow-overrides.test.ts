@@ -7,10 +7,12 @@ import assert from 'node:assert/strict';
 import { LIBRARY } from '../src/game/library';
 import { CAST_DEFAULT } from '../src/game/cast-shadow';
 import { CONTACT_LEAN, SHADOW_KINDS, SHADOW_OVERRIDES, contactLean, kindOf, leanShift, overrideOf, placeholderBoxes, ruleKind, type ShadowKind } from '../src/game/shadow-shape';
-import { contactOf, spriteRect, type Drawable } from '../src/game/sprites';
+import { VECTOR, contactOf, spriteRect, type Drawable } from '../src/game/sprites';
 import { OWNER_SCALE } from '../src/game/lots/scales';
 import { fourViews } from '../src/game/lots/preset-art';
 
+// T141's rule shapes: the fallback under the hand-drawn vector shadows (T142, shadow-vector.ts), tested with those off
+VECTOR.on = false;
 const BY = new Map(LIBRARY.map((it, i) => [it.id, i] as const));
 const wx = (x: number, y: number) => (x - y) * 64, wy = (x: number, y: number) => (x + y) * 32;
 /** a drawable of library sprite i at its owner scale, its footprint from its boxes (engine.ts footprint) */
