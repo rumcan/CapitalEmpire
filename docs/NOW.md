@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-27 01:14)
+## START HERE (kept current by the lead; last updated 2026-10-27 01:42)
 
 **Paste-ready start prompts for every role are in `docs/START-PROMPTS.md`:** the lead, a coding ticket, and the other sessions in this
 repo. The weekly usage cap is close (2026-10-26), so any chat may stop at any moment.
@@ -29,7 +29,7 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 | --- | --- | --- | --- | --- | --- |
 | T172 | #403 | `arena/T172-ram-step2` | `.claude/worktrees/t166` | 5187 | The game's RAM step 2: measure the main thread, the atlas (6 kept levels in the game), the GPU process and the other workers; take each lever with no visible, pop-in or speed cost. Agent: the ground agent. |
 | T112 | #199 | `arena/T112-sharp` (PR #394) | `.claude/worktrees/t112` | — | **Approved, merge HELD for the morning restart:** a lock change makes the 5174 auto-updater run `npm ci` in theme-consistency (the live 5191 studio holds sharp there; the lot agent's t160 uses it by junction). Morning order: stop 5191 → merge #394 → let npm ci finish → restart 5191 and 5174. All shipped bytes identical on 0.35.5; audit 0. |
-| T171 | #400 | `arena/T171-item-anchors` | `.claude/worktrees/t160` | 5186 | P25: per-item anchors (door/front, back, sides, fence line, kerb, drive/parking edge, corner) and rows learnt from the samples; model v4; shops turned on when their exam row is as good as `?oldlots`. Agent: the lot agent. |
+| T173 | #406 | `arena/T173-train-every-use` | `.claude/worktrees/t160` | 5186 | P25: the wizard and gallery train every use (shops, industry, open lots) with the game's own layout path; Ship model renders the exam (live vs shipped) and ships on the owner's click (`lot-models/v<N>.exam.jpg`); counters per group; palette thumbs at mip 2. Agent: the lot agent. |
 | T172 | #403 | `arena/T172-ram-step2` | `.claude/worktrees/t166` | 5187 | The game's RAM step 2: measure the main thread, the atlas (6 kept levels in the game), the GPU process and the other workers; take each lever with no visible, pop-in or speed cost. Agent: the ground agent. |
 | T112 | #199 | `arena/T112-sharp` (PR #394) | `.claude/worktrees/t112` | — | **Approved, merge HELD for the morning restart:** a lock change makes the 5174 auto-updater run `npm ci` in theme-consistency (the live 5191 studio holds sharp there; the lot agent's t160 uses it by junction). Morning order: stop 5191 → merge #394 → let npm ci finish → restart 5191 and 5174. All shipped bytes identical on 0.35.5; audit 0. |
 
@@ -88,6 +88,11 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
    (the sharp bump). See the History sections below and `gh issue list --label arena --state open`.
 
 ### Done recently (newest first; details in each PR)
+- 2026-10-27 01:42: **T171 #405 items know their place** (model v4 LATEST; v1-v3 unchanged): per-item anchors (kerb, door/front, sides,
+  back, fence line, drive/parking edge, corner) and rows; **shops now generate** (a "composed" group lays each known item by its own count at
+  its learnt place: bench, rack and bin at the kerb, hvac, cabinet and dumpster by the side, a hedge where the back fence is free); houses
+  and industry use anchors (mailbox and bins at the kerb, planting along the front, piles along fences); car parks, civic and tour keep v3
+  (anchors made them plainer). Compose time unchanged (55.7 ms, 507 lots generated). Shots `E:/ClaudeTemp/T171/`.
 - 2026-10-27 01:14: **T110 #402 textured light and shadow** (the owner's art rule): paint-tool area rims are a shine textured by the
   area's own colours, 0.2 m inside the edge; their shadows and dark rims multiply one cool shade `SHADE_RGB` (112,120,152), the same as the
   course shadows; bunker floor light inset; the Course puck's flat screen washes and cream edge line now textured and inset. Hillshade,
