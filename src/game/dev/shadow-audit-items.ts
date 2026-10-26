@@ -106,7 +106,7 @@ export function auditEntries(cat: AuditCat): AuditEntry[] {
   else {
     out = [];
     LIBRARY.forEach((it, i) => {
-      if (i >= WALKER_BASE || auditCatOf(it) !== cat || !drawnAsItself(i)) return;
+      if (it.kind === 'walker' || auditCatOf(it) !== cat || !drawnAsItself(i)) return;
       if (it.id.startsWith('east:') && !VIEW_ART.has(it.id)) return; // drawn as its front (mirror.ts drawnAs)
       out.push(entry(i, placeScale(it.id)));
     });
@@ -120,6 +120,6 @@ export function auditEntries(cat: AuditCat): AuditEntry[] {
 /** the library sprites the audit leaves out because the game never draws them as themselves (old buildings drawn as a new-art stand-in) */
 export function swappedItems(): number[] {
   const out: number[] = [];
-  LIBRARY.forEach((it, i) => { if (i < WALKER_BASE && it.kind !== 'lot' && !drawnAsItself(i)) out.push(i); });
+  LIBRARY.forEach((it, i) => { if (it.kind !== 'walker' && it.kind !== 'lot' && !drawnAsItself(i)) out.push(i); });
   return out;
 }

@@ -168,9 +168,11 @@ export function contactShadow(it: LibItem, d: ShadowSpot, pic: ArrayLike<number>
   if (fitted) {
     // the shape's width on screen: a box's diamond (hx + hy) * 64, an ellipse's 2 * sqrt(hx² + hy²) * 32
     const width = () => (s.round ? 64 * Math.hypot(hx, hy) : 64 * (hx + hy));
-    // a placeholder footprint (business art's 2 x 2 m box, a range roof's bays): the picture's base, square, its foot on the picture's foot
-    if ((kind === 'building' || kind === 'prop' || kind === 'round') && width() < 0.45 * pw) {
-      const h = 0.92 * pw / 128; hx = s.round ? h * Math.SQRT2 : h; hy = hx; placeholder = true;
+    // a placeholder footprint (business art's 2 x 2 m box; a building's far narrower than its picture): the picture's base, square, its foot on
+    // the picture's foot (a prop's narrow footprint under a wide picture is its real base: a rotary washing line, a sign on its post)
+    if ((placeholderBoxes(it) || kind === 'building') && width() < 0.45 * pw) {
+      // (a vehicle's pool: three quarters of its picture's width, its body seen across the corner)
+      const h = (kind === 'vehicle' ? 0.75 : 0.92) * pw / 128; hx = s.round ? h * Math.SQRT2 : h; hy = hx; placeholder = true;
       const mid = (px0 + px1) / 2, footY = py1 - 16 * (s.round ? 1.414 * hx : hx + hy);
       // the centre: on screen at (mid, footY), back to tiles
       const a = mid / 64, b = footY / 32; cx = (a + b) / 2; cy = (b - a) / 2;

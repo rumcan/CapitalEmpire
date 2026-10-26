@@ -27,16 +27,26 @@ interface AuditState { ready: boolean; pages: number; page: number; cat: string;
 const W = window as unknown as { __shadowAudit: AuditState };
 
 /** the lean uniform drawShadows takes (engine.ts draw: shadow-shape.ts contactLean) */
-function leanOf(): [number, number] { const l = SHAPE.contactLean(CAST); return [l.x, l.y]; }
+// (the old shadow-shape.ts, before T141, has none of contactLean, contactShadow, leanShift, kindOf, castsShadow: the page draws it too, for the
+// before sheets)
+const NEW = SHAPE as unknown as Partial<typeof SHAPE>;
+function leanOf(): [number, number] {
+  if (NEW.contactLean) { const l = NEW.contactLean(CAST); return [l.x, l.y]; }
+  const lean = CAST.on ? 6 * CAST.length : 0, a = CAST.angle * Math.PI / 180; return [lean * Math.cos(a), lean * Math.sin(a)];
+}
 /** the contact shadow the game gives a drawable (sprites.ts packShadow's call), for the labels and the review: its shape, its centre about
  *  the anchor (tiles) and its lean (world px) */
 function shapeOf(p: Prop) {
   const l = lookOf(p), it = LIBRARY[l.item]!, f = it.kind === 'car' ? CAR_SCALE : 1, cx = (p.x0 + p.x1) / 2, cy = (p.y0 + p.y1) / 2, hw = (p.x1 - p.x0) * f / 2, hh = (p.y1 - p.y0) * f / 2;
   if (l.hidden) return null;
-  const s = SHAPE.contactShadow(it, { x: l.x ?? p.x, y: l.y ?? p.y, x0: cx - hw, y0: cy - hh, x1: cx + hw, y1: cy + hh, scale: l.scale }, spriteRect(p));
+  if (!NEW.contactShadow || !NEW.leanShift || !NEW.kindOf || !NEW.castsShadow) {
+    const o = SHAPE.shadowShape(LIBRARY[p.item]!, hw * 2, hh * 2, p.scale), [lx, ly] = leanOf(); if (!o) return null;
+    return { ...o, cx: o.atAnchor ? 0 : cx - p.x, cy: o.atAnchor ? 0 : cy - p.y, lean: 1, shift: [lx * (o.hx + o.hy), ly * (o.hx + o.hy)], kind: LIBRARY[p.item]!.kind, cast: true };
+  }
+  const s = NEW.contactShadow(it, { x: l.x ?? p.x, y: l.y ?? p.y, x0: cx - hw, y0: cy - hh, x1: cx + hw, y1: cy + hh, scale: l.scale }, spriteRect(p));
   if (!s) return null;
-  const [lx, ly] = leanOf(), sh = SHAPE.leanShift(s, { x: lx, y: ly });
-  return { ...s, cx: s.x - p.x, cy: s.y - p.y, shift: [sh.x, sh.y], kind: SHAPE.kindOf(it), cast: SHAPE.castsShadow(it) };
+  const [lx, ly] = leanOf(), sh = NEW.leanShift(s, { x: lx, y: ly });
+  return { ...s, cx: s.x - p.x, cy: s.y - p.y, shift: [sh.x, sh.y], kind: NEW.kindOf(it), cast: NEW.castsShadow(it) };
 }
 let uid = 1;
 /** a prop of an entry with its anchor at tile (x, y) */
@@ -58,7 +68,9 @@ function extentsOf(e: AuditEntry) {
   let L = Math.min(r[0], r[0] + H * sh.sx), R = Math.max(r[2], r[2] + H * sh.sx), T = r[1], B = Math.max(r[3], fy + H * sh.sy);
   const corners = [[p.x0, p.y0], [p.x1, p.y0], [p.x1, p.y1], [p.x0, p.y1]] as const;
   for (const [x, y] of corners) { L = Math.min(L, worldX(x, y)); R = Math.max(R, worldX(x, y)); T = Math.min(T, worldY(x, y)); B = Math.max(B, worldY(x, y)); }
-  const s = shapeOf(p); if (s) { const e2 = (s.hx + s.hy + s.feather * 3) * 32 + 30; L = Math.min(L, -e2 - 40); R = Math.max(R, e2); B = Math.max(B, e2 / 2 + 30); }
+  // the contact shadow lies within the footprint and the picture's width, give or take its feather and lean: a margin (the same layout before
+  // and after a change to the shadows)
+  L -= 40; R += 24; B += 24;
   return { L: L - 14, T: T - 10, R: R + 14, B: B + 12 };
 }
 
