@@ -28,6 +28,11 @@ export const PER_LOT: Readonly<Record<ItemKind, number>> = { tree: 4, bush: 7, f
 const ORDER: readonly ItemKind[] = ['car', 'tree', 'bush', 'flowerbed', 'prop', 'decal'];
 /** the overlap (tiles) that counts as overlapping; a decal's footprint (it is flat: only the lot's edges hold it) */
 const TOUCH = 0.1, DECAL_HALF: Half = { ha: 0.4, hb: 0.4 };
+/** T171: per model's places (a Places object: one per shipped model and group), what never changes per lot: each item's anchors (placesOf),
+ *  each kind's row habit, each pool's distinct and rare ids, the items seen at each kind's anchor */
+interface PlaceCache { items: Map<string, ReturnType<typeof placesOf>>; rowy: Map<ItemKind, { len: number } | null>; pools: Map<readonly string[], { uniq: string[]; rare: string[] }>; rowPools: Map<string, readonly string[]> }
+const PLACE_CACHE = new WeakMap<Places, PlaceCache>();
+const placeCache = (t: Places): PlaceCache => { let c = PLACE_CACHE.get(t); if (!c) PLACE_CACHE.set(t, c = { items: new Map(), rowy: new Map(), pools: new Map(), rowPools: new Map() }); return c; };
 /** an index drawn by the weights (r() once, as learn.ts drawSector draws); -1 when they are all zero */
 function pickWeighted(w: readonly number[], r: () => number): number {
   const tot = w.reduce((a, b) => a + b, 0); if (!(tot > 0)) return -1;
@@ -84,8 +89,9 @@ export function generateLayout(g: GenInput, r: () => number = mulberry(g.seed >>
   // T171: the items the places know (their anchors, cached), whether a box fits (in the lot: on the verge only at the kerb; on nothing taken), and
   // an item laid at one of its anchors: an anchor drawn by its share among those the lot has, one of its places there with a little jitter (the
   // model keeps it with its keep rate where it lands, as a sector's item); null when none fits
-  const PL = g.places, known = new Map<string, ReturnType<typeof placesOf>>();
-  const placesFor = (id: string) => { if (!known.has(id)) known.set(id, PL ? placesOf(PL.t, id) : null); return known.get(id)!; };
+  // (what a model's places say never changes per lot: read once per model, PLACE_CACHE)
+  const PL = g.places, PC = PL ? placeCache(PL.t) : null;
+  const placesFor = (id: string) => { if (!PC) return null; if (!PC.items.has(id)) PC.items.set(id, placesOf(PL!.t, id)); return PC.items.get(id)!; };
   // (a learnt place may reach PLACE_REACH past the lot's sides and back, as compose's lot line allows: the owner's hedge stands a bush's depth off the fence)
   const fits = (box: Box, kind: ItemKind, verge: boolean) => box[0] >= -PLACE_REACH && box[2] <= lot.w + PLACE_REACH && box[3] <= lot.d + PLACE_REACH && box[1] >= (verge ? -VERGE : 0) && !boxes.some(q => overlap(q, box)) && !g.avoid?.some(v => !v.but?.includes(kind) && overlap(v.box, box));
   const anchored = (id: string, kind: ItemKind, h: Half, list: NonNullable<ReturnType<typeof placesOf>>): (LaidItem & { a: Anchor; along: number; off: number; p: number }) | null => {
@@ -104,10 +110,9 @@ export function generateLayout(g: GenInput, r: () => number = mulberry(g.seed >>
     return null;
   };
   /** T171: the pool's items seen at an anchor (by the pool's own weights: its repeats), else the pool; made once per kind and anchor */
-  const rowPools = new Map<string, readonly string[]>();
   const rowPool = (kind: ItemKind, a: Anchor, pool: readonly string[]) => {
-    const key = `${kind}|${a}`; let rp = rowPools.get(key);
-    if (!rp) { const at = pool.filter(id => placesFor(id)?.some(x => x.a === a)); rowPools.set(key, rp = at.length ? at : pool); }
+    const key = `${kind}|${a}`; let rp = PC!.rowPools.get(key);
+    if (!rp) { const at = pool.filter(id => placesFor(id)?.some(x => x.a === a)); PC!.rowPools.set(key, rp = at.length ? at : pool); }
     return rp;
   };
   /** T171: the row an item laid at a line anchor runs on (its kind's habit there: its share of rows, their length and spacing): more of the kind
@@ -133,10 +138,14 @@ export function generateLayout(g: GenInput, r: () => number = mulberry(g.seed >>
    *  count over a row's mean length, rounded at random), each run to its length; null for the others */
   const rowy = (k: ItemKind): { len: number } | null => {
     if (!PL) return null;
+    if (PC!.rowy.has(k)) return PC!.rowy.get(k)!;
     let items = 0, inRows = 0, runs = 0, len = 0;
     for (const [key, c] of PL.t.rows) if (key.startsWith(k + '|')) { items += c.items; inRows += c.inRows; runs += c.runs; len += c.len; }
-    return items >= PLACE_MIN && runs && inRows / items >= ROWY ? { len: len / runs } : null;
+    const v = items >= PLACE_MIN && runs && inRows / items >= ROWY ? { len: len / runs } : null;
+    PC!.rowy.set(k, v); return v;
   };
+  /** a pool's distinct ids and its rare ones (none known), once per pool */
+  const split = (pool: readonly string[]) => { let v = PC!.pools.get(pool); if (!v) PC!.pools.set(pool, v = { uniq: [...new Set(pool)], rare: pool.filter(id => !placesFor(id)) }); return v; };
   // T171: a group whose lots are composed (inventory): each known item by its own count per lot, at the lot's size (no pairs: the set is the set)
   const inv = !!PL?.t.inventory && PL.t.lots > 0, invSize = inv ? Math.min(1.6, Math.max(0.6, (lot.w * lot.d) / (PL!.t.area / PL!.t.lots))) : 1;
   for (const kind of ORDER) {
@@ -148,14 +157,15 @@ export function generateLayout(g: GenInput, r: () => number = mulberry(g.seed >>
     let draw: readonly string[] = pool, tries = inv && ry && ry.len >= HEDGE ? Math.max(n, 1) : n;
     if (inv && !(ry && ry.len >= HEDGE) && kind !== 'car' && kind !== 'decal' && pool.length) {
       let share = 0;
-      for (const id of [...new Set(pool)]) {
+      const sp = split(pool);
+      for (const id of sp.uniq) {
         const list = placesFor(id); if (!list) continue;
         const rate = (PL!.t.items.get(id)!.n / PL!.t.lots) * invSize, cnt = Math.floor(rate + r()), h = halfOf(id);
         share += rate;
         for (let c = 0; c < cnt; c++) { const at = anchored(id, kind, h, list); if (at) { out.push({ kind, id, x: at.x, y: at.y }); laid.set(kind, (laid.get(kind) ?? 0) + 1); } }
       }
       // rare items keep their kind's sectors (as before T171): the kind's count less its known items' share, from the pool's rare ones
-      draw = pool.filter(id => !placesFor(id)); tries = Math.max(0, Math.round(n - share));
+      draw = sp.rare; tries = Math.max(0, Math.round(n - share));
     }
     if (!draw.length || !tries) continue;
     // its tries: its count, less its partners laid already (with no pairs: its count)
