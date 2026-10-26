@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-26 22:25)
+## START HERE (kept current by the lead; last updated 2026-10-26 23:10)
 
 **Paste-ready start prompts for every role are in `docs/START-PROMPTS.md`:** the lead, a coding ticket, and the other sessions in this
 repo. The weekly usage cap is close (2026-10-26), so any chat may stop at any moment.
@@ -28,8 +28,7 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |
 | T168 | #381 | `arena/T168-texture-prewarm` | `.claude/worktrees/t166` | 5187 | T166 follow-up: the lazy textures made ahead in idle time (the surfaces the map lays and the open tool paints) and in slices, so no ~1 s first-use stall; memory within 5% of T166. Agent: the ground agent. |
-| T154 | #330 | `arena/T154-phase2-headings` | `.claude/worktrees/t160` | 5186 | **Phase 2 in flight** (phase 1 merged #345): a building on a 45° road draws the screen-axis view facing its road (`axis-library.ts` AXIS_SETS); the generator and stand-ins prefer buildings with a set there; buildings without one listed in GOLF-SPRITES.md. Agent: the lot agent. |
-| T152 | #325 | `arena/T152-car-spacing` (d3bdbf1) | `.claude/worktrees/t152` | — | **Paused** for the art (the owner). Root cause: the range's own cars (`rangebiz.ts:803/832/723`) are placed by their own clock; fixed in rangebiz.ts only (overlaps -75-82% with the 44-bay lot, money identical). **Owner's decision needed:** at full demand the one-lane drive and the building's ramp cannot carry the cars at a car's gap (wider drive, second ramp, faster car-park speeds, or the queue limiting sales). Left: three gates, shots, PR. |
+| T152 | #325 | `arena/T152-car-spacing` | `.claude/worktrees/t152` | 5186 | **Resumed overnight** by the lot agent: the fix (cars keep a car's gap in their lane, rangebiz.ts) is in; the lead's decision for the building at full demand: a wider drive / second entry lane if the art allows, else car occupancy (golfers and takings unchanged); not a queue cap. Then gates, shots, PR. |
 | T112 | #199 | `arena/T112-sharp` (1872f0e) | `.claude/worktrees/t112` | — | **Paused** for T153: sharp 0.35.5 in, all packed art identical (260 images byte-identical; 16 view PNGs only re-tagged), still to do: the KTX2 check, the studio check, audit/typecheck/suite/build, the PR. Resume from #199. |
 
 **Two coding agents at a time (the owner, 2026-10-26: first "maybe just too many background tasks?" after the studio tab died with the
@@ -87,6 +86,11 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
    (the sharp bump). See the History sections below and `gh issue list --label arena --state open`.
 
 ### Done recently (newest first; details in each PR)
+- 2026-10-26 ~23:05: **T154 phase 2 #386 eight headings**: on a 45° road a building with a screen-axis set faces its street (road 1 → N,
+  3 → E, 5 → S, 7 → W; never mirrored; footprint from the set). 14 buildings have sets (five parking garages, bakery, grocery, pharmacy,
+  three industrials, `world:house_0/1/3`); the owner's 45° presets use houses without sets, so a real 45° street looks the same: 65 of
+  the 74 buildings the presets place lack sets (missing-views list in `docs/GOLF-SPRITES.md`, `world:house_5` first). `?oldheadings`
+  for comparison. **#387** the presets test accepts removed pictures (T167 stand-ins): main's two lot-presets-json failures fixed.
 - 2026-10-26 ~22:25: **T161 #384 pairs, densities by state, the exam** (`lots/taste.ts`): partners learnt within 2.5 tiles (doghouse +
   sandbox + oak, mailbox + bins, hvac + cabinet); densities by state (upgraded lush, decrepit junky); **model v2 is LATEST** (a v1 town
   composes exactly as before: a save without `lotModel` stays v1, so the owner's existing town keeps v1; a new game uses v2). `npm run
