@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-26 21:30)
+## START HERE (kept current by the lead; last updated 2026-10-26 22:25)
 
 **Paste-ready start prompts for every role are in `docs/START-PROMPTS.md`:** the lead, a coding ticket, and the other sessions in this
 repo. The weekly usage cap is close (2026-10-26), so any chat may stop at any moment.
@@ -28,8 +28,7 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |
 | T168 | #381 | `arena/T168-texture-prewarm` | `.claude/worktrees/t166` | 5187 | T166 follow-up: the lazy textures made ahead in idle time (the surfaces the map lays and the open tool paints) and in slices, so no ~1 s first-use stall; memory within 5% of T166. Agent: the ground agent. |
-| T161 | (agent opens it) | from origin/main | `.claude/worktrees/t160` | 5186 | P25 step 6: pairs that go together, densities by state, the 50-seed exam contact sheet. Agent: the lot agent. |
-| T154 | #330 | `arena/T154-new-art` | `.claude/worktrees/t154` | — | **Phase 1 merged (#345).** Phase 2 waits: the eight-heading contract (a building on a 45° road picks its cardinal view, `AXIS_SETS`); the new subjects' diagonal views are art work (listed in GOLF-SPRITES.md). |
+| T154 | #330 | `arena/T154-phase2-headings` | `.claude/worktrees/t160` | 5186 | **Phase 2 in flight** (phase 1 merged #345): a building on a 45° road draws the screen-axis view facing its road (`axis-library.ts` AXIS_SETS); the generator and stand-ins prefer buildings with a set there; buildings without one listed in GOLF-SPRITES.md. Agent: the lot agent. |
 | T152 | #325 | `arena/T152-car-spacing` (d3bdbf1) | `.claude/worktrees/t152` | — | **Paused** for the art (the owner). Root cause: the range's own cars (`rangebiz.ts:803/832/723`) are placed by their own clock; fixed in rangebiz.ts only (overlaps -75-82% with the 44-bay lot, money identical). **Owner's decision needed:** at full demand the one-lane drive and the building's ramp cannot carry the cars at a car's gap (wider drive, second ramp, faster car-park speeds, or the queue limiting sales). Left: three gates, shots, PR. |
 | T112 | #199 | `arena/T112-sharp` (1872f0e) | `.claude/worktrees/t112` | — | **Paused** for T153: sharp 0.35.5 in, all packed art identical (260 images byte-identical; 16 view PNGs only re-tagged), still to do: the KTX2 check, the studio check, audit/typecheck/suite/build, the PR. Resume from #199. |
 
@@ -88,25 +87,29 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
    (the sharp bump). See the History sections below and `gh issue list --label arena --state open`.
 
 ### Done recently (newest first; details in each PR)
-- 2026-10-26 23:40: **T166 #380 the game's RAM about halved** (the owner: "we need to optimise the app"): one ground worker instead of three
+- 2026-10-26 ~22:25: **T161 #384 pairs, densities by state, the exam** (`lots/taste.ts`): partners learnt within 2.5 tiles (doghouse +
+  sandbox + oak, mailbox + bins, hvac + cabinet); densities by state (upgraded lush, decrepit junky); **model v2 is LATEST** (a v1 town
+  composes exactly as before: a save without `lotModel` stays v1, so the owner's existing town keeps v1; a new game uses v2). `npm run
+  lots:exam` renders 50 fixed lots (4 axis roads x 3 states x sizes) as a contact sheet (`E:/ClaudeTemp/T161/exam/`).
+- 2026-10-26 ~22:10: **T166 #380 the game's RAM about halved** (the owner: "we need to optimise the app"): one ground worker instead of three
   (three baked no faster: one GPU process), lazy procedural textures and photo mosaics, no IndexedDB texture pack (the old one deleted once).
   All Edge processes idle 5,895 → 3,316 MB, after a pan 5,949 → 2,910, after 10 jumps 7,095 → 3,671; VRAM 3.4-4.3 → 1.5-1.9 GB; browser
   process 455 → 56 MB; ready 5.9 → 3.0 s; bakes faster (bench 15.7 → 9.4 ms, district fps 47-54 → 57-59). The ground pixel-identical
   (NEAR 202 of 924,800 px by ≤2 levels). CPU canvases tried and dropped (bakes 9 → 38 ms). Cost: a ~1 s stall the first time a texture is
   needed (T168). Dev switch `?ground=old|lazy,one,two,soft,cache` and `scripts/perf/memory.mjs` measure each lever.
-- 2026-10-26 23:00: **#376 generated lots keep their garages and sheds** (every building of the frozen preset stays; nothing generated
+- 2026-10-26 ~22:00: **#376 generated lots keep their garages and sheds** (every building of the frozen preset stays; nothing generated
   lands on them). **T167 #377 removed pictures are never drawn**: the declined presets placed the removed rundown house (70), derelict
   two-storey (35) and fire station (48), so decrepit streets had no houses; now the house is an allocated dwelling of its size class that
   fits the band (seeded by the lot), another building one of its kind within 40% of its footprint, expansions and props left out; a badge in
   the lot lab marks each stand-in; the owner's files only read. Decrepit streets now show ordinary houses: real decrepit house art is an
   art request. Main typechecks with both, lot suites 42/42. The lead typechecks PRs in `.claude/worktrees/lead2-read` (node_modules is a
   junction to theme-consistency's: remove it with [System.IO.Directory]::Delete before removing the worktree).
-- 2026-10-26 22:00: **T160 #374 lots generated on the fly**: a house lot whose preset is frozen (not the owner's own) keeps its house,
+- 2026-10-26 ~21:45: **T160 #374 lots generated on the fly**: a house lot whose preset is frozen (not the owner's own) keeps its house,
   drive, walk, street items and fence; its plants, props, cars and decals come from the generator (`lot-gen.ts`) with the shipped model
   `lots/lot-models/v1.json` (87 presets, 2,709 items), seeded by street key + slot + state; the save records `lotModel` (missing = v1);
   the lab's "Ship model" writes the next version; `?oldlots` composes as before. Compose of a whole town ~54 → ~32 ms (a `carOwnerScale`
   memo). Known: garages/sheds dropped (follow-up in flight); decrepit houses not drawn (before too: T167).
-- 2026-10-26 21:20: **T165 #369 fairway and putting green from the new paintings** (`art/owner-supplied/{fairway,putting-green}-20261026`,
+- 2026-10-26 ~21:20: **T165 #369 fairway and putting green from the new paintings** (`art/owner-supplied/{fairway,putting-green}-20261026`,
   families `fairway-paint`, `putting-green-paint`): edges healed with a matched bridge (no seam line); the putting green MID falls back to
   the raw MID tiles with one shared strip (the painting's bright corner repeated). The fairway's mowing stripes fan out in perspective,
   so no crop lines them up: a soft stripe kink stays at the wrap. Straight stripes need a fairway painted without perspective (or without
