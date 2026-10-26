@@ -26,6 +26,10 @@
 // resized or regraded). The wrap mismatch before and after (on the WebP that ships) is recorded per level against the painting's own
 // neighbour difference inside; the script stops if a healed wrap is more than HEAL_LIMIT times the inside. The heal (method and band) is part
 // of the family's revision, so changing it re-bakes every chunk that laid it. The owner's art is read from this checkout, or from --art.
+// T165 (#365): the art session's fairway and putting-green paintings come in the same way (art/owner-supplied/{fairway,putting-green}-20261026,
+// families fairway-paint and putting-green-paint), healed with the bridge matched to each seam zone; the fairway's mowing stripes are measured
+// and cropped to whole periods where that lines them up across the wrap; the putting green's MID level falls back to the raw provisional MID
+// tiles healed with one shared strip (see OWNER). The provisional fairway and putting-green families stay as they were, the old option.
 //
 // Adding the next family: its handoff lands in READY-MATERIALS (with its canonical selection), run this script, then map it to a surface in
 // src/game/painted-surfaces.json (or in the studio's Painted tab). KIND below names the kind of family each material is (the studio's picker).
@@ -41,7 +45,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import sharp from 'sharp';
 import { ROOT } from './source.mjs';
-import { HEAL_METHOD, healWrap, wrapMismatch } from './tile-heal.mjs';
+import { HEAL_MATCH, HEAL_METHOD, HEAL_SHARED, cropPixels, healShared, healWrapWith, setMismatch, stripeCrop, wrapMismatch } from './tile-heal.mjs';
 
 const EIGHT = 'art/theme-consistency/generated/ground/eight-tiles';
 const READY_REL = `${EIGHT}/READY-MATERIALS.json`;
@@ -62,8 +66,17 @@ const NAME = { 'golden-fescue': 'Golden fescue', lake: 'Lake water', 'sand-rippl
 const PROVISIONAL = ['fairway', 'putting-green', 'long-grass'];
 /** the owner's own paintings (T162, #350): their folders, each with its source.json; the heal's band (px of each edge) and its limit (a healed
  *  wrap at most this many times the painting's own neighbour difference inside) */
-const OWNER = ['art/owner-supplied/rough-20261026'];
-const HEAL_BAND = 48, HEAL_LIMIT = 1.25;
+/** T165 (#365): also the art session's fairway and putting-green paintings. Per folder: `bridge` 'match' heals with the bridge where the
+ *  painting best matches its seam zone (tile-heal.mjs wrap-bridge-match-v1; absent: the middle, wrap-bridge-v1, as T162 shipped the rough);
+ *  `stripes` measures the mowing stripes and crops to whole stripe periods when that lines them up across the wrap at least STRIPE_GAIN
+ *  better (STRIPE_MIN_FRAC of each side kept at least); `shared` names levels that fall back to the issue's shared-strip heal of a
+ *  provisional family's raw tiles (the putting green's MID painting has a bright corner that repeats as a block pattern when tiled) */
+const OWNER = [
+  { folder: 'art/owner-supplied/rough-20261026' },
+  { folder: 'art/owner-supplied/fairway-20261026', bridge: 'match', stripes: true },
+  { folder: 'art/owner-supplied/putting-green-20261026', bridge: 'match', shared: { mid: 'putting-green' } },
+];
+const HEAL_BAND = 48, HEAL_LIMIT = 1.25, STRIPE_MIN_FRAC = 0.8, STRIPE_GAIN = 0.25;
 const TILE_IDS = ['tile-01', 'tile-02', 'tile-03', 'tile-04'];
 /** the legacy painted families' ids (painted-families.json): a tile set family whose material has one of these names gets `<material>-tiles` */
 const LEGACY = new Set(JSON.parse(fs.readFileSync(path.join(ROOT, 'src/game/painted-families.json'), 'utf8')).families.map(f => f.id));
@@ -207,31 +220,71 @@ for (const material of PROVISIONAL) {
 /** where the owner's art is read: this checkout (it is committed here), or --art (the tests' fixtures) */
 const OWNER_ART = path.resolve(arg('--art') ?? ROOT);
 const orel = p => path.join(OWNER_ART, p);
-for (const folder of OWNER) {
-  const srcRel = `${folder}/source.json`;
+const m2 = m => ({ lr: r2(m.lr), tb: r2(m.tb), h: r2(m.h), v: r2(m.v) });
+/** the interior (inside the outer HEAL_BAND px of each edge) of a healed picture is its source's exactly */
+const sameInterior = (a, b, w, ht, ch, what) => { for (let y = HEAL_BAND; y < ht - HEAL_BAND; y++) for (let i = (y * w + HEAL_BAND) * ch, e = (y * w + w - HEAL_BAND) * ch; i < e; i++) if (a[i] !== b[i]) fail(`${what}: the heal changed the interior at (${Math.floor(i / ch) % w}, ${y})`); };
+/** the heal's own result is held to HEAL_LIMIT x the inside, on its pixels (the WebP's numbers are recorded as they ship) */
+const withinLimit = (m, what) => { if (m.lr > HEAL_LIMIT * m.h || m.tb > HEAL_LIMIT * m.v) fail(`${what}: healed wrap LR ${r2(m.lr)} / TB ${r2(m.tb)} is more than ${HEAL_LIMIT}x the inside (${r2(m.h)} / ${r2(m.v)}): widen HEAL_BAND`); };
+for (const o of OWNER) {
+  const folder = o.folder, srcRel = `${folder}/source.json`;
   if (!fs.existsSync(orel(srcRel))) { console.warn(`prep-painted-tiles: no ${srcRel} under ${OWNER_ART}; its family is left out`); continue; }
   const src = JSON.parse(fs.readFileSync(orel(srcRel), 'utf8')), fam = src.family ?? {};
   if (!fam.id || !fam.name || !src.levels) fail(`${srcRel}: no family id, name or levels`);
   if (src.displayContract && (src.displayContract.allowMirror || src.displayContract.allowRotate || src.displayContract.allowFlip)) fail(`${srcRel}: allows mirror/rotate/flip, which the runtime never does`);
-  const levels = {};
+  const levels = {}, keyParts = [];
   for (const level of LEVELS) {
+    const sharedFrom = o.shared?.[level];
+    if (sharedFrom) {
+      // T165: this level falls back to the raw provisional set of `sharedFrom`, healed with one shared strip (any tile meets any tile)
+      const s = provisionalSet(sharedFrom, level);
+      if (!s) fail(`${folder} ${level}: no provisional ${sharedFrom} ${level} set for the shared-strip heal`);
+      const raws = [];
+      for (const [i, file] of s.files.entries()) { const buf = fs.readFileSync(rel(file)), { data, info } = await sharp(buf).raw().toBuffer({ resolveWithObject: true }); raws.push({ id: TILE_IDS[i], sha256: sha256(buf), source: file, data, w: info.width, h: info.height, ch: info.channels }); }
+      const w = Math.min(...raws.map(r => r.w)), ht = Math.min(...raws.map(r => r.h)), ch = raws[0].ch;
+      if (raws.some(r => r.ch !== ch || r.w - w > 8 || r.h - ht > 8)) fail(`${s.folder}: the four tiles are not one set`);
+      // the set's common size, top-left anchored (as the provisional families ship it); nothing resampled
+      const px = raws.map(r => (r.w === w && r.h === ht ? r.data : cropPixels(r.data, r.w, r.h, ch, { x0: 0, y0: 0, w, h: ht })));
+      const res = healShared(px, w, ht, ch, HEAL_BAND);
+      res.tiles.forEach((t, i) => sameInterior(t, px[i], w, ht, ch, raws[i].source));
+      const before = setMismatch(px, w, ht, ch), done = setMismatch(res.tiles, w, ht, ch);
+      withinLimit(done, `${folder} ${level} (shared strip)`);
+      const tiles = raws.map((r, i) => ({ id: r.id, sha256: r.sha256, source: r.source, raw: { data: res.tiles[i], width: w, height: ht, channels: ch }, ...(r.w !== w || r.h !== ht ? { crop: { from: [r.w, r.h], removedRight: r.w - w, removedBottom: r.h - ht } } : {}) }));
+      levels[level] = { folder: s.folder, native: [w, ht], decision: { file: null, sha256: null }, tiles, revision: `${s.revision}-shared`, status: null,
+        heal: { method: HEAL_SHARED, band: HEAL_BAND, centre: res.centre, fallback: `the painting ${src.levels[level]?.file ?? level} is not used (tiled, its bright corner repeats as a block pattern); ${sharedFrom}'s raw ${s.revision} tiles instead`, before: m2(before), healed: m2(done) } };
+      keyParts.push(`${level}:${HEAL_SHARED}/${HEAL_BAND}@${res.centre.x},${res.centre.y}:${tiles.map(t => t.sha256).join(',')}`);
+      continue;
+    }
     const sl = src.levels[level];
     if (!sl?.file || !/^[0-9a-f]{64}$/.test(sl.sha256 ?? '')) fail(`${srcRel} ${level}: no file or sha256`);
     const file = `${folder}/${sl.file}`, buf = fs.existsSync(orel(file)) ? fs.readFileSync(orel(file)) : fail(`missing ${file}`);
     const h = sha256(buf); if (h !== sl.sha256) fail(`${file}: sha256 ${h} != ${srcRel} ${sl.sha256}`);
-    const { data, info } = await sharp(buf).raw().toBuffer({ resolveWithObject: true }), { width: w, height: ht, channels: ch } = info;
-    if (Array.isArray(sl.size) && (w !== sl.size[0] || ht !== sl.size[1])) fail(`${file}: ${w}x${ht}, ${srcRel} says ${sl.size.join('x')}`);
-    const healed = healWrap(data, w, ht, ch, HEAL_BAND);
-    // the interior is the owner's pixels exactly: only the outer HEAL_BAND px of each edge may differ
-    for (let y = HEAL_BAND; y < ht - HEAL_BAND; y++) for (let i = (y * w + HEAL_BAND) * ch, e = (y * w + w - HEAL_BAND) * ch; i < e; i++) if (healed[i] !== data[i]) fail(`${file}: the heal changed the interior at (${Math.floor(i / ch) % w}, ${y})`);
-    // the heal's own result is held to HEAL_LIMIT x the inside, on its pixels (the WebP's numbers are recorded as they ship)
-    const before = wrapMismatch(data, w, ht, ch), done = wrapMismatch(healed, w, ht, ch);
-    if (done.lr > HEAL_LIMIT * done.h || done.tb > HEAL_LIMIT * done.v) fail(`${file}: healed wrap LR ${r2(done.lr)} / TB ${r2(done.tb)} is more than ${HEAL_LIMIT}x the inside (${r2(done.h)} / ${r2(done.v)}): widen HEAL_BAND`);
-    const tile = { id: TILE_IDS[0], sha256: h, source: file, raw: { data: healed, width: w, height: ht, channels: ch }, before, healed: done };
-    levels[level] = { folder, native: [w, ht], decision: { file: null, sha256: null }, tiles: [tile], revision: `${level}-${path.basename(folder)}`, status: null };
+    const { data, info } = await sharp(buf).raw().toBuffer({ resolveWithObject: true }), ch = info.channels;
+    if (Array.isArray(sl.size) && (info.width !== sl.size[0] || info.height !== sl.size[1])) fail(`${file}: ${info.width}x${info.height}, ${srcRel} says ${sl.size.join('x')}`);
+    // T165: the mowing stripes: their periods, and the whole-period crop that lines them up best across the wrap, used when it gains enough
+    let px = data, w = info.width, ht = info.height, crop = null, stripes = null;
+    if (o.stripes) {
+      const c = stripeCrop(data, w, ht, ch, { minFrac: STRIPE_MIN_FRAC });
+      if (!c) stripes = { found: false };
+      else {
+        const b = (c.phase.before.x + c.phase.before.y) / 2, a = (c.phase.after.x + c.phase.after.y) / 2, use = a <= (1 - STRIPE_GAIN) * b;
+        stripes = { periodX: r2(c.periodX), periodY: r2(c.periodY), phase: { x: r2(c.phase.before.x), y: r2(c.phase.before.y) }, bestCrop: { x0: c.x0, y0: c.y0, w: c.w, h: c.h, periods: [c.kx, c.ky], phase: { x: r2(c.phase.after.x), y: r2(c.phase.after.y) } }, applied: use };
+        if (use) { crop = { x0: c.x0, y0: c.y0, w: c.w, h: c.h }; px = cropPixels(data, w, ht, ch, crop); w = c.w; ht = c.h; }
+      }
+    }
+    const healed = healWrapWith(px, w, ht, ch, HEAL_BAND, { bridge: o.bridge ?? 'middle' });
+    sameInterior(healed.pixels, px, w, ht, ch, file);
+    const before = wrapMismatch(data, info.width, info.height, ch), done = wrapMismatch(healed.pixels, w, ht, ch);
+    withinLimit(done, file);
+    const method = o.bridge === 'match' ? HEAL_MATCH : HEAL_METHOD;
+    const tile = { id: TILE_IDS[0], sha256: h, source: file, raw: { data: healed.pixels, width: w, height: ht, channels: ch }, ...(crop ? { crop: { from: [info.width, info.height], ...crop } } : {}) };
+    levels[level] = { folder, native: [w, ht], decision: { file: null, sha256: null }, tiles: [tile], revision: `${level}-${path.basename(folder)}`, status: null,
+      heal: { method, band: HEAL_BAND, ...(o.bridge === 'match' ? { centre: healed.centre } : {}), ...(stripes ? { stripes } : {}), before: m2(before), healed: m2(done) } };
+    keyParts.push(`${level}:${method}/${HEAL_BAND}@${healed.centre.x},${healed.centre.y}${crop ? `:crop ${crop.x0},${crop.y0},${crop.w}x${crop.h}` : ''}:${h}`);
   }
-  // the revision: the paintings' hashes and the heal (another heal re-bakes every chunk that laid it)
-  const key = sha256(Buffer.from(LEVELS.map(l => levels[l].tiles[0].sha256).join(':') + `|${HEAL_METHOD}/${HEAL_BAND}`));
+  // the revision: the paintings' hashes and the heal (and, T165, its bridges, crops and fallback tiles): another heal re-bakes every chunk
+  // that laid it. The rough (T162: the middle bridge, no crop) keeps its key.
+  const plain = !o.bridge && !o.stripes && !o.shared;
+  const key = plain ? sha256(Buffer.from(LEVELS.map(l => levels[l].tiles[0].sha256).join(':') + `|${HEAL_METHOD}/${HEAL_BAND}`)) : sha256(Buffer.from(keyParts.join('|')));
   plan.push({ material: fam.id, id: gameId(fam.id), materialId: src.id ?? `owner:${path.basename(folder)}`, name: fam.name, kind: fam.kind ?? 'grass', key, selection: null, provisional: fam.provisional !== false, owner: srcRel, light: src.light ?? null, levels });
 }
 
@@ -253,8 +306,7 @@ for (const p of plan) {
   const fam = { id: p.id, materialId: p.materialId, name: p.name ?? NAME[p.material] ?? p.material.replace(/-/g, ' ').replace(/^./, c => c.toUpperCase()), kind: p.kind ?? KIND[p.material] ?? 'grass', revision: p.key.slice(0, 12), selection: p.selection, ...(p.provisional ? { provisional: true } : {}), ...(p.owner ? { owner: p.owner } : {}), light: p.light, mean: '#808080', levels: {} };
   const means = [];
   for (const level of LEVELS) {
-    const L = p.levels[level], out = [];
-    let heal = null;
+    const L = p.levels[level], out = [], decoded = [];
     for (const t of L.tiles) {
       const file = `tiles/${p.id}/${level}/${t.id}.webp`, abs = path.join(OUT, 'src/assets/ground/painted', file);
       // a provisional tile bigger than its set keeps its top-left native pixels (crop); an owner's painting is its healed pixels (raw, T162);
@@ -264,14 +316,10 @@ for (const p of plan) {
       const stats = await (t.raw ? pic() : sharp(t.crop ? await pic().png().toBuffer() : t.buf)).stats(), opaque = stats.isOpaque;
       const webp = () => (opaque ? pic().removeAlpha() : pic()).webp({ quality: QUALITY, effort: 6, smartSubsample: true });
       if (t.raw) {
-        // the healed painting's numbers: before, the owner's file; healed, its pixels after the heal; after, the WebP that ships (each against
-        // its own inside difference: the lossy WebP's error, about 3 levels a pixel, is independent on the two sides of a tile edge, so it adds
-        // a level or two across any wrap, the other tile sets' edges alike)
+        // a healed picture: its WebP decoded again, for the level's numbers as they ship (below)
         const buf = await webp().toBuffer(), dec = await sharp(buf).raw().toBuffer({ resolveWithObject: true });
         if (dec.info.width !== L.native[0] || dec.info.height !== L.native[1]) fail(`${file}: encoded ${dec.info.width}x${dec.info.height}`);
-        const m2 = m => ({ lr: r2(m.lr), tb: r2(m.tb), h: r2(m.h), v: r2(m.v) }), a = wrapMismatch(dec.data, dec.info.width, dec.info.height, dec.info.channels);
-        heal = { method: HEAL_METHOD, band: HEAL_BAND, before: m2(t.before), healed: m2(t.healed), after: m2(a) };
-        console.log(`${file}: wrap LR ${heal.before.lr} -> ${heal.after.lr} (inside ${heal.after.h}), TB ${heal.before.tb} -> ${heal.after.tb} (inside ${heal.after.v}); ${HEAL_METHOD}, ${HEAL_BAND} px`);
+        decoded.push(dec);
         if (!CHECK) { fs.mkdirSync(path.dirname(abs), { recursive: true }); fs.writeFileSync(abs, buf); }
       } else if (!CHECK) {
         fs.mkdirSync(path.dirname(abs), { recursive: true });
@@ -285,8 +333,22 @@ for (const p of plan) {
       out.push({ id: t.id, file, sha256: t.sha256, mean: hex(mean), ...(t.source ? { source: t.source } : {}), ...(t.crop ? { crop: t.crop } : {}) });
       console.log(file.padEnd(52), `${L.native[0]}x${L.native[1]}`, hex(mean), `${Math.round(bytes / 1024)} KB`, opaque ? '' : '(alpha kept)', p.provisional ? '(provisional)' : '');
     }
-    // an owner's painting (T162): its status says what it is and how its edges were healed
-    const status = heal ? `the owner's painting (${p.materialId}), one tile; edges healed to tile with itself (${heal.method}, ${heal.band} px): wrap LR ${heal.before.lr} -> ${heal.after.lr} (inside ${heal.after.h}), TB ${heal.before.tb} -> ${heal.after.tb} (inside ${heal.after.v})` : L.status;
+    // a healed level (T162, T165): its numbers before (the source), healed (its pixels) and after (the WebP that ships), each against its own
+    // inside difference (the lossy WebP's error, about 3 levels a pixel, is independent on the two sides of a tile edge, so it adds a level or
+    // two across any wrap, the other tile sets' edges alike); a shared-strip set's across every pair of its tiles. Its status says what it is.
+    let heal = null, status = L.status;
+    if (L.heal) {
+      const [w, ht, ch] = [decoded[0].info.width, decoded[0].info.height, decoded[0].info.channels];
+      const a = L.heal.method === HEAL_SHARED ? setMismatch(decoded.map(d => d.data), w, ht, ch) : wrapMismatch(decoded[0].data, w, ht, ch);
+      heal = { ...L.heal, after: m2(a) };
+      const nums = `wrap LR ${heal.before.lr} -> ${heal.after.lr} (inside ${heal.after.h}), TB ${heal.before.tb} -> ${heal.after.tb} (inside ${heal.after.v})`;
+      const st = heal.stripes, stripeNote = !st ? '' : st.found === false ? '; no stripes found'
+        : `; stripes ${st.periodX} x ${st.periodY} px, their phase step across the wrap ${st.phase.x} / ${st.phase.y} px, ${st.applied ? `cropped to ${st.bestCrop.periods.join(' x ')} periods (${st.bestCrop.phase.x} / ${st.bestCrop.phase.y} px)` : `uncropped (the best whole-period crop, ${st.bestCrop.periods.join(' x ')} periods, lines them up only to ${st.bestCrop.phase.x} / ${st.bestCrop.phase.y} px)`}`;
+      status = heal.method === HEAL_SHARED ? `${heal.fallback}: four tiles, every edge cross-faded to one shared strip (${heal.method}, ${heal.band} px, bridge at x ${heal.centre.x}, y ${heal.centre.y}); across any two tiles ${nums}`
+        : heal.method === HEAL_METHOD ? `the owner's painting (${p.materialId}), one tile; edges healed to tile with itself (${heal.method}, ${heal.band} px): ${nums}`
+        : `the painting (${p.materialId}), one tile; edges healed to tile with itself (${heal.method}, ${heal.band} px, bridge at x ${heal.centre.x}, y ${heal.centre.y}): ${nums}${stripeNote}`;
+      console.log(`${p.id} ${level}: ${status}`);
+    }
     fam.levels[level] = { revision: L.revision, folder: L.folder, native: L.native, decision: L.decision, tiles: out, ...(status ? { status } : {}), ...(heal ? { heal } : {}) };
   }
   fam.mean = hex([0, 1, 2].map(i => means.reduce((s, m) => s + m[i], 0) / means.length));

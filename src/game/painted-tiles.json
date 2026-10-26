@@ -6,7 +6,7 @@
   "sha256": "3bac71c02e5b452e67578f2f367c73bbebf42c9af7b0f56879d0afcb4d064323",
   "date": "2026-10-26"
  },
- "revision": "f94e548f2af8",
+ "revision": "9aeef69f9941",
  "display": {
   "minVisibleTiles": 2,
   "maxVisibleTiles": 4,
@@ -1014,6 +1014,437 @@
        "tb": 7.35,
        "h": 7.98,
        "v": 7.52
+      }
+     }
+    }
+   }
+  },
+  {
+   "id": "fairway-paint",
+   "materialId": "paint:fairway-20261026",
+   "name": "Fairway (painting)",
+   "kind": "grass",
+   "revision": "c6a5d7f94275",
+   "selection": null,
+   "provisional": true,
+   "owner": "art/owner-supplied/fairway-20261026/source.json",
+   "light": "UPPER RIGHT toward LOWER LEFT",
+   "mean": "#4f8814",
+   "levels": {
+    "near": {
+     "revision": "near-fairway-20261026",
+     "folder": "art/owner-supplied/fairway-20261026",
+     "native": [
+      1742,
+      903
+     ],
+     "decision": {
+      "file": null,
+      "sha256": null
+     },
+     "tiles": [
+      {
+       "id": "tile-01",
+       "file": "tiles/fairway-paint/near/tile-01.webp",
+       "sha256": "14fcf2b2a1b4a848a46e23c98f92f2a5da11a62953d4d3c0dfadd7f564d0fc75",
+       "mean": "#4f8814",
+       "source": "art/owner-supplied/fairway-20261026/near.png"
+      }
+     ],
+     "status": "the painting (paint:fairway-20261026), one tile; edges healed to tile with itself (wrap-bridge-match-v1, 48 px, bridge at x 174, y 96): wrap LR 10.46 -> 2.27 (inside 1.14), TB 9.78 -> 2.51 (inside 1.55); stripes 179.64 x 116.98 px, their phase step across the wrap 50.34 / 31.26 px, uncropped (the best whole-period crop, 9 x 7 periods, lines them up only to 43.63 / 28.59 px)",
+     "heal": {
+      "method": "wrap-bridge-match-v1",
+      "band": 48,
+      "centre": {
+       "x": 174,
+       "y": 96
+      },
+      "stripes": {
+       "periodX": 179.64,
+       "periodY": 116.98,
+       "phase": {
+        "x": 50.34,
+        "y": 31.26
+       },
+       "bestCrop": {
+        "x0": 35,
+        "y0": 84,
+        "w": 1617,
+        "h": 819,
+        "periods": [
+         9,
+         7
+        ],
+        "phase": {
+         "x": 43.63,
+         "y": 28.59
+        }
+       },
+       "applied": false
+      },
+      "before": {
+       "lr": 10.46,
+       "tb": 9.78,
+       "h": 1.2,
+       "v": 1.59
+      },
+      "healed": {
+       "lr": 1.14,
+       "tb": 1.67,
+       "h": 1.18,
+       "v": 1.56
+      },
+      "after": {
+       "lr": 2.27,
+       "tb": 2.51,
+       "h": 1.14,
+       "v": 1.55
+      }
+     }
+    },
+    "mid": {
+     "revision": "mid-fairway-20261026",
+     "folder": "art/owner-supplied/fairway-20261026",
+     "native": [
+      1743,
+      902
+     ],
+     "decision": {
+      "file": null,
+      "sha256": null
+     },
+     "tiles": [
+      {
+       "id": "tile-01",
+       "file": "tiles/fairway-paint/mid/tile-01.webp",
+       "sha256": "54743bfb086ca96e0d806832f6848d58732e25249cacdc6c20e1300d30089a1b",
+       "mean": "#599614",
+       "source": "art/owner-supplied/fairway-20261026/mid.png"
+      }
+     ],
+     "status": "the painting (paint:fairway-20261026), one tile; edges healed to tile with itself (wrap-bridge-match-v1, 48 px, bridge at x 1616, y 733): wrap LR 8.09 -> 2.58 (inside 1.33), TB 8.87 -> 2.8 (inside 1.72); stripes 123.54 x 73.38 px, their phase step across the wrap 35.38 / 19.42 px, uncropped (the best whole-period crop, 14 x 10 periods, lines them up only to 35.96 / 17.88 px)",
+     "heal": {
+      "method": "wrap-bridge-match-v1",
+      "band": 48,
+      "centre": {
+       "x": 1616,
+       "y": 733
+      },
+      "stripes": {
+       "periodX": 123.54,
+       "periodY": 73.38,
+       "phase": {
+        "x": 35.38,
+        "y": 19.42
+       },
+       "bestCrop": {
+        "x0": 13,
+        "y0": 134,
+        "w": 1730,
+        "h": 734,
+        "periods": [
+         14,
+         10
+        ],
+        "phase": {
+         "x": 35.96,
+         "y": 17.88
+        }
+       },
+       "applied": false
+      },
+      "before": {
+       "lr": 8.09,
+       "tb": 8.87,
+       "h": 1.59,
+       "v": 1.94
+      },
+      "healed": {
+       "lr": 1.6,
+       "tb": 2,
+       "h": 1.57,
+       "v": 1.9
+      },
+      "after": {
+       "lr": 2.58,
+       "tb": 2.8,
+       "h": 1.33,
+       "v": 1.72
+      }
+     }
+    },
+    "far": {
+     "revision": "far-fairway-20261026",
+     "folder": "art/owner-supplied/fairway-20261026",
+     "native": [
+      1742,
+      903
+     ],
+     "decision": {
+      "file": null,
+      "sha256": null
+     },
+     "tiles": [
+      {
+       "id": "tile-01",
+       "file": "tiles/fairway-paint/far/tile-01.webp",
+       "sha256": "da2925ecca80faca8399762f5143cd464a324cf07d7977dbaa8aa1375892b688",
+       "mean": "#57911a",
+       "source": "art/owner-supplied/fairway-20261026/far.png"
+      }
+     ],
+     "status": "the painting (paint:fairway-20261026), one tile; edges healed to tile with itself (wrap-bridge-match-v1, 48 px, bridge at x 205, y 99): wrap LR 8.94 -> 2.39 (inside 1.25), TB 10.8 -> 2.82 (inside 1.87); stripes 210.35 x 115.45 px, their phase step across the wrap 45.38 / 35.36 px, uncropped (the best whole-period crop, 7 x 7 periods, lines them up only to 46.83 / 25.69 px)",
+     "heal": {
+      "method": "wrap-bridge-match-v1",
+      "band": 48,
+      "centre": {
+       "x": 205,
+       "y": 99
+      },
+      "stripes": {
+       "periodX": 210.35,
+       "periodY": 115.45,
+       "phase": {
+        "x": 45.38,
+        "y": 35.36
+       },
+       "bestCrop": {
+        "x0": 270,
+        "y0": 0,
+        "w": 1472,
+        "h": 808,
+        "periods": [
+         7,
+         7
+        ],
+        "phase": {
+         "x": 46.83,
+         "y": 25.69
+        }
+       },
+       "applied": false
+      },
+      "before": {
+       "lr": 8.94,
+       "tb": 10.8,
+       "h": 1.28,
+       "v": 1.86
+      },
+      "healed": {
+       "lr": 1.16,
+       "tb": 1.85,
+       "h": 1.25,
+       "v": 1.83
+      },
+      "after": {
+       "lr": 2.39,
+       "tb": 2.82,
+       "h": 1.25,
+       "v": 1.87
+      }
+     }
+    }
+   }
+  },
+  {
+   "id": "putting-green-paint",
+   "materialId": "paint:putting-green-20261026",
+   "name": "Putting green (painting)",
+   "kind": "grass",
+   "revision": "c954a90a4253",
+   "selection": null,
+   "provisional": true,
+   "owner": "art/owner-supplied/putting-green-20261026/source.json",
+   "light": "UPPER RIGHT toward LOWER LEFT",
+   "mean": "#7c9e15",
+   "levels": {
+    "near": {
+     "revision": "near-putting-green-20261026",
+     "folder": "art/owner-supplied/putting-green-20261026",
+     "native": [
+      1743,
+      902
+     ],
+     "decision": {
+      "file": null,
+      "sha256": null
+     },
+     "tiles": [
+      {
+       "id": "tile-01",
+       "file": "tiles/putting-green-paint/near/tile-01.webp",
+       "sha256": "e61d1d0832558291773cdbfdbca7f39a69e02de9d15072a58f348cc76b3c16c4",
+       "mean": "#7c9e15",
+       "source": "art/owner-supplied/putting-green-20261026/near.png"
+      }
+     ],
+     "status": "the painting (paint:putting-green-20261026), one tile; edges healed to tile with itself (wrap-bridge-match-v1, 48 px, bridge at x 577, y 742): wrap LR 8.9 -> 3.5 (inside 2.4), TB 9.11 -> 4.02 (inside 3.28)",
+     "heal": {
+      "method": "wrap-bridge-match-v1",
+      "band": 48,
+      "centre": {
+       "x": 577,
+       "y": 742
+      },
+      "before": {
+       "lr": 8.9,
+       "tb": 9.11,
+       "h": 2.46,
+       "v": 3.31
+      },
+      "healed": {
+       "lr": 2.44,
+       "tb": 3.2,
+       "h": 2.41,
+       "v": 3.24
+      },
+      "after": {
+       "lr": 3.5,
+       "tb": 4.02,
+       "h": 2.4,
+       "v": 3.28
+      }
+     }
+    },
+    "mid": {
+     "revision": "mid-v1-shared",
+     "folder": "art/theme-consistency/generated/ground/eight-tiles/putting-green/mid-v1",
+     "native": [
+      1744,
+      901
+     ],
+     "decision": {
+      "file": null,
+      "sha256": null
+     },
+     "tiles": [
+      {
+       "id": "tile-01",
+       "file": "tiles/putting-green-paint/mid/tile-01.webp",
+       "sha256": "de1291920ead632ea75efd7ee713a28e95a33b4c1554a034ffc44d953c300476",
+       "mean": "#89b51d",
+       "source": "art/theme-consistency/generated/ground/eight-tiles/putting-green/mid-v1/tile-01-v1.raw.png"
+      },
+      {
+       "id": "tile-02",
+       "file": "tiles/putting-green-paint/mid/tile-02.webp",
+       "sha256": "b5b1bf46adbec0a63702b7295dda5f1295820185bf0af8bec8ff0f67e771f3a7",
+       "mean": "#84b21b",
+       "source": "art/theme-consistency/generated/ground/eight-tiles/putting-green/mid-v1/tile-02-v1.raw.png",
+       "crop": {
+        "from": [
+         1745,
+         901
+        ],
+        "removedRight": 1,
+        "removedBottom": 0
+       }
+      },
+      {
+       "id": "tile-03",
+       "file": "tiles/putting-green-paint/mid/tile-03.webp",
+       "sha256": "a7c3a5af952597e9efc9850c1bd646e54baf77f790c2aee9dfaa3b8fcbe199d7",
+       "mean": "#84b41b",
+       "source": "art/theme-consistency/generated/ground/eight-tiles/putting-green/mid-v1/tile-03-v1.raw.png",
+       "crop": {
+        "from": [
+         1744,
+         902
+        ],
+        "removedRight": 0,
+        "removedBottom": 1
+       }
+      },
+      {
+       "id": "tile-04",
+       "file": "tiles/putting-green-paint/mid/tile-04.webp",
+       "sha256": "79f9c7de44981264e0199514c46db2a9fddb07802fe82252f535857ffdeda8c1",
+       "mean": "#82b21a",
+       "source": "art/theme-consistency/generated/ground/eight-tiles/putting-green/mid-v1/tile-04-v1.raw.png",
+       "crop": {
+        "from": [
+         1744,
+         902
+        ],
+        "removedRight": 0,
+        "removedBottom": 1
+       }
+      }
+     ],
+     "status": "the painting mid.png is not used (tiled, its bright corner repeats as a block pattern); putting-green's raw mid-v1 tiles instead: four tiles, every edge cross-faded to one shared strip (shared-strip-match-v1, 48 px, bridge at x 189, y 600); across any two tiles wrap LR 15.1 -> 2.75 (inside 2.65), TB 14.35 -> 3.12 (inside 3.37)",
+     "heal": {
+      "method": "shared-strip-match-v1",
+      "band": 48,
+      "centre": {
+       "x": 189,
+       "y": 600
+      },
+      "fallback": "the painting mid.png is not used (tiled, its bright corner repeats as a block pattern); putting-green's raw mid-v1 tiles instead",
+      "before": {
+       "lr": 15.1,
+       "tb": 14.35,
+       "h": 2.75,
+       "v": 3.45
+      },
+      "healed": {
+       "lr": 1.59,
+       "tb": 2.39,
+       "h": 2.67,
+       "v": 3.35
+      },
+      "after": {
+       "lr": 2.75,
+       "tb": 3.12,
+       "h": 2.65,
+       "v": 3.37
+      }
+     }
+    },
+    "far": {
+     "revision": "far-putting-green-20261026",
+     "folder": "art/owner-supplied/putting-green-20261026",
+     "native": [
+      1742,
+      903
+     ],
+     "decision": {
+      "file": null,
+      "sha256": null
+     },
+     "tiles": [
+      {
+       "id": "tile-01",
+       "file": "tiles/putting-green-paint/far/tile-01.webp",
+       "sha256": "64ab32b0bfed474eb817c85009baf0c0934b95a15a674c68fd8015152feed06f",
+       "mean": "#7fa626",
+       "source": "art/owner-supplied/putting-green-20261026/far.png"
+      }
+     ],
+     "status": "the painting (paint:putting-green-20261026), one tile; edges healed to tile with itself (wrap-bridge-match-v1, 48 px, bridge at x 1627, y 786): wrap LR 4.92 -> 2.41 (inside 1.03), TB 11.67 -> 3 (inside 2.02)",
+     "heal": {
+      "method": "wrap-bridge-match-v1",
+      "band": 48,
+      "centre": {
+       "x": 1627,
+       "y": 786
+      },
+      "before": {
+       "lr": 4.92,
+       "tb": 11.67,
+       "h": 1.31,
+       "v": 2.25
+      },
+      "healed": {
+       "lr": 1.29,
+       "tb": 2.35,
+       "h": 1.28,
+       "v": 2.21
+      },
+      "after": {
+       "lr": 2.41,
+       "tb": 3,
+       "h": 1.03,
+       "v": 2.02
       }
      }
     }
