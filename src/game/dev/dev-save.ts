@@ -4,6 +4,10 @@
 // runtime imports of its own.
 import { formatPresets, parsePresets } from '../lots/preset-read';
 export { mergeAllocations } from '../lots/house-alloc';
+export { mergeSamples } from '../lots/learn';
+
+/** the lot wizard's samples (T158: lots/learn.ts), appended only through their merge (POST /__dev/learning), never written whole */
+export const LEARN_PATH = 'src/game/lots/lot-learning.json';
 
 /** the house allocations' file (T155: lots/house-alloc.ts), written only through its per-house merge (POST /__dev/allocations), never whole */
 export const ALLOC_PATH = 'src/game/lots/house-allocations.json';

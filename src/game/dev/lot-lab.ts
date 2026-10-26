@@ -49,6 +49,7 @@ import { detach, isMaster, largestSize, type DropCounts } from '../lots/derive';
 import { deriveMaster, mastersReport } from './lot-derive';
 import { BTN, DANGER, GO, ON, SEL, btn, check, drawHelp, el, heading, makeShell, mono, panelHead, typing, type Folds } from './lot-lab-ui';
 import { makePalette, type Swatch } from './lot-lab-palette';
+import { makeWizard, WIZARD_ID } from './lot-wizard';
 
 /** the least zoom the lab keeps (Camera.z): the lot stays big enough to edit (a lot too big for it keeps its fit zoom, see keepCam) */
 const LAB_ZOOM = 0.12;
@@ -184,6 +185,11 @@ export function installLotLab(game: Game): () => void {
     folded: v => shell.fold('palette', v),
   });
   drawHelp(shell.help);
+  /** the lot wizard (T158, lot-wizard.ts): W turns it on; it owns the clicks and the keys while it runs */
+  const wizard = makeWizard({
+    game, lot: () => ({ use, state, road }), frame: () => (geo ? labFrame(geo) : null), base: wizardBase, show: wizardShow, leave: wizardLeave, keepDraft, toScreen,
+    say: m => { message = m; drawStatus(); }, redraw: () => render(),
+  });
   const personEl = el('div', 'position:fixed;left:0;top:0;display:none;pointer-events:none;z-index:58;background-repeat:no-repeat');
 
   // ---------- the model's helpers
@@ -365,23 +371,28 @@ export function installLotLab(game: Game): () => void {
       obj = { id, use, state, w, d, props, patches, decals, road, whole: true };
       source = `variant ${variant + 1}: the game's farm for seed ${seed}`;
     }
-    if (use !== 'farm' && geo) {
-      // the building, as the allocations deal it, on its spot (as Change house does)
-      const half = frameHalf(labFrame(geo)), i = mainBuilding(obj, q => isHouseLike(q.id), half), q = i >= 0 ? obj.props[i]! : null;
-      if (q) {
-        const was = baseOf(q.id), next = reroll ? otherHouse(q.id, Math.random, houseOk) : allowedHouse(q.id, Math.random, houseOk);
-        if (next && next !== was) {
-          const own = ownerScaleOf(next), maxS = artLimit(next) / own, swapped = swapHouse(obj, i, next, half(q), half({ ...q, id: next, scale: Math.min(q.scale, maxS) }), maxS);
-          // a new draft is not the owner's edit yet: no curated flag
-          if (swapped) { obj = swapped; delete obj.curated; source += `\nnew building: ${next}${reroll ? '' : ` (${was} does not suit ${lotWords()})`}`; }
-        } else if (!next && !houseOk(was)) source += `\nno ${classWords(was)} suits ${lotWords()} (the house allocations): kept ${was}`;
-        else if (!next && reroll) source += `\nno other ${classWords(was)} suits ${lotWords()}: kept ${was}`;
-      }
-    }
+    const dealt = dealHouse(obj, reroll); obj = dealt.obj; source += dealt.note;
     setLotPresets([...lotPresets(), obj]);
     draft = { id, obj, saved: false }; current = id;
     stage(w, d, { use: luOf(use), ...levelOf(state), seed, preset: id });
     message = '';
+  }
+  /** the main building of a new lot, as the house allocations deal it, on its spot (as Change house does): reroll (Generate) a random other of its
+   *  family and size class that suits this road and state; otherwise it stays when it suits them, else one that does (a farm keeps its buildings).
+   *  The note says what changed */
+  function dealHouse(obj: LotPreset, reroll: boolean): { obj: LotPreset; note: string } {
+    if (use === 'farm' || !geo) return { obj, note: '' };
+    const half = frameHalf(labFrame(geo)), i = mainBuilding(obj, q => isHouseLike(q.id), half), q = i >= 0 ? obj.props[i]! : null;
+    if (!q) return { obj, note: '' };
+    const was = baseOf(q.id), next = reroll ? otherHouse(q.id, Math.random, houseOk) : allowedHouse(q.id, Math.random, houseOk);
+    if (next && next !== was) {
+      const own = ownerScaleOf(next), maxS = artLimit(next) / own, swapped = swapHouse(obj, i, next, half(q), half({ ...q, id: next, scale: Math.min(q.scale, maxS) }), maxS);
+      // a new draft is not the owner's edit yet: no curated flag
+      if (swapped) { delete swapped.curated; return { obj: swapped, note: `\nnew building: ${next}${reroll ? '' : ` (${was} does not suit ${lotWords()})`}` }; }
+      return { obj, note: '' };
+    }
+    if (!next && !houseOk(was)) return { obj, note: `\nno ${classWords(was)} suits ${lotWords()} (the house allocations): kept ${was}` };
+    return { obj, note: !next && reroll ? `\nno other ${classWords(was)} suits ${lotWords()}: kept ${was}` : '' };
   }
   /** Generate (in place): this lot again, its type, state, size (the current preset's own, steppers included) and road angle kept: another
    *  variant of its cell when it has more than one, a new seed (fences, street items, decals), a new building of the same size class */
@@ -402,7 +413,9 @@ export function installLotLab(game: Game): () => void {
     await generate(1);
   }
   /** a type or state changed: a farm has one state (built); the size kept when this pair has that size, else the first size; then the first variant */
-  function retype(): Promise<void> { if (use === 'farm') state = 'built'; const l = sizes(); if (!l.some(s => s.key === size)) size = l[0]?.key ?? ''; variant = -1; return generate(1); }
+  function retype(): Promise<void> { if (use === 'farm') state = 'built'; const l = sizes(); if (!l.some(s => s.key === size)) size = l[0]?.key ?? ''; variant = -1; return regen(); }
+  /** a new lot for the cell the drawer chose: the wizard's next (nothing learned) while the wizard is on, else the cell's first variant */
+  async function regen(): Promise<void> { if (wizard.on()) { if (use === 'farm') { wizard.toggle(false); return; } wizard.next(false); return; } await generate(1); }
   /** opens a lab preset: its type, state, size and road, composed as it is (its own preset forced); the unsaved draft before it is dropped */
   async function open(id: string): Promise<void> {
     const p = lotPresets().find(q => q.id === id && q.road !== undefined);
@@ -443,14 +456,17 @@ export function installLotLab(game: Game): () => void {
   }
   /** the next gap: the first cell of this type and state (sizes x road angles, after the current cell, wrapping) with no approved lab preset; moves there and generates its first variant */
   async function nextGap(): Promise<void> {
+    const gc = gapCell();
+    if (gc) { size = gc[0].key; road = gc[1]; variant = -1; await generate(1); return; }
+    message = sizes().length ? 'every size and road angle of this type and state has an approved preset' : 'no presets of this type and state yet';
+  }
+  /** the next gap: the first cell of this type and state (sizes x road angles, after the current cell, wrapping) with no approved lab preset; null: none */
+  function gapCell(): [Size, Road] | null {
     const cells: [Size, Road][] = [];
     for (const s of sizes()) for (let r = 0; r < 8; r++) cells.push([s, r as Road]);
     const at = cells.findIndex(([s, r]) => s.key === size && r === road);
-    for (let k = 1; k <= cells.length; k++) {
-      const [s, r] = cells[(at + k + cells.length) % cells.length]!;
-      if (!approvedIn(s.key, r)) { size = s.key; road = r; variant = -1; await generate(1); return; }
-    }
-    message = cells.length ? 'every size and road angle of this type and state has an approved preset' : 'no presets of this type and state yet';
+    for (let k = 1; k <= cells.length; k++) { const c = cells[(at + k + cells.length) % cells.length]!; if (!approvedIn(c[0].key, c[1])) return c; }
+    return null;
   }
   /** Review drafts: opens the next saved draft of this type (any state, size and road), in file order, after the current one, wrapping */
   async function nextDraft(): Promise<void> {
@@ -537,6 +553,51 @@ export function installLotLab(game: Game): () => void {
     const decals: PresetDecal[] = [...(p.decals ?? []), { id: decalId, x: within(q.x, 0, p.w), y: within(q.y, -WHOLE_FRONT, p.d), scale: 1, alpha: 1 }];
     void act(async () => { await commitLab(p, { decals }); message = `decal ${decalId} placed`; });
   };
+  /** the wizard's lot (T158): a lot of the current cell (gap: the next coverage gap's), composed as the game composes it from one of the cell's
+   *  presets with a random seed, whole, its house dealt by the allocations (a random one of its pool that suits the lot), not yet shown. The
+   *  same cell keeps the staged street (the fast path: no new stage); another cell is staged first */
+  function wizardBase(gap: boolean): LotPreset | null {
+    if (use === 'farm') return null;
+    if (gap) { const gc = gapCell(); if (gc) { size = gc[0].key; road = gc[1]; } }
+    const s = sizeNow(); if (!s) return null;
+    const keepLot = !!staged && staged.road === road && bkey(staged.w, staged.d) === s.key, w = keepLot ? staged!.w : s.w, d = keepLot ? staged!.d : s.d;
+    if (!lotSame(w, d)) stage(w, d, { use: luOf(use), ...levelOf(state), seed: 1 });
+    const c = candidates(w, d), g = geo;
+    if (!c.list.length || !g) return null;
+    const src = c.list[Math.floor(Math.random() * c.list.length)]!, sst: ComposeState = { use: luOf(use), ...levelOf(state), seed: seedOf(use, Math.floor(Math.random() * 997)), preset: src.id };
+    const { props, patches, decals } = presetFromComposition(compose(g, sst), labFrame(g), w, d, { whole: true });
+    return dealHouse({ id: WIZARD_ID, use, state, w, d, props, patches, decals, road, whole: true }, true).obj;
+  }
+  /** shows the wizard's lot: in the presets (in memory: an unsaved draft), the lab lot composed again with it (the street kept when the size and
+   *  road are the same) */
+  function wizardShow(p: LotPreset): void {
+    if (draft && draft.id !== p.id) dropDraft();
+    const list = lotPresets();
+    setLotPresets(list.some(q => q.id === p.id) ? replacePreset(list, p) : [...list, p]);
+    draft = { id: p.id, obj: p, saved: false }; current = p.id; source = '';
+    const st: ComposeState = { use: luOf(use), ...levelOf(state), seed: 1, preset: p.id };
+    if (staged && lotSame(p.w, p.d)) { game.restageLab(st); staged = { ...staged, st }; } else stage(p.w, p.d, st);
+  }
+  /** the wizard is off: its lot goes from the presets, and the lab shows the cell's first variant */
+  function wizardLeave(): void {
+    setLotPresets(lotPresets().filter(q => q.id !== WIZARD_ID));
+    if (draft?.id === WIZARD_ID) draft = null;
+    current = null; variant = -1;
+    void act(() => generate(1));
+  }
+  /** a wizard lot kept as a lab draft preset too (the wizard's toggle): a new id, saved; its id */
+  async function keepDraft(p: LotPreset): Promise<string> {
+    const id = `lab-${use}-${state}-${bkey(p.w, p.d)}-r${road}-wz${Date.now().toString(36)}`, q: LotPreset = { ...p, id };
+    setLotPresets([...lotPresets(), q]);
+    await saveLotPresets([id]);
+    return id;
+  }
+  /** a point of the lab lot's frame (tiles) on screen (viewport px), or null with no lot staged */
+  function toScreen(x: number, y: number): { x: number; y: number } | null {
+    const g = geo; if (!g) return null;
+    const w = toWorld(frameOf(g), x, y), c = game.cam, o = origin();
+    return { x: o.x + (worldX(w.x, w.y) - c.X) * c.z, y: o.y + (worldY(w.x, w.y) - c.Y) * c.z };
+  }
   /** a house's allocation set (null: unset, it suits everything again), saved through the dev server's per-house merge */
   async function setAlloc(id: string, a: HouseAlloc | null): Promise<void> {
     await saveAllocation(id, a);
@@ -565,12 +626,12 @@ export function installLotLab(game: Game): () => void {
     if (!ss.length) sel.append(new Option('no presets of this type and state', ''));
     for (const s of ss) sel.append(new Option(`${sizeLabel(s)} · ${approvedIn(s.key, null)} approved`, s.key));
     sel.value = size;
-    sel.addEventListener('change', () => { size = sel.value; void act(() => { variant = -1; return generate(1); }); });
+    sel.addEventListener('change', () => { size = sel.value; void act(() => { variant = -1; return regen(); }); });
     const comp = el('div', 'display:grid;grid-template-columns:repeat(3,40px);gap:4px;justify-content:center;margin-top:2px');
     for (const r of COMPASS) {
       if (r === null) { const c = el('div', 'display:flex;align-items:center;justify-content:center'); c.append(el('div', 'width:14px;height:14px;border-radius:3px;background:#64748b')); comp.append(c); continue; }
       const green = approvedIn(size, r) > 0;
-      const b = btn(ARROW[r]!, `position:relative;width:40px;height:40px;padding:0;font-size:19px;${road === r ? ON : BTN}`, () => { void act(() => { road = r; variant = -1; return generate(1); }); }, `Road ${r}: ${ROAD_WORDS[r]}${green ? ' (approved presets here)' : ''}`);
+      const b = btn(ARROW[r]!, `position:relative;width:40px;height:40px;padding:0;font-size:19px;${road === r ? ON : BTN}`, () => { void act(() => { road = r; variant = -1; return regen(); }); }, `Road ${r}: ${ROAD_WORDS[r]}${green ? ' (approved presets here)' : ''}`);
       if (green) b.append(el('span', 'position:absolute;top:3px;right:3px;width:6px;height:6px;border-radius:50%;background:#22c55e'));
       comp.append(b);
     }
@@ -605,7 +666,15 @@ export function installLotLab(game: Game): () => void {
     const p = curPreset(), t = shell.toolbar;
     const [chipT, bg, fg] = !p ? ['no lot', '#1e293b', '#94a3b8'] : unsaved(p.id) ? ['unsaved draft', '#92400e', '#fde68a'] : p.approved ? ['approved', '#14532d', '#86efac'] : ['saved draft', '#0c4a6e', '#7dd3fc'];
     const tog = (text: string, on: boolean, f: () => unknown, tip: string) => btn(text, on ? ON : BTN, () => act(f), tip);
+    const views = [tog('Lot grid (L)', gridOn, () => setGrid(!gridOn), "the lot's boundary and its cells (1 tile = 2 m), and the neighbours' boundaries, on the ground under the sprites"),
+      tog('Neighbours (N)', neighOn, () => setNeigh(!neighOn), use === 'farm' ? 'a farm stands alone on its country road: no neighbours' : 'the lots round this one on its street (two each way, three across), as the game would draw them (never edited)'),
+      tog('Person', personOn, () => { personOn = !personOn; }, 'a townsperson stands at the pointer over the map, for scale (its feet on the point under the pointer)'),
+      el('div', 'flex:1'),
+      btn('?', `${BTN}font-weight:800;padding:4px 11px`, () => toggleHelp(), 'the keys (?)')];
+    // the wizard's own bar while it runs (its keys as buttons), the view toggles kept
+    if (wizard.on()) { t.replaceChildren(...wizard.bar(), bar(), ...views); return; }
     t.replaceChildren(
+      wizard.toggleBtn(),
       btn('◀ Variant', BTN, () => act(() => generate(-1)), 'the previous variant (Shift+G)'),
       btn('Generate ▶', ON, () => act(generateHere), 'this lot again (its type, size and road angle): a new layout, seed and building that suits its road and state'),
       btn('New lot ▶', BTN, () => act(newLot), 'a random size and road angle, as the drawer\'s locks allow; both locked: the next variant'),
@@ -618,11 +687,7 @@ export function installLotLab(game: Game): () => void {
       bar(),
       btn('↶ Undo', BTN, () => act(() => { if (!editorAct('undo')) message = 'the map editor is not on yet'; }), 'Ctrl+Z'),
       bar(),
-      tog('Lot grid (L)', gridOn, () => setGrid(!gridOn), "the lot's boundary and its cells (1 tile = 2 m), and the neighbours' boundaries, on the ground under the sprites"),
-      tog('Neighbours (N)', neighOn, () => setNeigh(!neighOn), use === 'farm' ? 'a farm stands alone on its country road: no neighbours' : 'the lots round this one on its street (two each way, three across), as the game would draw them (never edited)'),
-      tog('Person', personOn, () => { personOn = !personOn; }, 'a townsperson stands at the pointer over the map, for scale (its feet on the point under the pointer)'),
-      el('div', 'flex:1'),
-      btn('?', `${BTN}font-weight:800;padding:4px 11px`, () => toggleHelp(), 'the keys (?)'));
+      ...views);
   }
   /** the Lot grid on or off (L) */
   function setGrid(v: boolean) { gridOn = v; syncGrid(); message = v ? "lot grid on: the lot's boundary and its 1-tile cells" : ''; }
@@ -750,7 +815,7 @@ export function installLotLab(game: Game): () => void {
   /** the INSPECTOR: the selection (when there is one), then the lot */
   function renderInspector() {
     const s = editorSel();
-    shell.inspector.replaceChildren(panelHead('INSPECTOR', '▸', () => shell.fold('inspector', true)), ...selSection(s), ...lotSection(s));
+    shell.inspector.replaceChildren(panelHead('INSPECTOR', '▸', () => shell.fold('inspector', true)), ...(wizard.on() ? wizard.panel() : []), ...selSection(s), ...lotSection(s));
   }
   /** the coverage of this type and state: a row per size, a column per road angle; the approved count (bold), the drafts (small), the colour, the current cell outlined; a click opens or generates it */
   function coverage(): HTMLElement {
@@ -900,6 +965,11 @@ export function installLotLab(game: Game): () => void {
     if (!started || typing(e.target)) return;
     const mod = e.ctrlKey || e.metaKey;
     const plain = !mod && !e.altKey, k = e.key.toLowerCase(), helpOn = shell.help.style.display !== 'none';
+    // the wizard owns its keys while it runs (Space, S, Backspace, W, Esc), and the lab's own lot keys rest (only ?, L and N stay)
+    if (wizard.on() && !helpOn) {
+      if (wizard.onKey(e)) { e.preventDefault(); e.stopImmediatePropagation(); render(); return; }
+      if (!(plain && (k === 'l' || k === 'n' || e.key === '?'))) { if (plain || mod) { e.preventDefault(); e.stopImmediatePropagation(); } return; }
+    } else if (k === 'w' && plain && !helpOn && use !== 'farm') { e.preventDefault(); e.stopImmediatePropagation(); wizard.toggle(true); return; }
     const go: (() => unknown) | null = e.key === '?' && !mod ? () => toggleHelp() : e.key === 'Escape' && helpOn ? () => toggleHelp(false)
       : k === 'l' && plain ? () => setGrid(!gridOn) : k === 'n' && plain ? () => setNeigh(!neighOn)
         : e.key === 'Escape' && (paint !== null || decalMode !== null) ? () => { setPaint(null); setDeco(null); palette.draw(); }
@@ -937,6 +1007,7 @@ export function installLotLab(game: Game): () => void {
     const s = editorSel();
     if (s.key !== selKey) { selKey = s.key; renderSelbar(s); renderInspector(); }
     placeSelbar(s);
+    wizard.frame();
   }
 
   /** the Lot grid's draw for the engine (Game.devGround): the lots syncGrid chose, none when the grid is off */
@@ -968,6 +1039,7 @@ export function installLotLab(game: Game): () => void {
     pauseEditor(false); editorOnly(null); setHouseFilter(null);
     if (game.devGround === drawGrid) game.devGround = null;
     gridLayer.dispose(); game.stageLabNeighbours([]);
+    wizard.dispose();
     style.remove(); mask.remove(); shell.remove(); personEl.remove();
   };
 }

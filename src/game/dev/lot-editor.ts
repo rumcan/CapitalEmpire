@@ -175,6 +175,10 @@ export function editorAct(a: LabAct): boolean { if (!lab) return false; lab.edit
 let paused = false;
 /** pauses the editor's pointer handling (the lot lab's ground painting): its presses go to the lab */
 export function pauseEditor(v: boolean): void { paused = v; }
+/** whether the editor's keys are muted (T158: the lot wizard owns the keys and never lets an edit save its lot) */
+let muted = false;
+/** mutes the editor's keys (the lot wizard), or lets them work again */
+export function muteEditor(v: boolean): void { muted = v; }
 
 /** installs the editor on a game and its overlay canvas (off until ?dev or the I key); returns the uninstall */
 export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => void {
@@ -585,7 +589,7 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
   /** a field that takes typing (the picker, the game's own inputs): its keys are its own; a checkbox or a button is not one */
   const typing = (t: EventTarget | null) => t instanceof HTMLTextAreaElement || t instanceof HTMLSelectElement || (t instanceof HTMLInputElement && !['checkbox', 'radio', 'button', 'range'].includes(t.type)) || (t instanceof HTMLElement && t.isContentEditable);
   const onKey = (e: KeyboardEvent) => {
-    if (typing(e.target)) return;
+    if (typing(e.target) || muted) return;
     const mod = e.ctrlKey || e.metaKey;
     if ((e.key === 'i' || e.key === 'I') && !mod && !e.altKey) { toggle(); stop(e); return; }
     if (!on) return;
