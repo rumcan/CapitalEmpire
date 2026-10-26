@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>P23 m0: the information architecture</title>
+<link rel="stylesheet" href="kit.css">
+<style>
+  body { background: #141711; }
+  .stage { padding: 22px 26px; background: radial-gradient(1200px 600px at 30% 0%, #1f2a18, #121510); }
+  h1 { margin: 0; font-family: Georgia, serif; font-size: 28px; color: var(--gold-hi); }
+  .lead { font-size: 13.5px; color: #cfc8b6; margin-top: 4px; }
+  .cols { display: grid; grid-template-columns: 1.02fr 1.2fr 1.1fr 1.1fr 1fr 1fr; gap: 10px; margin-top: 16px; }
+  .col { border-radius: 16px; background: rgba(20,21,25,.9); border: 1px solid var(--line); padding: 12px 12px 10px; }
+  .col.town { border-color: rgba(125,211,252,.25); }
+  .col h3 { margin: 0; display: flex; align-items: center; gap: 8px; font-family: Georgia, serif; font-size: 18px; }
+  .col h3 img { width: 26px; height: 26px; }
+  .col h3 .k { margin-left: auto; font-family: "Segoe UI", sans-serif; font-size: 11px; color: var(--dim); font-weight: 700; }
+  .col .what { font-size: 11.5px; color: var(--muted); margin: 3px 0 8px; min-height: 30px; }
+  .lvl { font-size: 9.5px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; margin: 9px 0 4px; display: flex; align-items: center; gap: 6px; }
+  .lvl.b { color: #86efac; } .lvl.u { color: #fbbf24; } .lvl.m { color: #a5b4fc; }
+  .lvl:after { content: ''; flex: 1; height: 1px; background: currentColor; opacity: .25; }
+  .it { font-size: 12px; color: #e6e0d0; padding: 2px 0; line-height: 1.35; }
+  .it .s { color: var(--dim); font-size: 11px; }
+  .group { font-size: 10px; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; color: var(--dim); margin: 0 0 6px 4px; }
+  .bottom { display: grid; grid-template-columns: 1.15fr 1fr 1fr; gap: 10px; margin-top: 12px; }
+  .legend { display: flex; gap: 14px; font-size: 11.5px; color: var(--muted); margin-top: 10px; }
+  .legend b { font-size: 10px; letter-spacing: .14em; }
+</style></head>
+<body><div class="stage">
+  <h1>The course town: one rail, grouped by what you build</h1>
+  <div class="lead">Holes are parks, paths and drives are streets, course buildings are houses. Build tools live on the left rail; reports, money and views live in the top bar. Each tool has one panel and one collapsible <b>More options</b> drawer (never a third level).</div>
+  <div class="row" style="gap:10px;margin-top:14px">
+    <div class="group" style="width:180px;margin:0">Everywhere</div><div class="group" style="flex:3.4;margin:0;color:#e9c46a">Course: the park town you build</div><div class="group" style="flex:2;margin:0;color:#7dd3fc">Town: unlocks with the tour's invitation</div>
+  </div>
+  <div class="cols">
+    <div class="col">
+      <h3><img src="../../../../src/assets/ui/icons/compass.webp">Select<span class="k">V</span></h3>
+      <div class="what">Click anything: its card opens in the panel. Pan, zoom, inspect.</div>
+      <div class="lvl b">Always</div>
+      <div class="it">Hole card: par, length, grow-in, quality, checks with Fix, money</div>
+      <div class="it">Edit shape · Move · Delete</div>
+      <div class="it">Path, building, car, junction cards</div>
+      <div class="it">Land block: <b>Buy this block</b></div>
+      <div class="lvl b" style="margin-top:14px">Remove · X</div>
+      <div class="it">Paths, roads, buildings, trees, props</div>
+      <div class="it s">surfaces: Erase in Holes (Alt) · holes: Delete on the card</div>
+    </div>
+    <div class="col">
+      <h3><img src="../../../../src/assets/ui/icons/trophy.webp">Holes<span class="k">C</span></h3>
+      <div class="what">Each hole is a park: rough it in with New hole, shape it in 1 m cells.</div>
+      <div class="lvl b">Beginner</div>
+      <div class="it"><b>New hole</b>: tee, green, handles, Build</div>
+      <div class="it">Shape by hand: Fairway · Green · Tee</div>
+      <div class="it">Sizes 1 · 2×2 · 3×3 · 4×4 · Erase (Alt)</div>
+      <div class="it">Your holes: badges, par, state</div>
+      <div class="lvl u">After hole 1</div>
+      <div class="it">Rough · Bunker · Water</div>
+      <div class="lvl m">More options</div>
+      <div class="it">Fill: Brush · Box · Lasso · Stamps</div>
+      <div class="it">Over others · Which hole · Seed or sod</div>
+      <div class="it">Fescue, waste · round brush · stripes · collars · ground height · saved holes</div>
+    </div>
+    <div class="col">
+      <h3><img src="../../../../src/assets/ui/icons/sidewalk.webp">Paths<span class="k">P</span></h3>
+      <div class="what">The streets: cart paths for golfers, drives for cars. Drawn like roads.</div>
+      <div class="lvl b">Beginner</div>
+      <div class="it">Cart paths: walking path · dirt</div>
+      <div class="it">Drives: gravel drive</div>
+      <div class="it">Draw · Upgrade (in place) · snaps to greens, tees, fronts, roads</div>
+      <div class="lvl u">After hole 1</div>
+      <div class="it">Cement slab path</div>
+      <div class="lvl u">Tour levels</div>
+      <div class="it">Paved path (2) · paved drive (2) · avenues (3)</div>
+      <div class="lvl m">More options</div>
+      <div class="it">Trees / median variants · 45° or 90° bends · replace · don't join · downgrade</div>
+    </div>
+    <div class="col">
+      <h3><img src="../../../../src/assets/ui/icons/buildings.webp">Buildings<span class="k">B</span></h3>
+      <div class="what">The houses: they face a drive or path and snap to it.</div>
+      <div class="lvl b">Beginner</div>
+      <div class="it">Course: <b>Clubhouse</b> (one only)</div>
+      <div class="lvl u">After hole 1 / the clubhouse</div>
+      <div class="it">Pro shop · cart barn · halfway house (9 holes)</div>
+      <div class="lvl u">Invited by the tour</div>
+      <div class="it">Tournament tab: tents, stands, gates, toilets (rent or buy)</div>
+      <div class="lvl u">Later (G9)</div>
+      <div class="it">Homes tab: the course's own houses</div>
+      <div class="lvl m">More options</div>
+      <div class="it">Free turn · no snap · show catchments</div>
+    </div>
+    <div class="col">
+      <h3><img src="../../../../src/assets/ui/icons/forest.webp">Landscape<span class="k">L</span></h3>
+      <div class="what">Trees and gardens that frame the holes.</div>
+      <div class="lvl u">After hole 1</div>
+      <div class="it">Trees · shrubs · flower beds (brushes)</div>
+      <div class="it">Pine straw · mulch (cell surfaces)</div>
+      <div class="lvl m">More options</div>
+      <div class="it">Plant picks · spacing · sizes</div>
+      <div class="it">Decor ground (the old Paint tool: plazas, paving, free shapes)</div>
+    </div>
+    <div class="col town">
+      <h3><img src="../../../../src/assets/ui/icons/road.webp">Roads<span class="k">R</span></h3>
+      <div class="what">The town's streets around your course.</div>
+      <div class="lvl u">Invited (or 3 holes)</div>
+      <div class="it">Build · Upgrade · Downgrade</div>
+      <div class="it">Junctions tab (lights, roundabouts)</div>
+      <h3 style="margin-top:12px"><img src="../../../../src/assets/ui/icons/bus.webp">Transport<span class="k">T</span></h3>
+      <div class="lvl u">Invited (or 3 holes)</div>
+      <div class="it">Car parks · shuttle routes · pay plaza</div>
+      <div class="it s">the range's car park meets tier 1</div>
+    </div>
+  </div>
+  <div class="bottom">
+    <div class="col"><h3 style="font-size:16px">Top bar: where you are, what you have</h3>
+      <div class="it" style="margin-top:6px"><b>Season chip</b>: "Founding season · 3 of 9 holes" or "Club Championship in 4 months" · click: the tour card (needs checklist with Fix buttons, the course report: holes, quality, upkeep, care)</div>
+      <div class="it"><b>Money</b>: the budget · speed · <b>Next season</b> (skip) · View ▾ · Settings · Help</div>
+      <div class="it s">Gone from the top bar: Course, Land, Holes, Event, Grass, All tools, Skip label changes</div></div>
+    <div class="col"><h3 style="font-size:16px">View ▾ (overlays, any tool)</h3>
+      <div class="it" style="margin-top:6px">Map grid (G) · Land for sale (prices on blocks) · Course plan (flat colours, numbers, lines) · Traffic (F) · Grass health · Golfer moods (later)</div>
+      <div class="it s">A tool may open its overlay itself: Paths shows the plan; a refused brush offers Land for sale</div></div>
+    <div class="col"><h3 style="font-size:16px">Settings</h3>
+      <div class="it" style="margin-top:6px">Show every tool now (for experienced players) · Effects and motion · Shadows · Night · Developer (F3)</div>
+      <div class="it s">Old saves open with every tool, as today</div></div>
+  </div>
+  <div class="legend"><span><b class="ok">BEGINNER</b> on screen from minute 0</span><span><b class="warn">UNLOCK</b> appears when the course earns it (a NEW badge)</span><span><b style="color:#a5b4fc">MORE OPTIONS</b> one click away, collapsed, remembered</span></div>
+</div></body></html>

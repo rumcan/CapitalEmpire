@@ -152,6 +152,71 @@ for (const dirName of fs.existsSync(PEOPLE3D) ? fs.readdirSync(PEOPLE3D).sort() 
 }
 if (!WALK_FRAMES) { console.warn('no 3D people in art/people3d (run render-person-3d.mjs)'); WALK_FRAMES = 9; }
 
+// ---- 1b (continued). the spectators and the golfers (art/spectators, art/golfers: the same 3D rig; a folder is a template sheet plus clip
+// sheets). They pack onto the walker pages with the townspeople, at the same scale. A person's frames per facing: the template's 9 (idle,
+// walk1..8), then its clips in the order given. Each clip sheet has its own frame size and anchor: a frame is cut at its own size and moved
+// so its feet land on the template's feet (the anchors differ by (template - own) x k), so every clip of a person stands on one point.
+const TEMPLATE_FRAMES = 9, SPEC_CLIPS = [['clap', 4], ['cheer', 6], ['sit', 2], ['sit_clap', 4]], GOLF_CLIPS = [['golf_drive', 12]];
+/** a sheet cut into trimmed frames: for each facing (WALK_DIRS) its frames in order; tmpl is the template json (the reference feet) */
+async function cutSheet(sheet, json, tmpl) {
+  const k = 0.5, fw = json.frameWidth, fh = json.frameHeight, W = Math.round(fw * k * MIP0), H = Math.round(fh * k * MIP0);
+  const sx = fw * k / W, sy = fh * k / H, dx = (tmpl.anchor.x - json.anchor.x) * k, dy = (tmpl.anchor.y - json.anchor.y) * k;   // display px per packed px, and the feet shift
+  const out = {};
+  for (const d of WALK_DIRS) {
+    const row = json.directions.indexOf(d); out[d] = [];
+    for (let fr = 0; fr < json.frames.length; fr++) {
+      const data = await sharp(sheet).extract({ left: fr * fw, top: row * fh, width: fw, height: fh }).resize(W, H, { kernel: 'lanczos3' }).ensureAlpha().raw().toBuffer();
+      const t = trim(data, W, H);
+      out[d].push({ crop: t.crop, cw: t.cw, ch: t.ch, qx0: t.x0 * sx + dx, qy0: t.y0 * sy + dy, qx1: (t.x1 + 1) * sx + dx, qy1: (t.y1 + 1) * sy + dy });
+    }
+  }
+  return out;
+}
+/** the people of one crowd group: each `prefix*` folder of art/<dir> with its template sheet and every clip sheet ([name, frames]). A folder
+ *  missing a sheet is logged and skipped. Returns the people ({ id, row: the table row, tmpl, cj: the clip jsons by name }), the walker frames in
+ *  order (person, facing, frame) and the clips (idle, walk, then the sheets: first frame in the row, frame count, times, loop, from the first person) */
+async function crowd(dir, prefix, label, sheets) {
+  const root = path.join(ROOT, 'art', dir), people = [], frames = [], k = 0.5;
+  const sig = j => JSON.stringify([j.frames.length, j.times, j.loop]);
+  for (const name of fs.existsSync(root) ? fs.readdirSync(root).sort() : []) {
+    if (!name.startsWith(prefix)) continue;
+    const id = `${label}:${name}`, base = path.join(root, name);
+    if (REMOVED.has(id)) continue;
+    const missing = [];
+    if (!fs.existsSync(path.join(base, 'sheet.json')) || !fs.existsSync(path.join(base, 'sheet.webp'))) missing.push('template');
+    for (const [c] of sheets) if (!fs.existsSync(path.join(base, c + '.json')) || !fs.existsSync(path.join(base, c + '.webp'))) missing.push(c);
+    if (missing.length) { console.warn(`${label} ${name}: no ${missing.join(', ')} sheet yet, skipped`); continue; }
+    const tmpl = JSON.parse(fs.readFileSync(path.join(base, 'sheet.json'), 'utf8'));
+    if (tmpl.directions.join(' ') !== WALK_DIRS.join(' ')) throw new Error(`${id}: rows ${tmpl.directions.join(' ')}, expected ${WALK_DIRS.join(' ')}`);
+    if (tmpl.frames.length !== TEMPLATE_FRAMES) throw new Error(`${id}: ${tmpl.frames.length} frames, expected ${TEMPLATE_FRAMES} (idle, walk1..8)`);
+    const cj = {};
+    for (const [c, n] of sheets) {
+      const j = JSON.parse(fs.readFileSync(path.join(base, c + '.json'), 'utf8'));
+      if (j.directions.join(' ') !== WALK_DIRS.join(' ')) throw new Error(`${id} ${c}: rows ${j.directions.join(' ')}, expected ${WALK_DIRS.join(' ')}`);
+      if (j.frames.length !== n) throw new Error(`${id} ${c}: ${j.frames.length} frames, expected ${n}`);
+      if (!Array.isArray(j.times) || j.times.length !== n || typeof j.loop !== 'boolean') throw new Error(`${id} ${c}: needs ${n} times and a loop flag`);
+      cj[c] = j;
+    }
+    const first = people[0];
+    if (first) {
+      for (const [c] of sheets) if (sig(cj[c]) !== sig(first.cj[c])) console.warn(`${id}: the ${c} clip differs from ${first.id} (frames, times or loop); the group uses ${first.id}'s`);
+      if (tmpl.walkFps !== first.tmpl.walkFps) console.warn(`${id}: walkFps ${tmpl.walkFps} differs from ${first.id} (${first.tmpl.walkFps}); the walk times use ${first.id}'s`);
+    }
+    const parts = [await cutSheet(path.join(base, 'sheet.webp'), tmpl, tmpl)];
+    for (const [c] of sheets) parts.push(await cutSheet(path.join(base, c + '.webp'), cj[c], tmpl));
+    const pi = people.length;
+    for (const d of WALK_DIRS) for (const part of parts) for (const f of part[d]) frames.push({ id: `${id}:${d}:${frames.length}`, person: pi, crop: f.crop, cw: f.cw, ch: f.ch, qx0: f.qx0, qy0: f.qy0, qx1: f.qx1, qy1: f.qy1 });
+    people.push({ id, tmpl, cj, row: { id, w: +(tmpl.frameWidth * k).toFixed(2), h: +(tmpl.frameHeight * k).toFixed(2), ax: +(tmpl.anchor.x * k).toFixed(2), ay: +(tmpl.anchor.y * k).toFixed(2), m: tmpl.heightMetres } });
+  }
+  // the clips: idle and walk are the template's frames, the sheets follow in order; their values are the first person's (the same for all)
+  const first = people[0], walkN = TEMPLATE_FRAMES - 1;
+  const clips = { idle: { start: 0, n: 1, times: [0], loop: true }, walk: { start: 1, n: walkN, times: first ? Array.from({ length: walkN }, (_, i) => +(i / (first.tmpl.walkFps || 8)).toFixed(4)) : [0], loop: true } };
+  let start = TEMPLATE_FRAMES;
+  for (const [c, n] of sheets) { clips[c] = { start, n, times: first ? first.cj[c].times : [0], loop: first ? first.cj[c].loop : true }; start += n; }
+  return { people, frames, clips, frameCount: start };
+}
+const spec = await crowd('spectators', 'spec_', 'spectator', SPEC_CLIPS), golf = await crowd('golfers', 'golf_', 'golfer', GOLF_CLIPS);
+
 // ---- 1c. the baked house lots (lot-variants.mjs): one picture per variant, rendered straight at mip-0 resolution, the whole lot
 // as its footprint and the house as its planner block
 for (const v of lotVariants().filter(v => !REMOVED.has(v.id))) {
@@ -183,7 +248,9 @@ function pack(list, gut, align) {
   }
 }
 pack(sprites, GUT, ALIGN);
-if (walkers.length) pack(walkers, 4, 4);
+// the walker pages hold the townspeople, the spectators and the golfers together
+const walkerList = [...walkers, ...spec.frames, ...golf.frames];
+if (walkerList.length) pack(walkerList, 4, 4);
 
 // ---- 3. pages and their mips
 const files = [];
@@ -217,6 +284,29 @@ const lib = sprites.map(s => {
   e.quad = [+s.qx0.toFixed(2), +s.qy0.toFixed(2), +s.qx1.toFixed(2), +s.qy1.toFixed(2)];
   return e;
 });
+/** walker frames as numbers (nine per frame): page, u0, v0, u1, v1, then the quad x0, y0, x1, y1 */
+const flatFrames = list => list.map(w => [w.page, ...[w.px / PAGE, w.py / PAGE, (w.px + w.cw) / PAGE, (w.py + w.ch) / PAGE].map(v => +v.toFixed(6)), ...[w.qx0, w.qy0, w.qx1, w.qy1].map(v => +v.toFixed(2))].join(',')).join(',');
+/** the generated lines of one crowd group (P: its constant prefix, cat: its LIBRARY category, keys: its clip names, seat: the spectators' seat height):
+ *  the table, the frame count, the clips, the frames, and the LIBRARY items pushed after the townspeople's (the base is the group's first frame) */
+function crowdLines(P, cat, group, keys, seat) {
+  const rows = group.people.map(p => { if (!seat) return p.row; const s = p.cj.sit.seatHeightMetres; if (typeof s !== 'number') throw new Error(`${p.id}: sit.json has no seatHeightMetres`); return { ...p.row, seat: s }; });
+  const T = seat ? '; seat: number' : '';
+  return [
+    `/** the ${cat.toLowerCase()} (3D renders): display size, anchor (feet) at the native scale, height in metres${seat ? ', seat height in metres (sit)' : ''} */`,
+    `export const @P_PEOPLE: { id: string; w: number; h: number; ax: number; ay: number; m: number${T} }[] = ${JSON.stringify(rows)};`,
+    '/** frames per facing: the template (idle, walk1..8), then the clips in the order of @P_CLIPS */',
+    `export const @P_FRAMES = ${group.frameCount};`,
+    `export const @P_CLIPS: Record<${keys}, PeopleClip> = ${JSON.stringify(group.clips)};`,
+    '/** every @P frame (person, facing, frame in order), in the walker encoding */',
+    `const @P_WF: number[] = [${flatFrames(group.frames)}];`,
+    '/** the index of the first @P frame in LIBRARY: frame (person p, facing d, frame f) is @P_BASE + (p * WALK_DIRS.length + d) * @P_FRAMES + f */',
+    'export const @P_BASE = LIBRARY.length;',
+    'for (let i = 0; i < @P_WF.length / 9; i++) {',
+    '  const p = @P_PEOPLE[Math.floor(i / (WALK_DIRS.length * @P_FRAMES))], o = i * 9;',
+    "  LIBRARY.push({ id: `${p.id}:${i % (WALK_DIRS.length * @P_FRAMES)}`, name: p.id, cat: '@CAT', kind: 'walker', w: p.w, h: p.h, ax: p.ax, ay: p.ay, boxes: [{ hx: 0.25, hy: 0.25, dx: 0, dy: 0 }], solid: 0, big: false, door: false, cost: 0, tex: [@P_WF[o], @P_WF[o + 1], @P_WF[o + 2], @P_WF[o + 3], @P_WF[o + 4]], quad: [@P_WF[o + 5], @P_WF[o + 6], @P_WF[o + 7], @P_WF[o + 8]] });",
+    '}',
+  ].map(s => s.replaceAll('@P', P).replaceAll('@CAT', cat));
+}
 fs.writeFileSync(path.join(ROOT, 'src/game/library.ts'), [
   '// Generated by scripts/assets/prep-sprites.mjs from the Maple Falls town export (TrickOrTreat public/assets/town-built/town.json).',
   '// w,h,ax,ay are display px at the native 128 px-per-tile scale; boxes are footprints in metres (2 m per tile).',
@@ -242,13 +332,17 @@ fs.writeFileSync(path.join(ROOT, 'src/game/library.ts'), [
   '/** the facings of every person (each drawn for real, none mirrored) and frames per facing (0 idle, 1 .. WALK_FRAMES-1 the walk) */',
   `export const WALK_DIRS = ${JSON.stringify(WALK_DIRS)}, WALK_FRAMES = ${WALK_FRAMES};`,
   '/** every walker frame (person, facing, frame in order): page, u0, v0, u1, v1, then the quad x0, y0, x1, y1 */',
-  `const WF = [${walkers.map(w => [w.page, ...[w.px / PAGE, w.py / PAGE, (w.px + w.cw) / PAGE, (w.py + w.ch) / PAGE].map(v => +v.toFixed(6)), ...[w.qx0, w.qy0, w.qx1, w.qy1].map(v => +v.toFixed(2))].join(',')).join(',')}];`,
+  `const WF = [${flatFrames(walkers)}];`,
   '/** the index of the first walker frame in LIBRARY: frame (person p, facing d, frame f) is WALKER_BASE + (p * WALK_DIRS.length + d) * WALK_FRAMES + f */',
   'export const WALKER_BASE = LIBRARY.length;',
   'for (let i = 0; i < WF.length / 9; i++) {',
   '  const p = WALKER_PEOPLE[Math.floor(i / (WALK_DIRS.length * WALK_FRAMES))], o = i * 9;',
   "  LIBRARY.push({ id: `${p.id}:${i % (WALK_DIRS.length * WALK_FRAMES)}`, name: p.id, cat: 'Townspeople', kind: 'walker', w: p.w, h: p.h, ax: p.ax, ay: p.ay, boxes: [{ hx: 0.25, hy: 0.25, dx: 0, dy: 0 }], solid: 0, big: false, door: false, cost: 0, tex: [WF[o], WF[o + 1], WF[o + 2], WF[o + 3], WF[o + 4]], quad: [WF[o + 5], WF[o + 6], WF[o + 7], WF[o + 8]] });",
   '}',
+  '/** a clip: its first frame in the row of its person, its frame count, the seconds of each frame in the source clip, and whether it loops */',
+  'export interface PeopleClip { start: number; n: number; times: number[]; loop: boolean }',
+  ...crowdLines('SPECTATOR', 'Spectators', spec, "'idle' | 'walk' | 'clap' | 'cheer' | 'sit' | 'sit_clap'", true),
+  ...crowdLines('GOLFER', 'Golfers', golf, "'idle' | 'walk' | 'golf_drive'", false),
   'appendCars(LIBRARY, ATLAS_PAGES);',
   'appendEast(LIBRARY, ATLAS_PAGES);',
   'appendBusinesses(LIBRARY, ATLAS_PAGES);',
@@ -257,6 +351,7 @@ fs.writeFileSync(path.join(ROOT, 'src/game/library.ts'), [
   'appendViews(LIBRARY, ATLAS_PAGES);',
   'appendTrees(LIBRARY, ATLAS_PAGES);', ''].join('\n'));
 console.log(`walkers: ${people.length} people, ${walkers.length} frames; frame fixes: ${flipped.length ? flipped.join(', ') : 'none'}`);
+console.log(`spectators: ${spec.people.length} people, ${spec.frames.length} frames; golfers: ${golf.people.length} people, ${golf.frames.length} frames`);
 console.log(`walk frames still needed: ${needed.length}${needed.length ? ` (${needed.join(', ')})` : ''}`);
 const used = sprites.reduce((s, x) => s + (x.cw + 2 * GUT) * (x.ch + 2 * GUT), 0);
 console.log(`sprites ${sprites.length}, pages ${pages.length}, fill ${(used / (pages.length * PAGE * PAGE) * 100).toFixed(0)}%`);

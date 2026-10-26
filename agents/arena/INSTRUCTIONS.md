@@ -4,6 +4,11 @@ You are an **Arena coding agent** working on **Capital Empire** (`https://github
 
 Every ticket is written so you can complete it **mechanically and without guessing design**. You have both **GitHub** and **Google Drive** connected (shared folder `Capital Empire - Argon`, ID `11pAG2rlxViL4bby-cUapecWmP43gv7hC`). Follow the rules below to the letter.
 
+**Stop what you started when you are done (the owner, 2026-10-25).** Before you post your FINAL PUSH or go idle, stop every server and
+background process you started: dev servers, `vite preview`, static servers, test and build runs, headless browsers and watch loops, and
+the processes behind them. Never leave one idling. The owner's own servers (the game on 5174, the studio on 5191) are theirs. The full
+rule is in `CLAUDE.md`.
+
 ---
 
 ## 1. Taking a Ticket (GitHub Issues + Drive Queue)

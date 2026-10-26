@@ -2,8 +2,9 @@
 // or verges, median, lane lines, centre line, shoulders and trees taken from the class itself (so a new class or variant draws itself).
 import type { RoadClass } from '../game/network';
 
-const SURFACE: Record<string, string> = { gravel: '#9b8668', asphaltWorn: '#555a61', asphalt: '#43474e', asphaltDark: '#33363c' };
-const WALK: Record<string, string> = { slabs: '#bdb5a5', gravel: '#9d8d70' };
+const SURFACE: Record<string, string> = { gravel: '#9b8668', asphaltWorn: '#555a61', asphalt: '#43474e', asphaltDark: '#33363c', dirt: '#b8976a', cement: '#d4d0c7' };
+/** turf: no verge, the grass runs up to the edge (the cart paths, T084) */
+const WALK: Record<string, string> = { slabs: '#bdb5a5', gravel: '#9d8d70', turf: '#4f6b2c' };
 const W = 112, H = 48, K = 3; // picture size (px) and px per tile across the road
 
 export function RoadThumb({ cls, w = W, h = H }: { cls: RoadClass; w?: number; h?: number }) {
@@ -15,8 +16,13 @@ export function RoadThumb({ cls, w = W, h = H }: { cls: RoadClass; w?: number; h
   parts.push(band(-cls.h, cls.h, SURFACE[cls.tex] ?? '#43474e', 'surface'));
   if (cls.median) parts.push(band(-cls.median / 2, cls.median / 2, '#5d7a3a', 'median'));
   if (cls.medianTrees) for (let x = 6; x < W; x += 14) parts.push(<circle key={`mt${x}`} cx={x} cy={y(0)} r={2.6} fill="#2f5a24" />);
+  // a garden median (P19): flower dots, pink and yellow alternating, where the trees would stand
+  if (cls.medianGarden) for (let x = 6, k = 0; x < W; x += 14, k++) parts.push(<circle key={`mg${x}`} cx={x} cy={y(0)} r={1.8} fill={k % 2 ? '#f2d24b' : '#e879a8'} />);
   if (cls.streetTrees) for (const s of [-1, 1]) for (let x = 3; x < W; x += 16) parts.push(<circle key={`st${s}${x}`} cx={x} cy={y(s * (half - 0.35))} r={2.4} fill="#2f5a24" />);
   if (cls.shoulder) for (const s of [-1, 1]) parts.push(line(s * (cls.h - cls.shoulder), '#e7c24a', undefined, `sh${s}`, 0.7));
+  // the starter cart paths' marks (T084): slab joints across a cement path, wheel ruts and a grass strip along a dirt one
+  if (cls.tex === 'cement') for (let x = 0; x < W + 40; x += 9) parts.push(<line key={`j${x}`} x1={x - 20} x2={x - 20} y1={y(-cls.h)} y2={y(cls.h)} stroke="#8a857b" strokeWidth={0.7} />);
+  if (cls.tex === 'dirt') { for (const s of [-1, 1]) parts.push(line(s * cls.h * 0.5, '#8f6f45', undefined, `rut${s}`, 0.8)); parts.push(line(0, '#6f8f3e', '4 2', 'grass', 0.8)); }
   // lane lines: a one-way class lists them across the whole width, a two-way class for one side (mirrored)
   const lanes = cls.oneway ? cls.laneLines : cls.laneLines.flatMap(o => [o, -o]);
   lanes.forEach((o, i) => parts.push(line(o, '#e8e8e2', '4 3', `ll${i}`, 0.7)));

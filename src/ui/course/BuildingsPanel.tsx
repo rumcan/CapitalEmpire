@@ -1,0 +1,31 @@
+import type { Game } from '../../game/engine';
+import { BUSINESS, CLUBHOUSE_RANGE_COST } from '../../game/business/catalogue';
+import { LIBRARY } from '../../game/library';
+import { Thumb } from '../Thumb';
+import { ToolHead } from '../ToolHead';
+
+/** the starting clubhouse's picture (the tin-and-tarp shack the game places: business/art.ts) */
+const CLUB_ART = LIBRARY.find(it => it.id === 'golf:clubhouse-shanty');
+
+/** the Buildings panel (plan P23 4.8, P1-E; was the Course tool's Buildings tab): the houses of the course town. Phase 1 has the clubhouse,
+ *  a card with its picture, price and "one only"; picking it arms its ghost (Buildings arms it on opening until it stands), placed as before:
+ *  its front snaps to a drive within 12 m, R turns it, Esc puts it down */
+export function BuildingsPanel({ game }: { game: Game }) {
+  const built = game.bizDefs.some(d => d.type === 'clubhouse'), placing = game.clubPlacing, B = BUSINESS.clubhouse;
+  return (
+    <div className="tp" data-panel="buildings">
+      <ToolHead icon="house" title="Buildings" desc="The houses of your course town, the clubhouse first" />
+      <button className={`card gap-1 ${placing ? 'card-on' : ''}`} data-card="clubhouse" aria-pressed={placing} disabled={built} onClick={() => game.placeClubhouse(!placing)} title={built ? 'Your clubhouse stands: there is one only' : placing ? 'Placing: click beside a drive (Esc puts it down)' : 'Pick to place it'}>
+        <div className="flex w-full items-center gap-3">
+          {CLUB_ART && <div className="grid h-16 w-20 shrink-0 place-items-center overflow-hidden rounded-lg bg-black/30"><Thumb it={CLUB_ART} size={60} /></div>}
+          <div className="min-w-0 flex-1">
+            <div className="flex items-baseline justify-between gap-2"><span className="font-semibold">Clubhouse</span><span className="text-amber-200">{built ? '✓ Built' : `$${CLUBHOUSE_RANGE_COST.toLocaleString()}`}</span></div>
+            <div className="sub-line">{`${B.footprint.w} × ${B.footprint.h} tiles · one only`}</div>
+          </div>
+        </div>
+        <div className="sub-line leading-snug">The course's front door: green fees start, the tournament's crowd heads here, and the tour needs it before it invites you.</div>
+      </button>
+      <p className="mt-2 leading-snug">{built ? 'Your clubhouse stands: there is one only.' : placing ? 'Click beside a drive on your land (its front snaps to the drive); R turns it, Esc puts it down.' : 'Pick the clubhouse to place it.'}</p>
+    </div>
+  );
+}

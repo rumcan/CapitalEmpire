@@ -1,0 +1,40 @@
+{
+  "id": "person:3d:town_w_shopper",
+  "name": "town_w_shopper (3D template)",
+  "size": "adult",
+  "heightMetres": 1.63,
+  "frameWidth": 160,
+  "frameHeight": 253,
+  "anchor": {
+    "x": 80,
+    "y": 243
+  },
+  "directions": [
+    "S",
+    "SW",
+    "W",
+    "NW",
+    "N",
+    "NE",
+    "E",
+    "SE"
+  ],
+  "frames": [
+    "idle",
+    "walk1",
+    "walk2",
+    "walk3",
+    "walk4",
+    "walk5",
+    "walk6",
+    "walk7",
+    "walk8"
+  ],
+  "walkFps": 5.7,
+  "mirrored": {},
+  "source": "output/cut-test/town_w_shopper",
+  "clips": {
+    "walk": "Armature|Casual_Walk|baselayer 4.20s, stride 1.40s, body turned -2 deg",
+    "idle": "Armature|Idle|baselayer"
+  }
+}

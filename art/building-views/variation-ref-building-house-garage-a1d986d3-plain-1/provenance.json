@@ -1,0 +1,169 @@
+{
+  "id": "variation:ref-building-house-garage-a1d986d3-plain:1",
+  "generator": "image_gen",
+  "generated": "2026-10-24",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-fd66cbbb-6d88-447d-b137-dc2215d410b5.png",
+  "prompt": "SQUARE 1:1 CANVAS, 2048x2048. Four small isolated building cutouts, widely separated in a 2x2 grid. All 4 silhouettes COMPLETE, each occupies only 60% of its cell height, with a fully transparent 100-pixel border all around and between sprites. ONE GAME ASSET CUTOUT on EMPTY TRANSPARENT ALPHA, RGBA PNG. Reference1 is STYLE ONLY: the Maple Bean street's coherent miniature 3D illustration, softly textured matte materials, restrained rich colours, charcoal roofs, warm amber lamps, readable fine detail, early dusk with remaining daylight. Reference2 shows IDENTITY ONLY: preserve this building's architecture, not its old rendering or blue night cast. It must look natural beside the buildings in reference1. Fixed 2:1 isometric camera and SCREEN UPPER RIGHT SUN in every view; right-facing planes warm, left-facing planes cooler. Exactly four true rigid quarter turns of the SAME physical object on a square 2x2 sheet: NE front+right, SE right+back, SW back+left, NW left+front. Same roof, windows, equipment and physical scale throughout; reconstruct hidden sides, never mirror a front. Centre each complete sprite within its own cell with20% blank margins on every side. Empty alpha in corners, gutters and gaps, zero clipping. NO BACKDROP OR FLOOR: no stage, ground surface, paving, terrain tile, foliage, leaves, broad shadow, haze, gradient, checkerboard, caption, divider, view label or frame. No people, vehicles, Halloween, pumpkins, skulls, cobwebs, spooky signage or decorative garlands. Only the physical building and integral structural parts, no attached landscape.  Ground isolation is critical: every pixel outside the physical building, steps and supports must have alpha=0. No grey floor patch or studio surface. Geometry audit: name four physical facades A front,B right,C rear,D left internally, then draw A+B, B+C, C+D, D+A respectively; unique front-only entrance must appear only in the two views which face A. Rear views need genuinely reconstructed rear facades, not four front variations. Do not copy reference camera four times.  Subject library ID variation:ref-building-house-garage-a1d986d3-plain:1. Rebuild this exact architecture in the shared Maple Bean art theme. Keep building height, wing/deck/garage position and roof shape. True opposite rear facades, no duplicated entrance/porch on all four sides. If identity is a rear view, retain it as one real rear face and reconstruct a sensible front; never clone the rear facade four times. Keep full roof/chimney and steps well clear of all canvas edges; small sprites with generous transparent space, no floors or yards.",
+  "references": [
+    {
+      "role": "authoritative-theme",
+      "file": "art/theme-consistency/references/theme-authoritative.png",
+      "sha256": "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2"
+    },
+    {
+      "role": "existing-subject-identity",
+      "id": "variation:ref-building-house-garage-a1d986d3-plain:1",
+      "direction": null,
+      "file": "art/theme-consistency/exports/buildings/variation-ref-building-house-garage-a1d986d3-plain-1.configured@2x.png",
+      "sha256": "2d98919d3d83475db465cadcadc7a4d4b439977cab19acd7d2e2eb78102e0d91"
+    }
+  ],
+  "integrationStatus": "ready",
+  "integrationReason": "Garage doors, front workbench and smaller service door distinguish front; air conditioner and blank rear lower wall follow correct turns. Pixel-preserving v2 layout inspected on magenta; alpha audit passes with zero crop/split warnings.",
+  "layoutCorrection": {
+    "method": "Pixel-preserving clear-gap split and centred four-cell repack; no generation, resizing or repainting.",
+    "originalSheet": "art/theme-consistency/generated/buildings/variation-ref-building-house-garage-a1d986d3-plain-1-4views-v1.png",
+    "originalSheetSha256": "cc991adbf49bfc72d2a7555d6202a2d261ed17c7258136f4e28ebc6589a0a1b2",
+    "originalDimensions": [
+      1254,
+      1254
+    ],
+    "outputDimensions": [
+      2048,
+      2048
+    ],
+    "outputSheetSha256": "5a6ceb69bc4b367ee8a270da14ff4119334737fc5154a2e197bf0ea109fc487e",
+    "cellSize": 1024,
+    "minimumCellMarginFraction": 0.15,
+    "padding": 4,
+    "partitionMode": "row-first",
+    "rowFirstFailure": null,
+    "rowGap": {
+      "start": 606,
+      "endExclusive": 674,
+      "midpoint": 640,
+      "alphaThreshold": 8
+    },
+    "columnGaps": [
+      {
+        "row": 0,
+        "start": 626,
+        "endExclusive": 678,
+        "midpoint": 652,
+        "alphaThreshold": 8
+      },
+      {
+        "row": 1,
+        "start": 588,
+        "endExclusive": 674,
+        "midpoint": 631,
+        "alphaThreshold": 8
+      }
+    ],
+    "globalColumnGap": null,
+    "columnRowGaps": [],
+    "extractionRects": [
+      {
+        "direction": "NE",
+        "row": 0,
+        "column": 0,
+        "extraction": {
+          "left": 23,
+          "top": 0,
+          "width": 629,
+          "height": 623
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 192780,
+        "visibleAlphaPixelsThreshold8": 181767,
+        "nonzeroRgbaSha256": "29d7af2758195db27e88efc9a3a3b1a5db5ec83a7e04221d2f7e71e0b869b136",
+        "destination": {
+          "left": 197,
+          "top": 200,
+          "width": 629,
+          "height": 623
+        }
+      },
+      {
+        "direction": "SE",
+        "row": 0,
+        "column": 1,
+        "extraction": {
+          "left": 652,
+          "top": 43,
+          "width": 574,
+          "height": 582
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 163352,
+        "visibleAlphaPixelsThreshold8": 155777,
+        "nonzeroRgbaSha256": "07475ef762ecd01cf87156d5bde52a15f93e42d18539ecf4e36a50b0f706a23a",
+        "destination": {
+          "left": 1249,
+          "top": 221,
+          "width": 574,
+          "height": 582
+        }
+      },
+      {
+        "direction": "SW",
+        "row": 1,
+        "column": 0,
+        "extraction": {
+          "left": 0,
+          "top": 664,
+          "width": 631,
+          "height": 590
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 171676,
+        "visibleAlphaPixelsThreshold8": 160309,
+        "nonzeroRgbaSha256": "19f413ad17b749c8b8ddb66732b21f343840908970aa240fd1193fcfa7f53888",
+        "destination": {
+          "left": 196,
+          "top": 1241,
+          "width": 631,
+          "height": 590
+        }
+      },
+      {
+        "direction": "NW",
+        "row": 1,
+        "column": 1,
+        "extraction": {
+          "left": 631,
+          "top": 644,
+          "width": 623,
+          "height": 598
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 178185,
+        "visibleAlphaPixelsThreshold8": 169177,
+        "nonzeroRgbaSha256": "c749b23018774ae977b47a3150141444768e9bdc1b84d1d277808d8659c40e22",
+        "destination": {
+          "left": 1224,
+          "top": 1237,
+          "width": 623,
+          "height": 598
+        }
+      }
+    ],
+    "sourcePixelCounts": {
+      "nonzeroAlphaPixels": 705993,
+      "visibleAlphaPixelsThreshold8": 667030,
+      "nonzeroRgbaSha256": "1ecf90bfd0cee0cd6fd3702dc011635f86eab29f8ba250debc4fef99259d5c25"
+    },
+    "nonzeroAndVisiblePixelConservation": true,
+    "exactVisibleRgbaConservation": true,
+    "visualReviewRequired": true,
+    "warnings": []
+  },
+  "sourceVisualReview": {
+    "reviewer": "building_variation_review",
+    "allFourViewsInspected": true,
+    "alphaCompositeBackground": "#b91b91",
+    "result": "ready",
+    "reason": "Garage doors, front workbench and smaller service door distinguish front; air conditioner and blank rear lower wall follow correct turns. Pixel-preserving v2 layout inspected on magenta; alpha audit passes with zero crop/split warnings.",
+    "reviewedAt": "2026-10-24T10:38:12.643Z"
+  }
+}

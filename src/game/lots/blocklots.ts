@@ -103,7 +103,8 @@ export function inBlock(q: number[], x: number, y: number): boolean {
 }
 
 /** the lots of one block: its inner rectangle cut by subdivide(), each cell a lot on the street of the side it faces. Null unless the
- *  block is a right-angled 4-corner face whose sides are 16-70 tiles after the street insets (a side with no ground street: null).
+ *  block is a right-angled 4-corner face whose sides are 16-70 tiles after the street insets (a side with no ground street: null, and a block
+ *  bounded by any course drive (noLots, P19) gets none).
  *  The cut is read from cache (keyed by the block's key, checked against its outline and insets) and written to it on a miss */
 export function blockLots(net: RoadNetwork, b: Block, terr: Uint8Array | null, cache: Map<string, BlockCut> = new Map()): Lot[] | null {
   if (b.pts.length !== 8) return null;
@@ -130,6 +131,8 @@ export function blockLots(net: RoadNetwork, b: Block, terr: Uint8Array | null, c
       const na = U.x * (s.a.y - A.y) - U.y * (s.a.x - A.x), nb = U.x * (s.b.y - A.y) - U.y * (s.b.x - A.x);
       if (Math.abs(na) >= 0.05 || Math.abs(nb) >= 0.05) continue;
       if (Math.min(Math.max(ta, tb), len) - Math.max(Math.min(ta, tb), 0) <= 0.01) continue;
+      // a course drive (P19, noLots) on the boundary: no town lots in this block
+      if (s.cls.noLots) return null;
       on.push(s); ins = Math.max(ins, s.cls.h + s.cls.walk + 0.5);
     }
     if (!on.length) return null;

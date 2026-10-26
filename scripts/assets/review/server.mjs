@@ -1,6 +1,8 @@
 // The sprite studio: the owner's screen for fixing the game's sprites.
 //   Library: every sprite as the game has it (cut from the atlas) and every lot decal (leaf drifts, stains: the decal strip), beside a person for scale: remove it from the game, or make it
-//            bigger or smaller everywhere it is placed (scripts/assets/removed.json, scale-overrides.json)
+//            bigger or smaller everywhere it is placed (scripts/assets/removed.json, scale-overrides.json). Each card is the picture the game draws at the size it
+//            draws it (an old building as its new-art stand-in; review/size-report.ts runs the game's own code), with the size it is sharp to at the closest
+//            zoom: a size past its picture's own pixels is refused. The game reads scale-overrides.json at runtime: a size shows after a reload of the game.
 //   Lots:    the baked house lots: click any sprite in one to move, resize, flip or delete it there (lot-edits.json)
 //   People:  every townsperson's walk (art/people3d, 8 facings x idle + 8 walk frames), animated: fix any frame that faces the wrong way (mirror it, use another frame in its
 //            place, or drop in a new picture): walker-fixes.json, the pictures in scripts/assets/walker-frames (walker-fix.mjs)
@@ -8,14 +10,17 @@
 //   Ground:  the map's base grass: two pictures (any ground picture or grass photo) with size and colour controls, mixed as the game mixes them,
 //            previewed on a block of 4 houses inside 4 streets; Save writes src/game/base-grass.json and src/assets/ground/base-grass-a/-b.webp (ground.js);
 //            and the map decals over it (nature patches, bare soil, grass patches, leaf scatters, tufts): Save decals writes src/game/map-decals.json
+//   Painted: which hand-painted family each surface wears (the golf surfaces, the map, the town lawns, the living ground, the course walls, any
+//            preset): a family picker with each family's three zoom levels, its version, scale, tint and tone; Save writes
+//            src/game/painted-surfaces.json, which a dev game from this checkout takes at once (painted.js)
 //   Rebuild: runs the asset steps again, then npm run build, so the game takes the changes.
 //   node scripts/assets/review/server.mjs [--port 5179]   then open http://127.0.0.1:5179/
-import { spawn } from 'node:child_process';
+import { execFile, spawn } from 'node:child_process';
 import fs from 'node:fs';
 import http from 'node:http';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { buildSync } from 'esbuild';
+import { build, buildSync } from 'esbuild';
 import sharp from 'sharp';
 // no file cache: sharp keeps the atlas pages it read open, and on Windows the Rebuild then cannot delete them (EPERM)
 sharp.cache(false);
@@ -32,6 +37,31 @@ const ATLAS = path.join(ROOT, 'src/assets/atlas'), CACHE = path.join(ROOT, 'outp
 fs.mkdirSync(CACHE, { recursive: true });
 const LOT_RES = 0.45;
 
+// ---------------------------------------------------------------- sizes: every sprite as the game draws it (review/size-report.ts)
+const SIZE_SRC = path.join(ROOT, 'scripts/assets/review/size-report.ts'), SIZE_OUT = path.join(ROOT, 'output/review/size-report.mjs');
+const SIZE_INPUTS = [SIZE_SRC, path.join(ROOT, 'scripts/assets/scale-overrides.json'), ...['library', 'views-library', 'trees-library', 'cars-library', 'east-library', 'business-library',
+  'construction-library', 'golf-library', 'newart', 'sizes', 'lots/scales', 'lots/studio-base'].map(f => path.join(ROOT, 'src/game', `${f}.ts`))];
+let sizes = { stamp: '', data: {} }, sizing = null;
+/** the size report: id -> { scale, base, sizeId, drawn: { id, name, quad, scale, fill, cap } | null, sharp, native, and the picture's atlas rect and page },
+ *  rebuilt when a library, the scales or the studio's sizes change (fresh: false takes the last one as it is) */
+async function sizeReport(fresh = true) {
+  if (!fresh && sizes.stamp) return sizes.data;
+  const stamp = SIZE_INPUTS.map(f => { try { return fs.statSync(f).mtimeMs; } catch { return 0; } }).join(',');
+  if (stamp === sizes.stamp) return sizes.data;
+  sizing ??= (async () => {
+    try {
+      // the atlas pages as their file paths (the thumbnails are cut from them), every other import as the game has it
+      await build({ entryPoints: [SIZE_SRC], bundle: true, platform: 'node', format: 'esm', outfile: SIZE_OUT, logLevel: 'silent',
+        plugins: [{ name: 'atlas-paths', setup(b) { b.onLoad({ filter: /\.(webp|png)$/ }, a => ({ contents: `export default ${JSON.stringify(a.path)};`, loader: 'js' })); } }] });
+      const out = await new Promise((ok, fail) => execFile(process.execPath, [SIZE_OUT], { cwd: ROOT, maxBuffer: 256 << 20 }, (e, so) => (e ? fail(e) : ok(so))));
+      sizes = { stamp, data: JSON.parse(out) };
+    } catch (e) { console.warn(`size report failed (the Library shows the sprites without their game sizes): ${e.message}`); sizes = { stamp, data: sizes.data }; }
+    finally { sizing = null; }
+  })();
+  await sizing; return sizes.data;
+}
+await sizeReport();
+
 // ---------------------------------------------------------------- the game's sprites (src/game/library.ts)
 function library() {
   const src = fs.readFileSync(path.join(ROOT, 'src/game/library.ts'), 'utf8'), out = [];
@@ -45,6 +75,14 @@ function library() {
   for (const a of APPENDED) {
     const txt = a.re.exec(fs.readFileSync(path.join(ROOT, a.file), 'utf8'))[1].replace(/,(\s*)\]/g, '$1]');
     for (const e of JSON.parse(txt)) if (!have.has(e.id) && !gone[e.id] && !gone[e.id.replace(/^east:/, '')]) { have.add(e.id); out.push({ id: e.id, name: e.name, cat: e.cat, kind: e.kind, tex: e.tex, w: e.w, h: e.h, quad: e.quad, ax: e.ax, ay: e.ay, page: path.join(ROOT, a.page(e.tex[0])) }); }
+  }
+  // the game's own pictures (size-report.ts): the four-view art in place of the old pictures it replaced, and the libraries not listed above (the
+  // generated trees); a building's other views (view:<id>:se|sw|nw) are not cards of their own: they take their building's size and removal
+  const at = new Map(out.map((s, i) => [s.id, i]));
+  for (const [id, e] of Object.entries(sizes.data)) {
+    const i = at.get(id), pic = { tex: e.tex, w: e.w, h: e.h, quad: e.quad, ax: e.ax, ay: e.ay, page: e.page };
+    if (i !== undefined) { if (!out[i].rect && e.page) Object.assign(out[i], pic); }
+    else if (!id.startsWith('view:') && !gone[id] && e.page) { out.push({ id, name: e.name, cat: e.cat, kind: e.kind, ...pic }); at.set(id, out.length - 1); }
   }
   const people = JSON.parse(/WALKER_PEOPLE[^=]*= (\[.*\]);/.exec(src)?.[1] ?? '[]'), wf = JSON.parse('[' + (/const WF = \[(.*)\];/.exec(src)?.[1] ?? '') + ']');
   // WF holds every frame of every person (per person: WALK_DIRS x WALK_FRAMES frames of 9 numbers); the first one (idle, facing S) is the picture
@@ -132,12 +170,15 @@ function rebuild() {
   const steps = ['scripts/assets/prep-decals.mjs', 'scripts/assets/nature-patches.mjs', 'scripts/assets/prep-sprites.mjs', 'scripts/assets/prep-scales.mjs', 'scripts/assets/prep-construction.mjs', 'scripts/assets/audit-sprites.mjs'];
   job = { log: '', done: false, code: 0, step: '', started: Date.now() };
   const run = i => {
-    if (i >= steps.length) return build();
+    if (i >= steps.length) return process.env.STUDIO_DEV_GAME ? devDone() : build();
     job.step = steps[i]; job.log += `\n> node ${steps[i]}\n`;
     const p = spawn(process.execPath, [steps[i]], { cwd: ROOT, env: { ...process.env, TOT_REPO: TOT } });
     p.stdout.on('data', d => { job.log += d; }); p.stderr.on('data', d => { job.log += d; });
     p.on('close', code => { if (code) { job.done = true; job.code = code; job.log += `\nFailed (${code}).\n`; } else run(i + 1); });
   };
+  // STUDIO_DEV_GAME set: the game runs on a vite dev server from this same checkout, which reloads the new atlases by itself, so the
+  // production build (minutes and an 8 GB heap) is skipped
+  const devDone = () => { job.done = true; job.log += '\nAll done: the dev game reloads the new sprites by itself (no build needed).\n'; };
   // the last step: the production build, so the test server on 5174 (vite preview of dist/) serves the new sprites
   const build = () => {
     job.step = 'npm run build'; job.log += '\n> npm run build\n';
@@ -227,7 +268,16 @@ const GROUND_SRC = [
   { group: 'Grass care', dir: 'src/assets/ground/grass-management', re: /\.(webp|png|jpg)$/i },
   { group: 'Grass care decals', dir: 'src/assets/ground/grass-management/decals', re: /\.(webp|png|jpg)$/i },
   { group: 'Grass photos', dir: 'art/grass-photo', re: /\.(webp|png|jpg)$/i },
+  // the painted grass (T082): each set's three zoom levels (painted-grass-art.ts), shown with the presets that use them
+  { group: 'Painted grass', dir: 'src/assets/ground/painted', re: /\.(webp|png|jpg)$/i },
 ];
+/** the painted sets a preset's old Painted set field can name (T082): the first painted grass only (the painted surfaces are edited in the Painted tab) */
+function paintedSets() {
+  try {
+    const fam = JSON.parse(fs.readFileSync(path.join(ROOT, 'src/game/painted-families.json'), 'utf8')).families.find(f => f.id === 'first-painted');
+    return fam ? [{ id: 'grass', levels: ['near', 'mid', 'far'].map(level => ({ level, src: 'src/assets/ground/painted/' + Object.values(fam.levels[level])[0].file, metres: fam.coverage[level] })) }] : [];
+  } catch { return []; }
+}
 function groundSources() {
   const out = [];
   for (const g of GROUND_SRC) {
@@ -260,6 +310,26 @@ function photos() {
   return PHOTOS;
 }
 
+// ---------------------------------------------------------------- the painted surfaces (the Painted tab; src/game/painted-surfaces.json)
+// which hand-painted family each surface of the game wears (painted-surfaces.ts): a family and version, scale, tint and tone per surface, the
+// town's lawns and any preset's own look. Save writes the file; a game on a vite dev server from this checkout takes it at once (no rebuild)
+const PL_ENTRY = path.join(ROOT, 'scripts/assets/review/painted-lib.ts'), PS_FILE = path.join(ROOT, 'src/game/painted-surfaces.json');
+const PAINTED_DIR = path.join(ROOT, 'src/assets/ground/painted'), PT_THUMBS = path.join(OUT, 'painted-thumbs');
+buildSync({ entryPoints: [PL_ENTRY], bundle: true, platform: 'node', format: 'esm', outfile: path.join(OUT, 'painted-lib.mjs'), loader: HL_LOADERS, logLevel: 'silent' });
+buildSync({ entryPoints: [PL_ENTRY], bundle: true, platform: 'browser', format: 'esm', outfile: path.join(OUT, 'painted-lib.js'), loader: HL_LOADERS, logLevel: 'silent' });
+const PL = await import(pathToFileURL(path.join(OUT, 'painted-lib.mjs')).href);
+fs.mkdirSync(PT_THUMBS, { recursive: true });
+function readSurfaces() { let f = null; try { f = JSON.parse(fs.readFileSync(PS_FILE, 'utf8')); } catch { /* none yet */ } return PL.clampSurfaces(f); }
+/** the file as the game keeps it: one look a line */
+function writeSurfaces(f) {
+  const line = o => JSON.stringify(o).replace(/":/g, '": ').replace(/,"/g, ', "').replace(/^\{/, '{ ').replace(/\}$/, ' }');
+  const obj = (o, pad) => Object.entries(o).map(([k, v]) => `${pad}${JSON.stringify(k)}: ${line(v)}`).join(',\n');
+  const txt = `{\n "v": 1,\n "surfaces": {\n${obj(f.surfaces, '  ')}\n },\n "lawns": [\n${f.lawns.map(l => '  ' + line(l)).join(',\n')}\n ],\n "presets": {\n${obj(f.presets, '  ')}\n }\n}\n`;
+  fs.writeFileSync(PS_FILE, txt.replace(/\{\n\n \}/g, '{}').replace(/\[\n\n \]/g, '[]'));
+}
+/** every painting the registry names (the Painted tab may read only these) */
+const paintedFiles = () => new Set(PL.FAMILIES.flatMap(f => PL.LEVEL_NAMES.flatMap(l => Object.values(f.levels[l]).map(p => p.file))));
+
 const body = req => new Promise(res => { let s = ''; req.on('data', d => { s += d; }); req.on('end', () => { try { res(JSON.parse(s || '{}')); } catch { res({}); } }); });
 http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://x'), json = o => { res.writeHead(200, { 'content-type': 'application/json' }); res.end(JSON.stringify(o)); };
@@ -269,11 +339,17 @@ http.createServer(async (req, res) => {
     if (P === '/') { res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' }); return res.end(fs.readFileSync(path.join(ROOT, 'scripts/assets/review/studio.html'), 'utf8')); }
     // library
     if (P === '/api/sprites') {
-      const list = library(), have = new Set(list.map(s => s.id)), rm = readRemoved(), sc = readScales();
+      const rep = await sizeReport(), list = library(), have = new Set(list.map(s => s.id)), rm = readRemoved(), sc = readScales();
       for (const id of Object.keys(rm)) if (!have.has(id)) list.push({ id, name: rm[id].name ?? id, cat: rm[id].cat ?? 'Removed', kind: rm[id].kind ?? '', tex: null, w: rm[id].w ?? 100, h: rm[id].h ?? 100, quad: rm[id].quad, ax: rm[id].ax, ay: rm[id].ay });
       // every golf sprite under one heading: the tournament art (golf:) and the business art's course pieces and buildings (business:golf-)
       for (const s of list) if (/^(golf:|business:golf-)/.test(s.id)) s.cat = 'Golf';
       for (const s of list) { s.base = s.kind === 'car' ? 0.8 : s.kind === 'walker' || s.kind === 'decal' || s.cat === 'Lots' ? 1 : mapScale(s.id); s.scale = s.kind === 'car' ? 0.8 : sc[s.id] ?? s.base; s.quad ??= [0, 0, s.w, s.h]; delete s.tex; delete s.page; }
+      // the game's sizes (size-report.ts): the scale it places each sprite at, what a reset falls back to, the id whose size it takes (a building's
+      // views share one), what it is drawn as and how big, the scale it is sharp to at the closest zoom and the most its source pixels allow
+      for (const s of list) {
+        const e = rep[s.id]; if (!e || s.kind === 'car' || s.kind === 'walker' || s.kind === 'decal') continue;
+        Object.assign(s, { scale: e.scale, base: e.base, sizeId: e.sizeId, drawn: e.drawn, sharp: e.sharp, native: e.native });
+      }
       // the townspeople, for the cursor: each one's trimmed picture and where its feet are (the anchor) inside it, in native px
       const walkers = list.filter(s => s.kind === 'walker' && !rm[s.id]).map(s => ({ id: s.id, name: s.name, quad: s.quad, ax: s.ax, ay: s.ay }));
       return json({ sprites: list, removed: rm, walkers });
@@ -286,10 +362,16 @@ http.createServer(async (req, res) => {
       writeRemoved(rm); return json({ removed: rm });
     }
     if (req.method === 'POST' && P === '/api/scale') {
-      const { id, factor, reset } = await body(req), sc = readScales();
-      // a lot decal's base is 1 (prep-decals packs it at its scale), a sprite's is the owner's map scale
-      const base = (library().find(x => x.id === id)?.kind ?? readRemoved()[id]?.kind) === 'decal' ? 1 : mapScale(id);
-      if (reset) delete sc[id]; else { const cur = sc[id] ?? base; sc[id] = +(cur * factor).toFixed(3); }
+      const { id: asked, factor, reset } = await body(req), sc = readScales(), rep = await sizeReport(false), e = rep[asked];
+      // the size is the building's for any of its views (sizeId); a lot decal's base is 1 (prep-decals packs it at its scale), a sprite's is the
+      // game's own fallback (its table scale) when the game has it, else the owner's map scale
+      const id = e?.sizeId ?? asked, own = rep[id] ?? e;
+      const base = (library().find(x => x.id === asked)?.kind ?? readRemoved()[asked]?.kind) === 'decal' ? 1 : own?.base ?? mapScale(id);
+      const cur = sc[id] ?? own?.scale ?? base, next = reset ? base : +(cur * factor).toFixed(3);
+      // never past its picture's own pixels: the smallest limit of the pictures that take this size (a building's four views; a stand-in's atlas)
+      const limit = Math.min(...Object.values(rep).filter(x => x.sizeId === id && x.native != null).map(x => x.native));
+      if (!reset && factor > 1 && next > limit * 1.001) return json({ id, scale: cur, base, refused: `pixelates above x${limit.toFixed(2)}: its picture has no more pixels` });
+      if (reset) delete sc[id]; else sc[id] = next;
       writeScales(sc); return json({ id, scale: sc[id] ?? base, base });
     }
     // lots
@@ -366,7 +448,23 @@ http.createServer(async (req, res) => {
       const rm = readRemoved(), sc = readScales(), houses = library().filter(x => x.kind === 'house' && x.tex && !rm[x.id]).map(x => ({ id: x.id, name: x.name, quad: x.quad ?? [0, 0, x.w, x.h], ax: x.ax, ay: x.ay, scale: sc[x.id] ?? mapScale(x.id) }));
       return json({ file: readGround(), sources: groundSources(), houses, ranges: GL.RANGES, defaults: { side: GL.DEFAULT_SIDE, mix: GL.DEFAULT_MIX }, decals: readDecals() });
     }
-    if (req.method === 'GET' && P === '/api/presets') return json({ ...readPresets(), surfaces: GL.PRESET_SURFACES, size: GL.PRESET_SIZE });
+    if (req.method === 'GET' && P === '/api/painted') return json({ families: PL.FAMILIES, surfaces: PL.SURFACES, presets: readPresets().presets.map(p => ({ id: p.id, name: p.name, surface: p.surface, lawn: p.lawn })), file: readSurfaces(), ranges: PL.LOOK_RANGES, lawnSlots: PL.LAWN_SLOTS });
+    if (req.method === 'POST' && P === '/api/painted') {
+      const { file } = await body(req);
+      if (!file || typeof file !== 'object') { res.writeHead(400); return res.end('no surfaces'); }
+      const out = PL.clampSurfaces(file); writeSurfaces(out); return json({ file: out });
+    }
+    if (P === '/painted-art') {
+      const f = url.searchParams.get('f'), px = Math.min(1024, Math.max(32, +(url.searchParams.get('px') || 0) || 0));
+      if (!f || !paintedFiles().has(f)) { res.writeHead(404); return res.end(); }
+      const abs = path.join(PAINTED_DIR, f);
+      if (!url.searchParams.get('px')) { res.writeHead(200, { 'content-type': 'image/webp', 'cache-control': 'no-cache' }); return res.end(fs.readFileSync(abs)); }
+      const st = fs.statSync(abs), t = path.join(PT_THUMBS, safe(f) + `-${px}-${st.size}-${Math.round(st.mtimeMs)}.webp`);
+      if (!fs.existsSync(t)) fs.writeFileSync(t, await sharp(abs).resize(px, px).webp({ quality: 85 }).toBuffer());
+      res.writeHead(200, { 'content-type': 'image/webp', 'cache-control': 'max-age=3600' }); return res.end(fs.readFileSync(t));
+    }
+    if (P === '/painted.js' || P === '/painted-lib.js') { res.writeHead(200, { 'content-type': 'text/javascript; charset=utf-8', 'cache-control': 'no-cache' }); return res.end(fs.readFileSync(P === '/painted.js' ? path.join(ROOT, 'scripts/assets/review/painted.js') : path.join(OUT, 'painted-lib.js'))); }
+    if (req.method === 'GET' && P === '/api/presets') return json({ ...readPresets(), surfaces: GL.PRESET_SURFACES, size: GL.PRESET_SIZE, painted: paintedSets() });
     if (req.method === 'POST' && P === '/api/preset') {
       // { preset, png: the baked seamless picture (base64), replaces: the id it was saved under before (a rename) }
       const { preset, png, replaces } = await body(req), p = GL.clampPreset(preset);

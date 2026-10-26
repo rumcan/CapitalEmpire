@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>P23 m1: the first minute, beginner Holes panel</title>
+<link rel="stylesheet" href="kit.css"><script src="mock.js"></script></head>
+<body><div class="stage" id="s">
+  <img class="bg" src="bg/start-17.webp">
+  <svg class="ov" id="ov"></svg>
+</div>
+<script>
+const M = MOCK, S = document.getElementById('s'), ov = document.getElementById('ov');
+// the start view (bg3.json s3-start): the range front at the road, the course land beyond
+const cam = { X: 14080, Y: 86016, z: 0.17, w: 1600, h: 900 }, P = M.iso(cam);
+// the owned parcel [1446, 972, 450, 300] and the driving range plot (70 x 150 tiles from the range front, away from the road)
+const parcel = [[1446, 972], [1896, 972], [1896, 1272], [1446, 1272]];
+const range = [[1446, 1202], [1596, 1202], [1596, 1272], [1446, 1272]];
+M.svg(ov, `<defs><mask id="out"><rect width="1600" height="900" fill="#fff"/><path d="${M.poly(P, parcel)}" fill="#000"/></mask></defs>
+  <rect width="1600" height="900" fill="rgba(8,10,6,0.42)" mask="url(#out)"/>
+  <pattern id="hatch" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(30)"><rect width="10" height="10" fill="rgba(25,35,48,0.38)"/><line x1="0" y1="0" x2="0" y2="10" stroke="rgba(190,210,230,0.22)" stroke-width="3"/></pattern>
+  <path d="${M.poly(P, range)}" fill="url(#hatch)" stroke="rgba(190,210,230,0.75)" stroke-width="2" stroke-dasharray="7 6"/>
+  <path d="${M.poly(P, parcel)}" fill="rgba(245,181,46,0.06)" stroke="#f5b52e" stroke-width="3"/>`);
+// labels on the map
+S.insertAdjacentHTML('beforeend', `
+  <div class="tag" style="left:1130px;top:612px;opacity:.95">Driving range plot<span class="l2">golfers hit here: no course building</span></div>
+  <div class="tag gold" style="left:1235px;top:150px">Your course land · 54 ha<span class="l2">room for a first nine</span></div>`);
+M.chrome(S, { stage: 1, active: 'holes', place: 'Driving range', money: '$600,000', season: { big: 'Founding season', small: 'Sep 1984 · the tour comes at 9 holes', done: 0, of: 9 } });
+// the Holes panel, as a beginner sees it (stage 1)
+S.insertAdjacentHTML('beforeend', `
+<div class="glass panel">
+  <div class="phead"><div class="badge"><img src="../../../../src/assets/ui/icons/trophy.webp"></div><div><h2>Holes</h2><div class="sub">Each hole is a park: build it, then shape it</div></div>
+    <div class="undo"><span class="off">↶</span><span class="off">↷</span></div></div>
+  <div class="sec"><div class="primary"><span class="plus">+</span><div><div class="t">New hole</div><div class="s">Click a tee, click a green, Build</div></div><span class="kc">N</span></div></div>
+  <div class="sec"><div class="caps">Shape by hand <span class="hint">1 m cells · keys 1–3</span></div>
+    <div class="swatches three">
+      <div class="sw"><span class="n">1</span><div class="d" style="background-image:url(tex/fairway.webp)"></div>Fairway</div>
+      <div class="sw"><span class="n">2</span><div class="d" style="background-image:url(tex/green.webp)"></div>Green</div>
+      <div class="sw"><span class="n">3</span><div class="d" style="background-image:url(tex/tee.webp)"></div>Tee</div>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <span class="size on"><span class="glyph" style="grid-template-columns:repeat(1,4px)"><i></i></span>1</span>
+      <span class="size"><span class="glyph" style="grid-template-columns:repeat(2,4px)"><i></i><i></i><i></i><i></i></span>2×2</span>
+      <span class="size"><span class="glyph" style="grid-template-columns:repeat(3,4px)">${'<i></i>'.repeat(9)}</span>3×3</span>
+      <span class="size"><span class="glyph" style="grid-template-columns:repeat(4,4px)">${'<i></i>'.repeat(16)}</span>4×4</span>
+    </div>
+    <div class="row" style="margin-top:8px"><span class="pill">Erase <span class="kc" style="margin-left:2px">Alt</span></span><span class="dim" style="font-size:11px">Pick a surface, then click a cell or drag</span></div>
+  </div>
+  <div class="sec"><div class="caps">Your holes <span class="hint">0 of 9 for the tour</span></div>
+    <div class="holes"><div class="hb add">+</div></div>
+  </div>
+  <div class="more"><div class="h">More options <span class="cnt">stamps · fill tools · seed or sod · height</span><span class="chev">▸</span></div></div>
+</div>`);
+// the welcome card (P22 2.8): one card, one button, over the map's free area
+S.insertAdjacentHTML('beforeend', `
+<div class="glass" style="position:absolute;left:640px;top:300px;width:470px;padding:22px 24px 18px">
+  <div class="caps" style="color:var(--gold-hi)">Welcome</div>
+  <div class="display" style="font-size:26px;font-weight:700;margin-top:4px">Your driving range on Route 9</div>
+  <div style="font-size:13.5px;line-height:1.5;color:#ddd6c6;margin-top:8px">Drivers stop to hit a bucket of balls. Build a golf course on your land behind the range, and a town will grow around you.</div>
+  <div class="box" style="margin-top:12px;font-size:12.5px;line-height:1.55">
+    <div class="check"><span class="m gold">1</span><span><b>Build hole 1</b>: click a tee, click a green, Build. About a minute.</span></div>
+    <div class="check"><span class="m dim">2</span><span class="muted">Place the clubhouse beside a drive</span></div>
+    <div class="check"><span class="m dim">3</span><span class="muted">Finish nine holes: the tour invites you</span></div>
+  </div>
+  <div class="row" style="margin-top:14px"><div class="primary" style="width:auto;padding:9px 18px"><div class="t">Build your first hole</div></div><span class="grow"></span><span class="dim" style="font-size:12px">Skip the guide</span></div>
+</div>`);
+S.insertAdjacentHTML('beforeend', `
+  <div class="glass guide"><span class="step">Step 1 of 7</span><span>Welcome. The button takes you to your course land with New hole ready.</span></div>
+  <div class="glass minimap" style="background:url(bg/start-17.webp) center/cover;filter:saturate(.7)"></div>
+  <div class="note" style="left:102px;top:552px;max-width:336px"><span class="n">1</span>A beginner sees <b>four tools</b> (Select, Holes, Paths, Buildings) and Remove. Landscape, Roads and Transport arrive as the course grows (section 5.4).</div>
+  <div class="note" style="left:448px;top:150px;max-width:190px"><span class="n">2</span><b>New hole</b> is the gold primary action. The cell brush is for shaping after.</div>
+  <div class="note" style="left:1150px;top:700px;max-width:320px"><span class="n">3</span>The land you can build on is lit gold; the range plot and the road side are dimmed. The button moves the camera onto the course land, so the first hover is never "Not your land".</div>
+  <div class="title-strip">P23 mockup m1 · the first minute · beginner Holes panel</div>`);
+</script>
+</body></html>

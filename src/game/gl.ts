@@ -1,13 +1,16 @@
-/** WebGL2 drawing: baked ground chunks as textured quads, sprites as instanced quads from one texture-array atlas,
+/** WebGL2 drawing: baked ground chunks as textured quads, sprites as instanced quads from the streamed atlas (atlas-gl.ts),
  *  contact shadows as instanced ground shapes (TrickOrTreat's base shadows, shadow-shape.ts), and vehicles as points for the planner view.
  *  Coordinates are world px. */
 import { ATLAS_PAGES, ATLAS_SIZE } from './library';
+import { AtlasGL, type AtlasSource } from './atlas-gl';
+import { atlasMip0 } from './sizes';
+import { CONTACT_LEAN } from './shadow-shape';
 
 /** floats per sprite instance: rect x0 y0 x1 y1 (world px), uv u0 v0 u1 v1, layer, alpha, cullable, foot line (world px; < 0: casts no shadow),
  *  clip x0 y0 x1 y1 (world px), foot: the footprint's near corner x y and its left and right corners' x (world px; the cast shadows stand on it) */
 export const SPRITE_STRIDE = 20;
 /** floats per shadow instance: centre x y (world px), half extents hx hy (metres along the map's axes), core, feather (metres), round (0 / 1),
- *  spare, clip x0 y0 x1 y1 (world px) */
+ *  lean (a multiplier of the common lean, shadow-shape.ts contactShadow), clip x0 y0 x1 y1 (world px) */
 export const SHADOW_STRIDE = 12;
 /** floats per point: x y (world px), rgba */
 export const POINT_STRIDE = 6;
@@ -46,13 +49,16 @@ void main() {
   gl_Position = cull ? vec4(2.0, 2.0, 2.0, 1.0) : vec4(s.x / uScreen.x * 2.0 - 1.0, 1.0 - s.y / uScreen.y * 2.0, 0.0, 1.0);
   vUV = vec3(mix(aUV.xy, aUV.zw, c), aMisc.x); vAlpha = aMisc.y; vW = w; vClip = aClip;
 }`;
-const FS_SPRITE = `#version 300 es
-precision highp float; precision mediump sampler2DArray;
-uniform sampler2DArray uAtlas;
+// the atlas lookup (atlas-gl.ts glsl: atlasTex, from the finest resident mip of the sprite's cell) is sampled before any discard: its level of
+// detail comes from derivatives, which need the whole 2 x 2 quad
+const FS_SPRITE = (atlas: string) => `#version 300 es
+precision highp float; precision highp int;
+${atlas}
 in vec3 vUV; in float vAlpha; in vec2 vW; flat in vec4 vClip; out vec4 o;
 void main() {
+  vec4 c = atlasTex(vUV.xy, vUV.z);
   if (vW.x < vClip.x || vW.y < vClip.y || vW.x >= vClip.z || vW.y >= vClip.w) discard;
-  vec4 c = texture(uAtlas, vUV); if (c.a < 0.004) discard; o = c * vAlpha;
+  if (c.a < 0.004) discard; o = c * vAlpha;
 }`;
 // cast shadows (cast-shadow.ts): each sprite's silhouette laid on the ground away from the sun. Every column of the picture stands on its own
 // foot: the front edges of its footprint diamond (aFoot: the near corner x y, the left and right corners' x, world px; past the corners the
@@ -78,16 +84,21 @@ void main() {
   gl_Position = aMisc.w < 0.0 ? vec4(2.0, 2.0, 2.0, 1.0) : vec4(s.x / uScreen.x * 2.0 - 1.0, 1.0 - s.y / uScreen.y * 2.0, 0.0, 1.0);
   vUV = vec3(mix(aUV.xy, aUV.zw, c), aMisc.x); vAlpha = aMisc.y; vW = vec2(x, y); vClip = aClip;
 }`;
-const FS_CAST = `#version 300 es
-precision highp float; precision mediump sampler2DArray;
-uniform sampler2DArray uAtlas; uniform vec4 uCast;
+const FS_CAST = (atlas: string) => `#version 300 es
+precision highp float; precision highp int;
+${atlas}
+uniform vec4 uCast;
 in vec3 vUV; in float vAlpha; in vec2 vW; flat in vec4 vClip; out vec4 o;
 void main() {
+  float a = atlasTex(vUV.xy, vUV.z).a * vAlpha * uCast.z;
   if (vW.x < vClip.x || vW.y < vClip.y || vW.x >= vClip.z || vW.y >= vClip.w) discard;
-  float a = texture(uAtlas, vUV).a * vAlpha * uCast.z; if (a < 0.004) discard;
+  if (a < 0.004) discard;
   o = vec4(0.024, 0.031, 0.051, 1.0) * a;
 }`;
-// the shape's 2:1 diamond bound: 32 world px per metre across, 16 down (x = (X - Y) * 32, y = (X + Y) * 16, X and Y in metres)
+// the shape's 2:1 diamond bound: 32 world px per metre across, 16 down (x = (X - Y) * 32, y = (X + Y) * 16, X and Y in metres).
+// The lean (T141, shadow-shape.ts leanShift: blob and box alike): uShift is the cast shadows' screen direction times their length against the
+// default (contactLean); the shape moves that way on the ground by CONTACT_LEAN.frac of its own reach from its centre to its edge in that
+// direction, at most CONTACT_LEAN.max metres, times its own multiplier (aLook.w)
 const VS_SHADOW = `#version 300 es
 layout(location=0) in vec4 aShape; layout(location=1) in vec4 aLook; layout(location=2) in vec4 aClip;
 uniform vec4 uCam; uniform vec2 uScreen; uniform vec2 uShift;
@@ -95,8 +106,14 @@ out vec2 vOff; out vec2 vW; flat out vec4 vShape; flat out vec4 vLook; flat out 
 void main() {
   vec2 c = vec2(gl_VertexID & 1, gl_VertexID >> 1) * 2.0 - 1.0;
   float e = aShape.z + aShape.w + aLook.y * 3.2;
-  // uShift leans the shape toward the cast shadows' side (screen px per metre of its half extents): the sun is on the other side
-  vec2 off = c * vec2(e * 32.0 + 2.0, e * 16.0 + 2.0), w = aShape.xy + uShift * (aShape.z + aShape.w) + off;
+  vec2 m = vec2(uShift.x / 32.0 + uShift.y / 16.0, uShift.y / 16.0 - uShift.x / 32.0) * 0.5, lean = vec2(0.0);
+  float n = length(uShift);
+  if (n > 0.0) {
+    vec2 u = normalize(m), h = max(aShape.zw, vec2(1e-4));
+    float reach = aLook.z > 0.5 ? 1.0 / length(u / h) : min(h.x / max(abs(u.x), 1e-4), h.y / max(abs(u.y), 1e-4));
+    lean = vec2((u.x - u.y) * 32.0, (u.x + u.y) * 16.0) * min(reach * ${CONTACT_LEAN.frac.toFixed(4)}, ${CONTACT_LEAN.max.toFixed(4)}) * aLook.w * n;
+  }
+  vec2 off = c * vec2(e * 32.0 + 2.0, e * 16.0 + 2.0), w = aShape.xy + lean + off;
   vec2 s = (w - uCam.xy) * uCam.z + uScreen * 0.5;
   gl_Position = vec4(s.x / uScreen.x * 2.0 - 1.0, 1.0 - s.y / uScreen.y * 2.0, 0.0, 1.0);
   vOff = off; vW = w; vShape = aShape; vLook = aLook; vClip = aClip;
@@ -139,8 +156,11 @@ type Prog = { p: WebGLProgram; u: Record<string, WebGLUniformLocation | null> };
 
 export class GLRenderer {
   gl: WebGL2RenderingContext;
-  private quad: Prog; private sprite: Prog; private shadow: Prog; private point: Prog; private cast: Prog;
-  atlas: WebGLTexture | null = null; atlasReady = false;
+  private quad: Prog; private shadow: Prog; private point: Prog;
+  /** the sprite and cast-shadow programs: built with the atlas (initAtlas), whose residency plan their lookup is compiled for */
+  private sprite: Prog | null = null; private cast: Prog | null = null;
+  /** the sprite atlas (T080, atlas-gl.ts): the always-resident low set, the streamed cell tiers and the lookup */
+  atlas: AtlasGL | null = null; atlasReady = false;
   private dyn: WebGLBuffer; private dynCap = 0;
   private maskTex: WebGLTexture; private emptyTex: WebGLTexture;
   view: View = { X: 0, Y: 0, ze: 1, cw: 1, ch: 1 };
@@ -151,8 +171,6 @@ export class GLRenderer {
     if (!gl) throw new Error('WebGL2 is not available');
     this.gl = gl;
     this.quad = this.program(VS_QUAD, FS_QUAD, ['uRect', 'uCam', 'uScreen', 'uUV', 'uTex', 'uMask', 'uMode', 'uAlpha']);
-    this.sprite = this.program(VS_SPRITE, FS_SPRITE, ['uCam', 'uScreen', 'uMinPx', 'uAtlas']);
-    this.cast = this.program(VS_CAST, FS_CAST, ['uCam', 'uScreen', 'uCast', 'uAtlas']);
     this.shadow = this.program(VS_SHADOW, FS_SHADOW, ['uCam', 'uScreen', 'uStrength', 'uShift']);
     this.point = this.program(VS_POINT, FS_POINT, ['uCam', 'uScreen', 'uSize', 'uSoft']);
     this.dyn = gl.createBuffer()!;
@@ -177,18 +195,25 @@ export class GLRenderer {
     gl.texParameteri(target, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(target, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
   }
 
-  /** load the sprite atlas pages into one texture array; dpr-1 screens skip mip 0 (half the memory) */
-  async loadAtlas(hiDpi: boolean) {
-    const gl = this.gl, base = hiDpi ? 0 : 1, levels = ATLAS_PAGES[0].length - base, size = ATLAS_SIZE >> base;
-    const tex = gl.createTexture()!; gl.bindTexture(gl.TEXTURE_2D_ARRAY, tex);
-    gl.texStorage3D(gl.TEXTURE_2D_ARRAY, levels, gl.RGBA8, size, size, ATLAS_PAGES.length);
-    const bmps = await Promise.all(ATLAS_PAGES.flatMap((row, p) => row.slice(base).map(async (url, m) => ({ p, m, bmp: await createImageBitmap(await (await fetch(url)).blob(), { premultiplyAlpha: 'premultiply', colorSpaceConversion: 'none' }) }))));
-    gl.bindTexture(gl.TEXTURE_2D_ARRAY, tex);
-    for (const { p, m, bmp } of bmps) { gl.texSubImage3D(gl.TEXTURE_2D_ARRAY, m, 0, 0, p, bmp.width, bmp.height, 1, gl.RGBA, gl.UNSIGNED_BYTE, bmp); bmp.close(); }
-    this.texParams(gl.TEXTURE_2D_ARRAY, true);
-    gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_MAX_LEVEL, levels - 1);
-    const aniso = gl.getExtension('EXT_texture_filter_anisotropic'); if (aniso) gl.texParameterf(gl.TEXTURE_2D_ARRAY, aniso.TEXTURE_MAX_ANISOTROPY_EXT, 2);
-    this.atlas = tex; this.atlasReady = true;
+  /** Plan the sprite atlas for this screen within GAME-PLAN's budget (atlas-pages.ts), load its always-resident low set (every page from a
+   *  coarse mip down) and build the sprite programs for it. The finer mips stream in per cell as the view needs them (engine.ts streamAtlas,
+   *  then pumpAtlas every frame). Mip 0 only on screens above 1x (sizes.ts atlasMip0). The sources are tried in order (the compressed KTX2
+   *  pages, then the WebP pages as RGBA8): one that fails to load its low set gives way to the next. */
+  async initAtlas(dpr: number, sources: AtlasSource[]) {
+    let a: AtlasGL | null = null, err: unknown = null;
+    for (const source of sources) {
+      try { a = await AtlasGL.create(this.gl, { dpr, pages: ATLAS_PAGES.length, size: ATLAS_SIZE, levels: ATLAS_PAGES[0]!.length, finest: atlasMip0(dpr) ? 0 : 1, source }); break; }
+      catch (e) { err = e; console.warn('[atlas]', String(e), '- trying the next source'); }
+    }
+    if (!a) throw err;
+    const lib = a.glsl(), samplers = a.samplerNames();
+    this.sprite = this.program(VS_SPRITE, FS_SPRITE(lib), ['uCam', 'uScreen', 'uMinPx', ...samplers]);
+    this.cast = this.program(VS_CAST, FS_CAST(lib), ['uCam', 'uScreen', 'uCast', ...samplers]);
+    this.atlas = a; this.atlasReady = true;
+  }
+  /** bind the atlas textures for a sprite program (units 2 on: 0 and 1 are the chunks' texture and mask) */
+  private bindAtlas(pr: Prog) {
+    const a = this.atlas!, units = a.bind(2); a.samplerNames().forEach((n, i) => this.gl.uniform1i(pr.u[n]!, units[i]!));
   }
   /** a texture from a baked ground chunk */
   textureFrom(bmp: ImageBitmap) {
@@ -238,9 +263,9 @@ export class GLRenderer {
   }
   /** sprite instances at float offset `firstFloat` of the uploaded stream */
   drawSprites(firstFloat: number, count: number, minPx: number) {
-    if (!count || !this.atlas) return; const gl = this.gl, pr = this.sprite;
+    if (!count || !this.atlas || !this.sprite) return; const gl = this.gl, pr = this.sprite;
     gl.useProgram(pr.p); this.camUniforms(pr); gl.uniform1f(pr.u.uMinPx, minPx);
-    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D_ARRAY, this.atlas); gl.uniform1i(pr.u.uAtlas, 0);
+    this.bindAtlas(pr);
     gl.bindBuffer(gl.ARRAY_BUFFER, this.dyn);
     const B = SPRITE_STRIDE * 4, o = firstFloat * 4;
     for (let i = 0; i < 4; i++) { gl.enableVertexAttribArray(i); gl.vertexAttribPointer(i, 4, gl.FLOAT, false, B, o + i * 16); gl.vertexAttribDivisor(i, 1); }
@@ -250,9 +275,9 @@ export class GLRenderer {
   }
   /** sprite instances at float offset `firstFloat`, as their cast shadows (cast-shadow.ts): sheared by (sx, sy) per px of height, darkness `strength` */
   drawCast(firstFloat: number, count: number, sx: number, sy: number, strength: number) {
-    if (!count || !this.atlas || strength <= 0) return; const gl = this.gl, pr = this.cast;
+    if (!count || !this.atlas || !this.cast || strength <= 0) return; const gl = this.gl, pr = this.cast;
     gl.useProgram(pr.p); this.camUniforms(pr); gl.uniform4f(pr.u.uCast, sx, sy, strength, 0);
-    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D_ARRAY, this.atlas); gl.uniform1i(pr.u.uAtlas, 0);
+    this.bindAtlas(pr);
     gl.bindBuffer(gl.ARRAY_BUFFER, this.dyn);
     const B = SPRITE_STRIDE * 4, o = firstFloat * 4;
     for (let i = 0; i < 5; i++) { gl.enableVertexAttribArray(i); gl.vertexAttribPointer(i, 4, gl.FLOAT, false, B, o + i * 16); gl.vertexAttribDivisor(i, 1); }
@@ -260,7 +285,8 @@ export class GLRenderer {
     for (let i = 0; i < 5; i++) { gl.vertexAttribDivisor(i, 0); gl.disableVertexAttribArray(i); }
     this.stats.draws++;
   }
-  /** instances at float offset `firstFloat` of the uploaded stream, as contact shadows; strength scales their darkness (1 = the builder's) */
+  /** instances at float offset `firstFloat` of the uploaded stream, as contact shadows; strength scales their darkness (1 = the builder's); (shiftX,
+   *  shiftY) the lean (shadow-shape.ts contactLean: the cast shadows' screen direction times their length against the default) */
   drawShadows(firstFloat: number, count: number, strength = 1, shiftX = 0, shiftY = 0) {
     if (!count || strength <= 0) return; const gl = this.gl, pr = this.shadow;
     gl.useProgram(pr.p); this.camUniforms(pr); gl.uniform1f(pr.u.uStrength, strength); gl.uniform2f(pr.u.uShift, shiftX, shiftY); gl.bindBuffer(gl.ARRAY_BUFFER, this.dyn);

@@ -1,0 +1,151 @@
+{
+  "id": "variation:ref-building-house-cottage-fc52ce66-plain:1",
+  "generator": "image_gen",
+  "generated": "2026-10-24",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-7efa915d-9ff7-4067-924a-6c0fc3cd0756.png",
+  "prompt": "ONE GAME ASSET CUTOUT on EMPTY TRANSPARENT ALPHA, RGBA PNG. Reference1 is STYLE ONLY: the Maple Bean street's coherent miniature 3D illustration, softly textured matte materials, restrained rich colours, charcoal roofs, warm amber lamps, readable fine detail, early dusk with remaining daylight. Reference2 shows IDENTITY ONLY: preserve this building's architecture, not its old rendering or blue night cast. It must look natural beside the buildings in reference1. Fixed 2:1 isometric camera and SCREEN UPPER RIGHT SUN in every view; right-facing planes warm, left-facing planes cooler. Exactly four true rigid quarter turns of the SAME physical object on a square 2x2 sheet: NE front+right, SE right+back, SW back+left, NW left+front. Same roof, windows, equipment and physical scale throughout; reconstruct hidden sides, never mirror a front. Centre each complete sprite within its own cell with20% blank margins on every side. Empty alpha in corners, gutters and gaps, zero clipping. NO BACKDROP OR FLOOR: no stage, ground surface, paving, terrain tile, foliage, leaves, broad shadow, haze, gradient, checkerboard, caption, divider, view label or frame. No people, vehicles, Halloween, pumpkins, skulls, cobwebs, spooky signage or decorative garlands. Only the physical building and integral structural parts, no attached landscape.  Ground isolation is critical: every pixel outside the physical building, steps and supports must have alpha=0. No grey floor patch or studio surface. Geometry audit: name four physical facades A front,B right,C rear,D left internally, then draw A+B, B+C, C+D, D+A respectively; unique front-only entrance must appear only in the two views which face A. Rear views need genuinely reconstructed rear facades, not four front variations. Do not copy reference camera four times.  Subject library ID variation:ref-building-house-cottage-fc52ce66-plain:1. Preserve this specific reference architecture, number of floors, roof shape, business function and attached structural features. Front signage/entrances belong only on physical front facades and must disappear in the two actual rear views. For gas stations retain pumps/canopy attached arrangement but no forecourt pavement. Drive-in screen has blank structural steel back, never a second movie screen. No parking surface, rectangular slab, grey floor, yard or landscaping.",
+  "references": [
+    {
+      "role": "authoritative-theme",
+      "file": "art/theme-consistency/references/theme-authoritative.png",
+      "sha256": "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2"
+    },
+    {
+      "role": "existing-subject-identity",
+      "id": "variation:ref-building-house-cottage-fc52ce66-plain:1",
+      "direction": null,
+      "file": "art/theme-consistency/exports/buildings/variation-ref-building-house-cottage-fc52ce66-plain-1.configured@2x.png",
+      "sha256": "5adf83ac24a12063966ca8b76383ad9d573d40ea4735575c7e8aece13b117079"
+    }
+  ],
+  "integrationStatus": "ready",
+  "integrationReason": "Door canopy on front NE/NW with opposite slants; rear tall gable/two lower annex faces stay coherent SE/SW. Matte stucco, slate and warm dusk match theme. Repack if equal-cell crop warning exists; verify alpha before ready. Lossless disconnected-silhouette v2 extraction passed every nonzero RGBA copy/conservation assertion, alpha audit with no warnings, and post-repack magenta/theme visual review.",
+  "layoutCorrection": {
+    "method": "Disconnected alpha>8 silhouette extraction with nearest-silhouette assignment of all remaining faint pixels; exact source RGBA pixel copies only, no resize, repaint or deletion.",
+    "originalSheet": "art/theme-consistency/generated/buildings/variation-ref-building-house-cottage-fc52ce66-plain-1-4views-v1.png",
+    "originalSheetSha256": "dbbd875ef86725e359ec848ef5efcc26fe236ad4806b49c800c57a336d472b4d",
+    "outputSheetSha256": "9c46bca1d5ef1547f14c77c9c04ee5e244edc891e49a34981120f5c6ae7d84b0",
+    "originalDimensions": [
+      1774,
+      887
+    ],
+    "outputDimensions": [
+      2816,
+      2816
+    ],
+    "cellSize": 1408,
+    "nonzeroAlphaPixels": 690962,
+    "nonzeroAndVisiblePixelConservation": true,
+    "exactVisibleRgbaConservation": true,
+    "assignmentPolicy": "Every alpha>8 dominant component remains intact. Multi-source orthogonal nearest-silhouette flood fills assign faint fringe and tiny detached components; every nonzero source tuple is copied exactly once.",
+    "views": [
+      {
+        "direction": "NE",
+        "dominantComponent": {
+          "label": 1,
+          "pixels": 179469,
+          "bounds": [
+            196,
+            9,
+            781,
+            456
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 31,
+          "y0": 0,
+          "x1": 910,
+          "y1": 503,
+          "count": 185798
+        },
+        "translation": {
+          "x": 233,
+          "y": 452
+        }
+      },
+      {
+        "direction": "SE",
+        "dominantComponent": {
+          "label": 2,
+          "pixels": 167040,
+          "bounds": [
+            1022,
+            10,
+            1606,
+            443
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 902,
+          "y0": 7,
+          "x1": 1743,
+          "y1": 517,
+          "count": 173861
+        },
+        "translation": {
+          "x": 789,
+          "y": 441
+        }
+      },
+      {
+        "direction": "SW",
+        "dominantComponent": {
+          "label": 8,
+          "pixels": 156960,
+          "bounds": [
+            212,
+            450,
+            778,
+            867
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 0,
+          "y0": 446,
+          "x1": 902,
+          "y1": 870,
+          "count": 162877
+        },
+        "translation": {
+          "x": 252,
+          "y": 1453
+        }
+      },
+      {
+        "direction": "NW",
+        "dominantComponent": {
+          "label": 9,
+          "pixels": 163173,
+          "bounds": [
+            1030,
+            451,
+            1599,
+            857
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 904,
+          "y0": 449,
+          "x1": 1737,
+          "y1": 868,
+          "count": 168426
+        },
+        "translation": {
+          "x": 791,
+          "y": 1453
+        }
+      }
+    ],
+    "visualReviewRequired": true
+  },
+  "sourceVisualReview": {
+    "reviewedAt": "2026-10-24T10:27:17.711Z",
+    "reviewer": "building_variation_review",
+    "alphaCompositeBackground": "#b91b91",
+    "allFourViewsInspected": true,
+    "themeReference": "art/theme-consistency/references/theme-authoritative.png",
+    "result": "ready",
+    "reason": "Door canopy on front NE/NW with opposite slants; rear tall gable/two lower annex faces stay coherent SE/SW. Matte stucco, slate and warm dusk match theme. Repack if equal-cell crop warning exists; verify alpha before ready. Lossless disconnected-silhouette v2 extraction passed every nonzero RGBA copy/conservation assertion, alpha audit with no warnings, and post-repack magenta/theme visual review.",
+    "postRepackContact": "output/building-priority/variation-post-repack-2.png"
+  }
+}

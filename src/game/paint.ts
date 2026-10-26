@@ -7,8 +7,9 @@ import { PRESETS, presetTex, surfacePreset } from './paint-presets';
 export type PaintTex = 'paving' | 'slabs' | 'pad' | 'asphalt' | 'asphaltDark' | 'asphaltWorn' | 'lotAsphalt' | 'roadgravel' | 'gravel' | 'dirt' | 'rockyDirt' | 'rockyDirtAlt' | 'field' | 'grass' | 'bunkerSand' | 'wasteSand' | 'pineStraw' | 'barkMulch' | 'spectatorPath' | 'woodChips' | 'grassDry' | 'asphaltPatched' | 'chipSeal' | 'concreteStained' | 'concreteCracked' | 'concreteOld' | 'concreteWeathered' | 'waterDark' | 'waterDeep' | 'waterClear' | GrassTex | `preset:${string}`;
 /** a border's texture: any fill texture, or the kerb */
 export type BorderTex = PaintTex | 'kerb';
-/** the border width: 0 none, 1 small, 2 medium, 3 large (BORDER_W, in tiles) */
-export type BorderSize = 0 | 1 | 2 | 3;
+/** the border width as a step on a continuous scale (the owner, 2026-10-25: "should be a slider"): 0 none, 1 small, 2 medium, 3 large (the
+ *  old buttons, BORDER_W), anything between, up to BORDER_STEP_MAX (huge); borderW gives the width in tiles */
+export type BorderSize = number;
 /** a painted ground area: a closed polygon of tiles, filled with one texture, with an optional border band inside its edge, corners rounded by radius (tiles, 0 sharp),
  *  and a tone filter over the fill: tone 0 none, 1 Multiply (darker), 2 Lighten (screen); toneAmt its strength (0..1); tint its colour ('#rrggbb');
  *  the border band has its own scale, angle, tone, strength and tint (bscale, bangle, btone, btoneAmt, btint), by default the fill's scale and angle with no tone;
@@ -19,6 +20,9 @@ export interface PaintArea { id: number; pts: number[]; tex: PaintTex; scale: nu
   mtex?: PaintTex; mshare?: number; msoft?: number; mpatch?: number;
   /** the draw order the player set (the layer buttons and keys): replaces the default (drawZ); absent = the default */
   order?: number;
+  /** its edge shade (T136, the Shadow slider beside Border width): 0 none .. 1 strong; the area reads as slightly raised, the shade on its
+   *  edges turned away from the sun (paint-edges.ts areaShadeAlpha); absent = 0, as every area before it */
+  shadow?: number;
 }
 /** an area's draw order on the ground (higher draws over lower): the player's order, else its brush layer's band and then its id (the order made) */
 export const drawZ = (a: { order?: number; kind?: BrushKind; id: number }) => a.order ?? (a.kind ? BRUSH_LAYER[a.kind] * 1e6 : 0) + a.id;
@@ -29,8 +33,9 @@ export type BrushKind = 'rough' | 'water' | 'fairway' | 'tee' | 'bunker' | 'gree
  *  written when anything after them is (as 0 and '' when absent, no tag on load); 12 and 13 (seed or sod, the month) when the area has a plantKind or a border style
  *  (as '' and 0 when absent); 14 to 18 (the border's scale, angle, tone, strength and tint) only when one differs from its default, and optional on load;
  *  19 to 22 (the blend: its texture, share, softness and patch size) only when the area blends a second texture (then 10 to 18 are written too);
- *  toTuple writes ten, twelve, fourteen, nineteen or twenty-three */
-export type PaintTuple = [string, number, number, number, string, number[], number?, number?, number?, string?, number?, string?, string?, number?, number?, number?, number?, number?, string?, string?, number?, number?, number?, number?];
+ *  23 the player's draw order (null when unset and a later slot is written); 24 the edge shade (T136) only when it is above 0 (then every slot
+ *  before it is written too); toTuple writes ten, twelve, fourteen, nineteen, twenty-three, twenty-four or twenty-five */
+export type PaintTuple = [string, number, number, number, string, number[], number?, number?, number?, string?, number?, string?, string?, number?, number?, number?, number?, number?, string?, string?, number?, number?, number?, (number | null)?, number?];
 /** the draw order layer of each brush kind (a patch's z is layer * 1e6 + id, so a later kind paints over an earlier one) */
 export const BRUSH_LAYER: Record<BrushKind, number> = { rough: 1, water: 2, fairway: 3, tee: 4, bunker: 5, green: 6, path: 7 };
 const BRUSH_KIND_IDS = new Set<string>(Object.keys(BRUSH_LAYER));
@@ -92,8 +97,24 @@ export const MENU_TEXES = PAINT_TEXES.filter(t => t.id.startsWith('preset:'));
 export const BORDER_MENU: { id: BorderTex; name: string; col: string }[] = [{ id: 'kerb', name: 'Kerb', col: '#f0dfbe' }, ...MENU_TEXES];
 /** true for a texture laid in tile space (a photo of grass-art.ts PHOTO_TEX or an owner's preset), not a screen-space painting */
 export const isPaintPhoto = (t: string) => t.startsWith('preset:') || isPhotoTex(t);
-/** the border width in tiles, by BorderSize */
+/** the border width in tiles at the old whole steps (none, small, medium, large) */
 export const BORDER_W = [0, 0.25, 0.5, 1];
+/** the largest border step: a band 4 tiles (8 m) wide */
+export const BORDER_STEP_MAX = 6;
+/** a border step's width in tiles: through the old steps (BORDER_W: 0, 0.25, 0.5, 1 tile), straight between them, then a tile more a step
+ *  up to BORDER_STEP_MAX (so old saves draw as they did, and a fraction of step 1 is a hairline) */
+export function borderW(b: number): number {
+  const v = Math.min(BORDER_STEP_MAX, Math.max(0, Number.isFinite(b) ? b : 0));
+  if (v >= 3) return 1 + (v - 3);
+  const k = Math.floor(v), f = v - k;
+  return BORDER_W[k]! + (k < 3 ? (BORDER_W[k + 1]! - BORDER_W[k]!) * f : 0);
+}
+/** the border step whose width is w tiles (borderW inverted) */
+export function borderStep(w: number): number {
+  const v = Math.max(0, Number.isFinite(w) ? w : 0);
+  if (v >= 1) return Math.min(BORDER_STEP_MAX, 3 + (v - 1));
+  return v >= 0.5 ? 2 + (v - 0.5) / 0.5 : v / 0.25;
+}
 /** the most corners an area may have */
 export const MAX_PTS = 200;
 /** the largest bounding box side in tiles (256 tiles = 512 m) */
@@ -255,15 +276,15 @@ const fin = (v: number, d: number) => Number.isFinite(v) ? v : d;
 
 /** a copy of a style (or a whole area) with the scale, angle, border, radius and tone clamped and the textures and tint checked (unknown → paving, kerb; a bad tint → black, or white when lightening) */
 export function clampStyle<T extends Omit<PaintArea, 'id' | 'pts'>>(st: T): T {
-  // the blend's fields are kept only with a known texture (they are left out, not undefined, without one)
-  const { mtex, mshare, msoft, mpatch, ...rest } = st, s = rest as T;
+  // the blend's fields are kept only with a known texture (they are left out, not undefined, without one); the edge shade only above 0
+  const { mtex, mshare, msoft, mpatch, shadow, ...rest } = st, s = rest as T, sh = Math.round(Math.min(1, Math.max(0, fin(shadow ?? 0, 0))) * 1000) / 1000;
   const tone = Math.min(2, Math.max(0, Math.round(fin(s.tone, 0)))) as 0 | 1 | 2, btone = Math.min(2, Math.max(0, Math.round(fin(s.btone, 0)))) as 0 | 1 | 2;
   return {
     ...s,
     tex: TEX_IDS.has(s.tex) ? s.tex : 'paving',
     scale: Math.min(SCALE_MAX, Math.max(SCALE_MIN, fin(s.scale, 1))),
     angle: wrapAngle(fin(s.angle, 0)),
-    border: Math.min(3, Math.max(0, Math.round(fin(s.border, 0)))) as BorderSize,
+    border: Math.round(Math.min(BORDER_STEP_MAX, Math.max(0, fin(s.border, 0))) * 1000) / 1000,
     btex: BTEX_IDS.has(s.btex) ? s.btex : 'kerb',
     radius: Math.min(RADIUS_MAX, Math.max(0, fin(s.radius, 0))),
     tone,
@@ -277,12 +298,29 @@ export function clampStyle<T extends Omit<PaintArea, 'id' | 'pts'>>(st: T): T {
     ...(mtex && TEX_IDS.has(mtex)
       ? { mtex, mshare: Math.min(1, Math.max(0, fin(mshare ?? 0.5, 0.5))), msoft: Math.min(0.5, Math.max(0.01, fin(msoft ?? 0.12, 0.12))), mpatch: Math.min(4, Math.max(0.25, fin(mpatch ?? 1, 1))) }
       : {}),
+    ...(sh > 0 ? { shadow: sh } : {}),
   };
+}
+/** copies a (clamped) style onto an area: its optional fields that the style leaves out (the blend, the edge shade) go from the area too */
+export function assignStyle(a: PaintArea, st: Omit<PaintArea, 'id' | 'pts'>): PaintArea {
+  Object.assign(a, st);
+  if (!st.mtex) { delete a.mtex; delete a.mshare; delete a.msoft; delete a.mpatch; }
+  if (!st.shadow) delete a.shadow;
+  return a;
 }
 
 /** the golf brush presets, in the panel's order: each kind's texture style and its brush radius r (tiles); the Paint panel's edits replace these (remembered) */
 /** a golf surface's texture: the owner's first preset standing for it, else the game's old one */
 const S = (surface: string, old: PaintTex): PaintTex => surfacePreset(surface) ?? old;
+/** the golf surface each of the game's old course photos stands for, and the photo the brushes fall back to (the water pieces' clear water
+ *  lays as the brushes' dark water) */
+const COURSE_SURFACE_OF: Record<string, [string, PaintTex]> = {
+  golfFairway: ['fairway', 'golfFairway'], golfFirstCut: ['firstCut', 'golfFirstCut'], golfFringe: ['fringe', 'golfFringe'], golfGreen: ['green', 'golfGreen'],
+  golfTee: ['tee', 'golfTee'], golfRough: ['rough', 'golfRough'], bunkerSand: ['bunker', 'bunkerSand'], waterDark: ['water', 'waterDark'], waterClear: ['water', 'waterDark'],
+};
+/** a course texture as the brushes lay it: the owner's preset for its golf surface, else the brushes' photo, so a placed piece and a brush stroke
+ *  of the same surface always match (the owner, 2026-10-24: the pieces laid a blocky old fairway photo the brushes never use) */
+export function courseTex(tex: PaintTex): PaintTex { const s = COURSE_SURFACE_OF[tex]; return s ? S(s[0], s[1]) : tex; }
 export const BRUSH_PRESETS: { kind: BrushKind; name: string; r: number; style: Omit<PaintArea, 'id' | 'pts' | 'hole' | 'kind'> }[] = [
   { kind: 'fairway', name: 'Fairway', r: 5, style: clampStyle({ ...DEFAULT_STYLE, tex: S('fairway', 'golfFairway'), border: 3, btex: S('firstCut', 'golfFirstCut'), radius: 0 }) },
   { kind: 'green', name: 'Green', r: 4, style: clampStyle({ ...DEFAULT_STYLE, tex: S('green', 'golfGreen'), border: 2, btex: S('fringe', 'golfFringe') }) },
@@ -298,24 +336,27 @@ const r3 = (v: number) => Math.round(v * 1000) / 1000;
 /** a painted area as its save tuple (scale, angle, radius and strength to 3 decimals) */
 export function toTuple(a: PaintArea): PaintTuple {
   const t: PaintTuple = [a.tex, r3(a.scale), r3(a.angle), a.border, a.btex, a.pts.slice(), r3(a.radius), a.tone, r3(a.toneAmt), a.tint];
-  // a slot is written when it or any later one is set (od: the player's draw order, slot 23, needs every slot before it)
-  const od = a.order !== undefined, mx = !!a.mtex || od, bd = mx || a.bscale !== DEFAULT_STYLE.bscale || a.bangle !== DEFAULT_STYLE.bangle || a.btone !== DEFAULT_STYLE.btone || a.btoneAmt !== DEFAULT_STYLE.btoneAmt || a.btint !== DEFAULT_STYLE.btint;
+  // a slot is written when it or any later one is set (od: the player's draw order, slot 23, and sd: the edge shade, slot 24, need every slot
+  // before them; an unset order before a shade is written as null)
+  const sd = !!a.shadow && a.shadow > 0, od = a.order !== undefined || sd, mx = !!a.mtex || od, bd = mx || a.bscale !== DEFAULT_STYLE.bscale || a.bangle !== DEFAULT_STYLE.bangle || a.btone !== DEFAULT_STYLE.btone || a.btoneAmt !== DEFAULT_STYLE.btoneAmt || a.btint !== DEFAULT_STYLE.btint;
   if (a.kind || a.hole || a.plantKind || bd) t.push(a.hole ?? 0, a.kind ?? '');
   if (a.plantKind || bd) t.push(a.plantKind ?? '', a.plantKind ? a.plantedMonth ?? 0 : 0);
   if (bd) t.push(r3(a.bscale), r3(a.bangle), a.btone, r3(a.btoneAmt), a.btint);
   if (mx) t.push(a.mtex ?? '', r3(a.mshare ?? 0.5), r3(a.msoft ?? 0.12), r3(a.mpatch ?? 1));
-  if (od) t.push(Math.round(a.order! * 1e6) / 1e6);
+  if (od) t.push(a.order !== undefined ? Math.round(a.order * 1e6) / 1e6 : null);
+  if (sd) t.push(r3(a.shadow!));
   return t;
 }
 
-/** the areas from save tuples: a tuple whose outline fails checkArea is skipped; ids 1..n over the kept ones, styles clamped (a missing radius is sharp, a missing tone is none); a hole tag that is not a positive integer and a kind that is not a BrushKind are dropped */
+/** the areas from save tuples: a tuple whose outline fails checkArea is skipped; ids 1..n over the kept ones, styles clamped (a missing radius is sharp, a missing tone is none, a missing edge shade is none); a hole tag that is not a positive integer and a kind that is not a BrushKind are dropped */
 export function fromTuples(ts: PaintTuple[]): PaintArea[] {
   const out: PaintArea[] = [];
   for (const t of ts) {
     if (checkArea(t[5]) !== '') continue;
     const s = clampStyle({ tex: t[0] as PaintTex, scale: t[1], angle: t[2], border: t[3] as BorderSize, btex: t[4] as BorderTex, radius: t[6] ?? 0, tone: (t[7] ?? 0) as 0 | 1 | 2, toneAmt: t[8] ?? DEFAULT_STYLE.toneAmt, tint: t[9] ?? DEFAULT_STYLE.tint,
       bscale: t[14] ?? DEFAULT_STYLE.bscale, bangle: t[15] ?? DEFAULT_STYLE.bangle, btone: (t[16] ?? 0) as 0 | 1 | 2, btoneAmt: t[17] ?? DEFAULT_STYLE.btoneAmt, btint: t[18] ?? DEFAULT_STYLE.btint,
-      ...(typeof t[19] === 'string' && t[19] ? { mtex: t[19] as PaintTex, mshare: t[20], msoft: t[21], mpatch: t[22] } : {}) });
+      ...(typeof t[19] === 'string' && t[19] ? { mtex: t[19] as PaintTex, mshare: t[20], msoft: t[21], mpatch: t[22] } : {}),
+      ...(typeof t[24] === 'number' ? { shadow: t[24] } : {}) });
     const tags: { hole?: number; kind?: BrushKind; plantKind?: 'seed' | 'sod'; plantedMonth?: number } = {};
     if (Number.isInteger(t[10]) && t[10]! > 0) tags.hole = t[10];
     if (typeof t[11] === 'string' && BRUSH_KIND_IDS.has(t[11])) tags.kind = t[11] as BrushKind;

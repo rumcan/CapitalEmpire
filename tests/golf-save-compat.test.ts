@@ -177,3 +177,28 @@ test('normalizeGolfSave safely defaults missing tees, pins, aims, parcel, tier, 
   assert.equal(normalizeGolfSave(undefined), null);
   assert.equal(normalizeGolfSave({ v: 1, course: [0, 0, 10, 10], clubhouse: { x: 1, y: 1 } }), null);
 });
+
+test('a range start save (plan P22 T087) normalizes with its start, exits, townBoost and invited; a save without start normalizes as before', () => {
+  const range = {
+    v: 1 as const, tier: 1, rep: 30, town: { x: 1000, y: 840 }, course: [772, 886, 300, 450] as [number, number, number, number],
+    parcel: [772, 886, 300, 450] as [number, number, number, number], dir: 2 as const, tees: [], pins: [], aims: [], clubhouse: { x: 840, y: 898 },
+    start: 'range' as const, exits: [{ x: 0, y: 880 }, { x: 2047, y: 880 }], townBoost: 1.2, invited: { at: 5400 }, founding: 2,
+  };
+  const n = normalizeGolfSave(JSON.parse(JSON.stringify(range)));
+  assert.ok(n);
+  assert.equal(n.start, 'range');
+  assert.deepEqual(n.exits, range.exits);
+  assert.equal(n.townBoost, 1.2);
+  assert.deepEqual(n.invited, { at: 5400 });
+  assert.equal(n.founding, 2);
+  // malformed range fields are dropped, never kept half-read
+  const bad = normalizeGolfSave({ ...range, start: 'town' as unknown as 'range', exits: [{ x: 1, y: Number.NaN }, { x: 0, y: 5 }], townBoost: Number.NaN, invited: { at: Number.NaN } });
+  assert.ok(bad);
+  assert.equal('start' in bad, false); assert.deepEqual(bad.exits, [{ x: 0, y: 5 }]); assert.equal('townBoost' in bad, false); assert.equal('invited' in bad, false);
+  // an old start: no new keys appear, and the rest is what it was
+  const { start: _s, exits: _e, townBoost: _b, invited: _i, founding: _f, ...old } = range;
+  const o = normalizeGolfSave(old);
+  assert.ok(o);
+  for (const k of ['start', 'exits', 'townBoost', 'invited', 'founding']) assert.equal(k in o, false, `${k} is not added`);
+  assert.deepEqual(o, { ...old });
+});

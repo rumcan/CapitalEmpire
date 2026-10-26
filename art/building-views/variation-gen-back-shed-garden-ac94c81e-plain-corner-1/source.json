@@ -1,0 +1,10 @@
+{
+ "id": "variation:gen-back-shed-garden-ac94c81e-plain-corner:1",
+ "version": "variation-gen-back-shed-garden-ac94c81e-plain-corner-1-4views-v2",
+ "files": {
+  "NE": "561fa71d96d99dfab7a1d6739358312cb8c01a8e342819ccf06c69257229f820",
+  "SE": "b4175a57f20354e123fff3ea4ee9537f8eb20208d5c453d375fd95fa2c00eb46",
+  "SW": "639ddfb1c16862bbea6e25fa263743ebe4f7bb091b67e4965a17a6f2df67af52",
+  "NW": "9ac069da43371ee3ece3bddd5bbc9bdc8ace088e1050e56dab5d1f2c0da4cbc6"
+ }
+}

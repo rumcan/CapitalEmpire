@@ -1,0 +1,14 @@
+{
+  "generationId": "b192996c-030e-4c9b-b19a-60a73c77ec1b",
+  "prompt": "Full-body character for a 3D model: curly-haired young club golfer in his 20s, Hispanic, a plain orange short-sleeved polo shirt, khaki trousers, no hat, brown golf shoes. Plain clothes with no logos, lettering or emblems. Standing in a neutral A-pose, both arms 45 degrees away from the body, hands open and empty, feet slightly apart, facing the viewer straight on, the whole body visible from head to toe. Match the painted style of the reference character. Plain flat light grey background, nothing else in the picture.",
+  "model": "gemini-3.1-flash-image-preview",
+  "seed": 314245727,
+  "imageUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/h5-imagegen/AFjPSjQH9kbcCl57sgO3/7r4388nXCvVG192gWNl54tkeGPz2/b98972ba-913b-49e6-bc1f-d9859050609a.png",
+  "requestPrompt": "Full-body character for a 3D model: curly-haired young club golfer in his 20s, Hispanic, a plain orange short-sleeved polo shirt, khaki trousers, no hat, brown golf shoes. Plain clothes with no logos, lettering or emblems. Standing in a neutral A-pose, both arms 45 degrees away from the body, hands open and empty, feet slightly apart, facing the viewer straight on, the whole body visible from head to toe. Match the painted style of the reference character. Plain flat light grey background, nothing else in the picture.",
+  "requestModel": "gemini-3.1-flash-image-preview",
+  "aspectRatio": "2:3",
+  "gameId": "AFjPSjQH9kbcCl57sgO3",
+  "outputPath": "E:\\Repos\\CapitalEmpire\\worktrees\\people-ground\\art\\golfers\\pics\\golf_am_m3.png",
+  "status": "saved",
+  "sha256": "b5a40924ff218d46c3c98d244df430bd57afb3e4100c18fa92e23ce343d2afb6"
+}

@@ -1,0 +1,10 @@
+{
+ "id": "variation:ref-building-church-1df07e15-plain:1",
+ "version": "variation-ref-building-church-1df07e15-plain-1-4views-v2",
+ "files": {
+  "NE": "a5ab3f85f5bf9ece48f6f68b27ea01a1c6c8200d0b3941757a66b05f06eebfd6",
+  "SE": "00ba9e6fd2dca95e9774347081ad585e4c0882491e4bd2e5798d06cedaf8ca4e",
+  "SW": "7cb10026d641e41ad4391a151beaeaa78b64de42a24c0a71983f7aabdfea6bed",
+  "NW": "6e684c4f562cf45b86668c1b67e0b3caf41def22c92a9965ae221107e18ffd87"
+ }
+}

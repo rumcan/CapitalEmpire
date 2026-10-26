@@ -1,0 +1,11 @@
+{
+  "image": "art/golfers/pics/golf_am_m1.png",
+  "look": "Weekend golfer in his 50s, a small paunch, a plain burgundy V-neck sweater over a white collared shirt, tan-and-green plaid trousers, a plain tan flat cap, brown-and-white saddle golf shoes",
+  "modelUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/threedgen/AFjPSjQH9kbcCl57sgO3/e3b44ea8-0d76-43db-b8f5-e2233df84d0f/model.compressed.glb",
+  "rigFrom": "base_man (local rig transfer, rig-local-person.mjs)",
+  "clipsFrom": {
+    "walk": "base_man",
+    "idle": "base_man",
+    "golf_drive": "base_man"
+  }
+}

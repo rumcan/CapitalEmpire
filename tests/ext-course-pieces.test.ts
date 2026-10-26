@@ -3,7 +3,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { PIECE_BUTTONS, pieceAreas, pieceCost, piecePropsOf, pieceWhy, snapTargets } from '../src/game/ext/course-pieces';
 import { computeSnapPiecePlacement, type SnapTargetRoad } from '../src/game/ext/course-snap';
-import { DEFAULT_STYLE } from '../src/game/paint';
+import { BRUSH_PRESETS, DEFAULT_STYLE, courseTex } from '../src/game/paint';
 import { PaintTool } from '../src/game/paint-tool';
 import type { PresetProp } from '../src/game/golf/holepreset';
 
@@ -199,5 +199,18 @@ describe('cart path price (T031)', () => {
     const areas = pieceAreas(pl);
     assert.equal(areas.find(a => a.kind === 'path')?.tex, 'spectatorPath');
     assert.ok(pieceCost(areas) > 0);
+  });
+});
+
+describe('pieces and brushes lay the same textures (the owner, 2026-10-24)', () => {
+  it('a placed piece lays the texture its surface brush lays (the owner preset, else the brush photo), never the old blocky photo', () => {
+    const want = (kind: string) => BRUSH_PRESETS.find(b => b.kind === kind)!.style.tex;
+    for (const [kind, arch] of [['fairway', 'fairway-pear'], ['green', 'green-kidney'], ['tee', 'tee-box'], ['bunker', 'bunker-crescent'], ['water', 'water-pond']] as const) {
+      const pl = computeSnapPiecePlacement({ kind, archetype: arch, cursor: { x: 500, y: 500 }, angleDeg: 0, scale: 1, snapEnabled: false, defaultHole: 1, areas: [] });
+      const core = pieceAreas(pl).find(a => a.kind === kind)!;
+      assert.equal(core.tex, want(kind), `${kind}: ${core.tex}`);
+      assert.ok(!pl.layers.some(l => l.role === 'outer-rim'), `${kind}: no rough rim`);
+    }
+    assert.equal(courseTex('waterClear'), courseTex('waterDark'));
   });
 });

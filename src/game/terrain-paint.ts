@@ -4,6 +4,19 @@ import { HS, HSTEP, TC, sampleField, type WaterPoint } from './terrain/types';
 import { fbm, smoothstep, type Noise } from './terrain/noise';
 import type { BBox } from './network';
 import { SUN_LIGHT, sampleCourseGrid } from './ext/course-height';
+import { PRESETS, surfacePreset, type PaintPreset } from './paint-presets';
+import type { PaintTex } from './paint';
+
+/** the woodland floor's texture (TC.HILL; the owner, 2026-10-24: "the map has this vector texture and it should be Fescue texture"): the
+ *  course's fescue (paint-presets.ts surfacePreset: the preset standing for the fescue surface, else the owner's preset named Fescue, the
+ *  Paint tool's), else the course's old fescue photo, so the woodland and the course's fescue always match. The ground painter lays it in
+ *  tile space at scale 1, as a painted course area (renderer.ts paintPhoto), through the woodland's soft noise-edged mask; a pure choice,
+ *  so the bake needs no rebuild step */
+export function woodlandTex(presets: readonly Pick<PaintPreset, 'id' | 'surface'>[] = PRESETS): PaintTex {
+  return surfacePreset('fescue', presets) ?? 'golfFescue';
+}
+/** the woodland floor's texture with the presets the game was built with (woodlandTex) */
+export const WOODLAND_TEX: PaintTex = woodlandTex();
 
 /** a canvas-like path target (Path2D satisfies it) */
 export interface PathSink { moveTo(x: number, y: number): void; lineTo(x: number, y: number): void; arc(x: number, y: number, r: number, a0: number, a1: number): void; closePath(): void }
@@ -45,19 +58,9 @@ export function shadeRGBA(shade: Float32Array, x0: number, y0: number, w: number
   return { data, W, H };
 }
 
-/** an RGBA overlay of the course height's shade alone (the same colours as shadeRGBA) over tiles [x0, x0+w) x [y0, y0+h) at res px per tile; null when nothing in the box is shaded (flat), so the caller can skip it */
-export function courseShadeRGBA(course: Float32Array, x0: number, y0: number, w: number, h: number, res: number): { data: Uint8ClampedArray; W: number; H: number } | null {
-  const W = Math.max(1, Math.ceil(w * res)), H = Math.max(1, Math.ceil(h * res));
-  const data = new Uint8ClampedArray(W * H * 4);
-  let any = false;
-  for (let v = 0; v < H; v++) for (let u = 0; u < W; u++) {
-    const tx = x0 + (u + 0.5) / res, ty = y0 + (v + 0.5) / res, k = (v * W + u) * 4;
-    if (tx < 0 || ty < 0 || tx >= MAP || ty >= MAP) continue; // off the map: no shade (clamped samples would streak)
-    shadePixel(data, k, sampleCourseGrid(course, tx, ty));
-    if (data[k + 3]! > 0) any = true;
-  }
-  return any ? { data, W, H } : null;
-}
+// The course height's own light (the Height tool's mounds and hollows) is not a flat overlay any more (T126): ext/course-height/light.ts and
+// renderer.ts heightLight composite it into the ground chunks, so its shade keeps the texture and its light lands on the texture's mid-tones
+// and lit tips, never in its dark gaps.
 
 /** one 3-tap box blur pass over a gw x gh grid, along x (dx=1) or y (dx=0), clamped at the edges */
 function boxPass(src: Float32Array, dst: Float32Array, gw: number, gh: number, horiz: boolean) {

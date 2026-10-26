@@ -183,7 +183,8 @@ function clearAlong(list: Seg[], s: Seg, p: Pt, n: Pt, reach: number): number {
 }
 /** the candidate lots of one seg, both sides, on the global lattice that its usable span covers */
 function segLots(net: RoadNetwork, s: Seg, terr: Uint8Array | null, out: Lot[], skip?: (x: number, y: number) => boolean) {
-  if (s.kind !== SK.GROUND) return;
+  // a course road (P19: noLots) grows no town lots; checked before SIZE, which has no row for its base
+  if (s.kind !== SK.GROUND || s.cls.noLots) return;
   const dv = sub(s.b, s.a), L = vlen(dv); if (L < 1e-6) return;
   const u = mul(dv, 1 / L), pu = perp(u), cls = s.cls, [W, D] = SIZE[cls.base], r0 = cls.h + cls.walk;
   const t0 = dot(s.a, u), t1 = dot(s.b, u), ra = endReach(s.a, cls), rb = endReach(s.b, cls);

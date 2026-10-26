@@ -79,6 +79,10 @@ on every lot so they meet), with planting along both faces and leaf drifts at th
 `node scripts/assets/review/server.mjs --port 5179`, then http://127.0.0.1:5179/ — the owner's screen:
 - **Library**: every sprite as the game has it, at true relative size (zoom slider), the pointer a townsperson at the same
   scale (feet on the pointer). Smaller/Bigger -> `scale-overrides.json`; Remove/Restore -> `removed.json`.
+  Each card is what the game draws (an old building as its new-art stand-in, `review/size-report.ts` runs the game's code) and
+  says the scale it is sharp to at the closest zoom; a size past the picture's own pixels is refused. The game imports
+  `scale-overrides.json` (`src/game/lots/scales.ts`), so a size shows after a reload, no rebuild; a building's four views take
+  one size (its id's). No sprite is ever drawn past its atlas pixels (`src/game/sizes.ts`, capped in `newart.ts lookOf`).
 - **Lots**: click a sprite in a baked lot to move (0.25 m), resize, mirror or delete it there -> `lot-edits.json`.
 - **People**: each townsperson's walk rows animated; click a frame to fix it -> `walker-fixes.json` (codes parsed by
   `walker-fix.mjs`): `mirror`; `use:<k>` / `use-mirror:<k>` (another frame of the row); `use:<DIR>:<k>` / `use-mirror:<DIR>:<k>`

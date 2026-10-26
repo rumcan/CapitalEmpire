@@ -1,15 +1,17 @@
 import { MAP, mulberry } from './iso';
 import type { LineStyle } from './types';
-export type Surface = 'asphalt' | 'asphaltDark' | 'asphaltWorn' | 'gravel';
-export type WalkKind = 'slabs' | 'gravel';
+/** a road's surface; dirt and cement: the course's starter cart paths (T084: packed dirt, cement slabs with a joint every 3 m) */
+export type Surface = 'asphalt' | 'asphaltDark' | 'asphaltWorn' | 'gravel' | 'dirt' | 'cement';
+/** a verge's surface; turf: no verge drawn, the grass runs up to the edge (the cart paths, T084) */
+export type WalkKind = 'slabs' | 'gravel' | 'turf';
 
 /* ---------- road classes ---------- */
 /** a class id: a type id plus its variant flags joined with dots ('street', 'arterial.tl.tr'); see the catalogue below */
 export type ClassId = string;
 /** the road types (one row of the catalogue each) */
-export type TypeId = 'gravel' | 'lane' | 'street' | 'road' | 'avenue' | 'arterial' | 'boulevard' | 'six' | 'grand' | 'divided';
-/** the size family a type sits in (the road tool's headers) */
-export type Family = 'small' | 'medium' | 'large' | 'rural';
+export type TypeId = 'gravel' | 'lane' | 'street' | 'road' | 'avenue' | 'arterial' | 'boulevard' | 'six' | 'grand' | 'divided' | 'drive-gravel' | 'drive' | 'drive-avenue' | 'cart-walk' | 'cart-dirt' | 'cart-slab' | 'cart';
+/** the size family a type sits in (the road tool's headers); course: the golf course's drives (P19); cart: its cart paths (P19, T084) */
+export type Family = 'small' | 'medium' | 'large' | 'rural' | 'course' | 'cart';
 export type NodeType = 'plain' | 'stop' | 'mini' | 'signal' | 'slip' | 'roundabout';
 export interface Pt { x: number; y: number }
 export interface Leg { a: Pt; b: Pt }
@@ -47,6 +49,13 @@ export interface RoadClass {
   streetTrees: boolean;
   centre: 'style' | 'dashed' | 'none' | 'double' | 'twltl';
   laneCentres: number[];
+  /** a course road: no town lots grow along it (P19) */
+  noLots?: boolean;
+  /** a garden median: shrubs and flower beds instead of trees (P19) */
+  medianGarden?: boolean;
+  /** a cart path (P19, T084): no traffic lanes (laneCentres is empty), so no car routes over it and no car park opens onto it; carts and
+   *  walkers only */
+  noCars?: boolean;
 }
 /** the plain road types: the seven presets (their numbers are the saved game's, do not change them) and the three new ones */
 const PLAIN: RoadClass[] = [
@@ -60,6 +69,17 @@ const PLAIN: RoadClass[] = [
   { id: 'six', name: 'Six-lane', desc: '6 lanes · painted median · 22 m', base: 'six', flags: [], family: 'large', vmax: 22.222, h: 5.5, walk: 1.025, walkTex: 'slabs', median: 0, shoulder: 0, tex: 'asphaltDark', rConcave: 3, bulb: 1, cost: 560, order: 4, crosswalk: true, laneLines: [2, 3.75], oneway: false, medianTrees: false, streetTrees: false, centre: 'double', laneCentres: [1.125, 2.875, 4.625] },
   { id: 'grand', name: 'Grand boulevard', desc: '6 lanes · tree-lined median · 25 m', base: 'grand', flags: [], family: 'large', vmax: 25.0, h: 6.25, walk: 1.025, walkTex: 'slabs', median: 2, shoulder: 0, tex: 'asphaltDark', rConcave: 3.25, bulb: 1, cost: 620, order: 4, crosswalk: true, laneLines: [2.75, 4.5], oneway: false, medianTrees: true, streetTrees: false, centre: 'none', laneCentres: [1.875, 3.625, 5.375] },
   { id: 'divided', name: 'Divided road', desc: '4 lanes · grass median · shoulders · 24 m', base: 'divided', flags: [], family: 'rural', vmax: 22.222, h: 6, walk: 0.75, walkTex: 'gravel', median: 3, shoulder: 1, tex: 'asphaltDark', rConcave: 3, bulb: 0, cost: 520, order: 3, crosswalk: false, laneLines: [3.25], oneway: false, medianTrees: false, streetTrees: false, centre: 'none', laneCentres: [2.375, 4.125] },
+  // the golf course's drives (P19): a miniature of the road catalogue, no town lots along them (noLots)
+  { id: 'drive-gravel', name: 'Gravel drive', desc: 'Course drive · single lane · 4 m · gravel', base: 'drive-gravel', flags: [], family: 'course', noLots: true, vmax: 6.944, h: 1, walk: 0.4, walkTex: 'gravel', median: 0, shoulder: 0, tex: 'gravel', rConcave: 0.8, bulb: 0.5, cost: 30, order: 0, crosswalk: false, laneLines: [], oneway: false, medianTrees: false, streetTrees: false, centre: 'none', laneCentres: [0] },
+  { id: 'drive', name: 'Paved drive', desc: 'Course drive · single lane · 4 m · kerbed', base: 'drive', flags: [], family: 'course', noLots: true, vmax: 8.333, h: 1, walk: 0.6, walkTex: 'slabs', median: 0, shoulder: 0, tex: 'asphalt', rConcave: 0.8, bulb: 0.5, cost: 90, order: 0, crosswalk: false, laneLines: [], oneway: false, medianTrees: false, streetTrees: false, centre: 'none', laneCentres: [0] },
+  { id: 'drive-avenue', name: 'Avenue drive', desc: 'Course drive · 1 lane each way · tree-lined median · 9 m', base: 'drive-avenue', flags: [], family: 'course', noLots: true, vmax: 8.333, h: 2.25, walk: 0.6, walkTex: 'slabs', median: 1.25, shoulder: 0, tex: 'asphaltDark', rConcave: 1.5, bulb: 0.5, cost: 220, order: 0, crosswalk: false, laneLines: [], oneway: false, medianTrees: true, streetTrees: false, centre: 'none', laneCentres: [1.45] },
+  // the golf course's cart paths (P19, T084): carts and walkers only (noCars: no lanes), no lots. Real widths 2, 2.5 and 3 m (h is the half width
+  // in tiles of 2 m), a 0.4 m turf verge each side (the frontage snap's clearance); painted under every road (order -2). The walking path (T100):
+  // 1.2 m of packed earth for the narrow routes between greens and tees, drawn on the course's 1 m half grid, the cheapest; no wheel ruts
+  { id: 'cart-walk', name: 'Walking path', desc: 'Footpath · 1.2 m · packed earth', base: 'cart-walk', flags: [], family: 'cart', noLots: true, noCars: true, vmax: 1.4, h: 0.3, walk: 0.15, walkTex: 'turf', median: 0, shoulder: 0, tex: 'dirt', rConcave: 0.3, bulb: 0.15, cost: 4, order: -2, crosswalk: false, laneLines: [], oneway: false, medianTrees: false, streetTrees: false, centre: 'none', laneCentres: [] },
+  { id: 'cart-dirt', name: 'Dirt path', desc: 'Cart path · 2 m · packed dirt', base: 'cart-dirt', flags: [], family: 'cart', noLots: true, noCars: true, vmax: 4.167, h: 0.5, walk: 0.2, walkTex: 'turf', median: 0, shoulder: 0, tex: 'dirt', rConcave: 0.5, bulb: 0.25, cost: 8, order: -2, crosswalk: false, laneLines: [], oneway: false, medianTrees: false, streetTrees: false, centre: 'none', laneCentres: [] },
+  { id: 'cart-slab', name: 'Cement slab path', desc: 'Cart path · 2.5 m · cement slabs', base: 'cart-slab', flags: [], family: 'cart', noLots: true, noCars: true, vmax: 5.556, h: 0.625, walk: 0.2, walkTex: 'turf', median: 0, shoulder: 0, tex: 'cement', rConcave: 0.5, bulb: 0.25, cost: 20, order: -2, crosswalk: false, laneLines: [], oneway: false, medianTrees: false, streetTrees: false, centre: 'none', laneCentres: [] },
+  { id: 'cart', name: 'Paved cart path', desc: 'Cart path · 3 m · asphalt', base: 'cart', flags: [], family: 'cart', noLots: true, noCars: true, vmax: 5.556, h: 0.75, walk: 0.2, walkTex: 'turf', median: 0, shoulder: 0, tex: 'asphalt', rConcave: 0.5, bulb: 0.25, cost: 45, order: -2, crosswalk: false, laneLines: [], oneway: false, medianTrees: false, streetTrees: false, centre: 'none', laneCentres: [] },
 ];
 /** the lanes of a one-way type (keyed by its base): a lane for each direction of the two-way type, across the whole width */
 const ONEWAY: Record<string, Partial<RoadClass>> = {
@@ -71,6 +91,7 @@ const ONEWAY: Record<string, Partial<RoadClass>> = {
 const FLAG: Record<string, (c: RoadClass) => Partial<RoadClass>> = {
   tr: c => ({ streetTrees: true, cost: c.cost + 20, name: c.name + ' with trees', desc: c.desc + ' · trees' }),
   gr: c => ({ medianTrees: false, cost: c.cost - 20, name: c.name + ' (grass median)', desc: c.desc.replace('tree-lined', 'grass') }),
+  gd: c => ({ medianTrees: false, medianGarden: true, cost: c.cost + 30, name: c.name + ' (garden median)', desc: c.desc.replace('tree-lined', 'garden') }),
   tl: () => ({ h: 4.875, laneCentres: [1.875, 3.875], laneLines: [2.875], centre: 'twltl', cost: 460, name: 'Arterial + turn lane', desc: '4 lanes · centre turn lane · 20 m' }),
   ow: c => {
     const lanes = ONEWAY[c.base]!.laneCentres!.length;
@@ -80,7 +101,7 @@ const FLAG: Record<string, (c: RoadClass) => Partial<RoadClass>> = {
 };
 const applyFlag = (c: RoadClass, f: string): RoadClass => ({ ...c, ...FLAG[f]!(c), id: c.id + '.' + f, flags: [...c.flags, f] });
 /** the variants that are built (the Tab key's list is VARIANTS) */
-const BUILT: [TypeId, string[]][] = [['street', ['tr']], ['avenue', ['gr']], ['arterial', ['tl']], ['arterial', ['tr']], ['arterial', ['tl', 'tr']], ['boulevard', ['gr']], ['grand', ['gr']], ['street', ['ow']], ['arterial', ['ow']], ['six', ['ow']], ['street', ['ow', 'tr']], ['arterial', ['ow', 'tr']]];
+const BUILT: [TypeId, string[]][] = [['street', ['tr']], ['avenue', ['gr']], ['arterial', ['tl']], ['arterial', ['tr']], ['arterial', ['tl', 'tr']], ['boulevard', ['gr']], ['grand', ['gr']], ['street', ['ow']], ['arterial', ['ow']], ['six', ['ow']], ['street', ['ow', 'tr']], ['arterial', ['ow', 'tr']], ['drive', ['tr']], ['drive-avenue', ['gr']], ['drive-avenue', ['gd']]];
 const PLAIN_BY_ID = Object.fromEntries(PLAIN.map(c => [c.id, c])) as Record<string, RoadClass>;
 /** every road class: the plain types, then their variants */
 export const CLASSES: RoadClass[] = [...PLAIN, ...BUILT.map(([t, fl]) => fl.reduce(applyFlag, PLAIN_BY_ID[t]!))];
@@ -88,10 +109,28 @@ export const CLASSES: RoadClass[] = [...PLAIN, ...BUILT.map(([t, fl]) => fl.redu
 export const CLASS = Object.fromEntries(CLASSES.map(c => [c.id, c])) as Record<string, RoadClass>;
 /** the class of a stored id (a save, a netop); an unknown id is a street */
 export function classOf(id: string): RoadClass { return CLASS[id] ?? CLASS.street! }
+/** the course's families (P19): its cart paths and its drives. They are built from the Course menu's Paths & drives, never the Roads panel (T084) */
+export const COURSE_FAMILIES: readonly Family[] = ['cart', 'course'];
+/** a class of the course's paths or drives (COURSE_FAMILIES) */
+export function isCourseClass(id: ClassId): boolean { return COURSE_FAMILIES.includes(classOf(id).family); }
+/** the golf tier a course road class opens at (P19, T084): the gravel drive and both starter cart paths (dirt, cement slabs) 1, the paved drive
+ *  and the paved cart path 2, the avenue drives 3; null for any other class */
+export function courseTierNeeded(id: ClassId): number | null {
+  const c = classOf(id);
+  if (c.family === 'cart') return c.base === 'cart' ? 2 : 1;
+  return c.family !== 'course' ? null : c.base === 'drive' ? 2 : c.base === 'drive-avenue' ? 3 : 1;
+}
+/** a course path or drive is open to build (T084): every tier with the dev sandbox's unlock-all (sandbox: the dev server, or ?unlock=1), else only
+ *  in a golf game (golfTier not null) at its golf tier (courseClassOpen) */
+export function courseRoadOpen(id: ClassId, golfTier: number | null, sandbox: boolean): boolean { return sandbox || (golfTier !== null && courseClassOpen(id, golfTier)); }
+/** a course road class is open at this golf tier (courseTierNeeded); any other class: true */
+export function courseClassOpen(id: ClassId, tier: number): boolean { return (courseTierNeeded(id) ?? 0) <= tier }
 /** the variant ids of each type, in Tab order (the road tool's Tab key cycles them) */
 export const VARIANTS: Record<TypeId, string[]> = {
   gravel: ['gravel'], lane: ['lane'], street: ['street', 'street.ow', 'street.tr', 'street.ow.tr'], road: ['road'], avenue: ['avenue', 'avenue.gr'],
   arterial: ['arterial', 'arterial.ow', 'arterial.tl', 'arterial.tr', 'arterial.ow.tr', 'arterial.tl.tr'], boulevard: ['boulevard', 'boulevard.gr'], six: ['six', 'six.ow'], grand: ['grand', 'grand.gr'], divided: ['divided'],
+  'drive-gravel': ['drive-gravel'], drive: ['drive', 'drive.tr'], 'drive-avenue': ['drive-avenue', 'drive-avenue.gr', 'drive-avenue.gd'],
+  'cart-walk': ['cart-walk'], 'cart-dirt': ['cart-dirt'], 'cart-slab': ['cart-slab'], cart: ['cart'],
 };
 /** the road tool's palette by size family (gravel is in two families) */
 export const TYPES: { id: TypeId; family: Family }[] = [
@@ -99,7 +138,13 @@ export const TYPES: { id: TypeId; family: Family }[] = [
   { id: 'avenue', family: 'medium' }, { id: 'arterial', family: 'medium' },
   { id: 'boulevard', family: 'large' }, { id: 'six', family: 'large' }, { id: 'grand', family: 'large' },
   { id: 'gravel', family: 'rural' }, { id: 'road', family: 'rural' }, { id: 'divided', family: 'rural' },
+  { id: 'drive-gravel', family: 'course' }, { id: 'drive', family: 'course' }, { id: 'drive-avenue', family: 'course' },
+  { id: 'cart-walk', family: 'cart' }, { id: 'cart-dirt', family: 'cart' }, { id: 'cart-slab', family: 'cart' }, { id: 'cart', family: 'cart' },
 ];
+/** the Roads panel's palette: the town's road types only (T084) */
+export const ROAD_TYPES = TYPES.filter(t => !COURSE_FAMILIES.includes(t.family));
+/** the Course menu's Paths & drives palette: the cart paths, then the course drives (T084) */
+export const COURSE_TYPES = TYPES.filter(t => COURSE_FAMILIES.includes(t.family));
 /** the classes the keys 1 to 6 pick, in key order (the arterial is picked in the panel) */
 export const KEY_CLASSES: ClassId[] = ['gravel', 'lane', 'street', 'road', 'avenue', 'boulevard'];
 /** the class the Upgrade tool takes a road to: one step up the ladder gravel -> street -> road -> arterial -> six-lane (a lane goes to a street),
@@ -109,6 +154,8 @@ export const WIDER: Partial<Record<ClassId, ClassId>> = {
   gravel: 'street', lane: 'street', street: 'road', road: 'arterial', arterial: 'six', 'arterial.tl': 'six', 'arterial.tr': 'six', 'arterial.tl.tr': 'six',
   'street.tr': 'arterial.tr', avenue: 'boulevard', 'avenue.gr': 'boulevard.gr', boulevard: 'grand', 'boulevard.gr': 'grand.gr',
   'street.ow': 'arterial.ow', 'arterial.ow': 'six.ow', 'street.ow.tr': 'arterial.ow.tr', 'arterial.ow.tr': 'six.ow',
+  'drive-gravel': 'drive', drive: 'drive-avenue', 'drive.tr': 'drive-avenue',
+  'cart-walk': 'cart-dirt', 'cart-dirt': 'cart-slab', 'cart-slab': 'cart',
 };
 /** the class the Downgrade tool takes a road to: one step back down WIDER's ladders (a six-lane to an arterial, a turn-lane arterial to a road).
  *  A class not listed is the bottom of its ladder (gravel, the lane, the divided road) */
@@ -116,6 +163,8 @@ export const NARROWER: Partial<Record<ClassId, ClassId>> = {
   street: 'gravel', road: 'street', arterial: 'road', 'arterial.tl': 'road', six: 'arterial', 'arterial.tr': 'street.tr', 'arterial.tl.tr': 'street.tr',
   boulevard: 'avenue', 'boulevard.gr': 'avenue.gr', grand: 'boulevard', 'grand.gr': 'boulevard.gr',
   'arterial.ow': 'street.ow', 'six.ow': 'arterial.ow', 'arterial.ow.tr': 'street.ow.tr',
+  'drive-avenue': 'drive', 'drive-avenue.gr': 'drive', 'drive-avenue.gd': 'drive', drive: 'drive-gravel', 'drive.tr': 'drive-gravel',
+  cart: 'cart-slab', 'cart-slab': 'cart-dirt', 'cart-dirt': 'cart-walk',
 };
 export const JUNCTIONS: { id: NodeType; name: string; desc: string; cost: number; minDeg: number }[] = [
   { id: 'plain', name: 'Plain', desc: 'Priority: the bigger road runs through, side roads stop or yield (two-way stop)', cost: 0, minDeg: 3 },
@@ -292,7 +341,7 @@ export interface Wear { pts: Pt[]; closed: boolean; r: number; h: number; offset
 export interface Tyre { x: number; y: number; ang: number; start: number; lat: number[]; len: number }
 export interface Route { nodes: Node[]; segs: Seg[]; pts: Pt[]; cls: RoadClass; style: LineStyle; kind: SegKind; closed: boolean; a0?: Arm; a1?: Arm }
 /** town: a street lamp of a gravel road, placed only where the town has houses near it (engine.syncAutoProps) */
-export interface AutoProp { kind: 'tree' | 'light' | 'rbtree' | 'lamp'; x: number; y: number; i: number; town?: boolean }
+export interface AutoProp { kind: 'tree' | 'light' | 'rbtree' | 'lamp' | 'garden'; x: number; y: number; i: number; town?: boolean }
 export interface PieceSel { seg: Seg; p0: Pt; p1: Pt }
 /** a bridge deck: the route centreline and the deck half width (tiles) */
 export interface BridgeRec { pts: Pt[]; hw: number; bbox: BBox }
@@ -303,6 +352,9 @@ export interface TunnelRec { pts: Pt[]; w: number; bbox: BBox }
 export interface Island { x: number; y: number; r: number }
 
 const YELLOW = '#d6b23b', WHITE = 'rgba(238,238,230,0.92)';
+/** the starter cart paths' marks (T084): a cement slab joint (a soft grey groove), a dirt path's wheel rut (darker packed earth) and its
+ *  centre grass (a muted painted green) */
+export const CEMENT_JOINT = 'rgba(86,82,74,0.5)', DIRT_RUT = 'rgba(112,82,48,0.4)', DIRT_GRASS = 'rgba(98,132,58,0.5)';
 
 function segIntersections(P: Pt, Q: Pt, A: Pt, B: Pt): [number, number][] {
   const d1 = sub(Q, P), d2 = sub(B, A), den = cross(d1, d2), w = sub(A, P), eps = 1e-9;
@@ -752,7 +804,8 @@ export class RoadNetwork {
     }
     fx.walkF.push(feat('stroke', path, 2 * (cls.h + cls.walk), cls.walkTex, walkOrder(cls.walkTex), bb));
     fx.asphF.push(feat('stroke', path, 2 * cls.h, cls.tex, cls.order, bb, 'butt', kerbed(cls)));
-    const rl = cls.h + 1.75;
+    // the markings' corner radius; a cart path's is tight, so its slab joints and wheel ruts stay on its narrow surface through a bend (T084)
+    const rl = cls.noCars ? cls.h + 0.25 : cls.h + 1.75;
     if (kerbed(cls)) {
       const n = r.pts.length, runs = r.closed ? n : n - 1;
       for (let k = 0; k < runs; k++) {
@@ -767,6 +820,7 @@ export class RoadNetwork {
       if (pts && pts.length >= 2 && (r.closed || mlen >= 3)) {
         fx.medianF.push(feat('stroke', roundedPath(pts, rl, r.closed), cls.median, 'grass', 0, bboxOf(pts, cls.median), 'round'));
         if (cls.medianTrees && r.kind !== SK.BRIDGE) walkAlong(pts, r.closed, 2.2, 4, (p, i) => fx.autoProps.push({ kind: 'tree', x: p.x, y: p.y, i }));
+        if (cls.medianGarden && r.kind !== SK.BRIDGE) walkAlong(pts, r.closed, 1.6, 3, (p, i) => fx.autoProps.push({ kind: 'garden', x: p.x, y: p.y, i }));
       }
     }
     if (cls.streetTrees && r.kind !== SK.BRIDGE) {
@@ -790,6 +844,11 @@ export class RoadNetwork {
       if (centre === 'dashed') push(0.12, YELLOW, cls.id === 'road' ? [2, 1.4] : [1.6, 1.2], 0);
       else if (centre === 'double') { push(0.1, YELLOW, null, 0.17); push(0.1, YELLOW, null, -0.17); }
       else if (centre === 'twltl') for (const s of [1, -1]) { push(0.1, YELLOW, null, s * 0.875); push(0.1, YELLOW, [1.6, 1.2], s * 0.7); }
+      // the starter cart paths' surface marks (T084), as markings (world-anchored dashes, chipped a little by the wear like paint):
+      // cement slabs a joint across the whole width every 1.5 tiles (3 m); packed dirt two darker wheel ruts and a ragged strip of grass between
+      // (not on the narrow walking path: no carts)
+      if (cls.tex === 'cement') push(2 * cls.h, CEMENT_JOINT, [0.06, 1.44], 0);
+      else if (cls.tex === 'dirt' && cls.h >= 0.5) { for (const s of [1, -1]) push(0.14, DIRT_RUT, null, s * cls.h * 0.5); push(0.11, DIRT_GRASS, [0.6, 0.5], 0); }
       // a one-way route's flow: seg a to seg b; the first seg's a is nodes[0] means the flow runs in pts order
       if (cls.oneway) {
         const n0 = r.nodes[0], n1 = r.nodes[1], s0 = r.segs.find(s => (s.a === n0 && s.b === n1) || (s.a === n1 && s.b === n0));
@@ -1024,6 +1083,8 @@ export class RoadNetwork {
       const a = base[k], b = base[(k + 1) % n], d = sub(b, a), L = vlen(d); if (L < 0.3) continue;
       const u = mul(d, 1 / L), nv = perp(u);
       for (const side of [1, -1]) { const nIn = mul(nv, -side), P = add(a, mul(nv, side * cls.h)); this.litterRun(fx, P, u, nIn, L, cls.walk, rng, g, curbed, cls.h); }
+      // a dirt path (T084): grass tufts growing in over both soft edges, leaning onto the path
+      if (cls.tex === 'dirt') for (const side of [1, -1]) for (let t = 0.2 + rng() * 0.6; t < L; t += 0.25 + rng() * 0.7) if (rng() < 0.7) { const p = add(add(a, mul(u, t)), mul(nv, side * (cls.h - 0.04 + (rng() - 0.5) * 0.12))); fx.tufts.push({ x: p.x, y: p.y, ang: Math.atan2(-nv.y * side, -nv.x * side) + (rng() - 0.5) * 0.8, v: (rng() * 3) | 0 }); }
       if (cls.median > 0) for (const side of [1, -1]) { const nIn = mul(nv, side), P = add(a, mul(nv, side * cls.median / 2)); this.litterRun(fx, P, u, nIn, L, 0, rng, g, false, cls.median / 2); }
       if (curbed) { const nSlab = Math.max(1, Math.round(L / 1.25)); for (let j = 0; j <= nSlab; j++) { const q = add(a, mul(u, (L * j) / nSlab)); for (const side of [1, -1]) { const c0 = add(q, mul(nv, side * cls.h)), c1 = add(q, mul(nv, side * (cls.h + 0.12))); fx.joints.push({ a: c0, b: c1 }); } } }
     }
@@ -1061,7 +1122,8 @@ export class RoadNetwork {
     return changed;
   }
   private decalsFor(r: Route, out: Decal[]) {
-    if (r.cls.id === 'gravel') return; // unpaved: no manholes, drains or patches
+    if (r.cls.tex === 'gravel') return; // unpaved (a gravel surface, the town's gravel and the gravel drive): no manholes, drains or patches
+    if (r.cls.noCars) return; // a cart path (T084): no drains, oil or patches (and no lanes to place them by)
     const cls = r.cls, p0 = r.pts[0], rng = mulberry(((p0.x * 73856093) ^ (p0.y * 19349663) ^ (cls.order * 83492791)) >>> 0);
     const curbed = cls.walkTex === 'slabs';
     const weights: [DecalType, number][] = curbed ? [['manhole', 2], ['drain', 2.5], ['oil', 1.5], ['patch', cls.id === 'lane' ? 2.5 : 1]] : [['manhole', 0.4], ['oil', 2], ['patch', 2]];

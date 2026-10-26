@@ -1,0 +1,32 @@
+{
+  "id": "variation:gen-house-ranch-long-a4ddd58c-plain:1",
+  "generator": "image_gen",
+  "generated": "2026-10-24",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-40e95fb1-4594-4583-8949-aebb46db1007.png",
+  "prompt": "ONE GAME ASSET CUTOUT on EMPTY TRANSPARENT ALPHA, RGBA PNG. Reference1 is STYLE ONLY: the Maple Bean street's coherent miniature 3D illustration, softly textured matte materials, restrained rich colours, charcoal roofs, warm amber lamps, readable fine detail, early dusk with remaining daylight. Reference2 shows IDENTITY ONLY: preserve this building's architecture, not its old rendering or blue night cast. It must look natural beside the buildings in reference1. Fixed 2:1 isometric camera and SCREEN UPPER RIGHT SUN in every view; right-facing planes warm, left-facing planes cooler. Exactly four true rigid quarter turns of the SAME physical object on a square 2x2 sheet: NE front+right, SE right+back, SW back+left, NW left+front. Same roof, windows, equipment and physical scale throughout; reconstruct hidden sides, never mirror a front. Centre each complete sprite within its own cell with20% blank margins on every side. Empty alpha in corners, gutters and gaps, zero clipping. NO BACKDROP OR FLOOR: no stage, ground surface, paving, terrain tile, foliage, leaves, broad shadow, haze, gradient, checkerboard, caption, divider, view label or frame. No people, vehicles, Halloween, pumpkins, skulls, cobwebs, spooky signage or decorative garlands. Only the physical building and integral structural parts, no attached landscape.  Ground isolation is critical: every pixel outside the physical building, steps and supports must have alpha=0. No grey floor patch or studio surface. Geometry audit: name four physical facades A front,B right,C rear,D left internally, then draw A+B, B+C, C+D, D+A respectively; unique front-only entrance must appear only in the two views which face A. Rear views need genuinely reconstructed rear facades, not four front variations. Do not copy reference camera four times.  Subject library ID variation:gen-house-ranch-long-a4ddd58c-plain:1. Preserve the exact dwelling/barn massing from identity reference. Distinguish its actual front and rear before drawing. Four clockwise physical rotations around one stationary object, never four views of the same porch. No invented yard, driveway or ground slab. Keep only integral balconies, steps, porch structure.",
+  "references": [
+    {
+      "role": "authoritative-theme",
+      "file": "art/theme-consistency/references/theme-authoritative.png",
+      "sha256": "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2"
+    },
+    {
+      "role": "existing-subject-identity",
+      "id": "variation:gen-house-ranch-long-a4ddd58c-plain:1",
+      "direction": null,
+      "file": "art/theme-consistency/exports/buildings/variation-gen-house-ranch-long-a4ddd58c-plain-1.configured@2x.png",
+      "sha256": "e50f0f4036fc2bd46c6bf393bedbe13e880b2fd5f1d1861b32e3d858240cd134"
+    }
+  ],
+  "integrationStatus": "ready",
+  "integrationReason": "Green entrance and carport belong to front; rear utilities and distinct lateral windows follow four turns. Clean alpha and crop margins.",
+  "sourceVisualReview": {
+    "reviewedAt": "2026-10-24T10:19:27.177Z",
+    "reviewer": "building_variation_review",
+    "alphaCompositeBackground": "#b91b91",
+    "allFourViewsInspected": true,
+    "themeReference": "art/theme-consistency/references/theme-authoritative.png",
+    "result": "ready",
+    "reason": "Green entrance and carport belong to front; rear utilities and distinct lateral windows follow four turns. Clean alpha and crop margins."
+  }
+}

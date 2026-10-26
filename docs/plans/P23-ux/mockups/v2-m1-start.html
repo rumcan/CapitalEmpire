@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>P23 v2 m1: minute zero</title>
+<link rel="stylesheet" href="kit-v2.css"><script src="cameras-v2.js"></script><script src="mock-v2.js"></script></head>
+<body><div class="stage" id="s"><img class="bg" id="bg"><svg class="ov" id="ov"></svg></div>
+<script>
+const M = MOCK, S = document.getElementById('s'), ov = document.getElementById('ov');
+document.getElementById('bg').src = `bg/v2-start-${M.W}.webp`;
+const c = M.cam('start-bg'), P = M.iso(c), T = M.tileOf(c), st = M.cams.state;
+const [px, py, pw, ph] = st.parcel, f = [st.range.x, st.range.y, st.range.w, st.range.h], d = st.dir;
+// the range plot from its front (golf/range.ts plotOfFront, RANGE_PLOT 70 x 150, RANGE_FRONT 24)
+const back = 150 - 24, plot = d === 2 ? [f[0], f[1], 70, 150] : d === 0 ? [f[0], f[1] - back, 70, 150] : d === 1 ? [f[0], f[1], 150, 70] : [f[0] - back, f[1], 150, 70];
+const inRect = (r, x, y) => x >= r[0] && x < r[0] + r[2] && y >= r[1] && y < r[1] + r[3];
+const land = (x, y) => inRect(st.parcel, x, y) && !inRect(plot, x, y);
+// the welcome card sits in the middle of the free map; the suggested tee is the visible land point farthest from it
+const cardW = 470, cardL = Math.round(450 + (M.W - 450 - cardW) / 2), cardT = Math.round(M.H * 0.3);
+let best = null;
+for (let sx = 470; sx < M.W - 80; sx += 20) for (let sy = 140; sy < M.H - 120; sy += 20) {
+  const [tx, ty] = T(sx, sy); if (!land(tx, ty) || !land(tx + 8, ty + 8) || !land(tx - 4, ty - 4)) continue;
+  if (sx > cardL - 40 && sx < cardL + cardW + 40 && sy > cardT - 40 && sy < cardT + 330) continue;
+  const score = Math.hypot(sx - (cardL + cardW / 2), sy - (cardT + 150));
+  if (!best || score > best.score) best = { sx, sy, score };
+}
+M.svg(ov, `<defs>
+    <mask id="out"><rect width="${M.W}" height="${M.H}" fill="#fff"/><path d="${M.poly(P, M.rect(...st.parcel))}" fill="#000"/></mask>
+    <pattern id="hatch" width="12" height="12" patternUnits="userSpaceOnUse" patternTransform="rotate(30)"><rect width="12" height="12" fill="rgba(20,30,46,0.30)"/><line x1="0" y1="0" x2="0" y2="12" stroke="rgba(210,225,240,0.32)" stroke-width="4"/></pattern>
+  </defs>
+  <rect width="${M.W}" height="${M.H}" fill="rgba(6,8,4,0.45)" mask="url(#out)"/>
+  <path d="${M.poly(P, M.rect(...plot))}" fill="url(#hatch)" stroke="rgba(210,225,240,0.8)" stroke-width="2" stroke-dasharray="8 6"/>
+  <path d="${M.poly(P, M.rect(...st.parcel))}" fill="rgba(245,181,46,0.05)" stroke="#f5b52e" stroke-width="3"/>
+  ${best ? `<circle cx="${best.sx}" cy="${best.sy}" r="26" fill="rgba(255,209,102,0.16)" stroke="#ffd166" stroke-width="3"/><circle cx="${best.sx}" cy="${best.sy}" r="40" fill="none" stroke="rgba(255,209,102,0.45)" stroke-width="2"/>` : ''}`);
+// labels: the range plot (inside its visible part) and the land
+const plotLbl = (() => { for (let sy = M.H - 160; sy > 120; sy -= 20) for (let sx = 470; sx < M.W - 300; sx += 20) { const [tx, ty] = T(sx, sy); if (inRect(plot, tx, ty) && !(sx > cardL - 20 && sx < cardL + cardW + 20 && sy > cardT - 20 && sy < cardT + 330)) return [sx, sy]; } return [500, M.H - 200]; })();
+M.html(S, `<div class="tag" style="left:${plotLbl[0]}px;top:${plotLbl[1]}px">The driving range<span class="l2">golfers hit here: no course on this plot</span></div>`);
+if (best) M.html(S, `<div class="tag gold" style="left:${best.sx + 300 > M.W ? best.sx - 250 : best.sx + 48}px;top:${best.sy - 22}px">A good spot for hole 1's tee<span class="l2">your course land</span></div>`);
+M.topbar(S);
+M.rail(S, { stage: 1, active: 'holes' });
+M.html(S, `
+<div class="glass panel">
+  <div class="phead"><div class="badge"><img src="../../../../src/assets/ui/icons/trophy.webp"></div><div><h2>Holes</h2><div class="sub">Each hole is a park: build it, then shape it</div></div>
+    <div class="undo"><span class="off">↶</span><span class="off">↷</span></div></div>
+  <div class="sec"><div class="primary"><span class="plus">+</span><div><div class="t">New hole</div><div class="s">Click a tee, then a green</div></div></div></div>
+  <div class="line1" style="margin-top:10px">The whole hole is planned for you: fairway, green, tee and rough. Nothing is paid until you press Build.</div>
+  <div class="dim" style="font-size:12.5px;margin-top:8px">Shape by hand (1 m cells) opens after your first hole.</div>
+</div>`);
+M.html(S, `
+<div class="glass" style="position:absolute;left:${cardL}px;top:${cardT}px;width:${cardW}px;padding:20px 22px 16px">
+  <div class="caps" style="color:var(--gold-hi)">Welcome</div>
+  <div class="display" style="font-size:25px;font-weight:700;margin-top:3px">Your driving range on Route 9</div>
+  <div style="font-size:14px;line-height:1.5;color:#e2dbca;margin-top:7px">Drivers stop to hit a bucket of balls. Build a golf course on your land behind the range, and a town will grow around you.</div>
+  <div class="box" style="margin-top:11px">
+    <div class="check"><span class="m gold">1</span><span><b>Build hole 1</b>: click a tee, click a green, Build.</span></div>
+    <div class="check"><span class="m dim">2</span><span class="muted">Place the clubhouse beside a drive</span></div>
+    <div class="check"><span class="m dim">3</span><span class="muted">Finish nine holes: the tour invites you</span></div>
+  </div>
+  <div class="row" style="margin-top:13px"><div class="primary focus" style="width:auto;padding:9px 18px"><div class="t">Build your first hole</div></div><span class="grow"></span><span class="dim">Skip the guide</span></div>
+</div>
+<div class="glass hintpill"><span class="caps" style="color:var(--gold-hi)">Step 1 of 7</span><span>The button takes you to your land with New hole ready</span></div>`);
+M.minimap(S, `bg/v2-start-${M.W}.webp`);
+if (!M.small) M.html(S, `
+  <div class="note" style="left:104px;top:${M.H - 300}px;max-width:336px"><span class="n">1</span><b>Minute zero is one button.</b> The brush, sizes and the rest unfold after hole 1 (critique D3.1).</div>
+  <div class="note" style="left:104px;top:${M.H - 210}px;max-width:336px"><span class="n">2</span>Tools that are not ready yet stay <b>in place, dimmed</b>, with what unlocks them; nothing on the rail moves later (D3.4).</div>`);
+M.html(S, `<div class="title-strip">P23 v2 · m1 minute zero · ${M.W} × ${M.H}</div>`);
+</script>
+</body></html>

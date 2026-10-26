@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>P23 v2 m2: New hole</title>
+<link rel="stylesheet" href="kit-v2.css"><script src="cameras-v2.js"></script><script src="mock-v2.js"></script></head>
+<body><div class="stage" id="s"><img class="bg" id="bg"><svg class="ov" id="ov"></svg></div>
+<script>
+const M = MOCK, S = document.getElementById('s'), ov = document.getElementById('ov');
+document.getElementById('bg').src = `bg/v2-wizard-${M.W}.webp`;
+const c = M.cam('wizard-shape-bg'), P = M.iso(c), tee = M.cams.tee, green = M.cams.green;
+// the numbers T102 showed for this plan in the capture (par 4 · 345 m · $31,290 at 1600; 346 m · $31,404 at 1366)
+const big = M.W >= 1600, len = big ? 345 : 346, cost = big ? 31290 : 31404, fw = big ? 18360 : 18420, rough = cost - fw - 3300 - 840;
+const usd = n => '$' + n.toLocaleString('en-US');
+const pt = P(tee.x, tee.y), pg = P(green.x, green.y);
+M.html(S, `<div class="tag gold" style="left:${pt[0] + 180 > M.W ? pt[0] - 170 : pt[0] + 18}px;top:${pt[1] + (pt[0] + 180 > M.W ? 20 : -40)}px">Tee · hole 1<span class="l2">drag to move it</span></div>`);
+M.html(S, `<div class="glass" style="position:absolute;right:12px;top:${big ? 80 : 80}px;padding:6px 12px;border-radius:999px;font-size:13px">Camera framed the hole · ${big ? '10%' : '8%'} <span class="dim">· any drag or wheel takes over</span></div>`);
+M.topbar(S);
+M.rail(S, { stage: 1, active: 'holes' });
+M.html(S, `
+<div class="glass panel">
+  <div class="phead"><div class="badge"><img src="../../../../src/assets/ui/icons/trophy.webp"></div><div><h2>New hole 1</h2><div class="sub">Shape it, then Build</div></div>
+    <div class="undo"><span title="Undo: move the green">↶</span><span class="off">↷</span></div></div>
+  <div class="step" style="margin-top:10px"><span class="done">✓ Tee</span><i>—</i><span class="done">✓ Green</span><i>—</i><span class="on">3 Shape</span></div>
+  <div class="sec row" style="gap:6px"><div class="primary" style="flex:1;padding:9px 14px"><div class="t">Build · ${usd(cost)}</div><span class="kc">Enter</span></div><span class="ghostbtn">Cancel</span></div>
+  <div class="box" style="margin-top:10px">
+    <div class="row"><div class="display" style="font-size:20px;font-weight:700">Par 4 · ${len} m</div><span class="grow"></span><span class="pill" style="padding:3px 10px">Hole 1 ▾</span></div>
+    <div class="muted" style="font-size:12.5px;margin-top:1px">${Math.round(len * 1.0936)} yd · straight · landing zone at 210 m</div>
+    <div style="margin-top:6px">
+      <div class="stat"><span class="muted">Fairway</span><b>${usd(fw)}</b></div>
+      <div class="stat"><span class="muted">Green · 550 m²</span><b>$3,300</b></div>
+      <div class="stat"><span class="muted">Tee · 280 m²</span><b>$840</b></div>
+      <div class="stat"><span class="muted">Rough and collars</span><b>${usd(rough)}</b></div>
+    </div>
+  </div>
+  <div class="sec"><div class="caps">Planting</div>
+    <div class="seg"><span class="on">Seed · ${usd(cost)}</span><span>Sod · ${usd(Math.round(cost * 4.3 / 100) * 100)}</span></div>
+    ${big ? `<div class="dim" style="font-size:12.5px;margin-top:5px;line-height:1.4">Seed: playable in 3–6 months. Sod is ready now but costs 4.3 times as much: nine holes like this would cost about $1.2M.</div>` : `<div class="dim" style="font-size:12.5px;margin-top:5px">Sod: ready now, 4.3 times the price (nine ≈ $1.2M)</div>`}
+    <div class="line1" style="margin-top:5px">Nine holes like this: about <b>${usd(Math.round(cost * 9 / 1000))}k</b> · you have <b class="ok">$600k</b></div></div>
+  <div class="sec"><div class="caps">Checks</div>
+    <div class="check"><span class="m ok">✓</span><span>Tee and green on your land</span></div>
+    <div class="check"><span class="m ok">✓</span><span>Clear of the driving range and roads</span></div>
+    <div class="check"><span class="m ok">✓</span><span>No other hole within 60 m</span></div>
+  </div>
+  ${big ? `<div class="dim" style="font-size:12px;margin-top:8px;line-height:1.45">Drag the line to bend it · amber handles widen · <span class="kc">R</span> turns the green · <span class="kc">Ctrl</span>+<span class="kc">Z</span> undoes a drag · <span class="kc">Esc</span> steps back</div>` : ''}
+</div>
+${big ? '' : `<div class="glass hintpill">Drag the line to bend it · amber handles widen · <span class="kc">R</span> turns the green · <span class="kc">Ctrl</span>+<span class="kc">Z</span> undoes a drag · <span class="kc">Esc</span> steps back</div>`}`);
+M.minimap(S, `bg/v2-wizard-${M.W}.webp`);
+if (big) M.html(S, `
+  <div class="note" style="left:620px;top:796px;max-width:420px"><span class="n">1</span>After the tee click the <b>camera eased out</b> so the whole hole fits beside the panel (D1.1). The ghost, handles and gold pill are T102's, as on main today.</div>
+  <div class="note" style="left:470px;top:128px;max-width:330px"><span class="n">2</span><b>Build is on top</b>, the price split and Seed or Sod under it; Sod shows what it does to the season (D3.5). Ctrl+Z takes back a drag, not hole 1 (D4.9).</div>`);
+M.html(S, `<div class="title-strip">P23 v2 · m2 New hole (T102 + P1-D) · ${M.W} × ${M.H}</div>`);
+</script>
+</body></html>

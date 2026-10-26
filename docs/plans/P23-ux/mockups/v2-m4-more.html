@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>P23 v2 m4: More options and My looks</title>
+<link rel="stylesheet" href="kit-v2.css"><script src="cameras-v2.js"></script><script src="mock-v2.js"></script>
+<style>
+  .stamp { width: 34px; height: 30px; border-radius: 9px; border: 1px solid var(--line); background: rgba(255,255,255,.03); display: grid; place-items: center; }
+  .stamp svg { width: 26px; height: 20px; }
+  .sheet { position: absolute; left: 452px; top: 80px; width: 330px; padding: 14px; }
+  .bigdisc { position: relative; flex: none; width: 120px; height: 120px; border-radius: 50%; background-size: 180px; background-position: center; box-shadow: inset 10px -8px 14px rgba(0,0,0,.32), inset -8px 6px 10px rgba(255,245,210,.3), 0 6px 14px rgba(0,0,0,.5); overflow: hidden; }
+  .chips { display: flex; flex-wrap: wrap; gap: 5px; }
+  input[type=range] { accent-color: #f5b52e; }
+</style></head>
+<body><div class="stage" id="s"><img class="bg" id="bg"><svg class="ov" id="ov"></svg></div>
+<script>
+const M = MOCK, S = document.getElementById('s'), ov = document.getElementById('ov');
+document.getElementById('bg').src = `bg/v2-grown-30-${M.W}.webp`;
+const c = M.cam('grown-30-bg'), P = M.iso(c), tee = M.cams.tee, green = M.cams.green;
+const dx = green.x - tee.x, dy = green.y - tee.y, L = Math.hypot(dx, dy), nx = -dy / L, ny = dx / L, mid = [(tee.x + green.x) / 2, (tee.y + green.y) / 2];
+let edge = null;
+for (const sd of [1, -1]) { const t = [mid[0] + nx * 10 * sd, mid[1] + ny * 10 * sd], p = P(...t); if (p[0] > 820 && p[0] < M.W - 300 && p[1] > 170 && p[1] < M.H - 190 && (!edge || p[0] > edge.p[0])) edge = { t, p }; }
+const cx = Math.round(edge.t[0] * 2) / 2, cy = Math.round(edge.t[1] * 2) / 2;
+const cells = []; for (let i = -1; i < 1; i++) for (let j = -1; j < 1; j++) cells.push([cx * 2 + i, cy * 2 + j]);
+const fp = M.cells(P, cells);
+M.svg(ov, `<g>${M.spot(P, cx, cy, 7, '255,250,230', 0.5)}</g><path d="${fp.fill}" fill="rgba(80,140,60,0.7)"/><path d="${fp.stroke}" fill="none" stroke="#f3ffe8" stroke-width="2"/>`);
+M.topbar(S, { money: '$657,790', month: 'Sep 1985' });
+M.rail(S, { stage: 2, active: 'holes' });
+M.pointer(S, edge.p[0] - 2, edge.p[1] - 4, { surf: 'fairway', wall: '#2f4a1a' });
+const blob = (fill, d) => `<svg viewBox="0 0 34 26"><path d="${d}" fill="${fill}" stroke="rgba(255,255,255,.6)" stroke-width="1"/></svg>`;
+M.html(S, `
+<div class="glass panel" style="padding-bottom:10px">
+  <div class="phead"><div class="badge"><img src="../../../../src/assets/ui/icons/trophy.webp"></div><div><h2>Holes</h2><div class="sub">Each hole is a park: build it, then shape it</div></div>
+    <div class="undo"><span>↶</span><span class="off">↷</span></div></div>
+  <div class="sec"><div class="primary" style="padding:7px 14px"><span class="plus">+</span><div class="t">New hole</div></div></div>
+  <div class="sec" style="margin-top:9px"><div class="swatches">${M.swatch('fairway', 'Fairway', 1, true)}${M.swatch('green', 'Green', 2)}${M.swatch('tee', 'Tee', 3)}${M.swatch('rough', 'Rough', 4)}${M.swatch('bunker', 'Bunker', 5)}${M.swatch('water', 'Water', 6)}</div>
+    <div class="row" style="margin-top:7px;gap:5px">${M.sizes(2)}<span class="pill" style="margin-left:auto">Erase</span></div></div>
+  <div class="more"><div class="h">More options <span class="cnt">open for this session</span><span class="chev">▾</span></div>
+    <div class="msec"><div class="t">Shapes</div><div class="row" style="gap:5px"><span class="pill">Box</span><span class="pill">Lasso</span><span class="pill">Round</span>
+      <div class="stamp" title="Kidney green">${blob('#5fb04a', 'M5 14 C5 5 15 4 18 9 C21 4 31 6 29 14 C28 22 8 23 5 14 Z')}</div><div class="stamp" title="Pot bunker">${blob('#e8dcc0', 'M9 13 a8 7 0 1 0 16 0 a8 7 0 1 0 -16 0')}</div><div class="stamp" title="Pond">${blob('#2f6a9e', 'M4 13 C4 5 14 3 20 6 C28 8 31 14 27 19 C22 24 7 23 4 13 Z')}</div></div></div>
+    <div class="msec"><div class="t">Look</div>
+      <div class="opt"><span class="lbl">My looks</span><span class="pill on" style="padding:4px 11px">Fairway: Dark stripes ▸</span></div>
+      <div class="opt"><span class="lbl">Mowing stripes</span><div class="seg" style="flex:1"><span class="on">Along</span><span>Across</span><span>None</span></div></div>
+      <div class="opt"><span class="lbl">Collars</span><div class="seg" style="flex:1"><span class="on">Automatic</span><span>Wider</span></div></div></div>
+    <div class="msec"><div class="t">Planting</div><div class="seg"><span class="on">Seed · grows in</span><span>Sod · ready, 4.3×</span></div></div>
+    <div class="msec"><div class="t">Hole · plants · ground</div><div class="row" style="gap:5px;flex-wrap:wrap"><span class="pill">Saved holes ▸</span><span class="pill">Plants ▸</span><span class="pill">Ground height ▸</span></div></div>
+  </div>
+</div>
+<div class="glass sheet">
+  <div class="row"><div class="display" style="font-size:19px;font-weight:700">My looks · Fairway</div><span class="grow"></span><span class="ibtn" style="width:28px;height:28px">✕</span></div>
+  <div class="row" style="margin-top:10px;gap:14px;align-items:center">
+    <div class="bigdisc" style="background-image:url(tex2/fairway.webp);filter:brightness(.82) saturate(1.1)">${M.mark('fairway', 120)}</div>
+    <div style="font-size:13px;line-height:1.45"><b>Dark stripes</b><div class="muted">Every fairway you paint from now uses it; the disc at the pointer shows it.</div></div></div>
+  <div class="sec"><div class="caps">Grass</div><div class="chips"><span class="pill on">Fairway grass</span><span class="pill">Fringe grass</span><span class="pill">First cut</span><span class="pill">Lawn</span></div></div>
+  <div class="sec"><div class="caps">Blend with</div><div class="chips"><span class="pill on">None</span><span class="pill">Worn path</span><span class="pill">Sand</span></div></div>
+  <div class="sec"><div class="caps">Size and tone</div>
+    <div class="opt"><span class="lbl">Scale</span><input type="range" min="25" max="400" value="100" style="flex:1"><span class="muted" style="width:42px;text-align:right">100%</span></div>
+    <div class="opt"><span class="lbl">Tone</span><div class="seg" style="flex:1"><span>None</span><span class="on">Darker</span><span>Lighter</span></div></div>
+    <div class="opt"><span class="lbl">Strength</span><input type="range" min="0" max="100" value="22" style="flex:1"><span class="muted" style="width:42px;text-align:right">22%</span></div></div>
+  <div class="sec row" style="gap:6px"><div class="primary" style="flex:1;padding:8px 14px;justify-content:center"><div class="t" style="font-size:14px">Use this look</div></div><span class="ghostbtn">Save as…</span></div>
+  <div class="dim" style="font-size:12px;margin-top:8px">Saved: Classic · Dark stripes · plain names, no file names</div>
+</div>`);
+M.minimap(S, `bg/v2-grown-30-${M.W}.webp`);
+M.html(S, `
+  <div class="note" style="left:${Math.min(edge.p[0] + 70, M.W - 330)}px;top:${edge.p[1] + 60}px;max-width:300px"><span class="n">1</span>The <b>disc</b> shows the look you made (here Dark stripes): the owner's "texture you have created" (D2.2). My looks here is decision 3 (recommended).</div>
+  <div class="note" style="left:800px;top:130px;max-width:300px"><span class="n">2</span>More options in <b>labelled sections</b>, open for this session only (D2.3). Run sits beside the brush; Saved holes move into New hole's menu.</div>
+  <div class="title-strip">P23 v2 · m4 More options and My looks (P1-E) · ${M.W} × ${M.H}</div>`);
+</script>
+</body></html>

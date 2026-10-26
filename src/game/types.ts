@@ -48,9 +48,16 @@ export interface Prop {
   auto?: string;
   /** placed by a plant brush (Paint: Trees, Bushes, Flowers): its Rub out removes it, and it is free (no refund); saved as the tuple's 6th element */
   plant?: 1;
+  /** placed by the Props tool (T131): its catalogue key (golf/decor.ts); saved as the tuple's 7th element (the 6th is then 0) */
+  decor?: string;
+  /** drawn this high above its spot (world px; T133: the range's upper deck, an auto prop, never saved): sprites.ts Drawable.lift */
+  lift?: number;
 }
 
-export type Tool = 'select' | 'road' | 'junction' | 'bulldoze' | 'park' | 'toll' | 'bus' | 'lane' | 'downgrade' | 'business' | 'paint' | 'course';
+/** path: the rail's Paths (T084), the road tool on the course's cart paths and drives (setTool turns it into 'road' with roadScope 'course');
+ *  buildings: the rail's Buildings (plan P23 P1-E), the course tool in its buildings scope, which places the clubhouse (setTool turns it into
+ *  'course' with courseScope 'buildings'); props: the rail's Props (T131, golf/propstool.ts), the course's decor */
+export type Tool = 'select' | 'road' | 'junction' | 'bulldoze' | 'park' | 'toll' | 'bus' | 'lane' | 'downgrade' | 'business' | 'paint' | 'course' | 'path' | 'buildings' | 'props';
 export type LineStyle = 0 | 1 | 2; // 0 dashed single, 1 double solid, 2 none
 export type BendMode = 90 | 45;
 

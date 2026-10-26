@@ -1,0 +1,150 @@
+{
+  "id": "variation:industrial-auto-body-shop-63875699:1",
+  "generator": "image_gen",
+  "generated": "2026-10-24",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-ecac47c3-3688-4f20-b78f-6e453db636ad.png",
+  "prompt": "ONE GAME ASSET CUTOUT on EMPTY TRANSPARENT ALPHA, RGBA PNG. Reference1 is STYLE ONLY: the Maple Bean street's coherent miniature 3D illustration, softly textured matte materials, restrained rich colours, charcoal roofs, warm amber lamps, readable fine detail, early dusk with remaining daylight. Reference2 shows IDENTITY ONLY: preserve this building's architecture, not its old rendering or blue night cast. It must look natural beside the buildings in reference1. Fixed 2:1 isometric camera and SCREEN UPPER RIGHT SUN in every view; right-facing planes warm, left-facing planes cooler. Exactly four true rigid quarter turns of the SAME physical object on a square 2x2 sheet: NE front+right, SE right+back, SW back+left, NW left+front. Same roof, windows, equipment and physical scale throughout; reconstruct hidden sides, never mirror a front. Centre each complete sprite within its own cell with20% blank margins on every side. Empty alpha in corners, gutters and gaps, zero clipping. NO BACKDROP OR FLOOR: no stage, ground surface, paving, terrain tile, foliage, leaves, broad shadow, haze, gradient, checkerboard, caption, divider, view label or frame. No people, vehicles, Halloween, pumpkins, skulls, cobwebs, spooky signage or decorative garlands. Only the physical building and integral structural parts, no attached landscape.  Subject library ID variation:industrial-auto-body-shop-63875699:1. Compact auto-body repair shop, cream stone/brick walls, broad twin grey garage doors, small side office door/window, shallow corrugated mono-pitch roof with HVAC. Normal readable MAPLE FALLS BODY SHOP sign. No tyres, decorations, ground or free-standing accessories.",
+  "references": [
+    {
+      "role": "authoritative-theme",
+      "file": "art/theme-consistency/references/theme-authoritative.png",
+      "sha256": "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2"
+    },
+    {
+      "role": "existing-subject-identity",
+      "id": "variation:industrial-auto-body-shop-63875699:1",
+      "direction": null,
+      "file": "art/theme-consistency/exports/buildings/variation-industrial-auto-body-shop-63875699-1.configured@2x.png",
+      "sha256": "6f50ab0d4bf61c36265ff6b3424640eba9880980b15d175cfde5f03e4a5ff88a"
+    }
+  ],
+  "integrationStatus": "ready",
+  "integrationReason": "All4 visible physical corners form front/right/back/left cycle; actual magenta alpha has no surrounding floor/haze. Matte timber/masonry/metal, charcoal roofs, amber practical lights and fixed screen-upper-right dusk are coherent with master. Layout-only repack preserves every nonzero source RGBA pixel without generation/repainting. Original low-alpha edge fringe does not truncate physical silhouette.",
+  "layoutCorrection": {
+    "method": "Disconnected alpha>8 silhouette extraction with nearest-silhouette assignment of all remaining fringe pixels; exact source RGBA pixel copies only, no resize, repaint or deletion.",
+    "seedAlphaThresholdExclusive": 8,
+    "originalSheet": "art/theme-consistency/generated/buildings/variation-industrial-auto-body-shop-63875699-1-4views-v1.png",
+    "originalSheetSha256": "795dcb38883ce6e0a4508c95acfbbe4e6f6abc1b28d24220c3cf9291f7ef1705",
+    "outputSheetSha256": "a3773d25bf2f7c54bd029e42e2a928383047b11ecee466f63adb5c42467b0510",
+    "originalDimensions": [
+      1774,
+      887
+    ],
+    "outputDimensions": [
+      2816,
+      2816
+    ],
+    "cellSize": 1408,
+    "nonzeroAlphaPixels": 712283,
+    "nonzeroAndVisiblePixelConservation": true,
+    "exactVisibleRgbaConservation": true,
+    "assignmentPolicy": "Every alpha>8 dominant component remains intact. Multi-source orthogonal nearest-silhouette flood fills assign fringe and tiny detached components; every nonzero source tuple is copied exactly once.",
+    "views": [
+      {
+        "direction": "NE",
+        "dominantComponent": {
+          "label": 2,
+          "pixels": 181441,
+          "bounds": [
+            205,
+            16,
+            799,
+            463
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 0,
+          "y0": 7,
+          "x1": 904,
+          "y1": 477,
+          "count": 186487
+        },
+        "translation": {
+          "x": 251,
+          "y": 461
+        }
+      },
+      {
+        "direction": "SE",
+        "dominantComponent": {
+          "label": 1,
+          "pixels": 175040,
+          "bounds": [
+            981,
+            13,
+            1567,
+            458
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 882,
+          "y0": 11,
+          "x1": 1745,
+          "y1": 463,
+          "count": 179891
+        },
+        "translation": {
+          "x": 798,
+          "y": 466
+        }
+      },
+      {
+        "direction": "SW",
+        "dominantComponent": {
+          "label": 5,
+          "pixels": 166548,
+          "bounds": [
+            206,
+            450,
+            790,
+            869
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 47,
+          "y0": 440,
+          "x1": 886,
+          "y1": 871,
+          "count": 170563
+        },
+        "translation": {
+          "x": 237,
+          "y": 1456
+        }
+      },
+      {
+        "direction": "NW",
+        "dominantComponent": {
+          "label": 4,
+          "pixels": 170738,
+          "bounds": [
+            984,
+            436,
+            1571,
+            867
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 888,
+          "y0": 434,
+          "x1": 1719,
+          "y1": 869,
+          "count": 175342
+        },
+        "translation": {
+          "x": 808,
+          "y": 1460
+        }
+      }
+    ],
+    "visualReviewRequired": true
+  },
+  "sourceVisualReview": {
+    "reviewer": "source_review_resume",
+    "actualAlphaBackground": "magenta #ff00c8",
+    "theme": "references/theme-authoritative.png",
+    "sourceOnly": true,
+    "geometry": "four-corner cycle reviewed",
+    "gameScaleNotCertified": true
+  }
+}

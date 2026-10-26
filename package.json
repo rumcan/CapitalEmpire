@@ -11,6 +11,8 @@
     "assets:ground": "node scripts/assets/prep-ground.mjs",
     "assets:sprites": "node scripts/assets/prep-sprites.mjs",
     "assets:scales": "node scripts/assets/prep-scales.mjs",
+    "lots:freeze": "node scripts/assets/freeze-lot-presets.mjs",
+    "lots:check": "node scripts/assets/freeze-lot-presets.mjs --check",
     "typecheck": "tsc --noEmit -p .",
     "bench": "node scripts/perf/bench.mjs",
     "worker:test": "bash scripts/worker/run.sh \"npm test\"",
@@ -35,11 +37,12 @@
     "@types/react": "19.2.7",
     "@types/react-dom": "19.2.3",
     "@vitejs/plugin-react": "5.1.1",
+    "ktx2-encoder": "0.6.0",
     "playwright-core": "^1.64.0",
     "sharp": "^0.34.4",
     "tailwindcss": "4.1.17",
+    "three": "0.186.1",
     "typescript": "5.9.3",
-    "vite": "7.3.2",
-    "vite-plugin-singlefile": "2.3.0"
+    "vite": "7.3.7"
   }
 }

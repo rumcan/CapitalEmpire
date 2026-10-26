@@ -62,6 +62,38 @@ tents, stands, car parks) and above all **manage the transport and roads around 
   gates (the placed gate structures, else the clubhouse plot's doors), queue there and are admitted at the gates' lane rate; inside they
   stand in galleries (tees, greens, stands, tents); at the day's end they walk back and their cars drive home. The results' gate waits,
   lateness and exit times come from these movers (replacing `measureGateFlows`). Details and the step list: NOW.md "The M2 design".
+- **2026-10-24, the owner: the lead's recommendation is the decision.** Design and planning questions no longer wait for the owner: the
+  lead takes the recommended option, records it in the plan's "Owner decisions" and here, and states it in the chat. Irreversible or
+  outward-facing actions still get asked first.
+- **2026-10-24: Alpha 1.0 is defined (plans/P01.md)** — testers are the owner plus 2–3 newcomers; tiers 1–3 balanced, 4–5 smoke-tested;
+  placeholder art allowed if it reads; the single HTML file is the Alpha build. **The season loop (plans/P04.md)**: money booked by the
+  month, the tier offer is a choice (Move up default), Skip warns about un-grown seeded surfaces with Lay sod, practice days stay resolved.
+- 2026-10-24: **A new Claude lead took over** (the owner: "see where you can take over as lead"; the earlier leads had been quiet since
+  about 13:20). It runs the job board (GitHub issues `arena` + `status:open`), writes the briefs, reviews and merges coder PRs, and
+  delegates all coding and investigation to other AIs (the owner: "delegate this work and all the work I give you here to other AIs").
+  Its own PRs wait for the owner's approval.
+- 2026-10-24: **Old building pictures never show** (the owner: "remove all the old ones from showing until it was replaced"). A building
+  without its four generated views is drawn as the new-art building of the same family nearest in size (dwelling, outbuilding, business,
+  or its library category); never mirrored; `?oldart` compares (src/game/newart.ts).
+- 2026-10-24: **The baked house lots are off** (compose.ts BAKED_LOTS): rendered from the old TrickOrTreat art; plan P20 replaces them
+  with curated lot presets for every lot.
+- 2026-10-24: **The building import cuts reviewed sheets itself** (prep-views.mjs + four-view-cells.mjs): a version the art model marked
+  `ready` with no crops yet is cut by the art model's own cell rules; nothing is written to the delivery folder.
+- 2026-10-24: **Plan P19** (course roads: a miniature road catalogue on the golf course, cart paths in their own path network, buildings
+  snap to drives and paths) and **plan P20** (every lot from a curated preset): docs/plans/P19.md and P20.md, decided under the owner's
+  standing rule.
+- 2026-10-24: Design constants taken for **T051a** (featured hole ×3, the 18th green ×2 after 14:30, a quarter of an over-full spot's
+  fans move every 30 minutes) and **T060a** (Traffic satisfaction 100 at ≤1.2× free flow, 0 at ≥3×; tent spend falls to 50% on the same
+  scale).
+- 2026-10-24: **Plan P22: the start is one road and the driving range; the town grows outward** (the owner: "New addition to the game.
+  The game starts with nothing but a road passing a driving range. The town grows from your driving range outward. No more prepainted
+  streets for the town."). A new game lays one county road edge to edge (class `road`, two map exits) past the player's driving range (a
+  new golf visit business on a 300 x 450-tile owned parcel); no town streets, lots, old nine or clubhouse. One town centre is seeded across
+  the road and the town planner lays every street, with grown-town rules (faster, compact, paced by holes and tournament success, never
+  on the course land). Passing traffic and range visitors from both exits are the early life and money; $600,000 start money stays. No
+  tournament until tier 1's needs (9 holes, car park, a clubhouse the player places) are met. Old saves keep their towns (`golf.start`
+  missing = the old start, `?start=town` keeps it for tests). A new `range:gate` and a grown-town fixture. Decided under the owner's
+  standing rule; details and tickets T085-T098 in docs/plans/P22.md.
 
 ## 6. How to work (so anyone can continue)
 - **The live log is `docs/NOW.md`.** Before you edit, write there: the step, the branch, the files and the exact change you are about to

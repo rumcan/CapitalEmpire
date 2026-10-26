@@ -1,0 +1,150 @@
+{
+  "id": "variation:industrial-lumber-workshop-8a43a691:1",
+  "generator": "image_gen",
+  "generated": "2026-10-24",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-7efcc0cd-75e2-4113-bab3-7f6545c8f7e3.png",
+  "prompt": "ONE GAME ASSET CUTOUT on EMPTY TRANSPARENT ALPHA, RGBA PNG. Reference1 is STYLE ONLY: the Maple Bean street's coherent miniature 3D illustration, softly textured matte materials, restrained rich colours, charcoal roofs, warm amber lamps, readable fine detail, early dusk with remaining daylight. Reference2 shows IDENTITY ONLY: preserve this building's architecture, not its old rendering or blue night cast. It must look natural beside the buildings in reference1. Fixed 2:1 isometric camera and SCREEN UPPER RIGHT SUN in every view; right-facing planes warm, left-facing planes cooler. Exactly four true rigid quarter turns of the SAME physical object on a square 2x2 sheet: NE front+right, SE right+back, SW back+left, NW left+front. Same roof, windows, equipment and physical scale throughout; reconstruct hidden sides, never mirror a front. Centre each complete sprite within its own cell with20% blank margins on every side. Empty alpha in corners, gutters and gaps, zero clipping. NO BACKDROP OR FLOOR: no stage, ground surface, paving, terrain tile, foliage, leaves, broad shadow, haze, gradient, checkerboard, caption, divider, view label or frame. No people, vehicles, Halloween, pumpkins, skulls, cobwebs, spooky signage or decorative garlands. Only the physical building and integral structural parts, no attached landscape.  Subject library ID variation:industrial-lumber-workshop-8a43a691:1. Long timber lumber workshop with raised clerestory ridge, broad barn-style workshop doors, integral side dust-extraction ductwork/cyclone. Retain sawmill function, but no loose lumber piles or ground or decorations. Ductwork remains same physical assembly in four turns.",
+  "references": [
+    {
+      "role": "authoritative-theme",
+      "file": "art/theme-consistency/references/theme-authoritative.png",
+      "sha256": "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2"
+    },
+    {
+      "role": "existing-subject-identity",
+      "id": "variation:industrial-lumber-workshop-8a43a691:1",
+      "direction": null,
+      "file": "art/theme-consistency/exports/buildings/variation-industrial-lumber-workshop-8a43a691-1.configured@2x.png",
+      "sha256": "8000cb7d0c149a18c28ea185ef26853b3adfd2dc40c91fced982092251c2da6a"
+    }
+  ],
+  "integrationStatus": "ready",
+  "integrationReason": "All4 visible physical corners form front/right/back/left cycle; actual magenta alpha has no surrounding floor/haze. Matte timber/masonry/metal, charcoal roofs, amber practical lights and fixed screen-upper-right dusk are coherent with master. Layout-only repack preserves every nonzero source RGBA pixel without generation/repainting. Original low-alpha edge fringe does not truncate physical silhouette.",
+  "layoutCorrection": {
+    "method": "Disconnected alpha>8 silhouette extraction with nearest-silhouette assignment of all remaining fringe pixels; exact source RGBA pixel copies only, no resize, repaint or deletion.",
+    "seedAlphaThresholdExclusive": 8,
+    "originalSheet": "art/theme-consistency/generated/buildings/variation-industrial-lumber-workshop-8a43a691-1-4views-v1.png",
+    "originalSheetSha256": "68c7b7e54f0d87c9bba75e507afb5f17a3f63ceea327219b795a2caa5baca222",
+    "outputSheetSha256": "59f5b95872d0e2870916c0c888da0d8a7a968e44834a1bf7cc311d06c87ce21f",
+    "originalDimensions": [
+      1774,
+      887
+    ],
+    "outputDimensions": [
+      2816,
+      2816
+    ],
+    "cellSize": 1408,
+    "nonzeroAlphaPixels": 748865,
+    "nonzeroAndVisiblePixelConservation": true,
+    "exactVisibleRgbaConservation": true,
+    "assignmentPolicy": "Every alpha>8 dominant component remains intact. Multi-source orthogonal nearest-silhouette flood fills assign fringe and tiny detached components; every nonzero source tuple is copied exactly once.",
+    "views": [
+      {
+        "direction": "NE",
+        "dominantComponent": {
+          "label": 1,
+          "pixels": 187077,
+          "bounds": [
+            162,
+            0,
+            785,
+            446
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 0,
+          "y0": 0,
+          "x1": 906,
+          "y1": 453,
+          "count": 192540
+        },
+        "translation": {
+          "x": 250,
+          "y": 477
+        }
+      },
+      {
+        "direction": "SE",
+        "dominantComponent": {
+          "label": 2,
+          "pixels": 183185,
+          "bounds": [
+            1008,
+            6,
+            1634,
+            440
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 907,
+          "y0": 0,
+          "x1": 1735,
+          "y1": 452,
+          "count": 189771
+        },
+        "translation": {
+          "x": 790,
+          "y": 477
+        }
+      },
+      {
+        "direction": "SW",
+        "dominantComponent": {
+          "label": 15,
+          "pixels": 179489,
+          "bounds": [
+            151,
+            445,
+            789,
+            880
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 0,
+          "y0": 434,
+          "x1": 918,
+          "y1": 886,
+          "count": 185264
+        },
+        "translation": {
+          "x": 244,
+          "y": 1451
+        }
+      },
+      {
+        "direction": "NW",
+        "dominantComponent": {
+          "label": 14,
+          "pixels": 175396,
+          "bounds": [
+            1018,
+            434,
+            1609,
+            866
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 880,
+          "y0": 431,
+          "x1": 1739,
+          "y1": 886,
+          "count": 181290
+        },
+        "translation": {
+          "x": 802,
+          "y": 1453
+        }
+      }
+    ],
+    "visualReviewRequired": true
+  },
+  "sourceVisualReview": {
+    "reviewer": "source_review_resume",
+    "actualAlphaBackground": "magenta #ff00c8",
+    "theme": "references/theme-authoritative.png",
+    "sourceOnly": true,
+    "geometry": "four-corner cycle reviewed",
+    "gameScaleNotCertified": true
+  }
+}

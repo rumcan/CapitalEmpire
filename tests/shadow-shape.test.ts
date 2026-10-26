@@ -2,14 +2,14 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { LIBRARY } from '../src/game/library';
-import { shadowAlpha, shadowShape } from '../src/game/shadow-shape';
+import { overrideOf, shadowAlpha, shadowShape } from '../src/game/shadow-shape';
 
 const first = (kind: string) => LIBRARY.find(it => it.kind === kind)!;
 
-test('shadows: every library sprite but the baked lots casts one, with sane numbers', () => {
+test('shadows: every library sprite but the baked lots (and the overrides that say none, T141) casts one, with sane numbers', () => {
   for (const it of LIBRARY) {
     const s = shadowShape(it, 1, 0.8);
-    if (it.kind === 'lot') { assert.equal(s, null, it.id); continue; }
+    if (it.kind === 'lot' || overrideOf(it.id)?.o.contact === false) { assert.equal(s, null, it.id); continue; }
     assert.ok(s, it.id);
     for (const v of [s.hx, s.hy, s.core, s.feather]) assert.ok(Number.isFinite(v) && v > 0, `${it.id} ${JSON.stringify(s)}`);
     assert.ok(s.core <= 1, it.id);

@@ -1,0 +1,169 @@
+{
+  "id": "variation:gen-back-shed-garden-ac94c81e-plain-corner:1",
+  "generator": "image_gen",
+  "generated": "2026-10-24",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-fc4ac137-f8a7-4217-835c-d94f8a09a14b.png",
+  "prompt": "ONE GAME ASSET CUTOUT on EMPTY TRANSPARENT ALPHA, RGBA PNG. Reference1 is STYLE ONLY: the Maple Bean street's coherent miniature 3D illustration, softly textured matte materials, restrained rich colours, charcoal roofs, warm amber lamps, readable fine detail, early dusk with remaining daylight. Reference2 shows IDENTITY ONLY: preserve this building's architecture, not its old rendering or blue night cast. It must look natural beside the buildings in reference1. Fixed 2:1 isometric camera and SCREEN UPPER RIGHT SUN in every view; right-facing planes warm, left-facing planes cooler. Exactly four true rigid quarter turns of the SAME physical object on a square 2x2 sheet: NE front+right, SE right+back, SW back+left, NW left+front. Same roof, windows, equipment and physical scale throughout; reconstruct hidden sides, never mirror a front. Centre each complete sprite within its own cell with20% blank margins on every side. Empty alpha in corners, gutters and gaps, zero clipping. NO BACKDROP OR FLOOR: no stage, ground surface, paving, terrain tile, foliage, leaves, broad shadow, haze, gradient, checkerboard, caption, divider, view label or frame. No people, vehicles, Halloween, pumpkins, skulls, cobwebs, spooky signage or decorative garlands. Only the physical building and integral structural parts, no attached landscape.  Subject library ID variation:gen-back-shed-garden-ac94c81e-plain-corner:1. Distinct grey timber house back with complex intersecting charcoal gables, two tall dormer windows, warm rear door/window and attached low timber storage shed projecting forward on one side. Keep house+structurally attached shed, omit vegetable patch, paving, bins, wheelbarrow and unrelated objects.",
+  "references": [
+    {
+      "role": "authoritative-theme",
+      "file": "art/theme-consistency/references/theme-authoritative.png",
+      "sha256": "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2"
+    },
+    {
+      "role": "existing-subject-identity",
+      "id": "variation:gen-back-shed-garden-ac94c81e-plain-corner:1",
+      "direction": null,
+      "file": "art/theme-consistency/exports/buildings/variation-gen-back-shed-garden-ac94c81e-plain-corner-1.configured@2x.png",
+      "sha256": "06b1ea47b1e450e7d4f3fc548c01b24261d4d51e175814bb34ef25f1edafb12b"
+    }
+  ],
+  "integrationStatus": "ready",
+  "integrationReason": "All4 visible physical corners form front/right/back/left cycle; actual magenta alpha has no surrounding floor/haze. Matte timber/masonry/metal, charcoal roofs, amber practical lights and fixed screen-upper-right dusk are coherent with master. Layout-only repack preserves every nonzero source RGBA pixel without generation/repainting. Original low-alpha edge fringe does not truncate physical silhouette.",
+  "layoutCorrection": {
+    "method": "Pixel-preserving clear-gap split and centred four-cell repack; no generation, resizing or repainting.",
+    "originalSheet": "art/theme-consistency/generated/buildings/variation-gen-back-shed-garden-ac94c81e-plain-corner-1-4views-v1.png",
+    "originalSheetSha256": "17c4efac4f01019a74751a6be2e164e8c8ac8aec0b1c835ffda0a943f2b71357",
+    "originalDimensions": [
+      1774,
+      887
+    ],
+    "outputDimensions": [
+      2304,
+      2304
+    ],
+    "outputSheetSha256": "4db8b23d7538db10e37fec72b5bcb02b81f7191216590ae9117cd78836055cc1",
+    "cellSize": 1152,
+    "minimumCellMarginFraction": 0.15,
+    "padding": 4,
+    "partitionMode": "row-first",
+    "rowFirstFailure": null,
+    "rowGap": {
+      "start": 438,
+      "endExclusive": 446,
+      "midpoint": 442,
+      "alphaThreshold": 8
+    },
+    "columnGaps": [
+      {
+        "row": 0,
+        "start": 803,
+        "endExclusive": 972,
+        "midpoint": 887,
+        "alphaThreshold": 8
+      },
+      {
+        "row": 1,
+        "start": 814,
+        "endExclusive": 992,
+        "midpoint": 903,
+        "alphaThreshold": 8
+      }
+    ],
+    "globalColumnGap": null,
+    "columnRowGaps": [],
+    "extractionRects": [
+      {
+        "direction": "NE",
+        "row": 0,
+        "column": 0,
+        "extraction": {
+          "left": 41,
+          "top": 0,
+          "width": 771,
+          "height": 442
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 176701,
+        "visibleAlphaPixelsThreshold8": 171835,
+        "nonzeroRgbaSha256": "058db7c0a8c8cdffdb58b7738672a99b4ccb91f825fe6ff14daa4d2dd981b6cd",
+        "destination": {
+          "left": 190,
+          "top": 355,
+          "width": 771,
+          "height": 442
+        }
+      },
+      {
+        "direction": "SE",
+        "row": 0,
+        "column": 1,
+        "extraction": {
+          "left": 965,
+          "top": 6,
+          "width": 795,
+          "height": 436
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 176057,
+        "visibleAlphaPixelsThreshold8": 171537,
+        "nonzeroRgbaSha256": "a9be201ee29ecc74a39b5979399e976ed504b9e7beced57661047aafc07be4ce",
+        "destination": {
+          "left": 1330,
+          "top": 358,
+          "width": 795,
+          "height": 436
+        }
+      },
+      {
+        "direction": "SW",
+        "row": 1,
+        "column": 0,
+        "extraction": {
+          "left": 239,
+          "top": 442,
+          "width": 660,
+          "height": 415
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 168450,
+        "visibleAlphaPixelsThreshold8": 163806,
+        "nonzeroRgbaSha256": "df076a91d179b4ca6d12b7fe826365c30f0ff43dacd4ad8afde839a0a56e0da6",
+        "destination": {
+          "left": 246,
+          "top": 1520,
+          "width": 660,
+          "height": 415
+        }
+      },
+      {
+        "direction": "NW",
+        "row": 1,
+        "column": 1,
+        "extraction": {
+          "left": 940,
+          "top": 442,
+          "width": 798,
+          "height": 445
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 166468,
+        "visibleAlphaPixelsThreshold8": 162115,
+        "nonzeroRgbaSha256": "961bd3cf6eff0ee9aa327571d77a6aa77a8333cdf576d1f58d96aae5d1774192",
+        "destination": {
+          "left": 1329,
+          "top": 1505,
+          "width": 798,
+          "height": 445
+        }
+      }
+    ],
+    "sourcePixelCounts": {
+      "nonzeroAlphaPixels": 687676,
+      "visibleAlphaPixelsThreshold8": 669293,
+      "nonzeroRgbaSha256": "6a2c6c1e3c05b23ffc9838ed16f0d3d0a569e389bbd4de3f7d1ed9c5ac3115bc"
+    },
+    "nonzeroAndVisiblePixelConservation": true,
+    "exactVisibleRgbaConservation": true,
+    "visualReviewRequired": true,
+    "warnings": []
+  },
+  "sourceVisualReview": {
+    "reviewer": "source_review_resume",
+    "actualAlphaBackground": "magenta #ff00c8",
+    "theme": "references/theme-authoritative.png",
+    "sourceOnly": true,
+    "geometry": "four-corner cycle reviewed",
+    "gameScaleNotCertified": true
+  }
+}

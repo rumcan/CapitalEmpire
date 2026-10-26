@@ -1,0 +1,10 @@
+{
+ "id": "static:shop_brick_rear",
+ "version": "static-shop_brick_rear-4views-v2",
+ "files": {
+  "NE": "8699b4241c8d0bbe68fef7bbfb4cae5fb937e360c036473e381d95e631bdaaae",
+  "SE": "486ab473607d139f5d24c49c506aac901f94d46df43afb15d22d01c9e9a4583e",
+  "SW": "a738230f616abf09f4cccbda32f100911098977a2470b2bc4b14f0c2081f92ad",
+  "NW": "1065e5e50e2da7827da55139ec1bb4d94891046843df3908d20787db4a1544f5"
+ }
+}

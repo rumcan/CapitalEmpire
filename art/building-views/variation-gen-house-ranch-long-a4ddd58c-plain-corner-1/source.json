@@ -1,0 +1,10 @@
+{
+ "id": "variation:gen-house-ranch-long-a4ddd58c-plain-corner:1",
+ "version": "variation-gen-house-ranch-long-a4ddd58c-plain-corner-1-4views-v2",
+ "files": {
+  "NE": "a0398254e56a3a2a9f40fde5a5e63c55e027e93c5c0d3ec41e72faf7d5601d01",
+  "SE": "807433b4a99c0689d0ae0712c5e44a06df38cffe71e7b994019f62f9842c6e9a",
+  "SW": "b20ef922be6964e6e93d3280164b1ba55f46a4fb2f68f8ca500333d8cf130ac4",
+  "NW": "84283903132367cb5df44dc1da0936a3122f4bc9082cefac34f97eb1d4adac1f"
+ }
+}

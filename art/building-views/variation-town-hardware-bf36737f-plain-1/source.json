@@ -1,0 +1,10 @@
+{
+ "id": "variation:town-hardware-bf36737f-plain:1",
+ "version": "variation-town-hardware-bf36737f-plain-1-4views-v1",
+ "files": {
+  "NE": "49c4af45ca781a7e3d186e04ae2b86defae956ae050760311f03bff434a2e115",
+  "SE": "ee6d002cd8bb8ff0c1a3ef195f33533f0eca24ceda7f73a706bffcf6e74b499a",
+  "SW": "5ce1a1a847ecf540c652cf51249d2dddea6f92fc98a37e668648c08055d8ce18",
+  "NW": "66af7bc43fa5a51f67c3f9bec76ef861151eadd8f9315e7df63338f46027bfa0"
+ }
+}
