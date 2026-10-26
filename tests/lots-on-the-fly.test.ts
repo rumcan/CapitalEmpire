@@ -14,6 +14,7 @@ import { footprintOf } from '../src/game/lots/preset-art';
 import { frameOf, toFrame } from '../src/game/lots/preset-frame';
 import { OVERLAP, share } from '../src/game/lots/compose-core';
 import { LIBRARY } from '../src/game/library';
+import { isBuilding } from '../src/game/mirror';
 
 (globalThis as unknown as { Path2D: unknown }).Path2D ??= class { moveTo() {} lineTo() {} arc() {} arcTo() {} closePath() {} rect() {} };
 
@@ -82,6 +83,22 @@ describe('lots generated on the fly (T160)', () => {
     setLotModel(1); assert.deepEqual(lots.map(l => JSON.stringify(compose(l.g, l.st))), v1, 'a v1 town still composes with v1');
     setLotModel(99); assert.equal(lotModelVersion(), 2, 'a version not shipped: the nearest below');
     setLotModel(was);
+  });
+  it('6. a generated lot keeps every building of its frozen preset (the house, a garage, a shed), and nothing generated stands on one', () => {
+    setGeneratedLots(true);
+    const many = [...examLots(), ...referenceLots()].filter(frozenHouse);
+    let seen = 0;
+    for (const l of many) {
+      const p = pickedPreset(l.g, l.st)!, builds = p.props.filter(q => { const it = LIBRARY[INDEX.get(q.id) ?? -1]; return !!it && isBuilding(it); }).length;
+      if (builds < 2) continue;
+      setGeneratedLots(false); const old = compose(l.g, l.st).props.filter(q => q.from && isBuilding(LIBRARY[INDEX.get(q.id)!]!)).length; setGeneratedLots(true);
+      const c = compose(l.g, l.st), kept = c.props.filter(q => q.from && isBuilding(LIBRARY[INDEX.get(q.id)!]!));
+      assert.equal(kept.length, old, `${p.id}: the generated lot draws the buildings ?oldlots draws`);
+      const fps = kept.map(q => { const h = footprintOf(q.id, q.scale, q.flip); return [q.x + h[0], q.y + h[1], q.x + h[2], q.y + h[3]] as [number, number, number, number]; });
+      for (const q of c.props.filter(x => !x.from && !x.street && !/^(fencex|fencey)$/.test(LIBRARY[INDEX.get(x.id) ?? -1]?.kind ?? ''))) { const h = footprintOf(q.id, q.scale, q.flip), fp: [number, number, number, number] = [q.x + h[0], q.y + h[1], q.x + h[2], q.y + h[3]]; for (const b of fps) assert.ok(share(b, fp) <= OVERLAP + 1e-9, `${q.id} on a building of ${p.id}`); }
+      seen++;
+    }
+    assert.ok(seen >= 5, `${seen} generated lots with a garage or a shed`);
   });
   it('5. the exam set: on the generated lots of 50 house lots nothing leaves the lot or overlaps beyond the rule; nothing stands on the walk', () => {
     setGeneratedLots(true);
