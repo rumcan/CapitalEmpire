@@ -131,7 +131,7 @@ describe('auto-sized lots (T155 PR 2)', () => {
     if (!src) return;
     const info = deriveInfo(src), kinds = src.props.map((q, i) => info.kind(q, i));
     assert.equal(kinds.filter(k => k === 'house').length, 1, 'one house');
-    const mb = bucketOf(src.w, src.d), sizes: DeriveSize[] = [{ w: src.w, d: src.d, bw: mb.w, bd: mb.d }, { w: src.w - 2, d: src.d - 2, ...bucketOf(src.w - 2, src.d - 2) as { w: number; d: number } }].map(s => ({ w: s.w, d: s.d, bw: bucketOf(s.w, s.d).w, bd: bucketOf(s.w, s.d).d }));
+    const sizes: DeriveSize[] = [[src.w, src.d], [src.w - 2, src.d - 2]].map(([w, d]) => ({ w: w!, d: d!, bw: bucketOf(w!, d!).w, bd: bucketOf(w!, d!).d }));
     const r = deriveMaster(src, sizes, [src]);
     for (const p of r.upsert) {
       const hb = (q: PresetProp): Box => { const h = info.half(q); return [q.x - h.ha, q.y - h.hb, q.x + h.ha, q.y + h.hb]; };
