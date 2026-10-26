@@ -25,7 +25,8 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |
 | T152 | #325 | `arena/T152-car-spacing` | `.claude/worktrees/t152` | 5187 | Cars keep a car-length gap in their lane (no piling up on the range drive and the county road); root cause first; all four gates on the branch. |
-| T112 | #199 | `arena/T112-sharp` | `.claude/worktrees/t112` | 5193 (studio check) | sharp 0.34.5 → 0.35 (high advisory); asset outputs proven unchanged by pixel diff; full suite and build allowed. |
+| **T153 (top priority)** | #327 | `arena/T153-golf-tiles` | `.claude/worktrees/t153` | 5186 | The owner: drop the furthest zoom level, NEAR on until ~5%, the new golf textures: sand-ripples (ready) → waste; fairway, putting-green, long-grass as **provisional** (raw sets, no handoff yet) → fairway, green+fringe, rough; a re-run switches each to its canonical selection when the art session hands it off. |
+| T112 | #199 | `arena/T112-sharp` (1872f0e) | `.claude/worktrees/t112` | — | **Paused** for T153: sharp 0.35.5 in, all packed art identical (260 images byte-identical; 16 view PNGs only re-tagged), still to do: the KTX2 check, the studio check, audit/typecheck/suite/build, the PR. Resume from #199. |
 
 **Two coding agents at a time (the owner, 2026-10-26: first "maybe just too many background tasks?" after the studio tab died with the
 PC at 1.5 GB free, then "start up two coding agents"):** keep two coding agents running, start the next queue ticket when one lands, no
