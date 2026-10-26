@@ -32,17 +32,27 @@ Follow AGENT-BRIEF's rules (disk, memory, ports, tests, art, PR) and its progres
 sub-step, ending with "To resume". Open the PR when done; do not merge (the lead merges).
 ```
 
-Tickets in progress now (see NOW.md "START HERE" for the current list):
-- **T140** #270 Town roads: the kerb face across chunk borders (branch `arena/T140-road-kerb`, dev port 5189).
-- **T141** #271 Every prop's shadow made for the top-right sun (branch `arena/T141-prop-shadows`, dev port 5186; the findings in
-  `docs/art/SHADOW-AUDIT.md` on that branch).
+Tickets in progress now: see NOW.md "START HERE" (the In flight table); it is the only list kept current.
 
 ## Other sessions working in this repo
 Each keeps its own handover doc with a start prompt at the top. Paste that prompt into a new chat.
-- **Studio lot-preset editor** (branch `lot-presets`, worktree `E:\Repos\CapitalEmpire\.claude\worktrees\lot-presets`, game on 5241,
-  studio on 5242; launch.json configs `lot-presets-game` and `lot-presets-studio`). Its handover is
-  `docs/handovers/lot-presets.md` on branch `lot-presets`, with the start prompt at the top. It was pushed to GitHub on 2026-10-26 at
-  51643a7 (the owner approved), so any PC or account can read it: `git show origin/lot-presets:docs/handovers/lot-presets.md`.
+- **The lot lab (lot-preset studio).** Its start prompt (the owner, 2026-10-26; it supersedes older ones), paste as is:
+  ```
+  You are the lot lab session on CapitalEmpire (the lot-preset studio, separate from the lead's work).
+  - Worktree E:\Repos\CapitalEmpire\.claude\worktrees\lot-presets, branch lot-presets (never the main checkout). Git there needs
+    GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=safe.directory GIT_CONFIG_VALUE_0=*.
+  - Handover: docs/handovers/lot-presets.md in that worktree (read its "Now" section, starting "At the account switch"), then
+    docs/plans/P20.md section "The lot lab".
+  - Servers (keep them up for the owner): game http://localhost:5241, studio http://127.0.0.1:5242 (also http://192.168.0.2:5242 on the
+    network for helpers), .claude/launch.json configs lot-presets-game and lot-presets-studio. They are not the lead's 5174/5191.
+  - Next: (1) check the studio Rebuild finished: GET http://127.0.0.1:5242/api/status (never POST /api/rebuild to poll); check the
+    Library pictures match their cards. (2) Finish the stand-in packing fix in scripts/assets/prep-sprites.mjs (old houses such as
+    variation:world-house_0-north-1dde6f56-plain:1 are drawn as four-view stand-ins; pack each stand-in for the largest size any
+    house drawn as it needs); check git diff for unfinished work. (3) Rebuild game sprites, then check resized houses in the lab
+    (http://localhost:5241/?lotlab&dev) with the Person cursor.
+  - The branch's newest commits (up to 309d68a) are local only; origin has 51643a7. Push them when the owner says so; no PR yet. Do not
+    merge lot-presets into main without the owner's review.
+  ```
 - **3D people, golf play and run.world.** This session made the 3D crowd and golfers (PR #238) and golf play (PR #258; its open items
   are under "Status" in `docs/GOLF-PLAY.md`).
   - **Handover:** `docs/HANDOVER-PEOPLE.md` section 0 "START HERE", with the start prompt at the top. It is on branch
