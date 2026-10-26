@@ -19,6 +19,7 @@ import { freshStats } from './game/business/state';
 import { BUSINESS_IMAGE } from './game/business/art';
 import { BUSINESS_THUMBS } from './game/business-library';
 import type { SurgeView } from './game/event/surge';
+import { BUILD } from './game/save';
 import { PaintPanel } from './PaintPanel';
 import { CoursePanel } from './ui/course/CoursePanel';
 import { BuildingsPanel } from './ui/course/BuildingsPanel';
@@ -336,6 +337,7 @@ export default function App() {
                         <button className={`btn ${armedBackup === k ? '!border-red-400 !text-red-300' : ''}`} title="Delete this backup for good" onClick={async () => { if (armedBackup !== k) { setArmedBackup(k); return; } setArmedBackup(null); await game.deleteSaveBackup(k); setBackups(await game.saveBackups()); }}>{armedBackup === k ? 'Click again' : 'Delete'}</button>
                       </div>
                     ))}
+                    <div className="px-2 pt-1 text-[10px] opacity-50" title="The build that is running: every save records it (P07), so a bug report with a .cesave says which build wrote it">Build {BUILD.app} · {BUILD.sha}</div>
                     {/* asked in the menu (the browser's confirm() is not shown in every embedded browser): a first click arms, a second acts */}
                     <button className={`btn w-full ${armed === 'new' ? '!border-red-400 !text-red-300' : ''}`} title="Start a new game: your current game is replaced" onClick={() => { if (armed !== 'new') { setArmed('new'); return; } setArmed(null); setMenu(false); game.newTown(); }}>{armed === 'new' ? 'Click again: replace this game' : 'New game'}</button>
                     <button className={`btn w-full ${armed === 'empty' ? '!border-red-400 !text-red-300' : ''}`} title="Clear everything and start from an empty field" onClick={() => { if (armed !== 'empty') { setArmed('empty'); return; } setArmed(null); setMenu(false); game.clearTown(); }}>{armed === 'empty' ? 'Click again: clear everything' : 'Empty map'}</button>
