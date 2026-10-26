@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-27 00:25)
+## START HERE (kept current by the lead; last updated 2026-10-27 01:14)
 
 **Paste-ready start prompts for every role are in `docs/START-PROMPTS.md`:** the lead, a coding ticket, and the other sessions in this
 repo. The weekly usage cap is close (2026-10-26), so any chat may stop at any moment.
@@ -27,10 +27,10 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 ### In flight
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |
-| T110 | #193 | `arena/T110-textured-light` | `.claude/worktrees/t166` | 5187 | The owner's art rule: highlights masked by the surface's texture and inset from edges, shadows that keep the texture (multiply, cool ambient, soft penumbra, occlusion at wall feet), one sun upper right; audit paint-edges rims, hillshade, collars/walls, kerbs, water glints, the cursor puck, tree contact shadows, chunk drop shadows. Agent: the ground agent. |
+| T172 | #403 | `arena/T172-ram-step2` | `.claude/worktrees/t166` | 5187 | The game's RAM step 2: measure the main thread, the atlas (6 kept levels in the game), the GPU process and the other workers; take each lever with no visible, pop-in or speed cost. Agent: the ground agent. |
 | T112 | #199 | `arena/T112-sharp` (PR #394) | `.claude/worktrees/t112` | — | **Approved, merge HELD for the morning restart:** a lock change makes the 5174 auto-updater run `npm ci` in theme-consistency (the live 5191 studio holds sharp there; the lot agent's t160 uses it by junction). Morning order: stop 5191 → merge #394 → let npm ci finish → restart 5191 and 5174. All shipped bytes identical on 0.35.5; audit 0. |
-| T169 | #392 | `arena/T169-every-use` | `.claude/worktrees/t160` | 5186 | P25: lots on the fly for every use (shops, industry, parks/civic): use groups in the model (v3), pools per group, the exam per group; a group ships only if its exam row looks at least as good as `?oldlots`. Agent: the lot agent. |
-| T110 | #193 | `arena/T110-textured-light` | `.claude/worktrees/t166` | 5187 | The owner's art rule: highlights masked by the surface's texture and inset from edges, shadows that keep the texture (multiply, cool ambient, soft penumbra, occlusion at wall feet), one sun upper right; audit paint-edges rims, hillshade, collars/walls, kerbs, water glints, the cursor puck, tree contact shadows, chunk drop shadows. Agent: the ground agent. |
+| T171 | #400 | `arena/T171-item-anchors` | `.claude/worktrees/t160` | 5186 | P25: per-item anchors (door/front, back, sides, fence line, kerb, drive/parking edge, corner) and rows learnt from the samples; model v4; shops turned on when their exam row is as good as `?oldlots`. Agent: the lot agent. |
+| T172 | #403 | `arena/T172-ram-step2` | `.claude/worktrees/t166` | 5187 | The game's RAM step 2: measure the main thread, the atlas (6 kept levels in the game), the GPU process and the other workers; take each lever with no visible, pop-in or speed cost. Agent: the ground agent. |
 | T112 | #199 | `arena/T112-sharp` (PR #394) | `.claude/worktrees/t112` | — | **Approved, merge HELD for the morning restart:** a lock change makes the 5174 auto-updater run `npm ci` in theme-consistency (the live 5191 studio holds sharp there; the lot agent's t160 uses it by junction). Morning order: stop 5191 → merge #394 → let npm ci finish → restart 5191 and 5174. All shipped bytes identical on 0.35.5; audit 0. |
 
 **Two coding agents at a time (the owner, 2026-10-26: first "maybe just too many background tasks?" after the studio tab died with the
@@ -88,6 +88,16 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
    (the sharp bump). See the History sections below and `gh issue list --label arena --state open`.
 
 ### Done recently (newest first; details in each PR)
+- 2026-10-27 01:14: **T110 #402 textured light and shadow** (the owner's art rule): paint-tool area rims are a shine textured by the
+  area's own colours, 0.2 m inside the edge; their shadows and dark rims multiply one cool shade `SHADE_RGB` (112,120,152), the same as the
+  course shadows; bunker floor light inset; the Course puck's flat screen washes and cream edge line now textured and inset. Hillshade,
+  collars, walls and banks were already compliant; kerbs (2-3 px) and water (no glints) left; prop/tree shadows are T141/T142's. Bake
+  time within noise. For the owner's eye: the puck reads slightly softer without its cream line. Shots `E:/ClaudeTemp/T110/shots/`.
+- 2026-10-27 00:47: **T169 #399 lots on the fly for more uses** (model v3 LATEST; v1/v2 towns unchanged): **industry on** (junk-yard
+  props varied lot to lot), **car parks, civic, tour on**; **shops off** (their frozen lots are composed: hedges along the fence, racks and
+  benches by the door, dumpster at the back; per-kind positions laid them worse: T171). A generated lot keeps its preset's buildings,
+  patches, fences, street items, parked cars and car-park furniture; no plant on paving except along the fence; no tree within 2.5 tiles of
+  a main building's front. Town compose 49.3 → 52.7 ms. Exams and game shots in `E:/ClaudeTemp/T169/`.
 - 2026-10-27 00:25: **T170 #397 main green again + the art session's newer tiles**: `RangeSim.newDay` test knows `noPark`/`taken`; the
   painted-tiles manifest test skips with "art moved: re-run prep-painted-tiles" when the art folder moved (strict otherwise). Shipped:
   long-grass canonical (no longer provisional; seams 38.7 → 18.7 NEAR), putting-green finished sets, and **putting-green-paint MID from the

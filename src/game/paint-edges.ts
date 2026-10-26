@@ -1,7 +1,11 @@
 // Painted surfaces' edges (the owner, 2026-10-24: "the edges of painted texture needs a light feather and a bevel, with shadow and light").
 // Every painted area's outline gets a light feather (its alpha fades to 0 over a short band, so it blends into what lies under it) and a
 // gentle bevel lit by the one sun at the screen's upper right: edges facing the sun get a soft light rim, edges facing away a soft dark rim
-// and a faint shadow cast outward (at 145° on screen, as cast-shadow.ts). Greens and tees are raised (a stronger bevel), fairways gentle,
+// and a faint shadow cast outward (at 145° on screen, as cast-shadow.ts).
+// T110 (the owner's light rule): the light rim is a mask; the renderer lays it as a shine textured by the surface under it (its own colour
+// squared: its mid-tones and lit tips brighten, its dark gaps stay dark) starting a small gap inside the edge (renderer.ts areaLight); the
+// dark rim and the cast shadow are multiplied in one cool shade colour (SHADE_RGB, the course shadows' and the edge shade's), so the
+// texture stays visible in them. Greens and tees are raised (a stronger bevel), fairways gentle,
 // a bunker is sunken (the light and dark sides swap, nothing is cast outside), water and the flat grasses only feather, paving stays crisp.
 // Works on any simple polygon (rounded corners, the rounded unions of many cells): everything comes from the distance to the outline.
 // The ground painter (renderer.ts drawPaints) bakes these images per area when its chunk re-bakes, never per frame.
@@ -20,11 +24,12 @@ export interface EdgeLook {
   feather: number;
   /** how far past the feather the bevel rim fades out, tiles */
   bevel: number;
-  /** the strongest light rim: alpha (0..1) of LIGHT_RGB laid in 'screen' on edges facing the sun */
+  /** the strongest light rim on edges facing the sun: the alpha (0..1) of its mask, through which the renderer adds the surface's own colour
+   *  squared times a warm tint (a textured shine, T110) */
   light: number;
   /** the strongest dark rim: alpha (0..1) of DARK_RGB laid in 'multiply' on edges facing away */
   dark: number;
-  /** the strongest cast shadow on the ground outside: alpha (0..1) of SHADOW_RGB */
+  /** the strongest cast shadow on the ground outside: alpha (0..1) of SHADOW_RGB laid in 'multiply' (T110: the ground keeps its texture) */
   shadow: number;
   /** the cast shadow's reach outside an edge facing straight away from the sun, tiles */
   shadowLen: number;
@@ -32,22 +37,28 @@ export interface EdgeLook {
   sunken: boolean;
 }
 
-/** each profile's look (null: crisp, drawn as before); tuned at the closest zoom (cache level 0.6) and mid zooms */
+/** each profile's look (null: crisp, drawn as before); tuned at the closest zoom (cache level 0.6) and mid zooms. T110: the light is a
+ *  textured shine's mask (about as bright as the old flat screen on the surface's mid-tones, brighter on its lit tips, none in its dark gaps),
+ *  the dark rim and the shadow multiplies of SHADE_RGB (as dark in green as the old darker rim colour and the old near-black shadow, a touch
+ *  cooler) */
 export const EDGE_LOOKS: Readonly<Record<EdgeProfile, Readonly<EdgeLook> | null>> = {
   crisp: null,
   flat: { feather: 0.5, bevel: 0, light: 0, dark: 0, shadow: 0, shadowLen: 0, sunken: false },
   water: { feather: 0.45, bevel: 0, light: 0, dark: 0, shadow: 0, shadowLen: 0, sunken: false },
-  turf: { feather: 0.6, bevel: 0.55, light: 0.14, dark: 0.2, shadow: 0.16, shadowLen: 0.55, sunken: false },
-  raised: { feather: 0.55, bevel: 0.75, light: 0.26, dark: 0.36, shadow: 0.3, shadowLen: 0.95, sunken: false },
-  sunken: { feather: 0.25, bevel: 1.8, light: 0.3, dark: 0.65, shadow: 0, shadowLen: 0, sunken: true },
+  turf: { feather: 0.6, bevel: 0.55, light: 0.22, dark: 0.29, shadow: 0.3, shadowLen: 0.55, sunken: false },
+  raised: { feather: 0.55, bevel: 0.75, light: 0.42, dark: 0.53, shadow: 0.57, shadowLen: 0.95, sunken: false },
+  sunken: { feather: 0.25, bevel: 1.8, light: 0.48, dark: 0.95, shadow: 0, shadowLen: 0, sunken: true },
 };
 
-/** the light rim's colour (warm sunlight), RGB 0..255 */
+/** the sunlight's colour (warm), RGB 0..255: the light mask images carry it (the renderer's textured shine uses its own warm tint) */
 export const LIGHT_RGB: readonly [number, number, number] = [255, 236, 176];
-/** the dark rim's colour (a cool shade, multiplied over the surface), RGB 0..255 */
-export const DARK_RGB: readonly [number, number, number] = [50, 56, 70];
-/** the cast shadow's colour (the hillshade's shadow colour, terrain-paint.ts), RGB 0..255 */
-export const SHADOW_RGB: readonly [number, number, number] = [14, 10, 34];
+/** the one cool shade every ground shadow multiplies in (T110: shade reads as sky light and the texture stays), RGB 0..255: the course
+ *  shadows' SHADE_TINT in renderer.ts and the edge shade's AREA_SHADE.rgb */
+export const SHADE_RGB: readonly [number, number, number] = [112, 120, 152];
+/** the dark rim's colour (multiplied over the surface): the shade */
+export const DARK_RGB: readonly [number, number, number] = SHADE_RGB;
+/** the cast shadow's colour (multiplied over the ground under it): the shade */
+export const SHADOW_RGB: readonly [number, number, number] = SHADE_RGB;
 
 /** paved textures keep a crisp edge (their own dark rim) */
 const PAVED = /^(asphalt|lotAsphalt|paving|pad|slabs|concrete|chipSeal|roadgravel)/;
@@ -197,8 +208,9 @@ export function edgeField(pts: readonly number[], x0: number, y0: number, w: num
 
 /** an RGBA image over a tile box (data row-major, W x H px), drawn stretched through the chunk's iso transform */
 export interface EdgeImage { data: Uint8ClampedArray; W: number; H: number }
-/** one area's edge images over the same box (null: nothing to draw): cut (alpha to remove from the surface: 'destination-out'), light (LIGHT_RGB
- *  in 'screen'), dark (DARK_RGB in 'multiply'), both over the surface before the cut; shadow (SHADOW_RGB, source-over) on the ground under it */
+/** one area's edge images over the same box (null: nothing to draw): cut (alpha to remove from the surface: 'destination-out'), light (the
+ *  mask of a textured shine, a gap inside the edge: renderer.ts areaLight), dark (DARK_RGB in 'multiply'), both over the surface before the
+ *  cut; shadow (SHADOW_RGB in 'multiply') on the ground under it */
 export interface EdgeImages { cut: EdgeImage | null; light: EdgeImage | null; dark: EdgeImage | null; shadow: EdgeImage | null }
 
 /** the surface's alpha at signed distance d (tiles, + inside) with a feather band of f tiles: 0 at and outside the outline, 1 from f in */
@@ -282,7 +294,7 @@ export function edgeBox(pb: readonly number[], cb: readonly number[], reach: num
  *  reads across the ground), how much a slow world-space noise varies the depth (so its inner edge is never one even band), and the light on
  *  the sun side: its strongest mask alpha, the gap inside the edge, the ramp in after it and the band's width (tiles: 0.2 m, 0.16 m, 0.8 m),
  *  drawn from cache level lightL up (its band about 3 cache px there; further out, and on district chunks, the shade alone) */
-export const AREA_SHADE = { len0: 1, len1: 1.75, max: 0.8, rgb: [112, 120, 152] as const, noise: 0.25, light: 0.5, gap: 0.1, ramp: 0.08, width: 0.4, lightL: 0.1 } as const;
+export const AREA_SHADE = { len0: 1, len1: 1.75, max: 0.8, rgb: SHADE_RGB, noise: 0.25, light: 0.5, gap: 0.1, ramp: 0.08, width: 0.4, lightL: 0.1 } as const;
 
 /** an area's Shadow as its bake uses it: 0 (none: absent, not a number, or not above 0) .. 1 */
 export function areaShadow(v: unknown): number { return typeof v === 'number' && v > 0 ? Math.min(1, v) : 0; }
@@ -325,6 +337,15 @@ export function areaLightGap(d: number, e = 0): number { return smooth01((d - e 
  *  Shadow s, the edge e tiles in */
 export function areaLightAlpha(d: number, f: number, s: number, e = 0): number {
   const v = areaShadow(s); return v ? v * AREA_SHADE.light * lightFacing(f) * lightBand(d, e) * areaLightGap(d, e) : 0;
+}
+
+/** the tile box an edge image's lit px cover (alpha above 0) from tile (x0, y0) at res px a tile, grown by a px (the bilinear stretch reaches
+ *  half a px past them): where a light's textured shine is worked (renderer.ts areaLight); null when nothing is lit */
+export function litBox(img: EdgeImage | null, x0: number, y0: number, res: number): [number, number, number, number] | null {
+  if (!img) return null;
+  let u0 = Infinity, v0 = Infinity, u1 = -Infinity, v1 = -Infinity;
+  for (let v = 0; v < img.H; v++) for (let u = 0; u < img.W; u++) if (img.data[4 * (v * img.W + u) + 3]) { if (u < u0) u0 = u; if (u > u1) u1 = u; if (v < v0) v0 = v; if (v > v1) v1 = v; }
+  return u1 < 0 ? null : [x0 + (u0 - 1) / res, y0 + (v0 - 1) / res, x0 + (u1 + 2) / res, y0 + (v1 + 2) / res];
 }
 
 /** an area's edge shade images over a field's box: shade (AREA_SHADE.rgb in 'multiply', clipped to the area; null: none) and the light's mask
