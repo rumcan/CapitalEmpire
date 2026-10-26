@@ -3,98 +3,165 @@
 The owner (2026-10-26): "audit each props boxed shadow. the shadows should be tailor made for a top right shadow ... some are not right at
 all." House rule: the sun at the upper right, shadows at 145° on screen (to the lower left), a cool multiply that keeps the ground's texture.
 
-**Status: WIP.** The audit sheet works and the before sheets are taken; the review is in progress (problems found so far below); no fix yet.
+**Status: done** (branch `arena/T141-prop-shadows`). 1,638 sprite views audited, 713 had a problem before, 20 are flagged after (all
+checked: 3 are the overrides' own "no contact shadow", the rest are measurement artefacts or accepted, see "After").
 
 ## The audit sheet (dev only)
 
 - `npm run dev`, then `http://127.0.0.1:<port>/?shadows=audit&cat=<category>&page=<n>` (src/game/dev/shadow-audit.ts). Categories
   (src/game/dev/shadow-audit-items.ts `AUDIT_CATS`): trees, poles, props, golf (the Props tool's catalogue, the course dressing, the course
-  pieces' props, the Event tool's structures: T113's course props), range (every piece of a fully built range at each home stage and facing),
-  vehicles, walkers (sampled: standing frames, all eight facings), buildings, fences.
-- Each sprite in each of its views is drawn three times, one strip each: BOTH shadows, the CONTACT shadow alone (with its footprint in white
-  and its anchor in red), the CAST shadow alone; the label gives the id, the contact shape (`o` round, `[]` box, half extents in metres),
-  the kind and the scale. Drawn with the game's own GL programs and sprite packing (gl.ts, sprites.ts), so the sheet is what the game draws.
+  pieces' props, the Event tool's structures: T113's course props), range (every piece of a fully built range at each home stage and facing,
+  at the engine's size and footprint), vehicles, walkers (sampled: standing frames, all eight facings), buildings (with business art), fences.
+- Each sprite, in each of its views, is drawn three times, one strip each: BOTH shadows, the CONTACT shadow alone (with its footprint in white
+  and its anchor in red on the ground), the CAST shadow alone. The label gives the id, the contact shape (`o` round, `[]` box, half extents in
+  metres), its shadow kind and the scale. It is drawn by the game's own GL programs and sprite packing (gl.ts, sprites.ts), so the sheet is what
+  the game draws; it also draws the old shadow code (it was used for the before sheets).
 - Options: `&z=0.3` zoom, `&w=1600` width (CSS px), `&per=40` items a page, `&h=3600` page height (device px), `&measure=1` measures every
   picture's opaque base from the atlas alpha (window.__shadowAudit.measure).
-- Capture: `node scripts/dev/shadow-audit.mjs --base http://127.0.0.1:5186/ --out <dir> [--cats trees,poles] [--scales 1,2] [--measure]`
-  (headless Edge; JPGs `<cat>-<page>-30pct.jpg` at 30% on a 1x screen, `-2x.jpg` at 30% on a 2x screen, 1600 px wide).
-- 1,102 entries: trees 63, poles 178, props 401, golf 134, range 63, vehicles 54, walkers 40 (sample), buildings 122, fences 47. Left out:
-  the 14 baked lots (they carry their own shadows) and 45 old buildings the game never draws as themselves (newart.ts draws a new-art
-  stand-in of their family, which is audited).
+- Capture: `node scripts/dev/shadow-audit.mjs --base http://127.0.0.1:5186/ --out <dir> [--cats trees,poles] [--scales 1,2] [--pages 0,1]
+  [--measure]` (headless Edge, closed when done; JPGs `<cat>-<page>-30pct.jpg` at 30% on a 1x screen and `-2x.jpg` at 30% on a 2x screen,
+  1,600 px wide).
+- 1,638 entries: trees 94, poles 181, props 462, golf 134, range 63, vehicles 70, walkers 40 (a sample: every frame shares one rule), buildings
+  547, fences 47. Left out: the baked lots (they carry their own shadows) and 46 old buildings the game never draws as themselves (newart.ts
+  draws a new-art stand-in of their family, which is audited; their shadow is now the stand-in's).
 
-## How the shadows work (before T141)
+## How the contact shadows work now (src/game/shadow-shape.ts)
 
-- Contact: `shadow-shape.ts` picks a kind by name regexes in this order: vehicle (`\b(car|van|pickup|bus|compact|truck|wagon|sedan|coupe|cart)\b`),
-  roundhouse (gazebo, fountain, merry-go-round), building (kinds house, building, venue, vending, arcade, junglegym, unless the name matches the
-  pole words), tree (kind tree or `/tree/` in the name), pole (kind lamp or the pole words: lamp, pole, sign, post, flag, meter, ...), plant
-  (kind bush or the round words), else prop (a box from the footprint). Round shapes sit on the anchor, boxes on the footprint's centre.
-- The GPU leans every shape toward the cast side by `6 * cast.length` screen px per metre of its half extents (hx + hy), along 145°.
-- Cast: each sprite's silhouette sheared at 145° by 0.9 per px of height, standing on its footprint's front edges.
+1. **The override** (`src/game/shadow-overrides.json`, by library id): kind, hx, hy (half extents, metres at scale 1), dx, dy (the centre's
+   offset from the anchor, metres at scale 1), core, feather, lean (a multiplier), `"contact": false`, `"cast": false`, and a note. A turned
+   view (`view:<id>:se|sw|nw`, `east:<id>`) shares its NE view's entry, its sizes and offsets turned with it; `variation:<group>` covers every
+   picture of a variation set. Offsets are not mirrored for a flipped sprite (only some old trees are flipped).
+2. **The kind rules** (`ruleKind`), on whole words of the name and id: lots none; walkers; fences their strip; roundhouse (gazebo, fountain,
+   merry-go-round, carousel, bandstand); building (the building kinds and the art inventory's business buildings, by id); vehicle (kind car or
+   a vehicle word, unless a car park, a stop, a shelter, a garage, a seat, a bench, a toy, a shopping cart or a pull wagon); tree; pole (kind
+   lamp or a pole word: lamp, pole, sign, post, flag, pin, meter, bollard, hydrant, mailbox, ...); plant; round (small round things: a
+   trampoline, a pool, a fire pit, a well, a spool, a barrel, a statue, ...); else prop (a box from the footprint).
+3. **The picture** (`contactShadow`, from the sprite's trimmed picture rect as drawn): a box is never wider than 0.9 of its picture (a
+   vehicle's 1.05), slides under the picture's middle when it is off by more than an eighth of its width, and keeps its front corner no lower
+   than the picture's foot; a placeholder footprint (business art's 2 x 2 m box, or a building's footprint under 45% of its picture's width)
+   is replaced by the picture's own base, which the cast shadow then stands on too; a pole's spot stands on the picture's foot (up or down
+   the screen from the anchor); a tree's pool goes down to the trunk's foot when the picture reaches below its anchor.
+4. **One lean for blob and box** (`CONTACT_LEAN`, `leanShift`; gl.ts VS_SHADOW per vertex, the same GPU cost: one instance a shadow): every
+   shape moves along the cast shadows' angle (145°) by half its own reach from its centre to its edge in that direction, at most 0.8 m, times
+   the cast length against its default and its override's lean. So nothing slides off its base (a fence's strip moves less than its depth), a
+   round pool and a box of one size lean alike, and the sun side stays lit.
+5. Sprites with `"cast": false` cast no cast shadow (sprites.ts packSprite); a hidden look casts no contact shadow either.
 
-## Problems found so far (before)
+## Before (the old code), by category
 
-### Name rules
-- `/tree/` matches "street": `world:streetlamp` (kind lamp; also the range's floodlights), `town:street_sign` and both street-name sign
-  sets (`variation:sign-street-names-a/b-*`, 12 sprites) get a tree's canopy pool (0.45 to 0.66 m) instead of a pole's spot. The tree rule is
-  checked before the lamp kind.
-- The pole words veto the building rule: `town:postoffice` and its variation ("Post Office") and `world:drivein_marquee` (buildings) get a
-  0.12 to 0.35 m spot under a whole building.
-- `post` matches inside words: `expansion:compost-bin` (3 views) gets a pole spot; `arcade_v2_clutter_poster` (a poster stand, 3) too.
-- `bus` / `car` / `cart` / `wagon` as vehicles: `town:bus_stop` (a shelter, 4 views), `ce:parking-entry`, `-exit`, `-kiosk` (4 views),
-  `-in-sign` ("Car park ..."), `expansion:carseat-bench` (3), `business:golf-cart-garage` (a garage, 4 views: a 0.88 m round pool under a
-  14 m building), the toy car, the pull wagon, the shopping cart: the vehicle's darkest pool (core 0.95, 1.35x the body).
-- `world:goalposts` (a pole spot in the middle of two posts and a crossbar).
+The problem classes, measured from each picture's opaque alpha (`output/t141/problems.mjs` in the worktree, not committed): a box wider than
+its picture; a box off the picture's middle; a contact shadow hidden under its picture (under 30% of its width); a pole's spot off the pole's
+foot; a tree's pool above its trunk's foot; the lean sliding a shape off its base; a box sticking out in front of the picture by over 25 px.
+Besides these, the kind rules gave 188 sprites the wrong kind (listed after the table).
 
-### Business art: 1 x 1 placeholder boxes
-- Every `business:*` sprite (and its views) has a 2 x 2 m placeholder box, so its contact box is 0.9 x 0.9 m whatever its size: the
-  clubhouse (1,036 px wide), the cart garage, the halfway pavilion, the coffee kiosk, the pro shop, the motel, the casino ... draw a contact
-  shadow hidden under the middle of the building (invisible), and the small ones (the bag trolley at 0.16, the pins) a speck.
+- **trees**: 94 audited, 5 with problems
+  - pool above the trunk foot (5): `world:tree_pine_1`, `ref:tree-maple-crimson`, `ref:tree-birch-gold`, `ref:tree-spruce-blue`, `world:tree_pine_2`
+- **poles**: 181 audited, 130 with problems
+  - spot off the pole's foot (129): `world:speaker_post`, `world:hydrant`, `world:mailbox`, `town:stop_sign` (40 px under the foot), `town:traffic_light`
+    (57), `town:utility_pole` (126), `expansion:rural-mailboxes`, `expansion:compost-bin` and its 7 variations, every road sign set
+    (`variation:sign-*`, 100 pictures), `arcade:arcade_v2_clutter_poster` and its 8 variations, `town:phone_booth` x3
+  - wider than its picture, lean slides it off its base (1): `ce:parking-in-sign`
+- **props**: 462 audited, 134 with problems
+  - sticks out in front (15): `world:scoreboard`, `variation:world-trashcan-76186b58-ns`, `expansion:trampoline`, `expansion:aboveground-pool` and its 4
+    variations, `expansion:crushed-car-stack` (and 2 variation sets), `expansion:junk-car`, `expansion:scrap-pickup-rear` (and its variations),
+    `expansion:stationwagon-rear`
+  - wider than its picture (102): `world:bench`, `world:trashcan`, `variation:world-trashcan-76186b58-ns` (a 1.17 m box under a 0.41 m can),
+    `expansion:trampoline` (a square under a round trampoline), the above-ground pools, the fire pits, the doghouses, `town:bus_stop` x3, the
+    car-seat benches, the cable spools, the scrap cars, the cement bags, the coin horse rides, the kiddie car, the shopping cart, the wagon, and
+    about 40 more variation views whose box is their base's or bigger
+  - lean slides it off its base (8): `expansion:wheel-stop`, `expansion:canoe` (and its variation), `poi:canoe-rack`, four thin arcade walls and counters
+  - off the picture (7): `expansion:basketball-hoop`, `expansion:aboveground-pool`, `expansion:backyard-tent`, `town:bus_stop`,
+    `variation:expansion-lean-to-shed-0b83bbf7-plain`, `ce:parking-entry`, `ce:parking-exit`
+  - hidden under its picture (16): the business props with the 2 x 2 m placeholder box (`business:golf-bench-course-map`, `-patio-table`,
+    `-mower`, `-practice-net`, `-footbridge`, `business:bus-sw`, `-se`, `business:taxi-sw`, `-se`, `business:fishing-bass-boat`, the docks),
+    `business:golf-pond`, `business:golf-bunker-crescent`, `expansion:washing-line`, `expansion:satellite-dish`
+  - a speck for a pool (2): `business:golf-cart-sw`, `business:golf-cart-se` (the placeholder box as a vehicle)
+- **golf**: 134 audited, 42 with problems
+  - hidden under its picture (17): `business:golf-clubhouse` x4, `business:golf-halfway-pavilion` x4, `business:golf-cart-garage` x4 (also a 0.88 m
+    round "vehicle" pool: "cart"), `business:fishing-rental-kiosk` x4, `business:golf-bench-course-map`
+  - off the picture (9) and sticks out in front (5): `golf:grandstand-s` (its NE and SW footprints reach 190 to 340 px left of the picture),
+    `golf:leaderboard` x4, `expansion:backyard-tent`, `ce:parking-entry`, `town:bus_stop`, `world:watertower`
+  - wider than its picture (11): `world:bench`, `world:trashcan`, `business:golf-pin-red`, `golf:grandstand-s`, `golf:leaderboard` x2,
+    `golf:toilet-block`, `town:bus_stop` x3, `world:watertower`
+  - pool above the trunk foot (5): the five trees above; lean slides it off its base (1): `world:hedge`
+- **range**: 63 audited, 32 with problems
+  - hidden under its picture (10): `business:golf-pro-shop` x4, `business:fishing-rental-kiosk` x4 (the coffee kiosk), `business:golf-patio-table`,
+    `expansion:washing-line`
+  - wider than / off the picture / sticks out in front (28): `business:golf-driving-range` (the covered bays' roofs on their bays' footprint)
+    x10, `golf:leaderboard` x2 (the range's sign), `gen:house-farmhouse-wrap` x4 (the house), `world:house_4`, `world:bench`, `expansion:firepit`
+  - lean slides it off its base (2): `world:fence_picket_x`, `expansion:chainlink-x` (the yard's and the boundary's fences)
+- **vehicles**: 70 audited, 8 with problems
+  - sticks out in front (1): `world:schoolbus` (its box 1.7 times the bus's width, then widened 1.35)
+  - wider than its picture (7): the side views of `world:car_2`, `world:car_3`, `static:compact_w`, `static:pickup_n`
+- **walkers**: 40 audited, 0 with problems
+- **buildings**: 547 audited, 340 with problems
+  - sticks out in front (192): almost every house, shop, barn, school and industrial building: the old lean slid a building's box by
+    `6 * cast.length` px per metre of (hx + hy), 30 to 60 px down-left, out in front of the walls
+  - off the picture (87): `world:diner`, `ref:building-gas-canopy`, `town:grocery`, `gen:house-ranch-long`, `gen:back-patio-pool`, the
+    `variation:*-plain` building variations (garages, cottages, dormers, the corner shop, the gas shop, the barn, the farmhouses), the
+    industrial variations, `business:diner`, `-buscompany`, `-casino`, `-fishing-boathouse`, `golf:grandstand-s`, `golf:leaderboard`
+  - wider than its picture (49): `town:grocery`, `world:primary_school`, `ref:landmark-silo` x4, `world:bleachers`, the industrial variations,
+    `golf:grandstand-s`, `golf:toilet-block`, and other building variations whose footprint is bigger than their picture
+  - hidden under its picture (76): every business building (the 2 x 2 m placeholder box): stadium, clubhouse, pro shop, cart garage, halfway
+    pavilion, sports bar, diner, bus company, taxi, casino, hotel, motel, estate villa, fishing lodge, tackle shop, fishing cabin, boathouse,
+    rental kiosk, driving range, each x4 views
+  - a pole's spot under a whole building (13): `town:postoffice` and its views and variation ("Post Office": the word "post"),
+    `world:drivein_marquee` x4, `town:phone_booth`
+- **fences**: 47 audited, 22 with problems
+  - lean slides it off its base (22): every fence along x (`world:hedge`, `world:fence_picket_x`, `world:fence_iron_x`, `expansion:chainlink-x`,
+    `-fence-privacy-x`, `-gate-chainlink-x`, `-picket-x`, `world:gate` and their variations): the old lean moved a 0.16 m deep strip by
+    about 0.5 m, three times its depth, off its fence
+  - wider than its picture (3): `variation:expansion-gate-chainlink-x-0393aa75-ns`, `variation:expansion-fence-privacy-x-dd8abdb9`, its `-ns`
+- **total**: 1,638 audited, 713 with problems
 
-### Footprints that are not under the picture
-- `golf:grandstand-s`, `golf:leaderboard`, `golf:toilet-block` (and the range's sign, the leaderboard): the NE and SW views' footprints
-  reach far to the left of the picture (the box shadow is off-centre by 70 to 340 px at scale 1), the SE and NW views' to the right.
+The kind rules (188 sprites given a wrong kind, now right; `tests/shadow-overrides.test.ts` holds them):
+- `/tree/` matched "street": `world:streetlamp` (kind lamp: the town's lamps and the range's floodlights), `town:street_sign` and both
+  street-name sign sets got a tree's canopy pool (tree to pole).
+- The pole words vetoed the building rule: `town:postoffice` (and its views and variation), `world:drivein_marquee` (pole to building).
+- `post` inside words: `expansion:compost-bin`, `arcade_v2_clutter_poster` and their variations (pole to prop).
+- Vehicle words in other things: `town:bus_stop`, `ce:parking-entry`, `-exit`, `-kiosk`, `-in-sign` ("Car park ..."),
+  `expansion:carseat-bench`, `expansion:crushed-car-stack`, the toy car, the pull wagon, the shopping cart (vehicle to prop or pole);
+  `business:golf-cart-garage` (vehicle to building).
+- Business art: the 18 business buildings were props with a 2 x 2 m box (prop to building, sized from their picture); the pins were props (now
+  poles); the bass boat and the taxis were props (now vehicles).
+- Round things had boxes: the trampoline, the above-ground pools, the wishing well, the fire pits, the rain barrel, the cable spools, the
+  tyre stack (prop to round).
 
-### Trees
-- Every capital and generated tree's canopy pool hits the 1.6 m cap (one size for all), about a third of the canopy's width; reasonable for
-  a contact pool under the cast shadow. Some trees' pictures reach 30 to 100 px below the anchor (`ref:tree-maple-crimson` 98,
-  `ref:tree-spruce-blue` 67, `ref:tree-birch-gold` 49, `world:tree_pine_*` 36 to 48, `world:tree_dead_*` about 30): to check whether the
-  pool sits on the trunk's foot.
+## After
 
-### The lean (every box and blob)
-- The lean was `6 * cast.length` screen px per metre of (hx + hy): a building's box (hx + hy about 10 m) slid 54 px down-left, so about 70
-  of the 122 buildings' contact boxes stick out 26 to 40 px in front of their pictures; a fence's strip (hx 3, hy 0.16) slid 17 px, about three
-  times its own depth, off its fence.
+- **trees** 94 audited, 0 flagged; **poles** 181, 0; **vehicles** 70, 0; **walkers** 40, 0.
+- **props** 462, 5 flagged: `world:scoreboard`, `business:golf-pond`, `business:golf-bunker-crescent` have no contact shadow by override (a board
+  on two posts; two flat ground pictures, which cast none either); `expansion:washing-line` and `expansion:satellite-dish` keep a small box at
+  their pole under a wide picture (right: their base is the pole).
+- **golf** 134, 3 flagged: `golf:leaderboard` x2 and `world:watertower` are measurement artefacts (the leaderboard's measure was taken at
+  another scale; the water tower is drawn as a stand-in, a snack bar or a barn, whose shadow fits).
+- **range** 63, 5 flagged: `expansion:washing-line` (as above); the covered bays' roofs x4 lean 25 to 30 px past the picture's foot (the
+  lean, by design).
+- **buildings** 547, 4 flagged: `business:stadium` x4 (measured at a scale past its pixel limit; drawn at its limit, the shadow fits that).
+- **fences** 47, 3 flagged: the frontal fence panel views (`variation:expansion-fence-privacy-x-*`, `-gate-chainlink-x-*-ns`), see below.
+- **total**: 1,638 audited, 20 flagged, none a real fault but the follow-ups below.
 
-### Props, poles, vehicles, buildings (from the measured pictures: `output/t141/analyze.mjs` in the worktree, not committed)
-- Boxes wider than their pictures (the box sticks out on the sun side too): the views of a variation set often keep a bigger box than their
-  base (`variation:world-trashcan-76186b58-ns:1` 1.17 m against the can's 0.41), the above-ground pools (2.2 to 2.9 m squares), the
-  trampoline (a 1.93 m square under a round trampoline), about 25 building variations (`variation:ref-building-*-plain:1`, garages,
-  `variation:town-hardware-*`, ... 17 to 121 px past the picture's right edge).
-- Boxes off the picture's middle by 130 to 380 px: `world:diner`, `variation:gen-house-ranch-long-*`, `variation:gen-house-farmhouse-wrap-*`,
-  `gen:back-patio-pool`, `variation:town-grocery-*`, the industrial variations (`bottling-plant`, `corrugated-warehouse`, `lumber-workshop`).
-- Pictures drawn wholly above their anchors: `town:stop_sign` (20 px), `town:traffic_light` (57), `town:utility_pole` (126), `town:street_sign`
-  (66): the spot sits on the ground below the pole's foot, detached.
-- Signs on two posts (the guide, recreation, local and assembly sign sets): a 0.19 m spot in the middle under the board.
-- `world:scoreboard` (a board on two posts): a 1.05 x 0.9 m box on the ground under the board, between the posts.
-- Round things with boxes: the trampoline, the above-ground pools, the fire pits, the cable spools.
-- Vehicles: `world:schoolbus`'s box is 1.7 times the bus's width (hy 2.84 m against a 2.5 m bus) and the 1.35 widening makes a big dark slab.
-- Fences: fine apart from the lean.
+## The override table (src/game/shadow-overrides.json, 4 entries)
 
-(To be continued: the after sheets and the remaining per-item overrides.)
+- `world:schoolbus`: hx 3.9, hy 1.0 (its library box is 1.7 times the bus's width).
+- `world:scoreboard`: no contact shadow (a board on two posts: the cast shadow draws the posts).
+- `business:golf-pond`, `business:golf-bunker-crescent`: no contact and no cast shadow (flat ground pictures).
 
-## The fix (in progress)
+Everything else is fixed by the rules and the picture fit, so the table stays the place for the owner's own tuning: add an entry by library id
+(its NE view for four-view art), with a `note`. `tests/shadow-overrides.test.ts` checks every key names a library sprite or variation set, every
+number is sane, and every entry says why.
 
-- `src/game/shadow-shape.ts`: whole-word name rules (`kindOf` / `ruleKind`), a `round` kind for small round things, the business art's
-  buildings by id, `contactShadow()` placing each shape with its picture (never wider than the picture, under its middle, its front corner no
-  lower than the picture's foot, a placeholder footprint replaced by the picture's base, a spot at the foot of a picture drawn above its
-  anchor), `overrideOf()` reading `src/game/shadow-overrides.json` (per id; a turned view shares its NE view's entry, turned; a variation set
-  shares `variation:<group>`), and one lean for blob and box (`CONTACT_LEAN`, `leanShift`: half the shape's reach toward the shadow side, at
-  most 0.8 m).
-- Still to do: gl.ts VS_SHADOW (the per-vertex lean, `aLook.w` the lean multiplier), sprites.ts (`contactShadow` with the picture rect, the
-  look's item, no shadow for a hidden look, the cast foot from a placeholder fit, `cast: false`), engine.ts (`contactLean(this.cast)`), the
-  overrides, the after sheets, `tests/shadow-overrides.test.ts`.
+## Follow-ups (not done here)
+
+- The frontal fence panel views (`variation:expansion-fence-privacy-x-*`, `variation:expansion-chainlink-y-96c97f62-ns:*`, the gate
+  variations) are drawn facing the camera while their footprint runs along a map axis: their strip runs diagonally under a level panel. A map
+  axis shape cannot follow a screen-level panel; they need their footprints fixed (art) or a "no contact" override each.
+- Two-post signs (the guide, recreation and local sign sets) get their spot at the post on the anchor, none at the other post.
+- Override offsets (dx, dy) are not mirrored for a flipped sprite (only some old trees are drawn flipped; none has an offset).
 
 ## Sheets
 
-Before: `E:/ClaudeTemp/T141/before/` on the dev PC (scratch, not committed), with `items-<cat>-<n>.json` (each page's entries and shapes)
-and `measure-<cat>.json` (each picture's measured base).
+On the dev PC (scratch, not committed): before `E:/ClaudeTemp/T141/before/`, after `E:/ClaudeTemp/T141/after/`. Each has every page of every
+category at 30% (`<cat>-<n>-30pct.jpg`: trees 4, poles 5, props 12, golf 5, range 3, vehicles 2, walkers 1, buildings 31, fences 2) and at 2x
+the golf and range categories in full (24 and 9 pages) and the first two pages of the others; `items-<cat>-<n>.json` (each page's entries and
+shapes) and, in before/, `measure-<cat>.json` (each picture's measured base). Regenerate with the capture command above.

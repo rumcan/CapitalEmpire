@@ -60,6 +60,13 @@ const BUSINESS_BUILDING = /^(view:)?business:(buscompany|casino|diner|estate-vil
 /** a sprite's override and the quarter turns its sizes and offsets take: its own entry, its NE view's (a turned view: view:<id>:se 1, sw 2,
  *  nw 3; east:<id> 1), its variation set's */
 export function overrideOf(id: string): { o: ShadowOverride; turn: number } | null {
+  let r = OVERRIDE_OF.get(id);
+  if (r === undefined) OVERRIDE_OF.set(id, r = findOverride(id));
+  return r;
+}
+/** (overrideOf's answers by id: every moving car and walker asks each frame) */
+const OVERRIDE_OF = new Map<string, { o: ShadowOverride; turn: number } | null>();
+function findOverride(id: string): { o: ShadowOverride; turn: number } | null {
   const own = SHADOW_OVERRIDES[id]; if (own) return { o: own, turn: 0 };
   const v = /^view:(.+):(se|sw|nw)$/.exec(id);
   if (v) { const o = SHADOW_OVERRIDES[v[1]!]; if (o) return { o, turn: v[2] === 'se' ? 1 : v[2] === 'sw' ? 2 : 3 }; }
