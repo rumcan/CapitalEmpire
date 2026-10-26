@@ -23,6 +23,7 @@ import { CELL as COURSE_CELL } from './golf/paintcourse';
 import { AREA_SHADE, EDGE_LOOKS, areaLightEdge, areaShadeImages, areaShadeReach, areaShadow, bandRamp, edgeBox, edgeField, edgeImages, edgeReach, edgeRes, featherTiles, type EdgeImage } from './paint-edges';
 import { CH_SIZE } from './ext/course-height';
 import { CART_RIM, CART_SURFACE, cartCast, cartRim } from './cart-bevel';
+import { faceShift, kerbFace, stepReach, upScreen } from './kerb-face';
 import { HEIGHT_LIGHT_STRENGTH, HL_MASK, LUMA_SIGMA_PER_L, heightLightGrid, heightLightPictures, heightLightRect, type HeightLightGrid } from './ext/course-height/light';
 import { PaintedGround, type LayLevel } from './painted-ground';
 import { coversMap } from './painted-families';
@@ -46,8 +47,8 @@ const LUSH_TINT = '#c4dcac', SOIL_LIFT = '#40291a', SOIL_WARM = '#f0cfa4';
 
 /** screen px per tile unit along the iso axes at level 1 */
 const TILE_PX = Math.hypot(HW, HH);
-/** curb geometry in tiles (kit: top 0.13 m, joint 0.08 m, face 0.18 m, gutter 0.40 m) */
-const CURB_TOP = 0.065, CURB_JOINT = 0.04, FACE_WORLD = 7.5, GUTTER = 0.2;
+/** curb geometry in tiles (kit: top 0.13 m, joint 0.08 m, face 0.18 m, gutter 0.40 m); the face's height on screen is kerb-face.ts FACE_WORLD */
+const CURB_TOP = 0.065, CURB_JOINT = 0.04, GUTTER = 0.2;
 const SLAB_LEN = 1.25;
 /** the owner's map decals (the sprite studio's Ground tab writes map-decals.json) */
 const MAP_DECALS = clampDecals(savedDecals as Parameters<typeof clampDecals>[0]);
@@ -699,8 +700,10 @@ export class GroundPainter {
 
     if (asph.length) {
       // the starter cart paths (dirt, cement slabs: T084) draw their own soft edges (5a), not the plain roads' dark one
-      const kerbed = asph.filter(f => f.kerb), plain = asph.filter(f => !f.kerb && !CART_SURFACE.has(f.tex));
-      const asphMask = maskOf('asphMask', asph), shift = Math.max(1, FACE_WORLD * L);
+      // the kerbed roads include those whose kerb face steps into this chunk from just below its bottom edge (T140)
+      const shift = faceShift(L), up = upScreen(M, shift);
+      const kerbed = net.asphF.filter(f => f.kerb && vis(stepReach(f.bbox, up))), plain = asph.filter(f => !f.kerb && !CART_SURFACE.has(f.tex));
+      const asphMask = maskOf('asphMask', asph);
       // ---- 4. curb: raised top ring (joint colour outside, cream top inside), then the visible face between the top and the road
       if (kerbed.length) {
         const top = this.buffer('curbTop', W, H), tg = ctx2d(top);
@@ -710,14 +713,11 @@ export class GroundPainter {
           tg.strokeStyle = tex.curb.top; for (const f of kerbed) ring(tg, f, 2 * CURB_TOP);
         }
         composite(top);
-        // the face: a wall of height `shift` px standing on the asphalt edge wherever the road lies below the curb on
-        // screen = (asphalt mask shifted up) minus (asphalt mask). Three tones from the strip, light at the top.
-        const kerbMask = maskOf('kerbMask', kerbed), bands = tex.curb.face;
-        const faceBands = this.buffer('faceBands', W, H), bg = ctx2d(faceBands);
-        bg.drawImage(kerbMask, 0, -shift); bg.globalCompositeOperation = 'destination-out'; bg.drawImage(kerbMask, 0, 0);
-        bg.globalCompositeOperation = 'source-in'; bg.fillStyle = bands[0]; bg.fillRect(0, 0, W, H);
-        const tint = (col: string, dy: number) => { const t = this.buffer('faceTint', W, H), g = ctx2d(t); g.drawImage(kerbMask, 0, dy); g.globalCompositeOperation = 'source-in'; g.fillStyle = col; g.fillRect(0, 0, W, H); bg.globalCompositeOperation = 'source-atop'; bg.drawImage(t, 0, 0); };
-        tint(bands[1], -shift * 0.62); tint(bands[2], -shift * 0.3);
+        // the face: a wall of height `shift` px standing on the asphalt edge wherever the road lies below the curb on screen = the kerbed
+        // roads stepped up the screen less the roads, in three tones from the strip, light at the top (kerb-face.ts). The steps are taken on
+        // the roads in tile space, never on this chunk's mask, so the face stays whole across the chunk's bottom edge (T140)
+        const faceBands = this.buffer('faceBands', W, H);
+        kerbFace(ctx2d(faceBands), kerbed, M, shift, tex.curb.face);
         composite(faceBands);
       }
       // plain (verge) roads: a soft dark edge instead of a curb, feathered by a 1 px blur (the owner: no hard vector line)
@@ -1030,7 +1030,9 @@ export class GroundPainter {
       }
     }
     const out = canvas(S, S), og = ctx2d(out), k = Math.max(1, 0.03 * ppm);
-    og.drawImage(c, SHADOW_DIR[0] * k, SHADOW_DIR[1] * k); og.globalCompositeOperation = 'source-in'; og.fillStyle = 'rgba(30,22,12,0.42)'; og.fillRect(0, 0, S, S);
+    // the shade slides the seamless square with its wrapped neighbours too, so the leaves across its edge keep their shade (T140)
+    for (const wx of [-S, 0, S]) for (const wy of [-S, 0, S]) og.drawImage(c, SHADOW_DIR[0] * k + wx, SHADOW_DIR[1] * k + wy);
+    og.globalCompositeOperation = 'source-in'; og.fillStyle = 'rgba(30,22,12,0.42)'; og.fillRect(0, 0, S, S);
     og.globalCompositeOperation = 'source-over'; og.drawImage(c, 0, 0);
     this.leafPic = out; return out;
   }
