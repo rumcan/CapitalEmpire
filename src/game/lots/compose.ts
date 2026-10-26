@@ -27,7 +27,13 @@ import PRESET_JSON from './lot-presets.json';
 import { generateLayout } from './lot-gen';
 import { kindPools } from './item-kinds';
 import { modelFrom, type Box, type HouseClass, type Model, type SectorLot } from './learn';
-import { CLASS_NAMES, frameHalf, sizeClassOf } from './house-class';
+import { CLASS_NAMES, frameHalf, houseFamilies, sizeClassOf } from './house-class';
+import { allows, parseAllocations } from './house-alloc';
+import ALLOC_JSON from './house-allocations.json';
+import REMOVED from '../../../scripts/assets/removed.json';
+import { OWNER_SCALE } from './scales';
+import { LIBRARY } from '../library';
+import { drawnAsStandIn } from '../newart';
 import { LATEST, LOT_MODELS } from './lot-models';
 export { isCarPark, type Composition, type ComposeState, type LotGeom, type Placed, type PresetDrop } from './compose-core';
 
@@ -241,9 +247,77 @@ export function pickedPreset(lot: LotGeom, st: ComposeState): LotPreset | null {
 export function lotPreset(lot: LotGeom, st: ComposeState): { preset: LotPreset; fit: Fitted; frame: PresetFrame } | null {
   const preset = pickedPreset(lot, st);
   if (!preset) return null;
-  const frame0 = frameOf(lot), frame = preset.road !== undefined && preset.road % 2 ? { ...frame0, q: quarterOfRoad(preset.road) } : frame0, fit = fitPreset(preset, lot.w, lot.d);
+  const frame0 = frameOf(lot), frame = preset.road !== undefined && preset.road % 2 ? { ...frame0, q: quarterOfRoad(preset.road) } : frame0;
+  // T167: a picture the owner removed is never drawn: a stand-in takes its place (or it is left out), before the house finds its yards
+  const fit = standIns(fitPreset(preset, lot.w, lot.d), preset, lot, frame);
   return { preset, fit: frozenHouse(preset) ? houseYards(fit, frame) : fit, frame };
 }
+
+// ---------- T167: stand-ins for the pictures the owner removed
+/** a picture the owner removed in the studio (removed.json: its kind, category, name and picture rectangle, read only), or one the library no
+ *  longer has; null when it is drawn as itself */
+function removedOf(id: string): RemovedPic | null {
+  const r = (REMOVED as Record<string, RemovedPic | undefined>)[id];
+  return r ? r : BY.has(id) ? null : { kind: 'building', cat: '', name: id };
+}
+interface RemovedPic { kind: string; cat: string; name: string; quad?: number[]; w?: number }
+/** a removed picture's footprint half extent (tiles): its picture's width over a tile's 128 display px, a square base, at its owner size */
+const removedHalf = (id: string, r: RemovedPic, scale: number) => { const q = r.quad, w = q && q.length >= 4 ? q[2]! - q[0]! : r.w ?? 256; return (w / 128) * scale * (OWNER_SCALE[id] ?? 1) / 2; };
+/** the house allocations (T155, read only): a stand-in house is one that suits the lot's road angle and state */
+const ALLOC = parseAllocations(ALLOC_JSON);
+/** a fitted preset with its removed pictures replaced: the lot's house (its widest building) by a house of the same size class that suits the
+ *  lot's road and state (the allocations) and fits its band, picked by the lot (it never changes on a reload); another building (a fire station)
+ *  by a building of its kind and about its footprint, else left out; an expansion or a prop left out. Each stand-in is marked (standIn: the
+ *  removed id) for the lot lab's badge. The preset itself is not changed */
+export function standIns(fit: Fitted, preset: LotPreset, lot: LotGeom, f: PresetFrame): Fitted {
+  const rem = fit.props.map(q => removedOf(q.id));
+  if (!rem.some(Boolean)) return fit;
+  const half = frameHalf(f), size = (i: number) => { const q = fit.props[i]!, r = rem[i]; if (r) { const h = removedHalf(q.id, r, q.scale); return 4 * h * h; } const it = BY.get(q.id); if (!it || !isBuilding(it)) return 0; const h = half(q); return 4 * h.ha * h.hb; };
+  const buildingAt = (i: number) => { const r = rem[i]; return r ? ['building', 'house', 'venue'].includes(r.kind) : !!BY.get(fit.props[i]!.id) && isBuilding(BY.get(fit.props[i]!.id)!); };
+  let main = -1, best = 0;
+  fit.props.forEach((_, i) => { if (!buildingAt(i)) return; const a = size(i); if (a > best) { best = a; main = i; } });
+  const state = preset.state, road = roadOf(lot.n), seed = fnv(`${streetKey(lot)}#${streetSlot(lot)}#removed`);
+  const props: PresetProp[] = [], from: number[] = [], mark: (string | undefined)[] = [];
+  fit.props.forEach((q, i) => {
+    const r = rem[i];
+    if (!r) { props.push(q); from.push(fit.from[i]!); mark.push(fit.standIn?.[i]); return; }
+    const expansion = /(^|[:-])expansion[:-]/.test(q.id) && i !== main;
+    const id = expansion || !buildingAt(i) ? null : i === main && preset.use === 'res' ? standInHouse(q, r, fit, lot, f, road, state, seed) : standInBuilding(q, r, seed + i);
+    if (!id) return;
+    // the stand-in keeps the removed one's street edge (its front, a square base) and its spot along the street; houseYards then keeps its yards
+    const hr = removedHalf(q.id, r, q.scale), h = half({ ...q, id, scale: 1 }), y = clamp(q.y - hr + h.hb, h.hb, Math.max(h.hb, lot.d - h.hb)), x = clamp(q.x, h.ha, Math.max(h.ha, lot.w - h.ha));
+    props.push({ ...q, id, scale: 1, x, y }); from.push(fit.from[i]!); mark.push(q.id);
+  });
+  return { ...fit, props, from, standIn: mark };
+}
+/** a stand-in house: a dwelling (house-class.ts) not removed, that suits the lot's road and state, of the removed one's size class, whose footprint
+ *  fits the lot's house band (the drive side and the side yards, T164) and depth; among those one picked by the lot's seed; else the one of any
+ *  class nearest the removed one's size that fits; null when none fits */
+function standInHouse(q: PresetProp, r: RemovedPic, fit: Fitted, lot: LotGeom, f: PresetFrame, road: Road, state: PresetState, seed: number): string | null {
+  const fam = houseFamilies().get('dwelling'); if (!fam) return null;
+  const half = frameHalf(f), hr = removedHalf(q.id, r, q.scale), area = 4 * hr * hr, [lo, hi] = fam.bounds;
+  const cls = area < lo ? 0 : area < hi ? 1 : 2, drive = fit.patches.find(a => a.kind === 'drive');
+  let d0 = Infinity, d1 = -Infinity; if (drive) for (let i = 0; i < drive.pts.length; i += 2) { d0 = Math.min(d0, drive.pts[i]!); d1 = Math.max(d1, drive.pts[i]!); }
+  const left = drive ? (d0 + d1) / 2 < lot.w / 2 : true, band = drive ? (left ? lot.w - SIDE_YARD - (d1 + DRIVE_GAP) : d0 - DRIVE_GAP - SIDE_YARD) : lot.w - 2 * SIDE_YARD;
+  const fits = (id: string) => { const h = half({ ...q, id, scale: 1 }); return 2 * h.ha <= band + 1e-6 && 2 * h.hb <= lot.d - 1; };
+  const ok = fam.ids.filter(id => !removedOf(id) && allows(ALLOC, id, road, state) && fits(id));
+  const same = ok.filter(id => sizeClassOf(id) === cls);
+  if (same.length) return same[seed % same.length]!;
+  if (!ok.length) return null;
+  return ok.reduce((a, b) => (Math.abs(fam.area.get(a)! - area) <= Math.abs(fam.area.get(b)! - area) ? a : b));
+}
+/** a stand-in building of another use (a fire station): one of the library's buildings of the removed one's kind (not removed, drawn as itself, a
+ *  front view) within 40% of its footprint area, one of the three nearest picked by the seed; null when there is none */
+function standInBuilding(q: PresetProp, r: RemovedPic, seed: number): string | null {
+  const hr = removedHalf(q.id, r, q.scale), area = 4 * hr * hr;
+  let pool = KIND_POOL.get(r.kind);
+  if (!pool) KIND_POOL.set(r.kind, pool = LIBRARY.filter((it, i) => it.kind === r.kind && isBuilding(it) && !removedOf(it.id) && !drawnAsStandIn(i) && !it.id.startsWith('view:') && !it.id.startsWith('east:') && !/-north-|[-_]rear(?![a-z])/.test(it.id))
+    .map(it => { const fp = footprintOf(it.id, OWNER_SCALE[it.id] ?? 1, false); return { id: it.id, a: (fp[2] - fp[0]) * (fp[3] - fp[1]) }; }));
+  const near = pool.filter(c => c.a >= area * 0.6 && c.a <= area * 1.4).sort((a, b) => Math.abs(a.a - area) - Math.abs(b.a - area) || (a.id < b.id ? -1 : 1)).slice(0, 3);
+  return near.length ? near[seed % near.length]!.id : null;
+}
+/** the library's buildings of a kind with their footprint areas, made once per kind (standInBuilding) */
+const KIND_POOL = new Map<string, { id: string; a: number }[]>();
 /** the approved farm preset a farm parcel draws (use 'farm', built, at its size, on its road angle: approvedFor), picked by its key (pickPreset); null
  *  when none fits: an angled parcel on an even road takes none, as pickedPreset gives a lot none */
 export function farmPreset(p: { o: Pt; u: Pt; n: Pt; w: number; d: number; key: string }): LotPreset | null {
@@ -279,7 +353,7 @@ function fromPreset(B: Build, lot: LotGeom, st: ComposeState, p: { preset: LotPr
     // a car's scale is its owner size (ownerScaleOf), the engine draws it at CAR_SCALE times that
     const s = q.scale * ownerScaleOf(q.id);
     // a whole preset's prop in front of the lot is a street item (the verge: done() keeps it there, as it keeps a procedural one)
-    const item = B.atW({ id: t.id, s, flip: t.flip, h: footprintOf(t.id, s, t.flip) }, toWorld(f, q.x, q.y), { plant: it.kind === 'tree' || it.kind === 'bush', from: { preset: preset.id, prop: fit.from[k]! }, street: preset.whole === true && q.y < 0 });
+    const item = B.atW({ id: t.id, s, flip: t.flip, h: footprintOf(t.id, s, t.flip) }, toWorld(f, q.x, q.y), { plant: it.kind === 'tree' || it.kind === 'bush', from: { preset: preset.id, prop: fit.from[k]! }, street: preset.whole === true && q.y < 0, ...(fit.standIn?.[k] ? { standIn: fit.standIn[k] } : {}) });
     if (item && !item.fence && !item.wheel) ups++;
     if (isBuilding(it)) { const fp = footprintOf(q.id, s, false), hw = (q.view % 2 ? fp[3] - fp[1] : fp[2] - fp[0]) / 2; if (hw > big) { big = hw; main = [q.x - hw, q.x + hw]; } }
   });

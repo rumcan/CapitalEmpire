@@ -199,6 +199,24 @@ export function installLotLab(game: Game): () => void {
     leave: wizardLeave, say: m => { message = m; drawStatus(); }, redraw: () => render(),
   }, wizard);
   const personEl = el('div', 'position:fixed;left:0;top:0;display:none;pointer-events:none;z-index:58;background-repeat:no-repeat');
+  /** T167: a badge on each prop drawn as a stand-in for a picture the owner removed (the lab lot and its neighbours), so the owner sees where to
+   *  re-lay a preset: their world points (footprint centres) and the removed ids, found when the panels are drawn; placed each frame */
+  const badgeLayer = el('div', 'position:fixed;left:0;top:0;pointer-events:none;z-index:57');
+  let badges: { x: number; y: number; was: string; id: string }[] = [];
+  function syncBadges(): void {
+    const out: typeof badges = [];
+    for (const k of ['lab', ...neighs.map(n => n.key)]) {
+      const at = game.lotOf(k); if (!at) continue;
+      for (const p of compose(at.g, at.st).props) if (p.standIn) { const fp = footprintOf(p.id, p.scale, p.flip); out.push({ x: p.x + (fp[0] + fp[2]) / 2, y: p.y + (fp[1] + fp[3]) / 2, was: p.standIn, id: p.id }); }
+    }
+    badges = out;
+    badgeLayer.replaceChildren(...out.map(b => { const e = el('div', 'position:fixed;transform:translate(-50%,-50%);background:rgba(146,64,14,.92);color:#fde68a;border:1px solid #f59e0b;border-radius:999px;padding:1px 7px;font:600 11px system-ui,sans-serif;white-space:nowrap', 'stand-in for a removed picture'); e.title = `${b.id} drawn in place of ${b.was} (removed in the studio): re-lay the preset to choose another`; return e; }));
+  }
+  /** each frame: the badges over their props */
+  function placeBadges(): void {
+    const c = game.cam, o = origin(), cs = badgeLayer.children;
+    badges.forEach((b, i) => { const e = cs[i] as HTMLElement | undefined; if (!e) return; e.style.left = `${o.x + (worldX(b.x, b.y) - c.X) * c.z}px`; e.style.top = `${o.y + (worldY(b.x, b.y) - c.Y) * c.z - 14}px`; });
+  }
 
   // ---------- the model's helpers
   /** the draft counts as saved once it is written, or once the editor replaced it (an edit, which the editor wrote to disk) */
@@ -923,7 +941,7 @@ export function installLotLab(game: Game): () => void {
   function render() {
     if (!started) return;
     syncHouseFilter();
-    renderDrawer(); renderToolbar(); renderInspector(); drawStatus();
+    renderDrawer(); renderToolbar(); renderInspector(); drawStatus(); syncBadges();
     if (shell.place()) fitCam();
     sigLast = sig(); keep();
   }
@@ -1040,7 +1058,7 @@ export function installLotLab(game: Game): () => void {
     const s = editorSel();
     if (s.key !== selKey) { selKey = s.key; renderSelbar(s); renderInspector(); }
     placeSelbar(s);
-    wizard.frame(); gallery.frame();
+    wizard.frame(); gallery.frame(); placeBadges();
   }
 
   /** the Lot grid's draw for the engine (Game.devGround): the lots syncGrid chose, none when the grid is off */
@@ -1051,7 +1069,7 @@ export function installLotLab(game: Game): () => void {
   // another tab or helper saved the house allocations: the inspector shows them
   const unAlloc = onAllocations(() => { if (started) renderInspector(); });
   document.head.append(style);
-  document.body.append(mask, personEl);
+  document.body.append(mask, personEl, badgeLayer);
   window.addEventListener('pointermove', onMapMove, { capture: true, passive: true }); window.addEventListener('pointerout', onMapOut, true);
   window.addEventListener('keydown', onKey, true);
   window.addEventListener('pointerdown', onPaintDown, true);
@@ -1073,6 +1091,6 @@ export function installLotLab(game: Game): () => void {
     if (game.devGround === drawGrid) game.devGround = null;
     gridLayer.dispose(); game.stageLabNeighbours([]);
     wizard.dispose(); gallery.dispose();
-    style.remove(); mask.remove(); shell.remove(); personEl.remove();
+    style.remove(); mask.remove(); shell.remove(); personEl.remove(); badgeLayer.remove();
   };
 }
