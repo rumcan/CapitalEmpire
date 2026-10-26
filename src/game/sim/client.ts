@@ -101,6 +101,11 @@ export class SimClient {
   walkers: Float32Array = NO_FLOATS; stops: Float32Array = NO_FLOATS;
   /** the galleries' standing crowds (LEAD.md M2.2): 8 floats a spot (x, y, fans, kind, fx, fy, ax, ay) */
   gallery: Float32Array = NO_FLOATS;
+  /** T147: the money moved at a place, from the frames since the engine last took it (4 numbers each: x, y in tiles, $ signed, 1 a sale lost; see
+   *  City.takeCash): the engine floats it up and clears it */
+  cash: number[] = [];
+  /** T147: told of every spend (the engine floats a purchase up where it was placed) */
+  onSpend: ((kind: 'construction' | 'compensation' | 'business' | 'upkeep', n: number) => void) | null = null;
   /** the active traffic incidents as the worker last sent them (with each frame): 3 floats each, x and y (tiles) and kind (1 crash, 0 breakdown) */
   incidents: Float32Array = NO_FLOATS;
   /** the active natural disaster as the worker last sent it (none: empty); called with the notes (warnings, starts, ends, repairs) of each such message */
@@ -205,7 +210,7 @@ export class SimClient {
  if (kind === 'business') { this.budget.money -= n; }  
  else if (kind === 'upkeep') { this.budget.money -= n; }  
  else { this.budget.money -= n; }  
- this.post({ t: 'spend', kind, n });  
+ this.post({ t: 'spend', kind, n }); this.onSpend?.(kind, n);  
  }
   /** takes (true) or repays (false) one loan unit; the worker refuses what the books do not allow */
   loan(take: boolean) { this.post({ t: 'loan', take }); }
@@ -273,6 +278,7 @@ export class SimClient {
     }
     this.stats = m.stats; this.round = m.stats.round; this.parks = m.stats.parks; this.town = m.stats.town;
     this.walkers = m.walkers ?? NO_FLOATS; this.stops = m.stops ?? NO_FLOATS; this.gallery = m.gallery ?? NO_FLOATS; this.incidents = m.inc;
+    if (m.money && this.cash.length < 4096) for (let k = 0; k < m.money.length; k++) this.cash.push(m.money[k]!);
     const S = new Map<string, { idx: number; stage: number }>(), G = m.sig;
     for (let k = 0; k + 3 < G.length; k += 4) S.set(sigKey(G[k]!, G[k + 1]!), { idx: G[k + 2]!, stage: G[k + 3]! });
     this.sigs = S;
