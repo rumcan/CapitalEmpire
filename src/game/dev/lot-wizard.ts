@@ -235,7 +235,7 @@ export function makeWizard(host: WizardHost) {
       check('heat map', heat, v => { heat = v; heatKey = ''; host.redraw(); }, 'each sector tinted by the keep rate of the kind under the pointer (or the one chosen); past samples kept green, deleted red'));
     out.push(tg);
     const ms = times.length ? [...times].sort((a, b) => a - b)[Math.floor(times.length / 2)]! : 0;
-    // T159: the owner's presets as a head start (every item on them kept), learnt again whenever he wants (a preset's sample replaces its last)
+    // T159: the owner's presets as a head start (every item on them kept), learnt again whenever they want (a preset's sample replaces its last)
     const n = lotPresets().filter(teaches).length;
     out.push(btn(`Learn from the presets (${n})`, BTN, () => learnPresets(), 'every item on the lab presets (approved and drafts) and on the frozen presets you edited counts as "kept here" with its lot; learning again replaces the last time'));
     out.push(el('div', 'font-size:13px;margin-top:6px;font-weight:700', `${st.total} sample${st.total === 1 ? '' : 's'}`),

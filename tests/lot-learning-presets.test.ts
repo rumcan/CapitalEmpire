@@ -14,7 +14,7 @@ import type { LotPreset } from '../src/game/lots/presets';
 
 const AT = '2026-10-26T00:00:00Z';
 describe('the presets as a head start, and the gallery (T159)', () => {
-  it('1. every item on the owner\'s presets is a kept sample with its lot: the lab presets and the frozen ones he edited; no house, fence or derived', () => {
+  it('1. every item on the owner\'s presets is a kept sample with its lot: the lab presets and the frozen ones they edited; no house, fence or derived', () => {
     const all = lotPresets(), list = presetSamples(all, AT), teach = all.filter(teaches);
     assert.ok(list.length > 10, `${list.length} presets teach`);
     assert.ok(teach.every(p => p.road !== undefined || p.curated) && !teach.some(p => p.derived || p.use === 'farm'));
@@ -31,7 +31,7 @@ describe('the presets as a head start, and the gallery (T159)', () => {
     assert.ok(skip({ derived: 'm' }) && skip({ use: 'farm' }) && skip({ id: 'lab-gallery-3' }) && skip({ id: 'lab-wizard' }) && skip({ road: undefined, curated: undefined }));
     // a preset's sample is the same whenever it is made (its id names the preset): learnt again, it replaces itself
     assert.equal(presetSample(p0, AT).id, presetSample(p0, '2027-01-01T00:00:00Z').id);
-    // the model starts from the owner's taste: everything kept, so the sectors he used rise above the prior
+    // the model starts from the owner's taste: everything kept, so the sectors they used rise above the prior
     const m = buildModel(list), st = learningStats(list);
     assert.equal(st.bySrc.preset, list.length); assert.equal(st.shares.length, 0, 'the presets keep everything: not in the wizard\'s trend');
     assert.ok([...m.values()].some(c => c.offered > 5 && c.kept === c.offered));

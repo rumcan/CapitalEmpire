@@ -1,5 +1,5 @@
-// The owner's presets as a head start for the lot generator (T159, P25 #348 step 3): every item the owner laid on a lot of his (the lab presets,
-// approved and drafts, and the frozen presets he edited: curated) is a "kept here" sample with its lot's context, so the model starts from his
+// The owner's presets as a head start for the lot generator (T159, P25 #348 step 3): every item the owner laid on a lot of theirs (the lab presets,
+// approved and drafts, and the frozen presets they edited: curated) is a "kept here" sample with its lot's context, so the model starts from their
 // taste on day one. A sample per preset (src 'preset', id preset:<preset id>): learnt again, it replaces the one before (lots/learn.ts
 // mergeSamples), so an edited preset is never counted twice. Left out: the house (the lot's own, not an item), fences and other buildings (the
 // generator does not offer them), the auto-sized presets (derived from a master: the master already counts), the lab's own in-memory lots (the
@@ -14,7 +14,7 @@ import { mainBuilding } from './lot-select';
 import { CLASS_NAMES, frameHalf, isHouseLike, sizeClassOf } from './lot-houses';
 
 const INDEX = new Map(LIBRARY.map((it, i) => [it.id, i] as const));
-/** whether a preset teaches the generator: a lab preset (the owner's: approved or a draft) or a frozen one he edited; not derived, not the lab's
+/** whether a preset teaches the generator: a lab preset (the owner's: approved or a draft) or a frozen one they edited; not derived, not the lab's
  *  in-memory lots, not a farm */
 export const teaches = (p: LotPreset) => p.use !== 'farm' && !p.derived && !p.id.startsWith('lab-wizard') && !p.id.startsWith('lab-gallery') && (p.road !== undefined || !!p.curated);
 /** a preset's sample: its context (a frozen preset is laid out for road 0) and every item on it but the house, fences and other buildings, kept */
