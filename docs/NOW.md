@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-26 23:10)
+## START HERE (kept current by the lead; last updated 2026-10-26 23:55)
 
 **Paste-ready start prompts for every role are in `docs/START-PROMPTS.md`:** the lead, a coding ticket, and the other sessions in this
 repo. The weekly usage cap is close (2026-10-26), so any chat may stop at any moment.
@@ -27,7 +27,7 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 ### In flight
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |
-| T168 | #381 | `arena/T168-texture-prewarm` | `.claude/worktrees/t166` | 5187 | T166 follow-up: the lazy textures made ahead in idle time (the surfaces the map lays and the open tool paints) and in slices, so no ~1 s first-use stall; memory within 5% of T166. Agent: the ground agent. |
+| T112 | #199 | `arena/T112-sharp` | `.claude/worktrees/t112` | 5193 (check studio, stopped after) | **Resumed overnight** by the ground agent: merge main, re-check the T162/T165 heals byte-identical with sharp 0.35.5, KTX2 compare, check studio, audit/typecheck/test/build, PR. Ships only if every shipped byte is identical. |
 | T152 | #325 | `arena/T152-car-spacing` | `.claude/worktrees/t152` | 5186 | **Resumed overnight** by the lot agent: the fix (cars keep a car's gap in their lane, rangebiz.ts) is in; the lead's decision for the building at full demand: a wider drive / second entry lane if the art allows, else car occupancy (golfers and takings unchanged); not a queue cap. Then gates, shots, PR. |
 | T112 | #199 | `arena/T112-sharp` (1872f0e) | `.claude/worktrees/t112` | — | **Paused** for T153: sharp 0.35.5 in, all packed art identical (260 images byte-identical; 16 view PNGs only re-tagged), still to do: the KTX2 check, the studio check, audit/typecheck/suite/build, the PR. Resume from #199. |
 
@@ -86,7 +86,13 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
    (the sharp bump). See the History sections below and `gh issue list --label arena --state open`.
 
 ### Done recently (newest first; details in each PR)
-- 2026-10-26 ~23:05: **T154 phase 2 #386 eight headings**: on a 45° road a building with a screen-axis set faces its street (road 1 → N,
+- 2026-10-26 ~23:00: **T168 #389 no first-use stall**: lazy textures built in 5 ms slices; a chunk that meets an unmade texture waits aside
+  while the others bake; idle test-bakes of the 8 chunks round the last one make ahead only what the map lays; the Course tool prewarms its
+  brushes; a row-at-a-time noise 4.6x faster. Cold-start bake max 978 → 158 ms, memory idle 3,466 → 3,047 MB (all Edge), the ground
+  pixel-identical. **Heads-up:** the lead's typecheck worktree `.claude/worktrees/lead2-read` was removed by someone at 22:43; git run in
+  its empty folder fell through to the main checkout (a checkout there aborted, nothing changed). Check a folder is a worktree before git.
+- 2026-10-26 ~23:00 → 23:50: the usage limit stopped the lead and the lot agent; both resumed at 23:51.
+- 2026-10-26 ~22:45: **T154 phase 2 #386 eight headings**: on a 45° road a building with a screen-axis set faces its street (road 1 → N,
   3 → E, 5 → S, 7 → W; never mirrored; footprint from the set). 14 buildings have sets (five parking garages, bakery, grocery, pharmacy,
   three industrials, `world:house_0/1/3`); the owner's 45° presets use houses without sets, so a real 45° street looks the same: 65 of
   the 74 buildings the presets place lack sets (missing-views list in `docs/GOLF-SPRITES.md`, `world:house_5` first). `?oldheadings`
