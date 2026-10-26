@@ -318,8 +318,9 @@ function houseBase(p: { preset: LotPreset; fit: Fitted; frame: PresetFrame }): {
   return { base: { ...p, fit }, house: k };
 }
 /** the generated items of a house lot (its base drawn): lot-gen.ts generateLayout in the preset's frame, with the shipped model, seeded by the
- *  lot; nothing on the house, the walk takes nothing and the drive only a car; the cars thinned by decline as a preset's are. Placed after the
- *  base, the street items and the fence, so those win any overlap */
+ *  lot, each item kept with the model's keep rate where it stands (the learned taste thins the generous set, as the owner does in the wizard);
+ *  nothing on the house, the walk takes nothing and the drive only a car; the cars thinned by decline as a preset's are. Placed after the base,
+ *  the street items and the fence, so those win any overlap */
 function generatedItems(B: Build, lot: LotGeom, st: ComposeState, p: { preset: LotPreset; fit: Fitted; frame: PresetFrame }, state: PresetState) {
   const f = p.frame, half = frameHalf(f), hq = p.fit.props[0], hh = hq ? half(hq) : null;
   const house: Box | null = hq && hh ? [hq.x - hh.ha, hq.y - hh.hb, hq.x + hh.ha, hq.y + hh.hb] : null;
@@ -327,7 +328,7 @@ function generatedItems(B: Build, lot: LotGeom, st: ComposeState, p: { preset: L
   const sl: SectorLot = { w: lot.w, d: lot.d, house, drives: p.fit.patches.filter(a => a.kind === 'drive').map(a => a.pts) };
   const avoid = p.fit.patches.filter(a => a.kind === 'drive' || a.kind === 'walk').map(a => ({ box: box(a.pts), ...(a.kind === 'drive' ? { but: ['car' as const] } : {}) }));
   const k = hq ? sizeClassOf(hq.id) : null, cls: HouseClass = hq ? CLASS_NAMES[k ?? 0] : 'none';
-  const items = generateLayout({ lot: sl, cls, model: shippedModel(), taken: house ? [house] : [], pools: kindPools(), half, seed: lotSeed(lot, state), avoid });
+  const items = generateLayout({ lot: sl, cls, model: shippedModel(), taken: house ? [house] : [], pools: kindPools(), half, seed: lotSeed(lot, state), avoid, keep: true });
   for (const it of items) {
     if (it.kind === 'decal') { decalMarks(B, f, [{ id: it.id, x: it.x, y: it.y, scale: 1, alpha: 1 }]); continue; }
     if (it.kind === 'car' && (B.noCars || (st.decline === 1 && B.r() >= CAR_KEEP_D1))) continue;

@@ -6,7 +6,7 @@
 // on a reload. No DOM; the pools and footprints are passed in (item-kinds.ts kindPools; the lot frame's footprints).
 import { mulberry } from '../iso';
 import type { PresetProp } from './presets';
-import { SECTORS, sectorOf, sectorRects, sectorWeights, VERGE, type Box, type HouseClass, type ItemKind, type Model, type SectorLot } from './learn';
+import { keepRate, SECTORS, sectorOf, sectorRects, sectorWeights, VERGE, type Box, type HouseClass, type ItemKind, type Model, type SectorLot } from './learn';
 
 /** a laid item: its kind, library (or decal) id and place (lot frame, tiles: the footprint's centre; a decal's centre) */
 export interface LaidItem { kind: ItemKind; id: string; x: number; y: number }
@@ -28,8 +28,9 @@ function pickWeighted(w: readonly number[], r: () => number): number {
 /** the generator's input: the lot (lots/learn.ts SectorLot: size, house box, drives), the house's size class, the model, the boxes already taken
  *  (the house, the fences, the street items), the pools by kind, each sprite's footprint half extents, the seed; density scales the counts
  *  (1: as PER_LOT); avoid: ground no item may stand on but the kinds it lets (the game's lots, T160: the walk takes nothing, the drive only a car;
- *  a decal is flat ground and goes anywhere) */
-export interface GenInput { lot: SectorLot; cls: HouseClass; model: Model; taken: readonly Box[]; pools: Readonly<Record<ItemKind, readonly string[]>>; half: (q: PresetProp) => Half; seed: number; density?: number; avoid?: readonly { box: Box; but?: readonly ItemKind[] }[] }
+ *  a decal is flat ground and goes anywhere); keep: the model keeps each item it lays with its keep rate there (the game's lots: the wizard offers
+ *  more than a lot needs for the owner to click off, the game lets the learned taste click them off) */
+export interface GenInput { lot: SectorLot; cls: HouseClass; model: Model; taken: readonly Box[]; pools: Readonly<Record<ItemKind, readonly string[]>>; half: (q: PresetProp) => Half; seed: number; density?: number; avoid?: readonly { box: Box; but?: readonly ItemKind[] }[]; keep?: boolean }
 const overlap = (a: Box, b: Box) => Math.min(a[2], b[2]) - Math.max(a[0], b[0]) > TOUCH && Math.min(a[3], b[3]) - Math.max(a[1], b[1]) > TOUCH;
 /** the items laid on a lot (see the file head); r: the random stream (the seed's mulberry32 unless given, for a caller that draws more from it) */
 export function generateLayout(g: GenInput, r: () => number = mulberry(g.seed >>> 0)): LaidItem[] {
@@ -56,6 +57,8 @@ export function generateLayout(g: GenInput, r: () => number = mulberry(g.seed >>
           const box: Box = [x - h.ha, y - h.hb, x + h.ha, y + h.hb];
           if (sectorOf(lot, x, y) !== sec || box[0] < 0 || box[2] > lot.w || box[3] > lot.d || box[1] < (sec === 'verge' ? -VERGE : 0)) continue;
           if (!decal && (boxes.some(o => overlap(o, box)) || g.avoid?.some(a => !a.but?.includes(kind) && overlap(a.box, box)))) continue;
+          // the learned taste keeps it, or the place stays free (no other place is tried: the model said no to this one)
+          if (g.keep && r() >= keepRate(g.model, g.cls, kind, sec)) { s = 4; break; }
           placed = { kind, id, x, y };
           if (!decal) boxes.push(box);
           break;
