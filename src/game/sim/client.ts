@@ -57,7 +57,7 @@ function put(out: Float32Array, k: number, tx: number, ty: number, r: number, g:
 
 /** The city worker's side: the cars of the sim, as typed arrays indexed by slot (n = the sim's slot count, 0 before the first frame), the parcels and the town. */
 export class SimClient {
-  private worker: Worker;
+  private worker: Worker | null;
   /** the parcels by key (geometry and the town's state) */
   lots = new Map<string, LotView>();
   /** the town's residents, jobs and built lots (from the last town message) and the growth option id */
@@ -135,12 +135,13 @@ export class SimClient {
   unlimited = false;
   private pool: Drawable[] = [];
 
-  /** starts the city worker, empty: the terrain and the network follow (terrain, then netOps) */
-  constructor() {
-    this.worker = new SimWorker();
-    this.worker.onmessage = (e: MessageEvent<FromSim>) => this.onMessage(e.data);
+  /** starts the city worker, empty: the terrain and the network follow (terrain, then netOps). run false (a light boot, the lot lab: T157,
+   *  boot.ts): no worker at all; every message is dropped, so no cars, town growth or books, and this mirror stays empty */
+  constructor(run = true) {
+    this.worker = run ? new SimWorker() : null;
+    if (this.worker) this.worker.onmessage = (e: MessageEvent<FromSim>) => this.onMessage(e.data);
   }
-  private post(m: ToSim) { this.worker.postMessage(m); }
+  private post(m: ToSim) { this.worker?.postMessage(m); }
   /** replaces the worker's network (the same ops the ground workers get) */
   netOps(ops: NetOp[]) { if (ops.length) this.post({ t: 'net', ops }); }
   /** a new valley: its terrain classes (copied), the highway entry (tiles), the seed and the town centres (flat x, y pairs in tiles; none: the single town),
@@ -247,7 +248,7 @@ export class SimClient {
   repairDisaster(id: number, key: string) { this.post({ t: 'repairDisaster', id, key }); }
   /** true while the worker is fast-forwarding (see skip) */
   get skipping() { return this.stats.skipping; }
-  terminate() { this.worker.terminate(); }
+  terminate() { this.worker?.terminate(); }
 
   private onMessage(m: FromSim) {
     if (m.t === 'log') { console.log('[sim]', m.message); return; }
