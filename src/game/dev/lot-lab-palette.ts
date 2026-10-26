@@ -5,7 +5,7 @@
 // swatches under Ground. A click arms placing a sprite (the editor), placing a decal, or painting a ground (the lab). Collapsible.
 import { LIBRARY } from '../library';
 import type { LibItem } from '../types';
-import { drawnAsStandIn } from '../newart';
+import { placeable, spriteGroup } from '../lots/item-kinds';
 import { LOT_DECALS, type LotDecal } from '../lot-decals';
 import { thumb } from './lot-editor';
 import { BTN, chip, el, type Shell } from './lot-lab-ui';
@@ -13,18 +13,8 @@ import { BTN, chip, el, type Shell } from './lot-lab-ui';
 /** the palette's groups: the sprite groups, the decals and the ground paint */
 export type PalGroup = 'all' | 'plants' | 'props' | 'buildings' | 'vehicles' | 'decals' | 'ground';
 export const GROUPS: [PalGroup, string][] = [['all', 'All'], ['plants', 'Plants'], ['props', 'Props'], ['buildings', 'Buildings'], ['vehicles', 'Vehicles'], ['decals', 'Decals'], ['ground', 'Ground']];
-/** the library categories the palette leaves out (the people) */
-export const SKIP_CAT = new Set(['Townspeople', 'Spectators', 'Golfers']);
-/** a sprite's group, from its kind and category (so new art lands in the right group by what it is) */
-export function spriteGroup(it: Pick<LibItem, 'id' | 'kind' | 'cat' | 'big'>): 'plants' | 'props' | 'buildings' | 'vehicles' {
-  if (it.kind === 'car' || it.cat === 'Vehicles' || it.id.startsWith('cars:')) return 'vehicles';
-  if (it.kind === 'tree' || it.kind === 'bush' || it.kind === 'plant' || /tree|plant|vegetation|flower|hedge|shrub|bush|garden bed|grass/i.test(it.cat)) return 'plants';
-  if (it.kind === 'building' || it.kind === 'house' || it.kind === 'venue' || it.kind === 'lot' || it.big) return 'buildings';
-  return 'props';
-}
-/** whether the lab's palette offers a library sprite: not a turned view or an east copy, not a walker or one of the people, not an old building
- *  drawn as a stand-in */
-export const placeable = (it: LibItem, i: number) => !it.id.startsWith('view:') && !it.id.startsWith('east:') && it.kind !== 'walker' && !SKIP_CAT.has(it.cat) && !drawnAsStandIn(i);
+// the groups and what may be placed are the lots' own (lots/item-kinds.ts), shared with the lot generator
+export { SKIP_CAT, spriteGroup, placeable } from '../lots/item-kinds';
 /** the sprites a group, category ('' every one) and search (id or name, any case) show, in library order */
 export function paletteSprites(group: PalGroup, cat: string, q: string): LibItem[] {
   const s = q.trim().toLowerCase();

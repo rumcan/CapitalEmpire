@@ -10,12 +10,12 @@ import type { Game } from '../engine';
 import type { LotPreset, PresetState, PresetUse, Road } from '../lots/presets';
 import type { PresetFrame } from '../lots/preset-frame';
 import { toFrame } from '../lots/preset-frame';
-import { CLASSES, ITEM_KINDS, SECTORS, SECTOR_NAMES, countOf, keepRate, learningStats, sampleItem, sectorArea, sectorRects, type Box, type HouseClass, type ItemKind, type Sample, type SectorLot } from '../lots/learn';
+import { CLASSES, ITEM_KINDS, SECTORS, SECTOR_NAMES, countOf, keepRate, learningStats, sampleItem, sectorArea, sectorOf, sectorRects, type Box, type HouseClass, type ItemKind, type Sample, type SectorLot } from '../lots/learn';
 import { addSample, learnedModel, learnedSamples, onLearning } from './learn-store';
-import { generateOffers, pools, type Offer } from './wizard-gen';
-import { areaOf, CLASS_NAMES, frameHalf, isHouseLike, sizeClassOf } from './lot-houses';
+import { generateLayout, type LaidItem } from '../lots/lot-gen';
+import { isFence, kindPools } from '../lots/item-kinds';
+import { CLASS_NAMES, frameHalf, isHouseLike, sizeClassOf } from './lot-houses';
 import { mainBuilding } from './lot-select';
-import { isFence } from './lot-derive';
 import { muteEditor, pauseEditor } from './lot-editor';
 import { BTN, GO, ON, btn, check, el, heading, mono } from './lot-lab-ui';
 
@@ -42,7 +42,7 @@ export interface WizardHost {
   redraw(): void;
 }
 /** an offered item on the wizard's lot: deleted or not */
-interface Item extends Offer { deleted: boolean }
+interface Item extends LaidItem { deleted: boolean }
 const SVGNS = 'http://www.w3.org/2000/svg';
 const KIND_NAMES: Readonly<Record<ItemKind, string>> = { tree: 'trees', bush: 'bushes', flowerbed: 'flowerbeds', prop: 'props', car: 'cars', decal: 'decals' };
 
@@ -50,7 +50,7 @@ const KIND_NAMES: Readonly<Record<ItemKind, string>> = { tree: 'trees', bush: 'b
 export function makeWizard(host: WizardHost) {
   let on = false, same = true, keep = false, heat = true, heatKind: ItemKind = 'tree', hover: ItemKind | null = null, heatKey = '';
   /** the lot on screen: its base (the house, fences, street items, patches), the offered items, the deletes to undo, its sector lot, its context */
-  let cur: { base: LotPreset; items: Item[]; undo: number[]; lot: SectorLot; house: string | null; cls: HouseClass; hw: number; hd: number } | null = null;
+  let cur: { base: LotPreset; items: Item[]; undo: number[]; lot: SectorLot; house: string | null; cls: HouseClass; hw: number; hd: number; seed: number } | null = null;
   /** the save-and-next times (ms), the last first */
   const times: number[] = [];
   const svg = document.createElementNS(SVGNS, 'svg') as SVGSVGElement;
@@ -67,7 +67,7 @@ export function makeWizard(host: WizardHost) {
   /** the sample of the lot on screen: its context and every offered item, kept or deleted */
   function sample(): Sample {
     const c = cur!, l = host.lot();
-    return { id: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`, at: new Date().toISOString(), ctx: { use: l.use, state: l.state, w: c.base.w, d: c.base.d, road: l.road, house: c.house, cls: c.cls, hw: c.hw, hd: c.hd },
+    return { id: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`, at: new Date().toISOString(), ctx: { use: l.use, state: l.state, w: c.base.w, d: c.base.d, road: l.road, house: c.house, cls: c.cls, hw: c.hw, hd: c.hd, seed: c.seed },
       items: c.items.map(it => sampleItem(c.lot, it.id, it.kind, it.x, it.y, !it.deleted)) };
   }
   /** the next lot: the sample of this one recorded first (record), then a lot of this cell (or the next gap) with its house, fences and street
@@ -89,8 +89,9 @@ export function makeWizard(host: WizardHost) {
     const lot: SectorLot = { w: base.w, d: base.d, house, drives: base.patches.filter(p => p.kind === 'drive').map(p => p.pts) };
     const taken: Box[] = base.props.map(q => { const h = half(q); return [q.x - h.ha, q.y - h.hb, q.x + h.ha, q.y + h.hb] as Box; });
     const k = hq ? sizeClassOf(hq.id) : null, cls: HouseClass = hq ? CLASS_NAMES[k ?? 0] : 'none';
-    const offers = generateOffers({ lot, cls, model: learnedModel(), taken, pools: pools(areaOf), half, r: Math.random });
-    cur = { base, items: offers.map(o => ({ ...o, deleted: false })), undo: [], lot, house: hq?.id ?? null, cls, hw: hh ? 2 * hh.ha : 0, hd: hh ? 2 * hh.hb : 0 };
+    // the generator is pure and seeded (lots/lot-gen.ts): the sample keeps the seed, so the same lot can be made again
+    const seed = Math.floor(Math.random() * 2147483647), offers = generateLayout({ lot, cls, model: learnedModel(), taken, pools: kindPools(), half, seed });
+    cur = { base, items: offers.map(o => ({ ...o, deleted: false })), undo: [], lot, house: hq?.id ?? null, cls, hw: hh ? 2 * hh.ha : 0, hd: hh ? 2 * hh.hb : 0, seed };
     host.show(build());
     heatKey = '';
     // timed to the frame that shows it
@@ -135,6 +136,11 @@ export function makeWizard(host: WizardHost) {
   };
   window.addEventListener('pointerdown', onDown, true);
   window.addEventListener('pointermove', onMove, { capture: true, passive: true });
+  // for the automated checks (dev builds only): the offered items left, with their kind, sector and place on screen
+  (window as unknown as { ceWizard?: unknown }).ceWizard = {
+    items: () => (cur ? cur.items.map((it, i) => ({ i, kind: it.kind, id: it.id, deleted: it.deleted, sector: sectorOf(cur!.lot, it.x, it.y), at: host.toScreen(it.x, it.y) })).filter(t => !t.deleted) : []),
+    times: () => [...times],
+  };
 
   /** the wizard on or off: the editor muted and paused while it runs; on, the first lot at once */
   function toggle(v = !on): void {
@@ -242,6 +248,6 @@ export function makeWizard(host: WizardHost) {
   const toggleBtn = () => btn('Wizard (W)', on ? ON : BTN, () => toggle(), 'the lot wizard: generate, click off what is wrong, Space saves and shows the next; the generator learns where things go');
   return {
     on: () => on, toggle, onKey, frame, bar, panel, toggleBtn, next,
-    dispose() { window.removeEventListener('pointerdown', onDown, true); window.removeEventListener('pointermove', onMove, true); unLearn(); svg.remove(); if (on) { pauseEditor(false); muteEditor(false); } },
+    dispose() { delete (window as unknown as { ceWizard?: unknown }).ceWizard; window.removeEventListener('pointerdown', onDown, true); window.removeEventListener('pointermove', onMove, true); unLearn(); svg.remove(); if (on) { pauseEditor(false); muteEditor(false); } },
   };
 }

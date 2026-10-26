@@ -72,10 +72,14 @@ export const sectorArea = (l: SectorLot, s: Sector) => sectorRects(l, s).reduce(
 /** an offered item as a sample keeps it: its library (or decal) id and kind; its place (lot frame, tiles) and normalised by the lot's size; its side
  *  of the house ('inside' over it) and the distance from the house's walls (tiles); its distance from the street edge (tiles); its sector; kept */
 export interface SampleItem { id: string; kind: ItemKind; x: number; y: number; nx: number; ny: number; side: 'front' | 'back' | 'left' | 'right' | 'inside'; house: number; street: number; sector: Sector; kept: boolean }
-/** a sample's context: the lot's type, state, size (tiles) and road angle; its house (library id, size class, footprint w x d tiles; null id: none) */
-export interface SampleCtx { use: PresetUse; state: PresetState; w: number; d: number; road: Road; house: string | null; cls: HouseClass; hw: number; hd: number }
-/** one wizard lot: an id (unique: merged by it), when it was made (ISO), its context and its items */
-export interface Sample { id: string; at: string; ctx: SampleCtx; items: SampleItem[] }
+/** a sample's context: the lot's type, state, size (tiles) and road angle; its house (library id, size class, footprint w x d tiles; null id: none);
+ *  the generator's seed when the lot was generated (lot-gen.ts: the same lot again) */
+export interface SampleCtx { use: PresetUse; state: PresetState; w: number; d: number; road: Road; house: string | null; cls: HouseClass; hw: number; hd: number; seed?: number }
+/** where a sample comes from (P25): the wizard (each offered item kept or deleted), a preset (every item in it "kept here": the owner's presets as
+ *  a head start) or the gallery (a whole lot judged at once: verdict up or down) */
+export type SampleSource = 'wizard' | 'preset' | 'gallery';
+/** one lot: an id (unique: merged by it), when it was made (ISO), its context and its items; src (absent: the wizard); verdict (the gallery's) */
+export interface Sample { id: string; at: string; ctx: SampleCtx; items: SampleItem[]; src?: SampleSource; verdict?: 'up' | 'down' }
 /** the file */
 export interface LearnFile { v: 1; samples: Sample[] }
 
@@ -100,9 +104,13 @@ export function readSample(v: unknown): Sample | null {
   const o = v as Partial<Sample> | null, c = o?.ctx as Partial<SampleCtx> | undefined;
   if (!o || typeof o !== 'object' || typeof o.id !== 'string' || !o.id || typeof o.at !== 'string' || !c || !Array.isArray(o.items)) return null;
   if (typeof c.use !== 'string' || typeof c.state !== 'string' || !fin(c.w) || !fin(c.d) || !fin(c.road) || !CLS.has(c.cls as string) || !fin(c.hw) || !fin(c.hd) || !(c.house === null || typeof c.house === 'string')) return null;
+  if (o.src !== undefined && !['wizard', 'preset', 'gallery'].includes(o.src)) return null;
+  if (o.verdict !== undefined && o.verdict !== 'up' && o.verdict !== 'down') return null;
+  if (c.seed !== undefined && !fin(c.seed)) return null;
   const items: SampleItem[] = [];
   for (const i of o.items) { const r = readItem(i); if (!r) return null; items.push(r); }
-  return { id: o.id, at: o.at, ctx: { use: c.use as PresetUse, state: c.state as PresetState, w: c.w!, d: c.d!, road: c.road as Road, house: c.house ?? null, cls: c.cls!, hw: c.hw!, hd: c.hd! }, items };
+  return { id: o.id, at: o.at, ctx: { use: c.use as PresetUse, state: c.state as PresetState, w: c.w!, d: c.d!, road: c.road as Road, house: c.house ?? null, cls: c.cls!, hw: c.hw!, hd: c.hd!, ...(c.seed !== undefined ? { seed: c.seed } : {}) }, items,
+    ...(o.src !== undefined ? { src: o.src } : {}), ...(o.verdict !== undefined ? { verdict: o.verdict } : {}) };
 }
 /** the file read: its valid samples, in order (a bad one is dropped) */
 export function parseLearning(v: unknown): LearnFile {
@@ -130,17 +138,28 @@ export interface Count { offered: number; kept: number }
 /** the model: counts by house class, item kind and sector */
 export type Model = Map<string, Count>;
 const key = (c: HouseClass, k: ItemKind, s: Sector) => `${c}|${k}|${s}`;
-/** the model of a list of samples: every offered item counted under its sample's house class, its kind and its sector */
-export function buildModel(samples: readonly Sample[]): Model {
-  const m: Model = new Map();
-  for (const s of samples) for (const it of s.items) {
-    const k = key(s.ctx.cls, it.kind, it.sector), c = m.get(k) ?? { offered: 0, kept: 0 };
-    c.offered++; if (it.kept) c.kept++; m.set(k, c);
-  }
+/** the model of a list of samples: every item counted under its sample's house class, its kind and its sector (a gallery lot judged down says
+ *  something is wrong but not which item: it is not counted) */
+export function buildModel(samples: readonly Sample[]): Model { const m: Model = new Map(); for (const s of samples) learn(m, s); return m; }
+/** a model with one more sample counted (the wizard after a save: no rebuild) */
+export function learn(m: Model, s: Sample): Model {
+  if (s.verdict === 'down') return m;
+  for (const it of s.items) { const k = key(s.ctx.cls, it.kind, it.sector), c = m.get(k) ?? { offered: 0, kept: 0 }; c.offered++; if (it.kept) c.kept++; m.set(k, c); }
   return m;
 }
-/** a model with one more sample counted (the wizard after a save: no rebuild) */
-export function learn(m: Model, s: Sample): Model { for (const it of s.items) { const k = key(s.ctx.cls, it.kind, it.sector), c = m.get(k) ?? { offered: 0, kept: 0 }; c.offered++; if (it.kept) c.kept++; m.set(k, c); } return m; }
+/** the model as data (P25: the game ships it with its lots): the prior and every count, keys sorted */
+export interface ModelData { v: 1; prior: { a: number; b: number }; counts: Record<string, [number, number]> }
+export function modelData(m: Model): ModelData {
+  const counts: Record<string, [number, number]> = {};
+  for (const k of [...m.keys()].sort()) { const c = m.get(k)!; counts[k] = [c.offered, c.kept]; }
+  return { v: 1, prior: { ...PRIOR }, counts };
+}
+/** a model read back from its data (bad entries dropped) */
+export function modelFrom(d: unknown): Model {
+  const m: Model = new Map(), c = d && typeof d === 'object' ? (d as Partial<ModelData>).counts : undefined;
+  if (c && typeof c === 'object') for (const [k, v] of Object.entries(c)) if (/^[a-z]+\|[a-z]+\|[a-z-]+$/.test(k) && Array.isArray(v) && fin(v[0]) && fin(v[1]) && v[1] <= v[0]) m.set(k, { offered: v[0], kept: v[1] });
+  return m;
+}
 /** the keep rate of a kind in a sector for a house class: the posterior mean of its Beta prior (PRIOR) and its counts */
 export function keepRate(m: Model, c: HouseClass, k: ItemKind, s: Sector): number {
   const n = m.get(key(c, k, s)) ?? { offered: 0, kept: 0 };
