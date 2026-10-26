@@ -16,6 +16,8 @@ import { RangeSim, garageSlots, rangeScene, rangeStats, upgradeWhy, withPrice, w
 import { CELL_T, type Grid, type GridDiff } from '../ext/course-grid';
 import { inPractice, practiceWords, scanPractice, type PracticeScan, type PracticeState } from './practice';
 import { PRACTICE_APPEAL, PRACTICE_FEE, PRACTICE_IDS, practiceAppeal, rangeScale, rangeUpkeep, type PracticeId } from './rangesave';
+import { PRI } from '../label-place';
+import { LABEL_OUTLINE, type WorldLabels } from '../world-labels';
 import { COFFEE, EXTRA_IDS, GARAGE_CARS, HOME_AT, HOME_NAME, KIOSK_SHARE, LESSON, LESSON_SHARE, homeStage, needsOf, type HomeStage } from './rangesave';
 
 /** what the host needs of the engine */
@@ -66,6 +68,8 @@ export function outfieldStripes(sc: Pick<RangeScene, 'aim' | 'roadDir' | 'mowFro
 const BOOK_EVERY = 2, SKIP_DT = 120;
 /** the practice area is read again at most this often (frames) while the grid changes (T130) */
 const SCAN_FRAMES = 6;
+/** the world labels' keys of the range's own stand-in pills (T151: the moving picker cart's and the practice strokes'), kept from frame to frame */
+const PICKER_KEY = 'range:picker', PUTT_KEY = 'range:putting-clip', CHIP_KEY = 'range:chipping-clip';
 /** the practice facilities' names (T130) */
 export const PRACTICE_NAME: Readonly<Record<PracticeId, string>> = { putting: 'Putting green', chipping: 'Chipping green and bunker' };
 
@@ -188,11 +192,13 @@ export class RangeHost {
   private carMover(k: number): Drawable { const a = this.carDraw; return a[k] ?? (a[k] = { item: 0, x: 0, y: 0, flip: false, scale: CAR_SCALE, x0: 0, y0: 0, x1: 0, y1: 0, moving: true }); }
 
   /** over the map (canvas px, screen: a tile point to canvas px, ze: zoom x dpr): at the street tier the lying balls (white dots) and the balls in
-   *  the air (a dot up its arc, its shadow on the grass) and the distance numbers over their markers; at district zoom the "Driving Range" label */
-  drawOver(c: CanvasRenderingContext2D, screen: (x: number, y: number) => { x: number; y: number }, ze: number, zoom: number, dpr: number, w: number, h: number): void {
+   *  the air (a dot up its arc, its shadow on the grass) and the distance numbers over their markers; at district zoom the "Driving Range" label.
+   *  The labels (the numbers, the car park building's count, the stand-in pills, the area's and the range's names) are world labels (T151):
+   *  they go to labels, placed with the map's others so none overlap */
+  drawOver(c: CanvasRenderingContext2D, screen: (x: number, y: number) => { x: number; y: number }, ze: number, zoom: number, dpr: number, w: number, h: number, labels: WorldLabels): void {
     const sc = this.scene; if (!sc) return;
     const on = (p: { x: number; y: number }, m = 40) => p.x > -m && p.y > -m && p.x < w + m && p.y < h + m;
-    this.drawPractice(c, screen, zoom, dpr, on);
+    this.drawPractice(c, screen, zoom, dpr, on, labels);
     if (zoom >= 0.12) {
       const r = Math.max(0.9 * dpr, 0.09 * 64 * ze), L = this.sim.lying, n = this.sim.nLying;
       c.fillStyle = 'rgba(255,255,255,0.92)'; c.beginPath();
@@ -205,38 +211,34 @@ export class RangeHost {
       for (let i = 0; i < this.nFlying; i++) { const p = screen(F[3 * i]!, F[3 * i + 1]!), hy = F[3 * i + 2]! * 32 * ze * 1.4; if (on(p, 200)) { c.moveTo(p.x + r * 1.2, p.y - hy); c.arc(p.x, p.y - hy, r * 1.2, 0, Math.PI * 2); } }
       c.fill();
       // the distance numbers: a small dark plate with white figures just above each marker
-      const px = Math.round(dpr * Math.max(9, 11 * Math.sqrt(Math.min(1, zoom / 0.3))));
-      c.font = `700 ${px}px system-ui, sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle';
+      const px = Math.round(dpr * Math.max(9, 11 * Math.sqrt(Math.min(1, zoom / 0.3)))), font = `700 ${px}px system-ui, sans-serif`;
       for (const t of sc.numbers) {
         const p = screen(t.x, t.y); if (!on(p)) continue;
-        const y = p.y - (t.low ? 1.2 : 2.6) * 32 * ze - (t.low ? 0 : px), tw = c.measureText(t.text).width + 8 * dpr;
-        c.fillStyle = 'rgba(16,24,16,0.8)'; c.beginPath(); c.roundRect(p.x - tw / 2, y - px * 0.75, tw, px * 1.5, 3 * dpr); c.fill();
-        c.fillStyle = '#f8fafc'; c.fillText(t.text, p.x, y + 0.5 * dpr);
+        const y = p.y - (t.low ? 1.2 : 2.6) * 32 * ze - (t.low ? 0 : px), tw = labels.width(font, t.text) + 8 * dpr;
+        labels.pill(t, PRI.marker, t.text, p.x, y, font, tw, px * 1.5, 'rgba(16,24,16,0.8)', 3 * dpr, '#f8fafc', 0.5 * dpr);
       }
       // the car park building's count (T146), as the car parks' own "P · parked/bays"
       if (sc.garage) {
-        const q = screen(sc.garage.label.x, sc.garage.label.y), t = `P · ${this.sim.parked(true)}/${GARAGE_CARS}`;
-        if (on(q, 100)) { c.font = `bold ${12 * dpr}px ui-sans-serif, system-ui, sans-serif`; c.lineJoin = 'round'; c.lineWidth = 3 * dpr; c.strokeStyle = 'rgba(2,6,23,0.9)'; c.strokeText(t, q.x, q.y); c.fillStyle = '#f8fafc'; c.fillText(t, q.x, q.y); }
+        const q = screen(sc.garage.label.x, sc.garage.label.y);
+        if (on(q, 100)) labels.text(sc.garage, PRI.count, `P · ${this.sim.parked(true)}/${GARAGE_CARS}`, q.x, q.y, `bold ${12 * dpr}px ui-sans-serif, system-ui, sans-serif`, 12 * dpr, '#f8fafc', LABEL_OUTLINE, 3 * dpr);
       }
       // the ball picker cart's stand-in pill (T133: the eight-way wagon stands in for it)
       const pk = this.sim.view().picker;
       if (pk) {
         const q = screen(pk.x, pk.y);
-        if (on(q)) {
-          const t = 'Stand In for Ball picker cart', fp = Math.round(dpr * 10);
-          c.font = `600 ${fp}px system-ui, sans-serif`; const tw = c.measureText(t).width + 10 * dpr, y = q.y - 40 * dpr;
-          c.fillStyle = 'rgba(15,23,42,0.78)'; c.beginPath(); c.roundRect(q.x - tw / 2, y - fp * 0.8, tw, fp * 1.6, 6 * dpr); c.fill();
-          c.fillStyle = '#fde68a'; c.fillText(t, q.x, y + 0.5 * dpr);
-        }
+        if (on(q)) this.standInPill(labels, PICKER_KEY, 'Stand In for Ball picker cart', q.x, q.y - 40 * dpr, dpr);
       }
-      c.textAlign = 'start'; c.textBaseline = 'alphabetic';
     } else if (zoom >= 0.03) {
       const p = screen(sc.label.x, sc.label.y); if (!on(p, 200)) return;
       const px = Math.round(dpr * 12);
-      c.font = `700 ${px}px system-ui, sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle';
-      c.lineWidth = 3 * dpr; c.strokeStyle = 'rgba(10,30,10,0.85)'; c.strokeText('Driving Range', p.x, p.y); c.fillStyle = '#ecfccb'; c.fillText('Driving Range', p.x, p.y);
-      c.textAlign = 'start'; c.textBaseline = 'alphabetic';
+      labels.text(sc.label, PRI.name, 'Driving Range', p.x, p.y, `700 ${px}px system-ui, sans-serif`, px, '#ecfccb', 'rgba(10,30,10,0.85)', 3 * dpr);
     }
+  }
+  /** a stand-in pill of the range's own (the picker cart, the practice strokes): amber words on a dark pill centred on (x, y), a world label of the
+   *  last rank */
+  private standInPill(labels: WorldLabels, key: unknown, t: string, x: number, y: number, dpr: number): void {
+    const fp = Math.round(dpr * 10), font = `600 ${fp}px system-ui, sans-serif`;
+    labels.pill(key, PRI.standIn, t, x, y, font, labels.width(font, t) + 10 * dpr, fp * 1.6, 'rgba(15,23,42,0.78)', 6 * dpr, '#fde68a', 0.5 * dpr);
   }
 
   // ---- the practice facilities (T130)
@@ -297,9 +299,8 @@ export class RangeHost {
   hint = false;
   /** the practice area is not open yet (a range start's ramp, T132: it opens with the first range upgrade): its label says so */
   practiceLocked = false;
-  private drawPractice(c: CanvasRenderingContext2D, screen: (x: number, y: number) => { x: number; y: number }, zoom: number, dpr: number, on: (p: { x: number; y: number }, m?: number) => boolean): void {
+  private drawPractice(c: CanvasRenderingContext2D, screen: (x: number, y: number) => { x: number; y: number }, zoom: number, dpr: number, on: (p: { x: number; y: number }, m?: number) => boolean, labels: WorldLabels): void {
     const sc = this.scene!, pa = sc.practice, p = this.practice;
-    c.textAlign = 'center'; c.textBaseline = 'middle';
     if (zoom >= 0.03 && !(p ? p.built : this.ctx.biz()?.practice.putting.open)) {
       const pulse = this.hint ? 0.55 + 0.35 * Math.sin(performance.now() / 260) : 0.4;
       c.beginPath();
@@ -308,21 +309,23 @@ export class RangeHost {
       c.setLineDash([7 * dpr, 6 * dpr]); c.lineWidth = 1.6 * dpr; c.strokeStyle = `rgba(236,252,203,${pulse.toFixed(3)})`; c.stroke(); c.setLineDash([]);
       const q = screen(pa.label.x, pa.label.y);
       if (on(q, 200)) {
-        const px = Math.round(dpr * 13);
-        c.font = `700 ${px}px system-ui, sans-serif`; c.lineWidth = 3 * dpr; c.strokeStyle = 'rgba(10,30,10,0.85)'; c.strokeText('Practice area', q.x, q.y); c.fillStyle = '#ecfccb'; c.fillText('Practice area', q.x, q.y);
-        if (zoom >= 0.12) { c.font = `600 ${Math.round(px * 0.8)}px system-ui, sans-serif`; const t = this.practiceLocked ? 'Opens with your first range upgrade' : 'Paint a putting green here'; c.strokeText(t, q.x, q.y + px * 1.3); c.fillStyle = '#d9f99d'; c.fillText(t, q.x, q.y + px * 1.3); }
+        // the area's name and (at the street tier) its hint under it: one world label (T151) whose box holds both lines
+        const px = Math.round(dpr * 13), lw = 3 * dpr, l = labels.text(pa, PRI.area, 'Practice area', q.x, q.y, `700 ${px}px system-ui, sans-serif`, px, '#ecfccb', 'rgba(10,30,10,0.85)', lw);
+        if (zoom >= 0.12) {
+          const sf = `600 ${Math.round(px * 0.8)}px system-ui, sans-serif`, t = this.practiceLocked ? 'Opens with your first range upgrade' : 'Paint a putting green here';
+          // the box from the name's top to the hint's foot, its centre moved down to the middle
+          const top = q.y - px / 2 - lw / 2, foot = q.y + px * 1.3 + px * 0.4 + lw / 2, mid = (top + foot) / 2;
+          l.sub = t; l.subFont = sf; l.subFill = '#d9f99d'; l.w = Math.max(l.w, labels.width(sf, t) + lw); l.h = foot - top;
+          l.y = l.py = mid; l.ty = q.y - mid; l.subDy = q.y + px * 1.3 - mid;
+        }
       }
     }
     // the stand-in pills of the strokes (the 3D golfers have no putting or chipping clip yet: GOLF-SPRITES)
     if (zoom >= 0.12 && p) for (const id of PRACTICE_IDS) {
       const f = p[id]; if (f.state !== 'open' || !f.centre || !this.sim.practiceToday[id]) continue;
       const q = screen(f.centre.x, f.centre.y); if (!on(q)) continue;
-      const t = id === 'putting' ? 'Stand In for golfer putting clip' : 'Stand In for golfer chipping clip', px = Math.round(dpr * 10);
-      c.font = `600 ${px}px system-ui, sans-serif`; const tw = c.measureText(t).width + 10 * dpr, y = q.y - 34 * dpr;
-      c.fillStyle = 'rgba(15,23,42,0.78)'; c.beginPath(); c.roundRect(q.x - tw / 2, y - px * 0.8, tw, px * 1.6, 6 * dpr); c.fill();
-      c.fillStyle = '#fde68a'; c.fillText(t, q.x, y + 0.5 * dpr);
+      this.standInPill(labels, id === 'putting' ? PUTT_KEY : CHIP_KEY, id === 'putting' ? 'Stand In for golfer putting clip' : 'Stand In for golfer chipping clip', q.x, q.y - 34 * dpr, dpr);
     }
-    c.textAlign = 'start'; c.textBaseline = 'alphabetic';
   }
 
   // ---- the range card's actions

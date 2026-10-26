@@ -5,6 +5,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { ColumnPlacer, LabelPlacer, PRI, type PlaceLabel } from '../src/game/label-place';
+import { LABEL_OUTLINE, WorldLabels } from '../src/game/world-labels';
+import { MoneyFloats, drawMoneyFloats } from '../src/game/moneyfloats';
 
 const W = 1600, H = 1000;
 const lab = (key: unknown, pri: number, x: number, y: number, w = 120, h = 16): PlaceLabel => ({ key, pri, x, y, w, h, px: 0, py: 0, shown: false });
@@ -151,4 +153,60 @@ test('the money columns: clear of the labels, a column climbs just above the lab
   // past the max lift: it stays at its point
   place(P, [name]); C.begin();
   assert.equal(C.lift(P, 70, 80, 470, 200, 530, 380, 50), 0);
+});
+
+// ---- the engine's side: the frame's labels (world-labels.ts) and the money floats after them (moneyfloats.ts) ----
+/** a 2D context stand-in that records the writes (text, x, y) and the font changes; text is 7 px a character */
+function recCtx() {
+  const fills: { t: string; x: number; y: number }[] = [], plates: number[][] = []; let fonts = 0;
+  const ctx = {
+    save() {}, restore() {}, setTransform() {}, beginPath() {}, fill() {}, strokeText() {},
+    roundRect: (x: number, y: number, w: number, h: number) => plates.push([x, y, w, h]),
+    fillText: (t: string, x: number, y: number) => fills.push({ t, x, y }),
+    measureText: (t: string) => ({ width: t.length * 7 }),
+    set font(_: string) { fonts++; }, get font() { return ''; },
+  } as unknown as CanvasRenderingContext2D;
+  return { ctx, fills, plates, fonts: () => fonts };
+}
+
+test('the frame\'s labels: the range\'s name plate keeps its anchor, the stand-in pills give way, every word written once where it was placed', () => {
+  const r = recCtx(), L = new WorldLabels(), font = 'bold 11px x', pf = '600 11px x';
+  for (let frame = 0; frame < 3; frame++) {
+    L.begin(r.ctx, 1);
+    // the stand-ins come first (as the overlay collects them), the name and the count after
+    L.pill('si-dispenser', PRI.standIn, 'Stand In for Ball dispenser', 500, 400, pf, 180, 17, '#000', 8, '#fff');
+    L.pill('si-kiosk', PRI.standIn, 'Stand In for Coffee kiosk', 520, 396, pf, 170, 17, '#000', 8, '#fff');
+    const name = L.text('range', PRI.name, 'DRIVING RANGE · 36 BAYS', 505, 402, font, 11, '#fff', LABEL_OUTLINE, 3);
+    name.bg = '#000'; name.w = name.w1 + 12; name.h = 18;
+    L.text('park', PRI.count, 'P · 70/180', 560, 404, font, 12, '#fff', LABEL_OUTLINE, 3);
+    assert.equal(L.n, 4);
+    L.place(1600, 1000); r.fills.length = 0; L.draw(r.ctx);
+    const at = (t: string) => r.fills.find(f => f.t === t);
+    assert.deepEqual(at('DRIVING RANGE · 36 BAYS'), { t: 'DRIVING RANGE · 36 BAYS', x: 505, y: 402 }, 'the name on its anchor');
+    noOverlap(L.list.slice(0, L.n), L.placer.gap);
+    for (const l of L.list.slice(0, L.n)) assert.equal(r.fills.filter(f => f.t === l.text).length, l.shown ? 1 : 0, `${l.text} written once if shown`);
+  }
+  // the pool: the same objects next frame, nothing left over from the last
+  const first = L.list[0]; L.begin(r.ctx, 1); const a = L.add('k', 1, 0, 0, 10, 10);
+  assert.ok(a === first && a.text === '' && a.bg === '' && a.alpha === 1);
+});
+
+test('the money floats over a placed label: their column climbs above it as one; with nothing in the way they stay where T147 put them', () => {
+  const now = 0.5, zoom = 0.3, ze = zoom, dpr = 1;
+  const fl = new MoneyFloats(); fl.frame(0);
+  fl.add({ x: 100, y: 100, amount: 8, kind: 'in' }, 0, zoom); fl.add({ x: 100, y: 100, amount: 30, kind: 'in' }, 0, zoom);
+  assert.equal(fl.live.length, 2); assert.ok(fl.live[1]!.x === 100 && fl.live[1]!.lift > 0, 'one column, two lines');
+  const screen = (x: number, y: number) => ({ x: x * 5, y: y * 5 });
+  const ys = (avoid?: Parameters<typeof drawMoneyFloats>[8]) => {
+    const r = recCtx(); drawMoneyFloats(r.ctx, fl.live, now, screen, ze, dpr, 1600, 1000, avoid); return r.fills.map(f => f.y);
+  };
+  const plain = ys();
+  // no label: the same as without avoid
+  const P = new LabelPlacer(), C = new ColumnPlacer(); P.place([], 0, 0, 0, 1600, 1000); C.begin();
+  assert.deepEqual(ys({ placer: P, cols: C }), plain);
+  // a name plate 40 px over the point: both floats above it, a line apart as before
+  const plate = lab('name', PRI.name, 500, 460, 200, 18); P.place([plate], 1, 0, 0, 1600, 1000); C.begin();
+  const lifted = ys({ placer: P, cols: C });
+  assert.ok(lifted.every(y => y < plate.py - plate.h / 2), `${lifted} above the plate's top ${plate.py - plate.h / 2}`);
+  assert.ok(Math.abs((lifted[0]! - lifted[1]!) - (plain[0]! - plain[1]!)) < 1e-9, 'the column kept its lines');
 });

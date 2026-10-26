@@ -124,6 +124,8 @@ import { neededLevel, type PageWant } from './atlas-pages';
 import { HALF_T, courseBuilding, gridShown, loadMapGrid, saveMapGrid } from './ext/map-grid';
 import { MapGridLayer } from './ext/map-grid/layer';
 import { MoneyFloats, addCash, drawMoneyFloats, rangeFloat, type MoneyEvent } from './moneyfloats';
+import { ColumnPlacer, PRI } from './label-place';
+import { LABEL_OUTLINE, WorldLabels } from './world-labels';
 import { FIRST_PAR3_M, RAMP_TOAST, RANGE_CARD_SEEN, STUCK_PLAY_SEC, advanceProgress, computeProgressiveUiState, emptyProgress, nextFirstRunHint, normalizeProgress, progressFacts, rampLock, type PlayerProgressFacts, type ProgressiveUiState } from './ext/progressive-ui';
 
 /** New hole's camera framing eases this long at most (ms; P23 4.4) */
@@ -242,7 +244,9 @@ const SHOT_HOLD = 'Your shot is open: the clock waits for it';
  *  reads back as the surface, and its planting */
 type CourseAreaRec = CourseArea & { hole?: number; tex: PaintTex };
 /** a piece of a screen-space label at (x, y), left-aligned, filled in col and outlined in the stroke style; returns the x after it */
-function labelPiece(ctx: CanvasRenderingContext2D, s: string, x: number, y: number, col: string): number { ctx.strokeText(s, x, y); ctx.fillStyle = col; ctx.fillText(s, x, y); return x + ctx.measureText(s).width; }
+/** T151: the world labels' keys for the labels with no object of their own (a town by its index, a zone, a gallery spot, a stop): a number per kind's
+ *  range, so a label keeps its slot from frame to frame */
+const LABEL_KEY = { town: 1e6, growth: 2e6, stopped: 2.1e6, gallery: 3e6, waiting: 4e6, noRoad: 5e6, landHover: 6e6, stadium: 6e6 + 1 } as const;
 
 interface Build { legs: Leg[]; cls: RoadClass; t0: number; dur: number; total: number; cum: number[] }
 interface Particle { x: number; y: number; vx: number; vy: number; vz: number; z: number; life: number; age: number; r: number }
@@ -379,6 +383,9 @@ export class Game {
    *  default, remembered (the gear menu's Money floats). Set it with setShowMoneyFloats */
   showMoneyFloats = true;
   readonly floats = new MoneyFloats();
+  /** T151, the map's world labels: collected over the overlay's frame, placed in one pass (none overlapping, stable) and written together; the
+   *  money floats' columns are placed after them (floatCols) */
+  readonly labels = new WorldLabels(); private floatCols = new ColumnPlacer();
   setShowMoneyFloats(on: boolean) {
     this.showMoneyFloats = on; if (!on) this.floats.clear();
     try { localStorage.setItem('capitalempire.moneyFloats', String(on)); } catch { /* storage may be unavailable */ }
@@ -555,7 +562,7 @@ export class Game {
   private grassVisible = false;
   private grassPedX = new Float32Array(PED_MAX); private grassPedY = new Float32Array(PED_MAX); private grassPedOut = new Uint8Array(PED_MAX);
   private grassCarX = new Float32Array(0); private grassCarY = new Float32Array(0); private grassCarAlive = new Uint8Array(0);
-  perf = { fps: 0, frameMs: 0, cpuMs: 0, drawMs: 0, /** main-thread ms this frame: the course chunks' work, the lot ground's flush to the workers, and the last course send's lag after its first change */ courseMs: 0, lotFlushMs: 0, courseLagMs: 0, /** the last course chunk job: its worker ms and chunks; the last areas job: its worker ms and the main ms of taking its areas in */ courseJobMs: 0, courseJobChunks: 0, areasJobMs: 0, areasApplyMs: 0, instances: 0, draws: 0, chunksPending: 0, uploadKB: 0, frames: 0, tier: 'street' as 'street' | 'district' | 'planner', forest: 0, townTrees: 0, simActive: 0, simTickMs: 0, simMaxTickMs: 0, pop: 0, jobs: 0, built: 0, lotProps: 0, /** T080: the atlas's GPU MB (fixed by its plan) and the share of this frame's on-screen sprite px drawn coarser than the zoom needs (streaming in) */ atlasMB: 0, atlasSoft: 0 };
+  perf = { fps: 0, frameMs: 0, cpuMs: 0, drawMs: 0, /** main-thread ms this frame: the course chunks' work, the lot ground's flush to the workers, and the last course send's lag after its first change */ courseMs: 0, lotFlushMs: 0, courseLagMs: 0, /** the last course chunk job: its worker ms and chunks; the last areas job: its worker ms and the main ms of taking its areas in */ courseJobMs: 0, courseJobChunks: 0, areasJobMs: 0, areasApplyMs: 0, instances: 0, draws: 0, chunksPending: 0, uploadKB: 0, frames: 0, tier: 'street' as 'street' | 'district' | 'planner', forest: 0, townTrees: 0, simActive: 0, simTickMs: 0, simMaxTickMs: 0, pop: 0, jobs: 0, built: 0, lotProps: 0, /** T080: the atlas's GPU MB (fixed by its plan) and the share of this frame's on-screen sprite px drawn coarser than the zoom needs (streaming in) */ atlasMB: 0, atlasSoft: 0, /** T151: the label pass's ms this frame (place and write) and its labels (collected, shown) */ labelMs: 0, labels: 0, labelsShown: 0 };
   private frameTimes: number[] = [];
   // input
   /** a drag in progress; build: a right-button press in the road tool (released without moving, it builds the route, as Enter) */
@@ -3554,12 +3561,11 @@ export class Game {
       // the range's car park also holds the range sim's cars, which the worker never sees (T132)
       // (T146: the cars in the car park building are counted over it, not here)
       const label = parkLabel(parked, pk && pk === this.rangePk?.pk ? this.range.sim.parked(false) : 0, pk ? pk.bays.length : 0);
-      ctx.font = `bold ${12 * dpr}px ui-sans-serif, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.lineJoin = 'round'; ctx.lineWidth = 3 * dpr; ctx.strokeStyle = 'rgba(2,6,23,0.9)'; ctx.strokeText(label, c.x, c.y);
-      ctx.fillStyle = '#f8fafc'; ctx.fillText(label, c.x, c.y);
+      // a count: a world label of the second rank (T151)
+      this.labels.text(d, PRI.count, label, c.x, c.y, `bold ${12 * dpr}px ui-sans-serif, system-ui, sans-serif`, 12 * dpr, '#f8fafc', LABEL_OUTLINE, 3 * dpr);
     }
     // the bay rows' lots and on-street runs: their entrances and labels, and a lot with no road in reach
-    this.parkView.ctx = ctx; this.parkView.dpr = dpr; drawParkingOverlay(this.parkView, this.extraParks, this.traffic.parks, this.parking.rows);
+    this.parkView.ctx = ctx; this.parkView.dpr = dpr; this.parkView.labels = this.labels; drawParkingOverlay(this.parkView, this.extraParks, this.traffic.parks, this.parking.rows);
     if (this.golf) {
     const parcels = this.golf.parcels ?? [this.golf.parcel];
     const rect = (x: number, y: number, w: number, h: number) => { this.setIso(ctx); ctx.beginPath(); ctx.rect(x, y, w, h); ctx.setTransform(1, 0, 0, 1, 0, 0); };
@@ -3573,12 +3579,8 @@ export class Game {
     ctx.fillStyle = 'rgba(34, 197, 94, 0.2)'; ctx.fill();
     ctx.strokeStyle = '#22c55e'; ctx.lineWidth = 2 * dpr; ctx.stroke();
     const c = this.screen(hr[0] + hr[2] / 2, hr[1] + hr[3] / 2);
-    const label = `$${h.price.toLocaleString()} (${h.landClass})`;
-    ctx.font = `bold ${12 * dpr}px ui-sans-serif, system-ui, sans-serif`;
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.strokeStyle = 'rgba(2, 6, 23, 0.9)'; ctx.lineWidth = 3 * dpr; ctx.strokeText(label, c.x, c.y);
-    ctx.fillStyle = '#f8fafc'; ctx.fillText(label, c.x, c.y);
-    ctx.textAlign = 'start'; ctx.textBaseline = 'alphabetic';
+    // the land tool's price at the hovered parcel: a hint, so the map's labels make way for it (T151)
+    this.labels.text(LABEL_KEY.landHover, PRI.hint, `$${h.price.toLocaleString()} (${h.landClass})`, c.x, c.y, `bold ${12 * dpr}px ui-sans-serif, system-ui, sans-serif`, 12 * dpr, '#f8fafc', LABEL_OUTLINE, 3 * dpr);
     }
     }
     ctx.lineJoin = 'miter'; ctx.textAlign = 'start'; ctx.textBaseline = 'alphabetic';
@@ -3678,16 +3680,15 @@ export class Game {
     this.setIso(ctx); ctx.beginPath();
     for (const d of this.tollDefs) { const s = this.tollSegs.get(d.id); if (s) for (const i of plazaIslands(d, laneOff(s, 0))) ring(ctx, i.quad); }
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = '#d4d4d8'; ctx.fill(); ctx.strokeStyle = '#0f172a'; ctx.lineWidth = dpr; ctx.stroke();
-    ctx.font = `bold ${12 * dpr}px ui-sans-serif, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.lineJoin = 'round'; ctx.lineWidth = 3 * dpr; ctx.strokeStyle = 'rgba(2,6,23,0.9)';
+    const font = `bold ${12 * dpr}px ui-sans-serif, system-ui, sans-serif`;
     for (const d of this.tollDefs) {
       const s = this.tollSegs.get(d.id); if (!s) continue;
       const off0 = laneOff(s, 0);
       for (const i of plazaIslands(d, off0)) { const p = this.screen(i.c.x, i.c.y); disc(ctx, p.x, p.y, 2 * dpr, '#ffbe3c'); }
-      const mid = plazaPoint(d, PLAZA_LEN / 2, (-s.cls.h + plazaEdge(d.booths, off0)) / 2), c = this.screen(mid.x, mid.y), label = `TOLL · $${price}`;
-      ctx.strokeText(label, c.x, c.y - 18 * dpr); ctx.fillStyle = '#f8fafc'; ctx.fillText(label, c.x, c.y - 18 * dpr);
+      // its price: a world label (T151)
+      const mid = plazaPoint(d, PLAZA_LEN / 2, (-s.cls.h + plazaEdge(d.booths, off0)) / 2), c = this.screen(mid.x, mid.y);
+      this.labels.text(d, PRI.count, `TOLL · $${price}`, c.x, c.y - 18 * dpr, font, 12 * dpr, '#f8fafc', LABEL_OUTLINE, 3 * dpr);
     }
-    ctx.lineJoin = 'miter'; ctx.textAlign = 'start'; ctx.textBaseline = 'alphabetic';
   }
   /** the toll tool's preview at the cursor: the plaza outline (green where it can go, else red), its inbound arrow and a booth line across each booth lane;
    *  the label: the reason, or the booths and the cost (red when short of the money) */
@@ -3792,12 +3793,13 @@ export class Game {
   private drawGalleries(ctx: CanvasRenderingContext2D) {
     const G = this.traffic.gallery; if (!G.length) return;
     const dpr = this.dpr, ze = this.cam.z * this.dpr, cw = this.cw, ch = this.ch, dots = this.cam.z < DISTRICT_Z, h = 0.9 * HH * 2 * ze;
-    ctx.font = `bold ${12 * dpr}px ui-sans-serif, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round'; ctx.lineWidth = 3 * dpr; ctx.strokeStyle = 'rgba(2,6,23,0.9)';
+    const font = `bold ${12 * dpr}px ui-sans-serif, system-ui, sans-serif`;
     for (let i = 0; i + 7 < G.length; i += 8) {
       const x = G[i]!, y = G[i + 1]!, n = Math.round(G[i + 2]!); if (n <= 0) continue;
       const c = this.screen(x, y); if (c.x < -200 || c.y < -200 || c.x > cw + 200 || c.y > ch + 200) continue;
       if (dots) { ctx.fillStyle = 'rgba(134,239,172,0.85)'; ctx.beginPath(); ctx.arc(c.x, c.y, Math.min(10, 2 + Math.sqrt(n) / 3) * dpr, 0, Math.PI * 2); ctx.fill(); }
-      if (this.cam.z >= 0.2) { const t = `${n} watching`, ty = c.y - h * 1.6; ctx.strokeText(t, c.x, ty); ctx.fillStyle = '#bbf7d0'; ctx.fillText(t, c.x, ty); }
+      // the count: a world label (T151), keyed by its spot
+      if (this.cam.z >= 0.2) this.labels.text(LABEL_KEY.gallery + i / 8, PRI.count, `${n} watching`, c.x, c.y - h * 1.6, font, 12 * dpr, '#bbf7d0', LABEL_OUTLINE, 3 * dpr);
     }
   }
   /** the shuttle crowd on the map (during a surge and its eval): each stop's and gate's queue with its count (`n waiting`, above the stop). The
@@ -3806,14 +3808,13 @@ export class Game {
   private drawWalkers(ctx: CanvasRenderingContext2D) {
     const W = this.traffic.walkers, S = this.traffic.stops;
     if (!W.length && !S.length) return;
-    const dpr = this.dpr, ze = this.cam.z * this.dpr, cw = this.cw, ch = this.ch, X0 = this.cam.X, Y0 = this.cam.Y;
-    ctx.font = `bold ${12 * dpr}px ui-sans-serif, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.lineJoin = 'round'; ctx.lineWidth = 3 * dpr; ctx.strokeStyle = 'rgba(2,6,23,0.9)';
+    const dpr = this.dpr, ze = this.cam.z * this.dpr, cw = this.cw, ch = this.ch, X0 = this.cam.X, Y0 = this.cam.Y, font = `bold ${12 * dpr}px ui-sans-serif, system-ui, sans-serif`;
     for (let i = 0; i + 3 < S.length; i += 4) {
       const sx = S[i]!, sy = S[i + 1]!, q = Math.round(S[i + 2]!);
       if (q > 0) {
-        const px = (worldX(sx, sy) - X0) * ze + cw / 2, py = (worldY(sx, sy) - Y0) * ze + ch / 2, label = `${q} waiting`;
-        ctx.strokeText(label, px, py - 16 * dpr); ctx.fillStyle = '#f8fafc'; ctx.fillText(label, px, py - 16 * dpr);
+        // the queue's count: a world label (T151), keyed by its stop
+        const px = (worldX(sx, sy) - X0) * ze + cw / 2, py = (worldY(sx, sy) - Y0) * ze + ch / 2;
+        this.labels.text(LABEL_KEY.waiting + i / 4, PRI.count, `${q} waiting`, px, py - 16 * dpr, font, 12 * dpr, '#f8fafc', LABEL_OUTLINE, 3 * dpr);
       }
     }
     if (this.cam.z < DISTRICT_Z) {
@@ -5303,10 +5304,12 @@ export class Game {
   private drawOverlay(now: number) {
     const ctx = this.ov, ze = this.cam.z * this.dpr;
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, this.cw, this.ch);
+    // T151: the world labels drawn below are collected (this.labels) and written together after the tolls, placed so none overlap
+    this.labels.begin(ctx, this.dpr);
     if (this.showLanes && this.cam.z > 0.12) this.drawLanes(ctx);
     if (this.showLots && this.cam.z > 0.06) this.drawLots(ctx);
     if (this.showAccess || this.cam.z < PLANNER_Z) this.drawAccess(ctx);
-    if (this.cam.z < DISTRICT_Z) this.drawTownNames(ctx);
+    if (this.cam.z < DISTRICT_Z) this.drawTownNames();
     if (this.traffic && this.cam.z >= DISTRICT_Z) { this.drawDisasters(ctx); this.drawSignals(ctx); this.drawIncidents(ctx); }
     if (this.tool === 'junction') { if (this.cam.z >= PLANNER_Z) this.drawJunctionBadges(ctx); this.drawSelectedJunction(ctx); }
     this.drawFlow(ctx);
@@ -5315,7 +5318,7 @@ export class Game {
     this.drawGroundOverlays(ctx);
     this.drawStadium(ctx);
     this.drawBusinesses(ctx);
-    if (this.showStandIns) this.drawStandIns(ctx);
+    if (this.showStandIns) this.drawStandIns();
     this.drawParks(ctx);
     this.drawParkPreview(ctx);
     this.drawBuses(ctx);
@@ -5323,7 +5326,7 @@ export class Game {
     this.drawWalkers(ctx);
     this.drawBalls(ctx);
     this.drawShot(ctx);
-    if (this.range.scene) { const o = { x: 0, y: 0 }, cx = this.cw / 2, cy = this.ch / 2; this.range.drawOver(ctx, (x, y) => { o.x = (worldX(x, y) - this.cam.X) * ze + cx; o.y = (worldY(x, y) - this.cam.Y) * ze + cy; return o; }, ze, this.cam.z, this.dpr, this.cw, this.ch); }
+    if (this.range.scene) { const o = { x: 0, y: 0 }, cx = this.cw / 2, cy = this.ch / 2; this.range.drawOver(ctx, (x, y) => { o.x = (worldX(x, y) - this.cam.X) * ze + cx; o.y = (worldY(x, y) - this.cam.Y) * ze + cy; return o; }, ze, this.cam.z, this.dpr, this.cw, this.ch, this.labels); }
     if (this.grassPanel) {
       const s = this.grassScope();
       if (s) {
@@ -5334,6 +5337,9 @@ export class Game {
       }
     }
     this.drawTolls(ctx);
+    // the world labels: placed in one pass (by priority, none overlapping, kept still across frames) and written over the map, under the tools'
+    // previews and hints
+    { const t0 = performance.now(); this.labels.place(this.cw, this.ch); this.labels.draw(ctx); this.perf.labelMs = performance.now() - t0; this.perf.labels = this.labels.n; this.perf.labelsShown = this.labels.shown; }
     this.drawTollPreview(ctx);
     this.drawBizPreview(ctx);
     this.drawEventGhosts(ctx);
@@ -5367,19 +5373,18 @@ export class Game {
     }
     this.drawNight(ctx, now);
     // T147: the money floats over everything on the map (the night too), under the HUD
-    if (this.showMoneyFloats && this.floats.live.length) drawMoneyFloats(ctx, this.floats.live, now / 1000, (x, y) => this.screen(x, y), ze, this.dpr, this.cw, this.ch);
+    // (T151: each float's column clear of the placed world labels)
+    this.floatCols.begin();
+    if (this.showMoneyFloats && this.floats.live.length) drawMoneyFloats(ctx, this.floats.live, now / 1000, (x, y) => this.screen(x, y), ze, this.dpr, this.cw, this.ch, { placer: this.labels.placer, cols: this.floatCols });
   }
 
   /** the map's three town names at the district and planner tiers: white with a dark outline, centred on each town site (screen px) */
-  private drawTownNames(ctx: CanvasRenderingContext2D) {
-    const dpr = this.dpr;
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.font = `bold ${16 * dpr}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round'; ctx.lineWidth = 4 * dpr; ctx.strokeStyle = '#0f172a'; ctx.fillStyle = '#ffffff';
+  private drawTownNames() {
+    const dpr = this.dpr, font = `bold ${16 * dpr}px sans-serif`;
     this.townPts.forEach((c, i) => {
-      const s = this.screen(c.x, c.y), label = this.names.town(i);
-      ctx.strokeText(label, s.x, s.y); ctx.fillText(label, s.x, s.y);
+      const s = this.screen(c.x, c.y);
+      this.labels.text(LABEL_KEY.town + i, PRI.name, this.names.town(i), s.x, s.y, font, 16 * dpr, '#ffffff', '#0f172a', 4 * dpr);
     });
-    ctx.textAlign = 'left';
   }
 
   /** the access overlay: each zone (128 tiles square) with a built lot, shaded by its access: green below 1.3, amber to 1.8, red above (25% alpha),
@@ -5398,17 +5403,15 @@ export class Game {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     if (this.cam.z < DISTRICT_Z) {
       // the labels in screen px, at each built zone's centre: started (green) and declining (red); growth stopped under them
-      const dpr = this.dpr;
-      ctx.font = `bold ${12 * dpr}px sans-serif`; ctx.textBaseline = 'middle'; ctx.textAlign = 'left'; ctx.lineJoin = 'round'; ctx.lineWidth = 3 * dpr; ctx.strokeStyle = '#0f172a';
+      // (T151: world labels, placed with the rest)
+      const dpr = this.dpr, font = `bold ${12 * dpr}px sans-serif`, px = 12 * dpr, lw = 3 * dpr;
       for (let z = 0; z < 256; z++) {
         if (!T.builtZone[z]) continue;
         const g = this.growN[z]!, d = this.declN[z]!, stop = T.access[z]! > 1.8;
         if (!g && !d && !stop) continue;
         const c = this.screen((z & 15) * 128 + 64, (z >> 4) * 128 + 64), a = g ? `+${g}` : '', b = d ? ` −${d}` : '';
-        let x = c.x - ctx.measureText(a + b).width / 2;
-        if (a) x = labelPiece(ctx, a, x, c.y, '#3ddc84');
-        if (b) labelPiece(ctx, b, x, c.y, '#ff3b3b');
-        if (stop) { const s = 'growth stopped'; labelPiece(ctx, s, c.x - ctx.measureText(s).width / 2, c.y + (a || b ? 15 * dpr : 0), '#ff3b3b'); }
+        if (a || b) this.labels.pair(LABEL_KEY.growth + z, PRI.growth, a, '#3ddc84', b, '#ff3b3b', c.x, c.y, font, px, '#0f172a', lw);
+        if (stop) this.labels.text(LABEL_KEY.stopped + z, PRI.growth - 1, 'growth stopped', c.x, c.y + (a || b ? 15 * dpr : 0), font, px, '#ff3b3b', '#0f172a', lw);
       }
     }
   }
@@ -5419,11 +5422,8 @@ export class Game {
     // label at the same spot: the stray glyph after "DRIVING RANGE")
     const s = this.site; if (!s || !this.bizDefs.some(d => d.type === 'stadium')) return;
     if (this.cam.z < PLANNER_Z) this.drawSite(ctx, s, 'rgba(150,160,175,0.55)');
-    const dpr = this.dpr, c = this.screen(s.c.x, s.c.y), label = `STADIUM · L${this.traffic.round.level}`;
-    ctx.font = `bold ${13 * dpr}px ui-sans-serif, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.lineJoin = 'round'; ctx.lineWidth = 4 * dpr; ctx.strokeStyle = 'rgba(2,6,23,0.9)'; ctx.strokeText(label, c.x, c.y);
-    ctx.fillStyle = '#f8fafc'; ctx.fillText(label, c.x, c.y);
-    ctx.lineJoin = 'miter'; ctx.textAlign = 'start'; ctx.textBaseline = 'alphabetic';
+    const dpr = this.dpr, c = this.screen(s.c.x, s.c.y);
+    this.labels.text(LABEL_KEY.stadium, PRI.name, `STADIUM · L${this.traffic.round.level}`, c.x, c.y, `bold ${13 * dpr}px ui-sans-serif, system-ui, sans-serif`, 13 * dpr, '#f8fafc', LABEL_OUTLINE, 4 * dpr);
   }
   /** a stadium site drawn: the footprint in fill, its pitch inset 8 tiles, the outline and the 4 doors (the placed stadium and the business ghost) */
   private drawSite(ctx: CanvasRenderingContext2D, s: Site, fill: string) {
@@ -5442,7 +5442,7 @@ export class Game {
   }
   /** Placed business labels; footprint fills only at planner zoom, below the detailed artwork tier. */
   private drawBusinesses(ctx: CanvasRenderingContext2D) {
-    const dpr = this.dpr;
+    const dpr = this.dpr, font = `bold ${11 * dpr}px ui-sans-serif, system-ui, sans-serif`;
     for (const d of this.bizDefs) {
       if (d.type === 'stadium') continue;
       // a range start's range (T132): its own name plate ("DRIVING RANGE · 4 BAYS", the worker's level means nothing there) on a dark plate, so
@@ -5451,19 +5451,18 @@ export class Game {
       if (range && this.cam.z < RANGE_LABEL_Z) continue;
       const B = BUSINESS[d.type], c0 = this.screen(d.x + d.w / 2, d.y + d.h / 2), c = range ? { x: c0.x, y: c0.y + 16 * dpr } : c0, label = range ? rangeMapLabel(rangeStats(range).bays) : `${B.name.toUpperCase()} · L${this.traffic.biz.find(v => v.id === d.id)?.level ?? 1}`;
       if (this.cam.z < PLANNER_Z) this.drawBizRect(ctx, d.x, d.y, d.w, d.h, FAMILY_FILL[B.family]);
-      ctx.font = `bold ${11 * dpr}px ui-sans-serif, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      if (range) { const w = ctx.measureText(label).width + 12 * dpr; ctx.fillStyle = 'rgba(2,6,23,0.82)'; ctx.beginPath(); ctx.roundRect(c.x - w / 2, c.y - 9 * dpr, w, 18 * dpr, 5 * dpr); ctx.fill(); }
-      ctx.lineJoin = 'round'; ctx.lineWidth = 3 * dpr; ctx.strokeStyle = 'rgba(2,6,23,0.9)'; ctx.strokeText(label, c.x, c.y);
-      ctx.fillStyle = '#f8fafc'; ctx.fillText(label, c.x, c.y);
-      ctx.lineJoin = 'miter'; ctx.textAlign = 'start'; ctx.textBaseline = 'alphabetic';
+      // the business's own name: a world label of the first rank (T151), the range's on its dark plate
+      const l = this.labels.text(d, PRI.name, label, c.x, c.y, font, 11 * dpr, '#f8fafc', LABEL_OUTLINE, 3 * dpr);
+      if (range) { l.bg = 'rgba(2,6,23,0.82)'; l.radius = 5 * dpr; l.w = l.w1 + 12 * dpr; l.h = 18 * dpr; }
     }
   }
   /** the stand-in labels (T114): each building on screen drawn as a stand-in (the view's props and the businesses' pictures) carries "Stand In
    *  for <name>" (newart.ts standInLabel, cached strings) in a small dark pill just above its picture, sized with the zoom (11 to 9 css px) and
-   *  faded out between 12% and 8%. On the map overlay, under the UI. No allocation per frame: a reused query set and rect, widths measured once */
-  private siHits = new Set<Prop>(); private siBox: BBox = [0, 0, 0, 0]; private siRect = [0, 0, 0, 0]; private siW = new Map<string, number>();
-  private siFont = ''; private siPx = 0;
-  private drawStandIns(ctx: CanvasRenderingContext2D) {
+   *  faded out between 12% and 8%. World labels of the last rank (T151): they give way to the real names, moving just above or below, hidden only
+   *  when no slot near is free. No allocation per frame: a reused query set and rect, widths measured once */
+  private siHits = new Set<Prop>(); private siBox: BBox = [0, 0, 0, 0]; private siRect = [0, 0, 0, 0];
+  private siFont = ''; private siPx = 0; private siFade = 1;
+  private drawStandIns() {
     const z = this.cam.z, fade = Math.min(1, (z - STANDIN_FADE[0]) / (STANDIN_FADE[1] - STANDIN_FADE[0])); if (!(fade > 0)) return;
     const ze = z * this.dpr, hw = this.cw / 2 / ze, hh = this.ch / 2 / ze, b = this.siBox;
     // the view in tiles: the bbox of the screen's corners, reaching further down for the tall pictures whose anchors are below the screen
@@ -5473,23 +5472,21 @@ export class Game {
     // 11 css px at the closest zoom, smaller as the view zooms out, never below a readable 9 px
     const px = Math.round(this.dpr * Math.max(9, 11 * Math.sqrt(Math.min(1, z / ZOOM_MAX))));
     if (px !== this.siPx) { this.siPx = px; this.siFont = `600 ${px}px system-ui, sans-serif`; }
-    ctx.save(); ctx.globalAlpha = fade; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = this.siFont;
-    for (const p of this.siHits) this.standInPill(ctx, p, ze);
-    for (const p of this.businessProps) this.standInPill(ctx, p, ze);
-    for (const l of this.range.labels) this.standInPill(ctx, l.p, ze, l.text);
-    for (const l of this.decor.labels) this.standInPill(ctx, l.p, ze, l.text);
-    ctx.restore();
+    this.siFade = fade;
+    for (const p of this.siHits) this.standInPill(p, p, ze);
+    for (const p of this.businessProps) this.standInPill(p, p, ze);
+    for (const l of this.range.labels) this.standInPill(l, l.p, ze, l.text);
+    for (const l of this.decor.labels) this.standInPill(l, l.p, ze, l.text);
   }
-  /** one stand-in's label pill (drawStandIns), if p is drawn as a stand-in and its label is on screen */
-  private standInPill(ctx: CanvasRenderingContext2D, p: Prop, ze: number, text?: string) {
+  /** one stand-in's label pill (drawStandIns), if p is drawn as a stand-in and its label is on screen: a world label (key: the prop, or the
+   *  scene's label) */
+  private standInPill(key: unknown, p: Prop, ze: number, text?: string) {
     const label = text ?? standInLabel(p.item); if (label === null) return;
-    let w11 = this.siW.get(label);
-    if (w11 === undefined) { ctx.font = '600 11px system-ui, sans-serif'; w11 = ctx.measureText(label).width; this.siW.set(label, w11); ctx.font = this.siFont; }
+    const w11 = this.labels.width('600 11px system-ui, sans-serif', label);
     const r = spriteRect(p, this.siRect), s = this.siPx / 11, w = w11 * s + 12 * s, h = 17 * s;
     const cx = ((r[0]! + r[2]!) / 2 - this.cam.X) * ze + this.cw / 2, y0 = (r[1]! - this.cam.Y) * ze + this.ch / 2 - h - 3 * s;
     if (cx + w / 2 < 0 || cx - w / 2 > this.cw || y0 + h < 0 || y0 > this.ch) return;
-    ctx.fillStyle = 'rgba(22,20,24,0.78)'; ctx.beginPath(); ctx.roundRect(cx - w / 2, y0, w, h, h / 2); ctx.fill();
-    ctx.fillStyle = '#f1f5f9'; ctx.fillText(label, cx, y0 + h / 2 + 0.5 * s);
+    this.labels.pill(key, PRI.standIn, label, cx, y0 + h / 2, this.siFont, w, h, 'rgba(22,20,24,0.78)', h / 2, '#f1f5f9', 0.5 * s).alpha = this.siFade;
   }
   /** the business tool's ghost at the cursor: the footprint (green where it can go, else red; the stadium's with its doors) and the reason beside the cursor if
    *  it cannot. With the type in hand at its max only the hint shows (a red footprint would hide the real one) */

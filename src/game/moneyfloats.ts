@@ -6,6 +6,7 @@
 // engine feeds it (the range's onMoney, the purchases placed, the city worker's money with its place) and draws it on its 2D overlay.
 import { DISTRICT_Z, HH, HW } from './iso';
 import type { RangeMoneyEvent } from './golf/rangebiz';
+import type { ColumnPlacer, LabelPlacer } from './label-place';
 
 /** one float per transaction at this zoom and closer (the street view; the galleries' "n watching" shows from here too) */
 export const FLOAT_STREET_Z = 0.2;
@@ -134,18 +135,25 @@ export function floatPose(f: Pick<MoneyFloat, 'born'>, now: number): { rise: num
 const FILL: Readonly<Record<FloatKind, string>> = { in: '#4ade80', out: '#f87171', lost: '#f87171' };
 const NOTE = '#fecaca', OUTLINE = 'rgba(2,6,23,0.92)';
 
-/** the floats on the 2D overlay (canvas px): each above its point (a walker's height up), on its line and risen and faded by its age; three passes (the street amounts, the place totals, the captions) so the font is set three times a frame */
-export function drawMoneyFloats(ctx: CanvasRenderingContext2D, floats: readonly MoneyFloat[], now: number, screen: (x: number, y: number) => { x: number; y: number }, ze: number, dpr: number, w: number, h: number): void {
+/** T151: the world labels the floats keep clear of (label-place.ts): this frame's placed labels, and the columns' lifts kept from frame to frame */
+export interface FloatAvoid { placer: LabelPlacer; cols: ColumnPlacer }
+/** the most a column climbs to clear the labels (px at dpr 1); past that it stays at its point */
+export const MAX_CLIMB = 160;
+
+/** the floats on the 2D overlay (canvas px): each above its point (a walker's height up), on its line and risen and faded by its age; three passes (the street amounts, the place totals, the captions) so the font is set three times a frame.
+ *  With avoid (T151) each column (the floats over one point) is lifted as one just clear of the placed world labels over its whole rise */
+export function drawMoneyFloats(ctx: CanvasRenderingContext2D, floats: readonly MoneyFloat[], now: number, screen: (x: number, y: number) => { x: number; y: number }, ze: number, dpr: number, w: number, h: number, avoid?: FloatAvoid): void {
   if (!floats.length) return;
-  const base = Math.max(10 * dpr, 1.3 * 0.9 * HH * 2 * ze);
+  const base = Math.max(10 * dpr, 1.3 * 0.9 * HH * 2 * ze), lifts = avoid ? columnLifts(floats, screen, base, dpr, avoid) : null;
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic'; ctx.lineJoin = 'round'; ctx.strokeStyle = OUTLINE;
   const pass = (merged: boolean | null, px: number) => {
     ctx.font = `${merged === null ? 600 : 800} ${px * dpr}px ui-sans-serif, system-ui, sans-serif`; ctx.lineWidth = (merged === null ? 2.5 : 3.5) * dpr;
-    for (const f of floats) {
+    for (let i = 0; i < floats.length; i++) {
+      const f = floats[i]!;
       if (merged === null ? !floatNote(f) : f.merged !== merged) continue;
       const p = screen(f.x, f.y), o = floatPose(f, now);
-      const y = p.y - base - floatHeight(f, now) * dpr + (merged === null ? 11 * dpr : 0);
+      const y = p.y - base - floatHeight(f, now) * dpr + (merged === null ? 11 * dpr : 0) + (lifts ? lifts[i]! : 0);
       if (p.x < -80 * dpr || p.x > w + 80 * dpr || y < -40 * dpr || y > h + 40 * dpr || o.alpha <= 0) continue;
       const t = merged === null ? floatNote(f) : moneyText(f);
       ctx.globalAlpha = o.alpha; ctx.strokeText(t, p.x, y); ctx.fillStyle = merged === null ? NOTE : FILL[f.kind]; ctx.fillText(t, p.x, y);
@@ -153,6 +161,28 @@ export function drawMoneyFloats(ctx: CanvasRenderingContext2D, floats: readonly 
   };
   pass(false, 14); pass(true, 16); pass(null, 11);
   ctx.globalAlpha = 1; ctx.textAlign = 'left';
+}
+
+/** a float's text width as the columns reckon it (canvas px, a little generous: bold figures about 0.62 em, the caption 0.56 em, the outline) */
+const floatWidth = (f: MoneyFloat, dpr: number): number =>
+  (Math.max(moneyText(f).length * 0.62 * (f.merged ? 16 : 14), floatNote(f).length * 0.56 * 11) + 4) * dpr;
+let colOf = new Int32Array(64), liftOf = new Float64Array(64);
+/** each float's lift (canvas px, <= 0): its column's (the floats over one point), whose box is the column's widest text over its whole rise (from
+ *  the caption under its lowest line to the top of its highest line risen), kept clear of the placed labels by the column placer */
+function columnLifts(floats: readonly MoneyFloat[], screen: (x: number, y: number) => { x: number; y: number }, base: number, dpr: number, avoid: FloatAvoid): Float64Array {
+  const n = floats.length;
+  if (colOf.length < n) { colOf = new Int32Array(n * 2); liftOf = new Float64Array(n * 2); }
+  colOf.fill(-1, 0, n);
+  for (let i = 0; i < n; i++) {
+    if (colOf[i]! >= 0) continue;
+    const f = floats[i]!; colOf[i] = i;
+    let wd = floatWidth(f, dpr);
+    for (let j = i + 1; j < n; j++) { const g = floats[j]!; if (colOf[j]! < 0 && g.x === f.x && g.y === f.y) { colOf[j] = i; wd = Math.max(wd, floatWidth(g, dpr)); } }
+    const p = screen(f.x, f.y), foot = p.y - base + 15 * dpr, top = p.y - base - (MAX_LIFT + RISE_PX + 18) * dpr;
+    liftOf[i] = avoid.cols.lift(avoid.placer, f.x, f.y, p.x - wd / 2, top, p.x + wd / 2, foot, MAX_CLIMB * dpr);
+  }
+  for (let i = 0; i < n; i++) liftOf[i] = liftOf[colOf[i]!]!;
+  return liftOf;
 }
 
 /** a lost golfer's caption by its reason (T146's why) */
