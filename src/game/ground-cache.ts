@@ -26,8 +26,8 @@ export interface Tile {
   /** A short zoom-resolution crossfade; independent of the construction reveal picture. */
   fadeFrom: WebGLTexture | null; fadeStart: number; fadePx: number;
   gen: number; stale: boolean; pendingL: number; pendingArtL: number; used: number;
-  /** the tile set families' coverage step its picture was baked at and whether it laid any (T145: only such a chunk depends on the step), and
-   *  the step of the bake in flight */
+  /** the tile spec its picture was baked at (painted-tiles.ts tileSpec: the band and the DPR) and whether it laid a tile set family (T145,
+   *  T150: only such a chunk depends on the spec), and the spec of the bake in flight */
   texTs: number; texTiled: boolean; pendingTs: number;
   /** when its picture last landed (performance.now ms), and the earliest time it may be baked again while it still has a picture (a course
    *  stroke re-staling the same chunks every send: each is re-baked at most every COURSE_HOLD_MS, showing its last picture meanwhile) */
@@ -103,6 +103,9 @@ export class GroundCache {
   broadcast(m: ToWorker, transfer?: (w: number) => Transferable[]) { this.workers.forEach((wk, i) => wk.postMessage(m, transfer ? transfer(i) : [])); }
   netOps(ops: NetOp[]) { if (ops.length) this.broadcast({ t: 'net', ops }); }
   lamps(pts: Float32Array) { this.broadcast({ t: 'lamps', pts }); }
+  /** the tile set bands the workers decode ahead (painted-tiles.ts bandsAhead, T150): sent only when they change */
+  private aheadKey = '';
+  tilesAhead(bands: readonly number[]) { const k = bands.join(','); if (k === this.aheadKey) return; this.aheadKey = k; this.broadcast({ t: 'tilesAhead', bands: [...bands] }); }
   terrain(t: { cls: Uint8Array; height: Float32Array; waters: Waterway[] }) { this.broadcast({ t: 'terrain', cls: t.cls, height: t.height, waters: t.waters }); }
   blocks(data: Float32Array) { this.broadcast({ t: 'blocks', data }); }
   /** the course height in tile box b (whole samples, clamped) goes to every worker, and the ground its light reaches re-bakes (the old bake
@@ -160,8 +163,8 @@ export class GroundCache {
     }
   }
   invalidateAll() { for (const t of this.tiles.values()) { t.gen++; t.stale = true; t.hold = 0; } }
-  /** ask for a tile at a level this frame (lower pri = sooner); ts: the tile set families' coverage step (T145: a picture that laid one is
-   *  baked again at another step, so a stale chunk never keeps an old set) */
+  /** ask for a tile at a level this frame (lower pri = sooner); ts: the tile spec (painted-tiles.ts tileSpec, T145, T150: a picture that
+   *  laid a tile set is baked again at another band or DPR, so a stale chunk never keeps an old set or size) */
   need(t: Tile, L: number, pri: number, now: number, artL = L, ts = 0) { t.used = now; if ((pictureCurrent(t, L, artL, ts) && (!t.stale || now < t.hold)) || t.pendingL === L && t.pendingArtL === artL && t.pendingTs === ts) return; this.want.push({ t, L, artL, ts, pri }); }
 
   /** send the most urgent requests to idle workers */
@@ -199,7 +202,7 @@ export class GroundCache {
     const edited = r.gen !== t.gen;
     if (edited && t.tex) { m.bmp.close(); return; }
     const u0 = performance.now();
-    // a new step (T145) keeps the old picture until the whole view has the new one too (engine.ts: then a cut, never a crossfade between sets)
+    // a new tile spec (T145, T150: a band switch or a DPR change) keeps the old picture until the whole view has the new one too (engine.ts: then a cut, never a crossfade between sets)
     const ts = m.ts ?? 0, stepChanged = (t.texTiled || !!m.tiled) && t.texTs !== ts;
     const old = t.tex, oldL = t.texL, oldPx = t.px, artL = m.artL ?? m.L, fade = old && (oldL !== m.L || t.texArtL !== artL || stepChanged) && !t.stale && t.kind !== 'p' && !t.prev;
     if (t.fadeFrom && t.fadeFrom !== old && t.fadeFrom !== t.prev) this.gl.deleteTexture(t.fadeFrom);

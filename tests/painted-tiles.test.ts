@@ -1,22 +1,22 @@
-// T145 (#300): the hand-painted terrain tile sets. The owner's rules (2026-10-26) as checks: only the art handoff's primary tiles ship,
-// hash-bound to its canonical selections; three authored sets chosen by the camera's zoom band with hysteresis; two to four whole tile areas in
-// view, switching before more than four; a few large FAR tiles on the overview; stable world-anchored whole-tile placement that panning,
-// resizing, the device pixel ratio and a reload never change; tiles edge to edge without gaps at chunk borders; no mirror, turn or blend;
-// separate gameplay layers; a stale chunk never keeps an old set.
+// T145 (#300) and T150 (#315): the hand-painted terrain tile sets. The owner's rules (2026-10-26) as checks: only the art handoff's primary
+// tiles ship, hash-bound to its canonical selections; three authored sets chosen by the camera's zoom band with hysteresis; each set one world
+// size, native at its anchor zoom (NEAR the closest zoom, MID the mid reference's camera, FAR the furthest zoom), never magnified at any zoom or
+// DPR, a real zoom inside a band; stable world-anchored whole-tile placement that panning, resizing and a reload never change; tiles edge to
+// edge without gaps at chunk borders; no mirror, turn or blend; separate gameplay layers; a stale chunk never keeps an old set.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import {
-  STEPS, TILES, TILED_FAMILIES, TILES_REVISION, TILE_BANDS, bandOf, cellOf, cellsIn, coverageOf, nextStep, snappedCell, stepAt, tiledFamily,
-  tileIndex, tileKey, tilePermutation, tileSize,
+  ANCHORS, TILES, TILED_FAMILIES, TILES_REVISION, TILE_BANDS, anchorAt, bandAt, bandOf, bandsAhead, cellOf, cellsIn, coverageOf, nextBand, snappedCell,
+  specBand, specDpr, tiledFamily, tileIndex, tileKey, tilePermutation, tileScreenPx, tileSize, tileSpec,
 } from '../src/game/painted-tiles';
 import { FAMILIES, clampLook, familyById, resolveFamily } from '../src/game/painted-families';
 import { clampSurfaces, lookOfTex } from '../src/game/painted-surfaces';
 import { chunkLayers, pictureCurrent, type ChunkPictures } from '../src/game/ground-layers';
 import { grassZoomLevels } from '../src/game/painted-grass-lod';
-import { CHUNK_H, CHUNK_W, LEVELS, MAP, MID_H, MID_LEVELS, MID_W, PLAN_H, PLAN_LEVELS, PLAN_W, PLANNER_Z, DISTRICT_Z, ZOOM_MAX, ZOOM_MIN, worldX, worldY } from '../src/game/iso';
+import { CHUNK_H, CHUNK_W, LEVELS, MID_H, MID_LEVELS, MID_W, PLAN_H, PLAN_LEVELS, PLAN_W, ZOOM_MAX, ZOOM_MIN, mulberry, worldX, worldY } from '../src/game/iso';
 import { DRAW_ORDER, layerCode } from '../src/game/ext/course-walls';
 import { SURF } from '../src/game/ext/course-grid';
 import { PRESETS } from '../src/game/paint-presets';
@@ -36,8 +36,6 @@ function webpSize(buf: Buffer): [number, number] {
   if (kind === 'VP8X') return [1 + buf.readUIntLE(24, 3), 1 + buf.readUIntLE(27, 3)];
   throw new Error('not a webp: ' + kind);
 }
-const [VW, VH] = TILES.coverage.refViewport, H = TILES.coverage.hysteresis;
-const areasAt = (fam: string, step: number, z: number, vw = VW, vh = VH) => coverageOf(vw, vh, z, tileSize(tiledFamily(fam)!.levels[bandOf(step)], step)).areas;
 
 test('the manifest ships only the ready families\' primary tiles: four a level, three authored sets each, files at native size', () => {
   assert.deepEqual(TILED_FAMILIES.map(f => f.materialId), ['painted:golden-fescue', 'painted:lake']);
@@ -86,52 +84,116 @@ test('the manifest is hash-bound to READY-MATERIALS and the canonical selections
   }
 });
 
-test('the coverage ladder: steps sqrt(2) apart cover the whole zoom range, each band its own set, NEAR street, MID district, FAR overview', () => {
-  assert.equal(STEPS[0]!.zHi >= ZOOM_MAX, true); assert.equal(STEPS[STEPS.length - 1]!.zLo <= ZOOM_MIN, true);
-  for (let k = 1; k < STEPS.length; k++) {
-    assert.equal(STEPS[k]!.zHi, STEPS[k - 1]!.zLo, 'contiguous');
-    assert.ok(Math.abs(STEPS[k]!.tileW / STEPS[k - 1]!.tileW - Math.SQRT2) < 0.001, 'each step a fixed world size, sqrt(2) the last');
-    assert.ok(TILE_BANDS.indexOf(STEPS[k]!.band) >= TILE_BANDS.indexOf(STEPS[k - 1]!.band), 'bands in order near, mid, far');
-  }
-  assert.equal(bandOf(stepAt(ZOOM_MAX)), 'near'); assert.equal(bandOf(stepAt(0.2)), 'near'); assert.equal(bandOf(stepAt(DISTRICT_Z * 0.9)), 'mid');
-  assert.equal(bandOf(stepAt(0.06)), 'mid'); assert.equal(bandOf(stepAt(PLANNER_Z * 0.85)), 'far'); assert.equal(bandOf(stepAt(ZOOM_MIN)), 'far');
-  for (const b of TILE_BANDS) assert.ok(STEPS.some(s => s.band === b));
+test('the anchors (T150): NEAR at the closest zoom, MID at the mid reference\'s camera, FAR at the furthest zoom; how each was found is recorded', () => {
+  assert.deepEqual(TILE_BANDS, ['near', 'mid', 'far']);
+  assert.equal(ANCHORS.near, ZOOM_MAX, 'the near reference was taken at the closest zoom'); assert.equal(ANCHORS.far, ZOOM_MIN, 'FAR is native at the furthest zoom');
+  assert.equal(ANCHORS.mid, 0.1, 'the mid reference\'s camera'); assert.ok(ANCHORS.far < ANCHORS.mid && ANCHORS.mid < ANCHORS.near);
+  assert.deepEqual(TILE_BANDS.map((_, b) => anchorAt(b)), [ANCHORS.near, ANCHORS.mid, ANCHORS.far]);
+  assert.deepEqual(ANCHORS.zoom, [ZOOM_MIN, ZOOM_MAX]);
+  assert.ok(ANCHORS.hysteresis > 1 && ANCHORS.hysteresis <= 1.1, 'a few % of hysteresis'); assert.ok(ANCHORS.preload > ANCHORS.hysteresis);
+  for (const b of TILE_BANDS) assert.ok(ANCHORS.how[b].length > 40, `${b}: how its anchor was found`);
+  // a fresh start: the coarsest set not magnified at the zoom
+  assert.equal(bandAt(ZOOM_MAX), 0); assert.equal(bandAt(0.2), 0); assert.equal(bandAt(0.1001), 0); assert.equal(bandAt(0.1), 1); assert.equal(bandAt(0.05), 1);
+  assert.equal(bandAt(ZOOM_MIN * 1.001), 1); assert.equal(bandAt(ZOOM_MIN), 2);
 });
 
-test('two to four whole tile areas at every zoom on the reference viewport, never more than four; a few large FAR tiles on the overview', () => {
-  for (const fam of ['golden-fescue', 'lake']) {
-    // with no history (a fresh start): 2 to 4 (to rounding)
-    for (let z = ZOOM_MAX; z >= ZOOM_MIN; z /= 1.013) { const a = areasAt(fam, stepAt(z), z); assert.ok(a >= 1.99 && a <= 4.02, `${fam} z ${z}: ${a}`); }
-    // zooming out then in through the whole range with the hysteresis: never more than four, never under 2 / H^2
-    let k: number | null = null, minA = Infinity, maxA = 0;
-    const walk = (z: number) => { k = nextStep(z, k); const a = areasAt(fam, k, z); minA = Math.min(minA, a); maxA = Math.max(maxA, a); };
-    for (let z = ZOOM_MAX; z >= ZOOM_MIN; z /= 1.01) walk(z);
-    for (let z = ZOOM_MIN; z <= ZOOM_MAX; z *= 1.01) walk(z);
-    assert.ok(maxA <= 4.02, `${fam}: at most four tile areas (${maxA})`); assert.ok(minA >= 2 / (H * H) - 0.02, `${fam}: ${minA}`);
+test('one fixed world size per set: native / (anchor x DPR), so at its anchor a tile is its native pixels wide on screen (1742 device px) at any DPR', () => {
+  for (const f of TILED_FAMILIES) for (const [b, band] of TILE_BANDS.entries()) {
+    const lv = f.levels[band], a = anchorAt(b);
+    for (const dpr of [1, 1.25, 1.5, 2]) {
+      const ts = tileSpec(b, dpr), [w, h] = tileSize(lv, ts);
+      assert.equal(specBand(ts), b); assert.equal(specDpr(ts), dpr); assert.equal(bandOf(ts), band);
+      // 1 painting px = 1 device px at the anchor: world px x CSS zoom x DPR = native px, in both axes (its own native aspect)
+      assert.ok(Math.abs(w * a * dpr - lv.native[0]) < 1e-6 && Math.abs(h * a * dpr - lv.native[1]) < 1e-6, `${f.id} ${band} dpr ${dpr}`);
+      assert.ok(Math.abs(w / h - lv.native[0] / lv.native[1]) < 1e-9, 'never squashed to the 2:1 diamond');
+      assert.ok(Math.abs(tileScreenPx(lv, a, b) - lv.native[0]) < 1e-9, 'the readout: native px on screen at the anchor');
+    }
+    // the same world size wherever the camera is in the band: the size reads the band and the DPR only, never the zoom
+    assert.deepEqual(tileSize(lv, tileSpec(b, 1)), tileSize(lv, tileSpec(nextBand(a, b), 1)));
   }
-  // the overview: the whole map in view, FAR tiles about a quarter of the map's width each
-  const far = STEPS[stepAt(ZOOM_MIN)]!, mapW = 2 * MAP * 64;
-  assert.equal(far.band, 'far'); assert.ok(mapW / far.tileW > 1 && mapW / far.tileW < 4, `${(mapW / far.tileW).toFixed(2)} FAR tiles across the map`);
-  assert.ok(areasAt('golden-fescue', stepAt(ZOOM_MIN), ZOOM_MIN) <= 4);
+  assert.equal(tiledFamily('golden-fescue')!.levels.near.native[0], 1742);
+  // FAR at the furthest zoom on a 1920 x 1080 CSS view: its native 1742 x 902 px, so 1.10 x 1.20 tiles at DPR 1 and 2.20 x 2.40 at DPR 2
+  const far = tiledFamily('golden-fescue')!.levels.far;
+  for (const dpr of [1, 2]) { const c = coverageOf(1920, 1080, ZOOM_MIN, tileSize(far, tileSpec(2, dpr))); assert.ok(Math.abs(c.across - 1920 * dpr / 1742) < 1e-6 && Math.abs(c.down - 1080 * dpr / 902) < 1e-6); }
+  // a junk or T145 spec reads as NEAR at DPR 1 (a chunk baked before T150 is simply stale)
+  for (const junk of [0, 3, 11, -5, 1.5, NaN]) { assert.equal(specBand(junk), 0); assert.equal(specDpr(junk), 1); }
+  assert.notEqual(tileSpec(0, 1), tileSpec(0, 2), 'a DPR change re-lays'); assert.notEqual(tileSpec(0, 1), tileSpec(1, 1));
+  assert.equal(tileSpec(1, 0), tileSpec(1, 1), 'no DPR: 1'); assert.equal(tileSpec(5, 1), tileSpec(2, 1), 'bands clamp');
 });
 
-test('band hysteresis: zooming out switches at the far end, zooming in only past the near end, and a camera resting at a boundary never flips', () => {
-  const k = 3, b = STEPS[k]!.zLo; // the boundary between step 3 and step 4 (a band edge: NEAR-MID is 2|3, MID-FAR 6|7)
-  assert.equal(nextStep(b * 1.001, k), k); assert.equal(nextStep(b, k), k + 1, 'out: at the boundary (four tile areas)');
-  assert.equal(nextStep(b * 1.05, k + 1), k + 1, 'in: held past the boundary'); assert.equal(nextStep(b * H * 1.001, k + 1), k, 'in: past the hysteresis');
-  // jitter round each band boundary: one switch, no flipping
-  for (const edge of [2, 6]) {
-    const zb = STEPS[edge]!.zLo; let s: number | null = edge, flips = 0;
-    for (let i = 0; i < 200; i++) { const z = zb * (1 + 0.03 * Math.sin(i)); const n = nextStep(z, s); if (n !== s) flips++; s = n; }
-    assert.ok(flips <= 1, `${flips} flips at the ${bandOf(edge)}/${bandOf(edge + 1)} edge`);
-    assert.notEqual(bandOf(edge), bandOf(edge + 1));
+test('never magnified: at every zoom, zooming out and in and jumping, at DPR 1, 1.5 and 2, a set is drawn at or below its native pixels', () => {
+  const rnd = mulberry(150);
+  for (const f of TILED_FAMILIES) for (const dpr of [1, 1.5, 2]) {
+    let b: number | null = null, worst = 0;
+    const frame = (z: number) => {
+      b = nextBand(z, b); const lv = f.levels[TILE_BANDS[b]!]!, devicePx = tileSize(lv, tileSpec(b, dpr))[0] * z * dpr;
+      worst = Math.max(worst, devicePx / lv.native[0]);
+      assert.ok(devicePx <= lv.native[0] * (1 + 1e-9), `${f.id} dpr ${dpr} z ${z}: ${devicePx.toFixed(1)} px > native ${lv.native[0]}`);
+      // and with no history
+      const c = bandAt(z), lc = f.levels[TILE_BANDS[c]!]!; assert.ok(tileSize(lc, tileSpec(c, dpr))[0] * z * dpr <= lc.native[0] * (1 + 1e-9));
+    };
+    for (let z = ZOOM_MAX; z > ZOOM_MIN; z /= 1.01) frame(z);
+    frame(ZOOM_MIN);
+    for (let z = ZOOM_MIN; z < ZOOM_MAX; z *= 1.01) frame(z);
+    frame(ZOOM_MAX);
+    for (let i = 0; i < 2000; i++) frame(ZOOM_MIN * (ZOOM_MAX / ZOOM_MIN) ** rnd()); // camera jumps (a hole, the overview, a reload)
+    for (const a of [ANCHORS.near, ANCHORS.mid, ANCHORS.far]) for (const k of [0.97, 0.999, 1, 1.001, 1.03]) frame(Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, a * k)));
+    assert.ok(Math.abs(worst - 1) < 1e-9, `${f.id} dpr ${dpr}: native is reached (${worst}) and never passed`);
   }
-  // a camera jump lands on the zoom's own step; a bad saved step is ignored; a saved step inside its hysteresis is kept (a reload lays the same tiles)
-  assert.equal(nextStep(0.01, 0), stepAt(0.01)); assert.equal(nextStep(0.2, 99), stepAt(0.2)); assert.equal(nextStep(0.2, null), stepAt(0.2));
-  assert.equal(nextStep(STEPS[5]!.zHi * 1.03, 5), 5); assert.equal(nextStep(STEPS[5]!.zHi * 1.03, null), 4);
 });
 
-test('placement is world-anchored and stable: pan, resize and DPR never change a tile; every neighbour differs; no mirror or turn exists', () => {
+test('a real zoom inside a band: no re-lay; the tiles shrink smoothly as the camera zooms out and the set switches only at the anchors', () => {
+  const lv = (b: number) => tiledFamily('lake')!.levels[TILE_BANDS[b]!]!;
+  for (const dpr of [1, 1.5, 2]) {
+    let b: number | null = null, prevTs = -1, prevPx = Infinity;
+    const switches: { z: number; from: number; to: number }[] = [];
+    for (let z = ZOOM_MAX; ; z = Math.max(ZOOM_MIN, z / 1.005)) {
+      const was = b; b = nextBand(z, b); const ts = tileSpec(b, dpr), px = tileSize(lv(b), ts)[0] * z * dpr;
+      if (prevTs >= 0 && ts !== prevTs) switches.push({ z, from: was!, to: b });
+      else if (prevTs >= 0) assert.ok(px < prevPx && px > prevPx / 1.0051, 'inside a band the same tiles shrink with the zoom, nothing else changes');
+      prevTs = ts; prevPx = px;
+      if (z === ZOOM_MIN) break;
+    }
+    assert.deepEqual(switches.map(s => [s.from, s.to]), [[0, 1], [1, 2]], 'NEAR to MID, MID to FAR, nothing else');
+    assert.ok(switches[0]!.z <= ANCHORS.mid / ANCHORS.hysteresis && switches[0]!.z > ANCHORS.mid / ANCHORS.hysteresis / 1.006, `NEAR to MID just past MID's anchor (${switches[0]!.z})`);
+    assert.equal(switches[1]!.z, ZOOM_MIN, 'MID to FAR at the furthest zoom, FAR\'s anchor');
+  }
+});
+
+test('band hysteresis: zooming out a coarser set takes over a few % past its anchor, zooming in the finer one at once; a resting camera never flips', () => {
+  const H = ANCHORS.hysteresis, m = ANCHORS.mid;
+  assert.equal(nextBand(m, 0), 0, 'out: NEAR shrinks a little past MID\'s anchor'); assert.equal(nextBand(m / H * 1.001, 0), 0); assert.equal(nextBand(m / H, 0), 1, 'out: then MID');
+  assert.equal(nextBand(m, 1), 1, 'in: MID up to its anchor (native)'); assert.equal(nextBand(m * 1.0001, 1), 0, 'in: past it NEAR at once, MID never magnified');
+  assert.equal(nextBand(ZOOM_MIN * 1.0001, 1), 1); assert.equal(nextBand(ZOOM_MIN, 1), 2, 'out: FAR at the furthest zoom (its anchor: no room below it)');
+  assert.equal(nextBand(ZOOM_MIN * 1.0001, 2), 1, 'in: FAR is left at once');
+  assert.equal(nextBand(ZOOM_MIN, 0), 2, 'a jump from NEAR to the overview: FAR'); assert.equal(nextBand(0.05, 0), 1); assert.equal(nextBand(0.25, 2), 0, 'a jump in from FAR: NEAR');
+  // jitter round MID's anchor and its switch: at most one switch, no flipping
+  // (FAR is native at the furthest zoom itself, so it shows only there: a camera moving off the limit leaves it at once, never magnified)
+  for (const [z0, amp, start] of [[m, 0.03, 0], [m, 0.03, 1], [m / H, 0.01, 0], [m / H, 0.01, 1]] as const) {
+    let b: number = start, flips = 0;
+    for (let i = 0; i < 300; i++) { const z = z0 * (1 + amp * Math.sin(i * 0.7)); const n = nextBand(z, b); if (n !== b) flips++; b = n; }
+    assert.ok(flips <= 1, `${flips} flips round ${z0} from ${start}`);
+  }
+  // a camera resting on an anchor stays in one band frame after frame
+  for (const [z, b] of [[m, 0], [m, 1], [m / H, 1], [ZOOM_MIN, 2], [ZOOM_MAX, 0]] as const) { let s: number = b; for (let i = 0; i < 50; i++) s = nextBand(z, s); assert.equal(s, nextBand(z, b)); }
+  // a bad saved band is ignored; a saved band inside the hysteresis is kept (a reload lays the same tiles)
+  assert.equal(nextBand(0.2, 99), bandAt(0.2)); assert.equal(nextBand(0.2, null), bandAt(0.2)); assert.equal(nextBand(0.2, 1.5), bandAt(0.2));
+  assert.equal(nextBand(m * 0.98, 0), 0); assert.equal(nextBand(m * 0.98, null), 1);
+});
+
+test('the next set is decoded ahead once the camera nears its switch, and only then', () => {
+  const P = ANCHORS.preload, m = ANCHORS.mid;
+  assert.deepEqual(bandsAhead(ZOOM_MAX, 0), []); assert.deepEqual(bandsAhead(m * P * 1.01, 0), []); assert.deepEqual(bandsAhead(m * P * 0.99, 0), [1]);
+  assert.deepEqual(bandsAhead(m / P * 1.01, 1), [0], 'MID near its anchor: NEAR ahead'); assert.deepEqual(bandsAhead(0.03, 1), []);
+  assert.deepEqual(bandsAhead(ZOOM_MIN * P * 0.99, 1), [2], 'MID near the furthest zoom: FAR ahead'); assert.deepEqual(bandsAhead(ZOOM_MIN, 2), [1]);
+  // whenever a switch happens, the set switched to was ahead on the frame before
+  let b: number | null = 0, ahead: number[] = [];
+  for (const z of [...Array.from({ length: 900 }, (_, i) => ZOOM_MAX / 1.005 ** i).filter(z => z > ZOOM_MIN), ZOOM_MIN, ...Array.from({ length: 900 }, (_, i) => ZOOM_MIN * 1.005 ** i).filter(z => z < ZOOM_MAX)]) {
+    const n = nextBand(z, b); if (n !== b) assert.ok(ahead.includes(n), `${b} -> ${n} at ${z}: decoded ahead`); b = n; ahead = bandsAhead(z, b);
+  }
+});
+
+test('placement is world-anchored and stable: pan and resize never change a tile; every neighbour differs; no mirror or turn exists', () => {
   for (const f of TILED_FAMILIES) for (const b of TILE_BANDS) {
     const perm = tilePermutation(f.id, b);
     assert.deepEqual([...perm].sort(), [0, 1, 2, 3], 'a permutation of the four whole tiles'); assert.deepEqual(tilePermutation(f.id, b), perm, 'seeded: the same every time');
@@ -140,18 +202,17 @@ test('placement is world-anchored and stable: pan, resize and DPR never change a
       for (const [dx, dy] of [[1, 0], [0, 1], [1, 1], [-1, 1]]) assert.notEqual(tileIndex(perm, ix + dx!, iy + dy!), me, `${f.id} ${b} (${ix},${iy})+(${dx},${dy})`);
     }
   }
-  // the tile under a world point depends on the point and the step only: the same for any camera position, window and DPR
+  // the tile under a world point depends on the point, the band and the DPR only (T150: the DPR is part of a set's world size): the same for
+  // any camera position and window
   const fam = tiledFamily('golden-fescue')!, x = 1030.4, y = 977.9, X = worldX(x, y), Y = worldY(x, y);
-  for (const z of [0.3, 0.12, 0.05, 0.02, 0.006]) {
-    const k = stepAt(z), [w, h] = tileSize(fam.levels[bandOf(k)], k), cell = cellOf(X, Y, w, h);
-    for (const dpr of [1, 1.5, 2]) { assert.equal(stepAt(z), k, 'the step never reads the dpr'); assert.ok(grassZoomLevels(z, dpr).rasterL > 0); }
+  for (const z of [0.3, 0.12, 0.05, 0.02, 0.006]) for (const dpr of [1, 1.5, 2]) {
+    const k = tileSpec(bandAt(z), dpr), [w, h] = tileSize(fam.levels[bandOf(k)], k), cell = cellOf(X, Y, w, h);
+    assert.ok(grassZoomLevels(z, dpr).rasterL > 0);
     for (const [vw, vh] of [[1920, 1080], [1280, 720], [2560, 1440], [800, 1200]]) {
       // the view's rectangle anywhere around the point: the point's cell and tile are the same
       for (const pan of [-3000, 0, 4567]) { const X0 = X + pan - vw / 2 / z, Y0 = Y - pan - vh / 2 / z; const c = cellsIn(X0, Y0, X0 + vw / z, Y0 + vh / z, w, h).find(q => q.ix === cell[0] && q.iy === cell[1]); if (X >= X0 && X < X0 + vw / z && Y >= Y0 && Y < Y0 + vh / z) assert.ok(c); }
     }
   }
-  // native aspect kept in the world: a tile's world size is the step's width by the level's own aspect (never squashed to the 2:1 diamond)
-  for (const k of [0, 5, 11]) for (const f of TILED_FAMILIES) { const lv = f.levels[bandOf(k)], [w, h] = tileSize(lv, k); assert.ok(Math.abs(w / h - lv.native[0] / lv.native[1]) < 1e-9); }
   assert.equal(TILES.display.minVisibleTiles, 2); assert.equal(TILES.display.maxVisibleTiles, 4);
   assert.deepEqual({ m: (TILES.display as Record<string, unknown>).allowMirror, r: (TILES.display as Record<string, unknown>).allowRotate }, { m: false, r: false });
 });
@@ -161,7 +222,7 @@ test('whole tiles butt edge to edge at every chunk border and cache level: snapp
   for (const [cw, ch, levels] of tiers) for (const L of levels) {
     // a chunk's origin is a whole number of px at its level, so every chunk rounds a tile edge to the same global px
     assert.ok(Math.abs(cw * L - Math.round(cw * L)) < 1e-9 && Math.abs(ch * L - Math.round(ch * L)) < 1e-9, `${cw}x${ch} @ ${L}`);
-    for (const k of [0, 4, 9]) {
+    for (const k of [0, 1, 2].flatMap(b => [1, 1.5, 2].map(dpr => tileSpec(b, dpr)))) {
       const [w, h] = tileSize(tiledFamily('lake')!.levels[bandOf(k)], k);
       for (let i = -3; i < 3; i++) {
         const a = snappedCell(i, i, w, h, L), r = snappedCell(i + 1, i, w, h, L), d = snappedCell(i, i + 1, w, h, L);
@@ -172,7 +233,7 @@ test('whole tiles butt edge to edge at every chunk border and cache level: snapp
   }
 });
 
-test('the tile sets join the families, laid as authored; fescue and water wear them, town grass and every legacy family are unchanged', () => {
+test('the tile sets join the families, laid as authored; fescue, water, the map grass and rivers wear them; town lawns, course turf and every legacy family are unchanged', () => {
   for (const id of ['golden-fescue', 'lake']) {
     const f = familyById(id)!; assert.ok(f.tiled);
     assert.deepEqual(clampLook({ family: id, version: 'v9', scale: 2, tint: '#ff0000', tone: 0.4 }), { family: id, version: null, scale: 1, tint: '#ffffff', tone: 0 }, 'no scale, tint or tone over the art');
@@ -185,8 +246,11 @@ test('the tile sets join the families, laid as authored; fescue and water wear t
   const S = clampSurfaces(surfacesFile);
   assert.equal(lookOfTex('golfFescue', S)!.family, 'golden-fescue'); assert.equal(lookOfTex('preset:fescue', S, PRESETS)!.family, 'golden-fescue');
   for (const t of ['waterDark', 'waterDeep', 'waterClear']) assert.equal(lookOfTex(t, S)!.family, 'lake', t);
-  assert.equal(lookOfTex('water', S)!.family, 'water-pond', 'rivers and creeks keep the pond water');
-  for (const t of ['grass', 'golfRough', 'golfFairway', 'golfGreen', 'meadow']) assert.ok(!familyById(lookOfTex(t, S)!.family)!.tiled, `${t} keeps its family`);
+  // the map's open grass draws golden fescue and rivers draw lake (the owner, 2026-10-26: "all the map water and grass needs to be replaced
+  // aswell"; main 003153a); the course turf keeps its families
+  assert.equal(lookOfTex('water', S)!.family, 'lake', 'rivers and creeks draw the lake');
+  for (const t of ['grass', 'meadow']) assert.equal(lookOfTex(t, S)!.family, 'golden-fescue', `the map's ${t}`);
+  for (const t of ['golfRough', 'golfFairway', 'golfGreen']) assert.ok(!familyById(lookOfTex(t, S)!.family)!.tiled, `${t} keeps its family`);
   for (const l of S.lawns) assert.ok(!familyById(l.family)!.tiled, 'no town lawn wears fescue');
   assert.deepEqual(S.surfaces.fescue, { family: 'golden-fescue', version: null, scale: 1, tint: '#ffffff', tone: 0 });
   assert.deepEqual(S.surfaces.water, { family: 'lake', version: null, scale: 1, tint: '#ffffff', tone: 0 });
@@ -199,7 +263,7 @@ test('separate gameplay layers: water and fescue keep their places in the course
   assert.ok(rank(SURF.fairway) > rank(SURF.fescue), 'fairway over the fescue'); assert.ok(rank(SURF.water) > rank(SURF.rough), 'water inside its own mask over the rough');
 });
 
-test('a stale chunk never keeps an old set: the step is in the chunk key for pictures that laid tiles, and the switch waits, then cuts', () => {
+test('a stale chunk never keeps an old set: the tile spec (band and DPR) is in the chunk key for pictures that laid tiles, and the switch waits, then cuts', () => {
   const pic = (o: Partial<ChunkPictures<string>>): ChunkPictures<string> => ({ tex: 'old', texL: 0.6, texArtL: 0.3, fadeFrom: null, prev: null, texTs: 2, texTiled: true, ...o });
   assert.equal(pictureCurrent(pic({}), 0.6, 0.3, 2), true); assert.equal(pictureCurrent(pic({}), 0.6, 0.3, 3), false, 'a tiled picture at another step is stale');
   assert.equal(pictureCurrent(pic({ texTiled: false }), 0.6, 0.3, 3), true, 'a chunk with no tile set is not baked again for a step');
@@ -209,6 +273,7 @@ test('a stale chunk never keeps an old set: the step is in the chunk key for pic
   lay = chunkLayers(pic({ tex: 'new', texTs: 3, fadeFrom: 'old' }), 0.6, 0.3, 0, false, 3); assert.equal(lay.base, 'old'); assert.equal(lay.top, null);
   // once every chunk on screen has it (the engine's cut: zoomBlend 1 at once): the new set alone
   lay = chunkLayers(pic({ tex: 'new', texTs: 3, fadeFrom: 'old' }), 0.6, 0.3, 1, false, 3); assert.equal(lay.base, 'new'); assert.equal(lay.top, null);
-  // the workers' composition key carries the revision and the step
-  assert.equal(tileKey(4), `${TILES_REVISION}#4`); assert.notEqual(tileKey(4), tileKey(5));
+  // the workers' composition key carries the revision and the spec: another band or another DPR is another key
+  const ts = tileSpec(1, 1.5); assert.equal(tileKey(ts), `${TILES_REVISION}#${ts}`);
+  assert.notEqual(tileKey(tileSpec(0, 1)), tileKey(tileSpec(1, 1))); assert.notEqual(tileKey(tileSpec(0, 1)), tileKey(tileSpec(0, 2)));
 });

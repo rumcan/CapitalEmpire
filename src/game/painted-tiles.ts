@@ -1,22 +1,25 @@
 import MANIFEST from './painted-tiles.json';
-import { HH, HW, mulberry } from './iso';
+import { HH, HW, ZOOM_MIN, mulberry } from './iso';
 
-/** The hand-painted terrain tile sets (T145, #300): each ready material family's three independently authored detail sets (NEAR, MID, FAR) of
- *  four large whole tiles, as the art handoff delivers them (scripts/assets/prep-painted-tiles.mjs writes the manifest painted-tiles.json from
- *  READY-MATERIALS.json, hash-checked), and the rules the ground lays them by:
+/** The hand-painted terrain tile sets (T145, #300; their size and zoom, T150, #315): each ready material family's three independently
+ *  authored detail sets (NEAR, MID, FAR) of four large whole tiles, as the art handoff delivers them (scripts/assets/prep-painted-tiles.mjs
+ *  writes the manifest painted-tiles.json from READY-MATERIALS.json, hash-checked), and the rules the ground lays them by:
  *  - **Projection.** A tile is a painting of the ground as the isometric camera sees it, so it is laid axis-aligned in world px (the ground
  *    chunks' own space: screen axes at zoom 1, ground plane at height 0): on screen it keeps its native aspect, its shapes and its painted
  *    light from the upper right; never squashed again, turned, mirrored or flipped. Height displacement and occlusion stay the ground's.
- *  - **Coverage.** The manifest's ladder of steps (each a band and one tile width in world px) is picked from the CSS camera zoom alone (never
- *    the device pixel ratio or the window), with hysteresis: on the reference viewport 2 to 4 whole tile areas show at every zoom, the next set
- *    (or the next step of the same set) takes over before more than four show, and the overview shows a few large FAR tiles. A step is a fixed
- *    world size, so a texture is never stretched continuously under the camera.
+ *  - **Size (T150).** Each set has one world size: the size at which it draws at its native pixels (1 painting px = 1 device px) at its
+ *    anchor zoom (the manifest's anchors, CSS zooms: NEAR the closest zoom, MID the mid reference's camera, FAR the furthest zoom), so
+ *    native / (anchor x DPR) world px. Inside a band zooming is a real zoom (no steps, no re-lay): the tiles shrink on screen as the camera
+ *    zooms out. A set is never drawn larger than its native pixels: zooming in past a set's anchor switches to the finer set at once; zooming
+ *    out, the finer set shrinks below native until the coarser set's anchor, where the coarser one takes over (a few % past it, the
+ *    hysteresis; FAR at the furthest zoom itself). The device pixel ratio is part of the size: a DPR change re-lays the tiles once.
  *  - **Placement.** A world-anchored grid of whole tiles from the world origin; each cell shows one of the four tiles, chosen by a seeded stable
  *    permutation, `(ix + 2 iy) mod 4`, so no tile ever touches a copy of itself (all eight neighbours differ). The four tiles butt edge to edge
  *    along their common borders; no overlap, random offset, mosaic, mask, blend or crossfade.
  *  Pure: importable from node tests (the pictures' URLs are found by painted-grass-art.ts paintedUrl). */
 
 export type TileBand = 'near' | 'mid' | 'far';
+/** finest first: a band's index is its place here (0 NEAR, 1 MID, 2 FAR) */
 export const TILE_BANDS: readonly TileBand[] = ['near', 'mid', 'far'];
 export interface TileRef { id: string; file: string; sha256: string; mean: string }
 export interface TiledLevel { revision: string; folder: string; native: [number, number]; decision: { file: string; sha256: string | null }; tiles: TileRef[] }
@@ -27,47 +30,76 @@ export interface TiledFamily {
   revision: string; selection: { file: string; sha256: string }; light: string | null; mean: string;
   levels: Record<TileBand, TiledLevel>;
 }
-/** one coverage step: its band, the CSS zoom range it covers ((zLo, zHi]) and one tile's width in world px (zoom 1) and metres */
-export interface CoverageStep { band: TileBand; zHi: number; zLo: number; tileW: number; metres: number }
+/** each set's anchor (the CSS zoom at which it draws at its native pixels), the switch hysteresis (zooming out, a coarser set takes over this
+ *  factor past its anchor), the preload factor (the next set's tiles are decoded once the zoom is this close to its switch), the camera's
+ *  zoom range, and how each anchor was found */
+export interface TileAnchors extends Record<TileBand, number> { hysteresis: number; preload: number; zoom: [number, number]; how: Record<TileBand, string> }
 export interface TilesManifest {
   v: 1; revision: string; source: { file: string; sha256: string; date: string | null };
   display: { minVisibleTiles: number; maxVisibleTiles: number };
-  coverage: { refViewport: [number, number]; areas: [number, number]; stepRatio: number; hysteresis: number; zoom: [number, number]; steps: CoverageStep[] };
+  anchors: TileAnchors;
   families: TiledFamily[];
 }
 export const TILES = MANIFEST as unknown as TilesManifest;
 export const TILED_FAMILIES: readonly TiledFamily[] = TILES.families;
 /** the tile sets' revision (every selection's hash): in the workers' composition keys and the chunks' cache keys */
 export const TILES_REVISION = TILES.revision;
-export const STEPS: readonly CoverageStep[] = TILES.coverage.steps;
+export const ANCHORS: TileAnchors = TILES.anchors;
 const BY_ID = new Map(TILED_FAMILIES.map(f => [f.id, f]));
 export const tiledFamily = (id: string): TiledFamily | undefined => BY_ID.get(id);
 
-/* ---- the step: which band and tile size the camera's zoom lays ---- */
-/** the step a CSS zoom falls in with no history (a fresh start): step k covers zooms (zLo, zHi]; past either end, the end step */
-export function stepAt(z: number): number {
-  if (!(z > 0)) return STEPS.length - 1;
-  for (let k = 0; k < STEPS.length; k++) if (z > STEPS[k]!.zLo) return k;
-  return STEPS.length - 1;
+/* ---- the band: which set the camera's zoom lays ---- */
+const N_BANDS = TILE_BANDS.length;
+/** a band's anchor (CSS zoom) by index (0 NEAR, 1 MID, 2 FAR) */
+export const anchorAt = (b: number): number => ANCHORS[TILE_BANDS[Math.max(0, Math.min(N_BANDS - 1, b))]!];
+/** z is at or below zoom a (to rounding: a camera clamped to ZOOM_MIN sits exactly on FAR's anchor) */
+const atOrBelow = (z: number, a: number) => z <= a * (1 + 1e-9);
+/** the band a CSS zoom lays with no history (a fresh start): the coarsest set not magnified there (the last whose anchor is at or above z) */
+export function bandAt(z: number): number {
+  let b = 0;
+  for (let i = 0; i < N_BANDS; i++) if (z > 0 && atOrBelow(z, anchorAt(i))) b = i;
+  return b;
 }
-/** the step at zoom z after step prev (the hysteresis): zooming out leaves a step as soon as z reaches its far end (where 4 tile areas show:
- *  switch before exceeding four); zooming in leaves it for a finer one only once z is past its near end by the manifest's hysteresis (the
- *  coarser tiles show down to 2 / hysteresis^2 areas meanwhile), so a camera resting at a boundary never flips between two sets */
-export function nextStep(z: number, prev: number | null | undefined): number {
-  const canon = stepAt(z);
-  if (prev == null || !Number.isInteger(prev) || prev < 0 || prev >= STEPS.length || canon === prev) return canon;
-  if (canon > prev) return canon; // zoomed out past prev's far end
-  return z > STEPS[prev]!.zHi * TILES.coverage.hysteresis ? canon : prev;
+/** the band at zoom z after band prev (the hysteresis, never magnified): zooming in past prev's anchor switches to the finer set at once (prev
+ *  would be magnified); zooming out, a coarser set takes over only once z is the manifest's hysteresis past its anchor (the finer set shrinks a
+ *  little further meanwhile), or at the furthest zoom, so a camera resting at an anchor never flips between two sets */
+export function nextBand(z: number, prev: number | null | undefined): number {
+  const canon = bandAt(z);
+  if (prev == null || !Number.isInteger(prev) || prev < 0 || prev >= N_BANDS || canon <= prev) return canon;
+  let b = prev;
+  for (let c = prev + 1; c <= canon; c++) if (atOrBelow(z, Math.max(anchorAt(c) / ANCHORS.hysteresis, ZOOM_MIN))) b = c;
+  return b;
 }
-export const bandOf = (step: number): TileBand => STEPS[Math.max(0, Math.min(STEPS.length - 1, step))]!.band;
-/** the cache key a chunk baked with tile sets carries: the revision and the step (so a stale chunk never keeps an old set) */
-export const tileKey = (step: number) => `${TILES_REVISION}#${step}`;
+/** the other bands whose tiles to decode ahead at zoom z in band b: the coarser set once z is within the preload factor of its anchor, the
+ *  finer one once z is within it of b's own anchor (where zooming in switches) */
+export function bandsAhead(z: number, b: number): number[] {
+  const out: number[] = [];
+  if (b > 0 && z * ANCHORS.preload >= anchorAt(b)) out.push(b - 1);
+  if (b < N_BANDS - 1 && z <= anchorAt(b + 1) * ANCHORS.preload) out.push(b + 1);
+  return out;
+}
+
+/* ---- the tile spec: the band and the display density a bake lays the tile sets at, as one number ---- */
+/** a device pixel ratio as the tile spec keeps it (hundredths, 0.5 to 4) */
+const dprCode = (dpr: number) => Math.max(50, Math.min(400, Math.round((Number.isFinite(dpr) && dpr > 0 ? dpr : 1) * 100)));
+/** the tile spec of band b on a screen of device pixel ratio dpr: the number the camera sends with each bake and every chunk that laid a tile
+ *  set keeps (its cache key), so a band switch or a DPR change re-bakes those chunks and nothing else does */
+export const tileSpec = (b: number, dpr: number): number => dprCode(dpr) * 4 + Math.max(0, Math.min(N_BANDS - 1, Math.round(b)));
+/** a tile spec's band index (0 NEAR, 1 MID, 2 FAR) and its device pixel ratio (a spec of 0 or junk: NEAR at DPR 1) */
+export const specBand = (ts: number): number => { const b = Number.isInteger(ts) && ts >= 200 ? ts % 4 : 0; return b < N_BANDS ? b : 0; };
+export const specDpr = (ts: number): number => Number.isInteger(ts) && ts >= 200 ? Math.floor(ts / 4) / 100 : 1;
+export const bandOf = (ts: number): TileBand => TILE_BANDS[specBand(ts)]!;
+/** the cache key a chunk baked with tile sets carries: the revision and the spec (so a stale chunk never keeps an old set or size) */
+export const tileKey = (ts: number) => `${TILES_REVISION}#${ts}`;
+/** how big a set is drawn against its native pixels at CSS zoom z (1: native; never above 1 in its own band) */
+export const drawnScale = (z: number, b: number): number => z / anchorAt(b);
 
 /* ---- placement ---- */
-/** one tile of a level at a step, in world px (zoom 1): the step's width, the level's own native aspect */
-export function tileSize(level: Pick<TiledLevel, 'native'>, step: number): [number, number] {
-  const w = STEPS[Math.max(0, Math.min(STEPS.length - 1, step))]!.tileW;
-  return [w, w * level.native[1] / level.native[0]];
+/** one tile of a level at a tile spec, in world px (zoom 1): its native pixels at the band's anchor zoom on the spec's screen, native /
+ *  (anchor x DPR), in both axes (its own native aspect) */
+export function tileSize(level: Pick<TiledLevel, 'native'>, ts: number): [number, number] {
+  const k = anchorAt(specBand(ts)) * specDpr(ts);
+  return [level.native[0] / k, level.native[1] / k];
 }
 const fnv = (s: string) => { let h = 0x811c9dc5; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193); } return h >>> 0; };
 /** a family level's seeded stable permutation of its tile indices (the same in every worker, every session) */
@@ -100,5 +132,11 @@ export function coverageOf(cssW: number, cssH: number, z: number, tile: readonly
   const tw = tile[0] * z, th = tile[1] * z;
   return { areas: (cssW * cssH) / (tw * th), across: cssW / tw, down: cssH / th };
 }
+/** world px (zoom 1) to metres along the screen's horizontal: a 2 m tile's diagonal is 128 world px */
+const M_PER_WORLD_X = 2 * Math.SQRT2 / 128;
+/** the metres one tile of a level covers across in band b on a screen of device pixel ratio dpr (its world width) */
+export const tileMetres = (level: Pick<TiledLevel, 'native'>, b: number, dpr = 1): number => tileSize(level, tileSpec(b, dpr))[0] * M_PER_WORLD_X;
+/** a tile's width on screen in device px at CSS zoom z in band b (its native width at the anchor; the DPR cancels: the world size holds it) */
+export const tileScreenPx = (level: Pick<TiledLevel, 'native'>, z: number, b: number): number => level.native[0] * drawnScale(z, b);
 /** the world-px point of a tile-space point at height 0 */
 export const worldOfTile = (x: number, y: number): [number, number] => [(x - y) * HW, (x + y) * HH];

@@ -27,42 +27,29 @@ const CHECK = process.argv.includes('--check');
 const ART = path.resolve(arg('--art') ?? [ROOT, path.join(ROOT, '../../..')].find(r => fs.existsSync(path.join(r, READY_REL))) ?? ROOT);
 const OUT_DIR = path.join(ROOT, 'src/assets/ground/painted/tiles'), MANIFEST = path.join(ROOT, 'src/game/painted-tiles.json');
 const LEVELS = ['near', 'mid', 'far'];
-/** WebP quality: 90 (lossy, effort 6, sharp YUV). The tiles are fine painted grass and water shown at 0.5x to 1.6x of their native pixels:
- *  at 90 the per-pixel error stays far below what the game's own bilinear resampling changes, at about a seventh of the PNG's bytes; lossless
+/** WebP quality: 90 (lossy, effort 6, sharp YUV). The tiles are fine painted grass and water shown at their native pixels or below (T150):
+ *  at 90 the per-pixel error stays below what the game's own bilinear resampling changes, at about a seventh of the PNG's bytes; lossless
  *  WebP would be several times bigger again for no visible gain. */
 const QUALITY = 90;
 /** the kind of family each material is (painted-families.ts PaintedKind: the studio lists a surface's fitting kinds first) */
 const KIND = { 'golden-fescue': 'grass', lake: 'water', 'pale-green-bushes': 'grass', 'pine-straw': 'cut', 'sand-ripples': 'sand', 'sand-raked': 'sand', desert: 'sand', dirt: 'cut', 'sand-long-grass': 'sand', 'long-grass': 'grass', swamp: 'water', fairway: 'grass', 'putting-green': 'grass', 'first-cut': 'grass' };
 const NAME = { 'golden-fescue': 'Golden fescue', lake: 'Lake water' };
 
-/* ---- the coverage ladder (the camera, iso.ts): how big one tile is in the world at each zoom ----
- * The owner (2026-10-26): two to four complete tile areas across the visible terrain; switch to the next detail set before more than four
- * show; the map overview uses a few large FAR tiles; never stretch a texture continuously under the camera. Two to four tile areas is a zoom
- * range of only sqrt(2), and the game zooms 50x (ZOOM_MIN 0.006 to ZOOM_MAX 0.3), so three fixed world sizes cannot hold it: each band lays
- * its own set at a few discrete world sizes (steps), sqrt(2) apart, picked by the CSS zoom (never the device pixel ratio or the window size,
- * so a resize or a DPR change never changes a tile) with hysteresis. On the reference viewport a step shows exactly 2 whole tile areas at its
- * closest zoom and 4 at its farthest; zooming out switches at 4, zooming back in only HYSTERESIS past the boundary (down to 1.7 areas).
- * The bands follow the game's tiers: NEAR the street zooms, MID the district zooms, FAR the planner map and the overview. */
+/* ---- the anchors (T150, #315): the one world size each set is laid at ----
+ * The owner (2026-10-26, after T145's 12 zoom steps): "the textures are also rendering too big. they should be smaller and when you zoom they
+ * are not zooming out correct ... if i am at the furthest zoom out level i feel like im seeing a zoomed in version of 1 of the texture images
+ * instead of 4 tiles at their max native size". So each set draws at its native pixels (1 painting px = 1 device px) at its anchor zoom (a CSS
+ * zoom, iso.ts): its world size is native / (anchor x DPR), one size for the display, and zooming is a real zoom (no steps inside a band). A
+ * set is never drawn above its native pixels: zooming in past a set's anchor switches to the finer set at once; zooming out, the finer set
+ * shrinks below native until the coarser set's anchor, where the coarser one takes over HYSTERESIS past it (FAR at ZOOM_MIN itself, the limit).
+ * The next set's tiles are decoded once the zoom is within PRELOAD of its switch. How each anchor was found is in ANCHOR_HOW (and the PR). */
 const ZOOM_MAX = 0.3, ZOOM_MIN = 0.006;
-const REF_VIEWPORT = [1920, 1080], AREAS = [2, 4], STEP_RATIO = Math.SQRT2, HYSTERESIS = 1.08;
-/** the reference tile aspect (height / width: the 1742 x 902 sets; each level keeps its own native aspect for its height) */
-const REF_ASPECT = 902 / 1742;
-/** ZOOM_MAX at the middle of step 0 (2 sqrt 2 tile areas) */
-const Z0 = ZOOM_MAX * Math.sqrt(STEP_RATIO);
-const BANDS = { near: [0, 2], mid: [3, 6], far: [7, 99] };
-/** world px (zoom 1) to metres along the screen's horizontal: a 2 m tile's diagonal is 128 world px */
-const M_PER_WORLD_X = 2 * Math.SQRT2 / 128;
-function ladder() {
-  const [vw, vh] = REF_VIEWPORT, steps = [];
-  const wAt2 = Math.sqrt(vw * vh / (AREAS[0] * REF_ASPECT)); // the tile's CSS width when 2 tile areas show
-  for (let k = 0; ; k++) {
-    const zHi = Z0 / STEP_RATIO ** k, zLo = zHi / STEP_RATIO, tileW = wAt2 / zHi;
-    const band = Object.entries(BANDS).find(([, [a, b]]) => k >= a && k <= b)[0];
-    steps.push({ band, zHi: +zHi.toFixed(6), zLo: +zLo.toFixed(6), tileW: Math.round(tileW), metres: Math.round(tileW * M_PER_WORLD_X) });
-    if (zLo <= ZOOM_MIN) break;
-  }
-  return steps;
-}
+const ANCHORS = { near: ZOOM_MAX, mid: 0.1, far: ZOOM_MIN }, HYSTERESIS = 1.04, PRELOAD = 1.414;
+const ANCHOR_HOW = {
+  near: "The near reference (material-screenshot-pipeline/references/owner-near.png, the camera near-shop-native.png comes from; its UI is the game's CSS size): the brick shop is 136 px wide; shop-sized buildings placed in the game at 30% and DPR 1 measure 131-138 px, and the boulevard's carriageway (69 px) gives 0.29: the camera was at the closest zoom, ZOOM_MAX 0.3.",
+  mid: "The mid reference (owner-mid.png, the source of scene-backgrounds/golden-fescue/mid-anchored-v2): the same shop is 45.2 px (0.332 of NEAR) and the gas canopy 53.8 px (0.344): 0.3 x 0.338 = 0.1.",
+  far: "The furthest zoom, ZOOM_MIN (the owner: the four FAR tiles at their native size there). The far reference (owner-far.png: the shop about 25 px) was painted at about 0.055.",
+};
 
 const sha256 = buf => crypto.createHash('sha256').update(buf).digest('hex');
 const rel = p => path.join(ART, p);
@@ -117,7 +104,7 @@ const manifest = {
   source: { file: READY_REL, sha256: sha256(readyBuf), date: ready.date ?? null },
   revision: sha256(Buffer.from(plan.map(p => p.selSha).join(':'))).slice(0, 12),
   display: { minVisibleTiles: ready.displayContract?.minVisibleTiles ?? 2, maxVisibleTiles: ready.displayContract?.maxVisibleTiles ?? 4, allowMirror: false, allowRotate: false, allowFlip: false },
-  coverage: { refViewport: REF_VIEWPORT, areas: AREAS, stepRatio: +STEP_RATIO.toFixed(6), hysteresis: HYSTERESIS, zoom: [ZOOM_MIN, ZOOM_MAX], steps: ladder() },
+  anchors: { ...ANCHORS, hysteresis: HYSTERESIS, preload: PRELOAD, zoom: [ZOOM_MIN, ZOOM_MAX], how: ANCHOR_HOW },
   webp: { quality: QUALITY },
   families: [],
 };
@@ -154,4 +141,4 @@ if (CHECK) {
   process.exit(have === text ? 0 : 2);
 }
 fs.writeFileSync(MANIFEST, text);
-console.log(`${manifest.families.length} families, ${manifest.families.length * 12} tiles, ${Math.round(kb)} KB; ${manifest.coverage.steps.length} coverage steps; revision ${manifest.revision}`);
+console.log(`${manifest.families.length} families, ${manifest.families.length * 12} tiles, ${Math.round(kb)} KB; anchors near ${ANCHORS.near}, mid ${ANCHORS.mid}, far ${ANCHORS.far}; revision ${manifest.revision}`);

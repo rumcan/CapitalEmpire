@@ -14,107 +14,21 @@
   "allowRotate": false,
   "allowFlip": false
  },
- "coverage": {
-  "refViewport": [
-   1920,
-   1080
-  ],
-  "areas": [
-   2,
-   4
-  ],
-  "stepRatio": 1.414214,
-  "hysteresis": 1.08,
+ "anchors": {
+  "near": 0.3,
+  "mid": 0.1,
+  "far": 0.006,
+  "hysteresis": 1.04,
+  "preload": 1.414,
   "zoom": [
    0.006,
    0.3
   ],
-  "steps": [
-   {
-    "band": "near",
-    "zHi": 0.356762,
-    "zLo": 0.252269,
-    "tileW": 3966,
-    "metres": 88
-   },
-   {
-    "band": "near",
-    "zHi": 0.252269,
-    "zLo": 0.178381,
-    "tileW": 5609,
-    "metres": 124
-   },
-   {
-    "band": "near",
-    "zHi": 0.178381,
-    "zLo": 0.126134,
-    "tileW": 7933,
-    "metres": 175
-   },
-   {
-    "band": "mid",
-    "zHi": 0.126134,
-    "zLo": 0.089191,
-    "tileW": 11218,
-    "metres": 248
-   },
-   {
-    "band": "mid",
-    "zHi": 0.089191,
-    "zLo": 0.063067,
-    "tileW": 15865,
-    "metres": 351
-   },
-   {
-    "band": "mid",
-    "zHi": 0.063067,
-    "zLo": 0.044595,
-    "tileW": 22437,
-    "metres": 496
-   },
-   {
-    "band": "mid",
-    "zHi": 0.044595,
-    "zLo": 0.031534,
-    "tileW": 31731,
-    "metres": 701
-   },
-   {
-    "band": "far",
-    "zHi": 0.031534,
-    "zLo": 0.022298,
-    "tileW": 44874,
-    "metres": 992
-   },
-   {
-    "band": "far",
-    "zHi": 0.022298,
-    "zLo": 0.015767,
-    "tileW": 63461,
-    "metres": 1402
-   },
-   {
-    "band": "far",
-    "zHi": 0.015767,
-    "zLo": 0.011149,
-    "tileW": 89748,
-    "metres": 1983
-   },
-   {
-    "band": "far",
-    "zHi": 0.011149,
-    "zLo": 0.007883,
-    "tileW": 126923,
-    "metres": 2805
-   },
-   {
-    "band": "far",
-    "zHi": 0.007883,
-    "zLo": 0.005574,
-    "tileW": 179496,
-    "metres": 3966
-   }
-  ]
+  "how": {
+   "near": "The near reference (material-screenshot-pipeline/references/owner-near.png, the camera near-shop-native.png comes from; its UI is the game's CSS size): the brick shop is 136 px wide; shop-sized buildings placed in the game at 30% and DPR 1 measure 131-138 px, and the boulevard's carriageway (69 px) gives 0.29: the camera was at the closest zoom, ZOOM_MAX 0.3.",
+   "mid": "The mid reference (owner-mid.png, the source of scene-backgrounds/golden-fescue/mid-anchored-v2): the same shop is 45.2 px (0.332 of NEAR) and the gas canopy 53.8 px (0.344): 0.3 x 0.338 = 0.1.",
+   "far": "The furthest zoom, ZOOM_MIN (the owner: the four FAR tiles at their native size there). The far reference (owner-far.png: the shop about 25 px) was painted at about 0.055."
+  }
  },
  "webp": {
   "quality": 90

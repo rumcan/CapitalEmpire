@@ -134,7 +134,9 @@ export type ToWorker =
   | { t: 'living'; on: boolean; debug: boolean }
   /** the course height light's strength (T126: the gear menu's Slope light, 0 = off): every chunk is baked again */
   | { t: 'slopeLight'; strength: number }
-  | { t: 'paint'; id: number; kind: TileKind; i: number; j: number; L: number; artL?: number; /** the tile set families' coverage step (T145) */ ts?: number };
+  /** the tile set bands to decode ahead (painted-tiles.ts bandsAhead: the camera is near their switch; T150), sent when they change */
+  | { t: 'tilesAhead'; bands: number[] }
+  | { t: 'paint'; id: number; kind: TileKind; i: number; j: number; L: number; artL?: number; /** the tile spec the tile set families are laid at (painted-tiles.ts tileSpec: the band and the DPR; T145, T150) */ ts?: number };
 
 export type FromWorker =
   /** saving: the builder still writes the textures to this browser's cache (a fresh profile), seconds in which its bakes wait; 'saved' when done */

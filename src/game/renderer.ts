@@ -236,7 +236,7 @@ export class GroundPainter {
   private chunkNow: { key: string; L: number; box: BBox; M: DOMMatrix; Minv: DOMMatrix; W: number; H: number } | null = null;
   /** the tinted and toned copies the bake in progress made (by composition, tint and tone), and the compositions it uses (kept in the LRU) */
   private toned = new Map<string, PaintedEntry>(); private bakeKeys = new Set<string>();
-  /** the bake in progress laid a tile set family (T145): its chunk then depends on the coverage step (GroundCache re-bakes it on a step change) */
+  /** the bake in progress laid a tile set family (T145): its chunk then depends on the tile spec (GroundCache re-bakes it on a band or DPR change) */
   tilesUsed = false;
   /** the planner's painted pictures (a look's far painting, tinted and toned), by look */
   private planPics = new Map<string, Cnv>();
@@ -350,7 +350,7 @@ export class GroundPainter {
     const cv = canvas(W, H), ctx = ctx2d(cv);
     const M = new DOMMatrix([HW * L, HH * L, -HW * L, HH * L, -X0 * L, -Y0 * L]);
     const box = GroundPainter.tileBox(X0, Y0, X0 + PLAN_W, Y0 + PLAN_H, 2), [tx0, ty0, tx1, ty1] = box;
-    // the tile set families (T145) lay their tiles here as on the ground chunks (planTiled), so the overview shows their FAR sets
+    // the tile set families (T145) lay their tiles here as on the ground chunks (planTiled), at the camera's band (the furthest zoom: FAR)
     this.chunkNow = { key: `p${i},${j}@${L}`, L, box, M, Minv: M.inverse(), W, H }; this.toned.clear(); this.bakeKeys.clear(); this.tilesUsed = false;
     ctx.fillStyle = '#2c3a20'; ctx.fillRect(0, 0, W, H);
     ctx.setTransform(M);
@@ -554,19 +554,19 @@ export class GroundPainter {
     });
     return tone.buf;
   }
-  /** a tile set family (T145, painted-tiles.ts) over the part of the chunk being baked asked for: its band's four whole tiles at the coverage
-   *  step's world size, laid edge to edge on the world-anchored grid, axis-aligned in the chunk's own (screen) axes, each the tile its cell's
+  /** a tile set family (T145, painted-tiles.ts) over the part of the chunk being baked asked for: its band's four whole tiles at the band's
+   *  one world size (T150: native / (anchor x DPR), from the tile spec), laid edge to edge on the world-anchored grid, axis-aligned in the chunk's own (screen) axes, each the tile its cell's
    *  permutation names; edges snapped to whole px (every chunk at this level agrees: no gap, no overlap). As authored: no scale, tint, tone,
    *  drift, mask or blend. null when a tile is not decoded */
   private tiledBuf(tp: TiledPick, need?: BBox): Cnv | null {
-    const c = this.chunkNow!, step = this.tex.tileStep, want = this.cellsOf(need), cw = Math.ceil(c.W / PAINT_CELL), chh = Math.ceil(c.H / PAINT_CELL);
-    const ck = `${c.key}:tiles:${tp.fam.id}@${tileKey(step)}`;
+    const c = this.chunkNow!, ts = this.tex.tileTs, want = this.cellsOf(need), cw = Math.ceil(c.W / PAINT_CELL), chh = Math.ceil(c.H / PAINT_CELL);
+    const ck = `${c.key}:tiles:${tp.fam.id}@${tileKey(ts)}`;
     let base = this.composed.get(ck);
     if (base) { this.composed.delete(ck); this.composed.set(ck, base); }
     else { base = { buf: canvas(c.W, c.H), cells: new Uint8Array(cw * chh), bytes: c.W * c.H * 4 }; this.composed.set(ck, base); this.composedBytes += base.bytes; }
     this.bakeKeys.add(ck); this.tilesUsed = true;
     for (const [k, v] of this.composed) { if (this.composedBytes <= COMPOSED_BYTES) break; if (this.bakeKeys.has(k)) continue; this.composed.delete(k); this.composedBytes -= v.bytes; }
-    const band = bandOf(step), lv = tp.fam.levels[band], urls = tp.urls[band], [w, h] = tileSize(lv, step), perm = tilePermutation(tp.fam.id, band);
+    const band = bandOf(ts), lv = tp.fam.levels[band], urls = tp.urls[band], [w, h] = tileSize(lv, ts), perm = tilePermutation(tp.fam.id, band);
     // the chunk's origin in its raster px (a whole number at every cache level) and its raster scale (px per world px)
     const L = c.L, ox = -c.M.e, oy = -c.M.f;
     return this.fillCells(base, want, (g, rect) => {
