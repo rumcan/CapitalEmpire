@@ -4310,14 +4310,23 @@ export class Game {
     setTimeout(() => URL.revokeObjectURL(url), 10000); // released later: some browsers start the download after the click returns
   }
   /** debug (the contact sheet): an empty map at the camera, then a street grid of cols x rows blocks (BLOCK tiles). Every lot is composed
-   *  directly (no town) with a use from uses (cycled), the level, decline and seed + i. The states hold until the next reset. */
-  stageLots(o: { cols: number; rows: number; uses: number[]; level: number; decline: number; seed: number }) {
+   *  directly (no town) with a use from uses (cycled), the level, decline and seed + i. The states hold until the next reset. diag (T154 Phase 2):
+   *  the grid turned 45 degrees, its streets on the roads at 45 degrees (blocks about BLOCK a side: steps of BLOCK / sqrt 2 tiles along x and y) */
+  stageLots(o: { cols: number; rows: number; uses: number[]; level: number; decline: number; seed: number; diag?: boolean }) {
     this.reset(); this.afterLoad();
     const W = o.cols * BLOCK, H = o.rows * BLOCK, c = tileOf(this.cam.X, this.cam.Y);
     const x0 = clamp(Math.round(c.x - W / 2), 8, MAP - 8 - W), y0 = clamp(Math.round(c.y - H / 2), 8, MAP - 8 - H);
     const legs: Leg[] = [];
-    for (let i = 0; i <= o.cols; i++) legs.push({ a: { x: x0 + i * BLOCK, y: y0 }, b: { x: x0 + i * BLOCK, y: y0 + H } });
-    for (let j = 0; j <= o.rows; j++) legs.push({ a: { x: x0, y: y0 + j * BLOCK }, b: { x: x0 + W, y: y0 + j * BLOCK } });
+    if (o.diag) {
+      // the corner (i, j) of the turned grid: i steps along (1, 1), j along (1, -1), the grid's middle at the camera
+      const S = Math.round(BLOCK / Math.SQRT2), ox = clamp(Math.round(c.x - ((o.cols + o.rows) * S) / 2), 8, MAP - 8 - (o.cols + o.rows) * S), oy = clamp(Math.round(c.y - ((o.cols - o.rows) * S) / 2), 8 + o.rows * S, MAP - 8 - o.cols * S);
+      const P = (i: number, j: number) => ({ x: ox + (i + j) * S, y: oy + (i - j) * S });
+      for (let i = 0; i <= o.cols; i++) legs.push({ a: P(i, 0), b: P(i, o.rows) });
+      for (let j = 0; j <= o.rows; j++) legs.push({ a: P(0, j), b: P(o.cols, j) });
+    } else {
+      for (let i = 0; i <= o.cols; i++) legs.push({ a: { x: x0 + i * BLOCK, y: y0 }, b: { x: x0 + i * BLOCK, y: y0 + H } });
+      for (let j = 0; j <= o.rows; j++) legs.push({ a: { x: x0, y: y0 + j * BLOCK }, b: { x: x0 + W, y: y0 + j * BLOCK } });
+    }
     this.edit.addLegs(legs, CLASS.street, 0);
     this.commitNetwork();
     const { added } = new LotMap().update(this.net, this.terrain.cls);

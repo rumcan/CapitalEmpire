@@ -225,6 +225,33 @@ The shops and houses with screen-axis sets (`town:bakery`, `town:grocery`, `town
 The world trash can's set had no crops yet (cut from its sheet by its subjects) and the 4-, 5- and 6-storey car parks' half-cell crops clip
 their subject (re-cut from the sheet the same way): the art model may want to review those cuts.
 
+## Buildings on the roads at 45 degrees: their cardinal views wanted (T154 Phase 2)
+On a road at 45 degrees a building with a screen-axis set faces its street. A lot's front faces its street: N on road 1, E on 3, S on 5, W on 7
+(`lots/preset-art.ts roadView`). It is never mirrored, and its footprint and anchor come from the set. A building without a set is drawn in its
+diagonal view, at 45 degrees to the road, as before. 14 buildings have a set: the five parking garages, `town:bakery`, `town:grocery`,
+`town:pharmacy`, the three industrial variations, and `world:house_0`, `_1` and `_3`. A variation (`variation:<base>-<hash>:1`) is its own picture
+and needs its own set. **Wanted: the N, E, S, W views** of the buildings below, as eight-view sheets (`<slug>-8views-vN`: the existing four views
+kept byte for byte, plus the four cardinal ones). The buildings the owner's presets of the 45-degree roads draw today come first (counted
+2026-10-27 over `lot-presets.json`):
+| Building (id) | Presets at 45 degrees | P |
+| --- | --- | --- |
+| House 5 (`world:house_5`) | 13 (12 approved) | P1 |
+| Colonial L-shape, double garage, variation 1 (`variation:gen-house-l-shape-e0e3b328-plain:1`), and its base `gen:house-l-shape` | 3 + 1 | P1 |
+| House 2 (`world:house_2`) and its variation `variation:world-house_2-north-332663ab-plain:1` | 2 + 1 | P1 |
+| House 0, variation 1 (`variation:world-house_0-51fa4b80-plain:1`) | 1 | P2 |
+| House Large, variation 1 (`variation:ref-building-house-large-20cb9f9e-plain:1`) | 1 | P2 |
+| Ranch L-shape, corner porch, variation 1 (`variation:gen-house-l-ranch-18552ce5-plain:1`) | 1 | P2 |
+| House Dormer, variation 1 (`variation:ref-building-house-dormer-b4413f08-plain:1`); Bellamy Hardware, variation 1 (`variation:town-hardware-bf36737f-plain:1`) | 1 draft each | P2 |
+| House back, shed and garden (`gen:back-shed-garden`); weathered timber outhouse (`expansion:outhouse`) | 1 each | P2 |
+
+All the presets place 74 different buildings; 65 of them have no set yet (houses 28, industry 14, shops and services 9, landmarks 9, yard
+buildings 5). The library holds 165 building subjects, 14 of them with a set. By how often the presets place them, the next ones wanted are:
+`town:postoffice` (193), `expansion:boarded-store-rear` and its variation (42 + 82), `expansion:lean-to-shed` (73), `world:school` (56),
+`expansion:outhouse` (53), `world:arcade` and its variation (51 + 45), `expansion:derelict-two-storey` (49), `static:garage_brick-v2` and its
+variation (39 + 32), `ref:building-gas-canopy` (39), `world:house_5` (38), `world:video` (38), `world:diner` (38), `world:video_rental` (37),
+`world:snack_bar` (35), `expansion:rundown-house` (34), `town:laundromat` (33), `static:garage_timber` (31), `ref:landmark-water-tower` (27),
+`static:garage_brick` (26), `world:house_2` (25), `world:house_4` (20).
+
 ## Props kit (plan P24 Phase 3, T131: art requests)
 The Props tool (`golf/decor.ts DECOR`) shows these as labelled stand-ins ("Stand In for ..." on the card and once per kind on the map); each
 goes in by replacing its item's `id` (and dropping its `standIn`). Four views where it says so (NE, SE, SW, NW as the building sheets: the front
