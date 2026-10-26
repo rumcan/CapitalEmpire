@@ -77,7 +77,7 @@ $('#who').onchange=e=>{me=walkers.find(p=>p.id===e.target.value)||null;man();};
 function cats(){const c=[...new Set(all.map(s=>s.cat))].sort(),box=$('#cats');box.innerHTML='';for(const k of ['',...c,'Removed']){const b=el('span',{className:'chip'+(k===cat?' on':''),textContent:k||'All'});b.onclick=()=>{cat=k;cats();draw();};box.append(b);}}
 /** the picture the game draws for a sprite (an old building's new-art stand-in) and its drawn scale: its scale times the stand-in's fill, never past
  *  its pixels (the game draws it at its cap there: newart.ts lookOf) */
-const drawnOf=s=>s.drawn?{id:s.drawn.id,quad:s.drawn.quad,k:Math.min(s.scale*s.drawn.fill,s.drawn.cap)}:{id:s.id,quad:s.quad,k:s.scale};
+const drawnOf=s=>s.drawn?{id:s.drawn.id,quad:s.drawn.quad,k:Math.min(s.scale*s.drawn.fill,s.drawn.cap)}:{id:s.id,quad:s.quad,k:s.scale*(s.carScale||1)};
 function stage(s){
   // the trimmed picture at the size the game draws it: (quad) x drawn scale x K
   const d=drawnOf(s),q=d.quad, w=(q[2]-q[0])*d.k*K, h=(q[3]-q[1])*d.k*K;
@@ -106,9 +106,10 @@ function card(s){const off=!!removed[s.id];
   rm.onclick=async()=>{await post('/api/'+(off?'restore':'remove'),{id:s.id});await loadLib();};
   const sc=el('span',{className:'scale',textContent:'× '+s.scale.toFixed(2)+(Math.abs(s.scale-s.base)>1e-3?' *':'')});
   const size=f=>async()=>{const r=await post('/api/scale',f?{id:s.id,factor:f}:{id:s.id,reset:true});if(r.refused){alert(`${s.name}: ${r.refused}`);return;}for(const x of all)if((x.sizeId??x.id)===r.id)x.scale=r.scale;draw();};
-  const fixed=s.cat==='Lots'||s.kind==='walker'||s.kind==='car';
+  // the baked house lots (cat Lots) and the walkers keep their size; a decal has no report line (its size is packed into the decal strip)
+  const fixed=s.cat==='Lots'||s.kind==='walker';
   return el('div',{className:'card'+(off?' removed':'')},stage(s),el('div',{className:'meta'},el('div',{className:'name',textContent:s.name}),el('div',{className:'cat',textContent:s.cat+' · '+s.kind}),el('div',{className:'id',textContent:s.id})),
-   fixed?null:sizeLine(s),
+   fixed||s.kind==='decal'?null:sizeLine(s),
    fixed?null:el('div',{className:'row'},el('button',{className:'btn',textContent:'Smaller',onclick:size(1/1.08)}),sc,el('button',{className:'btn',textContent:'Bigger',onclick:size(1.08)})),
    !fixed&&Math.abs(s.scale-s.base)>1e-3?el('div',{className:'row'},el('button',{className:'btn',textContent:'Reset size (×'+s.base.toFixed(2)+')',onclick:size(0)})):null,
    el('div',{className:'row'},rm));}

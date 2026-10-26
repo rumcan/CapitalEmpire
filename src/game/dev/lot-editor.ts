@@ -21,6 +21,7 @@ import { ATLAS_PAGES, ATLAS_SIZE, LIBRARY } from '../library';
 import { spriteRect, type Drawable } from '../sprites';
 import { worldX, worldY } from '../iso';
 import { OWNER_SCALE, TABLE_SCALE } from '../lots/scales';
+import { carSizeId } from '../ext/car-art';
 import { lookOf, maxDrawScale } from '../newart';
 import { compose, lotPreset, lotPresets, lotPresetsMeta, onLotPresetsReload, setLotPresets, type PresetDrop } from '../lots/compose';
 import { formatPresets, type LotPreset } from '../lots/presets';
@@ -198,7 +199,7 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
   function ghostDrawable(): Drawable | null {
     const s = ghost ? presetSource(ghost.lot, ghost.preset, ghost.index) : null; if (!s) return null;
     const q = s.preset.props[s.index]!, t = turned(q.id, s.frame.q + q.view), c = presetToWorld(s.frame, s.preset, q.x, q.y);
-    return drawable(t.id, c.x, c.y, isCar(t.id) ? 1 : q.scale * ownerScaleOf(q.id), t.flip);
+    return drawable(t.id, c.x, c.y, q.scale * ownerScaleOf(q.id), t.flip);
   }
   /** the props a lot leaves out now, with why (compose's drops) */
   function refreshDrops(lot: string | null) {
@@ -275,9 +276,7 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
     const q = s.preset.props[s.index]!, here = presetToWorld(s.frame, s.preset, q.x, q.y);
     let e: PresetEdit, note = '';
     if (a === 'bigger' || a === 'smaller') {
-      // a parked car is drawn at the road cars' size (CAR_SCALE) whatever its preset scale (compose: car ? 1)
-      if (isCar(q.id)) return say(`${q.id}: a parked car is drawn at the size of the cars on the road; its size is not the preset's`);
-      // the drawn size (the preset's scale x the owner scale) never past the picture's pixels in any of its views
+      // the drawn size (the preset's scale x the owner scale, a car's its owner size) never past the picture's pixels in any of its views
       const own = ownerScaleOf(q.id), lim = artLimit(q.id), next = growWithin(q.scale * own, a === 'bigger' ? GROW : 1 / GROW, lim);
       if (next === null) return say(refused(q.id, lim));
       e = { op: 'scale', prop: s.index, factor: next / (q.scale * own) };
@@ -298,15 +297,16 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
     if (r) await commitPreset(s.lot, s.preset, r.preset, r.prop, a, s.index, note);
   }
   async function libraryEdit(item: number, a: Act) {
-    const it = LIBRARY[item]!, id = fourViews(it.id)?.views[0] ?? it.id;
-    if ((a === 'bigger' || a === 'smaller') && isCar(id)) return say(`${id}: a parked car is drawn at the size of the cars on the road; it has no library size to set`);
+    const it = LIBRARY[item]!, car = isCar(it.id), id = car ? carSizeId(it.id) : fourViews(it.id)?.views[0] ?? it.id;
     if (a === 'bigger' || a === 'smaller') {
-      // the studio's rule (server.mjs /api/scale): its size, else the table's, times the step; never past the pixels of any of its views
-      const text = await load('scale-overrides.json'), sizes = JSON.parse(text) as Record<string, number>, base = TABLE_SCALE[id] ?? OWNER_SCALE[id] ?? 1, cur = sizes[id] ?? base;
-      const lim = artLimit(id), next = growWithin(cur, a === 'bigger' ? GROW : 1 / GROW, lim);
+      // the studio's rule (server.mjs /api/scale): its size, else the table's (a car's: 1, the size of its model), times the step; never past the pixels of any of its views
+      const text = await load('scale-overrides.json'), sizes = JSON.parse(text) as Record<string, number>, base = car ? 1 : TABLE_SCALE[id] ?? OWNER_SCALE[id] ?? 1, cur = sizes[id] ?? base;
+      const lim = artLimit(car ? it.id : id), next = growWithin(cur, a === 'bigger' ? GROW : 1 / GROW, lim);
       if (next === null) return say(refused(id, lim));
       const out = scaleOverride(sizes, id, base, next / cur), views = fourViews(id)?.views ?? [id], before = views.map(v => [v, OWNER_SCALE[v]] as const);
       await save('scale-overrides.json', studioJson(out));
+      // a car's size is read from the studio file when the game loads (ext/car-art carOwnerScale), so it shows after a reload
+      if (car) { undo.push({ kind: 'file', file: 'scale-overrides.json', text }); return say(`${id}: size ${out[id]} saved to scale-overrides.json; every car of this model is drawn at that size after a reload of the game`); }
       // scales.ts reads the studio sizes at runtime: the lots take the new size now (the dev server may reload the page to apply it everywhere)
       const apply = (s: (v: string) => number | undefined) => { for (const v of views) { const k = s(v); if (k === undefined) delete OWNER_SCALE[v]; else OWNER_SCALE[v] = k; } recomposeKeeping(); };
       apply(() => out[id]);
@@ -353,12 +353,12 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
     const item = INDEX.get(id); if (item === undefined) return say(`not a library id: ${id}`);
     const t = game.tileAt(mx, my), x = snap(t.x), y = snap(t.y), lot = game.lotKeyAt(x, y), at = lot ? game.lotOf(lot) : null, lp = at ? lotPreset(at.g, at.st) : null;
     if (lot && lp) {
-      const v = turned(id, lp.frame.q), fp = footprintOf(v.id, isCar(id) ? 1 : ownerScaleOf(id), v.flip), n = placeInPreset(lp.frame, lp.preset, x, y, (fp[2] - fp[0]) / 2, (fp[3] - fp[1]) / 2);
+      const v = turned(id, lp.frame.q), fp = footprintOf(v.id, ownerScaleOf(id), v.flip), n = placeInPreset(lp.frame, lp.preset, x, y, (fp[2] - fp[0]) / 2, (fp[3] - fp[1]) / 2);
       const r = applyEdit(lp.preset, { op: 'add', id, x: n.x, y: n.y });
       if (r) await commitPreset(lot, lp.preset, r.preset, r.prop, `added ${id}`, -1, n.clamped ? ' (at the lot edge)' : '');
       return;
     }
-    const s = isCar(id) ? 1 : ownerScaleOf(id), fp = footprintOf(id, s, false), p = game.addProp(item, x - (fp[0] + fp[2]) / 2, y - (fp[1] + fp[3]) / 2, false, s);
+    const s = ownerScaleOf(id), fp = footprintOf(id, s, false), p = game.addProp(item, x - (fp[0] + fp[2]) / 2, y - (fp[1] + fp[3]) / 2, false, s);
     undo.push({ kind: 'player-add', prop: p }); game.scheduleSave(); select(p); game.emit();
     say(`placed ${id} as a player's prop (the save)${lot ? ': that lot draws no preset' : ''}`);
   }
@@ -486,7 +486,7 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
     if (dr?.moved) drawGhost(drawable(LIBRARY[dr.p.item]!.id, (dr.p.x0 + dr.p.x1) / 2 + dr.dx, (dr.p.y0 + dr.p.y1) / 2 + dr.dy, dr.p.scale, dr.p.flip));
     else if (on && placing && overMap && cursor) {
       const t = game.tileAt(cursor.mx, cursor.my), x = snap(t.x), y = snap(t.y), lot = game.lotKeyAt(x, y), at = lot ? game.lotOf(lot) : null, lp = at ? lotPreset(at.g, at.st) : null;
-      const v = lp ? turned(placing, lp.frame.q) : { id: placing, flip: false }, d = drawable(v.id, x, y, isCar(placing) ? 1 : ownerScaleOf(placing), v.flip);
+      const v = lp ? turned(placing, lp.frame.q) : { id: placing, flip: false }, d = drawable(v.id, x, y, ownerScaleOf(placing), v.flip);
       drawGhost(d);
     } else ghostEl.style.display = 'none';
   };

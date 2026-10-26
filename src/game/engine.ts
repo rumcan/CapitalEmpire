@@ -49,6 +49,7 @@ import { inQuad, type CurbDef } from './event/curb';
 import { SpriteTiles, spriteRect, type Drawable } from './sprites';
 import { readSave, writeSave, clearSave, backupTownSlot, SAVE_VERSION, segRec, type SaveV5 } from './save';
 import { CAR_COLOURS, parkedCar } from './traffic';
+import { carOwnerScale } from './ext/car-art';
 import { SimClient, type LotView } from './sim/client';
 import { townClockFor, townTimeOf } from './sim/townclock';
 import { zoneOf } from './sim/routing';
@@ -3465,7 +3466,7 @@ export class Game {
       const key = `park:${id}:${i}`, have = this.parkCars.get(key);
       if (have && this.props.has(have)) continue;
       const bay = pk!.bays[i]!, facing = parkedCar(i, bay.dir);
-      this.parkCars.set(key, this.addProp(facing.item, bay.x - facing.ox, bay.y - facing.oy, facing.flip, 1, key));
+      this.parkCars.set(key, this.addProp(facing.item, bay.x - facing.ox, bay.y - facing.oy, facing.flip, facing.size, key));
     }
     for (let i = want; ; i++) { const key = `park:${id}:${i}`, p = this.parkCars.get(key); if (!p) break; this.removeProp(p); this.parkCars.delete(key); }
   }
@@ -4283,7 +4284,8 @@ export class Game {
     // helpers: a sprite facing +y with its front edge on frontY; flipped sprites face +x with their front edge on frontX
     const front = (id: string, cx: number, frontY: number, k = 1) => { const i = byId(id); if (i < 0) return; const it = LIBRARY[i], b = it.boxes[0], x = cx + Ox - b.dx * k / 2, y = frontY + Oy - (b.dy * k / 2 + b.hy * k / 2); if (!this.canPlace(it, x, y, false, k)) this.addProp(i, x, y, false, k); };
     const side = (id: string, frontX: number, cy: number, k = 1) => { const i = byId(id); if (i < 0) return; const it = LIBRARY[i], b = it.boxes[0], x = frontX + Ox - (b.dy * k / 2 + b.hy * k / 2), y = cy + Oy - b.dx * k / 2; if (!this.canPlace(it, x, y, true, k)) this.addProp(i, x, y, true, k); };
-    const put = (id: string, x: number, y: number, k = 1, flip = false) => { const i = byId(id); if (i >= 0 && !this.canPlace(LIBRARY[i], x + Ox, y + Oy, flip, k)) this.addProp(i, x + Ox, y + Oy, flip, k); };
+    // a car takes its owner size (carOwnerScale: the studio's, 1 unset) on top of k; the engine draws it at CAR_SCALE times that
+    const put = (id: string, x: number, y: number, k = 1, flip = false) => { const i = byId(id); if (i < 0) return; const s = LIBRARY[i].kind === 'car' ? k * carOwnerScale(id) : k; if (!this.canPlace(LIBRARY[i], x + Ox, y + Oy, flip, s)) this.addProp(i, x + Ox, y + Oy, flip, s); };
     front('town:postoffice', 45, 75.4); front('town:bakery', 54, 75.4); front('world:arcade', 63, 75.4);
     front('world:video_rental', 96, 75.4); front('town:grocery', 106, 75.4); front('world:diner', 115, 75.4); front('town:pharmacy', 123, 75.4);
     front('town:laundromat', 40, 118.9); front('town:fish_tackle', 128, 100);

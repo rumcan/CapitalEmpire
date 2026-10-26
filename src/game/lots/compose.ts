@@ -263,7 +263,8 @@ function fromPreset(B: Build, lot: LotGeom, st: ComposeState, p: { preset: LotPr
     if (!it) return;
     const car = it.cat === 'Vehicles';
     if (car && (B.noCars || (st.decline === 1 && B.r() >= CAR_KEEP_D1))) { B.drops?.push({ preset: preset.id, prop: fit.from[k]!, id: t.id, why: B.noCars ? 'no cars on a derelict lot' : 'cars thinned on a shabby lot' }); return; }
-    const s = car ? 1 : q.scale * ownerScaleOf(q.id);
+    // a car's scale is its owner size (ownerScaleOf), the engine draws it at CAR_SCALE times that
+    const s = q.scale * ownerScaleOf(q.id);
     // a whole preset's prop in front of the lot is a street item (the verge: done() keeps it there, as it keeps a procedural one)
     const item = B.atW({ id: t.id, s, flip: t.flip, h: footprintOf(t.id, s, t.flip) }, toWorld(f, q.x, q.y), { plant: it.kind === 'tree' || it.kind === 'bush', from: { preset: preset.id, prop: fit.from[k]! }, street: preset.whole === true && q.y < 0 });
     if (item && !item.fence && !item.wheel) ups++;

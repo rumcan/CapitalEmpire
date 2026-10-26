@@ -10,23 +10,15 @@
 > and keep this file current. Ask the owner before pushing or opening a PR.
 
 ## Now (the current work, newest first)
-- **In flight (2026-10-26, two coders): the owner: "repack and also do cars. why cant i resize cars in the library. every single prop and
-  decal should be resizable so it has a standard size for placement."** (a) Business art re-packed from the largest source
-  (`art/theme-consistency/exports/buildings/business-*.max@2x.png`, else the master) at what each owner scale needs, and `size-report.ts`
-  reading that source as `native` (`prep-business-art.mjs`). (b) Cars and lot decals resizable: the studio's Library no longer treats
-  `kind car` and `cat Lots` as fixed; a car's override multiplies its drawn size everywhere (parked, placed, on the roads; footprint
-  follows); a decal's override multiplies its drawn scale; the dev editor resizes cars. If a chat ends mid-way: check `git status` in the
-  worktree, typecheck, run the tests named in the briefs, then verify in the studio (a car card and a decal card have Smaller/Bigger; the
-  stadium grows past x0.64) and in the lab.
-- **House sizes (the owner: "you have houses in the game that are at max size too small. i need those fixed ... the person wont even fit
-  through the door at max size of the house").** Fixed in the studio: `scripts/assets/review/size-report.ts` now takes `native` from the
-  source picture's real width (TrickOrTreat library, the export's hd, Capital art), so the Library allows a sprite up to its source pixels
-  and shows "once packed again (Rebuild game sprites)" above what the atlas holds; Rebuild then packs it sharp. Caveat: 45 old houses
-  (e.g. House 1 north) are never drawn as themselves but as a four-view stand-in picked by position (`newart.ts` SWAP); their ceiling is
-  the stand-in's own pixels (about x2), and Rebuild raises a stand-in only through the stand-in's own size. The lab's palette leaves those
-  old houses out (`drawnAsStandIn`). **Next:** the owner sizes the self-drawn houses with the person cursor and clicks Rebuild; if a
-  stand-in house must be bigger than about x2, prep-sprites should pack each stand-in for the largest size any house drawn by it needs
-  (not done).
+- **Done (2026-10-26): cars resizable and business art re-packed (the owner: "repack and also do cars ... every single prop and decal
+  should be resizable so it has a standard size for placement").** Cars: one studio size per model (`ext/car-art carOwnerScale`), applied
+  parked, placed and on the roads (traffic, sim client, range host), footprints follow; the studio's car cards have Smaller/Bigger; the
+  dev editor resizes cars; tests `tests/cars-size.test.ts`. Car pictures stop being sharp past about x1.15 (their art); `size-report.ts`
+  gives cars no per-model native yet. Decals already had Smaller/Bigger (cat 'Decals'); `prep-decals.mjs` bakes their sizes at Rebuild.
+  Business art (`prep-business-art.mjs`): packed from the masters at the owner's sizes, never shrinking; the 19 ids drawn from four-view
+  art (views-library REPLACE: stadium, diner, sportsbar, motel, hotel, golf-clubhouse ...) are held, since their limit is the four-view
+  art (about 590 px a view: the stadium's x0.64 is real); growing them needs higher-res four-view art (an art job). The max/max@2x exports
+  are upscaled crops, not more detail. Atlas unchanged: 3 business pages, 63.9 MiB RGBA8 of 96 MiB.
 - **Sprites still refuse to grow (the owner, with a studio screenshot: "cant resize the images ... this issue is on all the images"; the
   stadium: "pixelates above x0.64: its picture has no more pixels").** Not fixed yet; the owner has NOT finished sizing, so do not run
   Rebuild until they say so. Found: business artwork goes through its own pack, `scripts/assets/prep-business-art.mjs`, which shrinks
@@ -52,8 +44,8 @@
   (fences, bins, decals all editable); decals select with a click.
 
 ## Exact next step
-0. The "Sprites still refuse to grow" plan under Now (business art re-pack from the `max@2x` exports, the size report). Do not
-   Rebuild until the owner says the sizing is done.
+0. The owner finishes sizing in the studio Library; then Rebuild game sprites and check the buildings and cars in the lab with the
+   Person cursor. Higher-res four-view art for the 19 swapped businesses and the old stand-in houses is an art job for the owner.
 1. The owner sizes the houses in the studio Library, then Rebuild game sprites (the studio's button; `STUDIO_DEV_GAME=1`, so no npm
    build). Check a rebuilt house in the lab at its new size with the person cursor.
 2. (Done: merge saves, network.) Optionally make `/__dev/save` refuse lot-presets.json so only merges write it.

@@ -9,8 +9,8 @@ import { LU, LV } from '../src/game/lots/town';
 import { LIBRARY } from '../src/game/library';
 import { LOT_DECALS } from '../src/game/lot-decals';
 import { mulberry } from '../src/game/iso';
-import { CAR_SCALE } from '../src/game/ext/car-art';
-import { OWNER_SCALE, TABLE_SCALE } from '../src/game/lots/scales';
+import { CAR_SCALE, carSizeId } from '../src/game/ext/car-art';
+import { OWNER_SCALE, STUDIO_SCALE, TABLE_SCALE } from '../src/game/lots/scales';
 import { isBuilding } from '../src/game/mirror';
 import { footprintOf, turned } from '../src/game/lots/preset-art';
 import { toWorld } from '../src/game/lots/preset-frame';
@@ -396,10 +396,13 @@ test('compositions are pinned: digests of fixed seeds, drawn at the table sizes 
     [22, { use: LU.IND, level: LV.BUILT, decline: 0, seed: 777777 }, '0887558a'],
   ];
   for (const [, st] of CASES) assert.ok(!isCarPark(st), `${JSON.stringify(st)} is a car park`);
-  // drawn at the table's sizes, not the owner's studio sizes (scale-overrides.json): a studio resize must never break the suite
+  // drawn at the table's sizes, not the owner's studio sizes (scale-overrides.json): a studio resize must never break the suite. A car's studio size
+  // (carOwnerScale reads STUDIO_SCALE, not OWNER_SCALE) is set aside the same way, and put back after
   const live = { ...OWNER_SCALE }, use = (to: Record<string, number>) => { for (const k of Object.keys(OWNER_SCALE)) delete OWNER_SCALE[k]; Object.assign(OWNER_SCALE, to); };
+  const studio = STUDIO_SCALE as Record<string, number>, studioLive = { ...studio };
+  for (const i of LIBRARY) if (i.kind === 'car') delete studio[carSizeId(i.id)];
   use(TABLE_SCALE);
-  try { assert.deepEqual(CASES.map(([i, st]) => digest(compose(LOTS[i], st))), CASES.map(c => c[2])); } finally { use(live); }
+  try { assert.deepEqual(CASES.map(([i, st]) => digest(compose(LOTS[i], st))), CASES.map(c => c[2])); } finally { use(live); Object.assign(studio, studioLive); }
 });
 
 test('about 15% of built commercial lots are public car parks: a car park has an asphalt bay patch and no building', () => {

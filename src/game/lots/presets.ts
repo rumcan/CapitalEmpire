@@ -10,7 +10,7 @@ export type PresetState = 'built' | 'upgraded' | 'declined';
 export type View = 0 | 1 | 2 | 3;
 /** a lot's road angle: the side its street lies on, in eighth turns from the preset frame's canonical facing: 0 the street on +y (screen bottom-left), 1 +x+y (screen bottom), 2 +x (bottom-right), 3 +x-y (right), 4 -y (top-right), 5 -x-y (top), 6 -x (top-left), 7 -x+y (left) */
 export type Road = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
-/** a prop in a preset, in the lot's own frame (tiles): x, y the centre of its footprint, x along the street (0 at the left as seen from the street), y away from the street (0 at the street edge); scale: a multiplier of the sprite's owner scale (scales.ts OWNER_SCALE; vehicles: of 1), 1 = the prop's stored size */
+/** a prop in a preset, in the lot's own frame (tiles): x, y the centre of its footprint, x along the street (0 at the left as seen from the street), y away from the street (0 at the street edge); scale: a multiplier of the sprite's owner scale (scales.ts OWNER_SCALE; vehicles: of their studio size, ext/car-art carOwnerScale), 1 = the prop's stored size */
 export interface PresetProp { id: string; x: number; y: number; scale: number; view: View }
 /** a ground patch in the lot's frame: pts as x, y pairs (tiles); lines: its painted lines (parking bays, furrows) as segment end points x0, y0, x1, y1 in the same frame (tiles) */
 export interface PresetPatch { kind: 'drive' | 'walk' | 'lot' | 'yard' | 'bed'; tex: string; pts: number[]; lines?: number[] }

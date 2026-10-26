@@ -152,7 +152,7 @@ export class RangeHost {
     if (n <= 0) return;
     this.ctx.payUpkeep(n); b.season.upkeep += n; b.total.upkeep += n; this.ctx.save(); if (this.cardOpen) this.ctx.emit();
   }
-  /** the golfers and cars in the tile box as movers (reused): the golfers' 3D frames, the cars at CAR_SCALE about their centres */
+  /** the golfers and cars in the tile box as movers (reused): the golfers' 3D frames, the cars at their size (CAR_SCALE x the owner size) about their centres */
   movers_(x0: number, y0: number, x1: number, y1: number): Drawable[] {
     const out = this.movers; out.length = 0;
     if (!this.scene) return out;
@@ -167,9 +167,9 @@ export class RangeHost {
     }
     for (let k = 0; k < d.nCars; k++) {
       const c = d.cars[k]!; if (c.x < x0 || c.x > x1 || c.y < y0 || c.y > y1) continue;
-      const f = F[c.type % 5]![carHeading(c.ang)]!, m = this.carMover(k);
-      m.item = f.item; m.flip = f.flip; m.scale = CAR_SCALE; m.moving = true;
-      m.x = c.x - f.ox * CAR_SCALE; m.y = c.y - f.oy * CAR_SCALE; m.x0 = c.x - f.hx * CAR_SCALE; m.x1 = c.x + f.hx * CAR_SCALE; m.y0 = c.y - f.hy * CAR_SCALE; m.y1 = c.y + f.hy * CAR_SCALE;
+      const f = F[c.type % 5]![carHeading(c.ang)]!, m = this.carMover(k), z = CAR_SCALE * f.size;
+      m.item = f.item; m.flip = f.flip; m.scale = z; m.moving = true;
+      m.x = c.x - f.ox * z; m.y = c.y - f.oy * z; m.x0 = c.x - f.hx * z; m.x1 = c.x + f.hx * z; m.y0 = c.y - f.hy * z; m.y1 = c.y + f.hy * z;
       out.push(m);
     }
     return out;

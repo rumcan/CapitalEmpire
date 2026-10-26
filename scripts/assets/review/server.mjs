@@ -39,6 +39,10 @@ const PORT = +(process.argv[process.argv.indexOf('--port') + 1] || 5179) || 5179
 const ATLAS = path.join(ROOT, 'src/assets/atlas'), CACHE = path.join(ROOT, 'output/review/thumbs');
 fs.mkdirSync(CACHE, { recursive: true });
 const LOT_RES = 0.45;
+/** a car's size key (src/game/ext/car-art carSizeId, the same rule): the eight headings of one car model (cars:<model>:<heading>) share the model's size */
+const carKey = id => id.replace(/^(cars:.+):(?:SE|S|SW|W|NW|N|NE|E)$/, '$1');
+/** the road cars' size (src/game/ext/car-art CAR_SCALE): a car is drawn at it times its studio size, so its card shows that size */
+const CAR_SCALE = +(/export const CAR_SCALE = ([\d.]+)/.exec(fs.readFileSync(path.join(ROOT, 'src/game/ext/car-art/index.ts'), 'utf8'))?.[1] ?? 1);
 
 // ---------------------------------------------------------------- sizes: every sprite as the game draws it (review/size-report.ts)
 const SIZE_SRC = path.join(ROOT, 'scripts/assets/review/size-report.ts'), SIZE_OUT = path.join(ROOT, 'output/review/size-report.mjs');
@@ -348,11 +352,14 @@ http.createServer(async (req, res) => {
       for (const id of Object.keys(rm)) if (!have.has(id)) list.push({ id, name: rm[id].name ?? id, cat: rm[id].cat ?? 'Removed', kind: rm[id].kind ?? '', tex: null, w: rm[id].w ?? 100, h: rm[id].h ?? 100, quad: rm[id].quad, ax: rm[id].ax, ay: rm[id].ay });
       // every golf sprite under one heading: the tournament art (golf:) and the business art's course pieces and buildings (business:golf-)
       for (const s of list) if (/^(golf:|business:golf-)/.test(s.id)) s.cat = 'Golf';
-      for (const s of list) { s.base = s.kind === 'car' ? 0.8 : s.kind === 'walker' || s.kind === 'decal' || s.cat === 'Lots' ? 1 : mapScale(s.id); s.scale = s.kind === 'car' ? 0.8 : sc[s.id] ?? s.base; s.quad ??= [0, 0, s.w, s.h]; delete s.tex; delete s.page; }
+      // a car is drawn at the road cars' size (CAR_SCALE) times its studio size, which its model shares (sizeId): 1 when unset
+      for (const s of list) { const car = s.kind === 'car'; s.base = car ? 1 : s.kind === 'walker' || s.kind === 'decal' || s.cat === 'Lots' ? 1 : mapScale(s.id); s.scale = car ? (sc[carKey(s.id)] ?? 1) : (sc[s.id] ?? s.base); if (car) Object.assign(s, { sizeId: carKey(s.id), carScale: CAR_SCALE }); s.quad ??= [0, 0, s.w, s.h]; delete s.tex; delete s.page; }
       // the game's sizes (size-report.ts): the scale it places each sprite at, what a reset falls back to, the id whose size it takes (a building's
       // views share one), what it is drawn as and how big, the scale it is sharp to at the closest zoom and the most its source pixels allow
       for (const s of list) {
-        const e = rep[s.id]; if (!e || s.kind === 'car' || s.kind === 'walker' || s.kind === 'decal') continue;
+        const e = rep[s.id]; if (!e || s.kind === 'walker' || s.kind === 'decal') continue;
+        // a car's scale and base are its own (above); the report's sharp size is in the same units (the scale, over CAR_SCALE)
+        if (s.kind === 'car') { s.sharp = e.sharp; continue; }
         Object.assign(s, { scale: e.scale, base: e.base, sizeId: e.sizeId, drawn: e.drawn, sharp: e.sharp, native: e.native });
       }
       // the townspeople, for the cursor: each one's trimmed picture and where its feet are (the anchor) inside it, in native px
@@ -368,11 +375,12 @@ http.createServer(async (req, res) => {
     }
     if (req.method === 'POST' && P === '/api/scale') {
       const { id: asked, factor, reset } = await body(req), sc = readScales(), rep = await sizeReport(false), e = rep[asked];
-      // the size is the building's for any of its views (sizeId); a lot decal's base is 1 (prep-decals packs it at its scale), a sprite's is the
-      // game's own fallback (its table scale) when the game has it, else the owner's map scale
-      const id = e?.sizeId ?? asked, own = rep[id] ?? e;
-      const base = (library().find(x => x.id === asked)?.kind ?? readRemoved()[asked]?.kind) === 'decal' ? 1 : own?.base ?? mapScale(id);
-      const cur = sc[id] ?? own?.scale ?? base, next = reset ? base : +(cur * factor).toFixed(3);
+      // the size is the building's for any of its views (sizeId); a car's is its model's (carKey) with base 1, the road cars' size; a lot decal's base
+      // is 1 (prep-decals packs it at its scale), a sprite's is the game's own fallback (its table scale) when the game has it, else the owner's map scale
+      const kind = library().find(x => x.id === asked)?.kind ?? readRemoved()[asked]?.kind, car = kind === 'car';
+      const id = car ? carKey(asked) : e?.sizeId ?? asked, own = rep[id] ?? e;
+      const base = car || kind === 'decal' ? 1 : own?.base ?? mapScale(id);
+      const cur = sc[id] ?? (car ? base : own?.scale ?? base), next = reset ? base : +(cur * factor).toFixed(3);
       // never past its picture's own pixels: the smallest limit of the pictures that take this size (a building's four views; a stand-in's atlas)
       const limit = Math.min(...Object.values(rep).filter(x => x.sizeId === id && x.native != null).map(x => x.native));
       if (!reset && factor > 1 && next > limit * 1.001) return json({ id, scale: cur, base, refused: `pixelates above x${limit.toFixed(2)}: its picture has no more pixels` });
