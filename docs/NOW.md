@@ -24,11 +24,13 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 ### In flight
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |
+| T145 | #300 | `arena/T145-painted-terrain` | an agent worktree under `.claude/worktrees` | 5186 | The owner's brief (in the issue): the accepted golden fescue and lake tiles in the game, three authored sets NEAR/MID/FAR of four large tiles each, hash-checked from `eight-tiles/READY-MATERIALS.json`, on main's T128 painted-families runtime. Brief: `E:/ClaudeTemp/lead/t145-brief.md`. |
 | T144 | #296 | `arena/T144-light-library` | an agent worktree under `.claude/worktrees` | 5193 | The owner: "studio crashed with ran out of memory" (the browser tab; the PC at 1.5 GB free). Thumbs as WebP at the card's size, off-screen cards release their images; memory measured before and after. |
 
-**One coding agent at a time (the owner, 2026-10-26: "maybe just too many background tasks?", after the studio tab died with the PC at
-1.5 GB free): the lead dispatches one coding agent at a time (a second only when it is one light process, such as a gate scan); the rest
-wait as tickets. Agents start only the servers they need and stop them before reporting.**
+**Two coding agents at a time (the owner, 2026-10-26: first "maybe just too many background tasks?" after the studio tab died with the
+PC at 1.5 GB free, then "start up two coding agents"):** keep two coding agents running, start the next queue ticket when one lands, no
+more; each runs one heavy process at a time. Both stopped once at the usage limit (13:50) and were resumed: an agent that stops on a
+limit is resumed with a message, not restarted.
 
 **One studio (the owner, 2026-10-26: "when a studio is running it is the only studio and any changes made affect the actual game
 sprites"; "put the studio on the network for all pcs on network to edit").** The lot lab's branch is on main (#290): the only studio is
