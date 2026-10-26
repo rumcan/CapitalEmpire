@@ -90,7 +90,7 @@ export function makePalette(shell: Shell, host: PaletteHost) {
     } else if (group === 'decals') {
       for (const d of LOT_DECALS) {
         if ((cat && d.group !== cat) || (q && !d.id.toLowerCase().includes(q))) continue;
-        const t = tile(`${d.id} (${d.group}): click, then press on the lot`, a.decal === d.id, () => host.decal(d.id), d.id); host.decalThumb(t, d, px - 6); out.push(t);
+        const t = tile(`${d.id} (${d.group}): click, then press on the lot`, a.decal === d.id, () => host.decal(d.id), d.id); host.decalThumb(t, d, px - 2); out.push(t);
       }
     } else {
       const all = paletteSprites(group, cat, search);
