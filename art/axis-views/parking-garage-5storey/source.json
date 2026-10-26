@@ -1,0 +1,81 @@
+{
+ "id": "ce:parking-garage-5storey",
+ "slug": "parking-garage-5storey",
+ "category": "buildings",
+ "version": "parking-garage-5storey-screen-axis-4views-v1",
+ "crops": "recut",
+ "why": "the half-cell crops clip N, S (the subject crosses its half cell): cut from the sheet by its subjects",
+ "sheetSha256": "f02298190f8a94cc60dee017352f1e4a4a133e0391eb75eadef0880e12df5fa6",
+ "status": "hold",
+ "storeys": 5,
+ "views": {
+  "N": {
+   "file": "N.png",
+   "sha256": "85de9ca95b73a3e4f55d701a678188459d882f7c6e8eb359d28f633cc45445f5",
+   "sheetRect": {
+    "left": 67,
+    "top": 59,
+    "width": 628,
+    "height": 504
+   },
+   "trim": [
+    0,
+    0,
+    628,
+    504
+   ],
+   "heading": "front faces screen down"
+  },
+  "E": {
+   "file": "E.png",
+   "sha256": "796599d5508f02f0f28b61e0c3700a84f1d37ec4c911af9e68afcd680d2cad27",
+   "sheetRect": {
+    "left": 816,
+    "top": 64,
+    "width": 377,
+    "height": 499
+   },
+   "trim": [
+    0,
+    0,
+    377,
+    499
+   ],
+   "heading": "front faces screen right (its right side to the camera)"
+  },
+  "S": {
+   "file": "S.png",
+   "sha256": "ec0ae1305fa03b8446e7e1987ab7264d1ee8ade8481612ba9397ae166caffe90",
+   "sheetRect": {
+    "left": 64,
+    "top": 663,
+    "width": 648,
+    "height": 502
+   },
+   "trim": [
+    0,
+    0,
+    648,
+    502
+   ],
+   "heading": "front faces screen up (its rear to the camera)"
+  },
+  "W": {
+   "file": "W.png",
+   "sha256": "fa3add2418de532c15cca692eb96600f7bf77ae2be098ba09f47e11d2a875164",
+   "sheetRect": {
+    "left": 810,
+    "top": 651,
+    "width": 384,
+    "height": 513
+   },
+   "trim": [
+    0,
+    0,
+    384,
+    513
+   ],
+   "heading": "front faces screen left (its left side to the camera)"
+  }
+ }
+}

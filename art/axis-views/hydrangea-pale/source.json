@@ -1,0 +1,63 @@
+{
+ "id": "landscape:hydrangea-pale",
+ "slug": "hydrangea-pale",
+ "category": "landscaping",
+ "version": "hydrangea-pale-screen-axis-4views-v1",
+ "crops": "half-cells",
+ "sheetSha256": "9e49181bdf15c8481dddbcc79a20ec997056a191f06b517326618b54010edc70",
+ "status": "passed-with-alpha-residue-warnings",
+ "views": {
+  "N": {
+   "file": "N.png",
+   "sha256": "da4237e1443913c647980a022362d7d207ca68a1f371612539f0dbffb7835de2",
+   "nativeSha256": "da4237e1443913c647980a022362d7d207ca68a1f371612539f0dbffb7835de2",
+   "pixelSha256": "93493f1d7a44449ec591d57c0917add532f353ade2271045ca3afc01e1025f42",
+   "trim": [
+    64,
+    108,
+    560,
+    475
+   ],
+   "heading": "front faces screen down"
+  },
+  "E": {
+   "file": "E.png",
+   "sha256": "decfcc8446e5e6d5864c64121f60561bf574deb95c73e0f29ab8c54949e069c7",
+   "nativeSha256": "decfcc8446e5e6d5864c64121f60561bf574deb95c73e0f29ab8c54949e069c7",
+   "pixelSha256": "15a09dcdb9f404aca6ca1b8ce06dcce94ba3a68fc09f52b3de6daa1bed46fea7",
+   "trim": [
+    73,
+    112,
+    508,
+    470
+   ],
+   "heading": "front faces screen right (its right side to the camera)"
+  },
+  "S": {
+   "file": "S.png",
+   "sha256": "d5c445915534880b53c25f7b0e80ae0db1d97c95af204c122183b17fecc50c16",
+   "nativeSha256": "d5c445915534880b53c25f7b0e80ae0db1d97c95af204c122183b17fecc50c16",
+   "pixelSha256": "29c033bb5a3db6f0032eb02653f002a217681cd986ea1a75e8e65de325a6d7bc",
+   "trim": [
+    71,
+    60,
+    544,
+    453
+   ],
+   "heading": "front faces screen up (its rear to the camera)"
+  },
+  "W": {
+   "file": "W.png",
+   "sha256": "a6ea908cc1d5e1313a9b43924d4c2c370964aa7136b49f747bb07e020c62edb0",
+   "nativeSha256": "a6ea908cc1d5e1313a9b43924d4c2c370964aa7136b49f747bb07e020c62edb0",
+   "pixelSha256": "a9e7a181fdff290440d99acab50285d708af785dc6ec4d63aca24d3121ff9d86",
+   "trim": [
+    68,
+    80,
+    507,
+    430
+   ],
+   "heading": "front faces screen left (its left side to the camera)"
+  }
+ }
+}

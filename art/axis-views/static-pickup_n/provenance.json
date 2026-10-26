@@ -1,0 +1,596 @@
+{
+  "id": "static:pickup_n",
+  "slug": "static-pickup_n",
+  "source": "art/theme-consistency/exports/cars/static-pickup_n.native.png",
+  "details": "1980s mustardyellow singlecab pickuptruck, EMPTY deep darkmetal cargobed, blackrearbumper, silverwheels, squaredcab, narrowdarkside stripe. Nose and openbed swapcorrectly underrotations.",
+  "category": "cars",
+  "output": "art/theme-consistency/generated/cars/static-pickup_n-screen-axis-4views-v1.png",
+  "provenance": "art/theme-consistency/generated/cars/static-pickup_n-screen-axis-4views-v1.provenance.json",
+  "references": [
+    "art/theme-consistency/references/theme-authoritative.png",
+    "art/theme-consistency/exports/cars/static-pickup_n.native.png"
+  ],
+  "prompt": "One EMPTY vehicle only. Image1 THEME reference: coherent detailed stylized hand-painted Maple Falls town, warmupper-right lateafternoon/earlydusk light, softpaintedmaterials notphotography. Image2 EXACT vehicle identity, enlarge/reconstructpaintedquality butpreservebodytype,paint,roofrack/bed,wheelbase,windowlayout and trim. 1980s mustardyellow singlecab pickuptruck, EMPTY deep darkmetal cargobed, blackrearbumper, silverwheels, squaredcab, narrowdarkside stripe. Nose and openbed swapcorrectly underrotations.\nGenerate SAME car in FOUR missing SCREEN-AXIS directions, genuine quarterturns underfixedlight. SQUARE transparent RGBA PNG, strict2x2cell sheet, rowmajor TOPLEFT=N nose points exactly SCREEN DOWN, raised orthographic head-onfront with visiblebonnet/roof, frontbumper horizontal; TOPRIGHT=E nose points exactly SCREEN RIGHT, perfectly horizontal longbody sideview fromelevatedcamera, roofvisible, wheelcontactlinehorizontal; BOTTOMLEFT=S nosepoints exactly SCREEN UP, true REAR visible with taillights, frontgrillehidden, bodyextendsvertically; BOTTOMRIGHT=W nose exactly SCREEN LEFT, oppositeside profile, elevatedroofvisible. All cameraelevation35degrees, parallelprojection, NO perspective, NO usualdiagonalisometric±26degree noseheadings. Keepmatchingphysicalscale, narrowfront/rearversuslongside naturally. SunalwaysSCREENUPPERRIGHT, tinycontactshade lowerleft, no mirroring to fakeanotherheading. Emptywindows, nodriver/passengers. Fourindependent completecutouts with15percent transparentmargin percell, centre guttersclear. TRUE ALPHA outsidevehicle, NO greyfloor, shadowdisc, parkingbay, road, scene, label, backdrop, checkerboard or whiteplate. No extraobjects. Headlampswarmwhiteandtaillightsred inphysicalpositions.",
+  "generator": "built-in image_gen",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-631ee384-e18b-4be3-a24e-eb0ef99cee6f.png",
+  "date": "2026-10-26",
+  "viewSet": "screen-axis-4",
+  "viewsOrder": [
+    "N",
+    "E",
+    "S",
+    "W"
+  ],
+  "lighting": "upper-right toward lower-left",
+  "integrationStatus": "pending-not-full-eight-view-source",
+  "alphaReview": "pending",
+  "processing": "Native generator output copied byte-for-byte. Crops pending; no resize or pixel repaint.",
+  "screenAxisExport": {
+    "schema": 1,
+    "id": "static:pickup_n",
+    "viewSet": "screen-axis-4",
+    "viewsOrder": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "sheet": "art/theme-consistency/generated/cars/static-pickup_n-screen-axis-4views-v1.png",
+    "sheetSha256": "91cb952410556964f33dc7808a26ec9422121dd091b94b46213a22e587bffac0",
+    "nativeSheetPixels": [
+      1254,
+      1254
+    ],
+    "processing": "Exact source-rectangle pixel crops only. No resize, alpha repaint, recolour, transform or mirroring. Alpha thresholds are diagnostic only; not a visual approval or alpha edit.",
+    "rectangleSelection": {
+      "file": "art/theme-consistency/generated/cars/static-pickup_n-screen-axis-4views-v1.source-rects-v2.json",
+      "review": {
+        "reviewer": "horizontal_crop_pack",
+        "method": "Manually inspected full source and alpha>=128 connected-component extents. Unequal nonoverlapping regions contain complete subjects. Source pixels unchanged; object and padding not rescaled.",
+        "evidence": "art/theme-consistency/generated/cars/static-pickup_n-screen-axis-4views-v1.png",
+        "acceptanceScope": "Source rectangle selection only, not physical-angle or live game approval"
+      }
+    },
+    "fileContractStatus": "passed-with-alpha-residue-warnings",
+    "visualReviewStatus": "pending",
+    "integrationStatus": "pending-not-full-eight-view-source",
+    "axisLineCounts": {
+      "vertical": 1075,
+      "horizontal": 251,
+      "verticalAtLeast16": 991,
+      "horizontalAtLeast16": 0,
+      "verticalAtLeast128": 983,
+      "horizontalAtLeast128": 0
+    },
+    "issues": [],
+    "warnings": [
+      "N: cell edge contains only low-alpha1..15 residue",
+      "E: cell edge contains only low-alpha1..15 residue",
+      "S: cell edge contains only low-alpha1..15 residue",
+      "W: cell edge contains only low-alpha1..15 residue"
+    ],
+    "views": {
+      "N": {
+        "sourceRect": {
+          "left": 0,
+          "top": 0,
+          "width": 430,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/cars/static-pickup_n-screen-axis-4views-v1-crops-v2/N.native.png",
+        "nativeSha256": "c2c9a437ea9ada2a3d4cb5580ac535e7934cfe35935d7ef25d97d3fc5c65b2fa",
+        "pixelSha256": "e64badb9c820d4f049bd9c1f9118f0ad6f7bc4952f72c83540188cc8e5d203ac",
+        "trimmedPixelSha256": "5f5bc57ead52e104fc0d0821442bd51d252841a57e93b51a3ff5c90688d8584a",
+        "nativePixels": [
+          430,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 132069,
+          "transparent": 137541,
+          "transparentFraction": 0.5101479915433403,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 0,
+            "top": 55,
+            "width": 430,
+            "height": 572
+          },
+          "padding": {
+            "left": 0,
+            "top": 55,
+            "right": 0,
+            "bottom": 0
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 137541,
+            "oneTo15": 7750,
+            "sixteenTo127": 1227,
+            "one28To254": 122944,
+            "opaque255": 148
+          },
+          "edge": {
+            "nonzero": 62,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 124319,
+            "transparent": 145291,
+            "transparentFraction": 0.5388932161269983,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 92,
+              "top": 84,
+              "width": 309,
+              "height": 467
+            },
+            "padding": {
+              "left": 92,
+              "top": 84,
+              "right": 29,
+              "bottom": 76
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 123092,
+            "transparent": 146518,
+            "transparentFraction": 0.5434442342643077,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 93,
+              "top": 87,
+              "width": 307,
+              "height": 463
+            },
+            "padding": {
+              "left": 93,
+              "top": 87,
+              "right": 30,
+              "bottom": 77
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 124068,
+          "transparent": 145542,
+          "transparentFraction": 0.5398241904973851,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 92,
+            "top": 86,
+            "width": 309,
+            "height": 465
+          },
+          "padding": {
+            "left": 92,
+            "top": 86,
+            "right": 29,
+            "bottom": 76
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      },
+      "E": {
+        "sourceRect": {
+          "left": 430,
+          "top": 0,
+          "width": 824,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/cars/static-pickup_n-screen-axis-4views-v1-crops-v2/E.native.png",
+        "nativeSha256": "eeaea3fd048bc4f09604b4201d998c7a21c55879ac39bfda097f4fe9b859461f",
+        "pixelSha256": "52973bbc88fbc26c972379e733a305eb09d4bd72b58750155ba111d3e89f9e51",
+        "trimmedPixelSha256": "0847a32ea845ef224c70d424558c2ccac0c587cd175d737c8967469e19ca0e42",
+        "nativePixels": [
+          824,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 193382,
+          "transparent": 323266,
+          "transparentFraction": 0.6256987349220359,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 0,
+            "top": 21,
+            "width": 808,
+            "height": 606
+          },
+          "padding": {
+            "left": 0,
+            "top": 21,
+            "right": 16,
+            "bottom": 0
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 323266,
+            "oneTo15": 23685,
+            "sixteenTo127": 1680,
+            "one28To254": 167779,
+            "opaque255": 238
+          },
+          "edge": {
+            "nonzero": 132,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 169697,
+            "transparent": 346951,
+            "transparentFraction": 0.6715423266905127,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 36,
+              "top": 191,
+              "width": 756,
+              "height": 324
+            },
+            "padding": {
+              "left": 36,
+              "top": 191,
+              "right": 32,
+              "bottom": 112
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 168017,
+            "transparent": 348631,
+            "transparentFraction": 0.6747940570756105,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 36,
+              "top": 191,
+              "width": 755,
+              "height": 324
+            },
+            "padding": {
+              "left": 36,
+              "top": 191,
+              "right": 33,
+              "bottom": 112
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 169189,
+          "transparent": 347459,
+          "transparentFraction": 0.6725255880212446,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 36,
+            "top": 191,
+            "width": 756,
+            "height": 324
+          },
+          "padding": {
+            "left": 36,
+            "top": 191,
+            "right": 32,
+            "bottom": 112
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      },
+      "S": {
+        "sourceRect": {
+          "left": 0,
+          "top": 627,
+          "width": 430,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/cars/static-pickup_n-screen-axis-4views-v1-crops-v2/S.native.png",
+        "nativeSha256": "f8389a0512ce5cd19162fb763f4d3e6721b9380d655f4305f2c0d4d1bece3d27",
+        "pixelSha256": "fb10329b1b7de077f5f5db1284f784e76229a76fad95fc603723bf163daa9c75",
+        "trimmedPixelSha256": "cb1dc9ffbdca2b56dcc57965d367da786600aa26485c6afab00345d5653c6811",
+        "nativePixels": [
+          430,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 126368,
+          "transparent": 143242,
+          "transparentFraction": 0.5312933496532027,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 37,
+            "top": 0,
+            "width": 393,
+            "height": 627
+          },
+          "padding": {
+            "left": 37,
+            "top": 0,
+            "right": 0,
+            "bottom": 0
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 143242,
+            "oneTo15": 7805,
+            "sixteenTo127": 1175,
+            "one28To254": 117178,
+            "opaque255": 210
+          },
+          "edge": {
+            "nonzero": 187,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 118563,
+            "transparent": 151047,
+            "transparentFraction": 0.5602425726048738,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 91,
+              "top": 66,
+              "width": 308,
+              "height": 433
+            },
+            "padding": {
+              "left": 91,
+              "top": 66,
+              "right": 31,
+              "bottom": 128
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 117388,
+            "transparent": 152222,
+            "transparentFraction": 0.5646007195578799,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 92,
+              "top": 66,
+              "width": 306,
+              "height": 432
+            },
+            "padding": {
+              "left": 92,
+              "top": 66,
+              "right": 32,
+              "bottom": 129
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 118334,
+          "transparent": 151276,
+          "transparentFraction": 0.5610919476280554,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 91,
+            "top": 66,
+            "width": 308,
+            "height": 433
+          },
+          "padding": {
+            "left": 91,
+            "top": 66,
+            "right": 31,
+            "bottom": 128
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      },
+      "W": {
+        "sourceRect": {
+          "left": 430,
+          "top": 627,
+          "width": 824,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/cars/static-pickup_n-screen-axis-4views-v1-crops-v2/W.native.png",
+        "nativeSha256": "104938cc888689c254ab369ddec7c3ccba3888d0e2165474937c3ce5f0335bb3",
+        "pixelSha256": "7aced187a15cf26805e47f7f5e8a897d469178d2fdd62d417f98ce8614b55a74",
+        "trimmedPixelSha256": "42cbb2c236af8bf07e191e2d1787dbfe86a03d2a4b4440bfe03da7a945fc5f09",
+        "nativePixels": [
+          824,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 194681,
+          "transparent": 321967,
+          "transparentFraction": 0.6231844505349871,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 1,
+            "top": 0,
+            "width": 805,
+            "height": 627
+          },
+          "padding": {
+            "left": 1,
+            "top": 0,
+            "right": 18,
+            "bottom": 0
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 321967,
+            "oneTo15": 24395,
+            "sixteenTo127": 1688,
+            "one28To254": 168194,
+            "opaque255": 404
+          },
+          "edge": {
+            "nonzero": 517,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 170286,
+            "transparent": 346362,
+            "transparentFraction": 0.6704022855019278,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 41,
+              "top": 175,
+              "width": 751,
+              "height": 327
+            },
+            "padding": {
+              "left": 41,
+              "top": 175,
+              "right": 32,
+              "bottom": 125
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 168598,
+            "transparent": 348050,
+            "transparentFraction": 0.6736695003174308,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 42,
+              "top": 176,
+              "width": 750,
+              "height": 325
+            },
+            "padding": {
+              "left": 42,
+              "top": 176,
+              "right": 32,
+              "bottom": 126
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 169452,
+          "transparent": 347196,
+          "transparentFraction": 0.6720165373716728,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 41,
+            "top": 176,
+            "width": 751,
+            "height": 326
+          },
+          "padding": {
+            "left": 41,
+            "top": 176,
+            "right": 32,
+            "bottom": 125
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      }
+    }
+  },
+  "visualReviewStatus": "pending"
+}

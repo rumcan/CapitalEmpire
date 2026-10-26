@@ -1,0 +1,63 @@
+{
+ "id": "town:grocery",
+ "slug": "town-grocery",
+ "category": "buildings",
+ "version": "town-grocery-screen-axis-4views-v1",
+ "crops": "half-cells",
+ "sheetSha256": "cfc652707d091fb8febbcf9e37f0572e156d50a9354bdd1d46ddfed1ede4e7c7",
+ "status": "passed-with-alpha-residue-warnings",
+ "views": {
+  "N": {
+   "file": "N.png",
+   "sha256": "166539d7a08d3ad1fc0b58604c828a0d2f9bbe46209c0ebe5315caaf11f9bf94",
+   "nativeSha256": "166539d7a08d3ad1fc0b58604c828a0d2f9bbe46209c0ebe5315caaf11f9bf94",
+   "pixelSha256": "8914d5c8deee70879e0d9ba610936c9d293ed615f9e49a87b70e3b06b5b9978d",
+   "trim": [
+    116,
+    60,
+    463,
+    518
+   ],
+   "heading": "front faces screen down"
+  },
+  "E": {
+   "file": "E.png",
+   "sha256": "64a1b5c71febccefe165979798c9976b4059957ccb8682e729ee1c50cbaae6a4",
+   "nativeSha256": "64a1b5c71febccefe165979798c9976b4059957ccb8682e729ee1c50cbaae6a4",
+   "pixelSha256": "512d16f017eb5868e027ce36258ec153a199b6e880d1a3f522c50a149922950e",
+   "trim": [
+    75,
+    88,
+    485,
+    477
+   ],
+   "heading": "front faces screen right (its right side to the camera)"
+  },
+  "S": {
+   "file": "S.png",
+   "sha256": "0899310c5beeca79fe8cdba54089ca3cf1b6346781338567eaaa642c65faf7cd",
+   "nativeSha256": "0899310c5beeca79fe8cdba54089ca3cf1b6346781338567eaaa642c65faf7cd",
+   "pixelSha256": "7380adb10a630d05bbec8dc659735fa04e49f39edf12de78f5f7dd6eed063b07",
+   "trim": [
+    109,
+    28,
+    464,
+    501
+   ],
+   "heading": "front faces screen up (its rear to the camera)"
+  },
+  "W": {
+   "file": "W.png",
+   "sha256": "f02814aeb187676480c489f0a6b2f1d6b2aae8025cd2c40ace65a00b1fc38c04",
+   "nativeSha256": "f02814aeb187676480c489f0a6b2f1d6b2aae8025cd2c40ace65a00b1fc38c04",
+   "pixelSha256": "807dc0613ba9a94bad28bfab3f215d65b8463d4fec131b3ea1a65c229148d933",
+   "trim": [
+    58,
+    62,
+    473,
+    459
+   ],
+   "heading": "front faces screen left (its left side to the camera)"
+  }
+ }
+}

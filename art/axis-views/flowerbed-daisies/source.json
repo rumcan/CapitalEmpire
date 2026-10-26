@@ -1,0 +1,87 @@
+{
+ "id": "landscape:flowerbed-daisies",
+ "slug": "flowerbed-daisies",
+ "category": "landscaping",
+ "version": "flowerbed-daisies-screen-axis-4views-v1",
+ "crops": "crops-v2",
+ "sheetSha256": "6744d1560ce536ba05ad53eadabbc9db3c31dddd0f1395e638b1c1579f00055e",
+ "status": "passed-with-alpha-residue-warnings",
+ "views": {
+  "N": {
+   "file": "N.png",
+   "sha256": "7b9c1bd2e17f46b1bf49dd3fd5c2008b5da77150762c33afe238e9b8befbd5bc",
+   "nativeSha256": "7b9c1bd2e17f46b1bf49dd3fd5c2008b5da77150762c33afe238e9b8befbd5bc",
+   "pixelSha256": "2e100063013238fce6adcbc86ddafe6981d8327c8931868fed089d408ccbc3e5",
+   "sheetRect": {
+    "left": 0,
+    "top": 0,
+    "width": 890,
+    "height": 627
+   },
+   "trim": [
+    92,
+    267,
+    737,
+    242
+   ],
+   "heading": "front faces screen down"
+  },
+  "E": {
+   "file": "E.png",
+   "sha256": "4f692cdb6a41f604276685685261f9b74dc8f192a0f36f4c9c9e879744f32072",
+   "nativeSha256": "4f692cdb6a41f604276685685261f9b74dc8f192a0f36f4c9c9e879744f32072",
+   "pixelSha256": "d0c7090cc844672c25ae23963317584df14d27328655c7c33a6dc3e1a48bc8ad",
+   "sheetRect": {
+    "left": 890,
+    "top": 0,
+    "width": 364,
+    "height": 627
+   },
+   "trim": [
+    56,
+    185,
+    232,
+    339
+   ],
+   "heading": "front faces screen right (its right side to the camera)"
+  },
+  "S": {
+   "file": "S.png",
+   "sha256": "7db8129fd396e72834c97c1839d6b8e75e2a277602460304adc5099a8311ca24",
+   "nativeSha256": "7db8129fd396e72834c97c1839d6b8e75e2a277602460304adc5099a8311ca24",
+   "pixelSha256": "601a50b7fbec50e92327a15e156b4ee41de1fc7f0722b86d5b84154e9a1e2658",
+   "sheetRect": {
+    "left": 0,
+    "top": 627,
+    "width": 890,
+    "height": 627
+   },
+   "trim": [
+    89,
+    184,
+    743,
+    228
+   ],
+   "heading": "front faces screen up (its rear to the camera)"
+  },
+  "W": {
+   "file": "W.png",
+   "sha256": "5d46a7a3be3c346285fc482f3fa48dd3ea31904366c7b1d9ab4abe44f96ec425",
+   "nativeSha256": "5d46a7a3be3c346285fc482f3fa48dd3ea31904366c7b1d9ab4abe44f96ec425",
+   "pixelSha256": "b1761ee6bda9be04ef320898bafeaac08c7cb00f876b9396a8bafa1903dd53ab",
+   "sheetRect": {
+    "left": 890,
+    "top": 627,
+    "width": 364,
+    "height": 627
+   },
+   "trim": [
+    58,
+    81,
+    239,
+    355
+   ],
+   "heading": "front faces screen left (its left side to the camera)"
+  }
+ }
+}

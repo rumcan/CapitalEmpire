@@ -19,6 +19,7 @@ import { OWNER_SCALE, TABLE_SCALE } from '../../../src/game/lots/scales';
 import { lookOf, standInCandidates } from '../../../src/game/newart';
 import { PIXEL_LIMIT, PIXEL_SLACK, atlasRes } from '../../../src/game/sizes';
 import { VIEW_ART } from '../../../src/game/views-library';
+import { AXIS_SETS } from '../../../src/game/axis-library';
 import { CAR_SCALE, carModelSize, carOwnerScale, carSizeId } from '../../../src/game/ext/car-art';
 import { STUDIO_SCALE } from '../../../src/game/lots/scales';
 import type { LibItem } from '../../../src/game/types';
@@ -28,8 +29,10 @@ import { capitalItems } from '../capital-art.mjs';
 const ROOT = process.cwd(), INDEX = new Map(LIBRARY.map((it, i) => [it.id, i] as const));
 const span = (it: LibItem) => { const b = it.boxes[0]; return b ? b.hx + b.hy : 1; };
 const isCar = (id: string) => LIBRARY[INDEX.get(id) ?? -1]?.kind === 'car';
-/** the id whose studio size a sprite takes: a view's or an east view's building, a car's model (carSizeId, for cars only: a building's variation views are their own) */
-const sizeIdOf = (id: string) => { const v = /^view:(.+):(se|sw|nw)$/.exec(id); return v ? v[1]! : id.startsWith('east:') && INDEX.has(id.slice(5)) ? id.slice(5) : isCar(id) ? carSizeId(id) : id; };
+/** the screen-axis pictures' subjects (axis-library.ts, T154): a subject's four N, E, S, W pictures take its size */
+const AXIS_OF = new Map<string, string>(Object.entries(AXIS_SETS).flatMap(([s, views]) => views.map(v => [v, s] as const)));
+/** the id whose studio size a sprite takes: a view's or an east view's building, a screen-axis picture's subject, a car's model (carSizeId, for cars only: a building's variation views are their own) */
+const sizeIdOf = (id: string) => { const a = AXIS_OF.get(id); if (a !== undefined && !isCar(id)) return a; const v = /^view:(.+):(se|sw|nw)$/.exec(id); return v ? v[1]! : id.startsWith('east:') && INDEX.has(id.slice(5)) ? id.slice(5) : isCar(id) ? carSizeId(id) : id; };
 const scaleOf = (id: string) => isCar(id) ? carOwnerScale(id) : OWNER_SCALE[sizeIdOf(id)] ?? OWNER_SCALE[id] ?? 1;
 /** the four-view sources' native widths (art/building-views/<slug>/<DIR>.png) by the library id each view is drawn as */
 const NATIVE_W = new Map<string, number>(), STORE = path.join(ROOT, 'art/building-views');
@@ -41,6 +44,17 @@ if (fs.existsSync(STORE)) for (const slug of fs.readdirSync(STORE)) {
     const f = path.join(STORE, slug, `${dir}.png`); if (fs.existsSync(f)) NATIVE_W.set(lid, fs.readFileSync(f).readUInt32BE(16));
   }
 }
+/** the screen-axis pictures' native widths (art/axis-views/<slug>/source.json: each view trimmed to its subject, as prep-axis-views.mjs packs it) */
+const AXIS_STORE = path.join(ROOT, 'art/axis-views'), AXIS_CAR = new Map<string, Record<string, number>>();
+if (fs.existsSync(AXIS_STORE)) for (const slug of fs.readdirSync(AXIS_STORE)) {
+  const src = path.join(AXIS_STORE, slug, 'source.json'); if (!fs.existsSync(src)) continue;
+  const s = JSON.parse(fs.readFileSync(src, 'utf8')) as { id: string; views: Record<string, { trim: number[] }> }, set = AXIS_SETS[s.id];
+  if (set) set.forEach((v, i) => { const t = s.views['NESW'[i]!]?.trim; if (t && INDEX.has(v)) NATIVE_W.set(v, t[2]!); });
+  // an eight-way car's cardinal headings (prep-cars.mjs takes them by nose direction, trimmed to the car: the pad off)
+  else if (/^cars:/.test(s.id)) AXIS_CAR.set(s.id.slice(5), Object.fromEntries(Object.entries(s.views).map(([k, v]) => [k, v.trim[2]! - 8])));
+}
+/** the manifest's heading for a screen-axis heading's nose (the set's N points down: the manifest's S) */
+const NOSE_KEY: Record<string, string> = { N: 'S', E: 'E', S: 'N', W: 'W' };
 /** the car pictures' native widths (art/cars/<model>/manifest.json, prep-cars.mjs): each heading is the library id cars:<model>:<key>, and the eight share one size */
 const CARS = path.join(ROOT, 'art/cars');
 if (fs.existsSync(CARS)) for (const model of fs.readdirSync(CARS)) {
@@ -48,6 +62,7 @@ if (fs.existsSync(CARS)) for (const model of fs.readdirSync(CARS)) {
   for (const v of (JSON.parse(fs.readFileSync(man, 'utf8')) as { views: { key: string; file: string }[] }).views) {
     const id = `cars:${model}:${v.key}`, f = path.join(CARS, model, v.file); if (INDEX.has(id) && fs.existsSync(f)) NATIVE_W.set(id, fs.readFileSync(f).readUInt32BE(16));
   }
+  for (const [k, w] of Object.entries(AXIS_CAR.get(model) ?? {})) { const id = `cars:${model}:${NOSE_KEY[k]}`; if (INDEX.has(id)) NATIVE_W.set(id, w); }
 }
 /** prep-sprites.mjs packs a town sprite at 0.6 x its largest drawn scale (the owner's scale +5%, the forest's 1.5), up to 3x its source (upscaled past it) */
 const FOREST = new Set([...fs.readFileSync(path.join(ROOT, 'src/game/forest.ts'), 'utf8').matchAll(/'([a-z]+:[^']+)'/g)].map(m => m[1]!));
@@ -127,7 +142,9 @@ LIBRARY.forEach((it, i) => {
     // no source found: a town sprite packed short of its largest drawn scale is short of its atlas (the old limit)
     native = px ? px / (ATLAS_MIP0 * it.w) / (it.kind === 'car' ? CAR_SCALE : 1) : atlasRes(it) < ATLAS_MIP0 * packedFor(it.id) * 0.995 ? PIXEL_LIMIT[i]! : null;
   }
-  else if (!self) {
+  // an old picture with screen-axis views beside it (a prop, T154): the smaller of its own source's limit and theirs
+  if (self && views !== null && !NATIVE_W.has(it.id) && atlasSprite) { const px = sourcePx(it.id); if (px && native !== null) native = Math.min(native, px / (ATLAS_MIP0 * it.w)); }
+  if (!self) {
     // drawn as a stand-in: the smallest of its stand-ins' own pixels, as a scale of this building (a stand-in fills its footprint, span for span);
     // prep-views packs each stand-in for what the buildings drawn as it need, so past this a Rebuild upscales (soft). Its sharp when unknown
     const limits = standInCandidates(i, scale).map(s => { const n = LIBRARY[s]!, v = viewsNative(sizeIdOf(n.id)); return v === null ? null : v * span(n) / span(it); });

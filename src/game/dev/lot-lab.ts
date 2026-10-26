@@ -25,6 +25,7 @@ import type { LibItem } from '../types';
 import { drawnAsStandIn, lookOf } from '../newart';
 import { spriteRect, type Drawable } from '../sprites';
 import { footprintOf, ownerScaleOf } from '../lots/preset-art';
+import { AXIS_SETS } from '../axis-library';
 import { worldX, worldY, ZOOM_MAX, ZOOM_MIN } from '../iso';
 import { composeFarm, type FarmParcel } from '../ext/farms/farms';
 import type { ComposeState, LotGeom } from '../lots/compose-core';
@@ -54,6 +55,9 @@ const FIT_MARGIN = 40;
 const MARGIN = 8;
 /** the palette's page: sprites shown at a time (More adds one) */
 const PAGE = 120;
+/** the screen-axis sets' first pictures (T154: the N view, the front facing screen down; R turns it through E, S, W): the palette lists a
+ *  set once, by it, the extra headings of the shops, houses and props among them (view:<id>:n) */
+const AXIS_FIRST: ReadonlySet<string> = new Set(Object.values(AXIS_SETS).map(v => v[0]));
 /** the library categories the palette leaves out (the people) */
 const SKIP_CAT = new Set(['Townspeople', 'Spectators', 'Golfers']);
 /** a use's name in the panel and the messages */
@@ -733,7 +737,7 @@ export function installLotLab(game: Game): () => void {
   function renderGrid() {
     grid.replaceChildren();
     const q = search.trim().toLowerCase();
-    const all = LIBRARY.filter((it, i) => !it.id.startsWith('view:') && !it.id.startsWith('east:') && it.kind !== 'walker' && !drawnAsStandIn(i) && (cat === 'All' ? !SKIP_CAT.has(it.cat) : it.cat === cat) && (!q || it.id.toLowerCase().includes(q) || it.name.toLowerCase().includes(q)));
+    const all = LIBRARY.filter((it, i) => (!it.id.startsWith('view:') || AXIS_FIRST.has(it.id)) && !it.id.startsWith('east:') && it.kind !== 'walker' && !drawnAsStandIn(i) && (cat === 'All' ? !SKIP_CAT.has(it.cat) : it.cat === cat) && (!q || it.id.toLowerCase().includes(q) || it.name.toLowerCase().includes(q)));
     for (const it of all.slice(0, shown)) {
       const t = el('div', 'width:48px;height:48px;flex:none;box-sizing:border-box;border:1px solid #334155;border-radius:5px;background-color:#0f172a;cursor:pointer;background-repeat:no-repeat');
       thumb(t, it.id, 44); t.title = `${it.name}\n${it.id}`;

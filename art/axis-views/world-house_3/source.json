@@ -1,0 +1,87 @@
+{
+ "id": "world:house_3",
+ "slug": "world-house_3",
+ "category": "buildings",
+ "version": "world-house_3-screen-axis-4views-v1",
+ "crops": "crops-v2",
+ "sheetSha256": "9df891a7688ac1e667a326306e5c736a1f76d0b83cb43d3d426dd2ebc95139de",
+ "status": "passed-with-alpha-residue-warnings",
+ "views": {
+  "N": {
+   "file": "N.png",
+   "sha256": "01c76305e1a1130dcf9639e7bdead51239fccb917e030def43a1bcee4fb922e9",
+   "nativeSha256": "01c76305e1a1130dcf9639e7bdead51239fccb917e030def43a1bcee4fb922e9",
+   "pixelSha256": "3c220ab9a160d13f3a1dd65cab1f410f434d1b4e74ce4ab2073840ea6cc1a0db",
+   "sheetRect": {
+    "left": 0,
+    "top": 0,
+    "width": 735,
+    "height": 627
+   },
+   "trim": [
+    62,
+    91,
+    644,
+    492
+   ],
+   "heading": "front faces screen down"
+  },
+  "E": {
+   "file": "E.png",
+   "sha256": "c9a417ed6a28f3254a83b51b5fa92c1cfbd99205f142b2010a58b009e4fc3f21",
+   "nativeSha256": "c9a417ed6a28f3254a83b51b5fa92c1cfbd99205f142b2010a58b009e4fc3f21",
+   "pixelSha256": "68b071c2d2513bc08d8a28ef3a563ef37e7b374248a8707df69399fa74da91fb",
+   "sheetRect": {
+    "left": 735,
+    "top": 0,
+    "width": 519,
+    "height": 627
+   },
+   "trim": [
+    35,
+    90,
+    438,
+    472
+   ],
+   "heading": "front faces screen right (its right side to the camera)"
+  },
+  "S": {
+   "file": "S.png",
+   "sha256": "96032811f2f46c12142917fbd1b2f188e4710597481b77ff1d33b54d98d7a511",
+   "nativeSha256": "96032811f2f46c12142917fbd1b2f188e4710597481b77ff1d33b54d98d7a511",
+   "pixelSha256": "460d26de10b83278e0f1edf7cfbd2e19e42cfa0b31a5302e00ee1583c6a69343",
+   "sheetRect": {
+    "left": 0,
+    "top": 627,
+    "width": 735,
+    "height": 627
+   },
+   "trim": [
+    61,
+    59,
+    642,
+    454
+   ],
+   "heading": "front faces screen up (its rear to the camera)"
+  },
+  "W": {
+   "file": "W.png",
+   "sha256": "d5d09f4960a32ac55c817849ada93475a647501f5c4ce65724b9bdc1dc834432",
+   "nativeSha256": "d5d09f4960a32ac55c817849ada93475a647501f5c4ce65724b9bdc1dc834432",
+   "pixelSha256": "e7891d8e92a3709f489ccefdb30ea9e7e7923c7c20d613b0ea5679e4961c9393",
+   "sheetRect": {
+    "left": 735,
+    "top": 627,
+    "width": 519,
+    "height": 627
+   },
+   "trim": [
+    38,
+    50,
+    438,
+    467
+   ],
+   "heading": "front faces screen left (its left side to the camera)"
+  }
+ }
+}

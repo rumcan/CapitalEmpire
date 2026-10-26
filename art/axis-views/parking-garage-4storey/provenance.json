@@ -1,0 +1,593 @@
+{
+  "id": "ce:parking-garage-4storey",
+  "slug": "parking-garage-4storey",
+  "category": "buildings",
+  "storeys": 4,
+  "requiresLibraryRegistration": true,
+  "source": "art/theme-consistency/references/horizontal-road-parking-landscaping-v1.png",
+  "output": "art/theme-consistency/generated/buildings/parking-garage-4storey-screen-axis-4views-v1.png",
+  "provenance": "art/theme-consistency/generated/buildings/parking-garage-4storey-screen-axis-4views-v1.provenance.json",
+  "references": [
+    "art/theme-consistency/references/theme-authoritative.png",
+    "art/theme-consistency/references/horizontal-road-parking-landscaping-v1.png",
+    "art/theme-consistency/references/road-diagonal-head-on-side-template-v1.png"
+  ],
+  "prompt": "ONE independentlyplaceable 4-STOREY municipal parkinggarage. Image1 = sole hand-paintedstylizedMapleFallstownTHEME. Image2 = approveddesignstudyREFERENCE forgaragefamily materialsandlook; isolate CENTRALgarage, discard ALL scenery/plants/street/boom/bench. Image3 CAMERA geometryONLY. Designthis 4-storey variant ofsamegaragefamily, count EXACTLY 4 distinct COVERED parkingstoreys INCLUDINGGROUND, onehorizontalrowofopenbaysperstorey, solid emptyflatroof NOTextraparkingdeck, nobasement. Thefrontmustclearlyshow 4 stackedopeningrows, countthemcarefully. 3 upperparkingstoreys abovegroundentrance. Warmgrey concretefloorbands, redbrickrectangularcolumnswithcreamcaps, darkgreenopensteelguardrails, warmamber ceilinglights. Broadrectangularfootprint fourbayswide, threebaysdeep; physicalrear-rightbrickstairtower smallrooftopaccessdoor, simpleflatdarkcharcoalemptyroof. GroundfloorfrontA haswideentryleft andsmallgreensquarePsign; allotherfrontbaysopen. RightsideD hasinternalrampvisiblewithintheoutline; rearCserviceentrance, leftBsimpleopenparkingbays. NOcars, occupancy,landscape, freestandingbarrier, streetlamp orpeople.\nFOUR genuine rigidquarterturns ofthisONE 4-storey structure. Fixedorthographicelevated35degreegamecamera, HEAD-ON screen-axis alignment to HORIZONTALSCREENROAD, notnormaldiagonal3quarterview. ALLprimaryvisiblefacadefootingsperfectlyHORIZONTAL, depthscreenVERTICAL, uprightwallsvertical; see roof fromabove. Strict2x2 equalcells, rowmajorTOPLEFT=N frontAfacesSCREEN DOWN, TOPRIGHT=E physicalrightsideDfronton(frontAoutofsightonrightend), BOTTOMLEFT=S trueREARCfacescamera(frontentryhidden), BOTTOMRIGHT=W physicalLEFTBfronton(frontAhiddenonleftend). No diagonalisometricfootprint edges, no perspective, noslopedbaseline. Acrossallviews preserveEXACTsame4floorcount, footprint, columnbaycount, railings,stairtowerphysicalcornerandramplocation. Light ALWAYS SCREENUPPERRIGHT towardLOWERLEFT, regardlessobjectrotation. Roof/cornicedetailsrotateproperly. Donotmirrororcopyfronttorear.\nSquaretrueRGBAtransparentPNG sheet, fourcompleteisolatedcutouts withATLEAST15%cleartransparentpadding aroundEACHquadrant andcentregutter. KeepEACHspritewhollyinsideitsownhalfwidth/halfheightcell, shrinkalluniformlyifneeded. NO background,greyfloor, pavedapron,shadowdisc,checkerboard,scene,vignette,frame,textlabels ornumbercaptions. Onlyintegralbuildingandsteps; verytinycontactocclusion. Detailreadableatgamescale, samepaintedtownfamily.",
+  "generator": "built-in image_gen",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-bbcbe2f5-505b-4c3b-8d1b-12c86efd5b15.png",
+  "date": "2026-10-26",
+  "viewSet": "screen-axis-4",
+  "viewsOrder": [
+    "N",
+    "E",
+    "S",
+    "W"
+  ],
+  "lighting": "upper-right toward lower-left",
+  "integrationStatus": "pending-not-full-eight-view-source",
+  "alphaReview": "pending",
+  "processing": "Native generator output copied byte-for-byte. Crops pending; no resize or pixel repaint.",
+  "screenAxisExport": {
+    "schema": 1,
+    "id": "ce:parking-garage-4storey",
+    "viewSet": "screen-axis-4",
+    "viewsOrder": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "sheet": "art/theme-consistency/generated/buildings/parking-garage-4storey-screen-axis-4views-v1.png",
+    "sheetSha256": "eee49dac28468fafeb6dd278801882468c15028063b5c449b3ed581a6bf83775",
+    "nativeSheetPixels": [
+      1254,
+      1254
+    ],
+    "processing": "Exact source-rectangle pixel crops only. No resize, alpha repaint, recolour, transform or mirroring. Alpha thresholds are diagnostic only; not a visual approval or alpha edit.",
+    "rectangleSelection": {
+      "method": "equal half-cells"
+    },
+    "fileContractStatus": "hold",
+    "visualReviewStatus": "pending",
+    "integrationStatus": "pending-not-full-eight-view-source",
+    "axisLineCounts": {
+      "vertical": 1613,
+      "horizontal": 6,
+      "verticalAtLeast16": 1576,
+      "horizontalAtLeast16": 0,
+      "verticalAtLeast128": 1568,
+      "horizontalAtLeast128": 0
+    },
+    "issues": [
+      "Alpha>=16 pixels on middle cell boundaries: inspect clipping/background",
+      "N: alpha>=16 silhouette touches cell boundary",
+      "E: alpha>=16 silhouette touches cell boundary",
+      "S: alpha>=16 silhouette touches cell boundary",
+      "W: alpha>=16 silhouette touches cell boundary"
+    ],
+    "warnings": [],
+    "views": {
+      "N": {
+        "sourceRect": {
+          "left": 0,
+          "top": 0,
+          "width": 627,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/buildings/parking-garage-4storey-screen-axis-4views-v1/N.native.png",
+        "nativeSha256": "cf80d8adb66a020a1101977ae8a405eeb751d455ba4f8714db96eec878f4a336",
+        "pixelSha256": "eec8a0941e3d916292e9324ab5f198b3f1355e0fb2b294f42025ea9d4909adf1",
+        "trimmedPixelSha256": "0bc399010577fbc408c40613f4f6f1ff0f99c361d9d99e37ed08d3680758bfd9",
+        "nativePixels": [
+          627,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 208466,
+          "transparent": 184663,
+          "transparentFraction": 0.4697262221815231,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 0,
+            "top": 18,
+            "width": 627,
+            "height": 609
+          },
+          "padding": {
+            "left": 0,
+            "top": 18,
+            "right": 0,
+            "bottom": 0
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 184663,
+            "oneTo15": 4316,
+            "sixteenTo127": 1514,
+            "one28To254": 202336,
+            "opaque255": 300
+          },
+          "edge": {
+            "nonzero": 449,
+            "atLeast16": 423,
+            "atLeast128": 421
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 204150,
+            "transparent": 188979,
+            "transparentFraction": 0.4807048068191357,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 62,
+              "top": 91,
+              "width": 565,
+              "height": 423
+            },
+            "padding": {
+              "left": 62,
+              "top": 91,
+              "right": 0,
+              "bottom": 113
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 202636,
+            "transparent": 190493,
+            "transparentFraction": 0.4845559600029507,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 63,
+              "top": 92,
+              "width": 564,
+              "height": 421
+            },
+            "padding": {
+              "left": 63,
+              "top": 92,
+              "right": 0,
+              "bottom": 114
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 204057,
+          "transparent": 189072,
+          "transparentFraction": 0.480941370389872,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 62,
+            "top": 91,
+            "width": 565,
+            "height": 423
+          },
+          "padding": {
+            "left": 62,
+            "top": 91,
+            "right": 0,
+            "bottom": 113
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      },
+      "E": {
+        "sourceRect": {
+          "left": 627,
+          "top": 0,
+          "width": 627,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/buildings/parking-garage-4storey-screen-axis-4views-v1/E.native.png",
+        "nativeSha256": "d4acd9912e618238f0fd2dbc12096a430646c1e5b5b6482fb7627c4f7ccf7ec0",
+        "pixelSha256": "5d3302ca62554ea16c81f0002647e86bc69cddcb56d4f49017022f05dd02a8dc",
+        "trimmedPixelSha256": "fc9153cb1129ebb6b46222ff2e89dc811ea4adb55c472791a5c0262df542815b",
+        "nativePixels": [
+          627,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 186406,
+          "transparent": 206723,
+          "transparentFraction": 0.5258401186379026,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 0,
+            "top": 24,
+            "width": 571,
+            "height": 603
+          },
+          "padding": {
+            "left": 0,
+            "top": 24,
+            "right": 56,
+            "bottom": 0
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 206723,
+            "oneTo15": 9795,
+            "sixteenTo127": 1782,
+            "one28To254": 174472,
+            "opaque255": 357
+          },
+          "edge": {
+            "nonzero": 429,
+            "atLeast16": 423,
+            "atLeast128": 421
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 176611,
+            "transparent": 216518,
+            "transparentFraction": 0.5507556043944863,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 0,
+              "top": 91,
+              "width": 565,
+              "height": 440
+            },
+            "padding": {
+              "left": 0,
+              "top": 91,
+              "right": 62,
+              "bottom": 96
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 174829,
+            "transparent": 218300,
+            "transparentFraction": 0.5552884676531114,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 0,
+              "top": 92,
+              "width": 564,
+              "height": 438
+            },
+            "padding": {
+              "left": 0,
+              "top": 92,
+              "right": 63,
+              "bottom": 97
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 176268,
+          "transparent": 216861,
+          "transparentFraction": 0.5516280915424708,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 0,
+            "top": 91,
+            "width": 565,
+            "height": 440
+          },
+          "padding": {
+            "left": 0,
+            "top": 91,
+            "right": 62,
+            "bottom": 96
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      },
+      "S": {
+        "sourceRect": {
+          "left": 0,
+          "top": 627,
+          "width": 627,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/buildings/parking-garage-4storey-screen-axis-4views-v1/S.native.png",
+        "nativeSha256": "44bbd9dc6e5a60127d1ac909a2846402a5d06955a77f2d11a954e47d01a111d2",
+        "pixelSha256": "be13fd0bead08d76b4d2963b3c9747f5098fc217f2ee23dfc4cb6091d7e3b230",
+        "trimmedPixelSha256": "4a25f92ff3c5b968ae50eac62b97af3789ad3a294a7cc0355a8fa94b05ffe8c0",
+        "nativePixels": [
+          627,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 220131,
+          "transparent": 172998,
+          "transparentFraction": 0.440054028067123,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 0,
+            "top": 0,
+            "width": 627,
+            "height": 609
+          },
+          "padding": {
+            "left": 0,
+            "top": 0,
+            "right": 0,
+            "bottom": 18
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 172998,
+            "oneTo15": 9750,
+            "sixteenTo127": 1445,
+            "one28To254": 208817,
+            "opaque255": 119
+          },
+          "edge": {
+            "nonzero": 393,
+            "atLeast16": 365,
+            "atLeast128": 363
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 210381,
+            "transparent": 182748,
+            "transparentFraction": 0.46485504757980206,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 66,
+              "top": 65,
+              "width": 561,
+              "height": 426
+            },
+            "padding": {
+              "left": 66,
+              "top": 65,
+              "right": 0,
+              "bottom": 136
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 208936,
+            "transparent": 184193,
+            "transparentFraction": 0.46853068585629654,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 67,
+              "top": 65,
+              "width": 560,
+              "height": 425
+            },
+            "padding": {
+              "left": 67,
+              "top": 65,
+              "right": 0,
+              "bottom": 137
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 210211,
+          "transparent": 182918,
+          "transparentFraction": 0.4652874756123308,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 67,
+            "top": 65,
+            "width": 560,
+            "height": 426
+          },
+          "padding": {
+            "left": 67,
+            "top": 65,
+            "right": 0,
+            "bottom": 136
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      },
+      "W": {
+        "sourceRect": {
+          "left": 627,
+          "top": 627,
+          "width": 627,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/buildings/parking-garage-4storey-screen-axis-4views-v1/W.native.png",
+        "nativeSha256": "1557a4d35af5190b5672865363175452823de1233d9d27f0d0f52675497d9866",
+        "pixelSha256": "9fe58f51dfeababbb6a295f6369d39fad5b031ec3a27368c8ee9704c6bf60817",
+        "trimmedPixelSha256": "731d58e90dcc4125a73b0f6f91a684b5533b873bc35638ef266b8e0d89715755",
+        "nativePixels": [
+          627,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 182172,
+          "transparent": 210957,
+          "transparentFraction": 0.5366101203421778,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 0,
+            "top": 5,
+            "width": 603,
+            "height": 550
+          },
+          "padding": {
+            "left": 0,
+            "top": 5,
+            "right": 24,
+            "bottom": 72
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 210957,
+            "oneTo15": 12389,
+            "sixteenTo127": 1732,
+            "one28To254": 167766,
+            "opaque255": 285
+          },
+          "edge": {
+            "nonzero": 379,
+            "atLeast16": 365,
+            "atLeast128": 363
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 169783,
+            "transparent": 223346,
+            "transparentFraction": 0.5681239491362886,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 0,
+              "top": 70,
+              "width": 565,
+              "height": 430
+            },
+            "padding": {
+              "left": 0,
+              "top": 70,
+              "right": 62,
+              "bottom": 127
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 168051,
+            "transparent": 225078,
+            "transparentFraction": 0.572529627679464,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 0,
+              "top": 71,
+              "width": 564,
+              "height": 428
+            },
+            "padding": {
+              "left": 0,
+              "top": 71,
+              "right": 63,
+              "bottom": 128
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 169445,
+          "transparent": 223684,
+          "transparentFraction": 0.5689837178127282,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 0,
+            "top": 71,
+            "width": 565,
+            "height": 429
+          },
+          "padding": {
+            "left": 0,
+            "top": 71,
+            "right": 62,
+            "bottom": 127
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      }
+    }
+  },
+  "visualReviewStatus": "pending"
+}

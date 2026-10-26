@@ -1,0 +1,63 @@
+{
+ "id": "variation:industrial-auto-body-shop-63875699:1",
+ "slug": "variation-industrial-auto-body-shop-63875699-1",
+ "category": "buildings",
+ "version": "variation-industrial-auto-body-shop-63875699-1-screen-axis-4views-v1",
+ "crops": "half-cells",
+ "sheetSha256": "28cc6f42adbbbca33ddabf93b4666d3dab8e3f443db13441dc0543f6f12b5868",
+ "status": "passed-with-alpha-residue-warnings",
+ "views": {
+  "N": {
+   "file": "N.png",
+   "sha256": "7f2c804561c4df9e8703471006e022be4324a4b97fe3d45b68a6e938489d66c2",
+   "nativeSha256": "7f2c804561c4df9e8703471006e022be4324a4b97fe3d45b68a6e938489d66c2",
+   "pixelSha256": "0dfd07b5b4a02069f8389426a413e24c862fd8a825b54e7324f08968210aa1e4",
+   "trim": [
+    75,
+    186,
+    519,
+    352
+   ],
+   "heading": "front faces screen down"
+  },
+  "E": {
+   "file": "E.png",
+   "sha256": "eb55234af5dbe2499204e96cc451a174b0d647df3964f7e7e3e9359a995f2991",
+   "nativeSha256": "eb55234af5dbe2499204e96cc451a174b0d647df3964f7e7e3e9359a995f2991",
+   "pixelSha256": "d806d9a93f9e2cb86610e6b4497fc98b758faaeb98eb049eb27c4b95bea6df09",
+   "trim": [
+    62,
+    186,
+    490,
+    348
+   ],
+   "heading": "front faces screen right (its right side to the camera)"
+  },
+  "S": {
+   "file": "S.png",
+   "sha256": "540750eac556b516f389107e4e0d9ffe1fc10af1f07aea6c8f7b69d6863c588c",
+   "nativeSha256": "540750eac556b516f389107e4e0d9ffe1fc10af1f07aea6c8f7b69d6863c588c",
+   "pixelSha256": "e412d5c34a7460120f7480a08ebe2001b7b2ce4b15ece5df32c64c562d6b0a38",
+   "trim": [
+    75,
+    132,
+    517,
+    332
+   ],
+   "heading": "front faces screen up (its rear to the camera)"
+  },
+  "W": {
+   "file": "W.png",
+   "sha256": "d0c0988c0293167e086d6fb21d4293d972d38727cef4e4c0887407c4d5f66325",
+   "nativeSha256": "d0c0988c0293167e086d6fb21d4293d972d38727cef4e4c0887407c4d5f66325",
+   "pixelSha256": "c1c2073e033b1855947a63dd63fe5e6ce1fcf0d3e379ac6f737cf252e07301ef",
+   "trim": [
+    54,
+    130,
+    496,
+    334
+   ],
+   "heading": "front faces screen left (its left side to the camera)"
+  }
+ }
+}
