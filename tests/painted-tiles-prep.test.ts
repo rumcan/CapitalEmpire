@@ -128,3 +128,68 @@ test('the prep script ships a family without a handoff provisionally, then its c
     r = run(); assert.notEqual(r.status, 0); assert.match(r.stderr, /sha256/); assert.equal(fs.readFileSync(path.join(out, 'src/game/painted-tiles.json'), 'utf8'), before);
   } finally { /* t.after cleans the fixture */ }
 });
+
+// T162 (#350): the owner's own paintings (art/owner-supplied/<set>/, named with their hashes in its source.json): one tile a level, its edges
+// healed in this step (tile-heal.mjs) so each tiles with itself, the wrap before and after recorded from the WebP that ships; a changed file
+// stops the script before it writes anything.
+/** a small opaque RGB PNG that does not tile: two waves and a tone gradient (each seed its own phase) */
+function wavyPng(w: number, h: number, seed: number): Buffer {
+  const chunk = (type: string, data: Buffer) => {
+    const len = Buffer.alloc(4); len.writeUInt32BE(data.length);
+    const td = Buffer.concat([Buffer.from(type, 'ascii'), data]), crc = Buffer.alloc(4); crc.writeUInt32BE(zlib.crc32(td) >>> 0);
+    return Buffer.concat([len, td, crc]);
+  };
+  const ihdr = Buffer.alloc(13); ihdr.writeUInt32BE(w, 0); ihdr.writeUInt32BE(h, 4); ihdr[8] = 8; ihdr[9] = 2;
+  const raw = Buffer.alloc((w * 3 + 1) * h);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) for (let c = 0; c < 3; c++) raw[y * (w * 3 + 1) + 1 + x * 3 + c] = Math.max(0, Math.min(255, Math.round(100 + 40 * Math.sin(x * 0.29 + y * 0.13 + c + seed) + 25 * Math.sin(y * 0.21 - x * 0.07 + seed) + 0.2 * x - 0.15 * y)));
+  return Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), chunk('IHDR', ihdr), chunk('IDAT', zlib.deflateSync(raw)), chunk('IEND', Buffer.alloc(0))]);
+}
+interface Wrap { lr: number; tb: number; h: number; v: number }
+
+test('the owner\'s paintings (T162): hash-checked against their source.json, one tile a level, edges healed to tile, the heal\'s numbers recorded from the shipped WebP', t => {
+  const root = path.resolve('output', `tests-t162-prep-${process.pid}`), out = path.join(root, 'out'), DIR = 'art/owner-supplied/rough-20261026';
+  fs.rmSync(root, { recursive: true, force: true });
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const write = (rel: string, data: Buffer | string) => { const p = path.join(root, rel); fs.mkdirSync(path.dirname(p), { recursive: true }); fs.writeFileSync(p, data); return p; };
+  const run = (...args: string[]) => spawnSync(process.execPath, ['scripts/assets/prep-painted-tiles.mjs', '--art', root, '--out', out, ...args], { encoding: 'utf8' });
+  const manifestText = () => fs.readFileSync(path.join(out, 'src/game/painted-tiles.json'), 'utf8');
+  write(`${EIGHT}/READY-MATERIALS.json`, JSON.stringify({ schema: 1, date: '2026-10-26', ready: [] }));
+  const sizes = { near: [240, 200], mid: [244, 198], far: [240, 200] } as const, levels: Record<string, unknown> = {}, hashes: Record<string, string> = {};
+  for (const [i, b] of (['near', 'mid', 'far'] as const).entries()) {
+    const buf = wavyPng(sizes[b][0], sizes[b][1], i); write(`${DIR}/${b}.png`, buf); hashes[b] = sha256(buf);
+    levels[b] = { file: `${b}.png`, sha256: hashes[b], size: sizes[b] };
+  }
+  write(`${DIR}/source.json`, JSON.stringify({ schema: 1, id: 'owner:rough-20261026', family: { id: 'rough-owner', name: 'Rough (owner)', kind: 'grass', provisional: true }, levels }));
+
+  let r = run();
+  assert.equal(r.status, 0, r.stderr + r.stdout);
+  const m = JSON.parse(manifestText());
+  assert.deepEqual(m.families.map((f: Fam) => f.id), ['rough-owner']);
+  const f = m.families[0] as Omit<Fam, 'levels'> & { name: string; kind: string; owner: string; levels: Record<'near' | 'mid' | 'far', Level & { heal: { method: string; band: number; before: Wrap; healed: Wrap; after: Wrap } }> };
+  assert.equal(f.name, 'Rough (owner)'); assert.equal(f.kind, 'grass'); assert.equal(f.provisional, true); assert.equal(f.selection, null);
+  assert.equal(f.materialId, 'owner:rough-20261026'); assert.equal(f.owner, `${DIR}/source.json`);
+  assert.equal(f.revision, sha256(['near', 'mid', 'far'].map(b => hashes[b]).join(':') + '|wrap-bridge-v1/48').slice(0, 12), 'the paintings\' hashes and the heal');
+  for (const b of ['near', 'mid', 'far'] as const) {
+    const lv = f.levels[b], x = lv.tiles[0]!;
+    assert.deepEqual(lv.tiles.map(q => q.id), ['tile-01']); assert.deepEqual(lv.native, sizes[b]); assert.equal(lv.folder, DIR); assert.equal(lv.decision.file, null);
+    assert.equal(x.sha256, hashes[b]); assert.equal(x.source, `${DIR}/${b}.png`); assert.equal(x.file, `tiles/rough-owner/${b}/tile-01.webp`);
+    const webp = path.join(out, 'src/assets/ground/painted', x.file);
+    assert.deepEqual(webpSize(fs.readFileSync(webp)), sizes[b], 'the native size, never resized');
+    const h = lv.heal; assert.equal(h.method, 'wrap-bridge-v1'); assert.equal(h.band, 48);
+    assert.ok(h.before.lr > 2 * h.before.h && h.before.tb > 2 * h.before.v, `${b}: the fixture has seams (${JSON.stringify(h.before)})`);
+    assert.ok(h.healed.lr <= 1.25 * h.healed.h && h.healed.tb <= 1.25 * h.healed.v, `${b}: healed (${JSON.stringify(h.healed)})`);
+    // as shipped: the lossy WebP adds its own small error across the wrap (on this smooth fixture more than on a painting), the seams still gone
+    assert.ok(h.after.lr < 0.6 * h.before.lr && h.after.tb < 0.6 * h.before.tb, `${b}: as shipped (${JSON.stringify(h.after)})`);
+    // the numbers are the shipped WebP's: measured again here, outside the script (sharp decodes it in a child node)
+    const code = `import sharp from 'sharp'; import { wrapMismatch } from './scripts/assets/tile-heal.mjs'; const d = await sharp(${JSON.stringify(webp)}).raw().toBuffer({ resolveWithObject: true }); console.log(JSON.stringify(wrapMismatch(d.data, d.info.width, d.info.height, d.info.channels)));`;
+    const q = spawnSync(process.execPath, ['--input-type=module', '-e', code], { encoding: 'utf8' });
+    assert.equal(q.status, 0, q.stderr); const again = JSON.parse(q.stdout) as Wrap;
+    for (const k of ['lr', 'tb', 'h', 'v'] as const) assert.ok(Math.abs(again[k] - h.after[k]) < 0.006, `${b} ${k}: ${again[k]} vs the manifest's ${h.after[k]}`);
+    assert.match(lv.status!, /one tile; edges healed to tile with itself \(wrap-bridge-v1, 48 px\)/);
+  }
+  r = run('--check'); assert.equal(r.status, 0, r.stdout); assert.match(r.stdout, /the manifest is current/);
+  // a changed painting stops the script before it writes anything
+  const before = manifestText();
+  write(`${DIR}/mid.png`, wavyPng(244, 198, 7));
+  r = run(); assert.notEqual(r.status, 0); assert.match(r.stderr, /mid\.png: sha256 [0-9a-f]{64} != .*source\.json/); assert.equal(manifestText(), before);
+});

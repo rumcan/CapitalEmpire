@@ -5,6 +5,8 @@
 // edge without gaps at chunk borders; no mirror, turn or blend; separate gameplay layers; a stale chunk never keeps an old set.
 // T153 (#327): the furthest zoom one step closer (FAR follows it), NEAR on down to nearUntil (5%), sand ripples on the waste areas, and the
 // course's fairway, putting green and long grass in provisionally (the switch to their handoff: tests/painted-tiles-prep.test.ts).
+// T162 (#350): the owner's own rough paintings, one a level, their edges healed in the asset step to tile with themselves (rough-owner): the
+// rough and the decrepit lots' lawns wear them; long grass stays in the manifest, unmapped.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -24,6 +26,7 @@ import { DRAW_ORDER, layerCode } from '../src/game/ext/course-walls';
 import { SURF } from '../src/game/ext/course-grid';
 import { PRESETS } from '../src/game/paint-presets';
 import surfacesFile from '../src/game/painted-surfaces.json';
+import { HEAL_METHOD, bridgeWeight, healWrap, wrapMismatch } from '../scripts/assets/tile-heal.mjs';
 
 const sha256 = (b: Buffer | string) => crypto.createHash('sha256').update(b).digest('hex');
 const READY_REL = 'art/theme-consistency/generated/ground/eight-tiles/READY-MATERIALS.json';
@@ -43,21 +46,29 @@ function webpSize(buf: Buffer): [number, number] {
 /** the accepted families (READY-MATERIALS' canonical selections, in its order), then the provisional ones (T153: no handoff yet) */
 const ACCEPTED = ['painted:golden-fescue', 'painted:lake', 'painted:sand-ripples'];
 const PROVISIONAL = ['painted:fairway', 'painted:putting-green', 'painted:long-grass'];
+/** the owner's own paintings (T162): provisional too, one tile a level, from art/owner-supplied (committed in this repo) */
+const OWNER = ['owner:rough-20261026'];
+const OWNER_DIR = 'art/owner-supplied/rough-20261026';
 const FOUR = ['tile-01', 'tile-02', 'tile-03', 'tile-04'] as const;
-/** a family's part of the revision: its canonical selection's sha256, or a provisional family's tiles' hashes */
-const familyKey = (f: TiledFamily) => f.selection?.sha256 ?? sha256(TILE_BANDS.flatMap(b => f.levels[b].tiles.map(t => t.sha256)).join(':'));
+/** a family's part of the revision: its canonical selection's sha256, or a provisional family's tiles' hashes (an owner family's with its heal) */
+const familyKey = (f: TiledFamily) => f.selection?.sha256 ?? sha256(TILE_BANDS.flatMap(b => f.levels[b].tiles.map(t => t.sha256)).join(':') + (f.owner ? `|${f.levels.near.heal!.method}/${f.levels.near.heal!.band}` : ''));
 
 test('the manifest ships only the ready families\' primary tiles and the provisional families\' chosen four: four a level, three authored sets each, files at native size', () => {
-  assert.deepEqual(TILED_FAMILIES.map(f => f.materialId), [...ACCEPTED, ...PROVISIONAL]);
+  assert.deepEqual(TILED_FAMILIES.map(f => f.materialId), [...ACCEPTED, ...PROVISIONAL, ...OWNER]);
   const ids = { 'golden-fescue': { near: ['tile-01', 'tile-03', 'tile-06', 'tile-08'], mid: FOUR, far: FOUR }, lake: { near: FOUR, mid: FOUR, far: FOUR }, 'sand-ripples-tiles': { near: FOUR, mid: FOUR, far: FOUR } } as const;
   const sets = { 'golden-fescue': { near: 'near-v3', mid: 'mid-v2', far: 'far-v4' }, lake: { near: 'near-v1', mid: 'mid-v1', far: 'far-v1' }, 'sand-ripples-tiles': { near: 'near-v1', mid: 'mid-v1', far: 'far-v1' } } as const;
   for (const f of TILED_FAMILIES) {
     const files = new Set<string>(), material = f.materialId.replace(/^painted:/, '');
-    assert.equal(!!f.provisional, PROVISIONAL.includes(f.materialId), `${f.id}: provisional exactly while it has no handoff`);
+    assert.equal(!!f.provisional, PROVISIONAL.includes(f.materialId) || OWNER.includes(f.materialId), `${f.id}: provisional exactly while it has no handoff`);
+    assert.equal(!!f.owner, OWNER.includes(f.materialId), `${f.id}: an owner family exactly when made from the owner's paintings`);
     if (f.provisional) assert.equal(f.selection, null, 'no canonical selection yet'); else assert.match(f.selection!.sha256, /^[0-9a-f]{64}$/);
     for (const b of TILE_BANDS) {
       const lv = f.levels[b];
-      if (f.provisional) {
+      if (f.owner) {
+        // T162: the owner's painting of the level, one tile, from its own folder (hash-recorded; the heal is checked in its own test below)
+        assert.deepEqual(lv.tiles.map(t => t.id), ['tile-01']); assert.equal(lv.decision.file, null); assert.equal(lv.folder, OWNER_DIR);
+        assert.equal(lv.tiles[0]!.source, `${OWNER_DIR}/${b}.png`); assert.equal(lv.revision, `${b}-rough-20261026`); assert.ok(lv.heal, `${f.id} ${b}: its heal recorded`);
+      } else if (f.provisional) {
         // the newest complete set of four in the level's own folder, as the art session left it (raw generator outputs), hash-recorded
         assert.deepEqual(lv.tiles.map(t => t.id), FOUR); assert.equal(lv.decision.file, null, 'no visual decision yet');
         assert.match(lv.revision, new RegExp(`^${b}-v\\d+$`)); assert.equal(lv.folder, `art/theme-consistency/generated/ground/eight-tiles/${material}/${lv.revision}`);
@@ -75,7 +86,7 @@ test('the manifest ships only the ready families\' primary tiles and the provisi
         assert.deepEqual(webpSize(fs.readFileSync(path.join(PAINTED, t.file))), lv.native, `${t.file} keeps its native ${lv.native.join('x')}`);
       }
     }
-    assert.equal(files.size, 12, `${f.id}: twelve distinct pictures: NEAR, MID and FAR are separate paintings, never one another's mips`);
+    assert.equal(files.size, f.owner ? 3 : 12, `${f.id}: distinct pictures: NEAR, MID and FAR are separate paintings, never one another's mips`);
   }
   assert.deepEqual(tiledFamily('lake')!.levels.mid.native, [1744, 900], 'sizes read from the selection, never assumed');
   // the legacy painted family `sand-ripples` keeps its id (still selectable): the tile set is `sand-ripples-tiles`
@@ -107,7 +118,7 @@ test('the manifest is hash-bound to READY-MATERIALS and the canonical selections
     }
   }
   // the provisional tiles are the PNGs they name (a source the art session has since removed is only reported: re-run the prep script)
-  for (const f of TILED_FAMILIES.filter(x => x.provisional)) for (const b of TILE_BANDS) for (const tl of f.levels[b].tiles) {
+  for (const f of TILED_FAMILIES.filter(x => x.provisional && !x.owner)) for (const b of TILE_BANDS) for (const tl of f.levels[b].tiles) {
     const p = path.join(ART, tl.source!);
     if (!fs.existsSync(p)) { t.diagnostic(`${tl.source}: no longer in the art folder (re-run scripts/assets/prep-painted-tiles.mjs)`); continue; }
     assert.equal(sha256(fs.readFileSync(p)), tl.sha256, `${tl.source}: the hash the manifest recorded`);
@@ -278,11 +289,12 @@ test('the next set is decoded ahead once the camera nears its switch, and only t
 
 test('placement is world-anchored and stable: pan and resize never change a tile; every neighbour differs; no mirror or turn exists', () => {
   for (const f of TILED_FAMILIES) for (const b of TILE_BANDS) {
-    const perm = tilePermutation(f.id, b);
-    assert.deepEqual([...perm].sort(), [0, 1, 2, 3], 'a permutation of the four whole tiles'); assert.deepEqual(tilePermutation(f.id, b), perm, 'seeded: the same every time');
+    const n = f.levels[b].tiles.length, perm = tilePermutation(f.id, b, n);
+    assert.deepEqual([...perm].sort(), Array.from({ length: n }, (_, i) => i), 'a permutation of the level\'s whole tiles'); assert.deepEqual(tilePermutation(f.id, b, n), perm, 'seeded: the same every time');
     for (let iy = -6; iy < 6; iy++) for (let ix = -6; ix < 6; ix++) {
-      const me = tileIndex(perm, ix, iy);
-      for (const [dx, dy] of [[1, 0], [0, 1], [1, 1], [-1, 1]]) assert.notEqual(tileIndex(perm, ix + dx!, iy + dy!), me, `${f.id} ${b} (${ix},${iy})+(${dx},${dy})`);
+      const me = tileIndex(perm, ix, iy); assert.ok(me >= 0 && me < n && f.levels[b].tiles[me], `${f.id} ${b}: a tile of the level`);
+      // four tiles: no tile touches a copy of itself; the owner's one tile a level (T162) repeats, accepted for now (#350)
+      if (n === 4) for (const [dx, dy] of [[1, 0], [0, 1], [1, 1], [-1, 1]]) assert.notEqual(tileIndex(perm, ix + dx!, iy + dy!), me, `${f.id} ${b} (${ix},${iy})+(${dx},${dy})`);
     }
   }
   // the tile under a world point depends on the point, the band and the DPR only (T150: the DPR is part of a set's world size): the same for
@@ -316,15 +328,15 @@ test('whole tiles butt edge to edge at every chunk border and cache level: snapp
   }
 });
 
-test('the tile sets join the families, laid as authored; fescue, water, the map grass and rivers wear them; T153: fairway, greens, rough and waste too; town lawns, tees and every legacy family are unchanged', () => {
-  for (const id of ['golden-fescue', 'lake', 'sand-ripples-tiles', 'fairway', 'putting-green', 'long-grass']) {
+test('the tile sets join the families, laid as authored; fescue, water, the map grass and rivers wear them; T153: fairway, greens and waste too; T162: the rough and decrepit lawns the owner\'s rough; town lawns, tees and every legacy family are unchanged', () => {
+  for (const id of ['golden-fescue', 'lake', 'sand-ripples-tiles', 'fairway', 'putting-green', 'long-grass', 'rough-owner']) {
     const f = familyById(id)!; assert.ok(f.tiled);
     assert.deepEqual(clampLook({ family: id, version: 'v9', scale: 2, tint: '#ff0000', tone: 0.4 }), { family: id, version: null, scale: 1, tint: '#ffffff', tone: 0 }, 'no scale, tint or tone over the art');
     const r = resolveFamily({ family: id, version: null, scale: 1 })!; assert.ok(r.tiled);
     assert.notEqual(r.near.file, r.mid.file); assert.notEqual(r.mid.file, r.far.file);
   }
   assert.equal(familyById('golden-fescue')!.kind, 'grass'); assert.equal(familyById('lake')!.kind, 'water'); assert.equal(familyById('sand-ripples-tiles')!.kind, 'sand');
-  for (const id of ['fairway', 'putting-green', 'long-grass']) { assert.equal(familyById(id)!.kind, 'grass'); assert.equal(familyById(id)!.provisional, true, `${id}: provisional (the studio says so)`); }
+  for (const id of ['fairway', 'putting-green', 'long-grass', 'rough-owner']) { assert.equal(familyById(id)!.kind, 'grass'); assert.equal(familyById(id)!.provisional, true, `${id}: provisional (the studio says so)`); }
   for (const id of ['golden-fescue', 'lake', 'sand-ripples-tiles']) assert.ok(!familyById(id)!.provisional, id);
   for (const id of ['emerald-short', 'sage-medium', 'sage-long', 'straw-long', 'water-pond', 'sand-raked', 'sand-ripples', 'underground-earth', 'first-painted']) { assert.ok(familyById(id) && !familyById(id)!.tiled, id); assert.ok(clampLook({ family: id, version: null, scale: 1, tint: '#ffffff', tone: 0 }), id); }
   assert.equal(FAMILIES.filter(f => f.tiled).length, TILED_FAMILIES.length);
@@ -341,9 +353,16 @@ test('the tile sets join the families, laid as authored; fescue, water, the map 
     assert.equal(lookOfTex(t, S)!.family, fam, t); assert.deepEqual(S.surfaces[key], neutral(fam), `${key}: neutral tint, tone and scale`);
     assert.deepEqual((surfacesFile.surfaces as Record<string, unknown>)[key], neutral(fam), `${key} in painted-surfaces.json`);
   }
-  // the rough went back to its old painting (#335: the provisional long-grass tiles show raw seams) until the art session repairs them
-  assert.equal(lookOfTex('golfRough', S)!.family, 'sage-long');
-  for (const [p, fam] of [['fairway', 'fairway'], ['green', 'putting-green'], ['fringe', 'putting-green'], ['rough', 'sage-long'], ['waste', 'sand-ripples-tiles']] as const) assert.equal(lookOfTex(`preset:${p}`, S, PRESETS)?.family ?? fam, fam, `the ${p} preset follows its surface`);
+  // T162 (#350): the rough (#335 had put it back on its old painting while the long-grass tiles showed raw seams) and the decrepit lots'
+  // lawns, which follow the rough (T155), wear the owner's rough paintings, neutral; the long-grass tiles stay in the manifest, unmapped
+  assert.equal(familyById('rough-owner')!.name, 'Rough (owner)');
+  for (const [t, key] of [['golfRough', 'rough'], ['lawnDeclined', 'lawnDeclined']] as const) {
+    assert.equal(lookOfTex(t, S)!.family, 'rough-owner', t); assert.deepEqual(S.surfaces[key], neutral('rough-owner'), `${key}: neutral tint, tone and scale`);
+    assert.deepEqual((surfacesFile.surfaces as Record<string, unknown>)[key], neutral('rough-owner'), `${key} in painted-surfaces.json`);
+  }
+  assert.ok(tiledFamily('long-grass'), 'long grass stays in the manifest');
+  assert.ok(![...Object.values(S.surfaces), ...S.lawns, ...Object.values(S.presets)].some(l => l.family === 'long-grass'), 'long grass unmapped');
+  for (const [p, fam] of [['fairway', 'fairway'], ['green', 'putting-green'], ['fringe', 'putting-green'], ['rough', 'rough-owner'], ['waste', 'sand-ripples-tiles']] as const) assert.equal(lookOfTex(`preset:${p}`, S, PRESETS)?.family ?? fam, fam, `the ${p} preset follows its surface`);
   // tees keep the old green until a family is chosen for them; the first cut keeps its family too
   for (const t of ['golfTee', 'golfFirstCut']) { const l = lookOfTex(t, S); if (l) assert.ok(!familyById(l.family)!.tiled, `${t} keeps its family`); }
   assert.equal(S.surfaces.tee!.family, 'emerald-short');
@@ -372,4 +391,58 @@ test('a stale chunk never keeps an old set: the tile spec (band and DPR) is in t
   // the workers' composition key carries the revision and the spec: another band or another DPR is another key
   const ts = tileSpec(1, 1.5); assert.equal(tileKey(ts), `${TILES_REVISION}#${ts}`);
   assert.notEqual(tileKey(tileSpec(0, 1)), tileKey(tileSpec(1, 1))); assert.notEqual(tileKey(tileSpec(0, 1)), tileKey(tileSpec(0, 2)));
+});
+
+test('the owner\'s rough (T162, #350): the paintings unchanged in the repo, one tile a level at their native size, edges healed so each tiles with itself', () => {
+  const f = tiledFamily('rough-owner')!;
+  assert.ok(f && f.provisional, 'provisional'); assert.equal(f.materialId, 'owner:rough-20261026'); assert.equal(f.owner, `${OWNER_DIR}/source.json`); assert.equal(f.name, 'Rough (owner)');
+  const src = JSON.parse(fs.readFileSync(path.join(process.cwd(), f.owner!), 'utf8'));
+  assert.deepEqual(src.family, { id: 'rough-owner', name: 'Rough (owner)', kind: 'grass', provisional: true });
+  // the owner's three files as supplied (E:/ClaudeTemp/rough-owner-20261026/v2, from the codex session): their sha256 never changes
+  const OWNER_SHA = { near: 'b3c9cdd3b41f44fd1e3814084dac01434114e4410c896c5e881c9f3ce6020ed5', mid: '6605fd9d40226a54a834e231f129d630cc1edfa36bd6e5157b43f3871b31ca09', far: '5bcc9981a3efeb10a18fcada96ee370a5e38a6ac43277ec90fee3809b7a731d8' } as const;
+  const SIZE = { near: [1742, 903], mid: [1744, 902], far: [1742, 903] } as const;
+  for (const b of TILE_BANDS) {
+    const lv = f.levels[b], t = lv.tiles[0]!;
+    assert.equal(lv.tiles.length, 1, `${b}: one tile`);
+    assert.equal(sha256(fs.readFileSync(path.join(process.cwd(), t.source!))), OWNER_SHA[b], `${t.source}: the owner's file, unchanged`);
+    assert.equal(t.sha256, OWNER_SHA[b]); assert.equal(src.levels[b].sha256, OWNER_SHA[b]); assert.equal(`${OWNER_DIR}/${src.levels[b].file}`, t.source);
+    assert.deepEqual(lv.native, SIZE[b]); assert.deepEqual(src.levels[b].size, SIZE[b]);
+    assert.deepEqual(webpSize(fs.readFileSync(path.join(PAINTED, t.file))), lv.native, `${t.file}: its native size (never resized)`);
+    // the heal: before, the owner's seams (the wrap 2-3x the inside); after, on the WebP that ships, about its own inside difference
+    const h = lv.heal!; assert.equal(h.method, HEAL_METHOD); assert.equal(h.band, 48);
+    assert.ok(h.before.lr > 2 * h.before.h && h.before.tb > 2 * h.before.v, `${b}: the seams before (${h.before.lr} / ${h.before.tb} vs ${h.before.h} / ${h.before.v})`);
+    assert.ok(h.healed.lr <= 1.25 * h.healed.h && h.healed.tb <= 1.25 * h.healed.v, `${b}: healed wrap ${h.healed.lr} / ${h.healed.tb}, about the inside ${h.healed.h} / ${h.healed.v}`);
+    assert.ok(h.after.lr <= 1.25 * h.after.h && h.after.tb <= 1.25 * h.after.v, `${b}: as shipped (WebP) ${h.after.lr} / ${h.after.tb}, about its inside ${h.after.h} / ${h.after.v}`);
+    assert.ok(h.after.lr < 0.6 * h.before.lr && h.after.tb < 0.6 * h.before.tb, `${b}: the seams gone`);
+    assert.match(lv.status!, /the owner's painting .*one tile; edges healed/);
+    // one tile a level: every cell shows it (the repetition is accepted for now)
+    const perm = tilePermutation(f.id, b, lv.tiles.length); assert.deepEqual(perm, [0]);
+    for (let iy = -3; iy < 3; iy++) for (let ix = -3; ix < 3; ix++) assert.equal(tileIndex(perm, ix, iy), 0);
+  }
+});
+
+test('the edge heal (tile-heal.mjs): only the outer band changes, as a cross-fade with the painting\'s own middle; the wrap as continuous as the inside, corners included', () => {
+  const w = 240, h = 200, ch = 3, band = 24, px = new Uint8Array(w * h * ch);
+  // a painting that does not tile: two waves and a tone gradient left to right and top to bottom
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) for (let c = 0; c < ch; c++) px[(y * w + x) * ch + c] = Math.max(0, Math.min(255, Math.round(100 + 40 * Math.sin(x * 0.31 + y * 0.17 + c) + 25 * Math.sin(y * 0.23 - x * 0.05) + 0.2 * x - 0.15 * y)));
+  const before = wrapMismatch(px, w, h, ch), out = healWrap(px, w, h, ch, band), after = wrapMismatch(out, w, h, ch);
+  assert.ok(before.lr > 2 * before.h && before.tb > 2 * before.v, `the fixture has seams (${JSON.stringify(before)})`);
+  assert.ok(after.lr <= 1.25 * after.h && after.tb <= 1.25 * after.v, `healed: ${JSON.stringify(after)}`);
+  assert.equal(out.length, px.length);
+  // the interior is untouched, to the value
+  for (let y = band; y < h - band; y++) for (let x = band; x < w - band; x++) for (let c = 0; c < ch; c++) assert.equal(out[(y * w + x) * ch + c], px[(y * w + x) * ch + c]);
+  // a row outside the top and bottom bands: each band pixel is its own value cross-faded with the bridge (the middle 2 x band px of the same
+  // row, same order: nothing mirrored or turned), the bridge's weight 0 at the band's inner edge and 1 at the wrap
+  const y = h / 2, d0 = w / 2 - band;
+  for (let p = -band; p < band; p++) {
+    const x = p < 0 ? w + p : p, k = bridgeWeight(p, band);
+    for (let c = 0; c < ch; c++) assert.ok(Math.abs(out[(y * w + x) * ch + c]! - ((1 - k) * px[(y * w + x) * ch + c]! + k * px[(y * w + d0 + band + p) * ch + c]!)) <= 1, `x ${x}`);
+  }
+  assert.ok(bridgeWeight(-band, band) < 0.01 && bridgeWeight(band - 1, band) < 0.01 && bridgeWeight(-1, band) > 0.99 && bridgeWeight(0, band) > 0.99);
+  for (let p = 0; p < band; p++) assert.ok(Math.abs(bridgeWeight(p, band) - bridgeWeight(-1 - p, band)) < 1e-12, 'symmetric about the wrap');
+  // the corners agree: inside the top band (healed both ways) the left-right wrap is as continuous as elsewhere
+  let corner = 0; for (let yy = 0; yy < band; yy++) for (let c = 0; c < 3; c++) corner += Math.abs(out[(yy * w + w - 1) * ch + c]! - out[(yy * w) * ch + c]!);
+  assert.ok(corner / (band * 3) <= 1.25 * after.h, `corner rows: ${corner / (band * 3)}`);
+  // a painting too small for its band is refused (the bridge would overlap a band)
+  assert.throws(() => healWrap(px, w, h, ch, 60), /too small/); assert.throws(() => healWrap(px, w, h, ch, 0), /band/);
 });

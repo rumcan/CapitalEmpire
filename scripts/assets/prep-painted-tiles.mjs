@@ -18,6 +18,15 @@
 // at most a few px, recorded per tile as `crop`). Nothing is resampled. A provisional family without a complete set at every level is left out (with a warning), never guessed. Once the
 // art session's handoff lists the family in READY-MATERIALS, re-running this script ships its canonical selection instead (no other change).
 //
+// The owner's own paintings (T162, #350): each folder in OWNER (art/owner-supplied/<set>/, committed in this repo) holds the owner's paintings
+// exactly as supplied, one a level ({near,mid,far}.png), and its source.json (the family's id, name and kind, each file's sha256 and size):
+// a hash or size mismatch stops the script. Each painting ships as its level's one tile (tile-01; the repetition of one tile is accepted for
+// now, the lead on #350), provisional, after its edges are healed here once so it tiles with itself (tile-heal.mjs healWrap: the outer
+// HEAL_BAND px of each edge cross-faded through a strip of the painting's own middle, the interior untouched; never mirrored, rotated,
+// resized or regraded). The wrap mismatch before and after (on the WebP that ships) is recorded per level against the painting's own
+// neighbour difference inside; the script stops if a healed wrap is more than HEAL_LIMIT times the inside. The heal (method and band) is part
+// of the family's revision, so changing it re-bakes every chunk that laid it. The owner's art is read from this checkout, or from --art.
+//
 // Adding the next family: its handoff lands in READY-MATERIALS (with its canonical selection), run this script, then map it to a surface in
 // src/game/painted-surfaces.json (or in the studio's Painted tab). KIND below names the kind of family each material is (the studio's picker).
 // A material whose name a legacy painted family (painted-families.json) already has gets the game id `<material>-tiles`, so the old family
@@ -32,6 +41,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import sharp from 'sharp';
 import { ROOT } from './source.mjs';
+import { HEAL_METHOD, healWrap, wrapMismatch } from './tile-heal.mjs';
 
 const EIGHT = 'art/theme-consistency/generated/ground/eight-tiles';
 const READY_REL = `${EIGHT}/READY-MATERIALS.json`;
@@ -50,6 +60,10 @@ const KIND = { 'golden-fescue': 'grass', lake: 'water', 'pale-green-bushes': 'gr
 const NAME = { 'golden-fescue': 'Golden fescue', lake: 'Lake water', 'sand-ripples': 'Sand ripples', fairway: 'Fairway', 'putting-green': 'Putting green', 'long-grass': 'Long grass' };
 /** the families that ship provisionally until their handoff (T153, the lead's decision on #327): the course's fairway, green and rough */
 const PROVISIONAL = ['fairway', 'putting-green', 'long-grass'];
+/** the owner's own paintings (T162, #350): their folders, each with its source.json; the heal's band (px of each edge) and its limit (a healed
+ *  wrap at most this many times the painting's own neighbour difference inside) */
+const OWNER = ['art/owner-supplied/rough-20261026'];
+const HEAL_BAND = 48, HEAL_LIMIT = 1.25;
 const TILE_IDS = ['tile-01', 'tile-02', 'tile-03', 'tile-04'];
 /** the legacy painted families' ids (painted-families.json): a tile set family whose material has one of these names gets `<material>-tiles` */
 const LEGACY = new Set(JSON.parse(fs.readFileSync(path.join(ROOT, 'src/game/painted-families.json'), 'utf8')).families.map(f => f.id));
@@ -73,10 +87,12 @@ const gameId = material => (LEGACY.has(material) ? `${material}-tiles` : materia
 // FAR_FROM 2.5% (anchor 0.05); ZOOM_MIN 1.25% (iso.ts), where FAR is 0.25x, about four tiles across a 1920 px screen. Never above native.
 const ZOOM_MAX = 0.3, ZOOM_MIN = 0.0125;
 const ANCHORS = { near: 0.6, mid: 0.2, far: 0.05 }, HYSTERESIS = 1.04, PRELOAD = 1.414, NEAR_UNTIL = 0.1, FAR_FROM = 0.025;
+// T150's and T153's anchors were found from the owner's references (the near shop 136 px at 30%: 0.3; the mid shop 0.338 of it: 0.1; the
+// furthest zoom: 0.0075); T156 halved each set's size from there (the texts below, as the manifest has carried them since T156).
 const ANCHOR_HOW = {
-  near: "The near reference (material-screenshot-pipeline/references/owner-near.png, the camera near-shop-native.png comes from; its UI is the game's CSS size): the brick shop is 136 px wide; shop-sized buildings placed in the game at 30% and DPR 1 measure 131-138 px, and the boulevard's carriageway (69 px) gives 0.29: the camera was at the closest zoom, ZOOM_MAX 0.3.",
-  mid: "The mid reference (owner-mid.png, the source of scene-backgrounds/golden-fescue/mid-anchored-v2): the same shop is 45.2 px (0.332 of NEAR) and the gas canopy 53.8 px (0.344): 0.3 x 0.338 = 0.1.",
-  far: "The furthest zoom, ZOOM_MIN (the owner: the four FAR tiles at their native size there); T153 raised it one zoom step (x1.25) from 0.006 to 0.0075, the owner removing the furthest level. The far reference (owner-far.png: the shop about 25 px) was painted at about 0.055.",
+  near: "T156 (the owner: \"half the size the fescue is displayed at, when fully zoomed in\"): 0.6, so NEAR is 0.5x native at the closest zoom (30%). Before: 0.3 from the near reference (the shop 136 px at 30%).",
+  mid: "T156 (the owner: \"bring in the next fescue earlier\"): MID comes in at nearUntil 10% at half its native size, anchor 0.2. Before: 0.1 from the mid reference.",
+  far: "T156 (the owner: \"the final fescue even earlier and make the final fescue smaller and atleast 4 tiles\", \"just dont let the player zoom out that far\"): FAR comes in at farFrom 2.5% at half its native size, anchor 0.05; the furthest zoom is now 1.25% (FAR 0.25x, about four tiles across 1920 px).",
 };
 
 const sha256 = buf => crypto.createHash('sha256').update(buf).digest('hex');
@@ -84,6 +100,7 @@ const rel = p => path.join(ART, p);
 const fail = m => { console.error('prep-painted-tiles: ' + m); process.exit(1); };
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 const hex = m => '#' + m.map(v => Math.round(v).toString(16).padStart(2, '0')).join('');
+const r2 = v => Math.round(v * 100) / 100;
 const readJson = p => { try { return JSON.parse(fs.readFileSync(rel(p), 'utf8')); } catch { return null; } };
 
 const readyBuf = fs.existsSync(rel(READY_REL)) ? fs.readFileSync(rel(READY_REL)) : fail(`no ${READY_REL} under ${ART}`);
@@ -186,14 +203,46 @@ for (const material of PROVISIONAL) {
   plan.push({ material, id: gameId(material), materialId: `painted:${material}`, key, selection: null, provisional: true, light, levels });
 }
 
+/* ---- the owner's own paintings (T162, #350): one painting a level, hash-checked, its edges healed here once to tile with itself ---- */
+/** where the owner's art is read: this checkout (it is committed here), or --art (the tests' fixtures) */
+const OWNER_ART = path.resolve(arg('--art') ?? ROOT);
+const orel = p => path.join(OWNER_ART, p);
+for (const folder of OWNER) {
+  const srcRel = `${folder}/source.json`;
+  if (!fs.existsSync(orel(srcRel))) { console.warn(`prep-painted-tiles: no ${srcRel} under ${OWNER_ART}; its family is left out`); continue; }
+  const src = JSON.parse(fs.readFileSync(orel(srcRel), 'utf8')), fam = src.family ?? {};
+  if (!fam.id || !fam.name || !src.levels) fail(`${srcRel}: no family id, name or levels`);
+  if (src.displayContract && (src.displayContract.allowMirror || src.displayContract.allowRotate || src.displayContract.allowFlip)) fail(`${srcRel}: allows mirror/rotate/flip, which the runtime never does`);
+  const levels = {};
+  for (const level of LEVELS) {
+    const sl = src.levels[level];
+    if (!sl?.file || !/^[0-9a-f]{64}$/.test(sl.sha256 ?? '')) fail(`${srcRel} ${level}: no file or sha256`);
+    const file = `${folder}/${sl.file}`, buf = fs.existsSync(orel(file)) ? fs.readFileSync(orel(file)) : fail(`missing ${file}`);
+    const h = sha256(buf); if (h !== sl.sha256) fail(`${file}: sha256 ${h} != ${srcRel} ${sl.sha256}`);
+    const { data, info } = await sharp(buf).raw().toBuffer({ resolveWithObject: true }), { width: w, height: ht, channels: ch } = info;
+    if (Array.isArray(sl.size) && (w !== sl.size[0] || ht !== sl.size[1])) fail(`${file}: ${w}x${ht}, ${srcRel} says ${sl.size.join('x')}`);
+    const healed = healWrap(data, w, ht, ch, HEAL_BAND);
+    // the interior is the owner's pixels exactly: only the outer HEAL_BAND px of each edge may differ
+    for (let y = HEAL_BAND; y < ht - HEAL_BAND; y++) for (let i = (y * w + HEAL_BAND) * ch, e = (y * w + w - HEAL_BAND) * ch; i < e; i++) if (healed[i] !== data[i]) fail(`${file}: the heal changed the interior at (${Math.floor(i / ch) % w}, ${y})`);
+    // the heal's own result is held to HEAL_LIMIT x the inside, on its pixels (the WebP's numbers are recorded as they ship)
+    const before = wrapMismatch(data, w, ht, ch), done = wrapMismatch(healed, w, ht, ch);
+    if (done.lr > HEAL_LIMIT * done.h || done.tb > HEAL_LIMIT * done.v) fail(`${file}: healed wrap LR ${r2(done.lr)} / TB ${r2(done.tb)} is more than ${HEAL_LIMIT}x the inside (${r2(done.h)} / ${r2(done.v)}): widen HEAL_BAND`);
+    const tile = { id: TILE_IDS[0], sha256: h, source: file, raw: { data: healed, width: w, height: ht, channels: ch }, before, healed: done };
+    levels[level] = { folder, native: [w, ht], decision: { file: null, sha256: null }, tiles: [tile], revision: `${level}-${path.basename(folder)}`, status: null };
+  }
+  // the revision: the paintings' hashes and the heal (another heal re-bakes every chunk that laid it)
+  const key = sha256(Buffer.from(LEVELS.map(l => levels[l].tiles[0].sha256).join(':') + `|${HEAL_METHOD}/${HEAL_BAND}`));
+  plan.push({ material: fam.id, id: gameId(fam.id), materialId: src.id ?? `owner:${path.basename(folder)}`, name: fam.name, kind: fam.kind ?? 'grass', key, selection: null, provisional: fam.provisional !== false, owner: srcRel, light: src.light ?? null, levels });
+}
+
 // ---- write the WebPs and the manifest
 const manifest = {
   v: 1,
-  note: `Generated by scripts/assets/prep-painted-tiles.mjs from ${READY_REL} (hash-checked) and, for families marked provisional, the newest complete raw sets in their folders (hash-recorded; T153). Do not edit by hand, except anchors.nearUntil.`,
+  note: `Generated by scripts/assets/prep-painted-tiles.mjs from ${READY_REL} (hash-checked) and, for families marked provisional, the newest complete raw sets in their folders (hash-recorded; T153), and for the owner's own paintings their files in art/owner-supplied (hash-checked against their source.json, edges healed by scripts/assets/tile-heal.mjs; T162). Do not edit by hand, except anchors.nearUntil and anchors.farFrom.`,
   source: { file: READY_REL, sha256: sha256(readyBuf), date: ready.date ?? null },
   revision: sha256(Buffer.from(plan.map(p => p.key).join(':'))).slice(0, 12),
   display: { minVisibleTiles: ready.displayContract?.minVisibleTiles ?? 2, maxVisibleTiles: ready.displayContract?.maxVisibleTiles ?? 4, allowMirror: false, allowRotate: false, allowFlip: false },
-  anchors: { ...ANCHORS, nearUntil, farFrom, hysteresis: HYSTERESIS, preload: PRELOAD, zoom: [ZOOM_MIN, ZOOM_MAX], how: ANCHOR_HOW },
+  anchors: { ...ANCHORS, nearUntil, hysteresis: HYSTERESIS, preload: PRELOAD, zoom: [ZOOM_MIN, ZOOM_MAX], how: ANCHOR_HOW, farFrom },
   webp: { quality: QUALITY },
   families: [],
 };
@@ -201,18 +250,32 @@ if (!CHECK) fs.mkdirSync(OUT_DIR, { recursive: true });
 let kb = 0;
 const written = new Set();
 for (const p of plan) {
-  const fam = { id: p.id, materialId: p.materialId, name: NAME[p.material] ?? p.material.replace(/-/g, ' ').replace(/^./, c => c.toUpperCase()), kind: KIND[p.material] ?? 'grass', revision: p.key.slice(0, 12), selection: p.selection, ...(p.provisional ? { provisional: true } : {}), light: p.light, mean: '#808080', levels: {} };
+  const fam = { id: p.id, materialId: p.materialId, name: p.name ?? NAME[p.material] ?? p.material.replace(/-/g, ' ').replace(/^./, c => c.toUpperCase()), kind: p.kind ?? KIND[p.material] ?? 'grass', revision: p.key.slice(0, 12), selection: p.selection, ...(p.provisional ? { provisional: true } : {}), ...(p.owner ? { owner: p.owner } : {}), light: p.light, mean: '#808080', levels: {} };
   const means = [];
   for (const level of LEVELS) {
     const L = p.levels[level], out = [];
+    let heal = null;
     for (const t of L.tiles) {
       const file = `tiles/${p.id}/${level}/${t.id}.webp`, abs = path.join(OUT, 'src/assets/ground/painted', file);
-      // a provisional tile bigger than its set keeps its top-left native pixels (crop); every other tile is the PNG as it is
-      const pic = () => (t.crop ? sharp(t.buf).extract({ left: 0, top: 0, width: L.native[0], height: L.native[1] }) : sharp(t.buf));
-      const stats = await sharp(t.crop ? await pic().png().toBuffer() : t.buf).stats(), opaque = stats.isOpaque;
-      if (!CHECK) {
+      // a provisional tile bigger than its set keeps its top-left native pixels (crop); an owner's painting is its healed pixels (raw, T162);
+      // every other tile is the PNG as it is
+      const pic = () => (t.raw ? sharp(Buffer.from(t.raw.data.buffer, t.raw.data.byteOffset, t.raw.data.byteLength), { raw: { width: t.raw.width, height: t.raw.height, channels: t.raw.channels } })
+        : t.crop ? sharp(t.buf).extract({ left: 0, top: 0, width: L.native[0], height: L.native[1] }) : sharp(t.buf));
+      const stats = await (t.raw ? pic() : sharp(t.crop ? await pic().png().toBuffer() : t.buf)).stats(), opaque = stats.isOpaque;
+      const webp = () => (opaque ? pic().removeAlpha() : pic()).webp({ quality: QUALITY, effort: 6, smartSubsample: true });
+      if (t.raw) {
+        // the healed painting's numbers: before, the owner's file; healed, its pixels after the heal; after, the WebP that ships (each against
+        // its own inside difference: the lossy WebP's error, about 3 levels a pixel, is independent on the two sides of a tile edge, so it adds
+        // a level or two across any wrap, the other tile sets' edges alike)
+        const buf = await webp().toBuffer(), dec = await sharp(buf).raw().toBuffer({ resolveWithObject: true });
+        if (dec.info.width !== L.native[0] || dec.info.height !== L.native[1]) fail(`${file}: encoded ${dec.info.width}x${dec.info.height}`);
+        const m2 = m => ({ lr: r2(m.lr), tb: r2(m.tb), h: r2(m.h), v: r2(m.v) }), a = wrapMismatch(dec.data, dec.info.width, dec.info.height, dec.info.channels);
+        heal = { method: HEAL_METHOD, band: HEAL_BAND, before: m2(t.before), healed: m2(t.healed), after: m2(a) };
+        console.log(`${file}: wrap LR ${heal.before.lr} -> ${heal.after.lr} (inside ${heal.after.h}), TB ${heal.before.tb} -> ${heal.after.tb} (inside ${heal.after.v}); ${HEAL_METHOD}, ${HEAL_BAND} px`);
+        if (!CHECK) { fs.mkdirSync(path.dirname(abs), { recursive: true }); fs.writeFileSync(abs, buf); }
+      } else if (!CHECK) {
         fs.mkdirSync(path.dirname(abs), { recursive: true });
-        await (opaque ? pic().removeAlpha() : pic()).webp({ quality: QUALITY, effort: 6, smartSubsample: true }).toFile(abs);
+        await webp().toFile(abs);
         // the WebP keeps the native size (never resized)
         const m = await sharp(abs).metadata(); if (m.width !== L.native[0] || m.height !== L.native[1]) fail(`${file}: wrote ${m.width}x${m.height}`);
       }
@@ -222,7 +285,9 @@ for (const p of plan) {
       out.push({ id: t.id, file, sha256: t.sha256, mean: hex(mean), ...(t.source ? { source: t.source } : {}), ...(t.crop ? { crop: t.crop } : {}) });
       console.log(file.padEnd(52), `${L.native[0]}x${L.native[1]}`, hex(mean), `${Math.round(bytes / 1024)} KB`, opaque ? '' : '(alpha kept)', p.provisional ? '(provisional)' : '');
     }
-    fam.levels[level] = { revision: L.revision, folder: L.folder, native: L.native, decision: L.decision, tiles: out, ...(L.status ? { status: L.status } : {}) };
+    // an owner's painting (T162): its status says what it is and how its edges were healed
+    const status = heal ? `the owner's painting (${p.materialId}), one tile; edges healed to tile with itself (${heal.method}, ${heal.band} px): wrap LR ${heal.before.lr} -> ${heal.after.lr} (inside ${heal.after.h}), TB ${heal.before.tb} -> ${heal.after.tb} (inside ${heal.after.v})` : L.status;
+    fam.levels[level] = { revision: L.revision, folder: L.folder, native: L.native, decision: L.decision, tiles: out, ...(status ? { status } : {}), ...(heal ? { heal } : {}) };
   }
   fam.mean = hex([0, 1, 2].map(i => means.reduce((s, m) => s + m[i], 0) / means.length));
   manifest.families.push(fam);
@@ -245,4 +310,4 @@ const prune = dir => {
 };
 prune(OUT_DIR);
 const prov = manifest.families.filter(f => f.provisional).map(f => f.id);
-console.log(`${manifest.families.length} families (${prov.length ? `provisional: ${prov.join(', ')}` : 'none provisional'}), ${manifest.families.length * 12} tiles, ${Math.round(kb)} KB; anchors near ${ANCHORS.near} (until ${nearUntil}), mid ${ANCHORS.mid}, far ${ANCHORS.far}; revision ${manifest.revision}`);
+console.log(`${manifest.families.length} families (${prov.length ? `provisional: ${prov.join(', ')}` : 'none provisional'}), ${manifest.families.reduce((s, f) => s + LEVELS.reduce((n, l) => n + f.levels[l].tiles.length, 0), 0)} tiles, ${Math.round(kb)} KB; anchors near ${ANCHORS.near} (until ${nearUntil}), mid ${ANCHORS.mid}, far ${ANCHORS.far}; revision ${manifest.revision}`);
