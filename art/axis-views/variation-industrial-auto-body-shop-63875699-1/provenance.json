@@ -1,0 +1,598 @@
+{
+  "id": "variation:industrial-auto-body-shop-63875699:1",
+  "slug": "variation-industrial-auto-body-shop-63875699-1",
+  "identity": "variation-industrial-auto-body-shop-63875699-1-4views-v2.png",
+  "details": "ONE-storey small MAPLE FALLS BODY SHOP, beige concrete block walls and patchy corrugated low flat roof, small HVAC and circular vent, TWO dark metal roll-up bays on front A with plain sign above, small personnel door on side D, window and walllamp. Rear plain servicewall, NO repeatfrontbays. No external tyres, tools or cars.",
+  "category": "buildings",
+  "viewOrder": [
+    "N",
+    "E",
+    "S",
+    "W"
+  ],
+  "source": "art/theme-consistency/generated/buildings/variation-industrial-auto-body-shop-63875699-1-4views-v2.png",
+  "output": "art/theme-consistency/generated/buildings/variation-industrial-auto-body-shop-63875699-1-screen-axis-4views-v1.png",
+  "provenance": "art/theme-consistency/generated/buildings/variation-industrial-auto-body-shop-63875699-1-screen-axis-4views-v1.provenance.json",
+  "references": [
+    "art/theme-consistency/references/theme-authoritative.png",
+    "art/theme-consistency/generated/buildings/variation-industrial-auto-body-shop-63875699-1-4views-v2.png",
+    "art/theme-consistency/references/road-diagonal-head-on-gable-template-v1.png"
+  ],
+  "prompt": "Create a NEW missing orientation set of ONE existing game building. Image 1 is THEME ONLY: match its detailed hand-painted stylized miniature town materials, warm autumn dusk palette, soft confident painted forms and warm lit windows. Image 2 is DESIGN IDENTITY: preserve this exact building's footprint proportions, storeys, roof type, chimney/vent arrangement, facade materials and entrance design. Image 3 is CAMERA GEOMETRY ONLY, never copy its colours/lines. IMPORTANT this is NOT the usual diagonal three-quarter isometric turntable. We need the intermediate 45-degree WORLD headings for roads that are perfectly HORIZONTAL or VERTICAL ON SCREEN. Fixed orthographic elevated camera about35degrees above horizontal, NO perspective. Every primary wall-footing line is exactly HORIZONTAL in screen coordinates; footprint depth goes straight vertically on the image. Roof is visible from above, with roof edges horizontal/vertical; vertical walls stay vertical. NO sloping +/-26.565degree footprint edges. No glimpse of a second major wall at a diagonal corner. Reconstruct true rigid quarter turns, never mirror lighting or reuse a front as a rear.\nReturn one SQUARE RGBA PNG with real transparent background and strict2x2 equal independent cells; no captions. ROW-MAJOR VIEW ORDER: TOP LEFT=N, entrance facade A seen exactly head-on, door faces screen DOWN; TOP RIGHT=E, building's physical right-hand side D seen exactly square-on, entrance facade at the right-hand end out of sight; BOTTOM LEFT=S, real REAR wall C seen exactly head-on, front entrance hidden on far side; BOTTOM RIGHT=W, building's physical left-hand side B seen square-on, front at left end out of sight. All four show matching elevation/scale and the SAME physical roof/vents. Building stays upright, not flat2D elevation: roofs still visible, natural elevated game view. Keep all geometry parallel to horizontal/vertical road layout. Use fixed SCREEN UPPER RIGHT sunlight, darker LOWER LEFT contact, enough dusk daylight for readable materials. All outside silhouette pixels transparent, NO grey floor, NO street, terrain, lawn, tiled square, vignette, backdrop, checkerboard, scene, parked cars, separate props or people. Only integral doorsteps/porch allowed; miniscule contact occlusion, no broad ground shadow cloud. Leave at least15percent transparent padding on every side of EACH quadrant; fit whole roof, steps and all details well inside cell. No overlap across centre gutters, no frame, labels or guide graphics. Four real distinct facades, never two duplicated images.\nONE-storey small MAPLE FALLS BODY SHOP, beige concrete block walls and patchy corrugated low flat roof, small HVAC and circular vent, TWO dark metal roll-up bays on front A with plain sign above, small personnel door on side D, window and walllamp. Rear plain servicewall, NO repeatfrontbays. No external tyres, tools or cars.",
+  "generator": "built-in image_gen",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-ee200552-30e6-4139-be9a-1dfe1253830c.png",
+  "date": "2026-10-26",
+  "viewSet": "screen-axis-4",
+  "viewsOrder": [
+    "N",
+    "E",
+    "S",
+    "W"
+  ],
+  "lighting": "upper-right toward lower-left",
+  "integrationStatus": "pending-not-full-eight-view-source",
+  "alphaReview": "pending",
+  "processing": "Native generator output copied byte-for-byte. Crops pending; no resize or pixel repaint.",
+  "screenAxisExport": {
+    "schema": 1,
+    "id": "variation:industrial-auto-body-shop-63875699:1",
+    "viewSet": "screen-axis-4",
+    "viewsOrder": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "sheet": "art/theme-consistency/generated/buildings/variation-industrial-auto-body-shop-63875699-1-screen-axis-4views-v1.png",
+    "sheetSha256": "28cc6f42adbbbca33ddabf93b4666d3dab8e3f443db13441dc0543f6f12b5868",
+    "nativeSheetPixels": [
+      1254,
+      1254
+    ],
+    "processing": "Exact half-cell pixel crops only. No resize, alpha repaint, recolour, transform or mirroring. Alpha thresholds are diagnostic only; not a visual approval or alpha edit.",
+    "fileContractStatus": "passed-with-alpha-residue-warnings",
+    "visualReviewStatus": "pending",
+    "integrationStatus": "pending-not-full-eight-view-source",
+    "axisLineCounts": {
+      "vertical": 14,
+      "horizontal": 23,
+      "verticalAtLeast16": 0,
+      "horizontalAtLeast16": 0,
+      "verticalAtLeast128": 0,
+      "horizontalAtLeast128": 0
+    },
+    "issues": [],
+    "warnings": [
+      "Only low-alpha1..15 residue on middle cell boundaries; exact pixels preserved",
+      "N: corner contains only low-alpha1..15 residue",
+      "N: cell edge contains only low-alpha1..15 residue",
+      "E: cell edge contains only low-alpha1..15 residue",
+      "S: corner contains only low-alpha1..15 residue",
+      "S: cell edge contains only low-alpha1..15 residue",
+      "W: cell edge contains only low-alpha1..15 residue"
+    ],
+    "views": {
+      "N": {
+        "sourceRect": {
+          "left": 0,
+          "top": 0,
+          "width": 627,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/buildings/variation-industrial-auto-body-shop-63875699-1-screen-axis-4views-v1/N.native.png",
+        "nativeSha256": "7f2c804561c4df9e8703471006e022be4324a4b97fe3d45b68a6e938489d66c2",
+        "pixelSha256": "0dfd07b5b4a02069f8389426a413e24c862fd8a825b54e7324f08968210aa1e4",
+        "trimmedPixelSha256": "0dfd07b5b4a02069f8389426a413e24c862fd8a825b54e7324f08968210aa1e4",
+        "nativePixels": [
+          627,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 176556,
+          "transparent": 216573,
+          "transparentFraction": 0.5508955075814809,
+          "cornersAlpha": [
+            0,
+            0,
+            1,
+            0
+          ],
+          "bounds": {
+            "left": 0,
+            "top": 0,
+            "width": 627,
+            "height": 627
+          },
+          "padding": {
+            "left": 0,
+            "top": 0,
+            "right": 0,
+            "bottom": 0
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 216573,
+            "oneTo15": 9138,
+            "sixteenTo127": 1491,
+            "one28To254": 165842,
+            "opaque255": 85
+          },
+          "edge": {
+            "nonzero": 89,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 167418,
+            "transparent": 225711,
+            "transparentFraction": 0.5741397861770564,
+            "cornersAlpha": [
+              0,
+              0,
+              1,
+              0
+            ],
+            "bounds": {
+              "left": 79,
+              "top": 190,
+              "width": 511,
+              "height": 344
+            },
+            "padding": {
+              "left": 79,
+              "top": 190,
+              "right": 37,
+              "bottom": 93
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 165927,
+            "transparent": 227202,
+            "transparentFraction": 0.5779324343917646,
+            "cornersAlpha": [
+              0,
+              0,
+              1,
+              0
+            ],
+            "bounds": {
+              "left": 80,
+              "top": 191,
+              "width": 509,
+              "height": 343
+            },
+            "padding": {
+              "left": 80,
+              "top": 191,
+              "right": 38,
+              "bottom": 93
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 166909,
+          "transparent": 226220,
+          "transparentFraction": 0.5754345265803337,
+          "cornersAlpha": [
+            0,
+            0,
+            1,
+            0
+          ],
+          "bounds": {
+            "left": 79,
+            "top": 190,
+            "width": 511,
+            "height": 344
+          },
+          "padding": {
+            "left": 79,
+            "top": 190,
+            "right": 37,
+            "bottom": 93
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      },
+      "E": {
+        "sourceRect": {
+          "left": 627,
+          "top": 0,
+          "width": 627,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/buildings/variation-industrial-auto-body-shop-63875699-1-screen-axis-4views-v1/E.native.png",
+        "nativeSha256": "eb55234af5dbe2499204e96cc451a174b0d647df3964f7e7e3e9359a995f2991",
+        "pixelSha256": "d806d9a93f9e2cb86610e6b4497fc98b758faaeb98eb049eb27c4b95bea6df09",
+        "trimmedPixelSha256": "56037f12259c32f538cacf50573430627eb0a82fef5799ff6d850a93b37d985a",
+        "nativePixels": [
+          627,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 172457,
+          "transparent": 220672,
+          "transparentFraction": 0.561322110554042,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 0,
+            "top": 0,
+            "width": 611,
+            "height": 627
+          },
+          "padding": {
+            "left": 0,
+            "top": 0,
+            "right": 16,
+            "bottom": 0
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 220672,
+            "oneTo15": 18062,
+            "sixteenTo127": 1454,
+            "one28To254": 152863,
+            "opaque255": 78
+          },
+          "edge": {
+            "nonzero": 130,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 154395,
+            "transparent": 238734,
+            "transparentFraction": 0.6072663171630686,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 66,
+              "top": 190,
+              "width": 482,
+              "height": 341
+            },
+            "padding": {
+              "left": 66,
+              "top": 190,
+              "right": 79,
+              "bottom": 96
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 152941,
+            "transparent": 240188,
+            "transparentFraction": 0.610964848688344,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 67,
+              "top": 191,
+              "width": 480,
+              "height": 339
+            },
+            "padding": {
+              "left": 67,
+              "top": 191,
+              "right": 80,
+              "bottom": 97
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 153910,
+          "transparent": 239219,
+          "transparentFraction": 0.6085000089029301,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 66,
+            "top": 190,
+            "width": 482,
+            "height": 340
+          },
+          "padding": {
+            "left": 66,
+            "top": 190,
+            "right": 79,
+            "bottom": 97
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      },
+      "S": {
+        "sourceRect": {
+          "left": 0,
+          "top": 627,
+          "width": 627,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/buildings/variation-industrial-auto-body-shop-63875699-1-screen-axis-4views-v1/S.native.png",
+        "nativeSha256": "540750eac556b516f389107e4e0d9ffe1fc10af1f07aea6c8f7b69d6863c588c",
+        "pixelSha256": "e412d5c34a7460120f7480a08ebe2001b7b2ce4b15ece5df32c64c562d6b0a38",
+        "trimmedPixelSha256": "e412d5c34a7460120f7480a08ebe2001b7b2ce4b15ece5df32c64c562d6b0a38",
+        "nativePixels": [
+          627,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 171064,
+          "transparent": 222065,
+          "transparentFraction": 0.5648654767264689,
+          "cornersAlpha": [
+            1,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 0,
+            "top": 0,
+            "width": 627,
+            "height": 627
+          },
+          "padding": {
+            "left": 0,
+            "top": 0,
+            "right": 0,
+            "bottom": 0
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 222065,
+            "oneTo15": 15128,
+            "sixteenTo127": 1579,
+            "one28To254": 154261,
+            "opaque255": 96
+          },
+          "edge": {
+            "nonzero": 331,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 155936,
+            "transparent": 237193,
+            "transparentFraction": 0.6033464842329108,
+            "cornersAlpha": [
+              1,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 79,
+              "top": 136,
+              "width": 509,
+              "height": 324
+            },
+            "padding": {
+              "left": 79,
+              "top": 136,
+              "right": 39,
+              "bottom": 167
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 154357,
+            "transparent": 238772,
+            "transparentFraction": 0.6073629775468103,
+            "cornersAlpha": [
+              1,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 80,
+              "top": 137,
+              "width": 508,
+              "height": 322
+            },
+            "padding": {
+              "left": 80,
+              "top": 137,
+              "right": 39,
+              "bottom": 168
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 155544,
+          "transparent": 237585,
+          "transparentFraction": 0.6043436124020359,
+          "cornersAlpha": [
+            1,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 79,
+            "top": 136,
+            "width": 509,
+            "height": 324
+          },
+          "padding": {
+            "left": 79,
+            "top": 136,
+            "right": 39,
+            "bottom": 167
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      },
+      "W": {
+        "sourceRect": {
+          "left": 627,
+          "top": 627,
+          "width": 627,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/buildings/variation-industrial-auto-body-shop-63875699-1-screen-axis-4views-v1/W.native.png",
+        "nativeSha256": "d0c0988c0293167e086d6fb21d4293d972d38727cef4e4c0887407c4d5f66325",
+        "pixelSha256": "c1c2073e033b1855947a63dd63fe5e6ce1fcf0d3e379ac6f737cf252e07301ef",
+        "trimmedPixelSha256": "b61ce0c7ffc7ee5e30d9a62709f5452f16aa2e2bce18ec0c075bc167e9323869",
+        "nativePixels": [
+          627,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 166935,
+          "transparent": 226194,
+          "transparentFraction": 0.5753683905282999,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 1,
+            "top": 0,
+            "width": 606,
+            "height": 627
+          },
+          "padding": {
+            "left": 1,
+            "top": 0,
+            "right": 20,
+            "bottom": 0
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 226194,
+            "oneTo15": 17432,
+            "sixteenTo127": 1459,
+            "one28To254": 147978,
+            "opaque255": 66
+          },
+          "edge": {
+            "nonzero": 217,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 149503,
+            "transparent": 243626,
+            "transparentFraction": 0.619710069722661,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 58,
+              "top": 134,
+              "width": 488,
+              "height": 326
+            },
+            "padding": {
+              "left": 58,
+              "top": 134,
+              "right": 81,
+              "bottom": 167
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 148044,
+            "transparent": 245085,
+            "transparentFraction": 0.6234213197194813,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 59,
+              "top": 135,
+              "width": 486,
+              "height": 324
+            },
+            "padding": {
+              "left": 59,
+              "top": 135,
+              "right": 82,
+              "bottom": 168
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 149017,
+          "transparent": 244112,
+          "transparentFraction": 0.6209463051568315,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 58,
+            "top": 134,
+            "width": 488,
+            "height": 326
+          },
+          "padding": {
+            "left": 58,
+            "top": 134,
+            "right": 81,
+            "bottom": 167
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      }
+    }
+  },
+  "visualReviewStatus": "pending"
+}

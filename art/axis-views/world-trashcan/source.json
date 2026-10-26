@@ -1,0 +1,80 @@
+{
+ "id": "world:trashcan",
+ "slug": "world-trashcan",
+ "category": "props",
+ "version": "world-trashcan-screen-axis-4views-v1",
+ "crops": "recut",
+ "why": "no crops yet: cut from the sheet by its subjects",
+ "sheetSha256": "cd723bce3fd00f2334eafae7282a29ea90cd9fd114dd462f36ceb06dae551342",
+ "status": "pending-art-review-and-physical-calibration",
+ "views": {
+  "N": {
+   "file": "N.png",
+   "sha256": "9a725164e763b3601be95be1e160a1a8b95c1af375bd979a70478b35d07f4db2",
+   "sheetRect": {
+    "left": 147,
+    "top": 113,
+    "width": 385,
+    "height": 454
+   },
+   "trim": [
+    0,
+    0,
+    385,
+    454
+   ],
+   "heading": "front faces screen down"
+  },
+  "E": {
+   "file": "E.png",
+   "sha256": "069baa7816a3640ed70a307a36a7f9441d46b555aebf011a987868bd93fb88e1",
+   "sheetRect": {
+    "left": 777,
+    "top": 112,
+    "width": 300,
+    "height": 458
+   },
+   "trim": [
+    0,
+    0,
+    300,
+    458
+   ],
+   "heading": "front faces screen right (its right side to the camera)"
+  },
+  "S": {
+   "file": "S.png",
+   "sha256": "76f029725424f97426ebfbc480575ee4fed1c8354a253b8277dd645a0669c5f7",
+   "sheetRect": {
+    "left": 148,
+    "top": 685,
+    "width": 383,
+    "height": 453
+   },
+   "trim": [
+    0,
+    0,
+    383,
+    453
+   ],
+   "heading": "front faces screen up (its rear to the camera)"
+  },
+  "W": {
+   "file": "W.png",
+   "sha256": "9bd1efacbd582018dc5e2afaf03e09c178e3e113d01889bd96244c9b5efb0782",
+   "sheetRect": {
+    "left": 793,
+    "top": 683,
+    "width": 298,
+    "height": 454
+   },
+   "trim": [
+    0,
+    0,
+    298,
+    454
+   ],
+   "heading": "front faces screen left (its left side to the camera)"
+  }
+ }
+}

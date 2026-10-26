@@ -1,0 +1,598 @@
+{
+  "id": "ce:parking-entry",
+  "slug": "ce-parking-entry",
+  "identity": "ce-parking-entry",
+  "details": "ONE parkingentry BOOM assembly matching source: palecream/green motordrive cabinet, small grey cardreader onmetalpost and single narrow red/white striped liftingbar. CLOSED horizontal-height arm only inALL4views, one physicalunit nottwo gates. N laneapproachSCREEN DOWN, cabinetleft and barrierextendsRIGHT acrosslane; E rotatesunit90worlddegrees so arm recedesVERTICALLY onimage ratherthan adiagonal, leverhinge/reader correctphysicalside; S rearofsamecabinet, armextendsLEFT; W oppositeprofile with armoppositeverticaldepth. Keepstripewidth and counterweightdesign; barrotatesgeometrynotlight. Entirelongarm/cabinet/reader uncut withinEACHcell. NO road, concretepad/groundplate, parkingbay orcar.",
+  "category": "props",
+  "source": "art/theme-consistency/exports/horizontal-identities/ce-parking-entry.native.png",
+  "output": "art/theme-consistency/generated/props/ce-parking-entry-screen-axis-4views-v1.png",
+  "provenance": "art/theme-consistency/generated/props/ce-parking-entry-screen-axis-4views-v1.provenance.json",
+  "references": [
+    "art/theme-consistency/references/theme-authoritative.png",
+    "art/theme-consistency/references/horizontal-road-parking-landscaping-v1.png",
+    "art/theme-consistency/exports/horizontal-identities/ce-parking-entry.native.png"
+  ],
+  "prompt": "ONE independentlyplaceable propONLY. Image1 = hand-painted stylized MapleFalls townTHEME; image2 = approved horizontal-screen-roadscene forstyle/camera; image3 = thisprop'sexisting gameidentity. Preservepractical1980sdesign, no fantasyembellishment. ONE parkingentry BOOM assembly matching source: palecream/green motordrive cabinet, small grey cardreader onmetalpost and single narrow red/white striped liftingbar. CLOSED horizontal-height arm only inALL4views, one physicalunit nottwo gates. N laneapproachSCREEN DOWN, cabinetleft and barrierextendsRIGHT acrosslane; E rotatesunit90worlddegrees so arm recedesVERTICALLY onimage ratherthan adiagonal, leverhinge/reader correctphysicalside; S rearofsamecabinet, armextendsLEFT; W oppositeprofile with armoppositeverticaldepth. Keepstripewidth and counterweightdesign; barrotatesgeometrynotlight. Entirelongarm/cabinet/reader uncut withinEACHcell. NO road, concretepad/groundplate, parkingbay orcar.\nGenerate FOUR realrigidquarterturns ofthis SAMEobject. Orthographicelevated35degreecamera, no perspective; alignstructuralbaseaxes HORIZONTALLY/VERTICALLYonSCREEN fornewhorizontalroadlayout, not±26degree diagonalgroundedges. SQUARE RGBAtransparentPNG strict2x2 equalcells ROWMAJOR N FRONT headon facesSCREENDOWN, E RIGHTSIDE, S trueBACK, W LEFTSIDE. Rotatephysicaldetailscorrectly; nevermirror orrepeatfrontasrear. Light fixedSCREEN UPPERRIGHT shadeLOWERLEFT; no rotatinglight. Matchsamepalette,detailedreadablepaintedmaterials andphysicalsizeallviews. ALL fourcutoutswhollyinsideownquarterwith15percentcleartransparentmargin toALLsidesandcentresplits; shrinkALLuniformlytofitlongobject. NObackground,greyfloor,terrain,shadowdisc,checkerboard,labels,frames,UI,people orotherprops. Transparentoutsideexactobjectsilhouette, tinycontactocclusiononly.",
+  "generator": "built-in image_gen",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-f13402a6-9427-4969-b50c-f35ddf0f7114.png",
+  "date": "2026-10-26",
+  "viewSet": "screen-axis-4",
+  "viewsOrder": [
+    "N",
+    "E",
+    "S",
+    "W"
+  ],
+  "lighting": "upper-right toward lower-left",
+  "integrationStatus": "pending-not-full-eight-view-source",
+  "alphaReview": "pending",
+  "processing": "Native generator output copied byte-for-byte. Crops pending; no resize or pixel repaint.",
+  "screenAxisExport": {
+    "schema": 1,
+    "id": "ce:parking-entry",
+    "viewSet": "screen-axis-4",
+    "viewsOrder": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "sheet": "art/theme-consistency/generated/props/ce-parking-entry-screen-axis-4views-v1.png",
+    "sheetSha256": "516609e3eea490509eaed23b60716d3286c4395efb0973a36baee8770d4b26cd",
+    "nativeSheetPixels": [
+      1254,
+      1254
+    ],
+    "processing": "Exact source-rectangle pixel crops only. No resize, alpha repaint, recolour, transform or mirroring. Alpha thresholds are diagnostic only; not a visual approval or alpha edit.",
+    "rectangleSelection": {
+      "file": "art/theme-consistency/generated/props/ce-parking-entry-screen-axis-4views-v1.source-rects-v2.json",
+      "review": {
+        "reviewer": "horizontal_crop_pack",
+        "method": "Manually inspected full source and alpha>=128 component bounds. Unequal nonoverlapping regions contain complete subject silhouettes. Exact source pixel crops only.",
+        "evidence": "art/theme-consistency/generated/props/ce-parking-entry-screen-axis-4views-v1.png",
+        "acceptanceScope": "Source rectangles only; angle/ground anchors/live integration not approved."
+      }
+    },
+    "fileContractStatus": "passed-with-alpha-residue-warnings",
+    "visualReviewStatus": "pending",
+    "integrationStatus": "pending-not-full-eight-view-source",
+    "axisLineCounts": {
+      "vertical": 553,
+      "horizontal": 78,
+      "verticalAtLeast16": 507,
+      "horizontalAtLeast16": 0,
+      "verticalAtLeast128": 499,
+      "horizontalAtLeast128": 0
+    },
+    "issues": [],
+    "warnings": [
+      "N: cell edge contains only low-alpha1..15 residue",
+      "E: cell edge contains only low-alpha1..15 residue",
+      "S: cell edge contains only low-alpha1..15 residue",
+      "W: cell edge contains only low-alpha1..15 residue"
+    ],
+    "views": {
+      "N": {
+        "sourceRect": {
+          "left": 0,
+          "top": 0,
+          "width": 835,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/props/ce-parking-entry-screen-axis-4views-v1-crops-v2/N.native.png",
+        "nativeSha256": "8f9713b459363d091ec995e8cf53a366142dce0a8538ef62c1a00b37edff2660",
+        "pixelSha256": "5d77fb70bff8394bbef8a25f6c64d4b9fec68409291c244b561893b8354a09ed",
+        "trimmedPixelSha256": "d585e3c13d2e7950d3d0625e2a3a09008ee49d8d42bf277d34d0687b2f20a7db",
+        "nativePixels": [
+          835,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 61859,
+          "transparent": 461686,
+          "transparentFraction": 0.8818458776227449,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 0,
+            "top": 17,
+            "width": 835,
+            "height": 610
+          },
+          "padding": {
+            "left": 0,
+            "top": 17,
+            "right": 0,
+            "bottom": 0
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 461686,
+            "oneTo15": 14145,
+            "sixteenTo127": 2200,
+            "one28To254": 45473,
+            "opaque255": 41
+          },
+          "edge": {
+            "nonzero": 55,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 47714,
+            "transparent": 475831,
+            "transparentFraction": 0.9088636124879428,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 146,
+              "top": 340,
+              "width": 636,
+              "height": 218
+            },
+            "padding": {
+              "left": 146,
+              "top": 340,
+              "right": 53,
+              "bottom": 69
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 45514,
+            "transparent": 478031,
+            "transparentFraction": 0.913065734559589,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 148,
+              "top": 343,
+              "width": 633,
+              "height": 214
+            },
+            "padding": {
+              "left": 148,
+              "top": 343,
+              "right": 54,
+              "bottom": 70
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 47295,
+          "transparent": 476250,
+          "transparentFraction": 0.9096639257370427,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 147,
+            "top": 342,
+            "width": 635,
+            "height": 216
+          },
+          "padding": {
+            "left": 147,
+            "top": 342,
+            "right": 53,
+            "bottom": 69
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      },
+      "E": {
+        "sourceRect": {
+          "left": 835,
+          "top": 0,
+          "width": 419,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/props/ce-parking-entry-screen-axis-4views-v1-crops-v2/E.native.png",
+        "nativeSha256": "a55c0e6315b2793dcf4fd8eec396354e7fc93d171b8330197c2e8763669c92b2",
+        "pixelSha256": "61021ee01b500719757f1c68c311350e9a507c53091ed1ebeba47d22ffbba11c",
+        "trimmedPixelSha256": "39697109016cea46b2c23982b4418eeef5153f2785ba1fac4ab0a8a216a3aab9",
+        "nativePixels": [
+          419,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 37057,
+          "transparent": 225656,
+          "transparentFraction": 0.8589449323025506,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 0,
+            "top": 31,
+            "width": 399,
+            "height": 572
+          },
+          "padding": {
+            "left": 0,
+            "top": 31,
+            "right": 20,
+            "bottom": 24
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 225656,
+            "oneTo15": 8274,
+            "sixteenTo127": 1089,
+            "one28To254": 27640,
+            "opaque255": 54
+          },
+          "edge": {
+            "nonzero": 21,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 28783,
+            "transparent": 233930,
+            "transparentFraction": 0.8904393768104357,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 68,
+              "top": 121,
+              "width": 104,
+              "height": 455
+            },
+            "padding": {
+              "left": 68,
+              "top": 121,
+              "right": 247,
+              "bottom": 51
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 27694,
+            "transparent": 235019,
+            "transparentFraction": 0.8945845846988919,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 69,
+              "top": 122,
+              "width": 101,
+              "height": 453
+            },
+            "padding": {
+              "left": 69,
+              "top": 122,
+              "right": 249,
+              "bottom": 52
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 28555,
+          "transparent": 234158,
+          "transparentFraction": 0.8913072440267517,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 69,
+            "top": 121,
+            "width": 102,
+            "height": 455
+          },
+          "padding": {
+            "left": 69,
+            "top": 121,
+            "right": 248,
+            "bottom": 51
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      },
+      "S": {
+        "sourceRect": {
+          "left": 0,
+          "top": 627,
+          "width": 815,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/props/ce-parking-entry-screen-axis-4views-v1-crops-v2/S.native.png",
+        "nativeSha256": "88fe73470fdf033fc1e8b0d812effe4550753e5435046b1fed4125c1e0405ea5",
+        "pixelSha256": "641aa95eb95e9377ec5527c9d44998508ba1a04eb6f6b2971f3e424fc0c156a3",
+        "trimmedPixelSha256": "3fb7b767a3934b964bb3bb6fb8b6b68fa46148a9e38d370b360bd00ba7869163",
+        "nativePixels": [
+          815,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 62313,
+          "transparent": 448692,
+          "transparentFraction": 0.8780579446385065,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 33,
+            "top": 0,
+            "width": 782,
+            "height": 571
+          },
+          "padding": {
+            "left": 33,
+            "top": 0,
+            "right": 0,
+            "bottom": 56
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 448692,
+            "oneTo15": 13100,
+            "sixteenTo127": 1921,
+            "one28To254": 46938,
+            "opaque255": 354
+          },
+          "edge": {
+            "nonzero": 35,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 49213,
+            "transparent": 461792,
+            "transparentFraction": 0.9036937016271857,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 104,
+              "top": 206,
+              "width": 604,
+              "height": 228
+            },
+            "padding": {
+              "left": 104,
+              "top": 206,
+              "right": 107,
+              "bottom": 193
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 47292,
+            "transparent": 463713,
+            "transparentFraction": 0.9074529603428538,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 105,
+              "top": 207,
+              "width": 602,
+              "height": 226
+            },
+            "padding": {
+              "left": 105,
+              "top": 207,
+              "right": 108,
+              "bottom": 194
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 48742,
+          "transparent": 462263,
+          "transparentFraction": 0.9046154147219695,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 104,
+            "top": 207,
+            "width": 604,
+            "height": 227
+          },
+          "padding": {
+            "left": 104,
+            "top": 207,
+            "right": 107,
+            "bottom": 193
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      },
+      "W": {
+        "sourceRect": {
+          "left": 815,
+          "top": 627,
+          "width": 439,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/props/ce-parking-entry-screen-axis-4views-v1-crops-v2/W.native.png",
+        "nativeSha256": "b53da80ba527b8f4d363937f33512072c95a2f5cd86178d35f634ab922015114",
+        "pixelSha256": "a06ee60e277f8e06724a96cbf6f6a5cc5ee5d15351ca7127a02d0ca2c1744dac",
+        "trimmedPixelSha256": "785ebe154f63c34932c2b26e6d5534af1aec146165b19edc96fe4db12f1a5051",
+        "nativePixels": [
+          439,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 31924,
+          "transparent": 243329,
+          "transparentFraction": 0.8840194293976814,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 0,
+            "top": 5,
+            "width": 415,
+            "height": 622
+          },
+          "padding": {
+            "left": 0,
+            "top": 5,
+            "right": 24,
+            "bottom": 0
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 243329,
+            "oneTo15": 6965,
+            "sixteenTo127": 699,
+            "one28To254": 24236,
+            "opaque255": 24
+          },
+          "edge": {
+            "nonzero": 71,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 24959,
+            "transparent": 250294,
+            "transparentFraction": 0.9093234224513448,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 105,
+              "top": 147,
+              "width": 111,
+              "height": 339
+            },
+            "padding": {
+              "left": 105,
+              "top": 147,
+              "right": 223,
+              "bottom": 141
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 24260,
+            "transparent": 250993,
+            "transparentFraction": 0.9118629043098531,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 106,
+              "top": 149,
+              "width": 109,
+              "height": 336
+            },
+            "padding": {
+              "left": 106,
+              "top": 149,
+              "right": 224,
+              "bottom": 142
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 24751,
+          "transparent": 250502,
+          "transparentFraction": 0.9100790908727607,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 105,
+            "top": 148,
+            "width": 111,
+            "height": 337
+          },
+          "padding": {
+            "left": 105,
+            "top": 148,
+            "right": 223,
+            "bottom": 142
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      }
+    }
+  },
+  "visualReviewStatus": "pending"
+}

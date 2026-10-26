@@ -13,6 +13,7 @@ import PRESET_FIXTURE from './fixtures/lot-presets.json';
 import { hasLettering, LETTERING_IDS, EAST_FACING } from '../src/game/lots/lettering';
 import { EAST_PAIRS } from '../src/game/east-library';
 import { VIEW_ART, unmirror } from '../src/game/views-library';
+import { AXIS_HEADING } from '../src/game/axis-library';
 import { REMOVED_IDS } from '../src/game/lots/scales';
 import { drawnAs, isBuilding } from '../src/game/mirror';
 import { fourViews } from '../src/game/lots/preset-art';
@@ -192,7 +193,8 @@ test('no building is ever drawn flipped: lots of every use facing +X and +Y, acr
 });
 
 test('the four-view buildings are never mirrored: a flip is the partner view (NE <-> SE, SW <-> NW), unflipped, on the same footprint', () => {
-  const four = LIBRARY.filter(it => VIEW_ART.has(it.id) || it.id.startsWith('view:'));
+  // the four-view art (the screen-axis views, view:<id>:n|e|s|w, turn by their own rule: mirror.ts drawnAs, tests/axis-views.test.ts)
+  const four = LIBRARY.filter(it => (VIEW_ART.has(it.id) || it.id.startsWith('view:')) && AXIS_HEADING[it.id] === undefined);
   assert.ok(four.length >= 40, `${four.length} four-view sprites`);
   const box = (id: string) => byId.get(id)!.boxes[0]!;
   for (const it of four) {

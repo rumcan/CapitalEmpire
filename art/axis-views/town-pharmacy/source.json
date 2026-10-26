@@ -1,0 +1,63 @@
+{
+ "id": "town:pharmacy",
+ "slug": "town-pharmacy",
+ "category": "buildings",
+ "version": "town-pharmacy-screen-axis-4views-v1",
+ "crops": "half-cells",
+ "sheetSha256": "402946cbe67c10667fb596ec4fa773e7cca1e61f648a56096df919fdc78da901",
+ "status": "passed-with-alpha-residue-warnings",
+ "views": {
+  "N": {
+   "file": "N.png",
+   "sha256": "93a028b984af39382553ed29fc9e0198722b69965af4fa183f5c68866d480018",
+   "nativeSha256": "93a028b984af39382553ed29fc9e0198722b69965af4fa183f5c68866d480018",
+   "pixelSha256": "5559ba96e66801bb20f82a3401c1f9aea6c3dcf26dc19ff796319cd4887bf46c",
+   "trim": [
+    101,
+    60,
+    449,
+    516
+   ],
+   "heading": "front faces screen down"
+  },
+  "E": {
+   "file": "E.png",
+   "sha256": "19538271f56794ec0c3cd77aec62636902cc5d3e4176388a7694562ce2b821c6",
+   "nativeSha256": "19538271f56794ec0c3cd77aec62636902cc5d3e4176388a7694562ce2b821c6",
+   "pixelSha256": "634b50eb29a912e0ae132ce2751bf06896f5181b580c24c3cdf6f99db5254284",
+   "trim": [
+    90,
+    74,
+    446,
+    496
+   ],
+   "heading": "front faces screen right (its right side to the camera)"
+  },
+  "S": {
+   "file": "S.png",
+   "sha256": "e76793e4e0080c14b383ab14e1e33666d791ea5eee952f587c2429efd02c21df",
+   "nativeSha256": "e76793e4e0080c14b383ab14e1e33666d791ea5eee952f587c2429efd02c21df",
+   "pixelSha256": "bdee6524aec137e94997c92832beb91521bfada7fe041dae62547e389cb0ad0e",
+   "trim": [
+    127,
+    45,
+    421,
+    502
+   ],
+   "heading": "front faces screen up (its rear to the camera)"
+  },
+  "W": {
+   "file": "W.png",
+   "sha256": "aa674f498c9c2d4aaa9946464be55242498dc95f495a0a249e9854e92d4fb99a",
+   "nativeSha256": "aa674f498c9c2d4aaa9946464be55242498dc95f495a0a249e9854e92d4fb99a",
+   "pixelSha256": "f17107f74f78241e8f9d313274636436639c21d7ecee7a19e6e0cb5e79dd7903",
+   "trim": [
+    95,
+    50,
+    409,
+    483
+   ],
+   "heading": "front faces screen left (its left side to the camera)"
+  }
+ }
+}

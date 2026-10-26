@@ -1,0 +1,594 @@
+{
+  "id": "landscape:hydrangea-pale",
+  "slug": "hydrangea-pale",
+  "details": "ONE palegreen hydrangeashrub, broad sagegreen leaves and handfulofroundedcream/palelimeflowerheads, threeasymmetricstems with onehigherflowerclusteratphysicalbackleft, 0.9mhigh 1.4mwide. No pink/neonflowers, pot,flowerbedborder,grassorgrounddisc.",
+  "kind": "bush",
+  "category": "landscaping",
+  "requiresLibraryRegistration": true,
+  "source": "art/theme-consistency/references/horizontal-road-parking-landscaping-v1.png",
+  "output": "art/theme-consistency/generated/landscaping/hydrangea-pale-screen-axis-4views-v1.png",
+  "provenance": "art/theme-consistency/generated/landscaping/hydrangea-pale-screen-axis-4views-v1.provenance.json",
+  "references": [
+    "art/theme-consistency/references/theme-authoritative.png",
+    "art/theme-consistency/references/horizontal-road-parking-landscaping-v1.png"
+  ],
+  "prompt": "DeriveONE standalone placeablelandscapingobject matchingthereferenceworld. Image1 THEMEONLY: detailedstylized hand-painted MapleFalls townart, broadconfidentpainted leafclusters, readableminiatureform, warmupperrightlateafternoonlight andsoftlowerleftshade, nophotographicnoise. Image2 APPROVEDdesigncontextandCAMERASCALE: smallgardenbesidehead-onparkinggarage. Isolateonlyspecifiedplant/bed concept, no garageorotherassets. ONE palegreen hydrangeashrub, broad sagegreen leaves and handfulofroundedcream/palelimeflowerheads, threeasymmetricstems with onehigherflowerclusteratphysicalbackleft, 0.9mhigh 1.4mwide. No pink/neonflowers, pot,flowerbedborder,grassorgrounddisc.\nReturn one SQUARE trueRGBAtransparentPNG strict2x2equalcells, fourgenuinerigidrotations ofSAMEasymmetricobject rowmajor N FRONT towardSCREENDOWN, E RIGHTSIDE, S BACK towardSCREENUP, W LEFTSIDE. Consistent elevatedorthographic35degreecamera withroof/topfoliagevisible, no perspective, maintainexactsamephysicalsize andshapethroughallviews. Rectangularborders/groundcontacts useSCREENHORIZONTALandVERTICALaxes forhorizontalroadlayout, notusualdiagonalisometricfootprint. Rotateplantstructure/border, keepSUNfixedSCREENUPPERRIGHT; nevermirrorlight orduplicatefrontasback. Everycutoutwith15percenttransparentpaddinginsideeachquarter, no crosscelloverlap. NOTascene orsurfacegrasspainting. No otherplants,outsidegroundpatch,grassapron,greyfloor,broadshadowdisc,backdrop,checkerboard,UI,words,caption,frame,people orgarlands. Intrinsicflowerbedsoil/borderispartofasset; barebushhasfoliage/stemsonly. Onlytinycontactocclusion.",
+  "generator": "built-in image_gen",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-4120716f-696f-420c-aaff-eee17cc5e3db.png",
+  "date": "2026-10-26",
+  "viewSet": "screen-axis-4",
+  "viewsOrder": [
+    "N",
+    "E",
+    "S",
+    "W"
+  ],
+  "lighting": "upper-right toward lower-left",
+  "integrationStatus": "pending-not-full-eight-view-source",
+  "alphaReview": "pending",
+  "processing": "Native generator output copied byte-for-byte. Crops pending; no resize or pixel repaint.",
+  "screenAxisExport": {
+    "schema": 1,
+    "id": "landscape:hydrangea-pale",
+    "viewSet": "screen-axis-4",
+    "viewsOrder": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "sheet": "art/theme-consistency/generated/landscaping/hydrangea-pale-screen-axis-4views-v1.png",
+    "sheetSha256": "9e49181bdf15c8481dddbcc79a20ec997056a191f06b517326618b54010edc70",
+    "nativeSheetPixels": [
+      1254,
+      1254
+    ],
+    "processing": "Exact source-rectangle pixel crops only. No resize, alpha repaint, recolour, transform or mirroring. Alpha thresholds are diagnostic only; not a visual approval or alpha edit.",
+    "rectangleSelection": {
+      "method": "equal half-cells"
+    },
+    "fileContractStatus": "passed-with-alpha-residue-warnings",
+    "visualReviewStatus": "pending",
+    "integrationStatus": "pending-not-full-eight-view-source",
+    "axisLineCounts": {
+      "vertical": 37,
+      "horizontal": 23,
+      "verticalAtLeast16": 0,
+      "horizontalAtLeast16": 0,
+      "verticalAtLeast128": 0,
+      "horizontalAtLeast128": 0
+    },
+    "issues": [],
+    "warnings": [
+      "Only low-alpha1..15 residue on middle cell boundaries; exact pixels preserved",
+      "N: cell edge contains only low-alpha1..15 residue",
+      "E: cell edge contains only low-alpha1..15 residue",
+      "S: corner contains only low-alpha1..15 residue",
+      "S: cell edge contains only low-alpha1..15 residue",
+      "W: cell edge contains only low-alpha1..15 residue"
+    ],
+    "views": {
+      "N": {
+        "sourceRect": {
+          "left": 0,
+          "top": 0,
+          "width": 627,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/landscaping/hydrangea-pale-screen-axis-4views-v1/N.native.png",
+        "nativeSha256": "da4237e1443913c647980a022362d7d207ca68a1f371612539f0dbffb7835de2",
+        "pixelSha256": "93493f1d7a44449ec591d57c0917add532f353ade2271045ca3afc01e1025f42",
+        "trimmedPixelSha256": "a92050acd7b3f555b4b3a84d6e37e1450ad37126f1332dfbba74e920e61e5961",
+        "nativePixels": [
+          627,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 188898,
+          "transparent": 204231,
+          "transparentFraction": 0.5195012324198927,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 0,
+            "top": 22,
+            "width": 627,
+            "height": 605
+          },
+          "padding": {
+            "left": 0,
+            "top": 22,
+            "right": 0,
+            "bottom": 0
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 204231,
+            "oneTo15": 11141,
+            "sixteenTo127": 2067,
+            "one28To254": 175538,
+            "opaque255": 152
+          },
+          "edge": {
+            "nonzero": 64,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 177757,
+            "transparent": 215372,
+            "transparentFraction": 0.5478405307163806,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 68,
+              "top": 112,
+              "width": 553,
+              "height": 467
+            },
+            "padding": {
+              "left": 68,
+              "top": 112,
+              "right": 6,
+              "bottom": 48
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 175690,
+            "transparent": 217439,
+            "transparentFraction": 0.5530983468530686,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 68,
+              "top": 112,
+              "width": 552,
+              "height": 466
+            },
+            "padding": {
+              "left": 68,
+              "top": 112,
+              "right": 7,
+              "bottom": 49
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 177261,
+          "transparent": 215868,
+          "transparentFraction": 0.549102203093641,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 68,
+            "top": 112,
+            "width": 552,
+            "height": 467
+          },
+          "padding": {
+            "left": 68,
+            "top": 112,
+            "right": 7,
+            "bottom": 48
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      },
+      "E": {
+        "sourceRect": {
+          "left": 627,
+          "top": 0,
+          "width": 627,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/landscaping/hydrangea-pale-screen-axis-4views-v1/E.native.png",
+        "nativeSha256": "decfcc8446e5e6d5864c64121f60561bf574deb95c73e0f29ab8c54949e069c7",
+        "pixelSha256": "15a09dcdb9f404aca6ca1b8ce06dcce94ba3a68fc09f52b3de6daa1bed46fea7",
+        "trimmedPixelSha256": "197dbda26271964e6dc5d8f221449ee67632b8467ce790647d4c68a58c250992",
+        "nativePixels": [
+          627,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 163561,
+          "transparent": 229568,
+          "transparentFraction": 0.5839508151268413,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 0,
+            "top": 3,
+            "width": 615,
+            "height": 602
+          },
+          "padding": {
+            "left": 0,
+            "top": 3,
+            "right": 12,
+            "bottom": 22
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 229568,
+            "oneTo15": 11476,
+            "sixteenTo127": 2431,
+            "one28To254": 149497,
+            "opaque255": 157
+          },
+          "edge": {
+            "nonzero": 4,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 152085,
+            "transparent": 241044,
+            "transparentFraction": 0.6131422510168418,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 77,
+              "top": 116,
+              "width": 500,
+              "height": 463
+            },
+            "padding": {
+              "left": 77,
+              "top": 116,
+              "right": 50,
+              "bottom": 48
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 149654,
+            "transparent": 243475,
+            "transparentFraction": 0.6193259718820031,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 78,
+              "top": 117,
+              "width": 498,
+              "height": 461
+            },
+            "padding": {
+              "left": 78,
+              "top": 117,
+              "right": 51,
+              "bottom": 49
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 151483,
+          "transparent": 241646,
+          "transparentFraction": 0.6146735549908554,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 77,
+            "top": 116,
+            "width": 500,
+            "height": 462
+          },
+          "padding": {
+            "left": 77,
+            "top": 116,
+            "right": 50,
+            "bottom": 49
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      },
+      "S": {
+        "sourceRect": {
+          "left": 0,
+          "top": 627,
+          "width": 627,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/landscaping/hydrangea-pale-screen-axis-4views-v1/S.native.png",
+        "nativeSha256": "d5c445915534880b53c25f7b0e80ae0db1d97c95af204c122183b17fecc50c16",
+        "pixelSha256": "29c033bb5a3db6f0032eb02653f002a217681cd986ea1a75e8e65de325a6d7bc",
+        "trimmedPixelSha256": "29c033bb5a3db6f0032eb02653f002a217681cd986ea1a75e8e65de325a6d7bc",
+        "nativePixels": [
+          627,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 179255,
+          "transparent": 213874,
+          "transparentFraction": 0.5440300766415095,
+          "cornersAlpha": [
+            0,
+            0,
+            1,
+            0
+          ],
+          "bounds": {
+            "left": 0,
+            "top": 0,
+            "width": 627,
+            "height": 627
+          },
+          "padding": {
+            "left": 0,
+            "top": 0,
+            "right": 0,
+            "bottom": 0
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 213874,
+            "oneTo15": 12622,
+            "sixteenTo127": 2263,
+            "one28To254": 164242,
+            "opaque255": 128
+          },
+          "edge": {
+            "nonzero": 139,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 166633,
+            "transparent": 226496,
+            "transparentFraction": 0.5761365862096157,
+            "cornersAlpha": [
+              0,
+              0,
+              1,
+              0
+            ],
+            "bounds": {
+              "left": 74,
+              "top": 64,
+              "width": 537,
+              "height": 445
+            },
+            "padding": {
+              "left": 74,
+              "top": 64,
+              "right": 16,
+              "bottom": 118
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 164370,
+            "transparent": 228759,
+            "transparentFraction": 0.5818929664308662,
+            "cornersAlpha": [
+              0,
+              0,
+              1,
+              0
+            ],
+            "bounds": {
+              "left": 75,
+              "top": 65,
+              "width": 535,
+              "height": 444
+            },
+            "padding": {
+              "left": 75,
+              "top": 65,
+              "right": 17,
+              "bottom": 118
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 166049,
+          "transparent": 227080,
+          "transparentFraction": 0.5776221036860675,
+          "cornersAlpha": [
+            0,
+            0,
+            1,
+            0
+          ],
+          "bounds": {
+            "left": 75,
+            "top": 64,
+            "width": 536,
+            "height": 445
+          },
+          "padding": {
+            "left": 75,
+            "top": 64,
+            "right": 16,
+            "bottom": 118
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      },
+      "W": {
+        "sourceRect": {
+          "left": 627,
+          "top": 627,
+          "width": 627,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/landscaping/hydrangea-pale-screen-axis-4views-v1/W.native.png",
+        "nativeSha256": "a6ea908cc1d5e1313a9b43924d4c2c370964aa7136b49f747bb07e020c62edb0",
+        "pixelSha256": "a9e7a181fdff290440d99acab50285d708af785dc6ec4d63aca24d3121ff9d86",
+        "trimmedPixelSha256": "c8233b88b22bb0e3715bb8ffc1f776a854a2702e888299c12a3ce8383edfc73e",
+        "nativePixels": [
+          627,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 154975,
+          "transparent": 238154,
+          "transparentFraction": 0.6057909744638529,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 0,
+            "top": 3,
+            "width": 609,
+            "height": 624
+          },
+          "padding": {
+            "left": 0,
+            "top": 3,
+            "right": 18,
+            "bottom": 0
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 238154,
+            "oneTo15": 11882,
+            "sixteenTo127": 2278,
+            "one28To254": 140705,
+            "opaque255": 110
+          },
+          "edge": {
+            "nonzero": 91,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 143093,
+            "transparent": 250036,
+            "transparentFraction": 0.6360151502433044,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 72,
+              "top": 84,
+              "width": 499,
+              "height": 422
+            },
+            "padding": {
+              "left": 72,
+              "top": 84,
+              "right": 56,
+              "bottom": 121
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 140815,
+            "transparent": 252314,
+            "transparentFraction": 0.6418096858791897,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 73,
+              "top": 85,
+              "width": 497,
+              "height": 420
+            },
+            "padding": {
+              "left": 73,
+              "top": 85,
+              "right": 57,
+              "bottom": 122
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 142547,
+          "transparent": 250582,
+          "transparentFraction": 0.6374040073360144,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 72,
+            "top": 84,
+            "width": 499,
+            "height": 422
+          },
+          "padding": {
+            "left": 72,
+            "top": 84,
+            "right": 56,
+            "bottom": 121
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      }
+    }
+  },
+  "visualReviewStatus": "pending"
+}

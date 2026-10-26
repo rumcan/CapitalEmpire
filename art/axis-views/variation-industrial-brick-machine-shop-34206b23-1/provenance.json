@@ -1,0 +1,597 @@
+{
+  "id": "variation:industrial-brick-machine-shop-34206b23:1",
+  "slug": "variation-industrial-brick-machine-shop-34206b23-1",
+  "identity": "variation-industrial-brick-machine-shop-34206b23-1-4views-v2.png",
+  "details": "ONE-storey red-brick machine workshop with stone/concrete base, two distinct sawtooth glazed roof ridges of dark corrugated steel, small roof HVAC, broad gridded factorywindows. Front A has ONE brown metal roller door between two factorywindows and small yellow safetyguards integral to doorway. Otherlongsidegriddedwindows, rear small service door. Preserve two sawtooth roof clerestoryruns across all turns.",
+  "category": "buildings",
+  "viewOrder": [
+    "N",
+    "E",
+    "S",
+    "W"
+  ],
+  "source": "art/theme-consistency/generated/buildings/variation-industrial-brick-machine-shop-34206b23-1-4views-v2.png",
+  "output": "art/theme-consistency/generated/buildings/variation-industrial-brick-machine-shop-34206b23-1-screen-axis-4views-v1.png",
+  "provenance": "art/theme-consistency/generated/buildings/variation-industrial-brick-machine-shop-34206b23-1-screen-axis-4views-v1.provenance.json",
+  "references": [
+    "art/theme-consistency/references/theme-authoritative.png",
+    "art/theme-consistency/generated/buildings/variation-industrial-brick-machine-shop-34206b23-1-4views-v2.png",
+    "art/theme-consistency/references/road-diagonal-head-on-gable-template-v1.png"
+  ],
+  "prompt": "Create a NEW missing orientation set of ONE existing game building. Image 1 is THEME ONLY: match its detailed hand-painted stylized miniature town materials, warm autumn dusk palette, soft confident painted forms and warm lit windows. Image 2 is DESIGN IDENTITY: preserve this exact building's footprint proportions, storeys, roof type, chimney/vent arrangement, facade materials and entrance design. Image 3 is CAMERA GEOMETRY ONLY, never copy its colours/lines. IMPORTANT this is NOT the usual diagonal three-quarter isometric turntable. We need the intermediate 45-degree WORLD headings for roads that are perfectly HORIZONTAL or VERTICAL ON SCREEN. Fixed orthographic elevated camera about35degrees above horizontal, NO perspective. Every primary wall-footing line is exactly HORIZONTAL in screen coordinates; footprint depth goes straight vertically on the image. Roof is visible from above, with roof edges horizontal/vertical; vertical walls stay vertical. NO sloping +/-26.565degree footprint edges. No glimpse of a second major wall at a diagonal corner. Reconstruct true rigid quarter turns, never mirror lighting or reuse a front as a rear.\nReturn one SQUARE RGBA PNG with real transparent background and strict2x2 equal independent cells; no captions. ROW-MAJOR VIEW ORDER: TOP LEFT=N, entrance facade A seen exactly head-on, door faces screen DOWN; TOP RIGHT=E, building's physical right-hand side D seen exactly square-on, entrance facade at the right-hand end out of sight; BOTTOM LEFT=S, real REAR wall C seen exactly head-on, front entrance hidden on far side; BOTTOM RIGHT=W, building's physical left-hand side B seen square-on, front at left end out of sight. All four show matching elevation/scale and the SAME physical roof/vents. Building stays upright, not flat2D elevation: roofs still visible, natural elevated game view. Keep all geometry parallel to horizontal/vertical road layout. Use fixed SCREEN UPPER RIGHT sunlight, darker LOWER LEFT contact, enough dusk daylight for readable materials. All outside silhouette pixels transparent, NO grey floor, NO street, terrain, lawn, tiled square, vignette, backdrop, checkerboard, scene, parked cars, separate props or people. Only integral doorsteps/porch allowed; miniscule contact occlusion, no broad ground shadow cloud. Leave at least15percent transparent padding on every side of EACH quadrant; fit whole roof, steps and all details well inside cell. No overlap across centre gutters, no frame, labels or guide graphics. Four real distinct facades, never two duplicated images.\nONE-storey red-brick machine workshop with stone/concrete base, two distinct sawtooth glazed roof ridges of dark corrugated steel, small roof HVAC, broad gridded factorywindows. Front A has ONE brown metal roller door between two factorywindows and small yellow safetyguards integral to doorway. Otherlongsidegriddedwindows, rear small service door. Preserve two sawtooth roof clerestoryruns across all turns.",
+  "generator": "built-in image_gen",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-37ca1d81-fe85-4446-ae94-d5ff3cefb06b.png",
+  "date": "2026-10-26",
+  "viewSet": "screen-axis-4",
+  "viewsOrder": [
+    "N",
+    "E",
+    "S",
+    "W"
+  ],
+  "lighting": "upper-right toward lower-left",
+  "integrationStatus": "pending-not-full-eight-view-source",
+  "alphaReview": "pending",
+  "processing": "Native generator output copied byte-for-byte. Crops pending; no resize or pixel repaint.",
+  "screenAxisExport": {
+    "schema": 1,
+    "id": "variation:industrial-brick-machine-shop-34206b23:1",
+    "viewSet": "screen-axis-4",
+    "viewsOrder": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "sheet": "art/theme-consistency/generated/buildings/variation-industrial-brick-machine-shop-34206b23-1-screen-axis-4views-v1.png",
+    "sheetSha256": "fbfb736c31dc2a500aed16ffd962ddb191621ba96a47f149ebdb24ab7eb102d6",
+    "nativeSheetPixels": [
+      1254,
+      1254
+    ],
+    "processing": "Exact half-cell pixel crops only. No resize, alpha repaint, recolour, transform or mirroring. Alpha thresholds are diagnostic only; not a visual approval or alpha edit.",
+    "fileContractStatus": "passed-with-alpha-residue-warnings",
+    "visualReviewStatus": "pending",
+    "integrationStatus": "pending-not-full-eight-view-source",
+    "axisLineCounts": {
+      "vertical": 136,
+      "horizontal": 19,
+      "verticalAtLeast16": 0,
+      "horizontalAtLeast16": 0,
+      "verticalAtLeast128": 0,
+      "horizontalAtLeast128": 0
+    },
+    "issues": [],
+    "warnings": [
+      "Only low-alpha1..15 residue on middle cell boundaries; exact pixels preserved",
+      "N: corner contains only low-alpha1..15 residue",
+      "N: cell edge contains only low-alpha1..15 residue",
+      "E: cell edge contains only low-alpha1..15 residue",
+      "S: cell edge contains only low-alpha1..15 residue",
+      "W: cell edge contains only low-alpha1..15 residue"
+    ],
+    "views": {
+      "N": {
+        "sourceRect": {
+          "left": 0,
+          "top": 0,
+          "width": 627,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/buildings/variation-industrial-brick-machine-shop-34206b23-1-screen-axis-4views-v1/N.native.png",
+        "nativeSha256": "6da9846230589fe3bf587c022685127f55368bcba47a1d6b8d80e86522dd876a",
+        "pixelSha256": "e4c1171e1de5a98c244e15d04ee1a23752e5ea44e7dc76949d3e3b79bdb177f7",
+        "trimmedPixelSha256": "c6bdbdb34a8193bc271ab57dcf4cb9306befd398c0ab5502e34aeacc609ee364",
+        "nativePixels": [
+          627,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 184483,
+          "transparent": 208646,
+          "transparentFraction": 0.5307316427940956,
+          "cornersAlpha": [
+            0,
+            0,
+            1,
+            0
+          ],
+          "bounds": {
+            "left": 0,
+            "top": 21,
+            "width": 627,
+            "height": 606
+          },
+          "padding": {
+            "left": 0,
+            "top": 21,
+            "right": 0,
+            "bottom": 0
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 208646,
+            "oneTo15": 11313,
+            "sixteenTo127": 1422,
+            "one28To254": 171554,
+            "opaque255": 194
+          },
+          "edge": {
+            "nonzero": 71,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 173170,
+            "transparent": 219959,
+            "transparentFraction": 0.5595084565117302,
+            "cornersAlpha": [
+              0,
+              0,
+              1,
+              0
+            ],
+            "bounds": {
+              "left": 103,
+              "top": 133,
+              "width": 484,
+              "height": 393
+            },
+            "padding": {
+              "left": 103,
+              "top": 133,
+              "right": 40,
+              "bottom": 101
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 171748,
+            "transparent": 221381,
+            "transparentFraction": 0.5631255898191179,
+            "cornersAlpha": [
+              0,
+              0,
+              1,
+              0
+            ],
+            "bounds": {
+              "left": 104,
+              "top": 134,
+              "width": 482,
+              "height": 391
+            },
+            "padding": {
+              "left": 104,
+              "top": 134,
+              "right": 41,
+              "bottom": 102
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 173022,
+          "transparent": 220107,
+          "transparentFraction": 0.5598849232694612,
+          "cornersAlpha": [
+            0,
+            0,
+            1,
+            0
+          ],
+          "bounds": {
+            "left": 103,
+            "top": 133,
+            "width": 483,
+            "height": 393
+          },
+          "padding": {
+            "left": 103,
+            "top": 133,
+            "right": 41,
+            "bottom": 101
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      },
+      "E": {
+        "sourceRect": {
+          "left": 627,
+          "top": 0,
+          "width": 627,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/buildings/variation-industrial-brick-machine-shop-34206b23-1-screen-axis-4views-v1/E.native.png",
+        "nativeSha256": "7b8872aa3c46abb117fd1b56705ed619a618414001d559d4661ae6525e9919eb",
+        "pixelSha256": "00d3975f6a7d01289b8ed3e7341df82cade6a542d5a128dc94f63ff13535eb5a",
+        "trimmedPixelSha256": "663e456ffd833ec8bb0e9192e7e06dcad79d9ae3853cd8917ca9f9cf5da3ee54",
+        "nativePixels": [
+          627,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 167140,
+          "transparent": 225989,
+          "transparentFraction": 0.5748469331949564,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 0,
+            "top": 8,
+            "width": 613,
+            "height": 619
+          },
+          "padding": {
+            "left": 0,
+            "top": 8,
+            "right": 14,
+            "bottom": 0
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 225989,
+            "oneTo15": 17259,
+            "sixteenTo127": 1335,
+            "one28To254": 148379,
+            "opaque255": 167
+          },
+          "edge": {
+            "nonzero": 10,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 149881,
+            "transparent": 243248,
+            "transparentFraction": 0.6187485532738618,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 60,
+              "top": 126,
+              "width": 457,
+              "height": 395
+            },
+            "padding": {
+              "left": 60,
+              "top": 126,
+              "right": 110,
+              "bottom": 106
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 148546,
+            "transparent": 244583,
+            "transparentFraction": 0.622144385176367,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 61,
+              "top": 127,
+              "width": 455,
+              "height": 393
+            },
+            "padding": {
+              "left": 61,
+              "top": 127,
+              "right": 111,
+              "bottom": 107
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 149644,
+          "transparent": 243485,
+          "transparentFraction": 0.619351408825093,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 60,
+            "top": 127,
+            "width": 457,
+            "height": 393
+          },
+          "padding": {
+            "left": 60,
+            "top": 127,
+            "right": 110,
+            "bottom": 107
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      },
+      "S": {
+        "sourceRect": {
+          "left": 0,
+          "top": 627,
+          "width": 627,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/buildings/variation-industrial-brick-machine-shop-34206b23-1-screen-axis-4views-v1/S.native.png",
+        "nativeSha256": "3fc6e3334ba83e7e9aef6d3bc990fccd421517ca10a4fe54da59a302a8176115",
+        "pixelSha256": "69bf8f7a0a2c9e89c867e7ede619b84c1b733712abb08a6f15cfa4e0b954ff7f",
+        "trimmedPixelSha256": "221b18d2932abda3d9de657974c2f368eec4ca4465a279f5163110334aee4262",
+        "nativePixels": [
+          627,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 179836,
+          "transparent": 213293,
+          "transparentFraction": 0.5425521902479847,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 0,
+            "top": 1,
+            "width": 627,
+            "height": 626
+          },
+          "padding": {
+            "left": 0,
+            "top": 1,
+            "right": 0,
+            "bottom": 0
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 213293,
+            "oneTo15": 9398,
+            "sixteenTo127": 1527,
+            "one28To254": 168806,
+            "opaque255": 105
+          },
+          "edge": {
+            "nonzero": 252,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 170438,
+            "transparent": 222691,
+            "transparentFraction": 0.5664578293638983,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 103,
+              "top": 71,
+              "width": 477,
+              "height": 382
+            },
+            "padding": {
+              "left": 103,
+              "top": 71,
+              "right": 47,
+              "bottom": 174
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 168911,
+            "transparent": 224218,
+            "transparentFraction": 0.5703420505737302,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 104,
+              "top": 72,
+              "width": 476,
+              "height": 380
+            },
+            "padding": {
+              "left": 104,
+              "top": 72,
+              "right": 47,
+              "bottom": 175
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 170338,
+          "transparent": 222791,
+          "transparentFraction": 0.5667121987947976,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 103,
+            "top": 71,
+            "width": 477,
+            "height": 381
+          },
+          "padding": {
+            "left": 103,
+            "top": 71,
+            "right": 47,
+            "bottom": 175
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      },
+      "W": {
+        "sourceRect": {
+          "left": 627,
+          "top": 627,
+          "width": 627,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/buildings/variation-industrial-brick-machine-shop-34206b23-1-screen-axis-4views-v1/W.native.png",
+        "nativeSha256": "de227fd1d853d80951f3f7d7e0098acd792341f5c4365f8ace1b461d7c0c2fb0",
+        "pixelSha256": "29c93d64744c2231e3c53048e23bbc9c2b52366c2fe7f666075cea9939af8bc0",
+        "trimmedPixelSha256": "4140ed49c33cad86a7866b8a3009286b5eacf41cbd2725265e35a3b5c5decbb5",
+        "nativePixels": [
+          627,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 163886,
+          "transparent": 229243,
+          "transparentFraction": 0.5831241144764187,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 0,
+            "top": 0,
+            "width": 623,
+            "height": 627
+          },
+          "padding": {
+            "left": 0,
+            "top": 0,
+            "right": 4,
+            "bottom": 0
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 229243,
+            "oneTo15": 12264,
+            "sixteenTo127": 1407,
+            "one28To254": 150010,
+            "opaque255": 205
+          },
+          "edge": {
+            "nonzero": 348,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 151622,
+            "transparent": 241507,
+            "transparentFraction": 0.6143199814819055,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 64,
+              "top": 64,
+              "width": 460,
+              "height": 389
+            },
+            "padding": {
+              "left": 64,
+              "top": 64,
+              "right": 103,
+              "bottom": 174
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 150215,
+            "transparent": 242914,
+            "transparentFraction": 0.6178989593746582,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 65,
+              "top": 64,
+              "width": 459,
+              "height": 388
+            },
+            "padding": {
+              "left": 65,
+              "top": 64,
+              "right": 103,
+              "bottom": 175
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 151428,
+          "transparent": 241701,
+          "transparentFraction": 0.61481345817785,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 64,
+            "top": 64,
+            "width": 460,
+            "height": 389
+          },
+          "padding": {
+            "left": 64,
+            "top": 64,
+            "right": 103,
+            "bottom": 174
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      }
+    }
+  },
+  "visualReviewStatus": "pending"
+}

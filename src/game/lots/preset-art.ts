@@ -4,6 +4,7 @@
 import { LIBRARY } from '../library';
 import type { LibItem } from '../types';
 import { VIEW_ART, unmirror } from '../views-library';
+import { AXIS_SETS } from '../axis-library';
 import { OWNER_SCALE } from './scales';
 import { hasLettering } from './lettering';
 import { CAR_DIRECTIONS, CAR_SCALE, carFootprint, carOwnerScale } from '../ext/car-art';
@@ -28,9 +29,21 @@ export function fourViews(id: string): Views | null {
   return out;
 }
 
+/** the screen-axis pictures (axis-library.ts, T154): each one's set [N, E, S, W] (the front facing screen down, right, up, left: one quarter turn
+ *  each, the same way round as NE, SE, SW, NW) and its place in it */
+const AXIS = new Map<string, Views>();
+for (const views of Object.values(AXIS_SETS)) if (views.every(v => BY.has(v))) views.forEach((v, at) => AXIS.set(v, { views: [...views] as Views['views'], at }));
+/** the screen-axis set of a picture (any of its four), or null */
+export const axisViews = (id: string): Views | null => AXIS.get(id) ?? null;
+const AXIS_OF = new Map<string, string>(Object.entries(AXIS_SETS).flatMap(([s, views]) => views.map(v => [v, s] as const)));
+/** the id a picture's studio size is kept under (its Library card): a four-view building's NE view, a screen-axis picture's subject (T154) */
+export const sizeKey = (id: string): string => AXIS_OF.get(id) ?? fourViews(id)?.views[0] ?? id;
+/** every picture one studio size (sizeKey) draws: the subject's four views (or itself) and its screen-axis set */
+export const sizeViews = (key: string): string[] => [...new Set([...(fourViews(key)?.views ?? [key]), ...(AXIS_SETS[key] ?? [])])];
+
 /** a drawn sprite as a preset stores it: its base id (the NE view for four-view art, else itself) and the view it is turned to (0..3) */
 export function baseView(id: string): { id: string; view: 0 | 1 | 2 | 3 } {
-  const v = fourViews(id);
+  const v = fourViews(id) ?? axisViews(id);
   return v ? { id: v.views[0], view: v.at as 0 | 1 | 2 | 3 } : { id, view: 0 };
 }
 
@@ -46,12 +59,12 @@ const LETTER = /_([nsew])(-v2)?$/;
 const NEXT_LETTER: Record<string, string> = { s: 'e', e: 'n', n: 'w', w: 's' };
 
 /** a sprite turned q quarter turns (the lot's facing plus the prop's view; any integer): the sprite and flip it is drawn with. Four-view art
- *  takes its turned view; an eight-way car its turned heading; an old vehicle its turned facing letter when the library has it; a fence its x or
+ *  and a screen-axis set (N, E, S, W) take their turned view; an eight-way car its turned heading; an old vehicle its turned facing letter when the library has it; a fence its x or
  *  y run; an axis prop (AXIS_PROPS) is mirrored on odd turns; anything else, lettered signs among them, keeps its picture unflipped */
 export function turned(id: string, q: number): { id: string; flip: boolean } {
   const t = ((Math.round(q) % 4) + 4) % 4;
   if (!t) return { id, flip: false };
-  const v = fourViews(id);
+  const v = fourViews(id) ?? axisViews(id);
   if (v) return { id: v.views[(v.at + t) % 4], flip: false };
   const car = CAR8.exec(id);
   if (car) { const h = CAR_DIRECTIONS.indexOf(car[2] as typeof CAR_DIRECTIONS[number]), n = `cars:${car[1]}:${CAR_DIRECTIONS[((h - 2 * t) % 8 + 8) % 8]}`; return { id: BY.has(n) ? n : id, flip: false }; }

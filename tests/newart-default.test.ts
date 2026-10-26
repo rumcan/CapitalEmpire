@@ -58,7 +58,7 @@ test('thumbItem: an old building is thumbnailed as its new-art stand-in, a new-a
     old++;
     assert.ok(isNew(thumbItem(it).id), `${it.id} thumbnails as ${thumbItem(it).id}`);
   });
-  assert.ok(old > 30, `${old} old buildings thumbnailed as new art`); // shrinks as the four-view art lands (46 on 2026-10-25, the 20 business-art props no longer counted)
+  assert.ok(old > 20, `${old} old buildings thumbnailed as new art`); // shrinks as the four-view art lands (46 on 2026-10-25, the 20 business-art props no longer counted; 27 after T154's Rebuild applied the studio's removals)
 });
 
 test('an old dwelling is drawn as a house: its stand-in is never a tent, a garage or an industrial building, nor golf or industry art (the owner, 2026-10-24)', () => {
@@ -73,7 +73,7 @@ test('an old dwelling is drawn as a house: its stand-in is never a tent, a garag
       assert.ok(s.cat !== 'Golf tournament' && s.cat !== 'Industry', `${it.id} is drawn as ${s.id} (${s.cat})`);
     }
   });
-  assert.ok(dwellings > 10, `${dwellings} old dwellings`); // shrinks as the four-view art lands (17 after the 2026-10-24 evening import)
+  assert.ok(dwellings > 5, `${dwellings} old dwellings`); // shrinks as the four-view art lands (17 after the 2026-10-24 evening import, 9 after T154's Rebuild applied the studio's removals)
 });
 
 test("a baked lot (the studio's Lots presets) is drawn as itself, never as one building stretched over the lot", () => {

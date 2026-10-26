@@ -32,8 +32,9 @@ import { carOwnerScale, carSizeId, foldCarSizes } from '../ext/car-art';
 import { lookOf, maxDrawScale } from '../newart';
 import { compose, lotPreset, lotPresets, lotPresetsMeta, onLotPresetsReload, setLotPresets, type PresetDrop } from '../lots/compose';
 import { formatPresets, type LotPreset, type PresetProp } from '../lots/presets';
+import { detach } from '../lots/derive';
 import { toFrame, toWorld, type PresetFrame } from '../lots/preset-frame';
-import { footprintOf, fourViews, ownerScaleOf, turned } from '../lots/preset-art';
+import { footprintOf, ownerScaleOf, sizeKey, sizeViews, turned } from '../lots/preset-art';
 import { applyEdit, clampToLot, fit1, growWithin, placeInPreset, presetToWorld, removeSprite, replacePreset, scaleOverride, snap, studioJson, worldToPreset, type PresetEdit } from './lot-edit';
 import { copySel, count, deleteSel, has, inBox, mainBuilding, moveSel, NONE, pasteClip, scaleSel, selOf, swapHouse, toggle as toggleSel, turnSel, union, within, type Clip, type Kind, type ScreenPt, type Selection } from './lot-select';
 import { artLimit, classWords, frameHalf, isHouseLike, nextHouse, type HouseOk } from './lot-houses';
@@ -174,6 +175,10 @@ export function editorAct(a: LabAct): boolean { if (!lab) return false; lab.edit
 let paused = false;
 /** pauses the editor's pointer handling (the lot lab's ground painting): its presses go to the lab */
 export function pauseEditor(v: boolean): void { paused = v; }
+/** whether the editor's keys are muted (T158: the lot wizard owns the keys and never lets an edit save its lot) */
+let muted = false;
+/** mutes the editor's keys (the lot wizard), or lets them work again */
+export function muteEditor(v: boolean): void { muted = v; }
 
 /** installs the editor on a game and its overlay canvas (off until ?dev or the I key); returns the uninstall */
 export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => void {
@@ -350,7 +355,9 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
   }
 
   // ---------- the edits
-  async function commitPreset(lot: string, before: LotPreset, after: LotPreset, index: number, what: string, undoIndex: number | null = index, note = '') {
+  async function commitPreset(lot: string, before: LotPreset, after0: LotPreset, index: number, what: string, undoIndex: number | null = index, note = '') {
+    // a hand edit detaches a derived preset from its master (T155: lots/derive.ts); an undo puts back what was
+    const after = undoIndex !== null ? detach(after0) : after0;
     if (undoIndex !== null) undo.push({ kind: 'preset', before, lot, index: undoIndex });
     setLotPresets(replacePreset(lotPresets(), after));
     // this lot at once, then only the other lots drawn from the same preset (not the whole town's ground on every key repeat)
@@ -361,7 +368,8 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
   }
   /** a multi-selection's edit made (one undo step, the selection before kept with it): the preset replaced, its lot composed at once and the
    *  others drawn from it queued, the selection s on the new preset, the preset saved */
-  async function commitGroup(lot: string, before: LotPreset, after: LotPreset, s: Selection, what: string, pushUndo = true) {
+  async function commitGroup(lot: string, before: LotPreset, after0: LotPreset, s: Selection, what: string, pushUndo = true) {
+    const after = pushUndo ? detach(after0) : after0;
     if (pushUndo) undo.push({ kind: 'preset', before, lot, index: -1, sel: group && group.preset === before.id ? group.sel : NONE });
     setLotPresets(replacePreset(lotPresets(), after));
     game.recomposeLots([lot], after.id);
@@ -477,7 +485,7 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
     if (r) await commitPreset(s.lot, s.preset, r.preset, r.prop, a, s.index, note);
   }
   async function libraryEdit(item: number, a: Act) {
-    const it = LIBRARY[item]!, car = isCar(it.id), id = car ? carSizeId(it.id) : fourViews(it.id)?.views[0] ?? it.id;
+    const it = LIBRARY[item]!, car = isCar(it.id), id = car ? carSizeId(it.id) : sizeKey(it.id);
     if (a === 'bigger' || a === 'smaller') {
       // the studio's rule (server.mjs /api/scale): its size, else the table's (a car's: 1, the size of its model), times the step; never past the pixels of any of its views
       // a car's size is its model's (carOwnerScale: a size the studio kept under one of its pictures' own keys before T143 counts, the largest), and the
@@ -485,7 +493,7 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
       const text = await load('scale-overrides.json'), sizes = JSON.parse(text) as Record<string, number>, base = car ? 1 : TABLE_SCALE[id] ?? OWNER_SCALE[id] ?? 1, cur = car ? carOwnerScale(it.id, sizes) : sizes[id] ?? base;
       const lim = artLimit(car ? it.id : id), next = growWithin(cur, a === 'bigger' ? GROW : 1 / GROW, lim);
       if (next === null) return say(refused(id, lim));
-      const out = car ? { ...foldCarSizes(sizes, CAR_IDS), [id]: +next.toFixed(3) } : scaleOverride(sizes, id, base, next / cur), views = fourViews(id)?.views ?? [id], before = views.map(v => [v, OWNER_SCALE[v]] as const);
+      const out = car ? { ...foldCarSizes(sizes, CAR_IDS), [id]: +next.toFixed(3) } : scaleOverride(sizes, id, base, next / cur), views = sizeViews(id), before = views.map(v => [v, OWNER_SCALE[v]] as const);
       await save('scale-overrides.json', studioJson(out));
       // a car's size is read from the studio file when the game loads (ext/car-art carOwnerScale), so it shows after a reload
       if (car) { undo.push({ kind: 'file', file: 'scale-overrides.json', text }); return say(`${id}: size ${out[id]} saved to scale-overrides.json; every car of this model is drawn at that size after a reload of the game`); }
@@ -581,7 +589,7 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
   /** a field that takes typing (the picker, the game's own inputs): its keys are its own; a checkbox or a button is not one */
   const typing = (t: EventTarget | null) => t instanceof HTMLTextAreaElement || t instanceof HTMLSelectElement || (t instanceof HTMLInputElement && !['checkbox', 'radio', 'button', 'range'].includes(t.type)) || (t instanceof HTMLElement && t.isContentEditable);
   const onKey = (e: KeyboardEvent) => {
-    if (typing(e.target)) return;
+    if (typing(e.target) || muted) return;
     const mod = e.ctrlKey || e.metaKey;
     if ((e.key === 'i' || e.key === 'I') && !mod && !e.altKey) { toggle(); stop(e); return; }
     if (!on) return;

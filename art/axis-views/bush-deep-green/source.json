@@ -1,0 +1,87 @@
+{
+ "id": "landscape:bush-deep-green",
+ "slug": "bush-deep-green",
+ "category": "landscaping",
+ "version": "bush-deep-green-screen-axis-4views-v1",
+ "crops": "crops-v2",
+ "sheetSha256": "dd1a17474de8870cc8417c646fad08c27efaba6b0db5d2ac18374a5ff6186f88",
+ "status": "passed-with-alpha-residue-warnings",
+ "views": {
+  "N": {
+   "file": "N.png",
+   "sha256": "f7847f10a1751a5694c3237f535eaaa11d8e6dea3a8f36c5b9011b9d3ae60737",
+   "nativeSha256": "f7847f10a1751a5694c3237f535eaaa11d8e6dea3a8f36c5b9011b9d3ae60737",
+   "pixelSha256": "e2c49b7637fb9d80c50e2cad4a1ad84f1fea23fc91573a51d47ee2c00e76404e",
+   "sheetRect": {
+    "left": 0,
+    "top": 0,
+    "width": 765,
+    "height": 627
+   },
+   "trim": [
+    30,
+    101,
+    700,
+    460
+   ],
+   "heading": "front faces screen down"
+  },
+  "E": {
+   "file": "E.png",
+   "sha256": "c2a02799485efd7b686519860b7db1b598ad28cb93543ce2ef0e694a1dd8beb4",
+   "nativeSha256": "c2a02799485efd7b686519860b7db1b598ad28cb93543ce2ef0e694a1dd8beb4",
+   "pixelSha256": "defbe2a405aa653ee8047b766ea215a04ca430159a2ef8cedc740f59e84e1bf2",
+   "sheetRect": {
+    "left": 765,
+    "top": 0,
+    "width": 489,
+    "height": 627
+   },
+   "trim": [
+    36,
+    107,
+    424,
+    470
+   ],
+   "heading": "front faces screen right (its right side to the camera)"
+  },
+  "S": {
+   "file": "S.png",
+   "sha256": "be3fac6e398074cbb53b6515a52fc00a2cdc9511977e303bd9e89b68e8183d76",
+   "nativeSha256": "be3fac6e398074cbb53b6515a52fc00a2cdc9511977e303bd9e89b68e8183d76",
+   "pixelSha256": "48adc6bebe9c766d143ecdc38bb14515c4721c69581ede779fce2e37c29172c1",
+   "sheetRect": {
+    "left": 0,
+    "top": 627,
+    "width": 765,
+    "height": 627
+   },
+   "trim": [
+    37,
+    68,
+    695,
+    446
+   ],
+   "heading": "front faces screen up (its rear to the camera)"
+  },
+  "W": {
+   "file": "W.png",
+   "sha256": "4e70cd01ab13d246291318aa03daa94f40ab1d742caa1e7dc44a8889c6c580ad",
+   "nativeSha256": "4e70cd01ab13d246291318aa03daa94f40ab1d742caa1e7dc44a8889c6c580ad",
+   "pixelSha256": "bd4454c653224c25ab6eae8c1a890efc572b1dea632e445c92d6bc6b1f02eb78",
+   "sheetRect": {
+    "left": 765,
+    "top": 627,
+    "width": 489,
+    "height": 627
+   },
+   "trim": [
+    31,
+    73,
+    422,
+    454
+   ],
+   "heading": "front faces screen left (its left side to the camera)"
+  }
+ }
+}

@@ -10,6 +10,31 @@
 > and keep this file current. Ask the owner before pushing or opening a PR.
 
 ## Now (the current work, newest first)
+- **T158 #343: the lot wizard** (P25 #348 step 1; the owner: "a lot wizzard that just generates a house and you haveto quickly delete stuff that
+  is in the wrong place ... and you learn from that"). W in the lab (or the toolbar's Wizard button):
+  - Each lot is the cell's lot as the game composes it, kept to its house (dealt by the allocations), fences and street items, plus a generous
+    set of offered items: trees, bushes, flowerbeds, yard props, a car and decals.
+  - The offered items come from `src/game/lots/lot-gen.ts generateLayout`. It is pure and seeded: the lot, house class, model, taken boxes, pools,
+    footprints and seed always give the same layout, so the game can use it on the fly (T160). Each item's sector is drawn by the model's keep
+    rates and its place inside that sector, never overlapping.
+  - The keys: a click deletes an offered item, Backspace puts it back, Space records the sample and shows the next lot (timed to its first
+    frame), S skips, W or Esc leaves.
+  - The editor is paused and muted (`muteEditor`) while the wizard runs: no edit can save the wizard's lot. Its id `lab-wizard` stays in memory.
+  - The learning lives in `src/game/lots/learn.ts`, which is pure:
+    - the sectors: verge, fence line, near the house, driveway strip, front, back, left, right, and the four corners (`sectorOf`, `sectorRects`);
+    - the samples: the context plus every offered item with its kind, place, normalised place, side, distance from the house's walls and from
+      the street, sector and kept flag. A sample may say where it came from: `src` wizard, preset or gallery, and a gallery `verdict` up or
+      down (a down lot is not counted);
+    - the Beta(1,1) keep rates per (house class, kind, sector), `drawSector` (rate squared times the square root of the sector's area), the
+      stats, and the model as data (`modelData` / `modelFrom`, for the game to ship).
+  - Item kinds and pools are in `src/game/lots/item-kinds.ts`, and the palette and the derive read the same helpers.
+  - The samples live in `src/game/lots/lot-learning.json`, which ships empty. They are appended through `POST /__dev/learning`
+    (`mergeSamples`, by sample id, so several helpers can train together). The lab's store is `src/game/dev/learn-store.ts`.
+  - The inspector's LOT WIZARD section has the toggles (same size and road, the fast path; also keep as a draft preset, off; heat map), the
+    counter (samples by house class, kept per lot first ten → last ten, a sparkline, the save-and-next time) and the keep rate of the heat map's
+    kind by sector. The heat map tints the lot's sectors by that rate and dots the past samples (kept green, deleted red).
+  - `window.ceWizard` (dev only) lists the offered items and the timings for automated checks.
+  - Tests: `tests/lot-wizard.test.ts`.
 - **Done (2026-10-26, T155 #333 PR 1): a roomier lab, house allocations, lawns by state** (the owner: "make the lot building UIX area better ...
   move some of that stuff out of the side drawer"; "Each house needs an allocation that says it will only work on which road angles and if its a
   build. upgraded or decrepit house"; "green grass for upgraded house lawns, fairway for the built ones and rough for the decrepit ones").
@@ -32,7 +57,20 @@
     `lawnDeclined` (sage-long, as rough on main, until the long-grass tiles are repaired and handed off) in `painted-surfaces.json`, tunable in
     Studio › Painted; `lotLawn(key, g, ids, state)`; the engine's `placeLot` passes `stateOf(level, decline)`, so every game lot uses them.
   - Tests `tests/house-alloc.test.ts`, `tests/lawns-by-state.test.ts`, `tests/lot-lab-palette.test.ts`; screenshots in `E:/ClaudeTemp/T155/`.
-  - Next (PR 2): auto-sized lots from a master on the largest size of a (type, state, road angle).
+  - **PR 2: auto-sized lots** (`src/game/lots/derive.ts`, pure; `src/game/dev/lot-derive.ts`, the library's footprints and kinds and the
+    masters report). A lab preset on the largest size of its type and state (the greatest area, `largestSize`) and not derived is a MASTER
+    (★ in the presets list, a MASTER box in the inspector). Save draft, Approve or Unapprove on a master derives every smaller size of its type,
+    state and road (each size whose bucket fits inside the master's): the house keeps its street edge and its spot along the street as a share
+    of the free width (centred stays centred), shifted forward only when the lot is shallower; fences on an edge follow it (back run forward,
+    right side in, along-edge places kept, segments past the corner dropped); every other prop keeps its distance from the house (the yards
+    shrink), shifted in up to 2 tiles when it pokes out; what no longer fits or would overlap something it did not overlap on the master goes,
+    trees first, then large props (buildings, footprints of 2.25 tiles² or more), then small props; decals go only when they leave the lot.
+    Derived presets are `<master id>~<bw>x<bd>`, carry `derived: <master id>` and the master's approval, and are made again on every master save
+    (a size no longer derived is removed). A hand edit (the editor's edits, the lab's paint, decals, W/D) detaches one (`detached: <master id>`,
+    curated) and the master then leaves that size alone. Discarding a master removes its derived sizes (confirmed). The inspector's MASTERS
+    (AUTO-SIZE) box lists this type and state's master per road and how many sizes it covers, and for every type and state the masters, derived
+    presets and approved cells of all (type x state x size x road). The preset format gained the optional `derived` / `detached`: old files read
+    and write unchanged (nothing to migrate). Tests `tests/lot-derive.test.ts`; screenshots `E:/ClaudeTemp/T155/master-and-derived.png`.
 - **Done (2026-10-26, T148 #309): multi-select, copy/paste, Change house, Lot grid, Generate in place, Neighbours** (the owner: "add multiple
   select and move/delete ... cntr c for copy and v for paste ... a shortcut button to change the house ... a grid that shows you where the Lot
   boundries are"; "click generate it should stay on that lot"; "a on and off toggle where you unhide or hide houses around the lot").

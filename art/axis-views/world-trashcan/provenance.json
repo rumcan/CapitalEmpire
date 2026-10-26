@@ -1,0 +1,30 @@
+{
+  "id": "world:trashcan",
+  "slug": "world-trashcan",
+  "identity": "world-trashcan",
+  "details": "ONE small darkblue/black ribbedmetal publictrashbin, roundlidwith narrowtopopening, two attachedsidehandles, metalbase andphysicallysameclosedlid. Four truequarterturns N/E/S/W with lidperspective andasymmetricallid/handlepositions changing; fixedupperrightlight, no copiedmirrors. No garbage, platform, flowers or ground.",
+  "category": "props",
+  "source": "art/theme-consistency/exports/horizontal-identities/world-trashcan.native.png",
+  "output": "art/theme-consistency/generated/props/world-trashcan-screen-axis-4views-v1.png",
+  "provenance": "art/theme-consistency/generated/props/world-trashcan-screen-axis-4views-v1.provenance.json",
+  "references": [
+    "art/theme-consistency/references/theme-authoritative.png",
+    "art/theme-consistency/references/horizontal-road-parking-landscaping-v1.png",
+    "art/theme-consistency/exports/horizontal-identities/world-trashcan.native.png"
+  ],
+  "prompt": "ONE independentlyplaceable propONLY. Image1 = hand-painted stylized MapleFalls townTHEME; image2 = approved horizontal-screen-roadscene forstyle/camera; image3 = thisprop'sexisting gameidentity. Preservepractical1980sdesign, no fantasyembellishment. ONE small darkblue/black ribbedmetal publictrashbin, roundlidwith narrowtopopening, two attachedsidehandles, metalbase andphysicallysameclosedlid. Four truequarterturns N/E/S/W with lidperspective andasymmetricallid/handlepositions changing; fixedupperrightlight, no copiedmirrors. No garbage, platform, flowers or ground.\nGenerate FOUR realrigidquarterturns ofthis SAMEobject. Orthographicelevated35degreecamera, no perspective; alignstructuralbaseaxes HORIZONTALLY/VERTICALLYonSCREEN fornewhorizontalroadlayout, not±26degree diagonalgroundedges. SQUARE RGBAtransparentPNG strict2x2 equalcells ROWMAJOR N FRONT headon facesSCREENDOWN, E RIGHTSIDE, S trueBACK, W LEFTSIDE. Rotatephysicaldetailscorrectly; nevermirror orrepeatfrontasrear. Light fixedSCREEN UPPERRIGHT shadeLOWERLEFT; no rotatinglight. Matchsamepalette,detailedreadablepaintedmaterials andphysicalsizeallviews. ALL fourcutoutswhollyinsideownquarterwith15percentcleartransparentmargin toALLsidesandcentresplits; shrinkALLuniformlytofitlongobject. NObackground,greyfloor,terrain,shadowdisc,checkerboard,labels,frames,UI,people orotherprops. Transparentoutsideexactobjectsilhouette, tinycontactocclusiononly.",
+  "generator": "built-in image_gen",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-e676615a-9dfa-46cf-928c-d5247b567b8e.png",
+  "date": "2026-10-26",
+  "viewSet": "screen-axis-4-supplement",
+  "viewsOrder": [
+    "N",
+    "E",
+    "S",
+    "W"
+  ],
+  "lighting": "upper-right toward lower-left",
+  "integrationStatus": "pending-art-review-and-physical-calibration",
+  "alphaReview": "pending",
+  "processing": "Native generator output copied byte-for-byte. Crops pending; no resize or pixel repaint."
+}
