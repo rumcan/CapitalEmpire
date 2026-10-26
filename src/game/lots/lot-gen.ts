@@ -10,6 +10,7 @@ import { mulberry } from '../iso';
 import type { PresetProp } from './presets';
 import { keepRate, SECTORS, sectorOf, sectorRects, sectorWeights, VERGE, type Box, type HouseClass, type ItemKind, type Model, type SectorLot } from './learn';
 import type { Partner } from './taste';
+import { lineLen, placesOf, pointAt, rowOf, type Anchor, type PlaceLot, type Places } from './places';
 
 /** a laid item: its kind, library (or decal) id and place (lot frame, tiles: the footprint's centre; a decal's centre) */
 export interface LaidItem { kind: ItemKind; id: string; x: number; y: number; /** a partner (T161): the index among the laid items of the item it goes with */ with?: number }
@@ -34,8 +35,9 @@ function pickWeighted(w: readonly number[], r: () => number): number {
  *  a decal is flat ground and goes anywhere); keep: the model keeps each item it lays with its keep rate there (the game's lots: the wizard offers
  *  more than a lot needs for the owner to click off, the game lets the learned taste click them off); kinds: each kind's count scaled (a state's
  *  density, T161); pairs: per anchor id the partners it brings (T161); minOne (default true): at least one of each kind but cars (false, T169:
- *  the other uses' lots, whose densities are their own, may have none of a kind) */
-export interface GenInput { lot: SectorLot; cls: HouseClass; model: Model; taken: readonly Box[]; pools: Readonly<Record<ItemKind, readonly string[]>>; half: (q: PresetProp) => Half; seed: number; density?: number; avoid?: readonly { box: Box; but?: readonly ItemKind[] }[]; keep?: boolean; kinds?: Readonly<Partial<Record<ItemKind, number>>>; pairs?: ReadonlyMap<string, readonly Partner[]>; minOne?: boolean }
+ *  the other uses' lots, whose densities are their own, may have none of a kind); places (T171): the items' learnt anchors (lots/places.ts) and the
+ *  lot's features they are read against: an item known there is laid at one of its anchors and places, a row as a row */
+export interface GenInput { lot: SectorLot; cls: HouseClass; model: Model; taken: readonly Box[]; pools: Readonly<Record<ItemKind, readonly string[]>>; half: (q: PresetProp) => Half; seed: number; density?: number; avoid?: readonly { box: Box; but?: readonly ItemKind[] }[]; keep?: boolean; kinds?: Readonly<Partial<Record<ItemKind, number>>>; pairs?: ReadonlyMap<string, readonly Partner[]>; minOne?: boolean; places?: { t: Places; lot: PlaceLot } }
 const overlap = (a: Box, b: Box) => Math.min(a[2], b[2]) - Math.max(a[0], b[0]) > TOUCH && Math.min(a[3], b[3]) - Math.max(a[1], b[1]) > TOUCH;
 /** the items laid on a lot (see the file head); r: the random stream (the seed's mulberry32 unless given, for a caller that draws more from it) */
 export function generateLayout(g: GenInput, r: () => number = mulberry(g.seed >>> 0)): LaidItem[] {
@@ -73,6 +75,41 @@ export function generateLayout(g: GenInput, r: () => number = mulberry(g.seed >>
       }
     }
   };
+  // T171: the items the places know (their anchors, cached), whether a box fits (in the lot: on the verge only at the kerb; on nothing taken), and
+  // an item laid at one of its anchors: an anchor drawn by its share among those the lot has, one of its places there with a little jitter (the
+  // model keeps it with its keep rate where it lands, as a sector's item); null when none fits
+  const PL = g.places, known = new Map<string, ReturnType<typeof placesOf>>();
+  const placesFor = (id: string) => { if (!known.has(id)) known.set(id, PL ? placesOf(PL.t, id) : null); return known.get(id)!; };
+  const fits = (box: Box, kind: ItemKind, verge: boolean) => box[0] >= 0 && box[2] <= lot.w && box[3] <= lot.d && box[1] >= (verge ? -VERGE : 0) && !boxes.some(q => overlap(q, box)) && !g.avoid?.some(v => !v.but?.includes(kind) && overlap(v.box, box));
+  const anchored = (id: string, kind: ItemKind, h: Half, list: NonNullable<ReturnType<typeof placesOf>>): (LaidItem & { a: Anchor; along: number; off: number; p: number }) | null => {
+    const P = PL!.lot, avail = list.filter(x => pointAt(P, x.a, 0.5, 0, 0) !== null);
+    if (!avail.length) return null;
+    for (let t = 0; t < 8; t++) {
+      const k = pickWeighted(avail.map(x => x.w), r); if (k < 0) return null;
+      const A = avail[k]!, j = 2 * Math.floor(r() * (A.pts.length >> 1)), p = A.a.startsWith('paved') ? Math.floor(r() * P.paved.length) : 0, free = A.a === 'free';
+      const along = A.pts[j]! + (r() - 0.5) * (free ? 0.06 : 0.08), off = A.pts[j + 1]! + (r() - 0.5) * (free ? 0.06 : 0.3), pt = pointAt(P, A.a, along, off, p)!;
+      const box: Box = [pt.x - h.ha, pt.y - h.hb, pt.x + h.ha, pt.y + h.hb];
+      if (!fits(box, kind, A.a === 'kerb')) continue;
+      if (g.keep && r() >= keepRate(g.model, g.cls, kind, sectorOf(lot, pt.x, pt.y))) return null;
+      boxes.push(box);
+      return { kind, id, x: pt.x, y: pt.y, a: A.a, along, off, p };
+    }
+    return null;
+  };
+  /** T171: the row an item laid at a line anchor runs on (its kind's habit there: its share of rows, their length and spacing): more of the kind
+   *  along the line from it, toward the line's longer side, each a spacing on, while its kind has tries left and each fits */
+  const row = (it: { kind: ItemKind; a: Anchor; along: number; off: number; p: number }, pool: readonly string[]) => {
+    const R = rowOf(PL!.t, it.kind, it.a), L = lineLen(PL!.lot, it.a, it.p);
+    if (!R || L <= 0 || r() >= R.share) return;
+    const step = R.gap / L, dir = it.along > 0.5 ? -1 : 1, n = Math.round(R.len) - 1;
+    for (let i = 1; i <= n && left > 1; i++) {
+      const u = it.along + dir * i * step; if (u < -0.05 || u > 1.05) break;
+      const id = pool[Math.floor(r() * pool.length)]!, h = halfOf(id), pt = pointAt(PL!.lot, it.a, u, it.off + (r() - 0.5) * 0.1, it.p)!;
+      const box: Box = [pt.x - h.ha, pt.y - h.hb, pt.x + h.ha, pt.y + h.hb];
+      if (!fits(box, it.kind, it.a === 'kerb')) break;
+      boxes.push(box); out.push({ kind: it.kind, id, x: pt.x, y: pt.y }); laid.set(it.kind, (laid.get(it.kind) ?? 0) + 1); left--;
+    }
+  };
   for (const kind of ORDER) {
     const pool = g.pools[kind], n = Math.max(kind === 'car' || g.minOne === false ? 0 : 1, Math.round(PER_LOT[kind] * f * mult(kind) + (r() - 0.5)));
     if (!pool.length) continue;
@@ -81,6 +118,13 @@ export function generateLayout(g: GenInput, r: () => number = mulberry(g.seed >>
     for (left = n - (early.get(kind) ?? 0); left > 0; left--) {
       const id = pool[Math.floor(r() * pool.length)]!, decal = kind === 'decal';
       const h = decal ? DECAL_HALF : halfOf(id);
+      // T171: an item the places know is laid at its anchors (and nowhere else: when none fits, its place stays free)
+      const list = PL && !decal ? placesFor(id) : null;
+      if (list) {
+        const at = anchored(id, kind, h, list);
+        if (at) { out.push({ kind, id, x: at.x, y: at.y }); laid.set(kind, (laid.get(kind) ?? 0) + 1); if (g.pairs) partners(out.length - 1); row(at, pool); }
+        continue;
+      }
       const w = weightsOf(kind).slice();
       let placed: LaidItem | null = null;
       for (let s = 0; s < 4 && !placed; s++) {

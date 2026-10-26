@@ -79,7 +79,10 @@ export const sectorArea = (l: SectorLot, s: Sector) => sectorRects(l, s).reduce(
 export interface SampleItem { id: string; kind: ItemKind; x: number; y: number; nx: number; ny: number; side: 'front' | 'back' | 'left' | 'right' | 'inside'; house: number; street: number; sector: Sector; kept: boolean }
 /** a sample's context: the lot's type, state, size (tiles) and road angle; its house (library id, size class, footprint w x d tiles; null id: none);
  *  the generator's seed when the lot was generated (lot-gen.ts: the same lot again) */
-export interface SampleCtx { use: PresetUse; state: PresetState; w: number; d: number; road: Road; house: string | null; cls: HouseClass; hw: number; hd: number; seed?: number }
+export interface SampleCtx { use: PresetUse; state: PresetState; w: number; d: number; road: Road; house: string | null; cls: HouseClass; hw: number; hd: number; seed?: number;
+  /** T171: the lot's features its items' places are read against (lots/places.ts): the main building's box and the drives' and car parks' boxes
+   *  (lot frame, tiles); absent in older samples (their items count for the sectors only) */
+  hb?: Box; paved?: Box[] }
 /** where a sample comes from (P25): the wizard (each offered item kept or deleted), a preset (every item in it "kept here": the owner's presets as
  *  a head start) or the gallery (a whole lot judged at once: verdict up or down) */
 export type SampleSource = 'wizard' | 'preset' | 'gallery';
@@ -112,9 +115,12 @@ export function readSample(v: unknown): Sample | null {
   if (o.src !== undefined && !['wizard', 'preset', 'gallery'].includes(o.src)) return null;
   if (o.verdict !== undefined && o.verdict !== 'up' && o.verdict !== 'down') return null;
   if (c.seed !== undefined && !fin(c.seed)) return null;
+  const box4 = (b: unknown): b is Box => Array.isArray(b) && b.length === 4 && b.every(fin);
+  if (c.hb !== undefined && !box4(c.hb)) return null;
+  if (c.paved !== undefined && !(Array.isArray(c.paved) && c.paved.every(box4))) return null;
   const items: SampleItem[] = [];
   for (const i of o.items) { const r = readItem(i); if (!r) return null; items.push(r); }
-  return { id: o.id, at: o.at, ctx: { use: c.use as PresetUse, state: c.state as PresetState, w: c.w!, d: c.d!, road: c.road as Road, house: c.house ?? null, cls: c.cls!, hw: c.hw!, hd: c.hd!, ...(c.seed !== undefined ? { seed: c.seed } : {}) }, items,
+  return { id: o.id, at: o.at, ctx: { use: c.use as PresetUse, state: c.state as PresetState, w: c.w!, d: c.d!, road: c.road as Road, house: c.house ?? null, cls: c.cls!, hw: c.hw!, hd: c.hd!, ...(c.seed !== undefined ? { seed: c.seed } : {}), ...(c.hb ? { hb: c.hb } : {}), ...(c.paved ? { paved: c.paved } : {}) }, items,
     ...(o.src !== undefined ? { src: o.src } : {}), ...(o.verdict !== undefined ? { verdict: o.verdict } : {}) };
 }
 /** the file read: its valid samples, in order (a bad one is dropped) */

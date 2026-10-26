@@ -29,7 +29,11 @@ export function presetSample(p: LotPreset, at: string): Sample {
     items.push(sampleItem(lot, q.id, kindOfId(q.id), q.x, q.y, true));
   });
   for (const c of p.decals ?? []) items.push(sampleItem(lot, c.id, 'decal', c.x, c.y, true));
-  return { id: `preset:${p.id}`, at, src: 'preset', ctx: { use: p.use, state: p.state, w: p.w, d: p.d, road, house: hq?.id ?? null, cls, hw: hh ? 2 * hh.ha : 0, hd: hh ? 2 * hh.hb : 0 }, items };
+  return { id: `preset:${p.id}`, at, src: 'preset', ctx: { use: p.use, state: p.state, w: p.w, d: p.d, road, house: hq?.id ?? null, cls, hw: hh ? 2 * hh.ha : 0, hd: hh ? 2 * hh.hb : 0, ...(house ? { hb: house } : {}), paved: pavedBoxes(p) }, items };
+}
+/** T171: a preset's drives' and car parks' boxes (lot frame, tiles: lots/places.ts reads its items' places against them) */
+export function pavedBoxes(p: Pick<LotPreset, 'patches'>): Box[] {
+  return p.patches.filter(a => a.kind === 'drive' || a.kind === 'lot').map(a => { let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity; for (let i = 0; i + 1 < a.pts.length; i += 2) { x0 = Math.min(x0, a.pts[i]!); x1 = Math.max(x1, a.pts[i]!); y0 = Math.min(y0, a.pts[i + 1]!); y1 = Math.max(y1, a.pts[i + 1]!); } return [x0, y0, x1, y1] as Box; });
 }
 /** the samples of every preset that teaches (teaches), in file order */
 export function presetSamples(list: readonly LotPreset[], at = new Date().toISOString()): Sample[] { return list.filter(teaches).map(p => presetSample(p, at)).filter(s => s.items.length > 0); }

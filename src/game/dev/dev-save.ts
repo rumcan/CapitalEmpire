@@ -7,6 +7,7 @@ export { mergeAllocations } from '../lots/house-alloc';
 export { mergeSamples } from '../lots/learn';
 import { tasteData, tasteFrom } from '../lots/taste';
 import { groupsBlock } from '../lots/group-data';
+import { placesData, placesFrom } from '../lots/places';
 
 /** the lot wizard's samples (T158: lots/learn.ts), appended only through their merge (POST /__dev/learning), never written whole */
 export const LEARN_PATH = 'src/game/lots/lot-learning.json';
@@ -29,7 +30,9 @@ export function modelFile(v: number, data: unknown, from: string): string | null
   const t = tasteData(tasteFrom(d)), block = (name: string, o: Record<string, unknown>) => `,\n "${name}": {\n${Object.entries(o).map(([k, x]) => `  ${JSON.stringify(k)}: ${JSON.stringify(x)}`).join(',\n')}\n }`;
   const taste = Object.keys(t.pairs).length || Object.keys(t.density).length ? block('anchors', t.anchors) + block('pairs', t.pairs) + block('density', t.density) : '';
   // the other uses' groups (T169, lots/group-data.ts): one group's data a few lines
-  return `{\n "v": ${v},\n "prior": {"a":${a},"b":${b}},\n "from": ${JSON.stringify(from)},\n "counts": {\n${rows.join(',\n')}\n }${taste}${groupsBlock(d)}\n}\n`;
+  // the houses' places (T171, lots/places.ts): one line
+  const pl = (d as { places?: unknown }).places, places = pl && typeof pl === 'object' ? `,\n "places": ${JSON.stringify(placesData(placesFrom(pl)))}` : '';
+  return `{\n "v": ${v},\n "prior": {"a":${a},"b":${b}},\n "from": ${JSON.stringify(from)},\n "counts": {\n${rows.join(',\n')}\n }${taste}${places}${groupsBlock(d)}\n}\n`;
 }
 /** the shipped models' index (src/game/lots/lot-models/index.ts) for these versions: each imported, the latest the highest */
 export function modelsIndex(versions: readonly number[]): string {

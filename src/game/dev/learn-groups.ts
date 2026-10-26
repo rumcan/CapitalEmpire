@@ -16,7 +16,7 @@ import { mainBuilding } from './lot-select';
 import { CLASS_NAMES, frameHalf, sizeClassOf } from '../lots/house-class';
 import { groupBaseItem } from '../lots/compose';
 import type { GroupData } from '../lots/group-data';
-import { teaches } from './learn-presets';
+import { pavedBoxes, teaches } from './learn-presets';
 
 const INDEX = new Map(LIBRARY.map((it, i) => [it.id, i] as const));
 /** a preset a group learns from: the owner's (as the houses', learn-presets.ts teaches) or a frozen one of its uses (its head start) */
@@ -31,7 +31,7 @@ export function groupSample(p: LotPreset, at: string): Sample {
   const cls: HouseClass = bq ? CLASS_NAMES[sizeClassOf(bq.id) ?? 0] : 'none', items: SampleItem[] = [];
   for (const q of p.props) if (!groupBaseItem(q.id, q.y)) items.push(sampleItem(lot, q.id, kindOfId(q.id), q.x, q.y, true));
   for (const c of p.decals ?? []) items.push(sampleItem(lot, c.id, 'decal', c.x, c.y, true));
-  return { id: `group:${p.id}`, at, src: 'preset', ctx: { use: p.use, state: p.state, w: p.w, d: p.d, road, house: bq?.id ?? null, cls, hw: bh ? 2 * bh.ha : 0, hd: bh ? 2 * bh.hb : 0 }, items };
+  return { id: `group:${p.id}`, at, src: 'preset', ctx: { use: p.use, state: p.state, w: p.w, d: p.d, road, house: bq?.id ?? null, cls, hw: bh ? 2 * bh.ha : 0, hd: bh ? 2 * bh.hb : 0, ...(house ? { hb: house } : {}), paved: pavedBoxes(p) }, items };
 }
 /** the samples of a group's presets (groupTeaches), in file order */
 export const groupSamples = (list: readonly LotPreset[], group: UseGroup, at = new Date().toISOString()): Sample[] => list.filter(p => groupOf(p.use) === group && groupTeaches(p)).map(p => groupSample(p, at));
