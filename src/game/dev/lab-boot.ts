@@ -37,7 +37,7 @@ export function labBox(): BBox {
 export function labBoot(): BootOptions {
   return {
     kind: 'lab', groundWorkers: 1, sim: false, atlasMB: 16, atlasKeep: 2, groundPx: 16e6, tileSources: 8, paintedSources: 6, eagerPhotos: LAB_EAGER_PHOTOS,
-    saveTextureCache: false, softCanvases: true, lazyTextures: true, lazyTints: true, box: labBox(), zoomMin: LAB_ZOOM_MIN, trees: false, moneyFloats: false, save: false, map: 'flat',
+    saveTextureCache: false, readTextureCache: true, softCanvases: true, lazyTextures: true, lazyTints: true, box: labBox(), zoomMin: LAB_ZOOM_MIN, trees: false, moneyFloats: false, save: false, map: 'flat',
   };
 }
 

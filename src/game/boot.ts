@@ -31,8 +31,12 @@ export interface BootOptions {
    *  chunk lays them, so making them later saves nothing, and up front they are the same pixels as ever (a tint made per level differs by a
    *  rounding) */
   lazyTints: boolean;
-  /** the ground workers read and write the browser's texture cache (IndexedDB); the light boot only reads it (it holds one pack: the game's) */
+  /** the ground workers write their texture pack to the browser's cache (IndexedDB) */
   saveTextureCache: boolean;
+  /** the ground workers read a cached pack (IndexedDB) instead of building one (T157: the light boot only reads it, the game's). T166: the game
+   *  neither reads nor writes it: with its textures made on first use its pack builds in about 1.3 s, the first view is baked as soon as with
+   *  a cached pack, and the write kept about the pack's size in the browser process (and delayed the first start's first view by 3 s) */
+  readTextureCache: boolean;
   /** the map box (tiles) the boot lives in: the camera's centre stays over it; null: the whole map */
   box: BBox | null;
   /** the furthest zoom (null: the game's ZOOM_MIN) */
@@ -49,8 +53,8 @@ export interface BootOptions {
 
 /** the plain game's boot: what the engine always did */
 export const GAME_BOOT: Readonly<BootOptions> = Object.freeze({
-  kind: 'game', groundWorkers: null, sim: true, atlasMB: null, atlasKeep: null, groundPx: 48e6, tileSources: null, paintedSources: null, eagerPhotos: null,
-  saveTextureCache: true, softCanvases: false, lazyTextures: true, lazyTints: false, box: null, zoomMin: null, trees: true, moneyFloats: true, save: true, map: 'valley',
+  kind: 'game', groundWorkers: 1, sim: true, atlasMB: null, atlasKeep: null, groundPx: 48e6, tileSources: null, paintedSources: null, eagerPhotos: null,
+  saveTextureCache: false, readTextureCache: false, softCanvases: false, lazyTextures: true, lazyTints: false, box: null, zoomMin: null, trees: true, moneyFloats: true, save: true, map: 'valley',
 });
 
 /* ---- T166 (#370): the game's ground workers' memory levers, and a dev build's way to measure them one at a time ---- */
@@ -60,12 +64,19 @@ export const GROUND_LEVERS = {
   lazy: { on: { lazyTextures: true }, off: { lazyTextures: false } },
   /** the workers' canvases on the CPU (willReadFrequently) instead of the GPU */
   soft: { on: { softCanvases: true }, off: { softCanvases: false } },
+  /** one ground worker: one texture pack instead of one per worker (the CPU's cores allowed three here) */
+  one: { on: { groundWorkers: 1 }, off: { groundWorkers: null } },
+  /** the texture pack read from and written to the browser's cache (IndexedDB), as the game did before T166 */
+  cache: { on: { saveTextureCache: true, readTextureCache: true }, off: { saveTextureCache: false, readTextureCache: false } },
+  /** two ground workers (to compare; listed after one, it wins) */
+  two: { on: { groundWorkers: 2 }, off: {} },
 } as const satisfies Record<string, { on: Partial<BootOptions>; off: Partial<BootOptions> }>;
 export type GroundLever = keyof typeof GROUND_LEVERS;
-/** a game boot with exactly the named levers on (a dev build's ?ground=lazy,soft; ?ground=old: none, the game before T166); unknown names are
- *  ignored. The levers GAME_BOOT has on are the ones T166 kept. */
+/** a game boot with exactly the named levers on (a dev build's ?ground=lazy,one; ?ground=old: the game before T166, only the cache on);
+ *  unknown names are ignored. GAME_BOOT has the ones T166 kept: lazy and one (and the cache off) */
 export function withGroundLevers(boot: BootOptions, spec: string): BootOptions {
   const on = new Set(spec.split(',').map(s => s.trim()));
+  if (on.has('old')) on.add('cache'); // the game before T166: one worker per spare core, every texture up front, the cache read and written
   const out: BootOptions = { ...boot };
   for (const [name, l] of Object.entries(GROUND_LEVERS)) Object.assign(out, on.has(name) ? l.on : l.off);
   return out;

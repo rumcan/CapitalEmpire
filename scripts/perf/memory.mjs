@@ -20,7 +20,7 @@ const args = process.argv.slice(2), url = args[0], label = args[1] ?? 'page';
 if (!url) { console.error('usage: node scripts/perf/memory.mjs <url> <label> [--idle s] [--generate n] [--dpr d]'); process.exit(2); }
 const opt = (k, d) => { const i = args.indexOf('--' + k); return i >= 0 ? args[i + 1] : d; };
 const gens = +opt('generate', '0'), idle = +opt('idle', '25'), dpr = +opt('dpr', '1.25'), W = +opt('w', '1600'), H = +opt('h', '900');
-const pan = +opt('pan', '0'), seed = opt('seed', null), warm = args.includes('--warm');
+const pan = +opt('pan', '0'), jumps = +opt('jumps', '0'), seed = opt('seed', null), warm = args.includes('--warm');
 const MB = b => Math.round(b / 1048576 * 10) / 10, sleep = ms => new Promise(r => setTimeout(r, ms));
 const ps = cmd => execFileSync('powershell', ['-NoProfile', '-Command', cmd], { encoding: 'utf8' });
 
@@ -109,6 +109,20 @@ try {
     const steps = Math.round(pan * 20);
     for (let k = 0; k <= steps; k++) { const a = (2 * Math.PI * k) / steps; await page.evaluate(([x, y, z]) => window.__game.lookAt(x, y, z), [c.x + 120 * Math.sin(a), c.y + 120 * (1 - Math.cos(a)), c.z]); await sleep(50); }
     await settle(5); await sample(`after a ${pan} s pan`);
+  }
+  if (jumps) {
+    // the ground's fill time after a jump to somewhere new (the bake throughput: a whole view of new chunks), at the closest zoom and at 8%
+    const fills = [];
+    for (let k = 0; k < jumps; k++) for (const z of [0.3, 0.08]) {
+      const x = 400 + ((k * 397 + (z > 0.1 ? 0 : 211)) % 1248), y = 400 + ((k * 631 + (z > 0.1 ? 97 : 0)) % 1248);
+      await page.evaluate(([x, y, z]) => window.__game.lookAt(x, y, z), [x, y, z]);
+      const t = Date.now(); await sleep(150);
+      for (let q = 0; q < 600; q++) { if (!(await page.evaluate(() => { const g = window.__game.ground; return g.want.length + g.inflight.reduce((a, b) => a + b, 0); }))) break; await sleep(50); }
+      fills.push({ z, s: (Date.now() - t) / 1000 });
+    }
+    const f = z => fills.filter(q => q.z === z).map(q => q.s).sort((a, b) => a - b), med = a => a[Math.floor(a.length / 2)];
+    out.jumps = fills; console.log(`${label} / jumps: view filled at 30% median ${med(f(0.3))} s (max ${Math.max(...f(0.3))}), at 8% median ${med(f(0.08))} s (max ${Math.max(...f(0.08))})`);
+    await sample(`after ${jumps} x 2 jumps`);
   }
   if (gens) {
     for (let k = 0; k < gens; k++) { if (!(await page.evaluate(() => { const b = [...document.querySelectorAll('button')].find(x => x.textContent?.trim().startsWith('Generate')); b?.click(); return !!b; }))) break; await sleep(2500); }

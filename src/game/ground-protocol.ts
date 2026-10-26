@@ -118,7 +118,9 @@ export type TileKind = 'g' | 'm' | 'p';
  *  it draws its canvases on the CPU (soft), and whether its procedural textures are made on first use (lazy) */
 export interface WorkerLimits { tiles: number | null; painted: number | null; eager: string[] | null; saveCache: boolean; soft: boolean; lazy: boolean;
   /** with lazy, the grass's tints made on first use too (a light boot's; T166: the game makes them up front) */
-  tints?: boolean }
+  tints?: boolean;
+  /** T166: a cached pack is read (absent: yes; the game's: no, it builds its own and the old cache is deleted) */
+  readCache?: boolean }
 export type ToWorker =
   | { t: 'grass'; cells: GrassCellView[]; strength: number; heat: boolean; mowing: boolean }
   | { t: 'init'; art: GroundArt & { grassMix?: BaseGrassArt; presets?: PhotoTexEntry[]; grassArt?: GrassArt }; terrain: Uint8Array; height: Float32Array; waters: Waterway[]; build: boolean; peers: number; limits?: WorkerLimits }
