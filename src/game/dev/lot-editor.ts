@@ -409,6 +409,9 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
   };
   const onDown = (e: PointerEvent) => {
     if (!on || paused || e.target !== canvas || e.button !== 0) return;
+    // the keys come here: stopping the press keeps a framed game (the studio's Lots tab) from taking the focus by itself, so Delete, R and the
+    // arrows would go to the page around it
+    window.focus();
     // the panel's fields let go of the keys (stopping the event keeps the focus where it was)
     if (document.activeElement instanceof HTMLElement && panel.contains(document.activeElement)) document.activeElement.blur();
     if (placing) { stop(e); const id = placing; if (!e.shiftKey) disarm(); void placeAt(id, e.offsetX, e.offsetY); return; }

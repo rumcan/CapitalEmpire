@@ -29,8 +29,14 @@ Read this to continue the lot lab work in a fresh chat. The design and the rules
 5. Do not slice off props at the lot's edge; no black background, the map's own grass instead (done: no mask; forest and farms
    are kept away from the lab lot, `Engine.labClear`).
 6. The cursor must be select, not the road tool (done: stageLab sets the select tool).
-7. **Open:** the leaf decals cannot be selected; bring in TrickOrTreat's town builder tools to lay decals and props from a list.
-8. **Open:** this handover (this file).
+7. **In progress:** the leaf decals cannot be selected; bring in TrickOrTreat's town builder tools to lay decals and props from a
+   list. Also: deleting a prop did not work. Found two causes: (a) in the studio frame the Delete key went to the studio page (fixed:
+   the editor focuses the frame on a press); (b) fences, bins, mailbox and decals are procedural, not part of the preset. Being built:
+   **whole lab presets** (`whole: true`, `decals: [...]`): Generate captures everything the game draws for the lot (fences, street
+   items, decals) into the draft, a whole preset draws alone (no procedural parts), and the lab gets a DECALS section (a list with
+   thumbnails from `lot-decals.webp`; place, select, move, scale, mirror, delete). Brief: the lead's scratch file `brief-whole.md`
+   (its content is the plan below in Next steps).
+8. Done: this handover (this file).
 
 ## Verified (browser, 2026-10-26)
 - The lab stages a lot on an axis road and on a diagonal road; Generate, variants, Save draft, Approve all work; an approved
@@ -63,9 +69,12 @@ Read this to continue the lot lab work in a fresh chat. The design and the rules
   preset. Request 7 changes that for decals.
 
 ## Next steps
-1. Request 7: decals and props from a list, like TrickOrTreat's town builder (read-only source `E:\Repos\TrickOrTreat`; never write
-   to it). Plan: a preset gains its own decals (`decals: { id, x, y, scale, alpha }[]` from `lot-decals.ts`); a lab preset with
-   decals draws them instead of the procedural leaf decals; Generate copies the procedural ones into the draft so they can be
-   selected and deleted; the panel gets a decal list with thumbnails, click to place, click a decal to select, move, delete.
-2. Check the open browser items above.
-3. Ask the owner, then push the branch and open the PR against main; remove the launch.json entries after the merge.
+1. Request 7, if not landed: whole lab presets as described in request 7 above (`presets.ts` PresetDecal, `whole`, `decals`;
+   `fitPreset` keeps a whole preset's props up to 1.5 tiles in front of the lot; `compose.ts` draws a whole or farm preset alone with
+   its decals pushed into Build.marks; `preset-from.ts` captures the 'marks' patch as decals; `lot-lab.ts` Generate composes the lot
+   from the source preset and stores it whole, plus the DECALS section). TrickOrTreat (`E:\Repos\TrickOrTreat`) is read-only.
+2. Before committing, drop any lab presets you made yourself while testing (the owner's have moved sprites, `curated: true`, and
+   were made in their tab; when unsure, ask). `scratchpad`-style helper: parse with `parsePresets`, filter by id, write with
+   `formatPresets`.
+3. Check the open browser items above.
+4. Ask the owner, then push the branch and open the PR against main; remove the launch.json entries after the merge.
