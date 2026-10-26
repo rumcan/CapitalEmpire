@@ -24,8 +24,8 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 ### In flight
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |
-| T146 | #303 | `arena/T146-range-parking` | an agent worktree under `.claude/worktrees` | 5187 | P24 D49: a "Bigger car park" upgrade on the range card (sized so a full 36-bay range turns no car away) and the skip counting parking. Opus, high effort (range work). |
-| T145 | #300 | `arena/T145-painted-terrain` | `.claude/worktrees/t145` | 5186 | The owner's brief (in the issue): the accepted golden fescue and lake tiles in the game, three authored sets NEAR/MID/FAR of four large tiles each, hash-checked from `eight-tiles/READY-MATERIALS.json`, on main's T128 painted-families runtime. Brief: `E:/ClaudeTemp/lead/t145-brief.md`. |
+| **T145 (top priority)** | #300 | `arena/T145-painted-terrain` | `.claude/worktrees/t145` | 5186 | The owner's brief (in the issue): the accepted golden fescue and lake tiles in the game, three authored sets NEAR/MID/FAR of four large tiles each, hash-checked from `eight-tiles/READY-MATERIALS.json`, on main's T128 painted-families runtime. Brief: `E:/ClaudeTemp/lead/t145-brief.md`. |
+| T146 | #303 | `arena/T146-range-parking` | an agent worktree under `.claude/worktrees` | 5187 | P24 D49: a "Bigger car park" upgrade on the range card (sized so a full 36-bay range turns no car away) and the skip counting parking. Opus, high effort (range work). **Paused** (the owner, 2026-10-26: "highest priority is the new textures please"): resume it from #303's "To resume" when T145 lands. |
 
 **Two coding agents at a time (the owner, 2026-10-26: first "maybe just too many background tasks?" after the studio tab died with the
 PC at 1.5 GB free, then "start up two coding agents"):** keep two coding agents running, start the next queue ticket when one lands, no
