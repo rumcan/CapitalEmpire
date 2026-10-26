@@ -24,7 +24,8 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 ### In flight
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |
-| T152 | #325 | `arena/T152-car-spacing` | `.claude/worktrees/t152` | 5187 | Cars keep a car-length gap in their lane (no piling up on the range drive and the county road); root cause first; all four gates on the branch. |
+| **T154 (top priority)** | #330 | `arena/T154-new-art` | `.claude/worktrees/t154` | 5187 (studio 5193) | The owner: "bringing the next art into the game ... new buildings and plants ... in the studio asap". Today's screen-axis four-view sets (parking garages 2-6 storey, bakery, grocery, pharmacy, 3 industrial, 3 houses; 3 bushes, 3 flowerbeds, hydrangea; bench, lamp, trash can, parking entry; 2 wagons, pickup) into the studio Library and the game; the parking garage replaces the car park building's stand-in. Phase 1 PR first; Phase 2 the eight headings. |
+| T152 | #325 | `arena/T152-car-spacing` (d3bdbf1) | `.claude/worktrees/t152` | — | **Paused** for the art (the owner). Root cause: the range's own cars (`rangebiz.ts:803/832/723`) are placed by their own clock; fixed in rangebiz.ts only (overlaps -75-82% with the 44-bay lot, money identical). **Owner's decision needed:** at full demand the one-lane drive and the building's ramp cannot carry the cars at a car's gap (wider drive, second ramp, faster car-park speeds, or the queue limiting sales). Left: three gates, shots, PR. |
 | **T153 (top priority)** | #327 | `arena/T153-golf-tiles` | `.claude/worktrees/t153` | 5186 | The owner: drop the furthest zoom level, NEAR on until ~5%, the new golf textures: sand-ripples (ready) → waste; fairway, putting-green, long-grass as **provisional** (raw sets, no handoff yet) → fairway, green+fringe, rough; a re-run switches each to its canonical selection when the art session hands it off. |
 | T112 | #199 | `arena/T112-sharp` (1872f0e) | `.claude/worktrees/t112` | — | **Paused** for T153: sharp 0.35.5 in, all packed art identical (260 images byte-identical; 16 view PNGs only re-tagged), still to do: the KTX2 check, the studio check, audit/typecheck/suite/build, the PR. Resume from #199. |
 
@@ -68,6 +69,8 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
    (the sharp bump). See the History sections below and `gh issue list --label arena --state open`.
 
 ### Done recently (newest first; details in each PR)
+- 2026-10-26: **#329 blob shadows 2 px blurrier** (the owner): every drawn contact shadow's rim +2 px (`shadow-vector.ts BLOB_BLUR`), the
+  fallback blob shader +0.0625 m.
 - 2026-10-26: **T151 #324 world labels never overlap**: one placement pass a frame by priority (`label-place.ts`, `world-labels.ts`;
   names 100, counts 90, stand-ins 10), slots kept while free, hidden when crowded; money float columns lifted clear.
 - 2026-10-26: **T148 #321 the lot lab's editing tools**: multi-select (Shift+click, box drag) with group move/delete/turn/size as one undo,
