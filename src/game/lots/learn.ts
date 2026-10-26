@@ -174,13 +174,18 @@ export const countOf = (m: Model, c: HouseClass, k: ItemKind, s: Sector): Count 
 /** a sector drawn for an item by the model (r() in [0, 1)): each sector of the lot weighted by its keep rate (squared: the model's word counts)
  *  times the square root of its area (so a large yard is not swamped by a thin band, nor a band starved); null when the lot has none */
 export function drawSector(m: Model, c: HouseClass, k: ItemKind, l: SectorLot, r: () => number, skip: ReadonlySet<Sector> = new Set()): Sector | null {
-  const ws = SECTORS.map(s => { if (skip.has(s)) return 0; const a = sectorArea(l, s); return a > 0.25 ? keepRate(m, c, k, s) ** 2 * Math.sqrt(a) : 0; }), tot = ws.reduce((a, b) => a + b, 0);
+  const ws = sectorWeights(m, c, k, l).map((w, i) => (skip.has(SECTORS[i]!) ? 0 : w)), tot = ws.reduce((a, b) => a + b, 0);
   if (!(tot > 0)) return null;
   let t = r() * tot;
   for (let i = 0; i < SECTORS.length; i++) { t -= ws[i]!; if (t < 0) return SECTORS[i]!; }
   return SECTORS[SECTORS.length - 1]!;
 }
 
+/** each sector's weight in drawSector, in SECTORS order: its keep rate squared times the square root of its area (0 for a sector of the lot
+ *  under a quarter tile) */
+export function sectorWeights(m: Model, c: HouseClass, k: ItemKind, l: SectorLot): number[] {
+  return SECTORS.map(s => { const a = sectorArea(l, s); return a > 0.25 ? keepRate(m, c, k, s) ** 2 * Math.sqrt(a) : 0; });
+}
 /** the wizard's counter: the samples, by house class and by source; each wizard sample's share of offered items kept, in order (the trend: the
  *  presets keep everything and the gallery judges whole lots, so they are left out of it), the mean of the first and the last ten; the gallery's
  *  lots judged and the share judged up */

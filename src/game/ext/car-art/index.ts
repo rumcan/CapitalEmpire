@@ -19,7 +19,16 @@ export function carSizeId(id: string): string { return carModel(id); }
  *  moving, whichever way it faces, so cars keep the road cars' size until the owner sets one. A size the studio kept under one of the model's pictures
  *  before T143 (a facing's or a view's own key) still counts: the largest of them (carModelSize), until the studio's next save folds them into the
  *  model's key. The table's car sizes (places-v5) are not used: lot and road cars never took them */
-export function carOwnerScale(id: string, sizes: Readonly<Record<string, number>> = STUDIO_SCALE): number { return carModelSize(sizes, carModel(id)) ?? 1; }
+export function carOwnerScale(id: string, sizes: Readonly<Record<string, number>> = STUDIO_SCALE): number {
+  // the studio's own sizes are read through a memo (carModelSize scans every size key: the lots ask for each car they compose, T160)
+  if (sizes !== STUDIO_SCALE) return carModelSize(sizes, carModel(id)) ?? 1;
+  let s = OWN.get(id);
+  if (s === undefined) OWN.set(id, s = carModelSize(sizes, carModel(id)) ?? 1);
+  return s;
+}
+/** the memo of carOwnerScale over the studio's sizes; forgotten when they change (lots/scales-live.ts) */
+const OWN = new Map<string, number>();
+export function forgetCarSizes(): void { OWN.clear(); }
 /** World-axis bounding half sizes in metres of a 4.5 m long, 1.8 m wide car. */
 export function carFootprint(heading: number): { hx: number; hy: number } {
   const a = heading * Math.PI / 4, c = Math.abs(Math.cos(a)), s = Math.abs(Math.sin(a));

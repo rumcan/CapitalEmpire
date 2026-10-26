@@ -8,7 +8,7 @@ import type { LotGeom } from '../lots/compose-core';
 import type { LotPreset, PresetState, PresetUse, Road } from '../lots/presets';
 import type { PresetFrame } from '../lots/preset-frame';
 import { learningStats } from '../lots/learn';
-import { addSample, learnedModel, learnedSamples } from './learn-store';
+import { addSamples, learnedModel, learnedSamples } from './learn-store';
 import { lotPreset, lotSample, makeLot, type WizLot } from './lot-wizard';
 import { muteEditor, pauseEditor } from './lot-editor';
 import { BTN, DANGER, GO, ON, btn, el, heading } from './lot-lab-ui';
@@ -64,7 +64,8 @@ export function makeGallery(host: GalleryHost, wizard: { load(c: WizLot): void }
   /** the verdicts saved (a sample per judged lot) and the next dozen laid */
   function save(): void {
     const l = host.lot(), judged = slots.filter(s => s.verdict);
-    for (const s of judged) void addSample(lotSample(s.lot, l, s.verdict!)).catch(e => host.say(`NOT SAVED to lot-learning.json: ${String(e)}`));
+    // the dozen's verdicts in one save (T160, from #364's review: not one request per lot)
+    void addSamples(judged.map(s => lotSample(s.lot, l, s.verdict!))).catch(e => host.say(`NOT SAVED to lot-learning.json: ${String(e)}`));
     host.say(judged.length ? `learned: ${judged.filter(s => s.verdict === 'up').length} good, ${judged.filter(s => s.verdict === 'down').length} bad (${learnedSamples().length} samples)` : 'nothing judged: the next dozen');
     lay();
   }

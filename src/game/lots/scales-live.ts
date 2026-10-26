@@ -6,6 +6,7 @@
 // again). Dev builds load it (lot-editor.ts); a production build never changes its sizes.
 import STUDIO from '../../../scripts/assets/scale-overrides.json';
 import { OWNER_SCALE, STUDIO_SCALE, TABLE_SCALE } from './scales';
+import { forgetCarSizes } from '../ext/car-art';
 
 const listeners = new Set<() => void>();
 /** calls fn after the studio's sizes changed in the running game; returns the unsubscribe */
@@ -21,6 +22,7 @@ export function applyStudioScales(next: Readonly<Record<string, number>>): strin
   }
   for (const id of Object.keys(studio)) if (!(id in next)) delete studio[id];
   Object.assign(studio, next);
+  forgetCarSizes();
   if (changed.length) for (const f of listeners) f();
   return changed;
 }

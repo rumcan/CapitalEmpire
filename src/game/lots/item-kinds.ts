@@ -6,7 +6,7 @@ import { LIBRARY } from '../library';
 import type { LibItem } from '../types';
 import { drawnAsStandIn } from '../newart';
 import { LOT_DECALS } from '../lot-decals';
-import { AXIS_SETS } from '../axis-library';
+import { AXIS_HEADING, AXIS_SETS } from '../axis-library';
 import { footprintOf, ownerScaleOf } from './preset-art';
 import type { ItemKind } from './learn';
 
@@ -36,8 +36,9 @@ export function ownArea(id: string): number { const fp = footprintOf(id, ownerSc
 const MAX_AREA: Readonly<Record<ItemKind, number>> = { tree: 9, bush: 4, flowerbed: 6, prop: 4, car: 12, decal: Infinity };
 /** a library sprite's kind for the lot generator, or null for one it does not offer (buildings, fences, signs, the people) */
 export function itemKind(it: LibItem, i: number, area = ownArea(it.id)): ItemKind | null {
-  // the town's lots leave the screen-axis art (view:...) to the Props tool and the lab (T154): the generator never offers it
-  if (!placeable(it, i) || it.id.startsWith('view:') || isFence(it.id)) return null;
+  // the town's lots leave the screen-axis art (its pictures, view:... and the sets' first) to the Props tool and the lab (T154): the generator,
+  // which lays the town's lots on the map axes (T160), never offers it
+  if (!placeable(it, i) || it.id.startsWith('view:') || AXIS_HEADING[it.id] !== undefined || isFence(it.id)) return null;
   const g = spriteGroup(it), t = `${it.id} ${it.name}`.toLowerCase();
   if (g === 'vehicles') return it.kind === 'car' && area <= MAX_AREA.car ? 'car' : null;
   if (g === 'buildings') return null;
