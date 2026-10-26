@@ -70,3 +70,13 @@ export function flatTerrain(): Terrain {
     highway: { x: 0, y: c, edge: 'W' }, start: { x: c - size / 2, y: c - size / 2, size }, towns: [], chokepoints: [],
   };
 }
+
+/** a light boot's filter for a cached pack (T157): the cache holds the game's pack (every one of grass-art.ts EAGER_PHOTO and every procedural
+ *  texture); left out are the photo textures outside the boot's eager set (their sources and mosaics: the worker builds one on first use,
+ *  ensure) and, when `lazy` names them, the procedural textures' mips (made on first use, Textures.image) */
+export function lightPack(allPhotos: ReadonlySet<string>, eager: ReadonlySet<string>, lazy: ReadonlySet<string> = new Set()): (name: string) => boolean {
+  return name => {
+    const m = /^(?:photo|mosaic):([^:]+)/.exec(name); if (m) return !allPhotos.has(m[1]!) || eager.has(m[1]!);
+    const q = /^mip:([^@]+)@/.exec(name); return !q || !lazy.has(q[1]!);
+  };
+}
