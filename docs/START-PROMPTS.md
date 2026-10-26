@@ -43,7 +43,12 @@ Each keeps its own handover doc with a start prompt at the top. Paste that promp
   studio on 5242; launch.json configs `lot-presets-game` and `lot-presets-studio`). Its handover is
   `docs/handovers/lot-presets.md` in that worktree, with the start prompt at the top (WIP commit 62d1322). As of 2026-10-26 it is
   **committed locally only**: the session asks the owner before pushing. Until it is pushed, open the doc from that worktree on this PC.
-- **3D spectators and run.world** (the 3D people and crowd art): `docs/HANDOVER-PEOPLE.md`, then `docs/SPECTATOR-ART.md`. Asked on
-  2026-10-26 to refresh it with a start prompt.
+- **3D people, golf play and run.world.** This session made the 3D crowd and golfers (PR #238) and golf play (PR #258; its open items
+  are under "Status" in `docs/GOLF-PLAY.md`).
+  - **Handover:** `docs/HANDOVER-PEOPLE.md` section 0 "START HERE", with the start prompt at the top. It is on branch
+    `art/people-ground-20261024` (worktree `E:\Repos\CapitalEmpire\worktrees\people-ground`, commit 80da0db), **committed locally only**
+    until the owner approves its push. Until then, read it from that worktree on this PC.
+  - **Batch loop:** a loop makes the last 12 people (`make-cast-loop.sh` in a hidden Git Bash, restarted 2026-10-26 05:37 UTC). It waits
+    out RUN's daily cap and dies if the app or PC stops, so a new chat restarts it as the handover says.
 - **Nightly regression:** a scheduled task ("CapitalEmpire nightly regression", about 02:06). It needs no prompt, but it needs its
   commands allowed so it can run unattended. Its report goes to `E:/ClaudeTemp/nightly/<date>.md`.
