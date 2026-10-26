@@ -226,8 +226,9 @@ export class Textures {
   private paintedLevel = .3;
   /** the coverage step the next bake lays the tile set families at (painted-tiles.ts nextStep: the camera's, sent with each bake) */
   tileStep = stepAt(.3);
-  /** the tile set families' decoded tiles (by URL, an LRU of MAX_TILE_SOURCES) with their mip chains, and the decodes in progress */
-  private tilePics = new Map<string, Cnv[]>();
+  /** the tile set families' decoded tiles (by URL, an LRU of MAX_TILE_SOURCES; the decoded bitmap itself, no canvas copy) with their mip
+   *  chains, and the decodes in progress */
+  private tilePics = new Map<string, (Cnv | ImageBitmap)[]>();
   private tileLoads = new Map<string, Promise<void>>();
   /** the art level the next bake is for (set by preparePainted) */
   get paintedArtLevel() { return this.paintedLevel; }
@@ -285,13 +286,13 @@ export class Textures {
       const have = this.tilePics.get(src); if (have) { this.tilePics.delete(src); this.tilePics.set(src, have); return null; }
       let pending = this.tileLoads.get(src);
       if (!pending) {
-        pending = loadImage(src).then(img => { try { this.tilePics.set(src, [toCanvas(img)]); } finally { img.close(); } }, err => console.warn('[painted tiles]', String(err)))
+        pending = loadImage(src).then(img => { this.tilePics.set(src, [img]); }, err => console.warn('[painted tiles]', String(err)))
           .finally(() => this.tileLoads.delete(src));
         this.tileLoads.set(src, pending);
       }
       return pending;
     }));
-    trimLru(this.tilePics, new Set([...urls, ...keep]), MAX_TILE_SOURCES);
+    trimLru(this.tilePics, new Set([...urls, ...keep]), MAX_TILE_SOURCES, chain => { for (const m of chain) if (m instanceof ImageBitmap) m.close(); });
   }
   /** before a bake: the tile set families among `variants` at coverage step `step`: the band's tiles decoded (awaited), the next band's
    *  started (when the camera is one step from it) */
@@ -304,9 +305,9 @@ export class Textures {
     await this.decodeTiles(now, ahead);
   }
   /** a decoded tile's mip with at least `px` pixels across (made on first use), or null when it is not decoded */
-  tileImage(src: string, px = Infinity): Cnv | null {
+  tileImage(src: string, px = Infinity): Cnv | ImageBitmap | null {
     const chain = this.tilePics.get(src); if (!chain) return null;
-    while (chain[chain.length - 1]!.width > 96 && chain[chain.length - 1]!.width / 2 >= px) chain.push(downscale(chain[chain.length - 1]!, 0.5));
+    while (chain[chain.length - 1]!.width > 96 && chain[chain.length - 1]!.width / 2 >= px) chain.push(downscale(chain[chain.length - 1]! as Cnv, 0.5));
     let img = chain[0]!; for (const m of chain) { if (m.width >= px) img = m; else break; }
     return img;
   }

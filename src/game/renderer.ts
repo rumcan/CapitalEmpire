@@ -571,7 +571,8 @@ export class GroundPainter {
     const L = c.L, ox = -c.M.e, oy = -c.M.f;
     return this.fillCells(base, want, (g, rect) => {
       const X0 = (rect[0] + ox) / L, Y0 = (rect[1] + oy) / L, X1 = (rect[0] + rect[2] + ox) / L, Y1 = (rect[1] + rect[3] + oy) / L;
-      g.setTransform(1, 0, 0, 1, 0, 0); g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high';
+      // the mip drawn is at most twice the size it lands at (Textures.tileImage), so plain bilinear filtering keeps it sharp and cheap
+      g.setTransform(1, 0, 0, 1, 0, 0); g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'medium';
       for (const q of cellsIn(X0, Y0, X1, Y1, w, h)) {
         const [a, b, a2, b2] = snappedCell(q.ix, q.iy, w, h, L), img = this.tex.tileImage(urls[tileIndex(perm, q.ix, q.iy)]!, a2 - a);
         if (!img) return false;
