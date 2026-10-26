@@ -24,23 +24,18 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 ### In flight
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |
-| T041 | #281 | `arena/T041-transport-panels` | `.claude/worktrees/agent-a36e64fee47ed1d2e` | 5186 | Orphaned 2026-10-24 work (no issue, no PR) found at the switch; agent merging main, then PR. |
-| T044 | #282 | `arena/T044-save-export` | `.claude/worktrees/agent-ae59a606466632c1f` | 5187 | Orphaned 2026-10-24 work (P07 decisions 5-6) found at the switch; agent merging main, then PR. |
-| Regression | — | main (`ded5712`) | `worktrees/theme-consistency` (read only) | — | Queue item 1: a haiku-runner runs typecheck, the full suite, the build, the gates; report `E:/ClaudeTemp/nightly/2026-10-26-manual.md`. |
+| T142 | #288 | `arena/T142-vector-shadows` | `.claude/worktrees/agent-a687f83d04c54c00a` | 5188 | The owner: "put a smart opus on the shadows to vector draw each shadow individually for all assets". Opus (high effort): a contact and a cast polygon per asset view in a data file, drafted from each picture then corrected by eye; range and golf first. T141's after sheets still show faults (the range bays' detached cast, the leaderboard's footprint). |
+| Gates | #285 | detached bisect | `.claude/worktrees/agent-a7002980f03663418` | — | Bisecting `fix:gate` (a) (green 2026-10-18 at -19.9%, now +23.9%) and `event:gate` (a), (b), (c); report and recommend, no src changes yet. |
 
-**Leftovers to remove (owner's OK needed; the lead's `git worktree remove` was refused by the permission check):** the merged
-worktrees `.claude/worktrees/agent-a024cbaabaa1fc2a1` (P23-ux #209), `agent-acd6950cf3042c7c6` (library-sizes #125),
-`agent-af505db199879b80d` (T073 #134), and `agent-afc4bc43ca3870124` (`lead/check-119-120-121`, a local merge check, never pushed); the
-unregistered folders `agent-a64b85bfa79e7e268` and `agent-a8daa84b2a02554f8` (about 0.6 GB each, not git worktrees).
+**2026-10-26 manual regression** (main `d750592`, `E:/ClaudeTemp/nightly/2026-10-26-manual.md`): typecheck, 1697/1697 tests, the build,
+sim, town, towns and biz gates PASS; fix and event gates FAIL (#285). towns/event/biz had not run for days (no .webp loader; fixed by #286).
 
 Each agent pushes its branch and comments on its issue after every sub-step,
 ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D spectators) keep their own handover docs; see
 `docs/START-PROMPTS.md`.
 
 ### Queue (in order)
-1. **The full regression (running, see In flight).** The 2026-10-26 nightly never ran: it waited for a permission approval, and then
-   the app quit. About 25 PRs since 2026-10-25 evening have had only their own tests. Fix real failures. The owner should allow the
-   nightly session's commands so it runs unattended.
+1. **The gate failures (#285, see In flight).** The owner should allow the nightly session's commands so it runs unattended.
 2. **The owner's new grass paintings**, when they arrive. Import them with `scripts/assets/prep-painted-families.mjs` (the families list
    in the script), then map them per surface in Studio › Painted.
 3. **P24 follow-ups:**
@@ -54,6 +49,10 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
    (the sharp bump). See the History sections below and `gh issue list --label arena --state open`.
 
 ### Done recently (newest first; details in each PR)
+- 2026-10-26: T044 #287 build stamp and save download/load/backups in the gear menu (P07 5-6); T041 #284 transport panels' fine controls
+  under All tools, golf wording (both orphaned 2026-10-24 work, found at the account switch); #286 the gate scripts' image loaders.
+  Removed the merged and dead worktrees (63 GB free on E:). About 32 unregistered old folders (~10 GB, 2026-10-22) remain in
+  `.claude/worktrees` (main-merge, golf-art, brush-round, ...): ask the owner before deleting.
 - 2026-10-26: T141 #279 every prop's shadow made for the top-right sun (1,638 views audited; whole-word name rules, shapes fitted to the drawn picture, one lean for blob and box, `shadow-overrides.json`; the audit page `?shadows=audit` and `docs/art/SHADOW-AUDIT.md`; left: front-facing fence panels, two-post signs).
 - 2026-10-26: T140 #277 the town roads' kerb face across chunk borders (`kerb-face.ts`; the leaf litter's square shade too; the shared test raster in `tests/helpers/soft-raster.ts`).
 - 2026-10-26: T139 #268 cart-path bevel; T136 #267 Shadow slider for painted areas; T137 #266 three-way wall junctions; T135 #264
