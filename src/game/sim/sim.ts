@@ -189,6 +189,9 @@ export class Sim {
   paid: Uint8Array; dwell: Float32Array;
   /** the toll cars served since the City last cleared it (the City books them, see City.step) */
   tolls = 0;
+  /** T147: where each of those cars paid (x y pairs, tiles: its point at its booth), for the money floats; the City clears it */
+  tollAt: number[] = [];
+  private tollPt = { x: 0, y: 0 };
   /** per lane: vehicles bound for it as a toll booth lane (planned onto it, not yet on it: see planFrom); per slot: the booth lane it is bound to (-1 none) */
   private bound = new Int32Array(0); private boundTo: Int32Array;
   /** the admissions since the City last cleared it: pairs [park, origin zone] for each car parked (the City clears it each step) */
@@ -389,7 +392,13 @@ export class Sim {
   }
 
   /** vehicle i has paid at its toll booth: counted in tolls (the City books the takings) */
-  private serve(i: number) { this.paid[i] = 1; this.tolls++; }
+  private serve(i: number) { this.paid[i] = 1; this.tolls++; if (this.pointOf(i, this.tollPt)) this.tollAt.push(this.tollPt.x, this.tollPt.y); }
+  private ptAt = { x: 0, y: 0, hx: 0, hy: 0 };
+  /** vehicle i's point (tiles: its lane's point at its distance, as writeFrame draws it but on the lane's centre) into o; false for an empty slot */
+  pointOf(i: number, o: { x: number; y: number }): boolean {
+    const ln = this.alive[i] ? this.g.lanes[this.lane[i]!] : undefined; if (!ln) return false;
+    laneAt(ln, this.s[i]!, this.ptAt); o.x = this.ptAt.x; o.y = this.ptAt.y; return true;
+  }
   /** removes vehicle i from its lane and frees its slot */
   despawn(i: number) {
     if (!this.alive[i]) return;

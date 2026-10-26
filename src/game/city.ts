@@ -89,6 +89,8 @@ const TAXI_V = 10;
 const TAXI_REACH = 8;
 /** the rides in a game day that make a taxi company's good day */
 const TAXI_GOOD = 10;
+/** T147: the money events kept for the next frame at most (4 floats each: see City.takeCash); more are not shown (the books still take them) */
+const CASH_MAX = 256;
 /** the tourists a level of each tourism-family business, the casino and the stadium draws (the tourist catchment's residents, see planVisits) */
 const TOURIST_PER_LEVEL = 300;
 /** the reach, tiles, of the highway entry's kerb: the road within this far of the entry brings the tourists in */
@@ -226,6 +228,16 @@ export class City {
    *  site's doors as before. gateAcc: each gate's admitting carried over between steps (fans) */
   gates: { x: number; y: number; lanes: number }[] = []; private gateAcc: number[] = [];
   setGates(list: { x: number; y: number; lanes: number }[]): void { this.gates = list.map(g => ({ x: g.x, y: g.y, lanes: Math.max(1, g.lanes) })); this.gateAcc = this.gates.map(() => 0); this.crowd?.setGates(this.gates.length); }
+  /** T147, the money floats: the money that moved at a place since the worker last took it, 4 floats each: x, y (tiles), $ (+ in, - out) and 1 for
+   *  a sale lost (its $ the sale's; the treasury is not charged), else 0. The worker posts it with the frame; capped at CASH_MAX */
+  private cash: number[] = [];
+  private cashAt(x: number, y: number, n: number, lost = 0): void { if (n && this.cash.length < 4 * CASH_MAX && Number.isFinite(x) && Number.isFinite(y) && Number.isFinite(n)) this.cash.push(x, y, n, lost); }
+  /** the money moved at a place since the last call (see cash), cleared; null when none */
+  takeCash(): Float32Array | null { if (!this.cash.length) return null; const b = Float32Array.from(this.cash); this.cash.length = 0; return b; }
+  /** each car park's cars turned away already shown (T147: the parking fee lost), by its sim state */
+  private turnSeen = new WeakMap<ParkState, number>();
+  /** a business's centre (tiles) */
+  private static mid(b: { x: number; y: number; w: number; h: number }): Pt { return { x: b.x + b.w / 2, y: b.y + b.h / 2 }; }
   /** the galleries (golf, LEAD.md M2.2): the spots the admitted fans stand at (golf/galleries.ts), and the draws that pick them */
   spots: GallerySpot[] = []; private spotRnd = seededRnd(0x6a11);
   /** the course's hole count (the largest hole of a spot; see spotDraw) and the spots' draws at the minute (reused) */
@@ -665,7 +677,11 @@ export class City {
   unfreeze(): void { this.sim.unfreeze(); }
 
   /** the towns built at once (a new valley, or a perfect round's growth, see Town.stamp): each town grows to perTown residents, or to targets[k] when given; returns the 'complete' events (a new array) */
-  stamp(perTown: number, targets?: number[]): TownEvent[] { const ev = this.town.stamp(this.ctx, perTown, this.sim.clock, targets); this.syncHour = -1; if (this.centres.length) for (const e of ev) if (e.kind === 'complete') this.connect(e); return ev; }
+  stamp(perTown: number, targets?: number[]): TownEvent[] {
+    const ev = this.town.stamp(this.ctx, perTown, this.sim.clock, targets), n0 = this.cash.length; this.syncHour = -1; if (this.centres.length) for (const e of ev) if (e.kind === 'complete') this.connect(e);
+    this.cash.length = n0; // T147: the towns built at once float no fees (money as you watch it only)
+    return ev;
+  }
 
   /** n sim steps (a frame at speed n), then the town to the sim time, then the planner (once a game hour). Returns the town's events
    *  (the array is reused: read it before the next call), the gravel extension the town lays now, if any (legs in tiles), and the
@@ -677,7 +693,11 @@ export class City {
     // the parking fees of the cars parked since the last step (sim.parkedNow holds a pair per car, read before it is cleared): the books take them,
     // and a round under way counts them (as it counts its tolls)
     const pk = this.sim.parkedNow.length >> 1, rs0 = this.round.stage;
-    if (pk && this.parkFee > 0 && !this.golf) { const y = pk * this.parkFee; this.budget.parking(y); if (rs0 === 'build' || rs0 === 'surge') this.round.parking += y; }
+    if (pk && this.parkFee > 0 && !this.golf) {
+      const y = pk * this.parkFee; this.budget.parking(y); if (rs0 === 'build' || rs0 === 'surge') this.round.parking += y;
+      // T147: each car's fee floats up at its car park's entrance
+      const pn = this.sim.parkedNow; for (let k = 0; k < pn.length; k += 2) { const P = this.parks[pn[k]!], e = P?.entrances[0]; if (e) this.cashAt(e.x, e.y, this.parkFee); }
+    }
     this.sim.parkedNow.length = 0;
     const hr = Math.floor(this.sim.clock / GAME_HOUR);
     let milestones = NO_MILESTONES, won = false;
@@ -703,7 +723,14 @@ export class City {
     if (rs === 'build' || rs === 'surge') { const u = this.upkeepRate() * n * DT / GAME_DAY; this.budget.upkeepLive(u); this.round.upkeep += u; }
     // the toll booths' takings since the last step: each car served pays the price of the round's level; the books take it, and a round
     // under way counts it (as it counts its upkeep)
-    if (this.sim.tolls) { const y = this.sim.tolls * tollPrice(this.round.level); this.budget.toll(y); if (rs === 'build' || rs === 'surge') this.round.toll += y; this.sim.tolls = 0; }
+    if (this.sim.tolls) {
+      const p = tollPrice(this.round.level), y = this.sim.tolls * p; this.budget.toll(y); if (rs === 'build' || rs === 'surge') this.round.toll += y; this.sim.tolls = 0;
+      // T147: each car's toll floats up at its booth
+      const ta = this.sim.tollAt; for (let k = 0; k + 1 < ta.length; k += 2) this.cashAt(ta[k]!, ta[k + 1]!, p);
+    }
+    this.sim.tollAt.length = 0;
+    // T147: a car park that turned cars away (full) lost their fees: red at its entrance (the treasury is not charged)
+    if (this.parkFee > 0 && !this.golf) this.lostParking();
     // the surge: its due cars spawn, then the party cars' exits are counted; kick-off (the round's last step of the surge) gives the result
     if (this.surge && rs === 'surge') this.surge.step(this.sim, this.g, this.busWalk);
     this.drainParty();
@@ -1237,19 +1264,30 @@ export class City {
     const ev = this.sim.busEv, C = this.crowd;
     if (C) for (let k = 0; k < ev.length; k += 4) {
       const slot = ev[k]!, r = ev[k + 1]!, kind = ev[k + 2]!, n = ev[k + 3]!;
-      if (kind === 0) { C.board(r, slot, n); this.busFares(n); }
+      if (kind === 0) { C.board(r, slot, n); this.busFares(n, slot); }
       else if (kind === 1) { for (let j = 0; j < n; j++) { const t = C.unloadOne(slot); if (t >= 0) this.walkDoor(t, this.busPts[r]?.doors ?? null, 1, -1); } }
       else C.requeue(r, slot);
     }
     ev.length = 0;
   }
   /** n fans boarded a shuttle: with a bus company, each pays its fare (booked as business takings, the company's visitors and revenue) */
-  private busFares(n: number): void {
+  private busFares(n: number, slot = -1): void {
     this.busRiders += n;
     const b = this.businesses.find(x => x.type === 'buscompany'), s = b ? this.bizStats.get(b.id) : undefined;
     if (!s) return;
     const r = n * BUSINESS.buscompany.pricePerVisitor;
     s.revenue += r; s.today.revenue += r; s.visitors += n; s.today.visitors += n; s.xp += n; this.budget.bizIncome(r);
+    // T147: the fares float up at the bus they boarded
+    if (slot >= 0 && this.sim.pointOf(slot, this.cashPt)) this.cashAt(this.cashPt.x, this.cashPt.y, r);
+  }
+  private cashPt = { x: 0, y: 0 };
+  /** T147: the cars each car park turned away since the last look (it was full): their fees lost, red at its entrance */
+  private lostParking(): void {
+    for (let k = 0; k < this.parks.length; k++) {
+      const st = this.sim.parks[k], e = this.parks[k]!.entrances[0]; if (!st) continue;
+      const seen = this.turnSeen.get(st) ?? st.turned; this.turnSeen.set(st, st.turned);
+      if (st.turned > seen && e) this.cashAt(e.x, e.y, -(st.turned - seen) * this.parkFee, 1);
+    }
   }
   /** a party car of park k parked at its bay (an index into busPts' park list): its PARTY fans walk from the bay to the lot stop of the route of this
    *  car park with the shortest queue, or else to the nearest door */
@@ -1314,6 +1352,8 @@ export class City {
     this.gates.forEach((g, i) => {
       const rate = gateRate(g.lanes, express), acc = (this.gateAcc[i] ?? 0) + rate * dt, done = C.admit(i, Math.floor(acc), g.x, g.y);
       this.gateAcc[i] = Math.min(acc - done, rate);
+      // T147: the fans let in before kick-off hold the tickets kick-off books (a ticket a fan at the doors): their money floats up at the gate
+      if (done > 0 && this.golf && this.round.stage === 'surge') this.cashAt(g.x, g.y, done * golfTicketPrice(this.golf.tier, this.round.cards));
     });
   }
   /** n fans of town at p walk to the stadium's nearest door (route: the route they came from, -1 none); with no door, they are there already.
@@ -1441,11 +1481,11 @@ export class City {
   /** the lots whose connection fee is paid (for the whole game; saved with the books, see booksSave) */
   private feeKeys = new Set<string>();
   /** a town lot that completes (BUILT) beside one of the player's roads pays the player its CONNECT_FEE once per lot key; a lot on a town's road pays nothing */
-  private connect(e: TownEvent): void { const l = this.lots.lots.get(e.key), n = CONNECT_FEE[e.use] ?? 0; if (!l || !n || l.seg.town || this.feeKeys.has(e.key)) return; this.feeKeys.add(e.key); this.budget.fee(n); }
+  private connect(e: TownEvent): void { const l = this.lots.lots.get(e.key), n = CONNECT_FEE[e.use] ?? 0; if (!l || !n || l.seg.town || this.feeKeys.has(e.key)) return; this.feeKeys.add(e.key); this.budget.fee(n); this.cashAt(l.c.x, l.c.y, n); }
   /** the books as saved: the budget's, with the lots whose connection fee is paid (feeKeys) */
   booksSave(): BudgetSave { return { ...this.budget.toJSON(), feeKeys: [...this.feeKeys] }; }
   /** a lot on a paved road the town builds on is sold: the player is paid its price (saleOf: nothing on gravel) */
-  private sell(key: string): void { const l = this.lots.lots.get(key), n = l ? saleOf(l.cls) : 0; if (n) this.budget.sale(n); }
+  private sell(key: string): void { const l = this.lots.lots.get(key), n = l ? saleOf(l.cls) : 0; if (n) { this.budget.sale(n); this.cashAt(l!.c.x, l!.c.y, n); } }
 
   /** a visit business's door on the road (see Door): for each of the footprint's 4 door points, the dseg of the segs within 6 tiles that has its
    *  business on its right (a one-way seg has one dseg), nearest the door point; null when no road is near or the lane is under 6 m. Visit types only */
@@ -1539,11 +1579,12 @@ export class City {
       this.visits.event(id, kind, ratio);
       const s = this.bizStats.get(id), b = s ? this.businesses.find(x => x.id === id) : undefined;
       if (!s || !b) continue;
-      if (kind === 1) { s.today.missed++; continue; }
-      const type = BUSINESS[b.type], r = type.pricePerVisitor * type.party;
+      const type = BUSINESS[b.type], r = type.pricePerVisitor * type.party, c = City.mid(b);
+      // T147: a lost car is the sale it would have made (red at the business, not charged); a visit's takings float up green there
+      if (kind === 1) { s.today.missed++; this.cashAt(c.x, c.y, -r, 1); continue; }
       s.revenue += r; s.today.revenue += r; s.today.visitors++; s.visitors++;
       if (ratio > ON_TIME_RATIO) s.today.late++;
-      this.budget.bizIncome(r);
+      this.budget.bizIncome(r); this.cashAt(c.x, c.y, r);
     }
     vo.length = 0;
   }
@@ -1574,7 +1615,7 @@ export class City {
       if (!(n > 0)) continue;
       const r = n * BUSINESS[b.type].pricePerVisitor;
       s.visitors += n; s.today.visitors = n; s.revenue += r; s.today.revenue = r; s.xp += n; s.goodDays++;
-      this.budget.bizIncome(r);
+      this.budget.bizIncome(r); const c = City.mid(b); this.cashAt(c.x, c.y, r);
     }
   }
   /** the highway entry (tiles) and whether a road is within ENTRY_REACH tiles of it (open: the tourists come in from it, see planVisits) */
@@ -1640,6 +1681,8 @@ export class City {
     const co = this.businesses.find(b => b.type === 'taxi'), s = co ? this.bizStats.get(co.id) : undefined;
     if (dRev > 0) { this.budget.bizIncome(dRev); if (s) { s.revenue += dRev; s.today.revenue += dRev; } }
     if (dCost > 0) this.budget.upkeepLive(dCost);
+    // T147: the fares green and the drivers' and fuel costs red at the taxi company
+    if (co) { const c = City.mid(co); if (dRev > 0) this.cashAt(c.x, c.y, dRev); if (dCost > 0) this.cashAt(c.x, c.y, -dCost); }
     if (s && dServed > 0) { s.visitors += dServed; s.today.visitors += dServed; s.xp += dServed; }
   }
   /** the day's taxi requests (once a game day, with the taxis): n = round(TAXI_RATE / 1000 * residents) parties, each from a built home (by population) to

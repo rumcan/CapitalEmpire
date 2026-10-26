@@ -335,7 +335,8 @@ export function garageSlots(g: NonNullable<RangeScene['garage']>, n: number): Ca
 /** the range's money as it happens (T146, for the floating money over the customers, T147): what (a bucket sold, a practice fee, a coffee, a
  *  lesson, or a golfer lost), how many golfers it is (a skip books fractions), the takings ($; 0 for the lost) and where (world tiles: the counter,
  *  the practice facility, the kiosk, the car or the line; null for a skip) */
-export interface RangeMoneyEvent { kind: 'bucket' | 'practice' | 'coffee' | 'lesson' | 'lost'; n: number; amount: number; at: Pt | null; /** a lost golfer's reason */ why?: 'queue' | 'parking' | 'patience' }
+export interface RangeMoneyEvent { kind: 'bucket' | 'practice' | 'coffee' | 'lesson' | 'lost'; n: number; amount: number; at: Pt | null; /** a lost golfer's reason */ why?: 'queue' | 'parking' | 'patience';
+  /** a lost golfer's sale (T147: its red float): the buckets it would have bought ($; not charged, not in amount) */ missed?: number }
 /** a route: points and the speed of each leg (tiles/s), with the cumulative times */
 interface Route { pts: Pt[]; v: number[]; at: number[] }
 function route(pts: Pt[], v: number[]): Route {
@@ -476,7 +477,7 @@ export class RangeSim {
     // the range's money, all of it here (T146): each sale, fee, coffee, lesson and lost golfer is counted in the save and told to onMoney with
     // where it happened (T147's floating money); booked is what step returns
     let booked = 0;
-    const tell = (kind: RangeMoneyEvent['kind'], n: number, amount: number, at: Pt | null, why?: RangeMoneyEvent['why']) => { if (this.onMoney && n > 0) this.onMoney({ kind, n, amount, at, ...(why ? { why } : {}) }); };
+    const tell = (kind: RangeMoneyEvent['kind'], n: number, amount: number, at: Pt | null, why?: RangeMoneyEvent['why']) => { if (this.onMoney && n > 0) this.onMoney({ kind, n, amount, at, ...(why ? { why, missed: n * value } : {}) }); };
     const sell = (n: number, at: Pt | null) => { const m = n * value; s.season.golfers += n; s.total.golfers += n; s.season.buckets += n * scale; s.total.buckets += n * scale; s.season.takings += m; s.total.takings += m; this.today.golfers += n; booked += m; tell('bucket', n, m, at); };
     const lose = (n: number, at: Pt | null, why: NonNullable<RangeMoneyEvent['why']>) => { s.season.lost += n; s.total.lost += n; this.today.lost += n; if (why === 'parking') this.today.noPark += n; tell('lost', n, 0, at, why); };
     // a practice facility's fees (T130): the business takings, as the buckets

@@ -121,6 +121,7 @@ import { ktx2Built, ktx2Source, pickFormat } from './atlas-ktx2';
 import { neededLevel, type PageWant } from './atlas-pages';
 import { HALF_T, courseBuilding, gridShown, loadMapGrid, saveMapGrid } from './ext/map-grid';
 import { MapGridLayer } from './ext/map-grid/layer';
+import { MoneyFloats, addCash, drawMoneyFloats, rangeFloat, type MoneyEvent } from './moneyfloats';
 import { FIRST_PAR3_M, RAMP_TOAST, RANGE_CARD_SEEN, STUCK_PLAY_SEC, advanceProgress, computeProgressiveUiState, emptyProgress, nextFirstRunHint, normalizeProgress, progressFacts, rampLock, type PlayerProgressFacts, type ProgressiveUiState } from './ext/progressive-ui';
 
 /** New hole's camera framing eases this long at most (ms; P23 4.4) */
@@ -372,6 +373,29 @@ export class Game {
     try { localStorage.setItem('capitalempire.standins', String(on)); } catch { /* storage may be unavailable */ }
     this.emit();
   }
+  /** T147, the money floats (moneyfloats.ts): green +$X rises where money comes in, red -$X where it goes out at a place or a sale is lost; on by
+   *  default, remembered (the gear menu's Money floats). Set it with setShowMoneyFloats */
+  showMoneyFloats = true;
+  readonly floats = new MoneyFloats();
+  setShowMoneyFloats(on: boolean) {
+    this.showMoneyFloats = on; if (!on) this.floats.clear();
+    try { localStorage.setItem('capitalempire.moneyFloats', String(on)); } catch { /* storage may be unavailable */ }
+    this.emit();
+  }
+  /** a money event floated at the camera's zoom now (none with the setting off) */
+  floatMoney(e: MoneyEvent) { if (this.showMoneyFloats) this.floats.add(e, performance.now() / 1000, this.cam.z); }
+  /** where a spend made now floats up (the map point clicked, set by pointerDown and pointerUp for their own spends; or spendAt's) */
+  private moneySpot: Omit<MoneyEvent, 'amount' | 'kind'> | null = null;
+  private moneyAt(p: Pt | null) { this.moneySpot = p ? { x: p.x, y: p.y } : null; if (p) queueMicrotask(() => { this.moneySpot = null; }); }
+  /** spends n $ of kind with its float at p: a purchase or upkeep red, a refund green */
+  private spendAt(p: Omit<MoneyEvent, 'amount' | 'kind'> | null, kind: 'construction' | 'upkeep', n: number) { const o = this.moneySpot; this.moneySpot = p; try { this.traffic.spend(kind, n); } finally { this.moneySpot = o; } }
+  /** every spend (SimClient.onSpend): one placed (a map click, spendAt) floats up there; the business takings book (the range's) float as they are made */
+  private spent(kind: 'construction' | 'compensation' | 'business' | 'upkeep', n: number) {
+    const p = this.moneySpot; if (!p || kind === 'business' || !n) return;
+    this.floatMoney({ ...p, amount: Math.abs(n), kind: n > 0 ? 'out' : 'in' });
+  }
+  /** the range's money place (merged over its shop at the mid zoom) */
+  private rangeSpot(): Omit<MoneyEvent, 'amount' | 'kind'> | null { const c = this.range.scene?.counter; return c ? { x: c.x, y: c.y, group: 'range', gx: c.x, gy: c.y } : null; }
   /** a course building tool is on (T100): the Course menu's tools, Paths & drives, an event structure being placed; the course half grid shows */
   get courseBuilding() { return courseBuilding(this.tool, this.roadScope, this.eventTool && !!this.eventStructurePending); }
   /** the course land the half grid covers (the course and its parcels; none outside a golf game: the whole view), into a reused list */
@@ -423,8 +447,8 @@ export class Game {
     removeProp: p => this.removeProp(p), setGround: (k, p) => this.setLotGround(k, p),
     layPaths: legs => { this.edit.addLegs(legs, classOf('cart-slab'), 0, undefined, true); this.commitNetwork(); },
     clearTrees: b => this.dropTownTrees(b[0], b[1], b[2], b[3]),
-    money: () => this.money, spend: n => this.traffic.spend('construction', n), book: n => this.traffic.spend('business', -n),
-    month: () => this.golfMonthIndex(), payUpkeep: n => this.traffic.spend('upkeep', n),
+    money: () => this.money, spend: n => this.spendAt(this.rangeSpot(), 'construction', n), book: n => this.traffic.spend('business', -n),
+    month: () => this.golfMonthIndex(), payUpkeep: n => this.spendAt(this.rangeSpot(), 'upkeep', n),
     demand: () => ({ tier: this.golf?.tier ?? 1, exits: this.golf?.exits?.length ?? 2, residents: this.traffic.pop, propsAppeal: this.decor.appeal(), practiceAppeal: this.golf?.range ? practiceAppeal(this.golf.range) : 0 }),
     dayLen: () => this.traffic.dayLen, simT: () => this.traffic.simTime(performance.now()),
     clock: () => { const c = this.clock(); return { hour: c.hour + c.minute / 60, day: c.day }; },
@@ -1129,6 +1153,10 @@ export class Game {
     this.traffic = new SimClient();
     try { this.disastersEnabled = localStorage.getItem('capitalempire.disasters') !== 'false'; } catch { /* default on */ }
     try { this.showStandIns = localStorage.getItem('capitalempire.standins') !== 'false'; } catch { /* default on */ }
+    try { this.showMoneyFloats = localStorage.getItem('capitalempire.moneyFloats') !== 'false'; } catch { /* default on */ }
+    // T147: the money floats' sources: every spend (placed ones float), the range's sales and lost golfers
+    this.traffic.onSpend = (k, n) => this.spent(k, n);
+    this.range.sim.onMoney = e => { const c = this.range.scene?.counter, f = rangeFloat(e, c ?? null); if (f) this.floatMoney(f); };
     try { const v = parseFloat(localStorage.getItem('capitalempire.shadows') ?? ''); if (Number.isFinite(v)) this.shadowStrength = Math.max(0, Math.min(2, v)); } catch { /* default 1.1 */ }
     try { this.vectorShadows = VECTOR.on = localStorage.getItem('capitalempire.vectorShadows') !== '0'; } catch { /* default on */ }
     this.gl.initVector(vectorMesh());
@@ -2832,6 +2860,7 @@ export class Game {
   // ---------- input ----------
   pointerDown(e: PointerEvent) {
   const mx = e.offsetX, my = e.offsetY;
+  this.moneyAt(this.tileAt(mx, my)); // T147: a spend this click makes floats up here
   this.camEase = null; // a press takes the camera back from New hole's framing (P23 4.4)
   // the owner's open shot (P4b) takes a left click on the course as its aim, before any tool does (a drag still pans; the aim is set on release)
   if (this.shot && e.button === 0 && !this.keys.has(' ')) { this.overlay.setPointerCapture(e.pointerId); this.dragging = { kind: 'pan', sx: mx, sy: my, camX: this.cam.X, camY: this.cam.Y, moved: false, aim: this.tileAt(mx, my) }; return; }
@@ -2944,7 +2973,7 @@ export class Game {
     }
   }
   pointerUp() {
-    const d = this.dragging;
+    const d = this.dragging; this.moneyAt(this.hover); // T147: a spend this release makes floats up here
     if (d?.kind === 'park') this.parkRelease();
     // a click (no drag) on the course aims the owner's open shot (P4b)
     if (d?.kind === 'pan' && d.aim && !d.moved) this.aimAt(d.aim);
@@ -4782,6 +4811,9 @@ export class Game {
     for (const p of this.particles) { p.age += dt; p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt; p.vz -= 0.8 * dt; p.r += 0.6 * dt; }
     this.particles = this.particles.filter(p => p.age < p.life);
     this.traffic?.update(now);
+    // T147: the money floats: the old ones go, then the city worker's money with its place (the range's comes as it steps)
+    this.floats.frame(now / 1000);
+    if (this.traffic?.cash.length) { if (this.showMoneyFloats) addCash(this.floats, this.traffic.cash, now / 1000, this.cam.z); this.traffic.cash.length = 0; }
     if (this.golf?.start === 'range') { this.range.sync(); this.range.step(); }
     if (this.golf) this.decor.frame();
     this.updatePeds(dt);
@@ -5284,6 +5316,8 @@ export class Game {
       ctx.fillStyle = `rgba(214,190,150,${a.toFixed(3)})`; ctx.beginPath(); ctx.ellipse(s.x, s.y - p.z * HH * ze * 1.5, r, r * 0.7, 0, 0, Math.PI * 2); ctx.fill();
     }
     this.drawNight(ctx, now);
+    // T147: the money floats over everything on the map (the night too), under the HUD
+    if (this.showMoneyFloats && this.floats.live.length) drawMoneyFloats(ctx, this.floats.live, now / 1000, (x, y) => this.screen(x, y), ze, this.dpr, this.cw, this.ch);
   }
 
   /** the map's three town names at the district and planner tiers: white with a dark outline, centred on each town site (screen px) */
