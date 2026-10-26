@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { execSync } from "child_process";
 import { fileURLToPath, pathToFileURL } from "url";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
@@ -8,6 +9,11 @@ import { checkDevRequest, checkDevSave, devSavePath } from "./src/game/dev/dev-s
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// the build stamp (P07 decision 5, T044): every save records the package version and the git sha that wrote it (informational only)
+const pkg = JSON.parse(fs.readFileSync(path.resolve(__dirname, "package.json"), "utf8")) as { version: string };
+let sha = "dev";
+try { sha = execSync("git rev-parse --short HEAD", { cwd: __dirname, stdio: ["ignore", "pipe", "ignore"] }).toString().trim() || "dev"; } catch { /* no git (a source archive): dev */ }
 
 /** The in-game dev editor's save (P20 / T071), in the dev server only (apply 'serve': never in a build). POST /__dev/save { file, json } writes
  *  one of the whitelisted files (src/game/dev/dev-save.ts: lot-presets.json, scale-overrides.json, removed.json) whole and atomically (a temp
@@ -106,7 +112,7 @@ function atlasKtx2(): Plugin {
 export default defineConfig(({ command }) => ({
   plugins: [react(), tailwindcss(), devSave(), atlasKtx2()],
   // the KTX2 atlas pages exist in a production build only: the dev server always shows the WebP pages, fresh as the art is edited
-  define: { __ATLAS_KTX2__: JSON.stringify(command === "build" && KTX2_ON) },
+  define: { __ATLAS_KTX2__: JSON.stringify(command === "build" && KTX2_ON), __BUILD__: JSON.stringify({ app: pkg.version, sha }) },
   // T080: the build is index.html plus hashed files next to it (dist/assets: the code, the workers, every atlas, view and ground picture), not one
   // inlined file: the single-file build had grown to 324 MB, took 4-11 minutes and ran out of memory. './' keeps every URL relative to the page, so
   // dist/ works from any folder of any static server (vite preview, a plain server, a sub-path such as GitHub Pages); the workers are files too

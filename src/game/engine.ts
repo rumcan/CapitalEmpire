@@ -47,7 +47,7 @@ import { drawParkingOverlay, type ParkOverlayView } from './parking-overlay';
 import type { BayRowDef } from './event/rows';
 import { inQuad, type CurbDef } from './event/curb';
 import { SpriteTiles, spriteRect, type Drawable } from './sprites';
-import { readSave, writeSave, clearSave, backupTownSlot, SAVE_VERSION, segRec, type SaveV5 } from './save';
+import { readSave, writeSave, clearSave, backupTownSlot, SAVE_VERSION, segRec, exportSaveBytes, importSaveBytes, listSaveBackups, readBackup, deleteBackup, type SaveV5 } from './save';
 import { CAR_COLOURS, parkedCar } from './traffic';
 import { SimClient, type LotView } from './sim/client';
 import { townClockFor, townTimeOf } from './sim/townclock';
@@ -4196,6 +4196,37 @@ export class Game {
     void this.save(); this.toast(`New game (seed ${this.seed})`); this.emit();
   }
   clearTown() { this.reset(); this.sendTerrain(); this.afterLoad(); void clearSave(); void this.save(); this.emit(); }
+  /** downloads the current save as capital-empire-YYYY-MM-DD.cesave (saves first, unless saving is blocked) */
+  async downloadSave(): Promise<void> {
+    await this.save();
+    const buf = await exportSaveBytes();
+    if (!buf) { this.toast('No save to download yet', 'warn'); return; }
+    const t = new Date(), pad = (n: number) => String(n).padStart(2, '0');
+    this.downloadBytes(buf, `capital-empire-${t.getFullYear()}-${pad(t.getMonth() + 1)}-${pad(t.getDate())}.cesave`);
+  }
+  /** loads a .cesave file: on success the page reloads into it (the current save is backed up first); on failure a toast says why */
+  async loadSaveFile(file: File): Promise<void> {
+    const was = this.saveBlocked; this.saveBlocked = true; // no autosave may write the old game over the file while it loads
+    const r = await importSaveBytes(await file.arrayBuffer());
+    if (r.ok) { location.reload(); return; }
+    this.saveBlocked = was; this.toast(r.why ?? 'This save could not be read', 'warn');
+  }
+  /** the backup slots for the gear menu, with a download and a delete for each */
+  async saveBackups(): Promise<string[]> { return listSaveBackups(); }
+  async downloadBackup(key: string): Promise<void> {
+    const buf = await readBackup(key);
+    if (!buf) { this.toast('That backup is gone', 'warn'); return; }
+    this.downloadBytes(buf, `capital-empire-${key}.cesave`);
+  }
+  async deleteSaveBackup(key: string): Promise<void> {
+    if (await deleteBackup(key)) this.toast('Backup deleted'); else this.toast('That backup could not be deleted', 'warn');
+  }
+  /** a file download of bytes: a Blob behind a temporary link that is clicked, then its URL is released */
+  private downloadBytes(buf: ArrayBuffer, name: string) {
+    const url = URL.createObjectURL(new Blob([buf], { type: 'application/gzip' }));
+    const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10000); // released later: some browsers start the download after the click returns
+  }
   /** debug (the contact sheet): an empty map at the camera, then a street grid of cols x rows blocks (BLOCK tiles). Every lot is composed
    *  directly (no town) with a use from uses (cycled), the level, decline and seed + i. The states hold until the next reset. */
   stageLots(o: { cols: number; rows: number; uses: number[]; level: number; decline: number; seed: number }) {
