@@ -24,8 +24,8 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 ### In flight
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |
-| T145 | #300 | `arena/T145-painted-terrain` | an agent worktree under `.claude/worktrees` | 5186 | The owner's brief (in the issue): the accepted golden fescue and lake tiles in the game, three authored sets NEAR/MID/FAR of four large tiles each, hash-checked from `eight-tiles/READY-MATERIALS.json`, on main's T128 painted-families runtime. Brief: `E:/ClaudeTemp/lead/t145-brief.md`. |
-| T144 | #296 | `arena/T144-light-library` | an agent worktree under `.claude/worktrees` | 5193 | The owner: "studio crashed with ran out of memory" (the browser tab; the PC at 1.5 GB free). Thumbs as WebP at the card's size, off-screen cards release their images; memory measured before and after. |
+| **T145 (top priority)** | #300 | `arena/T145-painted-terrain` | `.claude/worktrees/t145` | 5186 | The owner's brief (in the issue): the accepted golden fescue and lake tiles in the game, three authored sets NEAR/MID/FAR of four large tiles each, hash-checked from `eight-tiles/READY-MATERIALS.json`, on main's T128 painted-families runtime. Brief: `E:/ClaudeTemp/lead/t145-brief.md`. |
+| T146 | #303 | `arena/T146-range-parking` | an agent worktree under `.claude/worktrees` | 5187 | P24 D49: a "Bigger car park" upgrade on the range card (sized so a full 36-bay range turns no car away) and the skip counting parking. Opus, high effort (range work). **Paused** (the owner, 2026-10-26: "highest priority is the new textures please"): resume it from #303's "To resume" when T145 lands. |
 
 **Two coding agents at a time (the owner, 2026-10-26: first "maybe just too many background tasks?" after the studio tab died with the
 PC at 1.5 GB free, then "start up two coding agents"):** keep two coding agents running, start the next queue ticket when one lands, no
@@ -53,7 +53,7 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
 2. **The owner's new grass paintings**, when they arrive. Import them with `scripts/assets/prep-painted-families.mjs` (the families list
    in the script), then map them per surface in Studio › Painted.
 3. **P24 follow-ups:**
-   - a bigger range car park, or parking with the second tier (D49);
+   - a bigger range car park, or parking with the second tier (D49): T146 in flight;
    - overlapping labels at the range's shop front;
    - the putt, chip and coaching clips;
    - real art for the stand-ins in `docs/GOLF-SPRITES.md` (the range, practice and props kits).
@@ -63,6 +63,8 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
    (the sharp bump). See the History sections below and `gh issue list --label arena --state open`.
 
 ### Done recently (newest first; details in each PR)
+- 2026-10-26: **T144 #302 the studio's Library page is light**: WebP card thumbs at four size steps, cards scrolled far away drop their
+  pictures (decoded pictures held: 545 MB → at most 26 MB). The 5191 studio was restarted on it.
 - 2026-10-26: **#298 the gates retuned to the game as it is** (#285 closed; the bisect found intended features, not a regression: #87 woods
   buildable, 78e5472 three-town growth, 0c58278 parking fees). fix:gate refuses a city not at capacity (exit 2) and defaults to seed 1
   day 60; a round books its parking fees like its tolls (`Round.parking`); event:gate reconciles with them, (b) measured on the fixed
