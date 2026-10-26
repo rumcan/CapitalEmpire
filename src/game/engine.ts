@@ -50,7 +50,7 @@ import { drawParkingOverlay, type ParkOverlayView } from './parking-overlay';
 import type { BayRowDef } from './event/rows';
 import { inQuad, type CurbDef } from './event/curb';
 import { SpriteTiles, spriteRect, VECTOR, type Drawable } from './sprites';
-import { vectorMesh } from './shadow-vector';
+import { releaseVectorMeshData, vectorMesh } from './shadow-vector';
 import { readSave, writeSave, clearSave, backupTownSlot, SAVE_VERSION, segRec, exportSaveBytes, importSaveBytes, listSaveBackups, readBackup, deleteBackup, type SaveV5 } from './save';
 import { CAR_COLOURS, parkedCar } from './traffic';
 import { carOwnerScale } from './ext/car-art';
@@ -133,6 +133,8 @@ import { FIRST_PAR3_M, RAMP_TOAST, RANGE_CARD_SEEN, STUCK_PLAY_SEC, advanceProgr
 
 /** New hole's camera framing eases this long at most (ms; P23 4.4) */
 const CAM_EASE_MS = 400;
+/** a sprite px is picked where its atlas alpha is above this (0..255) */
+const PICK_ALPHA = 20;
 /** the junction types in Tab order (Shift+Tab goes back): each roundabout ring-lane count is its own step */
 const VARIANTS: { type: NodeType; rl: 1 | 2 | 3 }[] = [{ type: 'plain', rl: 1 }, { type: 'stop', rl: 1 }, { type: 'mini', rl: 1 }, { type: 'signal', rl: 1 }, { type: 'slip', rl: 1 }, { type: 'roundabout', rl: 1 }, { type: 'roundabout', rl: 2 }, { type: 'roundabout', rl: 3 }];
 /** what the lights' upgrades cost, by the tier they reach (index = tier: 0 fixed-time is free, 1 actuated, 2 adaptive) */
@@ -346,7 +348,8 @@ export class Game {
     return im.complete && im.naturalWidth ? im : null;
   }
   /** each atlas page's alpha at mip 2 (512 px), for picking a prop by its pixels */
-  private pageAlpha: ({ w: number; h: number; data: Uint8Array } | null)[] = [];
+  /** each atlas page's opacity for picking at mip 2, one bit a px (alpha above PICK_ALPHA; T172: a bit, not the alpha byte: 2 MB, not 18) */
+  private pageAlpha: ({ w: number; h: number; bits: Uint8Array } | null)[] = [];
   /** T080 atlas streaming (streamAtlas): screen px per cell this frame, the cells marked, the near cells (rebuilt every few frames) */
   private atlasMark = new Float32Array(0); private atlasTouched: number[] = []; private atlasNear: PageWant[] = []; private atlasNearAt = -1e9;
   ready = false; loadProgress = 0;
@@ -1179,7 +1182,7 @@ export class Game {
     this.range.sim.onMoney = e => { const c = this.range.scene?.counter, f = rangeFloat(e, c ?? null); if (f) this.floatMoney(f); };
     try { const v = parseFloat(localStorage.getItem('capitalempire.shadows') ?? ''); if (Number.isFinite(v)) this.shadowStrength = Math.max(0, Math.min(2, v)); } catch { /* default 1.1 */ }
     try { this.vectorShadows = VECTOR.on = localStorage.getItem('capitalempire.vectorShadows') !== '0'; } catch { /* default on */ }
-    this.gl.initVector(vectorMesh());
+    this.gl.initVector(vectorMesh()); releaseVectorMeshData(); // T172: the mesh's data is on the GPU now
     try { localStorage.removeItem('capitalempire.grassArt'); } catch { /* the old gear menu's Grass setting: gone, the painted art always */ }
     this.grassArt = import.meta.env.DEV && new URLSearchParams(location.search).get('grass') === 'photo' ? 'photo' : 'painted';
     this.ground.grassArt = this.grassArt;
@@ -1254,8 +1257,9 @@ export class Game {
       try {
         const b = await createImageBitmap(await (await fetch(row[2]!)).blob()), w = b.width, h = b.height, g = new OffscreenCanvas(w, h).getContext('2d', { willReadFrequently: true })!;
         g.drawImage(b, 0, 0); b.close();
-        const rgba = g.getImageData(0, 0, w, h).data, data = new Uint8Array(w * h); for (let i = 0; i < w * h; i++) data[i] = rgba[i * 4 + 3]!;
-        return { w, h, data };
+        const rgba = g.getImageData(0, 0, w, h).data, bits = new Uint8Array((w * h + 7) >> 3);
+        for (let i = 0; i < w * h; i++) if (rgba[i * 4 + 3]! > PICK_ALPHA) bits[i >> 3]! |= 1 << (i & 7);
+        return { w, h, bits };
       } catch { return null; }
     }));
     tick(0.3);
@@ -2867,7 +2871,7 @@ export class Game {
       if (!a) return p;
       let u = (X - r[0]) / (r[2] - r[0]); if (p.flip) u = 1 - u;
       const v = (Y - r[1]) / (r[3] - r[1]), px = clamp(Math.floor((u0 + (u1 - u0) * u) * a.w), 0, a.w - 1), py = clamp(Math.floor((v0 + (v1 - v0) * v) * a.h), 0, a.h - 1);
-      if (a.data[py * a.w + px]! > 20) return p;
+      const i = py * a.w + px; if ((a.bits[i >> 3]! >> (i & 7)) & 1) return p;
     }
     return null;
   }

@@ -82,6 +82,21 @@ export function withGroundLevers(boot: BootOptions, spec: string): BootOptions {
   return out;
 }
 
+/* ---- T172 (#403): a dev build's way to measure the memory budgets one at a time ---- */
+/** the numeric boot options a dev build's ?boot=<key>:<value>,... may set (a value of null: the game's own default) */
+export const BOOT_NUMBERS = ['atlasMB', 'atlasKeep', 'groundPx', 'tileSources', 'paintedSources'] as const;
+/** a boot with the named numbers set (?boot=atlasKeep:2,tileSources:12); unknown keys and values that are not numbers are ignored */
+export function withBootNumbers(boot: BootOptions, spec: string): BootOptions {
+  const out: BootOptions = { ...boot };
+  for (const part of spec.split(',')) {
+    const [k, v] = part.split(':').map(s => s.trim()) as [string, string | undefined];
+    if (!(BOOT_NUMBERS as readonly string[]).includes(k)) continue;
+    const n = v === 'null' ? null : Number(v); if (n !== null && !Number.isFinite(n)) continue;
+    if (k === 'groundPx') { if (n !== null) out.groundPx = n; } else (out as unknown as Record<string, number | null>)[k] = n;
+  }
+  return out;
+}
+
 /** the world rect (px at zoom 1) the camera's centre keeps to over a tile box: the box's corners' bounding rect (the iso diamond's) */
 export function boxView(b: BBox): { X0: number; Y0: number; X1: number; Y1: number } {
   const xs = [worldX(b[0], b[1]), worldX(b[2], b[1]), worldX(b[0], b[3]), worldX(b[2], b[3])], ys = [worldY(b[0], b[1]), worldY(b[2], b[1]), worldY(b[0], b[3]), worldY(b[2], b[3])];

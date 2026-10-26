@@ -147,6 +147,8 @@ export type ToWorker =
   | { t: 'tilesAhead'; bands: number[] }
   /** T168: textures the open tool can lay (the Course tool's brushes), made ahead while the worker is idle */
   | { t: 'prewarm'; tex: string[] }
+  /** T172: report the pixels the worker holds, by owner (a 'log' line `mem {...}`, MB of RGBA8; scripts/perf/memory.mjs) */
+  | { t: 'memProbe' }
   | { t: 'paint'; id: number; kind: TileKind; i: number; j: number; L: number; artL?: number; /** the tile spec the tile set families are laid at (painted-tiles.ts tileSpec: the band and the DPR; T145, T150) */ ts?: number };
 
 export type FromWorker =
