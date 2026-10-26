@@ -232,7 +232,7 @@ export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave): 
   let garage: RangeScene['garage'] = null;
   if (st.parking) {
     const a = P(GARAGE[0], GARAGE[2]), b = P(GARAGE[1], GARAGE[3]), box: [number, number, number, number] = [Math.min(a.x, b.x), Math.min(a.y, b.y), Math.max(a.x, b.x), Math.max(a.y, b.y)];
-    put('garage', GARAGE_ART, (GARAGE[0] + GARAGE[1]) / 2, (GARAGE[2] + GARAGE[3]) / 2, (toRoad + 1) % 4, { fit: GARAGE_FIT, foot: box, label: 'Stand In for the car park building' });
+    put('carpark', GARAGE_ART, (GARAGE[0] + GARAGE[1]) / 2, (GARAGE[2] + GARAGE[3]) / 2, (toRoad + 1) % 4, { fit: GARAGE_FIT, foot: box, label: 'Stand In for the car park building' });
     const r0 = P(GARAGE_RAMP.u, GARAGE_RAMP.v), r1 = P(GARAGE_RAMP.u - 1, GARAGE_RAMP.v), l0 = P(LOT_BESIDE[0], LOT_BESIDE[2]), l1 = P(LOT_BESIDE[1], LOT_BESIDE[3]);
     garage = {
       box, ramp: r0, into: { x: r1.x - r0.x, y: r1.y - r0.y }, door: P(GARAGE_DOOR.u, GARAGE_DOOR.v),

@@ -12,11 +12,11 @@ import { carHeading, facings } from '../traffic';
 import { PRESETS, presetTex, surfacePreset, type Stripes } from '../paint-presets';
 import { SURFACE_TEX } from './paintcourse';
 import type { GolfSurface } from './types';
-import { RangeSim, rangeScene, rangeStats, upgradeWhy, withPrice, withUpgrade, RANGE_UPGRADES, type CarSlot, type DemandCtx, type RangeBizSave, type RangeClock, type RangeScene, type RangeUpgradeId, type ScenePatch, type ScenePiece } from './rangebiz';
+import { RangeSim, garageSlots, rangeScene, rangeStats, upgradeWhy, withPrice, withUpgrade, RANGE_UPGRADES, type CarSlot, type DemandCtx, type RangeBizSave, type RangeClock, type RangeScene, type RangeUpgradeId, type ScenePatch, type ScenePiece } from './rangebiz';
 import { CELL_T, type Grid, type GridDiff } from '../ext/course-grid';
 import { inPractice, practiceWords, scanPractice, type PracticeScan, type PracticeState } from './practice';
 import { PRACTICE_APPEAL, PRACTICE_FEE, PRACTICE_IDS, practiceAppeal, rangeScale, rangeUpkeep, type PracticeId } from './rangesave';
-import { COFFEE, EXTRA_IDS, HOME_AT, HOME_NAME, KIOSK_SHARE, LESSON, LESSON_SHARE, homeStage, needsOf, type HomeStage } from './rangesave';
+import { COFFEE, EXTRA_IDS, GARAGE_CARS, HOME_AT, HOME_NAME, KIOSK_SHARE, LESSON, LESSON_SHARE, homeStage, needsOf, type HomeStage } from './rangesave';
 
 /** what the host needs of the engine */
 export interface RangeHostCtx {
@@ -24,6 +24,9 @@ export interface RangeHostCtx {
   biz(): RangeBizSave | null; plot(): { rect: Rect; facing: 0 | 1 | 2 | 3 } | null;
   /** the range's car park: its bays (point and heading) and its entrance; null while it is not built */
   carPark(): { bays: CarSlot[]; entrance: Pt } | null;
+  /** the range's car park (the lot on the plot) laid on rect (world) instead (T146: it keeps its near half beside the car park building); missing:
+   *  the lot stays as it is */
+  fitPark?(rect: Rect): void;
   /** places a scene piece as an auto prop (turned to its view, at its size, the key its auto) and removes one */
   addPiece(p: ScenePiece, key: string): Prop | null; removeProp(p: Prop): void;
   /** the ground patches of a key (null drops them), the cart paths to lay (cement slab, committed), the trees to clear off a box */
@@ -108,8 +111,14 @@ export class RangeHost {
     this.ctx.setGround('range:ground', sc.patches.map((p, i) => ({ pts: p.pts, tex: patchTex(p.surf), paint: { s: 1, a: 0, b: 0, bt: 'kerb', z: -1e6 + i, ...(p.edge ? { e: p.edge } : {}), ...(p.mow && mw ? { mw } : {}) } })));
     if (!this.scene) { this.ctx.clearTrees(sc.box); this.ctx.clearTrees(sc.practice.box); }
     if (!b.paths) { this.ctx.layPaths(sc.paths); b.paths = true; this.ctx.save(); }
+    // the car park building (T146): the lot keeps its near half beside it, the cart path is laid on round it once (an old save's first load too),
+    // and its places follow the lot's bays (the lot's first: the nearest)
+    if (sc.garage) {
+      this.ctx.fitPark?.(sc.garage.lot);
+      if (!b.garage) { this.ctx.layPaths([sc.garage.path]); b.garage = true; this.ctx.save(); }
+    }
     this.scene = sc;
-    this.sim.setScene(sc, cp?.bays ?? [], cp?.entrance ?? null);
+    this.sim.setScene(sc, [...(cp?.bays ?? []), ...(cp && sc.garage ? garageSlots(sc.garage, GARAGE_CARS) : [])], cp?.entrance ?? null);
   }
   /** everything off the map (a new game, a load, not a range start) */
   drop(): void {
@@ -203,6 +212,11 @@ export class RangeHost {
         const y = p.y - (t.low ? 1.2 : 2.6) * 32 * ze - (t.low ? 0 : px), tw = c.measureText(t.text).width + 8 * dpr;
         c.fillStyle = 'rgba(16,24,16,0.8)'; c.beginPath(); c.roundRect(p.x - tw / 2, y - px * 0.75, tw, px * 1.5, 3 * dpr); c.fill();
         c.fillStyle = '#f8fafc'; c.fillText(t.text, p.x, y + 0.5 * dpr);
+      }
+      // the car park building's count (T146), as the car parks' own "P · parked/bays"
+      if (sc.garage) {
+        const q = screen(sc.garage.label.x, sc.garage.label.y), t = `P · ${this.sim.parked(true)}/${GARAGE_CARS}`;
+        if (on(q, 100)) { c.font = `bold ${12 * dpr}px ui-sans-serif, system-ui, sans-serif`; c.lineJoin = 'round'; c.lineWidth = 3 * dpr; c.strokeStyle = 'rgba(2,6,23,0.9)'; c.strokeText(t, q.x, q.y); c.fillStyle = '#f8fafc'; c.fillText(t, q.x, q.y); }
       }
       // the ball picker cart's stand-in pill (T133: the eight-way wagon stands in for it)
       const pk = this.sim.view().picker;
@@ -353,6 +367,9 @@ export class RangeHost {
         words: id === 'kiosk' ? `${Math.round(KIOSK_SHARE * 100)}% of golfers buy a $${COFFEE} coffee · ${this.sim.today.kioskQueue} in line` : `${Math.round(LESSON_SHARE * 100)}% of golfers take a $${LESSON} lesson on the academy's two bays` })),
       home: { stage: homeStage(b), name: HOME_NAME[homeStage(b)], next: homeStage(b) < 2 ? { name: HOME_NAME[homeStage(b) + 1]!, at: HOME_AT[homeStage(b) as 0 | 1] } : null, total: b.total.takings },
       upstairs: this.sim.today.upstairs,
+      // the car park (T146): the range's cars parked now of its bays (the lot's and the building's), the cars a full car park turned away today,
+      // and the building's own count
+      parking: { parked: this.sim.parked(), bays: this.sim.parkBays, turned: this.sim.today.noPark, garage: st.parking ? { parked: this.sim.parked(true), cars: GARAGE_CARS } : null },
     };
   }
 }
