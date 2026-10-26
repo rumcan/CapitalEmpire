@@ -22,6 +22,7 @@ import { surfaceOfTex } from './golf/costs';
 import { CELL as COURSE_CELL } from './golf/paintcourse';
 import { EDGE_LOOKS, bandRamp, edgeBox, edgeField, edgeImages, edgeReach, edgeRes, featherTiles, type EdgeImage } from './paint-edges';
 import { CH_SIZE } from './ext/course-height';
+import { CART_RIM, CART_SURFACE, cartCast, cartRim } from './cart-bevel';
 import { HEIGHT_LIGHT_STRENGTH, HL_MASK, LUMA_SIGMA_PER_L, heightLightGrid, heightLightPictures, heightLightRect, type HeightLightGrid } from './ext/course-height/light';
 import { PaintedGround, type LayLevel } from './painted-ground';
 import { coversMap } from './painted-families';
@@ -66,13 +67,6 @@ const PAINT_COL = new Map(PAINT_TEXES.map(t => [t.id as string, t.col] as [strin
 /** the painted ground textures a photo (grass-art PHOTO_TEX) replaces in the ground layers: lot patches, verges, gravel roads (the dark grey
  *  Asphalt photo, the owner's call 2026-10-21), water, and the river and creek banks (the dirt photo, the owner 2026-10-21) */
 const GROUND_PHOTO = new Map<string, string>([['dirt', 'dirt'], ['gravel', 'gravel'], ['roadgravel', 'asphalt'], ['field', 'field'], ['water', 'waterDark'], ['bank', 'dirt'], ['creek', 'dirt']]);
-/** the starter cart paths' painted looks (T084, the hand-painted game-art style of T082), by road surface: a flat fill (multiplied by the grime
- *  blotches), the bevel rims (the sun at the upper right: lit rim on the upper-right edge, shade rim on the lower-left) with their strengths, a
- *  dirt path's feathered worn halo, and the slabs' thin cast shade. The planner's flat colour is plan */
-export const CART_SURFACE = new Map<string, { fill: string; plan: string; lit: string; litA: number; shade: string; shadeA: number; halo?: string; cast?: string }>([
-  ['dirt', { fill: '#cba673', plan: '#b08f60', lit: '#fbe8c0', litA: 0.5, shade: '#5e4127', shadeA: 0.3, halo: 'rgba(98,74,42,0.55)' }],
-  ['cement', { fill: '#d4d0c7', plan: '#bdb9b0', lit: '#fdfaf2', litA: 0.75, shade: '#6c675e', shadeA: 0.5, cast: 'rgba(18,22,16,0.32)' }],
-]);
 /** a ground photo drawn this many times its size (the owner, 2026-10-21: the gravel roads' asphalt "a lot" bigger); the hex-mixed mosaic
  *  still has 43 px a tile at 3x, above the 38 the closest zoom asks for */
 const GROUND_SCALE = new Map<string, number>([['roadgravel', 3]]);
@@ -718,27 +712,28 @@ export class GroundPainter {
       if (plain.length) { ctx.save(); ctx.filter = 'blur(1px)'; ctx.strokeStyle = 'rgba(12,10,8,0.5)'; for (const f of plain) ring(ctx, f, Math.max(0.2, 2 * minW)); ctx.restore(); ctx.setTransform(M); }
       // ---- 5. asphalt: the painted mosaic in ground space, per class tone
       // ---- 5a. the starter cart paths (T084), first, so every road meeting one paints over it: packed dirt and cement slabs in flat painted
-      // colour with soft blotches (the grime layer), a feathered worn halo round the dirt, a thin cast shade under the slabs' lower-left edge, and
-      // the sun's bevel (the sun at the upper right): a light rim on each path's upper-right edge, a shade rim on its lower-left edge. Their
-      // slab joints, wheel ruts and centre grass are markings (8); a dirt path's edge tufts are litter (10)
+      // colour with soft blotches (the grime layer), a feathered worn halo round the dirt, a thin cast shade under the slabs falling at 145°, and
+      // the sun's bevel (cart-bevel.ts; the sun at the upper right): a light rim on the edges facing it, a shade rim on those facing away. The
+      // cast and the rims step the paths themselves in tile space, never this chunk's mask, so they stay on the paths' edges across the chunk's
+      // border (T139). Their slab joints, wheel ruts and centre grass are markings (8); a dirt path's edge tufts are litter (10)
       const cartF = asph.filter(f => CART_SURFACE.has(f.tex));
       if (cartF.length) {
-        const tpx = Math.hypot(M.a, M.b), shift = (s: number) => [M.c * s, M.d * s] as const; // px per tile; a tile-space (0, s) step on screen (+y: toward the lower left)
+        const tpx = Math.hypot(M.a, M.b); // px per tile
         for (const [kind, look] of CART_SURFACE) {
           const feats = cartF.filter(f => f.tex === kind); if (!feats.length) continue;
           const m = maskOf('cartMask', feats);
           if (!lite && look.halo) { ctx.save(); ctx.filter = `blur(${Math.max(1, 0.14 * tpx).toFixed(1)}px)`; ctx.lineJoin = 'round'; ctx.strokeStyle = look.halo; for (const f of feats) ring(ctx, f, 0.4); ctx.restore(); ctx.setTransform(M); }
-          if (!lite && look.cast) { const cb = this.buffer('cartRim', W, H), cg = ctx2d(cb), [dx, dy] = shift(0.09); cg.drawImage(m, dx, dy); cg.globalCompositeOperation = 'source-in'; cg.fillStyle = look.cast; cg.fillRect(0, 0, W, H); composite(cb); }
+          if (!lite && look.cast) { const cb = this.buffer('cartRim', W, H); cartCast(ctx2d(cb), feats, M, W, H, look.cast); composite(cb); }
+          // the body: the flat fill and its two rims, then the grime blotches multiplied over all three, so the light and the shade keep the
+          // surface's texture (T110: no smooth shine)
           const bb = this.buffer('cartBody', W, H), bg = ctx2d(bb);
           bg.fillStyle = look.fill; bg.fillRect(0, 0, W, H);
+          if (!lite) for (const [col, s, alpha] of [[look.lit, CART_RIM, look.litA], [look.shade, -CART_RIM, look.shadeA]] as const) {
+            const rb = this.buffer('cartRim', W, H); cartRim(ctx2d(rb), m, feats, M, W, H, col, s);
+            bg.globalAlpha = alpha; bg.drawImage(rb, 0, 0); bg.globalAlpha = 1;
+          }
           bg.setTransform(M); bg.globalCompositeOperation = 'multiply'; bg.fillStyle = this.screenPattern(bg, 'grime', L, X0, Y0, Minv); bg.fillRect(tx0, ty0, tx1 - tx0, ty1 - ty0); bg.globalCompositeOperation = 'source-over';
           through(bb, m); composite(bb);
-          if (!lite) for (const [col, s, alpha] of [[look.lit, 0.11, look.litA], [look.shade, -0.11, look.shadeA]] as const) {
-            // a rim: the path's mask less the same mask stepped s tiles along y (a positive step leaves its upper-right edge, a negative its lower-left)
-            const rb = this.buffer('cartRim', W, H), rg = ctx2d(rb), [dx, dy] = shift(s);
-            rg.drawImage(m, 0, 0); rg.globalCompositeOperation = 'source-in'; rg.fillStyle = col; rg.fillRect(0, 0, W, H);
-            rg.globalCompositeOperation = 'destination-out'; rg.drawImage(m, dx, dy); composite(rb, 'source-over', alpha);
-          }
         }
       }
       // gravel roads are painted first, with their own pattern and no tones, so a paved road meeting one paints over it
