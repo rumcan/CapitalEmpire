@@ -35,7 +35,7 @@ import { CELL_T, SURF, fillPolygon, makeGrid, paintDisc, type Grid } from '../co
 import { spawnSplash, stepSplash, type SplashKind, type SplashParticle } from '../course-fx';
 import { HH, HW } from '../../iso';
 import { CAST, castShear } from '../../cast-shadow';
-import { DARK_RGB, LIGHT_RGB, SHADOW_RGB, edgeProfileOf, type EdgeProfile } from '../../paint-edges';
+import { DARK_RGB, edgeProfileOf, type EdgeProfile } from '../../paint-edges';
 import { BORDER_TEXES, borderW, roundCorners, type PaintArea } from '../../paint';
 import { SURF_SURFACE, surfOfSurface } from '../course-grid/areas';
 import { surfaceOfTex, unitBuildCost } from '../../golf/costs';
@@ -470,6 +470,37 @@ interface Sprite { key: string; c: SpriteCanvas; sh: SpriteCanvas; rx: number; r
 const thickOf = (ry: number, d: number) => clamp(0.3 * ry, 4 * d, 15 * d);
 
 const rgba = (c: readonly number[], a: number) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
+/** the puck's own shade: DARK_RGB (the ground's one cool shade, T110) multiplied over its pixels, SHADE_GAIN times the alpha it had with the
+ *  old darker rim colour (as dark in green) */
+const SHADE_GAIN = 1.47, shade = (a: number) => rgba(DARK_RGB, Math.min(1, a * SHADE_GAIN));
+/** the contact shadow and foot line laid over the game (another canvas: no multiply there), near-black so their alpha darkens the ground
+ *  in proportion and its texture stays (the old cast-shadow colour) */
+const CONTACT_RGB = [14, 10, 34] as const;
+/** the warm tint of the puck's textured light (renderer.ts SHINE_TINT) and its gap inside an edge and the ramp after it, device px per css px
+ *  (T110) */
+const PUCK_SHINE = 'rgb(255,232,176)', PUCK_GAP = 1.2, PUCK_RAMP = 0.8;
+let shineBuf: OffscreenCanvas | HTMLCanvasElement | null = null, maskBuf: OffscreenCanvas | HTMLCanvasElement | null = null;
+/** a scratch canvas at least w x h (null where there is none to make: the headless tests' stub contexts, which then go without the shine) */
+const scratch = (c: OffscreenCanvas | HTMLCanvasElement | null, w: number, h: number) => (c && c.width >= w && c.height >= h ? c
+  : typeof OffscreenCanvas !== 'undefined' ? new OffscreenCanvas(w, h) : typeof document !== 'undefined' ? Object.assign(document.createElement('canvas'), { width: w, height: h }) : null);
+/** a light laid on g textured by what g already holds (the owner's rule T110): each px gains its own colour squared times `tint` and k,
+ *  through the alpha `mask` draws (in g's canvas px, into a cleared buffer: it may clip), so mid-tones and lit tips brighten and dark gaps
+ *  stay dark, and nothing lands where g is clear; never a flat screen wash */
+function shineOn(g: CanvasRenderingContext2D, tint: string, k: number, mask: (m: CanvasRenderingContext2D) => void) {
+  const w = g.canvas.width, h = g.canvas.height;
+  shineBuf = scratch(shineBuf, w, h); maskBuf = scratch(maskBuf, w, h); if (!shineBuf || !maskBuf) return;
+  const m = shineBuf.getContext('2d') as CanvasRenderingContext2D | null, k2 = maskBuf.getContext('2d') as CanvasRenderingContext2D | null; if (!m || !k2) return;
+  k2.save(); k2.setTransform(1, 0, 0, 1, 0, 0); k2.globalAlpha = 1; k2.globalCompositeOperation = 'source-over'; k2.clearRect(0, 0, maskBuf.width, maskBuf.height); mask(k2); k2.restore();
+  m.save(); m.setTransform(1, 0, 0, 1, 0, 0); m.globalAlpha = 1; m.globalCompositeOperation = 'source-over'; m.clearRect(0, 0, shineBuf.width, shineBuf.height);
+  m.drawImage(g.canvas, 0, 0);
+  m.globalCompositeOperation = 'multiply'; m.drawImage(g.canvas, 0, 0); m.fillStyle = tint; m.fillRect(0, 0, w, h);
+  // only where g holds the puck (a multiply over clear px makes them the tint), then only through the mask
+  m.globalCompositeOperation = 'destination-in'; m.drawImage(g.canvas, 0, 0); m.drawImage(maskBuf, 0, 0);
+  m.restore();
+  g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = 'lighter';
+  for (let left = k; left > 0.01; left -= 1) { g.globalAlpha = Math.min(1, left); g.drawImage(shineBuf, 0, 0, w, h, 0, 0, w, h); }
+  g.restore();
+}
 
 /** paints a puck sprite for a brush of R tiles whose top face is rx, ry device px across (so s = rx / (R sqrt2 HW) device px per world px:
  *  the map scale it was bucketed at): the wall, the top face in the brush's photo with its tone and border band, the sun's light and shade,
@@ -516,17 +547,22 @@ function paintPuck(g: CanvasRenderingContext2D, st: PuckStyle, kind: string, era
   }
   // the sun: the right of the wall faces it, the left turns away; the foot sits in its own shade
   const hg = g.createLinearGradient(cx - rx, 0, cx + rx, 0);
-  hg.addColorStop(0, rgba(DARK_RGB, 0.62)); hg.addColorStop(0.45, rgba(DARK_RGB, 0.18)); hg.addColorStop(1, rgba(DARK_RGB, 0));
+  hg.addColorStop(0, shade(0.62)); hg.addColorStop(0.45, shade(0.18)); hg.addColorStop(1, shade(0));
   g.globalCompositeOperation = 'multiply'; g.fillStyle = hg; g.fillRect(0, 0, g.canvas.width, g.canvas.height);
-  const lg = g.createLinearGradient(cx - rx, 0, cx + rx, 0);
-  lg.addColorStop(0.5, rgba(LIGHT_RGB, 0)); lg.addColorStop(0.9, rgba(LIGHT_RGB, 0.32)); lg.addColorStop(1, rgba(LIGHT_RGB, 0.2));
-  g.globalCompositeOperation = 'screen'; g.fillStyle = lg; g.fillRect(0, 0, g.canvas.width, g.canvas.height);
+  // the foot's own shade (ambient occlusion where the wall meets the ground), multiplied in the shade
   const vg = g.createLinearGradient(0, cy + ry * 0.4, 0, cy + ry + thick);
-  vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(10,8,20,0.38)');
+  vg.addColorStop(0, shade(0)); vg.addColorStop(1, shade(0.55));
   g.globalCompositeOperation = 'multiply'; g.fillStyle = vg; g.fillRect(0, 0, g.canvas.width, g.canvas.height);
   g.globalCompositeOperation = 'source-over'; g.restore();
+  // the sun on the wall's right: a light textured by the wall's own soil or sand (T110), inside the wall
+  shineOn(g, PUCK_SHINE, 1.4, m => {
+    const lg = m.createLinearGradient(cx - rx, 0, cx + rx, 0);
+    lg.addColorStop(0.5, 'rgba(255,255,255,0)'); lg.addColorStop(0.9, 'rgba(255,255,255,0.5)'); lg.addColorStop(1, 'rgba(255,255,255,0.32)');
+    m.beginPath(); m.ellipse(cx, cy, rx, ry, 0, 0, Math.PI); m.lineTo(cx - rx, cy + thick); m.ellipse(cx, cy + thick, rx, ry, 0, Math.PI, 0, true); m.closePath();
+    m.fillStyle = lg; m.fill();
+  });
   // the foot's contact line
-  g.beginPath(); g.ellipse(cx, cy + thick, rx, ry, 0, 0, Math.PI); g.strokeStyle = 'rgba(16,12,26,0.5)'; g.lineWidth = Math.max(1, 1.1 * d); g.stroke();
+  g.beginPath(); g.ellipse(cx, cy + thick, rx, ry, 0, 0, Math.PI); g.strokeStyle = rgba(CONTACT_RGB, 0.5); g.lineWidth = Math.max(1, 1.1 * d); g.stroke();
 
   // ---- the top face: the brush's photo in tile space (its period, scale and angle), its tone, its border band inside the edge
   g.save(); iso(); g.beginPath(); g.arc(0, 0, R, 0, Math.PI * 2); g.clip();
@@ -546,30 +582,43 @@ function paintPuck(g: CanvasRenderingContext2D, st: PuckStyle, kind: string, era
   //      laid like paint-edges' bevel; a soft sheen toward the sun
   const sunk = profile === 'sunken' || profile === 'water';
   const [la, da] = profile === 'raised' ? [0.5, 0.5] : profile === 'turf' ? [0.38, 0.4] : profile === 'sunken' ? [0.36, 0.55] : profile === 'water' ? [0.3, 0.45] : profile === 'crisp' ? [0.22, 0.32] : [0.28, 0.32];
-  const ux = SUN_X * rx, uy = SUN_Y * ry;
-  g.save(); g.beginPath(); g.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2); g.clip();
+  //      T110: the light is a shine textured by the face's own photo (its mid-tones and lit tips, never its dark gaps), a small gap inside
+  //      the edge; the shade multiplied in the cool shade
+  const ux = SUN_X * rx, uy = SUN_Y * ry, gap = PUCK_GAP * d, ramp = PUCK_RAMP * d;
   const rimW = Math.max(2 * d, 0.36 * ry);
-  const lightG = g.createLinearGradient(cx + (sunk ? -ux : ux), cy + (sunk ? -uy : uy), cx - (sunk ? -ux : ux), cy - (sunk ? -uy : uy));
-  lightG.addColorStop(0, rgba(LIGHT_RGB, la)); lightG.addColorStop(0.42, rgba(LIGHT_RGB, 0)); lightG.addColorStop(1, rgba(LIGHT_RGB, 0));
-  const darkG = g.createLinearGradient(cx + (sunk ? -ux : ux), cy + (sunk ? -uy : uy), cx - (sunk ? -ux : ux), cy - (sunk ? -uy : uy));
-  darkG.addColorStop(0, rgba(DARK_RGB, 0)); darkG.addColorStop(0.55, rgba(DARK_RGB, 0)); darkG.addColorStop(1, rgba(DARK_RGB, da));
-  for (const [grad, op] of [[lightG, 'screen'], [darkG, 'multiply']] as const) {
-    g.globalCompositeOperation = op; g.strokeStyle = grad;
-    for (let k = 1; k <= 3; k++) { g.globalAlpha = 0.45; g.lineWidth = (rimW * 2 * k) / 3; g.beginPath(); g.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2); g.stroke(); }
-  }
-  g.globalAlpha = 1;
-  g.setTransform(1, 0, 0, ry / rx, 0, cy - (cy * ry) / rx);
-  const sheen = g.createRadialGradient(cx + 0.35 * ux, cy + (0.35 * uy * rx) / ry, 0, cx + 0.35 * ux, cy + (0.35 * uy * rx) / ry, rx * 1.05);
-  sheen.addColorStop(0, rgba(LIGHT_RGB, sunk ? 0.06 : 0.16)); sheen.addColorStop(1, rgba(LIGHT_RGB, 0));
-  g.globalCompositeOperation = 'screen'; g.fillStyle = sheen; g.fillRect(0, 0, g.canvas.width, (g.canvas.height * rx) / ry);
-  g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = 'source-over'; g.restore();
-
-  // ---- the rim: the top edge catches the sun on the right and fades to the left; the far edge glints up right
-  const eg = g.createLinearGradient(cx - rx, 0, cx + rx, 0);
-  eg.addColorStop(0, 'rgba(255,246,214,0.12)'); eg.addColorStop(0.65, 'rgba(255,246,214,0.45)'); eg.addColorStop(1, 'rgba(255,246,214,0.85)');
-  g.strokeStyle = eg; g.lineWidth = Math.max(1, 1.1 * d);
-  g.beginPath(); g.ellipse(cx, cy, rx, ry, 0, 0, Math.PI); g.stroke();
-  g.beginPath(); g.ellipse(cx, cy, rx, ry, 0, -Math.PI * 0.62, -Math.PI * 0.02); g.globalAlpha = 0.7; g.stroke(); g.globalAlpha = 1;
+  const sunAxis = (c: CanvasRenderingContext2D) => c.createLinearGradient(cx + (sunk ? -ux : ux), cy + (sunk ? -uy : uy), cx - (sunk ? -ux : ux), cy - (sunk ? -uy : uy));
+  const face = (c: CanvasRenderingContext2D, ex = 0) => { c.beginPath(); c.ellipse(cx, cy, Math.max(1, rx - ex), Math.max(1, ry - (ex * ry) / rx), 0, 0, Math.PI * 2); };
+  /** cuts the gap inside the face's edge out of a mask: nothing within `gap`, half over the ramp after it */
+  const inset = (m: CanvasRenderingContext2D) => {
+    m.globalCompositeOperation = 'destination-out'; m.globalAlpha = 1;
+    for (const [w, a] of [[gap + ramp, 0.5], [gap, 1]] as const) { m.strokeStyle = `rgba(0,0,0,${a})`; m.lineWidth = 2 * w; face(m); m.stroke(); }
+  };
+  g.save(); face(g); g.clip();
+  const darkG = sunAxis(g);
+  darkG.addColorStop(0, shade(0)); darkG.addColorStop(0.55, shade(0)); darkG.addColorStop(1, shade(da));
+  g.globalCompositeOperation = 'multiply'; g.strokeStyle = darkG;
+  for (let k = 1; k <= 3; k++) { g.globalAlpha = 0.45; g.lineWidth = (rimW * 2 * k) / 3; face(g); g.stroke(); }
+  g.globalAlpha = 1; g.globalCompositeOperation = 'source-over'; g.restore();
+  shineOn(g, PUCK_SHINE, 1.6, m => {
+    m.save(); face(m); m.clip();
+    // the light rim on the sun's side (its band as before, the gap cut out below) and a soft sheen toward the sun
+    const lightG = sunAxis(m);
+    lightG.addColorStop(0, `rgba(255,255,255,${la})`); lightG.addColorStop(0.42, 'rgba(255,255,255,0)'); lightG.addColorStop(1, 'rgba(255,255,255,0)');
+    m.strokeStyle = lightG; for (let k = 1; k <= 3; k++) { m.globalAlpha = 0.45; m.lineWidth = (rimW * 2 * k) / 3; face(m); m.stroke(); }
+    m.globalAlpha = 1; m.setTransform(1, 0, 0, ry / rx, 0, cy - (cy * ry) / rx);
+    const sheen = m.createRadialGradient(cx + 0.35 * ux, cy + (0.35 * uy * rx) / ry, 0, cx + 0.35 * ux, cy + (0.35 * uy * rx) / ry, rx * 1.05);
+    sheen.addColorStop(0, `rgba(255,255,255,${sunk ? 0.06 : 0.16})`); sheen.addColorStop(1, 'rgba(255,255,255,0)');
+    m.globalCompositeOperation = 'lighter'; m.fillStyle = sheen; m.fillRect(0, 0, m.canvas.width, (m.canvas.height * rx) / ry);
+    m.setTransform(1, 0, 0, 1, 0, 0);
+    // ---- the rim: the top edge catches the sun on the right and fades to the left; the far edge glints up right (a gap inside the edge)
+    const eg = m.createLinearGradient(cx - rx, 0, cx + rx, 0);
+    eg.addColorStop(0, 'rgba(255,255,255,0.12)'); eg.addColorStop(0.65, 'rgba(255,255,255,0.45)'); eg.addColorStop(1, 'rgba(255,255,255,0.85)');
+    m.globalCompositeOperation = 'lighter'; m.strokeStyle = eg; m.lineWidth = Math.max(1, 1.1 * d);
+    const ex = gap + ramp + m.lineWidth / 2;
+    m.beginPath(); m.ellipse(cx, cy, rx - ex, ry - (ex * ry) / rx, 0, 0, Math.PI); m.stroke();
+    m.beginPath(); m.ellipse(cx, cy, rx - ex, ry - (ex * ry) / rx, 0, -Math.PI * 0.62, -Math.PI * 0.02); m.globalAlpha = 0.7; m.stroke(); m.globalAlpha = 1;
+    inset(m); m.restore();
+  });
 
   // ---- rub out (T118): the puck is the surface you get back, with a dashed line round it (one meaning per line style: dashed = erase); T138:
   //      the line runs outside the face (its back edge, down its sides and along its foot), so the preview stays clear
@@ -705,7 +754,7 @@ function paintShadow(g: CanvasRenderingContext2D, rx: number, ry: number) {
   g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, w, h);
   g.setTransform(1, 0, 0, ry / rx, 0, (h / 2) * (1 - ry / rx));
   const rg = g.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, rx * 1.15);
-  rg.addColorStop(0, rgba(SHADOW_RGB, 0.62)); rg.addColorStop(0.55, rgba(SHADOW_RGB, 0.4)); rg.addColorStop(0.8, rgba(SHADOW_RGB, 0.14)); rg.addColorStop(1, rgba(SHADOW_RGB, 0));
+  rg.addColorStop(0, rgba(CONTACT_RGB, 0.62)); rg.addColorStop(0.55, rgba(CONTACT_RGB, 0.4)); rg.addColorStop(0.8, rgba(CONTACT_RGB, 0.14)); rg.addColorStop(1, rgba(CONTACT_RGB, 0));
   g.fillStyle = rg; g.fillRect(0, 0, w, h * (rx / ry));
   g.setTransform(1, 0, 0, 1, 0, 0);
 }

@@ -20,7 +20,7 @@ import { courseImages, courseRes, lineField } from './ext/course-grid/field';
 import { grassSurface, type GrassCellView } from './ext/grass-management';
 import { surfaceOfTex } from './golf/costs';
 import { CELL as COURSE_CELL } from './golf/paintcourse';
-import { AREA_SHADE, EDGE_LOOKS, areaLightEdge, areaShadeImages, areaShadeReach, areaShadow, bandRamp, edgeBox, edgeField, edgeImages, edgeReach, edgeRes, featherTiles, type EdgeImage } from './paint-edges';
+import { AREA_SHADE, EDGE_LOOKS, areaLightEdge, areaShadeImages, areaShadeReach, areaShadow, bandRamp, edgeBox, edgeField, edgeImages, edgeReach, edgeRes, featherTiles, litBox, type EdgeImage } from './paint-edges';
 import { CH_SIZE } from './ext/course-height';
 import { CART_RIM, CART_SURFACE, cartCast, cartRim } from './cart-bevel';
 import { faceShift, kerbFace, stepReach, upScreen } from './kerb-face';
@@ -1201,15 +1201,20 @@ export class GroundPainter {
       if (!eb) continue;
       const [ex0, ey0, ex1, ey1] = eb, field = edgeField(p.pts, ex0, ey0, ex1 - ex0, ey1 - ey0, res, reach, COURSE_CELL);
       const im = look ? edgeImages(field, look, feather) : null, sd = sh ? areaShadeImages(field, sh, !lite && L >= AREA_SHADE.lightL, feather) : null;
-      if (im) put(ctx, im.shadow, ex0, ey0, 'source-over');
+      // the cast shadow on the ground under it, multiplied in the cool shade so the ground keeps its texture (T110)
+      if (im) put(ctx, im.shadow, ex0, ey0, 'multiply');
       layer ??= this.buffer('paintEdge', ctx.canvas.width, ctx.canvas.height);
-      const g = ctx2d(layer);
+      const g = ctx2d(layer), path = polyPath(p.pts);
       this.drawPaint(g, p, L, X0, Y0, M, Minv, box, lite, feather);
-      if (im) { put(g, im.light, ex0, ey0, 'screen'); put(g, im.dark, ex0, ey0, 'multiply'); }
+      if (im) {
+        // the bevel's light rim: a shine textured by the area's own colours a small gap inside where its edge reads (T110), then its dark rim
+        const lb = litBox(im.light, ex0, ey0, res);
+        if (im.light && lb) this.areaLight(g, im.light, lb, path, ex0, ey0, res, L, M, areaLightEdge(feather));
+        put(g, im.dark, ex0, ey0, 'multiply');
+      }
       if (sd && (sd.shade || sd.light)) {
         // the edge shade (T136): multiplied in its cool colour inside the area only (a crisp area has no cut to trim what lands outside), then
         // the light on the sun side
-        const path = polyPath(p.pts);
         if (sd.shade) { g.save(); g.setTransform(M); g.clip(path); put(g, sd.shade, ex0, ey0, 'multiply'); g.restore(); }
         if (sd.light && sd.lightBox) this.areaLight(g, sd.light, sd.lightBox, path, ex0, ey0, res, L, M, areaLightEdge(feather));
       }
@@ -1391,10 +1396,12 @@ export class GroundPainter {
       } else if (ls.length) {
         // the profile's feather width; the light and shade fields only for a sunken surface's floor (raised edges are walls now)
         const prof = EDGE_LOOKS[ls[0]!.l.e] ?? null, f = prof ? featherTiles(prof, L) : flatF, look = prof?.sunken ? prof : null;
-        const ims: { im: ReturnType<typeof courseImages>; x0: number; y0: number }[] = [];
+        const ims: { im: ReturnType<typeof courseImages>; x0: number; y0: number }[] = [], edgePath = new Path2D();
         if (!lite && look) {
           // every chunk here takes the field over its own box from all the surface's edges within reach (so a seam is lit as one curve)
           const reach = edgeReach(look, f), all = ls.flatMap(q => q.l.edges);
+          // the edges as a path: the floor light's gap is cut along them (T110)
+          for (const e of all) { if (e.length < 4) continue; edgePath.moveTo(e[0]!, e[1]!); for (let k = 2; k + 1 < e.length; k += 2) edgePath.lineTo(e[k]!, e[k + 1]!); }
           let ex0 = Infinity, ey0 = Infinity, ex1 = -Infinity, ey1 = -Infinity;
           for (const e of all) for (let k = 0; k + 1 < e.length; k += 2) { const x = e[k]!, y = e[k + 1]!; if (x < ex0) ex0 = x; if (x > ex1) ex1 = x; if (y < ey0) ey0 = y; if (y > ey1) ey1 = y; }
           for (const c of cs) {
@@ -1404,17 +1411,15 @@ export class GroundPainter {
             if (F.any) ims.push({ im: courseImages(F, look, f), x0, y0 });
           }
         }
-        for (const q of ims) put(q.im.shadow, q.x0, q.y0, 'source-over');                    // 1
+        for (const q of ims) put(q.im.shadow, q.x0, q.y0, 'multiply');                       // 1
         if (!lite) for (const { l } of ls) feather(l, l.soft ?? l.edges, f);                     // 2
         for (const { l } of ls) fill(l, l.fill);                                                   // 3
         if (COURSE_DIRT) for (const { c, l } of ls) if (c.grow) this.courseDirt(ctx, c, l, L, X0, Y0, M, Minv, r); // 4: every tier, the grow-in is the ground's state (P23 D5.1)
         for (const q of ims) {                                                                     // 5
-          // the light as a shine textured by the sand under it (T110: on its mid-tones and highlights only), the shade multiplied
-          const im = q.im.light;
-          if (im) this.shine(ctx, this.cacheBox(M, q.x0, q.y0, q.x0 + im.W / res, q.y0 + im.H / res, ctx), SHINE_TINT, 1.6, g => {
-            const sm = this.buffer('small', im.W, im.H); ctx2d(sm).putImageData(new ImageData(im.data as Uint8ClampedArray<ArrayBuffer>, im.W, im.H), 0, 0);
-            g.setTransform(M); g.imageSmoothingEnabled = true; g.drawImage(sm, q.x0, q.y0, im.W / res, im.H / res);
-          });
+          // the light as a shine textured by the sand under it (T110: on its mid-tones and highlights only), starting a small gap inside the
+          // lip (its edge reads at the outline: the feather lies outside), the shade multiplied
+          const im = q.im.light, lb = litBox(im, q.x0, q.y0, res);
+          if (im && lb) this.areaLight(ctx, im, lb, edgePath, q.x0, q.y0, res, L, M, 0, SHINE_TINT);
           put(q.im.dark, q.x0, q.y0, 'multiply');
         }
         if (!lite) {                                                                               // 6
@@ -1847,7 +1852,7 @@ export class GroundPainter {
    *  in: paint-edges areaLightEdge) cut at full resolution (none within AREA_SHADE.gap of it, half over the ramp after it: areaLightGap). It
    *  works in a buffer the size of the light's box (the tile box lb) and only in the rows of LIGHT_ROW cache px the lit band crosses, each over
    *  the band's span in it, so its cost follows the band, not the chunk (T136's bake cost) */
-  private areaLight(g: C2D, img: EdgeImage, lb: readonly number[], path: Path2D, x0: number, y0: number, res: number, L: number, M: DOMMatrix, e: number) {
+  private areaLight(g: C2D, img: EdgeImage, lb: readonly number[], path: Path2D, x0: number, y0: number, res: number, L: number, M: DOMMatrix, e: number, tint = RIM_TINT) {
     const cb = this.cacheBox(M, lb[0]!, lb[1]!, lb[2]!, lb[3]!, g); if (!cb) return;
     const [bx, by, bw, bh] = cb;
     // the rows: each lit image px (its centre on the canvas, grown by its bilinear footprint) widens the span of the rows it reaches
@@ -1868,7 +1873,7 @@ export class GroundPainter {
     const A = this.bufferAtLeast('areaLight', bw, bh), a = ctx2d(A), T = new DOMMatrix([1, 0, 0, 1, -bx, -by]), px = 1 / (TILE_PX * L);
     a.save(); a.setTransform(T); a.clip(strips);
     a.globalCompositeOperation = 'copy'; a.drawImage(g.canvas as CanvasImageSource, bx, by, bw, bh, bx, by, bw, bh);
-    a.globalCompositeOperation = 'multiply'; a.drawImage(g.canvas as CanvasImageSource, bx, by, bw, bh, bx, by, bw, bh); a.fillStyle = RIM_TINT; a.fillRect(bx, by, bw, bh);
+    a.globalCompositeOperation = 'multiply'; a.drawImage(g.canvas as CanvasImageSource, bx, by, bw, bh, bx, by, bw, bh); a.fillStyle = tint; a.fillRect(bx, by, bw, bh);
     a.setTransform(T.multiply(M)); a.globalCompositeOperation = 'destination-in'; a.imageSmoothingEnabled = true; a.drawImage(s, x0, y0, img.W / res, img.H / res);
     a.globalCompositeOperation = 'destination-out'; a.lineJoin = 'round';
     for (const [w, al] of [[e + AREA_SHADE.gap + AREA_SHADE.ramp, 0.5], [e + AREA_SHADE.gap, 1]] as const) { a.strokeStyle = `rgba(0,0,0,${al})`; a.lineWidth = Math.max(px, 2 * w); a.stroke(path); }

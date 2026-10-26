@@ -3,8 +3,8 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { SUN_TILE_DIR } from '../src/game/ext/course-height';
 import {
-  EDGE_LOOKS, bandRamp, castWeight, edgeBox, edgeField, edgeImages, edgeNormals, edgeProfileOf, edgeReach, edgeRes, edgeShade, featherAlpha,
-  featherTiles, isCellSeam, rimWeight, sunFacing, type EdgeImage,
+  AREA_SHADE, DARK_RGB, EDGE_LOOKS, SHADE_RGB, SHADOW_RGB, bandRamp, castWeight, edgeBox, edgeField, edgeImages, edgeNormals, edgeProfileOf, edgeReach,
+  edgeRes, edgeShade, featherAlpha, featherTiles, isCellSeam, litBox, rimWeight, sunFacing, type EdgeImage,
 } from '../src/game/paint-edges';
 import { PaintTool } from '../src/game/paint-tool';
 import { DEFAULT_STYLE, type PaintArea } from '../src/game/paint';
@@ -208,5 +208,36 @@ describe('paint edges: the ground patch', () => {
     assert.equal(PaintTool.patch({ ...base, tex: 'waterDark' }).paint?.e, 'water');
     assert.equal(PaintTool.patch({ ...base, tex: 'dirt', border: 1, btex: 'kerb' }).paint?.e, undefined);
     assert.equal(PaintTool.patch({ ...base, tex: 'dirt' }).paint?.e, 'flat');
+  });
+});
+
+describe('paint edges: the owner’s light rule (T110)', () => {
+  it('one cool shade for the dark rim, the cast shadow and the edge shade: multiplied, light enough to keep the texture, blue strongest', () => {
+    assert.deepEqual(DARK_RGB, SHADE_RGB); assert.deepEqual(SHADOW_RGB, SHADE_RGB); assert.deepEqual(AREA_SHADE.rgb, SHADE_RGB);
+    const [r, g, b] = SHADE_RGB;
+    assert.ok(b > g && g > r, 'cool: blue darkens least');
+    assert.ok(Math.min(r, g, b) >= 100, 'a multiply of it at full alpha still keeps 40% of the ground: the texture stays');
+    // the strongest rims and shadow stay multiplies of it (alpha at most 1), and a bunker's lip shade is the darkest
+    for (const l of Object.values(EDGE_LOOKS)) if (l) for (const v of [l.light, l.dark, l.shadow]) assert.ok(v >= 0 && v <= 1);
+    assert.ok(EDGE_LOOKS.sunken!.dark > EDGE_LOOKS.raised!.dark && EDGE_LOOKS.raised!.dark > EDGE_LOOKS.turf!.dark);
+  });
+
+  it('litBox: the tile box of an image’s lit px, grown by a px; null when nothing is lit', () => {
+    const W = 8, H = 6, res = 4, data = new Uint8ClampedArray(W * H * 4), img: EdgeImage = { data, W, H };
+    assert.equal(litBox(null, 0, 0, res), null);
+    assert.equal(litBox(img, 0, 0, res), null);
+    data[4 * (2 * W + 3) + 3] = 200; data[4 * (4 * W + 5) + 3] = 1;
+    assert.deepEqual(litBox(img, 10, 20, res), [10 + 2 / res, 20 + 1 / res, 10 + 7 / res, 20 + 6 / res]);
+  });
+
+  it('the light rim is a mask (the renderer textures it): lit only on the sun side, and nowhere deep inside', () => {
+    const look = EDGE_LOOKS.raised!, feather = featherTiles(look, 0.6), res = 4, pts = square(10, 10, 8);
+    const im = edgeImages(edgeField(pts, 6, 6, 16, 16, res, edgeReach(look, feather)), look, feather);
+    assert.ok(im.light && im.dark && im.shadow);
+    // the sun is toward -y and a little -x: the top and left edges are lit, the bottom right corner's inside is not
+    const box = litBox(im.light, 6, 6, res)!;
+    assert.ok(box[0] < 10.5 && box[1] < 10.5, `the lit box starts at the sun-facing edges: ${box}`);
+    assert.ok(alphaAt(im.light, 6, 6, res, 14.1, 10.4) > 20, 'lit inside the top edge');
+    assert.equal(alphaAt(im.light, 6, 6, res, 17.6, 17.6), 0, 'not inside the edges turned away');
   });
 });
