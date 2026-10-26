@@ -246,7 +246,7 @@ type CourseAreaRec = CourseArea & { hole?: number; tex: PaintTex };
 /** a piece of a screen-space label at (x, y), left-aligned, filled in col and outlined in the stroke style; returns the x after it */
 /** T151: the world labels' keys for the labels with no object of their own (a town by its index, a zone, a gallery spot, a stop): a number per kind's
  *  range, so a label keeps its slot from frame to frame */
-const LABEL_KEY = { town: 1e6, growth: 2e6, stopped: 2.1e6, gallery: 3e6, waiting: 4e6, noRoad: 5e6, landHover: 6e6, stadium: 6e6 + 1 } as const;
+const LABEL_KEY = { town: 1e6, growth: 2e6, stopped: 2.1e6, gallery: 3e6, waiting: 4e6, landHover: 6e6, stadium: 6e6 + 1 } as const; // (7e6: parking-overlay.ts's lots with no road)
 
 interface Build { legs: Leg[]; cls: RoadClass; t0: number; dur: number; total: number; cum: number[] }
 interface Particle { x: number; y: number; vx: number; vy: number; vz: number; z: number; life: number; age: number; r: number }
