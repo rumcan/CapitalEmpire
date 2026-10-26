@@ -331,7 +331,7 @@ export function houseYards(fit: Fitted, f: PresetFrame): Fitted {
   });
   return { ...fit, props, patches };
 }
-/** whether a frozen house preset's house fits its band on a lot (any other preset does: the owner's are his to lay out) */
+/** whether a frozen house preset's house fits its band on a lot (any other preset does: the owner's are theirs to lay out) */
 function houseFits(p: LotPreset, lot: LotGeom): boolean {
   if (!frozenHouse(p)) return true;
   const band = houseBand(fitPreset(p, lot.w, lot.d), frameOf(lot));
