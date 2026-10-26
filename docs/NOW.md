@@ -24,7 +24,6 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 ### In flight
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |
-| **T145 (top priority)** | #300 | `arena/T145-painted-terrain` | `.claude/worktrees/t145` | 5186 | The owner's brief (in the issue): the accepted golden fescue and lake tiles in the game, three authored sets NEAR/MID/FAR of four large tiles each, hash-checked from `eight-tiles/READY-MATERIALS.json`, on main's T128 painted-families runtime. Brief: `E:/ClaudeTemp/lead/t145-brief.md`. |
 | T147 | #306 | `arena/T147-money-floats` | `.claude/worktrees/t147` (made by hand: the agent worktree failed for memory) | 5187 | Green +$X / red -$X floating up where money moves; the range first via T146's `RangeSim.onMoney`. Yields heavy steps to T145. |
 
 **Two coding agents at a time (the owner, 2026-10-26: first "maybe just too many background tasks?" after the studio tab died with the
@@ -50,7 +49,9 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
 ### Queue (in order)
 0. **T148 #309 the lot lab** (the owner, 2026-10-26, "after the new textures"): multi-select with move/delete, Ctrl+C/V, a Change house
    button, a lot-boundary grid, Generate staying on the current lot (type, size, angle) and re-rolling its layout and building, and a
-   Neighbours on/off toggle. Start it when T145 lands. Decisions in the issue.
+   Neighbours on/off toggle. T145 has landed: start it when memory allows (the PC was at 1.3 GB free at 15:07 with Codex making a worktree). Decisions in the issue.
+0b. **T149 #312 painted terrain follow-ups**: real game-vs-proof comparisons (T145's side-by-sides were invalid), the in-band zoom steps
+   (the owner's call), seams, DPR 2 softness, rivers.
 1. **The nightly.** The owner should allow the nightly session's commands so it runs unattended. fix:gate's new default (seed 1 day 60)
    passes by 1.8 points only: if it flips, retune the scenario (#298's header has the scan table), do not touch traffic.
 2. **The owner's new grass paintings**, when they arrive. Import them with `scripts/assets/prep-painted-families.mjs` (the families list
@@ -65,6 +66,11 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
    (the sharp bump). See the History sections below and `gh issue list --label arena --state open`.
 
 ### Done recently (newest first; details in each PR)
+- 2026-10-26: **T145 #311 the hand-painted terrain tiles**: golden fescue (surface `fescue`) and lake (surface `water`), three authored
+  sets NEAR/MID/FAR of four 1742x902 tiles each, hash-verified by `scripts/assets/prep-painted-tiles.mjs` from
+  `eight-tiles/READY-MATERIALS.json` into `src/assets/ground/painted/tiles/` and `src/game/painted-tiles.json`; world-anchored seeded
+  permutation, 12 zoom steps with hysteresis, the step in the worker/chunk keys; readout under `?debug`. Next families: add to
+  READY-MATERIALS, re-run the script, map a surface. Follow-ups in T149.
 - 2026-10-26: **T146 #308 the range's car park building and parallel counters** (P24 D49-D55): a $36,000 multi-storey car park (180
   cars, stand-in + art request `golf:range-carpark`), the pro shop's counters one per 9 bays, the skip capped by bays and parking. A full
   36-bay range: bays taken at peak 19 → 36, live day 125 → 420 sold, no car turned away. `RangeSim.onMoney` for T147.
