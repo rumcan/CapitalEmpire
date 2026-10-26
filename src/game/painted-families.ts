@@ -1,5 +1,6 @@
 import REGISTRY from './painted-families.json';
 import { grassDetailWeights, type GrassDetail, type GrassDetailWeight } from './painted-grass-lod';
+import { STEPS, TILED_FAMILIES, type TiledFamily } from './painted-tiles';
 
 /** The hand-painted ground families (#147, the art model's new-painted-spatial-scales-20261025.json): each a palette and length of grass, a
  *  sand, the pond water or a wall's cut face, with three paintings of real spatial coverage (near 40 m: half a town block; mid 320 m: half a
@@ -22,8 +23,22 @@ export interface PaintedFamilyDef {
   borrowed?: Partial<Record<GrassDetail, string>>;
   /** the first painted grass (T082): kept as it was, with its own zoom crossfade (painted-grass-lod.ts grassDetailWeights) */
   legacy?: boolean;
+  /** a hand-painted tile set family (T145, painted-tiles.ts): three authored sets of four whole tiles, laid as authored (no scale, tint or tone;
+   *  its levels here list each set's first tile, for the swatches and the studio's cards) */
+  tiled?: boolean;
 }
-export const FAMILIES: readonly PaintedFamilyDef[] = (REGISTRY as unknown as { families: PaintedFamilyDef[] }).families;
+/** a tile set family as the families list shows it: each level's set (its revision, e.g. near-v3) with its first tile, and as coverage the
+ *  metres one tile covers at the first step of its band (painted-tiles.ts: the camera picks the step) */
+function fromTiles(t: TiledFamily): PaintedFamilyDef {
+  const levels = {} as Record<GrassDetail, Record<string, FamilyPicture>>, coverage = {} as Record<GrassDetail, number>, pick: Partial<Record<GrassDetail, string>> = {};
+  for (const l of ['near', 'mid', 'far'] as const) {
+    const lv = t.levels[l], first = lv.tiles[0]!;
+    levels[l] = { [lv.revision]: { file: first.file, mean: first.mean, px: lv.native[0], sha256: first.sha256 } }; pick[l] = lv.revision;
+    coverage[l] = STEPS.find(s => s.band === l)?.metres ?? 0;
+  }
+  return { id: t.id, name: t.name, kind: t.kind, coverage, levels, pick, tiled: true };
+}
+export const FAMILIES: readonly PaintedFamilyDef[] = [...(REGISTRY as unknown as { families: PaintedFamilyDef[] }).families, ...TILED_FAMILIES.map(fromTiles)];
 const BY_ID = new Map(FAMILIES.map(f => [f.id, f]));
 export const familyById = (id: string): PaintedFamilyDef | undefined => BY_ID.get(id);
 /** every version any level of a family has, in order */
@@ -43,13 +58,15 @@ export function clampLook(v: unknown): PaintedLook | null {
   const o = v as Partial<PaintedLook> | null;
   if (!o || typeof o !== 'object' || typeof o.family !== 'string') return null;
   const f = familyById(o.family); if (!f) return null;
+  // a tile set is laid exactly as authored: no version choice (its canonical selection), scale, tint or tone (T145)
+  if (f.tiled) return { family: f.id, version: null, scale: 1, tint: '#ffffff', tone: 0 };
   const version = typeof o.version === 'string' && familyVersions(f).includes(o.version) ? o.version : null;
   return { family: f.id, version, scale: Math.round(clamp(num(o.scale, 1), LOOK_RANGES.scale[0], LOOK_RANGES.scale[1]) * 1000) / 1000, tint: typeof o.tint === 'string' && HEX.test(o.tint) ? o.tint.toLowerCase() : '#ffffff', tone: Math.round(clamp(num(o.tone, 0), LOOK_RANGES.tone[0], LOOK_RANGES.tone[1]) * 1000) / 1000 };
 }
 
 /** a level as a look lays it: the painting (its file), the metres one tile covers (the family's coverage times the look's scale), its mean colour and px */
 export interface LevelArt { file: string; metres: number; mean: string; px: number; version: string }
-export interface ResolvedFamily { id: string; kind: PaintedKind; legacy: boolean; near: LevelArt; mid: LevelArt; far: LevelArt }
+export interface ResolvedFamily { id: string; kind: PaintedKind; legacy: boolean; tiled: boolean; near: LevelArt; mid: LevelArt; far: LevelArt }
 /** the paintings a look lays at each level: the look's version where the level has it, else the level's pick, else its first version; a level
  *  with no painting at all (a cut face painted once) shows the next finer one at that one's coverage. null: no such family */
 export function resolveFamily(look: Pick<PaintedLook, 'family' | 'version' | 'scale'>): ResolvedFamily | null {
@@ -63,7 +80,7 @@ export function resolveFamily(look: Pick<PaintedLook, 'family' | 'version' | 'sc
     if (!art) return null;
     out[l] = prev = art;
   }
-  return { id: f.id, kind: f.kind, legacy: !!f.legacy, near: out.near!, mid: out.mid!, far: out.far! };
+  return { id: f.id, kind: f.kind, legacy: !!f.legacy, tiled: !!f.tiled, near: out.near!, mid: out.mid!, far: out.far! };
 }
 /** a look's key for the composed pictures (the family, version and scale: the tint and tone are applied over a copy) */
 export const lookKey = (look: Pick<PaintedLook, 'family' | 'version' | 'scale'>) => `${look.family}/${look.version ?? '*'}@${look.scale}`;

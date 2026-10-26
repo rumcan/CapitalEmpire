@@ -1,6 +1,6 @@
 /// <reference lib="webworker" />
 // A ground worker: holds its own copy of the road network, terrain and ground textures and bakes chunks on request.
-import { MAP, CHUNK_W, CHUNK_H, MID_K, PLAN_LEVELS } from './iso';
+import { MAP, CHUNK_W, CHUNK_H, MID_K, PLAN_LEVELS, PLAN_W, PLAN_H } from './iso';
 import { RoadNetwork } from './network';
 import type { FromWorker, ToWorker } from './ground-protocol';
 import { applyOps } from './netops';
@@ -92,6 +92,8 @@ const handle = async (m: ToWorker) => {
       }
       case 'paint': {
         await hasTextures;
+        // the coverage step the tile set families are laid at (T145, painted-tiles.ts): the camera's, with this bake
+        if (m.ts !== undefined) tex.tileStep = m.ts;
         if (m.kind !== 'p') await (woods ??= tex.ensure(WOODLAND_TEX).catch(err => post({ t: 'error', message: String(err) })));
         // the painted grass pictures this chunk needs at its art level (painted-grass-lod.ts): the base grass and its tints, and every texture
         // its lots, lawns, painted areas, course surfaces and managed turf use (a painted preset among them); never all of them
@@ -115,7 +117,13 @@ const handle = async (m: ToWorker) => {
             }
           }
           await tex.preparePainted(m.artL ?? m.L, need, near);
-        } else { await tex.preparePainted(PLAN_LEVELS[PLAN_LEVELS.length - 1], ['grass', 'meadow', 'outside']); await tex.preparePlanner(['grass', 'meadow', WOODLAND_TEX, WOODLAND]); }
+        } else {
+          await tex.preparePainted(PLAN_LEVELS[PLAN_LEVELS.length - 1], ['grass', 'meadow', 'outside']); await tex.preparePlanner(['grass', 'meadow', WOODLAND_TEX, WOODLAND]);
+          // the tile set families the planner piece's course surfaces wear (their tiles at the camera's step: the overview's FAR tiles)
+          const box = GroundPainter.tileBox(m.i * PLAN_W, m.j * PLAN_H, (m.i + 1) * PLAN_W, (m.j + 1) * PLAN_H, 2), course = new Set<string>(['grass', 'meadow', 'outside', WOODLAND_TEX, WOODLAND]);
+          for (const p of painter.lotsIn(box)) if (p.course) for (const l of p.course.layers) for (const t of [l, ...(l.collar ? [l.collar] : [])]) course.add(t.tex);
+          await tex.prepareTiles(course);
+        }
         // Decode only artwork used by the requested visible chunk, never all registered course/town cells.
         if (m.kind !== 'p' && painter.grassStrength > 0 && !painter.grassHeat) {
           const k = m.kind === 'm' ? MID_K : 1, w = CHUNK_W * k, h = CHUNK_H * k;
@@ -129,7 +137,7 @@ const handle = async (m: ToWorker) => {
         const t0 = performance.now();
         const cv = m.kind === 'p' ? painter.paintPlan(m.i, m.j, m.L) : painter.paint(m.i, m.j, m.L, m.kind === 'm');
         const bmp = cv.transferToImageBitmap();
-        post({ t: 'tile', id: m.id, kind: m.kind, i: m.i, j: m.j, L: m.L, artL: m.artL ?? m.L, bmp, ms: performance.now() - t0 }, [bmp]);
+        post({ t: 'tile', id: m.id, kind: m.kind, i: m.i, j: m.j, L: m.L, artL: m.artL ?? m.L, ts: m.ts, tiled: painter.tilesUsed, bmp, ms: performance.now() - t0 }, [bmp]);
         break;
       }
     }

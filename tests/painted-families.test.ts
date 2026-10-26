@@ -12,7 +12,7 @@ import file from '../src/game/painted-surfaces.json';
 const SCALED = { near: 40, mid: 320, far: 4096 };
 
 test('every new hand-painted family has the spatial-scales coverage: near 40 m, mid 320 m, far 4096 m a tile', () => {
-  const scaled = FAMILIES.filter(f => !f.legacy && !f.id.startsWith('cutaway-'));
+  const scaled = FAMILIES.filter(f => !f.legacy && !f.tiled && !f.id.startsWith('cutaway-'));
   assert.ok(scaled.length >= 15, 'the 10 grasses, 2 sands, the water and the 2 cut faces');
   for (const f of scaled) assert.deepEqual(f.coverage, SCALED, f.id);
   for (const id of ['emerald-short', 'emerald-medium', 'emerald-long', 'sage-short', 'sage-medium', 'sage-long', 'straw-short', 'straw-medium', 'straw-long', 'olive-short', 'sand-raked', 'sand-ripples', 'water-pond', 'underground-earth', 'underground-sand'])
@@ -41,7 +41,7 @@ test('a family resolves every level: the picked version, the look\'s version whe
   assert.equal(resolveFamily({ family: 'nope', version: null, scale: 1 }), null);
   // every version listed has a painting at some level, and every painting is a webp under the painted folder
   for (const f of FAMILIES) for (const v of familyVersions(f)) assert.ok(LEVEL_NAMES.some(l => f.levels[l][v]), `${f.id} ${v}`);
-  for (const f of FAMILIES) for (const l of LEVEL_NAMES) for (const p of Object.values(f.levels[l])) { assert.match(p.file, /\.webp$/); assert.equal(p.px, 1024); assert.match(p.mean, /^#[0-9a-f]{6}$/); }
+  for (const f of FAMILIES) for (const l of LEVEL_NAMES) for (const p of Object.values(f.levels[l])) { assert.match(p.file, /\.webp$/); assert.equal(p.px, f.tiled ? f.levels[l][f.pick[l]!]!.px : 1024); assert.match(p.mean, /^#[0-9a-f]{6}$/); }
 });
 
 test('the levels crossfade by zoom where neither is much enlarged or shrunk: near at the street zooms, mid in the district, far on the planner', () => {
@@ -80,12 +80,13 @@ test('every surface of the game wears a painted family: golf, map, town lawns, l
   const f = clampSurfaces(file);
   for (const s of SURFACES) assert.ok(f.surfaces[s.key], `${s.key} has a look`);
   // the golf logic: greens and tees the shortest emerald at the finest scale, the fairway short emerald, the collars medium, the rough sage,
-  // the fescue long straw, the bunker raked sand, waste rippled sand, water the pond
+  // the fescue the hand-painted golden fescue tiles (T145), the bunker raked sand, waste rippled sand, water the hand-painted lake tiles (T145)
   const S = f.surfaces;
   for (const k of ['green', 'tee', 'fairway']) assert.equal(S[k]!.family, 'emerald-short', k);
   assert.ok(S.green!.scale <= S.fairway!.scale && S.tee!.scale <= S.fairway!.scale);
-  assert.ok(S.rough!.family.startsWith('sage-')); assert.equal(S.fescue!.family, 'straw-long');
-  assert.equal(S.bunker!.family, 'sand-raked'); assert.equal(S.waste!.family, 'sand-ripples'); assert.equal(S.water!.family, 'water-pond');
+  assert.ok(S.rough!.family.startsWith('sage-')); assert.equal(S.fescue!.family, 'golden-fescue');
+  assert.equal(S.bunker!.family, 'sand-raked'); assert.equal(S.waste!.family, 'sand-ripples'); assert.equal(S.water!.family, 'lake');
+  assert.equal(S.river!.family, 'water-pond', 'the river keeps the pond water');
   for (const k of ['wallTurf', 'wallBank']) assert.equal(S[k]!.family, 'underground-earth'); assert.equal(S.wallSand!.family, 'underground-sand');
   assert.ok(S.lush!.family.endsWith('-long')); assert.ok(S.patchy!.family.startsWith('straw-'));
   // the town lawns differ in palette and length
