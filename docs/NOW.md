@@ -28,7 +28,7 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |
 | T166 | #370 | `arena/T166-game-ram` | `.claude/worktrees/t166` | 5187 | The game's RAM: T157's lazy textures, CPU canvases, one shared pack and the pack cache for the game's three ground workers (~450-630 MB each), measured step by step with `scripts/perf/memory.mjs`. Agent: the ground agent (T162/T165). |
-| T160 | #367 | `arena/T160-lots-on-the-fly` | `.claude/worktrees/t160` | 5186 | P25 step 5: house lots get their plants, props, cars and decals from the generator, seeded per lot; a shipped, versioned model (`lots/lot-models/v<N>.json`, `lotModel` in the save); `?oldlots` for the old way; owner presets stay exact overrides. Agent: the lot agent (T155/T158/T159). |
+| T167 | #371 | `arena/T160-keep-garages` then `arena/T167-removed-standins` | `.claude/worktrees/t160` | 5186 | The lot agent, in order: (1) T160 follow-up: keep the frozen preset's garages/sheds in the generated lots' base; (2) T167: removed pictures get seeded stand-ins (decrepit streets show no houses today: rundown house and derelict two-storey are removed); (3) T161 pairs, densities by state, the 50-seed exam sheet (issue to open). |
 | T154 | #330 | `arena/T154-new-art` | `.claude/worktrees/t154` | — | **Phase 1 merged (#345).** Phase 2 waits: the eight-heading contract (a building on a 45° road picks its cardinal view, `AXIS_SETS`); the new subjects' diagonal views are art work (listed in GOLF-SPRITES.md). |
 | T152 | #325 | `arena/T152-car-spacing` (d3bdbf1) | `.claude/worktrees/t152` | — | **Paused** for the art (the owner). Root cause: the range's own cars (`rangebiz.ts:803/832/723`) are placed by their own clock; fixed in rangebiz.ts only (overlaps -75-82% with the 44-bay lot, money identical). **Owner's decision needed:** at full demand the one-lane drive and the building's ramp cannot carry the cars at a car's gap (wider drive, second ramp, faster car-park speeds, or the queue limiting sales). Left: three gates, shots, PR. |
 | T112 | #199 | `arena/T112-sharp` (1872f0e) | `.claude/worktrees/t112` | — | **Paused** for T153: sharp 0.35.5 in, all packed art identical (260 images byte-identical; 16 view PNGs only re-tagged), still to do: the KTX2 check, the studio check, audit/typecheck/suite/build, the PR. Resume from #199. |
@@ -88,6 +88,11 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
    (the sharp bump). See the History sections below and `gh issue list --label arena --state open`.
 
 ### Done recently (newest first; details in each PR)
+- 2026-10-26 22:00: **T160 #374 lots generated on the fly**: a house lot whose preset is frozen (not the owner's own) keeps its house,
+  drive, walk, street items and fence; its plants, props, cars and decals come from the generator (`lot-gen.ts`) with the shipped model
+  `lots/lot-models/v1.json` (87 presets, 2,709 items), seeded by street key + slot + state; the save records `lotModel` (missing = v1);
+  the lab's "Ship model" writes the next version; `?oldlots` composes as before. Compose of a whole town ~54 → ~32 ms (a `carOwnerScale`
+  memo). Known: garages/sheds dropped (follow-up in flight); decrepit houses not drawn (before too: T167).
 - 2026-10-26 21:20: **T165 #369 fairway and putting green from the new paintings** (`art/owner-supplied/{fairway,putting-green}-20261026`,
   families `fairway-paint`, `putting-green-paint`): edges healed with a matched bridge (no seam line); the putting green MID falls back to
   the raw MID tiles with one shared strip (the painting's bright corner repeated). The fairway's mowing stripes fan out in perspective,
