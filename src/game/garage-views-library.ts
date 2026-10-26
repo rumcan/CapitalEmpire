@@ -2,7 +2,9 @@
 import type { LibItem } from './types';
 import { OWNER_SCALE, REMOVED_IDS } from './lots/scales';
 const PAGES: string[][] = [];
-const ITEMS: LibItem[] = [];
+const ITEMS: LibItem[] = [
+
+];
 /** Garage diagonal pictures [NE, SE, SW, NW]; the original garage ID remains its N picture. Units: sprite IDs. */
 export const GARAGE_VIEW_SETS: Readonly<Record<string, readonly [string, string, string, string]>> = {};
 /** Source width in native pixels, keyed by appended diagonal sprite ID. */
