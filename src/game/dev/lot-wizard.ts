@@ -120,9 +120,11 @@ export function makeWizard(host: WizardHost) {
     c.items.forEach((it, i) => { if (it.deleted || it.kind !== 'decal') return; const d = Math.hypot(it.x - q.x, it.y - q.y); if (d < bd) { bd = d; best = i; } });
     return best;
   }
+  /** whether an event is on the map: the game's canvas or the overlay canvas over it (where the pointer lands) */
+  const onMap = (t: EventTarget | null) => t === host.game.canvas || t === host.game.overlay;
   /** a press on the map: deletes the offered item under it (window capture: the editor and the game never see it) */
   const onDown = (e: PointerEvent) => {
-    if (!on || e.button !== 0 || e.target !== host.game.canvas) return;
+    if (!on || e.button !== 0 || !onMap(e.target)) return;
     e.preventDefault(); e.stopImmediatePropagation();
     const b = host.game.canvas.getBoundingClientRect(), i = itemAt(e.clientX - b.left, e.clientY - b.top);
     if (i < 0) { host.say('not an offered item (the house, fences and street items stay): click a tree, bush, flowerbed, prop, car or decal'); return; }
@@ -130,7 +132,7 @@ export function makeWizard(host: WizardHost) {
   };
   /** the pointer over the map: the heat map follows the kind of the offered item under it */
   const onMove = (e: PointerEvent) => {
-    if (!on || e.target !== host.game.canvas) return;
+    if (!on || !onMap(e.target)) return;
     const b = host.game.canvas.getBoundingClientRect(), i = itemAt(e.clientX - b.left, e.clientY - b.top), k = i >= 0 ? cur!.items[i]!.kind : null;
     if (k !== hover) { hover = k; heatKey = ''; }
   };
@@ -175,7 +177,7 @@ export function makeWizard(host: WizardHost) {
         if (ps.some(p => !p)) continue;
         const poly = document.createElementNS(SVGNS, 'polygon');
         poly.setAttribute('points', ps.map(p => `${p!.x},${p!.y}`).join(' '));
-        poly.setAttribute('fill', `hsla(${Math.round(rate * 120)},85%,50%,${n.offered ? 0.32 : 0.12})`); poly.setAttribute('stroke', 'rgba(255,255,255,.25)');
+        poly.setAttribute('fill', `hsla(${Math.round(rate * 120)},85%,50%,${n.offered ? 0.24 : 0.06})`); poly.setAttribute('stroke', 'rgba(255,255,255,.25)');
         out.push(poly);
       }
     }
