@@ -11,13 +11,12 @@
 //    stands standardDoor game px tall at the building's gauge scale (measures.json gaugeScale: its owner scale when it was first gauged, written
 //    back then, so a size set later in the sprite studio scales the building and survives a re-import). A view with no clear door takes the
 //    mean scale of its measured views; a subject with none measured keeps the original sprite's width (and is reported, to be measured).
-//    No view is sized past its picture's own pixels at the closest zoom (0.6 device px per game px at its owner scale, the studio's size or the
-//    table's): such a view is drawn smaller, at its native size, and reported (the owner, 2026-10-24: "Some are even placed so big they
-//    pixelate"). Business artwork keeps its width (drawn at a share of its parcel); the game caps its drawing (newart.ts lookOf).
+//    A view may be sized past its picture's own pixels (its owner scale, the studio's size or the table's asks it): it is packed upscaled (lanczos3,
+//    softer) up to 3x its pixels, and reported past that. Business artwork keeps its width (drawn at a share of its parcel); the game caps its drawing (newart.ts lookOf).
 // 3. Footprint: the original boxes grow or shrink with the art (the NE view against the original's width); SE and NW turn them (hx <-> hy).
 //    The ground point is the footprint's centre, found from the picture's lowest point (the near corner, +hx +hy).
-// 4. Pack: every view at 0.6 x display size times its owner scale (as big as it is drawn at the closest zoom), never past its picture's own
-//    pixels, on 2048 pages with five mips (src/assets/views/views-<page>-<mip>.webp), and write
+// 4. Pack: every view at 0.6 x display size times its owner scale (as big as it is drawn at the closest zoom), up to 3x its picture's own
+//    pixels (upscaled past them), on 2048 pages with five mips (src/assets/views/views-<page>-<mip>.webp), and write
 //    src/game/views-library.ts: appendViews puts NE in place of the original sprite and SE in place of its east art (east:<id>), keeping
 //    every saved index, and appends the other views as view:<id>:se|sw|nw. Night glows are found again on the new pictures.
 // 5. Coverage: art/building-views/COVERAGE.md lists every building of the game (art/theme-consistency/inventory.json, and any library sprite
@@ -126,10 +125,10 @@ for (const slug of fs.readdirSync(STORE).filter(d => fs.existsSync(path.join(STO
   if (measured.length) { const mean = measured.reduce((a, x) => a + x.s, 0) / measured.length; for (const x of views) if (!x.s) x.s = mean; }
   else { if (!business && !meas?.noGauge) unmeasured.push(`${id} (${version})`); const s = (base.quad[2] - base.quad[0]) / views[0].W; for (const x of views) x.s = s; }
   if (measured.length && meas && meas.gaugeScale === undefined) { meas.gaugeScale = +k.toFixed(3); gauged++; }
-  // never past the picture's own pixels at the closest zoom: drawn at k, a view is 0.6 x W x s x k device px wide from its W native px
+  // never past 3x the picture's own pixels at the closest zoom: drawn at k, a view is 0.6 x W x s x k device px wide from its W native px
   if (!business) {
-    const cap = 1 / (MIP0 * k), over = Math.max(...views.map(x => x.s / cap));
-    if (over > 1.001) { for (const x of views) x.s = Math.min(x.s, cap); capped.push(`${id} (x${over.toFixed(2)} past its pixels at scale ${k.toFixed(2)}: drawn ${(100 / over).toFixed(0)}% as big)`); }
+    const cap = 3 / (MIP0 * k), over = Math.max(...views.map(x => x.s / cap));
+    if (over > 1.001) { for (const x of views) x.s = Math.min(x.s, cap); capped.push(`${id} (x${over.toFixed(2)} past 3x its pixels at scale ${k.toFixed(2)}: drawn ${(100 / over).toFixed(0)}% as big)`); }
   }
   const f = business ? 1 : views[0].W * views[0].s / (base.quad[2] - base.quad[0]);
   for (const x of views) {
@@ -147,9 +146,9 @@ for (const slug of fs.readdirSync(STORE).filter(d => fs.existsSync(path.join(STO
 }
 
 // 4. shelf-pack onto as many 2048 pages as it takes
-// each view at its drawn size at the closest zoom (0.6 x its owner scale, at least 1), as far as its picture's own pixels go; no headroom for
-// the Lot Composer's +5% (the GPU memory: the game caps those few draws at the picture's pixels, newart.ts lookOf)
-const packAt = (sub, x) => Math.min(x.W / x.w, MIP0 * Math.max(1, owner(sub.id)));
+// each view at its drawn size at the closest zoom (0.6 x its owner scale, at least 1), upscaled past its picture's own pixels up to 3x them; no
+// headroom for the Lot Composer's +5% (the GPU memory: the game caps those few draws at the picture's pixels, newart.ts lookOf)
+const packAt = (sub, x) => Math.min(3 * x.W / x.w, MIP0 * Math.max(1, owner(sub.id)));
 const all = subjects.flatMap(sub => sub.views.map(x => ({ sub, x, width: Math.max(1, Math.round(x.w * packAt(sub, x))), height: Math.max(1, Math.round(x.h * packAt(sub, x))) }))).sort((a, b) => b.height - a.height);
 const pages = [[]];
 let px = GUT, py = GUT, rowH = 0;
@@ -230,7 +229,7 @@ let cx = 0, cy = 0, ch = 0; const placed = [];
 for (const t of tiles) { if (cx + t.w > 1600) { cx = 0; cy += ch + 8; ch = 0; } placed.push({ input: t.input, left: cx, top: cy }); cx += t.w + 8; ch = Math.max(ch, t.h); }
 await sharp({ create: { width: 1600, height: cy + ch, channels: 4, background: '#d8e0e3' } }).composite(placed).png().toFile(path.join(REVIEW, 'contact.png'));
 console.log(`Prepared ${all.length} views of ${subjects.length} buildings on ${pages.length} page(s); review: ${path.relative(root, REVIEW)}/contact.png`);
-if (capped.length) console.log(`Capped at their pixels (drawn smaller than the door gauge or the original width asks, never pixelated): ${capped.join(', ')}`);
+if (capped.length) console.log(`Capped at 3x their pixels (drawn smaller than the door gauge or the original width asks): ${capped.join(', ')}`);
 if (gauged) { fs.writeFileSync(path.join(STORE, 'measures.json'), `${JSON.stringify(measures, null, 1)}\n`); console.log(`Froze the gauge scale of ${gauged} subject(s) in art/building-views/measures.json`); }
 if (unmeasured.length) console.log(`Unmeasured (kept at the original width; add door gauges to art/building-views/measures.json): ${unmeasured.join(', ')}`);
 

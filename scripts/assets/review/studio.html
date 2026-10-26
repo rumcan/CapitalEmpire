@@ -16,9 +16,9 @@ input{background:#11130b;border:1px solid var(--line);color:var(--ink);border-ra
 #v-lib.person-cursor{cursor:none}#v-lib .bar{cursor:auto}#v-lib button,#v-lib input,#v-lib select,#v-lib .chip{cursor:pointer}
 #man{position:fixed;pointer-events:none;z-index:20;display:none;filter:drop-shadow(0 0 1px #000)}
 select{background:#11130b;border:1px solid var(--line);color:var(--ink);border-radius:6px;padding:5px 8px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:8px;overflow:hidden;display:flex;flex-direction:column;min-width:200px}.card.removed{opacity:.45;border-color:var(--red)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:8px;overflow:hidden;display:flex;flex-direction:column;min-width:200px}
 .stage{display:flex;align-items:flex-end;justify-content:center;background:linear-gradient(#2b3120,#323a24);padding:10px;min-height:60px}
-.stage.grass{background:#4f6b2c}.stage img{display:block}.meta{padding:8px}.name{font-weight:600}.cat{font-size:11px;color:var(--gold)}.id{font:11px ui-monospace,monospace;color:var(--dim);word-break:break-all}
+.stage.grass{background:#4f6b2c}.stage img{display:block}.views{display:flex;gap:4px;justify-content:center;align-items:flex-end;background:#262c1b;padding:4px}.views img{width:52px;height:44px;object-fit:contain}.meta{padding:8px}.name{font-weight:600}.cat{font-size:11px;color:var(--gold)}.id{font:11px ui-monospace,monospace;color:var(--dim);word-break:break-all}
 .size{padding:0 8px 6px;font-size:11px;color:var(--dim)}.size.warn{color:var(--red)}.size b{color:var(--ink);font-weight:600}
 .row{display:flex;gap:6px;padding:0 8px 8px;align-items:center}.row .btn{flex:1}.scale{font:12px ui-monospace,monospace;color:var(--ink);min-width:70px;text-align:center}
 .list{border-right:1px solid var(--line)}.li{padding:8px 12px;border-bottom:1px solid var(--line);cursor:pointer;font-size:13px}.li.on{background:#2a2e1c;color:var(--gold)}.li small{color:var(--dim)}
@@ -41,7 +41,7 @@ select{background:#11130b;border:1px solid var(--line);color:var(--ink);border-r
  <div class="bar"><input id="q" placeholder="Search id or name"><div class="chips" id="cats"></div><span style="flex:1"></span>
   <label class="hint">Size on screen <input id="zoom" type="range" min="0.15" max="1.2" step="0.05" value="0.35" style="min-width:120px;vertical-align:middle"></label>
   <label class="hint">You are <select id="who"></select></label><span id="count" class="hint"></span></div>
- <div class="hint" style="padding:0 16px">Every sprite is shown at the size the game draws it, and your pointer is a townsperson at the same scale (feet on the pointer): stand him at a door to check it. Smaller / Bigger change the sprite everywhere it is placed (the game reads the size when it reloads, no rebuild); an old building is shown as the new-art picture it is drawn as. A size past the picture's own pixels is refused: it would pixelate.</div>
+ <div class="hint" style="padding:0 16px">Every sprite is shown at the size the game draws it, and your pointer is a townsperson at the same scale (feet on the pointer): stand him at a door to check it. Smaller / Bigger change the sprite everywhere it is placed (the game reads the size when it reloads, no rebuild); an old building is shown as the new-art picture it is drawn as. A size past the picture's own pixels is allowed: the card warns, and a Rebuild upscales the picture (a little softer until higher-res art).</div>
  <div class="grid" id="grid"></div>
 </div>
 
@@ -74,7 +74,7 @@ window.addEventListener('blur',()=>{pointer=null;placeMan();});
 document.addEventListener('scroll',placeMan,true);
 $('#zoom').oninput=e=>{K=+e.target.value;man();draw();};
 $('#who').onchange=e=>{me=walkers.find(p=>p.id===e.target.value)||null;man();};
-function cats(){const c=[...new Set(all.map(s=>s.cat))].sort(),box=$('#cats');box.innerHTML='';for(const k of ['',...c,'Removed']){const b=el('span',{className:'chip'+(k===cat?' on':''),textContent:k||'All'});b.onclick=()=>{cat=k;cats();draw();};box.append(b);}}
+function cats(){const c=[...new Set(all.filter(s=>!removed[s.id]).map(s=>s.cat))].sort(),box=$('#cats');box.innerHTML='';for(const k of ['',...c]){const b=el('span',{className:'chip'+(k===cat?' on':''),textContent:k||'All'});b.onclick=()=>{cat=k;cats();draw();};box.append(b);}}
 /** the picture the game draws for a sprite (an old building's new-art stand-in) and its drawn scale: its scale times the stand-in's fill, never past
  *  its pixels (the game draws it at its cap there: newart.ts lookOf) */
 const drawnOf=s=>s.drawn?{id:s.drawn.id,quad:s.drawn.quad,k:Math.min(s.scale*s.drawn.fill,s.drawn.cap)}:{id:s.id,quad:s.quad,k:s.scale*(s.carScale||1)};
@@ -84,32 +84,38 @@ function stage(s){
   // a lot decal (a leaf drift, a stain) is drawn over grass, so its edges show as they do in the yard
   return el('div',{className:'stage'+(s.kind==='decal'?' grass':'')},el('img',{src:'/thumb/'+encodeURIComponent(d.id),loading:'lazy',style:`width:${w}px;height:${h}px`}));
 }
+/** past its own picture's pixels (the studio allows it, server.mjs /api/scale soft): a Rebuild packs a bigger picture from the source, a little softer. Not a stand-in: its picture is another sprite's */
+const softOf=s=>s.native!=null&&s.scale>s.native*1.001&&!(s.drawn&&s.drawn.id!==s.id);
 /** what the game makes of the size: the stand-in it is drawn as, and the scale it is sharp to at the closest zoom (red when past it) */
 function sizeLine(s){
   if(s.sharp==null&&!s.drawn)return null;
   const stand=s.drawn&&s.drawn.id!==s.id&&s.drawn.id!==s.sizeId?`drawn as ${s.drawn.name} (its four views are not in the game yet) · `:'';
   const past=s.sharp!=null&&s.scale>s.sharp*1.001;
   // drawn above its sharp size: its source picture allows more (native), which a Rebuild (Rebuild game sprites) packs in
-  const more=past&&s.native!=null&&s.native>s.sharp*1.01?` · ×${s.native.toFixed(2)} once packed again (Rebuild game sprites)`:'';
+  const more=past&&s.native!=null&&s.native>s.sharp*1.01?` · drawn at this size once packed again (Rebuild game sprites)`:'';
   return el('div',{className:'size'+(past?' warn':'')},stand,past?`pixelates above ×${s.sharp.toFixed(2)}: drawn at its pixels, smaller than asked${more}`:`sharp up to ×${(s.sharp??0).toFixed(2)}`,s.sizeId&&s.sizeId!==s.id?el('b',{textContent:` · the size of ${s.sizeId}`}):'');
 }
 // every sprite is shown, in batches of 200: the sentinel at the end of the grid pulls in the next batch when it scrolls into view
 const more=el('div',{className:'more',style:'flex-basis:100%;height:1px'});
 let shown=[],shownAt=0;
 const io=new IntersectionObserver(es=>{if(es.some(e=>e.isIntersecting))addBatch();});
-function draw(){$('#grid').innerHTML='';shown=all.filter(s=>(cat==='Removed'?removed[s.id]:!cat||s.cat===cat)&&(!q||(s.id+' '+s.name).toLowerCase().includes(q)));shownAt=0;addBatch();}
+function draw(){$('#grid').innerHTML='';shown=all.filter(s=>!removed[s.id]&&(!cat||s.cat===cat)&&(!q||(s.id+' '+s.name).toLowerCase().includes(q)));shownAt=0;addBatch();}
 function addBatch(){const g=$('#grid'),end=Math.min(shown.length,shownAt+200);for(;shownAt<end;shownAt++)g.append(card(shown[shownAt]));
  io.disconnect();if(shownAt<shown.length){g.append(more);io.observe(more);}else more.remove();
- $('#count').textContent=`${shown.length} shown · ${Object.keys(removed).length} removed`;}
-function card(s){const off=!!removed[s.id];
-  const rm=el('button',{className:'btn '+(off?'green':'red'),textContent:off?'Restore':'Remove from game'});
-  rm.onclick=async()=>{await post('/api/'+(off?'restore':'remove'),{id:s.id});await loadLib();};
+ $('#count').textContent=`${shown.length} shown`;}
+function card(s){
+  const rm=el('button',{className:'btn red',textContent:'Remove from game'});
+  rm.onclick=async()=>{await post('/api/remove',{id:s.id});await loadLib();};
   const sc=el('span',{className:'scale',textContent:'× '+s.scale.toFixed(2)+(Math.abs(s.scale-s.base)>1e-3?' *':'')});
-  const size=f=>async()=>{const r=await post('/api/scale',f?{id:s.id,factor:f}:{id:s.id,reset:true});if(r.refused){alert(`${s.name}: ${r.refused}`);return;}for(const x of all)if((x.sizeId??x.id)===r.id)x.scale=r.scale;draw();};
+  // the card's size goes to its copies too (each one's own id, so each scales from its own size); the copies are not cards, so only the card's scale shows
+  const size=f=>async()=>{const rs=[];for(const id of [s.id,...(s.dupes??[])])rs.push(await post('/api/scale',f?{id,factor:f}:{id,reset:true}));for(const r of rs)for(const x of all)if((x.sizeId??x.id)===r.id)x.scale=r.scale;draw();};
   // the baked house lots (cat Lots) and the walkers keep their size; a decal has no report line (its size is packed into the decal strip)
   const fixed=s.cat==='Lots'||s.kind==='walker';
-  return el('div',{className:'card'+(off?' removed':'')},stage(s),el('div',{className:'meta'},el('div',{className:'name',textContent:s.name}),el('div',{className:'cat',textContent:s.cat+' · '+s.kind}),el('div',{className:'id',textContent:s.id})),
+  // a four-view building: its four views in a row under the picture (the same /thumb route; sizing it sizes all four)
+  const views=s.views?el('div',{className:'views'},...s.views.map(v=>el('img',{src:'/thumb/'+encodeURIComponent(v.id),title:`${v.dir} · ${v.id}`,loading:'lazy'}))):null;
+  return el('div',{className:'card'},stage(s),views,el('div',{className:'meta'},el('div',{className:'name',textContent:s.name}),el('div',{className:'cat',textContent:s.cat+' · '+s.kind}),el('div',{className:'id',textContent:s.id}),s.dupes?.length?el('div',{className:'cat',textContent:`also: ${s.dupes.length} ${s.dupes.length===1?'copy':'copies'}`,title:s.dupes.join(', ')}):null),
    fixed||s.kind==='decal'?null:sizeLine(s),
+   fixed||s.kind==='decal'||!softOf(s)?null:el('div',{className:'size warn',textContent:'past its pixels: Rebuild upscales it (a little softer until higher-res art)'}),
    fixed?null:el('div',{className:'row'},el('button',{className:'btn',textContent:'Smaller',onclick:size(1/1.08)}),sc,el('button',{className:'btn',textContent:'Bigger',onclick:size(1.08)})),
    !fixed&&Math.abs(s.scale-s.base)>1e-3?el('div',{className:'row'},el('button',{className:'btn',textContent:'Reset size (×'+s.base.toFixed(2)+')',onclick:size(0)})):null,
    el('div',{className:'row'},rm));}

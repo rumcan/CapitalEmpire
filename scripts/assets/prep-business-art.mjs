@@ -4,8 +4,8 @@
 // Each picture is packed from its master, the only real source: the sheets it was cut from are its native generated resolution (the
 // theme-consistency max exports are resamples of an older atlas crop, so they add no detail). Its size is the larger of two floors: the size it
 // was always packed at (the old 512 px cap, the stadium at its master), and 0.6 x its largest owner scale (the lot table, then the studio's
-// overrides, +5% jitter) x its display width, as prep-sprites packs; never above the master. So it stays sharp at every size the studio allows
-// (review/size-report.ts reads the master's width as `native`).
+// overrides, +5% jitter) x its display width, as prep-sprites packs; up to 3x the master (past the master it is upscaled, lanczos3, softer, when the
+// owner's size asks). It is sharp up to the master's width (review/size-report.ts reads the master's width as `native`); past that the studio warns.
 // Exception: the ids with four-view art (art/building-views/business-<id>) are drawn with that art instead (views-library.ts REPLACE swaps the
 // library entry), so this picture is never drawn for them. They are packed at the size they held (HELD, else the floor), without growth. Growing
 // those buildings needs higher-res four-view art, not a bigger pack.
@@ -37,8 +37,9 @@ for (const m of manifest.items) {
   const floor = Math.min(1, limit / Math.max(m.width, m.height)), need = 0.6 * Math.max(1, (OWNER[id] ?? 0) * 1.05);
   // a four-view id is drawn with its four-view art (views-library.ts REPLACE), so its picture here keeps the size it held
   const views = fs.existsSync(path.join(root, 'art/building-views', 'business-' + m.id, 'source.json')), held = views ? HELD[m.id] : undefined;
-  const file = path.join(source, m.file), factor = views ? floor : Math.min(1, Math.max(floor, need));
+  const file = path.join(source, m.file), factor = views ? floor : Math.min(3, Math.max(floor, need));
   const w = held ?? Math.ceil(m.width * factor), h = held ? Math.ceil(m.height * held / m.width) : Math.ceil(m.height * factor);
+  if (Math.max(w, h) + 2 * pad > size) throw new Error(`${id} is larger than a ${size} px atlas page at ${factor.toFixed(2)}x its master`);
   if (x + w + pad > size) { x = pad; y += row + pad; row = 0; }
   if (y + h + pad > size) { pages.push([]); x = y = pad; row = 0; }
   pages.at(-1).push({ input: await sharp(file).resize(w, h).png().toBuffer(), left: x, top: y });

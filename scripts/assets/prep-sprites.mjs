@@ -3,7 +3,8 @@
 // Scale contract: the export's w,h,ax,ay are display px at the builder's native 128 px per tile. The game never zooms
 // closer than 30%, which on a dpr-2 screen is 0.6 device px per native px, so mip 0 is 0.6x native for a sprite drawn
 // at scale 1. A sprite the game draws bigger (the owner's lot scales, the forest) is packed at 0.6x its largest scale,
-// as far as its painted source goes, so it is never stretched at the closest zoom (scripts/assets/audit-sprites.mjs).
+// up to 3x its painted source: past the source's own pixels it is upscaled (lanczos3, softer) when the owner's size asks for it, so it is
+// stretched at the closest zoom only where the owner sized it past its pixels (scripts/assets/audit-sprites.mjs).
 // Besides the export (the sprites the owner's painted town uses), every upright sprite of a local TrickOrTreat town
 // builder library is packed too (source.mjs libraryItems), so the whole art set is available. Every page also
 // ships 0.3x, 0.15x, 0.075x and 0.0375x mips (the whole page downsampled, so one set of UVs serves every level).
@@ -79,8 +80,8 @@ for (const [cat, ids] of Object.entries(SEL)) for (const id of ids) {
   if (it.src) buf = fs.readFileSync(it.src);
   else if (it.local) buf = fs.readFileSync(path.join(ROOT, it.file));
   else { const file = it.file.split('/').pop(); try { buf = await fromExport('sprites-hd/' + file); } catch { buf = await fromExport('sprites/' + file); } }
-  // packed at its largest drawn scale, but never past the painted source's own pixels
-  const res = Math.min(MIP0 * maxScale(id), (await sharp(buf).metadata()).width / it.w);
+  // packed at its largest drawn scale, upscaled past the painted source's own pixels when the owner's size asks (lanczos3), at most 3x its source
+  const res = Math.min(MIP0 * maxScale(id), 3 * (await sharp(buf).metadata()).width / it.w);
   const W = Math.max(1, Math.round(it.w * res)), H = Math.max(1, Math.round(it.h * res));
   const { data } = await sharp(buf).ensureAlpha().resize(W, H, { fit: 'fill', kernel: 'lanczos3' }).raw().toBuffer({ resolveWithObject: true });
   let x0 = W, y0 = H, x1 = -1, y1 = -1;
