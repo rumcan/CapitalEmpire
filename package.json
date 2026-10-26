@@ -39,7 +39,7 @@
     "@vitejs/plugin-react": "5.1.1",
     "ktx2-encoder": "0.6.0",
     "playwright-core": "^1.64.0",
-    "sharp": "^0.34.4",
+    "sharp": "^0.35.5",
     "tailwindcss": "4.1.17",
     "three": "0.186.1",
     "typescript": "5.9.3",
