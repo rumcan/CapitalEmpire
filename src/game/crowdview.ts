@@ -1,7 +1,8 @@
 // The people the renderer draws for the crowd (docs/PEOPLE-IN-GAME.md): the spectators on the galleries, the queues at the gates and the stops,
-// the walking parties and the stand-in tee golfers, each as a sheet row and a frame of the 3D people (library.ts). Pure TS, no DOM, no engine:
-// every person is seeded (hash), so a spot keeps its people and their times from frame to frame, and the engine only packs the sprites.
-import { GOLFER_CLIPS, SPECTATOR_CLIPS, type PeopleClip } from './library';
+// the walking parties, each as a sheet row and a frame of the 3D people (library.ts); the golfers' frames come from the golf round's playback
+// (golf/play/view.ts). Pure TS, no DOM, no engine: every person is seeded (hash), so a spot keeps its people and their times from frame to frame,
+// and the engine only packs the sprites.
+import { SPECTATOR_CLIPS, type PeopleClip } from './library';
 import { facing } from './ext/pedestrians';
 
 /** a person to draw: its tile position, group (0 spectator, 1 golfer), person (its index in the group's people), sheet row (0-7, the rows
@@ -115,16 +116,4 @@ export function walkerPeople(W: ArrayLike<number>, o: number, idx: number, now: 
     p.x = x + vx * along; p.y = y + vy * along; p.group = 0; p.person = Math.floor(hash(idx, j) * people); p.row = row; p.frame = frame;
   }
   return k;
-}
-
-/** the stand-in golfer on a tee, until the sim plays golf (docs/PEOPLE-IN-GAME.md): a tee spot (kind 1, at float offset o of the 8-float gallery
- *  buffer) with fans and golfers > 0 has one pro at the tee (fx, fy), turned to aim at the pin (ax, ay). A 30 s cycle offset by the spot: the address
- *  (2 s), the swing (golf_drive by its times), the finish held 2 s, then idle. Writes out[0]; returns 1, or 0 with no golfer */
-export function teeGolfer(G: ArrayLike<number>, o: number, spot: number, now: number, golfers: number, out: CrowdPerson[]): number {
-  if (G[o + 3] !== 1 || !(G[o + 2]! > 0) || golfers <= 0) return 0;
-  const drive = GOLFER_CLIPS.golf_drive, swing = drive.times[drive.n - 1]! - drive.times[0]!, lt = ((now + hash(spot, 5) * 30) % 30 + 30) % 30;
-  const frame = lt < 2 ? drive.start : lt < 4 + swing ? at(drive, lt - 2) : GOLFER_CLIPS.idle.start;
-  const x = G[o + 4]!, y = G[o + 5]!, p = slot(out, 0);
-  p.x = x; p.y = y; p.group = 1; p.person = Math.floor(hash(spot, 77) * golfers); p.row = golferRow(G[o + 6]! - x, G[o + 7]! - y); p.frame = frame;
-  return 1;
 }

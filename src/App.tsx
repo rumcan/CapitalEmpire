@@ -43,6 +43,8 @@ import { CourseStatsPanel } from './ui/CourseStatsPanel';
 import { GrassManagementPanel } from './ui/GrassManagementPanel';
 import { formatPercent } from './ui/TournamentResults';
 import { SeasonReportCard } from './ui/golf/SeasonReportCard';
+import { GolfLeaderboard } from './ui/GolfLeaderboard';
+import { ShotPanel } from './ui/ShotPanel';
 import { RangeCard } from './ui/golf/RangeCard';
 import stadiumArt from './assets/ui/art/stadium.webp';
 
@@ -429,6 +431,8 @@ export default function App() {
           )}
           {game.site && game.traffic.round.stage !== 'eval' && <RoundPanel game={game} />}
           {game.site && game.traffic.round.stage === 'eval' && <EvalScreen game={game} />}
+          {game.site && game.playBoard() && <GolfLeaderboard game={game} />}
+          {game.shotState() && <ShotPanel game={game} />}
           {game.seasonReport && game.traffic.round.stage === 'free' && <SeasonReportCard report={game.seasonReport} onContinue={() => game.dismissSeasonReport()} />}
           {(() => { const rc = game.rangeCard(); return rc && <RangeCard view={rc} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.openRangeCard(false)} onPrice={p => game.setRangePrice(p)} onBuy={id => game.buyRangeUpgrade(id)} onShowPractice={() => game.showPracticeArea()} />; })()}
           {game.eventMode && !game.site && !game.golfMode && (
@@ -648,6 +652,7 @@ function EvalScreen({ game }: { game: Game }) {
  if (!last) return null;
  const pct = Math.round(last.rate * 100), delta = last.prevRate === null ? null : pct - Math.round(last.prevRate * 100);
  const ye = golf ? game.golfYearEnd(last) : null;
+ const board = golf ? game.playBoard() : null; // the golf day's board: the champion, or who leads while play goes on
  const book = ye ? computeTournamentCloseBook(ye, last.tickets ?? 0, game.courseAreaList(), last.upkeep, last.toll ?? 0) : null;
  return (
  <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center p-4">
@@ -698,6 +703,8 @@ function EvalScreen({ game }: { game: Game }) {
               : 'No change since the last run'}
           </p>
         </div>
+        {board && (board.champion ? <div className="rounded-lg bg-amber-400/15 px-3 py-2 text-sm font-semibold text-amber-200">{board.champion}</div>
+          : board.rows[0] && <p className="text-sm text-slate-200">Still on the course: <span className="font-semibold text-white">{board.rows[0].name}</span> leads at <span className="tabular-nums">{board.rows[0].toPar}</span> thru {board.rows[0].thru}</p>)}
         {golf ? (ye?.townGrowthText && <div className="rounded-lg bg-emerald-400/15 px-3 py-2 text-sm font-semibold text-emerald-200">{ye.townGrowthText}</div>) : (last.perfect && <div className="rounded-lg bg-emerald-400/15 px-3 py-2 text-sm font-semibold text-emerald-200">{`Perfect! The towns grow ${Math.round(TOWN_GROWTH * 100)}% and the stadium goes up to Level ${last.level + 1}`}</div>)}
         <div className="space-y-0.5 rounded-lg bg-white/5 p-2">
           {last.byTown.map((t, k) => (

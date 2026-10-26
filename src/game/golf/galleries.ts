@@ -38,10 +38,11 @@ export function gallerySpots(tees: readonly { hole: number; x: number; y: number
 }
 
 /** the spot an arriving party takes: by weight times the room left (a full spot pulls nothing); with every spot full, the least full one;
- *  -1 with no spots. r: a uniform draw in [0, 1) */
-export function pickSpot(spots: readonly GallerySpot[], fill: readonly number[], r: number): number {
+ *  -1 with no spots. r: a uniform draw in [0, 1). weights: each spot's pull at this minute (the City's draws, see gallerydraw.ts spotDraw), in place
+ *  of its weight */
+export function pickSpot(spots: readonly GallerySpot[], fill: readonly number[], r: number, weights?: readonly number[]): number {
   if (!spots.length) return -1;
-  let sum = 0; const w = spots.map((s, i) => { const v = s.weight * Math.max(0, 1 - (fill[i] ?? 0) / s.cap); sum += v; return v; });
+  let sum = 0; const w = spots.map((s, i) => { const v = (weights ? weights[i] ?? 0 : s.weight) * Math.max(0, 1 - (fill[i] ?? 0) / s.cap); sum += v; return v; });
   if (sum <= 0) { let best = 0; spots.forEach((s, i) => { if ((fill[i] ?? 0) / s.cap < (fill[best] ?? 0) / spots[best]!.cap) best = i; }); return best; }
   let x = r * sum;
   for (let i = 0; i < w.length; i++) { x -= w[i]!; if (x < 0) return i; }

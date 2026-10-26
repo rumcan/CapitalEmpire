@@ -151,6 +151,7 @@ scope.onmessage = (e: MessageEvent<ToSim>) => {
       case 'target': city.sim.setTarget(m.n); forcePost = true; break;
       case 'gates': city.setGates(m.gates); forcePost = true; break;
       case 'spots': city.setSpots(m.spots); forcePost = true; break;
+      case 'featured': city.setFeatured(m.holes); break;
       case 'townDay': {
         // a new length moves the town clock's rate at once (no jump), unless the tournament day runs: the day's end applies it (City.endTourneyDay)
         const s = city.sim, L = Math.max(24, m.dayLen);

@@ -19,7 +19,7 @@ import { Budget, CONNECT_FEE, GAME_DAY, LOAN, LOAN_RATE, SIGNAL_UPKEEP, compensa
 import { Career, type CareerSave, type Milestone } from './career';
 import type { HourStat } from './beforeafter';
 import { retime, jumpTo, townTimeOf } from './sim/townclock';
-import { EXIT_END, GATES_OPEN } from './golf/calendar';
+import { EXIT_END, FIRST_TEE, GATES_OPEN, PLAY_END } from './golf/calendar';
 import { LATE_AFTER_MIN, minuteAt, simAt, travelEstimate, wantedLeaves } from './golf/daytimeline';
 import { DECK_SEATS, ENTRY_S, EVENT_CLOCK, EXPRESS_ENTRY, GRAVEL_EVERY_H, PARTY, PERFECT_RATE, SURGE_SEED, TOWN_GROWTH, WALK_V, payout, promoMul, ticketPrice, tollPrice, type CardId } from './event/config';
 import type { BusRoute, BusRouteDef, BusStop } from './event/bus';
@@ -41,6 +41,7 @@ import { ON_TIME_GRACE_MIN } from './golf/tournamentday';
 import { gateRate } from './golf/venue';
 import { hasExpressGates } from './golf/golfcards';
 import { pickSpot, type GallerySpot } from './golf/galleries';
+import { RELOCATE_EVERY, relocate, spotDraw } from './golf/gallerydraw';
 import { dayShare, spectatorDemand, tierInfo, tournamentDue } from './golf/tour';
 import { roundTownGrowthRate, townGrowthTargets } from './golf/towngrowth';
 import { applyParkingFeeDemand } from './golf/parkingfee';
@@ -227,12 +228,46 @@ export class City {
   setGates(list: { x: number; y: number; lanes: number }[]): void { this.gates = list.map(g => ({ x: g.x, y: g.y, lanes: Math.max(1, g.lanes) })); this.gateAcc = this.gates.map(() => 0); this.crowd?.setGates(this.gates.length); }
   /** the galleries (golf, LEAD.md M2.2): the spots the admitted fans stand at (golf/galleries.ts), and the draws that pick them */
   spots: GallerySpot[] = []; private spotRnd = seededRnd(0x6a11);
-  setSpots(list: GallerySpot[]): void { this.spots = list; this.crowd?.setSpots(list.length); }
-  /** fans in at (x, y) walk on to a gallery spot (by weight and room); with no spots they stay where they are (inside) */
+  /** the course's hole count (the largest hole of a spot; see spotDraw) and the spots' draws at the minute (reused) */
+  private spotHoles = 0; private drawBuf: number[] = [];
+  /** the golf play's featured holes (docs/GOLF-PLAY.md decision 6; the engine sends them, see setFeatured): the spots on these holes draw more. Empty:
+   *  the day's featuredHole stands in */
+  featured = new Set<number>();
+  /** the last 30-minute mark the fans moved at (the tournament day; -Infinity until the surge's crowd starts: see startBuses) */
+  private relocatedAt = -Infinity;
+  setSpots(list: GallerySpot[]): void { this.spots = list; this.spotHoles = Math.max(0, ...list.map(s => s.hole)); this.crowd?.setSpots(list.length); }
+  /** the golf play's featured holes (the full set, each time): the spots on them draw more from now (see spotDraw); [] for none */
+  setFeatured(holes: number[]): void { this.featured = new Set(holes); }
+  /** the spots' draws at the tournament minute (spotDraw: the featured holes, else the day's featured group; the last green in the afternoon), into
+   *  drawBuf */
+  private spotDraws(): number[] {
+    const m = townTimeOf(this.sim.town, this.sim.t).dayMin, F = this.featured.size ? this.featured : undefined, out = this.drawBuf;
+    out.length = this.spots.length;
+    for (let i = 0; i < this.spots.length; i++) out[i] = spotDraw(this.spots[i]!, m, this.spotHoles, F);
+    return out;
+  }
+  /** fans in at (x, y) walk on to a gallery spot (by the draw at the minute and the room left); with no spots they stay where they are (inside) */
   private toGallery(town: number, n: number, x: number, y: number): void {
     const C = this.crowd; if (!C || !this.golf || !this.spots.length) return;
-    const i = pickSpot(this.spots, C.gallery, this.spotRnd()), s = this.spots[i]!;
+    const i = pickSpot(this.spots, C.gallery, this.spotRnd(), this.spotDraws()), s = this.spots[i]!;
     C.add({ x, y, tx: s.x + (this.spotRnd() - 0.5) * 3, ty: s.y + (this.spotRnd() - 0.5) * 3, n, town, stage: 3, route: i });
+  }
+  /** the fans move between the spots at every RELOCATE_EVERY game minute of the tournament day from FIRST_TEE to PLAY_END (each 30-minute mark once;
+   *  gallerydraw relocate): a move takes its fans off the `from` spot and sends them on as a stage 3 group to the `to` spot, where they count when
+   *  they arrive (so the fans are moved, not lost or made). Golf mode with spots and a crowd only */
+  private relocateFans(): void {
+    const C = this.crowd; if (!C || !this.golf || !this.tourneyDay || this.spots.length < 2) return;
+    const m = Math.floor(townTimeOf(this.sim.town, this.sim.t).dayMin / RELOCATE_EVERY) * RELOCATE_EVERY;
+    if (m < FIRST_TEE || m >= PLAY_END || m <= this.relocatedAt) return;
+    this.relocatedAt = m;
+    const F = this.featured.size ? this.featured : undefined;
+    for (const mv of relocate(this.spots, C.gallery, m, this.spotHoles, F)) {
+      const from = this.spots[mv.from]!, to = this.spots[mv.to]!, n = Math.min(mv.n, C.gallery[mv.from] ?? 0);
+      if (n <= 0) continue;
+      C.gallery[mv.from]! -= n;
+      // the walk starts and ends within 1.5 tiles of the spots' points, as toGallery's (town 0: a spot does not keep its fans' towns)
+      C.add({ x: from.x + (this.spotRnd() - 0.5) * 3, y: from.y + (this.spotRnd() - 0.5) * 3, tx: to.x + (this.spotRnd() - 0.5) * 3, ty: to.y + (this.spotRnd() - 0.5) * 3, n, town: 0, stage: 3, route: mv.to });
+    }
   }
   /** going home (golf, LEAD.md M2.3): every party car that parked (its town, car park and bay), the surge's homes by town (where the cars
    *  drive back to), and the leaving: when it starts, the release order, the next to release, the cars waiting to leave their car park, the
@@ -676,7 +711,7 @@ export class City {
       this.visits.step(this.sim, this.g, this.sim.clock);
       this.stepTaxis();
     }
-    if (this.crowd) { this.crowd.now = this.sim.t; this.crowd.step(WALK_V * n * DT / MPT); this.admitGates(n * DT); this.stepLeaving(); this.syncWait(); }
+    if (this.crowd) { this.crowd.now = this.sim.t; this.crowd.step(WALK_V * n * DT / MPT); this.admitGates(n * DT); this.relocateFans(); this.stepLeaving(); this.syncWait(); }
     if (rs === 'surge' && this.round.sim(n * DT)) this.kickOff();
     if (this.tourneyDay && this.dayOver()) this.endTourneyDay();
     const events = this.town.tick(this.sim.clock, this.ctx);
@@ -1167,7 +1202,7 @@ export class City {
   private startBuses(): void {
     this.sim.dropBuses();
     const C = new Crowd(this.round.crowd.length, this.busDefs.length);
-    this.crowd = C; C.setGates(this.gates.length); this.gateAcc = this.gates.map(() => 0);
+    this.crowd = C; C.setGates(this.gates.length); this.gateAcc = this.gates.map(() => 0); this.relocatedAt = -Infinity;
     C.setSpots(this.spots.length); C.onIn = (town, n, x, y) => this.toGallery(town, n, x, y);
     C.onBack = (_town, route) => { this.leave?.pending.push({ k: route, at: this.sim.t }); };
     if (this.golf) C.grace = ON_TIME_GRACE_MIN;

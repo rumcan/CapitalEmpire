@@ -40,3 +40,16 @@ test('galleries: a party picks by weight, a full spot pulls nothing, all full: t
   assert.equal(pickSpot(s, over, 0.3), ti);
   assert.equal(pickSpot([], [], 0.5), -1);
 });
+
+test('galleries: with weights given (the draw at the minute), a party picks by them, not the spots\' own weights; a full spot still pulls nothing', () => {
+  const s = gallerySpots(tees, pins), n = s.length, fill = new Array(n).fill(0), w = new Array(n).fill(0);
+  w[1] = 1;
+  for (let k = 0; k < 50; k++) assert.equal(pickSpot(s, fill, k / 50, w), 1, 'only spot 1 pulls');
+  w[3] = 1;
+  const got = new Array(n).fill(0);
+  for (let k = 0; k < 1000; k++) got[pickSpot(s, fill, (k + 0.5) / 1000, w)]++;
+  assert.ok(got[0] === 0 && got[2] === 0 && Math.abs(got[1] - got[3]) <= 1, `spots 1 and 3 share the pull: ${got}`);
+  // spot 1 is full (room 0), so spot 3 takes every party whatever the draw
+  const fl = s.map(q => q.cap); fl[3] = 0;
+  for (let k = 0; k < 20; k++) assert.equal(pickSpot(s, fl, k / 20, w), 3);
+});

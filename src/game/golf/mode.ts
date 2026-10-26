@@ -6,6 +6,7 @@ import type { PlacedEventStructure } from './eventtool';
 import type { CourseHeightSaveChunk } from '../ext/course-height';
 import type { GolfProgress } from '../ext/progressive-ui';
 import type { GridSave } from '../ext/course-grid';
+import type { OwnerInput } from './play/live';
 import { normalizeRangeBiz, type RangeBizSave } from './rangesave';
 
 /** a rectangle in tiles: top-left x, y and the size w, h */
@@ -42,9 +43,23 @@ export interface GolfSave {
  invited?: { at: number };
  /** the founding seasons passed: season ends with no tournament (range starts, T088); the calendar counts them with the tournaments (missing = 0) */
  founding?: number;
+ /** the owner's play in the day (docs/GOLF-PLAY.md decision 7, P4b; see GolfPlaySave). Missing: he is not in the day */
+ play?: GolfPlaySave;
  /** the range business (range starts, plan P24, T129: golf/rangesave.ts): its upgrades, bucket price and counts; a range start's save without it
   *  loads as the starting range */
  range?: RangeBizSave;
+}
+
+/** the owner's play as saved (GolfSave.play): the tournament's key (the round's count), his sex, the inputs he played in order, and how many of them
+ *  he had played when he handed the rest to the caddie (null while he still plays). A replay of the inputs (then the caddie) gives the same round.
+ *  Written when he joins, hits or caddies; dropped when the round is free */
+export interface GolfPlaySave { key: number; owner: 'm' | 'w'; inputs: OwnerInput[]; caddie: number | null }
+
+/** a saved owner's play, or null when it is not well formed (no key, sex or inputs list); a missing caddie count is null */
+function normalizePlaySave(p: Partial<GolfPlaySave> | null | undefined): GolfPlaySave | null {
+  const key = p?.key, owner = p?.owner, inputs = p?.inputs, caddie = p?.caddie;
+  if (typeof key !== 'number' || !Number.isFinite(key) || (owner !== 'm' && owner !== 'w') || !Array.isArray(inputs)) return null;
+  return { key, owner, inputs, caddie: typeof caddie === 'number' && Number.isFinite(caddie) ? caddie : null };
 }
 
 /** a golf game's start money, $ (City.setBudget's golf treasury) */
@@ -59,7 +74,7 @@ export function normalizeGolfSave(g: Partial<GolfSave> | null | undefined): Golf
   if (!g || !g.town || !g.course || !g.clubhouse) return null;
   const parcel: Rect = g.parcel ?? g.parcels?.[0] ?? g.course;
   // the range start's fields (plan P22 2.6) are taken out and put back only when well formed, so an old start's save normalizes as before
-  const { start, exits, townBoost, invited, founding, range, ...rest } = g;
+  const { start, exits, townBoost, invited, founding, play, range, ...rest } = g;
   const out: GolfSave = {
     ...rest,
     v: 1,
@@ -79,5 +94,6 @@ export function normalizeGolfSave(g: Partial<GolfSave> | null | undefined): Golf
   if (typeof townBoost === 'number' && Number.isFinite(townBoost)) out.townBoost = townBoost;
   if (invited && Number.isFinite(invited.at)) out.invited = { at: invited.at };
   if (typeof founding === 'number' && Number.isFinite(founding) && founding > 0) out.founding = Math.floor(founding);
+  const pl = normalizePlaySave(play); if (pl) out.play = pl;
   return out;
 }

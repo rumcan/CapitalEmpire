@@ -1,6 +1,6 @@
 import { CHUNK_H, CHUNK_W, DISTRICT_Z, HH, HW, MAP, MID_H, MID_W, PLANNER_Z, PLAN_H, PLAN_W, SPR_H, SPR_W, ZOOM_MAX, ZOOM_MIN, clamp, planLevelFor, tileOf, worldX, worldY, mulberry } from './iso';
 import { ATLAS_PAGES, GOLFER_BASE, GOLFER_FRAMES, GOLFER_PEOPLE, LIBRARY, SPECTATOR_BASE, SPECTATOR_FRAMES, SPECTATOR_PEOPLE, WALKER_BASE, WALKER_PEOPLE, WALK_DIRS, WALK_FRAMES } from './library';
-import { galleryPeople, queuePeople, teeGolfer, walkerPeople, type CrowdPerson } from './crowdview';
+import { galleryPeople, hash, queuePeople, walkerPeople, type CrowdPerson } from './crowdview';
 import { FACING_ROW, Pedestrians, sidewalks, type Door, type WalkerView } from './ext/pedestrians';
 import { GrassManagement, grassSurface, type GrassAction, type GrassCellView, type GrassScope, type GrassSettings } from './ext/grass-management';
 import { drawGhostBlueprint, drawGhostHint, drawGhostPoly, drawGhostRing, ghostStatus, type GhostBlueprint, type GhostView } from './ext/ghost-preview';
@@ -81,14 +81,14 @@ import { Budget, DEBT_DAYS, LOAN, compensation, type Ledger } from './budget';
 import { WIN_POP, classUnlocked, junctionUnlocked, tunnelsUnlocked, unlockOf } from './career';
 import type { DisasterNote } from './city';
 import type { DisasterKind } from './ext/disasters';
-import { normalizeGolfSave, type GolfSave, type GolfView } from './golf/mode';
+import { normalizeGolfSave, type GolfPlaySave, type GolfSave, type GolfView } from './golf/mode';
 import { createCourseHeightField, flattenCourseCorridor, loadCourseHeight, saveCourseHeight, unionBox as unionCourseBox, type CourseHeightField, type CourseHeightSaveChunk, type CourseTileBox } from './ext/course-height';
 import { HEIGHT_LIGHT_STRENGTH, clampHeightLight } from './ext/course-height/light';
 import { planGolfGame } from './golf/start';
 import { RANGE_CAM_ZOOM, planRangeStart } from './golf/rangestart';
 import { CLUB_REACH, clubhouseSpotWhy, plotOfFront, rangeLayout } from './golf/range';
 import { dressCourse } from './golf/dressing';
-import { SEASON_START, monthIndexLabel, monthsLeft, seasonLabel, seasonMonth, yearOf } from './golf/calendar';
+import { FIRST_TEE, SEASON_START, monthIndexLabel, monthsLeft, seasonLabel, seasonMonth, yearOf } from './golf/calendar';
 import { computeTournamentCloseBook, computeYearEnd, type YearEndResult } from './golf/yearend';
 import { countParkedCars } from './golf/parkingfee';
 import { parkRideNeeds } from './golf/parkride';
@@ -97,8 +97,9 @@ import type { CourseFacts } from './golf/tour';
 import { surfaceOfTex } from './golf/costs';
 import { adjacentBlockPrice, buyAdjacentBlock, COURSE_LAND_MSG, LAND_BLOCK, blockAt, blockOnRoad, blockOnWater, pointInLand, polyInParcels, type LandRoad, type ParcelLandClass } from './golf/parcels';
 import { buildCourseStatsPanel, type CourseStatsPanel } from './golf/coursestats';
-import type { CourseArea, CourseLayout } from './golf/types';
-import { deriveHoles, validateMarkerPlacement } from './golf/holes';
+import { TILE_M, type CourseArea, type CourseLayout, type GolfSurface } from './golf/types';
+import { deriveHoles, surfaceAt, validateMarkerPlacement } from './golf/holes';
+import { LiveGroup, OWNER_ADDRESS, OWNER_ART, OWNER_SKILL, POWER, PUTT_POWER, PlayView, allowedClubs, boardRows, carryM, championLine, makeCourseView, makeField, ownerGolfer, playRound, powerFor, startOwner, stateAt, standings, teeTimes, toParText, type BoardRow, type Club, type CourseView, type OwnerTurn, type RoundPlan, type Sex } from './golf/play';
 import { holeViews, markerPlan, tagByHole, type HoleView, type MarkerKind } from './golf/holeview';
 import { CAST, castShear, clampCast, type CastShadow } from './cast-shadow';
 import { MARKER_SCALE, OLD_TEE_IDS, PIN_RED_ID, PIN_YELLOW_ID, TEE_BACK_ID, TEE_FORWARD_ID, TEE_MIDDLE_ID } from './golf/dressing';
@@ -182,6 +183,24 @@ function crowdDrawable(out: Drawable[], k: number, p: CrowdPerson) {
   d.item = p.group ? GOLFER_BASE + (p.person * WALK_DIRS.length + p.row) * GOLFER_FRAMES + p.frame : SPECTATOR_BASE + (p.person * WALK_DIRS.length + p.row) * SPECTATOR_FRAMES + p.frame;
   d.x = p.x; d.y = p.y; d.x0 = p.x - 0.12; d.y0 = p.y - 0.12; d.x1 = p.x + 0.12; d.y1 = p.y + 0.12;
 }
+/** the golfer art (indices into GOLFER_PEOPLE) of a tag: the men's ids carry _m, the women's _w; with none of its own, a sex gets all the art */
+const golferArt = (tag: string): number[] => { const a = GOLFER_PEOPLE.flatMap((p, i) => p.id.includes(tag) ? [i] : []); return a.length ? a : GOLFER_PEOPLE.map((_, i) => i); };
+const GOLFER_ART: Record<'m' | 'w', number[]> = { m: golferArt('_m'), w: golferArt('_w') };
+/** the owner's art index in GOLFER_PEOPLE (OWNER_ART by sex; a sex's first golfer art when that id is missing) */
+const ownerArt = (sex: Sex): number => { const i = GOLFER_PEOPLE.findIndex(p => p.id === OWNER_ART[sex]); return i >= 0 ? i : GOLFER_ART[sex][0]!; };
+/** the day's golf round (docs/GOLF-PLAY.md P2): its plan, course view and playback, the tournament's key (the round's count), each golfer's art index, and
+ *  the owner's play (P4b; null when he is not in the day) */
+interface GolfPlay { plan: RoundPlan; view: CourseView; pv: PlayView; key: number; art: number[]; told: boolean; own: OwnerPlay | null }
+/** the owner's play in the day (docs/GOLF-PLAY.md decision 7, P4b): his golfer's id, sex and skill, his group's tee time, his live group (live.ts), his next
+ *  turn (null once his group is done), and the count of inputs he had played when he handed to the caddie (null while he plays) */
+interface OwnerPlay { id: number; sex: Sex; skill: number; tee: number; live: LiveGroup; turn: OwnerTurn | null; caddie: number | null }
+/** the owner's open shot (P4b, the shot panel): his turn and his input so far (the club, the aim point in tiles, the power: see powerFor) */
+export interface ShotState { turn: OwnerTurn; input: { club: Club; aim: Pt; power: number } }
+/** the day's leaderboard (docs/GOLF-PLAY.md decision 8): the game minute of the day, the top rows and the owner's (boardRows), the champion's line once
+ *  everyone is done (else null), whether everyone is done, the tournament's name, and the owner's group's tee time (null without him) */
+export interface PlayBoard { minute: number; rows: BoardRow[]; champion: string | null; done: boolean; event: string; ownerTee: number | null }
+/** the leaderboard's rows shown (the top 8, and the owner's row below them) */
+const BOARD_ROWS = 8;
 /** a closed path over a flat x y list, in the current transform's units */
 function ring(ctx: CanvasRenderingContext2D, p: number[]) { ctx.moveTo(p[0]!, p[1]!); for (let i = 2; i < p.length; i += 2) ctx.lineTo(p[i]!, p[i + 1]!); ctx.closePath(); }
 /** the distance from p to the seg s, tiles */
@@ -208,6 +227,10 @@ const PLAYING_SURFACES: ReadonlySet<string> = new Set(['fairway', 'firstCut', 'f
 const COURSE_GRID_PAD = 32;
 /** the least time between two sends of the course chunks during a stroke, ms (paint-tool.ts SEND_MS) */
 const COURSE_SEND_MS = 100;
+/** the least time between two workings-out of the featured holes (the crowd follows the play, docs/GOLF-PLAY.md decision 6), real ms */
+const FEATURED_EVERY_MS = 2000;
+/** the toast when the clock is asked to move while the owner's shot is open: the game waits for his shot (the speed, the skips and the pause hold) */
+const SHOT_HOLD = 'Your shot is open: the clock waits for it';
 /** a course area as the golf rules read it (deriveHoles, holeViews, markerPlan, the stats, the upkeep): its surface, hole, a texture that
  *  reads back as the surface, and its planting */
 type CourseAreaRec = CourseArea & { hole?: number; tex: PaintTex };
@@ -482,6 +505,14 @@ export class Game {
   private pedView: WalkerView[] = []; private pedDraw: Drawable[] = [];
   /** the crowd's movers (crowdMovers) and its scratch people: the spectators, the golfers */
   private crowdDraw: Drawable[] = []; private crowdPeople: CrowdPerson[] = []; private crowdGolfers: CrowdPerson[] = [];
+  /** the day's golf round (updatePlay, docs/GOLF-PLAY.md P2): built once per tournament; playTried is the key last tried, so a round with no holes is not rebuilt every frame */
+  private play: GolfPlay | null = null; private playTried = -1;
+  /** the owner's open shot (P4b: the shot panel; null when none is open) and the speed the sim had when it opened (it resumes at least at 1x) */
+  private shot: ShotState | null = null; private shotSpeed = 1;
+  /** the featured holes last sent to the city (featuredHoles; the City's set mirrors it) and the real ms they were last worked out at */
+  private featured: number[] = []; private featuredAt = -Infinity;
+  /** the leaderboard (playBoard), recomputed at most every 250 ms: the play it is for, the time, and the board */
+  private boardCache: { play: GolfPlay; at: number; board: PlayBoard } | null = null;
   /** Local care and wear augment the existing base grass, lawn presets, paint and grow-in. */
   grass = new GrassManagement(); grassPanel = false; grassHeat = false; grassRadius = 12; grassArea = false; grassDose = 1; grassAngle = 0;
   grassAction: GrassAction | null = null; grassTarget: Pt | null = null;
@@ -493,7 +524,7 @@ export class Game {
   private frameTimes: number[] = [];
   // input
   /** a drag in progress; build: a right-button press in the road tool (released without moving, it builds the route, as Enter) */
-  private dragging: null | { kind: 'pan' | 'bulldoze' | 'park'; sx: number; sy: number; camX: number; camY: number; moved: boolean; build?: boolean } = null;
+  private dragging: null | { kind: 'pan' | 'bulldoze' | 'park'; sx: number; sy: number; camX: number; camY: number; moved: boolean; build?: boolean; aim?: Pt } = null;
   /** the Paint tool: painted ground areas, its settings and the outline being drawn (docs/PAINT-TOOL.md) */
   paint = new PaintTool({ progress: () => this.bump('pieces'), setLotGround: (k, p) => { this.paintRev++; this.setLotGround(k, p); }, emit: () => this.emit(), save: () => this.scheduleSave(), toast: (t, k) => this.toast(t, k), affine: o => this.paintAffine(o), placeProps: (ps, seed) => this.placePresetProps(ps, seed), golfMode: () => this.golfMode, money: () => this.money, spend: n => this.traffic.spend('construction', n), ownedLand: pts => !this.golf || polyInParcels(this.golf.parcels ?? [this.golf.parcel], pts), currentMonth: () => !this.golf ? 0 : this.golfMonthIndex(), plant: (ids, x, y, r, spacing, size, seed) => this.plantProps(ids, x, y, r, spacing, size, seed), unplant: (x, y, r) => this.unplantProps(x, y, r), plantPool: k => plantPool(LIBRARY, k), courseHeight: () => this.courseHeight, roadsNear: (x, y, r) => { let k = 0; return [...this.net.segsNear({ x, y }, r)].map(s => ({ id: ++k, ax: s.a.x, ay: s.a.y, bx: s.b.x, by: s.b.y, halfWidthTiles: s.cls.h + s.cls.walk })); }, roadRev: () => this.net.version, heightChanged:b => { this.courseHeightChanged(unionCourseBox(b, this.flattenRoadsIn(b))!); },
     journal: { begin: () => { this.propLog = { added: [], removed: [] }; }, end: () => { const j = this.propLog; this.propLog = null; return j && (j.added.length || j.removed.length) ? j : null; }, undo: j => this.swapProps(j as PropLog, true), redo: j => this.swapProps(j as PropLog, false) },
@@ -2774,6 +2805,8 @@ export class Game {
   pointerDown(e: PointerEvent) {
   const mx = e.offsetX, my = e.offsetY;
   this.camEase = null; // a press takes the camera back from New hole's framing (P23 4.4)
+  // the owner's open shot (P4b) takes a left click on the course as its aim, before any tool does (a drag still pans; the aim is set on release)
+  if (this.shot && e.button === 0 && !this.keys.has(' ')) { this.overlay.setPointerCapture(e.pointerId); this.dragging = { kind: 'pan', sx: mx, sy: my, camX: this.cam.X, camY: this.cam.Y, moved: false, aim: this.tileAt(mx, my) }; return; }
   // the side modes live in Select (P23 P1-A): the Grass panel, Land, Event and Holes never take a build tool's click
   const side = this.tool === 'select';
   if (side && this.grassPanel && e.button === 0 && !this.keys.has(' ')) { this.grassTarget = this.tileAt(mx, my); if (this.grassAction) this.careGrass(this.grassAction); this.emit(); return; }
@@ -2885,6 +2918,8 @@ export class Game {
   pointerUp() {
     const d = this.dragging;
     if (d?.kind === 'park') this.parkRelease();
+    // a click (no drag) on the course aims the owner's open shot (P4b)
+    if (d?.kind === 'pan' && d.aim && !d.moved) this.aimAt(d.aim);
     // a right click (no drag) in the road tool builds the route drawn so far, as Enter does (the owner, 2026-10-19); a right drag still pans
     if (d?.kind === 'pan' && d.build && !d.moved && this.tool === 'road' && this.route.length > 1) this.finishRoute();
     if (this.paintOn) { this.paint.pointerUp(this.paintTol); this.courseCursor.release(); }
@@ -3060,7 +3095,11 @@ export class Game {
   /** the town's growth option (its id, see GROWTH_OPTIONS) */
   setGrowth(id: string) { this.traffic.setOption(id); this.emit(); }
   /** the sim speed (0 pauses); a speed above 0 is remembered for the resume */
-  setSpeed(k: number) { if (k > 0) this.lastSpeed = k; this.speed = k; this.traffic.setSpeed(k); this.emit(); }
+  setSpeed(k: number) {
+    // while the owner's shot is open the clock waits for it: only a pause goes through (closeShot clears the shot before it resumes)
+    if (k > 0 && this.shot) { this.toast(SHOT_HOLD, 'warn'); return; }
+    if (k > 0) this.lastSpeed = k; this.speed = k; this.traffic.setSpeed(k); this.emit();
+  }
   /** pauses, or resumes at the last speed */
   togglePause() { this.setSpeed(this.speed ? 0 : this.lastSpeed); }
   /** the game clock: the economy's day, and the time of day from the sim clock (one sim second is one game minute) */
@@ -3082,6 +3121,7 @@ export class Game {
   }
   /** fast-forwards the sim to the next 7:30 or 16:30 (game clock s 450 and 990 of the day); resumes first if paused. Not while the clock is frozen. */
   skipToRush() {
+    if (this.shot) { this.toast(SHOT_HOLD, 'warn'); return; }
     if (this.traffic.skipping) return;
     if (this.traffic.stats.frozen) { this.toast('The clock is frozen during an event'); return; }
     const now = performance.now(), c = this.traffic.clockTime(now), day = Math.floor(c / GAME_DAY) * GAME_DAY;
@@ -3722,6 +3762,19 @@ export class Game {
     }
     ctx.lineJoin = 'miter'; ctx.textAlign = 'start'; ctx.textBaseline = 'alphabetic';
   }
+  /** the golf balls of the day (docs/GOLF-PLAY.md P2) at the street tier: each in the air raised by its height (1 m = HH * ze px, half a tile's screen
+   *  height) over a soft shadow on the ground, or at rest; a white ball with a dark rim. Culled to the view */
+  private drawBalls(ctx: CanvasRenderingContext2D) {
+    const pl = this.play; if (!pl || this.cam.z < DISTRICT_Z) return;
+    const B = pl.pv.balls, dpr = this.dpr, ze = this.cam.z * dpr, cw = this.cw, ch = this.ch, r = Math.max(1.5, 0.06 * HH * 2 * ze);
+    ctx.lineWidth = dpr; ctx.strokeStyle = 'rgba(2,6,23,0.9)';
+    for (let i = 0; i < B.length; i++) {
+      const b = B[i]!, c = this.screen(b.x, b.y);
+      if (c.x < -r || c.y < -r || c.x > cw + r || c.y > ch + r) continue;
+      if (b.h > 0) { ctx.fillStyle = 'rgba(2,6,23,0.35)'; ctx.beginPath(); ctx.ellipse(c.x, c.y, 1.5 * r, 0.7 * r, 0, 0, Math.PI * 2); ctx.fill(); }
+      ctx.beginPath(); ctx.arc(c.x, c.y - b.h * HH * ze, r, 0, Math.PI * 2); ctx.fillStyle = '#f8fafc'; ctx.fill(); ctx.stroke();
+    }
+  }
   /** the bus tool's preview at the cursor: once the first stop is picked, a line from it to the plan (white dashed) and the plan's stop; the label: the reason,
    *  the lot stop's car park, or the doors stop's cost (red when short of the money) */
   private drawBusPreview(ctx: CanvasRenderingContext2D) {
@@ -3949,6 +4002,7 @@ export class Game {
   }
   /** fast-forwards the season to the tournament (the end of the game day, one sim second past it); golf mode only, not while the clock is frozen */
   skipToTournament() {
+  if (this.shot) { this.toast(SHOT_HOLD, 'warn'); return; }
   if (!this.golf || this.traffic.skipping) return;
   if (this.traffic.stats.frozen) { this.toast('The clock is frozen during an event'); return; }
     const now = performance.now(), c = this.traffic.clockTime(now), target = Math.floor(c / GAME_DAY) * GAME_DAY + GAME_DAY;
@@ -4050,7 +4104,7 @@ export class Game {
       curbs: this.parking.curbs.map((c): [number, number, number, number] => [c.ax, c.ay, c.bx, c.by]),
       parkFee: this.parking.fee,
       speed: this.net.speedTier,
-      golf: this.golf ? { ...this.golf, height: this.courseHeightChunks(), grid: this.gridSave(), plans: this.golf.plans?.length ? this.golf.plans : undefined } : undefined,
+      golf: this.golf ? { ...this.golf, height: this.courseHeightChunks(), grid: this.gridSave(), plans: this.golf.plans?.length ? this.golf.plans : undefined, play: this.golf.play && this.traffic.round.stage !== 'free' ? this.golf.play : undefined } : undefined,
     };
     try { return await writeSave(d); } catch { return 0; }
   }
@@ -4356,20 +4410,19 @@ export class Game {
     return out;
   }
 
-  /** the crowd as movers in a tile box (the street tier, with the townspeople): each gallery spot's fans (and a tee's stand-in golfer), each queue at a
-   *  stop or gate (its block 1.5 tiles behind the kerb toward the stop's car park, as drawWalkers had it) and each walking party, every person its 3D
-   *  frame (crowdview.ts; `now` in seconds). A spot, a party or a queue is culled by its point to the box padded by 4 tiles, the reach of its people.
-   *  Reused Drawables and scratch people: no allocation per frame once the crowd is warm */
+  /** the crowd as movers in a tile box (the street tier, with the townspeople): each gallery spot's fans, each queue at a stop or gate (its block
+   *  1.5 tiles behind the kerb toward the stop's car park, as drawWalkers had it) and each walking party, every person its 3D frame (crowdview.ts;
+   *  `now` in seconds), then the golfers of the day (playMovers). A spot, a party or a queue is culled by its point to the box padded by 4 tiles, the
+   *  reach of its people. Reused Drawables and scratch people: no allocation per frame once the crowd is warm */
   private crowdMovers(x0: number, y0: number, x1: number, y1: number, now: number): Drawable[] {
-    const G = this.traffic.gallery, W = this.traffic.walkers, S = this.traffic.stops, out = this.crowdDraw, P = this.crowdPeople, T = this.crowdGolfers;
-    const X0 = x0 - 4, Y0 = y0 - 4, X1 = x1 + 4, Y1 = y1 + 4, nS = SPECTATOR_PEOPLE.length, nG = GOLFER_PEOPLE.length;
+    const G = this.traffic.gallery, W = this.traffic.walkers, S = this.traffic.stops, out = this.crowdDraw, P = this.crowdPeople;
+    const X0 = x0 - 4, Y0 = y0 - 4, X1 = x1 + 4, Y1 = y1 + 4, nS = SPECTATOR_PEOPLE.length;
     let m = 0;
     for (let i = 0; i + 7 < G.length; i += 8) {
       const x = G[i]!, y = G[i + 1]!;
       if (x < X0 || x > X1 || y < Y0 || y > Y1) continue;
       const spot = i / 8, k = galleryPeople(G, i, spot, now, nS, P);
       for (let j = 0; j < k; j++) crowdDrawable(out, m++, P[j]!);
-      if (G[i + 3] === 1 && teeGolfer(G, i, spot, now, nG, T)) crowdDrawable(out, m++, T[0]!);
     }
     for (let i = 0; i + 5 < W.length; i += 6) {
       const x = W[i]!, y = W[i + 1]!;
@@ -4387,8 +4440,212 @@ export class Game {
       const k = queuePeople(sx + ux * 1.5, sy + uy * 1.5, sx, sy, q, r, now, nS, P);
       for (let j = 0; j < k; j++) crowdDrawable(out, m++, P[j]!);
     }
+    m = this.playMovers(out, m, X0, Y0, X1, Y1);
     out.length = m;
     return out;
+  }
+  /** the golfers of the day (docs/GOLF-PLAY.md P2) in the box, from mover m on: each person of the playback (PlayView.people) as a golfer of his art
+   *  (group 1: person = the art's index for his sex and look; the row and frame come from the view), culled to the box. Reuses one scratch person;
+   *  returns the next mover index */
+  private playMovers(out: Drawable[], m: number, X0: number, Y0: number, X1: number, Y1: number): number {
+    const pl = this.play; if (!pl) return m;
+    const P = pl.pv.people, t = this.crowdGolfers[0] ?? (this.crowdGolfers[0] = { x: 0, y: 0, group: 1, person: 0, row: 0, frame: 0 });
+    for (let j = 0; j < P.length; j++) {
+      const p = P[j]!;
+      if (p.x < X0 || p.x > X1 || p.y < Y0 || p.y > Y1) continue;
+      t.x = p.x; t.y = p.y; t.person = pl.art[p.golfer]!; t.row = p.row; t.frame = p.frame;
+      crowdDrawable(out, m++, t);
+    }
+    return m;
+  }
+  /** the golf round on the tournament day (docs/GOLF-PLAY.md P2), each frame in golf mode. It is built once per tournament, while its round is live
+   *  (the surge, and the eval after kick-off, so a reload in the eval finds it too), keyed by the round's count (runs: the same after a reload, new for
+   *  each tournament), and then played back at the town clock's minute of the day (the tournament day runs at 1 game minute per sim second). Dropped
+   *  when the round is free, or when there is no golf */
+  private updatePlay(now: number) {
+    const tr = this.traffic, r = tr?.round;
+    if (!this.golf || !r || (r.stage !== 'surge' && r.stage !== 'eval')) { this.play = null; this.playTried = -1; this.clearFeatured(); if (this.shot) this.closeShot(); return; }
+    if (this.playTried !== r.runs) { this.playTried = r.runs; this.play = this.buildPlaySaved(r.runs); }
+    if (!this.play) { this.clearFeatured(); return; }
+    const minute = townTimeOf(tr.town, tr.simTime(now)).dayMin;
+    // the owner's pending turn (P4b): his walk to the ball and his address there, facing the open shot's aim when one is open
+    const own = this.play.own, shotAim = this.shot && own && this.shot.turn === own.turn ? this.shot.input.aim : null;
+    this.play.pv.update(minute, now / 1000, own?.turn ?? null, shotAim);
+    this.ownerFrame(minute);
+    // the crowd follows the play (docs/GOLF-PLAY.md decision 6): the featured holes are worked out at most every FEATURED_EVERY_MS and sent when they change
+    if (now - this.featuredAt >= FEATURED_EVERY_MS) { this.featuredAt = now; this.sendFeatured(this.featuredHoles(this.play, minute)); }
+    // the champion is toasted once, the first time the board has one (its line is the board's)
+    if (!this.play.told) { const b = this.playBoard(); if (b?.champion) { this.play.told = true; this.toast(`${b.champion} — ${b.event}`, 'good'); } }
+  }
+  /** the holes the crowd follows at a game minute (docs/GOLF-PLAY.md decision 6), sorted, no repeats: the holes the last three groups are on (the marquee
+   *  groups tee off last) and the holes of the top three of the standings, among the golfers who have teed off and are not done. A golfer's hole is its
+   *  PlayHole.n (a 9-hole course's second nine repeats its numbers, as do the spots' holes) */
+  private featuredHoles(pl: GolfPlay, minute: number): number[] {
+    const { plan, view } = pl, st = stateAt(plan, view, minute), holes = new Set<number>();
+    const out = (id: number) => plan.done[id]! > minute;
+    const add = (id: number) => { const s = st.find(q => q.golfer === id), h = s ? view.holes[s.hole] : undefined; if (h) holes.add(h.n); };
+    for (const gr of plan.groups.slice(-3)) if (minute >= gr.tee) for (const id of gr.players) if (out(id)) add(id);
+    let top = 0;
+    for (const s of standings(plan, view, minute)) { if (!out(s.golfer)) continue; add(s.golfer); if (++top === 3) break; }
+    return [...holes].sort((a, b) => a - b);
+  }
+  /** the featured holes to the city when they differ from the last sent (the city's set is replaced whole: see SimClient.setFeatured) */
+  private sendFeatured(holes: number[]) {
+    const f = this.featured;
+    if (holes.length === f.length && holes.every((h, i) => h === f[i])) return;
+    this.featured = holes; this.traffic.setFeatured(holes);
+  }
+  /** no play: the city follows no golfers (the featured holes cleared, sent once when they were set) */
+  private clearFeatured() { if (this.featured.length) this.sendFeatured([]); }
+  /** the day's leaderboard (docs/GOLF-PLAY.md decision 8; the panel and the eval line read it): null with no play. The minute, the rows (boardRows: the
+   *  top 8 and the owner's row below them, the owner the one golfer marked owner), the champion's line once everyone is done, done, and the tournament's
+   *  name. Recomputed at most every 250 ms */
+  playBoard(): PlayBoard | null {
+    const pl = this.play; if (!pl) return null;
+    const now = performance.now(), c = this.boardCache;
+    if (c && c.play === pl && now - c.at < 250) return c.board;
+    const tr = this.traffic, plan = pl.plan, minute = townTimeOf(tr.town, tr.simTime(now)).dayMin, ownerId = plan.golfers.find(g => g.owner)?.id ?? null;
+    const board: PlayBoard = {
+      minute, rows: boardRows(standings(plan, pl.view, minute), plan.golfers, BOARD_ROWS, ownerId), champion: championLine(plan, pl.view, minute),
+      done: plan.golfers.every(g => plan.done[g.id]! <= minute), event: this.golf ? tierInfo(this.golf.tier).name : '', ownerTee: pl.own?.tee ?? null,
+    };
+    this.boardCache = { play: pl, at: now, board };
+    return board;
+  }
+  /** the round of a tournament key (see updatePlay): the course's played holes (the course grid's surface where it is painted, else the painted
+   *  areas), the field at the tier, its tee times and the round, all from a seed of the map's seed and the key. With an owner (P4b: a join, or the
+   *  save's play), his golfer joins the field as the next id, his group is played live (startOwner: his saved inputs replayed, then the caddie if he
+   *  handed over) and his next turn is due. Null with no holes to play */
+  private buildPlay(key: number, owner: GolfPlaySave | null): GolfPlay | null {
+    const g = this.golf; if (!g) return null;
+    const areas = this.courseAreaList(), grid = this.courseGrid;
+    const surfAt = (x: number, y: number): GolfSurface | null => {
+      const i = grid ? cellAt(grid, x, y) : -1, s = i >= 0 ? SURF_SURFACE[grid!.surf[i]!] : null;
+      return s ?? surfaceAt(areas, x, y);
+    };
+    const view = makeCourseView(deriveHoles(areas, g.tees, g.pins, g.aims), surfAt);
+    if (!view.holes.length) return null;
+    const seed = Math.floor(hash(this.seed, key) * 4294967296), field = makeField(g.tier, seed);
+    const golfers = owner ? [...field, ownerGolfer(field.length, owner.owner)] : field;
+    const groups = teeTimes(golfers, seed), li = owner ? groups.findIndex(gr => gr.players.includes(field.length)) : -1;
+    const plan = playRound(view, golfers, groups, seed, li >= 0 ? { live: li } : undefined);
+    const art = golfers.map(p => p.owner ? ownerArt(p.sex) : GOLFER_ART[p.sex][p.look % GOLFER_ART[p.sex].length]!);
+    const pl: GolfPlay = { plan, view, pv: new PlayView(plan, view), key, art, told: false, own: null };
+    if (owner && li >= 0) {
+      const { live, turn } = startOwner(plan, view, li, seed, owner.inputs, owner.caddie);
+      pl.own = { id: field.length, sex: owner.owner, skill: OWNER_SKILL, tee: groups[li]!.tee, live, turn, caddie: owner.caddie };
+    }
+    return pl;
+  }
+  /** the round of a tournament key from the save: the save's owner play when it is this tournament's (buildPlay replays his inputs). A save the course no
+   *  longer fits (its inputs throw) is dropped, and the day is played without him */
+  private buildPlaySaved(key: number): GolfPlay | null {
+    const s = this.golf?.play;
+    if (s && s.key === key) {
+      try { return this.buildPlay(key, s); } catch { if (this.golf) delete this.golf.play; this.scheduleSave(); }
+    }
+    return this.buildPlay(key, null);
+  }
+  /** whether the owner can join the day's tournament (docs/GOLF-PLAY.md decision 7): the play exists with no owner yet, and the game minute is before
+   *  FIRST_TEE - 10 (the window closes ten minutes before the first tee) */
+  canJoinTournament(): boolean {
+    const pl = this.play; if (!pl || pl.own) return false;
+    const tr = this.traffic; return townTimeOf(tr.town, tr.simTime(performance.now())).dayMin < FIRST_TEE - 10;
+  }
+  /** joins the tournament as the owner (P4b): the play is rebuilt with his golfer in the first group (the same seed and key; his first turn is due) and
+   *  the save records him. `sex` picks his look: golf_am_m3 for 'm', golf_am_w1 for 'w' */
+  joinTournament(sex: Sex) {
+    const pl = this.play; if (!pl || !this.canJoinTournament()) return;
+    const built = this.buildPlay(pl.key, { key: pl.key, owner: sex, inputs: [], caddie: null });
+    if (!built) return;
+    this.play = built; this.saveOwner(); this.emit();
+  }
+  /** the owner's open shot for the shot panel, or null */
+  shotState(): ShotState | null { return this.shot; }
+  /** the owner's club for the open shot: one his lie allows (allowedClubs; the driver only from the tee). The power resets to what carries the distance to
+   *  the aim (powerFor) */
+  setShotClub(c: Club) {
+    const s = this.shot, own = this.play?.own; if (!s || !own || !allowedClubs(s.turn.lie, s.turn.lie === 'tee').includes(c)) return;
+    const dM = Math.hypot(s.input.aim.x - s.turn.ball.x, s.input.aim.y - s.turn.ball.y) * TILE_M;
+    this.shot = { ...s, input: { club: c, aim: s.input.aim, power: powerFor(c, dM, own.skill) } }; this.emit();
+  }
+  /** the owner's power for the open shot: clamped to the club's range (30% to 100% of the full carry; a putt 50% to 150% of its length) */
+  setShotPower(p: number) {
+    const s = this.shot; if (!s || !Number.isFinite(p)) return;
+    const r = s.input.club === 'putter' ? PUTT_POWER : POWER;
+    this.shot = { ...s, input: { ...s.input, power: Math.min(r[1]!, Math.max(r[0]!, p)) } }; this.emit();
+  }
+  /** the owner's aim: a point on the course (a click, not a drag, while his shot is open). The power follows (powerFor), so the ring is where he means the
+   *  ball to land: a click 30 m out with the driver at 100% would otherwise fly the full carry past it */
+  private aimAt(t: Pt) {
+    const s = this.shot, own = this.play?.own; if (!s) return;
+    const aim = { x: t.x, y: t.y }, dM = Math.hypot(aim.x - s.turn.ball.x, aim.y - s.turn.ball.y) * TILE_M;
+    const power = own && s.input.club !== 'putter' ? powerFor(s.input.club, dM, own.skill) : s.input.power;
+    this.shot = { ...s, input: { ...s.input, aim, power } }; this.emit();
+  }
+  /** the owner's hit (P4b): plays his shot from the panel's input, plays the day on to his next turn, closes the shot (the sim resumes) and saves. When his
+   *  group is done, his score is toasted */
+  ownerHit() {
+    const s = this.shot, pl = this.play, own = pl?.own; if (!s || !pl || !own) return;
+    const i = s.input;
+    own.live.play({ holeIdx: s.turn.holeIdx, stroke: s.turn.stroke, club: i.club, aim: i.aim, power: i.power });
+    own.turn = own.live.advance();
+    this.closeShot(); this.saveOwner();
+    if (!own.turn) this.ownerDone(pl);
+    this.emit();
+  }
+  /** the owner hands the rest to the caddie (P4b): the model plays his group on, the shot closes (the sim resumes), the save records how many inputs he had
+   *  played, and his score is toasted (the group is done at once) */
+  ownerCaddie() {
+    const s = this.shot, pl = this.play, own = pl?.own; if (!s || !pl || !own) return;
+    own.live.caddie(); own.caddie = own.live.inputs.length; own.turn = own.live.advance();
+    this.closeShot(); this.saveOwner();
+    if (!own.turn) this.ownerDone(pl);
+    this.emit();
+  }
+  /** the owner's address (P4b, every frame): once his turn is due (the minute is OWNER_ADDRESS game minutes before his strike) and no shot is open, the sim
+   *  pauses (its speed remembered), the camera goes to his ball at the closest zoom, and the shot opens on the suggested club, aim and power */
+  private ownerFrame(minute: number) {
+    const own = this.play?.own, t = own?.turn; if (!own || !t || this.shot || minute < t.t - OWNER_ADDRESS) return;
+    this.shotSpeed = this.speed || this.lastSpeed; this.setSpeed(0);
+    this.shot = { turn: t, input: { club: t.suggested.club, aim: { x: t.suggested.aim.x, y: t.suggested.aim.y }, power: t.suggested.power } };
+    this.lookAt(t.ball.x, t.ball.y, ZOOM_MAX);
+  }
+  /** closes the open shot and resumes the sim at the speed it had (at least 1x) */
+  private closeShot() { this.shot = null; this.setSpeed(Math.max(1, this.shotSpeed)); }
+  /** writes the owner's play to the save (GolfSave.play): his tournament key, sex, the inputs he has played and his caddie count */
+  private saveOwner() {
+    const pl = this.play, o = pl?.own; if (!pl || !o || !this.golf) return;
+    this.golf.play = { key: pl.key, owner: o.sex, inputs: o.live.inputs.slice(), caddie: o.caddie };
+    this.scheduleSave();
+  }
+  /** toasts the owner's score once his group is done ("You shot 82 (+10)") */
+  private ownerDone(pl: GolfPlay) {
+    const id = pl.own?.id; if (id === undefined) return;
+    const total = pl.plan.strokes[id]!.reduce((a, b) => a + b, 0), par = pl.view.holes.reduce((a, h) => a + h.par, 0);
+    this.toast(`You shot ${total} (${toParText(total - par)})`, 'good');
+  }
+  /** the owner's open shot on the course (P4b, the 2D overlay): a line from his ball to the aim, a white ring at the aim, his ball, and for a full shot the
+   *  faint ellipse of its expected spread at the landing point (the carry along the aim): two sigmas along (0.03 + 0.07 * (1 - skill) of the carry) and
+   *  across ((1.5 + 5 * (1 - skill)) degrees) */
+  private drawShot(ctx: CanvasRenderingContext2D) {
+    const s = this.shot, own = this.play?.own; if (!s || !own) return;
+    const i = s.input, t = s.turn, dpr = this.dpr, b = this.screen(t.ball.x, t.ball.y), a = this.screen(i.aim.x, i.aim.y);
+    ctx.save();
+    if (i.club !== 'putter') {
+      const L = Math.hypot(i.aim.x - t.ball.x, i.aim.y - t.ball.y) || 1, ux = (i.aim.x - t.ball.x) / L, uy = (i.aim.y - t.ball.y) / L;
+      const carry = carryM(i.club, own.skill) * i.power / TILE_M, k = 1 - own.skill;
+      const px = t.ball.x + ux * carry, py = t.ball.y + uy * carry, A = 2 * (0.03 + 0.07 * k) * carry, B = 2 * carry * Math.tan((1.5 + 5 * k) * Math.PI / 180);
+      const c = this.screen(px, py), e1 = this.screen(px + ux * A, py + uy * A), e2 = this.screen(px - uy * B, py + ux * B);
+      // the unit circle through the spread's axes (their screen vectors from the landing point), filled faint
+      ctx.save(); ctx.transform(e1.x - c.x, e1.y - c.y, e2.x - c.x, e2.y - c.y, c.x, c.y); ctx.beginPath(); ctx.arc(0, 0, 1, 0, Math.PI * 2); ctx.restore();
+      ctx.fillStyle = 'rgba(255,255,255,0.12)'; ctx.fill();
+    }
+    ctx.lineWidth = 1.5 * dpr; ctx.strokeStyle = '#fff';
+    ctx.beginPath(); ctx.moveTo(b.x, b.y); ctx.lineTo(a.x, a.y); ctx.stroke();
+    ctx.beginPath(); ctx.arc(a.x, a.y, 6 * dpr, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(b.x, b.y, 3 * dpr, 0, Math.PI * 2); ctx.fillStyle = '#f8fafc'; ctx.fill(); ctx.stroke();
+    ctx.restore();
   }
 
   // ---------- main loop ----------
@@ -4495,6 +4752,8 @@ export class Game {
   private draw(now: number) {
     const z = this.cam.z, ze = z * this.dpr, gl = this.gl, cam = this.cam;
     const tier = z < PLANNER_Z ? 'planner' : z < DISTRICT_Z ? 'district' : 'street'; this.perf.tier = tier;
+    // the golf round moves on before the movers (the golfers) and the overlay (the balls) read it
+    this.updatePlay(now);
     gl.begin({ X: cam.X, Y: cam.Y, ze, cw: this.cw, ch: this.ch }, [0.106, 0.157, 0.086]);
     const X0 = cam.X - this.cw / 2 / ze, Y0 = cam.Y - this.ch / 2 / ze, X1 = cam.X + this.cw / 2 / ze, Y1 = cam.Y + this.ch / 2 / ze;
     const dist = (cx: number, cy: number) => Math.hypot(cx - cam.X, cy - cam.Y) * ze;
@@ -4870,6 +5129,8 @@ export class Game {
     this.drawBuses(ctx);
     this.drawGalleries(ctx);
     this.drawWalkers(ctx);
+    this.drawBalls(ctx);
+    this.drawShot(ctx);
     if (this.range.scene) { const o = { x: 0, y: 0 }, cx = this.cw / 2, cy = this.ch / 2; this.range.drawOver(ctx, (x, y) => { o.x = (worldX(x, y) - this.cam.X) * ze + cx; o.y = (worldY(x, y) - this.cam.Y) * ze + cy; return o; }, ze, this.cam.z, this.dpr, this.cw, this.ch); }
     if (this.grassPanel) {
       const s = this.grassScope();
