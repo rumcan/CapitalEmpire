@@ -104,6 +104,8 @@ function centred(n: LibItem, flip: boolean, k: number, d: { x0?: number; y0?: nu
  *  ?newart); never a prop */
 const swaps = (it: LibItem) => !isNew(it.id) && (it.kind === 'tree' ? NEW_ART_ONLY : isBuilding(it) && inInventory(it) && !BAKED_LOT(it) && (NEW_BUILDINGS_ONLY || NEW_ART_ONLY));
 const SWAP = LIBRARY.map(swaps);
+/** a library item the game never draws as itself: an old building drawn as a new-art stand-in picked by where it stands (the lot lab's palette leaves these out: a placed one would look different on every lot) */
+export const drawnAsStandIn = (item: number): boolean => !!SWAP[item];
 
 const CAR = LIBRARY.map(it => it.kind === 'car');
 /** the largest scale a drawable's item is drawn at (sizes.ts PIXEL_LIMIT; a parked car is drawn CAR_SCALE smaller than its scale, sprites.ts) */

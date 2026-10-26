@@ -16,7 +16,7 @@ import type { Game } from '../engine';
 import { CLASS } from '../network';
 import { ATLAS_PAGES, ATLAS_SIZE, LIBRARY } from '../library';
 import type { LibItem } from '../types';
-import { lookOf } from '../newart';
+import { drawnAsStandIn, lookOf } from '../newart';
 import { spriteRect, type Drawable } from '../sprites';
 import { footprintOf, ownerScaleOf } from '../lots/preset-art';
 import { worldX, worldY, ZOOM_MAX, ZOOM_MIN } from '../iso';
@@ -707,7 +707,7 @@ export function installLotLab(game: Game): () => void {
   function renderGrid() {
     grid.replaceChildren();
     const q = search.trim().toLowerCase();
-    const all = LIBRARY.filter(it => !it.id.startsWith('view:') && !it.id.startsWith('east:') && it.kind !== 'walker' && (cat === 'All' ? !SKIP_CAT.has(it.cat) : it.cat === cat) && (!q || it.id.toLowerCase().includes(q) || it.name.toLowerCase().includes(q)));
+    const all = LIBRARY.filter((it, i) => !it.id.startsWith('view:') && !it.id.startsWith('east:') && it.kind !== 'walker' && !drawnAsStandIn(i) && (cat === 'All' ? !SKIP_CAT.has(it.cat) : it.cat === cat) && (!q || it.id.toLowerCase().includes(q) || it.name.toLowerCase().includes(q)));
     for (const it of all.slice(0, shown)) {
       const t = el('div', 'width:48px;height:48px;flex:none;box-sizing:border-box;border:1px solid #334155;border-radius:5px;background-color:#0f172a;cursor:pointer;background-repeat:no-repeat');
       thumb(t, it.id, 44); t.title = `${it.name}\n${it.id}`;
