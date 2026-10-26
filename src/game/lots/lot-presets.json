@@ -51411,7 +51411,6 @@
 {"id":"town:ornamental_grass","x":8.6,"y":0.8,"scale":1.031,"view":0},
 {"id":"town:fern","x":9.7,"y":0.8,"scale":0.993,"view":0},
 {"id":"town:ornamental_grass","x":3.303,"y":4.51,"scale":1.037,"view":0},
-{"id":"town:ornamental_grass","x":9.053,"y":3.26,"scale":1.048,"view":0},
 {"id":"town:ornamental_grass","x":10.053,"y":3.26,"scale":1.003,"view":0},
 {"id":"world:bush_2","x":12.257,"y":3.76,"scale":1.016,"view":0},
 {"id":"gen:trash-cans-row","x":2.1,"y":-0.35,"scale":1.007,"view":0},
@@ -51433,8 +51432,8 @@
 {"id":"world:bush_2","x":8.638,"y":17.284,"scale":0.978,"view":0},
 {"id":"town:ornamental_grass","x":9.732,"y":17.541,"scale":0.923,"view":0},
 {"id":"world:bush_0","x":10.887,"y":17.222,"scale":1.059,"view":0},
-{"id":"variation:world-house_0-51fa4b80-plain:1","x":7.5,"y":6.85,"scale":1,"view":0},
-{"id":"static:garage_timber","x":6.25,"y":14.6,"scale":0.677,"view":0}
+{"id":"static:garage_timber","x":6.25,"y":14.6,"scale":0.677,"view":0},
+{"id":"variation:world-house_0-north-1dde6f56-plain:1","x":6.75,"y":6.6,"scale":1,"view":0}
 ],"patches":[
 {"kind":"yard","tex":"paving","pts":[0,0,1.6,0,1.6,10.597,0,10.597]},
 {"kind":"yard","tex":"paving","pts":[6.55,0,7.15,0,7.15,4.06,6.55,4.06]},

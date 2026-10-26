@@ -18,20 +18,19 @@
   studio allowing sizes up to it with the "once packed again" hint. Then: the owner sizes the houses in the studio Library (person cursor),
   then **Rebuild game sprites** packs them sharp at those sizes.
 - **Several helpers on the network (the owner: "setup the studio to run on the network and anyone with the IP can help create preset
-  lots").** Done in the files, not yet live: the studio listens on `STUDIO_HOST` (0.0.0.0 in launch.json), Vite gets `--host 0.0.0.0`,
-  the studio frames the game at the address the visitor used. In progress (a coder): saves merge per preset on the server
-  (`POST /__dev/presets`, `dev-save.ts mergePresets`) so two people saving at once never lose each other's work; the lab hides the dev
-  editor's floating panel (the owner: "remove this? we already have all the tools on the left") and shows its words in the lab panel.
-  Both servers must be restarted to listen on the network (this machine: 192.168.0.2, so http://192.168.0.2:5242). Windows may ask to
-  allow node through the firewall: the owner clicks Allow (never change firewall settings yourself).
+  lots").** Done and live (2026-10-26): studio http://192.168.0.2:5242 and game http://192.168.0.2:5241 (both listen on 0.0.0.0; the
+  studio frames the game at the address the visitor used). Saves merge per preset on the server (`POST /__dev/presets`,
+  `dev-save.ts mergePresets`, tests `tests/dev-save-merge.test.ts`): checked in the browser (a saved draft reached the file, Discard
+  removed it, the owner's presets untouched). The lab hides the dev editor's floating panel and shows its words. Windows may ask to allow
+  node through the firewall the first time another computer connects: the owner clicks Allow (never change firewall settings yourself).
+  Open: `/__dev/save` still accepts a whole lot-presets.json from an old open tab; reload old tabs.
 - Done today, after the first handover: lot size steppers (W/D) and the person cursor (an adult, base_man) in the lab; whole presets
   (fences, bins, decals all editable); decals select with a click.
 
 ## Exact next step
 1. When `size-report.ts` is fixed: restart the studio, open Library, check House 1 north (`variation:world-house_1-north-*`) now allows
    about x3.3; tell the owner to size the houses, then run Rebuild (the studio's button; `STUDIO_DEV_GAME=1`, so no npm build).
-2. When the merge saves land: restart both servers (network), test two lab tabs saving different presets at once (both survive in
-   `lot-presets.json`), commit.
+2. (Done: merge saves, network.) Optionally make `/__dev/save` refuse lot-presets.json so only merges write it.
 
 ## How to check
 - Typecheck: `npx tsc --noEmit -p .`. Lot tests: `npx esbuild tests/lot-presets-lab.test.ts tests/lot-presets-farm.test.ts tests/lot-presets.test.ts tests/lot-presets-json.test.ts tests/compose.test.ts tests/lot-edit.test.ts --bundle --platform=node --format=esm --loader:.webp=empty --loader:.png=empty --outdir=output/tests-check --out-extension:.js=.mjs --log-level=warning && node --test output/tests-check/*.mjs`.
