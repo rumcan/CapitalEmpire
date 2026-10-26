@@ -5,7 +5,11 @@ export type Cnv = OffscreenCanvas;
 export type C2D = OffscreenCanvasRenderingContext2D;
 /** every texture is built on OffscreenCanvas, so the same code runs in the ground workers and on the main thread */
 export function canvas(w: number, h: number): Cnv { return new OffscreenCanvas(Math.max(1, w), Math.max(1, h)); }
-export function ctx2d(c: Cnv, opts?: CanvasRenderingContext2DSettings): C2D { return c.getContext('2d', opts) as C2D; }
+export function ctx2d(c: Cnv, opts?: CanvasRenderingContext2DSettings): C2D { return c.getContext('2d', soft ? { ...opts, willReadFrequently: true } : opts) as C2D; }
+/** a light boot's ground worker (T157: the lot lab, ground-protocol.ts WorkerLimits.soft) draws its canvases on the CPU: never on the GPU, where
+ *  each one is a GPU texture and a copy in the GPU process too; set before the worker makes its first canvas */
+let soft = false;
+export function softCanvases(on: boolean) { soft = on; }
 export const clamp = (v: number, a: number, b: number) => (v < a ? a : v > b ? b : v);
 export const smooth = (a: number, b: number, v: number) => { const t = clamp((v - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
 /** tileable value noise over a (W, H) period */

@@ -193,7 +193,7 @@ autumn dusk, no lettering in the art unless said.
 | The player's cottage (`golf:home-cottage`, four views, T133) | 6 x 5 / 5 | `world:house_4` ("Stand In for the player's cottage") | a modest whitewashed cottage with a corrugated-iron roof, a small stoep with a bench, a water tank on a stand at its side, a satellite dish | P2 |
 | Golf pro coaching pose (`golf_coach`, the 3D golfers' 8 facings, T133) | 1 / 1.8 | the golfer's idle frame and the drive clip | a coach standing side-on to the pupil, one hand out pointing at the ball, then miming a slow half swing; 8 frames | P2 |
 | Divot-scarred range tee (texture) | 16 m | the tee turf | listed in section 6 | P1 |
-| Car park building (`golf:range-carpark`, four views, T146) | 18 x 26 / 12 (ground, three decks and the open roof deck) | `business:buscompany` at fit 22 ("Stand In for the car park building") | a plain concrete multi-storey car park: open decks with low concrete parapets and a steel rail, cars glimpsed on each deck, a ramp mouth at ground level on one long side (the lot's side, where the cars drive in), a stair tower with a glass door on a short side (the path's side, where the golfers walk out), a small green "P" panel by the ramp (no other lettering), light poles on the roof deck. The house lighting: the sun at the upper right, shadows at 145°, the shine masked by the concrete's texture and inset from the edges, the shadows a cool multiply that keeps it; never mirrored, each view its own picture. `rangeScene` places it at frame u 49..58, v 2..15 with its foot, its ramp facing the frame's +u | P1 |
+| Car park building (`golf:range-carpark`, four views, T146) | 18 x 26 / 12 (ground, three decks and the open roof deck) | **In (T154):** `ce:parking-garage-6storey`, the art model's parking garage (five covered levels at 36 cars: GARAGE_CARS 180), drawn from its screen-axis views (N, E, S, W, one per quarter turn) at scale 0.6 so it sits inside the footprint; no label. **Still wanted:** its four diagonal views NE, SE, SW, NW (`parking-garage-6storey-8views`: the eight-view contract), so it lines up with the range's lot, whose edges run along the world axes | the existing 6-storey parking garage (brick columns with cream caps, warm-grey floor bands, dark green rails, warm ceiling lights, the rear-right stair tower, the green P sign by the ramp) turned to the four diagonal headings. The house lighting: the sun at the upper right, shadows at 145°; never mirrored, each view its own picture. `rangeScene` places it at frame u 49..58, v 2..15 with its foot, its ramp facing the frame's +u | P1 |
 
 ## Practice facilities (plan P24 Phase 2, T130: art requests)
 The practice greens the player paints (`golf/practice.ts`, golfers in `golf/rangebiz.ts RangeSim`) stand these in; the stroke clips go into the
@@ -207,6 +207,51 @@ upper right, shadows at 145°, never mirrored.
 | Putting green sign (`golf:practice-sign`) | 1 x 0.2 / 1 | none | a small dark green timber sign on one post, the lettering PRACTICE GREEN in white | P2 |
 | Range ball basket (`golf:practice-balls`) | 0.4 / 0.3 | none | a wire basket of white range balls on the grass, a few spilled | P2 |
 
+## Screen-axis sets in the game, their diagonal views wanted (T154)
+The art model's `<slug>-screen-axis-4views-v1` sets are in the game (`scripts/assets/prep-axis-views.mjs`, record in `art/axis-views/INDEX.md`).
+Their views are the cardinal headings N, E, S, W of the eight-view contract (HANDOVER.md: NE, SE, SW, NW, N, E, S, W). The subjects new with
+them are drawn from those four views (one per quarter turn), so on the world-axis roads and lots they stand 45 degrees off until their
+**diagonal views NE, SE, SW, NW** exist; these are wanted, as eight-view sheets (`<slug>-8views-vN`, the same subject, its existing four views kept
+byte for byte):
+| Subject (id) | Has | Missing | P |
+| --- | --- | --- | --- |
+| Parking garages, 2 to 6 storeys (`ce:parking-garage-<n>storey`) | N, E, S, W | NE, SE, SW, NW (the 6-storey first: the range's car park) | P1 |
+| Shrubs: deep green, golden russet, sage round (`landscape:bush-*`); pale hydrangea (`landscape:hydrangea-pale`) | N, E, S, W | NE, SE, SW, NW | P2 |
+| Flower beds: daisies, lavender, marigolds (`landscape:flowerbed-*`) | N, E, S, W | NE, SE, SW, NW | P1 |
+| Bench, street lamp, trash can, car park entrance gate (`world:bench`, `world:streetlamp`, `world:trashcan`, `ce:parking-entry`) | N, E, S, W (beside their old pictures) | NE, SE, SW, NW | P2 |
+| Pickup (`static:pickup_n`, the pickup model) | N, E, S, W | the four diagonal headings, as an eight-way car (art/cars) | P2 |
+The shops and houses with screen-axis sets (`town:bakery`, `town:grocery`, `town:pharmacy`, the three industrial variations, `world:house_0`,
+`_1`, `_3`) keep their diagonal views; their N, E, S, W views are extra headings (`view:<id>:n|e|s|w`) the roads at 45 degrees take in T154 Phase 2.
+The world trash can's set had no crops yet (cut from its sheet by its subjects) and the 4-, 5- and 6-storey car parks' half-cell crops clip
+their subject (re-cut from the sheet the same way): the art model may want to review those cuts.
+
+## Buildings on the roads at 45 degrees: their cardinal views wanted (T154 Phase 2)
+On a road at 45 degrees a building with a screen-axis set faces its street. A lot's front faces its street: N on road 1, E on 3, S on 5, W on 7
+(`lots/preset-art.ts roadView`). It is never mirrored, and its footprint and anchor come from the set. A building without a set is drawn in its
+diagonal view, at 45 degrees to the road, as before. 14 buildings have a set: the five parking garages, `town:bakery`, `town:grocery`,
+`town:pharmacy`, the three industrial variations, and `world:house_0`, `_1` and `_3`. A variation (`variation:<base>-<hash>:1`) is its own picture
+and needs its own set. **Wanted: the N, E, S, W views** of the buildings below, as eight-view sheets (`<slug>-8views-vN`: the existing four views
+kept byte for byte, plus the four cardinal ones). The buildings the owner's presets of the 45-degree roads draw today come first (counted
+2026-10-27 over `lot-presets.json`):
+| Building (id) | Presets at 45 degrees | P |
+| --- | --- | --- |
+| House 5 (`world:house_5`) | 13 (12 approved) | P1 |
+| Colonial L-shape, double garage, variation 1 (`variation:gen-house-l-shape-e0e3b328-plain:1`), and its base `gen:house-l-shape` | 3 + 1 | P1 |
+| House 2 (`world:house_2`) and its variation `variation:world-house_2-north-332663ab-plain:1` | 2 + 1 | P1 |
+| House 0, variation 1 (`variation:world-house_0-51fa4b80-plain:1`) | 1 | P2 |
+| House Large, variation 1 (`variation:ref-building-house-large-20cb9f9e-plain:1`) | 1 | P2 |
+| Ranch L-shape, corner porch, variation 1 (`variation:gen-house-l-ranch-18552ce5-plain:1`) | 1 | P2 |
+| House Dormer, variation 1 (`variation:ref-building-house-dormer-b4413f08-plain:1`); Bellamy Hardware, variation 1 (`variation:town-hardware-bf36737f-plain:1`) | 1 draft each | P2 |
+| House back, shed and garden (`gen:back-shed-garden`); weathered timber outhouse (`expansion:outhouse`) | 1 each | P2 |
+
+All the presets place 74 different buildings; 65 of them have no set yet (houses 28, industry 14, shops and services 9, landmarks 9, yard
+buildings 5). The library holds 165 building subjects, 14 of them with a set. By how often the presets place them, the next ones wanted are:
+`town:postoffice` (193), `expansion:boarded-store-rear` and its variation (42 + 82), `expansion:lean-to-shed` (73), `world:school` (56),
+`expansion:outhouse` (53), `world:arcade` and its variation (51 + 45), `expansion:derelict-two-storey` (49), `static:garage_brick-v2` and its
+variation (39 + 32), `ref:building-gas-canopy` (39), `world:house_5` (38), `world:video` (38), `world:diner` (38), `world:video_rental` (37),
+`world:snack_bar` (35), `expansion:rundown-house` (34), `town:laundromat` (33), `static:garage_timber` (31), `ref:landmark-water-tower` (27),
+`static:garage_brick` (26), `world:house_2` (25), `world:house_4` (20).
+
 ## Props kit (plan P24 Phase 3, T131: art requests)
 The Props tool (`golf/decor.ts DECOR`) shows these as labelled stand-ins ("Stand In for ..." on the card and once per kind on the map); each
 goes in by replacing its item's `id` (and dropping its `standIn`). Four views where it says so (NE, SE, SW, NW as the building sheets: the front
@@ -216,7 +261,7 @@ in NE and NW), sun at the upper right, shadows at 145°, early autumn dusk, no l
 | Bronze golfer statue (`golf:prop-golfer-statue`, four views) | 1.5 x 1.5 / 3 | `expansion:coin-horse-ride` | a bronze golfer at the top of his follow-through on a square dressed-stone plinth with a plain bronze plaque | P1 |
 | Stone pillar (`golf:prop-stone-pillar`) | 0.8 x 0.8 / 2.2 | `world:grave_2` | a square sandstone gate pillar with a moulded cap and a stone ball finial, a little lichen at the foot | P1 |
 | Club flag pole (`golf:prop-flag-pole`) | 0.5 x 0.5 / 8 | `business:golf-pin-red` (scaled up) | a tall white aluminium flag pole on a concrete foot, a dark green club flag with a small gold crest lifting in the breeze | P1 |
-| Flower bed (`golf:prop-flower-bed`) | 3 x 1.5 / 0.5 | `world:bush_2` | a raised bed edged in brick, massed red and yellow annuals with a clipped box edge, dark mulch between | P1 |
+| Flower bed (`golf:prop-flower-bed`) | 3 x 1.5 / 0.5 | **In (T154):** `landscape:flowerbed-daisies` (and the lavender and marigold beds, new Props items), screen-axis views; **still wanted:** their diagonal views (below) | a raised bed edged in brick, massed red and yellow annuals with a clipped box edge, dark mulch between | P1 |
 | Tiered garden fountain, small (`golf:prop-fountain-small`, four views) | 2 x 2 / 1.8 | none (the plaza fountain is real art) | a two-tier cast-stone fountain in a round basin, water spilling from the top bowl, wet stone darker | P2 |
 | Stone entrance arch (`golf:prop-entrance-arch`, four views) | 5 x 1 / 4 | none (the ivy garden arch is real art) | a dressed-stone arch on two pillars over a path, a blank stone keystone, low hedges either side | P2 |
 | Classical urn on plinth (`golf:prop-urn`) | 0.8 x 0.8 / 1.6 | none | a stone urn on a square plinth spilling trailing ivy and white petunias | P2 |

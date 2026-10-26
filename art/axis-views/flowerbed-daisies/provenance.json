@@ -1,0 +1,599 @@
+{
+  "id": "landscape:flowerbed-daisies",
+  "slug": "flowerbed-daisies",
+  "details": "ONE lowrectangular flowerbed withthinwarmcreamstoneedging, actual darksoilonlyINSIDEtheborder, yellowandwhite daisieswithpaintedgreenleafclumps, 3mlong 1mdeep, kneeheightflowers. Flowersformlooseorganicclusters notformalperfectrows. Longaxis HORIZONTAL inN/Sviews; E/Wshowend-on narrowface andlongdepthrecedesVERTICALLY onimage. Bordercornershorizontal/vertical, no diamondfootprint. No surroundinglawn, pot,extrabeds orraisedhugeplatform.",
+  "kind": "flowerbed",
+  "category": "landscaping",
+  "requiresLibraryRegistration": true,
+  "source": "art/theme-consistency/references/horizontal-road-parking-landscaping-v1.png",
+  "output": "art/theme-consistency/generated/landscaping/flowerbed-daisies-screen-axis-4views-v1.png",
+  "provenance": "art/theme-consistency/generated/landscaping/flowerbed-daisies-screen-axis-4views-v1.provenance.json",
+  "references": [
+    "art/theme-consistency/references/theme-authoritative.png",
+    "art/theme-consistency/references/horizontal-road-parking-landscaping-v1.png"
+  ],
+  "prompt": "DeriveONE standalone placeablelandscapingobject matchingthereferenceworld. Image1 THEMEONLY: detailedstylized hand-painted MapleFalls townart, broadconfidentpainted leafclusters, readableminiatureform, warmupperrightlateafternoonlight andsoftlowerleftshade, nophotographicnoise. Image2 APPROVEDdesigncontextandCAMERASCALE: smallgardenbesidehead-onparkinggarage. Isolateonlyspecifiedplant/bed concept, no garageorotherassets. ONE lowrectangular flowerbed withthinwarmcreamstoneedging, actual darksoilonlyINSIDEtheborder, yellowandwhite daisieswithpaintedgreenleafclumps, 3mlong 1mdeep, kneeheightflowers. Flowersformlooseorganicclusters notformalperfectrows. Longaxis HORIZONTAL inN/Sviews; E/Wshowend-on narrowface andlongdepthrecedesVERTICALLY onimage. Bordercornershorizontal/vertical, no diamondfootprint. No surroundinglawn, pot,extrabeds orraisedhugeplatform.\nReturn one SQUARE trueRGBAtransparentPNG strict2x2equalcells, fourgenuinerigidrotations ofSAMEasymmetricobject rowmajor N FRONT towardSCREENDOWN, E RIGHTSIDE, S BACK towardSCREENUP, W LEFTSIDE. Consistent elevatedorthographic35degreecamera withroof/topfoliagevisible, no perspective, maintainexactsamephysicalsize andshapethroughallviews. Rectangularborders/groundcontacts useSCREENHORIZONTALandVERTICALaxes forhorizontalroadlayout, notusualdiagonalisometricfootprint. Rotateplantstructure/border, keepSUNfixedSCREENUPPERRIGHT; nevermirrorlight orduplicatefrontasback. Everycutoutwith15percenttransparentpaddinginsideeachquarter, no crosscelloverlap. NOTascene orsurfacegrasspainting. No otherplants,outsidegroundpatch,grassapron,greyfloor,broadshadowdisc,backdrop,checkerboard,UI,words,caption,frame,people orgarlands. Intrinsicflowerbedsoil/borderispartofasset; barebushhasfoliage/stemsonly. Onlytinycontactocclusion.",
+  "generator": "built-in image_gen",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-523bd28e-9764-4cdd-9d02-cc00f4eb22ed.png",
+  "date": "2026-10-26",
+  "viewSet": "screen-axis-4",
+  "viewsOrder": [
+    "N",
+    "E",
+    "S",
+    "W"
+  ],
+  "lighting": "upper-right toward lower-left",
+  "integrationStatus": "pending-not-full-eight-view-source",
+  "alphaReview": "pending",
+  "processing": "Native generator output copied byte-for-byte. Crops pending; no resize or pixel repaint.",
+  "screenAxisExport": {
+    "schema": 1,
+    "id": "landscape:flowerbed-daisies",
+    "viewSet": "screen-axis-4",
+    "viewsOrder": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "sheet": "art/theme-consistency/generated/landscaping/flowerbed-daisies-screen-axis-4views-v1.png",
+    "sheetSha256": "6744d1560ce536ba05ad53eadabbc9db3c31dddd0f1395e638b1c1579f00055e",
+    "nativeSheetPixels": [
+      1254,
+      1254
+    ],
+    "processing": "Exact source-rectangle pixel crops only. No resize, alpha repaint, recolour, transform or mirroring. Alpha thresholds are diagnostic only; not a visual approval or alpha edit.",
+    "rectangleSelection": {
+      "file": "art/theme-consistency/generated/landscaping/flowerbed-daisies-screen-axis-4views-v1.source-rects-v2.json",
+      "review": {
+        "reviewer": "horizontal_crop_pack",
+        "method": "Manually inspected complete source; opaque component extents show unequal-sized column arrangement. Nonoverlapping rectangle crops retain complete plants/beds; native pixels unchanged.",
+        "evidence": "art/theme-consistency/generated/landscaping/flowerbed-daisies-screen-axis-4views-v1.png",
+        "acceptanceScope": "Rectangle selection only; not genuine physical-rotation or game-integration approval."
+      }
+    },
+    "fileContractStatus": "passed-with-alpha-residue-warnings",
+    "visualReviewStatus": "pending",
+    "integrationStatus": "pending-not-full-eight-view-source",
+    "axisLineCounts": {
+      "vertical": 878,
+      "horizontal": 68,
+      "verticalAtLeast16": 751,
+      "horizontalAtLeast16": 0,
+      "verticalAtLeast128": 742,
+      "horizontalAtLeast128": 0
+    },
+    "issues": [],
+    "warnings": [
+      "N: cell edge contains only low-alpha1..15 residue",
+      "S: corner contains only low-alpha1..15 residue",
+      "S: cell edge contains only low-alpha1..15 residue",
+      "W: corner contains only low-alpha1..15 residue",
+      "W: cell edge contains only low-alpha1..15 residue"
+    ],
+    "views": {
+      "N": {
+        "sourceRect": {
+          "left": 0,
+          "top": 0,
+          "width": 890,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/landscaping/flowerbed-daisies-screen-axis-4views-v1-crops-v2/N.native.png",
+        "nativeSha256": "7b9c1bd2e17f46b1bf49dd3fd5c2008b5da77150762c33afe238e9b8befbd5bc",
+        "pixelSha256": "2e100063013238fce6adcbc86ddafe6981d8327c8931868fed089d408ccbc3e5",
+        "trimmedPixelSha256": "dbad6f22e8ad7a1c5a3c5990e753dad0b2e0700478c43c1b0826f85b5a4f54b8",
+        "nativePixels": [
+          890,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 160322,
+          "transparent": 397708,
+          "transparentFraction": 0.7127000340483487,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 0,
+            "top": 21,
+            "width": 884,
+            "height": 606
+          },
+          "padding": {
+            "left": 0,
+            "top": 21,
+            "right": 6,
+            "bottom": 0
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 397708,
+            "oneTo15": 17282,
+            "sixteenTo127": 4186,
+            "one28To254": 138840,
+            "opaque255": 14
+          },
+          "edge": {
+            "nonzero": 58,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 143040,
+            "transparent": 414990,
+            "transparentFraction": 0.7436696951776787,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 95,
+              "top": 271,
+              "width": 730,
+              "height": 234
+            },
+            "padding": {
+              "left": 95,
+              "top": 271,
+              "right": 65,
+              "bottom": 122
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 138854,
+            "transparent": 419176,
+            "transparentFraction": 0.7511710839919,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 96,
+              "top": 272,
+              "width": 728,
+              "height": 232
+            },
+            "padding": {
+              "left": 96,
+              "top": 272,
+              "right": 66,
+              "bottom": 123
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 142153,
+          "transparent": 415877,
+          "transparentFraction": 0.7452592154543662,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 96,
+            "top": 271,
+            "width": 729,
+            "height": 234
+          },
+          "padding": {
+            "left": 96,
+            "top": 271,
+            "right": 65,
+            "bottom": 122
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      },
+      "E": {
+        "sourceRect": {
+          "left": 890,
+          "top": 0,
+          "width": 364,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/landscaping/flowerbed-daisies-screen-axis-4views-v1-crops-v2/E.native.png",
+        "nativeSha256": "4f692cdb6a41f604276685685261f9b74dc8f192a0f36f4c9c9e879744f32072",
+        "pixelSha256": "d0c7090cc844672c25ae23963317584df14d27328655c7c33a6dc3e1a48bc8ad",
+        "trimmedPixelSha256": "ef27f45d803e5a8dab83b90560be31cc29262c87bbd78e6457612a96c3222b25",
+        "nativePixels": [
+          364,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 69661,
+          "transparent": 158567,
+          "transparentFraction": 0.6947745237218922,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 1,
+            "top": 21,
+            "width": 349,
+            "height": 598
+          },
+          "padding": {
+            "left": 1,
+            "top": 21,
+            "right": 14,
+            "bottom": 8
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 158567,
+            "oneTo15": 8073,
+            "sixteenTo127": 1456,
+            "one28To254": 60054,
+            "opaque255": 78
+          },
+          "edge": {
+            "nonzero": 0,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 61588,
+            "transparent": 166640,
+            "transparentFraction": 0.7301470459365196,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 60,
+              "top": 189,
+              "width": 224,
+              "height": 332
+            },
+            "padding": {
+              "left": 60,
+              "top": 189,
+              "right": 80,
+              "bottom": 106
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 60132,
+            "transparent": 168096,
+            "transparentFraction": 0.7365266312634734,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 61,
+              "top": 190,
+              "width": 222,
+              "height": 330
+            },
+            "padding": {
+              "left": 61,
+              "top": 190,
+              "right": 81,
+              "bottom": 107
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 61110,
+          "transparent": 167118,
+          "transparentFraction": 0.7322414427677586,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 60,
+            "top": 189,
+            "width": 224,
+            "height": 331
+          },
+          "padding": {
+            "left": 60,
+            "top": 189,
+            "right": 80,
+            "bottom": 107
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      },
+      "S": {
+        "sourceRect": {
+          "left": 0,
+          "top": 627,
+          "width": 890,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/landscaping/flowerbed-daisies-screen-axis-4views-v1-crops-v2/S.native.png",
+        "nativeSha256": "7db8129fd396e72834c97c1839d6b8e75e2a277602460304adc5099a8311ca24",
+        "pixelSha256": "601a50b7fbec50e92327a15e156b4ee41de1fc7f0722b86d5b84154e9a1e2658",
+        "trimmedPixelSha256": "601a50b7fbec50e92327a15e156b4ee41de1fc7f0722b86d5b84154e9a1e2658",
+        "nativePixels": [
+          890,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 149875,
+          "transparent": 408155,
+          "transparentFraction": 0.7314212497535975,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "bounds": {
+            "left": 0,
+            "top": 0,
+            "width": 890,
+            "height": 627
+          },
+          "padding": {
+            "left": 0,
+            "top": 0,
+            "right": 0,
+            "bottom": 0
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 408155,
+            "oneTo15": 19672,
+            "sixteenTo127": 3367,
+            "one28To254": 126830,
+            "opaque255": 6
+          },
+          "edge": {
+            "nonzero": 141,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 130203,
+            "transparent": 427827,
+            "transparentFraction": 0.7666738347400678,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "bounds": {
+              "left": 93,
+              "top": 188,
+              "width": 736,
+              "height": 220
+            },
+            "padding": {
+              "left": 93,
+              "top": 188,
+              "right": 61,
+              "bottom": 219
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 126836,
+            "transparent": 431194,
+            "transparentFraction": 0.7727075605254198,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "bounds": {
+              "left": 94,
+              "top": 189,
+              "width": 734,
+              "height": 218
+            },
+            "padding": {
+              "left": 94,
+              "top": 189,
+              "right": 62,
+              "bottom": 220
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 129524,
+          "transparent": 428506,
+          "transparentFraction": 0.7678906151998997,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "bounds": {
+            "left": 93,
+            "top": 188,
+            "width": 735,
+            "height": 220
+          },
+          "padding": {
+            "left": 93,
+            "top": 188,
+            "right": 62,
+            "bottom": 219
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      },
+      "W": {
+        "sourceRect": {
+          "left": 890,
+          "top": 627,
+          "width": 364,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/landscaping/flowerbed-daisies-screen-axis-4views-v1-crops-v2/W.native.png",
+        "nativeSha256": "5d46a7a3be3c346285fc482f3fa48dd3ea31904366c7b1d9ab4abe44f96ec425",
+        "pixelSha256": "b1761ee6bda9be04ef320898bafeaac08c7cb00f876b9396a8bafa1903dd53ab",
+        "trimmedPixelSha256": "541c977244bd84d4778d5d7f08a4aa3dd48445bdd0301cdb8e9583c2fa36d09d",
+        "nativePixels": [
+          364,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 75053,
+          "transparent": 153175,
+          "transparentFraction": 0.6711490264121843,
+          "cornersAlpha": [
+            0,
+            0,
+            1,
+            0
+          ],
+          "bounds": {
+            "left": 0,
+            "top": 12,
+            "width": 352,
+            "height": 615
+          },
+          "padding": {
+            "left": 0,
+            "top": 12,
+            "right": 12,
+            "bottom": 0
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 153175,
+            "oneTo15": 7359,
+            "sixteenTo127": 1627,
+            "one28To254": 65996,
+            "opaque255": 71
+          },
+          "edge": {
+            "nonzero": 144,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 67694,
+            "transparent": 160534,
+            "transparentFraction": 0.7033930981299402,
+            "cornersAlpha": [
+              0,
+              0,
+              1,
+              0
+            ],
+            "bounds": {
+              "left": 62,
+              "top": 85,
+              "width": 231,
+              "height": 348
+            },
+            "padding": {
+              "left": 62,
+              "top": 85,
+              "right": 71,
+              "bottom": 194
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 66067,
+            "transparent": 162161,
+            "transparentFraction": 0.7105219342061447,
+            "cornersAlpha": [
+              0,
+              0,
+              1,
+              0
+            ],
+            "bounds": {
+              "left": 63,
+              "top": 86,
+              "width": 230,
+              "height": 346
+            },
+            "padding": {
+              "left": 63,
+              "top": 86,
+              "right": 71,
+              "bottom": 195
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 67073,
+          "transparent": 161155,
+          "transparentFraction": 0.7061140613772193,
+          "cornersAlpha": [
+            0,
+            0,
+            1,
+            0
+          ],
+          "bounds": {
+            "left": 62,
+            "top": 85,
+            "width": 231,
+            "height": 347
+          },
+          "padding": {
+            "left": 62,
+            "top": 85,
+            "right": 71,
+            "bottom": 195
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      }
+    }
+  },
+  "visualReviewStatus": "pending"
+}

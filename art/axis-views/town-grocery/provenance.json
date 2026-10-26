@@ -1,0 +1,596 @@
+{
+  "id": "town:grocery",
+  "slug": "town-grocery",
+  "identity": "town-grocery-4views-v1.png",
+  "details": "Identity: Maple Falls Grocery, TWO storeys in warm red brick, cream lintels, dark flat parapet roof, green/cream striped awning and green shopfront, MAPLE FALLS GROCERY sign on facade A, two large display windows flanking entrance. Rear plain brick with service door and utilities, upper windows; no front awning on rear.",
+  "category": "buildings",
+  "viewOrder": [
+    "N",
+    "E",
+    "S",
+    "W"
+  ],
+  "source": "art/theme-consistency/generated/buildings/town-grocery-4views-v1.png",
+  "output": "art/theme-consistency/generated/buildings/town-grocery-screen-axis-4views-v1.png",
+  "provenance": "art/theme-consistency/generated/buildings/town-grocery-screen-axis-4views-v1.provenance.json",
+  "references": [
+    "art/theme-consistency/references/theme-authoritative.png",
+    "art/theme-consistency/generated/buildings/town-grocery-4views-v1.png",
+    "art/theme-consistency/references/road-diagonal-head-on-side-template-v1.png"
+  ],
+  "prompt": "Create a NEW missing orientation set of ONE existing game building. Image 1 is THEME ONLY: match its detailed hand-painted stylized miniature town materials, warm autumn dusk palette, soft confident painted forms and warm lit windows. Image 2 is DESIGN IDENTITY: preserve this exact building's footprint proportions, storeys, roof type, chimney/vent arrangement, facade materials and entrance design. Image 3 is CAMERA GEOMETRY ONLY, never copy its colours/lines. IMPORTANT this is NOT the usual diagonal three-quarter isometric turntable. We need the intermediate 45-degree WORLD headings for roads that are perfectly HORIZONTAL or VERTICAL ON SCREEN. Fixed orthographic elevated camera about35degrees above horizontal, NO perspective. Every primary wall-footing line is exactly HORIZONTAL in screen coordinates; footprint depth goes straight vertically on the image. Roof is visible from above, with roof edges horizontal/vertical; vertical walls stay vertical. NO sloping +/-26.565degree footprint edges. No glimpse of a second major wall at a diagonal corner. Reconstruct true rigid quarter turns, never mirror lighting or reuse a front as a rear.\nReturn one SQUARE RGBA PNG with real transparent background and strict2x2 equal independent cells; no captions. ROW-MAJOR VIEW ORDER: TOP LEFT=N, entrance facade A seen exactly head-on, door faces screen DOWN; TOP RIGHT=E, building's physical right-hand side D seen exactly square-on, entrance facade at the right-hand end out of sight; BOTTOM LEFT=S, real REAR wall C seen exactly head-on, front entrance hidden on far side; BOTTOM RIGHT=W, building's physical left-hand side B seen square-on, front at left end out of sight. All four show matching elevation/scale and the SAME physical roof/vents. Building stays upright, not flat2D elevation: roofs still visible, natural elevated game view. Keep all geometry parallel to horizontal/vertical road layout. Use fixed SCREEN UPPER RIGHT sunlight, darker LOWER LEFT contact, enough dusk daylight for readable materials. All outside silhouette pixels transparent, NO grey floor, NO street, terrain, lawn, tiled square, vignette, backdrop, checkerboard, scene, parked cars, separate props or people. Only integral doorsteps/porch allowed; miniscule contact occlusion, no broad ground shadow cloud. Leave at least15percent transparent padding on every side of EACH quadrant; fit whole roof, steps and all details well inside cell. No overlap across centre gutters, no frame, labels or guide graphics. Four real distinct facades, never two duplicated images.\nIdentity: Maple Falls Grocery, TWO storeys in warm red brick, cream lintels, dark flat parapet roof, green/cream striped awning and green shopfront, MAPLE FALLS GROCERY sign on facade A, two large display windows flanking entrance. Rear plain brick with service door and utilities, upper windows; no front awning on rear.",
+  "generator": "built-in image_gen",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-98063d1b-d38b-4f69-9511-a75d76d2cc79.png",
+  "date": "2026-10-26",
+  "viewSet": "screen-axis-4",
+  "viewsOrder": [
+    "N",
+    "E",
+    "S",
+    "W"
+  ],
+  "lighting": "upper-right toward lower-left",
+  "integrationStatus": "pending-not-full-eight-view-source",
+  "alphaReview": "pending",
+  "processing": "Native generator output copied byte-for-byte. Crops pending; no resize or pixel repaint.",
+  "screenAxisExport": {
+    "schema": 1,
+    "id": "town:grocery",
+    "viewSet": "screen-axis-4",
+    "viewsOrder": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "sheet": "art/theme-consistency/generated/buildings/town-grocery-screen-axis-4views-v1.png",
+    "sheetSha256": "cfc652707d091fb8febbcf9e37f0572e156d50a9354bdd1d46ddfed1ede4e7c7",
+    "nativeSheetPixels": [
+      1254,
+      1254
+    ],
+    "processing": "Exact half-cell pixel crops only. No resize, alpha repaint, recolour, transform or mirroring. Alpha thresholds are diagnostic only; not a visual approval or alpha edit.",
+    "fileContractStatus": "passed-with-alpha-residue-warnings",
+    "visualReviewStatus": "pending",
+    "integrationStatus": "pending-not-full-eight-view-source",
+    "axisLineCounts": {
+      "vertical": 3,
+      "horizontal": 7,
+      "verticalAtLeast16": 0,
+      "horizontalAtLeast16": 0,
+      "verticalAtLeast128": 0,
+      "horizontalAtLeast128": 0
+    },
+    "issues": [],
+    "warnings": [
+      "Only low-alpha1..15 residue on middle cell boundaries; exact pixels preserved",
+      "N: cell edge contains only low-alpha1..15 residue",
+      "E: cell edge contains only low-alpha1..15 residue",
+      "S: cell edge contains only low-alpha1..15 residue",
+      "W: cell edge contains only low-alpha1..15 residue"
+    ],
+    "views": {
+      "N": {
+        "sourceRect": {
+          "left": 0,
+          "top": 0,
+          "width": 627,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/buildings/town-grocery-screen-axis-4views-v1/N.native.png",
+        "nativeSha256": "166539d7a08d3ad1fc0b58604c828a0d2f9bbe46209c0ebe5315caaf11f9bf94",
+        "pixelSha256": "8914d5c8deee70879e0d9ba610936c9d293ed615f9e49a87b70e3b06b5b9978d",
+        "trimmedPixelSha256": "6d81b69b0ffe6f40446cbc3a134414a3c4b98e04ce2c97793cfdf0a2c06526cb",
+        "nativePixels": [
+          627,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 216924,
+          "transparent": 176205,
+          "transparentFraction": 0.44821165571606264,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 0,
+            "top": 26,
+            "width": 627,
+            "height": 593
+          },
+          "padding": {
+            "left": 0,
+            "top": 26,
+            "right": 0,
+            "bottom": 8
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 176205,
+            "oneTo15": 6497,
+            "sixteenTo127": 1605,
+            "one28To254": 208364,
+            "opaque255": 458
+          },
+          "edge": {
+            "nonzero": 7,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 210427,
+            "transparent": 182702,
+            "transparentFraction": 0.4647380376415884,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 120,
+              "top": 64,
+              "width": 455,
+              "height": 510
+            },
+            "padding": {
+              "left": 120,
+              "top": 64,
+              "right": 52,
+              "bottom": 53
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 208822,
+            "transparent": 184307,
+            "transparentFraction": 0.46882066700752173,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 121,
+              "top": 65,
+              "width": 453,
+              "height": 508
+            },
+            "padding": {
+              "left": 121,
+              "top": 65,
+              "right": 53,
+              "bottom": 54
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 210269,
+          "transparent": 182860,
+          "transparentFraction": 0.4651399413424092,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 120,
+            "top": 64,
+            "width": 455,
+            "height": 510
+          },
+          "padding": {
+            "left": 120,
+            "top": 64,
+            "right": 52,
+            "bottom": 53
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      },
+      "E": {
+        "sourceRect": {
+          "left": 627,
+          "top": 0,
+          "width": 627,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/buildings/town-grocery-screen-axis-4views-v1/E.native.png",
+        "nativeSha256": "64a1b5c71febccefe165979798c9976b4059957ccb8682e729ee1c50cbaae6a4",
+        "pixelSha256": "512d16f017eb5868e027ce36258ec153a199b6e880d1a3f522c50a149922950e",
+        "trimmedPixelSha256": "f27230fbb1beeaf55478707b66d38c06448ffc0bba62a9248e8eeaa2094bffee",
+        "nativePixels": [
+          627,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 204778,
+          "transparent": 188351,
+          "transparentFraction": 0.4791073667930883,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 1,
+            "top": 31,
+            "width": 608,
+            "height": 596
+          },
+          "padding": {
+            "left": 1,
+            "top": 31,
+            "right": 18,
+            "bottom": 0
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 188351,
+            "oneTo15": 6215,
+            "sixteenTo127": 1633,
+            "one28To254": 196435,
+            "opaque255": 495
+          },
+          "edge": {
+            "nonzero": 4,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 198563,
+            "transparent": 194566,
+            "transparentFraction": 0.49491642692347804,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 79,
+              "top": 92,
+              "width": 477,
+              "height": 469
+            },
+            "padding": {
+              "left": 79,
+              "top": 92,
+              "right": 71,
+              "bottom": 66
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 196930,
+            "transparent": 196199,
+            "transparentFraction": 0.4990702797300632,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 80,
+              "top": 93,
+              "width": 476,
+              "height": 468
+            },
+            "padding": {
+              "left": 80,
+              "top": 93,
+              "right": 71,
+              "bottom": 66
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 198321,
+          "transparent": 194808,
+          "transparentFraction": 0.49553200094625427,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 79,
+            "top": 92,
+            "width": 477,
+            "height": 469
+          },
+          "padding": {
+            "left": 79,
+            "top": 92,
+            "right": 71,
+            "bottom": 66
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      },
+      "S": {
+        "sourceRect": {
+          "left": 0,
+          "top": 627,
+          "width": 627,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/buildings/town-grocery-screen-axis-4views-v1/S.native.png",
+        "nativeSha256": "0899310c5beeca79fe8cdba54089ca3cf1b6346781338567eaaa642c65faf7cd",
+        "pixelSha256": "7380adb10a630d05bbec8dc659735fa04e49f39edf12de78f5f7dd6eed063b07",
+        "trimmedPixelSha256": "420d85a1c6bf07922528dad3dbeb7536450bf4be77cf07ffecc5866b0eea39f5",
+        "nativePixels": [
+          627,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 208962,
+          "transparent": 184167,
+          "transparentFraction": 0.4684645498042627,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 25,
+            "top": 7,
+            "width": 602,
+            "height": 584
+          },
+          "padding": {
+            "left": 25,
+            "top": 7,
+            "right": 0,
+            "bottom": 36
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 184167,
+            "oneTo15": 5025,
+            "sixteenTo127": 1661,
+            "one28To254": 201929,
+            "opaque255": 347
+          },
+          "edge": {
+            "nonzero": 1,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 203937,
+            "transparent": 189192,
+            "transparentFraction": 0.48124661370695115,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 113,
+              "top": 32,
+              "width": 457,
+              "height": 493
+            },
+            "padding": {
+              "left": 113,
+              "top": 32,
+              "right": 57,
+              "bottom": 102
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 202276,
+            "transparent": 190853,
+            "transparentFraction": 0.48547168995418805,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 114,
+              "top": 32,
+              "width": 455,
+              "height": 492
+            },
+            "padding": {
+              "left": 114,
+              "top": 32,
+              "right": 58,
+              "bottom": 103
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 203837,
+          "transparent": 189292,
+          "transparentFraction": 0.48150098313785045,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 113,
+            "top": 32,
+            "width": 456,
+            "height": 493
+          },
+          "padding": {
+            "left": 113,
+            "top": 32,
+            "right": 58,
+            "bottom": 102
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      },
+      "W": {
+        "sourceRect": {
+          "left": 627,
+          "top": 627,
+          "width": 627,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/buildings/town-grocery-screen-axis-4views-v1/W.native.png",
+        "nativeSha256": "f02814aeb187676480c489f0a6b2f1d6b2aae8025cd2c40ace65a00b1fc38c04",
+        "pixelSha256": "807dc0613ba9a94bad28bfab3f215d65b8463d4fec131b3ea1a65c229148d933",
+        "trimmedPixelSha256": "f87235ab920c18dbeb2d379a33fdd03277fa1bb17ed1641b8da97d41ccaee469",
+        "nativePixels": [
+          627,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 200853,
+          "transparent": 192276,
+          "transparentFraction": 0.48909136695588473,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 9,
+            "top": 0,
+            "width": 586,
+            "height": 627
+          },
+          "padding": {
+            "left": 9,
+            "top": 0,
+            "right": 32,
+            "bottom": 0
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 192276,
+            "oneTo15": 6945,
+            "sixteenTo127": 1621,
+            "one28To254": 191605,
+            "opaque255": 682
+          },
+          "edge": {
+            "nonzero": 31,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 193908,
+            "transparent": 199221,
+            "transparentFraction": 0.5067573239318391,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 62,
+              "top": 65,
+              "width": 466,
+              "height": 453
+            },
+            "padding": {
+              "left": 62,
+              "top": 65,
+              "right": 99,
+              "bottom": 109
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 192287,
+            "transparent": 200842,
+            "transparentFraction": 0.5108806524067163,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 63,
+              "top": 66,
+              "width": 464,
+              "height": 451
+            },
+            "padding": {
+              "left": 63,
+              "top": 66,
+              "right": 100,
+              "bottom": 110
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 193674,
+          "transparent": 199455,
+          "transparentFraction": 0.5073525484001434,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 62,
+            "top": 66,
+            "width": 465,
+            "height": 451
+          },
+          "padding": {
+            "left": 62,
+            "top": 66,
+            "right": 100,
+            "bottom": 110
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      }
+    }
+  },
+  "visualReviewStatus": "pending"
+}

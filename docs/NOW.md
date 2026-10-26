@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-26 midday)
+## START HERE (kept current by the lead; last updated 2026-10-26 22:25)
 
 **Paste-ready start prompts for every role are in `docs/START-PROMPTS.md`:** the lead, a coding ticket, and the other sessions in this
 repo. The weekly usage cap is close (2026-10-26), so any chat may stop at any moment.
@@ -18,17 +18,23 @@ repo. The weekly usage cap is close (2026-10-26), so any chat may stop at any mo
    its branch with AGENT-BRIEF's template.
 5. Then take the queue in order. Ask the owner only the questions marked as theirs.
 
+**Tests never block a merge** (the owner, 2026-10-26): the lead merges on review + typecheck; agents run their tests after the PR, in
+parallel, and push fixes as follow-up PRs (AGENT-BRIEF sections 1 and 5).
+
 **The owner tests on http://localhost:5174.** The owner pre-approves the lead's recommended decisions (state them in chat). The lead
 merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of every change.
 
 ### In flight
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |
-| T151 | #322 | `arena/T151-labels` | `.claude/worktrees/t151` | 5186 | World labels never overlap (the range's shop front first): one placement pass by priority, stable, hidden when crowded; money floats avoid them. |
+| T168 | #381 | `arena/T168-texture-prewarm` | `.claude/worktrees/t166` | 5187 | T166 follow-up: the lazy textures made ahead in idle time (the surfaces the map lays and the open tool paints) and in slices, so no ~1 s first-use stall; memory within 5% of T166. Agent: the ground agent. |
+| T154 | #330 | `arena/T154-phase2-headings` | `.claude/worktrees/t160` | 5186 | **Phase 2 in flight** (phase 1 merged #345): a building on a 45° road draws the screen-axis view facing its road (`axis-library.ts` AXIS_SETS); the generator and stand-ins prefer buildings with a set there; buildings without one listed in GOLF-SPRITES.md. Agent: the lot agent. |
+| T152 | #325 | `arena/T152-car-spacing` (d3bdbf1) | `.claude/worktrees/t152` | — | **Paused** for the art (the owner). Root cause: the range's own cars (`rangebiz.ts:803/832/723`) are placed by their own clock; fixed in rangebiz.ts only (overlaps -75-82% with the 44-bay lot, money identical). **Owner's decision needed:** at full demand the one-lane drive and the building's ramp cannot carry the cars at a car's gap (wider drive, second ramp, faster car-park speeds, or the queue limiting sales). Left: three gates, shots, PR. |
+| T112 | #199 | `arena/T112-sharp` (1872f0e) | `.claude/worktrees/t112` | — | **Paused** for T153: sharp 0.35.5 in, all packed art identical (260 images byte-identical; 16 view PNGs only re-tagged), still to do: the KTX2 check, the studio check, audit/typecheck/suite/build, the PR. Resume from #199. |
 
 **Two coding agents at a time (the owner, 2026-10-26: first "maybe just too many background tasks?" after the studio tab died with the
 PC at 1.5 GB free, then "start up two coding agents"):** keep two coding agents running, start the next queue ticket when one lands, no
-more; each runs one heavy process at a time. Both stopped once at the usage limit (13:50) and were resumed: an agent that stops on a
+more (the owner allowed a third for T157 on 2026-10-26); each runs one heavy process at a time. Both stopped once at the usage limit (13:50) and were resumed: an agent that stops on a
 limit is resumed with a message, not restarted.
 
 **One studio (the owner, 2026-10-26: "when a studio is running it is the only studio and any changes made affect the actual game
@@ -47,6 +53,21 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
 `docs/START-PROMPTS.md`.
 
 ### Queue (in order)
+- **OVERNIGHT 2026-10-26 → 27 (the owner, 21:10: "make sure you guys keep coding till tomorrow morning. im going to bed. if you dono what
+  to do, i trust you to make the best decision. try your best").** The lead keeps two agents busy; a session cron (`054b2391`, :13 and :53
+  from 22:00 to 07:53) wakes the lead to review/merge/dispatch. Order: **T166 #370** the game's RAM (ground workers' texture packs) →
+  **T161** (after T160, the lot agent) → **T167 #371** removed pictures never drawn (stand-ins; owner data untouched) → **T154 phase 2**
+  (#330, the eight-heading contract, code only) → **T112 #199** (sharp) → real failures from the 02:00 nightly go first. Morning: a summary
+  with screenshots for the owner.
+- **P25 #348 lots generated on the fly** (the owner: "start over with the lot presets we need a workflow that gets us to generating perfect
+  lots on the fly"): hard rules + learned per-sector taste (T158 wizard, in flight) → T159 bootstrap from the existing presets + a 12-lot
+  gallery → T160 the generator in the game, seeded per lot, model as data → T161 pairs, densities by state, a 50-seed exam sheet. The
+  presets file stays (archive, one-off overrides). Same agent as T155/T158.
+- **Scene-background paintings (checked 2026-10-26 evening, main checkout, untracked):** `art/theme-consistency/generated/ground/scene-backgrounds/<material>/`
+  holds one building-free painting a level (`*-background-anchored-v1.raw.png`, ~1742x903) for fairway, putting-green, lake, sand-raked,
+  sand-ripples, golden-fescue and long-grass; desert and dirt only the version with the shop. `long-grass/*-uniform-background-v2` = the
+  owner's rough already in the game (#360, same sha256). Fairway and putting-green go in through T165; lake, sands and fescue keep the
+  art session's seam-repaired READY tiles unless the owner prefers the paintings.
 - **Texture art status (2026-10-26 15:30):** the art session (Codex; `art/theme-consistency/material-texture-batches/ACTIVE-WORK.json`)
   has finished 2 of its 14 families (golden fescue, lake: in the game). sand-ripples has raw variants, sand-raked 2/12, desert/dirt
   anchors only; fairway, putting-green, first-cut, long-grass and the rest have job files and no pictures yet. Each lands through
@@ -58,7 +79,6 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
 2. **The owner's new grass paintings**, when they arrive. Import them with `scripts/assets/prep-painted-families.mjs` (the families list
    in the script), then map them per surface in Studio › Painted.
 3. **P24 follow-ups:**
-   - overlapping labels at the range's shop front: T151 in flight;
    - the putt, chip and coaching clips;
    - real art for the stand-ins in `docs/GOLF-SPRITES.md` (the range, practice and props kits).
 4. **The owner's call:** the top bar's chip words are icons only below 2200 px (T135). Bring the words back at 1920 if the owner asks.
@@ -67,6 +87,81 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
    (the sharp bump). See the History sections below and `gh issue list --label arena --state open`.
 
 ### Done recently (newest first; details in each PR)
+- 2026-10-26 ~22:25: **T161 #384 pairs, densities by state, the exam** (`lots/taste.ts`): partners learnt within 2.5 tiles (doghouse +
+  sandbox + oak, mailbox + bins, hvac + cabinet); densities by state (upgraded lush, decrepit junky); **model v2 is LATEST** (a v1 town
+  composes exactly as before: a save without `lotModel` stays v1, so the owner's existing town keeps v1; a new game uses v2). `npm run
+  lots:exam` renders 50 fixed lots (4 axis roads x 3 states x sizes) as a contact sheet (`E:/ClaudeTemp/T161/exam/`).
+- 2026-10-26 ~22:10: **T166 #380 the game's RAM about halved** (the owner: "we need to optimise the app"): one ground worker instead of three
+  (three baked no faster: one GPU process), lazy procedural textures and photo mosaics, no IndexedDB texture pack (the old one deleted once).
+  All Edge processes idle 5,895 → 3,316 MB, after a pan 5,949 → 2,910, after 10 jumps 7,095 → 3,671; VRAM 3.4-4.3 → 1.5-1.9 GB; browser
+  process 455 → 56 MB; ready 5.9 → 3.0 s; bakes faster (bench 15.7 → 9.4 ms, district fps 47-54 → 57-59). The ground pixel-identical
+  (NEAR 202 of 924,800 px by ≤2 levels). CPU canvases tried and dropped (bakes 9 → 38 ms). Cost: a ~1 s stall the first time a texture is
+  needed (T168). Dev switch `?ground=old|lazy,one,two,soft,cache` and `scripts/perf/memory.mjs` measure each lever.
+- 2026-10-26 ~22:00: **#376 generated lots keep their garages and sheds** (every building of the frozen preset stays; nothing generated
+  lands on them). **T167 #377 removed pictures are never drawn**: the declined presets placed the removed rundown house (70), derelict
+  two-storey (35) and fire station (48), so decrepit streets had no houses; now the house is an allocated dwelling of its size class that
+  fits the band (seeded by the lot), another building one of its kind within 40% of its footprint, expansions and props left out; a badge in
+  the lot lab marks each stand-in; the owner's files only read. Decrepit streets now show ordinary houses: real decrepit house art is an
+  art request. Main typechecks with both, lot suites 42/42. The lead typechecks PRs in `.claude/worktrees/lead2-read` (node_modules is a
+  junction to theme-consistency's: remove it with [System.IO.Directory]::Delete before removing the worktree).
+- 2026-10-26 ~21:45: **T160 #374 lots generated on the fly**: a house lot whose preset is frozen (not the owner's own) keeps its house,
+  drive, walk, street items and fence; its plants, props, cars and decals come from the generator (`lot-gen.ts`) with the shipped model
+  `lots/lot-models/v1.json` (87 presets, 2,709 items), seeded by street key + slot + state; the save records `lotModel` (missing = v1);
+  the lab's "Ship model" writes the next version; `?oldlots` composes as before. Compose of a whole town ~54 → ~32 ms (a `carOwnerScale`
+  memo). Known: garages/sheds dropped (follow-up in flight); decrepit houses not drawn (before too: T167).
+- 2026-10-26 ~21:20: **T165 #369 fairway and putting green from the new paintings** (`art/owner-supplied/{fairway,putting-green}-20261026`,
+  families `fairway-paint`, `putting-green-paint`): edges healed with a matched bridge (no seam line); the putting green MID falls back to
+  the raw MID tiles with one shared strip (the painting's bright corner repeated). The fairway's mowing stripes fan out in perspective,
+  so no crop lines them up: a soft stripe kink stays at the wrap. Straight stripes need a fairway painted without perspective (or without
+  stripes: the game draws its own mowing bands). Old `fairway` / `putting-green` families kept as the option.
+- 2026-10-26 evening: **T164 #361 + #366 main's tests green after the Rebuild**: a frozen house preset's house keeps its yards at today's
+  sizes (`compose.ts houseYards`: moved along the frontage into its band; `pickedPreset` prefers presets whose house fits);
+  `draft-shadows.mjs` drops shadow entries for pictures the library no longer has; newart-default pins no stand-in count. **T159 #364**
+  the lab's "Learn from the presets" (every item on the owner's lab and edited presets a kept sample, learnt again in place) and the
+  **lot gallery** (a dozen generated lots, Good / Bad each, Space saves and lays the next, Fix opens one in the wizard).
+- 2026-10-26: **T162 #360 the owner's rough** (`art/owner-supplied/rough-20261026`, family `rough-owner`, one tile a level): edges healed once
+  in the asset step (`scripts/assets/tile-heal.mjs`, wrap-bridge 48 px); `rough` and `lawnDeclined` wear it. **T163 #359 parked cars vs the
+  studio size**: sizes always matched; a studio save now reaches the running dev game at once (`lots/scales-live.ts`), and cards past a
+  picture's pixels show the size the lots draw. **#357 tests never block a merge** (merge on review + typecheck; fix forward).
+- 2026-10-26: **T157 #354 the lot lab runs light** (the owner: "the studio is taking too much ram"): boot options (`src/game/boot.ts`; the game
+  unchanged), the lab's light boot under `?lotlab` (one CPU-canvas ground worker, no sim/save/town/golf, lazy textures, a small atlas, a
+  320-tile box; `?lotlab&fullboot` for the old way); the studio's Lots frame only while open. Lab memory 4,179 → ~1,340 MB, VRAM 1,898 → ~290
+  MB. `scripts/perf/memory.mjs` repeats the measurement. Follow-ups noted: the game's three ground workers hold ~450-630 MB of texture pack
+  each (the lazy textures could help); the owner's own Chrome GPU process held 10.3 GB.
+- 2026-10-26: **T158 #352 the lot wizard** (W in the lab: click deletes, Space saves + next in ~36 ms, S skips; 12 sectors, Beta keep
+  rates, `lot-learning.json` via POST /__dev/learning; `lot-gen.ts` a pure seeded generator for P25). **#353** the studio Rebuild output
+  (the owner's latest sizes over the new art; the studio now runs with VIPS_CONCURRENCY=1 in launch.json: the Rebuild failed for memory
+  without it).
+- 2026-10-26: **T154 #345 the new art in the studio and the game**: 28 screen-axis sets (`sync-axis-views.mjs`, `prep-axis-views.mjs`,
+  `axis-library.ts`, both in the Rebuild): parking garages 2-6 storey (the 6-storey is the range's car park building), a Landscaping
+  category (3 bushes, 3 flowerbeds, hydrangea; in the lab palette and the Props tool), shops/industrials/houses with 8 views, bench/lamp/
+  bin/gate, the wagons' and pickup's views. **#346** saved the owner's uncommitted studio data first (lot presets +2,976 lines, sizes,
+  removals); the 5174 checkout's local Rebuild output was backed up to `E:/ClaudeTemp/lead/owner-rebuild-backup-20261026/` and the checkout
+  brought to main; a studio Rebuild then packs the owner's latest sizes on top. **Open, the owner's call:** lot presets still place three
+  removed ids (`town:firestation` and two variations): restore them or re-point the presets.
+- 2026-10-26: **T155 PR 2 #342 lots auto-sized from a master**: the largest size of a type/state is the master; Save/Approve derives every
+  smaller size of its road (`src/game/lots/derive.ts`: the house keeps its street edge, yards shrink, trees then large then small props
+  drop); derived ids `master~WxD`, a hand edit detaches; a masters report (3,744 type x state x size x road cells today).
+- 2026-10-26: 5174 had died (the app's crash takes the lead-started servers with it); restarted. Suggested to the owner: start 5174/5191 from
+  their own terminal so a Claude crash does not stop them.
+- 2026-10-26: **T155 PR 1 #340 the lot lab's new layout**: drawer = lot choice only; toolbar over the map; floating selection bar; bottom
+  palette strip (built from LIBRARY: new art shows up by itself); right inspector with **house allocations** (8-road compass, built /
+  upgraded / decrepit; `src/game/lots/house-allocations.json`, POST `/__dev/allocations`; Generate, New lot, variants and Change house only
+  deal houses that suit) and a coverage table; **lawns by state** (`lawnBuilt` fairway, `lawnUpgraded` putting-green, `lawnDeclined`
+  sage-long until long-grass is repaired).
+- 2026-10-26: **#337 fescue at half size up close, MID and FAR earlier, zoom-out stopped at 1.25%** (the owner): anchors near 0.6 / mid
+  0.2 / far 0.05, nearUntil 10%, new farFrom 2.5%, ZOOM_MIN 0.0125 (FAR 0.25x there, ~4.4 tiles across 1920 px). **#335 rough back on
+  sage-long** (the owner: the provisional long-grass "clearly not right").
+- 2026-10-26: the Claude app crashed twice; after each the lead restarted the auto-updater and the studio and resumed T154/T155 by message.
+- 2026-10-26: **T153 #332 zoom and golf textures**: ZOOM_MIN 0.0075 (one ZOOM_STEP 1.25 fewer; clampZoom), FAR native there, NEAR until 5%
+  (`anchors.nearUntil`); sand-ripples (canonical, id sand-ripples-tiles) → waste; fairway, putting-green, long-grass **provisional** from
+  the raw v1 tiles → fairway, green+fringe, rough (a re-run of prep-painted-tiles switches each to its canonical selection when
+  READY-MATERIALS lists it). The provisional rough shows hard seams (raw art). Follow-up: bring the turf-condition pictures back on tiled
+  turf (lead's call: yes).
+- 2026-10-26: **#329 blob shadows 2 px blurrier** (the owner): every drawn contact shadow's rim +2 px (`shadow-vector.ts BLOB_BLUR`), the
+  fallback blob shader +0.0625 m.
+- 2026-10-26: **T151 #324 world labels never overlap**: one placement pass a frame by priority (`label-place.ts`, `world-labels.ts`;
+  names 100, counts 90, stand-ins 10), slots kept while free, hidden when crowded; money float columns lifted clear.
 - 2026-10-26: **T148 #321 the lot lab's editing tools**: multi-select (Shift+click, box drag) with group move/delete/turn/size as one undo,
   Ctrl+C/V across lots, Change house (H, same family and size class), Lot grid (L), Generate in place + New lot ▶, Neighbours (N).
 - 2026-10-26: **T150 #319 painted tiles at their true size**: one fixed world size per set, native at its anchor (NEAR 30% from the

@@ -27,7 +27,9 @@ export const PROPS_DECAY = 0.8;
 /** the appeal of each item type (plan P24 Phase 3, rebalanced in T132 with the diminishing returns: a fountain is the front's centrepiece) */
 export const APPEAL = { plant: 0.01, fountain: 0.15, well: 0.03, statue: 0.08, pillar: 0.015, arch: 0.025, bench: 0.01, seatBig: 0.015, small: 0.005, board: 0.03, flagpole: 0.015 } as const;
 
-/** the catalogue: real library art (the Trees & plants, Street furniture, Yard and Landmarks categories, T113's golf props) and labelled stand-ins */
+/** the catalogue: real library art (the Trees & plants, Landscaping, Street furniture, Yard and Landmarks categories, T113's golf props) and labelled
+ *  stand-ins. T154: the art model's new shrubs, beds, bench, bin and lamp post are screen-axis sets (axis-library.ts: four genuine quarter turns, R
+ *  turns them); their catalogue picture is the N view (the front facing screen down) */
 export const DECOR: readonly DecorItem[] = [
   // ---- plants: +1% each, one kind (each more counts less)
   { key: 'pot-terracotta', name: 'Terracotta pot plant', group: 'plants', kind: 'plant', id: 'town:planter_terracotta', price: 120, appeal: APPEAL.plant, desc: 'A clipped shrub in a terracotta pot: line the shop front' },
@@ -37,7 +39,13 @@ export const DECOR: readonly DecorItem[] = [
   { key: 'grass-ornamental', name: 'Ornamental grass', group: 'plants', kind: 'plant', id: 'town:ornamental_grass', price: 50, appeal: APPEAL.plant, desc: 'A tall clump of ornamental grass' },
   { key: 'fern', name: 'Fern clump', group: 'plants', kind: 'plant', id: 'town:fern', price: 50, appeal: APPEAL.plant, desc: 'A soft green fern for shady beds' },
   { key: 'hedge', name: 'Clipped hedge', group: 'plants', kind: 'plant', id: 'world:hedge', price: 80, appeal: APPEAL.plant, desc: 'A low box hedge: edge a path or a bed' },
-  { key: 'flower-bed', name: 'Flower bed', group: 'plants', kind: 'plant', id: 'world:bush_2', price: 150, appeal: APPEAL.plant, standIn: 'Flower bed', desc: 'A bed of seasonal flowers' },
+  { key: 'flower-bed', name: 'Flower bed', group: 'plants', kind: 'plant', id: 'landscape:flowerbed-daisies', price: 150, appeal: APPEAL.plant, desc: 'A bed of white daisies in a timber edge' },
+  { key: 'flower-bed-lavender', name: 'Lavender bed', group: 'plants', kind: 'plant', id: 'landscape:flowerbed-lavender', price: 160, appeal: APPEAL.plant, desc: 'A bed of lavender: colour and scent by the path' },
+  { key: 'flower-bed-marigold', name: 'Marigold bed', group: 'plants', kind: 'plant', id: 'landscape:flowerbed-marigolds', price: 150, appeal: APPEAL.plant, desc: 'A bed of orange marigolds' },
+  { key: 'bush-green', name: 'Deep green bush', group: 'plants', kind: 'plant', id: 'landscape:bush-deep-green', price: 70, appeal: APPEAL.plant, desc: 'A dense evergreen bush' },
+  { key: 'bush-russet', name: 'Golden russet bush', group: 'plants', kind: 'plant', id: 'landscape:bush-golden-russet', price: 70, appeal: APPEAL.plant, desc: 'A bush in autumn gold and russet' },
+  { key: 'bush-sage', name: 'Sage bush', group: 'plants', kind: 'plant', id: 'landscape:bush-sage-round', price: 70, appeal: APPEAL.plant, desc: 'A round soft sage-green bush' },
+  { key: 'hydrangea-pale', name: 'Pale hydrangea', group: 'plants', kind: 'plant', id: 'landscape:hydrangea-pale', price: 80, appeal: APPEAL.plant, desc: 'A hydrangea in pale blooms' },
   { key: 'tree-maple', name: 'Ornamental maple', group: 'plants', kind: 'plant', id: 'ref:tree-maple-crimson', price: 300, appeal: APPEAL.plant, desc: 'A crimson maple for shade and colour' },
   // ---- water
   { key: 'fountain', name: 'Plaza fountain', group: 'water', kind: 'water', id: 'ref:landmark-fountain-v2', price: 12000, appeal: APPEAL.fountain, desc: 'A tiered stone fountain: the centrepiece of the front' },
@@ -47,12 +55,12 @@ export const DECOR: readonly DecorItem[] = [
   { key: 'pillar', name: 'Stone pillar', group: 'stone', kind: 'stone', id: 'world:grave_2', price: 400, appeal: APPEAL.pillar, standIn: 'Stone pillar', desc: 'A dressed stone column with a ball finial: pair them at a gate' },
   { key: 'arch', name: 'Ivy garden arch', group: 'stone', kind: 'stone', id: 'expansion:ivy-arbor', price: 900, appeal: APPEAL.arch, desc: 'An arbor grown over with ivy: an entrance to walk through' },
   // ---- furniture: seats +1% (the map bench +1.5%), small things +0.5%, signs (the board +3%, a flag pole +1.5%)
-  { key: 'bench', name: 'Park bench', group: 'furniture', kind: 'seat', id: 'world:bench', price: 300, appeal: APPEAL.bench, desc: 'A slatted bench to watch the golfers from' },
+  { key: 'bench', name: 'Park bench', group: 'furniture', kind: 'seat', id: 'view:world:bench:n', price: 300, appeal: APPEAL.bench, desc: 'A slatted bench to watch the golfers from' },
   { key: 'bench-map', name: 'Course-map bench', group: 'furniture', kind: 'seat', id: 'business:golf-bench-course-map', price: 600, appeal: APPEAL.seatBig, desc: 'A bench beside a board with the course map' },
   { key: 'picnic', name: 'Picnic table', group: 'furniture', kind: 'seat', id: 'town:picnic_table', price: 450, appeal: APPEAL.bench, desc: 'A timber table for the family day out' },
   { key: 'trolley', name: 'Bag trolley', group: 'furniture', kind: 'small', id: 'business:golf-bag-trolley', price: 150, appeal: APPEAL.small, desc: 'A golf bag on its trolley, parked for show' },
-  { key: 'bin', name: 'Litter bin', group: 'furniture', kind: 'small', id: 'world:trashcan', price: 80, appeal: APPEAL.small, desc: 'A tidy front is a busy front' },
-  { key: 'lamp', name: 'Lamp post', group: 'furniture', kind: 'small', id: 'world:streetlamp', price: 350, appeal: APPEAL.small, desc: 'Lit at night' },
+  { key: 'bin', name: 'Litter bin', group: 'furniture', kind: 'small', id: 'view:world:trashcan:n', price: 80, appeal: APPEAL.small, desc: 'A tidy front is a busy front' },
+  { key: 'lamp', name: 'Lamp post', group: 'furniture', kind: 'small', id: 'view:world:streetlamp:n', price: 350, appeal: APPEAL.small, desc: 'Lit at night' },
   { key: 'board', name: 'Welcome board', group: 'furniture', kind: 'sign', id: 'golf:leaderboard', price: 2500, appeal: APPEAL.board, scale: 0.45, desc: 'A tall board to greet golfers at the drive: four views' },
   { key: 'flagpole', name: 'Flag pole', group: 'furniture', kind: 'sign', id: 'business:golf-pin-red', price: 500, appeal: APPEAL.flagpole, scale: 0.6, standIn: 'Club flag pole', desc: 'A tall white pole flying the club flag' },
 ];

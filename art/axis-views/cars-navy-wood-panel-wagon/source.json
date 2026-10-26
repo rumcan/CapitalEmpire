@@ -1,0 +1,87 @@
+{
+ "id": "cars:navy-wood-panel-wagon",
+ "slug": "cars-navy-wood-panel-wagon",
+ "category": "cars",
+ "version": "cars-navy-wood-panel-wagon-screen-axis-4views-v1",
+ "crops": "crops-v2",
+ "sheetSha256": "a9d4dc6f6983370cc57b1a2952fc92f54fc4c020f9db05aca4b4f57ccfc3580a",
+ "status": "passed-with-alpha-residue-warnings",
+ "views": {
+  "N": {
+   "file": "N.png",
+   "sha256": "4d8f244b7f677026e5a9bf71cee8a696ad2900dbfcae95e35a431b2c4dbd9c1e",
+   "nativeSha256": "4d8f244b7f677026e5a9bf71cee8a696ad2900dbfcae95e35a431b2c4dbd9c1e",
+   "pixelSha256": "5117b12575be46d9623e8be82325b6cfb54ba44055034f6ea5a306ac5f990af7",
+   "sheetRect": {
+    "left": 0,
+    "top": 0,
+    "width": 480,
+    "height": 627
+   },
+   "trim": [
+    77,
+    146,
+    372,
+    419
+   ],
+   "heading": "front faces screen down"
+  },
+  "E": {
+   "file": "E.png",
+   "sha256": "f52cd45132c6fd64f050641966175f33f7e42e1aba38d31ed5ac6378e63a16b1",
+   "nativeSha256": "f52cd45132c6fd64f050641966175f33f7e42e1aba38d31ed5ac6378e63a16b1",
+   "pixelSha256": "28224ecec18a4370b423e3c4f7fe27aa167af96ff1a21f26ac4c190a3c83242a",
+   "sheetRect": {
+    "left": 480,
+    "top": 0,
+    "width": 774,
+    "height": 627
+   },
+   "trim": [
+    42,
+    232,
+    710,
+    298
+   ],
+   "heading": "front faces screen right (its right side to the camera)"
+  },
+  "S": {
+   "file": "S.png",
+   "sha256": "c494bd88fbc3a7859261021a58c3d3990902f1cc719a0fcfad54a2c618a06b2b",
+   "nativeSha256": "c494bd88fbc3a7859261021a58c3d3990902f1cc719a0fcfad54a2c618a06b2b",
+   "pixelSha256": "0c81e72504d44688541dbcad555daa714546b7f2771eb38f74e36fe603cf3955",
+   "sheetRect": {
+    "left": 0,
+    "top": 627,
+    "width": 480,
+    "height": 627
+   },
+   "trim": [
+    85,
+    89,
+    355,
+    377
+   ],
+   "heading": "front faces screen up (its rear to the camera)"
+  },
+  "W": {
+   "file": "W.png",
+   "sha256": "444d8f05d033f238f7c40e34fc0d0d3bc999064f88699eb06cac699d5dd50615",
+   "nativeSha256": "444d8f05d033f238f7c40e34fc0d0d3bc999064f88699eb06cac699d5dd50615",
+   "pixelSha256": "8bd2460ced49fb2d52ff6e3478b3eeed89410632b8ce629f357cb16b4ce1a061",
+   "sheetRect": {
+    "left": 480,
+    "top": 627,
+    "width": 774,
+    "height": 627
+   },
+   "trim": [
+    27,
+    159,
+    710,
+    303
+   ],
+   "heading": "front faces screen left (its left side to the camera)"
+  }
+ }
+}

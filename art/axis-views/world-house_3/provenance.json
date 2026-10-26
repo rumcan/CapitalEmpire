@@ -1,0 +1,604 @@
+{
+  "id": "world:house_3",
+  "slug": "world-house_3",
+  "identity": "world-house_3-4views-v2.png",
+  "details": "ONE-storey warm burnt-orange clapboard cottage, white corner/eave trim, black shutters, dark front door in long eaves wall A, two warm windows and small simple doorstep, dark grey gabled shingle roof and brick chimney, round gable attic window. N long eavesfront; E/W gableends; S rearplainservicewall. Omit ALL shrubs, pots and landscape aprons.",
+  "category": "buildings",
+  "viewOrder": [
+    "N",
+    "E",
+    "S",
+    "W"
+  ],
+  "source": "art/theme-consistency/generated/buildings/world-house_3-4views-v2.png",
+  "output": "art/theme-consistency/generated/buildings/world-house_3-screen-axis-4views-v1.png",
+  "provenance": "art/theme-consistency/generated/buildings/world-house_3-screen-axis-4views-v1.provenance.json",
+  "references": [
+    "art/theme-consistency/references/theme-authoritative.png",
+    "art/theme-consistency/generated/buildings/world-house_3-4views-v2.png",
+    "art/theme-consistency/references/road-diagonal-head-on-gable-template-v1.png"
+  ],
+  "prompt": "Create a NEW missing orientation set of ONE existing game building. Image 1 is THEME ONLY: match its detailed hand-painted stylized miniature town materials, warm autumn dusk palette, soft confident painted forms and warm lit windows. Image 2 is DESIGN IDENTITY: preserve this exact building's footprint proportions, storeys, roof type, chimney/vent arrangement, facade materials and entrance design. Image 3 is CAMERA GEOMETRY ONLY, never copy its colours/lines. IMPORTANT this is NOT the usual diagonal three-quarter isometric turntable. We need the intermediate 45-degree WORLD headings for roads that are perfectly HORIZONTAL or VERTICAL ON SCREEN. Fixed orthographic elevated camera about35degrees above horizontal, NO perspective. Every primary wall-footing line is exactly HORIZONTAL in screen coordinates; footprint depth goes straight vertically on the image. Roof is visible from above, with roof edges horizontal/vertical; vertical walls stay vertical. NO sloping +/-26.565degree footprint edges. No glimpse of a second major wall at a diagonal corner. Reconstruct true rigid quarter turns, never mirror lighting or reuse a front as a rear.\nReturn one SQUARE RGBA PNG with real transparent background and strict2x2 equal independent cells; no captions. ROW-MAJOR VIEW ORDER: TOP LEFT=N, entrance facade A seen exactly head-on, door faces screen DOWN; TOP RIGHT=E, building's physical right-hand side D seen exactly square-on, entrance facade at the right-hand end out of sight; BOTTOM LEFT=S, real REAR wall C seen exactly head-on, front entrance hidden on far side; BOTTOM RIGHT=W, building's physical left-hand side B seen square-on, front at left end out of sight. All four show matching elevation/scale and the SAME physical roof/vents. Building stays upright, not flat2D elevation: roofs still visible, natural elevated game view. Keep all geometry parallel to horizontal/vertical road layout. Use fixed SCREEN UPPER RIGHT sunlight, darker LOWER LEFT contact, enough dusk daylight for readable materials. All outside silhouette pixels transparent, NO grey floor, NO street, terrain, lawn, tiled square, vignette, backdrop, checkerboard, scene, parked cars, separate props or people. Only integral doorsteps/porch allowed; miniscule contact occlusion, no broad ground shadow cloud. Leave at least15percent transparent padding on every side of EACH quadrant; fit whole roof, steps and all details well inside cell. No overlap across centre gutters, no frame, labels or guide graphics. Four real distinct facades, never two duplicated images.\nONE-storey warm burnt-orange clapboard cottage, white corner/eave trim, black shutters, dark front door in long eaves wall A, two warm windows and small simple doorstep, dark grey gabled shingle roof and brick chimney, round gable attic window. N long eavesfront; E/W gableends; S rearplainservicewall. Omit ALL shrubs, pots and landscape aprons.",
+  "generator": "built-in image_gen",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-c36cae2d-36f8-456b-8694-ab5d3efa6d6d.png",
+  "date": "2026-10-26",
+  "viewSet": "screen-axis-4",
+  "viewsOrder": [
+    "N",
+    "E",
+    "S",
+    "W"
+  ],
+  "lighting": "upper-right toward lower-left",
+  "integrationStatus": "pending-not-full-eight-view-source",
+  "alphaReview": "pending",
+  "processing": "Native generator output copied byte-for-byte. Crops pending; no resize or pixel repaint.",
+  "screenAxisExport": {
+    "schema": 1,
+    "id": "world:house_3",
+    "viewSet": "screen-axis-4",
+    "viewsOrder": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "sheet": "art/theme-consistency/generated/buildings/world-house_3-screen-axis-4views-v1.png",
+    "sheetSha256": "9df891a7688ac1e667a326306e5c736a1f76d0b83cb43d3d426dd2ebc95139de",
+    "nativeSheetPixels": [
+      1254,
+      1254
+    ],
+    "processing": "Exact source-rectangle pixel crops only. No resize, alpha repaint, recolour, transform or mirroring. Alpha thresholds are diagnostic only; not a visual approval or alpha edit.",
+    "rectangleSelection": {
+      "file": "art/theme-consistency/generated/buildings/world-house_3-screen-axis-4views-v1.source-rects-v2.json",
+      "review": {
+        "reviewer": "horizontal_crop_pack",
+        "method": "Manually inspected full source and alpha>=128 connected-component extents. Unequal nonoverlapping regions contain complete subjects. Source pixels unchanged; object and padding not rescaled.",
+        "evidence": "art/theme-consistency/generated/buildings/world-house_3-screen-axis-4views-v1.png",
+        "acceptanceScope": "Source rectangle selection only, not physical-angle or live game approval"
+      }
+    },
+    "fileContractStatus": "passed-with-alpha-residue-warnings",
+    "visualReviewStatus": "pending",
+    "integrationStatus": "pending-not-full-eight-view-source",
+    "axisLineCounts": {
+      "vertical": 1703,
+      "horizontal": 4,
+      "verticalAtLeast16": 1612,
+      "horizontalAtLeast16": 0,
+      "verticalAtLeast128": 1593,
+      "horizontalAtLeast128": 0
+    },
+    "issues": [],
+    "warnings": [
+      "N: cell edge contains only low-alpha1..15 residue",
+      "E: cell edge contains only low-alpha1..15 residue",
+      "S: cell edge contains only low-alpha1..15 residue",
+      "W: cell edge contains only low-alpha1..15 residue"
+    ],
+    "views": {
+      "N": {
+        "sourceRect": {
+          "left": 0,
+          "top": 0,
+          "width": 735,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/buildings/world-house_3-screen-axis-4views-v1-crops-v2/N.native.png",
+        "nativeSha256": "01c76305e1a1130dcf9639e7bdead51239fccb917e030def43a1bcee4fb922e9",
+        "pixelSha256": "3c220ab9a160d13f3a1dd65cab1f410f434d1b4e74ce4ab2073840ea6cc1a0db",
+        "trimmedPixelSha256": "3c220ab9a160d13f3a1dd65cab1f410f434d1b4e74ce4ab2073840ea6cc1a0db",
+        "nativePixels": [
+          735,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 270611,
+          "transparent": 190234,
+          "transparentFraction": 0.4127938894856188,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 0,
+            "top": 0,
+            "width": 735,
+            "height": 627
+          },
+          "padding": {
+            "left": 0,
+            "top": 0,
+            "right": 0,
+            "bottom": 0
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 190234,
+            "oneTo15": 24588,
+            "sixteenTo127": 1772,
+            "one28To254": 243652,
+            "opaque255": 599
+          },
+          "edge": {
+            "nonzero": 203,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 246023,
+            "transparent": 214822,
+            "transparentFraction": 0.46614805411797894,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 65,
+              "top": 95,
+              "width": 638,
+              "height": 485
+            },
+            "padding": {
+              "left": 65,
+              "top": 95,
+              "right": 32,
+              "bottom": 47
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 244251,
+            "transparent": 216594,
+            "transparentFraction": 0.46999316473000685,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 66,
+              "top": 96,
+              "width": 636,
+              "height": 483
+            },
+            "padding": {
+              "left": 66,
+              "top": 96,
+              "right": 33,
+              "bottom": 48
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 245393,
+          "transparent": 215452,
+          "transparentFraction": 0.4675151081166119,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 66,
+            "top": 95,
+            "width": 636,
+            "height": 484
+          },
+          "padding": {
+            "left": 66,
+            "top": 95,
+            "right": 33,
+            "bottom": 48
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      },
+      "E": {
+        "sourceRect": {
+          "left": 735,
+          "top": 0,
+          "width": 519,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/buildings/world-house_3-screen-axis-4views-v1-crops-v2/E.native.png",
+        "nativeSha256": "c9a417ed6a28f3254a83b51b5fa92c1cfbd99205f142b2010a58b009e4fc3f21",
+        "pixelSha256": "68b071c2d2513bc08d8a28ef3a563ef37e7b374248a8707df69399fa74da91fb",
+        "trimmedPixelSha256": "979e825e8ec970566bef0a2027f14795ea0ef24a11323855abfe3ff3a73a6221",
+        "nativePixels": [
+          519,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 170893,
+          "transparent": 154520,
+          "transparentFraction": 0.47484273830486184,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 0,
+            "top": 9,
+            "width": 518,
+            "height": 616
+          },
+          "padding": {
+            "left": 0,
+            "top": 9,
+            "right": 1,
+            "bottom": 2
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 154520,
+            "oneTo15": 18322,
+            "sixteenTo127": 1290,
+            "one28To254": 151023,
+            "opaque255": 258
+          },
+          "edge": {
+            "nonzero": 153,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 152571,
+            "transparent": 172842,
+            "transparentFraction": 0.531146573738603,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 39,
+              "top": 94,
+              "width": 430,
+              "height": 464
+            },
+            "padding": {
+              "left": 39,
+              "top": 94,
+              "right": 50,
+              "bottom": 69
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 151281,
+            "transparent": 174132,
+            "transparentFraction": 0.5351107669330973,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 40,
+              "top": 95,
+              "width": 429,
+              "height": 462
+            },
+            "padding": {
+              "left": 40,
+              "top": 95,
+              "right": 50,
+              "bottom": 70
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 152354,
+          "transparent": 173059,
+          "transparentFraction": 0.5318134186403125,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 39,
+            "top": 94,
+            "width": 430,
+            "height": 464
+          },
+          "padding": {
+            "left": 39,
+            "top": 94,
+            "right": 50,
+            "bottom": 69
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      },
+      "S": {
+        "sourceRect": {
+          "left": 0,
+          "top": 627,
+          "width": 735,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/buildings/world-house_3-screen-axis-4views-v1-crops-v2/S.native.png",
+        "nativeSha256": "96032811f2f46c12142917fbd1b2f188e4710597481b77ff1d33b54d98d7a511",
+        "pixelSha256": "460d26de10b83278e0f1edf7cfbd2e19e42cfa0b31a5302e00ee1583c6a69343",
+        "trimmedPixelSha256": "1d3a0cf0fe7cef788a5f4ac78e8373ce92a50f7d6fd38f3102b96b1f18640e57",
+        "nativePixels": [
+          735,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 251261,
+          "transparent": 209584,
+          "transparentFraction": 0.4547819765864879,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 0,
+            "top": 0,
+            "width": 735,
+            "height": 605
+          },
+          "padding": {
+            "left": 0,
+            "top": 0,
+            "right": 0,
+            "bottom": 22
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 209584,
+            "oneTo15": 18586,
+            "sixteenTo127": 1797,
+            "one28To254": 230371,
+            "opaque255": 507
+          },
+          "edge": {
+            "nonzero": 98,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 232675,
+            "transparent": 228170,
+            "transparentFraction": 0.4951122394731417,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 65,
+              "top": 62,
+              "width": 634,
+              "height": 447
+            },
+            "padding": {
+              "left": 65,
+              "top": 62,
+              "right": 36,
+              "bottom": 118
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 230878,
+            "transparent": 229967,
+            "transparentFraction": 0.4990115982597186,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 66,
+              "top": 63,
+              "width": 633,
+              "height": 445
+            },
+            "padding": {
+              "left": 66,
+              "top": 63,
+              "right": 36,
+              "bottom": 119
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 232382,
+          "transparent": 228463,
+          "transparentFraction": 0.49574802807885515,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 65,
+            "top": 63,
+            "width": 634,
+            "height": 446
+          },
+          "padding": {
+            "left": 65,
+            "top": 63,
+            "right": 36,
+            "bottom": 118
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      },
+      "W": {
+        "sourceRect": {
+          "left": 735,
+          "top": 627,
+          "width": 519,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/buildings/world-house_3-screen-axis-4views-v1-crops-v2/W.native.png",
+        "nativeSha256": "d5d09f4960a32ac55c817849ada93475a647501f5c4ce65724b9bdc1dc834432",
+        "pixelSha256": "e7891d8e92a3709f489ccefdb30ea9e7e7923c7c20d613b0ea5679e4961c9393",
+        "trimmedPixelSha256": "3703b1566417d7c8d5bbf0749b20c9e832fe9dc23b0262fcc47858f5e2983d10",
+        "nativePixels": [
+          519,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 161011,
+          "transparent": 164402,
+          "transparentFraction": 0.5052103019854769,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 0,
+            "top": 3,
+            "width": 509,
+            "height": 598
+          },
+          "padding": {
+            "left": 0,
+            "top": 3,
+            "right": 10,
+            "bottom": 26
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 164402,
+            "oneTo15": 11520,
+            "sixteenTo127": 1328,
+            "one28To254": 147647,
+            "opaque255": 516
+          },
+          "edge": {
+            "nonzero": 67,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 149491,
+            "transparent": 175922,
+            "transparentFraction": 0.5406114691177059,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 42,
+              "top": 54,
+              "width": 430,
+              "height": 459
+            },
+            "padding": {
+              "left": 42,
+              "top": 54,
+              "right": 47,
+              "bottom": 114
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 148163,
+            "transparent": 177250,
+            "transparentFraction": 0.5446924369954489,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 43,
+              "top": 55,
+              "width": 428,
+              "height": 457
+            },
+            "padding": {
+              "left": 43,
+              "top": 55,
+              "right": 48,
+              "bottom": 115
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 148945,
+          "transparent": 176468,
+          "transparentFraction": 0.5422893369349104,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 42,
+            "top": 54,
+            "width": 430,
+            "height": 459
+          },
+          "padding": {
+            "left": 42,
+            "top": 54,
+            "right": 47,
+            "bottom": 114
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      }
+    }
+  },
+  "visualReviewStatus": "pending"
+}

@@ -1,0 +1,599 @@
+{
+  "id": "landscape:flowerbed-lavender",
+  "slug": "flowerbed-lavender",
+  "details": "ONE lowrectangular gardenbed edgedwithwornwarmcreamstone, purple/lavenderverticalflowerspikes withscatteredwhiteflowers andsilver-sagegreenfoliage, darksoilONLYinsideborder, 3mlong 1mdeep, maximumkneeheight. Plantmassesnatural/readablehandpainted, notphotorealtinyblades. N/S longaxishorizontal, E/Wlongdepthvertical. No diamondfootprint, surroundinggrass, trellis,pot,extraobjects.",
+  "kind": "flowerbed",
+  "category": "landscaping",
+  "requiresLibraryRegistration": true,
+  "source": "art/theme-consistency/references/horizontal-road-parking-landscaping-v1.png",
+  "output": "art/theme-consistency/generated/landscaping/flowerbed-lavender-screen-axis-4views-v1.png",
+  "provenance": "art/theme-consistency/generated/landscaping/flowerbed-lavender-screen-axis-4views-v1.provenance.json",
+  "references": [
+    "art/theme-consistency/references/theme-authoritative.png",
+    "art/theme-consistency/references/horizontal-road-parking-landscaping-v1.png"
+  ],
+  "prompt": "DeriveONE standalone placeablelandscapingobject matchingthereferenceworld. Image1 THEMEONLY: detailedstylized hand-painted MapleFalls townart, broadconfidentpainted leafclusters, readableminiatureform, warmupperrightlateafternoonlight andsoftlowerleftshade, nophotographicnoise. Image2 APPROVEDdesigncontextandCAMERASCALE: smallgardenbesidehead-onparkinggarage. Isolateonlyspecifiedplant/bed concept, no garageorotherassets. ONE lowrectangular gardenbed edgedwithwornwarmcreamstone, purple/lavenderverticalflowerspikes withscatteredwhiteflowers andsilver-sagegreenfoliage, darksoilONLYinsideborder, 3mlong 1mdeep, maximumkneeheight. Plantmassesnatural/readablehandpainted, notphotorealtinyblades. N/S longaxishorizontal, E/Wlongdepthvertical. No diamondfootprint, surroundinggrass, trellis,pot,extraobjects.\nReturn one SQUARE trueRGBAtransparentPNG strict2x2equalcells, fourgenuinerigidrotations ofSAMEasymmetricobject rowmajor N FRONT towardSCREENDOWN, E RIGHTSIDE, S BACK towardSCREENUP, W LEFTSIDE. Consistent elevatedorthographic35degreecamera withroof/topfoliagevisible, no perspective, maintainexactsamephysicalsize andshapethroughallviews. Rectangularborders/groundcontacts useSCREENHORIZONTALandVERTICALaxes forhorizontalroadlayout, notusualdiagonalisometricfootprint. Rotateplantstructure/border, keepSUNfixedSCREENUPPERRIGHT; nevermirrorlight orduplicatefrontasback. Everycutoutwith15percenttransparentpaddinginsideeachquarter, no crosscelloverlap. NOTascene orsurfacegrasspainting. No otherplants,outsidegroundpatch,grassapron,greyfloor,broadshadowdisc,backdrop,checkerboard,UI,words,caption,frame,people orgarlands. Intrinsicflowerbedsoil/borderispartofasset; barebushhasfoliage/stemsonly. Onlytinycontactocclusion.",
+  "generator": "built-in image_gen",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-be69d6cd-bd2c-4df2-ad4e-ba6e03a46a3c.png",
+  "date": "2026-10-26",
+  "viewSet": "screen-axis-4",
+  "viewsOrder": [
+    "N",
+    "E",
+    "S",
+    "W"
+  ],
+  "lighting": "upper-right toward lower-left",
+  "integrationStatus": "pending-not-full-eight-view-source",
+  "alphaReview": "pending",
+  "processing": "Native generator output copied byte-for-byte. Crops pending; no resize or pixel repaint.",
+  "screenAxisExport": {
+    "schema": 1,
+    "id": "landscape:flowerbed-lavender",
+    "viewSet": "screen-axis-4",
+    "viewsOrder": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "sheet": "art/theme-consistency/generated/landscaping/flowerbed-lavender-screen-axis-4views-v1.png",
+    "sheetSha256": "d20fde1262e593b45de485a94976a6bc3d44c3b66f1f0d632c752368c5051f29",
+    "nativeSheetPixels": [
+      1254,
+      1254
+    ],
+    "processing": "Exact source-rectangle pixel crops only. No resize, alpha repaint, recolour, transform or mirroring. Alpha thresholds are diagnostic only; not a visual approval or alpha edit.",
+    "rectangleSelection": {
+      "file": "art/theme-consistency/generated/landscaping/flowerbed-lavender-screen-axis-4views-v1.source-rects-v2.json",
+      "review": {
+        "reviewer": "horizontal_crop_pack",
+        "method": "Manually inspected complete source; opaque component extents show unequal-sized column arrangement. Nonoverlapping rectangle crops retain complete plants/beds; native pixels unchanged.",
+        "evidence": "art/theme-consistency/generated/landscaping/flowerbed-lavender-screen-axis-4views-v1.png",
+        "acceptanceScope": "Rectangle selection only; not genuine physical-rotation or game-integration approval."
+      }
+    },
+    "fileContractStatus": "passed-with-alpha-residue-warnings",
+    "visualReviewStatus": "pending",
+    "integrationStatus": "pending-not-full-eight-view-source",
+    "axisLineCounts": {
+      "vertical": 1093,
+      "horizontal": 18,
+      "verticalAtLeast16": 946,
+      "horizontalAtLeast16": 0,
+      "verticalAtLeast128": 909,
+      "horizontalAtLeast128": 0
+    },
+    "issues": [],
+    "warnings": [
+      "N: cell edge contains only low-alpha1..15 residue",
+      "S: corner contains only low-alpha1..15 residue",
+      "S: cell edge contains only low-alpha1..15 residue",
+      "W: corner contains only low-alpha1..15 residue",
+      "W: cell edge contains only low-alpha1..15 residue"
+    ],
+    "views": {
+      "N": {
+        "sourceRect": {
+          "left": 0,
+          "top": 0,
+          "width": 890,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/landscaping/flowerbed-lavender-screen-axis-4views-v1-crops-v2/N.native.png",
+        "nativeSha256": "1737298fdd87d73bc6814ff77627749046688df5700b7b692399859187cdaad3",
+        "pixelSha256": "0d8c39781b1c5cbf0831df61fe6982f778e3212ff94856d6e41281cb538a3fda",
+        "trimmedPixelSha256": "0d8c39781b1c5cbf0831df61fe6982f778e3212ff94856d6e41281cb538a3fda",
+        "nativePixels": [
+          890,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 189671,
+          "transparent": 368359,
+          "transparentFraction": 0.6601060874863358,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 0,
+            "top": 0,
+            "width": 890,
+            "height": 627
+          },
+          "padding": {
+            "left": 0,
+            "top": 0,
+            "right": 0,
+            "bottom": 0
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 368359,
+            "oneTo15": 14462,
+            "sixteenTo127": 4651,
+            "one28To254": 170188,
+            "opaque255": 370
+          },
+          "edge": {
+            "nonzero": 62,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 175209,
+            "transparent": 382821,
+            "transparentFraction": 0.6860222568679103,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 67,
+              "top": 220,
+              "width": 772,
+              "height": 294
+            },
+            "padding": {
+              "left": 67,
+              "top": 220,
+              "right": 51,
+              "bottom": 113
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 170558,
+            "transparent": 387472,
+            "transparentFraction": 0.6943569342150063,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 67,
+              "top": 220,
+              "width": 771,
+              "height": 293
+            },
+            "padding": {
+              "left": 67,
+              "top": 220,
+              "right": 52,
+              "bottom": 114
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 174108,
+          "transparent": 383922,
+          "transparentFraction": 0.6879952690715553,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 67,
+            "top": 220,
+            "width": 771,
+            "height": 294
+          },
+          "padding": {
+            "left": 67,
+            "top": 220,
+            "right": 52,
+            "bottom": 113
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      },
+      "E": {
+        "sourceRect": {
+          "left": 890,
+          "top": 0,
+          "width": 364,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/landscaping/flowerbed-lavender-screen-axis-4views-v1-crops-v2/E.native.png",
+        "nativeSha256": "0c1fa8a9d8c3fcb04a3308d99c6df2f71554ab739914b4701c801a81377a7f23",
+        "pixelSha256": "3408ad8edc9bd0b81eda7ba1b60c282c58fd3a8ea21d37bcfca671f073544a51",
+        "trimmedPixelSha256": "5ce486ba27105d9163773737289604c75ac2309b6267ea68a9d7ceafd989bb81",
+        "nativePixels": [
+          364,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 84958,
+          "transparent": 143270,
+          "transparentFraction": 0.6277494435389173,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 1,
+            "top": 19,
+            "width": 353,
+            "height": 606
+          },
+          "padding": {
+            "left": 1,
+            "top": 19,
+            "right": 10,
+            "bottom": 2
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 143270,
+            "oneTo15": 7465,
+            "sixteenTo127": 1814,
+            "one28To254": 75596,
+            "opaque255": 83
+          },
+          "edge": {
+            "nonzero": 0,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 77493,
+            "transparent": 150735,
+            "transparentFraction": 0.6604579630895421,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 54,
+              "top": 163,
+              "width": 260,
+              "height": 373
+            },
+            "padding": {
+              "left": 54,
+              "top": 163,
+              "right": 50,
+              "bottom": 91
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 75679,
+            "transparent": 152549,
+            "transparentFraction": 0.6684061552482605,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 55,
+              "top": 164,
+              "width": 258,
+              "height": 371
+            },
+            "padding": {
+              "left": 55,
+              "top": 164,
+              "right": 51,
+              "bottom": 92
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 77004,
+          "transparent": 151224,
+          "transparentFraction": 0.6626005573373994,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 54,
+            "top": 163,
+            "width": 260,
+            "height": 373
+          },
+          "padding": {
+            "left": 54,
+            "top": 163,
+            "right": 50,
+            "bottom": 91
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      },
+      "S": {
+        "sourceRect": {
+          "left": 0,
+          "top": 627,
+          "width": 890,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/landscaping/flowerbed-lavender-screen-axis-4views-v1-crops-v2/S.native.png",
+        "nativeSha256": "e3d45a1ceeabf01ce2e3abbee5af789d7029be63f46572bd4d810ebc2d3e4d63",
+        "pixelSha256": "9c70555cbe2d0ab589a733eb0461a0676e87e6570bfcb93665d66ac5530d882b",
+        "trimmedPixelSha256": "9c70555cbe2d0ab589a733eb0461a0676e87e6570bfcb93665d66ac5530d882b",
+        "nativePixels": [
+          890,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 195443,
+          "transparent": 362587,
+          "transparentFraction": 0.6497625575685895,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "bounds": {
+            "left": 0,
+            "top": 0,
+            "width": 890,
+            "height": 627
+          },
+          "padding": {
+            "left": 0,
+            "top": 0,
+            "right": 0,
+            "bottom": 0
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 362587,
+            "oneTo15": 20539,
+            "sixteenTo127": 4319,
+            "one28To254": 170543,
+            "opaque255": 42
+          },
+          "edge": {
+            "nonzero": 277,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 174904,
+            "transparent": 383126,
+            "transparentFraction": 0.686568822464742,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "bounds": {
+              "left": 62,
+              "top": 153,
+              "width": 776,
+              "height": 291
+            },
+            "padding": {
+              "left": 62,
+              "top": 153,
+              "right": 52,
+              "bottom": 183
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 170585,
+            "transparent": 387445,
+            "transparentFraction": 0.6943085497195491,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "bounds": {
+              "left": 63,
+              "top": 153,
+              "width": 775,
+              "height": 290
+            },
+            "padding": {
+              "left": 63,
+              "top": 153,
+              "right": 52,
+              "bottom": 184
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 173658,
+          "transparent": 384372,
+          "transparentFraction": 0.6888016773291759,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "bounds": {
+            "left": 62,
+            "top": 153,
+            "width": 776,
+            "height": 291
+          },
+          "padding": {
+            "left": 62,
+            "top": 153,
+            "right": 52,
+            "bottom": 183
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      },
+      "W": {
+        "sourceRect": {
+          "left": 890,
+          "top": 627,
+          "width": 364,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/landscaping/flowerbed-lavender-screen-axis-4views-v1-crops-v2/W.native.png",
+        "nativeSha256": "e4c1400c92728e75c273b8b32471eb050095ef01b9c85809012bc8b86d3d3a11",
+        "pixelSha256": "58659179305dc26111b42c7bffd6d0ef839b07a29d59b36236d03dbb6fe1becd",
+        "trimmedPixelSha256": "510ca23ccdaf83026a32b29d4f92f1d49cbbb26ee1726a5dba2fa658294e8868",
+        "nativePixels": [
+          364,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 84184,
+          "transparent": 144044,
+          "transparentFraction": 0.6311407890355258,
+          "cornersAlpha": [
+            0,
+            0,
+            1,
+            0
+          ],
+          "bounds": {
+            "left": 0,
+            "top": 7,
+            "width": 350,
+            "height": 620
+          },
+          "padding": {
+            "left": 0,
+            "top": 7,
+            "right": 14,
+            "bottom": 0
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 144044,
+            "oneTo15": 5847,
+            "sixteenTo127": 1629,
+            "one28To254": 76626,
+            "opaque255": 82
+          },
+          "edge": {
+            "nonzero": 36,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 78337,
+            "transparent": 149891,
+            "transparentFraction": 0.6567599067599068,
+            "cornersAlpha": [
+              0,
+              0,
+              1,
+              0
+            ],
+            "bounds": {
+              "left": 54,
+              "top": 89,
+              "width": 258,
+              "height": 374
+            },
+            "padding": {
+              "left": 54,
+              "top": 89,
+              "right": 52,
+              "bottom": 164
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 76708,
+            "transparent": 151520,
+            "transparentFraction": 0.6638975060027692,
+            "cornersAlpha": [
+              0,
+              0,
+              1,
+              0
+            ],
+            "bounds": {
+              "left": 55,
+              "top": 90,
+              "width": 256,
+              "height": 372
+            },
+            "padding": {
+              "left": 55,
+              "top": 90,
+              "right": 53,
+              "bottom": 165
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 77890,
+          "transparent": 150338,
+          "transparentFraction": 0.6587184745079482,
+          "cornersAlpha": [
+            0,
+            0,
+            1,
+            0
+          ],
+          "bounds": {
+            "left": 54,
+            "top": 89,
+            "width": 258,
+            "height": 374
+          },
+          "padding": {
+            "left": 54,
+            "top": 89,
+            "right": 52,
+            "bottom": 164
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      }
+    }
+  },
+  "visualReviewStatus": "pending"
+}

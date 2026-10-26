@@ -9,7 +9,8 @@ import { CAR_SCALE, carFootprint } from '../ext/car-art';
 import { FRONTAL } from './frontal';
 import { LU, LV } from './town';
 import {
-  BAY, BAY_DEPTH, BUSHES, Build, CHAIN, DEAD_TREES, PICKUPS, SCHOOL_SIGNS, TREES, WHEEL, cat, clamp, isCarPark, mix, names, pick, plain, specFit, withVariations,
+  BAY, BAY_DEPTH, BUSHES, Build, CHAIN, DEAD_TREES, DRIVE_GAP, PICKUPS, SCHOOL_SIGNS, SIDE_YARD, TREES, WHEEL, cat, clamp, isCarPark, mix, names, pick, plain, specFit,
+  withVariations,
   type ComposeState, type LotGeom, type Patch, type Placed,
 } from './compose-core';
 
@@ -17,8 +18,6 @@ import {
 /** the two-way aisle between the bay rows, the entrance drive's width (two lanes), a wheel stop's inset from a bay's outer edge, a nosed-in car's gap to its stop */
 /** NOSE: a parked car's centre this far short of its wheel stop: half a car at CAR_SCALE (the 4.5 m car is 3.96 m at 0.88: 0.99 tiles half) and a 0.15-tile gap, so its nose stops just short of the stop */
 const AISLE = 2.6, DRIVE_W = 2.6, STOP_IN = 0.35, NOSE = carFootprint(0).hx * CAR_SCALE / 2 + 0.15;
-/** the house band: the gap between the drive and the house (or its garage), and the side yard on the far side from the drive (tiles) */
-const DRIVE_GAP = 0.5, SIDE_YARD = 1.4;
 /** a library sprite drawn straight on (frontal.ts) or not isometric enough for a lot is never dealt; the house variations are kind 'building' */
 const isoBuilding = (i: LibItem) => !FRONTAL.has(i.id) && (i.kind === 'house' || i.kind === 'building');
 /** a rear view of a house: the north variations and the 'house back' sets (patio, pool, shed, swings, deck, porch) */

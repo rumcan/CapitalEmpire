@@ -1,0 +1,599 @@
+{
+  "id": "landscape:bush-deep-green",
+  "slug": "bush-deep-green",
+  "details": "ONE broadlowdeepforestgreen shrub, glossy buthandpainted roundedclusterleaves, irregular domed canopy with smallerprotrudinglobeononephysicalend, 1mhigh 1.7mwide. Warmolivetops underupperrightsun, coolsoftdeeptealundersides, neverbluephotographicnoise. Thinshortdarkstems atsoilcontact. NO pot,planter,flowersorgrasspatch.",
+  "kind": "bush",
+  "category": "landscaping",
+  "requiresLibraryRegistration": true,
+  "source": "art/theme-consistency/references/horizontal-road-parking-landscaping-v1.png",
+  "output": "art/theme-consistency/generated/landscaping/bush-deep-green-screen-axis-4views-v1.png",
+  "provenance": "art/theme-consistency/generated/landscaping/bush-deep-green-screen-axis-4views-v1.provenance.json",
+  "references": [
+    "art/theme-consistency/references/theme-authoritative.png",
+    "art/theme-consistency/references/horizontal-road-parking-landscaping-v1.png"
+  ],
+  "prompt": "DeriveONE standalone placeablelandscapingobject matchingthereferenceworld. Image1 THEMEONLY: detailedstylized hand-painted MapleFalls townart, broadconfidentpainted leafclusters, readableminiatureform, warmupperrightlateafternoonlight andsoftlowerleftshade, nophotographicnoise. Image2 APPROVEDdesigncontextandCAMERASCALE: smallgardenbesidehead-onparkinggarage. Isolateonlyspecifiedplant/bed concept, no garageorotherassets. ONE broadlowdeepforestgreen shrub, glossy buthandpainted roundedclusterleaves, irregular domed canopy with smallerprotrudinglobeononephysicalend, 1mhigh 1.7mwide. Warmolivetops underupperrightsun, coolsoftdeeptealundersides, neverbluephotographicnoise. Thinshortdarkstems atsoilcontact. NO pot,planter,flowersorgrasspatch.\nReturn one SQUARE trueRGBAtransparentPNG strict2x2equalcells, fourgenuinerigidrotations ofSAMEasymmetricobject rowmajor N FRONT towardSCREENDOWN, E RIGHTSIDE, S BACK towardSCREENUP, W LEFTSIDE. Consistent elevatedorthographic35degreecamera withroof/topfoliagevisible, no perspective, maintainexactsamephysicalsize andshapethroughallviews. Rectangularborders/groundcontacts useSCREENHORIZONTALandVERTICALaxes forhorizontalroadlayout, notusualdiagonalisometricfootprint. Rotateplantstructure/border, keepSUNfixedSCREENUPPERRIGHT; nevermirrorlight orduplicatefrontasback. Everycutoutwith15percenttransparentpaddinginsideeachquarter, no crosscelloverlap. NOTascene orsurfacegrasspainting. No otherplants,outsidegroundpatch,grassapron,greyfloor,broadshadowdisc,backdrop,checkerboard,UI,words,caption,frame,people orgarlands. Intrinsicflowerbedsoil/borderispartofasset; barebushhasfoliage/stemsonly. Onlytinycontactocclusion.",
+  "generator": "built-in image_gen",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-44d027d3-ff72-42b6-83e3-112ff1149a00.png",
+  "date": "2026-10-26",
+  "viewSet": "screen-axis-4",
+  "viewsOrder": [
+    "N",
+    "E",
+    "S",
+    "W"
+  ],
+  "lighting": "upper-right toward lower-left",
+  "integrationStatus": "pending-not-full-eight-view-source",
+  "alphaReview": "pending",
+  "processing": "Native generator output copied byte-for-byte. Crops pending; no resize or pixel repaint.",
+  "screenAxisExport": {
+    "schema": 1,
+    "id": "landscape:bush-deep-green",
+    "viewSet": "screen-axis-4",
+    "viewsOrder": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "sheet": "art/theme-consistency/generated/landscaping/bush-deep-green-screen-axis-4views-v1.png",
+    "sheetSha256": "dd1a17474de8870cc8417c646fad08c27efaba6b0db5d2ac18374a5ff6186f88",
+    "nativeSheetPixels": [
+      1254,
+      1254
+    ],
+    "processing": "Exact source-rectangle pixel crops only. No resize, alpha repaint, recolour, transform or mirroring. Alpha thresholds are diagnostic only; not a visual approval or alpha edit.",
+    "rectangleSelection": {
+      "file": "art/theme-consistency/generated/landscaping/bush-deep-green-screen-axis-4views-v1.source-rects-v2.json",
+      "review": {
+        "reviewer": "horizontal_crop_pack",
+        "method": "Manually inspected complete source; opaque component extents show unequal-sized column arrangement. Nonoverlapping rectangle crops retain complete plants/beds; native pixels unchanged.",
+        "evidence": "art/theme-consistency/generated/landscaping/bush-deep-green-screen-axis-4views-v1.png",
+        "acceptanceScope": "Rectangle selection only; not genuine physical-rotation or game-integration approval."
+      }
+    },
+    "fileContractStatus": "passed-with-alpha-residue-warnings",
+    "visualReviewStatus": "pending",
+    "integrationStatus": "pending-not-full-eight-view-source",
+    "axisLineCounts": {
+      "vertical": 1260,
+      "horizontal": 18,
+      "verticalAtLeast16": 1075,
+      "horizontalAtLeast16": 0,
+      "verticalAtLeast128": 1061,
+      "horizontalAtLeast128": 0
+    },
+    "issues": [],
+    "warnings": [
+      "N: cell edge contains only low-alpha1..15 residue",
+      "E: cell edge contains only low-alpha1..15 residue",
+      "S: corner contains only low-alpha1..15 residue",
+      "S: cell edge contains only low-alpha1..15 residue",
+      "W: cell edge contains only low-alpha1..15 residue"
+    ],
+    "views": {
+      "N": {
+        "sourceRect": {
+          "left": 0,
+          "top": 0,
+          "width": 765,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/landscaping/bush-deep-green-screen-axis-4views-v1-crops-v2/N.native.png",
+        "nativeSha256": "f7847f10a1751a5694c3237f535eaaa11d8e6dea3a8f36c5b9011b9d3ae60737",
+        "pixelSha256": "e2c49b7637fb9d80c50e2cad4a1ad84f1fea23fc91573a51d47ee2c00e76404e",
+        "trimmedPixelSha256": "8be4bccf7b71a312c293903175052483408f4e8031d40bc0ee2236768d614e79",
+        "nativePixels": [
+          765,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 241142,
+          "transparent": 238513,
+          "transparentFraction": 0.4972594885907579,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 0,
+            "top": 23,
+            "width": 764,
+            "height": 604
+          },
+          "padding": {
+            "left": 0,
+            "top": 23,
+            "right": 1,
+            "bottom": 0
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 238513,
+            "oneTo15": 17272,
+            "sixteenTo127": 3147,
+            "one28To254": 220454,
+            "opaque255": 269
+          },
+          "edge": {
+            "nonzero": 67,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 223870,
+            "transparent": 255785,
+            "transparentFraction": 0.5332687035473413,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 34,
+              "top": 104,
+              "width": 692,
+              "height": 454
+            },
+            "padding": {
+              "left": 34,
+              "top": 104,
+              "right": 39,
+              "bottom": 69
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 220723,
+            "transparent": 258932,
+            "transparentFraction": 0.5398296692414339,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 34,
+              "top": 105,
+              "width": 691,
+              "height": 452
+            },
+            "padding": {
+              "left": 34,
+              "top": 105,
+              "right": 40,
+              "bottom": 70
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 223121,
+          "transparent": 256534,
+          "transparentFraction": 0.5348302425701806,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 34,
+            "top": 105,
+            "width": 692,
+            "height": 452
+          },
+          "padding": {
+            "left": 34,
+            "top": 105,
+            "right": 39,
+            "bottom": 70
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      },
+      "E": {
+        "sourceRect": {
+          "left": 765,
+          "top": 0,
+          "width": 489,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/landscaping/bush-deep-green-screen-axis-4views-v1-crops-v2/E.native.png",
+        "nativeSha256": "c2a02799485efd7b686519860b7db1b598ad28cb93543ce2ef0e694a1dd8beb4",
+        "pixelSha256": "defbe2a405aa653ee8047b766ea215a04ca430159a2ef8cedc740f59e84e1bf2",
+        "trimmedPixelSha256": "c4f3eaa67559ce3439e0d5d1dd219f15f6c0a0d3ed28600d30907db1f5d2b8da",
+        "nativePixels": [
+          489,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 152237,
+          "transparent": 154366,
+          "transparentFraction": 0.50347191645222,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 0,
+            "top": 23,
+            "width": 463,
+            "height": 604
+          },
+          "padding": {
+            "left": 0,
+            "top": 23,
+            "right": 26,
+            "bottom": 0
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 154366,
+            "oneTo15": 11937,
+            "sixteenTo127": 2665,
+            "one28To254": 137517,
+            "opaque255": 118
+          },
+          "edge": {
+            "nonzero": 9,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 140300,
+            "transparent": 166303,
+            "transparentFraction": 0.5424049992987675,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 40,
+              "top": 111,
+              "width": 416,
+              "height": 462
+            },
+            "padding": {
+              "left": 40,
+              "top": 111,
+              "right": 33,
+              "bottom": 54
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 137635,
+            "transparent": 168968,
+            "transparentFraction": 0.5510970212294074,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 41,
+              "top": 112,
+              "width": 414,
+              "height": 460
+            },
+            "padding": {
+              "left": 41,
+              "top": 112,
+              "right": 34,
+              "bottom": 55
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 139572,
+          "transparent": 167031,
+          "transparentFraction": 0.5447794052895765,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 40,
+            "top": 111,
+            "width": 416,
+            "height": 462
+          },
+          "padding": {
+            "left": 40,
+            "top": 111,
+            "right": 33,
+            "bottom": 54
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      },
+      "S": {
+        "sourceRect": {
+          "left": 0,
+          "top": 627,
+          "width": 765,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/landscaping/bush-deep-green-screen-axis-4views-v1-crops-v2/S.native.png",
+        "nativeSha256": "be3fac6e398074cbb53b6515a52fc00a2cdc9511977e303bd9e89b68e8183d76",
+        "pixelSha256": "48adc6bebe9c766d143ecdc38bb14515c4721c69581ede779fce2e37c29172c1",
+        "trimmedPixelSha256": "48adc6bebe9c766d143ecdc38bb14515c4721c69581ede779fce2e37c29172c1",
+        "nativePixels": [
+          765,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 227624,
+          "transparent": 252031,
+          "transparentFraction": 0.525442244946889,
+          "cornersAlpha": [
+            0,
+            0,
+            1,
+            0
+          ],
+          "bounds": {
+            "left": 0,
+            "top": 0,
+            "width": 765,
+            "height": 627
+          },
+          "padding": {
+            "left": 0,
+            "top": 0,
+            "right": 0,
+            "bottom": 0
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 252031,
+            "oneTo15": 17429,
+            "sixteenTo127": 2899,
+            "one28To254": 207129,
+            "opaque255": 167
+          },
+          "edge": {
+            "nonzero": 208,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 210195,
+            "transparent": 269460,
+            "transparentFraction": 0.5617787784970447,
+            "cornersAlpha": [
+              0,
+              0,
+              1,
+              0
+            ],
+            "bounds": {
+              "left": 41,
+              "top": 72,
+              "width": 687,
+              "height": 439
+            },
+            "padding": {
+              "left": 41,
+              "top": 72,
+              "right": 37,
+              "bottom": 116
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 207296,
+            "transparent": 272359,
+            "transparentFraction": 0.5678227059032013,
+            "cornersAlpha": [
+              0,
+              0,
+              1,
+              0
+            ],
+            "bounds": {
+              "left": 42,
+              "top": 73,
+              "width": 685,
+              "height": 437
+            },
+            "padding": {
+              "left": 42,
+              "top": 73,
+              "right": 38,
+              "bottom": 117
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 209503,
+          "transparent": 270152,
+          "transparentFraction": 0.563221482106931,
+          "cornersAlpha": [
+            0,
+            0,
+            1,
+            0
+          ],
+          "bounds": {
+            "left": 41,
+            "top": 72,
+            "width": 687,
+            "height": 438
+          },
+          "padding": {
+            "left": 41,
+            "top": 72,
+            "right": 37,
+            "bottom": 117
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      },
+      "W": {
+        "sourceRect": {
+          "left": 765,
+          "top": 627,
+          "width": 489,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/landscaping/bush-deep-green-screen-axis-4views-v1-crops-v2/W.native.png",
+        "nativeSha256": "4e70cd01ab13d246291318aa03daa94f40ab1d742caa1e7dc44a8889c6c580ad",
+        "pixelSha256": "bd4454c653224c25ab6eae8c1a890efc572b1dea632e445c92d6bc6b1f02eb78",
+        "trimmedPixelSha256": "f29e2c2108a021a30beb7ccfcd24af655a1e65889fe8e625028d05a39c832870",
+        "nativePixels": [
+          489,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 147198,
+          "transparent": 159405,
+          "transparentFraction": 0.5199068502265144,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 0,
+            "top": 1,
+            "width": 473,
+            "height": 610
+          },
+          "padding": {
+            "left": 0,
+            "top": 1,
+            "right": 16,
+            "bottom": 16
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 159405,
+            "oneTo15": 9944,
+            "sixteenTo127": 2387,
+            "one28To254": 134723,
+            "opaque255": 144
+          },
+          "edge": {
+            "nonzero": 38,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 137254,
+            "transparent": 169349,
+            "transparentFraction": 0.5523396705185533,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 35,
+              "top": 77,
+              "width": 415,
+              "height": 446
+            },
+            "padding": {
+              "left": 35,
+              "top": 77,
+              "right": 39,
+              "bottom": 104
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 134867,
+            "transparent": 171736,
+            "transparentFraction": 0.5601249824691865,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 36,
+              "top": 78,
+              "width": 413,
+              "height": 445
+            },
+            "padding": {
+              "left": 36,
+              "top": 78,
+              "right": 40,
+              "bottom": 104
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 136612,
+          "transparent": 169991,
+          "transparentFraction": 0.5544335834939645,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 35,
+            "top": 77,
+            "width": 414,
+            "height": 446
+          },
+          "padding": {
+            "left": 35,
+            "top": 77,
+            "right": 40,
+            "bottom": 104
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      }
+    }
+  },
+  "visualReviewStatus": "pending"
+}

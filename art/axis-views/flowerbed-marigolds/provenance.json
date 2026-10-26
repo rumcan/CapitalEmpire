@@ -1,0 +1,598 @@
+{
+  "id": "landscape:flowerbed-marigolds",
+  "slug": "flowerbed-marigolds",
+  "details": "ONE lowrectangular timberedged autumnmarigoldbed withsmallgoldenorange/rustredroundedflowerheadsabovecompactgreenleafclusters, darksoilONLYinsideborder, simplelowwarmbrown timberperimeter, 3mlong 1mdeep, kneeheight. N/S longaxisHORIZONTAL; E/WshowshortendandlongdepthVERTICAL. Fourgenuineturnsofthesameplantarrangement/border, no diamonds, grassapron, stonebase, pot orotherbeds.",
+  "kind": "flowerbed",
+  "category": "landscaping",
+  "requiresLibraryRegistration": true,
+  "source": "art/theme-consistency/references/horizontal-road-parking-landscaping-v1.png",
+  "output": "art/theme-consistency/generated/landscaping/flowerbed-marigolds-screen-axis-4views-v1.png",
+  "provenance": "art/theme-consistency/generated/landscaping/flowerbed-marigolds-screen-axis-4views-v1.provenance.json",
+  "references": [
+    "art/theme-consistency/references/theme-authoritative.png",
+    "art/theme-consistency/references/horizontal-road-parking-landscaping-v1.png"
+  ],
+  "prompt": "DeriveONE standalone placeablelandscapingobject matchingthereferenceworld. Image1 THEMEONLY: detailedstylized hand-painted MapleFalls townart, broadconfidentpainted leafclusters, readableminiatureform, warmupperrightlateafternoonlight andsoftlowerleftshade, nophotographicnoise. Image2 APPROVEDdesigncontextandCAMERASCALE: smallgardenbesidehead-onparkinggarage. Isolateonlyspecifiedplant/bed concept, no garageorotherassets. ONE lowrectangular timberedged autumnmarigoldbed withsmallgoldenorange/rustredroundedflowerheadsabovecompactgreenleafclusters, darksoilONLYinsideborder, simplelowwarmbrown timberperimeter, 3mlong 1mdeep, kneeheight. N/S longaxisHORIZONTAL; E/WshowshortendandlongdepthVERTICAL. Fourgenuineturnsofthesameplantarrangement/border, no diamonds, grassapron, stonebase, pot orotherbeds.\nReturn one SQUARE trueRGBAtransparentPNG strict2x2equalcells, fourgenuinerigidrotations ofSAMEasymmetricobject rowmajor N FRONT towardSCREENDOWN, E RIGHTSIDE, S BACK towardSCREENUP, W LEFTSIDE. Consistent elevatedorthographic35degreecamera withroof/topfoliagevisible, no perspective, maintainexactsamephysicalsize andshapethroughallviews. Rectangularborders/groundcontacts useSCREENHORIZONTALandVERTICALaxes forhorizontalroadlayout, notusualdiagonalisometricfootprint. Rotateplantstructure/border, keepSUNfixedSCREENUPPERRIGHT; nevermirrorlight orduplicatefrontasback. Everycutoutwith15percenttransparentpaddinginsideeachquarter, no crosscelloverlap. NOTascene orsurfacegrasspainting. No otherplants,outsidegroundpatch,grassapron,greyfloor,broadshadowdisc,backdrop,checkerboard,UI,words,caption,frame,people orgarlands. Intrinsicflowerbedsoil/borderispartofasset; barebushhasfoliage/stemsonly. Onlytinycontactocclusion.",
+  "generator": "built-in image_gen",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-d782d8e8-0752-46de-b697-b38d4286131e.png",
+  "date": "2026-10-26",
+  "viewSet": "screen-axis-4",
+  "viewsOrder": [
+    "N",
+    "E",
+    "S",
+    "W"
+  ],
+  "lighting": "upper-right toward lower-left",
+  "integrationStatus": "pending-not-full-eight-view-source",
+  "alphaReview": "pending",
+  "processing": "Native generator output copied byte-for-byte. Crops pending; no resize or pixel repaint.",
+  "screenAxisExport": {
+    "schema": 1,
+    "id": "landscape:flowerbed-marigolds",
+    "viewSet": "screen-axis-4",
+    "viewsOrder": [
+      "N",
+      "E",
+      "S",
+      "W"
+    ],
+    "sheet": "art/theme-consistency/generated/landscaping/flowerbed-marigolds-screen-axis-4views-v1.png",
+    "sheetSha256": "ab5070efbda202abf67e3aeb220bf1c97a307c2ba4b6879b16bc3e84c8d84457",
+    "nativeSheetPixels": [
+      1254,
+      1254
+    ],
+    "processing": "Exact source-rectangle pixel crops only. No resize, alpha repaint, recolour, transform or mirroring. Alpha thresholds are diagnostic only; not a visual approval or alpha edit.",
+    "rectangleSelection": {
+      "file": "art/theme-consistency/generated/landscaping/flowerbed-marigolds-screen-axis-4views-v1.source-rects-v2.json",
+      "review": {
+        "reviewer": "horizontal_crop_pack",
+        "method": "Manually inspected complete source; opaque component extents show unequal-sized column arrangement. Nonoverlapping rectangle crops retain complete plants/beds; native pixels unchanged.",
+        "evidence": "art/theme-consistency/generated/landscaping/flowerbed-marigolds-screen-axis-4views-v1.png",
+        "acceptanceScope": "Rectangle selection only; not genuine physical-rotation or game-integration approval."
+      }
+    },
+    "fileContractStatus": "passed-with-alpha-residue-warnings",
+    "visualReviewStatus": "pending",
+    "integrationStatus": "pending-not-full-eight-view-source",
+    "axisLineCounts": {
+      "vertical": 911,
+      "horizontal": 109,
+      "verticalAtLeast16": 875,
+      "horizontalAtLeast16": 0,
+      "verticalAtLeast128": 867,
+      "horizontalAtLeast128": 0
+    },
+    "issues": [],
+    "warnings": [
+      "N: cell edge contains only low-alpha1..15 residue",
+      "E: cell edge contains only low-alpha1..15 residue",
+      "S: cell edge contains only low-alpha1..15 residue",
+      "W: cell edge contains only low-alpha1..15 residue"
+    ],
+    "views": {
+      "N": {
+        "sourceRect": {
+          "left": 0,
+          "top": 0,
+          "width": 860,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/landscaping/flowerbed-marigolds-screen-axis-4views-v1-crops-v2/N.native.png",
+        "nativeSha256": "c701c59083f891f6ee700cc9e7fcc19596befb9270bad120731cdaca151c313e",
+        "pixelSha256": "b716c83c2e57df96c50209f8981da1ee045ef55ff256cd111ad454a6a7bad37a",
+        "trimmedPixelSha256": "6cb477c87fce496b314b429ef8fc63d0be0116d112c4cef4efd08346bdf797dd",
+        "nativePixels": [
+          860,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 166822,
+          "transparent": 372398,
+          "transparentFraction": 0.6906234931938726,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 0,
+            "top": 19,
+            "width": 860,
+            "height": 608
+          },
+          "padding": {
+            "left": 0,
+            "top": 19,
+            "right": 0,
+            "bottom": 0
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 372398,
+            "oneTo15": 12417,
+            "sixteenTo127": 2346,
+            "one28To254": 151937,
+            "opaque255": 122
+          },
+          "edge": {
+            "nonzero": 70,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 154405,
+            "transparent": 384815,
+            "transparentFraction": 0.7136511998813101,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 89,
+              "top": 240,
+              "width": 724,
+              "height": 244
+            },
+            "padding": {
+              "left": 89,
+              "top": 240,
+              "right": 47,
+              "bottom": 143
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 152059,
+            "transparent": 387161,
+            "transparentFraction": 0.718001928711843,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 90,
+              "top": 241,
+              "width": 722,
+              "height": 242
+            },
+            "padding": {
+              "left": 90,
+              "top": 241,
+              "right": 48,
+              "bottom": 144
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 153777,
+          "transparent": 385443,
+          "transparentFraction": 0.7148158451096027,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 89,
+            "top": 241,
+            "width": 724,
+            "height": 243
+          },
+          "padding": {
+            "left": 89,
+            "top": 241,
+            "right": 47,
+            "bottom": 143
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      },
+      "E": {
+        "sourceRect": {
+          "left": 860,
+          "top": 0,
+          "width": 394,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/landscaping/flowerbed-marigolds-screen-axis-4views-v1-crops-v2/E.native.png",
+        "nativeSha256": "b97348df5a983b12fc5ccd0f046c2cdc4fd0e07deb596501f78dad0fdf78e387",
+        "pixelSha256": "d9d0016572b27051352ee93e761ed883b26cf4c2a4879b2b0799231c65d16a55",
+        "trimmedPixelSha256": "65b112a8b484f0e90944f5c087c0df1e9d4f0b64451d267e40ce1ddb55d5a8a1",
+        "nativePixels": [
+          394,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 75218,
+          "transparent": 171820,
+          "transparentFraction": 0.6955205272063407,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 1,
+            "top": 61,
+            "width": 393,
+            "height": 566
+          },
+          "padding": {
+            "left": 1,
+            "top": 61,
+            "right": 0,
+            "bottom": 0
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 171820,
+            "oneTo15": 5384,
+            "sixteenTo127": 1020,
+            "one28To254": 68595,
+            "opaque255": 219
+          },
+          "edge": {
+            "nonzero": 17,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 69834,
+            "transparent": 177204,
+            "transparentFraction": 0.7173147450999441,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 59,
+              "top": 166,
+              "width": 253,
+              "height": 338
+            },
+            "padding": {
+              "left": 59,
+              "top": 166,
+              "right": 82,
+              "bottom": 123
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 68814,
+            "transparent": 178224,
+            "transparentFraction": 0.7214436645374396,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 60,
+              "top": 167,
+              "width": 251,
+              "height": 337
+            },
+            "padding": {
+              "left": 60,
+              "top": 167,
+              "right": 83,
+              "bottom": 123
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 69620,
+          "transparent": 177418,
+          "transparentFraction": 0.7181810085897716,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 59,
+            "top": 166,
+            "width": 253,
+            "height": 338
+          },
+          "padding": {
+            "left": 59,
+            "top": 166,
+            "right": 82,
+            "bottom": 123
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      },
+      "S": {
+        "sourceRect": {
+          "left": 0,
+          "top": 627,
+          "width": 860,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/landscaping/flowerbed-marigolds-screen-axis-4views-v1-crops-v2/S.native.png",
+        "nativeSha256": "25301b58a6a09104e8c2be6e6638590960900672116c85661bfd2daea61a664c",
+        "pixelSha256": "feab8ea8faf3a700db82c8e3dfcbbbc5aa96fc5a94f61f563f6691a266d52d67",
+        "trimmedPixelSha256": "038bd884582305753c4d4892cc6d996b7cce34065acccc127c520d335d1557d9",
+        "nativePixels": [
+          860,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 172784,
+          "transparent": 366436,
+          "transparentFraction": 0.679566781647565,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 19,
+            "top": 0,
+            "width": 841,
+            "height": 627
+          },
+          "padding": {
+            "left": 19,
+            "top": 0,
+            "right": 0,
+            "bottom": 0
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 366436,
+            "oneTo15": 20847,
+            "sixteenTo127": 1915,
+            "one28To254": 149994,
+            "opaque255": 28
+          },
+          "edge": {
+            "nonzero": 92,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 151937,
+            "transparent": 387283,
+            "transparentFraction": 0.7182281814472757,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 89,
+              "top": 163,
+              "width": 725,
+              "height": 246
+            },
+            "padding": {
+              "left": 89,
+              "top": 163,
+              "right": 46,
+              "bottom": 218
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 150022,
+            "transparent": 389198,
+            "transparentFraction": 0.7217796075813212,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 90,
+              "top": 164,
+              "width": 724,
+              "height": 245
+            },
+            "padding": {
+              "left": 90,
+              "top": 164,
+              "right": 46,
+              "bottom": 218
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 151571,
+          "transparent": 387649,
+          "transparentFraction": 0.7189069396535737,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 89,
+            "top": 163,
+            "width": 725,
+            "height": 246
+          },
+          "padding": {
+            "left": 89,
+            "top": 163,
+            "right": 46,
+            "bottom": 218
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      },
+      "W": {
+        "sourceRect": {
+          "left": 860,
+          "top": 627,
+          "width": 394,
+          "height": 627
+        },
+        "nativeFile": "art/theme-consistency/generated/landscaping/flowerbed-marigolds-screen-axis-4views-v1-crops-v2/W.native.png",
+        "nativeSha256": "e3ec78af08f60cbe242cf70437f1af000c2d99ebfe9716318cc28c728d8c0016",
+        "pixelSha256": "a95fdccf4d0e58b3d2efeb802f21818058302bb33185b4bf1fdf4f86cdd12f8a",
+        "trimmedPixelSha256": "e75988287fa01e963777ee96e943307b63d69ec52c1fb4ea5acb3fd9fef37304",
+        "nativePixels": [
+          394,
+          627
+        ],
+        "alpha": {
+          "minimumAlpha": 1,
+          "nonzero": 76739,
+          "transparent": 170299,
+          "transparentFraction": 0.6893635796921931,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 0,
+            "top": 1,
+            "width": 390,
+            "height": 626
+          },
+          "padding": {
+            "left": 0,
+            "top": 1,
+            "right": 4,
+            "bottom": 0
+          }
+        },
+        "alphaDiagnostics": {
+          "histogram": {
+            "zero": 170299,
+            "oneTo15": 5884,
+            "sixteenTo127": 916,
+            "one28To254": 69746,
+            "opaque255": 193
+          },
+          "edge": {
+            "nonzero": 31,
+            "atLeast16": 0,
+            "atLeast128": 0
+          },
+          "atLeast16": {
+            "minimumAlpha": 16,
+            "nonzero": 70855,
+            "transparent": 176183,
+            "transparentFraction": 0.7131817777022158,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 56,
+              "top": 97,
+              "width": 259,
+              "height": 339
+            },
+            "padding": {
+              "left": 56,
+              "top": 97,
+              "right": 79,
+              "bottom": 191
+            }
+          },
+          "atLeast128": {
+            "minimumAlpha": 128,
+            "nonzero": 69939,
+            "transparent": 177099,
+            "transparentFraction": 0.7168897092754961,
+            "cornersAlpha": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bounds": {
+              "left": 56,
+              "top": 98,
+              "width": 259,
+              "height": 337
+            },
+            "padding": {
+              "left": 56,
+              "top": 98,
+              "right": 79,
+              "bottom": 192
+            }
+          }
+        },
+        "strongAlphaDiagnostic": {
+          "minimumAlpha": 32,
+          "nonzero": 70618,
+          "transparent": 176420,
+          "transparentFraction": 0.7141411442773986,
+          "cornersAlpha": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bounds": {
+            "left": 56,
+            "top": 97,
+            "width": 259,
+            "height": 338
+          },
+          "padding": {
+            "left": 56,
+            "top": 97,
+            "right": 79,
+            "bottom": 192
+          }
+        },
+        "exactDecodedSourceRgba": true,
+        "appearanceReview": "pending",
+        "groundAnchorReview": "pending",
+        "foundationAlignmentReview": "pending"
+      }
+    }
+  },
+  "visualReviewStatus": "pending"
+}

@@ -8,7 +8,7 @@ import { HEIGHT_LIGHT_REACH, HEIGHT_LIGHT_STRENGTH, clampHeightLight } from './e
 import { withBaseGrass } from './base-grass-saved';
 import { withPresets } from './paint-presets-saved';
 import { GRASS_ART_DEFAULT, type GrassArt } from './painted-grass-lod';
-import { patchBox, type FromWorker, type LotPatch, type NetOp, type TileKind, type ToWorker } from './ground-protocol';
+import { patchBox, type FromWorker, type LotPatch, type NetOp, type TileKind, type ToWorker, type WorkerLimits } from './ground-protocol';
 import type { GLRenderer } from './gl';
 import { unionBox, type BBox } from './network';
 import type { Waterway } from './terrain/types';
@@ -35,6 +35,8 @@ export interface Tile {
 }
 /** the least time between two bakes of a ground chunk that course edits keep re-staling, ms */
 export const COURSE_HOLD_MS = 150;
+/** the bakes the ground cache keeps the worker time of (bakeLog) */
+export const BAKE_LOG = 4096;
 const key = (k: TileKind, i: number, j: number) => (k === 'g' ? 0 : k === 'm' ? 1 : 2) * 1e10 + (j + 2048) * 65536 + (i + 32768);
 const SIZE: Record<TileKind, [number, number]> = { g: [CHUNK_W, CHUNK_H], m: [MID_W, MID_H], p: [PLAN_W, PLAN_H] };
 
@@ -45,6 +47,9 @@ export class GroundCache {
   private workers: Worker[] = []; private inflight: number[] = []; private reqs = new Map<number, { t: Tile; gen: number; w: number }>();
   private nextId = 1; private want: { t: Tile; L: number; artL: number; ts: number; pri: number }[] = [];
   ready = 0; private isReady: boolean[] = []; errors: string[] = []; bakeMs = 0; baked = 0;
+  /** T166: the worker ms of the last BAKE_LOG bakes (a ring: entry n % BAKE_LOG is bake n; scripts/perf/memory.mjs reads their median and p95),
+   *  when the first chunk landed (performance.now ms since the page loaded) and how long the builder took to have its textures (ms) */
+  bakeLog: number[] = []; firstTileAt = 0; texMs = 0;
   /** the builder worker writes the textures to this browser's cache after a fresh start: seconds in which a bake sent to it waits (T134: the
    *  planner pieces asked for first landed 5 s late), so it takes none while it has peers */
   private saving: boolean[] = [];
@@ -65,7 +70,9 @@ export class GroundCache {
   grassArt: GrassArt = GRASS_ART_DEFAULT;
   /** the Grass setting changed: every worker switches and every chunk is baked again (each keeps its old picture until then) */
   setGrassArt(art: GrassArt) { if (art === this.grassArt) return; this.grassArt = art; this.broadcast({ t: 'grassArt', art }); this.invalidateAll(); }
-  init(t: { cls: Uint8Array; height: Float32Array; waters: Waterway[] }) { const art = { ...withPresets(withBaseGrass(GROUND_ART)), grassArt: this.grassArt }; this.workers.forEach((wk, i) => wk.postMessage({ t: 'init', art, terrain: t.cls, height: t.height, waters: t.waters, build: i === 0, peers: this.workers.length - 1 } satisfies ToWorker)); this.broadcast({ t: 'living', ...this.living }); this.broadcast({ t: 'slopeLight', strength: this.slopeLight }); this.broadcast({ t: 'surfaces', file: paintedSurfaces() });
+  /** a light boot's worker limits (boot.ts, T157), sent with init; null: the game's */
+  limits: WorkerLimits | null = null;
+  init(t: { cls: Uint8Array; height: Float32Array; waters: Waterway[] }) { const art = { ...withPresets(withBaseGrass(GROUND_ART)), grassArt: this.grassArt }, limits = this.limits ?? undefined; this.workers.forEach((wk, i) => wk.postMessage({ t: 'init', art, terrain: t.cls, height: t.height, waters: t.waters, build: i === 0, peers: this.workers.length - 1, limits } satisfies ToWorker)); this.broadcast({ t: 'living', ...this.living }); this.broadcast({ t: 'slopeLight', strength: this.slopeLight }); this.broadcast({ t: 'surfaces', file: paintedSurfaces() });
     // the studio saved the painted surfaces (the dev server hot-swaps the file): every worker takes the new looks and every chunk is baked again
     this.unsurfaces?.(); this.unsurfaces = onPaintedSurfaces(file => { this.broadcast({ t: 'surfaces', file }); this.invalidateAll(); }); }
   private unsurfaces: (() => void) | null = null;
@@ -188,7 +195,7 @@ export class GroundCache {
   /** the hold on chunks a course edit re-stales (COURSE_HOLD_MS; the benchmark tries others) */
   courseHoldMs = COURSE_HOLD_MS;
   private onMessage(w: number, m: FromWorker) {
-    if (m.t === 'ready') { this.ready++; this.isReady[w] = true; this.saving[w] = !!m.saving; return; }
+    if (m.t === 'ready') { this.ready++; this.isReady[w] = true; this.saving[w] = !!m.saving; if (w === 0) this.texMs = m.ms; return; }
     if (m.t === 'saved') { this.saving[w] = false; return; }
     if (m.t === 'error') { this.errors.push(m.message); console.error('[ground worker]', m.message); return; }
     if (m.t === 'log') { console.log(`[ground worker ${w}]`, m.message); return; }
@@ -196,6 +203,7 @@ export class GroundCache {
     const r = this.reqs.get(m.id); this.reqs.delete(m.id); this.inflight[w]--;
     if (!r) { m.bmp.close(); return; }
     const t = r.t; t.pendingL = 0; t.pendingArtL = 0; t.pendingTs = -1;
+    this.bakeLog[this.baked % BAKE_LOG] = m.ms; if (!this.firstTileAt) this.firstTileAt = performance.now();
     this.bakeMs += m.ms; this.baked++;
     // edited while baking: it will be asked for again, and keeps the picture it has meanwhile; one with none shows this one (stale, so it is
     // still asked for again: the ground before the edit for a bake, rather than nothing; T134, the startup's edits did this to the planner pieces)

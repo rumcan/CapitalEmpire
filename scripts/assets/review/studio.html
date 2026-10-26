@@ -10,7 +10,7 @@ h1{font-size:16px;margin:0 8px 0 0}.tab{background:none;border:1px solid var(--l
 #status{color:var(--dim);font-size:12px;max-width:380px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 input{background:#11130b;border:1px solid var(--line);color:var(--ink);border-radius:6px;padding:6px 10px;min-width:180px}
 .chips{display:flex;flex-wrap:wrap;gap:4px}.chip{background:#11130b;border:1px solid var(--line);color:var(--dim);border-radius:999px;padding:3px 9px;cursor:pointer;font-size:12px}.chip.on{color:var(--ink);border-color:var(--gold)}
-.view{flex:1;overflow:auto;display:none}.view.on{display:block}
+.view{flex:1;overflow:auto;display:none}.view.on{display:block}#v-lots.on{display:flex;flex-direction:column;min-height:0}body:not(.lots) .lotsonly{display:none}
 .bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--line)}
 .grid{display:flex;flex-wrap:wrap;align-items:flex-start;gap:10px;padding:16px}
 #v-lib.person-cursor{cursor:none}#v-lib .bar{cursor:auto}#v-lib button,#v-lib input,#v-lib select,#v-lib .chip{cursor:pointer}
@@ -34,7 +34,7 @@ select{background:#11130b;border:1px solid var(--line);color:var(--ink);border-r
 #needed{padding:6px 16px 0;align-items:center}#needed b{font-weight:600;margin-right:4px}.fr img{display:block;height:96px}.fr span{position:absolute;right:2px;bottom:0;font-size:10px;color:var(--dim)}.anim{margin-left:16px;border-left:1px solid var(--line);padding-left:12px}
 </style></head><body>
 <header><h1>Sprite studio</h1>
-<button class="tab on" data-v="lib">Library</button><button class="tab" data-v="lots" title="The lot lab: one road and one lot composed as the game composes it, at any type, size and road angle: edit it, paint its ground, save it and approve it for the game">Lots</button><button class="tab" data-v="people">People</button><button class="tab" data-v="holes">Holes</button><button class="tab" data-v="painted" title="Which hand-painted family each surface of the game wears">Painted</button><button class="tab" data-v="ground" title="The old photo mixes: the map grass and texture presets as photos (the game shows them only with ?grass=photo on the dev server)">Photo mixes (old)</button>
+<button class="tab on" data-v="lib">Library</button><button class="tab" data-v="lots" title="The lot lab: one road and one lot composed as the game composes it, at any type, size and road angle: edit it, paint its ground, save it and approve it for the game">Lots</button><button class="tab" data-v="people">People</button><button class="tab" data-v="holes">Holes</button><button class="tab" data-v="painted" title="Which hand-painted family each surface of the game wears">Painted</button><button class="tab" data-v="ground" title="The old photo mixes: the map grass and texture presets as photos (the game shows them only with ?grass=photo on the dev server)">Photo mixes (old)</button><a id="labopen" class="lotsonly" target="_blank" title="the lot lab in a tab of its own (the whole window)" style="color:var(--gold);font-size:12px;margin-left:4px">open the lot lab in its own tab</a>
 <span style="flex:1"></span><span id="status"></span><button class="btn gold" id="rb">Rebuild game sprites</button></header>
 
 <img id="man" alt=""><div class="view on" id="v-lib">
@@ -47,7 +47,7 @@ select{background:#11130b;border:1px solid var(--line);color:var(--ink);border-r
 
 <div class="view" id="v-people"><div class="hint" style="padding:12px 16px 0">Click a frame to fix it: mirror it, use another frame (of any facing) in its place, or mark it as needing a new frame and drop the new picture in. Rebuild game sprites to put the fixes in the game. The strip on the right plays the walk as the game does (frames 1-8).</div><div id="needed" class="chips"></div><div id="people"></div></div>
 
-<div class="view" id="v-lots" style="overflow:hidden"><div class="bar hint" style="padding:6px 16px">The lot lab runs in the game itself (the dev server of this checkout), so a lot is composed and drawn exactly as the game does: <a id="labopen" target="_blank" style="color:var(--gold)">open it in its own tab</a></div><iframe id="labframe" title="Lot lab" style="display:block;width:100%;height:calc(100vh - 92px);border:0;background:#1b2816"></iframe></div>
+<div class="view" id="v-lots" style="overflow:hidden"></div>
 <div class="view" id="v-holes"></div>
 <div class="view" id="v-painted"></div>
 <div class="view" id="v-ground"></div>
@@ -55,10 +55,17 @@ select{background:#11130b;border:1px solid var(--line);color:var(--ink);border-r
 <script>
 const $=s=>document.querySelector(s), el=(t,a={},...k)=>{const e=document.createElement(t);Object.assign(e,a);for(const c of k)if(c!=null)e.append(c);return e};
 const post=(u,b)=>fetch(u,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(b||{})}).then(r=>r.json());
-document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x===b));document.querySelectorAll('.view').forEach(v=>v.classList.toggle('on',v.id==='v-'+b.dataset.v));placeMan();if(b.dataset.v==='people'&&!peopleLoaded)loadPeople();if(b.dataset.v==='lots'&&!$('#labframe').src)loadLab();});
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x===b));document.body.classList.toggle('lots',b.dataset.v==='lots');document.querySelectorAll('.view').forEach(v=>v.classList.toggle('on',v.id==='v-'+b.dataset.v));placeMan();if(b.dataset.v==='people'&&!peopleLoaded)loadPeople();if(b.dataset.v==='lots')loadLab();else unloadLab();});
 // ---------------- lots: the game's lot lab (?lotlab) in a frame, from the game dev server the studio was started with (STUDIO_GAME_URL)
 // a helper on another computer reaches the game by the address it reached the studio by (a localhost game URL means this machine)
-async function loadLab(){const c=await fetch('/api/config').then(r=>r.json()),g=new URL(c.game),own=h=>h==='localhost'||h==='127.0.0.1'||h==='[::1]';if(own(g.hostname)&&!own(location.hostname))g.hostname=location.hostname;const u=g.origin+'/?lotlab&dev';$('#labopen').href=u;$('#labframe').src=u;}
+// the frame lives only while the Lots tab is open (T157, the owner: "the studio is taking too much ram to run the full game"): made when the tab
+// opens, removed (its page unloaded, its memory freed) when another tab is chosen; the Library never loads the game. The lab keeps its place
+// (type, state, size, road, the preset it shows) in sessionStorage, so it comes back where it was; an unsaved generated draft does not
+let labSeq=0;
+async function loadLab(){const n=++labSeq;if($('#labframe'))return;const c=await fetch('/api/config').then(r=>r.json()),g=new URL(c.game),own=h=>h==='localhost'||h==='127.0.0.1'||h==='[::1]';if(own(g.hostname)&&!own(location.hostname))g.hostname=location.hostname;const u=g.origin+'/?lotlab&dev';$('#labopen').href=u;
+ if(n!==labSeq||$('#labframe')||!$('#v-lots').classList.contains('on'))return;
+ $('#v-lots').append(el('iframe',{id:'labframe',title:'Lot lab: the game itself (the dev server of this checkout) composes and draws the lot exactly as the game does',src:u,style:'display:block;width:100%;flex:1;min-height:0;border:0;background:#1b2816'}));}
+function unloadLab(){labSeq++;const f=$('#labframe');if(!f)return;f.src='about:blank';f.remove();}
 
 // ---------------- library
 let all=[],removed={},walkers=[],me=null,cat='',q='',K=0.35,pointer=null;   // K: display px per native game px, the same for every sprite and the man
@@ -77,7 +84,10 @@ $('#who').onchange=e=>{me=walkers.find(p=>p.id===e.target.value)||null;man();};
 function cats(){const c=[...new Set(all.filter(s=>!removed[s.id]).map(s=>s.cat))].sort(),box=$('#cats');box.innerHTML='';for(const k of ['',...c]){const b=el('span',{className:'chip'+(k===cat?' on':''),textContent:k||'All'});b.onclick=()=>{cat=k;cats();draw();};box.append(b);}}
 /** the picture the game draws for a sprite (an old building's new-art stand-in) and its drawn scale: its scale times the stand-in's fill, never past
  *  its pixels (the game draws it at its cap there: newart.ts lookOf) */
-const drawnOf=s=>s.drawn?{id:s.drawn.id,quad:s.drawn.quad,k:Math.min(s.scale*s.drawn.fill,s.drawn.cap)}:{id:s.id,quad:s.quad,k:s.scale*(s.carScale||1)};
+// a sprite drawn as itself past its sharp size is drawn at its pixels' limit (newart.ts lookOf: sharp / PIXEL_SLACK, src/game/sizes.ts), so its
+// card shows that size too (T163: a car's card was drawn at the size asked while the lots drew it at its limit)
+const PIXEL_SLACK=1.02,ownK=s=>s.sharp!=null&&s.scale>s.sharp?s.sharp/PIXEL_SLACK:s.scale;
+const drawnOf=s=>s.drawn?{id:s.drawn.id,quad:s.drawn.quad,k:Math.min(s.scale*s.drawn.fill,s.drawn.cap)}:{id:s.id,quad:s.quad,k:ownK(s)*(s.carScale||1)};
 // a card's picture is a WebP sized for the card (T144, server.mjs sized()): its long side at the next size step above what the card shows in device px
 // (the steps of scripts/assets/review/thumb-size.mjs, repeated here: this script cannot import), so the slider reuses the server's cache and the
 // browser never decodes more pixels than the card shows. The picture is loaded only while its card is near the view (near, below): data-src holds the URL

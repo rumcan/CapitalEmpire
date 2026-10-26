@@ -69,7 +69,8 @@ export interface CoursePatch { cx: number; cy: number; size: number; layers: Cou
 export interface LotPatch { pts: number[] /* x0 y0 x1 y1 ... (tiles, in order) */; tex: 'paving' | 'pad' | 'concrete' | 'asphalt' | 'lotAsphalt' | 'dirt' | 'rockyDirt' | 'rockyDirtAlt' | 'gravel' | 'field' | 'slabs' | 'asphaltDark' | 'asphaltWorn' | 'roadgravel' | 'grass' | 'bunkerSand' | 'wasteSand' | 'pineStraw' | 'barkMulch' | 'spectatorPath' | 'woodChips' | 'grassDry' | 'asphaltPatched' | 'chipSeal' | 'concreteStained' | 'concreteCracked' | 'concreteOld' | 'concreteWeathered' | 'waterDark' | 'waterDeep' | 'waterClear' | GrassTex | 'marks' | `preset:${string}`; lines?: number[] /* parking bay lines: x0 y0 x1 y1 ... (tiles) */;
   /** tex 'marks' (nothing filled; pts only bound it): flat decals (lot-decals.ts), five numbers each: index, x, y (tiles, the decal's centre), scale (negative: mirrored), alpha */
   marks?: number[]; paint?: PatchPaint; /** a lawn (lawns.ts): the texture (a preset) laid under the lots' own ground, turned by a (degrees), over share of the
-   *  patch in soft patches (1: all of it; soft: the patches' edge, patch: their size, 1 = 24 tiles a period); z: blocks 0 under lots 1 */ lawn?: { a: number; share: number; soft: number; patch: number; z: number }; /** markings over the road (on-street parking): only its lines are drawn, white, with the road's own markings */ top?: boolean; /** the colour of its lines (parking bays; absent: worn off-white) */ lineCol?: 'yellow';
+   *  patch in soft patches (1: all of it; soft: the patches' edge, patch: their size, 1 = 24 tiles a period); z: blocks 0 under lots 1; st: a lot's
+   *  look state (T155: its state's lawn, painted-surfaces.ts lawnTexFor) */ lawn?: { a: number; share: number; soft: number; patch: number; z: number; st?: 'built' | 'upgraded' | 'declined' }; /** markings over the road (on-street parking): only its lines are drawn, white, with the road's own markings */ top?: boolean; /** the colour of its lines (parking bays; absent: worn off-white) */ lineCol?: 'yellow';
   /** an on-street parking lay-by cut into the sidewalk: drawn after the roads, over the sidewalk and the kerb, with its own kerb on the outer side */ layby?: boolean;
   /** a course chunk (the course grid, T078): drawn with the painted areas (by its z) from its layers; pts is its chunk box grown by
    *  COURSE_PATCH_REACH (the index and the stale box: its feathers and shadows reach past the chunk), tex is unused ('grass') */
@@ -112,9 +113,17 @@ export type NetOp =
 
 /** g = ground chunk, m = district chunk (MID_K x MID_K, lite), p = planner chunk */
 export type TileKind = 'g' | 'm' | 'p';
+/** a light boot's limits for a ground worker (T157, boot.ts): the decoded tile-set tiles and painted pictures it keeps (null: the game's),
+ *  the photo textures it builds up front (null: all of grass-art.ts EAGER_PHOTO), whether it may write the browser's texture cache, whether
+ *  it draws its canvases on the CPU (soft), and whether its procedural textures are made on first use (lazy) */
+export interface WorkerLimits { tiles: number | null; painted: number | null; eager: string[] | null; saveCache: boolean; soft: boolean; lazy: boolean;
+  /** with lazy, the grass's tints made on first use too (a light boot's; T166: the game makes them up front) */
+  tints?: boolean;
+  /** T166: a cached pack is read (absent: yes; the game's: no, it builds its own and the old cache is deleted) */
+  readCache?: boolean }
 export type ToWorker =
   | { t: 'grass'; cells: GrassCellView[]; strength: number; heat: boolean; mowing: boolean }
-  | { t: 'init'; art: GroundArt & { grassMix?: BaseGrassArt; presets?: PhotoTexEntry[]; grassArt?: GrassArt }; terrain: Uint8Array; height: Float32Array; waters: Waterway[]; build: boolean; peers: number }
+  | { t: 'init'; art: GroundArt & { grassMix?: BaseGrassArt; presets?: PhotoTexEntry[]; grassArt?: GrassArt }; terrain: Uint8Array; height: Float32Array; waters: Waterway[]; build: boolean; peers: number; limits?: WorkerLimits }
   | { t: 'textures'; snap: TexSnapshot }
   /** the game's Grass setting changed (painted or photo): every chunk is baked again */
   | { t: 'grassArt'; art: GrassArt }
