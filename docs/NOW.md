@@ -67,8 +67,9 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
   (one left, bash PID 31220). Still listening, not ours: a stray vite on 5189 (an agent's, gone since 07:50) and the dead lot lab's 5241.
 - **Next, in order, when an agent lands:** **T205 #538** (the owner, 15:45: the hole card's Edit hole does nothing, the hole badge does not read as
   Edit hole, ugly scrollbars and a cut-off status line in Course › Holes; reproduce the dead Edit first; the issue and its comment have the design)
-  → **T206 #540** (the owner, 15:55: a Facilities group on the rail with Practice tools of their own, putting green and chipping green
-  and bunker, placed as a whole, not the hole brushes; Decoration moved under Facilities; range work: Opus high) → **T203 #531** the last
+  → **T206 #540** (the owner, 15:55-16:50: a Facilities group on the rail with Practice tools of their own, putting green and chipping
+  green and bunker, placed as a whole, not the hole brushes; Plants (trees, bushes, flowers) and Decoration under Facilities; Course ▸ Cart
+  paths & roads, the roads on the player's property, directly below Buildings; range work: Opus high) → **T203 #531** the last
   12 people in the game → **T112 #199** (merge #394 when the owner stops
   5191) → **T149 #312** (waits for the owner's FAR-anchor choice) → **T199 #517** swamp (waits for swamp tiles) → the lists below.
 - **P25 #348 lots generated on the fly** (the owner: "start over with the lot presets we need a workflow that gets us to generating perfect
