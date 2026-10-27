@@ -15,8 +15,8 @@ import { LIBRARY } from './library';
 import { isBuilding } from './mirror';
 import { BUILDING_IDS, VIEW_ART, unmirror } from './views-library';
 import { AXIS_HEADING } from './axis-library';
-import { OWNER_SCALE } from './lots/scales';
-import { CAR_SCALE } from './ext/car-art';
+import { OWNER_SCALE, STUDIO_SCALE } from './lots/scales';
+import { CAR_SCALE, carOwnerScale } from './ext/car-art';
 import { PIXEL_LIMIT, PIXEL_SLACK } from './sizes';
 import type { LibItem } from './types';
 
@@ -131,8 +131,29 @@ const SWAP = LIBRARY.map(swaps);
 export const drawnAsStandIn = (item: number): boolean => !!SWAP[item];
 
 const CAR = LIBRARY.map(it => it.kind === 'car');
-/** the largest scale a drawable's item is drawn at (sizes.ts PIXEL_LIMIT; a parked car is drawn CAR_SCALE smaller than its scale, sprites.ts) */
-const limitOf = (item: number, moving?: boolean) => PIXEL_LIMIT[item]! / (CAR[item] && !moving ? CAR_SCALE : 1);
+/** T190 (#489; the owner, 2026-10-27: "you should always alow for being able to make a sprite atleast 50% bigger or smaller"): every sprite's
+ *  size range spans at least SIZE_LO to SIZE_HI times its baseline (its studio size, else its owner size; a car its model's), whatever its
+ *  picture's pixels: the cap is max(pixel limit, SIZE_HI x baseline). Past its pixels it is a little soft at the closest zoom only (softAt) */
+export const SIZE_LO = 0.5, SIZE_HI = 1.5;
+/** an id's base (a view's: 'view:world:house_2:nw' is 'world:house_2'), the key its sizes are kept under */
+const baseId = (id: string) => id.replace(/^view:/, '').replace(/:(n|ne|e|se|s|sw|w|nw)$/, '');
+/** a library item's baseline size: its studio size, else its owner size (its id's, else its base's), else 1; a car its model's (carOwnerScale) */
+export function baselineOf(it: LibItem): number {
+  if (it.kind === 'car') return carOwnerScale(it.id);
+  const b = baseId(it.id);
+  return STUDIO_SCALE[it.id] ?? STUDIO_SCALE[b] ?? OWNER_SCALE[it.id] ?? OWNER_SCALE[b] ?? 1;
+}
+/** SIZE_HI x each item's baseline (refreshSizeRange reads them again after a size changes in the lab or the studio) */
+let HI = Float64Array.from(LIBRARY, it => SIZE_HI * baselineOf(it));
+export function refreshSizeRange(): void { HI = Float64Array.from(LIBRARY, it => SIZE_HI * baselineOf(it)); }
+/** the largest scale a drawable's item draws at without stretching its pixels at the closest zoom (sizes.ts PIXEL_LIMIT; a parked car is drawn
+ *  CAR_SCALE smaller than its scale, sprites.ts) */
+const pixelsOf = (item: number, moving?: boolean) => PIXEL_LIMIT[item]! / (CAR[item] && !moving ? CAR_SCALE : 1);
+/** the largest scale a drawable's item is drawn at: its pixels' limit, or SIZE_HI x its baseline when that is more (T190) */
+const limitOf = (item: number, moving?: boolean) => Math.max(pixelsOf(item, moving), HI[item]!);
+/** whether a drawable's item drawn at scale is past its picture's pixels at the closest zoom (T190: allowed up to SIZE_HI x its baseline, a little
+ *  soft at the closest zoom only; the lab says so) */
+export function softAt(item: number, scale: number, moving?: boolean): boolean { return !SWAP[item] && scale > pixelsOf(item, moving) * PIXEL_SLACK; }
 
 type Drawn = Look & { x: number; y: number; x0?: number; y0?: number; x1?: number; y1?: number; moving?: boolean };
 const cache = new WeakMap<object, Look & { src: number; srcFlip: boolean; srcScale: number; srcX: number; srcY: number }>();

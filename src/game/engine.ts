@@ -29,7 +29,6 @@ import { escapeLadder, pickTool, switchSideMode, type EscCard, type EscLadder, t
 import type { PresetProp } from './golf/holepreset';
 import { OWNER_SCALE, STUDIO_SCALE } from './lots/scales';
 import { turned } from './lots/preset-art';
-import { PIXEL_LIMIT, PIXEL_SLACK } from './sizes';
 import { RangeHost } from './golf/rangehost';
 import { PropsTool } from './golf/propstool';
 import { DECOR_BY_KEY, lotTouches, propTuple, sellBack, tupleMarks } from './golf/decor';
@@ -469,7 +468,7 @@ export class Game {
     addPiece: (p, key) => {
       const t = turned(p.id, p.q), item = LIB_INDEX.get(t.id); if (item === undefined) return null;
       // the studio's size wins; never past the pixels its atlas holds (sizes.ts), so the footprint and shadow match what is drawn
-      const it = LIBRARY[item]!, scale = Math.min(PIXEL_LIMIT[item]! * PIXEL_SLACK, STUDIO_SCALE[it.id] ?? (p.fit ? 64 * p.fit / it.w : p.scale ?? OWNER_SCALE[it.id] ?? 1));
+      const it = LIBRARY[item]!, scale = Math.min(maxDrawScale(item), STUDIO_SCALE[it.id] ?? (p.fit ? 64 * p.fit / it.w : p.scale ?? OWNER_SCALE[it.id] ?? 1));
       return this.addProp(item, p.x, p.y, t.flip, scale, key, p.lift || p.foot ? { lift: p.lift, foot: p.foot } : undefined);
     },
     removeProp: p => this.removeProp(p), setGround: (k, p) => this.setLotGround(k, p),
@@ -510,7 +509,7 @@ export class Game {
   /** the Props tool (plan P24 Phase 3, T131: golf/propstool.ts): the decor the player places, moves, turns and sells; its appeal feeds the range */
   readonly decor: PropsTool = new PropsTool({
     golf: () => this.golfMode && !!this.golf, item: id => LIB_INDEX.get(id), idOf: p => LIBRARY[p.item]!.id,
-    scaleOf: (item, want) => { const it = LIBRARY[item]!; return Math.min(PIXEL_LIMIT[item]! * PIXEL_SLACK, want ?? STUDIO_SCALE[it.id] ?? OWNER_SCALE[it.id] ?? 1); },
+    scaleOf: (item, want) => { const it = LIBRARY[item]!; return Math.min(maxDrawScale(item), want ?? STUDIO_SCALE[it.id] ?? OWNER_SCALE[it.id] ?? 1); },
     footprint: (item, x, y, k) => { const f = this.footprint(LIBRARY[item]!, x, y, false, k); return [f.x0, f.y0, f.x1, f.y1]; },
     spot: {
       owned: (x, y) => this.ownedAt(x, y),
