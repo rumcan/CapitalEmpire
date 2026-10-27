@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-27 06:56)
+## START HERE (kept current by the lead; last updated 2026-10-27 06:57)
 
 **Paste-ready start prompts for every role are in `docs/START-PROMPTS.md`:** the lead, a coding ticket, and the other sessions in this
 repo. The weekly usage cap is close (2026-10-26), so any chat may stop at any moment.
@@ -28,11 +28,11 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |
 | T178 diag | #443 | `arena/T178-junction-diag` | `.claude/worktrees/t166` | 5187 | Diagnostic for the owner's balance call: where the grown town's trips lose time (per junction), what each player lever buys (class upgrade, lights, roundabout, bypass, one-way) per $1,000, whether the sim's junction rules are sane. Agent: the ground agent. |
-| T181b, T182 | #453, #454 | fresh branches | `.claude/worktrees/t160` | 5186 | (1) lawns: the owner likes the streaks along fences; restore the living ground on lawns, find and remove the flat colour wash that hides the texture (measured: local contrast layer by layer); (2) the toolbar regroup. Agent: the lot agent. |
+| T181b → T183 → T182 | #453, #461, #454 | fresh branches | `.claude/worktrees/t160` | 5186 | The lot agent, in order: (1) lawns: keep the streaks, remove the flat colour wash; (2) **T183** the lot lab: decals that show (under the lawn?), ground drawing with clear Select / Draw modes (a lit switch, a banner, a brush cursor; drag to paint, Shift erases, Esc/V back); (3) the toolbar regroup. The owner is using the studio: never write their data. |
 | T112 | #199 | `arena/T112-sharp` (PR #394) | `.claude/worktrees/t112` | — | **Approved, merge HELD for the morning restart:** a lock change makes the 5174 auto-updater run `npm ci` in theme-consistency (the live 5191 studio holds sharp there; the lot agent's t160 uses it by junction). Morning order: stop 5191 → merge #394 → let npm ci finish → restart 5191 and 5174. All shipped bytes identical on 0.35.5; audit 0. |
 | P05 | #68 | PR #413 **open for the owner's approval** | — | — | The M5 balance plan, measured: arrival 47% at tier 1 from a fresh start (the start's 56-bay car park holds 168 fans), 100% with car parks; 10% at tier 2 fresh, 70-81% with car parks; an 18 of ~5,900 m fits the starting land on every seed (~$190k seeded); with the proposals a careful player reaches tier 3 in year 4. Knob recommended for "careless out-saves careful": sponsors x (1 + (rep-50)/50). |
 | T178 diag | #443 | `arena/T178-junction-diag` | `.claude/worktrees/t166` | 5187 | Diagnostic for the owner's balance call: where the grown town's trips lose time (per junction), what each player lever buys (class upgrade, lights, roundabout, bypass, one-way) per $1,000, whether the sim's junction rules are sane. Agent: the ground agent. |
-| T181b, T182 | #453, #454 | fresh branches | `.claude/worktrees/t160` | 5186 | (1) lawns: the owner likes the streaks along fences; restore the living ground on lawns, find and remove the flat colour wash that hides the texture (measured: local contrast layer by layer); (2) the toolbar regroup. Agent: the lot agent. |
+| T181b → T183 → T182 | #453, #461, #454 | fresh branches | `.claude/worktrees/t160` | 5186 | The lot agent, in order: (1) lawns: keep the streaks, remove the flat colour wash; (2) **T183** the lot lab: decals that show (under the lawn?), ground drawing with clear Select / Draw modes (a lit switch, a banner, a brush cursor; drag to paint, Shift erases, Esc/V back); (3) the toolbar regroup. The owner is using the studio: never write their data. |
 | T112 | #199 | `arena/T112-sharp` (PR #394) | `.claude/worktrees/t112` | — | **Approved, merge HELD for the morning restart:** a lock change makes the 5174 auto-updater run `npm ci` in theme-consistency (the live 5191 studio holds sharp there; the lot agent's t160 uses it by junction). Morning order: stop 5191 → merge #394 → let npm ci finish → restart 5191 and 5174. All shipped bytes identical on 0.35.5; audit 0. |
 
 **Two coding agents at a time (the owner, 2026-10-26: first "maybe just too many background tasks?" after the studio tab died with the
