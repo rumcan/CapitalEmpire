@@ -1,0 +1,10 @@
+{
+ "id": "ce:parking-garage-5storey",
+ "version": "parking-garage-5storey-4views-v2",
+ "files": {
+  "NE": "2098bc8dcce49ae69afb436640fe07f76d49c138f60b2a70a2e4869a43478c77",
+  "SE": "92a1047abbb65358a6deeceb21a231c80a57b32a6a4261af6c58dbf899fcd626",
+  "SW": "8cc0ad3aa79605ffdc73e2689dee373647e1ebe2364a678590c8a0a7fe39dd8f",
+  "NW": "4c4eb6861ceba6fdb20f1e9243677ff9d7ab234a78263a5c9b0ccfa6a515cc26"
+ }
+}

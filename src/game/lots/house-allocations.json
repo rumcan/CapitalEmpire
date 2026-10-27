@@ -1,4 +1,6 @@
 {
  "v": 1,
- "houses": {}
+ "houses": {
+  "world:house_5": {"roads":[0,1,2,3,4,5,6,7],"states":["built","upgraded","declined"]}
+ }
 }
