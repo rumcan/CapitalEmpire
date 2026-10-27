@@ -13,6 +13,8 @@ export interface GrassSave { v: 1; size: number; cell: number; days: number; set
 export interface GrassSettings { enabled: boolean; strength: number; recovery: number; wear: number; rain: number; evaporation: number; temperature: number; material: string; mowing: boolean }
 /** Care cost in dollars per 8 m cell at full dose; other cell sizes scale by area. */
 export const GRASS_COST: Record<GrassAction, number> = { mow: 2, water: 1, fertilise: 3, aerate: 4, seed: 6, sod: 28, repair: 5 };
+/** the care actions as the player reads them (plan P23-UX P2-5, T175: seed is Overseed, sod is Re-turf) */
+export const GRASS_ACTION_NAME: Readonly<Record<GrassAction, string>> = { mow: 'Mow', water: 'Water', fertilise: 'Fertilise', aerate: 'Aerate', seed: 'Overseed', sod: 'Re-turf', repair: 'Repair' };
 const clamp = (v: number, lo = 0, hi = 1) => Math.min(hi, Math.max(lo, Number.isFinite(v) ? v : lo));
 const defaults = (): GrassSettings => ({ enabled: true, strength: 0, recovery: 1, wear: 1, rain: 0.06, evaporation: 0.035, temperature: 20, material: 'auto', mowing: false });
 const bands: GrassCondition[] = ['neglected', 'stressed', 'recovering', 'maintained', 'pristine'];

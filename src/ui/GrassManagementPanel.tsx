@@ -1,9 +1,7 @@
 import type { Game } from '../game/engine';
-import { GROUND_MATERIALS, GRASS_COST, type GrassAction, type GrassSettings } from '../game/ext/grass-management';
+import { GROUND_MATERIALS, GRASS_ACTION_NAME, GRASS_COST, type GrassAction, type GrassSettings } from '../game/ext/grass-management';
 import { ToolHead } from './ToolHead';
-
-/** the care actions as the player reads them (plan P23-UX P2-5, T175: seed is Overseed, sod is Re-turf) */
-export const GRASS_ACTION_NAME: Readonly<Record<GrassAction, string>> = { mow: 'Mow', water: 'Water', fertilise: 'Fertilise', aerate: 'Aerate', seed: 'Overseed', sod: 'Re-turf', repair: 'Repair' };
+export { GRASS_ACTION_NAME };
 
 /** Local grass inspection and paid care; all radii in 2 m tiles, doses normalized 0..1. Docked: Greenkeeping's panel in the rail's panel (golf
  *  games, T175: pick a care, then each click on the turf applies it); else the floating Grass panel (the classic game's) */

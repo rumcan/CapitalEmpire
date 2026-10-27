@@ -2,7 +2,7 @@ import { CHUNK_H, CHUNK_W, DISTRICT_Z, HH, HW, MAP, MID_H, MID_W, PLANNER_Z, PLA
 import { ATLAS_PAGES, GOLFER_BASE, GOLFER_FRAMES, GOLFER_PEOPLE, LIBRARY, SPECTATOR_BASE, SPECTATOR_FRAMES, SPECTATOR_PEOPLE, WALKER_BASE, WALKER_PEOPLE, WALK_DIRS, WALK_FRAMES } from './library';
 import { galleryPeople, hash, queuePeople, walkerPeople, type CrowdPerson } from './crowdview';
 import { FACING_ROW, Pedestrians, sidewalks, type Door, type WalkerView } from './ext/pedestrians';
-import { GrassManagement, grassSurface, type GrassAction, type GrassCellView, type GrassScope, type GrassSettings } from './ext/grass-management';
+import { GRASS_ACTION_NAME, GrassManagement, grassSurface, type GrassAction, type GrassCellView, type GrassScope, type GrassSettings } from './ext/grass-management';
 import { drawGhostBlueprint, drawGhostHint, drawGhostPoly, drawGhostRing, ghostStatus, type GhostBlueprint, type GhostView } from './ext/ghost-preview';
 import { busGhostLabel, costLabel, markerGhost, structureGhost, tollGhostLabel } from './ext/event-ghost';
 import { CourseCursor, type CursorView } from './ext/course-cursor';
@@ -3479,8 +3479,8 @@ export class Game {
   /** Draw a drive: Paths with the gravel drive, the route started at the nearest road to the spot, the camera on both */
   drawDriveForClub() {
     const o = this.clubDriveOffer; if (!o) return;
-    const from = driveStart([...this.net.segsNear(o.spot, 200)].map(q => ({ a: q.a, b: q.b, family: q.cls.family, base: q.cls.base })), o.spot);
-    if (!from) { this.toast('No road within 400 m of that spot to start a drive from', 'warn'); return; }
+    const from = driveStart([...this.net.segsNear(o.spot, 600)].map(q => ({ a: q.a, b: q.b, family: q.cls.family, base: q.cls.base })), o.spot, 600);
+    if (!from) { this.toast('No road within 1.2 km of that spot to start a drive from', 'warn'); return; }
     this.setTool('path'); if (this.uiTool !== 'path') return;
     this.clubDrive = o; this.clubDriveOffer = null; this.roadClass = 'drive-gravel';
     const sn = snapPoint(this.net, from, this.snapRadius(), this.roadStep());
@@ -4680,7 +4680,7 @@ export class Game {
     const cost = this.grass.quote(action, scope, this.grassDose); if (!cost) { this.toast('Select a grass area first', 'warn'); return; }
     if (cost > this.money) { this.toast(`Grass care needs $${cost}`, 'warn'); return; }
     const n = this.grass.apply(action, scope, this.grassDose, this.grassAngle); if (!n) return;
-    this.traffic.spend('upkeep', cost); this.flushGrass(); this.scheduleSave(); this.toast(`${action}: ${n} turf cells ($${cost})`); this.emit();
+    this.traffic.spend('upkeep', cost); this.flushGrass(); this.scheduleSave(); this.toast(`${GRASS_ACTION_NAME[action]}: ${n} turf cells ($${cost})`); this.emit(); // T175: the plan's names
   }
   /** Persist owner tuning without changing lawn/base-grass/mowing presets. */
   tuneGrass(settings: Partial<GrassSettings>) { this.grass.configure(settings); this.flushGrass(); this.scheduleSave(); this.emit(); }
