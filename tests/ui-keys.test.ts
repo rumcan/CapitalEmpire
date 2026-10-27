@@ -53,8 +53,9 @@ describe('Help › Keys (T202)', () => {
   it('2. laid out as the menus: the rail, Course, Town, then the camera, speed, views and the keys that work anywhere; each group\'s tools in its part', () => {
     const s = keySheet({ golf: true, range: true, ui: null });
     const parts = s.map(x => x.part).filter((p, i, a) => a.indexOf(p) === i);
-    assert.deepEqual(parts, ['rail', 'course', 'town', 'general']);
-    assert.deepEqual(KEY_PARTS.map(p => p.part), ['rail', 'course', 'town', 'general', 'lab']);
+    assert.deepEqual(parts, ['top', 'course', 'town', 'general']);
+    assert.deepEqual(KEY_PARTS.map(p => p.part), ['top', 'course', 'town', 'general', 'lab']);
+    assert.deepEqual(s.filter(x => x.part === 'top').map(x => x.id), ['rail', 'anywhere'], 'the rail and the keys that work anywhere first');
     for (const r of RAIL) for (const t of toolsIn(r, true)) {
       const row = toolRows(s).find(x => x.tool === t.id); if (!t.key || !row || !r.section || t.id === 'props') continue;
       assert.equal(s.find(x => x.rows.includes(row))!.part, r.section, `${t.id} under ${r.section}`);
@@ -93,7 +94,14 @@ describe('Help › Keys (T202)', () => {
       const g = numberedGroups(true, false)[+r.keys - 1]!;
       assert.equal(r.why ?? null, entries.find(e => e.item.id === g.id)!.locked, `${g.id}'s lock`);
     }
-    assert.ok(keySheet({ golf: true, range: false, ui: null }).every(x => x.rows.every(r => !r.why)), 'every tool open: nothing dimmed');
+    // a tool's keys in hand: the card dimmed with its tool's lock, once
+    for (const c of s.filter(x => x.id.startsWith('in:'))) {
+      assert.equal(c.why ?? null, toolLock(ui, c.id.slice(3) as Tool), `${c.id}'s lock`);
+      assert.ok(c.rows.every(r => !r.why), `${c.id}: the reason once, on the card`);
+      if (c.why) assert.match(h, new RegExp(`<div class="keys-card keys-card-locked" data-keys-section="${c.id}" aria-disabled="true">`));
+    }
+    assert.ok(s.some(x => x.why), 'a locked tool\'s keys in hand at the start');
+    assert.ok(keySheet({ golf: true, range: false, ui: null }).every(x => !x.why && x.rows.every(r => !r.why)), 'every tool open: nothing dimmed');
     assert.ok(keySheet({ golf: false, range: false, ui }).every(x => x.rows.every(r => !r.why)), 'the classic game has no unlocks');
   });
   it('5. in the lot lab, the lab\'s own keys under their heading (its table, lot-lab-ui.ts KEYS)', () => {
@@ -107,7 +115,8 @@ describe('Help › Keys (T202)', () => {
   it('6. no sideways scroll: the cards wrap in columns, the card scrolls only vertically', () => {
     const css = readFileSync('src/index.css', 'utf8'), rule = (sel: string) => css.match(new RegExp(`\\${sel} \\{([^}]*)\\}`))?.[1] ?? '';
     assert.match(rule('.help-card'), /overflow-x: hidden/);
-    assert.match(rule('.keys-grid'), /repeat\(auto-fill, minmax\(/);
+    assert.match(rule('.keys-grid'), /columns: \d/, 'cards in as many columns as fit');
+    assert.match(rule('.keys-card'), /break-inside: avoid/);
     for (const sel of ['.keys-sheet', '.keys-grid', '.keys-card', '.keys-row', '.help-card-wide']) assert.doesNotMatch(rule(sel), /overflow-x: (auto|scroll)|white-space: nowrap/, sel);
     assert.match(rule('.help-card-wide'), /calc\(100vw - 2rem\)/, 'never wider than the screen');
   });

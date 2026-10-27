@@ -204,18 +204,19 @@
 .land-why { margin-top: 0.4rem; color: #fca5a5; font-size: 12.5px; }
 
 /* T202 (#529): Help › Keys: the sheet's parts (Course, Town, the general keys, the lot lab) and their cards in wrapping columns, never a
-   sideways scroll; the card itself scrolls vertically */
+   sideways scroll (the cards flow in as many columns as fit); the card itself scrolls vertically */
 .help-card { max-height: calc(var(--vh-ui, 100vh) - 2rem); overflow-y: auto; overflow-x: hidden; }
 .help-card-wide { width: min(64rem, calc(100vw - 2rem)); }
 .keys-sheet { margin-top: 0.75rem; display: flex; flex-direction: column; gap: 0.9rem; }
 .keys-heading { margin-bottom: 0.35rem; font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--gold); }
-.keys-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(15.5rem, 1fr)); gap: 0.6rem; }
-.keys-card { min-width: 0; border-radius: 0.7rem; border: 1px solid var(--line); background: rgba(255, 255, 255, 0.03); padding: 0.5rem 0.65rem; }
+.keys-grid { columns: 3 15.5rem; column-gap: 0.6rem; }
+.keys-card { min-width: 0; break-inside: avoid; margin-bottom: 0.6rem; border-radius: 0.7rem; border: 1px solid var(--line); background: rgba(255, 255, 255, 0.03); padding: 0.5rem 0.65rem; }
 .keys-title { margin-bottom: 0.25rem; font-weight: 700; color: var(--ink); }
 .keys-rows { display: flex; flex-direction: column; gap: 0.22rem; }
 .keys-row { display: grid; grid-template-columns: fit-content(45%) minmax(0, 1fr); gap: 0.5rem; align-items: baseline; font-size: 12.5px; }
 .keys-row dt { min-width: 3.2rem; }
 .keys-row dt .keycap { white-space: normal; overflow-wrap: anywhere; }
 .keys-row dd { min-width: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.3rem; color: #d6d0c2; overflow-wrap: anywhere; }
-.keys-row-locked { opacity: 0.6; }
+.keys-row-locked, .keys-card-locked { opacity: 0.6; }
+.keys-title { display: flex; align-items: center; gap: 0.3rem; }
 .keys-why { flex-basis: 100%; font-size: 11.5px; color: var(--muted); }

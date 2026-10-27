@@ -1,8 +1,7 @@
 // Help › Keys (T202, #529; plan P23-UX 6.2 P2-8 the keymap): T182 took the key letters off the rail and T193 put the tools in flyout menus, so
-// the keys were only in each tooltip; the Keys sheet lists them all in one place, laid out as the menus are: the rail (the number keys open its
-// groups, Select, Bulldoze), Course and Town with each group's tools (from the rail's own table, rail-items.ts RAIL: one source for the rail,
-// the flyouts and this sheet; a tool listed once) and a tool's keys while it is in hand, then the camera, the speed, the views and the keys that
-// work anywhere (Esc, Undo / Redo, Delete, this sheet). A locked tool or group is dimmed with its lock's reason. In the lot lab the sheet is the
+// the keys were only in each tooltip; the Keys sheet lists them all in one place, laid out as the menus are: at the top the rail (the number
+// keys open its groups, Select, Bulldoze) and the keys that work anywhere (Esc, Undo / Redo, Delete, this sheet), then Course and Town with each group's tools (from the rail's own table, rail-items.ts RAIL: one source for the rail,
+// the flyouts and this sheet; a tool listed once) and a tool's keys while it is in hand, then the camera, the speed and the views. A locked tool or group is dimmed with its lock's reason. In the lot lab the sheet is the
 // lab's keys under their own heading (lot-lab-ui.ts KEYS: the lab's own table). Pure TypeScript, no DOM: KeysSheet.tsx draws it.
 import type { Tool } from '../game/types';
 import type { ProgressiveUiState } from '../game/ext/progressive-ui';
@@ -12,13 +11,15 @@ import { RAIL, railEntries, toolLock, toolsIn, type RailItem } from './rail-item
 
 /** a row: its keys (as shown: 'R', 'Ctrl+Z', '1 – 6'), what they do, the tool they pick (a tool key), and why it is locked (null: open) */
 export interface KeyRow { keys: string; what: string; tool?: Tool; why?: string | null }
-/** the part of the sheet a section sits in: the rail, under Course or Town (as the rail's headings), the general keys, or the lot lab */
-export type KeyPart = 'rail' | 'course' | 'town' | 'general' | 'lab';
-/** a section (a card on the sheet): its title, its part and its rows */
-export interface KeySection { id: string; title: string; part: KeyPart; rows: KeyRow[] }
+/** the part of the sheet a section sits in: the top (the rail and the keys that work anywhere), under Course or Town (as the rail's headings),
+ *  the camera, speed and views, or the lot lab */
+export type KeyPart = 'top' | 'course' | 'town' | 'general' | 'lab';
+/** a section (a card on the sheet): its title, its part, its rows, and why it is locked (a tool's keys in hand while the tool is locked: the
+ *  card is dimmed with the reason once) */
+export interface KeySection { id: string; title: string; part: KeyPart; rows: KeyRow[]; why?: string | null }
 /** the parts in the sheet's order, with their headings ('' : none) */
 export const KEY_PARTS: readonly { part: KeyPart; heading: string }[] = [
-  { part: 'rail', heading: '' }, { part: 'course', heading: 'Course' }, { part: 'town', heading: 'Town' }, { part: 'general', heading: 'Camera, speed and views' }, { part: 'lab', heading: 'Lot lab' },
+  { part: 'top', heading: '' }, { part: 'course', heading: 'Course' }, { part: 'town', heading: 'Town' }, { part: 'general', heading: 'Camera, speed and views' }, { part: 'lab', heading: 'Lot lab' },
 ];
 
 /** the groups the number keys open (1 the first): the rail's groups a game shows after Select, in the rail's order (railEntries) */
@@ -46,19 +47,19 @@ const inHand = (): { title: string; tool: Tool; rows: [string, string][] }[] => 
   { title: 'Paint in hand', tool: 'paint', rows: [['Tab', 'Draw, Pick and Erase in turn'], ['[ / ]', 'a smaller / bigger brush'], ['Enter', 'close the outline'], ['Backspace', 'take back the last corner'], ['PageUp / PageDown', 'the picked area up / down a layer']] },
   { title: 'Buildings in hand', tool: 'business', rows: [['R', 'turn it']] },
 ];
-/** the camera, the speed, the views and the keys that work anywhere */
+/** the keys that work anywhere (the top), the camera, the speed and the views */
 const general = (): { id: string; title: string; rows: [string, string][] }[] => [
+  { id: 'anywhere', title: 'Anywhere', rows: [['Esc', 'close the top card or menu, then put down what is in hand, then back to Select'], ['Ctrl+Z / Ctrl+Y', 'undo / redo (the course, the paint, the props)'], ['Delete', 'remove or sell what is picked'], ['? / F1', 'these keys']] },
   { id: 'camera', title: 'Camera', rows: [['W A S D, arrows', 'pan'], ['Space + drag, right drag', 'pan'], ['+ / −, the wheel', 'zoom in / out']] },
   { id: 'speed', title: 'Speed', rows: [['Space (tap)', 'pause / go on'], [', / .', 'slower / faster'], ['H', 'skip to the next rush hour']] },
   { id: 'views', title: 'Views and panels', rows: [['G', 'the grid'], ['F', 'traffic flow and the junctions\' service'], ['B', 'the worst bottlenecks'], ['L', 'the lanes'], ['K', 'the lots'], ['O', 'the access paths']] },
-  { id: 'anywhere', title: 'Anywhere', rows: [['Esc', 'close the top card or menu, then put down what is in hand, then back to Select'], ['Ctrl+Z / Ctrl+Y', 'undo / redo (the course, the paint, the props)'], ['Delete', 'remove or sell what is picked'], ['? / F1', 'these keys']] },
 ];
 
 /** the lot lab's key table (lot-lab-ui.ts KEYS: [section, [keys, what][]][]) */
 export type LabKeys = readonly (readonly [string, readonly (readonly [string, string])[]])[];
 
-/** the Keys sheet: in the game, the rail (the number keys, Select, Bulldoze), each group's tools under Course and Town (in the rail's order, a
- *  tool listed once: the Props tool sits in both decorations) with the tools' keys in hand after them, and the general keys; in the lot lab
+/** the Keys sheet: in the game, the rail (the number keys, Select, Bulldoze) and the keys that work anywhere, each group's tools under Course and Town (in the rail's order, a
+ *  tool listed once: the Props tool sits in both decorations) with the tools' keys in hand after them, and the camera, speed and views; in the lot lab
  *  (lab given), the lab's own keys alone. ui: the unlocks in force (golf), null for every tool open */
 export function keySheet(o: { golf: boolean; ui: ProgressiveUiState | null; range: boolean; lab?: LabKeys | null }): KeySection[] {
   if (o.lab) return o.lab.map(([title, rows]) => ({ id: `lab:${title}`, title, part: 'lab' as const, rows: rows.map(([k, w]) => ({ keys: k, what: w })) }));
@@ -70,7 +71,7 @@ export function keySheet(o: { golf: boolean; ui: ProgressiveUiState | null; rang
   seen.add(sel.id);
   groups.forEach((r, i) => rail.push({ keys: String(i + 1), what: menuless(r) ? r.label : `the ${r.label} menu`, why: locks.get(r.id) ?? null }));
   for (const r of RAIL) if (r.section === null && r.id !== 'select' && (!r.only || r.only === game)) for (const t of toolsIn(r, o.golf)) if (t.key && !seen.has(t.id)) { seen.add(t.id); rail.push(toolRow(t)); }
-  out.push({ id: 'rail', title: 'The rail', part: 'rail', rows: rail });
+  out.push({ id: 'rail', title: 'The rail', part: 'top', rows: rail });
   // Course and Town: each group's tools with a key, then the keys of their tools in hand
   const shown = new Set<Tool>(), held = new Set<Tool>();
   for (const part of ['course', 'town'] as const) {
@@ -89,9 +90,12 @@ export function keySheet(o: { golf: boolean; ui: ProgressiveUiState | null; rang
       // a tool in two groups (Props: both decorations) has its keys in hand once, under the first
       if (!r || !shown.has(s.tool) || held.has(s.tool)) continue;
       held.add(s.tool);
-      out.push({ id: `in:${s.tool}`, title: s.title, part, rows: s.rows.map(([k, w]) => ({ keys: k, what: w, why: toolLock(ui, s.tool) })) });
+      out.push({ id: `in:${s.tool}`, title: s.title, part, rows: s.rows.map(([k, w]) => ({ keys: k, what: w })), why: toolLock(ui, s.tool) });
     }
   }
-  for (const s of general()) out.push({ id: s.id, title: s.title, part: 'general', rows: s.rows.map(([k, w]) => ({ keys: k, what: w })) });
+  for (const s of general()) {
+    const sec: KeySection = { id: s.id, title: s.title, part: s.id === 'anywhere' ? 'top' : 'general', rows: s.rows.map(([k, w]) => ({ keys: k, what: w })) };
+    if (sec.part === 'top') out.splice(1, 0, sec); else out.push(sec);
+  }
   return out;
 }
