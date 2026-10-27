@@ -15,7 +15,8 @@ export function PropsPanel({ game }: { game: Game }) {
   const t = game.decor, sel = t.selection(), range = game.golf?.start === 'range', appeal = range ? t.appeal() : 0;
   // T187: the catalogue by place: Decoration's the course's props, Town decoration's the town's (its Buildings their own view); All shows every item
   const town = t.where === 'town', buildings = town && t.group === 'buildings';
-  const groups = DECOR_GROUPS.filter(g => (buildings ? g.id === 'buildings' : t.all || g.id !== 'buildings'));
+  // T193: a group the toolbar's flyout opened (Props ▸ Plants) shows alone
+  const groups = DECOR_GROUPS.filter(g => (buildings ? g.id === 'buildings' : t.all || g.id !== 'buildings') && (buildings || !t.focus || g.id === t.focus));
   const items = (g: string) => DECOR.filter(d => d.group === g && (buildings || shownIn(d, t.where, t.all)));
   return (
     <div className="tp" data-panel="props" data-place={buildings ? 'town-buildings' : t.where}>
