@@ -37,7 +37,7 @@ export function GolfLeaderboard({ game }: { game: Game }) {
       )}
       {b.ownerTee !== null && <p className="mt-2 text-xs text-amber-200">You tee off at {teeText(b.ownerTee)}</p>}
       <div className="mt-2 space-y-0.5 text-xs tabular-nums">
-        <div className={`grid ${COLS} gap-2 text-[10px] uppercase text-slate-400`}><span>Pos</span><span>Name</span><span className="text-right">To par</span><span className="text-right">Thru</span></div>
+        <div className={`grid ${COLS} gap-2 text-[12px] uppercase text-slate-400`}><span>Pos</span><span>Name</span><span className="text-right">To par</span><span className="text-right">Thru</span></div>
         {b.rows.map(r => (
           <div key={r.golfer} className={`grid ${COLS} gap-2 rounded px-1 py-0.5 ${r.owner ? 'bg-amber-400/15 font-semibold text-amber-200' : 'text-slate-200'}`}>
             <span>{r.pos}</span><span className="truncate">{r.name}</span><span className="text-right">{r.toPar}</span><span className="text-right">{r.thru}</span>

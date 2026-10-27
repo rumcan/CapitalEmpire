@@ -35,21 +35,21 @@ export function CourseEdges({ game }: { game: Game }) {
   return (
     <div className="mt-2">
       {band && bw !== null && (
-        <div className="flex items-center gap-2 text-[11px] text-slate-400" title={`The ${band.band} round every ${name.toLowerCase()}: from a hairline to ${BORDER_MAX_M} m`}>
+        <div className="flex items-center gap-2 text-[12px] text-slate-400" title={`The ${band.band} round every ${name.toLowerCase()}: from a hairline to ${BORDER_MAX_M} m`}>
           <span className="w-12 shrink-0">Border</span>
           <input type="range" aria-label={`Border: the ${band.band} round every ${name.toLowerCase()}`} min={0} max={STEPS} step={1} value={borderPos(bw)} onChange={e => p.setCourseBorder(borderAt(+e.target.value))} className="min-w-0 flex-1" />
           <span className="w-16 text-right text-xs text-slate-200">{borderLabel(bw)}</span>
         </div>
       )}
       {sh !== null && (
-        <div className="mt-1 flex items-center gap-2 text-[11px] text-slate-400" title={`The shadow of every ${name.toLowerCase()}'s raised or sunken edge: none, a hairline contact line, up to a strong cast shadow`}>
+        <div className="mt-1 flex items-center gap-2 text-[12px] text-slate-400" title={`The shadow of every ${name.toLowerCase()}'s raised or sunken edge: none, a hairline contact line, up to a strong cast shadow`}>
           <span className="w-12 shrink-0">Shadow</span>
           <input type="range" aria-label={`Shadow of every ${name.toLowerCase()}`} min={0} max={100} step={1} value={Math.round(sh * 100)} onChange={e => p.setCourseShadow(+e.target.value / 100)} className="min-w-0 flex-1" />
           <span className="w-16 text-right text-xs text-slate-200">{shadowLabel(sh)}</span>
         </div>
       )}
       {ht !== null && hr && (
-        <div className="mt-1 flex items-center gap-2 text-[11px] text-slate-400" title={kind === 'tee' ? `How high every tee box stands: low on a grass bank, from ${ROCK_FROM} m on rocky sides with stairs up from the nearest cart path, higher a steep rock face` : `How high every ${name.toLowerCase()} stands on its gentle grass bank`}>
+        <div className="mt-1 flex items-center gap-2 text-[12px] text-slate-400" title={kind === 'tee' ? `How high every tee box stands: low on a grass bank, from ${ROCK_FROM} m on rocky sides with stairs up from the nearest cart path, higher a steep rock face` : `How high every ${name.toLowerCase()} stands on its gentle grass bank`}>
           <span className="w-12 shrink-0">Height</span>
           <input type="range" aria-label={`Height of every ${name.toLowerCase()}`} min={Math.round(hr[0] * 100)} max={Math.round(hr[1] * 100)} step={5} value={Math.round(ht * 100)} onChange={e => p.setSurfaceHeight(+e.target.value / 100)} className="min-w-0 flex-1" />
           <span className="w-24 text-right text-xs text-slate-200 whitespace-nowrap">{heightLabel(ht, kind === 'tee')}</span>

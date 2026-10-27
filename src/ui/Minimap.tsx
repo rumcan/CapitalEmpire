@@ -133,8 +133,10 @@ export function Minimap({ game }: { game: Game }) {
     let best = Infinity;
     game.townPts.forEach((p, i) => { const d = (p.x - centre.x) ** 2 + (p.y - centre.y) ** 2; if (d < best) { best = d; near = i; } });
   }
-  const line1 = near >= 0 ? game.names.town(near) : 'Maple Falls';
-  const line2 = near >= 0 ? 'Town' : 'Overview';
+  // a new range game's town has no name until its first building finishes (T095, P22 2.8: "... is on the map")
+  const named = near >= 0 ? game.townName(near) : null;
+  const line1 = near >= 0 ? named ?? 'New town' : 'Maple Falls';
+  const line2 = near >= 0 ? (named ? 'Town' : 'Not named yet') : 'Overview';
 
   return (
     <div className="pointer-events-auto absolute bottom-3 left-3 z-20 flex items-end gap-2" onPointerDown={stop} onPointerMove={stop} onPointerUp={stop}>
@@ -150,12 +152,12 @@ export function Minimap({ game }: { game: Game }) {
           onPointerUp={onUp}
           onPointerCancel={onUp}
         />
-        <div className="absolute right-2 top-1 text-[10px] font-bold text-[var(--gold)] leading-none text-center">▲<br />N</div>
+        <div className="absolute right-2 top-1 text-[12px] font-bold text-[var(--gold)] leading-none text-center">▲<br />N</div>
       </div>
       <div className="glass flex items-center gap-2 px-3 py-2 relative">
         <div className="flex flex-col">
           <span className="font-display text-sm">{line1}</span>
-          <span className="text-[11px] text-[var(--muted)]">{line2}</span>
+          <span className="text-[12px] text-[var(--muted)]">{line2}</span>
         </div>
         <button type="button" className="btn px-1 py-1" aria-label="Choose a town" aria-expanded={open} onClick={() => setOpen(o => !o)}>
           <Icon name="down" size={16} className={open ? 'rotate-180' : ''} />
@@ -164,7 +166,7 @@ export function Minimap({ game }: { game: Game }) {
           <div className="glass p-1 flex flex-col min-w-40 absolute bottom-full mb-2 left-0 max-h-72 overflow-y-auto">
             <button type="button" className="btn w-full justify-start" onClick={() => { game.lookAt(MAP / 2, MAP / 2, 0.03); setOpen(false); }}>Overview</button>
             {game.townPts.map((p, i) => (
-              <button key={i} type="button" className="btn w-full justify-start" onClick={() => { game.lookAt(p.x, p.y, Math.max(game.cam.z, 0.14)); setOpen(false); }}>{game.names.town(i)}</button>
+              <button key={i} type="button" className="btn w-full justify-start" onClick={() => { game.lookAt(p.x, p.y, Math.max(game.cam.z, 0.14)); setOpen(false); }}>{game.townName(i) ?? 'New town'}</button>
             ))}
           </div>
         )}

@@ -64,10 +64,12 @@ describe('locked tools stay in place, dimmed, with what unlocks them (P23 4.2)',
     const paint = button(h, 'paint');
     assert.match(paint, /class="[^"]*rail-tab-locked/, 'Paint is dimmed');
     assert.match(paint, /aria-disabled="true"/);
-    assert.match(paint, /title="Paint · Unlocks with your first hole"/);
+    // the styled tooltip (T179): its name, its key and what unlocks it, in place of the browser's title
+    assert.match(paint, /data-tip="Paint"/); assert.match(paint, /data-tip-key="A"/); assert.match(paint, /data-tip-why="Unlocks with your first hole"/);
+    assert.doesNotMatch(paint, / title=/);
     assert.match(paint, /aria-label="Paint: Unlocks with your first hole"/);
     assert.match(paint, /class="rail-lock"/, 'with its lock');
-    assert.match(button(h, 'roads'), /title="Roads · Unlocks with your third hole or the tour&#x27;s invitation"/);
+    assert.match(button(h, 'roads'), /data-tip-why="Unlocks with your third hole or the tour&#x27;s invitation"/);
     for (const id of ['select', 'holes', 'paths', 'buildings', 'props', 'bulldoze']) {
       assert.doesNotMatch(button(h, id), /rail-tab-locked|aria-disabled/, id);
     }

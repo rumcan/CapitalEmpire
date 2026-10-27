@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-27 05:14)
+## START HERE (kept current by the lead; last updated 2026-10-27 06:30)
 
 **Paste-ready start prompts for every role are in `docs/START-PROMPTS.md`:** the lead, a coding ticket, and the other sessions in this
 repo. The weekly usage cap is close (2026-10-26), so any chat may stop at any moment.
@@ -27,13 +27,12 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 ### In flight
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |
-| fix | #424, #168 | `arena/T174-fix-badge-tests`, then a bench branch | `.claude/worktrees/t166` | 5187 | (1) **main's 4 red tests** (`ui-grow-label` x3, `ui-holes-panel` x1 expect the hole badge's old title; T174 changed it on purpose); (2) the range20 bench scene with traffic (fixture at a busy hour). Agent: the ground agent. |
-| T177 | #437 | `arena/T177-lot-churn` | `.claude/worktrees/t160` | 5186 | A grown town keeps its started lots (T090 found ~30% lost when new streets re-partition the frontage): measure, then started/built lots keep their footprint, a leg never cuts a built lot; re-tune `GROWN_PLAN_H` if the bands fail high. Agent: the lot agent. |
+| T178→ | #442 (+#445) | `arena/T098-fixture-traffic` | `.claude/worktrees/t166` | 5187 | **The owner (06:15): "this is seposed to happen btw. the guy hasto upgrade his town roads".** The self-paving design is dropped. #442 (golf towns finally drive) merges with range:gate run two ways: unattended (stalls/declines: banded as measured) and a scripted player upgrading the most jammed streets (must reach P22 2.7's bands; upgrades and money per season reported); a jam hint if the game shows none. Agent: the ground agent. |
+| T181, T182 | #453, #454 | fresh branches | `.claude/worktrees/t160` | 5186 | **The owner's morning asks:** (1) remove the transparent colour mask over lawns (likely `drawManagedGrass` testing the lawn's preset, not its painted lawn); (2) the toolbar regrouped: COURSE (Driving range · Course · Decoration) and TOWN (Traffic · Town decoration), no key letters on the rail (keys kept in the tooltip). Agent: the lot agent. |
 | T112 | #199 | `arena/T112-sharp` (PR #394) | `.claude/worktrees/t112` | — | **Approved, merge HELD for the morning restart:** a lock change makes the 5174 auto-updater run `npm ci` in theme-consistency (the live 5191 studio holds sharp there; the lot agent's t160 uses it by junction). Morning order: stop 5191 → merge #394 → let npm ci finish → restart 5191 and 5174. All shipped bytes identical on 0.35.5; audit 0. |
-| T095 | #164 | `arena/T095-first-minute` (**draft PR #419**) | `.claude/worktrees/t160` | 5186 | Built and reviewed (typecheck clean, guide tests 15/15): welcome card (follows P24's ramp: "Open the range" until New hole opens), the founding line in the Tier sub-line (one-row top bar kept), two-line title, tee ring, three toasts, a 7-step range guide. The agent's session was refused `gh pr ready`: **the owner marks it ready and merges** (the lead does not override another session's refusal). Tidied at f4f9347 (screenshots out, minimap "New town" until named, ramp toast helper, step 5 held 8 s): **Squash and merge** (old webp commit in history). Agent: the lot agent. |
 | P05 | #68 | PR #413 **open for the owner's approval** | — | — | The M5 balance plan, measured: arrival 47% at tier 1 from a fresh start (the start's 56-bay car park holds 168 fans), 100% with car parks; 10% at tier 2 fresh, 70-81% with car parks; an 18 of ~5,900 m fits the starting land on every seed (~$190k seeded); with the proposals a careful player reaches tier 3 in year 4. Knob recommended for "careless out-saves careful": sponsors x (1 + (rep-50)/50). |
-| fix | #424, #168 | `arena/T174-fix-badge-tests`, then a bench branch | `.claude/worktrees/t166` | 5187 | (1) **main's 4 red tests** (`ui-grow-label` x3, `ui-holes-panel` x1 expect the hole badge's old title; T174 changed it on purpose); (2) the range20 bench scene with traffic (fixture at a busy hour). Agent: the ground agent. |
-| T177 | #437 | `arena/T177-lot-churn` | `.claude/worktrees/t160` | 5186 | A grown town keeps its started lots (T090 found ~30% lost when new streets re-partition the frontage): measure, then started/built lots keep their footprint, a leg never cuts a built lot; re-tune `GROWN_PLAN_H` if the bands fail high. Agent: the lot agent. |
+| T178→ | #442 (+#445) | `arena/T098-fixture-traffic` | `.claude/worktrees/t166` | 5187 | **The owner (06:15): "this is seposed to happen btw. the guy hasto upgrade his town roads".** The self-paving design is dropped. #442 (golf towns finally drive) merges with range:gate run two ways: unattended (stalls/declines: banded as measured) and a scripted player upgrading the most jammed streets (must reach P22 2.7's bands; upgrades and money per season reported); a jam hint if the game shows none. Agent: the ground agent. |
+| T181, T182 | #453, #454 | fresh branches | `.claude/worktrees/t160` | 5186 | **The owner's morning asks:** (1) remove the transparent colour mask over lawns (likely `drawManagedGrass` testing the lawn's preset, not its painted lawn); (2) the toolbar regrouped: COURSE (Driving range · Course · Decoration) and TOWN (Traffic · Town decoration), no key letters on the rail (keys kept in the tooltip). Agent: the lot agent. |
 | T112 | #199 | `arena/T112-sharp` (PR #394) | `.claude/worktrees/t112` | — | **Approved, merge HELD for the morning restart:** a lock change makes the 5174 auto-updater run `npm ci` in theme-consistency (the live 5191 studio holds sharp there; the lot agent's t160 uses it by junction). Morning order: stop 5191 → merge #394 → let npm ci finish → restart 5191 and 5174. All shipped bytes identical on 0.35.5; audit 0. |
 
 **Two coding agents at a time (the owner, 2026-10-26: first "maybe just too many background tasks?" after the studio tab died with the
@@ -95,6 +94,21 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
    (the sharp bump). See the History sections below and `gh issue list --label arena --state open`.
 
 ### Done recently (newest first; details in each PR)
+- 2026-10-27 06:30: **T180 #451 not by colour alone** (P23-UX D8.1): refused cells hatched with an ✕ (one module `ext/refused-mark.ts`:
+  the brush, New hole's left-out cells, blocked footprints, the clubhouse and props ghosts); icons beside ten colour-only states
+  (`ui/status-icon.ts`); body text 13 px, secondary 12 px; WCAG AA: `text-slate-500` on panels (2.9:1) → slate-400 (5.3:1).
+- 2026-10-27 06:26: **T095 #419 the first minute of a range start** (squash-merged on the owner's word): welcome card (follows the ramp),
+  the founding line in the Tier sub-line, the tee ring, three toasts, the 7-step range guide, the unnamed town until "is on the map". The
+  lead merged main in first (engine field renamed `playableHoles`: T090 has a `holesBuilt()` method).
+- 2026-10-27 06:03: **T179 #448 accessibility first pass** (P23-UX P2-7): one styled tooltip (`ui/Tooltip.tsx`) replaces 44 browser titles on
+  the rail and top bar (name, key, the lock's reason: "Roads R 🔒 Unlocks with your third hole or the tour's invitation"); the gold
+  focus ring extended to every control; a **UI scale** setting (90/100/110/125%, UI layer only, kept per browser). The top bar stays one
+  row at 1366x768 up to 110%; at 125% it wraps to two rows. Shots `E:/ClaudeTemp/T179/shots/`.
+- 2026-10-27 05:53: **T177 #441 a grown town keeps its started lots**: in a range start's town a started or built lot keeps its footprint;
+  new block and frontage lots fill round it; it goes only if its road goes or a road runs through it. Lost started/built lots over
+  20 seasons: 327/425/516 (seeds 1-3; **277-409 built houses removed**) → **0**. range:gate bands pass (`GROWN_PLAN_H` stays 0.5: growth
+  is street-limited); town:gate unchanged (the rule is range starts only: in classic towns subdividing closed blocks fills the interior).
+- 2026-10-27 05:34: **#440 main's tests green again** (the hole badge's new title and drag-slot class from T174).
 - 2026-10-27 05:14: **T098 #436 the grown-town fixture, loader and bench**: `npm run range:fixture` → `tests/fixtures/saves/golf-v5-range-20y.json`
   (seed 1 after 20 seasons: 2,391 lots, 6,648 residents; 36 KB gzipped; save-fixtures test 9); dev-only `?fixture=range20` (not in
   dist; never touches the player's save); bench `&start=range` and `&fixture=range20` stages all under budget (range20 8%: 0.86 / 2.0 ms CPU,
