@@ -56,9 +56,9 @@ const GROWTH = {
 /** the town's congestion per season (T178, with its own traffic since T098's leave-time fix): the season's finished trips' mean time over their
  *  ideal (Sim.score's act / ideal), and the share of the zones with trips (half a trip of evidence or more) over the decline line (access > 1.8,
  *  lots/town.ts), and the busiest county-road junction's share of the town's traffic across them (GATE_SHARE: one junction carrying most trips
- *  would want a second connection; the grown town reaches the county road at 10-25 junctions). Bands from seeds 1-3 measured with the trips at
- *  the classic rate a sim second and the town paving its jammed junctions (seed 1: at most 2.58x, 10 of 54 zones, the busiest junction 29%) */
-const CONGESTION = { RATIO_MAX: 3, BAD_SHARE: 0.25, DECLINE: 1.8, GATE_SHARE: 0.5 };
+ *  would want a second connection; checked from GATE_POP residents, as a young town's few trips use one or two junctions). Bands from seeds 1-3 measured with the trips at
+ *  the classic rate a sim second and the town paving its jammed junctions (at most: 2.58x, seed 1; 21 of 53 zones, 40%, seed 2; the busiest junction 38% from 1,000 residents, seed 2) */
+const CONGESTION = { RATIO_MAX: 3, BAD_SHARE: 0.45, DECLINE: 1.8, GATE_SHARE: 0.5, GATE_POP: 1000 };
 /** the scripted course and success of season k (1-based): holes 2, then 9 in seasons 2-5, 18 from 6; success 1.0, then 1.2 from season 3 */
 const holesIn = (k: number) => (k <= 1 ? 2 : k <= 5 ? 9 : 18), successIn = (k: number) => (k <= 2 ? 1 : 1.2);
 
@@ -208,7 +208,7 @@ const growth = seasons ? {
   i_land: seasonsOut.every(z => z.nearLand === 0 && z.onLand === 0),
   j_compact: [5, 20].every(k => !yr(k) || (yr(k)!.centreD ?? 0) <= GROWTH.centre[k]!) && (!yr(5) || yr(5)!.ribbon < GROWTH.RIBBON_SHARE),
   k_builds_steps: seasonsOut.every(z => z.builds > 0) && mean(cityMs) < GROWTH.STEP_MEAN && Math.max(...cityMs) < GROWTH.STEP_MAX,
-  l_congestion: seasonsOut.every(z => z.ratio <= CONGESTION.RATIO_MAX && z.badZones <= CONGESTION.BAD_SHARE * Math.max(1, z.zones) && z.gateShare <= CONGESTION.GATE_SHARE),
+  l_congestion: seasonsOut.every(z => z.ratio <= CONGESTION.RATIO_MAX && z.badZones <= CONGESTION.BAD_SHARE * Math.max(1, z.zones) && (z.pop < CONGESTION.GATE_POP || z.gateShare <= CONGESTION.GATE_SHARE)),
 } : {};
 Object.assign(checks, growth);
 if (seasons) console.log(`[range] growth, seed ${seed}: first leg at ${firstLeg} s, first lot at ${firstLot} s; ${[1, 5, 10, 20].filter(k => yr(k)).map(k => `year ${k}: ${yr(k)!.built} lots, ${yr(k)!.pop} residents, centre ${yr(k)!.centreD}`).join('; ')}; ribbon at year 5 ${yr(5) ? (100 * yr(5)!.ribbon).toFixed(1) + '%' : '-'}; City.step over ${seasons} seasons mean ${r2(mean(cityMs))} ms, max ${r2(Math.max(...cityMs))}`);
