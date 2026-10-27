@@ -128,7 +128,8 @@ export class SwampField {
   private segDist(i: number, x: number, y: number) {
     const s = this.segs, ax = s[i]!, ay = s[i + 1]!, dx = s[i + 2]! - ax, dy = s[i + 3]! - ay, l2 = dx * dx + dy * dy;
     const t = l2 > 0 ? clamp(((x - ax) * dx + (y - ay) * dy) / l2, 0, 1) : 0;
-    return Math.hypot(ax + dx * t - x, ay + dy * t - y) - (s[i + 4]! + (s[i + 5]! - s[i + 4]!) * t);
+    const ex = ax + dx * t - x, ey = ay + dy * t - y;
+    return Math.sqrt(ex * ex + ey * ey) - (s[i + 4]! + (s[i + 5]! - s[i + 4]!) * t);
   }
   /** the soft distance (edge) on the lattice of step st tiles, points [i0, i0 + ni) x [j0, j0 + nj) (point (i, j) at tile (i st, j st)): each
    *  segment visits the points its box holds (no point tests every segment), first for the nearest distance, then for the soft sum in the
@@ -176,20 +177,23 @@ export class SwampField {
     const live = new Uint8Array(ni * nj);
     for (let j = 0; j + 1 < nj; j++) for (let i = 0; i + 1 < ni; i++) { const k = j * ni + i; if (E[k]! < SWAMP_OUT || E[k + 1]! < SWAMP_OUT || E[k + ni]! < SWAMP_OUT || E[k + ni + 1]! < SWAMP_OUT) { live[k] = 1; any = true; } }
     if (!any) return null;
-    const R = new Float64Array(ni * nj).fill(NaN), gi0 = Math.floor(x0 / gs), gj0 = Math.floor(y0 / gs), gni = Math.floor((x0 + w) / gs) - gi0 + 2, gnj = Math.floor((y0 + h) / gs) - gj0 + 2;
+    const R = new Float64Array(ni * nj), gi0 = Math.floor(x0 / gs), gj0 = Math.floor(y0 / gs), gni = Math.floor((x0 + w) / gs) - gi0 + 2, gnj = Math.floor((y0 + h) / gs) - gj0 + 2;
+    for (let j = 0; j < nj; j++) for (let i = 0; i < ni; i++) R[j * ni + i] = reachAt((i0 + i) * st, (j0 + j) * st);
     const G = new Float64Array(gni * gnj).fill(NaN);
-    const r = (i: number, j: number) => { const k = j * ni + i; let v = R[k]!; if (v !== v) v = R[k] = reachAt((i0 + i) * st, (j0 + j) * st); return v; };
     const g = (i: number, j: number) => { const k = j * gni + i; let v = G[k]!; if (v !== v) v = G[k] = ragAt((gi0 + i) * gs, (gj0 + j) * gs); return v; };
     const W = Math.max(1, Math.ceil(w * res)), H = Math.max(1, Math.ceil(h * res)), data = new Uint8ClampedArray(W * H * 4);
+    // each column's lattice cells and fractions (the same arithmetic as cover's, made once a column)
+    const cI = new Int32Array(W), cT = new Float64Array(W), cG = new Int32Array(W), cGT = new Float64Array(W);
+    for (let u = 0; u < W; u++) { const x = x0 + (u + 0.5) / res, fx = x / st, fgx = x / gs; cI[u] = Math.floor(fx) - i0; cT[u] = fx - Math.floor(fx); cG[u] = Math.floor(fgx) - gi0; cGT[u] = fgx - Math.floor(fgx); }
     let u0 = W, v0 = H, u1 = -1, v1 = -1;
     for (let v = 0; v < H; v++) {
-      const y = y0 + (v + 0.5) / res, fy = y / st, jj = Math.floor(fy) - j0, ty = fy - Math.floor(fy), fgy = y / gs, gj = Math.floor(fgy) - gj0, gy = fgy - Math.floor(fgy);
+      const y = y0 + (v + 0.5) / res, fy = y / st, jj = Math.floor(fy) - j0, ty = fy - Math.floor(fy), fgy = y / gs, gj = Math.floor(fgy) - gj0, gy = fgy - Math.floor(fgy), row = jj * ni;
       for (let u = 0; u < W; u++) {
-        const x = x0 + (u + 0.5) / res, fx = x / st, ii = Math.floor(fx) - i0, tx = fx - Math.floor(fx), k = jj * ni + ii;
+        const ii = cI[u]!, k = row + ii;
         if (!live[k]) continue;
-        const e = bilerp(E[k]!, E[k + 1]!, E[k + ni]!, E[k + ni + 1]!, tx, ty); if (e >= SWAMP_OUT) continue;
-        const fgx = x / gs, gi = Math.floor(fgx) - gi0, gx = fgx - Math.floor(fgx);
-        const a = Math.round(bandOf(e, bilerp(r(ii, jj), r(ii + 1, jj), r(ii, jj + 1), r(ii + 1, jj + 1), tx, ty), bilerp(g(gi, gj), g(gi + 1, gj), g(gi, gj + 1), g(gi + 1, gj + 1), gx, gy)) * 255);
+        const tx = cT[u]!, e = bilerp(E[k]!, E[k + 1]!, E[k + ni]!, E[k + ni + 1]!, tx, ty); if (e >= SWAMP_OUT) continue;
+        const gi = cG[u]!, gx = cGT[u]!;
+        const a = Math.round(bandOf(e, bilerp(R[k]!, R[k + 1]!, R[k + ni]!, R[k + ni + 1]!, tx, ty), bilerp(g(gi, gj), g(gi + 1, gj), g(gi, gj + 1), g(gi + 1, gj + 1), gx, gy)) * 255);
         if (a <= 0) continue;
         data[(v * W + u) * 4 + 3] = a;
         if (u < u0) u0 = u; if (u > u1) u1 = u; if (v < v0) v0 = v; if (v > v1) v1 = v;
