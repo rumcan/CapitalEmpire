@@ -64,7 +64,7 @@
 
 /* the rail: key letters, the Course and Town headings, locked tools dimmed in place with a lock, NEW badges; 52 px items under 800 px tall */
 /* the items share the height under the top bar (which may wrap) and above the minimap: 60 px at most, 52 px at most under 800 px tall */
-.rail-tab { position: relative; height: clamp(42px, calc((100vh - var(--hud-top, 5.75rem) - 213px) / 9), 60px); font-size: 12px; }
+.rail-tab { position: relative; height: clamp(42px, calc((100vh - var(--hud-top, 5.75rem) - 222px) / 9), 58px); font-size: 12px; }
 .rail-tab-locked { opacity: 0.42; }
 .rail-tab-locked:hover { background: rgba(255, 255, 255, 0.03); }
 .rail-key { position: absolute; left: 0.3rem; top: 0.15rem; font-size: 12px; font-weight: 700; line-height: 1; color: var(--muted); }
@@ -73,7 +73,7 @@
 .rail-heading { padding-top: 0.2rem; text-align: center; font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
 .new-badge { display: inline-block; border-radius: 999px; background: linear-gradient(#ffd166, #f0a91e); padding: 0 0.3rem; font-size: 9px; font-weight: 800; letter-spacing: 0.04em; line-height: 14px; color: #1b1406; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4); }
 @media (max-height: 799px) {
-  .rail-tab { height: clamp(42px, calc((100vh - var(--hud-top, 5.75rem) - 213px) / 9), 52px); gap: 0.1rem; }
+  .rail-tab { height: clamp(42px, calc((100vh - var(--hud-top, 5.75rem) - 222px) / 9), 52px); gap: 0.1rem; }
   .rail-tab img { width: 24px; height: 24px; }
   .rail-heading { padding-top: 0; font-size: 12px; }
 }
