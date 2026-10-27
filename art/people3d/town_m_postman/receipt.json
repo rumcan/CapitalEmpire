@@ -1,0 +1,10 @@
+{
+  "image": "art/people3d/pics/town_m_postman.png",
+  "look": "Mail carrier in his 40s from a 1985 small American town, a light blue short-sleeved shirt, navy shorts, dark knee socks, black shoes. No badge, no lettering",
+  "modelUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/threedgen/AFjPSjQH9kbcCl57sgO3/da27029e-75a0-4f05-86fd-34ef2f477a88/model.compressed.glb",
+  "rigFrom": "base_man (local rig transfer, rig-local-person.mjs)",
+  "clipsFrom": {
+    "walk": "base_man",
+    "idle": "base_man"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "image": "art/spectators/pics/staff_vendor_m.png",
+  "look": "Food stand vendor, a man in his 40s, a white apron over a red-and-white striped short-sleeved shirt, a white paper hat, dark trousers. No logos, no lettering",
+  "modelUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/threedgen/AFjPSjQH9kbcCl57sgO3/674745d4-a4f4-401d-a65f-9f791a3cf4e2/model.compressed.glb",
+  "rigFrom": "base_man (local rig transfer, rig-local-person.mjs)",
+  "clipsFrom": {
+    "walk": "base_man",
+    "idle": "base_man"
+  }
+}
