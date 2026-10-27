@@ -8,6 +8,7 @@ import type { GolfProgress } from '../ext/progressive-ui';
 import type { GridSave } from '../ext/course-grid';
 import type { OwnerInput } from './play/live';
 import { normalizeRangeBiz, type RangeBizSave } from './rangesave';
+import { normalizeDaySave, type DaySave } from './everyday';
 
 /** a rectangle in tiles: top-left x, y and the size w, h */
 export type Rect = [number, number, number, number];
@@ -48,6 +49,9 @@ export interface GolfSave {
  /** the range business (range starts, plan P24, T129: golf/rangesave.ts): its upgrades, bucket price and counts; a range start's save without it
   *  loads as the starting range */
  range?: RangeBizSave;
+ /** everyday golf (T208, golf/everyday.ts DaySave): the town day in play, its check-ins paid and the season's play so far. Missing: none yet (a save
+  *  from before T208 starts with the day under way, booking the check-ins still to come) */
+ everyday?: DaySave;
 }
 
 /** the owner's play as saved (GolfSave.play): the tournament's key (the round's count), his sex, the inputs he played in order, and how many of them
@@ -74,7 +78,7 @@ export function normalizeGolfSave(g: Partial<GolfSave> | null | undefined): Golf
   if (!g || !g.town || !g.course || !g.clubhouse) return null;
   const parcel: Rect = g.parcel ?? g.parcels?.[0] ?? g.course;
   // the range start's fields (plan P22 2.6) are taken out and put back only when well formed, so an old start's save normalizes as before
-  const { start, exits, townBoost, invited, founding, play, range, ...rest } = g;
+  const { start, exits, townBoost, invited, founding, play, range, everyday, ...rest } = g;
   const out: GolfSave = {
     ...rest,
     v: 1,
@@ -95,5 +99,6 @@ export function normalizeGolfSave(g: Partial<GolfSave> | null | undefined): Golf
   if (invited && Number.isFinite(invited.at)) out.invited = { at: invited.at };
   if (typeof founding === 'number' && Number.isFinite(founding) && founding > 0) out.founding = Math.floor(founding);
   const pl = normalizePlaySave(play); if (pl) out.play = pl;
+  const ed = normalizeDaySave(everyday); if (ed) out.everyday = ed;
   return out;
 }

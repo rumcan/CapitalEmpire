@@ -58,10 +58,12 @@ import { gateSpots } from './parking-props';
 import { drawParkingOverlay, type ParkOverlayView } from './parking-overlay';
 import type { BayRowDef } from './event/rows';
 import { inQuad, type CurbDef } from './event/curb';
-import { SpriteTiles, spriteRect, VECTOR, type Drawable } from './sprites';
+import { CAR_SCALE, SpriteTiles, spriteRect, VECTOR, type Drawable } from './sprites';
 import { releaseVectorMeshData, vectorMeshData } from './shadow-vector';
 import { readSave, writeSave, withTourney, clearSave, backupTownSlot, SAVE_VERSION, segRec, exportSaveBytes, importSaveBytes, listSaveBackups, readBackup, deleteBackup, type SaveV5 } from './save';
-import { CAR_COLOURS, parkedCar } from './traffic';
+import { CAR_COLOURS, carHeading, facings, parkedCar } from './traffic';
+import { DayBook, clubCardView, dayCourse, dayPace, dayPlan, feeScale, normalizeDaySave, seasonPaceRep, type ClubCardView, type DayInputs, type DayRoster } from './golf/everyday';
+import { DayView, type ClubGround } from './golf/everydayview';
 import { carOwnerScale } from './ext/car-art';
 import { SimClient, type LotView } from './sim/client';
 import { townClockFor, townTimeOf } from './sim/townclock';
@@ -124,7 +126,7 @@ import { buyAdjacentBlock, COURSE_LAND_MSG, blockOnRoad, blockOnWater, pointInLa
 import { BAND_LABEL, LandSale } from './golf/land-sale';
 import { buildCourseStatsPanel, type CourseStatsPanel } from './golf/coursestats';
 import { TILE_M, type CourseArea, type CourseLayout, type GolfSurface } from './golf/types';
-import { deriveHoles, surfaceAt, validateMarkerPlacement } from './golf/holes';
+import { deriveHoles, surfaceAt, validateMarkerPlacement, type Hole } from './golf/holes';
 import { DayFinish, LiveGroup, OWNER_ADDRESS, OWNER_ART, OWNER_SKILL, POWER, PUTT_POWER, PlayView, allowedClubs, boardRows, carryM, championLine, dayRound, makeCourseView, powerFor, resultsDue, shortName as golferShort, stateAt, standings, toParText, waitText, waveLine, type BoardRow, type Club, type CourseView, type OwnerTurn, type RoundPlan, type Sex } from './golf/play';
 import { holeViews, markerPlan, tagByHole, type HoleView, type MarkerKind } from './golf/holeview';
 import { CAST, castShear, clampCast, type CastShadow } from './cast-shadow';
@@ -535,7 +537,7 @@ export class Game {
   /** the range card (null: closed, or not a range start) */
   rangeCard() { return this.range.cardOpen ? this.range.view() : null; }
   openRangeCard(open = !this.range.cardOpen) {
-    this.range.cardOpen = open && !!this.range.view();
+    this.range.cardOpen = open && !!this.range.view(); if (this.range.cardOpen) this.clubCardOpen = false; // (T208: one card at a time)
     // the ramp's first hint moves on once the card has been seen (T132)
     const p = this.golf?.progress; if (this.range.cardOpen && p && !p.seen.includes(RANGE_CARD_SEEN)) { p.seen.push(RANGE_CARD_SEEN); this.scheduleSave(); }
     this.emit();
@@ -620,6 +622,12 @@ export class Game {
   private crowdDraw: Drawable[] = []; private crowdPeople: CrowdPerson[] = []; private crowdGolfers: CrowdPerson[] = [];
   /** the day's golf round (updatePlay, docs/GOLF-PLAY.md P2): built once per tournament; playTried is the key last tried, so a round with no holes is not rebuilt every frame */
   private play: GolfPlay | null = null; private playTried = -1;
+  /** T208 everyday golf: the town days' play (the save, the booking: golf/everyday.ts DayBook), the day's playback (its town day and course key; null:
+   *  none on the course now), the played course (rebuilt when the holes change: its key), and the clubhouse card's open state */
+  private dayBook: DayBook | null = null; private dayPlay: { view: DayView; day: number; key: string } | null = null;
+  private dayCourse: { view: CourseView; key: string; at: number } | null = null; clubCardOpen = false;
+  /** T208: the bench's busy day (?golfers=N: this many visitors in place of dailyGolfers; dev and bench only) */
+  private dayBusy: number | undefined;
   /** the game hour of the tournament day the play last saved at (T209: the day saves itself each game hour, so a reload resumes near where it was); -1 none */
   private playSavedHr = -1;
   /** T209: a resumed tournament day waits, the sim paused at the save's moment, until its play is built again (the owner's shot may open at once): the
@@ -1483,7 +1491,7 @@ export class Game {
     // the dev sandbox options (see sandboxGrow): the URL, else the defaults of the dev server or the build
     const q = new URLSearchParams(location.search), dev = import.meta.env.DEV;
     this.sandboxGrow = Number(q.get('grow') ?? 1) || 1; // the game's speed everywhere (the owner, 2026-10-27: the dev server's default of 20 grew the town too fast); ?grow=N still speeds it for tests
-    this.startMode = q.get('start') === 'town' ? 'town' : q.get('start') === 'valley' ? 'valley' : 'range';
+    this.startMode = q.get('start') === 'town' ? 'town' : q.get('start') === 'valley' ? 'valley' : 'range'; { const gb = Number(q.get('golfers')); if (import.meta.env.DEV && q.has('golfers') && gb >= 0) this.dayBusy = gb; } // T208: ?golfers=N, a busy everyday day (dev, the bench)
     this.stampOn = q.has('stamp') ? q.get('stamp') === '1' : !dev;
     this.sandboxMoney = q.has('money') ? q.get('money') === '1' : dev;
     // every road class, junction (the roundabout without its card), tunnel and signal tier open from the start (?unlock=0 plays the unlocks)
@@ -3598,6 +3606,9 @@ export class Game {
         const p = this.propAt(mx, my), tl = this.tileAt(mx, my);
         // the range's own props and its front open the range card (P24, T129)
         if (p?.auto?.startsWith('range:') || (!p && this.range.hit(tl.x, tl.y))) { this.openRangeCard(true); return; }
+        // T208: the clubhouse (its footprint, and the building's height up the screen: 6 tiles back) opens the clubhouse card
+        const club = this.golf && !p ? this.bizDefs.find(d => d.type === 'clubhouse') : undefined;
+        if (club && tl.x >= club.x - 6 && tl.x < club.x + club.w && tl.y >= club.y - 6 && tl.y < club.y + club.h) { this.openClubCard(true); return; }
         // T219: an iconic place's props open its card
         if (p?.auto?.startsWith('place:')) { this.selected = null; this.selectedPlace = p.auto.slice(6); this.emit(); return; }
         this.selectedPlace = null;
@@ -4203,6 +4214,8 @@ export class Game {
   if (book.upkeepCost > 0) {
   this.traffic.spend('upkeep', book.upkeepCost);
   }
+  // T208: the season's everyday play is in the year end (golfYearEnd): a new season starts
+  this.dayBook?.endSeason();
   this.scheduleSave();
   }
   }
@@ -4354,7 +4367,7 @@ export class Game {
       const parked = this.traffic.parks.find(q => q.id === d.id)?.parked ?? 0, c = this.screen(d.x + d.w / 2, d.y + d.h / 2);
       // the range's car park also holds the range sim's cars, which the worker never sees (T132)
       // (T146: the cars in the car park building are counted over it, not here)
-      const label = parkLabel(parked, pk && pk === this.rangePk?.pk ? this.range.sim.parked(false) : 0, pk ? pk.bays.length : 0);
+      const label = parkLabel(parked, (pk && pk === this.rangePk?.pk ? this.range.sim.parked(false) : 0) + (pk && pk === this.dayPark && this.dayPlay ? this.dayPlay.view.parkedNow(this.dayMinute) : 0), pk ? pk.bays.length : 0); // (T208: and the everyday golfers' cars)
       // a count: a world label of the second rank (T151)
       this.labels.text(d, PRI.count, label, c.x, c.y, `bold ${12 * dpr}px ui-sans-serif, system-ui, sans-serif`, 12 * dpr, '#f8fafc', LABEL_OUTLINE, 3 * dpr);
     }
@@ -4642,8 +4655,9 @@ export class Game {
   /** the golf balls of the day (docs/GOLF-PLAY.md P2) at the street tier: each in the air raised by its height (1 m = HH * ze px, half a tile's screen
    *  height) over a soft shadow on the ground, or at rest; a white ball with a dark rim. Culled to the view */
   private drawBalls(ctx: CanvasRenderingContext2D) {
-    const pl = this.play; if (!pl || this.cam.z < DISTRICT_Z) return;
-    const B = pl.pv.balls, dpr = this.dpr, ze = this.cam.z * dpr, cw = this.cw, ch = this.ch, r = Math.max(1.5, 0.06 * HH * 2 * ze);
+    const pl = this.play, dv = this.dayPlay?.view; if ((!pl && !dv) || this.cam.z < DISTRICT_Z) return;
+    // (T208: the everyday golfers' balls too, from the playback of the groups on screen)
+    const B = pl && dv ? pl.pv.balls.concat(dv.balls) : pl ? pl.pv.balls : dv!.balls, dpr = this.dpr, ze = this.cam.z * dpr, cw = this.cw, ch = this.ch, r = Math.max(1.5, 0.06 * HH * 2 * ze);
     ctx.lineWidth = dpr; ctx.strokeStyle = 'rgba(2,6,23,0.9)';
     for (let i = 0; i < B.length; i++) {
       const b = B[i]!, c = this.screen(b.x, b.y);
@@ -4933,18 +4947,38 @@ export class Game {
   /** evaluates tournament day outcome and tour progression (null outside golf mode or without a finished round) */
   golfYearEnd(last = this.traffic.round.last): YearEndResult | null {
   if (!this.golf || !last) return null;
-  const stats = this.courseStatsView();
-  const holes = stats ? deriveHoles(this.courseAreaList(), this.golf.tees, this.golf.pins, this.golf.aims) : [];
-  const have = new Set<Need>(structuresNeeds(this.golf.structures ?? [], holes));
-  if (this.parkDefs.length > 0) have.add('carpark');
-  if (this.golf.start === 'range' && this.bizDefs.some(d => d.type === 'range')) have.add('range'); // a range start's driving range meets tier 3's range
-  for (const n of parkRideNeeds(this.golf.clubhouse, this.parkDefs, this.busDefs)) have.add(n);
-  const facts: CourseFacts = { holes: stats?.totals.holes ?? 0, lengthM: stats?.totals.lengthM ?? 0, have };
-  const gCards = this.golf.cards ?? this.traffic.round.cards;
-  for (const n of parkRideNeedsWithCards(this.golf.clubhouse, this.parkDefs, this.busDefs, gCards)) have.add(n);
-  const baseQ = stats ? buildCourseStatsPanel({ areas: this.courseAreaList(), tees: this.golf.tees, pins: this.golf.pins, aims: this.golf.aims, clubhouse: this.golf.clubhouse }, this.golf.tier, have, effectiveGrowInClockMonth(this.golfMonthIndex(), gCards), { field: this.courseHeight, areas: this.courseAreaList() }).qualityScore : 85;
+  const { holes, facts, baseQ, gCards } = this.golfFacts(this.golf);
   const parked = countParkedCars(this.traffic.parks, this.traffic.round.surge, last.byTown);
-  return computeYearEnd(this.golf.tier, this.golf.rep, last, facts, this.golf.poorYears ?? 0, this.golf.structures ?? [], holes, this.seed, baseQ, gCards, parked, this.parking.fee);
+  const ye = computeYearEnd(this.golf.tier, this.golf.rep, last, facts, this.golf.poorYears ?? 0, this.golf.structures ?? [], holes, this.seed, baseQ, gCards, parked, this.parking.fee);
+  // T208 everyday golf: the green fees are what the season's golfers paid (booked as they checked in; the close book does not book them again), and how
+  // the course played (the pace term, golf/everyday.ts seasonPaceRep) moves the reputation
+  const se = this.dayBook?.season();
+  if (se) { ye.greenFeesPlayed = Math.round(se.fees); ye.paceRep = seasonPaceRep(se); ye.rep = Math.min(100, Math.max(0, ye.rep + ye.paceRep)); }
+  return ye;
+  }
+  /** the course's facts for the year end and everyday golf (T208): the derived holes, the course facts (holes, length, what the club has), the quality
+   *  score before the cards, and the cards in play */
+  private golfFacts(g: GolfSave): { holes: Hole[]; facts: CourseFacts; baseQ: number; gCards: readonly string[] } {
+  const stats = this.courseStatsView();
+  const holes = stats ? deriveHoles(this.courseAreaList(), g.tees, g.pins, g.aims) : [];
+  const have = new Set<Need>(structuresNeeds(g.structures ?? [], holes));
+  if (this.parkDefs.length > 0) have.add('carpark');
+  if (g.start === 'range' && this.bizDefs.some(d => d.type === 'range')) have.add('range'); // a range start's driving range meets tier 3's range
+  for (const n of parkRideNeeds(g.clubhouse, this.parkDefs, this.busDefs)) have.add(n);
+  const facts: CourseFacts = { holes: stats?.totals.holes ?? 0, lengthM: stats?.totals.lengthM ?? 0, have };
+  const gCards = g.cards ?? this.traffic.round.cards;
+  for (const n of parkRideNeedsWithCards(g.clubhouse, this.parkDefs, this.busDefs, gCards)) have.add(n);
+  const baseQ = stats ? buildCourseStatsPanel({ areas: this.courseAreaList(), tees: g.tees, pins: g.pins, aims: g.aims, clubhouse: g.clubhouse }, g.tier, have, effectiveGrowInClockMonth(this.golfMonthIndex(), gCards), { field: this.courseHeight, areas: this.courseAreaList() }).qualityScore : 85;
+  return { holes, facts, baseQ, gCards };
+  }
+  /** T208: what the club is now, for a town day's everyday golf (golf/everyday.ts DayInputs): the quality score as the year end takes it (the course
+   *  consultant's card included), the reputation and the holes (as yearend.ts computeYearEnd: no stats, no holes) */
+  private dayInputs(): DayInputs {
+    const g = this.golf; if (!g) return { quality: 0, rep: 0, holes: 0 };
+    const { facts, baseQ, gCards } = this.golfFacts(g);
+    const inp: DayInputs = { quality: applyCourseConsultantQuality(baseQ, gCards), rep: g.rep, holes: facts.holes };
+    if (this.dayBusy !== undefined) inp.busy = this.dayBusy;
+    return inp;
   }
   /** fast-forwards the season to the tournament (the end of the game day, one sim second past it); golf mode only, not while the clock is frozen */
   skipToTournament() {
@@ -5057,7 +5091,7 @@ export class Game {
       curbs: this.parking.curbs.map((c): [number, number, number, number] => [c.ax, c.ay, c.bx, c.by]),
       parkFee: this.parking.fee,
       speed: this.net.speedTier,
-      golf: this.golf ? { ...this.golf, height: this.courseHeightChunks(), grid: this.gridSave(), plans: this.golf.plans?.length ? this.golf.plans : undefined, play: this.golf.play && this.traffic.round.stage !== 'free' ? this.golf.play : undefined } : undefined,
+      golf: this.golf ? { ...this.golf, height: this.courseHeightChunks(), grid: this.gridSave(), plans: this.golf.plans?.length ? this.golf.plans : undefined, play: this.golf.play && this.traffic.round.stage !== 'free' ? this.golf.play : undefined, everyday: this.dayBook?.save ?? this.golf.everyday } : undefined,
     };
     try { return await writeSave(withTourney(d, tourney)); } catch { return 0; }
   }
@@ -5073,7 +5107,7 @@ export class Game {
       this.bizOpenSeen = null;
       this.genTerrain(d.seed);
       // a golf game has one town (its centre, saved); a legacy save has none of these, and keeps the valley's three
-      this.golf = normalizeGolfSave(d.golf);
+      this.golf = normalizeGolfSave(d.golf); this.dayBook = null; this.dayPlay = null; this.clubCardOpen = false; // T208: everyday golf comes back from golf.everyday
       // a course grid that does not decode fails the load (the slot is backed up, T042), never an empty course saved over the real one
       const lg = this.golf ? loadCourseGrid(this.golf.grid) : 'migrate';
       if (lg === 'bad') { console.error('load failed: the course grid does not decode'); this.golf = null; return false; }
@@ -5490,6 +5524,7 @@ export class Game {
       for (let j = 0; j < k; j++) crowdDrawable(out, m++, P[j]!);
     }
     m = this.playMovers(out, m, X0, Y0, X1, Y1);
+    m = this.dayMovers(out, m, X0, Y0, X1, Y1, now); // T208: everyday golf
     out.length = m;
     return out;
   }
@@ -5539,6 +5574,94 @@ export class Game {
   /** the game minute the play is shown at: the town clock's minute of the day, held at the minute the round was over once the clock has run past the day's
    *  end (T210: the results stay open after the tournament day, when the town clock goes back to its normal rate and wraps at midnight) */
   private playMinute(pl: GolfPlay, minute: number): number { return pl.finish.over ? Math.max(minute, pl.finish.overAt) : minute; }
+  /** T208 everyday golf, each frame: the day book steps to the town clock's day and minute (golf/everyday.ts DayBook: the day's roster from what the club
+   *  is at its start, the check-ins booked as the minute passes them, at feeScale, as business takings floating up at the clubhouse; a tournament day
+   *  closes the day). Then the day's playback (golf/everydayview.ts DayView: the round played at the day's first frame, from the roster), rebuilt when the
+   *  day or the course's holes change; none on a tournament day, without a clubhouse or without holes. The movers and the balls read it */
+  private updateEveryday(now: number) {
+    const g = this.golf, tr = this.traffic;
+    if (!g || !this.bizDefs.some(d => d.type === 'clubhouse')) { this.dayPlay = null; return; }
+    if (!this.dayBook || this.dayBookFor !== g) { this.dayBook = new DayBook(this.seed, normalizeDaySave(g.everyday)); this.dayBookFor = g; this.dayPlay = null; }
+    const at = townTimeOf(tr.town, tr.simTime(now)), free = tr.round.stage === 'free';
+    this.dayMinute = at.dayMin;
+    const b = this.dayBook.step(at.day, at.dayMin, free, () => this.dayInputs(), feeScale(tr.dayLen), r => this.dayPaceOf(r, now));
+    if (b.fees > 0) {
+      tr.spend('business', -b.fees);
+      const c = g.clubhouse; this.floatMoney({ x: c.x, y: c.y, amount: Math.round(b.fees), kind: 'in', group: 'clubhouse', gx: c.x, gy: c.y });
+    }
+    if (b.members + b.visitors > 0) this.scheduleSave();
+    // the card follows the day (the golfers out, the waits): once a second while it is open
+    if (this.clubCardOpen && (b.members + b.visitors > 0 || now - this.clubEmitAt > 1000)) { this.clubEmitAt = now; this.emit(); }
+    const s = this.dayBook.save;
+    if (!free || !s || s.closed || s.day !== at.day) { this.dayPlay = null; return; }
+    const course = this.dayCourseOf(now);
+    if (!course || !course.view.holes.length) { this.dayPlay = null; return; }
+    if (!this.dayPlay || this.dayPlay.day !== s.day || this.dayPlay.key !== course.key) {
+      const roster = this.dayBook.rosterOf()!, plan = dayPlan(course.view, roster);
+      this.dayPlay = { view: new DayView(plan, roster, course.view, this.clubGround(g)), day: s.day, key: course.key };
+      this.dayArt = roster.golfers.map(p => GOLFER_ART[p.sex][p.look % GOLFER_ART[p.sex].length]!);
+    }
+  }
+  /** T208: the town day's minute everyday golf is played back at (set each frame) and each everyday golfer's art (indices into GOLFER_PEOPLE) */
+  private dayMinute = 0; private dayArt: number[] = []; private dayBookFor: GolfSave | null = null; private clubEmitAt = 0; private dayPark: CarPark | null = null;
+  /** T208: the everyday cars as movers (reused Drawables, rangehost.ts's way: their facing's picture at CAR_SCALE about their centre) */
+  private dayCarDraw: Drawable[] = []; private dayCarOut: Drawable[] = [];
+  /** T208: the pace of a day's roster for the season's pace term: the day on screen's plan, else the day played now (a day a skip jumped) */
+  private dayPaceOf(r: DayRoster, now: number) {
+    if (this.dayPlay && this.dayPlay.view.roster === r) return dayPace(this.dayPlay.view.plan);
+    const c = this.dayCourseOf(now); return c && c.view.holes.length ? dayPace(dayPlan(c.view, r)) : null;
+  }
+  /** T208: the played course for everyday golf, rebuilt when the tees, pins or aim points change (looked at every 2 s) */
+  private dayCourseOf(now: number): { view: CourseView; key: string } | null {
+    const g = this.golf; if (!g) return null;
+    const c = this.dayCourse;
+    if (c && now - c.at < 2000) return c;
+    const key = JSON.stringify([g.tees, g.pins, g.aims]);
+    if (c && c.key === key) { c.at = now; return c; }
+    this.dayCourse = { view: dayCourse(this.playCourse(g)), key, at: now }; // (each hole once: a 9-hole course is a 9-hole round)
+    return this.dayCourse;
+  }
+  /** T208: the club's ground for the everyday golfers' walks and cars: the clubhouse's door, and the car park nearest it (within 120 tiles) with its bays
+   *  (the far ones first: the near ones are the worker's parked cars') and its first entrance */
+  private clubGround(g: GolfSave): ClubGround {
+    const door = g.clubhouse;
+    let best: CarPark | null = null, bd = 120;
+    this.parkDefs.forEach((d, k) => { const pk = this.parkBuilt[k]; if (!pk || !pk.bays.length) return; const dd = rectDist(door, d.x, d.y, d.w, d.h); if (dd < bd) { bd = dd; best = pk; } });
+    const pk = best as CarPark | null; this.dayPark = pk;
+    if (!pk) return { door, bays: [], entrance: null };
+    return { door, bays: pk.bays.slice().reverse().map(b => ({ x: b.x, y: b.y, hx: b.hx, hy: b.hy })), entrance: pk.entrances[0] ?? null };
+  }
+  /** T208: the everyday golfers in the tile box as movers, from mover m on (as playMovers), after the day's playback is updated for the box; the cars go
+   *  to dayCarOut. Returns the next mover index */
+  private dayMovers(out: Drawable[], m: number, X0: number, Y0: number, X1: number, Y1: number, now: number): number {
+    const d = this.dayPlay; this.dayCarOut.length = 0; if (!d) return m;
+    const v = d.view; v.update(this.dayMinute, now, X0, Y0, X1, Y1);
+    const t = this.crowdGolfers[1] ?? (this.crowdGolfers[1] = { x: 0, y: 0, group: 1, person: 0, row: 0, frame: 0 });
+    for (const p of v.people) { t.x = p.x; t.y = p.y; t.person = this.dayArt[p.golfer] ?? 0; t.row = p.row; t.frame = p.frame; crowdDrawable(out, m++, t); }
+    const F = facings();
+    for (let k = 0; k < v.cars.length; k++) {
+      const c = v.cars[k]!, f = F[c.type % 5]![carHeading(c.ang)]!, z = CAR_SCALE * f.size;
+      const dr = this.dayCarDraw[k] ?? (this.dayCarDraw[k] = { item: 0, x: 0, y: 0, flip: false, scale: CAR_SCALE, x0: 0, y0: 0, x1: 0, y1: 0, moving: true });
+      dr.item = f.item; dr.flip = f.flip; dr.scale = z; dr.moving = true;
+      dr.x = c.x - f.ox * z; dr.y = c.y - f.oy * z; dr.x0 = c.x - f.hx * z; dr.x1 = c.x + f.hx * z; dr.y0 = c.y - f.hy * z; dr.y1 = c.y + f.hy * z;
+      this.dayCarOut.push(dr);
+    }
+    return m;
+  }
+  /** T208: the clubhouse card (null: closed, or no clubhouse) */
+  clubCard(): ClubCardView | null {
+    const g = this.golf, bk = this.dayBook;
+    if (!this.clubCardOpen || !g || !bk || !this.bizDefs.some(d => d.type === 'clubhouse')) return null;
+    return clubCardView(bk, this.dayPlay?.view ?? null, this.dayMinute, this.traffic.round.stage === 'free', g.rep, feeScale(this.traffic.dayLen));
+  }
+  /** T208: opens or closes the clubhouse card (the select tool's click on the clubhouse, the top bar's Club chip) */
+  openClubCard(open = !this.clubCardOpen) { this.clubCardOpen = open && !!this.golf && this.bizDefs.some(d => d.type === 'clubhouse'); if (this.clubCardOpen && this.range.cardOpen) this.range.cardOpen = false; this.emit(); }
+  /** T208: whether the game has a clubhouse (the top bar's Club chip) */
+  get hasClubhouse(): boolean { return !!this.golf && this.bizDefs.some(d => d.type === 'clubhouse'); }
+  /** T208: the everyday golfers out at the club now (checked in, not yet back at their car; the bench logs it) */
+  dayOutNow(): number { return this.dayPlay ? this.dayPlay.view.outNow(this.dayMinute) : 0; }
+  /** T208: the middle of the everyday golfers drawn over the whole map now (the bench's camera; null: none) */
+  dayFocus(): Pt | null { const v = this.dayPlay?.view; if (!v) return null; v.update(this.dayMinute, performance.now() / 1000, -1e6, -1e6, 1e6, 1e6); const P = v.people; return P.length ? { x: P.reduce((a, p) => a + p.x, 0) / P.length, y: P.reduce((a, p) => a + p.y, 0) / P.length } : null; }
   /** the eval's results screen is open (T210, resultsDue): in the eval, outside golf at once; on the tournament day once the last group is in (or at once
    *  with no play to wait for, or when the player asked for the results early); not while the play is not built yet (the first frame after a load) */
   resultsOpen(): boolean {
@@ -5612,12 +5735,7 @@ export class Game {
    *  handed over) and his next turn is due. Null with no holes to play */
   private buildPlay(key: number, owner: GolfPlaySave | null): GolfPlay | null {
     const g = this.golf; if (!g) return null;
-    const areas = this.courseAreaList(), grid = this.courseGrid;
-    const surfAt = (x: number, y: number): GolfSurface | null => {
-      const i = grid ? cellAt(grid, x, y) : -1, s = i >= 0 ? SURF_SURFACE[grid!.surf[i]!] : null;
-      return s ?? surfaceAt(areas, x, y);
-    };
-    const view = makeCourseView(deriveHoles(areas, g.tees, g.pins, g.aims), surfAt);
+    const view = this.playCourse(g);
     if (!view.holes.length) return null;
     // the field, the tee times, the round and the owner's live group (dayRound: the same pure build a reload makes, T209)
     const seed = Math.floor(hash(this.seed, key) * 4294967296), { plan, golfers, own } = dayRound(view, g.tier, seed, owner);
@@ -5625,6 +5743,16 @@ export class Game {
     const pl: GolfPlay = { plan, view, pv: new PlayView(plan, view), key, art, finish: new DayFinish(), own: null, waves: -1 };
     if (owner && own) pl.own = { id: own.id, sex: owner.owner, skill: OWNER_SKILL, tee: own.tee, live: own.live, turn: own.turn, caddie: owner.caddie };
     return pl;
+  }
+  /** the played course (docs/GOLF-PLAY.md P2a): the derived holes with a line, the lie from the course grid's surface where it is painted, else the painted
+   *  areas (the tournament's round and everyday golf, T208) */
+  private playCourse(g: GolfSave): CourseView {
+    const areas = this.courseAreaList(), grid = this.courseGrid;
+    const surfAt = (x: number, y: number): GolfSurface | null => {
+      const i = grid ? cellAt(grid, x, y) : -1, s = i >= 0 ? SURF_SURFACE[grid!.surf[i]!] : null;
+      return s ?? surfaceAt(areas, x, y);
+    };
+    return makeCourseView(deriveHoles(areas, g.tees, g.pins, g.aims), surfAt);
   }
   /** the round of a tournament key from the save: the save's owner play when it is this tournament's (buildPlay replays his inputs). A save the course no
    *  longer fits (its inputs throw) is dropped, and the day is played without him */
@@ -5895,7 +6023,7 @@ export class Game {
     this.ground.tilesAhead(bandsAhead(z, tb));
     const tier = z < PLANNER_Z ? 'planner' : z < DISTRICT_Z ? 'district' : 'street'; this.perf.tier = tier;
     // the golf round moves on before the movers (the golfers) and the overlay (the balls) read it
-    this.updatePlay(now);
+    this.updatePlay(now); this.updateEveryday(now);
     // T226: the colour grade this frame (grade.ts: none when off, easing off after dusk; the scene then draws straight to the screen)
     gl.grade = this.boot.kind === 'game' ? gradeFrame(this.grade, this.nightAmount()) : null;
     gl.begin({ X: cam.X, Y: cam.Y, ze, cw: this.cw, ch: this.ch }, [0.106, 0.157, 0.086]);
@@ -5989,7 +6117,7 @@ export class Game {
       // (T192: with their brake lights from the closest zooms down to 8%, drawn in the sprite pass right after each car)
       const cars: Drawable[] = this.traffic ? this.traffic.visible(bx0, by0, bx1, by1, cam.z >= 0.08) : [];
       // at the street tier the townspeople and the crowd (the galleries' fans, the queues, the walking parties) are the movers, merged in by depth
-      const movers = tier === 'street' ? cars.concat(this.peds.n ? this.pedMovers(bx0, by0, bx1, by1) : [], this.crowdMovers(bx0, by0, bx1, by1, now / 1000), this.range.movers_(bx0, by0, bx1, by1)) : cars;
+      const movers = tier === 'street' ? cars.concat(this.peds.n ? this.pedMovers(bx0, by0, bx1, by1) : [], this.crowdMovers(bx0, by0, bx1, by1, now / 1000), this.range.movers_(bx0, by0, bx1, by1), this.dayCarOut) : cars;
       // with the living ground the trees plant over every chunk on screen and as far out as a chunk's caster reach (a chunk bakes once its trees
       // are known: casterReady; a cell one tile short of that left an edge chunk unbaked for ever, T134)
       if (this.ground.castersUsed) { const CW2 = this.groundTier === 'm' ? MID_W : CHUNK_W, CH2 = this.groundTier === 'm' ? MID_H : CHUNK_H; this.plantForest(Math.floor(X0 / CW2) * CW2, Math.floor(Y0 / CH2) * CH2, (Math.floor(X1 / CW2) + 1) * CW2, (Math.floor(Y1 / CH2) + 1) * CH2, LIVING_PLANT_MARGIN); }

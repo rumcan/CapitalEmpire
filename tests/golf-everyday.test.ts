@@ -6,10 +6,12 @@ import assert from 'node:assert/strict';
 import { TILE_M } from '../src/game/golf/types';
 import { FLIGHT_TIME, PUTT_FLIGHT } from '../src/game/golf/play';
 import type { CourseView, Group, Lie, PlayHole, Pt, RoundPlan, Shot } from '../src/game/golf/play';
-import { DAY_FIRST_TEE, DAY_LAST_TEE, DAY_TEE_GAP, DayBook, PACE_REP_GOOD, PACE_REP_SLOW, checkInsTo, clubMembers, dayPace, dayPlan, dayRoster, feeScale, normalizeDaySave, paceReputation, type DayInputs } from '../src/game/golf/everyday';
+import { DAY_FIRST_TEE, DAY_LAST_TEE, DAY_TEE_GAP, DayBook, dayCourse, PACE_REP_GOOD, PACE_REP_SLOW, checkInsTo, clubMembers, dayPace, dayPlan, dayRoster, feeScale, normalizeDaySave, paceReputation, type DayInputs } from '../src/game/golf/everyday';
 import { DayView } from '../src/game/golf/everydayview';
-import { GREEN_FEE_PER_ROUND, OFF_SEASON_PLAY_DAYS, dailyGolfers, greenFeeIncome } from '../src/game/golf/yearend';
+import { GREEN_FEE_PER_ROUND, OFF_SEASON_PLAY_DAYS, computeTournamentCloseBook, computeYearEnd, dailyGolfers, greenFeeIncome } from '../src/game/golf/yearend';
 import { SEASON_LEN } from '../src/game/golf/calendar';
+import type { CourseFacts, Need } from '../src/game/golf/tour';
+import type { RoundResult } from '../src/game/event/round';
 
 /** the pars of the 18 holes */
 const PARS: (3 | 4 | 5)[] = [3, 4, 4, 5, 3, 4, 4, 4, 5, 4, 3, 4, 4, 4, 5, 4, 4, 5];
@@ -111,6 +113,15 @@ test('round: the everyday field plays the course in T211\'s order; two groups ne
   const b = dayRoster(SEED, 5, { ...CLUB, busy: 140 }); noGreenOverlap(dayPlan(VIEW, b), b.groups);
 });
 
+test('round: a 9-hole course is a 9-hole everyday round, so a group on its second loop never meets one on its first on a green', () => {
+  // the tournament's view of a 9-hole course lists it twice (courseview.ts): the same line objects again
+  const nine = VIEW.holes.slice(0, 9), twice: CourseView = { holes: [...nine, ...nine], lieAt: VIEW.lieAt };
+  const v = dayCourse(twice); assert.equal(v.holes.length, 9); assert.equal(dayCourse(VIEW).holes.length, 18);
+  const r = dayRoster(SEED, 6, { ...CLUB, holes: 9, busy: 90 }), p = dayPlan(v, r);
+  assert.ok(p.shots.every(s => s.hole < 9));
+  noGreenOverlap(p, r.groups);
+});
+
 test('pace term: a quick course gains, a slow one loses, nothing with no play', () => {
   assert.equal(paceReputation(0, 10), PACE_REP_GOOD);
   assert.equal(paceReputation(60, 10), PACE_REP_SLOW);
@@ -163,4 +174,16 @@ test('view: arrivals by car, the walk to the clubhouse, the round, the walk back
   assert.ok(v.outNow(660) >= all - 2);
   // the evening: every car gone
   v.update(23 * 60, 4, -100, -100, 2000, 2000); assert.equal(v.cars.length, 0); assert.equal(v.people.length, 0); assert.equal(v.parkedNow(23 * 60), 0);
+});
+
+test('close book: the green fees the season played are its line, already in the treasury: not booked again; without them the expectation as before', () => {
+  const rr = { level: 1, run: 1, sent: 100, arrived: 250, rate: 0.83, upkeep: 400, payout: 0, net: -400, prevRate: null, stuck: [], perfect: false, byTown: [] } as unknown as RoundResult;
+  const facts: CourseFacts = { holes: 9, lengthM: 2800, have: new Set<Need>(['carpark']) };
+  const ye = computeYearEnd(1, 40, rr, facts, 0, [], [], 'clear', 80);
+  const before = computeTournamentCloseBook(ye, 0, []);
+  assert.equal(before.greenFeeIncome, ye.greenFeeIncome);
+  const played = computeTournamentCloseBook({ ...ye, greenFeesPlayed: 12345 }, 0, []);
+  assert.equal(played.greenFeeIncome, 12345);
+  assert.equal(played.bizIncome, before.bizIncome - before.greenFeeIncome);
+  assert.equal(played.net, before.net - before.greenFeeIncome + 12345);
 });

@@ -15,6 +15,8 @@ export const DRIVE_MIN = 1.2;
 export const DESK_MIN = 2;
 /** a group's car leaves this long after its last golfer is back at it (game minutes) */
 export const LEAVE_MIN = 1.5;
+/** a group waiting behind the first tee for groups still to tee off stands this much further back for each (tiles) */
+const QUEUE_BACK = 2.4;
 /** the golfers of a group stand this far apart across their walk (tiles) */
 const SPREAD = 0.7;
 /** a hole's box is padded by this many tiles (the wayward balls and the walks off the line) */
@@ -81,6 +83,19 @@ export class DayView {
       tr.back = back; tr.leave = back + LEAVE_MIN;
       for (const b of tr.bays) if (b >= 0) free[b] = tr.leave + DRIVE_MIN;
     }
+    // the first tee's line: a group that reaches its place behind the tee while groups before it have still to tee off stands QUEUE_BACK further back
+    // for each of them (they would stand on one spot), and walks up to the tee for its shot
+    const h0 = holes[0];
+    if (h0) {
+      const a = h0.line[1] ?? h0.pin, dx = a.x - h0.tee.x, dy = a.y - h0.tee.y, L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L;
+      const lastFirst = plan.groups.map(gr => Math.max(...gr.players.map(id => this.legs[id]!.first)));
+      plan.groups.forEach((gr, g) => {
+        const at = this.trips[g]!.desk + this.legs[gr.players[0]!]!.w2;
+        let rank = 0; plan.groups.forEach((o, k) => { if (k !== g && o.tee < gr.tee && lastFirst[k]! > at) rank++; });
+        if (!rank) return;
+        for (const id of gr.players) { const L2 = this.legs[id]!; L2.spot = { x: L2.spot.x - ux * QUEUE_BACK * rank, y: L2.spot.y - uy * QUEUE_BACK * rank }; L2.w2 = walkMin(door, L2.spot); }
+      });
+    }
   }
 
   /** where a group's car c parks: its bay, else the entrance, else the door */
@@ -122,12 +137,13 @@ export class DayView {
         let px: number, py: number, hx = 0, hy = 0, walking = true;
         if (minute < L.first) {
           // before the round: the car to the door, the desk, the door to his place behind the first tee, waiting there, stepping up to the tee
-          const t1 = tr.arrive + L.w1, t2 = tr.desk, t3 = t2 + L.w2, step = L.first - ADDRESS_TIME - STEP_IN, tee = this.view.holes[0]?.tee ?? L.spot;
+          const tee = this.view.holes[0]?.tee ?? L.spot, stepMin = Math.max(STEP_IN, walkMin(L.spot, tee));
+          const t1 = tr.arrive + L.w1, t2 = tr.desk, t3 = t2 + L.w2, step = L.first - ADDRESS_TIME - stepMin;
           if (minute < t1) { const u = L.w1 > 0 ? (minute - tr.arrive) / L.w1 : 1; px = at.x + (door.x - at.x) * u; py = at.y + (door.y - at.y) * u; hx = door.x - at.x; hy = door.y - at.y; }
           else if (minute < t2) { px = door.x; py = door.y; walking = false; hx = L.spot.x - door.x; hy = L.spot.y - door.y; }
           else if (minute < t3) { const u = L.w2 > 0 ? (minute - t2) / L.w2 : 1; px = door.x + (L.spot.x - door.x) * u; py = door.y + (L.spot.y - door.y) * u; hx = L.spot.x - door.x; hy = L.spot.y - door.y; }
           else if (minute < step) { px = L.spot.x; py = L.spot.y; walking = false; hx = tee.x - L.spot.x; hy = tee.y - L.spot.y; }
-          else { const u = Math.min(1, (minute - step) / STEP_IN); px = L.spot.x + (tee.x - L.spot.x) * u; py = L.spot.y + (tee.y - L.spot.y) * u; hx = tee.x - L.spot.x; hy = tee.y - L.spot.y; }
+          else { const u = Math.min(1, (minute - step) / stepMin); px = L.spot.x + (tee.x - L.spot.x) * u; py = L.spot.y + (tee.y - L.spot.y) * u; hx = tee.x - L.spot.x; hy = tee.y - L.spot.y; }
         } else {
           // after the round: from where he walked off the last green back to the car; in it once he is there
           const t = minute - L.done; if (t >= L.w3) continue;

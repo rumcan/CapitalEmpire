@@ -4,7 +4,7 @@
 // play model (play/round.ts playRound: T211's Field, so the groups wait for each other as a tournament field does). The green fees are booked as each
 // group checks in at the clubhouse; members pay nothing on the day (their dues are the memberships). Pure TS, no DOM; times are game minutes of the town day.
 import { SEASON_LEN } from './calendar';
-import { dailyGolfers, GREEN_FEE_PER_ROUND, monthlyMembershipIncome, OFF_SEASON_PLAY_DAYS } from './yearend';
+import { dailyGolfers, GREEN_FEE_PER_ROUND, greenFeeIncome, monthlyMembershipIncome, OFF_SEASON_PLAY_DAYS } from './yearend';
 import { AM_SKILL, GOLFER_NAMES } from './play/field';
 import { playRound } from './play/round';
 import { rng } from './play/shot';
@@ -122,6 +122,13 @@ export function dayRoster(seed: number, day: number, inp: DayInputs): DayRoster 
   return { day, seed: s, golfers, groups, info, order, members, visitors, turned, fees };
 }
 
+/** the course an everyday round plays: each hole once (a 9-hole course is a 9-hole round; the tournament plays it twice, courseview.ts). So a group on its
+ *  second nine never shares a green with a group on its first: T211's field orders the groups per hole of the round, not per green */
+export function dayCourse(view: CourseView): CourseView {
+  const H = view.holes, k = H.findIndex((h, i) => i > 0 && h.line === H[0]!.line);
+  return k > 0 ? { holes: H.slice(0, k), lieAt: view.lieAt } : view;
+}
+
 /** the day's round on the course (play/round.ts playRound with the roster's golfers, groups and seed): every group's holes in time order, the waits on the
  *  group ahead (T211) and each golfer's done minute */
 export function dayPlan(view: CourseView, roster: DayRoster): RoundPlan { return playRound(view, roster.golfers, roster.groups, roster.seed); }
@@ -178,6 +185,40 @@ export function normalizeDaySave(s: Partial<DaySave> | null | undefined): DaySav
     day: s.day, inp, paid: Math.max(0, Math.floor(num(s.paid))), closed: !!s.closed,
     today: { members: num(t.members), visitors: num(t.visitors), fees: num(t.fees) },
     season: { days: num(se.days), members: num(se.members), visitors: num(se.visitors), turned: num(se.turned), fees: num(se.fees), groups: num(se.groups), waitMin: num(se.waitMin) },
+  };
+}
+
+/** the clubhouse card (T208, ui/golf/ClubhouseCard.tsx): whether the course is open today (closed on a tournament day), the minute; today: the members and
+ *  visitors on the tee sheet, those checked in so far, the green fees booked ($, scaled), the visitors turned away, the golfers out on the course and the
+ *  cars in the car park now, the next tee time (null: none left), the groups waiting on the group ahead now, the waits so far (minutes, summed, and per
+ *  group teed off) and the longest; the season: days played, members' and visitors' rounds, fees booked ($), the expectation (greenFeeIncome), the
+ *  average wait per group and the pace term; the club's members, the green fee and the scale */
+export interface ClubCardView {
+  open: boolean; minute: number;
+  today: { members: number; visitors: number; inMembers: number; inVisitors: number; fees: number; turned: number; out: number; parked: number; next: number | null; waiting: number; waitMin: number; waitAvg: number; worst: number };
+  season: { days: number; members: number; visitors: number; fees: number; expected: number; waitAvg: number; paceRep: number };
+  clubMembers: number; fee: number; scale: number;
+}
+
+/** the clubhouse card's view from the day book, the day's playback (null: none: a tournament day, no holes) and the minute */
+export function clubCardView(bk: DayBook, dv: { plan: RoundPlan; outNow(m: number): number; parkedNow(m: number): number } | null, minute: number, free: boolean, rep: number, scale: number): ClubCardView {
+  const s = bk.save, r = bk.rosterOf(), se = bk.season(), inp = s?.inp ?? { quality: 0, rep, holes: 0 };
+  let waitMin = 0, worst = 0, waiting = 0, teed = 0;
+  if (dv) {
+    const per = new Map<number, number>();
+    for (const w of dv.plan.pace?.waits ?? []) if (w.from <= minute) { const d = Math.min(w.to, minute) - w.from; per.set(w.group, (per.get(w.group) ?? 0) + d); waitMin += d; if (w.to > minute) waiting++; }
+    for (const v of per.values()) worst = Math.max(worst, v);
+    teed = dv.plan.groups.filter(g => g.tee <= minute).length;
+  }
+  const next = r ? r.groups.map(g => g.tee).find(t => t > minute) ?? null : null;
+  return {
+    open: free && !!s && !s.closed, minute,
+    today: {
+      members: r?.members ?? 0, visitors: r?.visitors ?? 0, inMembers: s?.today.members ?? 0, inVisitors: s?.today.visitors ?? 0, fees: s?.today.fees ?? 0, turned: r?.turned ?? 0,
+      out: dv ? dv.outNow(minute) : 0, parked: dv ? dv.parkedNow(minute) : 0, next, waiting, waitMin, waitAvg: teed ? waitMin / teed : 0, worst,
+    },
+    season: { days: se.days, members: se.members, visitors: se.visitors, fees: se.fees, expected: greenFeeIncome(inp.quality, inp.rep, inp.holes), waitAvg: se.groups ? se.waitMin / se.groups : 0, paceRep: seasonPaceRep(se) },
+    clubMembers: clubMembers(inp.quality, inp.rep, inp.holes), fee: GREEN_FEE_PER_ROUND, scale,
   };
 }
 

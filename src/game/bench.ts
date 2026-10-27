@@ -118,12 +118,13 @@ export function benchGame(g: Game, scene: BenchScene) {
     // T208: the course scene at GOLF_MINUTE (the most golfers out on an ordinary day), the camera over the course's middle
     if (scene === 'golf' && !warm) {
       const T = g.traffic; T.setTownClock(jumpTo(T.town, T.simTime(performance.now()), GOLF_MINUTE, T.town.rate)); warm = performance.now();
-      const c = g.golf?.course; if (c) g.lookAt(c[0] + c[2] / 2, c[1] + c[3] / 2, 0.3);
     }
     if (warm && performance.now() - warm < WARM_MS) return;
     g.onFrame = null;
+    // T208: the course scene's camera over the middle of the golfers out (else the course's middle)
+    if (scene === 'golf') { const f = g.dayFocus(), c = g.golf?.course; if (f) g.lookAt(f.x, f.y, 0.3); else if (c) g.lookAt(c[0] + c[2] / 2, c[1] + c[3] / 2, 0.3); }
     const at = townTimeOf(g.traffic.town, g.traffic.simTime(performance.now())), clock = `${String(at.hour).padStart(2, '0')}:${String(at.minute).padStart(2, '0')}`;
-    const info = { scene, heap: mem() as unknown as number, segs: g.net.segs.size, nodes: g.net.nodes.size, props: g.props.size, lotProps: g.perf.lotProps, lotsPending: g.lotsPending, pop: g.perf.pop, built: g.perf.built, settleMs: Math.round(performance.now() - t0), clock, carsAtStart: g.perf.simActive };
+    const info = { scene, ...(scene === 'golf' ? { golfersOut: g.dayOutNow() } : {}), heap: mem() as unknown as number, segs: g.net.segs.size, nodes: g.net.nodes.size, props: g.props.size, lotProps: g.perf.lotProps, lotsPending: g.lotsPending, pop: g.perf.pop, built: g.perf.built, settleMs: Math.round(performance.now() - t0), clock, carsAtStart: g.perf.simActive };
     console.log('[bench] scene', info);
     startTour(g, info, SCENE_STAGES[scene]);
   };
