@@ -671,7 +671,8 @@ export class City {
   /** after a network batch: the parcels that changed, the reachable segs, the town's lots */
   private lotsOps(): { lotsAdded: Lot[]; lotsRemoved: string[]; events: TownEvent[] } {
     const t0 = performance.now();
-    const { added, removed } = this.lots.update(this.net, this.cls);
+    // T177: a lot the town has started or built keeps its footprint through the re-partition (new streets partition round it)
+    const { added, removed } = this.lots.update(this.net, this.cls, key => (this.town.states.get(key)?.level ?? LV.EMPTY) >= LV.BUILDING);
     this.reach = this.centres.length ? reachableFrom(this.net, [this.ctx.entry, ...this.centres], [Infinity, ...this.centres.map(() => 80)]) : reachableSegs(this.net, this.ctx.entry);
     const events = this.town.onLots(added, removed);
     this.lotsMs = performance.now() - t0;
