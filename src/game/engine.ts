@@ -19,7 +19,7 @@ import { GroundCache } from './ground-cache';
 import { GAME_BOOT, clampCentre, flatTerrain, type BootOptions } from './boot';
 import { TILE_BANDS, TILES_REVISION, anchorAt, bandAt, bandRange, bandsAhead, cellOf, cellsIn, coverageOf, drawnScale, nearUntil, nextBand, tiledFamily, tileIndex, tilePermutation, tileScreenPx, tileSize, tileSpec } from './painted-tiles';
 import { paintedSurfaces } from './painted-surfaces-live';
-import { chunkLayers, pictureCurrent } from './ground-layers';
+import { chunkLayers, pictureCurrent, prebakeTargets } from './ground-layers';
 import { clampGrassArt, grassZoomLevels, type GrassArt } from './painted-grass-lod';
 import { lotBatch, type CourseTex, type LotPatch } from './ground-protocol';
 import { BLOCK_MAX_AREA, enclosedBlocks } from './blocks';
@@ -1895,6 +1895,31 @@ export class Game {
   /** a ground chunk may bake with the living ground: its prop cells are sent (sent now when dirty) and the forest and town-tree cells within reach
    *  are planted (plantForest plants them, nearest first, as far out as this reach: LIVING_PLANT_MARGIN), so it never bakes once without its
    *  trees and again with them */
+  /** the zooms ahead of z that prebake readies (T197), nearest first: out to the planner map's switch (a zoom out uncovers ground round the
+   *  view, and crosses into the district chunks), and one step in (the middle of the view at the next finer level) */
+  static readonly PREBAKE_ZOOMS = [1 / 1.6, 1 / 3, 1 / 6, 1 / 10, 1.6];
+  /** chunks prebake asks for at most at once (it asks again only when they are baked: GroundCache.idle) */
+  static readonly PREBAKE_PER_FRAME = 3;
+  /** prebake waits this long after the zoom last changed, ms */
+  static readonly PREBAKE_SETTLE_MS = 350;
+  /** the zoom prebake last saw, and the time before which it waits */
+  private prebakeZ = 0; private prebakeHold = 0;
+  /** T197 (the owner: "zooming in and out glitches the textures alot"): a zoom showed the planner map, a blurry low-detail picture, under every
+   *  chunk it brought into view until that chunk baked (about half the frames of a zoom sweep, up to 120 chunks at once). While the view's
+   *  ground is done (GroundCache.idle) the chunks of the views a zoom reaches next (PREBAKE_ZOOMS) are asked for at the lowest priority, a few
+   *  a frame: the other tier's over the whole view there, this tier's only off the screen (a chunk on screen keeps its picture: one picture a
+   *  chunk, so readying another level would blur it now). Their pictures count against the cache's pixel budget as any (evict: the least
+   *  recently used go first) */
+  private prebake(z: number, kind: 'g' | 'm' | 'p', X0: number, Y0: number, X1: number, Y1: number, now: number) {
+    const cam = this.cam, view = { X: cam.X, Y: cam.Y, cw: this.cw, ch: this.ch, dpr: this.dpr, z, kind, box: [X0, Y0, X1, Y1] as const, band: this.tileBand };
+    const levels = { levels: (zz: number) => grassZoomLevels(zz, this.dpr), spec: (zz: number, b: number | null) => tileSpec(nextBand(zz, b), this.dpr), zMin: PLANNER_Z, zMax: ZOOM_MAX, chunk: { g: [CHUNK_W, CHUNK_H] as [number, number], m: [MID_W, MID_H] as [number, number] } };
+    const has = (k: 'g' | 'm', i: number, j: number) => { const t = this.ground.tile(k, i, j); return !!t.tex && !t.stale; };
+    for (const p of prebakeTargets(view, levels, Game.PREBAKE_ZOOMS, has, Game.PREBAKE_PER_FRAME)) {
+      const w = p.kind === 'm' ? MID_W : CHUNK_W, h = p.kind === 'm' ? MID_H : CHUNK_H;
+      if (this.ground.livingActive && !this.casterReady(p.i * w, p.j * h, (p.i + 1) * w, (p.j + 1) * h)) continue;
+      this.ground.need(this.ground.tile(p.kind, p.i, p.j), p.L, p.pri, now, p.artL, p.ts);
+    }
+  }
   private casterReady(X0: number, Y0: number, X1: number, Y1: number): boolean {
     const a = tileOf(X0, Y0), b = tileOf(X1, Y0), c = tileOf(X0, Y1), d = tileOf(X1, Y1), g = CASTER_REACH;
     const tx0 = Math.min(a.x, b.x, c.x, d.x) - g, tx1 = Math.max(a.x, b.x, c.x, d.x) + g, ty0 = Math.min(a.y, b.y, c.y, d.y) - g, ty1 = Math.max(a.y, b.y, c.y, d.y) + g;
@@ -5455,7 +5480,9 @@ export class Game {
   private groundBlendAt = Infinity;
   private groundBlendOtherTier = false;
   /** the last target's tile spec, and whether the zoom transition in progress is a band (or DPR) switch (cut once the whole view has it) */
-  private groundTs = -1; private groundCut = false;
+  private groundTs = -1;
+  /** whether the last ground switch was a tile band step (T145; T197: it crossfades now as any switch; read by scripts/perf/zoom-sweep.mjs) */
+  groundCut = false;
   /** the tile set families' band (T150, painted-tiles.ts nextBand: from the CSS zoom with hysteresis, never magnified; saved with the camera) */
   tileBand: number | null = null;
   /** T186: sprite shadows over the ground's baked shade take the max of the two, not their product (the dev switch: window.__game.shadeMax =
@@ -5510,6 +5537,9 @@ export class Game {
     };
     if (tier === 'planner') {
       drawPlan();
+      // T197: the planner map shown, the district chunks a zoom in reaches are baked ahead meanwhile (as at the other tiers)
+      if (z !== this.prebakeZ) { this.prebakeZ = z; this.prebakeHold = now + Game.PREBAKE_SETTLE_MS; }
+      if (this.ground.idle && now >= this.prebakeHold) this.prebake(z, 'p', X0, Y0, X1, Y1, now);
       // vehicles as dots coloured by type
       const tr = this.traffic;
       if (tr) {
@@ -5526,8 +5556,9 @@ export class Game {
       if (!Number.isFinite(this.groundBlendAt)) {
         let complete = true;
         for (let j = j0; j <= j1 && complete; j++) for (let i = i0; i <= i1; i++) { const t = this.ground.tile(kind, i, j); if (!pictureCurrent(t, L, artL, ts) || t.stale) { complete = false; break; } }
-        // a step switch (T145: another tile set, or another tile size) cuts once every chunk on screen has it: never a crossfade of two sets
-        if (complete) this.groundBlendAt = this.groundCut ? now - 180 : now;
+        // a step switch (T145: another tile set, or another tile size) shows once every chunk on screen has it, then crossfades over the same
+        // 180 ms as a zoom level (T197: it cut, a visible jump of the whole ground's texture at a band switch)
+        if (complete) this.groundBlendAt = now;
       }
       const zoomBlend = Number.isFinite(this.groundBlendAt) ? Math.max(0, Math.min(1, (now - this.groundBlendAt) / 180)) : 0;
       // a chunk not baked yet shows its piece of the planner map meanwhile, asked for before any chunk (one planner bake covers 8 x 8 chunks:
@@ -5560,6 +5591,10 @@ export class Game {
       }
       // T188: the first view's ground is baked (the welcome card waits for it)
       if (baked && !this.firstViewBaked && this.ready) { this.firstViewBaked = true; this.emit(); }
+      // T197: the view done, the chunks a zoom would need next are baked ahead, a few a frame at the lowest priority
+      // (not while the zoom moves: a bake ahead in flight would hold up the next chunk on screen)
+      if (z !== this.prebakeZ) { this.prebakeZ = z; this.prebakeHold = now + Game.PREBAKE_SETTLE_MS; }
+      if (this.ground.idle && now >= this.prebakeHold) this.prebake(z, kind, X0, Y0, X1, Y1, now);
       // ---- the map grid and the course half grid (T100): over the ground and its paint, hidden on the roads, under every shadow and sprite
       if (this.gridLayer.draw(gl.gl, gl.view, z, this.dpr, gridShown(this.showGrid, this.tool), this.courseBuilding, this.gridLand(), this.net)) gl.stats.draws++;
       // the dev tools' ground lines (the lot lab's Lot grid): the same place, under every shadow and sprite

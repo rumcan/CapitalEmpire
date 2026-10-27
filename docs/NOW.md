@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-27 13:14)
+## START HERE (kept current by the lead; last updated 2026-10-27 13:21)
 
 **Paste-ready start prompts for every role are in `docs/START-PROMPTS.md`:** the lead, a coding ticket, and the other sessions in this
 repo. The weekly usage cap is close (2026-10-26), so any chat may stop at any moment.
@@ -27,7 +27,7 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 ### In flight
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |
-| tests | — | fresh branch | `.claude/worktrees/t160` | 5186 | 5 test files pin the owner's data and fail after #500 (compose pins, house-alloc, lot-taste, lot-wizard, train-every-use): keep the rules, drop owner-data pins, own fixtures where a hash is needed. Agent: the lot agent. |
+| T202 | #529 | fresh branch | `.claude/worktrees/t160` | 5186 | Help › Keys (the keys left the rail): a sheet from ? / F1 generated from the tool table, 1-6 pick the rail groups, and the 5 self-skipping version tests made rules. Agent: the lot agent. |
 | T196 → T197 → T195 | #505, #506, #507 | fresh branches | `.claude/worktrees/t166` | 5187 | The ground agent: (1) golf texture borders a soft textured shade, not a hard line (the owner); (2) zooming does not glitch the ground (frame strips, keep old chunks until rebaked, cross-fade band switches, idle pre-bake); (3) fix:gate re-scanned under the new junction rules + mini-roundabouts keep their corner lots. |
 | T112 | #199 | `arena/T112-sharp` (PR #394) | `.claude/worktrees/t112` | — | **Approved, merge HELD for the morning restart:** a lock change makes the 5174 auto-updater run `npm ci` in theme-consistency (the live 5191 studio holds sharp there; the lot agent's t160 uses it by junction). Morning order: stop 5191 → merge #394 → let npm ci finish → restart 5191 and 5174. All shipped bytes identical on 0.35.5; audit 0. |
 | P05 | #68 | PR #413 **open for the owner's approval** | — | — | The M5 balance plan, measured: arrival 47% at tier 1 from a fresh start (the start's 56-bay car park holds 168 fans), 100% with car parks; 10% at tier 2 fresh, 70-81% with car parks; an 18 of ~5,900 m fits the starting land on every seed (~$190k seeded); with the proposals a careful player reaches tier 3 in year 4. Knob recommended for "careless out-saves careful": sponsors x (1 + (rep-50)/50). |
@@ -93,6 +93,8 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
    (the sharp bump). See the History sections below and `gh issue list --label arena --state open`.
 
 ### Done recently (newest first; details in each PR)
+- 2026-10-27 13:21: **#528 main green (2033 pass, 0 fail)**: compose, house-alloc, lot-taste, lot-wizard and train-every-use check rules, not the owner's
+  data (presets, allocations, samples, the Rebuild's art), so a studio save no longer breaks them.
 - 2026-10-27 13:14: **T200 #526 Land for sale** (P23-UX P2-6): Course ▸ Land for sale; an overlay of buyable blocks by price band ($ / $$ / $$$
   with labels), unbuyable ones hatched with an ✕ and a reason (public road, water, not adjacent), your land outlined; a click opens a card
   (size, class, price, what is on it, what it adds) with Buy, never buying at once; a brush or New hole refused for "not your land" offers
