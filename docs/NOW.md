@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-27 04:52)
+## START HERE (kept current by the lead; last updated 2026-10-27 04:58)
 
 **Paste-ready start prompts for every role are in `docs/START-PROMPTS.md`:** the lead, a coding ticket, and the other sessions in this
 repo. The weekly usage cap is close (2026-10-26), so any chat may stop at any moment.
@@ -27,12 +27,12 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 ### In flight
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |
-| T091+T090 | #160, #159 | `arena/T091-T090-growth` | `.claude/worktrees/t166` | 5187 | P22 (RISKY): grown-town roads keep off the course, then the town grows from the range outward; range:gate gains P22 2.7's growth bands; then T098's range20 fixture, `?fixture=` and bench stages. Classic games unchanged (nightly numbers). Agent: the ground agent. |
+| T098b | #168 | `arena/T098-fixture-bench` | `.claude/worktrees/t166` | 5187 | T098's waiting parts, unblocked by T090: the range20 fixture save (seed 1, 20 seasons), its save-fixtures test, the dev `?fixture=range20` loader, the bench's `&start=range` / `&fixture=range20` stages vs GAME-PLAN 2.3. Agent: the ground agent. |
 | T176 | #432 | `arena/T176-ghost-extras` | `.claude/worktrees/t160` | 5186 | P23-UX P2-10, New hole's ghost extras: trees a Build clears tinted (textured) and counted, the collar ring in the footprint, labels fading near the pointer. Agent: the lot agent. |
 | T112 | #199 | `arena/T112-sharp` (PR #394) | `.claude/worktrees/t112` | — | **Approved, merge HELD for the morning restart:** a lock change makes the 5174 auto-updater run `npm ci` in theme-consistency (the live 5191 studio holds sharp there; the lot agent's t160 uses it by junction). Morning order: stop 5191 → merge #394 → let npm ci finish → restart 5191 and 5174. All shipped bytes identical on 0.35.5; audit 0. |
 | T095 | #164 | `arena/T095-first-minute` (**draft PR #419**) | `.claude/worktrees/t160` | 5186 | Built and reviewed (typecheck clean, guide tests 15/15): welcome card (follows P24's ramp: "Open the range" until New hole opens), the founding line in the Tier sub-line (one-row top bar kept), two-line title, tee ring, three toasts, a 7-step range guide. The agent's session was refused `gh pr ready`: **the owner marks it ready and merges** (the lead does not override another session's refusal). Tidied at f4f9347 (screenshots out, minimap "New town" until named, ramp toast helper, step 5 held 8 s): **Squash and merge** (old webp commit in history). Agent: the lot agent. |
 | P05 | #68 | PR #413 **open for the owner's approval** | — | — | The M5 balance plan, measured: arrival 47% at tier 1 from a fresh start (the start's 56-bay car park holds 168 fans), 100% with car parks; 10% at tier 2 fresh, 70-81% with car parks; an 18 of ~5,900 m fits the starting land on every seed (~$190k seeded); with the proposals a careful player reaches tier 3 in year 4. Knob recommended for "careless out-saves careful": sponsors x (1 + (rep-50)/50). |
-| T091+T090 | #160, #159 | `arena/T091-T090-growth` | `.claude/worktrees/t166` | 5187 | P22 (RISKY): grown-town roads keep off the course, then the town grows from the range outward; range:gate gains P22 2.7's growth bands; then T098's range20 fixture, `?fixture=` and bench stages. Classic games unchanged (nightly numbers). Agent: the ground agent. |
+| T098b | #168 | `arena/T098-fixture-bench` | `.claude/worktrees/t166` | 5187 | T098's waiting parts, unblocked by T090: the range20 fixture save (seed 1, 20 seasons), its save-fixtures test, the dev `?fixture=range20` loader, the bench's `&start=range` / `&fixture=range20` stages vs GAME-PLAN 2.3. Agent: the ground agent. |
 | T176 | #432 | `arena/T176-ghost-extras` | `.claude/worktrees/t160` | 5186 | P23-UX P2-10, New hole's ghost extras: trees a Build clears tinted (textured) and counted, the collar ring in the footprint, labels fading near the pointer. Agent: the lot agent. |
 | T112 | #199 | `arena/T112-sharp` (PR #394) | `.claude/worktrees/t112` | — | **Approved, merge HELD for the morning restart:** a lock change makes the 5174 auto-updater run `npm ci` in theme-consistency (the live 5191 studio holds sharp there; the lot agent's t160 uses it by junction). Morning order: stop 5191 → merge #394 → let npm ci finish → restart 5191 and 5174. All shipped bytes identical on 0.35.5; audit 0. |
 
@@ -95,6 +95,13 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
    (the sharp bump). See the History sections below and `gh issue list --label arena --state open`.
 
 ### Done recently (newest first; details in each PR)
+- 2026-10-27 04:58: **T090 #428 the town grows from the range outward** (P22 2.3, RISKY): a range start's town grows its own lots at
+  `(30 + 3 x holes + 0.04 x built) x success` a season (success set by each tournament, saved as `GolfSave.townBoost`), picks fall off
+  from its anchored centre, a lot builds in 240 s, a street every half game hour, the first street and lot ~60 s in at 1x (P22 2.8);
+  career grants pay in range starts; fixed: a young town measured its first pick from the map exit. range:gate holds P22 2.7's bands
+  over 20 seasons on seeds 1-3 (year 20: 2,056-2,391 lots, 5,610-6,648 residents; no street within 6 tiles of the golf land); classic
+  gates identical to the nightly; suite 1926/1926. Finding for a ticket: ~30% of started lots are lost when new streets re-partition
+  the frontage (lots.ts). Shots `E:/ClaudeTemp/T090/`.
 - 2026-10-27 04:52: **T175 #431 Greenkeeping on the rail + the clubhouse stopgap** (P23-UX P2-5, P2-9): Greenkeeping is a COURSE tool
   (no free key), locked until the first hole is grown in ("hole 1 ready Mar 1985"), then never again; its panel is the Grass panel with
   its cares armed (Overseed, Re-Turf: renamed from seed/sod), Esc drops the armed care; the top-bar Grass button picks it in golf games.
