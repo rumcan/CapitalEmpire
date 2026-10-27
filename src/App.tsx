@@ -1190,7 +1190,7 @@ function RoadPanel({ game, scope, compact = false }: { game: Game; scope: 'town'
   const [openFam, setOpenFam] = useState<Family | 'none' | null>(null);
   const isOpen = (f: Family) => openFam === null ? f === curFam : openFam === f;
   return (
-    <Panel title={course ? 'Paths' : 'Road Construction'} icon={course ? 'sidewalk' : 'road'} desc={course ? 'The streets of your course town: cart paths and drives, laid the way roads are built. Click to start, click again for each bend or stop. Points snap to junctions, paths, roads and the 1 m half grid of the course.' : 'Draw a connected route: click to start, click again for each bend or stop. Points snap to junctions, roads and the grid; crossings become junctions.'}>
+    <Panel title={course ? 'Paths' : 'Road Construction'} icon={course ? 'sidewalk' : 'road'} desc={course ? 'The streets of your course town: cart paths and drives, laid the way roads are built. Click to start, click again for each bend or stop; double-click or Enter to build, right-click to take back a point. Points snap to junctions, paths, roads and the 1 m half grid of the course.' : 'Draw a connected route: click to start, click again for each bend or stop; double-click or Enter to build, right-click to take back a point. Points snap to junctions, roads and the grid; crossings become junctions.'}>
       <div className="mt-2 flex flex-col gap-2">
         {/* T193 (compact: the toolbar's flyouts pick the class): the picked class alone, under its family's name */}
         {(compact ? families.filter(f => f.id === curFam) : families).map(f => { const ex = compact || isOpen(f.id); return (
@@ -1279,11 +1279,11 @@ function RoadPanel({ game, scope, compact = false }: { game: Game; scope: 'town'
         {block && <div className="mt-1 text-xs text-red-300">{block}</div>}
       </div>
       <div className="mt-2 flex gap-1">
-        <button className="chip chip-on flex-1 disabled:opacity-40" disabled={game.route.length < 2} onClick={() => game.finishRoute()}>Build route ⏎</button>
-        <button className="chip" disabled={!game.route.length} onClick={() => game.undoRoutePoint()} title="Backspace">Undo</button>
+        <button className="chip chip-on flex-1 disabled:opacity-40" disabled={game.route.length < 2} onClick={() => game.finishRoute()} title="Build the route (Enter, or double-click the last point)">Build route ⏎</button>
+        <button className="chip" disabled={!game.route.length} onClick={() => game.routeInput('backspace')} title="Take back the last point (Backspace or right-click)">Undo</button>
         <button className="chip" disabled={!game.route.length} onClick={() => game.cancelRoute()} title="Esc">Cancel</button>
       </div>
-      <p className="mt-2 text-[12px] text-slate-400">Double-click the last point, press Enter or right-click to build. To widen or narrow a road, use Upgrade (N) or Downgrade (Y). Trees and small items in the way are cleared; buildings block the route.</p>
+      <p className="mt-2 text-[12px] text-slate-400">Double-click the last point or press Enter to build; right-click or Backspace takes back the last point. To widen or narrow a road, use Upgrade (N) or Downgrade (Y). Trees and small items in the way are cleared; buildings block the route.</p>
     </Panel>
   );
 }
@@ -1730,7 +1730,7 @@ function SelectPanel({ game }: { game: Game }) {
 
 function hintFor(g: Game) {
   switch (g.tool) {
-    case 'road': return (g.route.length ? `Route: ${g.route.length} point(s) — click to extend, double-click, Enter or right-click to build, Backspace to undo, Esc to cancel, Shift for a straight 45° run` : `BUILDING NEW ROADS — Draw a connected route: click where the ${g.cls.name.toLowerCase()} should start${VARIANTS[g.cls.base]!.length > 1 ? ' · Tab flips the variant' : ''}`) + ' · E: replace';
+    case 'road': return (g.route.length ? `Route: ${g.route.length} point(s) — click to extend, double-click or Enter to build, right-click or Backspace to take back a point, Esc to cancel, Shift for a straight 45° run` : `BUILDING NEW ROADS — Draw a connected route: click where the ${g.cls.name.toLowerCase()} should start${VARIANTS[g.cls.base]!.length > 1 ? ' · Tab flips the variant' : ''}`) + ' · E: replace';
     case 'junction': {
       const s = g.selectedNode(), h = g.hoverNode, what = g.brush === 'signal' ? 'traffic lights' : g.brush === 'roundabout' ? `a ${g.ringLanes}-lane roundabout` : g.brush === 'stop' ? 'an all-way stop' : g.brush === 'mini' ? 'a mini-roundabout' : 'plain';
       if (g.brush === 'select') return s ? 'Click a corner’s + or × to add or remove its slipway (lights) · Esc deselects, then returns to Select' : h ? 'Click to select this junction · Tab flips its type' : 'Hover a junction to outline it · click to select it · Tab flips the type';

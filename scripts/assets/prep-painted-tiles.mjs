@@ -15,7 +15,8 @@
 // source file, and the family marked `"provisional": true`. The raw generator outputs are not always the same size within a set (putting
 // green MID: 1744x901, 1745x901, 1744x902): the set's native size is the four's common size (the smallest width and height), and a larger
 // tile loses its extra right column / bottom row (top-left anchored, as the art pipeline's own manifest-v1 crops a raw variant to its master;
-// at most a few px, recorded per tile as `crop`). Nothing is resampled. A provisional family without a complete set at every level is left out (with a warning), never guessed. Once the
+// at most a few px, recorded per tile as `crop`). Nothing is resampled. An explicit held/blocked/rejected appearance review excludes that set,
+// including its raw drafts. A provisional family without a complete set at every level is left out (with a warning), never guessed. Once the
 // art session's handoff lists the family in READY-MATERIALS, re-running this script ships its canonical selection instead (no other change).
 //
 // The owner's own paintings (T162, #350): each folder in OWNER (art/owner-supplied/<set>/, committed in this repo) holds the owner's paintings
@@ -164,7 +165,9 @@ for (const f of ready.ready) {
     if (!same(set.nativePixels, rl.nativePixels)) fail(`${f.id} ${level}: native ${set.nativePixels} != READY ${rl.nativePixels}`);
     const vd = set.visualDecision;
     if (!vd?.file || vd.file !== rl.visualDecision) fail(`${f.id} ${level}: visual decision ${vd?.file} != READY ${rl.visualDecision}`);
-    if (vd.sha256 && sha256(fs.readFileSync(rel(vd.file))) !== vd.sha256) fail(`${f.id} ${level}: ${vd.file} hash mismatch`);
+    const decisionBuf = fs.readFileSync(rel(vd.file));
+    if (vd.sha256 && sha256(decisionBuf) !== vd.sha256) fail(`${f.id} ${level}: ${vd.file} hash mismatch`);
+    if (JSON.parse(decisionBuf).decision !== 'accepted-for-art-appearance') fail(`${f.id} ${level}: ${vd.file} does not accept the artwork`);
     if (vd.decision && vd.decision !== 'accepted-for-art-appearance') fail(`${f.id} ${level}: decision ${vd.decision}`);
     const tiles = [];
     for (const t of set.primaryTiles) {
@@ -188,9 +191,26 @@ const LEVEL_DIR = /^(near|mid|far)-v(\d+)$/;
 /** a level's newest complete set in a family's folder: a finished `tile-0x.png` set (newest folder first), else a raw `tile-0x-v<k>.raw.png`
  *  set (newest folder, then newest k, first); null when no folder holds all four */
 function provisionalSet(material, level, only = null) {
+  // The owner's green MID fallback must follow a ready family's explicit selection, even if newer experiments exist on disk.
+  // Its canonical selection and actual appearance decision were hash-checked above.
+  const accepted = plan.find(p => p.material === material && p.selection);
+  if (accepted) {
+    const set = JSON.parse(fs.readFileSync(rel(accepted.selection.file), 'utf8')).sets[level];
+    return { folder: set.folder, revision: set.revision ?? path.basename(set.folder), files: set.primaryTiles.map(t => t.file), stage: 'finished tiles' };
+  }
   const dir = `${EIGHT}/${material}`;
   if (!fs.existsSync(rel(dir))) return null;
-  const folders = fs.readdirSync(rel(dir)).map(n => n.match(LEVEL_DIR)).filter(m => m && m[1] === level && fs.statSync(rel(`${dir}/${m[0]}`)).isDirectory() && (!only || m[0] === only)).sort((a, b) => +b[2] - +a[2]).map(m => m[0]);
+  const folders = fs.readdirSync(rel(dir)).map(n => n.match(LEVEL_DIR)).filter(m => m && m[1] === level && fs.statSync(rel(`${dir}/${m[0]}`)).isDirectory() && (!only || m[0] === only)).sort((a, b) => +b[2] - +a[2]).map(m => m[0]).filter(name => {
+    const reviewDir = `${dir}/${name}/review`;
+    if (!fs.existsSync(rel(reviewDir))) return true;
+    const held = fs.readdirSync(rel(reviewDir)).filter(n => /^appearance-(?:decision|review)(?:-v\d+)?\.json$/.test(n)).some(n => {
+      const review = readJson(`${reviewDir}/${n}`);
+      if (!review) fail(`${reviewDir}/${n}: invalid appearance review`);
+      return review?.visualAccepted === false || /^(?:held|blocked|rejected)(?:$|[- :])/i.test(review?.decision ?? '');
+    });
+    if (held) console.warn(`${material} ${level}: ${name} is held by its appearance review; not a provisional candidate`);
+    return !held;
+  });
   const all = ps => ps.every(p => fs.existsSync(rel(p)) && fs.statSync(rel(p)).isFile());
   for (const name of folders) {
     const files = TILE_IDS.map(id => `${dir}/${name}/${id}.png`);

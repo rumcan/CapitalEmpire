@@ -1,0 +1,122 @@
+{
+  "schema": 1,
+  "reviewedDate": "2026-10-26",
+  "reviewer": "/root/fescue_scale_review",
+  "material": "lake",
+  "zoom": "mid",
+  "revision": "v1",
+  "activeVariants": 4,
+  "decision": "accepted-for-art-appearance",
+  "scope": "Independent saved-PNG material and adjacency review, not runtime integration or owner signoff",
+  "materialIdentity": "Deep teal-blue painted still water with intermediate ripple grain and warm scattered upper-right glints remains coherent with the MID scene-derived reference. Strong glint clusters are more restrained than the initial extracted background.",
+  "lighting": "Warm upper-right afternoon reflection language is consistent across the four images. No flipped light, edge vignette, magenta guide, shore/road/tree/shop remnant or text is visible.",
+  "adjacency": "The four-tile proof and both shuffled layouts read as continuous water without a conspicuous straight join, rectangular tonal frame or grid. The native common-master half-height strip does not show an inherited straight cutoff.",
+  "nativeCuts": "The tile03 left native crop has a locally traceable irregular stroke/colour transition along the pixel-selection cut. It does not form a conspicuous low-frequency frame or straight repair line in the original-screen-size proof. This acceptance does not claim invisible native cuts at every magnification.",
+  "composition": "Four different interior ripple/glint arrangements remain within a shared matching border. The common border repeats by construction; no conspicuous border lattice stood out in the reviewed shuffles.",
+  "nativeEvidence": {
+    "folder": "output/lake-mid-far-v1-review",
+    "masterHalfHeight": {
+      "left": 0,
+      "top": 365,
+      "width": 700,
+      "height": 170
+    },
+    "tile03Left": {
+      "left": 0,
+      "top": 300,
+      "width": 330,
+      "height": 400
+    },
+    "tile04North": {
+      "left": 650,
+      "top": 0,
+      "width": 450,
+      "height": 220
+    }
+  },
+  "limits": [
+    "No art, application, runtime or tests changed by this reviewer.",
+    "No live integration, map-coverage, performance or owner-signoff claim.",
+    "Separate gameplay material layers are not runtime blended or randomized by this decision.",
+    "NEAR/MID/FAR are independently painted sets; common composition or resized cross-zoom geography is not required.",
+    "Only this four-image MID set is covered; NEAR is not approved by this decision."
+  ],
+  "files": [
+    {
+      "file": "tile-01.png",
+      "sha256": "c5c182ab3d548dea12fe25f71ab3740a746d01d5de27ec5a7f7118587fb80777",
+      "dimensions": [
+        1744,
+        900
+      ],
+      "bytes": 3500216
+    },
+    {
+      "file": "tile-02.png",
+      "sha256": "4002af3124169872c62aa755d67388742a7ed8be6bfd989d30c8eadf951a4c6e",
+      "dimensions": [
+        1744,
+        900
+      ],
+      "bytes": 3504324
+    },
+    {
+      "file": "tile-03.png",
+      "sha256": "fc06d3c71b99305c3f0d6f59a2f3ecb7943953c70bbbbed24ea31d8112d88251",
+      "dimensions": [
+        1744,
+        900
+      ],
+      "bytes": 3504414
+    },
+    {
+      "file": "tile-04.png",
+      "sha256": "d5af11de180bcc85bb41d5808505e462547b8a4bc8a5c7342f63fb5b0c84a343",
+      "dimensions": [
+        1744,
+        900
+      ],
+      "bytes": 3488315
+    },
+    {
+      "file": "review-four-tiles.png",
+      "sha256": "32dc1d61298d0f9b5cf721b8b884dff51cf5f84c28f38315cea65a6ff064f333",
+      "dimensions": [
+        1744,
+        900
+      ],
+      "bytes": 3091116
+    },
+    {
+      "file": "review-order-a.png",
+      "sha256": "ec249132ee3c55b1d70f004a03d10fd0219b4dde16d8ca3e625504692ba8c915",
+      "dimensions": [
+        1024,
+        528
+      ],
+      "bytes": 1076306
+    },
+    {
+      "file": "review-order-b.png",
+      "sha256": "689254d13eb87941f08d9a1dce32fb16d3251ba99e3099a49fe0f51010876bed",
+      "dimensions": [
+        1024,
+        528
+      ],
+      "bytes": 1080215
+    },
+    {
+      "file": "common-collar-master.png",
+      "sha256": "303c43385c1af0eb4f551d2a15308391c6ee886d6278aed741669cd74e606c1d",
+      "dimensions": [
+        1744,
+        900
+      ],
+      "bytes": 3507272
+    }
+  ],
+  "materialReference": {
+    "file": "art/theme-consistency/generated/ground/scene-backgrounds/lake/mid-background-anchored-v1.raw.png",
+    "sha256": "0b38988abe9bf202030e04883afa800bcc85a4a7b8d9679366526660e90f2014"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "key": "north-south",
+  "axis": "vertical",
+  "crop": {
+    "left": 743,
+    "top": 387,
+    "width": 256,
+    "height": 128
+  },
+  "id": "ground-background:golden-fescue",
+  "material": "golden-fescue",
+  "zoom": "near",
+  "stage": "full-scene-border-repair",
+  "source": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/near-v1/full-north-south-repair-input.png",
+  "output": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/near-v1/full-north-south-repair-v2.raw.png",
+  "provenance": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/near-v1/full-north-south-repair-v2.provenance.json",
+  "prompt": "Edit this exact full grass field picture. A straight artificial vertical join runs through its middle. Remove that join by continuing the existing golden fescue grass naturally across the middle, keeping the full scene's camera and scale.\nDo not zoom or enlarge the grass. Keep the same tiny on-screen blades and tuft sizes, overall1742x902wide framing, gold/ochre/olive/rust colour mixture, fine pale seedheads, warm painted game-art brushwork and upper-right-to-lower-left light. Continue the field with natural irregular density. Preserve the surrounding grass and edge appearance as closely as possible. No straight division, new stripe, blur, objects, buildings, trees, text, border, vignette or change of viewpoint. The entire image remains the same kind of grass background at the same viewing height. Return only the repaired full wide PNG image.",
+  "date": "2026-10-26",
+  "generator": "image_gen",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-6de0f1dd-a0a6-438f-b40c-57c0c6604d89.png",
+  "sourceSha256": "2ca1493f8eabc602af0105fc8626a5f28e341ef1058ef4d3dc916612d822c99b",
+  "processing": "Native generator output copied byte-for-byte; direct scene removal. No code repaint, recolour, warp or resample.",
+  "camera": "Same near source screenshot camera and apparent surface detail scale requested; no declared top-down/world coverage.",
+  "lighting": "UPPER RIGHT → LOWER LEFT",
+  "integrationStatus": "art-only-not-integrated",
+  "reviewStatus": "pending reference appearance, object-removal and lighting review"
+}

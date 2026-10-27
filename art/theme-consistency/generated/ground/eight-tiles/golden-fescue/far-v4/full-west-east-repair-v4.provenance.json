@@ -1,0 +1,20 @@
+{
+  "id": "ground-background:golden-fescue",
+  "material": "golden-fescue",
+  "zoom": "far",
+  "stage": "repair-shared-collar-box-context",
+  "version": 4,
+  "source": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/far-v4/full-west-east-repair-box-guide.png",
+  "output": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/far-v4/full-west-east-repair-v4.raw.png",
+  "provenance": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/far-v4/full-west-east-repair-v4.provenance.json",
+  "prompt": "Remove the bright magenta rectangular block from this exact full golden grass field picture. The block covers a missing patch of the SAME fine flowing fescue field. Paint the hidden grass naturally across that whole rectangle, connecting the surrounding grass smoothly on ALL FOUR SIDES.\nKeep the complete wide camera view, original tiny blade/tuft size, gold/ochre/tawny and olive palette, fine flowing painterly grass, even average exposure and light from upper right toward lower left. Do not zoom, magnify, add broad leaf shapes or change viewpoint. Use the grass around the box as the exact style and size guide.\nThe repaired area must have organic irregular flowing field growth with no straight horizontal/vertical line, colour step, stripe, rectangular outline or lane through it. Remove every magenta pixel. Do not preserve any artificial divider inside the hidden patch. Keep the rest of the field's appearance as closely as possible. No new objects or text. Return the complete full wide PNG field at the SAME viewing scale.",
+  "date": "2026-10-26",
+  "generator": "image_gen",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-5da12081-253b-418e-a311-b065ffcfe9dc.png",
+  "sourceSha256": "bf3507eb90d03a7e0351e29ac4e5dd4c66d3f8fb13ea2ed9d3ccdf65e554cf11",
+  "processing": "Native generator output copied byte-for-byte; direct scene removal. No code repaint, recolour, warp or resample.",
+  "camera": "Same far source screenshot camera and apparent surface detail scale requested; no declared top-down/world coverage.",
+  "lighting": "UPPER RIGHT → LOWER LEFT",
+  "integrationStatus": "art-only-not-integrated",
+  "reviewStatus": "pending reference appearance, object-removal and lighting review"
+}

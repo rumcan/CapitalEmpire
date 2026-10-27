@@ -1,0 +1,109 @@
+{
+  "schema": 1,
+  "material": "long-grass",
+  "zoom": "near",
+  "master": "art/theme-consistency/generated/ground/eight-tiles/long-grass/near-v3/tile-01-v3.raw.png",
+  "outputFolder": "art/theme-consistency/generated/ground/eight-tiles/long-grass/near-v3",
+  "collarPixels": 64,
+  "patchSpanPixels": 256,
+  "repairRaws": {
+    "northSouth": "art/theme-consistency/generated/ground/eight-tiles/long-grass/near-v3/full-north-south-repair-v3.raw.png",
+    "westEast": "art/theme-consistency/generated/ground/eight-tiles/long-grass/near-v3/full-west-east-repair-v3.raw.png"
+  },
+  "repairFullFrameCrops": {
+    "northSouth": {
+      "left": 0,
+      "top": 0,
+      "width": 1742,
+      "height": 902
+    },
+    "westEast": {
+      "left": 0,
+      "top": 0,
+      "width": 1742,
+      "height": 902
+    }
+  },
+  "variants": [
+    {
+      "id": "tile-01",
+      "raw": "art/theme-consistency/generated/ground/eight-tiles/long-grass/near-v3/tile-01-v3.raw.png",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 1742,
+        "height": 902
+      }
+    },
+    {
+      "id": "tile-02",
+      "raw": "art/theme-consistency/generated/ground/eight-tiles/long-grass/near-v3/tile-02-v3.raw.png",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 1742,
+        "height": 902
+      }
+    },
+    {
+      "id": "tile-03",
+      "raw": "art/theme-consistency/generated/ground/eight-tiles/long-grass/near-v3/tile-03-v3.raw.png",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 1742,
+        "height": 902
+      }
+    },
+    {
+      "id": "tile-04",
+      "raw": "art/theme-consistency/generated/ground/eight-tiles/long-grass/near-v3/tile-04-v3.raw.png",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 1742,
+        "height": 902
+      }
+    }
+  ],
+  "lighting": "Upper-right local tuft highlights only; uniform ambient mean exposure across whole field",
+  "minVisibleTiles": 2,
+  "maxVisibleTiles": 4,
+  "allowRotate": false,
+  "allowMirror": false,
+  "compositeMethod": "minimum-error-cut",
+  "cutOverlapPixels": 128,
+  "repairCutMarginPixels": 64,
+  "repairContext": "full-frame-bands",
+  "sourceSelection": {
+    "file": "art/theme-consistency/material-texture-batches/long-grass/tonematched-near-v3.jobs.json",
+    "sha256": "7ba91b90aae35265a0166bce6e2915beee6cf50ac1fbf56fb371b1edb6e2dc79"
+  },
+  "toneAuthority": {
+    "source": {
+      "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/near-v2/tile-01.png",
+      "sha256": "d4063847d0c60c6f2a0f0f030d791e50afe4936109dd60a3311dd3036a8a05d1",
+      "nativePixels": [
+        1742,
+        902
+      ]
+    },
+    "reusedByteForByte": "art/theme-consistency/generated/ground/eight-tiles/long-grass/near-v3/tile-01-v3.raw.png"
+  },
+  "appearanceSourceCamera": "near separate full-scene field, no macro enlargement, mips, common geography or runtime blending",
+  "reviewStatus": "v3 preparation only; held v2 retained unchanged. Actual shuffled appearance review is still required.",
+  "repairCrops": {
+    "northSouth": {
+      "left": 743,
+      "top": 387,
+      "width": 256,
+      "height": 128
+    },
+    "westEast": {
+      "left": 807,
+      "top": 323,
+      "width": 128,
+      "height": 256
+    }
+  }
+}

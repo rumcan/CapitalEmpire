@@ -1,0 +1,693 @@
+{
+  "schema": 1,
+  "id": "painted:sand-ripples",
+  "materialId": "painted:sand-ripples",
+  "material": "sand-ripples",
+  "date": "2026-10-26",
+  "versionedSelection": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/selection-v1.json",
+  "canonicalSelection": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/canonicalselection.json",
+  "status": "three-authored-sets-independent-art-appearance-passed",
+  "acceptanceScope": "Hash-bound saved-art visual review; not live integration or owner signoff",
+  "light": "UPPER RIGHT toward LOWER LEFT",
+  "displayContract": {
+    "minVisibleTiles": 2,
+    "maxVisibleTiles": 4,
+    "switchBeforeExceeding": 4,
+    "primaryVariantsPerSet": 4,
+    "allowFlip": false,
+    "allowMirror": false,
+    "allowRotate": false
+  },
+  "detailRelationship": "Three independently authored camera-detail sets; not mips, rescaled copies or matching geography",
+  "materialLayer": {
+    "separate": true,
+    "runtimeBlending": false,
+    "runtimeRandomisation": false
+  },
+  "runtimeIntegrated": false,
+  "sets": {
+    "near": {
+      "folder": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/near-v1",
+      "revision": "near-v1",
+      "status": "accepted-for-art-appearance",
+      "primaryTileIds": [
+        "tile-01",
+        "tile-02",
+        "tile-03",
+        "tile-04"
+      ],
+      "primaryTiles": [
+        {
+          "id": "tile-01",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/near-v1/tile-01.png",
+          "sha256": "0c33bbeca683baa724d463a3f92d54821b11b23aae0afa2dd8141d8798dffddd",
+          "bytes": 3598544,
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1742,
+            "height": 902
+          },
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/near-v1/tile-01-v1.raw.png",
+            "sha256": "1c339b55d5998af9be125b088d4fc3ad8ad09839c960fb4faea190f21e1114e1",
+            "bytes": 2411203,
+            "nativePixels": [
+              1742,
+              903
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/near-v1/tile-01-v1.provenance.json",
+              "sha256": "e802a31ca4a87f04dd02e38708ab448b3098b38d3a5de18585c74b3a352e0c27",
+              "bytes": 2734
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/near-v1/tile-01-v1.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/near-v1/tile-01.cut-paths.json"
+        },
+        {
+          "id": "tile-02",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/near-v1/tile-02.png",
+          "sha256": "9ffea2beb4004285f63512fc6094ecc3b4bd9e780d0f71d6da3d0de97a91d4c9",
+          "bytes": 3580777,
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1742,
+            "height": 902
+          },
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/near-v1/tile-02-v1.raw.png",
+            "sha256": "811d73d01ae877f06811fb3abacdbec3426c430a4d02ff0cdca97f4b1b144f5d",
+            "bytes": 2356075,
+            "nativePixels": [
+              1742,
+              903
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/near-v1/tile-02-v1.provenance.json",
+              "sha256": "0c87f6e464bb9b98c96f345c4c8c79aecdc957709407502af54577f064b1d7f0",
+              "bytes": 2734
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/near-v1/tile-02-v1.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/near-v1/tile-02.cut-paths.json"
+        },
+        {
+          "id": "tile-03",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/near-v1/tile-03.png",
+          "sha256": "71e307942a0a84c1fa2234834059cee63c417e91171d1d45249ac03c98452364",
+          "bytes": 3679396,
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1742,
+            "height": 902
+          },
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/near-v1/tile-03-v1.raw.png",
+            "sha256": "7a6d4f47bbf3d2229f9584384e36d53cbbbb7ff3b4e0a30f4be04855eafdc08b",
+            "bytes": 2473058,
+            "nativePixels": [
+              1742,
+              903
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/near-v1/tile-03-v1.provenance.json",
+              "sha256": "25cd55e429052080883097816eb53805a6ce0ac9a7d2c9786b7b392f570e1781",
+              "bytes": 2734
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/near-v1/tile-03-v1.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/near-v1/tile-03.cut-paths.json"
+        },
+        {
+          "id": "tile-04",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/near-v1/tile-04.png",
+          "sha256": "23eac71bddae6b5c23f493a6e6cccafbbd9449fc976b0459a724c64308836f28",
+          "bytes": 3536211,
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1742,
+            "height": 902
+          },
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/near-v1/tile-04-v1.raw.png",
+            "sha256": "04617e4ee6718bb5dd0e8e99753720caf0c742c46a0331ef4b560194da4ebd3d",
+            "bytes": 2365709,
+            "nativePixels": [
+              1742,
+              903
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/near-v1/tile-04-v1.provenance.json",
+              "sha256": "f22d09d693ffc2a18039415f3fe0ffc6cb97a1de60c56e151a9b3594e7fa20ce",
+              "bytes": 2734
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/near-v1/tile-04-v1.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/near-v1/tile-04.cut-paths.json"
+        }
+      ],
+      "visualDecision": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/near-v1/review/appearance-decision.json",
+        "sha256": "69eef5aa1d758fbe7be940833298186d444aac3896a299a6cbe9df4730077e92",
+        "bytes": 4200
+      },
+      "sourceManifest": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/near-v1/manifest-v1.json",
+        "sha256": "142784a171dfc68b72780265e78d82372b509f2b6a81f369bd804692aa02e863",
+        "bytes": 2816
+      },
+      "exportReport": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/near-v1/export-report.json",
+        "sha256": "2a6d3bc66651aeea68b63133412cd8762894f53dfe5af0711117303a0b79539b",
+        "bytes": 11097
+      },
+      "proofs": [
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/near-v1/review-four-tiles.png",
+          "sha256": "3b9a6ba9f9d0f693d5cd54e6701b2724ffc0f7ad0f1446ea1a4e1c82602a00a6",
+          "bytes": 3183112,
+          "nativePixels": [
+            1742,
+            902
+          ]
+        },
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/near-v1/review-order-a.png",
+          "sha256": "ccddec03dc1c89015da22c53973a5658dea78f09a0ea6cd9088c63f1539be350",
+          "bytes": 1083395,
+          "nativePixels": [
+            1024,
+            530
+          ]
+        },
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/near-v1/review-order-b.png",
+          "sha256": "7f8d3fe8abe4cacb203fe80e7463870d7f5e58619f5c409347e0cf5522ca6812",
+          "bytes": 1087076,
+          "nativePixels": [
+            1024,
+            530
+          ]
+        }
+      ],
+      "sharedRepairs": {
+        "northSouth": {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/near-v1/full-north-south-repair-v1.raw.png",
+          "sha256": "3ec02cb3fe4a2894d2e9083a4c6b1537cd5baee1d4f1e4858dc3e19adb050573",
+          "bytes": 2438342,
+          "nativePixels": [
+            1743,
+            902
+          ]
+        },
+        "westEast": {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/near-v1/full-west-east-repair-v1.raw.png",
+          "sha256": "83417bfad83a538a2d0782be2a8cc9ebb162c42eb167b1d007e2e9640f5a5490",
+          "bytes": 2433141,
+          "nativePixels": [
+            1743,
+            902
+          ]
+        }
+      },
+      "nativePixels": [
+        1742,
+        902
+      ]
+    },
+    "mid": {
+      "folder": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/mid-v1",
+      "revision": "mid-v1",
+      "status": "accepted-for-art-appearance",
+      "primaryTileIds": [
+        "tile-01",
+        "tile-02",
+        "tile-03",
+        "tile-04"
+      ],
+      "primaryTiles": [
+        {
+          "id": "tile-01",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/mid-v1/tile-01.png",
+          "sha256": "9f3ed1779be9945dbd16c8d2459786e57ca9a2c24672345070e94d4d5e87cace",
+          "bytes": 3619592,
+          "nativePixels": [
+            1744,
+            900
+          ],
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1744,
+            "height": 900
+          },
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/mid-v1/tile-01-v1.raw.png",
+            "sha256": "047276cb2ac99cbd2b2bb77fb44cd1507f685eb3f12ae727f5a1839d3f9c6f6e",
+            "bytes": 2374154,
+            "nativePixels": [
+              1744,
+              901
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/mid-v1/tile-01-v1.provenance.json",
+              "sha256": "e16f8f12681efc92b80ad3e6dc80711987b276a0d68a52f53ab9f4c98b9e7043",
+              "bytes": 2727
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/mid-v1/tile-01-v1.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/mid-v1/tile-01.cut-paths.json"
+        },
+        {
+          "id": "tile-02",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/mid-v1/tile-02.png",
+          "sha256": "e126680894c1ace2e26802887dc7399dc62cfaf08ff0826ab1e5ac54983b0b07",
+          "bytes": 3576770,
+          "nativePixels": [
+            1744,
+            900
+          ],
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1744,
+            "height": 900
+          },
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/mid-v1/tile-02-v1.raw.png",
+            "sha256": "0cee9711e0b28998e6c92bfbbdfb0585c778cc34b1082bd05bd6171e79baf104",
+            "bytes": 2325978,
+            "nativePixels": [
+              1745,
+              901
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/mid-v1/tile-02-v1.provenance.json",
+              "sha256": "378464c8d6776390928ab6628d622860420954089f48bb33b03f7e3103b2b63b",
+              "bytes": 2727
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/mid-v1/tile-02-v1.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/mid-v1/tile-02.cut-paths.json"
+        },
+        {
+          "id": "tile-03",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/mid-v1/tile-03.png",
+          "sha256": "8ce5c55aad89578b89c90044e9ae5ac8375c7fbb1b660c9990edbc6d529ca5d6",
+          "bytes": 3535103,
+          "nativePixels": [
+            1744,
+            900
+          ],
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1744,
+            "height": 900
+          },
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/mid-v1/tile-03-v1.raw.png",
+            "sha256": "86f99d5cf231beac0bece8f76d7d04efe60705cca7f35699cf7fc1f4f8b4dd21",
+            "bytes": 2330908,
+            "nativePixels": [
+              1744,
+              901
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/mid-v1/tile-03-v1.provenance.json",
+              "sha256": "37afe9ea42a3bf82872ba8e77c91e2798a2c4e47089a0f0253b458c166e5fac9",
+              "bytes": 2727
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/mid-v1/tile-03-v1.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/mid-v1/tile-03.cut-paths.json"
+        },
+        {
+          "id": "tile-04",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/mid-v1/tile-04.png",
+          "sha256": "7039e91935437948ec79eb49ee905dd763d23c239e7d81c03237ddafc5d4164b",
+          "bytes": 3586546,
+          "nativePixels": [
+            1744,
+            900
+          ],
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1744,
+            "height": 900
+          },
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/mid-v1/tile-04-v1.raw.png",
+            "sha256": "71b07486d42216d283b3b4f5f4591ec952ef693769a9aa775078c7ed332568eb",
+            "bytes": 2315371,
+            "nativePixels": [
+              1745,
+              901
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/mid-v1/tile-04-v1.provenance.json",
+              "sha256": "475daa0265385f62099ef20cc435d60b5286508c77e4cb1744264e02e53065d0",
+              "bytes": 2727
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/mid-v1/tile-04-v1.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/mid-v1/tile-04.cut-paths.json"
+        }
+      ],
+      "visualDecision": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/mid-v1/review/appearance-decision.json",
+        "sha256": "758363a75dcade1f74cf05c8d78bf38a1cca6f1e1b309dfc43e7c8e4d07ed87e",
+        "bytes": 4160
+      },
+      "sourceManifest": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/mid-v1/manifest-v1.json",
+        "sha256": "4d85d2eaa3bebeff939b550ea8eb5c482ccace4facb4c7fb4e633765fa6d946b",
+        "bytes": 2806
+      },
+      "exportReport": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/mid-v1/export-report.json",
+        "sha256": "de3dd038d80540a84541f29f68dd52731e3be71388bbee80fc446349d0e01c16",
+        "bytes": 11075
+      },
+      "proofs": [
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/mid-v1/review-four-tiles.png",
+          "sha256": "a73eae1a8c8acf4d9e30aef9686fd9bc14f803ffa945bb481c50c029917c1091",
+          "bytes": 3134845,
+          "nativePixels": [
+            1744,
+            900
+          ]
+        },
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/mid-v1/review-order-a.png",
+          "sha256": "5ac94a6d84b52cf99b1172518fc969eb53c41b0928ff8f543a753df7244d4565",
+          "bytes": 1058958,
+          "nativePixels": [
+            1024,
+            528
+          ]
+        },
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/mid-v1/review-order-b.png",
+          "sha256": "50ef2ed923b54c7abfd6df0a02fa92d00de07b3600cc28e43d7695ef45e72d4f",
+          "bytes": 1067731,
+          "nativePixels": [
+            1024,
+            528
+          ]
+        }
+      ],
+      "sharedRepairs": {
+        "northSouth": {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/mid-v1/full-north-south-repair-v1.raw.png",
+          "sha256": "1adf0db7710c662131b6cb1cd3e2a9ca0f183fa97fc3621edafc048794957d6d",
+          "bytes": 2424418,
+          "nativePixels": [
+            1746,
+            901
+          ]
+        },
+        "westEast": {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/mid-v1/full-west-east-repair-v1.raw.png",
+          "sha256": "07bf4a3ceb697140075aba0deffad782e24c99c437ffe8d8caf626ff133b054b",
+          "bytes": 2413369,
+          "nativePixels": [
+            1746,
+            901
+          ]
+        }
+      },
+      "nativePixels": [
+        1744,
+        900
+      ]
+    },
+    "far": {
+      "folder": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/far-v1",
+      "revision": "far-v1",
+      "status": "accepted-for-art-appearance",
+      "primaryTileIds": [
+        "tile-01",
+        "tile-02",
+        "tile-03",
+        "tile-04"
+      ],
+      "primaryTiles": [
+        {
+          "id": "tile-01",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/far-v1/tile-01.png",
+          "sha256": "0fe1f45db93497274ae0ef6bb72cda084c8dc0b095c0eaad4b364db5583658f2",
+          "bytes": 2924142,
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1742,
+            "height": 902
+          },
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/far-v1/tile-01-v1.raw.png",
+            "sha256": "ab1dd17c794981d0818fa770a98164b229c31509ace91ac4487db042c51f680c",
+            "bytes": 2028252,
+            "nativePixels": [
+              1742,
+              903
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/far-v1/tile-01-v1.provenance.json",
+              "sha256": "9a0a7d79a591892a8c9c59efedda056ee86163ef20c53a102b4ee212dc263ebe",
+              "bytes": 2727
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/far-v1/tile-01-v1.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/far-v1/tile-01.cut-paths.json"
+        },
+        {
+          "id": "tile-02",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/far-v1/tile-02.png",
+          "sha256": "631464152105852da796dad3c905db9854ecb902c6e65be7e0d238457b9802d3",
+          "bytes": 2986245,
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1742,
+            "height": 902
+          },
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/far-v1/tile-02-v1.raw.png",
+            "sha256": "df30e7821b698c48660b9b5190dcfa9b0e8a5074607a11ce07ed05a2cf0739bd",
+            "bytes": 2081747,
+            "nativePixels": [
+              1742,
+              903
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/far-v1/tile-02-v1.provenance.json",
+              "sha256": "f4023bc70b52f8fb0717e07eda8d793d3368de3413f91e5ff5122b44035c76db",
+              "bytes": 2727
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/far-v1/tile-02-v1.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/far-v1/tile-02.cut-paths.json"
+        },
+        {
+          "id": "tile-03",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/far-v1/tile-03.png",
+          "sha256": "2c0736acfe9ee3d839e93eac1ae2a54b2ff8a686af2ca3fc950e5d87a63bccee",
+          "bytes": 2962250,
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1742,
+            "height": 902
+          },
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/far-v1/tile-03-v1.raw.png",
+            "sha256": "5c83ce05359b8b8d7521c7e7e27e1bef199df939f6771e88a9204e1ff414ded5",
+            "bytes": 2053760,
+            "nativePixels": [
+              1742,
+              903
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/far-v1/tile-03-v1.provenance.json",
+              "sha256": "9006d603c376246bfb0b2c72ee2f694c8dd8ccb11d45e43f02b27cf3e1449de7",
+              "bytes": 2727
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/far-v1/tile-03-v1.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/far-v1/tile-03.cut-paths.json"
+        },
+        {
+          "id": "tile-04",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/far-v1/tile-04.png",
+          "sha256": "aac6706aff0dd3064504471332b38fe149b65273a45070c6ed4cd3bc64f198fa",
+          "bytes": 2944200,
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1742,
+            "height": 902
+          },
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/far-v1/tile-04-v1.raw.png",
+            "sha256": "c14ee4275e0d7671aa54166c53f7cd0c0e95e24d1959d70d45454cf15648f057",
+            "bytes": 2039030,
+            "nativePixels": [
+              1742,
+              903
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/far-v1/tile-04-v1.provenance.json",
+              "sha256": "e9db323daef4f921e4489b073f85d351af5f7b828ee57f8f9038263d2a84a054",
+              "bytes": 2727
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/far-v1/tile-04-v1.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/far-v1/tile-04.cut-paths.json"
+        }
+      ],
+      "visualDecision": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/far-v1/review/appearance-decision.json",
+        "sha256": "9f09f00e875e17bc6fbff8fadf1efd75e907835b6e9cb5ec872c1c90a867e2ce",
+        "bytes": 4191
+      },
+      "sourceManifest": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/far-v1/manifest-v1.json",
+        "sha256": "c64f80b281de1622c846248a14ad6cde30544e7021eaf6d1b4b14ef61b465e69",
+        "bytes": 2806
+      },
+      "exportReport": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/far-v1/export-report.json",
+        "sha256": "9eee8c8f0be99c8fe623a3b965c1a46fadf9c7e270d486543a07a9bceef7648b",
+        "bytes": 11059
+      },
+      "proofs": [
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/far-v1/review-four-tiles.png",
+          "sha256": "28d08d9205d4d2cba9dc8bf2da7ffb0b882f8fbc6584f2db1fb9b0e185aa558c",
+          "bytes": 2624069,
+          "nativePixels": [
+            1742,
+            902
+          ]
+        },
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/far-v1/review-order-a.png",
+          "sha256": "5bc61a52aec36dbbff63174ed5158d4b7d04ed70d420b6062ba78ae815c11533",
+          "bytes": 910100,
+          "nativePixels": [
+            1024,
+            530
+          ]
+        },
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/far-v1/review-order-b.png",
+          "sha256": "3088b0c776eafd92d4e633b6c9cf849b19b1b750576c4b81429bb3a52e1cd52d",
+          "bytes": 909677,
+          "nativePixels": [
+            1024,
+            530
+          ]
+        }
+      ],
+      "sharedRepairs": {
+        "northSouth": {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/far-v1/full-north-south-repair-v1.raw.png",
+          "sha256": "17c16153afc428c3c1155e9c0f549d4f0ddd5f2502e28597f669eb57ba53c9a0",
+          "bytes": 2028025,
+          "nativePixels": [
+            1743,
+            902
+          ]
+        },
+        "westEast": {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/far-v1/full-west-east-repair-v1.raw.png",
+          "sha256": "6c57739aab575faf231ce18926f134a12d35ac25bca0c261b6e1774f97f793e1",
+          "bytes": 2023342,
+          "nativePixels": [
+            1743,
+            902
+          ]
+        }
+      },
+      "nativePixels": [
+        1742,
+        902
+      ]
+    }
+  }
+}
