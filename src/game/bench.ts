@@ -3,6 +3,7 @@
  *  Open the game with ?bench. Results land in window.__bench (and the console) when the tour ends. */
 import type { Game } from './engine';
 import { MAP, PLANNER_Z, mulberry, worldX, worldY } from './iso';
+import { jumpTo, townTimeOf } from './sim/townclock';
 import { LIBRARY } from './library';
 import { benchLayout, benchNetwork, M0 } from './bench-net';
 import { makeGrid } from './ext/course-grid';
@@ -95,16 +96,25 @@ export const SCENE_STAGES: Record<BenchScene, Stage[]> = {
 };
 export type BenchScene = 'range' | 'fixture';
 
+/** the grown-town scene's town time: 08:00, the morning peak (the fixture is saved at 06:30, the range's morning), and the time the tour
+ *  waits after the clock moves, for the commute to fill the roads (15 s: 36 town minutes on the 10-minute town day) */
+const SCENE_MINUTE = 8 * 60, WARM_MS = 15000;
+
 /** The bench's game scenes (T098, issue #168), toured on the game the engine made in place of the synthetic city: `range` (?bench&start=range)
- *  the new range start; `fixture` (?bench&fixture=range20, dev/fixtures.ts) the range start's grown town at year 20. The tour pans from the
- *  start's or the save's camera with the game's own traffic, once the game is ready and a loaded town's lots are composed (at most 30 s) */
+ *  the new range start; `fixture` (?bench&fixture=range20, dev/fixtures.ts) the range start's grown town at year 20, its town clock moved on
+ *  to 08:00 and its commute let build for WARM_MS. The tour pans from the start's or the save's camera with the game's own traffic, once the
+ *  game is ready and a loaded town's lots are composed (at most 30 s) */
 export function benchGame(g: Game, scene: BenchScene) {
   g.benchMode = true;
   const t0 = performance.now();
+  let warm = 0;
   g.onFrame = () => {
     if (!g.ready || (g.lotsPending > 0 && performance.now() - t0 < 30000)) return;
+    if (scene === 'fixture' && !warm) { const T = g.traffic; T.setTownClock(jumpTo(T.town, T.simTime(performance.now()), SCENE_MINUTE, T.town.rate)); warm = performance.now(); }
+    if (warm && performance.now() - warm < WARM_MS) return;
     g.onFrame = null;
-    const info = { scene, heap: mem() as unknown as number, segs: g.net.segs.size, nodes: g.net.nodes.size, props: g.props.size, lotProps: g.perf.lotProps, lotsPending: g.lotsPending, pop: g.perf.pop, built: g.perf.built, settleMs: Math.round(performance.now() - t0) };
+    const at = townTimeOf(g.traffic.town, g.traffic.simTime(performance.now())), clock = `${String(at.hour).padStart(2, '0')}:${String(at.minute).padStart(2, '0')}`;
+    const info = { scene, heap: mem() as unknown as number, segs: g.net.segs.size, nodes: g.net.nodes.size, props: g.props.size, lotProps: g.perf.lotProps, lotsPending: g.lotsPending, pop: g.perf.pop, built: g.perf.built, settleMs: Math.round(performance.now() - t0), clock, carsAtStart: g.perf.simActive };
     console.log('[bench] scene', info);
     startTour(g, info, SCENE_STAGES[scene]);
   };
@@ -131,7 +141,7 @@ function startTour(g: Game, info: Record<string, unknown>, stages: Stage[] = STA
     if (t >= st.secs) {
       const sorted = [...cpu].sort((a, b) => a - b), q = (p: number) => sorted[Math.min(sorted.length - 1, Math.floor(p * sorted.length))] ?? 0;
       const fAvg = frames.reduce((a, b) => a + b, 0) / Math.max(1, frames.length);
-      results.push({ stage: st.name, fps: +(1000 / fAvg).toFixed(1), cpuAvgMs: +(cpu.reduce((a, b) => a + b, 0) / Math.max(1, cpu.length)).toFixed(2), cpuP95Ms: +q(0.95).toFixed(2), maxInstances: inst, maxDraws: draws, maxUploadKB: Math.round(upload), chunkUploadsPerSec: up, uploadMsPerSec: +g.ground.uploadMsPerSecond.toFixed(1), simTickMsMax: +stageSim.toFixed(2) });
+      results.push({ stage: st.name, fps: +(1000 / fAvg).toFixed(1), cpuAvgMs: +(cpu.reduce((a, b) => a + b, 0) / Math.max(1, cpu.length)).toFixed(2), cpuP95Ms: +q(0.95).toFixed(2), maxInstances: inst, maxDraws: draws, maxUploadKB: Math.round(upload), chunkUploadsPerSec: up, uploadMsPerSec: +g.ground.uploadMsPerSecond.toFixed(1), simTickMsMax: +stageSim.toFixed(2), cars: g.perf.simActive });
       s++; t = 0; frames = []; cpu = []; inst = draws = upload = up = 0; stageSim = 0; g.cam.X = startX; g.cam.Y = startY;
       if (s >= stages.length) {
         g.onFrame = null;

@@ -27,8 +27,9 @@ import { CoursePanel } from './ui/course/CoursePanel';
 import { BuildingsPanel } from './ui/course/BuildingsPanel';
 import { PropsPanel } from './ui/course/PropsPanel';
 import { MyLooksCard } from './ui/course/MyLooks';
-import { Rail, NewBadge } from './ui/Rail';
-import { railEntries, railItemOf, toolNew } from './ui/rail-items';
+import { Rail, NewBadge, LockMark } from './ui/Rail';
+import { entryKey, pickEntry, railEntries, railItemOf, toolLock, toolNew, toolSections, toolsIn, extraLock, type RailTool } from './ui/rail-items';
+import { tipAttrs } from './ui/tip';
 import { SurfaceMark } from './ui/course/SurfaceMark';
 import { BRUSH_PRESETS } from './game/paint';
 import { STRUCTURES } from './game/golf/tents';
@@ -107,6 +108,10 @@ export default function App() {
   useEffect(() => { const f3 = (e: KeyboardEvent) => { if (e.key === 'F3') { e.preventDefault(); setDev(!devRef.current); } }; window.addEventListener('keydown', f3); return () => window.removeEventListener('keydown', f3); }, []);
   /** the last tool picked in each rail item, so an item returns to it */
   const last = useRef<Record<string, Tool>>({});
+  /** T182: the rail item the player opened last (Props sits in both decorations: the one opened is the one lit) */
+  const activeRail = useRef<string | null>(null);
+  /** T187: the entry last opened in each rail item (its entryKey: Town decoration's Props or its Buildings) */
+  const lastEntry = useRef<Record<string, string>>({});
   /** Holes > More options > My looks (P23 decision 3): the surface style editor's card beside the Holes panel; Esc closes it first */
   const [looks, setLooks] = useState(false);
   const looksOpen = looks && game?.uiTool === 'course';
@@ -156,7 +161,16 @@ export default function App() {
   const toasts = game ? game.toasts.filter(t => performance.now() - t.t < 4000) : [];
   const net = game?.ledger?.net ?? 0, debtDays = game?.traffic.budget.debtDays ?? 0;
   // the rail item of the tool in hand (the road tool on the course is Paths, the course tool's clubhouse scope Buildings: game.uiTool)
-  const item = game ? railItemOf(game.uiTool) : undefined;
+  const item = game ? railItemOf(game.uiTool, activeRail.current) : undefined;
+  /** T187: opens a rail entry: the Props tool's view first (its place and group), then its tool; remembered as the item's last */
+  const openEntry = (itemId: string, t: RailTool) => {
+    if (!game) return;
+    activeRail.current = itemId; lastEntry.current[itemId] = entryKey(t);
+    if (t.view) game.decor.setView(t.view.where, t.view.group ?? null);
+    game.setTool(t.id);
+  };
+  /** whether a rail entry is the one in hand (the Props tool: its view too) */
+  const entryOn = (t: RailTool) => !!game && game.uiTool === t.id && (!t.view || (game.decor.where === t.view.where && (game.decor.group ?? undefined) === t.view.group));
   if (game && item) last.current[item.id] = game.uiTool;
   /** the golf HUD's view (null outside golf mode): the top bar's tier and month */
   const gv = game?.golfMode ? game.golfView() : null, fv = game?.golfMode ? game.foundingView() : null;
@@ -175,7 +189,6 @@ export default function App() {
   /** the surface keys in force: 1 to the last surface the progressive unlocks show (BRUSH_PRESETS' order, as PaintTool.key reads them) */
   const surfaceKeys = Math.max(1, ...BRUSH_PRESETS.map((b, i) => (!ui || (ui.visibleCourseBrushes as string[]).includes(b.kind) ? i + 1 : 0)));
   /** the open item's tools that the progressive unlocks show (the segmented row of Roads and Transport) */
-  const shownTools = item ? item.tools.filter(t => !ui || (ui.visibleTools as string[]).includes(t.id)) : [];
 
   /** the top bar's money figure (a button: it opens the budget) */
   const treasury = (g: Game) => <Stat icon="bank" label="Treasury" value={g.unlimited ? '∞' : withIcon(balanceKind(g.money), money(g.money))} tone={g.money < 0 ? 'text-red-300' : 'text-emerald-300'} sub={debtDays ? `bankrupt in ${DEBT_DAYS - debtDays} days` : undefined} subTone="text-red-300" onClick={() => { g.panel = g.panel === 'budget' ? null : 'budget'; g.emit(); }} />;
@@ -388,13 +401,42 @@ export default function App() {
           {/* T174: the box round the rail and the panel takes no clicks itself (it is as tall as the rail, so it covered the map under a short panel) */}
           <div className="pointer-events-none absolute left-3 top-[var(--hud-top,5.75rem)] z-20 flex items-start gap-2 [&>*]:pointer-events-auto">
             {/* P23 P1-E: the same places from minute zero; a tool not open yet stays dimmed in place with what unlocks it, a new one says NEW */}
-            <Rail entries={railEntries(ui, game.golfMode, game.uiTool)} onPick={r => game.setTool(last.current[r.id] ?? r.tools[0]!.id)} onLocked={(r, why) => game.toast(`${r.label}: ${why}`)} />
+            {/* T182: the groups (Driving range, Course, Decoration · Traffic, Town decoration); the range opens its card; a group opens its last tool, else its first open one */}
+            <Rail entries={railEntries(ui, game.golfMode, game.uiTool, { active: item?.id, range: !!game.range.scene, rangeOpen: game.range.cardOpen })}
+              onPick={r => {
+                activeRail.current = r.id;
+                if (r.action === 'range') { game.setTool('select'); game.openRangeCard(true); game.emit(); return; }
+                if (game.range.cardOpen) game.openRangeCard(false);
+                const e = pickEntry(r, game.golfMode, ui, lastEntry.current[r.id] ?? last.current[r.id]);
+                if (e) openEntry(r.id, e); else game.toast(`${r.label}: nothing open here yet`);
+              }}
+              onLocked={(r, why) => game.toast(`${r.label}: ${why}`)} />
             <div className="glass w-[330px] max-h-[calc(100vh-var(--hud-top,5.75rem)-8.25rem)] overflow-y-auto p-3" data-tool={game.uiTool}>
-              {shownTools.length > 1 && (
-                <div className="seg mb-3">
-                  {shownTools.map(t => (
-                    <button key={t.id} className={game.uiTool === t.id ? 'on' : ''} onClick={() => game.setTool(t.id)} title={t.key ? `${t.label} (${t.key})` : t.label}><Icon name={t.icon} size={16} />{t.label}{toolNew(ui, t.id) && <NewBadge />}</button>
+              {/* T182: the group's tools in a row (in sections: Traffic's Roads, Junctions, Transport); a locked one stays in its place, dimmed,
+                  with its lock and why (a click says it); the Course's Tournament opens the Event catalogue */}
+              {item && (toolsIn(item, game.golfMode).length > 1 || (game.golfMode && !!item.extras?.length)) && (
+                <div className="mb-3 space-y-1.5" data-testid="group-tools">
+                  {toolSections(item, game.golfMode).map(s => (
+                    <div key={s.sub || 'tools'}>
+                      {s.sub && <div className="label-caps mb-1">{s.sub}</div>}
+                      <div className="seg flex-wrap">
+                        {s.tools.map(t => { const why = toolLock(ui, t.id), on = entryOn(t); return (
+                          <button key={entryKey(t)} data-group-tool={t.view?.group ?? t.id} className={`${on ? 'on' : ''} ${why ? 'seg-locked' : ''}`} aria-disabled={why ? true : undefined} aria-pressed={on}
+                            onClick={() => (why ? game.toast(`${t.label}: ${why}`) : openEntry(item.id, t))} {...tipAttrs({ name: t.label, ...(t.key ? { key: t.key } : {}), ...(why ? { why } : {}) })}>
+                            {why ? <LockMark /> : <Icon name={t.icon} size={16} />}{t.label}{!why && toolNew(ui, t.id) && <NewBadge />}
+                          </button>
+                        ); })}
+                      </div>
+                    </div>
                   ))}
+                  {game.golfMode && item.extras?.map(x => { const why = extraLock(ui, x), on = x.id === 'event' && game.eventTool; return (
+                    <div key={x.id} className="seg">
+                      <button data-group-tool={x.id} className={`${on ? 'on' : ''} ${why ? 'seg-locked' : ''}`} aria-disabled={why ? true : undefined} aria-pressed={on}
+                        onClick={() => (why ? game.toast(`${x.label}: ${why}`) : x.id === 'event' ? game.toggleEventTool() : undefined)} {...tipAttrs({ name: `${x.label}: tents, grandstands and the tournament's structures`, ...(why ? { why } : {}) })}>
+                        {why ? <LockMark /> : <Icon name={x.icon} size={16} />}{x.label}
+                      </button>
+                    </div>
+                  ); })}
                 </div>
               )}
               {game.uiTool === 'road' && <RoadPanel game={game} scope="town" />}

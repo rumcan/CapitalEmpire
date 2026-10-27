@@ -319,6 +319,11 @@ export const LUSH_MAX = 0.85;
 /** the ambient occlusion's colour at full strength (a cool multiply that keeps the texture, T110) and its most */
 export const AO_COLOUR: readonly [number, number, number] = [0.5, 0.58, 0.74];
 export const AO_MAX = 0.62;
+/** whether the ambient occlusion is laid (T181b: off). The owner, 2026-10-27: "I like the streaks along fences etc, what i dont like is the
+ *  blanked color transparency over everything hiding the texture detail". Measured on a lot's lawn at 30% (the ground alone): the occlusion
+ *  laid a cool multiply up to AO_MAX over the ground within reach of every house, tree and fence (most of a town), darkening the lawn by a
+ *  quarter (red 0.74-0.78, blue 0.84 of the painting) and taking a fifth of its detail. The variants (the streaks, the soil, the litter) stay */
+export const LIVING_AO = false;
 export interface LivingMasks { W: number; H: number; x0: number; y0: number; res: number; lush: Uint8ClampedArray; thin: Uint8ClampedArray; bare: Uint8ClampedArray; litter: Uint8ClampedArray; ao: Uint8ClampedArray;
   /** the most each mask reaches (0..1): a pass whose mask stays near 0 is skipped */
   max: { lush: number; thin: number; bare: number; litter: number; ao: number } }

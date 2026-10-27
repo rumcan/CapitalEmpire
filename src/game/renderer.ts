@@ -17,7 +17,8 @@ import { DRAW_ORDER, FaceForm, GREEN_FACE, STAIR_TREAD, SURF_HEIGHT, SUN_DIR, WA
 import { SURF } from './ext/course-grid';
 import { SPROUT_PERIOD, growDraws, seedColour, seedSprouts, sproutRes, type GrowDraw } from './ext/course-fx/seed';
 import { courseImages, courseRes, lineField } from './ext/course-grid/field';
-import { grassSurface, type GrassCellView } from './ext/grass-management';
+import { type GrassCellView } from './ext/grass-management';
+import { grassOverlay } from './lawn-overlay';
 import { surfaceOfTex } from './golf/costs';
 import { CELL as COURSE_CELL } from './golf/paintcourse';
 import { AREA_SHADE, EDGE_LOOKS, areaLightEdge, areaShadeImages, areaShadeReach, areaShadow, bandRamp, edgeBox, edgeField, edgeImages, edgeReach, edgeRes, featherTiles, litBox, type EdgeImage } from './paint-edges';
@@ -30,7 +31,7 @@ import { coversMap } from './painted-families';
 import { bandOf, cellsIn, snappedCell, tileIndex, tileKey, tilePermutation, tileSize } from './painted-tiles';
 import { WOODLAND, lawnTexFor } from './painted-surfaces';
 import { BLEND_WAVES, blendAlpha, blendNoise, trimLru } from './painted-grass-lod';
-import { CasterStore, COURSE_GRASSY, COURSE_WATER, SHADOW_DIR, debugImage, grassyTex, influence, livingMasks, livingQueryBox, livingRes, livingSignature, waterTex, type Box, type InfluenceGrid, type LivingMasks, type RoadPiece, type WaterLine } from './living-ground';
+import { LIVING_AO, CasterStore, COURSE_GRASSY, COURSE_WATER, SHADOW_DIR, debugImage, grassyTex, influence, livingMasks, livingQueryBox, livingRes, livingSignature, waterTex, type Box, type InfluenceGrid, type LivingMasks, type RoadPiece, type WaterLine } from './living-ground';
 /** the bytes of painted compositions a worker keeps (a chunk's look is about 3 MB at the closest zoom; the bake in progress keeps all of its own) */
 const COMPOSED_BYTES = 64 << 20;
 /** a painted composition is made and kept in squares of this many chunk px (only the part of a chunk a surface uses is composed) */
@@ -695,8 +696,6 @@ export class GroundPainter {
     // ---- 1a. the lawns (lawns.ts): the road blocks' grass in soft patches, then each lot's own lawn, under the lots' own ground
     if (lawns.length) { this.drawLawns(ctx, lawns, L, X0, Y0, M, Minv, box); ctx.setTransform(M); this.drawManagedGrass(ctx, lawns, box, L); }
     drawLots(rest);
-    // ---- 1a". the lots' flat decals (leaf drifts, worn grass, oil stains, litter, mud) over their ground
-    if (marks.length) { this.drawMarks(ctx, marks, L, M, box); ctx.setTransform(M); }
     // ---- 1a'. painted areas (the Paint tool) in id order: over the lot ground, under the bridges and roads
     if (paints.length) { this.drawPaints(ctx, paints, L, X0, Y0, M, Minv, box, lite); ctx.setTransform(M); }
     // ---- 1a'''. the course height's light (T028b, T126): its slopes lit by the sun at the upper right and shaded away from it, its steep rises'
@@ -707,6 +706,9 @@ export class GroundPainter {
     if (this.living.on || this.living.debug) { this.drawLiving(ctx, L, lite, box, M, Minv, W, H, X0, Y0); ctx.setTransform(M); }
     // ---- 1a''. the car parks over the painted areas: their surface, rim and bay lines
     drawLots(parks);
+    // ---- 1a". the lots' flat decals (leaf drifts, worn grass, oil stains, litter, mud) on top of all their ground (T183: the lawn, the lot's
+    //      patches, the painted areas, the living ground's streaks and the car parks), under the bridges, roads and sprites
+    if (marks.length) { this.drawMarks(ctx, marks, L, M, box); ctx.setTransform(M); }
     // ---- 1b. bridge decks under the road: the shadow on the water, the piers, the deck's fascia and top
     for (const b of brs) {
       const path = linePath(b.pts, false);
@@ -1038,7 +1040,9 @@ export class GroundPainter {
     }
     // ---- the ambient occlusion: a cool multiply over everything, the foundations and paving too, but never over a course wall's face (its
     //      own light and shade, T099): there the shade layer is white
-    if (m.max.ao > 0.01) {
+    // T181b (the owner: "what i dont like is the blanked color transparency over everything hiding the texture detail"): off (LIVING_AO); it
+    //      took a fifth of a lawn's detail and darkened it a quarter, cool, wherever a house, tree or fence stood near: most of a town
+    if (LIVING_AO && m.max.ao > 0.01) {
       if (!wallPath) put(ctx, m.ao, 'multiply');
       else {
         const ab = this.buffer('livingAo', W, H), ag = ctx2d(ab); ag.fillStyle = '#fff'; ag.fillRect(0, 0, W, H); put(ag, m.ao, 'source-over');
@@ -2140,9 +2144,9 @@ export class GroundPainter {
     if ((!this.grassStrength && !this.grassHeat) || !this.grassCells.size) return;
     for (const p of patches) {
       // Fresh seed/sod keeps its original grow-in texture and timing.
-      // a hand-painted tile set (T145) is laid as authored: no condition picture mixed inside it; the Grass panel's health colours (a view the
-      // player turns on, not art) still show over it, now that the fairway, greens and rough wear tile sets (T153)
-      if (!grassSurface(p.tex, !!p.lawn, surfaceOfTex(p.tex as PaintTex)) || p.tex === 'golfSod' || (!this.grassHeat && this.tex.paintedOf(p.tex)?.tiled)) continue;
+      // a hand-painted tile set (T145) and a lot's lawn (T181) are laid as authored: no condition picture mixed inside them; the Grass panel's
+      // health colours (a view the player turns on, not art) still show over them, now that the fairway, greens and rough wear tile sets (T153)
+      if (grassOverlay(p, this.grassHeat, t => !!this.tex.paintedOf(t)?.tiled, surfaceOfTex(p.tex as PaintTex)) === 'none') continue;
       const b = quadBox(p.pts); ctx.save(); ctx.clip(polyPath(p.pts));
       for (let y = Math.max(0, Math.floor(Math.max(b[1], box[1]) / 4) * 4); y < Math.min(MAP, b[3], box[3]); y += 4) for (let x = Math.max(0, Math.floor(Math.max(b[0], box[0]) / 4) * 4); x < Math.min(MAP, b[2], box[2]); x += 4) {
         const v = this.grassCells.get(y / 4 * (MAP / 4) + x / 4); if (!v) continue;

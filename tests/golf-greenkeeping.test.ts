@@ -4,7 +4,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { computeProgressiveUiState, greenkeepingLock, type PlayerProgressFacts } from '../src/game/ext/progressive-ui';
-import { RAIL, railEntries } from '../src/ui/rail-items';
+import { RAIL, railEntries, railItemOf, toolLock, toolsIn } from '../src/ui/rail-items';
 import { GRASS_COST } from '../src/game/ext/grass-management';
 import { GRASS_ACTION_NAME } from '../src/ui/GrassManagementPanel';
 import { afterRoute, driveOffer, driveStart, wantsDrive } from '../src/game/golf/drivestopgap';
@@ -30,15 +30,15 @@ test('Greenkeeping opens with the first grown hole: locked in place with its why
   assert.ok(greenkeepingLock(f({ grownHoles: undefined, playableHoles: 0 })));
 });
 
-test('on the rail: under COURSE after Props, golf games only; the rail draws it locked with its why, then open', () => {
-  const i = RAIL.findIndex(r => r.id === 'greenkeeping'), props = RAIL.findIndex(r => r.id === 'props');
-  assert.equal(i, props + 1);
-  assert.equal(RAIL[i]!.section, 'course'); assert.equal(RAIL[i]!.only, 'golf'); assert.equal(RAIL[i]!.tools[0]!.id, 'greenkeeping');
-  const lockedRow = railEntries(computeProgressiveUiState(f()), true, 'select').find(e => e.item.id === 'greenkeeping')!;
-  assert.match(lockedRow.locked ?? '', /^Unlocks when your first hole is grown in/);
-  const openRow = railEntries(computeProgressiveUiState(f({ grownHoles: 2 })), true, 'greenkeeping').find(e => e.item.id === 'greenkeeping')!;
-  assert.equal(openRow.locked, null); assert.equal(openRow.on, true);
-  assert.equal(railEntries(null, false, 'select').some(e => e.item.id === 'greenkeeping'), false, 'not in the classic game (its Grass panel stays)');
+test('on the rail (T182): a tool of the Course group, golf games only; locked in its row with its why, then open', () => {
+  const course = RAIL.find(r => r.id === 'course')!, gk = course.tools.find(t => t.id === 'greenkeeping')!;
+  assert.equal(course.section, 'course'); assert.equal(gk.only, 'golf');
+  assert.equal(railItemOf('greenkeeping')?.id, 'course');
+  assert.match(toolLock(computeProgressiveUiState(f()), 'greenkeeping') ?? '', /^Unlocks when your first hole is grown in/);
+  assert.equal(railEntries(computeProgressiveUiState(f()), true, 'select').find(e => e.item.id === 'course')!.locked, null, 'the group stays open (Holes is)');
+  assert.equal(toolLock(computeProgressiveUiState(f({ grownHoles: 2 })), 'greenkeeping'), null);
+  assert.equal(railEntries(computeProgressiveUiState(f({ grownHoles: 2 })), true, 'greenkeeping').find(e => e.item.id === 'course')!.on, true);
+  assert.equal(toolsIn(course, false).some(t => t.id === 'greenkeeping'), false, 'not in the classic game (its Grass panel stays)');
 });
 
 test("the care keeps its actions and takes the plan's names: Overseed for seed, Re-turf for sod", () => {
