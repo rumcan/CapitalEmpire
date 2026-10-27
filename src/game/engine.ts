@@ -2298,7 +2298,7 @@ export class Game {
     for (const p of hits) if (p.auto && !p.auto.startsWith('place:') && !p.auto.startsWith('lot:') && LIBRARY[p.item]?.kind === 'tree') { this.removeProp(p); if (this.autoByKey.get(p.auto) === p) this.autoByKey.delete(p.auto); }
     for (const q of c.props) {
       const i = LIB_INDEX.get(q.id); if (i === undefined) continue;
-      const p = this.addProp(i, q.x, q.y, q.flip, q.scale, key); ps.push(p);
+      const p = this.addProp(i, q.x, q.y, q.flip, q.scale, key, q.foot ? { foot: q.foot } : undefined); ps.push(p); // q.foot: a picture fixed in art-fix.ts stands on its true footprint
       const src = q.from ? def.preset.props[q.from.prop]?.id : undefined, si = src ? def.standIns[src] : undefined;
       if (src && si && !seen.has(src)) { seen.add(src); this.placeStandIns.push({ p, text: `Stand In for ${si}` }); }
     }

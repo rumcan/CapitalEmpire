@@ -22,6 +22,7 @@ import {
 } from './compose-core';
 import { approvedFor, bucketOf, fitPreset, parsePresets, pickPreset, presetsFor, stateOf, type Fitted, type LotPreset, type PresetDecal, type PresetMeta, type PresetProp, type PresetState, type PresetUse, type Road } from './presets';
 import { AXIS_PROPS, drawnView, footprintOf, ownerScaleOf, roadView, turned } from './preset-art';
+import { fixedArt } from './art-fix';
 import { frameOf, listToWorld, quarterOfRoad, roadOf, toWorld, type PresetFrame } from './preset-frame';
 import PRESET_JSON from './lot-presets.json';
 import { generateLayout, PER_LOT, type LaidItem } from './lot-gen';
@@ -354,14 +355,14 @@ function fromPreset(B: Build, lot: LotGeom, st: ComposeState, p: { preset: LotPr
   if (B.drops) { const kept = new Set(fit.from); preset.props.forEach((q, i) => { if (!kept.has(i)) B.drops!.push({ preset: preset.id, prop: i, id: q.id, why: 'outside the lot at this size (the fit)' }); }); }
   fit.props.forEach((q, k) => {
     // T154 Phase 2: on a road at 45 degrees a building with a screen-axis set faces its street (preset-art.ts drawnView), else its view is turned
-    const t = drawnView(q.id, f, q.view), it = BY.get(t.id);
+    // T219: an iconic place draws a fixed picture (art-fix.ts) as its facing turns it, on its true footprint; a car's scale is its owner size (ownerScaleOf), the engine draws it at CAR_SCALE times that
+    const s = q.scale * ownerScaleOf(q.id), fx = B.artFix ? fixedArt(q.id, f.q + q.view, s) : null;
+    const t = fx ? { id: fx.id, flip: false, diag: false } : drawnView(q.id, f, q.view), it = BY.get(t.id);
     if (!it) return;
     const car = it.cat === 'Vehicles';
     if (car && (B.noCars || (st.decline === 1 && B.r() >= CAR_KEEP_D1))) { B.drops?.push({ preset: preset.id, prop: fit.from[k]!, id: t.id, why: B.noCars ? 'no cars on a derelict lot' : 'cars thinned on a shabby lot' }); return; }
-    // a car's scale is its owner size (ownerScaleOf), the engine draws it at CAR_SCALE times that
-    const s = q.scale * ownerScaleOf(q.id);
     // a whole preset's prop in front of the lot is a street item (the verge: done() keeps it there, as it keeps a procedural one)
-    const item = B.atW({ id: t.id, s, flip: t.flip, h: footprintOf(t.id, s, t.flip) }, toWorld(f, q.x, q.y), { plant: it.kind === 'tree' || it.kind === 'bush', ...(fit.from[k]! >= 0 ? { from: { preset: preset.id, prop: fit.from[k]! } } : { paved: true }), street: preset.whole === true && q.y < 0, ...(fit.standIn?.[k] ? { standIn: fit.standIn[k] } : {}), ...(t.diag ? { diag: true } : {}) });
+    const item = B.atW({ id: t.id, s, flip: t.flip, h: fx ? fx.h : footprintOf(t.id, s, t.flip) }, toWorld(f, q.x, q.y), { ...(fx ? { foot: true } : {}), plant: it.kind === 'tree' || it.kind === 'bush', ...(fit.from[k]! >= 0 ? { from: { preset: preset.id, prop: fit.from[k]! } } : { paved: true }), street: preset.whole === true && q.y < 0, ...(fit.standIn?.[k] ? { standIn: fit.standIn[k] } : {}), ...(t.diag ? { diag: true } : {}) });
     if (item && !item.fence && !item.wheel) ups++;
     if (isBuilding(it)) { const fp = footprintOf(t.diag ? t.id : q.id, s, false), hw = t.diag ? (fp[2] - fp[0]) / (2 * Math.SQRT2) : (q.view % 2 ? fp[3] - fp[1] : fp[2] - fp[0]) / 2; if (hw > big) { big = hw; main = [q.x - hw, q.x + hw]; } }
   });
@@ -652,7 +653,7 @@ function chainRing(B: Build) {
  *  each turned to the footprint's facing, never mirrored; its patches; its decals as the ground marks; nothing procedural). Deterministic */
 export function composeWhole(lot: LotGeom, preset: LotPreset, seed: number): Composition {
   const B = new Build(lot, mulberry(mix(seed, 219)));
-  B.keepAll = true; B.loose = true;
+  B.keepAll = true; B.loose = true; B.artFix = true;
   const frame = frameOf(lot), fit = fitPreset(preset, lot.w, lot.d);
   fromPreset(B, lot, { use: LU.GOV, level: LV.BUILT, decline: 0, seed }, { preset, fit, frame });
   decalMarks(B, frame, fit.decals);
