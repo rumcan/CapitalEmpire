@@ -3,6 +3,7 @@
 // the rows once everyone is done. It reads game.playBoard() and refreshes on its own twice a second. Before the join window closes (P4b) it offers
 // "Play in it" (as a man or a woman); once he is in it says when he tees off. After the 15:00 kick-off it says the results wait for the last group (and
 // offers them early); when the last group walks onto the 18th a banner names it and offers to watch it (T210).
+// T211: a group waiting on the group ahead shows it under its golfer's row ("waiting on the 7th tee").
 import { useEffect, useReducer } from 'react';
 import type { Game } from '../game/engine';
 
@@ -54,6 +55,7 @@ export function GolfLeaderboard({ game }: { game: Game }) {
         {b.rows.map(r => (
           <div key={r.golfer} className={`grid ${COLS} gap-2 rounded px-1 py-0.5 ${r.owner ? 'bg-amber-400/15 font-semibold text-amber-200' : 'text-slate-200'}`}>
             <span>{r.pos}</span><span className="truncate">{r.name}</span><span className="text-right">{r.toPar}</span><span className="text-right">{r.thru}</span>
+            {r.wait && <span className="col-start-2 col-span-3 -mt-0.5 truncate text-[11px] font-normal italic text-slate-400">{r.wait}</span>}
           </div>
         ))}
       </div>

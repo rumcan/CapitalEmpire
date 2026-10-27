@@ -91,7 +91,26 @@ also saves itself each game hour. A save without a tournament day is unchanged, 
 - The pure end of the round is `src/game/golf/play/finish.ts`: `DayFinish` latches the moment and the end, each once and in order, even at 20x; `resultsDue` is the gate. A day with no holes (no play) opens the results at once, as before. A reload rebuilds the play and ends the same way.
 - Tested in `tests/golf-play-finish.test.ts`.
 
-**Open (tickets since 2026-10-27: T211 #556 pace of play, T212 #557 the
+**Pace of play (T211 #556, 2026-10-28):** the field plays in one time order (`round.ts` `Field`), each group waiting on the group that began
+the hole before it, one look per strike:
+- it tees off once that group's balls are past the landing area (`LANDING_M`, 300 m from the tee) or holed;
+- it plays to the green once that group is off it (holed out, plus `GREEN_CLEAR` 0.2 min). The model's golfers decide "to the green" by
+  their stroke worked out ahead (aimed at the pin, or finishing on the green: the outcome never depends on the minute, so the waits only move
+  the minutes). The owner decides it by reach (`OWNER_REACH` 1.4 x his driver's carry, plus 15 m).
+
+The owner's live group plays in the same order: the play stops at his strike, so the groups behind wait for him and play on as he does, and
+he waits for the group ahead like anyone. A reload replays his inputs, so the waits come back the same.
+
+The wave-through: when a group reaches a tee with the group ahead already on its tee two holes on, and the group behind it is held up on the
+hole before, the slow group stands aside until that group has begun the hole, then waits on it. A group never waves back a group that went
+through it, and a group waved through on a hole waves nobody there (otherwise the groups held behind a slow group wave each other on).
+
+The plan keeps the pace (`plan.pace`: each group's arrival at each tee, the waits, the waits open at the owner's turn, the wave-throughs).
+The leaderboard shows a waiting golfer's line ("waiting on the 7th tee", "waiting for the 7th green"), and the engine toasts each
+wave-through. A group walks to the next tee with its group and waits there, standing behind the tee (`teeSpot`), spread by slot.
+
+A model field barely waits: tee times are 16-51 min apart and the groups' paces are within about 0.7 h, so the tier days end as before. The
+waits come from a slow group, most often the owner's. `tests/golf-play-pace.test.ts`.
+**Open (tickets since 2026-10-27: T212 #557 the
 putt and chip clips, T213 #558 caddies, carts and celebrations; and T208 #553 everyday golf, T214 #559 pros and memberships):** putts use the drive clip's
-address frames (no putt clip in Meshy's library); no caddies, carts or celebrations yet; the groups behind the owner's do not wait
-for his.
+address frames (no putt clip in Meshy's library); no caddies, carts or celebrations yet.

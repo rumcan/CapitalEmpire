@@ -16,14 +16,27 @@ export function roundOver(plan: RoundPlan, view: CourseView, minute: number): bo
   return plan.golfers.every(g => { const d = plan.done[g.id]!; return Number.isFinite(d) && d <= minute; });
 }
 
-/** the group still out with the latest tee time (null when everyone is done): the last group on the course */
+/** T211: how far group g has got by minute: the last hole whose tee it has reached (plan.pace.arrive) and when it reached it. With no pace (a plan made
+ *  by hand), hole 0 at its tee time: the groups never pass */
+function reach(plan: RoundPlan, g: number, minute: number): [number, number] {
+  const a = plan.pace?.arrive[g]; if (!a?.length) return [0, plan.groups[g]!.tee];
+  let h = 0; while (h + 1 < a.length && a[h + 1]! <= minute) h++;
+  return [h, a[h]!];
+}
+
+/** the group still out furthest back on the course (null when everyone is done): the last group. Furthest back is the fewest holes reached, then the
+ *  latest to reach that tee; in tee order that is the latest tee time, and after a wave-through (T211) the slow group that stood aside */
 function lastOut(plan: RoundPlan, minute: number): { group: number; golfers: number[] } | null {
-  let best = -1;
-  plan.groups.forEach((gr, i) => { if (gr.players.some(id => !(plan.done[id]! <= minute)) && (best < 0 || gr.tee >= plan.groups[best]!.tee)) best = i; });
+  let best = -1, bh = 0, ba = 0;
+  plan.groups.forEach((gr, i) => {
+    if (!gr.players.some(id => !(plan.done[id]! <= minute))) return;
+    const [h, a] = reach(plan, i, minute);
+    if (best < 0 || h < bh || (h === bh && a >= ba)) { best = i; bh = h; ba = a; }
+  });
   return best < 0 ? null : { group: best, golfers: plan.groups[best]!.players.filter(id => !(plan.done[id]! <= minute)) };
 }
 
-/** the last group on the final hole at minute: the group still out with the latest tee time has teed off, and every one of its golfers still out is
+/** the last group on the final hole at minute: the group still out furthest back (lastOut) has teed off, and every one of its golfers still out is
  *  on the round's last hole (walking to its tee, playing it or holing out). Null otherwise, and when everyone is done */
 export function lastGroupOnLast(plan: RoundPlan, view: CourseView, minute: number): LastGroup | null {
   const N = view.holes.length; if (!N) return null;

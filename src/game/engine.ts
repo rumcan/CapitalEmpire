@@ -125,7 +125,7 @@ import { BAND_LABEL, LandSale } from './golf/land-sale';
 import { buildCourseStatsPanel, type CourseStatsPanel } from './golf/coursestats';
 import { TILE_M, type CourseArea, type CourseLayout, type GolfSurface } from './golf/types';
 import { deriveHoles, surfaceAt, validateMarkerPlacement } from './golf/holes';
-import { DayFinish, LiveGroup, OWNER_ADDRESS, OWNER_ART, OWNER_SKILL, POWER, PUTT_POWER, PlayView, allowedClubs, boardRows, carryM, championLine, dayRound, makeCourseView, powerFor, resultsDue, shortName as golferShort, stateAt, standings, toParText, type BoardRow, type Club, type CourseView, type OwnerTurn, type RoundPlan, type Sex } from './golf/play';
+import { DayFinish, LiveGroup, OWNER_ADDRESS, OWNER_ART, OWNER_SKILL, POWER, PUTT_POWER, PlayView, allowedClubs, boardRows, carryM, championLine, dayRound, makeCourseView, powerFor, resultsDue, shortName as golferShort, stateAt, standings, toParText, waitText, waveLine, type BoardRow, type Club, type CourseView, type OwnerTurn, type RoundPlan, type Sex } from './golf/play';
 import { holeViews, markerPlan, tagByHole, type HoleView, type MarkerKind } from './golf/holeview';
 import { CAST, castShear, clampCast, type CastShadow } from './cast-shadow';
 import { SPEC_LOOK, clampSpecLook, specGain, type SpecLook } from './lamp-reflect';
@@ -227,7 +227,7 @@ const ownerArt = (sex: Sex): number => { const i = GOLFER_PEOPLE.findIndex(p => 
  *  the owner's play (P4b; null when he is not in the day) */
 /** the day's golf round as the engine plays it back: the plan, the course, the playback, the tournament key, each golfer's art, the end of the round (T210:
  *  the last group's moment and the round over, latched) and the owner's play */
-interface GolfPlay { plan: RoundPlan; view: CourseView; pv: PlayView; key: number; art: number[]; finish: DayFinish; own: OwnerPlay | null }
+interface GolfPlay { plan: RoundPlan; view: CourseView; pv: PlayView; key: number; art: number[]; finish: DayFinish; own: OwnerPlay | null; waves: number }
 /** the owner's play in the day (docs/GOLF-PLAY.md decision 7, P4b): his golfer's id, sex and skill, his group's tee time, his live group (live.ts), his next
  *  turn (null once his group is done), and the count of inputs he had played when he handed to the caddie (null while he plays) */
 interface OwnerPlay { id: number; sex: Sex; skill: number; tee: number; live: LiveGroup; turn: OwnerTurn | null; caddie: number | null }
@@ -5525,6 +5525,8 @@ export class Game {
     this.ownerFrame(minute); this.holdDay(now, true);
     // the crowd follows the play (docs/GOLF-PLAY.md decision 6): the featured holes are worked out at most every FEATURED_EVERY_MS and sent when they change
     if (now - this.featuredAt >= FEATURED_EVERY_MS) { this.featuredAt = now; this.sendFeatured(this.featuredHoles(this.play, minute)); }
+    // T211: a marshal's wave-through is toasted as the minute passes it (those before the first frame, a reload mid-day, are not)
+    this.toastWaves(this.play, minute);
     // the end of the round (T210): the last group's moment (a toast; the board offers to watch it), then the round over: the champion is toasted and the
     // results open (resultsOpen). Stepped at most every FINISH_EVERY_MS; the tracker latches both, so a 20x frame that jumps the 18th still has them in order
     if (now - this.finishAt >= FINISH_EVERY_MS) {
@@ -5551,6 +5553,12 @@ export class Game {
     const tr = this.traffic, m = this.playMinute(pl, townTimeOf(tr.town, tr.simTime(performance.now())).dayMin), st = stateAt(pl.plan, pl.view, m);
     const at = st.filter(s => lg.golfers.includes(s.golfer)); if (!at.length) return;
     this.lookAt(at.reduce((a, s) => a + s.x, 0) / at.length, at.reduce((a, s) => a + s.y, 0) / at.length);
+  }
+  /** T211: toasts the wave-throughs (plan.pace.waves, in time order) the minute has passed since the last frame; at the first frame only counts them */
+  private toastWaves(pl: GolfPlay, minute: number) {
+    const ws = pl.plan.pace?.waves; if (!ws) return;
+    if (pl.waves < 0) { pl.waves = 0; while (pl.waves < ws.length && ws[pl.waves]!.t <= minute) pl.waves++; return; }
+    while (pl.waves < ws.length && ws[pl.waves]!.t <= minute) this.toast(waveLine(pl.plan, pl.view, ws[pl.waves++]!), 'info');
   }
   /** T209: ends a resumed tournament day's wait (dayHold) once its play is back (ready: built, or none to build; the owner's shot, opened by ownerFrame,
    *  keeps the sim paused and goes on at the held speed), or DAY_HOLD_MS after the first frame when the day did not come back (the round loaded free) */
@@ -5591,7 +5599,7 @@ export class Game {
     const tr = this.traffic, plan = pl.plan, minute = this.playMinute(pl, townTimeOf(tr.town, tr.simTime(now)).dayMin), ownerId = plan.golfers.find(g => g.owner)?.id ?? null;
     const fin = pl.finish, last = fin.last && !fin.over ? fin.last.golfers.map(id => golferShort(plan.golfers.find(g => g.id === id)?.name ?? '')) : null;
     const board: PlayBoard = {
-      minute, rows: boardRows(standings(plan, pl.view, minute), plan.golfers, BOARD_ROWS, ownerId), champion: championLine(plan, pl.view, minute),
+      minute, rows: boardRows(standings(plan, pl.view, minute), plan.golfers, BOARD_ROWS, ownerId).map(r => ({ ...r, wait: waitText(plan, pl.view, r.golfer, minute) })), champion: championLine(plan, pl.view, minute),
       done: plan.golfers.every(g => plan.done[g.id]! <= minute), event: this.golf ? tierInfo(this.golf.tier).name : '', ownerTee: pl.own?.tee ?? null,
       last, waiting: tr.round.stage === 'eval' && !fin.over && !this.resultsEarly,
     };
@@ -5614,7 +5622,7 @@ export class Game {
     // the field, the tee times, the round and the owner's live group (dayRound: the same pure build a reload makes, T209)
     const seed = Math.floor(hash(this.seed, key) * 4294967296), { plan, golfers, own } = dayRound(view, g.tier, seed, owner);
     const art = golfers.map(p => p.owner ? ownerArt(p.sex) : GOLFER_ART[p.sex][p.look % GOLFER_ART[p.sex].length]!);
-    const pl: GolfPlay = { plan, view, pv: new PlayView(plan, view), key, art, finish: new DayFinish(), own: null };
+    const pl: GolfPlay = { plan, view, pv: new PlayView(plan, view), key, art, finish: new DayFinish(), own: null, waves: -1 };
     if (owner && own) pl.own = { id: own.id, sex: owner.owner, skill: OWNER_SKILL, tee: own.tee, live: own.live, turn: own.turn, caddie: owner.caddie };
     return pl;
   }
