@@ -38,7 +38,7 @@ import { guideTable, type GuideEvent } from './ext/progressive-ui/guide';
 import { welcomeReady } from './golf/firstview';
 /** the hints' anchors (T188: their Show me pulses the control) where the hint is no guide step */
 const HINT_ANCHOR: Readonly<Record<string, string>> = { 'hint-range-open': 'range-chip', 'hint-range-upgrade': 'range-chip', 'hint-range-props': 'rail-decor', 'hint-range-first-hole': 'new-hole' };
-import { RANGE_LABEL_Z, defaultRangeBiz, parkLabel, practiceAppeal, rangeMapLabel, rangeNewSeason, rangeScene, rangeStats, type RangeCounts, type RangeUpgradeId } from './golf/rangebiz';
+import { RANGE_LABEL_Z, defaultRangeBiz, parkLabel, practiceAppeal, rangeMapLabel, rangeNewSeason, rangeScene, rangeStats, rangeStructures, type RangeCounts, type RangeUpgradeId } from './golf/rangebiz';
 import { areaAt, brushTextures, toTuple, type PaintTuple, type PaintTex } from './paint';
 import { CELL_T, SURF, cellAt, diffBox, encodeGrid, fillPolygon, fitGrid, landGridBox, makeGrid, paintStroke, type Grid as CourseGrid, type GridDiff, type GridSave } from './ext/course-grid';
 import { STAIR_REACH } from './ext/course-walls';
@@ -112,6 +112,8 @@ import { parkRideNeeds } from './golf/parkride';
 import { applyCourseConsultantQuality, effectiveGrowInClockMonth, findGolfCard, isGolfCardId, parkRideNeedsWithCards } from './golf/golfcards';
 import type { CourseFacts } from './golf/tour';
 import { surfaceOfTex } from './golf/costs';
+import { inTheWay, rectPoly, routeObstacles, type Obstacle } from './route-obstacles';
+import { isSecondTap, routeAct, type RouteInput, type Tap } from './route-input';
 import { buyAdjacentBlock, COURSE_LAND_MSG, blockOnRoad, blockOnWater, pointInLand, polyInParcels, type LandRoad, type ParcelLandClass } from './golf/parcels';
 import { BAND_LABEL, LandSale } from './golf/land-sale';
 import { buildCourseStatsPanel, type CourseStatsPanel } from './golf/coursestats';
@@ -595,7 +597,7 @@ export class Game {
   private frameTimes: number[] = [];
   // input
   /** a drag in progress; build: a right-button press in the road tool (released without moving, it builds the route, as Enter) */
-  private dragging: null | { kind: 'pan' | 'bulldoze' | 'park'; sx: number; sy: number; camX: number; camY: number; moved: boolean; build?: boolean; aim?: Pt; /** a Select click's hole under it (0: none; T174) */ hole?: number; /** T200: a click on Land for sale's overlay (it opens the block's card on release, never buys) */ land?: Pt } = null;
+  private dragging: null | { kind: 'pan' | 'bulldoze' | 'park'; sx: number; sy: number; camX: number; camY: number; moved: boolean; /** T207: a road tool right-click: on release without a drag it takes back the last point */ back?: boolean; aim?: Pt; /** a Select click's hole under it (0: none; T174) */ hole?: number; /** T200: a click on Land for sale's overlay (it opens the block's card on release, never buys) */ land?: Pt } = null;
   /** the Paint tool: painted ground areas, its settings and the outline being drawn (docs/PAINT-TOOL.md) */
   paint = new PaintTool({ progress: () => this.bump('pieces'), setLotGround: (k, p) => { this.paintRev++; this.setLotGround(k, p); }, emit: () => this.emit(), save: () => this.scheduleSave(), toast: (t, k) => this.toast(t, k), affine: o => this.paintAffine(o), placeProps: (ps, seed) => this.placePresetProps(ps, seed), golfMode: () => this.golfMode, money: () => this.money, spend: n => this.traffic.spend('construction', n), ownedLand: pts => !this.golf || polyInParcels(this.golf.parcels ?? [this.golf.parcel], pts), currentMonth: () => !this.golf ? 0 : this.golfMonthIndex(), plant: (ids, x, y, r, spacing, size, seed) => this.plantProps(ids, x, y, r, spacing, size, seed), unplant: (x, y, r) => this.unplantProps(x, y, r), plantPool: k => plantPool(LIBRARY, k), courseHeight: () => this.courseHeight, roadsNear: (x, y, r) => { let k = 0; return [...this.net.segsNear({ x, y }, r)].map(s => ({ id: ++k, ax: s.a.x, ay: s.a.y, bx: s.b.x, by: s.b.y, halfWidthTiles: s.cls.h + s.cls.walk })); }, roadRev: () => this.net.version, heightChanged:b => { this.courseHeightChanged(unionCourseBox(b, this.flattenRoadsIn(b))!); },
     journal: { begin: () => { this.propLog = { added: [], removed: [] }; }, end: () => { const j = this.propLog; this.propLog = null; return j && (j.added.length || j.removed.length) ? j : null; }, undo: j => this.swapProps(j as PropLog, true), redo: j => this.swapProps(j as PropLog, false) },
@@ -2437,7 +2439,30 @@ export class Game {
     if (!legs.length) { const cs = this.route.length ? null : this.cursorSnap(); return cs && this.startOnLand(cs.p) ? COURSE_LAND_MSG : ''; }
     // judged exactly as a click at the cursor would be (roadClick refuses such a point), or, with the cursor on the last point, as finishing does
     const c0 = this.cursorSnap(), last = this.route[this.route.length - 1], cs = c0 && last ? this.aim(last, c0) : c0, onLast = !!cs && !!last && cs.p.x === last.x && cs.p.y === last.y;
-    return checkLegs(this.net, legs, this.routeFrom, onLast || !cs ? this.routeLast : cs, this.cls, new Set(this.routeCuts(legs).map(c => c.seg)), this.golfLand());
+    return checkLegs(this.net, legs, this.routeFrom, onLast || !cs ? this.routeLast : cs, this.cls, new Set(this.routeCuts(legs).map(c => c.seg)), this.golfLand()) || (this.routeInWay(legs)?.why ?? '');
+  }
+  /** what a route of the class in hand may not run into (T207, route-obstacles.ts): a course road (cart paths and drives) the range's
+   *  structures, the other businesses and the car parks' insides; a town road every business's and car park's padded rectangle; both the toll
+   *  plazas (a leg along a plaza's own centre line passes: upgrading its road) */
+  private routeObstacles(): Obstacle[] {
+    const g = this.golf, rd = g?.start === 'range' ? this.bizDefs.find(b => b.type === 'range') : undefined;
+    const tolls: Obstacle[] = [];
+    for (const d of this.tollDefs) {
+      const s = this.tollSegs.get(d.id); if (!s) continue;
+      const h = s.cls.h, W = plazaEdge(d.booths, laneOff(s, 0)), q = (t0: number, t1: number, o0: number, o1: number) => [plazaPoint(d, t0, o0), plazaPoint(d, t1, o0), plazaPoint(d, t1, o1), plazaPoint(d, t0, o1)].flatMap(p => [p.x, p.y]);
+      const onLine = (p: Pt) => Math.abs(plazaLocal(d, p.x, p.y).o) < 0.05;
+      tolls.push({ why: 'Roads cannot cross a toll plaza', zone: q(-1, PLAZA_LEN + 1, -h - 1, W + 1), outline: q(0, PLAZA_LEN, -h, W), pass: l => onLine(l.a) && onLine(l.b) });
+    }
+    const structures = g && rd ? rangeStructures(plotOfFront([rd.x, rd.y, rd.w, rd.h], g.dir), g.dir, g.range ??= defaultRangeBiz()) : [];
+    return routeObstacles({ course: isCourseClass(this.cls.id), biz: this.bizDefs, parks: this.parkDefs, structures, tolls });
+  }
+  /** the first thing in the way of a route of the class in hand, why, and its outline (null: nothing): what is in the way, or a big placed prop
+   *  (bulldoze it first). The preview (routeBlock), each click that adds a point (roadClick) and Build (finishRoute) all judge by it (T207) */
+  routeInWay(legs: Leg[]): { why: string; outline: readonly number[] } | null {
+    if (!legs.length) return null;
+    const hw = this.cls.h + this.cls.walk, o = inTheWay(legs, hw, this.routeObstacles()); if (o) return o;
+    const p = this.propsNearLegs(legs, hw).find(q => !q.auto && LIBRARY[q.item].big && LIBRARY[q.item].kind !== 'car');
+    return p ? { why: `${LIBRARY[p.item].name} is in the way — bulldoze it first`, outline: rectPoly(p.x0, p.y0, p.x1, p.y1) } : null;
   }
   /** whether a route of the class in hand may not start at p (T124): a town road inside the course land, where only the course's cart paths
    *  and drives are built (a point on the land's edge is fine: a town road may meet a course drive there) */
@@ -2519,14 +2544,26 @@ export class Game {
     const hit = this.lotsInLegs(this.structured(this.previewLegs()).parts);
     return { n: hit.length, comp: hit.reduce((s, v) => s + compensation(v), 0) };
   }
+  /** the road tool's last click (T207: the double-click's second click adds no point) */
+  private routeTap: Tap | null = null;
+  /** the road tool's right-click, Backspace, double-click and Enter (T207, route-input.ts): take back the last point (the first: drop the route),
+   *  or build */
+  routeInput(input: Exclude<RouteInput, 'click'>) {
+    if (this.tool !== 'road') return;
+    const a = routeAct(input, this.route.length);
+    if (a === 'back') this.undoRoutePoint(); else if (a === 'cancel') this.cancelRoute(); else if (a === 'build') this.finishRoute();
+  }
   private roadClick(mx: number, my: number) {
+    // the double-click's second click adds no point: the double-click builds what the preview shows (T207)
+    const tap = { t: performance.now(), mx, my }, second = isSecondTap(this.routeTap, tap); this.routeTap = second ? null : tap;
+    if (routeAct('click', this.route.length, second) === 'none') return;
     let s = snapPoint(this.net, this.tileAt(mx, my), this.snapRadius(), this.roadStep());
     if (this.route.length) s = this.aim(this.route[this.route.length - 1]!, s);
     if (!this.route.length) { if (this.startOnLand(s.p)) { this.toast(COURSE_LAND_MSG, 'warn'); return; } this.routeFrom = s; this.route.push(s.p); this.routeLast = s; this.emit(); return; }
     const last = this.route[this.route.length - 1], add = this.legsTo(last, s.p, this.keys.has('Shift'));
     // a point the route could not be built with is refused at once (the preview shows it red with the same reason)
     const legs: Leg[] = []; for (let i = 1; i < this.route.length; i++) legs.push({ a: this.route[i - 1]!, b: this.route[i]! });
-    const all = [...legs, ...add], why = add.length ? checkLegs(this.net, all, this.routeFrom, s, this.cls, new Set(this.routeCuts(all).map(c => c.seg)), this.golfLand()) : '';
+    const all = [...legs, ...add], why = add.length ? checkLegs(this.net, all, this.routeFrom, s, this.cls, new Set(this.routeCuts(all).map(c => c.seg)), this.golfLand()) || (this.routeInWay(all)?.why ?? '') : '';
     if (why) { this.toast(why, 'warn'); return; }
     for (const l of add) this.route.push(this.weld(l.b));
     this.routeLast = s; this.emit();
@@ -2557,35 +2594,6 @@ export class Game {
       for (let s = 0; s <= L; s += 0.5) for (let o = -hw; o <= hw + 1e-6; o += 0.5) {
         const x = l.a.x + u.x * s + n.x * o, y = l.a.y + u.y * s + n.y * o;
         for (const b of this.bizDefs) { const p = b.type === 'stadium' ? 2 : 1; if (x >= b.x - p && x < b.x + b.w + p && y >= b.y - p && y < b.y + b.h + p) return true; }
-      }
-    }
-    return false;
-  }
-  /** does a road corridor of half width hw run into a car park (its rect padded by 1 tile)? */
-  private crossesPark(legs: Leg[], hw: number): boolean {
-    for (const l of legs) {
-      const d = sub(l.b, l.a), L = vlen(d); if (!L) continue;
-      const u = mul(d, 1 / L), n = perp(u);
-      for (let s = 0; s <= L; s += 0.5) for (let o = -hw; o <= hw + 1e-6; o += 0.5) {
-        const x = l.a.x + u.x * s + n.x * o, y = l.a.y + u.y * s + n.y * o;
-        for (const p of this.parkDefs) if (x >= p.x - 1 && x <= p.x + p.w + 1 && y >= p.y - 1 && y <= p.y + p.h + 1) return true;
-      }
-    }
-    return false;
-  }
-  /** does a road corridor of half width hw run into a toll plaza (its outline padded by 1 tile)? Legs along the plaza's own centre line are fine (upgrading the road) */
-  private crossesToll(legs: Leg[], hw: number): boolean {
-    for (const d of this.tollDefs) {
-      const s = this.tollSegs.get(d.id); if (!s) continue;
-      const h = s.cls.h, W = plazaEdge(d.booths, laneOff(s, 0)), onLine = (p: Pt) => Math.abs(plazaLocal(d, p.x, p.y).o) < 0.05;
-      for (const l of legs) {
-        if (onLine(l.a) && onLine(l.b)) continue;
-        const dv = sub(l.b, l.a), L = vlen(dv); if (!L) continue;
-        const u = mul(dv, 1 / L), n = perp(u);
-        for (let k = 0; k <= L; k += 0.5) for (let o = -hw; o <= hw + 1e-6; o += 0.5) {
-          const f = plazaLocal(d, l.a.x + u.x * k + n.x * o, l.a.y + u.y * k + n.y * o);
-          if (f.t >= -1 && f.t <= PLAZA_LEN + 1 && f.o >= -h - 1 && f.o <= W + 1) return true;
-        }
       }
     }
     return false;
@@ -2626,7 +2634,7 @@ export class Game {
     const legs: Leg[] = [];
     for (let i = 1; i < this.route.length; i++) if (this.route[i].x !== this.route[i - 1].x || this.route[i].y !== this.route[i - 1].y) legs.push({ a: this.route[i - 1], b: this.route[i] });
     if (!legs.length) { this.cancelRoute(); return; }
-    const cuts = this.routeCuts(legs), block = checkLegs(this.net, legs, this.routeFrom, this.routeLast, this.cls, new Set(cuts.map(c => c.seg)), this.golfLand());
+    const cuts = this.routeCuts(legs), block = checkLegs(this.net, legs, this.routeFrom, this.routeLast, this.cls, new Set(cuts.map(c => c.seg)), this.golfLand()) || (this.routeInWay(legs)?.why ?? '');
     if (block) { this.toast(block, 'warn'); return; }
     const cls = this.cls, st = this.structured(legs), { parts, kinds, cost: build, lens } = st, cost = Math.round(build - this.piecesValue(cuts));
     const hit = this.lotsInLegs(parts), comp = hit.reduce((s, v) => s + compensation(v), 0);
@@ -2634,13 +2642,9 @@ export class Game {
     if (kinds.includes(SK.TUNNEL) && !this.tunnelsOpen()) { const lk = unlockOf('tunnel')!; this.toast(`Tunnels unlock at ${lk.pop.toLocaleString()} residents (${lk.name})`, 'warn'); return; }
     if (cost + comp > this.money) { this.toast(`Not enough money: the route costs $${cost.toLocaleString()}${comp ? ` and $${comp.toLocaleString()} compensation` : ''}`, 'warn'); return; }
     if (st.err) { this.toast(st.err, 'warn'); return; }
-    if (this.crossesBiz(legs, cls.h + cls.walk)) { this.toast('Roads cannot cross a business', 'warn'); return; }
-    if (this.crossesPark(legs, cls.h + cls.walk)) { this.toast('Roads cannot cross a car park', 'warn'); return; }
-    if (this.crossesToll(legs, cls.h + cls.walk)) { this.toast('Roads cannot cross a toll plaza', 'warn'); return; }
+    // what is in the way (businesses, the range's structures, car parks, toll plazas, big props) was judged with checkLegs above (routeInWay, T207)
     const total = this.net.legsLength(parts);
     const hw = cls.h + cls.walk, near = this.propsNearLegs(legs, hw);
-    const blocking = near.filter(p => !p.auto && LIBRARY[p.item].big && LIBRARY[p.item].kind !== 'car');
-    if (blocking.length) { this.toast(`${LIBRARY[blocking[0].item].name} is in the way — bulldoze it first`, 'warn'); return; }
     const cleared = near.filter(p => !p.auto && !LIBRARY[p.item].big);
     for (const p of cleared) this.removeProp(p);
     const now = performance.now(), dur = Math.min(4000, 700 + total * 70);
@@ -3300,7 +3304,7 @@ export class Game {
         this.selected = null; this.emit();
         if (this.showFlow) { const t = this.tileAt(mx, my); this.traffic.watchAt(t.x, t.y); this.emit(); }
       }
-      this.dragging = { kind: 'pan', sx: mx, sy: my, camX: this.cam.X, camY: this.cam.Y, moved: false, build: this.tool === 'road' && e.button === 2, ...(!pan && this.tool === 'select' && this.golf ? { hole: this.courseHoleAt(this.tileAt(mx, my)) } : {}) }; return;
+      this.dragging = { kind: 'pan', sx: mx, sy: my, camX: this.cam.X, camY: this.cam.Y, moved: false, back: this.tool === 'road' && e.button === 2, ...(!pan && this.tool === 'select' && this.golf ? { hole: this.courseHoleAt(this.tileAt(mx, my)) } : {}) }; return;
     }
     if (e.button !== 0) return;
     switch (this.tool) {
@@ -3362,8 +3366,8 @@ export class Game {
     // a click (no drag) on the course aims the owner's open shot (P4b)
     if (d?.kind === 'pan' && d.aim && !d.moved) this.aimAt(d.aim);
     if (d?.kind === 'pan' && d.land && !d.moved && this.landMode) { this.land.click(d.land.x, d.land.y); this.emit(); }
-    // a right click (no drag) in the road tool builds the route drawn so far, as Enter does (the owner, 2026-10-19); a right drag still pans
-    if (d?.kind === 'pan' && d.build && !d.moved && this.tool === 'road' && this.route.length > 1) this.finishRoute();
+    // a right click (no drag) in the road tool takes back the last point, as Backspace does (the owner, 2026-10-27, T207); a right drag still pans
+    if (d?.kind === 'pan' && d.back && !d.moved) this.routeInput('right');
     if (this.paintOn) { this.paint.pointerUp(this.paintTol); this.courseCursor.release(); }
     if (this.tool === 'park' && this.parking.mode === 'rows') this.parking.up();
     if (this.tool === 'props') this.decor.up();
@@ -3381,7 +3385,7 @@ export class Game {
   junctionName(n: Node): string { const names: string[] = []; for (const a of n.arms) { const s = this.roadNameOfSeg(a.seg); if (s) names.push(s); } return this.names.junction(names); }
   /** the name of the junction at tile position (x, y) (a node's position), or '' when there is no junction there */
   junctionNameAt(x: number, y: number): string { const n = this.net.nodeAt({ x, y }); return n ? this.junctionName(n) : ''; }
-  doubleClick() { if (this.tool === 'road' && this.route.length > 1) this.finishRoute(); if (this.paintOn) this.paint.doubleClick(); }
+  doubleClick() { this.routeInput('double'); if (this.paintOn) this.paint.doubleClick(); }
   wheel(e: WheelEvent) {
     e.preventDefault();
     const f = Math.exp(-e.deltaY * 0.0014);
@@ -3465,8 +3469,8 @@ export class Game {
     if (this.tool === 'park' && this.parking.key(e)) return;
     if (this.tool === 'props' && this.decor.key(e)) return;
     switch (e.key) {
-      case 'Enter': if (this.tool === 'road') this.finishRoute(); break;
-      case 'Backspace': if (this.tool === 'road') this.undoRoutePoint(); break;
+      case 'Enter': this.routeInput('enter'); break;
+      case 'Backspace': this.routeInput('backspace'); break;
       case 'Delete': this.deleteSelected(); break;
       case 'g': case 'G': this.setShowGrid(!this.showGrid); break;
       case 'l': case 'L': this.showLanes = !this.showLanes; this.emit(); break;
@@ -6207,6 +6211,12 @@ export class Game {
         this.setIso(ctx); ctx.beginPath(); strip(legs, cls.h); ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.fillStyle = bad ? 'rgba(160,40,40,0.6)' : 'rgba(50,60,80,0.6)'; ctx.fill(); ctx.strokeStyle = bad ? 'rgba(248,113,113,0.9)' : 'rgba(255,230,150,0.9)'; ctx.lineWidth = 1.5; ctx.setLineDash([6, 4]); ctx.stroke(); ctx.setLineDash([]);
         if (cls.median) { this.setIso(ctx); ctx.beginPath(); strip(legs, cls.median / 2); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = 'rgba(90,160,70,0.55)'; ctx.fill(); }
+        // the thing in the way, outlined red (T207: the shop, the covered bays, a car park, a toll plaza, a business, a big prop)
+        const hit = bad ? this.routeInWay(legs) : null;
+        if (hit && hit.why === block) {
+          const o = hit.outline; this.setIso(ctx); ctx.beginPath(); ctx.moveTo(o[0]!, o[1]!); for (let k = 2; k < o.length; k += 2) ctx.lineTo(o[k]!, o[k + 1]!); ctx.closePath(); ctx.setTransform(1, 0, 0, 1, 0, 0);
+          ctx.fillStyle = 'rgba(240,80,60,0.28)'; ctx.fill(); ctx.strokeStyle = '#f87171'; ctx.lineWidth = 2.5; ctx.stroke();
+        }
         this.setIso(ctx); ctx.beginPath(); for (const l of legs) { ctx.moveTo(l.a.x, l.a.y); ctx.lineTo(l.b.x, l.b.y); } ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.strokeStyle = bad ? '#f87171' : '#ffd866'; ctx.lineWidth = 2; ctx.stroke();
         if (cls.oneway) {
