@@ -92,7 +92,7 @@ export function holeCard(v: HoleView, o: { pins: readonly Pin[]; tees: readonly 
  *  stay, as PaintTool.deletePlan), its markers go with its green and tee, and nothing is refunded (course work is not refunded, as Erase) */
 export function deleteNote(c: Pick<HoleCardView, 'n' | 'areas'>): { refund: number; m2: number; text: string } {
   const m2 = c.areas.reduce((s, a) => s + a.m2, 0);
-  return { refund: 0, m2, text: `Hole ${c.n}'s ${m2.toLocaleString('en-US')} m² that New hole laid go back to the land (cells you have touched since stay), and its pin and tee markers go. No refund: course work is not refunded.` };
+  return { refund: 0, m2, text: `Up to ${m2.toLocaleString('en-US')} m² of hole ${c.n} go back to the land: the cells New hole laid (cells you have touched since stay). Its pin and tee markers go. No refund: course work is not refunded.` };
 }
 
 /** renumbering (D4.12): hole a and hole b trade numbers wherever a number lives. Returns the new values; the grid's hole layer is changed in

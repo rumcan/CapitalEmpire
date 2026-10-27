@@ -91,7 +91,7 @@ test("Delete states its refund, and the refund is the rule's: none (course work 
   const n = deleteNote({ n: 3, areas: [{ surface: 'fairway', m2: 2600, ready: null }, { surface: 'green', m2: 550, ready: 7 }, { surface: 'tee', m2: 120, ready: null }] });
   assert.equal(n.refund, 0);
   assert.equal(n.m2, 3270);
-  assert.match(n.text, /Hole 3's 3,270 m²/);
+  assert.match(n.text, /Up to 3,270 m² of hole 3/);
   assert.match(n.text, /No refund/);
   assert.match(n.text, /pin and tee markers go/);
 });
