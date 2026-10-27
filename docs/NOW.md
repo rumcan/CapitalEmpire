@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-27 03:50)
+## START HERE (kept current by the lead; last updated 2026-10-27 04:08)
 
 **Paste-ready start prompts for every role are in `docs/START-PROMPTS.md`:** the lead, a coding ticket, and the other sessions in this
 repo. The weekly usage cap is close (2026-10-26), so any chat may stop at any moment.
@@ -28,12 +28,12 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |
 | T091+T090 | #160, #159 | `arena/T091-T090-growth` | `.claude/worktrees/t166` | 5187 | P22 (RISKY): grown-town roads keep off the course, then the town grows from the range outward; range:gate gains P22 2.7's growth bands; then T098's range20 fixture, `?fixture=` and bench stages. Classic games unchanged (nightly numbers). Agent: the ground agent. |
-| T096 | #165 | `arena/T096-range-look` | `.claude/worktrees/t160` | 5186 | P22: the range's look: props from `rangeLayout` turning with the plot, the `range:1` ground patch (driving-range grass), the range kit in GOLF-SPRITES (art requests), range golfers at the bays. Agent: the lot agent. |
+| T174 | #424 | `arena/T174-hole-card` | `.claude/worktrees/t160` | 5186 | P23-UX Phase 2 P2-4, the hole card: select a hole → par, lengths, grow-in, areas, checks with Fix; pin/tee drags that never re-plan or charge; Edit, Delete (refund stated); renumber by dragging badges. Existing data only (D7.3). Agent: the lot agent. |
 | T112 | #199 | `arena/T112-sharp` (PR #394) | `.claude/worktrees/t112` | — | **Approved, merge HELD for the morning restart:** a lock change makes the 5174 auto-updater run `npm ci` in theme-consistency (the live 5191 studio holds sharp there; the lot agent's t160 uses it by junction). Morning order: stop 5191 → merge #394 → let npm ci finish → restart 5191 and 5174. All shipped bytes identical on 0.35.5; audit 0. |
 | T095 | #164 | `arena/T095-first-minute` (**draft PR #419**) | `.claude/worktrees/t160` | 5186 | Built and reviewed (typecheck clean, guide tests 15/15): welcome card (follows P24's ramp: "Open the range" until New hole opens), the founding line in the Tier sub-line (one-row top bar kept), two-line title, tee ring, three toasts, a 7-step range guide. The agent's session was refused `gh pr ready`: **the owner marks it ready and merges** (the lead does not override another session's refusal). Tidied at f4f9347 (screenshots out, minimap "New town" until named, ramp toast helper, step 5 held 8 s): **Squash and merge** (old webp commit in history). Agent: the lot agent. |
 | P05 | #68 | PR #413 **open for the owner's approval** | — | — | The M5 balance plan, measured: arrival 47% at tier 1 from a fresh start (the start's 56-bay car park holds 168 fans), 100% with car parks; 10% at tier 2 fresh, 70-81% with car parks; an 18 of ~5,900 m fits the starting land on every seed (~$190k seeded); with the proposals a careful player reaches tier 3 in year 4. Knob recommended for "careless out-saves careful": sponsors x (1 + (rep-50)/50). |
 | T091+T090 | #160, #159 | `arena/T091-T090-growth` | `.claude/worktrees/t166` | 5187 | P22 (RISKY): grown-town roads keep off the course, then the town grows from the range outward; range:gate gains P22 2.7's growth bands; then T098's range20 fixture, `?fixture=` and bench stages. Classic games unchanged (nightly numbers). Agent: the ground agent. |
-| T096 | #165 | `arena/T096-range-look` | `.claude/worktrees/t160` | 5186 | P22: the range's look: props from `rangeLayout` turning with the plot, the `range:1` ground patch (driving-range grass), the range kit in GOLF-SPRITES (art requests), range golfers at the bays. Agent: the lot agent. |
+| T174 | #424 | `arena/T174-hole-card` | `.claude/worktrees/t160` | 5186 | P23-UX Phase 2 P2-4, the hole card: select a hole → par, lengths, grow-in, areas, checks with Fix; pin/tee drags that never re-plan or charge; Edit, Delete (refund stated); renumber by dragging badges. Existing data only (D7.3). Agent: the lot agent. |
 | T112 | #199 | `arena/T112-sharp` (PR #394) | `.claude/worktrees/t112` | — | **Approved, merge HELD for the morning restart:** a lock change makes the 5174 auto-updater run `npm ci` in theme-consistency (the live 5191 studio holds sharp there; the lot agent's t160 uses it by junction). Morning order: stop 5191 → merge #394 → let npm ci finish → restart 5191 and 5174. All shipped bytes identical on 0.35.5; audit 0. |
 
 **Two coding agents at a time (the owner, 2026-10-26: first "maybe just too many background tasks?" after the studio tab died with the
@@ -95,6 +95,10 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
    (the sharp bump). See the History sections below and `gh issue list --label arena --state open`.
 
 ### Done recently (newest first; details in each PR)
+- 2026-10-27 04:08: **T096 #423 the range's look**: most was already built by P24/T086 (props turn with the plot, the range ground group,
+  golfers at the bays); added: the range's outfield and target greens are managed grass (`driving-range`, `golf-green` families, grass
+  catalog `PRESET_FAMILY`), a turning/placement test, and the range kit P2 → P1 in GOLF-SPRITES with art requests (mats strip, target-green
+  decal, a golfer teeing up). range:gate identical.
 - 2026-10-27 03:50: **T092 #418 map exits feed the town's visits**: the tourist catchment (clubhouse, tourism, casino) is one per map exit
   on a range start (`visitExits`; classic games keep one entry), its kerb on the lane into the map; the range itself already drew per
   exit through RangeSim (P24 D2), so no worker range cars. All gates as the nightly; range:gate identical. In a new game 15 range cars in
