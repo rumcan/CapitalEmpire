@@ -1,0 +1,346 @@
+{
+  "schema": 1,
+  "material": "fringe",
+  "zoom": "far",
+  "status": "exported-file-contract-only-visual-review-required",
+  "source": {
+    "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/master.native-crop.png",
+    "sha256": "c617d7f8faca30514fcf8253069433fdedbaaa5c0ec722c5d170804732a32300",
+    "pixelSha256": "98f97264e972891bfbee83112bfd373c980c2b2a03a892edef0d004ce4291486",
+    "dimensions": [
+      1742,
+      902
+    ]
+  },
+  "crop": {
+    "left": 0,
+    "top": 0,
+    "width": 1742,
+    "height": 902,
+    "removedRightPixels": 0,
+    "removedBottomPixels": 0
+  },
+  "rollPixels": [
+    871,
+    451
+  ],
+  "dimensions": [
+    1742,
+    902
+  ],
+  "collarPixels": 64,
+  "patchSpanPixels": 256,
+  "repairInputs": {
+    "northSouth": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/full-north-south-repair-input.png",
+    "westEast": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/full-west-east-repair-input.png"
+  },
+  "repairOutputCrops": {
+    "northSouth": {
+      "left": 743,
+      "top": 387,
+      "width": 256,
+      "height": 128
+    },
+    "westEast": {
+      "left": 807,
+      "top": 323,
+      "width": 128,
+      "height": 256
+    }
+  },
+  "smallPatchDiagnosticsOnly": true,
+  "generationRule": "Always edit the FULL scene-sized repair input to preserve apparent grass scale. Small patches are diagnostics/extraction only, never imagegen edit targets.",
+  "processing": "Minimum-error cut paths select either common-master or unique-variant native pixels at unchanged coordinates. Outer collar stays exact. No paint, recolour, blend, noise, mirror or rotation.",
+  "compositeMethod": "minimum-error-cut",
+  "repairContext": "full-frame-bands",
+  "repairs": {
+    "northSouth": {
+      "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/full-north-south-repair-v1.raw.png",
+      "sha256": "c605b80d7ce87101f745a9614514e2f314bc2404f3039b46b5020e762c26021c",
+      "pixelSha256": "d6dbc1e6a5e8de7959378cd28c69e3a011b19c636ceed04bb1964f65467e4d61",
+      "dimensions": [
+        1742,
+        903
+      ],
+      "explicitCrop": {
+        "left": 743,
+        "top": 387,
+        "width": 256,
+        "height": 128
+      },
+      "fullFrameCrop": {
+        "left": 0,
+        "top": 0,
+        "width": 1742,
+        "height": 902
+      },
+      "processing": "Exact native crop from full-frame AI repair",
+      "fullBandCrop": {
+        "left": 743,
+        "top": 0,
+        "width": 256,
+        "height": 902
+      }
+    },
+    "westEast": {
+      "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/full-west-east-repair-v1.raw.png",
+      "sha256": "964e6f69378e76b5957bd5efea02ccccfbef785b10fb070e372ff902920c6008",
+      "pixelSha256": "cf28a2ebbdd2ebb7c6ebb4d1ffc7e29133a5d9186248db2f1514ecdaae2dc136",
+      "dimensions": [
+        1743,
+        902
+      ],
+      "explicitCrop": {
+        "left": 807,
+        "top": 323,
+        "width": 128,
+        "height": 256
+      },
+      "fullFrameCrop": {
+        "left": 0,
+        "top": 0,
+        "width": 1742,
+        "height": 902
+      },
+      "processing": "Exact native crop from full-frame AI repair",
+      "fullBandCrop": {
+        "left": 0,
+        "top": 323,
+        "width": 1742,
+        "height": 256
+      }
+    }
+  },
+  "commonMaster": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/common-collar-master.png",
+  "commonMasterPixelSha256": "94a46514f31c50ea2fa42c34eafde021f6d344721c1a843a2b363d87fa652664",
+  "commonCutPaths": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/common-collar-cut-paths.json",
+  "variants": [
+    {
+      "id": "tile-01",
+      "source": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/tile-01-v1.raw.png",
+        "sha256": "f444e0e9f20abcfb90e7d78c17e441e2c20324602a10edffd3ca8bfc371135f7",
+        "pixelSha256": "1e4ad613891a05711afeb0028935270fcd6906d155e8a75dd93234282894edfb",
+        "dimensions": [
+          1742,
+          903
+        ]
+      },
+      "explicitCrop": {
+        "left": 0,
+        "top": 0,
+        "width": 1742,
+        "height": 902
+      },
+      "interiorPixelSha256": "7c6133474dff4b6a62c96c7811615f567e65d524b38fd28a77514373a95b8a8c",
+      "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/tile-01.png",
+      "pixelSha256": "f1850d5dce272937acbabaf431f481e1a25ac1394b69fcbcf70ee2eb23ea6804",
+      "collarPixelSha256": "ec109b1c23006bfd18af1d6aebe3daaa61211c5df37faec739d1140e495b800b",
+      "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/tile-01.cut-paths.json",
+      "variantSelectedPixels": 1009982
+    },
+    {
+      "id": "tile-02",
+      "source": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/tile-02-v1.raw.png",
+        "sha256": "2246b06fc552a4c8c6c65325b003d6cd6ee2951c7a997c5a83d8a390b243102a",
+        "pixelSha256": "8c7122fcb00ca023a055fea6178dd70ac47deaa6aaeeae650627814fe047acdc",
+        "dimensions": [
+          1742,
+          903
+        ]
+      },
+      "explicitCrop": {
+        "left": 0,
+        "top": 0,
+        "width": 1742,
+        "height": 902
+      },
+      "interiorPixelSha256": "c57613018295bef222595ab4a5a79e3e65a54261be837424945b17216f630ac6",
+      "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/tile-02.png",
+      "pixelSha256": "679b0a7f2e69ea4536bb093edafd27c3af908b56c9bf8e868500dc5b4c156f25",
+      "collarPixelSha256": "ec109b1c23006bfd18af1d6aebe3daaa61211c5df37faec739d1140e495b800b",
+      "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/tile-02.cut-paths.json",
+      "variantSelectedPixels": 994854
+    },
+    {
+      "id": "tile-03",
+      "source": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/tile-03-v1.raw.png",
+        "sha256": "74f43b753708a8bdc1228bff2b1e740903fc8a8a7dcf93124b98f4607ecb6de0",
+        "pixelSha256": "6ddaa9c89945cf859aa7d164849f38e53bc7ab3f827bc070a2dc2fab1fab2199",
+        "dimensions": [
+          1742,
+          903
+        ]
+      },
+      "explicitCrop": {
+        "left": 0,
+        "top": 0,
+        "width": 1742,
+        "height": 902
+      },
+      "interiorPixelSha256": "ffdc0ea9a5b773a0c9850e28accac018f410a42673a417fc05ae645687827def",
+      "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/tile-03.png",
+      "pixelSha256": "5799d6724e4d225e1a312cea8e9c7f703195824b58e54aa14c713d3bb84d66be",
+      "collarPixelSha256": "ec109b1c23006bfd18af1d6aebe3daaa61211c5df37faec739d1140e495b800b",
+      "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/tile-03.cut-paths.json",
+      "variantSelectedPixels": 1015306
+    },
+    {
+      "id": "tile-04",
+      "source": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/tile-04-v1.raw.png",
+        "sha256": "943eeb2ed82843b1585ac1a0f5ea1c794c8378fed994238acb7982e189baf611",
+        "pixelSha256": "201f53a4b9ea8ec9b264f48b963f5c2f8b75b19cc71642a752fa0737a148501b",
+        "dimensions": [
+          1742,
+          903
+        ]
+      },
+      "explicitCrop": {
+        "left": 0,
+        "top": 0,
+        "width": 1742,
+        "height": 902
+      },
+      "interiorPixelSha256": "9275158bd34776c9b767c71f6f7591320939e20fa2fad6eea73f5e1c216dcf20",
+      "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/tile-04.png",
+      "pixelSha256": "3c577c724dc22576f625f49715ca3c1390ff00bd432ef60c7cacca25d55aed93",
+      "collarPixelSha256": "ec109b1c23006bfd18af1d6aebe3daaa61211c5df37faec739d1140e495b800b",
+      "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/tile-04.cut-paths.json",
+      "variantSelectedPixels": 946094
+    }
+  ],
+  "tileCount": 4,
+  "authoredLevel": "far",
+  "lighting": "UPPER RIGHT toward LOWER LEFT",
+  "orientation": {
+    "allowRotate": false,
+    "allowMirror": false
+  },
+  "displayContract": {
+    "targetVisibleTiles": [
+      2,
+      4
+    ],
+    "minimumVisibleTiles": 2,
+    "maximumVisibleTiles": 4,
+    "switchBeforeExceeding": 4,
+    "nextDetailSetRequired": true,
+    "independentlyAuthoredDetailSets": true,
+    "primaryVariantCount": 4,
+    "variationBankCount": 4,
+    "geography": "No fixed world extent is implied by these camera-scale source plates."
+  },
+  "reviewFiles": [
+    "review-order-a.png",
+    "review-order-b.png",
+    "review-four-tiles.png"
+  ],
+  "pairChecks": [
+    {
+      "a": "tile-01",
+      "b": "tile-01",
+      "rightToLeftRgbMae": 4.448,
+      "bottomToTopRgbMae": 6.412
+    },
+    {
+      "a": "tile-01",
+      "b": "tile-02",
+      "rightToLeftRgbMae": 4.448,
+      "bottomToTopRgbMae": 6.412
+    },
+    {
+      "a": "tile-01",
+      "b": "tile-03",
+      "rightToLeftRgbMae": 4.448,
+      "bottomToTopRgbMae": 6.412
+    },
+    {
+      "a": "tile-01",
+      "b": "tile-04",
+      "rightToLeftRgbMae": 4.448,
+      "bottomToTopRgbMae": 6.412
+    },
+    {
+      "a": "tile-02",
+      "b": "tile-01",
+      "rightToLeftRgbMae": 4.448,
+      "bottomToTopRgbMae": 6.412
+    },
+    {
+      "a": "tile-02",
+      "b": "tile-02",
+      "rightToLeftRgbMae": 4.448,
+      "bottomToTopRgbMae": 6.412
+    },
+    {
+      "a": "tile-02",
+      "b": "tile-03",
+      "rightToLeftRgbMae": 4.448,
+      "bottomToTopRgbMae": 6.412
+    },
+    {
+      "a": "tile-02",
+      "b": "tile-04",
+      "rightToLeftRgbMae": 4.448,
+      "bottomToTopRgbMae": 6.412
+    },
+    {
+      "a": "tile-03",
+      "b": "tile-01",
+      "rightToLeftRgbMae": 4.448,
+      "bottomToTopRgbMae": 6.412
+    },
+    {
+      "a": "tile-03",
+      "b": "tile-02",
+      "rightToLeftRgbMae": 4.448,
+      "bottomToTopRgbMae": 6.412
+    },
+    {
+      "a": "tile-03",
+      "b": "tile-03",
+      "rightToLeftRgbMae": 4.448,
+      "bottomToTopRgbMae": 6.412
+    },
+    {
+      "a": "tile-03",
+      "b": "tile-04",
+      "rightToLeftRgbMae": 4.448,
+      "bottomToTopRgbMae": 6.412
+    },
+    {
+      "a": "tile-04",
+      "b": "tile-01",
+      "rightToLeftRgbMae": 4.448,
+      "bottomToTopRgbMae": 6.412
+    },
+    {
+      "a": "tile-04",
+      "b": "tile-02",
+      "rightToLeftRgbMae": 4.448,
+      "bottomToTopRgbMae": 6.412
+    },
+    {
+      "a": "tile-04",
+      "b": "tile-03",
+      "rightToLeftRgbMae": 4.448,
+      "bottomToTopRgbMae": 6.412
+    },
+    {
+      "a": "tile-04",
+      "b": "tile-04",
+      "rightToLeftRgbMae": 4.448,
+      "bottomToTopRgbMae": 6.412
+    }
+  ],
+  "commonCollarPixelSha256": "ec109b1c23006bfd18af1d6aebe3daaa61211c5df37faec739d1140e495b800b",
+  "cutOverlapPixels": 128,
+  "warnings": [
+    "Shared outer pixels guarantee the same joins for every ordering, not artistic seam acceptance.",
+    "Inspect collar/interior boundaries, all edge-repair endpoints and shuffled tile views.",
+    "No live game integration or reconstructed orthographic projection is claimed."
+  ]
+}

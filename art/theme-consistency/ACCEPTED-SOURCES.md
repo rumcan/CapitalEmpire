@@ -1,6 +1,6 @@
 # Accepted terrain source authority
 
-Start with `generated/ground/eight-tiles/READY-MATERIALS.json`. Its four families select 48 primary PNGs:
+Start with `generated/ground/eight-tiles/READY-MATERIALS.json`. Its six families select 72 primary PNGs:
 
 | Material | NEAR | MID | FAR |
 | --- | --- | --- | --- |
@@ -8,6 +8,8 @@ Start with `generated/ground/eight-tiles/READY-MATERIALS.json`. Its four familie
 | Lake | v1: 01–04 | v1: 01–04 | v1: 01–04 |
 | Sand ripples | v1: 01–04 | v1: 01–04 | v1: 01–04 |
 | Long grass | v3: 01–04 | v2: 01–04 | v2: 01–04 |
+| Putting green | v1: 01–04 | v2: 01–04 | v2: 01–04 |
+| Fringe/apron | v1: 01–04 | v1: 01–04 | v1: 01–04 |
 
 Each entry names a hash-bound `canonicalselection.json`; follow that selection's primary files, appearance decision and `HANDOFF.md`.
 The committed source closure includes the actual native PNGs, provenance, inputs, pixel-selection reports and appearance evidence those
@@ -22,8 +24,22 @@ distinct from owner approval and live game appearance.
 `node scripts/assets/prep-painted-tiles.mjs --art <art-checkout>` checks canonical hashes and native dimensions before writing assets.
 The command also needs the provisional and owner-source families named by its importer. An explicit held, blocked or rejected appearance
 review excludes that experimental set, including its raw drafts. If no usable fallback remains, preparation stops before writing; finish
-the approved handoff rather than deleting the hold. The owner's green MID fallback follows an accepted canonical selection when one exists.
+the approved handoff rather than deleting the hold. A fallback follows a canonical set when it satisfies that fallback's explicit revision pin.
+
+T217 publishes the complete accepted green under `runtimeId: "putting-green-finished"`, named "Putting green (fine turf)". Its canonical
+source ID and hashes are unchanged. This is an additional Painted option: the legacy green's pinned MID/FAR v1 sets and the owner's NEAR
+painting remain intact. Fringe keeps its existing runtime ID and identical packed pictures, now backed by its handoff.
+
+For a selected accepted batch, use:
+
+```sh
+node scripts/assets/prep-painted-tiles.mjs --art <art-checkout> --only fringe,putting-green-finished
+```
+
+The scoped command requires an existing manifest, retains all other family records, pictures and curated settings, updates the combined
+revision, and prunes only the selected family folders. An explicitly pinned held legacy option is retained only at the exact source files
+and hashes already recorded in that manifest; newly completed or changed rejected files cannot replace it.
 
 The owner-supplied `rough-owner`, `fairway-paint` and `putting-green-paint` families and their gameplay mappings remain separate. This
-source delivery does not replace them. Putting-green and fringe require their own accepted handoffs; this index makes no readiness claim
-for those unfinished families.
+source delivery preserves their paintings and surface choices. Their owner-source status remains separate from the new accepted green
+and fringe handoffs.

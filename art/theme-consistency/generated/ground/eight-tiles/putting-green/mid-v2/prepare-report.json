@@ -1,0 +1,54 @@
+{
+  "schema": 1,
+  "material": "putting-green",
+  "zoom": "mid",
+  "status": "AI-border-repairs-required",
+  "source": {
+    "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/mid-v2/master.native-crop.png",
+    "sha256": "258e4f3b2134c0b35717f9286de96caecc16c48854ad82c3f7156bed1fc81298",
+    "pixelSha256": "ae79eaeb517bc7a3e50baa1cca1ffeecc69e833fbacdaacd546d4617e7b6bdad",
+    "dimensions": [
+      1744,
+      900
+    ]
+  },
+  "crop": {
+    "left": 0,
+    "top": 0,
+    "width": 1744,
+    "height": 900,
+    "removedRightPixels": 0,
+    "removedBottomPixels": 0
+  },
+  "rollPixels": [
+    872,
+    450
+  ],
+  "dimensions": [
+    1744,
+    900
+  ],
+  "collarPixels": 64,
+  "patchSpanPixels": 256,
+  "repairInputs": {
+    "northSouth": "art/theme-consistency/generated/ground/eight-tiles/putting-green/mid-v2/full-north-south-repair-input.png",
+    "westEast": "art/theme-consistency/generated/ground/eight-tiles/putting-green/mid-v2/full-west-east-repair-input.png"
+  },
+  "repairOutputCrops": {
+    "northSouth": {
+      "left": 744,
+      "top": 386,
+      "width": 256,
+      "height": 128
+    },
+    "westEast": {
+      "left": 808,
+      "top": 322,
+      "width": 128,
+      "height": 256
+    }
+  },
+  "smallPatchDiagnosticsOnly": true,
+  "generationRule": "Always edit the FULL scene-sized repair input to preserve apparent grass scale. Small patches are diagnostics/extraction only, never imagegen edit targets.",
+  "processing": "Exact crop, quadrant translation and patch layout. No resampling, paint, blending, mirror or rotation."
+}

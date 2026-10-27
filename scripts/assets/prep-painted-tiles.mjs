@@ -45,8 +45,10 @@
 // src/game/painted-surfaces.json (or in the studio's Painted tab). KIND below names the kind of family each material is (the studio's picker).
 // A material whose name a legacy painted family (painted-families.json) already has gets the game id `<material>-tiles`, so the old family
 // stays selectable.
+// T217: READY may give an accepted family a distinct runtimeId/runtimeName, keeping its original canonical source ID and an older pinned
+// option. --only <accepted-runtime-ids> updates just those families, preserving every other packed picture, record and curated setting.
 //
-//   node scripts/assets/prep-painted-tiles.mjs [--art <checkout root holding art/>] [--out <root to write src/... under>] [--check]
+//   node scripts/assets/prep-painted-tiles.mjs [--art <checkout root holding art/>] [--out <root to write src/... under>] [--only id,id] [--check]
 // --check verifies the hashes and sizes and compares the manifest it would write with the one on disk, writing nothing.
 // The art is read from this checkout's art/ folder, else from the main checkout's (a .claude/worktrees/<name> worktree), never written.
 // --out (the tests' fixtures) writes the tiles and the manifest under another root instead of this checkout.
@@ -61,6 +63,7 @@ const EIGHT = 'art/theme-consistency/generated/ground/eight-tiles';
 const READY_REL = `${EIGHT}/READY-MATERIALS.json`;
 const arg = k => { const i = process.argv.indexOf(k); return i >= 0 ? process.argv[i + 1] : null; };
 const CHECK = process.argv.includes('--check');
+const ONLY = process.argv.includes('--only') ? new Set((arg('--only') ?? '').split(',').filter(Boolean)) : null;
 const ART = path.resolve(arg('--art') ?? [ROOT, path.join(ROOT, '../../..')].find(r => fs.existsSync(path.join(r, READY_REL))) ?? ROOT);
 const OUT = path.resolve(arg('--out') ?? ROOT);
 const OUT_DIR = path.join(OUT, 'src/assets/ground/painted/tiles'), MANIFEST = path.join(OUT, 'src/game/painted-tiles.json');
@@ -133,6 +136,7 @@ const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 const hex = m => '#' + m.map(v => Math.round(v).toString(16).padStart(2, '0')).join('');
 const r2 = v => Math.round(v * 100) / 100;
 const readJson = p => { try { return JSON.parse(fs.readFileSync(rel(p), 'utf8')); } catch { return null; } };
+if (ONLY && !ONLY.size) fail('--only requires comma-separated accepted runtime family IDs');
 
 const readyBuf = fs.existsSync(rel(READY_REL)) ? fs.readFileSync(rel(READY_REL)) : fail(`no ${READY_REL} under ${ART}`);
 const ready = JSON.parse(readyBuf);
@@ -180,7 +184,16 @@ for (const f of ready.ready) {
     }
     levels[level] = { folder: set.folder, native: set.nativePixels, decision: { file: vd.file, sha256: vd.sha256 ?? null }, tiles, revision: set.revision ?? path.basename(set.folder) };
   }
-  plan.push({ material, id: gameId(material), materialId: f.id, key: f.canonicalSelection.sha256, selection: { file: selPath, sha256: f.canonicalSelection.sha256 }, light: sel.light ?? null, levels });
+  const id = f.runtimeId ?? gameId(material);
+  if (!/^[a-z0-9][a-z0-9-]*$/.test(id) || (f.runtimeId && LEGACY.has(id))) fail(`${f.id}: invalid or legacy-colliding runtimeId ${id}`);
+  const existing = f.runtimeId && prevManifest?.families?.find(p => p.id === id);
+  if (existing && existing.materialId !== f.id) fail(`${f.id}: runtimeId ${id} belongs to another curated family`);
+  plan.push({ material, id, name: f.runtimeName, materialId: f.id, key: f.canonicalSelection.sha256, selection: { file: selPath, sha256: f.canonicalSelection.sha256 }, light: sel.light ?? null, levels });
+}
+if (ONLY) {
+  if (!Array.isArray(prevManifest?.families)) fail('--only requires an existing packed manifest to preserve');
+  for (const id of ONLY) if (!plan.some(p => p.id === id)) fail(`--only ${id}: no accepted canonical family with that runtime ID`);
+  for (const f of prevManifest.families) if (!ONLY.has(f.id) && packedFamilyKey(f).slice(0, 12) !== f.revision) fail(`${f.id}: existing revision is inconsistent; cannot preserve it in a scoped import`);
 }
 
 const m2 = m => ({ lr: r2(m.lr), tb: r2(m.tb), h: r2(m.h), v: r2(m.v) });
@@ -191,15 +204,17 @@ const LEVEL_DIR = /^(near|mid|far)-v(\d+)$/;
 /** a level's newest complete set in a family's folder: a finished `tile-0x.png` set (newest folder first), else a raw `tile-0x-v<k>.raw.png`
  *  set (newest folder, then newest k, first); null when no folder holds all four */
 function provisionalSet(material, level, only = null) {
-  // The owner's green MID fallback must follow a ready family's explicit selection, even if newer experiments exist on disk.
-  // Its canonical selection and actual appearance decision were hash-checked above.
+  // A fallback follows the canonical selection only when it satisfies its explicit revision pin. T191's older green remains an option.
+  // The canonical selection and its actual appearance decision were hash-checked above.
   const accepted = plan.find(p => p.material === material && p.selection);
   if (accepted) {
     const set = JSON.parse(fs.readFileSync(rel(accepted.selection.file), 'utf8')).sets[level];
-    return { folder: set.folder, revision: set.revision ?? path.basename(set.folder), files: set.primaryTiles.map(t => t.file), stage: 'finished tiles' };
+    const revision = set.revision ?? path.basename(set.folder);
+    if (!only || revision === only) return { folder: set.folder, revision, files: set.primaryTiles.map(t => t.file), stage: 'finished tiles', decision: { file: set.visualDecision.file, sha256: set.visualDecision.sha256 } };
   }
   const dir = `${EIGHT}/${material}`;
   if (!fs.existsSync(rel(dir))) return null;
+  let retainedLegacy = null;
   const folders = fs.readdirSync(rel(dir)).map(n => n.match(LEVEL_DIR)).filter(m => m && m[1] === level && fs.statSync(rel(`${dir}/${m[0]}`)).isDirectory() && (!only || m[0] === only)).sort((a, b) => +b[2] - +a[2]).map(m => m[0]).filter(name => {
     const reviewDir = `${dir}/${name}/review`;
     if (!fs.existsSync(rel(reviewDir))) return true;
@@ -208,9 +223,20 @@ function provisionalSet(material, level, only = null) {
       if (!review) fail(`${reviewDir}/${n}: invalid appearance review`);
       return review?.visualAccepted === false || /^(?:held|blocked|rejected)(?:$|[- :])/i.test(review?.decision ?? '');
     });
-    if (held) console.warn(`${material} ${level}: ${name} is held by its appearance review; not a provisional candidate`);
+    if (held && only) {
+      const was = prevManifest?.families?.find(f => f.id === gameId(material))?.levels?.[level];
+      // The pin is deliberate curation of an already shipped option, not permission to import changed rejected art. Return exactly its
+      // recorded source files, not any newly completed files in the same folder (a raw pin must not silently become a finished export).
+      if (was?.folder === `${dir}/${name}` && was.tiles?.length === 4 && was.tiles.every(t => typeof t.source === 'string' && t.source.startsWith(was.folder + '/') && fs.existsSync(rel(t.source)) && sha256(fs.readFileSync(rel(t.source))) === t.sha256)) {
+        const files = was.tiles.map(t => t.source), raw = files[0].match(/-v(\d+)\.raw\.png$/);
+        retainedLegacy = { folder: was.folder, revision: was.revision, files, stage: raw ? `raw generator outputs v${raw[1]}` : 'finished tiles' };
+        console.warn(`${material} ${level}: retaining pinned ${name} only at its exact currently shipped hashes`);
+      }
+    }
+    if (held && !retainedLegacy) console.warn(`${material} ${level}: ${name} is held by its appearance review; not a provisional candidate`);
     return !held;
   });
+  if (retainedLegacy) return retainedLegacy;
   const all = ps => ps.every(p => fs.existsSync(rel(p)) && fs.statSync(rel(p)).isFile());
   for (const name of folders) {
     const files = TILE_IDS.map(id => `${dir}/${name}/${id}.png`);
@@ -225,8 +251,10 @@ function provisionalSet(material, level, only = null) {
   }
   return null;
 }
-const readyMaterials = new Set(plan.map(p => p.material));
+// An accepted alias is an additional option; it must not remove the separately curated legacy family with the material's default ID.
+const readyMaterials = new Set(plan.filter(p => p.id === gameId(p.material)).map(p => p.material));
 for (const material of PROVISIONAL) {
+  if (ONLY) break;
   if (readyMaterials.has(material)) { console.log(`${material}: in READY-MATERIALS, its canonical selection ships (no longer provisional)`); continue; }
   const levels = {};
   let light = null;
@@ -278,6 +306,7 @@ const orel = p => path.join(OWNER_ART, p);
 /** the interior (inside the outer HEAL_BAND px of each edge) of a healed picture is its source's exactly */
 const sameInterior = (a, b, w, ht, ch, what) => { for (let y = HEAL_BAND; y < ht - HEAL_BAND; y++) for (let i = (y * w + HEAL_BAND) * ch, e = (y * w + w - HEAL_BAND) * ch; i < e; i++) if (a[i] !== b[i]) fail(`${what}: the heal changed the interior at (${Math.floor(i / ch) % w}, ${y})`); };
 for (const o of OWNER) {
+  if (ONLY) break;
   const folder = o.folder, srcRel = `${folder}/source.json`;
   if (!fs.existsSync(orel(srcRel))) { console.warn(`prep-painted-tiles: no ${srcRel} under ${OWNER_ART}; its family is left out`); continue; }
   const src = JSON.parse(fs.readFileSync(orel(srcRel), 'utf8')), fam = src.family ?? {};
@@ -307,7 +336,7 @@ for (const o of OWNER) {
       withinLimit(done, `${folder} ${level} (${res ? 'shared strip' : 'finished set'})`);
       const tiles = raws.map((r, i) => ({ id: r.id, sha256: r.sha256, source: r.source, raw: { data: pics[i], width: w, height: ht, channels: ch }, ...(r.w !== w || r.h !== ht ? { crop: { from: [r.w, r.h], removedRight: r.w - w, removedBottom: r.h - ht } } : {}) }));
       const fallback = o.why?.[level] ? `${o.why[level]}: ${res ? `raw ${s.revision} tiles, healed with one shared strip` : `finished ${s.revision} tiles, as the art session made them`}` : `the painting ${src.levels[level]?.file ?? level} is not used (tiled, its bright corner repeats as a block pattern); ${sharedFrom}'s ${res ? `raw ${s.revision} tiles` : `finished ${s.revision} tiles, as the art session made them,`} instead`;
-      levels[level] = { folder: s.folder, native: [w, ht], decision: { file: null, sha256: null }, tiles, revision: `${s.revision}-${res ? 'shared' : 'finished'}`, status: null,
+      levels[level] = { folder: s.folder, native: [w, ht], decision: s.decision ?? { file: null, sha256: null }, tiles, revision: `${s.revision}-${res ? 'shared' : 'finished'}`, status: null,
         heal: res ? { method: HEAL_SHARED, band: HEAL_BAND, centre: res.centre, fallback, before: m2(before), healed: m2(done) } : { method: HEAL_NONE, band: 0, fallback, before: m2(before), healed: m2(done) } };
       keyParts.push(res ? `${level}:${HEAL_SHARED}/${HEAL_BAND}@${res.centre.x},${res.centre.y}:${tiles.map(t => t.sha256).join(',')}` : `${level}:${HEAL_NONE}:${tiles.map(t => t.sha256).join(',')}`);
       continue;
@@ -346,7 +375,28 @@ for (const o of OWNER) {
   plan.push({ material: o.id ?? fam.id, id: gameId(o.id ?? fam.id), materialId: o.materialId ?? src.id ?? `owner:${path.basename(folder)}`, name: o.name ?? fam.name, kind: fam.kind ?? 'grass', key, selection: null, provisional: fam.provisional !== false, owner: srcRel, light: src.light ?? null, levels });
 }
 
+/** Reconstruct the same full revision key from a previously packed family, without decoding/re-encoding any of its pictures. */
+function packedFamilyKey(f) {
+  if (f.selection) return f.selection.sha256;
+  if (!f.owner) return sha256(Buffer.from(LEVELS.flatMap(b => f.levels[b].tiles.map(t => t.sha256)).join(':')));
+  const h0 = f.levels.near.heal;
+  if (h0.method === HEAL_METHOD) return sha256(Buffer.from(LEVELS.map(b => f.levels[b].tiles[0].sha256).join(':') + `|${h0.method}/${h0.band}`));
+  return sha256(Buffer.from(LEVELS.map(b => {
+    const L = f.levels[b], h = L.heal;
+    if (h.method === HEAL_NONE) return `${b}:${h.method}:${L.tiles.map(t => t.sha256).join(',')}`;
+    const base = `${b}:${h.method}/${h.band}@${h.centre.x},${h.centre.y}`;
+    if (h.method === HEAL_SHARED) return `${base}:${L.tiles.map(t => t.sha256).join(',')}`;
+    const t = L.tiles[0], crop = t.crop?.x0 !== undefined ? `:crop ${t.crop.x0},${t.crop.y0},${t.crop.w}x${t.crop.h}` : '';
+    return `${base}${crop}:${t.sha256}`;
+  }).join('|')));
+}
+
 // ---- write the WebPs and the manifest
+const runtimeIds = new Set();
+for (const p of plan) {
+  if (runtimeIds.has(p.id)) fail(`duplicate runtime family ${p.id}; choose a distinct runtimeId for the accepted alias`);
+  runtimeIds.add(p.id);
+}
 const manifest = {
   v: 1,
   note: `Generated by scripts/assets/prep-painted-tiles.mjs from ${READY_REL} (hash-checked) and, for families marked provisional, the newest complete raw sets in their folders (hash-recorded; T153), and for the owner's own paintings their files in art/owner-supplied (hash-checked against their source.json, edges healed by scripts/assets/tile-heal.mjs; T162). Do not edit by hand, except anchors.nearUntil and anchors.farFrom.`,
@@ -360,7 +410,7 @@ const manifest = {
 if (!CHECK) fs.mkdirSync(OUT_DIR, { recursive: true });
 let kb = 0;
 const written = new Set();
-for (const p of plan) {
+for (const p of plan.filter(p => !ONLY || ONLY.has(p.id))) {
   const fam = { id: p.id, materialId: p.materialId, name: p.name ?? NAME[p.material] ?? p.material.replace(/-/g, ' ').replace(/^./, c => c.toUpperCase()), kind: p.kind ?? KIND[p.material] ?? 'grass', revision: p.key.slice(0, 12), selection: p.selection, ...(p.provisional ? { provisional: true } : {}), ...(p.owner ? { owner: p.owner } : {}), light: p.light, mean: '#808080', levels: {} };
   const means = [];
   for (const level of LEVELS) {
@@ -413,6 +463,15 @@ for (const p of plan) {
   fam.mean = hex([0, 1, 2].map(i => means.reduce((s, m) => s + m[i], 0) / means.length));
   manifest.families.push(fam);
 }
+if (ONLY) {
+  const selected = new Map(manifest.families.map(f => [f.id, f])), previousIds = new Set(prevManifest.families.map(f => f.id));
+  const combined = prevManifest.families.map(f => selected.get(f.id) ?? f);
+  for (const f of manifest.families) if (!previousIds.has(f.id)) combined.push(f);
+  const byId = new Map(combined.map(f => [f.id, f])), readyIds = new Set(plan.map(p => p.id));
+  const families = [...plan.map(p => byId.get(p.id)).filter(Boolean), ...combined.filter(f => !readyIds.has(f.id))];
+  const source = manifest.source, revision = sha256(Buffer.from(families.map(packedFamilyKey).join(':'))).slice(0, 12);
+  Object.assign(manifest, prevManifest, { source, revision, families });
+}
 const text = JSON.stringify(manifest, null, 1) + '\n';
 if (CHECK) {
   const have = fs.existsSync(MANIFEST) ? fs.readFileSync(MANIFEST, 'utf8') : '';
@@ -429,6 +488,13 @@ const prune = dir => {
     else if (/\.(webp|png)$/.test(e.name) && !written.has(abs)) { fs.unlinkSync(abs); console.log('removed', path.relative(OUT, abs)); }
   }
 };
-prune(OUT_DIR);
+if (ONLY) {
+  const base = path.resolve(OUT_DIR);
+  for (const id of ONLY) {
+    const target = path.resolve(base, id);
+    if (!target.startsWith(base + path.sep)) fail(`unsafe scoped prune target ${target}`);
+    if (fs.existsSync(target)) prune(target);
+  }
+} else prune(OUT_DIR);
 const prov = manifest.families.filter(f => f.provisional).map(f => f.id);
-console.log(`${manifest.families.length} families (${prov.length ? `provisional: ${prov.join(', ')}` : 'none provisional'}), ${manifest.families.reduce((s, f) => s + LEVELS.reduce((n, l) => n + f.levels[l].tiles.length, 0), 0)} tiles, ${Math.round(kb)} KB; anchors near ${ANCHORS.near} (until ${nearUntil}), mid ${ANCHORS.mid}, far ${ANCHORS.far}; revision ${manifest.revision}`);
+console.log(`${manifest.families.length} families (${prov.length ? `provisional: ${prov.join(', ')}` : 'none provisional'}), ${manifest.families.reduce((s, f) => s + LEVELS.reduce((n, l) => n + f.levels[l].tiles.length, 0), 0)} tiles, ${Math.round(kb)} KB${ONLY ? ` prepared for ${[...ONLY].join(', ')}; other pictures retained` : ''}; anchors near ${ANCHORS.near} (until ${nearUntil}), mid ${ANCHORS.mid}, far ${ANCHORS.far}; revision ${manifest.revision}`);

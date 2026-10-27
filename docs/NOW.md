@@ -25,6 +25,11 @@ parallel, and push fixes as follow-up PRs (AGENT-BRIEF sections 1 and 5).
 merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of every change.
 
 ### In flight
+**Accepted green/fringe delivery (T217 #569, `lead/terrain-green-fringe-20261027`):** publish the two new canonical handoffs and their
+source closure; add the complete green set as `putting-green-finished`, retaining the legacy pinned green and every curated surface choice.
+Fringe keeps its existing ID and PNGs while gaining canonical acceptance. Preserve owner NEAR and rough. Next: explicit alias routing,
+hash-locked legacy-pin handling, focused fixtures, source/pack checks and actual game/Studio evidence. #486 source delivery is merged.
+
 **Accepted terrain source delivery (#383, `lead/terrain-ready-20261026`):** the four accepted families' canonical selections, native PNGs,
 provenance and review proofs are being committed from the art checkout. T170 already packed these exact accepted long-grass hashes;
 this delivery preserves those packed bytes and the owner's `rough-owner` mapping. Also guard asset preparation against explicitly held
