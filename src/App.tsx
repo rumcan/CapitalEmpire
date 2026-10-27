@@ -27,6 +27,7 @@ import { PaintPanel } from './PaintPanel';
 import { CoursePanel } from './ui/course/CoursePanel';
 import { BuildingsPanel } from './ui/course/BuildingsPanel';
 import { PropsPanel } from './ui/course/PropsPanel';
+import { PracticePanel } from './ui/course/PracticePanel';
 import { MyLooksCard } from './ui/course/MyLooks';
 import { Rail } from './ui/Rail';
 import { RAIL, entryKey, pickEntry, railEntries, railItemOf, type RailItem, type RailTool } from './ui/rail-items';
@@ -278,6 +279,7 @@ export default function App() {
       case 'paint': p.setMode('draw'); p.setStyle({ tex: act.tex as Parameters<typeof p.setStyle>[0]['tex'] }); break;
       case 'plant': p.setPlant(act.id as Parameters<typeof p.setPlant>[0]); break;
       case 'paintMode': p.setMode(act.id as Parameters<typeof p.setMode>[0]); break;
+      case 'practice': game.armPractice(act.id as 'putting' | 'chipping'); break; // T206: the facility's own building tool
     }
     game.emit();
   };
@@ -572,6 +574,7 @@ export default function App() {
               {game.uiTool === 'buildings' && <BuildingsPanel game={game} />}
               {game.tool === 'greenkeeping' && <GrassManagementPanel game={game} docked />}
               {game.tool === 'props' && <PropsPanel game={game} />}
+              {game.tool === 'practice' && <PracticePanel game={game} />}
               {game.tool === 'park' && <ParkPanel game={game} dev={dev} />}
               {game.tool === 'toll' && <TollPanel game={game} />}
               {game.tool === 'business' && <BusinessPanel game={game} />}
@@ -585,7 +588,7 @@ export default function App() {
           {/* the hint bar, centred in the lane between the minimap's town chip and the stats card. Golf mode (T035): the first-run hint, with its Got it;
               and while a course surface is armed (T118), always the Course pill: what a click lays (the surface's disc and mark, the hole it joins, the
               price a cell, the state's words) and how to switch or stop; no bar without either */}
-          {(!gv || hint || courseHint) && (
+          {(!gv || hint || courseHint || (game.tool === 'practice' && game.practice.kind)) && (
           <div className="pointer-events-none absolute bottom-3 left-[24.5rem] right-[15.5rem] z-20 flex flex-col items-center gap-1.5">
             {(!gv || hint) && (
             <div className={`flex items-center gap-2 glass rounded-full! px-4 py-1.5 text-xs ${gv ? 'pointer-events-auto' : ''}`}>
@@ -593,6 +596,15 @@ export default function App() {
               {gv && hint
                 ? <>{game.guideDone && performance.now() - game.guideDone.at < 6000 && <span className="font-semibold text-emerald-300" data-testid="guide-done">✓ {game.guideDone.text} · next:</span>}<span data-testid="hint-text"><b>{hint.title}</b> · {hint.body}</span>{hint.show && <button className="chip chip-on" data-testid={hint.id.startsWith('hint-practice') ? 'hint-show-practice' : 'hint-show'} onClick={() => { game.showHint(hint.id); bump(); }}>Show me</button>}<button className="chip" onClick={() => { game.dismissHint(hint.id); bump(); }}>Got it</button></>
                 : <span>{keyed(hintFor(game))}</span>}
+            </div>
+            )}
+            {/* T206: Facilities ▸ Practice in hand: what a click builds and for what, or why not; outside the practice area, Show area */}
+            {gv && game.tool === 'practice' && game.practice.kind && (
+            <div className="pointer-events-auto flex items-center gap-2 glass rounded-full! px-4 py-1.5 text-xs" data-testid="practice-pill">
+              <Icon name="pin" size={18} />
+              <span className={game.practice.ghost?.why ? 'text-rose-300' : 'text-slate-100'}>{game.practice.status}</span>
+              {game.practice.ghost?.refusal === 'outside' && <button className="chip chip-on whitespace-nowrap" data-testid="practice-show" onClick={() => game.practice.showArea()}>Show area</button>}
+              <span className="whitespace-nowrap text-slate-300">· <span className="keycap">[ ]</span> size · <span className="keycap">R</span> turn{game.practice.kind === 'putting' ? <> · <span className="keycap">Tab</span> outline</> : null} · <span className="keycap">Esc</span> stop</span>
             </div>
             )}
             {gv && courseHint && (
@@ -662,7 +674,7 @@ export default function App() {
           {game.shotState() && <ShotPanel game={game} />}
           {game.seasonReport && game.traffic.round.stage === 'free' && <SeasonReportCard report={game.seasonReport} onContinue={() => game.dismissSeasonReport()} />}
           {(() => { const w = !game.seasonReport ? game.welcomeView() : null; return w && <WelcomeCard road={w.road} newHole={w.newHole} onGo={() => game.closeWelcome(true)} onClose={() => game.closeWelcome(false)} />; })()}
-          {(() => { const rc = game.rangeCard(); return rc && <RangeCard view={rc} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.openRangeCard(false)} onPrice={p => game.setRangePrice(p)} onBuy={id => game.buyRangeUpgrade(id)} onShowPractice={() => game.showPracticeArea()} />; })()}
+          {(() => { const rc = game.rangeCard(); return rc && <RangeCard view={rc} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.openRangeCard(false)} onPrice={p => game.setRangePrice(p)} onBuy={id => game.buyRangeUpgrade(id)} onShowPractice={() => game.showPracticeArea()} onBuildPractice={id => { game.openRangeCard(false); activeRail.current = 'facilities'; game.armPractice(id, true); }} practiceWhy={game.toolLock('practice')} />; })()}
           {game.holeCardHole !== null && <HoleCard game={game} right={game.panel ? 'right-[19.5rem]' : 'right-3'} />}
           {game.eventMode && !game.site && !game.golfMode && (
             <div className={`pointer-events-auto absolute ${game.panel ? 'right-[19.5rem]' : 'right-3'} top-[var(--hud-top,6rem)] z-20 flex items-center gap-3 glass p-3 text-sm`}>

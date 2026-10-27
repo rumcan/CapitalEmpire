@@ -9,6 +9,9 @@ import { PRACTICE_SIZE, PRACTICE_WHY, PUTT_SHAPES, GAP_M, TURNS, bunkerInReach, 
 import { SURF, makeGrid, paintCells, paintDisc, type Grid } from '../src/game/ext/course-grid';
 import { plotPoint } from '../src/game/golf/range';
 import type { Rect } from '../src/game/golf/mode';
+import { PRACTICE_BRUSH_WHY, PaintTool, type PaintHost } from '../src/game/paint-tool';
+import { inPractice } from '../src/game/golf/practice';
+import { cellAt } from '../src/game/ext/course-grid';
 
 const plot: Rect = [200, 200, 70, 150];
 const AREA = practiceArea(plot, 2), BOX = AREA.box;
@@ -98,4 +101,48 @@ test('an old save\'s painted facilities still count, and the bulldozer takes the
   const s = scanPractice(g, BOX);
   assert.equal(s.putting.state, 'open'); assert.equal(s.chipping.state, 'open');
   const f = facilityAt(g, BOX, c.x, c.y)!; assert.ok(f.green > 0 && f.bunker > 0);
+});
+
+/** a PaintTool on the facing-2 grid whose practice area is AREA (the engine's practiceAt), with a treasury */
+function painter() {
+  const g = grid(), money = { v: 1e6 };
+  const host: PaintHost = {
+    setLotGround() {}, emit() {}, save() {}, toast() {}, affine() {}, placeProps: () => 0, plant: () => 0, unplant: () => 0, plantPool: () => [],
+    golfMode: () => true, currentMonth: () => 5, money: () => money.v, spend: n => { money.v -= n; },
+    grid: () => g, gridChanged() {}, ownedAt: () => true, practiceAt: (x, y) => inPractice(AREA, x, y),
+  };
+  const tool = new PaintTool(host); tool.enterCourse(); tool.setHole(1);
+  return { g, tool, money };
+}
+const stroke = (tool: PaintTool, x: number, y: number) => { tool.cursor = { x, y }; tool.pointerDown({ x, y }, 0, 0); tool.pointerUp(0.5); };
+
+test('the hole brushes are refused in the practice area: Green and Bunker lay nothing there, with the reason; elsewhere they paint', () => {
+  const { g, tool } = painter(), inside = P(90, 19);
+  for (const k of ['green', 'bunker'] as const) {
+    const outside = k === 'green' ? P(40, 80) : P(40, 100);
+    tool.setBrush(k); tool.setBrushCells(4);
+    stroke(tool, inside.x, inside.y);
+    const i = cellAt(g, inside.x, inside.y); assert.equal(g.surf[i], SURF.none, `${k}: nothing laid in the practice area`);
+    assert.equal(tool.brushSkipWhy()!(inside.x, inside.y), PRACTICE_BRUSH_WHY);
+    assert.equal(PRACTICE_BRUSH_WHY, 'Practice greens are built with Facilities ▸ Practice');
+    stroke(tool, outside.x, outside.y);
+    assert.equal(g.surf[cellAt(g, outside.x, outside.y)], k === 'green' ? SURF.green : SURF.bunker, `${k}: paints outside it`);
+  }
+  // an old save's painted facility stays (the grid is never rubbed out by the rule) and still counts
+  paintDisc(g, P(88, 19).x, P(88, 19).y, 6, SURF.green, 0, 0);
+  assert.equal(scanPractice(g, BOX).putting.state, 'open');
+});
+
+test("a facility is one undo step: gridEdit lays its cells and pays; undo takes both back; the bulldozer's refund is undone too", () => {
+  const { g, tool, money } = painter(), sp = spec('chipping', 104, 19, { turn: 2 }), p = practicePlan(sp), c = planCells(g, p), cost = planCost(g, c);
+  tool.gridEdit('build the chipping green and bunker', gg => ({ diffs: [paintCells(gg, c.green, c.green.length, SURF.green, 0, 0), paintCells(gg, c.bunker, c.bunker.length, SURF.bunker, 0, 0), paintCells(gg, c.tee, c.tee.length, SURF.tee, 0, 0)], spent: cost }));
+  assert.equal(money.v, 1e6 - cost); assert.equal(scanPractice(g, BOX).chipping.state, 'open');
+  assert.equal(tool.undoLabel, 'build the chipping green and bunker');
+  tool.undo(); assert.equal(money.v, 1e6); assert.equal(scanPractice(g, BOX).built, false, 'all of it gone in one step');
+  tool.redo(); assert.equal(scanPractice(g, BOX).chipping.state, 'open');
+  const f = facilityAt(g, BOX, p.centre.x, p.centre.y)!, back = facilityRefund(f);
+  tool.gridEdit('remove the chipping green and bunker', gg => ({ diffs: [paintCells(gg, f.cells, f.cells.length, SURF.none, 0, 0)], spent: -back }));
+  assert.equal(scanPractice(g, BOX).built, false); assert.equal(money.v, 1e6 - cost + back);
+  assert.equal(back, Math.round(cost / 2), 'half its price back');
+  tool.undo(); assert.equal(scanPractice(g, BOX).chipping.state, 'open'); assert.equal(money.v, 1e6 - cost);
 });
