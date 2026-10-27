@@ -1,0 +1,364 @@
+{
+  "schema": 1,
+  "id": "landscape:bush-deep-green",
+  "slug": "bush-deep-green",
+  "category": "landscaping",
+  "kind": "bush",
+  "viewSet": "diagonal-4",
+  "viewsOrder": [
+    "NE",
+    "SE",
+    "SW",
+    "NW"
+  ],
+  "requiresLibraryRegistration": true,
+  "generator": "built-in image_gen; canonical sheet is a lossless crop/order export of the saved generator sheet",
+  "generationProvenance": {
+    "file": "art/theme-consistency/generated/landscaping/bush-deep-green-diagonal-4views-v1.provenance.json",
+    "sha256": "ab321b67b9da9ec8ce4acb2fba4ec0b16524abbaf6e13d142af158ec761d640f"
+  },
+  "references": [
+    "art/theme-consistency/references/rotation-guide-v1.png",
+    "art/theme-consistency/generated/landscaping/bush-deep-green-screen-axis-4views-v1.png",
+    "art/theme-consistency/references/theme-authoritative.png"
+  ],
+  "prompt": "Use case: stylized-concept. FOUR genuinely elevated ISOMETRIC views of ONE landscape plant forMapleFalls town game. Image1 specifies four real quarterturn camera orientations ONLY, do not paint its boxes/labels/white markers. Image2 supplies species, scale, leafbrushwork and plantidentity ONLY; addmissing45degree-yawdiagonalviews, notitshead-onones. Image3 setsconsistenthandpaintedtownfamilytheme.\nONE broadlowdeepforestgreen shrub, glossy buthandpainted roundedclusterleaves, irregular domed canopy with smallerprotrudinglobeononephysicalend, 1mhigh 1.7mwide. Warmolivetops underupperrightsun, coolsoftdeeptealundersides, neverbluephotographicnoise. Thinshortdarkstems atsoilcontact. NO pot,planter,flowersorgrasspatch.\nKeep exactspecies/palette/dimensions, recognisableasymmetricplantlobes, branches andleafgrouping throughout rigid90degreeobjectturns. Fixed2:1isometricorthographiccamera, lookdownonfoliagetops, verticalstemsupright, truechangedocclusion andsilhouettefromeachside. StartingNE FRONT+RIGHT, SE RIGHT+REAR, SW REAR+LEFT, NW LEFT+FRONT; aphysicalsidebranchmovesaroundplantanddisappearsbehindfoliageinrearviews. Do not copy/pasteor mirroranypicture or justshuffleleavesonunchangedfrontview.\nHand-paintedstylizedreadablefoliagemasses andboldshapes, confidentbrushstrokes, samewarmtownart. SunfixedSCREENUPPERRIGHTtowardLOWERLEFTinall4views; leafyhighlightsright, lowerleftcoollocalundersides. RealRGBAtransparentoutsideplant, no pot, planter,greyfloor, grassisland, shadowdisc, backdrop,checkerboard, text/labels/guidecolors.\nSquare2x2equalcellssheet NE/SE/SW/NWrowmajor, fourcompleteisolatedcutouts allsamephysicalscale withatleast15%cleartransparentpaddingEACHcellincludingcentregutter. Keepallleavesinsidecell. Oneplantpercellonly.",
+  "sourceSheet": {
+    "file": "art/theme-consistency/generated/landscaping/bush-deep-green-diagonal-4views-v1.png",
+    "sha256": "c59238ef5fd44a7b95598581b68b2f8bc4f6693d511d3fd4102e43d644289cbb",
+    "nativePixels": [
+      1254,
+      1254
+    ]
+  },
+  "canonicalDirectionToSourceDirection": {
+    "NE": "NE",
+    "SE": "NW",
+    "SW": "SW",
+    "NW": "SE"
+  },
+  "output": "art/theme-consistency/generated/landscaping/bush-deep-green-4views-v1.png",
+  "lighting": "Fixed screen upper-right toward lower-left; art review pending",
+  "processing": "Exact native source-rectangle RGBA copied into transparent equal cells in canonical engine order. No resize, recolour, repaint, mirroring, warp, alpha thresholding or invented view.",
+  "diagonalExport": {
+    "schema": 1,
+    "id": "landscape:bush-deep-green",
+    "viewSet": "diagonal-4",
+    "viewsOrder": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "sheet": "art/theme-consistency/generated/landscaping/bush-deep-green-4views-v1.png",
+    "sheetSha256": "9a0faa2633a3a39eeffc7f75eb44c9ed38b995d75107c0979362e589b7aeeb01",
+    "nativeSheetPixels": [
+      1328,
+      1254
+    ],
+    "sourceSheet": {
+      "file": "art/theme-consistency/generated/landscaping/bush-deep-green-diagonal-4views-v1.png",
+      "sha256": "c59238ef5fd44a7b95598581b68b2f8bc4f6693d511d3fd4102e43d644289cbb",
+      "nativePixels": [
+        1254,
+        1254
+      ]
+    },
+    "canonicalDirectionToSourceDirection": {
+      "NE": "NE",
+      "SE": "NW",
+      "SW": "SW",
+      "NW": "SE"
+    },
+    "cycleCorrection": "Source camera-guide cycle is opposite runtime preset clockwise cycle. NE<-rawNE, SE<-rawNW, SW<-rawSW, NW<-rawSE; only labels/whole cutouts reordered, no pixels mirrored or transformed.",
+    "processing": "Exact native source-rectangle RGBA copied into transparent equal cells in canonical engine order. No resize, recolour, repaint, mirroring, warp, alpha thresholding or invented view.",
+    "fileContractStatus": "passed-with-alpha-residue-warnings",
+    "visualReviewStatus": "pending-primary-review",
+    "integrationStatus": "ready",
+    "issues": [],
+    "warnings": [
+      "NE: low alpha1..15 residue retained at canvas boundary",
+      "SE: low alpha1..15 residue retained at canvas boundary",
+      "SW: low alpha1..15 residue retained at canvas boundary",
+      "NW: low alpha1..15 residue retained at canvas boundary"
+    ],
+    "views": {
+      "NE": {
+        "nativeFile": "art/theme-consistency/generated/landscaping/bush-deep-green-4views-v1/NE.native.png",
+        "nativeSha256": "1abd5756317217266611e90acaf5e5d36ec332204a4aff2838e365e573d6b3e6",
+        "nativePixels": [
+          664,
+          627
+        ],
+        "pixelSha256": "d00f8b5ef12dfa7ed6dd4d0cadc6eff7860f83b3f99a8b741f6272a2a01ae6b0",
+        "sourceView": "NE",
+        "sourceFile": "art/theme-consistency/generated/landscaping/bush-deep-green-diagonal-4views-v1.png",
+        "sourceSha256": "c59238ef5fd44a7b95598581b68b2f8bc4f6693d511d3fd4102e43d644289cbb",
+        "rawSheetRect": {
+          "left": 0,
+          "top": 0,
+          "width": 664,
+          "height": 627
+        },
+        "sourceOffset": [
+          0,
+          0
+        ],
+        "sourceRect": {
+          "left": 0,
+          "top": 0,
+          "width": 664,
+          "height": 627
+        },
+        "exactDecodedSourceRgba": true,
+        "alpha": {
+          "strong": {
+            "threshold": 16,
+            "count": 198428,
+            "edge": 0,
+            "bounds": {
+              "left": 30,
+              "top": 114,
+              "width": 633,
+              "height": 444
+            },
+            "corners": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "all": {
+            "threshold": 1,
+            "count": 211749,
+            "edge": 54,
+            "bounds": {
+              "left": 0,
+              "top": 8,
+              "width": 664,
+              "height": 619
+            },
+            "corners": [
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      },
+      "SE": {
+        "nativeFile": "art/theme-consistency/generated/landscaping/bush-deep-green-4views-v1/SE.native.png",
+        "nativeSha256": "cc6ae84b2dfc25055eec5481830715cbddb2cb99a2bb259f8a2ff8bf17ef7b53",
+        "nativePixels": [
+          664,
+          627
+        ],
+        "pixelSha256": "d0bb39c14962f6f845e220a10501802cce305208705691b9584a45e97c163020",
+        "sourceView": "NW",
+        "sourceFile": "art/theme-consistency/generated/landscaping/bush-deep-green-diagonal-4views-v1.png",
+        "sourceSha256": "c59238ef5fd44a7b95598581b68b2f8bc4f6693d511d3fd4102e43d644289cbb",
+        "rawSheetRect": {
+          "left": 649,
+          "top": 627,
+          "width": 605,
+          "height": 627
+        },
+        "sourceOffset": [
+          29,
+          0
+        ],
+        "sourceRect": {
+          "left": 664,
+          "top": 0,
+          "width": 664,
+          "height": 627
+        },
+        "exactDecodedSourceRgba": true,
+        "alpha": {
+          "strong": {
+            "threshold": 16,
+            "count": 159086,
+            "edge": 0,
+            "bounds": {
+              "left": 54,
+              "top": 84,
+              "width": 542,
+              "height": 426
+            },
+            "corners": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "all": {
+            "threshold": 1,
+            "count": 172030,
+            "edge": 56,
+            "bounds": {
+              "left": 29,
+              "top": 0,
+              "width": 601,
+              "height": 627
+            },
+            "corners": [
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      },
+      "SW": {
+        "nativeFile": "art/theme-consistency/generated/landscaping/bush-deep-green-4views-v1/SW.native.png",
+        "nativeSha256": "258ad74a98bbf20f4efe5945d4d430e9c3ec92b9ddf4ee082015dabf430cdd76",
+        "nativePixels": [
+          664,
+          627
+        ],
+        "pixelSha256": "dc2df51629027ba2c7828a06daac6fea92672c274443597441f22d3873d6e4c2",
+        "sourceView": "SW",
+        "sourceFile": "art/theme-consistency/generated/landscaping/bush-deep-green-diagonal-4views-v1.png",
+        "sourceSha256": "c59238ef5fd44a7b95598581b68b2f8bc4f6693d511d3fd4102e43d644289cbb",
+        "rawSheetRect": {
+          "left": 0,
+          "top": 627,
+          "width": 649,
+          "height": 627
+        },
+        "sourceOffset": [
+          7,
+          0
+        ],
+        "sourceRect": {
+          "left": 0,
+          "top": 627,
+          "width": 664,
+          "height": 627
+        },
+        "exactDecodedSourceRgba": true,
+        "alpha": {
+          "strong": {
+            "threshold": 16,
+            "count": 178540,
+            "edge": 0,
+            "bounds": {
+              "left": 56,
+              "top": 62,
+              "width": 599,
+              "height": 446
+            },
+            "corners": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "all": {
+            "threshold": 1,
+            "count": 195164,
+            "edge": 58,
+            "bounds": {
+              "left": 7,
+              "top": 1,
+              "width": 649,
+              "height": 626
+            },
+            "corners": [
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      },
+      "NW": {
+        "nativeFile": "art/theme-consistency/generated/landscaping/bush-deep-green-4views-v1/NW.native.png",
+        "nativeSha256": "51bb2f52f5414d39999096625472357f1bc0cfeb6516f7788137d9ed5fe4e815",
+        "nativePixels": [
+          664,
+          627
+        ],
+        "pixelSha256": "25f8cf7ac51a377350747cd9b135ad0e9a67c1801a5e8847e556eacd45d16581",
+        "sourceView": "SE",
+        "sourceFile": "art/theme-consistency/generated/landscaping/bush-deep-green-diagonal-4views-v1.png",
+        "sourceSha256": "c59238ef5fd44a7b95598581b68b2f8bc4f6693d511d3fd4102e43d644289cbb",
+        "rawSheetRect": {
+          "left": 664,
+          "top": 0,
+          "width": 590,
+          "height": 627
+        },
+        "sourceOffset": [
+          37,
+          0
+        ],
+        "sourceRect": {
+          "left": 664,
+          "top": 627,
+          "width": 664,
+          "height": 627
+        },
+        "exactDecodedSourceRgba": true,
+        "alpha": {
+          "strong": {
+            "threshold": 16,
+            "count": 170487,
+            "edge": 0,
+            "bounds": {
+              "left": 57,
+              "top": 117,
+              "width": 533,
+              "height": 478
+            },
+            "corners": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "all": {
+            "threshold": 1,
+            "count": 181007,
+            "edge": 8,
+            "bounds": {
+              "left": 37,
+              "top": 0,
+              "width": 576,
+              "height": 627
+            },
+            "corners": [
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      }
+    }
+  },
+  "integrationStatus": "ready",
+  "integrationReason": "Native export complete; actual four-turn camera/theme/light appearance approval still required",
+  "visualReviewStatus": "accepted-for-art-appearance",
+  "appearanceReview": {
+    "date": "2026-10-27",
+    "reviewer": "Primary art agent",
+    "scope": "ART only, not owner approval or proof of live integration",
+    "verdict": "accepted",
+    "findings": [
+      "Species/style match existing painted town family",
+      "Local screen upper-right light",
+      "Clear alpha without floor/background",
+      "Changed branch occlusion through four physical views; no exact duplicate paintings",
+      "Canonical native directions reorder generator SE/NW to match the engine clockwise convention"
+    ]
+  }
+}

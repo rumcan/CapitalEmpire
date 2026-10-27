@@ -1,0 +1,364 @@
+{
+  "schema": 1,
+  "id": "landscape:bush-sage-round",
+  "slug": "bush-sage-round",
+  "category": "landscaping",
+  "kind": "bush",
+  "viewSet": "diagonal-4",
+  "viewsOrder": [
+    "NE",
+    "SE",
+    "SW",
+    "NW"
+  ],
+  "requiresLibraryRegistration": true,
+  "generator": "built-in image_gen; canonical sheet is a lossless crop/order export of the saved generator sheet",
+  "generationProvenance": {
+    "file": "art/theme-consistency/generated/landscaping/bush-sage-round-diagonal-4views-v1.provenance.json",
+    "sha256": "fb22bc76aed6ba9b4dafdab58a415779d2f641511f8b36a8c8e4a0ea2f8adeb9"
+  },
+  "references": [
+    "art/theme-consistency/references/rotation-guide-v1.png",
+    "art/theme-consistency/generated/landscaping/bush-sage-round-screen-axis-4views-v1.png",
+    "art/theme-consistency/references/theme-authoritative.png"
+  ],
+  "prompt": "Use case: stylized-concept. FOUR genuinely elevated ISOMETRIC views of ONE landscape plant forMapleFalls town game. Image1 specifies four real quarterturn camera orientations ONLY, do not paint its boxes/labels/white markers. Image2 supplies species, scale, leafbrushwork and plantidentity ONLY; addmissing45degree-yawdiagonalviews, notitshead-onones. Image3 setsconsistenthandpaintedtownfamilytheme.\nONE lowcompact rounded boxwood bush, pale sage/limegreen densepaintedoval leaves, threeirregularinterlockingfoliagemounds, 0.8mhigh 1.5mwide, shortdarkstemsvisibleatbase. Recognisableasymmetric smallsidebranch onphysicalright, preservedthroughturns. No pot,planter,edging,flowers orsurroundinggrass.\nKeep exactspecies/palette/dimensions, recognisableasymmetricplantlobes, branches andleafgrouping throughout rigid90degreeobjectturns. Fixed2:1isometricorthographiccamera, lookdownonfoliagetops, verticalstemsupright, truechangedocclusion andsilhouettefromeachside. StartingNE FRONT+RIGHT, SE RIGHT+REAR, SW REAR+LEFT, NW LEFT+FRONT; aphysicalsidebranchmovesaroundplantanddisappearsbehindfoliageinrearviews. Do not copy/pasteor mirroranypicture or justshuffleleavesonunchangedfrontview.\nHand-paintedstylizedreadablefoliagemasses andboldshapes, confidentbrushstrokes, samewarmtownart. SunfixedSCREENUPPERRIGHTtowardLOWERLEFTinall4views; leafyhighlightsright, lowerleftcoollocalundersides. RealRGBAtransparentoutsideplant, no pot, planter,greyfloor, grassisland, shadowdisc, backdrop,checkerboard, text/labels/guidecolors.\nSquare2x2equalcellssheet NE/SE/SW/NWrowmajor, fourcompleteisolatedcutouts allsamephysicalscale withatleast15%cleartransparentpaddingEACHcellincludingcentregutter. Keepallleavesinsidecell. Oneplantpercellonly.",
+  "sourceSheet": {
+    "file": "art/theme-consistency/generated/landscaping/bush-sage-round-diagonal-4views-v1.png",
+    "sha256": "efd75e03f09bb58b63b1d14608a6f595ee2d27dc980a1a9a81e3f98851cc77ad",
+    "nativePixels": [
+      1254,
+      1254
+    ]
+  },
+  "canonicalDirectionToSourceDirection": {
+    "NE": "NE",
+    "SE": "NW",
+    "SW": "SW",
+    "NW": "SE"
+  },
+  "output": "art/theme-consistency/generated/landscaping/bush-sage-round-4views-v1.png",
+  "lighting": "Fixed screen upper-right toward lower-left; art review pending",
+  "processing": "Exact native source-rectangle RGBA copied into transparent equal cells in canonical engine order. No resize, recolour, repaint, mirroring, warp, alpha thresholding or invented view.",
+  "diagonalExport": {
+    "schema": 1,
+    "id": "landscape:bush-sage-round",
+    "viewSet": "diagonal-4",
+    "viewsOrder": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "sheet": "art/theme-consistency/generated/landscaping/bush-sage-round-4views-v1.png",
+    "sheetSha256": "dd9ee4c65dd8c0beb1c491ef8b32e251c4f329063c1e5cd7e080539cbbaac4f5",
+    "nativeSheetPixels": [
+      1324,
+      1254
+    ],
+    "sourceSheet": {
+      "file": "art/theme-consistency/generated/landscaping/bush-sage-round-diagonal-4views-v1.png",
+      "sha256": "efd75e03f09bb58b63b1d14608a6f595ee2d27dc980a1a9a81e3f98851cc77ad",
+      "nativePixels": [
+        1254,
+        1254
+      ]
+    },
+    "canonicalDirectionToSourceDirection": {
+      "NE": "NE",
+      "SE": "NW",
+      "SW": "SW",
+      "NW": "SE"
+    },
+    "cycleCorrection": "Source camera-guide cycle is opposite runtime preset clockwise cycle. NE<-rawNE, SE<-rawNW, SW<-rawSW, NW<-rawSE; only labels/whole cutouts reordered, no pixels mirrored or transformed.",
+    "processing": "Exact native source-rectangle RGBA copied into transparent equal cells in canonical engine order. No resize, recolour, repaint, mirroring, warp, alpha thresholding or invented view.",
+    "fileContractStatus": "passed-with-alpha-residue-warnings",
+    "visualReviewStatus": "pending-primary-review",
+    "integrationStatus": "ready",
+    "issues": [],
+    "warnings": [
+      "NE: low alpha1..15 residue retained at canvas boundary",
+      "SE: low alpha1..15 residue retained at canvas boundary",
+      "SW: low alpha1..15 residue retained at canvas boundary",
+      "NW: low alpha1..15 residue retained at canvas boundary"
+    ],
+    "views": {
+      "NE": {
+        "nativeFile": "art/theme-consistency/generated/landscaping/bush-sage-round-4views-v1/NE.native.png",
+        "nativeSha256": "22b1e18bcb873723b4cecbcf624e05b6b59f5cfdecba4acbdbb6b26935133c57",
+        "nativePixels": [
+          662,
+          627
+        ],
+        "pixelSha256": "c3e1c7a79d4bcda5ee45365a23af5362ed018973ca38bf6fca5ad90277b897ef",
+        "sourceView": "NE",
+        "sourceFile": "art/theme-consistency/generated/landscaping/bush-sage-round-diagonal-4views-v1.png",
+        "sourceSha256": "efd75e03f09bb58b63b1d14608a6f595ee2d27dc980a1a9a81e3f98851cc77ad",
+        "rawSheetRect": {
+          "left": 0,
+          "top": 0,
+          "width": 662,
+          "height": 627
+        },
+        "sourceOffset": [
+          0,
+          0
+        ],
+        "sourceRect": {
+          "left": 0,
+          "top": 0,
+          "width": 662,
+          "height": 627
+        },
+        "exactDecodedSourceRgba": true,
+        "alpha": {
+          "strong": {
+            "threshold": 16,
+            "count": 179754,
+            "edge": 0,
+            "bounds": {
+              "left": 48,
+              "top": 138,
+              "width": 613,
+              "height": 426
+            },
+            "corners": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "all": {
+            "threshold": 1,
+            "count": 190110,
+            "edge": 16,
+            "bounds": {
+              "left": 25,
+              "top": 53,
+              "width": 637,
+              "height": 574
+            },
+            "corners": [
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      },
+      "SE": {
+        "nativeFile": "art/theme-consistency/generated/landscaping/bush-sage-round-4views-v1/SE.native.png",
+        "nativeSha256": "4275dc4e8afc964b09e039c6aba57e9fe58040d40b44bb34de34f1e9a5da9fd5",
+        "nativePixels": [
+          662,
+          627
+        ],
+        "pixelSha256": "72c9582a9b120d7d6052abd306e04474a6de9c0e70d77ecf9b788d658413c833",
+        "sourceView": "NW",
+        "sourceFile": "art/theme-consistency/generated/landscaping/bush-sage-round-diagonal-4views-v1.png",
+        "sourceSha256": "efd75e03f09bb58b63b1d14608a6f595ee2d27dc980a1a9a81e3f98851cc77ad",
+        "rawSheetRect": {
+          "left": 629,
+          "top": 627,
+          "width": 625,
+          "height": 627
+        },
+        "sourceOffset": [
+          18,
+          0
+        ],
+        "sourceRect": {
+          "left": 662,
+          "top": 0,
+          "width": 662,
+          "height": 627
+        },
+        "exactDecodedSourceRgba": true,
+        "alpha": {
+          "strong": {
+            "threshold": 16,
+            "count": 153945,
+            "edge": 0,
+            "bounds": {
+              "left": 73,
+              "top": 98,
+              "width": 554,
+              "height": 413
+            },
+            "corners": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "all": {
+            "threshold": 1,
+            "count": 164178,
+            "edge": 67,
+            "bounds": {
+              "left": 18,
+              "top": 0,
+              "width": 616,
+              "height": 627
+            },
+            "corners": [
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      },
+      "SW": {
+        "nativeFile": "art/theme-consistency/generated/landscaping/bush-sage-round-4views-v1/SW.native.png",
+        "nativeSha256": "41ee52bc2e98b760e2fc4db90374c46e5ba9351613c3102804e1a18c7f209f20",
+        "nativePixels": [
+          662,
+          627
+        ],
+        "pixelSha256": "fdbc72531b2e180b820a7d9e71b472d4741ec11878098d73b7521547f8395c37",
+        "sourceView": "SW",
+        "sourceFile": "art/theme-consistency/generated/landscaping/bush-sage-round-diagonal-4views-v1.png",
+        "sourceSha256": "efd75e03f09bb58b63b1d14608a6f595ee2d27dc980a1a9a81e3f98851cc77ad",
+        "rawSheetRect": {
+          "left": 0,
+          "top": 627,
+          "width": 629,
+          "height": 627
+        },
+        "sourceOffset": [
+          16,
+          0
+        ],
+        "sourceRect": {
+          "left": 0,
+          "top": 627,
+          "width": 662,
+          "height": 627
+        },
+        "exactDecodedSourceRgba": true,
+        "alpha": {
+          "strong": {
+            "threshold": 16,
+            "count": 163861,
+            "edge": 0,
+            "bounds": {
+              "left": 60,
+              "top": 80,
+              "width": 584,
+              "height": 410
+            },
+            "corners": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "all": {
+            "threshold": 1,
+            "count": 174812,
+            "edge": 51,
+            "bounds": {
+              "left": 16,
+              "top": 15,
+              "width": 629,
+              "height": 612
+            },
+            "corners": [
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      },
+      "NW": {
+        "nativeFile": "art/theme-consistency/generated/landscaping/bush-sage-round-4views-v1/NW.native.png",
+        "nativeSha256": "fba6893506b113f24519ff7c9729448a9c65c404bf9d6d1e29d793f85a6a05be",
+        "nativePixels": [
+          662,
+          627
+        ],
+        "pixelSha256": "8f6f8ea23245b3cc4b581bd4bdebace50494e5d8a63450c8aa6b09b01edfc2d4",
+        "sourceView": "SE",
+        "sourceFile": "art/theme-consistency/generated/landscaping/bush-sage-round-diagonal-4views-v1.png",
+        "sourceSha256": "efd75e03f09bb58b63b1d14608a6f595ee2d27dc980a1a9a81e3f98851cc77ad",
+        "rawSheetRect": {
+          "left": 662,
+          "top": 0,
+          "width": 592,
+          "height": 627
+        },
+        "sourceOffset": [
+          35,
+          0
+        ],
+        "sourceRect": {
+          "left": 662,
+          "top": 627,
+          "width": 662,
+          "height": 627
+        },
+        "exactDecodedSourceRgba": true,
+        "alpha": {
+          "strong": {
+            "threshold": 16,
+            "count": 149297,
+            "edge": 0,
+            "bounds": {
+              "left": 76,
+              "top": 128,
+              "width": 497,
+              "height": 451
+            },
+            "corners": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "all": {
+            "threshold": 1,
+            "count": 159129,
+            "edge": 2,
+            "bounds": {
+              "left": 35,
+              "top": 47,
+              "width": 544,
+              "height": 580
+            },
+            "corners": [
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      }
+    }
+  },
+  "integrationStatus": "ready",
+  "integrationReason": "Native export complete; actual four-turn camera/theme/light appearance approval still required",
+  "visualReviewStatus": "accepted-for-art-appearance",
+  "appearanceReview": {
+    "date": "2026-10-27",
+    "reviewer": "Primary art agent",
+    "scope": "ART only, not owner approval or proof of live integration",
+    "verdict": "accepted",
+    "findings": [
+      "Species/style match existing painted town family",
+      "Local screen upper-right light",
+      "Clear alpha without floor/background",
+      "Changed branch occlusion through four physical views; no exact duplicate paintings",
+      "Canonical native directions reorder generator SE/NW to match the engine clockwise convention"
+    ]
+  }
+}

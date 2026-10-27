@@ -7,7 +7,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { LIBRARY } from '../src/game/library';
 import { AXIS_HEADING, AXIS_NEW, AXIS_SETS, AXIS_TURN } from '../src/game/axis-library';
-import { GARAGE_VIEW_SETS } from '../src/game/garage-views-library';
+import { EXTRA_VIEW_SETS as GARAGE_VIEW_SETS } from '../src/game/extra-views-library';
 import { drawnAs } from '../src/game/mirror';
 import { axisViews, baseView, footprintOf, sizeKey, sizeViews, turned } from '../src/game/lots/preset-art';
 import { drawnAsStandIn, lookOf, standInLabel } from '../src/game/newart';

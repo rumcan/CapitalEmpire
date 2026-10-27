@@ -31,6 +31,10 @@ parallel, and push fixes as follow-up PRs (AGENT-BRIEF sections 1 and 5).
 **The owner tests on http://localhost:5174.** The owner pre-approves the lead's recommended decisions (state them in chat). The lead
 merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of every change.
 
+### Art integration T183 (#459)
+
+Branch `lead/garage-eight-views-20261026`, worktree `worktrees/garage-eight-views-20261026`: reviewed native diagonal views for all five parking-garage storey counts and three shrubs. Existing axis IDs and saved indices stay intact; new diagonal sets append once, share Studio sizes and use the actual road heading. Canonical SE/NW names are losslessly corrected from the generator labels. Source art, crop hashes and primary reviews accompany normal packed assets. Typecheck and actual game/Studio checks are the next step; no main claim before the PR merges.
+
 ### In flight
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |

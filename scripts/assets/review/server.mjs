@@ -54,7 +54,7 @@ const CAR_SCALE = +(/export const CAR_SCALE = ([\d.]+)/.exec(fs.readFileSync(pat
 
 // ---------------------------------------------------------------- sizes: every sprite as the game draws it (review/size-report.ts)
 const SIZE_SRC = path.join(ROOT, 'scripts/assets/review/size-report.ts'), SIZE_OUT = path.join(ROOT, 'output/review/size-report.mjs');
-const SIZE_INPUTS = [SIZE_SRC, path.join(ROOT, 'scripts/assets/scale-overrides.json'), ...['library', 'views-library', 'axis-library', 'garage-views-library', 'garage-views', 'trees-library', 'cars-library', 'east-library', 'business-library',
+const SIZE_INPUTS = [SIZE_SRC, path.join(ROOT, 'scripts/assets/scale-overrides.json'), ...['library', 'views-library', 'axis-library', 'extra-views-library', 'extra-views', 'trees-library', 'cars-library', 'east-library', 'business-library',
   'construction-library', 'golf-library', 'newart', 'sizes', 'lots/scales', 'lots/studio-base'].map(f => path.join(ROOT, 'src/game', `${f}.ts`))];
 let sizes = { stamp: '', data: {} }, sizing = null;
 /** the size report: id -> { scale, base, sizeId, drawn: { id, name, quad, scale, fill, cap } | null, sharp, native, and the picture's atlas rect and page },
@@ -109,7 +109,7 @@ function library() {
 /** the screen-axis sets (src/game/axis-library.ts AXIS_SETS, T154): subject id -> its [N, E, S, W] pictures; {} before the first pack */
 function axisSets() { try { return JSON.parse(/export const AXIS_SETS[^=]*= ({.*});/.exec(fs.readFileSync(path.join(ROOT, 'src/game/axis-library.ts'), 'utf8'))[1]); } catch { return {}; } }
 /** accepted garage diagonal sets; the existing card/base picture is still N, never reinterpreted as NE */
-function garageSets() { try { return JSON.parse(/export const GARAGE_VIEW_SETS[^=]*= ({.*});/.exec(fs.readFileSync(path.join(ROOT, 'src/game/garage-views-library.ts'), 'utf8'))[1]); } catch { return {}; } }
+function extraSets() { try { return JSON.parse(/export const EXTRA_VIEW_SETS[^=]*= ({.*});/.exec(fs.readFileSync(path.join(ROOT, 'src/game/extra-views-library.ts'), 'utf8'))[1]); } catch { return {}; } }
 // the appended libraries: the item array (one line in cars and businesses, several in east) and the page file for a page index
 const APPENDED = [
   { file: 'src/game/cars-library.ts', re: /ITEMS: LibItem\[\] = (\[[\s\S]*?\]);\n/, page: p => `src/assets/cars/cars-${p}.webp` },
@@ -414,7 +414,7 @@ http.createServer(async (req, res) => {
       // The card shows all four as thumbnails (/thumb/<id>) and sizes all four; the views are not cards of their own, so the east one is left out of the grid
       // A subject with a screen-axis set (axis-library.ts AXIS_SETS, T154) shows its N, E, S, W pictures too (a new subject's N view is its own picture;
       // a prop keeps its old picture as the card's, its four new views beside it), all sized together
-      const axis = axisSets(), garages = garageSets();
+      const axis = axisSets(), garages = extraSets();
       const viewsOf = id => {
         const se = rep[`east:${id}`] ? `east:${id}` : `view:${id}:se`, four = garages[id] ? garages[id].map((v, i) => ({ dir: ['NE', 'SE', 'SW', 'NW'][i], id: v })).filter(v => rep[v.id]) : rep[`view:${id}:sw`] && rep[`view:${id}:nw`] ? [{ dir: 'NE', id }, { dir: 'SE', id: se }, { dir: 'SW', id: `view:${id}:sw` }, { dir: 'NW', id: `view:${id}:nw` }] : [];
         const ax = (axis[id] ?? []).map((v, i) => ({ dir: 'NESW'[i], id: v })).filter(v => rep[v.id]), all = [...four, ...ax];

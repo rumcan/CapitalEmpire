@@ -1,0 +1,354 @@
+{
+  "schema": 1,
+  "id": "landscape:bush-golden-russet",
+  "slug": "bush-golden-russet",
+  "category": "landscaping",
+  "kind": "bush",
+  "viewSet": "diagonal-4",
+  "viewsOrder": [
+    "NE",
+    "SE",
+    "SW",
+    "NW"
+  ],
+  "requiresLibraryRegistration": true,
+  "generator": "built-in image_gen; canonical sheet is a lossless crop/order export of the saved generator sheet",
+  "generationProvenance": {
+    "file": "art/theme-consistency/generated/landscaping/bush-golden-russet-diagonal-4views-v2.provenance.json",
+    "sha256": "761440f10271bb917916521d1a3d8dfa188bf60b942880d4b0083e3a28acd2e4"
+  },
+  "references": [
+    "art/theme-consistency/generated/landscaping/bush-golden-russet-diagonal-4views-v1.png",
+    "art/theme-consistency/references/theme-authoritative.png"
+  ],
+  "prompt": "Layout correction ofImage1 only. Preserve theseFOURsamewarmrusset/goldenpaintedbush quarterturns andalltheirbranches/foliageidentity, but placeeachspritefullyinsideitsownEQUAL2x2cell with20percentcleartransparentpadding oneverycellside. Shrinkallfouruniformlyasneededandcentreeachinitsequalcell. No foliagecrossesthecentreverticalorhorizontalgutter, no leavesfromonespriteintrudeanothercell. Keepfourdistinctturns, elevationandupperrightsunfixed, samepalette/paintedthemeasimage2. TrueRGBAtransparentbackground, nofloor, scenery,shadowdisc,checkerboard,UI,textorlabels. Onecompletebushpercellonly. Do notcropanyfoliage. SquarePNG.",
+  "sourceSheet": {
+    "file": "art/theme-consistency/generated/landscaping/bush-golden-russet-diagonal-4views-v2.png",
+    "sha256": "428424d47f761cbc38d944072a0b72c7bc5886e45b4416068e6b59fafbe90781",
+    "nativePixels": [
+      1254,
+      1254
+    ]
+  },
+  "canonicalDirectionToSourceDirection": {
+    "NE": "NE",
+    "SE": "NW",
+    "SW": "SW",
+    "NW": "SE"
+  },
+  "output": "art/theme-consistency/generated/landscaping/bush-golden-russet-4views-v2.png",
+  "lighting": "Fixed screen upper-right toward lower-left; art review pending",
+  "processing": "Exact native source-rectangle RGBA copied into transparent equal cells in canonical engine order. No resize, recolour, repaint, mirroring, warp, alpha thresholding or invented view.",
+  "diagonalExport": {
+    "schema": 1,
+    "id": "landscape:bush-golden-russet",
+    "viewSet": "diagonal-4",
+    "viewsOrder": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "sheet": "art/theme-consistency/generated/landscaping/bush-golden-russet-4views-v2.png",
+    "sheetSha256": "6dd2ba17160afb191f91586bc31203fc054525a4f5b9f25554adcf111a225f82",
+    "nativeSheetPixels": [
+      1328,
+      1254
+    ],
+    "sourceSheet": {
+      "file": "art/theme-consistency/generated/landscaping/bush-golden-russet-diagonal-4views-v2.png",
+      "sha256": "428424d47f761cbc38d944072a0b72c7bc5886e45b4416068e6b59fafbe90781",
+      "nativePixels": [
+        1254,
+        1254
+      ]
+    },
+    "canonicalDirectionToSourceDirection": {
+      "NE": "NE",
+      "SE": "NW",
+      "SW": "SW",
+      "NW": "SE"
+    },
+    "cycleCorrection": "Source camera-guide cycle is opposite runtime preset clockwise cycle. NE<-rawNE, SE<-rawNW, SW<-rawSW, NW<-rawSE; only labels/whole cutouts reordered, no pixels mirrored or transformed.",
+    "processing": "Exact native source-rectangle RGBA copied into transparent equal cells in canonical engine order. No resize, recolour, repaint, mirroring, warp, alpha thresholding or invented view.",
+    "fileContractStatus": "passed-with-alpha-residue-warnings",
+    "visualReviewStatus": "accepted-for-art-appearance",
+    "integrationStatus": "ready",
+    "issues": [],
+    "warnings": [
+      "NE: low alpha1..15 residue retained at canvas boundary",
+      "SE: low alpha1..15 residue retained at canvas boundary",
+      "SW: low alpha1..15 residue retained at canvas boundary",
+      "NW: low alpha1..15 residue retained at canvas boundary"
+    ],
+    "views": {
+      "NE": {
+        "nativeFile": "art/theme-consistency/generated/landscaping/bush-golden-russet-4views-v2/NE.native.png",
+        "nativeSha256": "31aadd7b80ee2ff46058f628d77cf728ba2062e43903adafaade1eb6baae0711",
+        "nativePixels": [
+          664,
+          627
+        ],
+        "pixelSha256": "bacb1355aabeaac8432318a3c8a22ad885e40954db82c6ea574b8dd09fa2a3cf",
+        "sourceView": "NE",
+        "sourceFile": "art/theme-consistency/generated/landscaping/bush-golden-russet-diagonal-4views-v2.png",
+        "sourceSha256": "428424d47f761cbc38d944072a0b72c7bc5886e45b4416068e6b59fafbe90781",
+        "rawSheetRect": {
+          "left": 0,
+          "top": 0,
+          "width": 651,
+          "height": 627
+        },
+        "sourceOffset": [
+          6,
+          0
+        ],
+        "sourceRect": {
+          "left": 0,
+          "top": 0,
+          "width": 664,
+          "height": 627
+        },
+        "exactDecodedSourceRgba": true,
+        "alpha": {
+          "strong": {
+            "threshold": 16,
+            "count": 200703,
+            "edge": 0,
+            "bounds": {
+              "left": 50,
+              "top": 95,
+              "width": 606,
+              "height": 486
+            },
+            "corners": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "all": {
+            "threshold": 1,
+            "count": 219954,
+            "edge": 16,
+            "bounds": {
+              "left": 6,
+              "top": 15,
+              "width": 651,
+              "height": 612
+            },
+            "corners": [
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      },
+      "SE": {
+        "nativeFile": "art/theme-consistency/generated/landscaping/bush-golden-russet-4views-v2/SE.native.png",
+        "nativeSha256": "cfdda337b3b2a7aacb91e42799581c61650b42fcaba4c7ae2990a450ca75b62c",
+        "nativePixels": [
+          664,
+          627
+        ],
+        "pixelSha256": "1edd243560b8c66f964e09d1836fe915f8aa5b3cbdb05bce7d7dd87971e49c6b",
+        "sourceView": "NW",
+        "sourceFile": "art/theme-consistency/generated/landscaping/bush-golden-russet-diagonal-4views-v2.png",
+        "sourceSha256": "428424d47f761cbc38d944072a0b72c7bc5886e45b4416068e6b59fafbe90781",
+        "rawSheetRect": {
+          "left": 664,
+          "top": 627,
+          "width": 590,
+          "height": 627
+        },
+        "sourceOffset": [
+          37,
+          0
+        ],
+        "sourceRect": {
+          "left": 664,
+          "top": 0,
+          "width": 664,
+          "height": 627
+        },
+        "exactDecodedSourceRgba": true,
+        "alpha": {
+          "strong": {
+            "threshold": 16,
+            "count": 181568,
+            "edge": 0,
+            "bounds": {
+              "left": 57,
+              "top": 39,
+              "width": 549,
+              "height": 498
+            },
+            "corners": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "all": {
+            "threshold": 1,
+            "count": 195695,
+            "edge": 10,
+            "bounds": {
+              "left": 37,
+              "top": 0,
+              "width": 575,
+              "height": 627
+            },
+            "corners": [
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      },
+      "SW": {
+        "nativeFile": "art/theme-consistency/generated/landscaping/bush-golden-russet-4views-v2/SW.native.png",
+        "nativeSha256": "9685b57d76b94b5389a0324be03d159b8d68a6ee8b9ce5236e3033cf197bac06",
+        "nativePixels": [
+          664,
+          627
+        ],
+        "pixelSha256": "6ea88de28e359277a66b55684f5f0e7a7486fd6bca28b59a9f143b8b25d81768",
+        "sourceView": "SW",
+        "sourceFile": "art/theme-consistency/generated/landscaping/bush-golden-russet-diagonal-4views-v2.png",
+        "sourceSha256": "428424d47f761cbc38d944072a0b72c7bc5886e45b4416068e6b59fafbe90781",
+        "rawSheetRect": {
+          "left": 0,
+          "top": 627,
+          "width": 664,
+          "height": 627
+        },
+        "sourceOffset": [
+          0,
+          0
+        ],
+        "sourceRect": {
+          "left": 0,
+          "top": 627,
+          "width": 664,
+          "height": 627
+        },
+        "exactDecodedSourceRgba": true,
+        "alpha": {
+          "strong": {
+            "threshold": 16,
+            "count": 199031,
+            "edge": 0,
+            "bounds": {
+              "left": 39,
+              "top": 42,
+              "width": 624,
+              "height": 482
+            },
+            "corners": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "all": {
+            "threshold": 1,
+            "count": 217391,
+            "edge": 51,
+            "bounds": {
+              "left": 0,
+              "top": 0,
+              "width": 664,
+              "height": 627
+            },
+            "corners": [
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      },
+      "NW": {
+        "nativeFile": "art/theme-consistency/generated/landscaping/bush-golden-russet-4views-v2/NW.native.png",
+        "nativeSha256": "e57cac4448e4ddf60090973cfd073b9a40c8ed69e94e2d3b12c0250d116222b9",
+        "nativePixels": [
+          664,
+          627
+        ],
+        "pixelSha256": "93ca62c2682cbffa7b7a227c7f97cff00f4c4cb829df36a5a6bccd72c2555590",
+        "sourceView": "SE",
+        "sourceFile": "art/theme-consistency/generated/landscaping/bush-golden-russet-diagonal-4views-v2.png",
+        "sourceSha256": "428424d47f761cbc38d944072a0b72c7bc5886e45b4416068e6b59fafbe90781",
+        "rawSheetRect": {
+          "left": 651,
+          "top": 0,
+          "width": 603,
+          "height": 627
+        },
+        "sourceOffset": [
+          30,
+          0
+        ],
+        "sourceRect": {
+          "left": 664,
+          "top": 627,
+          "width": 664,
+          "height": 627
+        },
+        "exactDecodedSourceRgba": true,
+        "alpha": {
+          "strong": {
+            "threshold": 16,
+            "count": 185798,
+            "edge": 0,
+            "bounds": {
+              "left": 46,
+              "top": 91,
+              "width": 549,
+              "height": 521
+            },
+            "corners": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "all": {
+            "threshold": 1,
+            "count": 199694,
+            "edge": 5,
+            "bounds": {
+              "left": 30,
+              "top": 19,
+              "width": 589,
+              "height": 608
+            },
+            "corners": [
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      }
+    }
+  },
+  "integrationStatus": "ready",
+  "integrationReason": "Primary saved-art appearance approval recorded; runtime import still required.",
+  "visualReviewStatus": "accepted-for-art-appearance",
+  "appearanceDecision": {
+    "file": "art/theme-consistency/generated/landscaping/bush-golden-russet-4views-v2/review/appearance-decision.json",
+    "sha256": "fe230c190d346b6d6a2f4a90694693fcc356a2d4f5bc269c20fbe6e2555bb0ac"
+  }
+}

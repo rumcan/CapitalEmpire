@@ -33,10 +33,10 @@ import sharp from 'sharp';
 import { findGlows } from './find-glows.mjs';
 import { cropFourViews } from './four-view-cells.mjs';
 import { readScales } from './overrides.mjs';
-import { prepGarageViews } from './prep-garage-views.mjs';
+import { prepExtraViews } from './prep-extra-views.mjs';
 
 // Garages already use their base ID for the N picture; append their reviewed diagonal IDs separately, preserving existing saves.
-await prepGarageViews(process.argv.slice(2));
+await prepExtraViews(process.argv.slice(2));
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const BUILDINGS = 'art/theme-consistency/generated/buildings', STORE = path.join(root, 'art/building-views');

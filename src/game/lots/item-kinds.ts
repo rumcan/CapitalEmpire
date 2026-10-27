@@ -7,7 +7,8 @@ import type { LibItem } from '../types';
 import { drawnAsStandIn } from '../newart';
 import { LOT_DECALS } from '../lot-decals';
 import { AXIS_HEADING, AXIS_SETS } from '../axis-library';
-import { GARAGE_VIEW_SETS } from '../garage-views-library';
+import { EXTRA_VIEW_SETS } from '../extra-views-library';
+import { EXTRA_VIEW_BASE } from '../extra-views';
 import { footprintOf, ownerScaleOf } from './preset-art';
 import type { ItemKind } from './learn';
 
@@ -25,7 +26,7 @@ export function spriteGroup(it: Pick<LibItem, 'id' | 'kind' | 'cat' | 'big'>): '
  *  by it, the extra headings of the shops, houses and props among them (view:<id>:n) */
 const AXIS_FIRST: ReadonlySet<string> = new Set(Object.values(AXIS_SETS).map(v => v[0]));
 /** Garage diagonal sets are offered once too: their explicit NE picture; R turns within the four diagonal pictures. */
-const GARAGE_FIRST: ReadonlySet<string> = new Set(Object.values(GARAGE_VIEW_SETS).map(v => v[0]));
+const GARAGE_FIRST: ReadonlySet<string> = new Set(Object.values(EXTRA_VIEW_SETS).map(v => v[0]));
 /** whether a library sprite may be placed on a lot in the lab: not a turned view (but a screen-axis set's first) or an east copy, not a walker or
  *  one of the people, not an old building drawn as a stand-in */
 export const placeable = (it: LibItem, i: number) => (!it.id.startsWith('view:') || AXIS_FIRST.has(it.id) || GARAGE_FIRST.has(it.id)) && !it.id.startsWith('east:') && it.kind !== 'walker' && !SKIP_CAT.has(it.cat) && !drawnAsStandIn(i);
@@ -41,7 +42,8 @@ const MAX_AREA: Readonly<Record<ItemKind, number>> = { tree: 9, bush: 4, flowerb
 export function itemKind(it: LibItem, i: number, area = ownArea(it.id)): ItemKind | null {
   // the town's lots leave the screen-axis art (its pictures, view:... and the sets' first) to the Props tool and the lab (T154): the generator,
   // which lays the town's lots on the map axes (T160), never offers it
-  if (!placeable(it, i) || it.id.startsWith('view:') || AXIS_HEADING[it.id] !== undefined || isFence(it.id)) return null;
+  const diagonalPlant = EXTRA_VIEW_BASE.has(it.id) && spriteGroup(it) === 'plants';
+  if (!placeable(it, i) || (it.id.startsWith('view:') && !diagonalPlant) || AXIS_HEADING[it.id] !== undefined || isFence(it.id)) return null;
   const g = spriteGroup(it), t = `${it.id} ${it.name}`.toLowerCase();
   // a car a house keeps on its drive: no bus, no truck
   if (g === 'vehicles') return it.kind === 'car' && area <= MAX_AREA.car && !/bus|truck|tractor|trailer/i.test(`${it.id} ${it.name}`) ? 'car' : null;

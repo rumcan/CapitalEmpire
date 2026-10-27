@@ -1,0 +1,45 @@
+{
+  "id": "landscape:bush-deep-green",
+  "slug": "bush-deep-green",
+  "details": "ONE broadlowdeepforestgreen shrub, glossy buthandpainted roundedclusterleaves, irregular domed canopy with smallerprotrudinglobeononephysicalend, 1mhigh 1.7mwide. Warmolivetops underupperrightsun, coolsoftdeeptealundersides, neverbluephotographicnoise. Thinshortdarkstems atsoilcontact. NO pot,planter,flowersorgrasspatch.",
+  "kind": "bush",
+  "category": "landscaping",
+  "requiresLibraryRegistration": true,
+  "source": "art/theme-consistency/generated/landscaping/bush-deep-green-screen-axis-4views-v1.png",
+  "output": "art/theme-consistency/generated/landscaping/bush-deep-green-diagonal-4views-v1.png",
+  "provenance": "art/theme-consistency/generated/landscaping/bush-deep-green-diagonal-4views-v1.provenance.json",
+  "references": [
+    "art/theme-consistency/references/rotation-guide-v1.png",
+    "art/theme-consistency/generated/landscaping/bush-deep-green-screen-axis-4views-v1.png",
+    "art/theme-consistency/references/theme-authoritative.png"
+  ],
+  "prompt": "Use case: stylized-concept. FOUR genuinely elevated ISOMETRIC views of ONE landscape plant forMapleFalls town game. Image1 specifies four real quarterturn camera orientations ONLY, do not paint its boxes/labels/white markers. Image2 supplies species, scale, leafbrushwork and plantidentity ONLY; addmissing45degree-yawdiagonalviews, notitshead-onones. Image3 setsconsistenthandpaintedtownfamilytheme.\nONE broadlowdeepforestgreen shrub, glossy buthandpainted roundedclusterleaves, irregular domed canopy with smallerprotrudinglobeononephysicalend, 1mhigh 1.7mwide. Warmolivetops underupperrightsun, coolsoftdeeptealundersides, neverbluephotographicnoise. Thinshortdarkstems atsoilcontact. NO pot,planter,flowersorgrasspatch.\nKeep exactspecies/palette/dimensions, recognisableasymmetricplantlobes, branches andleafgrouping throughout rigid90degreeobjectturns. Fixed2:1isometricorthographiccamera, lookdownonfoliagetops, verticalstemsupright, truechangedocclusion andsilhouettefromeachside. StartingNE FRONT+RIGHT, SE RIGHT+REAR, SW REAR+LEFT, NW LEFT+FRONT; aphysicalsidebranchmovesaroundplantanddisappearsbehindfoliageinrearviews. Do not copy/pasteor mirroranypicture or justshuffleleavesonunchangedfrontview.\nHand-paintedstylizedreadablefoliagemasses andboldshapes, confidentbrushstrokes, samewarmtownart. SunfixedSCREENUPPERRIGHTtowardLOWERLEFTinall4views; leafyhighlightsright, lowerleftcoollocalundersides. RealRGBAtransparentoutsideplant, no pot, planter,greyfloor, grassisland, shadowdisc, backdrop,checkerboard, text/labels/guidecolors.\nSquare2x2equalcellssheet NE/SE/SW/NWrowmajor, fourcompleteisolatedcutouts allsamephysicalscale withatleast15%cleartransparentpaddingEACHcellincludingcentregutter. Keepallleavesinsidecell. Oneplantpercellonly.",
+  "viewSet": "diagonal-4",
+  "viewsOrder": [
+    "NE",
+    "SE",
+    "SW",
+    "NW"
+  ],
+  "transparent": true,
+  "date": "2026-10-27",
+  "generator": "built-in image_gen",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-e060b7cd-c933-4b7e-a26c-5872841aead9.png",
+  "referenceHashes": [
+    {
+      "file": "art/theme-consistency/references/rotation-guide-v1.png",
+      "sha256": "8d60d56c563159d06a052d472856e067366834957936b942a749934883fd2e3c"
+    },
+    {
+      "file": "art/theme-consistency/generated/landscaping/bush-deep-green-screen-axis-4views-v1.png",
+      "sha256": "dd1a17474de8870cc8417c646fad08c27efaba6b0db5d2ac18374a5ff6186f88"
+    },
+    {
+      "file": "art/theme-consistency/references/theme-authoritative.png",
+      "sha256": "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2"
+    }
+  ],
+  "lighting": "screen upper-right toward lower-left; even macro exposure for ground",
+  "integrationStatus": "pending-visual-review",
+  "processing": "Native generator output copied byte-for-byte; no repaint, resample, mirror, recolour or transform."
+}

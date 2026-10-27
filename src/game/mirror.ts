@@ -7,7 +7,7 @@
 import type { LibItem } from './types';
 import { BUILDING_IDS, VIEW_ART, unmirror } from './views-library';
 import { AXIS_TURN } from './axis-library';
-import { garageUnmirror } from './garage-views';
+import { extraUnmirror } from './extra-views';
 
 /** the kinds drawn from building art: houses, shops, lot buildings, baked lots, business pictures, golf and event structures */
 const KINDS = new Set(['house', 'building', 'venue', 'lot', 'business', 'gazebo', 'arcade']);
@@ -16,7 +16,7 @@ export const isBuilding = (it: LibItem) => BUILDING_IDS.has(it.id) || KINDS.has(
 
 /** the sprite and flip a library sprite is drawn with: a building or a screen-axis picture is never mirrored; anything else as it is */
 export function drawnAs(it: LibItem, flip: boolean): [string, boolean] {
-  const garage = garageUnmirror(it.id, flip); if (garage !== null) return [garage, false];
+  const garage = extraUnmirror(it.id, flip); if (garage !== null) return [garage, false];
   const a = AXIS_TURN[it.id]; if (a !== undefined) return [flip ? a : it.id, false];
   if (it.id.startsWith('east:') && !VIEW_ART.has(it.id)) return [it.id.slice(5), false];
   const [id, f] = unmirror(it.id, flip);
