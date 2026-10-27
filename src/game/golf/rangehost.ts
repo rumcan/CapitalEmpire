@@ -69,8 +69,9 @@ const rangePreset = (s: RangePresetKey) => PRESETS.find(p => p.id === RANGE_PRES
  *  (alternating down the range), 'y' bands down it (alternating across); null when the preset has them off */
 export function outfieldStripes(sc: Pick<RangeScene, 'aim' | 'roadDir' | 'mowFrom'>, s: Stripes | null | undefined): MowStripes | null {
   if (!s?.on) return null;
-  const u = s.dir === 'y' ? sc.roadDir : sc.aim, n = Math.hypot(u.x, u.y) || 1;
-  return { ux: u.x / n, uy: u.y / n, ox: sc.mowFrom.x, oy: sc.mowFrom.y, w: s.width, l: s.light, k: s.dark, lc: s.lightCol, dc: s.darkCol, t: s.tint, f: s.soft };
+  const u = s.dir === 'y' ? sc.roadDir : sc.aim, n = Math.hypot(u.x, u.y) || 1, na = Math.hypot(sc.aim.x, sc.aim.y) || 1;
+  // T227: the line of play rides along, so the course finish lays the outfield's bands as the fairways' (course-finish finishMow)
+  return { ux: u.x / n, uy: u.y / n, ox: sc.mowFrom.x, oy: sc.mowFrom.y, w: s.width, l: s.light, k: s.dark, lc: s.lightCol, dc: s.darkCol, t: s.tint, f: s.soft, lx: sc.aim.x / na, ly: sc.aim.y / na };
 }
 /** the takings are booked this often (sim s), not on every sale; a frame this long (sim s) is a skip */
 const BOOK_EVERY = 2, SKIP_DT = 120;

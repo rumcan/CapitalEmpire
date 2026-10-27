@@ -372,7 +372,9 @@ function readSurfaces() { let f = null; try { f = JSON.parse(fs.readFileSync(PS_
 function writeSurfaces(f) {
   const line = o => JSON.stringify(o).replace(/":/g, '": ').replace(/,"/g, ', "').replace(/^\{/, '{ ').replace(/\}$/, ' }');
   const obj = (o, pad) => Object.entries(o).map(([k, v]) => `${pad}${JSON.stringify(k)}: ${line(v)}`).join(',\n');
-  const txt = `{\n "v": 1,\n "surfaces": {\n${obj(f.surfaces, '  ')}\n },\n "lawns": [\n${f.lawns.map(l => '  ' + line(l)).join(',\n')}\n ],\n "presets": {\n${obj(f.presets, '  ')}\n }\n}\n`;
+  // T227: the course finish's knobs (course-finish.ts), one line, when the file has them (absent: the tuned look)
+  const course = f.course ? `,\n "course": ${line(f.course)}` : '';
+  const txt = `{\n "v": 1,\n "surfaces": {\n${obj(f.surfaces, '  ')}\n },\n "lawns": [\n${f.lawns.map(l => '  ' + line(l)).join(',\n')}\n ],\n "presets": {\n${obj(f.presets, '  ')}\n }${course}\n}\n`;
   fs.writeFileSync(PS_FILE, txt.replace(/\{\n\n \}/g, '{}').replace(/\[\n\n \]/g, '[]'));
 }
 /** every painting the registry names (the Painted tab may read only these) */
@@ -545,7 +547,7 @@ http.createServer(async (req, res) => {
       const rm = readRemoved(), sc = readScales(), houses = library().filter(x => x.kind === 'house' && x.tex && !rm[x.id]).map(x => ({ id: x.id, name: x.name, quad: x.quad ?? [0, 0, x.w, x.h], ax: x.ax, ay: x.ay, scale: sc[x.id] ?? mapScale(x.id) }));
       return json({ file: readGround(), sources: groundSources(), houses, ranges: GL.RANGES, defaults: { side: GL.DEFAULT_SIDE, mix: GL.DEFAULT_MIX }, decals: readDecals() });
     }
-    if (req.method === 'GET' && P === '/api/painted') return json({ families: PL.FAMILIES, surfaces: PL.SURFACES, presets: readPresets().presets.map(p => ({ id: p.id, name: p.name, surface: p.surface, lawn: p.lawn })), file: readSurfaces(), ranges: PL.LOOK_RANGES, lawnSlots: PL.LAWN_SLOTS });
+    if (req.method === 'GET' && P === '/api/painted') return json({ families: PL.FAMILIES, surfaces: PL.SURFACES, presets: readPresets().presets.map(p => ({ id: p.id, name: p.name, surface: p.surface, lawn: p.lawn })), file: readSurfaces(), ranges: PL.LOOK_RANGES, lawnSlots: PL.LAWN_SLOTS, finish: { defaults: PL.DEFAULT_COURSE_FINISH, ranges: PL.FINISH_RANGES } });
     if (req.method === 'POST' && P === '/api/painted') {
       const { file } = await body(req);
       if (!file || typeof file !== 'object') { res.writeHead(400); return res.end('no surfaces'); }
