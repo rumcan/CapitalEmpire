@@ -23,9 +23,9 @@
   "field": { "family": "underground-earth", "version": "v2", "scale": 0.5, "tint": "#9aa8f0", "tone": -0.1 },
   "woodland": { "family": "golden-fescue", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "outside": { "family": "golden-fescue", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
-  "lawn": { "family": "emerald-short", "version": null, "scale": 0.75, "tint": "#ffffff", "tone": 0 },
-  "lawnBuilt": { "family": "fringe", "version": null, "scale": 1, "tint": "#ffedfa", "tone": 0.04 },
-  "lawnUpgraded": { "family": "fringe", "version": null, "scale": 1, "tint": "#ffedfa", "tone": 0.1 },
+  "lawn": { "family": "first-cut-run", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
+  "lawnBuilt": { "family": "first-cut-run", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
+  "lawnUpgraded": { "family": "first-cut-run", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0.04 },
   "lawnDeclined": { "family": "rough-owner", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "lush": { "family": "rough-owner", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "patchy": { "family": "rough-owner", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
@@ -38,7 +38,7 @@
   { "family": "rough-owner", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0, "weight": 2 }
  ],
  "presets": {
-  "lawns": { "family": "emerald-short", "version": null, "scale": 0.75, "tint": "#ffffff", "tone": 0 },
+  "lawns": { "family": "first-cut-run", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "path-worn": { "family": "underground-earth", "version": "v2", "scale": 0.5, "tint": "#b0b4e8", "tone": 0 },
   "range-outfield": { "family": "fringe", "version": null, "scale": 1, "tint": "#ffedfa", "tone": 0.06 },
   "range-green": { "family": "putting-green-v2", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 }
