@@ -54,7 +54,7 @@ test('a putting green counts once it is big enough (green plus fringe) and lies 
   const g = grid();
   let s = scanPractice(g, AREA.box);
   assert.equal(s.putting.state, 'none'); assert.equal(s.chipping.state, 'none'); assert.equal(s.built, false);
-  assert.equal(practiceWords(s.putting), 'Paint a putting green here');
+  assert.equal(practiceWords(s.putting), 'Build a putting green');
   // a green outside the area does not count
   green(g, 40, 80, 6); s = scanPractice(g, AREA.box); assert.equal(s.putting.state, 'none'); assert.equal(s.built, false);
   // a small one in it: too small, with its size
@@ -191,7 +191,7 @@ test('the host: the tee box laid once into the grid as tee cells of no hole; the
   for (let i = 0; i < 8; i++) h.step();
   assert.equal(h.practiceFacts()!.putting, 'open'); assert.equal(biz.practice.putting.open, true); assert.ok(toasts.some(t => /Putting green open/.test(t)));
   const v = h.view()!;
-  assert.deepEqual(v.practice.map(f => f.state), ['open', 'none']); assert.match(v.practice[1]!.words, /Paint a chipping green/);
+  assert.deepEqual(v.practice.map(f => f.state), ['open', 'none']); assert.match(v.practice[1]!.words, /Build a chipping green and bunker/);
   assert.equal(h.zoneAt(a.x, a.y), 'practice area (no hole)'); assert.equal(h.zoneAt(b.x, b.y), '');
 });
 
@@ -201,7 +201,7 @@ test('the hints teach the brush: the putting green first, then the chipping gree
   const ui0 = computeProgressiveUiState(base); assert.equal(ui0.shapeByHand, false); assert.deepEqual(ui0.visibleCourseBrushes, []);
   const p = (putting: 'none' | 'small' | 'open', chipping: 'none' | 'nobunker' | 'open'): PlayerProgressFacts => ({ ...base, practice: { putting, chipping } });
   assert.equal(nextFirstRunHint(p('none', 'none'))?.id, 'hint-practice-putting');
-  assert.match(nextFirstRunHint(p('small', 'none'))!.body, /Green brush/);
+  assert.match(nextFirstRunHint(p('small', 'none'))!.body, /Facilities ▸ Practice ▸ Putting green/); // T206: its own tool, not the brush
   assert.equal(nextFirstRunHint(p('open', 'none'))?.id, 'hint-practice-chipping');
   assert.equal(nextFirstRunHint(p('open', 'nobunker'))?.id, 'hint-practice-chipping');
   assert.equal(nextFirstRunHint(p('open', 'open'))?.id, 'hint-build-first-hole', 'both built: on to the first hole');

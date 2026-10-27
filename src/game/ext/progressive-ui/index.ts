@@ -203,23 +203,23 @@ export const FIRST_RUN_HINTS: readonly FirstRunHint[] = [
   },
 ];
 
-/** a range start's teaching ramp (plan P24 Phase 2, T130): paint the putting green, then the chipping green and its bunker, in the practice area
- *  beside the range (the hint bar's Show me pans there and picks the brush) */
+/** a range start's teaching ramp (plan P24 Phase 2, T130): build the putting green, then the chipping green and its bunker, in the practice
+ *  area beside the range (the hint bar's Show me pans there and arms Facilities ▸ Practice with it: T206) */
 export const PRACTICE_HINTS: readonly FirstRunHint[] = [
   {
     id: 'hint-practice-putting',
     stage: 1,
-    title: 'Paint a putting green',
-    body: 'Drag the Green brush in the Practice area beside the car park: 300 m² with its fringe opens it (+10% visitors, $2 a golfer).',
-    targetTool: 'course',
+    title: 'Build a putting green',
+    body: 'Facilities ▸ Practice ▸ Putting green: move it over the Practice area beside the car park and click (+10% visitors, $2 a golfer).',
+    targetTool: 'practice',
     show: true,
   },
   {
     id: 'hint-practice-chipping',
     stage: 1,
-    title: 'Now a chipping green and a bunker',
-    body: 'Paint a second, smaller green in the Practice area (200 m²), then a bunker beside it with the Bunker brush.',
-    targetTool: 'course',
+    title: 'Now a chipping green and bunker',
+    body: 'Facilities ▸ Practice ▸ Chipping green and bunker: it comes with its practice bunker and a mat to chip from.',
+    targetTool: 'practice',
     show: true,
   },
 ];
@@ -269,7 +269,7 @@ export const RAMP_WHY: Readonly<Record<RampStep, string>> = Object.freeze({
 });
 /** the toast as each ramp step opens */
 export const RAMP_TOAST: Readonly<Partial<Record<RampStep, string>>> = Object.freeze({
-  1: 'The Practice area is open: paint a putting green beside the car park (Holes)',
+  1: 'The Practice area is open: build a putting green beside the car park (Facilities ▸ Practice)',
   2: 'Props are open (Z): dress the range to draw more golfers',
   3: 'New hole is open: build your first hole, a par-3',
 });
