@@ -22,7 +22,10 @@
 //       from the seed at year 5 (no ribbon). The plan's 200 and 350 hold on seeds 2 and 3 (centre 46 / 172 and 41 / 235); seed 1's seed lies
 //       among rivers and creeks on every side, and its town grows round them to 241 at year 5 and 371 at year 20 (a tighter ring, 90 + 9 x
 //       sqrt(built), moved it by 1 tile: the streets' land, not the lot picks, sets it), so the bounds are seed 1's with a margin;
-//   (k) every season has builds; City.step under 25 ms on average and under 60 ms at its worst over the whole run.
+//   (k) every season has builds; City.step under 25 ms on average and under 120 ms at its worst over the whole run. Re-banded from 60 for T184:
+//       the town now drives (#442) and, with the junction rules, grows further, so a jam holds up to about 4,250 cars; one sim second (10 sim
+//       steps) of them measured 40-85 ms at its worst (seed 1 no-player: 83 ms, sim.step 78 ms of it, 3,731 cars; seeds 2-3 under 64 ms), the
+//       sim's own work at that load (GAME-PLAN 2.3's budget is 25 ms a 100 ms tick); the mean stays 5-7 ms.
 //
 // The checks (the bounds from main's numbers below, with a margin; THRESHOLDS):
 //   (a) golfers served a day (the range's own count, golfers you see) in [GOLFERS_DAY]: the range is open and busy, not flooded;
@@ -57,7 +60,7 @@ const seed = Number(argv[0] ?? 1), days = Math.max(1, Math.round(Number(argv[1] 
 const GROWTH = {
   lots: { 1: [25, 60], 5: [220, 400], 10: [650, 1300], 20: [1800, 3200] } as Record<number, [number, number]>,
   pop: { 5: [500, 1000], 20: [4000, 7500] } as Record<number, [number, number]>,
-  centre: { 5: 260, 20: 400 } as Record<number, number>, RIBBON: 500, RIBBON_SHARE: 0.1, FIRST_LEG_H: 2, FIRST_LOT_H: 1, STEP_MEAN: 25, STEP_MAX: 60,
+  centre: { 5: 260, 20: 400 } as Record<number, number>, RIBBON: 500, RIBBON_SHARE: 0.1, FIRST_LEG_H: 2, FIRST_LOT_H: 1, STEP_MEAN: 25, STEP_MAX: 120,
 };
 /** The two runs (T178, issue #443). The owner, 2026-10-27, on the jam #442's traffic brought: "Its gravel streets then jam from about season 7,
  *  houses decline ... this is seposed to happen btw. the guy hasto upgrade his town roads". So:
@@ -69,13 +72,17 @@ const GROWTH = {
  *  Congestion per season: the season's finished trips' mean time over their ideal (Sim.score), the share of the zones with trips over the
  *  decline line (access > 1.8, lots/town.ts), and the busiest county-road junction's share of the town's traffic: reported every season in
  *  both runs (and in the JSON), not checked: the jam is the game */
-/** the no-player run's bands: seeds 1-3 measured (#442's traffic, T178, 2026-10-27) with about 20% either way. Lots built / residents:
- *    seed 1: year 1 26 / 57, year 5 288 / 744, year 10 832 / 2,151, year 20 1,664 / 3,601
- *    seed 2: year 1 30 / 69, year 5 243 / 619, year 10 707 / 1,832, year 20 2,012 / 4,408
- *    seed 3: year 1 28 / 60, year 5 244 / 627, year 10 732 / 1,892, year 20 1,555 / 3,629 */
+/** the no-player run's bands: seeds 1-3 measured with about 20% either way. Re-banded for T184 (#464, the owner's junction rules: equal crossings
+ *  first come, queue-aware routing, the deadlock breaker): a town left alone still jams (trips 3.2-3.5x their ideal time from season 10-13,
+ *  most zones over the decline line), but its crossings no longer starve their cross streets, so it grows further. Lots built / residents:
+ *    seed 1: year 1 31 / 63, year 5 319 / 823, year 10 967 / 2,574, year 20 2,145 / 5,308
+ *    seed 2: year 1 31 / 78, year 5 319 / 813, year 10 967 / 2,553, year 20 1,905 / 4,826
+ *    seed 3: year 1 31 / 72, year 5 319 / 820, year 10 967 / 2,512, year 20 1,893 / 4,789
+ *  (Before T184, #442's traffic: seed 1 26 / 57, 288 / 744, 832 / 2,151, 1,664 / 3,601; seed 2 30 / 69, 243 / 619, 707 / 1,832, 2,012 / 4,408;
+ *  seed 3 28 / 60, 244 / 627, 732 / 1,892, 1,555 / 3,629.) */
 const NO_PLAYER = {
-  lots: { 1: [20, 40], 5: [190, 350], 10: [560, 1000], 20: [1250, 2450] } as Record<number, [number, number]>,
-  pop: { 5: [480, 900], 10: [1450, 2600], 20: [2900, 5300] } as Record<number, [number, number]>,
+  lots: { 1: [25, 40], 5: [255, 385], 10: [775, 1160], 20: [1500, 2600] } as Record<number, [number, number]>,
+  pop: { 5: [650, 990], 10: [2000, 3100], 20: [3800, 6400] } as Record<number, [number, number]>,
 };
 const DECLINE = 1.8;
 /** the player run's upgrades: at most MAX segs a season, never below RESERVE in the treasury */
