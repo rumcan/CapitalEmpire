@@ -77,6 +77,11 @@ export function draftShadow(pic: DraftPicture, kind: DraftKind, shear: { sx: num
   // 2. the ground line g (texel rows) under every column
   const g = new Float64Array(w);
   const lowest = Math.max(...cols.map(x => bot[x]!));
+  // the trunk (a tree): the run of columns about the lowest pixel nearest the anchor (the trunk's foot, roots and all), and its centre column
+  const ax = clamp(Math.round(-x0 / rx), 0, w - 1);
+  let tc = -1; for (const x of cols) if (bot[x]! >= lowest - Math.max(2, 3 / ry) && (tc < 0 || Math.abs(x - ax) < Math.abs(tc - ax))) tc = x;
+  let ta = tc, tb = tc; while (ta > 0 && bot[ta - 1]! >= lowest - Math.max(2, 3 / ry)) ta--; while (tb < w - 1 && bot[tb + 1]! >= lowest - Math.max(2, 3 / ry)) tb++;
+  tc = Math.round((ta + tb) / 2);
   let mode = hint.ground ?? (kind === 'tree' || kind === 'plant' || kind === 'pole' || kind === 'walker' ? 'flat' : 'iso');
   if (Array.isArray(mode)) {
     const pts: [number, number][] = []; for (let i = 0; i + 1 < mode.length; i += 2) pts.push([(mode[i]! - x0) / rx, (mode[i + 1]! - y0) / ry]);
@@ -90,17 +95,39 @@ export function draftShadow(pic: DraftPicture, kind: DraftKind, shear: { sx: num
     for (let x = 0; x < w; x++) g[x] = feet.length && (x < feet[0]![0] || x > feet[feet.length - 1]![0]) && Number.isFinite(tent[x]!) ? Math.min(interp(feet, x), tent[x]!) : interp(feet, x);
     mode = 'iso';
   }
+  // 2a. (T185) a building's wall standing further back than something lower in front of it (a porch, a deck, steps, the bushes along it, a
+  // carport's posts), or drawn steeper than the 2:1 ground (the art's own perspective): the ground line above runs under the lower thing's
+  // diamond or the 2:1 tent, below the wall's own base, and the wall's shadow started off it (the owner, 2026-10-27: "shadows are not starting
+  // at the base of a sprite"). A building's column whose bottom is above that line is a wall standing on its own base when its bottom is
+  // within an eighth of the picture's height of the tent, or it runs most of the picture's height (a wall from the roof down; eaves, canopies
+  // and roofs' ends hang far higher and are short): its ground is its own bottom (median-smoothed along the wall). In the columns between
+  // (a porch's, a deck's: their own foot lower), a pixel above the walls' line (their tent, where it stays within that eighth) stands on it
+  const setback = new Uint8Array(w), back = new Float64Array(w).fill(-Infinity);
+  if (kind === 'building' && mode === 'iso' && !hint.box) {
+    const near8 = Math.max(tol, 0.12 * H); let any = false;
+    for (const x of cols) if (!touch[x] && bot[x]! < g[x]! - tol && (bot[x]! >= steep[x]! - near8 || bot[x]! - top[x]! >= 0.45 * H)) { setback[x] = 1; any = true; }
+    if (any) {
+      const b = new Float64Array(w).fill(-1); for (let x = 0; x < w; x++) if (setback[x]) b[x] = bot[x]!;
+      const t = tentOf(b, w, slope); for (let x = 0; x < w; x++) back[x] = !setback[x] && t[x]! >= 0 && g[x]! - t[x]! <= near8 ? t[x]! : -Infinity;
+      const sb = cols.filter(x => setback[x]);
+      sb.forEach((x, i) => { const win = sb.slice(Math.max(0, i - 2), i + 3).filter(c => Math.abs(c - x) <= 6).map(c => bot[c]!).sort((p, q) => p - q); g[x] = Math.max(bot[x]!, win[win.length >> 1]!); });
+    }
+  }
   // 2b. a box's depth (iso ground with a V: a building's walls, a car's body). Its footprint is the diamond on the V's three corners (the far
   // corner = left + right - near), so a column stands over ground from the near edge g up to the far edge gb. A pixel more than the box's
   // height above the near edge is its roof, standing further back: its height is held to the box's (hcap) and its foot moves back with it,
   // so the roof's shadow is the walls' height long, not the picture's whole height (the old silhouette shadows' fault at the back)
   const gb = Float64Array.from(g); let hcap = Infinity;
+  // (T185: not a vehicle seen end on, below: its feet on one flat line, no V; a bus's mirrors out at the picture's ends made a diamond of its
+  // rear, and its whole length cast as its height)
+  const tf = cols.filter(x => touch[x]), endOn = kind === 'vehicle' && H * ry > 0.9 * Wd && tf.length > 0
+    && Math.max(...tf.map(x => bot[x]!)) - Math.min(...tf.map(x => bot[x]!)) < 0.25 * slope * (tf[tf.length - 1]! - tf[0]! + 1);
   if (hint.box) {
     // a long thing seen end on (a camper, a tractor from the front): its picture's height is mostly its length running back; it stands this
     // share of its picture's height tall, the rest is depth
     for (const x of cols) gb[x] = top[x]!; hcap = hint.box * H;
   } else
-  if (mode === 'iso' && hint.depth !== false) {
+  if (mode === 'iso' && hint.depth !== false && !endOn) {
     // the diamond from the tent over the picture's whole width (a box's walls, a car's or a wagon's wheels near its corners): the near corner
     // at the tent's lowest point, the side corners at the picture's ends, the far corner opposite the near one
     const xl = cols[0]!, xr = cols[cols.length - 1]!; let xf = xl; for (let x = xl; x <= xr; x++) if (tent[x]! > tent[xf]!) xf = x;
@@ -124,8 +151,10 @@ export function draftShadow(pic: DraftPicture, kind: DraftKind, shear: { sx: num
       if (A(x, y) < SOLID) continue;
       const Yd = Y(y); if (below !== undefined && Yd > below) continue;
       // the pixel's foot (texel rows): its column's near ground, or further back for a box's roof (2b)
-      const foot = gb[x]! < g[x]! ? Math.min(g[x]!, Math.max(gb[x]!, y + hcap)) : g[x]!;
-      let hh = (foot - y) * ry; if ((g[x]! - y) * ry < minH) continue; hh = Math.max(0, hh) * hk;
+      // (T185: above a wall's base standing back (2a), on that base)
+      const near = back[x]! < g[x]! && y < back[x]! ? back[x]! : g[x]!;
+      const foot = gb[x]! < near ? Math.min(near, Math.max(gb[x]!, y + hcap)) : near;
+      let hh = (foot - y) * ry; if ((near - y) * ry < minH) continue; hh = Math.max(0, hh) * hk;
       const gx = X(x), gy = Y(foot), px = gx + hh * sx, py = gy + hh * sy;
       pts.push(px, py, hh); L = Math.min(L, px); R = Math.max(R, px); T = Math.min(T, py); B = Math.max(B, py);
     }
@@ -138,8 +167,11 @@ export function draftShadow(pic: DraftPicture, kind: DraftKind, shear: { sx: num
       // close (dilate, fill small holes, erode), so the landed pixels make one shape
       // (a tree's or a plant's twice: its leaves' shadow is one soft shape, not every twig's)
       // (a tree's or a plant's blurred into one soft shape: its leaves' shadow, not every twig's and needle's)
+      // (T185: the landed cells kept through the closing and joined edge to edge, so a thin leg's or post's shadow, a diagonal line of cells
+      // touching only at their corners, traces as part of the shape instead of breaking into specks the filter below drops: the shadow
+      // then stops short of the leg's foot)
       const closed = leafy ? smooth(dilate(grid, GW, GH), GW, GH, blur)
-        : erode(fillSmallHoles(dilate(grid, GW, GH), GW, GH, Math.max(6, (GW * GH) / 2500)), GW, GH);
+        : edgeJoin(or(erode(fillSmallHoles(dilate(grid, GW, GH), GW, GH, Math.max(6, (GW * GH) / 2500)), GW, GH), grid), GW, GH);
       const rings = traceRings(closed, GW, GH).map(r => ({ r, a: ringArea(r) }));
       // see-through things (a chain-link mesh, a lattice) cast a lighter shadow: the share of the filled shape the pixels really landed on
       let landed = 0, filled = 0; for (let c = 0; c < grid.length; c++) { landed += grid[c]!; filled += closed[c]!; }
@@ -159,7 +191,8 @@ export function draftShadow(pic: DraftPicture, kind: DraftKind, shear: { sx: num
       };
       const s: number[][] = [];
       for (const { r, a } of keep) {
-        const cap = a > 0 ? 22 : 8;
+        // (T185: 32 points an outer ring, was 22: a busy picture's ring, simplified to fit, lost its legs' and posts' shadows at their feet)
+        const cap = a > 0 ? 32 : 8;
         let tolDP = Math.max(1.5, 0.007 * Math.max(GW, GH)), simp = simplifyRing(r, tolDP);
         while (simp.length > cap) { tolDP *= 1.3; simp = simplifyRing(r, tolDP); }
         // never a ring that crosses itself (it would fill wrong): simplify less until it does not
@@ -172,13 +205,32 @@ export function draftShadow(pic: DraftPicture, kind: DraftKind, shear: { sx: num
         }
         s.push(fl);
       }
+      // (T185) a tree's trunk casts its own band from its foot up into the canopy's shadow: the blur above (one soft shape for the leaves)
+      // took the thin trunk's shadow away, so the canopy's shadow floated off the trunk (the owner, 2026-10-27: "shadows are not starting at
+      // the base of a sprite"); a ring of its own (four points) also survives the far copy's cut
+      if (kind === 'tree' && tc >= 0) { const t = trunkBand(); if (t) s.push(t); }
       if (s.length) out.s = s;
     }
+  }
+  /** the trunk's band: its columns a little above the roots, from the foot up to where the canopy spreads (and a sixth further, into the
+   *  canopy's shadow), as a cast ring [x, y, h, ...]; null when no trunk shows */
+  function trunkBand(): number[] | null {
+    const at = (x: number, y: number) => x >= 0 && x < w && y >= 0 && y < h && A(x, y) >= SOLID;
+    const runAt = (y: number, c: number): [number, number] | null => { let x = c; if (!at(x, y)) { let d = 1; while (d < 6 && !at(c - d, y) && !at(c + d, y)) d++; if (d >= 6) return null; x = at(c - d, y) ? c - d : c + d; } let a = x, b = x; while (at(a - 1, y)) a--; while (at(b + 1, y)) b++; return [a, b]; };
+    const yr = lowest - Math.max(1, Math.round(0.08 * H)), r0 = runAt(yr, tc) ?? [ta, tb];
+    const tw = Math.min(r0[1] - r0[0] + 1, Math.max(2, Math.round(0.15 * Wd / rx))), mid = (r0[0] + r0[1]) / 2, a = mid - tw / 2, b = mid + tw / 2;
+    // up the trunk until the picture spreads (the canopy, the first big branches)
+    let yTop = lowest;
+    for (let y = lowest - 1; y >= 0; y--) { const r = runAt(y, Math.round(mid)); if (!r || r[1] - r[0] + 1 > Math.max(2.5 * tw, tw + 8 / rx)) break; yTop = y; }
+    const hk = hint.height ?? 1, ht = Math.min((lowest - yTop) * ry * 1.17, 0.75 * Hd) * hk;
+    if (ht < 4) return null;
+    const xa = x0 + (a - 0.5) * rx, xb = x0 + (b + 0.5) * rx, gy = Y(lowest);
+    return [r1(xa), r1(gy), 0, r1(xb), r1(gy), 0, r1(xb), r1(gy), r1(ht), r1(xa), r1(gy), r1(ht)];
   }
   // 4. the contact: runs of touching columns
   if (hint.contact !== false && Array.isArray(hint.contact)) out.c = hint.contact;
   else if (hint.contact !== false) {
-    const tx = cols.filter(x => touch[x] && (below === undefined || Y(bot[x]!) <= below + 2));
+    const tx = cols.filter(x => (touch[x] || setback[x]) && (below === undefined || Y(bot[x]!) <= below + 2));
     const runs: [number, number][] = [];
     for (const x of tx) { const l = runs[runs.length - 1]; if (l && x - l[1] <= Math.max(2, 3 / rx)) l[1] = x; else runs.push([x, x]); }
     // merge runs whose gap stays near the ground (a car's body between its wheels; not a bench's seat)
@@ -192,7 +244,9 @@ export function draftShadow(pic: DraftPicture, kind: DraftKind, shear: { sx: num
     const c: number[][] = [], gY = (x: number) => Y(g[clamp(Math.round(x), 0, w - 1)]!);
     if (kind === 'tree') {
       // a tree: one soft pool at its trunk's foot (the canopy keeps the sky off the ground round it), a little wider than the trunk
-      const run = merged.reduce((a, b) => (b[1] - b[0] > a[1] - a[0] ? b : a)), xc = (run[0] + run[1]) / 2;
+      // (T185: at the trunk, the run at the lowest pixel nearest the anchor; the widest touching run was at times a low branch's, the pool
+      // beside the tree)
+      const run: [number, number] = tc >= 0 ? [ta, tb] : merged.reduce((a, b) => (b[1] - b[0] > a[1] - a[0] ? b : a)), xc = (run[0] + run[1]) / 2;
       const rr = clamp(0.2 * Wd, Math.max(6, (run[1] - run[0] + 1) * rx), 70);
       c.push(ellipse(X(xc), gY(xc), rr, rr * 0.5, 14));
       out.kc = hint.kc ?? 0.38; out.fc = hint.fc ?? Math.round(clamp(0.45 * rr, 3, 24));
@@ -275,6 +329,19 @@ function selfCrosses(r: [number, number][]) {
     if (((d1 > 0 && d2 < 0) || (d1 < 0 && d2 > 0)) && ((d3 > 0 && d4 < 0) || (d3 < 0 && d4 > 0))) return true;
   }
   return false;
+}
+/** a | b, cell by cell */
+function or(a: Uint8Array, b: Uint8Array) { const o = a.slice(); for (let i = 0; i < o.length; i++) if (b[i]) o[i] = 1; return o; }
+/** every two filled cells that touch only at a corner joined by filling one of the two cells between them (the traced rings then follow a
+ *  diagonal line of cells as one shape); the grid's border stays empty */
+function edgeJoin(g: Uint8Array, W: number, H: number) {
+  const o = g.slice();
+  for (let y = 1; y < H - 2; y++) for (let x = 1; x < W - 1; x++) {
+    if (!g[y * W + x]) continue;
+    if (x < W - 2 && g[(y + 1) * W + x + 1] && !g[y * W + x + 1] && !g[(y + 1) * W + x]) o[y * W + x + 1] = 1;
+    if (x > 1 && g[(y + 1) * W + x - 1] && !g[y * W + x - 1] && !g[(y + 1) * W + x]) o[y * W + x - 1] = 1;
+  }
+  return o;
 }
 function dilate(g: Uint8Array, W: number, H: number) {
   const o = new Uint8Array(W * H);
