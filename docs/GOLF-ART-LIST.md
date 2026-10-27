@@ -7,7 +7,8 @@ Everything the golf game still needs drawn, in one list for the image generator:
 - storage and maintenance;
 - the course's everyday furniture and the clubhouse surroundings;
 - the tournament;
-- the people (made in 3D from one picture each).
+- the people (made in 3D from one picture each);
+- greenkeeping: every grass in five conditions, soils and wear decals (section 10).
 
 Each item gives its **angle code** (below), its size, its game id and a prompt. The tracker of what is in the game stays
 `docs/GOLF-SPRITES.md`; this file is the generator's side.
@@ -513,3 +514,73 @@ clips; the game renders the eight facings (`docs/HANDOVER-PEOPLE.md`). 31 people
 - **Tournament:** the small grandstand, the leaderboard, the food tent, the toilet block.
 - **Yard props:** the washing line, braais, lawn chairs, cooler, swing seat, birdhouse.
 - **People:** 31 golfers, spectators, staff and townspeople (PR #238), plus the 12 waiting for T203.
+
+---
+
+## 10. Greenkeeping (grass care): every grass in five conditions
+The owner, 2026-10-27: "we have this massive green keeping section that relies on grass looking a specific way. you need all that art in
+the art document".
+
+Greenkeeping (`src/game/ext/grass-management/`, T016) lays a **condition layer** over every managed grass, chosen by its health:
+- **neglected → stressed → recovering → maintained → pristine;**
+- plus soils, and decals for wear, divots and mowing.
+
+T016 generated all of it on 2026-10-22 (`art/grass-management/textures/`, `decals/`, `DELIVERY.md`), **before the painted style**, so it no
+longer matches the new grass (golden fescue, the rough paintings, fringe, putting-green v2). Regenerate it in the painted style, family by
+family. Keep each file's id (`<family>-<condition>`), since the game loads them by id.
+
+**Angle C, opaque, a 16 m square** (the base textures), seamless on all four edges, no visible repeat. Each family's five conditions must be
+the same grass at the same scale and camera, changing only its state, so the game can blend one into the next.
+
+**How to prompt:** shared block C, then the family line, then the condition line. Attach the family's current painted texture (Studio ›
+Painted shows which one) as the identity reference.
+
+### The 16 grass families (`GRASS_SURFACES`)
+| Family id | What it is (the family line) |
+| --- | --- |
+| `golf-green` | a golf putting green: very short dense bentgrass, a fine even grain |
+| `golf-fairway` | a golf fairway: short dense ryegrass, mown, even |
+| `golf-tee` | a golf tee box: short turf, a little worn where golfers stand |
+| `golf-fringe` | the collar round a green: fairway-short turf, slightly longer than the green |
+| `golf-first-cut` | the first cut of rough: medium-length grass between fairway and rough |
+| `golf-rough` | golf rough: longer, denser, darker grass with some coarse blades |
+| `golf-fescue` | deep golden fescue: tall wispy grass, gold and green |
+| `driving-range` | a driving range's outfield: mown turf with scattered balls and divot marks |
+| `town-park` | a town park lawn: ordinary mixed grass |
+| `road-verge` | a roadside verge: rough, mixed grass, a little dusty |
+| `residential-lawn` | a backyard lawn: mown ryegrass |
+| `meadow` | an uncut meadow: long grasses and leafy wild plants |
+| `clover-lawn` | a lawn mixed with white clover |
+| `estate-lawn` | a manicured estate lawn: very even, rich green |
+| `shaded-lawn` | a lawn under trees: thinner, softer, with some moss |
+| `damp-lawn` | a damp low lawn: lush, with soft patches and a little moss |
+
+### The five conditions (the condition line)
+| Condition | What it looks like |
+| --- | --- |
+| `neglected` | long and uneven, patchy, weeds (dandelion, plantain), bare soil patches, brown dead areas, no mowing |
+| `stressed` | thinning, dry and yellowing, wilted blades, brown spots, footprints and compaction showing |
+| `recovering` | new green shoots coming through thin turf, seeded patches, a mix of fresh green and old brown |
+| `maintained` | healthy, even, mown, a few small imperfections |
+| `pristine` | immaculate: dense, uniform, rich colour, crisp mowing, not a blade out of place |
+
+### Soils (4 families x 5 conditions)
+`loam`, `sandy-soil`, `clay-soil` and `gravel-soil`, each `dry`, `damp`, `compacted`, `churned` and `prepared` (raked and ready to seed). Each
+is one picture: the family's soil in that state, seen from above.
+
+### Decal sheets (12): angle C, TRANSPARENT, four separate variants in a 2x2 grid
+Each sheet holds four independent overlays laid over any grass; transparent everywhere except the marks; the edges fade out.
+| Sheet id | The four variants show |
+| --- | --- |
+| `mowing-stripes` | light/dark mowing stripes in four widths |
+| `mowing-patterns` | checkerboard, diagonal, diamond and circle mowing patterns |
+| `crowd-light` | light foot wear: flattened grass in a scattered path |
+| `crowd-heavy` | heavy crowd wear: trampled, muddy, bare paths |
+| `divots-fresh` | fresh divots: torn turf with a brown soil scar |
+| `divots-repair` | divots filled with green-tinted sand seed mix |
+| `cart-tracks` | golf cart tyre tracks pressed into turf |
+| `mud-footprints` | muddy footprints after rain |
+| `dry-patches` | brown dry patches of different shapes |
+| `maintenance` | aeration core holes, a topdressing sand film, sprinkler wet circles, a hole plug |
+| `leaves-litter` | scattered autumn leaves (maple red, oak brown, gold) |
+| `surface-transitions` | soft ragged grass-to-soil edges |
