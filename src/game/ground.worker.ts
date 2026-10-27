@@ -14,7 +14,7 @@ import { WOODLAND_TEX } from './terrain-paint';
 import { VARIANT_IDS } from './living-ground';
 import { WALL_TEX } from './ext/course-walls';
 import { softCanvases } from './canvas2d';
-import { WOODLAND, lawnTexFor } from './painted-surfaces';
+import { BLOCK_UNDER, WOODLAND, lawnTexFor } from './painted-surfaces';
 import type { LotPatch } from './ground-protocol';
 
 const scope = self as unknown as DedicatedWorkerGlobalScope;
@@ -126,7 +126,7 @@ const handle = async (m: ToWorker) => {
           else if (isPaintPhoto(t) && !eager.has(t) && !tex.built(t)) void tex.ensure(t).catch(err => post({ t: 'error', message: String(err) }));
           else if (tex.isLazy(t)) tex.queueBuild(t);
         }
-        if (painted.length) void tex.preparePainted(tex.paintedArtLevel, painted).catch(err => post({ t: 'error', message: String(err) }));
+        if (painted.length) void tex.preparePainted(tex.paintedArtLevel, painted, [], false).catch(err => post({ t: 'error', message: String(err) }));
         kick();
         break;
       }
@@ -151,6 +151,8 @@ const handle = async (m: ToWorker) => {
             // a town lawn wears one of the painted lawns (painted-surfaces.ts lawnSlot), picked by where it lies
             // (a lot's lawn wears its look state's, T155: lawnTexFor)
             if (p.lawn && tex.paintedOn) { const t = lawnTexFor(p.lawn, p.pts, tex.surfaces); if (t) need.add(t); }
+            // T194: a block's grass in soft patches lies over the rough
+            if (p.lawn && p.lawn.share < 1) need.add(BLOCK_UNDER);
           }
           if (painter.grassStrength > 0 && !painter.grassHeat) {
             for (let y = Math.max(0, Math.floor(box[1] / 4)); y < Math.min(MAP / 4, Math.ceil(box[3] / 4)); y++) for (let x = Math.max(0, Math.floor(box[0] / 4)); x < Math.min(MAP / 4, Math.ceil(box[2] / 4)); x++) {
