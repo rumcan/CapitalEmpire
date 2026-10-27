@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-27 10:37)
+## START HERE (kept current by the lead; last updated 2026-10-27 11:19)
 
 **Paste-ready start prompts for every role are in `docs/START-PROMPTS.md`:** the lead, a coding ticket, and the other sessions in this
 repo. The weekly usage cap is close (2026-10-26), so any chat may stop at any moment.
@@ -27,11 +27,12 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 ### In flight
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |
-| T191 | #497 | fresh branch | `.claude/worktrees/t160` | 5186 | The new ground art (the owner): fringe (a new material: its own family, `fringe` mapped to it) and putting-green v2 MID/FAR, provisional, hash-recorded; the yard lawn lines untouched (the owner sets them in Studio › Painted). **Merge waits** until the lead has saved the owner's studio changes (5174 checkout: sizes, allocations, learning, presets, painted-surfaces) to main. Agent: the lot agent. |
-| T184 | #464 | fresh branches | `.claude/worktrees/t166` | 5187 | **The owner approved (diagnosis #443):** PR 1 junction rules (equal crossings first-come, queue-aware routing + a deadlock breaker, roundabout entry at the ring car's real speed; every gate before/after); PR 2 `JAM_HINT` at the Junction tool, `range:gate --player` placing junction tools, P22 bands on seeds 1-3 without going broke (tune prices, town income, growth in that order). Agent: the ground agent. |
+| T194 → T193 | #504, #502 | fresh branches | `.claude/worktrees/t160` | 5186 | The lot agent: (1) no fescue through green textures (lawn variety in rough; green edges never fade to fescue); (2) flyout submenus + no horizontal scrollbars. |
+| T192 | #501 | `arena/T192-car-lights` | `.claude/worktrees/t192` (node_modules a junction) | 5188 | Car lights: no headlights, brake lights about half, lights hidden by nearer sprites and the car's own body. Agent: the shadow agent (Opus; third agent). |
+| T196 → T197 → T195 | #505, #506, #507 | fresh branches | `.claude/worktrees/t166` | 5187 | The ground agent: (1) golf texture borders a soft textured shade, not a hard line (the owner); (2) zooming does not glitch the ground (frame strips, keep old chunks until rebaked, cross-fade band switches, idle pre-bake); (3) fix:gate re-scanned under the new junction rules + mini-roundabouts keep their corner lots. |
 | T112 | #199 | `arena/T112-sharp` (PR #394) | `.claude/worktrees/t112` | — | **Approved, merge HELD for the morning restart:** a lock change makes the 5174 auto-updater run `npm ci` in theme-consistency (the live 5191 studio holds sharp there; the lot agent's t160 uses it by junction). Morning order: stop 5191 → merge #394 → let npm ci finish → restart 5191 and 5174. All shipped bytes identical on 0.35.5; audit 0. |
 | P05 | #68 | PR #413 **open for the owner's approval** | — | — | The M5 balance plan, measured: arrival 47% at tier 1 from a fresh start (the start's 56-bay car park holds 168 fans), 100% with car parks; 10% at tier 2 fresh, 70-81% with car parks; an 18 of ~5,900 m fits the starting land on every seed (~$190k seeded); with the proposals a careful player reaches tier 3 in year 4. Knob recommended for "careless out-saves careful": sponsors x (1 + (rep-50)/50). |
-| T184 | #464 | fresh branches | `.claude/worktrees/t166` | 5187 | **The owner approved (diagnosis #443):** PR 1 junction rules (equal crossings first-come, queue-aware routing + a deadlock breaker, roundabout entry at the ring car's real speed; every gate before/after); PR 2 `JAM_HINT` at the Junction tool, `range:gate --player` placing junction tools, P22 bands on seeds 1-3 without going broke (tune prices, town income, growth in that order). Agent: the ground agent. |
+| T196 → T197 → T195 | #505, #506, #507 | fresh branches | `.claude/worktrees/t166` | 5187 | The ground agent: (1) golf texture borders a soft textured shade, not a hard line (the owner); (2) zooming does not glitch the ground (frame strips, keep old chunks until rebaked, cross-fade band switches, idle pre-bake); (3) fix:gate re-scanned under the new junction rules + mini-roundabouts keep their corner lots. |
 | T112 | #199 | `arena/T112-sharp` (PR #394) | `.claude/worktrees/t112` | — | **Approved, merge HELD for the morning restart:** a lock change makes the 5174 auto-updater run `npm ci` in theme-consistency (the live 5191 studio holds sharp there; the lot agent's t160 uses it by junction). Morning order: stop 5191 → merge #394 → let npm ci finish → restart 5191 and 5174. All shipped bytes identical on 0.35.5; audit 0. |
 
 **Two coding agents at a time (the owner, 2026-10-26: first "maybe just too many background tasks?" after the studio tab died with the
@@ -93,6 +94,19 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
    (the sharp bump). See the History sections below and `gh issue list --label arena --state open`.
 
 ### Done recently (newest first; details in each PR)
+- 2026-10-27 11:19: **T191 #499 the new ground art, used everywhere** (the owner: "make sure it gets used everywhere"): `fringe` (new, provisional,
+  only the export-report tiles) on the fringe surface and every collar round greens; `putting-green-v2` (MID/FAR the v2 sets, NEAR the
+  owner's painting) on the green, `lawnUpgraded`, and the range's target and practice greens. Nothing wears the old putting-green
+  families now; they stay as the option. Seams within 1.16x inside. Found: a stale MID chunk after the first zoom (to T197).
+- 2026-10-27 11:16: **T184 #468 + #470 junction rules that work** (the owner approved): equal crossings first-come (no arbitrary major, no STOP),
+  queue-aware routing (a link costs its head car's wait + 2 s a car), a 20 s deadlock breaker, roundabout entries judged by the ring car's
+  real speed; sim:gate towed 679 → 88; town/towns/event/biz as before; range bands pass for every player. The jam hint points at the
+  Junction tool; `--player` places all-way stops ($300) and reaches P22 on seeds 1-3 never broke ($58-76k over 20 seasons). **fix:gate
+  FAILS** (A 20% faster; B's class upgrade brings STOP back): re-scan in T195. Minis relieve the jam best but re-cut corner lots: T195.
+- 2026-10-27 10:57: **#500 the owner's studio work saved to main** (lot presets +2,132 lines, wizard samples, allocations, sizes, the Rebuild's
+  atlas/views/axis pages, new parking-garage views), committed from a separate index; the 5174 checkout then moved to main with
+  `reset --mixed` (its files untouched; clean). Lawns: lot lawns cover the whole lot (share 1); block grass is soft patches at the
+  owner's blockShare over the fescue; the living ground's thin/bare patches near fences and trees let the fescue show.
 - 2026-10-27 10:25: **T189 #495 block grass in the new paintings + Erase back**: the town's block grass wears long-grass and rough-owner
   (local contrast 14.8 / 11.0 at 30%, against the old looks' ~5 flat wash; sage, straw and the flat greens dropped; blockShare
   untouched; the old families still offered in Studio › Painted). The lot lab's **⌫ Erase (E)** mode and Eraser swatch: drag erases under
