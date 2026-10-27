@@ -98,6 +98,8 @@ const TOURIST_PER_LEVEL = 300;
 const ENTRY_REACH = 12;
 /** T090 (plan P22 2.3.3): the success a tournament's town growth rate gives a range start's grown town */
 export const grownSuccess = (rate: number): number => Math.min(GROWN_SUCCESS_MAX, Math.max(GROWN_SUCCESS_MIN, GROWN_SUCCESS0 + GROWN_SUCCESS_K * rate));
+/** T090: a range start's grown town plans a leg every this many game hours (plan P22 2.3.3 says every hour; see #159) */
+const GROWN_PLAN_H = 0.5;
 /** T091: a range start's town roads keep this much room from the golf land (tiles): a leg whose midpoint is nearer scores this much more (plan P22 2.3.5) */
 const GOLF_ROOM = 40;
 
@@ -1813,10 +1815,13 @@ export class City {
   private planGrow(): Leg[] | null {
     const cls = this.cls;
     if (!cls) return null;
-    const h = Math.floor(this.sim.clock * this.growSpeed / GAME_HOUR);
+    // a range start's grown town plans every GROWN_PLAN_H game hours (T090: one leg an hour leaves its growth short of land from year 8)
+    const period = (this.golf?.start === 'range' ? GROWN_PLAN_H : 1) * GAME_HOUR, h = Math.floor(this.sim.clock * this.growSpeed / period);
+    // a range start's first street rolls out at the first growth hour (plan P22 2.8: about 60 s in at 1x, with the first house frame), not at once
+    if (this.golf?.start === 'range' && this.sim.clock * this.growSpeed < GAME_HOUR) return null;
     if (h === this.planHour) return null;
     this.planHour = h;
-    if (this.pendingGrow && this.sim.clock - this.growAt < GAME_HOUR / this.growSpeed) return null;
+    if (this.pendingGrow && this.sim.clock - this.growAt < period / this.growSpeed) return null;
     const K = this.centres.length, k = K ? this.planHour % K : 0, grown = this.golf?.start === 'range';
     // with towns a leg every GRAVEL_EVERY_H game hours; a range start's grown town a leg every game hour (plan P22 2.3.3, T091)
     if (K && !grown && this.sim.clock - this.growAt < GRAVEL_EVERY_H * GAME_HOUR / this.growSpeed) return null;
