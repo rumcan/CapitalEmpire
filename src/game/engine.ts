@@ -577,7 +577,7 @@ export class Game {
   // economy (the books live in the city worker: traffic.budget, see the getters by the save)
   /** the sim speed (sim s per s; 0 = paused) and the last speed above 0 (what a resume goes back to) */
   speed = 1; private lastSpeed = 1; private lastFrame = 0;
-  /** the dev sandbox (URL ?grow=N, ?stamp=0|1, ?money=0|1; the dev server defaults to grow 20, no stamp, money on; the bench forces the game's): the growth speed (1 = the game's),
+  /** the dev sandbox (URL ?grow=N, ?stamp=0|1, ?money=0|1; the dev server defaults to grow 1 (the game's, since 2026-10-27), no stamp, money on; the bench forces the game's): the growth speed (1 = the game's),
    *  whether a new valley's towns are stamped to their residents, and unlimited money (sent to the city worker at init) */
   private sandboxGrow = 1; private stampOn = true; private sandboxMoney = false; private sandboxUnlock = false;
   /** how a new game starts (?start=): 'range' (the default: the county road and the driving range, plan P22), 'town' (the old start: a seeded
@@ -1423,7 +1423,7 @@ export class Game {
     this.showGrid = loadMapGrid(storageOf(), import.meta.env.DEV, location.search);
     // the dev sandbox options (see sandboxGrow): the URL, else the defaults of the dev server or the build
     const q = new URLSearchParams(location.search), dev = import.meta.env.DEV;
-    this.sandboxGrow = Number(q.get('grow') ?? (dev ? 20 : 1)) || 1;
+    this.sandboxGrow = Number(q.get('grow') ?? 1) || 1; // the game's speed everywhere (the owner, 2026-10-27: the dev server's default of 20 grew the town too fast); ?grow=N still speeds it for tests
     this.startMode = q.get('start') === 'town' ? 'town' : q.get('start') === 'valley' ? 'valley' : 'range';
     this.stampOn = q.has('stamp') ? q.get('stamp') === '1' : !dev;
     this.sandboxMoney = q.has('money') ? q.get('money') === '1' : dev;
