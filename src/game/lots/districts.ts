@@ -48,3 +48,15 @@ export function inIndustrial(lotCentre: Pt, indRect: [number, number, number, nu
   return lotCentre.x >= indRect[0] && lotCentre.x <= indRect[0] + indRect[2] &&
          lotCentre.y >= indRect[1] && lotCentre.y <= indRect[1] + indRect[3];
 }
+
+/** T091 (plan P22 2.3.6): a grown town's (a range start's) industrial district, 2x2 blocks (80 x 80 tiles), on the town's side of the county
+ *  road, 200-280 tiles from the town's seed along exitDir (a unit axis toward the nearer map exit), across from the seed's line +-40 tiles;
+ *  null when it would touch golf land (each [x, y, w, h], padded by 6 as the town's roads keep off it). The town opens it at 250 built lots */
+export function grownIndustrialRect(seed: Pt, exitDir: Pt, golfLand: readonly [number, number, number, number][] = []): [number, number, number, number] | null {
+  const span = IND_BLOCKS * BLOCK, along = 200 + span / 2, cx = seed.x + exitDir.x * along, cy = seed.y + exitDir.y * along;
+  const r: [number, number, number, number] = [cx - span / 2, cy - span / 2, span, span];
+  for (const [gx, gy, gw, gh] of golfLand) if (r[0] < gx + gw + 6 && r[0] + r[2] > gx - 6 && r[1] < gy + gh + 6 && r[1] + r[3] > gy - 6) return null;
+  return r;
+}
+/** the built lots from which a grown town opens its industrial district (plan P22 2.3.6) */
+export const GROWN_IND_FROM = 250;

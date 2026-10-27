@@ -82,6 +82,9 @@ export class Town {
   private ax: number[] = []; private ay: number[] = [];
   /** the town centres (tiles); the town index of every known lot (the nearest centre, -1 with none); per town: the residents, the built lots and the GOV lots */
   centres: Pt[] = []; private townIdx = new Map<string, number>();
+  /** T091 (a range start's grown town, plan P22 2.3.6): its industrial district (districts.ts grownIndustrialRect) and the built lots it opens
+   *  at, instead of the seeded towns' corner block; null: the seeded towns' (industrialRect) */
+  grownInd: { rect: [number, number, number, number] | null; from: number } | null = null;
   popK: number[] = []; builtK: number[] = []; govK: number[] = [];
 
   constructor(seed: number) { this.seed = seed >>> 0; this.rs = this.seed; }
@@ -270,8 +273,8 @@ export class Town {
     const k = this.townOf(l.key);
     const tc = k >= 0 && k < this.centres.length ? this.centres[k]! : (this.centres.length > 0 ? this.centres[0]! : null);
     if (tc !== null) {
-      const indR = industrialRect(tc, ctx.entry);
-      if (inIndustrial(l.c, indR)) return LU.IND;
+      const g = this.grownInd, indR = g ? (g.rect && this.built >= g.from ? g.rect : null) : industrialRect(tc, ctx.entry);
+      if (indR && inIndustrial(l.c, indR)) return LU.IND;
       if (inCommercial(l.c, cid, tc)) return LU.COM;
     }
     // the targets: the base shares times the option, renormalised over RES, COM, IND, TOUR
