@@ -20,8 +20,18 @@ export type Club = 'driver' | 'wood3' | 'iron4' | 'iron6' | 'iron8' | 'pw' | 'sw
 /** one stroke: the golfer, hole index (0..17), stroke number (1-based), the minute struck, from and to (tiles), the club, the lie where it came
  *  to rest, the penalty stroke (water or out of bounds), and whether it went in */
 export interface Shot { golfer: number; hole: number; stroke: number; t: number; from: Pt; to: Pt; club: Club; lie: Lie; penalty: 0 | 1; holed: boolean }
-/** the whole day's play: the field, the groups, every shot by t, strokes[golfer][hole] (penalties included), and the minute each golfer is done (holed out and walked off the last green) */
-export interface RoundPlan { golfers: Golfer[]; groups: Group[]; shots: Shot[]; strokes: number[][]; done: number[] }
+/** T211 pace of play: a group's wait on the group ahead: the group (an index into groups), the hole index, where (on the tee, for the landing area; or
+ *  short of the green, for the green), and from..to in game minutes (to is Infinity while the group ahead has not let it play yet) */
+export interface Wait { group: number; hole: number; at: 'tee' | 'green'; from: number; to: number }
+/** T211: a wave-through: at minute t, on the tee of hole `hole` (an index), the slow group (an index into groups, holding two holes open) stood aside and
+ *  the marshal waved the group behind it (through) on */
+export interface WaveThrough { t: number; hole: number; slow: number; through: number }
+/** T211: a round's pace: each group's minute at each tee (arrive[group][hole], Infinity until known), the waits as they were struck, the waits under way
+ *  where the play stops for the owner's input (open), and the wave-throughs in time order */
+export interface Pace { arrive: number[][]; waits: Wait[]; open: Wait[]; waves: WaveThrough[] }
+/** the whole day's play: the field, the groups, every shot by t, strokes[golfer][hole] (penalties included), the minute each golfer is done (holed out and
+ *  walked off the last green; Infinity until known), and the pace (T211; absent on a plan made by hand) */
+export interface RoundPlan { golfers: Golfer[]; groups: Group[]; shots: Shot[]; strokes: number[][]; done: number[]; pace?: Pace }
 /** what a golfer is doing at a minute: waiting for his tee time, walking, addressing or swinging a full shot, putting, holed, or done */
 export type Action = 'waiting' | 'walk' | 'address' | 'swing' | 'putt' | 'holed' | 'done';
 /** a golfer at a minute: the hole he is on, his position, what he does, where his ball is, the ball in flight, and his score so far */
