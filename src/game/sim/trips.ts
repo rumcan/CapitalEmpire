@@ -239,7 +239,11 @@ export class LotTrips {
   private generate(sim: Sim, H: number) {
     // a golf game reads its town clock (townclock.ts): hours of 60 minutes on a 1440-minute day; the classic game keeps its clock-based day
     const free = sim.townFree, hl = free ? 60 : sim.dayLen / 24, L = free ? DAY : sim.dayLen;
-    const C = free ? townHourIndex(sim.town, sim.t) : Math.floor(sim.townTime / hl), hod = ((C % 24) + 24) % 24, k = PER_RES * sim.townTraffic / 24 * demandAt((C + 0.5) * hl, L) / MEAN_DEMAND;
+    // a golf town makes the classic town's trips per sim second, not per town day (T178): its cars drive in sim seconds, so a town day shorter
+    // than the classic DAY (600 s on the 10-minute day) packed a day's trips into fewer seconds, 2.4x the classic load, and the grown gravel
+    // streets jammed from about 1,300 residents (seed 1: trips 3-4x their ideal time, most zones declining). The owner's townTraffic lever multiplies on top
+    const dense = free ? sim.dayLen / DAY : 1;
+    const C = free ? townHourIndex(sim.town, sim.t) : Math.floor(sim.townTime / hl), hod = ((C % 24) + 24) % 24, k = PER_RES * sim.townTraffic * dense / 24 * demandAt((C + 0.5) * hl, L) / MEAN_DEMAND;
     const morning = hod >= 6 && hod <= 11, evening = hod >= 15 && hod <= 21;
     for (const r of this.homes) {
       r.acc += r.pop * k; const n = Math.floor(r.acc); r.acc -= n;

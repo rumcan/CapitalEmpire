@@ -104,6 +104,7 @@ function frame() {
       const r = city.step(20);
       postTown(r.events, false);
       if (r.grow) post({ t: 'grow', legs: r.grow.flatMap(l => [l.a.x, l.a.y, l.b.x, l.b.y]) });
+      if (r.pave) post({ t: 'pave', legs: r.pave.flatMap(l => [l.a.x, l.a.y, l.b.x, l.b.y]) });
       if (r.ledger) { postBudget(r.ledger); postBiz(); }
       postCareer(r);
     }
@@ -112,6 +113,7 @@ function frame() {
     const r = city.step(speed);
     postTown(r.events, false);
     if (r.grow) post({ t: 'grow', legs: r.grow.flatMap(l => [l.a.x, l.a.y, l.b.x, l.b.y]) });
+    if (r.pave) post({ t: 'pave', legs: r.pave.flatMap(l => [l.a.x, l.a.y, l.b.x, l.b.y]) });
     if (r.ledger) { postBudget(r.ledger); postBiz(); }
     postCareer(r);
   }

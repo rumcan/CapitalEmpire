@@ -31,6 +31,7 @@ import { OWNER_SCALE, STUDIO_SCALE } from './lots/scales';
 import { turned } from './lots/preset-art';
 import { PIXEL_LIMIT, PIXEL_SLACK } from './sizes';
 import { RangeHost } from './golf/rangehost';
+import { townSegAt } from './golf/townpave';
 import { PropsTool } from './golf/propstool';
 import { DECOR_BY_KEY, propTuple, sellBack, tupleMarks } from './golf/decor';
 import { RANGE_LABEL_Z, defaultRangeBiz, parkLabel, practiceAppeal, rangeMapLabel, rangeNewSeason, rangeScene, rangeStats, type RangeCounts, type RangeUpgradeId } from './golf/rangebiz';
@@ -1375,6 +1376,7 @@ export class Game {
     // every road class, junction (the roundabout without its card), tunnel and signal tier open from the start (?unlock=0 plays the unlocks)
     this.sandboxUnlock = q.has('unlock') ? q.get('unlock') === '1' : dev;
     this.traffic.onGrow = (legs) => this.townGrow(legs);
+    this.traffic.onPave = (segs) => this.townPave(segs);
     this.traffic.onTown = (events) => { for (const e of events) this.lotQueue.add(e.key); };
     // a lot whose road was widened (or narrowed) keeps its house but moves back to the new verge: composed again there, not left over the road
     this.traffic.onLotsMoved = (keys) => { for (const k of keys) this.lotQueue.add(k); };
@@ -3462,6 +3464,19 @@ export class Game {
     this.commitNetwork(true, now + dur + 150);
     this.builds.push({ legs, cls, t0: now, dur, total, cum });
     if (now - this.growToast > 30000) { this.growToast = now; this.toast('The town laid a gravel road'); }
+  }
+
+  /** a range start's town paves its jammed junctions' gravel arms to streets (T178, City.planPave): each seg laid again as a town street, its
+   *  line style and kind kept (as the Upgrade tool does; the town pays, not the player). A seg that is no longer gravel is left */
+  private townPave(segs: Leg[]) {
+    let n = 0;
+    for (const l of segs) {
+      const sg = townSegAt(this.net, l); if (!sg) continue;
+      this.edit.addLegs([{ a: l.a, b: l.b }], CLASS.street, sg.style, [sg.kind], true); n++;
+    }
+    if (!n) return;
+    this.commitNetwork(true);
+    const now = performance.now(); if (now - this.growToast > 30000) { this.growToast = now; this.toast('The town paved its busiest streets'); }
   }
 
   // ---------- the event (Phase 5 step 2c) ----------

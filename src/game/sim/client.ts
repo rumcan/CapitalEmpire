@@ -70,6 +70,8 @@ export class SimClient {
   onLotsMoved?: (keys: string[]) => void;
   /** called with the gravel extension the town plans (the engine builds it, or skips it); the worker waits for its net ops */
   onGrow?: (legs: Leg[]) => void;
+  /** a range start's town paves these gravel segs (their ends) to streets (T178, City.planPave) */
+  onPave?: (segs: Leg[]) => void;
   /** the city's books as the worker last sent them (the treasury is also moved on spend, before the worker's answer), the game day, and called with each day's ledger as it closes */
   budget: BudgetSave = new Budget().toJSON(); day = 1; onLedger?: (l: Ledger) => void;
   /** the career as the worker last sent it (reset with the books), and called with the milestones a step newly reached and whether the city won */
@@ -271,6 +273,11 @@ export class SimClient {
       const legs: Leg[] = [];
       for (let i = 0; i + 3 < m.legs.length; i += 4) legs.push({ a: { x: m.legs[i], y: m.legs[i + 1] }, b: { x: m.legs[i + 2], y: m.legs[i + 3] } });
       this.onGrow?.(legs); return;
+    }
+    if (m.t === 'pave') {
+      const segs: Leg[] = [];
+      for (let i = 0; i + 3 < m.legs.length; i += 4) segs.push({ a: { x: m.legs[i], y: m.legs[i + 1] }, b: { x: m.legs[i + 2], y: m.legs[i + 3] } });
+      this.onPave?.(segs); return;
     }
     if (m.t === 'townBoost') { this.onTownBoost?.(m.v); return; }
     if (m.t === 'town') {

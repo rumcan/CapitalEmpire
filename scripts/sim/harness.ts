@@ -12,6 +12,7 @@ import { MAP } from '../../src/game/iso';
 import { TOWN_BLOCKS, TOWN_POP, townCentres, townGrid } from '../../src/game/lots/seedtowns';
 import { classOf } from '../../src/game/network';
 import { planRangeStart, type RangeStart } from '../../src/game/golf/rangestart';
+import { townSegAt } from '../../src/game/golf/townpave';
 import { RangeSim, defaultRangeBiz, practiceAppeal, rangeScene, type CarSlot, type DemandCtx, type RangeBizSave, type RangeClock, type RangeScene } from '../../src/game/golf/rangebiz';
 import { buildPark } from '../../src/game/event/carpark';
 import { GOLFER_PEOPLE } from '../../src/game/library';
@@ -61,6 +62,12 @@ export function setup(seed: number): Harness {
 
 /** the town's grow legs (gravel), applied with the editor and fed to the city as net ops */
 export function growLegs(h: Harness, legs: Leg[]) { h.editor.addLegs(legs, CLASS.gravel, 2, undefined, true); h.city.netOps(h.editor.commit()); }
+/** the town's paving order (T178, City.planPave): each gravel seg laid again as a town street, its style and kind kept, as the engine does */
+export function paveSegs(h: Harness, segs: Leg[]) {
+  let n = 0;
+  for (const l of segs) { const sg = townSegAt(h.editor.net, l); if (sg) { h.editor.addLegs([{ a: l.a, b: l.b }], CLASS.street, sg.style, [sg.kind], true); n++; } }
+  if (n) h.city.netOps(h.editor.commit());
+}
 
 /** one sim second s (from 1): City.step(10) (its time in h.stepMs), the caller's `before`, the grow legs, the caller's `after`, and at each game
  *  hour's end the land-locked bridge rule (at most once per 2 game days); returns the step result (its events array is reused) */
@@ -70,6 +77,7 @@ export function stepSecond(h: Harness, s: number, hooks?: StepHooks): StepResult
   h.stepMs = performance.now() - t0;
   hooks?.before?.(r, s);
   if (r.grow) { h.gravelLegs += r.grow.length; growLegs(h, r.grow); }
+  if (r.pave) paveSegs(h, r.pave);
   hooks?.after?.(s);
   if (s % HOUR === 0) {
     h.growHist.push({ none: h.city.growStats.none, legs: h.city.growStats.legs });

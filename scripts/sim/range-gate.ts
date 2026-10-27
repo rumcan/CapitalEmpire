@@ -53,6 +53,10 @@ const GROWTH = {
   pop: { 5: [500, 1000], 20: [4000, 7500] } as Record<number, [number, number]>,
   centre: { 5: 260, 20: 400 } as Record<number, number>, RIBBON: 500, RIBBON_SHARE: 0.1, FIRST_LEG_H: 2, FIRST_LOT_H: 1, STEP_MEAN: 25, STEP_MAX: 60,
 };
+/** the town's congestion per season (T178, with its own traffic since T098's leave-time fix): the season's finished trips' mean time over their
+ *  ideal (Sim.score's act / ideal), and the share of the zones with trips (half a trip of evidence or more) over the decline line (access > 1.8,
+ *  lots/town.ts). Bands from seeds 1-3 measured with the trips at the classic rate a sim second and the town paving its jammed junctions */
+const CONGESTION = { RATIO_MAX: 2.5, BAD_SHARE: 0.25, DECLINE: 1.8 };
 /** the scripted course and success of season k (1-based): holes 2, then 9 in seasons 2-5, 18 from 6; success 1.0, then 1.2 from season 3 */
 const holesIn = (k: number) => (k <= 1 ? 2 : k <= 5 ? 9 : 18), successIn = (k: number) => (k <= 2 ? 1 : 1.2);
 
@@ -109,9 +113,12 @@ const cityMs: number[] = [], rangeMs: number[] = [], out: Day[] = [];
 let cur: Day | null = null, lastDay = -1, takingsAt = 0, owed = 0;
 const newDay = (day: number): Day => ({ day, golfers: 0, lost: 0, noPark: 0, takings: 0, pop: 0, built: 0, carsAt5: null, visitsAt5: null, samples: 0, overlaps: 0, minGap: null, maxCars: 0 });
 const total = Math.max(days * RANGE_DAY, seasons * SEASON_LEN);
-interface Season { season: number; holes: number; success: number; built: number; lots: number; pop: number; builds: number; legs: number; centreD: number | null; ribbon: number; nearLand: number; onLand: number }
+interface Season { season: number; holes: number; success: number; built: number; lots: number; pop: number; builds: number; legs: number; centreD: number | null; ribbon: number; nearLand: number; onLand: number; ratio: number; zones: number; badZones: number; paved: number }
 const seasonsOut: Season[] = [];
 let firstLeg = -1, firstLot = -1, builds = 0, legsN = 0, season = 1;
+let ratioAt: [number, number] = [0, 0];
+/** the town's paved streets: its own street segs, in tiles (T178: the town paves its jammed junctions' gravel arms) */
+const pavedOf = () => { let L = 0; for (const sg of h.city.net.segs) if (sg.town && sg.cls.id === 'street') L += Math.hypot(sg.b.x - sg.a.x, sg.b.y - sg.a.y); return Math.round(L); };
 const kinds: Record<string, number> = {};
 const golf = R.start.save, land: [number, number, number, number][] = [golf.course, golf.parcel], seedPt = R.start.site.centre;
 const setSeason = (k: number) => h.city.setGolf({ tier: golf.tier, rep: golf.rep, land, start: 'range', exits: golf.exits, holes: holesIn(k), townBoost: successIn(k) });
@@ -130,10 +137,14 @@ function closeSeason(k: number) {
   for (const sg of h.city.net.segs) if (sg.town && sg.cls.id === 'gravel') for (const [x, y, w, hh] of land) { // the town's own streets (the county road, the drive and the range's paths are the game's)
     for (let i = 0; i <= 20; i++) { const px = sg.a.x + (sg.b.x - sg.a.x) * i / 20, py = sg.a.y + (sg.b.y - sg.a.y) * i / 20; if (Math.hypot(Math.max(x - px, 0, px - x - w), Math.max(y - py, 0, py - y - hh)) < 6 - 1e-6) { nearLand++; break; } }
   }
-  const z: Season = { season: k, holes: holesIn(k), success: successIn(k), built: town.built, lots: town.built, pop: town.pop, builds, legs: legsN, centreD: m ? Math.round(Math.hypot(sx / m - seedPt.x, sy / m - seedPt.y)) : null, ribbon: m ? far / m : 0, nearLand, onLand };
+  // the congestion: this season's finished trips (their mean time over ideal) and the zones over the decline line
+  const S = h.city.sim as unknown as { stats: { ratioSum: number; ratioN: number }; access: Float32Array; nS: Float64Array };
+  const dn = S.stats.ratioN - ratioAt[1], ratio = dn > 0 ? (S.stats.ratioSum - ratioAt[0]) / dn : 1; ratioAt = [S.stats.ratioSum, S.stats.ratioN];
+  const zs = [...S.access].filter((_, z) => S.nS[z]! > 0.5);
+  const z: Season = { season: k, holes: holesIn(k), success: successIn(k), built: town.built, lots: town.built, pop: town.pop, builds, legs: legsN, centreD: m ? Math.round(Math.hypot(sx / m - seedPt.x, sy / m - seedPt.y)) : null, ribbon: m ? far / m : 0, nearLand, onLand , ratio: r2(ratio), zones: zs.length, badZones: zs.filter(a => a > CONGESTION.DECLINE).length, paved: pavedOf() };
   seasonsOut.push(z); builds = 0; legsN = 0;
   if (k % 5 === 0) console.log(`  the town's events so far: ${JSON.stringify(kinds)}`);
-  console.log(`season ${String(k).padStart(2)} (holes ${z.holes}, success ${z.success}): lots built ${z.built}, residents ${z.pop}, builds ${z.builds}, legs ${z.legs}; centre ${z.centreD ?? '-'} tiles from the seed, ${(100 * z.ribbon).toFixed(1)}% over ${GROWTH.RIBBON}; town segs near the golf land ${z.nearLand}, lots on it ${z.onLand}`);
+  console.log(`season ${String(k).padStart(2)} (holes ${z.holes}, success ${z.success}): lots built ${z.built}, residents ${z.pop}, builds ${z.builds}, legs ${z.legs}; centre ${z.centreD ?? '-'} tiles from the seed, ${(100 * z.ribbon).toFixed(1)}% over ${GROWTH.RIBBON}; town segs near the golf land ${z.nearLand}, lots on it ${z.onLand}; trips ${z.ratio}x ideal, ${z.badZones}/${z.zones} zones over ${CONGESTION.DECLINE}, paved ${z.paved} tiles`);
 }
 for (let s = 1; s <= total; s++) {
   const r = stepSecond(h, s); cityMs.push(h.stepMs);
@@ -192,6 +203,7 @@ const growth = seasons ? {
   i_land: seasonsOut.every(z => z.nearLand === 0 && z.onLand === 0),
   j_compact: [5, 20].every(k => !yr(k) || (yr(k)!.centreD ?? 0) <= GROWTH.centre[k]!) && (!yr(5) || yr(5)!.ribbon < GROWTH.RIBBON_SHARE),
   k_builds_steps: seasonsOut.every(z => z.builds > 0) && mean(cityMs) < GROWTH.STEP_MEAN && Math.max(...cityMs) < GROWTH.STEP_MAX,
+  l_congestion: seasonsOut.every(z => z.ratio <= CONGESTION.RATIO_MAX && z.badZones <= CONGESTION.BAD_SHARE * Math.max(1, z.zones)),
 } : {};
 Object.assign(checks, growth);
 if (seasons) console.log(`[range] growth, seed ${seed}: first leg at ${firstLeg} s, first lot at ${firstLot} s; ${[1, 5, 10, 20].filter(k => yr(k)).map(k => `year ${k}: ${yr(k)!.built} lots, ${yr(k)!.pop} residents, centre ${yr(k)!.centreD}`).join('; ')}; ribbon at year 5 ${yr(5) ? (100 * yr(5)!.ribbon).toFixed(1) + '%' : '-'}; City.step over ${seasons} seasons mean ${r2(mean(cityMs))} ms, max ${r2(Math.max(...cityMs))}`);

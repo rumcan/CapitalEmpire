@@ -13,6 +13,7 @@ import { GROWN_IND_FROM, grownIndustrialRect } from './lots/districts';
 import { LK, LaneGraph, MPT, laneAt, type DSeg, type Lane } from './sim/lanes';
 import { DT, Sim, type CarInfo, type ParkState, type Sink } from './sim/sim';
 import { bottlenecks, type Report } from './sim/bottlenecks';
+import { paveBudget, pickPave, type PaveArm } from './golf/townpave';
 import { Incidents, type Exposure, type Incident, type Passage } from './ext/incidents';
 import { Disasters, type Disaster, type DisasterKind, type RoadInfo } from './ext/disasters';
 import { zoneOf } from './sim/routing';
@@ -315,6 +316,8 @@ export class City {
   /** the game hours' snapshots (see HourStat), newest last, at most HOURS_KEPT; the lots started (town 'build' events) since the terrain came */
   hours: HourStat[] = []; builds = 0;
   private planRnd = seededRnd(1); private planHour = -1; private pendingGrow = false; private growAt = -Infinity;
+  /** the paving planner (T178, golf/townpave.ts): its last planning period, and an order out (cleared by the next net batch); paveStats counts its steps and arms */
+  private paveHour = -1; private pendingPave = false; private paveAt = -Infinity; paveStats = { steps: 0, arms: 0 };
   /** the toll gates as the player placed them (setTolls' defs, the full list): their plazas are no-go ground for the town's roads (with towns) */
   private tollDefs: TollDef[] = [];
   /** the no-go zones of the town's roads (with towns, see RoadPlanCtx.blocked): the stadium site padded by 6 tiles, the other businesses padded by 2,
@@ -413,7 +416,7 @@ export class City {
     this.centres = towns;
     this.town = new Town(seed); this.town.setCentres(towns); this.town.option = optionOf(this.optId); this.town.speed = this.growSpeed; this.town.tick(this.sim.clock, this.ctx); this.syncHour = -1;
     this.hours = []; this.builds = 0;
-    this.planRnd = seededRnd(seed); this.planHour = -1; this.pendingGrow = false;
+    this.planRnd = seededRnd(seed); this.planHour = -1; this.pendingGrow = false; this.paveHour = -1; this.pendingPave = false;
     this.suggested = towns.length ? placeStadium(cls, towns) : null; this.site = this.autoStadium ? this.suggested : null; this.round = new Round(); this.grown = null; this.sim.entryS = ENTRY_S;
     this.surge = null; this.sim.dropParty(); this.crowd = null; this.sim.dropBuses();
     // a new valley has no incidents: the old ones' blocks are lifted, the module starts again
@@ -646,7 +649,7 @@ export class City {
    *  then the parcels, the reachable segs and the town's lots. Returns the parcels added and removed and the town's events. */
   netOps(ops: NetOp[]): { lotsAdded: Lot[]; lotsRemoved: string[]; events: TownEvent[] } {
     const t0 = performance.now();
-    this.pendingGrow = false;
+    this.pendingGrow = false; this.pendingPave = false;
     let part: NetOp[] = [], rebuilt = false;
     for (const op of ops) {
       part.push(op);
@@ -705,7 +708,7 @@ export class City {
    *  (the array is reused: read it before the next call), the gravel extension the town lays now, if any (legs in tiles), and the
    *  ledger of the game day that closed in these steps, if one did (else null). At a game hour's start the career is updated: the
    *  milestones newly reached (their grants paid then) and the win, if it came; milestones is the shared empty array most calls. */
-  step(n: number): { events: TownEvent[]; grow: Leg[] | null; ledger: Ledger | null; milestones: Milestone[]; won: boolean } {
+  step(n: number): { events: TownEvent[]; grow: Leg[] | null; pave: Leg[] | null; ledger: Ledger | null; milestones: Milestone[]; won: boolean } {
     const t0 = performance.now();
     this.calls++;
     // the parking fees of the cars parked since the last step (sim.parkedNow holds a pair per car, read before it is cleared): the books take them,
@@ -783,7 +786,7 @@ export class City {
       // the new day's visits are planned now, or when the round is free again (step)
       this.visitDay = -1; if (this.round.stage === 'free') this.planVisits();
     }
-    return { events, grow: this.planGrow(), ledger, milestones, won };
+    return { events, grow: this.planGrow(), pave: this.planPave(), ledger, milestones, won };
   }
 
   /** after each sim step (the incidents on): the link lanes' vehicles, summed over the second (metres, seconds, and the seconds slower than 1.5 m/s) */
@@ -1807,6 +1810,29 @@ export class City {
       this.taxiAt[i] = { x: o.to.x, y: o.to.y }; this.taxiOrd[i] = null; this.taxiCar[i] = -1; this.taxiReached.push(i);
     }
     to.length = 0;
+  }
+
+  /** a range start's grown town paves its jammed junctions' gravel arms (T178, golf/townpave.ts): once per growth period (GROWN_PLAN_H game
+   *  hours, at the growth speed), not while an order is out, within its budget (PAVE.PER_LOT street tiles per built lot). The engine (or the
+   *  harness) lays the arms as town streets, as the Upgrade tool does, and the net ops come back. Classic games and old golf starts: never */
+  private planPave(): Leg[] | null {
+    if (this.golf?.start !== 'range') return null;
+    const period = GROWN_PLAN_H * GAME_HOUR, h = Math.floor(this.sim.clock * this.growSpeed / period);
+    if (h === this.paveHour) return null;
+    this.paveHour = h;
+    // an order out waits for its net ops, or a period (in case the engine laid none)
+    if (this.pendingPave && this.sim.clock - this.paveAt < period / this.growSpeed) return null;
+    let paved = 0; for (const sg of this.net.segs) if (sg.town && sg.cls.id === 'street') paved += Math.hypot(sg.b.x - sg.a.x, sg.b.y - sg.a.y);
+    const budget = paveBudget(this.town.built, paved);
+    if (budget <= 0) return null;
+    const armsAt = (x: number, y: number): PaveArm[] => {
+      const n = this.net.nodeAt({ x, y }); if (!n) return [];
+      return n.segs.filter(sg => sg.town && sg.cls.id === 'gravel').map(sg => ({ a: { x: sg.a.x, y: sg.a.y }, b: { x: sg.b.x, y: sg.b.y }, len: Math.hypot(sg.b.x - sg.a.x, sg.b.y - sg.a.y) }));
+    };
+    const arms = pickPave(bottlenecks(this.g, this.sim, 0).junctions, armsAt, budget);
+    if (!arms.length) return null;
+    this.paveStats.steps++; this.paveStats.arms += arms.length; this.pendingPave = true; this.paveAt = this.sim.clock;
+    return arms.map(a => ({ a: a.a, b: a.b }));
   }
 
   /** the town lays a gravel extension when it is short of land: at most once per game hour, and not while the last one is out
