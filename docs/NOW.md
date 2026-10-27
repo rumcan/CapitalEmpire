@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-27 07:10)
+## START HERE (kept current by the lead; last updated 2026-10-27 07:19)
 
 **Paste-ready start prompts for every role are in `docs/START-PROMPTS.md`:** the lead, a coding ticket, and the other sessions in this
 repo. The weekly usage cap is close (2026-10-26), so any chat may stop at any moment.
@@ -27,6 +27,7 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 ### In flight
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |
+| T185 | #466 | `arena/T185-shadows` | `.claude/worktrees/t185` (node_modules a junction) | 5188 | **The owner: "the shadows need a new audit again. its shit"** (a third agent, Opus, on the owner's ask). First: overlapping shadows must not compound (one shadow layer, MAX blend, composited once); cast shadows must start at the sprite's base. Then the full audit by category and four game scenes, fixes in code, re-draft, hints. |
 | T184 | #464 | fresh branches | `.claude/worktrees/t166` | 5187 | **The owner approved (diagnosis #443):** PR 1 junction rules (equal crossings first-come, queue-aware routing + a deadlock breaker, roundabout entry at the ring car's real speed; every gate before/after); PR 2 `JAM_HINT` at the Junction tool, `range:gate --player` placing junction tools, P22 bands on seeds 1-3 without going broke (tune prices, town income, growth in that order). Agent: the ground agent. |
 | T183 → T182 | #461, #454 | fresh branches | `.claude/worktrees/t160` | 5186 | The lot agent: **T183** the lot lab (decals on top of lawns; ground drawing with clear Select / Draw modes; in the wizard a click selects and Del deletes), then the toolbar regroup. The owner is using the studio: never write their data. |
 | T112 | #199 | `arena/T112-sharp` (PR #394) | `.claude/worktrees/t112` | — | **Approved, merge HELD for the morning restart:** a lock change makes the 5174 auto-updater run `npm ci` in theme-consistency (the live 5191 studio holds sharp there; the lot agent's t160 uses it by junction). Morning order: stop 5191 → merge #394 → let npm ci finish → restart 5191 and 5174. All shipped bytes identical on 0.35.5; audit 0. |
