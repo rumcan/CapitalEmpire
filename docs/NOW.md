@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-27 03:11)
+## START HERE (kept current by the lead; last updated 2026-10-27 03:39)
 
 **Paste-ready start prompts for every role are in `docs/START-PROMPTS.md`:** the lead, a coding ticket, and the other sessions in this
 repo. The weekly usage cap is close (2026-10-26), so any chat may stop at any moment.
@@ -29,7 +29,7 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 | --- | --- | --- | --- | --- | --- |
 | T092 | #161 | `arena/T092-exits-feed-range` | `.claude/worktrees/t166` | 5187 | P22 2.2.2: the range draws passers-by from both map exits (`ctx.exits`; classic games keep one entry); range:gate re-banded if arrivals move it; other gates as the nightly. Agent: the ground agent. |
 | T112 | #199 | `arena/T112-sharp` (PR #394) | `.claude/worktrees/t112` | — | **Approved, merge HELD for the morning restart:** a lock change makes the 5174 auto-updater run `npm ci` in theme-consistency (the live 5191 studio holds sharp there; the lot agent's t160 uses it by junction). Morning order: stop 5191 → merge #394 → let npm ci finish → restart 5191 and 5174. All shipped bytes identical on 0.35.5; audit 0. |
-| T095 | #164 | `arena/T095-first-minute` | `.claude/worktrees/t160` | 5186 | P22 2.8, the range start's first minute: the welcome card (opens Course on New hole), the "Founding season · n of 9 holes" chip, the tee-spot ring, toasts (first street, first house, the town named), the range-start guide steps. Agent: the lot agent. |
+| T095 | #164 | `arena/T095-first-minute` (**draft PR #419**) | `.claude/worktrees/t160` | 5186 | Built and reviewed (typecheck clean, guide tests 15/15): welcome card (follows P24's ramp: "Open the range" until New hole opens), the founding line in the Tier sub-line (one-row top bar kept), two-line title, tee ring, three toasts, a 7-step range guide. The agent's session was refused `gh pr ready`: **the owner marks it ready and merges** (the lead does not override another session's refusal). Now: screenshots out of the repo, the minimap name, T132's toast, step 5. Agent: the lot agent. |
 | P05 | #68 | PR #413 **open for the owner's approval** | — | — | The M5 balance plan, measured: arrival 47% at tier 1 from a fresh start (the start's 56-bay car park holds 168 fans), 100% with car parks; 10% at tier 2 fresh, 70-81% with car parks; an 18 of ~5,900 m fits the starting land on every seed (~$190k seeded); with the proposals a careful player reaches tier 3 in year 4. Knob recommended for "careless out-saves careful": sponsors x (1 + (rep-50)/50). |
 | T092 | #161 | `arena/T092-exits-feed-range` | `.claude/worktrees/t166` | 5187 | P22 2.2.2: the range draws passers-by from both map exits (`ctx.exits`; classic games keep one entry); range:gate re-banded if arrivals move it; other gates as the nightly. Agent: the ground agent. |
 | T112 | #199 | `arena/T112-sharp` (PR #394) | `.claude/worktrees/t112` | — | **Approved, merge HELD for the morning restart:** a lock change makes the 5174 auto-updater run `npm ci` in theme-consistency (the live 5191 studio holds sharp there; the lot agent's t160 uses it by junction). Morning order: stop 5191 → merge #394 → let npm ci finish → restart 5191 and 5174. All shipped bytes identical on 0.35.5; audit 0. |
