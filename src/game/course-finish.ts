@@ -29,7 +29,7 @@ export interface CourseFinish {
   lip: number;
 }
 /** the tuned look (against the concept, at 30% and 15%) */
-export const DEFAULT_COURSE_FINISH: Readonly<CourseFinish> = { on: true, along: true, bandWidth: 3, bandStrength: 0.55, greenWidth: 0.75, greenStrength: 0.3, collarWidth: 4, collarTone: 0.45, lip: 1 };
+export const DEFAULT_COURSE_FINISH: Readonly<CourseFinish> = { on: true, along: true, bandWidth: 3, bandStrength: 0.8, greenWidth: 0.75, greenStrength: 0.3, collarWidth: 4, collarTone: 0.45, lip: 1 };
 /** the finish off: the course exactly as before T227 */
 export const FINISH_OFF: Readonly<CourseFinish> = { ...DEFAULT_COURSE_FINISH, on: false };
 /** the knobs' ranges (collarWidth: the Border slider's, ext/course-grid/patch BORDER_MIN_M .. BORDER_MAX_M) */
@@ -52,8 +52,9 @@ export function finishOf(file: { course?: unknown } | null | undefined): CourseF
 // ---------- the mowing bands ----------
 /** the bands' light (a lift in proportion to the grass's own colour times BAND_TINT, renderer.ts mowBands) and dark (a multiply of the dark
  *  colour) at full strength, and their soft edge (0 hard .. 1 a smooth wave; the concept's bands meet at a crisp mowing line). The concept's
- *  bands differ by about 20% in lightness; ours a little less at the default strength (light x1.09, dark x0.88), the mean a touch darker than
- *  the grass, so the fairway never reads brighter or more saturated than it is */
+ *  bands differ by about 20% in lightness on a smooth painting; ours, on a busier one, by about a third at the default strength (light x1.13,
+ *  dark x0.82: stronger than T218's washes, which flattened the texture), the mean a touch darker than the grass, so the fairway never reads
+ *  brighter or more saturated than it is */
 export const BAND_LIGHT = 0.16, BAND_DARK = 0.34, BAND_SOFT = 0.14;
 /** the light bands' tint: a warm pale yellow, so a light band leans a touch yellower than a dark one (as the concept's), never more saturated */
 export const BAND_TINT = '#fff0b4';
