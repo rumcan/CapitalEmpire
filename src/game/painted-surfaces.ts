@@ -12,7 +12,7 @@ import type { PresetState } from './lots/presets';
 export const WOODLAND = 'woodland';
 /** T194: what a town block's grass lies over where its soft patches leave the block (the rough's texture: the rough's painted look, the owner's
  *  rough paintings), never the map's fescue */
-export const BLOCK_UNDER = 'golfRough';
+export const BLOCK_UNDER = 'wasteSand'; // the owner, 2026-10-27: "change the block grass to desert": blocks lie over the Waste area sand (the desert) now, was the rough
 export type SurfaceGroup = 'Golf' | 'Map' | 'Town' | 'Living ground' | 'Course walls';
 /** a surface the studio lists by its plain name: the textures it stands for (a photo texture id, or a preset's golf surface), its group and the
  *  families that fit it (the picker shows those first) */
@@ -43,6 +43,7 @@ export const SURFACES: readonly SurfaceDef[] = [
   { key: 'lawn', name: 'Lawn (the Paint tool\'s lawn textures)', group: 'Town', tex: ['lawnLush', 'lawnClover'], kinds: ['grass'] },
   { key: 'lawnBuilt', name: 'Lot lawn: built lots (T155: the fairway)', group: 'Town', tex: ['lawnBuilt'], kinds: ['grass'] },
   { key: 'lawnUpgraded', name: 'Lot lawn: upgraded lots (T155: the putting green)', group: 'Town', tex: ['lawnUpgraded'], kinds: ['grass'] },
+  { key: 'mulch', name: 'Bark mulch (flower beds: the Paint tool\'s Bark mulch)', group: 'Town', tex: ['barkMulch'], kinds: ['cut'] },
   { key: 'lawnDeclined', name: 'Lot lawn: decrepit (declined) lots (T155: the rough)', group: 'Town', tex: ['lawnDeclined'], kinds: ['grass'] },
   { key: 'lush', name: 'Lush grass (along fences, walls and water)', group: 'Living ground', tex: ['grass-lush'], kinds: ['grass'] },
   { key: 'patchy', name: 'Patchy grass (under trees, at doors)', group: 'Living ground', tex: ['grass-patchy'], kinds: ['grass'] },
