@@ -5,7 +5,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { lotLawn } from '../src/game/lawns';
-import { clampSurfaces, lawnSlot, lawnTex, lawnTexFor, lookOfTex, STATE_LAWN, SURFACES } from '../src/game/painted-surfaces';
+import { clampSurfaces, knownFamily, lawnSlot, lawnTex, lawnTexFor, lookOfTex, STATE_LAWN, SURFACES } from '../src/game/painted-surfaces';
 import { stateOf } from '../src/game/lots/presets';
 import { LV } from '../src/game/lots/town';
 import FILE from '../src/game/painted-surfaces.json';
@@ -22,12 +22,9 @@ test('a lot\'s lawn carries its look state (none: as before)', () => {
 });
 
 test('the state lawns: built the fairway, upgraded the putting green, decrepit the rough\'s painting; owner-tunable surfaces of the studio', () => {
-  // built lawns wear what the fairway wears and upgraded ones what the greens wear (T165: the fairway and putting-green paintings)
-  assert.equal(file.surfaces[STATE_LAWN.built]!.family, file.surfaces.fairway!.family); assert.equal(file.surfaces[STATE_LAWN.built]!.family, 'fairway-paint');
-  // T191 (the owner: new art is used everywhere): the upgraded lawns wear what the greens wear, putting-green-v2
-  assert.equal(file.surfaces[STATE_LAWN.upgraded]!.family, file.surfaces.green!.family); assert.equal(file.surfaces[STATE_LAWN.upgraded]!.family, 'putting-green-v2');
-  // the long-grass tiles are not handed off yet (the owner rejected them): decrepit wears what rough wears today
-  assert.equal(file.surfaces[STATE_LAWN.declined]!.family, file.surfaces.rough!.family);
+  // which painting each state wears is the owner's (Studio › Painted: built fringe and upgraded fringe a touch brighter since #516, decrepit the
+  // rough): the test holds that each state lawn wears a known painted family, not which one (the owner tunes them)
+  for (const k of Object.values(STATE_LAWN)) assert.ok(knownFamily(file.surfaces[k]!.family), `${k} wears a known family (${file.surfaces[k]!.family})`);
   for (const k of Object.values(STATE_LAWN)) assert.ok(SURFACES.some(s => s.key === k && s.group === 'Town'), `${k} is a studio surface`);
   // the texture each lawn patch wears, by its state; a lot of no state (and a road block) one of the town lawns by where it lies
   const pts = lotLawn('lot-1', g, ['a'])!.pts;

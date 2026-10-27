@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { clampLook, coversMap, crossovers, FAMILIES, familyById, familyVersions, familyWeights, LEVEL_NAMES, lookColour, lookKey, nativeZoom, resolveFamily } from '../src/game/painted-families';
-import { clampSurfaces, lawnSlot, lawnTex, lookOfTex, SURFACES, surfaceOfTex, WOODLAND } from '../src/game/painted-surfaces';
+import { clampSurfaces, lawnSlot, lawnTex, lookOfTex, SURFACES, surfaceOfTex, WOODLAND, knownFamily } from '../src/game/painted-surfaces';
 import { grassDetailWeights } from '../src/game/painted-grass-lod';
 import { BLEND_WAVES, blendAlpha, blendNoise } from '../src/game/painted-grass-lod';
 import { courseBandOf, courseTexOf, lookChanged } from '../src/game/course-look';
@@ -85,14 +85,17 @@ test('every surface of the game wears a painted family: golf, map, town lawns, l
   const S = f.surfaces;
   assert.equal(S.tee!.family, 'emerald-short'); assert.ok(S.tee!.scale < 1, 'tees keep the old green until a family is chosen for them');
   // T165 (#365): the fairway and the greens wear the art session's paintings, healed to tile (the provisional sets stay as the old option)
-  assert.equal(S.fairway!.family, 'fairway-paint'); assert.equal(S.green!.family, 'putting-green-v2'); assert.equal(S.fringe!.family, 'fringe'); // T191: the new green and fringe
+  // which painting the fairway, green and fringe wear is the owner's (Studio › Painted; T191 brought fringe and putting-green-v2): known families
+  for (const k of ['fairway', 'green', 'fringe']) assert.ok(knownFamily(S[k]!.family), `${k}: ${S[k]!.family}`);
   // T162 (#350): the rough and the decrepit lots' lawns (which follow the rough, T155) wear the owner's rough paintings, edges healed to tile
   assert.equal(S.rough!.family, 'rough-owner'); assert.equal(S.lawnDeclined!.family, 'rough-owner'); assert.equal(S.fescue!.family, 'golden-fescue');
   assert.equal(S.bunker!.family, 'sand-raked'); assert.equal(S.waste!.family, 'sand-ripples-tiles'); assert.equal(S.water!.family, 'lake');
   // the map's open grass draws golden fescue and rivers draw lake (the owner, 2026-10-26: "all the map water and grass needs to be replaced
   // aswell"; main 003153a)
   assert.equal(S.river!.family, 'lake', 'rivers draw the lake');
-  for (const k of ['base', 'outside', 'meadow', 'dry', 'worn', 'lush', 'patchy', 'woodland']) assert.equal(S[k]!.family, 'golden-fescue', k);
+  for (const k of ['base', 'outside', 'meadow', 'dry', 'worn', 'woodland']) assert.equal(S[k]!.family, 'golden-fescue', k);
+  // the living ground's lush and patchy grass is the rough (the owner, #513: "it should not be fescue but rough")
+  for (const k of ['lush', 'patchy']) assert.equal(S[k]!.family, 'rough-owner', k);
   for (const k of ['wallTurf', 'wallBank']) assert.equal(S[k]!.family, 'underground-earth'); assert.equal(S.wallSand!.family, 'underground-sand');
   // T189 (the owner: "Keep the block grass but swap its looks to the new paintings and drop the pale sage"): the town lawns are the new
   // paintings with their texture (the long grass, the owner's rough), no sage; the old families stay in the manifest (the studio offers them)
