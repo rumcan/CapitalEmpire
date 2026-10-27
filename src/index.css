@@ -190,3 +190,15 @@
 /* no horizontal sliders in a tool panel (T193): its rows wrap, its long words break */
 .tool-panel { overflow-wrap: anywhere; }
 .tool-panel .flex:not(.flex-col):not(.flex-nowrap) { flex-wrap: wrap; }
+
+/* T200 (#524): Land for sale's key and card (LandPanel.tsx): the bands carry a $ label beside their colour (never colour alone); text wraps */
+.land-key { display: flex; flex-direction: column; gap: 0.25rem; margin-top: 0.4rem; }
+.land-key li { display: flex; flex-wrap: wrap; align-items: center; gap: 0.45rem; }
+.land-swatch { width: 14px; height: 14px; border-radius: 3px; border: 1px solid rgba(255, 255, 255, 0.4); flex: 0 0 auto; }
+.land-swatch-hatch { background: repeating-linear-gradient(45deg, rgba(255, 220, 210, 0.7) 0 2px, rgba(70, 60, 60, 0.5) 2px 5px); }
+.land-swatch-own { background: transparent; border: 2px dashed rgba(234, 179, 8, 0.85); }
+.land-band { min-width: 2.2rem; color: var(--gold-hi); }
+.land-card { margin-top: 0.75rem; padding: 0.6rem 0.7rem; border-radius: 0.7rem; border: 1px solid var(--gold-line, rgba(245, 181, 46, 0.4)); background: rgba(0, 0, 0, 0.25); overflow-wrap: anywhere; }
+.land-facts { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0.2rem 0.6rem; margin-top: 0.4rem; font-size: 12.5px; }
+.land-facts dt { color: var(--muted); }
+.land-why { margin-top: 0.4rem; color: #fca5a5; font-size: 12.5px; }

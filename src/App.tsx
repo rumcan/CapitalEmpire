@@ -58,6 +58,7 @@ import { SeasonReportCard } from './ui/golf/SeasonReportCard';
 import { GolfLeaderboard } from './ui/GolfLeaderboard';
 import { ShotPanel } from './ui/ShotPanel';
 import { RangeCard } from './ui/golf/RangeCard';
+import { LandPanel } from './ui/golf/LandPanel';
 import { WelcomeCard } from './ui/golf/WelcomeCard';
 import { TooltipLayer } from './ui/Tooltip';
 import { UI_SCALES, applyUiScale, currentUiScale, saveUiScale } from './ui/uiScale';
@@ -144,7 +145,7 @@ export default function App() {
   /** T193: the open flyouts (the rail item, the rows opened at first, whether the keyboard leads, the item's button's top in the rail's box) */
   const [fly, setFly] = useState<{ item: string; path: number[]; keyboard: boolean; top: number } | null>(null);
   /** T193: the leaf last picked in each rail item (its row keys and its labels: the tool panel's back arrow and breadcrumb) */
-  const lastLeaf = useRef<Record<string, { keys: string[]; crumb: string[] }>>({});
+  const lastLeaf = useRef<Record<string, { keys: string[]; crumb: string[]; tool: Tool }>>({});
   const railRef = useRef<HTMLElement | null>(null), railBox = useRef<HTMLDivElement | null>(null);
   /** Holes > More options > My looks (P23 decision 3): the surface style editor's card beside the Holes panel; Esc closes it first */
   const [looks, setLooks] = useState(false);
@@ -216,9 +217,11 @@ export default function App() {
     if (!game || !row.leaf) return;
     const { item: itemId, entry, act } = row.leaf, r = RAIL.find(x => x.id === itemId);
     const rows = r ? menuFor(r) : [], hit = leavesOf(rows).find(l => l.row.key === row.key);
-    if (hit) { let col: MenuRow[] | undefined = rows; const crumb: string[] = []; for (const k of hit.path) { const x: MenuRow | undefined = col?.find(q => q.key === k); if (!x) break; crumb.push(x.label); col = x.children; } lastLeaf.current[itemId] = { keys: hit.path, crumb }; }
+    if (hit) { let col: MenuRow[] | undefined = rows; const crumb: string[] = []; for (const k of hit.path) { const x: MenuRow | undefined = col?.find(q => q.key === k); if (!x) break; crumb.push(x.label); col = x.children; } lastLeaf.current[itemId] = { keys: hit.path, crumb, tool: entry.id }; }
     setFly(null);
     if (act?.k === 'event') { if (!game.eventTool) game.toggleEventTool(); game.emit(); return; }
+    // T200: Course › Land for sale: the overlay (a side mode in Select: another tool closes it)
+    if (act?.k === 'land') { activeRail.current = itemId; if (game.range.cardOpen) game.openRangeCard(false); game.openLandSale(); return; }
     if (act?.k === 'range') {
       activeRail.current = itemId; game.setTool('select'); game.openRangeCard(true); game.emit();
       // the section scrolled to the card's top (inside the card: scrollIntoView would scroll the page too)
@@ -257,6 +260,8 @@ export default function App() {
   const hint = ui ? ui.activeHint ?? game?.guideHint() ?? null : null; // T095: a range start's guide step when no other hint is up
   /** the Course brush's words (T118): what a click does (the surface, the hole it joins or starts, the price a cell) and the state; golf mode always shows them while a surface is armed */
   const courseHint = game?.courseHint() ?? '';
+  /** T200: where the brush was last refused for "not your land" (a few seconds: the pointer may leave the map for the pill's button) */
+  const landAt = game?.golfMode ? game.landRefusalAt() : null;
   /** the surface keys in force: 1 to the last surface the progressive unlocks show (BRUSH_PRESETS' order, as PaintTool.key reads them) */
   const surfaceKeys = Math.max(1, ...BRUSH_PRESETS.map((b, i) => (!ui || (ui.visibleCourseBrushes as string[]).includes(b.kind) ? i + 1 : 0)));
   /** the open item's tools that the progressive unlocks show (the segmented row of Roads and Transport) */
@@ -328,7 +333,7 @@ export default function App() {
                   {/* T188 (P23-UX P2-2): the season chip opens the Season card (the founding checklist or the tournament plan, and the Course stats, which had a
                       chip of their own); in a founding season it says the holes ("◔ 3/9 holes", T095's founding line) */}
                   {chip('courseStats') && (() => { const ph = seasonPhase(fv, game.traffic.round.runs); return <button className={`chip ${seasonOpen ? 'chip-on' : ''} ${ph === 'founding' ? 'font-semibold text-amber-300' : ''}`} onClick={() => { setSeasonOpen(!seasonOpen); setCourseStats(null); }} data-guide="season-chip" data-testid={ph === 'founding' ? 'founding-chip' : 'season-chip'} data-tip={founding ? `${founding}: the tour invites you with ${fv!.check.holesNeeded} holes, a car park and a clubhouse. Open the season's checklist and Course stats` : "The season: its tournament plan and the Course stats"} aria-label="Season"><Icon name="calendar" size={16} />{ph === 'founding' && fv ? <><span className="max-[1599px]:hidden">{seasonChip(ph, fv.check)}</span><span className="min-[1600px]:hidden">{`◔ ${Math.min(fv.check.holes, fv.check.holesNeeded)}/${fv.check.holesNeeded}`}</span></> : <span className={WIDE}>{seasonChip(ph, fv?.check)}</span>}</button>; })()}
-                  {chip('land') && <button className={`chip ${game.landMode ? 'chip-on' : ''}`} onClick={() => { game.toggleLandMode(); bump(); }} data-tip="Land: buy adjacent land parcels" aria-label="Land"><Icon name="compass" size={16} /><span className={WIDE}>Land</span></button>}
+                  {chip('land') && <button className={`chip ${game.landMode ? 'chip-on' : ''}`} onClick={() => { if (game.landMode) game.closeLandSale(); else game.openLandSale(); bump(); }} data-tip="Land for sale: the blocks next to your land, priced; click one to see it, Buy on its card (also Course › Land for sale)" aria-label="Land for sale"><Icon name="compass" size={16} /><span className={WIDE}>Land</span></button>}
                   {chip('holes') && <button className={`chip ${game.holesTool ? 'chip-on' : ''}`} onClick={() => { game.toggleHolesTool(); bump(); }} data-tip="Holes: move pins and tee markers" aria-label="Holes"><Icon name="pin" size={16} /><span className={WIDE}>Holes</span></button>}
  {chip('event') && <button data-guide="chip-event" className={`chip ${game.eventTool ? 'chip-on' : ''}`} onClick={() => { game.toggleEventTool(); bump(); }} data-tip="Event: the event structures catalogue" aria-label="Event"><Icon name="buildings" size={16} /><span className={WIDE}>Event</span></button>}
  {chip('skipTournament') && <button data-guide="chip-skip" className="chip disabled:opacity-40" disabled={game.traffic.skipping || gv.live} onClick={() => game.skipToTournament()} data-tip={fv && !fv.due ? `Skip to the end of the season (no tournament yet: ${fv.invited ? 'the first one closes the next season' : fv.check.text})` : 'Skip to the tournament (end of August)'} aria-label={fv && !fv.due ? 'Skip to season end' : 'Skip to tournament'}><Icon name="skip" size={16} /><span className={WIDE}>{fv && !fv.due ? 'Skip to season end' : 'Skip to tournament'}</span></button>}
@@ -501,7 +506,7 @@ export default function App() {
                     onClick={e => { const rows = menuFor(item), l = lastLeaf.current[item.id], el = railRef.current?.querySelector<HTMLElement>(`[data-rail="${item.id}"]`) ?? undefined; openFly(item, el, e.detail === 0, l ? indicesOf(rows, l.keys.slice(0, -1)) : []); }}>
                     <Icon name="left" size={16} />
                   </button>
-                  <span className="tool-crumb-text">{[item.label, ...(lastLeaf.current[item.id]?.crumb ?? [])].join(' › ')}</span>
+                  <span className="tool-crumb-text">{[item.label, ...(lastLeaf.current[item.id]?.tool === game.uiTool ? lastLeaf.current[item.id]!.crumb : [])].join(' › ')}</span>
                 </div>
               )}
               {game.uiTool === 'road' && <RoadPanel game={game} scope="town" compact />}
@@ -531,7 +536,8 @@ export default function App() {
               {game.tool === 'toll' && <TollPanel game={game} />}
               {game.tool === 'business' && <BusinessPanel game={game} />}
               {game.tool === 'bus' && <BusPanel game={game} />}
-              {game.tool === 'select' && <SelectPanel game={game} />}
+              {game.tool === 'select' && game.landMode && <LandPanel game={game} />}
+              {game.tool === 'select' && !game.landMode && <SelectPanel game={game} />}
             </div>
             {looksOpen && <MyLooksCard game={game} onClose={() => setLooks(false)} />}
           </div>
@@ -550,9 +556,11 @@ export default function App() {
             </div>
             )}
             {gv && courseHint && (
-            <div className="flex items-center gap-2 glass rounded-full! px-4 py-1.5 text-xs" data-testid="course-pill">
+            <div className={`flex items-center gap-2 glass rounded-full! px-4 py-1.5 text-xs ${landAt ? 'pointer-events-auto' : ''}`} data-testid="course-pill">
               <SurfaceMark kind={game.paint.brushKind} size={24} />
               <span className="text-slate-100">{courseHint}</span>
+              {/* T200: a brush refused for "not your land" offers the land for sale there */}
+              {landAt && <button className="chip chip-on whitespace-nowrap" data-testid="refusal-land" onClick={() => game.openLandSale(landAt)}>Land for sale</button>}
               <span className="whitespace-nowrap text-slate-300">· <span className="keycap">1–{surfaceKeys}</span> switch surface · <span className="keycap">Esc</span> stop</span>
             </div>
             )}

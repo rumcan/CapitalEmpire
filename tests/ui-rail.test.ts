@@ -56,7 +56,7 @@ describe('the rail: the groups, in the same places at every stage (T182)', () =>
     }
     const tools = (id: string) => RAIL.find(r => r.id === id)!.tools.map(t => t.id);
     assert.deepEqual(tools('course'), ['course', 'buildings', 'greenkeeping']);
-    assert.deepEqual(RAIL.find(r => r.id === 'course')!.extras?.map(x => x.id), ['event'], 'the tournament stuff: the Event catalogue');
+    assert.deepEqual(RAIL.find(r => r.id === 'course')!.extras?.map(x => x.id), ['event', 'land'], 'the tournament stuff: the Event catalogue; T200: Land for sale');
     assert.deepEqual(tools('decor'), ['path', 'props']);
     assert.deepEqual(tools('traffic'), ['road', 'lane', 'downgrade', 'junction', 'bus', 'park', 'toll']);
     assert.deepEqual(toolSections(RAIL.find(r => r.id === 'traffic')!, true).map(s => [s.sub, s.tools.length]), [['Roads', 3], ['Junctions', 1], ['Transport', 3]]);

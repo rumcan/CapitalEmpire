@@ -133,6 +133,8 @@ function Checks({ game, rows }: { game: Game; rows: WizCheck[] }) {
             <span className="min-w-0 flex-1">{r.kind === 'block' ? <span className="sr-only">Blocks Build: </span> : r.kind === 'warn' ? <span className="sr-only">Warning: </span> : r.kind === 'info' ? <span className="sr-only">Info: </span> : null}{r.text}</span>
             {r.fix === 'seed' && <button className="chip" onClick={() => { p.plantKind = 'seed'; game.emit(); }}>Use Seed</button>}
             {r.show && r.kind !== 'ok' && <button className="chip" onClick={() => p.showMe(r.show!)}>Show me</button>}
+            {/* T200: off your land: the land for sale there */}
+            {game.golfMode && (r.id === 'land' || (r.id === 'left' && /not your land/.test(r.text))) && <button className="chip chip-on" data-testid="refusal-land" onClick={() => game.openLandSale(r.show?.[0] ?? null)}>Land for sale</button>}
           </li>
         ))}
       </ul>

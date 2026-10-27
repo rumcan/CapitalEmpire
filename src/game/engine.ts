@@ -4,6 +4,7 @@ import { galleryPeople, hash, queuePeople, walkerPeople, type CrowdPerson } from
 import { FACING_ROW, Pedestrians, sidewalks, type Door, type WalkerView } from './ext/pedestrians';
 import { GRASS_ACTION_NAME, GrassManagement, grassSurface, type GrassAction, type GrassCellView, type GrassScope, type GrassSettings } from './ext/grass-management';
 import { drawGhostBlueprint, drawGhostHint, drawGhostPoly, drawGhostRing, drawRefusedMarks, ghostStatus, type GhostBlueprint, type GhostView } from './ext/ghost-preview';
+import { drawRefusedCross, strokeHatch } from './ext/refused-mark';
 import { busGhostLabel, costLabel, markerGhost, structureGhost, tollGhostLabel } from './ext/event-ghost';
 import { CourseCursor, type CursorView } from './ext/course-cursor';
 import { browserCursorTexture } from './ext/course-cursor/tex';
@@ -111,7 +112,8 @@ import { parkRideNeeds } from './golf/parkride';
 import { applyCourseConsultantQuality, effectiveGrowInClockMonth, findGolfCard, isGolfCardId, parkRideNeedsWithCards } from './golf/golfcards';
 import type { CourseFacts } from './golf/tour';
 import { surfaceOfTex } from './golf/costs';
-import { adjacentBlockPrice, buyAdjacentBlock, COURSE_LAND_MSG, LAND_BLOCK, blockAt, blockOnRoad, blockOnWater, pointInLand, polyInParcels, type LandRoad, type ParcelLandClass } from './golf/parcels';
+import { buyAdjacentBlock, COURSE_LAND_MSG, blockOnRoad, blockOnWater, pointInLand, polyInParcels, type LandRoad, type ParcelLandClass } from './golf/parcels';
+import { BAND_LABEL, LandSale } from './golf/land-sale';
 import { buildCourseStatsPanel, type CourseStatsPanel } from './golf/coursestats';
 import { TILE_M, type CourseArea, type CourseLayout, type GolfSurface } from './golf/types';
 import { deriveHoles, surfaceAt, validateMarkerPlacement } from './golf/holes';
@@ -261,6 +263,14 @@ type CourseAreaRec = CourseArea & { hole?: number; tex: PaintTex };
 /** a piece of a screen-space label at (x, y), left-aligned, filled in col and outlined in the stroke style; returns the x after it */
 /** T151: the world labels' keys for the labels with no object of their own (a town by its index, a zone, a gallery spot, a stop): a number per kind's
  *  range, so a label keeps its slot from frame to frame */
+/** T200: Land for sale's price bands on the map: a fill, an edge and the label's ink (the band's $ label goes with it: never colour alone) */
+/** T200: how long a brush's "not your land" refusal keeps its Land for sale button after the pointer moves on (ms) */
+const LAND_REFUSAL_MS = 5000;
+const LAND_BAND_COL = {
+  cheap: { fill: 'rgba(52, 211, 153, 0.22)', edge: 'rgba(52, 211, 153, 0.9)', ink: '#d1fae5' },
+  fair: { fill: 'rgba(250, 204, 21, 0.22)', edge: 'rgba(250, 204, 21, 0.9)', ink: '#fef9c3' },
+  dear: { fill: 'rgba(251, 113, 133, 0.22)', edge: 'rgba(251, 113, 133, 0.9)', ink: '#ffe4e6' },
+} as const;
 const LABEL_KEY = { town: 1e6, growth: 2e6, stopped: 2.1e6, gallery: 3e6, waiting: 4e6, landHover: 6e6, stadium: 6e6 + 1 } as const; // (7e6: parking-overlay.ts's lots with no road)
 
 interface Build { legs: Leg[]; cls: RoadClass; t0: number; dur: number; total: number; cum: number[] }
@@ -585,7 +595,7 @@ export class Game {
   private frameTimes: number[] = [];
   // input
   /** a drag in progress; build: a right-button press in the road tool (released without moving, it builds the route, as Enter) */
-  private dragging: null | { kind: 'pan' | 'bulldoze' | 'park'; sx: number; sy: number; camX: number; camY: number; moved: boolean; build?: boolean; aim?: Pt; /** a Select click's hole under it (0: none; T174) */ hole?: number } = null;
+  private dragging: null | { kind: 'pan' | 'bulldoze' | 'park'; sx: number; sy: number; camX: number; camY: number; moved: boolean; build?: boolean; aim?: Pt; /** a Select click's hole under it (0: none; T174) */ hole?: number; /** T200: a click on Land for sale's overlay (it opens the block's card on release, never buys) */ land?: Pt } = null;
   /** the Paint tool: painted ground areas, its settings and the outline being drawn (docs/PAINT-TOOL.md) */
   paint = new PaintTool({ progress: () => this.bump('pieces'), setLotGround: (k, p) => { this.paintRev++; this.setLotGround(k, p); }, emit: () => this.emit(), save: () => this.scheduleSave(), toast: (t, k) => this.toast(t, k), affine: o => this.paintAffine(o), placeProps: (ps, seed) => this.placePresetProps(ps, seed), golfMode: () => this.golfMode, money: () => this.money, spend: n => this.traffic.spend('construction', n), ownedLand: pts => !this.golf || polyInParcels(this.golf.parcels ?? [this.golf.parcel], pts), currentMonth: () => !this.golf ? 0 : this.golfMonthIndex(), plant: (ids, x, y, r, spacing, size, seed) => this.plantProps(ids, x, y, r, spacing, size, seed), unplant: (x, y, r) => this.unplantProps(x, y, r), plantPool: k => plantPool(LIBRARY, k), courseHeight: () => this.courseHeight, roadsNear: (x, y, r) => { let k = 0; return [...this.net.segsNear({ x, y }, r)].map(s => ({ id: ++k, ax: s.a.x, ay: s.a.y, bx: s.b.x, by: s.b.y, halfWidthTiles: s.cls.h + s.cls.walk })); }, roadRev: () => this.net.version, heightChanged:b => { this.courseHeightChanged(unionCourseBox(b, this.flattenRoadsIn(b))!); },
     journal: { begin: () => { this.propLog = { added: [], removed: [] }; }, end: () => { const j = this.propLog; this.propLog = null; return j && (j.added.length || j.removed.length) ? j : null; }, undo: j => this.swapProps(j as PropLog, true), redo: j => this.swapProps(j as PropLog, false) },
@@ -3217,8 +3227,10 @@ export class Game {
   const side = this.tool === 'select';
   if (this.tool === 'greenkeeping' && e.button === 0 && !this.keys.has(' ')) { this.grassTarget = this.tileAt(mx, my); if (this.grassAction) this.careGrass(this.grassAction); this.emit(); return; } // T175
   if (side && this.grassPanel && e.button === 0 && !this.keys.has(' ')) { this.grassTarget = this.tileAt(mx, my); if (this.grassAction) this.careGrass(this.grassAction); this.emit(); return; }
-  if (side && this.landMode && this.landHover && e.button === 0) {
-  this.buyLandBlock(this.landHover.rect);
+  // T200: Land for sale: a press pans the map as ever; a click (no drag) opens the block's card on release (pointerUp), never buys
+  if (side && this.landMode && e.button === 0 && !this.keys.has(' ')) {
+  this.overlay.setPointerCapture(e.pointerId);
+  this.dragging = { kind: 'pan', sx: mx, sy: my, camX: this.cam.X, camY: this.cam.Y, moved: false, land: this.tileAt(mx, my) };
   return;
   }
   this.overlay.setPointerCapture(e.pointerId);
@@ -3290,20 +3302,9 @@ export class Game {
   this.ghostMouse = { mx, my };
   if (this.badgeDrag) { const b = this.badgeDrag; b.mx = mx; b.my = my; if (Math.hypot(mx - b.sx, my - b.sy) > 4) b.moved = true; } // T174
   this.hover = this.tileAt(mx, my);
-  if (this.landMode && this.golf && this.hover) {
-  // the block under the pointer, lined up with the owned land (a range start's parcel is off the map's 40-tile lattice: golf/parcels.ts blockAt)
-  // a public road stays public: no block that would take its tiles (the course grows on the other sides, or beyond the road)
-  const cand = blockAt(this.golf.parcels ?? [this.golf.parcel], this.hover.x, this.hover.y, LAND_BLOCK, MAP, r => this.blockOnPublicRoad(r));
-  if (cand) {
-  const info = this.blockLandClass(cand);
-  const price = adjacentBlockPrice({ rect: cand, ...info, townPop: this.traffic.pop });
-  this.landHover = { rect: cand, price, landClass: info.landClass };
-  } else {
-  this.landHover = null;
-  }
-  } else if (this.landMode) {
-  this.landHover = null;
-  }
+  // T200: the overlay's block under the pointer (a refused one too: its reason shows by the pointer)
+  if (this.landMode && this.golf && this.hover) this.land.move(this.hover.x, this.hover.y);
+  else if (this.landMode) this.land.hover = null;
   const d = this.dragging;
     if (d) {
       if (Math.abs(mx - d.sx) + Math.abs(my - d.sy) > 3) d.moved = true;
@@ -3335,6 +3336,7 @@ export class Game {
     if (d?.kind === 'park') this.parkRelease();
     // a click (no drag) on the course aims the owner's open shot (P4b)
     if (d?.kind === 'pan' && d.aim && !d.moved) this.aimAt(d.aim);
+    if (d?.kind === 'pan' && d.land && !d.moved && this.landMode) { this.land.click(d.land.x, d.land.y); this.emit(); }
     // a right click (no drag) in the road tool builds the route drawn so far, as Enter does (the owner, 2026-10-19); a right drag still pans
     if (d?.kind === 'pan' && d.build && !d.moved && this.tool === 'road' && this.route.length > 1) this.finishRoute();
     if (this.paintOn) { this.paint.pointerUp(this.paintTol); this.courseCursor.release(); }
@@ -3507,6 +3509,7 @@ export class Game {
     if (this.route.length) { this.cancelRoute(); return true; }
     if (this.selected) { this.selected = null; this.emit(); return true; }
     if (this.selectedGolfMarker) { this.selectedGolfMarker = null; this.emit(); return true; }
+    if (this.landMode && this.land.card) { this.land.cancel(); this.emit(); return true; }
     if (this.landMode || this.holesTool) { this.toggleSideMode(this.landMode ? 'landMode' : 'holesTool'); return true; }
     return false;
   }
@@ -4016,16 +4019,35 @@ export class Game {
     const rect = (x: number, y: number, w: number, h: number) => { this.setIso(ctx); ctx.beginPath(); ctx.rect(x, y, w, h); ctx.setTransform(1, 0, 0, 1, 0, 0); };
     for (const r of parcels) {
     rect(r[0], r[1], r[2], r[3]);
-    ctx.strokeStyle = 'rgba(234, 179, 8, 0.7)'; ctx.lineWidth = 1.5 * dpr; ctx.setLineDash([4 * dpr, 4 * dpr]); ctx.stroke(); ctx.setLineDash([]);
+    // (T200: your land outlined clearly while Land for sale is open)
+    ctx.strokeStyle = this.landMode ? 'rgba(250, 204, 21, 0.95)' : 'rgba(234, 179, 8, 0.7)'; ctx.lineWidth = (this.landMode ? 3 : 1.5) * dpr; ctx.setLineDash([4 * dpr, 4 * dpr]); ctx.stroke(); ctx.setLineDash([]);
     }
-    if (this.landMode && this.landHover) {
-    const h = this.landHover, hr = h.rect;
-    rect(hr[0], hr[1], hr[2], hr[3]);
-    ctx.fillStyle = 'rgba(34, 197, 94, 0.2)'; ctx.fill();
-    ctx.strokeStyle = '#22c55e'; ctx.lineWidth = 2 * dpr; ctx.stroke();
-    const c = this.screen(hr[0] + hr[2] / 2, hr[1] + hr[3] / 2);
-    // the land tool's price at the hovered parcel: a hint, so the map's labels make way for it (T151)
-    this.labels.text(LABEL_KEY.landHover, PRI.hint, `$${h.price.toLocaleString()} (${h.landClass})`, c.x, c.y, `bold ${12 * dpr}px ui-sans-serif, system-ui, sans-serif`, 12 * dpr, '#f8fafc', LABEL_OUTLINE, 3 * dpr);
+    // T200: Land for sale: every block for sale tinted by its price band, with its band's $ label and its price (colour never alone, T180);
+    // a block you cannot buy hatched with a small ✕ (its reason by the pointer); the block under the pointer and the card's outlined
+    if (this.landMode) {
+    const offers = this.land.offers(), hov = this.land.hover, card = this.land.card, font = `bold ${12 * dpr}px ui-sans-serif, system-ui, sans-serif`;
+    for (const o of offers) {
+      const r = o.rect, on = hov === o || (card !== null && card.rect.join() === r.join());
+      rect(r[0] + 0.4, r[1] + 0.4, r[2] - 0.8, r[3] - 0.8);
+      if (o.why) {
+        ctx.save(); ctx.fillStyle = 'rgba(70, 60, 60, 0.28)'; ctx.fill(); ctx.clip();
+        const cs = [this.screen(r[0], r[1]), this.screen(r[0] + r[2], r[1]), this.screen(r[0], r[1] + r[3]), this.screen(r[0] + r[2], r[1] + r[3])];
+        strokeHatch(ctx, Math.min(...cs.map(c => c.x)), Math.min(...cs.map(c => c.y)), Math.max(...cs.map(c => c.x)), Math.max(...cs.map(c => c.y)), dpr, 'rgba(255, 220, 210, 0.75)', 0.55);
+        ctx.restore();
+        rect(r[0] + 0.4, r[1] + 0.4, r[2] - 0.8, r[3] - 0.8);
+        ctx.strokeStyle = on ? '#fca5a5' : 'rgba(252, 165, 165, 0.55)'; ctx.lineWidth = (on ? 2.5 : 1.2) * dpr; ctx.setLineDash([5 * dpr, 4 * dpr]); ctx.stroke(); ctx.setLineDash([]);
+        const c = this.screen(r[0] + r[2] / 2, r[1] + r[3] / 2); drawRefusedCross(ctx, c.x, c.y, dpr);
+        continue;
+      }
+      const band = LAND_BAND_COL[o.band ?? 'fair'];
+      ctx.fillStyle = band.fill; ctx.fill();
+      ctx.strokeStyle = on ? '#fff7d6' : band.edge; ctx.lineWidth = (on ? 3 : 1.5) * dpr; ctx.stroke();
+      const c = this.screen(r[0] + r[2] / 2, r[1] + r[3] / 2);
+      // a count's rank: the band and the price stay readable over the trees' names (T151)
+      this.labels.text(o, on ? PRI.hint : PRI.count, `${BAND_LABEL[o.band ?? 'fair']} · $${o.price.toLocaleString()}`, c.x, c.y, font, 12 * dpr, band.ink, LABEL_OUTLINE, 3 * dpr);
+    }
+    // the reason a block under the pointer cannot be bought, by the pointer
+    if (hov?.why && this.hover) { const c = this.screen(this.hover.x, this.hover.y); this.labels.text(LABEL_KEY.landHover, PRI.hint, hov.why, c.x, c.y - 22 * dpr, font, 12 * dpr, '#fecaca', LABEL_OUTLINE, 3 * dpr); }
     }
     }
     ctx.lineJoin = 'miter'; ctx.textAlign = 'start'; ctx.textBaseline = 'alphabetic';
@@ -4330,8 +4352,54 @@ export class Game {
   /** golf mode: a new game is a golf game (one town, the old nine, the season); the stadium and the Business tool are off */
   get golfMode(): boolean { return this.golf !== null; }
   landMode = false;
-  landHover: { rect: [number, number, number, number]; price: number; landClass: ParcelLandClass } | null = null;
+  /** T200 (#524): Land for sale: the blocks for sale next to your land, the one under the pointer and the card's (golf/land-sale.ts) */
+  readonly land: LandSale = new LandSale({
+    parcels: () => (this.golf ? this.golf.parcels ?? [this.golf.parcel] : []), map: MAP,
+    classOf: r => this.blockLandClass(r), onRoad: r => this.blockOnPublicRoad(r), pop: () => this.traffic.pop,
+    version: () => { let n = 0; for (const l of this.traffic.lots.values()) if (l.level >= 1) n++; return `${this.net.version}|${n}`; },
+  });
   toggleLandMode() { this.toggleSideMode('landMode'); }
+  /** T200: opens Land for sale (Course › Land for sale, the top bar's Land chip, a refusal's button), centred on tile point at when given */
+  openLandSale(at?: Pt | null) {
+    if (!this.golf) return;
+    if (!this.landMode) this.toggleSideMode('landMode');
+    this.land.cancel();
+    if (at) { this.camEase = null; this.cam.X = at.x; this.cam.Y = at.y; this.clampCam(); }
+    this.emit();
+  }
+  /** T200: closes Land for sale (its card and the overlay) */
+  closeLandSale() { if (this.landMode) this.toggleSideMode('landMode'); this.land.cancel(); this.emit(); }
+  /** T200: Buy on the card: exactly the card's block at the card's price (land-sale.ts LandSale.buy checks it is still that), else why not */
+  buyLandCard(): boolean {
+    const r = this.land.buy(this.money);
+    if (!r.ok) { this.toast(r.why, 'warn'); this.emit(); return false; }
+    const ok = this.buyLandBlock(r.rect, r.price);
+    if (ok) this.land.cancel();
+    this.emit();
+    return ok;
+  }
+  /** T200: where a course brush is refused for "not your land" (the tile under the pointer), for the refusal's Land for sale button; null else */
+  landRefusalAt(): Pt | null {
+    if (!this.golf || this.tool !== 'course' || this.landMode) return null;
+    const now = performance.now();
+    if (this.hover && this.courseCursor.state.kind === 'refused' && /not your land/i.test(this.courseCursor.hint)) this.landRefused = { at: { x: Math.round(this.hover.x), y: Math.round(this.hover.y) }, t: now };
+    return this.landRefused && now - this.landRefused.t < LAND_REFUSAL_MS ? this.landRefused.at : null;
+  }
+  /** the last "not your land" refusal of a course brush: where and when (landRefusalAt) */
+  private landRefused: { at: Pt; t: number } | null = null;
+  /** T200: the trees standing on a block (its card: cleared as you build there) */
+  treesOn(r: [number, number, number, number]): number {
+    const [x0, y0, x1, y1] = [r[0], r[1], r[0] + r[2], r[1] + r[3]], N = MAP / FOREST_CELL, at = (x: number, y: number) => x >= x0 && x < x1 && y >= y0 && y < y1;
+    let n = 0;
+    // the planted forest and town trees (by forest cell), then the placed tree props
+    for (const map of [this.forest, this.townTrees]) for (const [k, ps] of map) {
+      const ci = k % N, cj = Math.floor(k / N);
+      if (!boxNear([x0, y0, x1, y1], ci * FOREST_CELL, cj * FOREST_CELL, (ci + 1) * FOREST_CELL, (cj + 1) * FOREST_CELL, 0)) continue;
+      for (const p of ps) if (at(p.x, p.y)) n++;
+    }
+    for (const p of this.propGrid.query([x0, y0, x1, y1])) if (LIBRARY[p.item]?.kind === 'tree' && at((p.x0 + p.x1) / 2, (p.y0 + p.y1) / 2)) n++;
+    return n;
+  }
   /** the Grass panel's button: opens the panel (in Select) or closes it */
   toggleGrassPanel() { if (this.golfMode) { this.setTool(this.tool === 'greenkeeping' ? 'select' : 'greenkeeping'); return; } this.toggleSideMode('grassPanel'); } // T175: Greenkeeping in golf games
   /** opens side mode k (the Grass panel, Land, Holes, Event) and closes the others, or closes k: opening one switches to Select and picking a
@@ -4343,7 +4411,7 @@ export class Game {
   }
   /** what a closed side mode leaves behind: the land block under the pointer, the picked pin or tee, the structure in hand, the armed grass care */
   private tidySideModes() {
-  if (!this.landMode) this.landHover = null;
+  if (!this.landMode) { this.land.hover = null; this.land.cancel(); }
   if (!this.holesTool && !this.markerDrag) this.selectedGolfMarker = null;
   if (!this.eventTool) this.eventStructurePending = null;
   if (!this.grassPanel) this.grassAction = null;
@@ -4376,25 +4444,28 @@ export class Game {
     }
     return blockOnRoad(r, roads);
   }
-  buyLandBlock(r: [number, number, number, number]) {
-  if (!this.golf) return;
-  if (this.blockOnPublicRoad(r)) { this.toast('A public road runs here: it stays public', 'warn'); return; }
+  /** buys block r (T200: at price when given: refused if the price has moved since); true when bought */
+  buyLandBlock(r: [number, number, number, number], price?: number): boolean {
+  if (!this.golf) return false;
+  if (this.blockOnPublicRoad(r)) { this.toast('A public road runs here: it stays public', 'warn'); return false; }
   const parcels = this.golf.parcels ?? [this.golf.parcel];
   const info = this.blockLandClass(r);
   const res = buyAdjacentBlock(parcels, { rect: r, ...info, townPop: this.traffic.pop }, this.money);
   if (!res.ok) {
   this.toast(res.reason ?? 'Cannot buy this block', 'warn');
-  return;
+  return false;
   }
+  if (price !== undefined && res.price !== price) { this.toast(`The price changed: now $${res.price.toLocaleString()}`, 'warn'); return false; }
   this.golf.parcels = res.parcels;
   this.golf.parcel = res.bounds;
   this.fitCourseGrid(); // the course grid holds the new land
   this.sendGolf(); // the town keeps off the new land too
   this.traffic.spend('construction', res.price);
   this.scheduleSave();
-  this.toast(`Purchased ${info.landClass} block ($${res.price.toLocaleString()})`);
-  this.landHover = null;
+  this.toast(`Bought ${info.landClass} land: $${res.price.toLocaleString()}`);
+  this.land.hover = null;
   this.emit();
+  return true;
   }
   /** the golf HUD's view (null outside golf mode) */
   lastGolfMonth = -1;
@@ -4699,7 +4770,7 @@ export class Game {
     this.tollDefs = []; this.tollSegs.clear(); this.tollHover = null; for (const k of this.tollGround) this.setLotGround(k, null); this.tollGround.clear();
     this.busDefs = []; this.busPick = null; this.busHover = null; this.paint.clear(); this.dropCourseGrid();
     this.golf = null; this.townPts = []; this.golfProps.clear(); this.golfStructureProps.clear(); this.range.drop(); this.range.cardOpen = false;
-    this.landMode = false; this.landHover = null; this.holesTool = false; this.selectedGolfMarker = null;
+    this.landMode = false; this.land.hover = null; this.land.cancel(); this.holesTool = false; this.selectedGolfMarker = null;
     this.eventTool = false; this.eventStructurePending = null; this.lastGolfMonth = -1;
     // the last game's season card and calendar year do not carry over (T135: the new game's clock starts again in the city worker)
     this.seasonReport = null; this.seenYear = 0; this.foundTick = 0;

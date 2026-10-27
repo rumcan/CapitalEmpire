@@ -13,7 +13,7 @@ import { entryKey, extraLock, toolLock, toolNew, toolsIn, type RailItem, type Ra
 export type LeafAct =
   | { k: 'road'; id: string } | { k: 'junction'; id: string } | { k: 'surface'; id: string } | { k: 'newHole' } | { k: 'holes' }
   | { k: 'club' } | { k: 'halfway' } | { k: 'care'; id: string } | { k: 'event' } | { k: 'props'; group: string | null }
-  | { k: 'paint'; tex: string } | { k: 'plant'; id: string } | { k: 'paintMode'; id: string } | { k: 'range'; section: string | null };
+  | { k: 'paint'; tex: string } | { k: 'plant'; id: string } | { k: 'paintMode'; id: string } | { k: 'range'; section: string | null } | { k: 'land' };
 /** a leaf: the rail item it opens from, its tool entry (the Props tool's view with it), what else it does */
 export interface Leaf { item: string; entry: RailTool; act?: LeafAct }
 /** a flyout row: a caption (no action), a row with children (opens the next flyout), or a leaf. why: locked (dimmed, the reason shown) */
@@ -85,7 +85,7 @@ export function menuOf(item: RailItem, c: MenuCtx): MenuRow[] {
       if (b) rows.push(group('buildings', 'Buildings', 'house', [leaf(b, 'Clubhouse', { k: 'club' }, 'house'), leaf(b, 'Halfway house', { k: 'halfway' }, 'house')], b));
       const g = byId('greenkeeping');
       if (g) rows.push(group('greenkeeping', 'Greenkeeping', 'trees', [leaf(g, 'Grass care', undefined, 'trees'), ...c.cares.map(x => leaf(g, x.name, { k: 'care', id: x.id }))], g));
-      if (c.golf) for (const x of item.extras ?? []) rows.push({ key: `extra:${x.id}`, label: x.label, icon: x.icon, leaf: { item: item.id, entry: { id: 'select', label: x.label, key: '', icon: x.icon }, act: { k: 'event' } }, why: extraLock(c.ui, x) });
+      if (c.golf) for (const x of item.extras ?? []) rows.push({ key: `extra:${x.id}`, label: x.label, icon: x.icon, leaf: { item: item.id, entry: { id: 'select', label: x.label, key: '', icon: x.icon }, act: x.id === 'land' ? { k: 'land' } : { k: 'event' } }, why: extraLock(c.ui, x) });
       break;
     }
     case 'decor': {
