@@ -65,6 +65,18 @@ export function NightPanel({ game, bump }: { game: Game; bump: () => void }) {
         })}
         <button className="btn mt-2 w-full" onClick={() => set({ ...NIGHT_DEFAULT, mode: n.mode })}>The builder's night</button>
       </details>
+      {/* T215 (#561, phase 1): the street lamps' reflection pools as the camera specular, a test of the look (lamp-reflect.ts); not remembered */}
+      <details className="px-2 py-1 text-xs">
+        <summary className="cursor-pointer py-1">Lamp reflections (test)</summary>
+        <label className="flex items-center gap-2 py-1" title="On: the lamps' reflection pools on the road show whole in the middle of the screen and fade out toward its edges. Off: baked into the road as before">
+          <input type="checkbox" checked={game.specCam} onChange={e => { game.specCam = e.target.checked; bump(); }} />
+          <span>Follow the camera</span>
+        </label>
+        <Row label="Inner" value={game.spec.inner} min={0} max={2} step={0.01} show={game.spec.inner.toFixed(2)} set={v => { game.setSpec({ inner: v }); bump(); }} title="Within this distance from the screen's centre (over half the screen's width) the reflection is whole" />
+        <Row label="Outer" value={game.spec.outer} min={0.01} max={3} step={0.01} show={game.spec.outer.toFixed(2)} set={v => { game.setSpec({ outer: v }); bump(); }} title="Past this distance from the screen's centre the reflection is gone" />
+        <Row label="Strength" value={game.spec.strength} min={0} max={3} step={0.01} show={pct(game.spec.strength)} set={v => { game.setSpec({ strength: v }); bump(); }} />
+        <Row label="By day" value={game.spec.day} min={0} max={1} step={0.01} show={pct(game.spec.day)} set={v => { game.setSpec({ day: v }); bump(); }} title="The share of the strength by day; after dusk the night takes it to the whole" />
+      </details>
     </div>
   );
 }
