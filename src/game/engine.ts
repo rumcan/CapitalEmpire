@@ -5709,7 +5709,7 @@ export class Game {
     ctx.fillStyle = fill; ctx.fill(); ctx.strokeStyle = '#e9edf2'; ctx.lineWidth = 2 * this.dpr; ctx.stroke();
   }
   /** a refused rect (T180, not by colour alone): the hatch and the ✕, drawn over the ghost's picture */
-  private refusedRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) { drawRefusedMarks(this.ghostView(ctx), [x, y, x + w, y, x + w, y + h, x, y + h]); }
+  private refusedRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) { drawRefusedMarks(this.ghostView(ctx), [x, y, x + w, y, x + w, y + h, x, y + h], 'front'); }
   /** Placed business labels; footprint fills only at planner zoom, below the detailed artwork tier. */
   private drawBusinesses(ctx: CanvasRenderingContext2D) {
     const dpr = this.dpr, font = `bold ${11 * dpr}px ui-sans-serif, system-ui, sans-serif`;

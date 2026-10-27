@@ -89,7 +89,11 @@ describe('the refused-cell overlay draws the hatch and the ✕ (T180)', () => {
     const r = recorder(); drawGhostRing(view(r.ctx), 5, 5, 1.5, 0, 'invalid');
     assert.ok(crossAt(r.ops, 100, 60, 1), "a refused marker's ring gets its ✕");
     const club = recorder(), cv = view(club.ctx), cc = cv.screen(15, 13); drawRefusedMarks(cv, pts);
-    assert.ok(club.ops.includes('clip') && hatchStrokes(club.ops) === 1 && crossAt(club.ops, cc.x, cc.y, 1), "the clubhouse's ghost: the hatch and the ✕");
+    assert.ok(club.ops.includes('clip') && hatchStrokes(club.ops) === 1 && crossAt(club.ops, cc.x, cc.y, 1), "a refused rect: the hatch and the ✕");
+    // the clubhouse's ghost: its ✕ by the front corner (the lowest on screen), 16 css px in towards the centre
+    const big = [10, 10, 40, 10, 40, 34, 10, 34], fr = recorder(), fv = view(fr.ctx), bc = fv.screen(25, 22), f = fv.screen(40, 34), L = Math.hypot(bc.x - f.x, bc.y - f.y);
+    drawRefusedMarks(fv, big, 'front');
+    assert.ok(L > 16 && crossAt(fr.ops, f.x + ((bc.x - f.x) * 16) / L, f.y + ((bc.y - f.y) * 16) / L, 1), "the clubhouse's ✕ by its front corner");
   });
   it("New hole's left-out cells: the red hatch over them and a ✕ on the patch", () => {
     // the hatch is a canvas pattern: a tiny canvas double stands in for document

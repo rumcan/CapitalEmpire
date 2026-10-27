@@ -202,11 +202,20 @@ function hatchPoly(v: GhostView, pts: readonly number[]): void {
   ctx.restore();
 }
 
-/** a refused footprint drawn elsewhere (the clubhouse's and the Props ghost's rects): the hatch inside the polygon (tiles) and the ✕ at its centre */
-export function drawRefusedMarks(v: GhostView, pts: readonly number[]): void {
+/** a refused footprint drawn elsewhere (the clubhouse's and the Props ghost's rects): the hatch inside the polygon (tiles) and the ✕, at its
+ *  centre, or (front) by its front corner, 16 css px in, where a building's picture standing on the footprint does not cover it */
+export function drawRefusedMarks(v: GhostView, pts: readonly number[], at: 'centre' | 'front' = 'centre'): void {
   if (pts.length < 6) return;
   hatchPoly(v, pts);
-  const c = polyCentre(pts), p = v.screen(c.x, c.y); drawRefusedCross(v.ctx, p.x, p.y, v.dpr);
+  const c = polyCentre(pts), p = v.screen(c.x, c.y);
+  if (at === 'front') {
+    let f = p;
+    for (let i = 0; i + 1 < pts.length; i += 2) { const q = v.screen(pts[i]!, pts[i + 1]!); if (q.y > f.y) f = q; }
+    const dx = p.x - f.x, dy = p.y - f.y, L = Math.hypot(dx, dy), k = L > 0 ? Math.min(1, (16 * v.dpr) / L) : 0;
+    drawRefusedCross(v.ctx, f.x + dx * k, f.y + dy * k, v.dpr);
+    return;
+  }
+  drawRefusedCross(v.ctx, p.x, p.y, v.dpr);
 }
 
 /** draws an axis-aligned or rotated ghost footprint rectangle in world tiles */
