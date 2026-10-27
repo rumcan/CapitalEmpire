@@ -60,7 +60,7 @@ test('the catalogue: BUSINESS.clubhouse is a visit with the golf course\'s hours
   const c = BUSINESS.clubhouse;
   assert.equal(c.kind, 'visit');
   assert.equal(c.name, 'Clubhouse');
-  assert.deepEqual(c.footprint, { w: 40, h: 24 });
+  assert.deepEqual(c.footprint, { w: 20, h: 12 });
   assert.equal(c.buildCost, 0);
   assert.equal(c.upkeepPerDay, 300);
   assert.equal(c.pricePerVisitor, 22);
