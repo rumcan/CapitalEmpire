@@ -1,0 +1,346 @@
+{
+  "schema": 1,
+  "material": "sand-ripples",
+  "zoom": "near",
+  "status": "exported-file-contract-only-visual-review-required",
+  "source": {
+    "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/near-v1/master.native-crop.png",
+    "sha256": "c39a860da9e5c2a68bd00368bcd970ef2db38d208648dc7c4de8fc0ffa22e3c5",
+    "pixelSha256": "026f45cf94e1d1e464ae0f8058f3dd630db9861aa96e0ca0d7b69d7fbd265dbb",
+    "dimensions": [
+      1742,
+      902
+    ]
+  },
+  "crop": {
+    "left": 0,
+    "top": 0,
+    "width": 1742,
+    "height": 902,
+    "removedRightPixels": 0,
+    "removedBottomPixels": 0
+  },
+  "rollPixels": [
+    871,
+    451
+  ],
+  "dimensions": [
+    1742,
+    902
+  ],
+  "collarPixels": 64,
+  "patchSpanPixels": 256,
+  "repairInputs": {
+    "northSouth": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/near-v1/full-north-south-repair-input.png",
+    "westEast": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/near-v1/full-west-east-repair-input.png"
+  },
+  "repairOutputCrops": {
+    "northSouth": {
+      "left": 743,
+      "top": 387,
+      "width": 256,
+      "height": 128
+    },
+    "westEast": {
+      "left": 807,
+      "top": 323,
+      "width": 128,
+      "height": 256
+    }
+  },
+  "smallPatchDiagnosticsOnly": true,
+  "generationRule": "Always edit the FULL scene-sized repair input to preserve apparent grass scale. Small patches are diagnostics/extraction only, never imagegen edit targets.",
+  "processing": "Minimum-error cut paths select either common-master or unique-variant native pixels at unchanged coordinates. Outer collar stays exact. No paint, recolour, blend, noise, mirror or rotation.",
+  "compositeMethod": "minimum-error-cut",
+  "repairContext": "full-frame-bands",
+  "repairs": {
+    "northSouth": {
+      "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/near-v1/full-north-south-repair-v1.raw.png",
+      "sha256": "3ec02cb3fe4a2894d2e9083a4c6b1537cd5baee1d4f1e4858dc3e19adb050573",
+      "pixelSha256": "efaf2c4c3c86764768f0b72f29682110727fc9ef0f3794c255b616c58eadb9c2",
+      "dimensions": [
+        1743,
+        902
+      ],
+      "explicitCrop": {
+        "left": 743,
+        "top": 387,
+        "width": 256,
+        "height": 128
+      },
+      "fullFrameCrop": {
+        "left": 0,
+        "top": 0,
+        "width": 1742,
+        "height": 902
+      },
+      "processing": "Exact native crop from full-frame AI repair",
+      "fullBandCrop": {
+        "left": 743,
+        "top": 0,
+        "width": 256,
+        "height": 902
+      }
+    },
+    "westEast": {
+      "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/near-v1/full-west-east-repair-v1.raw.png",
+      "sha256": "83417bfad83a538a2d0782be2a8cc9ebb162c42eb167b1d007e2e9640f5a5490",
+      "pixelSha256": "a623c9f927ec5cf86f49f5a52dc67ca81c90afe14c6920074330f7b6edcf9ab8",
+      "dimensions": [
+        1743,
+        902
+      ],
+      "explicitCrop": {
+        "left": 807,
+        "top": 323,
+        "width": 128,
+        "height": 256
+      },
+      "fullFrameCrop": {
+        "left": 0,
+        "top": 0,
+        "width": 1742,
+        "height": 902
+      },
+      "processing": "Exact native crop from full-frame AI repair",
+      "fullBandCrop": {
+        "left": 0,
+        "top": 323,
+        "width": 1742,
+        "height": 256
+      }
+    }
+  },
+  "commonMaster": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/near-v1/common-collar-master.png",
+  "commonMasterPixelSha256": "79a48e0abbd9ae8cd80d7ee79e33e1d11469e3243e3dce9a628653a53f353679",
+  "commonCutPaths": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/near-v1/common-collar-cut-paths.json",
+  "variants": [
+    {
+      "id": "tile-01",
+      "source": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/near-v1/tile-01-v1.raw.png",
+        "sha256": "1c339b55d5998af9be125b088d4fc3ad8ad09839c960fb4faea190f21e1114e1",
+        "pixelSha256": "e72dbd9a4f26f4e31b98ef6dfd27f88570da38e807fe16fb89bc040d21d4a0a8",
+        "dimensions": [
+          1742,
+          903
+        ]
+      },
+      "explicitCrop": {
+        "left": 0,
+        "top": 0,
+        "width": 1742,
+        "height": 902
+      },
+      "interiorPixelSha256": "2ca36c9e9ec0aa5ac8f868e2b01480af850982656bc4aeed56475cefe9bd82a1",
+      "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/near-v1/tile-01.png",
+      "pixelSha256": "491b805fbed46c9b9583213fabe781c59d48fb292663c6450046d12190c0a8ed",
+      "collarPixelSha256": "7905d88d17c5147e4ea11b3058f091a43c1e8acbeddcaf8df10d0e7ff5bed811",
+      "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/near-v1/tile-01.cut-paths.json",
+      "variantSelectedPixels": 1012772
+    },
+    {
+      "id": "tile-02",
+      "source": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/near-v1/tile-02-v1.raw.png",
+        "sha256": "811d73d01ae877f06811fb3abacdbec3426c430a4d02ff0cdca97f4b1b144f5d",
+        "pixelSha256": "10ba371c943c103531ecd0356705c7a9f8dd2c3b2421e144568dea57a9acbe49",
+        "dimensions": [
+          1742,
+          903
+        ]
+      },
+      "explicitCrop": {
+        "left": 0,
+        "top": 0,
+        "width": 1742,
+        "height": 902
+      },
+      "interiorPixelSha256": "43ef5a39ac1d9278d8dded760337ed565ac02720b959fc01e0501ae878833d83",
+      "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/near-v1/tile-02.png",
+      "pixelSha256": "c18a7e3d9b6b9c49e4d0dc2f5d7e0e7878a681fa4e1cbb7c551f17b1b9f2a2b6",
+      "collarPixelSha256": "7905d88d17c5147e4ea11b3058f091a43c1e8acbeddcaf8df10d0e7ff5bed811",
+      "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/near-v1/tile-02.cut-paths.json",
+      "variantSelectedPixels": 1012673
+    },
+    {
+      "id": "tile-03",
+      "source": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/near-v1/tile-03-v1.raw.png",
+        "sha256": "7a6d4f47bbf3d2229f9584384e36d53cbbbb7ff3b4e0a30f4be04855eafdc08b",
+        "pixelSha256": "1023418b6785b4de917f0b12415330569de07cbf03238afbd2a189b0e65aee81",
+        "dimensions": [
+          1742,
+          903
+        ]
+      },
+      "explicitCrop": {
+        "left": 0,
+        "top": 0,
+        "width": 1742,
+        "height": 902
+      },
+      "interiorPixelSha256": "0f88dda31321900ca643728a47e61443557c32456f7412434924dd2d9d4c71a6",
+      "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/near-v1/tile-03.png",
+      "pixelSha256": "f463cb9628aca72ee60c24e53825f6afb363436353bcfa4b22d1d21be4c7e543",
+      "collarPixelSha256": "7905d88d17c5147e4ea11b3058f091a43c1e8acbeddcaf8df10d0e7ff5bed811",
+      "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/near-v1/tile-03.cut-paths.json",
+      "variantSelectedPixels": 993251
+    },
+    {
+      "id": "tile-04",
+      "source": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/near-v1/tile-04-v1.raw.png",
+        "sha256": "04617e4ee6718bb5dd0e8e99753720caf0c742c46a0331ef4b560194da4ebd3d",
+        "pixelSha256": "2040ee2dd433032d446d82f31ae87237b16f49cca6b24bf5feecb0d53d7bbc9c",
+        "dimensions": [
+          1742,
+          903
+        ]
+      },
+      "explicitCrop": {
+        "left": 0,
+        "top": 0,
+        "width": 1742,
+        "height": 902
+      },
+      "interiorPixelSha256": "4ca06772caab28613f15cccd25bd3584fb5c5b6a0096d458872ab0e0465f2af4",
+      "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/near-v1/tile-04.png",
+      "pixelSha256": "38b90c3d48698df3ac33d7bd4187ee88cd9d72e49136906b65c65a5cf8852591",
+      "collarPixelSha256": "7905d88d17c5147e4ea11b3058f091a43c1e8acbeddcaf8df10d0e7ff5bed811",
+      "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/near-v1/tile-04.cut-paths.json",
+      "variantSelectedPixels": 982381
+    }
+  ],
+  "tileCount": 4,
+  "authoredLevel": "near",
+  "lighting": "UPPER RIGHT toward LOWER LEFT",
+  "orientation": {
+    "allowRotate": false,
+    "allowMirror": false
+  },
+  "displayContract": {
+    "targetVisibleTiles": [
+      2,
+      4
+    ],
+    "minimumVisibleTiles": 2,
+    "maximumVisibleTiles": 4,
+    "switchBeforeExceeding": 4,
+    "nextDetailSetRequired": true,
+    "independentlyAuthoredDetailSets": true,
+    "primaryVariantCount": 4,
+    "variationBankCount": 4,
+    "geography": "No fixed world extent is implied by these camera-scale source plates."
+  },
+  "reviewFiles": [
+    "review-order-a.png",
+    "review-order-b.png",
+    "review-four-tiles.png"
+  ],
+  "pairChecks": [
+    {
+      "a": "tile-01",
+      "b": "tile-01",
+      "rightToLeftRgbMae": 2.705,
+      "bottomToTopRgbMae": 5.546
+    },
+    {
+      "a": "tile-01",
+      "b": "tile-02",
+      "rightToLeftRgbMae": 2.705,
+      "bottomToTopRgbMae": 5.546
+    },
+    {
+      "a": "tile-01",
+      "b": "tile-03",
+      "rightToLeftRgbMae": 2.705,
+      "bottomToTopRgbMae": 5.546
+    },
+    {
+      "a": "tile-01",
+      "b": "tile-04",
+      "rightToLeftRgbMae": 2.705,
+      "bottomToTopRgbMae": 5.546
+    },
+    {
+      "a": "tile-02",
+      "b": "tile-01",
+      "rightToLeftRgbMae": 2.705,
+      "bottomToTopRgbMae": 5.546
+    },
+    {
+      "a": "tile-02",
+      "b": "tile-02",
+      "rightToLeftRgbMae": 2.705,
+      "bottomToTopRgbMae": 5.546
+    },
+    {
+      "a": "tile-02",
+      "b": "tile-03",
+      "rightToLeftRgbMae": 2.705,
+      "bottomToTopRgbMae": 5.546
+    },
+    {
+      "a": "tile-02",
+      "b": "tile-04",
+      "rightToLeftRgbMae": 2.705,
+      "bottomToTopRgbMae": 5.546
+    },
+    {
+      "a": "tile-03",
+      "b": "tile-01",
+      "rightToLeftRgbMae": 2.705,
+      "bottomToTopRgbMae": 5.546
+    },
+    {
+      "a": "tile-03",
+      "b": "tile-02",
+      "rightToLeftRgbMae": 2.705,
+      "bottomToTopRgbMae": 5.546
+    },
+    {
+      "a": "tile-03",
+      "b": "tile-03",
+      "rightToLeftRgbMae": 2.705,
+      "bottomToTopRgbMae": 5.546
+    },
+    {
+      "a": "tile-03",
+      "b": "tile-04",
+      "rightToLeftRgbMae": 2.705,
+      "bottomToTopRgbMae": 5.546
+    },
+    {
+      "a": "tile-04",
+      "b": "tile-01",
+      "rightToLeftRgbMae": 2.705,
+      "bottomToTopRgbMae": 5.546
+    },
+    {
+      "a": "tile-04",
+      "b": "tile-02",
+      "rightToLeftRgbMae": 2.705,
+      "bottomToTopRgbMae": 5.546
+    },
+    {
+      "a": "tile-04",
+      "b": "tile-03",
+      "rightToLeftRgbMae": 2.705,
+      "bottomToTopRgbMae": 5.546
+    },
+    {
+      "a": "tile-04",
+      "b": "tile-04",
+      "rightToLeftRgbMae": 2.705,
+      "bottomToTopRgbMae": 5.546
+    }
+  ],
+  "commonCollarPixelSha256": "7905d88d17c5147e4ea11b3058f091a43c1e8acbeddcaf8df10d0e7ff5bed811",
+  "cutOverlapPixels": 128,
+  "warnings": [
+    "Shared outer pixels guarantee the same joins for every ordering, not artistic seam acceptance.",
+    "Inspect collar/interior boundaries, all edge-repair endpoints and shuffled tile views.",
+    "No live game integration or reconstructed orthographic projection is claimed."
+  ]
+}

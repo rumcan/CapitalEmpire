@@ -1,0 +1,135 @@
+{
+  "schema": 1,
+  "material": "golden-fescue",
+  "zoom": "near",
+  "master": "art/theme-consistency/generated/ground/scene-backgrounds/golden-fescue/near-background-anchored-v1.raw.png",
+  "outputFolder": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/near-v3",
+  "collarPixels": 64,
+  "patchSpanPixels": 256,
+  "repairRaws": {
+    "northSouth": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/near-v1/full-north-south-repair-v2.raw.png",
+    "westEast": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/near-v1/full-west-east-repair-v2.raw.png"
+  },
+  "repairCrops": {
+    "northSouth": {
+      "left": 743,
+      "top": 387,
+      "width": 256,
+      "height": 128
+    },
+    "westEast": {
+      "left": 807,
+      "top": 323,
+      "width": 128,
+      "height": 256
+    }
+  },
+  "variants": [
+    {
+      "id": "tile-01",
+      "raw": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/near-v1/tile-01-v1.raw.png",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 1742,
+        "height": 902
+      }
+    },
+    {
+      "id": "tile-02",
+      "raw": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/near-v1/tile-02-v1.raw.png",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 1742,
+        "height": 902
+      }
+    },
+    {
+      "id": "tile-03",
+      "raw": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/near-v1/tile-03-v1.raw.png",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 1742,
+        "height": 902
+      }
+    },
+    {
+      "id": "tile-04",
+      "raw": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/near-v1/tile-04-v1.raw.png",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 1742,
+        "height": 902
+      }
+    },
+    {
+      "id": "tile-05",
+      "raw": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/near-v1/tile-05-v1.raw.png",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 1742,
+        "height": 902
+      }
+    },
+    {
+      "id": "tile-06",
+      "raw": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/near-v1/tile-06-v1.raw.png",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 1742,
+        "height": 902
+      }
+    },
+    {
+      "id": "tile-07",
+      "raw": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/near-v1/tile-07-v1.raw.png",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 1742,
+        "height": 902
+      }
+    },
+    {
+      "id": "tile-08",
+      "raw": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/near-v1/tile-08-v1.raw.png",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 1742,
+        "height": 902
+      }
+    }
+  ],
+  "lighting": "UPPER RIGHT → LOWER LEFT",
+  "allowRotate": false,
+  "allowMirror": false,
+  "minVisibleTiles": 4,
+  "maxVisibleTiles": 8,
+  "ownerAcceptedMaster": true,
+  "appearanceSourceCamera": "near owner town screenshot, same view/grass apparent scale; do not infer metres per pixel",
+  "compositeMethod": "minimum-error-cut",
+  "cutOverlapPixels": 128,
+  "repairCutMarginPixels": 64,
+  "variantSourceVersion": "near-v1 imagegen raw sources preserved",
+  "repairContext": "full-frame-bands",
+  "repairFullFrameCrops": {
+    "northSouth": {
+      "left": 0,
+      "top": 0,
+      "width": 1742,
+      "height": 902
+    },
+    "westEast": {
+      "left": 0,
+      "top": 0,
+      "width": 1742,
+      "height": 902
+    }
+  }
+}

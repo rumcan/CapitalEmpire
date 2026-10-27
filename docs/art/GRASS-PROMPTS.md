@@ -1,5 +1,7 @@
 # Ground textures in the game-art style: the prompt sheet (T082)
 
+> **First read [GROUND-TEXTURE-METHOD.md](GROUND-TEXTURE-METHOD.md) (the owner, 2026-10-27):** ground textures are made by painting the layer into a game screenshot, slicing it out, cleaning it and painting a field of four tiles; the generator never knows it is making a texture. The prompts below are older (T082).
+
 The owner, 2026-10-24: "We want Blizzard Entertainment style textures." Reference picture:
 `art/reference/grass-style-blizzard-20261024.webp` (a green with two bunkers). Attach it to every request.
 

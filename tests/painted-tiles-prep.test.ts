@@ -14,7 +14,7 @@ import { spawnSync } from 'node:child_process';
 const EIGHT = 'art/theme-consistency/generated/ground/eight-tiles';
 const sha256 = (b: Buffer | string) => crypto.createHash('sha256').update(b).digest('hex');
 /** a small opaque RGB PNG, w x h, its pixels from the seed (so every file differs) */
-function png(w: number, h: number, seed: number): Buffer {
+function png(w: number, h: number, seed: number, flat = false): Buffer {
   const chunk = (type: string, data: Buffer) => {
     const len = Buffer.alloc(4); len.writeUInt32BE(data.length);
     const td = Buffer.concat([Buffer.from(type, 'ascii'), data]), crc = Buffer.alloc(4); crc.writeUInt32BE(zlib.crc32(td) >>> 0);
@@ -22,7 +22,7 @@ function png(w: number, h: number, seed: number): Buffer {
   };
   const ihdr = Buffer.alloc(13); ihdr.writeUInt32BE(w, 0); ihdr.writeUInt32BE(h, 4); ihdr[8] = 8; ihdr[9] = 2;
   const raw = Buffer.alloc((w * 3 + 1) * h);
-  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) for (let c = 0; c < 3; c++) raw[y * (w * 3 + 1) + 1 + x * 3 + c] = (seed * 53 + x * 17 + y * 29 + c * 71) & 255;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) for (let c = 0; c < 3; c++) raw[y * (w * 3 + 1) + 1 + x * 3 + c] = (seed * 53 + (flat ? 0 : x * 17 + y * 29) + c * 71) & 255;
   return Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), chunk('IHDR', ihdr), chunk('IDAT', zlib.deflateSync(raw)), chunk('IEND', Buffer.alloc(0))]);
 }
 /** a WebP's pixel size from its header (VP8, VP8L or VP8X) */
@@ -59,12 +59,18 @@ test('the prep script ships a family without a handoff provisionally, then its c
     for (let i = 1; i <= 4; i++) { write(`${F}/mid-v1/tile-0${i}-v1.raw.png`, png(12, 6, 10 + i)); write(`${F}/mid-v1/tile-0${i}-v2.raw.png`, i === 3 ? png(13, 7, 20 + i) : png(12, 6, 20 + i)); }
     // FAR: a finished set in far-v1 and only raw tiles in the newer far-v2: the finished set wins
     for (let i = 1; i <= 4; i++) { write(`${F}/far-v1/tile-0${i}.png`, png(12, 6, 30 + i)); write(`${F}/far-v2/tile-0${i}-v1.raw.png`, png(12, 6, 40 + i)); }
+    // A complete newer export with an appearance hold is not a finished asset, nor a raw fallback candidate from that same held set.
+    for (const b of ['near', 'mid', 'far']) {
+      for (let i = 1; i <= 4; i++) { write(`${F}/${b}-v8/tile-0${i}.png`, png(12, 6, 80 + i)); write(`${F}/${b}-v8/tile-0${i}-v8.raw.png`, png(12, 6, 90 + i)); }
+      write(`${F}/${b}-v8/review/appearance-review-v8.json`, JSON.stringify({ decision: 'held-for-appearance', visualAccepted: false }));
+    }
     // putting green: NEAR only (incomplete: left out); long grass: no folder at all
     for (let i = 1; i <= 4; i++) write(`${EIGHT}/putting-green/near-v1/tile-0${i}-v1.raw.png`, png(12, 6, 50 + i));
 
     let r = run();
     assert.equal(r.status, 0, r.stderr + r.stdout);
     assert.match(r.stderr, /putting-green mid: no complete set of four tiles; putting-green is left out/); assert.match(r.stderr, /long-grass near: no complete set/);
+    assert.match(r.stderr, /near-v8 is held by its appearance review/);
     let m = manifest();
     assert.deepEqual(m.families.map(f => f.id), ['fairway']);
     const f = m.families[0]!;
@@ -145,6 +151,41 @@ function wavyPng(w: number, h: number, seed: number): Buffer {
   return Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), chunk('IHDR', ihdr), chunk('IDAT', zlib.deflateSync(raw)), chunk('IEND', Buffer.alloc(0))]);
 }
 interface Wrap { lr: number; tb: number; h: number; v: number }
+
+test('a green fallback follows the ready canonical set rather than a newer complete experiment, and the actual review must accept it', t => {
+  const root = path.resolve('output', `tests-t168-art-${process.pid}`), out = path.join(root, 'out'), F = `${EIGHT}/putting-green`, DIR = 'art/owner-supplied/putting-green-20261026';
+  fs.rmSync(root, { recursive: true, force: true });
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const write = (rel: string, bytes: Buffer | string) => { const p = path.join(root, rel); fs.mkdirSync(path.dirname(p), { recursive: true }); fs.writeFileSync(p, bytes); };
+  const run = () => spawnSync(process.execPath, ['scripts/assets/prep-painted-tiles.mjs', '--art', root, '--out', out], { encoding: 'utf8' });
+  const sets: Record<string, any> = {}, levels: Record<string, any> = {}, ownerLevels: Record<string, any> = {};
+  for (const b of ['near', 'mid', 'far']) {
+    const folder = `${F}/${b}-v2`, decision = `${folder}/review/appearance-decision.json`, review = Buffer.from(JSON.stringify({ decision: 'accepted-for-art-appearance' }));
+    write(decision, review);
+    const primaryTiles = [1, 2, 3, 4].map(i => { const id = `tile-0${i}`, file = `${folder}/${id}.png`, bytes = png(24, 16, 7, true); write(file, bytes); return { id, file, sha256: sha256(bytes), nativePixels: [24, 16] }; });
+    sets[b] = { folder, revision: `${b}-v2`, primaryTileIds: primaryTiles.map(x => x.id), primaryTiles, nativePixels: [24, 16], visualDecision: { file: decision, sha256: sha256(review) } };
+    levels[b] = { folder, nativePixels: [24, 16], primaryTileIds: primaryTiles.map(x => x.id), visualDecision: decision };
+    // A complete and numerically newer experiment must never override the handoff, including the owner's MID fallback.
+    for (let i = 1; i <= 4; i++) write(`${F}/${b}-v99/tile-0${i}.png`, png(24, 16, 9, true));
+    const bytes = png(240, 200, 3, true); write(`${DIR}/${b}.png`, bytes);
+    ownerLevels[b] = { file: `${b}.png`, sha256: sha256(bytes), size: [240, 200] };
+  }
+  const writeAuthority = () => {
+    const buf = Buffer.from(JSON.stringify({ id: 'painted:putting-green', sets })); write(`${F}/canonicalselection.json`, buf);
+    write(`${EIGHT}/READY-MATERIALS.json`, JSON.stringify({ ready: [{ id: 'painted:putting-green', material: 'putting-green', canonicalSelection: { file: `${F}/canonicalselection.json`, sha256: sha256(buf) }, levels }] }));
+  };
+  writeAuthority();
+  write(`${DIR}/source.json`, JSON.stringify({ id: 'paint:putting-green-fixture', family: { id: 'putting-green-paint', name: 'Putting green' }, levels: ownerLevels }));
+  let r = run(); assert.equal(r.status, 0, r.stderr + r.stdout);
+  const file = path.join(out, 'src/game/painted-tiles.json'), before = fs.readFileSync(file, 'utf8'), manifest = JSON.parse(before);
+  const fallback = manifest.families.find((f: Fam) => f.id === 'putting-green-paint').levels.mid;
+  assert.equal(fallback.folder, `${F}/mid-v2`);
+  assert.deepEqual(fallback.tiles.map((x: Tile) => x.source), sets.mid.primaryTiles.map((x: Tile) => (x as Tile & { file: string }).file));
+  const held = Buffer.from(JSON.stringify({ decision: 'held-for-appearance', visualAccepted: false }));
+  write(sets.mid.visualDecision.file, held); sets.mid.visualDecision.sha256 = sha256(held); writeAuthority();
+  r = run(); assert.notEqual(r.status, 0); assert.match(r.stderr, /does not accept the artwork/);
+  assert.equal(fs.readFileSync(file, 'utf8'), before, 'a hash-consistent hold must stop before rewriting shipped assets');
+});
 
 test('the owner\'s paintings (T162): hash-checked against their source.json, one tile a level, edges healed to tile, the heal\'s numbers recorded from the shipped WebP', t => {
   const root = path.resolve('output', `tests-t162-prep-${process.pid}`), out = path.join(root, 'out'), DIR = 'art/owner-supplied/rough-20261026';

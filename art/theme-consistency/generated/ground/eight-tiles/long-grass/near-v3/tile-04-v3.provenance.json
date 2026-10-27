@@ -1,0 +1,19 @@
+{
+  "id": "material-texture:long-grass:near:tonematched-variant-4-v3",
+  "material": "long-grass",
+  "zoom": "near",
+  "stage": "tonematched-variant-v3",
+  "source": "art/theme-consistency/generated/ground/eight-tiles/long-grass/near-v2/tile-01.png",
+  "output": "art/theme-consistency/generated/ground/eight-tiles/long-grass/near-v3/tile-04-v3.raw.png",
+  "provenance": "art/theme-consistency/generated/ground/eight-tiles/long-grass/near-v3/tile-04-v3.provenance.json",
+  "prompt": "Edit this FULL wide painted field very conservatively. Keep EXACT same apparent grass scale, camera, warm-olive green palette, exposure, seedheads and overall density. Produce alternate natural arrangement number4 by rearranging individual small tufts ONLY through the middle60percent of the frame. Preserve the whole outer200pixel perimeter as nearly identical as possible. Change no mean colour or overall brightness. Every200x200area should have same average greenbrightness as corresponding sourcearea; any moved clump is replaced by equally bright local grass. Do not darken the centre, edges, corners or lowerleft; NO broad dark islands, frame, diagonal windrow, stripe, vignette or spotlight. Maintain a gently uniform field of small grass tufts with local upperright highlights ONLY, lowerleft short ambient undersides, overall ambient exposure even across entireframe. New tiny arrangements, no existing clump larger, no bushes or new objects. Keep fullnativewideframe and paintedstyle; no text/UI/roads/buildings. Return complete same-size opaquePNG. Last production constraint: these alternate largegroundpaintings mustjoin and maintainexacttonematch to thisreference.",
+  "date": "2026-10-26",
+  "generator": "image_gen",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-3c0e7d6d-81fe-4836-8725-4a4c93fd58fe.png",
+  "sourceSha256": "d4063847d0c60c6f2a0f0f030d791e50afe4936109dd60a3311dd3036a8a05d1",
+  "processing": "Native generator output copied byte-for-byte; direct scene removal. No code repaint, recolour, warp or resample.",
+  "camera": "Same near source screenshot camera and apparent surface detail scale requested; no declared top-down/world coverage.",
+  "lighting": "UPPER RIGHT → LOWER LEFT",
+  "integrationStatus": "art-only-not-integrated",
+  "reviewStatus": "pending reference appearance, object-removal and lighting review"
+}

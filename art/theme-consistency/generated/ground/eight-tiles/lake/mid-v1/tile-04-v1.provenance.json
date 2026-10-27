@@ -1,0 +1,20 @@
+{
+  "id": "material-texture:lake:mid:independent-variant-4",
+  "material": "lake",
+  "zoom": "mid",
+  "stage": "independent-variant-4",
+  "source": "art/theme-consistency/generated/ground/scene-backgrounds/lake/mid-background-anchored-v1.raw.png",
+  "output": "art/theme-consistency/generated/ground/eight-tiles/lake/mid-v1/tile-04-v1.raw.png",
+  "provenance": "art/theme-consistency/generated/ground/eight-tiles/lake/mid-v1/tile-04-v1.provenance.json",
+  "prompt": "Edit this FULL clean background image into a different natural arrangement of the SAME surface at the SAME mid camera and apparent feature size. CHOSEN MATERIAL: still pond/lake water, deep teal-blue, soft broad hand-painted ripples, a few SMALL warm sun glints on upper-right-facing ripple lips, even all over with no dark edge or broad glare stripe, no white waves or foam.. The chosen material is water: keep its teal-blue water, broad painted ripples and small sun glints. Do not turn it into grass, earth, islands, banks or dry plots. \nMake variation 4 of four: rearrange the soft density/colour groups and small material details organically, avoiding a repeated landmark composition. Preserve the source's overall mean exposure, colour balance, painted style, detail size, lighting from UPPER RIGHT toward LOWER LEFT and quiet edge context. No brightness frame, straight colour boundary, central cross, panel division, formal stripes unless they are the reference's mowing/rake bands, or copied small repeated motif. No building, tree, road, cast scene shadow, UI, label, object or blank area. Do not zoom, change projection, upscale the plants or redesign the material. Work from this unshifted full background, not a rolled or tiled composite. Deliver one complete same-size wide PNG.\nThe source is already a complete water background. Do not retain or create a building footprint, island, bank or shoreline. Keep only the water. Sun glints should be sparse small warm painted strokes in a naturally irregular distribution, never a glaring large reflection stripe, spotlight, grid or evenly spaced columns. Preserve the reference's upper-right afternoon light and apparent ripple size.\nRemove the large/long golden reflection chains currently visible in the source. In this new variation use only a few small isolated warm glints at new irregular interior positions, spread quietly over the water rather than in vertical columns. Keep each glint small and lit on the upper-right lip of its ripple; keep the field's average brightness even.",
+  "promptRevision": "v2-water-safety",
+  "date": "2026-10-26",
+  "generator": "image_gen",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-5629c913-0841-4169-b80d-b659c9cf98c8.png",
+  "sourceSha256": "0b38988abe9bf202030e04883afa800bcc85a4a7b8d9679366526660e90f2014",
+  "processing": "Native generator output copied byte-for-byte; direct scene removal. No code repaint, recolour, warp or resample.",
+  "camera": "Same mid source screenshot camera and apparent surface detail scale requested; no declared top-down/world coverage.",
+  "lighting": "UPPER RIGHT → LOWER LEFT",
+  "integrationStatus": "art-only-not-integrated",
+  "reviewStatus": "pending reference appearance, object-removal and lighting review"
+}

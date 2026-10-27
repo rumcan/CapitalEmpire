@@ -1,0 +1,110 @@
+{
+  "schema": 1,
+  "reviewedDate": "2026-10-26",
+  "reviewer": "/root/course_texture_exports",
+  "material": "sand-ripples",
+  "zoom": "mid",
+  "revision": "v1",
+  "activeVariants": 4,
+  "decision": "accepted-for-art-appearance",
+  "scope": "Saved-PNG native material and shuffled adjacency review; not runtime integration or owner signoff",
+  "materialIdentity": "Golden painted sand with smaller, denser shallow ripple language matching the independent medium scene-derived source.",
+  "lighting": "Creamy upper-right ridge edges and softer lower-left troughs remain coherent. Whole-frame exposure stays even; no dark edge, spotlight or vignette.",
+  "adjacency": "Four-tile and both shuffled actual-PNG layouts read as continuous material without conspicuous straight joins, central cross, rectangular collar, low-frequency tonal frame or brightness step.",
+  "nativeCuts": "Native master half-height, tile03 left and tile04 top crops inspected. Some irregular pixel-selection transitions remain locally traceable at native magnification; they do not form a conspicuous grid or straight repair line in the reviewed two/four-tile layouts. No claim of invisible cuts under arbitrary enlargement.",
+  "objectRemoval": "No shop, road, parking footprint, foliage, UI, text, unrelated shadow or magenta guide remnant visible.",
+  "composition": "Four distinct interior ripple arrangements with compatible shared border art. Shared borders repeat by construction; no runtime randomisation/blending is used.",
+  "nativeEvidence": [
+    {
+      "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/mid-v1/review/master-halfheight-native.png",
+      "sha256": "be5238dc37f5a7580fbef9329dae8529d411286d132eda3cd01403aa0bd6ff96"
+    },
+    {
+      "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/mid-v1/review/tile03-left-native.png",
+      "sha256": "692d80c36c3a3d5751469a7579f537997ec2430a4262852243d9aad0a31c6418"
+    },
+    {
+      "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/mid-v1/review/tile04-top-native.png",
+      "sha256": "fd20fdc4379d1e27c0b125b162855167f31e11953a4f693bba6bd040ee49be2b"
+    }
+  ],
+  "limits": [
+    "Art review only; no live game, coverage, performance or owner-signoff claim.",
+    "NEAR/MID/FAR are independent paintings, not shared geography or resized copies.",
+    "Separate gameplay material layers; no interior blending, mirror, flip or rotation."
+  ],
+  "files": [
+    {
+      "file": "tile-01.png",
+      "sha256": "9f3ed1779be9945dbd16c8d2459786e57ca9a2c24672345070e94d4d5e87cace",
+      "dimensions": [
+        1744,
+        900
+      ],
+      "bytes": 3619592
+    },
+    {
+      "file": "tile-02.png",
+      "sha256": "e126680894c1ace2e26802887dc7399dc62cfaf08ff0826ab1e5ac54983b0b07",
+      "dimensions": [
+        1744,
+        900
+      ],
+      "bytes": 3576770
+    },
+    {
+      "file": "tile-03.png",
+      "sha256": "8ce5c55aad89578b89c90044e9ae5ac8375c7fbb1b660c9990edbc6d529ca5d6",
+      "dimensions": [
+        1744,
+        900
+      ],
+      "bytes": 3535103
+    },
+    {
+      "file": "tile-04.png",
+      "sha256": "7039e91935437948ec79eb49ee905dd763d23c239e7d81c03237ddafc5d4164b",
+      "dimensions": [
+        1744,
+        900
+      ],
+      "bytes": 3586546
+    },
+    {
+      "file": "review-four-tiles.png",
+      "sha256": "a73eae1a8c8acf4d9e30aef9686fd9bc14f803ffa945bb481c50c029917c1091",
+      "dimensions": [
+        1744,
+        900
+      ],
+      "bytes": 3134845
+    },
+    {
+      "file": "review-order-a.png",
+      "sha256": "5ac94a6d84b52cf99b1172518fc969eb53c41b0928ff8f543a753df7244d4565",
+      "dimensions": [
+        1024,
+        528
+      ],
+      "bytes": 1058958
+    },
+    {
+      "file": "review-order-b.png",
+      "sha256": "50ef2ed923b54c7abfd6df0a02fa92d00de07b3600cc28e43d7695ef45e72d4f",
+      "dimensions": [
+        1024,
+        528
+      ],
+      "bytes": 1067731
+    },
+    {
+      "file": "common-collar-master.png",
+      "sha256": "c868875a97b0af305425c5fc925f816463aef85de36b0e64124f08d8dcf0a76f",
+      "dimensions": [
+        1744,
+        900
+      ],
+      "bytes": 3642229
+    }
+  ]
+}
