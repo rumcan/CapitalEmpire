@@ -8,7 +8,7 @@ import type { LotGeom } from '../lots/compose-core';
 import type { LotPreset, PresetState, PresetUse, Road } from '../lots/presets';
 import type { PresetFrame } from '../lots/preset-frame';
 import { learningStats } from '../lots/learn';
-import { addSamples, learnedModel, learnedSamples, learnedTaste } from './learn-store';
+import { addSamples, learnedSamples, liveModel } from './learn-store';
 import { lotPreset, lotSample, makeLot, type WizLot } from './lot-wizard';
 import { muteEditor, pauseEditor } from './lot-editor';
 import { BTN, DANGER, GO, ON, btn, el, heading } from './lot-lab-ui';
@@ -53,7 +53,8 @@ export function makeGallery(host: GalleryHost, wizard: { load(c: WizLot): void }
     for (let k = 0; k < row.n; k++) {
       const raw = host.base(); if (!raw) break;
       const o = row.off(k), g: LotGeom = { ...g0, o: { x: g0.o.x + g0.u.x * o, y: g0.o.y + g0.u.y * o } };
-      out.push({ lot: makeLot(raw, f, learnedModel(), undefined, learnedTaste()), g, verdict: null });
+      // T173: laid by the game's path with the live model, the lab lot's use's group
+      out.push({ lot: makeLot(raw, f, liveModel().lay), g, verdict: null });
     }
     if (!out.length) { host.say('the gallery has no lot to compose here (no preset of this type and state near this size)'); return; }
     slots = out; mid = Math.min(row.mid, out.length - 1);

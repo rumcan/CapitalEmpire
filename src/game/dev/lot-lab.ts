@@ -52,6 +52,7 @@ import { makePalette, type Swatch } from './lot-lab-palette';
 import { makeWizard, WIZARD_ID } from './lot-wizard';
 import { makeGallery } from './lot-gallery';
 import { makeExam } from './lot-exam';
+import { shipWithExam } from './ship-exam';
 
 /** the least zoom the lab keeps (Camera.z): the lot stays big enough to edit (a lot too big for it keeps its fit zoom, see keepCam) */
 const LAB_ZOOM = 0.12;
@@ -192,7 +193,7 @@ export function installLotLab(game: Game): () => void {
   /** the lot wizard (T158, lot-wizard.ts): W turns it on; it owns the clicks and the keys while it runs */
   const wizard = makeWizard({
     game, lot: () => ({ use, state, road }), frame: () => (geo ? labFrame(geo) : null), base: wizardBase, show: wizardShow, leave: wizardLeave, keepDraft, toScreen,
-    say: m => { message = m; drawStatus(); }, redraw: () => render(),
+    say: m => { message = m; drawStatus(); }, redraw: () => render(), ship: (data, from) => shipModel(data, from),
   });
   /** the lot gallery (T159, lot-gallery.ts): a dozen generated lots along the street, judged Good or Bad, Fix one in the wizard */
   const gallery = makeGallery({
@@ -201,13 +202,20 @@ export function installLotLab(game: Game): () => void {
     toScreen: (x, y) => { const c = game.cam, o = origin(); return { x: o.x + (worldX(x, y) - c.X) * c.z, y: o.y + (worldY(x, y) - c.Y) * c.z }; },
     leave: wizardLeave, say: m => { message = m; drawStatus(); }, redraw: () => render(),
   }, wizard);
-  // T161: the generator's exam (?exam): window.__lotExam, for scripts/lots/exam.mjs to stage its rows and shoot its lots
-  if (/[?&]exam(&|=|$)/.test(location.search)) (window as unknown as { __lotExam?: unknown }).__lotExam = makeExam({
+  // T161: the generator's exam: Ship model renders it (T173); with ?exam, window.__lotExam, for scripts/lots/exam.mjs to stage its rows and shoot its lots
+  const exam = makeExam({
     game, stage: examStage, free: () => shell.free(),
     screen: (x, y) => { const c = game.cam, o = origin(); return { x: o.x + (worldX(x, y) - c.X) * c.z, y: o.y + (worldY(x, y) - c.Y) * c.z }; },
     hold: v => { examHold = v; badgeLayer.style.display = v ? 'none' : ''; },
     centre: (wx, wy, z) => { game.cam.z = z; centreOn(wx, wy); game.emit(); },
   });
+  if (/[?&]exam(&|=|$)/.test(location.search)) (window as unknown as { __lotExam?: unknown }).__lotExam = exam;
+  /** T173: Ship model: the exam rendered (ship-exam.ts), the lab's lot staged again after it; the version shipped, or null */
+  async function shipModel(data: Record<string, unknown>, from: string): Promise<number | null> {
+    const saved = staged ? { road, w: staged.w, d: staged.d, st: staged.st } : null;
+    try { return await shipWithExam({ exam, game, say: m => { message = m; drawStatus(); } }, data, from); }
+    finally { exam.done(); if (saved) { road = saved.road; fitList = null; stage(saved.w, saved.d, saved.st); } render(); }
+  }
   const personEl = el('div', 'position:fixed;left:0;top:0;display:none;pointer-events:none;z-index:58;background-repeat:no-repeat');
   /** T167: a badge on each prop drawn as a stand-in for a picture the owner removed (the lab lot and its neighbours), so the owner sees where to
    *  re-lay a preset: their world points (footprint centres) and the removed ids, found when the panels are drawn; placed each frame */

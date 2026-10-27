@@ -10,17 +10,11 @@ import type { Game } from '../engine';
 import type { LotPreset, PresetState, PresetUse, Road } from '../lots/presets';
 import type { PresetFrame } from '../lots/preset-frame';
 import { toFrame } from '../lots/preset-frame';
-import { CLASSES, ITEM_KINDS, SECTORS, SECTOR_NAMES, countOf, keepRate, learningStats, sampleItem, sectorArea, sectorOf, sectorRects, type Box, type HouseClass, type ItemKind, type Model, type Sample, type SectorLot } from '../lots/learn';
-import { addSample, addSamples, learnedModel, learnedSamples, learnedTaste, onLearning } from './learn-store';
-import { pairTable, stateKinds, tasteData, type Taste } from '../lots/taste';
-import { pavedBoxes, presetSamples, teaches } from './learn-presets';
-import { lotPresets } from '../lots/compose';
-import { LATEST, LOT_MODELS } from '../lots/lot-models';
-import { modelData } from '../lots/learn';
-import { generateLayout, type LaidItem } from '../lots/lot-gen';
-import { isFence, kindPools } from '../lots/item-kinds';
-import { CLASS_NAMES, frameHalf, isHouseLike, sizeClassOf } from './lot-houses';
-import { mainBuilding } from './lot-select';
+import { ITEM_KINDS, SECTORS, SECTOR_NAMES, USE_GROUPS, countOf, keepRate, learningStats, sectorArea, sectorOf, sectorRects, type ItemKind, type Model, type Sample, type UseGroup } from '../lots/learn';
+import { addSample, learnedSamples, liveModel, onLearning } from './learn-store';
+import { LATEST } from '../lots/lot-models';
+import { groupStats, ownerSample, sampleGroup } from './live-model';
+import { lotPreset, lotSample, makeLot, type WizLot } from './wizard-lot';
 import { muteEditor, pauseEditor } from './lot-editor';
 import { BTN, GO, ON, btn, check, el, heading, mono } from './lot-lab-ui';
 
@@ -41,42 +35,19 @@ export interface WizardHost {
   leave(): void;
   /** keeps a lot as a lab draft preset (the toggle): its id */
   keepDraft(p: LotPreset): Promise<string>;
+  /** T173: Ship model: the lab renders the exam (the live model beside the latest shipped one) and ships the live model's data on the owner's
+   *  word there; the version shipped, or null (cancelled, failed) */
+  ship(data: Record<string, unknown>, from: string): Promise<number | null>;
   /** a lot-frame point on screen (viewport px), or null */
   toScreen(x: number, y: number): { x: number; y: number } | null;
   say(m: string): void;
   redraw(): void;
 }
-/** an offered item on the wizard's lot: deleted or not */
-interface Item extends LaidItem { deleted: boolean }
-/** a wizard lot (the wizard's, a gallery's): its base (the house, fences, street items, patches), the offered items, the deletes to undo, its
- *  sector lot, its house, size class and footprint, and the generator's seed */
-export interface WizLot { base: LotPreset; items: Item[]; undo: number[]; lot: SectorLot; house: string | null; cls: HouseClass; hw: number; hd: number; seed: number }
-/** a wizard lot from a lot composed as the game composes it (raw): kept to its house, fences and street items, the offered items laid by the model
- *  (lots/lot-gen.ts, pure and seeded) round them; with a taste (T161), its pairs and the lot's state's density too, so the owner judges them */
-export function makeLot(raw: LotPreset, f: PresetFrame, model: Model, seed = Math.floor(Math.random() * 2147483647), taste?: Taste): WizLot {
-  const half = frameHalf(f), hi = mainBuilding(raw, q => isHouseLike(q.id), half), hq = hi >= 0 ? raw.props[hi]! : null, hh = hq ? half(hq) : null;
-  // the base: the house, the fences and the street items (the verge); the plants, props, cars and decals are the wizard's to offer
-  const base: LotPreset = { ...raw, props: raw.props.filter((q, i) => i === hi || isFence(q.id) || q.y < 0), decals: [] };
-  const house: Box | null = hq && hh ? [hq.x - hh.ha, hq.y - hh.hb, hq.x + hh.ha, hq.y + hh.hb] : null;
-  const lot: SectorLot = { w: base.w, d: base.d, house, drives: base.patches.filter(p => p.kind === 'drive').map(p => p.pts) };
-  const taken: Box[] = base.props.map(q => { const h = half(q); return [q.x - h.ha, q.y - h.hb, q.x + h.ha, q.y + h.hb] as Box; });
-  const k = hq ? sizeClassOf(hq.id) : null, cls: HouseClass = hq ? CLASS_NAMES[k ?? 0] : 'none';
-  const pairs = taste ? pairTable(taste, kindPools()) : undefined, kinds = taste ? stateKinds(taste, raw.state) : undefined;
-  const offers = generateLayout({ lot, cls, model, taken, pools: kindPools(), half, seed, ...(pairs ? { pairs } : {}), ...(kinds ? { kinds } : {}) });
-  return { base, items: offers.map(o => ({ ...o, deleted: false })), undo: [], lot, house: hq?.id ?? null, cls, hw: hh ? 2 * hh.ha : 0, hd: hh ? 2 * hh.hb : 0, seed };
-}
-/** a wizard lot as a preset (id): its base and the offered items not deleted */
-export function lotPreset(c: WizLot, id: string): LotPreset {
-  const props = [...c.base.props], decals = [...(c.base.decals ?? [])];
-  for (const it of c.items) if (!it.deleted) { if (it.kind === 'decal') decals.push({ id: it.id, x: it.x, y: it.y, scale: 1, alpha: 1 }); else props.push({ id: it.id, x: it.x, y: it.y, scale: 1, view: 0 }); }
-  return { ...c.base, id, props, decals };
-}
-/** a wizard lot's sample: its context and every offered item, kept or deleted (the wizard's); a gallery's judges the whole lot (src gallery, the
- *  verdict: its items as they stood) */
-export function lotSample(c: WizLot, l: { use: PresetUse; state: PresetState; road: Road }, verdict?: 'up' | 'down'): Sample {
-  return { id: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`, at: new Date().toISOString(), ctx: { use: l.use, state: l.state, w: c.base.w, d: c.base.d, road: l.road, house: c.house, cls: c.cls, hw: c.hw, hd: c.hd, seed: c.seed, ...(c.lot.house ? { hb: c.lot.house } : {}), paved: pavedBoxes(c.base) },
-    items: c.items.map(it => sampleItem(c.lot, it.id, it.kind, it.x, it.y, !it.deleted)), ...(verdict ? { src: 'gallery' as const, verdict } : {}) };
-}
+export { lotPreset, lotSample, makeLot, type WizLot } from './wizard-lot';
+/** T173: the names of the use groups as the panel shows them */
+const GROUP_NAMES: Readonly<Record<UseGroup, string>> = { res: 'houses', com: 'shops', ind: 'industry', open: 'parks, civic, tour' };
+/** the live model's keep counts for a group (the heat map's, the sector table's) */
+const modelOf = (g: UseGroup): Model => { const L = liveModel().lay; return g === 'res' ? L.model : L.groups[g]?.model ?? L.model; };
 const SVGNS = 'http://www.w3.org/2000/svg';
 const KIND_NAMES: Readonly<Record<ItemKind, string>> = { tree: 'trees', bush: 'bushes', flowerbed: 'flowerbeds', prop: 'props', car: 'cars', decal: 'decals' };
 
@@ -109,7 +80,8 @@ export function makeWizard(host: WizardHost) {
     const raw = host.base(!same), f = host.frame();
     if (!raw || !f) { host.say('the wizard has no lot to compose here (no preset of this type and state near this size)'); return; }
     // the generator is pure and seeded (lots/lot-gen.ts): the sample keeps the seed, so the same lot can be made again
-    cur = makeLot(raw, f, learnedModel(), undefined, learnedTaste());
+    // T173: laid by the game's path with the live model, the lab lot's use's group (a shop lot: the shops' items, round its main building)
+    cur = makeLot(raw, f, liveModel().lay);
     host.show(build());
     heatKey = '';
     // timed to the frame that shows it
@@ -192,7 +164,7 @@ export function makeWizard(host: WizardHost) {
     const kind = hover ?? heatKind, key = `${kind}|${cam.X.toFixed(1)},${cam.Y.toFixed(1)},${cam.z.toFixed(4)}|${innerWidth}x${innerHeight}|${learnedSamples().length}`;
     if (key === heatKey) return;
     heatKey = key;
-    const out: SVGElement[] = [], m = learnedModel(), pt = (x: number, y: number) => host.toScreen(x, y);
+    const out: SVGElement[] = [], m = modelOf(c.group), pt = (x: number, y: number) => host.toScreen(x, y);
     for (const s of SECTORS) {
       if (sectorArea(c.lot, s) < 0.25) continue;
       const rate = keepRate(m, c.cls, kind, s), n = countOf(m, c.cls, kind, s);
@@ -207,7 +179,8 @@ export function makeWizard(host: WizardHost) {
     }
     // the past samples of this kind, at their place on this lot (the newest 400)
     let shown = 0;
-    const all = learnedSamples();
+    // (the owner's samples of this lot's group: T173)
+    const all = learnedSamples().filter(s => ownerSample(s) && sampleGroup(s) === c.group);
     for (let si = all.length - 1; si >= 0 && shown < 400; si--) for (const it of all[si]!.items) {
       if (it.kind !== kind || shown >= 400) continue;
       const p = pt(it.nx * c.lot.w, it.ny * c.lot.d); if (!p) continue;
@@ -231,7 +204,7 @@ export function makeWizard(host: WizardHost) {
   /** the inspector's WIZARD section: the toggles, the counter (samples by house class, the share kept per lot and its trend, the save-and-next
    *  time), the heat map's kind, and this lot's sectors with the keep rate of that kind */
   function panel(): HTMLElement[] {
-    const st = learningStats(learnedSamples()), m = learnedModel(), c = cur, kind = hover ?? heatKind;
+    const st = learningStats(learnedSamples()), c = cur, m = modelOf(c?.group ?? 'res'), kind = hover ?? heatKind, gs = groupStats(learnedSamples());
     const out: HTMLElement[] = [heading('LOT WIZARD', 'margin-top:4px')];
     const tg = el('div', 'display:flex;flex-direction:column;gap:3px');
     tg.append(check('same size and road (fastest)', same, v => { same = v; host.redraw(); }, 'off: each lot moves to the next coverage gap (another size or road angle)'),
@@ -239,15 +212,18 @@ export function makeWizard(host: WizardHost) {
       check('heat map', heat, v => { heat = v; heatKey = ''; host.redraw(); }, 'each sector tinted by the keep rate of the kind under the pointer (or the one chosen); past samples kept green, deleted red'));
     out.push(tg);
     const ms = times.length ? [...times].sort((a, b) => a - b)[Math.floor(times.length / 2)]! : 0;
-    // T159: the owner's presets as a head start (every item on them kept), learnt again whenever they want (a preset's sample replaces its last)
-    const n = lotPresets().filter(teaches).length;
-    out.push(btn(`Learn from the presets (${n})`, BTN, () => learnPresets(), 'every item on the lab presets (approved and drafts) and on the frozen presets you edited counts as "kept here" with its lot; learning again replaces the last time'));
-    // T160: the game composes its house lots with a shipped model, never the live one: shipping freezes this one as the next version
-    out.push(btn(`Ship model (v${shipped + 1})`, GO, () => ship(), `freeze the model learnt so far as lot model v${shipped + 1} (src/game/lots/lot-models): new towns compose their house lots with it; a saved town keeps its own version`));
-    out.push(el('div', 'font-size:13px;margin-top:6px;font-weight:700', `${st.total} sample${st.total === 1 ? '' : 's'}`),
-      el('div', 'font-size:12px;opacity:.85', `${st.bySrc.wizard} wizard · ${st.bySrc.preset} from presets · ${st.bySrc.gallery} gallery${st.judged ? ` (${Math.round(st.up * 100)}% good)` : ''}`),
-      el('div', 'font-size:12px;opacity:.85', CLASSES.filter(k => st.byClass[k]).map(k => `${k} ${st.byClass[k]}`).join(' · ') || 'none yet: delete what is wrong, then Space'),
-      el('div', 'font-size:12px;opacity:.85', st.shares.length ? `kept per lot: ${Math.round(st.first * 100)}% (first 10) → ${Math.round(st.last * 100)}% (last 10)` : ''),
+    // T160/T173: the game composes its lots with a shipped model, never the live one: shipping freezes this one as the next version, once the owner
+    // has seen its exam (the lab renders it beside the latest shipped model's)
+    out.push(btn(`Ship model (v${shipped + 1})…`, GO, () => ship(), `renders the exam (the model learnt so far beside v${shipped}) and, on your word there, freezes it as lot model v${shipped + 1} (src/game/lots/lot-models, with its exam picture): new towns compose their lots with it; a saved town keeps its own version`));
+    out.push(el('div', 'font-size:12px;opacity:.7;margin-top:4px', 'the presets are always the head start; your samples train the group of the lot they were made on'));
+    // T173: the training counters per group: the owner's samples, the wizard's share kept per lot (first ten → last ten), the gallery's good share
+    const tbl = el('div', 'display:grid;grid-template-columns:auto auto auto auto;gap:1px 8px;font-size:12px;margin-top:6px');
+    tbl.append(el('b', '', 'group'), el('b', 'text-align:right', 'samples'), el('b', 'text-align:right', 'kept/lot'), el('b', 'text-align:right', 'good'));
+    for (const g of USE_GROUPS) {
+      const x = gs[g], lit = c?.group === g ? 'color:#c4b5fd;font-weight:700' : 'opacity:.85';
+      tbl.append(el('span', lit, GROUP_NAMES[g]), el('span', `${lit};text-align:right`, `${x.samples}`), el('span', `${lit};text-align:right`, x.wizard ? `${Math.round(x.first * 100)}→${Math.round(x.last * 100)}%` : '·'), el('span', `${lit};text-align:right`, x.judged ? `${Math.round(x.up * 100)}% of ${x.judged}` : '·'));
+    }
+    out.push(el('div', 'font-size:13px;margin-top:6px;font-weight:700', `${st.total} sample${st.total === 1 ? '' : 's'}`), tbl,
       el('div', `font-size:12px;${ms > 500 ? 'color:#fca5a5' : 'opacity:.85'}`, times.length ? `next lot on screen: ${Math.round(times[0]!)} ms (median ${Math.round(ms)} ms of ${times.length})` : ''));
     if (st.shares.length > 1) out.push(spark(st.shares));
     const sel = el('select', 'background:#0f172a;color:#e2e8f0;border:1px solid #334155;border-radius:6px;padding:2px 6px;font:inherit;margin-left:6px');
@@ -256,7 +232,7 @@ export function makeWizard(host: WizardHost) {
     const hk = el('div', 'margin-top:6px;font-size:12px'); hk.append(`heat map of`, sel, el('span', 'opacity:.7', hover ? ` (pointer: ${KIND_NAMES[hover]})` : ''));
     out.push(hk);
     if (c) {
-      out.push(el('div', 'font-size:12px;opacity:.8;margin-top:4px', `${c.cls} house${c.house ? '' : ' (none)'} · keep rate of ${KIND_NAMES[kind]} by sector:`));
+      out.push(el('div', 'font-size:12px;opacity:.8;margin-top:4px', `${GROUP_NAMES[c.group]} · ${c.cls} main building${c.house ? '' : ' (none)'} · keep rate of ${KIND_NAMES[kind]} by sector:`));
       const t = el('div', 'display:grid;grid-template-columns:1fr auto auto;gap:1px 8px;font-size:12px');
       for (const s of SECTORS) {
         if (sectorArea(c.lot, s) < 0.25) continue;
@@ -270,18 +246,11 @@ export function makeWizard(host: WizardHost) {
   }
   /** the latest shipped lot model (lot-models/index.ts LATEST, the ships of this session after it) */
   let shipped = LATEST;
-  /** ships the model learnt so far (POST /__dev/lot-model): the dev server writes it as the next version and the index */
+  /** T173: Ship model: the live model (live-model.ts) shown in its exam beside the latest shipped one, shipped on the owner's word there */
   function ship(): void {
-    const st = learningStats(learnedSamples()), from = `${st.total} samples (${st.bySrc.wizard} wizard, ${st.bySrc.preset} from presets, ${st.bySrc.gallery} gallery), shipped ${new Date().toISOString().slice(0, 10)}`;
-    void fetch('/__dev/lot-model', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data: { ...modelData(learnedModel()), ...tasteData(learnedTaste()), groups: (LOT_MODELS[LATEST] as { groups?: unknown } | undefined)?.groups }, from }) })
-      .then(async r => { if (!r.ok) throw new Error(`${r.status} ${await r.text()}`); const v = ((await r.json()) as { version: number }).version; shipped = v; host.say(`shipped lot model v${v}: new towns compose their house lots with it (after a reload)`); host.redraw(); })
+    const gs = groupStats(learnedSamples()), from = `the presets and ${USE_GROUPS.map(g => `${gs[g].samples} ${GROUP_NAMES[g]} sample${gs[g].samples === 1 ? '' : 's'}`).join(', ')}, shipped ${new Date().toISOString().slice(0, 10)}`;
+    void host.ship(liveModel().data, from).then(v => { if (v) { shipped = v; host.say(`shipped lot model v${v} (and its exam picture): new towns compose their lots with it (after a reload)`); host.redraw(); } })
       .catch(e => host.say(`the model was not shipped: ${String(e)}`));
-  }
-  /** the presets' samples learnt (one save through the dev server's merge) */
-  function learnPresets(): void {
-    const list = presetSamples(lotPresets()), items = list.reduce((a, s) => a + s.items.length, 0);
-    void addSamples(list).then(() => { heatKey = ''; host.say(`learned from ${list.length} presets: ${items} items kept where the owner put them`); host.redraw(); }).catch(e => host.say(`NOT SAVED to lot-learning.json: ${String(e)}`));
-    host.redraw();
   }
   /** a sparkline of the share kept per lot (0..1), the newest on the right */
   function spark(v: readonly number[]): HTMLElement {

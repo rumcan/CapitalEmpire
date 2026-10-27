@@ -34,6 +34,24 @@ export function modelFile(v: number, data: unknown, from: string): string | null
   const pl = (d as { places?: unknown }).places, places = pl && typeof pl === 'object' ? `,\n "places": ${JSON.stringify(placesData(placesFrom(pl)))}` : '';
   return `{\n "v": ${v},\n "prior": {"a":${a},"b":${b}},\n "from": ${JSON.stringify(from)},\n "counts": {\n${rows.join(',\n')}\n }${taste}${places}${groupsBlock(d)}\n}\n`;
 }
+/** the most an exam picture may weigh (bytes) */
+export const EXAM_MAX = 8 * 1024 * 1024;
+/** T173: what Ship model writes (POST /__dev/lot-model) after the versions the folder has: the next version's exam picture (a JPEG data URL; none:
+ *  none), its model file and the index (LATEST: it), in that order; null when the data is not a model or the picture not a JPEG */
+export function shipPlan(have: readonly number[], data: unknown, from: string, exam?: unknown): { version: number; files: { name: string; content: string | Uint8Array }[] } | null {
+  const v = Math.max(0, ...have) + 1, text = modelFile(v, data, from), files: { name: string; content: string | Uint8Array }[] = [];
+  if (!text) return null;
+  if (exam !== undefined) {
+    const m = typeof exam === 'string' ? /^data:image\/jpeg;base64,([A-Za-z0-9+/]+=*)$/.exec(exam) : null;
+    if (!m || m[1]!.length * 0.75 > EXAM_MAX) return null;
+    const bin = atob(m[1]!), bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    if (bytes[0] !== 0xff || bytes[1] !== 0xd8) return null;
+    files.push({ name: `v${v}.exam.jpg`, content: bytes });
+  }
+  files.push({ name: `v${v}.json`, content: text }, { name: 'index.ts', content: modelsIndex([...have, v]) });
+  return { version: v, files };
+}
 /** the shipped models' index (src/game/lots/lot-models/index.ts) for these versions: each imported, the latest the highest */
 export function modelsIndex(versions: readonly number[]): string {
   const vs = [...new Set(versions)].filter(n => Number.isInteger(n) && n > 0).sort((a, b) => a - b);
