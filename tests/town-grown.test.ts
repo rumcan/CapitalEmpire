@@ -37,6 +37,8 @@ function grownCity(kind: 'range' | 'old' = 'range', holes = 0, townBoost = 1) {
   city.netOps(editor.commit(true));
   if (kind === 'range') city.setGolf({ tier: 1, rep: 0, land: [PARCEL], start: 'range', exits: [A, B], holes, townBoost });
   else city.setGolf({ tier: 1, rep: 0, land: [PARCEL] });
+  // T221: the pace is measured here, so the club has made enough money for any town (town-earnings.test.ts tests the room)
+  (city as unknown as Inside).budget.earned = 1e9;
   return { city, editor };
 }
 /** sim seconds: City.step(10) each, the town's legs applied as the engine does (gravel, a town road); the town's events collected */

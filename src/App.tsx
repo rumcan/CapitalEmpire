@@ -45,6 +45,7 @@ import { STRUCTURES } from './game/golf/tents';
 import { findGolfCard, type GolfCardDef } from './game/golf/golfcards';
 import { getTournamentWeather } from './game/golf/weather';
 import { computeTournamentCloseBook } from './game/golf/yearend';
+import { roomLine } from './game/golf/towngrowth';
 import { formatMultiDayStatus } from './game/golf/multiday';
 import { decorInfo } from './game/golf/decor';
 import { Icon, type IconName } from './ui/Icon';
@@ -308,7 +309,8 @@ export default function App() {
   /** the population, jobs, day and daily income: inline in classic mode, in the Treasury drawer in golf mode (T035) */
   const moreStats = (g: Game) => (
     <>
-      <Stat icon="people" label="Population" value={g.traffic.pop.toLocaleString()} />
+      {/* T221: a range start's town grows with the club's earnings: the room they make (the full line in the tip) */}
+      <Stat icon="people" label="Population" value={g.traffic.pop.toLocaleString()} {...(g.traffic.room !== null ? { sub: `room for ${Math.round(Math.max(g.traffic.pop, g.traffic.room)).toLocaleString()}`, subTestId: 'town-room', title: roomLine(g.traffic.pop, g.traffic.room) } : {})} />
       <Stat icon="briefcase" label="Jobs" value={g.traffic.jobs.toLocaleString()} />
       <Stat icon="sun" label="Day" value={String(g.day)} sub={hhmm(g.clock())} />
       <Stat icon="income" label="Daily income" value={withIcon(trendKind(net), (net >= 0 ? '+' : '') + money(net))} tone={net >= 0 ? 'text-emerald-300' : 'text-red-300'} />

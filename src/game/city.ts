@@ -45,7 +45,7 @@ import { hasExpressGates } from './golf/golfcards';
 import { pickSpot, type GallerySpot } from './golf/galleries';
 import { RELOCATE_EVERY, relocate, spotDraw } from './golf/gallerydraw';
 import { dayShare, spectatorDemand, tierInfo, tournamentDue } from './golf/tour';
-import { roundTownGrowthRate, townGrowthTargets } from './golf/towngrowth';
+import { earnedFor, earnedTarget, roundTownGrowthRate, townGrowthTargets } from './golf/towngrowth';
 import { applyParkingFeeDemand } from './golf/parkingfee';
 
 /** the vehicle slots of the sim, and the ring of step times (calls) kept for the frame stats */
@@ -593,6 +593,15 @@ export class City {
   setGrowth(k: number): void { this.growSpeed = k; this.town.speed = k; }
   setUnlimited(on: boolean): void { this.unlimited = on; this.budget.unlimited = on; }
 
+  /** T221 (#610): the residents a range start's grown town has room for with the money the club has made (golf/towngrowth.ts earnedTarget of
+   *  Budget.earned, the tournaments' success a bonus on it); null for any other game, whose towns grow as before. An old save's books, from
+   *  before the money made was kept, start from the earnings the town's size stands for (earnedFor), so a loaded town never stalls */
+  townRoom(): number | null {
+    const g = this.town.grown, b = this.budget;
+    if (!g || this.golf?.start !== 'range') return null;
+    if (b.earnedUnknown) { b.earned = Math.max(b.earned, earnedFor(this.town.pop + this.town.pending, g.success)); b.earnedUnknown = false; }
+    return earnedTarget(b.earned, g.success);
+  }
   /** spends n $ on kind (see Budget.spend); a negative construction n gives it back */
   spend(kind: 'construction' | 'compensation' | 'business' | 'upkeep', n: number): void { this.budget.spend(kind, n); }
   /** takes a loan unit (true: borrow, if the town can hold one) or repays one (false); false if the books refuse */
@@ -774,6 +783,7 @@ export class City {
     if (this.crowd) { this.crowd.now = this.sim.t; this.crowd.step(WALK_V * n * DT / MPT); this.admitGates(n * DT); this.relocateFans(); this.stepLeaving(); this.syncWait(); }
     if (rs === 'surge' && this.round.sim(n * DT)) this.kickOff();
     if (this.tourneyDay && this.dayOver()) this.endTourneyDay();
+    if (this.town.grown) this.town.grown.cap = this.townRoom() ?? undefined;
     const events = this.town.tick(this.sim.clock, this.ctx);
     const ch = Math.floor(this.sim.clock / GAME_HOUR); if (this.golfLand.length && ch !== this.courseHour) { this.courseHour = ch; this.clearCourse(events); }
     const towns = this.centres.length > 0;

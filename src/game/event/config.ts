@@ -128,6 +128,11 @@ export const GROWN_RING0 = 120, GROWN_RING_K = 12;
 /** T090 (plan P22 2.3.3): the success after a tournament: clamp(GROWN_SUCCESS0 + GROWN_SUCCESS_K x the round's town growth rate, GROWN_SUCCESS_MIN,
  *  GROWN_SUCCESS_MAX); 1 in founding seasons */
 export const GROWN_SUCCESS0 = 0.7, GROWN_SUCCESS_K = 8, GROWN_SUCCESS_MIN = 0.7, GROWN_SUCCESS_MAX = 1.8;
+/** T221 (#610; the owner: "it should scale with the amount of money youve made"): a range start's grown town has room for
+ *  (GROWN_EARN_P0 + GROWN_EARN_K x (money made / $1,000) ^ GROWN_EARN_P) x max(1, success) residents (golf/towngrowth.ts earnedTarget), the money
+ *  made being the club's running income (Budget.earned). It grows toward that at the pace above and stops there; a concave curve, so the first
+ *  $50k matter most (about 300 residents) and every later dollar a little less (seasons 1-20 of a careful and a careless player: range-gate) */
+export const GROWN_EARN_P0 = 60, GROWN_EARN_K = 23.5, GROWN_EARN_P = 0.6;
 /** with town centres: a lot's price, $ (times its frontage class value: CLASS_VALUE in budget.ts), paid to the player when the town builds on a lot on a paved road */
 export const LOT_PRICE = 2000;
 /** with town centres: the share of a lot's price the player is paid for it (see LOT_PRICE) */
