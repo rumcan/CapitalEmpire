@@ -76,32 +76,26 @@ test('a look is clamped, keyed without its tint and tone, and coloured by its ti
   assert.equal(lookColour('#808080', { tint: '#ffffff', tone: -0.5 }), '#404040');
 });
 
-test('every surface of the game wears a painted family: golf, map, town lawns, living ground, course walls', () => {
-  const f = clampSurfaces(file);
+test('every surface of the game wears a known painted family; the golf turf, the map grass and the town lawns wear hand-painted tile sets', () => {
+  // the painting rules, not the owner's picks (PR #520, T225): which painting a surface wears is the owner's (Studio › Painted), so this checks
+  // that every surface has a look and every look names a known family; that the golf turf, the map's grass and the town lawns wear a tile set
+  // (hand-painted, laid as authored: familyById(...).tiled); and that the rough and the decrepit lots' lawns wear the owner's rough (T162)
+  const f = clampSurfaces(file), S = f.surfaces;
   for (const s of SURFACES) assert.ok(f.surfaces[s.key], `${s.key} has a look`);
-  // the golf logic: tees the shortest emerald at the finest scale; the fescue the hand-painted golden fescue tiles (T145), water the
-  // hand-painted lake tiles (T145); the bunker raked sand. T153 (#327): the fairway, the greens and their fringes, the rough and the waste
-  // areas wear the hand-painted tile sets (fairway, putting green: provisional until their handoff; sand ripples), as authored
-  const S = f.surfaces;
-  assert.equal(S.tee!.family, 'emerald-short'); assert.ok(S.tee!.scale < 1, 'tees keep the old green until a family is chosen for them');
-  // T165 (#365): the fairway and the greens wear the art session's paintings, healed to tile (the provisional sets stay as the old option)
-  // which painting the fairway, green and fringe wear is the owner's (Studio › Painted; T191 brought fringe and putting-green-v2): known families
-  for (const k of ['fairway', 'green', 'fringe']) assert.ok(knownFamily(S[k]!.family), `${k}: ${S[k]!.family}`);
-  // T162 (#350): the rough and the decrepit lots' lawns (which follow the rough, T155) wear the owner's rough paintings, edges healed to tile
-  assert.equal(S.rough!.family, 'rough-owner'); assert.equal(S.lawnDeclined!.family, 'rough-owner'); assert.equal(S.fescue!.family, 'golden-fescue');
-  assert.equal(S.bunker!.family, 'sand-raked'); assert.equal(S.waste!.family, 'sand-ripples-tiles'); assert.equal(S.water!.family, 'lake');
-  // the map's open grass draws golden fescue and rivers draw lake (the owner, 2026-10-26: "all the map water and grass needs to be replaced
-  // aswell"; main 003153a)
-  assert.equal(S.river!.family, 'lake', 'rivers draw the lake');
-  for (const k of ['base', 'outside', 'meadow', 'dry', 'worn', 'woodland']) assert.equal(S[k]!.family, 'golden-fescue', k);
-  // the living ground's lush and patchy grass is the rough (the owner, #513: "it should not be fescue but rough")
-  for (const k of ['lush', 'patchy']) assert.equal(S[k]!.family, 'rough-owner', k);
-  for (const k of ['wallTurf', 'wallBank']) assert.equal(S[k]!.family, 'underground-earth'); assert.equal(S.wallSand!.family, 'underground-sand');
-  // T189 (the owner: "Keep the block grass but swap its looks to the new paintings and drop the pale sage"): the town lawns are the new
-  // paintings with their texture (the long grass, the owner's rough), no sage; the old families stay in the manifest (the studio offers them)
-  assert.deepEqual(f.lawns.map(l => l.family), ['long-grass', 'rough-owner']);
+  for (const [k, look] of Object.entries(S)) assert.ok(knownFamily(look!.family), `${k}: ${look!.family} is a known family`);
+  const tiled = (id: string) => familyById(id)?.tiled === true;
+  // the golf turf: the tee, the first cut, the fairway, the greens and their fringes, the rough (T145, T153, T165, T191)
+  for (const k of ['tee', 'firstCut', 'fairway', 'green', 'fringe', 'rough']) assert.ok(tiled(S[k]!.family), `${k}: ${S[k]!.family} is a tile set`);
+  // the map's grass (the open grass, the meadow, the dry and worn ground, the woodland floor) and the golden fescue
+  for (const k of ['fescue', 'base', 'outside', 'meadow', 'dry', 'worn', 'woodland']) assert.ok(tiled(S[k]!.family), `${k}: ${S[k]!.family} is a tile set`);
+  // the town lawns (T189): each one a tile set, weighted, and no pale sage
+  for (const l of f.lawns) assert.ok(tiled(l.family), `${l.family} is a tile set`);
+  assert.ok(f.lawns.every(l => l.weight > 0), 'every lawn has a weight');
   assert.ok(!f.lawns.some(l => /^sage-/.test(l.family)), 'no pale sage');
-  assert.ok(f.lawns.every(l => l.weight > 0));
+  // the owner's rough (T162, #350): the rough and the decrepit lots' lawns wear the owner's rough paintings, edges healed to tile
+  assert.equal(S.rough!.family, 'rough-owner'); assert.equal(S.lawnDeclined!.family, 'rough-owner');
+  // the bunker, waste, water, rivers, the living ground and the course walls: any known family (checked by the loop above)
+  // the old families stay in the manifest as options (the studio offers them)
   for (const id of ['emerald-short', 'sage-short', 'olive-short', 'straw-short']) assert.ok(resolveFamily({ family: id, version: null, scale: 1 }), `${id} is kept as the old option`);
 });
 
