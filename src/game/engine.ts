@@ -14,7 +14,7 @@ import { NetEditor, applyNodeEntry, netToOps, nodeEntry, straightChain } from '.
 import { TIER_BADGE, flagRule, isLights, junctionCorners, slipPlan, slipsOn, type Corner } from './junctions';
 import { MIN_SEP, checkLegs, replaceCuts, ringStubs, segDist as segSeg, snapPoint, type Snap } from './snap';
 import { STRUCT_COST, STRUCT_MAX, groundClass, highwayRoute, longestRun, splitByTerrain, structureLengths } from './structures';
-import { GLRenderer, POINT_STRIDE, SHADOW_STRIDE, SPRITE_STRIDE, VECTOR_STRIDE } from './gl';
+import { CULL_MIN_PX, GLRenderer, POINT_STRIDE, SHADOW_STRIDE, SPRITE_STRIDE, VECTOR_STRIDE } from './gl';
 import { GroundCache } from './ground-cache';
 import { GAME_BOOT, clampCentre, flatTerrain, type BootOptions } from './boot';
 import { TILE_BANDS, TILES_REVISION, anchorAt, bandAt, bandRange, bandsAhead, cellOf, cellsIn, coverageOf, drawnScale, nearUntil, nextBand, tiledFamily, tileIndex, tilePermutation, tileScreenPx, tileSize, tileSpec } from './painted-tiles';
@@ -5630,22 +5630,24 @@ export class Game {
         ...f.vec.map(v => [v.data, vecOn ? v.floats : 0] as [Float32Array, number])]);
       // the shadows into one layer, the darkest winning where they overlap, laid on the ground once (T185: gl.ts beginShadows): the cast
       // shadows (cast-shadow.ts), faded out by night, then the contact shadows, the vector shadows; then the sprites
+      // the district zoom's sprite cull (T216): one rule for a sprite and all its shadows (gl.ts CULL_MIN_PX)
+      const minPx = tier === 'district' ? CULL_MIN_PX * this.dpr : 0;
       gl.beginShadows();
       // the ground's own baked shade first (T186: the sprite shadows darken it only past that, never a product)
       if (this.shadeMax) for (const m of shadeMasks) gl.drawShadeMask(m.tex, ...m.r);
-      if (this.cast.on) { const sh = castShear(this.cast); gl.drawCast(pAt, f.floats / SPRITE_STRIDE, sh.sx, sh.sy, this.cast.strength * (1 - this.nightAmount())); }
+      if (this.cast.on) { const sh = castShear(this.cast); gl.drawCast(pAt, f.floats / SPRITE_STRIDE, sh.sx, sh.sy, this.cast.strength * (1 - this.nightAmount()), minPx); }
       // the contact shadows lean toward the cast shadows' side (away from the sun), blob and box alike (shadow-shape.ts contactLean, T141)
       const lean = contactLean(this.cast);
-      if (shadows) gl.drawShadows(sAt, f.shadowFloats / SHADOW_STRIDE, this.shadowStrength, lean.x, lean.y);
+      if (shadows) gl.drawShadows(sAt, f.shadowFloats / SHADOW_STRIDE, this.shadowStrength, lean.x, lean.y, minPx);
       // the hand-drawn vector shadows (T142): each picture's contact and cast shapes, the cast following the sun and fading out by night
       if (vecOn) {
         const sh = this.cast.on ? castShear(this.cast) : { sx: 0, sy: 0 }, castMul = this.cast.on ? this.cast.strength * (1 - this.nightAmount()) : 0;
         // (at the district zoom a shadow is a few px: the meshes' far copies, a few points a ring and no soft rim)
         const far = tier === 'district';
-        f.vec.forEach((v, k) => gl.drawVector(vAt[k]!, v.floats / VECTOR_STRIDE, far ? v.far : v.verts, sh.sx, sh.sy, this.shadowStrength, castMul, far));
+        f.vec.forEach((v, k) => gl.drawVector(vAt[k]!, v.floats / VECTOR_STRIDE, far ? v.far : v.verts, sh.sx, sh.sy, this.shadowStrength, castMul, far, minPx));
       }
       gl.endShadows();
-      gl.drawSprites(pAt, f.floats / SPRITE_STRIDE, tier === 'district' ? 7 * this.dpr : 0);
+      gl.drawSprites(pAt, f.floats / SPRITE_STRIDE, minPx);
     }
     this.gl.atlas?.pump();
     this.ground.pump(); this.ground.settle(now); this.ground.evict(now);
