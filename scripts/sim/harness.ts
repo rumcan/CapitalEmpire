@@ -64,7 +64,7 @@ export function setup(seed: number): Harness {
 export function growLegs(h: Harness, legs: Leg[]) { h.editor.addLegs(legs, CLASS.gravel, 2, undefined, true); h.city.netOps(h.editor.commit()); }
 
 /** what the player run did (playerUpgrade): the junction fixes (mini-roundabouts, roundabouts), the road segs upgraded, their tiles, and the money */
-export interface PlayerRoads { segs: number; cost: number; tiles: number; minis: number; /** all-way stops */ rings: number }
+export interface PlayerRoads { segs: number; cost: number; tiles: number; minis: number; /** all-way stops */ rings: number; /** the lots the fixes and upgrades took (their parcels re-cut: City.netOps lotsRemoved) */ lotsLost: number }
 /** the classes the player run takes up the ladder (WIDER) where a link is the bottleneck: the town's gravel, street and road */
 const PLAYER_FROM = new Set(['gravel', 'street', 'road']);
 /** the classes of one lane each way: a crossing of them takes a mini-roundabout (the Junction tool: 2 lanes each way at most) */
@@ -82,20 +82,20 @@ export const PLAYER_RULES = { LINK_VC: 0.9, LINK_LOSS: 100, JAM_LOSS: 100 };
  *     Upgrade tool's action (laid again in the next class, its style and kind kept, no longer the town's) and price (the class cost
  *     difference x length x STRUCT_COST of its kind); at most maxL.
  *  Everything is paid from the treasury as construction, never below `reserve`. Returns what it did */
-export function playerUpgrade(h: Harness, maxJ: number, maxL: number, reserve: number): PlayerRoads {
-  const B = (h.city as unknown as { budget: { money: number } }).budget, done: PlayerRoads = { segs: 0, cost: 0, tiles: 0, minis: 0, rings: 0 };
+export function playerUpgrade(h: Harness, maxJ: number, maxL: number, reserve: number, tool: 'mini' | 'stop' = 'mini'): PlayerRoads {
+  const B = (h.city as unknown as { budget: { money: number } }).budget, done: PlayerRoads = { segs: 0, cost: 0, tiles: 0, minis: 0, rings: 0, lotsLost: 0 };
   const rep = h.city.report(0), mini = variantCost('mini', 1), stop = variantCost('stop', 1);
   const jammed = rep.junctions.filter(j => (j.los === 'E' || j.los === 'F') && j.loss >= PLAYER_RULES.JAM_LOSS).sort((p, q) => q.loss - p.loss);
   let fixes = 0;
   for (const j of jammed) {
     if (fixes >= maxJ) break;
     const n = h.editor.net.nodeAt({ x: j.x, y: j.y }); if (!n || n.segs.length < 3) continue;
-    const narrow = n.segs.every(sg => NARROW.has(sg.cls.id)), to = n.type === 'plain' ? (narrow ? 'mini' : 'stop') : null, price = to === 'mini' ? mini : stop;
+    const narrow = n.segs.every(sg => NARROW.has(sg.cls.id)), to = n.type === 'plain' ? (narrow && tool === 'mini' ? 'mini' : 'stop') : null, price = to === 'mini' ? mini : stop;
     if (!to || B.money - price < reserve) continue;
     h.city.spend('construction', price); h.editor.setNodeType(n, to); fixes++; done.cost += price;
     if (to === 'mini') done.minis++; else done.rings++; // rings counts the all-way stops now
   }
-  if (fixes) h.city.netOps(h.editor.commit());
+  if (fixes) done.lotsLost += h.city.netOps(h.editor.commit()).lotsRemoved.length;
   const links = rep.links.filter(l => l.vc >= PLAYER_RULES.LINK_VC && l.loss >= PLAYER_RULES.LINK_LOSS && PLAYER_FROM.has(l.cls)).sort((p, q) => q.loss - p.loss);
   for (const l of links) {
     if (done.segs >= maxL) break;
@@ -108,7 +108,7 @@ export function playerUpgrade(h: Harness, maxJ: number, maxL: number, reserve: n
     h.editor.addLegs([{ a: { x: sg.a.x, y: sg.a.y }, b: { x: sg.b.x, y: sg.b.y } }], to, sg.style, [sg.kind]);
     done.segs++; done.cost += cost; done.tiles += len;
   }
-  if (done.segs) h.city.netOps(h.editor.commit());
+  if (done.segs) done.lotsLost += h.city.netOps(h.editor.commit()).lotsRemoved.length;
   done.tiles = Math.round(done.tiles);
   return done;
 }

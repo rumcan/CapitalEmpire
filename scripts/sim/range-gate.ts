@@ -89,7 +89,7 @@ const NO_PLAYER = {
 };
 const DECLINE = 1.8;
 /** the player run's work a season: at most MAX_J junction fixes and MAX_L road upgrades, never below RESERVE in the treasury */
-const PLAYER = { MAX_J: 60, MAX_L: 20, RESERVE: 0 };
+const PLAYER = { MAX_J: 60, MAX_L: 20, RESERVE: 0, TOOL: (process.env.PLAYER_TOOL === 'stop' ? 'stop' : 'mini') as 'mini' | 'stop' };
 /** the scripted course and success of season k (1-based): holes 2, then 9 in seasons 2-5, 18 from 6; success 1.0, then 1.2 from season 3 */
 const holesIn = (k: number) => (k <= 1 ? 2 : k <= 5 ? 9 : 18), successIn = (k: number) => (k <= 2 ? 1 : 1.2);
 
@@ -151,7 +151,7 @@ const seasonsOut: Season[] = [];
 let firstLeg = -1, firstLot = -1, builds = 0, legsN = 0, season = 1;
 let ratioAt: [number, number] = [0, 0];
 /** the player run's upgrades so far (segs, money, tiles), and this season's */
-const roads = { segs: 0, cost: 0, tiles: 0, minis: 0, rings: 0 }; let roadsSeason = { segs: 0, cost: 0, tiles: 0, minis: 0, rings: 0 };
+const roads = { segs: 0, cost: 0, tiles: 0, minis: 0, rings: 0, lotsLost: 0 }; let roadsSeason = { segs: 0, cost: 0, tiles: 0, minis: 0, rings: 0, lotsLost: 0 };
 const kinds: Record<string, number> = {};
 const golf = R.start.save, land: [number, number, number, number][] = [golf.course, golf.parcel], seedPt = R.start.site.centre;
 const setSeason = (k: number) => h.city.setGolf({ tier: golf.tier, rep: golf.rep, land, start: 'range', exits: golf.exits, holes: holesIn(k), townBoost: successIn(k) });
@@ -187,7 +187,7 @@ for (let s = 1; s <= total; s++) {
   if (r.grow) { legsN += r.grow.length; if (firstLeg < 0) firstLeg = s; }
   for (const e of r.events) { kinds[e.kind] = (kinds[e.kind] ?? 0) + 1; if (e.kind === 'build') { builds++; if (firstLot < 0) firstLot = s; } }
   // the player run: this season's upgrades are made at its end, and the next season's line reports them
-  if (seasons && s % SEASON_LEN === 0 && season <= seasons) { closeSeason(season); season++; if (season <= seasons) setSeason(season); if (player) { roadsSeason = playerUpgrade(h, PLAYER.MAX_J, PLAYER.MAX_L, PLAYER.RESERVE); roads.segs += roadsSeason.segs; roads.cost += roadsSeason.cost; roads.tiles += roadsSeason.tiles; roads.minis += roadsSeason.minis; roads.rings += roadsSeason.rings; } }
+  if (seasons && s % SEASON_LEN === 0 && season <= seasons) { closeSeason(season); season++; if (season <= seasons) setSeason(season); if (player) { roadsSeason = playerUpgrade(h, PLAYER.MAX_J, PLAYER.MAX_L, PLAYER.RESERVE, PLAYER.TOOL); roads.segs += roadsSeason.segs; roads.cost += roadsSeason.cost; roads.tiles += roadsSeason.tiles; roads.minis += roadsSeason.minis; roads.rings += roadsSeason.rings; roads.lotsLost += roadsSeason.lotsLost; } }
   if (s > days * RANGE_DAY) continue; // the range's own checks cover the first `days` town days
   const clock = rangeClock(h), sim = R.sim;
   // a new town day: the day before's counts (the range resets its own at its next step)
@@ -244,7 +244,7 @@ const growth = seasons ? {
   m_money: !player || seasonsOut.every(z => z.money >= 0),
 } : {};
 Object.assign(checks, growth);
-if (seasons) console.log(`[range] ${player ? 'player run' : 'no-player run'}, seed ${seed}${player ? `: ${roads.minis} mini-roundabouts, ${roads.rings} all-way stops, ${roads.segs} segs upgraded (${roads.tiles} tiles) for $${roads.cost}; the treasury at its lowest $${Math.min(...seasonsOut.map(z => z.money))}` : ''}`);
+if (seasons) console.log(`[range] ${player ? 'player run' : 'no-player run'}, seed ${seed}${player ? `: ${roads.minis} mini-roundabouts, ${roads.rings} all-way stops, ${roads.segs} segs upgraded (${roads.tiles} tiles) for $${roads.cost}, ${roads.lotsLost} lots re-cut; the treasury at its lowest $${Math.min(...seasonsOut.map(z => z.money))}` : ''}`);
 if (seasons) console.log(`[range] growth, seed ${seed}: first leg at ${firstLeg} s, first lot at ${firstLot} s; ${[1, 5, 10, 20].filter(k => yr(k)).map(k => `year ${k}: ${yr(k)!.built} lots, ${yr(k)!.pop} residents, centre ${yr(k)!.centreD}`).join('; ')}; ribbon at year 5 ${yr(5) ? (100 * yr(5)!.ribbon).toFixed(1) + '%' : '-'}; City.step over ${seasons} seasons mean ${r2(mean(cityMs))} ms, max ${r2(Math.max(...cityMs))}`);
 const pass = Object.values(checks).every(Boolean);
 console.log(`[range] seed ${seed}, ${out.length} town days: golfers ${golfers} (a day ${Math.min(...gd)}-${Math.max(...gd)}), lost ${lost} (${r1(100 * lost / Math.max(1, golfers + lost))}%), takings $${Math.round(takings)} (a day $${Math.round(Math.min(...td))}-$${Math.round(Math.max(...td))}); `
