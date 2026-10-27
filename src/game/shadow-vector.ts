@@ -50,7 +50,11 @@ export interface VectorMesh { verts: Float32Array; idx: Uint32Array; nVerts: num
 /** floats per mesh vertex: x, y, h (display px), kind (0 contact, 1 cast), core (darkness), edge (1 on the shape, 0 at the rim's outside), 2 spare */
 export const VERTEX_FLOATS = 8;
 
-const D = { f: 3, p: 0.04, kc: 0.7, cl: 8, ks: 1, fade: 0.3 };
+const D = { f: 3, p: 0.04, kc: 0.7, cl: 2, ks: 1, fade: 0.3 };
+/** the contact (blob) shadows are a fake ambient occlusion (the owner, 2026-10-27: "the blob shadows just need to a fake ambient occlusions.
+ *  they are way too prominent at them moment"): every contact shape's darkness (kc, and shadow-shape.ts's cores in gl.ts FS_SHADOW) times this,
+ *  centred under its picture (a 2 px lean, D.cl; shadow-shape.ts CONTACT_LEAN) and soft (BLOB_BLUR). The cast shadows are unchanged */
+export const CONTACT_AO = 0.45;
 
 type P = [number, number];
 const area = (r: P[]) => { let a = 0; for (let i = 0, n = r.length; i < n; i++) { const p = r[i]!, q = r[(i + 1) % n]!; a += p[0] * q[1] - q[0] * p[1]; } return a / 2; };
@@ -115,8 +119,8 @@ export function triangulate(pts: P[], outer: number[], holes: number[][]): numbe
 export const DRAFT_SHEAR = castShear(CAST);
 
 /** the extra soft rim every contact (blob) shadow gets, display px (the owner, 2026-10-26: "make the blob shadows more blurry across the
- *  board. like 2px") */
-export const BLOB_BLUR = 2;
+ *  board. like 2px"; 3 px since the contact shadows became ambient occlusion, CONTACT_AO) */
+export const BLOB_BLUR = 3;
 /** add one entry's triangles to the growing mesh: its contact rings, then its cast rings (outer rings and holes by winding), each filled and
  *  rimmed outward with its feather; far: the far copy (each ring cut to FAR_POINTS, no holes, no rim) */
 function addEntry(e: VectorShadow, V: number[], I: number[], mirror: boolean, far = false) {
@@ -140,7 +144,7 @@ function addEntry(e: VectorShadow, V: number[], I: number[], mirror: boolean, fa
     const vertex = (x: number, y: number, h: number, core: number, edge: number) => { V.push(x, y, h, kind, core, edge, 0, 0); };
     for (const r of R) {
       const idx: number[] = [];
-      for (const v of r) { idx.push(pts.length); pts.push(v.p); const core = kind ? (e.ks ?? D.ks) * (1 - (e.fade ?? D.fade) * Math.min(1, v.h / hMax)) : (e.kc ?? D.kc); vertex(v.x, v.y, v.h, core, 1); }
+      for (const v of r) { idx.push(pts.length); pts.push(v.p); const core = kind ? (e.ks ?? D.ks) * (1 - (e.fade ?? D.fade) * Math.min(1, v.h / hMax)) : (e.kc ?? D.kc) * CONTACT_AO; vertex(v.x, v.y, v.h, core, 1); }
       ringIdx.push(idx);
     }
     // fill: each outer ring (positive) with the holes (negative) whose first point it holds
