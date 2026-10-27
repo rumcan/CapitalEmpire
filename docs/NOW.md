@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-27 02:06)
+## START HERE (kept current by the lead; last updated 2026-10-27 02:23)
 
 **Paste-ready start prompts for every role are in `docs/START-PROMPTS.md`:** the lead, a coding ticket, and the other sessions in this
 repo. The weekly usage cap is close (2026-10-26), so any chat may stop at any moment.
@@ -29,7 +29,7 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 | --- | --- | --- | --- | --- | --- |
 | nightly | — | main (detached) | `.claude/worktrees/t166` | — | **No scheduled nightly task exists** (checked 02:06). The lead runs it with a haiku-runner: typecheck, npm test, build, the six gates, one at a time → `E:/ClaudeTemp/nightly/2026-10-27.md`. The ground agent's next ticket waits for it (RAM). |
 | T112 | #199 | `arena/T112-sharp` (PR #394) | `.claude/worktrees/t112` | — | **Approved, merge HELD for the morning restart:** a lock change makes the 5174 auto-updater run `npm ci` in theme-consistency (the live 5191 studio holds sharp there; the lot agent's t160 uses it by junction). Morning order: stop 5191 → merge #394 → let npm ci finish → restart 5191 and 5174. All shipped bytes identical on 0.35.5; audit 0. |
-| T173 | #406 | `arena/T173-train-every-use` | `.claude/worktrees/t160` | 5186 | P25: the wizard and gallery train every use (shops, industry, open lots) with the game's own layout path; Ship model renders the exam (live vs shipped) and ships on the owner's click (`lot-models/v<N>.exam.jpg`); counters per group; palette thumbs at mip 2. Agent: the lot agent. |
+| P05 | #68 | `lead/p05-balance-plan` | `.claude/worktrees/t160` | 5186 | The M5 balance plan **draft for the owner's approval** (no game numbers changed): measured structure paybacks, upkeep, crowd per tier, simulator vs game; proposed constants + balance tests → `docs/plans/P05.md`. Agent: the lot agent. |
 | nightly | — | main (detached) | `.claude/worktrees/t166` | — | **No scheduled nightly task exists** (checked 02:06). The lead runs it with a haiku-runner: typecheck, npm test, build, the six gates, one at a time → `E:/ClaudeTemp/nightly/2026-10-27.md`. The ground agent's next ticket waits for it (RAM). |
 | T112 | #199 | `arena/T112-sharp` (PR #394) | `.claude/worktrees/t112` | — | **Approved, merge HELD for the morning restart:** a lock change makes the 5174 auto-updater run `npm ci` in theme-consistency (the live 5191 studio holds sharp there; the lot agent's t160 uses it by junction). Morning order: stop 5191 → merge #394 → let npm ci finish → restart 5191 and 5174. All shipped bytes identical on 0.35.5; audit 0. |
 
@@ -88,6 +88,11 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
    (the sharp bump). See the History sections below and `gh issue list --label arena --state open`.
 
 ### Done recently (newest first; details in each PR)
+- 2026-10-27 02:23: **T173 #410 train every use in the lab**: the wizard and gallery follow the lab's lot type (shops, industry, car
+  parks/civic/tour) with the game's own layout path and the live model (presets as the head start + the owner's samples, weighted per
+  group: shops x4, industry x4, open x11); **Ship model** renders a 24-lot exam (shipped vs live) over the lab and ships on "Ship"
+  (`lot-models/v<N>.exam.jpg`, then the model, then the index); counters per group; palette thumbs at mip 2. "Learn from the presets"
+  removed (the presets are always the head start). Shots `E:/ClaudeTemp/T173/`.
 - 2026-10-27 02:06: **T172 #408 the game's RAM step 2**: the main-thread heap 214 → 127 MB (the terrain label buffer and shadow mesh
   data let go after use, the picking alpha as bits), the atlas keeps 2 decoded levels (24 → 8 MB), the ground chunk cache 32e6 px (after a
   pan 158 → 112 MB). Pixel-identical, no pop-in, bench fps as main; suite 1900/1900. Dropped: 12 tile sources (bake waits doubled).
