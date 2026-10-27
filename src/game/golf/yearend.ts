@@ -92,6 +92,11 @@ verdictText: string;
 facts: DayFacts;
 dailyGolfers?: number;
 greenFeeIncome?: number;
+/** T208 everyday golf: the green fees the season's golfers actually paid ($), booked as they checked in; when set, the close book shows these in place of
+ *  the expectation (greenFeeIncome) and does not book them again */
+greenFeesPlayed?: number;
+/** T208: the pace term, the reputation points how the course played this season added (golf/everyday.ts seasonPaceRep; already in rep) */
+paceRep?: number;
 monthlyMembership?: number;
 membershipIncome?: number;
 tentRevenue?: number;
@@ -166,10 +171,12 @@ export function computeTournamentCloseBook(
   const extraTents = (ye.multiDay && (ye.multiDay.resolvedDays > 0 || (ye.multiDay.practiceDays ?? 0) > 0))
     ? Math.max(0, ye.multiDay.totalTents - (ye.tentRevenue ?? 0))
     : 0;
-  const greenFees = Math.max(0, Math.round(ye.greenFeeIncome ?? 0));
+  // T208: the green fees the everyday golfers paid as they checked in are in the treasury already: the line shows them, the close books them no more
+  const playedLive = ye.greenFeesPlayed !== undefined;
+  const greenFees = Math.max(0, Math.round(playedLive ? ye.greenFeesPlayed! : ye.greenFeeIncome ?? 0));
   const memberships = Math.max(0, Math.round(ye.membershipIncome ?? 0));
   const parking = Math.max(0, Math.round(parkingIncomeOverride ?? ye.parkingIncome ?? 0));
-  const bizIncome = Math.max(0, Math.round((ye.tentRevenue ?? 0) + (ye.sponsorIncome ?? 0) + (ye.tvIncome ?? 0) + extraTickets + extraTents + greenFees + memberships + parking));
+  const bizIncome = Math.max(0, Math.round((ye.tentRevenue ?? 0) + (ye.sponsorIncome ?? 0) + (ye.tvIncome ?? 0) + extraTickets + extraTents + (playedLive ? 0 : greenFees) + memberships + parking));
   const purse = Math.max(0, Math.round(ye.purse ?? 0));
   const rent = Math.max(0, Math.round(ye.tentRentCost ?? 0));
   const annualTentUpkeep = Math.max(0, Math.round((ye.tentUpkeep ?? 0) * 12));
@@ -183,7 +190,7 @@ export function computeTournamentCloseBook(
   const toll = Math.max(0, Math.round(liveDayToll));
   const liveUpkeep = Math.max(0, Math.round(liveDayUpkeep));
   const closeDelta = bizIncome - upkeepCost;
-  const net = toll + liveTickets - liveUpkeep + closeDelta;
+  const net = toll + liveTickets + (playedLive ? greenFees : 0) - liveUpkeep + closeDelta;
   return {
     extraTickets,
     extraTents,

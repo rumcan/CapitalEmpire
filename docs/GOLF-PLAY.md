@@ -111,6 +111,38 @@ wave-through. A group walks to the next tee with its group and waits there, stan
 
 A model field barely waits: tee times are 16-51 min apart and the groups' paces are within about 0.7 h, so the tier days end as before. The
 waits come from a slow group, most often the owner's. `tests/golf-play-pace.test.ts`.
+**Everyday golf (T208 #553, 2026-10-28):** between tournaments the club's members and visitors play the course every town day
+(`src/game/golf/everyday.ts`, `everydayview.ts`; the engine's `updateEveryday`; `tests/golf-everyday.test.ts`):
+- **The tee sheet** (`dayRoster`, deterministic from the map's seed and the town day, from what the club was at the day's start: the quality score
+  as the year end takes it, the reputation, the holes). Members: `MEMBER_PLAY` (35%) of the club's members (`clubMembers` = the monthly dues,
+  `monthlyMembershipIncome`, over `MEMBER_DUES` $50; T214 prices memberships properly). Visitors: `dailyGolfers` +-15% a day (the reputation and
+  the course; they drive in from the town). Twos, threes and fours, members and visitors apart; tee times 07:00 to 15:00, at least 8 minutes apart
+  (a full sheet turns the last visitors away); club amateur skill (visitors 0.15-0.5, members 0.25-0.55), walking.
+- **The day:** a group's car drives in from the club car park's entrance and parks 25-35 minutes before its tee time; its golfers walk to the
+  clubhouse's door and check in (the green fee is paid there; members pay nothing on the day); they walk out to stand behind the first tee (a group
+  that arrives while groups before it still have to tee off stands further back, one place each), play their round with the golf play model
+  (`playRound`: T211's `Field`, so the everyday groups wait on each other exactly as a tournament field does), walk back to the car and drive off.
+  A 9-hole course is a 9-hole everyday round (`dayCourse`): the tournament plays it twice, but its field orders groups per hole of the round, so two
+  loops of everyday groups would share greens.
+- **No everyday play on a tournament day:** the day is closed as soon as the round is not free (the fees paid stay).
+- **The money:** a visitor's green fee ($22) is booked at check-in times `feeScale` (the billing days a town day stands for: `OFF_SEASON_PLAY_DAYS`
+  x the town day / `SEASON_LEN`, 10 at the 10-minute town day), as business takings (so `Budget.earned` and the town growth count it), floating
+  up at the clubhouse. `greenFeeIncome` stays the expectation (the clubhouse card shows it); the year end's green fees are what was played
+  (`YearEndResult.greenFeesPlayed`), and the close book no longer books them a second time. Days a skip jumps over are booked whole.
+- **The pace term:** the season's average wait on the group ahead per group moves the reputation at the season's end (`paceReputation`: +1 at 5
+  minutes or less, down to -3 at 30 or more; `YearEndResult.paceRep`).
+- **The clubhouse card** (the select tool on the clubhouse, or the top bar's Club chip): today's members and visitors (checked in of the tee
+  sheet), the green fees taken, the golfers out, the cars parked, the next tee time, the waits now and so far; the season's rounds, fees against
+  the expectation, and the pace term.
+- **Cheap off the screen:** the round is played once per day (about 30 ms for 50 golfers); each frame, a group off the screen costs a look at its
+  hole's box (from `plan.pace.arrive`), and only the groups on screen are played back (`PlayView.update(..., only)`).
+- **The save** (`GolfSave.everyday`, `DaySave`): the day, its inputs, the check-ins paid and the season so far; a reload mid-day rebuilds the same
+  roster and round and books on from where it was. A save from before T208 starts with the day under way, booking only the check-ins to come.
+- Dev and bench: `?golfers=N` (a busy day of N visitors), `?seed=N` (the old start's map), `?everyday=0` (none drawn); `npm run bench -- --start
+  town [--golfers N] [--seed N] [--everyday 0]`.
+- Left: carts (T213), memberships sold by the pros (T214), the clubhouse's visit cars (City's generic visits: they still book $22 x party as before,
+  on the season clock; T214 should make them the pro shop's and the bar's trade, or drop them), golfers walking the paths instead of straight lines.
+
 **Open (tickets since 2026-10-27: T212 #557 the
-putt and chip clips, T213 #558 caddies, carts and celebrations; and T208 #553 everyday golf, T214 #559 pros and memberships):** putts use the drive clip's
+putt and chip clips, T213 #558 caddies, carts and celebrations; and T214 #559 pros and memberships; T208 #553 everyday golf is above):** putts use the drive clip's
 address frames (no putt clip in Meshy's library); no caddies, carts or celebrations yet.

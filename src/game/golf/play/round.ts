@@ -493,6 +493,10 @@ export function stateAt(plan: RoundPlan, view: CourseView, minute: number, out?:
   return res;
 }
 
+/** one golfer's state at a game minute (as stateAt has it), written into out: the playback of a part of the field (T208: everyday golf computes only the
+ *  golfers on screen) */
+export function stateOne(plan: RoundPlan, view: CourseView, id: number, minute: number, out: GolferState): GolferState { return stateOf(plan, cacheOf(plan, view), id, minute, out); }
+
 /** the leaderboard at a minute: everyone whose group has teed off, sorted by to par, then holes thru (more first), then name; golfers with
  *  the same to par share a position (the UI shows the tie) */
 export function standings(plan: RoundPlan, view: CourseView, minute: number): Standing[] {
