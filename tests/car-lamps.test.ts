@@ -44,7 +44,7 @@ test('T192 lamps: drawn in the sprite pass right after their car, so a nearer sp
   const d: Drawable = { item: car, x: 100.5, y: 100.5, flip: false, scale: 1, x0: 100, y0: 100, x1: 101, y1: 101, moving: true, lamps };
   const X = worldX(100.5, 100.5), Y = worldY(100.5, 100.5), i = Math.floor(X / SPR_W), j = Math.floor(Y / SPR_H);
   const vis: { i: number; j: number }[] = []; for (let a = -3; a <= 3; a++) for (let b = -3; b <= 3; b++) vis.push({ i: i + a, j: j + b });
-  const f = tiles.frame(vis, [d]), rc = spriteRect(d), rh = spriteRect(p), at = (o: number, r: number[]) => [0, 1, 2, 3].every(k => Math.abs(f.stream[o + k]! - r[k]!) < 1e-3);
+  const f = tiles.frame(vis, [d]), rc = spriteRect(d), rh = spriteRect(p), at = (o: number, r: ArrayLike<number>) => [0, 1, 2, 3].every(k => Math.abs(f.stream[o + k]! - r[k]!) < 1e-3);
   // in each tile the car is drawn in: its picture, then its two glows, then (later) the house over them
   let checked = 0;
   for (let o = 0; o < f.floats; o += SPRITE_STRIDE) {
