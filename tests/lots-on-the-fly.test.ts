@@ -63,7 +63,7 @@ describe('lots generated on the fly (T160)', () => {
     assert.ok(gen.props.filter(p => p.from).length <= 1 && oldc.props.filter(p => p.from).length > 1, 'only the house comes from the frozen preset');
   });
   // (T202: the pinned hash here followed the owner's presets, sizes and removals, and skipped since they changed: the rule it stood for)
-  it('3. ?oldlots draws each lot from its frozen preset: every item that is not the street\'s, a fence or a decline\'s comes from the lot\'s own preset; the same every time', () => {
+  it('3. ?oldlots draws each lot from its frozen preset: every item taken from a preset is from the lot\'s own, a lot whose preset has a building is drawn from it, the same every time', () => {
     setGeneratedLots(false);
     try {
       let drawn = 0;
