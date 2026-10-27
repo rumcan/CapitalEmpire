@@ -83,6 +83,14 @@ the field, the leaderboard, the crowd and the owner at his ball come back where 
 back (his shot reopens). The road's traffic is not saved: the party cars on the road at the save queue at their car park's entrance. The day
 also saves itself each game hour. A save without a tournament day is unchanged, and one from before T209 loads as before (the surge as free).
 `tests/golf-day-resume.test.ts`.
+**The results wait for the last group (T210 #555, 2026-10-27):**
+- The day's result is still worked out at the 15:00 kick-off (the eval: the arrivals, the tickets, the draft; the money and the town growth at "Back to the valley" are as before). Only the results screen waits.
+- The leaderboard shows the live round and says "The results come when the last group is in". Its "Results now" button is today's early leave: the screen as it opened at kick-off ("Still on the course: X leads"), where "Back to the valley" ends the day and drops the play.
+- When the last group on the course walks onto the 18th, a toast names it, and the board shows a "Last group on the 18th" banner with a Watch button (the camera goes to it).
+- When every golfer is done, the champion is toasted and the results open: the champion, the final leaderboard (the owner's row too) and the takings.
+- The pure end of the round is `src/game/golf/play/finish.ts`: `DayFinish` latches the moment and the end, each once and in order, even at 20x; `resultsDue` is the gate. A day with no holes (no play) opens the results at once, as before. A reload rebuilds the play and ends the same way.
+- Tested in `tests/golf-play-finish.test.ts`.
+
 **Pace of play (T211 #556, 2026-10-28):** the field plays in one time order (`round.ts` `Field`), each group waiting on the group that began
 the hole before it, one look per strike:
 - it tees off once that group's balls are past the landing area (`LANDING_M`, 300 m from the tee) or holed;
@@ -103,7 +111,6 @@ wave-through. A group walks to the next tee with its group and waits there, stan
 
 A model field barely waits: tee times are 16-51 min apart and the groups' paces are within about 0.7 h, so the tier days end as before. The
 waits come from a slow group, most often the owner's. `tests/golf-play-pace.test.ts`.
-**Open (tickets since 2026-10-27: T210 #555 the results screen, T211 #556 pace of play, T212 #557 the
-putt and chip clips, T213 #558 caddies, carts and celebrations; and T208 #553 everyday golf, T214 #559 pros and memberships):** the results screen opens at the
-15:00 kick-off while golf goes on (the leaderboard stays, the champion follows when the last group is in); putts use the drive clip's
-address frames (no putt clip in Meshy's library); no caddies, carts or celebrations yet. (The groups behind the owner's now wait for his: T211, above.)
+**Open (tickets since 2026-10-27: T212 #557 the
+putt and chip clips, T213 #558 caddies, carts and celebrations; and T208 #553 everyday golf, T214 #559 pros and memberships):** putts use the drive clip's
+address frames (no putt clip in Meshy's library); no caddies, carts or celebrations yet.

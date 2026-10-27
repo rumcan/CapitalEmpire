@@ -1,7 +1,8 @@
 // The golf leaderboard (docs/GOLF-PLAY.md decision 8): the tournament day's live board over the map, from the tee-off to the results. It sits bottom
 // right (the round panel is top right): the position, the name, to par and the holes thru, the owner's row highlighted, and the champion's line under
 // the rows once everyone is done. It reads game.playBoard() and refreshes on its own twice a second. Before the join window closes (P4b) it offers
-// "Play in it" (as a man or a woman); once he is in it says when he tees off.
+// "Play in it" (as a man or a woman); once he is in it says when he tees off. After the 15:00 kick-off it says the results wait for the last group (and
+// offers them early); when the last group walks onto the 18th a banner names it and offers to watch it (T210).
 // T211: a group waiting on the group ahead shows it under its golfer's row ("waiting on the 7th tee").
 import { useEffect, useReducer } from 'react';
 import type { Game } from '../game/engine';
@@ -37,6 +38,18 @@ export function GolfLeaderboard({ game }: { game: Game }) {
         </div>
       )}
       {b.ownerTee !== null && <p className="mt-2 text-xs text-amber-200">You tee off at {teeText(b.ownerTee)}</p>}
+      {b.last && (
+        <div className="mt-2 flex items-center justify-between gap-2 rounded-lg border border-amber-400/40 bg-amber-400/15 px-2 py-1.5 text-xs text-amber-100" data-guide="last-group">
+          <span><span className="font-semibold text-amber-200">Last group on the 18th</span><br /><span className="text-slate-200">{b.last.join(', ')}</span></span>
+          <button className="chip shrink-0" onClick={() => game.watchLastGroup()}>Watch</button>
+        </div>
+      )}
+      {b.waiting && (
+        <div className="mt-2 flex items-center justify-between gap-2 text-[12px] text-slate-300">
+          <span>The results come when the last group is in.</span>
+          <button className="chip shrink-0" onClick={() => game.showResultsNow()}>Results now</button>
+        </div>
+      )}
       <div className="mt-2 space-y-0.5 text-xs tabular-nums">
         <div className={`grid ${COLS} gap-2 text-[12px] uppercase text-slate-400`}><span>Pos</span><span>Name</span><span className="text-right">To par</span><span className="text-right">Thru</span></div>
         {b.rows.map(r => (

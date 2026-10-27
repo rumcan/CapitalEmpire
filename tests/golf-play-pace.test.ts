@@ -5,7 +5,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { TILE_M } from '../src/game/golf/types';
-import { FLIGHT_TIME, GREEN_CLEAR, LANDING_M, LiveGroup, PICK_UP, PUTT_FLIGHT, makeField, ordinal, playRound, stateAt, teeTimes, waitOf, waitText, waveLine } from '../src/game/golf/play';
+import { DayFinish, FLIGHT_TIME, GREEN_CLEAR, LANDING_M, LiveGroup, PICK_UP, PUTT_FLIGHT, lastGroupOnLast, makeField, ordinal, playRound, stateAt, teeTimes, waitOf, waitText, waveLine } from '../src/game/golf/play';
 import type { CourseView, Golfer, Group, Lie, OwnerTurn, PlayHole, Pt, RoundPlan, Shot } from '../src/game/golf/play';
 
 /** the pars of the 18 holes, in play order: three 3s, eleven 4s, four 5s */
@@ -260,4 +260,20 @@ test('pace: no wave-through chain: a group waved through on a hole does not wave
     assert.ok(waves.length <= gs.length, `seed ${seed}: ${waves.length} wave-throughs for ${gs.length} groups`);
   }
   assert.ok(total >= 1, 'the slow group is waved past at least once');
+});
+
+test('pace and T210: after a wave-through the "last group on the 18th" is the slow group that stood aside (furthest back), not the group that went through', () => {
+  const view = course(), { f, gs } = slowMiddle([1, 0.05, 1], 8);
+  for (const seed of [1, 2, 3]) {
+    const p = playRound(view, f, gs, seed), fin = (g: number) => Math.max(...gs[g]!.players.map(id => p.done[id]!));
+    assert.equal(p.pace!.waves.length, 1, 'one wave-through');
+    // the group waved through (latest tee) plays the 18th while the slow group is still behind: not the last group then
+    const end = Math.max(...p.done);
+    for (let m = gs[0]!.tee; m <= end; m += 0.5) { const lg = lastGroupOnLast(p, view, m); if (lg) assert.equal(lg.group, 1, `seed ${seed} at ${m}: the last group on the 18th is the slow group (got ${lg.group})`); }
+    // the day's end latches the moment for the slow group, then the round over
+    const d = new DayFinish(); let last: number | null = null, over = false;
+    for (let m = gs[0]!.tee; m <= end + 1 && !over; m += 0.5) { const s = d.step(p, view, m); if (s.last && last === null) last = s.last.group; over = s.over; }
+    assert.equal(last, 1, `seed ${seed}: the moment names the slow group`); assert.ok(over, 'and the round ends');
+    assert.ok(fin(1) > fin(2), 'the slow group is in last');
+  }
 });
