@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-27 15:05)
+## START HERE (kept current by the lead; last updated 2026-10-27 15:35)
 
 **Paste-ready start prompts for every role are in `docs/START-PROMPTS.md`:** the lead, a coding ticket, and the other sessions in this
 repo. The weekly usage cap is close (2026-10-26), so any chat may stop at any moment.
@@ -27,7 +27,7 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 ### In flight
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |
-| T202 | #529 | `arena/T202-keys` (WIP c8bbbcd) | `.claude/worktrees/t160` | 5186 | **Agent 1 (resumed 14:50 after the account switch).** Help › Keys: a sheet from ? / F1 generated from the tool table, 1-6 pick the rail groups, the 5 self-skipping version tests made rules. The first agent stopped at the usage limit with its work uncommitted; the lead saved it as WIP (never typechecked). To resume: the issue's last comment. |
+| T204 | #534 | `arena/T204-rugged-edges` (fresh from main 17be1f2) | `.claude/worktrees/t160` | 5186 | **Agent 1 (started 15:30).** The owner's rugged grass edges: outlines drawn with rounded corners and a world-space wobble (gameplay cells unchanged), tall grass (fescue, long grass, rough) spilling over shorter grass and dirt in a tufted fringe with a cool shade under it, hard surfaces keep their line; bake +1 ms a chunk at most. Sub-steps: painted areas, course layers, the spill. To resume: the issue's last comment. |
 | T195 step 3 | #507 (reopened) | `arena/T195-fixgate-scan` (fresh from main) | `.claude/worktrees/t166` | — | **Agent 2 (started 14:50, Opus high: range work).** fix:gate FAILS on main since T184's junction rules: pick a scenario at capacity from the finished scans (`E:/ClaudeTemp/T195/scan1-5.log`), document it in fix-gate.ts's header, regenerate the range20 fixture with the minis player. Scenario and docs only, never traffic. Steps 1-2 merged (#522). |
 | T112 | #199 | `arena/T112-sharp` (PR #394) | `.claude/worktrees/t112` | — | **Approved, merge HELD for the owner:** a lock change makes the 5174 auto-updater run `npm ci` in theme-consistency, whose node_modules the live 5191 studio holds (sharp). Order: the owner stops 5191 → merge #394 → let npm ci finish → restart 5191 and 5174. All shipped bytes identical on 0.35.5; audit 0. |
 | P05 | #68 | PR #413 **open for the owner's approval** | — | — | The M5 balance plan, measured: arrival 47% at tier 1 from a fresh start (the start's 56-bay car park holds 168 fans), 100% with car parks; 10% at tier 2 fresh, 70-81% with car parks; an 18 of ~5,900 m fits the starting land on every seed (~$190k seeded); with the proposals a careful player reaches tier 3 in year 4. Knob recommended for "careless out-saves careful": sponsors x (1 + (rep-50)/50). |
@@ -64,9 +64,7 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
   merged). The 12 last 3D people finished on 2026-10-26 and are committed on `art/people-ground-20261024` (0bd25f4): T203 #531.
   Housekeeping: T174-T177, T179, T184 closed (merged earlier). The 5174 auto-updater ran 5 times over; the owner approved stopping 4
   (one left, bash PID 31220). Still listening, not ours: a stray vite on 5189 (an agent's, gone since 07:50) and the dead lot lab's 5241.
-- **Next, in order, when an agent lands:** **T204 #534 rugged grass edges** (the owner, 15:00: tall grass spills over short grass and dirt in a
-  ragged fringe, no straight lines or square corners; drawing only, gameplay cells unchanged; the issue has the design) → **T203 #531** the
-  last 12 people in the game → **T112 #199** (merge #394 when the owner stops
+- **Next, in order, when an agent lands:** **T203 #531** the last 12 people in the game → **T112 #199** (merge #394 when the owner stops
   5191) → **T149 #312** (waits for the owner's FAR-anchor choice) → **T199 #517** swamp (waits for swamp tiles) → the lists below.
 - **P25 #348 lots generated on the fly** (the owner: "start over with the lot presets we need a workflow that gets us to generating perfect
   lots on the fly"): hard rules + learned per-sector taste (T158 wizard, in flight) → T159 bootstrap from the existing presets + a 12-lot
@@ -96,6 +94,7 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
    (the sharp bump). See the History sections below and `gh issue list --label arena --state open`.
 
 ### Done recently (newest first; details in each PR)
+- 2026-10-27 15:30: **T202 #536 Help › Keys**: ? / F1 / the top bar's ? open a Keys sheet built from the rail's tool table (every key once, locks dimmed with their reason, vertical scroll only); 1-6 open the rail groups' flyouts (Holes keeps 1-7 for surfaces, Build 1-6 for road classes); the lot lab's ? opens the same sheet; the 5 self-skipping version tests are rules and run.
 - 2026-10-27 14:50: **#533 the range art list** (the owner: a list for the image generator): `docs/RANGE-ART-LIST.md`, four shared prompt blocks and 21 items (buildings, signs, props, the picker cart, ground pictures) with sizes, ids, stand-ins and priorities; the 3D clips and P3 ideas apart.
 - 2026-10-27 14:45: **T196 #514 soft course borders** (the green-to-fringe and tee joints a soft cool shade, no hard line), **T197 #518 zoom without glitches** (idle prebake of the next zooms' chunks, band switches crossfade, provisional bakes retried), **T195 #522 minis keep their corner lots** (lotRingClear; the range gate's player uses minis). Typecheck clean on the three together.
 - 2026-10-27 13:21: **#528 main green (2033 pass, 0 fail)**: compose, house-alloc, lot-taste, lot-wizard and train-every-use check rules, not the owner's
