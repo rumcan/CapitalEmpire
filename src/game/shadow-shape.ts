@@ -36,8 +36,9 @@ export const SHADOW_OVERRIDES: Readonly<Record<string, ShadowOverride>> = OVERRI
 
 /** The common lean of every contact shadow (blob and box alike, T141): each shape moves away from the sun, along the cast shadows' angle, by
  *  `frac` of its own reach from its centre to its edge in that direction (so it never slides off its base: a fence's strip moves its own
- *  thin depth, a tree's pool half its radius), at most `max` metres, at the cast shadows' full length (cast-shadow.ts CAST_DEFAULT.length) */
-export const CONTACT_LEAN = { frac: 0.5, max: 0.8 } as const;
+ *  thin depth, a tree's pool half its radius), at most `max` metres, at the cast shadows' full length (cast-shadow.ts CAST_DEFAULT.length).
+ *  2026-10-27: a small lean (was 0.5 / 0.8 m): the contact shadows are an ambient occlusion under their object (shadow-vector.ts CONTACT_AO) */
+export const CONTACT_LEAN = { frac: 0.15, max: 0.25 } as const;
 const LEAN_LENGTH = 0.9;
 
 const clamp = (v: number, a: number, b: number) => (v < a ? a : v > b ? b : v);
