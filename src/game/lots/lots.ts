@@ -85,12 +85,17 @@ const prio = (p: Lot, q: Lot) => (q.seg.cls.order - p.seg.cls.order) || (segLen(
 const near: Seg[] = [], nearThr: number[] = [], rings: Node[] = [], ringR: number[] = [];
 /** the clearance of a roundabout's (or a mini's) circle: its edge, the widest arm's walk, and CLEAR (0 for any other node) */
 export const ringClear = (n: Node) => (n.rb > 0 ? n.rb + Math.max(0, ...n.arms.map(a => a.walk)) + CLEAR : 0);
+/** the clearance a ring keeps lots out of (T195): a roundabout's circle (ringClear); none for a mini-roundabout, a painted island inside the
+ *  crossing's own box, which a corner lot already clears by the junction's reach. Before, a mini re-cut its corner lots: the range gate's
+ *  player who put minis on the jammed crossings lost 558 lots on seed 1 (#470). The roads' planner keeps its corridors off a mini's circle
+ *  all the same (lots/roads.ts ringClear) */
+export const lotRingClear = (n: Node) => (n.type === 'mini' ? 0 : ringClear(n));
 /** collect the other segs whose clearance band reaches the lot's rectangle, and the rings (at the ends of those segs or of s) whose
  *  circle does (a ring grown to more lanes reached into the lots of the roads around it: the owner's 3-lane ring, 2026-10-19) */
 function blockers(net: RoadNetwork, s: Seg, o: Pt, u: Pt, n: Pt, W: number, D: number) {
   near.length = 0; nearThr.length = 0; rings.length = 0; ringR.length = 0;
   const box = rectBox(o, u, n, W, D), cx = o.x + u.x * W / 2 + n.x * D / 2, cy = o.y + u.y * W / 2 + n.y * D / 2;
-  const ring = (nd: Node) => { const r = ringClear(nd); if (r > 0 && !rings.includes(nd) && touches([nd.x, nd.y, nd.x, nd.y], pad(box, r))) { rings.push(nd); ringR.push(r); } };
+  const ring = (nd: Node) => { const r = lotRingClear(nd); if (r > 0 && !rings.includes(nd) && touches([nd.x, nd.y, nd.x, nd.y], pad(box, r))) { rings.push(nd); ringR.push(r); } };
   ring(s.a); ring(s.b);
   for (const s2 of net.segsNear({ x: cx, y: cy }, Math.hypot(W, D) / 2 + RING_NEAR)) { ring(s2.a); ring(s2.b); }
   for (const s2 of net.segsNear({ x: cx, y: cy }, Math.hypot(W, D) / 2 + 7)) {
@@ -99,11 +104,11 @@ function blockers(net: RoadNetwork, s: Seg, o: Pt, u: Pt, n: Pt, W: number, D: n
     if (touches(segBox(s2), pad(box, thr))) { near.push(s2); nearThr.push(thr); }
   }
 }
-/** whether a lot's rectangle reaches into the circle (its clearance, ringClear) of a roundabout or a mini near it: the circle's centre
- *  clamped into the lot's own frame is within its radius */
+/** whether a lot's rectangle reaches into the circle (its clearance, lotRingClear) of a roundabout near it (a mini's reaches none, T195):
+ *  the circle's centre clamped into the lot's own frame is within its radius */
 function inRing(net: RoadNetwork, l: Lot): boolean {
   for (const s of net.segsNear(l.c, Math.hypot(l.w, l.d) / 2 + RING_NEAR)) for (const nd of [s.a, s.b]) {
-    const r = ringClear(nd); if (!(r > 0)) continue;
+    const r = lotRingClear(nd); if (!(r > 0)) continue;
     const v = sub(nd, l.o), a = Math.min(l.w, Math.max(0, dot(v, l.u))), b = Math.min(l.d, Math.max(0, dot(v, l.n)));
     const px = l.o.x + l.u.x * a + l.n.x * b - nd.x, py = l.o.y + l.u.y * a + l.n.y * b - nd.y;
     if (px * px + py * py < r * r) return true;
