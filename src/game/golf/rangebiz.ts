@@ -27,6 +27,8 @@ const TARGET_D = [25, 50, 75, 100, 120], TARGET_U = [28, 44, 32, 40, 36], TARGET
 const FAR_V = 149.4, SIDE_U: [number, number] = [0.6, 69.4];
 /** the land's grass the outfield leaves round the tee box (tiles): room for the raised tee's face at the Height slider's top (T127, T130) */
 const TEE_GAP = 2.6;
+/** how far a desert start's dirt tee box reaches past the tee cells (tiles, T223): over the course's first-cut collar round them (1 m) */
+const TEE_DIRT_PAD = 0.55;
 /** the second tier (T133): the upper deck is the covered-bay building again, drawn DECK_H world px up the screen over the lower roofs (its own
  *  mats then stand on the lower roofs' line: a double-deck stand), its first slot (the middle twelve of the 24) */
 export const DECK_H = 190;
@@ -143,8 +145,10 @@ export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave): 
   // start's (T223) is the desert, edge to edge, until the player grasses it
   if (st.grass) patches.push({ pts: quad(0.3, 69.7, TEE[3] + TEE_GAP, 149.7), surf: 'firstCut' }, { pts: quad(2, 68, TEE[3] + TEE_GAP + 0.6, 148), surf: 'outfield', mow: true });
   else patches.push({ pts: quad(0.3, 69.7, TEE[3] + TEE_GAP, 149.7), surf: 'desert' });
-  // the tee box wears the range's own tee (T223): packed dirt at a desert start, its divot-scarred turf once turfed (the course's tees keep theirs)
-  patches.push({ pts: quad(TEE[0], TEE[1], TEE[2], TEE[3]), surf: st.teeTurf ? 'teeTurf' : 'teeDirt' });
+  // the tee box wears the range's own tee (T223): packed dirt at a desert start, its divot-scarred turf once turfed (the course's tees keep theirs).
+  // The dirt reaches over the tee cells' first-cut collar (TEE_DIRT_PAD), so no green ring frames a desert tee; the turf keeps its collar
+  const pad = st.teeTurf ? 0 : TEE_DIRT_PAD;
+  patches.push({ pts: quad(TEE[0] - pad, TEE[1] + pad, TEE[2] - pad, TEE[3] + pad), surf: st.teeTurf ? 'teeTurf' : 'teeDirt' });
   const open = openSlots(st.lowerBays); // the tee box's mats (T133: the upper deck's bays are added below)
   patches.push({ pts: quad(slotU(open[0]!) - 1.5, slotU(open[open.length - 1]!) + 1.5, STAND_V - 2, STAND_V + 2.2), surf: 'concrete' });
   for (const k of open) { const u = slotU(k); patches.push({ pts: quad(u - 1.05, u + 1.05, STAND_V - 1.4, STAND_V + 1.6), surf: 'asphaltDark' }, { pts: quad(u - 0.65, u + 0.65, STAND_V - 0.2, STAND_V + 1.2), surf: 'green' }); }

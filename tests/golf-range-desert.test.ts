@@ -34,13 +34,14 @@ test('a new range starts in the desert: a desert outfield without stripes, a dir
   assert.equal(count(d, 'desert'), 1); assert.equal(count(d, 'outfield'), 0, 'no mown outfield yet');
   assert.ok(!sc.patches.find(p => p.surf === 'desert')!.mow, 'the desert carries no mowing stripes');
   assert.equal(count(d, 'teeDirt'), 1); assert.equal(count(d, 'teeTurf'), 0);
-  // the dirt covers the tee box (the course grid's tee cells) and lies under the mats' deck
+  // the dirt covers the tee box (the course grid's tee cells) and their 1 m first-cut collar, and lies under the mats' deck
   const tee = sc.patches.findIndex(p => p.surf === 'teeDirt'), deck = sc.patches.findIndex(p => p.surf === 'concrete');
   assert.ok(tee >= 0 && deck > tee, 'the mats are laid over the dirt');
-  const c = frame(sc.patches[tee]!.pts), us = c.map(q => q.u), vs = c.map(q => q.v);
-  assert.deepEqual([Math.min(...us), Math.max(...us), Math.min(...vs), Math.max(...vs)].map(x => Math.round(x * 1e6) / 1e6), [4, 67, 18, 24]);
-  const tc = frame(sc.teeBox), tu = tc.map(q => q.u), tv = tc.map(q => q.v);
-  assert.deepEqual([Math.min(...tu), Math.max(...tu), Math.min(...tv), Math.max(...tv)].map(x => Math.round(x * 1e6) / 1e6), [4, 67, 18, 24], 'the same box as the course grid\'s tee cells');
+  const box = (pts: number[]) => { const c = frame(pts), us = c.map(q => q.u), vs = c.map(q => q.v); return [Math.min(...us), Math.max(...us), Math.min(...vs), Math.max(...vs)].map(x => Math.round(x * 1e6) / 1e6); };
+  assert.deepEqual(box(sc.teeBox), [4, 67, 18, 24], 'the course grid\'s tee cells');
+  assert.deepEqual(box(sc.patches[tee]!.pts), [3.45, 67.55, 17.45, 24.55], 'the tee cells and their collar');
+  // turfed, the turf is the tee box alone (its first-cut collar shows round it, as round a course tee)
+  assert.deepEqual(box(rangeScene(plot, 2, buy(['teeturf'])).patches.find(p => p.surf === 'teeTurf')!.pts), [4, 67, 18, 24]);
   assert.equal(count(d, 'target'), sc.targets.length, 'a target green under each flag');
   assert.equal(count(d, 'fringe'), sc.targets.length);
 });
