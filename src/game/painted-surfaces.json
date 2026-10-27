@@ -1,7 +1,7 @@
 {
  "v": 1,
  "surfaces": {
-  "green": { "family": "putting-green-v2", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
+  "green": { "family": "putting-green", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "fringe": { "family": "fringe", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "fairway": { "family": "fairway-paint", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "firstCut": { "family": "emerald-medium", "version": null, "scale": 1, "tint": "#ffffff", "tone": -0.04 },
@@ -17,8 +17,8 @@
   "meadow": { "family": "golden-fescue", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "dry": { "family": "golden-fescue", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "worn": { "family": "golden-fescue", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
-  "dirt": { "family": "underground-earth", "version": "v2", "scale": 0.5, "tint": "#8aa6ff", "tone": -0.05 },
-  "bank": { "family": "underground-earth", "version": "v1", "scale": 0.5, "tint": "#8aa0e0", "tone": -0.15 },
+  "dirt": { "family": "cutaway-earth", "version": null, "scale": 1.07, "tint": "#ffffff", "tone": -0.18 },
+  "bank": { "family": "underground-earth", "version": "v1", "scale": 0.5, "tint": "#ffffff", "tone": -0.15 },
   "river": { "family": "lake", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "field": { "family": "underground-earth", "version": "v2", "scale": 0.5, "tint": "#9aa8f0", "tone": -0.1 },
   "woodland": { "family": "golden-fescue", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
@@ -27,8 +27,8 @@
   "lawnBuilt": { "family": "fairway-paint", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "lawnUpgraded": { "family": "putting-green-v2", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "lawnDeclined": { "family": "rough-owner", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
-  "lush": { "family": "golden-fescue", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
-  "patchy": { "family": "golden-fescue", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
+  "lush": { "family": "rough-owner", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
+  "patchy": { "family": "rough-owner", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "wallTurf": { "family": "underground-earth", "version": "v2", "scale": 0.533, "tint": "#9a9ce8", "tone": 0 },
   "wallSand": { "family": "underground-sand", "version": "v1", "scale": 0.533, "tint": "#f4f0e8", "tone": 0 },
   "wallBank": { "family": "underground-earth", "version": "v2", "scale": 0.533, "tint": "#6a74c8", "tone": -0.1 }
