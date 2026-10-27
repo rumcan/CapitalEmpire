@@ -256,6 +256,12 @@ export const RAMP_TOAST: Readonly<Partial<Record<RampStep, string>>> = Object.fr
   2: 'Props are open (Z): dress the range to draw more golfers',
   3: 'New hole is open: build your first hole, a par-3',
 });
+/** the toast as the ramp's step rises from was to now (T132), or null: none when it did not rise, when its tools were open already ("Show every
+ *  tool now", or the dev unlock: T095), and none for New hole once a hole exists (it says "build your first hole") */
+export function rampToast(was: RampStep | undefined, now: RampStep | undefined, o: { open: boolean; holes: number }): string | null {
+  if (was === undefined || now === undefined || now <= was || o.open || (now === 3 && o.holes >= 1)) return null;
+  return RAMP_TOAST[now] ?? null;
+}
 /** the length the first hole's plan suggests in a range start (m): a par-3 (the wizard's short first hole) */
 export const FIRST_PAR3_M = 150;
 

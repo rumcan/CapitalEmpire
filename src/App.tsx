@@ -49,6 +49,7 @@ import { SeasonReportCard } from './ui/golf/SeasonReportCard';
 import { GolfLeaderboard } from './ui/GolfLeaderboard';
 import { ShotPanel } from './ui/ShotPanel';
 import { RangeCard } from './ui/golf/RangeCard';
+import { WelcomeCard } from './ui/golf/WelcomeCard';
 import { TooltipLayer } from './ui/Tooltip';
 import { UI_SCALES, applyUiScale, currentUiScale, saveUiScale } from './ui/uiScale';
 import { HoleCard } from './ui/golf/HoleCard';
@@ -159,12 +160,16 @@ export default function App() {
   if (game && item) last.current[item.id] = game.uiTool;
   /** the golf HUD's view (null outside golf mode): the top bar's tier and month */
   const gv = game?.golfMode ? game.golfView() : null, fv = game?.golfMode ? game.foundingView() : null;
+  /** a range start's founding season before the invitation (P22 2.8, T095): "Founding season · n of 9 holes"; and the title's place (the range's,
+   *  then the town's once named) */
+  const founding = fv && gv && !fv.invited && game!.traffic.round.runs === 0 && !gv.live ? `Founding season · ${Math.min(fv.check.holes, fv.check.holesNeeded)} of ${fv.check.holesNeeded} holes` : null;
+  const title = game?.ready ? game.titleName() : null;
   /** the tool visibility in force (T033 progressive unlocks; null shows everything) */
   const ui = game?.toolUi() ?? null;
   /** whether a golf top-bar chip is shown under the progressive unlocks */
   const chip = (id: string) => !ui || (ui.visibleGolfChips as string[]).includes(id);
   /** the first-run hint (null when none or all dismissed); golf mode shows it in the bottom bar */
-  const hint = ui?.activeHint ?? null;
+  const hint = ui ? ui.activeHint ?? game?.guideHint() ?? null : null; // T095: a range start's guide step when no other hint is up
   /** the Course brush's words (T118): what a click does (the surface, the hole it joins or starts, the price a cell) and the state; golf mode always shows them while a surface is armed */
   const courseHint = game?.courseHint() ?? '';
   /** the surface keys in force: 1 to the last surface the progressive unlocks show (BRUSH_PRESETS' order, as PaintTool.key reads them) */
@@ -219,8 +224,8 @@ export default function App() {
               <div className="flex items-center gap-2.5">
                 <Icon name="leaf" size={38} />
                 <div className={gv ? 'max-[1899px]:hidden' : 'max-[1599px]:hidden'}>{/* the golf bar's title from 1900 px (T135: one row) */}
-                  <div className="whitespace-nowrap font-display text-2xl font-bold leading-tight text-[var(--gold-hi)]">Maple Falls</div>
-                  <div className="label-caps whitespace-nowrap">Town Builder</div>
+                  <div className="max-w-[12rem] truncate whitespace-nowrap font-display text-2xl font-bold leading-tight text-[var(--gold-hi)]" data-testid="title-name" title={title ? `${title.name} · ${title.sub}` : undefined}>{title?.name ?? 'Maple Falls'}</div>
+                  <div className="label-caps max-w-[12rem] truncate whitespace-nowrap">{title?.sub ?? 'Town Builder'}</div>
                 </div>
               </div>
               <div className="h-9 w-px bg-white/10" />
@@ -229,7 +234,8 @@ export default function App() {
                   {/* P23 4.11 (T135): the top bar keeps one row at 1366, 1600 and 1920 px at every stage: the tier's name under 1600 px, the title
                       under 1900 px, the chips' words and the invitation's sentence under 2200 px go into their tooltips; the traffic views are in the
                       gear menu */}
-                  <Stat icon="trophy" label="Tier" value={`T${gv.tier}`} sub={gv.tierName} subClass="max-[1599px]:hidden" title={`Tier ${gv.tier}: ${gv.tierName}`} tone="text-amber-200" />
+                  {/* T095 (P22 2.8): before the tour's invitation the Tier's line says the founding season's holes (one row at 1366-1920 px, T135) */}
+                  <Stat icon="trophy" label="Tier" value={`T${gv.tier}`} sub={founding ? withIcon('growing', founding) : gv.tierName} subClass="max-[1599px]:hidden" subTone={founding ? 'font-semibold text-amber-300' : undefined} subTestId={founding ? 'founding-chip' : undefined} title={founding ? `${founding}: the tour invites you with ${fv!.check.holesNeeded} holes, a car park and a clubhouse (Tier ${gv.tier}: ${gv.tierName})` : `Tier ${gv.tier}: ${gv.tierName}`} tone="text-amber-200" />
                   <Stat icon="calendar" label="Month" value={gv.month} sub={gv.live ? 'Tournament day' : `${Math.ceil(gv.monthsLeft)} ${Math.ceil(gv.monthsLeft) === 1 ? 'month' : 'months'} to ${fv && !fv.due ? 'season end' : 'the tournament'}`} />
                   {game.golf?.start === 'range' && <button className={`chip ${game.range.cardOpen ? 'chip-on' : ''}`} onClick={() => game.openRangeCard()} data-tip="The driving range: golfers, takings, bucket price and upgrades" aria-label="Range" data-testid="range-chip"><Icon name="income" size={16} /><span className={WIDE}>Range</span></button>}
                   {fv?.invited && game.traffic.round.runs === 0 && !gv.live && <span className="flex items-center gap-1 whitespace-nowrap rounded-md border border-amber-400/40 bg-amber-400/15 px-2 py-1 text-xs font-semibold text-amber-200" data-testid="invite-pill" data-tip={`The tour's invitation: the Club Championship at the end of ${fv.due ? 'this' : 'next'} season (the first tournament is held at the end of the season it names)`}><Icon name="trophy" size={14} /><span className="min-[2200px]:hidden">Invited</span><span className={WIDE}>The Club Championship: end of {fv.due ? 'this' : 'next'} season</span></span>}
@@ -499,6 +505,7 @@ export default function App() {
           {game.site && game.playBoard() && <GolfLeaderboard game={game} />}
           {game.shotState() && <ShotPanel game={game} />}
           {game.seasonReport && game.traffic.round.stage === 'free' && <SeasonReportCard report={game.seasonReport} onContinue={() => game.dismissSeasonReport()} />}
+          {(() => { const w = !game.seasonReport ? game.welcomeView() : null; return w && <WelcomeCard road={w.road} newHole={w.newHole} onGo={() => game.closeWelcome(true)} onClose={() => game.closeWelcome(false)} />; })()}
           {(() => { const rc = game.rangeCard(); return rc && <RangeCard view={rc} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.openRangeCard(false)} onPrice={p => game.setRangePrice(p)} onBuy={id => game.buyRangeUpgrade(id)} onShowPractice={() => game.showPracticeArea()} />; })()}
           {game.holeCardHole !== null && <HoleCard game={game} right={game.panel ? 'right-[19.5rem]' : 'right-3'} />}
           {game.eventMode && !game.site && !game.golfMode && (
@@ -587,14 +594,14 @@ function PerfPanel({ game }: { game: Game }) {
 }
 
 /** a top-bar figure: its icon (in a square, when given), its label, value and a line under it; bar (0 to 1) draws a thin progress bar under that */
-function Stat({ label, value, sub, tone, subTone, subClass, title, bar, onClick, icon }: { label: string; value: string; sub?: string; tone?: string; subTone?: string; subClass?: string; title?: string; bar?: number; onClick?: () => void; icon?: IconName }) {
+function Stat({ label, value, sub, tone, subTone, subClass, subTestId, title, bar, onClick, icon }: { label: string; value: string; sub?: string; tone?: string; subTone?: string; subClass?: string; subTestId?: string; title?: string; bar?: number; onClick?: () => void; icon?: IconName }) {
   return (
     <div className={`flex items-center gap-2.5 px-1 ${onClick ? 'cursor-pointer rounded-lg hover:bg-white/5' : ''}`} onClick={onClick} data-tip={title}>
       {icon && <div className="glass-2 hidden h-8 w-8 shrink-0 place-items-center min-[1900px]:grid"><Icon name={icon} size={24} /></div>}
       <div>
         <div className="label-caps">{label}</div>
         <div className={`text-sm font-semibold tabular-nums leading-tight ${tone ?? ''}`}>{value}</div>
-        {sub && <div className={`text-[12px] ${subTone ?? 'text-slate-400'} ${subClass ?? ''}`}>{sub}</div>}
+        {sub && <div className={`text-[12px] ${subTone ?? 'text-slate-400'} ${subClass ?? ''}`} data-testid={subTestId}>{sub}</div>}
         {bar !== undefined && <div className="mt-0.5 h-1 w-28 overflow-hidden rounded-full bg-white/10"><div className="h-full bg-amber-400 transition-all" style={{ width: `${Math.round(bar * 100)}%` }} /></div>}
       </div>
     </div>
