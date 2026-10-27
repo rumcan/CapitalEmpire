@@ -9,7 +9,7 @@
 // it, many settle it); the wizard's generator draws each item's sector by those rates. The samples live in lot-learning.json, appended through
 // the dev server's merge (mergeSamples: by sample id, so several people can train together).
 // Pure, with no runtime imports: vite.config.ts loads it (through src/game/dev/dev-save.ts).
-import type { PresetState, PresetUse, Road } from './presets';
+import type { PresetPatch, PresetState, PresetUse, Road } from './presets';
 
 /** an offered item's kind */
 export type ItemKind = 'tree' | 'bush' | 'flowerbed' | 'prop' | 'car' | 'decal';
@@ -87,7 +87,7 @@ export interface SampleCtx { use: PresetUse; state: PresetState; w: number; d: n
  *  a head start) or the gallery (a whole lot judged at once: verdict up or down) */
 export type SampleSource = 'wizard' | 'preset' | 'gallery';
 /** one lot: an id (unique: merged by it), when it was made (ISO), its context and its items; src (absent: the wizard); verdict (the gallery's) */
-export interface Sample { id: string; at: string; ctx: SampleCtx; items: SampleItem[]; src?: SampleSource; verdict?: 'up' | 'down' }
+export interface Sample { id: string; at: string; ctx: SampleCtx; items: SampleItem[]; src?: SampleSource; verdict?: 'up' | 'down'; /** T183: the lot's ground patches (lot frame) when the owner painted them in the wizard's Draw */ ground?: PresetPatch[] }
 /** the file */
 export interface LearnFile { v: 1; samples: Sample[] }
 

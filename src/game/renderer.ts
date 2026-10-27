@@ -696,8 +696,6 @@ export class GroundPainter {
     // ---- 1a. the lawns (lawns.ts): the road blocks' grass in soft patches, then each lot's own lawn, under the lots' own ground
     if (lawns.length) { this.drawLawns(ctx, lawns, L, X0, Y0, M, Minv, box); ctx.setTransform(M); this.drawManagedGrass(ctx, lawns, box, L); }
     drawLots(rest);
-    // ---- 1a". the lots' flat decals (leaf drifts, worn grass, oil stains, litter, mud) over their ground
-    if (marks.length) { this.drawMarks(ctx, marks, L, M, box); ctx.setTransform(M); }
     // ---- 1a'. painted areas (the Paint tool) in id order: over the lot ground, under the bridges and roads
     if (paints.length) { this.drawPaints(ctx, paints, L, X0, Y0, M, Minv, box, lite); ctx.setTransform(M); }
     // ---- 1a'''. the course height's light (T028b, T126): its slopes lit by the sun at the upper right and shaded away from it, its steep rises'
@@ -708,6 +706,9 @@ export class GroundPainter {
     if (this.living.on || this.living.debug) { this.drawLiving(ctx, L, lite, box, M, Minv, W, H, X0, Y0); ctx.setTransform(M); }
     // ---- 1a''. the car parks over the painted areas: their surface, rim and bay lines
     drawLots(parks);
+    // ---- 1a". the lots' flat decals (leaf drifts, worn grass, oil stains, litter, mud) on top of all their ground (T183: the lawn, the lot's
+    //      patches, the painted areas, the living ground's streaks and the car parks), under the bridges, roads and sprites
+    if (marks.length) { this.drawMarks(ctx, marks, L, M, box); ctx.setTransform(M); }
     // ---- 1b. bridge decks under the road: the shadow on the water, the piers, the deck's fascia and top
     for (const b of brs) {
       const path = linePath(b.pts, false);

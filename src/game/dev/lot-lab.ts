@@ -2,8 +2,12 @@
 // compose a lot of that type, state, size and road angle (Game.stageLab / restageLab), building, fence and all. The dev editor (lot-editor.ts)
 // edits it on the map; Save writes it as a lab preset (a draft, in memory until saved); Approve makes the game draw it on the matching lots
 // (compose.ts). Round the lot and its road lies the map's own grass (no forest or farms near: stageLab), and the camera fits the lot and its road
-// into the free area between the panels (zoom at least LAB_ZOOM, or the fit zoom of a lot too big for that). PAINT GROUND: a drag on the lot paints
-// a ground rectangle into its preset and Erase removes the patch under a click (the editor's pointer handling is paused meanwhile). DECALS: a
+// into the free area between the panels (zoom at least LAB_ZOOM, or the fit zoom of a lot too big for that). SELECT / DRAW (T183, #461): two modes,
+// lit in the toolbar. Select is the editor's (click, Shift+click, box, move, copy, paste). Draw paints a ground material: pick one under Ground in
+// the palette (or B: the last one) and drag; a round brush (0.5-4 tiles, [ ]) snapped to half tiles, each stroke merged into the lot's one patch
+// of that material (lot-paint.ts), Shift+drag erases it, R Shape (a rectangle), one undo per stroke; a banner says so and the cursor is the brush.
+// Esc, V, Select or a sprite or decal from the palette go back to Select; a stroke in progress is laid first, the selection kept. In the wizard
+// Draw paints its lot (saved with the sample). The editor's pointer handling is paused while drawing. DECALS: a
 // whole preset's flat ground decals (leaves, litter, stains): a thumbnail arms placing it on the lot; a click on a decal selects it (the editor).
 // A generated lot is whole: the game draws its fences, street items and decals from the preset alone (compose.ts).
 // SIZE: the W and D steppers under the size select resize the current preset (fitted, curated, staged again at the new size). PERSON CURSOR:
@@ -31,7 +35,7 @@ import { worldX, worldY, ZOOM_MAX, ZOOM_MIN } from '../iso';
 import { composeFarm, type FarmParcel } from '../ext/farms/farms';
 import type { ComposeState, LotGeom } from '../lots/compose-core';
 import { compose, lotPresets, setLotPresets } from '../lots/compose';
-import { approvedFor, bucketOf, fitPreset, presetsFor, WHOLE_FRONT, type LotPreset, type PresetDecal, type PresetPatch, type PresetState, type PresetUse, type Road } from '../lots/presets';
+import { approvedFor, bucketOf, fitPreset, presetsFor, WHOLE_FRONT, type LotPreset, type PresetDecal, type PresetState, type PresetUse, type Road } from '../lots/presets';
 import { frameOf, quarterOfRoad, toFrame, toWorld, type Pt, type PresetFrame } from '../lots/preset-frame';
 import { presetFromComposition } from '../lots/preset-from';
 import { LU, LV } from '../lots/town';
@@ -39,7 +43,8 @@ import { allocOf, allows, STATE_WORDS, toggled, type HouseAlloc } from '../lots/
 import type { LotDecal } from '../lot-decals';
 import decalSheet from '../../assets/ground/lot-decals.webp';
 import { replacePreset } from './lot-edit';
-import { armPlacing, editorAct, editorDeselect, editorOnly, editorSel, editorText, pauseEditor, saveLotPresets, setHouseFilter, thumb, type EditorSel, type LabAct } from './lot-editor';
+import { armPlacing, editorAct, editorDeselect, editorOnly, editorSel, editorText, pauseEditor, pushEditorUndo, saveLotPresets, setHouseFilter, thumb, type EditorSel, type LabAct } from './lot-editor';
+import { BRUSH_DEFAULT, CELL, applyStroke, grid, rectCells, stepBrush, strokeCells } from './lot-paint';
 import { mainBuilding, swapHouse } from './lot-select';
 import { allowedHouse, artLimit, baseOf, classWords, frameHalf, isHouseLike, otherHouse, suitCounts, type HouseOk } from './lot-houses';
 import { neighbourLots, planInPlace, planNewLot, type Neighbour } from './lot-lab-plan';
@@ -48,7 +53,7 @@ import { allocations, onAllocations, saveAllocation } from './house-alloc-store'
 import { detach, isMaster, largestSize, type DropCounts } from '../lots/derive';
 import { deriveMaster, mastersReport } from './lot-derive';
 import { BTN, DANGER, GO, ON, SEL, btn, check, drawHelp, el, heading, makeShell, mono, panelHead, typing, type Folds } from './lot-lab-ui';
-import { makePalette, type Swatch } from './lot-lab-palette';
+import { makePalette, SWATCHES, type Swatch } from './lot-lab-palette';
 import { makeWizard, WIZARD_ID } from './lot-wizard';
 import { makeGallery } from './lot-gallery';
 import { makeExam } from './lot-exam';
@@ -107,8 +112,6 @@ const levelOf = (s: PresetState) => (s === 'upgraded' ? { level: LV.UPGRADED, de
 const seedOf = (u: PresetUse, v: number) => (u === 'park' ? ((v % 15) + 15) % 15 : u === 'com' ? 15 + (((v * 7) % 85) + 85) % 85 : 1 + (((v * 7) % 997) + 997) % 997);
 /** a stored value when it is one of the list, else the default */
 const valueOr = <T extends string | number>(v: unknown, list: readonly T[], d: T): T => (list.includes(v as T) ? (v as T) : d);
-/** whether a point (x, y) lies inside a polygon given as x, y pairs (the even-odd rule) */
-const inPoly = (pts: readonly number[], x: number, y: number): boolean => { let inside = false; for (let i = 0, j = pts.length - 2; i < pts.length; j = i, i += 2) { const xi = pts[i]!, yi = pts[i + 1]!, xj = pts[j]!, yj = pts[j + 1]!; if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside; } return inside; };
 /** a frame coordinate snapped to half tiles and kept in [0, hi] (a paint point: the lot's frame, tiles) */
 const snapHalf = (v: number, hi: number) => Math.min(hi, Math.max(0, Math.round(v * 2) / 2));
 /** the view's subject in world px: the box around the lot and the road strip in front of it (MARGIN tiles past each end), which the camera fits */
@@ -147,9 +150,11 @@ export function installLotLab(game: Game): () => void {
   let message = '', source = '', lockAngle = false, lockSize = false;
   /** started once the game is ready; the signature of what the panels show (the 1.5 s check draws them only when it changed); the timers and the frame */
   let started = false, sigLast = '', live = 0, raf = 0;
-  /** the ground painting: the mode (a swatch, Erase, or null: off) and the drag in progress (its preset, swatch, size, the press point and the point now, in the lot's frame) */
-  let paint: Swatch | 'erase' | null = null;
-  let paintDrag: { id: string; sw: Swatch; w: number; d: number; x0: number; y0: number; x1: number; y1: number } | null = null;
+  /** Draw (T183): the material painted (null: Select), the last one (B comes back to it), the brush's radius (tiles), Shape (a rectangle instead of
+   *  the brush), the pointer's point on the lot (the brush circle), and the stroke in progress (its target: the lab's preset or the wizard's lot;
+   *  its path and cells so far; erasing; Shape's corners) */
+  let paint: Swatch | null = null, lastSw: Swatch = SWATCHES.find(s => s.tex === 'concrete') ?? SWATCHES[0]!, brushR = BRUSH_DEFAULT, shape = false, brushAt: Pt | null = null;
+  let stroke: { id: string; sw: Swatch; w: number; d: number; path: number[]; cells: Set<number>; erase: boolean; x0: number; y0: number; x1: number; y1: number; wiz: boolean } | null = null;
   /** the decal mode: 'place' (a press on the lot adds the armed decal decalId; Shift keeps placing) or null (off: a click on a decal selects it,
    *  through the editor, with the sprites) */
   let decalMode: 'place' | null = null, decalId = '';
@@ -178,13 +183,18 @@ export function installLotLab(game: Game): () => void {
   const SVGNS = 'http://www.w3.org/2000/svg', mask = document.createElementNS(SVGNS, 'svg'), preview = document.createElementNS(SVGNS, 'path');
   mask.style.cssText = 'position:fixed;left:0;top:0;pointer-events:none;z-index:55;display:none';
   preview.setAttribute('fill', 'rgba(56,189,248,.35)'); preview.setAttribute('stroke', '#38bdf8');
-  mask.append(preview);
+  // T183: the brush circle at the pointer (Draw), and the mode banner over the map
+  const brushEl = document.createElementNS(SVGNS, 'path');
+  brushEl.setAttribute('fill', 'rgba(253,230,138,.12)'); brushEl.setAttribute('stroke', '#fde68a'); brushEl.setAttribute('stroke-width', '2');
+  mask.append(preview, brushEl);
+  const banner = el('div', 'position:fixed;z-index:58;transform:translateX(-50%);display:none;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;background:rgba(15,23,42,.95);border:2px solid #fde68a;color:#fef3c7;font:600 13px system-ui,sans-serif;box-shadow:0 6px 18px rgba(0,0,0,.45);pointer-events:none;white-space:nowrap');
+  banner.id = 'ce-lab-draw-banner';
   const folds0 = (() => { const f = stored()?.folds; return f && typeof f === 'object' ? f as Partial<Folds> : null; })();
   const shell = makeShell(folds0, () => { fitCam(); palette.draw(); keep(); });
   const palette = makePalette(shell, {
     sprite: id => { setPaint(null); setDeco(null); message = armPlacing(id) ? `placing ${id}: click on the lot (Shift+click places more, Esc stops)` : 'the map editor is not on yet'; render(); },
     decal: id => { setDeco('place', id); message = `placing ${id}: press on the lot (Shift keeps placing, Esc stops)`; render(); palette.draw(); },
-    paint: sw => { setPaint(sw); message = sw === null ? '' : sw === 'erase' ? 'Erase: click a painted patch' : `painting ${sw.name}: drag on the lot`; render(); palette.draw(); },
+    paint: sw => { setPaint(sw === 'erase' ? lastSw : sw); render(); palette.draw(); },
     armed: () => ({ decal: decalMode === 'place' ? decalId : null, paint }),
     decalThumb,
     folded: v => shell.fold('palette', v),
@@ -193,6 +203,7 @@ export function installLotLab(game: Game): () => void {
   /** the lot wizard (T158, lot-wizard.ts): W turns it on; it owns the clicks and the keys while it runs */
   const wizard = makeWizard({
     game, lot: () => ({ use, state, road }), frame: () => (geo ? labFrame(geo) : null), base: wizardBase, show: wizardShow, leave: wizardLeave, keepDraft, toScreen,
+    busy: () => paint !== null || decalMode === 'place',
     say: m => { message = m; drawStatus(); }, redraw: () => render(), ship: (data, from) => shipModel(data, from),
   });
   /** the lot gallery (T159, lot-gallery.ts): a dozen generated lots along the street, judged Good or Bad, Fix one in the wizard */
@@ -356,21 +367,40 @@ export function installLotLab(game: Game): () => void {
     if (key === maskKey) return;
     maskKey = key; mask.setAttribute('width', `${innerWidth}`); mask.setAttribute('height', `${innerHeight}`);
   }
-  /** the paint drag's rectangle on the paint layer (its screen outline); none when there is no drag */
+  /** Draw's marks on the paint layer: the stroke in progress (its cells in the material's colour, red when erasing; Shape's rectangle), the brush
+   *  circle at the pointer, the banner and the canvas's cursor (none in Draw: the circle is the cursor) */
   function drawPaint() {
-    const g = geo, dr = paintDrag;
-    if (!g || !dr) { preview.setAttribute('d', ''); return; }
+    drawBanner();
+    game.canvas.style.cursor = game.overlay.style.cursor = paint !== null ? 'none' : '';
+    const g = geo, s = stroke;
+    if (!g) { preview.setAttribute('d', ''); brushEl.setAttribute('d', ''); return; }
     const f = frameOf(g), c = game.cam, o = origin();
-    const x0 = Math.min(dr.x0, dr.x1), x1 = Math.max(dr.x0, dr.x1), y0 = Math.min(dr.y0, dr.y1), y1 = Math.max(dr.y0, dr.y1);
     /** a point of the lot's frame on screen: frame -> world (o + u x + n y) -> screen */
     const S = (x: number, y: number) => { const p = toWorld(f, x, y); return `${o.x + (worldX(p.x, p.y) - c.X) * c.z},${o.y + (worldY(p.x, p.y) - c.Y) * c.z}`; };
-    preview.setAttribute('d', `M${S(x0, y0)}L${S(x1, y0)}L${S(x1, y1)}L${S(x0, y1)}Z`);
+    const quad = (x0: number, y0: number, x1: number, y1: number) => `M${S(x0, y0)}L${S(x1, y0)}L${S(x1, y1)}L${S(x0, y1)}Z`;
+    if (s) {
+      let d = '';
+      if (shape) d = quad(Math.min(s.x0, s.x1), Math.min(s.y0, s.y1), Math.max(s.x0, s.x1), Math.max(s.y0, s.y1));
+      else { const nx = grid(s.w, s.d).nx; for (const k of s.cells) { const i = k % nx, j = Math.floor(k / nx); d += quad(i * CELL, j * CELL, (i + 1) * CELL, (j + 1) * CELL); } }
+      preview.setAttribute('d', d);
+      preview.setAttribute('fill', s.erase ? 'rgba(248,113,113,.45)' : `${s.sw.col}cc`); preview.setAttribute('stroke', s.erase ? '#f87171' : 'none');
+    } else preview.setAttribute('d', '');
+    const b = brushAt;
+    if (paint !== null && b) {
+      const r = shape ? 0.3 : brushR, pts: string[] = [];
+      for (let k = 0; k < 32; k++) { const a = (k / 32) * Math.PI * 2; pts.push(S(b.x + r * Math.cos(a), b.y + r * Math.sin(a))); }
+      brushEl.setAttribute('d', `M${pts.join('L')}Z${shape ? `M${S(b.x - 0.6, b.y)}L${S(b.x + 0.6, b.y)}M${S(b.x, b.y - 0.6)}L${S(b.x, b.y + 0.6)}` : ''}`);
+      brushEl.setAttribute('stroke', stroke?.erase ? '#f87171' : '#fde68a');
+    } else brushEl.setAttribute('d', '');
   }
-  /** a pointer event's point in a lot's frame (tiles): snapped to half tiles and kept in the lot (x in [0, w], y in [0, d]); null when no lot is staged */
-  function paintPt(e: PointerEvent, w: number, d: number): Pt | null {
-    const g = geo; if (!g) return null;
-    const b = game.canvas.getBoundingClientRect(), t = game.tileAt(e.clientX - b.left, e.clientY - b.top), q = toFrame(frameOf(g), t.x, t.y);
-    return { x: snapHalf(q.x, w), y: snapHalf(q.y, d) };
+  /** the mode banner over the map while drawing: the material, what a drag does, the keys */
+  function drawBanner() {
+    if (paint === null || !started) { banner.style.display = 'none'; return; }
+    const a = shell.free(), sw = el('span', `display:inline-block;width:14px;height:14px;border-radius:3px;border:1px solid #fde68a;background:${paint.col}`);
+    banner.style.display = 'flex'; banner.style.left = `${(a.L + a.R) / 2}px`; banner.style.top = `${a.T + 40}px`;
+    const size = `${brushR} tile${brushR === 1 ? '' : 's'}`;
+    banner.replaceChildren(el('span', 'font-weight:800;color:#fde68a', '✎ Drawing:'), sw, el('span', '', paint.name),
+      el('span', 'opacity:.9', `· ${shape ? 'Shape: drag a rectangle' : 'drag to paint'} · Shift+drag erases · [ ] brush ${size} · R ${shape ? 'brush' : 'Shape'} · Esc or V back to Select`));
   }
 
   // ---------- the actions
@@ -557,17 +587,16 @@ export function installLotLab(game: Game): () => void {
     if (staged) game.restageLab(staged.st);
     await saveLotPresets([p.id]);
   }
-  /** Erase: the last patch of the preset whose polygon holds the point (in its frame) is removed and the preset saved; else says so */
-  async function eraseAt(p: LotPreset, q: Pt): Promise<void> {
-    let i = p.patches.length - 1;
-    while (i >= 0 && !inPoly(p.patches[i]!.pts, q.x, q.y)) i--;
-    if (i < 0) { message = 'no painted patch there'; return; }
-    const tex = p.patches[i]!.tex;
-    await commitLab(p, { patches: p.patches.filter((_, k) => k !== i) });
-    message = `erased a ${tex} patch`;
-  }
   /** the paint mode: a swatch, Erase, or null (off); the editor's pointer handling pauses while one is on, and a drag in progress is dropped */
-  function setPaint(v: Swatch | 'erase' | null): void { paint = v; paintDrag = null; if (v !== null) decalMode = null; pauseEditor(v !== null || decalMode !== null); drawPaint(); }
+  function setPaint(v: Swatch | null): void {
+    // a stroke in progress is laid first: switching never drops it (nor the editor's selection: the editor is only paused)
+    if (stroke) finishStroke();
+    paint = v; if (v) lastSw = v;
+    if (v !== null) decalMode = null;
+    pauseEditor(v !== null || decalMode !== null || wizard.on());
+    message = v ? `Draw: ${v.name}` : message.startsWith('Draw:') ? '' : message;
+    drawPaint();
+  }
   /** the current lab preset resized to w2 x d2 (tiles): fitted to the new size (fitPreset: the far side moves, props past the edge dropped), curated, set in the model (and the draft); the size select set to its bucket when this size has it; the lot staged again at the new size (the street fresh, the camera fitted); the presets saved */
   async function resize(w2: number, d2: number): Promise<void> {
     const p = curPreset();
@@ -587,8 +616,8 @@ export function installLotLab(game: Game): () => void {
    *  while placing (off, the editor selects decals with the sprites: a click, Shift+click, the box) */
   function setDeco(m: 'place' | null, id = decalId): void {
     decalMode = m; decalId = id;
-    if (m !== null) { paint = null; paintDrag = null; }
-    pauseEditor(m === 'place' || paint !== null); drawPaint();
+    if (m !== null) { if (stroke) finishStroke(); paint = null; }
+    pauseEditor(m === 'place' || paint !== null || wizard.on()); drawPaint();
   }
   /** a pointer event's point in the lot's frame (tiles, not snapped); null when no lot is staged */
   function framePt(e: PointerEvent): Pt | null { const g = geo; if (!g) return null; const b = game.canvas.getBoundingClientRect(), t = game.tileAt(e.clientX - b.left, e.clientY - b.top); return toFrame(frameOf(g), t.x, t.y); }
@@ -596,6 +625,15 @@ export function installLotLab(game: Game): () => void {
    *  y in [-1.5, d]); Shift keeps placing, else placing stops */
   const onDecalDown = (e: PointerEvent) => {
     if (decalMode !== 'place' || paint !== null || e.button !== 0 || !(e.target instanceof HTMLCanvasElement)) return;
+    // T183: in the wizard the decal goes on the wizard's lot (kept, so the sample learns it; Ctrl+Z takes it back), never into a saved preset
+    if (wizard.on()) {
+      e.preventDefault(); e.stopImmediatePropagation();
+      const l = wizard.ground(), q = framePt(e);
+      if (!l || !q) return;
+      if (!e.shiftKey) { setDeco(null); palette.draw(); }
+      wizard.addDecal(decalId, within(q.x, 0, l.w), within(q.y, -WHOLE_FRONT, l.d));
+      message = `decal ${decalId} placed on the wizard's lot (Ctrl+Z undoes)`; render(); return;
+    }
     const p = wholeNow(), q = p && framePt(e);
     e.preventDefault(); e.stopImmediatePropagation();
     if (!p || !q) { message = 'Generate a lot first (old presets have no decals of their own)'; render(); return; }
@@ -752,10 +790,16 @@ export function installLotLab(game: Game): () => void {
       tog('Person', personOn, () => { personOn = !personOn; }, 'a townsperson stands at the pointer over the map, for scale (its feet on the point under the pointer)'),
       el('div', 'flex:1'),
       btn('?', `${BTN}font-weight:800;padding:4px 11px`, () => toggleHelp(), 'the keys (?)')];
+    // T183: the mode switch, lit: Select (the editor's, or the wizard's select) or Draw (a ground material)
+    const modes = use === 'farm' ? [] : [
+      btn('↖ Select (V)', paint === null ? ON : BTN, () => { setPaint(null); render(); palette.draw(); }, wizard.on() ? 'Select: click an offered item, Shift or Ctrl+click adds, drag a box; Del deletes' : 'Select: click, Shift+click or drag a box to pick sprites and decals; move, copy and paste them'),
+      btn(paint ? `✎ Draw: ${paint.name} (B)` : '✎ Draw (B)', paint !== null ? `${ON}border-color:#fde68a;color:#fef3c7;` : BTN, () => { setPaint(paint ? null : lastSw); render(); palette.draw(); }, 'Draw a ground material (pick one under Ground in the palette): drag paints with a round brush, Shift+drag erases, [ ] brush size, R Shape (a rectangle), Esc or V back to Select'),
+      bar()];
     // the wizard's own bar while it runs (its keys as buttons), the view toggles kept
-    if (wizard.on()) { t.replaceChildren(...wizard.bar(), bar(), ...views); return; }
+    if (wizard.on()) { t.replaceChildren(...modes, ...wizard.bar(), bar(), ...views); return; }
     if (gallery.on()) { t.replaceChildren(...gallery.bar(), bar(), ...views); return; }
     t.replaceChildren(
+      ...modes,
       wizard.toggleBtn(), gallery.toggleBtn(),
       btn('◀ Variant', BTN, () => act(() => generate(-1)), 'the previous variant (Shift+G)'),
       btn('Generate ▶', ON, () => act(generateHere), 'this lot again (its type, size and road angle): a new layout, seed and building that suits its road and state'),
@@ -1006,47 +1050,88 @@ export function installLotLab(game: Game): () => void {
     if (cur && lab().some(p => p.id === cur)) void act(() => open(cur));
     else void act(() => generate(1));
   }
-  /** a press on the map with a paint mode on: Erase removes at once; a swatch starts a drag (onPaintMove, onPaintUp). Window capture: the game's pan and the editor's pick never see it */
+  /** what a stroke paints: the wizard's lot while the wizard runs (its own undo; saved with the sample), else the lab's preset */
+  function strokeTarget(): { id: string; w: number; d: number; wiz: boolean } | null {
+    if (wizard.on()) { const l = wizard.ground(); return l ? { id: WIZARD_ID, w: l.w, d: l.d, wiz: true } : null; }
+    const p = curPreset(); return p ? { id: p.id, w: p.w, d: p.d, wiz: false } : null;
+  }
+  /** a press on the map in Draw: a stroke starts (Shift: erasing), the brush's cells under it at once (Shape: the rectangle's first corner).
+   *  Window capture: the game's pan, the editor's pick and the wizard's select never see it */
   const onPaintDown = (e: PointerEvent) => {
     const m = paint;
     if (m === null || e.button !== 0 || !(e.target instanceof HTMLCanvasElement)) return;
     e.preventDefault(); e.stopImmediatePropagation();
-    const p = curPreset();
-    if (!p) { message = 'Generate a lot first'; render(); return; }
-    const q = paintPt(e, p.w, p.d);
+    const t = strokeTarget(), q = framePt(e);
+    if (!t) { message = 'Generate a lot first'; render(); return; }
     if (!q) return;
-    if (m === 'erase') { void act(() => eraseAt(p, q)); return; }
-    paintDrag = { id: p.id, sw: m, w: p.w, d: p.d, x0: q.x, y0: q.y, x1: q.x, y1: q.y };
+    const x = within(q.x, 0, t.w), y = within(q.y, 0, t.d), sx = snapHalf(q.x, t.w), sy = snapHalf(q.y, t.d);
+    stroke = { id: t.id, sw: m, w: t.w, d: t.d, path: [x, y], cells: shape ? new Set() : strokeCells(grid(t.w, t.d), [x, y], brushR), erase: e.shiftKey, x0: sx, y0: sy, x1: sx, y1: sy, wiz: t.wiz };
+    brushAt = q; drawPaint();
+  };
+  /** the pointer in Draw: the brush circle follows it; a stroke adds the brush's cells along the way (Shape: the rectangle's far corner) */
+  const onPaintMove = (e: PointerEvent) => {
+    if (paint === null) return;
+    const q = e.target instanceof HTMLCanvasElement ? framePt(e) : null, s = stroke;
+    brushAt = q;
+    // over the map the brush is the only cursor: the game's and the editor's hover outlines stay off (a right-drag still pans)
+    if (q && !s && !(e.buttons & 2)) e.stopImmediatePropagation();
+    if (s) {
+      e.preventDefault(); e.stopImmediatePropagation();
+      if (q) {
+        const x = within(q.x, 0, s.w), y = within(q.y, 0, s.d);
+        if (shape) { s.x1 = snapHalf(q.x, s.w); s.y1 = snapHalf(q.y, s.d); }
+        else { const n = s.path.length; for (const c of strokeCells(grid(s.w, s.d), [s.path[n - 2]!, s.path[n - 1]!, x, y], brushR)) s.cells.add(c); s.path.push(x, y); }
+      }
+    }
     drawPaint();
   };
-  /** a drag's moves: the rectangle follows the pointer (kept in the lot) */
-  const onPaintMove = (e: PointerEvent) => {
-    const d = paintDrag;
-    if (!d) return;
-    e.preventDefault(); e.stopImmediatePropagation();
-    const q = paintPt(e, d.w, d.d);
-    if (!q) return;
-    d.x1 = q.x; d.y1 = q.y; drawPaint();
-  };
-  /** a drag's release paints the rectangle (at least 0.5 x 0.5 tiles) as a patch of its preset, saved; a cancel paints nothing */
+  /** the release lays the stroke (a cancel too: a stroke is never dropped) */
   const onPaintUp = (e: PointerEvent) => {
-    const d = paintDrag;
-    if (!d) return;
-    e.preventDefault(); e.stopImmediatePropagation(); paintDrag = null; drawPaint();
-    if (e.type === 'pointercancel') return;
-    const x0 = Math.min(d.x0, d.x1), x1 = Math.max(d.x0, d.x1), y0 = Math.min(d.y0, d.y1), y1 = Math.max(d.y0, d.y1);
-    if (x1 - x0 < 0.5 || y1 - y0 < 0.5) { message = 'drag at least 0.5 x 0.5 tiles to paint'; render(); return; }
-    const p = lotPresets().find(q => q.id === d.id);
-    if (!p) { message = 'Generate a lot first'; render(); return; }
-    const patch: PresetPatch = { kind: d.sw.kind, tex: d.sw.tex, pts: [x0, y0, x1, y0, x1, y1, x0, y1] };
-    void act(async () => { await commitLab(p, { patches: [...p.patches, patch] }); message = `painted ${d.sw.name} (${x1 - x0} x ${y1 - y0} tiles), saved`; });
+    if (!stroke) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    finishStroke();
   };
+  /** the stroke in progress laid: merged into its target's one patch of its material (lot-paint.ts applyStroke; erasing takes the cells out),
+   *  one undo step (the lab's: the editor's Undo and Ctrl+Z; the wizard's: its own), the lab's preset saved as the lab saves every edit */
+  function finishStroke(): void {
+    const s = stroke; stroke = null; drawPaint();
+    if (!s) return;
+    if (shape && (Math.abs(s.x1 - s.x0) < 0.5 || Math.abs(s.y1 - s.y0) < 0.5)) { message = 'Shape: drag at least half a tile each way'; render(); return; }
+    const cells = shape ? rectCells(grid(s.w, s.d), s.x0, s.y0, s.x1, s.y1) : s.cells;
+    if (!cells.size) return;
+    const what = `${s.erase ? 'erased' : 'painted'} ${s.sw.name}`;
+    if (s.wiz) {
+      const l = wizard.ground(); if (!l) return;
+      wizard.setGround(applyStroke(l.patches, s.sw, l.w, l.d, cells, s.erase), what);
+      message = `${what} on the wizard's lot (Ctrl+Z undoes; saved with the sample)`; render(); return;
+    }
+    const p = lotPresets().find(q => q.id === s.id);
+    if (!p) { message = 'Generate a lot first'; render(); return; }
+    const before = p.patches, next = applyStroke(before, s.sw, p.w, p.d, cells, s.erase);
+    void act(async () => {
+      await commitLab(p, { patches: next });
+      pushEditorUndo(async () => { const now = lotPresets().find(q => q.id === p.id); if (now) await commitLab(now, { patches: before }); }, what);
+      message = `${what}, saved (Ctrl+Z undoes)`;
+    });
+  }
   /** the keys, in the capture phase, while the lab is on and not typing: ? the keys overlay (Esc closes it), g next variant, G previous, Ctrl+S
    *  save, Ctrl+Enter approve and next gap, Esc paint or decal placing off, L lot grid, N neighbours (the game's own L and N are stopped here) */
   const onKey = (e: KeyboardEvent) => {
     if (!started || typing(e.target)) return;
     const mod = e.ctrlKey || e.metaKey;
     const plain = !mod && !e.altKey, k = e.key.toLowerCase(), helpOn = shell.help.style.display !== 'none';
+    // T183: the mode keys come first (in the wizard too): B Draw (the last material), V or Esc back to Select, [ ] the brush, R Shape; Ctrl+Z in
+    // Draw takes the last stroke back (the editor's undo; the wizard's own while it runs)
+    if (!helpOn && !gallery.on() && use !== 'farm') {
+      const drawKey = !plain ? null
+        : k === 'b' && !e.shiftKey ? () => setPaint(paint ? null : lastSw)
+          : paint === null ? null
+            : k === 'v' || e.key === 'Escape' ? () => setPaint(null)
+              : e.key === '[' || e.key === ']' ? () => { brushR = stepBrush(brushR, e.key === ']' ? 1 : -1); message = `brush ${brushR} tile${brushR === 1 ? '' : 's'}`; }
+                : k === 'r' ? () => { shape = !shape; message = shape ? 'Shape: drag a rectangle' : 'the brush: drag to paint'; } : null;
+      if (drawKey) { e.preventDefault(); e.stopImmediatePropagation(); drawKey(); drawPaint(); render(); palette.draw(); return; }
+      if (paint !== null && mod && k === 'z' && !wizard.on()) { e.preventDefault(); e.stopImmediatePropagation(); void act(() => { if (!editorAct('undo')) message = 'the map editor is not on yet'; }); return; }
+    }
     // the wizard owns its keys while it runs (Space, S, Backspace, W, Esc), and the lab's own lot keys rest (only ?, L and N stay)
     // the gallery owns its keys while it is open (Space, Esc), as the wizard does
     if (gallery.on() && !helpOn) {
@@ -1086,7 +1171,7 @@ export function installLotLab(game: Game): () => void {
   /** each frame: the camera kept on the lot, the paint layer, the paint drag's rectangle while one is made, the person cursor, the editor's new
    *  message as the status, the selection bar (and the inspector when the selection changed) */
   function frame() {
-    raf = requestAnimationFrame(frame); keepCam(); drawMask(); if (paintDrag) drawPaint(); drawPerson();
+    raf = requestAnimationFrame(frame); keepCam(); drawMask(); if (paint !== null || stroke) drawPaint(); drawPerson();
     if (!started) return;
     const ed = editorText();
     if (ed.msg !== emMsg) { emMsg = ed.msg; if (ed.msg) { message = ed.msg; drawStatus(); } }
@@ -1104,7 +1189,7 @@ export function installLotLab(game: Game): () => void {
   // another tab or helper saved the house allocations: the inspector shows them
   const unAlloc = onAllocations(() => { if (started) renderInspector(); });
   document.head.append(style);
-  document.body.append(mask, personEl, badgeLayer);
+  document.body.append(mask, personEl, badgeLayer, banner);
   window.addEventListener('pointermove', onMapMove, { capture: true, passive: true }); window.addEventListener('pointerout', onMapOut, true);
   window.addEventListener('keydown', onKey, true);
   window.addEventListener('pointerdown', onPaintDown, true);
@@ -1126,6 +1211,6 @@ export function installLotLab(game: Game): () => void {
     if (game.devGround === drawGrid) game.devGround = null;
     gridLayer.dispose(); game.stageLabNeighbours([]);
     wizard.dispose(); gallery.dispose();
-    style.remove(); mask.remove(); shell.remove(); personEl.remove(); badgeLayer.remove(); delete (window as unknown as { __lotExam?: unknown }).__lotExam;
+    style.remove(); mask.remove(); shell.remove(); personEl.remove(); badgeLayer.remove(); banner.remove(); game.canvas.style.cursor = game.overlay.style.cursor = ''; delete (window as unknown as { __lotExam?: unknown }).__lotExam;
   };
 }
