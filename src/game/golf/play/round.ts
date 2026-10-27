@@ -109,7 +109,7 @@ export class HoleRun {
   record(p: Player, club: Club, t: number, dur: number, to: Pt, lie: Lie, penalty: 0 | 1, holed: boolean): Shot {
     const from = { x: p.ball.x, y: p.ball.y }, s: Shot = { golfer: p.id, hole: this.h, stroke: p.strokes + 1, t, from, to, club, lie, penalty, holed };
     const free = this.strikeAt(p);
-    if (t > free + 1e-9) this.c.pace.waits.push({ group: this.g.idx, hole: this.h, at: p.lie === 'tee' ? 'tee' : 'green', from: free, to: t });
+    if (t > free + 1e-9) { this.c.pace.waits.push({ group: this.g.idx, hole: this.h, at: p.lie === 'tee' ? 'tee' : 'green', from: free, to: t }); this.g.waited = this.h; }
     if (this.first < 0) this.first = t;
     this.c.out.push(s);
     p.strokes += 1 + penalty;
@@ -159,6 +159,8 @@ export class GroupRun {
   hold: GroupRun | null = null;
   /** T211: the group that began each hole right behind this one (the wave-through looks one group back) */
   readonly behind: (GroupRun | null)[];
+  /** T211: the last hole it waited on the group ahead (-1: none), and the groups it was waved through (it never waves them back) */
+  waited = -1; readonly passed: GroupRun[] = [];
   private c: PlayCtx; private gr: Group;
   constructor(c: PlayCtx, gr: Group, idx: number) {
     const N = c.view.holes.length;
@@ -237,13 +239,21 @@ export class Field {
     if (g.hold) return { p: null, t: g.hold.begun(g.h) ? Math.max(g.ready, g.hold.arrive[g.h]!) : Infinity };
     return { p: null, t: g.ready };
   }
-  /** a group at its next tee: it waves the group behind through when it holds two holes open (it stands aside: hold), else begins the hole behind the
-   *  group that began it last */
+  /** whether group b (on the hole before) is held up by g: it waited there, or its next strike waits now (on the group ahead: g) */
+  private heldBy(b: GroupRun, g: GroupRun): boolean {
+    if (b.waited === b.h) return true;
+    const run = b.hole; if (!run || run.ahead !== g) return false;
+    const p = run.next(); return !!p && run.timeOf(p) > run.strikeAt(p) + 1e-9;
+  }
+  /** a group at its next tee: it waves the group behind through when it holds two holes open and that group is held up by it (it stands aside: hold),
+   *  else begins the hole behind the group that began it last. A group never waves back a group that went through it, nor one it went through */
   private begin(g: GroupRun): void {
     const h = g.h, a = this.lastOn[h]!, N = this.c.view.holes.length;
     if (!g.hold && a && h >= 1 && h + 2 < N && a.teedOff(h + 2)) {
       const b = g.behind[h - 1];
-      if (b && b.h === h - 1 && b.teedOff(h - 1)) { g.hold = b; this.c.pace.waves.push({ t: g.ready, hole: h, slow: g.idx, through: b.idx }); return; }
+      if (b && b.h === h - 1 && b.teedOff(h - 1) && this.heldBy(b, g) && !g.passed.includes(b) && !b.passed.includes(g)) {
+        g.hold = b; b.passed.push(g); this.c.pace.waves.push({ t: g.ready, hole: h, slow: g.idx, through: b.idx }); return;
+      }
     }
     g.hold = null;
     g.begin(a);
