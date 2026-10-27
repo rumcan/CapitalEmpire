@@ -16,6 +16,33 @@ Each item gives its **angle code** (below), its size, its game id and a prompt. 
 **Status marks:** **(stand-in)** the game draws a labelled stand-in today, so this picture goes straight in. **(new)** nothing places it yet:
 the art can be made now, and a small ticket places it in the game. **(in the game)** already drawn: listed only so the set is complete.
 
+## Progress (kept current by the lead; the owner, 2026-10-27: "mark off the list things already done")
+
+**Marks:** ✅ in the game · 🎨 made, going in · ⏳ being made now · nothing: still to make. An item gets ✅ the day it is in the game, with the PR.
+
+**The owner's standing rules:** finished art goes straight into the game without asking ("put stuff in the game, dont ask"); the old look
+stays a Studio option. Ground textures follow [art/GROUND-TEXTURE-METHOD.md](art/GROUND-TEXTURE-METHOD.md).
+
+**Who makes what:**
+- **RUN.world** (the art agent, the owner's RUN account): ground textures by the owner's method (RUN paints tile 1 into a game screenshot,
+  tiles 2-4 quilted); top-down pictures (C); one-view sprites (B) on magenta; people's A-pose pictures (P).
+- **Codex** (the art session): four-view sheets (A, A8). RUN's four turns did not hold one object in the pilot. The one-view-per-call
+  route (each view matched to the last) is being tried.
+
+### Ground textures (course surfaces)
+| Surface | Status |
+| --- | --- |
+| First cut | ✅ `first-cut-run` (#586); also every lawn (#591) |
+| Tee | ✅ `tee-run` (#590) |
+| Fringe | ⏳ the art agent |
+| Rough | next |
+| Fairway | Codex (18 of 24 jobs done) |
+| Golden fescue, lake, putting green v2 | ✅ (the art session, earlier) |
+| Greenkeeping conditions (section 10) | after the course surfaces |
+
+### List items done
+None of items 1-147 is in the game yet: the range and practice items still draw labelled stand-ins.
+
 ## The angles
 
 Every picture uses the same camera: **2:1 isometric**.
