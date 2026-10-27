@@ -21,6 +21,7 @@ import { type GrassCellView } from './ext/grass-management';
 import { grassOverlay } from './lawn-overlay';
 import { surfaceOfTex } from './golf/costs';
 import { CELL as COURSE_CELL } from './golf/paintcourse';
+import { ruggedKind, ruggedRing, type RuggedKind } from './rugged-edges';
 import { AREA_SHADE, EDGE_LOOKS, JOINT_SOFT, SHADE_RGB, areaLightEdge, areaShadeImages, areaShadeReach, areaShadow, bandRamp, edgeBox, edgeField, edgeImages, edgeReach, edgeRes, featherTiles, jointFeather, jointLen, jointRamp, jointShadeWeight, litBox, type EdgeImage } from './paint-edges';
 import { CH_SIZE } from './ext/course-height';
 import { CART_RIM, CART_SURFACE, cartCast, cartRim } from './cart-bevel';
@@ -38,6 +39,9 @@ const COMPOSED_BYTES = 64 << 20;
 const PAINT_CELL = 128;
 /** a painted composition of a chunk: its picture, the cells composed so far, its size in bytes */
 type PaintedEntry = { buf: Cnv; cells: Uint8Array; bytes: number };
+/** T204: a painted area's or lot lawn's drawn form (GroundPainter.ruggedOf): the patch as drawn (its outline rounded and wobbled), its kind, its
+ *  winding (1: a side's (dy, -dx) points outward) */
+type RuggedForm = { q: LotPatch; kind: RuggedKind; side: 1 | -1 };
 /** the living ground's leaf litter (T111): the chunks whose leaves a worker keeps laid out, the picture's side (px), the tiles it covers and
  *  the leaves a square metre of it holds (the stochastic layout overlaps its soft patches about two deep, so the ground shows about twice that) */
 const LEAF_CHUNKS = 4, LEAF_PX = 1024, LEAF_PERIOD = 16, LEAF_DENSITY = 2.6;
@@ -294,6 +298,20 @@ export class GroundPainter {
   private leafPic: Cnv | null = null; private leafChunks = new Map<string, Cnv>();
   /** the influence grids and masks of the last few chunks, by chunk and sources (living-ground.ts livingSignature) */
   private livingMade = new Map<string, { grid: InfluenceGrid; masks: LivingMasks | null }>();
+  /** T204 (rugged-edges.ts): each painted area's and lot lawn's drawn form, by its patch (a patch keeps its object until it changes) */
+  private ruggedForms = new WeakMap<LotPatch, RuggedForm>();
+  /** the patch as it is drawn (T204): a soft area's outline rounded and wobbled (ruggedRing; gameplay keeps the patch's own pts), a hard one's
+   *  (paving, paths, kerbs) or a small one's as it is; its kind (rugged-edges ruggedKind) and its outline's winding (the sign that turns a side's
+   *  (dy, -dx) outward) */
+  private ruggedOf(p: LotPatch): RuggedForm {
+    let f = this.ruggedForms.get(p);
+    if (!f) {
+      const kind = ruggedKind(p.tex, p.paint && p.paint.b > 0 ? p.paint.bt : undefined), pts = kind === 'hard' ? p.pts : ruggedRing(p.pts, COURSE_CELL);
+      f = { q: pts === p.pts ? p : { ...p, pts: pts as number[] }, kind, side: signedArea(pts as number[]) >= 0 ? 1 : -1 };
+      this.ruggedForms.set(p, f);
+    }
+    return f;
+  }
   /** forget the planner map's colours (the Grass setting changed: the grass is another picture) */
   resetPlanColours() { this.planCols.clear(); this.planPics.clear(); this.wallPics.clear(); }
   /** the painted looks changed (the studio saved the surfaces, or the Grass setting): the compositions made with the old ones go */
@@ -740,7 +758,7 @@ export class GroundPainter {
       ctx.setTransform(M);
     };
     // ---- 1a. the lawns (lawns.ts): the road blocks' grass in soft patches, then each lot's own lawn, under the lots' own ground
-    if (lawns.length) { this.drawLawns(ctx, lawns, L, X0, Y0, M, Minv, box); ctx.setTransform(M); this.drawManagedGrass(ctx, lawns, box, L); }
+    if (lawns.length) { this.drawLawns(ctx, lawns, L, X0, Y0, M, Minv, box); ctx.setTransform(M); this.drawManagedGrass(ctx, lawns.map(p => (p.lawn!.z >= 1 ? this.ruggedOf(p).q : p)), box, L); }
     drawLots(rest);
     // ---- 1a'. painted areas (the Paint tool) in id order: over the lot ground, under the bridges and roads
     if (paints.length) { this.drawPaints(ctx, paints, L, X0, Y0, M, Minv, box, lite); ctx.setTransform(M); }
@@ -1017,7 +1035,7 @@ export class GroundPainter {
     for (const p of lots) {
       if (p.course) { for (const l of p.course.layers) { if ((!COURSE_GRASSY.has(l.s) || tiled(l.tex)) && l.fill.length) rings(l.fill); if (l.collar && l.collar.n !== 'bank' && l.collar.fill.length) rings(l.collar.fill); } if (p.course.walls) walls.push(...p.course.walls); continue; }
       if (p.top || p.layby || p.lawn || p.tex === 'marks' || (grassyTex(p.tex) && !tiled(p.tex))) continue;
-      ex.push({ path: polyPath(p.pts), rule: 'nonzero' });
+      ex.push({ path: polyPath(p.paint ? this.ruggedOf(p).q.pts : p.pts), rule: 'nonzero' }); // (a painted area as it is drawn, T204)
     }
     const wallPath = walls.length ? wallFaces(walls) : null;
     if (wallPath) ex.push({ path: wallPath, rule: 'nonzero' });
@@ -1175,12 +1193,15 @@ export class GroundPainter {
   }
   /** the lawns of a chunk (lawns.ts): each in its texture (a preset, turned by its angle), all of the patch or through the soft-patch mask (drawBlend) */
   private drawLawns(ctx: C2D, lawns: LotPatch[], L: number, X0: number, Y0: number, M: DOMMatrix, Minv: DOMMatrix, box: BBox) {
-    for (const p of lawns) {
+    for (const p0 of lawns) {
+      // T204: a lot's lawn with its outline rounded and wobbled (its own pts still pick its look); a road block's grass lies under the
+      // sidewalks that ring it, as it is
+      const p = p0.lawn!.z >= 1 ? this.ruggedOf(p0).q : p0;
       // with the painted art on, every town lawn wears one of the painted lawns (painted-surfaces.ts lawnSlot: picked by where it lies, so
       // neighbouring lots and blocks differ, and it stays put), else its preset's own painted look, else the map grass's; with the Grass
       // setting 'photo', the preset's picture as before
       // T155: a lot's lawn wears its look state's lawn (painted-surfaces.ts lawnTexFor: built the fairway, upgraded the putting green, declined the rough)
-      const lt = this.tex.paintedOn ? lawnTexFor(p.lawn, p.pts, this.tex.surfaces) : '';
+      const lt = this.tex.paintedOn ? lawnTexFor(p.lawn, p0.pts, this.tex.surfaces) : '';
       const t = lt && this.tex.isPainted(lt) ? lt : this.tex.isPainted(p.tex) || !this.tex.isPainted('grass') ? p.tex : 'grass';
       const lw = p.lawn!, pb = quadBox(p.pts), r = [Math.max(pb[0], box[0]) - 1, Math.max(pb[1], box[1]) - 1, Math.min(pb[2], box[2]) + 1, Math.min(pb[3], box[3]) + 1];
       if (r[2] <= r[0] || r[3] <= r[1] || !isPaintPhoto(p.tex) || !this.tex.has(t)) continue;
@@ -1250,10 +1271,12 @@ export class GroundPainter {
       g.save(); g.setTransform(M); g.globalCompositeOperation = op; g.globalAlpha = 1; g.imageSmoothingEnabled = true; g.drawImage(s, x0, y0, img.W / res, img.H / res); g.restore();
     };
     let course = false;
-    for (const p of paints) {
+    for (const p0 of paints) {
       // the course chunks (all z 0, so side by side in the order) draw together, surface by surface, so a chunk's lower surface never
       // lands over its neighbour's higher one at a seam
-      if (p.course) { if (!course) { course = true; this.drawCourses(ctx, paints.filter(q => q.course).map(q => q.course!), L, X0, Y0, M, Minv, box, lite); } continue; }
+      if (p0.course) { if (!course) { course = true; this.drawCourses(ctx, paints.filter(q => q.course).map(q => q.course!), L, X0, Y0, M, Minv, box, lite); } continue; }
+      // T204: drawn with its outline rounded and wobbled (a soft area; paving and paths keep their line)
+      const p = this.ruggedOf(p0).q;
       const look = p.paint!.e ? EDGE_LOOKS[p.paint!.e] ?? null : null, sh = areaShadow(p.paint!.sh);
       if (!look && !sh) { this.drawPaint(ctx, p, L, X0, Y0, M, Minv, box, lite, 0); continue; }
       const feather = look ? featherTiles(look, L) : 0, reach = Math.max(look ? edgeReach(look, feather) : 0, areaShadeReach(sh, feather)), eb = edgeBox(quadBox(p.pts), box, reach);
