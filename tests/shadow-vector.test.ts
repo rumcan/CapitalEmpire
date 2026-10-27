@@ -169,3 +169,9 @@ test('T185 draft: a vehicle seen end on with its mirrors out at the top casts ab
   const hMax = Math.max(...bus.s!.flatMap(r => r.filter((_, i) => i % 3 === 2)));
   assert.ok(hMax <= 0.9 * 110 + 2, `stands at most about its width tall: ${hMax}`);
 });
+test('T185 draft: where the ground line steps between two columns (a wall beside a chimney or a lower porch), no lit sliver runs down the shadow', () => {
+  // a building's two halves on two bases: the left wall's foot at y 179, the right half's 15 px lower (standing in front) at y 194
+  const house = draftShadow(pic(120, 220, 60, 194, (x, y) => (x >= 10 && x < 60 && y >= 40 && y <= 179) || (x >= 60 && x < 110 && y >= 40 && y <= 194)), 'building', sun)!;
+  // the line between the two halves' shadows, from the step's foot up the shadow: covered all along
+  for (let h = 10; h <= 120; h += 10) { const p: [number, number] = [60 - 60 + h * sun.sx, (179 + 194) / 2 - 194 + 0.5 + h * sun.sy]; assert.ok(castCovers(house, p), `the step's shadow at h ${h}`); }
+});
