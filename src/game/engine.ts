@@ -81,6 +81,7 @@ import { TC, classAt, generateTerrain, makeNoise, type Noise, type Terrain } fro
 import { slopeField } from './terrain-paint';
 import { CONIFER_IDS, FOREST_CELL, FOREST_VIEW_MARGIN, forestCell, forestCellRange, type ForestTree } from './forest';
 import { CHUNK_CASTER_REACH, LIVING_PLANT_MARGIN, casterKind, casterOf, doorToward, pxAcross, CK } from './living-ground';
+import { LEAF_DENSITY_DEFAULT, clampLeafDensity } from './leaf-fall';
 import { townTreeCell } from './towntrees';
 import type { BendMode, LibItem, LineStyle, Prop, Tool } from './types';
 import { LK, LaneGraph, laneAt, laneOff } from './sim/lanes';
@@ -1447,6 +1448,8 @@ export class Game {
     this.ground.living = { on: this.groundVariety, debug: false };
     try { const v = parseFloat(localStorage.getItem('capitalempire.slopeLight') ?? ''); if (Number.isFinite(v)) this.slopeLight = clampHeightLight(v); } catch { /* light.json's */ }
     this.ground.slopeLight = this.slopeLight;
+    try { const v = parseFloat(localStorage.getItem('capitalempire.leafDensity') ?? ''); if (Number.isFinite(v)) this.leafDensity = clampLeafDensity(v); } catch { /* the default */ }
+    this.ground.leafDensity = this.leafDensity;
     try { const n = localStorage.getItem('capitalempire.night'); if (n) this.night = clampNight(JSON.parse(n)); } catch { /* the defaults */ }
     try { const d = JSON.parse(localStorage.getItem('capitalempire.townday') ?? 'null'); if (d && typeof d === 'object') this.townDay = { minutes: Math.min(30, Math.max(0.5, +d.minutes || 10)), traffic: Math.min(4, Math.max(0, Number.isFinite(+d.traffic) ? +d.traffic : 1)) }; } catch { /* the defaults */ }
     this.traffic.setTownDay(this.townDay.minutes, this.townDay.traffic);
@@ -1989,7 +1992,7 @@ export class Game {
     const has = (k: 'g' | 'm', i: number, j: number) => { const t = this.ground.tile(k, i, j); return !!t.tex && !t.stale; };
     for (const p of prebakeTargets(view, levels, Game.PREBAKE_ZOOMS, has, Game.PREBAKE_PER_FRAME)) {
       const w = p.kind === 'm' ? MID_W : CHUNK_W, h = p.kind === 'm' ? MID_H : CHUNK_H;
-      if (this.ground.livingActive && !this.casterReady(p.i * w, p.j * h, (p.i + 1) * w, (p.j + 1) * h)) continue;
+      if (this.ground.castersUsed && !this.casterReady(p.i * w, p.j * h, (p.i + 1) * w, (p.j + 1) * h)) continue;
       this.ground.need(this.ground.tile(p.kind, p.i, p.j), p.L, p.pri, now, p.artL, p.ts);
     }
   }
@@ -2015,6 +2018,13 @@ export class Game {
     this.slopeLight = clampHeightLight(v);
     try { localStorage.setItem('capitalempire.slopeLight', String(this.slopeLight)); } catch { /* storage may be unavailable */ }
     this.ground.setSlopeLight(this.slopeLight); this.emit();
+  }
+  /** T220: the fallen leaves' density, the gear menu's Fallen leaves: 0 (none: the ground as before T220) to 2, 1 the default (kept across reloads) */
+  leafDensity = LEAF_DENSITY_DEFAULT;
+  setLeafDensity(v: number) {
+    this.leafDensity = clampLeafDensity(v);
+    try { localStorage.setItem('capitalempire.leafDensity', String(this.leafDensity)); } catch { /* storage may be unavailable */ }
+    this.ground.setLeafDensity(this.leafDensity); this.emit();
   }
   /** street lamps light the road: their reflection pools are part of the ground picture */
   syncLamps() {
@@ -5789,7 +5799,7 @@ export class Game {
       let baked = true;
       for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
         const t = this.ground.tile(kind, i, j); if (!t.tex) baked = false;
-        if (!this.ground.livingActive || this.casterReady(i * CW, j * CH, (i + 1) * CW, (j + 1) * CH)) this.ground.need(t, L, dist((i + 0.5) * CW, (j + 0.5) * CH), now, artL, ts);
+        if (!this.ground.castersUsed || this.casterReady(i * CW, j * CH, (i + 1) * CW, (j + 1) * CH)) this.ground.need(t, L, dist((i + 0.5) * CW, (j + 0.5) * CH), now, artL, ts);
         const r = [i * CW, j * CH, (i + 1) * CW, (j + 1) * CH] as const;
         if (t.prev && now < t.prevUntil) { gl.drawChunk(t.prev, ...r, false, 1, FULL_UV, spec(t.prev)); if (t.tex && t.tex !== t.prev && mask) gl.drawChunk(t.tex, ...r, true, 1, FULL_UV, spec(t.tex)); continue; }
         // its picture (ground-layers.ts): while the zoom crossfade waits for the whole view, an older picture, or its new one when it has none
@@ -5826,7 +5836,7 @@ export class Game {
       const movers = tier === 'street' ? cars.concat(this.peds.n ? this.pedMovers(bx0, by0, bx1, by1) : [], this.crowdMovers(bx0, by0, bx1, by1, now / 1000), this.range.movers_(bx0, by0, bx1, by1)) : cars;
       // with the living ground the trees plant over every chunk on screen and as far out as a chunk's caster reach (a chunk bakes once its trees
       // are known: casterReady; a cell one tile short of that left an edge chunk unbaked for ever, T134)
-      if (this.ground.livingActive) { const CW2 = this.groundTier === 'm' ? MID_W : CHUNK_W, CH2 = this.groundTier === 'm' ? MID_H : CHUNK_H; this.plantForest(Math.floor(X0 / CW2) * CW2, Math.floor(Y0 / CH2) * CH2, (Math.floor(X1 / CW2) + 1) * CW2, (Math.floor(Y1 / CH2) + 1) * CH2, LIVING_PLANT_MARGIN); }
+      if (this.ground.castersUsed) { const CW2 = this.groundTier === 'm' ? MID_W : CHUNK_W, CH2 = this.groundTier === 'm' ? MID_H : CHUNK_H; this.plantForest(Math.floor(X0 / CW2) * CW2, Math.floor(Y0 / CH2) * CH2, (Math.floor(X1 / CW2) + 1) * CW2, (Math.floor(Y1 / CH2) + 1) * CH2, LIVING_PLANT_MARGIN); }
       else this.plantForest(X0, Y0, X1, Y1);
       const f = this.sprites.frame(vis, movers), shadows = this.shadowStrength > 0;
       this.streamAtlas(f.stream, f.floats, X0, Y0, X1, Y1);

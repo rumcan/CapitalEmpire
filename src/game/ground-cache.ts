@@ -15,6 +15,7 @@ import type { Waterway } from './terrain/types';
 import GroundWorker from './ground.worker?worker';
 import type { GrassCellView } from './ext/grass-management';
 import { casterChange } from './living-ground';
+import { LEAF_DENSITY_DEFAULT, clampLeafDensity } from './leaf-fall';
 import { onPaintedSurfaces, paintedSurfaces } from './painted-surfaces-live';
 import { pictureCurrent } from './ground-layers';
 
@@ -86,7 +87,7 @@ export class GroundCache {
   setGrassArt(art: GrassArt) { if (art === this.grassArt) return; this.grassArt = art; this.broadcast({ t: 'grassArt', art }); this.invalidateAll(); }
   /** a light boot's worker limits (boot.ts, T157), sent with init; null: the game's */
   limits: WorkerLimits | null = null;
-  init(t: { cls: Uint8Array; height: Float32Array; waters: Waterway[] }) { const art = { ...withPresets(withBaseGrass(GROUND_ART)), grassArt: this.grassArt }, limits = this.limits ?? undefined; this.workers.forEach((wk, i) => wk.postMessage({ t: 'init', art, terrain: t.cls, height: t.height, waters: t.waters, build: i === 0, peers: this.workers.length - 1, limits } satisfies ToWorker)); this.broadcast({ t: 'living', ...this.living }); this.broadcast({ t: 'slopeLight', strength: this.slopeLight }); this.broadcast({ t: 'specCam', on: this.specCam }); this.broadcast({ t: 'surfaces', file: paintedSurfaces() });
+  init(t: { cls: Uint8Array; height: Float32Array; waters: Waterway[] }) { const art = { ...withPresets(withBaseGrass(GROUND_ART)), grassArt: this.grassArt }, limits = this.limits ?? undefined; this.workers.forEach((wk, i) => wk.postMessage({ t: 'init', art, terrain: t.cls, height: t.height, waters: t.waters, build: i === 0, peers: this.workers.length - 1, limits } satisfies ToWorker)); this.broadcast({ t: 'living', ...this.living }); this.broadcast({ t: 'slopeLight', strength: this.slopeLight }); this.broadcast({ t: 'leaves', density: this.leafDensity }); this.broadcast({ t: 'specCam', on: this.specCam }); this.broadcast({ t: 'surfaces', file: paintedSurfaces() });
     // the studio saved the painted surfaces (the dev server hot-swaps the file): every worker takes the new looks and every chunk is baked again
     this.unsurfaces?.(); this.unsurfaces = onPaintedSurfaces(file => { this.broadcast({ t: 'surfaces', file }); this.invalidateAll(); }); }
   private unsurfaces: (() => void) | null = null;
@@ -98,6 +99,14 @@ export class GroundCache {
   living = { on: true, debug: false };
   /** the living ground is baked at all (its variety, or the debug view of its maps) */
   get livingActive() { return this.living.on || this.living.debug; }
+  /** T220: the fallen leaves' density (the gear menu's Fallen leaves, leaf-fall.ts; 0 = none, the ground exactly as before T220) */
+  leafDensity = LEAF_DENSITY_DEFAULT;
+  /** the Fallen leaves changed: every worker switches and every chunk is baked again (each keeps its old picture until then); also the dev switch
+   *  window.__game.ground.setLeafDensity(0) that compares the looks and the bake times */
+  setLeafDensity(v: number) { const d = clampLeafDensity(v); if (d === this.leafDensity) return; this.leafDensity = d; this.broadcast({ t: 'leaves', density: d }); this.invalidateAll(); }
+  /** the chunks lay something from the casters (the living ground, or the fallen leaves under the trees and along the fences and walls): a chunk
+   *  waits for the casters round it, and a caster edit re-bakes the chunks under it */
+  get castersUsed() { return this.livingActive || this.leafDensity > 0; }
   /** Ground variety or its debug view changed: every worker switches and every chunk is baked again (each keeps its old picture until then) */
   /** T204: the rugged edges on or off (the dev switch: window.__game.ground.setRugged(false) compares the looks and the bake times) */
   rugged = true;
@@ -132,7 +141,7 @@ export class GroundCache {
     for (const [k, r] of this.casterQueue) {
       const old = this.casterSent.get(k), box = casterChange(old, r ?? new Float32Array(0));
       if (r) { this.casterSent.set(k, r); if (box || !old) set.push([k, r]); } else if (old) { this.casterSent.delete(k); drop.push(k); }
-      if (box && this.livingActive) this.invalidate(box, false, 0, 'gm');
+      if (box && this.castersUsed) this.invalidate(box, false, 0, 'gm');
     }
     this.casterQueue.clear();
     const dropPrefix = this.casterPrefixes.splice(0);

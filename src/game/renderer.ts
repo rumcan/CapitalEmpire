@@ -34,6 +34,8 @@ import { coversMap } from './painted-families';
 import { bandOf, cellsIn, snappedCell, tileIndex, tileKey, tilePermutation, tileSize } from './painted-tiles';
 import { BLOCK_UNDER, WOODLAND, lawnTexFor } from './painted-surfaces';
 import { BLEND_WAVES, blendAlpha, blendNoise, trimLru } from './painted-grass-lod';
+import { LEAF_DENSITY_DEFAULT, PIC_REACH, STAMP, layLeaves, leafSignature, type LeafRoad } from './leaf-fall';
+import { leafAtlasAt, type LeafAtlas } from './leaf-atlas';
 import { LIVING_AO, LIVING_EDGE, maskContours, CasterStore, COURSE_GRASSY, COURSE_WATER, SHADOW_DIR, debugImage, grassyTex, influence, livingMasks, livingQueryBox, livingRes, livingSignature, waterTex, type Box, type InfluenceGrid, type LivingMasks, type RoadPiece, type WaterLine } from './living-ground';
 /** the bytes of painted compositions a worker keeps (a chunk's look is about 3 MB at the closest zoom; the bake in progress keeps all of its own) */
 const COMPOSED_BYTES = 64 << 20;
@@ -124,6 +126,12 @@ const LIVING_MADE = 12;
 /** T217: the chunks whose living-ground variants' regions (rugged edges, T204) a worker keeps: a few kB of path each, so many more chunks than
  *  their grids and masks (a re-bake of a chunk whose masks were let go makes them again, but not its regions' contours and paths) */
 const LIVING_EDGES = 128;
+/** T220: the fallen leaves (leaf-fall.ts): the chunks whose stamps a worker keeps as placed (a few kB each), and the share of the leaves the
+ *  traffic leaves on a road by its family (a busy road's are blown away) */
+const LEAF_MEMO = 128;
+const LEAF_ROAD_KEEP: Record<string, number> = { small: 1, cart: 0.7, course: 0.6, rural: 0.55, medium: 0.45, large: 0.3 };
+/** T220: the paved lot ground (drives, walks, car parks, yards' concrete) where only a few leaves lie */
+const LEAF_HARD = new Set(['paving', 'pad', 'concrete', 'asphalt', 'lotAsphalt', 'slabs', 'asphaltDark', 'asphaltWorn', 'asphaltPatched', 'chipSeal', 'concreteStained', 'concreteCracked', 'concreteOld', 'concreteWeathered', 'gravel', 'roadgravel', 'spectatorPath']);
 /** T217: the sets of bank and rock-face runs whose paths a worker keeps (courseBanks; a few hundred kB at most each) */
 const BANK_BUILT = 32;
 /** the lush variant's tint (multiplied over the grass laid over itself: deeper and greener, never a flat colour), and the warm light the derived
@@ -410,6 +418,12 @@ export class GroundPainter {
   /** the reflection mask of the bake just done (the worker transfers it), or null when it has none */
   takeSpecMask(): OffscreenCanvas | null { const m = this.specMask; this.specMask = null; return m; }
   private leafPic: Cnv | null = null; private leafChunks = new Map<string, Cnv>();
+  /** T220: the fallen leaves' density (the gear menu's Fallen leaves, GroundCache.setLeafDensity; 0: none, the ground exactly as before T220) */
+  leafDensity = LEAF_DENSITY_DEFAULT;
+  /** T220: the fallen leaves' atlases by level, and each chunk's stamps as placed, by its tile box, with the key of what they came from (T217's
+   *  pattern: a re-bake draws them without placing them again); the patches' ids for that key, and the terrain's version */
+  private leafAtlases = new Map<number, LeafAtlas>(); private leafMemo = new Map<string, { sig: string; stamps: Float32Array }>();
+  private patchIds = new WeakMap<object, number>(); private patchSeq = 0; private terrainVer = 0;
   /** the influence grids and masks of the last few chunks, by chunk and sources (living-ground.ts livingSignature) */
   private livingMade = new Map<string, LivingMade>();
   /** T204: the living-ground variants' regions by chunk and sources (livingMade's key; T217: kept for more chunks than their masks) */
@@ -605,7 +619,7 @@ export class GroundPainter {
   /** the screen textures laid on the ground (isoImage), per source picture */
   private isoPics = new WeakMap<Cnv, Cnv>();
   /** take a new terrain: classes, height samples and waterways */
-  setTerrain(cls: Uint8Array, height: Float32Array, waters: Waterway[]) { this.terrain.set(cls); this.shade = shadeField(height); this.slope = slopeField(height); this.waters = waters.map(w => ({ w, box: waterBox(w.pts, 4) })); }
+  setTerrain(cls: Uint8Array, height: Float32Array, waters: Waterway[]) { this.terrainVer++; this.terrain.set(cls); this.shade = shadeField(height); this.slope = slopeField(height); this.waters = waters.map(w => ({ w, box: waterBox(w.pts, 4) })); }
   /** a sub-rect of the course height from the main thread (samples i0.., j0.., w by h, row-major): copied in (the chunks it lights re-bake) */
   setCourse(i0: number, j0: number, w: number, h: number, data: Float32Array) {
     for (let j = 0; j < h; j++) this.courseH.set(data.subarray(j * w, (j + 1) * w), (j0 + j) * CH_SIZE + i0);
@@ -2736,6 +2750,54 @@ export class GroundPainter {
     ctx.globalAlpha = 1;
   }
 
+  /** T220: the fallen leaves over a chunk (leaf-fall.ts): its stamps, each one picture of the level's atlas copied 1:1 onto whole pixels (one
+   *  drawImage a stamp, no transform: the pictures hold their leaves' turns and shadows) */
+  private drawLeafFall(g: C2D, box: BBox, L: number, M: DOMMatrix, W: number, H: number) {
+    const st = this.leafStamps(box, -M.e / L, -M.f / L); if (!st.length) return;
+    const A = this.leafAtlas(L), rc = A.rects, img = A.cv, a = M.a, b = M.b, c = M.c, d = M.d, e = M.e, f = M.f;
+    g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
+    for (let k = 0; k < st.length; k += STAMP) {
+      const x = st[k]!, y = st[k + 1]!, p = st[k + 2]! * 6, sw = rc[p + 2]!, sh = rc[p + 3]!;
+      const dx = Math.round(a * x + c * y + e - rc[p + 4]!), dy = Math.round(b * x + d * y + f - rc[p + 5]!);
+      if (dx > W || dy > H || dx + sw < 0 || dy + sh < 0) continue;
+      g.drawImage(img, rc[p]!, rc[p + 1]!, sw, sh, dx, dy, sw, sh);
+    }
+  }
+  /** T220: a chunk's fallen leaves as placed (leaf-fall.ts layLeaves) from the casters near it (not the forest's), its yards (the house lots'
+   *  own lawns), its paved lot ground and its roads; where none lie: water and woods, the course and the painted areas. Kept per chunk while
+   *  what they came from is the same. X0, Y0: the chunk's corner (world px; a chunk lays only the stamps that reach its picture) */
+  private leafStamps(box: BBox, X0: number, Y0: number): Float32Array {
+    const casters = this.casters.query([box[0] - 12, box[1] - 12, box[2] + 12, box[3] + 12], 'f:'), pid = (o: object) => { let v = this.patchIds.get(o); if (!v) this.patchIds.set(o, (v = ++this.patchSeq)); return v; };
+    const yards: number[][] = [], hard: number[][] = [], courses: CoursePatch[] = [], off: { pts: number[]; b: BBox }[] = [], ids: number[] = [];
+    for (const p of this.lotsIn([box[0] - 3, box[1] - 3, box[2] + 3, box[3] + 3])) {
+      if (p.top || p.layby || p.tex === 'marks') continue;
+      if (p.course) { courses.push(p.course); ids.push(pid(p)); }
+      else if (p.paint || waterTex(p.tex)) { off.push({ pts: p.pts, b: quadBox(p.pts) }); ids.push(pid(p)); }
+      else if (p.lawn) { if (p.lawn.z >= 1 && p.pts.length >= 8) { yards.push(p.pts); ids.push(pid(p)); } }
+      else if (LEAF_HARD.has(p.tex)) { hard.push(p.pts); ids.push(pid(p)); }
+    }
+    const roads: LeafRoad[] = [], cx = (box[0] + box[2]) / 2, cy = (box[1] + box[3]) / 2, rr = Math.max(box[2] - box[0], box[3] - box[1]) / 2 + 4;
+    for (const s of this.net.segsNear({ x: cx, y: cy }, rr)) if (s.kind !== SK.TUNNEL) roads.push({ ax: s.a.x, ay: s.a.y, bx: s.b.x, by: s.b.y, h: s.cls.h, walk: s.cls.walk, keep: LEAF_ROAD_KEEP[s.cls.family] ?? 0.6 });
+    const key = `${box[0]},${box[1]},${box[2]},${box[3]}`, sig = `${leafSignature({ casters, roads }, this.leafDensity)}:${this.terrainVer}:${ids.join(',')}`, have = this.leafMemo.get(key);
+    if (have && have.sig === sig) { this.leafMemo.delete(key); this.leafMemo.set(key, have); return have.stamps; }
+    const blocked = (x: number, y: number) => {
+      if (x < 0 || y < 0 || x >= MAP || y >= MAP || this.terrain[Math.floor(y) * MAP + Math.floor(x)]! > TC.PATCH) return true;
+      for (const c of courses) if (courseCovers(c, x, y)) return true;
+      for (const q of off) if (x >= q.b[0] && x <= q.b[2] && y >= q.b[1] && y <= q.b[3] && inPoly(q.pts, x, y)) return true;
+      return false;
+    };
+    const mx = (PIC_REACH + 1.5) * HW * Math.SQRT2, my = (PIC_REACH + 1.5) * HH * Math.SQRT2;
+    const within = (x: number, y: number) => { const wx = (x - y) * HW, wy = (x + y) * HH; return wx >= X0 - mx && wx <= X0 + CHUNK_W + mx && wy >= Y0 - my && wy <= Y0 + CHUNK_H + my; };
+    const stamps = layLeaves(box as Box, { casters, yards, hard, roads, blocked, within, cover: (x, y) => this.net.occAt(x, y) }, this.leafDensity);
+    this.leafMemo.set(key, { sig, stamps }); trimLru(this.leafMemo, new Set([key]), LEAF_MEMO);
+    return stamps;
+  }
+  /** T220: the fallen leaves' atlas at level L (leaf-atlas.ts), drawn once per level from the leaf sprites */
+  private leafAtlas(L: number): LeafAtlas {
+    let a = this.leafAtlases.get(L);
+    if (!a) { const tex = this.tex; a = leafAtlasAt(L, tex.leaves, (r, sizeM) => tex.leafRect(tex.pickLeaf(r, sizeM))); this.leafAtlases.set(L, a); }
+    return a;
+  }
   private drawLitter(ctx: C2D, net: FxView, L: number, M: DOMMatrix, box: BBox, W: number, H: number) {
     const [tx0, ty0, tx1, ty1] = box, tex = this.tex, atlas = tex.leaves, occAt = (x: number, y: number) => this.net.occAt(x, y);
     const lb = this.buffer('leaves', W, H), g = ctx2d(lb); g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high';
@@ -2764,6 +2826,8 @@ export class GroundPainter {
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 0.22; ctx.drawImage(sh, 0, 0); ctx.globalAlpha = 1;
     g.globalAlpha = 1;
     for (const l of inView) draw(l.x, l.y, l.ang, l.s, l.idx, 1);
+    // T220: the fallen leaves, over the litter and under the tufts and the lamp pools' light
+    if (this.leafDensity > 0) this.drawLeafFall(g, box, L, M, W, H);
     // tufts over the curb's grass edge
     if (L >= 0.15) {
       g.setTransform(M); g.lineCap = 'round';
