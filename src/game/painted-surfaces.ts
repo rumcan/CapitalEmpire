@@ -12,7 +12,7 @@ import type { PresetState } from './lots/presets';
 export const WOODLAND = 'woodland';
 /** T194: what a town block's grass lies over where its soft patches leave the block (the rough's texture: the rough's painted look, the owner's
  *  rough paintings), never the map's fescue */
-export const BLOCK_UNDER = 'wasteSand'; // the owner, 2026-10-27: "change the block grass to desert": blocks lie over the Waste area sand (the desert) now, was the rough
+export const BLOCK_UNDER = 'golfFescue'; // the owner, 2026-10-27: dirt blends only with fescue; blocks are a browner fescue (was the rough, then the desert)
 export type SurfaceGroup = 'Golf' | 'Map' | 'Town' | 'Living ground' | 'Course walls';
 /** a surface the studio lists by its plain name: the textures it stands for (a photo texture id, or a preset's golf surface), its group and the
  *  families that fit it (the picker shows those first) */
