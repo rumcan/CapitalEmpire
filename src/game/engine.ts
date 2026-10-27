@@ -627,7 +627,7 @@ export class Game {
   private dayBook: DayBook | null = null; private dayPlay: { view: DayView; day: number; key: string } | null = null;
   private dayCourse: { view: CourseView; key: string; at: number } | null = null; clubCardOpen = false;
   /** T208: the bench's busy day (?golfers=N: this many visitors in place of dailyGolfers; dev and bench only) */
-  private dayBusy: number | undefined;
+  private dayBusy: number | undefined; private devSeed = 0; private dayOff = false;
   /** the game hour of the tournament day the play last saved at (T209: the day saves itself each game hour, so a reload resumes near where it was); -1 none */
   private playSavedHr = -1;
   /** T209: a resumed tournament day waits, the sim paused at the save's moment, until its play is built again (the owner's shot may open at once): the
@@ -1491,7 +1491,7 @@ export class Game {
     // the dev sandbox options (see sandboxGrow): the URL, else the defaults of the dev server or the build
     const q = new URLSearchParams(location.search), dev = import.meta.env.DEV;
     this.sandboxGrow = Number(q.get('grow') ?? 1) || 1; // the game's speed everywhere (the owner, 2026-10-27: the dev server's default of 20 grew the town too fast); ?grow=N still speeds it for tests
-    this.startMode = q.get('start') === 'town' ? 'town' : q.get('start') === 'valley' ? 'valley' : 'range'; { const gb = Number(q.get('golfers')); if (import.meta.env.DEV && q.has('golfers') && gb >= 0) this.dayBusy = gb; } // T208: ?golfers=N, a busy everyday day (dev, the bench)
+    this.startMode = q.get('start') === 'town' ? 'town' : q.get('start') === 'valley' ? 'valley' : 'range'; { const gb = Number(q.get('golfers')); if (import.meta.env.DEV && q.has('golfers') && gb >= 0) this.dayBusy = gb; const sd = Number(q.get('seed')); if (import.meta.env.DEV && sd > 0) this.devSeed = Math.floor(sd); if (import.meta.env.DEV && q.get('everyday') === '0') this.dayOff = true; } // T208: ?golfers=N, a busy everyday day; ?seed=N, the old start's map; ?everyday=0, no everyday golf (dev, the bench's before and after)
     this.stampOn = q.has('stamp') ? q.get('stamp') === '1' : !dev;
     this.sandboxMoney = q.has('money') ? q.get('money') === '1' : dev;
     // every road class, junction (the roundabout without its card), tunnel and signal tier open from the start (?unlock=0 plays the unlocks)
@@ -1671,7 +1671,7 @@ export class Game {
    *  with nothing laid, when no seed fits (the caller then makes a classic game). */
   private newGolfGame(): boolean {
     for (let k = 0; k < 8; k++) {
-      const seed = newSeed();
+      const seed = k === 0 && this.devSeed ? this.devSeed : newSeed(); // (T208: ?seed=N, the bench's same map before and after)
       this.genTerrain(seed);
       const s = planGolfGame(this.terrain, seed);
       if (!s) continue;
@@ -4655,7 +4655,7 @@ export class Game {
   /** the golf balls of the day (docs/GOLF-PLAY.md P2) at the street tier: each in the air raised by its height (1 m = HH * ze px, half a tile's screen
    *  height) over a soft shadow on the ground, or at rest; a white ball with a dark rim. Culled to the view */
   private drawBalls(ctx: CanvasRenderingContext2D) {
-    const pl = this.play, dv = this.dayPlay?.view; if ((!pl && !dv) || this.cam.z < DISTRICT_Z) return;
+    const pl = this.play, dv = this.dayOff ? undefined : this.dayPlay?.view; if ((!pl && !dv) || this.cam.z < DISTRICT_Z) return;
     // (T208: the everyday golfers' balls too, from the playback of the groups on screen)
     const B = pl && dv ? pl.pv.balls.concat(dv.balls) : pl ? pl.pv.balls : dv!.balls, dpr = this.dpr, ze = this.cam.z * dpr, cw = this.cw, ch = this.ch, r = Math.max(1.5, 0.06 * HH * 2 * ze);
     ctx.lineWidth = dpr; ctx.strokeStyle = 'rgba(2,6,23,0.9)';
@@ -5634,7 +5634,7 @@ export class Game {
   /** T208: the everyday golfers in the tile box as movers, from mover m on (as playMovers), after the day's playback is updated for the box; the cars go
    *  to dayCarOut. Returns the next mover index */
   private dayMovers(out: Drawable[], m: number, X0: number, Y0: number, X1: number, Y1: number, now: number): number {
-    const d = this.dayPlay; this.dayCarOut.length = 0; if (!d) return m;
+    const d = this.dayPlay; this.dayCarOut.length = 0; if (!d || this.dayOff) return m; // (?everyday=0: the bench's same scene with none drawn)
     const v = d.view; v.update(this.dayMinute, now, X0, Y0, X1, Y1);
     const t = this.crowdGolfers[1] ?? (this.crowdGolfers[1] = { x: 0, y: 0, group: 1, person: 0, row: 0, frame: 0 });
     for (const p of v.people) { t.x = p.x; t.y = p.y; t.person = this.dayArt[p.golfer] ?? 0; t.row = p.row; t.frame = p.frame; crowdDrawable(out, m++, t); }
