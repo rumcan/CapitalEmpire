@@ -9,6 +9,7 @@ import { TC, sampleField } from './terrain/types';
 import { LotMap, type Lot } from './lots/lots';
 import { GROWTH_OPTIONS, LU, LV, Town, builtLots, type LotTuple, type TownCtx, type TownEvent } from './lots/town';
 import { needsLand, planExtension, reachableFrom, reachableSegs, seededRnd, type RoadPlanCtx } from './lots/roads';
+import { GROWN_IND_FROM, grownIndustrialRect } from './lots/districts';
 import { LK, LaneGraph, MPT, laneAt, type DSeg, type Lane } from './sim/lanes';
 import { DT, Sim, type CarInfo, type ParkState, type Sink } from './sim/sim';
 import { bottlenecks, type Report } from './sim/bottlenecks';
@@ -95,6 +96,8 @@ const CASH_MAX = 256;
 const TOURIST_PER_LEVEL = 300;
 /** the reach, tiles, of the highway entry's kerb (and each map exit's, T092): the road within this far of the entry brings the tourists in */
 const ENTRY_REACH = 12;
+/** T091: a range start's town roads keep this much room from the golf land (tiles): a leg whose midpoint is nearer scores this much more (plan P22 2.3.5) */
+const GOLF_ROOM = 40;
 
 /** the distance (tiles, capped) to the nearest WATER on the 4-tile cells (a cell is wet if one of its tiles is): a two-pass chamfer, in tiles */
 function waterField(terr: Uint8Array): Float32Array {
@@ -307,12 +310,12 @@ export class City {
   /** the toll gates as the player placed them (setTolls' defs, the full list): their plazas are no-go ground for the town's roads (with towns) */
   private tollDefs: TollDef[] = [];
   /** the no-go zones of the town's roads (with towns, see RoadPlanCtx.blocked): the stadium site padded by 6 tiles, the other businesses padded by 2,
-   *  a car park padded by 4, within 12 tiles of a toll plaza seg, within 6 tiles of a bus stop point; in a range start (plan P22) the golf land
-   *  padded by 6 too (the parcel lies across the road from the town's seed; T091 extends this to every golf game) */
+   *  a car park padded by 4, within 12 tiles of a toll plaza seg, within 6 tiles of a bus stop point; in every golf game the golf land padded by 6
+   *  too (plan P22 2.3.5, T091: the town's roads crossed the course before) */
   private blocked = (x: number, y: number): boolean => {
     const s = this.site;
     if (s && x > s.x - 6 && x < s.x + s.w + 6 && y > s.y - 6 && y < s.y + s.h + 6) return true;
-    if (this.golf?.start === 'range') for (const [gx, gy, gw, gh] of this.golfLand) if (x > gx - 6 && x < gx + gw + 6 && y > gy - 6 && y < gy + gh + 6) return true;
+    if (this.golf) for (const [gx, gy, gw, gh] of this.golfLand) if (x > gx - 6 && x < gx + gw + 6 && y > gy - 6 && y < gy + gh + 6) return true;
     for (const b of this.businesses) if (b.type !== 'stadium' && x > b.x - 2 && x < b.x + b.w + 2 && y > b.y - 2 && y < b.y + b.h + 2) return true;
     for (const p of this.parkDefs) { const b = parkBox(p); if (x > b.x - 4 && x < b.x + b.w + 4 && y > b.y - 4 && y < b.y + b.h + 4) return true; }
     for (const r of this.rowDefs) { const b = rowBox(r); if (x > b.x - 2 && x < b.x + b.w + 2 && y > b.y - 2 && y < b.y + b.h + 2) return true; }
@@ -479,6 +482,8 @@ export class City {
     // state has none of these keys, exactly as before
     this.golf = g ? { tier: g.tier, rep: g.rep } : null; this.round.golf = !!g; this.golfLand = g?.land ?? [];
     if (this.golf && g?.start === 'range') { this.golf.start = 'range'; if (g.exits) this.golf.exits = g.exits; if (g.invited) this.golf.invited = g.invited; }
+    // a range start's grown town (T091): its industrial district toward the nearer exit, opening at GROWN_IND_FROM built lots
+    this.town.grownInd = this.golf?.start === 'range' && this.centres.length ? { rect: this.grownIndustrial(), from: GROWN_IND_FROM } : null;
     // the town's lots inside the course go now (and every game hour: a loaded town's lots may come after this): the events to post
     const ev: TownEvent[] = []; this.clearCourse(ev);
     return ev;
@@ -1472,6 +1477,9 @@ export class City {
   /** a scratch lane point (the stops' points, see busStopAt) */
   private stopPt = { x: 0, y: 0, hx: 0, hy: 0 };
   /** the centre of town k: the mean of its BUILT lots (the town's centre while it has none) */
+  /** a range start's planner centre (plan P22 2.3.2, T091): the midpoint of the town's seed and its built lots' mean, so its heart stays at the
+   *  range (the seed itself while nothing is built) */
+  private anchoredCentre(k: number): Pt { const s = this.centres[k]!, m = this.townCentre(k); return { x: (s.x + m.x) / 2, y: (s.y + m.y) / 2 }; }
   private townCentre(k: number): Pt {
     let sx = 0, sy = 0, m = 0;
     for (const s of this.town.states.values()) if (s.level >= LV.BUILT && this.town.townOf(s.key) === k) { const l = this.lots.lots.get(s.key); if (l) { sx += l.c.x; sy += l.c.y; m++; } }
@@ -1623,6 +1631,14 @@ export class City {
   /** the map exits the tourists come in by (planVisits, T092; plan P22 2.2.2): a range start's two (golf.exits, its county road's ends), any
    *  other game's one highway entry (a classic game and an old golf start keep exits = [entry]) */
   private visitExits(): Pt[] { const ex = this.golf?.start === 'range' ? this.golf.exits : undefined; return ex?.length ? ex : [this.ctx.entry]; }
+  /** a range start's industrial district (districts.ts grownIndustrialRect): from the town's seed toward the nearer map exit along the road's axis */
+  private grownIndustrial(): [number, number, number, number] | null {
+    const seed = this.centres[0], ex = this.golf?.exits ?? [];
+    if (!seed || !ex.length) return null;
+    const near = ex.reduce((a, b) => (Math.hypot(b.x - seed.x, b.y - seed.y) < Math.hypot(a.x - seed.x, a.y - seed.y) ? b : a)), dx = near.x - seed.x, dy = near.y - seed.y;
+    const dir = Math.abs(dx) >= Math.abs(dy) ? { x: Math.sign(dx) || 1, y: 0 } : { x: 0, y: Math.sign(dy) || 1 };
+    return grownIndustrialRect(seed, dir, this.golfLand);
+  }
   /** the highway entry (tiles) and whether a road is within ENTRY_REACH tiles of it (open: the tourists come in from it, see planVisits) */
   touristEntry(): { x: number; y: number; open: boolean } { return { x: this.ctx.entry.x, y: this.ctx.entry.y, open: this.kerbAt(this.ctx.entry, ENTRY_REACH) !== null }; }
 
@@ -1785,11 +1801,16 @@ export class City {
     if (h === this.planHour) return null;
     this.planHour = h;
     if (this.pendingGrow && this.sim.clock - this.growAt < GAME_HOUR / this.growSpeed) return null;
-    const K = this.centres.length, k = K ? this.planHour % K : 0;
-    if (K && this.sim.clock - this.growAt < GRAVEL_EVERY_H * GAME_HOUR / this.growSpeed) return null;
+    const K = this.centres.length, k = K ? this.planHour % K : 0, grown = this.golf?.start === 'range';
+    // with towns a leg every GRAVEL_EVERY_H game hours; a range start's grown town a leg every game hour (plan P22 2.3.3, T091)
+    if (K && !grown && this.sim.clock - this.growAt < GRAVEL_EVERY_H * GAME_HOUR / this.growSpeed) return null;
     const c: RoadPlanCtx = K
-      ? { net: this.net, lots: this.lots, town: this.town, cls, entry: this.centres[k]!, rnd: this.planRnd, centre: this.townCentre(k), built: this.town.builtK[k], blocked: this.blocked, towns: true }
+      ? { net: this.net, lots: this.lots, town: this.town, cls, entry: this.centres[k]!, rnd: this.planRnd, centre: grown ? this.anchoredCentre(k) : this.townCentre(k), built: this.town.builtK[k], blocked: this.blocked, towns: true }
       : { net: this.net, lots: this.lots, town: this.town, cls, entry: this.ctx.entry, rnd: this.planRnd };
+    // every golf game counts only the lots that can build (not on golf land: they stalled the growth); a range start's legs keep their room from
+    // the golf land (a leg's midpoint within GOLF_ROOM tiles of it scores GOLF_ROOM more: the town grows away from the land the player may buy)
+    if (this.golf && this.golfLand.length) c.canBuild = l => !this.reserved(l);
+    if (grown && this.golfLand.length) c.penalty = mid => (this.golfLand.some(([gx, gy, gw, gh]) => Math.hypot(Math.max(gx - mid.x, 0, mid.x - gx - gw), Math.max(gy - mid.y, 0, mid.y - gy - gh)) < GOLF_ROOM) ? GOLF_ROOM : 0);
     if (!needsLand(c)) { this.growStats.enough++; return null; }
     const legs = planExtension(c);
     if (!legs) { this.growStats.none++; return null; }
