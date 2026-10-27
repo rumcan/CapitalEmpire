@@ -1,0 +1,1527 @@
+{
+ "notes": [
+  "T219 (P27): the iconic places, one whole preset each (the lot presets format, lots/presets.ts: x along the street, y away from it, tiles of 2 m). Edit freely: a bad place is dropped, never the game."
+ ],
+ "places": [
+  {
+   "id": "drive-in",
+   "name": "{town} Drive-In",
+   "kind": "Drive-in theatre",
+   "alone": "The Drive-In",
+   "pop": 1500,
+   "standIns": {
+    "golf:leaderboard": "Drive-in screen",
+    "ce:parking-kiosk": "Drive-in ticket booth",
+    "world:speaker_post": "Drive-in speaker post"
+   },
+   "preset": {
+    "id": "place:drive-in",
+    "use": "civic",
+    "state": "built",
+    "w": 30,
+    "d": 20,
+    "road": 0,
+    "whole": true,
+    "curated": true,
+    "props": [
+     {
+      "id": "world:drivein_marquee",
+      "x": 8.2,
+      "y": 1.3,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "ce:parking-kiosk",
+      "x": 6.2,
+      "y": 3.6,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "golf:leaderboard",
+      "x": 15,
+      "y": 17.8,
+      "scale": 2.4,
+      "view": 0
+     },
+     {
+      "id": "world:snack_bar",
+      "x": 15,
+      "y": 5,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "world:speaker_post",
+      "x": 3.65,
+      "y": 7.2,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "cars:burgundy-wagon:NE",
+      "x": 4.7,
+      "y": 7.9,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "cars:navy-wood-panel-wagon:NE",
+      "x": 6.8,
+      "y": 7.9,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "world:speaker_post",
+      "x": 7.85,
+      "y": 7.2,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "cars:navy-wood-panel-wagon:NE",
+      "x": 11,
+      "y": 7.9,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "cars:navy-wood-panel-wagon:NE",
+      "x": 19.4,
+      "y": 7.9,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "world:speaker_post",
+      "x": 20.45,
+      "y": 7.2,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "cars:burgundy-wagon:NE",
+      "x": 21.5,
+      "y": 7.9,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "cars:navy-wood-panel-wagon:NE",
+      "x": 23.6,
+      "y": 7.9,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "world:speaker_post",
+      "x": 24.65,
+      "y": 7.2,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "cars:burgundy-wagon:NE",
+      "x": 25.7,
+      "y": 7.9,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "cars:burgundy-wagon:NE",
+      "x": 3.2,
+      "y": 10.5,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "world:speaker_post",
+      "x": 4.25,
+      "y": 9.8,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "cars:navy-wood-panel-wagon:NE",
+      "x": 5.3,
+      "y": 10.5,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "cars:burgundy-wagon:NE",
+      "x": 7.4,
+      "y": 10.5,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "world:speaker_post",
+      "x": 8.45,
+      "y": 9.8,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "cars:navy-wood-panel-wagon:NE",
+      "x": 9.5,
+      "y": 10.5,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "cars:burgundy-wagon:NE",
+      "x": 11.6,
+      "y": 10.5,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "world:speaker_post",
+      "x": 12.65,
+      "y": 9.8,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "cars:navy-wood-panel-wagon:NE",
+      "x": 13.7,
+      "y": 10.5,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "cars:burgundy-wagon:NE",
+      "x": 15.8,
+      "y": 10.5,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "world:speaker_post",
+      "x": 16.85,
+      "y": 9.8,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "cars:navy-wood-panel-wagon:NE",
+      "x": 17.9,
+      "y": 10.5,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "world:speaker_post",
+      "x": 21.05,
+      "y": 9.8,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "cars:navy-wood-panel-wagon:NE",
+      "x": 22.1,
+      "y": 10.5,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "cars:burgundy-wagon:NE",
+      "x": 24.2,
+      "y": 10.5,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "world:speaker_post",
+      "x": 25.25,
+      "y": 9.8,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "cars:navy-wood-panel-wagon:NE",
+      "x": 26.3,
+      "y": 10.5,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "cars:navy-wood-panel-wagon:NE",
+      "x": 3.8,
+      "y": 13.1,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "world:speaker_post",
+      "x": 4.85,
+      "y": 12.4,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "cars:navy-wood-panel-wagon:NE",
+      "x": 8,
+      "y": 13.1,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "world:speaker_post",
+      "x": 9.05,
+      "y": 12.4,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "cars:burgundy-wagon:NE",
+      "x": 10.1,
+      "y": 13.1,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "cars:navy-wood-panel-wagon:NE",
+      "x": 12.2,
+      "y": 13.1,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "world:speaker_post",
+      "x": 13.25,
+      "y": 12.4,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "cars:burgundy-wagon:NE",
+      "x": 14.3,
+      "y": 13.1,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "cars:navy-wood-panel-wagon:NE",
+      "x": 16.4,
+      "y": 13.1,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "world:speaker_post",
+      "x": 17.45,
+      "y": 12.4,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "cars:burgundy-wagon:NE",
+      "x": 18.5,
+      "y": 13.1,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "cars:navy-wood-panel-wagon:NE",
+      "x": 20.6,
+      "y": 13.1,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "world:speaker_post",
+      "x": 21.65,
+      "y": 12.4,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "cars:burgundy-wagon:NE",
+      "x": 22.7,
+      "y": 13.1,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "cars:navy-wood-panel-wagon:NE",
+      "x": 24.8,
+      "y": 13.1,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "expansion:fence-privacy-y",
+      "x": 0.3,
+      "y": 4.575,
+      "scale": 0.949,
+      "view": 0
+     },
+     {
+      "id": "expansion:fence-privacy-y",
+      "x": 0.3,
+      "y": 7.325,
+      "scale": 0.949,
+      "view": 0
+     },
+     {
+      "id": "expansion:fence-privacy-y",
+      "x": 0.3,
+      "y": 10.075,
+      "scale": 0.949,
+      "view": 0
+     },
+     {
+      "id": "expansion:fence-privacy-y",
+      "x": 0.3,
+      "y": 12.825,
+      "scale": 0.949,
+      "view": 0
+     },
+     {
+      "id": "expansion:fence-privacy-y",
+      "x": 0.3,
+      "y": 15.575,
+      "scale": 0.949,
+      "view": 0
+     },
+     {
+      "id": "expansion:fence-privacy-y",
+      "x": 0.3,
+      "y": 18.325,
+      "scale": 0.949,
+      "view": 0
+     },
+     {
+      "id": "expansion:fence-privacy-y",
+      "x": 29.7,
+      "y": 4.575,
+      "scale": 0.949,
+      "view": 0
+     },
+     {
+      "id": "expansion:fence-privacy-y",
+      "x": 29.7,
+      "y": 7.325,
+      "scale": 0.949,
+      "view": 0
+     },
+     {
+      "id": "expansion:fence-privacy-y",
+      "x": 29.7,
+      "y": 10.075,
+      "scale": 0.949,
+      "view": 0
+     },
+     {
+      "id": "expansion:fence-privacy-y",
+      "x": 29.7,
+      "y": 12.825,
+      "scale": 0.949,
+      "view": 0
+     },
+     {
+      "id": "expansion:fence-privacy-y",
+      "x": 29.7,
+      "y": 15.575,
+      "scale": 0.949,
+      "view": 0
+     },
+     {
+      "id": "expansion:fence-privacy-y",
+      "x": 29.7,
+      "y": 18.325,
+      "scale": 0.949,
+      "view": 0
+     },
+     {
+      "id": "expansion:fence-privacy-x",
+      "x": 1.77,
+      "y": 19.7,
+      "scale": 0.977,
+      "view": 0
+     },
+     {
+      "id": "expansion:fence-privacy-x",
+      "x": 4.71,
+      "y": 19.7,
+      "scale": 0.977,
+      "view": 0
+     },
+     {
+      "id": "expansion:fence-privacy-x",
+      "x": 7.65,
+      "y": 19.7,
+      "scale": 0.977,
+      "view": 0
+     },
+     {
+      "id": "expansion:fence-privacy-x",
+      "x": 10.59,
+      "y": 19.7,
+      "scale": 0.977,
+      "view": 0
+     },
+     {
+      "id": "expansion:fence-privacy-x",
+      "x": 13.53,
+      "y": 19.7,
+      "scale": 0.977,
+      "view": 0
+     },
+     {
+      "id": "expansion:fence-privacy-x",
+      "x": 16.47,
+      "y": 19.7,
+      "scale": 0.977,
+      "view": 0
+     },
+     {
+      "id": "expansion:fence-privacy-x",
+      "x": 19.41,
+      "y": 19.7,
+      "scale": 0.977,
+      "view": 0
+     },
+     {
+      "id": "expansion:fence-privacy-x",
+      "x": 22.35,
+      "y": 19.7,
+      "scale": 0.977,
+      "view": 0
+     },
+     {
+      "id": "expansion:fence-privacy-x",
+      "x": 25.29,
+      "y": 19.7,
+      "scale": 0.977,
+      "view": 0
+     },
+     {
+      "id": "expansion:fence-privacy-x",
+      "x": 28.23,
+      "y": 19.7,
+      "scale": 0.977,
+      "view": 0
+     },
+     {
+      "id": "expansion:fence-privacy-x",
+      "x": 12.1,
+      "y": 3.2,
+      "scale": 1.064,
+      "view": 0
+     },
+     {
+      "id": "expansion:fence-privacy-x",
+      "x": 15.3,
+      "y": 3.2,
+      "scale": 1.064,
+      "view": 0
+     },
+     {
+      "id": "expansion:fence-privacy-x",
+      "x": 18.5,
+      "y": 3.2,
+      "scale": 1.064,
+      "view": 0
+     },
+     {
+      "id": "expansion:fence-privacy-x",
+      "x": 21.7,
+      "y": 3.2,
+      "scale": 1.064,
+      "view": 0
+     },
+     {
+      "id": "expansion:fence-privacy-x",
+      "x": 24.9,
+      "y": 3.2,
+      "scale": 1.064,
+      "view": 0
+     },
+     {
+      "id": "expansion:fence-privacy-x",
+      "x": 28.1,
+      "y": 3.2,
+      "scale": 1.064,
+      "view": 0
+     },
+     {
+      "id": "world:streetlamp",
+      "x": 4,
+      "y": 11,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "world:streetlamp",
+      "x": 26,
+      "y": 11,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "capital:tree-oak-moderate",
+      "x": 27.8,
+      "y": 1.6,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "capital:tree-maple-open",
+      "x": 13.5,
+      "y": 1.6,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "world:bush_1",
+      "x": 11.2,
+      "y": 1.8,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "world:bush_1",
+      "x": 25,
+      "y": 1.9,
+      "scale": 1,
+      "view": 0
+     }
+    ],
+    "patches": [
+     {
+      "kind": "yard",
+      "tex": "preset:lawns",
+      "pts": [
+       0,
+       0,
+       30,
+       0,
+       30,
+       20,
+       0,
+       20
+      ]
+     },
+     {
+      "kind": "lot",
+      "tex": "gravel",
+      "pts": [
+       0.6,
+       3.2,
+       29.4,
+       3.2,
+       29.4,
+       17.8,
+       0.6,
+       17.8
+      ]
+     },
+     {
+      "kind": "drive",
+      "tex": "roadgravel",
+      "pts": [
+       2.2,
+       0,
+       5.4,
+       0,
+       5.4,
+       3.2,
+       2.2,
+       3.2
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "high-school",
+   "name": "{town} High",
+   "kind": "High school",
+   "alone": "The High School",
+   "pop": 3000,
+   "standIns": {
+    "town:utility_pole": "Flag pole",
+    "world:goalposts": "Football goalposts",
+    "world:bleachers": "Bleachers"
+   },
+   "preset": {
+    "id": "place:high-school",
+    "use": "civic",
+    "state": "built",
+    "w": 50,
+    "d": 35,
+    "road": 0,
+    "whole": true,
+    "curated": true,
+    "props": [
+     {
+      "id": "world:school",
+      "x": 13,
+      "y": 8.2,
+      "scale": 1.25,
+      "view": 0
+     },
+     {
+      "id": "world:primary_school",
+      "x": 11,
+      "y": 16.6,
+      "scale": 0.9,
+      "view": 2
+     },
+     {
+      "id": "town:utility_pole",
+      "x": 9.6,
+      "y": 1.4,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "world:bench",
+      "x": 16.6,
+      "y": 2,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "world:trashcan",
+      "x": 18.2,
+      "y": 2,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "world:schoolbus",
+      "x": 3.3,
+      "y": 6.5,
+      "scale": 1,
+      "view": 1
+     },
+     {
+      "id": "world:schoolbus",
+      "x": 3.3,
+      "y": 10.5,
+      "scale": 1,
+      "view": 1
+     },
+     {
+      "id": "world:schoolbus",
+      "x": 3.3,
+      "y": 14.5,
+      "scale": 1,
+      "view": 1
+     },
+     {
+      "id": "cars:burgundy-wagon:NE",
+      "x": 25.6,
+      "y": 10,
+      "scale": 1,
+      "view": 2
+     },
+     {
+      "id": "cars:burgundy-wagon:NE",
+      "x": 27.6,
+      "y": 4,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "cars:navy-wood-panel-wagon:NE",
+      "x": 27.6,
+      "y": 10,
+      "scale": 1,
+      "view": 2
+     },
+     {
+      "id": "cars:navy-wood-panel-wagon:NE",
+      "x": 29.6,
+      "y": 4,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "cars:burgundy-wagon:NE",
+      "x": 29.6,
+      "y": 10,
+      "scale": 1,
+      "view": 2
+     },
+     {
+      "id": "cars:burgundy-wagon:NE",
+      "x": 35.6,
+      "y": 4,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "cars:navy-wood-panel-wagon:NE",
+      "x": 35.6,
+      "y": 10,
+      "scale": 1,
+      "view": 2
+     },
+     {
+      "id": "cars:navy-wood-panel-wagon:NE",
+      "x": 37.6,
+      "y": 4,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "cars:burgundy-wagon:NE",
+      "x": 37.6,
+      "y": 10,
+      "scale": 1,
+      "view": 2
+     },
+     {
+      "id": "cars:burgundy-wagon:NE",
+      "x": 39.6,
+      "y": 4,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "cars:navy-wood-panel-wagon:NE",
+      "x": 39.6,
+      "y": 10,
+      "scale": 1,
+      "view": 2
+     },
+     {
+      "id": "cars:burgundy-wagon:NE",
+      "x": 41.6,
+      "y": 10,
+      "scale": 1,
+      "view": 2
+     },
+     {
+      "id": "cars:burgundy-wagon:NE",
+      "x": 43.6,
+      "y": 4,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "cars:navy-wood-panel-wagon:NE",
+      "x": 43.6,
+      "y": 10,
+      "scale": 1,
+      "view": 2
+     },
+     {
+      "id": "world:goalposts",
+      "x": 18.1,
+      "y": 25.4,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "world:goalposts",
+      "x": 44.9,
+      "y": 25.4,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "world:scoreboard",
+      "x": 31.5,
+      "y": 33.8,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "world:bleachers",
+      "x": 26.5,
+      "y": 15.6,
+      "scale": 1,
+      "view": 2
+     },
+     {
+      "id": "world:bleachers",
+      "x": 36.5,
+      "y": 15.6,
+      "scale": 1,
+      "view": 2
+     },
+     {
+      "id": "expansion:chainlink-x",
+      "x": 11.35,
+      "y": 34.6,
+      "scale": 1.012,
+      "view": 0
+     },
+     {
+      "id": "expansion:chainlink-x",
+      "x": 13.05,
+      "y": 34.6,
+      "scale": 1.012,
+      "view": 0
+     },
+     {
+      "id": "expansion:chainlink-x",
+      "x": 14.75,
+      "y": 34.6,
+      "scale": 1.012,
+      "view": 0
+     },
+     {
+      "id": "expansion:chainlink-x",
+      "x": 16.45,
+      "y": 34.6,
+      "scale": 1.012,
+      "view": 0
+     },
+     {
+      "id": "expansion:chainlink-x",
+      "x": 18.15,
+      "y": 34.6,
+      "scale": 1.012,
+      "view": 0
+     },
+     {
+      "id": "expansion:chainlink-x",
+      "x": 19.85,
+      "y": 34.6,
+      "scale": 1.012,
+      "view": 0
+     },
+     {
+      "id": "expansion:chainlink-x",
+      "x": 21.55,
+      "y": 34.6,
+      "scale": 1.012,
+      "view": 0
+     },
+     {
+      "id": "expansion:chainlink-x",
+      "x": 23.25,
+      "y": 34.6,
+      "scale": 1.012,
+      "view": 0
+     },
+     {
+      "id": "expansion:chainlink-x",
+      "x": 24.95,
+      "y": 34.6,
+      "scale": 1.012,
+      "view": 0
+     },
+     {
+      "id": "expansion:chainlink-x",
+      "x": 26.65,
+      "y": 34.6,
+      "scale": 1.012,
+      "view": 0
+     },
+     {
+      "id": "expansion:chainlink-x",
+      "x": 28.35,
+      "y": 34.6,
+      "scale": 1.012,
+      "view": 0
+     },
+     {
+      "id": "expansion:chainlink-x",
+      "x": 30.05,
+      "y": 34.6,
+      "scale": 1.012,
+      "view": 0
+     },
+     {
+      "id": "expansion:chainlink-x",
+      "x": 31.75,
+      "y": 34.6,
+      "scale": 1.012,
+      "view": 0
+     },
+     {
+      "id": "expansion:chainlink-x",
+      "x": 33.45,
+      "y": 34.6,
+      "scale": 1.012,
+      "view": 0
+     },
+     {
+      "id": "expansion:chainlink-x",
+      "x": 35.15,
+      "y": 34.6,
+      "scale": 1.012,
+      "view": 0
+     },
+     {
+      "id": "expansion:chainlink-x",
+      "x": 36.85,
+      "y": 34.6,
+      "scale": 1.012,
+      "view": 0
+     },
+     {
+      "id": "expansion:chainlink-x",
+      "x": 38.55,
+      "y": 34.6,
+      "scale": 1.012,
+      "view": 0
+     },
+     {
+      "id": "expansion:chainlink-x",
+      "x": 40.25,
+      "y": 34.6,
+      "scale": 1.012,
+      "view": 0
+     },
+     {
+      "id": "expansion:chainlink-x",
+      "x": 41.95,
+      "y": 34.6,
+      "scale": 1.012,
+      "view": 0
+     },
+     {
+      "id": "expansion:chainlink-x",
+      "x": 43.65,
+      "y": 34.6,
+      "scale": 1.012,
+      "view": 0
+     },
+     {
+      "id": "expansion:chainlink-x",
+      "x": 45.35,
+      "y": 34.6,
+      "scale": 1.012,
+      "view": 0
+     },
+     {
+      "id": "expansion:chainlink-x",
+      "x": 47.05,
+      "y": 34.6,
+      "scale": 1.012,
+      "view": 0
+     },
+     {
+      "id": "expansion:chainlink-x",
+      "x": 48.75,
+      "y": 34.6,
+      "scale": 1.012,
+      "view": 0
+     },
+     {
+      "id": "expansion:chainlink-y",
+      "x": 49.6,
+      "y": 14.858,
+      "scale": 1.022,
+      "view": 0
+     },
+     {
+      "id": "expansion:chainlink-y",
+      "x": 49.6,
+      "y": 16.575,
+      "scale": 1.022,
+      "view": 0
+     },
+     {
+      "id": "expansion:chainlink-y",
+      "x": 49.6,
+      "y": 18.292,
+      "scale": 1.022,
+      "view": 0
+     },
+     {
+      "id": "expansion:chainlink-y",
+      "x": 49.6,
+      "y": 20.008,
+      "scale": 1.022,
+      "view": 0
+     },
+     {
+      "id": "expansion:chainlink-y",
+      "x": 49.6,
+      "y": 21.725,
+      "scale": 1.022,
+      "view": 0
+     },
+     {
+      "id": "expansion:chainlink-y",
+      "x": 49.6,
+      "y": 23.442,
+      "scale": 1.022,
+      "view": 0
+     },
+     {
+      "id": "expansion:chainlink-y",
+      "x": 49.6,
+      "y": 25.158,
+      "scale": 1.022,
+      "view": 0
+     },
+     {
+      "id": "expansion:chainlink-y",
+      "x": 49.6,
+      "y": 26.875,
+      "scale": 1.022,
+      "view": 0
+     },
+     {
+      "id": "expansion:chainlink-y",
+      "x": 49.6,
+      "y": 28.592,
+      "scale": 1.022,
+      "view": 0
+     },
+     {
+      "id": "expansion:chainlink-y",
+      "x": 49.6,
+      "y": 30.308,
+      "scale": 1.022,
+      "view": 0
+     },
+     {
+      "id": "expansion:chainlink-y",
+      "x": 49.6,
+      "y": 32.025,
+      "scale": 1.022,
+      "view": 0
+     },
+     {
+      "id": "expansion:chainlink-y",
+      "x": 49.6,
+      "y": 33.742,
+      "scale": 1.022,
+      "view": 0
+     },
+     {
+      "id": "expansion:chainlink-y",
+      "x": 10.5,
+      "y": 20.811,
+      "scale": 0.966,
+      "view": 0
+     },
+     {
+      "id": "expansion:chainlink-y",
+      "x": 10.5,
+      "y": 22.433,
+      "scale": 0.966,
+      "view": 0
+     },
+     {
+      "id": "expansion:chainlink-y",
+      "x": 10.5,
+      "y": 24.056,
+      "scale": 0.966,
+      "view": 0
+     },
+     {
+      "id": "expansion:chainlink-y",
+      "x": 10.5,
+      "y": 25.678,
+      "scale": 0.966,
+      "view": 0
+     },
+     {
+      "id": "expansion:chainlink-y",
+      "x": 10.5,
+      "y": 27.3,
+      "scale": 0.966,
+      "view": 0
+     },
+     {
+      "id": "expansion:chainlink-y",
+      "x": 10.5,
+      "y": 28.922,
+      "scale": 0.966,
+      "view": 0
+     },
+     {
+      "id": "expansion:chainlink-y",
+      "x": 10.5,
+      "y": 30.544,
+      "scale": 0.966,
+      "view": 0
+     },
+     {
+      "id": "expansion:chainlink-y",
+      "x": 10.5,
+      "y": 32.167,
+      "scale": 0.966,
+      "view": 0
+     },
+     {
+      "id": "expansion:chainlink-y",
+      "x": 10.5,
+      "y": 33.789,
+      "scale": 0.966,
+      "view": 0
+     },
+     {
+      "id": "capital:tree-oak-moderate",
+      "x": 21,
+      "y": 1.6,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "capital:tree-maple-open",
+      "x": 6.4,
+      "y": 1.6,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "capital:tree-oak-moderate",
+      "x": 47.6,
+      "y": 1.6,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "world:tree_pine_1",
+      "x": 3.2,
+      "y": 22,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "capital:tree-maple-open",
+      "x": 5.6,
+      "y": 28,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "world:tree_pine_1",
+      "x": 3,
+      "y": 32,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "world:bush_1",
+      "x": 21,
+      "y": 14,
+      "scale": 1,
+      "view": 0
+     },
+     {
+      "id": "world:bush_1",
+      "x": 22.6,
+      "y": 14.6,
+      "scale": 1,
+      "view": 0
+     }
+    ],
+    "patches": [
+     {
+      "kind": "yard",
+      "tex": "preset:lawns",
+      "pts": [
+       0,
+       0,
+       50,
+       0,
+       50,
+       35,
+       0,
+       35
+      ]
+     },
+     {
+      "kind": "walk",
+      "tex": "slabs",
+      "pts": [
+       11.6,
+       0,
+       14.4,
+       0,
+       14.4,
+       3.6,
+       11.6,
+       3.6
+      ]
+     },
+     {
+      "kind": "yard",
+      "tex": "concrete",
+      "pts": [
+       7,
+       2.4,
+       19,
+       2.4,
+       19,
+       3.8,
+       7,
+       3.8
+      ]
+     },
+     {
+      "kind": "lot",
+      "tex": "asphalt",
+      "pts": [
+       0.8,
+       3.6,
+       5.8,
+       3.6,
+       5.8,
+       17,
+       0.8,
+       17
+      ]
+     },
+     {
+      "kind": "drive",
+      "tex": "asphalt",
+      "pts": [
+       1.2,
+       0,
+       4.4,
+       0,
+       4.4,
+       3.6,
+       1.2,
+       3.6
+      ]
+     },
+     {
+      "kind": "lot",
+      "tex": "asphalt",
+      "pts": [
+       24,
+       2.4,
+       46,
+       2.4,
+       46,
+       11.6,
+       24,
+       11.6
+      ],
+      "lines": [
+       24.6,
+       2.6,
+       24.6,
+       5.4,
+       26.6,
+       2.6,
+       26.6,
+       5.4,
+       28.6,
+       2.6,
+       28.6,
+       5.4,
+       30.6,
+       2.6,
+       30.6,
+       5.4,
+       32.6,
+       2.6,
+       32.6,
+       5.4,
+       34.6,
+       2.6,
+       34.6,
+       5.4,
+       36.6,
+       2.6,
+       36.6,
+       5.4,
+       38.6,
+       2.6,
+       38.6,
+       5.4,
+       40.6,
+       2.6,
+       40.6,
+       5.4,
+       42.6,
+       2.6,
+       42.6,
+       5.4,
+       44.6,
+       2.6,
+       44.6,
+       5.4,
+       24.6,
+       8.6,
+       24.6,
+       11.4,
+       26.6,
+       8.6,
+       26.6,
+       11.4,
+       28.6,
+       8.6,
+       28.6,
+       11.4,
+       30.6,
+       8.6,
+       30.6,
+       11.4,
+       32.6,
+       8.6,
+       32.6,
+       11.4,
+       34.6,
+       8.6,
+       34.6,
+       11.4,
+       36.6,
+       8.6,
+       36.6,
+       11.4,
+       38.6,
+       8.6,
+       38.6,
+       11.4,
+       40.6,
+       8.6,
+       40.6,
+       11.4,
+       42.6,
+       8.6,
+       42.6,
+       11.4,
+       44.6,
+       8.6,
+       44.6,
+       11.4
+      ]
+     },
+     {
+      "kind": "drive",
+      "tex": "asphalt",
+      "pts": [
+       34.4,
+       0,
+       37.6,
+       0,
+       37.6,
+       2.4,
+       34.4,
+       2.4
+      ]
+     },
+     {
+      "kind": "yard",
+      "tex": "dirt",
+      "pts": [
+       40.5,
+       17.4,
+       42.972,
+       17.792,
+       45.202,
+       18.928,
+       46.972,
+       20.698,
+       48.108,
+       22.928,
+       48.5,
+       25.4,
+       48.108,
+       27.872,
+       46.972,
+       30.102,
+       45.202,
+       31.872,
+       42.972,
+       33.008,
+       40.5,
+       33.4,
+       22.5,
+       33.4,
+       20.028,
+       33.008,
+       17.798,
+       31.872,
+       16.028,
+       30.102,
+       14.892,
+       27.872,
+       14.5,
+       25.4,
+       14.892,
+       22.928,
+       16.028,
+       20.698,
+       17.798,
+       18.928,
+       20.028,
+       17.792,
+       22.5,
+       17.4
+      ]
+     },
+     {
+      "kind": "yard",
+      "tex": "preset:fairway",
+      "pts": [
+       17.9,
+       20.2,
+       45.1,
+       20.2,
+       45.1,
+       30.6,
+       17.9,
+       30.6
+      ],
+      "lines": [
+       19.5,
+       20.2,
+       19.5,
+       30.6,
+       21.9,
+       20.2,
+       21.9,
+       30.6,
+       24.3,
+       20.2,
+       24.3,
+       30.6,
+       26.7,
+       20.2,
+       26.7,
+       30.6,
+       29.1,
+       20.2,
+       29.1,
+       30.6,
+       31.5,
+       20.2,
+       31.5,
+       30.6,
+       33.9,
+       20.2,
+       33.9,
+       30.6,
+       36.3,
+       20.2,
+       36.3,
+       30.6,
+       38.7,
+       20.2,
+       38.7,
+       30.6,
+       41.1,
+       20.2,
+       41.1,
+       30.6,
+       43.5,
+       20.2,
+       43.5,
+       30.6,
+       19.5,
+       20.2,
+       43.5,
+       20.2,
+       19.5,
+       30.6,
+       43.5,
+       30.6
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}

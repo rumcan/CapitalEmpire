@@ -359,13 +359,15 @@ export class Build {
   /** the composition: candidates in order, the first that fits wins; plants stop at the cap */
   /** a lot the owner laid out (a whole or farm preset): every prop is drawn where it stands, overlapping another or not (only the lot line holds) */
   keepAll = false;
+  /** T219: an iconic place (compose.ts composeWhole): no lot line either (its land is its own; a picture whose footprint pokes past it stays) */
+  loose = false;
   done(): Composition {
     const props: Placed[] = [], acc: Item[] = []; let ups = 0;
     // a preset prop left out is told to the drops sink, with why (the dev editor shows them: nothing in a preset goes unseen)
     const drop = (it: Item, why: string) => { if (it.from && this.drops) this.drops.push({ ...it.from, id: it.id, why }); };
     for (const it of this.items) {
       // Shared boundary panels remain on their surveyed line even when a driveway reaches the lot edge.
-      if (!this.inside(it)) { drop(it, 'past the lot line'); continue; }
+      if (!this.loose && !this.inside(it)) { drop(it, 'past the lot line'); continue; }
       if (!it.boundary && !it.paved && !it.from && this.onPatch(it)) continue;
       // two cars never share ground (a car is kept only if it shares none with an earlier car)
       const car = it.car && !this.keepAll ? acc.find(a => a.car && share(a.fp, it.fp) > 0) : undefined;

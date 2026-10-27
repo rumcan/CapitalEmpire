@@ -647,3 +647,11 @@ the water towers, a silo, a windmill and a fountain. These pieces are missing:
 
 **147. Running track and field** · **C** · 100 x 60 m · P1. Top-down.
 > Subject: seen from straight above, a high school football field: striped mown grass with white yard lines (no numbers), end zones, inside a red-brown running track with white lane lines curving round both ends.
+
+**In the game now (T219):** both places are built (`src/game/lots/iconic-places.json`), with labelled stand-ins: the blank golf leaderboard
+(`golf:leaderboard`) for the screen (142), `world:speaker_post` for the speaker posts (143), the car park attendant kiosk (`ce:parking-kiosk`)
+for the ticket booth (144), `world:goalposts` (145), `world:bleachers` (146), and `town:utility_pole` for a flag pole (new: **148. Flag pole**
+· **B** · 0.3 m, 9 high · P2: a white school flag pole on a small concrete base with the flag hanging limp, its rope against the pole). The track
+(147) is painted ground for now (`dirt` round a `preset:fairway` field with white yard lines). The library's own drive-in screen
+(`variation:ref-building-drive-in-screen-b0bccc2a-plain:1`) is not used: its footprint (1 x 8) runs across its picture, so three of its four
+facings draw it off its lot, and its face carries "Maple Falls Drive-In" (every town is named differently).
