@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-27 05:53)
+## START HERE (kept current by the lead; last updated 2026-10-27 06:03)
 
 **Paste-ready start prompts for every role are in `docs/START-PROMPTS.md`:** the lead, a coding ticket, and the other sessions in this
 repo. The weekly usage cap is close (2026-10-26), so any chat may stop at any moment.
@@ -28,12 +28,12 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |
 | T178 | #443 (on PR #442, **held**) | `arena/T178-town-upgrades` (stacked on `arena/T098-fixture-traffic`) | `.claude/worktrees/t166` | 5187 | **Big find:** since T048 no golf town ever drove (leave time in town minutes vs the sim clock in seconds); #442 fixes it, and the grown town then gridlocks on gravel from season 7-8, failing range:gate's bands. Decision: the town upgrades its own busiest streets (and adds a second county-road connection), budget by size; classic unchanged; both merge when range:gate passes with traffic. Agent: the ground agent. |
-| T179 | #446 | `arena/T179-a11y` | `.claude/worktrees/t160` | 5186 | P23-UX P2-7 subset: focus rings everywhere, one styled tooltip (name, key, the lock/refusal reason) on the rail and top bar, a UI scale setting (90-125%). Agent: the lot agent. |
+| T180 | #449 | `arena/T180-not-by-colour` | `.claude/worktrees/t160` | 5186 | P23-UX D8.1 colour part: refused cells hatched with ✕, icons beside colour-only states, 13/12 px text, WCAG AA pairs. Agent: the lot agent. |
 | T112 | #199 | `arena/T112-sharp` (PR #394) | `.claude/worktrees/t112` | — | **Approved, merge HELD for the morning restart:** a lock change makes the 5174 auto-updater run `npm ci` in theme-consistency (the live 5191 studio holds sharp there; the lot agent's t160 uses it by junction). Morning order: stop 5191 → merge #394 → let npm ci finish → restart 5191 and 5174. All shipped bytes identical on 0.35.5; audit 0. |
 | T095 | #164 | `arena/T095-first-minute` (**draft PR #419**) | `.claude/worktrees/t160` | 5186 | Built and reviewed (typecheck clean, guide tests 15/15): welcome card (follows P24's ramp: "Open the range" until New hole opens), the founding line in the Tier sub-line (one-row top bar kept), two-line title, tee ring, three toasts, a 7-step range guide. The agent's session was refused `gh pr ready`: **the owner marks it ready and merges** (the lead does not override another session's refusal). Tidied at f4f9347 (screenshots out, minimap "New town" until named, ramp toast helper, step 5 held 8 s): **Squash and merge** (old webp commit in history). Agent: the lot agent. |
 | P05 | #68 | PR #413 **open for the owner's approval** | — | — | The M5 balance plan, measured: arrival 47% at tier 1 from a fresh start (the start's 56-bay car park holds 168 fans), 100% with car parks; 10% at tier 2 fresh, 70-81% with car parks; an 18 of ~5,900 m fits the starting land on every seed (~$190k seeded); with the proposals a careful player reaches tier 3 in year 4. Knob recommended for "careless out-saves careful": sponsors x (1 + (rep-50)/50). |
 | T178 | #443 (on PR #442, **held**) | `arena/T178-town-upgrades` (stacked on `arena/T098-fixture-traffic`) | `.claude/worktrees/t166` | 5187 | **Big find:** since T048 no golf town ever drove (leave time in town minutes vs the sim clock in seconds); #442 fixes it, and the grown town then gridlocks on gravel from season 7-8, failing range:gate's bands. Decision: the town upgrades its own busiest streets (and adds a second county-road connection), budget by size; classic unchanged; both merge when range:gate passes with traffic. Agent: the ground agent. |
-| T179 | #446 | `arena/T179-a11y` | `.claude/worktrees/t160` | 5186 | P23-UX P2-7 subset: focus rings everywhere, one styled tooltip (name, key, the lock/refusal reason) on the rail and top bar, a UI scale setting (90-125%). Agent: the lot agent. |
+| T180 | #449 | `arena/T180-not-by-colour` | `.claude/worktrees/t160` | 5186 | P23-UX D8.1 colour part: refused cells hatched with ✕, icons beside colour-only states, 13/12 px text, WCAG AA pairs. Agent: the lot agent. |
 | T112 | #199 | `arena/T112-sharp` (PR #394) | `.claude/worktrees/t112` | — | **Approved, merge HELD for the morning restart:** a lock change makes the 5174 auto-updater run `npm ci` in theme-consistency (the live 5191 studio holds sharp there; the lot agent's t160 uses it by junction). Morning order: stop 5191 → merge #394 → let npm ci finish → restart 5191 and 5174. All shipped bytes identical on 0.35.5; audit 0. |
 
 **Two coding agents at a time (the owner, 2026-10-26: first "maybe just too many background tasks?" after the studio tab died with the
@@ -95,6 +95,10 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
    (the sharp bump). See the History sections below and `gh issue list --label arena --state open`.
 
 ### Done recently (newest first; details in each PR)
+- 2026-10-27 06:03: **T179 #448 accessibility first pass** (P23-UX P2-7): one styled tooltip (`ui/Tooltip.tsx`) replaces 44 browser titles on
+  the rail and top bar (name, key, the lock's reason: "Roads R 🔒 Unlocks with your third hole or the tour's invitation"); the gold
+  focus ring extended to every control; a **UI scale** setting (90/100/110/125%, UI layer only, kept per browser). The top bar stays one
+  row at 1366x768 up to 110%; at 125% it wraps to two rows. Shots `E:/ClaudeTemp/T179/shots/`.
 - 2026-10-27 05:53: **T177 #441 a grown town keeps its started lots**: in a range start's town a started or built lot keeps its footprint;
   new block and frontage lots fill round it; it goes only if its road goes or a road runs through it. Lost started/built lots over
   20 seasons: 327/425/516 (seeds 1-3; **277-409 built houses removed**) → **0**. range:gate bands pass (`GROWN_PLAN_H` stays 0.5: growth
