@@ -5,6 +5,7 @@
 import type { Tool } from '../game/types';
 import type { ProgressiveUiState, RailGroupId } from '../game/ext/progressive-ui';
 import type { IconName } from './Icon';
+import type { TipParts } from './tip';
 
 /** a tool in a rail item: the segmented row at the top of its panel when the item has more than one */
 export interface RailTool { id: Tool; label: string; key: string; icon: IconName }
@@ -70,4 +71,9 @@ export function railEntries(ui: ProgressiveUiState | null, golf: boolean, uiTool
     last = r.section;
   }
   return out;
+}
+
+/** a rail item's tooltip (T179): its name, its key (if it has one) and, locked, what unlocks it (the stages' and the ramp's words) */
+export function railTip(e: RailEntry): TipParts {
+  return { name: e.item.label, ...(e.item.key ? { key: e.item.key } : {}), ...(e.locked ? { why: e.locked } : {}) };
 }

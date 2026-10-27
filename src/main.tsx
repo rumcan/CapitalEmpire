@@ -2,6 +2,10 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App";
+import { applyUiScale, loadUiScale } from "./ui/uiScale";
+
+// T179: the UI scale kept in this browser, before the first paint
+applyUiScale(loadUiScale());
 
 // the shadow audit sheet (T141, dev only: ?shadows=audit) draws in place of the game
 if (import.meta.env.DEV && new URLSearchParams(location.search).get("shadows") === "audit")
