@@ -32,7 +32,7 @@ import { turned } from './lots/preset-art';
 import { PIXEL_LIMIT, PIXEL_SLACK } from './sizes';
 import { RangeHost } from './golf/rangehost';
 import { PropsTool } from './golf/propstool';
-import { DECOR_BY_KEY, propTuple, sellBack, tupleMarks } from './golf/decor';
+import { DECOR_BY_KEY, lotTouches, propTuple, sellBack, tupleMarks } from './golf/decor';
 import { RANGE_LABEL_Z, defaultRangeBiz, parkLabel, practiceAppeal, rangeMapLabel, rangeNewSeason, rangeScene, rangeStats, type RangeCounts, type RangeUpgradeId } from './golf/rangebiz';
 import { areaAt, brushTextures, toTuple, type PaintTuple, type PaintTex } from './paint';
 import { CELL_T, SURF, cellAt, diffBox, encodeGrid, fillPolygon, fitGrid, landGridBox, makeGrid, paintStroke, type Grid as CourseGrid, type GridDiff, type GridSave } from './ext/course-grid';
@@ -510,6 +510,8 @@ export class Game {
       water: b => { for (let y = Math.floor(b[1]); y < Math.ceil(b[3]); y++) for (let x = Math.floor(b[0]); x < Math.ceil(b[2]); x++) { const c = this.terrain.cls[y * MAP + x]; if (c === TC.WATER || c === TC.CREEK || c === TC.BANK) return true; } const g = this.courseGrid; if (g) for (let y = b[1]; y <= b[3]; y += 0.5) for (let x = b[0]; x <= b[2]; x += 0.5) { const i = cellAt(g, x, y); if (i >= 0 && g.surf[i] === SURF.water) return true; } return false; },
       road: b => this.net.rectOcc(b[0] + 0.08, b[1] + 0.08, b[2] - 0.08, b[3] - 0.08) > 0 || this.parkDefs.some(d => b[0] < d.x + d.w && b[2] > d.x && b[1] < d.y + d.h && b[3] > d.y),
       course: (x, y) => { const g = this.courseGrid, i = g ? cellAt(g, x, y) : -1, v = i >= 0 ? g!.surf[i] : 0; return v === SURF.green ? 'green' : v === SURF.bunker ? 'bunker' : ''; },
+      // T187: a town prop keeps off the town's lots (its houses grow there)
+      lot: b => lotTouches(this.traffic.lots.values(), b),
     },
     propsIn: b => this.propGrid.query(b), props: () => this.props, propName: p => (p.decor ? DECOR_BY_KEY.get(p.decor)?.name : p.auto === 'range:shop' ? 'the shop' : undefined) ?? LIBRARY[p.item]!.name,
     scene: () => this.range.scene,

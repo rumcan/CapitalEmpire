@@ -5,11 +5,12 @@
 // is golf/propstool.ts. Prices are $; appeal a fraction (0.01 = +1% visitors, and +1% on the fair price).
 import type { Pt } from '../network';
 import { PROPS_APPEAL_CAP } from './rangesave';
+import { LIBRARY } from '../library';
 
-/** the panel's groups, in order */
-export type DecorGroup = 'plants' | 'water' | 'stone' | 'furniture';
+/** the panel's groups, in order (T187: Buildings, the few the player adds to the town: Town decoration's) */
+export type DecorGroup = 'plants' | 'water' | 'stone' | 'furniture' | 'buildings';
 export const DECOR_GROUPS: readonly { id: DecorGroup; name: string }[] = [
-  { id: 'plants', name: 'Plants' }, { id: 'water', name: 'Water' }, { id: 'stone', name: 'Stone' }, { id: 'furniture', name: 'Furniture' },
+  { id: 'plants', name: 'Plants' }, { id: 'water', name: 'Water' }, { id: 'stone', name: 'Stone' }, { id: 'furniture', name: 'Furniture' }, { id: 'buildings', name: 'Buildings' },
 ];
 
 /** a catalogue item: its key (saved with the prop), plain name, group, library picture (the NE view of four-view art), price ($), appeal (a
@@ -63,8 +64,37 @@ export const DECOR: readonly DecorItem[] = [
   { key: 'lamp', name: 'Lamp post', group: 'furniture', kind: 'small', id: 'view:world:streetlamp:n', price: 350, appeal: APPEAL.small, desc: 'Lit at night' },
   { key: 'board', name: 'Welcome board', group: 'furniture', kind: 'sign', id: 'golf:leaderboard', price: 2500, appeal: APPEAL.board, scale: 0.45, desc: 'A tall board to greet golfers at the drive: four views' },
   { key: 'flagpole', name: 'Flag pole', group: 'furniture', kind: 'sign', id: 'business:golf-pin-red', price: 500, appeal: APPEAL.flagpole, scale: 0.6, standIn: 'Club flag pole', desc: 'A tall white pole flying the club flag' },
+  // ---- the town's buildings (T187, Town decoration › Buildings; the owner: "a few buildings that you can add to the town"): the library's own
+  //      art only. Decoration: the game models no town attractiveness or land value for them to raise, so they add nothing but the look (appeal 0;
+  //      the range's appeal counts the props near it alone). A statue and a town hall annex have no art yet (docs/GOLF-SPRITES.md)
+  { key: 'town-gazebo', name: 'Bandstand gazebo', group: 'buildings', kind: 'stone', id: 'world:gazebo', price: 8000, appeal: 0, desc: 'A white bandstand for the park: summer concerts on the green' },
+  { key: 'town-fountain', name: 'Park fountain', group: 'buildings', kind: 'water', id: 'ref:landmark-fountain-v2', price: 12000, appeal: 0, desc: 'A tiered stone fountain for a square or a park corner' },
+  { key: 'bus-shelter', name: 'Bus shelter', group: 'buildings', kind: 'small', id: 'town:bus_stop', price: 1500, appeal: 0, desc: 'A covered bench by the road for the bus' },
+  { key: 'toilet-block', name: 'Public toilets', group: 'buildings', kind: 'stone', id: 'golf:toilet-block', price: 9000, appeal: 0, desc: 'A small toilet block for a park or a square' },
+  { key: 'chapel', name: 'Small chapel', group: 'buildings', kind: 'stone', id: 'variation:world-church-44e76535-plain:1', price: 60000, appeal: 0, desc: 'A white clapboard chapel with its steeple' },
 ];
 export const DECOR_BY_KEY: ReadonlyMap<string, DecorItem> = new Map(DECOR.map(d => [d.key, d]));
+
+// ---------------------------------------------------------------- the place (T187: props by place)
+
+/** where a prop belongs: the course (Decoration), the town (Town decoration) or both */
+export type DecorPlace = 'course' | 'town' | 'both';
+/** a prop's place by its picture's library category (the small table T187 asked for; a category not listed belongs to both): street and park
+ *  things are both's; golf's and the stand-ins' own the course's */
+export const CAT_PLACE: Readonly<Record<string, DecorPlace>> = {
+  'Street furniture': 'both', 'Trees & plants': 'both', 'Landscaping': 'both', 'Arcade': 'both', 'Yard': 'both', 'Landmarks': 'both',
+  'Business artwork': 'course', 'Golf tournament': 'course', 'Odds & ends': 'course', 'Halloween': 'course',
+};
+const CAT_OF = new Map(LIBRARY.map(i => [i.id, i.cat]));
+/** an item's place: a town building is the town's; else its picture's category's (CAT_PLACE), both when its category is not listed */
+export function placeOf(d: Pick<DecorItem, 'group' | 'id'>): DecorPlace {
+  if (d.group === 'buildings') return 'town';
+  return CAT_PLACE[CAT_OF.get(d.id) ?? ''] ?? 'both';
+}
+/** whether an item shows in a view's catalogue: its place is the view's or both (all: every item, the panel's All) */
+export const shownIn = (d: Pick<DecorItem, 'group' | 'id'>, view: 'course' | 'town', all = false): boolean => all || placeOf(d) === 'both' || placeOf(d) === view;
+/** where an item placed from a view stands: its own place, or the view's for an item of both */
+export const standsIn = (d: Pick<DecorItem, 'group' | 'id'>, view: 'course' | 'town'): 'course' | 'town' => { const p = placeOf(d); return p === 'both' ? view : p; };
 
 /** what selling a prop gives back: half its price */
 export const sellBack = (d: DecorItem): number => Math.round(d.price / 2);
@@ -131,6 +161,8 @@ export interface DecorSpot {
   range(x: number, y: number): 'mats' | 'target' | '';
   /** the name of a building or prop the box overlaps, or '' */
   overlaps(b: Box): string;
+  /** T187: whether the box touches a town lot (the town's own ground: its houses grow there) */
+  lot?(b: Box): boolean;
 }
 /** the points of a footprint the checks sample: its corners, edges' midpoints and centre, and a 0.5-tile lattice inside a big one */
 function samples(b: Box): Pt[] {
@@ -140,8 +172,17 @@ function samples(b: Box): Pt[] {
   return out;
 }
 /** why a prop of footprint b cannot stand there ('' when it can), in the order a player fixes them: the land first, then what is in the way */
-export function decorSpotWhy(b: Box, s: DecorSpot): string {
+export function decorSpotWhy(b: Box, s: DecorSpot, place: 'course' | 'town' = 'course'): string {
   const pts = samples(b);
+  // T187: a town prop or building stands in the town, off your land and off the town's lots (its houses grow there): on the grass between them
+  if (place === 'town') {
+    if (pts.some(p => s.owned(p.x, p.y))) return 'In the town: off your land (the course has its own decoration)';
+    if (s.water(b)) return 'Not on water';
+    if (s.road(b)) return 'Not on a road, path or car park';
+    if (s.lot?.(b)) return "Not on a town lot (the town's houses grow there): on the park and verge grass between them";
+    const o = s.overlaps(b); if (o) return `Overlaps ${o}`;
+    return '';
+  }
   if (!pts.every(p => s.owned(p.x, p.y))) return 'Only on your land: the range, the practice area and the course';
   if (s.water(b)) return 'Not on water';
   if (s.road(b)) return 'Not on a road, path or car park';
@@ -151,6 +192,20 @@ export function decorSpotWhy(b: Box, s: DecorSpot): string {
   }
   const o = s.overlaps(b); if (o) return `Overlaps ${o}`;
   return '';
+}
+
+/** whether a box touches any of the lots (origin o, frontage u and depth n unit vectors, width w and depth d: the town's lots as City keeps them):
+ *  a corner or the centre of the box in a lot, or a corner of a lot in the box (T187) */
+export function lotTouches(lots: Iterable<{ o: ArrayLike<number>; u: ArrayLike<number>; n: ArrayLike<number>; w: number; d: number }>, b: Box): boolean {
+  const pts = [b[0], b[1], b[2], b[1], b[2], b[3], b[0], b[3], (b[0] + b[2]) / 2, (b[1] + b[3]) / 2];
+  for (const l of lots) {
+    const ox = l.o[0]!, oy = l.o[1]!, ux = l.u[0]! * l.w, uy = l.u[1]! * l.w, nx = l.n[0]! * l.d, ny = l.n[1]! * l.d;
+    const q = [ox, oy, ox + ux, oy + uy, ox + ux + nx, oy + uy + ny, ox + nx, oy + ny];
+    if (Math.max(q[0]!, q[2]!, q[4]!, q[6]!) < b[0] || Math.min(q[0]!, q[2]!, q[4]!, q[6]!) > b[2] || Math.max(q[1]!, q[3]!, q[5]!, q[7]!) < b[1] || Math.min(q[1]!, q[3]!, q[5]!, q[7]!) > b[3]) continue;
+    for (let k = 0; k < pts.length; k += 2) if (inPoly(q, pts[k]!, pts[k + 1]!)) return true;
+    for (let k = 0; k < 8; k += 2) if (q[k]! > b[0] && q[k]! < b[2] && q[k + 1]! > b[1] && q[k + 1]! < b[3]) return true;
+  }
+  return false;
 }
 
 /** whether point (x, y) is inside polygon pts (flat x y pairs) */

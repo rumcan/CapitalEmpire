@@ -16,7 +16,11 @@ import type { TipParts } from './tip';
 
 /** a tool in a rail item: its button in the row at the top of the item's panel; sub: the section it sits in (Traffic's Roads, Junctions,
  *  Transport); only: the game it shows in */
-export interface RailTool { id: Tool; label: string; key: string; icon: IconName; sub?: string; only?: 'golf' | 'classic' }
+export interface RailTool { id: Tool; label: string; key: string; icon: IconName; sub?: string; only?: 'golf' | 'classic'; /** T187: the Props tool's view this entry opens (its place and group) */ view?: PropsView }
+/** the Props tool's view (T187): where it places (Decoration the course, Town decoration the town) and the group it opens on */
+export interface PropsView { where: 'course' | 'town'; group?: 'buildings' }
+/** an entry's key in its item (the Props tool sits twice in Town decoration: its props and its buildings) */
+export const entryKey = (t: RailTool): string => (t.view ? `${t.id}:${t.view.where}:${t.view.group ?? ''}` : t.id);
 /** a button in an item's row that is no tool: the Tournament (the Event catalogue, a side mode with a top-bar chip of its own) */
 export interface RailExtra { id: GolfChipId; label: string; icon: IconName }
 /** a rail item: its label, icon and key (named in the tooltip, never drawn on the rail), the heading it sits under, its progressive-ui group (the
@@ -40,7 +44,7 @@ export const RAIL: readonly RailItem[] = [
   ], extras: [{ id: 'event', label: 'Tournament', icon: 'calendar' }] },
   { id: 'decor', label: 'Decoration', icon: 'leaf', key: 'Z', section: 'course', group: 'course', tools: [
     { id: 'path', label: 'Paths', key: '', icon: 'sidewalk' },
-    { id: 'props', label: 'Props', key: 'Z', icon: 'leaf', only: 'golf' },
+    { id: 'props', label: 'Props', key: 'Z', icon: 'leaf', only: 'golf', view: { where: 'course' } },
   ] },
   // TOWN
   { id: 'traffic', label: 'Traffic', icon: 'road', key: 'R', section: 'town', group: 'roads', tools: [
@@ -54,8 +58,10 @@ export const RAIL: readonly RailItem[] = [
   ] },
   { id: 'towndecor', label: 'Town decoration', icon: 'terrain', key: 'A', section: 'town', group: 'paint', tools: [
     { id: 'paint', label: 'Paint', key: 'A', icon: 'terrain' },
-    { id: 'props', label: 'Props', key: 'Z', icon: 'leaf', only: 'golf' },
-    // the town's buildings the player adds (the classic game's Business tool; a golf game's town builds itself: none there yet)
+    { id: 'props', label: 'Props', key: 'Z', icon: 'leaf', only: 'golf', view: { where: 'town' } },
+    // the few buildings the player adds to the town: a golf game's from the Props tool's Buildings (T187: decor.ts, the library's art); the
+    // classic game's Business tool
+    { id: 'props', label: 'Buildings', key: '', icon: 'buildings', only: 'golf', view: { where: 'town', group: 'buildings' } },
     { id: 'business', label: 'Buildings', key: 'M', icon: 'buildings', only: 'classic' },
   ] },
   { id: 'bulldoze', label: 'Bulldoze', icon: 'bulldozer', key: 'X', section: null, group: 'bulldoze', tools: [{ id: 'bulldoze', label: 'Bulldoze', key: 'X', icon: 'bulldozer' }] },
@@ -116,11 +122,15 @@ export function railEntries(ui: ProgressiveUiState | null, golf: boolean, uiTool
 export function railTip(e: RailEntry): TipParts {
   return { name: e.item.label, ...(e.item.key ? { key: e.item.key } : {}), ...(e.locked ? { why: e.locked } : {}) };
 }
-/** the tool a click on an item opens: the last one used there if it is still open, else its first open tool (null: every tool locked) */
+/** the entry a click on an item opens: the last one used there if it is still open (by its entryKey, or its tool), else its first open one
+ *  (null: every tool locked) */
+export function pickEntry(r: RailItem, golf: boolean, ui: ProgressiveUiState | null, last?: string | null): RailTool | null {
+  const open = toolsIn(r, golf).filter(t => !toolLock(ui, t.id));
+  return (last ? open.find(t => entryKey(t) === last) ?? open.find(t => t.id === last) : undefined) ?? open[0] ?? null;
+}
+/** the tool a click on an item opens (pickEntry's) */
 export function pickTool(r: RailItem, golf: boolean, ui: ProgressiveUiState | null, lastUsed?: Tool | null): Tool | null {
-  const tools = toolsIn(r, golf), open = tools.filter(t => !toolLock(ui, t.id));
-  if (lastUsed && open.some(t => t.id === lastUsed)) return lastUsed;
-  return open[0]?.id ?? null;
+  return pickEntry(r, golf, ui, lastUsed)?.id ?? null;
 }
 /** an item's tools in sections, in order (Traffic: Roads, Junctions, Transport; others one unnamed section) */
 export function toolSections(r: RailItem, golf: boolean): { sub: string; tools: RailTool[] }[] {
