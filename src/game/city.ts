@@ -783,7 +783,7 @@ export class City {
     if (this.crowd) { this.crowd.now = this.sim.t; this.crowd.step(WALK_V * n * DT / MPT); this.admitGates(n * DT); this.relocateFans(); this.stepLeaving(); this.syncWait(); }
     if (rs === 'surge' && this.round.sim(n * DT)) this.kickOff();
     if (this.tourneyDay && this.dayOver()) this.endTourneyDay();
-    if (this.town.grown) this.town.grown.cap = this.townRoom() ?? undefined;
+    if (this.town.grown) this.town.grown.cap = this.townRoom() ?? Infinity;
     const events = this.town.tick(this.sim.clock, this.ctx);
     const ch = Math.floor(this.sim.clock / GAME_HOUR); if (this.golfLand.length && ch !== this.courseHour) { this.courseHour = ch; this.clearCourse(events); }
     const towns = this.centres.length > 0;

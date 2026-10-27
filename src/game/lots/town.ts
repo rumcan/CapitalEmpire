@@ -40,7 +40,7 @@ const NOISE = 0.15, PICK_TOP = 400;
  *  a grown town's (T090): its own (on a town seg of any class, or gravel), the player's (on the player's paved roads) */
 const ANY = 0, GRAVEL = 1, PAVED = 2, OWN = 3, PLAYER = 4;
 /** a range start's grown town (T090, plan P22 2.3.2-2.3.3): the holes the player has built and the tournaments' success factor; T221 (#610): the
- *  residents it has room for (cap: the City's golf/towngrowth.ts earnedTarget of the money made; absent: no limit) */
+ *  residents it has room for (cap: the City's golf/towngrowth.ts earnedTarget of the money made; absent or Infinity: no limit) */
 export interface GrownOpts { holes: number; success: number; cap?: number }
 /** T090: the compact rings' falloff of a lot dc tiles from the anchored centre with `built` lots built: exp(-dc / (GROWN_RING0 + GROWN_RING_K x sqrt(built))) */
 export const grownRing = (dc: number, built: number): number => Math.exp(-dc / (GROWN_RING0 + GROWN_RING_K * Math.sqrt(Math.max(0, built))));
@@ -100,8 +100,7 @@ export class Town {
    *  first growth hour */
   setGrown(g: GrownOpts | null) {
     if (g && !this.grown && this.built === 0 && this.acc < 1) this.acc = 1;
-    const cap = g?.cap ?? this.grown?.cap;
-    this.grown = g ? { holes: Math.max(0, g.holes), success: Math.max(0, g.success), ...(cap !== undefined ? { cap } : {}) } : null;
+    this.grown = g ? { holes: Math.max(0, g.holes), success: Math.max(0, g.success), cap: g.cap ?? this.grown?.cap ?? Infinity } : null;
   }
   /** T221: the residents the grown town's lots building now will bring (Town.step counts them each game hour: a lot building as a home) */
   pending = 0;
