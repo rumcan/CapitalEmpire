@@ -2,9 +2,9 @@
 // from each tee marker, its grow-in (the hole's and each surface's), its surfaces' areas, and its checks and warnings, each with the Fix that arms
 // the tool that mends it; the note Delete's confirm states; and the renumbering of two holes (D4.12: badges dragged), which swaps every place a
 // hole number lives so the routing and the walk check follow. No quality score, golfers or fees, and no Move. Pure TS, no DOM.
-import { holeLine, lineLength } from './holes';
+import { holeLine, lineLength, validateMarkerPlacement } from './holes';
 import type { HoleView } from './holeview';
-import { TILE_M, type AimPoint, type GolfSurface, type Pin, type TeeMark } from './types';
+import { TILE_M, type AimPoint, type CourseArea, type GolfSurface, type Pin, type TeeMark } from './types';
 import { MONTH_BASE, SURF_SURFACE } from '../ext/course-grid/areas';
 import { SURF_GROW_MONTHS } from '../ext/course-fx';
 import type { Grid } from '../ext/course-grid';
@@ -106,4 +106,19 @@ export function swapHoleNumbers<P extends { hole: number }, T extends { hole: nu
   for (const ar of d.areas ?? []) if (ar.hole === a || ar.hole === b) ar.hole = sw(ar.hole);
   const re = <X extends { hole: number }>(xs: readonly X[]) => xs.map(x => (x.hole === a || x.hole === b ? { ...x, hole: sw(x.hole) } : x));
   return { pins: re(d.pins), tees: re(d.tees), aims: re(d.aims), plans: re(d.plans).sort((p, q) => p.hole - q.hole), cells };
+}
+
+/** a pin or tee marker dragged to (x, y) (T174, P23 D2.5): on its surface (a pin on a green, a tee marker on a tee: holes.ts
+ *  validateMarkerPlacement) the markers with it moved there, else the reason it stays. It reads and returns only the markers: no plan is
+ *  re-made and nothing is charged */
+export function markerMove(m: { pins: readonly Pin[]; tees: readonly TeeMark[] }, areas: CourseArea[], hole: number, kind: 'pin' | TeeMark['kind'], x: number, y: number):
+  { ok: true; pins: Pin[]; tees: TeeMark[] } | { ok: false; reason: string } {
+  const v = validateMarkerPlacement(areas, kind, x, y);
+  if (!v.ok) return { ok: false, reason: v.reason ?? 'Not there' };
+  if (kind === 'pin') {
+    const has = m.pins.some(p => p.hole === hole);
+    return { ok: true, pins: has ? m.pins.map(p => (p.hole === hole ? { ...p, x, y } : p)) : [...m.pins, { hole, x, y }], tees: [...m.tees] };
+  }
+  const has = m.tees.some(t => t.hole === hole && t.kind === kind);
+  return { ok: true, pins: [...m.pins], tees: has ? m.tees.map(t => (t.hole === hole && t.kind === kind ? { ...t, x, y } : t)) : [...m.tees, { hole, kind, x, y }] };
 }

@@ -1,0 +1,114 @@
+// The hole card (plan P23-UX 6.2 P2-4, T174): a selected hole's facts as the game has them (D7.3: par, lengths from each tee, grow-in, its
+// surfaces' areas, its checks and warnings), each check with the Fix that arms the tool that mends it; the pin and tee markers dragged on the map
+// while it is open (no re-plan, no charge); Edit hole (New hole's editor); Delete with a confirm that states the refund; the number, which
+// trades places with another hole's (D4.12, as dragging the Holes panel's badges). Opened by a hole's badge in the Holes panel or a click on the
+// hole with Select; Esc or ✕ closes it. In New hole's card style; colour never alone (P23 D8.1: ✓ ◔ ! ✗ beside the colours, 13 px body).
+import { useState } from 'react';
+import type { Game } from '../../game/engine';
+import { deleteNote, type HoleCardCheck, type HoleCardView } from '../../game/golf/holecard';
+import { monthIndexLabel } from '../../game/golf/calendar';
+import { SurfaceMark } from '../course/SurfaceMark';
+import { Icon } from '../Icon';
+
+/** the surfaces' names as the Holes panel says them */
+const NAME: Record<string, string> = { green: 'Green', tee: 'Tee', fairway: 'Fairway', rough: 'Rough', bunker: 'Bunker', water: 'Water', fescue: 'Fescue', waste: 'Waste area' };
+/** the tee markers' names */
+const TEE: Record<string, string> = { back: 'Back', middle: 'Middle', forward: 'Forward' };
+const m2 = (n: number) => `${n.toLocaleString('en-US')} m²`;
+
+/** the open card's facts (null: none open) */
+function useHoleCard(game: Game): HoleCardView | null { return game.holeCardView(); }
+/** a two-step action: ask, then do (the card's Delete) */
+function useConfirm(): [boolean, () => void, () => void] { const [on, set] = useState(false); return [on, () => set(true), () => set(false)]; }
+
+/** the card, beside the map's right edge (left of an open side panel, as the range card) */
+export function HoleCard({ game, right = 'right-3' }: { game: Game; right?: string }) {
+  const c = useHoleCard(game), [asking, ask, unask] = useConfirm();
+  if (!c) return null;
+  const bad = c.checks.filter(k => !k.ok), state = bad.length ? { icon: '!', word: 'needs attention', tone: 'text-amber-300' } : c.ready !== null ? { icon: '◔', word: `growing · ready ${monthIndexLabel(c.ready)}`, tone: 'text-sky-300' } : { icon: '✓', word: 'ready', tone: 'text-emerald-300' };
+  const length = c.tees[0]?.m ?? 0, del = deleteNote(c);
+  const others = game.courseHoleViews().filter(v => v.n !== c.n);
+  return (
+    <section className={`pointer-events-auto absolute ${right} top-[var(--hud-top,6rem)] z-20 max-h-[78vh] w-[340px] overflow-y-auto rounded-xl border border-[var(--gold-line)] bg-slate-950/90 p-3 text-[13px] text-slate-200 shadow-2xl backdrop-blur`} data-testid="hole-card" aria-label={`Hole ${c.n}`}>
+      <div className="flex items-start justify-between gap-2 border-b border-white/10 pb-2">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="wiz-title">Hole {c.n}</span>
+            <label className="wiz-num" title="The hole's number: another hole's trades places with it (the routing follows), as dragging its badge in the Holes panel">
+              <span className="sr-only">Number</span>
+              <select value={c.n} onChange={e => game.renumberHole(c.n, +e.target.value)} data-testid="hole-number">
+                {Array.from({ length: 18 }, (_, i) => i + 1).map(n => <option key={n} value={n}>{n === c.n ? `No. ${n}` : others.some(v => v.n === n && v.started) ? `No. ${n} (swap with hole ${n})` : `No. ${n}`}</option>)}
+              </select>
+            </label>
+          </div>
+          <div className="mt-0.5 text-[13px] text-slate-300">{c.par ? `Par ${c.par} · ${length} m` : 'No par yet: it needs a pin and a tee'}</div>
+          <div className={`mt-0.5 flex items-center gap-1.5 text-[12px] ${state.tone}`} data-testid="hole-state"><span aria-hidden className="font-bold">{state.icon}</span>{state.word}</div>
+        </div>
+        <button className="btn-icon" onClick={() => game.closeHoleCard()} title="Close (Esc)" aria-label="Close the hole card"><Icon name="close" size={18} /></button>
+      </div>
+
+      {c.tees.length > 0 && (
+        <div className="wiz-stats" data-testid="hole-tees">
+          <div className="text-[12px] text-[var(--muted)]">From each tee</div>
+          <dl className="wiz-split">
+            {c.tees.map(t => <div key={t.kind}><dt>{TEE[t.kind]} tee</dt><dd>{t.m} m</dd></div>)}
+          </dl>
+        </div>
+      )}
+
+      {c.areas.length > 0 && (
+        <div className="wiz-stats" data-testid="hole-areas">
+          <div className="text-[12px] text-[var(--muted)]">Its surfaces</div>
+          <ul className="mt-1 flex flex-col gap-1 text-[13px]">
+            {c.areas.map(a => (
+              <li key={a.surface} className="flex items-center gap-2">
+                <SurfaceMark kind={a.surface} size={20} />
+                <span className="min-w-0 flex-1">{NAME[a.surface] ?? a.surface}</span>
+                <span className="tabular-nums font-semibold">{m2(a.m2)}</span>
+                <span className={`w-[7.5rem] text-right text-[12px] ${a.ready !== null ? 'text-sky-300' : 'text-emerald-300'}`}>{a.ready !== null ? <><span aria-hidden>◔ </span>ready {monthIndexLabel(a.ready)}</> : <><span aria-hidden>✓ </span>grown in</>}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <div className="mt-2" data-testid="hole-checks">
+        <div className="mb-1 text-[12px] text-[var(--muted)]">Checks</div>
+        <ul className="wiz-checks">
+          {c.checks.map(k => <CheckRow key={k.id} game={game} k={k} />)}
+        </ul>
+      </div>
+
+      <p className="sub-line mt-2">Drag the pin or a tee marker on the map to move it: no re-plan, no charge. It stays on its green or tee.</p>
+
+      {!asking ? (
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          <button className="chip" disabled={!c.planned} onClick={() => game.editHole(c.n)} title={c.planned ? "New hole's editor: drag the line, the tee and the green" : 'Painted by hand: shape it with the brush'} data-testid="hole-edit"><Icon name="pin" size={14} />Edit hole</button>
+          <button className="chip" disabled={!c.planned} onClick={ask} title={c.planned ? 'Clears what New hole laid for it, after a confirm' : 'Painted by hand: erase it with the brush'} data-testid="hole-delete"><Icon name="bulldozer" size={14} />Delete</button>
+        </div>
+      ) : (
+        <div className="mt-2 rounded-lg border border-rose-400/40 bg-rose-500/10 p-2" role="alertdialog" aria-label={`Delete hole ${c.n}?`} data-testid="hole-delete-confirm">
+          <div className="font-semibold text-rose-200">Delete hole {c.n}?</div>
+          <p className="mt-0.5 text-[12px] text-slate-300">{del.text}</p>
+          <div className="mt-1.5 flex gap-1.5">
+            <button className="chip border-rose-400/60 text-rose-100" onClick={() => { unask(); game.deleteHole(c.n); }} autoFocus>Delete hole {c.n} · {del.refund ? `refund $${del.refund.toLocaleString('en-US')}` : 'no refund'}</button>
+            <button className="chip" onClick={unask}>Keep it</button>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
+/** one check: its mark (✓ ok, ✗ a check that fails, ! a warning) beside its colour, its words, and its Fix */
+function CheckRow({ game, k }: { game: Game; k: HoleCardCheck }) {
+  const cls = k.ok ? 'wiz-ok' : k.warn ? 'wiz-warn' : 'wiz-block', mark = k.ok ? '✓' : k.warn ? '!' : '✗';
+  const fix = k.fix, label = !fix ? '' : fix.kind === 'edit' ? 'Edit hole' : fix.kind === 'brush' ? `Paint ${NAME[fix.surface]!.toLowerCase()}` : fix.marker === 'pin' ? 'Move the pin' : 'Move the tees';
+  return (
+    <li className={cls}>
+      <span className="wiz-mark" aria-hidden>{mark}</span>
+      <span className="min-w-0 flex-1">{k.text}</span>
+      {fix && <button className="chip" onClick={() => game.holeCardFix(fix)} title="Arms the tool that fixes it">{label}</button>}
+    </li>
+  );
+}
