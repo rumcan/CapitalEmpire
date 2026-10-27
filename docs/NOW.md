@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-27 08:02)
+## START HERE (kept current by the lead; last updated 2026-10-27 08:36)
 
 **Paste-ready start prompts for every role are in `docs/START-PROMPTS.md`:** the lead, a coding ticket, and the other sessions in this
 repo. The weekly usage cap is close (2026-10-26), so any chat may stop at any moment.
@@ -29,11 +29,11 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 | --- | --- | --- | --- | --- | --- |
 | T185 → T186 | #466, #474 | `arena/T185-base` | `.claude/worktrees/t185` (node_modules a junction) | 5188 | The shadow agent (Opus): #473 merged (no compounding). Now PR 2, the base: tree shadows float below the trunk (all 126 trees: the draft blurs the trunk away), contact pools off-centre (34 trees, 15 poles), walls behind porches leave a lit wedge, legged props' foot gaps, overlong casts (24); re-draft; then T186: sprite shadows vs the ground's baked shade (max). |
 | T184 | #464 | fresh branches | `.claude/worktrees/t166` | 5187 | **The owner approved (diagnosis #443):** PR 1 junction rules (equal crossings first-come, queue-aware routing + a deadlock breaker, roundabout entry at the ring car's real speed; every gate before/after); PR 2 `JAM_HINT` at the Junction tool, `range:gate --player` placing junction tools, P22 bands on seeds 1-3 without going broke (tune prices, town income, growth in that order). Agent: the ground agent. |
-| T182 | #454 | fresh branch | `.claude/worktrees/t160` | 5186 | The toolbar regroup: COURSE (Driving range · Course · Decoration), TOWN (Traffic · Town decoration), no key letters on the rail. Agent: the lot agent. |
+| T188 | #479 | fresh branch | `.claude/worktrees/t160` | 5186 | P23-UX P2-2 + P2-3: the founding chip opens a Season card (the checklist with Fix buttons, Course stats moved in), `data-guide` anchors with Show me pulses, engine events advance the guide, the welcome card waits for the ground. Agent: the lot agent. |
 | T112 | #199 | `arena/T112-sharp` (PR #394) | `.claude/worktrees/t112` | — | **Approved, merge HELD for the morning restart:** a lock change makes the 5174 auto-updater run `npm ci` in theme-consistency (the live 5191 studio holds sharp there; the lot agent's t160 uses it by junction). Morning order: stop 5191 → merge #394 → let npm ci finish → restart 5191 and 5174. All shipped bytes identical on 0.35.5; audit 0. |
 | P05 | #68 | PR #413 **open for the owner's approval** | — | — | The M5 balance plan, measured: arrival 47% at tier 1 from a fresh start (the start's 56-bay car park holds 168 fans), 100% with car parks; 10% at tier 2 fresh, 70-81% with car parks; an 18 of ~5,900 m fits the starting land on every seed (~$190k seeded); with the proposals a careful player reaches tier 3 in year 4. Knob recommended for "careless out-saves careful": sponsors x (1 + (rep-50)/50). |
 | T184 | #464 | fresh branches | `.claude/worktrees/t166` | 5187 | **The owner approved (diagnosis #443):** PR 1 junction rules (equal crossings first-come, queue-aware routing + a deadlock breaker, roundabout entry at the ring car's real speed; every gate before/after); PR 2 `JAM_HINT` at the Junction tool, `range:gate --player` placing junction tools, P22 bands on seeds 1-3 without going broke (tune prices, town income, growth in that order). Agent: the ground agent. |
-| T182 | #454 | fresh branch | `.claude/worktrees/t160` | 5186 | The toolbar regroup: COURSE (Driving range · Course · Decoration), TOWN (Traffic · Town decoration), no key letters on the rail. Agent: the lot agent. |
+| T188 | #479 | fresh branch | `.claude/worktrees/t160` | 5186 | P23-UX P2-2 + P2-3: the founding chip opens a Season card (the checklist with Fix buttons, Course stats moved in), `data-guide` anchors with Show me pulses, engine events advance the guide, the welcome card waits for the ground. Agent: the lot agent. |
 | T112 | #199 | `arena/T112-sharp` (PR #394) | `.claude/worktrees/t112` | — | **Approved, merge HELD for the morning restart:** a lock change makes the 5174 auto-updater run `npm ci` in theme-consistency (the live 5191 studio holds sharp there; the lot agent's t160 uses it by junction). Morning order: stop 5191 → merge #394 → let npm ci finish → restart 5191 and 5174. All shipped bytes identical on 0.35.5; audit 0. |
 
 **Two coding agents at a time (the owner, 2026-10-26: first "maybe just too many background tasks?" after the studio tab died with the
@@ -95,6 +95,14 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
    (the sharp bump). See the History sections below and `gh issue list --label arena --state open`.
 
 ### Done recently (newest first; details in each PR)
+- 2026-10-27 08:36: **T187 #478 the toolbar's gaps**: Town decoration › Buildings in golf games (park fountain $12k, bus shelter $1.5k,
+  public toilets $9k, small chapel $60k; decoration only: the town has no land value to raise; no stand-ins: bandstand, statue, town
+  hall annex requested in GOLF-SPRITES); Course › Buildings › **Halfway house** ($18k, one per course, within 80 m of a tee, front on a
+  cart path; half the clubhouse's golfers stop and spend $4); Props filtered by place (course 28, town 22, an All toggle).
+- 2026-10-27 08:12: **T182 #472 the toolbar regrouped** (the owner's grouping): Select · COURSE: Driving range (the range card), Course (Holes,
+  Buildings, Greenkeeping, Tournament), Decoration (Paths, Props) · TOWN: Traffic (Roads: Build/Upgrade/Downgrade, Junctions, Transport: Bus
+  route, Car park, Toll gate), Town decoration (Paint, Props; Buildings in the classic game) · Bulldoze; no key letters on the rail (keys
+  work, named in the tooltip); a group locked only when all its tools are; NEW per group; old saves map. Gaps: T187.
 - 2026-10-27 08:02: **T185 #473 shadows no longer compound** (the owner: "two shadows blocking the same light does not multiply a shadow"):
   one R8 shadow layer drawn with MAX blending, laid on the ground once as a multiply in one cool colour (`cast-shadow.ts SHADOW_AMBIENT`);
   bench fps the same or better. The audit (1,524 vector shadows) is on #466; sheets `E:/ClaudeTemp/T185/`.

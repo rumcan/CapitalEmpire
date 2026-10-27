@@ -1,5 +1,6 @@
-// The rail's buttons (plan P23 4.2, P1-E; the items and their states are rail-items.ts): the Course and Town headings, each item with its key letter,
-// a locked item dimmed in place with a lock and its "Unlocks with …" (a click says it, nothing opens), and a NEW badge until first opened.
+// The rail's buttons (plan P23 4.2, P1-E; the items and their states are rail-items.ts; T182 the groups): the Course and Town headings, each item
+// (no key letters on the rail, T182: the tooltip names the key), a locked item dimmed in place with a lock and its "Unlocks with …" (a click
+// says it, nothing opens), and a NEW badge until its new tools are first opened.
 import { Icon } from './Icon';
 import { railTip, type RailEntry, type RailItem } from './rail-items';
 import { tipAttrs } from './tip';
@@ -36,7 +37,6 @@ export function Rail({ entries, onPick, onLocked }: { entries: RailEntry[]; onPi
             {...tipAttrs(railTip(e))}
             className={`rail-tab ${on ? 'rail-tab-on' : ''} ${locked ? 'rail-tab-locked' : ''}`}
           >
-            {r.key && <span className="rail-key">{r.key}</span>}
             {locked && <span className="rail-lock"><LockMark /></span>}
             {isNew && <NewBadge className="rail-new" />}
             <Icon name={r.icon} size={28} />
