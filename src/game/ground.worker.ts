@@ -106,6 +106,7 @@ const handle = async (m: ToWorker) => {
       case 'stripes': painter.stripes = m.on; break;
       case 'leaves': painter.leafDensity = m.density; break;
       case 'specCam': painter.specCam = m.on; break;
+      case 'swamp': painter.swamp = m.on; break;
       case 'slopeLight': painter.slopeLight = m.strength; break;
       case 'lotground': {
         // the lazy photo textures the edit's paint areas use (fill and border, course surfaces and collars, wall art): built first, so the
@@ -146,6 +147,8 @@ const handle = async (m: ToWorker) => {
           const k = m.kind === 'm' ? MID_K : 1, w = CHUNK_W * k, h = CHUNK_H * k;
           const box = GroundPainter.tileBox(m.i * w, m.j * h, (m.i + 1) * w, (m.j + 1) * h);
           const need = new Set<string>(['grass', 'meadow', 'outside', WOODLAND_TEX, WOODLAND, 'dirt', 'bank', 'creek', 'water', 'growSoil']), near = new Set<string>();
+          // T199: the small streams' swamp, where one reaches into the chunk
+          if (painter.swampIn(box)) need.add('swamp');
           // the living ground's painted variant sets (T111), when their art is in the game
           if (painter.living.on && !painter.living.debug) for (const v of VARIANT_IDS) if (tex.isPainted(v)) need.add(v);
           for (const p of painter.lotsIn(box)) {
@@ -171,6 +174,7 @@ const handle = async (m: ToWorker) => {
           await tex.preparePainted(PLAN_LEVELS[PLAN_LEVELS.length - 1], ['grass', 'meadow', 'outside']); await tex.preparePlanner(['grass', 'meadow', WOODLAND_TEX, WOODLAND]);
           // the tile set families the planner piece's course surfaces wear (their tiles at the camera's band: FAR at the furthest zoom)
           const box = GroundPainter.tileBox(m.i * PLAN_W, m.j * PLAN_H, (m.i + 1) * PLAN_W, (m.j + 1) * PLAN_H, 2), course = new Set<string>(['grass', 'meadow', 'outside', WOODLAND_TEX, WOODLAND]);
+          if (painter.swampIn(box)) course.add('swamp'); // (T199: the streams' swamp)
           for (const p of painter.lotsIn(box)) if (p.course) for (const l of p.course.layers) for (const t of [l, ...(l.collar ? [l.collar] : [])]) course.add(t.tex);
           await tex.prepareTiles(course);
         }
@@ -203,13 +207,15 @@ const handle = async (m: ToWorker) => {
         tex.deferMakes = deferring; tex.deferNeed = !probing(m); tex.missing.clear();
         try { cv = m.kind === 'p' ? painter.paintPlan(m.i, m.j, m.L) : painter.paint(m.i, m.j, m.L, m.kind === 'm'); }
         finally { tex.deferMakes = false; tex.deferNeed = true; }
-        if (probing(m)) { tex.missing.clear(); cv.width = cv.height = 0; painter.takeShadeMask(); painter.takeSpecMask(); kick(); break; }
-        if (tex.missing.size) { const keys = [...tex.missing]; tex.missing.clear(); painter.takeShadeMask(); painter.takeSpecMask(); putAside(m, Promise.all(keys.map(k => tex.whenMade(k)))); break; }
+        if (probing(m)) { tex.missing.clear(); cv.width = cv.height = 0; painter.takeShadeMask(); painter.takeSpecMask(); painter.takeGlossMask(); kick(); break; }
+        if (tex.missing.size) { const keys = [...tex.missing]; tex.missing.clear(); painter.takeShadeMask(); painter.takeSpecMask(); painter.takeGlossMask(); putAside(m, Promise.all(keys.map(k => tex.whenMade(k)))); break; }
         lastBake = performance.now(); if (deferring && m.kind !== 'p') aheadOf(m);
         const bmp = cv.transferToImageBitmap(), sm = m.kind === 'p' ? null : painter.takeShadeMask(), shade = sm ? sm.transferToImageBitmap() : undefined;
         // (T215: the reflection mask, when specCam is on and the chunk has a lamp pool on its asphalt)
         const rm = m.kind === 'p' ? null : painter.takeSpecMask(), spec = rm ? rm.transferToImageBitmap() : undefined;
-        post({ t: 'tile', id: m.id, kind: m.kind, i: m.i, j: m.j, L: m.L, artL: m.artL ?? m.L, ts: m.ts, tiled: painter.tilesUsed, prov: painter.provisional, bmp, shade, spec, ms: performance.now() - t0 }, [bmp, ...(shade ? [shade] : []), ...(spec ? [spec] : [])]);
+        // (T199: the swamp's gloss mask, when specCam is on and the chunk lays the swamp)
+        const gm = m.kind === 'p' ? null : painter.takeGlossMask(), gloss = gm ? gm.transferToImageBitmap() : undefined;
+        post({ t: 'tile', id: m.id, kind: m.kind, i: m.i, j: m.j, L: m.L, artL: m.artL ?? m.L, ts: m.ts, tiled: painter.tilesUsed, prov: painter.provisional, bmp, shade, spec, gloss, ms: performance.now() - t0 }, [bmp, ...(shade ? [shade] : []), ...(spec ? [spec] : []), ...(gloss ? [gloss] : [])]);
         break;
       }
     }

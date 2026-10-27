@@ -129,6 +129,7 @@ import { LiveGroup, OWNER_ADDRESS, OWNER_ART, OWNER_SKILL, POWER, PUTT_POWER, Pl
 import { holeViews, markerPlan, tagByHole, type HoleView, type MarkerKind } from './golf/holeview';
 import { CAST, castShear, clampCast, type CastShadow } from './cast-shadow';
 import { SPEC_LOOK, clampSpecLook, specGain, type SpecLook } from './lamp-reflect';
+import { glossGain } from './swamp';
 import { contactLean } from './shadow-shape';
 import { MARKER_SCALE, OLD_TEE_IDS, PIN_RED_ID, PIN_YELLOW_ID, TEE_BACK_ID, TEE_FORWARD_ID, TEE_MIDDLE_ID } from './golf/dressing';
 import { FALLBACK_STRUCTURE_SPRITE, STRUCTURE_SPRITE, STRUCTURE_SPRITE_OLD } from './golf/structure-art';
@@ -5888,6 +5889,10 @@ export class Game {
       const mask = this.revealMask(now); if (mask) gl.setMask(mask);
       // T215: the camera specular's falloff and gain this frame (the night light's amount takes the pools to their whole strength after dusk)
       gl.spec = this.ground.specCam ? { inner: this.spec.inner, outer: this.spec.outer, gain: specGain(this.spec, this.nightAmount()) } : null;
+      // T199: the swamp's sky glint, on the same switch and knobs (its gain falls after dusk: no sky to reflect); each picture's gloss mask by
+      // the picture itself
+      gl.gloss = this.ground.specCam ? { inner: this.spec.inner, outer: this.spec.outer, gain: glossGain(this.spec, this.nightAmount()) } : null;
+      gl.glossOf ??= tex => this.ground.glossOf(tex);
       const spec = (tex: WebGLTexture | null) => this.ground.specOf(tex);
       const shadeMasks: { tex: WebGLTexture; r: readonly [number, number, number, number] }[] = [];
       let baked = true;
