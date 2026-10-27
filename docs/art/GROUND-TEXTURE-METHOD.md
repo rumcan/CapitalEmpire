@@ -17,7 +17,7 @@ edit a game scene; the words "texture", "tile", "tileable" and "seamless" never 
    - It is a game scene, nothing more.
 3. **Slice it out.** Crop the region where the layer now is. Ask the generator to remove everything except that ground (buildings,
    roads, props, edges, other surfaces), at the same scale and light.
-4. **The big image of four.** From the clean ground, the generator paints one large continuous field of it, the size of four tiles as
+4. **The big image of four.** *(2026-10-27, learned with RUN.world: RUN paints a different lawn in every new screenshot and copies whatever it can see when asked to continue, so it cannot make tiles 2-4 itself. What works: tile 1 from steps 1-3, then tiles 2-4 by **image quilting** of tile 1's own painted grass, Efros-Freeman patches of about 192 px with minimum-error cuts, tone-matched; the shared border a plain quilt too. Script: `E:/ClaudeTemp/ART-RUN/scripts/quilt.mjs`.)* From the clean ground, the generator paints one large continuous field of it, the size of four tiles as
    a 2x2.
    - Cut the four tiles from it.
    - Check them shuffled (2x2 and 4x4).
