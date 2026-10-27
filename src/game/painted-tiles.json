@@ -6,7 +6,7 @@
   "sha256": "a0261d09a8e64e61421af4c0120db926c35e4260eef8e4d9c9d3848665b5b5ff",
   "date": "2026-10-26"
  },
- "revision": "e0088264949c",
+ "revision": "847e942a9f11",
  "display": {
   "minVisibleTiles": 2,
   "maxVisibleTiles": 4,
@@ -2308,6 +2308,428 @@
        "tb": 3,
        "h": 1.25,
        "v": 2.51
+      }
+     }
+    }
+   }
+  },
+  {
+   "id": "putting-green-run",
+   "materialId": "painted:putting-green-run",
+   "name": "Putting green (painted, quilted)",
+   "kind": "grass",
+   "revision": "5dd776f41819",
+   "selection": null,
+   "provisional": true,
+   "light": null,
+   "mean": "#8abb24",
+   "levels": {
+    "near": {
+     "revision": "near-tiles-v1",
+     "folder": "art/theme-consistency/generated/ground/run-grass/putting-green/near/tiles-v1",
+     "native": [
+      1742,
+      902
+     ],
+     "decision": {
+      "file": null,
+      "sha256": null
+     },
+     "tiles": [
+      {
+       "id": "tile-01",
+       "file": "tiles/putting-green-run/near/tile-01.webp",
+       "sha256": "4217824adbec6fa40df9455a570b3683828448b44cbb317411fe0a966fdecbf1",
+       "mean": "#8abb24",
+       "source": "art/theme-consistency/generated/ground/run-grass/putting-green/near/tiles-v1/tile-01.png"
+      },
+      {
+       "id": "tile-02",
+       "file": "tiles/putting-green-run/near/tile-02.webp",
+       "sha256": "4fc67c5d4b75ca796df6bf6efb1fc945f4559c4a172913da84f8fe0ddf4eb4bc",
+       "mean": "#8abb24",
+       "source": "art/theme-consistency/generated/ground/run-grass/putting-green/near/tiles-v1/tile-02.png"
+      },
+      {
+       "id": "tile-03",
+       "file": "tiles/putting-green-run/near/tile-03.webp",
+       "sha256": "e42087b2fc88917691c32a782f5202cb3c3ccf35df1c62c934d553bdbccad3e1",
+       "mean": "#8abb24",
+       "source": "art/theme-consistency/generated/ground/run-grass/putting-green/near/tiles-v1/tile-03.png"
+      },
+      {
+       "id": "tile-04",
+       "file": "tiles/putting-green-run/near/tile-04.webp",
+       "sha256": "7dd67222c070c21c6622a1ceac4c0247092da944e3fdc511684d9664401177e4",
+       "mean": "#8abb24",
+       "source": "art/theme-consistency/generated/ground/run-grass/putting-green/near/tiles-v1/tile-04.png"
+      }
+     ],
+     "status": "the art session's finished near-tiles-v1 tiles (T191): four tiles that meet one another as made (finished-set-as-made, no heal); across any two tiles wrap LR 2.88 -> 4.19 (inside 2.88), TB 4.02 -> 4.93 (inside 3.88)",
+     "heal": {
+      "method": "finished-set-as-made",
+      "band": 0,
+      "fallback": "the art session's finished near-tiles-v1 tiles (T191)",
+      "before": {
+       "lr": 2.88,
+       "tb": 4.02,
+       "h": 2.84,
+       "v": 3.77
+      },
+      "healed": {
+       "lr": 2.88,
+       "tb": 4.02,
+       "h": 2.84,
+       "v": 3.77
+      },
+      "after": {
+       "lr": 4.19,
+       "tb": 4.93,
+       "h": 2.88,
+       "v": 3.88
+      }
+     }
+    },
+    "mid": {
+     "revision": "mid-tiles-v1",
+     "folder": "art/theme-consistency/generated/ground/run-grass/putting-green/mid/tiles-v1",
+     "native": [
+      1744,
+      902
+     ],
+     "decision": {
+      "file": null,
+      "sha256": null
+     },
+     "tiles": [
+      {
+       "id": "tile-01",
+       "file": "tiles/putting-green-run/mid/tile-01.webp",
+       "sha256": "a9fb360e65473628ac6ddb4cbb397910561f9c069e4a176ec326ea520e1833cc",
+       "mean": "#8abb24",
+       "source": "art/theme-consistency/generated/ground/run-grass/putting-green/mid/tiles-v1/tile-01.png"
+      },
+      {
+       "id": "tile-02",
+       "file": "tiles/putting-green-run/mid/tile-02.webp",
+       "sha256": "0cd2444b4866f3a05a6a7965e636340292f5438a2639a736ac80534604b4c997",
+       "mean": "#8aba24",
+       "source": "art/theme-consistency/generated/ground/run-grass/putting-green/mid/tiles-v1/tile-02.png"
+      },
+      {
+       "id": "tile-03",
+       "file": "tiles/putting-green-run/mid/tile-03.webp",
+       "sha256": "f870398e17ad1c4bf0f1bc9c4e443e294d59d68df17d1c6c90b0d523f952711b",
+       "mean": "#8abb24",
+       "source": "art/theme-consistency/generated/ground/run-grass/putting-green/mid/tiles-v1/tile-03.png"
+      },
+      {
+       "id": "tile-04",
+       "file": "tiles/putting-green-run/mid/tile-04.webp",
+       "sha256": "52c1b36d51ecc03f905e7ac6429c8ba24173b5ad3519c323e2da20f4bd9de88c",
+       "mean": "#89ba24",
+       "source": "art/theme-consistency/generated/ground/run-grass/putting-green/mid/tiles-v1/tile-04.png"
+      }
+     ],
+     "status": "the art session's finished mid-tiles-v1 tiles (T191): four tiles that meet one another as made (finished-set-as-made, no heal); across any two tiles wrap LR 3.12 -> 4.37 (inside 3.07), TB 3.89 -> 4.81 (inside 4.02)",
+     "heal": {
+      "method": "finished-set-as-made",
+      "band": 0,
+      "fallback": "the art session's finished mid-tiles-v1 tiles (T191)",
+      "before": {
+       "lr": 3.12,
+       "tb": 3.89,
+       "h": 3.12,
+       "v": 3.98
+      },
+      "healed": {
+       "lr": 3.12,
+       "tb": 3.89,
+       "h": 3.12,
+       "v": 3.98
+      },
+      "after": {
+       "lr": 4.37,
+       "tb": 4.81,
+       "h": 3.07,
+       "v": 4.02
+      }
+     }
+    },
+    "far": {
+     "revision": "far-tiles-v1",
+     "folder": "art/theme-consistency/generated/ground/run-grass/putting-green/far/tiles-v1",
+     "native": [
+      1742,
+      902
+     ],
+     "decision": {
+      "file": null,
+      "sha256": null
+     },
+     "tiles": [
+      {
+       "id": "tile-01",
+       "file": "tiles/putting-green-run/far/tile-01.webp",
+       "sha256": "fff65f6e9f7528be694012582efcc9dcc504d7cfe410bcec0ff972acdfb0a026",
+       "mean": "#8abb24",
+       "source": "art/theme-consistency/generated/ground/run-grass/putting-green/far/tiles-v1/tile-01.png"
+      },
+      {
+       "id": "tile-02",
+       "file": "tiles/putting-green-run/far/tile-02.webp",
+       "sha256": "b2a9e420765a987a03f3e7fe965ca1db7d77cd5e0544910c128eed4254371460",
+       "mean": "#8aba24",
+       "source": "art/theme-consistency/generated/ground/run-grass/putting-green/far/tiles-v1/tile-02.png"
+      },
+      {
+       "id": "tile-03",
+       "file": "tiles/putting-green-run/far/tile-03.webp",
+       "sha256": "a5af225336e9b2a3261e8171b89e1cc35a6178ac10d927ec978d9ea17dddffa8",
+       "mean": "#8aba24",
+       "source": "art/theme-consistency/generated/ground/run-grass/putting-green/far/tiles-v1/tile-03.png"
+      },
+      {
+       "id": "tile-04",
+       "file": "tiles/putting-green-run/far/tile-04.webp",
+       "sha256": "9fc1e77d09773d35e4daa3fd5e6cdafb85bb18537b4c4c8ecb33a65c247abdd3",
+       "mean": "#8aba24",
+       "source": "art/theme-consistency/generated/ground/run-grass/putting-green/far/tiles-v1/tile-04.png"
+      }
+     ],
+     "status": "the art session's finished far-tiles-v1 tiles (T191): four tiles that meet one another as made (finished-set-as-made, no heal); across any two tiles wrap LR 3.45 -> 4.8 (inside 3.42), TB 5.2 -> 5.87 (inside 5.32)",
+     "heal": {
+      "method": "finished-set-as-made",
+      "band": 0,
+      "fallback": "the art session's finished far-tiles-v1 tiles (T191)",
+      "before": {
+       "lr": 3.45,
+       "tb": 5.2,
+       "h": 3.39,
+       "v": 5.15
+      },
+      "healed": {
+       "lr": 3.45,
+       "tb": 5.2,
+       "h": 3.39,
+       "v": 5.15
+      },
+      "after": {
+       "lr": 4.8,
+       "tb": 5.87,
+       "h": 3.42,
+       "v": 5.32
+      }
+     }
+    }
+   }
+  },
+  {
+   "id": "rough-run",
+   "materialId": "painted:rough-run",
+   "name": "Rough (RUN, quilted)",
+   "kind": "grass",
+   "revision": "de19bbdeae41",
+   "selection": null,
+   "provisional": true,
+   "light": null,
+   "mean": "#425e1c",
+   "levels": {
+    "near": {
+     "revision": "near-tiles-v1",
+     "folder": "art/theme-consistency/generated/ground/run-grass/rough/near/tiles-v1",
+     "native": [
+      1376,
+      768
+     ],
+     "decision": {
+      "file": null,
+      "sha256": null
+     },
+     "tiles": [
+      {
+       "id": "tile-01",
+       "file": "tiles/rough-run/near/tile-01.webp",
+       "sha256": "f9cd75bf16366abf3d2f3a989e3e1f1546a383979d76fd27bc3c27c88b324e17",
+       "mean": "#425e1c",
+       "source": "art/theme-consistency/generated/ground/run-grass/rough/near/tiles-v1/tile-01.png"
+      },
+      {
+       "id": "tile-02",
+       "file": "tiles/rough-run/near/tile-02.webp",
+       "sha256": "8775b7a7c56e49648e80b21168ae90bbea35e52eff3f60da0d170f3e60c89005",
+       "mean": "#425e1c",
+       "source": "art/theme-consistency/generated/ground/run-grass/rough/near/tiles-v1/tile-02.png"
+      },
+      {
+       "id": "tile-03",
+       "file": "tiles/rough-run/near/tile-03.webp",
+       "sha256": "289771e6a16296ae3825495abe3212ba6fcc3eef59832ba2619e0e74fcd323ca",
+       "mean": "#425e1c",
+       "source": "art/theme-consistency/generated/ground/run-grass/rough/near/tiles-v1/tile-03.png"
+      },
+      {
+       "id": "tile-04",
+       "file": "tiles/rough-run/near/tile-04.webp",
+       "sha256": "a4b0ba503ebc88640a866269fe72025526aee5b0695ae5da1ad5eaee478c7e64",
+       "mean": "#425e1c",
+       "source": "art/theme-consistency/generated/ground/run-grass/rough/near/tiles-v1/tile-04.png"
+      }
+     ],
+     "status": "the art session's finished near-tiles-v1 tiles (T191): four tiles that meet one another as made (finished-set-as-made, no heal); across any two tiles wrap LR 10.99 -> 10.93 (inside 9.7), TB 7.9 -> 8.23 (inside 8)",
+     "heal": {
+      "method": "finished-set-as-made",
+      "band": 0,
+      "fallback": "the art session's finished near-tiles-v1 tiles (T191)",
+      "before": {
+       "lr": 10.99,
+       "tb": 7.9,
+       "h": 9.77,
+       "v": 7.99
+      },
+      "healed": {
+       "lr": 10.99,
+       "tb": 7.9,
+       "h": 9.77,
+       "v": 7.99
+      },
+      "after": {
+       "lr": 10.93,
+       "tb": 8.23,
+       "h": 9.7,
+       "v": 8
+      }
+     }
+    },
+    "mid": {
+     "revision": "mid-tiles-v1",
+     "folder": "art/theme-consistency/generated/ground/run-grass/rough/mid/tiles-v1",
+     "native": [
+      1376,
+      768
+     ],
+     "decision": {
+      "file": null,
+      "sha256": null
+     },
+     "tiles": [
+      {
+       "id": "tile-01",
+       "file": "tiles/rough-run/mid/tile-01.webp",
+       "sha256": "1c527fe0ad6492dcac57bc7555fbaac0db25358dc16a00e549880ca15cb9c461",
+       "mean": "#425e1c",
+       "source": "art/theme-consistency/generated/ground/run-grass/rough/mid/tiles-v1/tile-01.png"
+      },
+      {
+       "id": "tile-02",
+       "file": "tiles/rough-run/mid/tile-02.webp",
+       "sha256": "ae7135c191f0cb59423282bb7690c9ee95747a093b7c0e26d6ffe3d3cff2e27b",
+       "mean": "#425e1c",
+       "source": "art/theme-consistency/generated/ground/run-grass/rough/mid/tiles-v1/tile-02.png"
+      },
+      {
+       "id": "tile-03",
+       "file": "tiles/rough-run/mid/tile-03.webp",
+       "sha256": "dae2199eac260edc1126bd5cf75743738ff44b4f221f2dce901d31313499edd2",
+       "mean": "#425e1c",
+       "source": "art/theme-consistency/generated/ground/run-grass/rough/mid/tiles-v1/tile-03.png"
+      },
+      {
+       "id": "tile-04",
+       "file": "tiles/rough-run/mid/tile-04.webp",
+       "sha256": "99a2731d8c7964029024caa3ac26f82c0ae3d153d7d022f4d348b5c15e2f9a43",
+       "mean": "#425e1c",
+       "source": "art/theme-consistency/generated/ground/run-grass/rough/mid/tiles-v1/tile-04.png"
+      }
+     ],
+     "status": "the art session's finished mid-tiles-v1 tiles (T191): four tiles that meet one another as made (finished-set-as-made, no heal); across any two tiles wrap LR 9.05 -> 9.21 (inside 8.18), TB 8.08 -> 8.43 (inside 7.89)",
+     "heal": {
+      "method": "finished-set-as-made",
+      "band": 0,
+      "fallback": "the art session's finished mid-tiles-v1 tiles (T191)",
+      "before": {
+       "lr": 9.05,
+       "tb": 8.08,
+       "h": 8.29,
+       "v": 7.92
+      },
+      "healed": {
+       "lr": 9.05,
+       "tb": 8.08,
+       "h": 8.29,
+       "v": 7.92
+      },
+      "after": {
+       "lr": 9.21,
+       "tb": 8.43,
+       "h": 8.18,
+       "v": 7.89
+      }
+     }
+    },
+    "far": {
+     "revision": "far-tiles-v1",
+     "folder": "art/theme-consistency/generated/ground/run-grass/rough/far/tiles-v1",
+     "native": [
+      1376,
+      768
+     ],
+     "decision": {
+      "file": null,
+      "sha256": null
+     },
+     "tiles": [
+      {
+       "id": "tile-01",
+       "file": "tiles/rough-run/far/tile-01.webp",
+       "sha256": "62d2dbf3030ef3d4e025b44c975cc6e43efc9cfeddd6f12b7289c94d29e9e288",
+       "mean": "#425e1c",
+       "source": "art/theme-consistency/generated/ground/run-grass/rough/far/tiles-v1/tile-01.png"
+      },
+      {
+       "id": "tile-02",
+       "file": "tiles/rough-run/far/tile-02.webp",
+       "sha256": "c734b818933a120d5aa6f8987ce12aa842c61df9d2c27b5128226ab6a6425e9f",
+       "mean": "#425e1c",
+       "source": "art/theme-consistency/generated/ground/run-grass/rough/far/tiles-v1/tile-02.png"
+      },
+      {
+       "id": "tile-03",
+       "file": "tiles/rough-run/far/tile-03.webp",
+       "sha256": "6b686421c3bb26939acbb56c7bd3fc50fa415a458ea4d1bf07318f0c06acb508",
+       "mean": "#425e1c",
+       "source": "art/theme-consistency/generated/ground/run-grass/rough/far/tiles-v1/tile-03.png"
+      },
+      {
+       "id": "tile-04",
+       "file": "tiles/rough-run/far/tile-04.webp",
+       "sha256": "15fc556f1ec6ef2df458ab553fc6a3b0d503577e1a205b0c7070accb659bdb4d",
+       "mean": "#425e1c",
+       "source": "art/theme-consistency/generated/ground/run-grass/rough/far/tiles-v1/tile-04.png"
+      }
+     ],
+     "status": "the art session's finished far-tiles-v1 tiles (T191): four tiles that meet one another as made (finished-set-as-made, no heal); across any two tiles wrap LR 6.68 -> 7.03 (inside 6.44), TB 7.82 -> 8.13 (inside 6.77)",
+     "heal": {
+      "method": "finished-set-as-made",
+      "band": 0,
+      "fallback": "the art session's finished far-tiles-v1 tiles (T191)",
+      "before": {
+       "lr": 6.68,
+       "tb": 7.82,
+       "h": 6.59,
+       "v": 6.86
+      },
+      "healed": {
+       "lr": 6.68,
+       "tb": 7.82,
+       "h": 6.59,
+       "v": 6.86
+      },
+      "after": {
+       "lr": 7.03,
+       "tb": 8.13,
+       "h": 6.44,
+       "v": 6.77
       }
      }
     }
