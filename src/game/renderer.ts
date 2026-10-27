@@ -97,7 +97,7 @@ function courseCovers(c: CoursePatch, x: number, y: number): boolean {
   }
   return false;
 }
-/** T217: an area's spill over one chunk as laid (its blades' and its shade bands' paths; null: none there), kept by chunk and area while the
+/** T217: an area's spill over one chunk as laid (its blades' and its shade bands' paths; null: none there), kept by chunk, blade scale and area while the
  *  ground laid before the area (others) and the course chunks are the same objects: a re-bake of the chunk (a course edit re-stales many)
  *  lays it again without reading the ground round the outline or building paths */
 type SpillMemo = { others: readonly LotPatch[]; course: readonly CoursePatch[]; paths: { blades: Path2D[]; near: Path2D; far: Path2D } | null };
@@ -122,6 +122,8 @@ const LIVING_MADE = 12;
 /** T217: the chunks whose living-ground variants' regions (rugged edges, T204) a worker keeps: a few kB of path each, so many more chunks than
  *  their grids and masks (a re-bake of a chunk whose masks were let go makes them again, but not its regions' contours and paths) */
 const LIVING_EDGES = 128;
+/** T217: the sets of bank and rock-face runs whose paths a worker keeps (courseBanks; a few hundred kB at most each) */
+const BANK_BUILT = 32;
 /** the lush variant's tint (multiplied over the grass laid over itself: deeper and greener, never a flat colour), and the warm light the derived
  *  soil is lifted by (screen) */
 const LUSH_TINT = '#c4dcac', SOIL_LIFT = '#40291a', SOIL_WARM = '#f0cfa4';
@@ -482,8 +484,9 @@ export class GroundPainter {
    *  lawn, lot, painted area or course layer there), cut from the ground under it (under) */
   private areaSpill(ctx: C2D, f: RuggedForm, others: readonly LotPatch[], course: readonly CoursePatch[], L: number, M: DOMMatrix, box: BBox, under: CanvasPattern) {
     const ring = f.q.pts, n = ring.length >> 1; if (n < 3 || !SPILLS_ON.has(f.kind)) return;
-    // T217: laid as on this chunk's last bake when nothing round it changed
-    const ck = this.chunkNow!.key;
+    // T217: laid as on this chunk's last bake when nothing round it changed (by the chunk and the blades' scale: its box is the same at every
+    // level, so two levels with the same scale share it)
+    const k = spillScale(L, TILE_PX), ck = `${this.chunkNow!.key.replace(/@.*/, '')}#${k}`;
     let byArea = this.spillMemo.get(ck);
     if (byArea) { this.spillMemo.delete(ck); this.spillMemo.set(ck, byArea); } else { this.spillMemo.set(ck, byArea = new Map()); trimLru(this.spillMemo, new Set([ck]), SPILL_MEMO_CHUNKS); }
     const memo = byArea.get(f);
@@ -493,7 +496,7 @@ export class GroundPainter {
       return;
     }
     const keep = (paths: SpillMemo['paths']) => { byArea.delete(f); byArea.set(f, { others: others.slice(), course: course.slice(), paths }); for (const a of byArea.keys()) { if (byArea.size <= SPILL_MEMO_AREAS) break; byArea.delete(a); } };
-    const k = spillScale(L, TILE_PX), x0 = box[0] - 1.5, y0 = box[1] - 1.5, x1 = box[2] + 1.5, y1 = box[3] + 1.5;
+    const x0 = box[0] - 1.5, y0 = box[1] - 1.5, x1 = box[2] + 1.5, y1 = box[3] + 1.5;
     // which outline points have the map's grass just outside
     const tall = new Uint8Array(n), near = others.filter(o => o !== f.q && o.pts.length >= 6), nb = near.map(o => quadBox(o.pts));
     let any = false;
@@ -1984,14 +1987,18 @@ export class GroundPainter {
     const bOfBin = (k: number) => BANK_B0 + (BANK_B1 - BANK_B0) * (k / (NB - 1));
     type Group = { f: FaceForm; hs: number; face: Path2D; bands: Path2D[]; upper: Path2D; toe: Path2D[]; crest: Path2D; body: Path2D; foot: Path2D; shadow: Path2D[]; shade: boolean;
       stoneShade: Path2D; stones: Path2D[]; lights: Path2D[]; tufts: Path2D[]; sides: Path2D[]; treads: Path2D[]; risers: Path2D[]; noses: Path2D; cheeks: Path2D; timber: boolean; stairs: boolean };
-    const groups = new Map<number, Group>(), ends = endNormals(ws);
-    for (const w of ws) {
+    // T217: the faces' paths are made once for these runs (tile space, the same at every level) and kept for the next bake they reach (T204's
+    // warped wall tops have ten times the points: a re-bake of a chunk under a bank built them all again)
+    const bkey = this.bankKey(ws, lite, stairs), built = this.bankBuilt.get(bkey) as Map<number, Group> | undefined;
+    const groups = built ?? new Map<number, Group>(), ends = built ? null : endNormals(ws);
+    if (built) { this.bankBuilt.delete(bkey); this.bankBuilt.set(bkey, built); }
+    if (!built) for (const w of ws) {
       const p = w.p, n = p.length / 3; if (n < 2 || !w.f) continue;
       const hs = w.hs ?? 0, f = w.f as FaceForm, key = f * 16 + hs, r = w.r ?? 0, k = faceScale({ m: w.m as WallMat, hs }), ratio = 2 * r;
       let G = groups.get(key);
       if (!G) groups.set(key, G = { f, hs, face: new Path2D(), bands: Array.from({ length: NQ * NB }, () => new Path2D()), upper: new Path2D(), toe: BANK_TOE.map(() => new Path2D()), crest: new Path2D(), body: new Path2D(), foot: new Path2D(), shadow: [new Path2D(), new Path2D(), new Path2D()], shade: false,
         stoneShade: new Path2D(), stones: Array.from({ length: 6 }, () => new Path2D()), lights: [new Path2D(), new Path2D(), new Path2D()], tufts: [new Path2D(), new Path2D(), new Path2D()], sides: Array.from({ length: 4 }, () => new Path2D()), treads: Array.from({ length: 4 }, () => new Path2D()), risers: Array.from({ length: 4 }, () => new Path2D()), noses: new Path2D(), cheeks: new Path2D(), timber: f === FaceForm.Bank, stairs: false });
-      const { ox, oy, nx, ny } = bankPoints(p, r, k, ends), lb = new Float64Array(n);
+      const { ox, oy, nx, ny } = bankPoints(p, r, k, ends!), lb = new Float64Array(n);
       for (let i = 0; i < n; i++) lb[i] = slopeLight(nx[i]!, ny[i]!, ratio);
       const X = (i: number, d: number) => p[3 * i]! + d * ox[i]!, Y = (i: number, d: number) => p[3 * i + 1]! + d * oy[i]!;
       const strip = (path: Path2D, d0: number, d1: number) => { path.moveTo(X(0, d0), Y(0, d0)); for (let i = 1; i < n; i++) path.lineTo(X(i, d0), Y(i, d0)); for (let i = n - 1; i >= 0; i--) path.lineTo(X(i, d1), Y(i, d1)); path.closePath(); };
@@ -2027,6 +2034,7 @@ export class GroundPainter {
       rd.stones.forEach((q, t) => G.stones[t]!.addPath(q)); rd.lights.forEach((q, t) => G.lights[t]!.addPath(q)); G.stoneShade.addPath(rd.shade); rd.tufts.forEach((q, t) => G.tufts[t]!.addPath(q));
       if (hs === SURF.tee) this.bankStairs(G, w, nx, ny, stairs, k);
     }
+    if (!built) { this.bankBuilt.set(bkey, groups); trimLru(this.bankBuilt, new Set([bkey]), BANK_BUILT); }
     const shine = (G: Group, paint: (g: C2D) => void) => {
       let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
       for (const w of ws) if ((w.f as FaceForm) === G.f && (w.hs ?? 0) === G.hs) { const { ox, oy } = footOffsets(w); for (let i = 0; i < w.p.length / 3; i++) { const x = w.p[3 * i]!, y = w.p[3 * i + 1]!; x0 = Math.min(x0, x, x + ox[i]!); x1 = Math.max(x1, x, x + ox[i]!); y0 = Math.min(y0, y, y + oy[i]!); y1 = Math.max(y1, y, y + oy[i]!); } }
@@ -2111,6 +2119,18 @@ export class GroundPainter {
         }
       }
     };
+  }
+  /** T217: the banks' and rock faces' paths as made (courseBanks), by its runs (bankKey), the last BANK_BUILT sets of runs */
+  private bankBuilt = new Map<string, Map<number, unknown>>();
+  private wallIds = new WeakMap<CourseWall, number>(); private wallIdNext = 1;
+  /** a set of runs' key for bankBuilt: lite, the stairs (cut into a tee's runs) and each run by its own id (a run keeps its object while its
+   *  course chunk does) */
+  private bankKey(ws: readonly CourseWall[], lite: boolean, stairs: readonly Stair[]): string {
+    let s = lite ? 'm' : 'g';
+    for (const q of stairs) s += `|${q.x},${q.y},${q.nx},${q.ny},${q.half}`;
+    s += '#';
+    for (const w of ws) { let id = this.wallIds.get(w); if (id === undefined) this.wallIds.set(w, id = this.wallIdNext++); s += id + ','; }
+    return s;
   }
   /** each rock run's stones and tufts (courseBanks), kept with the run (a chunk patch's runs live as long as the patch) and made again only
    *  when its feet move (a neighbouring run's end, which its ends share, came or went) */
