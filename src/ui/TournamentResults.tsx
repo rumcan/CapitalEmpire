@@ -1,5 +1,6 @@
 // Golf tournament results screen view component (docs/GOLF-PLAN.md sections 2.3, 5.4, 7, and 8.1). React presentational component.
 import type { TournamentDayScore } from '../game/golf/tournamentday';
+import { trendKind, withIcon } from './status-icon';
 import { tierInfo } from '../game/golf/tour';
 
 /** format currency with explicit sign for net results */
@@ -57,34 +58,34 @@ export function TournamentResults({ score, tier, year, prevReputation, onContinu
           <div className="text-xs text-slate-400">Tier {tier} Championship</div>
         </div>
         <div className="text-right">
-          <div className="text-[10px] uppercase text-slate-400">Day Satisfaction</div>
+          <div className="text-[12px] uppercase text-slate-400">Day Satisfaction</div>
           <div className={`text-base font-bold ${sat.text}`}>{formatPercent(score.satisfaction)}</div>
-          <div className="text-[10px] text-slate-400">{sat.label}</div>
+          <div className="text-[12px] text-slate-400">{sat.label}</div>
         </div>
       </div>
 
       <div className="grid grid-cols-4 gap-2 text-center text-xs">
         <div className="rounded-lg bg-white/5 p-2">
-          <div className="text-[10px] uppercase text-slate-400">Admitted</div>
+          <div className="text-[12px] uppercase text-slate-400">Admitted</div>
           <div className="text-sm font-bold text-white">{score.admitted.toLocaleString()}</div>
-          <div className="text-[10px] text-slate-400">{score.facts.onTime.toLocaleString()} on time</div>
+          <div className="text-[12px] text-slate-400">{score.facts.onTime.toLocaleString()} on time</div>
         </div>
         <div className="rounded-lg bg-white/5 p-2">
-          <div className="text-[10px] uppercase text-slate-400">Late / Missed</div>
+          <div className="text-[12px] uppercase text-slate-400">Late / Missed</div>
           <div className="text-sm font-bold text-amber-300">{score.facts.late} late</div>
-          <div className="text-[10px] text-rose-400">{score.facts.missed} missed</div>
+          <div className="text-[12px] text-rose-400">{score.facts.missed} missed</div>
         </div>
         <div className="rounded-lg bg-white/5 p-2">
-          <div className="text-[10px] uppercase text-slate-400">Exit P95</div>
+          <div className="text-[12px] uppercase text-slate-400">Exit P95</div>
           <div className="text-sm font-bold text-white">{Math.round(score.facts.exitP95Min)} min</div>
-          <div className="text-[10px] text-slate-400">Queue: {score.facts.avgQueueMin.toFixed(1)}m</div>
+          <div className="text-[12px] text-slate-400">Queue: {score.facts.avgQueueMin.toFixed(1)}m</div>
         </div>
         <div className="rounded-lg bg-white/5 p-2">
-          <div className="text-[10px] uppercase text-slate-400">Reputation</div>
+          <div className="text-[12px] uppercase text-slate-400">Reputation</div>
           <div className="text-sm font-bold text-white">
             {prevReputation} → <span className={repChange.text}>{score.reputationAfter}</span>
           </div>
-          <div className={`text-[10px] font-semibold ${repChange.text}`}>{repChange.label} shift</div>
+          <div className={`text-[12px] font-semibold ${repChange.text}`}>{repChange.label} shift</div>
         </div>
       </div>
 
@@ -92,7 +93,7 @@ export function TournamentResults({ score, tier, year, prevReputation, onContinu
         <div className="mb-2 font-semibold text-slate-300">Financial Ledger</div>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <div className="mb-1 text-[10px] font-bold uppercase text-emerald-400">Revenue</div>
+            <div className="mb-1 text-[12px] font-bold uppercase text-emerald-400">Revenue</div>
             <div className="space-y-1 text-slate-300">
               <div className="flex justify-between">
                 <span>Ticket Sales ({tInfo.ticket > 0 ? `$${tInfo.ticket}/ea` : 'Free'}):</span>
@@ -122,7 +123,7 @@ export function TournamentResults({ score, tier, year, prevReputation, onContinu
           </div>
 
           <div>
-            <div className="mb-1 text-[10px] font-bold uppercase text-rose-400">Costs</div>
+            <div className="mb-1 text-[12px] font-bold uppercase text-rose-400">Costs</div>
             <div className="space-y-1 text-slate-300">
               <div className="flex justify-between">
                 <span>Purse & Sanctioning:</span>
@@ -157,7 +158,7 @@ export function TournamentResults({ score, tier, year, prevReputation, onContinu
         <div className="mt-3 flex items-center justify-between border-t border-white/10 pt-2 text-sm font-bold">
           <span>Net Tournament Profit:</span>
           <span className={`text-base tabular-nums ${m.net >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-            {formatResultMoney(m.net, true)}
+            {withIcon(trendKind(m.net), formatResultMoney(m.net, true))}
           </span>
         </div>
       </div>

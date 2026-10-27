@@ -32,6 +32,7 @@
 // Pure geometry and canvas calls (the canvas factory and the photo source come in), importable from node tests. Units: tiles of 2 m for
 // the map, device px on screen.
 import { CELL_T, SURF, fillPolygon, makeGrid, paintDisc, type Grid } from '../course-grid';
+import { drawRefusedCross, HATCH_LIGHT, strokeHatch } from '../refused-mark';
 import { spawnSplash, stepSplash, type SplashKind, type SplashParticle } from '../course-fx';
 import { HH, HW } from '../../iso';
 import { CAST, castShear } from '../../cast-shadow';
@@ -152,7 +153,7 @@ const GRASS: Look = { glow: '#a6e07a', core: '#f0fbe2', fill: '#86c25a', wall: '
 /** each brush kind's tint (the footprint's fill): the UI's small disc icons (the hint pill, the surface chips) use the same colours */
 export const SURFACE_TINT: Readonly<Record<string, string>> = { ...Object.fromEntries(Object.entries(LOOKS).map(([k, l]) => [k, l.fill])), grass: GRASS.fill };
 /** the refused cells' muted red: tint, edge and hatch; the ✕ badge's red */
-const SKIP_FILL = '#c8604f', SKIP_EDGE = '#f0a090', HATCH = 'rgba(255,196,180,0.85)', CROSS_RED = '#cf3f33';
+const SKIP_FILL = '#c8604f', SKIP_EDGE = '#f0a090', HATCH = HATCH_LIGHT;
 /** the footprint's tint and edge strengths, and the dark line under the edge that keeps it crisp on a light surface */
 const TINT_A = 0.26, SKIP_A = 0.22, EDGE_A = 0.9, UNDER = 'rgba(12,18,8,0.42)';
 /** the kept cells' dotted outline (protected: a higher surface stays on top) */
@@ -1125,21 +1126,15 @@ export class CourseCursor {
     let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
     for (let i = 0; i < end; i += 2) { const X = s[i]!, Y = s[i + 1]!; if (X < x0) x0 = X; if (X > x1) x1 = X; if (Y < y0) y0 = Y; if (Y > y1) y1 = Y; }
     ctx.save(); ctx.clip('evenodd');
-    const p = 4.5 * d;
-    ctx.beginPath();
-    for (let k = Math.floor((x0 - y1) / p) * p; k <= x1 - y0; k += p) { ctx.moveTo(k + y0, y0); ctx.lineTo(k + y1, y1); }
-    ctx.strokeStyle = HATCH; ctx.globalAlpha = 0.7; ctx.lineWidth = d; ctx.stroke();
+    strokeHatch(ctx, x0, y0, x1, y1, d, HATCH, 0.7);
     ctx.restore();
     this.loopsPath(ctx, loops, ox, oy, v);
     this.edge(ctx, SKIP_EDGE, d, this.dashes(d).none, EDGE_A);
     if (!(xdx === xdx)) return;
     // the ✕: a small red badge on the refused cell nearest the dab, the same size at every zoom
     const ze = v.ze, tx = ox + (xdx + 0.5) * CELL_T, ty = oy + (xdy + 0.5) * CELL_T;
-    const X = (tx - ty) * HW * ze + v.cw / 2 - v.camX * ze, Y = (tx + ty) * HH * ze + v.ch / 2 - v.camY * ze, a = 2.5 * d;
-    ctx.globalAlpha = 1; ctx.beginPath(); ctx.arc(X, Y, 6.5 * d, 0, Math.PI * 2);
-    ctx.fillStyle = CROSS_RED; ctx.fill(); ctx.strokeStyle = 'rgba(255,246,240,0.95)'; ctx.lineWidth = 1.3 * d; ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(X - a, Y - a); ctx.lineTo(X + a, Y + a); ctx.moveTo(X + a, Y - a); ctx.lineTo(X - a, Y + a);
-    ctx.lineCap = 'round'; ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.7 * d; ctx.stroke(); ctx.lineCap = 'butt';
+    const X = (tx - ty) * HW * ze + v.cw / 2 - v.camX * ze, Y = (tx + ty) * HH * ze + v.ch / 2 - v.camY * ze;
+    drawRefusedCross(ctx, X, Y, d);
   }
   /** strokes the current path as the footprint's edge: a dark line under a light one, a css px wide, in a dash pattern (none: solid) */
   private edge(ctx: CanvasRenderingContext2D, col: string, d: number, dash: number[], alpha: number) {

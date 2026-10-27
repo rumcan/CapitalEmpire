@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+/* T180 (P23-UX D8.1): body text at 13 px or more. text-xs is the panels' body size: 13 px here (Tailwind's 12 px default was below the
+   floor); secondary text (sub-lines, labels, key hints) is 12 px, the old 9 to 11 px sizes raised to it. */
+@theme { --text-xs: 0.8125rem; --text-xs--line-height: 1.3; }
+
 /* The Maple Falls look (the owner's mockup, docs/ui/mockup-road-panel.webp): dark charcoal glass panels, gold accents and outlines,
    a serif display face for the logo and panel titles, small caps section labels. */
 :root {
@@ -15,12 +19,12 @@
 }
 
 .font-display { font-family: Georgia, "Palatino Linotype", "Book Antiqua", Palatino, serif; letter-spacing: 0.01em; }
-.label-caps { font-size: 0.66rem; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
+.label-caps { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
 
 .glass { border-radius: 1rem; border: 1px solid var(--line); background: var(--panel); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.04); backdrop-filter: blur(10px); color: var(--ink); }
 .glass-2 { border-radius: 0.75rem; border: 1px solid var(--line); background: var(--panel-2); }
 
-.btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem; border-radius: 0.65rem; border: 1px solid var(--line); background: var(--panel-2); padding: 0.35rem 0.7rem; font-size: 0.75rem; color: var(--ink); }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem; border-radius: 0.65rem; border: 1px solid var(--line); background: var(--panel-2); padding: 0.35rem 0.7rem; font-size: 0.8125rem; color: var(--ink); }
 .btn:hover { border-color: var(--gold-line); }
 .btn-icon { display: inline-flex; align-items: center; justify-content: center; width: 2.4rem; height: 2.4rem; border-radius: 0.7rem; border: 1px solid var(--line); background: var(--panel-2); }
 .btn-icon:hover { border-color: var(--gold-line); }
@@ -28,7 +32,7 @@
 .btn-gold { display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; border-radius: 0.65rem; background: linear-gradient(#ffc94a, #f0a91e); padding: 0.4rem 0.9rem; font-size: 0.8rem; font-weight: 700; color: #1b1406; box-shadow: 0 2px 10px rgba(245, 181, 46, 0.35); }
 .btn-gold:hover { filter: brightness(1.06); }
 
-.chip { display: inline-flex; align-items: center; gap: 0.3rem; border-radius: 0.55rem; border: 1px solid var(--line); background: rgba(255, 255, 255, 0.03); padding: 0.3rem 0.6rem; font-size: 0.7rem; color: #d9d3c4; }
+.chip { display: inline-flex; align-items: center; gap: 0.3rem; border-radius: 0.55rem; border: 1px solid var(--line); background: rgba(255, 255, 255, 0.03); padding: 0.3rem 0.6rem; font-size: 0.75rem; color: #d9d3c4; }
 .chip:hover { border-color: var(--gold-line); }
 .chip-on { background: linear-gradient(#ffc94a, #f0a91e); color: #1b1406; border-color: transparent; font-weight: 600; }
 
@@ -41,11 +45,11 @@
 .rail-tab-on { border-color: var(--gold); background: var(--gold-wash); color: var(--gold-hi); box-shadow: inset 0 0 12px rgba(245, 181, 46, 0.18); }
 
 .seg { display: flex; gap: 0.25rem; border-radius: 0.7rem; background: rgba(0, 0, 0, 0.25); padding: 0.2rem; }
-.seg > button { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 0.3rem; border-radius: 0.55rem; padding: 0.3rem 0.4rem; font-size: 0.7rem; color: #d9d3c4; }
+.seg > button { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 0.3rem; border-radius: 0.55rem; padding: 0.3rem 0.4rem; font-size: 0.75rem; color: #d9d3c4; }
 .seg > button:hover { background: rgba(255, 255, 255, 0.06); }
 .seg > button.on { background: linear-gradient(#ffc94a, #f0a91e); color: #1b1406; font-weight: 600; }
 
-.keycap { display: inline-flex; align-items: center; justify-content: center; min-width: 1.5rem; margin: 0 0.15rem; border-radius: 0.35rem; border: 1px solid rgba(255, 255, 255, 0.25); background: rgba(255, 255, 255, 0.06); padding: 0 0.3rem; font-size: 0.65rem; font-weight: 700; line-height: 1.2rem; color: var(--ink); }
+.keycap { display: inline-flex; align-items: center; justify-content: center; min-width: 1.5rem; margin: 0 0.15rem; border-radius: 0.35rem; border: 1px solid rgba(255, 255, 255, 0.25); background: rgba(255, 255, 255, 0.06); padding: 0 0.3rem; font-size: 0.75rem; font-weight: 700; line-height: 1.2rem; color: var(--ink); }
 
 /* ---- P23 P1-E: the rail, the Holes and Buildings panels (docs/plans/P23-UX.md 4.2, 4.3, 4.11) ---- */
 /* visible focus rings for keyboard users: 2 px gold, offset 2 px */
@@ -60,24 +64,24 @@
 
 /* the rail: key letters, the Course and Town headings, locked tools dimmed in place with a lock, NEW badges; 52 px items under 800 px tall */
 /* the items share the height under the top bar (which may wrap) and above the minimap: 60 px at most, 52 px at most under 800 px tall */
-.rail-tab { position: relative; height: clamp(42px, calc((100vh - var(--hud-top, 5.75rem) - 213px) / 9), 60px); font-size: 12px; }
+.rail-tab { position: relative; height: clamp(42px, calc((100vh - var(--hud-top, 5.75rem) - 222px) / 9), 58px); font-size: 12px; }
 .rail-tab-locked { opacity: 0.42; }
 .rail-tab-locked:hover { background: rgba(255, 255, 255, 0.03); }
-.rail-key { position: absolute; left: 0.3rem; top: 0.15rem; font-size: 11px; font-weight: 700; line-height: 1; color: var(--muted); }
+.rail-key { position: absolute; left: 0.3rem; top: 0.15rem; font-size: 12px; font-weight: 700; line-height: 1; color: var(--muted); }
 .rail-lock { position: absolute; right: 0.3rem; top: 0.2rem; color: var(--muted); }
 .rail-new { position: absolute; right: 0.1rem; top: 0.1rem; }
-.rail-heading { padding-top: 0.2rem; text-align: center; font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.rail-heading { padding-top: 0.2rem; text-align: center; font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
 .new-badge { display: inline-block; border-radius: 999px; background: linear-gradient(#ffd166, #f0a91e); padding: 0 0.3rem; font-size: 9px; font-weight: 800; letter-spacing: 0.04em; line-height: 14px; color: #1b1406; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4); }
 @media (max-height: 799px) {
-  .rail-tab { height: clamp(42px, calc((100vh - var(--hud-top, 5.75rem) - 213px) / 9), 52px); gap: 0.1rem; }
+  .rail-tab { height: clamp(42px, calc((100vh - var(--hud-top, 5.75rem) - 222px) / 9), 52px); gap: 0.1rem; }
   .rail-tab img { width: 24px; height: 24px; }
-  .rail-heading { padding-top: 0; font-size: 10px; }
+  .rail-heading { padding-top: 0; font-size: 12px; }
 }
 
 /* a tool panel (tp): 13 px text and controls, 12 px secondary lines, 11 px keycaps and small-caps headings; pills and marked swatches */
 .tp { font-size: 13px; line-height: 1.4; }
 .tp .chip { border-radius: 999px; padding: 0.3rem 0.7rem; font-size: 13px; }
-.tp .label-caps { font-size: 11px; }
+.tp .label-caps { font-size: 12px; }
 .tp .sub-line, .sub-line { font-size: 12px; color: var(--muted); }
 .tp .card { font-size: 13px; color: var(--ink); }
 .tp .card:disabled { cursor: default; }
@@ -116,7 +120,7 @@
 .wiz-checks { display: flex; flex-direction: column; gap: 0.25rem; font-size: 12px; }
 .wiz-checks li { display: flex; align-items: center; gap: 0.4rem; }
 .wiz-checks .chip { padding: 0.1rem 0.5rem; font-size: 12px; }
-.wiz-mark { display: grid; flex-shrink: 0; place-items: center; width: 1.05rem; height: 1.05rem; border-radius: 999px; font-size: 11px; font-weight: 800; }
+.wiz-mark { display: grid; flex-shrink: 0; place-items: center; width: 1.05rem; height: 1.05rem; border-radius: 999px; font-size: 12px; font-weight: 800; }
 .wiz-block { color: #fecaca; }
 .wiz-block .wiz-mark { background: #b91c1c; color: #fff; }
 .wiz-warn { color: #fde68a; }
@@ -126,12 +130,12 @@
 /* T176: an info row (the trees a Build clears): a sky mark beside the words */
 .wiz-info { color: var(--ink); }
 .wiz-info .wiz-mark { background: rgba(56, 189, 248, 0.28); color: #bae6fd; font-style: italic; }
-.wiz-keys { margin-top: 0.5rem; font-size: 11px; line-height: 1.6; color: var(--muted); }
+.wiz-keys { margin-top: 0.5rem; font-size: 12px; line-height: 1.6; color: var(--muted); }
 .swatches { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0.2rem; }
 .swatch { position: relative; display: flex; flex-direction: column; align-items: center; gap: 0.15rem; border-radius: 0.7rem; border: 1px solid transparent; padding: 0.3rem 0.05rem 0.25rem; font-size: 12px; color: #d9d3c4; }
 .swatch:hover { border-color: var(--gold-line); }
 .swatch-disc { display: grid; place-items: center; width: 2.6rem; height: 2.6rem; border-radius: 999px; background: rgba(0, 0, 0, 0.32); box-shadow: inset 0 0 0 1px var(--line); }
-.swatch-key { position: absolute; right: 0.2rem; top: 0.05rem; font-size: 11px; font-weight: 700; color: var(--muted); }
+.swatch-key { position: absolute; right: 0.2rem; top: 0.05rem; font-size: 12px; font-weight: 700; color: var(--muted); }
 .swatch-on { border-color: var(--gold); background: var(--gold-wash); color: var(--gold-hi); font-weight: 700; }
 .swatch-on .swatch-disc { box-shadow: 0 0 0 2px var(--gold); }
 .swatch-on .swatch-key { color: var(--gold-hi); }
@@ -151,4 +155,4 @@
 .more { margin-top: 0.8rem; border-top: 1px solid var(--line); padding-top: 0.55rem; }
 .more-head { display: flex; width: 100%; align-items: baseline; gap: 0.5rem; text-align: left; font-size: 13px; color: var(--ink); }
 .more-sub { flex: 1; font-size: 12px; color: var(--muted); }
-.sub-head { margin-bottom: 0.3rem; font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--gold); }
+.sub-head { margin-bottom: 0.3rem; font-size: 12px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--gold); }

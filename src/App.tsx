@@ -53,6 +53,7 @@ import { WelcomeCard } from './ui/golf/WelcomeCard';
 import { TooltipLayer } from './ui/Tooltip';
 import { UI_SCALES, applyUiScale, currentUiScale, saveUiScale } from './ui/uiScale';
 import { HoleCard } from './ui/golf/HoleCard';
+import { affordKind, balanceKind, statusIcon, trendKind, withIcon } from './ui/status-icon';
 import stadiumArt from './assets/ui/art/stadium.webp';
 
 /** the top bar on one row (P23 4.11, T135): its golf chips (and the invitation's whole sentence) show their words only from 2200 px; narrower,
@@ -177,14 +178,14 @@ export default function App() {
   const shownTools = item ? item.tools.filter(t => !ui || (ui.visibleTools as string[]).includes(t.id)) : [];
 
   /** the top bar's money figure (a button: it opens the budget) */
-  const treasury = (g: Game) => <Stat icon="bank" label="Treasury" value={g.unlimited ? '∞' : money(g.money)} tone={g.money < 0 ? 'text-red-300' : 'text-emerald-300'} sub={debtDays ? `bankrupt in ${DEBT_DAYS - debtDays} days` : undefined} subTone="text-red-300" onClick={() => { g.panel = g.panel === 'budget' ? null : 'budget'; g.emit(); }} />;
+  const treasury = (g: Game) => <Stat icon="bank" label="Treasury" value={g.unlimited ? '∞' : withIcon(balanceKind(g.money), money(g.money))} tone={g.money < 0 ? 'text-red-300' : 'text-emerald-300'} sub={debtDays ? `bankrupt in ${DEBT_DAYS - debtDays} days` : undefined} subTone="text-red-300" onClick={() => { g.panel = g.panel === 'budget' ? null : 'budget'; g.emit(); }} />;
   /** the population, jobs, day and daily income: inline in classic mode, in the Treasury drawer in golf mode (T035) */
   const moreStats = (g: Game) => (
     <>
       <Stat icon="people" label="Population" value={g.traffic.pop.toLocaleString()} />
       <Stat icon="briefcase" label="Jobs" value={g.traffic.jobs.toLocaleString()} />
       <Stat icon="sun" label="Day" value={String(g.day)} sub={hhmm(g.clock())} />
-      <Stat icon="income" label="Daily income" value={(net >= 0 ? '+' : '') + money(net)} tone={net >= 0 ? 'text-emerald-300' : 'text-red-300'} />
+      <Stat icon="income" label="Daily income" value={withIcon(trendKind(net), (net >= 0 ? '+' : '') + money(net))} tone={net >= 0 ? 'text-emerald-300' : 'text-red-300'} />
     </>
   );
 
@@ -234,7 +235,7 @@ export default function App() {
                       under 1900 px, the chips' words and the invitation's sentence under 2200 px go into their tooltips; the traffic views are in the
                       gear menu */}
                   {/* T095 (P22 2.8): before the tour's invitation the Tier's line says the founding season's holes (one row at 1366-1920 px, T135) */}
-                  <Stat icon="trophy" label="Tier" value={`T${gv.tier}`} sub={founding ?? gv.tierName} subClass="max-[1599px]:hidden" subTone={founding ? 'font-semibold text-amber-300' : undefined} subTestId={founding ? 'founding-chip' : undefined} title={founding ? `${founding}: the tour invites you with ${fv!.check.holesNeeded} holes, a car park and a clubhouse (Tier ${gv.tier}: ${gv.tierName})` : `Tier ${gv.tier}: ${gv.tierName}`} tone="text-amber-200" />
+                  <Stat icon="trophy" label="Tier" value={`T${gv.tier}`} sub={founding ? withIcon('growing', founding) : gv.tierName} subClass="max-[1599px]:hidden" subTone={founding ? 'font-semibold text-amber-300' : undefined} subTestId={founding ? 'founding-chip' : undefined} title={founding ? `${founding}: the tour invites you with ${fv!.check.holesNeeded} holes, a car park and a clubhouse (Tier ${gv.tier}: ${gv.tierName})` : `Tier ${gv.tier}: ${gv.tierName}`} tone="text-amber-200" />
                   <Stat icon="calendar" label="Month" value={gv.month} sub={gv.live ? 'Tournament day' : `${Math.ceil(gv.monthsLeft)} ${Math.ceil(gv.monthsLeft) === 1 ? 'month' : 'months'} to ${fv && !fv.due ? 'season end' : 'the tournament'}`} />
                   {game.golf?.start === 'range' && <button className={`chip ${game.range.cardOpen ? 'chip-on' : ''}`} onClick={() => game.openRangeCard()} data-tip="The driving range: golfers, takings, bucket price and upgrades" aria-label="Range" data-testid="range-chip"><Icon name="income" size={16} /><span className={WIDE}>Range</span></button>}
                   {fv?.invited && game.traffic.round.runs === 0 && !gv.live && <span className="flex items-center gap-1 whitespace-nowrap rounded-md border border-amber-400/40 bg-amber-400/15 px-2 py-1 text-xs font-semibold text-amber-200" data-testid="invite-pill" data-tip={`The tour's invitation: the Club Championship at the end of ${fv.due ? 'this' : 'next'} season (the first tournament is held at the end of the season it names)`}><Icon name="trophy" size={14} /><span className="min-[2200px]:hidden">Invited</span><span className={WIDE}>The Club Championship: end of {fv.due ? 'this' : 'next'} season</span></span>}
@@ -256,7 +257,7 @@ export default function App() {
                   </div>
                 </div>
               ) : <>{treasury(game)}{moreStats(game)}</>}
-              {dev && <span className="rounded-md border border-sky-400/50 bg-sky-400/15 px-1.5 py-0.5 text-[10px] font-bold text-sky-200" data-tip="Developer panels are on (F3 hides them)">DEV</span>}
+              {dev && <span className="rounded-md border border-sky-400/50 bg-sky-400/15 px-1.5 py-0.5 text-[12px] font-bold text-sky-200" data-tip="Developer panels are on (F3 hides them)">DEV</span>}
               {dev && (game.growth !== 1 || game.unlimited || !game.stamped) && (
                 <div className="rounded-md border border-amber-400/40 bg-amber-400/15 px-2 py-1 text-xs font-semibold text-amber-200" data-tip="Dev sandbox options (URL: ?grow=N, ?money=0|1, ?stamp=0|1)">
                   dev: {[game.growth !== 1 && `grow ${game.growth}×`, game.unlimited && '∞ $', !game.stamped && 'no stamp', game.unlockAll && 'all unlocked'].filter(Boolean).join(' · ')}
@@ -367,12 +368,12 @@ export default function App() {
                     {backups.length > 0 && <button className="btn w-full" onClick={() => setBackupsOpen(!backupsOpen)} data-tip="Saves kept as backups: a newer build's, an unreadable one, the copy before a migration, and the one replaced by a load">Backups ({backups.length}) {backupsOpen ? '▴' : '▾'}</button>}
                     {backupsOpen && backups.map(k => (
                       <div key={k} className="flex items-center gap-1 px-2 py-1 text-xs">
-                        <span className="min-w-0 flex-1 truncate text-[10px] opacity-70" data-tip={k}>{k}</span>
+                        <span className="min-w-0 flex-1 truncate text-[12px] opacity-70" data-tip={k}>{k}</span>
                         <button className="btn" onClick={() => void game.downloadBackup(k)} data-tip="Download this backup as a .cesave file">Download</button>
                         <button className={`btn ${armedBackup === k ? '!border-red-400 !text-red-300' : ''}`} data-tip="Delete this backup for good" onClick={async () => { if (armedBackup !== k) { setArmedBackup(k); return; } setArmedBackup(null); await game.deleteSaveBackup(k); setBackups(await game.saveBackups()); }}>{armedBackup === k ? 'Click again' : 'Delete'}</button>
                       </div>
                     ))}
-                    <div className="px-2 pt-1 text-[10px] opacity-50" data-tip="The build that is running: every save records it (P07), so a bug report with a .cesave says which build wrote it">Build {BUILD.app} · {BUILD.sha}</div>
+                    <div className="px-2 pt-1 text-[12px] opacity-50" data-tip="The build that is running: every save records it (P07), so a bug report with a .cesave says which build wrote it">Build {BUILD.app} · {BUILD.sha}</div>
                     {/* asked in the menu (the browser's confirm() is not shown in every embedded browser): a first click arms, a second acts */}
                     <button className={`btn w-full ${armed === 'new' ? '!border-red-400 !text-red-300' : ''}`} data-tip="Start a new game: your current game is replaced" onClick={() => { if (armed !== 'new') { setArmed('new'); return; } setArmed(null); setMenu(false); game.newTown(); }}>{armed === 'new' ? 'Click again: replace this game' : 'New game'}</button>
                     <button className={`btn w-full ${armed === 'empty' ? '!border-red-400 !text-red-300' : ''}`} data-tip="Clear everything and start from an empty field" onClick={() => { if (armed !== 'empty') { setArmed('empty'); return; } setArmed(null); setMenu(false); game.clearTown(); }}>{armed === 'empty' ? 'Click again: clear everything' : 'Empty map'}</button>
@@ -483,9 +484,9 @@ export default function App() {
           <div key={s.id} className="space-y-1 rounded-lg border border-white/5 bg-white/5 p-2">
           <div className="flex justify-between font-medium text-white">
           <span>{s.name}</span>
-          <span className="text-[10px] text-slate-400">{s.footprint.w}×{s.footprint.h}{s.unit ? ` · ${s.capacity} ${s.unit}` : ''}</span>
+          <span className="text-[12px] text-slate-400">{s.footprint.w}×{s.footprint.h}{s.unit ? ` · ${s.capacity} ${s.unit}` : ''}</span>
           </div>
-          <p className="text-[11px] text-slate-400">{s.blurb}</p>
+          <p className="text-[12px] text-slate-400">{s.blurb}</p>
           <div className="flex gap-1.5 pt-1">
           {s.rent > 0 && (
           <button className={`chip flex-1 justify-center text-center ${game?.eventStructurePending?.typeId === s.id && game.eventStructurePending?.mode === 'rent' ? 'chip-on' : ''}`} onClick={() => { if (game) { game.setPendingStructure(s.id, 'rent'); bump(); } }}>Rent ${s.rent.toLocaleString()}</button>
@@ -554,7 +555,7 @@ export default function App() {
 function TilesPanel({ game }: { game: Game }) {
   const r = game.tilesReadout();
   return (
-    <div className="absolute bottom-[10.5rem] right-3 z-20 w-72 glass p-2 text-[11px] tabular-nums" data-testid="tiles-readout">
+    <div className="absolute bottom-[10.5rem] right-3 z-20 w-72 glass p-2 text-[12px] tabular-nums" data-testid="tiles-readout">
       <div className="flex justify-between"><span className="font-semibold">Painted tiles · {r.band.toUpperCase()}</span><span>zoom {(r.zoom * 100).toFixed(2)}% · dpr {r.dpr}</span></div>
       <div className={r.scale > 1.0005 ? 'text-amber-300' : 'text-slate-300'} data-testid="tiles-scale">anchor {(r.anchor * 100).toFixed(2)}% · drawn {r.scale.toFixed(3)}x native</div>
       <div className="text-slate-400">band shows {(r.zRange[0] * 100).toFixed(2)}-{(r.zRange[1] * 100).toFixed(2)}% · near until {(r.nearUntil * 100).toFixed(2)}% · rev {r.revision}</div>
@@ -574,7 +575,7 @@ function TilesPanel({ game }: { game: Game }) {
 function PerfPanel({ game }: { game: Game }) {
   const p = game.perf;
   return (
-    <div className="absolute bottom-3 right-3 z-20 w-56 glass p-2 text-[11px] tabular-nums">
+    <div className="absolute bottom-3 right-3 z-20 w-56 glass p-2 text-[12px] tabular-nums">
       <div className="flex justify-between"><span>{p.fps.toFixed(0)} fps · {p.tier}</span><span>cpu {p.cpuMs.toFixed(1)} ms</span></div>
       <div className="flex justify-between text-slate-400"><span>{p.instances.toLocaleString()} sprites · {p.draws} draws</span><span>{p.uploadKB.toFixed(0)} KB</span></div>
       <div className="flex justify-between text-slate-400"><span>{game.props.size.toLocaleString()} props · {game.net.segs.size.toLocaleString()} segs</span><span>bake {p.chunksPending}</span></div>
@@ -600,7 +601,7 @@ function Stat({ label, value, sub, tone, subTone, subClass, subTestId, title, ba
       <div>
         <div className="label-caps">{label}</div>
         <div className={`text-sm font-semibold tabular-nums leading-tight ${tone ?? ''}`}>{value}</div>
-        {sub && <div className={`text-[10px] ${subTone ?? 'text-slate-500'} ${subClass ?? ''}`} data-testid={subTestId}>{sub}</div>}
+        {sub && <div className={`text-[12px] ${subTone ?? 'text-slate-400'} ${subClass ?? ''}`} data-testid={subTestId}>{sub}</div>}
         {bar !== undefined && <div className="mt-0.5 h-1 w-28 overflow-hidden rounded-full bg-white/10"><div className="h-full bg-amber-400 transition-all" style={{ width: `${Math.round(bar * 100)}%` }} /></div>}
       </div>
     </div>
@@ -627,7 +628,7 @@ function BudgetPanel({ game }: { game: Game }) {
         {l ? (
           <div className="space-y-0.5 text-xs">
             {rows.map(([name, v, income]) => (
-              <div key={name} className={`flex justify-between ${!v ? 'text-slate-500' : income ? 'text-emerald-300' : 'text-red-300'}`}><span>{name}</span><span className="tabular-nums">{v && !income ? '−' : v ? '+' : ''}{money(v)}</span></div>
+              <div key={name} className={`flex justify-between ${!v ? 'text-slate-400' : income ? 'text-emerald-300' : 'text-red-300'}`}><span>{name}</span><span className="tabular-nums">{v && !income ? '−' : v ? '+' : ''}{money(v)}</span></div>
             ))}
             <div className={`mt-1 flex justify-between border-t border-white/10 pt-1 font-semibold ${l.net >= 0 ? 'text-emerald-300' : 'text-red-300'}`}><span>Net</span><span className="tabular-nums">{l.net >= 0 ? '+' : '−'}{money(Math.abs(l.net))}</span></div>
           </div>
@@ -640,7 +641,7 @@ function BudgetPanel({ game }: { game: Game }) {
             </div>
           ))}
         </div>
-        <div className="mt-1 text-[10px] text-slate-500">{H.length ? `Net per day, last ${H.length} day${H.length === 1 ? '' : 's'}` : 'No day has closed yet'}</div>
+        <div className="mt-1 text-[12px] text-slate-400">{H.length ? `Net per day, last ${H.length} day${H.length === 1 ? '' : 's'}` : 'No day has closed yet'}</div>
         <div className="mt-3 text-xs text-slate-300">Loans: {b.loans} of {maxLoans} × {money(LOAN)} at {Math.round(LOAN_RATE * 100)}%/day</div>
         <div className="mt-1 flex gap-1">
           <button className="chip flex-1" onClick={() => game.borrow()}>Borrow</button>
@@ -660,7 +661,7 @@ function SurgeTowns({ rows, total, golf }: { rows: TownRow[]; total?: { fans: nu
       {rows.map((w, k) => (
         <div key={k}>
           <p className="text-xs tabular-nums text-slate-300">{String.fromCharCode(65 + k)}  parked {w.parked}/{w.sent} cars · at the stop {w.atStop} · on buses {w.onBus} · arrived {w.fans} {who}{w.stranded > 0 ? ' · no car park reachable' : ''}{w.byBus > 0 ? ` · by bus ${w.byBus}` : ''}</p>
-          {w.rest && <p className="text-[10px] tabular-nums text-slate-400">{w.rest}</p>}
+          {w.rest && <p className="text-[12px] tabular-nums text-slate-400">{w.rest}</p>}
         </div>
       ))}
       {total && <p className="text-xs font-semibold tabular-nums text-slate-100">Arrived {F}/{S * PARTY} {who} ({S ? Math.round(100 * F / (S * PARTY)) : 0}%)</p>}
@@ -707,13 +708,13 @@ function RoundPanel({ game }: { game: Game }) {
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <span className="font-display text-base font-bold tracking-wide text-[var(--gold-hi)] uppercase">{gv ? gv.tierName : 'Event: Stadium'}</span>
-              <span className="rounded-md border border-[var(--gold-line)] px-1.5 text-[10px] font-bold uppercase text-[var(--gold-hi)]">{gv ? `T${gv.tier}` : `Level ${r.level}`}</span>
+              <span className="rounded-md border border-[var(--gold-line)] px-1.5 text-[12px] font-bold uppercase text-[var(--gold-hi)]">{gv ? `T${gv.tier}` : `Level ${r.level}`}</span>
             </div>
             <span className="text-sm">{gv ? gv.month : `${r.year} – Run ${r.runs + 1}`}</span>
           </div>
         </div>
         <p className="mt-2 max-w-[15rem] text-xs text-slate-300">{sentence}</p>
-        {r.stage === 'free' && last && <p className="text-[11px] text-slate-400">Last run: {last.arrived}/{last.sent * PARTY} {golf ? 'spectators' : 'fans'} arrived ({Math.round(last.rate * 100)}%)</p>}
+        {r.stage === 'free' && last && <p className="text-[12px] text-slate-400">Last run: {last.arrived}/{last.sent * PARTY} {golf ? 'spectators' : 'fans'} arrived ({Math.round(last.rate * 100)}%)</p>}
         {r.stage === 'build' && (
           <div className="mt-2 space-y-2">
             <span className="block text-xl font-bold tabular-nums text-[var(--gold-hi)]">Build · {mmss(Math.ceil(r.buildLeft))}</span>
@@ -755,34 +756,34 @@ function EvalScreen({ game }: { game: Game }) {
  {ye && (
  <div className="rounded-xl border border-white/10 bg-white/5 p-3 text-xs">
  {ye.weather && (
- <div className="mb-2 flex items-center justify-between border-b border-white/10 pb-2 text-[11px] text-slate-300">
+ <div className="mb-2 flex items-center justify-between border-b border-white/10 pb-2 text-[12px] text-slate-300">
  <span className="font-semibold text-amber-200">Weather: {ye.weather.icon} {ye.weather.label}</span>
  <span className="text-slate-400">{ye.weather.summary}</span>
  </div>
  )}
  <div className="grid grid-cols-4 gap-2 text-center">
  <div>
- <div className="text-[10px] uppercase text-slate-400">Satisfaction</div>
+ <div className="text-[12px] uppercase text-slate-400">Satisfaction</div>
  <div className="text-base font-bold text-amber-200">{formatPercent(ye.satisfaction)}</div>
- <div className="text-[10px] text-slate-400" title="Measured from the crowd on the day; est.: estimated (no gates placed, or the cars are still leaving)">Q {Math.round(ye.facts.avgQueueMin)}m{ye.measured?.gates ? '' : ' est.'} · Exit {Math.round(ye.facts.exitP95Min)}m{ye.measured?.exit ? '' : ' est.'}</div>
+ <div className="text-[12px] text-slate-400" title="Measured from the crowd on the day; est.: estimated (no gates placed, or the cars are still leaving)">Q {Math.round(ye.facts.avgQueueMin)}m{ye.measured?.gates ? '' : ' est.'} · Exit {Math.round(ye.facts.exitP95Min)}m{ye.measured?.exit ? '' : ' est.'}</div>
  </div>
  <div>
- <div className="text-[10px] uppercase text-slate-400">Reputation</div>
+ <div className="text-[12px] uppercase text-slate-400">Reputation</div>
  <div className="text-base font-bold text-white">
- {ye.prevRep} → <span className={ye.rep >= ye.prevRep ? 'text-emerald-400' : 'text-rose-400'}>{ye.rep}</span>
+ {ye.prevRep} → <span className={ye.rep >= ye.prevRep ? 'text-emerald-400' : 'text-rose-400'}>{withIcon(trendKind(ye.rep - ye.prevRep), String(ye.rep))}</span>
  </div>
  </div>
  <div>
- <div className="text-[10px] uppercase text-slate-400">Tent Takings</div>
+ <div className="text-[12px] uppercase text-slate-400">Tent Takings</div>
  <div className="text-base font-bold text-emerald-300">{money(ye.tentRevenue ?? 0)}</div>
  </div>
  <div>
- <div className="text-[10px] uppercase text-slate-400">Next Year</div>
+ <div className="text-[12px] uppercase text-slate-400">Next Year</div>
  <div className="text-xs font-semibold text-emerald-300">{ye.verdictText}</div>
  </div>
  </div>
           {ye.multiDay && ye.multiDay.resolvedDays > 0 && (
-            <div className="mt-2 border-t border-white/10 pt-2 text-center text-[11px] text-slate-300">
+            <div className="mt-2 border-t border-white/10 pt-2 text-center text-[12px] text-slate-300">
               <span className="font-semibold text-amber-300">{formatMultiDayStatus(ye.multiDay.liveDays, ye.multiDay.resolvedDays, ye.multiDay.practiceDays ?? 0)}</span> · Total {ye.multiDay.totalSpectators.toLocaleString()} spectators · {money(ye.multiDay.totalRevenue)} gross
             </div>
           )}
@@ -827,7 +828,7 @@ function EvalScreen({ game }: { game: Game }) {
                 <button key={id} className="flex flex-col rounded-xl border border-white/10 bg-white/5 p-3 text-left transition hover:border-amber-400/50 hover:bg-white/10" onClick={() => game.pickCard(id)}>
                   <span className="flex items-start justify-between gap-1">
                     <span className="text-sm font-semibold text-slate-100">{c.name}</span>
-                    <span className={`shrink-0 rounded px-1 text-[9px] font-bold uppercase ${c.kind === 'unlock' ? 'bg-sky-400/20 text-sky-200' : 'bg-amber-400/20 text-amber-200'}`}>{c.kind === 'unlock' ? 'Unlock' : 'Upgrade'}</span>
+                    <span className={`shrink-0 rounded px-1 text-[12px] font-bold uppercase ${c.kind === 'unlock' ? 'bg-sky-400/20 text-sky-200' : 'bg-amber-400/20 text-amber-200'}`}>{c.kind === 'unlock' ? 'Unlock' : 'Upgrade'}</span>
                   </span>
                   <span className="mt-1 text-xs text-slate-400">{c.desc}</span>
                 </button>
@@ -868,20 +869,20 @@ function BottleneckPanel({ game }: { game: Game }) {
               return (
               <button key={it.kind + it.key} className="block w-full rounded-lg px-1.5 py-1 text-left hover:bg-white/10" onClick={() => game.jumpTo(it.x, it.y)} title="Jump there">
                 <div className="flex items-center gap-2 text-xs">
-                  <span className="w-4 text-right tabular-nums text-slate-500">{i + 1}</span>
+                  <span className="w-4 text-right tabular-nums text-slate-400">{i + 1}</span>
                   <span className="min-w-0 flex-1 truncate text-slate-100">{name || it.label}</span>
                   {it.kind === 'junction'
-                    ? <span className="grid h-4 w-4 shrink-0 place-items-center rounded-full text-[9px] font-bold text-slate-900" style={{ background: LOS_COL[it.los] }}>{it.los}</span>
-                    : <span className="shrink-0 text-[10px] tabular-nums text-slate-300">v/c {it.vc.toFixed(2)}</span>}
+                    ? <span className="grid h-4 w-4 shrink-0 place-items-center rounded-full text-[12px] font-bold text-slate-900" style={{ background: LOS_COL[it.los] }}>{it.los}</span>
+                    : <span className="shrink-0 text-[12px] tabular-nums text-slate-300">v/c {it.vc.toFixed(2)}</span>}
                 </div>
-                {name ? <div className="pl-6 text-[10px] text-slate-500">{it.label}</div> : null}
-                <div className="pl-6 text-[10px] text-slate-400">{(it.loss / 60).toFixed(1)} veh-min lost per hour{it.vc < 0.3 && (it.los === 'E' || it.los === 'F') ? <span className="text-amber-300"> · queued back from downstream</span> : it.vc >= 0.8 ? <span className="text-red-300"> · at capacity</span> : null}</div>
+                {name ? <div className="pl-6 text-[12px] text-slate-400">{it.label}</div> : null}
+                <div className="pl-6 text-[12px] text-slate-400">{(it.loss / 60).toFixed(1)} veh-min lost per hour{it.vc < 0.3 && (it.los === 'E' || it.los === 'F') ? <span className="text-amber-300"> · queued back from downstream</span> : it.vc >= 0.8 ? <span className="text-red-300"> · at capacity</span> : null}</div>
               </button>
               );
             })}
           </div>
         ) : <p className="text-xs text-slate-400">{game.traffic.report ? 'No bottlenecks: the traffic flows freely' : 'No traffic yet'}</p>}
-        <div className="mt-3 flex items-center gap-2 text-[10px] text-slate-400">
+        <div className="mt-3 flex items-center gap-2 text-[12px] text-slate-400">
           {FLOW_LEGEND.map(([t, c]) => (
             <span key={t} className="flex items-center gap-1"><span className="inline-block h-2 w-3 rounded-sm" style={{ background: c }} />{t}</span>
           ))}
@@ -897,7 +898,7 @@ function winLabel(game: Game, w: Window) { return `day ${Math.floor(w.h0 / 24) -
 const fmtVal = (name: string, v: number) => name === 'Time lost per trip' ? `${v.toFixed(1)} s` : name === 'Trip time vs free flow' ? v.toFixed(2) : Math.round(v).toLocaleString();
 /** the change of a compared value: an arrow and the per cent, green when better and red when worse; a dash when it did not move */
 function Change({ d }: { d: Delta }) {
-  if (Math.abs(d.pct) < 0.5) return <span className="text-slate-500">–</span>;
+  if (Math.abs(d.pct) < 0.5) return <span className="text-slate-400">–</span>;
   return <span className={d.better ? 'text-emerald-300' : 'text-red-300'}>{d.pct > 0 ? '▲' : '▼'} {Math.min(999, Math.abs(d.pct)).toFixed(0)}%</span>;
 }
 /** the before / after section of the bottlenecks panel: a snapshot now, then the first rush after the change against the last rush before it (see Game.takeSnapshot) */
@@ -909,14 +910,14 @@ function BeforeAfter({ game }: { game: Game }) {
     <div className="mt-3 border-t border-white/10 pt-2">
       <div className="mb-1 text-xs font-bold text-slate-200">Before / after</div>
       <button className="chip" onClick={() => game.takeSnapshot()}>Take snapshot</button>
-      <p className="mt-1 text-[11px] text-slate-400">Snapshot, change the roads, then wait for (or skip to) the next rush hour.</p>
+      <p className="mt-1 text-[12px] text-slate-400">Snapshot, change the roads, then wait for (or skip to) the next rush hour.</p>
     </div>
   );
   const rows = after ? compare(snap.before ?? after, after) : [];
   return (
     <div className="mt-3 border-t border-white/10 pt-2">
       <div className="mb-1 flex items-center gap-2 text-xs font-bold text-slate-200">Before / after<span className="flex-1" /><button className="chip" onClick={() => game.clearSnapshot()}>Clear</button></div>
-      <div className="space-y-1 text-[11px] text-slate-300">
+      <div className="space-y-1 text-[12px] text-slate-300">
         {snap.before
           ? <p>Before: {winLabel(game, snap.before)}{snap.before.rush ? '' : ' (no rush yet: the last 2 hours)'}</p>
           : <p className="text-amber-200">No traffic on record before the snapshot yet</p>}
@@ -924,7 +925,7 @@ function BeforeAfter({ game }: { game: Game }) {
           <>
             <p>After: {winLabel(game, after)}</p>
             <table className="w-full tabular-nums">
-              <thead><tr className="text-[10px] text-slate-500"><th className="text-left font-normal">Measure</th><th className="text-right font-normal">Before</th><th className="text-right font-normal">After</th><th className="text-right font-normal">Change</th></tr></thead>
+              <thead><tr className="text-[12px] text-slate-400"><th className="text-left font-normal">Measure</th><th className="text-right font-normal">Before</th><th className="text-right font-normal">After</th><th className="text-right font-normal">Change</th></tr></thead>
               <tbody>
                 {rows.map(d => (
                   <tr key={d.name} className="border-t border-white/5">
@@ -951,7 +952,7 @@ function BeforeAfter({ game }: { game: Game }) {
 const ACCESS_LEGEND: [string, string][] = [['full growth (< 1.3)', '#3ddc84'], ['slowed (1.3–1.8)', '#ffb020'], ['stopped (> 1.8)', '#ff3b3b']];
 function AccessLegend({ game }: { game: Game }) {
   return (
-    <div className="pointer-events-none absolute bottom-[9.5rem] left-3 z-20 w-56 rounded-xl border border-white/10 bg-slate-950/80 p-2 text-[11px] text-slate-300 shadow-lg backdrop-blur">
+    <div className="pointer-events-none absolute bottom-[9.5rem] left-3 z-20 w-56 rounded-xl border border-white/10 bg-slate-950/80 p-2 text-[12px] text-slate-300 shadow-lg backdrop-blur">
       {ACCESS_LEGEND.map(([t, c]) => (
         <div key={t} className="flex items-center gap-2"><span className="inline-block h-2.5 w-3 rounded-sm" style={{ background: c }} />{t}</div>
       ))}
@@ -966,18 +967,18 @@ const HIST_GRADIENT = `linear-gradient(90deg, ${HIST_RAMP.map(c => `rgb(${c.join
 /** the flow legend: the over-time view (time: the delay each road lost over about 6 game hours, a gradient) or the live bands */
 function HeatLegend({ raised, time }: { raised: boolean; time: boolean }) {
   return (
-    <div className={`pointer-events-none absolute ${raised ? 'bottom-[17rem]' : 'bottom-[9.5rem]'} left-3 z-20 w-64 rounded-xl border border-white/10 bg-slate-950/80 p-2 text-[11px] text-slate-300 shadow-lg backdrop-blur`}>
+    <div className={`pointer-events-none absolute ${raised ? 'bottom-[17rem]' : 'bottom-[9.5rem]'} left-3 z-20 w-64 rounded-xl border border-white/10 bg-slate-950/80 p-2 text-[12px] text-slate-300 shadow-lg backdrop-blur`}>
       {time ? <>
         <div className="mb-1 font-bold text-slate-100">Congestion · over time</div>
         <div className="h-2 w-full rounded-full" style={{ background: HIST_GRADIENT }} />
-        <div className="mt-0.5 flex justify-between text-[10px] text-slate-300"><span>some delay</span><span>jams every day</span></div>
-        <div className="mt-1 border-t border-white/10 pt-1 text-[10px] text-slate-400">where cars lost time over the last ~6 game hours</div>
+        <div className="mt-0.5 flex justify-between text-[12px] text-slate-300"><span>some delay</span><span>jams every day</span></div>
+        <div className="mt-1 border-t border-white/10 pt-1 text-[12px] text-slate-400">where cars lost time over the last ~6 game hours</div>
       </> : <>
         <div className="mb-1 font-bold text-slate-100">Congestion · live</div>
         {HEAT_LEGEND.map(([t, c]) => (
           <div key={t} className="flex items-center gap-2"><span className="inline-block h-1 w-4 shrink-0 rounded-full" style={{ background: c }} />{t}</div>
         ))}
-        <div className="mt-1 border-t border-white/10 pt-1 text-[10px] text-slate-400">speed against the limit, each direction; updated twice a second</div>
+        <div className="mt-1 border-t border-white/10 pt-1 text-[12px] text-slate-400">speed against the limit, each direction; updated twice a second</div>
       </>}
     </div>
   );
@@ -995,7 +996,7 @@ function Panel({ title, children, icon, desc }: { title: string; children: React
         <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-[var(--gold-line)] bg-black/30"><Icon name={icon} size={30} /></div>
         <div className="min-w-0">
           <div className="font-display text-lg font-bold">{title}</div>
-          {desc && <div className="mt-0.5 text-[11px] leading-snug text-[var(--muted)]">{desc}</div>}
+          {desc && <div className="mt-0.5 text-[12px] leading-snug text-[var(--muted)]">{desc}</div>}
         </div>
       </div>
       {children}
@@ -1040,7 +1041,7 @@ function RoadPanel({ game, scope }: { game: Game; scope: 'town' | 'course' }) {
           <div key={f.id}>
             <button className="mb-1 flex w-full items-baseline gap-2 text-left" onClick={() => setOpenFam(ex ? 'none' : f.id)} aria-expanded={ex}>
               <span className="label-caps">{f.label}</span>
-              <span className="min-w-0 flex-1 truncate text-[10px] text-[var(--muted)]">{f.desc}</span>
+              <span className="min-w-0 flex-1 truncate text-[12px] text-[var(--muted)]">{f.desc}</span>
               {!ex && f.id === curFam && <span className="shrink-0 text-xs font-semibold text-[var(--gold)]">{curName}</span>}
               <Icon name={ex ? 'up' : 'down'} size={12} />
             </button>
@@ -1055,7 +1056,7 @@ function RoadPanel({ game, scope }: { game: Game; scope: 'town' | 'course' }) {
                       <RoadThumb cls={c} w={84} h={36} />
                       <div className="min-w-0 flex-1">
                         <div className="text-xs font-semibold text-slate-100">{c.name}</div>
-                        <div className="text-[10px] text-[var(--muted)]">{[...c.desc.split(' · ').filter(p => /\d/.test(p)), c.noCars ? 'carts & walkers' : `${Math.round(speedOf(c, game.net.speedTier) * 3.6)} km/h`].join(' · ')}</div>
+                        <div className="text-[12px] text-[var(--muted)]">{[...c.desc.split(' · ').filter(p => /\d/.test(p)), c.noCars ? 'carts & walkers' : `${Math.round(speedOf(c, game.net.speedTier) * 3.6)} km/h`].join(' · ')}</div>
                       </div>
                       <span className="shrink-0 text-xs font-semibold text-[var(--gold)]">{lock ?? `${money(c.cost)} / 2 m`}</span>
                     </div>
@@ -1068,9 +1069,9 @@ function RoadPanel({ game, scope }: { game: Game; scope: 'town' | 'course' }) {
                           const fl = vc.flags.join('.');
                           return <button key={v} className={`chip ${game.roadClass === v ? 'chip-on' : ''}`} onClick={() => { game.roadClass = v; game.emit(); }}><Icon name={VARIANT_ICON[fl] ?? 'road'} size={14} />{VARIANT_LABEL[fl] ?? vc.name}</button>;
                         })}
-                        <span className="ml-auto text-[10px] text-slate-500">Tab: flip</span>
+                        <span className="ml-auto text-[12px] text-slate-400">Tab: flip</span>
                       </div>
-                      <div className="mt-1 text-[10px] text-slate-400">{money(game.cls.cost)} / 2 m · {game.cls.desc}</div>
+                      <div className="mt-1 text-[12px] text-slate-400">{money(game.cls.cost)} / 2 m · {game.cls.desc}</div>
                     </div>
                   )}
                 </div>
@@ -1081,7 +1082,7 @@ function RoadPanel({ game, scope }: { game: Game; scope: 'town' | 'course' }) {
       </div>
       {/* T084: the course's ladders; the Upgrade and Downgrade tools step a path or drive along them (they are the Roads menu's, for every road) */}
       {course && (
-        <div className="mt-2 rounded-lg bg-white/5 p-2 text-[11px] text-slate-300">
+        <div className="mt-2 rounded-lg bg-white/5 p-2 text-[12px] text-slate-300">
           <div>Upgrade a path or drive one step (you pay only the difference): walking path → dirt path → cement slabs → paved cart path; gravel drive → paved → avenue.</div>
           <div className="mt-1 flex flex-wrap gap-1">
             <button className="chip" onClick={() => game.setTool('lane')} title="Upgrade tool (N)"><Icon name="up" size={14} />Upgrade</button>
@@ -1093,22 +1094,22 @@ function RoadPanel({ game, scope }: { game: Game; scope: 'town' | 'course' }) {
       {adv && <>
         <div className="mt-2 text-xs font-bold uppercase tracking-[0.2em] text-amber-300">Fine tuning</div>
         <div className="mt-2 flex items-center gap-1 text-xs">
-          <span className="mr-1 text-[10px] uppercase tracking-wider text-slate-400">Bends</span>
+          <span className="mr-1 text-[12px] uppercase tracking-wider text-slate-400">Bends</span>
           {([90, 45] as const).map(b => <button key={b} className={`chip ${game.bendMode === b ? 'chip-on' : ''}`} onClick={() => { game.bendMode = b; game.emit(); }} title="Q toggles">{b}°</button>)}
-          <span className="ml-auto text-[10px] text-slate-500">Shift: straight line</span>
+          <span className="ml-auto text-[12px] text-slate-400">Shift: straight line</span>
         </div>
         <div className="mt-2 flex items-center gap-1 text-xs">
-          <span className="mr-1 text-[10px] uppercase tracking-wider text-slate-400">Replace</span>
+          <span className="mr-1 text-[12px] uppercase tracking-wider text-slate-400">Replace</span>
           <button className={`chip ${game.replaceMode ? 'chip-on' : ''}`} onClick={() => { game.replaceMode = !game.replaceMode; game.emit(); }} title="E toggles">{game.replaceMode ? 'On' : 'Off'}</button>
-          <span className="ml-auto text-[10px] text-slate-500">Roads in the way are bulldozed</span>
+          <span className="ml-auto text-[12px] text-slate-400">Roads in the way are bulldozed</span>
         </div>
         {!course && <div className="mt-2 flex flex-wrap items-center gap-1 text-xs">
-          <span className="mr-1 text-[10px] uppercase tracking-wider text-slate-400">Speed limits</span>
+          <span className="mr-1 text-[12px] uppercase tracking-wider text-slate-400">Speed limits</span>
           {([0, 1, 2, 3] as const).map(t => { const open = t <= game.speedTierMax(); return <button key={t} className={`chip ${game.net.speedTier === t ? 'chip-on' : ''} ${open ? '' : 'opacity-50'}`} onClick={() => game.setSpeedTier(t)} title={open ? (t ? `Every road +${SPEED_BONUS_KMH[t]} km/h (up to 140)` : 'Each road its own limit') : `From ${SPEED_TIER_YEAR[t]}`}>{t ? `+${SPEED_BONUS_KMH[t]}` : 'Standard'}</button>; })}
         </div>}
         {cls.centre === 'style' && (
           <div className="mt-2 flex items-center gap-1">
-            <span className="mr-1 text-[10px] uppercase tracking-wider text-slate-400">Centre line</span>
+            <span className="mr-1 text-[12px] uppercase tracking-wider text-slate-400">Centre line</span>
             {([['Dashed', 0], ['Double', 1], ['None', 2]] as const).map(([n, v]) => (
               <button key={v} className={`chip ${game.lineStyle === v ? 'chip-on' : ''}`} onClick={() => { game.lineStyle = v; game.emit(); }}>{n}</button>
             ))}
@@ -1117,8 +1118,8 @@ function RoadPanel({ game, scope }: { game: Game; scope: 'town' | 'course' }) {
       </>}
       <div className="mt-2 rounded-lg bg-white/5 p-2 text-xs">
         <div className="flex justify-between"><span className="text-slate-400">Route</span><span>{game.route.length} point{game.route.length === 1 ? '' : 's'} · {Math.round(len * 2)} m</span></div>
-        <div className="flex justify-between"><span className="text-slate-400">Cost</span><span className={cost + comp.comp > game.money ? 'text-red-300' : 'text-emerald-300'}>{money(cost)}</span></div>
-        {comp.n > 0 && <div className="flex justify-between"><span className="text-slate-400">Compensation</span><span className="text-red-300">{money(comp.comp)} <span className="text-slate-500">({comp.n} building{comp.n === 1 ? '' : 's'})</span></span></div>}
+        <div className="flex justify-between"><span className="text-slate-400">Cost</span><span className={cost + comp.comp > game.money ? 'text-red-300' : 'text-emerald-300'}>{withIcon(affordKind(cost + comp.comp, game.money), money(cost))}</span></div>
+        {comp.n > 0 && <div className="flex justify-between"><span className="text-slate-400">Compensation</span><span className="text-red-300">{money(comp.comp)} <span className="text-slate-400">({comp.n} building{comp.n === 1 ? '' : 's'})</span></span></div>}
         {block && <div className="mt-1 text-xs text-red-300">{block}</div>}
       </div>
       <div className="mt-2 flex gap-1">
@@ -1126,7 +1127,7 @@ function RoadPanel({ game, scope }: { game: Game; scope: 'town' | 'course' }) {
         <button className="chip" disabled={!game.route.length} onClick={() => game.undoRoutePoint()} title="Backspace">Undo</button>
         <button className="chip" disabled={!game.route.length} onClick={() => game.cancelRoute()} title="Esc">Cancel</button>
       </div>
-      <p className="mt-2 text-[11px] text-slate-500">Double-click the last point, press Enter or right-click to build. To widen or narrow a road, use Upgrade (N) or Downgrade (Y). Trees and small items in the way are cleared; buildings block the route.</p>
+      <p className="mt-2 text-[12px] text-slate-400">Double-click the last point, press Enter or right-click to build. To widen or narrow a road, use Upgrade (N) or Downgrade (Y). Trees and small items in the way are cleared; buildings block the route.</p>
     </Panel>
   );
 }
@@ -1205,7 +1206,7 @@ function BusinessPanel({ game }: { game: Game }) {
       <div className="max-h-[60vh] overflow-y-auto pr-1">
         {FAMILIES.map(f => (
           <div key={f}>
-            <div className="mt-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">{f}</div>
+            <div className="mt-2 text-[12px] font-semibold uppercase tracking-[0.2em] text-slate-400">{f}</div>
             {BUSINESSES.filter(b => b.family === f && (b.id as string) !== 'clubhouse').map(b => <BizCard key={b.id} game={game} b={b} free={free} />)}
           </div>
         ))}
@@ -1272,7 +1273,7 @@ function TollPanel({ game }: { game: Game }) {
       <div className="mt-2 rounded-lg bg-white/5 p-2 text-xs">
         <div className="flex justify-between"><span className="text-slate-400">Toll per car</span><span>{money(price)}</span></div>
         <div className="flex justify-between"><span className="text-slate-400">Booths per new gate</span><span>{game.tollBooths}</span></div>
-        <div className="flex justify-between"><span className="text-slate-400">Cost of a new gate</span><span className={cost > game.money ? 'text-red-300' : 'text-emerald-300'}>{money(cost)}</span></div>
+        <div className="flex justify-between"><span className="text-slate-400">Cost of a new gate</span><span className={cost > game.money ? 'text-red-300' : 'text-emerald-300'}>{withIcon(affordKind(cost, game.money), money(cost))}</span></div>
       </div>
       <div className="mt-2 max-h-64 overflow-y-auto">
         {game.tollDefs.length === 0 && <p className="text-xs text-slate-400">No toll gates yet.</p>}
@@ -1299,7 +1300,7 @@ function BusPanel({ game }: { game: Game }) {
       <div className="mt-2 rounded-lg bg-white/5 p-2 text-xs">
         <div className="flex justify-between"><span className="text-slate-400">Buses per new route</span><span>{game.busFleet}</span></div>
         <div className="flex justify-between"><span className="text-slate-400">Seats per bus</span><span>{game.busSeats}</span></div>
-        <div className="flex justify-between"><span className="text-slate-400">Cost of a new route</span><span className={cost > game.money ? 'text-red-300' : 'text-emerald-300'}>{cost ? money(cost) : 'free (the starting kit)'}</span></div>
+        <div className="flex justify-between"><span className="text-slate-400">Cost of a new route</span><span className={cost > game.money ? 'text-red-300' : 'text-emerald-300'}>{cost ? withIcon(affordKind(cost, game.money), money(cost)) : 'free (the starting kit)'}</span></div>
       </div>
       <div className="mt-2 max-h-64 overflow-y-auto">
         {game.busDefs.length === 0 && <p className="text-xs text-slate-400">No bus routes yet.</p>}
@@ -1350,7 +1351,7 @@ function JunctionPanel({ game }: { game: Game }) {
       <div className="mt-1 grid grid-cols-1 gap-1">
         <button className={`card ${b === 'select' ? 'card-on' : ''}`} onClick={() => { game.brush = 'select'; game.emit(); }}>
           <div className="flex w-full items-center justify-between text-xs"><span className="font-semibold text-slate-100">Select</span><span className="text-amber-300">free</span></div>
-          <div className="text-[10px] text-slate-400">Click a junction to select it and set its type and options</div>
+          <div className="text-[12px] text-slate-400">Click a junction to select it and set its type and options</div>
         </button>
         {JUNCTION_KINDS.map(t => {
           const lk = game.junctionOpen(t) ? null : unlockOf('junction', t)!, spec = JUNCTIONS.find(j => j.id === t)!, on = b === t;
@@ -1358,7 +1359,7 @@ function JunctionPanel({ game }: { game: Game }) {
             <div key={t} className="space-y-1">
               <button className={`card w-full ${on ? 'card-on' : ''} ${lk ? 'opacity-50' : ''}`} onClick={() => { game.brush = t; game.emit(); }}>
                 <div className="flex w-full items-center justify-between text-xs"><span className="font-semibold text-slate-100">{SEG_NAME[t]}</span><span className="text-amber-300">{lk ? (game.eventMode ? 'Roundabout card' : lockText(lk.pop)) : spec.cost ? money(spec.cost) : 'free'}</span></div>
-                <div className="text-[10px] text-slate-400">{spec.desc}</div>
+                <div className="text-[12px] text-slate-400">{spec.desc}</div>
               </button>
               {t === 'roundabout' && on && (
                 <div className="flex items-center gap-1 text-xs">
@@ -1370,7 +1371,7 @@ function JunctionPanel({ game }: { game: Game }) {
           );
         })}
       </div>
-      <p className="mt-2 text-[11px] text-slate-400">{hint}</p>
+      <p className="mt-2 text-[12px] text-slate-400">{hint}</p>
     </Panel>
   );
 }
@@ -1383,17 +1384,17 @@ function SelectedJunction({ game, n }: { game: Game; n: Node }) {
   const blocked = segs.filter(t => !active(t)).map(t => game.installCheck(n, t, game.ringLanes).why).filter(Boolean);
   return (
     <div className="mt-2 space-y-2 border-t border-white/10 pt-2 text-xs">
-      <div><div className="font-semibold text-slate-100">{game.junctionName(n) || 'Junction'}</div><div className="text-[11px] text-slate-400">{n.arms.length} roads{n.arms.length < 3 ? ' (a bend)' : ''}</div></div>
+      <div><div className="font-semibold text-slate-100">{game.junctionName(n) || 'Junction'}</div><div className="text-[12px] text-slate-400">{n.arms.length} roads{n.arms.length < 3 ? ' (a bend)' : ''}</div></div>
       <div>
-        <div className="mb-1 text-[11px] text-slate-400">Type</div>
+        <div className="mb-1 text-[12px] text-slate-400">Type</div>
         <div className="flex gap-1">
           {segs.map(t => {
             const { cost } = game.installCheck(n, t, game.ringLanes);
-            return <button key={t} className={`chip flex-1 ${active(t) ? 'chip-on' : ''}`} onClick={() => game.setSelectedType(t)}><span className="block">{SEG_SHORT[t]}</span><span className="block text-[10px] opacity-80">{active(t) ? 'now' : cost ? money(cost) : 'free'}</span></button>;
+            return <button key={t} className={`chip flex-1 ${active(t) ? 'chip-on' : ''}`} onClick={() => game.setSelectedType(t)}><span className="block">{SEG_SHORT[t]}</span><span className="block text-[12px] opacity-80">{active(t) ? 'now' : cost ? money(cost) : 'free'}</span></button>;
           })}
         </div>
-        {blocked.map((w, i) => <p key={i} className="mt-1 text-[10px] text-amber-300">{w}</p>)}
-        {KIND_HELP[n.type] && <p className="mt-1 text-[11px] text-slate-400">{KIND_HELP[n.type]}</p>}
+        {blocked.map((w, i) => <p key={i} className="mt-1 text-[12px] text-amber-300">{w}</p>)}
+        {KIND_HELP[n.type] && <p className="mt-1 text-[12px] text-slate-400">{KIND_HELP[n.type]}</p>}
       </div>
       {n.type === 'plain' && <div className="space-y-2"><FlagRow game={game} n={n} k="wide" /><FlagRow game={game} n={n} k="tl" /></div>}
       {lights && (
@@ -1414,9 +1415,9 @@ function FlagRow({ game, n, k }: { game: Game; n: Node; k: 'wide' | 'tl' }) {
   return (
     <div className="flex items-center gap-2">
       <div className="min-w-0 flex-1">
-        <div className="text-slate-100">{k === 'wide' ? 'Wide corners' : 'Turn lanes'} <span className="text-[10px] text-amber-300">{on ? 'on' : money(FLAG_COST[k])}</span></div>
-        <div className="text-[10px] text-slate-400">{k === 'wide' ? 'The corners take up to twice the speed' : 'The left lane takes left turns only (two-lane roads)'}</div>
-        {why && <div className="text-[10px] text-amber-300">{why}</div>}
+        <div className="text-slate-100">{k === 'wide' ? 'Wide corners' : 'Turn lanes'} <span className="text-[12px] text-amber-300">{on ? 'on' : money(FLAG_COST[k])}</span></div>
+        <div className="text-[12px] text-slate-400">{k === 'wide' ? 'The corners take up to twice the speed' : 'The left lane takes left turns only (two-lane roads)'}</div>
+        {why && <div className="text-[12px] text-amber-300">{why}</div>}
       </div>
       <button className={`chip ${on ? 'chip-on' : ''}`} disabled={!on && !!why} onClick={() => game.setFlag(n, k, !on)}>{on ? 'Remove' : 'Add'}</button>
     </div>
@@ -1429,9 +1430,9 @@ function SlipRow({ game, n }: { game: Game; n: Node }) {
   return (
     <div className="flex items-center gap-2">
       <div className="min-w-0 flex-1">
-        <div className="text-slate-100">Slipways: {on} of {fit.length} corners <span className="text-[10px] text-amber-300">{money(SLIP_CORNER_COST)} a corner</span></div>
-        <div className="text-[10px] text-slate-400">The + and × on the map add or remove one</div>
-        {why && <div className="text-[10px] text-amber-300">{why}</div>}
+        <div className="text-slate-100">Slipways: {on} of {fit.length} corners <span className="text-[12px] text-amber-300">{money(SLIP_CORNER_COST)} a corner</span></div>
+        <div className="text-[12px] text-slate-400">The + and × on the map add or remove one</div>
+        {why && <div className="text-[12px] text-amber-300">{why}</div>}
       </div>
       <button className="chip" disabled={!fit.length || on === fit.length || addCost > game.money} onClick={() => game.setSlipways(n, fit.map(c => c.deg))}>All{addCost ? ` (${money(addCost)})` : ''}</button>
       <button className="chip" disabled={!on} onClick={() => game.setSlipways(n, [])}>None</button>
@@ -1447,10 +1448,10 @@ function RingRow({ game, n }: { game: Game; n: Node }) {
       <div className="flex gap-1">
         {opts.map(k => {
           const { cost } = game.installCheck(n, 'roundabout', k);
-          return <button key={k} className={`chip flex-1 ${cur === k ? 'chip-on' : ''}`} disabled={cur === k} onClick={() => { game.ringLanes = k; game.setSelectedType('roundabout'); }}><span className="block">{k} lane{k > 1 ? 's' : ''}</span><span className="block text-[10px] opacity-80">{cur === k ? 'now' : cost ? `+${money(cost)}` : 'free'}</span></button>;
+          return <button key={k} className={`chip flex-1 ${cur === k ? 'chip-on' : ''}`} disabled={cur === k} onClick={() => { game.ringLanes = k; game.setSelectedType('roundabout'); }}><span className="block">{k} lane{k > 1 ? 's' : ''}</span><span className="block text-[12px] opacity-80">{cur === k ? 'now' : cost ? `+${money(cost)}` : 'free'}</span></button>;
         })}
       </div>
-      {why && <p className="text-[10px] text-amber-300">{why}</p>}
+      {why && <p className="text-[12px] text-amber-300">{why}</p>}
     </div>
   );
 }
@@ -1513,7 +1514,7 @@ function CarPanel({ game }: { game: Game }) {
         <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
           <span className="text-slate-400">Speed</span><span className="tabular-nums">{Math.round(c.v * 3.6)} km/h (limit {Math.round(c.vmax * 3.6)})</span>
           <span className="text-slate-400">Going to</span><span>{GOING[c.tag] ?? 'driving around'}</span>
-          <span className="text-slate-400">Trip so far</span><span className={`tabular-nums ${tone}`}>{mmss(c.tripS)} (ideal {mmss(c.idealS)}, {ratio.toFixed(1)}×)</span>
+          <span className="text-slate-400">Trip so far</span><span className={`tabular-nums ${tone}`}>{ratio > 1.3 ? `${statusIcon('warn')} ` : ''}{mmss(c.tripS)} (ideal {mmss(c.idealS)}, {ratio.toFixed(1)}×)</span>
           <span className="text-slate-400">Distance left</span><span className="tabular-nums">{Math.round(Math.hypot(c.dx - c.x, c.dy - c.y) * 2)} m</span>
         </div>
         <div className="mt-2 flex gap-1">
@@ -1531,7 +1532,7 @@ function RoutesPanel({ game }: { game: Game }) {
     <div className="rounded-xl border border-white/10 bg-slate-950/85 p-3 shadow-lg backdrop-blur">
       <Panel title="Junction routes">
         <p className="text-xs text-slate-200">{w.n} cars crossed since you started watching</p>
-        <p className="mt-1 text-[10px] text-slate-400"><span className="text-blue-400">Blue</span>: where they come from · <span className="text-orange-400">orange</span>: where they go</p>
+        <p className="mt-1 text-[12px] text-slate-400"><span className="text-blue-400">Blue</span>: where they come from · <span className="text-orange-400">orange</span>: where they go</p>
         <div className="mt-2 flex gap-1"><button className="chip" onClick={() => game.closeWatch()}>Close</button></div>
       </Panel>
     </div>
@@ -1548,7 +1549,7 @@ function SelectPanel({ game }: { game: Game }) {
     <Panel title="Selected">
       <div className="flex items-center gap-2" data-testid="select-decor">
         <Thumb it={it} size={56} />
-        <div><div className="text-sm font-semibold">{d.name}</div><div className="text-[11px] text-slate-400">{d.group} · bought for {money(d.price)} · sells for {money(d.sell)}{d.standIn ? ` · Stand In for ${d.standIn}` : ''}</div></div>
+        <div><div className="text-sm font-semibold">{d.name}</div><div className="text-[12px] text-slate-400">{d.group} · bought for {money(d.price)} · sells for {money(d.sell)}{d.standIn ? ` · Stand In for ${d.standIn}` : ''}</div></div>
       </div>
       <div className="mt-2 flex flex-wrap gap-1">
         <button className="chip bg-red-500/70 text-white" onClick={() => game.deleteSelected()}>{`Sell for ${money(d.sell)} (Del)`}</button>
@@ -1559,7 +1560,7 @@ function SelectPanel({ game }: { game: Game }) {
     <Panel title="Selected">
       <div className="flex items-center gap-2">
         <Thumb it={it} size={56} />
-        <div><div className="text-sm font-semibold">{it.name}</div><div className="text-[11px] text-slate-400">{it.cat} · scale {p.scale.toFixed(2)}{p.flip ? ' · flipped' : ''}{p.auto ? ' · placed by the road works' : ''}</div></div>
+        <div><div className="text-sm font-semibold">{it.name}</div><div className="text-[12px] text-slate-400">{it.cat} · scale {p.scale.toFixed(2)}{p.flip ? ' · flipped' : ''}{p.auto ? ' · placed by the road works' : ''}</div></div>
       </div>
       <div className="mt-2 flex flex-wrap gap-1">
         <button className="chip" onClick={() => game.scaleSelected(1.1)}>Bigger</button>

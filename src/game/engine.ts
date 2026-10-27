@@ -3,7 +3,7 @@ import { ATLAS_PAGES, GOLFER_BASE, GOLFER_FRAMES, GOLFER_PEOPLE, LIBRARY, SPECTA
 import { galleryPeople, hash, queuePeople, walkerPeople, type CrowdPerson } from './crowdview';
 import { FACING_ROW, Pedestrians, sidewalks, type Door, type WalkerView } from './ext/pedestrians';
 import { GRASS_ACTION_NAME, GrassManagement, grassSurface, type GrassAction, type GrassCellView, type GrassScope, type GrassSettings } from './ext/grass-management';
-import { drawGhostBlueprint, drawGhostHint, drawGhostPoly, drawGhostRing, ghostStatus, type GhostBlueprint, type GhostView } from './ext/ghost-preview';
+import { drawGhostBlueprint, drawGhostHint, drawGhostPoly, drawGhostRing, drawRefusedMarks, ghostStatus, type GhostBlueprint, type GhostView } from './ext/ghost-preview';
 import { busGhostLabel, costLabel, markerGhost, structureGhost, tollGhostLabel } from './ext/event-ghost';
 import { CourseCursor, type CursorView } from './ext/course-cursor';
 import { browserCursorTexture } from './ext/course-cursor/tex';
@@ -5828,6 +5828,8 @@ export class Game {
     this.setIso(ctx); ctx.beginPath(); ctx.rect(x, y, w, h); ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.fillStyle = fill; ctx.fill(); ctx.strokeStyle = '#e9edf2'; ctx.lineWidth = 2 * this.dpr; ctx.stroke();
   }
+  /** a refused rect (T180, not by colour alone): the hatch and the ✕, drawn over the ghost's picture */
+  private refusedRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) { drawRefusedMarks(this.ghostView(ctx), [x, y, x + w, y, x + w, y + h, x, y + h], 'front'); }
   /** Placed business labels; footprint fills only at planner zoom, below the detailed artwork tier. */
   private drawBusinesses(ctx: CanvasRenderingContext2D) {
     const dpr = this.dpr, font = `bold ${11 * dpr}px ui-sans-serif, system-ui, sans-serif`;
@@ -5897,6 +5899,7 @@ export class Game {
         ctx.drawImage(image, u0 * image.naturalWidth, v0 * image.naturalHeight, (u1 - u0) * image.naturalWidth, (v1 - v0) * image.naturalHeight, 0, 0, w, height); ctx.restore();
       }
       ctx.restore();
+      if (h.why && this.bizType !== 'stadium') this.refusedRect(ctx, h.def.x, h.def.y, h.def.w, h.def.h);
     }
     if (h.why) this.hintAt(ctx, h.mx, h.my, h.why, true);
   }
@@ -5913,6 +5916,7 @@ export class Game {
       ctx.drawImage(image, u0 * image.naturalWidth, v0 * image.naturalHeight, (u1 - u0) * image.naturalWidth, (v1 - v0) * image.naturalHeight, x, y, (r[2] - r[0]) * ze, (r[3] - r[1]) * ze);
       ctx.restore();
     }
+    if (g.why) this.refusedRect(ctx, g.box[0], g.box[1], g.box[2] - g.box[0], g.box[3] - g.box[1]);
     if (m) this.hintAt(ctx, m.mx, m.my, g.label, !!g.why);
   }
   /** the overlay view the shared ghost drawers take (T019/T020) */

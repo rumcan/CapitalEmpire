@@ -18,11 +18,11 @@ export function SeasonReportCard({ report, onContinue }: { report: SeasonReport;
         </p>
         <div className="grid grid-cols-2 gap-2 text-center">
           <div className="rounded-xl border border-white/10 bg-white/5 p-2">
-            <div className="text-[10px] uppercase text-slate-400">Range takings</div>
+            <div className="text-[12px] uppercase text-slate-400">Range takings</div>
             <div className="text-base font-bold text-emerald-300">{money(report.takings)}</div>
           </div>
           <div className="rounded-xl border border-white/10 bg-white/5 p-2">
-            <div className="text-[10px] uppercase text-slate-400">Residents</div>
+            <div className="text-[12px] uppercase text-slate-400">Residents</div>
             <div className="text-base font-bold text-white">{report.residents.toLocaleString()}</div>
           </div>
         </div>
@@ -32,7 +32,7 @@ export function SeasonReportCard({ report, onContinue }: { report: SeasonReport;
           </div>
         )}
         <div className="rounded-xl border border-white/10 bg-white/5 p-3 text-xs">
-          <div className="mb-1 text-[10px] uppercase text-slate-400">The tour's invitation</div>
+          <div className="mb-1 text-[12px] uppercase text-slate-400">The tour's invitation</div>
           <div className="flex flex-wrap gap-x-3 gap-y-1">
             <span>{Math.min(c.holes, c.holesNeeded)} of {c.holesNeeded} holes {tick(c.holes >= c.holesNeeded)}</span>
             <span>car park {tick(c.carpark)}</span>
