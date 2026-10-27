@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-27 21:30)
+## START HERE (kept current by the lead; last updated 2026-10-27 21:45)
 
 **Paste-ready start prompts for every role are in `docs/START-PROMPTS.md`:** the lead, a coding ticket, and the other sessions in this
 repo. The weekly usage cap is close (2026-10-26), so any chat may stop at any moment.
@@ -73,7 +73,8 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
   merged). The 12 last 3D people finished on 2026-10-26 and are committed on `art/people-ground-20261024` (0bd25f4): T203 #531.
   Housekeeping: T174-T177, T179, T184 closed (merged earlier). The 5174 auto-updater ran 5 times over; the owner approved stopping 4
   (one left, bash PID 31220). Still listening, not ours: a stray vite on 5189 (an agent's, gone since 07:50) and the dead lot lab's 5241.
-- **Next, in order, when an agent lands:** **T220 #605** many more fallen leaves in the town and backyards, baked into the ground (the
+- **Next, in order, when an agent lands:** **T221 #609** the town grows with the money you have made (the owner; #608 already put the
+  dev server's growth back to the game's 1x, it was 20x; range work: Opus high) → **T220 #605** many more fallen leaves in the town and backyards, baked into the ground (the
   owner: "without making the game slower") → the golf play tickets, **T210 #555** the
   results wait for the last group → **T211 #556** pace of play → **T208 #553 everyday golf** (golfers play your course every day and pay
   green fees; today it is only a yearly number) → **T212 #557** putt, chip, tee-up and coach clips → **T213 #558** caddies, carts,
@@ -109,6 +110,7 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
    (the sharp bump). See the History sections below and `gh issue list --label arena --state open`.
 
 ### Done recently (newest first; details in each PR)
+- 2026-10-27 21:40: **#608 the dev server grows the town at the game's speed** (the owner: "grows too fast"; it was 20x by default on the dev server; `?grow=N` for tests).
 - 2026-10-27 20:25: **T209 #599 the tournament day resumes after a reload**: the day's clocks, surge, crowd, car parks and the owner's round saved as an optional `SaveV5.tourney` during the round only (every other save byte-identical); a resumed day holds the sim until its play is rebuilt; old saves load as before.
 - 2026-10-27 20:05: **T203 #597 the last 12 people**: 7 townspeople walk the town, 4 spectators join the crowd with their clips (the vendor waits for a staff system); only the walker pages 17-21 repacked, pages 0-16 byte-identical; GPU 95.8 / 96 MB. #596 the clubhouse test follows its new size.
 - 2026-10-27 19:50: **#590 the tee** (RUN-made, quilted: `tee-run` on Painted › Tee); **#591 lawns calmer** (the owner: "crazy green"; every lawn surface on `first-cut-run`, no lines); **#593 the clubhouse a quarter of the size** (the owner: "masssiive"; 40 x 24 → 20 x 12 tiles; placed ones keep their saved size; its tests run after the merge). T218 #592 fairway stripes and T219 #594 iconic places filed; GOLF-ART-LIST section 11 holds the places' missing art.
