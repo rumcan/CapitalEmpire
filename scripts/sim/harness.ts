@@ -64,32 +64,36 @@ export function setup(seed: number): Harness {
 export function growLegs(h: Harness, legs: Leg[]) { h.editor.addLegs(legs, CLASS.gravel, 2, undefined, true); h.city.netOps(h.editor.commit()); }
 
 /** what the player run did (playerUpgrade): the junction fixes (mini-roundabouts, roundabouts), the road segs upgraded, their tiles, and the money */
-export interface PlayerRoads { segs: number; cost: number; tiles: number; minis: number; rings: number }
+export interface PlayerRoads { segs: number; cost: number; tiles: number; minis: number; /** all-way stops */ rings: number }
 /** the classes the player run takes up the ladder (WIDER) where a link is the bottleneck: the town's gravel, street and road */
 const PLAYER_FROM = new Set(['gravel', 'street', 'road']);
+/** the classes of one lane each way: a crossing of them takes a mini-roundabout (the Junction tool: 2 lanes each way at most) */
+const NARROW = new Set(['gravel', 'lane', 'street', 'road', 'drive-gravel', 'drive']);
 /** the player's thresholds (T184): a link is the bottleneck at v/c LINK_VC with LINK_LOSS veh-s lost a game hour; a jammed crossing is at LOS
  *  E or F with JAM_LOSS veh-s lost a game hour */
 export const PLAYER_RULES = { LINK_VC: 0.9, LINK_LOSS: 100, JAM_LOSS: 100 };
 /** A player who manages the town's traffic (T184; the owner, 2026-10-27: "... retune the road challenge with a player who places junction
  *  tools"), at each call:
  *  1. the jammed crossings (bottleneck report: LOS E or F, JAM_LOSS or more lost), the worst first, get the Junction tool's fix at its price
- *     (variantCost): a plain crossing of 3+ arms a mini-roundabout, a mini that still jams a one-lane roundabout; at most maxJ;
+ *     (variantCost): a plain crossing of 3+ arms whose arms are at most one lane each way a mini-roundabout ($1,500), a wider one an all-way
+ *     stop ($300); a crossing that has its fix is left (the first run turned jammed minis into one-lane roundabouts: about 75 a seed at
+ *     $8,000 each, the treasury gone by season 14 for little gain); at most maxJ;
  *  2. then roads only where a link itself is the bottleneck (v/c LINK_VC or more, LINK_LOSS or more lost): the seg one class up with the
  *     Upgrade tool's action (laid again in the next class, its style and kind kept, no longer the town's) and price (the class cost
  *     difference x length x STRUCT_COST of its kind); at most maxL.
  *  Everything is paid from the treasury as construction, never below `reserve`. Returns what it did */
 export function playerUpgrade(h: Harness, maxJ: number, maxL: number, reserve: number): PlayerRoads {
   const B = (h.city as unknown as { budget: { money: number } }).budget, done: PlayerRoads = { segs: 0, cost: 0, tiles: 0, minis: 0, rings: 0 };
-  const rep = h.city.report(0), mini = variantCost('mini', 1), ring = variantCost('roundabout', 1);
+  const rep = h.city.report(0), mini = variantCost('mini', 1), stop = variantCost('stop', 1);
   const jammed = rep.junctions.filter(j => (j.los === 'E' || j.los === 'F') && j.loss >= PLAYER_RULES.JAM_LOSS).sort((p, q) => q.loss - p.loss);
   let fixes = 0;
   for (const j of jammed) {
     if (fixes >= maxJ) break;
     const n = h.editor.net.nodeAt({ x: j.x, y: j.y }); if (!n || n.segs.length < 3) continue;
-    const to = n.type === 'plain' ? 'mini' : n.type === 'mini' ? 'roundabout' : null, price = to === 'mini' ? mini : ring;
+    const narrow = n.segs.every(sg => NARROW.has(sg.cls.id)), to = n.type === 'plain' ? (narrow ? 'mini' : 'stop') : null, price = to === 'mini' ? mini : stop;
     if (!to || B.money - price < reserve) continue;
     h.city.spend('construction', price); h.editor.setNodeType(n, to); fixes++; done.cost += price;
-    if (to === 'mini') done.minis++; else done.rings++;
+    if (to === 'mini') done.minis++; else done.rings++; // rings counts the all-way stops now
   }
   if (fixes) h.city.netOps(h.editor.commit());
   const links = rep.links.filter(l => l.vc >= PLAYER_RULES.LINK_VC && l.loss >= PLAYER_RULES.LINK_LOSS && PLAYER_FROM.has(l.cls)).sort((p, q) => q.loss - p.loss);
