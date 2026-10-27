@@ -25,7 +25,7 @@
   "outside": { "family": "golden-fescue", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "lawn": { "family": "emerald-short", "version": null, "scale": 0.75, "tint": "#ffffff", "tone": 0 },
   "lawnBuilt": { "family": "fairway-paint", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
-  "lawnUpgraded": { "family": "putting-green-paint", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
+  "lawnUpgraded": { "family": "putting-green-v2", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "lawnDeclined": { "family": "rough-owner", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "lush": { "family": "golden-fescue", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "patchy": { "family": "golden-fescue", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
@@ -41,6 +41,6 @@
   "lawns": { "family": "emerald-short", "version": null, "scale": 0.75, "tint": "#ffffff", "tone": 0 },
   "path-worn": { "family": "underground-earth", "version": "v2", "scale": 0.5, "tint": "#b0b4e8", "tone": 0 },
   "range-outfield": { "family": "emerald-short", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0.02 },
-  "range-green": { "family": "emerald-short", "version": null, "scale": 0.5, "tint": "#eaffcf", "tone": 0.26 }
+  "range-green": { "family": "putting-green-v2", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 }
  }
 }

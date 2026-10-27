@@ -387,7 +387,7 @@ test('the tile sets join the families, laid as authored; fescue, water, the map 
   // T153 (#327): the course's turf and waste areas wear the new sets, neutral (the tile sets are laid as authored); T165 (#365): the fairway,
   // the greens and their fringes the art session's paintings (fairway-paint, putting-green-paint), the old provisional sets kept unmapped
   const neutral = (family: string) => ({ family, version: null, scale: 1, tint: '#ffffff', tone: 0 });
-  for (const [t, key, fam] of [['golfFairway', 'fairway', 'fairway-paint'], ['golfGreen', 'green', 'putting-green-v2'], ['golfFringe', 'fringe', 'fringe'], ['wasteSand', 'waste', 'sand-ripples-tiles'], ['lawnBuilt', 'lawnBuilt', 'fairway-paint'], ['lawnUpgraded', 'lawnUpgraded', 'putting-green-paint']] as const) {
+  for (const [t, key, fam] of [['golfFairway', 'fairway', 'fairway-paint'], ['golfGreen', 'green', 'putting-green-v2'], ['golfFringe', 'fringe', 'fringe'], ['wasteSand', 'waste', 'sand-ripples-tiles'], ['lawnBuilt', 'lawnBuilt', 'fairway-paint'], ['lawnUpgraded', 'lawnUpgraded', 'putting-green-v2']] as const) {
     assert.equal(lookOfTex(t, S)!.family, fam, t); assert.deepEqual(S.surfaces[key], neutral(fam), `${key}: neutral tint, tone and scale`);
     assert.deepEqual((surfacesFile.surfaces as Record<string, unknown>)[key], neutral(fam), `${key} in painted-surfaces.json`);
   }
@@ -610,6 +610,12 @@ test("T191 (#497): the fringe (new) and the putting green's v2 MID and FAR ship 
     assert.ok(L.heal!.before.lr <= 1.25 * L.heal!.before.h && L.heal!.before.tb <= 1.25 * L.heal!.before.v, `v2 ${l}: within 1.25x the inside`);
   }
   assert.equal(v2.levels.near.tiles[0]!.sha256, paint.levels.near.tiles[0]!.sha256, "v2's NEAR is the owner's putting-green painting");
+  // T191 (the owner: new art is used everywhere): no surface, lawn or preset wears the families v2 and the fringe replace; the range's target
+  // greens (the range-green preset) and the upgraded lawns wear v2, neutral; the old families stay only as the option in Studio › Painted
+  const S = clampSurfaces(surfacesFile), looks = [...Object.values(S.surfaces), ...S.lawns, ...Object.values(S.presets)];
+  for (const id of ['putting-green', 'putting-green-paint']) assert.ok(!looks.some(l => l.family === id), `${id} is only the old option`);
+  for (const l of [S.presets['range-green']!, S.surfaces.lawnUpgraded!, S.surfaces.green!]) assert.deepEqual(l, { family: 'putting-green-v2', version: null, scale: 1, tint: '#ffffff', tone: 0 });
+  assert.equal(lookOfTex('preset:range-green', S)!.family, 'putting-green-v2'); assert.equal(lookOfTex('golfFringe', S)!.family, 'fringe');
   // the old families: pinned to the sets they shipped (the old option), never the v2 sets
   assert.match(old.levels.mid.folder, /putting-green\/mid-v1$/); assert.match(old.levels.far.folder, /putting-green\/far-v1$/); assert.match(paint.levels.mid.folder, /putting-green\/mid-v1$/);
 });
