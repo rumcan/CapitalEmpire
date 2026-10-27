@@ -125,7 +125,7 @@ import { BAND_LABEL, LandSale } from './golf/land-sale';
 import { buildCourseStatsPanel, type CourseStatsPanel } from './golf/coursestats';
 import { TILE_M, type CourseArea, type CourseLayout, type GolfSurface } from './golf/types';
 import { deriveHoles, surfaceAt, validateMarkerPlacement } from './golf/holes';
-import { LiveGroup, OWNER_ADDRESS, OWNER_ART, OWNER_SKILL, POWER, PUTT_POWER, PlayView, allowedClubs, boardRows, carryM, championLine, dayRound, makeCourseView, powerFor, stateAt, standings, toParText, type BoardRow, type Club, type CourseView, type OwnerTurn, type RoundPlan, type Sex } from './golf/play';
+import { DayFinish, LiveGroup, OWNER_ADDRESS, OWNER_ART, OWNER_SKILL, POWER, PUTT_POWER, PlayView, allowedClubs, boardRows, carryM, championLine, dayRound, makeCourseView, powerFor, resultsDue, shortName as golferShort, stateAt, standings, toParText, type BoardRow, type Club, type CourseView, type OwnerTurn, type RoundPlan, type Sex } from './golf/play';
 import { holeViews, markerPlan, tagByHole, type HoleView, type MarkerKind } from './golf/holeview';
 import { CAST, castShear, clampCast, type CastShadow } from './cast-shadow';
 import { SPEC_LOOK, clampSpecLook, specGain, type SpecLook } from './lamp-reflect';
@@ -224,7 +224,9 @@ const GOLFER_ART: Record<'m' | 'w', number[]> = { m: golferArt('_m'), w: golferA
 const ownerArt = (sex: Sex): number => { const i = GOLFER_PEOPLE.findIndex(p => p.id === OWNER_ART[sex]); return i >= 0 ? i : GOLFER_ART[sex][0]!; };
 /** the day's golf round (docs/GOLF-PLAY.md P2): its plan, course view and playback, the tournament's key (the round's count), each golfer's art index, and
  *  the owner's play (P4b; null when he is not in the day) */
-interface GolfPlay { plan: RoundPlan; view: CourseView; pv: PlayView; key: number; art: number[]; told: boolean; own: OwnerPlay | null }
+/** the day's golf round as the engine plays it back: the plan, the course, the playback, the tournament key, each golfer's art, the end of the round (T210:
+ *  the last group's moment and the round over, latched) and the owner's play */
+interface GolfPlay { plan: RoundPlan; view: CourseView; pv: PlayView; key: number; art: number[]; finish: DayFinish; own: OwnerPlay | null }
 /** the owner's play in the day (docs/GOLF-PLAY.md decision 7, P4b): his golfer's id, sex and skill, his group's tee time, his live group (live.ts), his next
  *  turn (null once his group is done), and the count of inputs he had played when he handed to the caddie (null while he plays) */
 interface OwnerPlay { id: number; sex: Sex; skill: number; tee: number; live: LiveGroup; turn: OwnerTurn | null; caddie: number | null }
@@ -232,11 +234,17 @@ interface OwnerPlay { id: number; sex: Sex; skill: number; tee: number; live: Li
 export interface ShotState { turn: OwnerTurn; input: { club: Club; aim: Pt; power: number } }
 /** the day's leaderboard (docs/GOLF-PLAY.md decision 8): the game minute of the day, the top rows and the owner's (boardRows), the champion's line once
  *  everyone is done (else null), whether everyone is done, the tournament's name, and the owner's group's tee time (null without him) */
-export interface PlayBoard { minute: number; rows: BoardRow[]; champion: string | null; done: boolean; event: string; ownerTee: number | null }
+export interface PlayBoard { minute: number; rows: BoardRow[]; champion: string | null; done: boolean; event: string; ownerTee: number | null;
+  /** T210: the last group's names (short) from its walk onto the final hole until the round is over (the board's banner offers to watch it); null otherwise */
+  last: string[] | null;
+  /** T210: the eval is in (the 15:00 kick-off) and its results wait for the last group (the board says so and offers them early) */
+  waiting: boolean }
 /** the leaderboard's rows shown (the top 8, and the owner's row below them) */
 const BOARD_ROWS = 8;
 /** T209: the longest a resumed tournament day waits for its play after the first frame (holdDay), ms */
 const DAY_HOLD_MS = 3000;
+/** T210: the end of the round (the last group's moment, the round over) is stepped at most this often, ms (at 20x about 4 game minutes) */
+const FINISH_EVERY_MS = 200;
 /** a closed path over a flat x y list, in the current transform's units */
 function ring(ctx: CanvasRenderingContext2D, p: number[]) { ctx.moveTo(p[0]!, p[1]!); for (let i = 2; i < p.length; i += 2) ctx.lineTo(p[i]!, p[i + 1]!); ctx.closePath(); }
 /** the distance from p to the seg s, tiles */
@@ -620,6 +628,9 @@ export class Game {
   private shot: ShotState | null = null; private shotSpeed = 1;
   /** the featured holes last sent to the city (featuredHoles; the City's set mirrors it) and the real ms they were last worked out at */
   private featured: number[] = []; private featuredAt = -Infinity;
+  /** T210: the real ms the end of the round (GolfPlay.finish) was last stepped at, and whether the player asked for the results before the last group is
+   *  in (today's early leave: the eval's screen as it opened at kick-off; reset when the round is free) */
+  private finishAt = -Infinity; private resultsEarly = false;
   /** the leaderboard (playBoard), recomputed at most every 250 ms: the play it is for, the time, and the board */
   private boardCache: { play: GolfPlay; at: number; board: PlayBoard } | null = null;
   /** Local care and wear augment the existing base grass, lawn presets, paint and grow-in. */
@@ -4185,7 +4196,7 @@ export class Game {
   this.scheduleSave();
   }
   }
-  this.traffic.closeRound(); this.emit();
+  this.resultsEarly = false; this.traffic.closeRound(); this.emit();
   }
   /** moves the camera to the stadium's centre, keeping the zoom */
   goToSite() { const s = this.site; if (!s) return; this.cam.X = worldX(s.c.x, s.c.y); this.cam.Y = worldY(s.c.x, s.c.y); this.clampCam(); this.emit(); }
@@ -5492,10 +5503,10 @@ export class Game {
    *  when the round is free, or when there is no golf */
   private updatePlay(now: number) {
     const tr = this.traffic, r = tr?.round;
-    if (!this.golf || !r || (r.stage !== 'surge' && r.stage !== 'eval')) { this.play = null; this.playTried = -1; this.playSavedHr = -1; this.clearFeatured(); if (this.shot) this.closeShot(); this.holdDay(now, false); return; }
+    if (!this.golf || !r || (r.stage !== 'surge' && r.stage !== 'eval')) { this.play = null; this.playTried = -1; this.playSavedHr = -1; this.resultsEarly = false; this.clearFeatured(); if (this.shot) this.closeShot(); this.holdDay(now, false); return; }
     if (this.playTried !== r.runs) { this.playTried = r.runs; this.play = this.buildPlaySaved(r.runs); }
     if (!this.play) { this.clearFeatured(); this.holdDay(now, true); return; }
-    const minute = townTimeOf(tr.town, tr.simTime(now)).dayMin;
+    const minute = this.playMinute(this.play, townTimeOf(tr.town, tr.simTime(now)).dayMin);
     // the day saves itself each game hour (T209: the save keeps the day, SaveV5.tourney), so a reload resumes near where it was; the owner's shots save as he plays
     const hr = Math.floor(minute / 60); if (hr !== this.playSavedHr) { if (this.playSavedHr >= 0) this.scheduleSave(); this.playSavedHr = hr; }
     // the owner's pending turn (P4b): his walk to the ball and his address there, facing the open shot's aim when one is open
@@ -5504,8 +5515,32 @@ export class Game {
     this.ownerFrame(minute); this.holdDay(now, true);
     // the crowd follows the play (docs/GOLF-PLAY.md decision 6): the featured holes are worked out at most every FEATURED_EVERY_MS and sent when they change
     if (now - this.featuredAt >= FEATURED_EVERY_MS) { this.featuredAt = now; this.sendFeatured(this.featuredHoles(this.play, minute)); }
-    // the champion is toasted once, the first time the board has one (its line is the board's)
-    if (!this.play.told) { const b = this.playBoard(); if (b?.champion) { this.play.told = true; this.toast(`${b.champion} — ${b.event}`, 'good'); } }
+    // the end of the round (T210): the last group's moment (a toast; the board offers to watch it), then the round over: the champion is toasted and the
+    // results open (resultsOpen). Stepped at most every FINISH_EVERY_MS; the tracker latches both, so a 20x frame that jumps the 18th still has them in order
+    if (now - this.finishAt >= FINISH_EVERY_MS) {
+      this.finishAt = now;
+      const pl = this.play, fin = pl.finish.step(pl.plan, pl.view, minute);
+      if (fin.last && !fin.over) this.toast(`Last group on the 18th: ${fin.last.golfers.map(id => golferShort(pl.plan.golfers.find(g => g.id === id)?.name ?? '')).join(', ')}`, 'info');
+      if (fin.over) { const line = championLine(pl.plan, pl.view); this.boardCache = null; if (line) this.toast(`${line} — ${this.golf ? tierInfo(this.golf.tier).name : ''}`, 'good'); else this.emit(); }
+    }
+  }
+  /** the game minute the play is shown at: the town clock's minute of the day, held at the minute the round was over once the clock has run past the day's
+   *  end (T210: the results stay open after the tournament day, when the town clock goes back to its normal rate and wraps at midnight) */
+  private playMinute(pl: GolfPlay, minute: number): number { return pl.finish.over ? Math.max(minute, pl.finish.overAt) : minute; }
+  /** the eval's results screen is open (T210, resultsDue): in the eval, outside golf at once; on the tournament day once the last group is in (or at once
+   *  with no play to wait for, or when the player asked for the results early); not while the play is not built yet (the first frame after a load) */
+  resultsOpen(): boolean {
+    const r = this.traffic.round, waitPlay = !!this.golf && r.stage === 'eval';
+    return resultsDue(r.stage, !!this.golf, !waitPlay ? null : this.playTried !== r.runs ? undefined : this.play ? this.play.finish : null, this.resultsEarly);
+  }
+  /** the results now, before the last group is in (T210: today's early leave kept; the screen says who leads, and Back to the valley ends the day) */
+  showResultsNow() { if (this.traffic.round.stage !== 'eval') return; this.resultsEarly = true; this.emit(); }
+  /** the camera to the last group on the 18th (T210, the board's Watch): the middle of its golfers still out, at the current zoom */
+  watchLastGroup() {
+    const pl = this.play, lg = pl?.finish.last; if (!pl || !lg || pl.finish.over) return;
+    const tr = this.traffic, m = this.playMinute(pl, townTimeOf(tr.town, tr.simTime(performance.now())).dayMin), st = stateAt(pl.plan, pl.view, m);
+    const at = st.filter(s => lg.golfers.includes(s.golfer)); if (!at.length) return;
+    this.lookAt(at.reduce((a, s) => a + s.x, 0) / at.length, at.reduce((a, s) => a + s.y, 0) / at.length);
   }
   /** T209: ends a resumed tournament day's wait (dayHold) once its play is back (ready: built, or none to build; the owner's shot, opened by ownerFrame,
    *  keeps the sim paused and goes on at the held speed), or DAY_HOLD_MS after the first frame when the day did not come back (the round loaded free) */
@@ -5543,10 +5578,12 @@ export class Game {
     const pl = this.play; if (!pl) return null;
     const now = performance.now(), c = this.boardCache;
     if (c && c.play === pl && now - c.at < 250) return c.board;
-    const tr = this.traffic, plan = pl.plan, minute = townTimeOf(tr.town, tr.simTime(now)).dayMin, ownerId = plan.golfers.find(g => g.owner)?.id ?? null;
+    const tr = this.traffic, plan = pl.plan, minute = this.playMinute(pl, townTimeOf(tr.town, tr.simTime(now)).dayMin), ownerId = plan.golfers.find(g => g.owner)?.id ?? null;
+    const fin = pl.finish, last = fin.last && !fin.over ? fin.last.golfers.map(id => golferShort(plan.golfers.find(g => g.id === id)?.name ?? '')) : null;
     const board: PlayBoard = {
       minute, rows: boardRows(standings(plan, pl.view, minute), plan.golfers, BOARD_ROWS, ownerId), champion: championLine(plan, pl.view, minute),
       done: plan.golfers.every(g => plan.done[g.id]! <= minute), event: this.golf ? tierInfo(this.golf.tier).name : '', ownerTee: pl.own?.tee ?? null,
+      last, waiting: tr.round.stage === 'eval' && !fin.over && !this.resultsEarly,
     };
     this.boardCache = { play: pl, at: now, board };
     return board;
@@ -5567,7 +5604,7 @@ export class Game {
     // the field, the tee times, the round and the owner's live group (dayRound: the same pure build a reload makes, T209)
     const seed = Math.floor(hash(this.seed, key) * 4294967296), { plan, golfers, own } = dayRound(view, g.tier, seed, owner);
     const art = golfers.map(p => p.owner ? ownerArt(p.sex) : GOLFER_ART[p.sex][p.look % GOLFER_ART[p.sex].length]!);
-    const pl: GolfPlay = { plan, view, pv: new PlayView(plan, view), key, art, told: false, own: null };
+    const pl: GolfPlay = { plan, view, pv: new PlayView(plan, view), key, art, finish: new DayFinish(), own: null };
     if (owner && own) pl.own = { id: own.id, sex: owner.owner, skill: OWNER_SKILL, tee: own.tee, live: own.live, turn: own.turn, caddie: owner.caddie };
     return pl;
   }

@@ -683,7 +683,7 @@ export default function App() {
           )}
           {game.site && game.traffic.round.stage !== 'eval' && !(game.golfMode && game.traffic.round.stage === 'free') && <RoundPanel game={game} />}
           {seasonOpen && game.golfMode && game.traffic.round.stage !== 'eval' && <SeasonCard game={game} onClose={() => setSeasonOpen(false)} onSelectHole={h => { const pin = game.golf?.pins.find(p => p.hole === h); if (pin) game.lookAt(pin.x, pin.y); }} />}
-          {game.site && game.traffic.round.stage === 'eval' && <EvalScreen game={game} />}
+          {game.site && game.resultsOpen() && <EvalScreen game={game} />}
           {game.site && game.playBoard() && <GolfLeaderboard game={game} />}
           {game.shotState() && <ShotPanel game={game} />}
           {game.seasonReport && game.traffic.round.stage === 'free' && <SeasonReportCard report={game.seasonReport} onContinue={() => game.dismissSeasonReport()} />}
@@ -924,8 +924,9 @@ function RoundPanel({ game }: { game: Game }) {
   );
 }
 
-/** the evaluation screen (Phase 5 step 7b): a centred card over the map, shown in eval only. The arrival rate and its change, the towns, the money, the
- *  bottlenecks at kick-off (Go jumps there), and the draft of cards: picking one opens the way back to the valley (closeRound). No close button */
+/** the evaluation screen (Phase 5 step 7b): a centred card over the map, shown in eval only (on the tournament day once the last group is in, T210:
+ *  Game.resultsOpen). The arrival rate and its change, the champion and the final leaderboard (golf), the towns, the money, the bottlenecks at kick-off
+ *  (Go jumps there), and the draft of cards: picking one opens the way back to the valley (closeRound). No close button */
 function EvalScreen({ game }: { game: Game }) {
  const r = game.traffic.round, last = r.last, golf = game.golfMode, gv = golf ? game.golfView() : null;
  if (!last) return null;
@@ -984,6 +985,16 @@ function EvalScreen({ game }: { game: Game }) {
         </div>
         {board && (board.champion ? <div className="rounded-lg bg-amber-400/15 px-3 py-2 text-sm font-semibold text-amber-200">{board.champion}</div>
           : board.rows[0] && <p className="text-sm text-slate-200">Still on the course: <span className="font-semibold text-white">{board.rows[0].name}</span> leads at <span className="tabular-nums">{board.rows[0].toPar}</span> thru {board.rows[0].thru}</p>)}
+        {board?.champion && board.rows.length > 0 && (
+          // the final scores (T210): the board's top rows and the owner's below them, in two columns
+          <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 rounded-lg bg-white/5 p-2 text-xs tabular-nums" data-guide="results-scores">
+            {board.rows.map(row => (
+              <div key={row.golfer} className={`grid grid-cols-[2.25rem_1fr_2.5rem] gap-2 rounded px-1 ${row.owner ? 'bg-amber-400/15 font-semibold text-amber-200' : 'text-slate-200'}`}>
+                <span className="text-slate-400">{row.pos}</span><span className="truncate">{row.name}</span><span className="text-right">{row.toPar}</span>
+              </div>
+            ))}
+          </div>
+        )}
         {golf ? (ye?.townGrowthText && <div className="rounded-lg bg-emerald-400/15 px-3 py-2 text-sm font-semibold text-emerald-200">{ye.townGrowthText}</div>) : (last.perfect && <div className="rounded-lg bg-emerald-400/15 px-3 py-2 text-sm font-semibold text-emerald-200">{`Perfect! The towns grow ${Math.round(TOWN_GROWTH * 100)}% and the stadium goes up to Level ${last.level + 1}`}</div>)}
         <div className="space-y-0.5 rounded-lg bg-white/5 p-2">
           {last.byTown.map((t, k) => (
