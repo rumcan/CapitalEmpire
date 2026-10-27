@@ -8,6 +8,9 @@ import { PLACE_DEFS, duePlaces, findSite, placeBox, placeDef, placeDefsFrom, pla
 import { composeWhole } from '../src/game/lots/compose';
 import { frameOf } from '../src/game/lots/preset-frame';
 import { hasSprite } from '../src/game/lots/preset-art';
+import { ART_FIXES, FRONT_DIR, fixedArt } from '../src/game/lots/art-fix';
+import { LIBRARY } from '../src/game/library';
+import { CAR_DIRECTIONS } from '../src/game/ext/car-art';
 
 (globalThis as unknown as { Path2D: unknown }).Path2D ??= class { moveTo() {} lineTo() {} arc() {} arcTo() {} closePath() {} rect() {} };
 
@@ -125,4 +128,68 @@ describe('the save', () => {
     assert.deepEqual(placesFromTuples([['drive-in', 1, 2, 1], ['drive-in', 3, 4, 2], ['mall', 1, 1, 0], ['high-school', 1, 2, 7], 'x']), [{ id: 'drive-in', x: 1, y: 2, q: 1 }]);
     assert.deepEqual(placesFromTuples(undefined), []);
   });
+});
+
+// the drive-in's screen is the library's own picture (T219 follow-up, #594): its footprint lies along its picture and its picture on the lot, at every facing
+const SCREEN = 'variation:ref-building-drive-in-screen-b0bccc2a-plain:1', fix = ART_FIXES[SCREEN]!;
+/** the pictures whose long side runs along the world x (read off the sheets: NE and SW; SE and NW run along y) */
+const LONG_X = new Set([SCREEN, `view:${SCREEN}:sw`]);
+const lib = new Map(LIBRARY.map(i => [i.id, i]));
+/** the world direction a car picture's heading looks (preset-art.ts CAR8: the heading's index times an eighth turn, atan2 over the world x, y) */
+const carDir = (id: string) => {
+  const m = /^cars:.+:(SE|S|SW|W|NW|N|NE|E)$/.exec(id); if (!m) return null;
+  const a = CAR_DIRECTIONS.indexOf(m[1] as typeof CAR_DIRECTIONS[number]) * Math.PI / 4;
+  return { x: Math.round(Math.cos(a)) + 0, y: Math.round(Math.sin(a)) + 0 };
+};
+
+describe('the drive-in screen', () => {
+  it('is the library picture, once, not a stand-in', () => {
+    assert.equal(drive.preset.props.filter(q => q.id === SCREEN).length, 1);
+    assert.ok(!drive.preset.props.some(q => q.id === 'golf:leaderboard'), 'the golf leaderboard no longer stands in');
+    assert.ok(!Object.keys(drive.standIns).includes('golf:leaderboard') && !Object.values(drive.standIns).includes('Drive-in screen'));
+    assert.equal(new Set(fix.front).size, 4, 'four pictures');
+    for (const id of fix.front) assert.ok(hasSprite(id) && fix.foot[id], `${id} is in the library with a footprint`);
+  });
+  it('fixes only its own picture, from any of its pictures', () => {
+    assert.equal(fixedArt('world:snack_bar', 0, 1), null);
+    assert.equal(fixedArt('golf:leaderboard', 1, 1), null);
+    assert.ok(fixedArt(SCREEN, 0, 2));
+    assert.equal(fixedArt(fix.front[2]!, 2, 2)?.id, fix.front[0], 'two quarters on from its back view is its base view');
+  });
+  for (const q of [0, 1, 2, 3] as const) {
+    it(`facing ${q}: its front faces the street, its footprint lies along its picture and on the lot, every car faces it`, () => {
+      const p: PlacedPlace = { id: drive.id, x: 100, y: 100, q }, g = placeGeom(p, drive), b = placeBox(p, drive), c = composeWhole(g, drive.preset, 5);
+      const scr = c.props.filter(r => r.from && drive.preset.props[r.from.prop]!.id === SCREEN);
+      assert.equal(scr.length, 1, 'the screen is drawn');
+      const r = scr[0]!, fp = r.foot!, it = lib.get(r.id)!, sp = drive.preset.props[r.from!.prop]!;
+      // the picture whose front faces the street: the street lies along -n, and that is the way the picture's front looks
+      assert.equal(r.id, fix.front[q], 'the picture for this facing');
+      assert.deepEqual([FRONT_DIR[q]!.x, FRONT_DIR[q]!.y], [0 - g.n.x, 0 - g.n.y], 'its front looks at the street');
+      assert.equal(r.flip, false, 'never mirrored');
+      // its footprint: inside the place, centred where the preset puts it, its long side along its picture, at its own size
+      assert.ok(fp[0] >= b[0] - 1e-6 && fp[1] >= b[1] - 1e-6 && fp[2] <= b[2] + 1e-6 && fp[3] <= b[3] + 1e-6, `inside the lot ${JSON.stringify([fp, b])}`);
+      const at = { x: (fp[0] + fp[2]) / 2, y: (fp[1] + fp[3]) / 2 };
+      const want = { x: g.o.x + g.u.x * sp.x + g.n.x * sp.y, y: g.o.y + g.u.y * sp.x + g.n.y * sp.y };
+      assert.ok(Math.hypot(at.x - want.x, at.y - want.y) < 1e-6, 'its footprint stands where the preset puts the screen');
+      const wide = fp[2] - fp[0], deep = fp[3] - fp[1];
+      assert.ok(LONG_X.has(r.id) ? wide > 3 * deep : deep > 3 * wide, `its long side along its picture (${wide.toFixed(2)} x ${deep.toFixed(2)})`);
+      assert.ok(Math.abs(Math.max(wide, deep) - 5.5 * r.scale) < 1e-6 && Math.abs(Math.min(wide, deep) - 1.2 * r.scale) < 1e-6, "the picture's own size");
+      // its picture sits on that footprint: the picture's lowest point (the generator's near corner) lands on the footprint's near corner
+      const b0 = it.boxes[0]!, nx = it.ax + 32 * (b0.hx - b0.hy), ny = it.ay + 16 * (b0.hx + b0.hy), k = r.scale;
+      const X = (r.x - r.y) * 64 + k * (nx - it.ax), Y = (r.x + r.y) * 32 + k * (ny - it.ay);
+      assert.ok(Math.abs(X / 128 + Y / 64 - fp[2]) < 1e-6 && Math.abs(Y / 64 - X / 128 - fp[3]) < 1e-6, 'its lowest point on the near corner');
+      // and the drawn picture lies inside the lot's own span across the screen
+      const left = (r.x - r.y) * 64 - it.ax * k, right = left + it.w * k, xs = [b[0] - b[3], b[2] - b[3], b[0] - b[1], b[2] - b[1]].map(v => v * 64);
+      assert.ok(left >= Math.min(...xs) && right <= Math.max(...xs), 'its picture inside the lot across the screen');
+      // every car looks the way the rows run, toward the screen at their end (the away vector), and the screen is ahead of it
+      let cars = 0;
+      for (const z of c.props) {
+        const d = carDir(z.id); if (!d) continue;
+        cars++;
+        assert.deepEqual([d.x, d.y], [g.n.x, g.n.y], `${z.id} faces the screen`);
+        assert.ok((at.x - z.x) * g.n.x + (at.y - z.y) * g.n.y > 0, 'the screen is ahead of the car');
+      }
+      assert.equal(cars, 28, 'the rows');
+    });
+  }
 });
