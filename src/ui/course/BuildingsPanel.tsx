@@ -26,6 +26,13 @@ export function BuildingsPanel({ game }: { game: Game }) {
         <div className="sub-line leading-snug">The course's front door: green fees start, the tournament's crowd heads here, and the tour needs it before it invites you.</div>
       </button>
       <p className="mt-2 leading-snug">{built ? 'Your clubhouse stands: there is one only.' : placing ? 'Click beside a drive on your land (its front snaps to the drive); R turns it, Esc puts it down.' : 'Pick the clubhouse to place it.'}</p>
+      {!built && game.clubDriveOffer && (
+        <div className="mt-2 rounded-lg border border-amber-400/40 bg-amber-400/10 p-2" data-testid="club-drive-offer">
+          <div className="flex items-center gap-1.5 text-amber-200"><span aria-hidden className="font-bold">!</span>No drive within reach of the spot you tried</div>
+          <button className="chip chip-on mt-1.5" onClick={() => game.drawDriveForClub()} data-testid="club-draw-drive">Draw a drive</button>
+          <div className="sub-line mt-1 leading-snug">It starts at the nearest road. When it is built, the clubhouse comes back armed at that spot.</div>
+        </div>
+      )}
     </div>
   );
 }

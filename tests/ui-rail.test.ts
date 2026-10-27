@@ -9,7 +9,7 @@ import { advanceProgress, computeProgressiveUiState, emptyProgress, progressFact
 import { railEntries, toolNew, type RailEntry } from '../src/ui/rail-items';
 import { Rail } from '../src/ui/Rail';
 
-const GOLF_RAIL = ['select', 'holes', 'paths', 'buildings', 'props', 'roads', 'junction', 'transport', 'paint', 'bulldoze'];
+const GOLF_RAIL = ['select', 'holes', 'paths', 'buildings', 'props', 'greenkeeping', 'roads', 'junction', 'transport', 'paint', 'bulldoze'];
 const course = (holes: number): CourseProgress => ({ holes, seasons: 0, invited: false });
 /** the unlocks of a golf game with this progress and holes */
 const uiOf = (p: GolfProgress, holes: number) => computeProgressiveUiState(progressFacts(p, course(holes)));
@@ -55,6 +55,7 @@ describe('locked tools stay in place, dimmed, with what unlocks them (P23 4.2)',
   it('stage 1: Roads, Junctions, Transport and Paint render dimmed with a lock and their "Unlocks with …"; Holes, Paths and Buildings are open', () => {
     const es = railEntries(uiOf(played(0), 0), true, 'course'), h = html(es);
     assert.deepEqual(es.filter(e => e.locked).map(e => [e.item.id, e.locked]), [
+      ['greenkeeping', 'Unlocks when your first hole is grown in'], // T175
       ['roads', "Unlocks with your third hole or the tour's invitation"],
       ['junction', "Unlocks with your third hole or the tour's invitation"],
       ['transport', "Unlocks with your third hole or the tour's invitation"],
@@ -120,7 +121,7 @@ describe('NEW badges clear once the tool is opened (P23 4.2, T117 seen ids)', ()
   });
 
   it('stage 3: Roads, Junctions and Transport say NEW; opening Roads clears its badge, and its Upgrade and Downgrade keep theirs until opened', () => {
-    const p = played(3, ['paint']);
+    const p = played(3, ['paint', 'greenkeeping']); // Greenkeeping's own NEW badge is T175's tests'
     const es = railEntries(uiOf(p, 3), true, 'select');
     assert.deepEqual(es.filter(e => e.isNew).map(e => e.item.id), ['roads', 'junction', 'transport']);
     advanceProgress(p, progressFacts(p, course(3)), 'road');

@@ -2,7 +2,7 @@ import { CHUNK_H, CHUNK_W, DISTRICT_Z, HH, HW, MAP, MID_H, MID_W, PLANNER_Z, PLA
 import { ATLAS_PAGES, GOLFER_BASE, GOLFER_FRAMES, GOLFER_PEOPLE, LIBRARY, SPECTATOR_BASE, SPECTATOR_FRAMES, SPECTATOR_PEOPLE, WALKER_BASE, WALKER_PEOPLE, WALK_DIRS, WALK_FRAMES } from './library';
 import { galleryPeople, hash, queuePeople, walkerPeople, type CrowdPerson } from './crowdview';
 import { FACING_ROW, Pedestrians, sidewalks, type Door, type WalkerView } from './ext/pedestrians';
-import { GrassManagement, grassSurface, type GrassAction, type GrassCellView, type GrassScope, type GrassSettings } from './ext/grass-management';
+import { GRASS_ACTION_NAME, GrassManagement, grassSurface, type GrassAction, type GrassCellView, type GrassScope, type GrassSettings } from './ext/grass-management';
 import { drawGhostBlueprint, drawGhostHint, drawGhostPoly, drawGhostRing, ghostStatus, type GhostBlueprint, type GhostView } from './ext/ghost-preview';
 import { busGhostLabel, costLabel, markerGhost, structureGhost, tollGhostLabel } from './ext/event-ghost';
 import { CourseCursor, type CursorView } from './ext/course-cursor';
@@ -96,7 +96,8 @@ import { planGolfGame } from './golf/start';
 import { RANGE_CAM_ZOOM, planRangeStart } from './golf/rangestart';
 import { CLUB_REACH, clubhouseSpotWhy, plotOfFront, rangeLayout } from './golf/range';
 import { dressCourse } from './golf/dressing';
-import { FIRST_TEE, SEASON_START, monthsLeft, seasonLabel, seasonMonth, yearOf } from './golf/calendar';
+import { FIRST_TEE, SEASON_START, monthIndexLabel, monthsLeft, seasonLabel, seasonMonth, yearOf } from './golf/calendar';
+import { afterRoute, driveOffer, driveStart, type DriveStopgap } from './golf/drivestopgap';
 import { growReadyLabel, hintWithGrow } from './golf/growlabel';
 import { computeTournamentCloseBook, computeYearEnd, type YearEndResult } from './golf/yearend';
 import { countParkedCars } from './golf/parkingfee';
@@ -2316,7 +2317,7 @@ export class Game {
     }
 
   // ---------- road routing ----------
-  setTool(t: Tool) { if (t === 'business' && this.golfMode) return; /* golf mode: the game places the clubhouse, so no Business tool */ if (this.refuseLocked(t)) return; /* P23 4.10: a locked tool says what unlocks it */ const scope = t === 'path' ? 'course' : t === 'road' ? 'town' : this.roadScope; if (t === 'path') t = 'road'; /* T084: Paths & drives is the road tool on the course */ const cScope = t === 'buildings' ? 'buildings' : t === 'course' ? 'holes' : this.courseScope; if (t === 'buildings') t = 'course'; /* P23 P1-E: Buildings is the course tool's clubhouse scope */ if (this.tool !== t || scope !== this.roadScope || cScope !== this.courseScope) { this.paint.cancel(); this.cancelRoute(); this.selected = null; this.selectedJunction = null; this.parkDrag = null; this.parking.drag = null; this.tollHover = null; this.bizHover = null; this.busPick = null; this.busHover = null; this.laneHover = null; this.decor.cancel(); } this.tool = t; if (pickTool(this, t)) this.tidySideModes(); /* P23 P1-A: a build tool closes the Grass panel, Land, Holes and Event */ if (t === 'road') this.setRoadScope(scope); if (t === 'course') this.courseScope = cScope; if (t !== 'course' || cScope === 'holes') this.clubPlacing = false; else if (this.golf && !this.bizDefs.some(d => d.type === 'clubhouse')) this.clubPlacing = true; /* Buildings arms the clubhouse until it stands */ if (t === 'course') { this.paint.enterCourse(); this.ground.prewarm(brushTextures()); /* T168: what its brushes lay, made ahead */ } else if (t === 'paint') this.paint.enterPaint(); this.emit(); }
+  setTool(t: Tool) { const wasGk = this.tool === 'greenkeeping'; if (t === 'business' && this.golfMode) return; /* golf mode: the game places the clubhouse, so no Business tool */ if (this.refuseLocked(t)) return; /* P23 4.10: a locked tool says what unlocks it */ const scope = t === 'path' ? 'course' : t === 'road' ? 'town' : this.roadScope; if (t === 'path') t = 'road'; /* T084: Paths & drives is the road tool on the course */ const cScope = t === 'buildings' ? 'buildings' : t === 'course' ? 'holes' : this.courseScope; if (t === 'buildings') t = 'course'; /* P23 P1-E: Buildings is the course tool's clubhouse scope */ if (this.tool !== t || scope !== this.roadScope || cScope !== this.courseScope) { this.paint.cancel(); this.cancelRoute(); this.selected = null; this.selectedJunction = null; this.parkDrag = null; this.parking.drag = null; this.tollHover = null; this.bizHover = null; this.busPick = null; this.busHover = null; this.laneHover = null; this.decor.cancel(); } this.tool = t; if (pickTool(this, t)) this.tidySideModes(); /* P23 P1-A: a build tool closes the Grass panel, Land, Holes and Event */ if (t === 'road') this.setRoadScope(scope); if (t === 'course') this.courseScope = cScope; if (t !== 'course' || cScope === 'holes') this.clubPlacing = false; else if (this.golf && !this.bizDefs.some(d => d.type === 'clubhouse')) this.clubPlacing = true; /* Buildings arms the clubhouse until it stands */ if (t === 'course') { this.paint.enterCourse(); this.ground.prewarm(brushTextures()); /* T168: what its brushes lay, made ahead */ } else if (t === 'paint') this.paint.enterPaint(); /* T175: Greenkeeping's panel is the Grass panel; leaving it puts its care down */ if (t === 'greenkeeping') this.grassPanel = true; else if (wasGk) { this.grassPanel = false; this.grassAction = null; } this.emit(); }
   /** the snap radius in tiles: about 14 screen px (at least 2 tiles) */
   private snapRadius() { return Math.max(2, 14 / (HW * this.cam.z)); }
   /** the road tool's snap under the cursor, or null with no cursor */
@@ -2548,6 +2549,7 @@ export class Game {
     this.route = [];
     const structs = [lens[SK.BRIDGE] ? `${Math.round(lens[SK.BRIDGE] * 2)} m bridge` : '', lens[SK.TUNNEL] ? `${Math.round(lens[SK.TUNNEL] * 2)} m tunnel` : ''].filter(Boolean);
     this.toast(`Built ${Math.round(total * 2)} m of ${cls.name.toLowerCase()}${structs.length ? ` (${structs.join(', ')})` : ''} ${paid < 0 ? `(refund $${(-paid).toLocaleString()})` : `for $${paid.toLocaleString()}`}${comp ? `, $${comp.toLocaleString()} compensation for ${hit.length} building${hit.length > 1 ? 's' : ''}` : ''}${cleared.length ? ` (cleared ${cleared.length} item${cleared.length > 1 ? 's' : ''})` : ''}${cuts.length ? `, replaced ${cuts.length} road piece${cuts.length > 1 ? 's' : ''} worth $${Math.round(removed).toLocaleString()}` : ''}`, 'good');
+    this.clubDriveBuilt(cls); // T175: the clubhouse stopgap's drive
     // a one-way road that ends in a dead end traps cars: warned, not refused
     if (cls.oneway && parts.length && [parts[0]!.a, parts[parts.length - 1]!.b].some(p => this.net.nodeAt(p)?.segs.length === 1)) this.toast('A one-way road that ends in a dead end traps cars', 'warn');
   }
@@ -3014,6 +3016,7 @@ export class Game {
   if (this.shot && e.button === 0 && !this.keys.has(' ')) { this.overlay.setPointerCapture(e.pointerId); this.dragging = { kind: 'pan', sx: mx, sy: my, camX: this.cam.X, camY: this.cam.Y, moved: false, aim: this.tileAt(mx, my) }; return; }
   // the side modes live in Select (P23 P1-A): the Grass panel, Land, Event and Holes never take a build tool's click
   const side = this.tool === 'select';
+  if (this.tool === 'greenkeeping' && e.button === 0 && !this.keys.has(' ')) { this.grassTarget = this.tileAt(mx, my); if (this.grassAction) this.careGrass(this.grassAction); this.emit(); return; } // T175
   if (side && this.grassPanel && e.button === 0 && !this.keys.has(' ')) { this.grassTarget = this.tileAt(mx, my); if (this.grassAction) this.careGrass(this.grassAction); this.emit(); return; }
   if (side && this.landMode && this.landHover && e.button === 0) {
   this.buyLandBlock(this.landHover.rect);
@@ -3272,7 +3275,7 @@ export class Game {
    *  card), the tool's own step (with a text box focused, Esc stops there: the tool keeps what is in hand), and Select */
   private escRungs(e: KeyboardEvent, textBox: boolean): EscLadder {
     return {
-      open: () => ({ ...this.uiCards?.open(), event: this.eventTool, grass: this.grassPanel, panel: !!this.panel }),
+      open: () => ({ ...this.uiCards?.open(), event: this.eventTool, grass: this.grassPanel && this.tool !== 'greenkeeping', panel: !!this.panel }),
       close: c => {
         if (c === 'event') this.toggleSideMode('eventTool'); else if (c === 'grass') this.toggleSideMode('grassPanel');
         else { if (c === 'panel') this.panel = null; else this.uiCards?.close(c); this.emit(); }
@@ -3286,6 +3289,7 @@ export class Game {
    *  junction picked, the car watched, the bus stop picked, the route, the selection, the pin or tee picked, the Land or Holes switch);
    *  true when it did (else Esc puts the tool down for Select) */
   private escHand(e: KeyboardEvent): boolean {
+    if (this.tool === 'greenkeeping' && this.grassAction) { this.grassAction = null; this.emit(); return true; } // T175: the care in hand first
     if (this.holeCardHole !== null) { this.closeHoleCard(); return true; } // T174: the hole card first
     if (this.clubPlacing && this.tool === 'course') { this.placeClubhouse(false); return true; }
     if (this.paintOn && this.paint.key(e)) return true;
@@ -3468,6 +3472,30 @@ export class Game {
   // ---------- the clubhouse the player places (range starts, plan P22 2.5.2, T089) ----------
   /** the rail's Buildings (P23 P1-E; was the Course tool's Buildings tab): the clubhouse's ghost follows the cursor and a click places it */
   clubPlacing = false;
+  /** a clubhouse click refused for want of a drive offers "Draw a drive" (golf/drivestopgap.ts; T175): the clubhouse's rect and the spot tried */
+  clubDriveOffer: DriveStopgap | null = null;
+  /** the drive being drawn for it: when a drive is built, Buildings comes back with the clubhouse armed at the spot */
+  private clubDrive: DriveStopgap | null = null;
+  /** Draw a drive: Paths with the gravel drive, the route started at the nearest road to the spot, the camera on both */
+  drawDriveForClub() {
+    const o = this.clubDriveOffer; if (!o) return;
+    const from = driveStart([...this.net.segsNear(o.spot, 600)].map(q => ({ a: q.a, b: q.b, family: q.cls.family, base: q.cls.base })), o.spot, 600);
+    if (!from) { this.toast('No road within 1.2 km of that spot to start a drive from', 'warn'); return; }
+    this.setTool('path'); if (this.uiTool !== 'path') return;
+    this.clubDrive = o; this.clubDriveOffer = null; this.roadClass = 'drive-gravel';
+    const sn = snapPoint(this.net, from, this.snapRadius(), this.roadStep());
+    this.cancelRoute(); this.routeFrom = sn; this.route.push(sn.p); this.routeLast = sn;
+    this.lookAt((from.x + o.spot.x) / 2, (from.y + o.spot.y) / 2);
+    this.toast("Draw the drive to the clubhouse's spot, then Enter or double-click: the clubhouse comes back armed there", 'info'); this.emit();
+  }
+  /** a route built: a drive for the clubhouse stopgap brings Buildings back with the clubhouse armed at the spot tried */
+  private clubDriveBuilt(cls: { family?: string; base: string }) {
+    const p = afterRoute(this.clubDrive, cls); if (!p) return;
+    this.clubDrive = null; this.placeClubhouse(true); if (!this.clubPlacing) return;
+    this.lookAt(p.spot.x, p.spot.y);
+    const sc = this.screen(p.spot.x, p.spot.y); this.clubUpdate(sc.x / this.dpr, sc.y / this.dpr, p.spot);
+    this.toast('Drive built: the clubhouse is back where you tried it. Click to place it', 'good'); this.emit();
+  }
   /** starts (on) or ends placing the clubhouse (golf games; Buildings opens) */
   placeClubhouse(on: boolean) {
     const go = on && !!this.golf;
@@ -3497,8 +3525,8 @@ export class Game {
   /** the clubhouse's ghost at the cursor: its front snapped to the nearest course drive or path within CLUB_REACH (ext/frontage-snap, P19) and slid
    *  along it (up to 40 tiles, nearest first) to the first spot it can be built on (the range's drive is shorter than the clubhouse, so it runs on
    *  past the drive's end); else the footprint centred on the cursor (R turns it). With no spot, the first try shows with its reason */
-  private clubUpdate(mx: number, my: number) {
-    const t = this.tileAt(mx, my), B = BUSINESS.clubhouse, fp = { w: B.footprint.w, d: B.footprint.h }, segs: SnapSeg[] = [];
+  private clubUpdate(mx: number, my: number, at?: Pt) {
+    const t = at ?? this.tileAt(mx, my), B = BUSINESS.clubhouse, fp = { w: B.footprint.w, d: B.footprint.h }, segs: SnapSeg[] = [];
     for (const s of this.net.segsNear(t, 60)) { const g = snapSegOf(s); if (g) segs.push(g); }
     const sn = snapFrontage(t.x, t.y, fp, segs, CLUB_REACH), cands: [number, number, number, number][] = [];
     if (sn) {
@@ -3516,7 +3544,12 @@ export class Game {
    *  range) and its green fees start; golf.clubhouse moves to its door nearest a road */
   private clubClick() {
     const h = this.bizHover; if (!h || h.def.type !== 'clubhouse') return;
-    if (h.why) { this.toast(h.why, 'warn'); return; }
+    if (h.why) {
+      // T175: a refusal a drive mends offers one (the Buildings panel's Draw a drive)
+      this.clubDriveOffer = driveOffer(h.why, [h.def.x, h.def.y, h.def.w, h.def.h], this.hover ?? { x: h.def.x + h.def.w / 2, y: h.def.y + h.def.h / 2 });
+      this.toast(this.clubDriveOffer ? `${h.why}: Draw a drive from the Buildings panel` : h.why, 'warn'); this.emit(); return;
+    }
+    this.clubDriveOffer = null; this.clubDrive = null;
     this.traffic.spend('construction', CLUBHOUSE_RANGE_COST);
     this.setBizDefs([...this.bizDefs, { ...h.def, id: Math.max(0, ...this.bizDefs.map(d => d.id)) + 1 }]);
     this.traffic.setBusinesses(this.bizDefs); this.farmsUpdate();
@@ -4034,7 +4067,7 @@ export class Game {
   landHover: { rect: [number, number, number, number]; price: number; landClass: ParcelLandClass } | null = null;
   toggleLandMode() { this.toggleSideMode('landMode'); }
   /** the Grass panel's button: opens the panel (in Select) or closes it */
-  toggleGrassPanel() { this.toggleSideMode('grassPanel'); }
+  toggleGrassPanel() { if (this.golfMode) { this.setTool(this.tool === 'greenkeeping' ? 'select' : 'greenkeeping'); return; } this.toggleSideMode('grassPanel'); } // T175: Greenkeeping in golf games
   /** opens side mode k (the Grass panel, Land, Holes, Event) and closes the others, or closes k: opening one switches to Select and picking a
    *  build tool closes them (setTool), so a side mode never takes a build tool's click (P23 P1-A, tool-modes.ts). Land, Holes and Event are golf only */
   toggleSideMode(k: SideMode) {
@@ -4114,6 +4147,12 @@ export class Game {
     const range = b ? { upgrades: b.owned.length, seasonTakings: b.season.takings, propsPlaced: this.decor.appeal() > 0 } : undefined;
     const f = p ? progressFacts(p, { holes: this.courseHoleViews().filter(h => h.par > 0).length, seasons: this.seasonsDone(), invited: !!g!.invited, range }) : null;
     const pr = f && this.range.practiceFacts(); if (f && pr) f.practice = pr; // a range start's practice facilities (T130): their hints and brushes
+    if (f) { // Greenkeeping opens with the first hole grown in (T175)
+      const grow = this.holesGrowing(), par = this.courseHoleViews().filter(h => h.par > 0);
+      f.grownHoles = par.filter(h => !grow.has(h.n)).length;
+      const soon = par.filter(h => grow.has(h.n)).sort((a, b) => grow.get(a.n)! - grow.get(b.n)!)[0];
+      if (soon) f.firstReady = `hole ${soon.n} ready ${monthIndexLabel(grow.get(soon.n)!)}`;
+    }
     return f;
   }
   private progTick = 0;
@@ -4641,7 +4680,7 @@ export class Game {
     const cost = this.grass.quote(action, scope, this.grassDose); if (!cost) { this.toast('Select a grass area first', 'warn'); return; }
     if (cost > this.money) { this.toast(`Grass care needs $${cost}`, 'warn'); return; }
     const n = this.grass.apply(action, scope, this.grassDose, this.grassAngle); if (!n) return;
-    this.traffic.spend('upkeep', cost); this.flushGrass(); this.scheduleSave(); this.toast(`${action}: ${n} turf cells ($${cost})`); this.emit();
+    this.traffic.spend('upkeep', cost); this.flushGrass(); this.scheduleSave(); this.toast(`${GRASS_ACTION_NAME[action]}: ${n} turf cells ($${cost})`); this.emit(); // T175: the plan's names
   }
   /** Persist owner tuning without changing lawn/base-grass/mowing presets. */
   tuneGrass(settings: Partial<GrassSettings>) { this.grass.configure(settings); this.flushGrass(); this.scheduleSave(); this.emit(); }
