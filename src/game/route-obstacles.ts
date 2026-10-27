@@ -7,17 +7,25 @@
 // shop, home, covered bays and deck, kiosk and car park building (golf/rangebiz.ts rangeStructures), the clubhouse and the halfway house, other
 // businesses; never by the range business's whole rectangle (its front: the strip of the range plot along the road, mostly empty grass), and a
 // drive may come up to a car park's edge to join it, as a road joins a road. Town roads keep the whole rectangles, padded. Pure: no DOM.
+//
+// T224 (#623): a roundabout (a mini too) placed, grown or widened is judged by the same list: its disc (inTheWayOfDisc) is tested against the same
+// obstacles, so a ring never takes in what a road may not cross (the owner, 2026-10-27: a 3-lane ring over the range's sign and the drive-in's
+// speaker posts, ticket booth and snack bar). The iconic places (T219) stand in the list for roads and rings alike. ring-clear.ts does the rest.
 import type { Leg } from './network';
 
 /** a thing a route may not run into: the refusal's words; zone, where the route's corridor may not reach (a convex world polygon, x y pairs,
  *  padded as the rule wants); outline, the thing itself (x y pairs) the preview draws red; pass, a leg it lets through (a toll plaza: a leg along
  *  its own centre line, upgrading the road) */
-export interface Obstacle { why: string; zone: readonly number[]; outline: readonly number[]; pass?: (l: Leg) => boolean }
+export interface Obstacle { why: string; zone: readonly number[]; outline: readonly number[]; pass?: (l: Leg) => boolean; /** the thing's name in a ring's refusal ("the pro shop", "a business"; T224) */ name?: string }
 
 /** an axis-aligned box as a polygon (x y pairs) */
 export const rectPoly = (x0: number, y0: number, x1: number, y1: number): number[] => [x0, y0, x1, y0, x1, y1, x0, y1];
 /** the refusal for a route into a named thing */
 export const crossWhy = (name: string): string => `Roads cannot cross ${name}`;
+/** the refusal for a ring (kind: "A roundabout", "A mini-roundabout") over a named thing */
+export const ringWhy = (kind: string, name: string): string => `${kind} cannot cover ${name}`;
+/** an iconic place's name inside a sentence: "The Drive-In" reads "the Drive-In" (a town's own name keeps its capital) */
+export const inSentence = (name: string): string => (name.startsWith('The ') ? 't' + name.slice(1) : name);
 /** a business's name in a refusal: the golf buildings and the stadium by name, any other "a business" */
 export function bizName(type: string): string {
   return type === 'clubhouse' ? 'the clubhouse' : type === 'halfway' ? 'the halfway house' : type === 'range' ? 'the driving range' : type === 'stadium' ? 'the stadium' : 'a business';
@@ -71,30 +79,62 @@ export function inTheWay(legs: readonly Leg[], hw: number, obs: readonly Obstacl
   return null;
 }
 
+/** a disc: a ring's footprint (centre x y and radius r, world tiles) */
+export interface Disc { x: number; y: number; r: number }
+/** whether a disc reaches into a convex polygon (x y pairs, either winding) by more than eps: touching does not */
+export function discOverlaps(d: Disc, p: readonly number[], eps = 1e-6): boolean {
+  const n = p.length / 2; if (n < 3) return false;
+  let pos = 0, neg = 0, best = Infinity;
+  for (let i = 0; i < n; i++) {
+    const j = (i + 1) % n, ax = p[i * 2]!, ay = p[i * 2 + 1]!, bx = p[j * 2]!, by = p[j * 2 + 1]!, ex = bx - ax, ey = by - ay, L2 = ex * ex + ey * ey;
+    const c = ex * (d.y - ay) - ey * (d.x - ax); if (c > 1e-12) pos++; else if (c < -1e-12) neg++;
+    const t = L2 > 0 ? Math.max(0, Math.min(1, ((d.x - ax) * ex + (d.y - ay) * ey) / L2)) : 0, qx = ax + ex * t - d.x, qy = ay + ey * t - d.y;
+    best = Math.min(best, Math.hypot(qx, qy));
+  }
+  if (pos === 0 || neg === 0) return true; // the centre is inside
+  return best < d.r - eps;
+}
+/** the first obstacle (in the list's order) a ring's disc reaches into, or null. A ring has no `pass`: a toll plaza's centre line lets a road through,
+ *  never a roundabout (T224) */
+export function inTheWayOfDisc(d: Disc, obs: readonly Obstacle[]): Obstacle | null {
+  for (const o of obs) {
+    const b = boxOf(o.zone);
+    if (d.x + d.r <= b[0] || d.x - d.r >= b[2] || d.y + d.r <= b[1] || d.y - d.r >= b[3]) continue;
+    if (discOverlaps(d, o.zone)) return o;
+  }
+  return null;
+}
+
 /** a placed rectangle (a business, a car park): x y w h, world tiles */
 export interface PlacedRect { x: number; y: number; w: number; h: number }
 /** a structure with a footprint (world box x0 y0 x1 y1) and its name in the refusal ("the pro shop") */
 export interface Structure { name: string; box: readonly [number, number, number, number] }
 /** what a route of a class is judged against: course, a course class (cart paths and drives); the businesses (their type and rect); the car
  *  parks; the range's structures (a range start); the toll plazas (their obstacles, built by the engine) */
-export interface RouteWorld { course: boolean; biz: readonly (PlacedRect & { type: string })[]; parks: readonly PlacedRect[]; structures?: readonly Structure[]; tolls?: readonly Obstacle[] }
+export interface RouteWorld { course: boolean; biz: readonly (PlacedRect & { type: string })[]; parks: readonly PlacedRect[]; structures?: readonly Structure[]; tolls?: readonly Obstacle[]; /** the iconic places (T219): their footprints, named as the map names them; no road or ring crosses one (T224) */ places?: readonly Structure[] }
 
 /** a rect padded by p as an obstacle (its zone padded, its outline the rect) */
-const padded = (why: string, r: PlacedRect, p: number): Obstacle => ({ why, zone: rectPoly(r.x - p, r.y - p, r.x + r.w + p, r.y + r.h + p), outline: rectPoly(r.x, r.y, r.x + r.w, r.y + r.h) });
+const padded = (name: string, r: PlacedRect, p: number): Obstacle => ({ why: crossWhy(name), name, zone: rectPoly(r.x - p, r.y - p, r.x + r.w + p, r.y + r.h + p), outline: rectPoly(r.x, r.y, r.x + r.w, r.y + r.h) });
+/** named structures (world boxes) as obstacles: the zone is the box itself, the outline too */
+export function structureObstacles(list: readonly Structure[]): Obstacle[] {
+  return list.map(s => { const [x0, y0, x1, y1] = s.box, r = rectPoly(x0, y0, x1, y1); return { why: crossWhy(s.name), name: s.name, zone: r, outline: r }; });
+}
 
 /** the obstacles of a route, in the order they are judged (the first hit names the refusal):
  *  - a town road: every business's whole rectangle, padded (the stadium's by 2 tiles, the others' by 1), then every car park padded by 1, then
  *    the toll plazas;
  *  - a course road (cart paths and drives): the range's structures, the businesses but the range (its rectangle is its front's strip of land,
- *    the player's to cross), each padded as above, the car parks unpadded (a drive may come up to the edge to join one), the toll plazas */
+ *    the player's to cross), each padded as above, the car parks unpadded (a drive may come up to the edge to join one), the toll plazas;
+ *  - both: the iconic places' footprints (T224), after the range's structures and before the businesses */
 export function routeObstacles(w: RouteWorld): Obstacle[] {
   const out: Obstacle[] = [];
-  if (w.course) for (const s of w.structures ?? []) { const [x0, y0, x1, y1] = s.box, r = rectPoly(x0, y0, x1, y1); out.push({ why: crossWhy(s.name), zone: r, outline: r }); }
+  if (w.course) out.push(...structureObstacles(w.structures ?? []));
+  out.push(...structureObstacles(w.places ?? [])); // an iconic place is a building to every class (T224)
   for (const b of w.biz) {
     if (w.course && b.type === 'range') continue;
-    out.push(padded(crossWhy(bizName(b.type)), b, b.type === 'stadium' ? 2 : 1));
+    out.push(padded(bizName(b.type), b, b.type === 'stadium' ? 2 : 1));
   }
-  for (const p of w.parks) out.push(padded(crossWhy('a car park'), p, w.course ? 0 : 1));
+  for (const p of w.parks) out.push(padded('a car park', p, w.course ? 0 : 1));
   out.push(...(w.tolls ?? []));
   return out;
 }
