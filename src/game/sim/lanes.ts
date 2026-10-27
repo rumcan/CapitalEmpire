@@ -149,6 +149,10 @@ function turnOf(hin: Pt, hout: Pt): Turn {
   const ang = Math.atan2(cross(hin, hout), dot(hin, hout));
   return Math.abs(ang) > 2.7 ? 'U' : ang > 0.35 ? 'R' : ang < -0.35 ? 'L' : 'S';
 }
+/** a plain crossing with no major road (T184): four or more arms, all of one class */
+export function equalCrossing(io: readonly { a: { cls: { id: string } } }[]): boolean {
+  return io.length >= 4 && io.every(x => x.a.cls.id === io[0]!.a.cls.id);
+}
 /** the arms that are the major road of a plain junction: the opposed pair with the highest class sum, else the two highest classes */
 function majorArms(io: ArmIO[]): boolean[] {
   const M = io.length;
@@ -428,9 +432,13 @@ export class LaneGraph {
   }
   /** a junction of three or more arms, not a roundabout: signals, or priorities at a plain node */
   private junction(n: Node, io: ArmIO[], nl: number[], mv: number[]) {
-    const M = io.length, sig = n.type === 'signal' || n.type === 'slip', stop = n.type === 'stop', major = sig || stop ? [] : majorArms(io);
+    const M = io.length, sig = n.type === 'signal' || n.type === 'slip', stop = n.type === 'stop';
+    // an equal crossing (T184, the owner's call after #443): a plain crossing of four or more arms all of one class has no major road (majorArms
+    // would pick one of two equal pairs at random, and from road class up the other pair got STOP and starved): every arm yields, first come
+    // first served (Sim.clearOf: equal priority goes by the time waited)
+    const equal = !sig && !stop && equalCrossing(io), major = sig || stop || equal ? [] : majorArms(io);
     let minorCtl: number = CTL.YIELD;
-    if (!sig && !stop) { let hi = 0; for (const x of io) if (major[x.i]) hi = Math.max(hi, x.a.cls.order); minorCtl = hi >= 2 ? CTL.STOP : CTL.YIELD; }
+    if (!sig && !stop && !equal) { let hi = 0; for (const x of io) if (major[x.i]) hi = Math.max(hi, x.a.cls.order); minorCtl = hi >= 2 ? CTL.STOP : CTL.YIELD; }
     const armPhase = new Array<number>(M).fill(-1);
     // an arm with no inbound lanes (a one-way road running out) gets no phase: its signals never go green
     const hasIn = io.map(x => this.dsegs[x.inD]!.lanes.length > 0);
@@ -497,6 +505,7 @@ export class LaneGraph {
           if (t === 'R' && slipOn(n, x.a, y.a)) { c.ctl = CTL.YIELD; c.phase = -1; c.prio = 1; }
           if (sp && c.ctl === CTL.SIGNAL) { const pl = sp.phaseLanes[c.phase]!, f = (aL ?? inL).id; if (!pl.includes(f)) pl.push(f); }
         } else if (stop) { c.ctl = CTL.STOP; c.prio = 1; }
+        else if (equal) { c.ctl = CTL.YIELD; c.prio = 1; }
         else if (major[x.i]) { c.ctl = CTL.FREE; c.prio = t === 'L' ? 2 : 3; }
         else { c.ctl = minorCtl; c.prio = t === 'R' ? 1 : 0; }
         paths.push([inL.id, ...(aL ? [aL.id] : []), c.id, ...(dL ? [dL.id] : []), outL.id]);
