@@ -2398,3 +2398,46 @@ A new Claude lead took over the board (docs/LEAD.md section 5). It reviews and m
   - Max instances: 3,314, 8,926, 23,418 and 62,262 at those stages.
   - Planner 0.95 / 1.4 and 1.01 / 1.3.
   - Sim tick 5.93 ms average, 20.6 ms worst at 10k cars.
+
+### The grown-town scene with traffic (2026-10-27, PR #442)
+
+**The town had no cars because of a sim bug, not the fixture's hour.**
+- Since T048, a golf game's lot trips got their leave time as a town minute. `LotTrips.retry` compared that with `sim.t`, which is in sim seconds.
+- Town minutes run ahead of sim seconds (2.4 minutes a second on the 10-minute town day), so no golf town trip ever left.
+- The fix: the leave time goes through the town clock (`simTimeAt` in townclock.ts). Classic games are unchanged. `tests/sim-townclock.test.ts` pins it.
+
+**The scene.** `?bench&fixture=range20` now moves the town clock from the fixture's 06:30 to 08:00, the morning peak. The tour waits 15 s for the commute, then starts at 08:36.
+
+| Scene and stage | CPU avg / p95 ms | Max instances | Cars | Budget | Result |
+| --- | --- | --- | --- | --- | --- |
+| `&fixture=range20` street 30% pan | 0.64 / 1.2 | 2,338 | 377 | frame ≤ 8 ms, ≤ 60k instances (GAME-PLAN 2.3) | pass |
+| `&fixture=range20` district 8% pan | 1.00 / 2.1 | 10,938 | 432 | frame ≤ 8 ms, ≤ 120k instances | pass |
+| `&start=range` street 17% pan | 0.43 / 0.6 | 760 | 0 | frame ≤ 4 ms, ≤ 5k instances (P22 2.7.4) | pass |
+| `&start=range` district 4.5% pan | 0.40 / 0.8 | 3,544 | 0 | frame ≤ 4 ms, ≤ 5k instances | pass |
+
+- The run: dev PC, RTX 3080, Edge, dpr 1, 1600x900, port 5187. Every stage ran at 57 fps.
+- The fixture scene had 301 cars at its start. Its sim tick averaged 0.58 ms, 2.1 ms at worst.
+- The range start has no town yet, so no lot trips.
+
+**The fix's cost: a grown range town now grows less, so `range:gate` fails its growth bands.**
+- With its own traffic, seed 1 at year 20 reaches 1,664 built lots and 3,601 residents. Without traffic it reached 2,391 and 6,648. P22 2.7's band is 4,000-7,500 residents.
+- The town's events over 20 seasons: 2,397 builds against 2,288 declines.
+- The gate's result: `h_bands` FAIL, every other check ok.
+- **T090's growth constants were tuned with no town traffic.** They need retuning with traffic on, and then the fixture should be regenerated (`npm run range:fixture`).
+- Until then the committed fixture is #436's town, grown without traffic.
+
+**Why the town declines: it gridlocks.** A diagnostic run of seed 1 with trips on (a scratch script, not in the repo) shows when.
+- Seasons 1-6 (up to 1,007 residents): trips take 1.3-1.6x their ideal time, and no zone is over the decline line. Access counts as bad above 1.8, i.e. act/ideal over 2.18.
+- From season 7-8 (1,300-1,600 residents) the grown gravel streets jam:
+
+| Season | Cars active | Trips' time over ideal | Zones over 1.8 | Trips dropped (cumulative) |
+| --- | --- | --- | --- | --- |
+| 7 | 299 | 2.0x | 1 of 22 | 51 |
+| 8 | 643 | 2.7x | 9 of 24 | 69 |
+| 10 | 1,198 | 3.5x | 15 of 32 | 306 |
+| 14 | 2,149 | 3.4x | 34 of 48 | 1,138 |
+
+- So the retune is a design question, not only constants. Options:
+  - the grown town builds bigger roads or more connections as it grows;
+  - the player is expected to upgrade the town's roads;
+  - the decline rule is softened for a range town.
