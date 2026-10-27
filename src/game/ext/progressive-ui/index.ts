@@ -344,10 +344,11 @@ function lockedAt<T extends string>(table: Readonly<Partial<Record<T, Onboarding
   return all ? [] : (Object.keys(table) as T[]).filter(id => table[id]! > s).map(id => ({ id, stage: table[id]!, why: STAGE_WHY[table[id]!] }));
 }
 
-/** Greenkeeping's lock (plan P23-UX P2-5, T175): it opens when the first hole is grown in (the course has turf to keep); null when open (every
- *  tool shown, or a grown hole), else the why the rail's tooltip and a click say, in the ramp's words */
+/** Greenkeeping's lock (plan P23-UX P2-5, T175): it opens when the first hole is grown in (the course has turf to keep), and once open (seen:
+ *  opened, or an old save, which sees every tool) it never closes again; null when open (every tool shown too), else the why the rail's tooltip
+ *  and a click say, in the ramp's words */
 export function greenkeepingLock(f: PlayerProgressFacts): string | null {
-  if (f.advancedMode || (f.grownHoles ?? f.playableHoles) >= 1) return null;
+  if (f.advancedMode || (f.seen ?? []).includes('greenkeeping') || (f.grownHoles ?? f.playableHoles) >= 1) return null;
   return `Unlocks when your first hole is grown in${f.firstReady ? ` (${f.firstReady})` : ''}`;
 }
 
