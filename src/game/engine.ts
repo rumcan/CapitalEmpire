@@ -229,6 +229,8 @@ export interface ShotState { turn: OwnerTurn; input: { club: Club; aim: Pt; powe
 export interface PlayBoard { minute: number; rows: BoardRow[]; champion: string | null; done: boolean; event: string; ownerTee: number | null }
 /** the leaderboard's rows shown (the top 8, and the owner's row below them) */
 const BOARD_ROWS = 8;
+/** T209: the longest a resumed tournament day waits for its play after the first frame (holdDay), ms */
+const DAY_HOLD_MS = 3000;
 /** a closed path over a flat x y list, in the current transform's units */
 function ring(ctx: CanvasRenderingContext2D, p: number[]) { ctx.moveTo(p[0]!, p[1]!); for (let i = 2; i < p.length; i += 2) ctx.lineTo(p[i]!, p[i + 1]!); ctx.closePath(); }
 /** the distance from p to the seg s, tiles */
@@ -600,6 +602,9 @@ export class Game {
   private play: GolfPlay | null = null; private playTried = -1;
   /** the game hour of the tournament day the play last saved at (T209: the day saves itself each game hour, so a reload resumes near where it was); -1 none */
   private playSavedHr = -1;
+  /** T209: a resumed tournament day waits, the sim paused at the save's moment, until its play is built again (the owner's shot may open at once): the
+   *  speed to go on at and when the wait was first seen (performance.now(), 0 before the first frame); null when not waiting. See holdDay */
+  private dayHold: { speed: number; at: number } | null = null;
   /** the owner's open shot (P4b: the shot panel; null when none is open) and the speed the sim had when it opened (it resumes at least at 1x) */
   private shot: ShotState | null = null; private shotSpeed = 1;
   /** the featured holes last sent to the city (featuredHoles; the City's set mirrors it) and the real ms they were last worked out at */
@@ -1523,8 +1528,9 @@ export class Game {
     if (this.stampPending) { this.stampPending = false; this.traffic.stamp(TOWN_POP); this.scheduleSave(); }
     if (loaded) {
       this.traffic.townState(loaded.lots ?? [], loaded.simT ?? 0, loaded.budget, loaded.money, loaded.career, loaded.shift ?? 0, loaded.round, loaded.bizStats); this.traffic.setTownClock(loaded.townClock ?? townClockFor(this.traffic.dayLen));
-      // the tournament day under way at the save resumes (T209): the round in its surge or eval, its clocks, the crowd and the car parks (the worker checks it)
-      if (loaded.tourney) this.traffic.resumeDay(loaded.round, loaded.tourney);
+      // the tournament day under way at the save resumes (T209): the round in its surge or eval, its clocks, the crowd and the car parks (the worker checks it);
+      // the sim waits at that moment until the day's play is built again (holdDay), so the field does not play on while the game boots
+      if (loaded.tourney) { this.dayHold = { speed: this.speed || this.lastSpeed, at: 0 }; this.setSpeed(0); this.traffic.resumeDay(loaded.round, loaded.tourney); }
     }
     else this.rangeMorning();
     if (opts.bench) console.log('[bench] after load', Math.round(performance.now() - tl), 'ms');
@@ -5240,20 +5246,29 @@ export class Game {
    *  when the round is free, or when there is no golf */
   private updatePlay(now: number) {
     const tr = this.traffic, r = tr?.round;
-    if (!this.golf || !r || (r.stage !== 'surge' && r.stage !== 'eval')) { this.play = null; this.playTried = -1; this.playSavedHr = -1; this.clearFeatured(); if (this.shot) this.closeShot(); return; }
+    if (!this.golf || !r || (r.stage !== 'surge' && r.stage !== 'eval')) { this.play = null; this.playTried = -1; this.playSavedHr = -1; this.clearFeatured(); if (this.shot) this.closeShot(); this.holdDay(now, false); return; }
     if (this.playTried !== r.runs) { this.playTried = r.runs; this.play = this.buildPlaySaved(r.runs); }
-    if (!this.play) { this.clearFeatured(); return; }
+    if (!this.play) { this.clearFeatured(); this.holdDay(now, true); return; }
     const minute = townTimeOf(tr.town, tr.simTime(now)).dayMin;
     // the day saves itself each game hour (T209: the save keeps the day, SaveV5.tourney), so a reload resumes near where it was; the owner's shots save as he plays
     const hr = Math.floor(minute / 60); if (hr !== this.playSavedHr) { if (this.playSavedHr >= 0) this.scheduleSave(); this.playSavedHr = hr; }
     // the owner's pending turn (P4b): his walk to the ball and his address there, facing the open shot's aim when one is open
     const own = this.play.own, shotAim = this.shot && own && this.shot.turn === own.turn ? this.shot.input.aim : null;
     this.play.pv.update(minute, now / 1000, own?.turn ?? null, shotAim);
-    this.ownerFrame(minute);
+    this.ownerFrame(minute); this.holdDay(now, true);
     // the crowd follows the play (docs/GOLF-PLAY.md decision 6): the featured holes are worked out at most every FEATURED_EVERY_MS and sent when they change
     if (now - this.featuredAt >= FEATURED_EVERY_MS) { this.featuredAt = now; this.sendFeatured(this.featuredHoles(this.play, minute)); }
     // the champion is toasted once, the first time the board has one (its line is the board's)
     if (!this.play.told) { const b = this.playBoard(); if (b?.champion) { this.play.told = true; this.toast(`${b.champion} — ${b.event}`, 'good'); } }
+  }
+  /** T209: ends a resumed tournament day's wait (dayHold) once its play is back (ready: built, or none to build; the owner's shot, opened by ownerFrame,
+   *  keeps the sim paused and goes on at the held speed), or DAY_HOLD_MS after the first frame when the day did not come back (the round loaded free) */
+  private holdDay(now: number, ready: boolean) {
+    const h = this.dayHold; if (!h) return;
+    if (!h.at) h.at = now;
+    if (!ready && now - h.at < DAY_HOLD_MS) return;
+    this.dayHold = null;
+    if (this.shot) this.shotSpeed = h.speed; else this.setSpeed(h.speed);
   }
   /** the holes the crowd follows at a game minute (docs/GOLF-PLAY.md decision 6), sorted, no repeats: the holes the last three groups are on (the marquee
    *  groups tee off last) and the holes of the top three of the standings, among the golfers who have teed off and are not done. A golfer's hole is its
