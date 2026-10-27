@@ -1,4 +1,4 @@
-// The shared harness of the headless gates (town-gate.ts, fix-gate.ts): the valley and its highway, the city stepped one sim second at a time
+// The shared harness of the headless gates (town-gate.ts, fix-gate.ts, range-gate.ts): the valley and its highway, the city stepped one sim second at a time
 // with the town's grow legs applied as the engine does, and the player's bridge (the land-locked rule). Pure node, no DOM.
 import { reachableSegs } from '../../src/game/lots/roads';
 import { LV } from '../../src/game/lots/town';
@@ -10,6 +10,12 @@ import { classAt, generateTerrain } from '../../src/game/terrain';
 import { TC, type Terrain } from '../../src/game/terrain/types';
 import { MAP } from '../../src/game/iso';
 import { TOWN_BLOCKS, TOWN_POP, townCentres, townGrid } from '../../src/game/lots/seedtowns';
+import { classOf } from '../../src/game/network';
+import { planRangeStart, type RangeStart } from '../../src/game/golf/rangestart';
+import { RangeSim, defaultRangeBiz, practiceAppeal, rangeScene, type CarSlot, type DemandCtx, type RangeBizSave, type RangeClock, type RangeScene } from '../../src/game/golf/rangebiz';
+import { buildPark } from '../../src/game/event/carpark';
+import { GOLFER_PEOPLE } from '../../src/game/library';
+import { townTimeOf } from '../../src/game/sim/townclock';
 
 // the network builds Path2D outlines for the painters; in Node a stub that ignores them is enough
 (globalThis as unknown as { Path2D: unknown }).Path2D ??= class { moveTo() {} lineTo() {} arc() {} arcTo() {} closePath() {} rect() {} };
@@ -166,4 +172,55 @@ function landLocked(h: Harness): boolean {
   if (n < 4) return false;
   for (let k = 1; k <= 3; k++) { const a = g[n - k]!, b = g[n - k - 1]!; if (a.none <= b.none || a.legs !== b.legs) return false; }
   return true;
+}
+
+/* ---- T098 (#168): a fresh range start, as the engine's new game lays it (engine.ts newRangeGame, sendGolf, sendTerrain; sim/client.ts
+ * setTownDay; golf/rangehost.ts) ---- */
+
+/** the default town day of a golf game: 10 real minutes at 1x (sim/client.ts townMinutes), in sim s */
+export const RANGE_DAY = 600;
+/** a new range game's town day starts at 06:30 (engine.ts rangeMorning, P24 D16) */
+export const RANGE_MORNING = 390;
+
+/** the range business beside it: the golfers' sim (golf/rangebiz.ts RangeSim, stepped by the town clock as golf/rangehost.ts steps it), its
+ *  save, scene, car park bays and entrance, and the plan it came from */
+export interface RangeRig { sim: RangeSim; save: RangeBizSave; scene: RangeScene; slots: CarSlot[]; entrance: Pt | null; start: RangeStart; dayLen: number }
+export type RangeHarness = Harness & { range: RangeRig };
+
+/** the valley of `seed` with its range start (planRangeStart; throws when no site fits): the county road, the gravel drive and the range's cement
+ *  cart paths, the city on the golf town day (a 10-minute day from 06:30, free-running, the town's seed across the road, the range start's golf
+ *  state: tier 1, its exits and land), the range and its car park as businesses, and the range's golfers on the plot with the car park's bays */
+export function setupRange(seed: number): RangeHarness {
+  const t = generateTerrain(seed), start = planRangeStart(t, seed);
+  if (!start) throw new Error(`seed ${seed}: no range start fits this valley`);
+  const { road, site, save: golf } = start;
+  const city = new City(1);
+  const editor = new NetEditor(new RoadNetwork());
+  editor.net.paintData = false;
+  const cls = (x: number, y: number) => classAt(t, x, y);
+  editor.addLegs(road.legs, CLASS.road, 0, road.kinds, true);
+  editor.addLegs(site.drive, classOf('drive-gravel'), 0, undefined, true);
+  const save = defaultRangeBiz(), scene = rangeScene(site.rangePlot, site.dir, save);
+  editor.addLegs(scene.paths, classOf('cart-slab'), 0, undefined, true); save.paths = true;
+  // the city's entry: the map exit nearest the town's seed (engine.ts sendTerrain); the golf state and land (sendGolf)
+  const c = site.centre, entry = road.exits.reduce((a, b) => (Math.hypot(b.x - c.x, b.y - c.y) < Math.hypot(a.x - c.x, a.y - c.y) ? b : a));
+  city.terrain(t.cls, entry, seed, [c], t.height, true);
+  city.netOps(editor.commit(true));
+  city.setGolf({ tier: golf.tier, rep: golf.rep, land: [golf.course, golf.parcel], start: 'range', exits: golf.exits });
+  // the golf town day (the sim worker's 'townDay' and the engine's rangeMorning)
+  const s = city.sim; s.dayLen = RANGE_DAY; s.townTraffic = 1; s.townFree = true; s.town = { t0: s.t, m0: RANGE_MORNING, rate: 1440 / RANGE_DAY };
+  const [fx, fy, fw, fh] = site.rangeFront, [px, py, pw, ph] = site.carpark, park = { id: 1, x: px, y: py, w: pw, h: ph };
+  city.setBusinesses([{ id: 1, type: 'range', x: fx, y: fy, w: fw, h: fh }]);
+  city.setParks([park]);
+  // the range's golfers on its plot, parking in the car park's bays (engine.ts rangeCarPark: its built bays and first entrance)
+  const pk = buildPark(editor.net, park), slots: CarSlot[] = pk ? pk.bays.map(b => ({ x: b.x, y: b.y, hx: b.hx, hy: b.hy })) : [], entrance = pk?.entrances[0] ?? null;
+  const sim = new RangeSim(seed, GOLFER_PEOPLE.length);
+  sim.setScene(scene, slots, entrance);
+  return { t, city, editor, entry, cls, growHist: [], lastBridge: -Infinity, bridges: 0, gravelLegs: 0, stepMs: 0, range: { sim, save, scene, slots, entrance, start, dayLen: RANGE_DAY } };
+}
+/** the range's clock and demand now (golf/rangehost.ts: the town clock's hour and day; tier 1, the exits, the town's residents, no props yet,
+ *  the practice greens' appeal) */
+export function rangeClock(h: RangeHarness): RangeClock { const tt = townTimeOf(h.city.sim.town, h.city.sim.t); return { hour: tt.hour + tt.minute / 60, day: tt.day }; }
+export function rangeDemand(h: RangeHarness): DemandCtx {
+  return { tier: h.range.start.save.tier, exits: h.range.start.save.exits.length, residents: h.city.town.pop, propsAppeal: 0, practiceAppeal: practiceAppeal(h.range.save) };
 }
