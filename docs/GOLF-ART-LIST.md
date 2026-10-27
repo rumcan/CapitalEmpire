@@ -37,7 +37,9 @@ stays a Studio option. Ground textures follow [art/GROUND-TEXTURE-METHOD.md](art
 | Fringe | held: the RUN set came out too flat at NEAR (the owner's no-flat-wash rule); the textured fringe in the game stays |
 | Rough | paused for the scene paintings (NEAR/FAR mockups on disk) |
 | Desert (Waste area sand) | ✅ `desert-run` (#612), from the art session's painting, the store removed |
-| Swamp, dirt, sand-raked | ⏳ the art agent (the owner's top priority) |
+| Swamp | ✅ `swamp-run` (#614), RUN-painted; on the map with T199 #517 |
+| Dirt (Dirt surface, farm fields) | ✅ `dirt-run` (#616, #617), from the art session's painting, the store removed |
+| Sand-raked and the other scene paintings | ⏳ the art agent (the owner's top priority) |
 | Fairway | Codex (18 of 24 jobs done) |
 | Golden fescue, lake, putting green v2 | ✅ (the art session, earlier) |
 | Greenkeeping conditions (section 10) | after the course surfaces |
