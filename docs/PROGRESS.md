@@ -2365,3 +2365,36 @@ A new Claude lead took over the board (docs/LEAD.md section 5). It reviews and m
   - library sizes (some houses drawn big enough to pixelate);
   - painted edges with a feather and a sun-lit bevel;
   - the fairway tool rethink (plan P21, after research).
+
+## T098: the grown-town fixture and the range bench scenes (2026-10-27, #168)
+
+- **The fixture.**
+  - `npm run range:fixture -- [seed=1] [seasons=20]` (`scripts/sim/range-fixture.ts`) writes `tests/fixtures/saves/golf-v5-range-20y.json`.
+  - It is seed 1 after 20 seasons with the range gate's scripted course and success, the course land empty (P22 2.3.4's year 20).
+  - Size: 2,391 built lots, 6,648 residents, 931 segs; 150 KB, **36 KB gzipped** (the budget is 2 MB).
+  - Test: `tests/save-fixtures.test.ts` 9 (it loads; under 2 MB gzipped).
+- **The loader.** `?fixture=range20` (dev only: `src/game/dev/fixtures.ts`, imported under `import.meta.env.DEV`) opens it.
+  - Your stored save is neither read nor written over (saving is off, and a toast says so).
+  - Screenshots at 4.5%, 8% and 30%: the grown town south and east of the county road, the driving range, and the course land an empty field with no roads or lots.
+- **The bench's game scenes.** `npm run bench -- --size 1 --start range` and `npm run bench -- --size 1 --fixture range20` run them; a plain `--size 1` is unchanged.
+  - Run on the dev PC: RTX 3080, Edge, dpr 1, 1600x900, dev server.
+  - Every stage ran at 57 fps (vsync).
+  - Frame times are main-thread CPU (avg / p95 ms).
+
+| Scene and stage | CPU avg / p95 ms | Max instances | Budget | Result |
+| --- | --- | --- | --- | --- |
+| `&start=range` street 17% pan | 0.32 / 0.4 | 552 | frame ≤ 4 ms, instances ≤ 5k (P22 2.7.4) | pass |
+| `&start=range` district 4.5% pan | 0.46 / 1.4 | 2,574 | frame ≤ 4 ms, instances ≤ 5k | pass |
+| `&fixture=range20` street 30% pan | 0.57 / 1.4 | 2,314 | frame ≤ 8 ms, ≤ 60k instances at Street (GAME-PLAN 2.3) | pass |
+| `&fixture=range20` district 8% pan | 0.86 / 2.0 | 10,884 | frame ≤ 8 ms, ≤ 120k instances at District | pass |
+
+- **Other numbers from the fixture scene.**
+  - 74,175 props, 72,476 of them lot props.
+  - The lots were composed 3.0 s after load.
+  - Ground cache 62 MB; sim tick 0.42 ms average, 0.6 ms worst.
+  - The scene had no cars moving while it was measured (`sim.active` 0). The 10k-car budget is still covered by the synthetic stages.
+- **The synthetic stages, same run (unchanged by T098).**
+  - CPU avg / p95 ms: street 30% 0.85 / 1.3, street 17% 1.53 / 2.3, district 8% 1.93 / 3.0, district 4.5% 3.41 / 5.9.
+  - Max instances: 3,314, 8,926, 23,418 and 62,262 at those stages.
+  - Planner 0.95 / 1.4 and 1.01 / 1.3.
+  - Sim tick 5.93 ms average, 20.6 ms worst at 10k cars.

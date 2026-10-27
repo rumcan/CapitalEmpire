@@ -186,4 +186,33 @@ describe('save fixtures & golden tests (T043)', () => {
     assert.deepEqual(s.lots ?? [], []);
     assert.equal(normalizeProgress(g.progress).pieces, 0);
   });
+
+  it('9. golf-v5-range-20y.json (T098, plan P22 2.7.3: seed 1 grown 20 seasons, scripts/sim/range-fixture.ts) -> loads, a grown range-start town, the course land empty, under 2 MB gzipped', async () => {
+    const raw = loadFixture('golf-v5-range-20y.json');
+    const gz = await gzip(raw);
+    assert.ok(gz.byteLength < 2 * 1024 * 1024, `${(gz.byteLength / 1024).toFixed(0)} KB gzipped (under 2 MB)`);
+    const s = upgradeSave(JSON.parse(raw));
+    assert.ok(s, 'expected upgradeSave to accept the grown town');
+    assert.equal(s.version, SAVE_VERSION);
+    assert.equal(s.seed, 1);
+    const g = normalizeGolfSave(s.golf);
+    assert.ok(g);
+    assert.equal(g.start, 'range');
+    assert.equal(g.exits?.length, 2);
+    assert.deepEqual(g.tees, [], 'the course land is still to build: no tees');
+    assert.deepEqual(g.pins, [], 'and no pins');
+    // P22 2.7's year-20 band: 1,800-3,200 lots
+    const lots = s.lots ?? [];
+    assert.ok(lots.length >= 1800 && lots.length <= 3200, `${lots.length} lots`);
+    // the town's streets (gravel, the towns') keep 6 tiles off the golf land
+    const land = [g.course, g.parcel];
+    for (const [ax, ay, bx, by, cls, , , town] of s.segs) {
+      if (cls !== 'gravel' || town !== 1) continue;
+      for (const [x, y, w, h] of land) for (let i = 0; i <= 10; i++) {
+        const px = ax + (bx - ax) * i / 10, py = ay + (by - ay) * i / 10;
+        assert.ok(Math.hypot(Math.max(x - px, 0, px - x - w), Math.max(y - py, 0, py - y - h)) >= 6 - 1e-6, `a town street at (${px}, ${py}) by the golf land`);
+      }
+    }
+    assert.ok(typeof s.simT === 'number' && s.simT >= 20 * 1440, 'the clock after 20 seasons');
+  });
 });

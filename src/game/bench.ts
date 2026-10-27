@@ -86,8 +86,31 @@ const STAGES: Stage[] = [
   { name: 'planner 2%', z: 0.02, vx: 12000, vy: 4000, secs: 5 },
   { name: 'planner whole map', z: 0.0065, vx: 0, vy: 0, secs: 5 },
 ];
+const stage = (name: string) => STAGES.find(st => st.name === name)!;
+/** the game scenes' stages (T098, plan P22 2.7.4): the new range start at 17% and 4.5% (target: frame <= 4 ms, instances <= 5k), and the grown
+ *  town at 30% and 8% (against GAME-PLAN 2.3's budgets) */
+export const SCENE_STAGES: Record<BenchScene, Stage[]> = {
+  range: [stage('street 17% pan'), stage('district 4.5% pan')],
+  fixture: [stage('street 30% pan'), stage('district 8% pan')],
+};
+export type BenchScene = 'range' | 'fixture';
 
-function startTour(g: Game, info: Record<string, unknown>) {
+/** The bench's game scenes (T098, issue #168), toured on the game the engine made in place of the synthetic city: `range` (?bench&start=range)
+ *  the new range start; `fixture` (?bench&fixture=range20, dev/fixtures.ts) the range start's grown town at year 20. The tour pans from the
+ *  start's or the save's camera with the game's own traffic, once the game is ready and a loaded town's lots are composed (at most 30 s) */
+export function benchGame(g: Game, scene: BenchScene) {
+  g.benchMode = true;
+  const t0 = performance.now();
+  g.onFrame = () => {
+    if (!g.ready || (g.lotsPending > 0 && performance.now() - t0 < 30000)) return;
+    g.onFrame = null;
+    const info = { scene, heap: mem() as unknown as number, segs: g.net.segs.size, nodes: g.net.nodes.size, props: g.props.size, lotProps: g.perf.lotProps, lotsPending: g.lotsPending, pop: g.perf.pop, built: g.perf.built, settleMs: Math.round(performance.now() - t0) };
+    console.log('[bench] scene', info);
+    startTour(g, info, SCENE_STAGES[scene]);
+  };
+}
+
+function startTour(g: Game, info: Record<string, unknown>, stages: Stage[] = STAGES) {
   const results: Record<string, unknown>[] = [];
   let s = 0, t = -2, frames: number[] = [], cpu: number[] = [], inst = 0, draws = 0, upload = 0, up = 0;
   /** the sim worker's tick time: the max per stage, and the average and max over the whole tour */
@@ -98,7 +121,7 @@ function startTour(g: Game, info: Record<string, unknown>) {
     const tick = g.perf.simTickMs;
     stageSim = Math.max(stageSim, tick); simSum += tick; simN++; simMax = Math.max(simMax, tick);
     t += dt;
-    const st = STAGES[s];
+    const st = stages[s];
     g.cam.z = st.z;
     const dir = Math.floor(Math.max(0, t) / 3) % 2 ? -1 : 1;
     g.cam.X += st.vx * dt * dir; g.cam.Y += st.vy * dt * dir;
@@ -110,7 +133,7 @@ function startTour(g: Game, info: Record<string, unknown>) {
       const fAvg = frames.reduce((a, b) => a + b, 0) / Math.max(1, frames.length);
       results.push({ stage: st.name, fps: +(1000 / fAvg).toFixed(1), cpuAvgMs: +(cpu.reduce((a, b) => a + b, 0) / Math.max(1, cpu.length)).toFixed(2), cpuP95Ms: +q(0.95).toFixed(2), maxInstances: inst, maxDraws: draws, maxUploadKB: Math.round(upload), chunkUploadsPerSec: up, uploadMsPerSec: +g.ground.uploadMsPerSecond.toFixed(1), simTickMsMax: +stageSim.toFixed(2) });
       s++; t = 0; frames = []; cpu = []; inst = draws = upload = up = 0; stageSim = 0; g.cam.X = startX; g.cam.Y = startY;
-      if (s >= STAGES.length) {
+      if (s >= stages.length) {
         g.onFrame = null;
         if (info.course) { const at = info.course as { x: number; y: number }; paintStage(g, at, r => { results.push(r); wizardStage(g, at, r2 => { results.push(r2); finish(); }); }); return; }
         finish();
@@ -118,7 +141,7 @@ function startTour(g: Game, info: Record<string, unknown>) {
     }
   };
   function finish() {
-    const out = { ...info, cars: BENCH_CARS, dpr: g.dpr, screen: `${g.cw}x${g.ch}`, groundBakes: g.ground.baked, avgBakeMs: +(g.ground.bakeMs / Math.max(1, g.ground.baked)).toFixed(1), groundCacheMB: Math.round(g.ground.residentPx * 4 / 1048576), groundCachePeakMB: Math.round(g.ground.peakPx * 4 / 1048576), sim: { active: g.perf.simActive, tickMsAvg: +(simSum / Math.max(1, simN)).toFixed(2), tickMsMax: +simMax.toFixed(2) }, stages: results };
+    const out = { ...info, cars: info.scene ? g.perf.simActive : BENCH_CARS, dpr: g.dpr, screen: `${g.cw}x${g.ch}`, groundBakes: g.ground.baked, avgBakeMs: +(g.ground.bakeMs / Math.max(1, g.ground.baked)).toFixed(1), groundCacheMB: Math.round(g.ground.residentPx * 4 / 1048576), groundCachePeakMB: Math.round(g.ground.peakPx * 4 / 1048576), sim: { active: g.perf.simActive, tickMsAvg: +(simSum / Math.max(1, simN)).toFixed(2), tickMsMax: +simMax.toFixed(2) }, stages: results };
     (window as unknown as { __bench: unknown }).__bench = out;
     console.log('[bench] results', JSON.stringify(out, null, 1));
     g.toast('Benchmark finished: results in the console', 'good');
