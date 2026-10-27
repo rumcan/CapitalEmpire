@@ -126,6 +126,8 @@ export interface LeafSources {
 export const STAMP = 3;
 /** the side of the yard scatter's cells (tiles), and the stamps a cell tries */
 const YARD_CELL = 2, YARD_TRIES = 2;
+/** the share of the back yard's stamps that are raked heaps */
+const BACK_HEAPS = 0.16;
 /** how far a tree's leaves reach (canopy radii from its trunk); a fence or a wall counts the trees within NEAR_REACH tiles */
 const TREE_FALL_REACH = 2.1, NEAR_REACH = 9;
 
@@ -291,13 +293,15 @@ export function layLeaves(box: Box, src: LeafSources, density: number): Float32A
       const r = mulberry(seedOf(gx, gy, 0xa4d5));
       if (src.within && !src.within((gx + 0.5) * YARD_CELL, (gy + 0.5) * YARD_CELL)) continue;
       for (let k = 0; k < YARD_TRIES; k++) {
-        const x = (gx + r()) * YARD_CELL, y = (gy + r()) * YARD_CELL, a = r(), small = r() < 0.22, sh = r(); r(); const kU = r(), mu = r();
+        const x = (gx + r()) * YARD_CELL, y = (gy + r()) * YARD_CELL, a = r(), small = r() < 0.22, sh = r(), heapU = r(), kU = r(), mu = r();
         const kind = small ? LK.SMALL : LK.SCATTER, shape = Math.floor(sh * shapeN(kind)), mood = mu < 0.7 ? MOOD.MIXED : Math.floor(mu * 10) % 3;
         const yd = yards.length ? inside(yards, x, y) : null;
         if (yd) {
           // how deep into the lot (0 the street, 1 the back line): the back yard behind the house gets the most
           const p = yd.p, ox = p[0]!, oy = p[1]!, qx = p[6]!, qy = p[7]!, dl = Math.hypot(qx - ox, qy - oy) || 1, depth = ((x - ox) * (qx - ox) + (y - oy) * (qy - oy)) / (dl * dl);
-          if (under(a, depth > 0.5 ? 0.78 : 0.6, 0.45, x, y)) put(x, y, kind, shape, 0, mood, kU, false);
+          // (now and then a raked heap in the back yard)
+          const back = depth > 0.5, heap = back && heapU < BACK_HEAPS;
+          if (under(a, back ? 0.78 : 0.6, 0.45, x, y)) put(x, y, heap ? LK.PILE : kind, heap ? Math.floor(sh * (PILE_SHAPES - SMALL_HEAPS)) : shape, 0, mood, kU, false);
         } else if (roads.length && a < 0.8 * density) {
           const rd = roadAt(x, y);
           if (rd && rd.d >= rd.r.h && under(a, 0.3, 0.5, x, y)) put(x, y, kind, shape, 0, mood, kU, false);
