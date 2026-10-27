@@ -203,8 +203,8 @@ const handle = async (m: ToWorker) => {
         lastBake = performance.now(); if (deferring && m.kind !== 'p') aheadOf(m);
         const bmp = cv.transferToImageBitmap(), sm = m.kind === 'p' ? null : painter.takeShadeMask(), shade = sm ? sm.transferToImageBitmap() : undefined;
         // (T215: the reflection mask, when specCam is on and the chunk has a lamp pool on its asphalt)
-        const spec = (m.kind === 'p' ? null : painter.takeSpecMask()) ?? undefined;
-        post({ t: 'tile', id: m.id, kind: m.kind, i: m.i, j: m.j, L: m.L, artL: m.artL ?? m.L, ts: m.ts, tiled: painter.tilesUsed, prov: painter.provisional, bmp, shade, spec, ms: performance.now() - t0 }, [bmp, ...(shade ? [shade] : []), ...(spec ? [spec.data.buffer] : [])]);
+        const rm = m.kind === 'p' ? null : painter.takeSpecMask(), spec = rm ? rm.transferToImageBitmap() : undefined;
+        post({ t: 'tile', id: m.id, kind: m.kind, i: m.i, j: m.j, L: m.L, artL: m.artL ?? m.L, ts: m.ts, tiled: painter.tilesUsed, prov: painter.provisional, bmp, shade, spec, ms: performance.now() - t0 }, [bmp, ...(shade ? [shade] : []), ...(spec ? [spec] : [])]);
         break;
       }
     }

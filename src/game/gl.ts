@@ -53,7 +53,7 @@ void main() {
 }`;
 // T215: the street lamps' reflection pools as the camera specular (lamp-reflect.ts): a chunk with a reflection mask (uSpec.z > 0: its gain)
 // lights its own pixels as the bake's pools did (specLight: toward the 'lit' mosaics' response of the painting's pixel, rebuilt from the
-// road's local mean the mask holds in rgb) at the mask's intensity (alpha) times the camera falloff, 1 within uSpec.x of the screen's centre
+// road's local mean the mask holds premultiplied in rgb) at the mask's intensity (alpha) times the camera falloff, 1 within uSpec.x of the centre
 // and 0 past uSpec.y (the distance in device px over half the longer side: round on any screen). The mask is a SPEC_MASK_K-th of the
 // chunk's size (its uv scaled to the px it covers). No mask (uSpec.z 0): the chunk as before
 const FS_QUAD = `#version 300 es
@@ -68,7 +68,7 @@ void main() {
     vec4 m = texture(uSpecTex, vUV * vec2(textureSize(uTex, 0)) / (${SPEC_MASK_K.toFixed(1)} * vec2(textureSize(uSpecTex, 0))));
     if (m.a > 0.002) {
       float d = length(gl_FragCoord.xy - 0.5 * uScreen) / (0.5 * max(uScreen.x, uScreen.y));
-      c.rgb = specLight(c.rgb * 255.0, vec4(m.rgb * 255.0, m.a), (1.0 - smoothstep(uSpec.x, uSpec.y, d)) * uSpec.z) / 255.0;
+      c.rgb = specLight(c.rgb * 255.0, vec4(m.rgb / m.a * 255.0, m.a), (1.0 - smoothstep(uSpec.x, uSpec.y, d)) * uSpec.z) / 255.0;
     }
   }
   if (uMode == 1) c *= texture(uMask, vec2(gl_FragCoord.x / uScreen.x, 1.0 - gl_FragCoord.y / uScreen.y)).a;
@@ -349,10 +349,13 @@ export class GLRenderer {
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, bmp); this.texParams(gl.TEXTURE_2D, false);
     return t;
   }
-  /** T215: a texture from a baked chunk's reflection mask (renderer.ts takeSpecMask: RGBA bytes, not premultiplied) */
-  specTexture(w: number, h: number, data: Uint8Array) {
+  /** T215: a texture from a baked chunk's reflection mask (renderer.ts takeSpecMask), kept premultiplied: its bilinear lookup then weighs the
+   *  road's mean by the asphalt's coverage, and FS_QUAD divides it out */
+  specTexture(bmp: ImageBitmap) {
     const gl = this.gl, t = gl.createTexture()!; gl.bindTexture(gl.TEXTURE_2D, t);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, data); this.texParams(gl.TEXTURE_2D, false);
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, bmp); this.texParams(gl.TEXTURE_2D, false);
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
     return t;
   }
   deleteTexture(t: WebGLTexture) { this.gl.deleteTexture(t); }

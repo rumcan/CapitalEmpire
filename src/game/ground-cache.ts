@@ -231,14 +231,14 @@ export class GroundCache {
     if (m.t === 'log') { console.log(`[ground worker ${w}]`, m.message); return; }
     if (m.t === 'texpack') { m.snaps.forEach((snap, k) => this.workers[k + 1]?.postMessage({ t: 'textures', snap } satisfies ToWorker, snap.bitmaps)); return; }
     const r = this.reqs.get(m.id); this.reqs.delete(m.id); this.inflight[w]--;
-    if (!r) { m.bmp.close(); m.shade?.close(); return; }
+    if (!r) { m.bmp.close(); m.shade?.close(); m.spec?.close(); return; }
     const t = r.t; t.pendingL = 0; t.pendingArtL = 0; t.pendingTs = -1;
     this.bakeLog[this.baked % BAKE_LOG] = m.ms; this.waitLog[this.baked % BAKE_LOG] = performance.now() - r.at; if (!this.firstTileAt) this.firstTileAt = performance.now();
     this.bakeMs += m.ms; this.baked++;
     // edited while baking: it will be asked for again, and keeps the picture it has meanwhile; one with none shows this one (stale, so it is
     // still asked for again: the ground before the edit for a bake, rather than nothing; T134, the startup's edits did this to the planner pieces)
     const edited = r.gen !== t.gen;
-    if (edited && t.tex) { m.bmp.close(); m.shade?.close(); return; }
+    if (edited && t.tex) { m.bmp.close(); m.shade?.close(); m.spec?.close(); return; }
     const u0 = performance.now();
     // a new tile spec (T145, T150: a band switch or a DPR change) keeps the old picture until the whole view has the new one too (engine.ts: then a cut, never a crossfade between sets)
     const ts = m.ts ?? 0, stepChanged = (t.texTiled || !!m.tiled) && t.texTs !== ts;
@@ -249,7 +249,7 @@ export class GroundCache {
     if (t.shade) this.gl.deleteTexture(t.shade);
     t.shade = m.shade ? this.gl.textureFrom(m.shade) : null; m.shade?.close();
     t.tex = this.gl.textureFrom(m.bmp); t.texL = m.L; t.texArtL = artL; t.texTs = ts; t.texTiled = !!m.tiled; t.px = m.bmp.width * m.bmp.height; t.stale = edited; t.baked = u0; m.bmp.close();
-    if (m.spec) this.specs.set(t.tex, this.gl.specTexture(m.spec.w, m.spec.h, m.spec.data));
+    if (m.spec) { this.specs.set(t.tex, this.gl.specTexture(m.spec)); m.spec.close(); }
     // T197: a picture that fell back to the photo where a tile set was not decoded yet shows meanwhile and is asked for again after a short
     // hold (the tiles decode on the way), so a placeholder never stays
     if (m.prov && !edited) { this.provisional++; const k = (this.provTries.get(t) ?? 0) + 1; this.provTries.set(t, k); if (k <= PROVISIONAL_TRIES) { t.stale = true; t.hold = u0 + PROVISIONAL_RETRY_MS; } }

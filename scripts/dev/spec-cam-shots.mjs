@@ -34,9 +34,10 @@ try {
   await page.goto(`${base}?start=town&stamp=0`);
   await page.waitForFunction(() => window.__game?.ready, null, { timeout: 180000 });
   await page.addStyleTag({ content: '* { visibility: hidden !important } canvas { visibility: visible !important }' });
-  // no baking ahead while the shots are taken (it keeps the workers busy), the look's knobs, and the night by hand (0 day .. 1 night)
+  // no baking ahead while the shots are taken (it keeps the workers busy), the game paused (the town builds on), the look's knobs, and the
+  // night by hand (0 day .. 1 night)
   const street = await page.evaluate(look => {
-    const g = window.__game; g.prebake = () => {}; g.setSpec(look); window.__night = 1; g.nightAmount = () => window.__night;
+    const g = window.__game; g.prebake = () => {}; g.setSpeed(0); g.setSpec(look); window.__night = 1; g.nightAmount = () => window.__night;
     // the pool with the most pools within 24 tiles: a lamp-lit street
     const ps = g.net.pools; let best = null, bestN = -1;
     for (const p of ps) { let n = 0; for (const q of ps) if (Math.hypot(q.x - p.x, q.y - p.y) < 24) n++; if (n > bestN) { bestN = n; best = p; } }
@@ -59,18 +60,38 @@ try {
     }
   }
   if (!quick) {
-    // ---- the frame strip: the street panned from the edge to the centre, at night, at 30%, off and on (six frames, two rows of three)
+    // ---- the frame strip: the street panned from the edge to the centre, at night, at 30%, off (top row) and on (bottom row): each frame cut
+    //      to the same 420 x 260 px round the chosen pool (the camera moves, the pool stays in the middle of the cut); and at each place how
+    //      much on differs from off: the share of the cut's px whose luma differs by more than 6, and their mean off - on (> 0: on is darker
+    //      there, the pools fading out; about 0 or below: the pools as baked)
+    const places = [0.97, 0.88, 0.79, 0.7, 0.61, 0.5], cw = 420, ch = 260, rows = [];
     for (const on of [false, true]) {
       await setSpec(on); await setNight(1);
-      const frames = [];
-      for (const fx of [0.95, 0.86, 0.77, 0.68, 0.59, 0.5]) { await place(fx, 0.3); await settle(page, 500); frames.push(await page.screenshot({ type: 'png' })); }
-      const tw = W / 2, th = H / 2, tiles = await Promise.all(frames.map(f => sharp(f).resize(tw, th).png().toBuffer()));
-      const file = join(out, `strip-night-30pct-${on ? 'on' : 'off'}.jpg`);
-      await sharp({ create: { width: tw * 3, height: th * 2, channels: 3, background: '#000' } }).composite(tiles.map((t, i) => ({ input: t, left: (i % 3) * tw, top: Math.floor(i / 3) * th }))).jpeg({ quality: 85, mozjpeg: true }).toFile(file);
-      console.log(file);
+      const cuts = [];
+      for (const fx of places) {
+        await place(fx, 0.3); await settle(page, 500);
+        const png = await page.screenshot({ type: 'png' }), px = Math.round(fx * W), left = Math.max(0, Math.min(W - cw, px - cw / 2)), top = Math.round(H / 2 - ch / 2);
+        cuts.push(await sharp(png).extract({ left, top, width: cw, height: ch }).png().toBuffer());
+      }
+      rows.push(cuts);
+    }
+    report.strip = {};
+    for (let i = 0; i < places.length; i++) {
+      const [a, b] = await Promise.all(rows.map(r => sharp(r[i]).removeAlpha().raw().toBuffer())), lum = (d, o) => 0.299 * d[o] + 0.587 * d[o + 1] + 0.114 * d[o + 2];
+      let n = 0, sum = 0; for (let o = 0; o < a.length; o += 3) { const d = lum(a, o) - lum(b, o); if (Math.abs(d) > 6) { n++; sum += d; } }
+      report.strip[`${Math.round(places[i] * 100)}%`] = { differing: `${(100 * n / (cw * ch)).toFixed(1)}%`, offMinusOn: +(n ? sum / n : 0).toFixed(1) };
+    }
+    {
+      const gap = 6, lab = 22, Wd = places.length * cw + (places.length - 1) * gap, Hd = 2 * ch + gap + lab;
+      const label = Buffer.from(`<svg width="${Wd}" height="${lab}" xmlns="http://www.w3.org/2000/svg">${places.map((fx, i) => `<text x="${i * (cw + gap) + cw / 2}" y="16" font-family="Arial" font-size="15" text-anchor="middle" fill="#fff">pool at ${Math.round(fx * 100)}% across</text>`).join('')}</svg>`);
+      const comp = [{ input: label, left: 0, top: 0 }];
+      rows.forEach((cuts, r) => cuts.forEach((c, i) => comp.push({ input: c, left: i * (cw + gap), top: lab + r * (ch + gap) })));
+      const file = join(out, 'strip-night-30pct.jpg');
+      await sharp({ create: { width: Wd, height: Hd, channels: 3, background: '#000' } }).composite(comp).jpeg({ quality: 88, mozjpeg: true }).toFile(file);
+      console.log(file, JSON.stringify(report.strip));
     }
     // ---- the numbers: each switch re-bakes the view (invalidateAll): the worker ms of those bakes; then the draw time, synchronous (the
-    //      frame's CPU and GPU: the draw, then a 1 px read that waits for the GPU), 120 frames, the pool at the centre, at night and by day
+    //      frame's CPU and GPU: the draw, then a 1 px read that waits for the GPU), 240 frames, the pool at the centre, at night and by day
     report.bake = {}; report.frame = {};
     for (const z of [0.3, 0.15]) {
       await place(0.5, z);
@@ -82,18 +103,19 @@ try {
         const k = `${Math.round(z * 100)}pct-${on ? 'on' : 'off'}`;
         (report.bake[k] ??= []).push({ bakes: s.length, median: +q(0.5).toFixed(1), p95: +q(0.95).toFixed(1), mean: +(s.reduce((a, b) => a + b, 0) / (s.length || 1)).toFixed(1) });
       }
-      for (const on of [false, true]) {
+      // (three rounds of off then on, 240 frames each, so a warm-up or a stray stall weighs on neither)
+      for (let round = 0; round < 3; round++) for (const on of [false, true]) {
         await setSpec(on); await settle(page);
         for (const [light, v] of [['night', 1], ['day', 0]]) {
           await setNight(v);
           const t = await page.evaluate(() => {
             const g = window.__game, gl = g.gl.gl, px = new Uint8Array(4); cancelAnimationFrame(g.raf);
-            for (let i = 0; i < 10; i++) { g.draw(performance.now()); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); }
-            const ts = []; for (let i = 0; i < 120; i++) { const a = performance.now(); g.draw(a); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); ts.push(performance.now() - a); }
+            for (let i = 0; i < 20; i++) { g.draw(performance.now()); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); }
+            const ts = []; for (let i = 0; i < 240; i++) { const a = performance.now(); g.draw(a); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); ts.push(performance.now() - a); }
             g.raf = requestAnimationFrame(g.frame); ts.sort((a, b) => a - b);
-            return { median: +ts[60].toFixed(2), p95: +ts[114].toFixed(2), mean: +(ts.reduce((a, b) => a + b, 0) / ts.length).toFixed(2) };
+            return { median: +ts[120].toFixed(2), p95: +ts[228].toFixed(2), mean: +(ts.reduce((a, b) => a + b, 0) / ts.length).toFixed(2) };
           });
-          report.frame[`${Math.round(z * 100)}pct-${light}-${on ? 'on' : 'off'}`] = t;
+          (report.frame[`${Math.round(z * 100)}pct-${light}-${on ? 'on' : 'off'}`] ??= []).push(t);
         }
       }
     }
