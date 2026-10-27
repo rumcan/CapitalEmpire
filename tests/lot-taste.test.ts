@@ -52,7 +52,12 @@ describe('the lot generator\'s taste: pairs and densities by state (T161)', () =
     assert.deepEqual(back.counts, data.counts);
     const t2 = tasteFrom(back);
     assert.deepEqual(pairTable(t2, kindPools()), pairTable(taste, kindPools()));
-    for (const s of EXAM_STATES) assert.deepEqual(stateKinds(t2, s), stateKinds(taste, s));
+    // (T201: within the file's rounding: it keeps 3 decimals, and the owner's presets decide which side of a rounding a value lands on)
+    for (const s of EXAM_STATES) {
+      const a = stateKinds(t2, s), b = stateKinds(taste, s);
+      assert.deepEqual(Object.keys(a ?? {}).sort(), Object.keys(b ?? {}).sort(), s);
+      for (const k of Object.keys(b ?? {})) assert.ok(Math.abs((a as Record<string, number>)[k]! - (b as Record<string, number>)[k]!) <= 0.002, `${s} ${k}: ${(a as Record<string, number>)[k]} read back for ${(b as Record<string, number>)[k]}`);
+    }
     const plain = modelFile(9, modelData(buildModel(samples)), 'test')!;
     assert.ok(!/"pairs"|"density"/.test(plain), 'no taste, no taste blocks');
   });

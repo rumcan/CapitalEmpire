@@ -34,13 +34,21 @@ function wizardOf(use: PresetUse, k: number, seed: number) {
 }
 
 describe('train every use in the lot lab (T173)', () => {
-  it('1. the live model with no training is the latest shipped one (learnt from the same presets)', () => {
-    const d = liveModelData(lotPresets(), [], L4) as Record<string, unknown>;
-    for (const k of ['anchors', 'pairs', 'density', 'places']) assert.deepEqual(d[k], L4[k], k);
-    assert.deepEqual(groupsFrom(d), groupsFrom(L4), 'every group as v4');
-    // the houses' keep counts: as v4's but the two items whose house footprint T154 turned (4 counts of 127)
-    const a = d.counts as Record<string, number[]>, b = L4.counts as Record<string, number[]>, diff = Object.keys({ ...a, ...b }).filter(k => JSON.stringify(a[k]) !== JSON.stringify(b[k]));
-    assert.ok(diff.length <= 4, diff.join(', '));
+  // (T201: until 2026-10-27 this compared the live model with v4's numbers, which were learnt from the presets of their day: the owner edits the
+  // presets in the studio, so the rules stand instead of the numbers)
+  it("1. the live model with no training is the presets' own: the same every time, shaped as the shipped one, and it follows the presets", () => {
+    const P = lotPresets(), d = liveModelData(P, [], L4) as Record<string, unknown>;
+    assert.deepEqual(liveModelData(P, [], L4), d, 'the same every time');
+    // shaped as v4: its blocks, and its groups with v4's on and off
+    for (const k of ['counts', 'anchors', 'pairs', 'density', 'places']) assert.ok(d[k] !== undefined, `${k} learnt`);
+    const g = groupsFrom(d), g4 = groupsFrom(L4);
+    assert.deepEqual(Object.keys(g).sort(), Object.keys(g4).sort(), "v4's groups");
+    for (const k of Object.keys(g4) as (keyof typeof g4)[]) assert.equal(g[k]!.on, g4[k]!.on, `${k}: on as v4`);
+    // learnt from the presets: without a use's frozen presets that use's group learns another model; the houses' counts follow the house presets
+    const noInd = liveModelData(P.filter(p => p.use !== 'ind'), [], L4) as Record<string, unknown>;
+    assert.notDeepEqual(groupsFrom(noInd).ind, g.ind, 'the works follow their presets'); assert.deepEqual(groupsFrom(noInd).com, g.com, 'the shops do not');
+    const fewer = liveModelData(P.filter((p, i) => p.use !== 'res' || i % 2 === 0), [], L4) as Record<string, unknown>;
+    assert.notDeepEqual(fewer.counts, d.counts, 'the houses follow their presets');
   });
   it('2. a shop lot\'s sample trains the shops, not the houses; a house lot\'s the houses, not the shops; a gallery lot judged Bad trains nothing', () => {
     const { lot } = wizardOf('com', 3, 11), base = liveModelData(lotPresets(), [], L4);

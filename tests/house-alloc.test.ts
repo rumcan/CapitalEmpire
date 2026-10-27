@@ -30,8 +30,10 @@ describe('house allocations (T155)', () => {
     assert.deepEqual(clampAlloc({ roads: [3, 1, 1, 9, 'x'], states: ['upgraded', 'built', 'no'] }), { roads: [1, 3], states: ['built', 'upgraded'] });
     assert.equal(clampAlloc({ roads: [1] }), null);
     assert.deepEqual(parseAllocations({ houses: { 'ok': { roads: [], states: [] }, 'bad id': { roads: [], states: [] }, 'x': 3 } }).houses, { ok: { roads: [], states: [] } });
-    // the shipped file is empty: every house suits everything until the owner sets one (never commit test allocations)
-    assert.deepEqual(parseAllocations(FILE), EMPTY);
+    // the shipped file is the owner's (the studio's house allocations, T201: not pinned): every entry in it is valid and it reads back as written
+    const shipped = parseAllocations(FILE);
+    assert.equal(Object.keys(shipped.houses).length, Object.keys((FILE as { houses?: object }).houses ?? {}).length, 'no entry of the shipped file is dropped');
+    assert.deepEqual(parseAllocations(JSON.parse(formatAllocations(shipped))), shipped);
   });
   it('2. a toggle starts from "everything" for an unset house and flips one road or state; null unsets it', () => {
     const a = toggled(null, { road: 3 });
