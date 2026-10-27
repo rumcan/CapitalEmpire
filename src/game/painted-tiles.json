@@ -6,7 +6,7 @@
   "sha256": "a0261d09a8e64e61421af4c0120db926c35e4260eef8e4d9c9d3848665b5b5ff",
   "date": "2026-10-26"
  },
- "revision": "90860bdd8e3d",
+ "revision": "6c121bcd2535",
  "display": {
   "minVisibleTiles": 2,
   "maxVisibleTiles": 4,
@@ -1675,6 +1675,217 @@
        "tb": 7.08,
        "h": 5.59,
        "v": 7.54
+      }
+     }
+    }
+   }
+  },
+  {
+   "id": "swamp-run",
+   "materialId": "painted:swamp-run",
+   "name": "Swamp (RUN, quilted)",
+   "kind": "water",
+   "revision": "1bd2e000e765",
+   "selection": null,
+   "provisional": true,
+   "light": null,
+   "mean": "#4c5430",
+   "levels": {
+    "near": {
+     "revision": "near-tiles-v1",
+     "folder": "art/theme-consistency/generated/ground/run-grass/swamp/near/tiles-v1",
+     "native": [
+      1376,
+      768
+     ],
+     "decision": {
+      "file": null,
+      "sha256": null
+     },
+     "tiles": [
+      {
+       "id": "tile-01",
+       "file": "tiles/swamp-run/near/tile-01.webp",
+       "sha256": "d2aa905753a34ae9fc2ff3feaab9c3ff0a4d594269f65b0dda1059ae2c262b91",
+       "mean": "#4a5330",
+       "source": "art/theme-consistency/generated/ground/run-grass/swamp/near/tiles-v1/tile-01.png"
+      },
+      {
+       "id": "tile-02",
+       "file": "tiles/swamp-run/near/tile-02.webp",
+       "sha256": "b54a210751698c23d8cbeab8e98c5be5caace6659e6ee796377c22c9544dc98a",
+       "mean": "#4c5530",
+       "source": "art/theme-consistency/generated/ground/run-grass/swamp/near/tiles-v1/tile-02.png"
+      },
+      {
+       "id": "tile-03",
+       "file": "tiles/swamp-run/near/tile-03.webp",
+       "sha256": "722fe6a4cfa075bef7ac16a03a53b708a02ccd13539a9737e811ba1100df2e88",
+       "mean": "#4c5430",
+       "source": "art/theme-consistency/generated/ground/run-grass/swamp/near/tiles-v1/tile-03.png"
+      },
+      {
+       "id": "tile-04",
+       "file": "tiles/swamp-run/near/tile-04.webp",
+       "sha256": "0c310d3a4aea13154f6d3ccb3327eea20efee597d80ea079649c78e024b318c8",
+       "mean": "#4c5530",
+       "source": "art/theme-consistency/generated/ground/run-grass/swamp/near/tiles-v1/tile-04.png"
+      }
+     ],
+     "status": "the art session's finished near-tiles-v1 tiles (T191): four tiles that meet one another as made (finished-set-as-made, no heal); across any two tiles wrap LR 10.32 -> 10.86 (inside 9.38), TB 10.99 -> 11.5 (inside 9.37)",
+     "heal": {
+      "method": "finished-set-as-made",
+      "band": 0,
+      "fallback": "the art session's finished near-tiles-v1 tiles (T191)",
+      "before": {
+       "lr": 10.32,
+       "tb": 10.99,
+       "h": 9.52,
+       "v": 9.47
+      },
+      "healed": {
+       "lr": 10.32,
+       "tb": 10.99,
+       "h": 9.52,
+       "v": 9.47
+      },
+      "after": {
+       "lr": 10.86,
+       "tb": 11.5,
+       "h": 9.38,
+       "v": 9.37
+      }
+     }
+    },
+    "mid": {
+     "revision": "mid-tiles-v1",
+     "folder": "art/theme-consistency/generated/ground/run-grass/swamp/mid/tiles-v1",
+     "native": [
+      1376,
+      768
+     ],
+     "decision": {
+      "file": null,
+      "sha256": null
+     },
+     "tiles": [
+      {
+       "id": "tile-01",
+       "file": "tiles/swamp-run/mid/tile-01.webp",
+       "sha256": "d4282086c0dffcc3aea72e410137ff5b66b4681a682ee0ae2399fc77e036cfc5",
+       "mean": "#495431",
+       "source": "art/theme-consistency/generated/ground/run-grass/swamp/mid/tiles-v1/tile-01.png"
+      },
+      {
+       "id": "tile-02",
+       "file": "tiles/swamp-run/mid/tile-02.webp",
+       "sha256": "cd568d1dab796e76850bf3fcad738b1c11c6c4298e40648b942b04ce64d00ec8",
+       "mean": "#4c5530",
+       "source": "art/theme-consistency/generated/ground/run-grass/swamp/mid/tiles-v1/tile-02.png"
+      },
+      {
+       "id": "tile-03",
+       "file": "tiles/swamp-run/mid/tile-03.webp",
+       "sha256": "23f760390cb296559901426e49494846a9ed1b4333f6b3159e50471a0eaba382",
+       "mean": "#4d5630",
+       "source": "art/theme-consistency/generated/ground/run-grass/swamp/mid/tiles-v1/tile-03.png"
+      },
+      {
+       "id": "tile-04",
+       "file": "tiles/swamp-run/mid/tile-04.webp",
+       "sha256": "d709c7b9eb59e8b0bd9f790e4eeeef4bcfb7ea24a35106b0c8c0b25d556a6be7",
+       "mean": "#4b5531",
+       "source": "art/theme-consistency/generated/ground/run-grass/swamp/mid/tiles-v1/tile-04.png"
+      }
+     ],
+     "status": "the art session's finished mid-tiles-v1 tiles (T191): four tiles that meet one another as made (finished-set-as-made, no heal); across any two tiles wrap LR 7.9 -> 8.53 (inside 8.55), TB 11.24 -> 11.82 (inside 10.24)",
+     "heal": {
+      "method": "finished-set-as-made",
+      "band": 0,
+      "fallback": "the art session's finished mid-tiles-v1 tiles (T191)",
+      "before": {
+       "lr": 7.9,
+       "tb": 11.24,
+       "h": 8.83,
+       "v": 10.46
+      },
+      "healed": {
+       "lr": 7.9,
+       "tb": 11.24,
+       "h": 8.83,
+       "v": 10.46
+      },
+      "after": {
+       "lr": 8.53,
+       "tb": 11.82,
+       "h": 8.55,
+       "v": 10.24
+      }
+     }
+    },
+    "far": {
+     "revision": "far-tiles-v1",
+     "folder": "art/theme-consistency/generated/ground/run-grass/swamp/far/tiles-v1",
+     "native": [
+      1376,
+      768
+     ],
+     "decision": {
+      "file": null,
+      "sha256": null
+     },
+     "tiles": [
+      {
+       "id": "tile-01",
+       "file": "tiles/swamp-run/far/tile-01.webp",
+       "sha256": "a40c4ef8aeb5997dfff4bc51741e33ecfa494aac281326b76788b0714b131c74",
+       "mean": "#4b5531",
+       "source": "art/theme-consistency/generated/ground/run-grass/swamp/far/tiles-v1/tile-01.png"
+      },
+      {
+       "id": "tile-02",
+       "file": "tiles/swamp-run/far/tile-02.webp",
+       "sha256": "b1fe81f4bdf0667d0aba3a75e32c591d5caa244008edd891404a863f0caa4f20",
+       "mean": "#4b5531",
+       "source": "art/theme-consistency/generated/ground/run-grass/swamp/far/tiles-v1/tile-02.png"
+      },
+      {
+       "id": "tile-03",
+       "file": "tiles/swamp-run/far/tile-03.webp",
+       "sha256": "87db8e4dfb5247b7d74e97a0cf28b854ec1ec8e64276e72f0973ab32c35446fe",
+       "mean": "#4b5531",
+       "source": "art/theme-consistency/generated/ground/run-grass/swamp/far/tiles-v1/tile-03.png"
+      },
+      {
+       "id": "tile-04",
+       "file": "tiles/swamp-run/far/tile-04.webp",
+       "sha256": "31da20676ae75456555270f62ad17cf6fad1c24eefdd34679d4e37241ef51c30",
+       "mean": "#4b5531",
+       "source": "art/theme-consistency/generated/ground/run-grass/swamp/far/tiles-v1/tile-04.png"
+      }
+     ],
+     "status": "the art session's finished far-tiles-v1 tiles (T191): four tiles that meet one another as made (finished-set-as-made, no heal); across any two tiles wrap LR 6.64 -> 7.4 (inside 6.23), TB 8.34 -> 8.79 (inside 7.66)",
+     "heal": {
+      "method": "finished-set-as-made",
+      "band": 0,
+      "fallback": "the art session's finished far-tiles-v1 tiles (T191)",
+      "before": {
+       "lr": 6.64,
+       "tb": 8.34,
+       "h": 6.43,
+       "v": 7.78
+      },
+      "healed": {
+       "lr": 6.64,
+       "tb": 8.34,
+       "h": 6.43,
+       "v": 7.78
+      },
+      "after": {
+       "lr": 7.4,
+       "tb": 8.79,
+       "h": 6.23,
+       "v": 7.66
       }
      }
     }
