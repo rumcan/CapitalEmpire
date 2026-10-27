@@ -15,6 +15,7 @@ import { VARIANT_IDS } from './living-ground';
 import { WALL_TEX } from './ext/course-walls';
 import { softCanvases } from './canvas2d';
 import { BLOCK_UNDER, WOODLAND, lawnTexFor } from './painted-surfaces';
+import { roughTexes } from './rough-yards';
 import type { LotPatch } from './ground-protocol';
 
 const scope = self as unknown as DedicatedWorkerGlobalScope;
@@ -157,6 +158,8 @@ const handle = async (m: ToWorker) => {
             if (p.lawn && tex.paintedOn) { const t = lawnTexFor(p.lawn, p.pts, tex.surfaces); if (t) need.add(t); }
             // T194: a block's grass in soft patches lies over the rough
             if (p.lawn && p.lawn.share < 1) need.add(BLOCK_UNDER);
+            // T222: a rough yard's fescue, dirt and desert patches
+            if (p.lawn?.rough) for (const t of roughTexes(p.lawn.rough)) need.add(t);
           }
           if (painter.grassStrength > 0 && !painter.grassHeat) {
             for (let y = Math.max(0, Math.floor(box[1] / 4)); y < Math.min(MAP / 4, Math.ceil(box[3] / 4)); y++) for (let x = Math.max(0, Math.floor(box[0] / 4)); x < Math.min(MAP / 4, Math.ceil(box[2] / 4)); x++) {
@@ -315,7 +318,7 @@ function memProbe(): Record<string, number> {
 function patchPhotos(p: LotPatch): string[] {
   // has: ensure's own test; a painted texture (its family's pictures, decoded before the bake) needs no photo (T168: never built)
   const out: string[] = [], add = (t: string | undefined) => { if (t && isPaintPhoto(t) && !eager.has(t) && !tex.isPainted(t) && !tex.has(t)) out.push(t); };
-  if (p.lawn) add(p.tex); else if (p.paint) { add(p.tex); if (p.paint.b > 0) add(p.paint.bt); if (p.paint.m) add(p.paint.m.t); }
+  if (p.lawn) { add(p.tex); if (p.lawn.rough) for (const t of roughTexes(p.lawn.rough)) add(t); } else if (p.paint) { add(p.tex); if (p.paint.b > 0) add(p.paint.bt); if (p.paint.m) add(p.paint.m.t); }
   if (p.course) { for (const l of p.course.layers) { add(l.tex); if (l.collar) add(l.collar.tex); } if (p.course.walls?.length) for (const t of WALL_TEX) add(t); }
   return out;
 }

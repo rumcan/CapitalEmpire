@@ -89,7 +89,7 @@ export const BORDER_KINDS: Partial<Record<BrushKind, { s: number; band: string }
   bunker: { s: SURF.bunker, band: 'lip' }, water: { s: SURF.water, band: 'bank' },
 };
 /** the brush kinds that paint the course grid (the old painted-area border does nothing for them) */
-export const GRID_KINDS: readonly BrushKind[] = ['fairway', 'green', 'tee', 'rough', 'bunker', 'water'];
+export const GRID_KINDS: readonly BrushKind[] = ['fairway', 'green', 'tee', 'rough', 'bunker', 'water', 'waste'];
 /** the least ms between two re-draws of the course while a Border or Shadow slider is dragged (the last value always lands) */
 export const LOOK_MS = 120;
 /** the localStorage key of the edited brush presets */

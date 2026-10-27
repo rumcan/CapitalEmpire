@@ -10,6 +10,7 @@ import type { BBox } from './network';
 import type { GrassCellView } from './ext/grass-management';
 import type { EdgeProfile } from './paint-edges';
 import type { GrassArt } from './painted-grass-lod';
+import type { RoughMix } from './rough-yards';
 import type { SurfacesFile } from './painted-surfaces';
 
 /** a painted area's look (the Paint tool, docs/PAINT-TOOL.md): texture scale s, angle a (degrees, tile space, about the map origin), border width b (tiles, 0 = none),
@@ -76,7 +77,7 @@ export interface LotPatch { pts: number[] /* x0 y0 x1 y1 ... (tiles, in order) *
   /** tex 'marks' (nothing filled; pts only bound it): flat decals (lot-decals.ts), five numbers each: index, x, y (tiles, the decal's centre), scale (negative: mirrored), alpha */
   marks?: number[]; paint?: PatchPaint; /** a lawn (lawns.ts): the texture (a preset) laid under the lots' own ground, turned by a (degrees), over share of the
    *  patch in soft patches (1: all of it; soft: the patches' edge, patch: their size, 1 = 24 tiles a period); z: blocks 0 under lots 1; st: a lot's
-   *  look state (T155: its state's lawn, painted-surfaces.ts lawnTexFor) */ lawn?: { a: number; share: number; soft: number; patch: number; z: number; st?: 'built' | 'upgraded' | 'declined' }; /** markings over the road (on-street parking): only its lines are drawn, white, with the road's own markings */ top?: boolean; /** the colour of its lines (parking bays; absent: worn off-white) */ lineCol?: 'yellow';
+   *  look state (T155: its state's lawn, painted-surfaces.ts lawnTexFor); rough: a new or poor town's untended yard (T222, rough-yards.ts): fescue, dirt or desert in soft patches over the mown lawn */ lawn?: { a: number; share: number; soft: number; patch: number; z: number; st?: 'built' | 'upgraded' | 'declined'; rough?: RoughMix }; /** markings over the road (on-street parking): only its lines are drawn, white, with the road's own markings */ top?: boolean; /** the colour of its lines (parking bays; absent: worn off-white) */ lineCol?: 'yellow';
   /** an on-street parking lay-by cut into the sidewalk: drawn after the roads, over the sidewalk and the kerb, with its own kerb on the outer side */ layby?: boolean;
   /** a course chunk (the course grid, T078): drawn with the painted areas (by its z) from its layers; pts is its chunk box grown by
    *  COURSE_PATCH_REACH (the index and the stale box: its feathers and shadows reach past the chunk), tex is unused ('grass') */

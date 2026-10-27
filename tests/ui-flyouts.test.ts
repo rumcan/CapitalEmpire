@@ -28,7 +28,7 @@ const ctx = (golf: boolean, ui: MenuCtx['ui'], o: Partial<MenuCtx> = {}): MenuCt
   roads: [{ id: 'gravel', name: 'Gravel', family: 'Small', why: null }, { id: 'street', name: 'Street', family: 'Small', why: null }, { id: 'avenue', name: 'Avenue', family: 'Medium', why: 'Avenue: unlocks at 2,000 residents' }],
   paths: [{ id: 'cart-walk', name: 'Walking path', family: 'Cart paths', why: null }, { id: 'drive-gravel', name: 'Gravel drive', family: 'Course drives', why: null }],
   junctions: [{ id: 'plain', name: 'Plain', why: null }, { id: 'stop', name: 'All-way stop', why: null }, { id: 'roundabout', name: 'Roundabout', why: 'Unlocks at 5,000 residents' }],
-  surfaces: [{ id: 'fairway', name: 'Fairway' }, { id: 'green', name: 'Green' }],
+  surfaces: [{ id: 'fairway', name: 'Fairway' }, { id: 'green', name: 'Green' }, { id: 'waste', name: 'Waste area' }],
   cares: [{ id: 'mow', name: 'Mow' }, { id: 'water', name: 'Water' }],
   propGroups: [{ id: 'plants', name: 'Plants' }, { id: 'water', name: 'Water' }],
   materials: [{ id: 'preset:golf-green', name: 'Golf - Green', col: '#3a550b' }],
@@ -62,8 +62,10 @@ describe('the flyouts: sub-menus to the side, as many levels as the tools have (
     assert.deepEqual(find(c, 'Cart paths & roads', 'Walking path').leaf?.act, { k: 'road', id: 'cart-walk' });
     assert.deepEqual(find(c, 'Land for sale').leaf?.act, { k: 'land' }, 'T200: the land for sale');
     assert.deepEqual(labels(find(c, 'Holes').children!), ['New hole', 'Your holes', 'Shape by hand']);
-    assert.deepEqual(labels(find(c, 'Holes', 'Shape by hand').children!), ['Fairway', 'Green']);
+    assert.deepEqual(labels(find(c, 'Holes', 'Shape by hand').children!), ['Fairway', 'Green', 'Waste area']);
     assert.deepEqual(find(c, 'Holes', 'Shape by hand', 'Green').leaf?.act, { k: 'surface', id: 'green' });
+    assert.deepEqual(find(c, 'Holes', 'Shape by hand', 'Waste area').leaf?.act, { k: 'surface', id: 'waste' }, 'T222: the Waste area brush');
+    assert.equal(find(c, 'Holes', 'Shape by hand', 'Waste area').mark, 'waste', 'its pebbles mark');
     assert.deepEqual(labels(find(c, 'Buildings').children!), ['Clubhouse', 'Halfway house']);
     if (GREENKEEPING) assert.deepEqual(labels(find(c, 'Greenkeeping').children!), ['Grass care', 'Mow', 'Water']);
     assert.deepEqual(find(c, 'Tournament').leaf?.act, { k: 'event' });

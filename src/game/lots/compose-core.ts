@@ -40,6 +40,12 @@ export interface Spec { id: string; s: number; flip: boolean; h: Box4 }
 export interface Opt { flip?: boolean; mul?: number; street?: boolean; plant?: boolean; boundary?: boolean; paved?: boolean; from?: { preset: string; prop: number }; standIn?: string; diag?: boolean; foot?: boolean }
 export interface Patch { kind: 'drive' | 'walk' | 'lot' | 'yard' | 'bed'; tex: LotPatch['tex']; quad: number[]; lines?: number[] }
 export interface Pair { x: string; y: string }
+/** T222 (the owner, 2026-10-27: "dirt on farms and backyard veg gardens"): a vegetable bed lays the Dirt surface's ground (painted-surfaces.json
+ *  `dirt`, dirt-run) under its rows */
+export const BED_TEX: LotPatch['tex'] = 'dirt';
+/** a ground patch's surface as the lot lays it: a bed (the procedural ones and the lot presets', which the studio saved as 'field') wears the
+ *  Dirt surface; every other patch keeps its own */
+export const patchTex = (kind: Patch['kind'], tex: LotPatch['tex']): LotPatch['tex'] => (kind === 'bed' && tex === 'field' ? BED_TEX : tex);
 
 /** the flat ground decals by group (lot-decals.ts): index lists */
 export const MARKS: Record<string, number[]> = {};
@@ -249,13 +255,14 @@ export class Build {
     this.run(k, e, e, e, D - e, undefined, drop); this.run(k, W - e, e, W - e, D - e, undefined, drop);
     this.run(k, 0, D - e, W, D - e, undefined, drop);
   }
-  /** a vegetable bed (lot-frame rectangle; keep it clear of the house, it bars uprights): a field patch with furrows every half tile along u */
+  /** a vegetable bed (lot-frame rectangle; keep it clear of the house, it bars uprights): a patch of the Dirt surface (T222: dirt-run, as the
+   *  farms and the range's dirt wear it; it was the Farm fields' ground) with furrows every half tile along u */
   bed(a0: number, b0: number, a1: number, b1: number) {
     const A0 = clamp(a0, 0, this.W), A1 = clamp(a1, 0, this.W), B0 = clamp(b0, 0, this.D), B1 = clamp(b1, 0, this.D);
     if (A1 - A0 < 1 || B1 - B0 < 1) return;
     const lines: number[] = [];
     for (let b = B0 + 0.25; b < B1 - 0.1; b += 0.5) { const p = this.P(A0 + 0.15, b), q = this.P(A1 - 0.15, b); lines.push(p.x, p.y, q.x, q.y); }
-    this.patches.push({ kind: 'bed', tex: 'field', quad: this.quad(A0, B0, A1, B1), lines });
+    this.patches.push({ kind: 'bed', tex: BED_TEX, quad: this.quad(A0, B0, A1, B1), lines });
   }
   /** a flat decal from a group (or one id) centred at a lot-frame point, at 0.8-1.2x, mirrored at random, 70-100% opaque */
   mark(group: string, a: number, b: number, size = 1) {

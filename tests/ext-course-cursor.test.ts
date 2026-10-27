@@ -514,7 +514,7 @@ test('switching and stopping (T118, the owner): number keys switch the surface, 
   frame(cur, tool);
   assert.match(cur.hint, /^Painting Fairway · /);
   const sprites = cur.stats.sprites;
-  // the keys follow BRUSH_PRESETS: 1 fairway, 2 green, 3 tee, 4 rough, 5 bunker, 6 water, 7 cart path
+  // the keys follow BRUSH_PRESETS: 1 fairway, 2 green, 3 tee, 4 rough, 5 bunker, 6 water, 7 waste area (T222), 8 cart path
   for (const [k, kind, name] of [['2', 'green', 'Green'], ['3', 'tee', 'Tee'], ['4', 'rough', 'Rough'], ['5', 'bunker', 'Bunker'], ['6', 'water', 'Water'], ['1', 'fairway', 'Fairway']] as const) {
     assert.equal(key(k), true, `key ${k} is taken`);
     assert.equal(tool.brushKind, kind);

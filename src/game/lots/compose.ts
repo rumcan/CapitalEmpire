@@ -17,7 +17,7 @@ import { isBuilding } from '../mirror';
 import { LU, LV } from './town';
 import {
   BUSHES, BY, Build, CHAIN, DEAD_TREES, DRIVE_GAP, JUNK, MARK_ID, PARK_PIECES, PICKUPS, PRIVACY, SCHOOL_SIGNS, SIDE_YARD, TREES, clamp, isCarPark, mix,
-  names, pick, specFit, withVariations,
+  names, patchTex, pick, specFit, withVariations,
   type Composition, type ComposeState, type LotGeom, type Pt, type PresetDrop,
 } from './compose-core';
 import { approvedFor, bucketOf, fitPreset, parsePresets, pickPreset, presetsFor, stateOf, type Fitted, type LotPreset, type PresetDecal, type PresetMeta, type PresetProp, type PresetState, type PresetUse, type Road } from './presets';
@@ -349,7 +349,7 @@ function fromPreset(B: Build, lot: LotGeom, st: ComposeState, p: { preset: LotPr
   const range = (pts: readonly number[]): [number, number] => { let a = Infinity, b = -Infinity; for (let i = 0; i < pts.length; i += 2) { a = Math.min(a, pts[i]!); b = Math.max(b, pts[i]!); } return [a, b]; };
   let drive: [number, number] | null = null, main: [number, number] | null = null, big = 0, ups = 0;
   for (const a of fit.patches) {
-    B.patches.push({ kind: a.kind, tex: a.tex as LotPatch['tex'], quad: listToWorld(f, a.pts), ...(a.lines ? { lines: listToWorld(f, a.lines) } : {}) });
+    B.patches.push({ kind: a.kind, tex: patchTex(a.kind, a.tex as LotPatch['tex']), quad: listToWorld(f, a.pts), ...(a.lines ? { lines: listToWorld(f, a.lines) } : {}) });
     if (a.kind === 'drive' && !drive) drive = range(a.pts);
   }
   if (B.drops) { const kept = new Set(fit.from); preset.props.forEach((q, i) => { if (!kept.has(i)) B.drops!.push({ preset: preset.id, prop: i, id: q.id, why: 'outside the lot at this size (the fit)' }); }); }
