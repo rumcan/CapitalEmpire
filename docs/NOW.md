@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-27 02:23)
+## START HERE (kept current by the lead; last updated 2026-10-27 02:30)
 
 **Paste-ready start prompts for every role are in `docs/START-PROMPTS.md`:** the lead, a coding ticket, and the other sessions in this
 repo. The weekly usage cap is close (2026-10-26), so any chat may stop at any moment.
@@ -27,10 +27,10 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 ### In flight
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |
-| nightly | — | main (detached) | `.claude/worktrees/t166` | — | **No scheduled nightly task exists** (checked 02:06). The lead runs it with a haiku-runner: typecheck, npm test, build, the six gates, one at a time → `E:/ClaudeTemp/nightly/2026-10-27.md`. The ground agent's next ticket waits for it (RAM). |
+| T098 | #168 | `arena/T098-range-gate` | `.claude/worktrees/t166` | 5187 | The range gate (the nightly's coverage gap: no gate bundles `rangebiz.ts`, and the range start is the default new game): `setupRange(seed)`, `npm run range:gate` on seeds 1-3 with thresholds from measured main numbers; the range20 fixture and bench stages only if T090 landed. Agent: the ground agent. |
 | T112 | #199 | `arena/T112-sharp` (PR #394) | `.claude/worktrees/t112` | — | **Approved, merge HELD for the morning restart:** a lock change makes the 5174 auto-updater run `npm ci` in theme-consistency (the live 5191 studio holds sharp there; the lot agent's t160 uses it by junction). Morning order: stop 5191 → merge #394 → let npm ci finish → restart 5191 and 5174. All shipped bytes identical on 0.35.5; audit 0. |
 | P05 | #68 | `lead/p05-balance-plan` | `.claude/worktrees/t160` | 5186 | The M5 balance plan **draft for the owner's approval** (no game numbers changed): measured structure paybacks, upkeep, crowd per tier, simulator vs game; proposed constants + balance tests → `docs/plans/P05.md`. Agent: the lot agent. |
-| nightly | — | main (detached) | `.claude/worktrees/t166` | — | **No scheduled nightly task exists** (checked 02:06). The lead runs it with a haiku-runner: typecheck, npm test, build, the six gates, one at a time → `E:/ClaudeTemp/nightly/2026-10-27.md`. The ground agent's next ticket waits for it (RAM). |
+| T098 | #168 | `arena/T098-range-gate` | `.claude/worktrees/t166` | 5187 | The range gate (the nightly's coverage gap: no gate bundles `rangebiz.ts`, and the range start is the default new game): `setupRange(seed)`, `npm run range:gate` on seeds 1-3 with thresholds from measured main numbers; the range20 fixture and bench stages only if T090 landed. Agent: the ground agent. |
 | T112 | #199 | `arena/T112-sharp` (PR #394) | `.claude/worktrees/t112` | — | **Approved, merge HELD for the morning restart:** a lock change makes the 5174 auto-updater run `npm ci` in theme-consistency (the live 5191 studio holds sharp there; the lot agent's t160 uses it by junction). Morning order: stop 5191 → merge #394 → let npm ci finish → restart 5191 and 5174. All shipped bytes identical on 0.35.5; audit 0. |
 
 **Two coding agents at a time (the owner, 2026-10-26: first "maybe just too many background tasks?" after the studio tab died with the
@@ -45,6 +45,10 @@ http://192.168.0.2:5174; launch configs `studio` with `STUDIO_HOST=0.0.0.0`, `le
 studio for the owner; an agent's check studio (5193) is stopped before it reports. The old lot lab servers (5241, 5242) and its
 worktree `.claude/worktrees/lot-presets` are dead: the owner closes the servers, then the worktree goes. The owner restored
 `variation:gen-house-l-shape-e0e3b328-plain:1` for its 9 lot presets (#294); `tests/lot-presets-json.test.ts` passes again.
+
+**2026-10-27 nightly** (main `81a66c0`, run by the lead with a haiku-runner at 02:30; **no scheduled nightly task exists**,
+`E:/ClaudeTemp/nightly/2026-10-27.md`): typecheck, **1906/1906 tests**, the build, sim, town, towns, fix, event and biz gates **all PASS**.
+Gap: no gate covers the range start (T098).
 
 **2026-10-26 manual regression** (main `d750592`, `E:/ClaudeTemp/nightly/2026-10-26-manual.md`): typecheck, 1697/1697 tests, the build,
 sim, town, towns and biz gates PASS; fix and event gates FAIL (#285). towns/event/biz had not run for days (no .webp loader; fixed by #286).
