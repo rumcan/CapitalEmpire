@@ -1,0 +1,12 @@
+{
+  "generationId": "f71da003-c76f-432b-ac1d-87c1752207b3",
+  "provider": "hunyuan3d-v3.1-pro",
+  "mode": "image-to-3d",
+  "quality": "standard",
+  "gameId": "AFjPSjQH9kbcCl57sgO3",
+  "outputPath": "E:\\Repos\\CapitalEmpire\\worktrees\\people-ground\\art\\people3d\\town_w_elder\\model.glb",
+  "status": "saved",
+  "sha256": "6d6a09b510fe963a1fc51346f2a2ee58ad3ecf4562903478912d5d8247532b2f",
+  "modelUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/threedgen/AFjPSjQH9kbcCl57sgO3/f71da003-c76f-432b-ac1d-87c1752207b3/model.compressed.glb",
+  "seed": 1837643571
+}

@@ -1,0 +1,14 @@
+{
+  "image": "art/spectators/pics/spec_k_boy_cap.png",
+  "look": "Ten-year-old boy at a 1985 golf tournament, an oversized plain red cap, a striped t-shirt, shorts, sneakers. Plain clothes, no logos, no lettering",
+  "modelUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/threedgen/AFjPSjQH9kbcCl57sgO3/cd28ae11-90f8-4e85-8d41-6acbd1c14053/model.compressed.glb",
+  "rigFrom": "base_kid (local rig transfer, rig-local-person.mjs)",
+  "clipsFrom": {
+    "walk": "base_kid",
+    "idle": "base_kid",
+    "clap": "base_kid",
+    "cheer": "base_kid",
+    "sit": "base_kid",
+    "sit_clap": "base_kid"
+  }
+}

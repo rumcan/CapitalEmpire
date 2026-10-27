@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { ARRIVE, CROSS, FACINGS, FACING_ROW, Pedestrians, WALK_SPEED, facing, sidewalks, type Door, type WalkRoad } from '../src/game/ext/pedestrians/pedestrians';
+import { LIBRARY, WALKER_BASE, WALKER_PEOPLE, WALK_DIRS, WALK_FRAMES } from '../src/game/library';
 
 const STREET = { h: 1.625, walk: 1.025 }, KERB = STREET.h + STREET.walk / 2;
 /** a grid of streets n x n blocks, `gap` tiles apart, as straight open roads between the crossings */
@@ -112,4 +113,23 @@ test('determinism, and a road edit leaves the walkers on unchanged sidewalks exa
   const out: { x: number; y: number; face: number; frame: number; person: number }[] = [];
   assert.equal(P.inBox(-5, -5, 95, 95, out), P.out);
   assert.ok(ARRIVE > 0);
+});
+
+test('the townspeople (T203): the last seven are in the walker table with all their frames, and a town of walkers shows every person', () => {
+  const ids = WALKER_PEOPLE.map(p => p.id.replace(/^person:3d:/, ''));
+  for (const id of ['town_w_waitress', 'town_w_student', 'town_m_jogger', 'town_m_postman', 'town_k_boy', 'town_k_girl', 'town_w_elder']) {
+    const p = ids.indexOf(id);
+    assert.ok(p >= 0, `${id} is not a townsperson`);
+    for (let d = 0; d < WALK_DIRS.length; d++) for (let f = 0; f < WALK_FRAMES; f++) {
+      const it = LIBRARY[WALKER_BASE + (p * WALK_DIRS.length + d) * WALK_FRAMES + f]!;
+      assert.equal(it.name, WALKER_PEOPLE[p]!.id, `${id} facing ${d} frame ${f}`); assert.equal(it.kind, 'walker'); assert.equal(it.cat, 'Townspeople');
+    }
+  }
+  assert.ok(!ids.some(id => id.startsWith('staff_') || id.startsWith('spec_')), `townspeople only: ${ids.join(' ')}`);
+  // the engine's walkers draw on the whole table (engine.ts: new Pedestrians(seed, WALKER_PEOPLE.length, ...))
+  const P = new Pedestrians(11, WALKER_PEOPLE.length, 1000); P.setDoors(doorsOf(3, 40)); P.setSidewalks(sidewalks(grid(3, 40))); P.populate(1000);
+  for (let k = 0; k < 200; k++) P.step(0.1);
+  const out: { x: number; y: number; face: number; frame: number; person: number }[] = [], seen = new Set<number>();
+  for (let i = 0, n = P.inBox(-5, -5, 125, 125, out); i < n; i++) seen.add(out[i]!.person);
+  assert.equal(seen.size, WALKER_PEOPLE.length, `people out walking: ${seen.size} of ${WALKER_PEOPLE.length}`);
 });

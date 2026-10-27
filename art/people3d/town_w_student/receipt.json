@@ -1,0 +1,10 @@
+{
+  "image": "art/people3d/pics/town_w_student.png",
+  "look": "College student in her late teens from a 1985 small American town, an oversized denim jacket, a white t-shirt, jeans, white sneakers, big curly hair. No logos, no lettering",
+  "modelUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/threedgen/AFjPSjQH9kbcCl57sgO3/1a0ca693-c4cb-4a60-9510-813c3d40b735/model.compressed.glb",
+  "rigFrom": "base_woman (local rig transfer, rig-local-person.mjs)",
+  "clipsFrom": {
+    "walk": "base_woman",
+    "idle": "base_woman"
+  }
+}
