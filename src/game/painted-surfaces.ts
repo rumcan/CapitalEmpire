@@ -43,6 +43,7 @@ export const SURFACES: readonly SurfaceDef[] = [
   { key: 'lawn', name: 'Lawn (the Paint tool\'s lawn textures)', group: 'Town', tex: ['lawnLush', 'lawnClover'], kinds: ['grass'] },
   { key: 'lawnBuilt', name: 'Lot lawn: built lots (T155: the fairway)', group: 'Town', tex: ['lawnBuilt'], kinds: ['grass'] },
   { key: 'lawnUpgraded', name: 'Lot lawn: upgraded lots (T155: the putting green)', group: 'Town', tex: ['lawnUpgraded'], kinds: ['grass'] },
+  { key: 'mulch', name: 'Bark mulch (flower beds: the Paint tool\'s Bark mulch)', group: 'Town', tex: ['barkMulch'], kinds: ['cut'] },
   { key: 'lawnDeclined', name: 'Lot lawn: decrepit (declined) lots (T155: the rough)', group: 'Town', tex: ['lawnDeclined'], kinds: ['grass'] },
   { key: 'lush', name: 'Lush grass (along fences, walls and water)', group: 'Living ground', tex: ['grass-lush'], kinds: ['grass'] },
   { key: 'patchy', name: 'Patchy grass (under trees, at doors)', group: 'Living ground', tex: ['grass-patchy'], kinds: ['grass'] },
