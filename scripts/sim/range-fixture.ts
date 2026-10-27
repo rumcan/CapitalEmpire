@@ -4,7 +4,7 @@
 // course still to build) and the camera on the town. It is read by tests/save-fixtures.test.ts (it loads; under 2 MB gzipped), the dev
 // ?fixture=range20 loader (engine.ts) and the bench's &fixture=range20 stage (bench.ts).
 //   npm run range:fixture -- [seed = 1] [seasons = 20] [--player]   (writes tests/fixtures/saves/golf-v5-range-20y.json)
-// --player (T178, T184): a player puts all-way stops on the town's jammed crossings (the Junction tool) and upgrades bottleneck roads at each season's end
+// --player (T178, T184, T195): a player puts mini-roundabouts on the town's jammed crossings (the Junction tool) and upgrades bottleneck roads at each season's end
 // (harness playerUpgrade, as range:gate --player does: 60 fixes and 20 upgrades a season at most), so
 // the fixture is a healthy grown town; the committed fixture is made with it. Without it, the town left alone jams and declines.
 import fs from 'node:fs';
@@ -33,7 +33,7 @@ setSeason(1);
 for (let s = 1; s <= seasons * SEASON_LEN; s++) {
   stepSecond(h, s);
   if (s % SEASON_LEN === 0 && s < seasons * SEASON_LEN) setSeason(s / SEASON_LEN + 1);
-  if (player && s % SEASON_LEN === 0 && s < seasons * SEASON_LEN) { const r = playerUpgrade(h, 60, 20, 0, 'stop'); roads.segs += r.segs + r.minis + r.rings; roads.cost += r.cost; }
+  if (player && s % SEASON_LEN === 0 && s < seasons * SEASON_LEN) { const r = playerUpgrade(h, 60, 20, 0, 'mini'); roads.segs += r.segs + r.minis + r.rings; roads.cost += r.cost; }
 }
 const city = h.city, I = city as unknown as { budget: Budget; career: Career }, sim = city.sim, site = R.start.site, c = site.centre;
 const lots: LotTuple[] = [...city.town.states.values()].filter(st => st.level !== LV.EMPTY).map(st => [st.key, st.use, st.level, st.decline, st.seed, st.since]);

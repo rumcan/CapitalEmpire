@@ -91,9 +91,11 @@ const NO_PLAYER = {
 };
 const DECLINE = 1.8;
 /** the player run's work a season: at most MAX_J junction fixes and MAX_L road upgrades, never below RESERVE in the treasury */
-/** the player's junction tool: an all-way stop (T184: on seeds 1-3 it reaches P22's bands for $58-76k and takes no land; a mini-roundabout
- *  cuts the jam more but re-cuts its corner lots, 558 on seed 1, and the town then misses its bands; PLAYER_TOOL=mini measures it) */
-const PLAYER = { MAX_J: 60, MAX_L: 20, RESERVE: 0, TOOL: (process.env.PLAYER_TOOL === 'mini' ? 'mini' : 'stop') as 'mini' | 'stop' };
+/** the player's junction tool: a mini-roundabout (T195: since a mini keeps its corner lots, lots/lots.ts lotRingClear, it is the lever that
+ *  pays: seeds 1-3 at year 20 2,183 / 5,541, 1,931 / 5,065, 1,963 / 5,008 lots / residents, trips 3.18x / 2.93x / 2.85x ideal at season 20
+ *  against the no-player 3.44x / 3.17x / 2.96x, for $315,000-391,500, the treasury never under $408,742). PLAYER_TOOL=stop measures the all-way
+ *  stop (T184: $58-76k, the bands reached, but the jam barely moves: 3.65x / 3.12x / 3.06x) */
+const PLAYER = { MAX_J: 60, MAX_L: 20, RESERVE: 0, TOOL: (process.env.PLAYER_TOOL === 'stop' ? 'stop' : 'mini') as 'mini' | 'stop' };
 /** the scripted course and success of season k (1-based): holes 2, then 9 in seasons 2-5, 18 from 6; success 1.0, then 1.2 from season 3 */
 const holesIn = (k: number) => (k <= 1 ? 2 : k <= 5 ? 9 : 18), successIn = (k: number) => (k <= 2 ? 1 : 1.2);
 
