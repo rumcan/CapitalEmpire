@@ -2,7 +2,7 @@
 // RAIL, which the rail and the flyouts read): every tool's key appears on it exactly once, a locked tool dimmed with its lock's reason, laid
 // out as the menus are (the rail, Course, Town, then the camera, speed, views and the keys that work anywhere), and in the lot lab the lab's
 // own keys under their heading. The number keys open the rail's groups in order, except where a tool already uses them (the Holes brush's
-// surfaces 1-7, the town's Build its road classes 1-6). npm test (bundled by esbuild, run by node --test; the sheet renders with react-dom/server).
+// surfaces 1-8, the town's Build its road classes 1-6). npm test (bundled by esbuild, run by node --test; the sheet renders with react-dom/server).
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -138,14 +138,16 @@ describe('the number keys (T202)', () => {
     assert.equal(rail.rows.find(r => r.keys === '6')!.what, 'Bulldoze', 'Bulldoze has no flyout: its number picks it');
     assert.equal(rail.rows.find(r => r.keys === '3')!.what, 'the Facilities menu', 'T206: Facilities in Decoration\'s place');
   });
-  it('2. a tool that uses them keeps them: Holes its surfaces (1-7), the town\'s Build its road classes (1-6); elsewhere they open the groups', () => {
+  it('2. a tool that uses them keeps them: Holes its surfaces (1-8), the town\'s Build its road classes (1-6); elsewhere they open the groups', () => {
     for (const n of [1, 2, 3, 4, 5, 6]) {
       for (const t of ['select', 'bulldoze', 'junction', 'lane', 'paint', 'props', 'path', 'buildings', 'greenkeeping', 'park', 'bus', 'toll'] as Tool[]) assert.deepEqual(numberKeyUse(t, n), { k: 'group', i: n - 1 }, `${t} ${n}`);
       assert.deepEqual(numberKeyUse('road', n), { k: 'class', i: n - 1 });
       assert.deepEqual(numberKeyUse('course', n), { k: 'surface', i: n - 1 });
     }
     assert.deepEqual(numberKeyUse('course', 7), { k: 'surface', i: 6 }, 'the seventh surface');
-    assert.equal(BRUSH_PRESETS.length, 7, 'seven surfaces');
+    assert.deepEqual(numberKeyUse('course', 8), { k: 'surface', i: 7 }, 'T222: the eighth surface, the Waste area');
+    assert.equal(numberKeyUse('course', 9), null, 'no ninth');
+    assert.equal(BRUSH_PRESETS.length, 8, 'eight surfaces');
     assert.equal(numberKeyUse('select', 7), null, 'no seventh group');
     assert.equal(numberKeyUse('road', 7), null);
     assert.equal(numberKeyUse('select', 0), null);

@@ -27,7 +27,7 @@ export interface PaintArea { id: number; pts: number[]; tex: PaintTex; scale: nu
 /** an area's draw order on the ground (higher draws over lower): the player's order, else its brush layer's band and then its id (the order made) */
 export const drawZ = (a: { order?: number; kind?: BrushKind; id: number }) => a.order ?? (a.kind ? BRUSH_LAYER[a.kind] * 1e6 : 0) + a.id;
 /** the golf brush's kinds: the areas a stroke paints (BRUSH_PRESETS) */
-export type BrushKind = 'rough' | 'water' | 'fairway' | 'tee' | 'bunker' | 'green' | 'path';
+export type BrushKind = 'rough' | 'water' | 'fairway' | 'tee' | 'bunker' | 'green' | 'path' | 'waste';
 /** the save tuple: [tex, scale, angle, border, btex, pts, radius, tone, toneAmt, tint, hole, kind, plantKind, plantedMonth, bscale, bangle, btone, btoneAmt, btint];
  *  elements 6 to 9 are optional on load (older saves have no radius, and none has no tone: they load sharp and untoned); 10 and 11 (the hole and the brush kind) are
  *  written when anything after them is (as 0 and '' when absent, no tag on load); 12 and 13 (seed or sod, the month) when the area has a plantKind or a border style
@@ -37,7 +37,7 @@ export type BrushKind = 'rough' | 'water' | 'fairway' | 'tee' | 'bunker' | 'gree
  *  before it is written too); toTuple writes ten, twelve, fourteen, nineteen, twenty-three, twenty-four or twenty-five */
 export type PaintTuple = [string, number, number, number, string, number[], number?, number?, number?, string?, number?, string?, string?, number?, number?, number?, number?, number?, string?, string?, number?, number?, number?, (number | null)?, number?];
 /** the draw order layer of each brush kind (a patch's z is layer * 1e6 + id, so a later kind paints over an earlier one) */
-export const BRUSH_LAYER: Record<BrushKind, number> = { rough: 1, water: 2, fairway: 3, tee: 4, bunker: 5, green: 6, path: 7 };
+export const BRUSH_LAYER: Record<BrushKind, number> = { rough: 1, water: 2, fairway: 3, tee: 4, bunker: 5, green: 6, path: 7, waste: 5 };
 const BRUSH_KIND_IDS = new Set<string>(Object.keys(BRUSH_LAYER));
 /** a tile box [x0, y0, x1, y1] */
 export type PaintBox = [number, number, number, number];
@@ -329,6 +329,9 @@ export const BRUSH_PRESETS: { kind: BrushKind; name: string; r: number; style: O
   { kind: 'bunker', name: 'Bunker', r: 2, style: clampStyle({ ...DEFAULT_STYLE, tex: S('bunker', 'bunkerSand'), border: 2, btex: S('rough', 'golfRough') }) },
   { kind: 'water', name: 'Water', r: 4, style: clampStyle({ ...DEFAULT_STYLE, tex: S('water', 'waterDark'), border: 2, btex: 'dirt' }) },
   { kind: 'path', name: 'Cart path', r: 1, style: clampStyle({ ...DEFAULT_STYLE, tex: S('path', 'asphalt'), border: 0 }) },
+  // T222 (the owner, 2026-10-27: "add desert as a waste bunker in the course"): the Waste area, the course grid's waste surface (the desert, Painted ›
+  // Waste area sand). Last, so the keys 1-7 stay as they were (it is key 8); priced like a bunker (golf/costs.ts) and played as sand (golf/play)
+  { kind: 'waste', name: 'Waste area', r: 3, style: clampStyle({ ...DEFAULT_STYLE, tex: S('waste', 'wasteSand'), border: 0 }) },
 ];
 
 /** the textures the Course tool's brushes lay (fills and borders): the ground workers make them ahead when the tool opens (T168) */

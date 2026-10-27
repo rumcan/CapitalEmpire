@@ -70,7 +70,7 @@ export function escapeLadder(l: EscLadder): EscStep {
 export type NumberKeyUse = { k: 'surface' | 'class' | 'group'; i: number };
 export function numberKeyUse(uiTool: Tool, n: number): NumberKeyUse | null {
   if (!(n >= 1 && n <= 9) || !Number.isInteger(n)) return null;
-  if (uiTool === 'course') return n <= 7 ? { k: 'surface', i: n - 1 } : null;
+  if (uiTool === 'course') return n <= 8 ? { k: 'surface', i: n - 1 } : null; // T222: the eighth surface is the Waste area
   if (uiTool === 'road') return n <= 6 ? { k: 'class', i: n - 1 } : null;
   return n <= 6 ? { k: 'group', i: n - 1 } : null;
 }

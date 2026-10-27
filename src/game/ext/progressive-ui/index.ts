@@ -16,7 +16,7 @@ export type UiToolId = 'select' | 'road' | 'lane' | 'downgrade' | 'paint' | 'cou
 export type GolfChipId = 'courseStats' | 'land' | 'holes' | 'event' | 'skipTournament' | 'grass';
 
 /** course builder brush surface kinds matching BrushKind in src/game/paint.ts */
-export type CourseBrushId = 'tee' | 'fairway' | 'green' | 'bunker' | 'water' | 'rough' | 'path';
+export type CourseBrushId = 'tee' | 'fairway' | 'green' | 'bunker' | 'water' | 'rough' | 'path' | 'waste';
 
 /** fine controls that live one level down unless "Show every tool now" is on */
 export type FineControlId = 'snapToggle' | 'pieceAngle' | 'pieceScale' | 'heightBrush' | 'surfaceTone' | 'customStyle';
@@ -146,9 +146,9 @@ export const TOOL_GROUP: Readonly<Partial<Record<UiToolId, RailGroupId>>> = Obje
 /** the stage each top-bar chip shows at: the course stats from the start; skip and the grass with the first hole; the pins and tees, the Event
  *  catalogue and Land with the town (as before T117, so the top bar does not grow at stage 2) */
 export const CHIP_STAGE: Readonly<Record<GolfChipId, OnboardingStage>> = Object.freeze({ courseStats: 1, skipTournament: 2, grass: 2, holes: 3, event: 3, land: 3 });
-/** the stage each course brush opens at: Shape by hand's six surfaces at stage 2 (stage 1 is New hole only); the painted cart path, which the
+/** the stage each course brush opens at: Shape by hand's surfaces at stage 2 (stage 1 is New hole only; T222 added the Waste area); the painted cart path, which the
  *  Paths tool replaced, at stage 3 */
-export const BRUSH_STAGE: Readonly<Record<CourseBrushId, OnboardingStage>> = Object.freeze({ fairway: 2, green: 2, tee: 2, rough: 2, bunker: 2, water: 2, path: 3 });
+export const BRUSH_STAGE: Readonly<Record<CourseBrushId, OnboardingStage>> = Object.freeze({ fairway: 2, green: 2, tee: 2, rough: 2, bunker: 2, water: 2, path: 3, waste: 2 });
 /** the course path classes the stage holds back: the walking and dirt paths and the gravel drive are open from the start, the cement slabs with
  *  the first hole (the paved ones and the avenues wait for their tour level: network.ts courseTierNeeded) */
 export const COURSE_CLASS_STAGE: Readonly<Record<string, OnboardingStage>> = Object.freeze({ 'cart-slab': 2 });
