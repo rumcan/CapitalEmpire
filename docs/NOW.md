@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-27 18:30)
+## START HERE (kept current by the lead; last updated 2026-10-27 18:45)
 
 **Paste-ready start prompts for every role are in `docs/START-PROMPTS.md`:** the lead, a coding ticket, and the other sessions in this
 repo. The weekly usage cap is close (2026-10-26), so any chat may stop at any moment.
@@ -65,12 +65,13 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
   merged). The 12 last 3D people finished on 2026-10-26 and are committed on `art/people-ground-20261024` (0bd25f4): T203 #531.
   Housekeeping: T174-T177, T179, T184 closed (merged earlier). The 5174 auto-updater ran 5 times over; the owner approved stopping 4
   (one left, bash PID 31220). Still listening, not ours: a stray vite on 5189 (an agent's, gone since 07:50) and the dead lot lab's 5241.
-- **Next, in order, when an agent lands:** **T205 #538** (the owner, 15:45: the hole card's Edit hole does nothing, the hole badge does not read as
+- **Next, in order, when an agent lands:** **T216 #563** (the owner, 18:35: zoomed out, bushes vanish but their shadows stay; the cast,
+  contact and vector shadow passes skip the sprites' 7-px cull: root cause and plan in the issue; small) → **T205 #538** (the owner, 15:45: the hole card's Edit hole does nothing, the hole badge does not read as
   Edit hole, ugly scrollbars and a cut-off status line in Course › Holes; reproduce the dead Edit first; the issue and its comment have the design)
   → **T206 #540** (the owner, 15:55-16:50: a Facilities group on the rail with Practice tools of their own, putting green and chipping
   green and bunker, placed as a whole, not the hole brushes; Plants (trees, bushes, flowers) and Decoration under Facilities; Course ▸ Cart
-  paths & roads, the roads on the player's property, directly below Buildings; range work: Opus high) → **T215 #561** (the owner, 18:25: a camera specular layer, shine strongest at the screen's centre fading to the edges, gloss on water
-  and roads; a prototype with a verdict behind `__game.specCam`, built like T186's shade mask) → **T203 #531** the last
+  paths & roads, the roads on the player's property, directly below Buildings; range work: Opus high) → **T215 #561** (the owner, 18:25: a camera specular layer, strongest at the screen's centre fading to the edges; **phase 1 only the
+  street lamps' reflection pools**, moved from the baked road into a T186-style mask lit on the GPU; a prototype with a verdict) → **T203 #531** the last
 - **Golf play's tickets (the owner, 18:05: "do we have tickets for playing golf yet?"; play P1-P4 is on main from #258), after T203, in this
   order:** T209 #554 the owner's round resumes after a reload → T210 #555 the results wait for the last group → T211 #556 pace of play →
   **T208 #553 everyday golf** (golfers play your course every day, pay green fees; today it is only a yearly number) → T212 #557 putt,
