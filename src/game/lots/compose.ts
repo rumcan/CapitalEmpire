@@ -37,6 +37,7 @@ import REMOVED from '../../../scripts/assets/removed.json';
 import { OWNER_SCALE } from './scales';
 import { LIBRARY } from '../library';
 import { drawnAsStandIn } from '../newart';
+import { GAS_SHOP, GAS_SHOP_FALLBACK, WHEEL_STOP, gasPlan, isCanopy, isOpenStructure, matchBays } from './gas-station';
 import { LATEST, LOT_MODELS } from './lot-models';
 export { isCarPark, type Composition, type ComposeState, type LotGeom, type Placed, type PresetDrop } from './compose-core';
 
@@ -360,7 +361,7 @@ function fromPreset(B: Build, lot: LotGeom, st: ComposeState, p: { preset: LotPr
     // a car's scale is its owner size (ownerScaleOf), the engine draws it at CAR_SCALE times that
     const s = q.scale * ownerScaleOf(q.id);
     // a whole preset's prop in front of the lot is a street item (the verge: done() keeps it there, as it keeps a procedural one)
-    const item = B.atW({ id: t.id, s, flip: t.flip, h: footprintOf(t.id, s, t.flip) }, toWorld(f, q.x, q.y), { plant: it.kind === 'tree' || it.kind === 'bush', from: { preset: preset.id, prop: fit.from[k]! }, street: preset.whole === true && q.y < 0, ...(fit.standIn?.[k] ? { standIn: fit.standIn[k] } : {}), ...(t.diag ? { diag: true } : {}) });
+    const item = B.atW({ id: t.id, s, flip: t.flip, h: footprintOf(t.id, s, t.flip) }, toWorld(f, q.x, q.y), { plant: it.kind === 'tree' || it.kind === 'bush', ...(fit.from[k]! >= 0 ? { from: { preset: preset.id, prop: fit.from[k]! } } : { paved: true }), street: preset.whole === true && q.y < 0, ...(fit.standIn?.[k] ? { standIn: fit.standIn[k] } : {}), ...(t.diag ? { diag: true } : {}) });
     if (item && !item.fence && !item.wheel) ups++;
     if (isBuilding(it)) { const fp = footprintOf(t.diag ? t.id : q.id, s, false), hw = t.diag ? (fp[2] - fp[0]) / (2 * Math.SQRT2) : (q.view % 2 ? fp[3] - fp[1] : fp[2] - fp[0]) / 2; if (hw > big) { big = hw; main = [q.x - hw, q.x + hw]; } }
   });
@@ -418,13 +419,30 @@ const FRONTAGE = 2.5;
 /** whether a lot of the other uses draws generated (its frozen preset's base and the generator's items): its group on in the shipped model */
 const groupLot = (p: LotPreset) => { const g = groupOf(p.use); return GENERATED && p.use !== 'res' && frozenAny(p) && !!g && !!shippedLay().groups[g]; };
 /** a fitted preset of the other uses' base (groupBaseItem: its buildings, fences, cars, car park furniture and street items, and every patch),
- *  and the index of its main building, the widest (-1: none: a park) */
-function groupBase(p: { preset: LotPreset; fit: Fitted; frame: PresetFrame }): { base: { preset: LotPreset; fit: Fitted; frame: PresetFrame }; main: number } {
+ *  and the index of its main building, the widest that is no open structure (-1: none: a park). T198: a canopy, carport or shelter is never the
+ *  main building; a gas station (a canopy and no other building) is laid as one (gas-station.ts gasPlan: the canopy on its forecourt, the gas
+ *  shop as the main building, its bays, walk and service items); the wheel stops and parked cars are matched to their bays (matchBays) */
+export function groupBase(p: { preset: LotPreset; fit: Fitted; frame: PresetFrame }): { base: { preset: LotPreset; fit: Fitted; frame: PresetFrame }; main: number; gas?: true } {
   const half = frameHalf(p.frame), keep: number[] = [];
-  let k = -1, area = 0;
-  p.fit.props.forEach((q, i) => { if (!groupBaseItem(q.id, q.y)) return; keep.push(i); const it = BY.get(q.id); if (!it || !isBuilding(it)) return; const h = half(q), a = h.ha * h.hb; if (a > area) { area = a; k = keep.length - 1; } });
-  const fit: Fitted = { ...p.fit, props: keep.map(i => p.fit.props[i]!), from: keep.map(i => p.fit.from[i]!), decals: [], ...(p.fit.standIn ? { standIn: keep.map(i => p.fit.standIn![i]) } : {}) };
-  return { base: { ...p, fit }, main: k };
+  p.fit.props.forEach((q, i) => { if (groupBaseItem(q.id, q.y)) keep.push(i); });
+  const widest = (props: readonly PresetProp[]) => { let k = -1, area = 0; props.forEach((q, i) => { const it = BY.get(q.id); if (!it || !isBuilding(it) || isOpenStructure(q.id)) return; const h = half(q), a = h.ha * h.hb; if (a > area) { area = a; k = i; } }); return k; };
+  const stand = p.fit.standIn;
+  // T198: a gas station: its street items (in front of the lot) stay, the rest is the plan's
+  const canopy = keep.map(i => p.fit.props[i]!).find(q => q.y >= 0 && isCanopy(q.id));
+  if (canopy && widest(keep.map(i => p.fit.props[i]!)) < 0) {
+    const drive = p.fit.patches.find(a => a.kind === 'drive'), dx = drive ? drive.pts.filter((_, j) => j % 2 === 0) : [], driveLeft = dx.length ? (Math.min(...dx) + Math.max(...dx)) / 2 < p.frame.w / 2 : false;
+    const shops = [GAS_SHOP, ...GAS_SHOP_FALLBACK].filter(id => !removedOf(id));
+    const plan = gasPlan(p.frame.w, p.frame.d, canopy, shops, half, { fill: p.preset.state === 'upgraded' ? 0.75 : 0.5, seed: fnv(`${p.preset.id}#${p.frame.o.x.toFixed(1)},${p.frame.o.y.toFixed(1)}`), driveLeft });
+    if (plan) {
+      const street = keep.filter(i => p.fit.props[i]!.y < 0);
+      const fit: Fitted = { ...p.fit, props: [...street.map(i => p.fit.props[i]!), ...plan.props], from: [...street.map(i => p.fit.from[i]!), ...plan.props.map(() => -1)], patches: plan.patches, decals: [], ...(stand ? { standIn: [...street.map(i => stand[i]), ...plan.props.map(() => undefined)] } : {}) };
+      return { base: { ...p, fit }, main: street.length + plan.main, gas: true };
+    }
+  }
+  // the wheel stops only with their bays, the parked cars inside theirs (T198)
+  const m = matchBays(keep.map(i => p.fit.props[i]!), p.fit.patches, id => kindOfId(id) === 'car'), idx = m.keep.map(j => keep[j]!);
+  const fit: Fitted = { ...p.fit, props: m.props, from: idx.map(i => p.fit.from[i]!), decals: [], ...(stand ? { standIn: idx.map(i => stand[i]) } : {}) };
+  return { base: { ...p, fit }, main: widest(m.props) };
 }
 
 /** 32-bit FNV-1a of a string */
@@ -439,7 +457,7 @@ function houseBase(p: { preset: LotPreset; fit: Fitted; frame: PresetFrame }): {
   // widest is the house (the generator's size class and sectors read it)
   const half = frameHalf(p.frame), keep: number[] = [];
   let k = -1, area = 0;
-  p.fit.props.forEach((q, i) => { const it = BY.get(q.id); if (!it || !isBuilding(it)) return; keep.push(i); const h = half(q), a = h.ha * h.hb; if (a > area) { area = a; k = keep.length - 1; } });
+  p.fit.props.forEach((q, i) => { const it = BY.get(q.id); if (!it || !isBuilding(it)) return; keep.push(i); if (isOpenStructure(q.id)) return; const h = half(q), a = h.ha * h.hb; if (a > area) { area = a; k = keep.length - 1; } });
   // the stand-in marks (T167) follow the props kept, index for index
   const fit: Fitted = { ...p.fit, props: keep.map(i => p.fit.props[i]!), from: keep.map(i => p.fit.from[i]!), decals: [], ...(p.fit.standIn ? { standIn: keep.map(i => p.fit.standIn![i]) } : {}) };
   return { base: { ...p, fit }, house: k };
@@ -492,11 +510,31 @@ export function layoutWith(lot: { w: number; d: number }, p: { preset: LotPreset
       ...p.fit.patches.filter(a => a.kind === 'yard' && PAVED.has(a.tex)).map(a => ({ box: inner(box(a.pts)), but: plants })),
       ...(house ? [{ box: [house[0], house[1] - FRONTAGE, house[2], house[1]] as Box, but: notTree }] : []),
     ];
-    return generateLayout({ lot: sl, cls, model: run.model, taken, pools: run.pools, half, seed, avoid: off, keep, kinds, minOne: false, ...(run.pairs ? { pairs: run.pairs } : {}), ...(run.places ? { places: { t: run.places, lot: placeLot } } : {}) });
+    return offPaving(generateLayout({ lot: sl, cls, model: run.model, taken, pools: run.pools, half, seed, avoid: off, keep, kinds, minOne: false, ...(run.pairs ? { pairs: run.pairs } : {}), ...(run.places ? { places: { t: run.places, lot: placeLot } } : {}) }), p, half);
   }
   const kinds = M.kinds.get(state);
-  return generateLayout({ lot: sl, cls, model: M.model, taken, pools: kindPools(), half, seed, avoid, keep, ...(M.pairs ? { pairs: M.pairs } : {}), ...(kinds ? { kinds } : {}), ...(M.places ? { places: { t: M.places, lot: placeLot } } : {}) });
+  return offPaving(generateLayout({ lot: sl, cls, model: M.model, taken, pools: kindPools(), half, seed, avoid, keep, ...(M.pairs ? { pairs: M.pairs } : {}), ...(kinds ? { kinds } : {}), ...(M.places ? { places: { t: M.places, lot: placeLot } } : {}) }), p, half);
 }
+/** how close to a building, or to a paved yard's edge, a generated prop or car may stand on the paving (tiles, T198) */
+export const PAVING_NEAR = 1.2;
+/** T198 (the owner's gas station: dumpsters and boxes standing mid-lot): the generator's items kept off open paving: a prop or a car on a paved
+ *  yard (asphalt, concrete, slabs, paving) stays only along the yard's edges or by a building (PAVING_NEAR); a wheel stop is never generated
+ *  (wheel stops only with their bays: the base's, matchBays), and a generated car never touches a car park's bays (it would stand across their
+ *  lines). Plants and ground marks are as the generator laid them */
+function offPaving(items: LaidItem[], p: { fit: Fitted }, half: (q: PresetProp) => { ha: number; hb: number }): LaidItem[] {
+  const yards = p.fit.patches.filter(a => a.kind === 'yard' && PAVED.has(a.tex)).map(a => boxOfPts(a.pts));
+  const builds = p.fit.props.filter(q => { const it = BY.get(q.id); return !!it && isBuilding(it); }).map(q => { const h = half(q); return [q.x - h.ha, q.y - h.hb, q.x + h.ha, q.y + h.hb] as Box; });
+  const N = PAVING_NEAR, near = (b: Box, x: number, y: number) => x >= b[0] - N && x <= b[2] + N && y >= b[1] - N && y <= b[3] + N;
+  const open = (x: number, y: number) => yards.some(b => x > b[0] + N && x < b[2] - N && y > b[1] + N && y < b[3] - N) && !builds.some(b => near(b, x, y));
+  const parks = p.fit.patches.filter(a => a.kind === 'lot').map(a => boxOfPts(a.pts));
+  const onBays = (it: LaidItem) => { const h = half({ id: it.id, x: it.x, y: it.y, scale: 1, view: 0 }); return parks.some(b => it.x + h.ha > b[0] && it.x - h.ha < b[2] && it.y + h.hb > b[1] && it.y - h.hb < b[3]); };
+  // the partners' indices follow the items kept (a partner dropped: none)
+  const at = new Map<number, number>(), out: LaidItem[] = [];
+  items.forEach((it, i) => { if (it.id === WHEEL_STOP || ((it.kind === 'prop' || it.kind === 'car') && open(it.x, it.y)) || (it.kind === 'car' && onBays(it))) return; at.set(i, out.length); out.push(it); });
+  return out.map(it => { if (it.with === undefined) return it; const w = at.get(it.with); const { with: _w, ...rest } = it; return w === undefined ? rest : { ...rest, with: w }; });
+}
+/** a point list's bounding box */
+const boxOfPts = (pts: readonly number[]): Box => { let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity; for (let i = 0; i + 1 < pts.length; i += 2) { x0 = Math.min(x0, pts[i]!); x1 = Math.max(x1, pts[i]!); y0 = Math.min(y0, pts[i + 1]!); y1 = Math.max(y1, pts[i + 1]!); } return [x0, y0, x1, y1]; };
 /** the items the generator lays on a lot the game generates (a built house lot of a frozen preset; preset frame, tiles), as compose draws them
  *  (but the cars a decline thins): the exam sheet and the tests read them; null for any other lot */
 export function lotLayout(lot: LotGeom, st: ComposeState): LaidItem[] | null {
@@ -504,7 +542,7 @@ export function lotLayout(lot: LotGeom, st: ComposeState): LaidItem[] | null {
   const p = lotPreset(lot, st), state = stateOf(st.level, st.decline);
   if (!p || !state || p.preset.use === 'farm' || p.preset.whole) return null;
   // T169: a lot of the other uses whose group the model generates
-  if (presetUse(st) !== 'res') { if (!groupLot(p.preset)) return null; const gb = groupBase(p); return layoutOf(lot, gb.base, state, gb.main, groupOf(p.preset.use)!); }
+  if (presetUse(st) !== 'res') { if (!groupLot(p.preset)) return null; const gb = groupBase(p); return gb.gas ? [] : layoutOf(lot, gb.base, state, gb.main, groupOf(p.preset.use)!); }
   if (!frozenHouse(p.preset)) return null;
   const hb = houseBase(p);
   return layoutOf(lot, hb.base, state, hb.house);
@@ -643,7 +681,8 @@ export function compose(lot: LotGeom, st: ComposeState, drops?: PresetDrop[]): C
     streetItems(B, use, d);
     B.marksIn('leaves', 0.8, 0.8, B.W - 0.8, B.D - 0.8, 1 + Math.floor(B.r() * 2));
     if (use === 'ind') chainRing(B); else edge();
-    generatedItems(B, lot, st, gb.base, state, gb.main, groupOf(p.preset.use)!);
+    // T198: a gas station is laid whole by its plan (its forecourt clear, no tree over its canopy): the generator lays nothing on it
+    if (!gb.gas) generatedItems(B, lot, st, gb.base, state, gb.main, groupOf(p.preset.use)!);
     B.cap = Infinity;
   }
   else {
