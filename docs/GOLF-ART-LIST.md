@@ -64,7 +64,9 @@ Sizes are real-world metres (1 game unit = 1 m, a map tile is 2 m); the pixels a
 **B. One view.**
 > ONE subject, centred, one view only, on a SQUARE image on a FLAT PURE MAGENTA background (#FF00FF, RGB 255,0,255: one uniform colour edge to edge, no gradient, floor, texture, vignette or shadow on it), to be keyed out to transparency afterwards; the subject itself contains NO magenta, pink or purple and has a crisp outline. Reference 1 is the only visual-theme authority: match its detailed illustrated miniature style. Fixed parallel 2:1 isometric camera, verticals vertical. Early autumn dusk: low warm sunlight from SCREEN UPPER RIGHT, a tiny soft contact shadow toward SCREEN LOWER LEFT; a lamp, if it has one, warmly lit. The year is 1985. No people, no ground tile, lawn, backdrop, checkerboard, caption or frame. Leave at least 15% clear space on every side. No lettering.
 
-**C. Top-down ground picture.**
+**C. Top-down ground picture.** For ground TEXTURES (grass, sand, soil, the greenkeeping conditions) do not use this block: follow
+[art/GROUND-TEXTURE-METHOD.md](art/GROUND-TEXTURE-METHOD.md), the owner's method (paint the layer into a game screenshot, slice it, clean it,
+paint four tiles; the generator never knows it is a texture). Block C is for decals and one-off pictures (mats, target greens, helipads).
 > A ground picture seen from STRAIGHT ABOVE (orthographic top-down, no perspective, no isometric tilt), filling the whole square canvas edge to edge. Detailed hand-painted illustrated style matching reference 1's grass and paving. Soft even daylight with a gentle warm light from the upper right; no cast shadows except tiny ones under small objects, toward the lower left. No objects standing up out of the ground, no people, no lettering, no frame. No visible repeating pattern: every patch of it looks different.
 
 **D. Eight facings.**
