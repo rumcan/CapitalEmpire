@@ -2471,3 +2471,26 @@ With #442's traffic, a range town gridlocked from about season 7-8. I measured w
   - trips at most 3x their ideal time;
   - at most 45% of zones over the line;
   - the busiest county junction at most 50%, from 1,000 residents.
+
+**range:gate passes on seeds 1-3 with traffic.** Every check, a to l, is ok.
+
+| Seed | Year 5 lots / residents | Year 10 lots / residents | Year 20 lots / residents | Trips over ideal, max | Zones over 1.8, max | Busiest county junction (1,000+ residents) |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | 287 / 745 | 855 / 2,291 | 2,401 / 6,695 | 2.58x | 19% | 13% |
+| 2 | 243 / 614 | 709 / 1,932 | 2,158 / 6,181 | 2.51x | 40% | 38% |
+| 3 | 239 / 622 | 715 / 1,879 | 2,050 / 5,743 | 1.78x | 2% | 24% |
+
+- **Paving.** Seed 1 paved 3,560 street tiles by year 20. Its budget at year 20 is 1.5 x 2,401 = 3,601, so it used nearly all of it.
+- **Paving does not lower the trips-over-ideal number.** With paving, seed 1's late seasons ran 2.4-2.6x; without it, 2.06-2.09x. A paved street's higher speed lowers the trip's ideal time, while the delay at junctions stays. Growth was about the same either way (6,695 against 6,631 residents).
+- **The fixture, regenerated.** `npm run range:fixture` now gives 2,401 built lots, 6,695 residents and 89 paved street segs; 36 KB gzipped. save-fixtures passes 9/9.
+- **The bench**, every stage under budget, at 57 fps:
+
+| Scene and stage | CPU avg / p95 ms | Max instances | Cars |
+| --- | --- | --- | --- |
+| `&fixture=range20`, 08:36, 30% | 0.76 / 1.4 | 2,426 | 163 |
+| `&fixture=range20`, 8% | 1.01 / 1.7 | 10,934 | 178 |
+| `&start=range` 17% | 0.54 / 1.0 | 626 | 0 |
+| `&start=range` 4.5% | 0.46 / 0.8 | 3,868 | 0 |
+
+  The fixture scene's sim tick averaged 0.53 ms, 2.4 ms at worst.
+- **Screenshots** of year 10 and year 20 at 08:47, at 8% and 30%, are in E:/ClaudeTemp/T098/shots/ (`t178-year10-busy-*`, `t178-year20-busy-*`). Year 10 has 52 cars moving, year 20 has 155.
