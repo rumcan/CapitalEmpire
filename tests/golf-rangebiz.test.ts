@@ -18,21 +18,24 @@ const start = { tier: 1, exits: 2, residents: 0 };
 test('a new range: 4 bays, $6, nothing bought, no counts; the save normalizes and migrates', () => {
   const d = defaultRangeBiz();
   assert.deepEqual(d.owned, []); assert.equal(d.price, 6); assert.equal(rangeStats(d).bays, START_BAYS); assert.equal(d.season.takings, 0);
-  assert.deepEqual(normalizeRangeBiz(undefined), d);
-  assert.deepEqual(normalizeRangeBiz('junk'), d);
-  const n = normalizeRangeBiz({ owned: ['bays12', 'bays8', 'nope', 'lights', 'lights'], price: 40, season: { golfers: 3, takings: -5 }, paths: true });
+  // T223: a new range starts in the desert; a range saved before T223 (none, or no desert flag) keeps its grass
+  assert.equal(d.desert, true); assert.deepEqual(normalizeRangeBiz(JSON.parse(JSON.stringify(d))), d);
+  assert.deepEqual(normalizeRangeBiz(undefined), { ...d, owned: ['teeturf', 'grass'] });
+  assert.deepEqual(normalizeRangeBiz('junk'), { ...d, owned: ['teeturf', 'grass'] });
+  const n = normalizeRangeBiz({ owned: ['bays12', 'bays8', 'nope', 'lights', 'lights'], price: 40, season: { golfers: 3, takings: -5 }, paths: true, desert: true });
   assert.deepEqual(n.owned, ['bays8', 'lights'], 'an unknown upgrade, a duplicate and one bought before its prerequisite are dropped');
   assert.equal(n.price, PRICE_MAX); assert.equal(n.season.golfers, 3); assert.equal(n.season.takings, 0); assert.equal(n.paths, true);
   assert.equal(normalizeRangeBiz({ price: 1 }).price, PRICE_MIN);
-  // golf/mode.ts: a range start's save without a range gets the starting range; with one keeps it; an old start's save gets none
+  // golf/mode.ts: a range start's save without a range gets the starting range (grassed: it was saved before T223); with one keeps it; an old
+  // start's save gets none
   const base = { v: 1, tier: 1, rep: 0, town: { x: 0, y: 0 }, course: [0, 0, 10, 10], parcel: [0, 0, 10, 10], dir: 2, tees: [], pins: [], aims: [], clubhouse: { x: 0, y: 0 } } as unknown as GolfSave;
-  assert.deepEqual(normalizeGolfSave({ ...base, start: 'range' })!.range, d);
+  assert.deepEqual(normalizeGolfSave({ ...base, start: 'range' })!.range, { ...d, owned: ['teeturf', 'grass'] });
   assert.deepEqual(normalizeGolfSave(JSON.parse(JSON.stringify({ ...base, start: 'range', range: withPrice(withUpgrade(d, 'lights'), 9) })))!.range!.owned, ['lights']);
   assert.equal(normalizeGolfSave(base)!.range, undefined);
 });
 
 test('the upgrades: their order, their costs, and what each does to the stats', () => {
-  assert.equal(RANGE_UPGRADES.length, 13, 'the eight of Phase 1, the four World of Golf extras (T133: golf-range-extras.test.ts) and the car park building (T146: golf-range-parking.test.ts)');
+  assert.equal(RANGE_UPGRADES.length, 15, 'the eight of Phase 1, the four World of Golf extras (T133: golf-range-extras.test.ts), the car park building (T146: golf-range-parking.test.ts) and the desert start\'s two ground upgrades (T223: golf-range-desert.test.ts)');
   const d = defaultRangeBiz();
   assert.equal(upgradeWhy(d, 'bays12', 1e9), 'Build 8 hitting bays first');
   assert.match(upgradeWhy(d, 'proshop', 1000), /Not enough money/);

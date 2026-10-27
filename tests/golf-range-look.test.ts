@@ -11,7 +11,7 @@ import type { Rect } from '../src/game/golf/mode';
 
 const plots: Record<0 | 1 | 2 | 3, Rect> = { 0: [500, 600, 70, 150], 1: [900, 300, 150, 70], 2: [200, 200, 70, 150], 3: [1200, 1300, 150, 70] };
 const FACINGS = [0, 1, 2, 3] as const;
-const ALL: RangeUpgradeId[] = ['bays8', 'bays12', 'bays24', 'targets', 'covered', 'lights', 'dispenser', 'proshop'];
+const ALL: RangeUpgradeId[] = ['bays8', 'bays12', 'bays24', 'targets', 'covered', 'lights', 'dispenser', 'proshop', 'teeturf', 'grass'];
 const saves: [string, RangeBizSave][] = [['a new range', defaultRangeBiz()], ['every upgrade', ALL.reduce((s, id) => withUpgrade(s, id), defaultRangeBiz())]];
 
 /** a world point in the plot's own frame (u along the road, v away from it): plotPoint inverted */
@@ -64,8 +64,12 @@ test('the ground turns with the plot too: every patch the same in the plot frame
         }
       }
     });
-    assert.equal(sc[0]!.patches.filter(p => p.surf === 'outfield').length, 1, `${name}: one outfield`);
-    assert.ok(sc[0]!.patches.find(p => p.surf === 'outfield')!.mow, `${name}: the outfield carries its mowing stripes`);
+    // a new range's outfield is the desert (T223), a grassed one the mown outfield with its stripes
+    const grass = s.owned.includes('grass');
+    assert.equal(sc[0]!.patches.filter(p => p.surf === (grass ? 'outfield' : 'desert')).length, 1, `${name}: one outfield`);
+    assert.equal(sc[0]!.patches.filter(p => p.surf === (grass ? 'desert' : 'outfield')).length, 0, `${name}: no other outfield`);
+    if (grass) assert.ok(sc[0]!.patches.find(p => p.surf === 'outfield')!.mow, `${name}: the outfield carries its mowing stripes`);
+    else assert.ok(!sc[0]!.patches.find(p => p.surf === 'desert')!.mow, `${name}: the desert has no stripes`);
     assert.equal(sc[0]!.patches.filter(p => p.surf === 'target').length, sc[0]!.targets.length, `${name}: a target green under each flag`);
   }
 });
