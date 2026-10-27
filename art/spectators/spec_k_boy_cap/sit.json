@@ -1,0 +1,41 @@
+{
+  "id": "spectator:spec_k_boy_cap:sit",
+  "name": "spec_k_boy_cap sit",
+  "clip": "sit",
+  "heightMetres": 1.38,
+  "frameWidth": 160,
+  "frameHeight": 221,
+  "anchor": {
+    "x": 80,
+    "y": 211
+  },
+  "directions": [
+    "S",
+    "SW",
+    "W",
+    "NW",
+    "N",
+    "NE",
+    "E",
+    "SE"
+  ],
+  "frames": [
+    "sit1",
+    "sit2"
+  ],
+  "fps": 0.2,
+  "loop": true,
+  "times": [
+    0.3,
+    1
+  ],
+  "source": "art/spectators/spec_k_boy_cap",
+  "clips": {
+    "sit": "Armature|Chair_Sit_Idle_M|baselayer 10.70s, stride 10.30s, body turned 1 deg"
+  },
+  "seatHeightMetres": 0.34,
+  "seat": {
+    "x": 80,
+    "y": 173
+  }
+}
