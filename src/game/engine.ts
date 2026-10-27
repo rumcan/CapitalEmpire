@@ -117,7 +117,7 @@ import { applyCourseConsultantQuality, effectiveGrowInClockMonth, findGolfCard, 
 import type { CourseFacts } from './golf/tour';
 import { surfaceOfTex } from './golf/costs';
 import { inSentence, inTheWay, rectPoly, ringWhy, routeObstacles, structureObstacles, type Obstacle, type Structure } from './route-obstacles';
-import { judgeRing, rangePieceName, type RingProp, type RingVerdict } from './ring-clear';
+import { judgeRing, rangePieceName, ringGrows, type RingProp, type RingVerdict } from './ring-clear';
 import { isSecondTap, routeAct, type RouteInput, type Tap } from './route-input';
 import { buyAdjacentBlock, COURSE_LAND_MSG, blockOnRoad, blockOnWater, pointInLand, polyInParcels, type LandRoad, type ParcelLandClass } from './golf/parcels';
 import { BAND_LABEL, LandSale } from './golf/land-sale';
@@ -2884,10 +2884,10 @@ export class Game {
   private ringJudge(n: Node, t: NodeType, rl: 1 | 2 | 3, hs: number[] = n.arms.map(a => a.h), walk = Math.max(0, ...n.arms.map(a => a.walk))): RingVerdict<Prop> | null {
     if (t !== 'roundabout' && t !== 'mini') return null;
     const rb = t === 'roundabout' ? (n.arms.length >= 2 ? ringRadius(hs, rl) : 0) : (n.arms.length >= 3 ? Math.max(4, Math.max(...hs) + 1) : 0);
-    // a ring that does not grow takes in nothing new: the same type no bigger, or a mini inside the ring that stands (what it covers is covered now)
-    if (!(rb > 0) || (n.rb > 0 && (n.type === t || t === 'mini') && rb <= n.rb + 1e-6 && walk <= Math.max(0, ...n.arms.map(a => a.walk)) + 1e-6)) return null;
-    const name = t === 'roundabout' ? 'A roundabout' : 'A mini-roundabout';
-    return judgeRing({ x: n.x, y: n.y, rb, walk, kind: t, name, obstacles: this.ringObstacles(n), props: this.ringPropList(n, rb, walk, name), lots: this.traffic.lots.values() });
+    if (!(rb > 0)) return null;
+    const name = t === 'roundabout' ? 'A roundabout' : 'A mini-roundabout', now = n.rb > 0 ? { type: n.type, rb: n.rb, walk: Math.max(0, ...n.arms.map(a => a.walk)) } : null;
+    if (!ringGrows(now, t, rb, walk)) return null; // nothing new is covered: no judging
+    return judgeRing({ x: n.x, y: n.y, rb, walk, kind: t, name, obstacles: this.ringObstacles(n), props: this.ringPropList(n, rb, walk, name), lots: this.traffic.lots.values(), now });
   }
   /** the physical rules of a ring of type t (rl ring lanes) at node n, in the order they are told: what the ring takes in (ringJudge: a business, a car
    *  park, the range, an iconic place, a big prop refuse it), arms too short for it, another road in its circle. why: '' when it can be built */

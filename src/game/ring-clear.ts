@@ -19,7 +19,9 @@ export interface RingLot { key?: string; o: readonly number[]; u: readonly numbe
 export interface RingProp<P> { p: P; box: readonly [number, number, number, number]; refuse: string | null }
 /** a ring to judge: its centre, its outer radius rb and the widest arm's walk (the network's), the kind ('roundabout' keeps lots out, a 'mini' is
  *  a painted island and keeps none), its name in a refusal ("A roundabout"), the route obstacles of its class and the props and lots near it */
-export interface RingInput<P> { x: number; y: number; rb: number; walk: number; kind: 'roundabout' | 'mini'; name: string; obstacles: readonly Obstacle[]; props: Iterable<RingProp<P>>; lots: Iterable<RingLot> }
+export interface RingInput<P> { x: number; y: number; rb: number; walk: number; kind: 'roundabout' | 'mini'; name: string; obstacles: readonly Obstacle[]; props: Iterable<RingProp<P>>; lots: Iterable<RingLot>;
+  /** the ring that stands there now (its type, outer radius and widest walk), none for a plain junction: a ring that does not grow takes in nothing new */
+  now?: { type: string; rb: number; walk: number } | null }
 /** the verdict: why (the refusal, or ''), the outlines to draw red (polygons, x y pairs), the props that go, the built lots that go, their compensation ($)
  *  and the lots' outlines (to draw them amber: what the click takes) */
 export interface RingVerdict<P> { why: string; outline: number[][]; props: P[]; lots: RingLot[]; comp: number; lotOutlines: number[][] }
@@ -39,6 +41,12 @@ export function rangePieceName(key: string): string {
   if (/^(flag|board|mark)/.test(k)) return 'the range targets';
   if (/^(bench|bins-tee|trolley)/.test(k)) return 'the tee area';
   return 'the driving range';
+}
+
+/** whether a ring of kind, outer radius rb and widest walk would cover more than the ring that stands there (now): the same kind no bigger, or a mini
+ *  inside the ring that stands, covers only what is covered already (a ring re-laned down is free: it never meets a rule it already met) */
+export function ringGrows(now: { type: string; rb: number; walk: number } | null | undefined, kind: 'roundabout' | 'mini', rb: number, walk: number): boolean {
+  return !(now && now.rb > 0 && (now.type === kind || kind === 'mini') && rb <= now.rb + 1e-6 && walk <= now.walk + 1e-6);
 }
 
 /** the disc a ring covers: its outer edge and the widest arm's walk (the pavement round it) */
@@ -65,6 +73,7 @@ export function lotsInRing(lots: Iterable<RingLot>, x: number, y: number, rb: nu
  *  A refusal carries no lots and no price (nothing is taken) */
 export function judgeRing<P>(r: RingInput<P>): RingVerdict<P> {
   const none: RingVerdict<P> = { why: '', outline: [], props: [], lots: [], comp: 0, lotOutlines: [] };
+  if (!ringGrows(r.now, r.kind, r.rb, r.walk)) return none;
   const disc = ringDisc(r.x, r.y, r.rb, r.walk), o = inTheWayOfDisc(disc, r.obstacles);
   if (o) return { ...none, why: ringWhy(r.name, o.name ?? 'something'), outline: [[...o.outline]] };
   const props: P[] = [];
