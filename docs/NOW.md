@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-28 00:05)
+## START HERE (kept current by the lead; last updated 2026-10-28 00:15)
 
 **Paste-ready start prompts for every role are in `docs/START-PROMPTS.md`:** the lead, a coding ticket, and the other sessions in this
 repo. The weekly usage cap is close (2026-10-26), so any chat may stop at any moment.
@@ -73,11 +73,13 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
   merged). The 12 last 3D people finished on 2026-10-26 and are committed on `art/people-ground-20261024` (0bd25f4): T203 #531.
   Housekeeping: T174-T177, T179, T184 closed (merged earlier). The 5174 auto-updater ran 5 times over; the owner approved stopping 4
   (one left, bash PID 31220). Still listening, not ours: a stray vite on 5189 (an agent's, gone since 07:50) and the dead lot lab's 5241.
-- **Next, in order, when an agent lands:** T210 #555 the results wait for the last group → T211 #556 pace of play →
-  **T208 #553 everyday golf** (golfers play your course every day, pay green fees; today it is only a yearly number) → T212 #557 putt,
-  chip, tee-up and coach clips → T213 #558 caddies, carts, celebrations → T214 #559 club pros and memberships (plan first).
-  12 people in the game → **T112 #199** (merge #394 when the owner stops
-  5191) → **T149 #312** (waits for the owner's FAR-anchor choice) → **T199 #517** swamp (waits for swamp tiles) → the lists below.
+- **Next, in order, when an agent lands:** the golf play tickets, **T209 #554** the owner's round resumes after a reload → **T210 #555** the
+  results wait for the last group → **T211 #556** pace of play → **T208 #553 everyday golf** (golfers play your course every day and pay
+  green fees; today it is only a yearly number) → **T212 #557** putt, chip, tee-up and coach clips → **T213 #558** caddies, carts,
+  celebrations → **T214 #559** club pros and memberships (plan first) → then **T112 #199** (merge #394 when the owner stops 5191) →
+  **T149 #312** (waits for the owner's FAR-anchor choice) → **T199 #517** swamp (waits for swamp tiles) → the lists below.
+  (Golf play P1-P4 is on main from #258; the owner asked for its tickets on 2026-10-27, 18:05. T215 #561 stays open for the owner's call on
+  water and roads by day.)
 - **P25 #348 lots generated on the fly** (the owner: "start over with the lot presets we need a workflow that gets us to generating perfect
   lots on the fly"): hard rules + learned per-sector taste (T158 wizard, in flight) → T159 bootstrap from the existing presets + a 12-lot
   gallery → T160 the generator in the game, seeded per lot, model as data → T161 pairs, densities by state, a 50-seed exam sheet. The
