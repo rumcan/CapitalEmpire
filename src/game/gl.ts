@@ -13,6 +13,7 @@ import { CONTACT_LEAN } from './shadow-shape';
 import { CONTACT_AO, VERTEX_FLOATS, type VectorMesh } from './shadow-vector';
 import { SHADOW_AMBIENT } from './cast-shadow';
 import { BRAKE_LIGHT } from './sim/car-lamps';
+import { SPEC_LIGHT_GLSL, SPEC_MASK_K } from './lamp-reflect';
 
 /** floats per sprite instance: rect x0 y0 x1 y1 (world px), uv u0 v0 u1 v1, layer, alpha, cullable, foot line (world px; < 0: casts no shadow),
  *  clip x0 y0 x1 y1 (world px), foot: the footprint's near corner x y and its left and right corners' x (world px; the cast shadows stand on it) */
@@ -36,6 +37,8 @@ const MESH_W = 2048;
 export const POINT_STRIDE = 6;
 
 export interface View { X: number; Y: number; ze: number; cw: number; ch: number }
+/** a chunk's whole picture (drawChunk's uv) */
+export const FULL_UV: readonly number[] = [0, 0, 1, 1];
 
 const VS_QUAD = `#version 300 es
 uniform vec4 uRect; uniform vec4 uCam; // camX camY ze 0
@@ -48,12 +51,26 @@ void main() {
   gl_Position = vec4(s.x / uScreen.x * 2.0 - 1.0, 1.0 - s.y / uScreen.y * 2.0, 0.0, 1.0);
   vUV = mix(uUV.xy, uUV.zw, c);
 }`;
+// T215: the street lamps' reflection pools as the camera specular (lamp-reflect.ts): a chunk with a reflection mask (uSpec.z > 0: its gain)
+// lights its own pixels as the bake's pools did (specLight: toward the 'lit' mosaics' response of the painting's pixel, rebuilt from the
+// road's local mean the mask holds premultiplied in rgb) at the mask's intensity (alpha) times the camera falloff, 1 within uSpec.x of the centre
+// and 0 past uSpec.y (the distance in device px over half the longer side: round on any screen). The mask is a SPEC_MASK_K-th of the
+// chunk's size (its uv scaled to the px it covers). No mask (uSpec.z 0): the chunk as before
 const FS_QUAD = `#version 300 es
 precision highp float;
 uniform sampler2D uTex; uniform sampler2D uMask; uniform int uMode; uniform vec2 uScreen; uniform float uAlpha;
+uniform sampler2D uSpecTex; uniform vec4 uSpec;
 in vec2 vUV; out vec4 o;
+${SPEC_LIGHT_GLSL}
 void main() {
   vec4 c = texture(uTex, vUV);
+  if (uSpec.z > 0.0) {
+    vec4 m = texture(uSpecTex, vUV * vec2(textureSize(uTex, 0)) / (${SPEC_MASK_K.toFixed(1)} * vec2(textureSize(uSpecTex, 0))));
+    if (m.a > 0.002) {
+      float d = length(gl_FragCoord.xy - 0.5 * uScreen) / (0.5 * max(uScreen.x, uScreen.y));
+      c.rgb = specLight(c.rgb * 255.0, vec4(m.rgb / m.a * 255.0, m.a), (1.0 - smoothstep(uSpec.x, uSpec.y, d)) * uSpec.z) / 255.0;
+    }
+  }
   if (uMode == 1) c *= texture(uMask, vec2(gl_FragCoord.x / uScreen.x, 1.0 - gl_FragCoord.y / uScreen.y)).a;
   o = c * uAlpha;
 }`;
@@ -274,7 +291,7 @@ export class GLRenderer {
     const gl = canvas.getContext('webgl2', { alpha: false, antialias: false, premultipliedAlpha: true, preserveDrawingBuffer: false, powerPreference: 'high-performance' });
     if (!gl) throw new Error('WebGL2 is not available');
     this.gl = gl;
-    this.quad = this.program(VS_QUAD, FS_QUAD, ['uRect', 'uCam', 'uScreen', 'uUV', 'uTex', 'uMask', 'uMode', 'uAlpha']);
+    this.quad = this.program(VS_QUAD, FS_QUAD, ['uRect', 'uCam', 'uScreen', 'uUV', 'uTex', 'uMask', 'uMode', 'uAlpha', 'uSpecTex', 'uSpec']);
     this.shadow = this.program(VS_SHADOW, FS_SHADOW, ['uCam', 'uScreen', 'uStrength', 'uShift', 'uMinPx']);
     this.point = this.program(VS_POINT, FS_POINT, ['uCam', 'uScreen', 'uSize', 'uSoft']);
     this.vec = this.program(VS_VEC, FS_VEC, ['uCam', 'uScreen', 'uShear', 'uMul', 'uFar', 'uVerts', 'uIdx', 'uMinPx']);
@@ -321,7 +338,8 @@ export class GLRenderer {
     this.cast = this.program(VS_CAST, FS_CAST(lib), ['uCam', 'uScreen', 'uCast', 'uMinPx', ...samplers]);
     this.atlas = a; this.atlasReady = true;
   }
-  /** bind the atlas textures for a sprite program (units 2 on: 0 and 1 are the chunks' texture and mask) */
+  /** bind the atlas textures for a sprite program (units 2 on: 0 and 1 are the chunks' texture and mask; the chunk program's reflection mask, T215,
+   *  is on 2 too, rebound with every chunk, as the atlas is with every sprite draw) */
   private bindAtlas(pr: Prog) {
     const a = this.atlas!, units = a.bind(2); a.samplerNames().forEach((n, i) => this.gl.uniform1i(pr.u[n]!, units[i]!));
   }
@@ -331,7 +349,19 @@ export class GLRenderer {
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, bmp); this.texParams(gl.TEXTURE_2D, false);
     return t;
   }
+  /** T215: a texture from a baked chunk's reflection mask (renderer.ts takeSpecMask), kept premultiplied: its bilinear lookup then weighs the
+   *  road's mean by the asphalt's coverage, and FS_QUAD divides it out */
+  specTexture(bmp: ImageBitmap) {
+    const gl = this.gl, t = gl.createTexture()!; gl.bindTexture(gl.TEXTURE_2D, t);
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, bmp); this.texParams(gl.TEXTURE_2D, false);
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+    return t;
+  }
   deleteTexture(t: WebGLTexture) { this.gl.deleteTexture(t); }
+  /** T215: the camera specular this frame (engine.ts: lamp-reflect.ts specGain and the knobs), or null (specCam off): the falloff's inner and
+   *  outer radius and the gain a chunk drawn with a reflection mask lights its pools by */
+  spec: { inner: number; outer: number; gain: number } | null = null;
   /** the build-reveal mask (alpha), in screen space */
   setMask(src: OffscreenCanvas | HTMLCanvasElement | null) {
     if (!src) return; const gl = this.gl; gl.bindTexture(gl.TEXTURE_2D, this.maskTex);
@@ -349,12 +379,14 @@ export class GLRenderer {
     const v = this.view, sx = (X: number) => Math.round((X - v.X) * v.ze + v.cw / 2), sy = (Y: number) => Math.round((Y - v.Y) * v.ze + v.ch / 2);
     return [sx(X0), sy(Y0), sx(X1), sy(Y1)];
   }
-  /** a baked chunk; masked = draw through the reveal mask */
-  drawChunk(tex: WebGLTexture, X0: number, Y0: number, X1: number, Y1: number, masked = false, alpha = 1, uv: readonly number[] = [0, 0, 1, 1]) {
-    const gl = this.gl, pr = this.quad; gl.useProgram(pr.p); this.camUniforms(pr);
+  /** a baked chunk; masked = draw through the reveal mask; spec = its picture's reflection mask (T215, GroundCache.specOf), lit by this.spec */
+  drawChunk(tex: WebGLTexture, X0: number, Y0: number, X1: number, Y1: number, masked = false, alpha = 1, uv: readonly number[] = FULL_UV, spec: WebGLTexture | null = null) {
+    const gl = this.gl, pr = this.quad, sp = spec && this.spec && this.spec.gain > 0 ? this.spec : null; gl.useProgram(pr.p); this.camUniforms(pr);
     gl.uniform4f(pr.u.uRect, X0, Y0, X1, Y1); gl.uniform4f(pr.u.uUV, uv[0], uv[1], uv[2], uv[3]); gl.uniform1i(pr.u.uMode, masked ? 1 : 0); gl.uniform1f(pr.u.uAlpha, alpha);
+    gl.uniform4f(pr.u.uSpec, sp ? sp.inner : 0, sp ? sp.outer : 1, sp ? sp.gain : 0, 0);
     gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, tex); gl.uniform1i(pr.u.uTex, 0);
     gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, masked ? this.maskTex : this.emptyTex); gl.uniform1i(pr.u.uMask, 1);
+    gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D, sp ? spec : this.emptyTex); gl.uniform1i(pr.u.uSpecTex, 2);
     gl.activeTexture(gl.TEXTURE0);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4); this.stats.draws++;
   }

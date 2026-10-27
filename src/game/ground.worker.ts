@@ -102,6 +102,7 @@ const handle = async (m: ToWorker) => {
       }
       case 'living': painter.living = { on: m.on, debug: m.debug }; break;
       case 'rugged': painter.rugged = m.on; break;
+      case 'specCam': painter.specCam = m.on; break;
       case 'slopeLight': painter.slopeLight = m.strength; break;
       case 'lotground': {
         // the lazy photo textures the edit's paint areas use (fill and border, course surfaces and collars, wall art): built first, so the
@@ -197,11 +198,13 @@ const handle = async (m: ToWorker) => {
         tex.deferMakes = deferring; tex.deferNeed = !probing(m); tex.missing.clear();
         try { cv = m.kind === 'p' ? painter.paintPlan(m.i, m.j, m.L) : painter.paint(m.i, m.j, m.L, m.kind === 'm'); }
         finally { tex.deferMakes = false; tex.deferNeed = true; }
-        if (probing(m)) { tex.missing.clear(); cv.width = cv.height = 0; painter.takeShadeMask(); kick(); break; }
-        if (tex.missing.size) { const keys = [...tex.missing]; tex.missing.clear(); painter.takeShadeMask(); putAside(m, Promise.all(keys.map(k => tex.whenMade(k)))); break; }
+        if (probing(m)) { tex.missing.clear(); cv.width = cv.height = 0; painter.takeShadeMask(); painter.takeSpecMask(); kick(); break; }
+        if (tex.missing.size) { const keys = [...tex.missing]; tex.missing.clear(); painter.takeShadeMask(); painter.takeSpecMask(); putAside(m, Promise.all(keys.map(k => tex.whenMade(k)))); break; }
         lastBake = performance.now(); if (deferring && m.kind !== 'p') aheadOf(m);
         const bmp = cv.transferToImageBitmap(), sm = m.kind === 'p' ? null : painter.takeShadeMask(), shade = sm ? sm.transferToImageBitmap() : undefined;
-        post({ t: 'tile', id: m.id, kind: m.kind, i: m.i, j: m.j, L: m.L, artL: m.artL ?? m.L, ts: m.ts, tiled: painter.tilesUsed, prov: painter.provisional, bmp, shade, ms: performance.now() - t0 }, shade ? [bmp, shade] : [bmp]);
+        // (T215: the reflection mask, when specCam is on and the chunk has a lamp pool on its asphalt)
+        const rm = m.kind === 'p' ? null : painter.takeSpecMask(), spec = rm ? rm.transferToImageBitmap() : undefined;
+        post({ t: 'tile', id: m.id, kind: m.kind, i: m.i, j: m.j, L: m.L, artL: m.artL ?? m.L, ts: m.ts, tiled: painter.tilesUsed, prov: painter.provisional, bmp, shade, spec, ms: performance.now() - t0 }, [bmp, ...(shade ? [shade] : []), ...(spec ? [spec] : [])]);
         break;
       }
     }

@@ -14,7 +14,7 @@ import { NetEditor, applyNodeEntry, netToOps, nodeEntry, straightChain } from '.
 import { TIER_BADGE, flagRule, isLights, junctionCorners, slipPlan, slipsOn, type Corner } from './junctions';
 import { MIN_SEP, checkLegs, replaceCuts, ringStubs, segDist as segSeg, snapPoint, type Snap } from './snap';
 import { STRUCT_COST, STRUCT_MAX, groundClass, highwayRoute, longestRun, splitByTerrain, structureLengths } from './structures';
-import { CULL_MIN_PX, GLRenderer, POINT_STRIDE, SHADOW_STRIDE, SPRITE_STRIDE, VECTOR_STRIDE } from './gl';
+import { CULL_MIN_PX, FULL_UV, GLRenderer, POINT_STRIDE, SHADOW_STRIDE, SPRITE_STRIDE, VECTOR_STRIDE } from './gl';
 import { GroundCache } from './ground-cache';
 import { GAME_BOOT, clampCentre, flatTerrain, type BootOptions } from './boot';
 import { TILE_BANDS, TILES_REVISION, anchorAt, bandAt, bandRange, bandsAhead, cellOf, cellsIn, coverageOf, drawnScale, nearUntil, nextBand, tiledFamily, tileIndex, tilePermutation, tileScreenPx, tileSize, tileSpec } from './painted-tiles';
@@ -123,6 +123,7 @@ import { deriveHoles, surfaceAt, validateMarkerPlacement } from './golf/holes';
 import { LiveGroup, OWNER_ADDRESS, OWNER_ART, OWNER_SKILL, POWER, PUTT_POWER, PlayView, allowedClubs, boardRows, carryM, championLine, makeCourseView, makeField, ownerGolfer, playRound, powerFor, startOwner, stateAt, standings, teeTimes, toParText, type BoardRow, type Club, type CourseView, type OwnerTurn, type RoundPlan, type Sex } from './golf/play';
 import { holeViews, markerPlan, tagByHole, type HoleView, type MarkerKind } from './golf/holeview';
 import { CAST, castShear, clampCast, type CastShadow } from './cast-shadow';
+import { SPEC_LOOK, clampSpecLook, specGain, type SpecLook } from './lamp-reflect';
 import { contactLean } from './shadow-shape';
 import { MARKER_SCALE, OLD_TEE_IDS, PIN_RED_ID, PIN_YELLOW_ID, TEE_BACK_ID, TEE_FORWARD_ID, TEE_MIDDLE_ID } from './golf/dressing';
 import { FALLBACK_STRUCTURE_SPRITE, STRUCTURE_SPRITE, STRUCTURE_SPRITE_OLD } from './golf/structure-art';
@@ -5527,6 +5528,15 @@ export class Game {
   /** T186: sprite shadows over the ground's baked shade take the max of the two, not their product (the dev switch: window.__game.shadeMax =
    *  false shows them multiplied, as before, for a comparison) */
   shadeMax = true;
+  /** T215 (#561, phase 1): the street lamps' reflection pools as the camera specular (lamp-reflect.ts): on, the ground bakes them onto each
+   *  chunk's reflection mask and the GPU lights the road by it times a falloff from the screen's centre (gl.ts FS_QUAD), so a pool shows
+   *  whole in the middle of the screen and fades out toward the edges; off (the default), they are baked into the road as before. The dev
+   *  switch window.__game.specCam = true (every chunk is baked again); the knobs window.__game.setSpec({ inner, outer, strength, day }), and
+   *  the gear menu's Night panel. Not remembered: a test of the look for the owner */
+  get specCam() { return this.ground.specCam; }
+  set specCam(on: boolean) { this.ground.setSpecCam(!!on); this.emit(); }
+  spec: SpecLook = { ...SPEC_LOOK };
+  setSpec(p: Partial<SpecLook>) { this.spec = clampSpecLook({ ...this.spec, ...p }); this.emit(); }
   /** the dev readout of the tile set families (T145, T150; App.tsx TilesPanel, shown with the Developer panel: ?debug, F3 or the gear menu): the camera's
    *  band, its anchor zoom (where it draws at its native pixels), how big it is drawn against native, and the zooms the band shows over; for each
    *  tile set family a surface wears, its set, the tiles in view, a tile's width on screen in device px and how many whole tiles the view shows;
@@ -5609,21 +5619,24 @@ export class Game {
         if (p.tex) gl.drawChunk(p.tex, X, Y, X + CW, Y + CH, false, 1, [(X - pi * PLAN_W) / PLAN_W, (Y - pj * PLAN_H) / PLAN_H, (X + CW - pi * PLAN_W) / PLAN_W, (Y + CH - pj * PLAN_H) / PLAN_H]);
       }
       const mask = this.revealMask(now); if (mask) gl.setMask(mask);
+      // T215: the camera specular's falloff and gain this frame (the night light's amount takes the pools to their whole strength after dusk)
+      gl.spec = this.ground.specCam ? { inner: this.spec.inner, outer: this.spec.outer, gain: specGain(this.spec, this.nightAmount()) } : null;
+      const spec = (tex: WebGLTexture | null) => this.ground.specOf(tex);
       const shadeMasks: { tex: WebGLTexture; r: readonly [number, number, number, number] }[] = [];
       let baked = true;
       for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
         const t = this.ground.tile(kind, i, j); if (!t.tex) baked = false;
         if (!this.ground.livingActive || this.casterReady(i * CW, j * CH, (i + 1) * CW, (j + 1) * CH)) this.ground.need(t, L, dist((i + 0.5) * CW, (j + 0.5) * CH), now, artL, ts);
         const r = [i * CW, j * CH, (i + 1) * CW, (j + 1) * CH] as const;
-        if (t.prev && now < t.prevUntil) { gl.drawChunk(t.prev, ...r); if (t.tex && t.tex !== t.prev && mask) gl.drawChunk(t.tex, ...r, true); continue; }
+        if (t.prev && now < t.prevUntil) { gl.drawChunk(t.prev, ...r, false, 1, FULL_UV, spec(t.prev)); if (t.tex && t.tex !== t.prev && mask) gl.drawChunk(t.tex, ...r, true, 1, FULL_UV, spec(t.tex)); continue; }
         // its picture (ground-layers.ts): while the zoom crossfade waits for the whole view, an older picture, or its new one when it has none
         // (a chunk that came into view: it drew nothing, the clear colour, until the last chunk on screen was baked, T134), the other tier's
         // pictures over it, and its new picture fading in
         const lay = chunkLayers(t, L, artL, zoomBlend, this.groundBlendOtherTier, ts);
-        if (lay.base) gl.drawChunk(lay.base, ...r);
+        if (lay.base) gl.drawChunk(lay.base, ...r, false, 1, FULL_UV, spec(lay.base));
         const fallback = lay.fallback ? this.ground.zoomFallback(kind, r, now) : [];
-        for (const picture of fallback) gl.drawChunk(picture.tex, ...picture.rect, false, 1, picture.uv);
-        if (lay.top && (lay.top !== lay.base || fallback.length)) gl.drawChunk(lay.top, ...r, false, lay.topAlpha);
+        for (const picture of fallback) gl.drawChunk(picture.tex, ...picture.rect, false, 1, picture.uv, picture.spec);
+        if (lay.top && (lay.top !== lay.base || fallback.length)) gl.drawChunk(lay.top, ...r, false, lay.topAlpha, FULL_UV, spec(lay.top));
         // (T186: the shade its picture baked in, for the sprite shadows to take the max with; only while that picture is the one drawn)
         if (t.shade && (lay.base === t.tex || lay.top === t.tex)) shadeMasks.push({ tex: t.shade, r });
         if (t.fadeFrom && Number.isFinite(this.groundBlendAt) && (zoomBlend < 1 || !Number.isFinite(t.fadeStart))) t.fadeStart = this.groundBlendAt;

@@ -86,7 +86,7 @@ export class GroundCache {
   setGrassArt(art: GrassArt) { if (art === this.grassArt) return; this.grassArt = art; this.broadcast({ t: 'grassArt', art }); this.invalidateAll(); }
   /** a light boot's worker limits (boot.ts, T157), sent with init; null: the game's */
   limits: WorkerLimits | null = null;
-  init(t: { cls: Uint8Array; height: Float32Array; waters: Waterway[] }) { const art = { ...withPresets(withBaseGrass(GROUND_ART)), grassArt: this.grassArt }, limits = this.limits ?? undefined; this.workers.forEach((wk, i) => wk.postMessage({ t: 'init', art, terrain: t.cls, height: t.height, waters: t.waters, build: i === 0, peers: this.workers.length - 1, limits } satisfies ToWorker)); this.broadcast({ t: 'living', ...this.living }); this.broadcast({ t: 'slopeLight', strength: this.slopeLight }); this.broadcast({ t: 'surfaces', file: paintedSurfaces() });
+  init(t: { cls: Uint8Array; height: Float32Array; waters: Waterway[] }) { const art = { ...withPresets(withBaseGrass(GROUND_ART)), grassArt: this.grassArt }, limits = this.limits ?? undefined; this.workers.forEach((wk, i) => wk.postMessage({ t: 'init', art, terrain: t.cls, height: t.height, waters: t.waters, build: i === 0, peers: this.workers.length - 1, limits } satisfies ToWorker)); this.broadcast({ t: 'living', ...this.living }); this.broadcast({ t: 'slopeLight', strength: this.slopeLight }); this.broadcast({ t: 'specCam', on: this.specCam }); this.broadcast({ t: 'surfaces', file: paintedSurfaces() });
     // the studio saved the painted surfaces (the dev server hot-swaps the file): every worker takes the new looks and every chunk is baked again
     this.unsurfaces?.(); this.unsurfaces = onPaintedSurfaces(file => { this.broadcast({ t: 'surfaces', file }); this.invalidateAll(); }); }
   private unsurfaces: (() => void) | null = null;
@@ -102,6 +102,17 @@ export class GroundCache {
   /** T204: the rugged edges on or off (the dev switch: window.__game.ground.setRugged(false) compares the looks and the bake times) */
   rugged = true;
   setRugged(on: boolean) { if (on === this.rugged) return; this.rugged = on; this.broadcast({ t: 'rugged', on }); this.invalidateAll(); }
+  /** T215: the street lamps' reflection pools as the camera specular (on: each chunk's pools go onto its reflection mask, lit on the GPU by the
+   *  camera falloff, gl.ts FS_QUAD) or baked into the road picture as before (off, the default); the dev switch window.__game.specCam */
+  specCam = false;
+  setSpecCam(on: boolean) { if (on === this.specCam) return; this.specCam = on; this.broadcast({ t: 'specCam', on }); this.invalidateAll(); }
+  /** T215: each chunk picture's reflection mask (renderer.ts takeSpecMask), by picture: it goes wherever its picture is drawn (a zoom
+   *  crossfade's old picture, the build reveal's, the other tier's fallback) and is deleted with it (dropPicture) */
+  private specs = new Map<WebGLTexture, WebGLTexture>();
+  /** the reflection mask of a chunk picture, or null (specCam off, or no lamp pool on its asphalt) */
+  specOf(tex: WebGLTexture | null): WebGLTexture | null { return (tex && this.specs.get(tex)) ?? null; }
+  /** delete a chunk picture and its reflection mask */
+  private dropPicture(tex: WebGLTexture) { this.gl.deleteTexture(tex); const s = this.specs.get(tex); if (s) { this.gl.deleteTexture(s); this.specs.delete(tex); } }
   setLiving(on: boolean, debug: boolean) { if (on === this.living.on && debug === this.living.debug) return; this.living = { on, debug }; this.broadcast({ t: 'living', on, debug }); this.invalidateAll(); }
   /** the caster records last sent, by key, and the edits waiting for the next pump (null: the key goes) */
   private casterSent = new Map<string, Float32Array>(); private casterQueue = new Map<string, Float32Array | null>(); private casterPrefixes: string[] = [];
@@ -183,7 +194,7 @@ export class GroundCache {
       const [W, H] = SIZE[t.kind];
       if ((t.i + 1) * W < X0 || t.i * W > X1 || (t.j + 1) * H < Y0 || t.j * H > Y1) continue;
       t.gen++; t.stale = true; t.hold = hold ? Math.max(t.hold, t.baked + hold) : 0;
-      if (keepPrev && t.tex && t.kind !== 'p') { if (t.prev && t.prev !== t.tex) this.gl.deleteTexture(t.prev); t.prev = t.tex; t.prevUntil = Math.max(t.prevUntil, until); }
+      if (keepPrev && t.tex && t.kind !== 'p') { if (t.prev && t.prev !== t.tex) this.dropPicture(t.prev); t.prev = t.tex; t.prevUntil = Math.max(t.prevUntil, until); }
     }
   }
   invalidateAll() { for (const t of this.tiles.values()) { t.gen++; t.stale = true; t.hold = 0; } }
@@ -220,30 +231,31 @@ export class GroundCache {
     if (m.t === 'log') { console.log(`[ground worker ${w}]`, m.message); return; }
     if (m.t === 'texpack') { m.snaps.forEach((snap, k) => this.workers[k + 1]?.postMessage({ t: 'textures', snap } satisfies ToWorker, snap.bitmaps)); return; }
     const r = this.reqs.get(m.id); this.reqs.delete(m.id); this.inflight[w]--;
-    if (!r) { m.bmp.close(); m.shade?.close(); return; }
+    if (!r) { m.bmp.close(); m.shade?.close(); m.spec?.close(); return; }
     const t = r.t; t.pendingL = 0; t.pendingArtL = 0; t.pendingTs = -1;
     this.bakeLog[this.baked % BAKE_LOG] = m.ms; this.waitLog[this.baked % BAKE_LOG] = performance.now() - r.at; if (!this.firstTileAt) this.firstTileAt = performance.now();
     this.bakeMs += m.ms; this.baked++;
     // edited while baking: it will be asked for again, and keeps the picture it has meanwhile; one with none shows this one (stale, so it is
     // still asked for again: the ground before the edit for a bake, rather than nothing; T134, the startup's edits did this to the planner pieces)
     const edited = r.gen !== t.gen;
-    if (edited && t.tex) { m.bmp.close(); m.shade?.close(); return; }
+    if (edited && t.tex) { m.bmp.close(); m.shade?.close(); m.spec?.close(); return; }
     const u0 = performance.now();
     // a new tile spec (T145, T150: a band switch or a DPR change) keeps the old picture until the whole view has the new one too (engine.ts: then a cut, never a crossfade between sets)
     const ts = m.ts ?? 0, stepChanged = (t.texTiled || !!m.tiled) && t.texTs !== ts;
     const old = t.tex, oldL = t.texL, oldPx = t.px, artL = m.artL ?? m.L, fade = old && (oldL !== m.L || t.texArtL !== artL || stepChanged) && !t.stale && t.kind !== 'p' && !t.prev;
-    if (t.fadeFrom && t.fadeFrom !== old && t.fadeFrom !== t.prev) this.gl.deleteTexture(t.fadeFrom);
+    if (t.fadeFrom && t.fadeFrom !== old && t.fadeFrom !== t.prev) this.dropPicture(t.fadeFrom);
     t.fadeFrom = null; t.fadePx = 0;
     // (T186: the shade mask goes with the new picture: the fading old picture shows over the new mask meanwhile, a few frames)
     if (t.shade) this.gl.deleteTexture(t.shade);
     t.shade = m.shade ? this.gl.textureFrom(m.shade) : null; m.shade?.close();
     t.tex = this.gl.textureFrom(m.bmp); t.texL = m.L; t.texArtL = artL; t.texTs = ts; t.texTiled = !!m.tiled; t.px = m.bmp.width * m.bmp.height; t.stale = edited; t.baked = u0; m.bmp.close();
+    if (m.spec) { this.specs.set(t.tex, this.gl.specTexture(m.spec)); m.spec.close(); }
     // T197: a picture that fell back to the photo where a tile set was not decoded yet shows meanwhile and is asked for again after a short
     // hold (the tiles decode on the way), so a placeholder never stays
     if (m.prov && !edited) { this.provisional++; const k = (this.provTries.get(t) ?? 0) + 1; this.provTries.set(t, k); if (k <= PROVISIONAL_TRIES) { t.stale = true; t.hold = u0 + PROVISIONAL_RETRY_MS; } }
     else this.provTries.delete(t);
     if (fade) { t.fadeFrom = old; t.fadeStart = Infinity; t.fadePx = oldPx; }
-    else if (old && old !== t.prev) this.gl.deleteTexture(old);
+    else if (old && old !== t.prev) this.dropPicture(old);
     const u1 = performance.now(); this.upCount++; this.upMs += u1 - u0;
     if (u1 - this.upT > 1000) { this.uploadsThisSecond = this.upCount; this.uploadMsPerSecond = this.upMs; this.upCount = 0; this.upMs = 0; this.upT = u1; }
   }
@@ -254,22 +266,22 @@ export class GroundCache {
     this.residentPx = px + held; this.peakPx = Math.max(this.peakPx, this.residentPx);
     if (px <= this.budgetPx) return;
     const old = [...this.tiles.values()].filter(t => t.tex && t.used !== now).sort((a, b) => a.used - b.used);
-    for (const t of old) { if (px <= this.budgetPx * 0.8) break; px -= t.px + t.fadePx; this.gl.deleteTexture(t.tex!); t.tex = null; if (t.shade) { this.gl.deleteTexture(t.shade); t.shade = null; } if (t.prev) { this.gl.deleteTexture(t.prev); t.prev = null; } if (t.fadeFrom) { this.gl.deleteTexture(t.fadeFrom); t.fadeFrom = null; t.fadePx = 0; } }
+    for (const t of old) { if (px <= this.budgetPx * 0.8) break; px -= t.px + t.fadePx; this.dropPicture(t.tex!); t.tex = null; if (t.shade) { this.gl.deleteTexture(t.shade); t.shade = null; } if (t.prev) { this.dropPicture(t.prev); t.prev = null; } if (t.fadeFrom) { this.dropPicture(t.fadeFrom); t.fadeFrom = null; t.fadePx = 0; } }
   }
   /** release reveal pictures whose animation is over */
   settle(now: number) { for (const t of this.tiles.values()) {
-    if (t.prev && now > t.prevUntil && !t.stale) { if (t.prev !== t.tex) this.gl.deleteTexture(t.prev); t.prev = null; }
-    if (t.fadeFrom && (now >= t.fadeStart + 180 || !Number.isFinite(t.fadeStart) && now - t.used > 2000)) { if (t.fadeFrom !== t.tex && t.fadeFrom !== t.prev) this.gl.deleteTexture(t.fadeFrom); t.fadeFrom = null; t.fadePx = 0; }
+    if (t.prev && now > t.prevUntil && !t.stale) { if (t.prev !== t.tex) this.dropPicture(t.prev); t.prev = null; }
+    if (t.fadeFrom && (now >= t.fadeStart + 180 || !Number.isFinite(t.fadeStart) && now - t.used > 2000)) { if (t.fadeFrom !== t.tex && t.fadeFrom !== t.prev) this.dropPicture(t.fadeFrom); t.fadeFrom = null; t.fadePx = 0; }
   } }
   static planOf(i: number, j: number) { return { i: Math.floor(i / PLAN_K), j: Math.floor(j / PLAN_K) }; }
   /** Reuse the other ground tier's already baked pictures during a zoom transition; never request extra bakes. */
   zoomFallback(kind: 'g' | 'm', box: readonly [number, number, number, number], now: number) {
-    const other = kind === 'g' ? 'm' : 'g', [w, h] = SIZE[other], result: { tex: WebGLTexture; rect: [number, number, number, number]; uv: [number, number, number, number] }[] = [];
+    const other = kind === 'g' ? 'm' : 'g', [w, h] = SIZE[other], result: { tex: WebGLTexture; spec: WebGLTexture | null; rect: [number, number, number, number]; uv: [number, number, number, number] }[] = [];
     for (let j = Math.floor(box[1] / h); j < Math.ceil(box[3] / h); j++) for (let i = Math.floor(box[0] / w); i < Math.ceil(box[2] / w); i++) {
       const tile = this.tiles.get(key(other, i, j)); if (!tile?.tex) continue;
       const x0 = Math.max(box[0], i * w), y0 = Math.max(box[1], j * h), x1 = Math.min(box[2], (i + 1) * w), y1 = Math.min(box[3], (j + 1) * h);
       tile.used = now;
-      result.push({ tex: tile.tex, rect: [x0, y0, x1, y1], uv: [(x0 - i * w) / w, (y0 - j * h) / h, (x1 - i * w) / w, (y1 - j * h) / h] });
+      result.push({ tex: tile.tex, spec: this.specOf(tile.tex), rect: [x0, y0, x1, y1], uv: [(x0 - i * w) / w, (y0 - j * h) / h, (x1 - i * w) / w, (y1 - j * h) / h] });
     }
     return result;
   }
