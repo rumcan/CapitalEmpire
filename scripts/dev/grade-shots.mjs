@@ -3,7 +3,7 @@
 // with the graded town beside the owner's concept picture (docs/art/concept/maple-falls-concept.webp); the GPU's curve checked against
 // grade.ts gradeRgb at the screen's centre; and the frame time, synchronous (the draw, then a 1 px read that waits for the GPU), off, on and
 // with the edge blur, at 30% and 15%.
-//   node scripts/dev/grade-shots.mjs --base http://127.0.0.1:5186/ --out E:/ClaudeTemp/T226 [--only town,range,course,dusk,blur,sheet,check,time]
+//   node scripts/dev/grade-shots.mjs --base http://127.0.0.1:5186/ --out E:/ClaudeTemp/T226 [--only town,range,course,dusk,blur,sheet,check,time,menu]
 //     [--grade '{"strength":1}'] [--tag v2]
 // Needs a dev server (vite) on --base. One headless Edge at a time, closed when done; a fresh profile, so each start is a new game.
 import { chromium } from 'playwright-core';
@@ -13,7 +13,7 @@ import { join } from 'node:path';
 
 const args = process.argv.slice(2), opt = (k, d) => { const i = args.indexOf(`--${k}`); return i >= 0 ? args[i + 1] : d; };
 const base = opt('base', 'http://127.0.0.1:5186/'), out = opt('out', 'output/grade-shots'), tag = opt('tag', '') ? `-${opt('tag', '')}` : '';
-const only = new Set(opt('only', 'town,range,course,dusk,blur,sheet,check,time').split(',')), extra = JSON.parse(opt('grade', '{}'));
+const only = new Set(opt('only', 'town,range,course,dusk,blur,sheet,check,time,menu').split(',')), extra = JSON.parse(opt('grade', '{}'));
 const W = 1280, H = 800;
 mkdirSync(out, { recursive: true });
 const browser = await chromium.launch({ channel: 'msedge', headless: true, args: ['--enable-gpu', '--ignore-gpu-blocklist', '--use-angle=d3d11'] });
@@ -30,14 +30,14 @@ const shot = async (page, name) => {
   console.log(file); return file;
 };
 /** a fresh page on `url` (a new game or a fixture), loaded, the UI hidden, the game paused */
-const open = async url => {
+const open = async (url, keepUi = false) => {
   const ctx = await browser.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: 1 });
   const page = await ctx.newPage();
   page.on('pageerror', e => console.log('[pageerror]', e.message));
   page.on('console', m => { if (m.type() === 'error') console.log('[console]', m.text().slice(0, 300)); });
   await page.goto(url);
   await page.waitForFunction(() => window.__game?.ready, null, { timeout: 240000 });
-  await page.addStyleTag({ content: '* { visibility: hidden !important } canvas { visibility: visible !important }' });
+  if (!keepUi) await page.addStyleTag({ content: '* { visibility: hidden !important } canvas { visibility: visible !important }' });
   await page.evaluate(() => { const g = window.__game; g.prebake = () => {}; g.setSpeed(0); window.__night = 0; g.nightAmount = () => window.__night; });
   return { page, ctx };
 };
@@ -135,6 +135,18 @@ try {
     if (hole) { const b = hole.b; await look(page, (b[0] + b[2]) / 2, (b[1] + b[3]) / 2, 0.3); await settle(page); files.course30 = await pair(page, 'course-30pct'); }
     await ctx.close();
   }
+  // ---- the gear menu's Colour grade (the UI shown): the menu opened, the panel scrolled into view, the strength at 100%
+  if (only.has('menu')) {
+    const { page, ctx } = await open(`${base}?start=town`, true);
+    await grade(page, true, false);
+    await page.click('[data-tip="Settings"]'); await page.waitForSelector('[data-testid="grade-panel"]');
+    const panel = page.locator('[data-testid="grade-panel"]'); await panel.scrollIntoViewIfNeeded(); await page.waitForTimeout(300);
+    const box = await panel.boundingBox();
+    const file = join(out, `menu-colour-grade${tag}.png`);
+    await page.screenshot({ path: file, clip: { x: Math.max(0, box.x - 20), y: Math.max(0, box.y - 120), width: Math.min(W - box.x + 20, box.width + 40), height: box.height + 200 } });
+    console.log(file); report.menu = await page.evaluate(() => JSON.parse(localStorage.getItem('capitalempire.grade')));
+    await ctx.close();
+  }
   // ---- the sheet: the town off, on, and the concept, each the same height, labelled
   if (only.has('sheet') && files.town15) {
     const h = 520, gap = 8, lab = 26;
@@ -159,6 +171,6 @@ try {
       console.log(f2);
     }
   }
-  writeFileSync(join(out, `numbers${tag}.json`), JSON.stringify(report, null, 2));
+  writeFileSync(join(out, `numbers${tag}${opt('only', '') ? '-' + opt('only', '').replace(/,/g, '_') : ''}.json`), JSON.stringify(report, null, 2));
   console.log(JSON.stringify(report, null, 2));
 } finally { await browser.close(); }
