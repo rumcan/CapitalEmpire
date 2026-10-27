@@ -149,9 +149,9 @@ export function makeWizard(host: WizardHost) {
     const p = g.propAt(mx, my), from = p ? g.lotFrom.get(p) : undefined;
     if (from && from.preset === WIZARD_ID) {
       let k = from.prop - c.base.props.length;
-      if (k < 0) return -1;
-      for (let i = 0; i < c.items.length; i++) { const it = c.items[i]!; if (it.deleted || it.kind === 'decal') continue; if (k-- === 0) return i; }
-      return -1;
+      // an offered sprite; a base sprite (the house, a fence) is no item: a decal near the point under it is (T183: decals behind the house
+      // could not be picked)
+      if (k >= 0) for (let i = 0; i < c.items.length; i++) { const it = c.items[i]!; if (it.deleted || it.kind === 'decal') continue; if (k-- === 0) return i; }
     }
     const f = host.frame(); if (!f) return -1;
     const t = g.tileAt(mx, my), q = toFrame(f, t.x, t.y);

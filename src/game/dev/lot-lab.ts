@@ -371,7 +371,7 @@ export function installLotLab(game: Game): () => void {
    *  circle at the pointer, the banner and the canvas's cursor (none in Draw: the circle is the cursor) */
   function drawPaint() {
     drawBanner();
-    game.canvas.style.cursor = paint !== null ? 'none' : '';
+    game.canvas.style.cursor = game.overlay.style.cursor = paint !== null ? 'none' : '';
     const g = geo, s = stroke;
     if (!g) { preview.setAttribute('d', ''); brushEl.setAttribute('d', ''); return; }
     const f = frameOf(g), c = game.cam, o = origin();
@@ -397,7 +397,7 @@ export function installLotLab(game: Game): () => void {
   function drawBanner() {
     if (paint === null || !started) { banner.style.display = 'none'; return; }
     const a = shell.free(), sw = el('span', `display:inline-block;width:14px;height:14px;border-radius:3px;border:1px solid #fde68a;background:${paint.col}`);
-    banner.style.display = 'flex'; banner.style.left = `${(a.L + a.R) / 2}px`; banner.style.top = `${a.T + 10}px`;
+    banner.style.display = 'flex'; banner.style.left = `${(a.L + a.R) / 2}px`; banner.style.top = `${a.T + 40}px`;
     const size = `${brushR} tile${brushR === 1 ? '' : 's'}`;
     banner.replaceChildren(el('span', 'font-weight:800;color:#fde68a', '✎ Drawing:'), sw, el('span', '', paint.name),
       el('span', 'opacity:.9', `· ${shape ? 'Shape: drag a rectangle' : 'drag to paint'} · Shift+drag erases · [ ] brush ${size} · R ${shape ? 'brush' : 'Shape'} · Esc or V back to Select`));
@@ -1073,6 +1073,8 @@ export function installLotLab(game: Game): () => void {
     if (paint === null) return;
     const q = e.target instanceof HTMLCanvasElement ? framePt(e) : null, s = stroke;
     brushAt = q;
+    // over the map the brush is the only cursor: the game's and the editor's hover outlines stay off (a right-drag still pans)
+    if (q && !s && !(e.buttons & 2)) e.stopImmediatePropagation();
     if (s) {
       e.preventDefault(); e.stopImmediatePropagation();
       if (q) {
@@ -1209,6 +1211,6 @@ export function installLotLab(game: Game): () => void {
     if (game.devGround === drawGrid) game.devGround = null;
     gridLayer.dispose(); game.stageLabNeighbours([]);
     wizard.dispose(); gallery.dispose();
-    style.remove(); mask.remove(); shell.remove(); personEl.remove(); badgeLayer.remove(); banner.remove(); game.canvas.style.cursor = ''; delete (window as unknown as { __lotExam?: unknown }).__lotExam;
+    style.remove(); mask.remove(); shell.remove(); personEl.remove(); badgeLayer.remove(); banner.remove(); game.canvas.style.cursor = game.overlay.style.cursor = ''; delete (window as unknown as { __lotExam?: unknown }).__lotExam;
   };
 }
