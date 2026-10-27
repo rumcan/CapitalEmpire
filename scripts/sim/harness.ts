@@ -6,7 +6,7 @@ import { City } from '../../src/game/city';
 import { CLASS, RoadNetwork, SK, type ClassId, type Leg, type Node, type Pt, type Seg } from '../../src/game/network';
 import { NetEditor } from '../../src/game/netops';
 import { STRUCT_COST, highwayRoute, splitByTerrain } from '../../src/game/structures';
-import { WIDER } from '../../src/game/network';
+import { WIDER, variantCost } from '../../src/game/network';
 import { classAt, generateTerrain } from '../../src/game/terrain';
 import { TC, type Terrain } from '../../src/game/terrain/types';
 import { MAP } from '../../src/game/iso';
@@ -63,32 +63,46 @@ export function setup(seed: number): Harness {
 /** the town's grow legs (gravel), applied with the editor and fed to the city as net ops */
 export function growLegs(h: Harness, legs: Leg[]) { h.editor.addLegs(legs, CLASS.gravel, 2, undefined, true); h.city.netOps(h.editor.commit()); }
 
-/** what the player run's road upgrades did (playerUpgrade): segs and money in all, and per call */
-export interface PlayerRoads { segs: number; cost: number; tiles: number }
-/** the classes the player run takes up the ladder (WIDER): the town's gravel to street, then street to road */
-const PLAYER_FROM = new Set(['gravel', 'street']);
-/** A player who upgrades the town's roads (T178; the owner, 2026-10-27: "this is seposed to happen btw. the guy hasto upgrade his town roads"):
- *  the jammed junctions of the bottleneck report (level of service E or F), the worst first, have their gravel and street arms taken one class
- *  up (gravel -> street -> road) with the Upgrade tool's action (engine laneClick: each seg laid again in the next class, its line style and kind
- *  kept, no longer the town's) at the Upgrade tool's price (the class cost difference x length x STRUCT_COST of its kind), paid from the
- *  treasury as construction, while the money lasts above `reserve`, at most `max` segs a call. Returns what it did */
-export function playerUpgrade(h: Harness, max: number, reserve: number): PlayerRoads {
-  const B = (h.city as unknown as { budget: { money: number } }).budget, done: PlayerRoads = { segs: 0, cost: 0, tiles: 0 };
-  const jammed = h.city.report(0).junctions.filter(j => j.los === 'E' || j.los === 'F').sort((p, q) => q.loss - p.loss);
-  const seen = new Set<Seg>();
+/** what the player run did (playerUpgrade): the junction fixes (mini-roundabouts, roundabouts), the road segs upgraded, their tiles, and the money */
+export interface PlayerRoads { segs: number; cost: number; tiles: number; minis: number; rings: number }
+/** the classes the player run takes up the ladder (WIDER) where a link is the bottleneck: the town's gravel, street and road */
+const PLAYER_FROM = new Set(['gravel', 'street', 'road']);
+/** the player's thresholds (T184): a link is the bottleneck at v/c LINK_VC with LINK_LOSS veh-s lost a game hour; a jammed crossing is at LOS
+ *  E or F with JAM_LOSS veh-s lost a game hour */
+export const PLAYER_RULES = { LINK_VC: 0.9, LINK_LOSS: 100, JAM_LOSS: 100 };
+/** A player who manages the town's traffic (T184; the owner, 2026-10-27: "... retune the road challenge with a player who places junction
+ *  tools"), at each call:
+ *  1. the jammed crossings (bottleneck report: LOS E or F, JAM_LOSS or more lost), the worst first, get the Junction tool's fix at its price
+ *     (variantCost): a plain crossing of 3+ arms a mini-roundabout, a mini that still jams a one-lane roundabout; at most maxJ;
+ *  2. then roads only where a link itself is the bottleneck (v/c LINK_VC or more, LINK_LOSS or more lost): the seg one class up with the
+ *     Upgrade tool's action (laid again in the next class, its style and kind kept, no longer the town's) and price (the class cost
+ *     difference x length x STRUCT_COST of its kind); at most maxL.
+ *  Everything is paid from the treasury as construction, never below `reserve`. Returns what it did */
+export function playerUpgrade(h: Harness, maxJ: number, maxL: number, reserve: number): PlayerRoads {
+  const B = (h.city as unknown as { budget: { money: number } }).budget, done: PlayerRoads = { segs: 0, cost: 0, tiles: 0, minis: 0, rings: 0 };
+  const rep = h.city.report(0), mini = variantCost('mini', 1), ring = variantCost('roundabout', 1);
+  const jammed = rep.junctions.filter(j => (j.los === 'E' || j.los === 'F') && j.loss >= PLAYER_RULES.JAM_LOSS).sort((p, q) => q.loss - p.loss);
+  let fixes = 0;
   for (const j of jammed) {
-    const n = h.editor.net.nodeAt({ x: j.x, y: j.y }); if (!n) continue;
-    for (const sg of [...n.segs]) {
-      if (done.segs >= max) break;
-      if (seen.has(sg) || !PLAYER_FROM.has(sg.cls.id)) continue;
-      seen.add(sg);
-      const to = CLASS[WIDER[sg.cls.id as ClassId]!]!, len = Math.hypot(sg.b.x - sg.a.x, sg.b.y - sg.a.y), cost = Math.round(len * (to.cost - sg.cls.cost) * STRUCT_COST[sg.kind]!);
-      if (B.money - cost < reserve) continue;
-      h.city.spend('construction', cost);
-      h.editor.addLegs([{ a: { x: sg.a.x, y: sg.a.y }, b: { x: sg.b.x, y: sg.b.y } }], to, sg.style, [sg.kind]);
-      done.segs++; done.cost += cost; done.tiles += len;
-    }
-    if (done.segs >= max) break;
+    if (fixes >= maxJ) break;
+    const n = h.editor.net.nodeAt({ x: j.x, y: j.y }); if (!n || n.segs.length < 3) continue;
+    const to = n.type === 'plain' ? 'mini' : n.type === 'mini' ? 'roundabout' : null, price = to === 'mini' ? mini : ring;
+    if (!to || B.money - price < reserve) continue;
+    h.city.spend('construction', price); h.editor.setNodeType(n, to); fixes++; done.cost += price;
+    if (to === 'mini') done.minis++; else done.rings++;
+  }
+  if (fixes) h.city.netOps(h.editor.commit());
+  const links = rep.links.filter(l => l.vc >= PLAYER_RULES.LINK_VC && l.loss >= PLAYER_RULES.LINK_LOSS && PLAYER_FROM.has(l.cls)).sort((p, q) => q.loss - p.loss);
+  for (const l of links) {
+    if (done.segs >= maxL) break;
+    const a = h.editor.net.nodeAt({ x: l.ax, y: l.ay }); if (!a) continue;
+    const sg = a.segs.find(q => { const o = q.a === a ? q.b : q.a; return Math.abs(o.x - l.bx) < 1e-6 && Math.abs(o.y - l.by) < 1e-6; });
+    if (!sg || !PLAYER_FROM.has(sg.cls.id)) continue;
+    const to = CLASS[WIDER[sg.cls.id as ClassId]!]!, len = Math.hypot(sg.b.x - sg.a.x, sg.b.y - sg.a.y), cost = Math.round(len * (to.cost - sg.cls.cost) * STRUCT_COST[sg.kind]!);
+    if (B.money - cost < reserve) continue;
+    h.city.spend('construction', cost);
+    h.editor.addLegs([{ a: { x: sg.a.x, y: sg.a.y }, b: { x: sg.b.x, y: sg.b.y } }], to, sg.style, [sg.kind]);
+    done.segs++; done.cost += cost; done.tiles += len;
   }
   if (done.segs) h.city.netOps(h.editor.commit());
   done.tiles = Math.round(done.tiles);
