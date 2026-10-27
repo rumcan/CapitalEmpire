@@ -3,6 +3,18 @@
 The living status of the project. Every session reads this first and updates it before it ends.
 The full design is in [GAME-PLAN.md](GAME-PLAN.md); the working rules are in [../CLAUDE.md](../CLAUDE.md).
 
+### Accepted terrain source delivery (#383, 2026-10-27)
+
+Committed the source authority that the packed painted-terrain manifest already referenced: READY, four canonical selections, their
+48 primary native PNGs, hash-bound appearance decisions, provenance, inputs and proofs. T170 already shipped the same long-grass
+NEAR v3 / MID v2 / FAR v2 hashes; this delivery changes no packed pixels or gameplay mappings and preserves `rough-owner`.
+The 440-file dependency closure passes 717 explicit path/hash bindings and all 48 native/packed size checks, with no missing files or
+mismatches. Historical inputs remain lineage only; `art/theme-consistency/ACCEPTED-SOURCES.md` explains the selection contract.
+
+The importer now excludes a set explicitly held by its appearance review, verifies the actual canonical decision, and makes the owner's
+green MID fallback follow an accepted canonical selection instead of a newer experimental folder. Typecheck and three focused prep
+fixtures pass. No full suite/build or owner-server changes; putting-green and fringe require separate accepted handoffs.
+
 _Last updated: 2026-10-24 morning: **the UIX revamp** (section "UIX revamp, 2026-10-24" at the end: who builds what, the job board, what is merged). Before that 2026-10-21 evening: **handover** (section "Handover, 2026-10-21" at the end). Earlier 2026-10-21: **the golf events pivot (v6)**: the plan, the review of all development and the golf sprite list
 ([GOLF-PLAN.md](GOLF-PLAN.md), [GOLF-SPRITES.md](GOLF-SPRITES.md)); every plan doc updated; in-flight work parked (section "The golf
 pivot" near the end). Before that 2026-10-20 evening: the art branch claude/sprites-and-people merged (TrickOrTreat sprites, baked lots with a separate fence layer, townspeople, sprite studio with walk-frame fixes; docs/ART-PIPELINE.md); before that 2026-10-20 afternoon (B.3 daily visit businesses, B.4 tickets and cards, B.5 bus and taxi companies); before that 2026-10-19 evening, paint branch (the Paint tool: ground areas, docs/PAINT-TOOL.md); before that 2026-10-19 late night (Phase B started: docs/BUSINESSES.md, B.1 the player places the stadium); before that 2026-10-19 night (road builder stress test and its fixes, junction preview); before that 2026-10-19 evening (rings at awkward joins, road Replace mode, lane look-ahead); before that 2026-10-19 afternoon (3-lane ring fixes, lots and town roads clear of rings, dev unlock-all); before that 2026-10-19 morning (all ten Arena PRs merged; disasters and farms wired); before that 2026-10-18 night: Phase 6R in progress; approach flares done; Arena PRs #1 and #2 reviewed (changes requested). Pushed to origin at `21f2092`._
@@ -2547,15 +2559,3 @@ Gates before (main 9974d10) and after:
 - **Screenshots of a jam:** not taken.
   - The dev game, loading the no-player fixture and running 12 town hours at 4x, showed no red zone (access at most 1.11, about 950 cars).
   - The headless jam builds over seasons of trips that are not saved with the town.
-
-### Accepted terrain source delivery (#383, 2026-10-27)
-
-Committed the source authority that the packed painted-terrain manifest already referenced: READY, four canonical selections, their
-48 primary native PNGs, hash-bound appearance decisions, provenance, inputs and proofs. T170 already shipped the same long-grass
-NEAR v3 / MID v2 / FAR v2 hashes; this delivery changes no packed pixels or gameplay mappings and preserves `rough-owner`.
-The 440-file dependency closure passes 717 explicit path/hash bindings and all 48 native/packed size checks, with no missing files or
-mismatches. Historical inputs remain lineage only; `art/theme-consistency/ACCEPTED-SOURCES.md` explains the selection contract.
-
-The importer now excludes a set explicitly held by its appearance review, verifies the actual canonical decision, and makes the owner's
-green MID fallback follow an accepted canonical selection instead of a newer experimental folder. Typecheck and three focused prep
-fixtures pass. No full suite/build or owner-server changes; putting-green and fringe require separate accepted handoffs.
