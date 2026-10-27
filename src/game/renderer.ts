@@ -4,7 +4,7 @@ import { MOSAIC_TILES, PLACEHOLDER, canvas, ctx2d, type C2D, type Cnv, type Text
 import { fbm, maskFrom, smooth } from './canvas2d';
 import { EAGER_PHOTO } from './grass-art';
 import { PAINT_TEXES, isPaintPhoto, type PaintTex } from './paint';
-import { POOL_ANCHOR, PPM, SLAB_CELL } from './ground-art';
+import { ASPHALT_MEAN, POOL_ANCHOR, PPM, SLAB_CELL } from './ground-art';
 import { POOL_SHARES, SPEC_MASK_K } from './lamp-reflect';
 import { LOT_DECALS } from './lot-decals';
 import { clampDecals, drawDecals, flatSquash, placeDecals } from './map-decals';
@@ -303,6 +303,19 @@ const hash01 = (k: number, salt: number) => { let h = Math.imul(k ^ 0x9e3779b9, 
 const signedArea = (pts: number[]) => { let a = 0; const n = pts.length / 2; for (let i = 0; i < n; i++) { const j = (i + 1) % n; a += pts[2 * i] * pts[2 * j + 1] - pts[2 * j] * pts[2 * i + 1]; } return a / 2; };
 
 /** Paints ground chunks (the full-quality bake) and planner chunks (the far-zoom map). Runs in the ground workers. */
+/** T215: the reflection mask's bytes (RGBA, not premultiplied: the GPU reads them as they are): the road's local mean colour (mean: its asphalt
+ *  alone, unpremultiplied; a texel with little asphalt takes the chunk's mean road colour, so the GPU's bilinear lookup next to the asphalt's
+ *  edge never mixes in black) and the pools' intensity in alpha (cover's red) */
+function specBytes(mean: Uint8ClampedArray, cover: Uint8ClampedArray, w: number, h: number): { w: number; h: number; data: Uint8Array } {
+  const out = new Uint8Array(w * h * 4); let r = 0, g = 0, b = 0, n = 0;
+  for (let k = 0; k < mean.length; k += 4) { const a = mean[k + 3]!; if (a >= 16) { r += mean[k]! * a; g += mean[k + 1]! * a; b += mean[k + 2]! * a; n += a; } }
+  const fill = n ? [r / n, g / n, b / n] : [...ASPHALT_MEAN];
+  for (let k = 0; k < out.length; k += 4) {
+    const own = mean[k + 3]! >= 16;
+    out[k] = own ? mean[k]! : fill[0]!; out[k + 1] = own ? mean[k + 1]! : fill[1]!; out[k + 2] = own ? mean[k + 2]! : fill[2]!; out[k + 3] = cover[k]!;
+  }
+  return { w, h, data: out };
+}
 /** the baked shade mask's size against its chunk's (T186: a quarter each way; the shades are soft) */
 export const SHADE_MASK_K = 4;
 /** a 2D context whose every transform is scaled by k first (T186: a chunk's drawing laid onto its smaller shade mask by the same calls: the
@@ -371,11 +384,11 @@ export class GroundPainter {
   /** T215: the street lamps' reflection pools go onto a per-chunk reflection mask (the camera specular lights the road by it on the GPU, gl.ts
    *  FS_QUAD) instead of into the road picture (the dev switch window.__game.specCam, GroundCache.setSpecCam; off, the default, bakes them as before) */
   specCam = false;
-  /** T215: the reflection mask of the bake in progress (a SPEC_MASK_K-th of the chunk's size each way, opaque black, the pools' intensity in
-   *  red), made only when the chunk has a pool on its asphalt; null between bakes, in a planner bake and with specCam off */
-  private specMask: OffscreenCanvas | null = null;
+  /** T215: the reflection mask of the bake in progress (a SPEC_MASK_K-th of the chunk's size each way: the road's local mean colour and the pools'
+   *  intensity as RGBA bytes, specBytes), made only when the chunk has a lamp pool; null between bakes, in a planner bake and with specCam off */
+  private specMask: { w: number; h: number; data: Uint8Array } | null = null;
   /** the reflection mask of the bake just done (the worker transfers it), or null when it has none */
-  takeSpecMask(): OffscreenCanvas | null { const m = this.specMask; this.specMask = null; return m; }
+  takeSpecMask(): { w: number; h: number; data: Uint8Array } | null { const m = this.specMask; this.specMask = null; return m; }
   private leafPic: Cnv | null = null; private leafChunks = new Map<string, Cnv>();
   /** the influence grids and masks of the last few chunks, by chunk and sources (living-ground.ts livingSignature) */
   private livingMade = new Map<string, LivingMade>();
@@ -1131,6 +1144,17 @@ export class GroundPainter {
         const ringR = Math.max(0.8, i.r * 0.42);
         ctx.beginPath(); ctx.arc(i.x, i.y, ringR, 0, Math.PI * 2); ctx.arc(i.x, i.y, ringR - 0.7, 0, Math.PI * 2, true); ctx.fillStyle = pat('paving'); ctx.fill('evenodd');
       }
+      // T215: with specCam on, the road's local mean colour before its decals, markings and pools (the asphalt alone, through its mask, at the
+      // reflection mask's size; getImageData unpremultiplies, so a texel's colour is the mean over its asphalt only): the GPU takes the road's
+      // texture as each pixel's distance from it (lamp-reflect.ts specPixel)
+      const pools = net.pools.filter(p => p.x >= tx0 - 8 && p.x <= tx1 + 8 && p.y >= ty0 - 8 && p.y <= ty1 + 8);
+      const specK = 1 / SPEC_MASK_K, mw = Math.max(1, Math.ceil(W * specK)), mh = Math.max(1, Math.ceil(H * specK));
+      let specMean: Uint8ClampedArray | null = null;
+      if (this.specCam && pools.length) {
+        const b = this.buffer('specRoad', W, H), bg = ctx2d(b); bg.drawImage(cv, 0, 0); bg.globalCompositeOperation = 'destination-in'; bg.drawImage(asphMask, 0, 0);
+        const s = this.buffer('specMean', mw, mh), sg = ctx2d(s); sg.imageSmoothingEnabled = true; sg.imageSmoothingQuality = 'high'; sg.drawImage(b, 0, 0, W * specK, H * specK);
+        specMean = sg.getImageData(0, 0, mw, mh).data;
+      }
       // ---- 8. decals, tyre marks, markings (chipped), crossings
       if (!lite) for (const d of net.decals) if (d.x >= tx0 - 2 && d.x <= tx1 + 2 && d.y >= ty0 - 2 && d.y <= ty1 + 2) drawDecal(ctx, d);
       if (!lite) for (const t of net.tyres) {
@@ -1157,7 +1181,6 @@ export class GroundPainter {
         for (const w of wear) { wg.strokeStyle = 'rgba(255,255,255,0.035)'; wg.lineWidth = 0.5; for (const o of w.offsets) wg.stroke(roundedPath(offsetPolyline(w.pts, o, w.closed), w.r, w.closed)); }
         through(wb, asphMask); composite(wb, 'screen');
       }
-      const pools = net.pools.filter(p => p.x >= tx0 - 8 && p.x <= tx1 + 8 && p.y >= ty0 - 8 && p.y <= ty1 + 8);
       if (pools.length) {
         const rotA = Math.PI / 2 - tex.stampAngle, sc = 1.2 / (2 * PPM);
         /** a pool's stamp transform (chunk px): the stamp's anchor on the pool, its streak turned to the screen's */
@@ -1165,19 +1188,19 @@ export class GroundPainter {
           const S = M.transformPoint(new DOMPoint(p.x, p.y));
           return new DOMMatrix([1, 0, 0, 1, S.x, S.y]).multiply(new DOMMatrix([Math.cos(rotA), Math.sin(rotA), -Math.sin(rotA), Math.cos(rotA), 0, 0])).multiply(new DOMMatrix([1, 0, 0, 1, -S.x, -S.y])).multiply(M).multiply(new DOMMatrix([sc, 0, 0, sc, p.x, p.y])).multiply(new DOMMatrix([1, 0, 0, 1, -POOL_ANCHOR[0], -POOL_ANCHOR[1]]));
         };
-        if (this.specCam) {
+        if (specMean) {
           // T215: the pools' coverage (each stamp at its strength, through the asphalt mask) onto the reflection mask instead, a SPEC_MASK_K-th
-          // of the chunk's size: red = 0.4 pool1 + 0.5 pool2, the stamp's intensity (lamp-reflect.ts poolIntensity); the GPU lights the road
-          // by it times the camera falloff (gl.ts FS_QUAD), so the road picture keeps no pool
-          const k = 1 / SPEC_MASK_K, mw = Math.max(1, Math.ceil(W * k)), mh = Math.max(1, Math.ceil(H * k)), Sk = new DOMMatrix([k, 0, 0, k, 0, 0]);
-          const mc = new OffscreenCanvas(mw, mh), mg = mc.getContext('2d')!; mg.fillStyle = '#000'; mg.fillRect(0, 0, mw, mh); mg.globalCompositeOperation = 'lighter';
+          // of the chunk's size: its alpha 0.4 pool1 + 0.5 pool2, the stamp's intensity (lamp-reflect.ts poolIntensity), its colour the road's
+          // local mean; the GPU lights the road by it times the camera falloff (gl.ts FS_QUAD), so the road picture keeps no pool
+          const k = specK, Sk = new DOMMatrix([k, 0, 0, k, 0, 0]);
+          const mc = this.buffer('specCover', mw, mh), mg = ctx2d(mc); mg.fillStyle = '#000'; mg.fillRect(0, 0, mw, mh); mg.globalCompositeOperation = 'lighter';
           ([[POOL_SHARES[0], tex.pool1], [POOL_SHARES[1], tex.pool2]] as const).forEach(([share, stamp]) => {
             const pm = this.buffer('specPool', mw, mh), pg = ctx2d(pm); pg.imageSmoothingEnabled = true;
             for (const p of pools) { pg.setTransform(Sk.multiply(stampAt(p))); pg.globalAlpha = p.strength; pg.drawImage(stamp, 0, 0); }
             pg.setTransform(1, 0, 0, 1, 0, 0); pg.globalAlpha = 1; pg.globalCompositeOperation = 'destination-in'; pg.drawImage(asphMask, 0, 0, W * k, H * k); pg.globalCompositeOperation = 'source-over';
             mg.globalAlpha = share; mg.drawImage(pm, 0, 0);
           });
-          this.specMask = mc;
+          this.specMask = specBytes(specMean, mg.getImageData(0, 0, mw, mh).data, mw, mh);
         } else for (const [variant, stamp] of [['lit1', tex.pool1], ['lit2', tex.pool2]] as const) {
           const pm = this.buffer('poolMask', W, H), pg = ctx2d(pm); pg.imageSmoothingEnabled = true;
           for (const p of pools) { pg.setTransform(stampAt(p)); pg.globalAlpha = p.strength; pg.drawImage(stamp, 0, 0); }

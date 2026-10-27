@@ -13,7 +13,7 @@ import { CONTACT_LEAN } from './shadow-shape';
 import { CONTACT_AO, VERTEX_FLOATS, type VectorMesh } from './shadow-vector';
 import { SHADOW_AMBIENT } from './cast-shadow';
 import { BRAKE_LIGHT } from './sim/car-lamps';
-import { LAMP_LIT_GLSL, SPEC_MASK_K } from './lamp-reflect';
+import { SPEC_LIGHT_GLSL, SPEC_MASK_K } from './lamp-reflect';
 
 /** floats per sprite instance: rect x0 y0 x1 y1 (world px), uv u0 v0 u1 v1, layer, alpha, cullable, foot line (world px; < 0: casts no shadow),
  *  clip x0 y0 x1 y1 (world px), foot: the footprint's near corner x y and its left and right corners' x (world px; the cast shadows stand on it) */
@@ -52,23 +52,23 @@ void main() {
   vUV = mix(uUV.xy, uUV.zw, c);
 }`;
 // T215: the street lamps' reflection pools as the camera specular (lamp-reflect.ts): a chunk with a reflection mask (uSpec.z > 0: its gain)
-// lights its own pixels by the painting's lamp response (lampLit, the 'lit' mosaics' litPixel) at the mask's intensity times the camera
-// falloff, 1 within uSpec.x of the screen's centre and 0 past uSpec.y (the distance in device px over half the longer side: round on any
-// screen). The mask is a SPEC_MASK_K-th of the chunk's size (its uv scaled to the px it covers). No mask (uSpec.z 0): the chunk as before
+// lights its own pixels as the bake's pools did (specLight: toward the 'lit' mosaics' response of the painting's pixel, rebuilt from the
+// road's local mean the mask holds in rgb) at the mask's intensity (alpha) times the camera falloff, 1 within uSpec.x of the screen's centre
+// and 0 past uSpec.y (the distance in device px over half the longer side: round on any screen). The mask is a SPEC_MASK_K-th of the
+// chunk's size (its uv scaled to the px it covers). No mask (uSpec.z 0): the chunk as before
 const FS_QUAD = `#version 300 es
 precision highp float;
 uniform sampler2D uTex; uniform sampler2D uMask; uniform int uMode; uniform vec2 uScreen; uniform float uAlpha;
 uniform sampler2D uSpecTex; uniform vec4 uSpec;
 in vec2 vUV; out vec4 o;
-${LAMP_LIT_GLSL}
+${SPEC_LIGHT_GLSL}
 void main() {
   vec4 c = texture(uTex, vUV);
   if (uSpec.z > 0.0) {
-    float a = texture(uSpecTex, vUV * vec2(textureSize(uTex, 0)) / (${SPEC_MASK_K.toFixed(1)} * vec2(textureSize(uSpecTex, 0)))).r;
-    if (a > 0.002) {
+    vec4 m = texture(uSpecTex, vUV * vec2(textureSize(uTex, 0)) / (${SPEC_MASK_K.toFixed(1)} * vec2(textureSize(uSpecTex, 0))));
+    if (m.a > 0.002) {
       float d = length(gl_FragCoord.xy - 0.5 * uScreen) / (0.5 * max(uScreen.x, uScreen.y));
-      float I = min(a * (1.0 - smoothstep(uSpec.x, uSpec.y, d)) * uSpec.z, 1.0);
-      if (I > 0.002) c.rgb = lampLit(c.rgb * 255.0, I) / 255.0;
+      c.rgb = specLight(c.rgb * 255.0, vec4(m.rgb * 255.0, m.a), (1.0 - smoothstep(uSpec.x, uSpec.y, d)) * uSpec.z) / 255.0;
     }
   }
   if (uMode == 1) c *= texture(uMask, vec2(gl_FragCoord.x / uScreen.x, 1.0 - gl_FragCoord.y / uScreen.y)).a;
@@ -349,10 +349,10 @@ export class GLRenderer {
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, bmp); this.texParams(gl.TEXTURE_2D, false);
     return t;
   }
-  /** T215: a single-channel texture (R8, the bitmap's red) from a baked chunk's reflection mask (renderer.ts takeSpecMask) */
-  maskTextureFrom(bmp: ImageBitmap) {
+  /** T215: a texture from a baked chunk's reflection mask (renderer.ts takeSpecMask: RGBA bytes, not premultiplied) */
+  specTexture(w: number, h: number, data: Uint8Array) {
     const gl = this.gl, t = gl.createTexture()!; gl.bindTexture(gl.TEXTURE_2D, t);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.R8, gl.RED, gl.UNSIGNED_BYTE, bmp); this.texParams(gl.TEXTURE_2D, false);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, data); this.texParams(gl.TEXTURE_2D, false);
     return t;
   }
   deleteTexture(t: WebGLTexture) { this.gl.deleteTexture(t); }
