@@ -6,7 +6,7 @@ import { City } from '../../src/game/city';
 import { CLASS, RoadNetwork, SK, type ClassId, type Leg, type Node, type Pt, type Seg } from '../../src/game/network';
 import { NetEditor } from '../../src/game/netops';
 import { STRUCT_COST, highwayRoute, splitByTerrain } from '../../src/game/structures';
-import { WIDER, variantCost } from '../../src/game/network';
+import { WIDER } from '../../src/game/network';
 import { classAt, generateTerrain } from '../../src/game/terrain';
 import { TC, type Terrain } from '../../src/game/terrain/types';
 import { MAP } from '../../src/game/iso';
@@ -64,27 +64,18 @@ export function setup(seed: number): Harness {
 export function growLegs(h: Harness, legs: Leg[]) { h.editor.addLegs(legs, CLASS.gravel, 2, undefined, true); h.city.netOps(h.editor.commit()); }
 
 /** what the player run's road upgrades did (playerUpgrade): segs and money in all, and per call */
-export interface PlayerRoads { segs: number; cost: number; tiles: number; minis: number }
+export interface PlayerRoads { segs: number; cost: number; tiles: number }
 /** the classes the player run takes up the ladder (WIDER): the town's gravel to street, then street to road */
 const PLAYER_FROM = new Set(['gravel', 'street']);
 /** A player who upgrades the town's roads (T178; the owner, 2026-10-27: "this is seposed to happen btw. the guy hasto upgrade his town roads"):
  *  the jammed junctions of the bottleneck report (level of service E or F), the worst first, have their gravel and street arms taken one class
  *  up (gravel -> street -> road) with the Upgrade tool's action (engine laneClick: each seg laid again in the next class, its line style and kind
  *  kept, no longer the town's) at the Upgrade tool's price (the class cost difference x length x STRUCT_COST of its kind), paid from the
- *  treasury as construction, while the money lasts above `reserve`, at most `max` segs a call. First, as a player would with the Junction tool,
- *  each jammed plain junction of 3 or more arms becomes a mini-roundabout at the tool's price (variantCost; the scratch runs on seed 1: the
- *  best single lever against the jam, 2.9x ideal at season 12 against paving's 4.4x). Returns what it did */
+ *  treasury as construction, while the money lasts above `reserve`, at most `max` segs a call. Returns what it did */
 export function playerUpgrade(h: Harness, max: number, reserve: number): PlayerRoads {
-  const B = (h.city as unknown as { budget: { money: number } }).budget, done: PlayerRoads = { segs: 0, cost: 0, tiles: 0, minis: 0 };
+  const B = (h.city as unknown as { budget: { money: number } }).budget, done: PlayerRoads = { segs: 0, cost: 0, tiles: 0 };
   const jammed = h.city.report(0).junctions.filter(j => j.los === 'E' || j.los === 'F').sort((p, q) => q.loss - p.loss);
-  const seen = new Set<Seg>(), mini = variantCost('mini', 1);
-  for (const j of jammed) {
-    const m = h.editor.net.nodeAt({ x: j.x, y: j.y });
-    if (m && m.type === 'plain' && m.segs.length >= 3 && m.segs.every(sg => PLAYER_FROM.has(sg.cls.id)) && B.money - mini >= reserve) {
-      h.city.spend('construction', mini); h.editor.setNodeType(m, 'mini'); done.minis++; done.cost += mini;
-    }
-  }
-  if (done.minis) h.city.netOps(h.editor.commit());
+  const seen = new Set<Seg>();
   for (const j of jammed) {
     const n = h.editor.net.nodeAt({ x: j.x, y: j.y }); if (!n) continue;
     for (const sg of [...n.segs]) {
