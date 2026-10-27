@@ -21,7 +21,7 @@ import { type GrassCellView } from './ext/grass-management';
 import { grassOverlay } from './lawn-overlay';
 import { surfaceOfTex } from './golf/costs';
 import { CELL as COURSE_CELL } from './golf/paintcourse';
-import { AREA_SHADE, EDGE_LOOKS, areaLightEdge, areaShadeImages, areaShadeReach, areaShadow, bandRamp, edgeBox, edgeField, edgeImages, edgeReach, edgeRes, featherTiles, litBox, type EdgeImage } from './paint-edges';
+import { AREA_SHADE, EDGE_LOOKS, JOINT_SOFT, SHADE_RGB, areaLightEdge, areaShadeImages, areaShadeReach, areaShadow, bandRamp, edgeBox, edgeField, edgeImages, edgeReach, edgeRes, featherTiles, jointFeather, jointLen, jointRamp, jointShadeWeight, litBox, type EdgeImage } from './paint-edges';
 import { CH_SIZE } from './ext/course-height';
 import { CART_RIM, CART_SURFACE, cartCast, cartRim } from './cart-bevel';
 import { faceShift, kerbFace, stepReach, upScreen } from './kerb-face';
@@ -1360,7 +1360,7 @@ export class GroundPainter {
       const s = this.buffer('small', img.W, img.H); ctx2d(s).putImageData(new ImageData(img.data as Uint8ClampedArray<ArrayBuffer>, img.W, img.H), 0, 0);
       g.save(); g.setTransform(M); g.globalCompositeOperation = op; g.imageSmoothingEnabled = true; g.drawImage(s, x0, y0, img.W / res, img.H / res); g.restore();
     };
-    const flatF = featherTiles(EDGE_LOOKS.flat!, L), px = 1 / (TILE_PX * L);
+    const flatF = featherTiles(EDGE_LOOKS.flat!, L), wallF = 0.5 * jointFeather(L);
     const layers = (s: number) => { const out: { c: CoursePatch; l: CourseLayer }[] = []; for (const c of cs) for (const l of c.layers) if (l.s === s) out.push({ c, l }); return out; };
     // the walls by the layer they hang over, the lit top edges by the layer they light. A raised surface's bank or rock face (T127) is drawn
     // just before that surface's first layer instead, over every flat layer drawn so far (one bank spans the rough and the fairway alike)
@@ -1445,7 +1445,11 @@ export class GroundPainter {
         // a lip or bank lies on the ground under it and takes no part in the walls (course-walls isOverlay): kept off every wall face
         const over = isOverlay(code) && allWalls.length > 0;
         if (over) { const keep = new Path2D(); keep.rect(r[0]!, r[1]!, r[2]! - r[0]!, r[3]! - r[1]!); keep.addPath(wallFaces(allWalls)); ctx.save(); ctx.setTransform(M); ctx.clip(keep, 'evenodd'); }
-        if (!lite) for (const { l } of ls) if (l.collar) feather(l.collar, l.collar.soft ?? l.collar.edges, Math.min(flatF, l.collar.w ?? flatF)); // a thin band (the Border slider) feathers no wider than itself
+        // a thin band (the Border slider) feathers no wider than itself, but never under 0.6 of the flat feather (T196: no crisp outer line)
+        if (!lite) for (const { l } of ls) if (l.collar) feather(l.collar, l.collar.soft ?? l.collar.edges, Math.min(flatF, Math.max(l.collar.w ?? flatF, 0.6 * flatF)));
+        // T196: every edge of a raised band (a green's fringe, a tee's cut) softened a little, its walls' tops too: the band's texture fades
+        // over the top of the face hanging from it (a pond's bank keeps its own wet edge)
+        if (!lite && code !== layerCode(SURF.water, true)) for (const { l } of ls) if (l.collar) feather(l.collar, l.collar.edges, wallF);
         for (const { l } of ls) if (l.collar) fill(l.collar, l.collar.fill);
         // a pond's bank: wet soil fading out from the water's edge into the grass, and a few stones
         if (!lite && code === layerCode(SURF.water, true)) this.courseBank(ctx, ls.flatMap(q => q.l.edges), ringsOfCode(code), L, M);
@@ -1471,6 +1475,8 @@ export class GroundPainter {
         }
         for (const q of ims) { put(q.im.shadow, q.x0, q.y0, 'multiply'); this.onShadeMask(m => put(q.im.shadow, q.x0, q.y0, 'multiply', m)); } // 1
         if (!lite) for (const { l } of ls) feather(l, l.soft ?? l.edges, f);                     // 2
+        if (!lite) for (const { l } of ls) if (l.joint?.length) feather(l, l.joint, jointFeather(L)); // 2b: the cross-fade over its own collar (T196)
+        if (!lite && !prof?.sunken && s !== SURF.water) for (const { l } of ls) feather(l, l.edges, wallF); // 2c: its walls' tops softened (T196)
         for (const { l } of ls) fill(l, l.fill);                                                   // 3
         if (COURSE_DIRT) for (const { c, l } of ls) if (c.grow) this.courseDirt(ctx, c, l, L, X0, Y0, M, Minv, r); // 4: every tier, the grow-in is the ground's state (P23 D5.1)
         for (const q of ims) {                                                                     // 5
@@ -1482,7 +1488,9 @@ export class GroundPainter {
         }
         if (!lite) {                                                                               // 6
           const joints = ls.flatMap(q => q.l.joint ?? []);
-          if (joints.length) { ctx.save(); ctx.setTransform(M); ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.globalCompositeOperation = 'multiply'; ctx.strokeStyle = 'rgba(64,84,70,0.75)'; ctx.lineWidth = Math.max(1.2 * px, 0.035); ctx.stroke(linesOf(joints)); ctx.restore(); }
+          // T196: a soft shade on the collar side (the lower surface), reaching a little back over the surface, stronger turned from the sun:
+          // no crisp mowing line
+          if (joints.length) { const up = ringsOfCode(code), down = ringsOfCode(code | 1); this.courseJointShade(ctx, joints, L, M, up, down); this.onShadeMask(m => this.courseJointShade(m, joints, L, M, up, down)); }
         }
         rims(code);                                                                                // 7
         if (!lite && COURSE_STRIPES) for (const { l } of ls) this.courseStripes(ctx, l, L, M);      // 8
@@ -1873,6 +1881,28 @@ export class GroundPainter {
         for (let e = 1; e >= 0; e -= 0.25) { const b = P(j, fr * e, e); side.lineTo(b[0], b[1]); }
         side.closePath();
       }
+    }
+  }
+  /** a course surface's joints with its own collar (T196, paint-edges JOINT_SOFT; the owner: "this should be blurred to be a shadow not a hard
+   *  line"): the shade multiplied in SHADE_RGB (T110: cool, the textures stay), its peak at the joint and falling smoothly over jointLen into
+   *  the collar (clipped to it: the lower side) and over inner x that back over the surface (clipped to it), by jointRamp's strokes; each
+   *  segment weighted by how far it turns from the sun (jointShadeWeight, four steps). Its outward normal is (dy, -dx), the edges' own */
+  private courseJointShade(g: C2D, joints: readonly ArrayLike<number>[], L: number, M: DOMMatrix, up: Path2D, down: Path2D) {
+    const NB = 4, bins = Array.from({ length: NB }, () => new Path2D()), used = new Array<boolean>(NB).fill(false);
+    for (const q of joints) for (let i = 0; i + 3 < q.length; i += 2) {
+      const dx = q[i + 2]! - q[i]!, dy = q[i + 3]! - q[i + 1]!, l = Math.hypot(dx, dy); if (l < 1e-6) continue;
+      const facing = (dy * SUN_DIR.x - dx * SUN_DIR.y) / l, w = jointShadeWeight(facing), k = Math.min(NB - 1, Math.max(0, Math.round((w - JOINT_SOFT.lit) / (1 - JOINT_SOFT.lit) * (NB - 1))));
+      bins[k]!.moveTo(q[i]!, q[i + 1]!); bins[k]!.lineTo(q[i + 2]!, q[i + 3]!); used[k] = true;
+    }
+    const len = jointLen(L), [r, gc, b] = SHADE_RGB;
+    for (const [clip, reach] of [[down, len], [up, len * JOINT_SOFT.inner]] as const) {
+      g.save(); g.setTransform(M); g.clip(clip, 'evenodd'); g.globalCompositeOperation = 'multiply'; g.lineJoin = 'round'; g.lineCap = 'round';
+      for (let k = 0; k < NB; k++) {
+        if (!used[k]) continue;
+        const w = JOINT_SOFT.lit + ((1 - JOINT_SOFT.lit) * k) / (NB - 1);
+        for (const st of jointRamp(reach, JOINT_SOFT.shade * w)) { if (st.alpha <= 0) continue; g.strokeStyle = `rgba(${r},${gc},${b},${st.alpha.toFixed(4)})`; g.lineWidth = 2 * st.half; g.stroke(bins[k]!); }
+      }
+      g.restore();
     }
   }
   /** the lit top edges on one layer (T099; ext/course-walls RimRun: a height step whose face turns to the sun at the upper right, the higher

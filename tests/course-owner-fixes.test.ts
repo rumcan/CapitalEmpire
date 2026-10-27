@@ -221,8 +221,9 @@ test('5. the walls\' shadow is a hairline by default: a thin soft contact line, 
   assert.equal(DEFAULT_SHADOW, SHADOW_HAIRLINE);
   const h = wallShade();
   assert.deepEqual(h, wallShade(SHADOW_HAIRLINE));
-  assert.ok(h.soft <= 0.04 && h.softPx <= 1, `contact stroke ${h.soft} tiles`);
-  assert.ok(h.line <= 0.015, `contact line ${h.line} tiles`);
+  assert.ok(h.soft <= 0.06 && h.softPx <= 2, `contact stroke ${h.soft} tiles`);
+  // T196: the tight line is soft too: at least 1.2 px and light, never a crisp dark hairline
+  assert.ok(h.line <= 0.03 && h.linePx >= 1.2 && h.lineA <= 0.2, `contact line ${h.line} tiles, ${h.linePx} px at ${h.lineA}`);
   assert.ok(h.cast <= 0.15 * WALL_SHADOW + 1e-9 && h.castA <= 0.15, `cast ${h.cast} tiles a metre at ${h.castA}`);
   const s = wallShade(1);
   assert.deepEqual([s.cast, s.castA, s.soft, s.softPx, s.softA, s.line, s.linePx, s.lineA], [WALL_SHADOW, 0.34, 0.12, 3, 0.45, 0.05, 1.5, 0.8], 'strong: the walls\' shadow as T099 drew it');
