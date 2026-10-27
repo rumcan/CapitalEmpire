@@ -50,13 +50,21 @@ export interface RangeHostCtx {
 function patchTex(s: ScenePatch['surf']): LotPatch['tex'] {
   if (s === 'concrete') return 'pad'; // the Paint tool's concrete
   if (s === 'dirt' || s === 'grassDry' || s === 'asphaltDark' || s === 'gravel') return s;
-  // the range's own presets (T132: the owner tunes them in the studio), else the course's fairway and green as before
-  if (s === 'outfield' || s === 'target') { const own = rangePreset(s); return own ? presetTex(own.id) : patchTex(s === 'outfield' ? 'fairway' : 'green'); }
+  // the range's own presets (T132, T223: the owner tunes them in the studio), else the nearest game texture
+  if (s in RANGE_PRESET) { const own = rangePreset(s as RangePresetKey); return own ? presetTex(own.id) : PRESET_FALLBACK[s as RangePresetKey](); }
   return (surfacePreset(s) ?? SURFACE_TEX[s as GolfSurface].tex) as LotPatch['tex'];
 }
-/** the range's own texture presets (paint-presets.json, T132): the outfield (its mowing stripes) and the target greens */
-export const RANGE_PRESET: Readonly<Record<'outfield' | 'target', string>> = { outfield: 'range-outfield', target: 'range-green' };
-const rangePreset = (s: 'outfield' | 'target') => PRESETS.find(p => p.id === RANGE_PRESET[s]) ?? null;
+type RangePresetKey = 'outfield' | 'target' | 'desert' | 'teeDirt' | 'teeTurf' | 'yard';
+/** the range's own texture presets (paint-presets.json, T132): the outfield (its mowing stripes) and the target greens; T223: the desert start's
+ *  outfield (the Waste area sand's desert, no stripes), the range's tee box as packed dirt and as its divot-scarred turf (its own, so the
+ *  course's tees never change with it), and the caravan's and the cottage's desert yard (painted-surfaces.json presets give each its look) */
+export const RANGE_PRESET: Readonly<Record<RangePresetKey, string>> = { outfield: 'range-outfield', target: 'range-green', desert: 'range-outfield-desert', teeDirt: 'range-tee', teeTurf: 'range-tee-turf', yard: 'range-home-yard' };
+/** the texture a range patch takes when its preset is missing (the course's fairway, green and tee, the waste sand and the dirt) */
+const PRESET_FALLBACK: Readonly<Record<RangePresetKey, () => LotPatch['tex']>> = {
+  outfield: () => patchTex('fairway'), target: () => patchTex('green'), teeTurf: () => patchTex('tee'),
+  desert: () => 'wasteSand' as LotPatch['tex'], yard: () => 'wasteSand' as LotPatch['tex'], teeDirt: () => 'dirt',
+};
+const rangePreset = (s: RangePresetKey) => PRESETS.find(p => p.id === RANGE_PRESET[s]) ?? null;
 /** the outfield's mowing stripes (PatchPaint.mw) from its preset's Stripes, laid in the range's frame: 'x' bands across the line of play
  *  (alternating down the range), 'y' bands down it (alternating across); null when the preset has them off */
 export function outfieldStripes(sc: Pick<RangeScene, 'aim' | 'roadDir' | 'mowFrom'>, s: Stripes | null | undefined): MowStripes | null {

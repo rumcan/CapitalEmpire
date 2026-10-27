@@ -541,6 +541,206 @@
    "lawn": false,
    "painted": null,
    "pic": "golf-green"
+  },
+  {
+   "id": "range-outfield-desert",
+   "name": "Range outfield (desert)",
+   "surface": null,
+   "size": 32.5,
+   "col": "#b5976f",
+   "a": {
+    "src": "src/assets/ground/paint-photo-waste-sand.webp",
+    "scale": 4,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1.0,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "b": {
+    "src": "src/assets/ground/paint-photo-dirt.webp",
+    "scale": 6,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1.05,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "mix": {
+    "share": 0.5,
+    "soft": 0.3,
+    "patch": 1,
+    "tone": 0.3,
+    "warm": 0.1,
+    "angle": 0,
+    "tilt": 0.5
+   },
+   "stripes": {
+    "on": false,
+    "dir": "x",
+    "width": 3,
+    "light": 0.12,
+    "dark": 0.12,
+    "lightCol": "#b4d46c",
+    "darkCol": "#2e5a1c",
+    "tint": 0.25,
+    "soft": 0.3
+   },
+   "lawn": false,
+   "painted": null,
+   "pic": "sand"
+  },
+  {
+   "id": "range-tee",
+   "name": "Range tee box (dirt)",
+   "surface": null,
+   "size": 16,
+   "col": "#8a6a48",
+   "a": {
+    "src": "src/assets/ground/paint-photo-dirt.webp",
+    "scale": 4,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1.0,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "b": {
+    "src": "src/assets/ground/paint-photo-dirt.webp",
+    "scale": 7,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 0.92,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "mix": {
+    "share": 0.5,
+    "soft": 0.3,
+    "patch": 1,
+    "tone": 0.3,
+    "warm": 0.1,
+    "angle": 0,
+    "tilt": 0.5
+   },
+   "stripes": {
+    "on": false,
+    "dir": "x",
+    "width": 3,
+    "light": 0.12,
+    "dark": 0.12,
+    "lightCol": "#b4d46c",
+    "darkCol": "#2e5a1c",
+    "tint": 0.25,
+    "soft": 0.3
+   },
+   "lawn": false,
+   "painted": null,
+   "pic": "path-worn"
+  },
+  {
+   "id": "range-tee-turf",
+   "name": "Range tee box (turf)",
+   "surface": null,
+   "size": 16,
+   "col": "#48631d",
+   "a": {
+    "src": "src/assets/ground/paint-photo-golf-fringe.webp",
+    "scale": 1.1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1.05,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "b": {
+    "src": "src/assets/ground/paint-photo-fairway.webp",
+    "scale": 4.4,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1.05,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "mix": {
+    "share": 0.5,
+    "soft": 0.3,
+    "patch": 1,
+    "tone": 0.3,
+    "warm": 0.1,
+    "angle": 0,
+    "tilt": 0.5
+   },
+   "stripes": {
+    "on": false,
+    "dir": "x",
+    "width": 3,
+    "light": 0.12,
+    "dark": 0.12,
+    "lightCol": "#b4d46c",
+    "darkCol": "#2e5a1c",
+    "tint": 0.25,
+    "soft": 0.3
+   },
+   "lawn": false,
+   "painted": null,
+   "pic": "first-cut"
+  },
+  {
+   "id": "range-home-yard",
+   "name": "Range home yard (desert)",
+   "surface": null,
+   "size": 16,
+   "col": "#b5976f",
+   "a": {
+    "src": "src/assets/ground/paint-photo-waste-sand.webp",
+    "scale": 4,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1.0,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "b": {
+    "src": "src/assets/ground/paint-photo-dirt.webp",
+    "scale": 6,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1.05,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "mix": {
+    "share": 0.5,
+    "soft": 0.3,
+    "patch": 1,
+    "tone": 0.3,
+    "warm": 0.1,
+    "angle": 0,
+    "tilt": 0.5
+   },
+   "stripes": {
+    "on": false,
+    "dir": "x",
+    "width": 3,
+    "light": 0.12,
+    "dark": 0.12,
+    "lightCol": "#b4d46c",
+    "darkCol": "#2e5a1c",
+    "tint": 0.25,
+    "soft": 0.3
+   },
+   "lawn": false,
+   "painted": null,
+   "pic": "sand"
   }
  ],
  "blocks": null,

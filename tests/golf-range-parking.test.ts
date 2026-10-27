@@ -67,8 +67,8 @@ test('the save: the building round-trips, an old save loads without it, a buildi
   assert.deepEqual(back.owned, s.owned); assert.equal(back.garage, true);
   // a save from before T146 (T133's shape): nothing new, no building
   const old = normalizeRangeBiz({ v: 1, owned: GROWN, price: 8, season: { takings: 5 }, total: { takings: 9 }, practice: {}, extras: {}, paths: true, tee: true });
-  assert.deepEqual(old.owned, GROWN); assert.equal(old.garage, undefined); assert.ok(!rangeStats(old).parking);
-  assert.deepEqual(normalizeRangeBiz({ v: 1, owned: ['bays8', 'parking'], price: 6, garage: true }).owned, ['bays8'], 'the building needs the second tier');
+  assert.deepEqual(old.owned, ['teeturf', 'grass', ...GROWN], 'a save from before T223 keeps its grass'); assert.equal(old.garage, undefined); assert.ok(!rangeStats(old).parking);
+  assert.deepEqual(normalizeRangeBiz({ v: 1, owned: ['bays8', 'parking'], price: 6, garage: true, desert: true }).owned, ['bays8'], 'the building needs the second tier');
   assert.equal(normalizeRangeBiz({ v: 1, owned: ['bays8'], price: 6, garage: true }).garage, undefined, 'no path flag without the building');
 });
 

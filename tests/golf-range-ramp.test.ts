@@ -181,7 +181,7 @@ test('the range upgrades cost upkeep each month, booked as upkeep and shown on t
 });
 
 test('the range stays a range: its own outfield preset with mowing stripes on top, target greens raised in a fringe and collar', () => {
-  const sc = rangeScene([200, 200, 70, 150], 2, defaultRangeBiz());
+  const sc = rangeScene([200, 200, 70, 150], 2, withUpgrade(withUpgrade(defaultRangeBiz(), 'teeturf'), 'grass')); // T223: once grassed
   const out = sc.patches.filter(p => p.surf === 'outfield'); assert.equal(out.length, 1); assert.equal(out[0]!.mow, true);
   const greens = sc.patches.filter(p => p.surf === 'target'); assert.equal(greens.length, 2, 'two target greens to start');
   assert.ok(greens.every(p => p.edge === 'raised'));

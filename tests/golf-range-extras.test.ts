@@ -4,7 +4,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  ACADEMY_BAYS, COFFEE, DECK_H, EXTRA_APPEAL, HOME_AT, KIOSK_SHARE, LESSON, LESSON_SHARE, PICK_SWATH, RANGE_UPGRADES, RangeSim, TIER2_BAYS,
+  ACADEMY_BAYS, COFFEE, DECK_H, EXTRA_APPEAL, GROUND_APPEAL, HOME_AT, KIOSK_SHARE, LESSON, LESSON_SHARE, PICK_SWATH, RANGE_UPGRADES, RangeSim, TIER2_BAYS,
   defaultRangeBiz, homeStage, normalizeRangeBiz, rangeNewSeason, rangeScale, rangeScene, rangeStats, rangeUpkeep, skippedVisits, upgradeWhy, withUpgrade,
   type CarSlot, type RangeBizSave, type RangeUpgradeId,
 } from '../src/game/golf/rangebiz';
@@ -16,7 +16,7 @@ const FACINGS = [0, 1, 2, 3] as const;
 const start = { tier: 1, exits: 2, residents: 0 }, busy = { tier: 5, exits: 2, residents: 20000 };
 const buy = (ids: RangeUpgradeId[], s = defaultRangeBiz()): RangeBizSave => ids.reduce((q, id) => withUpgrade(q, id), s);
 const BASE: RangeUpgradeId[] = ['bays8', 'bays12', 'targets', 'covered', 'dispenser', 'proshop'];
-const EVERY: RangeUpgradeId[] = [...BASE, 'bays24', 'lights', 'kiosk', 'picker', 'tier2', 'academy', 'parking'];
+const EVERY: RangeUpgradeId[] = [...BASE, 'bays24', 'lights', 'kiosk', 'picker', 'tier2', 'academy', 'parking', 'teeturf', 'grass'];
 
 test('the extras are range card upgrades: their costs, upkeep and what each needs first', () => {
   const by = new Map(RANGE_UPGRADES.map(u => [u.id, u]));
@@ -41,7 +41,7 @@ test('what the extras do to the stats: twelve bays upstairs, the appeal, the hou
   assert.ok(Math.abs(s1.appeal - s0.appeal - EXTRA_APPEAL.tier2) < 1e-9);
   assert.equal(all.bays, 36); assert.equal(all.lowerBays, 24); assert.equal(all.qMax, 4 + 9);
   assert.ok(all.academy && all.kiosk && all.picker);
-  assert.ok(Math.abs(all.appeal - (1.6 + 0.1 + 0.05 + 0.03 + 0.05)) < 1e-9);
+  assert.ok(Math.abs(all.appeal - (1.6 + 0.1 + 0.05 + 0.03 + 0.05 + GROUND_APPEAL.teeturf + GROUND_APPEAL.grass)) < 1e-9); // T223: the ground upgrades too
   assert.equal(all.close, 22); assert.equal(rangeStats(buy(['kiosk', 'picker'], buy(['bays8']))).close, 18);
 });
 
@@ -50,7 +50,7 @@ test('the save: the extras round-trip, an old save migrates with zero counts, a 
   const back = normalizeRangeBiz(JSON.parse(JSON.stringify(s)));
   assert.deepEqual(back.owned, s.owned); assert.deepEqual(back.extras, s.extras);
   const old = normalizeRangeBiz({ v: 1, owned: ['bays8', 'tier2', 'academy'], price: 6, season: { takings: 5 }, practice: {} });
-  assert.deepEqual(old.owned, ['bays8'], 'the second tier (no 12 bays or cover) and the academy (no pro shop) are dropped');
+  assert.deepEqual(old.owned, ['teeturf', 'grass', 'bays8'], 'the second tier (no 12 bays or cover) and the academy (no pro shop) are dropped; the grass of a save from before T223 is kept');
   assert.deepEqual(old.extras, defaultRangeBiz().extras, 'a save from before T133 has no coffees or lessons');
   rangeNewSeason(s); assert.equal(s.extras.kiosk.season.golfers, 0); assert.equal(s.extras.academy.total.takings, 1200);
 });

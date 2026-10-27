@@ -41,6 +41,10 @@
   "lawns": { "family": "first-cut-run", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "path-worn": { "family": "underground-earth", "version": "v2", "scale": 0.5, "tint": "#b0b4e8", "tone": 0 },
   "range-outfield": { "family": "fringe", "version": null, "scale": 1, "tint": "#ffedfa", "tone": 0.06 },
-  "range-green": { "family": "putting-green-run", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 }
+  "range-green": { "family": "putting-green-run", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
+  "range-outfield-desert": { "family": "desert-run", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
+  "range-tee": { "family": "dirt-run", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
+  "range-tee-turf": { "family": "range-tee-divots-run", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
+  "range-home-yard": { "family": "desert-run", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 }
  }
 }
