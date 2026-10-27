@@ -13,6 +13,7 @@ import savedDecals from './map-decals.json';
 import { HS, TC, type Waterway } from './terrain/types';
 import { makeNoise } from './terrain/noise';
 import { WOODLAND_TEX, classAlpha, rockAlpha, shadeField, shadeRGBA, slopeField, waterBox, waterShape } from './terrain-paint';
+import { fairwayStripeLook, holeStripeLegs, legArea, type StripeLook } from './course-stripes';
 import { quadBox, type CourseLayer, type CoursePatch, type CourseRim, type CourseTex, type CourseWall, type LotPatch, type MowStripes, type PatchTex } from './ground-protocol';
 import { DRAW_ORDER, FaceForm, GREEN_FACE, STAIR_TREAD, SURF_HEIGHT, SUN_DIR, WALL_DROP, WALL_PX_PER_M, WALL_TEX, WallMat, defaultShadow, faceLight, faceScale, isOverlay, layerCode, shadowOwner, slopeLight, stairSteps, wallShade, type Stair, type WallShade } from './ext/course-walls';
 import { SURF } from './ext/course-grid';
@@ -181,10 +182,11 @@ const polyPath = (pts: number[]) => {
 const ringPath = (p: Path2D, pts: ArrayLike<number>) => { if (pts.length < 6) return; p.moveTo(pts[0]!, pts[1]!); for (let k = 2; k + 1 < pts.length; k += 2) p.lineTo(pts[k]!, pts[k + 1]!); p.closePath(); };
 /** a painted area's or course chunk's place in the draw order among the painted areas */
 const paintZ = (p: LotPatch) => p.course ? -1e300 : p.paint!.z; // the course under every painted area, even one ordered below 0
-/** the course chunks' draw-order switches (renderer drawCourses): step 5, the mowing stripes, waits for T075's stripe bands; step 6, the
- *  dirt of seeded cells through the growth mask, is on (T076 landed) */
-const COURSE_STRIPES = false;
+/** the course chunks' draw-order switch (renderer drawCourses): step 4, the dirt of seeded cells through the growth mask, is on (T076 landed);
+ *  step 8, the fairway's mowing stripes, is GroundPainter.stripes (T218, on: the dev switch GroundCache.setStripes) */
 const COURSE_DIRT = true;
+/** T218: the fairways' stripe look, the range outfield preset's (course-stripes fairwayStripeLook; the presets are fixed at build) */
+const FAIRWAY_STRIPES: StripeLook = fairwayStripeLook();
 /** the strokes of a course surface's outward feather (a linear fade in this many steps) */
 const FEATHER_STEPS = 4;
 /** the soil seeded course cells show while they grow in (plan P21 3.4; a seeded-soil photo is in the art queue) */
@@ -395,6 +397,8 @@ export class GroundPainter {
   casters = new CasterStore(); living = { on: true, debug: false };
   /** T204: the rugged edges on (the default) or off (the dev switch, GroundCache.setRugged) */
   rugged = true;
+  /** T218: the fairways' mowing stripes on (the default) or off (the dev switch, GroundCache.setStripes) */
+  stripes = true;
   /** T215: the street lamps' reflection pools go onto a per-chunk reflection mask (the camera specular lights the road by it on the GPU, gl.ts
    *  FS_QUAD) instead of into the road picture (the dev switch window.__game.specCam, GroundCache.setSpecCam; off, the default, bakes them as before) */
   specCam = false;
@@ -1653,12 +1657,12 @@ export class GroundPainter {
    *    inner half); 3. its fill: the rings, even-odd; 4. the dirt of seeded cells and their young grass through the growth mask x the soft-patch noise
    *    (COURSE_DIRT); 5. the floor shade's light and dark rims; 6. its joint runs: a crisp mowing line where it meets its own collar (the
    *    kerb's joint); 7. its lit top edges (courseRims: a soft painted light along its edges whose step faces the sun at the upper right);
-   *    8. last on its top, the mowing stripes (courseStripes, clipped to its rings: COURSE_STRIPES, off until T075 lands);
+   *    8. last on its top, the fairway's mowing stripes (courseStripes, T218: clipped to its rings, at every tier as the range's are);
    *  - then the walls hanging over that layer (courseWalls), so every layer drawn later covers them where it overlaps and no wall crosses a
    *    later surface; the walls over the map grass go first of all.
    *  Edges that are walls or hidden under a later layer get no feather: they stay crisp, as a kerb's edge. No dark outline stroke. A district
-   *  (lite) chunk draws the fills, the collar fills, the grow-in (the ground's state, never left out) and the walls in their light steps only
-   *  (no feathers, shades, bands, edges or stripes) */
+   *  (lite) chunk draws the fills, the collar fills, the grow-in (the ground's state, never left out), the walls in their light steps and the
+   *  fairway's stripes only (no feathers, shades, bands or edges; the stripes read at every zoom, as the range outfield's do) */
   private drawCourses(ctx: C2D, cs: CoursePatch[], L: number, X0: number, Y0: number, M: DOMMatrix, Minv: DOMMatrix, box: BBox, lite: boolean, under: CanvasPattern | null = null) {
     const r = [box[0] - 1, box[1] - 1, box[2] + 1, box[3] + 1], res = courseRes(L);
     /** a course texture as a fill style on g: painted (its look, composed over the part `need` of the chunk), the photo or preset in tile space
@@ -1873,7 +1877,7 @@ export class GroundPainter {
           if (joints.length) { const up = ringsOfCode(code), down = ringsOfCode(code | 1); this.courseJointShade(ctx, joints, L, M, up, down); this.onShadeMask(m => this.courseJointShade(m, joints, L, M, up, down)); }
         }
         rims(code);                                                                                // 7
-        if (!lite && COURSE_STRIPES) for (const { l } of ls) this.courseStripes(ctx, l, L, M);      // 8
+        if (this.stripes && s === SURF.fairway) for (const { c, l } of ls) this.courseStripes(ctx, c, l, r, M, lite); // 8 (T218)
         if (s === SURF.fairway && !lite && this.rugged) spill();                                                   // 9: the tall grass's spill (T204)
       }
       walls(code);
@@ -2456,11 +2460,54 @@ export class GroundPainter {
     ctx.fillStyle = 'rgb(86,80,70)'; ctx.fill(body); ctx.fillStyle = 'rgba(196,188,164,0.85)'; ctx.fill(lit);
     ctx.restore();
   }
-  /** the last step on a mown surface's top (drawCourses step 7), the mowing stripes along each hole's centre line (P21 3.4): the hook for
-   *  T075's stripeBands, drawn only when COURSE_STRIPES is on (off until T075 lands and is wired here). The owner's rule: the stripes go on
-   *  top at the end, the only pattern allowed to repeat. Clip them to the layer's own rings (l.fill, even-odd): its top, never across the
-   *  walls, which are drawn after this over the layers they hang over */
-  private courseStripes(_ctx: C2D, _l: CourseLayer, _L: number, _M: DOMMatrix) { /* T075: light and dark bands along l.stripes, clipped to l.fill */ }
+  /** drawCourses step 8, last on the fairway's top (T218; the owner's rule: the stripes go on top at the end, the only pattern allowed to
+   *  repeat): its mowing stripes, as light as the range outfield's and drawn by the same mowStripes (the texture screened and multiplied, no
+   *  flat wash). Each hole of l.stripes (course-stripes holeStripeLegs) in its share of the chunk (runs), each leg of its line of play in its
+   *  share of that (legArea: a dogleg's legs split at each bend's bisector); hole 0 in the default direction. Clipped to the layer's rings
+   *  (its wobbled outline, even-odd: never across the walls drawn after it, and inside T204's spill, drawn next) and to the chunk's own box,
+   *  moved by the same wobble as its rings (courseOwnBox), so two chunks never stripe the same ground twice. In world tiles: the bands of
+   *  neighbouring chunks meet */
+  private courseStripes(ctx: C2D, c: CoursePatch, l: CourseLayer, r: readonly number[], M: DOMMatrix, lite: boolean) {
+    const st = l.stripes; if (!st?.length || !l.fill.length) return;
+    const S = c.size, x0 = c.cx * S, y0 = c.cy * S, pad = RUGGED.limit + 0.2;
+    const b = [Math.max(r[0]!, x0 - pad), Math.max(r[1]!, y0 - pad), Math.min(r[2]!, x0 + S + pad), Math.min(r[3]!, y0 + S + pad)];
+    if (b[2]! <= b[0]! || b[3]! <= b[1]!) return;
+    const rings = new Path2D(); for (const q of l.fill) ringPath(rings, q);
+    ctx.save(); ctx.setTransform(M); ctx.clip(this.courseOwnBox(c, lite)); ctx.clip(rings, 'evenodd');
+    for (const e of st) {
+      let eb = b;
+      if (e.runs) {
+        // this hole's share of the chunk (rows of cells merged into boxes): clipped to it, the bands only over its box
+        const p = new Path2D(); let ex0 = Infinity, ey0 = Infinity, ex1 = -Infinity, ey1 = -Infinity;
+        for (let k = 0; k + 3 < e.runs.length; k += 4) {
+          const a0 = e.runs[k]!, a1 = e.runs[k + 1]!, a2 = e.runs[k + 2]!, a3 = e.runs[k + 3]!;
+          p.rect(a0, a1, a2 - a0, a3 - a1); ex0 = Math.min(ex0, a0); ey0 = Math.min(ey0, a1); ex1 = Math.max(ex1, a2); ey1 = Math.max(ey1, a3);
+        }
+        eb = [Math.max(b[0]!, ex0), Math.max(b[1]!, ey0), Math.min(b[2]!, ex1), Math.min(b[3]!, ey1)];
+        if (eb[2]! <= eb[0]! || eb[3]! <= eb[1]!) continue;
+        ctx.save(); ctx.clip(p);
+      }
+      const legs = holeStripeLegs(e.line, FAIRWAY_STRIPES, e.a);
+      if (legs.length === 1) this.mowStripes(ctx, legs[0]!.m, eb);
+      else for (let i = 0; i < legs.length; i++) {
+        const q = legArea(legs, i, eb); if (!q.length) continue;
+        const p = new Path2D(); ringPath(p, q); let qx0 = Infinity, qy0 = Infinity, qx1 = -Infinity, qy1 = -Infinity;
+        for (let k = 0; k + 1 < q.length; k += 2) { qx0 = Math.min(qx0, q[k]!); qx1 = Math.max(qx1, q[k]!); qy0 = Math.min(qy0, q[k + 1]!); qy1 = Math.max(qy1, q[k + 1]!); }
+        ctx.save(); ctx.clip(p); this.mowStripes(ctx, legs[i]!.m, [qx0, qy0, qx1, qy1]); ctx.restore();
+      }
+      if (e.runs) ctx.restore();
+    }
+    ctx.restore();
+  }
+  /** T218: a course chunk's own tile box as a clip path, its sides split and moved by the wobble exactly as its rings' are (warpedCourse: the
+   *  same step, so two chunks' shared side is the same curve), kept per patch and tier; the plain box when the rugged edges are off */
+  private ownBoxes = new WeakMap<CoursePatch, { key: string; p: Path2D }>();
+  private courseOwnBox(c: CoursePatch, lite: boolean): Path2D {
+    const key = `${this.rugged ? 1 : 0}${lite ? 1 : 0}`, had = this.ownBoxes.get(c); if (had?.key === key) return had.p;
+    const S = c.size, x0 = c.cx * S, y0 = c.cy * S, box = [x0, y0, x0 + S, y0, x0 + S, y0 + S, x0, y0 + S];
+    const p = new Path2D(); ringPath(p, this.rugged ? warpLine(box, true, lite ? RUGGED.courseStepLite : RUGGED.courseStep) : box);
+    this.ownBoxes.set(c, { key, p }); return p;
+  }
   /** a grow stage's cells of a course chunk as an alpha mask (1 px per cell; one ImageData kept and reused, chunk after chunk) on the 'small'
    *  buffer */
   private growStageMask(c: CoursePatch, d: GrowDraw): Cnv {

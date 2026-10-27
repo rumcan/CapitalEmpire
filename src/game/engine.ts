@@ -255,6 +255,9 @@ const PLAYING_SURFACES: ReadonlySet<string> = new Set(['fairway', 'firstCut', 'f
 const COURSE_GRID_PAD = 32;
 /** the least time between two sends of the course chunks during a stroke, ms (paint-tool.ts SEND_MS) */
 const COURSE_SEND_MS = 100;
+/** T218: how often (ms) the holes' playing lines are compared with the last look (engine watchHoleLines), and how far round a line that moved
+ *  its chunks are sent again (tiles: the fairway's stripes turn with it; a fairway lies within this of its line) */
+const LINES_EVERY_MS = 250, LINES_REACH = 40;
 /** the least time between two workings-out of the featured holes (the crowd follows the play, docs/GOLF-PLAY.md decision 6), real ms */
 const FEATURED_EVERY_MS = 2000;
 /** the welcome card shows only in a range game loaded with less play than this, seconds (P22 2.8: once per new game; older saves never see it) */
@@ -943,6 +946,26 @@ export class Game {
     }
     return out;
   }
+  /** T218: each hole's playing line as last looked at (its numbers as a key, and its box), null until the first look */
+  private linesSeen: Map<number, { key: string; box: number[] }> | null = null; private linesAt = 0;
+  /** T218: the fairway's stripes follow each hole's playing line, which the chunks carry: when one moves (a pin or tee moved, a plan's bends
+   *  changed, a hole made or gone), the chunks round its old and new line are sent again. Looked at every LINES_EVERY_MS (the frame loop) */
+  private watchHoleLines(now: number) {
+    if (now - this.linesAt < LINES_EVERY_MS) return; this.linesAt = now;
+    if (!this.courseGrid) { this.linesSeen = null; return; }
+    const cur = new Map<number, { key: string; box: number[] }>();
+    for (const [h, l] of this.holeLines()) {
+      const box = [Infinity, Infinity, -Infinity, -Infinity];
+      for (let k = 0; k + 1 < l.length; k += 2) { box[0] = Math.min(box[0]!, l[k]!); box[1] = Math.min(box[1]!, l[k + 1]!); box[2] = Math.max(box[2]!, l[k]!); box[3] = Math.max(box[3]!, l[k + 1]!); }
+      cur.set(h, { key: l.join(','), box });
+    }
+    const seen = this.linesSeen; this.linesSeen = cur; if (!seen) return;
+    const moved: number[][] = [];
+    for (const [h, q] of cur) { const was = seen.get(h); if (!was) moved.push(q.box); else if (was.key !== q.key) moved.push(was.box, q.box); }
+    for (const [h, was] of seen) if (!cur.has(h)) moved.push(was.box);
+    const R = LINES_REACH;
+    for (const b of moved) this.sendCourseChunks([b[0]! - R, b[1]! - R, b[2]! + R, b[3]! + R]);
+  }
   private growCache: { g: CourseGrid; rev: number; now: number; v: Map<number, number> } | null = null;
   /** the holes still growing in, each with the game month (golfMonthIndex's scale) it is grown in (T121; worked out again when the grid or
    *  the month changes) */
@@ -1020,6 +1043,7 @@ export class Game {
   /** every chunk of the grid again (a load, a new look); chunks sent before that are now off the grid are dropped */
   resendCourse() {
     const g = this.courseGrid; if (!g) return;
+    this.linesSeen = null; // every chunk takes the lines as they are now (T218: the watch starts again from them)
     this.sendCourseChunks([g.x0, g.y0, g.x0 + g.w * CELL_T, g.y0 + g.h * CELL_T]);
   }
   /** the grid changed (the Course tool, undo, redo): the workers get the cells, its box waits to be sent (flush: now; else within the frame
@@ -5421,7 +5445,7 @@ export class Game {
     const pdt = this.lastFrame ? Math.min(0.25, (now - this.lastFrame) / 1000) : 0; this.lastFrame = now; const gp = this.golf?.progress; if (gp && this.speed > 0 && gp.playS < STUCK_PLAY_SEC) gp.playS += pdt;
     this.perf.courseMs = this.cMs; this.cMs = 0; this.perf.lotFlushMs = 0;
     if (this.grassWait.size) { const tg = performance.now(); this.courseGrass(1); this.cMs += performance.now() - tg; }
-    this.applyLotQueue(); this.applyFarmQueue(); if (this.cgDirty && performance.now() - this.cgSentAt >= this.courseSendMs) { const tc = performance.now(); this.flushCourse(); this.cMs += performance.now() - tc; } this.flushLotGround(); this.flushCasters(); this.laybyLots();
+    this.applyLotQueue(); this.applyFarmQueue(); if (this.cgDirty && performance.now() - this.cgSentAt >= this.courseSendMs) { const tc = performance.now(); this.flushCourse(); this.cMs += performance.now() - tc; } this.watchHoleLines(performance.now()); this.flushLotGround(); this.flushCasters(); this.laybyLots();
     // the farms yield to the lots the town builds on (checked about once a second: the count walks every lot)
     if (this.farmsEnabled && ++this.farmTick % 60 === 0 && this.farmMap.stale(claimedLots(this.traffic.lots), this.site, this.farmParks().length)) this.farmsUpdate(true);
     if (this.traffic.round.cards.length > this.cardsApplied) this.applyCards();
