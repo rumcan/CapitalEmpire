@@ -17,7 +17,8 @@ import { DRAW_ORDER, FaceForm, GREEN_FACE, STAIR_TREAD, SURF_HEIGHT, SUN_DIR, WA
 import { SURF } from './ext/course-grid';
 import { SPROUT_PERIOD, growDraws, seedColour, seedSprouts, sproutRes, type GrowDraw } from './ext/course-fx/seed';
 import { courseImages, courseRes, lineField } from './ext/course-grid/field';
-import { grassSurface, type GrassCellView } from './ext/grass-management';
+import { type GrassCellView } from './ext/grass-management';
+import { grassOverlay, livingKeepsOff } from './lawn-overlay';
 import { surfaceOfTex } from './golf/costs';
 import { CELL as COURSE_CELL } from './golf/paintcourse';
 import { AREA_SHADE, EDGE_LOOKS, areaLightEdge, areaShadeImages, areaShadeReach, areaShadow, bandRamp, edgeBox, edgeField, edgeImages, edgeReach, edgeRes, featherTiles, litBox, type EdgeImage } from './paint-edges';
@@ -968,7 +969,8 @@ export class GroundPainter {
     const rings = (rs: readonly ArrayLike<number>[]) => { const q = new Path2D(); for (const r of rs) ringPath(q, r); ex.push({ path: q, rule: 'evenodd' }); };
     for (const p of lots) {
       if (p.course) { for (const l of p.course.layers) { if ((!COURSE_GRASSY.has(l.s) || tiled(l.tex)) && l.fill.length) rings(l.fill); if (l.collar && l.collar.n !== 'bank' && l.collar.fill.length) rings(l.collar.fill); } if (p.course.walls) walls.push(...p.course.walls); continue; }
-      if (p.top || p.layby || p.lawn || p.tex === 'marks' || (grassyTex(p.tex) && !tiled(p.tex))) continue;
+      // T181: a lot's lawn is laid as authored too (lawn-overlay.ts): the variants were the "transparent colour mask" over the yards
+      if (!livingKeepsOff(p, grassyTex, tiled)) continue;
       ex.push({ path: polyPath(p.pts), rule: 'nonzero' });
     }
     const wallPath = walls.length ? wallFaces(walls) : null;
@@ -2140,9 +2142,9 @@ export class GroundPainter {
     if ((!this.grassStrength && !this.grassHeat) || !this.grassCells.size) return;
     for (const p of patches) {
       // Fresh seed/sod keeps its original grow-in texture and timing.
-      // a hand-painted tile set (T145) is laid as authored: no condition picture mixed inside it; the Grass panel's health colours (a view the
-      // player turns on, not art) still show over it, now that the fairway, greens and rough wear tile sets (T153)
-      if (!grassSurface(p.tex, !!p.lawn, surfaceOfTex(p.tex as PaintTex)) || p.tex === 'golfSod' || (!this.grassHeat && this.tex.paintedOf(p.tex)?.tiled)) continue;
+      // a hand-painted tile set (T145) and a lot's lawn (T181) are laid as authored: no condition picture mixed inside them; the Grass panel's
+      // health colours (a view the player turns on, not art) still show over them, now that the fairway, greens and rough wear tile sets (T153)
+      if (grassOverlay(p, this.grassHeat, t => !!this.tex.paintedOf(t)?.tiled, surfaceOfTex(p.tex as PaintTex)) === 'none') continue;
       const b = quadBox(p.pts); ctx.save(); ctx.clip(polyPath(p.pts));
       for (let y = Math.max(0, Math.floor(Math.max(b[1], box[1]) / 4) * 4); y < Math.min(MAP, b[3], box[3]); y += 4) for (let x = Math.max(0, Math.floor(Math.max(b[0], box[0]) / 4) * 4); x < Math.min(MAP, b[2], box[2]); x += 4) {
         const v = this.grassCells.get(y / 4 * (MAP / 4) + x / 4); if (!v) continue;
