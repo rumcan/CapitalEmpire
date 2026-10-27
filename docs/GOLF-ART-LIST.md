@@ -16,6 +16,33 @@ Each item gives its **angle code** (below), its size, its game id and a prompt. 
 **Status marks:** **(stand-in)** the game draws a labelled stand-in today, so this picture goes straight in. **(new)** nothing places it yet:
 the art can be made now, and a small ticket places it in the game. **(in the game)** already drawn: listed only so the set is complete.
 
+## Progress (kept current by the lead; the owner, 2026-10-27: "mark off the list things already done")
+
+**Marks:** ✅ in the game · 🎨 made, going in · ⏳ being made now · nothing: still to make. An item gets ✅ the day it is in the game, with the PR.
+
+**The owner's standing rules:** finished art goes straight into the game without asking ("put stuff in the game, dont ask"); the old look
+stays a Studio option. Ground textures follow [art/GROUND-TEXTURE-METHOD.md](art/GROUND-TEXTURE-METHOD.md).
+
+**Who makes what:**
+- **RUN.world** (the art agent, the owner's RUN account): ground textures by the owner's method (RUN paints tile 1 into a game screenshot,
+  tiles 2-4 quilted); top-down pictures (C); one-view sprites (B) on magenta; people's A-pose pictures (P).
+- **Codex** (the art session): four-view sheets (A, A8). RUN's four turns did not hold one object in the pilot. The one-view-per-call
+  route (each view matched to the last) is being tried.
+
+### Ground textures (course surfaces)
+| Surface | Status |
+| --- | --- |
+| First cut | ✅ `first-cut-run` (#586); also every lawn (#591) |
+| Tee | ✅ `tee-run` (#590) |
+| Fringe | 🎨 MID and FAR made; NEAR refused by RUN's safety filter (8 tries), retried with a new frame; held until NEAR exists |
+| Rough | ⏳ the art agent |
+| Fairway | Codex (18 of 24 jobs done) |
+| Golden fescue, lake, putting green v2 | ✅ (the art session, earlier) |
+| Greenkeeping conditions (section 10) | after the course surfaces |
+
+### List items done
+None of items 1-147 is in the game yet: the range and practice items still draw labelled stand-ins.
+
 ## The angles
 
 Every picture uses the same camera: **2:1 isometric**.
@@ -25,8 +52,8 @@ Every picture uses the same camera: **2:1 isometric**.
 
 | Code | What it is | Pictures | Use it for |
 | --- | --- | --- | --- |
-| **A** | Four views | one 2x2 sheet: NE, SE, SW, NW, four real quarter turns of the same object | anything with a front and a back that the game turns to face a road, a hole or a path: buildings, kiosks, signs, benches, shelters |
-| **A8** | Eight views | A's four plus N, E, S, W | a building that may also stand on a 45-degree town road (most course buildings sit on the grid and need only A) |
+| **A** | **Two views** (the owner, 2026-10-27: "just get two diffrent angles of each thing same lighting from top right always") | one 1x2 sheet: view 1 front+right (the old NE cell: the front faces the screen's lower left), view 2 left+front (the old NW cell: the front faces the lower right); the same object, never mirrored, the sun at the upper right in both | anything with a front that the game turns to face a road, a hole or a path: buildings, kiosks, signs, benches, shelters. The game shows view 1 or view 2 by which way the object faces; its back is not drawn |
+| **A8** | (dropped) | the owner's two views (A) replace the four and eight-view sheets | - |
 | **B** | One view, several variants | one picture each, 2-4 variants | things that look the same from every side: trees, palms, rocks, bins, posts, round lamps, flags. Variants (other shapes, sizes, leans) stop a row of them looking copied. |
 | **C** | Top-down ground picture | one square picture seen from straight above | mats, target greens, decals, ground textures |
 | **D** | Eight facings | eight separate pictures: E, NE, N, NW, W, SW, S, SE (where its front points) | vehicles: carts, mowers, trucks |
@@ -58,7 +85,7 @@ Sizes are real-world metres (1 game unit = 1 m, a map tile is 2 m); the pixels a
 
 ## The shared blocks
 
-**A. Four views** (for A8, ask for eight cells, NE, SE, SW, NW, N, E, S, W, in a 3x3 grid with the centre left empty).
+**A. Two views** (the owner, 2026-10-27). Below, read "a strict 2x2 grid of four separate cells in row-major order NE, SE, SW, NW: four genuine 90-degree turns" as "two separate views side by side: view 1 front+right, view 2 left+front, two genuine turns"; everything else holds.
 > ONE subject. Reference 1 is the only visual-theme authority: match its detailed illustrated miniature style, materials and light. A later reference, when given, is this subject's identity: keep its design. The last reference, when it is the camera-rotation guide, is a geometry diagram only: never copy its colours, boxes, labels or marker. Return one SQUARE image on a FLAT PURE MAGENTA background (#FF00FF, RGB 255,0,255: one uniform colour edge to edge, no gradient, floor, texture, vignette or shadow on it), to be keyed out to transparency afterwards; the subject itself contains NO magenta, pink or purple and has a crisp outline: a strict 2x2 grid of four separate cells in row-major order NE, SE, SW, NW: four genuine 90-degree turns of the SAME physical object, with the face pairs front+right, right+back, back+left, left+front. Reconstruct the real back and sides; never mirror a front and never repeat a view. Fixed parallel 2:1 isometric camera, ground axes +/-26.565 degrees, verticals vertical. Early autumn dusk: low warm sunlight fixed at SCREEN UPPER RIGHT in every cell, right-facing planes warmer, left-facing planes cooler, only tiny soft contact shadows toward SCREEN LOWER LEFT; practical lamps already warmly lit, still enough daylight to read every material. The year is 1985: no modern screens, LEDs, QR codes or present-day plastic signage. No people, no Halloween decoration, no ground tile, lawn, street, backdrop, haze, checkerboard, caption or frame, no neighbouring objects. Leave at least 15% clear transparent space round each view, including the centre gutters; shrink all four views uniformly so nothing is cropped. No lettering unless this prompt asks for it; lettering that is asked for reads correctly in every view.
 
 **B. One view.**

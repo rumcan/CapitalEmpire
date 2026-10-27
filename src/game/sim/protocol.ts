@@ -19,6 +19,7 @@ import type { BizDef, BizStats, BizView } from '../business/state';
 import type { DisasterNote, DisasterView } from '../city';
 import type { DisasterKind } from '../ext/disasters';
 import type { TownClock } from './townclock';
+import type { DaySave } from '../event/daysave';
 
 /** what the worker measured, sent with every frame (walkers and stops: while a surge or its eval is on: the walking fan groups, 6 floats each (x, y in tiles, fans, stage, tx, ty),
  *  and the lot stops, 4 floats each (x, y in tiles, the fans waiting, the route index)); skipping: a fast-forward is running (simT is then the last frame's, not extrapolated);
@@ -45,7 +46,11 @@ export type ToSim = { t: 'net'; ops: NetOp[] } | { t: 'terrain'; cls: Uint8Array
   /** the galleries (LEAD.md M2.2): the spots the admitted fans stand at (golf/galleries.ts) */
   | { t: 'spots'; spots: GallerySpot[] }
   /** the golf play's featured holes (docs/GOLF-PLAY.md decision 6): the spots on these holes draw more; [] none (see City.setFeatured) */
-  | { t: 'featured'; holes: number[] };
+  | { t: 'featured'; holes: number[] }
+  /** T209: a request for the tournament day as the save keeps it (City.daySave; the answer is a daySave message with the same id) */
+  | { t: 'daySave'; id: number }
+  /** T209: the tournament day from a save resumes (City.resumeDay), after townState and townClock: the saved round and the day */
+  | { t: 'resumeDay'; round?: RoundSave; day: DaySave };
 /** (golf: the golf mode on, with the tournament's tier and its reputation (the season ends with it: see City.setGolf), or off; parking: the bay rows and on-street runs as the player drew them (the full lists) and the fee per parked car ($); disastersOn: the natural disasters on or off (off by default; off lifts their closures); repairDisaster: the player pays the repair of the quake closure key of disaster id) */
 /** (buses: the shuttle routes as the player drew them (the full list, each time: the worker resolves their stops); heat: the congestion heat map on or off (off by default: nothing is posted then); report: a request for the bottleneck report now; the worker also sends one each game hour; inspect: the car in slot is inspected, a car message with every frame, -1 stops;
  *  watch: the junction within 4 tiles of (x, y) is watched for the routes through it, x < 0 stops; businesses: the player's businesses (the full list: see City.setBusinesses); biz (in townState): the businesses' saved stats) */
@@ -57,6 +62,8 @@ export type FromSim = /** T090: a range start's town success after a tournament 
   | { t: 'budget'; save: BudgetSave; career: CareerSave; day: number; ledger: Ledger | null } | { t: 'milestone'; newly: Milestone[]; won: boolean } | { t: 'report'; report: Report; hours: HourStat[] }
   | { t: 'car'; info: CarInfo | null } | { t: 'watch'; node: [number, number] | null; n: number; lines: Float32Array } | { t: 'site'; site: Site | null }
   | { t: 'biz'; list: BizView[] }
+  /** T209: the answer to a daySave request (the same id): the tournament day as the save keeps it, null when none is under way */
+  | { t: 'daySave'; id: number; day: DaySave | null }
   | { t: 'heatGeom'; version: number; geom: Float32Array } | { t: 'heat'; version: number; ratio: Float32Array; dens: Float32Array; hist: Float32Array; pdem: Float32Array };
 /** (heatGeom: the heat map's geometry for heatVersion version, 6 floats per dseg id (see Sim.heatGeometry), posted when the version changed while on;
  *  heat: each dseg's speed ratio and density (copies) for that version, every 500 ms while on, and its congestion over time (hist: heatHist, the delay per lane-km

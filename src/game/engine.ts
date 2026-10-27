@@ -59,7 +59,7 @@ import type { BayRowDef } from './event/rows';
 import { inQuad, type CurbDef } from './event/curb';
 import { SpriteTiles, spriteRect, VECTOR, type Drawable } from './sprites';
 import { releaseVectorMeshData, vectorMeshData } from './shadow-vector';
-import { readSave, writeSave, clearSave, backupTownSlot, SAVE_VERSION, segRec, exportSaveBytes, importSaveBytes, listSaveBackups, readBackup, deleteBackup, type SaveV5 } from './save';
+import { readSave, writeSave, withTourney, clearSave, backupTownSlot, SAVE_VERSION, segRec, exportSaveBytes, importSaveBytes, listSaveBackups, readBackup, deleteBackup, type SaveV5 } from './save';
 import { CAR_COLOURS, parkedCar } from './traffic';
 import { carOwnerScale } from './ext/car-art';
 import { SimClient, type LotView } from './sim/client';
@@ -120,7 +120,7 @@ import { BAND_LABEL, LandSale } from './golf/land-sale';
 import { buildCourseStatsPanel, type CourseStatsPanel } from './golf/coursestats';
 import { TILE_M, type CourseArea, type CourseLayout, type GolfSurface } from './golf/types';
 import { deriveHoles, surfaceAt, validateMarkerPlacement } from './golf/holes';
-import { LiveGroup, OWNER_ADDRESS, OWNER_ART, OWNER_SKILL, POWER, PUTT_POWER, PlayView, allowedClubs, boardRows, carryM, championLine, makeCourseView, makeField, ownerGolfer, playRound, powerFor, startOwner, stateAt, standings, teeTimes, toParText, type BoardRow, type Club, type CourseView, type OwnerTurn, type RoundPlan, type Sex } from './golf/play';
+import { LiveGroup, OWNER_ADDRESS, OWNER_ART, OWNER_SKILL, POWER, PUTT_POWER, PlayView, allowedClubs, boardRows, carryM, championLine, dayRound, makeCourseView, powerFor, stateAt, standings, toParText, type BoardRow, type Club, type CourseView, type OwnerTurn, type RoundPlan, type Sex } from './golf/play';
 import { holeViews, markerPlan, tagByHole, type HoleView, type MarkerKind } from './golf/holeview';
 import { CAST, castShear, clampCast, type CastShadow } from './cast-shadow';
 import { SPEC_LOOK, clampSpecLook, specGain, type SpecLook } from './lamp-reflect';
@@ -229,6 +229,8 @@ export interface ShotState { turn: OwnerTurn; input: { club: Club; aim: Pt; powe
 export interface PlayBoard { minute: number; rows: BoardRow[]; champion: string | null; done: boolean; event: string; ownerTee: number | null }
 /** the leaderboard's rows shown (the top 8, and the owner's row below them) */
 const BOARD_ROWS = 8;
+/** T209: the longest a resumed tournament day waits for its play after the first frame (holdDay), ms */
+const DAY_HOLD_MS = 3000;
 /** a closed path over a flat x y list, in the current transform's units */
 function ring(ctx: CanvasRenderingContext2D, p: number[]) { ctx.moveTo(p[0]!, p[1]!); for (let i = 2; i < p.length; i += 2) ctx.lineTo(p[i]!, p[i + 1]!); ctx.closePath(); }
 /** the distance from p to the seg s, tiles */
@@ -601,6 +603,11 @@ export class Game {
   private crowdDraw: Drawable[] = []; private crowdPeople: CrowdPerson[] = []; private crowdGolfers: CrowdPerson[] = [];
   /** the day's golf round (updatePlay, docs/GOLF-PLAY.md P2): built once per tournament; playTried is the key last tried, so a round with no holes is not rebuilt every frame */
   private play: GolfPlay | null = null; private playTried = -1;
+  /** the game hour of the tournament day the play last saved at (T209: the day saves itself each game hour, so a reload resumes near where it was); -1 none */
+  private playSavedHr = -1;
+  /** T209: a resumed tournament day waits, the sim paused at the save's moment, until its play is built again (the owner's shot may open at once): the
+   *  speed to go on at and when the wait was first seen (performance.now(), 0 before the first frame); null when not waiting. See holdDay */
+  private dayHold: { speed: number; at: number } | null = null;
   /** the owner's open shot (P4b: the shot panel; null when none is open) and the speed the sim had when it opened (it resumes at least at 1x) */
   private shot: ShotState | null = null; private shotSpeed = 1;
   /** the featured holes last sent to the city (featuredHoles; the City's set mirrors it) and the real ms they were last worked out at */
@@ -1543,7 +1550,12 @@ export class Game {
     this.ground.init(this.terrain);
     this.sendTerrain(); this.afterLoad();
     if (this.stampPending) { this.stampPending = false; this.traffic.stamp(TOWN_POP); this.scheduleSave(); }
-    if (loaded) { this.traffic.townState(loaded.lots ?? [], loaded.simT ?? 0, loaded.budget, loaded.money, loaded.career, loaded.shift ?? 0, loaded.round, loaded.bizStats); this.traffic.setTownClock(loaded.townClock ?? townClockFor(this.traffic.dayLen)); }
+    if (loaded) {
+      this.traffic.townState(loaded.lots ?? [], loaded.simT ?? 0, loaded.budget, loaded.money, loaded.career, loaded.shift ?? 0, loaded.round, loaded.bizStats); this.traffic.setTownClock(loaded.townClock ?? townClockFor(this.traffic.dayLen));
+      // the tournament day under way at the save resumes (T209): the round in its surge or eval, its clocks, the crowd and the car parks (the worker checks it);
+      // the sim waits at that moment until the day's play is built again (holdDay), so the field does not play on while the game boots
+      if (loaded.tourney) { this.dayHold = { speed: this.speed || this.lastSpeed, at: 0 }; this.setSpeed(0); this.traffic.resumeDay(loaded.round, loaded.tourney); }
+    }
     else this.rangeMorning();
     if (opts.bench) console.log('[bench] after load', Math.round(performance.now() - tl), 'ms');
     if (fixture && !opts.bench) readNote = { text: `Dev fixture ${fixName}: saving is off for this session, so your own save is kept.`, kind: 'info' };
@@ -4782,6 +4794,10 @@ export class Game {
   get lotsPending() { return this.lotQueue.size + this.staged.size; }
   async save() {
     if (this.benchMode) return 0; if (this.saveBlocked) return 0;
+    // the tournament day under way (T209): the worker's snapshot of it, asked for first (only while a golf round is in its surge or eval: every other save
+    // is written at once, as before, without it)
+    const rs = this.traffic.round.stage, tourney = this.golf && (rs === 'surge' || rs === 'eval') ? await this.traffic.daySave() : null;
+    if (this.saveBlocked) return 0;
     const d: SaveV5 = {
       version: SAVE_VERSION, map: MAP, seed: this.seed, lotModel: lotModelVersion(),
       segs: [...this.net.segs].map(segRec),
@@ -4804,7 +4820,7 @@ export class Game {
       speed: this.net.speedTier,
       golf: this.golf ? { ...this.golf, height: this.courseHeightChunks(), grid: this.gridSave(), plans: this.golf.plans?.length ? this.golf.plans : undefined, play: this.golf.play && this.traffic.round.stage !== 'free' ? this.golf.play : undefined } : undefined,
     };
-    try { return await writeSave(d); } catch { return 0; }
+    try { return await writeSave(withTourney(d, tourney)); } catch { return 0; }
   }
   /** the course height as save chunks (undefined when flat), recomputed only when the field changed */
   private courseHeightChunks(): CourseHeightSaveChunk[] | undefined {
@@ -5254,18 +5270,29 @@ export class Game {
    *  when the round is free, or when there is no golf */
   private updatePlay(now: number) {
     const tr = this.traffic, r = tr?.round;
-    if (!this.golf || !r || (r.stage !== 'surge' && r.stage !== 'eval')) { this.play = null; this.playTried = -1; this.clearFeatured(); if (this.shot) this.closeShot(); return; }
+    if (!this.golf || !r || (r.stage !== 'surge' && r.stage !== 'eval')) { this.play = null; this.playTried = -1; this.playSavedHr = -1; this.clearFeatured(); if (this.shot) this.closeShot(); this.holdDay(now, false); return; }
     if (this.playTried !== r.runs) { this.playTried = r.runs; this.play = this.buildPlaySaved(r.runs); }
-    if (!this.play) { this.clearFeatured(); return; }
+    if (!this.play) { this.clearFeatured(); this.holdDay(now, true); return; }
     const minute = townTimeOf(tr.town, tr.simTime(now)).dayMin;
+    // the day saves itself each game hour (T209: the save keeps the day, SaveV5.tourney), so a reload resumes near where it was; the owner's shots save as he plays
+    const hr = Math.floor(minute / 60); if (hr !== this.playSavedHr) { if (this.playSavedHr >= 0) this.scheduleSave(); this.playSavedHr = hr; }
     // the owner's pending turn (P4b): his walk to the ball and his address there, facing the open shot's aim when one is open
     const own = this.play.own, shotAim = this.shot && own && this.shot.turn === own.turn ? this.shot.input.aim : null;
     this.play.pv.update(minute, now / 1000, own?.turn ?? null, shotAim);
-    this.ownerFrame(minute);
+    this.ownerFrame(minute); this.holdDay(now, true);
     // the crowd follows the play (docs/GOLF-PLAY.md decision 6): the featured holes are worked out at most every FEATURED_EVERY_MS and sent when they change
     if (now - this.featuredAt >= FEATURED_EVERY_MS) { this.featuredAt = now; this.sendFeatured(this.featuredHoles(this.play, minute)); }
     // the champion is toasted once, the first time the board has one (its line is the board's)
     if (!this.play.told) { const b = this.playBoard(); if (b?.champion) { this.play.told = true; this.toast(`${b.champion} — ${b.event}`, 'good'); } }
+  }
+  /** T209: ends a resumed tournament day's wait (dayHold) once its play is back (ready: built, or none to build; the owner's shot, opened by ownerFrame,
+   *  keeps the sim paused and goes on at the held speed), or DAY_HOLD_MS after the first frame when the day did not come back (the round loaded free) */
+  private holdDay(now: number, ready: boolean) {
+    const h = this.dayHold; if (!h) return;
+    if (!h.at) h.at = now;
+    if (!ready && now - h.at < DAY_HOLD_MS) return;
+    this.dayHold = null;
+    if (this.shot) this.shotSpeed = h.speed; else this.setSpeed(h.speed);
   }
   /** the holes the crowd follows at a game minute (docs/GOLF-PLAY.md decision 6), sorted, no repeats: the holes the last three groups are on (the marquee
    *  groups tee off last) and the holes of the top three of the standings, among the golfers who have teed off and are not done. A golfer's hole is its
@@ -5315,16 +5342,11 @@ export class Game {
     };
     const view = makeCourseView(deriveHoles(areas, g.tees, g.pins, g.aims), surfAt);
     if (!view.holes.length) return null;
-    const seed = Math.floor(hash(this.seed, key) * 4294967296), field = makeField(g.tier, seed);
-    const golfers = owner ? [...field, ownerGolfer(field.length, owner.owner)] : field;
-    const groups = teeTimes(golfers, seed), li = owner ? groups.findIndex(gr => gr.players.includes(field.length)) : -1;
-    const plan = playRound(view, golfers, groups, seed, li >= 0 ? { live: li } : undefined);
+    // the field, the tee times, the round and the owner's live group (dayRound: the same pure build a reload makes, T209)
+    const seed = Math.floor(hash(this.seed, key) * 4294967296), { plan, golfers, own } = dayRound(view, g.tier, seed, owner);
     const art = golfers.map(p => p.owner ? ownerArt(p.sex) : GOLFER_ART[p.sex][p.look % GOLFER_ART[p.sex].length]!);
     const pl: GolfPlay = { plan, view, pv: new PlayView(plan, view), key, art, told: false, own: null };
-    if (owner && li >= 0) {
-      const { live, turn } = startOwner(plan, view, li, seed, owner.inputs, owner.caddie);
-      pl.own = { id: field.length, sex: owner.owner, skill: OWNER_SKILL, tee: groups[li]!.tee, live, turn, caddie: owner.caddie };
-    }
+    if (owner && own) pl.own = { id: own.id, sex: owner.owner, skill: OWNER_SKILL, tee: own.tee, live: own.live, turn: own.turn, caddie: owner.caddie };
     return pl;
   }
   /** the round of a tournament key from the save: the save's owner play when it is this tournament's (buildPlay replays his inputs). A save the course no

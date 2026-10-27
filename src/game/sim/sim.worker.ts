@@ -168,6 +168,9 @@ scope.onmessage = (e: MessageEvent<ToSim>) => {
       case 'skip': skipUntil = m.until; forcePost = true; break;
       case 'option': city.option(m.id); break;
       case 'townState': postTown(city.restore(m.lots, m.simT, m.budget, m.money, m.career, m.shift), true); city.loadRound(m.round); city.restoreBiz(m.biz); postBudget(null); postBiz(); break;
+      // T209: the tournament day as the save keeps it (asked for by the engine's save), and a saved one resuming (after townState and townClock)
+      case 'daySave': post({ t: 'daySave', id: m.id, day: city.daySave() }); break;
+      case 'resumeDay': if (city.resumeDay(m.round, m.day)) { postBudget(null); forcePost = true; } break;
       case 'parks': city.setParks(m.defs); forcePost = true; break;
       case 'businesses': city.setBusinesses(m.defs); post({ t: 'site', site: city.site }); postBiz(); break;
       case 'golf': { const ev = city.setGolf(m.on ? { tier: m.tier, rep: m.rep, land: m.land, start: m.start, exits: m.exits, invited: m.invited, holes: m.holes, townBoost: m.townBoost } : null); if (ev.length) postTown(ev, true); break; }
