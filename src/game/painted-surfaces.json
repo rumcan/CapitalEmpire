@@ -20,7 +20,7 @@
   "dirt": { "family": "dirt-run", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "bank": { "family": "underground-earth", "version": "v1", "scale": 0.5, "tint": "#ffffff", "tone": -0.15 },
   "river": { "family": "lake", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
-  "field": { "family": "underground-earth", "version": "v2", "scale": 0.5, "tint": "#9aa8f0", "tone": -0.1 },
+  "field": { "family": "dirt-run", "version": null, "scale": 0.75, "tint": "#ffffff", "tone": -0.04 },
   "woodland": { "family": "golden-fescue", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "outside": { "family": "golden-fescue", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "lawn": { "family": "first-cut-run", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
