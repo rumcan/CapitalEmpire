@@ -16,6 +16,7 @@ import { isBuilding } from './mirror';
 import { BUILDING_IDS, VIEW_ART, unmirror } from './views-library';
 import { AXIS_HEADING } from './axis-library';
 import { OWNER_SCALE, STUDIO_SCALE } from './lots/scales';
+import { onStudioScales } from './lots/scales-live';
 import { CAR_SCALE, carOwnerScale } from './ext/car-art';
 import { PIXEL_LIMIT, PIXEL_SLACK } from './sizes';
 import type { LibItem } from './types';
@@ -146,6 +147,8 @@ export function baselineOf(it: LibItem): number {
 /** SIZE_HI x each item's baseline (refreshSizeRange reads them again after a size changes in the lab or the studio) */
 let HI = Float64Array.from(LIBRARY, it => SIZE_HI * baselineOf(it));
 export function refreshSizeRange(): void { HI = Float64Array.from(LIBRARY, it => SIZE_HI * baselineOf(it)); }
+// a studio size saved while the game runs (the studio's Library, the lab's "this sprite everywhere") moves the baseline: the range follows
+onStudioScales(refreshSizeRange);
 /** the largest scale a drawable's item draws at without stretching its pixels at the closest zoom (sizes.ts PIXEL_LIMIT; a parked car is drawn
  *  CAR_SCALE smaller than its scale, sprites.ts) */
 const pixelsOf = (item: number, moving?: boolean) => PIXEL_LIMIT[item]! / (CAR[item] && !moving ? CAR_SCALE : 1);
