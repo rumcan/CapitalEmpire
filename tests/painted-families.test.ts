@@ -85,7 +85,7 @@ test('every surface of the game wears a painted family: golf, map, town lawns, l
   const S = f.surfaces;
   assert.equal(S.tee!.family, 'emerald-short'); assert.ok(S.tee!.scale < 1, 'tees keep the old green until a family is chosen for them');
   // T165 (#365): the fairway and the greens wear the art session's paintings, healed to tile (the provisional sets stay as the old option)
-  assert.equal(S.fairway!.family, 'fairway-paint'); assert.equal(S.green!.family, 'putting-green-paint'); assert.equal(S.fringe!.family, 'putting-green-paint');
+  assert.equal(S.fairway!.family, 'fairway-paint'); assert.equal(S.green!.family, 'putting-green-v2'); assert.equal(S.fringe!.family, 'fringe'); // T191: the new green and fringe
   // T162 (#350): the rough and the decrepit lots' lawns (which follow the rough, T155) wear the owner's rough paintings, edges healed to tile
   assert.equal(S.rough!.family, 'rough-owner'); assert.equal(S.lawnDeclined!.family, 'rough-owner'); assert.equal(S.fescue!.family, 'golden-fescue');
   assert.equal(S.bunker!.family, 'sand-raked'); assert.equal(S.waste!.family, 'sand-ripples-tiles'); assert.equal(S.water!.family, 'lake');

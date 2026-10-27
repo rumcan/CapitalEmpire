@@ -46,10 +46,12 @@ function webpSize(buf: Buffer): [number, number] {
 /** the accepted families (READY-MATERIALS' canonical selections, in its order), then the provisional ones (T153: no handoff yet) */
 // T170 (#395): long grass is through the art session's handoff (its canonical selection in READY-MATERIALS): accepted, no longer provisional
 const ACCEPTED = ['painted:golden-fescue', 'painted:lake', 'painted:sand-ripples', 'painted:long-grass'];
-const PROVISIONAL = ['painted:fairway', 'painted:putting-green'];
+// T191 (#497): the fringe, new, provisional (the art session's finished v1 sets, measured and shipped as made)
+const PROVISIONAL = ['painted:fairway', 'painted:putting-green', 'painted:fringe'];
 /** the owner's own paintings (T162) and the art session's fairway and putting-green paintings (T165): provisional too, one tile a level, from
  *  art/owner-supplied (committed in this repo); a level may instead be a provisional family's raw tiles healed with one shared strip (T165) */
-const OWNER = ['owner:rough-20261026', 'paint:fairway-20261026', 'paint:putting-green-20261026'];
+// T191: the putting green with the v2 MID and FAR sets (NEAR the owner's painting), an owner family like putting-green-paint
+const OWNER = ['owner:rough-20261026', 'paint:fairway-20261026', 'paint:putting-green-20261026', 'paint:putting-green-v2'];
 const OWNER_DIR = 'art/owner-supplied/rough-20261026';
 const SHARED = 'shared-strip-match-v1';
 const FOUR = ['tile-01', 'tile-02', 'tile-03', 'tile-04'] as const;
@@ -385,7 +387,7 @@ test('the tile sets join the families, laid as authored; fescue, water, the map 
   // T153 (#327): the course's turf and waste areas wear the new sets, neutral (the tile sets are laid as authored); T165 (#365): the fairway,
   // the greens and their fringes the art session's paintings (fairway-paint, putting-green-paint), the old provisional sets kept unmapped
   const neutral = (family: string) => ({ family, version: null, scale: 1, tint: '#ffffff', tone: 0 });
-  for (const [t, key, fam] of [['golfFairway', 'fairway', 'fairway-paint'], ['golfGreen', 'green', 'putting-green-paint'], ['golfFringe', 'fringe', 'putting-green-paint'], ['wasteSand', 'waste', 'sand-ripples-tiles'], ['lawnBuilt', 'lawnBuilt', 'fairway-paint'], ['lawnUpgraded', 'lawnUpgraded', 'putting-green-paint']] as const) {
+  for (const [t, key, fam] of [['golfFairway', 'fairway', 'fairway-paint'], ['golfGreen', 'green', 'putting-green-v2'], ['golfFringe', 'fringe', 'fringe'], ['wasteSand', 'waste', 'sand-ripples-tiles'], ['lawnBuilt', 'lawnBuilt', 'fairway-paint'], ['lawnUpgraded', 'lawnUpgraded', 'putting-green-v2']] as const) {
     assert.equal(lookOfTex(t, S)!.family, fam, t); assert.deepEqual(S.surfaces[key], neutral(fam), `${key}: neutral tint, tone and scale`);
     assert.deepEqual((surfacesFile.surfaces as Record<string, unknown>)[key], neutral(fam), `${key} in painted-surfaces.json`);
   }
@@ -403,7 +405,7 @@ test('the tile sets join the families, laid as authored; fescue, water, the map 
     assert.ok(tiledFamily(id), `${id} stays in the manifest (the old option)`);
     assert.ok(![...Object.values(S.surfaces), ...S.lawns, ...Object.values(S.presets)].some(l => l.family === id), `${id} unmapped`);
   }
-  for (const [p, fam] of [['fairway', 'fairway-paint'], ['green', 'putting-green-paint'], ['fringe', 'putting-green-paint'], ['rough', 'rough-owner'], ['waste', 'sand-ripples-tiles']] as const) assert.equal(lookOfTex(`preset:${p}`, S, PRESETS)?.family ?? fam, fam, `the ${p} preset follows its surface`);
+  for (const [p, fam] of [['fairway', 'fairway-paint'], ['green', 'putting-green-v2'], ['fringe', 'fringe'], ['rough', 'rough-owner'], ['waste', 'sand-ripples-tiles']] as const) assert.equal(lookOfTex(`preset:${p}`, S, PRESETS)?.family ?? fam, fam, `the ${p} preset follows its surface`);
   // tees keep the old green until a family is chosen for them; the first cut keeps its family too
   for (const t of ['golfTee', 'golfFirstCut']) { const l = lookOfTex(t, S); if (l) assert.ok(!familyById(l.family)!.tiled, `${t} keeps its family`); }
   assert.equal(S.surfaces.tee!.family, 'emerald-short');
@@ -588,4 +590,32 @@ test('the fairway and putting-green paintings (T165, #365): unchanged in the rep
   }
   // the old provisional sets are kept as they were (the old option): four tiles a level (the art session's newest set), no heal
   for (const id of ['fairway', 'putting-green']) for (const b of TILE_BANDS) { const lv = tiledFamily(id)!.levels[b]; assert.equal(lv.tiles.length, 4); assert.equal(lv.heal, undefined); }
+});
+
+test("T191 (#497): the fringe (new) and the putting green's v2 MID and FAR ship as made; the old families keep the sets they shipped", () => {
+  const fam = (id: string) => TILED_FAMILIES.find(f => f.id === id)!;
+  const fr = fam('fringe'), v2 = fam('putting-green-v2'), old = fam('putting-green'), paint = fam('putting-green-paint');
+  assert.ok(fr && v2 && old && paint);
+  assert.equal(fr.name, 'Fringe'); assert.equal(fr.kind, 'grass'); assert.equal(fr.provisional, true);
+  for (const l of ['near', 'mid', 'far'] as const) {
+    const L = fr.levels[l];
+    assert.equal(L.tiles.length, 4, `fringe ${l}: four tiles`);
+    assert.match(L.folder, new RegExp(`eight-tiles/fringe/${l}-v1$`));
+    assert.deepEqual(L.tiles.map(t => t.source!.split('/').pop()), ['tile-01.png', 'tile-02.png', 'tile-03.png', 'tile-04.png'], 'the exported tiles, never a repair input');
+    assert.equal(L.heal!.method, 'finished-set-as-made'); assert.ok(L.heal!.before.lr <= 1.25 * L.heal!.before.h && L.heal!.before.tb <= 1.25 * L.heal!.before.v, `fringe ${l}: within 1.25x the inside`);
+  }
+  for (const l of ['mid', 'far'] as const) {
+    const L = v2.levels[l];
+    assert.match(L.folder, new RegExp(`eight-tiles/putting-green/${l}-v2$`)); assert.equal(L.tiles.length, 4); assert.equal(L.heal!.method, 'finished-set-as-made');
+    assert.ok(L.heal!.before.lr <= 1.25 * L.heal!.before.h && L.heal!.before.tb <= 1.25 * L.heal!.before.v, `v2 ${l}: within 1.25x the inside`);
+  }
+  assert.equal(v2.levels.near.tiles[0]!.sha256, paint.levels.near.tiles[0]!.sha256, "v2's NEAR is the owner's putting-green painting");
+  // T191 (the owner: new art is used everywhere): no surface, lawn or preset wears the families v2 and the fringe replace; the range's target
+  // greens (the range-green preset) and the upgraded lawns wear v2, neutral; the old families stay only as the option in Studio › Painted
+  const S = clampSurfaces(surfacesFile), looks = [...Object.values(S.surfaces), ...S.lawns, ...Object.values(S.presets)];
+  for (const id of ['putting-green', 'putting-green-paint']) assert.ok(!looks.some(l => l.family === id), `${id} is only the old option`);
+  for (const l of [S.presets['range-green']!, S.surfaces.lawnUpgraded!, S.surfaces.green!]) assert.deepEqual(l, { family: 'putting-green-v2', version: null, scale: 1, tint: '#ffffff', tone: 0 });
+  assert.equal(lookOfTex('preset:range-green', S)!.family, 'putting-green-v2'); assert.equal(lookOfTex('golfFringe', S)!.family, 'fringe');
+  // the old families: pinned to the sets they shipped (the old option), never the v2 sets
+  assert.match(old.levels.mid.folder, /putting-green\/mid-v1$/); assert.match(old.levels.far.folder, /putting-green\/far-v1$/); assert.match(paint.levels.mid.folder, /putting-green\/mid-v1$/);
 });
