@@ -5,7 +5,7 @@
   "fringe": { "family": "fringe", "version": null, "scale": 1, "tint": "#ffedfa", "tone": 0.04 },
   "fairway": { "family": "fringe", "version": null, "scale": 1, "tint": "#ffedfa", "tone": 0.04 },
   "firstCut": { "family": "first-cut-run", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
-  "tee": { "family": "emerald-short", "version": null, "scale": 0.5, "tint": "#ffffff", "tone": 0.03 },
+  "tee": { "family": "tee-run", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "sod": { "family": "emerald-short", "version": "v1", "scale": 0.75, "tint": "#ffffff", "tone": 0 },
   "rough": { "family": "rough-owner", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "fescue": { "family": "golden-fescue", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
