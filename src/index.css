@@ -48,6 +48,9 @@
 .seg > button { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 0.3rem; border-radius: 0.55rem; padding: 0.3rem 0.4rem; font-size: 0.75rem; color: #d9d3c4; }
 .seg > button:hover { background: rgba(255, 255, 255, 0.06); }
 .seg > button.on { background: linear-gradient(#ffc94a, #f0a91e); color: #1b1406; font-weight: 600; }
+/* T182: a locked tool in a group's row: in its place, dimmed, its lock beside its name */
+.seg > button.seg-locked { opacity: 0.55; cursor: not-allowed; }
+.seg.flex-wrap > button { flex: 1 1 auto; min-width: 5.5rem; }
 
 .keycap { display: inline-flex; align-items: center; justify-content: center; min-width: 1.5rem; margin: 0 0.15rem; border-radius: 0.35rem; border: 1px solid rgba(255, 255, 255, 0.25); background: rgba(255, 255, 255, 0.06); padding: 0 0.3rem; font-size: 0.75rem; font-weight: 700; line-height: 1.2rem; color: var(--ink); }
 
