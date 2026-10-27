@@ -170,7 +170,9 @@ export interface PaintHost { setLotGround(key: string, patches: LotPatch[] | nul
   /** the trees New hole's ghost would clear (T176: Engine.wizardTrees), for the wizard's info row */
   treesCleared?(): number;
   /** a course surface's look (a brush style) changed: the grid's chunks are drawn again in it */
-  courseLook?(): void }
+  courseLook?(): void
+  /** T188: a hole was built with New hole (not a replan): the guide moves on at once */
+  holeBuilt?(hole: number): void }
 /** the ghost's fill by texture (the hole preview): the green, fairway, water and sand; other areas are only outlined */
 const GHOST_FILL: Record<string, string> = { golfGreen: 'rgba(120,200,120,0.35)', golfFairway: 'rgba(150,210,120,0.25)', waterDark: 'rgba(70,120,200,0.35)', bunkerSand: 'rgba(230,210,150,0.4)' };
 /** what the preview needs to draw (the engine's overlay helpers) */
@@ -597,6 +599,7 @@ export class PaintTool {
     w.suggestM = 0; // the par-3 suggestion is the first hole's only (T132)
     this.pill = null;
     this.host.save();
+    if (!editing) this.host.holeBuilt?.(hole);
     this.host.toast(`Hole ${hole} ${editing ? 'replanned' : 'built'}: par ${gh.info.par}, ${gh.info.lengthM} m${gh.cost ? `, $${gh.cost.toLocaleString()}` : ''}`);
     this.host.emit(); return true;
   }

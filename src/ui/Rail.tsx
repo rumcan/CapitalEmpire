@@ -30,6 +30,7 @@ export function Rail({ entries, onPick, onLocked }: { entries: RailEntry[]; onPi
           {heading && <div className="rail-heading">{HEADING[heading]}</div>}
           <button
             data-rail={r.id}
+            data-guide={`rail-${r.id}`}
             onClick={() => (locked ? onLocked(r, locked) : onPick(r))}
             aria-disabled={locked ? true : undefined}
             aria-pressed={on}

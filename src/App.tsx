@@ -44,6 +44,9 @@ import { RoadThumb } from './ui/RoadThumb';
 import { Thumb } from './ui/Thumb';
 import { Minimap } from './ui/Minimap';
 import { CourseStatsPanel } from './ui/CourseStatsPanel';
+import { SeasonCard } from './ui/golf/SeasonCard';
+import { seasonChip, seasonPhase } from './ui/golf/season';
+import { GuidePulse } from './ui/GuidePulse';
 import { GrassManagementPanel } from './ui/GrassManagementPanel';
 import { formatPercent } from './ui/TournamentResults';
 import { SeasonReportCard } from './ui/golf/SeasonReportCard';
@@ -98,9 +101,11 @@ export default function App() {
   const [backupsOpen, setBackupsOpen] = useState(false);
   const [armedBackup, setArmedBackup] = useState<string | null>(null);
   useEffect(() => { if (!menu || !game) { setBackupsOpen(false); setArmedBackup(null); return; } void game.saveBackups().then(setBackups); }, [menu, game]);
-  const [courseStats, setCourseStats] = useState<ReturnType<Game['courseStatsView']>>(null);  
+  const [courseStats, setCourseStats] = useState<ReturnType<Game['courseStatsView']>>(null);
+  /** T188: the Season card (the season chip opens it: the year, the founding checklist or the tournament plan, the Course stats) */
+  const [seasonOpen, setSeasonOpen] = useState(false);
   // Esc closes the topmost menu or card before it reaches the tool (P23 P1-A): the engine's Esc ladder asks which of these are open
-  useEffect(() => { if (game) game.uiCards = { open: () => ({ help, menu, looks: looksOpen, stats: !!courseStats }), close: c => (c === 'help' ? setHelp(false) : c === 'menu' ? setMenu(false) : c === 'looks' ? setLooks(false) : setCourseStats(null)) }; });
+  useEffect(() => { if (game) game.uiCards = { open: () => ({ help, menu, looks: looksOpen, stats: !!courseStats || seasonOpen }), close: c => (c === 'help' ? setHelp(false) : c === 'menu' ? setMenu(false) : c === 'looks' ? setLooks(false) : (setCourseStats(null), setSeasonOpen(false))) }; });
   /** the Developer toggle (see devStart): the gear menu's checkbox and F3 set it; remembered */
   const [dev, setDevState] = useState(devStart);
   const devRef = useRef(dev);
@@ -205,6 +210,7 @@ export default function App() {
   return (
     <div className="ui-root fixed inset-0 overflow-hidden bg-[#1b2816] text-slate-100 select-none" style={{ fontFamily: 'ui-sans-serif, system-ui, sans-serif' }}>
       <TooltipLayer />
+      {game && <GuidePulse anchor={game.guideAnchor} />}
       <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
       <canvas
         ref={overlayRef}
@@ -248,16 +254,18 @@ export default function App() {
                       under 1900 px, the chips' words and the invitation's sentence under 2200 px go into their tooltips; the traffic views are in the
                       gear menu */}
                   {/* T095 (P22 2.8): before the tour's invitation the Tier's line says the founding season's holes (one row at 1366-1920 px, T135) */}
-                  <Stat icon="trophy" label="Tier" value={`T${gv.tier}`} sub={founding ? withIcon('growing', founding) : gv.tierName} subClass="max-[1599px]:hidden" subTone={founding ? 'font-semibold text-amber-300' : undefined} subTestId={founding ? 'founding-chip' : undefined} title={founding ? `${founding}: the tour invites you with ${fv!.check.holesNeeded} holes, a car park and a clubhouse (Tier ${gv.tier}: ${gv.tierName})` : `Tier ${gv.tier}: ${gv.tierName}`} tone="text-amber-200" />
-                  <Stat icon="calendar" label="Month" value={gv.month} sub={gv.live ? 'Tournament day' : `${Math.ceil(gv.monthsLeft)} ${Math.ceil(gv.monthsLeft) === 1 ? 'month' : 'months'} to ${fv && !fv.due ? 'season end' : 'the tournament'}`} />
-                  {game.golf?.start === 'range' && <button className={`chip ${game.range.cardOpen ? 'chip-on' : ''}`} onClick={() => game.openRangeCard()} data-tip="The driving range: golfers, takings, bucket price and upgrades" aria-label="Range" data-testid="range-chip"><Icon name="income" size={16} /><span className={WIDE}>Range</span></button>}
-                  {fv?.invited && game.traffic.round.runs === 0 && !gv.live && <span className="flex items-center gap-1 whitespace-nowrap rounded-md border border-amber-400/40 bg-amber-400/15 px-2 py-1 text-xs font-semibold text-amber-200" data-testid="invite-pill" data-tip={`The tour's invitation: the Club Championship at the end of ${fv.due ? 'this' : 'next'} season (the first tournament is held at the end of the season it names)`}><Icon name="trophy" size={14} /><span className="min-[2200px]:hidden">Invited</span><span className={WIDE}>The Club Championship: end of {fv.due ? 'this' : 'next'} season</span></span>}
+                  <Stat icon="trophy" label="Tier" value={`T${gv.tier}`} sub={gv.tierName} subClass="max-[1599px]:hidden" title={founding ? `${founding}: the tour invites you with ${fv!.check.holesNeeded} holes, a car park and a clubhouse (Tier ${gv.tier}: ${gv.tierName})` : `Tier ${gv.tier}: ${gv.tierName}`} tone="text-amber-200" />
+                  <Stat icon="calendar" label="Month" guide="month" value={gv.month} sub={gv.live ? 'Tournament day' : `${Math.ceil(gv.monthsLeft)} ${Math.ceil(gv.monthsLeft) === 1 ? 'month' : 'months'} to ${fv && !fv.due ? 'season end' : 'the tournament'}`} />
+                  {game.golf?.start === 'range' && <button className={`chip ${game.range.cardOpen ? 'chip-on' : ''}`} onClick={() => game.openRangeCard()} data-tip="The driving range: golfers, takings, bucket price and upgrades" aria-label="Range" data-testid="range-chip" data-guide="range-chip"><Icon name="income" size={16} /><span className={WIDE}>Range</span></button>}
+                  {fv?.invited && game.traffic.round.runs === 0 && !gv.live && <span className="flex items-center gap-1 whitespace-nowrap rounded-md border border-amber-400/40 bg-amber-400/15 px-2 py-1 text-xs font-semibold text-amber-200" data-testid="invite-pill" data-guide="invite-pill" data-tip={`The tour's invitation: the Club Championship at the end of ${fv.due ? 'this' : 'next'} season (the first tournament is held at the end of the season it names)`}><Icon name="trophy" size={14} /><span className="min-[2200px]:hidden">Invited</span><span className={WIDE}>The Club Championship: end of {fv.due ? 'this' : 'next'} season</span></span>}
                   {gv.live && (() => { const w = getTournamentWeather(game.seed, game.traffic.round.stage === 'eval' && game.traffic.round.last ? game.traffic.round.last.run : game.traffic.round.runs + 1); return <span className="rounded-md border border-amber-400/40 bg-amber-400/15 px-2 py-1 text-xs font-semibold text-amber-200" data-tip={w.summary}>{w.icon} {w.label}</span>; })()}
-                  {chip('courseStats') && <button className={`chip ${courseStats ? 'chip-on' : ''}`} onClick={() => setCourseStats(courseStats ? null : (game.courseStatsView() ?? null))} data-tip="Course stats and scorecard" aria-label="Course"><Icon name="trophy" size={16} /><span className={WIDE}>Course</span></button>}
+                  {/* T188 (P23-UX P2-2): the season chip opens the Season card (the founding checklist or the tournament plan, and the Course stats, which had a
+                      chip of their own); in a founding season it says the holes ("◔ 3/9 holes", T095's founding line) */}
+                  {chip('courseStats') && (() => { const ph = seasonPhase(fv, game.traffic.round.runs); return <button className={`chip ${seasonOpen ? 'chip-on' : ''} ${ph === 'founding' ? 'font-semibold text-amber-300' : ''}`} onClick={() => { setSeasonOpen(!seasonOpen); setCourseStats(null); }} data-guide="season-chip" data-testid={ph === 'founding' ? 'founding-chip' : 'season-chip'} data-tip={founding ? `${founding}: the tour invites you with ${fv!.check.holesNeeded} holes, a car park and a clubhouse. Open the season's checklist and Course stats` : "The season: its tournament plan and the Course stats"} aria-label="Season"><Icon name="calendar" size={16} />{ph === 'founding' && fv ? <><span className="max-[1599px]:hidden">{seasonChip(ph, fv.check)}</span><span className="min-[1600px]:hidden">{`◔ ${Math.min(fv.check.holes, fv.check.holesNeeded)}/${fv.check.holesNeeded}`}</span></> : <span className={WIDE}>{seasonChip(ph, fv?.check)}</span>}</button>; })()}
                   {chip('land') && <button className={`chip ${game.landMode ? 'chip-on' : ''}`} onClick={() => { game.toggleLandMode(); bump(); }} data-tip="Land: buy adjacent land parcels" aria-label="Land"><Icon name="compass" size={16} /><span className={WIDE}>Land</span></button>}
                   {chip('holes') && <button className={`chip ${game.holesTool ? 'chip-on' : ''}`} onClick={() => { game.toggleHolesTool(); bump(); }} data-tip="Holes: move pins and tee markers" aria-label="Holes"><Icon name="pin" size={16} /><span className={WIDE}>Holes</span></button>}
- {chip('event') && <button className={`chip ${game.eventTool ? 'chip-on' : ''}`} onClick={() => { game.toggleEventTool(); bump(); }} data-tip="Event: the event structures catalogue" aria-label="Event"><Icon name="buildings" size={16} /><span className={WIDE}>Event</span></button>}
- {chip('skipTournament') && <button className="chip disabled:opacity-40" disabled={game.traffic.skipping || gv.live} onClick={() => game.skipToTournament()} data-tip={fv && !fv.due ? `Skip to the end of the season (no tournament yet: ${fv.invited ? 'the first one closes the next season' : fv.check.text})` : 'Skip to the tournament (end of August)'} aria-label={fv && !fv.due ? 'Skip to season end' : 'Skip to tournament'}><Icon name="skip" size={16} /><span className={WIDE}>{fv && !fv.due ? 'Skip to season end' : 'Skip to tournament'}</span></button>}
+ {chip('event') && <button data-guide="chip-event" className={`chip ${game.eventTool ? 'chip-on' : ''}`} onClick={() => { game.toggleEventTool(); bump(); }} data-tip="Event: the event structures catalogue" aria-label="Event"><Icon name="buildings" size={16} /><span className={WIDE}>Event</span></button>}
+ {chip('skipTournament') && <button data-guide="chip-skip" className="chip disabled:opacity-40" disabled={game.traffic.skipping || gv.live} onClick={() => game.skipToTournament()} data-tip={fv && !fv.due ? `Skip to the end of the season (no tournament yet: ${fv.invited ? 'the first one closes the next season' : fv.check.text})` : 'Skip to the tournament (end of August)'} aria-label={fv && !fv.due ? 'Skip to season end' : 'Skip to tournament'}><Icon name="skip" size={16} /><span className={WIDE}>{fv && !fv.due ? 'Skip to season end' : 'Skip to tournament'}</span></button>}
                 </>
               ) : game.eventMode
                 ? <Stat icon="trophy" label="Level" value={String(game.traffic.round.xp)} sub={`${game.traffic.round.cards.length} cards`} tone="text-amber-200" />
@@ -421,7 +429,7 @@ export default function App() {
                       {s.sub && <div className="label-caps mb-1">{s.sub}</div>}
                       <div className="seg flex-wrap">
                         {s.tools.map(t => { const why = toolLock(ui, t.id), on = entryOn(t); return (
-                          <button key={entryKey(t)} data-group-tool={t.view?.group ?? t.id} className={`${on ? 'on' : ''} ${why ? 'seg-locked' : ''}`} aria-disabled={why ? true : undefined} aria-pressed={on}
+                          <button key={entryKey(t)} data-group-tool={t.view?.group ?? t.id} data-guide={`tool-${t.view?.group ?? t.id}`} className={`${on ? 'on' : ''} ${why ? 'seg-locked' : ''}`} aria-disabled={why ? true : undefined} aria-pressed={on}
                             onClick={() => (why ? game.toast(`${t.label}: ${why}`) : openEntry(item.id, t))} {...tipAttrs({ name: t.label, ...(t.key ? { key: t.key } : {}), ...(why ? { why } : {}) })}>
                             {why ? <LockMark /> : <Icon name={t.icon} size={16} />}{t.label}{!why && toolNew(ui, t.id) && <NewBadge />}
                           </button>
@@ -480,7 +488,7 @@ export default function App() {
             <div className={`flex items-center gap-2 glass rounded-full! px-4 py-1.5 text-xs ${gv ? 'pointer-events-auto' : ''}`}>
               <Icon name="info" size={18} />
               {gv && hint
-                ? <><span data-testid="hint-text"><b>{hint.title}</b> · {hint.body}</span>{hint.show && <button className="chip chip-on" data-testid={hint.id.startsWith('hint-practice') ? 'hint-show-practice' : 'hint-show'} onClick={() => { game.showHint(hint.id); bump(); }}>Show me</button>}<button className="chip" onClick={() => { game.dismissHint(hint.id); bump(); }}>Got it</button></>
+                ? <>{game.guideDone && performance.now() - game.guideDone.at < 6000 && <span className="font-semibold text-emerald-300" data-testid="guide-done">✓ {game.guideDone.text} · next:</span>}<span data-testid="hint-text"><b>{hint.title}</b> · {hint.body}</span>{hint.show && <button className="chip chip-on" data-testid={hint.id.startsWith('hint-practice') ? 'hint-show-practice' : 'hint-show'} onClick={() => { game.showHint(hint.id); bump(); }}>Show me</button>}<button className="chip" onClick={() => { game.dismissHint(hint.id); bump(); }}>Got it</button></>
                 : <span>{keyed(hintFor(game))}</span>}
             </div>
             )}
@@ -542,7 +550,8 @@ export default function App() {
           </div>
           </div>
           )}
-          {game.site && game.traffic.round.stage !== 'eval' && <RoundPanel game={game} />}
+          {game.site && game.traffic.round.stage !== 'eval' && !(game.golfMode && game.traffic.round.stage === 'free') && <RoundPanel game={game} />}
+          {seasonOpen && game.golfMode && game.traffic.round.stage !== 'eval' && <SeasonCard game={game} onClose={() => setSeasonOpen(false)} onSelectHole={h => { const pin = game.golf?.pins.find(p => p.hole === h); if (pin) game.lookAt(pin.x, pin.y); }} />}
           {game.site && game.traffic.round.stage === 'eval' && <EvalScreen game={game} />}
           {game.site && game.playBoard() && <GolfLeaderboard game={game} />}
           {game.shotState() && <ShotPanel game={game} />}
@@ -636,9 +645,9 @@ function PerfPanel({ game }: { game: Game }) {
 }
 
 /** a top-bar figure: its icon (in a square, when given), its label, value and a line under it; bar (0 to 1) draws a thin progress bar under that */
-function Stat({ label, value, sub, tone, subTone, subClass, subTestId, title, bar, onClick, icon }: { label: string; value: string; sub?: string; tone?: string; subTone?: string; subClass?: string; subTestId?: string; title?: string; bar?: number; onClick?: () => void; icon?: IconName }) {
+function Stat({ label, value, sub, tone, subTone, subClass, subTestId, title, bar, onClick, icon, guide }: { label: string; value: string; sub?: string; tone?: string; subTone?: string; subClass?: string; subTestId?: string; title?: string; bar?: number; onClick?: () => void; icon?: IconName; guide?: string }) {
   return (
-    <div className={`flex items-center gap-2.5 px-1 ${onClick ? 'cursor-pointer rounded-lg hover:bg-white/5' : ''}`} onClick={onClick} data-tip={title}>
+    <div className={`flex items-center gap-2.5 px-1 ${onClick ? 'cursor-pointer rounded-lg hover:bg-white/5' : ''}`} onClick={onClick} data-tip={title} data-guide={guide}>
       {icon && <div className="glass-2 hidden h-8 w-8 shrink-0 place-items-center min-[1900px]:grid"><Icon name={icon} size={24} /></div>}
       <div>
         <div className="label-caps">{label}</div>
@@ -793,7 +802,7 @@ function EvalScreen({ game }: { game: Game }) {
  const book = ye ? computeTournamentCloseBook(ye, last.tickets ?? 0, game.courseAreaList(), last.upkeep, last.toll ?? 0) : null;
  return (
  <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center p-4">
- <div className="pointer-events-auto max-h-full w-[560px] max-w-full space-y-3 overflow-y-auto rounded-2xl border border-white/10 bg-slate-950/90 p-5 text-slate-200 shadow-2xl backdrop-blur">
+ <div className="pointer-events-auto max-h-full w-[560px] max-w-full space-y-3 overflow-y-auto rounded-2xl border border-white/10 bg-slate-950/90 p-5 text-slate-200 shadow-2xl backdrop-blur" data-guide="results">
  <div className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-400/80">{gv ? `${gv.tierName} · ${last.run === 1 ? 'First' : 'Year ' + last.run} tournament` : `Stadium · Level ${last.level} · Run ${last.run}`}</div>
  {ye && (
  <div className="rounded-xl border border-white/10 bg-white/5 p-3 text-xs">

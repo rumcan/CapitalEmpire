@@ -18,7 +18,7 @@ export function BuildingsPanel({ game }: { game: Game }) {
   return (
     <div className="tp" data-panel="buildings">
       <ToolHead icon="house" title="Buildings" desc="The houses of your course town, the clubhouse first" />
-      <button className={`card gap-1 ${placing ? 'card-on' : ''}`} data-card="clubhouse" aria-pressed={placing} disabled={built} onClick={() => game.placeClubhouse(!placing)} title={built ? 'Your clubhouse stands: there is one only' : placing ? 'Placing: click beside a drive (Esc puts it down)' : 'Pick to place it'}>
+      <button className={`card gap-1 ${placing ? 'card-on' : ''}`} data-card="clubhouse" data-guide="clubhouse-card" aria-pressed={placing} disabled={built} onClick={() => game.placeClubhouse(!placing)} title={built ? 'Your clubhouse stands: there is one only' : placing ? 'Placing: click beside a drive (Esc puts it down)' : 'Pick to place it'}>
         <div className="flex w-full items-center gap-3">
           {CLUB_ART && <div className="grid h-16 w-20 shrink-0 place-items-center overflow-hidden rounded-lg bg-black/30"><Thumb it={CLUB_ART} size={60} /></div>}
           <div className="min-w-0 flex-1">
