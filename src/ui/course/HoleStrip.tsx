@@ -72,7 +72,7 @@ export function HoleStrip({ game }: { game: Game }) {
         <span className="min-w-0">{!cv ? '' : cv.started
           ? `Hole ${cur}${cv.par ? ` · par ${cv.par} · ${cv.lengthM} m` : ''} · ${curState!.word}`
           : built.length ? `Hole ${cur} · empty: paint a green and a tee` : 'No holes yet: New hole plans one for you'}</span>
-        {planned && <button className="chip" disabled={editing} onClick={() => game.editHole(cur)} title={editing ? `Hole ${cur}'s editor is open above: drag the tee, the green or the line, then Build` : `New hole's editor on hole ${cur}: drag the tee, the green or the line; Build to save`} data-testid="status-edit">{editing ? `Editing hole ${cur}` : `✎ Edit hole ${cur}`}</button>}
+        {planned && <button className={`chip ${editing ? 'chip-editing' : ''}`} disabled={editing} onClick={() => game.editHole(cur)} title={editing ? `Hole ${cur}'s editor is open above: drag the tee, the green or the line, then Build` : `New hole's editor on hole ${cur}: drag the tee, the green or the line; Build to save`} data-testid="status-edit">{editing ? `Editing hole ${cur}` : `✎ Edit hole ${cur}`}</button>}
       </div>
       {missing.length > 0 && (
         <ul className="mt-1 flex flex-col gap-0.5">

@@ -107,6 +107,8 @@
 /* the Holes panel's status line (T205): its words wrap, then ✎ Edit hole n, on the next line when the words fill this one */
 .status-line { display: flex; flex-wrap: wrap; align-items: center; column-gap: 0.5rem; row-gap: 0.3rem; font-size: 13px; color: var(--ink); }
 .status-line > button { flex: none; white-space: nowrap; }
+/* Edit hole while that hole's editor is open ("Editing hole n", T205): a state, in gold, not a dead button */
+.chip-editing:disabled { cursor: default; border-color: var(--gold-line); background: var(--gold-wash); color: var(--gold-hi); }
 .wizard-card { border-radius: 0.9rem; border: 1px solid var(--gold-line); background: var(--gold-wash); padding: 0.6rem 0.7rem; }
 /* New hole's card (T119, P23 4.4): the title and number, the steps, Build on top, the stats and split, planting, the check table, the keys */
 .wiz-title { font-family: Georgia, "Palatino Linotype", Palatino, serif; font-size: 17px; font-weight: 700; color: var(--gold-hi); }

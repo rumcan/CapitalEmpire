@@ -89,8 +89,8 @@ export function HoleCard({ game, right = 'right-3' }: { game: Game; right?: stri
         <>
           <div className="mt-2 flex flex-wrap gap-1.5">
             {/* T205: Edit hole always shows what it did: the editor opens on this hole, framed, with a toast; while it is open it says so */}
-            <button className="chip" disabled={!c.planned || editing} onClick={() => game.editHole(c.n)} title={editing ? `Hole ${c.n}'s editor is open in the Holes panel: drag the tee, the green or the line, then Build` : c.planned ? "New hole's editor: drag the tee, the green or the line; Build to save" : 'Painted by hand: shape it with the brush'} data-testid="hole-edit"><Icon name="pin" size={14} />{editing ? `Editing hole ${c.n}` : 'Edit hole'}</button>
-            <button className="chip" disabled={!c.planned} onClick={ask} title={c.planned ? 'Clears what New hole laid for it, after a confirm' : 'Painted by hand: erase it with the brush'} data-testid="hole-delete"><Icon name="bulldozer" size={14} />Delete</button>
+            <button className={`chip ${editing ? 'chip-editing' : 'disabled:opacity-40'}`} disabled={!c.planned || editing} onClick={() => game.editHole(c.n)} title={editing ? `Hole ${c.n}'s editor is open in the Holes panel: drag the tee, the green or the line, then Build` : c.planned ? "New hole's editor: drag the tee, the green or the line; Build to save" : 'Painted by hand: shape it with the brush'} data-testid="hole-edit"><Icon name="pin" size={14} />{editing ? `Editing hole ${c.n}` : 'Edit hole'}</button>
+            <button className="chip disabled:opacity-40" disabled={!c.planned} onClick={ask} title={c.planned ? 'Clears what New hole laid for it, after a confirm' : 'Painted by hand: erase it with the brush'} data-testid="hole-delete"><Icon name="bulldozer" size={14} />Delete</button>
           </div>
           {!c.planned && <p className="sub-line mt-1" data-testid="hole-edit-why">Painted by hand: shape it with the brush. Edit hole and Delete are for holes New hole planned.</p>}
         </>
