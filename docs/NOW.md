@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-27 02:30)
+## START HERE (kept current by the lead; last updated 2026-10-27 02:35)
 
 **Paste-ready start prompts for every role are in `docs/START-PROMPTS.md`:** the lead, a coding ticket, and the other sessions in this
 repo. The weekly usage cap is close (2026-10-26), so any chat may stop at any moment.
@@ -29,7 +29,7 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 | --- | --- | --- | --- | --- | --- |
 | T098 | #168 | `arena/T098-range-gate` | `.claude/worktrees/t166` | 5187 | The range gate (the nightly's coverage gap: no gate bundles `rangebiz.ts`, and the range start is the default new game): `setupRange(seed)`, `npm run range:gate` on seeds 1-3 with thresholds from measured main numbers; the range20 fixture and bench stages only if T090 landed. Agent: the ground agent. |
 | T112 | #199 | `arena/T112-sharp` (PR #394) | `.claude/worktrees/t112` | — | **Approved, merge HELD for the morning restart:** a lock change makes the 5174 auto-updater run `npm ci` in theme-consistency (the live 5191 studio holds sharp there; the lot agent's t160 uses it by junction). Morning order: stop 5191 → merge #394 → let npm ci finish → restart 5191 and 5174. All shipped bytes identical on 0.35.5; audit 0. |
-| P05 | #68 | `lead/p05-balance-plan` | `.claude/worktrees/t160` | 5186 | The M5 balance plan **draft for the owner's approval** (no game numbers changed): measured structure paybacks, upkeep, crowd per tier, simulator vs game; proposed constants + balance tests → `docs/plans/P05.md`. Agent: the lot agent. |
+| P05 | #68 | `lead/p05-balance-plan` (PR #413, **open for the owner's approval**) | `.claude/worktrees/t160` | 5186 | Draft done: the simulator flatters the game (tents reach 31% not 100%; the second nine ~$505k not $60k; a careful player stuck at tier 2); proposals: a crowd hub, honest upkeep (rough once, 100%), 120 club days, quality feeds the crowd, the simulator on the game's functions. **Now measuring its open risks** (the real arrival rate, whether 18 holes fit the parcel) into the same PR. Agent: the lot agent. |
 | T098 | #168 | `arena/T098-range-gate` | `.claude/worktrees/t166` | 5187 | The range gate (the nightly's coverage gap: no gate bundles `rangebiz.ts`, and the range start is the default new game): `setupRange(seed)`, `npm run range:gate` on seeds 1-3 with thresholds from measured main numbers; the range20 fixture and bench stages only if T090 landed. Agent: the ground agent. |
 | T112 | #199 | `arena/T112-sharp` (PR #394) | `.claude/worktrees/t112` | — | **Approved, merge HELD for the morning restart:** a lock change makes the 5174 auto-updater run `npm ci` in theme-consistency (the live 5191 studio holds sharp there; the lot agent's t160 uses it by junction). Morning order: stop 5191 → merge #394 → let npm ci finish → restart 5191 and 5174. All shipped bytes identical on 0.35.5; audit 0. |
 
