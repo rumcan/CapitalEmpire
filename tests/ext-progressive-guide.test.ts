@@ -2,15 +2,21 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  FALLBACK_TEE_PAST,
   GUIDE,
   GUIDE_STEPS,
   LEGACY_HINT_STEP,
+  RANGE_GUIDE,
+  fallbackTeeSpot,
   guideNext,
+  guideShown,
   guideSkip,
   guideStep,
+  guideTable,
   stepMet,
   type GuideFacts,
 } from '../src/game/ext/progressive-ui/guide';
+import { plotOfFront } from '../src/game/golf/range';
 
 /** a default guide facts record */
 function facts(over: Partial<GuideFacts> = {}): GuideFacts {
@@ -136,5 +142,86 @@ describe('guided Year 1 rules (T045)', () => {
     assert.equal(LEGACY_HINT_STEP['hint-connect-road-and-park'], 4);
     assert.equal(LEGACY_HINT_STEP['hint-place-gate-and-tents'], 5);
     assert.equal(LEGACY_HINT_STEP['hint-traffic-and-advanced'], 7);
+  });
+});
+
+describe("a range start's guide steps (P22 2.8, T095)", () => {
+  /** a new range game's facts: the welcome seen (step 2), nothing built */
+  const range = (over: Partial<GuideFacts> = {}): GuideFacts => facts({ start: 'range', step: 2, holes: 0, ...over });
+
+  it('10. start range picks RANGE_GUIDE (7 steps, unique ids, n = index + 1); any other start keeps GUIDE', () => {
+    assert.equal(guideTable({ start: 'range' }), RANGE_GUIDE);
+    assert.equal(guideTable({ start: 'town' }), GUIDE);
+    assert.equal(guideTable({}), GUIDE);
+    assert.equal(RANGE_GUIDE.length, GUIDE_STEPS);
+    assert.deepEqual(RANGE_GUIDE.map(g => g.n), [1, 2, 3, 4, 5, 6, 7]);
+    assert.equal(new Set(RANGE_GUIDE.map(g => g.id)).size, 7);
+    for (const g of RANGE_GUIDE) assert.ok(g.title.length > 0 && g.body.length > 0 && !/^Step \d/.test(g.title), g.id);
+    const s1 = guideStep(facts({ start: 'range' }));
+    assert.equal(s1?.id, 'guide-range-welcome');
+    assert.equal(guideNext(facts({ start: 'range' })), 2);
+  });
+
+  it('11. the triggers in order: hole 1 built, the clubhouse placed, holes >= 9, invited, runs >= 1, then the results (Next)', () => {
+    assert.equal(guideStep(range())?.id, 'guide-range-hole');
+    assert.equal(guideStep(range({ holes: 1 }))?.id, 'guide-range-clubhouse');
+    assert.equal(guideStep(range({ holes: 1, clubhouse: true }))?.id, 'guide-range-nine');
+    assert.equal(guideStep(range({ holes: 8, clubhouse: true }))?.id, 'guide-range-nine');
+    assert.equal(guideStep(range({ holes: 9, clubhouse: true }))?.id, 'guide-range-invite');
+    assert.equal(guideStep(range({ holes: 9, clubhouse: true, invited: true }))?.id, 'guide-range-tournament');
+    const done = range({ holes: 9, clubhouse: true, invited: true, runs: 1 });
+    assert.equal(guideStep(done)?.id, 'guide-range-results');
+    assert.equal(guideNext(done), 8);
+    assert.equal(guideStep({ ...done, step: 8 }), null);
+  });
+
+  it('12. each trigger is its own fact: stepMet reads only its step (pieces, roads, parks and structures, the old start triggers, do not count)', () => {
+    assert.equal(stepMet(2, range({ kinds: { tee: 1, fairway: 1, green: 1 } })), false);
+    assert.equal(stepMet(2, range({ holes: 1 })), true);
+    assert.equal(stepMet(3, range({ structures: 3, parks: 2 })), false);
+    assert.equal(stepMet(3, range({ clubhouse: true })), true);
+    assert.equal(stepMet(4, range({ holes: 8 })), false);
+    assert.equal(stepMet(4, range({ holes: 9 })), true);
+    assert.equal(stepMet(5, range({ invited: false })), false);
+    assert.equal(stepMet(5, range({ invited: true })), true);
+    assert.equal(stepMet(6, range({ runs: 0 })), false);
+    assert.equal(stepMet(6, range({ runs: 1 })), true);
+    assert.equal(stepMet(1, range()), false);
+    assert.equal(stepMet(7, range({ runs: 3 })), false);
+  });
+
+  it('13. a clubhouse placed before hole 1 holds step 2; with hole 1 the guide moves past both to Finish the nine', () => {
+    assert.equal(guideStep(range({ clubhouse: true }))?.id, 'guide-range-hole');
+    assert.equal(guideStep(range({ clubhouse: true, holes: 1 }))?.id, 'guide-range-nine');
+  });
+
+  it('14. old saves without the guide\'s progress get no guide (either start), and a range start is never offered the stuck step', () => {
+    for (let step = 1; step <= 7; step++) {
+      assert.equal(guideStep(facts({ step, progress: false })), null);
+      assert.equal(guideStep(range({ step, progress: false })), null);
+    }
+    assert.equal(guideShown(facts({ tutorial: 'off', progress: false, seasons: 2 })), null);
+    assert.equal(guideShown(range({ tutorial: 'off', seasons: 3, playS: 99999 })), null);
+    assert.equal(guideShown(facts({ tutorial: 'off', seasons: 1 }))?.id, 'guide-stuck');
+  });
+
+  it('15. the ring\'s fallback tee: off the range plot, on the parcel, FALLBACK_TEE_PAST past the plot on the side with more parcel, level with the front', () => {
+    for (const dir of [0, 1, 2, 3] as const) {
+      const alongX = dir === 0 || dir === 2;
+      // a front of 70 x 24 tiles at (1000, 1000) (24 x 70 when the road runs along y), its plot, and a parcel 450 along the road from the plot's far side
+      const front: [number, number, number, number] = alongX ? [1000, 1000, 70, 24] : [1000, 1000, 24, 70];
+      const plot = plotOfFront(front, dir);
+      const parcel: [number, number, number, number] = alongX ? [plot[0], plot[1], 450, plot[3]] : [plot[0], plot[1], plot[2], 450];
+      const t = fallbackTeeSpot(plot, front, parcel, dir);
+      const onPlot = t.x >= plot[0] && t.x < plot[0] + plot[2] && t.y >= plot[1] && t.y < plot[1] + plot[3];
+      assert.equal(onPlot, false, `dir ${dir}: off the plot`);
+      assert.ok(t.x > parcel[0] && t.x < parcel[0] + parcel[2] && t.y > parcel[1] && t.y < parcel[1] + parcel[3], `dir ${dir}: on the parcel`);
+      if (alongX) { assert.equal(t.x, plot[0] + plot[2] + FALLBACK_TEE_PAST); assert.equal(t.y, front[1] + front[3] / 2); }
+      else { assert.equal(t.y, plot[1] + plot[3] + FALLBACK_TEE_PAST); assert.equal(t.x, front[0] + front[2] / 2); }
+      // the parcel on the other side: the tee goes that way
+      const left: [number, number, number, number] = alongX ? [plot[0] + plot[2] - 450, plot[1], 450, plot[3]] : [plot[0], plot[1] + plot[3] - 450, plot[2], 450];
+      const u = fallbackTeeSpot(plot, front, left, dir);
+      if (alongX) assert.equal(u.x, plot[0] - FALLBACK_TEE_PAST); else assert.equal(u.y, plot[1] - FALLBACK_TEE_PAST);
+    }
   });
 });

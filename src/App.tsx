@@ -49,6 +49,7 @@ import { SeasonReportCard } from './ui/golf/SeasonReportCard';
 import { GolfLeaderboard } from './ui/GolfLeaderboard';
 import { ShotPanel } from './ui/ShotPanel';
 import { RangeCard } from './ui/golf/RangeCard';
+import { WelcomeCard } from './ui/golf/WelcomeCard';
 import stadiumArt from './assets/ui/art/stadium.webp';
 
 /** the top bar on one row (P23 4.11, T135): its golf chips (and the invitation's whole sentence) show their words only from 2200 px; narrower,
@@ -158,7 +159,7 @@ export default function App() {
   /** whether a golf top-bar chip is shown under the progressive unlocks */
   const chip = (id: string) => !ui || (ui.visibleGolfChips as string[]).includes(id);
   /** the first-run hint (null when none or all dismissed); golf mode shows it in the bottom bar */
-  const hint = ui?.activeHint ?? null;
+  const hint = ui ? ui.activeHint ?? game?.guideHint() ?? null : null; // T095: a range start's guide step when no other hint is up
   /** the Course brush's words (T118): what a click does (the surface, the hole it joins or starts, the price a cell) and the state; golf mode always shows them while a surface is armed */
   const courseHint = game?.courseHint() ?? '';
   /** the surface keys in force: 1 to the last surface the progressive unlocks show (BRUSH_PRESETS' order, as PaintTool.key reads them) */
@@ -212,7 +213,7 @@ export default function App() {
               <div className="flex items-center gap-2.5">
                 <Icon name="leaf" size={38} />
                 <div className={gv ? 'max-[1899px]:hidden' : 'max-[1599px]:hidden'}>{/* the golf bar's title from 1900 px (T135: one row) */}
-                  <div className="whitespace-nowrap font-display text-2xl font-bold leading-tight text-[var(--gold-hi)]">Maple Falls</div>
+                  <div className="whitespace-nowrap font-display text-2xl font-bold leading-tight text-[var(--gold-hi)]" data-testid="title-name">{game.titleName() ?? 'Maple Falls'}</div>
                   <div className="label-caps whitespace-nowrap">Town Builder</div>
                 </div>
               </div>
@@ -224,6 +225,7 @@ export default function App() {
                       gear menu */}
                   <Stat icon="trophy" label="Tier" value={`T${gv.tier}`} sub={gv.tierName} subClass="max-[1599px]:hidden" title={`Tier ${gv.tier}: ${gv.tierName}`} tone="text-amber-200" />
                   <Stat icon="calendar" label="Month" value={gv.month} sub={gv.live ? 'Tournament day' : `${Math.ceil(gv.monthsLeft)} ${Math.ceil(gv.monthsLeft) === 1 ? 'month' : 'months'} to ${fv && !fv.due ? 'season end' : 'the tournament'}`} />
+                  {fv && !fv.invited && game.traffic.round.runs === 0 && !gv.live && <span className="flex items-center gap-1 whitespace-nowrap rounded-md border border-white/10 bg-white/5 px-2 py-1 text-xs font-semibold text-slate-200" data-testid="founding-chip" title={`Founding season · ${Math.min(fv.check.holes, fv.check.holesNeeded)} of ${fv.check.holesNeeded} holes: the tour invites you with ${fv.check.holesNeeded} holes, a car park and a clubhouse`}><Icon name="pin" size={14} /><span className="min-[1600px]:hidden">{Math.min(fv.check.holes, fv.check.holesNeeded)}/{fv.check.holesNeeded}</span><span className="max-[1599px]:hidden">Founding season · {Math.min(fv.check.holes, fv.check.holesNeeded)} of {fv.check.holesNeeded} holes</span></span>}
                   {game.golf?.start === 'range' && <button className={`chip ${game.range.cardOpen ? 'chip-on' : ''}`} onClick={() => game.openRangeCard()} title="The driving range: golfers, takings, bucket price and upgrades" aria-label="Range" data-testid="range-chip"><Icon name="income" size={16} /><span className={WIDE}>Range</span></button>}
                   {fv?.invited && game.traffic.round.runs === 0 && !gv.live && <span className="flex items-center gap-1 whitespace-nowrap rounded-md border border-amber-400/40 bg-amber-400/15 px-2 py-1 text-xs font-semibold text-amber-200" data-testid="invite-pill" title={`The tour's invitation: the Club Championship at the end of ${fv.due ? 'this' : 'next'} season (the first tournament is held at the end of the season it names)`}><Icon name="trophy" size={14} /><span className="min-[2200px]:hidden">Invited</span><span className={WIDE}>The Club Championship: end of {fv.due ? 'this' : 'next'} season</span></span>}
                   {gv.live && (() => { const w = getTournamentWeather(game.seed, game.traffic.round.stage === 'eval' && game.traffic.round.last ? game.traffic.round.last.run : game.traffic.round.runs + 1); return <span className="rounded-md border border-amber-400/40 bg-amber-400/15 px-2 py-1 text-xs font-semibold text-amber-200" title={w.summary}>{w.icon} {w.label}</span>; })()}
@@ -485,6 +487,7 @@ export default function App() {
           {game.site && game.playBoard() && <GolfLeaderboard game={game} />}
           {game.shotState() && <ShotPanel game={game} />}
           {game.seasonReport && game.traffic.round.stage === 'free' && <SeasonReportCard report={game.seasonReport} onContinue={() => game.dismissSeasonReport()} />}
+          {(() => { const w = !game.seasonReport ? game.welcomeView() : null; return w && <WelcomeCard road={w.road} newHole={w.newHole} onGo={() => game.closeWelcome(true)} onClose={() => game.closeWelcome(false)} />; })()}
           {(() => { const rc = game.rangeCard(); return rc && <RangeCard view={rc} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.openRangeCard(false)} onPrice={p => game.setRangePrice(p)} onBuy={id => game.buyRangeUpgrade(id)} onShowPractice={() => game.showPracticeArea()} />; })()}
           {game.eventMode && !game.site && !game.golfMode && (
             <div className={`pointer-events-auto absolute ${game.panel ? 'right-[19.5rem]' : 'right-3'} top-[var(--hud-top,6rem)] z-20 flex items-center gap-3 glass p-3 text-sm`}>
