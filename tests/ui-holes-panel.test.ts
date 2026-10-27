@@ -1,5 +1,5 @@
 // Headless tests for the Holes panel (plan P23 4.3, P1-E, T120): stage 1 renders New hole only; from the first hole, your holes as badges
-// with icons and the current hole's status line, Shape by hand with six marked swatches, and More options collapsed; the wizard's card takes
+// with icons and the current hole's status line, Shape by hand with seven marked swatches, and More options collapsed; the wizard's card takes
 // New hole's place on top. The panel renders with react-dom/server against a stand-in game (only what the panel reads). npm test.
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
@@ -75,8 +75,8 @@ describe('the Holes panel after hole 1 (stage 2)', () => {
     assert.match(h, /Hole 1 · par 4 · 342 m · ready/);
     assert.match(h, /3 holes · par 12 · 972 m/);
     assert.match(h, /data-section="shape"/);
-    assert.equal((h.match(/data-swatch=/g) ?? []).length, 6, 'six surfaces');
-    assert.match(h, /keys 1–6/);
+    assert.equal((h.match(/data-swatch=/g) ?? []).length, 7, 'seven surfaces at stage 2 (T222: the Waste area with them; the cart path waits for stage 3)');
+    assert.match(h, /keys 1–7/);
     assert.match(h, /data-section="more"[\s\S]*aria-expanded="false"[\s\S]*More options[\s\S]*shapes · my looks · planting · more/);
     assert.doesNotMatch(h, /Saved holes|My looks<\/span>/, 'More options is collapsed');
   });

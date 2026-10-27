@@ -95,7 +95,7 @@ export function kindOfTex(tex: string): BrushKind | undefined {
   return BRUSH_PRESETS.find(b => b.style.tex === tex)?.kind ?? SURFACE_KIND[surfaceOfTex(tex as PaintTex) ?? ''] ?? (tex.startsWith('water') ? 'water' : undefined);
 }
 /** the brush kind of a golf surface (costs.ts surfaceOfTex: the plain textures and the owner's presets tagged with a surface) */
-const SURFACE_KIND: Record<string, BrushKind> = { green: 'green', tee: 'tee', fairway: 'fairway', rough: 'rough', bunker: 'bunker', water: 'water', path: 'path' };
+const SURFACE_KIND: Record<string, BrushKind> = { green: 'green', tee: 'tee', fairway: 'fairway', rough: 'rough', bunker: 'bunker', waste: 'waste', water: 'water', path: 'path' };
 /** a stored hole as a preset: its areas in the default style with the stored texture, border and corners (a stored kind is kept when it is
  *  a brush kind), its props with their exact sprites (the flag is the prop whose id names a flag or pin) */
 export function storedHolePreset(h: StoredHole): HolePreset {

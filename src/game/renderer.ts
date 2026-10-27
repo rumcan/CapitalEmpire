@@ -34,6 +34,7 @@ import { PaintedGround, type LayLevel } from './painted-ground';
 import { coversMap } from './painted-families';
 import { bandOf, cellsIn, snappedCell, tileIndex, tileKey, tilePermutation, tileSize } from './painted-tiles';
 import { BLOCK_UNDER, WOODLAND, lawnTexFor } from './painted-surfaces';
+import { ROUGH_SOFT, ROUGH_TEX, roughBack, type RoughKind, type RoughMix } from './rough-yards';
 import { BLEND_WAVES, blendAlpha, blendNoise, trimLru } from './painted-grass-lod';
 import { LEAF_DENSITY_DEFAULT, PIC_REACH, STAMP, layLeaves, leafSignature, type LeafRoad } from './leaf-fall';
 import { leafAtlasAt, type LeafAtlas } from './leaf-atlas';
@@ -1638,6 +1639,8 @@ export class GroundPainter {
         if (this.tex.has(BLOCK_UNDER)) fill(BLOCK_UNDER);
         this.drawBlend(ctx, { t, s: lw.share, f: lw.soft, p: lw.patch }, 1, G, path, 'nonzero', r, L, X0, Y0, M, Minv);
       }
+      // T222: a new or poor town's untended yard: fescue, dirt or desert over the mown lawn in soft patches (rough-yards.ts)
+      if (lw.rough && lw.z >= 1) this.drawRough(ctx, p0, p, lw.rough, G, path, r, L, X0, Y0, M, Minv);
       // T204: a lot's lawn takes the tall grass's spill where the map's grass meets it
       if (under && lw.z >= 1) this.areaSpill(ctx, this.ruggedOf(p0), laid, [], L, M, box, under);
     }
@@ -1645,9 +1648,13 @@ export class GroundPainter {
   /** a second texture laid over a surface in soft patches (a painted area's Blend with, PatchPaint m; a course look's; a road block's lawn): the
    *  texture (painted, a photo or preset in tile space at scale sx turned by G, else the screen texture) through the blend noise's mask
    *  (painted-grass-lod.ts blendNoise: world space, never periodic; share, softness and patch size from m), inside clip */
-  private drawBlend(ctx: C2D, m: { t: string; s: number; f: number; p: number }, sx: number, G: DOMMatrix, clip: Path2D, rule: CanvasFillRule, r: number[], L: number, X0: number, Y0: number, M: DOMMatrix, Minv: DOMMatrix) {
+  private drawBlend(ctx: C2D, m: { t: string; s: number; f: number; p: number; g?: (x: number, y: number) => number }, sx: number, G: DOMMatrix, clip: Path2D, rule: CanvasFillRule, r: number[], L: number, X0: number, Y0: number, M: DOMMatrix, Minv: DOMMatrix, px?: readonly [number, number, number, number]) {
     if (m.s <= 0) return;
-    const b = this.buffer('blend', ctx.canvas.width, ctx.canvas.height), g = ctx2d(b), t = m.t;
+    // px (T222): the device box [x, y, w, h] the blend lies in (a yard's), so only that box of the scratch layer is cleared and laid over the chunk,
+    // not the whole chunk-sized canvas; m.g weights the share by tile position
+    let b: Cnv;
+    if (px) { b = this.bufferAtLeast('blendBox', ctx.canvas.width, ctx.canvas.height); ctx2d(b).clearRect(px[0], px[1], px[2], px[3]); } else b = this.buffer('blend', ctx.canvas.width, ctx.canvas.height);
+    const g = ctx2d(b), t = m.t;
     // the scratch layer's context is reused chunk after chunk: its clip is saved and restored, or the clips would add up
     g.save(); g.setTransform(M); g.clip(clip, rule);
     let style: CanvasPattern | string = PAINT_COL.get(t) ?? '#808080';
@@ -1662,15 +1669,35 @@ export class GroundPainter {
       g.globalCompositeOperation = 'destination-in'; g.imageSmoothingEnabled = true; g.drawImage(nm.img, nm.x0, nm.y0, nm.w, nm.h);
     }
     g.globalCompositeOperation = 'source-over'; g.restore();
-    ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(b, 0, 0); ctx.restore();
+    ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
+    if (px) ctx.drawImage(b, px[0], px[1], px[2], px[3], px[0], px[1], px[2], px[3]); else ctx.drawImage(b, 0, 0);
+    ctx.restore();
+  }
+  /** T222: a rough yard's patches (rough-yards.ts): its fescue, dirt or desert (and a second look in finer patches) laid over the mown lawn through
+   *  the blend noise, inside the lot's rugged outline (path), weighted by depth: most of the share in the back yard, `f` of it in the front */
+  private drawRough(ctx: C2D, p0: LotPatch, p: LotPatch, mix: RoughMix, G: DOMMatrix, path: Path2D, r: number[], L: number, X0: number, Y0: number, M: DOMMatrix, Minv: DOMMatrix) {
+    const q = p0.pts; if (q.length < 8) return;
+    // the lot's frame from its four corners (o, o + u w, o + u w + n d, o + n d): the depth 0 at the street edge to 1 at the back
+    const ox = q[0]!, oy = q[1]!, nx = q[6]! - ox, ny = q[7]! - oy, dd = nx * nx + ny * ny; if (dd < 1e-6) return;
+    const depth = (x: number, y: number) => roughBack(mix.f, ((x - ox) * nx + (y - oy) * ny) / dd);
+    // the yard's box in device px, from its drawn outline
+    const W = ctx.canvas.width, H = ctx.canvas.height; let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (let k = 0; k + 1 < p.pts.length; k += 2) { const x = p.pts[k]!, y = p.pts[k + 1]!, X = M.a * x + M.c * y + M.e, Y = M.b * x + M.d * y + M.f; x0 = Math.min(x0, X); x1 = Math.max(x1, X); y0 = Math.min(y0, Y); y1 = Math.max(y1, Y); }
+    const bx = Math.max(0, Math.floor(x0) - 2), by = Math.max(0, Math.floor(y0) - 2), bw = Math.min(W, Math.ceil(x1) + 2) - bx, bh = Math.min(H, Math.ceil(y1) + 2) - by;
+    if (!(bw > 0 && bh > 0)) return;
+    const layers: [RoughKind, number, number][] = [[mix.k, mix.s, mix.p]]; if (mix.k2 && mix.s2) layers.push([mix.k2, mix.s2, mix.p2 ?? 0.3]);
+    for (const [k, s, pa] of layers) {
+      const t = ROUGH_TEX[k]; if (!this.tex.isPainted(t) && !this.tex.has(t)) continue;
+      this.drawBlend(ctx, { t, s, f: ROUGH_SOFT, p: pa, g: depth }, 1, G, path, 'nonzero', r, L, X0, Y0, M, Minv, [bx, by, bw, bh]);
+    }
   }
   /** the blend's mask over tile box r: blendAlpha of the blend noise sampled on the world grid (a step of a quarter of its shortest wave, finer
    *  at the closest zooms), as a small picture to stretch over r (x0, y0, w, h: tiles); outside r it is transparent */
-  private noiseMask(r: number[], m: { s: number; f: number; p: number }, L: number) {
+  private noiseMask(r: number[], m: { s: number; f: number; p: number; g?: (x: number, y: number) => number }, L: number) {
     const step = Math.max(BLEND_WAVES[BLEND_WAVES.length - 1]![0] * m.p / 4, 1 / (8 * L * 10)), x0 = Math.floor(r[0]! / step) * step, y0 = Math.floor(r[1]! / step) * step;
     const w = Math.min(1024, Math.ceil((r[2]! - x0) / step) + 1), h = Math.min(1024, Math.ceil((r[3]! - y0) / step) + 1), st = Math.max((r[2]! - x0) / (w - 1), (r[3]! - y0) / (h - 1), step);
     const img = this.buffer('blendNoise', w, h), d = new ImageData(w, h);
-    for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) { const o = (j * w + i) * 4; d.data[o + 3] = Math.round(255 * blendAlpha(blendNoise(x0 + i * st, y0 + j * st, m.p), m.s, m.f)); }
+    for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) { const o = (j * w + i) * 4; d.data[o + 3] = Math.round(255 * blendAlpha(blendNoise(x0 + i * st, y0 + j * st, m.p), m.g ? m.s * m.g(x0 + i * st, y0 + j * st) : m.s, m.f)); }
     ctx2d(img).putImageData(d, 0, 0);
     // the samples sit on the picture's pixel centres: the picture spans half a step more on each side
     return { img, x0: x0 - st / 2, y0: y0 - st / 2, w: w * st, h: h * st };
