@@ -194,11 +194,11 @@ const handle = async (m: ToWorker) => {
         tex.deferMakes = deferring; tex.deferNeed = !probing(m); tex.missing.clear();
         try { cv = m.kind === 'p' ? painter.paintPlan(m.i, m.j, m.L) : painter.paint(m.i, m.j, m.L, m.kind === 'm'); }
         finally { tex.deferMakes = false; tex.deferNeed = true; }
-        if (probing(m)) { tex.missing.clear(); cv.width = cv.height = 0; kick(); break; }
-        if (tex.missing.size) { const keys = [...tex.missing]; tex.missing.clear(); putAside(m, Promise.all(keys.map(k => tex.whenMade(k)))); break; }
+        if (probing(m)) { tex.missing.clear(); cv.width = cv.height = 0; painter.takeShadeMask(); kick(); break; }
+        if (tex.missing.size) { const keys = [...tex.missing]; tex.missing.clear(); painter.takeShadeMask(); putAside(m, Promise.all(keys.map(k => tex.whenMade(k)))); break; }
         lastBake = performance.now(); if (deferring && m.kind !== 'p') aheadOf(m);
-        const bmp = cv.transferToImageBitmap();
-        post({ t: 'tile', id: m.id, kind: m.kind, i: m.i, j: m.j, L: m.L, artL: m.artL ?? m.L, ts: m.ts, tiled: painter.tilesUsed, bmp, ms: performance.now() - t0 }, [bmp]);
+        const bmp = cv.transferToImageBitmap(), sm = m.kind === 'p' ? null : painter.takeShadeMask(), shade = sm ? sm.transferToImageBitmap() : undefined;
+        post({ t: 'tile', id: m.id, kind: m.kind, i: m.i, j: m.j, L: m.L, artL: m.artL ?? m.L, ts: m.ts, tiled: painter.tilesUsed, bmp, shade, ms: performance.now() - t0 }, shade ? [bmp, shade] : [bmp]);
         break;
       }
     }

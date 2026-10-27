@@ -228,6 +228,22 @@ const hash01 = (k: number, salt: number) => { let h = Math.imul(k ^ 0x9e3779b9, 
 const signedArea = (pts: number[]) => { let a = 0; const n = pts.length / 2; for (let i = 0; i < n; i++) { const j = (i + 1) % n; a += pts[2 * i] * pts[2 * j + 1] - pts[2 * j] * pts[2 * i + 1]; } return a / 2; };
 
 /** Paints ground chunks (the full-quality bake) and planner chunks (the far-zoom map). Runs in the ground workers. */
+/** the baked shade mask's size against its chunk's (T186: a quarter each way; the shades are soft) */
+export const SHADE_MASK_K = 4;
+/** a 2D context whose every transform is scaled by k first (T186: a chunk's drawing laid onto its smaller shade mask by the same calls: the
+ *  chunk transform and the chunk's own px both land scaled) */
+function scaledContext(g: C2D, k: number): C2D {
+  const S = new DOMMatrix([k, 0, 0, k, 0, 0]);
+  return new Proxy(g, {
+    get(t, p) {
+      if (p === 'setTransform') return (...a: unknown[]) => { t.setTransform(a.length === 0 ? S : a.length === 1 ? S.multiply(DOMMatrix.fromMatrix(a[0] as DOMMatrix2DInit)) : S.multiply(new DOMMatrix(a as number[]))); };
+      if (p === 'resetTransform') return () => { t.setTransform(S); };
+      if (p === 'transform' || p === 'getTransform' || p === 'translate' || p === 'scale' || p === 'rotate') { const f = Reflect.get(t, p, t) as (...a: unknown[]) => unknown; return (...a: unknown[]) => f.apply(t, a); }
+      const v = Reflect.get(t, p, t); return typeof v === 'function' ? (v as (...a: unknown[]) => unknown).bind(t) : v;
+    },
+    set(t, p, v) { return Reflect.set(t, p, v, t); },
+  });
+}
 export class GroundPainter {
   /** State-driven turf overlays, separate from the owner's base grass and lawn/mowing presets. */
   grassCells = new Map<number, GrassCellView>(); grassImages = new Map<string, Cnv>(); grassStrength = 0.45; grassHeat = false; grassMowing = false;
@@ -239,6 +255,25 @@ export class GroundPainter {
   private toned = new Map<string, PaintedEntry>(); private bakeKeys = new Set<string>();
   /** the bake in progress laid a tile set family (T145): its chunk then depends on the tile spec (GroundCache re-bakes it on a band or DPR change) */
   tilesUsed = false;
+  /** T186: the baked shade's multiplier, mirrored (the owner, 2026-10-27: "two shadows blocking the same light does not multiply a shadow"):
+   *  every shade the bake darkens the ground with (the hillshade, the course height's shade, the painted areas' and the course's edge shade and
+   *  cast shadows, the course walls' cast shadows) is laid again onto a white chunk-sized mask, so the mask holds how dark the ground already is
+   *  from shade. The worker hands it on at a quarter of the chunk's size (takeShadeMask); the engine's sprite shadow layer then takes the max
+   *  of the two, so a sprite's shadow over a baked shade darkens it only as far as the darker of them (gl.ts drawShadeMask, endShadows). Null
+   *  between bakes and in a planner bake */
+  private shadeMask: { cv: OffscreenCanvas; g: C2D; used: boolean } | null = null;
+  /** lay a shade onto the mask too (the bake in progress has one): draw is the same drawing as onto the chunk, given the mask's context, whose
+   *  transforms are the chunk's scaled down to the mask (scaledContext: so the chunk transform M and the chunk's px place it alike); its state
+   *  is saved and restored round it */
+  private onShadeMask(draw: (g: C2D) => void) {
+    const m = this.shadeMask; if (!m) return;
+    m.g.save(); m.g.resetTransform(); draw(m.g); m.g.restore(); m.used = true;
+  }
+  /** the mask of the bake just done (the worker transfers it), or null when it laid no shade (the chunk then has none: no texture, no draw) */
+  takeShadeMask(): OffscreenCanvas | null {
+    const m = this.shadeMask; this.shadeMask = null;
+    return m?.used ? m.cv : null;
+  }
   /** the planner's painted pictures (a look's far painting, tinted and toned), by look */
   private planPics = new Map<string, Cnv>();
   /** the course walls' painted cut faces (a look's near painting at a mip, tinted and toned), by look and mip */
@@ -351,6 +386,7 @@ export class GroundPainter {
   paintPlan(i: number, j: number, L: number): Cnv {
     const W = Math.round(PLAN_W * L), H = Math.round(PLAN_H * L), X0 = i * PLAN_W, Y0 = j * PLAN_H;
     const cv = canvas(W, H), ctx = ctx2d(cv);
+    this.shadeMask = null; // (T186: a planner bake keeps no shade mask)
     const M = new DOMMatrix([HW * L, HH * L, -HW * L, HH * L, -X0 * L, -Y0 * L]);
     const box = GroundPainter.tileBox(X0, Y0, X0 + PLAN_W, Y0 + PLAN_H, 2), [tx0, ty0, tx1, ty1] = box;
     // the tile set families (T145) lay their tiles here as on the ground chunks (planTiled), at the camera's band (the furthest zoom: FAR)
@@ -425,6 +461,7 @@ export class GroundPainter {
     // the shade, straight onto the chunk (the picture is white where nothing is shaded)
     const sh = rect('hlShade', '#fff'); stretch(sh.bg, 'hlShadePic', pics.shade);
     ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = 'multiply'; ctx.drawImage(sh.b, x0, y0); ctx.restore();
+    this.onShadeMask(m => { m.setTransform(1, 0, 0, 1, 0, 0); m.globalCompositeOperation = 'multiply'; m.drawImage(sh.b, x0, y0); });
     // the luminance, its neighbourhood's mean (a Gaussian, on a copy grown by P px so the edges have one) and 1 − mean
     const lum = rect('hlLum', '#808080'); op(lum.bg, 'luminosity', () => lum.bg.drawImage(src, x0, y0, rw, rh, 0, 0, rw, rh));
     const sig = Math.max(1.5, LUMA_SIGMA_PER_L * L), P = Math.ceil(3 * sig) + 1;
@@ -620,6 +657,10 @@ export class GroundPainter {
     const pat = (n: TexName) => { let p = pats.get(n); if (!p) { p = this.photoFill(ctx, n, L) ?? this.screenPattern(ctx, n, L, X0, Y0, Minv); pats.set(n, p); } return p; };
     const box = GroundPainter.tileBox(X0, Y0, X0 + CW, Y0 + CH), [tx0, ty0, tx1, ty1] = box, vis = (b: BBox) => b[2] >= tx0 && b[0] <= tx1 && b[3] >= ty0 && b[1] <= ty1;
     this.chunkNow = { key: `${lite ? 'm' : 'g'}${i},${j}@${L}`, L, box, M, Minv, W, H }; this.toned.clear(); this.bakeKeys.clear(); this.tilesUsed = false;
+    // T186: the shade mask (a quarter of the chunk's size), white (no shade) until a shade is laid on it; none for a district chunk (its
+    // sprites' shadows are a few px: the far meshes)
+    if (lite) this.shadeMask = null;
+    else { const mc = new OffscreenCanvas(Math.max(1, Math.ceil(W / SHADE_MASK_K)), Math.max(1, Math.ceil(H / SHADE_MASK_K))), mg = mc.getContext('2d')!; mg.fillStyle = '#fff'; mg.fillRect(0, 0, mc.width, mc.height); this.shadeMask = { cv: mc, g: scaledContext(mg, 1 / SHADE_MASK_K), used: false }; }
     const minW = 1 / (TILE_PX * L), net = this.net.view([tx0 - 8, ty0 - 8, tx1 + 8, ty1 + 8], !lite), tex = this.tex;
     const paint = (g: C2D, f: Feature) => { g.lineCap = f.cap; if (f.kind === 'stroke') { g.lineWidth = f.w; g.stroke(f.path); } else g.fill(f.path); };
     const ring = (g: C2D, f: Feature, extra: number) => { g.lineCap = f.cap; if (f.kind === 'stroke') { g.lineWidth = f.w + extra; g.stroke(f.path); } else { g.lineWidth = extra; g.stroke(f.path); } };
@@ -651,7 +692,9 @@ export class GroundPainter {
     const shore = (g: C2D, list: typeof near, extra: number, f: number, scale = 1) => { g.setTransform(M); g.globalCompositeOperation = 'lighter'; g.fillStyle = 'rgba(0,0,0,0.25)'; for (let s = 0; s < 4; s++) { const p = new Path2D(); let any = false; for (const w of list) any = waterShape(p, w.w.pts, extra + f * (1 - (2 * s) / 3), box, scale) || any; if (any) g.fill(p); } g.globalCompositeOperation = 'source-over'; };
     if (rivers.length) layer('bank', g => shore(g, rivers, 3, 0.8));
     if (creeks.length) { layer('creek', g => shore(g, creeks, 0.5, 0.5)); layer('water', g => shore(g, creeks, 0, 0.25, 0.35), water); }
-    const sres = lite ? 0.25 : 0.5; overlay(ctx, shadeRGBA(this.shade, tx0, ty0, bw, bh, sres), sres); ctx.setTransform(M);
+    const sres = lite ? 0.25 : 0.5, hs = shadeRGBA(this.shade, tx0, ty0, bw, bh, sres); overlay(ctx, hs, sres); ctx.setTransform(M);
+    // (T186: its shade on the mask, not its light: only when it shades anything)
+    if (this.shadeMask) { const d = hs.data.slice(); let any = false; for (let k = 3; k < d.length; k += 4) { if (d[k - 1]! >= 160) d[k] = 0; else if (d[k]! > 4) any = true; } if (any) this.onShadeMask(g => overlay(g, { data: d, W: hs.W, H: hs.H }, sres)); }
     if (rivers.length) layer('water', g => shore(g, rivers, 0, 0.3), water);
 
     const walk = net.walkF.filter(f => vis(f.bbox)), asph = net.asphF.filter(f => vis(f.bbox));
@@ -1206,7 +1249,7 @@ export class GroundPainter {
       const [ex0, ey0, ex1, ey1] = eb, field = edgeField(p.pts, ex0, ey0, ex1 - ex0, ey1 - ey0, res, reach, COURSE_CELL);
       const im = look ? edgeImages(field, look, feather) : null, sd = sh ? areaShadeImages(field, sh, !lite && L >= AREA_SHADE.lightL, feather) : null;
       // the cast shadow on the ground under it, multiplied in the cool shade so the ground keeps its texture (T110)
-      if (im) put(ctx, im.shadow, ex0, ey0, 'multiply');
+      if (im) { put(ctx, im.shadow, ex0, ey0, 'multiply'); this.onShadeMask(m => put(m, im.shadow, ex0, ey0, 'multiply')); }
       layer ??= this.buffer('paintEdge', ctx.canvas.width, ctx.canvas.height);
       const g = ctx2d(layer), path = polyPath(p.pts);
       this.drawPaint(g, p, L, X0, Y0, M, Minv, box, lite, feather);
@@ -1215,11 +1258,13 @@ export class GroundPainter {
         const lb = litBox(im.light, ex0, ey0, res);
         if (im.light && lb) this.areaLight(g, im.light, lb, path, ex0, ey0, res, L, M, areaLightEdge(feather));
         put(g, im.dark, ex0, ey0, 'multiply');
+        // (T186: on the mask inside the area: the dark rim lies inside its outline)
+        this.onShadeMask(m => { m.setTransform(M); m.clip(path); put(m, im.dark, ex0, ey0, 'multiply'); });
       }
       if (sd && (sd.shade || sd.light)) {
         // the edge shade (T136): multiplied in its cool colour inside the area only (a crisp area has no cut to trim what lands outside), then
         // the light on the sun side
-        if (sd.shade) { g.save(); g.setTransform(M); g.clip(path); put(g, sd.shade, ex0, ey0, 'multiply'); g.restore(); }
+        if (sd.shade) { g.save(); g.setTransform(M); g.clip(path); put(g, sd.shade, ex0, ey0, 'multiply'); g.restore(); this.onShadeMask(m => { m.setTransform(M); m.clip(path); put(m, sd.shade, ex0, ey0, 'multiply'); }); }
         if (sd.light && sd.lightBox) this.areaLight(g, sd.light, sd.lightBox, path, ex0, ey0, res, L, M, areaLightEdge(feather));
       }
       if (im) put(g, im.cut, ex0, ey0, 'destination-out');
@@ -1301,10 +1346,10 @@ export class GroundPainter {
       ctx.restore();
     };
     /** an edge image over the tiles from (x0, y0), stretched onto ctx through the chunk transform with the op */
-    const put = (img: EdgeImage | null, x0: number, y0: number, op: GlobalCompositeOperation) => {
+    const put = (img: EdgeImage | null, x0: number, y0: number, op: GlobalCompositeOperation, g: C2D = ctx) => {
       if (!img) return;
       const s = this.buffer('small', img.W, img.H); ctx2d(s).putImageData(new ImageData(img.data as Uint8ClampedArray<ArrayBuffer>, img.W, img.H), 0, 0);
-      ctx.save(); ctx.setTransform(M); ctx.globalCompositeOperation = op; ctx.imageSmoothingEnabled = true; ctx.drawImage(s, x0, y0, img.W / res, img.H / res); ctx.restore();
+      g.save(); g.setTransform(M); g.globalCompositeOperation = op; g.imageSmoothingEnabled = true; g.drawImage(s, x0, y0, img.W / res, img.H / res); g.restore();
     };
     const flatF = featherTiles(EDGE_LOOKS.flat!, L), px = 1 / (TILE_PX * L);
     const layers = (s: number) => { const out: { c: CoursePatch; l: CourseLayer }[] = []; for (const c of cs) for (const l of c.layers) if (l.s === s) out.push({ c, l }); return out; };
@@ -1415,7 +1460,7 @@ export class GroundPainter {
             if (F.any) ims.push({ im: courseImages(F, look, f), x0, y0 });
           }
         }
-        for (const q of ims) put(q.im.shadow, q.x0, q.y0, 'multiply');                       // 1
+        for (const q of ims) { put(q.im.shadow, q.x0, q.y0, 'multiply'); this.onShadeMask(m => put(q.im.shadow, q.x0, q.y0, 'multiply', m)); } // 1
         if (!lite) for (const { l } of ls) feather(l, l.soft ?? l.edges, f);                     // 2
         for (const { l } of ls) fill(l, l.fill);                                                   // 3
         if (COURSE_DIRT) for (const { c, l } of ls) if (c.grow) this.courseDirt(ctx, c, l, L, X0, Y0, M, Minv, r); // 4: every tier, the grow-in is the ground's state (P23 D5.1)
@@ -1424,7 +1469,7 @@ export class GroundPainter {
           // lip (its edge reads at the outline: the feather lies outside), the shade multiplied
           const im = q.im.light, lb = litBox(im, q.x0, q.y0, res);
           if (im && lb) this.areaLight(ctx, im, lb, edgePath, q.x0, q.y0, res, L, M, 0, SHINE_TINT);
-          put(q.im.dark, q.x0, q.y0, 'multiply');
+          put(q.im.dark, q.x0, q.y0, 'multiply'); this.onShadeMask(m => put(q.im.dark, q.x0, q.y0, 'multiply', m));
         }
         if (!lite) {                                                                               // 6
           const joints = ls.flatMap(q => q.l.joint ?? []);
@@ -1518,6 +1563,8 @@ export class GroundPainter {
       // nested lengths (a penumbra that softens away from the wall), the contact shade tight and dark along the foot (the wall sits into the ground)
       ctx.globalCompositeOperation = 'multiply';
       if (shade) { ctx.fillStyle = SHADE_TINT; ctx.globalAlpha = sh.castA; for (const sp of shadow) ctx.fill(sp); ctx.globalAlpha = 1; }
+      // (T186: the cast shadow on the mask too)
+      if (shade) this.onShadeMask(m => { m.setTransform(M); if (clip) m.clip(clip); m.globalCompositeOperation = 'multiply'; m.fillStyle = SHADE_TINT; m.globalAlpha = sh.castA; for (const sp of shadow) m.fill(sp); });
       if (!lite && sh.softA + sh.lineA > 0) { ctx.strokeStyle = SHADE_TINT; ctx.globalAlpha = sh.softA; ctx.lineWidth = Math.max(sh.softPx * px, sh.soft); ctx.stroke(foot); ctx.globalAlpha = sh.lineA; ctx.lineWidth = Math.max(sh.linePx * px, sh.line); ctx.stroke(foot); ctx.globalAlpha = 1; }
       ctx.globalCompositeOperation = 'source-over';
       // the face: each band's strip in a mid tone first (no hairlines between the steps), then each band in each light step
@@ -1644,6 +1691,7 @@ export class GroundPainter {
         if (rock) {
           ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = SHADE_TINT; ctx.strokeStyle = SHADE_TINT;
           if (G.shade && sh.castA > 0) { ctx.globalAlpha = Math.min(1, sh.castA * 1.6); for (const sp of G.shadow) ctx.fill(sp); }
+          if (G.shade && sh.castA > 0) this.onShadeMask(m => { m.setTransform(M); m.globalCompositeOperation = 'multiply'; m.fillStyle = SHADE_TINT; m.globalAlpha = Math.min(1, sh.castA * 1.6); for (const sp of G.shadow) m.fill(sp); });
           if (sh.softA + sh.lineA > 0) { ctx.globalAlpha = sh.softA; ctx.lineWidth = Math.max(sh.softPx * px, sh.soft); ctx.stroke(G.foot); ctx.globalAlpha = sh.lineA * 0.8; ctx.lineWidth = Math.max(sh.linePx * px, sh.line); ctx.stroke(G.foot); }
           ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
         }
