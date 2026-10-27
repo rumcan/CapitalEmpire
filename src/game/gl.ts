@@ -15,6 +15,7 @@ import { SHADOW_AMBIENT } from './cast-shadow';
 import { BRAKE_LIGHT } from './sim/car-lamps';
 import { SPEC_LIGHT_GLSL, SPEC_MASK_K } from './lamp-reflect';
 import { GLOSS, GLOSS_LIGHT_GLSL } from './swamp';
+import { GRADE_GLSL, blurGlsl, type GradeFrame } from './grade';
 
 /** floats per sprite instance: rect x0 y0 x1 y1 (world px), uv u0 v0 u1 v1, layer, alpha, cullable, foot line (world px; < 0: casts no shadow),
  *  clip x0 y0 x1 y1 (world px), foot: the footprint's near corner x y and its left and right corners' x (world px; the cast shadows stand on it) */
@@ -261,6 +262,30 @@ void main() {
   float l = dot(texture(uTex, vUV).rgb, vec3(0.299, 0.587, 0.114));
   o = vec4(0.0, clamp((1.0 - l) / ${(1 - (0.299 * SHADOW_AMBIENT[0] + 0.587 * SHADOW_AMBIENT[1] + 0.114 * SHADOW_AMBIENT[2])).toFixed(5)}, 0.0, 1.0), 0.0, 0.0);
 }`;
+// T226 (grade.ts): the colour grade, one full-screen pass from the scene's texture to the screen: the edge blur mixed in toward the top and
+// bottom (uGrade.z: on), the tone curve at strength uGrade.x, the vignette at uGrade.y. The scene's own pixel is fetched exactly (texelFetch),
+// the blur (half the screen's size) bilinear
+const FS_GRADE = `#version 300 es
+precision highp float;
+uniform sampler2D uScene; uniform sampler2D uBlur; uniform vec4 uGrade; uniform vec2 uScreen; out vec4 o;
+${GRADE_GLSL}
+void main() {
+  vec2 uv = gl_FragCoord.xy / uScreen;
+  vec3 c = texelFetch(uScene, ivec2(gl_FragCoord.xy), 0).rgb;
+  if (uGrade.z > 0.5) { float m = gradeEdgeMask(uv.y); if (m > 0.0) c = mix(c, texture(uBlur, uv).rgb, m); }
+  if (uGrade.x > 0.0) c = gradeCurve(c, uGrade.x) * gradeVignette(uv, uGrade.y);
+  o = vec4(c, 1.0);
+}`;
+// T226: the edge blur's separable Gaussian (grade.ts blurTaps), into a target of half the screen's size; uStep one of its px along the pass's
+// axis, in uv (the first pass reads the full-size scene bilinear, so it also halves it)
+const FS_BLUR = `#version 300 es
+precision highp float;
+uniform sampler2D uSrc; uniform vec2 uStep; uniform vec2 uSize; out vec4 o;
+void main() {
+  vec2 uv = gl_FragCoord.xy / uSize;
+${blurGlsl()}
+  o = vec4(c, 1.0);
+}`;
 const VS_POINT = `#version 300 es
 layout(location=0) in vec2 aPos; layout(location=1) in vec4 aCol;
 uniform vec4 uCam; uniform vec2 uScreen; uniform float uSize;
@@ -297,6 +322,16 @@ export class GLRenderer {
   atlas: AtlasGL | null = null; atlasReady = false;
   private dyn: WebGLBuffer; private dynCap = 0;
   private maskTex: WebGLTexture; private emptyTex: WebGLTexture;
+  /** T226: the colour grade this frame (engine.ts: grade.ts gradeFrame), read by begin: null, the scene draws straight to the screen as it
+   *  always did (bit for bit, no offscreen target); else into the scene target, which endFrame lays on the screen through the grade */
+  grade: GradeFrame | null = null;
+  private gradeProg: Prog; private blurProg: Prog;
+  /** T226: the framebuffer this frame's scene draws into (begin): the scene target while graded, else null (the screen) */
+  private target: WebGLFramebuffer | null = null; private frameGrade: GradeFrame | null = null;
+  /** T226: the scene target (RGBA8, the screen's size) and the edge blur's two half-size targets; made on first use, resized with the
+   *  screen, released when the grade or the blur is switched off (releaseGrade) */
+  private sceneTex: WebGLTexture | null = null; private sceneFbo: WebGLFramebuffer | null = null; private sceneW = 0; private sceneH = 0;
+  private blurTex: WebGLTexture[] = []; private blurFbo: WebGLFramebuffer[] = []; private blurW = 0; private blurH = 0;
   view: View = { X: 0, Y: 0, ze: 1, cw: 1, ch: 1 };
   stats = { draws: 0, instances: 0, uploadFloats: 0 };
 
@@ -310,6 +345,8 @@ export class GLRenderer {
     this.vec = this.program(VS_VEC, FS_VEC, ['uCam', 'uScreen', 'uShear', 'uMul', 'uFar', 'uVerts', 'uIdx', 'uMinPx']);
     this.layerProg = this.program(VS_FULL, FS_LAYER, ['uLayer', 'uAmbient']);
     this.shadeProg = this.program(VS_QUAD, FS_SHADEMASK, ['uRect', 'uCam', 'uScreen', 'uUV', 'uTex']);
+    this.gradeProg = this.program(VS_FULL, FS_GRADE, ['uScene', 'uBlur', 'uGrade', 'uScreen']);
+    this.blurProg = this.program(VS_FULL, FS_BLUR, ['uSrc', 'uStep', 'uSize']);
     this.dyn = gl.createBuffer()!;
     this.maskTex = gl.createTexture()!; this.emptyTex = gl.createTexture()!;
     for (const t of [this.maskTex, this.emptyTex]) { gl.bindTexture(gl.TEXTURE_2D, t); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 255])); this.texParams(gl.TEXTURE_2D, false); }
@@ -388,8 +425,69 @@ export class GLRenderer {
 
   begin(v: View, clear: [number, number, number]) {
     const gl = this.gl; this.view = v; this.stats = { draws: 0, instances: 0, uploadFloats: 0 };
+    // T226: graded, the scene draws into the scene target (endFrame lays it on the screen); else straight to the screen, as before
+    this.frameGrade = this.grade; this.target = this.frameGrade ? this.sceneTarget(v.cw, v.ch) : null;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.target);
     gl.viewport(0, 0, v.cw, v.ch); gl.disable(gl.SCISSOR_TEST);
     gl.clearColor(clear[0], clear[1], clear[2], 1); gl.clear(gl.COLOR_BUFFER_BIT);
+  }
+  /** a colour target: an RGBA8 texture (bilinear, clamped) and its framebuffer */
+  private colourTarget(tex: WebGLTexture | null, fbo: WebGLFramebuffer | null, w: number, h: number): [WebGLTexture, WebGLFramebuffer] {
+    const gl = this.gl; if (tex) gl.deleteTexture(tex);
+    const t = gl.createTexture()!; gl.bindTexture(gl.TEXTURE_2D, t);
+    gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RGBA8, Math.max(1, w), Math.max(1, h)); this.texParams(gl.TEXTURE_2D, false);
+    const f = fbo ?? gl.createFramebuffer()!;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, f); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, t, 0);
+    return [t, f];
+  }
+  /** T226: the scene target at the screen's size (made, or made again after a resize) */
+  private sceneTarget(w: number, h: number) {
+    if (!this.sceneFbo || this.sceneW !== w || this.sceneH !== h) { [this.sceneTex, this.sceneFbo] = this.colourTarget(this.sceneTex, this.sceneFbo, w, h); this.sceneW = w; this.sceneH = h; }
+    return this.sceneFbo;
+  }
+  /** T226: GPU memory the grade holds now (bytes): the scene target, and the edge blur's targets while it is on */
+  get gradeBytes() { return this.sceneW * this.sceneH * 4 + this.blurTex.length * this.blurW * this.blurH * 4; }
+  /** T226: release the grade's targets (the grade switched off), or only the edge blur's (blurOnly: the blur switched off) */
+  releaseGrade(blurOnly = false) {
+    const gl = this.gl;
+    for (const t of this.blurTex) gl.deleteTexture(t); for (const f of this.blurFbo) gl.deleteFramebuffer(f);
+    this.blurTex = []; this.blurFbo = []; this.blurW = this.blurH = 0;
+    if (blurOnly) return;
+    if (this.sceneTex) gl.deleteTexture(this.sceneTex); if (this.sceneFbo) gl.deleteFramebuffer(this.sceneFbo);
+    this.sceneTex = null; this.sceneFbo = null; this.sceneW = this.sceneH = 0;
+  }
+  /** T226: the end of the frame's scene. Graded (begin drew the scene into the scene target): the edge blur's two passes when it is on, then the
+   *  grade pass lays the scene on the screen; the screen is bound again either way. Not graded: nothing (the scene is on the screen already) */
+  endFrame() {
+    const g = this.frameGrade, gl = this.gl; this.frameGrade = null;
+    if (!g || !this.target || !this.sceneTex) { this.target = null; return; }
+    const { cw, ch } = this.view;
+    gl.disable(gl.SCISSOR_TEST); gl.disable(gl.BLEND); gl.colorMask(true, true, true, true);
+    if (g.edgeBlur) {
+      const bw = Math.max(1, cw >> 1), bh = Math.max(1, ch >> 1);
+      if (this.blurW !== bw || this.blurH !== bh || this.blurTex.length < 2) {
+        for (let i = 0; i < 2; i++) { const [t, f] = this.colourTarget(this.blurTex[i] ?? null, this.blurFbo[i] ?? null, bw, bh); this.blurTex[i] = t; this.blurFbo[i] = f; }
+        this.blurW = bw; this.blurH = bh;
+      }
+      const pr = this.blurProg; gl.useProgram(pr.p); gl.viewport(0, 0, bw, bh); gl.uniform2f(pr.u.uSize, bw, bh); gl.uniform1i(pr.u.uSrc, 0);
+      gl.activeTexture(gl.TEXTURE0);
+      // across, from the scene (halving it), then down
+      gl.bindFramebuffer(gl.FRAMEBUFFER, this.blurFbo[0]!); gl.bindTexture(gl.TEXTURE_2D, this.sceneTex); gl.uniform2f(pr.u.uStep, 1 / bw, 0);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, this.blurFbo[1]!); gl.bindTexture(gl.TEXTURE_2D, this.blurTex[0]!); gl.uniform2f(pr.u.uStep, 0, 1 / bh);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+      this.stats.draws += 2;
+    }
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null); gl.viewport(0, 0, cw, ch);
+    const pr = this.gradeProg; gl.useProgram(pr.p);
+    gl.uniform4f(pr.u.uGrade, g.strength, g.strength, g.edgeBlur && this.blurTex[1] ? 1 : 0, 0); gl.uniform2f(pr.u.uScreen, cw, ch);
+    gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, this.blurTex[1] ?? this.emptyTex); gl.uniform1i(pr.u.uBlur, 1);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, this.sceneTex); gl.uniform1i(pr.u.uScene, 0);
+    gl.drawArrays(gl.TRIANGLES, 0, 3); this.stats.draws++;
+    // (the scene and blur textures unbound: next frame's scene draws into the scene target, which no sampler may hold then)
+    gl.bindTexture(gl.TEXTURE_2D, null); gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, null); gl.activeTexture(gl.TEXTURE0);
+    gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+    this.target = null;
   }
   private camUniforms(pr: Prog) { const v = this.view, gl = this.gl; gl.uniform4f(pr.u.uCam, v.X, v.Y, v.ze, 0); gl.uniform2f(pr.u.uScreen, v.cw, v.ch); }
   /** world rect -> device px, rounded so neighbouring rects share exact edges */
@@ -475,7 +573,8 @@ export class GLRenderer {
   endShadows() {
     if (!this.layerOpen) return;
     const gl = this.gl, pr = this.layerProg;
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null); gl.blendEquation(gl.FUNC_ADD); gl.colorMask(true, true, true, true);
+    // (back to the frame's target: the screen, or the scene target while graded, T226)
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.target); gl.blendEquation(gl.FUNC_ADD); gl.colorMask(true, true, true, true);
     this.layerOpen = false;
     if (this.layerUsed) {
       gl.useProgram(pr.p); gl.uniform3f(pr.u.uAmbient, SHADOW_AMBIENT[0], SHADOW_AMBIENT[1], SHADOW_AMBIENT[2]);

@@ -129,6 +129,7 @@ import { DayFinish, LiveGroup, OWNER_ADDRESS, OWNER_ART, OWNER_SKILL, POWER, PUT
 import { holeViews, markerPlan, tagByHole, type HoleView, type MarkerKind } from './golf/holeview';
 import { CAST, castShear, clampCast, type CastShadow } from './cast-shadow';
 import { SPEC_LOOK, clampSpecLook, specGain, type SpecLook } from './lamp-reflect';
+import { clampGrade, gradeFrame, loadGrade, saveGrade, type GradeSettings } from './grade';
 import { glossGain } from './swamp';
 import { contactLean } from './shadow-shape';
 import { MARKER_SCALE, OLD_TEE_IDS, PIN_RED_ID, PIN_YELLOW_ID, TEE_BACK_ID, TEE_FORWARD_ID, TEE_MIDDLE_ID } from './golf/dressing';
@@ -1405,6 +1406,15 @@ export class Game {
   setCast(c: Partial<CastShadow>) {
     this.cast = clampCast({ ...this.cast, ...c });
     try { localStorage.setItem('capitalempire.cast', JSON.stringify(this.cast)); } catch { /* storage may be unavailable */ }
+    this.emit();
+  }
+  /** T226 (grade.ts): the golden-hour colour grade (the gear menu's Colour grade: on or off, its strength 0..150%, the edge blur), remembered.
+   *  The plain game only: a light boot (the lot lab) draws its scene ungraded, as before (its exam shots compare lots across the screen) */
+  grade: GradeSettings = loadGrade(storageOf());
+  setGrade(p: Partial<GradeSettings>) {
+    const was = this.grade; this.grade = clampGrade({ ...this.grade, ...p }); saveGrade(storageOf(), this.grade);
+    // (the targets go when their switch does: the scene target with the grade, the half-size pair with the edge blur)
+    if (was.on && !this.grade.on) this.gl.releaseGrade(); else if (was.edgeBlur && !this.grade.edgeBlur) this.gl.releaseGrade(true);
     this.emit();
   }
   /** the contact shadows' darkness (shadow-shape.ts; 1 = TrickOrTreat's builder, 0 = none); the settings preference survives reloads */
@@ -5878,6 +5888,8 @@ export class Game {
     const tier = z < PLANNER_Z ? 'planner' : z < DISTRICT_Z ? 'district' : 'street'; this.perf.tier = tier;
     // the golf round moves on before the movers (the golfers) and the overlay (the balls) read it
     this.updatePlay(now);
+    // T226: the colour grade this frame (grade.ts: none when off, easing off after dusk; the scene then draws straight to the screen)
+    gl.grade = this.boot.kind === 'game' ? gradeFrame(this.grade, this.nightAmount()) : null;
     gl.begin({ X: cam.X, Y: cam.Y, ze, cw: this.cw, ch: this.ch }, [0.106, 0.157, 0.086]);
     const X0 = cam.X - this.cw / 2 / ze, Y0 = cam.Y - this.ch / 2 / ze, X1 = cam.X + this.cw / 2 / ze, Y1 = cam.Y + this.ch / 2 / ze;
     const dist = (cx: number, cy: number) => Math.hypot(cx - cam.X, cy - cam.Y) * ze;
@@ -6001,6 +6013,8 @@ export class Game {
       gl.endShadows();
       gl.drawSprites(pAt, f.floats / SPRITE_STRIDE, minPx);
     }
+    // T226: the scene laid on the screen through the grade (when graded), before the overlay and its night pass read the canvas
+    gl.endFrame();
     this.gl.atlas?.pump();
     this.ground.pump(); this.ground.settle(now); this.ground.evict(now);
     this.syncParkCars(now);
