@@ -29,7 +29,7 @@ export interface CourseFinish {
   lip: number;
 }
 /** the tuned look (against the concept, at 30% and 15%) */
-export const DEFAULT_COURSE_FINISH: Readonly<CourseFinish> = { on: true, along: true, bandWidth: 3.5, bandStrength: 0.55, greenWidth: 0.75, greenStrength: 0.4, collarWidth: 4, collarTone: 0.45, lip: 1 };
+export const DEFAULT_COURSE_FINISH: Readonly<CourseFinish> = { on: true, along: true, bandWidth: 3, bandStrength: 0.55, greenWidth: 0.75, greenStrength: 0.3, collarWidth: 4, collarTone: 0.45, lip: 1 };
 /** the finish off: the course exactly as before T227 */
 export const FINISH_OFF: Readonly<CourseFinish> = { ...DEFAULT_COURSE_FINISH, on: false };
 /** the knobs' ranges (collarWidth: the Border slider's, ext/course-grid/patch BORDER_MIN_M .. BORDER_MAX_M) */

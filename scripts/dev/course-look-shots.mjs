@@ -30,7 +30,8 @@ const shot = async (page, name) => {
   await sharp(await page.screenshot({ type: 'png' })).jpeg({ quality: 90, mozjpeg: true }).toFile(file);
   console.log(file); return file;
 };
-/** a fresh page on `url` (a new game or a fixture), loaded, the UI hidden, the game paused, broad day, no baking ahead */
+/** a fresh page on `url` (a new game or a fixture), loaded, the UI hidden, the game paused, broad day, no baking ahead (the colour grade as
+ *  the game has it: on, T226) */
 const open = async url => {
   const ctx = await browser.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: 1 });
   const page = await ctx.newPage();
@@ -39,7 +40,7 @@ const open = async url => {
   await page.goto(url);
   await page.waitForFunction(() => window.__game?.ready, null, { timeout: 240000 });
   await page.addStyleTag({ content: '* { visibility: hidden !important } canvas { visibility: visible !important }' });
-  await page.evaluate(() => { const g = window.__game; g.prebake = () => {}; g.setSpeed(0); g.setShowGrid?.(false); window.__night = 0; g.nightAmount = () => window.__night; g.setGrade?.({ on: false }); });
+  await page.evaluate(() => { const g = window.__game; g.prebake = () => {}; g.setSpeed(0); g.setShowGrid?.(false); window.__night = 0; g.nightAmount = () => window.__night; });
   return { page, ctx };
 };
 const look = (page, x, y, z) => page.evaluate(([x, y, z]) => { const g = window.__game; g.camEase = null; g.lookAt(x, y, z); }, [x, y, z]);

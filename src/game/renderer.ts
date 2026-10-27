@@ -2620,7 +2620,8 @@ export class GroundPainter {
         if (eb[2]! <= eb[0]! || eb[3]! <= eb[1]!) continue;
         ctx.save(); ctx.clip(p);
       }
-      const legs = holeStripeLegs(e.line, look, e.a);
+      // a green is mown one way, along the approach: its hole's last leg alone (no chevron where an aim point lies near it)
+      const all = holeStripeLegs(e.line, look, e.a), legs = l.s === SURF.green ? [{ m: all[all.length - 1]!.m, cut: null }] : all;
       if (legs.length === 1) this.layBands(ctx, legs[0]!.m, eb, M, textured);
       else for (let i = 0; i < legs.length; i++) {
         const q = legArea(legs, i, eb); if (!q.length) continue;
