@@ -150,12 +150,12 @@ export function Minimap({ game }: { game: Game }) {
           onPointerUp={onUp}
           onPointerCancel={onUp}
         />
-        <div className="absolute right-2 top-1 text-[10px] font-bold text-[var(--gold)] leading-none text-center">▲<br />N</div>
+        <div className="absolute right-2 top-1 text-[12px] font-bold text-[var(--gold)] leading-none text-center">▲<br />N</div>
       </div>
       <div className="glass flex items-center gap-2 px-3 py-2 relative">
         <div className="flex flex-col">
           <span className="font-display text-sm">{line1}</span>
-          <span className="text-[11px] text-[var(--muted)]">{line2}</span>
+          <span className="text-[12px] text-[var(--muted)]">{line2}</span>
         </div>
         <button type="button" className="btn px-1 py-1" aria-label="Choose a town" aria-expanded={open} onClick={() => setOpen(o => !o)}>
           <Icon name="down" size={16} className={open ? 'rotate-180' : ''} />

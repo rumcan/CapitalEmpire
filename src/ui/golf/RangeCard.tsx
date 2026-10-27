@@ -18,7 +18,7 @@ export function RangeCard({ view, onClose, onPrice, onBuy, onShowPractice, right
       <div className="flex items-center justify-between border-b border-white/10 pb-2">
         <div>
           <div className="font-semibold text-amber-200">Driving range</div>
-          <div className="text-[11px] text-slate-400">{st.proShop ? 'Pro shop' : 'The shack (a crappy pro shop)'} · {st.tier2 ? `${st.lowerBays} + ${st.bays - st.lowerBays} upstairs` : st.bays} bays · {st.counters} {st.counters === 1 ? 'counter' : 'counters'} · open {view.hours}</div>
+          <div className="text-[12px] text-slate-400">{st.proShop ? 'Pro shop' : 'The shack (a crappy pro shop)'} · {st.tier2 ? `${st.lowerBays} + ${st.bays - st.lowerBays} upstairs` : st.bays} bays · {st.counters} {st.counters === 1 ? 'counter' : 'counters'} · open {view.hours}</div>
         </div>
         <button className="btn-icon" onClick={onClose} title="Close"><Icon name="close" size={18} /></button>
       </div>
@@ -28,8 +28,8 @@ export function RangeCard({ view, onClose, onPrice, onBuy, onShowPractice, right
         <Tile label="Lost" value={`${today.lost > 0 ? `${statusIcon('warn')} ` : ''}${Math.round(today.lost)}`} sub="drove on" tone={today.lost > 0 ? 'text-rose-300' : 'text-white'} />
       </div>
       <div className="flex items-center justify-between gap-2 rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-xs" data-testid="range-parking" title="The range's car park: its golfers' cars parked now of its bays (the lot's and the car park building's), and the cars that drove on today because it was full">
-        <span className="text-slate-300">Parking: <span className="font-semibold text-white">{view.parking.parked}/{view.parking.bays}</span> cars{view.parking.garage ? <span className="text-slate-500"> · building {view.parking.garage.parked}/{view.parking.garage.cars}</span> : null}</span>
-        <span className={view.parking.turned > 0 ? 'font-semibold text-rose-300' : 'text-slate-500'}>{view.parking.turned} turned away today{view.parking.turned > 0 && !st.parking ? ' (car park full)' : ''}</span>
+        <span className="text-slate-300">Parking: <span className="font-semibold text-white">{view.parking.parked}/{view.parking.bays}</span> cars{view.parking.garage ? <span className="text-slate-400"> · building {view.parking.garage.parked}/{view.parking.garage.cars}</span> : null}</span>
+        <span className={view.parking.turned > 0 ? 'font-semibold text-rose-300' : 'text-slate-400'}>{view.parking.turned} turned away today{view.parking.turned > 0 && !st.parking ? ' (car park full)' : ''}</span>
       </div>
       <div className="grid grid-cols-2 gap-1.5 text-center">
         <Tile label="Season takings" value={money(biz.season.takings)} sub={`${Math.round(biz.season.buckets).toLocaleString()} buckets`} tone="text-emerald-300" />
@@ -37,23 +37,23 @@ export function RangeCard({ view, onClose, onPrice, onBuy, onShowPractice, right
       </div>
       <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-xs" data-testid="range-upkeep" title="Each upgrade costs a little every game month (twelve a season), booked as upkeep; the range itself costs $2,000 a season">
         <span className="text-slate-300">Upgrades' upkeep: <span className={view.upkeep > 0 ? 'font-semibold text-rose-300' : 'text-white'}>{money(view.upkeep)} a month</span></span>
-        <span className="text-slate-500">{money(view.upkeepSeason)} this season</span>
+        <span className="text-slate-400">{money(view.upkeepSeason)} this season</span>
       </div>
       <div className="rounded-lg border border-white/10 bg-white/5 p-2 text-xs">
-        <div className="mb-1 flex items-center justify-between"><span className="text-[10px] uppercase text-slate-400">Bucket price</span><span className="text-slate-400">{demandWord}</span></div>
+        <div className="mb-1 flex items-center justify-between"><span className="text-[12px] uppercase text-slate-400">Bucket price</span><span className="text-slate-400">{demandWord}</span></div>
         <div className="flex items-center gap-2">
           <button className="chip" disabled={biz.price <= PRICE_MIN} onClick={() => onPrice(biz.price - 1)} title="Cheaper">−</button>
           <span className="min-w-[3rem] text-center text-base font-bold text-white">{money(biz.price)}</span>
           <button className="chip" disabled={biz.price >= PRICE_MAX} onClick={() => onPrice(biz.price + 1)} title="Dearer">+</button>
-          <span className="text-[11px] text-slate-400">{st.extra ? `+ ${money(st.extra)} shop spend · ` : ''}fair price {money(st.ref)}</span>
+          <span className="text-[12px] text-slate-400">{st.extra ? `+ ${money(st.extra)} shop spend · ` : ''}fair price {money(st.ref)}</span>
         </div>
-        <div className="mt-1 text-[10px] text-slate-500">Each golfer you see stands for {scale} customers over the season.</div>
+        <div className="mt-1 text-[12px] text-slate-400">Each golfer you see stands for {scale} customers over the season.</div>
       </div>
       <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-xs" data-testid="range-props-appeal" title="Props within 15 tiles of the shop or the mats (the Props tool): more golfers, and a higher fair price">
-        <span className="text-slate-300">Appeal from props: <span className={st.propsAppeal > 0 ? 'font-semibold text-emerald-300' : 'text-white'}>{appealText(st.propsAppeal)}</span> <span className="text-slate-500">(of {appealText(PROPS_APPEAL_CAP)})</span></span>
+        <span className="text-slate-300">Appeal from props: <span className={st.propsAppeal > 0 ? 'font-semibold text-emerald-300' : 'text-white'}>{appealText(st.propsAppeal)}</span> <span className="text-slate-400">(of {appealText(PROPS_APPEAL_CAP)})</span></span>
       </div>
       <div className="space-y-1.5" data-testid="range-practice">
-        <div className="flex items-center justify-between text-[10px] uppercase text-slate-400">
+        <div className="flex items-center justify-between text-[12px] uppercase text-slate-400">
           <span>Practice facilities</span>
           {onShowPractice && <button className="chip normal-case" onClick={onShowPractice} title="Show the practice area and pick the brush">Show area</button>}
         </div>
@@ -63,35 +63,35 @@ export function RangeCard({ view, onClose, onPrice, onBuy, onShowPractice, right
               <span className="font-medium text-white">{f.name}</span>
               <span className={f.state === 'open' ? 'text-emerald-300' : f.state === 'none' ? 'text-slate-400' : 'text-amber-300'}>{f.state === 'open' ? 'Open' : f.state === 'none' ? 'Not built' : 'Not open yet'}</span>
             </div>
-            <div className="text-[11px] text-slate-400">{f.words}</div>
-            <div className="mt-0.5 flex justify-between text-[10px] text-slate-500">
+            <div className="text-[12px] text-slate-400">{f.words}</div>
+            <div className="mt-0.5 flex justify-between text-[12px] text-slate-400">
               <span>+{Math.round(f.appeal * 100)}% visitors · ${view.fee} a golfer</span>
               <span>{f.today} today · {Math.round(f.golfers)} this season · <span className="text-emerald-300/90">{money(f.takings)}</span></span>
             </div>
           </div>
         ))}
-        <div className="text-[10px] text-slate-500">Paint them with the Green and Bunker brushes in the Practice area beside the car park. A share of the range's golfers walk over after their bucket.</div>
+        <div className="text-[12px] text-slate-400">Paint them with the Green and Bunker brushes in the Practice area beside the car park. A share of the range's golfers walk over after their bucket.</div>
       </div>
       {view.extras.some(e => e.owned) && (
         <div className="space-y-1.5" data-testid="range-extras">
-          <div className="text-[10px] uppercase text-slate-400">Kiosk and academy</div>
+          <div className="text-[12px] uppercase text-slate-400">Kiosk and academy</div>
           {view.extras.filter(e => e.owned).map(e => (
             <div key={e.id} className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-2 text-xs" data-testid={`range-extra-${e.id}`}>
               <div className="flex items-center justify-between gap-2">
                 <span className="font-medium text-white">{e.id === 'kiosk' ? 'Coffee kiosk' : 'Golf academy'}</span>
-                <span className="text-[10px] text-slate-400">{e.today} today · {Math.round(e.season.golfers)} this season · <span className="text-emerald-300/90">{money(e.season.takings)}</span></span>
+                <span className="text-[12px] text-slate-400">{e.today} today · {Math.round(e.season.golfers)} this season · <span className="text-emerald-300/90">{money(e.season.takings)}</span></span>
               </div>
-              <div className="text-[11px] text-slate-400">{e.words}</div>
+              <div className="text-[12px] text-slate-400">{e.words}</div>
             </div>
           ))}
         </div>
       )}
       <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-xs" data-testid="range-home" title="Your home beside the range grows with the range's lifetime takings">
         <span className="text-slate-300">Your home: <span className="font-semibold text-white">{view.home.name}</span></span>
-        <span className="text-slate-500">{view.home.next ? `${view.home.next.name} at ${money(view.home.next.at)} taken (${money(view.home.total)} so far)` : `${money(view.home.total)} taken in all`}</span>
+        <span className="text-slate-400">{view.home.next ? `${view.home.next.name} at ${money(view.home.next.at)} taken (${money(view.home.total)} so far)` : `${money(view.home.total)} taken in all`}</span>
       </div>
       <div className="space-y-1.5">
-        <div className="text-[10px] uppercase text-slate-400">Upgrades</div>
+        <div className="text-[12px] uppercase text-slate-400">Upgrades</div>
         {view.upgrades.map(u => (
           <div key={u.id} className={`rounded-lg border p-2 text-xs ${u.owned ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-white/5 bg-white/5'}`}>
             <div className="flex items-center justify-between gap-2">
@@ -100,9 +100,9 @@ export function RangeCard({ view, onClose, onPrice, onBuy, onShowPractice, right
                 <button className="chip disabled:opacity-40" disabled={!!u.why} title={u.why || `Build for ${money(u.cost)}`} onClick={() => onBuy(u.id)} data-testid={`range-buy-${u.id}`}>Build {money(u.cost)}</button>
               )}
             </div>
-            <div className="text-[11px] text-slate-400">{u.effect}</div>
-            <div className="text-[10px] text-slate-500">Upkeep {money(u.upkeep)} a month{view.needs[u.id].length ? ` · needs ${view.needs[u.id].join(' and ')}` : ''}</div>
-            {!u.owned && u.why && u.why !== 'Built' && <div className="text-[10px] text-amber-300/80">{u.why}</div>}
+            <div className="text-[12px] text-slate-400">{u.effect}</div>
+            <div className="text-[12px] text-slate-400">Upkeep {money(u.upkeep)} a month{view.needs[u.id].length ? ` · needs ${view.needs[u.id].join(' and ')}` : ''}</div>
+            {!u.owned && u.why && u.why !== 'Built' && <div className="text-[12px] text-amber-300/80">{u.why}</div>}
           </div>
         ))}
       </div>
@@ -112,9 +112,9 @@ export function RangeCard({ view, onClose, onPrice, onBuy, onShowPractice, right
 function Tile({ label, value, sub, tone = 'text-white' }: { label: string; value: string; sub: string; tone?: string }) {
   return (
     <div className="rounded-lg border border-white/10 bg-white/5 p-1.5">
-      <div className="text-[10px] uppercase text-slate-400">{label}</div>
+      <div className="text-[12px] uppercase text-slate-400">{label}</div>
       <div className={`text-sm font-bold ${tone}`}>{value}</div>
-      <div className="text-[10px] text-slate-500">{sub}</div>
+      <div className="text-[12px] text-slate-400">{sub}</div>
     </div>
   );
 }

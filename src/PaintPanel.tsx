@@ -51,20 +51,20 @@ export function PaintPanel({ game }: { game: Game }) {
   return (
     <div>
       <div className="mb-2 text-xs font-bold uppercase tracking-[0.2em] text-amber-300">Paint</div>
-      <div className="mt-2 text-[11px] text-slate-400">Plants</div>
+      <div className="mt-2 text-[12px] text-slate-400">Plants</div>
       <div className="flex flex-wrap gap-1">
         {PLANT_KINDS.map(k => <button key={k.kind} className={`chip ${p.mode === 'plant' && p.plantBrush === k.kind ? 'chip-on' : ''}`} onClick={() => p.setPlant(k.kind)}><span className="mr-1 inline-block h-2.5 w-2.5 rounded-full align-middle" style={{ backgroundColor: k.col }} />{k.name}</button>)}
       </div>
       {game.golfMode && p.mode !== 'plant' && (
         <>
-          <div className="mt-2 text-[11px] text-slate-400">Planting method</div>
+          <div className="mt-2 text-[12px] text-slate-400">Planting method</div>
           <div className="flex flex-wrap gap-1">
             <button className={`chip ${p.plantKind === 'seed' ? 'chip-on' : ''}`} onClick={() => { p.plantKind = 'seed'; game.emit(); }}>Seed (grows in)</button>
             <button className={`chip ${p.plantKind === 'sod' ? 'chip-on' : ''}`} onClick={() => { p.plantKind = 'sod'; game.emit(); }}>Sod (instant, 3–5× cost)</button>
           </div>
         </>
       )}
-      <div className="mt-2 text-[11px] text-slate-400">Mode</div>
+      <div className="mt-2 text-[12px] text-slate-400">Mode</div>
       <div className="flex flex-wrap gap-1">
         {MODES.map(m => <button key={m.id} className={`chip ${p.mode === m.id ? 'chip-on' : ''}`} onClick={() => p.setMode(m.id)}>{m.label}</button>)}
       </div>
@@ -81,22 +81,22 @@ export function PlantControls({ game }: { game: Game }) {
   const togglePick = (id: string) => { const next = new Set(plantPicked); if (next.has(id)) next.delete(id); else next.add(id); p.setPlantSet({ ids: pool.map(x => x.id).filter(x => next.has(x)) }); };
   return (
     <>
-      <div className="mt-2 text-[11px] text-slate-400">Brush size</div>
+      <div className="mt-2 text-[12px] text-slate-400">Brush size</div>
       <div className="flex items-center gap-2">
         <input type="range" min={PLANT_R[0]} max={PLANT_R[1]} step={0.5} value={ps.r} onChange={e => p.setPlantSet({ r: +e.target.value })} className="flex-1" />
         <span className="w-16 text-right text-xs text-slate-200">{`${ps.r} tiles`}</span>
       </div>
-      <div className="mt-2 text-[11px] text-slate-400">Spacing (the gap between plants)</div>
+      <div className="mt-2 text-[12px] text-slate-400">Spacing (the gap between plants)</div>
       <div className="flex items-center gap-2">
         <input type="range" min={PLANT_SPACING[0]} max={PLANT_SPACING[1]} step={0.5} value={ps.spacing} onChange={e => p.setPlantSet({ spacing: +e.target.value })} className="flex-1" />
         <span className="w-16 text-right text-xs text-slate-200">{`${ps.spacing * 2} m`}</span>
       </div>
-      <div className="mt-2 text-[11px] text-slate-400">Smallest plant (of its normal size)</div>
+      <div className="mt-2 text-[12px] text-slate-400">Smallest plant (of its normal size)</div>
       <div className="flex items-center gap-2">
         <input type="range" min={PLANT_SIZE[0]} max={PLANT_SIZE[1]} step={0.05} value={ps.lo} onChange={e => p.setPlantSet({ lo: Math.min(+e.target.value, ps.hi) })} className="flex-1" />
         <span className="w-16 text-right text-xs text-slate-200">{`${Math.round(ps.lo * 100)}%`}</span>
       </div>
-      <div className="mt-2 text-[11px] text-slate-400">Largest plant</div>
+      <div className="mt-2 text-[12px] text-slate-400">Largest plant</div>
       <div className="flex items-center gap-2">
         <input type="range" min={PLANT_SIZE[0]} max={PLANT_SIZE[1]} step={0.05} value={ps.hi} onChange={e => p.setPlantSet({ hi: Math.max(+e.target.value, ps.lo) })} className="flex-1" />
         <span className="w-16 text-right text-xs text-slate-200">{`${Math.round(ps.hi * 100)}%`}</span>
@@ -104,7 +104,7 @@ export function PlantControls({ game }: { game: Game }) {
       <div className="mt-1 flex flex-wrap gap-1">
         <button className={`chip ${p.rubOut ? 'chip-on' : ''}`} onClick={() => { p.rubOut = !p.rubOut; game.emit(); }}>Rub out</button>
       </div>
-      <div className="mt-2 flex items-center gap-2 text-[11px] text-slate-400">
+      <div className="mt-2 flex items-center gap-2 text-[12px] text-slate-400">
         {`${pk.name}: ${plantPicked.size} of ${pool.length} picked`}
         <button className="chip" onClick={() => p.setPlantSet({ ids: null })}>All</button>
         <button className="chip" onClick={() => p.setPlantSet({ ids: [] })}>None</button>
@@ -113,11 +113,11 @@ export function PlantControls({ game }: { game: Game }) {
         {pool.map(x => (
           <button key={x.id} title={`${x.name} (${x.id})`} onClick={() => togglePick(x.id)}
             className={`flex h-14 items-end justify-center rounded border p-0.5 ${plantPicked.has(x.id) ? 'border-amber-400 bg-amber-400/15' : 'border-slate-700 bg-slate-900/40 opacity-50'}`}>
-            {LIB_BY_ID.has(x.id) ? <Thumb it={LIB_BY_ID.get(x.id)!} size={48} /> : <span className="text-[10px]">{x.name}</span>}
+            {LIB_BY_ID.has(x.id) ? <Thumb it={LIB_BY_ID.get(x.id)!} size={48} /> : <span className="text-[12px]">{x.name}</span>}
           </button>
         ))}
       </div>
-      <div className="mt-2 text-[11px] text-slate-400">{`${game.plantedCount()} planted by these brushes · free (decoration)`}</div>
+      <div className="mt-2 text-[12px] text-slate-400">{`${game.plantedCount()} planted by these brushes · free (decoration)`}</div>
     </>
   );
 }
@@ -128,7 +128,7 @@ function Section({ id, title, children, open: dflt = true }: { id: string; title
   const [open, setOpen] = useState<boolean>(() => { try { const v = localStorage.getItem(key); return v === null ? dflt : v === '1'; } catch { return dflt; } });
   return (
     <details open={open} onToggle={e => { const o = e.currentTarget.open; setOpen(o); try { localStorage.setItem(key, o ? '1' : '0'); } catch { /* storage unavailable */ } }}>
-      <summary className="mt-2 cursor-pointer select-none text-[11px] font-semibold uppercase tracking-wide text-slate-300">{title}</summary>
+      <summary className="mt-2 cursor-pointer select-none text-[12px] font-semibold uppercase tracking-wide text-slate-300">{title}</summary>
       {children}
     </details>
   );
@@ -152,22 +152,22 @@ export function StyleEditor({ game, gridOnly = false }: { game: Game; gridOnly?:
   return (
     <>
       {picked && !gridOnly && (<Section id="layer" title="Layer">
-        <div className="mt-2 text-[11px] text-slate-400">Layer (over or under the areas it overlaps)</div>
+        <div className="mt-2 text-[12px] text-slate-400">Layer (over or under the areas it overlaps)</div>
         <div className="flex flex-wrap gap-1">
           <button className="chip" title="To the back: under every area it overlaps (Shift+Page Down, Ctrl+Shift+[)" onClick={() => p.moveLayer('back')}>To back</button>
           <button className="chip" title="Back one: under the next area below it (Page Down, Ctrl+[)" onClick={() => p.moveLayer(-1)}>Back</button>
           <button className="chip" title="Forward one: over the next area above it (Page Up, Ctrl+])" onClick={() => p.moveLayer(1)}>Forward</button>
           <button className="chip" title="To the front: over every area it overlaps (Shift+Page Up, Ctrl+Shift+])" onClick={() => p.moveLayer('front')}>To front</button>
         </div>
-        <div className="text-[10px] text-slate-500">Page Up / Down, Shift for front / back (or Ctrl+] / Ctrl+[)</div>
+        <div className="text-[12px] text-slate-400">Page Up / Down, Shift for front / back (or Ctrl+] / Ctrl+[)</div>
       </Section>)}
       <Section id="texture" title="Texture and blend">
-      <div className="mt-2 text-[11px] text-slate-400">Texture</div>
+      <div className="mt-2 text-[12px] text-slate-400">Texture</div>
       <div className="flex flex-wrap gap-1">
         {MENU_TEXES.map(t => <button key={t.id} className={`chip ${s.tex === t.id ? 'chip-on' : ''}`} onClick={() => p.setStyle({ tex: t.id })}><span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm align-middle" style={swatch(t)} />{plainName(t.name)}</button>)}
-        {!MENU_TEXES.length && <div className="text-[11px] text-slate-400">No texture presets yet: make them in the studio (Ground → Texture presets), then Rebuild game sprites.</div>}
+        {!MENU_TEXES.length && <div className="text-[12px] text-slate-400">No texture presets yet: make them in the studio (Ground → Texture presets), then Rebuild game sprites.</div>}
       </div>
-      <div className="mt-2 text-[11px] text-slate-400">Blend with</div>
+      <div className="mt-2 text-[12px] text-slate-400">Blend with</div>
       <div className="flex flex-wrap gap-1">
         <button className={`chip ${!s.mtex ? 'chip-on' : ''}`} onClick={() => p.setStyle({ mtex: undefined })}>None</button>
         {MENU_TEXES.map(t => <button key={t.id} className={`chip ${s.mtex === t.id ? 'chip-on' : ''}`} onClick={() => p.setStyle({ mtex: t.id })}><span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm align-middle" style={swatch(t)} />{plainName(t.name)}</button>)}
@@ -175,7 +175,7 @@ export function StyleEditor({ game, gridOnly = false }: { game: Game; gridOnly?:
       {s.mtex && (
         <>
           {([['Share', 'mshare', 0, 1, 0.01, (v: number) => `${Math.round(v * 100)}%`, 0.5], ['Softness', 'msoft', 0.01, 0.5, 0.01, (v: number) => v.toFixed(2), 0.12], ['Patch size', 'mpatch', 0.25, 4, 0.05, (v: number) => `${v.toFixed(2)}x`, 1]] as const).map(([label, key, lo, hi, step, fmt, def]) => (
-            <div key={key} className="mt-1 flex items-center gap-2 text-[11px] text-slate-400">
+            <div key={key} className="mt-1 flex items-center gap-2 text-[12px] text-slate-400">
               <span className="w-16 shrink-0">{label}</span>
               <input type="range" min={lo} max={hi} step={step} value={s[key] ?? def} onChange={e => p.setStyle({ [key]: +e.target.value })} className="min-w-0 flex-1" />
               <span className="w-12 text-right text-xs text-slate-200">{fmt(s[key] ?? def)}</span>
@@ -185,7 +185,7 @@ export function StyleEditor({ game, gridOnly = false }: { game: Game; gridOnly?:
       )}
       </Section>
       <Section id="look" title="Size, angle and colour">
-      <div className="mt-2 text-[11px] text-slate-400">Scale</div>
+      <div className="mt-2 text-[12px] text-slate-400">Scale</div>
       <div className="flex items-center gap-1">
         <button className="btn" onClick={() => p.setStyle({ scale: s.scale / 1.25 })}>−</button>
         <span className="w-12 text-center text-xs text-slate-200">{`${Math.round(s.scale * 100)}%`}</span>
@@ -193,7 +193,7 @@ export function StyleEditor({ game, gridOnly = false }: { game: Game; gridOnly?:
         <button className="btn" onClick={() => p.setStyle({ scale: 1 })}>Reset</button>
       </div>
       {!fillPainted && (<>
-      <div className="mt-2 text-[11px] text-slate-400">Angle</div>
+      <div className="mt-2 text-[12px] text-slate-400">Angle</div>
       <div className="flex items-center gap-2">
         <input type="range" min={-90} max={90} step={5} value={s.angle} onChange={e => p.setStyle({ angle: +e.target.value })} className="flex-1" />
         <span className="w-10 text-right text-xs text-slate-200">{`${Math.round(s.angle)}°`}</span>
@@ -204,13 +204,13 @@ export function StyleEditor({ game, gridOnly = false }: { game: Game; gridOnly?:
         <button className="chip disabled:opacity-40" disabled={pts.length < 4} onClick={() => p.setStyle({ angle: edgeAngle(pts) })}>Along first edge</button>
       </div>
       </>)}
-      <div className="mt-2 text-[11px] text-slate-400">Tone</div>
+      <div className="mt-2 text-[12px] text-slate-400">Tone</div>
       <div className="flex flex-wrap gap-1">
         {TONES.map(t => <button key={t.id} className={`chip ${s.tone === t.id ? 'chip-on' : ''}`} onClick={() => p.setStyle(toneStyle(t.id, s.tint))}>{t.label}</button>)}
       </div>
       {s.tone > 0 && (
         <>
-          <div className="mt-2 text-[11px] text-slate-400">Strength</div>
+          <div className="mt-2 text-[12px] text-slate-400">Strength</div>
           <div className="flex items-center gap-2">
             <input type="range" min={0} max={100} step={5} value={Math.round(s.toneAmt * 100)} onChange={e => p.setStyle({ toneAmt: +e.target.value / 100 })} className="flex-1" />
             <span className="w-10 text-right text-xs text-slate-200">{`${Math.round(s.toneAmt * 100)}%`}</span>
@@ -227,13 +227,13 @@ export function StyleEditor({ game, gridOnly = false }: { game: Game; gridOnly?:
           own Shadow under it (T136) */}
       <Section id="border" title="Border">
       {grid ? <CourseEdges game={game} /> : (<>
-        <div className="flex items-center gap-2 text-[11px] text-slate-400" title="The border band inside the area's edge: none, a hairline, up to 8 m">
+        <div className="flex items-center gap-2 text-[12px] text-slate-400" title="The border band inside the area's edge: none, a hairline, up to 8 m">
           <span className="w-12 shrink-0">Border</span>
           <input type="range" aria-label="Border width" min={0} max={BORDER_STEPS} step={1} value={paintBorderPos(s.border)} onChange={e => p.setStyle({ border: paintBorderAt(+e.target.value) })} className="min-w-0 flex-1" />
           <span className="w-16 text-right text-xs text-slate-200">{s.border > 0 ? borderLabel(2 * borderW(s.border)) : 'none'}</span>
         </div>
         {/* T136: the area's edge shade, so it reads as slightly raised under the sun at the upper right (0 none, the look before it) */}
-        <div className="mt-1 flex items-center gap-2 text-[11px] text-slate-400" title="The area's edge shade: a soft shade inside its edges turned away from the sun and a little light on those turned to it, so it reads as slightly raised">
+        <div className="mt-1 flex items-center gap-2 text-[12px] text-slate-400" title="The area's edge shade: a soft shade inside its edges turned away from the sun and a little light on those turned to it, so it reads as slightly raised">
           <span className="w-12 shrink-0">Shadow</span>
           <input type="range" aria-label="Area shadow" min={0} max={100} step={1} value={Math.round((s.shadow ?? 0) * 100)} onChange={e => p.setStyle({ shadow: +e.target.value / 100 })} className="min-w-0 flex-1" />
           <span className="w-16 text-right text-xs text-slate-200">{`${Math.round((s.shadow ?? 0) * 100)}%`}</span>
@@ -241,11 +241,11 @@ export function StyleEditor({ game, gridOnly = false }: { game: Game; gridOnly?:
       </>)}
       {(grid ? band : s.border > 0) && (
         <>
-          <div className="mt-2 text-[11px] text-slate-400">Border texture</div>
+          <div className="mt-2 text-[12px] text-slate-400">Border texture</div>
           <div className="flex flex-wrap gap-1">
             {BORDER_MENU.filter(t => !grid || t.id !== 'kerb').map(t => <button key={t.id} className={`chip ${s.btex === t.id ? 'chip-on' : ''}`} onClick={() => p.setStyle({ btex: t.id })}><span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm align-middle" style={swatch(t)} />{plainName(t.name)}</button>)}
           </div>
-          <div className="mt-2 flex items-center gap-2 text-[11px] text-slate-400">
+          <div className="mt-2 flex items-center gap-2 text-[12px] text-slate-400">
             Border scale and angle
             <button className={`chip ${bFollow ? 'chip-on' : ''}`} title="The border uses the fill's scale and angle" onClick={() => p.setStyle({ bscale: 1, bangle: 0 })}>Follow the fill</button>
           </div>
@@ -266,13 +266,13 @@ export function StyleEditor({ game, gridOnly = false }: { game: Game; gridOnly?:
             <button className="chip disabled:opacity-40" disabled={pts.length < 4} onClick={() => bOwn({ bangle: edgeAngle(pts) })}>Along first edge</button>
           </div>
           </>)}
-          <div className="mt-2 text-[11px] text-slate-400">Border tone</div>
+          <div className="mt-2 text-[12px] text-slate-400">Border tone</div>
           <div className="flex flex-wrap gap-1">
             {TONES.map(t => <button key={t.id} className={`chip ${s.btone === t.id ? 'chip-on' : ''}`} onClick={() => p.setStyle({ btone: t.id, btint: toneStyle(t.id, s.btint).tint })}>{t.label}</button>)}
           </div>
           {s.btone > 0 && (
             <>
-              <div className="mt-2 text-[11px] text-slate-400">Border strength</div>
+              <div className="mt-2 text-[12px] text-slate-400">Border strength</div>
               <div className="flex items-center gap-2">
                 <input type="range" min={0} max={100} step={5} value={Math.round(s.btoneAmt * 100)} onChange={e => p.setStyle({ btoneAmt: +e.target.value / 100 })} className="flex-1" />
                 <span className="w-10 text-right text-xs text-slate-200">{`${Math.round(s.btoneAmt * 100)}%`}</span>
@@ -288,7 +288,7 @@ export function StyleEditor({ game, gridOnly = false }: { game: Game; gridOnly?:
       </Section>
       {!gridOnly && <Section id="shape" title={grid ? 'Grid' : 'Corners and grid'} open={false}>
       {!grid && (<>
-      <div className="mt-2 text-[11px] text-slate-400">Corners</div>
+      <div className="mt-2 text-[12px] text-slate-400">Corners</div>
       <div className="flex items-center gap-2">
         <input type="range" min={0} max={RADIUS_MAX} step={0.25} value={s.radius} onChange={e => p.setStyle({ radius: +e.target.value })} className="flex-1" />
         <span className="w-14 text-right text-xs text-slate-200">{s.radius === 0 ? 'Sharp' : `${s.radius * 2} m`}</span>
@@ -299,7 +299,7 @@ export function StyleEditor({ game, gridOnly = false }: { game: Game; gridOnly?:
       Snap corners to the grid
       </label>
       </Section>}
-      {!gridOnly && <div className="mt-2 text-[11px] text-slate-400">{game.golfMode ? (p.outline().length >= 6 ? `Estimated cost: $${Math.round(areaBuildCost(p.outline(), s.tex, p.plantKind)).toLocaleString()} (${p.plantKind}) · ${p.areas.length} area(s)` : `${p.areas.length} painted area(s)`) : `${p.areas.length} painted area(s) · free (decoration)`}</div>}
+      {!gridOnly && <div className="mt-2 text-[12px] text-slate-400">{game.golfMode ? (p.outline().length >= 6 ? `Estimated cost: $${Math.round(areaBuildCost(p.outline(), s.tex, p.plantKind)).toLocaleString()} (${p.plantKind}) · ${p.areas.length} area(s)` : `${p.areas.length} painted area(s)`) : `${p.areas.length} painted area(s) · free (decoration)`}</div>}
     </>
   );
 }

@@ -35,7 +35,7 @@ export function ShotPanel({ game }: { game: Game }) {
           <span className="pointer-events-none absolute -top-1 h-3 w-px bg-amber-300" style={{ left: `${full}%` }} />
         </span>
       </label>
-      <p className="mt-1 text-[11px] text-slate-400">Click the course to aim{putting ? ' (the putt runs the full distance at 100%)' : ''}.</p>
+      <p className="mt-1 text-[12px] text-slate-400">Click the course to aim{putting ? ' (the putt runs the full distance at 100%)' : ''}.</p>
       <div className="mt-3 flex justify-end gap-2">
         <button className="btn" onClick={() => game.ownerCaddie()}>Let the caddie finish</button>
         <button className="btn-gold" onClick={() => game.ownerHit()}>Hit</button>
