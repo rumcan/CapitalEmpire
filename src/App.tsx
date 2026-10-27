@@ -1508,6 +1508,22 @@ const SEG_SHORT: Record<JunctionKind, string> = { plain: 'Plain', stop: '4-way s
 const JUNCTION_KINDS: JunctionKind[] = ['plain', 'stop', 'mini', 'signal', 'roundabout'];
 /** the one-line help under the Type control for the types with no options */
 const KIND_HELP: Record<string, string> = { stop: 'Every approach stops; the car that waited longest goes first.', mini: 'A painted island; drivers give way to the circle and take turns.' };
+/** the ring brushes' preview under the pointer (T224): the price, the compensation for the buildings the ring clears (as the road tool says it), or the
+ *  thing that refuses it, named (the map outlines it red) */
+function RingPreview({ game }: { game: Game }) {
+  const n = game.hoverNode, b = game.brush;
+  if (!n || (b !== 'roundabout' && b !== 'mini')) return null;
+  const c = game.installCheck(n, b, game.ringLanes); if (/^It (already|is already)/.test(c.why)) return null;
+  const nl = c.ring?.lots.length ?? 0, np = c.ring?.props.length ?? 0;
+  return (
+    <div className="mt-2 rounded-lg bg-white/5 p-2 text-xs">
+      <div className="flex justify-between"><span className="text-slate-400">Cost</span><span className={c.cost + c.comp > game.money ? 'text-red-300' : 'text-emerald-300'}>{money(c.cost)}</span></div>
+      {nl > 0 && <div className="flex justify-between"><span className="text-slate-400">Compensation</span><span className="text-red-300">{money(c.comp)} <span className="text-slate-400">({nl} building{nl === 1 ? '' : 's'})</span></span></div>}
+      {np > 0 && <div className="flex justify-between"><span className="text-slate-400">Cleared</span><span>{np} item{np === 1 ? '' : 's'}</span></div>}
+      {c.why && <div className="mt-1 text-xs text-red-300">{c.why}</div>}
+    </div>
+  );
+}
 /** the junction tool's panel: the brush cards (Select, then Plain, All-way stop, Mini-roundabout, Lights and Roundabout with its ring-lane chips), then the selected junction (SelectedJunction) */
 function JunctionPanel({ game, compact = false }: { game: Game; compact?: boolean }) {
   const b = game.brush, n = game.selectedNode();
@@ -1552,6 +1568,7 @@ function JunctionPanel({ game, compact = false }: { game: Game; compact?: boolea
           );
         })}
       </div>
+      <RingPreview game={game} />
       <p className="mt-2 text-[12px] text-slate-400">{hint}</p>
     </Panel>
   );
@@ -1570,8 +1587,8 @@ function SelectedJunction({ game, n }: { game: Game; n: Node }) {
         <div className="mb-1 text-[12px] text-slate-400">Type</div>
         <div className="flex gap-1">
           {segs.map(t => {
-            const { cost } = game.installCheck(n, t, game.ringLanes);
-            return <button key={t} className={`chip flex-1 ${active(t) ? 'chip-on' : ''}`} onClick={() => game.setSelectedType(t)}><span className="block">{SEG_SHORT[t]}</span><span className="block text-[12px] opacity-80">{active(t) ? 'now' : cost ? money(cost) : 'free'}</span></button>;
+            const { cost, comp, ring } = game.installCheck(n, t, game.ringLanes), total = cost + comp;
+            return <button key={t} className={`chip flex-1 ${active(t) ? 'chip-on' : ''}`} title={comp ? `Includes $${comp.toLocaleString()} compensation for ${ring?.lots.length ?? 0} building${ring?.lots.length === 1 ? '' : 's'}` : undefined} onClick={() => game.setSelectedType(t)}><span className="block">{SEG_SHORT[t]}</span><span className="block text-[12px] opacity-80">{active(t) ? 'now' : total ? money(total) : 'free'}</span></button>;
           })}
         </div>
         {blocked.map((w, i) => <p key={i} className="mt-1 text-[12px] text-amber-300">{w}</p>)}
@@ -1622,16 +1639,19 @@ function SlipRow({ game, n }: { game: Game; n: Node }) {
 }
 /** a roundabout's ring lanes: the chips (the current one marked; re-laning pays the difference, a fall is free) and the reason a change cannot go */
 function RingRow({ game, n }: { game: Game; n: Node }) {
-  const cur = n.rl ?? 1, opts = [1, 2, 3] as const, why = opts.filter(k => k !== cur).map(k => game.installCheck(n, 'roundabout', k).why).filter(Boolean)[0];
+  const cur = n.rl ?? 1, opts = [1, 2, 3] as const, checks = opts.filter(k => k !== cur).map(k => ({ k, c: game.installCheck(n, 'roundabout', k) })), why = checks.map(q => q.c.why).filter(Boolean)[0];
+  // T224: a bigger ring takes in the buildings its circle reaches; their compensation is in the price (as a road's is), and said here
+  const takes = checks.filter(q => !q.c.why && q.c.comp > 0).map(q => `${q.k} lane${q.k > 1 ? 's' : ''}: ${q.c.ring!.lots.length} building${q.c.ring!.lots.length === 1 ? '' : 's'} cleared, ${money(q.c.comp)} compensation`);
   return (
     <div className="space-y-1">
       <div className="text-slate-100">Ring lanes</div>
       <div className="flex gap-1">
         {opts.map(k => {
-          const { cost } = game.installCheck(n, 'roundabout', k);
-          return <button key={k} className={`chip flex-1 ${cur === k ? 'chip-on' : ''}`} disabled={cur === k} onClick={() => { game.ringLanes = k; game.setSelectedType('roundabout'); }}><span className="block">{k} lane{k > 1 ? 's' : ''}</span><span className="block text-[12px] opacity-80">{cur === k ? 'now' : cost ? `+${money(cost)}` : 'free'}</span></button>;
+          const { cost, comp } = game.installCheck(n, 'roundabout', k), total = cost + comp;
+          return <button key={k} className={`chip flex-1 ${cur === k ? 'chip-on' : ''}`} disabled={cur === k} onClick={() => { game.ringLanes = k; game.setSelectedType('roundabout'); }}><span className="block">{k} lane{k > 1 ? 's' : ''}</span><span className="block text-[12px] opacity-80">{cur === k ? 'now' : total ? `+${money(total)}` : 'free'}</span></button>;
         })}
       </div>
+      {takes.map((t, i) => <p key={i} className="text-[12px] text-slate-400">{t}</p>)}
       {why && <p className="text-[12px] text-amber-300">{why}</p>}
     </div>
   );
@@ -1758,12 +1778,16 @@ function hintFor(g: Game) {
     case 'junction': {
       const s = g.selectedNode(), h = g.hoverNode, what = g.brush === 'signal' ? 'traffic lights' : g.brush === 'roundabout' ? `a ${g.ringLanes}-lane roundabout` : g.brush === 'stop' ? 'an all-way stop' : g.brush === 'mini' ? 'a mini-roundabout' : 'plain';
       if (g.brush === 'select') return s ? 'Click a corner’s + or × to add or remove its slipway (lights) · Esc deselects, then returns to Select' : h ? 'Click to select this junction · Tab flips its type' : 'Hover a junction to outline it · click to select it · Tab flips the type';
-      return h ? `Click to make this junction ${what} · right-click resets it to plain · Tab flips the type` : `Hover a junction (three or more roads; roundabouts also work on bends) to make it ${what} · Esc returns to Select`;
+      // T224: a ring the rules refuse says why here too, and one that clears buildings says what it pays
+      const rc = h && (g.brush === 'roundabout' || g.brush === 'mini') ? g.installCheck(h, g.brush, g.ringLanes) : null;
+      if (rc?.why && !/^It (already|is already)/.test(rc.why)) return rc.why;
+      const pay = rc && rc.comp > 0 ? ` (${rc.ring!.lots.length} building${rc.ring!.lots.length === 1 ? '' : 's'} cleared, ${money(rc.comp)} compensation)` : '';
+      return h ? `Click to make this junction ${what}${pay} · right-click resets it to plain · Tab flips the type` : `Hover a junction (three or more roads; roundabouts also work on bends) to make it ${what} · Esc returns to Select`;
     }
     case 'lane': case 'downgrade': {
       const h = g.laneHover, up = g.tool === 'lane', head = up ? 'UPGRADE' : 'DOWNGRADE', rev = ' · Right-click a one-way road to reverse it';
       if (!h || !h.segs.length) return `${head} — hover a straight road: its run lights up; click to take it one size ${up ? 'up (you pay the difference)' : 'down (the difference is refunded)'}` + rev;
-      return (h.why || `${head} — click to make this ${h.segs.length > 1 ? 'run' : 'road'} ${h.to!.name.toLowerCase()} ${h.cost < 0 ? `(refund ${money(-h.cost)})` : `for ${money(h.cost)}`}`) + rev; }
+      return (h.why || `${head} — click to make this ${h.segs.length > 1 ? 'run' : 'road'} ${h.to!.name.toLowerCase()} ${h.cost < 0 ? `(refund ${money(-h.cost)})` : `for ${money(h.cost + h.comp)}${h.comp ? ` (${money(h.comp)} compensation for the buildings its ring clears)` : ''}`}`) + rev; }
     case 'course': { const q = g.paint, ch = g.courseHint(); return q.mode === 'brush' ? `${ch ? `${ch} ·` : `COURSE (hole ${q.brushHole}, ${q.brushKind}):`} drag to paint · Alt-drag erases · [ ] size · 1–7 surfaces · Ctrl+Z undo` : q.mode === 'draw' ? `COURSE (hole ${q.brushHole}, ${q.brushKind} shape): click corners, double-click or Enter closes · Esc back to the brush · Ctrl+Z undo` : q.mode === 'hole' ? `COURSE: click to place ${q.holeSlot ? 'preset ' + q.holeSlot : 'a generated hole'} · R turns · Esc back to the brush` : q.mode === 'plant' ? `COURSE (plants: ${q.plantBrush}): drag to plant · Alt-drag removes what these brushes planted · [ ] size` : 'COURSE: pick a surface (1–7) to paint'; }
     case 'bulldoze': return 'Click objects or roads to remove them (roads refund their value)';
     case 'paint': return g.paint.mode === 'draw' ? (g.paint.pts.length ? `PAINT: ${g.paint.pts.length / 2} corner(s) — click the first corner, double-click or Enter to close · Backspace undoes · Esc cancels` : 'PAINT: click the corners of a shape, or press and drag to paint an outline freehand · Tab: Draw, Pick, Erase') : g.paint.mode === 'pick' ? 'PAINT: click an area to pick it and change its look · Page Up / Down moves it over / under (Shift: to the front / back) · Delete removes it · Esc: back to Draw · Tab: the next mode' : g.paint.mode === 'hole' ? 'GOLF HOLE: click to place (tee at the click) · R turns · Esc back to Draw' : g.paint.mode === 'brush' ? `BRUSH (${g.paint.brushKind}, hole ${g.paint.brushHole}): drag to paint · Alt-drag erases · [ ] size · Esc back to Draw` : g.paint.mode === 'plant' ? `PLANT (${g.paint.plantBrush}): drag to plant · Alt-drag removes what these brushes planted · [ ] size · Esc back to Draw` : 'PAINT: click an area to erase it';

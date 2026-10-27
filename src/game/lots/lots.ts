@@ -84,7 +84,16 @@ const prio = (p: Lot, q: Lot) => (q.seg.cls.order - p.seg.cls.order) || (segLen(
 // scratch for one candidate's blockers (the other segs near its box, with their clearance, and the rings near it)
 const near: Seg[] = [], nearThr: number[] = [], rings: Node[] = [], ringR: number[] = [];
 /** the clearance of a roundabout's (or a mini's) circle: its edge, the widest arm's walk, and CLEAR (0 for any other node) */
-export const ringClear = (n: Node) => (n.rb > 0 ? n.rb + Math.max(0, ...n.arms.map(a => a.walk)) + CLEAR : 0);
+export const ringClear = (n: Node) => ringClearR(n.rb, Math.max(0, ...n.arms.map(a => a.walk)));
+/** the same from a ring's radius rb and its widest arm's walk (0 for no ring): what a ring that is not built yet would keep lots out of (T224) */
+export const ringClearR = (rb: number, walk: number) => (rb > 0 ? rb + walk + CLEAR : 0);
+/** whether a lot's rectangle (origin ox oy, along ux uy, away nx ny, w by d) reaches into the circle at cx cy of radius r: the circle's centre
+ *  clamped into the lot's own frame is within the radius (inRing, and the prices of a ring not built yet) */
+export function rectReachesDisc(ox: number, oy: number, ux: number, uy: number, nx: number, ny: number, w: number, d: number, cx: number, cy: number, r: number): boolean {
+  const vx = cx - ox, vy = cy - oy, a = Math.min(w, Math.max(0, vx * ux + vy * uy)), b = Math.min(d, Math.max(0, vx * nx + vy * ny));
+  const px = ox + ux * a + nx * b - cx, py = oy + uy * a + ny * b - cy;
+  return px * px + py * py < r * r;
+}
 /** the clearance a ring keeps lots out of (T195): a roundabout's circle (ringClear); none for a mini-roundabout, a painted island inside the
  *  crossing's own box, which a corner lot already clears by the junction's reach. Before, a mini re-cut its corner lots: the range gate's
  *  player who put minis on the jammed crossings lost 558 lots on seed 1 (#470). The roads' planner keeps its corridors off a mini's circle
@@ -109,9 +118,7 @@ function blockers(net: RoadNetwork, s: Seg, o: Pt, u: Pt, n: Pt, W: number, D: n
 function inRing(net: RoadNetwork, l: Lot): boolean {
   for (const s of net.segsNear(l.c, Math.hypot(l.w, l.d) / 2 + RING_NEAR)) for (const nd of [s.a, s.b]) {
     const r = lotRingClear(nd); if (!(r > 0)) continue;
-    const v = sub(nd, l.o), a = Math.min(l.w, Math.max(0, dot(v, l.u))), b = Math.min(l.d, Math.max(0, dot(v, l.n)));
-    const px = l.o.x + l.u.x * a + l.n.x * b - nd.x, py = l.o.y + l.u.y * a + l.n.y * b - nd.y;
-    if (px * px + py * py < r * r) return true;
+    if (rectReachesDisc(l.o.x, l.o.y, l.u.x, l.u.y, l.n.x, l.n.y, l.w, l.d, nd.x, nd.y, r)) return true;
   }
   return false;
 }
