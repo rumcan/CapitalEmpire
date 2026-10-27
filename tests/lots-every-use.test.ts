@@ -8,7 +8,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import crypto from 'node:crypto';
-import { compose, groupBaseItem, lotLayout, lotPreset, lotPresets, lotModelVersion, pickedPreset, setGeneratedLots, setLotModel, type ComposeState, type LotGeom } from '../src/game/lots/compose';
+import { compose, groupBase, groupBaseItem, lotLayout, lotPreset, lotPresets, lotModelVersion, pickedPreset, setGeneratedLots, setLotModel, type ComposeState, type LotGeom } from '../src/game/lots/compose';
 import { LATEST, LOT_MODELS } from '../src/game/lots/lot-models';
 import { groupOf } from '../src/game/lots/learn';
 import { groupsBlock, groupsFrom } from '../src/game/lots/group-data';
@@ -98,6 +98,8 @@ describe('lots on the fly for every use (T169)', () => {
   it('5. the base stays: every building, fence, car and car park piece of the frozen preset is drawn; the shops and the owner\'s presets compose as ?oldlots', () => {
     setLotModel(3);
     for (const use of ['ind', 'park', 'civic', 'tour'] as const) for (const l of lotsOf(use, 20)) {
+      // T198: a gas station (a canopy its only building) is laid whole by its plan (gas-station.ts), its canopy moved onto its forecourt
+      if (groupBase(lotPreset(l.g, l.st)!).gas) continue;
       setGeneratedLots(false); const old = compose(l.g, l.st).props.filter(q => q.from && groupBaseItem(q.id, -1) && !q.street); setGeneratedLots(true);
       const now = compose(l.g, l.st).props.filter(q => q.from);
       for (const q of old) if (BY.get(q.id) && groupBaseItem(q.id, 0)) assert.ok(now.some(x => x.id === q.id && Math.abs(x.x - q.x) < 1e-6 && Math.abs(x.y - q.y) < 1e-6), `${l.p.id}: ${q.id} kept`);
