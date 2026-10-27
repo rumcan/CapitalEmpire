@@ -37,10 +37,10 @@ const inHand = (): { title: string; tool: Tool; rows: [string, string][] }[] => 
     ['R', 'turn the stamp, the hole or the green'], ['Enter', 'finish the shape or the run'], ['Backspace', 'take back the last corner'],
     ['PageUp / PageDown', 'the picked area up / down a layer']] },
   { title: 'Props in hand', tool: 'props', rows: [['R', 'turn it'], ['Delete', 'sell the picked prop']] },
-  { title: 'Roads in hand', tool: 'road', rows: [
+  { title: 'Roads and paths in hand', tool: 'road', rows: [
     [`1 – ${KEY_CLASSES.length}`, `the road class: ${KEY_CLASSES.map(c => (CLASS[c]?.name ?? c).toLowerCase()).join(', ')}`],
     ['Tab / Shift+Tab', 'the next / previous kind of this class (one-way, trees, a median)'], ['Q', 'bends of 90° or 45°'], ['E', 'Replace: the roads in the way are bulldozed'],
-    ['Shift', 'a straight run'], ['Enter', 'build the route'], ['Backspace', 'take back the last point']] },
+    ['Shift', 'a straight run'], ['Enter, double-click', 'build the route'], ['Backspace, right-click', 'take back the last point (the first: drop the route)']] },
   { title: 'Junctions in hand', tool: 'junction', rows: [['Tab / Shift+Tab', 'the next / previous type of the junction under the pointer']] },
   { title: 'Car park in hand', tool: 'park', rows: [['Tab', 'the rows\' other side']] },
   { title: 'Toll gate in hand', tool: 'toll', rows: [['R', 'turn the gate round']] },

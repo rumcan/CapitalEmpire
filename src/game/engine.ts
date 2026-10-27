@@ -113,6 +113,7 @@ import { applyCourseConsultantQuality, effectiveGrowInClockMonth, findGolfCard, 
 import type { CourseFacts } from './golf/tour';
 import { surfaceOfTex } from './golf/costs';
 import { inTheWay, rectPoly, routeObstacles, type Obstacle } from './route-obstacles';
+import { isSecondTap, routeAct, type RouteInput, type Tap } from './route-input';
 import { buyAdjacentBlock, COURSE_LAND_MSG, blockOnRoad, blockOnWater, pointInLand, polyInParcels, type LandRoad, type ParcelLandClass } from './golf/parcels';
 import { BAND_LABEL, LandSale } from './golf/land-sale';
 import { buildCourseStatsPanel, type CourseStatsPanel } from './golf/coursestats';
@@ -596,7 +597,7 @@ export class Game {
   private frameTimes: number[] = [];
   // input
   /** a drag in progress; build: a right-button press in the road tool (released without moving, it builds the route, as Enter) */
-  private dragging: null | { kind: 'pan' | 'bulldoze' | 'park'; sx: number; sy: number; camX: number; camY: number; moved: boolean; build?: boolean; aim?: Pt; /** a Select click's hole under it (0: none; T174) */ hole?: number; /** T200: a click on Land for sale's overlay (it opens the block's card on release, never buys) */ land?: Pt } = null;
+  private dragging: null | { kind: 'pan' | 'bulldoze' | 'park'; sx: number; sy: number; camX: number; camY: number; moved: boolean; /** T207: a road tool right-click: on release without a drag it takes back the last point */ back?: boolean; aim?: Pt; /** a Select click's hole under it (0: none; T174) */ hole?: number; /** T200: a click on Land for sale's overlay (it opens the block's card on release, never buys) */ land?: Pt } = null;
   /** the Paint tool: painted ground areas, its settings and the outline being drawn (docs/PAINT-TOOL.md) */
   paint = new PaintTool({ progress: () => this.bump('pieces'), setLotGround: (k, p) => { this.paintRev++; this.setLotGround(k, p); }, emit: () => this.emit(), save: () => this.scheduleSave(), toast: (t, k) => this.toast(t, k), affine: o => this.paintAffine(o), placeProps: (ps, seed) => this.placePresetProps(ps, seed), golfMode: () => this.golfMode, money: () => this.money, spend: n => this.traffic.spend('construction', n), ownedLand: pts => !this.golf || polyInParcels(this.golf.parcels ?? [this.golf.parcel], pts), currentMonth: () => !this.golf ? 0 : this.golfMonthIndex(), plant: (ids, x, y, r, spacing, size, seed) => this.plantProps(ids, x, y, r, spacing, size, seed), unplant: (x, y, r) => this.unplantProps(x, y, r), plantPool: k => plantPool(LIBRARY, k), courseHeight: () => this.courseHeight, roadsNear: (x, y, r) => { let k = 0; return [...this.net.segsNear({ x, y }, r)].map(s => ({ id: ++k, ax: s.a.x, ay: s.a.y, bx: s.b.x, by: s.b.y, halfWidthTiles: s.cls.h + s.cls.walk })); }, roadRev: () => this.net.version, heightChanged:b => { this.courseHeightChanged(unionCourseBox(b, this.flattenRoadsIn(b))!); },
     journal: { begin: () => { this.propLog = { added: [], removed: [] }; }, end: () => { const j = this.propLog; this.propLog = null; return j && (j.added.length || j.removed.length) ? j : null; }, undo: j => this.swapProps(j as PropLog, true), redo: j => this.swapProps(j as PropLog, false) },
@@ -2543,7 +2544,19 @@ export class Game {
     const hit = this.lotsInLegs(this.structured(this.previewLegs()).parts);
     return { n: hit.length, comp: hit.reduce((s, v) => s + compensation(v), 0) };
   }
+  /** the road tool's last click (T207: the double-click's second click adds no point) */
+  private routeTap: Tap | null = null;
+  /** the road tool's right-click, Backspace, double-click and Enter (T207, route-input.ts): take back the last point (the first: drop the route),
+   *  or build */
+  routeInput(input: Exclude<RouteInput, 'click'>) {
+    if (this.tool !== 'road') return;
+    const a = routeAct(input, this.route.length);
+    if (a === 'back') this.undoRoutePoint(); else if (a === 'cancel') this.cancelRoute(); else if (a === 'build') this.finishRoute();
+  }
   private roadClick(mx: number, my: number) {
+    // the double-click's second click adds no point: the double-click builds what the preview shows (T207)
+    const tap = { t: performance.now(), mx, my }, second = isSecondTap(this.routeTap, tap); this.routeTap = second ? null : tap;
+    if (routeAct('click', this.route.length, second) === 'none') return;
     let s = snapPoint(this.net, this.tileAt(mx, my), this.snapRadius(), this.roadStep());
     if (this.route.length) s = this.aim(this.route[this.route.length - 1]!, s);
     if (!this.route.length) { if (this.startOnLand(s.p)) { this.toast(COURSE_LAND_MSG, 'warn'); return; } this.routeFrom = s; this.route.push(s.p); this.routeLast = s; this.emit(); return; }
@@ -3291,7 +3304,7 @@ export class Game {
         this.selected = null; this.emit();
         if (this.showFlow) { const t = this.tileAt(mx, my); this.traffic.watchAt(t.x, t.y); this.emit(); }
       }
-      this.dragging = { kind: 'pan', sx: mx, sy: my, camX: this.cam.X, camY: this.cam.Y, moved: false, build: this.tool === 'road' && e.button === 2, ...(!pan && this.tool === 'select' && this.golf ? { hole: this.courseHoleAt(this.tileAt(mx, my)) } : {}) }; return;
+      this.dragging = { kind: 'pan', sx: mx, sy: my, camX: this.cam.X, camY: this.cam.Y, moved: false, back: this.tool === 'road' && e.button === 2, ...(!pan && this.tool === 'select' && this.golf ? { hole: this.courseHoleAt(this.tileAt(mx, my)) } : {}) }; return;
     }
     if (e.button !== 0) return;
     switch (this.tool) {
@@ -3353,8 +3366,8 @@ export class Game {
     // a click (no drag) on the course aims the owner's open shot (P4b)
     if (d?.kind === 'pan' && d.aim && !d.moved) this.aimAt(d.aim);
     if (d?.kind === 'pan' && d.land && !d.moved && this.landMode) { this.land.click(d.land.x, d.land.y); this.emit(); }
-    // a right click (no drag) in the road tool builds the route drawn so far, as Enter does (the owner, 2026-10-19); a right drag still pans
-    if (d?.kind === 'pan' && d.build && !d.moved && this.tool === 'road' && this.route.length > 1) this.finishRoute();
+    // a right click (no drag) in the road tool takes back the last point, as Backspace does (the owner, 2026-10-27, T207); a right drag still pans
+    if (d?.kind === 'pan' && d.back && !d.moved) this.routeInput('right');
     if (this.paintOn) { this.paint.pointerUp(this.paintTol); this.courseCursor.release(); }
     if (this.tool === 'park' && this.parking.mode === 'rows') this.parking.up();
     if (this.tool === 'props') this.decor.up();
@@ -3372,7 +3385,7 @@ export class Game {
   junctionName(n: Node): string { const names: string[] = []; for (const a of n.arms) { const s = this.roadNameOfSeg(a.seg); if (s) names.push(s); } return this.names.junction(names); }
   /** the name of the junction at tile position (x, y) (a node's position), or '' when there is no junction there */
   junctionNameAt(x: number, y: number): string { const n = this.net.nodeAt({ x, y }); return n ? this.junctionName(n) : ''; }
-  doubleClick() { if (this.tool === 'road' && this.route.length > 1) this.finishRoute(); if (this.paintOn) this.paint.doubleClick(); }
+  doubleClick() { this.routeInput('double'); if (this.paintOn) this.paint.doubleClick(); }
   wheel(e: WheelEvent) {
     e.preventDefault();
     const f = Math.exp(-e.deltaY * 0.0014);
@@ -3456,8 +3469,8 @@ export class Game {
     if (this.tool === 'park' && this.parking.key(e)) return;
     if (this.tool === 'props' && this.decor.key(e)) return;
     switch (e.key) {
-      case 'Enter': if (this.tool === 'road') this.finishRoute(); break;
-      case 'Backspace': if (this.tool === 'road') this.undoRoutePoint(); break;
+      case 'Enter': this.routeInput('enter'); break;
+      case 'Backspace': this.routeInput('backspace'); break;
       case 'Delete': this.deleteSelected(); break;
       case 'g': case 'G': this.setShowGrid(!this.showGrid); break;
       case 'l': case 'L': this.showLanes = !this.showLanes; this.emit(); break;
