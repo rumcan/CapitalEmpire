@@ -6,7 +6,7 @@
   "sha256": "a0261d09a8e64e61421af4c0120db926c35e4260eef8e4d9c9d3848665b5b5ff",
   "date": "2026-10-26"
  },
- "revision": "99ffb7cdae65",
+ "revision": "44ee7e785529",
  "display": {
   "minVisibleTiles": 2,
   "maxVisibleTiles": 4,
@@ -1042,6 +1042,217 @@
        "tb": 7.13,
        "h": 4.06,
        "v": 5.82
+      }
+     }
+    }
+   }
+  },
+  {
+   "id": "first-cut-run",
+   "materialId": "painted:first-cut-run",
+   "name": "First cut (RUN, quilted)",
+   "kind": "grass",
+   "revision": "d7f1358dbe47",
+   "selection": null,
+   "provisional": true,
+   "light": null,
+   "mean": "#5e7b29",
+   "levels": {
+    "near": {
+     "revision": "near-tiles-v3b",
+     "folder": "art/theme-consistency/generated/ground/run-grass/first-cut/near/tiles-v3b",
+     "native": [
+      1376,
+      768
+     ],
+     "decision": {
+      "file": null,
+      "sha256": null
+     },
+     "tiles": [
+      {
+       "id": "tile-01",
+       "file": "tiles/first-cut-run/near/tile-01.webp",
+       "sha256": "85bc6e52904b37181c5fc0c2f70465c3255d67cdcc05c6f83a6c02e519ec9af7",
+       "mean": "#5d7b29",
+       "source": "art/theme-consistency/generated/ground/run-grass/first-cut/near/tiles-v3b/tile-01.png"
+      },
+      {
+       "id": "tile-02",
+       "file": "tiles/first-cut-run/near/tile-02.webp",
+       "sha256": "df52c60ce2a9e9852a66a56fd0dc28a9c79975a10e3b145051701a793eee1eb4",
+       "mean": "#5e7b29",
+       "source": "art/theme-consistency/generated/ground/run-grass/first-cut/near/tiles-v3b/tile-02.png"
+      },
+      {
+       "id": "tile-03",
+       "file": "tiles/first-cut-run/near/tile-03.webp",
+       "sha256": "d0c9548fa458728674ed7c7cd01da7d7f3cefe2a049bf061a4f7a6a6664f6172",
+       "mean": "#5e7b29",
+       "source": "art/theme-consistency/generated/ground/run-grass/first-cut/near/tiles-v3b/tile-03.png"
+      },
+      {
+       "id": "tile-04",
+       "file": "tiles/first-cut-run/near/tile-04.webp",
+       "sha256": "bf3a5c82fa08969c603f63f355b281c1c74e110a987cda2f792bf875b912485f",
+       "mean": "#5e7b29",
+       "source": "art/theme-consistency/generated/ground/run-grass/first-cut/near/tiles-v3b/tile-04.png"
+      }
+     ],
+     "status": "the art session's finished near-tiles-v3b tiles (T191): four tiles that meet one another as made (finished-set-as-made, no heal); across any two tiles wrap LR 4.84 -> 5.18 (inside 4.21), TB 4.26 -> 5.05 (inside 3.44)",
+     "heal": {
+      "method": "finished-set-as-made",
+      "band": 0,
+      "fallback": "the art session's finished near-tiles-v3b tiles (T191)",
+      "before": {
+       "lr": 4.84,
+       "tb": 4.26,
+       "h": 4.53,
+       "v": 3.66
+      },
+      "healed": {
+       "lr": 4.84,
+       "tb": 4.26,
+       "h": 4.53,
+       "v": 3.66
+      },
+      "after": {
+       "lr": 5.18,
+       "tb": 5.05,
+       "h": 4.21,
+       "v": 3.44
+      }
+     }
+    },
+    "mid": {
+     "revision": "mid-tiles-v3b",
+     "folder": "art/theme-consistency/generated/ground/run-grass/first-cut/mid/tiles-v3b",
+     "native": [
+      1376,
+      768
+     ],
+     "decision": {
+      "file": null,
+      "sha256": null
+     },
+     "tiles": [
+      {
+       "id": "tile-01",
+       "file": "tiles/first-cut-run/mid/tile-01.webp",
+       "sha256": "cd7457b9bcc509356b652cd8cc0d1ce3d6dc496417e04d539a14c1b4beb9dbd0",
+       "mean": "#5d7e2c",
+       "source": "art/theme-consistency/generated/ground/run-grass/first-cut/mid/tiles-v3b/tile-01.png"
+      },
+      {
+       "id": "tile-02",
+       "file": "tiles/first-cut-run/mid/tile-02.webp",
+       "sha256": "f47f1fa6b8086ace39dbfe95b0f8c0bd778a60f1a17e0ea8d938884b64213eac",
+       "mean": "#5d7e2c",
+       "source": "art/theme-consistency/generated/ground/run-grass/first-cut/mid/tiles-v3b/tile-02.png"
+      },
+      {
+       "id": "tile-03",
+       "file": "tiles/first-cut-run/mid/tile-03.webp",
+       "sha256": "457dc5780fb382a6c26def09e56150ebabdd72e4b260866698994e7c5cfb520d",
+       "mean": "#5d7e2c",
+       "source": "art/theme-consistency/generated/ground/run-grass/first-cut/mid/tiles-v3b/tile-03.png"
+      },
+      {
+       "id": "tile-04",
+       "file": "tiles/first-cut-run/mid/tile-04.webp",
+       "sha256": "982483f10d5264fbb93682647537e409fb5481b82c1d9f9f7ca97e0f0d91ea42",
+       "mean": "#5d7e2c",
+       "source": "art/theme-consistency/generated/ground/run-grass/first-cut/mid/tiles-v3b/tile-04.png"
+      }
+     ],
+     "status": "the art session's finished mid-tiles-v3b tiles (T191): four tiles that meet one another as made (finished-set-as-made, no heal); across any two tiles wrap LR 6.41 -> 6.64 (inside 5.84), TB 5.81 -> 6.22 (inside 5.47)",
+     "heal": {
+      "method": "finished-set-as-made",
+      "band": 0,
+      "fallback": "the art session's finished mid-tiles-v3b tiles (T191)",
+      "before": {
+       "lr": 6.41,
+       "tb": 5.81,
+       "h": 6.04,
+       "v": 5.58
+      },
+      "healed": {
+       "lr": 6.41,
+       "tb": 5.81,
+       "h": 6.04,
+       "v": 5.58
+      },
+      "after": {
+       "lr": 6.64,
+       "tb": 6.22,
+       "h": 5.84,
+       "v": 5.47
+      }
+     }
+    },
+    "far": {
+     "revision": "far-tiles-v3b",
+     "folder": "art/theme-consistency/generated/ground/run-grass/first-cut/far/tiles-v3b",
+     "native": [
+      1376,
+      768
+     ],
+     "decision": {
+      "file": null,
+      "sha256": null
+     },
+     "tiles": [
+      {
+       "id": "tile-01",
+       "file": "tiles/first-cut-run/far/tile-01.webp",
+       "sha256": "4e65dd668357522db1d600edf56e45def852a459db25f4b1de127449c640673b",
+       "mean": "#5c7937",
+       "source": "art/theme-consistency/generated/ground/run-grass/first-cut/far/tiles-v3b/tile-01.png"
+      },
+      {
+       "id": "tile-02",
+       "file": "tiles/first-cut-run/far/tile-02.webp",
+       "sha256": "866494b0f886baa079bdf0a8f6b84c3686949755d0dc4355de15bfddbf020208",
+       "mean": "#5c7937",
+       "source": "art/theme-consistency/generated/ground/run-grass/first-cut/far/tiles-v3b/tile-02.png"
+      },
+      {
+       "id": "tile-03",
+       "file": "tiles/first-cut-run/far/tile-03.webp",
+       "sha256": "c07cc9ca37453cd3534426ce365ebb59b2bf02e8589b40f92c3955fa3e9db9c6",
+       "mean": "#5c7937",
+       "source": "art/theme-consistency/generated/ground/run-grass/first-cut/far/tiles-v3b/tile-03.png"
+      },
+      {
+       "id": "tile-04",
+       "file": "tiles/first-cut-run/far/tile-04.webp",
+       "sha256": "342337279215840e710ce8794ee48054a937b8524b1d31af0cdc27f2dc72b334",
+       "mean": "#5c7937",
+       "source": "art/theme-consistency/generated/ground/run-grass/first-cut/far/tiles-v3b/tile-04.png"
+      }
+     ],
+     "status": "the art session's finished far-tiles-v3b tiles (T191): four tiles that meet one another as made (finished-set-as-made, no heal); across any two tiles wrap LR 4.86 -> 4.88 (inside 4.05), TB 3.54 -> 4.11 (inside 3.08)",
+     "heal": {
+      "method": "finished-set-as-made",
+      "band": 0,
+      "fallback": "the art session's finished far-tiles-v3b tiles (T191)",
+      "before": {
+       "lr": 4.86,
+       "tb": 3.54,
+       "h": 4.51,
+       "v": 3.51
+      },
+      "healed": {
+       "lr": 4.86,
+       "tb": 3.54,
+       "h": 4.51,
+       "v": 3.51
+      },
+      "after": {
+       "lr": 4.88,
+       "tb": 4.11,
+       "h": 4.05,
+       "v": 3.08
       }
      }
     }
