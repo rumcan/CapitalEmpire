@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-27 08:36)
+## START HERE (kept current by the lead; last updated 2026-10-27 08:46)
 
 **Paste-ready start prompts for every role are in `docs/START-PROMPTS.md`:** the lead, a coding ticket, and the other sessions in this
 repo. The weekly usage cap is close (2026-10-26), so any chat may stop at any moment.
@@ -27,7 +27,7 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 ### In flight
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |
-| T185 → T186 | #466, #474 | `arena/T185-base` | `.claude/worktrees/t185` (node_modules a junction) | 5188 | The shadow agent (Opus): #473 merged (no compounding). Now PR 2, the base: tree shadows float below the trunk (all 126 trees: the draft blurs the trunk away), contact pools off-centre (34 trees, 15 poles), walls behind porches leave a lit wedge, legged props' foot gaps, overlong casts (24); re-draft; then T186: sprite shadows vs the ground's baked shade (max). |
+| T185 hints → T186 | #466, #474 | fresh branches | `.claude/worktrees/t185` (node_modules a junction) | 5188 | The shadow agent (Opus): #473 (no compounding) and #482 (the base) merged; now per-picture hand hints from the after sheets, then T186 (sprite shadows vs the ground's baked shade: max). |
 | T184 | #464 | fresh branches | `.claude/worktrees/t166` | 5187 | **The owner approved (diagnosis #443):** PR 1 junction rules (equal crossings first-come, queue-aware routing + a deadlock breaker, roundabout entry at the ring car's real speed; every gate before/after); PR 2 `JAM_HINT` at the Junction tool, `range:gate --player` placing junction tools, P22 bands on seeds 1-3 without going broke (tune prices, town income, growth in that order). Agent: the ground agent. |
 | T188 | #479 | fresh branch | `.claude/worktrees/t160` | 5186 | P23-UX P2-2 + P2-3: the founding chip opens a Season card (the checklist with Fix buttons, Course stats moved in), `data-guide` anchors with Show me pulses, engine events advance the guide, the welcome card waits for the ground. Agent: the lot agent. |
 | T112 | #199 | `arena/T112-sharp` (PR #394) | `.claude/worktrees/t112` | — | **Approved, merge HELD for the morning restart:** a lock change makes the 5174 auto-updater run `npm ci` in theme-consistency (the live 5191 studio holds sharp there; the lot agent's t160 uses it by junction). Morning order: stop 5191 → merge #394 → let npm ci finish → restart 5191 and 5174. All shipped bytes identical on 0.35.5; audit 0. |
@@ -95,6 +95,10 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
    (the sharp bump). See the History sections below and `gh issue list --label arena --state open`.
 
 ### Done recently (newest first; details in each PR)
+- 2026-10-27 08:46: **T185 #482 cast shadows start at the base** (the owner: "shadows are not starting at the base of a sprite"): fixed in
+  `shadow-draft.ts` and all 1,524 pictures re-drafted: walls behind porches/decks/steps stand on their own bottom (wall bases outside
+  their cast 85 → 2), trees get a trunk band ring and their pool on the trunk, thin legs kept (corner cells joined, 32-point rings),
+  end-on vehicles no fake depth (the bus's cast 257 → 127 px); detached casts 17 → 5. Sheets `E:/ClaudeTemp/T185/pr2/`.
 - 2026-10-27 08:36: **T187 #478 the toolbar's gaps**: Town decoration › Buildings in golf games (park fountain $12k, bus shelter $1.5k,
   public toilets $9k, small chapel $60k; decoration only: the town has no land value to raise; no stand-ins: bandstand, statue, town
   hall annex requested in GOLF-SPRITES); Course › Buildings › **Halfway house** ($18k, one per course, within 80 m of a tee, front on a
