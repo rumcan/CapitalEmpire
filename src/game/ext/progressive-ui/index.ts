@@ -59,6 +59,9 @@ export interface PlayerProgressFacts {
   practice?: { putting: 'none' | 'small' | 'nobunker' | 'open'; chipping: 'none' | 'small' | 'nobunker' | 'open' };
   /** a range start's ramp from the range to the first hole (plan P24 Phase 4a, T132); missing outside range starts */
   ramp?: RampFacts;
+  /** the town's streets are jammed (T178): at least JAM_ZONES zones with built lots are over the decline line (the engine's access, the
+   *  access overlay's red); missing = no */
+  townJammed?: boolean;
 }
 
 /** a range start's ramp step (P24 Phase 4a): 0 the range card, 1 the practice area (after the first range upgrade), 2 Props (after the putting
@@ -230,6 +233,18 @@ export const STUCK_HINT: FirstRunHint = Object.freeze({
   targetTool: 'course',
 });
 
+/** the zones with built lots over the decline line (access > 1.8, lots/town.ts) from which the town counts as jammed (T178) */
+export const JAM_ZONES = 3;
+/** the town's jam (T178; the owner, 2026-10-27: the jam is the game, "the guy has to upgrade his town roads"): a grown town's gravel streets
+ *  jam, and its houses decline where the traffic crawls. Shown once (until Got it), in front of the course's hints, once Upgrade is open */
+export const JAM_HINT: FirstRunHint = Object.freeze({
+  id: 'hint-town-jammed',
+  stage: 1,
+  title: 'Town streets are jammed',
+  body: 'Houses decline where traffic crawls. Upgrade the busiest streets with Roads: Upgrade. Press O to see the red zones.',
+  targetTool: 'lane',
+});
+
 /** whether the player is stuck (P23 4.2): no hole with a par after one season or STUCK_PLAY_SEC of play. Never in a range start (T132): the
  *  range is the job until New hole opens, and the ramp's own hint then offers the first hole */
 export function isStuck(f: PlayerProgressFacts): boolean {
@@ -319,6 +334,8 @@ export function resolveOnboardingStage(f: PlayerProgressFacts): OnboardingStage 
 export function nextFirstRunHint(f: PlayerProgressFacts): FirstRunHint | null {
   const dismissed = new Set(f.dismissedHints ?? []), stage = resolveOnboardingStage(f), [h1, h2, h3, h4] = FIRST_RUN_HINTS;
   if (isStuck(f) && !dismissed.has(STUCK_HINT.id)) return STUCK_HINT;
+  // the jam's hint points at the Upgrade tool, so only once it is open
+  if (f.townJammed && (f.advancedMode || stage >= TOOL_STAGE.lane!) && !dismissed.has(JAM_HINT.id)) return JAM_HINT;
   // a range start (T132): the ramp's hints until the first hole (never Step 1's: the range is the job), then the stages' as everywhere
   if (f.ramp && f.playableHoles < 1) return rampHint(f, dismissed);
   // a range start's practice facilities first (T130): the putting green, then the chipping green and bunker

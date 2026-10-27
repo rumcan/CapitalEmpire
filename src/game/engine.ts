@@ -132,7 +132,7 @@ import { MapGridLayer } from './ext/map-grid/layer';
 import { MoneyFloats, addCash, drawMoneyFloats, rangeFloat, type MoneyEvent } from './moneyfloats';
 import { ColumnPlacer, PRI } from './label-place';
 import { LABEL_OUTLINE, WorldLabels } from './world-labels';
-import { FIRST_PAR3_M, RAMP_TOAST, RANGE_CARD_SEEN, STUCK_PLAY_SEC, advanceProgress, computeProgressiveUiState, emptyProgress, nextFirstRunHint, normalizeProgress, progressFacts, rampLock, type PlayerProgressFacts, type ProgressiveUiState } from './ext/progressive-ui';
+import { FIRST_PAR3_M, JAM_ZONES, RAMP_TOAST, RANGE_CARD_SEEN, STUCK_PLAY_SEC, advanceProgress, computeProgressiveUiState, emptyProgress, nextFirstRunHint, normalizeProgress, progressFacts, rampLock, type PlayerProgressFacts, type ProgressiveUiState } from './ext/progressive-ui';
 
 /** New hole's camera framing eases this long at most (ms; P23 4.4) */
 const CAM_EASE_MS = 400;
@@ -4214,6 +4214,10 @@ export class Game {
     const range = b ? { upgrades: b.owned.length, seasonTakings: b.season.takings, propsPlaced: this.decor.appeal() > 0 } : undefined;
     const f = p ? progressFacts(p, { holes: this.courseHoleViews().filter(h => h.par > 0).length, seasons: this.seasonsDone(), invited: !!g!.invited, range }) : null;
     const pr = f && this.range.practiceFacts(); if (f && pr) f.practice = pr; // a range start's practice facilities (T130): their hints and brushes
+    if (f && b) { // a range start's town jam (T178): zones with built lots over the decline line (the access overlay's red)
+      const T = this.traffic; let jam = 0; for (let z = 0; z < 256; z++) if (T.builtZone[z] && T.access[z]! > 1.8) jam++;
+      f.townJammed = jam >= JAM_ZONES;
+    }
     if (f) { // Greenkeeping opens with the first hole grown in (T175)
       const grow = this.holesGrowing(), par = this.courseHoleViews().filter(h => h.par > 0);
       f.grownHoles = par.filter(h => !grow.has(h.n)).length;

@@ -5,7 +5,8 @@ import { LV } from '../../src/game/lots/town';
 import { City } from '../../src/game/city';
 import { CLASS, RoadNetwork, SK, type ClassId, type Leg, type Node, type Pt, type Seg } from '../../src/game/network';
 import { NetEditor } from '../../src/game/netops';
-import { highwayRoute, splitByTerrain } from '../../src/game/structures';
+import { STRUCT_COST, highwayRoute, splitByTerrain } from '../../src/game/structures';
+import { WIDER } from '../../src/game/network';
 import { classAt, generateTerrain } from '../../src/game/terrain';
 import { TC, type Terrain } from '../../src/game/terrain/types';
 import { MAP } from '../../src/game/iso';
@@ -61,6 +62,38 @@ export function setup(seed: number): Harness {
 
 /** the town's grow legs (gravel), applied with the editor and fed to the city as net ops */
 export function growLegs(h: Harness, legs: Leg[]) { h.editor.addLegs(legs, CLASS.gravel, 2, undefined, true); h.city.netOps(h.editor.commit()); }
+
+/** what the player run's road upgrades did (playerUpgrade): segs and money in all, and per call */
+export interface PlayerRoads { segs: number; cost: number; tiles: number }
+/** the classes the player run takes up the ladder (WIDER): the town's gravel to street, then street to road */
+const PLAYER_FROM = new Set(['gravel', 'street']);
+/** A player who upgrades the town's roads (T178; the owner, 2026-10-27: "this is seposed to happen btw. the guy hasto upgrade his town roads"):
+ *  the jammed junctions of the bottleneck report (level of service E or F), the worst first, have their gravel and street arms taken one class
+ *  up (gravel -> street -> road) with the Upgrade tool's action (engine laneClick: each seg laid again in the next class, its line style and kind
+ *  kept, no longer the town's) at the Upgrade tool's price (the class cost difference x length x STRUCT_COST of its kind), paid from the
+ *  treasury as construction, while the money lasts above `reserve`, at most `max` segs a call. Returns what it did */
+export function playerUpgrade(h: Harness, max: number, reserve: number): PlayerRoads {
+  const B = (h.city as unknown as { budget: { money: number } }).budget, done: PlayerRoads = { segs: 0, cost: 0, tiles: 0 };
+  const jammed = h.city.report(0).junctions.filter(j => j.los === 'E' || j.los === 'F').sort((p, q) => q.loss - p.loss);
+  const seen = new Set<Seg>();
+  for (const j of jammed) {
+    const n = h.editor.net.nodeAt({ x: j.x, y: j.y }); if (!n) continue;
+    for (const sg of [...n.segs]) {
+      if (done.segs >= max) break;
+      if (seen.has(sg) || !PLAYER_FROM.has(sg.cls.id)) continue;
+      seen.add(sg);
+      const to = CLASS[WIDER[sg.cls.id as ClassId]!]!, len = Math.hypot(sg.b.x - sg.a.x, sg.b.y - sg.a.y), cost = Math.round(len * (to.cost - sg.cls.cost) * STRUCT_COST[sg.kind]!);
+      if (B.money - cost < reserve) continue;
+      h.city.spend('construction', cost);
+      h.editor.addLegs([{ a: { x: sg.a.x, y: sg.a.y }, b: { x: sg.b.x, y: sg.b.y } }], to, sg.style, [sg.kind]);
+      done.segs++; done.cost += cost; done.tiles += len;
+    }
+    if (done.segs >= max) break;
+  }
+  if (done.segs) h.city.netOps(h.editor.commit());
+  done.tiles = Math.round(done.tiles);
+  return done;
+}
 
 /** one sim second s (from 1): City.step(10) (its time in h.stepMs), the caller's `before`, the grow legs, the caller's `after`, and at each game
  *  hour's end the land-locked bridge rule (at most once per 2 game days); returns the step result (its events array is reused) */
