@@ -2425,3 +2425,19 @@ A new Claude lead took over the board (docs/LEAD.md section 5). It reviews and m
 - The gate's result: `h_bands` FAIL, every other check ok.
 - **T090's growth constants were tuned with no town traffic.** They need retuning with traffic on, and then the fixture should be regenerated (`npm run range:fixture`).
 - Until then the committed fixture is #436's town, grown without traffic.
+
+**Why the town declines: it gridlocks.** A diagnostic run of seed 1 with trips on (a scratch script, not in the repo) shows when.
+- Seasons 1-6 (up to 1,007 residents): trips take 1.3-1.6x their ideal time, and no zone is over the decline line. Access counts as bad above 1.8, i.e. act/ideal over 2.18.
+- From season 7-8 (1,300-1,600 residents) the grown gravel streets jam:
+
+| Season | Cars active | Trips' time over ideal | Zones over 1.8 | Trips dropped (cumulative) |
+| --- | --- | --- | --- | --- |
+| 7 | 299 | 2.0x | 1 of 22 | 51 |
+| 8 | 643 | 2.7x | 9 of 24 | 69 |
+| 10 | 1,198 | 3.5x | 15 of 32 | 306 |
+| 14 | 2,149 | 3.4x | 34 of 48 | 1,138 |
+
+- So the retune is a design question, not only constants. Options:
+  - the grown town builds bigger roads or more connections as it grows;
+  - the player is expected to upgrade the town's roads;
+  - the decline rule is softened for a range town.
