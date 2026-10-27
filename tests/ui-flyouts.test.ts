@@ -54,7 +54,8 @@ describe('the flyouts: sub-menus to the side, as many levels as the tools have (
   });
   it('Course ▸ Holes ▸ New hole · Your holes · Shape by hand ▸ the surfaces; Buildings ▸ Clubhouse · Halfway house; Greenkeeping ▸ the cares; Tournament', () => {
     const c = menuOf(RAIL.find(r => r.id === 'course')!, ALL);
-    assert.deepEqual(labels(c), ['Holes', 'Buildings', 'Greenkeeping', 'Tournament']);
+    assert.deepEqual(labels(c), ['Holes', 'Buildings', 'Greenkeeping', 'Tournament', 'Land for sale']);
+    assert.deepEqual(find(c, 'Land for sale').leaf?.act, { k: 'land' }, 'T200: the land for sale');
     assert.deepEqual(labels(find(c, 'Holes').children!), ['New hole', 'Your holes', 'Shape by hand']);
     assert.deepEqual(labels(find(c, 'Holes', 'Shape by hand').children!), ['Fairway', 'Green']);
     assert.deepEqual(find(c, 'Holes', 'Shape by hand', 'Green').leaf?.act, { k: 'surface', id: 'green' });
