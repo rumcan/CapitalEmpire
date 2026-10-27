@@ -2493,3 +2493,15 @@ The `--player` run (harness `playerUpgrade`) works like this:
 - Added: `JAM_HINT` in the first-run hint bar. It says "Town streets are jammed ... Upgrade the busiest streets with Roads: Upgrade. Press O to see the red zones."
   - It shows once, when 3 or more built zones are over the line and Upgrade is open, and it points at the Upgrade tool.
   - It has tests in ext-progressive-ui.
+
+### Accepted terrain source delivery (#383, 2026-10-27)
+
+Committed the source authority that the packed painted-terrain manifest already referenced: READY, four canonical selections, their
+48 primary native PNGs, hash-bound appearance decisions, provenance, inputs and proofs. T170 already shipped the same long-grass
+NEAR v3 / MID v2 / FAR v2 hashes; this delivery changes no packed pixels or gameplay mappings and preserves `rough-owner`.
+The 440-file dependency closure passes 717 explicit path/hash bindings and all 48 native/packed size checks, with no missing files or
+mismatches. Historical inputs remain lineage only; `art/theme-consistency/ACCEPTED-SOURCES.md` explains the selection contract.
+
+The importer now excludes a set explicitly held by its appearance review, verifies the actual canonical decision, and makes the owner's
+green MID fallback follow an accepted canonical selection instead of a newer experimental folder. Typecheck and three focused prep
+fixtures pass. No full suite/build or owner-server changes; putting-green and fringe require separate accepted handoffs.

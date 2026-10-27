@@ -28,8 +28,10 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 **Accepted terrain source delivery (#383, `lead/terrain-ready-20261026`):** the four accepted families' canonical selections, native PNGs,
 provenance and review proofs are being committed from the art checkout. T170 already packed these exact accepted long-grass hashes;
 this delivery preserves those packed bytes and the owner's `rough-owner` mapping. Also guard asset preparation against explicitly held
-appearance reviews and make the green fallback follow a future canonical selection. Next: validate the source closure, typecheck, focused
-prep checks and a reviewable PR; no full suite/build or owner server changes.
+appearance reviews and make the green fallback follow a future canonical selection. Verified 440 source files, 717 path/hash bindings and
+all 48 primary native/packed sizes, with zero missing references or mismatches. Typecheck and the three focused prep fixtures pass.
+Next: review and merge the source delivery PR. No full suite/build, new browser session or owner server changes were needed; runtime pixels
+are unchanged. Green/fringe remain separate pending handoffs.
 
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |
