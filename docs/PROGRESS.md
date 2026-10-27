@@ -2441,3 +2441,33 @@ A new Claude lead took over the board (docs/LEAD.md section 5). It reviews and m
   - the grown town builds bigger roads or more connections as it grows;
   - the player is expected to upgrade the town's roads;
   - the decline rule is softened for a range town.
+
+## T178: a grown range town paves its own busy streets (2026-10-27, #443, PR #445 stacked on #442)
+
+With #442's traffic, a range town gridlocked from about season 7-8. I measured why on seed 1 (scratch harness runs, not in the repo).
+
+- **Junctions lose the time, not links.** At season 9, junctions lost 28,805 vehicle-seconds a game hour against 1,637 on links. They were plain junctions at LOS F, with low v/c.
+- **Junction control and paving alone do not hold it.** Trips' time over ideal at seasons 8 / 10 / 12:
+
+| What the town does | Season 8 | Season 10 | Season 12 |
+| --- | --- | --- | --- |
+| nothing | 2.68x | 3.54x | 3.87x |
+| signals | 4.15x | 4.12x | 3.45x |
+| all-way stops | 4.37x | 4.42x | 4.12x |
+| mini-roundabouts | 2.45x | 2.69x | 2.93x |
+| paving the jammed arms | 2.13x | 4.20x | 4.44x |
+
+- **The cause is the town day.** It is 600 sim seconds, against the classic 1,440, and cars drive in sim seconds. So a golf town packed a day's trips into 2.4x fewer seconds than a classic town of its size.
+
+**What changed:**
+- **`trips.ts`.** A golf town makes the classic town's trips per sim second (x dayLen / DAY). This applies to every townFree game: range starts and old golf starts in the game. The headless classic and old-start gates are not townFree, so they are unchanged.
+- **`golf/townpave.ts` and `City.planPave`: the lead's rule.** On a range start, once per growth period:
+  - the town's jammed junctions (LOS E or F, 200+ vehicle-seconds lost a game hour), the worst first, have their gravel arms laid again as town streets;
+  - at most 3 junctions a step, within 1.5 street tiles per built lot;
+  - the town pays, not the player;
+  - the order travels worker -> client -> engine `townPave`, and the harness uses `paveSegs`.
+- **No second county connection is needed.** The grown town meets the county road at 10-25 junctions, and from 1,000 residents the busiest carries at most 38%. The gate now checks this share.
+- **range:gate per season** now records the trips' mean time over ideal, the zones over the decline line, the paved tiles and the busiest county junction's share. The check is `l_congestion`. Its bands come from seeds 1-3:
+  - trips at most 3x their ideal time;
+  - at most 45% of zones over the line;
+  - the busiest county junction at most 50%, from 1,000 residents.
