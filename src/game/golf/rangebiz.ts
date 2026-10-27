@@ -67,10 +67,12 @@ const GARAGE_SCALE = 0.6;
 export interface ScenePiece { key: string; id: string; x: number; y: number; q: number; scale?: number; fit?: number; label?: string; /** drawn this high above its spot (world px, T133: the upper deck) */ lift?: number;
   /** its footprint (world x0 y0 x1 y1, T133) in place of its picture's boxes: a covered-bay roof's or the deck's, behind its golfers */ foot?: [number, number, number, number] }
 /** a ground patch of the scene: a world polygon (x y pairs) and its surface: a golf surface (laid with the course's own presets), the range's own
- *  presets (T132: 'outfield', the mown outfield with its stripes, and 'target', a target green: rangehost.ts patchTex) or a ground texture; edge:
+ *  presets (T132: 'outfield', the mown outfield with its stripes, and 'target', a target green; T223: 'desert', the desert start's outfield,
+ *  'teeDirt' and 'teeTurf', the range's tee box before and after it is turfed, and 'yard', the caravan's and the cottage's desert yard:
+ *  rangehost.ts patchTex) or a ground texture; edge:
  *  its outline's profile (paint-edges.ts: a target green is raised, its collars feathered; absent: crisp); mow: its mowing stripes are laid on
  *  top (the outfield) */
-export interface ScenePatch { pts: number[]; surf: 'fairway' | 'firstCut' | 'tee' | 'fringe' | 'green' | 'rough' | 'dirt' | 'grassDry' | 'asphaltDark' | 'gravel' | 'concrete' | 'outfield' | 'target'; edge?: 'raised' | 'flat'; mow?: true }
+export interface ScenePatch { pts: number[]; surf: 'fairway' | 'firstCut' | 'tee' | 'fringe' | 'green' | 'rough' | 'dirt' | 'grassDry' | 'asphaltDark' | 'gravel' | 'concrete' | 'outfield' | 'target' | 'desert' | 'teeDirt' | 'teeTurf' | 'yard'; edge?: 'raised' | 'flat'; mow?: true }
 /** a target green in the scene: centre, radius and distance from the tee line (m) */
 export interface SceneTarget { x: number; y: number; r: number; m: number }
 /** the scene of a range (rangeScene) */
@@ -137,8 +139,12 @@ export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave): 
   // painted areas draw over the course, so the outfield keeps TEE_GAP tiles off it, where the raised tee's bank or rock face hangs down onto the
   // land's grass), the pads and mats of the open bays on their concrete deck (over the tee box), the target greens, the shop's packed dirt and
   // the caravan's dry lawn
-  // the outfield is the range's own preset with its mowing stripes laid on top (T132: they read at every zoom, across the line of play)
-  patches.push({ pts: quad(0.3, 69.7, TEE[3] + TEE_GAP, 149.7), surf: 'firstCut' }, { pts: quad(2, 68, TEE[3] + TEE_GAP + 0.6, 148), surf: 'outfield', mow: true });
+  // the outfield is the range's own preset with its mowing stripes laid on top (T132: they read at every zoom, across the line of play); a desert
+  // start's (T223) is the desert, edge to edge, until the player grasses it
+  if (st.grass) patches.push({ pts: quad(0.3, 69.7, TEE[3] + TEE_GAP, 149.7), surf: 'firstCut' }, { pts: quad(2, 68, TEE[3] + TEE_GAP + 0.6, 148), surf: 'outfield', mow: true });
+  else patches.push({ pts: quad(0.3, 69.7, TEE[3] + TEE_GAP, 149.7), surf: 'desert' });
+  // the tee box wears the range's own tee (T223): packed dirt at a desert start, its divot-scarred turf once turfed (the course's tees keep theirs)
+  patches.push({ pts: quad(TEE[0], TEE[1], TEE[2], TEE[3]), surf: st.teeTurf ? 'teeTurf' : 'teeDirt' });
   const open = openSlots(st.lowerBays); // the tee box's mats (T133: the upper deck's bays are added below)
   patches.push({ pts: quad(slotU(open[0]!) - 1.5, slotU(open[open.length - 1]!) + 1.5, STAND_V - 2, STAND_V + 2.2), surf: 'concrete' });
   for (const k of open) { const u = slotU(k); patches.push({ pts: quad(u - 1.05, u + 1.05, STAND_V - 1.4, STAND_V + 1.6), surf: 'asphaltDark' }, { pts: quad(u - 0.65, u + 0.65, STAND_V - 0.2, STAND_V + 1.2), surf: 'green' }); }
@@ -150,8 +156,8 @@ export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave): 
     targets.push({ x: c.x, y: c.y, r, m: TARGET_D[i]! * 2 });
   }
   const home = homeStage(s), Y = YARDS[home]!;
-  // the caravan's yard is dry lawn; the cottage's and the house's a mown lawn (T133)
-  patches.push({ pts: quad(28, 41, 3, 15.4), surf: 'dirt' }, { pts: quad(Y[0], Y[1], Y[2], Y[3]), surf: home ? 'firstCut' : 'grassDry' });
+  // the caravan's and the cottage's yard is the desert (T223: the range's 'yard' preset); the house's a mown lawn (T133)
+  patches.push({ pts: quad(28, 41, 3, 15.4), surf: 'dirt' }, { pts: quad(Y[0], Y[1], Y[2], Y[3]), surf: home === 2 ? 'firstCut' : 'yard' });
   if (st.kiosk) patches.push({ pts: quad(PATIO[0], PATIO[1], PATIO[2], PATIO[3]), surf: 'concrete' });
   if (st.parking) patches.push({ pts: quad(GARAGE[0], GARAGE[1], GARAGE[2], GARAGE[3]), surf: 'concrete' });
 
