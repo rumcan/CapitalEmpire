@@ -132,13 +132,13 @@ export function vnoise(x: number, y: number, s: number) {
   return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
 }
 /** T204 (the owner, 2026-10-27: open fescue "spotted with green blotches"): the open ground's patches, fewer and larger than openNoise's:
- *  waves of about 80 m and 30 m, -1 (thin) .. 1 (lush); only their crests count (influence: past OPEN_PATCH_AT), never periodic */
+ *  waves of about 88 m and 32 m, -1 (thin) .. 1 (lush); only their crests count (influence: past OPEN_PATCH_AT), never periodic */
 export function openPatch(x: number, y: number) {
-  const n = vnoise(x / 40 + 3.7, y / 40 - 8.1, 47) * 0.68 + vnoise(x / 15 - 1.3, y / 15 + 5.9, 49) * 0.32;
+  const n = vnoise(x / 44 + 3.7, y / 44 - 8.1, 47) * 0.7 + vnoise(x / 16 - 1.3, y / 16 + 5.9, 49) * 0.3;
   return Math.max(-1, Math.min(1, (n - 0.5) * 2.7));
 }
 /** where openPatch's crests start to count, and where they are full (lush above, thin below the negative) */
-export const OPEN_PATCH_AT: readonly [number, number] = [0.4, 0.68];
+export const OPEN_PATCH_AT: readonly [number, number] = [0.5, 0.78];
 /** the open ground's slow patches at tile (x, y), -1 (thin) .. 1 (lush): waves of about 44 m and 17 m (never a multiple of the grass's
  *  48, 96 or 192 m pictures) */
 export function openNoise(x: number, y: number) {
@@ -458,15 +458,17 @@ export const pxAcross = (px: number) => px / (64 * Math.SQRT2);
 /* ---- T204: the lush and patchy variants with a rugged edge (renderer.ts drawLiving): each spot is the one grass or the other, the region where
  *      a mask passes its level outlined (maskContours) and its edge broken by the tall grass's tufts (rugged-edges spillBlades), never two
  *      paintings cross-faded at half alpha (the owner: a ghosted, pale green) ---- */
-/** the level (0..1 of the mask's alpha) where each variant starts */
-export const LIVING_EDGE = { lush: 0.3, thin: 0.42 } as const;
+/** the level (0..1 of the mask's alpha) where each variant starts: the lush grass laid whole inside its region, the patchy grass (going over
+ *  to soil) keeping its mask's depth inside, its fade cut off at its region's edge */
+export const LIVING_EDGE = { lush: 0.4, thin: 0.3 } as const;
 /** the closed outlines (flat x y rings, tiles) where a mask (RGBA, one px per sample, alpha the channel; the samples at x0 + (i + 0.5) / res)
  *  crosses `level` (0..1): marching squares with linear interpolation, a saddle read by its centre, the grid's outside counted as below so every
  *  outline closes. Each ring has the inside on its (dy, -dx) side, so a hole runs the other way round from its outer ring (fill them even-odd
  *  or non-zero). Each piece of an
  *  outline depends only on the four samples round it, so two chunks' grids that share samples draw the same outline there */
 export function maskContours(a: ArrayLike<number>, W: number, H: number, x0: number, y0: number, res: number, level: number): number[][] {
-  const t = level * 255, PW = W + 2, PH = H + 2, v = new Float32Array(PW * PH).fill(-t);
+  // (the level half way between two alpha steps: no sample sits exactly on it, so no crossing falls on a sample and no piece has no length)
+  const t = Math.floor(level * 255) + 0.5, PW = W + 2, PH = H + 2, v = new Float32Array(PW * PH).fill(-t);
   for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) v[(j + 1) * PW + i + 1] = a[(j * W + i) * 4 + 3]! - t;
   // the crossing on each edge: horizontal edge (i, j)-(i + 1, j) id 2 (j PW + i), vertical (i, j)-(i, j + 1) id 2 (j PW + i) + 1
   const pt = (id: number): [number, number] => {

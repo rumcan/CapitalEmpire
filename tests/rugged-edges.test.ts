@@ -203,13 +203,33 @@ describe('the living ground\'s variants with a rugged edge (T204 d)', () => {
     assert.ok(out > 0.9 * (t.length / 6), `tips outside: ${out} of ${t.length / 6}`);
   });
   it('the open ground\'s patches are fewer and larger than before', () => {
-    // the share of open ground past the lush crest, and the patches' size: a run along a line in and out of them
-    let inPatch = 0, runs = 0, prev = false; const N = 4000;
-    for (let k = 0; k < N; k++) { const x = k * 0.5, on = openPatch(x, 333) > OPEN_PATCH_AT[0]; if (on) inPatch++; if (on && !prev) runs++; prev = on; }
-    let inOld = 0, runsOld = 0; prev = false;
-    for (let k = 0; k < N; k++) { const x = k * 0.5, on = openNoise(x, 333) > 0.12; if (on) inOld++; if (on && !prev) runsOld++; prev = on; }
-    assert.ok(inPatch < 0.6 * inOld, `share ${inPatch / N} vs ${inOld / N}`);
-    assert.ok(runs < runsOld, `patches ${runs} vs ${runsOld}`);
-    assert.ok(inPatch / Math.max(1, runs) > inOld / Math.max(1, runsOld), 'each patch longer');
+    // along ten long lines: the share of open ground in a patch, the patches and their mean length, each read where it shows (half way up its
+    // ramp: the old noise's 0.36, the new one's OPEN_PATCH_AT middle)
+    const stat = (f: (x: number, y: number) => number, t: number) => {
+      let inP = 0, runs = 0; const N = 4000;
+      for (let r = 0; r < 10; r++) { let prev = false; for (let k = 0; k < N; k++) { const on = f(k * 0.5, 333 + r * 97) > t; if (on) inP++; if (on && !prev) runs++; prev = on; } }
+      return { share: inP / (10 * N), runs, len: (inP * 0.5) / Math.max(1, runs) };
+    };
+    const old = stat(openNoise, 0.36), now = stat(openPatch, (OPEN_PATCH_AT[0] + OPEN_PATCH_AT[1]) / 2);
+    assert.ok(now.share < 0.5 * old.share, `share ${now.share.toFixed(3)} vs ${old.share.toFixed(3)}`);
+    assert.ok(now.runs < 0.5 * old.runs, `patches ${now.runs} vs ${old.runs}`);
+    assert.ok(now.len > old.len, `each patch longer: ${now.len.toFixed(1)} vs ${old.len.toFixed(1)} tiles`);
+  });
+});
+
+describe('the variants\' outlines on a real mask (T204 d)', () => {
+  it('every ring closes and none shares an edge crossing, even where samples sit on the level', () => {
+    // a noisy mask with many samples exactly at the level (alpha 102 = 0.4 x 255)
+    const W = 60, H = 50, a = new Uint8ClampedArray(W * H * 4);
+    for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) { const v = 128 + 120 * Math.sin(i * 0.37) * Math.cos(j * 0.29) + ((i * 7 + j * 13) % 5) * 6; a[(j * W + i) * 4 + 3] = (i + j) % 7 === 0 ? 102 : v; }
+    const rings = maskContours(a, W, H, 0, 0, 2, 0.4);
+    assert.ok(rings.length > 5);
+    // each ring closes on itself: its last point next to its first (pieces half a sample long at most)
+    for (const r of rings) assert.ok(Math.hypot(r[r.length - 2]! - r[0]!, r[r.length - 1]! - r[1]!) < 0.75, 'a ring that closes');
+    // the samples on the level only make specks: the region is the same, give or take, as with them a step above it
+    const b = a.slice(); for (let q = 0; q < W * H; q++) if (b[q * 4 + 3] === 102) b[q * 4 + 3] = 103;
+    const area = (rs: number[][]) => Math.abs(rs.reduce((s, r) => s + signedArea(r), 0));
+    const A = area(rings), B = area(maskContours(b, W, H, 0, 0, 2, 0.4));
+    assert.ok(Math.abs(A - B) < 0.05 * B, `area ${A.toFixed(1)} vs ${B.toFixed(1)} tiles`);
   });
 });
