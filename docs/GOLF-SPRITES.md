@@ -1,5 +1,8 @@
 # Golf sprites and textures: what to make (v6, 2026-10-21)
 
+**The image generator's list, with prompts and the angle every item needs:** [GOLF-ART-LIST.md](GOLF-ART-LIST.md) (2026-10-27: the range, fun
+targets, practice areas, pros and memberships, storage and maintenance, the course, the clubhouse, the tournament, people).
+
 The art the golf events game needs ([GOLF-PLAN.md](GOLF-PLAN.md)): course furniture, the tournament's temporary structures,
 people, vehicles and the painted surfaces. **Nothing here is a whole hole:** greens, fairways, tees, bunkers and water are
 painted with the Paint tool (textures, section 6). Sprites are the objects that stand on them.
@@ -172,7 +175,7 @@ so 1024 px is plenty (section 1).
 - Still missing: tee steps, a bunker rake, a pond waterfall, pond rocks, and pond reeds (reeds use the roadside ornamental grass for now). They plug into `PIECE_PROP_SPRITE` in `src/game/ext/course-pieces/index.ts` (a sprite id, or `null` until the art exists).
 
 ## The range business kit (plan P24 Phase 1, T129, the World of Golf extras, T133, and the range's look, P22 T096: art requests)
-**Paste-ready prompts for every item below and in "Practice facilities":** [RANGE-ART-LIST.md](RANGE-ART-LIST.md) (2026-10-27).
+**Paste-ready prompts for every item below and in "Practice facilities":** [GOLF-ART-LIST.md](GOLF-ART-LIST.md) section 1 (2026-10-27).
 The opening range (`golf/rangebiz.ts rangeScene`) stands these in with labelled stand-ins ("Stand In for ..."); each goes in by its id in
 `rangeScene`. Four views (NE, SE, SW, NW as the building sheets: the front in NE and NW), sun at the upper right, shadows at 145°, early
 autumn dusk, no lettering in the art unless said.
