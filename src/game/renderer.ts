@@ -42,7 +42,7 @@ import { LIVING_AO, LIVING_EDGE, maskContours, CasterStore, COURSE_GRASSY, COURS
 const COMPOSED_BYTES = 64 << 20;
 /** a painted composition is made and kept in squares of this many chunk px (only the part of a chunk a surface uses is composed) */
 const PAINT_CELL = 128;
-/** T199: the swamp tiles' glosses a worker keeps (two bands' worth, about 1 MB each) */
+/** T199: the swamp tiles' glosses a worker keeps (two bands' worth, a quarter of a MB each) */
 const GLOSS_TILES = 8;
 /** a painted composition of a chunk: its picture, the cells composed so far, its size in bytes */
 /** a chunk's living ground as made (drawLiving): its influence grid and its masks */

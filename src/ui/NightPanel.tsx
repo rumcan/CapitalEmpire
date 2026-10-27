@@ -65,10 +65,11 @@ export function NightPanel({ game, bump }: { game: Game; bump: () => void }) {
         })}
         <button className="btn mt-2 w-full" onClick={() => set({ ...NIGHT_DEFAULT, mode: n.mode })}>The builder's night</button>
       </details>
-      {/* T215 (#561, phase 1): the street lamps' reflection pools as the camera specular, a test of the look (lamp-reflect.ts); not remembered */}
+      {/* T215 (#561, phase 1): the street lamps' reflection pools as the camera specular, a test of the look (lamp-reflect.ts); not remembered.
+          T199 (#517): the same switch and knobs light the swamp's pools with a cool sky glint (swamp.ts), strongest by day */}
       <details className="px-2 py-1 text-xs">
-        <summary className="cursor-pointer py-1">Lamp reflections (test)</summary>
-        <label className="flex items-center gap-2 py-1" title="On: the lamps' reflection pools on the road show whole in the middle of the screen and fade out toward its edges. Off: baked into the road as before">
+        <summary className="cursor-pointer py-1">Lamp reflections and swamp glint (test)</summary>
+        <label className="flex items-center gap-2 py-1" title="On: the lamps' reflection pools on the road, and the sky's glint on the swamp's pools, show whole in the middle of the screen and fade out toward its edges. Off: the pools baked into the road as before, and no glint">
           <input type="checkbox" checked={game.specCam} onChange={e => { game.specCam = e.target.checked; bump(); }} />
           <span>Follow the camera</span>
         </label>
