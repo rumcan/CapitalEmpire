@@ -59,11 +59,11 @@ test('T226 the curve is monotonic: along the grey ramp and along each channel, t
 
 test('T226 at 100%: highlights warmer, deep shadows cooler (toward teal), mid contrast and saturation up slightly', () => {
   const warmth = (c: readonly number[]) => c[0]! - c[2]!;
-  // a grey highlight turns warm, a grey deep shadow cool; a mid grey barely moves
+  // a grey highlight turns warm (red gains most, blue least), a grey deep shadow cool (blue over red, red down); a mid grey moves a little
   const hi = gradeRgb(0.85, 0.85, 0.85, 1), lo = gradeRgb(0.12, 0.12, 0.12, 1), mid = gradeRgb(0.5, 0.5, 0.5, 1);
-  assert.ok(hi[0] > 0.85 && hi[2] < 0.85 && warmth(hi) > 0.02, `highlight warmer: ${hi}`);
-  assert.ok(lo[2] > lo[0] && lo[1] >= lo[0] && lo[0] < 0.12, `shadow cooler: ${lo}`);
-  assert.ok(mid.every(v => Math.abs(v - 0.5) < 0.03), `mid grey nearly still: ${mid}`);
+  assert.ok(hi[0] > hi[1] && hi[1] > hi[2] && warmth(hi) > 0.03, `highlight warmer: ${hi}`);
+  assert.ok(lo[2] > lo[0] && lo[1] > lo[0] && lo[0] < 0.12, `shadow cooler: ${lo}`);
+  assert.ok(mid.every(v => Math.abs(v - 0.5) < 0.06) && warmth(mid) > 0 && warmth(lo) < 0, `mid grey moves little, on the warm side: ${mid}`);
   // the gold ground and a green lawn get warmer in their light and richer; a texture's local contrast is kept or raised, never flattened
   for (const c of [[0.72, 0.6, 0.36], [0.42, 0.55, 0.25]] as const) {
     const o = gradeRgb(c[0], c[1], c[2], 1), sat = (v: readonly number[]) => Math.max(...v) - Math.min(...v);
@@ -73,9 +73,11 @@ test('T226 at 100%: highlights warmer, deep shadows cooler (toward teal), mid co
       assert.ok(luma(...b) - luma(...a) >= 2 * d * 0.95, `${c} ±${d}: the detail survives (${(luma(...b) - luma(...a)).toFixed(4)})`);
     }
   }
-  // mid contrast: a step round the middle grows (by up to the S-curve's mid slope, 1 + contrast / 2), and the ends' slopes stay positive
+  // mid contrast: a step round the middle grows slightly (the S-curve's slope there, 1 + 2a(p(1 - p)) at its pivot, a little more with the warmth)
   const step = luma(...gradeRgb(0.55, 0.55, 0.55, 1)) - luma(...gradeRgb(0.45, 0.45, 0.45, 1));
-  assert.ok(step > 0.1 && step < 0.1 * (1 + GRADE.contrast), `mid step ${step}`);
+  assert.ok(step > 0.1 * (1 + GRADE.contrast * 0.3) && step < 0.1 * (1 + GRADE.contrast * 1.2), `mid step ${step}`);
+  // and the darkest darks a little deeper, the bright mids a little brighter (below the pivot down, above it up)
+  assert.ok(luma(...gradeRgb(0.2, 0.2, 0.2, 1)) < 0.2 && luma(...gradeRgb(0.6, 0.6, 0.6, 1)) > 0.6);
   // more strength, more of it; the already rich colours gain less than the dull ones (vibrance)
   const h15 = gradeRgb(0.85, 0.85, 0.85, 1.5); assert.ok(warmth(h15) > warmth(hi));
   const gain = (c: [number, number, number]) => { const o = gradeRgb(...c, 1); return (Math.max(...o) - Math.min(...o)) / (Math.max(...c) - Math.min(...c)); };

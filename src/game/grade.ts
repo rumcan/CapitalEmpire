@@ -10,7 +10,8 @@
  *    - split toning by the pixel's luma: highlights a little warmer (red up, blue down), deep shadows a little cooler, toward teal (red down,
  *      blue and a touch of green up). Each channel moves by k * c * (1 - c) (a bump, zero at 0 and 1, monotonic for |k| < 1), k the zone's
  *      weight times the channel's gain, so nothing clips and nothing is washed over;
- *    - mid contrast up slightly: an S-curve c + a * (2c - 1) * c * (1 - c) (mid slope 1 + a / 2, end slopes 1 - a);
+ *    - mid contrast up slightly: an S-curve c + 2a * (c - p) * c * (1 - c) about the pivot p (its slope there 1 + 2a * p * (1 - p), at the
+      ends 1 - 2a * p and 1 - 2a * (1 - p): monotonic while a < 1 / (2 * max(p, 1 - p)));
  *    - saturation up slightly, as a vibrance: the dull colours (the gold ground, the greens) gain more than the already rich ones (the
  *      maples' reds), and never past the gamut (each pixel's boost is held where its first channel would reach 0 or 1: no hue shift, no clip).
  *  - **A soft vignette:** the corners a few percent darker (a multiply: the texture stays).
@@ -26,19 +27,25 @@
  *  - warm, cool: each channel's gain (r, g, b) in the highlights and in the deep shadows (the bump's k at the zone's full weight);
  *  - hi: the highlight zone, by luma (its weight a smoothstep from hi[0] to hi[1]); lo: the deep shadow zone (its weight 1 below lo[0], a
  *    smoothstep down to 0 at lo[1]);
- *  - contrast: the S-curve's a; vibrance: the saturation boost of a grey-ish colour (1 + vibrance * (1 - its saturation));
+ *  - contrast, pivot: the S-curve's a and the value it turns about (below it darker, above it lighter); vibrance: the saturation boost of a
+ *    grey (1 + vibrance * (1 - its saturation)^2: a rich colour gains little);
  *  - vignette: how much darker the corners are; vignetteFrom: where the darkening starts, on the screen's radius (0 the centre, 1 a corner;
  *    the screen's own shape, so the sides' midpoints are at 0.71);
  *  - night: the night light's amount over which the grade eases off (a smoothstep: whole below night[0], none past night[1]).
- *  Tuned against the concept beside the town and the range (scripts/dev/grade-shots.mjs): the concept's warmth and richness, not its colours
- *  (our ground is still gold) */
+ *  Tuned against the concept beside the town and the range (scripts/dev/grade-shots.mjs; the colour statistics are in the PR): the concept's
+ *  warmth and richness, not its colours (our ground is still gold). Our frames are darker and flatter than the concept (mean luma 80-84
+ *  against 97-104, its spread 38-40 against 51-52), so the S-curve turns low (pivot 0.36), lifting the upper mids rather than crushing the
+ *  shadows, and the highlight zone starts low (our highlights are luma 0.5-0.75). The warm gain is mostly red: golden light turns the grass
+ *  toward the concept's yellow-green instead of a brighter green. At 100% the town's highlights warm from R-B 104 to 121 (the concept's 126),
+ *  its saturation goes 64 to 75 (the concept's 83-91), its spread 38 to 41, its mean luma stays put (84 to 83) */
 export const GRADE = {
-  warm: [0.11, 0.04, -0.12] as readonly [number, number, number],
-  cool: [-0.1, 0.015, 0.08] as readonly [number, number, number],
-  hi: [0.38, 0.92] as readonly [number, number],
-  lo: [0.06, 0.42] as readonly [number, number],
-  contrast: 0.18,
-  vibrance: 0.22,
+  warm: [0.24, 0.03, -0.1] as readonly [number, number, number],
+  cool: [-0.08, 0.02, 0.07] as readonly [number, number, number],
+  hi: [0.25, 0.75] as readonly [number, number],
+  lo: [0.04, 0.34] as readonly [number, number],
+  contrast: 0.2,
+  pivot: 0.36,
+  vibrance: 0.3,
   vignette: 0.07,
   vignetteFrom: 0.42,
   night: [0.25, 0.9] as readonly [number, number],
@@ -101,9 +108,9 @@ export function gradeRgb(r: number, g: number, b: number, s: number): [number, n
   const k = (i: 0 | 1 | 2) => s * (G.warm[i] * hw + G.cool[i] * lw);
   let c = [bump(r, k(0)), bump(g, k(1)), bump(b, k(2))];
   const a = s * G.contrast;
-  c = c.map(v => v + a * (2 * v - 1) * v * (1 - v));
+  c = c.map(v => v + 2 * a * (v - G.pivot) * v * (1 - v));
   const L2 = luma(c[0]!, c[1]!, c[2]!), sat = Math.max(c[0]!, c[1]!, c[2]!) - Math.min(c[0]!, c[1]!, c[2]!);
-  let f = 1 + s * G.vibrance * (1 - sat);
+  let f = 1 + s * G.vibrance * (1 - sat) * (1 - sat);
   for (const v of c) { const d = v - L2; if (d > 1e-6) f = Math.min(f, (1 - L2) / d); else if (d < -1e-6) f = Math.min(f, L2 / -d); }
   return [clamp(L2 + (c[0]! - L2) * f, 0, 1), clamp(L2 + (c[1]! - L2) * f, 0, 1), clamp(L2 + (c[2]! - L2) * f, 0, 1)];
 }
@@ -138,9 +145,9 @@ vec3 gradeCurve(vec3 c, float s) {
   vec3 k = s * (${glslVec3(GRADE.warm)} * hw + ${glslVec3(GRADE.cool)} * lw);
   c = c + k * c * (1.0 - c);
   float a = s * ${glslNum(GRADE.contrast)};
-  c = c + a * (2.0 * c - 1.0) * c * (1.0 - c);
+  c = c + 2.0 * a * (c - ${glslNum(GRADE.pivot)}) * c * (1.0 - c);
   float L2 = gradeLuma(c), sat = max(c.r, max(c.g, c.b)) - min(c.r, min(c.g, c.b));
-  float f = 1.0 + s * ${glslNum(GRADE.vibrance)} * (1.0 - sat);
+  float f = 1.0 + s * ${glslNum(GRADE.vibrance)} * (1.0 - sat) * (1.0 - sat);
   vec3 d = c - L2;
   for (int i = 0; i < 3; i++) { if (d[i] > 1e-6) f = min(f, (1.0 - L2) / d[i]); else if (d[i] < -1e-6) f = min(f, L2 / -d[i]); }
   return clamp(L2 + d * f, 0.0, 1.0);
