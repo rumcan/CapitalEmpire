@@ -38,16 +38,16 @@ Autumn trees and conifers, colonial houses with warm windows, lamps, the sun at 
 | # | Work | What changes | Size |
 | --- | --- | --- | --- |
 | 1 | **Green ground** | Painted mapping only (`painted-surfaces.json`): the map's open ground, the town blocks and the yards go green. Golden fescue stays on the course's fescue and native areas; the desert stays on the range start (T223) and the waste areas. Use today's green families until the concept-coloured ones (items 149-153) land. It reverses #625 and the map half of #621, so it is the owner's call. | an hour |
-| 2 | **Golden-hour grade** | One full-screen pass after the scene: a tone curve (warm highlights, cool deep shadows, a little more saturation and contrast), a soft vignette, an optional edge blur for the miniature feel. It is a curve, not a tint, so texture detail stays (the no-flat-wash rule). A gear-menu switch. | a ticket |
-| 3 | **Fairway bands and collar** | T218's stripes wider and stronger. The first-cut ring round fairways and greens clearly darker. Greens get fine stripes. | tuning |
-| 4 | **Bunker lips** | A dark textured crescent inside the far (upper right) rim, a light near lip, a thin raised grass lip (the textured-shadow rule). | a ticket |
+| 2 | **Golden-hour grade** (done, #654) | One full-screen pass after the scene: a tone curve (warm highlights, cool deep shadows, a little more saturation and contrast), a soft vignette, an optional edge blur for the miniature feel. It is a curve, not a tint, so texture detail stays (the no-flat-wash rule). A gear-menu switch. | a ticket |
+| 3 | **Fairway bands and collar** (T227 #656, running) | T218's stripes wider and stronger. The first-cut ring round fairways and greens clearly darker. Greens get fine stripes. | tuning |
+| 4 | **Bunker lips** (T227 #656, running) | A dark textured crescent inside the far (upper right) rim, a light near lip, a thin raised grass lip (the textured-shadow rule). | a ticket |
 | 5 | **Pond edges and water** | A pond edge style (natural reeds, or boulders as in the concept) that lays boulders and reeds along the edge by itself. Water darker teal, deeper in the middle, with T215's camera reflection. A fountain pond as one placeable town and clubhouse feature. Needs art 154 and 158-160. | a ticket |
 | 6 | **Trees frame the holes** | When a hole is built, an optional priced tree line (spruce, pine and maple clumps) along the outer edge of its rough. | a ticket |
 | 7 | **Streets and car parks** | Zebra crossings at junctions and white edge lines. Car parks draw parked cars to match their count (the range already shows "P 6/44"). | a ticket |
 | 8 | **Fuller yards** | The lot composer lays hedges, flower beds and fences once art 162-165 lands. | after the art |
 | 9 | **Building sites** | Bought land shows bare dirt inside a white dashed line. Buildings rise with the construction kit (art 168-172). | a ticket |
 | 10 | **UI** | Stat chips in the top bar (reputation, golfers a month, course rating). The build tools as illustrated tiles (art 174). | a ticket |
-| 11 | **Life on the course** | Golfers playing and carts on the paths: already queued as T208 and T213. | queued |
+| 11 | **Life on the course** (T211 #655 done; T208 #553 running) | Golfers playing and carts on the paths: already queued as T208 and T213. | queued |
 
 ## The art (GOLF-ART-LIST section 12, items 149-175)
 
