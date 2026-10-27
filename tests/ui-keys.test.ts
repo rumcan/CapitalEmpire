@@ -69,6 +69,11 @@ describe('Help › Keys (T202)', () => {
     assert.equal(holes.part, 'course'); assert.equal(roads.part, 'town');
     assert.equal(holes.rows[0]!.keys, `1 – ${BRUSH_PRESETS.length}`); assert.equal(roads.rows[0]!.keys, `1 – ${KEY_CLASSES.length}`);
     assert.equal(s.filter(x => x.id === 'in:props').length, 1, 'the Props tool\'s keys in hand once (it sits in both decorations)');
+    // T206: the practice tools' keys and the plant brush's, under Course (Facilities); Paint's own under Town
+    const prac = s.find(x => x.id === 'in:practice')!, plants = s.find(x => x.id === 'in:paint:alt')!, paint = s.find(x => x.id === 'in:paint')!;
+    assert.equal(prac.part, 'course'); assert.deepEqual(prac.rows.map(r => r.keys), ['[ / ]', 'R', 'Tab / Shift+Tab', 'Click']);
+    assert.equal(plants.part, 'course'); assert.ok(plants.rows.some(r => r.keys === 'Alt + drag'), 'the plant brush\'s keys');
+    assert.equal(paint.part, 'town');
   });
   it('3. every letter the engine\'s keyDown handles is on the sheet', () => {
     const src = readFileSync('src/game/engine.ts', 'utf8'), body = src.slice(src.indexOf('  keyDown(e: KeyboardEvent) {'), src.indexOf('  keyUp(e: KeyboardEvent) {'));
@@ -96,7 +101,7 @@ describe('Help › Keys (T202)', () => {
     }
     // a tool's keys in hand: the card dimmed with its tool's lock, once
     for (const c of s.filter(x => x.id.startsWith('in:'))) {
-      assert.equal(c.why ?? null, toolLock(ui, c.id.slice(3) as Tool), `${c.id}'s lock`);
+      assert.equal(c.why ?? null, toolLock(ui, c.id.slice(3).split(':')[0] as Tool), `${c.id}'s lock`);
       assert.ok(c.rows.every(r => !r.why), `${c.id}: the reason once, on the card`);
       if (c.why) assert.match(h, new RegExp(`<div class="keys-card keys-card-locked" data-keys-section="${c.id}" aria-disabled="true">`));
     }
@@ -125,13 +130,13 @@ describe('Help › Keys (T202)', () => {
 describe('the number keys (T202)', () => {
   it('1. 1-6 open the rail\'s groups after Select, in the rail\'s order (the six with a driving range)', () => {
     const order = (golf: boolean, range: boolean) => railEntries(null, golf, 'select', { range }).map(e => e.item.id).filter(id => id !== 'select');
-    assert.deepEqual(numberedGroups(true, true).map(r => r.id), ['range', 'course', 'decor', 'traffic', 'towndecor', 'bulldoze']);
+    assert.deepEqual(numberedGroups(true, true).map(r => r.id), ['range', 'course', 'facilities', 'traffic', 'towndecor', 'bulldoze']);
     for (const g of GAMES) assert.deepEqual(numberedGroups(g.golf, g.range).map(r => r.id), order(g.golf, g.range).slice(0, 6), JSON.stringify(g));
     // the sheet's rail card names them by number
     const rail = keySheet({ golf: true, range: true, ui: null }).find(x => x.id === 'rail')!;
     assert.deepEqual(rail.rows.filter(r => /^\d$/.test(r.keys)).map(r => r.keys), ['1', '2', '3', '4', '5', '6']);
     assert.equal(rail.rows.find(r => r.keys === '6')!.what, 'Bulldoze', 'Bulldoze has no flyout: its number picks it');
-    assert.equal(rail.rows.find(r => r.keys === '3')!.what, 'the Decoration menu');
+    assert.equal(rail.rows.find(r => r.keys === '3')!.what, 'the Facilities menu', 'T206: Facilities in Decoration\'s place');
   });
   it('2. a tool that uses them keeps them: Holes its surfaces (1-7), the town\'s Build its road classes (1-6); elsewhere they open the groups', () => {
     for (const n of [1, 2, 3, 4, 5, 6]) {

@@ -75,7 +75,7 @@ export const GUIDE: readonly GuideStep[] = Object.freeze([
     title: 'Connect your hole',
     body: 'Lay a cart path or build a road to link your hole to the road network.',
     done: 'auto',
-    target: { ui: 'rail-decor', map: 'nearestRoad' },
+    target: { ui: 'rail-course', map: 'nearestRoad' }, // T206: Course › Cart paths & roads
   },
   {
     id: 'guide-park',

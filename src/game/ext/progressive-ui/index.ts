@@ -10,7 +10,7 @@ export type RailGroupId = 'select' | 'roads' | 'paint' | 'course' | 'junction' |
 
 /** individual tool ids matching Tool in src/game/types.ts, plus 'buildings': the Course tool's Buildings tab (the clubhouse), a rail item of its
  *  own from plan P23 P1-E */
-export type UiToolId = 'select' | 'road' | 'lane' | 'downgrade' | 'paint' | 'course' | 'path' | 'buildings' | 'props' | 'greenkeeping' | 'junction' | 'bulldoze' | 'bus' | 'park' | 'toll' | 'business';
+export type UiToolId = 'select' | 'road' | 'lane' | 'downgrade' | 'paint' | 'course' | 'path' | 'buildings' | 'props' | 'greenkeeping' | 'practice' | 'junction' | 'bulldoze' | 'bus' | 'park' | 'toll' | 'business';
 
 /** top-bar golf chip ids in src/App.tsx */
 export type GolfChipId = 'courseStats' | 'land' | 'holes' | 'event' | 'skipTournament' | 'grass';
@@ -136,11 +136,11 @@ export const GROUP_STAGE: Readonly<Partial<Record<RailGroupId, OnboardingStage>>
 });
 /** the stage each golf tool opens at: Holes, Paths and Buildings from the start, Paint with the first hole, the town's tools at stage 3 */
 export const TOOL_STAGE: Readonly<Partial<Record<UiToolId, OnboardingStage>>> = Object.freeze({
-  select: 1, course: 1, path: 1, buildings: 1, props: 1, greenkeeping: 1, road: 3, lane: 3, downgrade: 3, junction: 3, bus: 3, park: 3, toll: 3, paint: 2, bulldoze: 1,
+  select: 1, course: 1, path: 1, buildings: 1, props: 1, greenkeeping: 1, practice: 1, road: 3, lane: 3, downgrade: 3, junction: 3, bus: 3, park: 3, toll: 3, paint: 2, bulldoze: 1,
 });
 /** the rail group each golf tool sits in */
 export const TOOL_GROUP: Readonly<Partial<Record<UiToolId, RailGroupId>>> = Object.freeze({
-  select: 'select', course: 'course', path: 'course', buildings: 'course', props: 'course', greenkeeping: 'course', road: 'roads', lane: 'roads', downgrade: 'roads', junction: 'junction',
+  select: 'select', course: 'course', path: 'course', buildings: 'course', props: 'course', greenkeeping: 'course', practice: 'course', road: 'roads', lane: 'roads', downgrade: 'roads', junction: 'junction',
   bus: 'transport', park: 'transport', toll: 'transport', paint: 'paint', bulldoze: 'bulldoze',
 });
 /** the stage each top-bar chip shows at: the course stats from the start; skip and the grass with the first hole; the pins and tees, the Event
@@ -203,23 +203,23 @@ export const FIRST_RUN_HINTS: readonly FirstRunHint[] = [
   },
 ];
 
-/** a range start's teaching ramp (plan P24 Phase 2, T130): paint the putting green, then the chipping green and its bunker, in the practice area
- *  beside the range (the hint bar's Show me pans there and picks the brush) */
+/** a range start's teaching ramp (plan P24 Phase 2, T130): build the putting green, then the chipping green and its bunker, in the practice
+ *  area beside the range (the hint bar's Show me pans there and arms Facilities ▸ Practice with it: T206) */
 export const PRACTICE_HINTS: readonly FirstRunHint[] = [
   {
     id: 'hint-practice-putting',
     stage: 1,
-    title: 'Paint a putting green',
-    body: 'Drag the Green brush in the Practice area beside the car park: 300 m² with its fringe opens it (+10% visitors, $2 a golfer).',
-    targetTool: 'course',
+    title: 'Build a putting green',
+    body: 'Facilities ▸ Practice ▸ Putting green: move it over the Practice area beside the car park and click (+10% visitors, $2 a golfer).',
+    targetTool: 'practice',
     show: true,
   },
   {
     id: 'hint-practice-chipping',
     stage: 1,
-    title: 'Now a chipping green and a bunker',
-    body: 'Paint a second, smaller green in the Practice area (200 m²), then a bunker beside it with the Bunker brush.',
-    targetTool: 'course',
+    title: 'Now a chipping green and bunker',
+    body: 'Facilities ▸ Practice ▸ Chipping green and bunker: it comes with its practice bunker and a mat to chip from.',
+    targetTool: 'practice',
     show: true,
   },
 ];
@@ -259,7 +259,7 @@ export function isStuck(f: PlayerProgressFacts): boolean {
 export const RAMP_TAKINGS = 20000;
 /** the ramp step each tool opens at in a range start (the rest follow the stages): Holes and Paths with the first upgrade (to paint the
  *  practice greens), Props once the putting green opens, Buildings (the clubhouse) with New hole */
-export const RAMP_TOOL_STEP: Readonly<Partial<Record<UiToolId, RampStep>>> = Object.freeze({ course: 1, path: 1, props: 2, buildings: 3 });
+export const RAMP_TOOL_STEP: Readonly<Partial<Record<UiToolId, RampStep>>> = Object.freeze({ course: 1, path: 1, practice: 1, props: 2, buildings: 3 }); // T206: the practice tools open with the first range upgrade, as the brushes that painted them did
 /** what opens each ramp step, as a locked tool's tooltip says it */
 export const RAMP_WHY: Readonly<Record<RampStep, string>> = Object.freeze({
   0: '',
@@ -269,7 +269,7 @@ export const RAMP_WHY: Readonly<Record<RampStep, string>> = Object.freeze({
 });
 /** the toast as each ramp step opens */
 export const RAMP_TOAST: Readonly<Partial<Record<RampStep, string>>> = Object.freeze({
-  1: 'The Practice area is open: paint a putting green beside the car park (Holes)',
+  1: 'The Practice area is open: build a putting green beside the car park (Facilities ▸ Practice)',
   2: 'Props are open (Z): dress the range to draw more golfers',
   3: 'New hole is open: build your first hole, a par-3',
 });
