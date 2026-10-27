@@ -34,8 +34,8 @@ stays a Studio option. Ground textures follow [art/GROUND-TEXTURE-METHOD.md](art
 | --- | --- |
 | First cut | ✅ `first-cut-run` (#586); also every lawn (#591) |
 | Tee | ✅ `tee-run` (#590) |
-| Fringe | ⏳ the art agent |
-| Rough | next |
+| Fringe | 🎨 MID and FAR made; NEAR refused by RUN's safety filter (8 tries), retried with a new frame; held until NEAR exists |
+| Rough | ⏳ the art agent |
 | Fairway | Codex (18 of 24 jobs done) |
 | Golden fescue, lake, putting green v2 | ✅ (the art session, earlier) |
 | Greenkeeping conditions (section 10) | after the course surfaces |
