@@ -204,10 +204,10 @@ describe('save fixtures & golden tests (T043)', () => {
     // P22 2.7's year-20 band: 1,800-3,200 lots
     const lots = s.lots ?? [];
     assert.ok(lots.length >= 1800 && lots.length <= 3200, `${lots.length} lots`);
-    // the town's streets (gravel, the towns') keep 6 tiles off the golf land
+    // the town's streets (gravel, or paved by the town: T178) keep 6 tiles off the golf land
     const land = [g.course, g.parcel];
     for (const [ax, ay, bx, by, cls, , , town] of s.segs) {
-      if (cls !== 'gravel' || town !== 1) continue;
+      if ((cls !== 'gravel' && cls !== 'street') || town !== 1) continue;
       for (const [x, y, w, h] of land) for (let i = 0; i <= 10; i++) {
         const px = ax + (bx - ax) * i / 10, py = ay + (by - ay) * i / 10;
         assert.ok(Math.hypot(Math.max(x - px, 0, px - x - w), Math.max(y - py, 0, py - y - h)) >= 6 - 1e-6, `a town street at (${px}, ${py}) by the golf land`);
