@@ -6,7 +6,7 @@
   "sha256": "a0261d09a8e64e61421af4c0120db926c35e4260eef8e4d9c9d3848665b5b5ff",
   "date": "2026-10-26"
  },
- "revision": "99eff757e149",
+ "revision": "90860bdd8e3d",
  "display": {
   "minVisibleTiles": 2,
   "maxVisibleTiles": 4,
@@ -1464,6 +1464,217 @@
        "tb": 6.17,
        "h": 5.14,
        "v": 5.45
+      }
+     }
+    }
+   }
+  },
+  {
+   "id": "desert-run",
+   "materialId": "painted:desert-run",
+   "name": "Desert (painted, quilted)",
+   "kind": "sand",
+   "revision": "8af4509e3333",
+   "selection": null,
+   "provisional": true,
+   "light": null,
+   "mean": "#dc7d2e",
+   "levels": {
+    "near": {
+     "revision": "near-tiles-v2",
+     "folder": "art/theme-consistency/generated/ground/run-grass/desert/near/tiles-v2",
+     "native": [
+      1742,
+      902
+     ],
+     "decision": {
+      "file": null,
+      "sha256": null
+     },
+     "tiles": [
+      {
+       "id": "tile-01",
+       "file": "tiles/desert-run/near/tile-01.webp",
+       "sha256": "c1bb92ebc9d2b0b6bd99d71759e12c7cfaefa866738641c3a9a3bd65a496dd77",
+       "mean": "#dc7d2e",
+       "source": "art/theme-consistency/generated/ground/run-grass/desert/near/tiles-v2/tile-01.png"
+      },
+      {
+       "id": "tile-02",
+       "file": "tiles/desert-run/near/tile-02.webp",
+       "sha256": "868264782ef69dec13fb94d481a115b664a19e4055fb397ff788e0aea1a57d78",
+       "mean": "#dc7d2e",
+       "source": "art/theme-consistency/generated/ground/run-grass/desert/near/tiles-v2/tile-02.png"
+      },
+      {
+       "id": "tile-03",
+       "file": "tiles/desert-run/near/tile-03.webp",
+       "sha256": "b8b53f7d1796f749257aa968d4740068d12d8b889e06c486d75386463d638c40",
+       "mean": "#dc7d2e",
+       "source": "art/theme-consistency/generated/ground/run-grass/desert/near/tiles-v2/tile-03.png"
+      },
+      {
+       "id": "tile-04",
+       "file": "tiles/desert-run/near/tile-04.webp",
+       "sha256": "99d7d7d0b6eaa5095a03dfe64b29cd1ce137785ea31cd71ca303fb85fc97e3a3",
+       "mean": "#dc7d2e",
+       "source": "art/theme-consistency/generated/ground/run-grass/desert/near/tiles-v2/tile-04.png"
+      }
+     ],
+     "status": "the art session's finished near-tiles-v2 tiles (T191): four tiles that meet one another as made (finished-set-as-made, no heal); across any two tiles wrap LR 9.08 -> 10.26 (inside 10.04), TB 12.58 -> 13.39 (inside 12.22)",
+     "heal": {
+      "method": "finished-set-as-made",
+      "band": 0,
+      "fallback": "the art session's finished near-tiles-v2 tiles (T191)",
+      "before": {
+       "lr": 9.08,
+       "tb": 12.58,
+       "h": 9.61,
+       "v": 11.77
+      },
+      "healed": {
+       "lr": 9.08,
+       "tb": 12.58,
+       "h": 9.61,
+       "v": 11.77
+      },
+      "after": {
+       "lr": 10.26,
+       "tb": 13.39,
+       "h": 10.04,
+       "v": 12.22
+      }
+     }
+    },
+    "mid": {
+     "revision": "mid-tiles-v2",
+     "folder": "art/theme-consistency/generated/ground/run-grass/desert/mid/tiles-v2",
+     "native": [
+      1744,
+      902
+     ],
+     "decision": {
+      "file": null,
+      "sha256": null
+     },
+     "tiles": [
+      {
+       "id": "tile-01",
+       "file": "tiles/desert-run/mid/tile-01.webp",
+       "sha256": "dd360e2c5e69c13058cdfc71e952a63d80a489379ee0503faccd848b3dbb6e2d",
+       "mean": "#dc7d2e",
+       "source": "art/theme-consistency/generated/ground/run-grass/desert/mid/tiles-v2/tile-01.png"
+      },
+      {
+       "id": "tile-02",
+       "file": "tiles/desert-run/mid/tile-02.webp",
+       "sha256": "47e8c4bcba54e7ad0d83e8a2a9f215333c0c9c68d331af60d03a482e0a0fa7c3",
+       "mean": "#dc7d2e",
+       "source": "art/theme-consistency/generated/ground/run-grass/desert/mid/tiles-v2/tile-02.png"
+      },
+      {
+       "id": "tile-03",
+       "file": "tiles/desert-run/mid/tile-03.webp",
+       "sha256": "6592e3ce021576358058a2863db1b4aa5454995fa4e3510e8d0e22ec5292cc69",
+       "mean": "#dc7d2e",
+       "source": "art/theme-consistency/generated/ground/run-grass/desert/mid/tiles-v2/tile-03.png"
+      },
+      {
+       "id": "tile-04",
+       "file": "tiles/desert-run/mid/tile-04.webp",
+       "sha256": "2e18fe334cd5da7d42a02f139fcda23173afee8810e102a83f4ab22abac5e92e",
+       "mean": "#dc7d2e",
+       "source": "art/theme-consistency/generated/ground/run-grass/desert/mid/tiles-v2/tile-04.png"
+      }
+     ],
+     "status": "the art session's finished mid-tiles-v2 tiles (T191): four tiles that meet one another as made (finished-set-as-made, no heal); across any two tiles wrap LR 6.88 -> 8.06 (inside 6.19), TB 8.66 -> 9.4 (inside 8.21)",
+     "heal": {
+      "method": "finished-set-as-made",
+      "band": 0,
+      "fallback": "the art session's finished mid-tiles-v2 tiles (T191)",
+      "before": {
+       "lr": 6.88,
+       "tb": 8.66,
+       "h": 5.91,
+       "v": 7.85
+      },
+      "healed": {
+       "lr": 6.88,
+       "tb": 8.66,
+       "h": 5.91,
+       "v": 7.85
+      },
+      "after": {
+       "lr": 8.06,
+       "tb": 9.4,
+       "h": 6.19,
+       "v": 8.21
+      }
+     }
+    },
+    "far": {
+     "revision": "far-tiles-v2",
+     "folder": "art/theme-consistency/generated/ground/run-grass/desert/far/tiles-v2",
+     "native": [
+      1742,
+      902
+     ],
+     "decision": {
+      "file": null,
+      "sha256": null
+     },
+     "tiles": [
+      {
+       "id": "tile-01",
+       "file": "tiles/desert-run/far/tile-01.webp",
+       "sha256": "d2396b8caa27b3cd8c9c0f91d972fce384e50119a59abe21c0a7e3dbf3ac1f60",
+       "mean": "#dc7d2e",
+       "source": "art/theme-consistency/generated/ground/run-grass/desert/far/tiles-v2/tile-01.png"
+      },
+      {
+       "id": "tile-02",
+       "file": "tiles/desert-run/far/tile-02.webp",
+       "sha256": "6db71a8001451350baad4f67ae348aa37028814b499afe8606c28c13d5ff228c",
+       "mean": "#dc7d2e",
+       "source": "art/theme-consistency/generated/ground/run-grass/desert/far/tiles-v2/tile-02.png"
+      },
+      {
+       "id": "tile-03",
+       "file": "tiles/desert-run/far/tile-03.webp",
+       "sha256": "05982384566819224ea566f819c013af13f6688d556e2242bb55527076baab97",
+       "mean": "#dc7d2e",
+       "source": "art/theme-consistency/generated/ground/run-grass/desert/far/tiles-v2/tile-03.png"
+      },
+      {
+       "id": "tile-04",
+       "file": "tiles/desert-run/far/tile-04.webp",
+       "sha256": "b4ee9e0878b2e3de4db877b488743dd026e238ad81813e74391c09e758878665",
+       "mean": "#dc7d2e",
+       "source": "art/theme-consistency/generated/ground/run-grass/desert/far/tiles-v2/tile-04.png"
+      }
+     ],
+     "status": "the art session's finished far-tiles-v2 tiles (T191): four tiles that meet one another as made (finished-set-as-made, no heal); across any two tiles wrap LR 5.88 -> 6.91 (inside 5.59), TB 6.44 -> 7.08 (inside 7.54)",
+     "heal": {
+      "method": "finished-set-as-made",
+      "band": 0,
+      "fallback": "the art session's finished far-tiles-v2 tiles (T191)",
+      "before": {
+       "lr": 5.88,
+       "tb": 6.44,
+       "h": 5.33,
+       "v": 7.16
+      },
+      "healed": {
+       "lr": 5.88,
+       "tb": 6.44,
+       "h": 5.33,
+       "v": 7.16
+      },
+      "after": {
+       "lr": 6.91,
+       "tb": 7.08,
+       "h": 5.59,
+       "v": 7.54
       }
      }
     }
