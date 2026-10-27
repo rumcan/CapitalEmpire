@@ -18,7 +18,7 @@ import { SURF } from './ext/course-grid';
 import { SPROUT_PERIOD, growDraws, seedColour, seedSprouts, sproutRes, type GrowDraw } from './ext/course-fx/seed';
 import { courseImages, courseRes, lineField } from './ext/course-grid/field';
 import { type GrassCellView } from './ext/grass-management';
-import { grassOverlay, livingKeepsOff } from './lawn-overlay';
+import { grassOverlay } from './lawn-overlay';
 import { surfaceOfTex } from './golf/costs';
 import { CELL as COURSE_CELL } from './golf/paintcourse';
 import { AREA_SHADE, EDGE_LOOKS, areaLightEdge, areaShadeImages, areaShadeReach, areaShadow, bandRamp, edgeBox, edgeField, edgeImages, edgeReach, edgeRes, featherTiles, litBox, type EdgeImage } from './paint-edges';
@@ -31,7 +31,7 @@ import { coversMap } from './painted-families';
 import { bandOf, cellsIn, snappedCell, tileIndex, tileKey, tilePermutation, tileSize } from './painted-tiles';
 import { WOODLAND, lawnTexFor } from './painted-surfaces';
 import { BLEND_WAVES, blendAlpha, blendNoise, trimLru } from './painted-grass-lod';
-import { CasterStore, COURSE_GRASSY, COURSE_WATER, SHADOW_DIR, debugImage, grassyTex, influence, livingMasks, livingQueryBox, livingRes, livingSignature, waterTex, type Box, type InfluenceGrid, type LivingMasks, type RoadPiece, type WaterLine } from './living-ground';
+import { LIVING_AO, CasterStore, COURSE_GRASSY, COURSE_WATER, SHADOW_DIR, debugImage, grassyTex, influence, livingMasks, livingQueryBox, livingRes, livingSignature, waterTex, type Box, type InfluenceGrid, type LivingMasks, type RoadPiece, type WaterLine } from './living-ground';
 /** the bytes of painted compositions a worker keeps (a chunk's look is about 3 MB at the closest zoom; the bake in progress keeps all of its own) */
 const COMPOSED_BYTES = 64 << 20;
 /** a painted composition is made and kept in squares of this many chunk px (only the part of a chunk a surface uses is composed) */
@@ -969,8 +969,7 @@ export class GroundPainter {
     const rings = (rs: readonly ArrayLike<number>[]) => { const q = new Path2D(); for (const r of rs) ringPath(q, r); ex.push({ path: q, rule: 'evenodd' }); };
     for (const p of lots) {
       if (p.course) { for (const l of p.course.layers) { if ((!COURSE_GRASSY.has(l.s) || tiled(l.tex)) && l.fill.length) rings(l.fill); if (l.collar && l.collar.n !== 'bank' && l.collar.fill.length) rings(l.collar.fill); } if (p.course.walls) walls.push(...p.course.walls); continue; }
-      // T181: a lot's lawn is laid as authored too (lawn-overlay.ts): the variants were the "transparent colour mask" over the yards
-      if (!livingKeepsOff(p, grassyTex, tiled)) continue;
+      if (p.top || p.layby || p.lawn || p.tex === 'marks' || (grassyTex(p.tex) && !tiled(p.tex))) continue;
       ex.push({ path: polyPath(p.pts), rule: 'nonzero' });
     }
     const wallPath = walls.length ? wallFaces(walls) : null;
@@ -1040,7 +1039,9 @@ export class GroundPainter {
     }
     // ---- the ambient occlusion: a cool multiply over everything, the foundations and paving too, but never over a course wall's face (its
     //      own light and shade, T099): there the shade layer is white
-    if (m.max.ao > 0.01) {
+    // T181b (the owner: "what i dont like is the blanked color transparency over everything hiding the texture detail"): off (LIVING_AO); it
+    //      took a fifth of a lawn's detail and darkened it a quarter, cool, wherever a house, tree or fence stood near: most of a town
+    if (LIVING_AO && m.max.ao > 0.01) {
       if (!wallPath) put(ctx, m.ao, 'multiply');
       else {
         const ab = this.buffer('livingAo', W, H), ag = ctx2d(ab); ag.fillStyle = '#fff'; ag.fillRect(0, 0, W, H); put(ag, m.ao, 'source-over');

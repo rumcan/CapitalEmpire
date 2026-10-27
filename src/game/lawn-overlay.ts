@@ -1,9 +1,7 @@
-// A lot's lawn is laid as authored (T181, the owner 2026-10-27: "lawns have an auto transparent color mask over them please remove"): the
-// ground's automatic overlays leave a lot's yard alone. They were the living ground's variants (T111: the lush green multiplied along fences
-// and hedges, the soil's colour on thin grass under trees and by doors, bare soil, leaf litter), laid over every lawn, and the grass condition
-// picture (the Grass panel's strength), laid over every lawn when it was turned up. The Grass panel's health colours (a view the player turns
-// on) still show over a lawn, as on the course; the ambient occlusion (the light, not a colour) still shades it. A road block's grass (the
-// town's grass in soft patches, lawns.ts blockLawn) and the course keep every overlay, as before. Pure.
+// A lot's lawn and the grass condition picture (T181, the owner 2026-10-27: "lawns have an auto transparent color mask over them please
+// remove"): the condition picture (the Grass panel's strength, when it is turned up) leaves a lot's yard alone; the Grass panel's health
+// colours (a view the player turns on) still show over it, as on the course. The living ground's streaks (T111) are laid over lawns again
+// (T181b: the owner likes them); the wash the owner meant was its ambient occlusion (living-ground.ts LIVING_AO). Pure.
 import { grassSurface } from './ext/grass-management';
 
 /** a lawn patch's layer: 1 a lot's own yard (lawns.ts lotLawn), 0 a road block's grass under the lots (blockLawn) */
@@ -20,12 +18,4 @@ export function grassOverlay(p: LawnLike, heat: boolean, tiled: (tex: string) =>
   if (heat) return 'heat';
   if (isLotLawn(p) || tiled(p.tex)) return 'none';
   return 'picture';
-}
-
-/** whether the living ground's variants leave a lot patch alone (the cut-out list): hard ground and non-grass paint as before (the caller's
- *  rule), and now a lot's lawn; a road block's grass and the map grass keep the variety */
-export function livingKeepsOff(p: LawnLike & { top?: boolean; layby?: unknown }, grassy: (tex: string) => boolean, tiled: (tex: string) => boolean): boolean {
-  if (isLotLawn(p)) return true;
-  if (p.top || p.layby || p.lawn || p.tex === 'marks' || (grassy(p.tex) && !tiled(p.tex))) return false;
-  return true;
 }
