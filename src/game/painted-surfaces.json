@@ -3,8 +3,8 @@
  "surfaces": {
   "green": { "family": "putting-green", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "fringe": { "family": "fringe", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
-  "fairway": { "family": "fairway-paint", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
-  "firstCut": { "family": "emerald-medium", "version": null, "scale": 1, "tint": "#ffffff", "tone": -0.04 },
+  "fairway": { "family": "fringe", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
+  "firstCut": { "family": "fringe", "version": null, "scale": 1.25, "tint": "#ffffff", "tone": -0.05 },
   "tee": { "family": "emerald-short", "version": null, "scale": 0.5, "tint": "#ffffff", "tone": 0.03 },
   "sod": { "family": "emerald-short", "version": "v1", "scale": 0.75, "tint": "#ffffff", "tone": 0 },
   "rough": { "family": "rough-owner", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
@@ -40,7 +40,7 @@
  "presets": {
   "lawns": { "family": "emerald-short", "version": null, "scale": 0.75, "tint": "#ffffff", "tone": 0 },
   "path-worn": { "family": "underground-earth", "version": "v2", "scale": 0.5, "tint": "#b0b4e8", "tone": 0 },
-  "range-outfield": { "family": "emerald-short", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0.02 },
+  "range-outfield": { "family": "fringe", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0.02 },
   "range-green": { "family": "putting-green-v2", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 }
  }
 }
