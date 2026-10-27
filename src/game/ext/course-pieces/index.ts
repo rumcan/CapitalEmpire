@@ -23,13 +23,13 @@ export const PIECE_BUTTONS: readonly { arch: CoursePieceArchetype; kind: SnapPie
   { arch: 'path-stub', kind: 'path', name: 'Cart path' },
 ];
 
-/** the painted areas a new piece can snap to: the course areas with a piece kind (rough is not a target). An area without a kind takes its
+/** the painted areas a new piece can snap to: the course areas with a piece kind (rough and the T222 waste area are not targets). An area without a kind takes its
  *  texture's (the generated course and preset holes carry none); a piece's under-layers (they carry an order) stay out */
 export function snapTargets(areas: readonly (Pick<PaintArea, 'id' | 'pts' | 'kind' | 'hole'> & { tex?: string; order?: number })[]): SnapTargetArea[] {
   const out: SnapTargetArea[] = [];
   for (const a of areas) {
     const k = a.kind ?? (a.order === undefined && a.tex ? kindOfTex(a.tex) : undefined);
-    if (k && k !== 'rough') out.push({ id: a.id, kind: k, pts: a.pts, ...(a.hole ? { hole: a.hole } : {}) });
+    if (k && k !== 'rough' && k !== 'waste') out.push({ id: a.id, kind: k, pts: a.pts, ...(a.hole ? { hole: a.hole } : {}) });
   }
   return out;
 }
