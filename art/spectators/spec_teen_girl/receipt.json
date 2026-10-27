@@ -1,0 +1,14 @@
+{
+  "image": "art/spectators/pics/spec_teen_girl.png",
+  "look": "Teenage girl of about 15 at a 1985 golf tournament, long dark hair, a plain white t-shirt, a sweatshirt tied round the waist, jeans, sneakers. Plain clothes, no logos, no lettering",
+  "modelUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/threedgen/AFjPSjQH9kbcCl57sgO3/35c394a6-6590-4643-90a2-2468a67442b6/model.compressed.glb",
+  "rigFrom": "base_woman (local rig transfer, rig-local-person.mjs)",
+  "clipsFrom": {
+    "walk": "base_woman",
+    "idle": "base_woman",
+    "clap": "base_woman",
+    "cheer": "base_woman",
+    "sit": "base_woman",
+    "sit_clap": "base_woman"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "image": "art/people3d/pics/town_k_boy.png",
+  "look": "Nine-year-old boy from a 1985 small American town, a striped t-shirt, blue jeans, sneakers, messy hair. No logos, no lettering",
+  "modelUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/threedgen/AFjPSjQH9kbcCl57sgO3/22aafcba-9d2a-4403-b3e6-07ad8cfbd09a/model.compressed.glb",
+  "rigFrom": "base_kid (local rig transfer, rig-local-person.mjs)",
+  "clipsFrom": {
+    "walk": "base_kid",
+    "idle": "base_kid"
+  }
+}
