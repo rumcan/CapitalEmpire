@@ -99,6 +99,9 @@ export class GroundCache {
   /** the living ground is baked at all (its variety, or the debug view of its maps) */
   get livingActive() { return this.living.on || this.living.debug; }
   /** Ground variety or its debug view changed: every worker switches and every chunk is baked again (each keeps its old picture until then) */
+  /** T204: the rugged edges on or off (the dev switch: window.__game.ground.setRugged(false) compares the looks and the bake times) */
+  rugged = true;
+  setRugged(on: boolean) { if (on === this.rugged) return; this.rugged = on; this.broadcast({ t: 'rugged', on }); this.invalidateAll(); }
   setLiving(on: boolean, debug: boolean) { if (on === this.living.on && debug === this.living.debug) return; this.living = { on, debug }; this.broadcast({ t: 'living', on, debug }); this.invalidateAll(); }
   /** the caster records last sent, by key, and the edits waiting for the next pump (null: the key goes) */
   private casterSent = new Map<string, Float32Array>(); private casterQueue = new Map<string, Float32Array | null>(); private casterPrefixes: string[] = [];

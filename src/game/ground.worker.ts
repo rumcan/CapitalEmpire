@@ -101,6 +101,7 @@ const handle = async (m: ToWorker) => {
         break;
       }
       case 'living': painter.living = { on: m.on, debug: m.debug }; break;
+      case 'rugged': painter.rugged = m.on; break;
       case 'slopeLight': painter.slopeLight = m.strength; break;
       case 'lotground': {
         // the lazy photo textures the edit's paint areas use (fill and border, course surfaces and collars, wall art): built first, so the

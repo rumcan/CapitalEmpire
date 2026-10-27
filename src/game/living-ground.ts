@@ -131,6 +131,14 @@ export function vnoise(x: number, y: number, s: number) {
   const a = hash2(xi, yi, s), b = hash2(xi + 1, yi, s), c = hash2(xi, yi + 1, s), d = hash2(xi + 1, yi + 1, s);
   return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
 }
+/** T204 (the owner, 2026-10-27: open fescue "spotted with green blotches"): the open ground's patches, fewer and larger than openNoise's:
+ *  waves of about 88 m and 32 m, -1 (thin) .. 1 (lush); only their crests count (influence: past OPEN_PATCH_AT), never periodic */
+export function openPatch(x: number, y: number) {
+  const n = vnoise(x / 44 + 3.7, y / 44 - 8.1, 47) * 0.7 + vnoise(x / 16 - 1.3, y / 16 + 5.9, 49) * 0.3;
+  return Math.max(-1, Math.min(1, (n - 0.5) * 2.7));
+}
+/** where openPatch's crests start to count, and where they are full (lush above, thin below the negative) */
+export const OPEN_PATCH_AT: readonly [number, number] = [0.5, 0.78];
 /** the open ground's slow patches at tile (x, y), -1 (thin) .. 1 (lush): waves of about 44 m and 17 m (never a multiple of the grass's
  *  48, 96 or 192 m pictures) */
 export function openNoise(x: number, y: number) {
@@ -275,7 +283,7 @@ export function influence(box: Box, res: number, src: LivingSources): InfluenceG
   // the open noise is slow: sampled on a coarse lattice every 2 tiles of the world (the same points in every chunk, so seams agree) and stretched
   const step = Math.max(1, Math.round(res * 2)), ci0 = Math.floor(ix0 / step), cj0 = Math.floor(iy0 / step);
   const cw = Math.floor((ix0 + w - 1) / step) - ci0 + 2, chh = Math.floor((iy0 + h - 1) / step) - cj0 + 2, coarse = new Float32Array(cw * chh);
-  for (let j = 0; j < chh; j++) for (let i = 0; i < cw; i++) coarse[j * cw + i] = openNoise(((ci0 + i) * step + 0.5) / res, ((cj0 + j) * step + 0.5) / res);
+  for (let j = 0; j < chh; j++) for (let i = 0; i < cw; i++) coarse[j * cw + i] = openPatch(((ci0 + i) * step + 0.5) / res, ((cj0 + j) * step + 0.5) / res);
   const add = (v: number, ch: number) => ch + v * (1 - ch);
   for (let j = 0; j < h; j++) {
     const gj = iy0 + j, cj = Math.floor(gj / step), fy = (gj - cj * step) / step, rowB = (cj - cj0) * cw;
@@ -283,7 +291,8 @@ export function influence(box: Box, res: number, src: LivingSources): InfluenceG
       const q = j * w + i, gi = ix0 + i, ci = Math.floor(gi / step), fx = (gi - ci * step) / step, b0 = rowB + ci - ci0;
       const on = (coarse[b0]! * (1 - fx) + coarse[b0 + 1]! * fx) * (1 - fy) + (coarse[b0 + cw]! * (1 - fx) + coarse[b0 + cw + 1]! * fx) * fy;
       let L = lush[q]!, T = thin[q]!, B = bare[q]!, A = ao[q]!;
-      L = add(0.38 * sm(0.12, 0.6, on), L); T = add(0.24 * sm(0.2, 0.65, -on), T);
+      // the open ground: a few large patches (T204), whole grass of the one kind or the other
+      L = add(0.62 * sm(OPEN_PATCH_AT[0], OPEN_PATCH_AT[1], on), L); T = add(0.4 * sm(OPEN_PATCH_AT[0], OPEN_PATCH_AT[1], -on), T);
       if (fence) { const d = fence[q]!; if (d < BIG) { L = add(0.9 * near(0.6, 2.2, d), L); A = add(0.34 * near(0, 0.7, d), A); } }
       if (hedge) { const d = hedge[q]!; if (d < BIG) { L = add(0.92 * near(0.9, 2.8, d), L); A = add(0.42 * near(0, 1.0, d), A); } }
       if (wallL) { const d = wallL[q]!; if (d < BIG) { L = add(0.8 * near(0.7, 2.2, d), L); A = add(0.46 * near(0, 0.9, d), A); } }
@@ -445,3 +454,64 @@ export function doorToward(x0: number, y0: number, x1: number, y1: number, q: { 
 /** the ground-pixel width of a picture across (world px at the native scale, times its scale) as tiles on the ground: a circle r tiles round
  *  is 2 r x 64 sqrt 2 px wide on screen */
 export const pxAcross = (px: number) => px / (64 * Math.SQRT2);
+
+/* ---- T204: the lush and patchy variants with a rugged edge (renderer.ts drawLiving): each spot is the one grass or the other, the region where
+ *      a mask passes its level outlined (maskContours) and its edge broken by the tall grass's tufts (rugged-edges spillBlades), never two
+ *      paintings cross-faded at half alpha (the owner: a ghosted, pale green) ---- */
+/** the level (0..1 of the mask's alpha) where each variant starts: the lush grass laid whole inside its region, the patchy grass (going over
+ *  to soil) keeping its mask's depth inside, its fade cut off at its region's edge */
+export const LIVING_EDGE = { lush: 0.4, thin: 0.3 } as const;
+/** the closed outlines (flat x y rings, tiles) where a mask (RGBA, one px per sample, alpha the channel; the samples at x0 + (i + 0.5) / res)
+ *  crosses `level` (0..1): marching squares with linear interpolation, a saddle read by its centre, the grid's outside counted as below so every
+ *  outline closes. Each ring has the inside on its (dy, -dx) side, so a hole runs the other way round from its outer ring (fill them even-odd
+ *  or non-zero). Each piece of an
+ *  outline depends only on the four samples round it, so two chunks' grids that share samples draw the same outline there */
+export function maskContours(a: ArrayLike<number>, W: number, H: number, x0: number, y0: number, res: number, level: number): number[][] {
+  // (the level half way between two alpha steps: no sample sits exactly on it, so no crossing falls on a sample and no piece has no length)
+  const t = Math.floor(level * 255) + 0.5, PW = W + 2, PH = H + 2, v = new Float32Array(PW * PH).fill(-t);
+  for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) v[(j + 1) * PW + i + 1] = a[(j * W + i) * 4 + 3]! - t;
+  // the crossing on each edge: horizontal edge (i, j)-(i + 1, j) id 2 (j PW + i), vertical (i, j)-(i, j + 1) id 2 (j PW + i) + 1
+  const pt = (id: number): [number, number] => {
+    const k = id >> 1, i = k % PW, j = (k - i) / PW, a0 = v[k]!, a1 = id & 1 ? v[k + PW]! : v[k + 1]!, f = a0 / (a0 - a1);
+    const gi = id & 1 ? i : i + f, gj = id & 1 ? j + f : j;
+    return [x0 + (gi - 1 + 0.5) / res, y0 + (gj - 1 + 0.5) / res];
+  };
+  const next = new Map<number, number>();
+  /** links the directed piece e1 -> e2 of cell (i, j), turned so the inside lies on its (dy, -dx) side (the cross of the piece and the way to
+   *  an inside corner is negative) */
+  const link = (i: number, j: number, e1: number, e2: number) => {
+    const [px, py] = pt(e1), [qx, qy] = pt(e2), mx = (px + qx) / 2, my = (py + qy) / 2;
+    // the corner nearest the piece's middle, and which side of the piece it lies on
+    let best = Infinity, cx = 0, cy = 0, inside = false;
+    for (const [di, dj] of [[0, 0], [1, 0], [1, 1], [0, 1]] as const) {
+      const X = x0 + (i + di - 1 + 0.5) / res, Y = y0 + (j + dj - 1 + 0.5) / res, d = (X - mx) ** 2 + (Y - my) ** 2;
+      if (d < best) { best = d; cx = X; cy = Y; inside = v[(j + dj) * PW + i + di]! > 0; }
+    }
+    const cr = (qx - px) * (cy - py) - (qy - py) * (cx - px);
+    if ((cr < 0) === inside) next.set(e1, e2); else next.set(e2, e1);
+  };
+  for (let j = 0; j + 1 < PH; j++) for (let i = 0; i + 1 < PW; i++) {
+    const k = j * PW + i, A = v[k]! > 0, B = v[k + 1]! > 0, C = v[k + PW + 1]! > 0, D = v[k + PW]! > 0;
+    const c = (A ? 8 : 0) | (B ? 4 : 0) | (C ? 2 : 0) | (D ? 1 : 0); if (c === 0 || c === 15) continue;
+    const T = 2 * k, R = 2 * (k + 1) + 1, Bo = 2 * (k + PW), L = 2 * k + 1;
+    const mid = (v[k]! + v[k + 1]! + v[k + PW + 1]! + v[k + PW]!) / 4 > 0;
+    switch (c) {
+      case 1: case 14: link(i, j, L, Bo); break;
+      case 2: case 13: link(i, j, Bo, R); break;
+      case 3: case 12: link(i, j, L, R); break;
+      case 4: case 11: link(i, j, T, R); break;
+      case 6: case 9: link(i, j, T, Bo); break;
+      case 7: case 8: link(i, j, T, L); break;
+      case 5: if (mid) { link(i, j, T, L); link(i, j, R, Bo); } else { link(i, j, T, R); link(i, j, L, Bo); } break;
+      case 10: if (mid) { link(i, j, T, R); link(i, j, L, Bo); } else { link(i, j, T, L); link(i, j, R, Bo); } break;
+    }
+  }
+  const out: number[][] = [], seen = new Set<number>();
+  for (const s0 of next.keys()) {
+    if (seen.has(s0)) continue;
+    const ring: number[] = []; let e: number | undefined = s0;
+    while (e !== undefined && !seen.has(e)) { seen.add(e); const [x, y] = pt(e); ring.push(x, y); e = next.get(e); }
+    if (ring.length >= 6) out.push(ring);
+  }
+  return out;
+}

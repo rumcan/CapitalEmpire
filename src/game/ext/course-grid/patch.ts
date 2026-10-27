@@ -8,7 +8,8 @@ import type { CourseLayer, CourseTex, LotPatch } from '../../ground-protocol';
 import type { EdgeProfile } from '../../paint-edges';
 import { MONTH_BASE } from './areas';
 import { growMask } from '../course-fx';
-import { chunkWalls, coversOf, defaultShadow, layerCode, surfHeights, teeStairs } from '../course-walls';
+import { DRAW_ORDER, LayerStack, chunkWalls, coversOf, defaultShadow, layerCode, surfHeights, teeStairs } from '../course-walls';
+import { SPILL_SURFACES, TALL_CODES, spillRuns } from '../course-walls/spill';
 
 /** a course chunk's side, tiles (128 cells) */
 export const COURSE_CHUNK = 64;
@@ -138,6 +139,12 @@ export function coursePatch(g: Grid, cx: number, cy: number, looks: CourseLooks,
   // the edges exactly as they will be drawn (capped), for the walls (T099): each layer's edges sorted into soft, joint and wall runs
   const capped = outs.map(o => ({ o, se: capPoints(o.fill, o.edges), ce: o.collar ? capPoints(o.collar.fill, o.collar.edges) : null }));
   const cw = chunkWalls(g, capped.flatMap(({ o, se, ce }) => [{ code: layerCode(o.surf, false), edges: se[1] }, ...(ce ? [{ code: layerCode(o.surf, true), edges: ce[1] }] : [])]), coversOf(outs), styles, heights);
+  // T204: where tall grass (the rough, the fescue, the map grass) meets the fairway or its first cut, read as the walls read their sides
+  const stack = new LayerStack(coversOf(outs), styles, DRAW_ORDER, heights), spill: { p: Float32Array; o: number }[] = [];
+  for (const { o, se, ce } of capped) if (SPILL_SURFACES.includes(o.surf)) {
+    for (const r of spillRuns(g, stack, layerCode(o.surf, false), se[1], TALL_CODES, styles)) spill.push({ p: Float32Array.from(r.p), o: r.o });
+    if (ce) for (const r of spillRuns(g, stack, layerCode(o.surf, true), ce[1], TALL_CODES, styles)) spill.push({ p: Float32Array.from(r.p), o: r.o });
+  }
   for (const { o, se: [fill, edges], ce } of capped) {
     const look = looks.surf[o.surf]!, r = cw.runs.get(layerCode(o.surf, false));
     const L: CourseLayer = { s: o.surf, ...texOf(look), e: SURF_EDGE[o.surf] ?? 'flat', fill: f32(fill), edges: f32(edges), soft: f32(r?.soft ?? []), joint: f32(r?.joint ?? []) };
@@ -158,14 +165,14 @@ export function coursePatch(g: Grid, cx: number, cy: number, looks: CourseLooks,
   const stairs = cw.walls.some(w => w.f && w.hs === SURF.tee) ? teeStairs(g, [x0, y0, x1, y1], paths, heights) : [];
   const st = stairs.length ? { st: stairs.flatMap(q => [q.x, q.y, q.nx, q.ny, q.half]) } : {};
   const sh = looks.shadow?.length ? { sh: Array.from({ length: 9 }, (_, s) => { const v = looks.shadow![s]; return v !== undefined && Number.isFinite(v) ? Math.min(1, Math.max(0, v)) : defaultShadow(s); }) } : {};
-  return { pts: [x0, y0, x1, y0, x1, y1, x0, y1], tex: 'grass', course: { cx, cy, size: S, layers, ...(walls.length ? { walls } : {}), ...(rims.length ? { rims } : {}), ...(grow ? { grow } : {}), ...sh, ...st, z: 0 } };
+  return { pts: [x0, y0, x1, y0, x1, y1, x0, y1], tex: 'grass', course: { cx, cy, size: S, layers, ...(walls.length ? { walls } : {}), ...(rims.length ? { rims } : {}), ...(grow ? { grow } : {}), ...sh, ...st, ...(spill.length ? { spill } : {}), z: 0 } };
 }
 
 /** the buffers of a patch's typed arrays (a postMessage transfer list) */
 export function patchBuffers(p: LotPatch): ArrayBuffer[] {
   const out: ArrayBuffer[] = [], c = p.course; if (!c) return out;
   for (const l of c.layers) for (const a of [...l.fill, ...l.edges, ...(l.soft ?? []), ...(l.joint ?? []), ...(l.collar ? [...l.collar.fill, ...l.collar.edges, ...(l.collar.soft ?? [])] : [])]) out.push(a.buffer as ArrayBuffer);
-  for (const w of [...(c.walls ?? []), ...(c.rims ?? [])]) out.push(w.p.buffer as ArrayBuffer);
+  for (const w of [...(c.walls ?? []), ...(c.rims ?? []), ...(c.spill ?? [])]) out.push(w.p.buffer as ArrayBuffer);
   if (c.grow) out.push(c.grow.buffer as ArrayBuffer);
   return out;
 }

@@ -90,7 +90,8 @@ test('the worn patch under a tree is no stamped disc: its own lumpy, stretched s
   assert.ok(barePx * 3 < thinPx, `soil ${barePx} px, thin ${thinPx} px`);
   // canopies overlapping run together into one woodland floor: between two trees 1.6 radii apart the ground stays thin, no gap of grass
   const pair = influence(BOX, 4, src(tree(16, 20, R), tree(16 + R * 1.6, 20, R)));
-  assert.ok(at(pair, 'thin', 16 + R * 0.8, 20) > 0.6, `the floor between them: ${at(pair, 'thin', 16 + R * 0.8, 20).toFixed(2)}`);
+  // (0.5: T204 took the open ground's thin patches from this spot, which used to add a little; the canopies alone still make the floor)
+  assert.ok(at(pair, 'thin', 16 + R * 0.8, 20) > 0.5, `the floor between them: ${at(pair, 'thin', 16 + R * 0.8, 20).toFixed(2)}`);
 });
 
 test('buildings darken round their foundations and wear the ground at the door; roads leave a worn edge and a lush verge; water a lush bank', () => {
