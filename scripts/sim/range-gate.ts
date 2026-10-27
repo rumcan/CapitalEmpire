@@ -22,10 +22,11 @@
 //       from the seed at year 5 (no ribbon). The plan's 200 and 350 hold on seeds 2 and 3 (centre 46 / 172 and 41 / 235); seed 1's seed lies
 //       among rivers and creeks on every side, and its town grows round them to 241 at year 5 and 371 at year 20 (a tighter ring, 90 + 9 x
 //       sqrt(built), moved it by 1 tile: the streets' land, not the lot picks, sets it), so the bounds are seed 1's with a margin;
-//   (k) every season has builds; City.step under 25 ms on average and under 120 ms at its worst over the whole run. Re-banded from 60 for T184:
-//       the town now drives (#442) and, with the junction rules, grows further, so a jam holds up to about 4,250 cars; one sim second (10 sim
-//       steps) of them measured 40-85 ms at its worst (seed 1 no-player: 83 ms, sim.step 78 ms of it, 3,731 cars; seeds 2-3 under 64 ms), the
-//       sim's own work at that load (GAME-PLAN 2.3's budget is 25 ms a 100 ms tick); the mean stays 5-7 ms.
+//   (k) every season has builds; City.step under 25 ms on average, and its 99.9th percentile second under 60 ms (the worst is printed).
+//       T184: the town now drives (#442) and, with the junction rules, grows further, so a jam holds up to about 4,250 cars, and one sim
+//       second (10 sim steps) of them costs 40-50 ms. The single worst second is noise on this shared PC: the same run twice gave 67.8 and
+//       47.6 ms, and the all-way-stop player's seeds 133, 129 and 34 ms. So the check is on the 99.9th percentile (29 seconds of the 28,800),
+//       at P22's 60 ms. The worst was first re-banded from 60 to 120 ms in #468.
 //   (m) the player run: the treasury never below zero at a season's end (T184).
 //
 // The checks (the bounds from main's numbers below, with a margin; THRESHOLDS):
@@ -61,7 +62,7 @@ const seed = Number(argv[0] ?? 1), days = Math.max(1, Math.round(Number(argv[1] 
 const GROWTH = {
   lots: { 1: [25, 60], 5: [220, 400], 10: [650, 1300], 20: [1800, 3200] } as Record<number, [number, number]>,
   pop: { 5: [500, 1000], 20: [4000, 7500] } as Record<number, [number, number]>,
-  centre: { 5: 260, 20: 400 } as Record<number, number>, RIBBON: 500, RIBBON_SHARE: 0.1, FIRST_LEG_H: 2, FIRST_LOT_H: 1, STEP_MEAN: 25, STEP_MAX: 120,
+  centre: { 5: 260, 20: 400 } as Record<number, number>, RIBBON: 500, RIBBON_SHARE: 0.1, FIRST_LEG_H: 2, FIRST_LOT_H: 1, STEP_MEAN: 25, STEP_P999: 60,
 };
 /** The two runs (T178, issue #443). The owner, 2026-10-27, on the jam #442's traffic brought: "Its gravel streets then jam from about season 7,
  *  houses decline ... this is seposed to happen btw. the guy hasto upgrade his town roads". So:
@@ -89,7 +90,9 @@ const NO_PLAYER = {
 };
 const DECLINE = 1.8;
 /** the player run's work a season: at most MAX_J junction fixes and MAX_L road upgrades, never below RESERVE in the treasury */
-const PLAYER = { MAX_J: 60, MAX_L: 20, RESERVE: 0, TOOL: (process.env.PLAYER_TOOL === 'stop' ? 'stop' : 'mini') as 'mini' | 'stop' };
+/** the player's junction tool: an all-way stop (T184: on seeds 1-3 it reaches P22's bands for $58-76k and takes no land; a mini-roundabout
+ *  cuts the jam more but re-cuts its corner lots, 558 on seed 1, and the town then misses its bands; PLAYER_TOOL=mini measures it) */
+const PLAYER = { MAX_J: 60, MAX_L: 20, RESERVE: 0, TOOL: (process.env.PLAYER_TOOL === 'mini' ? 'mini' : 'stop') as 'mini' | 'stop' };
 /** the scripted course and success of season k (1-based): holes 2, then 9 in seasons 2-5, 18 from 6; success 1.0, then 1.2 from season 3 */
 const holesIn = (k: number) => (k <= 1 ? 2 : k <= 5 ? 9 : 18), successIn = (k: number) => (k <= 2 ? 1 : 1.2);
 
@@ -239,13 +242,13 @@ const growth = seasons ? {
   h_bands: [1, 5, 10, 20].every(k => !yr(k) || (inBand(yr(k)!.built, (player ? GROWTH : NO_PLAYER).lots[k]) && inBand(yr(k)!.pop, (player ? GROWTH : NO_PLAYER).pop[k]))),
   i_land: seasonsOut.every(z => z.nearLand === 0 && z.onLand === 0),
   j_compact: [5, 20].every(k => !yr(k) || (yr(k)!.centreD ?? 0) <= GROWTH.centre[k]!) && (!yr(5) || yr(5)!.ribbon < GROWTH.RIBBON_SHARE),
-  k_builds_steps: seasonsOut.every(z => z.builds > 0) && mean(cityMs) < GROWTH.STEP_MEAN && Math.max(...cityMs) < GROWTH.STEP_MAX,
+  k_builds_steps: seasonsOut.every(z => z.builds > 0) && mean(cityMs) < GROWTH.STEP_MEAN && q(cityMs, 0.999) < GROWTH.STEP_P999,
   // the player run never goes broke (T184: the owner's fair challenge)
   m_money: !player || seasonsOut.every(z => z.money >= 0),
 } : {};
 Object.assign(checks, growth);
 if (seasons) console.log(`[range] ${player ? 'player run' : 'no-player run'}, seed ${seed}${player ? `: ${roads.minis} mini-roundabouts, ${roads.rings} all-way stops, ${roads.segs} segs upgraded (${roads.tiles} tiles) for $${roads.cost}, ${roads.lotsLost} lots re-cut; the treasury at its lowest $${Math.min(...seasonsOut.map(z => z.money))}` : ''}`);
-if (seasons) console.log(`[range] growth, seed ${seed}: first leg at ${firstLeg} s, first lot at ${firstLot} s; ${[1, 5, 10, 20].filter(k => yr(k)).map(k => `year ${k}: ${yr(k)!.built} lots, ${yr(k)!.pop} residents, centre ${yr(k)!.centreD}`).join('; ')}; ribbon at year 5 ${yr(5) ? (100 * yr(5)!.ribbon).toFixed(1) + '%' : '-'}; City.step over ${seasons} seasons mean ${r2(mean(cityMs))} ms, max ${r2(Math.max(...cityMs))}`);
+if (seasons) console.log(`[range] growth, seed ${seed}: first leg at ${firstLeg} s, first lot at ${firstLot} s; ${[1, 5, 10, 20].filter(k => yr(k)).map(k => `year ${k}: ${yr(k)!.built} lots, ${yr(k)!.pop} residents, centre ${yr(k)!.centreD}`).join('; ')}; ribbon at year 5 ${yr(5) ? (100 * yr(5)!.ribbon).toFixed(1) + '%' : '-'}; City.step over ${seasons} seasons mean ${r2(mean(cityMs))} ms, p99.9 ${r2(q(cityMs, 0.999))} ms, max ${r2(Math.max(...cityMs))}`);
 const pass = Object.values(checks).every(Boolean);
 console.log(`[range] seed ${seed}, ${out.length} town days: golfers ${golfers} (a day ${Math.min(...gd)}-${Math.max(...gd)}), lost ${lost} (${r1(100 * lost / Math.max(1, golfers + lost))}%), takings $${Math.round(takings)} (a day $${Math.round(Math.min(...td))}-$${Math.round(Math.max(...td))}); `
   + `cleared by 05:00 on ${full.filter(d => d.carsAt5 === 0 && d.visitsAt5 === 0).length}/${full.length} days; overlaps ${overlaps}/${samples} samples (${r2(100 * overlaps / Math.max(1, samples))}%; ${Object.entries(where).map(([k, v]) => `${k} ${v}`).join(', ') || 'none'}), closest ${r2(Math.min(...out.map(d => d.minGap ?? Infinity)))} tiles; `
