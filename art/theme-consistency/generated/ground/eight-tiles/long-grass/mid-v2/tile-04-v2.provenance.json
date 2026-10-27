@@ -1,0 +1,19 @@
+{
+  "id": "material-texture:long-grass:mid:uniform-variant-4-v2",
+  "material": "long-grass",
+  "zoom": "mid",
+  "stage": "uniform-variant-4",
+  "source": "art/theme-consistency/generated/ground/scene-backgrounds/long-grass/mid-uniform-background-v2.raw.png",
+  "output": "art/theme-consistency/generated/ground/eight-tiles/long-grass/mid-v2/tile-04-v2.raw.png",
+  "provenance": "art/theme-consistency/generated/ground/eight-tiles/long-grass/mid-v2/tile-04-v2.provenance.json",
+  "prompt": "Paint a DIFFERENT natural arrangement of the SAME long green golf rough as this FULL reference, variation 4 of four at the SAME mid camera and EXACT apparent grass size. Keep the detailed hand-painted town art and same dense fine tuft/leaf structure. Preserve mean olive-green palette and small restrained golden-green tips. Shift the individual small tufts and organic groupings to make a distinct field view, but NO new large dark shapes, clump islands, clearings or landmarks. No zoom, enlarging grass or changing projection.\nHIGHEST PRIORITY: even overall illumination across the ENTIRE image. All corners, edges and centre have the SAME mean exposure and green/yellow balance. No upper-right bright area or lower-left dark area, no broad light/shade swathes, diagonal bands/windrows, spotlight, vignette or dark edge frame. No overly bright seedheads. Diffuse ambient fills all regions. Sun stays SCREEN UPPER RIGHT ONLY as subtle small-scale tuft highlights, with shallow soft shade locally at tuft lower-left: never an image-wide brightness gradient. The field's material variation remains small, low-contrast and similarly distributed everywhere. Do NOT add any cast shadows or distant tree/building lighting.\nKeep calm uniform edge context and at least the outer192pixels as visually close to the supplied frame as possible, preserving exposure and detail scale there; do not invent a border/frame. Four images need to sit together without visible tone panels. No objects, buildings, roads, trees, props, people, letters or UI. Entire image is grass, opaque same-size WIDE PNG. No photographic grain. At the final delivery, this background will form one large interchangeable ground tile: edge regions must have even matching colour and exposure with no light-to-dark falloff.",
+  "date": "2026-10-26",
+  "generator": "image_gen",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-55e8cc9d-ec8f-4b87-8ea4-e2c8720ddf00.png",
+  "sourceSha256": "6605fd9d40226a54a834e231f129d630cc1edfa36bd6e5157b43f3871b31ca09",
+  "processing": "Native generator output copied byte-for-byte; direct scene removal. No code repaint, recolour, warp or resample.",
+  "camera": "Same mid source screenshot camera and apparent surface detail scale requested; no declared top-down/world coverage.",
+  "lighting": "UPPER RIGHT → LOWER LEFT",
+  "integrationStatus": "art-only-not-integrated",
+  "reviewStatus": "pending reference appearance, object-removal and lighting review"
+}

@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "primaryTile01Source": "art/theme-consistency/generated/ground/eight-tiles/long-grass/near-v2/tile-01.png",
+  "jobs": [
+    {
+      "id": "material-texture:long-grass:near:tonematched-variant-2-v3",
+      "material": "long-grass",
+      "zoom": "near",
+      "stage": "tonematched-variant-v3",
+      "source": "art/theme-consistency/generated/ground/eight-tiles/long-grass/near-v2/tile-01.png",
+      "output": "art/theme-consistency/generated/ground/eight-tiles/long-grass/near-v3/tile-02-v3.raw.png",
+      "provenance": "art/theme-consistency/generated/ground/eight-tiles/long-grass/near-v3/tile-02-v3.provenance.json",
+      "prompt": "Edit this FULL wide painted field very conservatively. Keep EXACT same apparent grass scale, camera, warm-olive green palette, exposure, seedheads and overall density. Produce alternate natural arrangement number2 by rearranging individual small tufts ONLY through the middle60percent of the frame. Preserve the whole outer200pixel perimeter as nearly identical as possible. Change no mean colour or overall brightness. Every200x200area should have same average greenbrightness as corresponding sourcearea; any moved clump is replaced by equally bright local grass. Do not darken the centre, edges, corners or lowerleft; NO broad dark islands, frame, diagonal windrow, stripe, vignette or spotlight. Maintain a gently uniform field of small grass tufts with local upperright highlights ONLY, lowerleft short ambient undersides, overall ambient exposure even across entireframe. New tiny arrangements, no existing clump larger, no bushes or new objects. Keep fullnativewideframe and paintedstyle; no text/UI/roads/buildings. Return complete same-size opaquePNG. Last production constraint: these alternate largegroundpaintings mustjoin and maintainexacttonematch to thisreference."
+    },
+    {
+      "id": "material-texture:long-grass:near:tonematched-variant-3-v3",
+      "material": "long-grass",
+      "zoom": "near",
+      "stage": "tonematched-variant-v3",
+      "source": "art/theme-consistency/generated/ground/eight-tiles/long-grass/near-v2/tile-01.png",
+      "output": "art/theme-consistency/generated/ground/eight-tiles/long-grass/near-v3/tile-03-v3.raw.png",
+      "provenance": "art/theme-consistency/generated/ground/eight-tiles/long-grass/near-v3/tile-03-v3.provenance.json",
+      "prompt": "Edit this FULL wide painted field very conservatively. Keep EXACT same apparent grass scale, camera, warm-olive green palette, exposure, seedheads and overall density. Produce alternate natural arrangement number3 by rearranging individual small tufts ONLY through the middle60percent of the frame. Preserve the whole outer200pixel perimeter as nearly identical as possible. Change no mean colour or overall brightness. Every200x200area should have same average greenbrightness as corresponding sourcearea; any moved clump is replaced by equally bright local grass. Do not darken the centre, edges, corners or lowerleft; NO broad dark islands, frame, diagonal windrow, stripe, vignette or spotlight. Maintain a gently uniform field of small grass tufts with local upperright highlights ONLY, lowerleft short ambient undersides, overall ambient exposure even across entireframe. New tiny arrangements, no existing clump larger, no bushes or new objects. Keep fullnativewideframe and paintedstyle; no text/UI/roads/buildings. Return complete same-size opaquePNG. Last production constraint: these alternate largegroundpaintings mustjoin and maintainexacttonematch to thisreference."
+    },
+    {
+      "id": "material-texture:long-grass:near:tonematched-variant-4-v3",
+      "material": "long-grass",
+      "zoom": "near",
+      "stage": "tonematched-variant-v3",
+      "source": "art/theme-consistency/generated/ground/eight-tiles/long-grass/near-v2/tile-01.png",
+      "output": "art/theme-consistency/generated/ground/eight-tiles/long-grass/near-v3/tile-04-v3.raw.png",
+      "provenance": "art/theme-consistency/generated/ground/eight-tiles/long-grass/near-v3/tile-04-v3.provenance.json",
+      "prompt": "Edit this FULL wide painted field very conservatively. Keep EXACT same apparent grass scale, camera, warm-olive green palette, exposure, seedheads and overall density. Produce alternate natural arrangement number4 by rearranging individual small tufts ONLY through the middle60percent of the frame. Preserve the whole outer200pixel perimeter as nearly identical as possible. Change no mean colour or overall brightness. Every200x200area should have same average greenbrightness as corresponding sourcearea; any moved clump is replaced by equally bright local grass. Do not darken the centre, edges, corners or lowerleft; NO broad dark islands, frame, diagonal windrow, stripe, vignette or spotlight. Maintain a gently uniform field of small grass tufts with local upperright highlights ONLY, lowerleft short ambient undersides, overall ambient exposure even across entireframe. New tiny arrangements, no existing clump larger, no bushes or new objects. Keep fullnativewideframe and paintedstyle; no text/UI/roads/buildings. Return complete same-size opaquePNG. Last production constraint: these alternate largegroundpaintings mustjoin and maintainexacttonematch to thisreference."
+    }
+  ]
+}

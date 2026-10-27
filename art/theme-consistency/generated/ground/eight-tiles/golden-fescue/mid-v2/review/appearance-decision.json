@@ -1,0 +1,80 @@
+{
+  "schema": 1,
+  "reviewedDate": "2026-10-26",
+  "reviewer": "/root/fescue_scale_review",
+  "material": "golden-fescue",
+  "zoom": "mid",
+  "revision": "v2",
+  "activeVariants": 4,
+  "decision": "accepted-for-art-appearance",
+  "scope": "Independent saved-PNG material and adjacency review; not runtime integration or owner signoff",
+  "comparisonWithV1": "The previous washed bright collar against a darker interior created a conspicuous angular tonal patch on the left of the four-tile proof. In the identical450x260 proof region, v2 substantially removes that low-frequency polygon. The four-tile proof and both shuffled layouts now read as a coherent field without the former hard tonal frame/cut.",
+  "nativeCuts": "Unscaled left and north tile01 crops show local stroke transitions from the pixel-selection cuts, but no conspicuous straight repair endpoint or strong tonal polygon at the reviewed proof scale. This is a visual acceptance of these files, not a claim of mathematically invisible joins at every magnification.",
+  "materialIdentity": "Fine flowing golden/tawny grass, muted olive undergrowth and small low tufts retain the corrected MIDv2 fescue identity. The prior broad leaf/chip drift has not returned.",
+  "lighting": "Upper-right highlights and soft lower-left shade remain coherent across the four active variants; no flipped lighting or remaining magenta guide is visible.",
+  "composition": "Four different interior density arrangements remain visible within a shared matching border. Border artwork repeats by construction; no conspicuous repeated border lattice stood out in the two shuffled contacts.",
+  "proofCrops": {
+    "fourTileLeft": {
+      "left": 0,
+      "top": 160,
+      "width": 450,
+      "height": 260
+    },
+    "tile01Left": {
+      "left": 0,
+      "top": 330,
+      "width": 330,
+      "height": 400
+    },
+    "tile01North": {
+      "left": 650,
+      "top": 0,
+      "width": 450,
+      "height": 220
+    },
+    "outputFolder": "output/fescue-mid-v2-review"
+  },
+  "limits": [
+    "No application, runtime, test or artwork changes by this reviewer.",
+    "This approves offline material PNG appearance; it does not endorse runtime texture mixing or randomisation. Separate gameplay material layers remain separate.",
+    "NEAR, MID and FAR are independently painted sets; identical cross-zoom geography is not required.",
+    "No approval of FAR, map coverage, performance or owner signoff."
+  ],
+  "files": [
+    {
+      "file": "tile-01.png",
+      "sha256": "2e95f6edd2ec7371f8bce673b53f2edf87772a28ddef83c1498b06f3f34a4177",
+      "bytes": 4918105
+    },
+    {
+      "file": "tile-02.png",
+      "sha256": "7d4c2c18570ec2f209814e675b9cf4c4bca7c62a0c5b8731f656dfa66eb90ad3",
+      "bytes": 4917305
+    },
+    {
+      "file": "tile-03.png",
+      "sha256": "8c7204f89995748386aaf59272d8c993d464e161d92ba3ee97adb7341eab12f0",
+      "bytes": 4886576
+    },
+    {
+      "file": "tile-04.png",
+      "sha256": "768cf9b063b54628d5cb69e17adc8d71d6a024e5054e2eec051b3a569835388b",
+      "bytes": 4910942
+    },
+    {
+      "file": "review-four-tiles.png",
+      "sha256": "b03644598370d412a6588a8f35496d11fc26684684a5c4fe0e8678f5b11e4c04",
+      "bytes": 4180509
+    },
+    {
+      "file": "review-order-a.png",
+      "sha256": "770f26c5f9ec56adf1c1042349b0c9fee983b4676d3af899cb6225aff4d7522b",
+      "bytes": 1429539
+    },
+    {
+      "file": "review-order-b.png",
+      "sha256": "c1f47707257e79845c0ea709d38ec3fbc486572773a9ba1cf4c2772401d4c8fd",
+      "bytes": 1431304
+    }
+  ]
+}

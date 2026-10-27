@@ -25,6 +25,12 @@ parallel, and push fixes as follow-up PRs (AGENT-BRIEF sections 1 and 5).
 merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of every change.
 
 ### In flight
+**Accepted terrain source delivery (#383, `lead/terrain-ready-20261026`):** the four accepted families' canonical selections, native PNGs,
+provenance and review proofs are being committed from the art checkout. T170 already packed these exact accepted long-grass hashes;
+this delivery preserves those packed bytes and the owner's `rough-owner` mapping. Also guard asset preparation against explicitly held
+appearance reviews and make the green fallback follow a future canonical selection. Next: validate the source closure, typecheck, focused
+prep checks and a reviewable PR; no full suite/build or owner server changes.
+
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |
 | T178→ | #442 (+#445) | `arena/T098-fixture-traffic` | `.claude/worktrees/t166` | 5187 | **The owner (06:15): "this is seposed to happen btw. the guy hasto upgrade his town roads".** The self-paving design is dropped. #442 (golf towns finally drive) merges with range:gate run two ways: unattended (stalls/declines: banded as measured) and a scripted player upgrading the most jammed streets (must reach P22 2.7's bands; upgrades and money per season reported); a jam hint if the game shows none. Agent: the ground agent. |

@@ -1,0 +1,115 @@
+{
+  "schema": 1,
+  "reviewedDate": "2026-10-26",
+  "reviewer": "/root/fescue_scale_review",
+  "material": "golden-fescue",
+  "zoom": "near",
+  "revision": "v3",
+  "decision": "accepted-for-art-appearance",
+  "scope": "Independent visual review of saved NEAR artwork and adjacency proofs; not owner signoff or live game integration",
+  "materialIdentity": {
+    "result": "pass",
+    "finding": "Golden narrow grass blades, pale seedhead glints, muted olive shade and rusty low clumps remain consistent with the previously accepted near scene background. Apparent detail size and painted treatment are coherent across the eight images."
+  },
+  "lighting": {
+    "result": "pass",
+    "finding": "Upper-right highlights and lower-left soft relief shade read consistently; no mirrored or rotated lighting switch is apparent."
+  },
+  "adjacency": {
+    "result": "pass-at-reviewed-proofs",
+    "finding": "The 1742x902 four-tile proof and both shuffled eight-tile proofs do not show an obvious straight cross, rectangular collar frame, hard brightness step or repair endpoint. Native north/west full-band cut crops also read as continuous painted vegetation."
+  },
+  "composition": {
+    "result": "pass-with-shared-border",
+    "finding": "Eight different interiors show varied arrangements of rusty clumps, pale seedheads and open gold turf. They are not eight duplicate complete images. Their common outer border intentionally repeats, but no conspicuous border lattice or repeated border motif stood out in the two shuffled contacts.",
+    "limitation": "The shared border is repeated artwork by construction; this review does not certify that repetition can never become noticeable over a much larger placement."
+  },
+  "inspected": [
+    "review-four-tiles.png",
+    "review-eight-order-a.png",
+    "review-eight-order-b.png",
+    "tile-01.png",
+    "tile-04.png",
+    "tile-08.png",
+    "review/north-full-band-mincut.png",
+    "review/west-full-band-mincut.png"
+  ],
+  "notCertified": [
+    "Runtime integration or performance",
+    "World coverage or camera-scale mapping",
+    "MID or FAR artwork",
+    "Owner acceptance",
+    "Pixel-preserving identity with the original town screenshot"
+  ],
+  "files": [
+    {
+      "file": "tile-01.png",
+      "sha256": "f72f83262b0682836557b0f8abceb8e9c83b622132bba15ce863132cc1d3f30f",
+      "bytes": 5117117
+    },
+    {
+      "file": "tile-02.png",
+      "sha256": "275324d382f4336723a15c1e5d7f5e840b8f836ea04cf176dbf1050e5b9118bb",
+      "bytes": 5134398
+    },
+    {
+      "file": "tile-03.png",
+      "sha256": "aa6df7f847b38ba8bd928b878072737f6b0df566a500e7f41740c7a3546dba22",
+      "bytes": 5149608
+    },
+    {
+      "file": "tile-04.png",
+      "sha256": "d1e68413290b7fcb98bfa4a57a879c6750dfa4505e5af0cf5e87af2307eb55d1",
+      "bytes": 5123392
+    },
+    {
+      "file": "tile-05.png",
+      "sha256": "44609d3521ad4c1c0c48c69ad71202c3fa01afa06418bd661b733954eb6b50e5",
+      "bytes": 5149512
+    },
+    {
+      "file": "tile-06.png",
+      "sha256": "4f1c99dce5333bbe4a8082594f979971149f14f20a7aae20d52ab44cbffdebba",
+      "bytes": 5111206
+    },
+    {
+      "file": "tile-07.png",
+      "sha256": "c8b5f7ff6f1a5b1842e2fe8dd84e940fb41dcee53c3f0bde1577891be3370ddf",
+      "bytes": 5106013
+    },
+    {
+      "file": "tile-08.png",
+      "sha256": "5461a3d3c4d8e65f47e5c585a4d693e9a6906bc178e479b472addc761076565d",
+      "bytes": 5131742
+    },
+    {
+      "file": "review-four-tiles.png",
+      "sha256": "49ea7b99c347e1dd9b9059c03f7e7c0f9799a2167cb18d8603551e983f36ac30",
+      "bytes": 4473757
+    },
+    {
+      "file": "review-eight-order-a.png",
+      "sha256": "d15944280d6a97d8cee1ba323deaba08c59d773b77b545912567be79fa38f201",
+      "bytes": 2751463
+    },
+    {
+      "file": "review-eight-order-b.png",
+      "sha256": "ae90fb19e09ea9528d8960c93b957da5a357826b1d81c18a7a1904ec2ccee076",
+      "bytes": 2750278
+    },
+    {
+      "file": "review/north-full-band-mincut.png",
+      "sha256": "67d5a7697438cf3c3f5c462d15db1121830b3432274e79e22d3153e4fa371718",
+      "bytes": 341829
+    },
+    {
+      "file": "review/west-full-band-mincut.png",
+      "sha256": "6c6301b75472a32674bf069b98ec555f3c81ed99aefba8863d87a1b16b8ea9b1",
+      "bytes": 356151
+    }
+  ],
+  "materialReference": {
+    "file": "art/theme-consistency/generated/ground/scene-backgrounds/golden-fescue/near-background-anchored-v1.raw.png",
+    "sha256": "d435a4a73c2e9c6318ebef400b30926ff48231e3a96f48623a51267c2617dd57"
+  }
+}
