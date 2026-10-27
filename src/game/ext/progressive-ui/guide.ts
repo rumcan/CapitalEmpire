@@ -39,6 +39,15 @@ export interface GuideTarget { ui?: string; map?: 'newHoleSpot' | 'nearestRoad' 
 /** one step of the guide */
 export interface GuideStep { id: string; n: number; title: string; body: string; done: 'next' | 'auto'; target: GuideTarget }
 
+/** an engine event that moves the guide on at once (T188): a hole built, the clubhouse placed, a car park built */
+export type GuideEvent = 'hole' | 'clubhouse' | 'carpark';
+/** the facts after an event, before the next count catches up (the guide reads them at once): a hole more, the clubhouse placed, a car park more */
+export function applyGuideEvent(f: GuideFacts, e: GuideEvent): GuideFacts {
+  if (e === 'hole') return { ...f, holes: (f.holes ?? 0) + 1 };
+  if (e === 'clubhouse') return { ...f, clubhouse: true };
+  return { ...f, parks: f.parks + 1 };
+}
+
 /** the number of steps */
 export const GUIDE_STEPS = 7;
 
@@ -58,7 +67,7 @@ export const GUIDE: readonly GuideStep[] = Object.freeze([
     title: 'Lay out a new hole',
     body: 'Open Holes and press New hole: click a tee, then a green, and Build.',
     done: 'auto',
-    target: { ui: 'rail-course', map: 'newHoleSpot' },
+    target: { ui: 'new-hole', map: 'newHoleSpot' },
   },
   {
     id: 'guide-connect',
@@ -66,7 +75,7 @@ export const GUIDE: readonly GuideStep[] = Object.freeze([
     title: 'Connect your hole',
     body: 'Lay a cart path or build a road to link your hole to the road network.',
     done: 'auto',
-    target: { ui: 'piece-path-stub', map: 'nearestRoad' },
+    target: { ui: 'rail-decor', map: 'nearestRoad' },
   },
   {
     id: 'guide-park',
@@ -118,7 +127,7 @@ export const RANGE_GUIDE: readonly GuideStep[] = Object.freeze([
     title: 'Lay hole 1',
     body: 'Open Holes and press New hole: click a tee, then a green, and Build. The ring marks a good tee near the range.',
     done: 'auto',
-    target: { ui: 'rail-course', map: 'newHoleSpot' },
+    target: { ui: 'new-hole', map: 'newHoleSpot' },
   },
   {
     id: 'guide-range-clubhouse',
@@ -126,7 +135,7 @@ export const RANGE_GUIDE: readonly GuideStep[] = Object.freeze([
     title: 'Place the clubhouse',
     body: 'Open Buildings and place the clubhouse by the road or the drive: the tour will not come without one.',
     done: 'auto',
-    target: { ui: 'rail-buildings' },
+    target: { ui: 'clubhouse-card' },
   },
   {
     id: 'guide-range-nine',
@@ -134,7 +143,7 @@ export const RANGE_GUIDE: readonly GuideStep[] = Object.freeze([
     title: 'Finish the nine',
     body: 'Build holes until the course has nine. The town grows faster with every hole you open.',
     done: 'auto',
-    target: { ui: 'rail-course', map: 'newHoleSpot' },
+    target: { ui: 'new-hole', map: 'newHoleSpot' },
   },
   {
     id: 'guide-range-invite',
@@ -142,7 +151,7 @@ export const RANGE_GUIDE: readonly GuideStep[] = Object.freeze([
     title: "The tour's invitation",
     body: "Nine holes, a car park and a clubhouse bring the tour's invitation to the Club Championship. Your range's car park already counts.",
     done: 'auto',
-    target: { ui: 'invite-pill' },
+    target: { ui: 'season-chip' },
   },
   {
     id: 'guide-range-tournament',
@@ -242,7 +251,7 @@ export const GUIDE_STUCK: GuideStep = Object.freeze({
   title: 'Need a hand with your first hole?',
   body: 'Open Holes and press New hole: click a tee, then a green, and the whole hole is planned for you. Build when it looks right.',
   done: 'auto',
-  target: Object.freeze({ ui: 'rail-course', map: 'newHoleSpot' }),
+  target: Object.freeze({ ui: 'new-hole', map: 'newHoleSpot' }),
 });
 
 /** the step the guide shows: guideStep's; or, when the guide is off (skipped or finished) and the player is stuck (no hole after one season or

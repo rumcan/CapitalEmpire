@@ -50,6 +50,10 @@
 .seg > button.on { background: linear-gradient(#ffc94a, #f0a91e); color: #1b1406; font-weight: 600; }
 /* T182: a locked tool in a group's row: in its place, dimmed, its lock beside its name */
 .seg > button.seg-locked { opacity: 0.55; cursor: not-allowed; }
+/* T188: the guide's pulse ring on a data-guide anchor (GuidePulse.tsx); still under reduced motion */
+.guide-pulse { position: fixed; z-index: 70; pointer-events: none; border: 3px solid var(--gold-hi); border-radius: 12px; box-shadow: 0 0 0 4px rgba(255, 209, 102, 0.25), 0 0 18px rgba(255, 209, 102, 0.6); animation: guide-pulse 1.1s ease-in-out infinite; }
+@keyframes guide-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.55; transform: scale(1.06); } }
+@media (prefers-reduced-motion: reduce) { .guide-pulse { animation: none; } }
 .seg.flex-wrap > button { flex: 1 1 auto; min-width: 5.5rem; }
 
 .keycap { display: inline-flex; align-items: center; justify-content: center; min-width: 1.5rem; margin: 0 0.15rem; border-radius: 0.35rem; border: 1px solid rgba(255, 255, 255, 0.25); background: rgba(255, 255, 255, 0.06); padding: 0 0.3rem; font-size: 0.75rem; font-weight: 700; line-height: 1.2rem; color: var(--ink); }
