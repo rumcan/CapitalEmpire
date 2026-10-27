@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-27 02:35)
+## START HERE (kept current by the lead; last updated 2026-10-27 03:09)
 
 **Paste-ready start prompts for every role are in `docs/START-PROMPTS.md`:** the lead, a coding ticket, and the other sessions in this
 repo. The weekly usage cap is close (2026-10-26), so any chat may stop at any moment.
@@ -27,10 +27,10 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 ### In flight
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |
-| T098 | #168 | `arena/T098-range-gate` | `.claude/worktrees/t166` | 5187 | The range gate (the nightly's coverage gap: no gate bundles `rangebiz.ts`, and the range start is the default new game): `setupRange(seed)`, `npm run range:gate` on seeds 1-3 with thresholds from measured main numbers; the range20 fixture and bench stages only if T090 landed. Agent: the ground agent. |
+| T092 | #161 | `arena/T092-exits-feed-range` | `.claude/worktrees/t166` | 5187 | P22 2.2.2: the range draws passers-by from both map exits (`ctx.exits`; classic games keep one entry); range:gate re-banded if arrivals move it; other gates as the nightly. Agent: the ground agent. |
 | T112 | #199 | `arena/T112-sharp` (PR #394) | `.claude/worktrees/t112` | — | **Approved, merge HELD for the morning restart:** a lock change makes the 5174 auto-updater run `npm ci` in theme-consistency (the live 5191 studio holds sharp there; the lot agent's t160 uses it by junction). Morning order: stop 5191 → merge #394 → let npm ci finish → restart 5191 and 5174. All shipped bytes identical on 0.35.5; audit 0. |
 | P05 | #68 | `lead/p05-balance-plan` (PR #413, **open for the owner's approval**) | `.claude/worktrees/t160` | 5186 | Draft done: the simulator flatters the game (tents reach 31% not 100%; the second nine ~$505k not $60k; a careful player stuck at tier 2); proposals: a crowd hub, honest upkeep (rough once, 100%), 120 club days, quality feeds the crowd, the simulator on the game's functions. **Now measuring its open risks** (the real arrival rate, whether 18 holes fit the parcel) into the same PR. Agent: the lot agent. |
-| T098 | #168 | `arena/T098-range-gate` | `.claude/worktrees/t166` | 5187 | The range gate (the nightly's coverage gap: no gate bundles `rangebiz.ts`, and the range start is the default new game): `setupRange(seed)`, `npm run range:gate` on seeds 1-3 with thresholds from measured main numbers; the range20 fixture and bench stages only if T090 landed. Agent: the ground agent. |
+| T092 | #161 | `arena/T092-exits-feed-range` | `.claude/worktrees/t166` | 5187 | P22 2.2.2: the range draws passers-by from both map exits (`ctx.exits`; classic games keep one entry); range:gate re-banded if arrivals move it; other gates as the nightly. Agent: the ground agent. |
 | T112 | #199 | `arena/T112-sharp` (PR #394) | `.claude/worktrees/t112` | — | **Approved, merge HELD for the morning restart:** a lock change makes the 5174 auto-updater run `npm ci` in theme-consistency (the live 5191 studio holds sharp there; the lot agent's t160 uses it by junction). Morning order: stop 5191 → merge #394 → let npm ci finish → restart 5191 and 5174. All shipped bytes identical on 0.35.5; audit 0. |
 
 **Two coding agents at a time (the owner, 2026-10-26: first "maybe just too many background tasks?" after the studio tab died with the
@@ -92,6 +92,10 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
    (the sharp bump). See the History sections below and `gh issue list --label arena --state open`.
 
 ### Done recently (newest first; details in each PR)
+- 2026-10-27 03:09: **T098 #415 the range gate** (`npm run range:gate -- [seed] [days]`, 20 town days in ~10 s, deterministic): a fresh
+  range start headless (`harness.ts setupRange`), held to bands from main's numbers: golfers 31-40 a day, takings $7.2-9.6k, lost ~40% (4
+  bays), no car left at 05:00, range cars overlapping ≤2% (1.1% today, at the car park entrance and aisles), step times. Seeds 1-3 PASS;
+  other gates unchanged; suite 1911/1911. The range20 fixture, `?fixture=` and bench stages wait for T090 (#159).
 - 2026-10-27 02:23: **T173 #410 train every use in the lab**: the wizard and gallery follow the lab's lot type (shops, industry, car
   parks/civic/tour) with the game's own layout path and the live model (presets as the head start + the owner's samples, weighted per
   group: shops x4, industry x4, open x11); **Ship model** renders a 24-lot exam (shipped vs live) over the lab and ships on "Ship"
