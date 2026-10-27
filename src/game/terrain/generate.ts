@@ -77,7 +77,8 @@ function resample(pts: P[], step: number): P[] {
   return out;
 }
 
-/** label buffer and stack shared by the component passes (reused, not allocated per tile) */
+/** label buffer and stack shared by the component passes of one check (reused, not allocated per tile; T172: released when the check ends,
+ *  so the 16 MB of a 2048 x 2048 map is not kept for the rest of the game) */
 let LAB: Int32Array | null = null;
 let STK = new Int32Array(1 << 16);
 function growStack() { const g = new Int32Array(STK.length * 2); g.set(STK); STK = g; }
@@ -149,6 +150,7 @@ export function checkGuarantees(t: Terrain): GuaranteeReport {
     if (bad) reasons.push(`town site ${k} has ${bad} unbuildable tiles`);
   }
   if (t.chokepoints.length < 1) reasons.push('no chokepoint (bridge or gorge)');
+  LAB = null;
   return { ok: reasons.length === 0, reasons, buildableConnected, sideA, sideB, ms: performance.now() - t0 };
 }
 

@@ -346,6 +346,7 @@ export class GLRenderer {
   }
   /** upload the vector shadows' mesh (shadow-vector.ts vectorMesh): its vertices, two RGBA32F texels each, and its indices (R32UI) */
   initVector(m: VectorMesh) {
+    if (m.verts.length < m.nVerts * VERTEX_FLOATS) throw new Error('initVector: the mesh data was released (shadow-vector.ts releaseVectorMeshData)');
     const gl = this.gl, up = (tex: WebGLTexture | null, data: ArrayBufferView, texels: number, ifmt: number, fmt: number, type: number, per: number) => {
       const h = Math.max(1, Math.ceil(texels / MESH_W)), t = tex ?? gl.createTexture()!;
       const buf = new (data.constructor as Float32ArrayConstructor | Uint32ArrayConstructor)(MESH_W * h * per); buf.set(data as Float32Array & Uint32Array);

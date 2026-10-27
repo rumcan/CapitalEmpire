@@ -42,6 +42,8 @@ try {
   await pcdp.send('Performance.enable');
   const made = []; page.on('console', m => { const q = /\[ground worker (\d+)\] made (\S+) in (\d+) ms/.exec(m.text()); if (q) made.push({ t: (Date.now() - t0) / 1000, w: +q[1], what: q[2], ms: +q[3] }); });
   out.made = made;
+  // T172: the ground workers' pixels by owner, asked for at each sample (a `mem {...}` log line per worker)
+  const memLines = []; page.on('console', m => { const q = /\[ground worker (\d+)\] mem (\{.*\})/.exec(m.text()); if (q) memLines.push({ w: +q[1], parts: JSON.parse(q[2]) }); });
   const t0 = Date.now();
   await page.goto(url, { waitUntil: 'load', timeout: 120000 });
   await page.waitForFunction(() => window.__game && window.__game.ready, null, { timeout: 180000, polling: 100 });
@@ -107,13 +109,30 @@ try {
     if (w.length) console.log(`  worker V8 heaps ${w.join(', ')} MB`);
     const r = Object.entries(s.infra).filter(([k]) => k.startsWith('renderer')).sort((a, b) => (b[1].footprintMB ?? 0) - (a[1].footprintMB ?? 0))[0]?.[1];
     if (r) console.log('  renderer allocators: ' + Object.entries(r.alloc).filter(([, v]) => v >= 5).sort((a, b) => b[1] - a[1]).slice(0, 12).map(([n, v]) => `${n} ${v}`).join(', '));
+    const gp = Object.entries(s.infra).find(([k]) => k.startsWith('GPU'))?.[1];
+    if (gp) console.log('  GPU process allocators: ' + Object.entries(gp.alloc).filter(([, v]) => v >= 5).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([n, v]) => `${n} ${v}`).join(', '));
+    // T172: the ground workers' pixels by owner (MB of RGBA8)
+    memLines.length = 0; await page.evaluate(() => window.__game.ground.broadcast({ t: 'memProbe' })).catch(() => {});
+    for (let k = 0; k < 20 && memLines.length < (game.groundWorkers || 1); k++) await sleep(100);
+    s.groundPixels = memLines.map(l => l.parts);
+    for (const l of memLines) { const tot = Object.values(l.parts).reduce((a, b) => a + b, 0); console.log(`  ground worker ${l.w} pixels ${tot.toFixed(0)} MB: ` + Object.entries(l.parts).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k} ${v}`).join(', ')); }
   };
   await settle(idle); await sample('idle');
+  /** T172: the sprite atlas's pop-in: the cells wanted on screen this frame still short of the level they want (drawn blurrier until it
+   *  lands), and its decodes and loads so far */
+  const atlasNow = () => page.evaluate(() => {
+    const a = window.__game.gl.atlas; if (!a) return null; const P = a.pages; let waiting = 0;
+    for (const tier of P.slots) for (const s of tier) if (s.unit >= 0 && s.weight >= 1e9 && s.have > s.target && s.used >= a.frame - 2) waiting++;
+    return { waiting, decodes: a.stats.decodes, loads: P.stats.loads };
+  }).catch(() => null);
   if (pan) {
     // round a circle of 120 tiles about the view's centre at its zoom, one step every 50 ms, so new chunks keep being baked
     const c = await page.evaluate(() => { const g = window.__game, X = g.cam.X, Y = g.cam.Y; return { x: (X / 64 + Y / 32) / 2, y: (Y / 32 - X / 64) / 2, z: g.cam.z }; });
-    const steps = Math.round(pan * 20);
-    for (let k = 0; k <= steps; k++) { const a = (2 * Math.PI * k) / steps; await page.evaluate(([x, y, z]) => window.__game.lookAt(x, y, z), [c.x + 120 * Math.sin(a), c.y + 120 * (1 - Math.cos(a)), c.z]); await sleep(50); }
+    const steps = Math.round(pan * 20), a0 = await atlasNow(), waits = [];
+    for (let k = 0; k <= steps; k++) { const a = (2 * Math.PI * k) / steps; await page.evaluate(([x, y, z]) => window.__game.lookAt(x, y, z), [c.x + 120 * Math.sin(a), c.y + 120 * (1 - Math.cos(a)), c.z]); await sleep(50); if (k % 4 === 0) { const w = await atlasNow(); if (w) waits.push(w.waiting); } }
+    const a1 = await atlasNow();
+    if (a0 && a1) { const mean = waits.reduce((x, y) => x + y, 0) / Math.max(1, waits.length); out.atlasPan = { meanWaiting: +mean.toFixed(1), maxWaiting: Math.max(0, ...waits), decodes: a1.decodes - a0.decodes, loads: a1.loads - a0.loads };
+      console.log(`${label} / atlas during the pan: cells waiting for their level mean ${out.atlasPan.meanWaiting}, max ${out.atlasPan.maxWaiting}; ${out.atlasPan.decodes} decodes, ${out.atlasPan.loads} loads`); }
     await settle(5); await sample(`after a ${pan} s pan`);
   }
   if (coursePaint) {
@@ -134,12 +153,18 @@ try {
     for (let k = 0; k < jumps; k++) for (const z of [0.3, 0.08]) {
       const x = 400 + ((k * 397 + (z > 0.1 ? 0 : 211)) % 1248), y = 400 + ((k * 631 + (z > 0.1 ? 97 : 0)) % 1248);
       await page.evaluate(([x, y, z]) => window.__game.lookAt(x, y, z), [x, y, z]);
-      const t = Date.now(); await sleep(150);
-      for (let q = 0; q < 600; q++) { if (!(await page.evaluate(() => { const g = window.__game.ground; return g.want.length + g.inflight.reduce((a, b) => a + b, 0); }))) break; await sleep(50); }
-      fills.push({ z, s: (Date.now() - t) / 1000 });
+      const t = Date.now(); await sleep(150); let sharp = null;
+      for (let q = 0; q < 600; q++) {
+        const w = await atlasNow(); if (sharp === null && w && !w.waiting) sharp = (Date.now() - t) / 1000;
+        if (!(await page.evaluate(() => { const g = window.__game.ground; return g.want.length + g.inflight.reduce((a, b) => a + b, 0); }))) break; await sleep(50);
+      }
+      for (let q = 0; sharp === null && q < 100; q++) { const w = await atlasNow(); if (!w || !w.waiting) sharp = (Date.now() - t) / 1000; else await sleep(50); }
+      fills.push({ z, s: (Date.now() - t) / 1000, sharp });
     }
     const f = z => fills.filter(q => q.z === z).map(q => q.s).sort((a, b) => a - b), med = a => a[Math.floor(a.length / 2)];
     out.jumps = fills; console.log(`${label} / jumps: view filled at 30% median ${med(f(0.3))} s (max ${Math.max(...f(0.3))}), at 8% median ${med(f(0.08))} s (max ${Math.max(...f(0.08))})`);
+    const sh = z => fills.filter(q => q.z === z).map(q => q.sharp ?? 9).sort((a, b) => a - b);
+    console.log(`${label} / jumps: sprites at their level at 30% median ${med(sh(0.3))} s (max ${Math.max(...sh(0.3))}), at 8% median ${med(sh(0.08))} s (max ${Math.max(...sh(0.08))})`);
     await sample(`after ${jumps} x 2 jumps`);
   }
   if (gens) {
