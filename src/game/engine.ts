@@ -116,7 +116,8 @@ import { parkRideNeeds } from './golf/parkride';
 import { applyCourseConsultantQuality, effectiveGrowInClockMonth, findGolfCard, isGolfCardId, parkRideNeedsWithCards } from './golf/golfcards';
 import type { CourseFacts } from './golf/tour';
 import { surfaceOfTex } from './golf/costs';
-import { inTheWay, rectPoly, routeObstacles, type Obstacle } from './route-obstacles';
+import { inSentence, inTheWay, rectPoly, ringWhy, routeObstacles, structureObstacles, type Obstacle, type Structure } from './route-obstacles';
+import { judgeRing, rangePieceName, type RingProp, type RingVerdict } from './ring-clear';
 import { isSecondTap, routeAct, type RouteInput, type Tap } from './route-input';
 import { buyAdjacentBlock, COURSE_LAND_MSG, blockOnRoad, blockOnWater, pointInLand, polyInParcels, type LandRoad, type ParcelLandClass } from './golf/parcels';
 import { BAND_LABEL, LandSale } from './golf/land-sale';
@@ -1307,7 +1308,7 @@ export class Game {
   private routeCostCache: { key: string; cost: number } | null = null;
   /** the add-lane tool's plan at the cursor: the straight run of road under it (segs; none on a toll plaza), the class it widens to (null: already the widest),
    *  its cost ($, as the road tool charges the upgrade) and why it cannot be built ('' if it can) */
-  laneHover: null | { segs: Seg[]; to: RoadClass | null; cost: number; why: string; down: boolean } = null;
+  laneHover: null | { segs: Seg[]; to: RoadClass | null; cost: number; why: string; down: boolean; /** T224: the compensation for the buildings the rings at the run's ends grow into, and what each takes (or is refused by) */ comp: number; rings: RingVerdict<Prop>[] } = null;
   /** the shuttle bus routes as the player drew them (saved; ids 1..n, a route's index is its sim index), the bus tool's first stop once it is chosen (its
    *  road point, tiles, its car park's id, and its town when the stop is beside a town's car park lot; null until then), and the tool's plan at the cursor
    *  (see busUpdate: the stop it would place, x, y, its car park or town, and why not) */
@@ -2624,17 +2625,26 @@ export class Game {
   /** what a route of the class in hand may not run into (T207, route-obstacles.ts): a course road (cart paths and drives) the range's
    *  structures, the other businesses and the car parks' insides; a town road every business's and car park's padded rectangle; both the toll
    *  plazas (a leg along a plaza's own centre line passes: upgrading its road) */
-  private routeObstacles(): Obstacle[] {
-    const g = this.golf, rd = g?.start === 'range' ? this.bizDefs.find(b => b.type === 'range') : undefined;
+  private routeObstacles(course = isCourseClass(this.cls.id)): Obstacle[] {
     const tolls: Obstacle[] = [];
     for (const d of this.tollDefs) {
       const s = this.tollSegs.get(d.id); if (!s) continue;
       const h = s.cls.h, W = plazaEdge(d.booths, laneOff(s, 0)), q = (t0: number, t1: number, o0: number, o1: number) => [plazaPoint(d, t0, o0), plazaPoint(d, t1, o0), plazaPoint(d, t1, o1), plazaPoint(d, t0, o1)].flatMap(p => [p.x, p.y]);
       const onLine = (p: Pt) => Math.abs(plazaLocal(d, p.x, p.y).o) < 0.05;
-      tolls.push({ why: 'Roads cannot cross a toll plaza', zone: q(-1, PLAZA_LEN + 1, -h - 1, W + 1), outline: q(0, PLAZA_LEN, -h, W), pass: l => onLine(l.a) && onLine(l.b) });
+      tolls.push({ why: 'Roads cannot cross a toll plaza', name: 'a toll plaza', zone: q(-1, PLAZA_LEN + 1, -h - 1, W + 1), outline: q(0, PLAZA_LEN, -h, W), pass: l => onLine(l.a) && onLine(l.b) });
     }
-    const structures = g && rd ? rangeStructures(plotOfFront([rd.x, rd.y, rd.w, rd.h], g.dir), g.dir, g.range ??= defaultRangeBiz()) : [];
-    return routeObstacles({ course: isCourseClass(this.cls.id), biz: this.bizDefs, parks: this.parkDefs, structures, tolls });
+    return routeObstacles({ course, biz: this.bizDefs, parks: this.parkDefs, structures: this.rangeStructs(), tolls, places: this.placeStructures() });
+  }
+  /** the range's buildings and pieces with a footprint (golf/rangebiz.ts rangeStructures), none outside a range start */
+  private rangeStructs(): Structure[] {
+    const g = this.golf, rd = g?.start === 'range' ? this.bizDefs.find(b => b.type === 'range') : undefined;
+    return g && rd ? rangeStructures(plotOfFront([rd.x, rd.y, rd.w, rd.h], g.dir), g.dir, g.range ??= defaultRangeBiz()) : [];
+  }
+  /** the iconic places (T219) as named footprints: no road or ring crosses one (T224); "the Drive-In" in a town with no name, else the town's own */
+  private placeStructures(): Structure[] {
+    const out: Structure[] = [], town = this.townName(0);
+    for (const p of this.places) { const d = placeDef(p.id); if (d) out.push({ name: inSentence(placeName(d, town)), box: placeBox(p, d) }); }
+    return out;
   }
   /** the first thing in the way of a route of the class in hand, why, and its outline (null: nothing): what is in the way, or a big placed prop
    *  (bulldoze it first). The preview (routeBlock), each click that adds a point (roadClick) and Build (finishRoute) all judge by it (T207) */
@@ -2847,44 +2857,70 @@ export class Game {
     // a one-way road that ends in a dead end traps cars: warned, not refused
     if (cls.oneway && parts.length && [parts[0]!.a, parts[parts.length - 1]!.b].some(p => this.net.nodeAt(p)?.segs.length === 1)) this.toast('A one-way road that ends in a dead end traps cars', 'warn');
   }
-  /** what installing type t on node n costs (a roundabout re-laned pays the difference: a fall is free) and why it cannot be done: locked, already so,
-   *  too few roads, or not enough money ('' when it can). rl: the ring lanes of a roundabout */
-  /** the placed (not a lot's) props a ring would stand on: those whose footprint reaches within the ring's outer edge (its radius, as the network
-   *  will make it, plus the widest arm's walk) of a roundabout or a mini installed at n (none for any other type). A road built over them is
-   *  refused for the big ones and clears the small ones (finishRoute); a ring does the same (the owner's ring, 2026-10-20: buildings stood in it) */
-  private ringProps(n: Node, t: NodeType, rl: 1 | 2 | 3): Prop[] {
-    const hs = n.arms.map(a => a.h), walk = Math.max(0, ...n.arms.map(a => a.walk));
-    const rb = t === 'roundabout' && n.arms.length >= 2 ? ringRadius(hs, rl) : t === 'mini' && n.arms.length >= 3 ? Math.max(4, Math.max(...hs) + 1) : 0;
-    if (!(rb > 0)) return [];
-    const R = rb + walk, out: Prop[] = [];
+  /** the obstacles a ring at node n is judged by (T224): the route obstacles of its class (a ring whose arms are all course roads is on the player's
+   *  own land: the course rules; any other ring the town's, with the range's structures too), the one list the road preview, each click and Build use */
+  private ringObstacles(n: Node): Obstacle[] {
+    const course = n.arms.length > 0 && n.arms.every(a => isCourseClass(a.cls.id)), obs = this.routeObstacles(course);
+    return course ? obs : [...structureObstacles(this.rangeStructs()), ...obs];
+  }
+  /** the placed (not a lot's, not a tree's) props near a ring of outer edge rb and widest walk, with what each does to it: a placed prop goes (the
+   *  big ones refuse it: bulldoze them first), a piece of the range's scene or of an iconic place refuses it, named (T224) */
+  private ringPropList(n: Node, rb: number, walk: number, kind: string): RingProp<Prop>[] {
+    const R = rb + walk, out: RingProp<Prop>[] = [];
     for (const p of this.propGrid.query([n.x - R, n.y - R, n.x + R, n.y + R])) {
-      if (p.auto) continue;
-      const dx = Math.max(p.x0 - n.x, 0, n.x - p.x1), dy = Math.max(p.y0 - n.y, 0, n.y - p.y1);
-      if (dx * dx + dy * dy < R * R) out.push(p);
+      let refuse: string | null = null;
+      if (p.auto) {
+        if (p.auto.startsWith('range:')) refuse = ringWhy(kind, rangePieceName(p.auto));
+        else if (p.auto.startsWith('place:')) { const d = placeDef(p.auto.slice(6)); refuse = ringWhy(kind, d ? inSentence(placeName(d, this.townName(0))) : 'a place'); }
+        else continue; // the town's trees and a lot's own props follow the network and the lot
+      } else if (LIBRARY[p.item].big && LIBRARY[p.item].kind !== 'car') refuse = `${LIBRARY[p.item].name} is in the way — bulldoze it first`;
+      out.push({ p, box: [p.x0, p.y0, p.x1, p.y1], refuse });
     }
     return out;
   }
-  installCheck(n: Node, t: NodeType, rl: 1 | 2 | 3): { cost: number; why: string; hit: Seg[] } {
-    const spec = JUNCTIONS.find(j => j.id === t)!, same = t === 'signal' ? isLights(n) : n.type === t, ring = t === 'roundabout' && n.type === 'roundabout';
-    const cost = ring ? Math.max(0, variantCost(t, rl) - variantCost(t, n.rl ?? 1)) : variantCost(t, rl);
-    let why = '', hit: Seg[] = [];
-    if (!this.junctionOpen(t)) { const lk = unlockOf('junction', t)!; why = this.eventMode ? `${spec.name} needs the Roundabout card` : `${spec.name} unlocks at ${lk.pop.toLocaleString()} residents (${lk.name})`; }
-    else if (same && (t !== 'roundabout' || (n.rl ?? 1) === rl)) why = t === 'signal' ? 'It already has traffic lights' : t === 'plain' ? 'It is already plain' : t === 'stop' ? 'It is already an all-way stop' : t === 'mini' ? 'It is already a mini-roundabout' : `It already has a ${rl}-lane ring`;
-    else if (n.arms.length < spec.minDeg) why = t === 'roundabout' ? 'A roundabout needs a junction or a bend in the road' : 'Needs a junction of three or more roads';
-    else if (t === 'mini' && !miniFits(n)) why = 'Too big for a mini-roundabout (2 lanes each way at most)';
-    else if (this.ringProps(n, t, rl).some(p => LIBRARY[p.item].big && LIBRARY[p.item].kind !== 'car')) { const p = this.ringProps(n, t, rl).find(q => LIBRARY[q.item].big && LIBRARY[q.item].kind !== 'car')!; why = `${LIBRARY[p.item].name} is in the way — bulldoze it first`; }
+  /** what a ring of type t (rl ring lanes) at node n takes in (T224), by the arms' half widths hs and widest walk it would have: its disc against the
+   *  route obstacles, the props under it, the built lots its circle reaches and their compensation. Null for a type that is no ring, and for a
+   *  ring that does not grow (re-laned down: everything it covers is covered now) */
+  private ringJudge(n: Node, t: NodeType, rl: 1 | 2 | 3, hs: number[] = n.arms.map(a => a.h), walk = Math.max(0, ...n.arms.map(a => a.walk))): RingVerdict<Prop> | null {
+    if (t !== 'roundabout' && t !== 'mini') return null;
+    const rb = t === 'roundabout' ? (n.arms.length >= 2 ? ringRadius(hs, rl) : 0) : (n.arms.length >= 3 ? Math.max(4, Math.max(...hs) + 1) : 0);
+    // a ring that does not grow takes in nothing new: the same type no bigger, or a mini inside the ring that stands (what it covers is covered now)
+    if (!(rb > 0) || (n.rb > 0 && (n.type === t || t === 'mini') && rb <= n.rb + 1e-6 && walk <= Math.max(0, ...n.arms.map(a => a.walk)) + 1e-6)) return null;
+    const name = t === 'roundabout' ? 'A roundabout' : 'A mini-roundabout';
+    return judgeRing({ x: n.x, y: n.y, rb, walk, kind: t, name, obstacles: this.ringObstacles(n), props: this.ringPropList(n, rb, walk, name), lots: this.traffic.lots.values() });
+  }
+  /** the physical rules of a ring of type t (rl ring lanes) at node n, in the order they are told: what the ring takes in (ringJudge: a business, a car
+   *  park, the range, an iconic place, a big prop refuse it), arms too short for it, another road in its circle. why: '' when it can be built */
+  private ringPhysical(n: Node, t: NodeType, rl: 1 | 2 | 3): { why: string; hit: Seg[]; ring: RingVerdict<Prop> | null } {
+    const ring = this.ringJudge(n, t, rl);
+    if (ring?.why) return { why: ring.why, hit: [], ring };
     // an arm that ends inside the ring (another junction or a bend within its radius plus 2 tiles): its road would run on to the island and cars
     // turned at its end there (the owner's 3-lane ring, 2026-10-19: an arterial met the street 10 tiles from the junction made a ring)
     // (a multi-lane ring needs its radius plus 6 tiles: closer, its entries and exits squeezed into the next junction; this was only a warning after
     // the build, the owner: "why does it tell me it needs longer approaches but builds it anyway")
-    else if (t === 'roundabout' && n.arms.some(a => a.len < ringRadius(n.arms.map(b => b.h), rl) + (rl > 1 ? 6 : 2))) {
+    if (t === 'roundabout' && n.arms.some(a => a.len < ringRadius(n.arms.map(b => b.h), rl) + (rl > 1 ? 6 : 2))) {
       const need = ringRadius(n.arms.map(b => b.h), rl) + (rl > 1 ? 6 : 2), short = n.arms.filter(a => a.len < need), a = short.reduce((p, q) => (q.len < p.len ? q : p));
-      why = `Too close to the next junction or bend: a ${rl}-lane ring needs arms of ${Math.ceil(need * 2)} m (one is ${Math.round(a.len * 2)} m)`; hit = short.map(x => x.seg);
+      return { why: `Too close to the next junction or bend: a ${rl}-lane ring needs arms of ${Math.ceil(need * 2)} m (one is ${Math.round(a.len * 2)} m)`, hit: short.map(x => x.seg), ring };
     }
     // a ring (or a mini's island) at n must not take in another road or junction: the owner's rings may not run over an unrelated street
-    else if ((t === 'roundabout' || t === 'mini') && (hit = this.ringClash(n, t, rl)).length) why = 'Another road is in the way of the ring';
-    else if (cost > this.money) why = `Not enough money: ${ring ? `the ${rl}-lane ring` : spec.name.toLowerCase()} costs $${cost.toLocaleString()}`;
-    return { cost, why, hit };
+    const hit = t === 'roundabout' || t === 'mini' ? this.ringClash(n, t, rl) : [];
+    return { why: hit.length ? 'Another road is in the way of the ring' : '', hit, ring };
+  }
+  /** what installing type t on node n costs (a roundabout re-laned pays the difference: a fall is free) and why it cannot be done: locked, already so,
+   *  too few roads, what a ring would cover (T224), or not enough money ('' when it can). rl: the ring lanes of a roundabout. comp: the compensation
+   *  for the built lots a ring takes in (added to the price, as a road's is); ring: what it takes (its props, lots and outlines) */
+  installCheck(n: Node, t: NodeType, rl: 1 | 2 | 3): { cost: number; why: string; hit: Seg[]; comp: number; ring: RingVerdict<Prop> | null } {
+    const spec = JUNCTIONS.find(j => j.id === t)!, same = t === 'signal' ? isLights(n) : n.type === t, relane = t === 'roundabout' && n.type === 'roundabout';
+    const cost = relane ? Math.max(0, variantCost(t, rl) - variantCost(t, n.rl ?? 1)) : variantCost(t, rl);
+    let why = '', hit: Seg[] = [], ring: RingVerdict<Prop> | null = null;
+    if (!this.junctionOpen(t)) { const lk = unlockOf('junction', t)!; why = this.eventMode ? `${spec.name} needs the Roundabout card` : `${spec.name} unlocks at ${lk.pop.toLocaleString()} residents (${lk.name})`; }
+    else if (same && (t !== 'roundabout' || (n.rl ?? 1) === rl)) why = t === 'signal' ? 'It already has traffic lights' : t === 'plain' ? 'It is already plain' : t === 'stop' ? 'It is already an all-way stop' : t === 'mini' ? 'It is already a mini-roundabout' : `It already has a ${rl}-lane ring`;
+    else if (n.arms.length < spec.minDeg) why = t === 'roundabout' ? 'A roundabout needs a junction or a bend in the road' : 'Needs a junction of three or more roads';
+    else if (t === 'mini' && !miniFits(n)) why = 'Too big for a mini-roundabout (2 lanes each way at most)';
+    else if (t === 'roundabout' || t === 'mini') ({ why, hit, ring } = this.ringPhysical(n, t, rl));
+    const comp = ring?.comp ?? 0;
+    if (!why && cost + comp > this.money) why = `Not enough money: ${relane ? `the ${rl}-lane ring` : spec.name.toLowerCase()} costs $${cost.toLocaleString()}${comp ? ` and $${comp.toLocaleString()} compensation` : ''}`;
+    return { cost, why, hit, comp, ring };
   }
   /** the radius (tiles) a roundabout of rl ring lanes, or a mini (t), would have at node n: its circle */
   ringOf(n: Node, t: NodeType, rl: 1 | 2 | 3): number { const hs = n.arms.map(a => a.h); return t === 'roundabout' ? ringRadius(hs, rl) : Math.max(4, Math.max(...hs) + 1); }
@@ -2904,13 +2940,14 @@ export class Game {
    *  year (lights already there keep their tier), a roundabout's ring lanes are set. The junction is selected even when refused (the panel says why) */
   private installType(n: Node, t: NodeType, rl: 1 | 2 | 3): boolean {
     this.selectedJunction = n;
-    const { cost, why } = this.installCheck(n, t, rl);
+    const { cost, why, comp, ring } = this.installCheck(n, t, rl);
     // the junction already is that type: the click just selects it (no warning)
     if (why && /^It (already|is already)/.test(why)) { this.emit(); return false; }
     if (why) { this.toast(why, 'warn'); this.emit(); return false; }
     const relane = n.type === 'roundabout' && t === 'roundabout', name = JUNCTIONS.find(j => j.id === t)!.name;
-    // the small placed items under the ring go, as under a new road (the big ones refused it: installCheck)
-    for (const p of this.ringProps(n, t, rl)) this.removeProp(p);
+    // what the ring takes in goes, as under a new road (T224): the small placed items for nothing, the built lots for their compensation (the
+    // worker's partition drops them with the commit below; the big props, the businesses, the range and the iconic places refused it: installCheck)
+    const took = this.ringTaken(ring, comp);
     this.traffic.spend('construction', cost);
     if (n.type !== t) this.edit.setNodeType(n, t);
     if (t === 'signal') this.edit.setSignal(n, this.signalTier(), undefined);
@@ -2920,8 +2957,17 @@ export class Game {
     const m = this.net.nodeAt({ x: n.x, y: n.y }) ?? n; this.selectedJunction = m;
     const warn = this.armWarn(m);
     if (warn) this.toast(warn, 'warn');
-    else this.toast(relane ? `Roundabout: ${rl} ring lane${rl > 1 ? 's' : ''}` : `${name} installed`, 'good');
+    else this.toast((relane ? `Roundabout: ${rl} ring lane${rl > 1 ? 's' : ''}` : `${name} installed`) + took, 'good');
     return true;
+  }
+  /** a ring's click takes what it covers (T224): its props are removed, its compensation is spent; the words for the toast (" · 2 buildings cleared, $9,000
+   *  compensation · 3 items cleared"), '' when it took nothing */
+  private ringTaken(ring: RingVerdict<Prop> | null, comp: number): string {
+    if (!ring) return '';
+    for (const p of ring.props) this.removeProp(p);
+    if (comp) this.traffic.spend('compensation', comp);
+    const nl = ring.lots.length, np = ring.props.length;
+    return `${nl ? ` · ${nl} building${nl > 1 ? 's' : ''} cleared, $${comp.toLocaleString()} compensation` : ''}${np ? ` · ${np} item${np > 1 ? 's' : ''} cleared` : ''}`;
   }
   /** the Type control: the selected junction takes type t (a roundabout with ringLanes), as the brush would install it */
   setSelectedType(t: NodeType) { const n = this.selectedNode(); if (n) this.installType(n, t, this.ringLanes); this.emit(); }
@@ -2959,18 +3005,31 @@ export class Game {
    *  downgrade: a refund) and why it cannot be done */
   private laneUpdate(t: Pt | null) {
     const down = this.tool === 'downgrade', piece = t ? this.net.pieceNear(t) : null;
-    if (!piece) { this.laneHover = t ? { segs: [], to: null, cost: 0, why: 'Point at a road', down } : null; return; }
+    if (!piece) { this.laneHover = t ? { segs: [], to: null, cost: 0, why: 'Point at a road', down, comp: 0, rings: [] } : null; return; }
     const tolls = [...this.tollSegs.values()], seg = piece.seg;
     const segs = straightChain(seg, x => tolls.includes(x)), next = (down ? NARROWER : WIDER)[seg.cls.id], to = next ? classOf(next) : null;
     let raw = 0; if (to) for (const s of segs) raw += vlen(sub(s.b, s.a)) * (to.cost - s.cls.cost) * STRUCT_COST[s.kind];
     const cost = Math.round(raw);
-    let why = '';
+    let why = '', rg: { comp: number; rings: RingVerdict<Prop>[] } = { comp: 0, rings: [] };
     if (tolls.includes(seg)) why = down ? 'Toll plazas cannot be narrowed' : 'Toll plazas cannot be widened';
     else if (!to) why = down ? `${seg.cls.name} is already the smallest road of its kind` : `${seg.cls.name} is already the biggest road of its kind (more in Phase 7)`;
     else if (!down && !this.classOpen(to.id)) why = this.classLockWhy(to.id);
     else if (to.h + to.walk > seg.cls.h + seg.cls.walk && this.widenClash(segs, to)) why = 'No room to widen: another road is too close';
-    else if (cost > this.money) why = `Not enough money: ${to.name.toLowerCase()} costs $${cost.toLocaleString()} more`;
-    this.laneHover = { segs, to, cost, why, down };
+    else if (!down && (rg = this.widenRings(segs, to)).rings.some(r => r.why)) why = rg.rings.find(r => r.why)!.why;
+    else if (cost + rg.comp > this.money) why = `Not enough money: ${to.name.toLowerCase()} costs $${cost.toLocaleString()} more${rg.comp ? ` and $${rg.comp.toLocaleString()} compensation` : ''}`;
+    this.laneHover = { segs, to, cost, why, down, comp: why ? 0 : rg.comp, rings: rg.rings };
+  }
+  /** T224: widening a run to class `to` grows every roundabout (and mini) at its ends, a ring being as wide as its widest arm: each is judged as a ring
+   *  placed there would be (what it would cover refuses it, the buildings it takes are paid for). The verdicts, and the compensation of those that can go */
+  private widenRings(segs: Seg[], to: RoadClass): { comp: number; rings: RingVerdict<Prop>[] } {
+    const run = new Set(segs), done = new Set<Node>(), rings: RingVerdict<Prop>[] = []; let comp = 0;
+    for (const sg of segs) for (const m of [sg.a, sg.b]) {
+      if (done.has(m) || !(m.rb > 0) || (m.type !== 'roundabout' && m.type !== 'mini')) continue;
+      done.add(m);
+      const v = this.ringJudge(m, m.type, m.rl ?? 1, m.arms.map(a => (run.has(a.seg) ? to.h : a.h)), Math.max(0, ...m.arms.map(a => (run.has(a.seg) ? to.walk : a.walk))));
+      if (v) { rings.push(v); comp += v.why ? 0 : v.comp; }
+    }
+    return { comp, rings };
   }
   /** true when widening the run segs to class to would make their corridors meet a road they do not meet already (a new overlap, not the contact a
    *  junction has), or would put a seg through the circle of a roundabout or mini the run does not touch (a ring the run ends at re-sizes itself) */
@@ -2994,13 +3053,14 @@ export class Game {
   private laneClick() {
     const h = this.laneHover; if (!h) return;
     if (!h.segs.length || !h.to || h.why) { this.toast(h.why || 'Point at a road', 'warn'); return; }
+    const took = h.rings.map(r => this.ringTaken(r, r.comp)).join(''); // the buildings and items the grown rings take (T224)
     this.traffic.spend('construction', h.cost);
     let tiles = 0;
     const from = h.segs[0]!.cls.name.toLowerCase();
     for (const s of h.segs) { tiles += vlen(sub(s.b, s.a)); this.edit.addLegs([{ a: s.a, b: s.b }], h.to, s.style, [s.kind]); }
     this.commitNetwork(); this.puff(h.segs[0]!.a.x, h.segs[0]!.a.y, 8);
     const price = h.cost < 0 ? `refund $${(-h.cost).toLocaleString()}` : `$${h.cost.toLocaleString()}`;
-    this.toast(`${h.down ? 'Downgraded' : 'Upgraded'} ${Math.round(tiles * 2)} m of ${from} to ${h.to.name.toLowerCase()} (${price})`, 'good');
+    this.toast(`${h.down ? 'Downgraded' : 'Upgraded'} ${Math.round(tiles * 2)} m of ${from} to ${h.to.name.toLowerCase()} (${price})${took}`, 'good');
     this.laneUpdate(this.hover);
   }
   /** the Upgrade and Downgrade tools' right-click: the one-way straight run under the pointer is reversed (each seg replaced with its b-to-a, free); a two-way road is refused */
@@ -3113,13 +3173,23 @@ export class Game {
   private flipJunction(dir: 1 | -1) {
     const n = this.hover ? this.net.nearestNode(this.hover, 2, 5) : null;
     if (!n) { this.toast('Hover a junction or a bend in the road', 'warn'); return; }
-    const fits = VARIANTS.filter(v => this.junctionOpen(v.type) && (v.type === 'plain' || n.arms.length >= JUNCTIONS.find(j => j.id === v.type)!.minDeg) && (v.type !== 'mini' || miniFits(n)));
+    // a ring variant the rules refuse (T224: what it would cover, arms too short, another road in its circle) is skipped, so Tab never sticks on it;
+    // the first reason is toasted with the flip
+    const refused: string[] = [];
+    const fits = VARIANTS.filter(v => {
+      if (!(this.junctionOpen(v.type) && (v.type === 'plain' || n.arms.length >= JUNCTIONS.find(j => j.id === v.type)!.minDeg) && (v.type !== 'mini' || miniFits(n)))) return false;
+      const cur = v.type === n.type && (v.type !== 'roundabout' || v.rl === (n.rl ?? 1));
+      if (cur || (v.type !== 'roundabout' && v.type !== 'mini')) return true;
+      const why = this.ringPhysical(n, v.type, v.rl).why; if (why) refused.push(why);
+      return !why;
+    });
     const i = fits.findIndex(v => v.type === n.type && (v.type !== 'roundabout' || v.rl === (n.rl ?? 1)));
     const k = i < 0 ? (dir > 0 ? 0 : fits.length - 1) : (i + dir + fits.length) % fits.length;
-    if (k === i) { this.toast('No other junction type is open for this junction yet', 'warn'); return; }
+    if (k === i) { this.toast(refused[0] ?? 'No other junction type is open for this junction yet', 'warn'); return; }
     const v = fits[k]!, name = JUNCTIONS.find(j => j.id === v.type)!.name + (v.type === 'roundabout' ? `, ${v.rl} ring lane${v.rl > 1 ? 's' : ''}` : '');
-    const price = variantCost(v.type, v.rl), cost = Math.max(0, price - variantCost(n.type, n.rl ?? 1));
-    if (cost > this.money) { this.toast(`Not enough money: ${name} costs $${price.toLocaleString()}`, 'warn'); return; }
+    const price = variantCost(v.type, v.rl), ring = this.ringJudge(n, v.type, v.rl), comp = ring?.comp ?? 0, cost = Math.max(0, price - variantCost(n.type, n.rl ?? 1));
+    if (cost + comp > this.money) { this.toast(`Not enough money: ${name} costs $${(price + comp).toLocaleString()}${comp ? ` with $${comp.toLocaleString()} compensation` : ''}`, 'warn'); return; }
+    const took = this.ringTaken(ring, comp);
     this.traffic.spend('construction', cost);
     if (v.type === 'roundabout') this.ringLanes = v.rl;
     const hadLights = isLights(n), lit = v.type === 'signal' || v.type === 'slip';
@@ -3132,7 +3202,7 @@ export class Game {
     const m = this.net.nodeAt({ x: n.x, y: n.y }) ?? n; this.selectedJunction = m;
     const warn = this.armWarn(m);
     if (warn) this.toast(warn, 'warn');
-    else this.toast(`${name} (${price ? '$' + price.toLocaleString() : 'free'}) · Tab for the next type`, 'good');
+    else this.toast(`${name} (${price ? '$' + price.toLocaleString() : 'free'})${took} · Tab for the next type${refused.length ? ` · ${refused[0]}` : ''}`, 'good');
   }
   /** the fixed-time green seconds of each phase (the panel's sliders, once released): sets the lights to fixed-time and commits the network */
   setSplit(n: Node, split: number[]) { this.edit.setSignal(n, 0, split); this.commitNetwork(); }
@@ -6503,6 +6573,23 @@ export class Game {
         this.setIso(ctx); ctx.beginPath(); ctx.arc(n.x, n.y, Math.max(0.5, ri), 0, Math.PI * 2); ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.fillStyle = bad ? 'rgba(240,80,60,0.18)' : 'rgba(110,150,80,0.5)'; ctx.fill(); ctx.setLineDash([6, 4]); ctx.stroke(); ctx.setLineDash([]);
         if (c.hit.length) { this.setIso(ctx); ctx.beginPath(); strip(c.hit.map(s => ({ a: s.a, b: s.b })), Math.max(...c.hit.map(s => s.cls.h + s.cls.walk))); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = 'rgba(240,80,60,0.45)'; ctx.fill(); ctx.strokeStyle = '#f87171'; ctx.lineWidth = 2; ctx.stroke(); }
+        // T224: what the ring would take in, before the click: the buildings and props it clears amber and dashed (their compensation is in the price
+        // below), the thing that refuses it (a business, the range's sign, an iconic place, a big prop) outlined red
+        const ring = c.ring, poly = (o: readonly number[]) => { ctx.moveTo(o[0]!, o[1]!); for (let k = 2; k < o.length; k += 2) ctx.lineTo(o[k]!, o[k + 1]!); ctx.closePath(); };
+        if (ring && !bad && (ring.lotOutlines.length || ring.props.length)) {
+          this.setIso(ctx); ctx.beginPath(); for (const o of ring.lotOutlines) poly(o); for (const p of ring.props) poly(rectPoly(p.x0, p.y0, p.x1, p.y1)); ctx.setTransform(1, 0, 0, 1, 0, 0);
+          ctx.fillStyle = 'rgba(251,191,36,0.3)'; ctx.fill(); ctx.strokeStyle = '#fbbf24'; ctx.lineWidth = 2; ctx.setLineDash([5, 4]); ctx.stroke(); ctx.setLineDash([]);
+        }
+        if (ring?.outline.length && c.why === ring.why) {
+          this.setIso(ctx); ctx.beginPath(); for (const o of ring.outline) poly(o); ctx.setTransform(1, 0, 0, 1, 0, 0);
+          ctx.fillStyle = 'rgba(240,80,60,0.28)'; ctx.fill(); ctx.strokeStyle = '#f87171'; ctx.lineWidth = 2.5; ctx.stroke();
+        }
+        const gm = this.ghostMouse;
+        if (!bad && !c.why && gm) {
+          const nl = ring?.lots.length ?? 0, np = ring?.props.length ?? 0, nm = b === 'roundabout' ? `Roundabout, ${rl} lane${rl > 1 ? 's' : ''}` : 'Mini-roundabout';
+          const g = costLabel('', c.cost + c.comp, this.money, `${nm}${nl ? ` · ${nl} building${nl > 1 ? 's' : ''} cleared, $${c.comp.toLocaleString()} compensation` : ''}${np ? ` · ${np} item${np > 1 ? 's' : ''} cleared` : ''}`);
+          drawGhostHint(this.ghostView(ctx), gm.mx, gm.my, g.label, g.bad);
+        }
         if (bad) { const p = this.screen(n.x, n.y); ctx.font = `bold ${12 * this.dpr}px ui-sans-serif, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round'; ctx.lineWidth = 3 * this.dpr; ctx.strokeStyle = '#0f172a'; ctx.strokeText(c.why, p.x, p.y - 22 * this.dpr); ctx.fillStyle = '#f87171'; ctx.fillText(c.why, p.x, p.y - 22 * this.dpr); }
       } else {
         const r = Math.max(...n.arms.map(a => a.h)) + 1.5;
@@ -6516,8 +6603,17 @@ export class Game {
       ctx.fillStyle = h.why ? 'rgba(240,80,60,0.3)' : h.down ? 'rgba(96,165,250,0.3)' : 'rgba(255,216,102,0.3)'; ctx.fill();
       this.setIso(ctx); ctx.beginPath(); for (const l of legs) { ctx.moveTo(l.a.x, l.a.y); ctx.lineTo(l.b.x, l.b.y); } ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.strokeStyle = h.why ? '#f87171' : h.down ? '#60a5fa' : '#ffd866'; ctx.lineWidth = 2; ctx.stroke();
-      const gm = this.ghostMouse;
-      if (gm) { const g = costLabel(h.why, h.cost, this.money, h.to ? `${h.down ? 'Downgrade' : 'Upgrade'} to ${h.to.name.toLowerCase()}` : ''); drawGhostHint(this.ghostView(ctx), gm.mx, gm.my, g.label, g.bad); }
+      // T224: the buildings and items the rings at its ends would grow over (amber, paid for in the price), or the thing that refuses (red)
+      const poly = (o: readonly number[]) => { ctx.moveTo(o[0]!, o[1]!); for (let k = 2; k < o.length; k += 2) ctx.lineTo(o[k]!, o[k + 1]!); ctx.closePath(); };
+      for (const r of h.rings) {
+        this.setIso(ctx); ctx.beginPath();
+        if (r.why) for (const o of r.outline) poly(o); else { for (const o of r.lotOutlines) poly(o); for (const p of r.props) poly(rectPoly(p.x0, p.y0, p.x1, p.y1)); }
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        if (r.why) { ctx.fillStyle = 'rgba(240,80,60,0.28)'; ctx.fill(); ctx.strokeStyle = '#f87171'; ctx.lineWidth = 2.5; ctx.stroke(); }
+        else if (r.lotOutlines.length || r.props.length) { ctx.fillStyle = 'rgba(251,191,36,0.3)'; ctx.fill(); ctx.strokeStyle = '#fbbf24'; ctx.lineWidth = 2; ctx.setLineDash([5, 4]); ctx.stroke(); ctx.setLineDash([]); }
+      }
+      const gm = this.ghostMouse, nb = h.rings.reduce((a, r) => a + (r.why ? 0 : r.lots.length), 0);
+      if (gm) { const g = costLabel(h.why, h.cost + h.comp, this.money, h.to ? `${h.down ? 'Downgrade' : 'Upgrade'} to ${h.to.name.toLowerCase()}${nb ? ` · ${nb} building${nb > 1 ? 's' : ''} cleared, $${h.comp.toLocaleString()} compensation` : ''}` : ''); drawGhostHint(this.ghostView(ctx), gm.mx, gm.my, g.label, g.bad); }
     } else if (this.tool === 'bulldoze' && this.hoverPiece) {
       const pc = this.hoverPiece, cls = pc.seg.cls;
       this.setIso(ctx); ctx.beginPath(); strip([{ a: pc.p0, b: pc.p1 }], cls.h + cls.walk); ctx.setTransform(1, 0, 0, 1, 0, 0);
