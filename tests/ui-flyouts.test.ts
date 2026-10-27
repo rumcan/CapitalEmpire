@@ -31,7 +31,8 @@ const ctx = (golf: boolean, ui: MenuCtx['ui'], o: Partial<MenuCtx> = {}): MenuCt
   cares: [{ id: 'mow', name: 'Mow' }, { id: 'water', name: 'Water' }],
   propGroups: [{ id: 'plants', name: 'Plants' }, { id: 'water', name: 'Water' }],
   materials: [{ id: 'preset:golf-green', name: 'Golf - Green', col: '#3a550b' }],
-  plants: [{ id: 'trees', name: 'Trees', col: '#2a4' }],
+  plants: [{ id: 'trees', name: 'Trees', col: '#2a4' }, { id: 'bushes', name: 'Bushes', col: '#3b5' }, { id: 'flowers', name: 'Flowers', col: '#c5a' }],
+  practice: [{ id: 'putting', name: 'Putting green', why: null }, { id: 'chipping', name: 'Chipping green and bunker', why: null }],
   newHoleWhy: null,
   range: [{ id: 'card', name: 'Range card' }, { id: 'range-practice', name: 'Practice facilities' }],
   ...o,
@@ -52,9 +53,12 @@ describe('the flyouts: sub-menus to the side, as many levels as the tools have (
     assert.deepEqual(labels(find(t, 'Junctions').children!), ['Select a junction', 'Plain', 'All-way stop', 'Roundabout']);
     assert.deepEqual(labels(find(t, 'Transport').children!), ['Bus route', 'Car park', 'Toll gate']);
   });
-  it('Course ▸ Holes ▸ New hole · Your holes · Shape by hand ▸ the surfaces; Buildings ▸ Clubhouse · Halfway house; Greenkeeping ▸ the cares; Tournament', () => {
+  it('Course ▸ Holes ▸ New hole · Your holes · Shape by hand ▸ the surfaces; Buildings ▸ Clubhouse · Halfway house; Cart paths & roads ▸ the paths and drives; Greenkeeping ▸ the cares; Tournament', () => {
     const c = menuOf(RAIL.find(r => r.id === 'course')!, ALL);
-    assert.deepEqual(labels(c), ['Holes', 'Buildings', 'Greenkeeping', 'Tournament', 'Land for sale']);
+    assert.deepEqual(labels(c), ['Holes', 'Buildings', 'Cart paths & roads', 'Greenkeeping', 'Tournament', 'Land for sale'], 'T206: Cart paths & roads directly below Buildings');
+    assert.deepEqual(find(c, 'Cart paths & roads').children!.map(r => (r.caption ? `[${r.label}]` : r.label)), ['[Cart paths]', 'Walking path', '[Course drives]', 'Gravel drive']);
+    assert.equal(find(c, 'Cart paths & roads').note, 'Roads and cart paths on your property', 'its tooltip (the owner: "these are roads for on you property")');
+    assert.deepEqual(find(c, 'Cart paths & roads', 'Walking path').leaf?.act, { k: 'road', id: 'cart-walk' });
     assert.deepEqual(find(c, 'Land for sale').leaf?.act, { k: 'land' }, 'T200: the land for sale');
     assert.deepEqual(labels(find(c, 'Holes').children!), ['New hole', 'Your holes', 'Shape by hand']);
     assert.deepEqual(labels(find(c, 'Holes', 'Shape by hand').children!), ['Fairway', 'Green']);
@@ -63,12 +67,21 @@ describe('the flyouts: sub-menus to the side, as many levels as the tools have (
     assert.deepEqual(labels(find(c, 'Greenkeeping').children!), ['Grass care', 'Mow', 'Water']);
     assert.deepEqual(find(c, 'Tournament').leaf?.act, { k: 'event' });
   });
-  it('Decoration ▸ Paths ▸ the paths and drives · Props ▸ by group; Town decoration ▸ Paint ▸ Areas ▸ the materials, Plants ▸ ... · Props ▸ · Buildings', () => {
-    const d = menuOf(RAIL.find(r => r.id === 'decor')!, ALL), td = menuOf(RAIL.find(r => r.id === 'towndecor')!, ALL);
-    assert.deepEqual(labels(d), ['Paths', 'Props']);
-    assert.deepEqual(find(d, 'Paths').children!.map(r => (r.caption ? `[${r.label}]` : r.label)), ['[Cart paths]', 'Walking path', '[Course drives]', 'Gravel drive']);
-    assert.deepEqual(labels(find(d, 'Props').children!), ['All props', 'Plants', 'Water']);
-    assert.deepEqual(find(d, 'Props', 'Plants').leaf?.entry.view, { where: 'course' });
+  it('Facilities ▸ Practice ▸ the facilities · Plants ▸ Trees, Bushes, Flowers · Decoration ▸ Props ▸ by group (T206); Town decoration ▸ Paint ▸ Areas ▸ the materials, Plants ▸ ... · Props ▸ · Buildings', () => {
+    const d = menuOf(RAIL.find(r => r.id === 'facilities')!, ALL), td = menuOf(RAIL.find(r => r.id === 'towndecor')!, ALL);
+    assert.deepEqual(labels(d), ['Practice', 'Plants', 'Decoration']);
+    assert.deepEqual(labels(find(d, 'Practice').children!), ['Putting green', 'Chipping green and bunker']);
+    assert.deepEqual(find(d, 'Practice', 'Putting green').leaf?.act, { k: 'practice', id: 'putting' });
+    assert.equal(find(d, 'Practice', 'Putting green').leaf?.entry.id, 'practice', 'its own building tool, not the hole brushes');
+    assert.deepEqual(labels(find(d, 'Plants').children!), ['Trees', 'Bushes', 'Flowers'], 'the plant brush, reachable from the course side');
+    assert.deepEqual(find(d, 'Plants', 'Trees').leaf, { item: 'facilities', entry: RAIL.find(r => r.id === 'facilities')!.tools[1], act: { k: 'plant', id: 'trees' } });
+    assert.deepEqual(labels(find(d, 'Decoration').children!), ['Props']);
+    assert.deepEqual(labels(find(d, 'Decoration', 'Props').children!), ['All props', 'Plants', 'Water']);
+    assert.deepEqual(find(d, 'Decoration', 'Props', 'Plants').leaf?.entry.view, { where: 'course' });
+    assert.ok(!leavesOf(d).some(l => l.row.leaf!.entry.id === 'path'), 'Decoration keeps no Paths');
+    // not a range start: Practice locked in place with why
+    const nr = menuOf(RAIL.find(r => r.id === 'facilities')!, ctx(true, null, { practice: [{ id: 'putting', name: 'Putting green', why: 'Comes with a driving range' }, { id: 'chipping', name: 'Chipping green and bunker', why: 'Comes with a driving range' }] }));
+    assert.equal(find(nr, 'Practice').why, 'Comes with a driving range');
     assert.deepEqual(labels(td), ['Paint', 'Props', 'Buildings']);
     assert.deepEqual(labels(find(td, 'Paint').children!), ['Areas', 'Plants', 'Pick an area', 'Erase areas']);
     assert.equal(find(td, 'Paint', 'Areas', 'Golf - Green').swatch, '#3a550b');

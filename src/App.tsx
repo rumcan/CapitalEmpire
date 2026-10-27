@@ -94,6 +94,8 @@ function menuCtx(game: Game): MenuCtx {
     propGroups: DECOR_GROUPS.filter(g => g.id !== 'buildings').map(g => ({ id: g.id, name: g.name })),
     materials: MENU_TEXES.map(t => ({ id: t.id, name: t.name, col: t.col })),
     plants: PLANT_KINDS.map(k => ({ id: k.kind, name: k.name, col: k.col })),
+    // T206: Facilities ▸ Practice: the range's practice area's facilities (no range: locked with why)
+    practice: [{ id: 'putting', name: 'Putting green' }, { id: 'chipping', name: 'Chipping green and bunker' }].map(f => ({ ...f, why: game.range.scene ? null : 'Comes with a driving range (its practice area)' })),
     newHoleWhy: ui?.newHoleLock ?? null,
     range: game.range.scene ? [{ id: 'card', name: 'Range card' }, { id: 'range-practice', name: 'Practice facilities' }, { id: 'range-extras', name: 'Kiosk and academy' }, { id: 'range-upgrades', name: 'Upgrades' }] : [],
   };
@@ -518,7 +520,7 @@ export default function App() {
           {/* T174: the box round the rail and the panel takes no clicks itself (it is as tall as the rail, so it covered the map under a short panel) */}
           <div ref={railBox} className={`pointer-events-none absolute left-3 top-[var(--hud-top,5.75rem)] ${fly ? 'z-40' : 'z-20'} flex items-start gap-2 [&>*]:pointer-events-auto`}>
             {/* P23 P1-E: the same places from minute zero; a tool not open yet stays dimmed in place with what unlocks it, a new one says NEW */}
-            {/* T182: the groups (Driving range, Course, Decoration · Traffic, Town decoration); the range opens its card; a group opens its last tool, else its first open one */}
+            {/* T182: the groups (Driving range, Course, Facilities (T206) · Traffic, Town decoration); the range opens its card; a group opens its last tool, else its first open one */}
             {/* T193: a group opens its flyout (a click again, Esc or a click on the map closes it); Select and Bulldoze pick their tool */}
             <Rail navRef={railRef} open={fly?.item ?? null} entries={railEntries(ui, game.golfMode, game.uiTool, { active: item?.id, range: !!game.range.scene, rangeOpen: game.range.cardOpen })}
               onPick={(r, keyboard, el) => {

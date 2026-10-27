@@ -96,6 +96,7 @@ export function Flyouts({ rows, top, left, startPath = [], keyboard = false, onL
             return (
               <button key={r.key} type="button" role="menuitem" data-row={`${level}:${index}`} data-key={r.key} tabIndex={focused ? 0 : -1}
                 data-guide={r.leaf ? `tool-${r.leaf.entry.view?.group ?? r.leaf.entry.id}` : undefined}
+                {...(r.note && !r.why ? { 'data-tip': r.note } : {})}
                 aria-haspopup={r.children ? 'menu' : undefined} aria-expanded={r.children ? opened : undefined} aria-disabled={r.why ? true : undefined}
                 className={`flyout-row ${opened ? 'flyout-row-open' : ''} ${r.why ? 'flyout-row-locked' : ''}`}
                 onMouseEnter={() => (r.children && !r.why ? open(level, index, false) : shut(level))}
