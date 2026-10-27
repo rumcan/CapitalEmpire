@@ -22,7 +22,7 @@ import type { HourStat } from './beforeafter';
 import { retime, jumpTo, townTimeOf } from './sim/townclock';
 import { EXIT_END, FIRST_TEE, GATES_OPEN, PLAY_END } from './golf/calendar';
 import { LATE_AFTER_MIN, minuteAt, simAt, travelEstimate, wantedLeaves } from './golf/daytimeline';
-import { DECK_SEATS, ENTRY_S, EVENT_CLOCK, EXPRESS_ENTRY, GRAVEL_EVERY_H, PARTY, PERFECT_RATE, SURGE_SEED, TOWN_GROWTH, WALK_V, payout, promoMul, ticketPrice, tollPrice, type CardId } from './event/config';
+import { DECK_SEATS, ENTRY_S, EVENT_CLOCK, EXPRESS_ENTRY, GRAVEL_EVERY_H, GROWN_SUCCESS0, GROWN_SUCCESS_K, GROWN_SUCCESS_MAX, GROWN_SUCCESS_MIN, PARTY, PERFECT_RATE, SURGE_SEED, TOWN_GROWTH, WALK_V, payout, promoMul, ticketPrice, tollPrice, type CardId } from './event/config';
 import type { BusRoute, BusRouteDef, BusStop } from './event/bus';
 import { Crowd, type FanCounts } from './event/crowd';
 import type { TollDef } from './event/toll';
@@ -96,6 +96,10 @@ const CASH_MAX = 256;
 const TOURIST_PER_LEVEL = 300;
 /** the reach, tiles, of the highway entry's kerb (and each map exit's, T092): the road within this far of the entry brings the tourists in */
 const ENTRY_REACH = 12;
+/** T090 (plan P22 2.3.3): the success a tournament's town growth rate gives a range start's grown town */
+export const grownSuccess = (rate: number): number => Math.min(GROWN_SUCCESS_MAX, Math.max(GROWN_SUCCESS_MIN, GROWN_SUCCESS0 + GROWN_SUCCESS_K * rate));
+/** T090: a range start's grown town plans a leg every this many game hours (plan P22 2.3.3 says every hour; see #159) */
+const GROWN_PLAN_H = 0.5;
 /** T091: a range start's town roads keep this much room from the golf land (tiles): a leg whose midpoint is nearer scores this much more (plan P22 2.3.5) */
 const GOLF_ROOM = 40;
 
@@ -216,6 +220,10 @@ export class City {
   suggested: Site | null = null;
   /** the towns grown by the last close (closeRound: a perfect run only; null otherwise): the new lots' events, and the residents of each town reached */
   grown: { events: TownEvent[]; pops: number[] } | null = null;
+  /** T090: a range start's town success factor set by the last tournament's close (null: none since the worker last read it: takeTownBoost) */
+  private townBoost: number | null = null;
+  /** T090: the success factor the last tournament set (once: the worker posts it for the engine's save), null when none is new */
+  takeTownBoost(): number | null { const b = this.townBoost; this.townBoost = null; return b; }
   /** the surge of the round (event/surge.ts: planned at the surge's start, counted through the eval; null outside) and the road components of the
    *  network (comp: the segs joined by road share a number; labelled after each network batch, see labelComps) */
   surge: Surge | null = null; private comp = new Map<Seg, number>();
@@ -477,13 +485,15 @@ export class City {
     return true;
   }
   /** golf mode on (with the tournament's tier and its reputation) or off (null): a new valley keeps it (terrain does not touch it) */
-  setGolf(g: { tier: number; rep: number; land?: [number, number, number, number][]; start?: 'range'; exits?: Pt[]; invited?: { at: number } } | null): TownEvent[] {
+  setGolf(g: { tier: number; rep: number; land?: [number, number, number, number][]; start?: 'range'; exits?: Pt[]; invited?: { at: number }; holes?: number; townBoost?: number } | null): TownEvent[] {
     // a range start's start, exits and invitation (plan P22) are kept for the range-start rules that read them (T088-T094); an old start's golf
     // state has none of these keys, exactly as before
     this.golf = g ? { tier: g.tier, rep: g.rep } : null; this.round.golf = !!g; this.golfLand = g?.land ?? [];
     if (this.golf && g?.start === 'range') { this.golf.start = 'range'; if (g.exits) this.golf.exits = g.exits; if (g.invited) this.golf.invited = g.invited; }
     // a range start's grown town (T091): its industrial district toward the nearer exit, opening at GROWN_IND_FROM built lots
     this.town.grownInd = this.golf?.start === 'range' && this.centres.length ? { rect: this.grownIndustrial(), from: GROWN_IND_FROM } : null;
+    // and its lot growth (T090, plan P22 2.3.2-2.3.3): the holes built and the tournaments' success (1 until the first tournament)
+    this.town.setGrown(this.golf?.start === 'range' && this.centres.length ? { holes: g?.holes ?? 0, success: g?.townBoost ?? 1 } : null);
     // the town's lots inside the course go now (and every game hour: a loaded town's lots may come after this): the events to post
     const ev: TownEvent[] = []; this.clearCourse(ev);
     return ev;
@@ -528,7 +538,10 @@ export class City {
     // (the everyday trips start again on their own)
     for (let i = 0; i < this.sim.cap; i++) if (this.sim.alive[i]) this.sim.despawn(i);
     this.unfreeze(); this.emptyParks(); this.endTourneyDay();
-    if (this.golf) { const rate = last ? roundTownGrowthRate(last, this.golf.tier, this.golf.rep) : 0; if (rate > 0 && this.centres.length) this.grown = this.growTowns(rate); } else if (perfect && this.centres.length) this.grown = this.growTowns();
+    // a range start's grown town (T090, plan P22 2.3.3): no stamp after the tournament; its success sets the town's pace (townBoost, kept by the
+    // engine in the save), so its growth is always seen happening
+    if (this.golf?.start === 'range' && this.town.grown) { const rate = last ? roundTownGrowthRate(last, this.golf.tier, this.golf.rep) : 0; this.townBoost = grownSuccess(rate); this.town.grown.success = this.townBoost; }
+    else if (this.golf) { const rate = last ? roundTownGrowthRate(last, this.golf.tier, this.golf.rep) : 0; if (rate > 0 && this.centres.length) this.grown = this.growTowns(rate); } else if (perfect && this.centres.length) this.grown = this.growTowns();
     return true;
   }
   /** the tournament day's end (T048): the town clock returns to the normal rate (the day length as last set: see the townDay message); a no-op otherwise */
@@ -710,12 +723,17 @@ export class City {
       this.pushHour(hr); this.syncHour = hr; this.town.access.set(this.sim.access); this.builtSync();
       // once a game hour a visit business with no plan yet today (no road or no homes when it was placed) gets another try
       this.visitDay = -1;
-      // with towns (centres) there is no career: its milestones and grants wait (the event's money is the income, see dayIn)
+      // with towns (centres) there is no career: its milestones and grants wait (the event's money is the income, see dayIn); a range start's
+      // grown town pays the milestones' grants as county development grants (T090, plan P22 2.1.5: the town's growth is the player's), no win
       if (!this.centres.length) {
         const u = this.career.update(this.town.pop);
         for (const m of u.newly) if (m.grant) this.budget.grant(m.grant);
         if (u.newly.length) milestones = u.newly;
         won = u.won;
+      } else if (this.golf?.start === 'range') {
+        const u = this.career.update(this.town.pop);
+        for (const m of u.newly) if (m.grant) this.budget.grant(m.grant);
+        if (u.newly.length) milestones = u.newly;
       }
     }
     if (this.incidents) { for (let k = 0; k < n; k++) { this.sim.step(); this.sample(); } if (this.sim.t - this.incT >= 0.999) this.incidentTick(); }
@@ -1797,10 +1815,13 @@ export class City {
   private planGrow(): Leg[] | null {
     const cls = this.cls;
     if (!cls) return null;
-    const h = Math.floor(this.sim.clock * this.growSpeed / GAME_HOUR);
+    // a range start's grown town plans every GROWN_PLAN_H game hours (T090: one leg an hour leaves its growth short of land from year 8)
+    const period = (this.golf?.start === 'range' ? GROWN_PLAN_H : 1) * GAME_HOUR, h = Math.floor(this.sim.clock * this.growSpeed / period);
+    // a range start's first street rolls out at the first growth hour (plan P22 2.8: about 60 s in at 1x, with the first house frame), not at once
+    if (this.golf?.start === 'range' && this.sim.clock * this.growSpeed < GAME_HOUR) return null;
     if (h === this.planHour) return null;
     this.planHour = h;
-    if (this.pendingGrow && this.sim.clock - this.growAt < GAME_HOUR / this.growSpeed) return null;
+    if (this.pendingGrow && this.sim.clock - this.growAt < period / this.growSpeed) return null;
     const K = this.centres.length, k = K ? this.planHour % K : 0, grown = this.golf?.start === 'range';
     // with towns a leg every GRAVEL_EVERY_H game hours; a range start's grown town a leg every game hour (plan P22 2.3.3, T091)
     if (K && !grown && this.sim.clock - this.growAt < GRAVEL_EVERY_H * GAME_HOUR / this.growSpeed) return null;

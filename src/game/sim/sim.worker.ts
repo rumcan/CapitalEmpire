@@ -170,7 +170,7 @@ scope.onmessage = (e: MessageEvent<ToSim>) => {
       case 'townState': postTown(city.restore(m.lots, m.simT, m.budget, m.money, m.career, m.shift), true); city.loadRound(m.round); city.restoreBiz(m.biz); postBudget(null); postBiz(); break;
       case 'parks': city.setParks(m.defs); forcePost = true; break;
       case 'businesses': city.setBusinesses(m.defs); post({ t: 'site', site: city.site }); postBiz(); break;
-      case 'golf': { const ev = city.setGolf(m.on ? { tier: m.tier, rep: m.rep, land: m.land, start: m.start, exits: m.exits, invited: m.invited } : null); if (ev.length) postTown(ev, true); break; }
+      case 'golf': { const ev = city.setGolf(m.on ? { tier: m.tier, rep: m.rep, land: m.land, start: m.start, exits: m.exits, invited: m.invited, holes: m.holes, townBoost: m.townBoost } : null); if (ev.length) postTown(ev, true); break; }
       case 'parkTest': city.parkTest(m.id, m.n); forcePost = true; break;
       case 'tolls': city.setTolls(m.defs); forcePost = true; break;
       case 'parking': city.setParking(m.rows, m.curbs, m.fee); forcePost = true; break;
@@ -183,7 +183,7 @@ scope.onmessage = (e: MessageEvent<ToSim>) => {
       case 'repairDisaster': city.repairDisaster(m.id, m.key); postBudget(null); break;
       case 'round':
         if (m.op === 'start') city.startRound(); else if (m.op === 'now') city.startNow(); else if (m.op === 'pick') city.pickCard(m.card);
-        else { if (city.closeRound() && city.grown) postTown(city.grown.events, true); postBiz(); }
+        else { if (city.closeRound() && city.grown) postTown(city.grown.events, true); const b = city.takeTownBoost(); if (b !== null) post({ t: 'townBoost', v: b }); postBiz(); }
         postBudget(null); forcePost = true; break;
       case 'spend': city.spend(m.kind, m.n); postBudget(null); break;
       case 'loan': city.loan(m.take); postBudget(null); break;
