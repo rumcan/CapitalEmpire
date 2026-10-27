@@ -17,6 +17,7 @@ import type { Tool } from '../game/types';
 import { CHIP_STAGE, NEW_BADGE_IDS, STAGE_WHY, type GolfChipId, type ProgressiveUiState, type RailGroupId } from '../game/ext/progressive-ui';
 import type { IconName } from './Icon';
 import type { TipParts } from './tip';
+import { GREENKEEPING } from '../game/features';
 
 /** a tool in a rail item: its button in the row at the top of the item's panel; sub: the section it sits in (Traffic's Roads, Junctions,
  *  Transport); only: the game it shows in */
@@ -46,7 +47,7 @@ export const RAIL: readonly RailItem[] = [
     // T206: the roads on the player's own property (the course's cart paths and drives: the road tool on the course, T084), below Buildings
     { id: 'path', label: 'Cart paths & roads', key: '', icon: 'sidewalk' },
     // Greenkeeping (plan P23-UX P2-5, T175): the Grass panel as a tool, its care armed like a brush; it opens with the first grown hole
-    { id: 'greenkeeping', label: 'Greenkeeping', key: '', icon: 'trees', only: 'golf' },
+    ...(GREENKEEPING ? [{ id: 'greenkeeping' as const, label: 'Greenkeeping', key: '', icon: 'trees' as const, only: 'golf' as const }] : []), // hidden for now (features.ts)
   ], extras: [{ id: 'event', label: 'Tournament', icon: 'calendar' }, { id: 'land', label: 'Land for sale', icon: 'terrain' }] },
   // T206: the practice facilities' own building tools, the plant brush (Town decoration's, on the course side too) and Decoration's Props
   { id: 'facilities', label: 'Facilities', icon: 'leaf', key: 'Z', section: 'course', group: 'course', only: 'golf', tools: [
