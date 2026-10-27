@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-27 17:55)
+## START HERE (kept current by the lead; last updated 2026-10-27 18:10)
 
 **Paste-ready start prompts for every role are in `docs/START-PROMPTS.md`:** the lead, a coding ticket, and the other sessions in this
 repo. The weekly usage cap is close (2026-10-26), so any chat may stop at any moment.
@@ -70,6 +70,10 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
   → **T206 #540** (the owner, 15:55-16:50: a Facilities group on the rail with Practice tools of their own, putting green and chipping
   green and bunker, placed as a whole, not the hole brushes; Plants (trees, bushes, flowers) and Decoration under Facilities; Course ▸ Cart
   paths & roads, the roads on the player's property, directly below Buildings; range work: Opus high) → **T203 #531** the last
+- **Golf play's tickets (the owner, 18:05: "do we have tickets for playing golf yet?"; play P1-P4 is on main from #258), after T203, in this
+  order:** T209 #554 the owner's round resumes after a reload → T210 #555 the results wait for the last group → T211 #556 pace of play →
+  **T208 #553 everyday golf** (golfers play your course every day, pay green fees; today it is only a yearly number) → T212 #557 putt,
+  chip, tee-up and coach clips → T213 #558 caddies, carts, celebrations → T214 #559 club pros and memberships (plan first).
   12 people in the game → **T112 #199** (merge #394 when the owner stops
   5191) → **T149 #312** (waits for the owner's FAR-anchor choice) → **T199 #517** swamp (waits for swamp tiles) → the lists below.
 - **P25 #348 lots generated on the fly** (the owner: "start over with the lot presets we need a workflow that gets us to generating perfect
