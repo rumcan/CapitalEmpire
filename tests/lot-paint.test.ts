@@ -61,3 +61,18 @@ describe('the ground brush (T183)', () => {
     assert.ok(a.includes(bays)); assert.equal(a.length, 2);
   });
 });
+
+import { selectAfter } from '../src/game/dev/wizard-lot';
+describe("the wizard's select (T183)", () => {
+  it('a click selects one item, Shift or Ctrl+click toggles, a box selects (or adds), the ground clears', () => {
+    const none = new Set<number>();
+    assert.deepEqual([...selectAfter(none, { item: 3, add: false, box: null })], [3]);
+    assert.deepEqual([...selectAfter(new Set([3]), { item: 5, add: false, box: null })], [5], 'a plain click replaces the selection');
+    assert.deepEqual([...selectAfter(new Set([3]), { item: 5, add: true, box: null })].sort(), [3, 5], 'Shift or Ctrl+click adds');
+    assert.deepEqual([...selectAfter(new Set([3, 5]), { item: 5, add: true, box: null })], [3], 'and takes out again');
+    assert.deepEqual([...selectAfter(new Set([3]), { item: -1, add: false, box: [1, 2] })].sort(), [1, 2], 'a box selects what is in it');
+    assert.deepEqual([...selectAfter(new Set([3]), { item: -1, add: true, box: [1, 2] })].sort(), [1, 2, 3], 'Shift+box adds');
+    assert.deepEqual([...selectAfter(new Set([3]), { item: -1, add: false, box: null })], [], 'a click on the ground clears');
+    const s = new Set([4]); selectAfter(s, { item: 1, add: true, box: null }); assert.deepEqual([...s], [4], 'the selection before is untouched (a new set)');
+  });
+});

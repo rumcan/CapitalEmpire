@@ -74,9 +74,9 @@ export function makePalette(shell: Shell, host: PaletteHost) {
     strip.style.gridAutoColumns = `${px}px`;
     const out: HTMLElement[] = [];
     if (group === 'ground') {
-      for (const sw of SWATCHES) { const t = tile(`${sw.name}: drag on the lot to paint a rectangle (${sw.kind} · ${sw.tex})`, a.paint === sw, () => host.paint(a.paint === sw ? null : sw), `${sw.name} · ${sw.tex}`); t.style.background = sw.col; t.append(el('span', 'position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.55);font-size:10px;text-align:center', sw.name)); out.push(t); }
-      const er = tile('Erase: click a painted patch to remove it', a.paint === 'erase', () => host.paint(a.paint === 'erase' ? null : 'erase'), 'Erase'); er.append(el('span', 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px', '⌫ Erase')); out.push(er);
-      const off = tile('paint off (Esc)', a.paint === null, () => host.paint(null), 'Off'); off.append(el('span', 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px', 'Off')); out.push(off);
+      // T183: a swatch is Draw with that material (drag paints, Shift+drag erases); Select goes back
+      for (const sw of SWATCHES) { const t = tile(`Draw ${sw.name}: drag on the lot to paint (a round brush, [ ] its size), Shift+drag erases, R Shape (a rectangle); Esc or V back to Select`, a.paint === sw, () => host.paint(a.paint === sw ? null : sw), `${sw.name} · ${sw.tex}`); t.style.background = sw.col; t.append(el('span', 'position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.55);font-size:12px;text-align:center', sw.name)); out.push(t); }
+      const off = tile('back to Select (Esc or V)', a.paint === null, () => host.paint(null), 'Select'); off.append(el('span', 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px', '↖ Select')); out.push(off);
     } else if (group === 'decals') {
       for (const d of LOT_DECALS) {
         if ((cat && d.group !== cat) || (q && !d.id.toLowerCase().includes(q))) continue;

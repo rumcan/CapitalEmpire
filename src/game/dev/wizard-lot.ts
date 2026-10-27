@@ -39,6 +39,13 @@ export function makeLot(raw: LotPreset, f: PresetFrame, M: LayModel, seed = Math
   const k = hq ? sizeClassOf(hq.id) : null, cls: HouseClass = hq ? CLASS_NAMES[k ?? 0] : 'none';
   return { base, items: offers.map(o => ({ ...o, deleted: false })), undo: [], lot, house: hq?.id ?? null, cls, hw: hh ? 2 * hh.ha : 0, hd: hh ? 2 * hh.hb : 0, seed, group };
 }
+/** the wizard's selection after a release (T183): a box selects the items in it (adding: to the selection); a click on an item selects it alone
+ *  (adding: toggles it); a click on the ground clears it (adding: keeps it). Pure: a new set */
+export function selectAfter(sel: ReadonlySet<number>, r: { item: number; add: boolean; box: readonly number[] | null }): Set<number> {
+  if (r.box) return r.add ? new Set([...sel, ...r.box]) : new Set(r.box);
+  if (r.item >= 0) { if (!r.add) return new Set([r.item]); const s = new Set(sel); if (s.has(r.item)) s.delete(r.item); else s.add(r.item); return s; }
+  return r.add ? new Set(sel) : new Set();
+}
 /** a wizard lot as a preset (id): its base and the offered items not deleted */
 export function lotPreset(c: WizLot, id: string): LotPreset {
   const props = [...c.base.props], decals = [...(c.base.decals ?? [])];

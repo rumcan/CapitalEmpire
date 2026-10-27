@@ -59,7 +59,9 @@ type Undo =
   | { kind: 'file'; file: 'scale-overrides.json' | 'removed.json'; text: string; restore?: () => void }
   | { kind: 'player'; prop: Prop; item: number; x: number; y: number; scale: number; flip: boolean }
   | { kind: 'player-del'; prop: Prop; item: number; x: number; y: number; scale: number; flip: boolean }
-  | { kind: 'player-add'; prop: Prop };
+  | { kind: 'player-add'; prop: Prop }
+  /** a step another part of the lab made (T183: a ground stroke): its own way back */
+  | { kind: 'fn'; run: () => Promise<void> | void; what: string };
 
 /** the resize step (a factor) and the move steps (tiles) */
 const GROW = 1.05, STEP = 0.25, STEP_BIG = 1;
@@ -148,7 +150,10 @@ export interface EditorSel {
 }
 const NO_SEL: EditorSel = { key: '', props: 0, decals: 0, lot: null, preset: null, items: [], box: null };
 /** the open editor's entries for the lot lab (set by installLotEditor, null while no editor is installed): arm a library id, run an action, let go of the selection, the selection now */
-let lab: { place: (id: string) => void; edit: (a: LabAct) => void; deselect: () => void; sel: () => EditorSel } | null = null;
+let lab: { place: (id: string) => void; edit: (a: LabAct) => void; deselect: () => void; sel: () => EditorSel; push: (run: () => Promise<void> | void, what: string) => void } | null = null;
+/** T183: a step the lab made (a ground stroke) onto the editor's undo stack, so Undo and Ctrl+Z take it back in turn with the sprites' steps; false when
+ *  the editor is not on */
+export function pushEditorUndo(run: () => Promise<void> | void, what: string): boolean { if (!lab) return false; lab.push(run, what); return true; }
 /** the selection as the lot lab shows it (EditorSel); nothing while no editor is installed */
 export function editorSel(): EditorSel { return lab ? lab.sel() : NO_SEL; }
 /** the houses Change house may deal (T155: the lot lab's allocations for its road and state) and their words for the messages ('road 3, built');
@@ -579,6 +584,7 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
         if (u.sel) await commitGroup(u.lot, now ?? u.before, u.before, within(u.sel, u.before), 'undone', false);
         else await commitPreset(u.lot, now ?? u.before, u.before, u.index, 'undone', null);
       } else if (u.kind === 'file') { await save(u.file, u.text); u.restore?.(); say(`undone: ${u.file} restored`); }
+      else if (u.kind === 'fn') { await u.run(); say(`undone: ${u.what}`); }
       else if (u.kind === 'player') {
         // a prop removed and put back since is a new Prop: the step applies to it
         const p = live(u.prop);
@@ -827,6 +833,7 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
     },
     deselect: () => { drag = null; box = null; if (sel || ghost || group) select(null); },
     sel: selInfo,
+    push: (run, what) => { undo.push({ kind: 'fn', run, what }); },
   };
   return () => {
     cancelAnimationFrame(raf); unReload(); unScales(); lab = null;
