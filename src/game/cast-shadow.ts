@@ -29,6 +29,20 @@ export function shadowMultiplier(a: number): [number, number, number] {
   const t = clamp(a, 0, 1);
   return [1 - t + t * SHADOW_AMBIENT[0], 1 - t + t * SHADOW_AMBIENT[1], 1 - t + t * SHADOW_AMBIENT[2]];
 }
+/** T186: the coverage of the one shadow colour as dark (by luminance) as a baked shade that left the ground `lum` of its light (0..1): what
+ *  gl.ts FS_SHADEMASK writes into the shadow layer's green from a chunk's shade mask */
+export function shadeCoverage(lum: number): number {
+  const a = 1 - (0.299 * SHADOW_AMBIENT[0] + 0.587 * SHADOW_AMBIENT[1] + 0.114 * SHADOW_AMBIENT[2]);
+  return clamp((1 - lum) / a, 0, 1);
+}
+/** T186: what a sprite shadow of darkness s multiplies the ground by where the ground's own baked shade is b (as coverage, shadeCoverage):
+ *  the ground is already that dark, so the shadow darkens it only as far as the darker of the two, M(max(s, b)) / M(b) (gl.ts FS_LAYER); 1
+ *  where the baked shade is the darker */
+export function shadowOverShade(s: number, b: number): [number, number, number] {
+  if (s <= b) return [1, 1, 1];
+  const ms = shadowMultiplier(s), mb = shadowMultiplier(b);
+  return [ms[0] / mb[0], ms[1] / mb[1], ms[2] / mb[2]];
+}
 /** the shear of a shadow: a point h px above the foot line moves to (x + h * sx, foot + h * sy) */
 export function castShear(c: CastShadow): { sx: number; sy: number } {
   const a = c.angle * Math.PI / 180;
