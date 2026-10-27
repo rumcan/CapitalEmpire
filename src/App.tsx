@@ -154,6 +154,10 @@ export default function App() {
   if (game && item) last.current[item.id] = game.uiTool;
   /** the golf HUD's view (null outside golf mode): the top bar's tier and month */
   const gv = game?.golfMode ? game.golfView() : null, fv = game?.golfMode ? game.foundingView() : null;
+  /** a range start's founding season before the invitation (P22 2.8, T095): "Founding season · n of 9 holes"; and the title's place (the range's,
+   *  then the town's once named) */
+  const founding = fv && gv && !fv.invited && game!.traffic.round.runs === 0 && !gv.live ? `Founding season · ${Math.min(fv.check.holes, fv.check.holesNeeded)} of ${fv.check.holesNeeded} holes` : null;
+  const title = game?.ready ? game.titleName() : null;
   /** the tool visibility in force (T033 progressive unlocks; null shows everything) */
   const ui = game?.toolUi() ?? null;
   /** whether a golf top-bar chip is shown under the progressive unlocks */
@@ -213,8 +217,8 @@ export default function App() {
               <div className="flex items-center gap-2.5">
                 <Icon name="leaf" size={38} />
                 <div className={gv ? 'max-[1899px]:hidden' : 'max-[1599px]:hidden'}>{/* the golf bar's title from 1900 px (T135: one row) */}
-                  <div className="whitespace-nowrap font-display text-2xl font-bold leading-tight text-[var(--gold-hi)]" data-testid="title-name">{game.titleName() ?? 'Maple Falls'}</div>
-                  <div className="label-caps whitespace-nowrap">Town Builder</div>
+                  <div className="max-w-[12rem] truncate whitespace-nowrap font-display text-2xl font-bold leading-tight text-[var(--gold-hi)]" data-testid="title-name" title={title ? `${title.name} · ${title.sub}` : undefined}>{title?.name ?? 'Maple Falls'}</div>
+                  <div className="label-caps max-w-[12rem] truncate whitespace-nowrap">{title?.sub ?? 'Town Builder'}</div>
                 </div>
               </div>
               <div className="h-9 w-px bg-white/10" />
@@ -223,9 +227,9 @@ export default function App() {
                   {/* P23 4.11 (T135): the top bar keeps one row at 1366, 1600 and 1920 px at every stage: the tier's name under 1600 px, the title
                       under 1900 px, the chips' words and the invitation's sentence under 2200 px go into their tooltips; the traffic views are in the
                       gear menu */}
-                  <Stat icon="trophy" label="Tier" value={`T${gv.tier}`} sub={gv.tierName} subClass="max-[1599px]:hidden" title={`Tier ${gv.tier}: ${gv.tierName}`} tone="text-amber-200" />
+                  {/* T095 (P22 2.8): before the tour's invitation the Tier's line says the founding season's holes (one row at 1366-1920 px, T135) */}
+                  <Stat icon="trophy" label="Tier" value={`T${gv.tier}`} sub={founding ?? gv.tierName} subClass="max-[1599px]:hidden" subTone={founding ? 'font-semibold text-amber-300' : undefined} subTestId={founding ? 'founding-chip' : undefined} title={founding ? `${founding}: the tour invites you with ${fv!.check.holesNeeded} holes, a car park and a clubhouse (Tier ${gv.tier}: ${gv.tierName})` : `Tier ${gv.tier}: ${gv.tierName}`} tone="text-amber-200" />
                   <Stat icon="calendar" label="Month" value={gv.month} sub={gv.live ? 'Tournament day' : `${Math.ceil(gv.monthsLeft)} ${Math.ceil(gv.monthsLeft) === 1 ? 'month' : 'months'} to ${fv && !fv.due ? 'season end' : 'the tournament'}`} />
-                  {fv && !fv.invited && game.traffic.round.runs === 0 && !gv.live && <span className="flex items-center gap-1 whitespace-nowrap rounded-md border border-white/10 bg-white/5 px-2 py-1 text-xs font-semibold text-slate-200" data-testid="founding-chip" title={`Founding season · ${Math.min(fv.check.holes, fv.check.holesNeeded)} of ${fv.check.holesNeeded} holes: the tour invites you with ${fv.check.holesNeeded} holes, a car park and a clubhouse`}><Icon name="pin" size={14} /><span className="min-[1600px]:hidden">{Math.min(fv.check.holes, fv.check.holesNeeded)}/{fv.check.holesNeeded}</span><span className="max-[1599px]:hidden">Founding season · {Math.min(fv.check.holes, fv.check.holesNeeded)} of {fv.check.holesNeeded} holes</span></span>}
                   {game.golf?.start === 'range' && <button className={`chip ${game.range.cardOpen ? 'chip-on' : ''}`} onClick={() => game.openRangeCard()} title="The driving range: golfers, takings, bucket price and upgrades" aria-label="Range" data-testid="range-chip"><Icon name="income" size={16} /><span className={WIDE}>Range</span></button>}
                   {fv?.invited && game.traffic.round.runs === 0 && !gv.live && <span className="flex items-center gap-1 whitespace-nowrap rounded-md border border-amber-400/40 bg-amber-400/15 px-2 py-1 text-xs font-semibold text-amber-200" data-testid="invite-pill" title={`The tour's invitation: the Club Championship at the end of ${fv.due ? 'this' : 'next'} season (the first tournament is held at the end of the season it names)`}><Icon name="trophy" size={14} /><span className="min-[2200px]:hidden">Invited</span><span className={WIDE}>The Club Championship: end of {fv.due ? 'this' : 'next'} season</span></span>}
                   {gv.live && (() => { const w = getTournamentWeather(game.seed, game.traffic.round.stage === 'eval' && game.traffic.round.last ? game.traffic.round.last.run : game.traffic.round.runs + 1); return <span className="rounded-md border border-amber-400/40 bg-amber-400/15 px-2 py-1 text-xs font-semibold text-amber-200" title={w.summary}>{w.icon} {w.label}</span>; })()}
@@ -575,14 +579,14 @@ function PerfPanel({ game }: { game: Game }) {
 }
 
 /** a top-bar figure: its icon (in a square, when given), its label, value and a line under it; bar (0 to 1) draws a thin progress bar under that */
-function Stat({ label, value, sub, tone, subTone, subClass, title, bar, onClick, icon }: { label: string; value: string; sub?: string; tone?: string; subTone?: string; subClass?: string; title?: string; bar?: number; onClick?: () => void; icon?: IconName }) {
+function Stat({ label, value, sub, tone, subTone, subClass, subTestId, title, bar, onClick, icon }: { label: string; value: string; sub?: string; tone?: string; subTone?: string; subClass?: string; subTestId?: string; title?: string; bar?: number; onClick?: () => void; icon?: IconName }) {
   return (
     <div className={`flex items-center gap-2.5 px-1 ${onClick ? 'cursor-pointer rounded-lg hover:bg-white/5' : ''}`} onClick={onClick} title={title}>
       {icon && <div className="glass-2 hidden h-8 w-8 shrink-0 place-items-center min-[1900px]:grid"><Icon name={icon} size={24} /></div>}
       <div>
         <div className="label-caps">{label}</div>
         <div className={`text-sm font-semibold tabular-nums leading-tight ${tone ?? ''}`}>{value}</div>
-        {sub && <div className={`text-[10px] ${subTone ?? 'text-slate-500'} ${subClass ?? ''}`}>{sub}</div>}
+        {sub && <div className={`text-[10px] ${subTone ?? 'text-slate-500'} ${subClass ?? ''}`} data-testid={subTestId}>{sub}</div>}
         {bar !== undefined && <div className="mt-0.5 h-1 w-28 overflow-hidden rounded-full bg-white/10"><div className="h-full bg-amber-400 transition-all" style={{ width: `${Math.round(bar * 100)}%` }} /></div>}
       </div>
     </div>

@@ -94,6 +94,7 @@ import { HEIGHT_LIGHT_STRENGTH, clampHeightLight } from './ext/course-height/lig
 import { planGolfGame } from './golf/start';
 import { RANGE_CAM_ZOOM, planRangeStart } from './golf/rangestart';
 import { CLUB_REACH, clubhouseSpotWhy, plotOfFront, rangeLayout } from './golf/range';
+import { practiceArea } from './golf/practice';
 import { dressCourse } from './golf/dressing';
 import { FIRST_TEE, SEASON_START, monthsLeft, seasonLabel, seasonMonth, yearOf } from './golf/calendar';
 import { growReadyLabel, hintWithGrow } from './golf/growlabel';
@@ -2796,12 +2797,12 @@ export class Game {
     const at = g.dir === 0 ? { x: cx, y: d.y + d.h + off } : g.dir === 1 ? { x: d.x - off, y: cy } : g.dir === 2 ? { x: cx, y: d.y - off } : { x: d.x + d.w + off, y: cy };
     return (this.rangeRoadName = this.roadNameAt(at));
   }
-  /** the top bar's title (P22 2.8): a new range game's range ("Route 9 Driving Range") until its town is named, then the town's name; null in
-   *  other games (the game's own title) */
-  titleName(): string | null {
+  /** the top bar's title (P22 2.8), its big line and its small one: a new range game's range ("Driving Range", "on County Road 36") until its
+   *  town is named, then the town ("Pine Hollow", "Town Builder"); null in other games (the game's own title) */
+  titleName(): { name: string; sub: string } | null {
     const g = this.golf; if (g?.start !== 'range') return null;
-    if (g.progress?.ramp === undefined || this.firstSeen('town-named')) return this.names.town(0);
-    const r = this.rangeRoad(); return r ? `${r} Driving Range` : 'The Driving Range';
+    if (g.progress?.ramp === undefined || this.firstSeen('town-named')) return { name: this.names.town(0), sub: 'Town Builder' };
+    const r = this.rangeRoad(); return { name: 'Driving Range', sub: r ? `on ${r}` : 'on the county road' };
   }
   /** the welcome card (P22 2.8): once per new range game, while it is new (under WELCOME_PLAY_S of play when loaded), until it is closed.
    *  newHole: New hole is open (the card's button then builds the first hole; while P24's ramp holds it, the button opens the range) */
@@ -2829,8 +2830,8 @@ export class Game {
    *  range on the parcel. Null in other games */
   teeSpot(): { x: number; y: number } | null {
     const g = this.golf, d = g?.start === 'range' ? this.bizDefs.find(q => q.type === 'range') : undefined; if (!g || !d) return null;
-    const front: [number, number, number, number] = [d.x, d.y, d.w, d.h];
-    return fallbackTeeSpot(plotOfFront(front, g.dir), front, g.parcel, g.dir);
+    const front: [number, number, number, number] = [d.x, d.y, d.w, d.h], plot = plotOfFront(front, g.dir);
+    return fallbackTeeSpot(plot, front, g.parcel, g.dir, practiceArea(plot, g.dir).box); // off the practice area beside the plot (T130)
   }
   /** a new range game's guide step as a hint (P22 2.8, T095): the hint bar shows it when no other hint is up. From hole 1 on in practice: until
    *  then the ramp's hints teach the range, and the welcome card was step 1. Null when its hint was dismissed (Got it), the guide is done, or the
@@ -5303,10 +5304,12 @@ export class Game {
     // the tee ring (P22 2.8, T095): a gold ring pulsing out from the suggested tee while a range start's first New hole is in hand
     const ts = this.teeRingOn ? this.teeSpot() : null;
     if (ts) {
-      const s = this.screen(ts.x, ts.y), ph = (now % 1600) / 1600, d = this.dpr;
-      ctx.strokeStyle = '#fcd34d'; ctx.lineWidth = 3 * d;
-      ctx.globalAlpha = 0.95; ctx.beginPath(); ctx.arc(s.x, s.y, 12 * d, 0, Math.PI * 2); ctx.stroke();
-      ctx.globalAlpha = 1 - ph; ctx.beginPath(); ctx.arc(s.x, s.y, (12 + 26 * ph) * d, 0, Math.PI * 2); ctx.stroke();
+      const s = this.screen(ts.x, ts.y), ph = (now % 1600) / 1600, d = this.dpr, R = 16 * d;
+      ctx.globalAlpha = 0.35; ctx.fillStyle = '#fde68a'; ctx.beginPath(); ctx.arc(s.x, s.y, R, 0, Math.PI * 2); ctx.fill();
+      for (const [r, a] of [[R, 1], [R + 34 * ph * d, 1 - ph]] as const) {
+        ctx.globalAlpha = a * 0.7; ctx.strokeStyle = '#0f172a'; ctx.lineWidth = 6 * d; ctx.beginPath(); ctx.arc(s.x, s.y, r, 0, Math.PI * 2); ctx.stroke();
+        ctx.globalAlpha = a; ctx.strokeStyle = '#fde68a'; ctx.lineWidth = 3 * d; ctx.beginPath(); ctx.arc(s.x, s.y, r, 0, Math.PI * 2); ctx.stroke();
+      }
       ctx.globalAlpha = 1;
     }
   }

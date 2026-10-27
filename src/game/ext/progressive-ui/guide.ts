@@ -256,17 +256,27 @@ export const LEGACY_HINT_STEP: Readonly<Record<string, number>> = Object.freeze(
   'hint-traffic-and-advanced': 7,
 });
 
-/** how far past the range plot's side the ring's tee spot is, tiles (T095: until P06's newHoleSpot lands) */
-export const FALLBACK_TEE_PAST = 30;
+/** how far past the range plot's side the ring's tee spot is, tiles, and how far past the practice area's far side when that lies beside the
+ *  plot (P24 T130: the putting and chipping greens; a tee there is refused) (T095: until P06's newHoleSpot lands) */
+export const FALLBACK_TEE_PAST = 30, FALLBACK_PRACTICE_PAST = 15;
+/** how far behind the range front's back edge (the way its golfers hit) the ring's tee spot is, tiles: off the road's verge, so the tee box and
+ *  its rough lie on the land */
+export const FALLBACK_TEE_BEHIND = 10;
 
 /** the ring's suggested tee spot in a range start until P06's newHoleSpot lands (T095): FALLBACK_TEE_PAST tiles past the range plot's side along
- *  the road, on the side with more of the parcel, level with the middle of the range front's depth, kept 2 tiles inside the parcel. dir: the way
- *  the range's golfers hit (0 north, 1 east, 2 south, 3 west), so the road runs along x for 0 and 2 and along y for 1 and 3 */
-export function fallbackTeeSpot(plot: Rect, front: Rect, parcel: Rect, dir: 0 | 1 | 2 | 3): { x: number; y: number } {
+ *  the road, on the side with more of the parcel, or FALLBACK_PRACTICE_PAST past the practice area (practice: its box, x0 y0 x1 y1) when that is
+ *  further; FALLBACK_TEE_BEHIND past the range front's back edge; kept 2 tiles inside the parcel. dir: the way the range's golfers hit (0 north,
+ *  1 east, 2 south, 3 west), so the road runs along x for 0 and 2 and along y for 1 and 3 */
+export function fallbackTeeSpot(plot: Rect, front: Rect, parcel: Rect, dir: 0 | 1 | 2 | 3, practice?: readonly [number, number, number, number]): { x: number; y: number } {
   const alongX = dir === 0 || dir === 2, [qx, qy, qw, qh] = parcel;
   const a0 = alongX ? plot[0] : plot[1], a1 = a0 + (alongX ? plot[2] : plot[3]), p0 = alongX ? qx : qy, p1 = p0 + (alongX ? qw : qh);
-  const along = p1 - a1 >= a0 - p0 ? a1 + FALLBACK_TEE_PAST : a0 - FALLBACK_TEE_PAST;
-  const across = alongX ? front[1] + front[3] / 2 : front[0] + front[2] / 2;
+  const up = p1 - a1 >= a0 - p0;
+  let along = up ? a1 + FALLBACK_TEE_PAST : a0 - FALLBACK_TEE_PAST;
+  if (practice) {
+    const b0 = alongX ? practice[0] : practice[1], b1 = alongX ? practice[2] : practice[3];
+    along = up ? Math.max(along, b1 + FALLBACK_PRACTICE_PAST) : Math.min(along, b0 - FALLBACK_PRACTICE_PAST);
+  }
+  const across = dir === 0 ? front[1] - FALLBACK_TEE_BEHIND : dir === 1 ? front[0] + front[2] + FALLBACK_TEE_BEHIND : dir === 2 ? front[1] + front[3] + FALLBACK_TEE_BEHIND : front[0] - FALLBACK_TEE_BEHIND;
   const clamp = (v: number, lo: number, hi: number) => Math.min(Math.max(v, lo + 2), hi - 2);
   return alongX ? { x: clamp(along, qx, qx + qw), y: clamp(across, qy, qy + qh) } : { x: clamp(across, qx, qx + qw), y: clamp(along, qy, qy + qh) };
 }

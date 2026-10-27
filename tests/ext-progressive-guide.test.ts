@@ -2,6 +2,8 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  FALLBACK_PRACTICE_PAST,
+  FALLBACK_TEE_BEHIND,
   FALLBACK_TEE_PAST,
   GUIDE,
   GUIDE_STEPS,
@@ -17,6 +19,7 @@ import {
   type GuideFacts,
 } from '../src/game/ext/progressive-ui/guide';
 import { plotOfFront } from '../src/game/golf/range';
+import { inPractice, practiceArea } from '../src/game/golf/practice';
 
 /** a default guide facts record */
 function facts(over: Partial<GuideFacts> = {}): GuideFacts {
@@ -205,7 +208,7 @@ describe("a range start's guide steps (P22 2.8, T095)", () => {
     assert.equal(guideShown(facts({ tutorial: 'off', seasons: 1 }))?.id, 'guide-stuck');
   });
 
-  it('15. the ring\'s fallback tee: off the range plot, on the parcel, FALLBACK_TEE_PAST past the plot on the side with more parcel, level with the front', () => {
+  it('15. the ring\'s fallback tee: off the range plot, on the parcel, FALLBACK_TEE_PAST past the plot on the side with more parcel, behind the front', () => {
     for (const dir of [0, 1, 2, 3] as const) {
       const alongX = dir === 0 || dir === 2;
       // a front of 70 x 24 tiles at (1000, 1000) (24 x 70 when the road runs along y), its plot, and a parcel 450 along the road from the plot's far side
@@ -216,12 +219,20 @@ describe("a range start's guide steps (P22 2.8, T095)", () => {
       const onPlot = t.x >= plot[0] && t.x < plot[0] + plot[2] && t.y >= plot[1] && t.y < plot[1] + plot[3];
       assert.equal(onPlot, false, `dir ${dir}: off the plot`);
       assert.ok(t.x > parcel[0] && t.x < parcel[0] + parcel[2] && t.y > parcel[1] && t.y < parcel[1] + parcel[3], `dir ${dir}: on the parcel`);
-      if (alongX) { assert.equal(t.x, plot[0] + plot[2] + FALLBACK_TEE_PAST); assert.equal(t.y, front[1] + front[3] / 2); }
-      else { assert.equal(t.y, plot[1] + plot[3] + FALLBACK_TEE_PAST); assert.equal(t.x, front[0] + front[2] / 2); }
+      const behind = dir === 0 ? front[1] - FALLBACK_TEE_BEHIND : dir === 1 ? front[0] + front[2] + FALLBACK_TEE_BEHIND : dir === 2 ? front[1] + front[3] + FALLBACK_TEE_BEHIND : front[0] - FALLBACK_TEE_BEHIND;
+      if (alongX) { assert.equal(t.x, plot[0] + plot[2] + FALLBACK_TEE_PAST); assert.equal(t.y, behind); }
+      else { assert.equal(t.y, plot[1] + plot[3] + FALLBACK_TEE_PAST); assert.equal(t.x, behind); }
       // the parcel on the other side: the tee goes that way
       const left: [number, number, number, number] = alongX ? [plot[0] + plot[2] - 450, plot[1], 450, plot[3]] : [plot[0], plot[1] + plot[3] - 450, plot[2], 450];
       const u = fallbackTeeSpot(plot, front, left, dir);
       if (alongX) assert.equal(u.x, plot[0] - FALLBACK_TEE_PAST); else assert.equal(u.y, plot[1] - FALLBACK_TEE_PAST);
+      // the range's practice area beside the plot (P24 T130): the tee goes FALLBACK_PRACTICE_PAST past it, never on it
+      const pa = practiceArea(plot, dir), w = fallbackTeeSpot(plot, front, parcel, dir, pa.box);
+      assert.equal(inPractice(pa, w.x, w.y), false, `dir ${dir}: off the practice area`);
+      const onPlotW = w.x >= plot[0] && w.x < plot[0] + plot[2] && w.y >= plot[1] && w.y < plot[1] + plot[3];
+      assert.equal(onPlotW, false, `dir ${dir}: off the plot with the practice area`);
+      const far = alongX ? Math.max(plot[0] + plot[2] + FALLBACK_TEE_PAST, pa.box[2] + FALLBACK_PRACTICE_PAST) : Math.max(plot[1] + plot[3] + FALLBACK_TEE_PAST, pa.box[3] + FALLBACK_PRACTICE_PAST);
+      if (alongX) assert.equal(w.x, Math.min(far, parcel[0] + parcel[2] - 2)); else assert.equal(w.y, Math.min(far, parcel[1] + parcel[3] - 2));
     }
   });
 });
