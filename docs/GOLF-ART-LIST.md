@@ -34,8 +34,10 @@ stays a Studio option. Ground textures follow [art/GROUND-TEXTURE-METHOD.md](art
 | --- | --- |
 | First cut | ✅ `first-cut-run` (#586); also every lawn (#591) |
 | Tee | ✅ `tee-run` (#590) |
-| Fringe | 🎨 MID and FAR made; NEAR refused by RUN's safety filter (8 tries), retried with a new frame; held until NEAR exists |
-| Rough | ⏳ the art agent |
+| Fringe | held: the RUN set came out too flat at NEAR (the owner's no-flat-wash rule); the textured fringe in the game stays |
+| Rough | paused for the scene paintings (NEAR/FAR mockups on disk) |
+| Desert (Waste area sand) | ✅ `desert-run` (#612), from the art session's painting, the store removed |
+| Swamp, dirt, sand-raked | ⏳ the art agent (the owner's top priority) |
 | Fairway | Codex (18 of 24 jobs done) |
 | Golden fescue, lake, putting green v2 | ✅ (the art session, earlier) |
 | Greenkeeping conditions (section 10) | after the course surfaces |
