@@ -20,7 +20,7 @@ export function holeState(v: HoleView, grow: string): HoleState {
 }
 
 /** the Holes panel's Your holes (P23 4.3): a badge per hole that exists, each with its icon as well as its colour, the current one ringed (a
- *  click makes it current and moves the camera there), and the "+" badge (New hole ▾: Plan a hole · From a saved hole · An empty hole to
+ *  click makes it current, moves the camera there and opens its hole card, T174; dragged onto another badge, the two trade numbers, D4.12), and the "+" badge (New hole ▾: Plan a hole · From a saved hole · An empty hole to
  *  paint by hand); one status line under them for the current hole ("Hole 1 · par 4 · 342 m · growing · ready Mar 1985") and, when it needs
  *  attention, what it is missing */
 export function HoleStrip({ game }: { game: Game }) {
@@ -28,6 +28,8 @@ export function HoleStrip({ game }: { game: Game }) {
   /** a hole's grow-in words (T121, T135: the one source, Game.holeGrowLabel), '' once it is grown in */
   const growth = (n: number) => game.holeGrowLabel(n);
   const [menu, setMenu] = useState(false);
+  /** the badge being dragged to renumber (T174, P23 D4.12: dropped on another badge, the two trade numbers); 0: none */
+  const [drag, setDrag] = useState(0);
   const built = views.filter(v => v.started), scored = views.filter(v => v.par > 0);
   const totalPar = scored.reduce((s, v) => s + v.par, 0), totalM = scored.reduce((s, v) => s + v.lengthM, 0);
   const curState = cv?.started ? holeState(cv, growth(cur)) : null;
@@ -41,7 +43,11 @@ export function HoleStrip({ game }: { game: Game }) {
         {built.map(v => {
           const st = holeState(v, growth(v.n)), on = cur === v.n;
           return (
-            <button key={v.n} data-hole={v.n} aria-pressed={on} className={`hole-badge hole-${st.kind} ${on ? 'hole-badge-on' : ''}`} title={`Hole ${v.n}${v.par ? ` · par ${v.par} · ${v.lengthM} m` : ''} · ${st.word}`} onClick={() => game.goToHole(v.n)}>
+            <button key={v.n} data-hole={v.n} aria-pressed={on} className={`hole-badge hole-${st.kind} ${on ? 'hole-badge-on' : ''} ${drag === v.n ? 'opacity-50' : ''}`} title={`Hole ${v.n}${v.par ? ` · par ${v.par} · ${v.lengthM} m` : ''} · ${st.word} · click for its card; drag onto another badge to trade numbers`}
+              onClick={() => { game.goToHole(v.n); game.openHoleCard(v.n); }}
+              draggable onDragStart={e => { e.dataTransfer.setData('text/plain', String(v.n)); e.dataTransfer.effectAllowed = 'move'; setDrag(v.n); }} onDragEnd={() => setDrag(0)}
+              onDragOver={e => { if (drag && drag !== v.n) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; } }}
+              onDrop={e => { e.preventDefault(); const from = +e.dataTransfer.getData('text/plain') || drag; setDrag(0); if (from && from !== v.n) game.renumberHole(from, v.n); }}>
               <span className="hole-icon" aria-hidden>{st.icon}</span>{v.n}
             </button>
           );

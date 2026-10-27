@@ -10,7 +10,7 @@ export type RailGroupId = 'select' | 'roads' | 'paint' | 'course' | 'junction' |
 
 /** individual tool ids matching Tool in src/game/types.ts, plus 'buildings': the Course tool's Buildings tab (the clubhouse), a rail item of its
  *  own from plan P23 P1-E */
-export type UiToolId = 'select' | 'road' | 'lane' | 'downgrade' | 'paint' | 'course' | 'path' | 'buildings' | 'props' | 'junction' | 'bulldoze' | 'bus' | 'park' | 'toll' | 'business';
+export type UiToolId = 'select' | 'road' | 'lane' | 'downgrade' | 'paint' | 'course' | 'path' | 'buildings' | 'props' | 'greenkeeping' | 'junction' | 'bulldoze' | 'bus' | 'park' | 'toll' | 'business';
 
 /** top-bar golf chip ids in src/App.tsx */
 export type GolfChipId = 'courseStats' | 'land' | 'holes' | 'event' | 'skipTournament' | 'grass';
@@ -35,6 +35,11 @@ export interface PlayerProgressFacts {
   seasonsDone: number;
   /** whether the tour has invited the player (a range start's golf.invited) */
   invited: boolean;
+  /** the holes with a par that are grown in (T175: Greenkeeping opens with the first; missing: as many as playableHoles, so a game that does not
+   *  say keeps it open as soon as it has a hole) */
+  grownHoles?: number;
+  /** when the first growing hole is grown in, as the lock's why says it ("hole 1 ready Mar 1985"; T175) */
+  firstReady?: string;
   /** real play seconds in this game (the stuck player's fallback reads STUCK_PLAY_SEC) */
   elapsedSeconds: number;
   /** the highest stage reached so far (saved; a stage never closes again; missing = 1) */
@@ -128,11 +133,11 @@ export const GROUP_STAGE: Readonly<Partial<Record<RailGroupId, OnboardingStage>>
 });
 /** the stage each golf tool opens at: Holes, Paths and Buildings from the start, Paint with the first hole, the town's tools at stage 3 */
 export const TOOL_STAGE: Readonly<Partial<Record<UiToolId, OnboardingStage>>> = Object.freeze({
-  select: 1, course: 1, path: 1, buildings: 1, props: 1, road: 3, lane: 3, downgrade: 3, junction: 3, bus: 3, park: 3, toll: 3, paint: 2, bulldoze: 1,
+  select: 1, course: 1, path: 1, buildings: 1, props: 1, greenkeeping: 1, road: 3, lane: 3, downgrade: 3, junction: 3, bus: 3, park: 3, toll: 3, paint: 2, bulldoze: 1,
 });
 /** the rail group each golf tool sits in */
 export const TOOL_GROUP: Readonly<Partial<Record<UiToolId, RailGroupId>>> = Object.freeze({
-  select: 'select', course: 'course', path: 'course', buildings: 'course', props: 'course', road: 'roads', lane: 'roads', downgrade: 'roads', junction: 'junction',
+  select: 'select', course: 'course', path: 'course', buildings: 'course', props: 'course', greenkeeping: 'course', road: 'roads', lane: 'roads', downgrade: 'roads', junction: 'junction',
   bus: 'transport', park: 'transport', toll: 'transport', paint: 'paint', bulldoze: 'bulldoze',
 });
 /** the stage each top-bar chip shows at: the course stats from the start; skip and the grass with the first hole; the pins and tees, the Event
@@ -158,6 +163,7 @@ const ALL_FINE_CONTROLS: readonly FineControlId[] = ['snapToggle', 'pieceAngle',
 
 /** every id that can carry a NEW badge: the tools and rail groups that open after stage 1 (an old save counts them all as seen) */
 export const NEW_BADGE_IDS: readonly string[] = Object.freeze([...new Set([
+  'greenkeeping', // T175: it opens with the first hole grown in
   ...Object.entries(GROUP_STAGE).filter(([, s]) => s! > 1).map(([id]) => id),
   ...Object.entries(TOOL_STAGE).filter(([, s]) => s! > 1).map(([id]) => id),
 ])]);
@@ -338,16 +344,26 @@ function lockedAt<T extends string>(table: Readonly<Partial<Record<T, Onboarding
   return all ? [] : (Object.keys(table) as T[]).filter(id => table[id]! > s).map(id => ({ id, stage: table[id]!, why: STAGE_WHY[table[id]!] }));
 }
 
+/** Greenkeeping's lock (plan P23-UX P2-5, T175): it opens when the first hole is grown in (the course has turf to keep), and once open (seen:
+ *  opened, or an old save, which sees every tool) it never closes again; null when open (every tool shown too), else the why the rail's tooltip
+ *  and a click say, in the ramp's words */
+export function greenkeepingLock(f: PlayerProgressFacts): string | null {
+  if (f.advancedMode || (f.seen ?? []).includes('greenkeeping') || (f.grownHoles ?? f.playableHoles) >= 1) return null;
+  return `Unlocks when your first hole is grown in${f.firstReady ? ` (${f.firstReady})` : ''}`;
+}
+
 /** computes the complete progressive-exposure UI state from player progress facts */
 export function computeProgressiveUiState(f: PlayerProgressFacts): ProgressiveUiState {
   const stage = resolveOnboardingStage(f), adv = Boolean(f.advancedMode), seen = new Set(f.seen ?? []), ramp = adv ? null : rampStep(f);
   const visibleGroups = openAt(GROUP_STAGE, stage, adv);
   // a range start's ramp (T132) holds back Holes, Paths, Props and Buildings until their step: in place, with its why, besides the stages
-  const stageTools = openAt(TOOL_STAGE, stage, adv), visibleTools = stageTools.filter(id => !rampLock(f, id));
-  const lockedTools: LockedItem<UiToolId>[] = [...stageTools.filter(id => rampLock(f, id)).map(id => ({ id, stage: 1 as OnboardingStage, why: rampLock(f, id)! })), ...lockedAt(TOOL_STAGE, stage, adv)];
+  // Greenkeeping (T175) waits for the first grown hole, in place, with its why
+  const gk = greenkeepingLock(f), held = (id: UiToolId) => rampLock(f, id) ?? (id === 'greenkeeping' ? gk : null);
+  const stageTools = openAt(TOOL_STAGE, stage, adv), visibleTools = stageTools.filter(id => !held(id));
+  const lockedTools: LockedItem<UiToolId>[] = [...stageTools.filter(id => held(id)).map(id => ({ id, stage: 1 as OnboardingStage, why: held(id)! })), ...lockedAt(TOOL_STAGE, stage, adv)];
   // a new range game's ramp tools carry NEW as they open (Holes opens with the first upgrade)
   const rampNew = (id: string) => !!f.ramp?.fresh && RAMP_TOOL_STEP[id as UiToolId] !== undefined;
-  const isNew = (id: string, s: OnboardingStage | undefined) => !adv && ((s ?? 1) > 1 || rampNew(id)) && !seen.has(id);
+  const isNew = (id: string, s: OnboardingStage | undefined) => !adv && ((s ?? 1) > 1 || rampNew(id) || id === 'greenkeeping') && !seen.has(id);
   return {
     stage,
     advancedMode: adv,

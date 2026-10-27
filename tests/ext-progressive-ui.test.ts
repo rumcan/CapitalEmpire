@@ -36,7 +36,7 @@ const f = (over: Partial<PlayerProgressFacts> = {}): PlayerProgressFacts => ({ .
 
 /** every golf rail group and tool (the Business tool is the town's: golf games never list it) */
 const GOLF_GROUPS = ['select', 'course', 'roads', 'junction', 'transport', 'paint', 'bulldoze'];
-const GOLF_TOOLS = ['select', 'course', 'path', 'buildings', 'props', 'road', 'lane', 'downgrade', 'junction', 'bus', 'park', 'toll', 'paint', 'bulldoze'];
+const GOLF_TOOLS = ['select', 'course', 'path', 'buildings', 'props', 'greenkeeping', 'road', 'lane', 'downgrade', 'junction', 'bus', 'park', 'toll', 'paint', 'bulldoze'];
 const SHAPE_BY_HAND = ['fairway', 'green', 'tee', 'rough', 'bunker', 'water'];
 
 describe('the stage table (P23 4.2, T117): every "when" row', () => {
@@ -160,9 +160,10 @@ describe('NEW badges (T117)', () => {
   it('a tool opened past stage 1 carries NEW until its id is seen', () => {
     const s2 = computeProgressiveUiState(f({ playableHoles: 1 }));
     assert.deepEqual(s2.newGroups, ['paint']);
-    assert.deepEqual(s2.newTools, ['paint']);
-    assert.deepEqual(computeProgressiveUiState(f({ playableHoles: 1, seen: ['paint'] })).newTools, []);
-    const s3 = computeProgressiveUiState(f({ playableHoles: 3, seen: ['paint', 'road', 'roads'] }));
+    // Greenkeeping (T175) opens with the first grown hole (a game that does not say counts its holes grown) and is NEW until opened
+    assert.deepEqual(s2.newTools, ['greenkeeping', 'paint']);
+    assert.deepEqual(computeProgressiveUiState(f({ playableHoles: 1, seen: ['paint', 'greenkeeping'] })).newTools, []);
+    const s3 = computeProgressiveUiState(f({ playableHoles: 3, seen: ['paint', 'road', 'roads', 'greenkeeping'] }));
     assert.deepEqual(s3.newGroups, ['junction', 'transport']);
     assert.deepEqual(s3.newTools, ['lane', 'downgrade', 'junction', 'bus', 'park', 'toll']);
   });

@@ -49,6 +49,7 @@ import { SeasonReportCard } from './ui/golf/SeasonReportCard';
 import { GolfLeaderboard } from './ui/GolfLeaderboard';
 import { ShotPanel } from './ui/ShotPanel';
 import { RangeCard } from './ui/golf/RangeCard';
+import { HoleCard } from './ui/golf/HoleCard';
 import stadiumArt from './assets/ui/art/stadium.webp';
 
 /** the top bar on one row (P23 4.11, T135): its golf chips (and the invitation's whole sentence) show their words only from 2200 px; narrower,
@@ -262,7 +263,7 @@ export default function App() {
                 <button className="btn-icon" onClick={() => game.zoomAt(clampZoom(game.cam.z / ZOOM_STEP))} title="Zoom out (-)"><Icon name="zoom-out" size={20} /></button>
                 <button className="btn-icon" onClick={() => game.zoomAt(clampZoom(game.cam.z * ZOOM_STEP))} title="Zoom in (+)"><Icon name="zoom-in" size={20} /></button>
               </div>
-              <button className={`btn ${game.grassPanel ? 'on' : ''}`} onClick={() => game.toggleGrassPanel()} title="Inspect and maintain course and town grass">Grass</button>
+              <button className={`btn ${game.grassPanel ? 'on' : ''}`} onClick={() => game.toggleGrassPanel()} title={game.golfMode ? `Greenkeeping: keep the course's turf${game.toolLock('greenkeeping') ? ` (${game.toolLock('greenkeeping')})` : ''}` : 'Inspect and maintain course and town grass'}>Grass</button>
               <div className="relative">
                 <button className={`btn-icon ${menu ? 'on' : ''}`} onClick={() => setMenu(!menu)} title="Settings"><Icon name="gear" size={22} /></button>
                 {menu && (
@@ -367,7 +368,8 @@ export default function App() {
             </div>
           </div>
 
-          <div className="absolute left-3 top-[var(--hud-top,5.75rem)] z-20 flex items-start gap-2">
+          {/* T174: the box round the rail and the panel takes no clicks itself (it is as tall as the rail, so it covered the map under a short panel) */}
+          <div className="pointer-events-none absolute left-3 top-[var(--hud-top,5.75rem)] z-20 flex items-start gap-2 [&>*]:pointer-events-auto">
             {/* P23 P1-E: the same places from minute zero; a tool not open yet stays dimmed in place with what unlocks it, a new one says NEW */}
             <Rail entries={railEntries(ui, game.golfMode, game.uiTool)} onPick={r => game.setTool(last.current[r.id] ?? r.tools[0]!.id)} onLocked={(r, why) => game.toast(`${r.label}: ${why}`)} />
             <div className="glass w-[330px] max-h-[calc(100vh-var(--hud-top,5.75rem)-8.25rem)] overflow-y-auto p-3" data-tool={game.uiTool}>
@@ -399,6 +401,7 @@ export default function App() {
               {game.tool === 'paint' && <PaintPanel game={game} />}
               {game.uiTool === 'course' && <CoursePanel game={game} looks={looksOpen} onLooks={setLooks} />}
               {game.uiTool === 'buildings' && <BuildingsPanel game={game} />}
+              {game.tool === 'greenkeeping' && <GrassManagementPanel game={game} docked />}
               {game.tool === 'props' && <PropsPanel game={game} />}
               {game.tool === 'park' && <ParkPanel game={game} dev={dev} />}
               {game.tool === 'toll' && <TollPanel game={game} />}
@@ -447,7 +450,7 @@ export default function App() {
           </div>
           )}
           {game.panel === 'budget' && <BudgetPanel game={game} />}
-          {game.grassPanel && <GrassManagementPanel game={game} />}
+          {game.grassPanel && game.tool !== 'greenkeeping' && <GrassManagementPanel game={game} />}
           {courseStats && (
           <div className={`pointer-events-auto absolute ${game.panel ? 'right-[19.5rem]' : 'right-3'} top-[var(--hud-top,6rem)] z-20`}>
           <CourseStatsPanel stats={courseStats} onClose={() => setCourseStats(null)} onSelectHole={h => { if (game.holesTool) game.selectGolfMarker(h, 'pin'); else { const pin = game.golf?.pins.find(p => p.hole === h); if (pin) game.jumpTo(pin.x, pin.y); } }} />
@@ -486,6 +489,7 @@ export default function App() {
           {game.shotState() && <ShotPanel game={game} />}
           {game.seasonReport && game.traffic.round.stage === 'free' && <SeasonReportCard report={game.seasonReport} onContinue={() => game.dismissSeasonReport()} />}
           {(() => { const rc = game.rangeCard(); return rc && <RangeCard view={rc} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.openRangeCard(false)} onPrice={p => game.setRangePrice(p)} onBuy={id => game.buyRangeUpgrade(id)} onShowPractice={() => game.showPracticeArea()} />; })()}
+          {game.holeCardHole !== null && <HoleCard game={game} right={game.panel ? 'right-[19.5rem]' : 'right-3'} />}
           {game.eventMode && !game.site && !game.golfMode && (
             <div className={`pointer-events-auto absolute ${game.panel ? 'right-[19.5rem]' : 'right-3'} top-[var(--hud-top,6rem)] z-20 flex items-center gap-3 glass p-3 text-sm`}>
               <Icon name="trophy" size={32} />

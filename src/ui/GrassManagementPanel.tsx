@@ -1,14 +1,21 @@
 import type { Game } from '../game/engine';
-import { GROUND_MATERIALS, GRASS_COST, type GrassAction, type GrassSettings } from '../game/ext/grass-management';
+import { GROUND_MATERIALS, GRASS_ACTION_NAME, GRASS_COST, type GrassAction, type GrassSettings } from '../game/ext/grass-management';
+import { ToolHead } from './ToolHead';
+export { GRASS_ACTION_NAME };
 
-/** Local grass inspection and paid care; all radii in 2 m tiles, doses normalized 0..1. */
-export function GrassManagementPanel({ game }: { game: Game }) {
+/** Local grass inspection and paid care; all radii in 2 m tiles, doses normalized 0..1. Docked: Greenkeeping's panel in the rail's panel (golf
+ *  games, T175: pick a care, then each click on the turf applies it); else the floating Grass panel (the classic game's) */
+export function GrassManagementPanel({ game, docked = false }: { game: Game; docked?: boolean }) {
   const s = game.grass.settings, point = game.grassTarget, cell = point && game.grass.at(point.x, point.y), scope = game.grassScope();
   const edit = (f: () => void) => { f(); game.emit(); };
   const slider = (label: string, key: keyof Pick<GrassSettings, 'strength' | 'recovery' | 'wear' | 'rain' | 'evaporation' | 'temperature'>, min: number, max: number, step: number) => <label className="block text-xs">{label}: {s[key].toFixed(2)}<input className="w-full" type="range" min={min} max={max} step={step} value={s[key]} onChange={e => game.tuneGrass({ [key]: +e.target.value })} /></label>;
-  return <section className="pointer-events-auto absolute right-3 top-[var(--hud-top,6rem)] z-30 max-h-[78vh] w-80 space-y-3 overflow-y-auto rounded-xl border border-white/10 bg-slate-950/95 p-4 text-slate-100 shadow-2xl">
-    <div className="flex items-center justify-between"><strong>Grass care</strong><button onClick={() => edit(() => { game.grassPanel = false; game.grassAction = null; })}>Close</button></div>
-    <p className="text-xs text-slate-300">Click turf to inspect. Arm an operation to apply it on each click. Right-drag pans. Cells cover 8 × 8 m.</p>
+  // a plain call, not a component: the subtree keeps its identity across renders (a slider being dragged keeps its focus)
+  const wrap = (children: React.ReactNode) => docked
+    ? <div className="tp space-y-3" data-panel="greenkeeping"><ToolHead icon="trees" title="Greenkeeping" desc="Keep the course's turf: pick a care, then click the turf" />{children}</div>
+    : <section className="pointer-events-auto absolute right-3 top-[var(--hud-top,6rem)] z-30 max-h-[78vh] w-80 space-y-3 overflow-y-auto rounded-xl border border-white/10 bg-slate-950/95 p-4 text-slate-100 shadow-2xl">
+      <div className="flex items-center justify-between"><strong>Grass care</strong><button onClick={() => edit(() => { game.grassPanel = false; game.grassAction = null; })}>Close</button></div>{children}</section>;
+  return wrap(<>
+    <p className="text-xs text-slate-300">{docked ? 'Pick a care below, then click the turf: each click applies it there (Esc puts it down). With none picked, a click inspects. Right-drag pans. Cells cover 8 × 8 m.' : 'Click turf to inspect. Arm an operation to apply it on each click. Right-drag pans. Cells cover 8 × 8 m.'}</p>
     {s.strength === 0 && <p className="text-xs text-slate-300">Existing grass appearance is preserved. Turn on health colours or raise Condition layer below to see maintenance overlays.</p>}
     <div className="flex gap-3 text-xs"><label><input type="checkbox" checked={s.enabled} onChange={e => game.tuneGrass({ enabled: e.target.checked })} /> Enable care</label><label><input type="checkbox" checked={game.grassHeat} onChange={e => edit(() => { game.grassHeat = e.target.checked; game.tuneGrass({}); })} /> Health colours</label></div>
     <p className="text-xs">{game.grass.activeCells.toLocaleString()} managed cells · {game.grass.days.toFixed(1)} turf days</p>
@@ -17,7 +24,7 @@ export function GrassManagementPanel({ game }: { game: Game }) {
     {!game.grassArea && <label className="block text-xs">Radius: {game.grassRadius * 2} m<input className="w-full" type="range" min="2" max="64" step="2" value={game.grassRadius} onChange={e => edit(() => { game.grassRadius = +e.target.value; })} /></label>}
     <label className="block text-xs">Care dose: {Math.round(game.grassDose * 100)}%<input className="w-full" type="range" min="0.1" max="1" step="0.1" value={game.grassDose} onChange={e => edit(() => { game.grassDose = +e.target.value; })} /></label>
     <label className="block text-xs">Mowing direction: {game.grassAngle}°<input className="w-full" type="range" min="0" max="165" step="15" value={game.grassAngle} onChange={e => edit(() => { game.grassAngle = +e.target.value; })} /></label>
-    <div className="grid grid-cols-2 gap-2">{(Object.keys(GRASS_COST) as GrassAction[]).map(action => <button key={action} className={`rounded border p-2 text-xs capitalize ${game.grassAction === action ? 'border-emerald-400 bg-emerald-900' : 'border-white/20'}`} onClick={() => edit(() => { game.grassAction = game.grassAction === action ? null : action; })}>{action}{scope ? ` · $${game.grass.quote(action, scope, game.grassDose)}` : ''}</button>)}<button className="rounded border border-white/20 p-2 text-xs" disabled={!game.grassAction || !scope} onClick={() => game.grassAction && game.careGrass(game.grassAction)}>Apply here</button></div>
+    <div className="grid grid-cols-2 gap-2">{(Object.keys(GRASS_COST) as GrassAction[]).map(action => <button key={action} className={`rounded border p-2 text-xs capitalize ${game.grassAction === action ? 'border-emerald-400 bg-emerald-900' : 'border-white/20'}`} aria-pressed={game.grassAction === action} data-action={action} onClick={() => edit(() => { game.grassAction = game.grassAction === action ? null : action; })}>{GRASS_ACTION_NAME[action]}{scope ? ` · $${game.grass.quote(action, scope, game.grassDose)}` : ''}</button>)}<button className="rounded border border-white/20 p-2 text-xs" disabled={!game.grassAction || !scope} onClick={() => game.grassAction && game.careGrass(game.grassAction)}>Apply here</button></div>
     <button className="text-xs underline" onClick={() => game.markGrassDivot()} disabled={!cell}>Mark one player divot here</button>
     <details><summary className="cursor-pointer text-xs">Appearance and weather tuning</summary><div className="mt-2 space-y-2">
       <label className="block text-xs"><input type="checkbox" checked={s.mowing} onChange={e => game.tuneGrass({ mowing: e.target.checked })} /> Temporary care mowing marks (preset stripes stay unchanged)</label>
@@ -26,5 +33,5 @@ export function GrassManagementPanel({ game }: { game: Game }) {
       {slider('Condition layer', 'strength', 0, 1, 0.05)}{slider('Recovery rate', 'recovery', 0, 5, 0.1)}{slider('Traffic wear rate', 'wear', 0, 5, 0.1)}{slider('Daily rain / soil capacity', 'rain', 0, 0.5, 0.01)}{slider('Daily evaporation / soil capacity', 'evaporation', 0, 0.3, 0.005)}{slider('Temperature °C', 'temperature', -10, 45, 1)}
       <p className="text-xs text-slate-400">Tournament weather adds rain, storm or heat effects. Mowing presets and base grass remain editable in Studio.</p>
     </div></details>
-  </section>;
+  </>);
 }

@@ -11,9 +11,13 @@ const conditions: GrassCondition[] = ['neglected', 'stressed', 'recovering', 'ma
 export const GROUND_MATERIALS: readonly GroundMaterial[] = [...GRASS_SURFACES.flatMap(family => conditions.map(condition => ({ id: `${family}-${condition}`, family, kind: 'grass' as const, condition, worldMetres: 16 }))), ...['loam', 'sandy-soil', 'clay-soil', 'gravel-soil'].flatMap(family => ['dry', 'damp', 'compacted', 'churned', 'prepared'].map(condition => ({ id: `${family}-${condition}`, family, kind: 'soil' as const, condition, worldMetres: 16 })))];
 /** Transparent decal sheets, four independently usable variants per sheet (row-major). */
 export const GRASS_DECALS = ['mowing-stripes', 'mowing-patterns', 'crowd-light', 'crowd-heavy', 'divots-fresh', 'divots-repair', 'cart-tracks', 'mud-footprints', 'dry-patches', 'maintenance', 'leaves-litter', 'surface-transitions'] as const;
+/** Texture presets with no golf surface that are still managed turf, by preset id (T096): the driving range's own outfield (its mown stripes) is
+ *  the driving-range family, its target greens are greens (golf/rangehost.ts RANGE_PRESET: 'range-outfield', 'range-green') */
+export const PRESET_FAMILY: Readonly<Record<string, GrassSurface>> = { 'range-outfield': 'driving-range', 'range-green': 'golf-green' };
 /** Existing paint texture to managed family; non-grass surfaces are excluded. */
 export function grassSurface(tex: string, lawn = false, presetSurface?: string | null): GrassSurface | null {
   if (lawn) return 'residential-lawn';
+  if (tex.startsWith('preset:') && PRESET_FAMILY[tex.slice(7)]) return PRESET_FAMILY[tex.slice(7)]!;
   if (tex.startsWith('preset:')) { const families: Record<string, GrassSurface> = { green: 'golf-green', fairway: 'golf-fairway', tee: 'golf-tee', fringe: 'golf-fringe', firstCut: 'golf-first-cut', rough: 'golf-rough', fescue: 'golf-fescue' }; return presetSurface ? families[presetSurface] ?? null : null; }
   const known: Record<string, GrassSurface> = { grass: 'town-park', grassDry: 'road-verge', lawnLush: 'residential-lawn', lawnWorn: 'residential-lawn', lawnClover: 'clover-lawn', golfGreen: 'golf-green', golfFairway: 'golf-fairway', golfTee: 'golf-tee', golfFringe: 'golf-fringe', golfFirstCut: 'golf-first-cut', golfRough: 'golf-rough', golfFescue: 'golf-fescue', golfSod: 'golf-fairway', meadowLush: 'meadow', meadowFlowers: 'meadow' };
   return known[tex] ?? null;
