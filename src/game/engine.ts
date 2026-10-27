@@ -559,7 +559,6 @@ export class Game {
   /** the city worker (cars, parcels, town): created with the game, so the town grows whenever the sim runs */
   traffic: SimClient;
   /** car light points, reused each frame (grown to 7 points per sim slot) */
-  private lightBuf = new Float32Array(0);
   // perf
   /** the townspeople on the sidewalks (ext/pedestrians): the sidewalks follow the network (net.version), one walker per two
    *  built lots (at most PED_MAX), walking in real time while the game runs; drawn at the Street tier as movers */
@@ -5345,7 +5344,7 @@ export class Game {
       for (let gy = gy0; gy <= gy1; gy++) for (let gx = gx0; gx <= gx1; gx++) { const u = (p * G + gy) * G + gx; if (mark[u] === 0) touched.push(u); mark[u] += share; }
     };
     for (let o = 0; o < floats; o += SPRITE_STRIDE) {
-      if (!(stream[o + 9]! > 0)) continue; // hidden
+      if (!(stream[o + 9]! > 0) || stream[o + 8]! < 0) continue; // hidden, or a lamp's glow (T192: no atlas page)
       // the part of the picture on screen: its rect clipped to its tile and the view, in its uv rect
       const x0 = stream[o]!, y0 = stream[o + 1]!, x1 = stream[o + 2]!, y1 = stream[o + 3]!, w = x1 - x0, h = y1 - y0;
       const cx0 = Math.max(x0, stream[o + 12]!, X0), cy0 = Math.max(y0, stream[o + 13]!, Y0), cx1 = Math.min(x1, stream[o + 14]!, X1), cy1 = Math.min(y1, stream[o + 15]!, Y1);
@@ -5493,7 +5492,8 @@ export class Game {
       const c = [tileOf(X0, Y0), tileOf(X1, Y0), tileOf(X0, Y1), tileOf(X1, Y1)], pad = 6;
       // cars in tunnels are not drawn (the sim client skips them)
       const bx0 = Math.min(...c.map(p => p.x)) - pad, by0 = Math.min(...c.map(p => p.y)) - pad, bx1 = Math.max(...c.map(p => p.x)) + pad, by1 = Math.max(...c.map(p => p.y)) + pad;
-      const cars: Drawable[] = this.traffic ? this.traffic.visible(bx0, by0, bx1, by1) : [];
+      // (T192: with their brake lights from the closest zooms down to 8%, drawn in the sprite pass right after each car)
+      const cars: Drawable[] = this.traffic ? this.traffic.visible(bx0, by0, bx1, by1, cam.z >= 0.08) : [];
       // at the street tier the townspeople and the crowd (the galleries' fans, the queues, the walking parties) are the movers, merged in by depth
       const movers = tier === 'street' ? cars.concat(this.peds.n ? this.pedMovers(bx0, by0, bx1, by1) : [], this.crowdMovers(bx0, by0, bx1, by1, now / 1000), this.range.movers_(bx0, by0, bx1, by1)) : cars;
       // with the living ground the trees plant over every chunk on screen and as far out as a chunk's caster reach (a chunk bakes once its trees
@@ -5502,12 +5502,9 @@ export class Game {
       else this.plantForest(X0, Y0, X1, Y1);
       const f = this.sprites.frame(vis, movers), shadows = this.shadowStrength > 0;
       this.streamAtlas(f.stream, f.floats, X0, Y0, X1, Y1);
-      // car lights (night): lamps and beam glows of the cars in the same box, uploaded with the sprites
-      const tr = this.traffic, lightOn = !!tr && cam.z >= 0.08;
-      if (tr && lightOn && this.lightBuf.length < tr.n * 7 * POINT_STRIDE) this.lightBuf = new Float32Array(tr.n * 7 * POINT_STRIDE);
-      const lt = tr && lightOn ? tr.lights(bx0, by0, bx1, by1, ze, Math.floor(now / 350) % 2 === 0, this.lightBuf) : null;
+      // (T192: no car light overlay any more: no headlights, beams or turn signals; the brake lights are glow instances in the sprite stream)
       const vecOn = shadows || this.cast.on;
-      const [sAt, pAt, lAt, ...vAt] = gl.uploadParts([[f.shadows, shadows ? f.shadowFloats : 0], [f.stream, f.floats], [this.lightBuf, lt ? (lt.small + lt.beams) * POINT_STRIDE : 0],
+      const [sAt, pAt, ...vAt] = gl.uploadParts([[f.shadows, shadows ? f.shadowFloats : 0], [f.stream, f.floats],
         ...f.vec.map(v => [v.data, vecOn ? v.floats : 0] as [Float32Array, number])]);
       // the shadows into one layer, the darkest winning where they overlap, laid on the ground once (T185: gl.ts beginShadows): the cast
       // shadows (cast-shadow.ts), faded out by night, then the contact shadows, the vector shadows; then the sprites
@@ -5527,7 +5524,6 @@ export class Game {
       }
       gl.endShadows();
       gl.drawSprites(pAt, f.floats / SPRITE_STRIDE, tier === 'district' ? 7 * this.dpr : 0);
-      if (lt) { gl.drawPoints(lAt, lt.small, Math.max(2, 0.55 * 64 * ze), true); gl.drawPoints(lAt + lt.small * POINT_STRIDE, lt.beams, Math.max(4, 2.6 * 64 * ze), true); }
     }
     this.gl.atlas?.pump();
     this.ground.pump(); this.ground.settle(now); this.ground.evict(now);

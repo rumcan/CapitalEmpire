@@ -12,6 +12,7 @@ import { atlasMip0 } from './sizes';
 import { CONTACT_LEAN } from './shadow-shape';
 import { CONTACT_AO, VERTEX_FLOATS, type VectorMesh } from './shadow-vector';
 import { SHADOW_AMBIENT } from './cast-shadow';
+import { BRAKE_LIGHT } from './sim/car-lamps';
 
 /** floats per sprite instance: rect x0 y0 x1 y1 (world px), uv u0 v0 u1 v1, layer, alpha, cullable, foot line (world px; < 0: casts no shadow),
  *  clip x0 y0 x1 y1 (world px), foot: the footprint's near corner x y and its left and right corners' x (world px; the cast shadows stand on it) */
@@ -70,6 +71,14 @@ precision highp float; precision highp int;
 ${atlas}
 in vec3 vUV; in float vAlpha; in vec2 vW; flat in vec4 vClip; flat in float vTint; out vec4 o;
 void main() {
+  // T192: a lamp's glow (sim/car-lamps.ts, layer GLOW_LAYER: no atlas page): a soft disc of the brake lights' red, added (alpha 0), drawn in
+  // the painter's order right after its car, so nearer sprites cover it (the branch is the same for a whole instance)
+  if (vUV.z < -0.5) {
+    if (vW.x < vClip.x || vW.y < vClip.y || vW.x >= vClip.z || vW.y >= vClip.w) discard;
+    vec2 q = vUV.xy * 2.0 - 1.0; float d = dot(q, q); if (d >= 1.0) discard;
+    float f = (1.0 - d) * (1.0 - d);
+    o = vec4(vec3(${BRAKE_LIGHT.colour.map(v => v.toFixed(3)).join(', ')}) * (vAlpha * f), 0.0); return;
+  }
   vec4 c = atlasTex(vUV.xy, vUV.z);
   if (vW.x < vClip.x || vW.y < vClip.y || vW.x >= vClip.z || vW.y >= vClip.w) discard;
   if (c.a < 0.004) discard;
