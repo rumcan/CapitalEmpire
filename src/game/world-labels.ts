@@ -2,6 +2,7 @@
 // names, the car parks' "P · n/N", the stand-in pills, the counts, the town names, the range's markers), then places them in one pass
 // (label-place.ts: by priority, none overlapping, stable across frames) and writes the placed ones. The money floats are drawn after, clear of them.
 // No allocation a frame once warm: the labels are pooled and the text widths cached by font.
+import { labelFade } from './ext/hole-wizard/extras';
 import { LabelPlacer, type PlaceLabel } from './label-place';
 
 /** one label and how it is written: its text (and an optional second piece in another colour on the line, and a line under it), font, colours,
@@ -85,15 +86,19 @@ export class WorldLabels {
   /** places this frame's labels in the view (canvas px w x h); the number shown */
   place(w: number, h: number): number { return (this.shown = this.placer.place(this.list, this.n, 0, 0, w, h)); }
 
+  /** the pointer the labels fade near (canvas px, its reach and the alpha; T176: while New hole's ghost is up), or null */
+  fadeNear: { x: number; y: number; r: number; a: number } | null = null;
   /** writes the placed labels (in the order they came: the font set only when it changes) */
   draw(ctx: CanvasRenderingContext2D): void {
     if (!this.n) return;
+    const fn = this.fadeNear;
     ctx.save();
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
     let font = '', alpha = 1;
     for (let i = 0; i < this.n; i++) {
       const l = this.list[i]!; if (!l.shown) continue;
-      if (l.alpha !== alpha) { alpha = l.alpha; ctx.globalAlpha = alpha; }
+      const la = fn ? l.alpha * labelFade(l.px - l.w / 2, l.py - l.h / 2, l.w, l.h, fn.x, fn.y, fn.r, fn.a) : l.alpha;
+      if (la !== alpha) { alpha = la; ctx.globalAlpha = alpha; }
       if (l.bg) { ctx.fillStyle = l.bg; ctx.beginPath(); ctx.roundRect(l.px - l.w / 2, l.py - l.h / 2, l.w, l.h, l.radius); ctx.fill(); }
       if (l.font !== font) { font = l.font; ctx.font = font; }
       const y = l.py + l.ty;
