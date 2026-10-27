@@ -12,7 +12,7 @@ export function GrassManagementPanel({ game, docked = false }: { game: Game; doc
   // a plain call, not a component: the subtree keeps its identity across renders (a slider being dragged keeps its focus)
   const wrap = (children: React.ReactNode) => docked
     ? <div className="tp space-y-3" data-panel="greenkeeping"><ToolHead icon="trees" title="Greenkeeping" desc="Keep the course's turf: pick a care, then click the turf" />{children}</div>
-    : <section className="pointer-events-auto absolute right-3 top-[var(--hud-top,6rem)] z-30 max-h-[78vh] w-80 space-y-3 overflow-y-auto rounded-xl border border-white/10 bg-slate-950/95 p-4 text-slate-100 shadow-2xl">
+    : <section data-testid="grass-panel" className="pointer-events-auto absolute right-3 top-[var(--hud-top,6rem)] z-30 max-h-[calc(var(--vh-ui,100vh)-var(--hud-top,6rem)-4.5rem)] w-80 space-y-3 overflow-y-auto overflow-x-hidden rounded-xl border border-white/10 bg-slate-950/95 p-4 text-slate-100 shadow-2xl">
       <div className="flex items-center justify-between"><strong>Grass care</strong><button onClick={() => edit(() => { game.grassPanel = false; game.grassAction = null; })}>Close</button></div>{children}</section>;
   return wrap(<>
     <p className="text-xs text-slate-300">{docked ? 'Pick a care below, then click the turf: each click applies it there (Esc puts it down). With none picked, a click inspects. Right-drag pans. Cells cover 8 × 8 m.' : 'Click turf to inspect. Arm an operation to apply it on each click. Right-drag pans. Cells cover 8 × 8 m.'}</p>
