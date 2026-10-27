@@ -29,6 +29,8 @@ function places(g: Game, n: number): { badge: string; status: string } {
 }
 /** the course cursor's pill for a brush on hole 2 (CourseCursor.hint's words) */
 const CURSOR = 'Painting Fairway · Hole 2 · $2 a cell';
+/** what a badge's tooltip adds after the hole's words: its card and the renumbering drag (T174, HoleStrip) */
+const BADGE_ACTIONS = ' · click for its card; drag onto another badge to trade numbers';
 
 describe('the grow-in words (P23 4.6)', () => {
   it('growReadyLabel: "growing · ready Mar 1985" for month 6 of the first season; nothing once grown in', () => {
@@ -40,7 +42,7 @@ describe('the grow-in words (P23 4.6)', () => {
   it('the badge, the status line and the hint pill say the same words for a growing hole', () => {
     const g = fakeGame({ 2: 6 }), label = g.holeGrowLabel(2), at = places(g, 2);
     assert.equal(label, 'growing · ready Mar 1985');
-    assert.equal(at.badge, `Hole 2 · par 3 · 150 m · ${label}`, 'the badge');
+    assert.equal(at.badge, `Hole 2 · par 3 · 150 m · ${label}${BADGE_ACTIONS}`, 'the badge');
     assert.equal(at.status, `Hole 2 · par 3 · 150 m · ${label}`, 'the status line');
     assert.equal(hintWithGrow(CURSOR, 2, label), `Painting Fairway · Hole 2 · ${label} · $2 a cell`, 'the hint pill, after the hole\'s name');
     assert.match(renderToStaticMarkup(createElement(HoleStrip, { game: g })), /<button data-hole="2"[^>]*class="hole-badge hole-growing[^"]*"[^>]*><span class="hole-icon" aria-hidden="true">◔<\/span>2/, 'the ◔ badge');
@@ -49,7 +51,7 @@ describe('the grow-in words (P23 4.6)', () => {
   it('once the hole has grown in, none of them says growing', () => {
     const g = fakeGame({}), at = places(g, 2);
     assert.equal(g.holeGrowLabel(2), '');
-    assert.equal(at.badge, 'Hole 2 · par 3 · 150 m · ready');
+    assert.equal(at.badge, `Hole 2 · par 3 · 150 m · ready${BADGE_ACTIONS}`);
     assert.equal(at.status, 'Hole 2 · par 3 · 150 m · ready');
     assert.equal(hintWithGrow(CURSOR, 2, g.holeGrowLabel(2)), CURSOR);
   });
@@ -57,7 +59,7 @@ describe('the grow-in words (P23 4.6)', () => {
   it('another hole growing leaves the current hole\'s status and pill alone; its own badge says it', () => {
     const g = fakeGame({ 1: 13 }), at = places(g, 2);
     assert.equal(at.status, 'Hole 2 · par 3 · 150 m · ready');
-    assert.equal(places(g, 1).badge, 'Hole 1 · par 4 · 342 m · growing · ready Oct 1985');
+    assert.equal(places(g, 1).badge, `Hole 1 · par 4 · 342 m · growing · ready Oct 1985${BADGE_ACTIONS}`);
     assert.equal(hintWithGrow(CURSOR, 2, g.holeGrowLabel(2)), CURSOR);
   });
 
