@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-27 20:15)
+## START HERE (kept current by the lead; last updated 2026-10-27 20:35)
 
 **Paste-ready start prompts for every role are in `docs/START-PROMPTS.md`:** the lead, a coding ticket, and the other sessions in this
 repo. The weekly usage cap is close (2026-10-26), so any chat may stop at any moment.
@@ -35,7 +35,7 @@ are unchanged. Green/fringe remain separate pending handoffs.
 
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |
-| T209 | #554 | `arena/T209-round-resumes` (fresh from main 799cad0) | `.claude/worktrees/t160` | 5186 | **Agent 1 (started 19:15).** The owner's tournament round resumes after a reload: save the round's seed, clock, the owner's inputs, the crowd's surge; old saves load as before. Reproduce first. To resume: the issue's last comment. |
+| T219 | #594 | `arena/T219-iconic-places` (fresh from main 6b73587) | `.claude/worktrees/t160` | 5186 | **Agent 1 (started 20:30, Opus high).** Iconic places on every map: a short plan (`docs/plans/P27.md`), then the drive-in theatre (about 1,500 residents) and the high school (about 3,000), once per map, seeded, named after the town, stand-ins for the missing art (GOLF-ART-LIST section 11). PR says Refs (more places follow). To resume: the issue's last comment. |
 | T218 | #592 | `arena/T218-fairway-stripes` (fresh from main 64b426c) | `.claude/worktrees/t166` | 5187 | **Agent 2 (started 20:10).** Light mowing stripes on the fairways like the range's outfield (`COURSE_STRIPES`, `courseStripes` was a stub): across each hole's line of play, `mowStripes`' look, +1 ms a chunk at most. To resume: the issue's last comment. |
 | ART-RUN | — | none (art files, untracked, as Codex keeps them) | the main checkout's `art/theme-consistency/generated/ground/run-grass/` (read-only git) | — | **Image-generation agent (RUN.world, rumcan@gmail.com; not a coding agent).** The owner's method (`docs/art/GROUND-TEXTURE-METHOD.md`) works at RUN's own 1376x768 with no resampling. **First cut v1** (all three bands) made from one frame's quarters: 688x384 tiles, about 16 a view, so repeats show (FAR a tone checkerboard). **What works (first cut NEAR, approved by the lead):** tile 1 by the owner's method in RUN; **tiles 2-4 by image quilting from tile 1** (`E:/ClaudeTemp/ART-RUN/scripts/quilt.mjs`, Efros-Freeman, 192 px patches, min-error cuts, the shared border a plain quilt too), no RUN calls: the 4x4 has no grid, no seams, tone within 0.3. **Failed and dropped:** four independent screenshots (RUN paints a different lawn each time) and outpainting (RUN copies what it sees; a strip anchor leaves a straight line). **First cut is IN THE GAME** (#586, the owner: "yes merge"): family `first-cut-run`, shipped by `prep-painted-tiles.mjs` `RUN_SETS` from `run-grass/first-cut/<band>/tiles-v3b` (run it from a worktree on main with `--art E:/Repos/CapitalEmpire --owner-art <the worktree>`; without `--owner-art` the owner's paintings drop out; ship only the family you mean to: the art session's READY-MATERIALS has moved on for fringe and putting green, unreviewed). **The tee is IN THE GAME** (#590, `tee-run`). **The owner's rule from now on: finished art goes straight in, no asking** ("put stuff in the game, dont ask just do it we can always remove it later"; the old look stays a Studio option). Next: the fringe, then the rough. **Sprites stay with Codex:** RUN's four-view turns failed the pilot (views not one rigid object, no margins; the magenta key itself was clean). Every RUN generation is deleted from the library once on disk (0 left at the last check). Credits: 7,200 spent today by 21:20, 25,875 left; quilting costs none. To resume: `E:/ClaudeTemp/ART-RUN/PROGRESS.md`. |
 | T112 | #199 | `arena/T112-sharp` (PR #394) | `.claude/worktrees/t112` | — | **Approved, merge HELD for the owner:** a lock change makes the 5174 auto-updater run `npm ci` in theme-consistency, whose node_modules the live 5191 studio holds (sharp). Order: the owner stops 5191 → merge #394 → let npm ci finish → restart 5191 and 5174. All shipped bytes identical on 0.35.5; audit 0. |
@@ -73,8 +73,7 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
   merged). The 12 last 3D people finished on 2026-10-26 and are committed on `art/people-ground-20261024` (0bd25f4): T203 #531.
   Housekeeping: T174-T177, T179, T184 closed (merged earlier). The 5174 auto-updater ran 5 times over; the owner approved stopping 4
   (one left, bash PID 31220). Still listening, not ours: a stray vite on 5189 (an agent's, gone since 07:50) and the dead lot lab's 5241.
-- **Next, in order, when an agent lands:** **T219 #594**
-  iconic places on every map, a drive-in and a high school first (the owner; plan first) → the golf play tickets, **T210 #555** the
+- **Next, in order, when an agent lands:** the golf play tickets, **T210 #555** the
   results wait for the last group → **T211 #556** pace of play → **T208 #553 everyday golf** (golfers play your course every day and pay
   green fees; today it is only a yearly number) → **T212 #557** putt, chip, tee-up and coach clips → **T213 #558** caddies, carts,
   celebrations → **T214 #559** club pros and memberships (plan first) → then **T112 #199** (merge #394 when the owner stops 5191) →
@@ -109,6 +108,7 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
    (the sharp bump). See the History sections below and `gh issue list --label arena --state open`.
 
 ### Done recently (newest first; details in each PR)
+- 2026-10-27 20:25: **T209 #599 the tournament day resumes after a reload**: the day's clocks, surge, crowd, car parks and the owner's round saved as an optional `SaveV5.tourney` during the round only (every other save byte-identical); a resumed day holds the sim until its play is rebuilt; old saves load as before.
 - 2026-10-27 20:05: **T203 #597 the last 12 people**: 7 townspeople walk the town, 4 spectators join the crowd with their clips (the vendor waits for a staff system); only the walker pages 17-21 repacked, pages 0-16 byte-identical; GPU 95.8 / 96 MB. #596 the clubhouse test follows its new size.
 - 2026-10-27 19:50: **#590 the tee** (RUN-made, quilted: `tee-run` on Painted › Tee); **#591 lawns calmer** (the owner: "crazy green"; every lawn surface on `first-cut-run`, no lines); **#593 the clubhouse a quarter of the size** (the owner: "masssiive"; 40 x 24 → 20 x 12 tiles; placed ones keep their saved size; its tests run after the merge). T218 #592 fairway stripes and T219 #594 iconic places filed; GOLF-ART-LIST section 11 holds the places' missing art.
 - 2026-10-27 ~19:05: **T217 #588 rugged edges within the bake budget**: caches only (spill paths, ring boxes, the living ground's outlines, bank faces); on-minus-off now about 0 to +0.8 ms median; the look byte-identical (19 shots, 0 px). First cut checked on 5174: mapped, its tiles served, no errors.
