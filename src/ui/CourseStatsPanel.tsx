@@ -9,16 +9,18 @@ export interface CourseStatsPanelProps {
   stats: CourseStatsPanel;
   onClose?: () => void;
   onSelectHole?: (hole: number) => void;
+  /** T188: inside the Season card: no box and size of its own */
+  bare?: boolean;
 }
 
 /** presentational panel displaying course holes, totals, upkeep, quality hints, and next-tier checklist */
-export function CourseStatsPanel({ stats, onClose, onSelectHole }: CourseStatsPanelProps) {
+export function CourseStatsPanel({ stats, onClose, onSelectHole, bare }: CourseStatsPanelProps) {
   const tInfo = tierInfo(stats.tier);
   const nextInfo = stats.nextTier !== null ? tierInfo(stats.nextTier) : null;
   const qBadge = qualityBadgeClass(stats.qualityScore);
 
   return (
-    <div className="glass w-[360px] max-h-[calc(100vh-var(--hud-top,5.75rem)-4rem)] overflow-y-auto rounded-xl border border-white/10 bg-slate-950/85 p-3 text-slate-200 shadow-xl backdrop-blur">
+    <div className={bare ? 'text-slate-200' : 'glass w-[360px] max-h-[calc(100vh-var(--hud-top,5.75rem)-4rem)] overflow-y-auto rounded-xl border border-white/10 bg-slate-950/85 p-3 text-slate-200 shadow-xl backdrop-blur'}>
       <div className="flex items-center justify-between border-b border-white/10 pb-2">
         <div className="flex items-center gap-2">
           <Icon name="trophy" className="h-4 w-4 text-amber-400" />

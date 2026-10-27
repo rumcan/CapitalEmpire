@@ -40,7 +40,7 @@ export function CoursePanel({ game, looks = false, onLooks }: { game: Game; look
         <button className="round-btn" disabled={!re} aria-label={re ? `Redo ${re}` : 'Nothing to redo'} title={re ? `Redo: ${re} (Ctrl+Y)` : 'Nothing to redo'} onClick={() => p.redoTop()}>↷</button>
       </ToolHead>
       {plan ? <HoleWizardPanel game={game} /> : (
-        <button className={`pill-gold ${lock ? 'opacity-50' : ''}`} data-primary="new-hole" aria-disabled={!!lock} title={lock ? `New hole: ${lock}` : 'Click the tee, then the green: the whole hole is planned, ready to shape and build'} onClick={() => newHole(game)}>
+        <button className={`pill-gold ${lock ? 'opacity-50' : ''}`} data-primary="new-hole" data-guide="new-hole" aria-disabled={!!lock} title={lock ? `New hole: ${lock}` : 'Click the tee, then the green: the whole hole is planned, ready to shape and build'} onClick={() => newHole(game)}>
           <span className="pill-plus" aria-hidden>{lock ? <LockMark size={12} /> : '+'}</span>
           <span className="min-w-0"><span className="block">New hole</span>{lock ? <small data-testid="new-hole-lock">{lock}</small> : !shape && <small>Click a tee, then a green</small>}</span>
         </button>
