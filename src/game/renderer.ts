@@ -32,12 +32,14 @@ import { coversMap } from './painted-families';
 import { bandOf, cellsIn, snappedCell, tileIndex, tileKey, tilePermutation, tileSize } from './painted-tiles';
 import { BLOCK_UNDER, WOODLAND, lawnTexFor } from './painted-surfaces';
 import { BLEND_WAVES, blendAlpha, blendNoise, trimLru } from './painted-grass-lod';
-import { LIVING_AO, CasterStore, COURSE_GRASSY, COURSE_WATER, SHADOW_DIR, debugImage, grassyTex, influence, livingMasks, livingQueryBox, livingRes, livingSignature, waterTex, type Box, type InfluenceGrid, type LivingMasks, type RoadPiece, type WaterLine } from './living-ground';
+import { LIVING_AO, LIVING_EDGE, maskContours, CasterStore, COURSE_GRASSY, COURSE_WATER, SHADOW_DIR, debugImage, grassyTex, influence, livingMasks, livingQueryBox, livingRes, livingSignature, waterTex, type Box, type InfluenceGrid, type LivingMasks, type RoadPiece, type WaterLine } from './living-ground';
 /** the bytes of painted compositions a worker keeps (a chunk's look is about 3 MB at the closest zoom; the bake in progress keeps all of its own) */
 const COMPOSED_BYTES = 64 << 20;
 /** a painted composition is made and kept in squares of this many chunk px (only the part of a chunk a surface uses is composed) */
 const PAINT_CELL = 128;
 /** a painted composition of a chunk: its picture, the cells composed so far, its size in bytes */
+/** a chunk's living ground as made (drawLiving): its influence grid, its masks, and its variants' rugged edges (T204) */
+type LivingMade = { grid: InfluenceGrid; masks: LivingMasks | null; edges?: Map<string, { region: Path2D; blades: Path2D } | null> };
 type PaintedEntry = { buf: Cnv; cells: Uint8Array; bytes: number };
 /** T204: a painted area's or lot lawn's drawn form (GroundPainter.ruggedOf): the patch as drawn (its outline rounded and wobbled), its kind, its
  *  winding (1: a side's (dy, -dx) points outward) */
@@ -344,7 +346,30 @@ export class GroundPainter {
   rugged = true;
   private leafPic: Cnv | null = null; private leafChunks = new Map<string, Cnv>();
   /** the influence grids and masks of the last few chunks, by chunk and sources (living-ground.ts livingSignature) */
-  private livingMade = new Map<string, { grid: InfluenceGrid; masks: LivingMasks | null }>();
+  private livingMade = new Map<string, LivingMade>();
+  /** T204: a living-ground variant's rugged edge over a chunk (made once per chunk and sources, with its masks): the region where its mask passes
+   *  its level (LIVING_EDGE; living-ground maskContours), and the tufts of its grass reaching out over the ground round it (rugged-edges
+   *  spillBlades from the region's outline, the variant's side the tall side), by blade scale */
+  private livingEdge(made: LivingMade, m: LivingMasks, key: 'lush' | 'thin', k: number): { region: Path2D; blades: Path2D } | null {
+    const e = (made.edges ??= new Map()), id = key + ':' + k;
+    let r = e.get(id);
+    if (r === undefined) {
+      const rings = maskContours(m[key], m.W, m.H, m.x0, m.y0, m.res, LIVING_EDGE[key]);
+      if (!rings.length) r = null;
+      else {
+        const region = new Path2D(), blades = new Path2D();
+        for (const q of rings) {
+          ringPath(region, q);
+          // the ring runs with the variant on its (dy, -dx) side (maskContours' winding): that is the tall side, the tufts reach out
+          const t = spillBlades([...q, q[0]!, q[1]!], 1, k);
+          for (let i = 0; i + 5 < t.length; i += 6) { blades.moveTo(t[i]!, t[i + 1]!); blades.lineTo(t[i + 2]!, t[i + 3]!); blades.lineTo(t[i + 4]!, t[i + 5]!); blades.closePath(); }
+        }
+        r = { region, blades };
+      }
+      e.set(id, r);
+    }
+    return r;
+  }
   /** T204 (rugged-edges.ts): each painted area's and lot lawn's drawn form, by its patch (a patch keeps its object until it changes) */
   private ruggedForms = new WeakMap<LotPatch, RuggedForm>();
   /** the patch as it is drawn (T204): a soft area's outline rounded and wobbled (ruggedRing; gameplay keeps the patch's own pts), a hard one's
@@ -1250,21 +1275,33 @@ export class GroundPainter {
       }
       g.drawImage(soilBuf, 0, 0);
     };
+    /** T204: a variant's picture (layer) laid on the ground whole inside its region and as tufts over its edge (livingEdge), when the rugged
+     *  edges are on; false (nothing laid) when they are off */
+    const rugged = (layer: Cnv, key: 'lush' | 'thin') => {
+      if (!this.rugged) return false;
+      const e = this.livingEdge(made!, m, key, Math.max(2, spillScale(L, TILE_PX)));
+      if (!e) return true;
+      vg.save(); vg.setTransform(M); vg.clip(e.region, 'evenodd'); vg.setTransform(1, 0, 0, 1, 0, 0); vg.globalCompositeOperation = 'source-over'; vg.globalAlpha = 1; vg.drawImage(layer, 0, 0); vg.restore();
+      const p = vg.createPattern(layer, 'no-repeat'); if (!p) return true;
+      p.setTransform(Minv); vg.save(); vg.setTransform(M); vg.globalCompositeOperation = 'source-over'; vg.globalAlpha = 1; vg.fillStyle = p; vg.fill(e.blades); vg.restore();
+      return true;
+    };
     // lush: richer, denser grass along fences, walls and hedges, near water and on the verges: the grass laid over itself (its strokes' contrast
     // and colour deepen: darker gaps, brighter tips), tinted a deeper green
     if (m.max.lush > T) {
       const lb = this.buffer('livingLayer', W, H), lg = ctx2d(lb), a = art('grass-lush', maskBox(m.lush));
       if (a) lg.drawImage(a, 0, 0);
       else { lg.drawImage(vg.canvas, 0, 0); lg.globalCompositeOperation = 'overlay'; lg.drawImage(vg.canvas, 0, 0); lg.globalCompositeOperation = 'multiply'; lg.fillStyle = LUSH_TINT; lg.fillRect(0, 0, W, H); lg.globalCompositeOperation = 'source-over'; }
-      put(lg, m.lush, 'destination-in'); lay(lb, 'source-over');
+      // T204: the lush grass whole inside its region, its edge broken by its own tufts (no half-alpha cross-fade with the grass under it)
+      if (!rugged(lb, 'lush')) { put(lg, m.lush, 'destination-in'); lay(lb, 'source-over'); }
     }
     // thin: patchy grass going over to soil, under trees, at doors and corners, on worn edges: the soil's colour on the grass's own strokes
     // (dry, thin turf that keeps its texture), then the soil in the grass's dark gaps (lighten: the lit tufts stay)
     if (m.max.thin > T) {
       const lb = this.buffer('livingLayer', W, H), lg = ctx2d(lb), a = art('grass-patchy', maskBox(m.thin));
       if (a) lg.drawImage(a, 0, 0); else soil(lg);
-      put(lg, m.thin, 'destination-in');
-      if (a) lay(lb, 'source-over'); else { lay(lb, 'color', 0.7); lay(lb, 'lighten'); }
+      if (a && rugged(lb, 'thin')) { /* T204: the patchy grass whole in its region, with its tufts */ }
+      else { put(lg, m.thin, 'destination-in'); if (a) lay(lb, 'source-over'); else { lay(lb, 'color', 0.7); lay(lb, 'lighten'); } }
     }
     // bare: the soil, then the grass that was there laid back over it with lighten (its lit tufts and strokes run through the soil, its dark gaps
     // stay soil), so the soil's edge dissolves into thin grass instead of ending in a cut-out rim

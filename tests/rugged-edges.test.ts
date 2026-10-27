@@ -1,6 +1,7 @@
 // Headless tests for the rugged grass edges (T204, rugged-edges.ts: the rounded, wobbled outlines and the tall grass's spill): no DOM, no canvas.
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
+import { maskContours, openNoise, openPatch, OPEN_PATCH_AT } from '../src/game/living-ground';
 import { RUGGED, SPILL, inPoly, roundedRing, ruggedKind, ruggedRing, signedArea, spillBlades, spillClump, spillScale, warpLine, warpTriples, wobbleAt } from '../src/game/rugged-edges';
 
 /** an axis-aligned rectangle x0 y0 .. x1 y1, counter-clockwise or clockwise */
@@ -164,5 +165,51 @@ describe('which surfaces take part (T204)', () => {
   it('point in polygon', () => {
     const r = rect(0, 0, 4, 4);
     assert.ok(inPoly(r, 2, 2)); assert.ok(!inPoly(r, 5, 2)); assert.ok(!inPoly(r, -0.1, 2));
+  });
+});
+
+describe('the living ground\'s variants with a rugged edge (T204 d)', () => {
+  /** a mask (RGBA, alpha the channel) of a disc of radius r tiles at (cx, cy), with a hole of radius h, over W x H samples at res a tile from (0, 0) */
+  const disc = (W: number, H: number, res: number, cx: number, cy: number, r: number, h = 0) => {
+    const a = new Uint8ClampedArray(W * H * 4);
+    for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) { const d = Math.hypot((i + 0.5) / res - cx, (j + 0.5) / res - cy); a[(j * W + i) * 4 + 3] = d < r && d >= h ? 255 : 0; }
+    return a;
+  };
+  it('outlines a mask where it passes its level, closed, holes included, the same wherever the grid starts', () => {
+    const rings = maskContours(disc(40, 40, 2, 10, 10, 6), 40, 40, 0, 0, 2, 0.5);
+    assert.equal(rings.length, 1);
+    const r = rings[0]!;
+    for (let k = 0; k < r.length; k += 2) { const d = Math.hypot(r[k]! - 10, r[k + 1]! - 10); assert.ok(Math.abs(d - 6) < 0.6, `on the disc's rim: ${d.toFixed(2)}`); }
+    assert.ok(Math.abs(Math.abs(signedArea(r)) - Math.PI * 36) < 0.1 * Math.PI * 36, 'about the disc\'s area');
+    // a ring (disc with a hole): an outer and an inner outline, wound opposite ways
+    const two = maskContours(disc(40, 40, 2, 10, 10, 8, 3), 40, 40, 0, 0, 2, 0.5);
+    assert.equal(two.length, 2);
+    assert.ok(Math.sign(signedArea(two[0]!)) !== Math.sign(signedArea(two[1]!)), 'a hole runs the other way');
+    // a mask touching the grid's edge still closes (the outside counts as below)
+    const edge = maskContours(disc(20, 20, 2, 0, 5, 4), 20, 20, 0, 0, 2, 0.5);
+    assert.equal(edge.length, 1);
+  });
+  it('its tufts root inside the variant and reach out over the ground round it', () => {
+    const W = 40, a = disc(W, W, 2, 10, 10, 6), rings = maskContours(a, W, W, 0, 0, 2, 0.5), r = rings[0]!;
+    const t = spillBlades([...r, r[0]!, r[1]!], 1, 2);
+    assert.ok(t.length > 0);
+    let out = 0;
+    for (let k = 0; k < t.length; k += 6) {
+      const rx = (t[k]! + t[k + 2]!) / 2, ry = (t[k + 1]! + t[k + 3]!) / 2, tx = t[k + 4]!, ty = t[k + 5]!;
+      // (the outline lies within half a sample, 0.25 tiles, of the disc's rim)
+      assert.ok(Math.hypot(rx - 10, ry - 10) < 6.25 - SPILL.root / 2, 'the root inside');
+      if (Math.hypot(tx - 10, ty - 10) > Math.hypot(rx - 10, ry - 10)) out++;
+    }
+    assert.ok(out > 0.9 * (t.length / 6), `tips outside: ${out} of ${t.length / 6}`);
+  });
+  it('the open ground\'s patches are fewer and larger than before', () => {
+    // the share of open ground past the lush crest, and the patches' size: a run along a line in and out of them
+    let inPatch = 0, runs = 0, prev = false; const N = 4000;
+    for (let k = 0; k < N; k++) { const x = k * 0.5, on = openPatch(x, 333) > OPEN_PATCH_AT[0]; if (on) inPatch++; if (on && !prev) runs++; prev = on; }
+    let inOld = 0, runsOld = 0; prev = false;
+    for (let k = 0; k < N; k++) { const x = k * 0.5, on = openNoise(x, 333) > 0.12; if (on) inOld++; if (on && !prev) runsOld++; prev = on; }
+    assert.ok(inPatch < 0.6 * inOld, `share ${inPatch / N} vs ${inOld / N}`);
+    assert.ok(runs < runsOld, `patches ${runs} vs ${runsOld}`);
+    assert.ok(inPatch / Math.max(1, runs) > inOld / Math.max(1, runsOld), 'each patch longer');
   });
 });
