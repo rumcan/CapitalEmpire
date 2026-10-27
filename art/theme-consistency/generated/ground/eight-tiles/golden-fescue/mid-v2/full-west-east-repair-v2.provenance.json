@@ -1,0 +1,20 @@
+{
+  "id": "ground-background:golden-fescue",
+  "material": "golden-fescue",
+  "zoom": "mid",
+  "stage": "full-field-annotated-join-removal",
+  "version": 2,
+  "source": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/mid-v2/full-west-east-repair-guide.png",
+  "output": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/mid-v2/full-west-east-repair-v2.raw.png",
+  "provenance": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/mid-v2/full-west-east-repair-v2.provenance.json",
+  "prompt": "Remove the bright magenta horizontal guide stripe from this EXACT full grass picture. Reveal and paint the same golden fescue grass behind the stripe, naturally joining the grass immediately on both sides.\nKeep this full wide camera and the original on-screen grass size. Do not zoom, enlarge blades, change framing or create a macro picture. Continue the fine narrow flowing golden grass strokes, soft olive undergrowth, small low tufts and warm painterly style already visible around the stripe. Keep the same average golden/ochre/tawny palette, exposure and upper-right-to-lower-left light.\nThe stripe was a temporary guide, not a real feature. Remove every magenta pixel and make that area continuous natural grass with NO straight line, band, colour step, path, seam or border. Keep all the surrounding field as closely as possible, including its blade/tuft size and irregular density. No objects or text. Return the same complete wide PNG field picture with the stripe erased.",
+  "date": "2026-10-26",
+  "generator": "image_gen",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-e5e64af6-923a-44fb-b44f-5a18838161b5.png",
+  "sourceSha256": "48309c7887ced9132646f16548d0c667802371cdfee157dcff3209cba4a6f775",
+  "processing": "Native generator output copied byte-for-byte; direct scene removal. No code repaint, recolour, warp or resample.",
+  "camera": "Same mid source screenshot camera and apparent surface detail scale requested; no declared top-down/world coverage.",
+  "lighting": "UPPER RIGHT → LOWER LEFT",
+  "integrationStatus": "art-only-not-integrated",
+  "reviewStatus": "pending reference appearance, object-removal and lighting review"
+}

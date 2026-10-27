@@ -1,0 +1,20 @@
+{
+  "id": "material-texture:lake:far:independent-variant-3",
+  "material": "lake",
+  "zoom": "far",
+  "stage": "independent-variant-3",
+  "source": "art/theme-consistency/generated/ground/scene-backgrounds/lake/far-background-anchored-v1.raw.png",
+  "output": "art/theme-consistency/generated/ground/eight-tiles/lake/far-v1/tile-03-v1.raw.png",
+  "provenance": "art/theme-consistency/generated/ground/eight-tiles/lake/far-v1/tile-03-v1.provenance.json",
+  "prompt": "Edit this FULL clean background image into a different natural arrangement of the SAME surface at the SAME far camera and apparent feature size. CHOSEN MATERIAL: still pond/lake water, deep teal-blue, soft broad hand-painted ripples, a few SMALL warm sun glints on upper-right-facing ripple lips, even all over with no dark edge or broad glare stripe, no white waves or foam.. The chosen material is water: keep its teal-blue water, broad painted ripples and small sun glints. Do not turn it into grass, earth, islands, banks or dry plots. \nMake variation 3 of four: rearrange the soft density/colour groups and small material details organically, avoiding a repeated landmark composition. Preserve the source's overall mean exposure, colour balance, painted style, detail size, lighting from UPPER RIGHT toward LOWER LEFT and quiet edge context. No brightness frame, straight colour boundary, central cross, panel division, formal stripes unless they are the reference's mowing/rake bands, or copied small repeated motif. No building, tree, road, cast scene shadow, UI, label, object or blank area. Do not zoom, change projection, upscale the plants or redesign the material. Work from this unshifted full background, not a rolled or tiled composite. Deliver one complete same-size wide PNG.\nThe source is already a complete water background. Do not retain or create a building footprint, island, bank or shoreline. Keep only the water. Sun glints should be sparse small warm painted strokes in a naturally irregular distribution, never a glaring large reflection stripe, spotlight, grid or evenly spaced columns. Preserve the reference's upper-right afternoon light and apparent ripple size.",
+  "promptRevision": "v2-water-safety",
+  "date": "2026-10-26",
+  "generator": "image_gen",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-feb0b44c-5c02-4ba2-b616-e387a339518c.png",
+  "sourceSha256": "ef02708e70ef5a72a0d25397a5cd010a4349ab8ecd9f6789df7a4fb9ca9a7c6f",
+  "processing": "Native generator output copied byte-for-byte; direct scene removal. No code repaint, recolour, warp or resample.",
+  "camera": "Same far source screenshot camera and apparent surface detail scale requested; no declared top-down/world coverage.",
+  "lighting": "UPPER RIGHT → LOWER LEFT",
+  "integrationStatus": "art-only-not-integrated",
+  "reviewStatus": "pending reference appearance, object-removal and lighting review"
+}

@@ -1,0 +1,256 @@
+{
+  "schema": 1,
+  "date": "2026-10-26",
+  "purpose": "Actual material PNG sets ready for implementation; only explicitly hash-bound accepted families listed",
+  "readyFamilyCount": 4,
+  "primaryPngCount": 48,
+  "preservedOptionalPngCount": 4,
+  "ready": [
+    {
+      "id": "painted:golden-fescue",
+      "material": "golden-fescue",
+      "canonicalSelection": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/canonicalselection.json",
+        "sha256": "537ae50c6541fc07a7f4e34a3d7d0bd3dd46634fee62f0a5f0448d1c8cc0d221"
+      },
+      "primaryPngCount": 12,
+      "preservedOptionalPngCount": 4,
+      "levels": {
+        "near": {
+          "folder": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/near-v3",
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "primaryTileIds": [
+            "tile-01",
+            "tile-03",
+            "tile-06",
+            "tile-08"
+          ],
+          "visualDecision": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/near-v3/review/appearance-decision.json"
+        },
+        "mid": {
+          "folder": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/mid-v2",
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "primaryTileIds": [
+            "tile-01",
+            "tile-02",
+            "tile-03",
+            "tile-04"
+          ],
+          "visualDecision": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/mid-v2/review/appearance-decision.json"
+        },
+        "far": {
+          "folder": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/far-v4",
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "primaryTileIds": [
+            "tile-01",
+            "tile-02",
+            "tile-03",
+            "tile-04"
+          ],
+          "visualDecision": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/far-v4/review/appearance-decision.json"
+        }
+      },
+      "artStatus": "accepted-for-art-appearance",
+      "runtimeIntegrated": false
+    },
+    {
+      "id": "painted:lake",
+      "material": "lake",
+      "canonicalSelection": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/lake/canonicalselection.json",
+        "sha256": "c267a46bd0cc2a3cdd34a86849d8368ee1932c889431f2fac578de8d20a3c4fa"
+      },
+      "primaryPngCount": 12,
+      "preservedOptionalPngCount": 0,
+      "levels": {
+        "near": {
+          "folder": "art/theme-consistency/generated/ground/eight-tiles/lake/near-v1",
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "primaryTileIds": [
+            "tile-01",
+            "tile-02",
+            "tile-03",
+            "tile-04"
+          ],
+          "visualDecision": "art/theme-consistency/generated/ground/eight-tiles/lake/near-v1/review/appearance-decision.json"
+        },
+        "mid": {
+          "folder": "art/theme-consistency/generated/ground/eight-tiles/lake/mid-v1",
+          "nativePixels": [
+            1744,
+            900
+          ],
+          "primaryTileIds": [
+            "tile-01",
+            "tile-02",
+            "tile-03",
+            "tile-04"
+          ],
+          "visualDecision": "art/theme-consistency/generated/ground/eight-tiles/lake/mid-v1/review/appearance-decision.json"
+        },
+        "far": {
+          "folder": "art/theme-consistency/generated/ground/eight-tiles/lake/far-v1",
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "primaryTileIds": [
+            "tile-01",
+            "tile-02",
+            "tile-03",
+            "tile-04"
+          ],
+          "visualDecision": "art/theme-consistency/generated/ground/eight-tiles/lake/far-v1/review/appearance-decision.json"
+        }
+      },
+      "artStatus": "accepted-for-art-appearance",
+      "runtimeIntegrated": false
+    },
+    {
+      "id": "painted:sand-ripples",
+      "material": "sand-ripples",
+      "canonicalSelection": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/canonicalselection.json",
+        "sha256": "221393d5b1b1d11026a4745fb9fee1451fa9f69d6d851d931ac5f8c922e4d07a"
+      },
+      "primaryPngCount": 12,
+      "preservedOptionalPngCount": 0,
+      "levels": {
+        "near": {
+          "folder": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/near-v1",
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "primaryTileIds": [
+            "tile-01",
+            "tile-02",
+            "tile-03",
+            "tile-04"
+          ],
+          "visualDecision": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/near-v1/review/appearance-decision.json"
+        },
+        "mid": {
+          "folder": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/mid-v1",
+          "nativePixels": [
+            1744,
+            900
+          ],
+          "primaryTileIds": [
+            "tile-01",
+            "tile-02",
+            "tile-03",
+            "tile-04"
+          ],
+          "visualDecision": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/mid-v1/review/appearance-decision.json"
+        },
+        "far": {
+          "folder": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/far-v1",
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "primaryTileIds": [
+            "tile-01",
+            "tile-02",
+            "tile-03",
+            "tile-04"
+          ],
+          "visualDecision": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/far-v1/review/appearance-decision.json"
+        }
+      },
+      "artStatus": "accepted-for-art-appearance",
+      "runtimeIntegrated": false
+    },
+    {
+      "id": "painted:long-grass",
+      "material": "long-grass",
+      "canonicalSelection": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/canonicalselection.json",
+        "sha256": "4df57491bb1627ef065b5ab9f4c527f87a0d896c1776e3dff06ba652f6323cce"
+      },
+      "primaryPngCount": 12,
+      "preservedOptionalPngCount": 0,
+      "levels": {
+        "near": {
+          "folder": "art/theme-consistency/generated/ground/eight-tiles/long-grass/near-v3",
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "primaryTileIds": [
+            "tile-01",
+            "tile-02",
+            "tile-03",
+            "tile-04"
+          ],
+          "visualDecision": "art/theme-consistency/generated/ground/eight-tiles/long-grass/near-v3/review/appearance-decision.json"
+        },
+        "mid": {
+          "folder": "art/theme-consistency/generated/ground/eight-tiles/long-grass/mid-v2",
+          "nativePixels": [
+            1742,
+            900
+          ],
+          "primaryTileIds": [
+            "tile-01",
+            "tile-02",
+            "tile-03",
+            "tile-04"
+          ],
+          "visualDecision": "art/theme-consistency/generated/ground/eight-tiles/long-grass/mid-v2/review/appearance-decision.json"
+        },
+        "far": {
+          "folder": "art/theme-consistency/generated/ground/eight-tiles/long-grass/far-v2",
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "primaryTileIds": [
+            "tile-01",
+            "tile-02",
+            "tile-03",
+            "tile-04"
+          ],
+          "visualDecision": "art/theme-consistency/generated/ground/eight-tiles/long-grass/far-v2/review/appearance-decision.json"
+        }
+      },
+      "artStatus": "accepted-for-art-appearance",
+      "runtimeIntegrated": false,
+      "runtimeMappingAuthority": "Generated art only; do not replace owner-supplied rough-20261026 or T162 runtime mapping automatically."
+    }
+  ],
+  "remainingFamilies": [
+    "desert",
+    "dirt",
+    "fairway",
+    "first-cut",
+    "pale-green-bushes",
+    "pine-straw",
+    "putting-green",
+    "sand-long-grass",
+    "sand-raked",
+    "swamp"
+  ],
+  "remainingStatus": "Pending approved canonical texture handoff; references or partial outputs are not readiness",
+  "displayContract": {
+    "minVisibleTiles": 2,
+    "maxVisibleTiles": 4,
+    "allowMirror": false,
+    "allowRotate": false
+  },
+  "layerContract": "Separate gameplay material layers; no runtime blending/randomisation or integration claimed",
+  "appearanceAuthority": "Independent visual decisions plus exact selected PNG hashes verified; not owner signoff or file-existence inference"
+}

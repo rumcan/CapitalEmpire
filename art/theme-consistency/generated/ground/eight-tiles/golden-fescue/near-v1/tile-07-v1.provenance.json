@@ -1,0 +1,22 @@
+{
+  "id": "ground-background:golden-fescue",
+  "material": "golden-fescue",
+  "zoom": "near",
+  "stage": "independently-authored-field-variation",
+  "variant": "tile-07",
+  "version": 1,
+  "source": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/near-v1/common-collar-master.png",
+  "approvedAppearance": "art/theme-consistency/generated/ground/scene-backgrounds/golden-fescue/near-background-anchored-v1.raw.png",
+  "output": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/near-v1/tile-07-v1.raw.png",
+  "provenance": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/near-v1/tile-07-v1.provenance.json",
+  "prompt": "Edit this complete golden fescue field picture into a DIFFERENT PATCH OF THE SAME FIELD, seen at exactly the same camera height, framing and apparent grass size. Make a distinct interior arrangement with varied but subtle gold-versus-olive density patches, some small rust tuft groups, and irregular flowing grass growth rather than stripes.\nKeep the source's exact material identity: flowing small narrow golden/ochre blades, low warm rust/tawny tuft groups, muted olive undergrowth and a few tiny pale seedhead dots, hand-painted Warcraft/Hearthstone game-art brushwork. The grass is already the correct size in this full wide image. Do not zoom in or out, enlarge the blades, reduce them to repeated squiggles, or change the viewpoint. Native requested output1742x902pixels, same full wide picture.\nRetain the grass and its colours in the outermost64pixel border as closely as possible, and let the different interior grow naturally into that edge context. No rectangular frames, straight divisions, quadrant breaks, brightness bands or visible borders. Remove any such artificial divisions already present in the source. Keep the average gold/olive/rust balance, overall exposure, brushstroke size and natural irregular density consistent throughout. The interior should be genuinely newly arranged grass, not a shifted or mirrored copy.\nLight stays from UPPER RIGHT toward LOWER LEFT, with gently highlighted upper-right tips and soft lower-left grass self-shading. No global light gradient or cast shadows of objects. No buildings, roads, trees, separate shrubs, rocks, objects, text, UI, outline, vignette or collage. Deliver ONE complete continuous grass background PNG.",
+  "date": "2026-10-26",
+  "generator": "image_gen",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-b62fe9c8-a861-463d-b7bf-1cf9f49e073c.png",
+  "sourceSha256": "0995e0d9c389e3eb2cedb6b9edd8df2f98d6430ddedc3453a42c9620c6cf2a7e",
+  "processing": "Native generator output copied byte-for-byte; direct scene removal. No code repaint, recolour, warp or resample.",
+  "camera": "Same near source screenshot camera and apparent surface detail scale requested; no declared top-down/world coverage.",
+  "lighting": "UPPER RIGHT → LOWER LEFT",
+  "integrationStatus": "art-only-not-integrated",
+  "reviewStatus": "pending reference appearance, object-removal and lighting review"
+}

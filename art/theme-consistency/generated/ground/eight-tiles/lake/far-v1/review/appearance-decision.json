@@ -1,0 +1,122 @@
+{
+  "schema": 1,
+  "reviewedDate": "2026-10-26",
+  "reviewer": "/root/fescue_scale_review",
+  "material": "lake",
+  "zoom": "far",
+  "revision": "v1",
+  "activeVariants": 4,
+  "decision": "accepted-for-art-appearance",
+  "scope": "Independent saved-PNG material and adjacency review, not runtime integration or owner signoff",
+  "materialIdentity": "Deep teal-blue painted still water with fine distant ripple grain and small warm scattered glints remains coherent with the FAR scene-derived reference.",
+  "lighting": "Warm upper-right afternoon reflection language is consistent across the four images. No flipped light, edge vignette, magenta guide, shore/road/tree/shop remnant or text is visible.",
+  "adjacency": "The four-tile proof and both shuffled layouts read as continuous water without a conspicuous straight join, rectangular tonal frame or grid. The native common-master half-height strip does not show an inherited straight cutoff.",
+  "nativeCuts": "Local native pixel-selection stroke changes can be seen on close inspection, but no conspicuous straight repair endpoint or tonal frame appears in the reviewed proof scale. This acceptance does not claim invisible cuts at every magnification.",
+  "composition": "Four different interior ripple/glint arrangements remain within a shared matching border. The common border repeats by construction; no conspicuous border lattice stood out in the reviewed shuffles.",
+  "nativeEvidence": {
+    "folder": "output/lake-mid-far-v1-review",
+    "masterHalfHeight": {
+      "left": 0,
+      "top": 365,
+      "width": 700,
+      "height": 170
+    },
+    "tile03Left": {
+      "left": 0,
+      "top": 300,
+      "width": 330,
+      "height": 400
+    },
+    "tile04North": {
+      "left": 650,
+      "top": 0,
+      "width": 450,
+      "height": 220
+    }
+  },
+  "limits": [
+    "No art, application, runtime or tests changed by this reviewer.",
+    "No live integration, map-coverage, performance or owner-signoff claim.",
+    "Separate gameplay material layers are not runtime blended or randomized by this decision.",
+    "NEAR/MID/FAR are independently painted sets; common composition or resized cross-zoom geography is not required.",
+    "Only this four-image FAR set is covered; NEAR is not approved by this decision."
+  ],
+  "files": [
+    {
+      "file": "tile-01.png",
+      "sha256": "6d5cf21ab0a411119739078d2503b7032d884089896573a478bca4fb92a15b99",
+      "dimensions": [
+        1742,
+        902
+      ],
+      "bytes": 3401905
+    },
+    {
+      "file": "tile-02.png",
+      "sha256": "741a7488708b9221792af2d871e3845e7c9d1160ca90727bb3d5fd2c4fc23d9e",
+      "dimensions": [
+        1742,
+        902
+      ],
+      "bytes": 3420356
+    },
+    {
+      "file": "tile-03.png",
+      "sha256": "4ed790ae89022fb6bc2f928ce0dec9a16bd3fa762b58dda1147f394f89411341",
+      "dimensions": [
+        1742,
+        902
+      ],
+      "bytes": 3357084
+    },
+    {
+      "file": "tile-04.png",
+      "sha256": "863289df33dcc9f593fd5fca0f8bbbd92a8f50ece79a9f93237fd3fcb00d9be2",
+      "dimensions": [
+        1742,
+        902
+      ],
+      "bytes": 3423830
+    },
+    {
+      "file": "review-four-tiles.png",
+      "sha256": "3cff56a6256212a7e18b762ef466b8bf98e66591d19402623bd690690fe3cb45",
+      "dimensions": [
+        1742,
+        902
+      ],
+      "bytes": 2993781
+    },
+    {
+      "file": "review-order-a.png",
+      "sha256": "04e4744ede3e332fce60c9af752be34a2cfbbc4ff2dd0e5d4509baeaf15145cb",
+      "dimensions": [
+        1024,
+        530
+      ],
+      "bytes": 1047720
+    },
+    {
+      "file": "review-order-b.png",
+      "sha256": "0a5c34707e811024b9e7d8d753f71a9f8e9ceb0229b80d69646dbde394711fe0",
+      "dimensions": [
+        1024,
+        530
+      ],
+      "bytes": 1041008
+    },
+    {
+      "file": "common-collar-master.png",
+      "sha256": "94aafe82d471e60682ca1890af6623b4a7d255062be72ebe9232956b09cef8c9",
+      "dimensions": [
+        1742,
+        902
+      ],
+      "bytes": 3423535
+    }
+  ],
+  "materialReference": {
+    "file": "art/theme-consistency/generated/ground/scene-backgrounds/lake/far-background-anchored-v1.raw.png",
+    "sha256": "ef02708e70ef5a72a0d25397a5cd010a4349ab8ecd9f6789df7a4fb9ca9a7c6f"
+  }
+}

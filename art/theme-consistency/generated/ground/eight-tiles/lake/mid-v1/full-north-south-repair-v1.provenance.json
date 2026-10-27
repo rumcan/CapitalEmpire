@@ -1,0 +1,19 @@
+{
+  "id": "material-texture:lake:mid:repair-north-south-seam",
+  "material": "lake",
+  "zoom": "mid",
+  "stage": "repair-north-south-seam",
+  "source": "art/theme-consistency/generated/ground/eight-tiles/lake/mid-v1/full-north-south-repair-box-guide.png",
+  "output": "art/theme-consistency/generated/ground/eight-tiles/lake/mid-v1/full-north-south-repair-v1.raw.png",
+  "provenance": "art/theme-consistency/generated/ground/eight-tiles/lake/mid-v1/full-north-south-repair-v1.provenance.json",
+  "prompt": "Edit this FULL-frame image. Remove ONLY the bright magenta BOX and reconstruct a natural matching patch of the adjacent still pond/lake water, deep teal-blue, soft broad hand-painted ripples, a few SMALL warm sun glints on upper-right-facing ripple lips, even all over with no dark edge or broad glare stripe, no white waves or foam.. Keep the rest of the image, its mid camera, apparent feature sizes, source palette, mean exposure and painted brushwork unchanged. Light remains UPPER RIGHT toward LOWER LEFT. Do not copy the old straight join beneath the box: continue natural irregular material throughout the entire marked area without a stripe offset, box edge or rectangular boundary. No zoom, crop input, macro view, new texture swatch, grid, frame, objects or lettering. Return the full same-size PNG with no magenta left.",
+  "date": "2026-10-26",
+  "generator": "image_gen",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-f7bd3309-e842-4732-9b72-dc4202a5ccab.png",
+  "sourceSha256": "c4f0a8cfc3cc181f70a116552bf539a6d37ae4476d2329c24eeeea0fc58d0574",
+  "processing": "Native generator output copied byte-for-byte; direct scene removal. No code repaint, recolour, warp or resample.",
+  "camera": "Same mid source screenshot camera and apparent surface detail scale requested; no declared top-down/world coverage.",
+  "lighting": "UPPER RIGHT → LOWER LEFT",
+  "integrationStatus": "art-only-not-integrated",
+  "reviewStatus": "pending reference appearance, object-removal and lighting review"
+}

@@ -1,0 +1,952 @@
+{
+  "schema": 1,
+  "id": "painted:lake",
+  "materialId": "painted:lake",
+  "material": "lake",
+  "date": "2026-10-26",
+  "versionedSelection": "art/theme-consistency/generated/ground/eight-tiles/lake/selection-v1.json",
+  "canonicalSelection": "art/theme-consistency/generated/ground/eight-tiles/lake/canonicalselection.json",
+  "status": "three-authored-sets-independent-art-appearance-passed",
+  "acceptanceScope": "Hash-bound independent saved-art appearance review; not owner signoff or live game integration",
+  "light": "UPPER RIGHT toward LOWER LEFT",
+  "displayContract": {
+    "minVisibleTiles": 2,
+    "maxVisibleTiles": 4,
+    "switchBeforeExceeding": 4,
+    "primaryVariantsPerSet": 4,
+    "allowFlip": false,
+    "allowMirror": false,
+    "allowRotate": false
+  },
+  "detailRelationship": "Three independently authored water camera-detail sets; not mips, matching geography, rescaled copies or fixed world-metre coverage",
+  "materialLayer": {
+    "type": "water",
+    "separate": true,
+    "runtimeBlending": false,
+    "runtimeRandomisation": false
+  },
+  "runtimeIntegrated": false,
+  "sets": {
+    "near": {
+      "folder": "art/theme-consistency/generated/ground/eight-tiles/lake/near-v1",
+      "status": "accepted-for-art-appearance",
+      "primaryTileIds": [
+        "tile-01",
+        "tile-02",
+        "tile-03",
+        "tile-04"
+      ],
+      "primaryTiles": [
+        {
+          "id": "tile-01",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/lake/near-v1/tile-01.png",
+          "sha256": "3fc910157c5cc1c2f5bf141aecac80be91e12f762f09347e205632cbe214eb79",
+          "bytes": 3555029,
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "pixelSha256": "e8c6f88a9a00860a91f7068e2ffd99c719e56c8ce4fa87300da7370f85335780",
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/lake/near-v1/tile-01-v1.raw.png",
+            "sha256": "d7f1a67daecc256fdf263b94a5bbb73e6876b3b6227b03afb17f80a4fdf5d664",
+            "bytes": 2174168,
+            "nativePixels": [
+              1742,
+              903
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/lake/near-v1/tile-01-v1.provenance.json",
+              "sha256": "cb974b6563dde880da44e3d93353ce0762adda984acec60a8c15614d5c962e57",
+              "bytes": 3105
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/lake/near-v1/tile-01-v1.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1742,
+            "height": 902
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/lake/near-v1/tile-01.cut-paths.json"
+        },
+        {
+          "id": "tile-02",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/lake/near-v1/tile-02.png",
+          "sha256": "05f9c2497cf6d4f2f04b97354ad2cd358551e26d07eb95e64d5f48f34811c599",
+          "bytes": 3498867,
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "pixelSha256": "91750b286f1835827dc7604a182e8927c415239cbda872c76e96e783a84fe790",
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/lake/near-v1/tile-02-v1.raw.png",
+            "sha256": "0877829d2262d8555fc25b04f54a529670ccb9e0aa11b0b52d636da80c52180c",
+            "bytes": 2157492,
+            "nativePixels": [
+              1742,
+              903
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/lake/near-v1/tile-02-v1.provenance.json",
+              "sha256": "c1dd12c6c0fed1a647a13820469ff1756ab96d2d1915f394348290ea63fa45b4",
+              "bytes": 3105
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/lake/near-v1/tile-02-v1.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1742,
+            "height": 902
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/lake/near-v1/tile-02.cut-paths.json"
+        },
+        {
+          "id": "tile-03",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/lake/near-v1/tile-03.png",
+          "sha256": "4f784faacdde2936eb59bb00ced425640cb3df95caf89d7c9d41eaa6dd7bb5df",
+          "bytes": 3580107,
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "pixelSha256": "b3333282d2b7605bd5643157117151fa0d75c34817004ba489f2146bbe08988e",
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/lake/near-v1/tile-03-v1.raw.png",
+            "sha256": "f9aa66bada4fbf7f93c88d41531f2c08b85345f7de28e359de0d2d90c5b8be0f",
+            "bytes": 2228506,
+            "nativePixels": [
+              1742,
+              903
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/lake/near-v1/tile-03-v1.provenance.json",
+              "sha256": "edfc4a7c3614948db5e63223e0913dfc08dfbca112493d6cfbffc932c56fb403",
+              "bytes": 3105
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/lake/near-v1/tile-03-v1.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1742,
+            "height": 902
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/lake/near-v1/tile-03.cut-paths.json"
+        },
+        {
+          "id": "tile-04",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/lake/near-v1/tile-04.png",
+          "sha256": "b99f767fe902642ab9bbdc102eaa86fd76218dbac14805dcf5f6bec039f29db4",
+          "bytes": 3545885,
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "pixelSha256": "2e1ac973a994947d669c780793b86b19b7cf51cd5d7d6cb5d7267f58c082e80e",
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/lake/near-v1/tile-04-v1.raw.png",
+            "sha256": "1bcaf6d77b71c24ea99aa52534e0bb5dfad6cf2ac58b90df017d5057d4461b37",
+            "bytes": 2158053,
+            "nativePixels": [
+              1742,
+              903
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/lake/near-v1/tile-04-v1.provenance.json",
+              "sha256": "5183a200f25e0de9582a64b3e1c0d4121d271a9babba36f0fdf6ba8e934525e2",
+              "bytes": 3105
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/lake/near-v1/tile-04-v1.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1742,
+            "height": 902
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/lake/near-v1/tile-04.cut-paths.json"
+        }
+      ],
+      "optionalExtraTiles": [],
+      "nativePixels": [
+        1742,
+        902
+      ],
+      "visualDecision": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/lake/near-v1/review/appearance-decision.json",
+        "sha256": "40ba706bd23cef623dfc8ea60ba0501486d0c21b7ab1673a8f98354107cb9b14",
+        "bytes": 4562,
+        "decision": "accepted-for-art-appearance"
+      },
+      "exportReport": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/lake/near-v1/export-report.json",
+        "sha256": "a81549cfb6febd8e5450b28a16b84059e84ff05753465aee8d00904786ebcaee",
+        "bytes": 10937
+      },
+      "inputManifest": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/lake/near-v1/manifest-v1.json",
+        "sha256": "83580ae583a351e040e3c1820d51eb43f99938fb6de1d594ce1d0f306d1df4f3",
+        "bytes": 2744
+      },
+      "commonMaster": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/lake/near-v1/common-collar-master.png",
+        "sha256": "f9533b5695a404b70100403cc21d91498d0311531610ffc89fedd57883927db7",
+        "bytes": 3556401,
+        "nativePixels": [
+          1742,
+          902
+        ]
+      },
+      "sourceMaster": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/lake/near-v1/master.native-crop.png",
+        "sha256": "011f773bee28d349d55efbaa368b0a9ae5ed7e1e25f3d671c224b5b8e0277c52",
+        "bytes": 3293893,
+        "nativePixels": [
+          1742,
+          902
+        ],
+        "provenance": {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/lake/near-v1/master.native-crop.provenance.json",
+          "sha256": "94a312bb770cd3f72ca29c0e7ab9cbfe162a94a202f09dd90f4134b5d51bde97",
+          "bytes": 644
+        },
+        "derivedFrom": {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/lake/near-v1/tile-01-v1.raw.png",
+          "sha256": "d7f1a67daecc256fdf263b94a5bbb73e6876b3b6227b03afb17f80a4fdf5d664",
+          "bytes": 2174168,
+          "nativePixels": [
+            1742,
+            903
+          ],
+          "provenance": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/lake/near-v1/tile-01-v1.provenance.json",
+            "sha256": "cb974b6563dde880da44e3d93353ce0762adda984acec60a8c15614d5c962e57",
+            "bytes": 3105
+          },
+          "prompt": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/lake/near-v1/tile-01-v1.provenance.json",
+            "jsonPointer": "/prompt"
+          }
+        },
+        "processing": "Exact native pixel crop to common even dimensions; no resample or upscale.",
+        "crop": {
+          "left": 0,
+          "top": 0,
+          "width": 1742,
+          "height": 902
+        }
+      },
+      "sharedRepairSources": {
+        "northSouth": {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/lake/near-v1/full-north-south-repair-v1.raw.png",
+          "sha256": "fc9c598ec35b2007100d3cb5c7c72702090421ceeaa127b677929bf988810ff5",
+          "bytes": 2192255,
+          "nativePixels": [
+            1743,
+            902
+          ],
+          "provenance": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/lake/near-v1/full-north-south-repair-v1.provenance.json",
+            "sha256": "e05de4501586132c14f5ef8fec958a99edc583b0ba4428cb8840e325ed86f826",
+            "bytes": 1886
+          },
+          "prompt": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/lake/near-v1/full-north-south-repair-v1.provenance.json",
+            "jsonPointer": "/prompt"
+          }
+        },
+        "westEast": {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/lake/near-v1/full-west-east-repair-v1.raw.png",
+          "sha256": "7d5c3b56245026ce78a9ed49086fa6eff302850fb8ecf27b5617c7c41bd10838",
+          "bytes": 2183839,
+          "nativePixels": [
+            1743,
+            902
+          ],
+          "provenance": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/lake/near-v1/full-west-east-repair-v1.provenance.json",
+            "sha256": "c6397252e24600194289bf17f661cef8e06ab7ad872d4696faaae067a69f8841",
+            "bytes": 1876
+          },
+          "prompt": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/lake/near-v1/full-west-east-repair-v1.provenance.json",
+            "jsonPointer": "/prompt"
+          }
+        }
+      },
+      "proofs": {
+        "twoTileNative": {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/lake/handoff-proofs/near-two-tile-native.png",
+          "sha256": "28797ddf150018cd15266c72f28a85bc6ff1bc4b40710381324e062922d08406",
+          "bytes": 3536363,
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "processing": "Exact native right-half/left-half source windows; no resampling"
+        },
+        "fourTileScreen": {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/lake/handoff-proofs/near-four-tile-screen.png",
+          "sha256": "0601ae1035ff768de70632f42c760bd6f70069357b0565e64d810cd1595a29e8",
+          "bytes": 3197167,
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "primaryOrder": [
+            "tile-01",
+            "tile-02",
+            "tile-03",
+            "tile-04"
+          ],
+          "processing": "Four complete final PNGs displayed2x2 with uniform0.5downsampling for this proof only; original art unchanged"
+        },
+        "fourTileNativeJunction": {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/lake/handoff-proofs/near-four-tile-native-junction.png",
+          "sha256": "4f1f256a48837d9016e87c4bcffd6ab60b2128bc313666afce748ba8c41477bf",
+          "bytes": 3561426,
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "primaryOrder": [
+            "tile-01",
+            "tile-02",
+            "tile-03",
+            "tile-04"
+          ],
+          "processing": "Exact native corner windows around a four-tile junction; no resampling"
+        }
+      }
+    },
+    "mid": {
+      "folder": "art/theme-consistency/generated/ground/eight-tiles/lake/mid-v1",
+      "status": "accepted-for-art-appearance",
+      "primaryTileIds": [
+        "tile-01",
+        "tile-02",
+        "tile-03",
+        "tile-04"
+      ],
+      "primaryTiles": [
+        {
+          "id": "tile-01",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/lake/mid-v1/tile-01.png",
+          "sha256": "c5c182ab3d548dea12fe25f71ab3740a746d01d5de27ec5a7f7118587fb80777",
+          "bytes": 3500216,
+          "nativePixels": [
+            1744,
+            900
+          ],
+          "pixelSha256": "f11e864b9ccf91d4759201b1fe61985e8f12b71a6510ef37610a4715793b5479",
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/lake/mid-v1/tile-01-v1.raw.png",
+            "sha256": "6ef0e9f26071990515b4229a82f0c5a30614284b58d437c7a3a0128b464a27f8",
+            "bytes": 2123172,
+            "nativePixels": [
+              1745,
+              901
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/lake/mid-v1/tile-01-v1.provenance.json",
+              "sha256": "a7ec7046ce3205d982ed96b076be39def86b83221f82e1fe29d143108def403c",
+              "bytes": 3295
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/lake/mid-v1/tile-01-v1.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1744,
+            "height": 900
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/lake/mid-v1/tile-01.cut-paths.json"
+        },
+        {
+          "id": "tile-02",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/lake/mid-v1/tile-02.png",
+          "sha256": "4002af3124169872c62aa755d67388742a7ed8be6bfd989d30c8eadf951a4c6e",
+          "bytes": 3504324,
+          "nativePixels": [
+            1744,
+            900
+          ],
+          "pixelSha256": "55df4b5dd03089afde5722b3fd6a02395d5968f10bd5cd4a508d8c665dc870f8",
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/lake/mid-v1/tile-02-v1.raw.png",
+            "sha256": "8f8e67df4841d9ac4d5d6157647b66f7b982885be9c72f785592b8ade2244b02",
+            "bytes": 2179035,
+            "nativePixels": [
+              1745,
+              901
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/lake/mid-v1/tile-02-v1.provenance.json",
+              "sha256": "1c4becdbfb909552f09675f87636244771f9829f33e14d31350d8b32008a9628",
+              "bytes": 3295
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/lake/mid-v1/tile-02-v1.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1744,
+            "height": 900
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/lake/mid-v1/tile-02.cut-paths.json"
+        },
+        {
+          "id": "tile-03",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/lake/mid-v1/tile-03.png",
+          "sha256": "fc06d3c71b99305c3f0d6f59a2f3ecb7943953c70bbbbed24ea31d8112d88251",
+          "bytes": 3504414,
+          "nativePixels": [
+            1744,
+            900
+          ],
+          "pixelSha256": "75f21f105f1c794bce0681523f5317bf03bcaf29d2f607b6b726a59024583039",
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/lake/mid-v1/tile-03-v1.raw.png",
+            "sha256": "419f97e13ed7ee59b14469f5e8a358976de6c2e0b5bab5e70564ea20c686d99f",
+            "bytes": 2116839,
+            "nativePixels": [
+              1746,
+              901
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/lake/mid-v1/tile-03-v1.provenance.json",
+              "sha256": "f586005578cb06ac7dad5d5664f8abb6a7348d0ee0d4ce6dfdd056f0a9b54a4b",
+              "bytes": 3295
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/lake/mid-v1/tile-03-v1.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1744,
+            "height": 900
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/lake/mid-v1/tile-03.cut-paths.json"
+        },
+        {
+          "id": "tile-04",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/lake/mid-v1/tile-04.png",
+          "sha256": "d5af11de180bcc85bb41d5808505e462547b8a4bc8a5c7342f63fb5b0c84a343",
+          "bytes": 3488315,
+          "nativePixels": [
+            1744,
+            900
+          ],
+          "pixelSha256": "69e2cb0123efc21f2076530aa97d5ca43699ff2927dee122a6cf978a7eecc2a4",
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/lake/mid-v1/tile-04-v1.raw.png",
+            "sha256": "d1e485b730adc6bd198f8b59ea96d89a4ece4e9ca89694286c391ffbf12e9275",
+            "bytes": 2106307,
+            "nativePixels": [
+              1745,
+              901
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/lake/mid-v1/tile-04-v1.provenance.json",
+              "sha256": "9d9dc898959a4fb8b5dd8635942a87add266cf7cbcc6909c8a168fbf38dde2e1",
+              "bytes": 3295
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/lake/mid-v1/tile-04-v1.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1744,
+            "height": 900
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/lake/mid-v1/tile-04.cut-paths.json"
+        }
+      ],
+      "optionalExtraTiles": [],
+      "nativePixels": [
+        1744,
+        900
+      ],
+      "visualDecision": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/lake/mid-v1/review/appearance-decision.json",
+        "sha256": "bc4141b615d15e830bf2850fe62b810783df1c31be91d932720832eb4d66c095",
+        "bytes": 4363,
+        "decision": "accepted-for-art-appearance"
+      },
+      "exportReport": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/lake/mid-v1/export-report.json",
+        "sha256": "e99d066050a2aefdd35457ee780dee5c683f9f7d896979f8bccc5ee9dd021a17",
+        "bytes": 10915
+      },
+      "inputManifest": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/lake/mid-v1/manifest-v1.json",
+        "sha256": "8b15527ec3d9a068976d9991f6b1077b897ac9024ca6bb72121ba90fc53adfd2",
+        "bytes": 2734
+      },
+      "commonMaster": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/lake/mid-v1/common-collar-master.png",
+        "sha256": "303c43385c1af0eb4f551d2a15308391c6ee886d6278aed741669cd74e606c1d",
+        "bytes": 3507272,
+        "nativePixels": [
+          1744,
+          900
+        ]
+      },
+      "sourceMaster": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/lake/mid-v1/master.native-crop.png",
+        "sha256": "4760fde4dfdff276a2d7dbdd2debb2f7ef1f72a06a4026faf1b95a5f117e0bde",
+        "bytes": 3265212,
+        "nativePixels": [
+          1744,
+          900
+        ],
+        "provenance": {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/lake/mid-v1/master.native-crop.provenance.json",
+          "sha256": "8edae5218e01efd1f4f7095ec3cd92aa114344134bd2305e2013a911ed9dfbef",
+          "bytes": 642
+        },
+        "derivedFrom": {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/lake/mid-v1/tile-01-v1.raw.png",
+          "sha256": "6ef0e9f26071990515b4229a82f0c5a30614284b58d437c7a3a0128b464a27f8",
+          "bytes": 2123172,
+          "nativePixels": [
+            1745,
+            901
+          ],
+          "provenance": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/lake/mid-v1/tile-01-v1.provenance.json",
+            "sha256": "a7ec7046ce3205d982ed96b076be39def86b83221f82e1fe29d143108def403c",
+            "bytes": 3295
+          },
+          "prompt": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/lake/mid-v1/tile-01-v1.provenance.json",
+            "jsonPointer": "/prompt"
+          }
+        },
+        "processing": "Exact native pixel crop to common even dimensions; no resample or upscale.",
+        "crop": {
+          "left": 0,
+          "top": 0,
+          "width": 1744,
+          "height": 900
+        }
+      },
+      "sharedRepairSources": {
+        "northSouth": {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/lake/mid-v1/full-north-south-repair-v1.raw.png",
+          "sha256": "34da7578a9cceac80b2bc0f1fa4e1bce746b31c79549783fe0ee8b150f0848c9",
+          "bytes": 2131449,
+          "nativePixels": [
+            1746,
+            901
+          ],
+          "provenance": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/lake/mid-v1/full-north-south-repair-v1.provenance.json",
+            "sha256": "feddf12e30563f286079c669aa9d5686282e41aa650e44c79ce75f3210e61715",
+            "bytes": 2076
+          },
+          "prompt": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/lake/mid-v1/full-north-south-repair-v1.provenance.json",
+            "jsonPointer": "/prompt"
+          }
+        },
+        "westEast": {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/lake/mid-v1/full-west-east-repair-v1.raw.png",
+          "sha256": "deabc7bda4c4cd3760f5d6ff7a8923968475bafa4b43ef61f24a96aed0c45aa4",
+          "bytes": 2113563,
+          "nativePixels": [
+            1746,
+            901
+          ],
+          "provenance": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/lake/mid-v1/full-west-east-repair-v1.provenance.json",
+            "sha256": "51accad886b66bacc451c007b7005d302453975783d22f75e62dcec1402727f6",
+            "bytes": 2066
+          },
+          "prompt": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/lake/mid-v1/full-west-east-repair-v1.provenance.json",
+            "jsonPointer": "/prompt"
+          }
+        }
+      },
+      "proofs": {
+        "twoTileNative": {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/lake/handoff-proofs/mid-two-tile-native.png",
+          "sha256": "29ae14335a477c5412bcb684c773647dd48629dc8e3234a7970e23b0952533fa",
+          "bytes": 3519494,
+          "nativePixels": [
+            1744,
+            900
+          ],
+          "processing": "Exact native right-half/left-half source windows; no resampling"
+        },
+        "fourTileScreen": {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/lake/handoff-proofs/mid-four-tile-screen.png",
+          "sha256": "3e8bb735fad798a96d94d8e5175ef424a70cec27c564c4bc2b6581e986062160",
+          "bytes": 3079639,
+          "nativePixels": [
+            1744,
+            900
+          ],
+          "primaryOrder": [
+            "tile-01",
+            "tile-02",
+            "tile-03",
+            "tile-04"
+          ],
+          "processing": "Four complete final PNGs displayed2x2 with uniform0.5downsampling for this proof only; original art unchanged"
+        },
+        "fourTileNativeJunction": {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/lake/handoff-proofs/mid-four-tile-native-junction.png",
+          "sha256": "1877b99785cca03689bd0cf2a49662bdcf3ac150c852949fe8bcbeb1df5581b7",
+          "bytes": 3528030,
+          "nativePixels": [
+            1744,
+            900
+          ],
+          "primaryOrder": [
+            "tile-01",
+            "tile-02",
+            "tile-03",
+            "tile-04"
+          ],
+          "processing": "Exact native corner windows around a four-tile junction; no resampling"
+        }
+      }
+    },
+    "far": {
+      "folder": "art/theme-consistency/generated/ground/eight-tiles/lake/far-v1",
+      "status": "accepted-for-art-appearance",
+      "primaryTileIds": [
+        "tile-01",
+        "tile-02",
+        "tile-03",
+        "tile-04"
+      ],
+      "primaryTiles": [
+        {
+          "id": "tile-01",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/lake/far-v1/tile-01.png",
+          "sha256": "6d5cf21ab0a411119739078d2503b7032d884089896573a478bca4fb92a15b99",
+          "bytes": 3401905,
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "pixelSha256": "dd02063e5b13ac752a8f45f5527d79d75b54e4e286f237736fa34dd3401d8a23",
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/lake/far-v1/tile-01-v1.raw.png",
+            "sha256": "60ac6a2f7e48030f369c4b6ab593b9c314fa2c458a6eb004cba484089b2f451b",
+            "bytes": 2320861,
+            "nativePixels": [
+              1742,
+              903
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/lake/far-v1/tile-01-v1.provenance.json",
+              "sha256": "e962ea0643c3dbb061c5781d8ad8e617b31f42f6daa99123f6959fad5500f356",
+              "bytes": 2940
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/lake/far-v1/tile-01-v1.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1742,
+            "height": 902
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/lake/far-v1/tile-01.cut-paths.json"
+        },
+        {
+          "id": "tile-02",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/lake/far-v1/tile-02.png",
+          "sha256": "741a7488708b9221792af2d871e3845e7c9d1160ca90727bb3d5fd2c4fc23d9e",
+          "bytes": 3420356,
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "pixelSha256": "75dddd6193f783622161b3d417f311c62d735e908832f6143e0bde9807a618b4",
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/lake/far-v1/tile-02-v1.raw.png",
+            "sha256": "e1198d2a35c01f85d21b7049e304c5b16e8d22738ab466a637ad2057d2141c47",
+            "bytes": 2334870,
+            "nativePixels": [
+              1742,
+              903
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/lake/far-v1/tile-02-v1.provenance.json",
+              "sha256": "0f5809c5ab8e02fe6708cb34752dc4703f42cb0951773ad1e4e45faf7f410e40",
+              "bytes": 2940
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/lake/far-v1/tile-02-v1.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1742,
+            "height": 902
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/lake/far-v1/tile-02.cut-paths.json"
+        },
+        {
+          "id": "tile-03",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/lake/far-v1/tile-03.png",
+          "sha256": "4ed790ae89022fb6bc2f928ce0dec9a16bd3fa762b58dda1147f394f89411341",
+          "bytes": 3357084,
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "pixelSha256": "28dfc594b77585cdea4d172ae109866430c87341ac16bebb8af7dbf622043ce9",
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/lake/far-v1/tile-03-v1.raw.png",
+            "sha256": "468fee5c7aba8fc9c60cdee2af822bb885f2900e24bc1334173150973a555829",
+            "bytes": 2285771,
+            "nativePixels": [
+              1742,
+              903
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/lake/far-v1/tile-03-v1.provenance.json",
+              "sha256": "71a0444c6c2d37859a18820eda415447331c9fda957b0b47a15eed42f614bc12",
+              "bytes": 2940
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/lake/far-v1/tile-03-v1.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1742,
+            "height": 902
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/lake/far-v1/tile-03.cut-paths.json"
+        },
+        {
+          "id": "tile-04",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/lake/far-v1/tile-04.png",
+          "sha256": "863289df33dcc9f593fd5fca0f8bbbd92a8f50ece79a9f93237fd3fcb00d9be2",
+          "bytes": 3423830,
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "pixelSha256": "2c717e515b3afeff4e25f80b1b6156465ae36e8df02e9aeef2a1a6cd57583e80",
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/lake/far-v1/tile-04-v1.raw.png",
+            "sha256": "cb6e07516d88560a8d666f1d013ad963b593d422a6b9217f0108df8d36f38c52",
+            "bytes": 2355303,
+            "nativePixels": [
+              1742,
+              903
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/lake/far-v1/tile-04-v1.provenance.json",
+              "sha256": "3841d491f9d36e254cede42f4db7868f20506839caa3bcc579c83a70731be8f4",
+              "bytes": 2940
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/lake/far-v1/tile-04-v1.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1742,
+            "height": 902
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/lake/far-v1/tile-04.cut-paths.json"
+        }
+      ],
+      "optionalExtraTiles": [],
+      "nativePixels": [
+        1742,
+        902
+      ],
+      "visualDecision": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/lake/far-v1/review/appearance-decision.json",
+        "sha256": "77faeca0cc2e98d5b3d2d10337a5917f38a96e7089f2f8e804c2b43256e4af1e",
+        "bytes": 4214,
+        "decision": "accepted-for-art-appearance"
+      },
+      "exportReport": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/lake/far-v1/export-report.json",
+        "sha256": "58ca8c86e238644f20b4912a2e9299de51336381dc1877c43b929bbb1cbba76c",
+        "bytes": 10915
+      },
+      "inputManifest": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/lake/far-v1/manifest-v1.json",
+        "sha256": "adeedd404be34b69240b168b9e7ca9bfa2a8f9618815bca71a3c49c310bef415",
+        "bytes": 2734
+      },
+      "commonMaster": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/lake/far-v1/common-collar-master.png",
+        "sha256": "94aafe82d471e60682ca1890af6623b4a7d255062be72ebe9232956b09cef8c9",
+        "bytes": 3423535,
+        "nativePixels": [
+          1742,
+          902
+        ]
+      },
+      "sourceMaster": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/lake/far-v1/master.native-crop.png",
+        "sha256": "1baa8815f80bfa0e5472fcf8f7404939e6df2ae22706cd03eae10035c409711e",
+        "bytes": 3158351,
+        "nativePixels": [
+          1742,
+          902
+        ],
+        "provenance": {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/lake/far-v1/master.native-crop.provenance.json",
+          "sha256": "df54dfd895ed34783ca0321c7f15632196ed0fbe0162e754813810ffdc933adc",
+          "bytes": 642
+        },
+        "derivedFrom": {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/lake/far-v1/tile-01-v1.raw.png",
+          "sha256": "60ac6a2f7e48030f369c4b6ab593b9c314fa2c458a6eb004cba484089b2f451b",
+          "bytes": 2320861,
+          "nativePixels": [
+            1742,
+            903
+          ],
+          "provenance": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/lake/far-v1/tile-01-v1.provenance.json",
+            "sha256": "e962ea0643c3dbb061c5781d8ad8e617b31f42f6daa99123f6959fad5500f356",
+            "bytes": 2940
+          },
+          "prompt": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/lake/far-v1/tile-01-v1.provenance.json",
+            "jsonPointer": "/prompt"
+          }
+        },
+        "processing": "Exact native pixel crop to common even dimensions; no resample or upscale.",
+        "crop": {
+          "left": 0,
+          "top": 0,
+          "width": 1742,
+          "height": 902
+        }
+      },
+      "sharedRepairSources": {
+        "northSouth": {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/lake/far-v1/full-north-south-repair-v1.raw.png",
+          "sha256": "1c274d31b120e8b5ba620c86a29313b929ee9a903e8e70c50a26c22dabfbd4bb",
+          "bytes": 2341405,
+          "nativePixels": [
+            1743,
+            902
+          ],
+          "provenance": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/lake/far-v1/full-north-south-repair-v1.provenance.json",
+            "sha256": "6c8e16a3fa1d266c03d9da4171953a710a1333802839051b6d1620bd25f23abf",
+            "bytes": 2076
+          },
+          "prompt": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/lake/far-v1/full-north-south-repair-v1.provenance.json",
+            "jsonPointer": "/prompt"
+          }
+        },
+        "westEast": {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/lake/far-v1/full-west-east-repair-v1.raw.png",
+          "sha256": "ea06823e5f68d6625f73a229eaeb6719883c7a8a68062178235f37725e005788",
+          "bytes": 2332211,
+          "nativePixels": [
+            1743,
+            902
+          ],
+          "provenance": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/lake/far-v1/full-west-east-repair-v1.provenance.json",
+            "sha256": "758a826955834342446e3717d00f1001c310d753928d7e813a96fc04dadb0dc6",
+            "bytes": 2066
+          },
+          "prompt": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/lake/far-v1/full-west-east-repair-v1.provenance.json",
+            "jsonPointer": "/prompt"
+          }
+        }
+      },
+      "proofs": {
+        "twoTileNative": {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/lake/handoff-proofs/far-two-tile-native.png",
+          "sha256": "a52206d4a83046e1183f2eeb9973cd2917c44d6b35abe29559da057d411c7a5c",
+          "bytes": 3401341,
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "processing": "Exact native right-half/left-half source windows; no resampling"
+        },
+        "fourTileScreen": {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/lake/handoff-proofs/far-four-tile-screen.png",
+          "sha256": "44fad37d7a63d04f1772cf1280dd1864a2b82ac59f8fa72eb0030aa8c72c9e5a",
+          "bytes": 3011527,
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "primaryOrder": [
+            "tile-01",
+            "tile-02",
+            "tile-03",
+            "tile-04"
+          ],
+          "processing": "Four complete final PNGs displayed2x2 with uniform0.5downsampling for this proof only; original art unchanged"
+        },
+        "fourTileNativeJunction": {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/lake/handoff-proofs/far-four-tile-native-junction.png",
+          "sha256": "8e666f61844361076e600fe321419cf6c770c51ae1d3a468027ea621b1fd7984",
+          "bytes": 3401033,
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "primaryOrder": [
+            "tile-01",
+            "tile-02",
+            "tile-03",
+            "tile-04"
+          ],
+          "processing": "Exact native corner windows around a four-tile junction; no resampling"
+        }
+      }
+    }
+  }
+}

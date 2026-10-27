@@ -1,0 +1,696 @@
+{
+  "schema": 1,
+  "date": "2026-10-25",
+  "reviewFolder": "art/theme-consistency/material-screenshot-pipeline/reviews/owner-three-v1",
+  "sourceAuthority": "Exact owner FAR/MID/NEAR originals; 41validv1studiespreserved, only lakeNEARv2 correction.",
+  "jobs": [
+    {
+      "material": "golden-fescue",
+      "name": "Golden fescue",
+      "height": "far",
+      "source": "art/theme-consistency/material-screenshot-pipeline/references/owner-far.png",
+      "sourceDescription": "FAR screenshot: broad open countryside/course in the foreground and the town in the upper/background portion",
+      "output": "art/theme-consistency/material-screenshot-pipeline/generated/golden-fescue/far-town-study-v1.raw.png",
+      "provenance": "art/theme-consistency/material-screenshot-pipeline/generated/golden-fescue/far-town-study-v1.provenance.json",
+      "references": [
+        {
+          "role": "EDIT TARGET: exact owner far original screenshot; this alone determines output camera/scene",
+          "file": "art/theme-consistency/material-screenshot-pipeline/references/owner-far.png"
+        }
+      ],
+      "prompt": "Use case: precise-object-edit.\nEDIT IMAGE1, the owner's EXACT FAR GAME SCREENSHOT. FAR screenshot: broad open countryside/course in the foreground and the town in the upper/background portion. Return this same view as ONE full edited screenshot, same camera, scene composition, framing and aspect. Preserve the UI, text, buildings, roads, fences, paths, parked vehicles, planted trees and all object positions. No new scene and no collage.\nCHANGE ONLY: the existing visible open, undeveloped grassy plots and open grassy countryside, including grass between existing buildings where it is open ground; retain every road, building, fence, path, planted tree and existing non-grass object.\nMATERIAL CONCEPT — Golden fescue: long golden fescue: fine flowing straw-gold and tawny grass, warm olive undergrowth, soft irregular tufts of believable knee-high length, varied density, no identical repeated clumps.\nART DIRECTION: hand-painted stylized Blizzard Entertainment environment art (World of Warcraft / Hearthstone). Broad confident painted groups, soft value gradients, rich controlled organic detail, no photographic noise. It must belong beside this existing game's brick/slate buildings and autumn trees. At THIS far camera height, keep material details at believable world scale; individual small blades/needles/flowers/ripples merge into appropriate painted groups, never huge plant shapes. Keep the named material's colour identity consistent with its other zoom views.\nLIGHT IS FROM THE UPPER RIGHT TO THE LOWER LEFT. Every surface relief has upper-right highlights and soft lower-left shade. One fixed sun direction; match the scene's exposure, no new spotlight, vignette, dark border or global brightness gradient. Preserve existing scene shadows and everything outside the target ground as much as possible.\n\nDo not change the camera height, paint over roads/buildings/UI, invent large props/trees, put lettering in the material, output a separate texture card, or tile a small motif repeatedly. Output ONE far game screenshot with only its ground material changed."
+    },
+    {
+      "material": "golden-fescue",
+      "name": "Golden fescue",
+      "height": "mid",
+      "source": "art/theme-consistency/material-screenshot-pipeline/references/owner-mid.png",
+      "sourceDescription": "MEDIUM screenshot: the road grid and whole town neighbourhood fill most of the view, Depot Town near centre",
+      "output": "art/theme-consistency/material-screenshot-pipeline/generated/golden-fescue/mid-town-study-v1.raw.png",
+      "provenance": "art/theme-consistency/material-screenshot-pipeline/generated/golden-fescue/mid-town-study-v1.provenance.json",
+      "references": [
+        {
+          "role": "EDIT TARGET: exact owner mid original screenshot; this alone determines output camera/scene",
+          "file": "art/theme-consistency/material-screenshot-pipeline/references/owner-mid.png"
+        }
+      ],
+      "prompt": "Use case: precise-object-edit.\nEDIT IMAGE1, the owner's EXACT MID GAME SCREENSHOT. MEDIUM screenshot: the road grid and whole town neighbourhood fill most of the view, Depot Town near centre. Return this same view as ONE full edited screenshot, same camera, scene composition, framing and aspect. Preserve the UI, text, buildings, roads, fences, paths, parked vehicles, planted trees and all object positions. No new scene and no collage.\nCHANGE ONLY: the existing visible open, undeveloped grassy plots and open grassy countryside, including grass between existing buildings where it is open ground; retain every road, building, fence, path, planted tree and existing non-grass object.\nMATERIAL CONCEPT — Golden fescue: long golden fescue: fine flowing straw-gold and tawny grass, warm olive undergrowth, soft irregular tufts of believable knee-high length, varied density, no identical repeated clumps.\nART DIRECTION: hand-painted stylized Blizzard Entertainment environment art (World of Warcraft / Hearthstone). Broad confident painted groups, soft value gradients, rich controlled organic detail, no photographic noise. It must belong beside this existing game's brick/slate buildings and autumn trees. At THIS mid camera height, keep material details at believable world scale; individual small blades/needles/flowers/ripples merge into appropriate painted groups, never huge plant shapes. Keep the named material's colour identity consistent with its other zoom views.\nLIGHT IS FROM THE UPPER RIGHT TO THE LOWER LEFT. Every surface relief has upper-right highlights and soft lower-left shade. One fixed sun direction; match the scene's exposure, no new spotlight, vignette, dark border or global brightness gradient. Preserve existing scene shadows and everything outside the target ground as much as possible.\n\nDo not change the camera height, paint over roads/buildings/UI, invent large props/trees, put lettering in the material, output a separate texture card, or tile a small motif repeatedly. Output ONE mid game screenshot with only its ground material changed."
+    },
+    {
+      "material": "golden-fescue",
+      "name": "Golden fescue",
+      "height": "near",
+      "source": "art/theme-consistency/material-screenshot-pipeline/references/owner-near.png",
+      "sourceDescription": "CLOSE screenshot: large houses and fenced vacant plots, gas station left of centre/bottom and popcorn shop near lower centre",
+      "output": "art/theme-consistency/material-screenshot-pipeline/generated/golden-fescue/near-town-study-v1.raw.png",
+      "provenance": "art/theme-consistency/material-screenshot-pipeline/generated/golden-fescue/near-town-study-v1.provenance.json",
+      "references": [
+        {
+          "role": "EDIT TARGET: exact owner near original screenshot; this alone determines output camera/scene",
+          "file": "art/theme-consistency/material-screenshot-pipeline/references/owner-near.png"
+        }
+      ],
+      "prompt": "Use case: precise-object-edit.\nEDIT IMAGE1, the owner's EXACT NEAR GAME SCREENSHOT. CLOSE screenshot: large houses and fenced vacant plots, gas station left of centre/bottom and popcorn shop near lower centre. Return this same view as ONE full edited screenshot, same camera, scene composition, framing and aspect. Preserve the UI, text, buildings, roads, fences, paths, parked vehicles, planted trees and all object positions. No new scene and no collage.\nCHANGE ONLY: the existing visible open, undeveloped grassy plots and open grassy countryside, including grass between existing buildings where it is open ground; retain every road, building, fence, path, planted tree and existing non-grass object.\nMATERIAL CONCEPT — Golden fescue: long golden fescue: fine flowing straw-gold and tawny grass, warm olive undergrowth, soft irregular tufts of believable knee-high length, varied density, no identical repeated clumps.\nART DIRECTION: hand-painted stylized Blizzard Entertainment environment art (World of Warcraft / Hearthstone). Broad confident painted groups, soft value gradients, rich controlled organic detail, no photographic noise. It must belong beside this existing game's brick/slate buildings and autumn trees. At THIS near camera height, keep material details at believable world scale; small turf/needle/ripple detail may read clearly near the building footprints. Keep the named material's colour identity consistent with its other zoom views.\nLIGHT IS FROM THE UPPER RIGHT TO THE LOWER LEFT. Every surface relief has upper-right highlights and soft lower-left shade. One fixed sun direction; match the scene's exposure, no new spotlight, vignette, dark border or global brightness gradient. Preserve existing scene shadows and everything outside the target ground as much as possible.\n\nDo not change the camera height, paint over roads/buildings/UI, invent large props/trees, put lettering in the material, output a separate texture card, or tile a small motif repeatedly. Output ONE near game screenshot with only its ground material changed."
+    },
+    {
+      "material": "pale-green-bushes",
+      "name": "Pale green low bushes",
+      "height": "far",
+      "source": "art/theme-consistency/material-screenshot-pipeline/references/owner-far.png",
+      "sourceDescription": "FAR screenshot: broad open countryside/course in the foreground and the town in the upper/background portion",
+      "output": "art/theme-consistency/material-screenshot-pipeline/generated/pale-green-bushes/far-town-study-v1.raw.png",
+      "provenance": "art/theme-consistency/material-screenshot-pipeline/generated/pale-green-bushes/far-town-study-v1.provenance.json",
+      "references": [
+        {
+          "role": "EDIT TARGET: exact owner far original screenshot; this alone determines output camera/scene",
+          "file": "art/theme-consistency/material-screenshot-pipeline/references/owner-far.png"
+        }
+      ],
+      "prompt": "Use case: precise-object-edit.\nEDIT IMAGE1, the owner's EXACT FAR GAME SCREENSHOT. FAR screenshot: broad open countryside/course in the foreground and the town in the upper/background portion. Return this same view as ONE full edited screenshot, same camera, scene composition, framing and aspect. Preserve the UI, text, buildings, roads, fences, paths, parked vehicles, planted trees and all object positions. No new scene and no collage.\nCHANGE ONLY: the existing visible open, undeveloped grassy plots and open grassy countryside, including grass between existing buildings where it is open ground; retain every road, building, fence, path, planted tree and existing non-grass object.\nMATERIAL CONCEPT — Pale green low bushes: pale sage/lime-green low bushy ground cover, soft rounded small shrubs and leafy mounds interwoven with pale grass, restrained highlights and consistent small believable scale; not trees or enormous bushes.\nART DIRECTION: hand-painted stylized Blizzard Entertainment environment art (World of Warcraft / Hearthstone). Broad confident painted groups, soft value gradients, rich controlled organic detail, no photographic noise. It must belong beside this existing game's brick/slate buildings and autumn trees. At THIS far camera height, keep material details at believable world scale; individual small blades/needles/flowers/ripples merge into appropriate painted groups, never huge plant shapes. Keep the named material's colour identity consistent with its other zoom views.\nLIGHT IS FROM THE UPPER RIGHT TO THE LOWER LEFT. Every surface relief has upper-right highlights and soft lower-left shade. One fixed sun direction; match the scene's exposure, no new spotlight, vignette, dark border or global brightness gradient. Preserve existing scene shadows and everything outside the target ground as much as possible.\n\nDo not change the camera height, paint over roads/buildings/UI, invent large props/trees, put lettering in the material, output a separate texture card, or tile a small motif repeatedly. Output ONE far game screenshot with only its ground material changed."
+    },
+    {
+      "material": "pale-green-bushes",
+      "name": "Pale green low bushes",
+      "height": "mid",
+      "source": "art/theme-consistency/material-screenshot-pipeline/references/owner-mid.png",
+      "sourceDescription": "MEDIUM screenshot: the road grid and whole town neighbourhood fill most of the view, Depot Town near centre",
+      "output": "art/theme-consistency/material-screenshot-pipeline/generated/pale-green-bushes/mid-town-study-v1.raw.png",
+      "provenance": "art/theme-consistency/material-screenshot-pipeline/generated/pale-green-bushes/mid-town-study-v1.provenance.json",
+      "references": [
+        {
+          "role": "EDIT TARGET: exact owner mid original screenshot; this alone determines output camera/scene",
+          "file": "art/theme-consistency/material-screenshot-pipeline/references/owner-mid.png"
+        }
+      ],
+      "prompt": "Use case: precise-object-edit.\nEDIT IMAGE1, the owner's EXACT MID GAME SCREENSHOT. MEDIUM screenshot: the road grid and whole town neighbourhood fill most of the view, Depot Town near centre. Return this same view as ONE full edited screenshot, same camera, scene composition, framing and aspect. Preserve the UI, text, buildings, roads, fences, paths, parked vehicles, planted trees and all object positions. No new scene and no collage.\nCHANGE ONLY: the existing visible open, undeveloped grassy plots and open grassy countryside, including grass between existing buildings where it is open ground; retain every road, building, fence, path, planted tree and existing non-grass object.\nMATERIAL CONCEPT — Pale green low bushes: pale sage/lime-green low bushy ground cover, soft rounded small shrubs and leafy mounds interwoven with pale grass, restrained highlights and consistent small believable scale; not trees or enormous bushes.\nART DIRECTION: hand-painted stylized Blizzard Entertainment environment art (World of Warcraft / Hearthstone). Broad confident painted groups, soft value gradients, rich controlled organic detail, no photographic noise. It must belong beside this existing game's brick/slate buildings and autumn trees. At THIS mid camera height, keep material details at believable world scale; individual small blades/needles/flowers/ripples merge into appropriate painted groups, never huge plant shapes. Keep the named material's colour identity consistent with its other zoom views.\nLIGHT IS FROM THE UPPER RIGHT TO THE LOWER LEFT. Every surface relief has upper-right highlights and soft lower-left shade. One fixed sun direction; match the scene's exposure, no new spotlight, vignette, dark border or global brightness gradient. Preserve existing scene shadows and everything outside the target ground as much as possible.\n\nDo not change the camera height, paint over roads/buildings/UI, invent large props/trees, put lettering in the material, output a separate texture card, or tile a small motif repeatedly. Output ONE mid game screenshot with only its ground material changed."
+    },
+    {
+      "material": "pale-green-bushes",
+      "name": "Pale green low bushes",
+      "height": "near",
+      "source": "art/theme-consistency/material-screenshot-pipeline/references/owner-near.png",
+      "sourceDescription": "CLOSE screenshot: large houses and fenced vacant plots, gas station left of centre/bottom and popcorn shop near lower centre",
+      "output": "art/theme-consistency/material-screenshot-pipeline/generated/pale-green-bushes/near-town-study-v1.raw.png",
+      "provenance": "art/theme-consistency/material-screenshot-pipeline/generated/pale-green-bushes/near-town-study-v1.provenance.json",
+      "references": [
+        {
+          "role": "EDIT TARGET: exact owner near original screenshot; this alone determines output camera/scene",
+          "file": "art/theme-consistency/material-screenshot-pipeline/references/owner-near.png"
+        }
+      ],
+      "prompt": "Use case: precise-object-edit.\nEDIT IMAGE1, the owner's EXACT NEAR GAME SCREENSHOT. CLOSE screenshot: large houses and fenced vacant plots, gas station left of centre/bottom and popcorn shop near lower centre. Return this same view as ONE full edited screenshot, same camera, scene composition, framing and aspect. Preserve the UI, text, buildings, roads, fences, paths, parked vehicles, planted trees and all object positions. No new scene and no collage.\nCHANGE ONLY: the existing visible open, undeveloped grassy plots and open grassy countryside, including grass between existing buildings where it is open ground; retain every road, building, fence, path, planted tree and existing non-grass object.\nMATERIAL CONCEPT — Pale green low bushes: pale sage/lime-green low bushy ground cover, soft rounded small shrubs and leafy mounds interwoven with pale grass, restrained highlights and consistent small believable scale; not trees or enormous bushes.\nART DIRECTION: hand-painted stylized Blizzard Entertainment environment art (World of Warcraft / Hearthstone). Broad confident painted groups, soft value gradients, rich controlled organic detail, no photographic noise. It must belong beside this existing game's brick/slate buildings and autumn trees. At THIS near camera height, keep material details at believable world scale; small turf/needle/ripple detail may read clearly near the building footprints. Keep the named material's colour identity consistent with its other zoom views.\nLIGHT IS FROM THE UPPER RIGHT TO THE LOWER LEFT. Every surface relief has upper-right highlights and soft lower-left shade. One fixed sun direction; match the scene's exposure, no new spotlight, vignette, dark border or global brightness gradient. Preserve existing scene shadows and everything outside the target ground as much as possible.\n\nDo not change the camera height, paint over roads/buildings/UI, invent large props/trees, put lettering in the material, output a separate texture card, or tile a small motif repeatedly. Output ONE near game screenshot with only its ground material changed."
+    },
+    {
+      "material": "pine-straw",
+      "name": "Pine straw",
+      "height": "far",
+      "source": "art/theme-consistency/material-screenshot-pipeline/references/owner-far.png",
+      "sourceDescription": "FAR screenshot: broad open countryside/course in the foreground and the town in the upper/background portion",
+      "output": "art/theme-consistency/material-screenshot-pipeline/generated/pine-straw/far-town-study-v1.raw.png",
+      "provenance": "art/theme-consistency/material-screenshot-pipeline/generated/pine-straw/far-town-study-v1.provenance.json",
+      "references": [
+        {
+          "role": "EDIT TARGET: exact owner far original screenshot; this alone determines output camera/scene",
+          "file": "art/theme-consistency/material-screenshot-pipeline/references/owner-far.png"
+        }
+      ],
+      "prompt": "Use case: precise-object-edit.\nEDIT IMAGE1, the owner's EXACT FAR GAME SCREENSHOT. FAR screenshot: broad open countryside/course in the foreground and the town in the upper/background portion. Return this same view as ONE full edited screenshot, same camera, scene composition, framing and aspect. Preserve the UI, text, buildings, roads, fences, paths, parked vehicles, planted trees and all object positions. No new scene and no collage.\nCHANGE ONLY: the existing visible open, undeveloped grassy plots and open grassy countryside, including grass between existing buildings where it is open ground; retain every road, building, fence, path, planted tree and existing non-grass object.\nMATERIAL CONCEPT — Pine straw: a natural warm cinnamon-brown, honey and muted ochre carpet of fallen pine needles, grouped into broad readable hand-painted swirls with fine needle hints, a few dark earthy gaps; flat ground cover, no new pine trees.\nART DIRECTION: hand-painted stylized Blizzard Entertainment environment art (World of Warcraft / Hearthstone). Broad confident painted groups, soft value gradients, rich controlled organic detail, no photographic noise. It must belong beside this existing game's brick/slate buildings and autumn trees. At THIS far camera height, keep material details at believable world scale; individual small blades/needles/flowers/ripples merge into appropriate painted groups, never huge plant shapes. Keep the named material's colour identity consistent with its other zoom views.\nLIGHT IS FROM THE UPPER RIGHT TO THE LOWER LEFT. Every surface relief has upper-right highlights and soft lower-left shade. One fixed sun direction; match the scene's exposure, no new spotlight, vignette, dark border or global brightness gradient. Preserve existing scene shadows and everything outside the target ground as much as possible.\n\nDo not change the camera height, paint over roads/buildings/UI, invent large props/trees, put lettering in the material, output a separate texture card, or tile a small motif repeatedly. Output ONE far game screenshot with only its ground material changed."
+    },
+    {
+      "material": "pine-straw",
+      "name": "Pine straw",
+      "height": "mid",
+      "source": "art/theme-consistency/material-screenshot-pipeline/references/owner-mid.png",
+      "sourceDescription": "MEDIUM screenshot: the road grid and whole town neighbourhood fill most of the view, Depot Town near centre",
+      "output": "art/theme-consistency/material-screenshot-pipeline/generated/pine-straw/mid-town-study-v1.raw.png",
+      "provenance": "art/theme-consistency/material-screenshot-pipeline/generated/pine-straw/mid-town-study-v1.provenance.json",
+      "references": [
+        {
+          "role": "EDIT TARGET: exact owner mid original screenshot; this alone determines output camera/scene",
+          "file": "art/theme-consistency/material-screenshot-pipeline/references/owner-mid.png"
+        }
+      ],
+      "prompt": "Use case: precise-object-edit.\nEDIT IMAGE1, the owner's EXACT MID GAME SCREENSHOT. MEDIUM screenshot: the road grid and whole town neighbourhood fill most of the view, Depot Town near centre. Return this same view as ONE full edited screenshot, same camera, scene composition, framing and aspect. Preserve the UI, text, buildings, roads, fences, paths, parked vehicles, planted trees and all object positions. No new scene and no collage.\nCHANGE ONLY: the existing visible open, undeveloped grassy plots and open grassy countryside, including grass between existing buildings where it is open ground; retain every road, building, fence, path, planted tree and existing non-grass object.\nMATERIAL CONCEPT — Pine straw: a natural warm cinnamon-brown, honey and muted ochre carpet of fallen pine needles, grouped into broad readable hand-painted swirls with fine needle hints, a few dark earthy gaps; flat ground cover, no new pine trees.\nART DIRECTION: hand-painted stylized Blizzard Entertainment environment art (World of Warcraft / Hearthstone). Broad confident painted groups, soft value gradients, rich controlled organic detail, no photographic noise. It must belong beside this existing game's brick/slate buildings and autumn trees. At THIS mid camera height, keep material details at believable world scale; individual small blades/needles/flowers/ripples merge into appropriate painted groups, never huge plant shapes. Keep the named material's colour identity consistent with its other zoom views.\nLIGHT IS FROM THE UPPER RIGHT TO THE LOWER LEFT. Every surface relief has upper-right highlights and soft lower-left shade. One fixed sun direction; match the scene's exposure, no new spotlight, vignette, dark border or global brightness gradient. Preserve existing scene shadows and everything outside the target ground as much as possible.\n\nDo not change the camera height, paint over roads/buildings/UI, invent large props/trees, put lettering in the material, output a separate texture card, or tile a small motif repeatedly. Output ONE mid game screenshot with only its ground material changed."
+    },
+    {
+      "material": "pine-straw",
+      "name": "Pine straw",
+      "height": "near",
+      "source": "art/theme-consistency/material-screenshot-pipeline/references/owner-near.png",
+      "sourceDescription": "CLOSE screenshot: large houses and fenced vacant plots, gas station left of centre/bottom and popcorn shop near lower centre",
+      "output": "art/theme-consistency/material-screenshot-pipeline/generated/pine-straw/near-town-study-v1.raw.png",
+      "provenance": "art/theme-consistency/material-screenshot-pipeline/generated/pine-straw/near-town-study-v1.provenance.json",
+      "references": [
+        {
+          "role": "EDIT TARGET: exact owner near original screenshot; this alone determines output camera/scene",
+          "file": "art/theme-consistency/material-screenshot-pipeline/references/owner-near.png"
+        }
+      ],
+      "prompt": "Use case: precise-object-edit.\nEDIT IMAGE1, the owner's EXACT NEAR GAME SCREENSHOT. CLOSE screenshot: large houses and fenced vacant plots, gas station left of centre/bottom and popcorn shop near lower centre. Return this same view as ONE full edited screenshot, same camera, scene composition, framing and aspect. Preserve the UI, text, buildings, roads, fences, paths, parked vehicles, planted trees and all object positions. No new scene and no collage.\nCHANGE ONLY: the existing visible open, undeveloped grassy plots and open grassy countryside, including grass between existing buildings where it is open ground; retain every road, building, fence, path, planted tree and existing non-grass object.\nMATERIAL CONCEPT — Pine straw: a natural warm cinnamon-brown, honey and muted ochre carpet of fallen pine needles, grouped into broad readable hand-painted swirls with fine needle hints, a few dark earthy gaps; flat ground cover, no new pine trees.\nART DIRECTION: hand-painted stylized Blizzard Entertainment environment art (World of Warcraft / Hearthstone). Broad confident painted groups, soft value gradients, rich controlled organic detail, no photographic noise. It must belong beside this existing game's brick/slate buildings and autumn trees. At THIS near camera height, keep material details at believable world scale; small turf/needle/ripple detail may read clearly near the building footprints. Keep the named material's colour identity consistent with its other zoom views.\nLIGHT IS FROM THE UPPER RIGHT TO THE LOWER LEFT. Every surface relief has upper-right highlights and soft lower-left shade. One fixed sun direction; match the scene's exposure, no new spotlight, vignette, dark border or global brightness gradient. Preserve existing scene shadows and everything outside the target ground as much as possible.\n\nDo not change the camera height, paint over roads/buildings/UI, invent large props/trees, put lettering in the material, output a separate texture card, or tile a small motif repeatedly. Output ONE near game screenshot with only its ground material changed."
+    },
+    {
+      "material": "sand-ripples",
+      "name": "Natural rippled sand",
+      "height": "far",
+      "source": "art/theme-consistency/material-screenshot-pipeline/references/owner-far.png",
+      "sourceDescription": "FAR screenshot: broad open countryside/course in the foreground and the town in the upper/background portion",
+      "output": "art/theme-consistency/material-screenshot-pipeline/generated/sand-ripples/far-town-study-v1.raw.png",
+      "provenance": "art/theme-consistency/material-screenshot-pipeline/generated/sand-ripples/far-town-study-v1.provenance.json",
+      "references": [
+        {
+          "role": "EDIT TARGET: exact owner far original screenshot; this alone determines output camera/scene",
+          "file": "art/theme-consistency/material-screenshot-pipeline/references/owner-far.png"
+        }
+      ],
+      "prompt": "Use case: precise-object-edit.\nEDIT IMAGE1, the owner's EXACT FAR GAME SCREENSHOT. FAR screenshot: broad open countryside/course in the foreground and the town in the upper/background portion. Return this same view as ONE full edited screenshot, same camera, scene composition, framing and aspect. Preserve the UI, text, buildings, roads, fences, paths, parked vehicles, planted trees and all object positions. No new scene and no collage.\nCHANGE ONLY: the existing visible open, undeveloped grassy plots and open grassy countryside, including grass between existing buildings where it is open ground; retain every road, building, fence, path, planted tree and existing non-grass object.\nMATERIAL CONCEPT — Natural rippled sand: warm pale golden sand with natural fine shallow wind ripples, creamy highlights and soft ochre troughs, broad confident painted groups, no giant dunes.\nART DIRECTION: hand-painted stylized Blizzard Entertainment environment art (World of Warcraft / Hearthstone). Broad confident painted groups, soft value gradients, rich controlled organic detail, no photographic noise. It must belong beside this existing game's brick/slate buildings and autumn trees. At THIS far camera height, keep material details at believable world scale; individual small blades/needles/flowers/ripples merge into appropriate painted groups, never huge plant shapes. Keep the named material's colour identity consistent with its other zoom views.\nLIGHT IS FROM THE UPPER RIGHT TO THE LOWER LEFT. Every surface relief has upper-right highlights and soft lower-left shade. One fixed sun direction; match the scene's exposure, no new spotlight, vignette, dark border or global brightness gradient. Preserve existing scene shadows and everything outside the target ground as much as possible.\n\nDo not change the camera height, paint over roads/buildings/UI, invent large props/trees, put lettering in the material, output a separate texture card, or tile a small motif repeatedly. Output ONE far game screenshot with only its ground material changed."
+    },
+    {
+      "material": "sand-ripples",
+      "name": "Natural rippled sand",
+      "height": "mid",
+      "source": "art/theme-consistency/material-screenshot-pipeline/references/owner-mid.png",
+      "sourceDescription": "MEDIUM screenshot: the road grid and whole town neighbourhood fill most of the view, Depot Town near centre",
+      "output": "art/theme-consistency/material-screenshot-pipeline/generated/sand-ripples/mid-town-study-v1.raw.png",
+      "provenance": "art/theme-consistency/material-screenshot-pipeline/generated/sand-ripples/mid-town-study-v1.provenance.json",
+      "references": [
+        {
+          "role": "EDIT TARGET: exact owner mid original screenshot; this alone determines output camera/scene",
+          "file": "art/theme-consistency/material-screenshot-pipeline/references/owner-mid.png"
+        }
+      ],
+      "prompt": "Use case: precise-object-edit.\nEDIT IMAGE1, the owner's EXACT MID GAME SCREENSHOT. MEDIUM screenshot: the road grid and whole town neighbourhood fill most of the view, Depot Town near centre. Return this same view as ONE full edited screenshot, same camera, scene composition, framing and aspect. Preserve the UI, text, buildings, roads, fences, paths, parked vehicles, planted trees and all object positions. No new scene and no collage.\nCHANGE ONLY: the existing visible open, undeveloped grassy plots and open grassy countryside, including grass between existing buildings where it is open ground; retain every road, building, fence, path, planted tree and existing non-grass object.\nMATERIAL CONCEPT — Natural rippled sand: warm pale golden sand with natural fine shallow wind ripples, creamy highlights and soft ochre troughs, broad confident painted groups, no giant dunes.\nART DIRECTION: hand-painted stylized Blizzard Entertainment environment art (World of Warcraft / Hearthstone). Broad confident painted groups, soft value gradients, rich controlled organic detail, no photographic noise. It must belong beside this existing game's brick/slate buildings and autumn trees. At THIS mid camera height, keep material details at believable world scale; individual small blades/needles/flowers/ripples merge into appropriate painted groups, never huge plant shapes. Keep the named material's colour identity consistent with its other zoom views.\nLIGHT IS FROM THE UPPER RIGHT TO THE LOWER LEFT. Every surface relief has upper-right highlights and soft lower-left shade. One fixed sun direction; match the scene's exposure, no new spotlight, vignette, dark border or global brightness gradient. Preserve existing scene shadows and everything outside the target ground as much as possible.\n\nDo not change the camera height, paint over roads/buildings/UI, invent large props/trees, put lettering in the material, output a separate texture card, or tile a small motif repeatedly. Output ONE mid game screenshot with only its ground material changed."
+    },
+    {
+      "material": "sand-ripples",
+      "name": "Natural rippled sand",
+      "height": "near",
+      "source": "art/theme-consistency/material-screenshot-pipeline/references/owner-near.png",
+      "sourceDescription": "CLOSE screenshot: large houses and fenced vacant plots, gas station left of centre/bottom and popcorn shop near lower centre",
+      "output": "art/theme-consistency/material-screenshot-pipeline/generated/sand-ripples/near-town-study-v1.raw.png",
+      "provenance": "art/theme-consistency/material-screenshot-pipeline/generated/sand-ripples/near-town-study-v1.provenance.json",
+      "references": [
+        {
+          "role": "EDIT TARGET: exact owner near original screenshot; this alone determines output camera/scene",
+          "file": "art/theme-consistency/material-screenshot-pipeline/references/owner-near.png"
+        }
+      ],
+      "prompt": "Use case: precise-object-edit.\nEDIT IMAGE1, the owner's EXACT NEAR GAME SCREENSHOT. CLOSE screenshot: large houses and fenced vacant plots, gas station left of centre/bottom and popcorn shop near lower centre. Return this same view as ONE full edited screenshot, same camera, scene composition, framing and aspect. Preserve the UI, text, buildings, roads, fences, paths, parked vehicles, planted trees and all object positions. No new scene and no collage.\nCHANGE ONLY: the existing visible open, undeveloped grassy plots and open grassy countryside, including grass between existing buildings where it is open ground; retain every road, building, fence, path, planted tree and existing non-grass object.\nMATERIAL CONCEPT — Natural rippled sand: warm pale golden sand with natural fine shallow wind ripples, creamy highlights and soft ochre troughs, broad confident painted groups, no giant dunes.\nART DIRECTION: hand-painted stylized Blizzard Entertainment environment art (World of Warcraft / Hearthstone). Broad confident painted groups, soft value gradients, rich controlled organic detail, no photographic noise. It must belong beside this existing game's brick/slate buildings and autumn trees. At THIS near camera height, keep material details at believable world scale; small turf/needle/ripple detail may read clearly near the building footprints. Keep the named material's colour identity consistent with its other zoom views.\nLIGHT IS FROM THE UPPER RIGHT TO THE LOWER LEFT. Every surface relief has upper-right highlights and soft lower-left shade. One fixed sun direction; match the scene's exposure, no new spotlight, vignette, dark border or global brightness gradient. Preserve existing scene shadows and everything outside the target ground as much as possible.\n\nDo not change the camera height, paint over roads/buildings/UI, invent large props/trees, put lettering in the material, output a separate texture card, or tile a small motif repeatedly. Output ONE near game screenshot with only its ground material changed."
+    },
+    {
+      "material": "sand-raked",
+      "name": "Raked golf sand",
+      "height": "far",
+      "source": "art/theme-consistency/material-screenshot-pipeline/references/owner-far.png",
+      "sourceDescription": "FAR screenshot: broad open countryside/course in the foreground and the town in the upper/background portion",
+      "output": "art/theme-consistency/material-screenshot-pipeline/generated/sand-raked/far-town-study-v1.raw.png",
+      "provenance": "art/theme-consistency/material-screenshot-pipeline/generated/sand-raked/far-town-study-v1.provenance.json",
+      "references": [
+        {
+          "role": "EDIT TARGET: exact owner far original screenshot; this alone determines output camera/scene",
+          "file": "art/theme-consistency/material-screenshot-pipeline/references/owner-far.png"
+        }
+      ],
+      "prompt": "Use case: precise-object-edit.\nEDIT IMAGE1, the owner's EXACT FAR GAME SCREENSHOT. FAR screenshot: broad open countryside/course in the foreground and the town in the upper/background portion. Return this same view as ONE full edited screenshot, same camera, scene composition, framing and aspect. Preserve the UI, text, buildings, roads, fences, paths, parked vehicles, planted trees and all object positions. No new scene and no collage.\nCHANGE ONLY: the existing visible open, undeveloped grassy plots and open grassy countryside, including grass between existing buildings where it is open ground; retain every road, building, fence, path, planted tree and existing non-grass object.\nMATERIAL CONCEPT — Raked golf sand: creamy light buff golf bunker sand, fine tidy gently bending rake grooves, shallow relief and soft broad painted tonal groups, no tool or footprints.\nART DIRECTION: hand-painted stylized Blizzard Entertainment environment art (World of Warcraft / Hearthstone). Broad confident painted groups, soft value gradients, rich controlled organic detail, no photographic noise. It must belong beside this existing game's brick/slate buildings and autumn trees. At THIS far camera height, keep material details at believable world scale; individual small blades/needles/flowers/ripples merge into appropriate painted groups, never huge plant shapes. Keep the named material's colour identity consistent with its other zoom views.\nLIGHT IS FROM THE UPPER RIGHT TO THE LOWER LEFT. Every surface relief has upper-right highlights and soft lower-left shade. One fixed sun direction; match the scene's exposure, no new spotlight, vignette, dark border or global brightness gradient. Preserve existing scene shadows and everything outside the target ground as much as possible.\n\nDo not change the camera height, paint over roads/buildings/UI, invent large props/trees, put lettering in the material, output a separate texture card, or tile a small motif repeatedly. Output ONE far game screenshot with only its ground material changed."
+    },
+    {
+      "material": "sand-raked",
+      "name": "Raked golf sand",
+      "height": "mid",
+      "source": "art/theme-consistency/material-screenshot-pipeline/references/owner-mid.png",
+      "sourceDescription": "MEDIUM screenshot: the road grid and whole town neighbourhood fill most of the view, Depot Town near centre",
+      "output": "art/theme-consistency/material-screenshot-pipeline/generated/sand-raked/mid-town-study-v1.raw.png",
+      "provenance": "art/theme-consistency/material-screenshot-pipeline/generated/sand-raked/mid-town-study-v1.provenance.json",
+      "references": [
+        {
+          "role": "EDIT TARGET: exact owner mid original screenshot; this alone determines output camera/scene",
+          "file": "art/theme-consistency/material-screenshot-pipeline/references/owner-mid.png"
+        }
+      ],
+      "prompt": "Use case: precise-object-edit.\nEDIT IMAGE1, the owner's EXACT MID GAME SCREENSHOT. MEDIUM screenshot: the road grid and whole town neighbourhood fill most of the view, Depot Town near centre. Return this same view as ONE full edited screenshot, same camera, scene composition, framing and aspect. Preserve the UI, text, buildings, roads, fences, paths, parked vehicles, planted trees and all object positions. No new scene and no collage.\nCHANGE ONLY: the existing visible open, undeveloped grassy plots and open grassy countryside, including grass between existing buildings where it is open ground; retain every road, building, fence, path, planted tree and existing non-grass object.\nMATERIAL CONCEPT — Raked golf sand: creamy light buff golf bunker sand, fine tidy gently bending rake grooves, shallow relief and soft broad painted tonal groups, no tool or footprints.\nART DIRECTION: hand-painted stylized Blizzard Entertainment environment art (World of Warcraft / Hearthstone). Broad confident painted groups, soft value gradients, rich controlled organic detail, no photographic noise. It must belong beside this existing game's brick/slate buildings and autumn trees. At THIS mid camera height, keep material details at believable world scale; individual small blades/needles/flowers/ripples merge into appropriate painted groups, never huge plant shapes. Keep the named material's colour identity consistent with its other zoom views.\nLIGHT IS FROM THE UPPER RIGHT TO THE LOWER LEFT. Every surface relief has upper-right highlights and soft lower-left shade. One fixed sun direction; match the scene's exposure, no new spotlight, vignette, dark border or global brightness gradient. Preserve existing scene shadows and everything outside the target ground as much as possible.\n\nDo not change the camera height, paint over roads/buildings/UI, invent large props/trees, put lettering in the material, output a separate texture card, or tile a small motif repeatedly. Output ONE mid game screenshot with only its ground material changed."
+    },
+    {
+      "material": "sand-raked",
+      "name": "Raked golf sand",
+      "height": "near",
+      "source": "art/theme-consistency/material-screenshot-pipeline/references/owner-near.png",
+      "sourceDescription": "CLOSE screenshot: large houses and fenced vacant plots, gas station left of centre/bottom and popcorn shop near lower centre",
+      "output": "art/theme-consistency/material-screenshot-pipeline/generated/sand-raked/near-town-study-v1.raw.png",
+      "provenance": "art/theme-consistency/material-screenshot-pipeline/generated/sand-raked/near-town-study-v1.provenance.json",
+      "references": [
+        {
+          "role": "EDIT TARGET: exact owner near original screenshot; this alone determines output camera/scene",
+          "file": "art/theme-consistency/material-screenshot-pipeline/references/owner-near.png"
+        }
+      ],
+      "prompt": "Use case: precise-object-edit.\nEDIT IMAGE1, the owner's EXACT NEAR GAME SCREENSHOT. CLOSE screenshot: large houses and fenced vacant plots, gas station left of centre/bottom and popcorn shop near lower centre. Return this same view as ONE full edited screenshot, same camera, scene composition, framing and aspect. Preserve the UI, text, buildings, roads, fences, paths, parked vehicles, planted trees and all object positions. No new scene and no collage.\nCHANGE ONLY: the existing visible open, undeveloped grassy plots and open grassy countryside, including grass between existing buildings where it is open ground; retain every road, building, fence, path, planted tree and existing non-grass object.\nMATERIAL CONCEPT — Raked golf sand: creamy light buff golf bunker sand, fine tidy gently bending rake grooves, shallow relief and soft broad painted tonal groups, no tool or footprints.\nART DIRECTION: hand-painted stylized Blizzard Entertainment environment art (World of Warcraft / Hearthstone). Broad confident painted groups, soft value gradients, rich controlled organic detail, no photographic noise. It must belong beside this existing game's brick/slate buildings and autumn trees. At THIS near camera height, keep material details at believable world scale; small turf/needle/ripple detail may read clearly near the building footprints. Keep the named material's colour identity consistent with its other zoom views.\nLIGHT IS FROM THE UPPER RIGHT TO THE LOWER LEFT. Every surface relief has upper-right highlights and soft lower-left shade. One fixed sun direction; match the scene's exposure, no new spotlight, vignette, dark border or global brightness gradient. Preserve existing scene shadows and everything outside the target ground as much as possible.\n\nDo not change the camera height, paint over roads/buildings/UI, invent large props/trees, put lettering in the material, output a separate texture card, or tile a small motif repeatedly. Output ONE near game screenshot with only its ground material changed."
+    },
+    {
+      "material": "desert",
+      "name": "Dry desert ground",
+      "height": "far",
+      "source": "art/theme-consistency/material-screenshot-pipeline/references/owner-far.png",
+      "sourceDescription": "FAR screenshot: broad open countryside/course in the foreground and the town in the upper/background portion",
+      "output": "art/theme-consistency/material-screenshot-pipeline/generated/desert/far-town-study-v1.raw.png",
+      "provenance": "art/theme-consistency/material-screenshot-pipeline/generated/desert/far-town-study-v1.provenance.json",
+      "references": [
+        {
+          "role": "EDIT TARGET: exact owner far original screenshot; this alone determines output camera/scene",
+          "file": "art/theme-consistency/material-screenshot-pipeline/references/owner-far.png"
+        }
+      ],
+      "prompt": "Use case: precise-object-edit.\nEDIT IMAGE1, the owner's EXACT FAR GAME SCREENSHOT. FAR screenshot: broad open countryside/course in the foreground and the town in the upper/background portion. Return this same view as ONE full edited screenshot, same camera, scene composition, framing and aspect. Preserve the UI, text, buildings, roads, fences, paths, parked vehicles, planted trees and all object positions. No new scene and no collage.\nCHANGE ONLY: the existing visible open, undeveloped grassy plots and open grassy countryside, including grass between existing buildings where it is open ground; retain every road, building, fence, path, planted tree and existing non-grass object.\nMATERIAL CONCEPT — Dry desert ground: warm ochre and sandy terracotta desert ground, compact dry soil, restrained small cracked/crumbled patches, subtle dusty lighter sand, fine sparse grit grouped into broad painted forms; no giant rocks or dunes.\nART DIRECTION: hand-painted stylized Blizzard Entertainment environment art (World of Warcraft / Hearthstone). Broad confident painted groups, soft value gradients, rich controlled organic detail, no photographic noise. It must belong beside this existing game's brick/slate buildings and autumn trees. At THIS far camera height, keep material details at believable world scale; individual small blades/needles/flowers/ripples merge into appropriate painted groups, never huge plant shapes. Keep the named material's colour identity consistent with its other zoom views.\nLIGHT IS FROM THE UPPER RIGHT TO THE LOWER LEFT. Every surface relief has upper-right highlights and soft lower-left shade. One fixed sun direction; match the scene's exposure, no new spotlight, vignette, dark border or global brightness gradient. Preserve existing scene shadows and everything outside the target ground as much as possible.\n\nDo not change the camera height, paint over roads/buildings/UI, invent large props/trees, put lettering in the material, output a separate texture card, or tile a small motif repeatedly. Output ONE far game screenshot with only its ground material changed."
+    },
+    {
+      "material": "desert",
+      "name": "Dry desert ground",
+      "height": "mid",
+      "source": "art/theme-consistency/material-screenshot-pipeline/references/owner-mid.png",
+      "sourceDescription": "MEDIUM screenshot: the road grid and whole town neighbourhood fill most of the view, Depot Town near centre",
+      "output": "art/theme-consistency/material-screenshot-pipeline/generated/desert/mid-town-study-v1.raw.png",
+      "provenance": "art/theme-consistency/material-screenshot-pipeline/generated/desert/mid-town-study-v1.provenance.json",
+      "references": [
+        {
+          "role": "EDIT TARGET: exact owner mid original screenshot; this alone determines output camera/scene",
+          "file": "art/theme-consistency/material-screenshot-pipeline/references/owner-mid.png"
+        }
+      ],
+      "prompt": "Use case: precise-object-edit.\nEDIT IMAGE1, the owner's EXACT MID GAME SCREENSHOT. MEDIUM screenshot: the road grid and whole town neighbourhood fill most of the view, Depot Town near centre. Return this same view as ONE full edited screenshot, same camera, scene composition, framing and aspect. Preserve the UI, text, buildings, roads, fences, paths, parked vehicles, planted trees and all object positions. No new scene and no collage.\nCHANGE ONLY: the existing visible open, undeveloped grassy plots and open grassy countryside, including grass between existing buildings where it is open ground; retain every road, building, fence, path, planted tree and existing non-grass object.\nMATERIAL CONCEPT — Dry desert ground: warm ochre and sandy terracotta desert ground, compact dry soil, restrained small cracked/crumbled patches, subtle dusty lighter sand, fine sparse grit grouped into broad painted forms; no giant rocks or dunes.\nART DIRECTION: hand-painted stylized Blizzard Entertainment environment art (World of Warcraft / Hearthstone). Broad confident painted groups, soft value gradients, rich controlled organic detail, no photographic noise. It must belong beside this existing game's brick/slate buildings and autumn trees. At THIS mid camera height, keep material details at believable world scale; individual small blades/needles/flowers/ripples merge into appropriate painted groups, never huge plant shapes. Keep the named material's colour identity consistent with its other zoom views.\nLIGHT IS FROM THE UPPER RIGHT TO THE LOWER LEFT. Every surface relief has upper-right highlights and soft lower-left shade. One fixed sun direction; match the scene's exposure, no new spotlight, vignette, dark border or global brightness gradient. Preserve existing scene shadows and everything outside the target ground as much as possible.\n\nDo not change the camera height, paint over roads/buildings/UI, invent large props/trees, put lettering in the material, output a separate texture card, or tile a small motif repeatedly. Output ONE mid game screenshot with only its ground material changed."
+    },
+    {
+      "material": "desert",
+      "name": "Dry desert ground",
+      "height": "near",
+      "source": "art/theme-consistency/material-screenshot-pipeline/references/owner-near.png",
+      "sourceDescription": "CLOSE screenshot: large houses and fenced vacant plots, gas station left of centre/bottom and popcorn shop near lower centre",
+      "output": "art/theme-consistency/material-screenshot-pipeline/generated/desert/near-town-study-v1.raw.png",
+      "provenance": "art/theme-consistency/material-screenshot-pipeline/generated/desert/near-town-study-v1.provenance.json",
+      "references": [
+        {
+          "role": "EDIT TARGET: exact owner near original screenshot; this alone determines output camera/scene",
+          "file": "art/theme-consistency/material-screenshot-pipeline/references/owner-near.png"
+        }
+      ],
+      "prompt": "Use case: precise-object-edit.\nEDIT IMAGE1, the owner's EXACT NEAR GAME SCREENSHOT. CLOSE screenshot: large houses and fenced vacant plots, gas station left of centre/bottom and popcorn shop near lower centre. Return this same view as ONE full edited screenshot, same camera, scene composition, framing and aspect. Preserve the UI, text, buildings, roads, fences, paths, parked vehicles, planted trees and all object positions. No new scene and no collage.\nCHANGE ONLY: the existing visible open, undeveloped grassy plots and open grassy countryside, including grass between existing buildings where it is open ground; retain every road, building, fence, path, planted tree and existing non-grass object.\nMATERIAL CONCEPT — Dry desert ground: warm ochre and sandy terracotta desert ground, compact dry soil, restrained small cracked/crumbled patches, subtle dusty lighter sand, fine sparse grit grouped into broad painted forms; no giant rocks or dunes.\nART DIRECTION: hand-painted stylized Blizzard Entertainment environment art (World of Warcraft / Hearthstone). Broad confident painted groups, soft value gradients, rich controlled organic detail, no photographic noise. It must belong beside this existing game's brick/slate buildings and autumn trees. At THIS near camera height, keep material details at believable world scale; small turf/needle/ripple detail may read clearly near the building footprints. Keep the named material's colour identity consistent with its other zoom views.\nLIGHT IS FROM THE UPPER RIGHT TO THE LOWER LEFT. Every surface relief has upper-right highlights and soft lower-left shade. One fixed sun direction; match the scene's exposure, no new spotlight, vignette, dark border or global brightness gradient. Preserve existing scene shadows and everything outside the target ground as much as possible.\n\nDo not change the camera height, paint over roads/buildings/UI, invent large props/trees, put lettering in the material, output a separate texture card, or tile a small motif repeatedly. Output ONE near game screenshot with only its ground material changed."
+    },
+    {
+      "material": "dirt",
+      "name": "Painted earth",
+      "height": "far",
+      "source": "art/theme-consistency/material-screenshot-pipeline/references/owner-far.png",
+      "sourceDescription": "FAR screenshot: broad open countryside/course in the foreground and the town in the upper/background portion",
+      "output": "art/theme-consistency/material-screenshot-pipeline/generated/dirt/far-town-study-v1.raw.png",
+      "provenance": "art/theme-consistency/material-screenshot-pipeline/generated/dirt/far-town-study-v1.provenance.json",
+      "references": [
+        {
+          "role": "EDIT TARGET: exact owner far original screenshot; this alone determines output camera/scene",
+          "file": "art/theme-consistency/material-screenshot-pipeline/references/owner-far.png"
+        }
+      ],
+      "prompt": "Use case: precise-object-edit.\nEDIT IMAGE1, the owner's EXACT FAR GAME SCREENSHOT. FAR screenshot: broad open countryside/course in the foreground and the town in the upper/background portion. Return this same view as ONE full edited screenshot, same camera, scene composition, framing and aspect. Preserve the UI, text, buildings, roads, fences, paths, parked vehicles, planted trees and all object positions. No new scene and no collage.\nCHANGE ONLY: the existing visible open, undeveloped grassy plots and open grassy countryside, including grass between existing buildings where it is open ground; retain every road, building, fence, path, planted tree and existing non-grass object.\nMATERIAL CONCEPT — Painted earth: natural warm medium-brown compacted dirt and crumbly earth, softly varied ochre/brown worn patches, small shallow clods and restrained fine grit, broad readable painted shapes; no deep trenches or giant boulders.\nART DIRECTION: hand-painted stylized Blizzard Entertainment environment art (World of Warcraft / Hearthstone). Broad confident painted groups, soft value gradients, rich controlled organic detail, no photographic noise. It must belong beside this existing game's brick/slate buildings and autumn trees. At THIS far camera height, keep material details at believable world scale; individual small blades/needles/flowers/ripples merge into appropriate painted groups, never huge plant shapes. Keep the named material's colour identity consistent with its other zoom views.\nLIGHT IS FROM THE UPPER RIGHT TO THE LOWER LEFT. Every surface relief has upper-right highlights and soft lower-left shade. One fixed sun direction; match the scene's exposure, no new spotlight, vignette, dark border or global brightness gradient. Preserve existing scene shadows and everything outside the target ground as much as possible.\n\nDo not change the camera height, paint over roads/buildings/UI, invent large props/trees, put lettering in the material, output a separate texture card, or tile a small motif repeatedly. Output ONE far game screenshot with only its ground material changed."
+    },
+    {
+      "material": "dirt",
+      "name": "Painted earth",
+      "height": "mid",
+      "source": "art/theme-consistency/material-screenshot-pipeline/references/owner-mid.png",
+      "sourceDescription": "MEDIUM screenshot: the road grid and whole town neighbourhood fill most of the view, Depot Town near centre",
+      "output": "art/theme-consistency/material-screenshot-pipeline/generated/dirt/mid-town-study-v1.raw.png",
+      "provenance": "art/theme-consistency/material-screenshot-pipeline/generated/dirt/mid-town-study-v1.provenance.json",
+      "references": [
+        {
+          "role": "EDIT TARGET: exact owner mid original screenshot; this alone determines output camera/scene",
+          "file": "art/theme-consistency/material-screenshot-pipeline/references/owner-mid.png"
+        }
+      ],
+      "prompt": "Use case: precise-object-edit.\nEDIT IMAGE1, the owner's EXACT MID GAME SCREENSHOT. MEDIUM screenshot: the road grid and whole town neighbourhood fill most of the view, Depot Town near centre. Return this same view as ONE full edited screenshot, same camera, scene composition, framing and aspect. Preserve the UI, text, buildings, roads, fences, paths, parked vehicles, planted trees and all object positions. No new scene and no collage.\nCHANGE ONLY: the existing visible open, undeveloped grassy plots and open grassy countryside, including grass between existing buildings where it is open ground; retain every road, building, fence, path, planted tree and existing non-grass object.\nMATERIAL CONCEPT — Painted earth: natural warm medium-brown compacted dirt and crumbly earth, softly varied ochre/brown worn patches, small shallow clods and restrained fine grit, broad readable painted shapes; no deep trenches or giant boulders.\nART DIRECTION: hand-painted stylized Blizzard Entertainment environment art (World of Warcraft / Hearthstone). Broad confident painted groups, soft value gradients, rich controlled organic detail, no photographic noise. It must belong beside this existing game's brick/slate buildings and autumn trees. At THIS mid camera height, keep material details at believable world scale; individual small blades/needles/flowers/ripples merge into appropriate painted groups, never huge plant shapes. Keep the named material's colour identity consistent with its other zoom views.\nLIGHT IS FROM THE UPPER RIGHT TO THE LOWER LEFT. Every surface relief has upper-right highlights and soft lower-left shade. One fixed sun direction; match the scene's exposure, no new spotlight, vignette, dark border or global brightness gradient. Preserve existing scene shadows and everything outside the target ground as much as possible.\n\nDo not change the camera height, paint over roads/buildings/UI, invent large props/trees, put lettering in the material, output a separate texture card, or tile a small motif repeatedly. Output ONE mid game screenshot with only its ground material changed."
+    },
+    {
+      "material": "dirt",
+      "name": "Painted earth",
+      "height": "near",
+      "source": "art/theme-consistency/material-screenshot-pipeline/references/owner-near.png",
+      "sourceDescription": "CLOSE screenshot: large houses and fenced vacant plots, gas station left of centre/bottom and popcorn shop near lower centre",
+      "output": "art/theme-consistency/material-screenshot-pipeline/generated/dirt/near-town-study-v1.raw.png",
+      "provenance": "art/theme-consistency/material-screenshot-pipeline/generated/dirt/near-town-study-v1.provenance.json",
+      "references": [
+        {
+          "role": "EDIT TARGET: exact owner near original screenshot; this alone determines output camera/scene",
+          "file": "art/theme-consistency/material-screenshot-pipeline/references/owner-near.png"
+        }
+      ],
+      "prompt": "Use case: precise-object-edit.\nEDIT IMAGE1, the owner's EXACT NEAR GAME SCREENSHOT. CLOSE screenshot: large houses and fenced vacant plots, gas station left of centre/bottom and popcorn shop near lower centre. Return this same view as ONE full edited screenshot, same camera, scene composition, framing and aspect. Preserve the UI, text, buildings, roads, fences, paths, parked vehicles, planted trees and all object positions. No new scene and no collage.\nCHANGE ONLY: the existing visible open, undeveloped grassy plots and open grassy countryside, including grass between existing buildings where it is open ground; retain every road, building, fence, path, planted tree and existing non-grass object.\nMATERIAL CONCEPT — Painted earth: natural warm medium-brown compacted dirt and crumbly earth, softly varied ochre/brown worn patches, small shallow clods and restrained fine grit, broad readable painted shapes; no deep trenches or giant boulders.\nART DIRECTION: hand-painted stylized Blizzard Entertainment environment art (World of Warcraft / Hearthstone). Broad confident painted groups, soft value gradients, rich controlled organic detail, no photographic noise. It must belong beside this existing game's brick/slate buildings and autumn trees. At THIS near camera height, keep material details at believable world scale; small turf/needle/ripple detail may read clearly near the building footprints. Keep the named material's colour identity consistent with its other zoom views.\nLIGHT IS FROM THE UPPER RIGHT TO THE LOWER LEFT. Every surface relief has upper-right highlights and soft lower-left shade. One fixed sun direction; match the scene's exposure, no new spotlight, vignette, dark border or global brightness gradient. Preserve existing scene shadows and everything outside the target ground as much as possible.\n\nDo not change the camera height, paint over roads/buildings/UI, invent large props/trees, put lettering in the material, output a separate texture card, or tile a small motif repeatedly. Output ONE near game screenshot with only its ground material changed."
+    },
+    {
+      "material": "sand-long-grass",
+      "name": "Sand with long grass",
+      "height": "far",
+      "source": "art/theme-consistency/material-screenshot-pipeline/references/owner-far.png",
+      "sourceDescription": "FAR screenshot: broad open countryside/course in the foreground and the town in the upper/background portion",
+      "output": "art/theme-consistency/material-screenshot-pipeline/generated/sand-long-grass/far-town-study-v1.raw.png",
+      "provenance": "art/theme-consistency/material-screenshot-pipeline/generated/sand-long-grass/far-town-study-v1.provenance.json",
+      "references": [
+        {
+          "role": "EDIT TARGET: exact owner far original screenshot; this alone determines output camera/scene",
+          "file": "art/theme-consistency/material-screenshot-pipeline/references/owner-far.png"
+        }
+      ],
+      "prompt": "Use case: precise-object-edit.\nEDIT IMAGE1, the owner's EXACT FAR GAME SCREENSHOT. FAR screenshot: broad open countryside/course in the foreground and the town in the upper/background portion. Return this same view as ONE full edited screenshot, same camera, scene composition, framing and aspect. Preserve the UI, text, buildings, roads, fences, paths, parked vehicles, planted trees and all object positions. No new scene and no collage.\nCHANGE ONLY: the existing visible open, undeveloped grassy plots and open grassy countryside, including grass between existing buildings where it is open ground; retain every road, building, fence, path, planted tree and existing non-grass object.\nMATERIAL CONCEPT — Sand with long grass: pale warm coastal sand with scattered long straw-and-sage grass tussocks, fine wind-combed grassy tips, plenty of visible sandy ground between irregular tufts, realistic small scale.\nART DIRECTION: hand-painted stylized Blizzard Entertainment environment art (World of Warcraft / Hearthstone). Broad confident painted groups, soft value gradients, rich controlled organic detail, no photographic noise. It must belong beside this existing game's brick/slate buildings and autumn trees. At THIS far camera height, keep material details at believable world scale; individual small blades/needles/flowers/ripples merge into appropriate painted groups, never huge plant shapes. Keep the named material's colour identity consistent with its other zoom views.\nLIGHT IS FROM THE UPPER RIGHT TO THE LOWER LEFT. Every surface relief has upper-right highlights and soft lower-left shade. One fixed sun direction; match the scene's exposure, no new spotlight, vignette, dark border or global brightness gradient. Preserve existing scene shadows and everything outside the target ground as much as possible.\n\nDo not change the camera height, paint over roads/buildings/UI, invent large props/trees, put lettering in the material, output a separate texture card, or tile a small motif repeatedly. Output ONE far game screenshot with only its ground material changed."
+    },
+    {
+      "material": "sand-long-grass",
+      "name": "Sand with long grass",
+      "height": "mid",
+      "source": "art/theme-consistency/material-screenshot-pipeline/references/owner-mid.png",
+      "sourceDescription": "MEDIUM screenshot: the road grid and whole town neighbourhood fill most of the view, Depot Town near centre",
+      "output": "art/theme-consistency/material-screenshot-pipeline/generated/sand-long-grass/mid-town-study-v1.raw.png",
+      "provenance": "art/theme-consistency/material-screenshot-pipeline/generated/sand-long-grass/mid-town-study-v1.provenance.json",
+      "references": [
+        {
+          "role": "EDIT TARGET: exact owner mid original screenshot; this alone determines output camera/scene",
+          "file": "art/theme-consistency/material-screenshot-pipeline/references/owner-mid.png"
+        }
+      ],
+      "prompt": "Use case: precise-object-edit.\nEDIT IMAGE1, the owner's EXACT MID GAME SCREENSHOT. MEDIUM screenshot: the road grid and whole town neighbourhood fill most of the view, Depot Town near centre. Return this same view as ONE full edited screenshot, same camera, scene composition, framing and aspect. Preserve the UI, text, buildings, roads, fences, paths, parked vehicles, planted trees and all object positions. No new scene and no collage.\nCHANGE ONLY: the existing visible open, undeveloped grassy plots and open grassy countryside, including grass between existing buildings where it is open ground; retain every road, building, fence, path, planted tree and existing non-grass object.\nMATERIAL CONCEPT — Sand with long grass: pale warm coastal sand with scattered long straw-and-sage grass tussocks, fine wind-combed grassy tips, plenty of visible sandy ground between irregular tufts, realistic small scale.\nART DIRECTION: hand-painted stylized Blizzard Entertainment environment art (World of Warcraft / Hearthstone). Broad confident painted groups, soft value gradients, rich controlled organic detail, no photographic noise. It must belong beside this existing game's brick/slate buildings and autumn trees. At THIS mid camera height, keep material details at believable world scale; individual small blades/needles/flowers/ripples merge into appropriate painted groups, never huge plant shapes. Keep the named material's colour identity consistent with its other zoom views.\nLIGHT IS FROM THE UPPER RIGHT TO THE LOWER LEFT. Every surface relief has upper-right highlights and soft lower-left shade. One fixed sun direction; match the scene's exposure, no new spotlight, vignette, dark border or global brightness gradient. Preserve existing scene shadows and everything outside the target ground as much as possible.\n\nDo not change the camera height, paint over roads/buildings/UI, invent large props/trees, put lettering in the material, output a separate texture card, or tile a small motif repeatedly. Output ONE mid game screenshot with only its ground material changed."
+    },
+    {
+      "material": "sand-long-grass",
+      "name": "Sand with long grass",
+      "height": "near",
+      "source": "art/theme-consistency/material-screenshot-pipeline/references/owner-near.png",
+      "sourceDescription": "CLOSE screenshot: large houses and fenced vacant plots, gas station left of centre/bottom and popcorn shop near lower centre",
+      "output": "art/theme-consistency/material-screenshot-pipeline/generated/sand-long-grass/near-town-study-v1.raw.png",
+      "provenance": "art/theme-consistency/material-screenshot-pipeline/generated/sand-long-grass/near-town-study-v1.provenance.json",
+      "references": [
+        {
+          "role": "EDIT TARGET: exact owner near original screenshot; this alone determines output camera/scene",
+          "file": "art/theme-consistency/material-screenshot-pipeline/references/owner-near.png"
+        }
+      ],
+      "prompt": "Use case: precise-object-edit.\nEDIT IMAGE1, the owner's EXACT NEAR GAME SCREENSHOT. CLOSE screenshot: large houses and fenced vacant plots, gas station left of centre/bottom and popcorn shop near lower centre. Return this same view as ONE full edited screenshot, same camera, scene composition, framing and aspect. Preserve the UI, text, buildings, roads, fences, paths, parked vehicles, planted trees and all object positions. No new scene and no collage.\nCHANGE ONLY: the existing visible open, undeveloped grassy plots and open grassy countryside, including grass between existing buildings where it is open ground; retain every road, building, fence, path, planted tree and existing non-grass object.\nMATERIAL CONCEPT — Sand with long grass: pale warm coastal sand with scattered long straw-and-sage grass tussocks, fine wind-combed grassy tips, plenty of visible sandy ground between irregular tufts, realistic small scale.\nART DIRECTION: hand-painted stylized Blizzard Entertainment environment art (World of Warcraft / Hearthstone). Broad confident painted groups, soft value gradients, rich controlled organic detail, no photographic noise. It must belong beside this existing game's brick/slate buildings and autumn trees. At THIS near camera height, keep material details at believable world scale; small turf/needle/ripple detail may read clearly near the building footprints. Keep the named material's colour identity consistent with its other zoom views.\nLIGHT IS FROM THE UPPER RIGHT TO THE LOWER LEFT. Every surface relief has upper-right highlights and soft lower-left shade. One fixed sun direction; match the scene's exposure, no new spotlight, vignette, dark border or global brightness gradient. Preserve existing scene shadows and everything outside the target ground as much as possible.\n\nDo not change the camera height, paint over roads/buildings/UI, invent large props/trees, put lettering in the material, output a separate texture card, or tile a small motif repeatedly. Output ONE near game screenshot with only its ground material changed."
+    },
+    {
+      "material": "long-grass",
+      "name": "Long green grass",
+      "height": "far",
+      "source": "art/theme-consistency/material-screenshot-pipeline/references/owner-far.png",
+      "sourceDescription": "FAR screenshot: broad open countryside/course in the foreground and the town in the upper/background portion",
+      "output": "art/theme-consistency/material-screenshot-pipeline/generated/long-grass/far-town-study-v1.raw.png",
+      "provenance": "art/theme-consistency/material-screenshot-pipeline/generated/long-grass/far-town-study-v1.provenance.json",
+      "references": [
+        {
+          "role": "EDIT TARGET: exact owner far original screenshot; this alone determines output camera/scene",
+          "file": "art/theme-consistency/material-screenshot-pipeline/references/owner-far.png"
+        }
+      ],
+      "prompt": "Use case: precise-object-edit.\nEDIT IMAGE1, the owner's EXACT FAR GAME SCREENSHOT. FAR screenshot: broad open countryside/course in the foreground and the town in the upper/background portion. Return this same view as ONE full edited screenshot, same camera, scene composition, framing and aspect. Preserve the UI, text, buildings, roads, fences, paths, parked vehicles, planted trees and all object positions. No new scene and no collage.\nCHANGE ONLY: the existing visible open, undeveloped grassy plots and open grassy countryside, including grass between existing buildings where it is open ground; retain every road, building, fence, path, planted tree and existing non-grass object.\nMATERIAL CONCEPT — Long green grass: lush long moss/olive-green meadow grass with soft flowing tufts, a few restrained yellow-green seedheads, irregular natural density, believable knee-high length; no giant leaf rosettes.\nART DIRECTION: hand-painted stylized Blizzard Entertainment environment art (World of Warcraft / Hearthstone). Broad confident painted groups, soft value gradients, rich controlled organic detail, no photographic noise. It must belong beside this existing game's brick/slate buildings and autumn trees. At THIS far camera height, keep material details at believable world scale; individual small blades/needles/flowers/ripples merge into appropriate painted groups, never huge plant shapes. Keep the named material's colour identity consistent with its other zoom views.\nLIGHT IS FROM THE UPPER RIGHT TO THE LOWER LEFT. Every surface relief has upper-right highlights and soft lower-left shade. One fixed sun direction; match the scene's exposure, no new spotlight, vignette, dark border or global brightness gradient. Preserve existing scene shadows and everything outside the target ground as much as possible.\n\nDo not change the camera height, paint over roads/buildings/UI, invent large props/trees, put lettering in the material, output a separate texture card, or tile a small motif repeatedly. Output ONE far game screenshot with only its ground material changed."
+    },
+    {
+      "material": "long-grass",
+      "name": "Long green grass",
+      "height": "mid",
+      "source": "art/theme-consistency/material-screenshot-pipeline/references/owner-mid.png",
+      "sourceDescription": "MEDIUM screenshot: the road grid and whole town neighbourhood fill most of the view, Depot Town near centre",
+      "output": "art/theme-consistency/material-screenshot-pipeline/generated/long-grass/mid-town-study-v1.raw.png",
+      "provenance": "art/theme-consistency/material-screenshot-pipeline/generated/long-grass/mid-town-study-v1.provenance.json",
+      "references": [
+        {
+          "role": "EDIT TARGET: exact owner mid original screenshot; this alone determines output camera/scene",
+          "file": "art/theme-consistency/material-screenshot-pipeline/references/owner-mid.png"
+        }
+      ],
+      "prompt": "Use case: precise-object-edit.\nEDIT IMAGE1, the owner's EXACT MID GAME SCREENSHOT. MEDIUM screenshot: the road grid and whole town neighbourhood fill most of the view, Depot Town near centre. Return this same view as ONE full edited screenshot, same camera, scene composition, framing and aspect. Preserve the UI, text, buildings, roads, fences, paths, parked vehicles, planted trees and all object positions. No new scene and no collage.\nCHANGE ONLY: the existing visible open, undeveloped grassy plots and open grassy countryside, including grass between existing buildings where it is open ground; retain every road, building, fence, path, planted tree and existing non-grass object.\nMATERIAL CONCEPT — Long green grass: lush long moss/olive-green meadow grass with soft flowing tufts, a few restrained yellow-green seedheads, irregular natural density, believable knee-high length; no giant leaf rosettes.\nART DIRECTION: hand-painted stylized Blizzard Entertainment environment art (World of Warcraft / Hearthstone). Broad confident painted groups, soft value gradients, rich controlled organic detail, no photographic noise. It must belong beside this existing game's brick/slate buildings and autumn trees. At THIS mid camera height, keep material details at believable world scale; individual small blades/needles/flowers/ripples merge into appropriate painted groups, never huge plant shapes. Keep the named material's colour identity consistent with its other zoom views.\nLIGHT IS FROM THE UPPER RIGHT TO THE LOWER LEFT. Every surface relief has upper-right highlights and soft lower-left shade. One fixed sun direction; match the scene's exposure, no new spotlight, vignette, dark border or global brightness gradient. Preserve existing scene shadows and everything outside the target ground as much as possible.\n\nDo not change the camera height, paint over roads/buildings/UI, invent large props/trees, put lettering in the material, output a separate texture card, or tile a small motif repeatedly. Output ONE mid game screenshot with only its ground material changed."
+    },
+    {
+      "material": "long-grass",
+      "name": "Long green grass",
+      "height": "near",
+      "source": "art/theme-consistency/material-screenshot-pipeline/references/owner-near.png",
+      "sourceDescription": "CLOSE screenshot: large houses and fenced vacant plots, gas station left of centre/bottom and popcorn shop near lower centre",
+      "output": "art/theme-consistency/material-screenshot-pipeline/generated/long-grass/near-town-study-v1.raw.png",
+      "provenance": "art/theme-consistency/material-screenshot-pipeline/generated/long-grass/near-town-study-v1.provenance.json",
+      "references": [
+        {
+          "role": "EDIT TARGET: exact owner near original screenshot; this alone determines output camera/scene",
+          "file": "art/theme-consistency/material-screenshot-pipeline/references/owner-near.png"
+        }
+      ],
+      "prompt": "Use case: precise-object-edit.\nEDIT IMAGE1, the owner's EXACT NEAR GAME SCREENSHOT. CLOSE screenshot: large houses and fenced vacant plots, gas station left of centre/bottom and popcorn shop near lower centre. Return this same view as ONE full edited screenshot, same camera, scene composition, framing and aspect. Preserve the UI, text, buildings, roads, fences, paths, parked vehicles, planted trees and all object positions. No new scene and no collage.\nCHANGE ONLY: the existing visible open, undeveloped grassy plots and open grassy countryside, including grass between existing buildings where it is open ground; retain every road, building, fence, path, planted tree and existing non-grass object.\nMATERIAL CONCEPT — Long green grass: lush long moss/olive-green meadow grass with soft flowing tufts, a few restrained yellow-green seedheads, irregular natural density, believable knee-high length; no giant leaf rosettes.\nART DIRECTION: hand-painted stylized Blizzard Entertainment environment art (World of Warcraft / Hearthstone). Broad confident painted groups, soft value gradients, rich controlled organic detail, no photographic noise. It must belong beside this existing game's brick/slate buildings and autumn trees. At THIS near camera height, keep material details at believable world scale; small turf/needle/ripple detail may read clearly near the building footprints. Keep the named material's colour identity consistent with its other zoom views.\nLIGHT IS FROM THE UPPER RIGHT TO THE LOWER LEFT. Every surface relief has upper-right highlights and soft lower-left shade. One fixed sun direction; match the scene's exposure, no new spotlight, vignette, dark border or global brightness gradient. Preserve existing scene shadows and everything outside the target ground as much as possible.\n\nDo not change the camera height, paint over roads/buildings/UI, invent large props/trees, put lettering in the material, output a separate texture card, or tile a small motif repeatedly. Output ONE near game screenshot with only its ground material changed."
+    },
+    {
+      "material": "swamp",
+      "name": "Swamp ground",
+      "height": "far",
+      "source": "art/theme-consistency/material-screenshot-pipeline/references/owner-far.png",
+      "sourceDescription": "FAR screenshot: broad open countryside/course in the foreground and the town in the upper/background portion",
+      "output": "art/theme-consistency/material-screenshot-pipeline/generated/swamp/far-town-study-v1.raw.png",
+      "provenance": "art/theme-consistency/material-screenshot-pipeline/generated/swamp/far-town-study-v1.provenance.json",
+      "references": [
+        {
+          "role": "EDIT TARGET: exact owner far original screenshot; this alone determines output camera/scene",
+          "file": "art/theme-consistency/material-screenshot-pipeline/references/owner-far.png"
+        }
+      ],
+      "prompt": "Use case: precise-object-edit.\nEDIT IMAGE1, the owner's EXACT FAR GAME SCREENSHOT. FAR screenshot: broad open countryside/course in the foreground and the town in the upper/background portion. Return this same view as ONE full edited screenshot, same camera, scene composition, framing and aspect. Preserve the UI, text, buildings, roads, fences, paths, parked vehicles, planted trees and all object positions. No new scene and no collage.\nCHANGE ONLY: the existing open, undeveloped grassy plots and open grassy countryside; apply swamp ground within those existing boundaries, preserving every road, building, landscaped garden, fence, path and tree.\nMATERIAL CONCEPT — Swamp ground: a swampy olive/teal wetland surface: dark moist earth, mossy grass, scattered small sedge/reed clumps and shallow still teal water patches, soft muddy transitions, no trees or giant reeds.\nART DIRECTION: hand-painted stylized Blizzard Entertainment environment art (World of Warcraft / Hearthstone). Broad confident painted groups, soft value gradients, rich controlled organic detail, no photographic noise. It must belong beside this existing game's brick/slate buildings and autumn trees. At THIS far camera height, keep material details at believable world scale; individual small blades/needles/flowers/ripples merge into appropriate painted groups, never huge plant shapes. Keep the named material's colour identity consistent with its other zoom views.\nLIGHT IS FROM THE UPPER RIGHT TO THE LOWER LEFT. Every surface relief has upper-right highlights and soft lower-left shade. One fixed sun direction; match the scene's exposure, no new spotlight, vignette, dark border or global brightness gradient. Preserve existing scene shadows and everything outside the target ground as much as possible.\n\nDo not change the camera height, paint over roads/buildings/UI, invent large props/trees, put lettering in the material, output a separate texture card, or tile a small motif repeatedly. Output ONE far game screenshot with only its ground material changed."
+    },
+    {
+      "material": "swamp",
+      "name": "Swamp ground",
+      "height": "mid",
+      "source": "art/theme-consistency/material-screenshot-pipeline/references/owner-mid.png",
+      "sourceDescription": "MEDIUM screenshot: the road grid and whole town neighbourhood fill most of the view, Depot Town near centre",
+      "output": "art/theme-consistency/material-screenshot-pipeline/generated/swamp/mid-town-study-v1.raw.png",
+      "provenance": "art/theme-consistency/material-screenshot-pipeline/generated/swamp/mid-town-study-v1.provenance.json",
+      "references": [
+        {
+          "role": "EDIT TARGET: exact owner mid original screenshot; this alone determines output camera/scene",
+          "file": "art/theme-consistency/material-screenshot-pipeline/references/owner-mid.png"
+        }
+      ],
+      "prompt": "Use case: precise-object-edit.\nEDIT IMAGE1, the owner's EXACT MID GAME SCREENSHOT. MEDIUM screenshot: the road grid and whole town neighbourhood fill most of the view, Depot Town near centre. Return this same view as ONE full edited screenshot, same camera, scene composition, framing and aspect. Preserve the UI, text, buildings, roads, fences, paths, parked vehicles, planted trees and all object positions. No new scene and no collage.\nCHANGE ONLY: the existing open, undeveloped grassy plots and open grassy countryside; apply swamp ground within those existing boundaries, preserving every road, building, landscaped garden, fence, path and tree.\nMATERIAL CONCEPT — Swamp ground: a swampy olive/teal wetland surface: dark moist earth, mossy grass, scattered small sedge/reed clumps and shallow still teal water patches, soft muddy transitions, no trees or giant reeds.\nART DIRECTION: hand-painted stylized Blizzard Entertainment environment art (World of Warcraft / Hearthstone). Broad confident painted groups, soft value gradients, rich controlled organic detail, no photographic noise. It must belong beside this existing game's brick/slate buildings and autumn trees. At THIS mid camera height, keep material details at believable world scale; individual small blades/needles/flowers/ripples merge into appropriate painted groups, never huge plant shapes. Keep the named material's colour identity consistent with its other zoom views.\nLIGHT IS FROM THE UPPER RIGHT TO THE LOWER LEFT. Every surface relief has upper-right highlights and soft lower-left shade. One fixed sun direction; match the scene's exposure, no new spotlight, vignette, dark border or global brightness gradient. Preserve existing scene shadows and everything outside the target ground as much as possible.\n\nDo not change the camera height, paint over roads/buildings/UI, invent large props/trees, put lettering in the material, output a separate texture card, or tile a small motif repeatedly. Output ONE mid game screenshot with only its ground material changed."
+    },
+    {
+      "material": "swamp",
+      "name": "Swamp ground",
+      "height": "near",
+      "source": "art/theme-consistency/material-screenshot-pipeline/references/owner-near.png",
+      "sourceDescription": "CLOSE screenshot: large houses and fenced vacant plots, gas station left of centre/bottom and popcorn shop near lower centre",
+      "output": "art/theme-consistency/material-screenshot-pipeline/generated/swamp/near-town-study-v1.raw.png",
+      "provenance": "art/theme-consistency/material-screenshot-pipeline/generated/swamp/near-town-study-v1.provenance.json",
+      "references": [
+        {
+          "role": "EDIT TARGET: exact owner near original screenshot; this alone determines output camera/scene",
+          "file": "art/theme-consistency/material-screenshot-pipeline/references/owner-near.png"
+        }
+      ],
+      "prompt": "Use case: precise-object-edit.\nEDIT IMAGE1, the owner's EXACT NEAR GAME SCREENSHOT. CLOSE screenshot: large houses and fenced vacant plots, gas station left of centre/bottom and popcorn shop near lower centre. Return this same view as ONE full edited screenshot, same camera, scene composition, framing and aspect. Preserve the UI, text, buildings, roads, fences, paths, parked vehicles, planted trees and all object positions. No new scene and no collage.\nCHANGE ONLY: the existing open, undeveloped grassy plots and open grassy countryside; apply swamp ground within those existing boundaries, preserving every road, building, landscaped garden, fence, path and tree.\nMATERIAL CONCEPT — Swamp ground: a swampy olive/teal wetland surface: dark moist earth, mossy grass, scattered small sedge/reed clumps and shallow still teal water patches, soft muddy transitions, no trees or giant reeds.\nART DIRECTION: hand-painted stylized Blizzard Entertainment environment art (World of Warcraft / Hearthstone). Broad confident painted groups, soft value gradients, rich controlled organic detail, no photographic noise. It must belong beside this existing game's brick/slate buildings and autumn trees. At THIS near camera height, keep material details at believable world scale; small turf/needle/ripple detail may read clearly near the building footprints. Keep the named material's colour identity consistent with its other zoom views.\nLIGHT IS FROM THE UPPER RIGHT TO THE LOWER LEFT. Every surface relief has upper-right highlights and soft lower-left shade. One fixed sun direction; match the scene's exposure, no new spotlight, vignette, dark border or global brightness gradient. Preserve existing scene shadows and everything outside the target ground as much as possible.\n\nDo not change the camera height, paint over roads/buildings/UI, invent large props/trees, put lettering in the material, output a separate texture card, or tile a small motif repeatedly. Output ONE near game screenshot with only its ground material changed."
+    },
+    {
+      "material": "lake",
+      "name": "Still lake water",
+      "height": "far",
+      "source": "art/theme-consistency/material-screenshot-pipeline/references/owner-far.png",
+      "sourceDescription": "FAR screenshot: broad open countryside/course in the foreground and the town in the upper/background portion",
+      "output": "art/theme-consistency/material-screenshot-pipeline/generated/lake/far-town-study-v1.raw.png",
+      "provenance": "art/theme-consistency/material-screenshot-pipeline/generated/lake/far-town-study-v1.provenance.json",
+      "references": [
+        {
+          "role": "EDIT TARGET: exact owner far original screenshot; this alone determines output camera/scene",
+          "file": "art/theme-consistency/material-screenshot-pipeline/references/owner-far.png"
+        }
+      ],
+      "prompt": "Use case: precise-object-edit.\nEDIT IMAGE1, the owner's EXACT FAR GAME SCREENSHOT. FAR screenshot: broad open countryside/course in the foreground and the town in the upper/background portion. Return this same view as ONE full edited screenshot, same camera, scene composition, framing and aspect. Preserve the UI, text, buildings, roads, fences, paths, parked vehicles, planted trees and all object positions. No new scene and no collage.\nCHANGE ONLY: the existing open, undeveloped grassy plots and open grassy countryside; turn those existing ground areas into calm water within their existing boundaries, with a narrow natural bank where needed; keep every road, building, garden, fence, path and tree dry and unchanged.\nMATERIAL CONCEPT — Still lake water: still pond/lake water, deep teal-blue, soft broad hand-painted ripples, a few SMALL warm sun glints on upper-right-facing ripple lips, even all over with no dark edge or broad glare stripe, no white waves or foam.\nART DIRECTION: hand-painted stylized Blizzard Entertainment environment art (World of Warcraft / Hearthstone). Broad confident painted groups, soft value gradients, rich controlled organic detail, no photographic noise. It must belong beside this existing game's brick/slate buildings and autumn trees. At THIS far camera height, keep material details at believable world scale; individual small blades/needles/flowers/ripples merge into appropriate painted groups, never huge plant shapes. Keep the named material's colour identity consistent with its other zoom views.\nLIGHT IS FROM THE UPPER RIGHT TO THE LOWER LEFT. Every surface relief has upper-right highlights and soft lower-left shade. One fixed sun direction; match the scene's exposure, no new spotlight, vignette, dark border or global brightness gradient. Preserve existing scene shadows and everything outside the target ground as much as possible.\n\nDo not change the camera height, paint over roads/buildings/UI, invent large props/trees, put lettering in the material, output a separate texture card, or tile a small motif repeatedly. Output ONE far game screenshot with only its ground material changed."
+    },
+    {
+      "material": "lake",
+      "name": "Still lake water",
+      "height": "mid",
+      "source": "art/theme-consistency/material-screenshot-pipeline/references/owner-mid.png",
+      "sourceDescription": "MEDIUM screenshot: the road grid and whole town neighbourhood fill most of the view, Depot Town near centre",
+      "output": "art/theme-consistency/material-screenshot-pipeline/generated/lake/mid-town-study-v1.raw.png",
+      "provenance": "art/theme-consistency/material-screenshot-pipeline/generated/lake/mid-town-study-v1.provenance.json",
+      "references": [
+        {
+          "role": "EDIT TARGET: exact owner mid original screenshot; this alone determines output camera/scene",
+          "file": "art/theme-consistency/material-screenshot-pipeline/references/owner-mid.png"
+        }
+      ],
+      "prompt": "Use case: precise-object-edit.\nEDIT IMAGE1, the owner's EXACT MID GAME SCREENSHOT. MEDIUM screenshot: the road grid and whole town neighbourhood fill most of the view, Depot Town near centre. Return this same view as ONE full edited screenshot, same camera, scene composition, framing and aspect. Preserve the UI, text, buildings, roads, fences, paths, parked vehicles, planted trees and all object positions. No new scene and no collage.\nCHANGE ONLY: the existing open, undeveloped grassy plots and open grassy countryside; turn those existing ground areas into calm water within their existing boundaries, with a narrow natural bank where needed; keep every road, building, garden, fence, path and tree dry and unchanged.\nMATERIAL CONCEPT — Still lake water: still pond/lake water, deep teal-blue, soft broad hand-painted ripples, a few SMALL warm sun glints on upper-right-facing ripple lips, even all over with no dark edge or broad glare stripe, no white waves or foam.\nART DIRECTION: hand-painted stylized Blizzard Entertainment environment art (World of Warcraft / Hearthstone). Broad confident painted groups, soft value gradients, rich controlled organic detail, no photographic noise. It must belong beside this existing game's brick/slate buildings and autumn trees. At THIS mid camera height, keep material details at believable world scale; individual small blades/needles/flowers/ripples merge into appropriate painted groups, never huge plant shapes. Keep the named material's colour identity consistent with its other zoom views.\nLIGHT IS FROM THE UPPER RIGHT TO THE LOWER LEFT. Every surface relief has upper-right highlights and soft lower-left shade. One fixed sun direction; match the scene's exposure, no new spotlight, vignette, dark border or global brightness gradient. Preserve existing scene shadows and everything outside the target ground as much as possible.\n\nDo not change the camera height, paint over roads/buildings/UI, invent large props/trees, put lettering in the material, output a separate texture card, or tile a small motif repeatedly. Output ONE mid game screenshot with only its ground material changed."
+    },
+    {
+      "material": "lake",
+      "name": "Still lake water",
+      "height": "near",
+      "source": "art/theme-consistency/material-screenshot-pipeline/references/owner-near.png",
+      "sourceDescription": "CLOSE screenshot: large houses and fenced vacant plots, gas station left of centre/bottom and popcorn shop near lower centre",
+      "output": "art/theme-consistency/material-screenshot-pipeline/generated/lake/near-town-study-v2.raw.png",
+      "provenance": "art/theme-consistency/material-screenshot-pipeline/generated/lake/near-town-study-v2.provenance.json",
+      "references": [
+        {
+          "role": "EDIT TARGET: exact owner near original screenshot; this alone determines output camera/scene",
+          "file": "art/theme-consistency/material-screenshot-pipeline/references/owner-near.png"
+        },
+        {
+          "role": "WATER STYLE ONLY: preserve valid lake treatment, but its flooded construction yard is a known defect; output original image1 scene",
+          "file": "art/theme-consistency/material-screenshot-pipeline/generated/lake/near-town-study-v1.raw.png"
+        }
+      ],
+      "prompt": "Use case: precise-object-edit. Edit IMAGE1, the exact original CLOSE owner screenshot. IMAGE2 gives the desired calm teal LAKE WATER MATERIAL only.\nKeep image1's exact camera, UI, buildings, roads, fences, planted trees, vehicles and object positions. Replace ONLY the original dark-green grassy undeveloped plots with the same still deep teal-blue painted lake water and small upper-right warm sun glints seen in image2. Preserve its valid water treatment in those grass plots.\nCRITICAL CORRECTION: every ORIGINAL BROWN/GREY construction or gravel yard must stay DRY exactly as in IMAGE1. In particular the LOWER-RIGHT construction plot around the yellow excavator and stacked materials, approximately image x1390..1742,y620..880, is NON-GRASS. Retain its original dry brown/grey ground, machinery base, materials, driveway and boundaries. The water over that yard in image2 is the specific error to avoid. Other original dry soil/construction plots remain dry too. Machinery and buildings must never be partly submerged.\nLight comes from UPPER RIGHT toward LOWER LEFT; same exposure and hand-painted Blizzard/Warcraft/Hearthstone material language. Soft broad ripples, few small warm glints, no foam or new shoreline objects. Return ONE edited screenshot at IMAGE1's original close camera and aspect. Keep all other valid scene elements; no collage, new UI or town redesign."
+    },
+    {
+      "material": "fairway",
+      "name": "Fairway turf",
+      "height": "far",
+      "source": "art/theme-consistency/material-screenshot-pipeline/references/owner-far.png",
+      "sourceDescription": "FAR screenshot: broad open countryside/course in the foreground and the town in the upper/background portion",
+      "output": "art/theme-consistency/material-screenshot-pipeline/generated/fairway/far-town-study-v1.raw.png",
+      "provenance": "art/theme-consistency/material-screenshot-pipeline/generated/fairway/far-town-study-v1.provenance.json",
+      "references": [
+        {
+          "role": "EDIT TARGET: exact owner far original screenshot; this alone determines output camera/scene",
+          "file": "art/theme-consistency/material-screenshot-pipeline/references/owner-far.png"
+        },
+        {
+          "role": "STYLE ONLY: short green fairway with broad soft mowing bands; do not copy this camera or scene",
+          "file": "art/theme-consistency/material-screenshot-pipeline/references/owner-fairway-style.png"
+        }
+      ],
+      "prompt": "Use case: precise-object-edit.\nEDIT IMAGE1, the owner's EXACT FAR GAME SCREENSHOT. FAR screenshot: broad open countryside/course in the foreground and the town in the upper/background portion. Return this same view as ONE full edited screenshot, same camera, scene composition, framing and aspect. Preserve the UI, text, buildings, roads, fences, paths, parked vehicles, planted trees and all object positions. No new scene and no collage.\nCHANGE ONLY: the existing open, undeveloped grassy plots and open grassy countryside; apply this short fairway turf and broad consistent mowing bands within existing ground boundaries, keeping all buildings, roads, fences and planted trees unchanged.\nMATERIAL CONCEPT — Fairway turf: dense closely mown natural medium-green golf fairway turf with broad alternating slightly lighter and darker green mowing bands, softly blended band edges and subtle small painted turf texture; clearly shorter and tidier than the flowerier surrounding rough.\nART DIRECTION: hand-painted stylized Blizzard Entertainment environment art (World of Warcraft / Hearthstone). Broad confident painted groups, soft value gradients, rich controlled organic detail, no photographic noise. It must belong beside this existing game's brick/slate buildings and autumn trees. At THIS far camera height, keep material details at believable world scale; individual small blades/needles/flowers/ripples merge into appropriate painted groups, never huge plant shapes. Keep the named material's colour identity consistent with its other zoom views.\nLIGHT IS FROM THE UPPER RIGHT TO THE LOWER LEFT. Every surface relief has upper-right highlights and soft lower-left shade. One fixed sun direction; match the scene's exposure, no new spotlight, vignette, dark border or global brightness gradient. Preserve existing scene shadows and everything outside the target ground as much as possible.\nIMAGE2 is FAIRWAY STYLE ONLY: reproduce its dense short green turf and broad softly transitioning light/dark mowing bands inside the original ground areas of IMAGE1. Output IMAGE1's camera and town, not the driving-range scene.\nDo not change the camera height, paint over roads/buildings/UI, invent large props/trees, put lettering in the material, output a separate texture card, or tile a small motif repeatedly. Output ONE far game screenshot with only its ground material changed."
+    },
+    {
+      "material": "fairway",
+      "name": "Fairway turf",
+      "height": "mid",
+      "source": "art/theme-consistency/material-screenshot-pipeline/references/owner-mid.png",
+      "sourceDescription": "MEDIUM screenshot: the road grid and whole town neighbourhood fill most of the view, Depot Town near centre",
+      "output": "art/theme-consistency/material-screenshot-pipeline/generated/fairway/mid-town-study-v1.raw.png",
+      "provenance": "art/theme-consistency/material-screenshot-pipeline/generated/fairway/mid-town-study-v1.provenance.json",
+      "references": [
+        {
+          "role": "EDIT TARGET: exact owner mid original screenshot; this alone determines output camera/scene",
+          "file": "art/theme-consistency/material-screenshot-pipeline/references/owner-mid.png"
+        },
+        {
+          "role": "STYLE ONLY: short green fairway with broad soft mowing bands; do not copy this camera or scene",
+          "file": "art/theme-consistency/material-screenshot-pipeline/references/owner-fairway-style.png"
+        }
+      ],
+      "prompt": "Use case: precise-object-edit.\nEDIT IMAGE1, the owner's EXACT MID GAME SCREENSHOT. MEDIUM screenshot: the road grid and whole town neighbourhood fill most of the view, Depot Town near centre. Return this same view as ONE full edited screenshot, same camera, scene composition, framing and aspect. Preserve the UI, text, buildings, roads, fences, paths, parked vehicles, planted trees and all object positions. No new scene and no collage.\nCHANGE ONLY: the existing open, undeveloped grassy plots and open grassy countryside; apply this short fairway turf and broad consistent mowing bands within existing ground boundaries, keeping all buildings, roads, fences and planted trees unchanged.\nMATERIAL CONCEPT — Fairway turf: dense closely mown natural medium-green golf fairway turf with broad alternating slightly lighter and darker green mowing bands, softly blended band edges and subtle small painted turf texture; clearly shorter and tidier than the flowerier surrounding rough.\nART DIRECTION: hand-painted stylized Blizzard Entertainment environment art (World of Warcraft / Hearthstone). Broad confident painted groups, soft value gradients, rich controlled organic detail, no photographic noise. It must belong beside this existing game's brick/slate buildings and autumn trees. At THIS mid camera height, keep material details at believable world scale; individual small blades/needles/flowers/ripples merge into appropriate painted groups, never huge plant shapes. Keep the named material's colour identity consistent with its other zoom views.\nLIGHT IS FROM THE UPPER RIGHT TO THE LOWER LEFT. Every surface relief has upper-right highlights and soft lower-left shade. One fixed sun direction; match the scene's exposure, no new spotlight, vignette, dark border or global brightness gradient. Preserve existing scene shadows and everything outside the target ground as much as possible.\nIMAGE2 is FAIRWAY STYLE ONLY: reproduce its dense short green turf and broad softly transitioning light/dark mowing bands inside the original ground areas of IMAGE1. Output IMAGE1's camera and town, not the driving-range scene.\nDo not change the camera height, paint over roads/buildings/UI, invent large props/trees, put lettering in the material, output a separate texture card, or tile a small motif repeatedly. Output ONE mid game screenshot with only its ground material changed."
+    },
+    {
+      "material": "fairway",
+      "name": "Fairway turf",
+      "height": "near",
+      "source": "art/theme-consistency/material-screenshot-pipeline/references/owner-near.png",
+      "sourceDescription": "CLOSE screenshot: large houses and fenced vacant plots, gas station left of centre/bottom and popcorn shop near lower centre",
+      "output": "art/theme-consistency/material-screenshot-pipeline/generated/fairway/near-town-study-v1.raw.png",
+      "provenance": "art/theme-consistency/material-screenshot-pipeline/generated/fairway/near-town-study-v1.provenance.json",
+      "references": [
+        {
+          "role": "EDIT TARGET: exact owner near original screenshot; this alone determines output camera/scene",
+          "file": "art/theme-consistency/material-screenshot-pipeline/references/owner-near.png"
+        },
+        {
+          "role": "STYLE ONLY: short green fairway with broad soft mowing bands; do not copy this camera or scene",
+          "file": "art/theme-consistency/material-screenshot-pipeline/references/owner-fairway-style.png"
+        }
+      ],
+      "prompt": "Use case: precise-object-edit.\nEDIT IMAGE1, the owner's EXACT NEAR GAME SCREENSHOT. CLOSE screenshot: large houses and fenced vacant plots, gas station left of centre/bottom and popcorn shop near lower centre. Return this same view as ONE full edited screenshot, same camera, scene composition, framing and aspect. Preserve the UI, text, buildings, roads, fences, paths, parked vehicles, planted trees and all object positions. No new scene and no collage.\nCHANGE ONLY: the existing open, undeveloped grassy plots and open grassy countryside; apply this short fairway turf and broad consistent mowing bands within existing ground boundaries, keeping all buildings, roads, fences and planted trees unchanged.\nMATERIAL CONCEPT — Fairway turf: dense closely mown natural medium-green golf fairway turf with broad alternating slightly lighter and darker green mowing bands, softly blended band edges and subtle small painted turf texture; clearly shorter and tidier than the flowerier surrounding rough.\nART DIRECTION: hand-painted stylized Blizzard Entertainment environment art (World of Warcraft / Hearthstone). Broad confident painted groups, soft value gradients, rich controlled organic detail, no photographic noise. It must belong beside this existing game's brick/slate buildings and autumn trees. At THIS near camera height, keep material details at believable world scale; small turf/needle/ripple detail may read clearly near the building footprints. Keep the named material's colour identity consistent with its other zoom views.\nLIGHT IS FROM THE UPPER RIGHT TO THE LOWER LEFT. Every surface relief has upper-right highlights and soft lower-left shade. One fixed sun direction; match the scene's exposure, no new spotlight, vignette, dark border or global brightness gradient. Preserve existing scene shadows and everything outside the target ground as much as possible.\nIMAGE2 is FAIRWAY STYLE ONLY: reproduce its dense short green turf and broad softly transitioning light/dark mowing bands inside the original ground areas of IMAGE1. Output IMAGE1's camera and town, not the driving-range scene.\nDo not change the camera height, paint over roads/buildings/UI, invent large props/trees, put lettering in the material, output a separate texture card, or tile a small motif repeatedly. Output ONE near game screenshot with only its ground material changed."
+    },
+    {
+      "material": "putting-green",
+      "name": "Putting green turf",
+      "height": "far",
+      "source": "art/theme-consistency/material-screenshot-pipeline/references/owner-far.png",
+      "sourceDescription": "FAR screenshot: broad open countryside/course in the foreground and the town in the upper/background portion",
+      "output": "art/theme-consistency/material-screenshot-pipeline/generated/putting-green/far-town-study-v1.raw.png",
+      "provenance": "art/theme-consistency/material-screenshot-pipeline/generated/putting-green/far-town-study-v1.provenance.json",
+      "references": [
+        {
+          "role": "EDIT TARGET: exact owner far original screenshot; this alone determines output camera/scene",
+          "file": "art/theme-consistency/material-screenshot-pipeline/references/owner-far.png"
+        }
+      ],
+      "prompt": "Use case: precise-object-edit.\nEDIT IMAGE1, the owner's EXACT FAR GAME SCREENSHOT. FAR screenshot: broad open countryside/course in the foreground and the town in the upper/background portion. Return this same view as ONE full edited screenshot, same camera, scene composition, framing and aspect. Preserve the UI, text, buildings, roads, fences, paths, parked vehicles, planted trees and all object positions. No new scene and no collage.\nCHANGE ONLY: the existing visible open, undeveloped grassy plots and open grassy countryside, including grass between existing buildings where it is open ground; retain every road, building, fence, path, planted tree and existing non-grass object.\nMATERIAL CONCEPT — Putting green turf: very short smooth fine pale-to-medium green golf putting turf, tiny soft painterly turf variation, even tight finish, clearly finer and shorter than the surrounding fairway, restrained slightly warm highlights.\nART DIRECTION: hand-painted stylized Blizzard Entertainment environment art (World of Warcraft / Hearthstone). Broad confident painted groups, soft value gradients, rich controlled organic detail, no photographic noise. It must belong beside this existing game's brick/slate buildings and autumn trees. At THIS far camera height, keep material details at believable world scale; individual small blades/needles/flowers/ripples merge into appropriate painted groups, never huge plant shapes. Keep the named material's colour identity consistent with its other zoom views.\nLIGHT IS FROM THE UPPER RIGHT TO THE LOWER LEFT. Every surface relief has upper-right highlights and soft lower-left shade. One fixed sun direction; match the scene's exposure, no new spotlight, vignette, dark border or global brightness gradient. Preserve existing scene shadows and everything outside the target ground as much as possible.\n\nDo not change the camera height, paint over roads/buildings/UI, invent large props/trees, put lettering in the material, output a separate texture card, or tile a small motif repeatedly. Output ONE far game screenshot with only its ground material changed."
+    },
+    {
+      "material": "putting-green",
+      "name": "Putting green turf",
+      "height": "mid",
+      "source": "art/theme-consistency/material-screenshot-pipeline/references/owner-mid.png",
+      "sourceDescription": "MEDIUM screenshot: the road grid and whole town neighbourhood fill most of the view, Depot Town near centre",
+      "output": "art/theme-consistency/material-screenshot-pipeline/generated/putting-green/mid-town-study-v1.raw.png",
+      "provenance": "art/theme-consistency/material-screenshot-pipeline/generated/putting-green/mid-town-study-v1.provenance.json",
+      "references": [
+        {
+          "role": "EDIT TARGET: exact owner mid original screenshot; this alone determines output camera/scene",
+          "file": "art/theme-consistency/material-screenshot-pipeline/references/owner-mid.png"
+        }
+      ],
+      "prompt": "Use case: precise-object-edit.\nEDIT IMAGE1, the owner's EXACT MID GAME SCREENSHOT. MEDIUM screenshot: the road grid and whole town neighbourhood fill most of the view, Depot Town near centre. Return this same view as ONE full edited screenshot, same camera, scene composition, framing and aspect. Preserve the UI, text, buildings, roads, fences, paths, parked vehicles, planted trees and all object positions. No new scene and no collage.\nCHANGE ONLY: the existing visible open, undeveloped grassy plots and open grassy countryside, including grass between existing buildings where it is open ground; retain every road, building, fence, path, planted tree and existing non-grass object.\nMATERIAL CONCEPT — Putting green turf: very short smooth fine pale-to-medium green golf putting turf, tiny soft painterly turf variation, even tight finish, clearly finer and shorter than the surrounding fairway, restrained slightly warm highlights.\nART DIRECTION: hand-painted stylized Blizzard Entertainment environment art (World of Warcraft / Hearthstone). Broad confident painted groups, soft value gradients, rich controlled organic detail, no photographic noise. It must belong beside this existing game's brick/slate buildings and autumn trees. At THIS mid camera height, keep material details at believable world scale; individual small blades/needles/flowers/ripples merge into appropriate painted groups, never huge plant shapes. Keep the named material's colour identity consistent with its other zoom views.\nLIGHT IS FROM THE UPPER RIGHT TO THE LOWER LEFT. Every surface relief has upper-right highlights and soft lower-left shade. One fixed sun direction; match the scene's exposure, no new spotlight, vignette, dark border or global brightness gradient. Preserve existing scene shadows and everything outside the target ground as much as possible.\n\nDo not change the camera height, paint over roads/buildings/UI, invent large props/trees, put lettering in the material, output a separate texture card, or tile a small motif repeatedly. Output ONE mid game screenshot with only its ground material changed."
+    },
+    {
+      "material": "putting-green",
+      "name": "Putting green turf",
+      "height": "near",
+      "source": "art/theme-consistency/material-screenshot-pipeline/references/owner-near.png",
+      "sourceDescription": "CLOSE screenshot: large houses and fenced vacant plots, gas station left of centre/bottom and popcorn shop near lower centre",
+      "output": "art/theme-consistency/material-screenshot-pipeline/generated/putting-green/near-town-study-v1.raw.png",
+      "provenance": "art/theme-consistency/material-screenshot-pipeline/generated/putting-green/near-town-study-v1.provenance.json",
+      "references": [
+        {
+          "role": "EDIT TARGET: exact owner near original screenshot; this alone determines output camera/scene",
+          "file": "art/theme-consistency/material-screenshot-pipeline/references/owner-near.png"
+        }
+      ],
+      "prompt": "Use case: precise-object-edit.\nEDIT IMAGE1, the owner's EXACT NEAR GAME SCREENSHOT. CLOSE screenshot: large houses and fenced vacant plots, gas station left of centre/bottom and popcorn shop near lower centre. Return this same view as ONE full edited screenshot, same camera, scene composition, framing and aspect. Preserve the UI, text, buildings, roads, fences, paths, parked vehicles, planted trees and all object positions. No new scene and no collage.\nCHANGE ONLY: the existing visible open, undeveloped grassy plots and open grassy countryside, including grass between existing buildings where it is open ground; retain every road, building, fence, path, planted tree and existing non-grass object.\nMATERIAL CONCEPT — Putting green turf: very short smooth fine pale-to-medium green golf putting turf, tiny soft painterly turf variation, even tight finish, clearly finer and shorter than the surrounding fairway, restrained slightly warm highlights.\nART DIRECTION: hand-painted stylized Blizzard Entertainment environment art (World of Warcraft / Hearthstone). Broad confident painted groups, soft value gradients, rich controlled organic detail, no photographic noise. It must belong beside this existing game's brick/slate buildings and autumn trees. At THIS near camera height, keep material details at believable world scale; small turf/needle/ripple detail may read clearly near the building footprints. Keep the named material's colour identity consistent with its other zoom views.\nLIGHT IS FROM THE UPPER RIGHT TO THE LOWER LEFT. Every surface relief has upper-right highlights and soft lower-left shade. One fixed sun direction; match the scene's exposure, no new spotlight, vignette, dark border or global brightness gradient. Preserve existing scene shadows and everything outside the target ground as much as possible.\n\nDo not change the camera height, paint over roads/buildings/UI, invent large props/trees, put lettering in the material, output a separate texture card, or tile a small motif repeatedly. Output ONE near game screenshot with only its ground material changed."
+    },
+    {
+      "material": "first-cut",
+      "name": "First cut turf",
+      "height": "far",
+      "source": "art/theme-consistency/material-screenshot-pipeline/references/owner-far.png",
+      "sourceDescription": "FAR screenshot: broad open countryside/course in the foreground and the town in the upper/background portion",
+      "output": "art/theme-consistency/material-screenshot-pipeline/generated/first-cut/far-town-study-v1.raw.png",
+      "provenance": "art/theme-consistency/material-screenshot-pipeline/generated/first-cut/far-town-study-v1.provenance.json",
+      "references": [
+        {
+          "role": "EDIT TARGET: exact owner far original screenshot; this alone determines output camera/scene",
+          "file": "art/theme-consistency/material-screenshot-pipeline/references/owner-far.png"
+        }
+      ],
+      "prompt": "Use case: precise-object-edit.\nEDIT IMAGE1, the owner's EXACT FAR GAME SCREENSHOT. FAR screenshot: broad open countryside/course in the foreground and the town in the upper/background portion. Return this same view as ONE full edited screenshot, same camera, scene composition, framing and aspect. Preserve the UI, text, buildings, roads, fences, paths, parked vehicles, planted trees and all object positions. No new scene and no collage.\nCHANGE ONLY: the existing visible open, undeveloped grassy plots and open grassy countryside, including grass between existing buildings where it is open ground; retain every road, building, fence, path, planted tree and existing non-grass object.\nMATERIAL CONCEPT — First cut turf: tidy medium-length vivid natural green first-cut golf grass, small soft tufts and low-contrast painted turf groups, modestly longer than a fairway and shorter than rough, no big plants.\nART DIRECTION: hand-painted stylized Blizzard Entertainment environment art (World of Warcraft / Hearthstone). Broad confident painted groups, soft value gradients, rich controlled organic detail, no photographic noise. It must belong beside this existing game's brick/slate buildings and autumn trees. At THIS far camera height, keep material details at believable world scale; individual small blades/needles/flowers/ripples merge into appropriate painted groups, never huge plant shapes. Keep the named material's colour identity consistent with its other zoom views.\nLIGHT IS FROM THE UPPER RIGHT TO THE LOWER LEFT. Every surface relief has upper-right highlights and soft lower-left shade. One fixed sun direction; match the scene's exposure, no new spotlight, vignette, dark border or global brightness gradient. Preserve existing scene shadows and everything outside the target ground as much as possible.\n\nDo not change the camera height, paint over roads/buildings/UI, invent large props/trees, put lettering in the material, output a separate texture card, or tile a small motif repeatedly. Output ONE far game screenshot with only its ground material changed."
+    },
+    {
+      "material": "first-cut",
+      "name": "First cut turf",
+      "height": "mid",
+      "source": "art/theme-consistency/material-screenshot-pipeline/references/owner-mid.png",
+      "sourceDescription": "MEDIUM screenshot: the road grid and whole town neighbourhood fill most of the view, Depot Town near centre",
+      "output": "art/theme-consistency/material-screenshot-pipeline/generated/first-cut/mid-town-study-v1.raw.png",
+      "provenance": "art/theme-consistency/material-screenshot-pipeline/generated/first-cut/mid-town-study-v1.provenance.json",
+      "references": [
+        {
+          "role": "EDIT TARGET: exact owner mid original screenshot; this alone determines output camera/scene",
+          "file": "art/theme-consistency/material-screenshot-pipeline/references/owner-mid.png"
+        }
+      ],
+      "prompt": "Use case: precise-object-edit.\nEDIT IMAGE1, the owner's EXACT MID GAME SCREENSHOT. MEDIUM screenshot: the road grid and whole town neighbourhood fill most of the view, Depot Town near centre. Return this same view as ONE full edited screenshot, same camera, scene composition, framing and aspect. Preserve the UI, text, buildings, roads, fences, paths, parked vehicles, planted trees and all object positions. No new scene and no collage.\nCHANGE ONLY: the existing visible open, undeveloped grassy plots and open grassy countryside, including grass between existing buildings where it is open ground; retain every road, building, fence, path, planted tree and existing non-grass object.\nMATERIAL CONCEPT — First cut turf: tidy medium-length vivid natural green first-cut golf grass, small soft tufts and low-contrast painted turf groups, modestly longer than a fairway and shorter than rough, no big plants.\nART DIRECTION: hand-painted stylized Blizzard Entertainment environment art (World of Warcraft / Hearthstone). Broad confident painted groups, soft value gradients, rich controlled organic detail, no photographic noise. It must belong beside this existing game's brick/slate buildings and autumn trees. At THIS mid camera height, keep material details at believable world scale; individual small blades/needles/flowers/ripples merge into appropriate painted groups, never huge plant shapes. Keep the named material's colour identity consistent with its other zoom views.\nLIGHT IS FROM THE UPPER RIGHT TO THE LOWER LEFT. Every surface relief has upper-right highlights and soft lower-left shade. One fixed sun direction; match the scene's exposure, no new spotlight, vignette, dark border or global brightness gradient. Preserve existing scene shadows and everything outside the target ground as much as possible.\n\nDo not change the camera height, paint over roads/buildings/UI, invent large props/trees, put lettering in the material, output a separate texture card, or tile a small motif repeatedly. Output ONE mid game screenshot with only its ground material changed."
+    },
+    {
+      "material": "first-cut",
+      "name": "First cut turf",
+      "height": "near",
+      "source": "art/theme-consistency/material-screenshot-pipeline/references/owner-near.png",
+      "sourceDescription": "CLOSE screenshot: large houses and fenced vacant plots, gas station left of centre/bottom and popcorn shop near lower centre",
+      "output": "art/theme-consistency/material-screenshot-pipeline/generated/first-cut/near-town-study-v1.raw.png",
+      "provenance": "art/theme-consistency/material-screenshot-pipeline/generated/first-cut/near-town-study-v1.provenance.json",
+      "references": [
+        {
+          "role": "EDIT TARGET: exact owner near original screenshot; this alone determines output camera/scene",
+          "file": "art/theme-consistency/material-screenshot-pipeline/references/owner-near.png"
+        }
+      ],
+      "prompt": "Use case: precise-object-edit.\nEDIT IMAGE1, the owner's EXACT NEAR GAME SCREENSHOT. CLOSE screenshot: large houses and fenced vacant plots, gas station left of centre/bottom and popcorn shop near lower centre. Return this same view as ONE full edited screenshot, same camera, scene composition, framing and aspect. Preserve the UI, text, buildings, roads, fences, paths, parked vehicles, planted trees and all object positions. No new scene and no collage.\nCHANGE ONLY: the existing visible open, undeveloped grassy plots and open grassy countryside, including grass between existing buildings where it is open ground; retain every road, building, fence, path, planted tree and existing non-grass object.\nMATERIAL CONCEPT — First cut turf: tidy medium-length vivid natural green first-cut golf grass, small soft tufts and low-contrast painted turf groups, modestly longer than a fairway and shorter than rough, no big plants.\nART DIRECTION: hand-painted stylized Blizzard Entertainment environment art (World of Warcraft / Hearthstone). Broad confident painted groups, soft value gradients, rich controlled organic detail, no photographic noise. It must belong beside this existing game's brick/slate buildings and autumn trees. At THIS near camera height, keep material details at believable world scale; small turf/needle/ripple detail may read clearly near the building footprints. Keep the named material's colour identity consistent with its other zoom views.\nLIGHT IS FROM THE UPPER RIGHT TO THE LOWER LEFT. Every surface relief has upper-right highlights and soft lower-left shade. One fixed sun direction; match the scene's exposure, no new spotlight, vignette, dark border or global brightness gradient. Preserve existing scene shadows and everything outside the target ground as much as possible.\n\nDo not change the camera height, paint over roads/buildings/UI, invent large props/trees, put lettering in the material, output a separate texture card, or tile a small motif repeatedly. Output ONE near game screenshot with only its ground material changed."
+    }
+  ]
+}

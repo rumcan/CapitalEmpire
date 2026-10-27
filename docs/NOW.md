@@ -25,6 +25,14 @@ parallel, and push fixes as follow-up PRs (AGENT-BRIEF sections 1 and 5).
 merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of every change.
 
 ### In flight
+**Accepted terrain source delivery (#383, `lead/terrain-ready-20261026`):** the four accepted families' canonical selections, native PNGs,
+provenance and review proofs are being committed from the art checkout. T170 already packed these exact accepted long-grass hashes;
+this delivery preserves those packed bytes and the owner's `rough-owner` mapping. Also guard asset preparation against explicitly held
+appearance reviews and make the green fallback follow a future canonical selection. Verified 440 source files, 717 path/hash bindings and
+all 48 primary native/packed sizes, with zero missing references or mismatches. Typecheck and the three focused prep fixtures pass.
+Next: review and merge the source delivery PR. No full suite/build, new browser session or owner server changes were needed; runtime pixels
+are unchanged. Green/fringe remain separate pending handoffs.
+
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |
 | T204 | #534 | `arena/T204-rugged-edges` (fresh from main 17be1f2) | `.claude/worktrees/t160` | 5186 | **Agent 1 (started 15:30).** The owner's rugged grass edges: outlines drawn with rounded corners and a world-space wobble (gameplay cells unchanged), tall grass (fescue, long grass, rough) spilling over shorter grass and dirt in a tufted fringe with a cool shade under it, hard surfaces keep their line; bake +1 ms a chunk at most. Sub-steps: painted areas, course layers, the spill, **(d) the living ground's lush and patchy grass meets the fescue with the same rugged edge, not a fade, and fewer open-ground blotches** (the owner, 18:55: "world fescue poorly tries to blend with another green grass ... the fade isnt good"). To resume: the issue's last comment. |

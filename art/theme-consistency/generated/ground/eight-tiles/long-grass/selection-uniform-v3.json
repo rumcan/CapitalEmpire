@@ -1,0 +1,726 @@
+{
+  "schema": 1,
+  "id": "painted:long-grass",
+  "materialId": "painted:long-grass",
+  "material": "long-grass",
+  "date": "2026-10-26",
+  "versionedSelection": "art/theme-consistency/generated/ground/eight-tiles/long-grass/selection-uniform-v3.json",
+  "canonicalSelection": "art/theme-consistency/generated/ground/eight-tiles/long-grass/canonicalselection.json",
+  "status": "three-authored-sets-independent-art-appearance-passed",
+  "acceptanceScope": "Hash-bound saved-art visual review only; not owner signoff or live game/studio integration",
+  "light": "UPPER RIGHT toward LOWER LEFT, local tuft shading only, even whole-field ambient exposure",
+  "displayContract": {
+    "minVisibleTiles": 2,
+    "maxVisibleTiles": 4,
+    "switchBeforeExceeding": 4,
+    "primaryVariantsPerSet": 4,
+    "allowFlip": false,
+    "allowMirror": false,
+    "allowRotate": false
+  },
+  "detailRelationship": "Three independently authored camera-detail sets; not mips, resized copies or matching geography",
+  "materialLayer": {
+    "separate": true,
+    "runtimeBlending": false,
+    "runtimeRandomisation": false
+  },
+  "runtimeIntegrated": false,
+  "runtimeMappingAuthority": "Do not replace the separately owner-selected rough from art/owner-supplied/rough-20261026 or its T162 mapping without explicit owner direction. This selection publishes generated art only.",
+  "sets": {
+    "near": {
+      "folder": "art/theme-consistency/generated/ground/eight-tiles/long-grass/near-v3",
+      "nativePixels": [
+        1742,
+        902
+      ],
+      "revision": "near-v3",
+      "status": "accepted-for-art-appearance",
+      "primaryTileIds": [
+        "tile-01",
+        "tile-02",
+        "tile-03",
+        "tile-04"
+      ],
+      "primaryTiles": [
+        {
+          "id": "tile-01",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/near-v3/tile-01.png",
+          "sha256": "35202b98009f4217abdaf7aa1c8cb5890d0a0ab3e4e8e296d34dea8878d73fb0",
+          "bytes": 4914453,
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1742,
+            "height": 902
+          },
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/near-v3/tile-01-v3.raw.png",
+            "sha256": "d4063847d0c60c6f2a0f0f030d791e50afe4936109dd60a3311dd3036a8a05d1",
+            "bytes": 4915661,
+            "nativePixels": [
+              1742,
+              902
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/near-v3/tile-01-v3.provenance.json",
+              "sha256": "34462c02faf5cfe5709b7989621c93c77872ea76016e407caf6221fccce3a95b",
+              "bytes": 782
+            },
+            "reuse": "Byte-for-byte reuse of near-v2/tile-01.png as tone authority. No image generation, decode/re-encode, repaint, recolour or resize.",
+            "source": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/near-v2/tile-01.png",
+              "sha256": "d4063847d0c60c6f2a0f0f030d791e50afe4936109dd60a3311dd3036a8a05d1",
+              "nativePixels": [
+                1742,
+                902
+              ]
+            }
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/long-grass/near-v3/tile-01.cut-paths.json"
+        },
+        {
+          "id": "tile-02",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/near-v3/tile-02.png",
+          "sha256": "7162d2c580bc4e4a3560341a34398dc71c7cb6f36da04a064dc045f57fdd5f33",
+          "bytes": 4888263,
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1742,
+            "height": 902
+          },
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/near-v3/tile-02-v3.raw.png",
+            "sha256": "d3137b3484deab6e86ff97a44840b0e6dcb6f10019571b09f1a75ed783db739e",
+            "bytes": 3700186,
+            "nativePixels": [
+              1743,
+              902
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/near-v3/tile-02-v3.provenance.json",
+              "sha256": "d2823db9de15fcedbc0ca6606acef92c33f7b6add38c2198802ec672088bec57",
+              "bytes": 2403
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/near-v3/tile-02-v3.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/long-grass/near-v3/tile-02.cut-paths.json"
+        },
+        {
+          "id": "tile-03",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/near-v3/tile-03.png",
+          "sha256": "67289e5f8202e24faa49003f62abd4b82d5b0c66d6ebd3b79b27aa2b77ed9766",
+          "bytes": 4875933,
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1742,
+            "height": 902
+          },
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/near-v3/tile-03-v3.raw.png",
+            "sha256": "0b9ba728947b3a72ce102623ec94ba564d1551d1aee4745bd11dab92f79fba65",
+            "bytes": 3654513,
+            "nativePixels": [
+              1742,
+              903
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/near-v3/tile-03-v3.provenance.json",
+              "sha256": "a2c12d382f38327c867310fd85cfe32218fd460ad51da381a45ebb7313d7dfc9",
+              "bytes": 2403
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/near-v3/tile-03-v3.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/long-grass/near-v3/tile-03.cut-paths.json"
+        },
+        {
+          "id": "tile-04",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/near-v3/tile-04.png",
+          "sha256": "860a43b5d2961ede89df2669d5d4e69f38ba2a08628582859544cc183fc8681c",
+          "bytes": 4890091,
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1742,
+            "height": 902
+          },
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/near-v3/tile-04-v3.raw.png",
+            "sha256": "29f60edec0c0431a35f8116246ae04b190fc80e5ba8e710df6d59712ad163401",
+            "bytes": 3698332,
+            "nativePixels": [
+              1742,
+              903
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/near-v3/tile-04-v3.provenance.json",
+              "sha256": "a746bd43e3317d58782617b62c63eeee65a485dd3725aa38f4ece4fd20423de4",
+              "bytes": 2403
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/near-v3/tile-04-v3.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/long-grass/near-v3/tile-04.cut-paths.json"
+        }
+      ],
+      "visualDecision": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/near-v3/review/appearance-decision.json",
+        "sha256": "1fb4daad9743c77a45ca0a9337779ec715149a43f82087a147a3cebc87283363",
+        "bytes": 5189
+      },
+      "sourceManifest": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/near-v3/manifest-v3.json",
+        "sha256": "f50d6a3916ec9edb3f7fe9d5d35ac9bfa766e0dd2b88c4a953ca99026804f386",
+        "bytes": 3256
+      },
+      "exportReport": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/near-v3/export-report.json",
+        "sha256": "59cbc083402c70ef1b1f220177c1f423862c5cd6db50cbd3555298a90a36ce7f",
+        "bytes": 11086
+      },
+      "proofs": [
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/near-v3/review/four-tiles-shuffled-screen.png",
+          "sha256": "b03f5d6a2d3209c92434b3ca45c6585a17dffd64582cbeb13b6579e0d8b79f4f",
+          "bytes": 4137489,
+          "nativePixels": [
+            1742,
+            902
+          ]
+        },
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/near-v3/review/four-tiles-shuffled-native.png",
+          "sha256": "1ea68e2233792261cee21e10e646eed626a4af707a378423e8ee70e0d2fc6906",
+          "bytes": 16436235,
+          "nativePixels": [
+            3484,
+            1804
+          ]
+        },
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/near-v3/review/two-tiles-horizontal-native.png",
+          "sha256": "0147a508b2bdf084c94102852e1eacf1824715094039b983272873f9f2ef755c",
+          "bytes": 8198735,
+          "nativePixels": [
+            3484,
+            902
+          ]
+        },
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/near-v3/review/two-tiles-vertical-native.png",
+          "sha256": "69c22bbcd674086f68ecafdd73904b78876c172b37c68c351e019efd28991bcf",
+          "bytes": 9777980,
+          "nativePixels": [
+            1742,
+            1804
+          ]
+        }
+      ],
+      "sharedRepairs": {
+        "northSouth": {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/near-v3/full-north-south-repair-v3.raw.png",
+          "sha256": "e5bbf5eb524b68621b9134fb9faf058121f4ef71768d263b20f88ae5cf90e10b",
+          "bytes": 3633384,
+          "nativePixels": [
+            1743,
+            902
+          ]
+        },
+        "westEast": {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/near-v3/full-west-east-repair-v3.raw.png",
+          "sha256": "eb6f4eb7a9382170072510f6403d5e50a1b4758a201012272c3fb770d76624a7",
+          "bytes": 3669994,
+          "nativePixels": [
+            1743,
+            902
+          ]
+        }
+      }
+    },
+    "mid": {
+      "folder": "art/theme-consistency/generated/ground/eight-tiles/long-grass/mid-v2",
+      "nativePixels": [
+        1742,
+        900
+      ],
+      "revision": "mid-v2",
+      "status": "accepted-for-art-appearance",
+      "primaryTileIds": [
+        "tile-01",
+        "tile-02",
+        "tile-03",
+        "tile-04"
+      ],
+      "primaryTiles": [
+        {
+          "id": "tile-01",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/mid-v2/tile-01.png",
+          "sha256": "f88f5202445083bae004d837ae1ae2fbf7057bda9c4035755b5702f49e9ff658",
+          "bytes": 4613016,
+          "nativePixels": [
+            1742,
+            900
+          ],
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1742,
+            "height": 900
+          },
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/mid-v2/tile-01-v2.raw.png",
+            "sha256": "45e10ab4da4dff9a1c090dfbe5cef9fcdad4201feab7c7fd02e2271d42c2a2af",
+            "bytes": 3260333,
+            "nativePixels": [
+              1744,
+              902
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/mid-v2/tile-01-v2.provenance.json",
+              "sha256": "23a9e2e2d0c1e399cd405fa8742ae7b5dcf15f092d5abd178f9bb5f05c6aab5d",
+              "bytes": 3017
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/mid-v2/tile-01-v2.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/long-grass/mid-v2/tile-01.cut-paths.json"
+        },
+        {
+          "id": "tile-02",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/mid-v2/tile-02.png",
+          "sha256": "ca11444c5c69ec552da990845484c8453f32cc4dab57a54f33b61abb919daa90",
+          "bytes": 4631216,
+          "nativePixels": [
+            1742,
+            900
+          ],
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1742,
+            "height": 900
+          },
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/mid-v2/tile-02-v2.raw.png",
+            "sha256": "2689c751a19cf785123a9cb915f20f536315219ac922f8b13d9d0825b4b12325",
+            "bytes": 3301192,
+            "nativePixels": [
+              1744,
+              901
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/mid-v2/tile-02-v2.provenance.json",
+              "sha256": "0965ba82073da0f7712ffeacc946d456beb23222193c5aa56675d770fe6fad78",
+              "bytes": 3017
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/mid-v2/tile-02-v2.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/long-grass/mid-v2/tile-02.cut-paths.json"
+        },
+        {
+          "id": "tile-03",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/mid-v2/tile-03.png",
+          "sha256": "f5b86918df01b26d0e668ad049867131b5f8207d6c21f1482e5754180555af64",
+          "bytes": 4626424,
+          "nativePixels": [
+            1742,
+            900
+          ],
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1742,
+            "height": 900
+          },
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/mid-v2/tile-03-v2.raw.png",
+            "sha256": "44b3a4600ff4f1668d7348eb39b2dda5e2f34a6a8c7a1b0d769c8e46865f71ea",
+            "bytes": 3383427,
+            "nativePixels": [
+              1743,
+              902
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/mid-v2/tile-03-v2.provenance.json",
+              "sha256": "c54eeaf11a49fbff29e9100dc8f55a895523b7b75c0fbb1617c5be6d7fe85b6e",
+              "bytes": 3017
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/mid-v2/tile-03-v2.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/long-grass/mid-v2/tile-03.cut-paths.json"
+        },
+        {
+          "id": "tile-04",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/mid-v2/tile-04.png",
+          "sha256": "06a07023840e3d9d4c0c29d189ec5afdb9be4f9a8a9663c5827b63c023a8be24",
+          "bytes": 4691926,
+          "nativePixels": [
+            1742,
+            900
+          ],
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1742,
+            "height": 900
+          },
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/mid-v2/tile-04-v2.raw.png",
+            "sha256": "0abf02bf337ac3dc844badb00c77afb261395857e31e1d5733d993e425fc3cd5",
+            "bytes": 3457753,
+            "nativePixels": [
+              1744,
+              901
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/mid-v2/tile-04-v2.provenance.json",
+              "sha256": "f44fd92a1cfef649dd81ba883e5ee86e67a4f667bd7f21cab1a315abcee8dda0",
+              "bytes": 3017
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/mid-v2/tile-04-v2.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/long-grass/mid-v2/tile-04.cut-paths.json"
+        }
+      ],
+      "visualDecision": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/mid-v2/review/appearance-decision.json",
+        "sha256": "85bb9edcd4f5dbfbd6d5e8593c316be5a3e81dacce1480012668ba3a00403eeb",
+        "bytes": 5069
+      },
+      "sourceManifest": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/mid-v2/manifest-v2.json",
+        "sha256": "a9f637446bb15dfe680deb8837dc045fe42518010559e711fa2b5c7b6bb5b4fb",
+        "bytes": 2863
+      },
+      "exportReport": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/mid-v2/export-report.json",
+        "sha256": "d6e97cd338410c8dcd218f3474a624fdf97c0ac5697d31cc212bbb590a8ff277",
+        "bytes": 11035
+      },
+      "proofs": [
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/mid-v2/review/four-tiles-shuffled-screen.png",
+          "sha256": "7da528ada571c8d5989c5e2861329f6ca16177bc18ea5ee554e2dcb6591e30ff",
+          "bytes": 3958898,
+          "nativePixels": [
+            1742,
+            900
+          ]
+        },
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/mid-v2/review/four-tiles-shuffled-native.png",
+          "sha256": "35c6537b8b2510e719af0b60b31a4cce77f30bdf10f3008304634ae221d56820",
+          "bytes": 15751106,
+          "nativePixels": [
+            3484,
+            1800
+          ]
+        },
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/mid-v2/review/two-tiles-horizontal-native.png",
+          "sha256": "eff391c3cc499f89841bbe945767b0c4e7bed132cabb0168b04ab03c78513e33",
+          "bytes": 7897415,
+          "nativePixels": [
+            3484,
+            900
+          ]
+        },
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/mid-v2/review/two-tiles-vertical-native.png",
+          "sha256": "c3675ba6ae82a83af662c062f6193ff7410cb9ef919acccfd08cedff273b849b",
+          "bytes": 9256917,
+          "nativePixels": [
+            1742,
+            1800
+          ]
+        }
+      ],
+      "sharedRepairs": {
+        "northSouth": {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/mid-v2/full-north-south-repair-v2.raw.png",
+          "sha256": "6d1e737583d966d855bd7b7bfe67b8c28b256ba1a155226588ad5e25e41d349e",
+          "bytes": 3093279,
+          "nativePixels": [
+            1744,
+            901
+          ]
+        },
+        "westEast": {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/mid-v2/full-west-east-repair-v2.raw.png",
+          "sha256": "74983ecc1b75b80a08db4062e8e337a1574664376bcf30086c4794580032ae03",
+          "bytes": 3139699,
+          "nativePixels": [
+            1745,
+            901
+          ]
+        }
+      }
+    },
+    "far": {
+      "folder": "art/theme-consistency/generated/ground/eight-tiles/long-grass/far-v2",
+      "nativePixels": [
+        1742,
+        902
+      ],
+      "revision": "far-v2",
+      "status": "accepted-for-art-appearance",
+      "primaryTileIds": [
+        "tile-01",
+        "tile-02",
+        "tile-03",
+        "tile-04"
+      ],
+      "primaryTiles": [
+        {
+          "id": "tile-01",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/far-v2/tile-01.png",
+          "sha256": "96fbedfce011c2f11aa1f92e69dcfd6825116ae1b931b831c50f18f89b8d495b",
+          "bytes": 4573610,
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1742,
+            "height": 902
+          },
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/far-v2/tile-01-v2.raw.png",
+            "sha256": "62b7f9e86229d6b5a0dc5a83b1588a1dca78a86c82106ad35f26b91550ed2cfe",
+            "bytes": 3135805,
+            "nativePixels": [
+              1742,
+              903
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/far-v2/tile-01-v2.provenance.json",
+              "sha256": "de18f4dc83196fba11c25b2e4882df9346529089452841df66b3f2b609a6b6b5",
+              "bytes": 3017
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/far-v2/tile-01-v2.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/long-grass/far-v2/tile-01.cut-paths.json"
+        },
+        {
+          "id": "tile-02",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/far-v2/tile-02.png",
+          "sha256": "33eb1ab996487c4e1683585e4d725c1a6bd0d58d1106c3b9c8d8c88566ee463f",
+          "bytes": 4555370,
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1742,
+            "height": 902
+          },
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/far-v2/tile-02-v2.raw.png",
+            "sha256": "f16f27ca556844878e5b22a529ee6cbc1e95de07214f81afada311d9c29cafc9",
+            "bytes": 3294846,
+            "nativePixels": [
+              1742,
+              903
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/far-v2/tile-02-v2.provenance.json",
+              "sha256": "762def57ad0036e2eb64e73711387bee6e1834060011bf9984cf59b199156d2c",
+              "bytes": 3017
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/far-v2/tile-02-v2.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/long-grass/far-v2/tile-02.cut-paths.json"
+        },
+        {
+          "id": "tile-03",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/far-v2/tile-03.png",
+          "sha256": "4b1539b2e1689a5e2665d24ceebb032b6a857d9f169bab655a03898119ed459c",
+          "bytes": 4604462,
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1742,
+            "height": 902
+          },
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/far-v2/tile-03-v2.raw.png",
+            "sha256": "35e278bfa1abbb16f12d0329d1feb2cb68c8a6a4c99201ac1353e5d2b58b3d2a",
+            "bytes": 3255551,
+            "nativePixels": [
+              1742,
+              903
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/far-v2/tile-03-v2.provenance.json",
+              "sha256": "34a1c1632bf013efccb9f56216ae1a302aa3b88ebbe87c1b6a21c2bd5b88bba9",
+              "bytes": 3017
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/far-v2/tile-03-v2.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/long-grass/far-v2/tile-03.cut-paths.json"
+        },
+        {
+          "id": "tile-04",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/far-v2/tile-04.png",
+          "sha256": "bbf03f4ccdbe9c2bee178ae9f113945ac75cac552ed4834422d07d3dc6b6c3fc",
+          "bytes": 4633239,
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1742,
+            "height": 902
+          },
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/far-v2/tile-04-v2.raw.png",
+            "sha256": "b8daee3f5bdd41a7cf04e116988c25c6ad53fbc99ebaed80c08955daa2d54eb9",
+            "bytes": 3429310,
+            "nativePixels": [
+              1742,
+              903
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/far-v2/tile-04-v2.provenance.json",
+              "sha256": "3ceafc131b0be64f40fb5200f89d50b2d53a2e49918ed01b2f7b9549c3334c93",
+              "bytes": 3017
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/far-v2/tile-04-v2.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/long-grass/far-v2/tile-04.cut-paths.json"
+        }
+      ],
+      "visualDecision": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/far-v2/review/appearance-decision.json",
+        "sha256": "74203abe3ced94b30abe152c0f56c60b496452f8eca7c7fd10a65f8f9f53bf97",
+        "bytes": 5069
+      },
+      "sourceManifest": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/far-v2/manifest-v2.json",
+        "sha256": "02edd0cf50d6fe217833ad833d4a8b5bc75faa841126539a628b981a74115d78",
+        "bytes": 2863
+      },
+      "exportReport": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/far-v2/export-report.json",
+        "sha256": "ec0657c073addff04cd3102db61db08efc2b921e0bccd376fa9a22b631d071ca",
+        "bytes": 11019
+      },
+      "proofs": [
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/far-v2/review/four-tiles-shuffled-screen.png",
+          "sha256": "901b401af0b51c660ac3b8f99199cce72f26e5af176c011110667b71b045f8e4",
+          "bytes": 3893049,
+          "nativePixels": [
+            1742,
+            902
+          ]
+        },
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/far-v2/review/four-tiles-shuffled-native.png",
+          "sha256": "d26f41481d96f33235ea6573a05077e302f9c3e842b53c5b890f762be9322786",
+          "bytes": 15471030,
+          "nativePixels": [
+            3484,
+            1804
+          ]
+        },
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/far-v2/review/two-tiles-horizontal-native.png",
+          "sha256": "d7aaecd98f6f09415979c2f52cce3eaf725d7a0d2f592f4392e5bad3117af718",
+          "bytes": 7808696,
+          "nativePixels": [
+            3484,
+            902
+          ]
+        },
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/far-v2/review/two-tiles-vertical-native.png",
+          "sha256": "b71d6f194f9f3258c1a6e6ca0ec8b3aad8183dc32ec5542f7e19ed343e704552",
+          "bytes": 9159104,
+          "nativePixels": [
+            1742,
+            1804
+          ]
+        }
+      ],
+      "sharedRepairs": {
+        "northSouth": {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/far-v2/full-north-south-repair-v2.raw.png",
+          "sha256": "00ef822cb1ad7605a4477fc27e86d6a937ef4d23f545e1ce652d442c92a39623",
+          "bytes": 3114193,
+          "nativePixels": [
+            1743,
+            902
+          ]
+        },
+        "westEast": {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/far-v2/full-west-east-repair-v2.raw.png",
+          "sha256": "6e1a6887ff508d3f1e91b38113f34ad707163ceaf07e0712375f072477724311",
+          "bytes": 3098649,
+          "nativePixels": [
+            1743,
+            902
+          ]
+        }
+      }
+    }
+  }
+}

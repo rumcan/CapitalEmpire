@@ -1,0 +1,99 @@
+{
+  "schema": 1,
+  "material": "golden-fescue",
+  "zoom": "far",
+  "master": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/far-v2/tile-01-v2.raw.png",
+  "outputFolder": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/far-v4",
+  "collarPixels": 64,
+  "patchSpanPixels": 256,
+  "repairRaws": {
+    "northSouth": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/far-v3/full-north-south-repair-v3.raw.png",
+    "westEast": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/far-v4/full-west-east-repair-v4.raw.png"
+  },
+  "repairCrops": {
+    "northSouth": {
+      "left": 743,
+      "top": 387,
+      "width": 256,
+      "height": 128
+    },
+    "westEast": {
+      "left": 807,
+      "top": 323,
+      "width": 128,
+      "height": 256
+    }
+  },
+  "repairFullFrameCrops": {
+    "northSouth": {
+      "left": 0,
+      "top": 0,
+      "width": 1742,
+      "height": 902
+    },
+    "westEast": {
+      "left": 0,
+      "top": 0,
+      "width": 1742,
+      "height": 902
+    }
+  },
+  "variants": [
+    {
+      "id": "tile-01",
+      "raw": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/far-v2/tile-01-v2.raw.png",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 1742,
+        "height": 902
+      }
+    },
+    {
+      "id": "tile-02",
+      "raw": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/far-v2/tile-02-v2.raw.png",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 1742,
+        "height": 902
+      }
+    },
+    {
+      "id": "tile-03",
+      "raw": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/far-v3/tile-03-v1.raw.png",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 1742,
+        "height": 902
+      }
+    },
+    {
+      "id": "tile-04",
+      "raw": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/far-v3/tile-04-v1.raw.png",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 1742,
+        "height": 902
+      }
+    }
+  ],
+  "lighting": "UPPER RIGHT → LOWER LEFT",
+  "allowRotate": false,
+  "allowMirror": false,
+  "minVisibleTiles": 2,
+  "maxVisibleTiles": 4,
+  "ownerAcceptedMaster": false,
+  "appearanceSourceCamera": "far owner town screenshot, independently extracted full-scene field, no shared layouts or resampling between levels",
+  "compositeMethod": "minimum-error-cut",
+  "cutOverlapPixels": 128,
+  "repairCutMarginPixels": 64,
+  "repairContext": "full-frame-bands",
+  "status": "shared-collar-west-east-repair-only-awaiting-AI",
+  "masterSelection": "Corrected FAR01 after full-frame magenta-guided removal of the native y451 join; retain old FAR v1 held sources and stale v2 context unchanged.",
+  "sourceInteriorsReview": "Parent independent native QA: all four FAR v3 interiors are good; shared collar alone is held.",
+  "sharedContextHold": "FAR v3 paired collar contains a horizontal offset in west/east repair context near source y442–443. Replace only this shared repair; preserve all four interiors and north/south repair.",
+  "visualAccepted": false
+}
