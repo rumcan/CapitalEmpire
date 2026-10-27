@@ -43,7 +43,9 @@ function anchorsInSource(): Set<string> {
   walk('src');
   const app = readFileSync('src/App.tsx', 'utf8'), rail = readFileSync('src/ui/Rail.tsx', 'utf8'), card = readFileSync('src/ui/golf/SeasonCard.tsx', 'utf8');
   assert.match(rail, /data-guide=\{`rail-\$\{r\.id\}`\}/); for (const r of RAIL) out.add(`rail-${r.id}`);
-  assert.match(app, /data-guide=\{`tool-\$\{t\.view\?\.group \?\? t\.id\}`\}/); for (const r of RAIL) for (const t of r.tools) out.add(`tool-${t.view?.group ?? t.id}`);
+  // T193: the group's tools are the flyouts' leaves now (Flyouts.tsx: tool-<id>, the Props tool's group for its Buildings)
+  const fly = readFileSync('src/ui/Flyouts.tsx', 'utf8');
+  assert.match(fly, /data-guide=\{r\.leaf \? `tool-\$\{r\.leaf\.entry\.view\?\.group \?\? r\.leaf\.entry\.id\}` : undefined\}/); for (const r of RAIL) for (const t of r.tools) out.add(`tool-${t.view?.group ?? t.id}`);
   assert.match(app, /guide="month"/); out.add('month');
   assert.match(card, /data-guide=\{`fix-\$\{it\.id\}`\}/); for (const k of Object.keys(FIX)) out.add(`fix-${k}`);
   return out;

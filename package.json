@@ -15,6 +15,7 @@
     "lots:check": "node scripts/assets/freeze-lot-presets.mjs --check",
     "lots:exam": "node scripts/lots/exam.mjs",
     "typecheck": "tsc --noEmit -p .",
+    "ui:overflow": "node scripts/dev/ui-overflow.mjs",
     "bench": "node scripts/perf/bench.mjs",
     "worker:test": "bash scripts/worker/run.sh \"npm test\"",
     "worker:bench": "bash scripts/worker/run.sh \"npm run build && node scripts/perf/bench.mjs --serve --channel chrome --size 1\"",
