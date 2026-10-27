@@ -2510,8 +2510,10 @@ export class GroundPainter {
    *  and contrast kept, its gaps still darkest), for a broad light that must not turn the grass more saturated */
   private shine(ctx: C2D, box: [number, number, number, number] | null, tint: string, k: number, mask: (g: C2D) => void, squared = true) {
     if (!box) return;
-    const [x, y, w, h] = box, A = this.buffer('shine', ctx.canvas.width, ctx.canvas.height), a = ctx2d(A);
-    a.save(); a.setTransform(1, 0, 0, 1, 0, 0);
+    // T227: the buffer's pixels kept and its work clipped to the box (a 'copy' or 'destination-in' otherwise clears the whole chunk-sized
+    // canvas, each shine): only the box is ever read back, so the light is the same, for a box's cost instead of a chunk's
+    const [x, y, w, h] = box, A = this.bufferKeep('shine', ctx.canvas.width, ctx.canvas.height), a = ctx2d(A);
+    a.save(); a.setTransform(1, 0, 0, 1, 0, 0); a.beginPath(); a.rect(x, y, w, h); a.clip();
     a.globalCompositeOperation = 'copy'; a.drawImage(ctx.canvas as CanvasImageSource, x, y, w, h, x, y, w, h);
     a.globalCompositeOperation = 'multiply'; if (squared) a.drawImage(A as CanvasImageSource, x, y, w, h, x, y, w, h); a.fillStyle = tint; a.fillRect(x, y, w, h);
     a.globalCompositeOperation = 'destination-in'; mask(a);
@@ -2848,7 +2850,7 @@ export class GroundPainter {
   }
   /** T227: a light band along rims (by weight step: weight i / (n - 1)) laid as a shine textured by what is under it (the owner's light rule,
    *  T110: inset from the edge by a gap, ramped in, strongest just past it and fading out over w), clipped to `clip` (even-odd), strength k */
-  private rimShine(ctx: C2D, rims: readonly (Path2D | null)[], clip: Path2D, box: number[], gap: number, w: number, k: number, L: number, M: DOMMatrix) {
+  private rimShine(ctx: C2D, rims: readonly (Path2D | null)[], clip: Path2D, box: number[], gap: number, w: number, k: number, L: number, M: DOMMatrix, squared = true) {
     const R = gap + w + 0.1, cb = this.cacheBox(M, box[0]! - R, box[1]! - R, box[2]! + R, box[3]! + R, ctx); if (!cb) return;
     const px = 1 / (TILE_PX * L), n = rims.length, B = this.bufferKeep('lipMask', ctx.canvas.width, ctx.canvas.height), g = ctx2d(B);
     g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(cb[0], cb[1], cb[2], cb[3]); g.setTransform(M); g.clip(clip, 'evenodd');
@@ -2857,7 +2859,7 @@ export class GroundPainter {
     g.globalCompositeOperation = 'destination-out';
     for (const [hw, a] of [[gap + 0.06, 0.5], [gap, 1]] as const) { g.strokeStyle = `rgba(0,0,0,${a})`; g.lineWidth = Math.max(px, 2 * hw); for (const p of rims) if (p) g.stroke(p); }
     g.restore();
-    this.shine(ctx, cb, SHINE_TINT, k, a => { a.setTransform(1, 0, 0, 1, 0, 0); a.drawImage(B, cb[0], cb[1], cb[2], cb[3], cb[0], cb[1], cb[2], cb[3]); });
+    this.shine(ctx, cb, SHINE_TINT, k, a => { a.setTransform(1, 0, 0, 1, 0, 0); a.drawImage(B, cb[0], cb[1], cb[2], cb[3], cb[0], cb[1], cb[2], cb[3]); }, squared);
   }
   /** T227: a cool shade along rims (by weight step), falling from a at the rim to none `reach` away (paint-edges jointRamp: smooth, no hard
    *  line), multiplied so the texture under it stays (T110), clipped to `clip` (even-odd); onto the shade mask too (shadow: it is a shade); off: the
@@ -2890,7 +2892,8 @@ export class GroundPainter {
     const rims = this.lipRims(with_); if (!rims) return;
     const band = new Path2D(); let bw = 0;
     for (const l of with_) { for (const q of l.collar!.fill) ringPath(band, q); bw = Math.max(bw, l.collar!.w ?? 0.5); }
-    this.rimShine(ctx, rims.far, band, rims.box, LIP.grassGap, Math.max(0.1, bw - LIP.grassGap), LIP.grass * k, L, M);
+    // the grass is dark (the first cut, toned): a lift in proportion to it, not squared, so the lit lip reads without turning it more saturated
+    this.rimShine(ctx, rims.far, band, rims.box, LIP.grassGap, Math.max(0.1, bw - LIP.grassGap), LIP.grass * k, L, M, false);
     this.rimShade(ctx, rims.near, band, bw, LIP.shade * k, false, M);
   }
   /** T227: the course finish the surfaces file carries (course-finish.ts; Studio > Painted > Course finish) */

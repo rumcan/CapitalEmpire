@@ -52,8 +52,9 @@ export function finishOf(file: { course?: unknown } | null | undefined): CourseF
 // ---------- the mowing bands ----------
 /** the bands' light (a lift in proportion to the grass's own colour times BAND_TINT, renderer.ts mowBands) and dark (a multiply of the dark
  *  colour) at full strength, and their soft edge (0 hard .. 1 a smooth wave; the concept's bands meet at a crisp mowing line). The concept's
- *  bands differ by about 20% in lightness; ours a little more at the default strength, as our grass painting is busier */
-export const BAND_LIGHT = 0.24, BAND_DARK = 0.26, BAND_SOFT = 0.14;
+ *  bands differ by about 20% in lightness; ours a little less at the default strength (light x1.09, dark x0.88), the mean a touch darker than
+ *  the grass, so the fairway never reads brighter or more saturated than it is */
+export const BAND_LIGHT = 0.16, BAND_DARK = 0.34, BAND_SOFT = 0.14;
 /** the light bands' tint: a warm pale yellow, so a light band leans a touch yellower than a dark one (as the concept's), never more saturated */
 export const BAND_TINT = '#fff0b4';
 /** the greens' fine stripes at full strength: subtle, as the concept's smooth greens */
@@ -109,7 +110,7 @@ export function finishBorders(border: readonly (number | undefined)[], f: Course
 /** the lips' numbers at lip strength 1, tiles and alphas: the dark crescent inside the far rim (a cool multiply that keeps the sand's texture,
  *  reaching `reach` in from `foot` of the far wall's drop down the screen), the light near lip (a textured shine a gap inside the near rim, `w` wide), the raised grass lip round the sand (on the
  *  lip band: a shine on its far side, inset from the sand's edge by a gap; a light shade on its near side) */
-export const LIP = { dark: 0.7, reach: 1.1, foot: 0.85, light: 0.85, gap: 0.07, w: 0.38, grass: 0.9, grassGap: 0.05, shade: 0.3 } as const;
+export const LIP = { dark: 0.7, reach: 1.1, foot: 0.85, light: 0.75, gap: 0.07, w: 0.36, grass: 0.4, grassGap: 0.05, shade: 0.3 } as const;
 /** how many weight steps a rim is drawn in */
 export const LIP_BINS = 4;
 /** a segment's sun facing: its outward normal (dy, -dx) (the surface lies on the left of travel, course-grid patch edges) against the sun at the

@@ -4,7 +4,7 @@
 // outfield after Grass the outfield (?fixture=range20) at 30% and 15%; a sheet of the
 // course beside the owner's concept picture; and the bake times of the same chunks with the finish off and on at 30% and 8%.
 //   node scripts/dev/course-look-shots.mjs --base http://127.0.0.1:5187/ --out E:/ClaudeTemp/T227 [--only hole,green,bunker,range,sheet,bake]
-//     [--finish '{"bandStrength":0.2}'] [--tag v2] [--modes off,on]
+//     [--finish '{"bandStrength":0.2}'] [--tag v2] [--modes off,on] [--reps 3 (the bake runs of each mode, alternating)]
 // Needs a dev server (vite) on --base. One headless Edge, closed when done; a fresh profile, so each start is a new game. On a build without
 // the finish (main before T227) the switch does nothing and both shots show today's look: run it with --modes main.
 import { chromium } from 'playwright-core';
@@ -14,7 +14,7 @@ import { join } from 'node:path';
 
 const args = process.argv.slice(2), opt = (k, d) => { const i = args.indexOf(`--${k}`); return i >= 0 ? args[i + 1] : d; };
 const base = opt('base', 'http://127.0.0.1:5187/'), out = opt('out', 'output/course-look'), tag = opt('tag', '') ? `-${opt('tag', '')}` : '';
-const only = new Set(opt('only', 'hole,green,bunker,range,sheet,bake').split(',')), extra = JSON.parse(opt('finish', '{}')), modes = opt('modes', 'off,on').split(',');
+const only = new Set(opt('only', 'hole,green,bunker,range,sheet,bake').split(',')), extra = JSON.parse(opt('finish', '{}')), modes = opt('modes', 'off,on').split(','), reps = +opt('reps', '3');
 const W = 1280, H = 800;
 mkdirSync(out, { recursive: true });
 const browser = await chromium.launch({ channel: 'msedge', headless: true, args: ['--enable-gpu', '--ignore-gpu-blocklist', '--use-angle=d3d11'] });
@@ -107,21 +107,25 @@ try {
       }
     }
     // ---- the bake times: each run re-bakes the view (invalidateAll): the worker ms of those bakes, on the same chunks (the hole at the
-    //      centre), three times each mode, alternating
+    //      centre), --reps times each mode, alternating
     if (sp?.hole && only.has('bake')) {
-      report.bake = {};
+      report.bake = {}; const pooled = {};
       for (const z of [0.3, 0.08]) {
         await look(page, sp.hole.x, sp.hole.y, z); await settle(page);
-        for (let rep = 0; rep < 3; rep++) for (const m of modes) {
+        for (let rep = 0; rep < reps; rep++) for (const m of modes) {
           await finish(page, m); await settle(page);
           const n0 = await page.evaluate(() => { const g = window.__game; g.ground.invalidateAll(); return g.ground.baked; });
           await settle(page);
           const ms = await page.evaluate(n0 => { const g = window.__game, l = []; for (let k = n0; k < g.ground.baked; k++) l.push(g.ground.bakeLog[k % 4096]); return l; }, n0);
           const s = [...ms].sort((a, b) => a - b), q = f => s.length ? s[Math.min(s.length - 1, Math.floor(f * s.length))] : 0;
           (report.bake[`${Math.round(z * 100)}pct-${m}`] ??= []).push({ bakes: s.length, median: +q(0.5).toFixed(1), p95: +q(0.95).toFixed(1), mean: +(s.reduce((a, b) => a + b, 0) / (s.length || 1)).toFixed(1) });
+          (pooled[`${Math.round(z * 100)}pct-${m}`] ??= []).push(...ms);
         }
       }
+      // every bake of a mode together (the runs alternate the modes, so a busy moment of the PC lands on both alike)
+      report.pooled = Object.fromEntries(Object.entries(pooled).map(([k, l]) => { const s = [...l].sort((a, b) => a - b), q = f => s[Math.min(s.length - 1, Math.floor(f * s.length))]; return [k, { bakes: s.length, median: +q(0.5).toFixed(1), p25: +q(0.25).toFixed(1), p75: +q(0.75).toFixed(1), p95: +q(0.95).toFixed(1), mean: +(s.reduce((a, b) => a + b, 0) / s.length).toFixed(2) }]; }));
       console.log('bake', JSON.stringify(report.bake));
+      console.log('pooled', JSON.stringify(report.pooled));
     }
     await ctx.close();
   }
@@ -164,7 +168,8 @@ try {
     const rows = [
       await row([[first(files.hole30), `hole 30%, ${modes[0]}`], [last(files.hole30), `hole 30%, ${last(modes)}`], [crop, 'the concept']]),
       await row([[first(files.hole15), `hole 15%, ${modes[0]}`], [last(files.hole15), `hole 15%, ${last(modes)}`], [crop, 'the concept']]),
-      ...(files.range30 ? [await row([[first(files.range30), `range 30%, ${modes[0]}`], [last(files.range30), `range 30%, ${last(modes)}`], [crop, 'the concept']])] : []),
+      ...(files.bunker30 ? [await row([[first(files.bunker30), `a concept-sized bunker 30%, ${modes[0]}`], [last(files.bunker30), `a concept-sized bunker 30%, ${last(modes)}`], [crop, 'the concept']])] : []),
+      ...(files.range15 ? [await row([[first(files.range15), `range 15%, ${modes[0]}`], [last(files.range15), `range 15%, ${last(modes)}`], [crop, 'the concept']])] : []),
     ];
     const Wd = Math.max(...rows.map(r => r.w)), Hd = rows.reduce((s, r) => s + r.h + gap, -gap);
     let y = 0; const comp = []; for (const r of rows) { comp.push({ input: r.buf, left: 0, top: y }); y += r.h + gap; }
