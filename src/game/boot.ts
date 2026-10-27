@@ -14,9 +14,11 @@ export interface BootOptions {
   sim: boolean;
   /** the sprite atlas's budget in compressed MB (an RGBA8 fallback takes 4x); null: GAME-PLAN's by the screen (atlas-pages.ts atlasBudget) */
   atlasMB: number | null;
-  /** decoded atlas page levels kept for the next loads (null: atlas-gl.ts KEEP_LEVELS, 6; each up to a whole page, 16 MB at mip 0) */
+  /** decoded atlas page levels kept for the next loads (null: atlas-gl.ts KEEP_LEVELS, 6; each up to a whole page, 16 MB at mip 0). T172: the
+   *  game keeps 2, as the lab: the streamed levels are about 4 MB each, so 8 MB instead of 24, a few more decodes on a pan and no cell later */
   atlasKeep: number | null;
-  /** GPU pixels for the baked ground chunks (ground-cache.ts budgetPx) */
+  /** GPU pixels for the baked ground chunks (ground-cache.ts budgetPx). T172: the game's 32e6 (128 MB of RGBA8; was 48e6): after a 30 s pan
+   *  112 MB instead of 158, after 20 jumps 99 instead of 172, with as many bakes and the same fill times */
   groundPx: number;
   /** what each ground worker keeps decoded: tile-set tiles (textures.ts MAX_TILE_SOURCES) and painted pictures (MAX_PAINTED_SOURCES); null: the game's */
   tileSources: number | null; paintedSources: number | null;
@@ -53,7 +55,7 @@ export interface BootOptions {
 
 /** the plain game's boot: what the engine always did */
 export const GAME_BOOT: Readonly<BootOptions> = Object.freeze({
-  kind: 'game', groundWorkers: 1, sim: true, atlasMB: null, atlasKeep: null, groundPx: 48e6, tileSources: null, paintedSources: null, eagerPhotos: null,
+  kind: 'game', groundWorkers: 1, sim: true, atlasMB: null, atlasKeep: 2, groundPx: 32e6, tileSources: null, paintedSources: null, eagerPhotos: null,
   saveTextureCache: false, readTextureCache: false, softCanvases: false, lazyTextures: true, lazyTints: false, box: null, zoomMin: null, trees: true, moneyFloats: true, save: true, map: 'valley',
 });
 
@@ -79,6 +81,21 @@ export function withGroundLevers(boot: BootOptions, spec: string): BootOptions {
   if (on.has('old')) on.add('cache'); // the game before T166: one worker per spare core, every texture up front, the cache read and written
   const out: BootOptions = { ...boot };
   for (const [name, l] of Object.entries(GROUND_LEVERS)) Object.assign(out, on.has(name) ? l.on : l.off);
+  return out;
+}
+
+/* ---- T172 (#403): a dev build's way to measure the memory budgets one at a time ---- */
+/** the numeric boot options a dev build's ?boot=<key>:<value>,... may set (a value of null: the game's own default) */
+export const BOOT_NUMBERS = ['atlasMB', 'atlasKeep', 'groundPx', 'tileSources', 'paintedSources'] as const;
+/** a boot with the named numbers set (?boot=atlasKeep:2,tileSources:12); unknown keys and values that are not numbers are ignored */
+export function withBootNumbers(boot: BootOptions, spec: string): BootOptions {
+  const out: BootOptions = { ...boot };
+  for (const part of spec.split(',')) {
+    const [k, v] = part.split(':').map(s => s.trim()) as [string, string | undefined];
+    if (!(BOOT_NUMBERS as readonly string[]).includes(k)) continue;
+    const n = v === 'null' ? null : Number(v); if (n !== null && !Number.isFinite(n)) continue;
+    if (k === 'groundPx') { if (n !== null) out.groundPx = n; } else (out as unknown as Record<string, number | null>)[k] = n;
+  }
   return out;
 }
 

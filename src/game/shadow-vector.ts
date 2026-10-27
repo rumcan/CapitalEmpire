@@ -208,6 +208,12 @@ export function buildVectorMesh(shapes: Readonly<Record<string, VectorShadow>> =
 let MESH: VectorMesh | null = null;
 /** the game's mesh, built on first use */
 export function vectorMesh(): VectorMesh { return MESH ??= buildVectorMesh(); }
+/** T172: the mesh's vertices and indices let go once they are on the GPU (gl.ts initVector; about 11 MB): the ranges (`at`) and the counts
+ *  stay for the sprites */
+export function releaseVectorMeshData() { if (MESH) MESH = { ...MESH, verts: new Float32Array(0), idx: new Uint32Array(0) }; }
+/** the mesh with its vertices and indices, for an upload: the game's, or the same mesh built again once they were let go (a second engine on
+ *  the page: React's dev double mount, a hot reload) */
+export function vectorMeshData(): VectorMesh { const m = vectorMesh(); return m.verts.length >= m.nVerts * VERTEX_FLOATS ? m : buildVectorMesh(); }
 /** does a library id have a vector shadow (an entry with at least one shape) */
 export function hasVectorShadow(id: string): boolean { return vectorMesh().at.has(id); }
 /** is a library id on the fallback list (keeps T141's shadows on purpose) */

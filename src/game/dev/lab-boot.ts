@@ -15,7 +15,7 @@
 // This module is pure (no DOM, no GL): the engine and App.tsx read its answers, the tests check them (tests/lab-boot.test.ts).
 import { MAP } from '../iso';
 import type { BBox } from '../network';
-import { GAME_BOOT, withGroundLevers, type BootOptions } from '../boot';
+import { GAME_BOOT, withBootNumbers, withGroundLevers, type BootOptions } from '../boot';
 
 /** the side of the lab's map box in tiles: the lab street (90 tiles each way of its centre, engine.ts stageLab, also on a diagonal), the lab
  *  lot and its neighbours (two each way along the street, three across: lot-lab-plan.ts neighbourLots) with room to spare */
@@ -46,6 +46,8 @@ export function labBoot(): BootOptions {
 export function bootFor(search: string, dev: boolean): BootOptions {
   const q = new URLSearchParams(search);
   if (dev && q.has('lotlab') && !q.has('fullboot')) return labBoot();
-  // T166: a dev build's ?ground=<levers> boots the game with exactly those ground-worker levers on (boot.ts GROUND_LEVERS; ?ground=old: none)
-  return dev && q.has('ground') ? withGroundLevers({ ...GAME_BOOT }, q.get('ground') ?? '') : { ...GAME_BOOT };
+  // T166: a dev build's ?ground=<levers> boots the game with exactly those ground-worker levers on (boot.ts GROUND_LEVERS; ?ground=old: none);
+  // T172: and ?boot=<key>:<value>,... sets its memory budgets (boot.ts BOOT_NUMBERS)
+  const boot = dev && q.has('ground') ? withGroundLevers({ ...GAME_BOOT }, q.get('ground') ?? '') : { ...GAME_BOOT };
+  return dev && q.has('boot') ? withBootNumbers(boot, q.get('boot') ?? '') : boot;
 }

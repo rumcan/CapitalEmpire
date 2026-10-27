@@ -13,7 +13,7 @@ import { EAGER_PHOTO } from '../src/game/grass-art';
 test('the game boots as it always did: every option at the engine\'s old value', () => {
   assert.deepEqual({ ...GAME_BOOT }, {
     // T166 (#370): one ground worker, its textures made on first use (the grass tints up front), no texture cache read or written
-    kind: 'game', groundWorkers: 1, sim: true, atlasMB: null, atlasKeep: null, groundPx: 48e6, tileSources: null, paintedSources: null, eagerPhotos: null,
+    kind: 'game', groundWorkers: 1, sim: true, atlasMB: null, atlasKeep: 2, groundPx: 32e6, tileSources: null, paintedSources: null, eagerPhotos: null,
     saveTextureCache: false, readTextureCache: false, softCanvases: false, lazyTextures: true, lazyTints: false, box: null, zoomMin: null, trees: true, moneyFloats: true, save: true, map: 'valley',
   });
   assert.ok(Object.isFrozen(GAME_BOOT));

@@ -113,6 +113,10 @@ const handle = async (m: ToWorker) => {
         painter.setLotGround(m.set, m.drop);
         break;
       }
+      case 'memProbe': {
+        post({ t: 'log', message: 'mem ' + JSON.stringify(memProbe()) });
+        break;
+      }
       case 'prewarm': {
         // T168: textures the open tool can lay (the Course tool's brushes), made ahead: photos decoded now, procedural textures and mosaics in
         // slices while the worker is idle; nothing waits for them
@@ -275,6 +279,28 @@ tick.port1.onmessage = () => {
   try { tex.step(performance.now() + sliceMs(), pending === 0 && performance.now() - lastBake > IDLE_MS); } catch (err) { post({ t: 'error', message: (err as Error).stack || String(err) }); }
   kick();
 };
+/** T172: the pixels this worker holds, by owner, MB of RGBA8 (each canvas or bitmap counted once, at width x height x 4): the textures'
+ *  mips, mosaics, photo sources, painted pictures, tile set pictures and fixed pictures; the painter's caches and scratch buffers. A measure
+ *  for scripts/perf/memory.mjs, never on a hot path */
+function memProbe(): Record<string, number> {
+  const seen = new Set<object>(), out: Record<string, number> = {};
+  const px = (v: unknown, depth = 0): number => {
+    if (!v || typeof v !== 'object' || seen.has(v) || depth > 3) return 0;
+    const o = v as { width?: unknown; height?: unknown }; seen.add(v);
+    if (typeof o.width === 'number' && typeof o.height === 'number' && (v instanceof OffscreenCanvas || v instanceof ImageBitmap)) return o.width * o.height * 4;
+    if (v instanceof Map) { let n = 0; for (const x of v.values()) n += px(x, depth + 1); return n; }
+    if (Array.isArray(v)) { let n = 0; for (const x of v) n += px(x, depth + 1); return n; }
+    if (depth > 0) { let n = 0; for (const x of Object.values(v)) n += px(x, depth + 1); return n; }
+    return 0;
+  };
+  const add = (k: string, v: unknown) => { const n = px(v); if (n) out[k] = Math.round((n / 1048576) * 10) / 10; };
+  const T = tex as unknown as Record<string, unknown>, P = painter as unknown as Record<string, unknown>;
+  for (const k of ['mips', 'mosaics', 'photoSrc', 'paintedPics', 'tilePics']) add('tex.' + k, T[k]);
+  add('tex.fixed', ['slabs', 'leaves', 'pool1', 'pool2', 'decals', 'soil', 'lotDecals', 'nature'].map(k => T[k]));
+  for (const k of ['grassImages', 'toned', 'planPics', 'wallPics', 'composed', 'scratch', 'leafChunks', 'livingMade']) add('painter.' + k, P[k]);
+  add('painter.leafPic', [P.leafPic]);
+  return out;
+}
 /** the photo textures (lazy, not built yet) a lot patch lays: a lawn's photo, a painted area's fill, border and mix, a course chunk's surfaces
  *  and collars (T078) and the wall art its walls wear (T099 WALL_TEX slots) */
 function patchPhotos(p: LotPatch): string[] {
