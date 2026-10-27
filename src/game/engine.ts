@@ -2,6 +2,7 @@ import { CHUNK_H, CHUNK_W, DISTRICT_Z, HH, HW, MAP, MID_H, MID_W, PLANNER_Z, PLA
 import { ATLAS_PAGES, GOLFER_BASE, GOLFER_FRAMES, GOLFER_PEOPLE, LIBRARY, SPECTATOR_BASE, SPECTATOR_FRAMES, SPECTATOR_PEOPLE, WALKER_BASE, WALKER_PEOPLE, WALK_DIRS, WALK_FRAMES } from './library';
 import { galleryPeople, hash, queuePeople, walkerPeople, type CrowdPerson } from './crowdview';
 import { FACING_ROW, Pedestrians, sidewalks, type Door, type WalkerView } from './ext/pedestrians';
+import { GREENKEEPING } from './features';
 import { GRASS_ACTION_NAME, GrassManagement, grassSurface, type GrassAction, type GrassCellView, type GrassScope, type GrassSettings } from './ext/grass-management';
 import { drawGhostBlueprint, drawGhostHint, drawGhostPoly, drawGhostRing, drawRefusedMarks, ghostStatus, type GhostBlueprint, type GhostView } from './ext/ghost-preview';
 import { drawRefusedCross, strokeHatch } from './ext/refused-mark';
@@ -618,7 +619,7 @@ export class Game {
   /** the leaderboard (playBoard), recomputed at most every 250 ms: the play it is for, the time, and the board */
   private boardCache: { play: GolfPlay; at: number; board: PlayBoard } | null = null;
   /** Local care and wear augment the existing base grass, lawn presets, paint and grow-in. */
-  grass = new GrassManagement(); grassPanel = false; grassHeat = false; grassRadius = 12; grassArea = false; grassDose = 1; grassAngle = 0;
+  grass = (() => { const g = new GrassManagement(); if (!GREENKEEPING) g.configure({ enabled: false }); return g; })(); grassPanel = false; grassHeat = false; grassRadius = 12; grassArea = false; grassDose = 1; grassAngle = 0;
   grassAction: GrassAction | null = null; grassTarget: Pt | null = null;
   private grassZones = new Map<string, string[]>(); private grassDelta: GrassCellView[] = []; private grassSim = -1; private grassElapsed = 0; private grassTrafficT = -1;
   private grassVisible = false;
@@ -4973,6 +4974,7 @@ export class Game {
       this.dropCourseGrid();
       if (this.golf) { this.courseGrid = lg === 'migrate' ? null : lg; delete this.golf.grid; this.golf.plans = Array.isArray(this.golf.plans) ? this.golf.plans.filter(Array.isArray) : undefined; }
       this.grass.load(d.grass); this.grassSim = -1;
+      if (!GREENKEEPING) this.grass.configure({ enabled: false }); // greenkeeping hidden for now (features.ts): no condition layer, no drift
       // the bay rows and on-street runs (their ground and lists go to the City now: the network is built above; afterLoad syncs their gates)
       this.parking.load(d.rows?.map(([ax, ay, bx, by, side, bay, col], k): BayRowDef => ({ id: k + 1, ax, ay, bx, by, side: side < 0 ? -1 : 1, bay: bay === 60 || bay === 45 ? bay : 90, col: col === 'white' ? 'white' : 'yellow' })), d.curbs?.map(([ax, ay, bx, by], k): CurbDef => ({ id: k + 1, ax, ay, bx, by })), d.parkFee);
       // the cards the save had applied are in its tolls and routes already: only the fields new gates and routes take are set from them
