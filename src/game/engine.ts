@@ -5397,7 +5397,9 @@ export class Game {
       const vecOn = shadows || this.cast.on;
       const [sAt, pAt, lAt, ...vAt] = gl.uploadParts([[f.shadows, shadows ? f.shadowFloats : 0], [f.stream, f.floats], [this.lightBuf, lt ? (lt.small + lt.beams) * POINT_STRIDE : 0],
         ...f.vec.map(v => [v.data, vecOn ? v.floats : 0] as [Float32Array, number])]);
-      // the cast shadows (cast-shadow.ts), faded out by night, then the contact shadows, then the sprites
+      // the shadows into one layer, the darkest winning where they overlap, laid on the ground once (T185: gl.ts beginShadows): the cast
+      // shadows (cast-shadow.ts), faded out by night, then the contact shadows, the vector shadows; then the sprites
+      gl.beginShadows();
       if (this.cast.on) { const sh = castShear(this.cast); gl.drawCast(pAt, f.floats / SPRITE_STRIDE, sh.sx, sh.sy, this.cast.strength * (1 - this.nightAmount())); }
       // the contact shadows lean toward the cast shadows' side (away from the sun), blob and box alike (shadow-shape.ts contactLean, T141)
       const lean = contactLean(this.cast);
@@ -5409,6 +5411,7 @@ export class Game {
         const far = tier === 'district';
         f.vec.forEach((v, k) => gl.drawVector(vAt[k]!, v.floats / VECTOR_STRIDE, far ? v.far : v.verts, sh.sx, sh.sy, this.shadowStrength, castMul, far));
       }
+      gl.endShadows();
       gl.drawSprites(pAt, f.floats / SPRITE_STRIDE, tier === 'district' ? 7 * this.dpr : 0);
       if (lt) { gl.drawPoints(lAt, lt.small, Math.max(2, 0.55 * 64 * ze), true); gl.drawPoints(lAt + lt.small * POINT_STRIDE, lt.beams, Math.max(4, 2.6 * 64 * ze), true); }
     }

@@ -1,11 +1,17 @@
 /** WebGL2 drawing: baked ground chunks as textured quads, sprites as instanced quads from the streamed atlas (atlas-gl.ts),
  *  contact shadows as instanced ground shapes (TrickOrTreat's base shadows, shadow-shape.ts), and vehicles as points for the planner view.
- *  Coordinates are world px. */
+ *  Coordinates are world px.
+ *
+ *  The shadow layer (T185, the owner, 2026-10-27: "two shadows blocking the same light does not multiply a shadow"): every sprite shadow (the
+ *  silhouette casts, the T141 shapes, the vector contact and cast shapes) draws its darkness into one offscreen coverage layer with MAX
+ *  blending (beginShadows), so where shadows overlap the ground is as dark as the darkest of them, never their product; the layer then
+ *  darkens the ground once (endShadows: a multiply by cast-shadow.ts shadowMultiplier, the one cool shadow colour, so the texture stays). */
 import { ATLAS_PAGES, ATLAS_SIZE } from './library';
 import { AtlasGL, type AtlasSource } from './atlas-gl';
 import { atlasMip0 } from './sizes';
 import { CONTACT_LEAN } from './shadow-shape';
 import { CONTACT_AO, VERTEX_FLOATS, type VectorMesh } from './shadow-vector';
+import { SHADOW_AMBIENT } from './cast-shadow';
 
 /** floats per sprite instance: rect x0 y0 x1 y1 (world px), uv u0 v0 u1 v1, layer, alpha, cullable, foot line (world px; < 0: casts no shadow),
  *  clip x0 y0 x1 y1 (world px), foot: the footprint's near corner x y and its left and right corners' x (world px; the cast shadows stand on it) */
@@ -105,7 +111,7 @@ void main() {
   float a = atlasTex(vUV.xy, vUV.z).a * vAlpha * uCast.z;
   if (vW.x < vClip.x || vW.y < vClip.y || vW.x >= vClip.z || vW.y >= vClip.w) discard;
   if (a < 0.004) discard;
-  o = vec4(0.024, 0.031, 0.051, 1.0) * a;
+  o = vec4(clamp(a, 0.0, 1.0)); // its darkness, into the shadow layer (MAX: GLRenderer.beginShadows)
 }`;
 // the shape's 2:1 diamond bound: 32 world px per metre across, 16 down (x = (X - Y) * 32, y = (X + Y) * 16, X and Y in metres).
 // The lean (T141, shadow-shape.ts leanShift: blob and box alike): uShift is the cast shadows' screen direction times their length against the
@@ -131,9 +137,9 @@ void main() {
   vOff = off; vW = w; vShape = aShape; vLook = aLook; vClip = aClip;
 }`;
 // TrickOrTreat's shadows.mjs render(): a rounded box or an ellipse in ground metres, darkest at the base and feathered both inside and
-// outside the edge, in the builder's shadow colour (6, 8, 13); premultiplied, times the owner's strength and CONTACT_AO (an ambient occlusion,
-// shadow-vector.ts). The feather is 3 px (0.09375 m: a metre along an axis is 32 px across) softer than the shape's own, as every contact
-// shadow is (shadow-vector.ts BLOB_BLUR)
+// outside the edge; its darkness, times the owner's strength and CONTACT_AO (an ambient occlusion, shadow-vector.ts), into the shadow layer
+// (T185: the one shadow colour is laid once, GLRenderer.endShadows). The feather is 3 px (0.09375 m: a metre along an axis is 32 px across)
+// softer than the shape's own, as every contact shadow is (shadow-vector.ts BLOB_BLUR)
 const FS_SHADOW = `#version 300 es
 precision highp float;
 in vec2 vOff; in vec2 vW; flat in vec4 vShape; flat in vec4 vLook; flat in vec4 vClip; out vec4 o;
@@ -145,13 +151,13 @@ void main() {
   else { float r = min(0.18, min(hx, hy) * 0.5); vec2 q = abs(vec2(X, Y)) - vec2(hx, hy) + r; d = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r; }
   float a = vLook.x * ${CONTACT_AO.toFixed(4)} * (1.0 - smoothstep(-f, f * 1.2, d)) * (0.82 + 0.18 * smoothstep(0.0, -min(hx, hy), d));
   a = clamp(a * uStrength, 0.0, 1.0); if (a < 0.002) discard;
-  o = vec4(vec3(6.0, 8.0, 13.0) / 255.0 * a, a);
+  o = vec4(a);
 }`;
 // the vector shadows (T142, shadow-vector.ts): one instance per sprite, its mesh's triangles fetched from the mesh textures by gl_VertexID
 // (vertices past its count fold away). A vertex (x, y, h) about the anchor, in the picture's px, lands at (x, y) + h * the sun's shear, times
 // the sprite's scale (a mirrored sprite draws the mirrored copy of its mesh); contact vertices (kind 0) have a small h, their lean. Each tile's copy of a sprite draws only what
 // falls from its part of the picture (the point h px up the picture, held to the picture's rect), so a sprite over several tiles draws once.
-// Feathered by the rim's edge value (smoothstep), darkness per vertex times the contact or the cast strength; the same cool multiply
+// Feathered by the rim's edge value (smoothstep), darkness per vertex times the contact or the cast strength, into the shadow layer (T185)
 const VS_VEC = `#version 300 es
 precision highp float; precision highp int; precision highp usampler2D;
 layout(location=0) in vec4 aA; layout(location=1) in vec4 aB; layout(location=2) in vec4 aClip; layout(location=3) in vec4 aRect;
@@ -180,7 +186,18 @@ void main() {
   vec2 p = clamp(vSrc, vRect.xy, vRect.zw);
   if (p.x < vClip.x || p.y < vClip.y || p.x >= vClip.z || p.y >= vClip.w) discard;
   float a = clamp(vCore * smoothstep(0.0, 1.0, vEdge), 0.0, 1.0); if (a < 0.002) discard;
-  o = vec4(vec3(6.0, 8.0, 13.0) / 255.0 * a, a);
+  o = vec4(a);
+}`;
+// the shadow layer laid on the ground once (T185): one full-screen triangle, each pixel multiplied by the shadow colour's multiplier at its
+// coverage (cast-shadow.ts shadowMultiplier: mix(1, SHADOW_AMBIENT, a), a multiply, so the ground keeps its texture)
+const VS_FULL = `#version 300 es
+void main() { vec2 p = vec2(float((gl_VertexID & 1) << 2) - 1.0, float((gl_VertexID & 2) << 1) - 1.0); gl_Position = vec4(p, 0.0, 1.0); }`;
+const FS_LAYER = `#version 300 es
+precision highp float;
+uniform sampler2D uLayer; uniform vec3 uAmbient; out vec4 o;
+void main() {
+  float a = texelFetch(uLayer, ivec2(gl_FragCoord.xy), 0).r; if (a < 0.002) discard;
+  o = vec4(mix(vec3(1.0), uAmbient, a), 1.0);
 }`;
 const VS_POINT = `#version 300 es
 layout(location=0) in vec2 aPos; layout(location=1) in vec4 aCol;
@@ -205,7 +222,10 @@ type Prog = { p: WebGLProgram; u: Record<string, WebGLUniformLocation | null> };
 
 export class GLRenderer {
   gl: WebGL2RenderingContext;
-  private quad: Prog; private shadow: Prog; private point: Prog; private vec: Prog;
+  private quad: Prog; private shadow: Prog; private point: Prog; private vec: Prog; private layerProg: Prog;
+  /** the shadow layer (T185): a screen-sized coverage texture (R8) and its framebuffer; open between beginShadows and endShadows */
+  private layerTex: WebGLTexture | null = null; private layerFbo: WebGLFramebuffer | null = null; private layerW = 0; private layerH = 0;
+  private layerOpen = false; private layerUsed = false;
   /** the vector shadows' mesh textures (initVector) */
   private vecVerts: WebGLTexture | null = null; private vecIdx: WebGLTexture | null = null;
   /** the sprite and cast-shadow programs: built with the atlas (initAtlas), whose residency plan their lookup is compiled for */
@@ -225,6 +245,7 @@ export class GLRenderer {
     this.shadow = this.program(VS_SHADOW, FS_SHADOW, ['uCam', 'uScreen', 'uStrength', 'uShift']);
     this.point = this.program(VS_POINT, FS_POINT, ['uCam', 'uScreen', 'uSize', 'uSoft']);
     this.vec = this.program(VS_VEC, FS_VEC, ['uCam', 'uScreen', 'uShear', 'uMul', 'uFar', 'uVerts', 'uIdx']);
+    this.layerProg = this.program(VS_FULL, FS_LAYER, ['uLayer', 'uAmbient']);
     this.dyn = gl.createBuffer()!;
     this.maskTex = gl.createTexture()!; this.emptyTex = gl.createTexture()!;
     for (const t of [this.maskTex, this.emptyTex]) { gl.bindTexture(gl.TEXTURE_2D, t); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 255])); this.texParams(gl.TEXTURE_2D, false); }
@@ -328,9 +349,46 @@ export class GLRenderer {
     for (let i = 0; i < 4; i++) { gl.vertexAttribDivisor(i, 0); gl.disableVertexAttribArray(i); }
     this.stats.draws++; this.stats.instances += count;
   }
+  /** Open the shadow layer (T185): drawCast, drawShadows and drawVector then draw their darkness into it, the darkest winning where they
+   *  overlap (MAX blending), until endShadows lays it on what is drawn so far (the ground). Outside it they would draw coverage straight onto
+   *  the screen, so every frame that draws shadows opens it first */
+  beginShadows() {
+    const gl = this.gl, { cw, ch } = this.view;
+    if (!this.layerTex || this.layerW !== cw || this.layerH !== ch) {
+      if (this.layerTex) gl.deleteTexture(this.layerTex);
+      this.layerTex = gl.createTexture()!; gl.bindTexture(gl.TEXTURE_2D, this.layerTex);
+      gl.texStorage2D(gl.TEXTURE_2D, 1, gl.R8, Math.max(1, cw), Math.max(1, ch));
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      this.layerFbo ??= gl.createFramebuffer()!;
+      gl.bindFramebuffer(gl.FRAMEBUFFER, this.layerFbo); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.layerTex, 0);
+      this.layerW = cw; this.layerH = ch;
+    }
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.layerFbo);
+    gl.viewport(0, 0, cw, ch); gl.disable(gl.SCISSOR_TEST);
+    gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.blendEquation(gl.MAX); gl.blendFunc(gl.ONE, gl.ONE);
+    this.layerOpen = true; this.layerUsed = false;
+  }
+  /** Close the shadow layer and lay it on the screen: every pixel times the shadow colour's multiplier at its coverage (a multiply: the ground
+   *  keeps its texture). Nothing drawn into it: nothing laid */
+  endShadows() {
+    if (!this.layerOpen) return;
+    const gl = this.gl, pr = this.layerProg;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null); gl.blendEquation(gl.FUNC_ADD);
+    this.layerOpen = false;
+    if (this.layerUsed) {
+      gl.useProgram(pr.p); gl.uniform3f(pr.u.uAmbient, SHADOW_AMBIENT[0], SHADOW_AMBIENT[1], SHADOW_AMBIENT[2]);
+      gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, this.layerTex); gl.uniform1i(pr.u.uLayer, 0);
+      gl.blendFunc(gl.ZERO, gl.SRC_COLOR);
+      gl.drawArrays(gl.TRIANGLES, 0, 3); this.stats.draws++;
+    }
+    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+  }
   /** sprite instances at float offset `firstFloat`, as their cast shadows (cast-shadow.ts): sheared by (sx, sy) per px of height, darkness `strength` */
   drawCast(firstFloat: number, count: number, sx: number, sy: number, strength: number) {
     if (!count || !this.atlas || !this.cast || strength <= 0) return; const gl = this.gl, pr = this.cast;
+    this.layerUsed = true;
     gl.useProgram(pr.p); this.camUniforms(pr); gl.uniform4f(pr.u.uCast, sx, sy, strength, 0);
     this.bindAtlas(pr);
     gl.bindBuffer(gl.ARRAY_BUFFER, this.dyn);
@@ -344,6 +402,7 @@ export class GLRenderer {
    *  shiftY) the lean (shadow-shape.ts contactLean: the cast shadows' screen direction times their length against the default) */
   drawShadows(firstFloat: number, count: number, strength = 1, shiftX = 0, shiftY = 0) {
     if (!count || strength <= 0) return; const gl = this.gl, pr = this.shadow;
+    this.layerUsed = true;
     gl.useProgram(pr.p); this.camUniforms(pr); gl.uniform1f(pr.u.uStrength, strength); gl.uniform2f(pr.u.uShift, shiftX, shiftY); gl.bindBuffer(gl.ARRAY_BUFFER, this.dyn);
     for (let i = 0; i < 3; i++) { gl.enableVertexAttribArray(i); gl.vertexAttribPointer(i, 4, gl.FLOAT, false, SHADOW_STRIDE * 4, firstFloat * 4 + i * 16); gl.vertexAttribDivisor(i, 1); }
     gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, count);
@@ -371,6 +430,7 @@ export class GLRenderer {
    *  meshes' far copies (the district zoom) */
   drawVector(firstFloat: number, count: number, verts: number, sx: number, sy: number, contact: number, cast: number, far = false) {
     if (!count || !verts || !this.vecVerts || (contact <= 0 && cast <= 0)) return; const gl = this.gl, pr = this.vec;
+    this.layerUsed = true;
     gl.useProgram(pr.p); this.camUniforms(pr); gl.uniform2f(pr.u.uShear, sx, sy); gl.uniform2f(pr.u.uMul, contact, cast); gl.uniform1i(pr.u.uFar, far ? 1 : 0);
     gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, this.vecVerts); gl.uniform1i(pr.u.uVerts, 0);
     gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, this.vecIdx); gl.uniform1i(pr.u.uIdx, 1);
