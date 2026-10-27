@@ -21,13 +21,10 @@ models and rigs to the game?"* and *"build playing golf into the game"*.
 - **PR #258:** golf play (the field, the round, the crowd following the play, the owner playing in the tournament). Plan, status and
   open items: `docs/GOLF-PLAY.md` "Status".
 
-**In flight:** the batch loop for the last 12 people (all from A-pose pictures, already drawn and committed): the waitress, student,
-jogger, postman, two town kids, the town elder woman, the vendor, two teens and two child spectators. It died with the app on
-2026-10-25 18:06 UTC and was restarted 2026-10-26 05:37 UTC as a hidden Git Bash process (`make-cast-loop.sh`, about 13 models per
-RUN day; it waits out RUN's daily 3D cap, which resets about 00:15 UTC). Check it with `tail output/people-cast.log` and
-`ps -ef | grep make-cast`; restart it with:
-`Start-Process 'C:\Program Files\Git\bin\bash.exe' -ArgumentList '-lc','"cd /e/Repos/CapitalEmpire/worktrees/people-ground && export TOT_REPO=/e/Repos/TrickOrTreat && bash scripts/assets/people3d/make-cast-loop.sh > output/people-cast-loop.out 2>&1"' -WindowStyle Hidden`
-from PowerShell.
+**Done (T203, #531, 2026-10-27):** the batch finished on 2026-10-26 06:33 UTC (12 made) and the 12 were checked and brought into the
+game: the 7 townspeople walk the town and the 4 spectators (teens and kids, with all four crowd clips) join the crowd; `staff_vendor_m` is
+kept in `art/spectators/` but not packed (no staff in the game yet). Who is in, and the atlas numbers: `docs/PEOPLE-IN-GAME.md` "Who is in
+the game". The batch loop is over.
 
 **Tools and services.**
 - **RUN CLI:** `rundot` at `%LOCALAPPDATA%\Programs\Rundot`, signed in as the owner. TrickOrTreat's game id `AFjPSjQH9kbcCl57sgO3`,
@@ -39,7 +36,7 @@ from PowerShell.
   `strip-glb-images.mjs`, `cut-plate.mjs`, `rig-local-person.mjs`, `render-person-3d.mjs`.
 
 **Left to do, in order.**
-1. Finish the batch and bring the 12 people into the game (above).
+1. ~~Finish the batch and bring the 12 people into the game~~ (done, T203).
 2. Staff (marshals, volunteers, caddies, security, the vendor) are packed nowhere yet; the crowd code draws only `spec_*`.
 3. The grandstand's real seat rows (`docs/PEOPLE-IN-GAME.md` "Status").
 4. A putt clip: Meshy's library has none, so putts reuse the swing's address frames.
