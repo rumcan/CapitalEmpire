@@ -11,6 +11,7 @@ import { advanceProgress, computeProgressiveUiState, emptyProgress, progressFact
 import { RAIL, extraLock, pickTool, railEntries, railItemOf, railItemsOf, railTip, toolLock, toolNew, toolSections, toolsIn, type RailEntry } from '../src/ui/rail-items';
 import { Rail } from '../src/ui/Rail';
 import type { Tool } from '../src/game/types';
+import { GREENKEEPING } from '../src/game/features';
 
 const GOLF_RAIL = ['select', 'course', 'facilities', 'traffic', 'towndecor', 'bulldoze'];
 /** the classic town game: Facilities holds golf tools only, so it is not on its rail */
@@ -30,7 +31,8 @@ const html = (es: RailEntry[]) => renderToStaticMarkup(createElement(Rail, { ent
 /** the rendered button of rail item id */
 const button = (h: string, id: string) => h.match(new RegExp(`<button data-rail="${id}"[^>]*>[\\s\\S]*?</button>`))?.[0] ?? '';
 const WHY3 = "Unlocks with your third hole or the tour's invitation";
-const ALL_TOOLS: Tool[] = ['select', 'road', 'junction', 'bulldoze', 'park', 'toll', 'bus', 'lane', 'downgrade', 'business', 'paint', 'course', 'path', 'buildings', 'props', 'greenkeeping', 'practice'];
+/** every tool a rail item holds: greenkeeping is in none while GREENKEEPING is off (features.ts) */
+const ALL_TOOLS: Tool[] = (['select', 'road', 'junction', 'bulldoze', 'park', 'toll', 'bus', 'lane', 'downgrade', 'business', 'paint', 'course', 'path', 'buildings', 'props', 'greenkeeping', 'practice'] as Tool[]).filter(t => GREENKEEPING || t !== 'greenkeeping');
 
 describe('the rail: the groups, in the same places at every stage (T182)', () => {
   it('golf: Select · Course: Driving range, Course, Facilities · Town: Traffic, Town decoration · Bulldoze, at every stage', () => {
@@ -58,7 +60,7 @@ describe('the rail: the groups, in the same places at every stage (T182)', () =>
       assert.equal(n, t === 'props' || t === 'paint' ? 2 : 1, t);
     }
     const tools = (id: string) => RAIL.find(r => r.id === id)!.tools.map(t => t.id);
-    assert.deepEqual(tools('course'), ['course', 'buildings', 'path', 'greenkeeping'], 'T206: Cart paths & roads directly below Buildings');
+    assert.deepEqual(tools('course'), GREENKEEPING ? ['course', 'buildings', 'path', 'greenkeeping'] : ['course', 'buildings', 'path'], 'T206: Cart paths & roads directly below Buildings');
     assert.deepEqual(RAIL.find(r => r.id === 'course')!.extras?.map(x => x.id), ['event', 'land'], 'the tournament stuff: the Event catalogue; T200: Land for sale');
     assert.deepEqual(tools('facilities'), ['practice', 'paint', 'props'], 'T206: Practice, Plants, Decoration (Props)');
     assert.equal(RAIL.find(r => r.id === 'decor'), undefined, 'Decoration is no group of the rail');
@@ -69,7 +71,7 @@ describe('the rail: the groups, in the same places at every stage (T182)', () =>
   it('the tool in hand lights its group; Props lights the decoration it was opened from; the open range card lights the Driving range', () => {
     const ui = uiOf(played(3), 3);
     const lit = (t: Tool, active?: string, rangeOpen = false) => railEntries(ui, true, t, { active, range: true, rangeOpen }).filter(e => e.on).map(e => e.item.id);
-    assert.deepEqual(lit('course'), ['course']); assert.deepEqual(lit('buildings'), ['course']); assert.deepEqual(lit('greenkeeping'), ['course']);
+    assert.deepEqual(lit('course'), ['course']); assert.deepEqual(lit('buildings'), ['course']); assert.deepEqual(lit('greenkeeping'), GREENKEEPING ? ['course'] : [], 'hidden: no rail item holds it');
     assert.deepEqual(lit('path'), ['course']); assert.deepEqual(lit('lane'), ['traffic']); assert.deepEqual(lit('toll'), ['traffic']); assert.deepEqual(lit('paint'), ['towndecor']);
     assert.deepEqual(lit('paint', 'facilities'), ['facilities'], 'T206: the plant brush opened from Facilities lights it'); assert.deepEqual(lit('practice'), ['facilities']);
     assert.deepEqual(lit('props'), ['facilities']); assert.deepEqual(lit('props', 'towndecor'), ['towndecor']); assert.deepEqual(lit('props', 'facilities'), ['facilities']);
@@ -134,12 +136,13 @@ describe('no key letters on the rail; the keys stay in the tooltip (T182)', () =
 });
 
 describe('NEW per group; old saves (T117 seen ids, T182)', () => {
-  it('stage 2: Town decoration says NEW (its Paint) until Paint is opened, then never again (Course: its Greenkeeping, T175)', () => {
+  it('stage 2: Town decoration says NEW (its Paint) until Paint is opened, then never again (Course: its Greenkeeping, T175, while it is on the rail)', () => {
     const p = played(1);
-    assert.deepEqual(railEntries(uiOf(p, 1), true, 'course').filter(e => e.isNew).map(e => e.item.id), ['course', 'facilities', 'towndecor'], 'T206: Facilities too (its Plants, the Paint tool\'s plant brush)');
+    // Course's NEW is its Greenkeeping (T175): no Course NEW while GREENKEEPING is off (features.ts hides that tool)
+    assert.deepEqual(railEntries(uiOf(p, 1), true, 'course').filter(e => e.isNew).map(e => e.item.id), GREENKEEPING ? ['course', 'facilities', 'towndecor'] : ['facilities', 'towndecor'], 'T206: Facilities too (its Plants, the Paint tool\'s plant brush)');
     assert.match(button(html(railEntries(uiOf(p, 1), true, 'course')), 'towndecor'), /class="new-badge rail-new">NEW</);
     advanceProgress(p, progressFacts(p, course(1)), 'paint');
-    assert.deepEqual(railEntries(uiOf(p, 1), true, 'course').filter(e => e.isNew).map(e => e.item.id), ['course']);
+    assert.deepEqual(railEntries(uiOf(p, 1), true, 'course').filter(e => e.isNew).map(e => e.item.id), GREENKEEPING ? ['course'] : []);
     advanceProgress(p, progressFacts(p, course(1)), 'greenkeeping');
     assert.deepEqual(railEntries(uiOf(p, 1), true, 'course').filter(e => e.isNew).map(e => e.item.id), []);
   });

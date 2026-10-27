@@ -37,7 +37,7 @@ const f = (over: Partial<PlayerProgressFacts> = {}): PlayerProgressFacts => ({ .
 
 /** every golf rail group and tool (the Business tool is the town's: golf games never list it) */
 const GOLF_GROUPS = ['select', 'course', 'roads', 'junction', 'transport', 'paint', 'bulldoze'];
-const GOLF_TOOLS = ['select', 'course', 'path', 'buildings', 'props', 'greenkeeping', 'road', 'lane', 'downgrade', 'junction', 'bus', 'park', 'toll', 'paint', 'bulldoze'];
+const GOLF_TOOLS = ['select', 'course', 'path', 'buildings', 'props', 'greenkeeping', 'practice', 'road', 'lane', 'downgrade', 'junction', 'bus', 'park', 'toll', 'paint', 'bulldoze'];
 const SHAPE_BY_HAND = ['fairway', 'green', 'tee', 'rough', 'bunker', 'water'];
 
 describe('the stage table (P23 4.2, T117): every "when" row', () => {
@@ -80,10 +80,10 @@ describe('the stage table (P23 4.2, T117): every "when" row', () => {
 });
 
 describe('the stage table (P23 4.2, T117): every "open" row', () => {
-  it('stage 1: Select, Holes (New hole only), Paths (walking, dirt, gravel drive), Buildings, Bulldoze; the rest locked in place', () => {
+  it('stage 1: Select, Holes (New hole only), Paths (walking, dirt, gravel drive), Buildings, Practice, Bulldoze; the rest locked in place', () => {
     const s = computeProgressiveUiState(f());
     assert.deepEqual(s.visibleGroups, ['select', 'course', 'bulldoze']);
-    assert.deepEqual(s.visibleTools, ['select', 'course', 'path', 'buildings', 'props', 'bulldoze']);
+    assert.deepEqual(s.visibleTools, ['select', 'course', 'path', 'buildings', 'props', 'practice', 'bulldoze']);
     assert.deepEqual(s.visibleCourseBrushes, []);
     assert.equal(s.shapeByHand, false);
     assert.deepEqual(s.lockedCourseClasses.map(c => c.id), ['cart-slab']);
