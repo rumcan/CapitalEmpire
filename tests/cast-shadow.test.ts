@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { CAST, CAST_DEFAULT, SHADOW_AMBIENT, castShear, clampCast, shadowMultiplier } from '../src/game/cast-shadow';
+import { CAST, CAST_DEFAULT, SHADOW_AMBIENT, castShear, clampCast, shadeCoverage, shadowMultiplier, shadowOverShade } from '../src/game/cast-shadow';
 import { EDGE_LOOKS, SHADE_RGB } from '../src/game/paint-edges';
 
 test('cast shadows: settings held to their ranges, the file read, the shear from the sun side and length', () => {
@@ -51,4 +51,43 @@ test('T185 shadow layer: every sprite shadow draws its darkness into one layer w
     assert.ok(draw.includes(call), `${call} inside the shadow layer`);
     assert.equal(engine.split(call).length - 1, draw.split(call).length - 1, `every ${call} inside the shadow layer`);
   }
+});
+
+// T186 (the owner: "two shadows blocking the same light does not multiply a shadow", the ground's baked shade included)
+test('T186 sprite shadow over a baked shade: the darker of the two, never their product; unchanged where only one lies', () => {
+  const lum = (c: readonly number[]) => 0.299 * c[0]! + 0.587 * c[1]! + 0.114 * c[2]!;
+  // no baked shade: the sprite shadow as before (T185)
+  assert.deepEqual(shadowOverShade(0.6, 0), shadowMultiplier(0.6));
+  // no sprite shadow, or a lighter one than the baked shade: the ground untouched (the shader discards)
+  assert.deepEqual(shadowOverShade(0, 0.3), [1, 1, 1]); assert.deepEqual(shadowOverShade(0.2, 0.3), [1, 1, 1]);
+  // a darker sprite shadow: the ground ends as dark as that shadow alone (baked x factor = M(s)), not darker
+  const b = 0.3, s = 0.6, baked = shadowMultiplier(b), f = shadowOverShade(s, b), total = baked.map((v, i) => v * f[i]!);
+  total.forEach((v, i) => assert.ok(Math.abs(v - shadowMultiplier(s)[i]!) < 1e-9, `channel ${i}`));
+  assert.ok(lum(total) > lum(baked.map((v, i) => v * shadowMultiplier(s)[i]!)) + 0.05, 'lighter than the old product');
+  // continuous where the sprite shadow passes the baked shade
+  const near = shadowOverShade(b + 1e-4, b); near.forEach(v => assert.ok(Math.abs(v - 1) < 1e-3));
+  // the mask's coverage: white is none; the ground shade (SHADE_RGB) at full strength is about half a sprite shadow's darkness
+  assert.equal(shadeCoverage(1), 0);
+  const shade = lum(SHADE_RGB.map(v => v / 255)), c = shadeCoverage(shade);
+  assert.ok(c > 0.45 && c < 0.65, `SHADE_RGB as coverage: ${c.toFixed(3)}`);
+  assert.ok(Math.abs(lum(shadowMultiplier(c)) - shade) < 0.01, 'as dark by luminance');
+});
+
+test('T186 shader and bake: the layer keeps the baked shade in green, the composite divides it out, every shade the bake multiplies is mirrored', () => {
+  const gl = readFileSync(resolve('src/game/gl.ts'), 'utf8'), engine = readFileSync(resolve('src/game/engine.ts'), 'utf8'), r = readFileSync(resolve('src/game/renderer.ts'), 'utf8');
+  assert.match(gl, /gl\.RG8/, 'the layer has a green channel');
+  const layer = gl.slice(gl.indexOf('const FS_LAYER'), gl.indexOf('}`;', gl.indexOf('const FS_LAYER')));
+  assert.match(layer, /sb\.r < sb\.g \+ 0\.002\) discard/, 'untouched where the baked shade is the darker');
+  assert.match(layer, /mix\(vec3\(1\.0\), uAmbient, sb\.r\) \/ mix\(vec3\(1\.0\), uAmbient, sb\.g\)/, 'M(s) / M(b)');
+  assert.match(gl.slice(gl.indexOf('  beginShadows()'), gl.indexOf('  drawShadeMask(')), /colorMask\(true, false, false, false\)/, 'sprite shadows write red only');
+  assert.match(gl.slice(gl.indexOf('  drawShadeMask('), gl.indexOf('  endShadows()')), /colorMask\(false, true, false, false\)/, 'the masks write green only');
+  // the engine lays the masks inside the layer, before the sprite shadows
+  const draw = engine.slice(engine.indexOf('gl.beginShadows()'), engine.indexOf('gl.endShadows()'));
+  assert.ok(draw.indexOf('gl.drawShadeMask(') >= 0 && draw.indexOf('gl.drawShadeMask(') < draw.indexOf('gl.drawCast('), 'masks first');
+  // the bake: every edge image's shadow, dark rim and edge shade put with multiply also goes onto the mask
+  for (const what of ['im.shadow', 'im.dark', 'sd.shade', 'q.im.shadow', 'q.im.dark']) {
+    const puts = r.split(`put(${what}, `).length - 1 + r.split(`, ${what}, `).filter((_, i) => i > 0).length;
+    assert.ok(puts >= 2, `${what} is put on the chunk and on the mask (${puts})`);
+  }
+  assert.ok((r.match(/onShadeMask\(/g) ?? []).length >= 9, 'the shade sites mirrored');
 });
