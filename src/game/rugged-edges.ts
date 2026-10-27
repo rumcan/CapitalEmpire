@@ -161,11 +161,12 @@ export function warpPoint(x: number, y: number): [number, number] { const o = wo
 
 /** the spill's numbers (tiles unless said): the longest and shortest blade into the short side (max at a full clump, the owner's 0.3 to 0.8),
  *  how far a blade's root starts back inside the tall side (so its base merges with the ground it grows from), the blades' spacing and base
- *  width at the closest levels (the renderer scales both up at far ones), a tip's lean along the edge (a share of its length); the shade under
+ *  width at the closest levels (the renderer scales both up at far ones), a tip's lean along the edge (a share of its length: a clump leans
+ *  one way, its blades about it), how often a blade in a full clump has a second one fanning from its root (fan); the shade under
  *  the overhang: the blades again, moved toward the shadows (145 degrees on screen) by shadeOff and multiplied in the cool shade at shadeA, and
  *  a soft contact band band tiles into the short side at bandA; sparse: a hard surface's edge keeps its line with only a few short tufts (the
  *  clump past sparseAt, at sparseLen of the length) */
-export const SPILL = { max: 0.8, min: 0.05, root: 0.12, spacing: 0.075, width: 0.065, lean: 0.35, shadeOff: 0.07, shadeA: 0.3, band: 0.32, bandA: 0.14, sparseAt: 0.62, sparseLen: 0.45 } as const;
+export const SPILL = { max: 0.8, min: 0.08, root: 0.12, spacing: 0.075, width: 0.065, lean: 0.6, fan: 0.5, shadeOff: 0.045, shadeA: 0.18, band: 0.32, bandA: 0.16, sparseAt: 0.62, sparseLen: 0.45 } as const;
 
 /** a 0..1 hash of a point (quantized to 1/64 tile) and a seed */
 function hash01(x: number, y: number, s: number): number {
@@ -197,13 +198,20 @@ export function spillBlades(line: ArrayLike<number>, side: 1 | -1, k = 1, sparse
       const h0 = hash01(ax + tx * s, ay + ty * s, 17), p = Math.min(len, Math.max(0, s + (h0 - 0.5) * 0.7 * gap)), px = ax + tx * p, py = ay + ty * p;
       const c = spillClump(px, py);
       if (sparse && c < SPILL.sparseAt) continue;
-      const h1 = hash01(px, py, 29), h2 = hash01(px, py, 31), h3 = hash01(px, py, 37);
-      let reach = SPILL.min + (SPILL.max - SPILL.min) * c * c * (0.45 + 0.55 * h1);
+      const h1 = hash01(px, py, 29), h2 = hash01(px, py, 31), h3 = hash01(px, py, 37), h4 = hash01(px, py, 41);
+      let reach = SPILL.min + (SPILL.max - SPILL.min) * c * (0.5 + 0.5 * h1);
       if (sparse) reach *= SPILL.sparseLen;
-      const lean = (h2 - 0.5) * 2 * SPILL.lean * reach, w = wid * (0.7 + 0.6 * h3) / 2;
+      // the lean: the clump's own way (a slow noise) and the blade's about it
+      const way = 2 * vnoise(px / 0.9 + 4.41, py / 0.9 - 8.83, 229) - 1, lean = (0.55 * way + 0.45 * (2 * h2 - 1)) * SPILL.lean * reach, w = wid * (0.6 + 0.8 * h3) / 2;
       const rx = px + nx * SPILL.root, ry = py + ny * SPILL.root;
       out.push(rx - tx * w, ry - ty * w, rx + tx * w, ry + ty * w, px - nx * reach + tx * lean, py - ny * reach + ty * lean);
       owner?.push(i);
+      // a full clump's blades fan: now and then a second, shorter one from the same root, leaning the other way
+      if (h4 < SPILL.fan * c && !sparse) {
+        const r2 = reach * (0.55 + 0.35 * h1), l2 = -0.7 * lean + (h3 - 0.5) * 0.3 * r2;
+        out.push(rx - tx * w * 0.8, ry - ty * w * 0.8, rx + tx * w * 0.8, ry + ty * w * 0.8, px - nx * r2 + tx * l2, py - ny * r2 + ty * l2);
+        owner?.push(i);
+      }
     }
   }
   return out;
@@ -236,11 +244,6 @@ export function ruggedKind(tex: string, border?: string): RuggedKind {
   if (TALL.test(tex)) return 'tall';
   return 'short';
 }
-
-/** the course surfaces whose outer edges take the spill (flat short turf: the fairway and its first cut; a raised tee or green keeps its
- *  bank and T196's soft joint) and the layer codes counted as tall grass outside them (0 the map grass, the rough's and the fescue's fills) */
-export const SPILL_SURFACES: readonly number[] = [4];
-export const TALL_CODES: readonly number[] = [0, 2, 4];
 
 /** whether a point lies inside a closed polygon (even-odd) */
 export function inPoly(pts: ArrayLike<number>, x: number, y: number): boolean {

@@ -21,7 +21,7 @@ import { type GrassCellView } from './ext/grass-management';
 import { grassOverlay } from './lawn-overlay';
 import { surfaceOfTex } from './golf/costs';
 import { CELL as COURSE_CELL } from './golf/paintcourse';
-import { ruggedKind, ruggedRing, warpLine, warpPoint, warpTriples, type RuggedKind } from './rugged-edges';
+import { SPILL, SPILL_SHADE_OFF, inPoly, ruggedKind, ruggedRing, spillBlades, spillScale, warpLine, warpPoint, warpTriples, type RuggedKind } from './rugged-edges';
 import { AREA_SHADE, EDGE_LOOKS, JOINT_SOFT, SHADE_RGB, areaLightEdge, areaShadeImages, areaShadeReach, areaShadow, bandRamp, edgeBox, edgeField, edgeImages, edgeReach, edgeRes, featherTiles, jointFeather, jointLen, jointRamp, jointShadeWeight, litBox, type EdgeImage } from './paint-edges';
 import { CH_SIZE } from './ext/course-height';
 import { CART_RIM, CART_SURFACE, cartCast, cartRim } from './cart-bevel';
@@ -41,7 +41,28 @@ const PAINT_CELL = 128;
 type PaintedEntry = { buf: Cnv; cells: Uint8Array; bytes: number };
 /** T204: a painted area's or lot lawn's drawn form (GroundPainter.ruggedOf): the patch as drawn (its outline rounded and wobbled), its kind, its
  *  winding (1: a side's (dy, -dx) points outward) */
-type RuggedForm = { q: LotPatch; kind: RuggedKind; side: 1 | -1 };
+type RuggedForm = { q: LotPatch; kind: RuggedKind; side: 1 | -1; /** its spill's blades by blade scale (each blade's outline point: own) */ blades?: Map<number, { tri: Float32Array; own: Int32Array }> };
+/** the kinds of area the tall grass spills over (a hard one only in a few tufts) */
+const SPILLS_ON: ReadonlySet<RuggedKind> = new Set<RuggedKind>(['short', 'hard']);
+/** how far outside an area's outline the ground is read for the spill (the map's grass, or something laid there), tiles */
+const SPILL_PROBE = 0.4;
+/** whether a course chunk (as drawn) lays a surface or a collar at tile (x, y) (even-odd over each layer's rings) */
+function courseCovers(c: CoursePatch, x: number, y: number): boolean {
+  const x0 = c.cx * c.size - 0.2, y0 = c.cy * c.size - 0.2;
+  if (x < x0 || y < y0 || x > x0 + c.size + 0.4 || y > y0 + c.size + 0.4) return false;
+  for (const l of c.layers) for (const rs of [l.fill, l.collar?.fill ?? []]) { let k = false; for (const r of rs) if (inPoly(r, x, y)) k = !k; if (k) return true; }
+  return false;
+}
+/** a run (flat x y, its tall side on side x (dy, -dx)) moved d tiles the other way (into the short side), each point along the mean of its
+ *  pieces' normals, appended to path as an open polyline */
+function offsetRun(path: Path2D, p: ArrayLike<number>, side: 1 | -1, d: number) {
+  const n = p.length >> 1; if (n < 2) return;
+  for (let i = 0; i < n; i++) {
+    const h = Math.max(0, i - 1), j = Math.min(n - 1, i + 1), dx = p[2 * j]! - p[2 * h]!, dy = p[2 * j + 1]! - p[2 * h + 1]!, l = Math.hypot(dx, dy) || 1;
+    const x = p[2 * i]! - (side * dy / l) * d, y = p[2 * i + 1]! + (side * dx / l) * d;
+    if (i) path.lineTo(x, y); else path.moveTo(x, y);
+  }
+}
 /** the living ground's leaf litter (T111): the chunks whose leaves a worker keeps laid out, the picture's side (px), the tiles it covers and
  *  the leaves a square metre of it holds (the stochastic layout overlaps its soft patches about two deep, so the ground shows about twice that) */
 const LEAF_CHUNKS = 4, LEAF_PX = 1024, LEAF_PERIOD = 16, LEAF_DENSITY = 2.6;
@@ -311,6 +332,75 @@ export class GroundPainter {
       this.ruggedForms.set(p, f);
     }
     return f;
+  }
+  /** T204: the spill's blades of each course chunk as drawn (warpedCourse), by blade scale: one triangle list per tall layer outside */
+  private courseBladeSets = new WeakMap<CoursePatch, Map<number, { o: number; tri: Float32Array }[]>>();
+  /** the ground under every lawn, lot and painted area as baked so far (the map's grass, its meadows, banks and hillshade), as a fill in the
+   *  chunk's px under its matrix (T204: the tall grass a short area's spill is cut from), copied only when some patch here takes a spill from
+   *  it; null when none does */
+  private spillUnder(ctx: C2D, all: readonly LotPatch[], Minv: DOMMatrix, W: number, H: number): CanvasPattern | null {
+    const need = all.some(p => p.course ? !!p.course.spill?.some(r => r.o === 0) : (!!p.paint || (!!p.lawn && p.lawn.z >= 1)) && SPILLS_ON.has(this.ruggedOf(p).kind));
+    if (!need) return null;
+    const s = this.buffer('spillUnder', W, H), g = ctx2d(s);
+    g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1; g.drawImage(ctx.canvas, 0, 0); g.restore();
+    const p = ctx.createPattern(s, 'no-repeat'); p?.setTransform(Minv); return p;
+  }
+  /** T204: the tall grass's spill over a short area (a painted area, a lot's lawn) where its outline meets the map's grass: the blades of its
+   *  outline (rugged-edges spillBlades: a hard area's few), those whose outline point has the map's grass just outside (no earlier lawn, lot,
+   *  painted area or course layer there), cut from the ground under it (under) */
+  private areaSpill(ctx: C2D, f: RuggedForm, others: readonly LotPatch[], course: readonly CoursePatch[], L: number, M: DOMMatrix, box: BBox, under: CanvasPattern) {
+    const ring = f.q.pts, n = ring.length >> 1; if (n < 3 || !SPILLS_ON.has(f.kind)) return;
+    const k = spillScale(L, TILE_PX), x0 = box[0] - 1.5, y0 = box[1] - 1.5, x1 = box[2] + 1.5, y1 = box[3] + 1.5;
+    // which outline points have the map's grass just outside
+    const tall = new Uint8Array(n), near = others.filter(o => o !== f.q && o.pts.length >= 6), nb = near.map(o => quadBox(o.pts));
+    let any = false;
+    for (let i = 0; i < n; i++) {
+      const x = ring[2 * i]!, y = ring[2 * i + 1]!; if (x < x0 || x > x1 || y < y0 || y > y1) continue;
+      const h = (i + n - 1) % n, j = (i + 1) % n;
+      let nx = (ring[2 * j + 1]! - ring[2 * h + 1]!) * f.side, ny = -(ring[2 * j]! - ring[2 * h]!) * f.side; const l = Math.hypot(nx, ny); if (l < 1e-9) continue;
+      const ox = x + (nx / l) * SPILL_PROBE, oy = y + (ny / l) * SPILL_PROBE;
+      let out = true;
+      for (let q = 0; q < near.length && out; q++) { const b = nb[q]!; if (ox >= b[0] && ox <= b[2] && oy >= b[1] && oy <= b[3] && inPoly(near[q]!.pts, ox, oy)) out = false; }
+      for (let q = 0; q < course.length && out; q++) out = !courseCovers(course[q]!, ox, oy);
+      if (out) { tall[i] = 1; any = true; }
+    }
+    if (!any) return;
+    let set = f.blades?.get(k);
+    if (!set) {
+      const closed = [...ring, ring[0]!, ring[1]!], own: number[] = [], tri = spillBlades(closed, f.side, k, f.kind === 'hard', [], own);
+      set = { tri: Float32Array.from(tri), own: Int32Array.from(own) }; (f.blades ??= new Map()).set(k, set);
+    }
+    // the runs of tall points, for the shade band
+    const lines: { p: number[]; side: 1 | -1 }[] = [];
+    if (tall.every(v => v)) lines.push({ p: [...ring, ring[0]!, ring[1]!], side: f.side });
+    else for (let i = 0; i < n; i++) if (tall[i] && !tall[(i + n - 1) % n]) { const p: number[] = []; for (let q = i; tall[q % n]; q++) p.push(ring[2 * (q % n)]!, ring[2 * (q % n) + 1]!); if (p.length >= 4) lines.push({ p, side: f.side }); }
+    const own = set.own;
+    this.layBlades(ctx, M, set.tri, b => tall[own[b]!] === 1 || tall[(own[b]! + 1) % n] === 1, box, lines, under);
+  }
+  /** lays spill blades (triangles in tiles, six numbers each) picked by `pick` (by index) whose tip lies near the chunk's box: first the shade
+   *  under their overhang, a soft band just inside the short side of each run of `lines` (its tall side on side x (dy, -dx)) and the blades
+   *  moved toward the shadows (145 degrees on screen), both multiplied in the cool shade (T110: the ground keeps its texture) and laid on the
+   *  shade mask too (T186); then the blades in `fill`, the tall ground's own picture (tone: its course tone over them) */
+  private layBlades(ctx: C2D, M: DOMMatrix, tri: ArrayLike<number>, pick: ((b: number) => boolean) | null, box: BBox, lines: readonly { p: ArrayLike<number>; side: 1 | -1 }[], fill: CanvasPattern | string, tone?: (draw: () => void) => void) {
+    const path = new Path2D(), x0 = box[0] - 1, y0 = box[1] - 1, x1 = box[2] + 1, y1 = box[3] + 1;
+    let any = false;
+    for (let b = 0, q = 0; q + 5 < tri.length; b++, q += 6) {
+      const tx = tri[q + 4]!, ty = tri[q + 5]!;
+      if (tx < x0 || tx > x1 || ty < y0 || ty > y1 || (pick && !pick(b))) continue;
+      path.moveTo(tri[q]!, tri[q + 1]!); path.lineTo(tri[q + 2]!, tri[q + 3]!); path.lineTo(tx, ty); path.closePath(); any = true;
+    }
+    if (!any) return;
+    // the band: the runs moved a quarter and a half of its width into the short side, stroked half and full width (stacked: strongest at the edge)
+    const near = new Path2D(), far = new Path2D();
+    for (const l of lines) { offsetRun(near, l.p, l.side, SPILL.band / 4); offsetRun(far, l.p, l.side, SPILL.band / 2); }
+    const shade = (g: C2D) => {
+      g.save(); g.setTransform(M); g.globalCompositeOperation = 'multiply'; g.fillStyle = g.strokeStyle = SHADE_TINT; g.lineCap = 'butt'; g.lineJoin = 'round';
+      g.globalAlpha = SPILL.bandA / 2; g.lineWidth = SPILL.band; g.stroke(far); g.lineWidth = SPILL.band / 2; g.stroke(near);
+      g.globalAlpha = SPILL.shadeA; g.translate(SPILL_SHADE_OFF[0], SPILL_SHADE_OFF[1]); g.fill(path);
+      g.restore();
+    };
+    shade(ctx); this.onShadeMask(shade);
+    ctx.save(); ctx.setTransform(M); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; ctx.fillStyle = fill; ctx.fill(path); tone?.(() => ctx.fill(path)); ctx.restore();
   }
   /** T204: each course chunk as it is drawn, by its patch (made once a patch) */
   private warpedCourses = new WeakMap<CoursePatch, CoursePatch>();
@@ -783,10 +873,12 @@ export class GroundPainter {
       ctx.setTransform(M);
     };
     // ---- 1a. the lawns (lawns.ts): the road blocks' grass in soft patches, then each lot's own lawn, under the lots' own ground
-    if (lawns.length) { this.drawLawns(ctx, lawns, L, X0, Y0, M, Minv, box); ctx.setTransform(M); this.drawManagedGrass(ctx, lawns.map(p => (p.lawn!.z >= 1 ? this.ruggedOf(p).q : p)), box, L); }
+    // T204: the ground under them all as baked so far, when some patch here takes the tall grass's spill (cut from it)
+    const under = this.spillUnder(ctx, all, Minv, W, H), laid = [...lawns.map(p => (p.lawn!.z >= 1 ? this.ruggedOf(p).q : p)), ...rest];
+    if (lawns.length) { this.drawLawns(ctx, lawns, L, X0, Y0, M, Minv, box, under, laid); ctx.setTransform(M); this.drawManagedGrass(ctx, lawns.map(p => (p.lawn!.z >= 1 ? this.ruggedOf(p).q : p)), box, L); }
     drawLots(rest);
     // ---- 1a'. painted areas (the Paint tool) in id order: over the lot ground, under the bridges and roads
-    if (paints.length) { this.drawPaints(ctx, paints, L, X0, Y0, M, Minv, box, lite); ctx.setTransform(M); }
+    if (paints.length) { this.drawPaints(ctx, paints, L, X0, Y0, M, Minv, box, lite, under, laid); ctx.setTransform(M); }
     // ---- 1a'''. the course height's light (T028b, T126): its slopes lit by the sun at the upper right and shaded away from it, its steep rises'
     //      cast shadows and its hollows' occlusion, over the grass, the lots and the painted course, under the living ground, car parks and roads
     if (this.courseAny && this.slopeLight > 0) { const hl = heightLightGrid(this.courseH, box, lite ? 1 : 2); if (hl) this.heightLight(ctx, hl, M, W, H, L); ctx.setTransform(M); }
@@ -1218,7 +1310,7 @@ export class GroundPainter {
     return m;
   }
   /** the lawns of a chunk (lawns.ts): each in its texture (a preset, turned by its angle), all of the patch or through the soft-patch mask (drawBlend) */
-  private drawLawns(ctx: C2D, lawns: LotPatch[], L: number, X0: number, Y0: number, M: DOMMatrix, Minv: DOMMatrix, box: BBox) {
+  private drawLawns(ctx: C2D, lawns: LotPatch[], L: number, X0: number, Y0: number, M: DOMMatrix, Minv: DOMMatrix, box: BBox, under: CanvasPattern | null = null, laid: readonly LotPatch[] = []) {
     for (const p0 of lawns) {
       // T204: a lot's lawn with its outline rounded and wobbled (its own pts still pick its look); a road block's grass lies under the
       // sidewalks that ring it, as it is
@@ -1247,6 +1339,8 @@ export class GroundPainter {
         if (this.tex.has(BLOCK_UNDER)) fill(BLOCK_UNDER);
         this.drawBlend(ctx, { t, s: lw.share, f: lw.soft, p: lw.patch }, 1, G, path, 'nonzero', r, L, X0, Y0, M, Minv);
       }
+      // T204: a lot's lawn takes the tall grass's spill where the map's grass meets it
+      if (under && lw.z >= 1) this.areaSpill(ctx, this.ruggedOf(p0), laid, [], L, M, box, under);
     }
   }
   /** a second texture laid over a surface in soft patches (a painted area's Blend with, PatchPaint m; a course look's; a road block's lawn): the
@@ -1287,7 +1381,7 @@ export class GroundPainter {
    *  slider: a cool multiply inside the edges turned from the sun and a textured light a gap inside those turned to it, both clipped to the area)
    *  and its feather (paint-edges.ts: images from its outline, made when the chunk bakes, never per frame), and laid over the chunk after the
    *  shadow it casts on the ground below */
-  private drawPaints(ctx: C2D, paints: LotPatch[], L: number, X0: number, Y0: number, M: DOMMatrix, Minv: DOMMatrix, box: BBox, lite: boolean) {
+  private drawPaints(ctx: C2D, paints: LotPatch[], L: number, X0: number, Y0: number, M: DOMMatrix, Minv: DOMMatrix, box: BBox, lite: boolean, under: CanvasPattern | null = null, others: readonly LotPatch[] = []) {
     const res = edgeRes(L);
     let layer: Cnv | null = null;
     /** an edge image over the tiles from (x0, y0) (res px a tile), stretched onto g through the chunk transform (bilinear) with the op */
@@ -1297,16 +1391,21 @@ export class GroundPainter {
       g.save(); g.setTransform(M); g.globalCompositeOperation = op; g.globalAlpha = 1; g.imageSmoothingEnabled = true; g.drawImage(s, x0, y0, img.W / res, img.H / res); g.restore();
     };
     let course = false;
+    // T204: the ground laid so far as drawn (the lawns, the lots, the painted areas before this one: the spill over an area reads the map's grass
+    // just outside it only where none of them lies) and the course as drawn
+    const drawn: LotPatch[] = [...others], courses = paints.filter(q => q.course).map(q => this.warpedCourse(q.course!));
     for (const p0 of paints) {
       // the course chunks (all z 0, so side by side in the order) draw together, surface by surface, so a chunk's lower surface never
       // lands over its neighbour's higher one at a seam
-      if (p0.course) { if (!course) { course = true; this.drawCourses(ctx, paints.filter(q => q.course).map(q => this.warpedCourse(q.course!)), L, X0, Y0, M, Minv, box, lite); } continue; }
+      if (p0.course) { if (!course) { course = true; this.drawCourses(ctx, courses, L, X0, Y0, M, Minv, box, lite, under); } continue; }
       // T204: drawn with its outline rounded and wobbled (a soft area; paving and paths keep their line)
-      const p = this.ruggedOf(p0).q;
+      const rf = this.ruggedOf(p0), p = rf.q;
+      // T204: then the tall grass's spill over its edges where the map's grass meets them (a hard area's few tufts)
+      const spill = () => { if (under) this.areaSpill(ctx, rf, drawn, courses, L, M, box, under); drawn.push(p); };
       const look = p.paint!.e ? EDGE_LOOKS[p.paint!.e] ?? null : null, sh = areaShadow(p.paint!.sh);
-      if (!look && !sh) { this.drawPaint(ctx, p, L, X0, Y0, M, Minv, box, lite, 0); continue; }
+      if (!look && !sh) { this.drawPaint(ctx, p, L, X0, Y0, M, Minv, box, lite, 0); spill(); continue; }
       const feather = look ? featherTiles(look, L) : 0, reach = Math.max(look ? edgeReach(look, feather) : 0, areaShadeReach(sh, feather)), eb = edgeBox(quadBox(p.pts), box, reach);
-      if (!eb) continue;
+      if (!eb) { drawn.push(p); continue; }
       const [ex0, ey0, ex1, ey1] = eb, field = edgeField(p.pts, ex0, ey0, ex1 - ex0, ey1 - ey0, res, reach, COURSE_CELL);
       const im = look ? edgeImages(field, look, feather) : null, sd = sh ? areaShadeImages(field, sh, !lite && L >= AREA_SHADE.lightL, feather) : null;
       // the cast shadow on the ground under it, multiplied in the cool shade so the ground keeps its texture (T110)
@@ -1337,6 +1436,7 @@ export class GroundPainter {
         ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; ctx.drawImage(layer, rx, ry, rw, rh, rx, ry, rw, rh); ctx.restore();
         g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(rx, ry, rw, rh); g.restore();
       }
+      spill();
     }
   }
   /** the course chunks of a ground chunk (the course grid; plan P21 sections 3.4 and 3.8, T077; the walls T099), under the chunk transform,
@@ -1354,7 +1454,7 @@ export class GroundPainter {
    *  Edges that are walls or hidden under a later layer get no feather: they stay crisp, as a kerb's edge. No dark outline stroke. A district
    *  (lite) chunk draws the fills, the collar fills, the grow-in (the ground's state, never left out) and the walls in their light steps only
    *  (no feathers, shades, bands, edges or stripes) */
-  private drawCourses(ctx: C2D, cs: CoursePatch[], L: number, X0: number, Y0: number, M: DOMMatrix, Minv: DOMMatrix, box: BBox, lite: boolean) {
+  private drawCourses(ctx: C2D, cs: CoursePatch[], L: number, X0: number, Y0: number, M: DOMMatrix, Minv: DOMMatrix, box: BBox, lite: boolean, under: CanvasPattern | null = null) {
     const r = [box[0] - 1, box[1] - 1, box[2] + 1, box[3] + 1], res = courseRes(L);
     /** a course texture as a fill style on g: painted (its look, composed over the part `need` of the chunk), the photo or preset in tile space
      *  (turned and scaled about the origin), else the screen texture */
@@ -1413,6 +1513,32 @@ export class GroundPainter {
       g.save(); g.setTransform(M); g.globalCompositeOperation = op; g.imageSmoothingEnabled = true; g.drawImage(s, x0, y0, img.W / res, img.H / res); g.restore();
     };
     const flatF = featherTiles(EDGE_LOOKS.flat!, L), wallF = 0.5 * jointFeather(L);
+    /** T204: the tall grass's spill over the fairway and its first cut (CoursePatch.spill, as drawn): for each tall layer outside, its blades
+     *  (rugged-edges spillBlades, made once a patch and blade scale) cut from that layer's own picture and tone (the rough's, the fescue's), or
+     *  from the ground under the course where the map's grass meets the turf */
+    const spill = () => {
+      const k = spillScale(L, TILE_PX), x0 = box[0] - 2, y0 = box[1] - 2, x1 = box[2] + 2, y1 = box[3] + 2, by = new Map<number, { tri: Float32Array[]; lines: { p: Float32Array; side: 1 }[] }>();
+      for (const c of cs) {
+        if (!c.spill?.length) continue;
+        let m = this.courseBladeSets.get(c); if (!m) this.courseBladeSets.set(c, m = new Map());
+        let sets = m.get(k);
+        if (!sets) { const g = new Map<number, number[]>(); for (const r of c.spill) { let a = g.get(r.o); if (!a) g.set(r.o, a = []); spillBlades(r.p, 1, k, false, a); } sets = [...g].map(([o, a]) => ({ o, tri: Float32Array.from(a) })); m.set(k, sets); }
+        for (const q of sets) { let e = by.get(q.o); if (!e) by.set(q.o, e = { tri: [], lines: [] }); e.tri.push(q.tri); }
+        for (const r of c.spill) {
+          let near = false; for (let q = 0; q + 1 < r.p.length && !near; q += 2) near = r.p[q]! >= x0 && r.p[q]! <= x1 && r.p[q + 1]! >= y0 && r.p[q + 1]! <= y1;
+          if (near) by.get(r.o)?.lines.push({ p: r.p, side: 1 });
+        }
+      }
+      for (const [o, e] of by) {
+        if (!e.lines.length) continue;
+        const t = o ? cs.flatMap(c => c.layers).find(l => l.s === o >> 1) : null, need = boxOf(e.lines.map(l => l.p), 1);
+        if (need[2] <= need[0] || need[3] <= need[1]) continue;
+        const fill = t ? style(ctx, t, need) : under; if (!fill) continue;
+        let tri = e.tri[0]!;
+        if (e.tri.length > 1) { tri = new Float32Array(e.tri.reduce((n, q) => n + q.length, 0)); let at = 0; for (const q of e.tri) { tri.set(q, at); at += q.length; } }
+        this.layBlades(ctx, M, tri, null, box, e.lines, fill, t ? draw => toneOver(ctx, t, 1, draw) : undefined);
+      }
+    };
     const layers = (s: number) => { const out: { c: CoursePatch; l: CourseLayer }[] = []; for (const c of cs) for (const l of c.layers) if (l.s === s) out.push({ c, l }); return out; };
     // the walls by the layer they hang over, the lit top edges by the layer they light. A raised surface's bank or rock face (T127) is drawn
     // just before that surface's first layer instead, over every flat layer drawn so far (one bank spans the rough and the fairway alike)
@@ -1546,6 +1672,7 @@ export class GroundPainter {
         }
         rims(code);                                                                                // 7
         if (!lite && COURSE_STRIPES) for (const { l } of ls) this.courseStripes(ctx, l, L, M);      // 8
+        if (s === SURF.fairway) spill();                                                            // 9: the tall grass's spill (T204)
       }
       walls(code);
     }
