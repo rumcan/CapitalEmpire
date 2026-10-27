@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-27 06:57)
+## START HERE (kept current by the lead; last updated 2026-10-27 07:10)
 
 **Paste-ready start prompts for every role are in `docs/START-PROMPTS.md`:** the lead, a coding ticket, and the other sessions in this
 repo. The weekly usage cap is close (2026-10-26), so any chat may stop at any moment.
@@ -27,12 +27,12 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 ### In flight
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |
-| T178 diag | #443 | `arena/T178-junction-diag` | `.claude/worktrees/t166` | 5187 | Diagnostic for the owner's balance call: where the grown town's trips lose time (per junction), what each player lever buys (class upgrade, lights, roundabout, bypass, one-way) per $1,000, whether the sim's junction rules are sane. Agent: the ground agent. |
-| T181b → T183 → T182 | #453, #461, #454 | fresh branches | `.claude/worktrees/t160` | 5186 | The lot agent, in order: (1) lawns: keep the streaks, remove the flat colour wash; (2) **T183** the lot lab: decals that show (under the lawn?), ground drawing with clear Select / Draw modes (a lit switch, a banner, a brush cursor; drag to paint, Shift erases, Esc/V back); (3) the toolbar regroup. The owner is using the studio: never write their data. |
+| T184 | #464 | fresh branches | `.claude/worktrees/t166` | 5187 | **The owner approved (diagnosis #443):** PR 1 junction rules (equal crossings first-come, queue-aware routing + a deadlock breaker, roundabout entry at the ring car's real speed; every gate before/after); PR 2 `JAM_HINT` at the Junction tool, `range:gate --player` placing junction tools, P22 bands on seeds 1-3 without going broke (tune prices, town income, growth in that order). Agent: the ground agent. |
+| T183 → T182 | #461, #454 | fresh branches | `.claude/worktrees/t160` | 5186 | The lot agent: **T183** the lot lab (decals on top of lawns; ground drawing with clear Select / Draw modes; in the wizard a click selects and Del deletes), then the toolbar regroup. The owner is using the studio: never write their data. |
 | T112 | #199 | `arena/T112-sharp` (PR #394) | `.claude/worktrees/t112` | — | **Approved, merge HELD for the morning restart:** a lock change makes the 5174 auto-updater run `npm ci` in theme-consistency (the live 5191 studio holds sharp there; the lot agent's t160 uses it by junction). Morning order: stop 5191 → merge #394 → let npm ci finish → restart 5191 and 5174. All shipped bytes identical on 0.35.5; audit 0. |
 | P05 | #68 | PR #413 **open for the owner's approval** | — | — | The M5 balance plan, measured: arrival 47% at tier 1 from a fresh start (the start's 56-bay car park holds 168 fans), 100% with car parks; 10% at tier 2 fresh, 70-81% with car parks; an 18 of ~5,900 m fits the starting land on every seed (~$190k seeded); with the proposals a careful player reaches tier 3 in year 4. Knob recommended for "careless out-saves careful": sponsors x (1 + (rep-50)/50). |
-| T178 diag | #443 | `arena/T178-junction-diag` | `.claude/worktrees/t166` | 5187 | Diagnostic for the owner's balance call: where the grown town's trips lose time (per junction), what each player lever buys (class upgrade, lights, roundabout, bypass, one-way) per $1,000, whether the sim's junction rules are sane. Agent: the ground agent. |
-| T181b → T183 → T182 | #453, #461, #454 | fresh branches | `.claude/worktrees/t160` | 5186 | The lot agent, in order: (1) lawns: keep the streaks, remove the flat colour wash; (2) **T183** the lot lab: decals that show (under the lawn?), ground drawing with clear Select / Draw modes (a lit switch, a banner, a brush cursor; drag to paint, Shift erases, Esc/V back); (3) the toolbar regroup. The owner is using the studio: never write their data. |
+| T184 | #464 | fresh branches | `.claude/worktrees/t166` | 5187 | **The owner approved (diagnosis #443):** PR 1 junction rules (equal crossings first-come, queue-aware routing + a deadlock breaker, roundabout entry at the ring car's real speed; every gate before/after); PR 2 `JAM_HINT` at the Junction tool, `range:gate --player` placing junction tools, P22 bands on seeds 1-3 without going broke (tune prices, town income, growth in that order). Agent: the ground agent. |
+| T183 → T182 | #461, #454 | fresh branches | `.claude/worktrees/t160` | 5186 | The lot agent: **T183** the lot lab (decals on top of lawns; ground drawing with clear Select / Draw modes; in the wizard a click selects and Del deletes), then the toolbar regroup. The owner is using the studio: never write their data. |
 | T112 | #199 | `arena/T112-sharp` (PR #394) | `.claude/worktrees/t112` | — | **Approved, merge HELD for the morning restart:** a lock change makes the 5174 auto-updater run `npm ci` in theme-consistency (the live 5191 studio holds sharp there; the lot agent's t160 uses it by junction). Morning order: stop 5191 → merge #394 → let npm ci finish → restart 5191 and 5174. All shipped bytes identical on 0.35.5; audit 0. |
 
 **Two coding agents at a time (the owner, 2026-10-26: first "maybe just too many background tasks?" after the studio tab died with the
@@ -94,6 +94,10 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
    (the sharp bump). See the History sections below and `gh issue list --label arena --state open`.
 
 ### Done recently (newest first; details in each PR)
+- 2026-10-27 07:10: **#463 lawns keep their detail**: the streaks along fences are back (the owner likes them); the blanket was the living
+  ground's ambient occlusion (a cool multiply over all ground near any house, tree or fence): off (`LIVING_AO = false`); a built
+  lawn's local contrast 1.14 → 1.78 at 30% (the raw painting 1.66), its colour back at the painting's. **#443 junction diagnosis**: class
+  upgrades add speed not capacity; plain one-lane crossings gridlock by spillback; junction tools save 0.26-0.43x for $3-80k on 10 crossings.
 - 2026-10-27 06:56: **#442 + #456 golf towns drive, and the jam is the player's** (the owner: "the guy hasto upgrade his town roads"): the T048
   leave-time bug fixed (no golf town trip ever left); range:gate's default run bands the unattended town's stall; `--player` (a
   harness player upgrading jammed arms each season) reaches P22's bands on seed 1 only (~$810k over 20 seasons, then broke): **the
