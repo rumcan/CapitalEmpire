@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-27 06:26)
+## START HERE (kept current by the lead; last updated 2026-10-27 06:30)
 
 **Paste-ready start prompts for every role are in `docs/START-PROMPTS.md`:** the lead, a coding ticket, and the other sessions in this
 repo. The weekly usage cap is close (2026-10-26), so any chat may stop at any moment.
@@ -28,11 +28,11 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |
 | T178→ | #442 (+#445) | `arena/T098-fixture-traffic` | `.claude/worktrees/t166` | 5187 | **The owner (06:15): "this is seposed to happen btw. the guy hasto upgrade his town roads".** The self-paving design is dropped. #442 (golf towns finally drive) merges with range:gate run two ways: unattended (stalls/declines: banded as measured) and a scripted player upgrading the most jammed streets (must reach P22 2.7's bands; upgrades and money per season reported); a jam hint if the game shows none. Agent: the ground agent. |
-| T180 | #449 | `arena/T180-not-by-colour` | `.claude/worktrees/t160` | 5186 | P23-UX D8.1 colour part: refused cells hatched with ✕, icons beside colour-only states, 13/12 px text, WCAG AA pairs. Agent: the lot agent. |
+| T181, T182 | #453, #454 | fresh branches | `.claude/worktrees/t160` | 5186 | **The owner's morning asks:** (1) remove the transparent colour mask over lawns (likely `drawManagedGrass` testing the lawn's preset, not its painted lawn); (2) the toolbar regrouped: COURSE (Driving range · Course · Decoration) and TOWN (Traffic · Town decoration), no key letters on the rail (keys kept in the tooltip). Agent: the lot agent. |
 | T112 | #199 | `arena/T112-sharp` (PR #394) | `.claude/worktrees/t112` | — | **Approved, merge HELD for the morning restart:** a lock change makes the 5174 auto-updater run `npm ci` in theme-consistency (the live 5191 studio holds sharp there; the lot agent's t160 uses it by junction). Morning order: stop 5191 → merge #394 → let npm ci finish → restart 5191 and 5174. All shipped bytes identical on 0.35.5; audit 0. |
 | P05 | #68 | PR #413 **open for the owner's approval** | — | — | The M5 balance plan, measured: arrival 47% at tier 1 from a fresh start (the start's 56-bay car park holds 168 fans), 100% with car parks; 10% at tier 2 fresh, 70-81% with car parks; an 18 of ~5,900 m fits the starting land on every seed (~$190k seeded); with the proposals a careful player reaches tier 3 in year 4. Knob recommended for "careless out-saves careful": sponsors x (1 + (rep-50)/50). |
 | T178→ | #442 (+#445) | `arena/T098-fixture-traffic` | `.claude/worktrees/t166` | 5187 | **The owner (06:15): "this is seposed to happen btw. the guy hasto upgrade his town roads".** The self-paving design is dropped. #442 (golf towns finally drive) merges with range:gate run two ways: unattended (stalls/declines: banded as measured) and a scripted player upgrading the most jammed streets (must reach P22 2.7's bands; upgrades and money per season reported); a jam hint if the game shows none. Agent: the ground agent. |
-| T180 | #449 | `arena/T180-not-by-colour` | `.claude/worktrees/t160` | 5186 | P23-UX D8.1 colour part: refused cells hatched with ✕, icons beside colour-only states, 13/12 px text, WCAG AA pairs. Agent: the lot agent. |
+| T181, T182 | #453, #454 | fresh branches | `.claude/worktrees/t160` | 5186 | **The owner's morning asks:** (1) remove the transparent colour mask over lawns (likely `drawManagedGrass` testing the lawn's preset, not its painted lawn); (2) the toolbar regrouped: COURSE (Driving range · Course · Decoration) and TOWN (Traffic · Town decoration), no key letters on the rail (keys kept in the tooltip). Agent: the lot agent. |
 | T112 | #199 | `arena/T112-sharp` (PR #394) | `.claude/worktrees/t112` | — | **Approved, merge HELD for the morning restart:** a lock change makes the 5174 auto-updater run `npm ci` in theme-consistency (the live 5191 studio holds sharp there; the lot agent's t160 uses it by junction). Morning order: stop 5191 → merge #394 → let npm ci finish → restart 5191 and 5174. All shipped bytes identical on 0.35.5; audit 0. |
 
 **Two coding agents at a time (the owner, 2026-10-26: first "maybe just too many background tasks?" after the studio tab died with the
@@ -94,6 +94,9 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
    (the sharp bump). See the History sections below and `gh issue list --label arena --state open`.
 
 ### Done recently (newest first; details in each PR)
+- 2026-10-27 06:30: **T180 #451 not by colour alone** (P23-UX D8.1): refused cells hatched with an ✕ (one module `ext/refused-mark.ts`:
+  the brush, New hole's left-out cells, blocked footprints, the clubhouse and props ghosts); icons beside ten colour-only states
+  (`ui/status-icon.ts`); body text 13 px, secondary 12 px; WCAG AA: `text-slate-500` on panels (2.9:1) → slate-400 (5.3:1).
 - 2026-10-27 06:26: **T095 #419 the first minute of a range start** (squash-merged on the owner's word): welcome card (follows the ramp),
   the founding line in the Tier sub-line, the tee ring, three toasts, the 7-step range guide, the unnamed town until "is on the map". The
   lead merged main in first (engine field renamed `playableHoles`: T090 has a `holesBuilt()` method).
