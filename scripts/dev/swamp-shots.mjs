@@ -1,7 +1,7 @@
 // T199 (#517): in-game shots of a small stream drawn as swamp (window.__game.ground.setSwamp: off is the old creek bed) at 30%, 8% and 2%, the
 // swamp's pools with the camera glint off and on (window.__game.specCam) at 30% from the same view, a river nearby (unchanged), and the bake
 // times of the same chunks with the swamp off and on (and the glint on).
-//   node scripts/dev/swamp-shots.mjs --base http://127.0.0.1:5187/ --out E:/ClaudeTemp/T199 [--quick]
+//   node scripts/dev/swamp-shots.mjs --base http://127.0.0.1:5187/ --out E:/ClaudeTemp/T199 [--quick | --numbers (the bake and frame times only)]
 // Needs a dev server (vite) on --base. One headless Edge, closed when done; a fresh profile, so each start is a new game.
 import { chromium } from 'playwright-core';
 import sharp from 'sharp';
@@ -9,7 +9,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const args = process.argv.slice(2), opt = (k, d) => { const i = args.indexOf(`--${k}`); return i >= 0 ? args[i + 1] : d; };
-const base = opt('base', 'http://127.0.0.1:5187/'), out = opt('out', 'output/swamp'), quick = args.includes('--quick');
+const base = opt('base', 'http://127.0.0.1:5187/'), out = opt('out', 'output/swamp'), quick = args.includes('--quick'), numbers = args.includes('--numbers');
 const W = 1280, H = 800;
 mkdirSync(out, { recursive: true });
 const browser = await chromium.launch({ channel: 'msedge', headless: true, args: ['--enable-gpu', '--ignore-gpu-blocklist', '--use-angle=d3d11'] });
@@ -50,21 +50,23 @@ try {
   const place = (p, z) => page.evaluate(([X, Y, z]) => { const g = window.__game; g.camEase = null; g.cam.z = z; g.cam.X = X; g.cam.Y = Y; }, [p.X, p.Y, z]);
   const setSwamp = on => page.evaluate(on => window.__game.ground.setSwamp(on), on);
   const setSpec = on => page.evaluate(on => { window.__game.specCam = on; }, on);
-  // ---- the creek before (the old creek bed) and after (swamp) at 30%, 8% and 2%; the river nearby at 8%
-  for (const on of [false, true]) {
-    await setSwamp(on);
-    for (const z of quick ? [0.3] : [0.3, 0.08, 0.02]) { await place(where.mid, z); await settle(page); await shot(page, `creek-${Math.round(z * 100)}pct-${on ? 'swamp' : 'before'}`); }
-    if (where.mouth && !quick) { await place(where.mouth, 0.08); await settle(page); await shot(page, `river-8pct-${on ? 'swamp' : 'before'}`); await place(where.mouth, 0.3); await settle(page); await shot(page, `river-30pct-${on ? 'swamp' : 'before'}`); }
+  if (!numbers) {
+    // ---- the creek before (the old creek bed) and after (swamp) at 30%, 8% and 2%; the river nearby at 8%
+    for (const on of [false, true]) {
+      await setSwamp(on);
+      for (const z of quick ? [0.3] : [0.3, 0.08, 0.02]) { await place(where.mid, z); await settle(page); await shot(page, `creek-${Math.round(z * 100)}pct-${on ? 'swamp' : 'before'}`); }
+      if (where.mouth && !quick) { await place(where.mouth, 0.08); await settle(page); await shot(page, `river-8pct-${on ? 'swamp' : 'before'}`); await place(where.mouth, 0.3); await settle(page); await shot(page, `river-30pct-${on ? 'swamp' : 'before'}`); }
+    }
+    // ---- the glint off and on, the same view at 30%, by day and at dusk
+    await setSwamp(true);
+    for (const on of [false, true]) {
+      await setSpec(on); await place(where.mid, 0.3); await settle(page);
+      for (const [light, v] of quick ? [['day', 0]] : [['day', 0], ['dusk', 0.5]]) { await page.evaluate(v => { window.__night = v; }, v); await page.waitForTimeout(250); await shot(page, `glint-30pct-${light}-${on ? 'on' : 'off'}`); }
+    }
+    // the glint's centre-to-edge falloff: the same pools at the screen's centre and near its edge (on)
+    await place({ X: where.mid.X + 0.42 * W / 0.3, Y: where.mid.Y }, 0.3); await settle(page); await page.evaluate(() => { window.__night = 0; }); await shot(page, 'glint-30pct-day-on-edge');
+    await setSpec(false); await settle(page); await shot(page, 'glint-30pct-day-off-edge');
   }
-  // ---- the glint off and on, the same view at 30%, by day and at dusk
-  await setSwamp(true);
-  for (const on of [false, true]) {
-    await setSpec(on); await place(where.mid, 0.3); await settle(page);
-    for (const [light, v] of quick ? [['day', 0]] : [['day', 0], ['dusk', 0.5]]) { await page.evaluate(v => { window.__night = v; }, v); await page.waitForTimeout(250); await shot(page, `glint-30pct-${light}-${on ? 'on' : 'off'}`); }
-  }
-  // the glint's centre-to-edge falloff: the same pools at the screen's centre and near its edge (on)
-  await place({ X: where.mid.X + 0.42 * W / 0.3, Y: where.mid.Y }, 0.3); await settle(page); await page.evaluate(() => { window.__night = 0; }); await shot(page, 'glint-30pct-day-on-edge');
-  await setSpec(false); await settle(page); await shot(page, 'glint-30pct-day-off-edge');
   if (!quick) {
     // ---- the bake times: each switch re-bakes the view (invalidateAll): the worker ms of those bakes, on the same chunks (the creek at the
     //      centre), twice each: swamp off, swamp on, swamp on with the glint

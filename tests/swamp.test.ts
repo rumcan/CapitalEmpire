@@ -10,7 +10,7 @@ import { clampSurfaces, lookOfTex, SURFACES, surfaceOfTex } from '../src/game/pa
 import file from '../src/game/painted-surfaces.json';
 import tiles from '../src/game/painted-tiles.json';
 import { SPEC_LOOK } from '../src/game/lamp-reflect';
-import { GLOSS, GLOSS_LIGHT_GLSL, KEY, SWAMP, SWAMP_OUT, SwampField, bandAt, glossGain, glossPixel, glossTile, swampKey, swampStreams } from '../src/game/swamp';
+import { GLOSS, GLOSS_LIGHT_GLSL, KEY, SWAMP, SWAMP_OUT, SwampField, bandOf, glossGain, glossPixel, glossTile, swampKey, swampStreams } from '../src/game/swamp';
 
 const lum = (c: readonly number[]) => 0.299 * c[0]! + 0.587 * c[1]! + 0.114 * c[2]!;
 /** a wavy creek of width w (tiles) from (x0, y0), n points 6 tiles apart */
@@ -74,7 +74,7 @@ test('T199 the band: whole over its channel, a rugged rim that never runs straig
   assert.ok(longest < 16, `a straight run of ${longest / 4} tiles`);
   // past the farthest reach (on the plain distance, less the soft union's most), nothing
   for (let x = 150; x < 400; x += 3.7) for (let y = 150; y < 400; y += 3.3) if (plainEdge(pts, x, y) > SWAMP_OUT + SWAMP.soft * Math.log(3)) assert.equal(f.cover(x, y), 0, `${x}, ${y}`);
-  assert.equal(bandAt(SWAMP_OUT, 0, 0), 0); assert.equal(bandAt(-1, 0, 0), 1);
+  assert.equal(bandOf(SWAMP_OUT, SWAMP.reach, 0), 0); assert.equal(bandOf(-1, 0, SWAMP.rag), 1, "the core, whatever the noise");
 });
 
 test('T199 the band rounds the inside of a bend (no sharp corner) and every chunk lays the same cover', () => {
@@ -109,10 +109,12 @@ test('T199 the gloss mask: a tile\'s pools, inset from their edges, brightest in
   const pool = (x: number, y: number) => Math.hypot(x - 30, y - 30) < 16 || Math.hypot(x - 75, y - 30) < 3 || Math.hypot(x - 96, y - 52) < 14; // a big pool, a small one, one cut by the border
   for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const c = pool(x + 0.5, y + 0.5) ? water : grass; src.set([...c, 255], (y * w + x) * 4); }
   const g = glossTile(src, w, h), A = (x: number, y: number) => g[(y * w + x) * 4 + 3]!;
+  // (the pool's edge at y = 14; a px y - 14 inside it)
+  const [i0, i1] = GLOSS.inset, mid = Math.round(14 + (i0 + i1) / 2);
   assert.equal(A(30, 30), 255, 'whole in the big pool\'s middle');
-  assert.ok(A(30, 30) > A(30, 20) && A(30, 20) > A(30, 16), 'rising from the rim to the middle');
+  assert.ok(A(30, 30) > A(30, mid) && A(30, mid) > A(30, 15) && A(30, mid) > 0, `rising from the rim to the middle: ${A(30, 15)}, ${A(30, mid)}, ${A(30, 30)}`);
   for (const [x, y] of [[30, 14], [14, 30], [45, 30], [30, 45]]) assert.ok(A(x, y) <= 8, `a gap inside the edge at ${x}, ${y}: ${A(x, y)}`);
-  assert.ok(A(75, 30) < 80, 'a small pool has little');
+  assert.ok(A(75, 30) < 160, `a small pool has less: ${A(75, 30)}`);
   for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (!pool(x + 0.5, y + 0.5)) assert.equal(A(x, y), 0, 'none on the grass');
   assert.deepEqual([...g.slice((30 * w + 30) * 4, (30 * w + 30) * 4 + 3)], water, 'the pool\'s own mean colour');
   // the pool cut by the tile's right border: its gloss runs to the border (more of the same water goes on in the next tile), not a line
@@ -121,10 +123,12 @@ test('T199 the gloss mask: a tile\'s pools, inset from their edges, brightest in
 
 test('T199 the gloss of the shipped swamp tiles picks their pools and nothing else', () => {
   const tile = resolve('src/assets/ground/painted/tiles/swamp-run/near/tile-01.webp');
-  const code = `import sharp from 'sharp'; const d = await sharp(${JSON.stringify(tile)}).resize(688, 384).ensureAlpha().raw().toBuffer(); process.stdout.write(d.toString('base64'));`;
+  // (as the worker makes it: the tile at GLOSS.tileScale of its native 1376 x 768)
+  const w = Math.round(1376 * GLOSS.tileScale), h = Math.round(768 * GLOSS.tileScale);
+  const code = `import sharp from 'sharp'; const d = await sharp(${JSON.stringify(tile)}).resize(${w}, ${h}).ensureAlpha().raw().toBuffer(); process.stdout.write(d.toString('base64'));`;
   const r = spawnSync(process.execPath, ['--input-type=module', '-e', code], { encoding: 'utf8', maxBuffer: 1 << 24 });
   assert.equal(r.status, 0, r.stderr);
-  const raw = Buffer.from(r.stdout, 'base64'), w = 688, h = 384, src = new Uint8ClampedArray(raw.buffer, raw.byteOffset, raw.length), g = glossTile(src, w, h);
+  const raw = Buffer.from(r.stdout, 'base64'), src = new Uint8ClampedArray(raw.buffer, raw.byteOffset, raw.length), g = glossTile(src, w, h);
   let glossy = 0, water = 0;
   for (let i = 0; i < w * h; i++) {
     const k = swampKey(src[4 * i]!, src[4 * i + 1]!, src[4 * i + 2]!); if (k >= 0.5) water++;

@@ -23,7 +23,7 @@ import type { SpecLook } from './lamp-reflect';
 /** the band's numbers (tiles):
  *  - reach: how far past the channel's edge (half its width) the swamp reaches on average (the soft union, below, adds about a tile and a
  *    half); sway: how much that varies along the stream, over a slow noise of swayWave; rag: the edge's raggedness, at most (a fractal noise of
- *    ragWave and three finer octaves); feather: the soft rim's half width; core: the band always covers its channel and this much past it (so
+ *    ragWave and two finer octaves, on a half-tile lattice); feather: the soft rim's half width; core: the band always covers its channel and this much past it (so
  *    no fescue ever shows between the stream and its swamp, whatever the noise);
  *  - soft: the soft union's radius: the band's edge is the level set of a smooth minimum of the distances to the stream's segments, so the
  *    inside of a bend is rounded (a plain minimum leaves a sharp corner there) and the joints draw no kink;
@@ -36,9 +36,11 @@ export const SWAMP = {
 } as const;
 /** the farthest the band can reach past its channel's edge (tiles, on the soft distance): past it, nothing is swamp */
 export const SWAMP_OUT = SWAMP.reach + SWAMP.sway + SWAMP.rag + SWAMP.feather;
-/** how far past the nearest segment another still counts for the soft distance (its share past it is under e^-4); a segment's box is grown
- *  by twice it, so every chunk and every point query sums the same segments wherever the band can be */
-const SOFT_REACH = 4 * SWAMP.soft;
+/** how far past the nearest segment another still counts for the soft distance (its share past it is under e^-3, left out alike everywhere) */
+const SOFT_REACH = 3 * SWAMP.soft;
+/** past this nearest distance the soft distance is SWAMP_OUT (the soft sum takes at most soft x ln 4 off it: four segments within reach); a
+ *  segment's box is grown by it and SOFT_REACH, so every chunk and every point query sums the same segments wherever the band can be */
+const SOFT_OUT = SWAMP_OUT + SWAMP.soft * Math.log(4);
 
 /** the waterways drawn as swamp: the small streams (creeks), never the river */
 export const swampStreams = <T extends { kind: string }>(waters: readonly T[]): T[] => waters.filter(w => w.kind === 'creek');
@@ -49,18 +51,26 @@ const NOISE = makeNoise(0x5a17);
 /** the band's reach past the channel's edge at tile (x, y): its slow sway along the stream */
 export const reachAt = (x: number, y: number) => SWAMP.reach + SWAMP.sway * clamp(NOISE(x / SWAMP.swayWave + 0.37, y / SWAMP.swayWave + 0.71), -1, 1);
 /** the edge's raggedness at tile (x, y) (tiles, within +-rag) */
-export const ragAt = (x: number, y: number) => SWAMP.rag * clamp(2 * fbm(NOISE, x / SWAMP.ragWave + 13.1, y / SWAMP.ragWave - 7.9, 4), -1, 1);
-/** the band's cover (0..1) at tile (x, y), e tiles past the channel's edge on the soft distance (negative inside the channel): its ragged rim,
- *  and whole over its core */
-export function bandAt(e: number, x: number, y: number): number {
+export const ragAt = (x: number, y: number) => SWAMP.rag * clamp(2 * fbm(NOISE, x / SWAMP.ragWave + 13.1, y / SWAMP.ragWave - 7.9, 3), -1, 1);
+/** the band's cover (0..1), e tiles past the channel's edge on the soft distance (negative inside the channel), where its reach is R and its
+ *  rim's rag g: its ragged rim, and whole over its core */
+export function bandOf(e: number, R: number, g: number): number {
   const core = 1 - smooth(SWAMP.core - SWAMP.feather, SWAMP.core + SWAMP.feather, e);
   if (e >= SWAMP_OUT) return core;
-  const R = reachAt(x, y);
-  return Math.max(core, 1 - smooth(R - SWAMP.feather, R + SWAMP.feather, e + ragAt(x, y)));
+  return Math.max(core, 1 - smooth(R - SWAMP.feather, R + SWAMP.feather, e + g));
 }
+/** the rag's lattice step (tiles): the soft distance and the reach are sampled every tile, the rag (its finest octave about 0.6 tiles) every
+ *  half tile; between, bilinear. World-anchored, so every chunk and every point query reads the same values */
+const RAG_STEP = 0.5;
+const bilerp = (a: number, b: number, c: number, d: number, tx: number, ty: number) => { const t = a + (b - a) * tx, u = c + (d - c) * tx; return t + (u - t) * ty; };
+/** a lattice point's key in a cache */
+const latKey = (i: number, j: number) => (i + 8192) * 32768 + j + 8192;
+/** the soft distance from the nearest segment's m and the soft sum */
+const softEdge = (m: number, sum: number) => Math.min(SWAMP_OUT, m - SWAMP.soft * Math.log(sum));
+const CACHE_MAX = 1 << 18;
 
-/** segment records: ax ay bx by (tiles), the half widths at a and b, then the box (grown by the widest half width, SWAMP_OUT and twice the
- *  soft union's reach) */
+/** segment records: ax ay bx by (tiles), the half widths at a and b, then the box (grown by the widest half width, SOFT_OUT and the soft
+ *  union's reach) */
 const SEG = 10;
 /** the bucket size (tiles) of the segment index */
 const CELL = 32;
@@ -70,15 +80,17 @@ const CELL = 32;
 export class SwampField {
   private segs: Float64Array;
   private cells = new Map<number, number[]>();
+  /** the point queries' lattice values (soft distance and reach by tile, rag by half tile), kept as they are asked for (cleared past CACHE_MAX) */
+  private latE = new Map<number, number>(); private latR = new Map<number, number>(); private latG = new Map<number, number>();
   constructor(streams: readonly { pts: readonly WaterPoint[] }[]) {
     const out: number[] = [];
     for (const s of streams) {
       const p = s.pts;
       for (let k = 0; k + 1 < p.length; k++) {
-        const a = p[k]!, b = p[k + 1]!, g = Math.max(a.w, b.w) / 2 + SWAMP_OUT + 2 * SOFT_REACH;
+        const a = p[k]!, b = p[k + 1]!, g = Math.max(a.w, b.w) / 2 + SOFT_OUT + SOFT_REACH;
         out.push(a.x, a.y, b.x, b.y, a.w / 2, b.w / 2, Math.min(a.x, b.x) - g, Math.min(a.y, b.y) - g, Math.max(a.x, b.x) + g, Math.max(a.y, b.y) + g);
       }
-      if (p.length === 1) { const a = p[0]!, g = a.w / 2 + SWAMP_OUT + 2 * SOFT_REACH; out.push(a.x, a.y, a.x, a.y, a.w / 2, a.w / 2, a.x - g, a.y - g, a.x + g, a.y + g); }
+      if (p.length === 1) { const a = p[0]!, g = a.w / 2 + SOFT_OUT + SOFT_REACH; out.push(a.x, a.y, a.x, a.y, a.w / 2, a.w / 2, a.x - g, a.y - g, a.x + g, a.y + g); }
     }
     this.segs = Float64Array.from(out);
     for (let i = 0; i < this.segs.length; i += SEG) {
@@ -96,41 +108,89 @@ export class SwampField {
     for (let cy = Math.floor(y0 / CELL); cy <= Math.floor(y1 / CELL); cy++) for (let cx = Math.floor(x0 / CELL); cx <= Math.floor(x1 / CELL); cx++) {
       for (const i of this.cells.get((cy + 64) * 4096 + cx + 64) ?? []) if (s[i + 6]! <= x1 && s[i + 8]! >= x0 && s[i + 7]! <= y1 && s[i + 9]! >= y0) seen.add(i);
     }
-    return [...seen];
+    return [...seen].sort((a, b) => a - b); // (one order everywhere: the soft sum adds up alike in every chunk and query)
   }
   /** how far tile (x, y) lies past the channels' edge (tiles; negative inside one), at most SWAMP_OUT: the soft union of the segments' distances
    *  (the nearest's, less soft x ln of the sum of exp(-(d - nearest) / soft) over the segments within SOFT_REACH of it: at most the nearest's
-   *  distance, about a tile and a half less along a stream). d: a scratch for the distances (as long as the list) */
+   *  distance, about a tile and a half less along a stream). list: segments near (any superset of those whose box holds the point gives the
+   *  same value); d: a scratch for the distances (as long as the list) */
   edge(list: readonly number[], x: number, y: number, d: Float64Array = new Float64Array(list.length)): number {
     const s = this.segs; let m = Infinity, n = 0;
     for (const i of list) {
       if (x < s[i + 6]! || x > s[i + 8]! || y < s[i + 7]! || y > s[i + 9]!) continue;
-      const ax = s[i]!, ay = s[i + 1]!, dx = s[i + 2]! - ax, dy = s[i + 3]! - ay, l2 = dx * dx + dy * dy;
-      const t = l2 > 0 ? clamp(((x - ax) * dx + (y - ay) * dy) / l2, 0, 1) : 0;
-      const v = Math.hypot(ax + dx * t - x, ay + dy * t - y) - (s[i + 4]! + (s[i + 5]! - s[i + 4]!) * t);
-      d[n++] = v; if (v < m) m = v;
+      const v = this.segDist(i, x, y); d[n++] = v; if (v < m) m = v;
     }
-    if (!(m < SWAMP_OUT + SOFT_REACH)) return SWAMP_OUT;
+    if (!(m < SOFT_OUT)) return SWAMP_OUT;
     let sum = 0; for (let k = 0; k < n; k++) { const v = d[k]! - m; if (v < SOFT_REACH) sum += Math.exp(-v / SWAMP.soft); }
-    return Math.min(SWAMP_OUT, m - SWAMP.soft * Math.log(sum));
+    return softEdge(m, sum);
   }
-  /** the band's cover (0..1) at tile (x, y) */
+  /** segment i's distance from (x, y) past its channel's edge (tiles) */
+  private segDist(i: number, x: number, y: number) {
+    const s = this.segs, ax = s[i]!, ay = s[i + 1]!, dx = s[i + 2]! - ax, dy = s[i + 3]! - ay, l2 = dx * dx + dy * dy;
+    const t = l2 > 0 ? clamp(((x - ax) * dx + (y - ay) * dy) / l2, 0, 1) : 0;
+    return Math.hypot(ax + dx * t - x, ay + dy * t - y) - (s[i + 4]! + (s[i + 5]! - s[i + 4]!) * t);
+  }
+  /** the soft distance (edge) on the lattice of step st tiles, points [i0, i0 + ni) x [j0, j0 + nj) (point (i, j) at tile (i st, j st)): each
+   *  segment visits the points its box holds (no point tests every segment), first for the nearest distance, then for the soft sum in the
+   *  list's order, so every value is edge()'s exactly */
+  private lattice(list: readonly number[], i0: number, j0: number, ni: number, nj: number, st: number): Float64Array {
+    const s = this.segs, M = new Float64Array(ni * nj).fill(Infinity), S = new Float64Array(ni * nj);
+    for (const i of list) {
+      const a = Math.max(0, Math.ceil(s[i + 6]! / st) - i0), b = Math.min(ni - 1, Math.floor(s[i + 8]! / st) - i0), c = Math.max(0, Math.ceil(s[i + 7]! / st) - j0), d = Math.min(nj - 1, Math.floor(s[i + 9]! / st) - j0);
+      for (let y = c; y <= d; y++) for (let x = a; x <= b; x++) { const k = y * ni + x, v = this.segDist(i, (i0 + x) * st, (j0 + y) * st); if (v < M[k]!) M[k] = v; }
+    }
+    for (const i of list) {
+      const a = Math.max(0, Math.ceil(s[i + 6]! / st) - i0), b = Math.min(ni - 1, Math.floor(s[i + 8]! / st) - i0), c = Math.max(0, Math.ceil(s[i + 7]! / st) - j0), d = Math.min(nj - 1, Math.floor(s[i + 9]! / st) - j0);
+      for (let y = c; y <= d; y++) for (let x = a; x <= b; x++) { const k = y * ni + x, m = M[k]!; if (!(m < SOFT_OUT)) continue; const v = this.segDist(i, (i0 + x) * st, (j0 + y) * st) - m; if (v < SOFT_REACH) S[k] += Math.exp(-v / SWAMP.soft); }
+    }
+    for (let k = 0; k < M.length; k++) { const m = M[k]!; M[k] = m < SOFT_OUT ? softEdge(m, S[k]!) : SWAMP_OUT; }
+    return M;
+  }
+  private cached(map: Map<number, number>, k: number, f: () => number) {
+    let v = map.get(k); if (v !== undefined) return v;
+    if (map.size > CACHE_MAX) map.clear();
+    v = f(); map.set(k, v); return v;
+  }
+  /** the band's cover (0..1) at tile (x, y), as alpha samples it */
   cover(x: number, y: number): number {
     if (this.empty) return 0;
-    return bandAt(this.edge(this.near(x, y, x, y), x, y), x, y);
+    const i = Math.floor(x), j = Math.floor(y), tx = x - i, ty = y - j, list = this.near(i, j, i + 1, j + 1); if (!list.length) return 0;
+    const E = (a: number, b: number) => this.cached(this.latE, latKey(a, b), () => this.edge(list, a, b));
+    const e = bilerp(E(i, j), E(i + 1, j), E(i, j + 1), E(i + 1, j + 1), tx, ty); if (e >= SWAMP_OUT) return 0;
+    const R = (a: number, b: number) => this.cached(this.latR, latKey(a, b), () => reachAt(a, b));
+    const gi = Math.floor(x / RAG_STEP), gj = Math.floor(y / RAG_STEP), gx = x / RAG_STEP - gi, gy = y / RAG_STEP - gj;
+    const G = (a: number, b: number) => this.cached(this.latG, latKey(a, b), () => ragAt(a * RAG_STEP, b * RAG_STEP));
+    return bandOf(e, bilerp(R(i, j), R(i + 1, j), R(i, j + 1), R(i + 1, j + 1), tx, ty), bilerp(G(gi, gj), G(gi + 1, gj), G(gi, gj + 1), G(gi + 1, gj + 1), gx, gy));
   }
   /** the band's cover over tiles [x0, x0 + w) x [y0, y0 + h) at res samples a tile (RGB 0, alpha the cover; sample (u, v) at the tile point
-   *  (x0 + (u + 0.5) / res, y0 + (v + 0.5) / res), as terrain-paint.ts classAlpha), with the tile box it covers; null when none */
+   *  (x0 + (u + 0.5) / res, y0 + (v + 0.5) / res), as terrain-paint.ts classAlpha), with the tile box it covers; null when none. The soft
+   *  distance and the reach on the tile lattice over the box, the rag on the half-tile lattice only where the band can reach; a district chunk
+   *  (res under 2: a tile is a few px) on lattices twice as coarse */
   alpha(x0: number, y0: number, w: number, h: number, res: number): { data: Uint8ClampedArray; W: number; H: number; box: [number, number, number, number] } | null {
     if (this.empty) return null;
-    const list = this.near(x0, y0, x0 + w, y0 + h); if (!list.length) return null;
-    const W = Math.max(1, Math.ceil(w * res)), H = Math.max(1, Math.ceil(h * res)), data = new Uint8ClampedArray(W * H * 4), d = new Float64Array(list.length);
+    const st = res >= 2 ? 1 : 2, gs = RAG_STEP * st;
+    const i0 = Math.floor(x0 / st), j0 = Math.floor(y0 / st), ni = Math.floor((x0 + w) / st) - i0 + 2, nj = Math.floor((y0 + h) / st) - j0 + 2;
+    const list = this.near(i0 * st, j0 * st, (i0 + ni - 1) * st, (j0 + nj - 1) * st); if (!list.length) return null;
+    const E = this.lattice(list, i0, j0, ni, nj, st); let any = false;
+    // (a lattice cell whose four corners are all past SWAMP_OUT lays nothing: its samples are skipped whole)
+    const live = new Uint8Array(ni * nj);
+    for (let j = 0; j + 1 < nj; j++) for (let i = 0; i + 1 < ni; i++) { const k = j * ni + i; if (E[k]! < SWAMP_OUT || E[k + 1]! < SWAMP_OUT || E[k + ni]! < SWAMP_OUT || E[k + ni + 1]! < SWAMP_OUT) { live[k] = 1; any = true; } }
+    if (!any) return null;
+    const R = new Float64Array(ni * nj).fill(NaN), gi0 = Math.floor(x0 / gs), gj0 = Math.floor(y0 / gs), gni = Math.floor((x0 + w) / gs) - gi0 + 2, gnj = Math.floor((y0 + h) / gs) - gj0 + 2;
+    const G = new Float64Array(gni * gnj).fill(NaN);
+    const r = (i: number, j: number) => { const k = j * ni + i; let v = R[k]!; if (v !== v) v = R[k] = reachAt((i0 + i) * st, (j0 + j) * st); return v; };
+    const g = (i: number, j: number) => { const k = j * gni + i; let v = G[k]!; if (v !== v) v = G[k] = ragAt((gi0 + i) * gs, (gj0 + j) * gs); return v; };
+    const W = Math.max(1, Math.ceil(w * res)), H = Math.max(1, Math.ceil(h * res)), data = new Uint8ClampedArray(W * H * 4);
     let u0 = W, v0 = H, u1 = -1, v1 = -1;
     for (let v = 0; v < H; v++) {
-      const y = y0 + (v + 0.5) / res;
+      const y = y0 + (v + 0.5) / res, fy = y / st, jj = Math.floor(fy) - j0, ty = fy - Math.floor(fy), fgy = y / gs, gj = Math.floor(fgy) - gj0, gy = fgy - Math.floor(fgy);
       for (let u = 0; u < W; u++) {
-        const x = x0 + (u + 0.5) / res, e = this.edge(list, x, y, d); if (e >= SWAMP_OUT) continue;
-        const a = Math.round(bandAt(e, x, y) * 255); if (a <= 0) continue;
+        const x = x0 + (u + 0.5) / res, fx = x / st, ii = Math.floor(fx) - i0, tx = fx - Math.floor(fx), k = jj * ni + ii;
+        if (!live[k]) continue;
+        const e = bilerp(E[k]!, E[k + 1]!, E[k + ni]!, E[k + ni + 1]!, tx, ty); if (e >= SWAMP_OUT) continue;
+        const fgx = x / gs, gi = Math.floor(fgx) - gi0, gx = fgx - Math.floor(fgx);
+        const a = Math.round(bandOf(e, bilerp(r(ii, jj), r(ii + 1, jj), r(ii, jj + 1), r(ii + 1, jj + 1), tx, ty), bilerp(g(gi, gj), g(gi + 1, gj), g(gi, gj + 1), g(gi + 1, gj + 1), gx, gy)) * 255);
+        if (a <= 0) continue;
         data[(v * W + u) * 4 + 3] = a;
         if (u < u0) u0 = u; if (u > u1) u1 = u; if (v < v0) v0 = v; if (v > v1) v1 = v;
       }
@@ -148,9 +208,11 @@ export const KEY = { br: [6, 18], gr: [14, 26] } as const;
 export const swampKey = (r: number, g: number, b: number) => smooth(KEY.br[0], KEY.br[1], b - r) * smooth(KEY.gr[0], KEY.gr[1], g - r);
 
 /** the glint's numbers:
- *  - tileScale: a tile's gloss is made at this share of its native size (the near set as it lies on screen at the closest zoom);
+ *  - tileScale: a tile's gloss is made at this share of its native size (the near set as the gloss mask holds it at the closest zoom: the
+ *    tile lies there at half its native size, the mask is half the chunk's);
  *  - inset: px at that scale: the glint starts this far inside a pool's edge and is whole past the second (the textured-highlights rule: a
- *    small gap inside the edge, about 0.15 m at 30%, then a soft rise, so a pool's sheen is brightest in its open middle);
+ *    small gap inside the edge, about 0.15 m at 30%, a px here two on screen there; then a soft rise, so a pool's sheen is brightest in its
+ *    open middle);
  *  - meanRadius: px: each pool's local mean colour, over its own water within this box radius (the GPU takes the water's texture as each
  *    pixel's distance from it);
  *  - maskK: the chunk's gloss mask is a maskK-th of its size each way (the pools are small: finer than the lamps' quarter);
@@ -159,7 +221,7 @@ export const swampKey = (r: number, g: number, b: number) => smooth(KEY.br[0], K
  *  - sky: the cool sky colour the pools reflect (0..255);
  *  - night: the share of the glint gone after dusk (no sky to reflect) */
 export const GLOSS = {
-  tileScale: 0.5, inset: [1.5, 9], meanRadius: 14, maskK: 2,
+  tileScale: 0.25, inset: [1, 4.5], meanRadius: 7, maskK: 2,
   amount: 0.55, spread: 12, floor: 0.2, max: 0.5, sky: [180, 212, 226], night: 0.8,
 } as const;
 
