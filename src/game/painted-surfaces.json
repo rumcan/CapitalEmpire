@@ -1,8 +1,8 @@
 {
  "v": 1,
  "surfaces": {
-  "green": { "family": "putting-green-paint", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
-  "fringe": { "family": "putting-green-paint", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
+  "green": { "family": "putting-green-v2", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
+  "fringe": { "family": "fringe", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "fairway": { "family": "fairway-paint", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "firstCut": { "family": "emerald-medium", "version": null, "scale": 1, "tint": "#ffffff", "tone": -0.04 },
   "tee": { "family": "emerald-short", "version": null, "scale": 0.5, "tint": "#ffffff", "tone": 0.03 },
