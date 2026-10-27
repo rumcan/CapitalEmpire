@@ -172,6 +172,13 @@ test('view: arrivals by car, the walk to the clubhouse, the round, the walk back
   v.update(660, 2, -100, -100, 2000, 2000); const all = v.people.length; assert.ok(all > 10, `${all} on screen`);
   v.update(660, 3, 5000, 5000, 5100, 5100); assert.equal(v.people.length, 0); assert.equal(v.balls.length, 0);
   assert.ok(v.outNow(660) >= all - 2);
+  // a busy 18-hole day: a hundred and more out at once; the playback's cost per frame with all of them on screen, and with none (logged)
+  const br = dayRoster(SEED, 5, { ...CLUB, busy: 220 }), tp = performance.now(), bp = dayPlan(VIEW, br), planMs = performance.now() - tp, bv = new DayView(bp, br, VIEW, ground);
+  const out = bv.outNow(720); assert.ok(out >= 100, `${out} out at noon`);
+  let t0 = performance.now(); for (let k = 0; k < 200; k++) bv.update(720 + k * 0.05, k / 60, -100, -100, 2000, 2000);
+  const onMs = (performance.now() - t0) / 200, drawn = bv.people.length;
+  t0 = performance.now(); for (let k = 0; k < 200; k++) bv.update(730 + k * 0.05, k / 60, 5000, 5000, 5100, 5100);
+  console.log(`[everyday] ${br.golfers.length} golfers, ${br.groups.length} groups played in ${planMs.toFixed(0)} ms; ${out} out at noon: ${drawn} drawn ${onMs.toFixed(3)} ms a frame; none on screen ${((performance.now() - t0) / 200).toFixed(3)} ms a frame`);
   // the evening: every car gone
   v.update(23 * 60, 4, -100, -100, 2000, 2000); assert.equal(v.cars.length, 0); assert.equal(v.people.length, 0); assert.equal(v.parkedNow(23 * 60), 0);
 });

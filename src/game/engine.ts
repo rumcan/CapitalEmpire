@@ -5622,14 +5622,14 @@ export class Game {
     return this.dayCourse;
   }
   /** T208: the club's ground for the everyday golfers' walks and cars: the clubhouse's door, and the car park nearest it (within 120 tiles) with its bays
-   *  (the far ones first: the near ones are the worker's parked cars') and its first entrance */
+   *  (in the car park's own order, nearest its entrances first, as the worker parks its cars: the tournament's and the everyday golfers' never share a day) and its first entrance */
   private clubGround(g: GolfSave): ClubGround {
     const door = g.clubhouse;
     let best: CarPark | null = null, bd = 120;
     this.parkDefs.forEach((d, k) => { const pk = this.parkBuilt[k]; if (!pk || !pk.bays.length) return; const dd = rectDist(door, d.x, d.y, d.w, d.h); if (dd < bd) { bd = dd; best = pk; } });
     const pk = best as CarPark | null; this.dayPark = pk;
     if (!pk) return { door, bays: [], entrance: null };
-    return { door, bays: pk.bays.slice().reverse().map(b => ({ x: b.x, y: b.y, hx: b.hx, hy: b.hy })), entrance: pk.entrances[0] ?? null };
+    return { door, bays: pk.bays.map(b => ({ x: b.x, y: b.y, hx: b.hx, hy: b.hy })), entrance: pk.entrances[0] ?? null };
   }
   /** T208: the everyday golfers in the tile box as movers, from mover m on (as playMovers), after the day's playback is updated for the box; the cars go
    *  to dayCarOut. Returns the next mover index */
@@ -5660,8 +5660,8 @@ export class Game {
   get hasClubhouse(): boolean { return !!this.golf && this.bizDefs.some(d => d.type === 'clubhouse'); }
   /** T208: the everyday golfers out at the club now (checked in, not yet back at their car; the bench logs it) */
   dayOutNow(): number { return this.dayPlay ? this.dayPlay.view.outNow(this.dayMinute) : 0; }
-  /** T208: the middle of the everyday golfers drawn over the whole map now (the bench's camera; null: none) */
-  dayFocus(): Pt | null { const v = this.dayPlay?.view; if (!v) return null; v.update(this.dayMinute, performance.now() / 1000, -1e6, -1e6, 1e6, 1e6); const P = v.people; return P.length ? { x: P.reduce((a, p) => a + p.x, 0) / P.length, y: P.reduce((a, p) => a + p.y, 0) / P.length } : null; }
+  /** T208: the busiest spot of the everyday golfers now (the golfer with the most others within 50 tiles) (the bench's camera; null: none) */
+  dayFocus(): Pt | null { const v = this.dayPlay?.view; if (!v) return null; v.update(this.dayMinute, performance.now() / 1000, -1e6, -1e6, 1e6, 1e6); let best: Pt | null = null, bn = -1; for (const p of v.people) { let n = 0; for (const q of v.people) if (Math.abs(q.x - p.x) + Math.abs(q.y - p.y) < 50) n++; if (n > bn) { bn = n; best = { x: p.x, y: p.y }; } } return best; }
   /** the eval's results screen is open (T210, resultsDue): in the eval, outside golf at once; on the tournament day once the last group is in (or at once
    *  with no play to wait for, or when the player asked for the results early); not while the play is not built yet (the first frame after a load) */
   resultsOpen(): boolean {
