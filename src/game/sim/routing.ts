@@ -17,6 +17,8 @@ const ASTAR_POPS = 4000;
 const ON_DEMAND = 4;
 /** A* heuristic speed, m/s (the fastest road class) */
 const H_SPEED = 17;
+/** a live queue's seconds a car behind its head (T184: Router.costs): the headway a car takes to leave a junction line */
+export const QUEUE_HEADWAY = 2;
 /** seconds added to the link and the movements into a dseg closed by a disaster (Router.setShut): new plans go round it when they can */
 export const CLOSED_COST = 3600;
 
@@ -85,6 +87,8 @@ export class Router {
   private used = new Uint8Array(0);
   /** per dseg id: seconds to traverse it (linkCost) */
   private lcA = new Float64Array(0);
+  /** per dseg id: its live queue's delay, s (T184: the head car's wait at the line plus QUEUE_HEADWAY a car behind it; Router.costs) */
+  private qDelay = new Float64Array(0);
   /** per movement id: seconds for it (moveCost) */
   private mcA = new Float64Array(0);
   /** per movement id: the dseg it leaves */
@@ -116,7 +120,7 @@ export class Router {
     this.vEma = grown(this.vEma, nD); this.zoneD = grown(this.zoneD, nD); this.dGone = grown(this.dGone, nD);
     this.lcA = grown(this.lcA, nD); this.inOff = grown(this.inOff, nD + 1); this.cursor = grown(this.cursor, nD + 1);
     this.gS = grown(this.gS, nD); this.gSt = grown(this.gSt, nD); this.par = grown(this.par, nD); this.cl = grown(this.cl, nD);
-    this.sumV = grown(this.sumV, nD); this.cntV = grown(this.cntV, nD);
+    this.sumV = grown(this.sumV, nD); this.cntV = grown(this.cntV, nD); this.qDelay = grown(this.qDelay, nD);
     this.dEma = grown(this.dEma, nM); this.used = grown(this.used, nM); this.mcA = grown(this.mcA, nM); this.mFrom = grown(this.mFrom, nM);
     this.inList = grown(this.inList, nM); this.shut = grown(this.shut, nD);
     for (let id = 0; id < nD; id++) {
@@ -179,7 +183,7 @@ export class Router {
   /** recomputes lcA and mcA from the current speeds, delays and lengths */
   private refreshCosts() {
     const g = this.g, nD = g.dsegs.length, nM = g.moves.length;
-    for (let d = 0; d < nD; d++) { const dg = g.dsegs[d]; this.lcA[d] = dg ? dg.len / Math.max(this.vEma[d]!, 1) + (this.shut[d] ? CLOSED_COST : 0) : 0; }
+    for (let d = 0; d < nD; d++) { const dg = g.dsegs[d]; this.lcA[d] = dg ? dg.len / Math.max(this.vEma[d]!, 1) + (this.qDelay[d] ?? 0) + (this.shut[d] ? CLOSED_COST : 0) : 0; }
     for (let m = 0; m < nM; m++) this.mcA[m] = g.moves[m] ? this.moveCost(m) : 0;
   }
 
@@ -200,6 +204,17 @@ export class Router {
       if (!dg) continue;
       if (C[d]) this.vEma[d] = 0.9 * this.vEma[d]! + 0.1 * (S[d]! / C[d]!);
       else this.vEma[d] = this.vEma[d]! + 0.1 * (dg.vmax - this.vEma[d]!);
+    }
+    // the live queues (T184): a link lane whose head car waits at its line (Sim.wait) costs that wait plus a headway for each car behind it,
+    // on top of its travel time, until the queue moves. Before, a junction's delay was fed only when a car left it and relaxed while nobody
+    // did, and a link's cost stopped at its length at 1 m/s, so a jammed approach (its head stuck for minutes) looked no worse than a slow one
+    const W = sim.wait, QD = this.qDelay; QD.fill(0, 0, n);
+    for (let id = 0; id < Q.length; id++) {
+      const q = Q[id]!; if (!q.length) continue;
+      const ln = lanes[id]; if (!ln || ln.kind !== LK.LINK) continue;
+      const w = W[q[0]!]!; if (!(w > 0)) continue;
+      const live = w + QUEUE_HEADWAY * (q.length - 1);
+      if (live > QD[ln.dseg]!) QD[ln.dseg] = live;
     }
     for (let m = 0; m < this.used.length; m++) {
       if (!this.used[m] && g.moves[m]) this.dEma[m] *= 0.99;
