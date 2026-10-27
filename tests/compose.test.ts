@@ -11,8 +11,7 @@ import { LU, LV } from '../src/game/lots/town';
 import { LIBRARY } from '../src/game/library';
 import { LOT_DECALS } from '../src/game/lot-decals';
 import { mulberry } from '../src/game/iso';
-import { CAR_SCALE, carSizeId, forgetCarSizes } from '../src/game/ext/car-art';
-import { OWNER_SCALE, STUDIO_SCALE, TABLE_SCALE } from '../src/game/lots/scales';
+import { CAR_SCALE } from '../src/game/ext/car-art';
 import { isBuilding } from '../src/game/mirror';
 import { footprintOf, turned } from '../src/game/lots/preset-art';
 import { toWorld } from '../src/game/lots/preset-frame';
@@ -388,27 +387,39 @@ function digest(c: Composition): string {
   return h.toString(16).padStart(8, '0');
 }
 
-test('compositions are pinned: digests of fixed seeds, drawn at the table sizes so a studio resize never breaks them (re-pinned 2026-10-24 evening for that; earlier 2026-10-24 for P20 / T064: every built lot drawn from its preset (lot-presets.json), the street items, leaves, fences and decline touches procedural; the building site is unchanged. Earlier: 2026-10-24 for the four-view buildings prep-views cropped from reviewed sheets and no building ever mirrored; 2026-10-23 for the four-view building art; 2026-10-22 for the yards keeping only their leaves and the house lots 25% wider; 2026-10-21 for the owner evening curation and the car park layout; 2026-10-20 for separate residential boundaries)', () => {
-  const CASES: [number, ComposeState, string][] = [
-    [0, { use: LU.COM, level: LV.BUILT, decline: 0, seed: 123456 }, '5688befb'],
-    [7, { use: LU.COM, level: LV.UPGRADED, decline: 1, seed: 271828 }, '1538a361'],
-    [15, { use: LU.COM, level: LV.BUILT, decline: 2, seed: 987654 }, '48f49438'],
-    [30, { use: LU.COM, level: LV.BUILT, decline: 3, seed: 42 }, '46cbdf24'],
-    [4, { use: LU.COM, level: LV.BUILDING, decline: 0, seed: 5 }, 'e9201342'],
-    // re-pinned 2026-10-26 (T154): the studio's Rebuild applied the committed removals and sizes (removed.json, scale-overrides.json) to the library
-    // re-pinned 2026-10-27 for T167: this lot's preset places a picture the owner removed, drawn now as its stand-in
-    [20, { use: LU.RES, level: LV.BUILT, decline: 0, seed: 555555 }, 'a11c59bb'],
-    [22, { use: LU.IND, level: LV.BUILT, decline: 0, seed: 777777 }, '0887558a'],
+// (T201: the pinned digests these cases carried until 2026-10-27 followed the owner's studio art: the studio's Rebuild writes the library, its
+// sizes and its views, and the props a lot draws read their footprints and pools from it. The presets are this test's own fixture; the art
+// cannot be: so the cases keep the rules the pins stood for (the same lot and seed draw the same, whatever was drawn before them; the seed
+// moves a lot; each state draws its own kind of lot), not the hashes)
+test('compositions are fixed: the same lot and seed draw the same whatever came before; another seed another; each state its own kind of lot', () => {
+  const CASES: [number, ComposeState][] = [
+    [0, { use: LU.COM, level: LV.BUILT, decline: 0, seed: 123456 }],
+    [7, { use: LU.COM, level: LV.UPGRADED, decline: 1, seed: 271828 }],
+    [15, { use: LU.COM, level: LV.BUILT, decline: 2, seed: 987654 }],
+    [30, { use: LU.COM, level: LV.BUILT, decline: 3, seed: 42 }],
+    [4, { use: LU.COM, level: LV.BUILDING, decline: 0, seed: 5 }],
+    [20, { use: LU.RES, level: LV.BUILT, decline: 0, seed: 555555 }],
+    [22, { use: LU.IND, level: LV.BUILT, decline: 0, seed: 777777 }],
   ];
   for (const [, st] of CASES) assert.ok(!isCarPark(st), `${JSON.stringify(st)} is a car park`);
-  // drawn at the table's sizes, not the owner's studio sizes (scale-overrides.json): a studio resize must never break the suite. A car's studio size
-  // (carOwnerScale reads STUDIO_SCALE, not OWNER_SCALE) is set aside the same way, and put back after
-  const live = { ...OWNER_SCALE }, use = (to: Record<string, number>) => { for (const k of Object.keys(OWNER_SCALE)) delete OWNER_SCALE[k]; Object.assign(OWNER_SCALE, to); };
-  const studio = STUDIO_SCALE as Record<string, number>, studioLive = { ...studio };
-  for (const i of LIBRARY) if (i.kind === 'car') { delete studio[carSizeId(i.id)]; delete studio[i.id]; }
-  // (T160: carOwnerScale keeps a memo of the studio's sizes: told when they are changed by hand, as lots/scales-live.ts tells it)
-  use(TABLE_SCALE); forgetCarSizes();
-  try { assert.deepEqual(CASES.map(([i, st]) => digest(compose(LOTS[i], st))), CASES.map(c => c[2])); } finally { use(live); Object.assign(studio, studioLive); forgetCarSizes(); }
+  const forward = CASES.map(([i, st]) => digest(compose(LOTS[i], st)));
+  // drawn again in the other order, after other lots: no state is kept between compositions
+  for (const { lot, st } of COMBOS.slice(0, 40)) compose(lot, st);
+  const backward = [...CASES].reverse().map(([i, st]) => digest(compose(LOTS[i], st))).reverse();
+  assert.deepEqual(backward, forward, 'the same lot and seed draw the same, whatever was drawn before');
+  // another seed draws another lot (its procedural parts move), and no two cases draw the same
+  const moved = CASES.filter(([i, st], k) => digest(compose(LOTS[i], { ...st, seed: (st.seed + 1) >>> 0 })) !== forward[k]).length;
+  assert.ok(moved >= CASES.length - 1, `${moved} of ${CASES.length} cases moved with the seed`);
+  assert.equal(new Set(forward).size, CASES.length, 'every case draws its own lot');
+  // each state its own kind of lot: a built shop a building, a decrepit one (decline 3) no car, a building site no building, a house its house
+  // and its fence, a works its chain-link
+  const kinds = (i: number, st: ComposeState) => compose(LOTS[i], st).props.map(p => byId.get(p.id)!);
+  const big = (k: ReturnType<typeof kinds>) => k.some(it => isBuilding(it) && it.big);
+  assert.ok(big(kinds(0, CASES[0]![1])), 'a built shop has its building');
+  assert.ok(!kinds(30, CASES[3]![1]).some(it => it.cat === 'Vehicles'), 'a derelict lot has no car');
+  assert.ok(!big(kinds(4, CASES[4]![1])), 'a building site has no building yet');
+  const house = kinds(20, CASES[5]![1]); assert.ok(big(house), 'a house lot has its house'); assert.ok(house.some(it => it.kind === 'fencex' || it.kind === 'fencey'), 'and its fence');
+  assert.ok(compose(LOTS[22], CASES[6]![1]).props.some(p => /chainlink/.test(p.id)), 'a works has its chain-link');
 });
 
 test('about 15% of built commercial lots are public car parks: a car park has an asphalt bay patch and no building', () => {
