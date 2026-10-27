@@ -50,6 +50,9 @@ import { GolfLeaderboard } from './ui/GolfLeaderboard';
 import { ShotPanel } from './ui/ShotPanel';
 import { RangeCard } from './ui/golf/RangeCard';
 import { WelcomeCard } from './ui/golf/WelcomeCard';
+import { TooltipLayer } from './ui/Tooltip';
+import { UI_SCALES, applyUiScale, currentUiScale, saveUiScale } from './ui/uiScale';
+import { HoleCard } from './ui/golf/HoleCard';
 import stadiumArt from './assets/ui/art/stadium.webp';
 
 /** the top bar on one row (P23 4.11, T135): its golf chips (and the invitation's whole sentence) show their words only from 2200 px; narrower,
@@ -82,6 +85,8 @@ export default function App() {
   const [help, setHelp] = useState(false);
   /** the settings menu (Save, New game, Empty map) open under its gear */
   const [menu, setMenu] = useState(false);
+  /** the UI scale in force (T179: Settings; applied at boot from this browser's storage) */
+  const [uiScale, setUiScale] = useState(currentUiScale);
   /** the menu button waiting for its second click (New game, Empty map), or null */
   const [armed, setArmed] = useState<'new' | 'empty' | null>(null);
   useEffect(() => { if (!menu) setArmed(null); }, [menu]);
@@ -112,7 +117,7 @@ export default function App() {
   const hudRo = useRef<ResizeObserver | null>(null);
   const topBar = useCallback((el: HTMLDivElement | null) => {
     hudRo.current?.disconnect(); hudRo.current = null; if (!el) return;
-    hudRo.current = new ResizeObserver(() => document.documentElement.style.setProperty('--hud-top', `${Math.round(el.getBoundingClientRect().bottom)}px`));
+    hudRo.current = new ResizeObserver(() => document.documentElement.style.setProperty('--hud-top', `${Math.round(el.getBoundingClientRect().bottom / currentUiScale())}px`)); // T179: in the UI layer's units
     hudRo.current.observe(el);
   }, []);
 
@@ -184,7 +189,8 @@ export default function App() {
   );
 
   return (
-    <div className="fixed inset-0 overflow-hidden bg-[#1b2816] text-slate-100 select-none" style={{ fontFamily: 'ui-sans-serif, system-ui, sans-serif' }}>
+    <div className="ui-root fixed inset-0 overflow-hidden bg-[#1b2816] text-slate-100 select-none" style={{ fontFamily: 'ui-sans-serif, system-ui, sans-serif' }}>
+      <TooltipLayer />
       <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
       <canvas
         ref={overlayRef}
@@ -230,14 +236,14 @@ export default function App() {
                   {/* T095 (P22 2.8): before the tour's invitation the Tier's line says the founding season's holes (one row at 1366-1920 px, T135) */}
                   <Stat icon="trophy" label="Tier" value={`T${gv.tier}`} sub={founding ?? gv.tierName} subClass="max-[1599px]:hidden" subTone={founding ? 'font-semibold text-amber-300' : undefined} subTestId={founding ? 'founding-chip' : undefined} title={founding ? `${founding}: the tour invites you with ${fv!.check.holesNeeded} holes, a car park and a clubhouse (Tier ${gv.tier}: ${gv.tierName})` : `Tier ${gv.tier}: ${gv.tierName}`} tone="text-amber-200" />
                   <Stat icon="calendar" label="Month" value={gv.month} sub={gv.live ? 'Tournament day' : `${Math.ceil(gv.monthsLeft)} ${Math.ceil(gv.monthsLeft) === 1 ? 'month' : 'months'} to ${fv && !fv.due ? 'season end' : 'the tournament'}`} />
-                  {game.golf?.start === 'range' && <button className={`chip ${game.range.cardOpen ? 'chip-on' : ''}`} onClick={() => game.openRangeCard()} title="The driving range: golfers, takings, bucket price and upgrades" aria-label="Range" data-testid="range-chip"><Icon name="income" size={16} /><span className={WIDE}>Range</span></button>}
-                  {fv?.invited && game.traffic.round.runs === 0 && !gv.live && <span className="flex items-center gap-1 whitespace-nowrap rounded-md border border-amber-400/40 bg-amber-400/15 px-2 py-1 text-xs font-semibold text-amber-200" data-testid="invite-pill" title={`The tour's invitation: the Club Championship at the end of ${fv.due ? 'this' : 'next'} season (the first tournament is held at the end of the season it names)`}><Icon name="trophy" size={14} /><span className="min-[2200px]:hidden">Invited</span><span className={WIDE}>The Club Championship: end of {fv.due ? 'this' : 'next'} season</span></span>}
-                  {gv.live && (() => { const w = getTournamentWeather(game.seed, game.traffic.round.stage === 'eval' && game.traffic.round.last ? game.traffic.round.last.run : game.traffic.round.runs + 1); return <span className="rounded-md border border-amber-400/40 bg-amber-400/15 px-2 py-1 text-xs font-semibold text-amber-200" title={w.summary}>{w.icon} {w.label}</span>; })()}
-                  {chip('courseStats') && <button className={`chip ${courseStats ? 'chip-on' : ''}`} onClick={() => setCourseStats(courseStats ? null : (game.courseStatsView() ?? null))} title="Course stats and scorecard" aria-label="Course"><Icon name="trophy" size={16} /><span className={WIDE}>Course</span></button>}
-                  {chip('land') && <button className={`chip ${game.landMode ? 'chip-on' : ''}`} onClick={() => { game.toggleLandMode(); bump(); }} title="Land: buy adjacent land parcels" aria-label="Land"><Icon name="compass" size={16} /><span className={WIDE}>Land</span></button>}
-                  {chip('holes') && <button className={`chip ${game.holesTool ? 'chip-on' : ''}`} onClick={() => { game.toggleHolesTool(); bump(); }} title="Holes: move pins and tee markers" aria-label="Holes"><Icon name="pin" size={16} /><span className={WIDE}>Holes</span></button>}
- {chip('event') && <button className={`chip ${game.eventTool ? 'chip-on' : ''}`} onClick={() => { game.toggleEventTool(); bump(); }} title="Event: the event structures catalogue" aria-label="Event"><Icon name="buildings" size={16} /><span className={WIDE}>Event</span></button>}
- {chip('skipTournament') && <button className="chip disabled:opacity-40" disabled={game.traffic.skipping || gv.live} onClick={() => game.skipToTournament()} title={fv && !fv.due ? `Skip to the end of the season (no tournament yet: ${fv.invited ? 'the first one closes the next season' : fv.check.text})` : 'Skip to the tournament (end of August)'} aria-label={fv && !fv.due ? 'Skip to season end' : 'Skip to tournament'}><Icon name="skip" size={16} /><span className={WIDE}>{fv && !fv.due ? 'Skip to season end' : 'Skip to tournament'}</span></button>}
+                  {game.golf?.start === 'range' && <button className={`chip ${game.range.cardOpen ? 'chip-on' : ''}`} onClick={() => game.openRangeCard()} data-tip="The driving range: golfers, takings, bucket price and upgrades" aria-label="Range" data-testid="range-chip"><Icon name="income" size={16} /><span className={WIDE}>Range</span></button>}
+                  {fv?.invited && game.traffic.round.runs === 0 && !gv.live && <span className="flex items-center gap-1 whitespace-nowrap rounded-md border border-amber-400/40 bg-amber-400/15 px-2 py-1 text-xs font-semibold text-amber-200" data-testid="invite-pill" data-tip={`The tour's invitation: the Club Championship at the end of ${fv.due ? 'this' : 'next'} season (the first tournament is held at the end of the season it names)`}><Icon name="trophy" size={14} /><span className="min-[2200px]:hidden">Invited</span><span className={WIDE}>The Club Championship: end of {fv.due ? 'this' : 'next'} season</span></span>}
+                  {gv.live && (() => { const w = getTournamentWeather(game.seed, game.traffic.round.stage === 'eval' && game.traffic.round.last ? game.traffic.round.last.run : game.traffic.round.runs + 1); return <span className="rounded-md border border-amber-400/40 bg-amber-400/15 px-2 py-1 text-xs font-semibold text-amber-200" data-tip={w.summary}>{w.icon} {w.label}</span>; })()}
+                  {chip('courseStats') && <button className={`chip ${courseStats ? 'chip-on' : ''}`} onClick={() => setCourseStats(courseStats ? null : (game.courseStatsView() ?? null))} data-tip="Course stats and scorecard" aria-label="Course"><Icon name="trophy" size={16} /><span className={WIDE}>Course</span></button>}
+                  {chip('land') && <button className={`chip ${game.landMode ? 'chip-on' : ''}`} onClick={() => { game.toggleLandMode(); bump(); }} data-tip="Land: buy adjacent land parcels" aria-label="Land"><Icon name="compass" size={16} /><span className={WIDE}>Land</span></button>}
+                  {chip('holes') && <button className={`chip ${game.holesTool ? 'chip-on' : ''}`} onClick={() => { game.toggleHolesTool(); bump(); }} data-tip="Holes: move pins and tee markers" aria-label="Holes"><Icon name="pin" size={16} /><span className={WIDE}>Holes</span></button>}
+ {chip('event') && <button className={`chip ${game.eventTool ? 'chip-on' : ''}`} onClick={() => { game.toggleEventTool(); bump(); }} data-tip="Event: the event structures catalogue" aria-label="Event"><Icon name="buildings" size={16} /><span className={WIDE}>Event</span></button>}
+ {chip('skipTournament') && <button className="chip disabled:opacity-40" disabled={game.traffic.skipping || gv.live} onClick={() => game.skipToTournament()} data-tip={fv && !fv.due ? `Skip to the end of the season (no tournament yet: ${fv.invited ? 'the first one closes the next season' : fv.check.text})` : 'Skip to the tournament (end of August)'} aria-label={fv && !fv.due ? 'Skip to season end' : 'Skip to tournament'}><Icon name="skip" size={16} /><span className={WIDE}>{fv && !fv.due ? 'Skip to season end' : 'Skip to tournament'}</span></button>}
                 </>
               ) : game.eventMode
                 ? <Stat icon="trophy" label="Level" value={String(game.traffic.round.xp)} sub={`${game.traffic.round.cards.length} cards`} tone="text-amber-200" />
@@ -250,44 +256,49 @@ export default function App() {
                   </div>
                 </div>
               ) : <>{treasury(game)}{moreStats(game)}</>}
-              {dev && <span className="rounded-md border border-sky-400/50 bg-sky-400/15 px-1.5 py-0.5 text-[10px] font-bold text-sky-200" title="Developer panels are on (F3 hides them)">DEV</span>}
+              {dev && <span className="rounded-md border border-sky-400/50 bg-sky-400/15 px-1.5 py-0.5 text-[10px] font-bold text-sky-200" data-tip="Developer panels are on (F3 hides them)">DEV</span>}
               {dev && (game.growth !== 1 || game.unlimited || !game.stamped) && (
-                <div className="rounded-md border border-amber-400/40 bg-amber-400/15 px-2 py-1 text-xs font-semibold text-amber-200" title="Dev sandbox options (URL: ?grow=N, ?money=0|1, ?stamp=0|1)">
+                <div className="rounded-md border border-amber-400/40 bg-amber-400/15 px-2 py-1 text-xs font-semibold text-amber-200" data-tip="Dev sandbox options (URL: ?grow=N, ?money=0|1, ?stamp=0|1)">
                   dev: {[game.growth !== 1 && `grow ${game.growth}×`, game.unlimited && '∞ $', !game.stamped && 'no stamp', game.unlockAll && 'all unlocked'].filter(Boolean).join(' · ')}
                 </div>
               )}
             </div>
             <div className="pointer-events-auto ml-auto flex items-center gap-2">
               <div className="glass flex items-center gap-1 px-2 py-1.5">
-                <button className="btn-icon" onClick={() => game.togglePause()} title="Pause (Space)"><Icon name={game.speed ? 'pause' : 'play'} size={22} /></button>
-                {SPEEDS.map(k => <button key={k} className={`chip ${game.speed === k ? 'chip-on' : ''}`} onClick={() => game.setSpeed(k)} title="Speed (, and .)">{k}×</button>)}
-                <button className="chip disabled:opacity-40" disabled={game.traffic.skipping} onClick={() => game.skipToRush()} title="Skip to the next rush hour (H)"><Icon name="skip" size={16} />{game.traffic.skipping ? 'Skipping…' : ''}</button>
-                {game.night.mode === 'clock' && game.clockNight() > 0 && <button className="chip" onClick={() => game.skipNight()} title="Skip this night: daylight until the next one (how often nights come: gear menu, Night)"><Icon name="sun" size={16} /> Skip night</button>}
+                <button className="btn-icon" onClick={() => game.togglePause()} data-tip="Pause (Space)"><Icon name={game.speed ? 'pause' : 'play'} size={22} /></button>
+                {SPEEDS.map(k => <button key={k} className={`chip ${game.speed === k ? 'chip-on' : ''}`} onClick={() => game.setSpeed(k)} data-tip="Speed (, and .)">{k}×</button>)}
+                <button className="chip disabled:opacity-40" disabled={game.traffic.skipping} onClick={() => game.skipToRush()} data-tip="Skip to the next rush hour (H)"><Icon name="skip" size={16} />{game.traffic.skipping ? 'Skipping…' : ''}</button>
+                {game.night.mode === 'clock' && game.clockNight() > 0 && <button className="chip" onClick={() => game.skipNight()} data-tip="Skip this night: daylight until the next one (how often nights come: gear menu, Night)"><Icon name="sun" size={16} /> Skip night</button>}
               </div>
               <div className="glass flex items-center gap-1 px-2 py-1.5">
-                <button className="btn-icon" onClick={() => game.zoomAt(clampZoom(game.cam.z / ZOOM_STEP))} title="Zoom out (-)"><Icon name="zoom-out" size={20} /></button>
-                <button className="btn-icon" onClick={() => game.zoomAt(clampZoom(game.cam.z * ZOOM_STEP))} title="Zoom in (+)"><Icon name="zoom-in" size={20} /></button>
+                <button className="btn-icon" onClick={() => game.zoomAt(clampZoom(game.cam.z / ZOOM_STEP))} data-tip="Zoom out (-)"><Icon name="zoom-out" size={20} /></button>
+                <button className="btn-icon" onClick={() => game.zoomAt(clampZoom(game.cam.z * ZOOM_STEP))} data-tip="Zoom in (+)"><Icon name="zoom-in" size={20} /></button>
               </div>
-              <button className={`btn ${game.grassPanel ? 'on' : ''}`} onClick={() => game.toggleGrassPanel()} title="Inspect and maintain course and town grass">Grass</button>
+              <button className={`btn ${game.grassPanel ? 'on' : ''}`} onClick={() => game.toggleGrassPanel()} data-tip={game.golfMode ? `Greenkeeping: keep the course's turf${game.toolLock('greenkeeping') ? ` (${game.toolLock('greenkeeping')})` : ''}` : 'Inspect and maintain course and town grass'}>Grass</button>
               <div className="relative">
-                <button className={`btn-icon ${menu ? 'on' : ''}`} onClick={() => setMenu(!menu)} title="Settings"><Icon name="gear" size={22} /></button>
+                <button className={`btn-icon ${menu ? 'on' : ''}`} onClick={() => setMenu(!menu)} data-tip="Settings"><Icon name="gear" size={22} /></button>
                 {menu && (
                   <div className="glass absolute right-0 top-full z-30 mt-2 flex max-h-[calc(100vh-8rem)] w-80 flex-col gap-1 overflow-y-auto p-2">
-                    <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" title="Performance panel, dev badge, Studio, traffic and growth controls (F3)"><input type="checkbox" checked={dev} onChange={e => setDev(e.target.checked)} />Developer (F3)</label>
+                    <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" data-tip="Performance panel, dev badge, Studio, traffic and growth controls (F3)"><input type="checkbox" checked={dev} onChange={e => setDev(e.target.checked)} />Developer (F3)</label>
                     {/* T117: the unlocks' Settings switch (was the top bar's All tools chip): every tool and fine control now, whatever the stage */}
                     {game.playerProgressFacts() && (
-                      <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" title={ui ? `Tools open as your course grows (${ui.stageLabel}). Tick to show every tool and fine control now` : 'The dev sandbox shows every tool (?unlock=0 plays the unlocks)'}>
+                      <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" data-tip={ui ? `Tools open as your course grows (${ui.stageLabel}). Tick to show every tool and fine control now` : 'The dev sandbox shows every tool (?unlock=0 plays the unlocks)'}>
                         <input type="checkbox" checked={!ui || ui.advancedMode} disabled={!ui} onChange={e => { game.setAdvancedTools(e.target.checked); bump(); }} />
                         Show every tool now
                       </label>
                     )}
-                    <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" title="A subtle iso grid of the 2 m tiles roads and lots snap to, at all times (it fades out as you zoom out). Building the course shows its 1 m half grid either way (G)">
+                    {/* T179 (P23 P2-7): the UI scale, the UI layer only (the map keeps its size); kept in this browser */}
+                    <div className="flex items-center gap-2 px-2 py-2 text-sm" role="group" aria-label="UI scale">
+                      <span className="flex-1">UI scale</span>
+                      {UI_SCALES.map(v => <button key={v} className={`chip ${uiScale === v ? 'chip-on' : ''}`} aria-pressed={uiScale === v} data-scale={v} onClick={() => setUiScale(applyUiScale(saveUiScale(v)))}>{Math.round(v * 100)}%</button>)}
+                    </div>
+                    <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" data-tip="A subtle iso grid of the 2 m tiles roads and lots snap to, at all times (it fades out as you zoom out). Building the course shows its 1 m half grid either way (G)">
                       <input type="checkbox" checked={game.showGrid} onChange={e => { game.setShowGrid(e.target.checked); bump(); }} />
                       Map grid (G)
                     </label>
                     {/* T135: the traffic views moved here from the top bar (it keeps one row at 1366 px); their keys are unchanged (F, B) */}
                     <div className="flex items-center gap-2 px-2 py-2 text-sm">
-                      <label className="flex cursor-pointer items-center gap-2" title="Live congestion heat map (F)">
+                      <label className="flex cursor-pointer items-center gap-2" data-tip="Live congestion heat map (F)">
                         <input type="checkbox" checked={game.showFlow} onChange={e => { game.setFlow(e.target.checked); bump(); }} />
                         Heat map (F)
                       </label>
@@ -295,85 +306,86 @@ export default function App() {
                         <button key={m} className={`chip ${game.flowMode === m ? 'chip-on' : ''}`} onClick={() => { game.flowMode = m; game.emit(); }}>{m === 'time' ? 'Over time' : 'Now'}</button>
                       ))}</span>}
                     </div>
-                    <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" title="The worst bottlenecks (B)">
+                    <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" data-tip="The worst bottlenecks (B)">
                       <input type="checkbox" checked={game.panel === 'bottlenecks'} onChange={e => { game.panel = e.target.checked ? 'bottlenecks' : null; if (game.panel) game.traffic.requestReport(); bump(); }} />
                       Bottlenecks (B)
                     </label>
-                    <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" title="A small label over each building drawn as a stand-in (another building of its kind) until its own art arrives: Stand In for Church">
+                    <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" data-tip="A small label over each building drawn as a stand-in (another building of its kind) until its own art arrives: Stand In for Church">
                       <input type="checkbox" checked={game.showStandIns} onChange={e => { game.setShowStandIns(e.target.checked); bump(); }} />
                       Show stand-in labels
                     </label>
-                    <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" title="Money floats up where it is made: green +$X when a customer pays, red -$X when money goes out at a place, and red -$X with a small 'lost' under it for a sale lost (a customer turned away or giving up a queue; the treasury is not charged). One per sale close up, a running total per place further out, none at the district zoom">
+                    <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" data-tip="Money floats up where it is made: green +$X when a customer pays, red -$X when money goes out at a place, and red -$X with a small 'lost' under it for a sale lost (a customer turned away or giving up a queue; the treasury is not charged). One per sale close up, a running total per place further out, none at the district zoom">
                       <input type="checkbox" checked={game.showMoneyFloats} onChange={e => { game.setShowMoneyFloats(e.target.checked); bump(); }} />
                       Money floats
                     </label>
-                    <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" title="Floods, storms, landslides, wildfires and earthquakes close roads now and then">
+                    <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" data-tip="Floods, storms, landslides, wildfires and earthquakes close roads now and then">
                       <input type="checkbox" checked={game.disastersEnabled} onChange={e => { game.setDisasters(e.target.checked); bump(); }} />
                       Natural disasters
                     </label>
-                    <label className="flex items-center gap-2 px-2 py-2 text-sm" title="The contact shadows under every building, car, tree and prop (TrickOrTreat's town-builder shadows). 100% = the builder's, 0 = off">
+                    <label className="flex items-center gap-2 px-2 py-2 text-sm" data-tip="The contact shadows under every building, car, tree and prop (TrickOrTreat's town-builder shadows). 100% = the builder's, 0 = off">
                       <span className="w-16 shrink-0">Shadows</span>
                       <input type="range" className="min-w-0 flex-1" min={0} max={2} step={0.05} value={game.shadowStrength} onChange={e => { game.setShadowStrength(+e.target.value); bump(); }} />
                       <span className="w-10 text-right tabular-nums">{Math.round(game.shadowStrength * 100)}%</span>
                     </label>
                     {dev && (
-                      <label className="flex cursor-pointer items-center gap-2 px-2 py-1 text-xs" title="Developer: each picture's own hand-drawn shadow (T142); off shows the older rule shapes and silhouettes (T141) for comparison">
+                      <label className="flex cursor-pointer items-center gap-2 px-2 py-1 text-xs" data-tip="Developer: each picture's own hand-drawn shadow (T142); off shows the older rule shapes and silhouettes (T141) for comparison">
                         <input type="checkbox" checked={game.vectorShadows} onChange={e => { game.setVectorShadows(e.target.checked); bump(); }} />
                         Drawn shadows (T142)
                       </label>
                     )}
-                    <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" title="The grass grows where it would: darker, bushier grass along fences, walls, hedges and water, patchy grass with bare dirt and leaves under trees, worn ground at doors and path edges, and soft shade at the foot of everything (T111)">
+                    <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" data-tip="The grass grows where it would: darker, bushier grass along fences, walls, hedges and water, patchy grass with bare dirt and leaves under trees, worn ground at doors and path edges, and soft shade at the foot of everything (T111)">
                       <input type="checkbox" checked={game.groundVariety} onChange={e => { game.setGroundVariety(e.target.checked); bump(); }} />
                       Ground variety
                     </label>
-                    <label className="flex items-center gap-2 px-2 py-2 text-sm" title="How strongly raised and lowered ground (the Height tool) catches the sun at the upper right: lit, textured slopes facing it, soft cool shade facing away (T126). 100% = the default, 0 = off">
+                    <label className="flex items-center gap-2 px-2 py-2 text-sm" data-tip="How strongly raised and lowered ground (the Height tool) catches the sun at the upper right: lit, textured slopes facing it, soft cool shade facing away (T126). 100% = the default, 0 = off">
                       <span className="w-16 shrink-0">Slope light</span>
                       <input type="range" className="min-w-0 flex-1" min={0} max={2} step={0.05} value={game.slopeLight} onChange={e => { game.setSlopeLight(+e.target.value); bump(); }} />
                       <span className="w-10 text-right tabular-nums">{Math.round(game.slopeLight * 100)}%</span>
                     </label>
                     {dev && (
-                      <label className="flex cursor-pointer items-center gap-2 px-2 py-1 text-xs" title="Developer: the ground shows the living ground's influence maps instead of the grass: lush green, thin orange, bare brown, litter red, shade blue-grey">
+                      <label className="flex cursor-pointer items-center gap-2 px-2 py-1 text-xs" data-tip="Developer: the ground shows the living ground's influence maps instead of the grass: lush green, thin orange, bare brown, litter red, shade blue-grey">
                         <input type="checkbox" checked={game.groundDebug} onChange={e => { game.setGroundDebug(e.target.checked); bump(); }} />
                         Ground variety maps (debug)
                       </label>
                     )}
-                    <label className="flex cursor-pointer items-center gap-2 px-2 pt-2 text-sm" title="Every tree, building, prop and car throws its silhouette onto the ground away from the sun (the baked house lots have theirs baked in, from cast-shadow.json)">
+                    <label className="flex cursor-pointer items-center gap-2 px-2 pt-2 text-sm" data-tip="Every tree, building, prop and car throws its silhouette onto the ground away from the sun (the baked house lots have theirs baked in, from cast-shadow.json)">
                       <input type="checkbox" checked={game.cast.on} onChange={e => { game.setCast({ on: e.target.checked }); bump(); }} />
                       Cast shadows
                     </label>
                     {game.cast.on && ([['Sun side', 'angle', 0, 360, 5, `${Math.round(game.cast.angle)}°`], ['Length', 'length', 0.1, 1.5, 0.05, `${Math.round(game.cast.length * 100)}%`], ['Darkness', 'strength', 0, 1, 0.02, `${Math.round(game.cast.strength * 100)}%`]] as const).map(([label, k, lo, hi, step, show]) => (
-                      <label key={k} className="flex items-center gap-2 px-2 py-1 text-xs" title={k === 'angle' ? 'The way the shadows fall on screen: 0 right, 90 down, 180 left, 270 up' : undefined}>
+                      <label key={k} className="flex items-center gap-2 px-2 py-1 text-xs" data-tip={k === 'angle' ? 'The way the shadows fall on screen: 0 right, 90 down, 180 left, 270 up' : undefined}>
                         <span className="w-16 shrink-0">{label}</span>
                         <input type="range" className="min-w-0 flex-1" min={lo} max={hi} step={step} value={game.cast[k]} onChange={e => { game.setCast({ [k]: +e.target.value }); bump(); }} />
                         <span className="w-10 text-right tabular-nums">{show}</span>
                       </label>
                     ))}
                     <NightPanel game={game} bump={bump} />
-                    <button className="btn w-full" onClick={() => { setMenu(false); game.save(); }} title="Saved automatically; force a save now">Save</button>
-                    <button className="btn w-full" onClick={() => { setMenu(false); void game.downloadSave(); }} title="Download the save as a .cesave file (for a bug report, or to carry it to another computer)">Download save</button>
-                    <button className="btn w-full" onClick={() => saveFile.current?.click()} title="Load a .cesave file in place of this game: this game is backed up first">Load save file…</button>
+                    <button className="btn w-full" onClick={() => { setMenu(false); game.save(); }} data-tip="Saved automatically; force a save now">Save</button>
+                    <button className="btn w-full" onClick={() => { setMenu(false); void game.downloadSave(); }} data-tip="Download the save as a .cesave file (for a bug report, or to carry it to another computer)">Download save</button>
+                    <button className="btn w-full" onClick={() => saveFile.current?.click()} data-tip="Load a .cesave file in place of this game: this game is backed up first">Load save file…</button>
                     <input ref={saveFile} type="file" accept=".cesave,application/gzip" className="hidden" onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; if (f) void game.loadSaveFile(f); }} />
-                    {backups.length > 0 && <button className="btn w-full" onClick={() => setBackupsOpen(!backupsOpen)} title="Saves kept as backups: a newer build's, an unreadable one, the copy before a migration, and the one replaced by a load">Backups ({backups.length}) {backupsOpen ? '▴' : '▾'}</button>}
+                    {backups.length > 0 && <button className="btn w-full" onClick={() => setBackupsOpen(!backupsOpen)} data-tip="Saves kept as backups: a newer build's, an unreadable one, the copy before a migration, and the one replaced by a load">Backups ({backups.length}) {backupsOpen ? '▴' : '▾'}</button>}
                     {backupsOpen && backups.map(k => (
                       <div key={k} className="flex items-center gap-1 px-2 py-1 text-xs">
-                        <span className="min-w-0 flex-1 truncate text-[10px] opacity-70" title={k}>{k}</span>
-                        <button className="btn" onClick={() => void game.downloadBackup(k)} title="Download this backup as a .cesave file">Download</button>
-                        <button className={`btn ${armedBackup === k ? '!border-red-400 !text-red-300' : ''}`} title="Delete this backup for good" onClick={async () => { if (armedBackup !== k) { setArmedBackup(k); return; } setArmedBackup(null); await game.deleteSaveBackup(k); setBackups(await game.saveBackups()); }}>{armedBackup === k ? 'Click again' : 'Delete'}</button>
+                        <span className="min-w-0 flex-1 truncate text-[10px] opacity-70" data-tip={k}>{k}</span>
+                        <button className="btn" onClick={() => void game.downloadBackup(k)} data-tip="Download this backup as a .cesave file">Download</button>
+                        <button className={`btn ${armedBackup === k ? '!border-red-400 !text-red-300' : ''}`} data-tip="Delete this backup for good" onClick={async () => { if (armedBackup !== k) { setArmedBackup(k); return; } setArmedBackup(null); await game.deleteSaveBackup(k); setBackups(await game.saveBackups()); }}>{armedBackup === k ? 'Click again' : 'Delete'}</button>
                       </div>
                     ))}
-                    <div className="px-2 pt-1 text-[10px] opacity-50" title="The build that is running: every save records it (P07), so a bug report with a .cesave says which build wrote it">Build {BUILD.app} · {BUILD.sha}</div>
+                    <div className="px-2 pt-1 text-[10px] opacity-50" data-tip="The build that is running: every save records it (P07), so a bug report with a .cesave says which build wrote it">Build {BUILD.app} · {BUILD.sha}</div>
                     {/* asked in the menu (the browser's confirm() is not shown in every embedded browser): a first click arms, a second acts */}
-                    <button className={`btn w-full ${armed === 'new' ? '!border-red-400 !text-red-300' : ''}`} title="Start a new game: your current game is replaced" onClick={() => { if (armed !== 'new') { setArmed('new'); return; } setArmed(null); setMenu(false); game.newTown(); }}>{armed === 'new' ? 'Click again: replace this game' : 'New game'}</button>
-                    <button className={`btn w-full ${armed === 'empty' ? '!border-red-400 !text-red-300' : ''}`} title="Clear everything and start from an empty field" onClick={() => { if (armed !== 'empty') { setArmed('empty'); return; } setArmed(null); setMenu(false); game.clearTown(); }}>{armed === 'empty' ? 'Click again: clear everything' : 'Empty map'}</button>
+                    <button className={`btn w-full ${armed === 'new' ? '!border-red-400 !text-red-300' : ''}`} data-tip="Start a new game: your current game is replaced" onClick={() => { if (armed !== 'new') { setArmed('new'); return; } setArmed(null); setMenu(false); game.newTown(); }}>{armed === 'new' ? 'Click again: replace this game' : 'New game'}</button>
+                    <button className={`btn w-full ${armed === 'empty' ? '!border-red-400 !text-red-300' : ''}`} data-tip="Clear everything and start from an empty field" onClick={() => { if (armed !== 'empty') { setArmed('empty'); return; } setArmed(null); setMenu(false); game.clearTown(); }}>{armed === 'empty' ? 'Click again: clear everything' : 'Empty map'}</button>
                   </div>
                 )}
               </div>
               {dev && ON_PC && <a className="btn" href={STUDIO_URL} target="studio" rel="noopener" title="The sprite studio (5179): sprites, lots, holes, the ground grass and map decals. Its Rebuild game sprites rebuilds this game: reload to see it">Studio</a>}
-              <button className="btn-icon" onClick={() => setHelp(true)} title="How it works"><Icon name="help" size={22} /></button>
+              <button className="btn-icon" onClick={() => setHelp(true)} data-tip="How it works"><Icon name="help" size={22} /></button>
             </div>
           </div>
 
-          <div className="absolute left-3 top-[var(--hud-top,5.75rem)] z-20 flex items-start gap-2">
+          {/* T174: the box round the rail and the panel takes no clicks itself (it is as tall as the rail, so it covered the map under a short panel) */}
+          <div className="pointer-events-none absolute left-3 top-[var(--hud-top,5.75rem)] z-20 flex items-start gap-2 [&>*]:pointer-events-auto">
             {/* P23 P1-E: the same places from minute zero; a tool not open yet stays dimmed in place with what unlocks it, a new one says NEW */}
             <Rail entries={railEntries(ui, game.golfMode, game.uiTool)} onPick={r => game.setTool(last.current[r.id] ?? r.tools[0]!.id)} onLocked={(r, why) => game.toast(`${r.label}: ${why}`)} />
             <div className="glass w-[330px] max-h-[calc(100vh-var(--hud-top,5.75rem)-8.25rem)] overflow-y-auto p-3" data-tool={game.uiTool}>
@@ -405,6 +417,7 @@ export default function App() {
               {game.tool === 'paint' && <PaintPanel game={game} />}
               {game.uiTool === 'course' && <CoursePanel game={game} looks={looksOpen} onLooks={setLooks} />}
               {game.uiTool === 'buildings' && <BuildingsPanel game={game} />}
+              {game.tool === 'greenkeeping' && <GrassManagementPanel game={game} docked />}
               {game.tool === 'props' && <PropsPanel game={game} />}
               {game.tool === 'park' && <ParkPanel game={game} dev={dev} />}
               {game.tool === 'toll' && <TollPanel game={game} />}
@@ -453,7 +466,7 @@ export default function App() {
           </div>
           )}
           {game.panel === 'budget' && <BudgetPanel game={game} />}
-          {game.grassPanel && <GrassManagementPanel game={game} />}
+          {game.grassPanel && game.tool !== 'greenkeeping' && <GrassManagementPanel game={game} />}
           {courseStats && (
           <div className={`pointer-events-auto absolute ${game.panel ? 'right-[19.5rem]' : 'right-3'} top-[var(--hud-top,6rem)] z-20`}>
           <CourseStatsPanel stats={courseStats} onClose={() => setCourseStats(null)} onSelectHole={h => { if (game.holesTool) game.selectGolfMarker(h, 'pin'); else { const pin = game.golf?.pins.find(p => p.hole === h); if (pin) game.jumpTo(pin.x, pin.y); } }} />
@@ -493,6 +506,7 @@ export default function App() {
           {game.seasonReport && game.traffic.round.stage === 'free' && <SeasonReportCard report={game.seasonReport} onContinue={() => game.dismissSeasonReport()} />}
           {(() => { const w = !game.seasonReport ? game.welcomeView() : null; return w && <WelcomeCard road={w.road} newHole={w.newHole} onGo={() => game.closeWelcome(true)} onClose={() => game.closeWelcome(false)} />; })()}
           {(() => { const rc = game.rangeCard(); return rc && <RangeCard view={rc} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.openRangeCard(false)} onPrice={p => game.setRangePrice(p)} onBuy={id => game.buyRangeUpgrade(id)} onShowPractice={() => game.showPracticeArea()} />; })()}
+          {game.holeCardHole !== null && <HoleCard game={game} right={game.panel ? 'right-[19.5rem]' : 'right-3'} />}
           {game.eventMode && !game.site && !game.golfMode && (
             <div className={`pointer-events-auto absolute ${game.panel ? 'right-[19.5rem]' : 'right-3'} top-[var(--hud-top,6rem)] z-20 flex items-center gap-3 glass p-3 text-sm`}>
               <Icon name="trophy" size={32} />
@@ -581,7 +595,7 @@ function PerfPanel({ game }: { game: Game }) {
 /** a top-bar figure: its icon (in a square, when given), its label, value and a line under it; bar (0 to 1) draws a thin progress bar under that */
 function Stat({ label, value, sub, tone, subTone, subClass, subTestId, title, bar, onClick, icon }: { label: string; value: string; sub?: string; tone?: string; subTone?: string; subClass?: string; subTestId?: string; title?: string; bar?: number; onClick?: () => void; icon?: IconName }) {
   return (
-    <div className={`flex items-center gap-2.5 px-1 ${onClick ? 'cursor-pointer rounded-lg hover:bg-white/5' : ''}`} onClick={onClick} title={title}>
+    <div className={`flex items-center gap-2.5 px-1 ${onClick ? 'cursor-pointer rounded-lg hover:bg-white/5' : ''}`} onClick={onClick} data-tip={title}>
       {icon && <div className="glass-2 hidden h-8 w-8 shrink-0 place-items-center min-[1900px]:grid"><Icon name={icon} size={24} /></div>}
       <div>
         <div className="label-caps">{label}</div>

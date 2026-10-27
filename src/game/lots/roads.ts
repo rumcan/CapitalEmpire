@@ -10,7 +10,10 @@ import { TC } from '../terrain/types';
 /** centre and built: the town centre to plan around and that town's built lots (default: the Town's whole built area); blocked: the no-go
  *  tiles, no leg may pass through one (see valid); towns: the town's roads with centres: a leg joins only the town's own classes (BRANCH_IDS)
  *  and never touches a main road (any other class) */
-export interface RoadPlanCtx { net: RoadNetwork; lots: LotMap; town: Town; cls: Uint8Array /* terrain classes */; entry: Pt; rnd: () => number; centre?: Pt; built?: number; blocked?: (x: number, y: number) => boolean; towns?: boolean }
+export interface RoadPlanCtx { net: RoadNetwork; lots: LotMap; town: Town; cls: Uint8Array /* terrain classes */; entry: Pt; rnd: () => number; centre?: Pt; built?: number; blocked?: (x: number, y: number) => boolean; towns?: boolean /** T091: whether an EMPTY lot can build (golf games: not on golf land); short() counts only those. Absent: every EMPTY lot counts */
+  canBuild?: (l: Lot) => boolean;
+  /** T091: a term added to a candidate leg's score by its midpoint (range starts: +40 within 40 tiles of golf land, so the town grows away from it) */
+  penalty?: (mid: Pt) => number }
 
 /** the block size (tiles), the reach of the land counted from the centre (tiles), and the least land kept (lots) */
 export const BLOCK = 40;
@@ -100,7 +103,7 @@ function builtCentre(c: RoadPlanCtx): Pt {
  *  with the town, so a spread-out town does not keep asking for roads) than max(24, 1.5 × the Town's daily growth) */
 function short(c: RoadPlanCtx, cen: Pt, reach: Set<Seg>): boolean {
   let n = 0; const B = c.built ?? c.town.built, R = NEAR + 10 * Math.sqrt(B);
-  for (const l of c.lots.lots.values()) if (reach.has(l.seg) && isEmpty(c.town, l) && dist(l.c, cen) <= R) n++;
+  for (const l of c.lots.lots.values()) if (reach.has(l.seg) && isEmpty(c.town, l) && dist(l.c, cen) <= R && (!c.canBuild || c.canBuild(l))) n++;
   return n < Math.max(MIN_LAND, 1.5 * (20 + 0.1 * B));
 }
 
@@ -126,7 +129,7 @@ function ahead(c: RoadPlanCtx, A: Pt, u: Pt, L: number, start: Seg): { t: number
 function push(c: RoadPlanCtx, cen: Pt, out: Cand[], A: Pt, u: Pt, L: number, start: Seg, close: Seg | null, dead: boolean) {
   const mid = { x: A.x + u.x * L / 2, y: A.y + u.y * L / 2 };
   const junctions = (!dead && paved(start) ? 1 : 0) + (close && paved(close) ? 1 : 0);
-  const score = dist(mid, cen) + (close ? -CLOSE_BONUS : dead ? DEAD_PEN : 0) + JUNC_PEN * junctions;
+  const score = dist(mid, cen) + (close ? -CLOSE_BONUS : dead ? DEAD_PEN : 0) + JUNC_PEN * junctions + (c.penalty ? c.penalty(mid) : 0);
   out.push({ A, u, L, start, close, dead, score, tie: c.rnd() });
 }
 

@@ -4,7 +4,7 @@ import type { Lot, LotMap } from './lots';
 import type { Pt } from '../network';
 import { zoneOf } from '../sim/routing';
 import type { Built } from '../sim/trips';
-import { PAVED_RATE, TOWN_RATE_BASE, TOWN_RATE_PER_BUILT } from '../event/config';
+import { GROWN_BASE, GROWN_BUILD_S, GROWN_PER_BUILT, GROWN_PER_HOLE, GROWN_RING0, GROWN_RING_K, PAVED_RATE, TOWN_RATE_BASE, TOWN_RATE_PER_BUILT } from '../event/config';
 import { inCommercial, inIndustrial, industrialRect } from './districts';
 
 export const LU = { NONE: 0, RES: 1, COM: 2, IND: 3, TOUR: 4, GOV: 5 } as const;
@@ -34,8 +34,13 @@ const POP: number[][] = [[0, 0], [3, 5], [0, 0], [0, 0], [0, 0], [0, 0]];
 const JOBS: number[][] = [[0, 0], [0, 0], [3, 5], [6, 10], [3, 6], [8, 12]];
 /** the seeded noise on land use scores (+-), the candidates kept for the weighted pick */
 const NOISE = 0.15, PICK_TOP = 400;
-/** the lot sides of a pick: any lot, only those on gravel (the town's land with towns), only those on paved roads (the player's, with towns) */
-const ANY = 0, GRAVEL = 1, PAVED = 2;
+/** the lot sides of a pick: any lot, only those on gravel (the town's land with towns), only those on paved roads (the player's, with towns);
+ *  a grown town's (T090): its own (on a town seg of any class, or gravel), the player's (on the player's paved roads) */
+const ANY = 0, GRAVEL = 1, PAVED = 2, OWN = 3, PLAYER = 4;
+/** a range start's grown town (T090, plan P22 2.3.2-2.3.3): the holes the player has built and the tournaments' success factor */
+export interface GrownOpts { holes: number; success: number }
+/** T090: the compact rings' falloff of a lot dc tiles from the anchored centre with `built` lots built: exp(-dc / (GROWN_RING0 + GROWN_RING_K x sqrt(built))) */
+export const grownRing = (dc: number, built: number): number => Math.exp(-dc / (GROWN_RING0 + GROWN_RING_K * Math.sqrt(Math.max(0, built))));
 /** the base target share of built+building lots by use (index = LU; GOV is a quota, not a share; the option scales these), and the lots before shares count */
 const TARGET = [0, 0.65, 0.2, 0.1, 0.05], MIN_OCC = 10;
 
@@ -82,6 +87,15 @@ export class Town {
   private ax: number[] = []; private ay: number[] = [];
   /** the town centres (tiles); the town index of every known lot (the nearest centre, -1 with none); per town: the residents, the built lots and the GOV lots */
   centres: Pt[] = []; private townIdx = new Map<string, number>();
+  /** T091 (a range start's grown town, plan P22 2.3.6): its industrial district (districts.ts grownIndustrialRect) and the built lots it opens
+   *  at, instead of the seeded towns' corner block; null: the seeded towns' (industrialRect) */
+  grownInd: { rect: [number, number, number, number] | null; from: number } | null = null;
+  /** T090: a range start's grown town (null: the seeded towns' rules): its rate, its own and the player's picks, its compact rings and its build
+   *  time; the anchored centre its rings centre on (the seed while nothing is built), updated each growth hour */
+  grown: GrownOpts | null = null; private grownCen: Pt = { x: 0, y: 0 };
+  /** T090: a grown town from now on (or the seeded rules again with null); a new town's accumulator starts at 1, so its first lot starts in the
+   *  first growth hour */
+  setGrown(g: GrownOpts | null) { if (g && !this.grown && this.built === 0 && this.acc < 1) this.acc = 1; this.grown = g ? { holes: Math.max(0, g.holes), success: Math.max(0, g.success) } : null; }
   popK: number[] = []; builtK: number[] = []; govK: number[] = [];
 
   constructor(seed: number) { this.seed = seed >>> 0; this.rs = this.seed; }
@@ -179,7 +193,7 @@ export class Town {
     if (this.dirty) this.rescan();
     // the lots: construction, then upgrade, decline, recovery and clearing of the built ones
     for (const s of this.states.values()) {
-      if (s.level === LV.BUILDING) { if (T - s.since >= DAY / 2 / this.speed) { this.set(s, s.use, LV.BUILT, s.decline, T); ev.push(this.evt(s, 'complete')); } continue; }
+      if (s.level === LV.BUILDING) { if (T - s.since >= (this.grown ? GROWN_BUILD_S : DAY / 2) / this.speed) { this.set(s, s.use, LV.BUILT, s.decline, T); ev.push(this.evt(s, 'complete')); } continue; }
       if (s.level < LV.BUILT) continue;
       const g = this.geo.get(s.key)!, c = g.c, z = zoneOf(c.x, c.y), a = this.access[z];
       if (s.decline === 3 && T - s.since >= 2 * DAY) { this.set(s, LU.NONE, LV.EMPTY, 0, T); ev.push(this.evt(s, 'clear')); continue; }
@@ -194,6 +208,19 @@ export class Town {
     // the growth: civic quota first, then the fraction of lots per hour. With town centres the town grows on gravel only, and slower;
     // the player's paved roads grow PAVED_RATE lots a game hour on their own accumulator (the rates: config.ts)
     if (this.govN < this.govTarget()) this.placeGov(ctx, T, ev);
+    // T090: a range start's grown town: its own lots at its own rate (more with holes and with built lots, times success), the player's paved
+    // roads at PAVED_RATE, both drawn toward the anchored centre
+    const g = this.grown;
+    if (g && this.centres.length) {
+      this.grownCen = this.anchoredCentre();
+      this.acc += (GROWN_BASE + GROWN_PER_HOLE * Math.min(18, g.holes) + GROWN_PER_BUILT * this.built) * g.success / 24 * this.speed;
+      let n = Math.floor(this.acc); this.acc -= n;
+      for (; n > 0; n--) { const l = this.pick(ctx, OWN); if (!l) break; this.startBuild(l, ctx, T, ev); }
+      this.accP += PAVED_RATE * this.speed;
+      let m = Math.floor(this.accP); this.accP -= m;
+      for (; m > 0; m--) { const l = this.pick(ctx, PLAYER); if (!l) break; this.startBuild(l, ctx, T, ev); }
+      return;
+    }
     const towns = this.centres.length > 0;
     this.acc += towns ? (TOWN_RATE_BASE + TOWN_RATE_PER_BUILT * this.built) / 24 * this.speed : (20 + 0.1 * this.built) / 24 * this.speed;
     let n = Math.floor(this.acc); this.acc -= n;
@@ -222,17 +249,27 @@ export class Town {
     const n = this.cand.length; if (!n) return null;
     if (this.w.length < n) { this.w = new Float64Array(2 * n); this.sel = new Int32Array(2 * n); }
     const w = this.w, sel = this.sel; let m = 0;
+    // a grown town's picks (T090): its own lots or the player's, nearest the anchored centre (the first, before any is built: from it), times
+    // the compact rings' falloff
+    const grown = side === OWN || side === PLAYER, gc = this.grownCen;
     for (let i = 0; i < n; i++) {
       const l = this.cand[i]; w[i] = 0;
-      if (side && (side === PAVED) === (l.cls === 'gravel')) continue;
+      if (grown) { if ((side === OWN) !== (!!l.seg.town || l.cls === 'gravel')) continue; }
+      else if (side && (side === PAVED) === (l.cls === 'gravel')) continue;
       const zg = this.openness(l, ctx); if (zg <= 0) continue;
-      const d = this.nAct ? this.candDn[i] : dist(l.c, ctx.entry);
-      w[i] = zg * Math.exp(-d / 40) * lotValue(l); sel[m++] = i;
+      const d = this.nAct ? this.candDn[i] : dist(l.c, grown ? gc : ctx.entry);
+      w[i] = zg * Math.exp(-d / 40) * lotValue(l) * (grown ? grownRing(dist(l.c, gc), this.built) : 1); sel[m++] = i;
     }
     if (!m) return null;
     const q = this.drawTop(w, sel, m); return q < 0 ? null : this.cand[q];
   }
 
+  /** T090: the grown town's anchored centre: halfway between its seed (the first centre) and the built lots' mean (the seed while none is built) */
+  private anchoredCentre(): Pt {
+    const s = this.centres[0]!; let sx = 0, sy = 0, k = 0;
+    for (const st of this.states.values()) if (st.level >= LV.BUILT) { const l = this.geo.get(st.key); if (l) { sx += l.c.x; sy += l.c.y; k++; } }
+    return k ? { x: (s.x + sx / k) / 2, y: (s.y + sy / k) / 2 } : { x: s.x, y: s.y };
+  }
   /** one weighted pick among the best candidates of town k (the town's own lots, weighted by distance to its centre or the
    *  nearest lot not EMPTY); null if none can grow */
   private pickTown(ctx: TownCtx, k: number): Lot | null {
@@ -270,8 +307,8 @@ export class Town {
     const k = this.townOf(l.key);
     const tc = k >= 0 && k < this.centres.length ? this.centres[k]! : (this.centres.length > 0 ? this.centres[0]! : null);
     if (tc !== null) {
-      const indR = industrialRect(tc, ctx.entry);
-      if (inIndustrial(l.c, indR)) return LU.IND;
+      const g = this.grownInd, indR = g ? (g.rect && this.built >= g.from ? g.rect : null) : industrialRect(tc, ctx.entry);
+      if (indR && inIndustrial(l.c, indR)) return LU.IND;
       if (inCommercial(l.c, cid, tc)) return LU.COM;
     }
     // the targets: the base shares times the option, renormalised over RES, COM, IND, TOUR

@@ -49,7 +49,14 @@
 
 /* ---- P23 P1-E: the rail, the Holes and Buildings panels (docs/plans/P23-UX.md 4.2, 4.3, 4.11) ---- */
 /* visible focus rings for keyboard users: 2 px gold, offset 2 px */
-:where(button, a, input, select, summary, [tabindex]):focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+:where(button, a, input, select, textarea, summary, [tabindex], [role="button"], [role="menuitem"], [contenteditable="true"]):focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+/* T179 (P23 P2-7): the UI scale (Settings): the UI layer zooms, the map's canvases and the tooltip (placed in window px) do not */
+.ui-root > :not(canvas):not(.ui-unscaled) { zoom: var(--ui-scale, 1); }
+/* the styled tooltip (Tooltip.tsx): the control's name, its key, and why it is locked or refused */
+.ui-tip { position: fixed; z-index: 70; pointer-events: none; display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; max-width: 300px; border-radius: 0.55rem; border: 1px solid var(--gold-line); background: rgba(2, 6, 23, 0.95); padding: 0.3rem 0.55rem; font-size: calc(12.5px * var(--ui-scale, 1)); line-height: 1.35; color: var(--ink); box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45); }
+.ui-tip-name { font-weight: 700; }
+.ui-tip-key { border-radius: 0.3rem; border: 1px solid var(--line); background: rgba(255, 255, 255, 0.06); padding: 0 0.3rem; font: 600 calc(11px * var(--ui-scale, 1)) ui-sans-serif, system-ui, sans-serif; }
+.ui-tip-why { flex-basis: 100%; color: #fcd34d; }
 
 /* the rail: key letters, the Course and Town headings, locked tools dimmed in place with a lock, NEW badges; 52 px items under 800 px tall */
 /* the items share the height under the top bar (which may wrap) and above the minimap: 60 px at most, 52 px at most under 800 px tall */
@@ -116,6 +123,9 @@
 .wiz-warn .wiz-mark { background: #b45309; color: #fff; }
 .wiz-ok { color: var(--ink); }
 .wiz-ok .wiz-mark { color: #74e3a4; }
+/* T176: an info row (the trees a Build clears): a sky mark beside the words */
+.wiz-info { color: var(--ink); }
+.wiz-info .wiz-mark { background: rgba(56, 189, 248, 0.28); color: #bae6fd; font-style: italic; }
 .wiz-keys { margin-top: 0.5rem; font-size: 11px; line-height: 1.6; color: var(--muted); }
 .swatches { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0.2rem; }
 .swatch { position: relative; display: flex; flex-direction: column; align-items: center; gap: 0.15rem; border-radius: 0.7rem; border: 1px solid transparent; padding: 0.3rem 0.05rem 0.25rem; font-size: 12px; color: #d9d3c4; }

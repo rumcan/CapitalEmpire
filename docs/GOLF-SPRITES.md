@@ -26,7 +26,7 @@ painted with the Paint tool (textures, section 6). Sprites are the objects that 
 | Art (atlas id) | Use in golf mode |
 | --- | --- |
 | `business:golf-clubhouse`, `golf-pro-shop`, `golf-cart-garage`, `golf-halfway-pavilion` | The clubhouse area and the halfway house |
-| `business:golf-practice-net`, `golf-driving-range` | The practice area (the range as a placeable set until the range kit, P2) |
+| `business:golf-practice-net`, `golf-driving-range` | The practice area; `golf-driving-range` is also the range's covered bays (`rangeScene`, until the range kit below, P1) |
 | `business:golf-bench-course-map`, `golf-patio-table`, `golf-mower`, `golf-bag-trolley`, `golf-footbridge` | Course furniture |
 | `business:golf-pin-red`, `golf-pin-yellow`, `golf-pin-red-equipment` | Flagsticks (until the new pin set) |
 | `business:golf-cart-sw`, `golf-cart-se` | Golf carts (two facings: needs the 8-facing set, P1) |
@@ -61,7 +61,7 @@ candidates to drop from the atlas for GPU memory: the Halloween sets (monsters, 
 | Sprinklers spraying | 0.3 + spray | 3 frames | evening flavour | P3 |
 | Flower beds and planters by tees | 2–4 | 4 | the beauty score | P2 |
 | Practice green flags (short, numbered) | 0.8 | 5 | - | P2 |
-| Range kit: target flags, distance boards, ball dispenser, hitting bay dividers, mats, ball-picker cart | various | sets | the practice range (tier 3 need) | P2 |
+| Range kit: target flags, distance boards, ball dispenser, hitting bay dividers, mats, ball-picker cart | various | sets | the driving range every range start opens with (P22 T096; the rows are in "The range business kit" below) | P1 |
 | Bag drop stand, bag racks, club storage | 2–4 | front, rear | by the clubhouse | P2 |
 
 ## 4. The tournament (temporary structures)
@@ -171,7 +171,7 @@ so 1024 px is plenty (section 1).
 ## Course piece props (T030b)
 - Still missing: tee steps, a bunker rake, a pond waterfall, pond rocks, and pond reeds (reeds use the roadside ornamental grass for now). They plug into `PIECE_PROP_SPRITE` in `src/game/ext/course-pieces/index.ts` (a sprite id, or `null` until the art exists).
 
-## The range business kit (plan P24 Phase 1, T129, and the World of Golf extras, T133: art requests)
+## The range business kit (plan P24 Phase 1, T129, the World of Golf extras, T133, and the range's look, P22 T096: art requests)
 The opening range (`golf/rangebiz.ts rangeScene`) stands these in with labelled stand-ins ("Stand In for ..."); each goes in by its id in
 `rangeScene`. Four views (NE, SE, SW, NW as the building sheets: the front in NE and NW), sun at the upper right, shadows at 145°, early
 autumn dusk, no lettering in the art unless said.
@@ -193,6 +193,9 @@ autumn dusk, no lettering in the art unless said.
 | The player's cottage (`golf:home-cottage`, four views, T133) | 6 x 5 / 5 | `world:house_4` ("Stand In for the player's cottage") | a modest whitewashed cottage with a corrugated-iron roof, a small stoep with a bench, a water tank on a stand at its side, a satellite dish | P2 |
 | Golf pro coaching pose (`golf_coach`, the 3D golfers' 8 facings, T133) | 1 / 1.8 | the golfer's idle frame and the drive clip | a coach standing side-on to the pupil, one hand out pointing at the ball, then miming a slow half swing; 8 frames | P2 |
 | Divot-scarred range tee (texture) | 16 m | the tee turf | listed in section 6 | P1 |
+| Hitting mats strip (`golf:range-mats`, T096; one mat a bay, the bays 2.5 tiles apart) | 4.2 x 6 per bay / 0.05 | each open bay's dark pad (an `asphaltDark` patch) and a green tee square (scene patches) | a top-down decal of one artificial-turf hitting mat on a concrete pad: worn green turf, a white rubber tee, two or three range balls, a scuffed strike zone; tiles side by side into a strip, so its left and right edges match | P1 |
+| Target green decal (`golf:range-target-green`, T096) | 12-20 across (radius 3-5 tiles) | the `range-green` preset disc with a raised, feathered collar (`ScenePatch` 'target') | a top-down round range target green: a smooth inner green, a lighter collar ring, a faint darker ring at the edge, a cup at the centre for the flag, a few balls lying on it; laid at any size, never rotated into a different look | P1 |
+| Range golfer at a mat (`golf_range_tee_up`, the 3D golfers' 8 facings, T096) | 1 / 1.8 | the golfer's idle frame between drives, then the drive clip (`golf_drive`) | a golfer at a hitting mat between shots: bends to take a ball from the bucket at the mat, tees it up, stands up for a practice waggle; then the existing drive clip; 8 frames | P1 |
 | Car park building (`golf:range-carpark`, four views, T146) | 18 x 26 / 12 (ground, three decks and the open roof deck) | **In (T154):** `ce:parking-garage-6storey`, the art model's parking garage (five covered levels at 36 cars: GARAGE_CARS 180), drawn from its screen-axis views (N, E, S, W, one per quarter turn) at scale 0.6 so it sits inside the footprint; no label. **Still wanted:** its four diagonal views NE, SE, SW, NW (`parking-garage-6storey-8views`: the eight-view contract), so it lines up with the range's lot, whose edges run along the world axes | the existing 6-storey parking garage (brick columns with cream caps, warm-grey floor bands, dark green rails, warm ceiling lights, the rear-right stair tower, the green P sign by the ramp) turned to the four diagonal headings. The house lighting: the sun at the upper right, shadows at 145°; never mirrored, each view its own picture. `rangeScene` places it at frame u 49..58, v 2..15 with its foot, its ramp facing the frame's +u | P1 |
 
 ## Practice facilities (plan P24 Phase 2, T130: art requests)

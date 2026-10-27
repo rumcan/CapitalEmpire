@@ -33,6 +33,8 @@ export interface LibItem {
 
 export interface Prop {
   uid: number;
+  /** drawn tinted (T176: a tree New hole's Build would clear; sprites.ts Drawable.tint) */
+  tint?: boolean;
   /** index into LIBRARY */
   item: number;
   x: number;
@@ -57,7 +59,7 @@ export interface Prop {
 /** path: the rail's Paths (T084), the road tool on the course's cart paths and drives (setTool turns it into 'road' with roadScope 'course');
  *  buildings: the rail's Buildings (plan P23 P1-E), the course tool in its buildings scope, which places the clubhouse (setTool turns it into
  *  'course' with courseScope 'buildings'); props: the rail's Props (T131, golf/propstool.ts), the course's decor */
-export type Tool = 'select' | 'road' | 'junction' | 'bulldoze' | 'park' | 'toll' | 'bus' | 'lane' | 'downgrade' | 'business' | 'paint' | 'course' | 'path' | 'buildings' | 'props';
+export type Tool = 'select' | 'road' | 'junction' | 'bulldoze' | 'park' | 'toll' | 'bus' | 'lane' | 'downgrade' | 'business' | 'paint' | 'course' | 'path' | 'buildings' | 'props' | 'greenkeeping';
 export type LineStyle = 0 | 1 | 2; // 0 dashed single, 1 double solid, 2 none
 export type BendMode = 90 | 45;
 

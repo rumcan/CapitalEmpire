@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-27 03:11)
+## START HERE (kept current by the lead; last updated 2026-10-27 06:03)
 
 **Paste-ready start prompts for every role are in `docs/START-PROMPTS.md`:** the lead, a coding ticket, and the other sessions in this
 repo. The weekly usage cap is close (2026-10-26), so any chat may stop at any moment.
@@ -27,11 +27,13 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 ### In flight
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |
-| T092 | #161 | `arena/T092-exits-feed-range` | `.claude/worktrees/t166` | 5187 | P22 2.2.2: the range draws passers-by from both map exits (`ctx.exits`; classic games keep one entry); range:gate re-banded if arrivals move it; other gates as the nightly. Agent: the ground agent. |
+| T178 | #443 (on PR #442, **held**) | `arena/T178-town-upgrades` (stacked on `arena/T098-fixture-traffic`) | `.claude/worktrees/t166` | 5187 | **Big find:** since T048 no golf town ever drove (leave time in town minutes vs the sim clock in seconds); #442 fixes it, and the grown town then gridlocks on gravel from season 7-8, failing range:gate's bands. Decision: the town upgrades its own busiest streets (and adds a second county-road connection), budget by size; classic unchanged; both merge when range:gate passes with traffic. Agent: the ground agent. |
+| T180 | #449 | `arena/T180-not-by-colour` | `.claude/worktrees/t160` | 5186 | P23-UX D8.1 colour part: refused cells hatched with ✕, icons beside colour-only states, 13/12 px text, WCAG AA pairs. Agent: the lot agent. |
 | T112 | #199 | `arena/T112-sharp` (PR #394) | `.claude/worktrees/t112` | — | **Approved, merge HELD for the morning restart:** a lock change makes the 5174 auto-updater run `npm ci` in theme-consistency (the live 5191 studio holds sharp there; the lot agent's t160 uses it by junction). Morning order: stop 5191 → merge #394 → let npm ci finish → restart 5191 and 5174. All shipped bytes identical on 0.35.5; audit 0. |
-| T095 | #164 | `arena/T095-first-minute` | `.claude/worktrees/t160` | 5186 | P22 2.8, the range start's first minute: the welcome card (opens Course on New hole), the "Founding season · n of 9 holes" chip, the tee-spot ring, toasts (first street, first house, the town named), the range-start guide steps. Agent: the lot agent. |
+| T095 | #164 | `arena/T095-first-minute` (**draft PR #419**) | `.claude/worktrees/t160` | 5186 | Built and reviewed (typecheck clean, guide tests 15/15): welcome card (follows P24's ramp: "Open the range" until New hole opens), the founding line in the Tier sub-line (one-row top bar kept), two-line title, tee ring, three toasts, a 7-step range guide. The agent's session was refused `gh pr ready`: **the owner marks it ready and merges** (the lead does not override another session's refusal). Tidied at f4f9347 (screenshots out, minimap "New town" until named, ramp toast helper, step 5 held 8 s): **Squash and merge** (old webp commit in history). Agent: the lot agent. |
 | P05 | #68 | PR #413 **open for the owner's approval** | — | — | The M5 balance plan, measured: arrival 47% at tier 1 from a fresh start (the start's 56-bay car park holds 168 fans), 100% with car parks; 10% at tier 2 fresh, 70-81% with car parks; an 18 of ~5,900 m fits the starting land on every seed (~$190k seeded); with the proposals a careful player reaches tier 3 in year 4. Knob recommended for "careless out-saves careful": sponsors x (1 + (rep-50)/50). |
-| T092 | #161 | `arena/T092-exits-feed-range` | `.claude/worktrees/t166` | 5187 | P22 2.2.2: the range draws passers-by from both map exits (`ctx.exits`; classic games keep one entry); range:gate re-banded if arrivals move it; other gates as the nightly. Agent: the ground agent. |
+| T178 | #443 (on PR #442, **held**) | `arena/T178-town-upgrades` (stacked on `arena/T098-fixture-traffic`) | `.claude/worktrees/t166` | 5187 | **Big find:** since T048 no golf town ever drove (leave time in town minutes vs the sim clock in seconds); #442 fixes it, and the grown town then gridlocks on gravel from season 7-8, failing range:gate's bands. Decision: the town upgrades its own busiest streets (and adds a second county-road connection), budget by size; classic unchanged; both merge when range:gate passes with traffic. Agent: the ground agent. |
+| T180 | #449 | `arena/T180-not-by-colour` | `.claude/worktrees/t160` | 5186 | P23-UX D8.1 colour part: refused cells hatched with ✕, icons beside colour-only states, 13/12 px text, WCAG AA pairs. Agent: the lot agent. |
 | T112 | #199 | `arena/T112-sharp` (PR #394) | `.claude/worktrees/t112` | — | **Approved, merge HELD for the morning restart:** a lock change makes the 5174 auto-updater run `npm ci` in theme-consistency (the live 5191 studio holds sharp there; the lot agent's t160 uses it by junction). Morning order: stop 5191 → merge #394 → let npm ci finish → restart 5191 and 5174. All shipped bytes identical on 0.35.5; audit 0. |
 
 **Two coding agents at a time (the owner, 2026-10-26: first "maybe just too many background tasks?" after the studio tab died with the
@@ -93,6 +95,53 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
    (the sharp bump). See the History sections below and `gh issue list --label arena --state open`.
 
 ### Done recently (newest first; details in each PR)
+- 2026-10-27 06:03: **T179 #448 accessibility first pass** (P23-UX P2-7): one styled tooltip (`ui/Tooltip.tsx`) replaces 44 browser titles on
+  the rail and top bar (name, key, the lock's reason: "Roads R 🔒 Unlocks with your third hole or the tour's invitation"); the gold
+  focus ring extended to every control; a **UI scale** setting (90/100/110/125%, UI layer only, kept per browser). The top bar stays one
+  row at 1366x768 up to 110%; at 125% it wraps to two rows. Shots `E:/ClaudeTemp/T179/shots/`.
+- 2026-10-27 05:53: **T177 #441 a grown town keeps its started lots**: in a range start's town a started or built lot keeps its footprint;
+  new block and frontage lots fill round it; it goes only if its road goes or a road runs through it. Lost started/built lots over
+  20 seasons: 327/425/516 (seeds 1-3; **277-409 built houses removed**) → **0**. range:gate bands pass (`GROWN_PLAN_H` stays 0.5: growth
+  is street-limited); town:gate unchanged (the rule is range starts only: in classic towns subdividing closed blocks fills the interior).
+- 2026-10-27 05:34: **#440 main's tests green again** (the hole badge's new title and drag-slot class from T174).
+- 2026-10-27 05:14: **T098 #436 the grown-town fixture, loader and bench**: `npm run range:fixture` → `tests/fixtures/saves/golf-v5-range-20y.json`
+  (seed 1 after 20 seasons: 2,391 lots, 6,648 residents; 36 KB gzipped; save-fixtures test 9); dev-only `?fixture=range20` (not in
+  dist; never touches the player's save); bench `&start=range` and `&fixture=range20` stages all under budget (range20 8%: 0.86 / 2.0 ms CPU,
+  10,884 instances; no cars yet: fixed next). Note for the owner: the course land shows as the map's autumn field grass, not mown green.
+- 2026-10-27 05:11: **T176 #435 New hole's ghost extras** (P23-UX P2-10): the trees a Build clears are tinted (a warm rust in the sprite
+  shader, their own light and shade kept; shadows unchanged) and counted as an info check ("42 trees cleared"), the same set the Build
+  clears (the clearing code and the ghost share two rules); the ghost draws the collar band the Build lays (first cut, fringe, bunker
+  lip, water bank; not charged); map labels and the Build pill fade to 30% within 60 px of the pointer. Shots `E:/ClaudeTemp/T176/shots/`.
+- 2026-10-27 04:58: **T090 #428 the town grows from the range outward** (P22 2.3, RISKY): a range start's town grows its own lots at
+  `(30 + 3 x holes + 0.04 x built) x success` a season (success set by each tournament, saved as `GolfSave.townBoost`), picks fall off
+  from its anchored centre, a lot builds in 240 s, a street every half game hour, the first street and lot ~60 s in at 1x (P22 2.8);
+  career grants pay in range starts; fixed: a young town measured its first pick from the map exit. range:gate holds P22 2.7's bands
+  over 20 seasons on seeds 1-3 (year 20: 2,056-2,391 lots, 5,610-6,648 residents; no street within 6 tiles of the golf land); classic
+  gates identical to the nightly; suite 1926/1926. Finding for a ticket: ~30% of started lots are lost when new streets re-partition
+  the frontage (lots.ts). Shots `E:/ClaudeTemp/T090/`.
+- 2026-10-27 04:52: **T175 #431 Greenkeeping on the rail + the clubhouse stopgap** (P23-UX P2-5, P2-9): Greenkeeping is a COURSE tool
+  (no free key), locked until the first hole is grown in ("hole 1 ready Mar 1985"), then never again; its panel is the Grass panel with
+  its cares armed (Overseed, Re-Turf: renamed from seed/sod), Esc drops the armed care; the top-bar Grass button picks it in golf games.
+  A clubhouse refused for want of a drive offers **Draw a drive** (Paths › gravel drive from the nearest road); the drive built, Buildings
+  comes back with the clubhouse armed at the spot. Shots `E:/ClaudeTemp/T175/shots/`.
+- 2026-10-27 04:34: **T174 #426 the hole card** (P23-UX P2-4): select a hole by its map badge (new: drawn at each hole's first tee),
+  its Holes panel badge or a click with Select → par, lengths per tee, grow-in per surface, areas, checks with Fix (arms the brush,
+  the marker or Edit hole); pin and tee drags never re-plan or charge (`markerMove`, refused off their surface); Edit hole; Delete
+  (confirms "no refund", "up to N m²" cleared); renumber by swapping badges (grid, plans, pins, tees, painted areas follow). Also fixed: the
+  rail/panel box swallowed map clicks under a short panel. Shots `E:/ClaudeTemp/T174/shots/`.
+- 2026-10-27 04:19: **T091 #422 grown-town roads keep off the course**: every golf game's town roads keep 6 tiles off the golf land (old
+  starts could cross the course before); `short()` counts only lots that can build; a range start's town lays a leg every game hour,
+  anchored between its seed and its built lots, legs near golf land (40 tiles) penalised; a grown industrial district 200-280 tiles toward
+  the nearer exit. Classic games untouched. T090 builds on it. The lead typechecks PRs in a sparse `.claude/worktrees/lead-tc` (no art,
+  docs, assets; node_modules a junction: remove it with [System.IO.Directory]::Delete first).
+- 2026-10-27 04:08: **T096 #423 the range's look**: most was already built by P24/T086 (props turn with the plot, the range ground group,
+  golfers at the bays); added: the range's outfield and target greens are managed grass (`driving-range`, `golf-green` families, grass
+  catalog `PRESET_FAMILY`), a turning/placement test, and the range kit P2 → P1 in GOLF-SPRITES with art requests (mats strip, target-green
+  decal, a golfer teeing up). range:gate identical.
+- 2026-10-27 03:50: **T092 #418 map exits feed the town's visits**: the tourist catchment (clubhouse, tourism, casino) is one per map exit
+  on a range start (`visitExits`; classic games keep one entry), its kerb on the lane into the map; the range itself already drew per
+  exit through RangeSim (P24 D2), so no worker range cars. All gates as the nightly; range:gate identical. In a new game 15 range cars in
+  75 s, 8 and 7 from each end. Suite 1915/1915.
 - 2026-10-27 03:09: **T098 #415 the range gate** (`npm run range:gate -- [seed] [days]`, 20 town days in ~10 s, deterministic): a fresh
   range start headless (`harness.ts setupRange`), held to bands from main's numbers: golfers 31-40 a day, takings $7.2-9.6k, lost ~40% (4
   bays), no car left at 05:00, range cars overlapping ≤2% (1.1% today, at the car park entrance and aisles), step times. Seeds 1-3 PASS;

@@ -16,7 +16,9 @@ import { vectorMesh, type VectorRange } from './shadow-vector';
 export interface Drawable { item: number; x: number; y: number; flip: boolean; scale: number; x0: number; y0: number; x1: number; y1: number; /** a moving car (SimClient.visible): already drawn at CAR_SCALE */ moving?: boolean;
   /** drawn this high above its spot (world px, up the screen; T133: the range's upper deck and its golfers): it keeps its footprint for the
    *  painter's order and casts no shadow (what holds it up casts its own) */
-  lift?: number }
+  lift?: number;
+  /** drawn tinted (T176: a tree New hole's Build would clear): a warm red multiplied in, so the art's own darks stay dark */
+  tint?: boolean }
 /** every car is drawn this much smaller than its art, parked (props of kind car, about the middle of their footprint) and moving (SimClient.visible,
  *  about the car's centre): the owner, 2026-10-19, "20% smaller", the parked cars too */
 export { CAR_SCALE };
@@ -92,7 +94,7 @@ function packSprite(d0: Drawable, out: Float32Array, o: number, i: number, j: nu
   // w: the foot line (world px) the cast shadow hinges on; a baked lot casts none (its picture carries its own, baked), nor a sprite whose
   // override says so (shadow-overrides.json: a flat one); a hidden one draws nothing
   // (a picture with a vector shadow casts its drawn shape instead: packVector)
-  out[o + 8] = t[0]; out[o + 9] = l.hidden ? 0 : alpha; out[o + 10] = it.big ? 0 : 1; out[o + 11] = it.kind === 'lot' || l.hidden || d0.lift || !casts(l.item) || (VECTOR.on && vecOf(l.item)) ? -1 : worldY(l.x ?? d0.x, l.y ?? d0.y);
+  out[o + 8] = t[0]; out[o + 9] = l.hidden ? 0 : d0.tint ? 2 + alpha : alpha; /* T176: 2 + alpha marks a tinted sprite (gl.ts) */ out[o + 10] = it.big ? 0 : 1; out[o + 11] = it.kind === 'lot' || l.hidden || d0.lift || !casts(l.item) || (VECTOR.on && vecOf(l.item)) ? -1 : worldY(l.x ?? d0.x, l.y ?? d0.y);
   clip(out, o + 12, i, j);
   // the footprint's front edges, for the cast shadows (gl.ts VS_CAST): the near corner (x1, y1) and the left (x0, y1) and right (x1, y0)
   // corners; business art's placeholder footprint (a 2 x 2 m box under a whole building) gives way to its picture's base (T141)
@@ -181,6 +183,8 @@ export class SpriteTiles {
   }
   /** after a prop moved, flipped or scaled */
   update(p: Prop) { this.remove(p); this.add(p); }
+  /** whether p is drawn (T176: a tinted tree the Build has since cleared is not put back) */
+  has(p: Prop): boolean { return this.where.has(p); }
   clear() { this.tiles.clear(); this.where.clear(); this.count = 0; }
   /** re-pack every tile (the vector shadows turned on or off) */
   repack() { for (const t of this.tiles.values()) t.order = null; }

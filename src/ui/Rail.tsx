@@ -1,7 +1,8 @@
 // The rail's buttons (plan P23 4.2, P1-E; the items and their states are rail-items.ts): the Course and Town headings, each item with its key letter,
 // a locked item dimmed in place with a lock and its "Unlocks with …" (a click says it, nothing opens), and a NEW badge until first opened.
 import { Icon } from './Icon';
-import type { RailEntry, RailItem } from './rail-items';
+import { railTip, type RailEntry, type RailItem } from './rail-items';
+import { tipAttrs } from './tip';
 
 const HEADING = { course: 'Course', town: 'Town' } as const;
 
@@ -23,7 +24,7 @@ export const NewBadge = ({ className = '' }: { className?: string }) => <span cl
 export function Rail({ entries, onPick, onLocked }: { entries: RailEntry[]; onPick: (r: RailItem) => void; onLocked: (r: RailItem, why: string) => void }) {
   return (
     <nav className="glass flex flex-col gap-1 p-1.5" aria-label="Tools">
-      {entries.map(({ item: r, on, locked, isNew, heading }) => (
+      {entries.map(e => { const { item: r, on, locked, isNew, heading } = e; return (
         <div key={r.id} className="contents">
           {heading && <div className="rail-heading">{HEADING[heading]}</div>}
           <button
@@ -32,7 +33,7 @@ export function Rail({ entries, onPick, onLocked }: { entries: RailEntry[]; onPi
             aria-disabled={locked ? true : undefined}
             aria-pressed={on}
             aria-label={locked ? `${r.label}: ${locked}` : isNew ? `${r.label} (new)` : r.label}
-            title={locked ? `${r.label} · ${locked}` : r.key ? `${r.label} (${r.key})` : r.label}
+            {...tipAttrs(railTip(e))}
             className={`rail-tab ${on ? 'rail-tab-on' : ''} ${locked ? 'rail-tab-locked' : ''}`}
           >
             {r.key && <span className="rail-key">{r.key}</span>}
@@ -42,7 +43,7 @@ export function Rail({ entries, onPick, onLocked }: { entries: RailEntry[]; onPi
             <span>{r.label}</span>
           </button>
         </div>
-      ))}
+      ); })}
     </nav>
   );
 }

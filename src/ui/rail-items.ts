@@ -5,6 +5,7 @@
 import type { Tool } from '../game/types';
 import type { ProgressiveUiState, RailGroupId } from '../game/ext/progressive-ui';
 import type { IconName } from './Icon';
+import type { TipParts } from './tip';
 
 /** a tool in a rail item: the segmented row at the top of its panel when the item has more than one */
 export interface RailTool { id: Tool; label: string; key: string; icon: IconName }
@@ -22,6 +23,9 @@ export const RAIL: readonly RailItem[] = [
   { id: 'paths', label: 'Paths', icon: 'sidewalk', key: '', section: 'course', group: 'course', tools: [{ id: 'path', label: 'Paths', key: '', icon: 'sidewalk' }] },
   { id: 'buildings', label: 'Buildings', icon: 'house', key: '', section: 'course', group: 'course', tools: [{ id: 'buildings', label: 'Buildings', key: '', icon: 'house' }], only: 'golf' },
   { id: 'props', label: 'Props', icon: 'leaf', key: 'Z', section: 'course', group: 'course', tools: [{ id: 'props', label: 'Props', key: 'Z', icon: 'leaf' }], only: 'golf' },
+  // Greenkeeping (plan P23-UX P2-5, T175): the Grass panel as a tool, its care armed like a brush; it opens with the first grown hole (no key:
+  // every free letter is taken)
+  { id: 'greenkeeping', label: 'Greenkeeping', icon: 'trees', key: '', section: 'course', group: 'course', tools: [{ id: 'greenkeeping', label: 'Greenkeeping', key: '', icon: 'trees' }], only: 'golf' },
   { id: 'roads', label: 'Roads', icon: 'road', key: 'R', section: 'town', group: 'roads', tools: [
     { id: 'road', label: 'Build', key: 'R', icon: 'road' },
     { id: 'lane', label: 'Upgrade', key: 'N', icon: 'up' },
@@ -67,4 +71,9 @@ export function railEntries(ui: ProgressiveUiState | null, golf: boolean, uiTool
     last = r.section;
   }
   return out;
+}
+
+/** a rail item's tooltip (T179): its name, its key (if it has one) and, locked, what unlocks it (the stages' and the ramp's words) */
+export function railTip(e: RailEntry): TipParts {
+  return { name: e.item.label, ...(e.item.key ? { key: e.item.key } : {}), ...(e.locked ? { why: e.locked } : {}) };
 }
