@@ -156,7 +156,7 @@ export type FromWorker =
   | { t: 'ready'; ms: number; saving?: boolean }
   | { t: 'saved' }
   | { t: 'texpack'; snaps: TexSnapshot[] }
-  | { t: 'tile'; id: number; kind: TileKind; i: number; j: number; L: number; artL?: number; /** the step it was baked at, and whether it laid a tile set family (T145) */ ts?: number; tiled?: boolean; bmp: ImageBitmap;
+  | { t: 'tile'; id: number; kind: TileKind; i: number; j: number; L: number; artL?: number; /** the step it was baked at, and whether it laid a tile set family (T145) */ ts?: number; tiled?: boolean; /** T197: a tile set's tiles were not decoded for part of it (it fell back to the photo): bake it again soon */ prov?: boolean; bmp: ImageBitmap;
       /** T186: the baked shade's multiplier at a quarter of the chunk's size (renderer.ts takeShadeMask); none when the bake laid no shade */
       shade?: ImageBitmap; ms: number }
   | { t: 'error'; message: string }
