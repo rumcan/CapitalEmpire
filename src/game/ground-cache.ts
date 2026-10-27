@@ -21,6 +21,8 @@ import { pictureCurrent } from './ground-layers';
 export interface Tile {
   kind: TileKind; i: number; j: number;
   tex: WebGLTexture | null; texL: number; texArtL: number; px: number;
+  /** T186: its picture's baked shade multiplier (renderer.ts takeShadeMask, a quarter of its size; gl.ts drawShadeMask), null when it has none */
+  shade: WebGLTexture | null;
   /** the picture before the last edit, kept for the build reveal */
   prev: WebGLTexture | null; prevUntil: number;
   /** A short zoom-resolution crossfade; independent of the construction reveal picture. */
@@ -159,7 +161,7 @@ export class GroundCache {
 
   tile(kind: TileKind, i: number, j: number) {
     const k = key(kind, i, j); let t = this.tiles.get(k);
-    if (!t) { t = { kind, i, j, tex: null, texL: 0, texArtL: 0, px: 0, prev: null, prevUntil: 0, fadeFrom: null, fadeStart: 0, fadePx: 0, gen: 0, stale: false, pendingL: 0, pendingArtL: 0, used: 0, baked: 0, hold: 0, texTs: -1, texTiled: false, pendingTs: -1 }; this.tiles.set(k, t); }
+    if (!t) { t = { kind, i, j, tex: null, texL: 0, texArtL: 0, px: 0, shade: null, prev: null, prevUntil: 0, fadeFrom: null, fadeStart: 0, fadePx: 0, gen: 0, stale: false, pendingL: 0, pendingArtL: 0, used: 0, baked: 0, hold: 0, texTs: -1, texTiled: false, pendingTs: -1 }; this.tiles.set(k, t); }
     return t;
   }
   /** mark the chunks over a tile-space box stale; keepPrev keeps the current picture for the build reveal */
@@ -206,20 +208,23 @@ export class GroundCache {
     if (m.t === 'log') { console.log(`[ground worker ${w}]`, m.message); return; }
     if (m.t === 'texpack') { m.snaps.forEach((snap, k) => this.workers[k + 1]?.postMessage({ t: 'textures', snap } satisfies ToWorker, snap.bitmaps)); return; }
     const r = this.reqs.get(m.id); this.reqs.delete(m.id); this.inflight[w]--;
-    if (!r) { m.bmp.close(); return; }
+    if (!r) { m.bmp.close(); m.shade?.close(); return; }
     const t = r.t; t.pendingL = 0; t.pendingArtL = 0; t.pendingTs = -1;
     this.bakeLog[this.baked % BAKE_LOG] = m.ms; this.waitLog[this.baked % BAKE_LOG] = performance.now() - r.at; if (!this.firstTileAt) this.firstTileAt = performance.now();
     this.bakeMs += m.ms; this.baked++;
     // edited while baking: it will be asked for again, and keeps the picture it has meanwhile; one with none shows this one (stale, so it is
     // still asked for again: the ground before the edit for a bake, rather than nothing; T134, the startup's edits did this to the planner pieces)
     const edited = r.gen !== t.gen;
-    if (edited && t.tex) { m.bmp.close(); return; }
+    if (edited && t.tex) { m.bmp.close(); m.shade?.close(); return; }
     const u0 = performance.now();
     // a new tile spec (T145, T150: a band switch or a DPR change) keeps the old picture until the whole view has the new one too (engine.ts: then a cut, never a crossfade between sets)
     const ts = m.ts ?? 0, stepChanged = (t.texTiled || !!m.tiled) && t.texTs !== ts;
     const old = t.tex, oldL = t.texL, oldPx = t.px, artL = m.artL ?? m.L, fade = old && (oldL !== m.L || t.texArtL !== artL || stepChanged) && !t.stale && t.kind !== 'p' && !t.prev;
     if (t.fadeFrom && t.fadeFrom !== old && t.fadeFrom !== t.prev) this.gl.deleteTexture(t.fadeFrom);
     t.fadeFrom = null; t.fadePx = 0;
+    // (T186: the shade mask goes with the new picture: the fading old picture shows over the new mask meanwhile, a few frames)
+    if (t.shade) this.gl.deleteTexture(t.shade);
+    t.shade = m.shade ? this.gl.textureFrom(m.shade) : null; m.shade?.close();
     t.tex = this.gl.textureFrom(m.bmp); t.texL = m.L; t.texArtL = artL; t.texTs = ts; t.texTiled = !!m.tiled; t.px = m.bmp.width * m.bmp.height; t.stale = edited; t.baked = u0; m.bmp.close();
     if (fade) { t.fadeFrom = old; t.fadeStart = Infinity; t.fadePx = oldPx; }
     else if (old && old !== t.prev) this.gl.deleteTexture(old);
@@ -233,7 +238,7 @@ export class GroundCache {
     this.residentPx = px + held; this.peakPx = Math.max(this.peakPx, this.residentPx);
     if (px <= this.budgetPx) return;
     const old = [...this.tiles.values()].filter(t => t.tex && t.used !== now).sort((a, b) => a.used - b.used);
-    for (const t of old) { if (px <= this.budgetPx * 0.8) break; px -= t.px + t.fadePx; this.gl.deleteTexture(t.tex!); t.tex = null; if (t.prev) { this.gl.deleteTexture(t.prev); t.prev = null; } if (t.fadeFrom) { this.gl.deleteTexture(t.fadeFrom); t.fadeFrom = null; t.fadePx = 0; } }
+    for (const t of old) { if (px <= this.budgetPx * 0.8) break; px -= t.px + t.fadePx; this.gl.deleteTexture(t.tex!); t.tex = null; if (t.shade) { this.gl.deleteTexture(t.shade); t.shade = null; } if (t.prev) { this.gl.deleteTexture(t.prev); t.prev = null; } if (t.fadeFrom) { this.gl.deleteTexture(t.fadeFrom); t.fadeFrom = null; t.fadePx = 0; } }
   }
   /** release reveal pictures whose animation is over */
   settle(now: number) { for (const t of this.tiles.values()) {
