@@ -13,7 +13,8 @@ import { entryKey, extraLock, toolLock, toolNew, toolsIn, type RailItem, type Ra
 export type LeafAct =
   | { k: 'road'; id: string } | { k: 'junction'; id: string } | { k: 'surface'; id: string } | { k: 'newHole' } | { k: 'holes' }
   | { k: 'club' } | { k: 'halfway' } | { k: 'care'; id: string } | { k: 'event' } | { k: 'props'; group: string | null }
-  | { k: 'paint'; tex: string } | { k: 'plant'; id: string } | { k: 'paintMode'; id: string } | { k: 'range'; section: string | null } | { k: 'land' };
+  | { k: 'paint'; tex: string } | { k: 'plant'; id: string } | { k: 'paintMode'; id: string } | { k: 'range'; section: string | null } | { k: 'land' }
+  | { k: 'practice'; id: string };
 /** a leaf: the rail item it opens from, its tool entry (the Props tool's view with it), what else it does */
 export interface Leaf { item: string; entry: RailTool; act?: LeafAct }
 /** a flyout row: a caption (no action), a row with children (opens the next flyout), or a leaf. why: locked (dimmed, the reason shown) */
@@ -33,6 +34,8 @@ export interface MenuCtx {
   propGroups: { id: string; name: string }[];
   materials: { id: string; name: string; col?: string }[];
   plants: { id: string; name: string; col?: string }[];
+  /** T206: the practice facilities (Facilities ▸ Practice) with their own lock besides the tool's (no practice area: not a range start) */
+  practice?: { id: string; name: string; why: string | null }[];
   /** New hole's lock (null: open) */
   newHoleWhy: string | null;
   /** the range card's sections (a game with a range) */
@@ -83,16 +86,22 @@ export function menuOf(item: RailItem, c: MenuCtx): MenuRow[] {
       ] : [], h));
       const b = byId('buildings');
       if (b) rows.push(group('buildings', 'Buildings', 'house', [leaf(b, 'Clubhouse', { k: 'club' }, 'house'), leaf(b, 'Halfway house', { k: 'halfway' }, 'house')], b));
+      // T206: the roads on your property (the course's cart paths and drives), directly below Buildings; town roads stay in Traffic
+      const p = byId('path');
+      if (p) { const r = group('paths', p.label, 'sidewalk', classes(p, c.paths), p); if (r) rows.push({ ...r, note: 'Roads and cart paths on your property' }); }
       const g = byId('greenkeeping');
       if (g) rows.push(group('greenkeeping', 'Greenkeeping', 'trees', [leaf(g, 'Grass care', undefined, 'trees'), ...c.cares.map(x => leaf(g, x.name, { k: 'care', id: x.id }))], g));
       if (c.golf) for (const x of item.extras ?? []) rows.push({ key: `extra:${x.id}`, label: x.label, icon: x.icon, leaf: { item: item.id, entry: { id: 'select', label: x.label, key: '', icon: x.icon }, act: x.id === 'land' ? { k: 'land' } : { k: 'event' } }, why: extraLock(c.ui, x) });
       break;
     }
-    case 'decor': {
-      const p = byId('path');
-      rows.push(group('paths', 'Paths', 'sidewalk', classes(p, c.paths), p));
+    case 'facilities': {
+      // T206: Practice ▸ the facilities (each its own building tool), Plants ▸ the plant brush's kinds, Decoration ▸ Props ▸ by group
+      const pt = byId('practice');
+      if (pt) rows.push(group('practice', 'Practice', 'pin', (c.practice ?? []).map(f => ({ ...leaf(pt, f.name, { k: 'practice', id: f.id }, 'pin')!, why: toolLock(c.ui, pt.id) ?? f.why })), pt));
+      const pa = byId('paint');
+      if (pa) rows.push(group('plants', 'Plants', 'trees', c.plants.map(m => ({ ...leaf(pa, m.name, { k: 'plant', id: m.id })!, ...(m.col ? { swatch: m.col } : {}) })), pa));
       const pr = byId('props');
-      if (pr) rows.push(group('props', 'Props', 'leaf', [leaf(pr, 'All props', { k: 'props', group: null }), ...c.propGroups.map(g => leaf(pr, g.name, { k: 'props', group: g.id }))], pr));
+      if (pr) rows.push(group('decoration', 'Decoration', 'leaf', [group('props', 'Props', 'leaf', [leaf(pr, 'All props', { k: 'props', group: null }), ...c.propGroups.map(g => leaf(pr, g.name, { k: 'props', group: g.id }))], pr)], pr));
       break;
     }
     case 'towndecor': {

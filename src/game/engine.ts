@@ -32,12 +32,13 @@ import { OWNER_SCALE, STUDIO_SCALE } from './lots/scales';
 import { turned } from './lots/preset-art';
 import { RangeHost } from './golf/rangehost';
 import { PropsTool } from './golf/propstool';
+import { PracticeTool } from './golf/practicetool';
 import { DECOR_BY_KEY, lotTouches, propTuple, sellBack, tupleMarks } from './golf/decor';
 import { HALFWAY_COST, halfwaySpotWhy, halfwayTakings } from './golf/halfway';
 import { guideTable, type GuideEvent } from './ext/progressive-ui/guide';
 import { welcomeReady } from './golf/firstview';
 /** the hints' anchors (T188: their Show me pulses the control) where the hint is no guide step */
-const HINT_ANCHOR: Readonly<Record<string, string>> = { 'hint-range-open': 'range-chip', 'hint-range-upgrade': 'range-chip', 'hint-range-props': 'rail-decor', 'hint-range-first-hole': 'new-hole' };
+const HINT_ANCHOR: Readonly<Record<string, string>> = { 'hint-range-open': 'range-chip', 'hint-range-upgrade': 'range-chip', 'hint-range-props': 'rail-facilities', 'hint-range-first-hole': 'new-hole' };
 import { RANGE_LABEL_Z, defaultRangeBiz, parkLabel, practiceAppeal, rangeMapLabel, rangeNewSeason, rangeScene, rangeStats, rangeStructures, type RangeCounts, type RangeUpgradeId } from './golf/rangebiz';
 import { areaAt, brushTextures, toTuple, type PaintTuple, type PaintTex } from './paint';
 import { CELL_T, SURF, cellAt, diffBox, encodeGrid, fillPolygon, fitGrid, landGridBox, makeGrid, paintStroke, type Grid as CourseGrid, type GridDiff, type GridSave } from './ext/course-grid';
@@ -101,7 +102,7 @@ import { HEIGHT_LIGHT_STRENGTH, clampHeightLight } from './ext/course-height/lig
 import { planGolfGame } from './golf/start';
 import { RANGE_CAM_ZOOM, planRangeStart } from './golf/rangestart';
 import { CLUB_REACH, clubhouseSpotWhy, plotOfFront, rangeLayout } from './golf/range';
-import { practiceArea } from './golf/practice';
+import { inPractice, practiceArea } from './golf/practice';
 import { dressCourse } from './golf/dressing';
 import { FIRST_TEE, SEASON_START, monthIndexLabel, monthsLeft, seasonLabel, seasonMonth, yearOf } from './golf/calendar';
 import { afterRoute, driveOffer, driveStart, type DriveStopgap } from './golf/drivestopgap';
@@ -338,7 +339,7 @@ const miniFits = (n: Node): boolean => n.arms.every(a => a.cls.laneCentres.lengt
 type PropLog = { added: Prop[]; removed: Prop[] };
 
 /** the tools' names as the rail and the panels say them (a locked tool's toast, P23 4.10) */
-const TOOL_NAME: Partial<Record<Tool, string>> = { road: 'Roads', lane: 'Upgrade', downgrade: 'Downgrade', junction: 'Junctions', bus: 'Bus routes', park: 'Car parks', toll: 'Toll gates', paint: 'Paint', course: 'Holes', path: 'Paths', buildings: 'Buildings', bulldoze: 'Bulldoze' };
+const TOOL_NAME: Partial<Record<Tool, string>> = { road: 'Roads', lane: 'Upgrade', downgrade: 'Downgrade', junction: 'Junctions', bus: 'Bus routes', park: 'Car parks', toll: 'Toll gates', paint: 'Paint', course: 'Holes', path: 'Cart paths & roads', buildings: 'Buildings', bulldoze: 'Bulldoze', practice: 'Practice' };
 
 export class Game {
   gl: GLRenderer; ov: CanvasRenderingContext2D;
@@ -497,7 +498,7 @@ export class Game {
     layTee: pts => { const g = this.courseGrid; if (!g) return false; const q: Pt[] = []; for (let i = 0; i < pts.length; i += 2) q.push({ x: pts[i]!, y: pts[i + 1]! }); this.courseGridChanged(fillPolygon(g, q, SURF.tee, 0, 0), true); return true; },
   }, 0x7a29);
   /** the hint's Show me (T130): the camera on the practice area at 30% with the brush that builds its next facility */
-  showPracticeArea() { const t = this.range.practiceTarget(); if (!t) return; this.lookAt(t.x, t.y, 0.3); this.setTool('course'); this.paint.setBrush(t.brush); this.emit(); }
+  showPracticeArea() { const t = this.range.practiceTarget(); if (!t) return; this.lookAt(t.x, t.y, 0.3); this.armPractice(t.kind, true); this.emit(); } // T206: the facility's own tool, not the brush
   /** the range's car park (the one on the range plot) as the range's golfers park in it: its bays and entrance, cached per built park */
   private rangeCarPark(): { bays: { x: number; y: number; hx: number; hy: number }[]; entrance: Pt } | null {
     const k = this.parkDefs.findIndex(d => this.onRangePlot(d.x + d.w / 2, d.y + d.h / 2)), pk = k >= 0 ? this.parkBuilt[k] : null;
@@ -540,6 +541,22 @@ export class Game {
     step: (label, run) => this.paint.step(label, run), undo: () => this.paint.undo(), redo: () => this.paint.redo(),
     save: () => this.scheduleSave(), toast: (t, k) => this.toast(t, k), emit: () => this.emit(),
   });
+  /** Facilities ▸ Practice (T206, #540: golf/practicetool.ts): the practice facilities' own building tools; the bulldozer takes a built one */
+  readonly practice: PracticeTool = new PracticeTool({
+    area: () => (this.golf?.start === 'range' ? this.range.scene?.practice ?? null : null), grid: () => this.courseGrid,
+    owned: (x, y) => this.ownedAt(x, y) && !this.onRangePlot(x, y), open: k => this.range.practice?.[k].state === 'open',
+    tileAt: (mx, my) => this.tileAt(mx, my), money: () => this.money, month: () => (this.golf ? this.golfMonthIndex() : 0),
+    gridStep: (label, run) => this.paint.gridEdit(label, run), undo: () => this.paint.undo(), redo: () => this.paint.redo(),
+    lookAt: (x, y, z) => this.lookAt(x, y, z),
+    save: () => this.scheduleSave(), toast: (t, k) => this.toast(t, k), emit: () => this.emit(),
+  });
+  /** a practice facility in hand (Facilities ▸ Practice, the range card's Build; null puts it down); show: the camera on the practice area */
+  armPractice(kind: 'putting' | 'chipping' | null, show = false) {
+    if (!kind) { this.practice.cancel(); this.emit(); return; }
+    if (this.refuseLocked('practice')) return;
+    if (this.tool !== 'practice') this.setTool('practice');
+    if (this.tool === 'practice') this.practice.arm(kind, show);
+  }
   /** what a placed prop sells for (the bulldozer, Delete): half a Props tool item's price (T131), else half its library price, nothing for a plant */
   private sellValue(p: Prop): number { const d = p.decor ? DECOR_BY_KEY.get(p.decor) : undefined; return d ? sellBack(d) : p.plant ? 0 : Math.round(LIBRARY[p.item]!.cost * 0.5); }
   /** the before / after snapshot (the bottlenecks panel): the game hour it was taken at, the window before (null: no traffic on record yet), and the next rush, [start, end] in absolute game hours */
@@ -605,6 +622,7 @@ export class Game {
     grid: () => this.courseGrid, gridChanged: (d, flush) => { this.range.practiceCells(this.courseGrid, d); this.courseGridChanged(d, flush); }, gridAreas: () => this.gridAreaList(),
     // the course keeps off the driving range's own plot (its hut, mats, car park and the field its golfers hit into), the rest of your land is
     // the course's; the brush's footprint and the wizard say which refusal it is
+    practiceAt: (x, y) => this.golf?.start === 'range' && !!this.range.scene && inPractice(this.range.scene.practice, x, y), // T206
     ownedAt: (x, y) => this.ownedAt(x, y) && !this.onRangePlot(x, y), landWhy: (x, y) => (this.onRangePlot(x, y) ? 'range' : this.ownedAt(x, y) ? '' : 'off'), plans: () => this.golf?.plans ?? [], setPlans: p => this.setGolfPlans(p), holeBuilt: () => this.guideEvent('hole'), pinOf: n => this.golf?.pins.find(q => q.hole === n) ?? null,
     // New hole (P23 4.4, T119): the camera framing, the practice area (P24 D24), and what its warnings measure against
     fitView: (pts, zoomIn) => this.fitView(pts, zoomIn), practiceBox: () => (this.golf?.start === 'range' ? this.range.scene?.practice.box ?? null : null),
@@ -2436,7 +2454,7 @@ export class Game {
     }
 
   // ---------- road routing ----------
-  setTool(t: Tool) { const wasGk = this.tool === 'greenkeeping'; if (t === 'business' && this.golfMode) return; /* golf mode: the game places the clubhouse, so no Business tool */ if (this.refuseLocked(t)) return; /* P23 4.10: a locked tool says what unlocks it */ const scope = t === 'path' ? 'course' : t === 'road' ? 'town' : this.roadScope; if (t === 'path') t = 'road'; /* T084: Paths & drives is the road tool on the course */ const cScope = t === 'buildings' ? 'buildings' : t === 'course' ? 'holes' : this.courseScope; if (t === 'buildings') t = 'course'; /* P23 P1-E: Buildings is the course tool's clubhouse scope */ if (this.tool !== t || scope !== this.roadScope || cScope !== this.courseScope) { this.paint.cancel(); this.cancelRoute(); this.selected = null; this.selectedJunction = null; this.parkDrag = null; this.parking.drag = null; this.tollHover = null; this.bizHover = null; this.busPick = null; this.busHover = null; this.laneHover = null; this.decor.cancel(); } this.tool = t; if (pickTool(this, t)) this.tidySideModes(); /* P23 P1-A: a build tool closes the Grass panel, Land, Holes and Event */ if (t === 'road') this.setRoadScope(scope); if (t === 'course') this.courseScope = cScope; if (t !== 'course' || cScope === 'holes') { this.clubPlacing = false; this.halfwayPlacing = false; } else if (this.golf && !this.bizDefs.some(d => d.type === 'clubhouse')) this.clubPlacing = true; /* Buildings arms the clubhouse until it stands */ if (t === 'course') { this.paint.enterCourse(); this.ground.prewarm(brushTextures()); /* T168: what its brushes lay, made ahead */ } else if (t === 'paint') this.paint.enterPaint(); /* T175: Greenkeeping's panel is the Grass panel; leaving it puts its care down */ if (t === 'greenkeeping') this.grassPanel = true; else if (wasGk) { this.grassPanel = false; this.grassAction = null; } this.emit(); }
+  setTool(t: Tool) { const wasGk = this.tool === 'greenkeeping'; if (t === 'business' && this.golfMode) return; /* golf mode: the game places the clubhouse, so no Business tool */ if (this.refuseLocked(t)) return; /* P23 4.10: a locked tool says what unlocks it */ const scope = t === 'path' ? 'course' : t === 'road' ? 'town' : this.roadScope; if (t === 'path') t = 'road'; /* T084: Paths & drives is the road tool on the course */ const cScope = t === 'buildings' ? 'buildings' : t === 'course' ? 'holes' : this.courseScope; if (t === 'buildings') t = 'course'; /* P23 P1-E: Buildings is the course tool's clubhouse scope */ if (this.tool !== t || scope !== this.roadScope || cScope !== this.courseScope) { this.paint.cancel(); this.cancelRoute(); this.selected = null; this.selectedJunction = null; this.parkDrag = null; this.parking.drag = null; this.tollHover = null; this.bizHover = null; this.busPick = null; this.busHover = null; this.laneHover = null; this.decor.cancel(); this.practice.cancel(); } this.tool = t; if (pickTool(this, t)) this.tidySideModes(); /* P23 P1-A: a build tool closes the Grass panel, Land, Holes and Event */ if (t === 'road') this.setRoadScope(scope); if (t === 'course') this.courseScope = cScope; if (t !== 'course' || cScope === 'holes') { this.clubPlacing = false; this.halfwayPlacing = false; } else if (this.golf && !this.bizDefs.some(d => d.type === 'clubhouse')) this.clubPlacing = true; /* Buildings arms the clubhouse until it stands */ if (t === 'course') { this.paint.enterCourse(); this.ground.prewarm(brushTextures()); /* T168: what its brushes lay, made ahead */ } else if (t === 'paint') this.paint.enterPaint(); /* T175: Greenkeeping's panel is the Grass panel; leaving it puts its care down */ if (t === 'greenkeeping') this.grassPanel = true; else if (wasGk) { this.grassPanel = false; this.grassAction = null; } this.emit(); }
   /** the snap radius in tiles: about 14 screen px (at least 2 tiles) */
   private snapRadius() { return Math.max(2, 14 / (HW * this.cam.z)); }
   /** the road tool's snap under the cursor, or null with no cursor */
@@ -3157,7 +3175,8 @@ export class Game {
       }
       if (p && !p.auto) { const it = LIBRARY[p.item], back = this.sellValue(p); this.removeProp(p); this.traffic.spend('construction', -back); if (it.kind === 'lamp') this.syncLamps(); this.scheduleSave(); this.toast(back ? `Removed ${it.name} (+$${back.toLocaleString()})` : `Removed ${it.name}`); return; }
   
- const k = this.parkIndexAt(t);
+      if (this.golf && this.practice.removeAt(t.x, t.y)) return; // T206: a practice facility goes whole, half its price back
+      const k = this.parkIndexAt(t);
       if (k >= 0) { const id = this.parkDefs[k]!.id; this.removePark(k); this.scheduleSave(); this.toast(`Removed car park #${id} (no refund)`); this.emit(); return; }
       const g = this.tollIndexAt(t);
       if (g >= 0) { const id = this.tollDefs[g]!.id; this.removeToll(g); this.scheduleSave(); this.toast(`Removed toll gate #${id} (the road stays; no refund)`); this.emit(); return; }
@@ -3294,6 +3313,7 @@ export class Game {
     }
     const pan = e.button === 1 || e.button === 2 || this.keys.has(' ');
     if (this.keys.has(' ')) this.spacePanned = true;
+    if (this.tool === 'practice' && !pan) { if (e.button === 0) this.practice.click(mx, my); return; } // T206
     if (this.tool === 'props' && !pan) { if (e.button === 0) this.decor.down(mx, my); return; } // the Props tool (T131): place, or select and drag
     if (this.tool === 'junction' && e.button === 2 && this.junctionRight(mx, my)) return;
     if (this.paintOn && e.button === 2 && this.paint.secondary(this.tileAt(mx, my), mx, my)) return;
@@ -3349,6 +3369,7 @@ export class Game {
       else if (d.kind === 'park') this.parkUpdate(mx, my);
     } else if (this.tool === 'select') this.hoverProp = this.propAt(mx, my);
     if (this.tool === 'props') this.decor.move(mx, my);
+    if (this.tool === 'practice') this.practice.move(mx, my);
     if (this.tool === 'select' && !d) this.hoverRoad = this.hoverProp ? '' : this.roadNameAt(this.hover);
     if (this.tool === 'junction') this.hoverNode = this.net.nearestNode(this.hover, this.brush === 'roundabout' || this.brush === 'select' ? 2 : 3, 5);
     if (this.tool === 'lane' || this.tool === 'downgrade') this.laneUpdate(this.hover);
@@ -3380,7 +3401,7 @@ export class Game {
     if (this.tool === 'props') this.decor.up();
     this.dragging = null;
   }
-  pointerLeave() { this.paint.cursor = null; this.paint.mouse = null; this.paint.hover = 0; this.paint.hoverH = null; this.hover = null; this.hoverProp = null; this.hoverNode = null; this.hoverPiece = null; this.hoverRoad = ''; this.tollHover = null; this.bizHover = null; this.ghostMouse = null; this.busHover = null; this.laneHover = null; this.decor.ghost = null; }
+  pointerLeave() { this.paint.cursor = null; this.paint.mouse = null; this.paint.hover = 0; this.paint.hoverH = null; this.hover = null; this.hoverProp = null; this.hoverNode = null; this.hoverPiece = null; this.hoverRoad = ''; this.tollHover = null; this.bizHover = null; this.ghostMouse = null; this.busHover = null; this.laneHover = null; this.decor.ghost = null; this.practice.leave(); }
   /** the name of the road under tile t (the piece under it, then its route), or '' */
   roadNameAt(t: Pt | null): string {
     const piece = t ? this.net.pieceNear(t) : null;
@@ -3475,6 +3496,7 @@ export class Game {
     if (this.paintOn && this.paint.key(e)) return;
     if (this.tool === 'park' && this.parking.key(e)) return;
     if (this.tool === 'props' && this.decor.key(e)) return;
+    if (this.tool === 'practice' && this.practice.key(e)) { this.emit(); return; } // T206
     switch (e.key) {
       case 'Enter': this.routeInput('enter'); break;
       case 'Backspace': this.routeInput('backspace'); break;
@@ -3551,6 +3573,7 @@ export class Game {
     if (this.paintOn && this.paint.key(e)) return true;
     if (this.tool === 'park' && this.parking.key(e)) return true;
     if (this.tool === 'props' && this.decor.esc()) return true;
+    if (this.tool === 'practice' && this.practice.cancel()) { this.emit(); return true; } // T206: the facility in hand goes down first
     if (this.tool === 'junction' && (this.selectedJunction || this.brush !== 'select')) { if (this.selectedJunction) this.selectedJunction = null; else this.brush = 'select'; this.emit(); return true; }
     if (this.traffic.car || this.traffic.watch) { this.closeInspect(); this.closeWatch(); return true; }
     if (this.busPick) { this.busPick = null; this.busHover = null; this.emit(); return true; }
@@ -5979,6 +6002,7 @@ export class Game {
     this.drawBizPreview(ctx);
     this.drawEventGhosts(ctx);
     this.drawDecorGhost(ctx);
+    this.drawPracticeGhost(ctx);
     this.drawBusPreview(ctx);
     for (const p of [this.selected, this.hoverProp]) {
       if (!p) continue;
@@ -6165,6 +6189,27 @@ export class Game {
       ctx.restore();
     }
     if (g.why) this.refusedRect(ctx, g.box[0], g.box[1], g.box[2] - g.box[0], g.box[3] - g.box[1]);
+    if (m) this.hintAt(ctx, m.mx, m.my, g.label, !!g.why);
+  }
+  /** T206: Facilities ▸ Practice in hand: the practice area's outline and the facility's ghost (green, sand and mat, see-through; red with the
+   *  reason where it cannot go) with its label; the bulldozer over a practice facility: what a click removes and refunds */
+  private pracHover: { key: string; f: ReturnType<PracticeTool['facilityAt']> } | null = null;
+  private drawPracticeGhost(ctx: CanvasRenderingContext2D) {
+    const m = this.ghostMouse;
+    if (this.tool === 'bulldoze' && !this.hoverPiece && this.hover && this.golf && this.courseGrid) {
+      const h = this.hover, key = `${Math.floor(h.x * 2)},${Math.floor(h.y * 2)},${this.courseGrid.rev}`;
+      if (this.pracHover?.key !== key) this.pracHover = { key, f: this.practice.facilityAt(h.x, h.y) };
+      const f = this.pracHover.f; if (f && m) this.hintAt(ctx, m.mx, m.my, `Click removes the ${f.name} (+$${f.refund.toLocaleString()})`, true);
+      return;
+    }
+    if (this.tool !== 'practice') return;
+    const a = this.range.scene?.practice, v = this.ghostView(ctx);
+    if (a) drawGhostPoly(v, a.pts, 'valid', { dashed: true, fillColor: 'rgba(236,252,203,0.05)' });
+    const g = this.practice.ghost; if (!g) return;
+    const st = g.why ? 'invalid' : 'valid', p = g.plan;
+    drawGhostPoly(v, p.green, st, { fillColor: g.why ? undefined : 'rgba(110,190,90,0.55)', borderWidthTiles: 1, borderColor: 'rgba(80,150,70,0.35)' });
+    if (p.bunker) drawGhostPoly(v, p.bunker, st, { fillColor: g.why ? undefined : 'rgba(230,214,160,0.7)' });
+    if (p.spot) drawGhostPoly(v, p.spot, st, { fillColor: g.why ? undefined : 'rgba(150,200,110,0.7)' });
     if (m) this.hintAt(ctx, m.mx, m.my, g.label, !!g.why);
   }
   /** the overlay view the shared ghost drawers take (T019/T020) */

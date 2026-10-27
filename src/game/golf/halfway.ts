@@ -44,7 +44,7 @@ export function halfwaySpotWhy(r: readonly [number, number, number, number], s: 
   if (pts.some(p => s.surf(p.x, p.y) === 'play')) return 'Off the fairways, greens, tees, bunkers and water: on the rough or the grass beside them';
   if (!s.tees.some(t => gapTo(r, t) <= HALFWAY_TEE_REACH)) return `Near a tee: within ${HALFWAY_TEE_REACH * 2} m of one (between holes 9 and 10 is the classic spot)`;
   if (s.pathGap < 0) return 'Not on the path: beside it';
-  if (s.pathGap > HALFWAY_PATH_GAP) return 'Its front on a cart path: draw one to it (Decoration › Paths)';
+  if (s.pathGap > HALFWAY_PATH_GAP) return 'Its front on a cart path: draw one to it (Course › Cart paths & roads)';
   if (HALFWAY_COST > s.money) return `Not enough money: the halfway house costs $${HALFWAY_COST.toLocaleString()}`;
   return '';
 }

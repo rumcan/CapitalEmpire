@@ -3,7 +3,7 @@
 // flyout and every submenu in it; picks every leaf and looks at the tool panel it opens (and the Junctions panel with a junction selected, where
 // the roundabout's note once sat over a horizontal scrollbar), Help › Keys (T202: F1, the Keys sheet scrolled through), and Course › Holes with a
 // hole built (T205: the plain panel with the badges and the status line's ✎ Edit hole, the hole card, and the editor's shape step, top and
-// end). A box fails when it is wider than it shows (its content scrolls or is cut
+// end), the floating Grass panel and (a range start) the range card, top and end (T206: both once ran past the bottom at 125%). A box fails when it is wider than it shows (its content scrolls or is cut
 // sideways), when any element in it scrolls sideways, or when it passes the screen's edge. Nothing is saved: every POST is answered here.
 //   npm run ui:overflow -- --url http://localhost:5173 [--channel msedge|chrome] [--quick]
 import { chromium } from 'playwright-core';
@@ -17,7 +17,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 const check = () => {
   const out = [], W = innerWidth, H = innerHeight, se = document.scrollingElement;
   if (se && (se.scrollTop || se.scrollLeft)) out.push(['the page', `scrolled (${se.scrollLeft}, ${se.scrollTop})`]);
-  const boxes = [...document.querySelectorAll('[data-testid="rail"], [data-flyout-col], [data-testid="tool-panel"], [data-testid="help"], [data-testid="hole-card"]')].filter(e => e.offsetParent !== null);
+  const boxes = [...document.querySelectorAll('[data-testid="rail"], [data-flyout-col], [data-testid="tool-panel"], [data-testid="help"], [data-testid="hole-card"], [data-testid="range-card"], [data-testid="grass-panel"]')].filter(e => e.offsetParent !== null);
   for (const b of boxes) {
     const name = b.getAttribute('data-testid') ?? `flyout ${b.getAttribute('data-flyout-col')}`, r = b.getBoundingClientRect();
     if (b.scrollWidth > b.clientWidth + 1) out.push([name, `content ${b.scrollWidth}px wide in ${b.clientWidth}px`]);
@@ -146,9 +146,33 @@ try {
       }
       await p.evaluate(() => { const g = window.__game; g.closeHoleCard?.(); g.paint.setBrush(g.paint.brushKind); g.emit(); });
     }
+    // the floating Grass panel (Select with the Grass panel on; T206: its height follows the UI scale)
+    await p.evaluate(() => { const g = window.__game; g.closeHoleCard?.(); g.setTool('select'); g.grassPanel = true; g.emit(); }); await sleep(350);
+    if (await p.$('[data-testid="grass-panel"]')) { await look('the Grass panel'); await p.evaluate(() => { const c = document.querySelector('[data-testid="grass-panel"]'); c.scrollTop = c.scrollHeight; }); await sleep(150); await look('the Grass panel, scrolled to its end'); }
+    await p.evaluate(() => { const g = window.__game; g.grassPanel = false; g.emit(); });
     await ctx.close();
+    // the range card (T206): a range start, the card at its top and its end
+    {
+      const rc = await browser.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: 1 });
+      await rc.addInitScript(s => { try { localStorage.clear(); localStorage.setItem('capitalempire.uiScale', String(s)); } catch { /* none */ } }, S);
+      const q = await rc.newPage();
+      await q.route('**/*', r => { const x = r.request(); return x.method() !== 'GET' && x.method() !== 'HEAD' ? r.fulfill({ status: 200, contentType: 'application/json', body: '{"ok":true}' }) : r.continue(); });
+      await q.goto(`${URL}/?start=range&unlock=0`, { waitUntil: 'domcontentloaded', timeout: 180000 });
+      await q.waitForFunction(() => window.__game?.ready, null, { timeout: 300000 });
+      await sleep(2000);
+      await q.evaluate(() => { const g = window.__game; g.setSpeed(0); document.querySelectorAll('button[aria-label="Close"]').forEach(x => x.click()); g.openRangeCard(true); g.emit(); });
+      await sleep(500);
+      const lookQ = async what => { looked++; for (const [box, why] of await q.evaluate(check)) fails.push(`${tag} · ${what} · ${box}: ${why}`); };
+      if (!(await q.$('[data-testid="range-card"]'))) fails.push(`${tag} · the range card did not open on a range start`);
+      else {
+        await lookQ('the range card');
+        await q.evaluate(() => { const c = document.querySelector('[data-testid="range-card"]'); c.scrollTop = c.scrollHeight; }); await sleep(150);
+        await lookQ('the range card, scrolled to its end');
+      }
+      await rc.close();
+    }
     console.log(`${tag}: looked ${looked} times so far, ${fails.length} failures so far`);
   }
 } finally { await browser.close(); }
 if (fails.length) { console.log(`FAIL: ${fails.length}`); for (const f of fails.slice(0, 60)) console.log('  ' + f); process.exit(1); }
-console.log(`OK: no rail, flyout, tool panel, Help › Keys, Course › Holes or hole card overflows (${looked} looks, ${SIZES.length} sizes x ${SCALES.length} UI scales)`);
+console.log(`OK: no rail, flyout, tool panel, Help › Keys, Course › Holes, hole card, Grass panel or range card overflows (${looked} looks, ${SIZES.length} sizes x ${SCALES.length} UI scales)`);

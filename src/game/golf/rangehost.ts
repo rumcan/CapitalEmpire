@@ -287,11 +287,12 @@ export class RangeHost {
     const p = this.practice, b = this.ctx.biz()!;
     return { putting: p?.putting.state ?? (b.practice.putting.open ? 'open' : 'none'), chipping: p?.chipping.state ?? (b.practice.chipping.open ? 'open' : 'none') };
   }
-  /** where the practice area is (its middle) and the brush that builds the next facility there (the hint's Show me) */
-  practiceTarget(): { x: number; y: number; brush: 'green' | 'bunker' } | null {
+  /** where the practice area is (its middle) and the facility to build next there (the hint's Show me, the card's Show area: T206, the
+   *  practice tool armed with it): the putting green until it is open, then the chipping green */
+  practiceTarget(): { x: number; y: number; kind: PracticeId } | null {
     const sc = this.scene; if (!sc) return null;
-    const f = this.practiceFacts(), c = this.practice?.chipping;
-    return { ...sc.practice.label, brush: f && f.putting === 'open' && c && c.state === 'nobunker' ? 'bunker' : 'green' };
+    const f = this.practiceFacts();
+    return { ...sc.practice.label, kind: f && f.putting === 'open' ? 'chipping' : 'putting' };
   }
 
   /** the practice area (T130): until something is built there a faint dashed outline with its "Practice area" label (brighter while the hint
@@ -312,7 +313,7 @@ export class RangeHost {
         // the area's name and (at the street tier) its hint under it: one world label (T151) whose box holds both lines
         const px = Math.round(dpr * 13), lw = 3 * dpr, l = labels.text(pa, PRI.area, 'Practice area', q.x, q.y, `700 ${px}px system-ui, sans-serif`, px, '#ecfccb', 'rgba(10,30,10,0.85)', lw);
         if (zoom >= 0.12) {
-          const sf = `600 ${Math.round(px * 0.8)}px system-ui, sans-serif`, t = this.practiceLocked ? 'Opens with your first range upgrade' : 'Paint a putting green here';
+          const sf = `600 ${Math.round(px * 0.8)}px system-ui, sans-serif`, t = this.practiceLocked ? 'Opens with your first range upgrade' : 'Build a putting green here (Facilities ▸ Practice)';
           // the box from the name's top to the hint's foot, its centre moved down to the middle
           const top = q.y - px / 2 - lw / 2, foot = q.y + px * 1.3 + px * 0.4 + lw / 2, mid = (top + foot) / 2;
           l.sub = t; l.subFont = sf; l.subFill = '#d9f99d'; l.w = Math.max(l.w, labels.width(sf, t) + lw); l.h = foot - top;

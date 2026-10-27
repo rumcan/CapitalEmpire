@@ -60,6 +60,10 @@ export const HOLE_COUNT = 18;
 export type LandRefusal = 'off' | 'range';
 export const LAND_WHY: Readonly<Record<LandRefusal, string>> = { off: 'Not your land', range: 'The driving range stands here' };
 /** why Rub out leaves a cell as it is when the land rules let it (T125): nothing above the base there, or (rubHoleOnly) another hole's cell */
+/** T206: the Green and Bunker brushes in the practice area */
+export const PRACTICE_BRUSH_WHY = 'Practice greens are built with Facilities ▸ Practice';
+/** whether surface s is one the practice tools lay (the brushes are refused with it in the practice area) */
+const practiceSurf = (s: number) => s === SURF.green || s === SURF.bunker;
 export const RUB_WHY = { nothing: 'Nothing to rub out', hole: 'Another hole' } as const;
 /** the studio's 18 preset holes (src/game/golf/hole-presets.json; null: an empty slot) */
 const STORED: (StoredHole | null)[] = Array.from({ length: HOLE_COUNT }, (_, i) => ((HOLE_PRESETS as { holes?: (StoredHole | null)[] }).holes?.[i] ?? null));
@@ -147,6 +151,9 @@ export interface PaintHost { setLotGround(key: string, patches: LotPatch[] | nul
   /** why the course cannot take tile (x, y) where ownedAt says no: 'off' your land, or the driving range's own plot ('range'); '' (or
    *  missing) where it can. Only the refusal's words read it */
   landWhy?(x: number, y: number): LandRefusal | '';
+  /** T206: whether tile (x, y) lies in the driving range's practice area (its greens and bunkers are built with Facilities ▸ Practice, not
+   *  the hole brushes: the Green and Bunker brushes are refused there) */
+  practiceAt?(x: number, y: number): boolean;
   /** the golf game's hole plans (save tuples) and their setter: undo and redo carry them */
   plans?(): unknown[];
   setPlans?(p: unknown[]): void;
@@ -807,10 +814,11 @@ export class PaintTool {
   }
   /** the brush rules on grid g: 'below' (a stroke slides past the surfaces drawn above it, as the old layers did) and owned
    *  cells only; a rub out (T125) takes every cell rubWhy lets it (it lays the base over them, carved: no 'below', no course-grid rub) */
-  private gridOpts(g: Grid, erase: boolean): PaintOpts {
+  private gridOpts(g: Grid, erase: boolean, s = surfOfSurface(this.brushKind)): PaintOpts {
     if (erase) { const why = this.rubWhy(g); return { allow: i => !why(i), carve: true }; } // carved: the drawn course leaves the gap open
-    const own = this.host.ownedAt;
-    return { over: 'below', allow: i => { if (!own) return true; const c = cellCentre(g, i); return own(c.x, c.y); } };
+    const own = this.host.ownedAt, prac = practiceSurf(s) ? this.host.practiceAt : undefined;
+    // T206: a green or bunker never goes into the practice area (Facilities ▸ Practice builds there; painted ones of old saves stay)
+    return { over: 'below', allow: i => { if (!own && !prac) return true; const c = cellCentre(g, i); return (!own || own(c.x, c.y)) && !prac?.(c.x, c.y); } };
   }
   /** what Rub out gives back on the course grid (T125): rough, or the land's own grass (none) when the brush in hand is rough itself */
   private rubBase(): number { return this.brushKind === 'rough' ? SURF.none : SURF.rough; }
@@ -845,13 +853,14 @@ export class PaintTool {
       const i = cellAt(g, x, y); if (i < 0) return 'Off the course land';
       if (rub) return rub(i);
       if (own) { const c = cellCentre(g, i); if (!own(c.x, c.y)) return LAND_WHY[this.host.landWhy?.(c.x, c.y) || 'off']; }
+      if (practiceSurf(s) && this.host.practiceAt) { const c = cellCentre(g, i); if (this.host.practiceAt(c.x, c.y)) return PRACTICE_BRUSH_WHY; }
       const top = g.surf[i]!, nm = SURF_SURFACE[top]; return top > s ? `${nm ? nm[0]!.toUpperCase() + nm.slice(1) : 'A higher surface'} stays on top` : '';
     };
   }
   /** fills polygon pts (tiles) into grid g as surface s for hole h (the brush rules): the cells that change are charged (1 m² each at the
    *  surface's price; golf mode) and kept in the open action; false, with the toast and nothing changed, when the treasury cannot pay */
   private gridFill(g: Grid, pts: number[], s: number, h: number): boolean {
-    const d = fillPolygon(g, toXY(pts), s, h, plantMonth(this.plantKind, this.host.currentMonth?.()), this.gridOpts(g, false));
+    const d = fillPolygon(g, toXY(pts), s, h, plantMonth(this.plantKind, this.host.currentMonth?.()), this.gridOpts(g, false, s));
     const cost = this.host.golfMode?.() ? Math.round(diffCost(d, v => unitBuildCost(SURF_SURFACE[v] ?? 'other', this.plantKind))) : 0, money = this.host.money?.() ?? 0;
     if (cost > 0 && money < cost) { applyDiff(g, d, true); this.host.toast(`Not enough money: this costs $${cost.toLocaleString()} (treasury: $${Math.round(money).toLocaleString()})`, 'warn'); return false; }
     if (cost > 0) { this.host.spend?.(cost); if (this.tx) this.tx.spent += cost; }
@@ -864,6 +873,18 @@ export class PaintTool {
   step(label: string, run: () => number) {
     this.begin(label);
     try { const spent = run(); if (this.tx) this.tx.spent += spent; } finally { this.commit(); }
+  }
+  /** an outside edit of the course grid as one undo step (T206: the practice tools build and the bulldozer removes a practice facility): run
+   *  lays its cells into the grid (the diffs it returns, made in place) and returns what it spent ($, below 0 for a refund), which is paid
+   *  here; undo takes the cells and the money back. Nothing happens without a grid */
+  gridEdit(label: string, run: (g: Grid) => { diffs: GridDiff[]; spent: number } | null) {
+    const g = this.host.grid?.(); if (!g) return;
+    this.begin(label);
+    try {
+      const r = run(g);
+      if (r) { for (const d of r.diffs) this.gridApply(d); if (r.spent) { this.host.spend?.(r.spent); if (this.tx) this.tx.spent += r.spent; } }
+    } finally { this.commit(); }
+    this.host.save(); this.host.emit();
   }
   /** whether there is a step to undo / redo (the panel's buttons) */
   get canUndo() { return this.undos.length > 0 && !this.tx; }
@@ -1027,7 +1048,7 @@ export class PaintTool {
       // (fringe, first cut) are automatic now and are dropped; a cart path stays a painted area
       if (grid) {
         const gs = PaintTool.surfOf(s), sf = s.kind ?? surfaceOfTex(s.tex);
-        if (gs) { const d = fillPolygon(grid, toXY(roundCorners(s.pts, s.radius)), gs, s.hole ?? pl0(p), plantMonth(this.plantKind, m), this.gridOpts(grid, false)); this.gridApply(d); continue; }
+        if (gs) { const d = fillPolygon(grid, toXY(roundCorners(s.pts, s.radius)), gs, s.hole ?? pl0(p), plantMonth(this.plantKind, m), this.gridOpts(grid, false, gs)); this.gridApply(d); continue; }
         if (sf === 'fringe' || sf === 'firstCut') continue;
       }
       const id = this.nextId++;

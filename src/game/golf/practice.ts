@@ -1,4 +1,4 @@
-// The practice facilities the player paints beside the range (plan P24 Phase 2, T130): the practice area (the owned land across the drive from
+// The practice facilities the player builds beside the range (T206: with Facilities ▸ Practice, golf/practicebuild.ts; painted before) (plan P24 Phase 2, T130): the practice area (the owned land across the drive from
 // the range's car park, a short walk from the shop) and what the course grid holds there: a putting green (green plus its fringe, at least
 // PUTT_MIN m²), and a chipping green with a practice bunker beside it. They are practice facilities, not holes: the engine keeps the cells there
 // at hole 0, so no hole counts them. Pure TS, no DOM, deterministic; positions in tiles of 2 m, the grid's cells are 1 m.
@@ -118,7 +118,7 @@ export function scanPractice(g: Grid, box: readonly [number, number, number, num
 export function practiceWords(f: Pick<PracticeFacility, 'id' | 'state' | 'm2' | 'need'>): string {
   const name = f.id === 'putting' ? 'putting green' : 'chipping green';
   switch (f.state) {
-    case 'none': return f.id === 'putting' ? 'Paint a putting green here' : 'Paint a chipping green and a bunker here';
+    case 'none': return f.id === 'putting' ? 'Build a putting green' : 'Build a chipping green and bunker'; // T206: its own tool (Facilities ▸ Practice)
     case 'small': return `Too small: ${Math.round(f.m2)} of ${f.need} m²`;
     case 'nobunker': return 'Add a practice bunker beside it';
     default: return `Open: ${name}, ${Math.round(f.m2)} m²`;
