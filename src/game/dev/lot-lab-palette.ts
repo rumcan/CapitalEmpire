@@ -76,6 +76,8 @@ export function makePalette(shell: Shell, host: PaletteHost) {
     if (group === 'ground') {
       // T183: a swatch is Draw with that material (drag paints, Shift+drag erases); Select goes back
       for (const sw of SWATCHES) { const t = tile(`Draw ${sw.name}: drag on the lot to paint (a round brush, [ ] its size), Shift+drag erases, R Shape (a rectangle); Esc or V back to Select`, a.paint === sw, () => host.paint(a.paint === sw ? null : sw), `${sw.name} · ${sw.tex}`); t.style.background = sw.col; t.append(el('span', 'position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.55);font-size:12px;text-align:center', sw.name)); out.push(t); }
+      // T189: the Eraser: Erase mode (a drag erases under the brush, a click takes a whole patch out)
+      const er = tile('Eraser: drag erases ground under the brush (any material, or only the picked one: O), a click takes a whole patch out, Del the outlined patch; Esc or V back to Select', a.paint === 'erase', () => host.paint('erase'), 'Eraser'); er.style.background = 'repeating-linear-gradient(45deg,#3f1d1d 0 6px,#7f1d1d 6px 12px)'; er.append(el('span', 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700', '⌫ Eraser')); out.push(er);
       const off = tile('back to Select (Esc or V)', a.paint === null, () => host.paint(null), 'Select'); off.append(el('span', 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px', '↖ Select')); out.push(off);
     } else if (group === 'decals') {
       for (const d of LOT_DECALS) {

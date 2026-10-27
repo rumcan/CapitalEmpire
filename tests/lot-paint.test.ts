@@ -76,3 +76,26 @@ describe("the wizard's select (T183)", () => {
     const s = new Set([4]); selectAfter(s, { item: 1, add: true, box: null }); assert.deepEqual([...s], [4], 'the selection before is untouched (a new set)');
   });
 });
+
+import { eraseAny, isClick, patchIndexAt } from '../src/game/dev/lot-paint';
+describe('Erase (T189): under the brush any material or only one, a click takes a whole patch out, undo', () => {
+  it('a drag in Erase takes the cells out of every material (lined patches stay); only the picked one with the toggle', () => {
+    const g = grid(W, D), bays: PresetPatch = { kind: 'lot', tex: 'asphalt', pts: [6, 0, 10, 0, 10, 3, 6, 3], lines: [7, 0, 7, 3] };
+    let ps = applyStroke([bays], concrete, W, D, rectCells(g, 0, 0, 6, 6), false);
+    ps = applyStroke(ps, dirt, W, D, rectCells(g, 0, 6, 6, 12), false);
+    const before = ps, cut = rectCells(g, 2, 4, 4, 8);
+    const any = eraseAny(ps, W, D, cut);
+    assert.ok(count(cellsOf(any, 'concrete', W, D)) < count(cellsOf(before, 'concrete', W, D)), 'concrete erased');
+    assert.ok(count(cellsOf(any, 'dirt', W, D)) < count(cellsOf(before, 'dirt', W, D)), 'dirt erased');
+    assert.ok(any.includes(bays), 'the parking bays stay');
+    const only = applyStroke(ps, concrete, W, D, cut, true);
+    assert.equal(count(cellsOf(only, 'dirt', W, D)), count(cellsOf(before, 'dirt', W, D)), 'only concrete: the dirt stays');
+    assert.ok(count(cellsOf(only, 'concrete', W, D)) < count(cellsOf(before, 'concrete', W, D)));
+    assert.equal(ps, before, 'the patches before are the undo (untouched)');
+  });
+  it('a click takes the last patch drawn under it out whole; a short wobble is a click, a drag is not', () => {
+    const a: PresetPatch = { kind: 'yard', tex: 'dirt', pts: [0, 0, 6, 0, 6, 6, 0, 6] }, b: PresetPatch = { kind: 'walk', tex: 'paving', pts: [2, 2, 4, 2, 4, 4, 2, 4] };
+    assert.equal(patchIndexAt([a, b], 3, 3), 1, 'the paving drawn last'); assert.equal(patchIndexAt([a, b], 1, 1), 0); assert.equal(patchIndexAt([a, b], 8, 8), -1);
+    assert.equal(isClick([3, 3]), true); assert.equal(isClick([3, 3, 3.1, 3.05]), true); assert.equal(isClick([3, 3, 5, 3]), false);
+  });
+});
