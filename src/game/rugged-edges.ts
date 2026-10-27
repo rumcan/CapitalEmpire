@@ -18,14 +18,15 @@ import { SUN_TILE_DIR } from './ext/course-height';
  *    point never leaves the tile of margin its patch is indexed with); its slope stays under about 0.65, so no outline folds over itself;
  *  - waves: the noise's wavelengths (tiles), weights and seeds (a long sway, a shorter waver and a faint ripple, none periodic: a value noise
  *    alone has flat spots, where a side would run straight for several tiles);
- *  - step: the longest side a painted outline keeps after rounding (so a straight side follows the wobble), courseStep a course line's;
+ *  - step: the longest side a painted outline keeps after rounding (so a straight side follows the wobble), courseStep a course line's,
+ *    courseStepLite a course line's in a district chunk (a tile a few px: within a px of the finer one);
  *  - rK, rMin, rMax: a corner's radius, rK x the square root of the area, clamped to [rMin, rMax] tiles; rSide: at most this share of
  *    either side it joins (so a narrow area's corners never overlap);
  *  - minSize: an area whose square root of area is under this keeps its outline (the range's hitting mats, a small sign plinth) */
 export const RUGGED = {
   amp: 1.15, limit: 0.8,
   waves: [[5.2, 0.66, 311], [2.5, 0.25, 313], [1.2, 0.09, 317]] as readonly (readonly [number, number, number])[],
-  step: 0.35, courseStep: 0.5,
+  step: 0.35, courseStep: 0.5, courseStepLite: 1.25,
   rK: 0.13, rMin: 0.6, rMax: 1.5, rSide: 0.42,
   minSize: 2.2,
 } as const;
@@ -45,6 +46,9 @@ export function wobbleAt(x: number, y: number, out: number[] | Float64Array = [0
   out[0] = dx; out[1] = dy;
   return out;
 }
+
+/** a scratch offset for the warps */
+const WOB = new Float64Array(2);
 
 /** a closed polygon's signed area (x right, y down), tiles² */
 export function signedArea(pts: ArrayLike<number>): number {
@@ -125,32 +129,35 @@ export function ruggedRing(pts: readonly number[], seamCell = 0): readonly numbe
  *  (its closing side, last point back to the first, is split too). The pieces of one side are the same whichever line it belongs to and
  *  whichever way it runs, so a fill ring, an edge and a wall drawn from one outline move together */
 export function warpLine(q: ArrayLike<number>, closed = false, step: number = RUGGED.courseStep): Float32Array {
-  const n = q.length >> 1, out: number[] = [], o = [0, 0];
-  const sides = closed ? n : n - 1;
+  const n = q.length >> 1, sides = closed ? n : n - 1, ms = new Int32Array(Math.max(0, sides));
+  let total = n;
+  for (let i = 0; i < sides; i++) { const j = (i + 1) % n, m = Math.ceil(Math.hypot(q[2 * j]! - q[2 * i]!, q[2 * j + 1]! - q[2 * i + 1]!) / step); ms[i] = m; if (m > 1) total += m - 1; }
+  const r = new Float32Array(2 * total), o = WOB;
+  let w = 0;
   for (let i = 0; i < n; i++) {
     const x = q[2 * i]!, y = q[2 * i + 1]!;
-    out.push(x, y);
-    if (i >= sides) continue;
-    const j = (i + 1) % n, ex = q[2 * j]!, ey = q[2 * j + 1]!, m = Math.ceil(Math.hypot(ex - x, ey - y) / step);
-    for (let k = 1; k < m; k++) out.push(x + ((ex - x) * k) / m, y + ((ey - y) * k) / m);
+    wobbleAt(x, y, o); r[w++] = x + o[0]!; r[w++] = y + o[1]!;
+    const m = i < sides ? ms[i]! : 0; if (m < 2) continue;
+    const j = (i + 1) % n, dx = (q[2 * j]! - x) / m, dy = (q[2 * j + 1]! - y) / m;
+    for (let k = 1; k < m; k++) { const px = x + dx * k, py = y + dy * k; wobbleAt(px, py, o); r[w++] = px + o[0]!; r[w++] = py + o[1]!; }
   }
-  const r = new Float32Array(out.length);
-  for (let k = 0; k + 1 < out.length; k += 2) { wobbleAt(out[k]!, out[k + 1]!, o); r[k] = out[k]! + o[0]!; r[k + 1] = out[k + 1]! + o[1]!; }
   return r;
 }
 
 /** a course wall's top (x, y, drop triples) split and moved as warpLine moves its edge: the drop eased linearly along each piece */
 export function warpTriples(p: ArrayLike<number>, step: number = RUGGED.courseStep): Float32Array {
-  const n = Math.floor(p.length / 3), out: number[] = [], o = [0, 0];
+  const n = Math.floor(p.length / 3), ms = new Int32Array(Math.max(0, n - 1));
+  let total = n;
+  for (let i = 0; i + 1 < n; i++) { const m = Math.ceil(Math.hypot(p[3 * i + 3]! - p[3 * i]!, p[3 * i + 4]! - p[3 * i + 1]!) / step); ms[i] = m; if (m > 1) total += m - 1; }
+  const r = new Float32Array(3 * total), o = WOB;
+  let w = 0;
   for (let i = 0; i < n; i++) {
     const x = p[3 * i]!, y = p[3 * i + 1]!, d = p[3 * i + 2]!;
-    out.push(x, y, d);
-    if (i + 1 >= n) continue;
-    const ex = p[3 * i + 3]!, ey = p[3 * i + 4]!, ed = p[3 * i + 5]!, m = Math.ceil(Math.hypot(ex - x, ey - y) / step);
-    for (let k = 1; k < m; k++) out.push(x + ((ex - x) * k) / m, y + ((ey - y) * k) / m, d + ((ed - d) * k) / m);
+    wobbleAt(x, y, o); r[w++] = x + o[0]!; r[w++] = y + o[1]!; r[w++] = d;
+    const m = i + 1 < n ? ms[i]! : 0; if (m < 2) continue;
+    const dx = (p[3 * i + 3]! - x) / m, dy = (p[3 * i + 4]! - y) / m, dd = (p[3 * i + 5]! - d) / m;
+    for (let k = 1; k < m; k++) { const px = x + dx * k, py = y + dy * k; wobbleAt(px, py, o); r[w++] = px + o[0]!; r[w++] = py + o[1]!; r[w++] = d + dd * k; }
   }
-  const r = new Float32Array(out.length);
-  for (let k = 0; k + 2 < out.length; k += 3) { wobbleAt(out[k]!, out[k + 1]!, o); r[k] = out[k]! + o[0]!; r[k + 1] = out[k + 1]! + o[1]!; r[k + 2] = out[k + 2]!; }
   return r;
 }
 

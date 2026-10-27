@@ -145,6 +145,8 @@ export type ToWorker =
   | { t: 'casters'; set: [string, Float32Array][]; drop: string[]; dropPrefix?: string[] }
   /** the gear menu's Ground variety (T111) and the dev debug view of its influence maps: every chunk is baked again */
   | { t: 'living'; on: boolean; debug: boolean }
+  /** T204: the rugged edges (the wobble, rounded corners and the tall grass's spill) on or off (the dev switch, for comparing looks and bake times) */
+  | { t: 'rugged'; on: boolean }
   /** the course height light's strength (T126: the gear menu's Slope light, 0 = off): every chunk is baked again */
   | { t: 'slopeLight'; strength: number }
   /** the tile set bands to decode ahead (painted-tiles.ts bandsAhead: the camera is near their switch; T150), sent when they change */
