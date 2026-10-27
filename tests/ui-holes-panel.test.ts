@@ -69,9 +69,9 @@ describe('the Holes panel after hole 1 (stage 2)', () => {
   it('New hole stays on top; your holes as badges with icons; the current hole\'s status line; Shape by hand; More options collapsed', () => {
     const h = render(fakeGame({ facts: { playableHoles: 2, stageReached: 2 }, holes, growing: { 2: 6 } }));
     assert.ok(h.indexOf('data-primary="new-hole"') < h.indexOf('data-section="holes"'), 'New hole is on top');
-    assert.match(h, /<button data-hole="1"[^>]*class="hole-badge hole-ready hole-badge-on ?"[^>]*><span class="hole-icon" aria-hidden="true">✓<\/span>1/);
-    assert.match(h, /<button data-hole="2"[^>]*class="hole-badge hole-growing[^"]*"[^>]*><span class="hole-icon" aria-hidden="true">◔<\/span>2/);
-    assert.match(h, /<button data-hole="3"[^>]*class="hole-badge hole-attn[^"]*"[^>]*><span class="hole-icon" aria-hidden="true">!<\/span>3/);
+    assert.match(h, /<button data-hole="1"[^>]*class="hole-badge hole-ready hole-badge-on ?"[^>]*><span class="hole-icon" aria-hidden="true">✓<\/span>Hole 1</);
+    assert.match(h, /<button data-hole="2"[^>]*class="hole-badge hole-growing[^"]*"[^>]*><span class="hole-icon" aria-hidden="true">◔<\/span>Hole 2</);
+    assert.match(h, /<button data-hole="3"[^>]*class="hole-badge hole-attn[^"]*"[^>]*><span class="hole-icon" aria-hidden="true">!<\/span>Hole 3</);
     assert.match(h, /Hole 1 · par 4 · 342 m · ready/);
     assert.match(h, /3 holes · par 12 · 972 m/);
     assert.match(h, /data-section="shape"/);

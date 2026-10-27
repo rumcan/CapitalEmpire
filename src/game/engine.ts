@@ -662,11 +662,18 @@ export class Game {
     if (!this.holesTool) this.toggleHolesTool();
     this.selectGolfMarker(n, f.marker);
   }
-  /** Edit hole: New hole's editor on hole n's plan (T102's path); false with a toast for a hole painted by hand */
+  /** Edit hole (the hole card, the Holes panel's status line): New hole's editor on hole n's plan, framed by the camera, with a toast
+   *  (PaintTool.editHole; T205: when it is already open it stays, drags and all); the card closes. False with a toast for a hole painted by
+   *  hand (the card stays) */
   editHole(n: number): boolean {
+    if (!this.paint.hasPlan(n)) { this.toast(`Hole ${n} was painted by hand: shape it with the brush`, 'info'); return false; }
+    const shown = this.uiTool === 'course'; // the Holes panel is laid out already: the camera frames the map beside it
     this.setTool('course'); if (this.tool !== 'course') return false;
-    if (!this.paint.editPlan(n)) { this.toast(`Hole ${n} was painted by hand: shape it with the brush`, 'info'); return false; }
-    this.closeHoleCard(); return true;
+    this.closeHoleCard();
+    if (!this.paint.editHole(n)) return false;
+    // the panel opens with this press (from Select): frame the hole again once it is laid out, so it is not under the panel
+    if (!shown && typeof requestAnimationFrame === 'function') { const pts = this.paint.wizard.planView(); requestAnimationFrame(() => this.fitView(pts, true)); }
+    return true;
   }
   /** Delete (after the card's confirm): hole n's plan and the cells it laid (PaintTool.deletePlan: no refund, your touch-ups stay) */
   deleteHole(n: number): boolean {

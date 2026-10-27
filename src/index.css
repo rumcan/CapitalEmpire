@@ -74,7 +74,7 @@
 /* the rail: key letters, the Course and Town headings, locked tools dimmed in place with a lock, NEW badges; 52 px items under 800 px tall */
 /* the items share the height under the top bar (which may wrap) and above the minimap: 60 px at most, 52 px at most under 800 px tall */
 .rail-tab { position: relative; height: clamp(42px, calc((100vh - var(--hud-top, 5.75rem) - 222px) / 9), 58px); font-size: 12px; }
-.rail-nav { max-height: calc(var(--vh-ui, 100vh) - var(--hud-top, 5.75rem) - 9rem); overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; }
+.rail-nav { max-height: calc(var(--vh-ui, 100vh) - var(--hud-top, 5.75rem) - 9rem); overflow-y: auto; overflow-x: hidden; } /* its scrollbar: the global one (T205) */
 .rail-tab-locked { opacity: 0.42; }
 .rail-tab-locked:hover { background: rgba(255, 255, 255, 0.03); }
 .rail-key { position: absolute; left: 0.3rem; top: 0.15rem; font-size: 12px; font-weight: 700; line-height: 1; color: var(--muted); }
@@ -104,7 +104,11 @@
 .round-btn:disabled { opacity: 0.35; }
 .sec-head { display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.35rem; }
 .sec-note { font-size: 12px; color: var(--muted); }
-.status-line { font-size: 13px; color: var(--ink); }
+/* the Holes panel's status line (T205): its words wrap, then ✎ Edit hole n, on the next line when the words fill this one */
+.status-line { display: flex; flex-wrap: wrap; align-items: center; column-gap: 0.5rem; row-gap: 0.3rem; font-size: 13px; color: var(--ink); }
+.status-line > button { flex: none; white-space: nowrap; }
+/* Edit hole while that hole's editor is open ("Editing hole n", T205): a state, in gold, not a dead button */
+.chip-editing:disabled { cursor: default; border-color: var(--gold-line); background: var(--gold-wash); color: var(--gold-hi); }
 .wizard-card { border-radius: 0.9rem; border: 1px solid var(--gold-line); background: var(--gold-wash); padding: 0.6rem 0.7rem; }
 /* New hole's card (T119, P23 4.4): the title and number, the steps, Build on top, the stats and split, planting, the check table, the keys */
 .wiz-title { font-family: Georgia, "Palatino Linotype", Palatino, serif; font-size: 17px; font-weight: 700; color: var(--gold-hi); }
@@ -149,7 +153,7 @@
 .swatch-on { border-color: var(--gold); background: var(--gold-wash); color: var(--gold-hi); font-weight: 700; }
 .swatch-on .swatch-disc { box-shadow: 0 0 0 2px var(--gold); }
 .swatch-on .swatch-key { color: var(--gold-hi); }
-.hole-badge { display: inline-flex; min-width: 2.75rem; height: 2rem; align-items: center; justify-content: center; gap: 0.3rem; border-radius: 999px; border: 1px solid var(--line); background: rgba(255, 255, 255, 0.04); padding: 0 0.65rem; font-size: 13px; font-weight: 700; color: var(--ink); }
+.hole-badge { display: inline-flex; min-width: 2.75rem; height: 2rem; white-space: nowrap; align-items: center; justify-content: center; gap: 0.3rem; border-radius: 999px; border: 1px solid var(--line); background: rgba(255, 255, 255, 0.04); padding: 0 0.65rem; font-size: 13px; font-weight: 700; color: var(--ink); }
 .hole-badge:hover { border-color: var(--gold-line); }
 .hole-badge-on { border-color: var(--gold); box-shadow: inset 0 0 0 1px var(--gold); background: var(--gold-wash); }
 .hole-icon { font-size: 15px; line-height: 1; }
@@ -187,6 +191,22 @@
 .tool-crumb { display: flex; align-items: center; gap: 0.4rem; margin: -0.25rem 0 0.6rem; font-size: 12px; color: var(--muted); }
 .tool-crumb-text { min-width: 0; overflow-wrap: anywhere; }
 .tool-back { flex: 0 0 auto; }
+/* T205 (#538, the owner: "the ugly scroll bars"): one thin, themed scrollbar everywhere: a translucent light thumb on a transparent track, gold
+   under the pointer, no arrow buttons. Chrome and Edge (121+) drop the ::-webkit-scrollbar rules on any box that sets scrollbar-width or
+   scrollbar-color, so the standard pair is only for browsers without the webkit ones (Firefox), and no box sets them itself. */
+::-webkit-scrollbar { width: 8px; height: 8px; background: transparent; }
+::-webkit-scrollbar-track, ::-webkit-scrollbar-corner { background: transparent; }
+::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
+::-webkit-scrollbar-thumb { min-height: 28px; border: 2px solid transparent; border-radius: 999px; background: rgba(239, 233, 218, 0.26) padding-box; }
+::-webkit-scrollbar-thumb:hover { background: rgba(245, 181, 46, 0.85) padding-box; }
+::-webkit-scrollbar-thumb:active { background: var(--gold) padding-box; }
+@supports not selector(::-webkit-scrollbar) {
+  * { scrollbar-width: thin; scrollbar-color: rgba(239, 233, 218, 0.3) transparent; }
+}
+/* no sideways scrollbar anywhere (the owner's standing rule; T193, T205): a box that scrolls up and down never scrolls sideways, and its long
+   lines wrap instead */
+.overflow-y-auto:not(.overflow-x-auto) { overflow-x: hidden; overflow-wrap: break-word; }
+
 /* no horizontal sliders in a tool panel (T193): its rows wrap, its long words break */
 .tool-panel { overflow-wrap: anywhere; }
 .tool-panel .flex:not(.flex-col):not(.flex-nowrap) { flex-wrap: wrap; }

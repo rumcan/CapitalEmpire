@@ -579,6 +579,19 @@ export class PaintTool {
     this.mode = 'plan'; this.cancel(); this.selected = 0; this.hover = 0; this.hoverH = null; this.pill = null;
     this.wizard.open(p); this.brushHole = n; this.host.emit(); return true;
   }
+  /** the hole whose built plan New hole's editor has open ("Edit hole n" in the Holes panel), 0: none */
+  get editingHole(): number { return this.mode === 'plan' && this.course && this.wizard.base ? this.wizard.base.hole : 0; }
+  /** Edit hole (the hole card, the Holes panel's status line; T205): New hole's editor on hole n's plan, the camera framing the hole and a
+   *  toast that says what to do, so the press always shows. When that hole's editor is already open it is left as it is (re-opening it threw
+   *  away its unsaved drags and changed nothing on screen: the owner's dead Edit hole, #538); the framing and the toast come again. False,
+   *  with the reason as a toast, for a hole painted by hand (no plan) */
+  editHole(n: number): boolean {
+    if (!this.hasPlan(n)) { this.host.toast(`Hole ${n} was painted by hand: shape it with the brush`, 'info'); return false; }
+    if (this.editingHole !== n && !this.editPlan(n)) return false;
+    this.host.fitView?.(this.wizard.planView(), true);
+    this.host.toast(`Editing hole ${n}: drag the tee, the green or the line; Build to save`);
+    return true;
+  }
   /** Build (the gold pill or Enter): lays the plan's cells exactly as the ghost shows them, saves the plan (golf.aims follow it), charges
    *  the cells that change, all as one undo step; then the ripple plays and the wizard waits for the next hole's tee */
   buildPlan(): boolean {
