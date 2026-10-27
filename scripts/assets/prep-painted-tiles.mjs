@@ -46,7 +46,7 @@
 // A material whose name a legacy painted family (painted-families.json) already has gets the game id `<material>-tiles`, so the old family
 // stays selectable.
 //
-//   node scripts/assets/prep-painted-tiles.mjs [--art <checkout root holding art/>] [--out <root to write src/... under>] [--check]
+//   node scripts/assets/prep-painted-tiles.mjs [--art <checkout root holding art/>] [--owner-art <root holding art/owner-supplied>] [--out <root to write src/... under>] [--check]
 // --check verifies the hashes and sizes and compares the manifest it would write with the one on disk, writing nothing.
 // The art is read from this checkout's art/ folder, else from the main checkout's (a .claude/worktrees/<name> worktree), never written.
 // --out (the tests' fixtures) writes the tiles and the manifest under another root instead of this checkout.
@@ -70,15 +70,20 @@ const LEVELS = ['near', 'mid', 'far'];
  *  WebP would be several times bigger again for no visible gain. */
 const QUALITY = 90;
 /** the kind of family each material is (painted-families.ts PaintedKind: the studio lists a surface's fitting kinds first) */
-const KIND = { 'golden-fescue': 'grass', lake: 'water', 'pale-green-bushes': 'grass', 'pine-straw': 'cut', 'sand-ripples': 'sand', 'sand-raked': 'sand', desert: 'sand', dirt: 'cut', 'sand-long-grass': 'sand', 'long-grass': 'grass', swamp: 'water', fairway: 'grass', 'putting-green': 'grass', 'first-cut': 'grass' };
-const NAME = { 'golden-fescue': 'Golden fescue', lake: 'Lake water', 'sand-ripples': 'Sand ripples', fairway: 'Fairway', 'putting-green': 'Putting green', 'long-grass': 'Long grass', fringe: 'Fringe' };
+const KIND = { 'first-cut-run': 'grass', 'golden-fescue': 'grass', lake: 'water', 'pale-green-bushes': 'grass', 'pine-straw': 'cut', 'sand-ripples': 'sand', 'sand-raked': 'sand', desert: 'sand', dirt: 'cut', 'sand-long-grass': 'sand', 'long-grass': 'grass', swamp: 'water', fairway: 'grass', 'putting-green': 'grass', 'first-cut': 'grass' };
+const NAME = { 'first-cut-run': 'First cut (RUN, quilted)', 'golden-fescue': 'Golden fescue', lake: 'Lake water', 'sand-ripples': 'Sand ripples', fairway: 'Fairway', 'putting-green': 'Putting green', 'long-grass': 'Long grass', fringe: 'Fringe' };
 /** the families that ship provisionally until their handoff (T153, the lead's decision on #327): the course's fairway, green and rough; T191:
  *  the fringe */
-const PROVISIONAL = ['fairway', 'putting-green', 'long-grass', 'fringe'];
+const PROVISIONAL = ['fairway', 'putting-green', 'long-grass', 'fringe', 'first-cut-run'];
+/** the RUN.world families (2026-10-27, the owner's ground texture method, docs/art/GROUND-TEXTURE-METHOD.md): tile 1 a level painted by RUN into
+ *  a game screenshot and cleaned, tiles 2-4 quilted from it (the agent's E:/ClaudeTemp/ART-RUN/FIRST-CUT-README.md); the approved finished set a
+ *  level is `<dir>/<level>/<set>/tile-0x.png` with its export-report.json, under the art checkout (--art) as the art session's sets are. Shipped
+ *  provisionally and MEASURED, as made when they tile cleanly. The owner approved first cut for the game on 2026-10-27 ("yes merge") */
+const RUN_SETS = { 'first-cut-run': { dir: 'art/theme-consistency/generated/ground/run-grass/first-cut', set: 'tiles-v3b' } };
 /** T191: a provisional family pinned to the sets it shipped (its newest folder moved on: the new set ships in a family of its own) */
 const PIN = { 'putting-green': { mid: 'mid-v1', far: 'far-v1' } };
 /** T191: provisional families whose finished sets are measured across any two tiles (shipped as made within HEAL_LIMIT, else one shared strip) */
-const MEASURED = new Set(['fringe']);
+const MEASURED = new Set(['fringe', 'first-cut-run']);
 /** the owner's own paintings (T162, #350): their folders, each with its source.json; the heal's band (px of each edge) and its limit (a healed
  *  wrap at most this many times the painting's own neighbour difference inside) */
 /** T165 (#365): also the art session's fairway and putting-green paintings. Per folder: `bridge` 'match' heals with the bridge where the
@@ -198,6 +203,9 @@ function provisionalSet(material, level, only = null) {
     const set = JSON.parse(fs.readFileSync(rel(accepted.selection.file), 'utf8')).sets[level];
     return { folder: set.folder, revision: set.revision ?? path.basename(set.folder), files: set.primaryTiles.map(t => t.file), stage: 'finished tiles' };
   }
+  // the RUN.world families (the owner's ground texture method, docs/art/GROUND-TEXTURE-METHOD.md): one approved finished set a level
+  const run = RUN_SETS[material];
+  if (run) { const folder = `${run.dir}/${level}/${run.set}`, files = TILE_IDS.map(id => `${folder}/${id}.png`); return files.every(f => fs.existsSync(rel(f))) ? { folder, revision: `${level}-${run.set}`, files, stage: 'finished tiles' } : null; }
   const dir = `${EIGHT}/${material}`;
   if (!fs.existsSync(rel(dir))) return null;
   const folders = fs.readdirSync(rel(dir)).map(n => n.match(LEVEL_DIR)).filter(m => m && m[1] === level && fs.statSync(rel(`${dir}/${m[0]}`)).isDirectory() && (!only || m[0] === only)).sort((a, b) => +b[2] - +a[2]).map(m => m[0]).filter(name => {
@@ -273,7 +281,9 @@ for (const material of PROVISIONAL) {
 
 /* ---- the owner's own paintings (T162, #350): one painting a level, hash-checked, its edges healed here once to tile with itself ---- */
 /** where the owner's art is read: this checkout (it is committed here), or --art (the tests' fixtures) */
-const OWNER_ART = path.resolve(arg('--art') ?? ROOT);
+// (--owner-art: the owner's committed art from another checkout than --art: run from a worktree on main with --art at the art session's
+// checkout, the owner's paintings are this worktree's own; without it a checkout on an older branch drops the owner's families)
+const OWNER_ART = path.resolve(arg('--owner-art') ?? arg('--art') ?? ROOT);
 const orel = p => path.join(OWNER_ART, p);
 /** the interior (inside the outer HEAL_BAND px of each edge) of a healed picture is its source's exactly */
 const sameInterior = (a, b, w, ht, ch, what) => { for (let y = HEAL_BAND; y < ht - HEAL_BAND; y++) for (let i = (y * w + HEAL_BAND) * ch, e = (y * w + w - HEAL_BAND) * ch; i < e; i++) if (a[i] !== b[i]) fail(`${what}: the heal changed the interior at (${Math.floor(i / ch) % w}, ${y})`); };
