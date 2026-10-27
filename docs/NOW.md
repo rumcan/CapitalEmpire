@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-27 07:19)
+## START HERE (kept current by the lead; last updated 2026-10-27 07:49)
 
 **Paste-ready start prompts for every role are in `docs/START-PROMPTS.md`:** the lead, a coding ticket, and the other sessions in this
 repo. The weekly usage cap is close (2026-10-26), so any chat may stop at any moment.
@@ -29,11 +29,11 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 | --- | --- | --- | --- | --- | --- |
 | T185 | #466 | `arena/T185-shadows` | `.claude/worktrees/t185` (node_modules a junction) | 5188 | **The owner: "the shadows need a new audit again. its shit"** (a third agent, Opus, on the owner's ask). First: overlapping shadows must not compound (one shadow layer, MAX blend, composited once); cast shadows must start at the sprite's base. Then the full audit by category and four game scenes, fixes in code, re-draft, hints. |
 | T184 | #464 | fresh branches | `.claude/worktrees/t166` | 5187 | **The owner approved (diagnosis #443):** PR 1 junction rules (equal crossings first-come, queue-aware routing + a deadlock breaker, roundabout entry at the ring car's real speed; every gate before/after); PR 2 `JAM_HINT` at the Junction tool, `range:gate --player` placing junction tools, P22 bands on seeds 1-3 without going broke (tune prices, town income, growth in that order). Agent: the ground agent. |
-| T183 → T182 | #461, #454 | fresh branches | `.claude/worktrees/t160` | 5186 | The lot agent: **T183** the lot lab (decals on top of lawns; ground drawing with clear Select / Draw modes; in the wizard a click selects and Del deletes), then the toolbar regroup. The owner is using the studio: never write their data. |
+| T182 | #454 | fresh branch | `.claude/worktrees/t160` | 5186 | The toolbar regroup: COURSE (Driving range · Course · Decoration), TOWN (Traffic · Town decoration), no key letters on the rail. Agent: the lot agent. |
 | T112 | #199 | `arena/T112-sharp` (PR #394) | `.claude/worktrees/t112` | — | **Approved, merge HELD for the morning restart:** a lock change makes the 5174 auto-updater run `npm ci` in theme-consistency (the live 5191 studio holds sharp there; the lot agent's t160 uses it by junction). Morning order: stop 5191 → merge #394 → let npm ci finish → restart 5191 and 5174. All shipped bytes identical on 0.35.5; audit 0. |
 | P05 | #68 | PR #413 **open for the owner's approval** | — | — | The M5 balance plan, measured: arrival 47% at tier 1 from a fresh start (the start's 56-bay car park holds 168 fans), 100% with car parks; 10% at tier 2 fresh, 70-81% with car parks; an 18 of ~5,900 m fits the starting land on every seed (~$190k seeded); with the proposals a careful player reaches tier 3 in year 4. Knob recommended for "careless out-saves careful": sponsors x (1 + (rep-50)/50). |
 | T184 | #464 | fresh branches | `.claude/worktrees/t166` | 5187 | **The owner approved (diagnosis #443):** PR 1 junction rules (equal crossings first-come, queue-aware routing + a deadlock breaker, roundabout entry at the ring car's real speed; every gate before/after); PR 2 `JAM_HINT` at the Junction tool, `range:gate --player` placing junction tools, P22 bands on seeds 1-3 without going broke (tune prices, town income, growth in that order). Agent: the ground agent. |
-| T183 → T182 | #461, #454 | fresh branches | `.claude/worktrees/t160` | 5186 | The lot agent: **T183** the lot lab (decals on top of lawns; ground drawing with clear Select / Draw modes; in the wizard a click selects and Del deletes), then the toolbar regroup. The owner is using the studio: never write their data. |
+| T182 | #454 | fresh branch | `.claude/worktrees/t160` | 5186 | The toolbar regroup: COURSE (Driving range · Course · Decoration), TOWN (Traffic · Town decoration), no key letters on the rail. Agent: the lot agent. |
 | T112 | #199 | `arena/T112-sharp` (PR #394) | `.claude/worktrees/t112` | — | **Approved, merge HELD for the morning restart:** a lock change makes the 5174 auto-updater run `npm ci` in theme-consistency (the live 5191 studio holds sharp there; the lot agent's t160 uses it by junction). Morning order: stop 5191 → merge #394 → let npm ci finish → restart 5191 and 5174. All shipped bytes identical on 0.35.5; audit 0. |
 
 **Two coding agents at a time (the owner, 2026-10-26: first "maybe just too many background tasks?" after the studio tab died with the
@@ -95,6 +95,10 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
    (the sharp bump). See the History sections below and `gh issue list --label arena --state open`.
 
 ### Done recently (newest first; details in each PR)
+- 2026-10-27 07:49: **T183 #467 the lot lab**: decals work in the wizard (its click handler swallowed them), pick behind sprites, and
+  draw on top of all of a lot's ground everywhere; **Select / Draw** modes (a lit switch "↖ Select (V)" / "✎ Draw: Concrete (B)", a banner,
+  a brush cursor 0.5-4 tiles with [ ]; strokes merge into one patch per material; Shift erases; R Shape; one undo per stroke); in the
+  wizard a click selects (a ring), Del/Backspace deletes (still "not kept"), Ctrl+Z undoes, Draw is saved with the sample.
 - 2026-10-27 07:10: **#463 lawns keep their detail**: the streaks along fences are back (the owner likes them); the blanket was the living
   ground's ambient occlusion (a cool multiply over all ground near any house, tree or fence): off (`LIVING_AO = false`); a built
   lawn's local contrast 1.14 → 1.78 at 30% (the raw painting 1.66), its colour back at the painting's. **#443 junction diagnosis**: class
