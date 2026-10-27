@@ -1,6 +1,8 @@
 // The guided Year 1 (P06/T045): the 7 steps, what completes each, and what each points at; and the stuck player's offer of New hole (P23 T117).
+// A range start (plan P22 2.8, T095) has its own 7 steps, chosen by GuideFacts.start, and the ring's tee spot until P06's newHoleSpot lands.
 // Pure TS, no DOM. index.ts re-exports this file, so its import from './index' is read inside function bodies only.
 import { STUCK_PLAY_SEC } from './index';
+import type { Rect } from '../../golf/mode';
 
 /** the facts the guide reads: the player's counters (T033a), placed course pieces by kind, tournaments run, and the guide's saved state */
 export interface GuideFacts {
@@ -19,6 +21,14 @@ export interface GuideFacts {
   tutorial: 'on' | 'off';
   /** the step the player is on (1..7; the guide never moves backwards) */
   step: number;
+  /** the game's start (T095): 'range' picks the range start's steps (RANGE_GUIDE); anything else, or missing, the old start's (GUIDE) */
+  start?: string;
+  /** a range start's clubhouse is placed (T095; missing = no) */
+  clubhouse?: boolean;
+  /** the tour has invited the player (T095; missing = no) */
+  invited?: boolean;
+  /** false for an old save without the guide's progress (T095: a save from before the range start's ramp): no guide at all; missing = true */
+  progress?: boolean;
 }
 
 /** what a step points at: a UI element by its data-guide id, and/or a map spot the engine resolves */
@@ -90,8 +100,84 @@ export const GUIDE: readonly GuideStep[] = Object.freeze([
   },
 ]);
 
-/** whether step n's goal is met by the facts (steps that finish on Next are never auto-met) */
+/** a range start's steps (plan P22 2.8, T095): the welcome, hole 1, the clubhouse, the nine, the tour's invitation, the tournament, the results */
+export const RANGE_GUIDE: readonly GuideStep[] = Object.freeze([
+  {
+    id: 'guide-range-welcome',
+    n: 1,
+    title: 'Welcome to your driving range',
+    body: 'Drivers on the county road stop to hit a bucket. Grow the range, build a course behind it, and a town will grow around you.',
+    done: 'next',
+    target: { ui: 'range-chip' },
+  },
+  {
+    id: 'guide-range-hole',
+    n: 2,
+    title: 'Lay hole 1',
+    body: 'Open Holes and press New hole: click a tee, then a green, and Build. The ring marks a good tee near the range.',
+    done: 'auto',
+    target: { ui: 'rail-course', map: 'newHoleSpot' },
+  },
+  {
+    id: 'guide-range-clubhouse',
+    n: 3,
+    title: 'Place the clubhouse',
+    body: 'Open Buildings and place the clubhouse by the road or the drive: the tour will not come without one.',
+    done: 'auto',
+    target: { ui: 'rail-buildings' },
+  },
+  {
+    id: 'guide-range-nine',
+    n: 4,
+    title: 'Finish the nine',
+    body: 'Build holes until the course has nine. The town grows faster with every hole you open.',
+    done: 'auto',
+    target: { ui: 'rail-course', map: 'newHoleSpot' },
+  },
+  {
+    id: 'guide-range-invite',
+    n: 5,
+    title: "The tour's invitation",
+    body: "Nine holes, a car park and a clubhouse bring the tour's invitation to the Club Championship. Your range's car park already counts.",
+    done: 'auto',
+    target: { ui: 'invite-pill' },
+  },
+  {
+    id: 'guide-range-tournament',
+    n: 6,
+    title: 'Play the tournament',
+    body: 'The first tournament closes the season the invitation names. Skip to it and watch the crowd arrive.',
+    done: 'auto',
+    target: { ui: 'chip-skip' },
+  },
+  {
+    id: 'guide-range-results',
+    n: 7,
+    title: 'Review your results',
+    body: 'Check the verdict and the takings, then plan the next season.',
+    done: 'next',
+    target: { ui: 'results' },
+  },
+]);
+
+/** the steps for the facts' start: a range start's (RANGE_GUIDE), else the old start's (GUIDE) */
+export function guideTable(f: Pick<GuideFacts, 'start'>): readonly GuideStep[] { return f.start === 'range' ? RANGE_GUIDE : GUIDE; }
+
+/** whether a range start's step n is met (T095): 2 hole 1 built, 3 the clubhouse placed, 4 nine holes, 5 invited, 6 a tournament run */
+function rangeStepMet(n: number, f: GuideFacts): boolean {
+  switch (n) {
+    case 2: return (f.holes ?? 0) >= 1;
+    case 3: return !!f.clubhouse;
+    case 4: return (f.holes ?? 0) >= 9;
+    case 5: return !!f.invited;
+    case 6: return f.runs >= 1;
+    default: return false;
+  }
+}
+
+/** whether step n's goal is met by the facts (steps that finish on Next are never auto-met); a range start's by its own table */
 export function stepMet(n: number, f: GuideFacts): boolean {
+  if (f.start === 'range') return rangeStepMet(n, f);
   switch (n) {
     case 1:
       return false;
@@ -112,12 +198,14 @@ export function stepMet(n: number, f: GuideFacts): boolean {
   }
 }
 
-/** the step to show (null when the guide is off or past step 7): the saved step, moved forward past every auto step already met */
+/** the step to show (null when the guide is off, past step 7, or an old save without its progress): the saved step, moved forward past every
+ *  auto step already met, from the start's table */
 export function guideStep(f: GuideFacts): GuideStep | null {
-  if (f.tutorial === 'off' || f.step > GUIDE_STEPS) return null;
+  if (f.tutorial === 'off' || f.step > GUIDE_STEPS || f.progress === false) return null;
+  const table = guideTable(f);
   let curr = Math.max(1, f.step);
   while (curr <= GUIDE_STEPS) {
-    const stepDef = GUIDE[curr - 1]!;
+    const stepDef = table[curr - 1]!;
     if (stepDef.done === 'auto' && stepMet(curr, f)) {
       curr++;
     } else {
@@ -151,10 +239,11 @@ export const GUIDE_STUCK: GuideStep = Object.freeze({
 });
 
 /** the step the guide shows: guideStep's; or, when the guide is off (skipped or finished) and the player is stuck (no hole after one season or
- *  STUCK_PLAY_SEC of play: the same fallback that opens stage 2), the offer of New hole; else null */
+ *  STUCK_PLAY_SEC of play: the same fallback that opens stage 2), the offer of New hole; else null. A range start is never stuck (P24 D32): its
+ *  ramp opens New hole */
 export function guideShown(f: GuideFacts): GuideStep | null {
   const s = guideStep(f);
-  if (s) return s;
+  if (s || f.start === 'range' || f.progress === false) return s;
   const stuck = !stepMet(2, f) && ((f.seasons ?? 0) >= 1 || (f.playS ?? 0) >= STUCK_PLAY_SEC);
   return stuck ? GUIDE_STUCK : null;
 }
@@ -166,3 +255,18 @@ export const LEGACY_HINT_STEP: Readonly<Record<string, number>> = Object.freeze(
   'hint-place-gate-and-tents': 5,
   'hint-traffic-and-advanced': 7,
 });
+
+/** how far past the range plot's side the ring's tee spot is, tiles (T095: until P06's newHoleSpot lands) */
+export const FALLBACK_TEE_PAST = 30;
+
+/** the ring's suggested tee spot in a range start until P06's newHoleSpot lands (T095): FALLBACK_TEE_PAST tiles past the range plot's side along
+ *  the road, on the side with more of the parcel, level with the middle of the range front's depth, kept 2 tiles inside the parcel. dir: the way
+ *  the range's golfers hit (0 north, 1 east, 2 south, 3 west), so the road runs along x for 0 and 2 and along y for 1 and 3 */
+export function fallbackTeeSpot(plot: Rect, front: Rect, parcel: Rect, dir: 0 | 1 | 2 | 3): { x: number; y: number } {
+  const alongX = dir === 0 || dir === 2, [qx, qy, qw, qh] = parcel;
+  const a0 = alongX ? plot[0] : plot[1], a1 = a0 + (alongX ? plot[2] : plot[3]), p0 = alongX ? qx : qy, p1 = p0 + (alongX ? qw : qh);
+  const along = p1 - a1 >= a0 - p0 ? a1 + FALLBACK_TEE_PAST : a0 - FALLBACK_TEE_PAST;
+  const across = alongX ? front[1] + front[3] / 2 : front[0] + front[2] / 2;
+  const clamp = (v: number, lo: number, hi: number) => Math.min(Math.max(v, lo + 2), hi - 2);
+  return alongX ? { x: clamp(along, qx, qx + qw), y: clamp(across, qy, qy + qh) } : { x: clamp(across, qx, qx + qw), y: clamp(along, qy, qy + qh) };
+}
