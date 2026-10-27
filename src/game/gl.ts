@@ -47,25 +47,30 @@ void main() {
 const VS_SPRITE = `#version 300 es
 layout(location=0) in vec4 aRect; layout(location=1) in vec4 aUV; layout(location=2) in vec4 aMisc; layout(location=3) in vec4 aClip;
 uniform vec4 uCam; uniform vec2 uScreen; uniform float uMinPx;
-out vec3 vUV; out float vAlpha; out vec2 vW; flat out vec4 vClip;
+out vec3 vUV; out float vAlpha; out vec2 vW; flat out vec4 vClip; flat out float vTint;
 void main() {
   vec2 c = vec2(gl_VertexID & 1, gl_VertexID >> 1);
   vec2 w = mix(aRect.xy, aRect.zw, c);
   vec2 s = (w - uCam.xy) * uCam.z + uScreen * 0.5;
   bool cull = aMisc.z > 0.5 && (aRect.w - aRect.y) * uCam.z < uMinPx;
+  vTint = aMisc.y > 1.5 ? 1.0 : 0.0; // T176: 2 + alpha marks a tinted sprite
   gl_Position = cull ? vec4(2.0, 2.0, 2.0, 1.0) : vec4(s.x / uScreen.x * 2.0 - 1.0, 1.0 - s.y / uScreen.y * 2.0, 0.0, 1.0);
-  vUV = vec3(mix(aUV.xy, aUV.zw, c), aMisc.x); vAlpha = aMisc.y; vW = w; vClip = aClip;
+  vUV = vec3(mix(aUV.xy, aUV.zw, c), aMisc.x); vAlpha = aMisc.y > 1.5 ? aMisc.y - 2.0 : aMisc.y; vW = w; vClip = aClip;
 }`;
 // the atlas lookup (atlas-gl.ts glsl: atlasTex, from the finest resident mip of the sprite's cell) is sampled before any discard: its level of
 // detail comes from derivatives, which need the whole 2 x 2 quad
 const FS_SPRITE = (atlas: string) => `#version 300 es
 precision highp float; precision highp int;
 ${atlas}
-in vec3 vUV; in float vAlpha; in vec2 vW; flat in vec4 vClip; out vec4 o;
+in vec3 vUV; in float vAlpha; in vec2 vW; flat in vec4 vClip; flat in float vTint; out vec4 o;
 void main() {
   vec4 c = atlasTex(vUV.xy, vUV.z);
   if (vW.x < vClip.x || vW.y < vClip.y || vW.x >= vClip.z || vW.y >= vClip.w) discard;
-  if (c.a < 0.004) discard; o = c * vAlpha;
+  if (c.a < 0.004) discard;
+  // T176: a tinted sprite (a tree a Build would clear): its own light and shade in one warm rust red (its luminance times the tint), so it
+  // reads as marked even among autumn reds, and the art's own darks stay dark (the owner's light rule)
+  if (vTint > 0.5) { float l = dot(c.rgb, vec3(0.299, 0.587, 0.114)); c.rgb = min(vec3(l) * vec3(1.8, 0.66, 0.44), vec3(c.a)); }
+  o = c * vAlpha;
 }`;
 // cast shadows (cast-shadow.ts): each sprite's silhouette laid on the ground away from the sun. Every column of the picture stands on its own
 // foot: the front edges of its footprint diamond (aFoot: the near corner x y, the left and right corners' x, world px; past the corners the
@@ -89,7 +94,7 @@ void main() {
   vec2 s = (g - uCam.xy) * uCam.z + uScreen * 0.5;
   vec2 c = vec2((x - aRect.x) / max(aRect.z - aRect.x, 1e-3), (y - aRect.y) / max(aRect.w - aRect.y, 1e-3));
   gl_Position = aMisc.w < 0.0 ? vec4(2.0, 2.0, 2.0, 1.0) : vec4(s.x / uScreen.x * 2.0 - 1.0, 1.0 - s.y / uScreen.y * 2.0, 0.0, 1.0);
-  vUV = vec3(mix(aUV.xy, aUV.zw, c), aMisc.x); vAlpha = aMisc.y; vW = vec2(x, y); vClip = aClip;
+  vUV = vec3(mix(aUV.xy, aUV.zw, c), aMisc.x); vAlpha = aMisc.y > 1.5 ? aMisc.y - 2.0 : aMisc.y; vW = vec2(x, y); vClip = aClip; // T176: a tint's 2 + alpha
 }`;
 const FS_CAST = (atlas: string) => `#version 300 es
 precision highp float; precision highp int;

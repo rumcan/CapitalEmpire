@@ -167,6 +167,8 @@ export interface PaintHost { setLotGround(key: string, patches: LotPatch[] | nul
   publicRoads?(box: readonly [number, number, number, number]): { ax: number; ay: number; bx: number; by: number; name: string }[];
   /** the holes as lines from tee to pin: New hole's too-close warning */
   holeLines?(): { hole: number; line: { x: number; y: number }[] }[];
+  /** the trees New hole's ghost would clear (T176: Engine.wizardTrees), for the wizard's info row */
+  treesCleared?(): number;
   /** a course surface's look (a brush style) changed: the grid's chunks are drawn again in it */
   courseLook?(): void }
 /** the ghost's fill by texture (the hole preview): the green, fairway, water and sand; other areas are only outlined */
@@ -314,6 +316,7 @@ export class PaintTool {
     landBox: () => this.host.landBox?.() ?? null,
     roads: b => this.host.publicRoads?.(b) ?? [],
     holeLines: () => this.host.holeLines?.() ?? [],
+    treesCleared: () => this.host.treesCleared?.() ?? 0,
   });
   private pill: { x: number; y: number; w: number; h: number } | null = null;
   /** when plan mode last told the panel (ms; drags tell it at most every 150 ms) */

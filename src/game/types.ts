@@ -33,6 +33,8 @@ export interface LibItem {
 
 export interface Prop {
   uid: number;
+  /** drawn tinted (T176: a tree New hole's Build would clear; sprites.ts Drawable.tint) */
+  tint?: boolean;
   /** index into LIBRARY */
   item: number;
   x: number;

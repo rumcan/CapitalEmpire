@@ -38,7 +38,8 @@ import { areaAt, brushTextures, toTuple, type PaintTuple, type PaintTex } from '
 import { CELL_T, SURF, cellAt, diffBox, encodeGrid, fillPolygon, fitGrid, landGridBox, makeGrid, paintStroke, type Grid as CourseGrid, type GridDiff, type GridSave } from './ext/course-grid';
 import { STAIR_REACH } from './ext/course-walls';
 import { SURFACE_TEX_ID, SURF_SURFACE, areaRank, growingHoles, ringArea, type GridArea } from './ext/course-grid/areas';
-import { aimsFromPlans, decodePlans, encodePlans, frameView, type FreeRect } from './ext/hole-wizard';
+import { aimsFromPlans, decodePlans, encodePlans, frameView, type FreeRect, type WizardGhost } from './ext/hole-wizard';
+import { FOREST_CLEAR, LABEL_FADE_ALPHA, LABEL_FADE_PX, TOWN_CLEAR, plantedTreeCleared, propTreeCleared, treesCleared, type NearTree } from './ext/hole-wizard/extras';
 import { holeAreas, holeCard, markerMove, swapHoleNumbers, type HoleCardView, type HoleFix } from './golf/holecard';
 import { isCourseArea, loadCourseGrid, migrateAreas } from './ext/course-grid/migrate';
 import { COURSE_PATCH_REACH, courseChunksIn, courseEditReach, courseGrowKey, courseKey, courseStyles, growStatic, widestCollar, type CourseLooks } from './ext/course-grid/patch';
@@ -590,6 +591,7 @@ export class Game {
     suggestM: () => (this.golf?.start === 'range' && !(this.golf.plans ?? []).length && !this.courseHoleViews().some(h => h.par > 0) ? FIRST_PAR3_M : 0),
     landBox: () => { const L = this.golf ? this.golfLand() : []; if (!L.length) return null; return [Math.min(...L.map(r => r[0])), Math.min(...L.map(r => r[1])), Math.max(...L.map(r => r[0] + r[2])), Math.max(...L.map(r => r[1] + r[3]))]; },
     publicRoads: b => [...this.net.segsNear({ x: (b[0] + b[2]) / 2, y: (b[1] + b[3]) / 2 }, Math.hypot(b[2] - b[0], b[3] - b[1]) / 2 + 4)].filter(s => s.kind !== SK.TUNNEL && !isCourseClass(s.cls.id)).map(s => ({ ax: s.a.x, ay: s.a.y, bx: s.b.x, by: s.b.y, name: this.roadNameOfSeg(s) })),
+    treesCleared: () => this.ghostTrees.set.length, // T176
     holeLines: () => { const g = this.golf; if (!g) return []; return g.pins.flatMap(p => { const t = g.tees.find(q => q.hole === p.hole && q.kind === 'back') ?? g.tees.find(q => q.hole === p.hole); return t ? [{ hole: p.hole, line: [{ x: t.x, y: t.y }, { x: p.x, y: p.y }] }] : []; }); },
     courseLook: () => this.resendCourse() });
   /** the hole plans change (a wizard build, edit or delete, or their undo and redo; T102): golf.aims follow the plans' bends, so the holes'
@@ -1006,13 +1008,60 @@ export class Game {
     this.courseGridChanged(d, false);
     return d.n;
   }
+  // ---------- New hole's ghost extras (plan P23-UX 6.2 P2-10, T176) ----------
+  /** the trees New hole's ghost would clear: the ghost they were worked out for, when (ms), and the trees (tinted on the map) */
+  private ghostTrees: { ghost: WizardGhost | null; at: number; set: Prop[] } = { ghost: null, at: 0, set: [] };
+  /** the trees the ghost's Build would clear (the info row's count; the same rules the clearing uses: ext/hole-wizard/extras.ts) */
+  wizardTrees(): Prop[] { return this.ghostTrees.set; }
+  /** each frame: with New hole's ghost up, the trees its Build would clear are worked out again when the ghost changes (at most every 150 ms,
+   *  the checks' throttle) and tinted; without one, the tint goes */
+  private ghostTreesCheck() {
+    const c = this.ghostTrees, gh = this.tool === 'course' && this.paint.mode === 'plan' ? this.paint.wizard.ghost() : null, now = performance.now();
+    if (gh === c.ghost || (gh && c.ghost && now - c.at < 150)) return;
+    const next = gh ? this.treesUnder(gh) : [];
+    const keep = new Set(next);
+    for (const p of c.set) if (!keep.has(p) && p.tint) { p.tint = false; if (this.sprites.has(p)) this.sprites.update(p); } // a cleared tree is not put back
+    const was = new Set(c.set);
+    for (const p of next) if (!was.has(p) || !p.tint) { p.tint = true; if (this.sprites.has(p)) this.sprites.update(p); }
+    const changed = next.length !== c.set.length;
+    this.ghostTrees = { ghost: gh, at: now, set: next };
+    if (changed) this.emit();
+  }
+  /** the trees ghost gh's Build would clear: the planted forest and town trees and the placed tree props near its cells, read against the grid as
+   *  it will be once built (the ghost's diff over today's cells) */
+  private treesUnder(gh: WizardGhost): Prop[] {
+    const g = this.courseGrid, d = gh.diff; if (!g || !d.n || d.w !== g.w || d.x0 !== g.x0 || d.y0 !== g.y0) return [];
+    const changed = new Map<number, number>(); for (let k = 0; k < d.n; k++) changed.set(d.idx[k]!, d.s1[k]!);
+    const after = (x: number, y: number) => { const i = cellAt(g, x, y); return i < 0 ? 0 : changed.get(i) ?? g.surf[i]!; };
+    const b = diffBox(d); if (!b) return [];
+    const pad = TOWN_CLEAR + 1, x0 = b.x0 - pad, y0 = b.y0 - pad, x1 = b.x1 + pad, y1 = b.y1 + pad;
+    const near: NearTree[] = [], props: Prop[] = [], N = MAP / FOREST_CELL;
+    for (const [map, r] of [[this.forest, FOREST_CLEAR], [this.townTrees, TOWN_CLEAR]] as const) {
+      for (const [k, ps] of map) {
+        const ci = k % N, cj = Math.floor(k / N);
+        if (!boxNear([x0, y0, x1, y1], ci * FOREST_CELL, cj * FOREST_CELL, (ci + 1) * FOREST_CELL, (cj + 1) * FOREST_CELL, 0)) continue;
+        for (const p of ps) {
+          // the trunk, as treeSprites anchored the sprite on it
+          const it = LIBRARY[p.item]!, bx = it.boxes[0]!, tx = p.x + bx.dx * p.scale / 2, ty = p.y + bx.dy * p.scale / 2;
+          if (tx < x0 || tx > x1 || ty < y0 || ty > y1) continue;
+          near.push({ x: tx, y: ty, planted: true, r }); props.push(p);
+        }
+      }
+    }
+    for (const p of this.propGrid.query([x0, y0, x1, y1])) {
+      if (LIBRARY[p.item]?.kind !== 'tree') continue;
+      const cx = (p.x0 + p.x1) / 2, cy = (p.y0 + p.y1) / 2; if (cx < x0 || cx > x1 || cy < y0 || cy > y1) continue;
+      near.push({ x: cx, y: cy, planted: false, r: 0 }); props.push(p);
+    }
+    return treesCleared(near, after).map(i => props[i]!);
+  }
   /** the tree props whose foot stands on a playing surface cell of the grid in box (fairway, green, tee, bunker, waste, water) go */
   private clearTreesOnGrid(b: readonly number[]) {
     const g = this.courseGrid; if (!g) return;
     for (const p of [...this.propGrid.query([b[0]!, b[1]!, b[2]!, b[3]!])]) {
       if (LIBRARY[p.item]?.kind !== 'tree') continue;
       const cx = (p.x0 + p.x1) / 2, cy = (p.y0 + p.y1) / 2; if (cx < b[0]! || cx > b[2]! || cy < b[1]! || cy > b[3]!) continue;
-      const i = cellAt(g, cx, cy); if (i >= 0 && g.surf[i]! >= SURF.water) this.removeProp(p);
+      if (propTreeCleared((x, y) => this.courseSurfAt(x, y), cx, cy)) this.removeProp(p); // T176: the ghost reads the same rule
     }
   }
   /** the grid's surface id at tile (x, y) (0: none or no grid) */
@@ -1708,7 +1757,7 @@ export class Game {
       for (const d of parks) if (x > d.x - r - 1 && x < d.x + d.w + r + 1 && y > d.y - r - 1 && y < d.y + d.h + r + 1) return false;
       for (const [d, s] of tolls) { const f = plazaLocal(d, x, y); if (f.t >= -r && f.t <= PLAZA_LEN + r && f.o >= -s.cls.h - r && f.o <= plazaEdge(d.booths, laneOff(s, 0)) + r) return false; }
       if (paints.length) for (let k = 0; k < 9; k++) { const a = k * Math.PI / 4; if (areaAt(paints, x + (k < 8 ? Math.cos(a) * r : 0), y + (k < 8 ? Math.sin(a) * r : 0))) return false; }
-      if (grid) for (let k = 0; k < 9; k++) { const a = k * Math.PI / 4; if (this.courseSurfAt(x + (k < 8 ? Math.cos(a) * r : 0), y + (k < 8 ? Math.sin(a) * r : 0))) return false; } // the course grid's cells
+      if (grid && plantedTreeCleared((px, py) => this.courseSurfAt(px, py), x, y, r)) return false; // the course grid's cells (T176: the ghost reads the same rule)
       return !this.inPortal(x, y);
     };
     return { lots, free };
@@ -5007,7 +5056,7 @@ export class Game {
     // the farms yield to the lots the town builds on (checked about once a second: the count walks every lot)
     if (this.farmsEnabled && ++this.farmTick % 60 === 0 && this.farmMap.stale(claimedLots(this.traffic.lots), this.site, this.farmParks().length)) this.farmsUpdate(true);
     if (this.traffic.round.cards.length > this.cardsApplied) this.applyCards();
-    this.yearCheck(); this.foundingCheck(); this.progressCheck();
+    this.yearCheck(); this.foundingCheck(); this.progressCheck(); this.ghostTreesCheck(); // T176
     const t0 = performance.now();
     const dt = Math.min(0.05, (now - this.last) / 1000), frameMs = now - this.last; this.last = now;
     this.resize();
@@ -5545,7 +5594,7 @@ export class Game {
     this.drawTolls(ctx);
     // the world labels: placed in one pass (by priority, none overlapping, kept still across frames) and written over the map, under the tools'
     // previews and hints
-    { const t0 = performance.now(); this.labels.place(this.cw, this.ch); this.labels.draw(ctx); this.perf.labelMs = performance.now() - t0; this.perf.labels = this.labels.n; this.perf.labelsShown = this.labels.shown; }
+    { const t0 = performance.now(); this.labels.place(this.cw, this.ch); const gm = this.ghostMouse; this.labels.fadeNear = this.ghostTrees.ghost && gm ? { x: gm.mx * this.dpr, y: gm.my * this.dpr, r: LABEL_FADE_PX * this.dpr, a: LABEL_FADE_ALPHA } : null; this.labels.draw(ctx); this.perf.labelMs = performance.now() - t0; this.perf.labels = this.labels.n; this.perf.labelsShown = this.labels.shown; }
     this.drawTollPreview(ctx);
     this.drawBizPreview(ctx);
     this.drawEventGhosts(ctx);

@@ -128,8 +128,8 @@ function Checks({ game, rows }: { game: Game; rows: WizCheck[] }) {
       <ul className="wiz-checks">
         {rows.map(r => (
           <li key={r.id} data-check={r.id} className={`wiz-${r.kind}`}>
-            <span className="wiz-mark" aria-hidden>{r.kind === 'block' ? '✕' : r.kind === 'warn' ? '!' : '✓'}</span>
-            <span className="min-w-0 flex-1">{r.kind === 'block' ? <span className="sr-only">Blocks Build: </span> : r.kind === 'warn' ? <span className="sr-only">Warning: </span> : null}{r.text}</span>
+            <span className="wiz-mark" aria-hidden>{r.kind === 'block' ? '✕' : r.kind === 'warn' ? '!' : r.kind === 'info' ? 'i' : '✓'}</span>
+            <span className="min-w-0 flex-1">{r.kind === 'block' ? <span className="sr-only">Blocks Build: </span> : r.kind === 'warn' ? <span className="sr-only">Warning: </span> : r.kind === 'info' ? <span className="sr-only">Info: </span> : null}{r.text}</span>
             {r.fix === 'seed' && <button className="chip" onClick={() => { p.plantKind = 'seed'; game.emit(); }}>Use Seed</button>}
             {r.show && r.kind !== 'ok' && <button className="chip" onClick={() => p.showMe(r.show!)}>Show me</button>}
           </li>

@@ -6,6 +6,15 @@
 import { CELL_T, SURF } from '../course-grid';
 import { CORRIDOR_M } from '../hole-plan';
 import { NO_CHANGES, REFUSED, RIPPLE_LINE_MS, RIPPLE_POP_MS, type HoleWizard, type PlanHandle, type WizardGhost } from './index';
+import { labelFade } from './extras';
+/** the collar ring's look by the surface it collars (T176): the first cut round fairway and tee, the fringe round the green, the lip and bank */
+const COLLAR_LOOK: Record<number, { fill: string; edge: string }> = {
+  [SURF.fairway]: { fill: 'rgba(150,196,96,0.5)', edge: 'rgba(214,240,170,0.85)' },
+  [SURF.tee]: { fill: 'rgba(150,196,96,0.5)', edge: 'rgba(214,240,170,0.85)' },
+  [SURF.green]: { fill: 'rgba(132,214,140,0.6)', edge: 'rgba(225,255,225,0.95)' },
+  [SURF.bunker]: { fill: 'rgba(200,170,110,0.45)', edge: 'rgba(240,215,160,0.8)' },
+  [SURF.water]: { fill: 'rgba(150,120,80,0.45)', edge: 'rgba(200,170,120,0.8)' },
+};
 
 /** what the wizard draws with (the Paint tool's PaintView) */
 export interface WizardView {
@@ -97,6 +106,15 @@ function drawGhost(v: WizardView, gh: WizardGhost) {
     ctx.lineCap = 'square'; ctx.strokeStyle = look.edge; ctx.lineWidth = (s === SURF.rough ? 1 : 1.3) * d; ctx.stroke(); ctx.lineCap = 'butt';
     if (s === REFUSED) hatchRuns(v, gh.runs, gh.gx0, gh.gy0, HATCH_RED, REFUSED);
   }
+  // the collar ring the Build lays round its surfaces (T176): what you see is what is built
+  for (const [s, e] of gh.collarEdges) {
+    const look = COLLAR_LOOK[s]; if (!look) continue;
+    fillRuns(v, gh.collarRuns, gh.gx0, gh.gy0, s, look.fill);
+    v.setIso(ctx); ctx.beginPath();
+    for (let k = 0; k < e.length; k += 4) { ctx.moveTo(gh.gx0 + e[k]! * CELL_T, gh.gy0 + e[k + 1]! * CELL_T); ctx.lineTo(gh.gx0 + e[k + 2]! * CELL_T, gh.gy0 + e[k + 3]! * CELL_T); }
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.lineCap = 'square'; ctx.strokeStyle = look.edge; ctx.lineWidth = 1 * d; ctx.stroke(); ctx.lineCap = 'butt';
+  }
   // the practice area's cells (laid, but they stay practice: no hole) under an amber hatch (the warning)
   if (gh.practice) hatchRuns(v, gh.practiceRuns, gh.gx0, gh.gy0, HATCH_AMBER);
 }
@@ -154,7 +172,7 @@ function drawHandles(v: WizardView, hs: readonly PlanHandle[], hot: PlanHandle |
 }
 
 /** the gold Build pill below the green (P21 3.3: click it or press Enter): its box in css px, or null when not drawn */
-function drawPill(v: WizardView, w: HoleWizard, gh: WizardGhost): { x: number; y: number; w: number; h: number } | null {
+function drawPill(v: WizardView, w: HoleWizard, gh: WizardGhost, mouse: { mx: number; my: number } | null = null): { x: number; y: number; w: number; h: number } | null {
   const pl = w.plan; if (!pl) return null;
   const ctx = v.ctx, d = v.dpr, c = w.check(), g = v.screen(pl.green.x, pl.green.y);
   // a block says itself on the pill, in red (P23 4.4: "The green is off your land"); an edit with no change says so, greyed
@@ -162,12 +180,15 @@ function drawPill(v: WizardView, w: HoleWizard, gh: WizardGhost): { x: number; y
   const text = c.ok ? `Build · $${gh.cost.toLocaleString()}` : same ? NO_CHANGES : (c.why.split(':')[0] ?? 'Build');
   ctx.font = `bold ${Math.round(12 * d)}px ui-sans-serif, system-ui, sans-serif`;
   const tw = ctx.measureText(text).width, bw = tw + 22 * d, bh = 24 * d, x0 = Math.round(g.x - bw / 2), y0 = Math.round(g.y + 22 * d);
+  // T176: near the pointer (not on the pill itself: it is a button) the pill fades, so it never hides the spot being placed
+  const on = !!mouse && mouse.mx * d >= x0 && mouse.mx * d <= x0 + bw && mouse.my * d >= y0 && mouse.my * d <= y0 + bh;
+  ctx.globalAlpha = mouse && !on ? labelFade(x0, y0, bw, bh, mouse.mx * d, mouse.my * d, 60 * d) : 1;
   ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(x0, y0, bw, bh, bh / 2); else ctx.rect(x0, y0, bw, bh);
   ctx.fillStyle = c.ok ? '#f5c542' : bad ? 'rgba(127,29,29,0.92)' : 'rgba(71,85,105,0.9)'; ctx.fill();
   ctx.lineWidth = 1.5 * d; ctx.strokeStyle = c.ok ? '#7c5a06' : bad ? '#f87171' : 'rgba(15,23,42,0.9)'; ctx.stroke();
   ctx.fillStyle = c.ok ? '#1f1503' : bad ? '#fecaca' : '#cbd5e1'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.fillText(text, x0 + bw / 2, y0 + bh / 2 + 0.5 * d);
-  ctx.textAlign = 'start'; ctx.textBaseline = 'alphabetic';
+  ctx.textAlign = 'start'; ctx.textBaseline = 'alphabetic'; ctx.globalAlpha = 1;
   return { x: x0 / d, y: y0 / d, w: bw / d, h: bh / d };
 }
 
@@ -230,7 +251,7 @@ export function drawWizard(v: WizardView, w: HoleWizard, mouse: { mx: number; my
       // a tee or a green Build waits on is ringed in red where it stands (P23 4.4)
       const c = w.check(), pl = w.plan;
       if (pl && c.at) { const ctx = v.ctx, d = v.dpr, p = v.screen(pl[c.at].x, pl[c.at].y); ctx.beginPath(); ctx.arc(p.x, p.y, 15 * d, 0, Math.PI * 2); ctx.lineWidth = 3 * d; ctx.strokeStyle = '#ef4444'; ctx.stroke(); }
-      if (gh) pill = drawPill(v, w, gh);
+      if (gh) pill = drawPill(v, w, gh, mouse);
     }
   }
   if (mouse) { const l = w.label(); v.hint(mouse.mx, mouse.my, l.text, l.bad); }
