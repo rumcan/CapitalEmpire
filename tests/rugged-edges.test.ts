@@ -47,7 +47,7 @@ describe('the wobble (T204)', () => {
   });
   it('never repeats along an edge (no period of the grass pictures or its own waves)', () => {
     // the offset along a long straight line, against the same line shifted by each wave's length and by the grass pictures' periods
-    for (const shift of [4.7, 9.4, 2.2, 1.1, 24, 48, 96]) {
+    for (const shift of [5.2, 10.4, 2.5, 1.2, 24, 48, 96]) {
       let diff = 0;
       for (let k = 0; k < 200; k++) { const x = 500 + k * 0.5, o = wobbleAt(x, 777), p = wobbleAt(x + shift, 777); diff += Math.hypot(o[0]! - p[0]!, o[1]! - p[1]!); }
       assert.ok(diff / 200 > 0.05, `shift ${shift}: ${(diff / 200).toFixed(3)}`);

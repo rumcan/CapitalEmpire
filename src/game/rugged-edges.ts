@@ -2,8 +2,8 @@
 // needs to be a rugged edge of grass that spills over to the shorter grass and we should not see any exactly straight line or perfect 90 degree
 // corners"). Drawing only: gameplay keeps the true cells and rectangles (what is owned, paid for, legal or placed never changes).
 // - The outline: a painted area's corners are rounded (a radius scaled to its size, RUGGED.rMin to rMax tiles) and every soft outline (the
-//   painted areas, a lot's lawn, the course's layers) is moved by one world-space wobble (wobbleAt: value noise of about 4.7, 2.2 and 1.1 tiles,
-//   never periodic, at most about 0.7 tiles), so neighbouring chunks, rebakes and zoom levels agree, two outlines that share an edge move
+//   painted areas, a lot's lawn, the course's layers) is moved by one world-space wobble (wobbleAt: value noise of about 5.2, 2.5 and 1.2 tiles,
+//   never periodic, a quarter of a tile on average and at most 0.8), so neighbouring chunks, rebakes and zoom levels agree, two outlines that share an edge move
 //   together, and an edit elsewhere never moves an edge. Hard man-made surfaces (paving, paths, kerbs) keep their line.
 // - The spill: where tall grass (fescue, rough, the map's open ground) meets short grass or dirt, the tall grass reaches over it in a ragged
 //   fringe of blades (spillBlades: a clumpy world-space noise sets their length, up to SPILL.max tiles, a hash each one's lean and width), cut
@@ -14,7 +14,8 @@ import { isCellSeam, smooth01 } from './paint-edges';
 import { SUN_TILE_DIR } from './ext/course-height';
 
 /** the outline's numbers:
- *  - amp: the wobble's scale (tiles, each axis; the noise keeps most of it within half of this, and |offset| is eased to at most `limit`);
+ *  - amp: the wobble's scale (tiles, each axis; the noise keeps its mean near a fifth of this, and |offset| is eased to at most `limit`, so a
+ *    point never leaves the tile of margin its patch is indexed with); its slope stays under about 0.65, so no outline folds over itself;
  *  - waves: the noise's wavelengths (tiles), weights and seeds (a long sway, a shorter waver and a faint ripple, none periodic: a value noise
  *    alone has flat spots, where a side would run straight for several tiles);
  *  - step: the longest side a painted outline keeps after rounding (so a straight side follows the wobble), courseStep a course line's;
@@ -22,8 +23,8 @@ import { SUN_TILE_DIR } from './ext/course-height';
  *    either side it joins (so a narrow area's corners never overlap);
  *  - minSize: an area whose square root of area is under this keeps its outline (the range's hitting mats, a small sign plinth) */
 export const RUGGED = {
-  amp: 0.75, limit: 0.68,
-  waves: [[4.7, 0.55, 311], [2.2, 0.3, 313], [1.1, 0.15, 317]] as readonly (readonly [number, number, number])[],
+  amp: 1.15, limit: 0.8,
+  waves: [[5.2, 0.66, 311], [2.5, 0.25, 313], [1.2, 0.09, 317]] as readonly (readonly [number, number, number])[],
   step: 0.35, courseStep: 0.5,
   rK: 0.13, rMin: 0.6, rMax: 1.5, rSide: 0.42,
   minSize: 2.2,

@@ -21,7 +21,7 @@ import { type GrassCellView } from './ext/grass-management';
 import { grassOverlay } from './lawn-overlay';
 import { surfaceOfTex } from './golf/costs';
 import { CELL as COURSE_CELL } from './golf/paintcourse';
-import { ruggedKind, ruggedRing, type RuggedKind } from './rugged-edges';
+import { ruggedKind, ruggedRing, warpLine, warpPoint, warpTriples, type RuggedKind } from './rugged-edges';
 import { AREA_SHADE, EDGE_LOOKS, JOINT_SOFT, SHADE_RGB, areaLightEdge, areaShadeImages, areaShadeReach, areaShadow, bandRamp, edgeBox, edgeField, edgeImages, edgeReach, edgeRes, featherTiles, jointFeather, jointLen, jointRamp, jointShadeWeight, litBox, type EdgeImage } from './paint-edges';
 import { CH_SIZE } from './ext/course-height';
 import { CART_RIM, CART_SURFACE, cartCast, cartRim } from './cart-bevel';
@@ -311,6 +311,31 @@ export class GroundPainter {
       this.ruggedForms.set(p, f);
     }
     return f;
+  }
+  /** T204: each course chunk as it is drawn, by its patch (made once a patch) */
+  private warpedCourses = new WeakMap<CoursePatch, CoursePatch>();
+  /** a course chunk as it is drawn (T204): every fill ring, edge, soft and joint run, collar, wall top, lit edge, stair and spill run moved by
+   *  the one world-space wobble (rugged-edges warpLine: each side split the same way whichever line it is in), so the course's straight runs
+   *  waver like the painted areas' and its pieces still meet each other and the neighbour chunks' (gameplay keeps the grid's cells) */
+  private warpedCourse(c: CoursePatch): CoursePatch {
+    let w = this.warpedCourses.get(c);
+    if (!w) {
+      const rings = (a: readonly Float32Array[]) => a.map(q => warpLine(q, true)), lines = (a: readonly Float32Array[]) => a.map(q => warpLine(q));
+      const opt = (a: readonly Float32Array[] | undefined) => (a ? lines(a) : undefined);
+      const st = c.st?.slice();
+      if (st) for (let q = 0; q + 4 < st.length; q += 5) { const [x, y] = warpPoint(st[q]!, st[q + 1]!); st[q] = x; st[q + 1] = y; }
+      w = {
+        ...c,
+        layers: c.layers.map(l => ({
+          ...l, fill: rings(l.fill), edges: lines(l.edges), soft: opt(l.soft), joint: opt(l.joint),
+          collar: l.collar && { ...l.collar, fill: rings(l.collar.fill), edges: lines(l.collar.edges), soft: opt(l.collar.soft) },
+        })),
+        walls: c.walls?.map(x => ({ ...x, p: warpTriples(x.p) })), rims: c.rims?.map(r => ({ ...r, p: warpLine(r.p) })), st,
+        spill: c.spill?.map(s => ({ ...s, p: warpLine(s.p) })),
+      };
+      this.warpedCourses.set(c, w);
+    }
+    return w;
   }
   /** forget the planner map's colours (the Grass setting changed: the grass is another picture) */
   resetPlanColours() { this.planCols.clear(); this.planPics.clear(); this.wallPics.clear(); }
@@ -1033,7 +1058,8 @@ export class GroundPainter {
     const ex: { path: Path2D; rule: CanvasFillRule }[] = [], walls: CourseWall[] = [], tiled = (t: string) => !!this.tex.paintedOf(t)?.tiled;
     const rings = (rs: readonly ArrayLike<number>[]) => { const q = new Path2D(); for (const r of rs) ringPath(q, r); ex.push({ path: q, rule: 'evenodd' }); };
     for (const p of lots) {
-      if (p.course) { for (const l of p.course.layers) { if ((!COURSE_GRASSY.has(l.s) || tiled(l.tex)) && l.fill.length) rings(l.fill); if (l.collar && l.collar.n !== 'bank' && l.collar.fill.length) rings(l.collar.fill); } if (p.course.walls) walls.push(...p.course.walls); continue; }
+      // (the course as it is drawn, T204)
+      if (p.course) { const c = this.warpedCourse(p.course); for (const l of c.layers) { if ((!COURSE_GRASSY.has(l.s) || tiled(l.tex)) && l.fill.length) rings(l.fill); if (l.collar && l.collar.n !== 'bank' && l.collar.fill.length) rings(l.collar.fill); } if (c.walls) walls.push(...c.walls); continue; }
       if (p.top || p.layby || p.lawn || p.tex === 'marks' || (grassyTex(p.tex) && !tiled(p.tex))) continue;
       ex.push({ path: polyPath(p.paint ? this.ruggedOf(p).q.pts : p.pts), rule: 'nonzero' }); // (a painted area as it is drawn, T204)
     }
@@ -1274,7 +1300,7 @@ export class GroundPainter {
     for (const p0 of paints) {
       // the course chunks (all z 0, so side by side in the order) draw together, surface by surface, so a chunk's lower surface never
       // lands over its neighbour's higher one at a seam
-      if (p0.course) { if (!course) { course = true; this.drawCourses(ctx, paints.filter(q => q.course).map(q => q.course!), L, X0, Y0, M, Minv, box, lite); } continue; }
+      if (p0.course) { if (!course) { course = true; this.drawCourses(ctx, paints.filter(q => q.course).map(q => this.warpedCourse(q.course!)), L, X0, Y0, M, Minv, box, lite); } continue; }
       // T204: drawn with its outline rounded and wobbled (a soft area; paving and paths keep their line)
       const p = this.ruggedOf(p0).q;
       const look = p.paint!.e ? EDGE_LOOKS[p.paint!.e] ?? null : null, sh = areaShadow(p.paint!.sh);
