@@ -1388,8 +1388,17 @@ export class Game {
     await atlas; this.perf.atlasMB = (this.gl.atlas?.bytes ?? 0) / 1048576; tick(0.5); if (this.dead) return;
     // a light boot without a save (the lot lab) never reads one and never writes one
     if (!this.boot.save) this.saveBlocked = true;
-    const read = opts.bench || !this.boot.save ? null : await readSave(); if (this.dead) return;
-    const save = read?.save ?? null;
+    // the dev-only ?fixture= save (T098, dev/fixtures.ts; ?fixture=range20: the range start's grown town at year 20, the course land empty and
+    // green): loaded in place of the stored save, which is then neither read nor written over (saving is off). With ?bench, the grown-town scene
+    const fixName = import.meta.env.DEV ? new URLSearchParams(location.search).get('fixture') : null;
+    const fixture = import.meta.env.DEV && fixName ? await (await import('./dev/fixtures')).devFixture(fixName) : null; if (this.dead) return;
+    if (fixName) this.saveBlocked = true;
+    // the bench's game scenes (T098, bench.ts benchGame): ?bench&start=range tours a new range start, ?bench&fixture=range20 the grown town;
+    // a plain ?bench builds the synthetic city. Neither scene ever saves
+    const benchScene = !opts.bench ? null : fixture ? 'fixture' as const : new URLSearchParams(location.search).get('start') === 'range' ? 'range' as const : null;
+    if (benchScene) { this.benchMode = true; this.saveBlocked = true; }
+    const read = opts.bench || fixName || !this.boot.save ? null : await readSave(); if (this.dead) return;
+    const save = fixture ?? read?.save ?? null;
     // T042: an unreadable save is kept as a backup (then a new game starts); if the backup failed, the slot is never written over
     let readNote: { text: string; kind: Toast['kind'] } | null = null;
     if (read && (read.status === 'future' || read.status === 'otherMap' || read.status === 'corrupt')) {
@@ -1399,7 +1408,7 @@ export class Game {
     // the store could not even be read: we cannot know what the slot holds, so never write over it (a private window cannot save anyway)
     if (read && read.status === 'none' && !read.backedUp) this.saveBlocked = true;
     let loaded: SaveV5 | null = null;
-    if (opts.bench) { this.genTerrain(1); const { buildBenchmark } = await import('./bench'); buildBenchmark(this, opts.bench); }
+    if (opts.bench && !benchScene) { this.genTerrain(1); const { buildBenchmark } = await import('./bench'); buildBenchmark(this, opts.bench); }
     else if (this.boot.map === 'flat') { this.golf = null; this.useTerrain(flatTerrain(), 0); } // a light boot's flat map: no town, course or range
     else if (!save && this.newGame()) { /* a new golf game: the range start's road and range, or the old start's town and course (see newGame) */ }
     else if (!save || !this.load(save)) {
@@ -1416,6 +1425,8 @@ export class Game {
     if (loaded) { this.traffic.townState(loaded.lots ?? [], loaded.simT ?? 0, loaded.budget, loaded.money, loaded.career, loaded.shift ?? 0, loaded.round, loaded.bizStats); this.traffic.setTownClock(loaded.townClock ?? townClockFor(this.traffic.dayLen)); }
     else this.rangeMorning();
     if (opts.bench) console.log('[bench] after load', Math.round(performance.now() - tl), 'ms');
+    if (fixture && !opts.bench) readNote = { text: `Dev fixture ${fixName}: saving is off for this session, so your own save is kept.`, kind: 'info' };
+    if (benchScene) { const { benchGame } = await import('./bench'); if (this.dead) return; benchGame(this, benchScene); }
     await new Promise<void>(res => { const wait = () => (this.ground.ready || this.dead ? res() : setTimeout(wait, 30)); wait(); });
     if (this.dead) return;
     this.ready = true; tick(1);
@@ -4338,6 +4349,8 @@ export class Game {
   repay() { const b = this.traffic.budget; if (!b.loans) this.toast('No loans to repay', 'warn'); else if (b.money < LOAN) this.toast('Not enough money to repay', 'warn'); else this.traffic.loan(false); }
   scheduleSave() { if (this.benchMode) return; clearTimeout(this.saveTimer); this.saveTimer = window.setTimeout(() => void this.save(), 800); }
   benchMode = false;
+  /** the lots still to compose (queued, or staged part-way): the bench's grown-town scene waits for them before its tour (T098) */
+  get lotsPending() { return this.lotQueue.size + this.staged.size; }
   async save() {
     if (this.benchMode) return 0; if (this.saveBlocked) return 0;
     const d: SaveV5 = {
