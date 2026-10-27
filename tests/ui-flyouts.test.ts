@@ -12,6 +12,7 @@ import { advanceProgress, computeProgressiveUiState, emptyProgress, progressFact
 import { RAIL, entryKey, toolLock, toolsIn } from '../src/ui/rail-items';
 import { columnsOf, indicesOf, leavesOf, menuOf, navKey, type MenuCtx, type MenuRow, type NavState } from '../src/ui/flyout-menu';
 import { Flyouts } from '../src/ui/Flyouts';
+import { GREENKEEPING } from '../src/game/features';
 
 const course = (holes: number): CourseProgress => ({ holes, seasons: 0, invited: false });
 const uiOf = (p: GolfProgress, holes: number) => computeProgressiveUiState(progressFacts(p, course(holes)));
@@ -53,9 +54,9 @@ describe('the flyouts: sub-menus to the side, as many levels as the tools have (
     assert.deepEqual(labels(find(t, 'Junctions').children!), ['Select a junction', 'Plain', 'All-way stop', 'Roundabout']);
     assert.deepEqual(labels(find(t, 'Transport').children!), ['Bus route', 'Car park', 'Toll gate']);
   });
-  it('Course ▸ Holes ▸ New hole · Your holes · Shape by hand ▸ the surfaces; Buildings ▸ Clubhouse · Halfway house; Cart paths & roads ▸ the paths and drives; Greenkeeping ▸ the cares; Tournament', () => {
+  it('Course ▸ Holes ▸ New hole · Your holes · Shape by hand ▸ the surfaces; Buildings ▸ Clubhouse · Halfway house; Cart paths & roads ▸ the paths and drives; Greenkeeping ▸ the cares (while GREENKEEPING is on); Tournament', () => {
     const c = menuOf(RAIL.find(r => r.id === 'course')!, ALL);
-    assert.deepEqual(labels(c), ['Holes', 'Buildings', 'Cart paths & roads', 'Greenkeeping', 'Tournament', 'Land for sale'], 'T206: Cart paths & roads directly below Buildings');
+    assert.deepEqual(labels(c), GREENKEEPING ? ['Holes', 'Buildings', 'Cart paths & roads', 'Greenkeeping', 'Tournament', 'Land for sale'] : ['Holes', 'Buildings', 'Cart paths & roads', 'Tournament', 'Land for sale'], 'T206: Cart paths & roads directly below Buildings; no Greenkeeping group while it is hidden (features.ts)');
     assert.deepEqual(find(c, 'Cart paths & roads').children!.map(r => (r.caption ? `[${r.label}]` : r.label)), ['[Cart paths]', 'Walking path', '[Course drives]', 'Gravel drive']);
     assert.equal(find(c, 'Cart paths & roads').note, 'Roads and cart paths on your property', 'its tooltip (the owner: "these are roads for on you property")');
     assert.deepEqual(find(c, 'Cart paths & roads', 'Walking path').leaf?.act, { k: 'road', id: 'cart-walk' });
@@ -64,7 +65,7 @@ describe('the flyouts: sub-menus to the side, as many levels as the tools have (
     assert.deepEqual(labels(find(c, 'Holes', 'Shape by hand').children!), ['Fairway', 'Green']);
     assert.deepEqual(find(c, 'Holes', 'Shape by hand', 'Green').leaf?.act, { k: 'surface', id: 'green' });
     assert.deepEqual(labels(find(c, 'Buildings').children!), ['Clubhouse', 'Halfway house']);
-    assert.deepEqual(labels(find(c, 'Greenkeeping').children!), ['Grass care', 'Mow', 'Water']);
+    if (GREENKEEPING) assert.deepEqual(labels(find(c, 'Greenkeeping').children!), ['Grass care', 'Mow', 'Water']);
     assert.deepEqual(find(c, 'Tournament').leaf?.act, { k: 'event' });
   });
   it('Facilities ▸ Practice ▸ the facilities · Plants ▸ Trees, Bushes, Flowers · Decoration ▸ Props ▸ by group (T206); Town decoration ▸ Paint ▸ Areas ▸ the materials, Plants ▸ ... · Props ▸ · Buildings', () => {
