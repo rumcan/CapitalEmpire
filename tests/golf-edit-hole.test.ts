@@ -112,14 +112,14 @@ const editButton = (h: string) => { const m = /<button([^>]*data-testid="hole-ed
 
 test("the card's Edit hole: enabled for a planned hole; \"Editing hole 1\" (disabled) while that hole's editor is open; disabled with its reason for a hole painted by hand", () => {
   let b = editButton(cardHtml(fakeGame({ open: 1 }).game));
-  assert.equal(b.text, 'Edit hole'); assert.doesNotMatch(b.attrs, /disabled/);
+  assert.equal(b.text, 'Edit hole'); assert.doesNotMatch(b.attrs, / disabled=""/);
   b = editButton(cardHtml(fakeGame({ open: 1, editing: 2 }).game));
-  assert.equal(b.text, 'Edit hole', 'another hole\'s editor open: this one can still be edited'); assert.doesNotMatch(b.attrs, /disabled/);
+  assert.equal(b.text, 'Edit hole', 'another hole\'s editor open: this one can still be edited'); assert.doesNotMatch(b.attrs, / disabled=""/);
   b = editButton(cardHtml(fakeGame({ open: 1, editing: 1 }).game));
-  assert.equal(b.text, 'Editing hole 1'); assert.match(b.attrs, /disabled/); assert.match(b.attrs, /title="[^"]*editor is open/);
+  assert.equal(b.text, 'Editing hole 1'); assert.match(b.attrs, / disabled=""/); assert.match(b.attrs, /title="[^"]*editor is open/);
   const h = cardHtml(fakeGame({ open: 2, hand: [2] }).game);
   b = editButton(h);
-  assert.equal(b.text, 'Edit hole'); assert.match(b.attrs, /disabled/);
+  assert.equal(b.text, 'Edit hole'); assert.match(b.attrs, / disabled=""/);
   assert.match(h, /data-testid="hole-edit-why"[^>]*>Painted by hand: shape it with the brush/, 'the reason is on the card, not only in a tooltip');
 });
 
