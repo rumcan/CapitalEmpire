@@ -38,8 +38,8 @@ const COMPOSED_BYTES = 64 << 20;
 /** a painted composition is made and kept in squares of this many chunk px (only the part of a chunk a surface uses is composed) */
 const PAINT_CELL = 128;
 /** a painted composition of a chunk: its picture, the cells composed so far, its size in bytes */
-/** a chunk's living ground as made (drawLiving): its influence grid, its masks, and its variants' rugged edges (T204) */
-type LivingMade = { grid: InfluenceGrid; masks: LivingMasks | null; edges?: Map<string, Path2D | null> };
+/** a chunk's living ground as made (drawLiving): its influence grid and its masks */
+type LivingMade = { grid: InfluenceGrid; masks: LivingMasks | null };
 /** T204: the tufts along a living-ground variant's edge, as dashed strokes of its outline (a dash across a wide butt-capped stroke is a blade
  *  standing across the edge; Skia lays thousands of them natively, where building them as shapes in script cost tens of ms a chunk): per
  *  layer, how far the blades reach each way (tiles) and the dash pattern (blade width, gap, ... tiles: from a hash, long and uneven so no
@@ -75,13 +75,35 @@ function splitRun(p: ArrayLike<number>, S: number): { p: number[]; x: number; y:
 }
 /** how far outside an area's outline the ground is read for the spill (the map's grass, or something laid there), tiles */
 const SPILL_PROBE = 0.4;
+/** T217: a ring's tile box (made once a ring: a course chunk's rings are never changed), so a point outside it skips the ring (never inside) */
+const ringBoxes = new WeakMap<object, BBox>();
+function ringBox(r: ArrayLike<number>): BBox {
+  let b = ringBoxes.get(r as object);
+  if (!b) {
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (let k = 0; k + 1 < r.length; k += 2) { const x = r[k]!, y = r[k + 1]!; if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+    ringBoxes.set(r as object, b = [x0, y0, x1, y1]);
+  }
+  return b;
+}
 /** whether a course chunk (as drawn) lays a surface or a collar at tile (x, y) (even-odd over each layer's rings) */
 function courseCovers(c: CoursePatch, x: number, y: number): boolean {
   const x0 = c.cx * c.size - 0.2, y0 = c.cy * c.size - 0.2;
   if (x < x0 || y < y0 || x > x0 + c.size + 0.4 || y > y0 + c.size + 0.4) return false;
-  for (const l of c.layers) for (const rs of [l.fill, l.collar?.fill ?? []]) { let k = false; for (const r of rs) if (inPoly(r, x, y)) k = !k; if (k) return true; }
+  for (const l of c.layers) for (const rs of [l.fill, l.collar?.fill ?? []]) {
+    let k = false;
+    for (const r of rs) { const b = ringBox(r); if (x >= b[0] && x <= b[2] && y >= b[1] && y <= b[3] && inPoly(r, x, y)) k = !k; }
+    if (k) return true;
+  }
   return false;
 }
+/** T217: an area's spill over one chunk as laid (its blades' and its shade bands' paths; null: none there), kept by chunk and area while the
+ *  ground laid before the area (others) and the course chunks are the same objects: a re-bake of the chunk (a course edit re-stales many)
+ *  lays it again without reading the ground round the outline or building paths */
+type SpillMemo = { others: readonly LotPatch[]; course: readonly CoursePatch[]; paths: { blades: Path2D[]; near: Path2D; far: Path2D } | null };
+/** the chunks whose areas' spills a worker keeps, and the areas a chunk keeps (an area edited over and over leaves its old forms behind) */
+const SPILL_MEMO_CHUNKS = 96, SPILL_MEMO_AREAS = 48;
+const sameList = <T,>(a: readonly T[], b: readonly T[]) => { if (a.length !== b.length) return false; for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false; return true; };
 /** a run (flat x y, its tall side on side x (dy, -dx)) moved d tiles the other way (into the short side), each point along the mean of its
  *  pieces' normals, appended to path as an open polyline */
 function offsetRun(path: Path2D, p: ArrayLike<number>, side: 1 | -1, d: number) {
@@ -97,6 +119,9 @@ function offsetRun(path: Path2D, p: ArrayLike<number>, side: 1 | -1, d: number) 
 const LEAF_CHUNKS = 4, LEAF_PX = 1024, LEAF_PERIOD = 16, LEAF_DENSITY = 2.6;
 /** the chunks whose influence grids and masks a worker keeps (about half a MB each) */
 const LIVING_MADE = 12;
+/** T217: the chunks whose living-ground variants' regions (rugged edges, T204) a worker keeps: a few kB of path each, so many more chunks than
+ *  their grids and masks (a re-bake of a chunk whose masks were let go makes them again, but not its regions' contours and paths) */
+const LIVING_EDGES = 128;
 /** the lush variant's tint (multiplied over the grass laid over itself: deeper and greener, never a flat colour), and the warm light the derived
  *  soil is lifted by (screen) */
 const LUSH_TINT = '#c4dcac', SOIL_LIFT = '#40291a', SOIL_WARM = '#f0cfa4';
@@ -370,10 +395,13 @@ export class GroundPainter {
   private leafPic: Cnv | null = null; private leafChunks = new Map<string, Cnv>();
   /** the influence grids and masks of the last few chunks, by chunk and sources (living-ground.ts livingSignature) */
   private livingMade = new Map<string, LivingMade>();
-  /** T204: a living-ground variant's region over a chunk (made once per chunk and sources, with its masks): where its mask passes its level
-   *  (LIVING_EDGE; living-ground maskContours), as a path (its rings, even-odd) */
-  private livingEdge(made: LivingMade, m: LivingMasks, key: 'lush' | 'thin'): Path2D | null {
-    const e = (made.edges ??= new Map());
+  /** T204: the living-ground variants' regions by chunk and sources (livingMade's key; T217: kept for more chunks than their masks) */
+  private livingEdges = new Map<string, Map<'lush' | 'thin', Path2D | null>>();
+  /** T204: a living-ground variant's region over a chunk (made once per chunk and sources, ck: livingMade's key): where its mask passes its
+   *  level (LIVING_EDGE; living-ground maskContours), as a path (its rings, even-odd) */
+  private livingEdge(ck: string, m: LivingMasks, key: 'lush' | 'thin'): Path2D | null {
+    let e = this.livingEdges.get(ck);
+    if (e) { this.livingEdges.delete(ck); this.livingEdges.set(ck, e); } else { this.livingEdges.set(ck, e = new Map()); trimLru(this.livingEdges, new Set([ck]), LIVING_EDGES); }
     let r = e.get(key);
     if (r === undefined) {
       const rings = maskContours(m[key], m.W, m.H, m.x0, m.y0, m.res, LIVING_EDGE[key]);
@@ -400,6 +428,8 @@ export class GroundPainter {
   /** T204: the spill of each course chunk as drawn (warpedCourse), by blade scale: its blades and shade bands bucketed by place
    *  (SPILL_BUCKET tiles square) and by the tall layer outside, as paths made once (a bake only adds the buckets near its box) */
   private courseSpills = new WeakMap<CoursePatch, Map<number, SpillBucket[]>>();
+  /** T217: each area's spill as laid over a chunk, by chunk key (with its level) and area (areaSpill) */
+  private spillMemo = new Map<string, Map<RuggedForm, SpillMemo>>();
   private courseSpillOf(c: CoursePatch, k: number): SpillBucket[] {
     let m = this.courseSpills.get(c); if (!m) this.courseSpills.set(c, m = new Map());
     let out = m.get(k);
@@ -452,6 +482,17 @@ export class GroundPainter {
    *  lawn, lot, painted area or course layer there), cut from the ground under it (under) */
   private areaSpill(ctx: C2D, f: RuggedForm, others: readonly LotPatch[], course: readonly CoursePatch[], L: number, M: DOMMatrix, box: BBox, under: CanvasPattern) {
     const ring = f.q.pts, n = ring.length >> 1; if (n < 3 || !SPILLS_ON.has(f.kind)) return;
+    // T217: laid as on this chunk's last bake when nothing round it changed
+    const ck = this.chunkNow!.key;
+    let byArea = this.spillMemo.get(ck);
+    if (byArea) { this.spillMemo.delete(ck); this.spillMemo.set(ck, byArea); } else { this.spillMemo.set(ck, byArea = new Map()); trimLru(this.spillMemo, new Set([ck]), SPILL_MEMO_CHUNKS); }
+    const memo = byArea.get(f);
+    if (memo && sameList(memo.others, others) && sameList(memo.course, course)) {
+      byArea.delete(f); byArea.set(f, memo);
+      if (memo.paths) this.layBlades(ctx, M, memo.paths.blades, memo.paths.near, memo.paths.far, under);
+      return;
+    }
+    const keep = (paths: SpillMemo['paths']) => { byArea.delete(f); byArea.set(f, { others: others.slice(), course: course.slice(), paths }); for (const a of byArea.keys()) { if (byArea.size <= SPILL_MEMO_AREAS) break; byArea.delete(a); } };
     const k = spillScale(L, TILE_PX), x0 = box[0] - 1.5, y0 = box[1] - 1.5, x1 = box[2] + 1.5, y1 = box[3] + 1.5;
     // which outline points have the map's grass just outside
     const tall = new Uint8Array(n), near = others.filter(o => o !== f.q && o.pts.length >= 6), nb = near.map(o => quadBox(o.pts));
@@ -466,7 +507,7 @@ export class GroundPainter {
       for (let q = 0; q < course.length && out; q++) out = !courseCovers(course[q]!, ox, oy);
       if (out) { tall[i] = 1; any = true; }
     }
-    if (!any) return;
+    if (!any) { keep(null); return; }
     let set = f.blades?.get(k);
     if (!set) {
       const own: number[] = [], tri = spillBlades([...ring, ring[0]!, ring[1]!], f.side, k, false, [], own);
@@ -475,10 +516,11 @@ export class GroundPainter {
     // the blades of the tall stretches near the chunk, and those stretches' shade bands
     const nearP = new Path2D(), farP = new Path2D(), own = set.own;
     const blades = bladePaths(set.tri, (b, tx, ty) => tx >= x0 && tx <= x1 && ty >= y0 && ty <= y1 && (tall[own[b]!] === 1 || tall[(own[b]! + 1) % n] === 1));
-    if (!blades.length) return;
+    if (!blades.length) { keep(null); return; }
     const band = (p: ArrayLike<number>) => { offsetRun(nearP, p, f.side, SPILL.band / 4); offsetRun(farP, p, f.side, SPILL.band / 2); };
     if (tall.every(v => v)) band([...ring, ring[0]!, ring[1]!]);
     else for (let i = 0; i < n; i++) if (tall[i] && !tall[(i + n - 1) % n]) { const p: number[] = []; for (let q = i; tall[q % n]; q++) p.push(ring[2 * (q % n)]!, ring[2 * (q % n) + 1]!); if (p.length >= 4) band(p); }
+    keep({ blades, near: nearP, far: farP });
     this.layBlades(ctx, M, blades, nearP, farP, under);
   }
   /** lays the spill's blades (tile space): first the shade under their overhang, a soft band just inside the short side (near and far: the
@@ -1287,12 +1329,12 @@ export class GroundPainter {
      *  edges are on; false (nothing laid) when they are off */
     const rugged = (layer: Cnv, key: 'lush' | 'thin') => {
       if (!this.rugged) return false;
-      const region = this.livingEdge(made!, m, key);
+      const region = this.livingEdge(ck, m, key);
       if (!region) return true;
       // the blades' width at least about a cache px (fewer, wider blades further out); the grass round it as it is now (copied as the variant
       // is drawn over it): the tufts reaching back into the lush grass are cut from it, at the closest levels only (further out they are a
-      // px or two, not worth the copy)
-      const k = spillScale(L, TILE_PX), under = key === 'lush' && k === 1 ? vg.createPattern(vg.canvas, 'no-repeat') : null, p = vg.createPattern(layer, 'no-repeat');
+      // px or two, not worth the copy); T217: no tufts at the far levels (k 4), so no copies of the pictures for them either
+      const k = spillScale(L, TILE_PX), tufted = k <= 2, under = tufted && key === 'lush' && k === 1 ? vg.createPattern(vg.canvas, 'no-repeat') : null, p = tufted ? vg.createPattern(layer, 'no-repeat') : null;
       vg.save(); vg.setTransform(M); vg.clip(region, 'evenodd'); vg.setTransform(1, 0, 0, 1, 0, 0); vg.globalCompositeOperation = 'source-over'; vg.globalAlpha = 1; vg.drawImage(layer, 0, 0); vg.restore();
       const tufts = (style: CanvasPattern | null, layers: readonly { len: number; dash: readonly number[] }[], inside: boolean) => {
         if (!style) return;
@@ -1304,7 +1346,7 @@ export class GroundPainter {
         for (const t of layers) { vg.setLineDash(k === 1 ? t.dash as number[] : t.dash.map(v => v * k)); vg.lineWidth = 2 * t.len; vg.stroke(region); }
         vg.restore();
       };
-      if (k <= 2) { tufts(p, TUFTS.out, false); tufts(under, TUFTS.back, true); }
+      if (tufted) { tufts(p, TUFTS.out, false); tufts(under, TUFTS.back, true); }
       return true;
     };
     // lush: richer, denser grass along fences, walls and hedges, near water and on the verges: the grass laid over itself (its strokes' contrast
