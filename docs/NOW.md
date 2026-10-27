@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-27 04:19)
+## START HERE (kept current by the lead; last updated 2026-10-27 04:34)
 
 **Paste-ready start prompts for every role are in `docs/START-PROMPTS.md`:** the lead, a coding ticket, and the other sessions in this
 repo. The weekly usage cap is close (2026-10-26), so any chat may stop at any moment.
@@ -28,12 +28,12 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |
 | T091+T090 | #160, #159 | `arena/T091-T090-growth` | `.claude/worktrees/t166` | 5187 | P22 (RISKY): grown-town roads keep off the course, then the town grows from the range outward; range:gate gains P22 2.7's growth bands; then T098's range20 fixture, `?fixture=` and bench stages. Classic games unchanged (nightly numbers). Agent: the ground agent. |
-| T174 | #424 | `arena/T174-hole-card` | `.claude/worktrees/t160` | 5186 | P23-UX Phase 2 P2-4, the hole card: select a hole → par, lengths, grow-in, areas, checks with Fix; pin/tee drags that never re-plan or charge; Edit, Delete (refund stated); renumber by dragging badges. Existing data only (D7.3). Agent: the lot agent. |
+| T175 | #429 | `arena/T175-greenkeeping-stopgap` | `.claude/worktrees/t160` | 5186 | P23-UX P2-5 + P2-9: Greenkeeping as a rail tool (today's Grass panel, actions armed; locked until the first grown hole; Overseed, Re-turf) and the clubhouse's "Draw a drive" stopgap (back armed at the same spot). Agent: the lot agent. |
 | T112 | #199 | `arena/T112-sharp` (PR #394) | `.claude/worktrees/t112` | — | **Approved, merge HELD for the morning restart:** a lock change makes the 5174 auto-updater run `npm ci` in theme-consistency (the live 5191 studio holds sharp there; the lot agent's t160 uses it by junction). Morning order: stop 5191 → merge #394 → let npm ci finish → restart 5191 and 5174. All shipped bytes identical on 0.35.5; audit 0. |
 | T095 | #164 | `arena/T095-first-minute` (**draft PR #419**) | `.claude/worktrees/t160` | 5186 | Built and reviewed (typecheck clean, guide tests 15/15): welcome card (follows P24's ramp: "Open the range" until New hole opens), the founding line in the Tier sub-line (one-row top bar kept), two-line title, tee ring, three toasts, a 7-step range guide. The agent's session was refused `gh pr ready`: **the owner marks it ready and merges** (the lead does not override another session's refusal). Tidied at f4f9347 (screenshots out, minimap "New town" until named, ramp toast helper, step 5 held 8 s): **Squash and merge** (old webp commit in history). Agent: the lot agent. |
 | P05 | #68 | PR #413 **open for the owner's approval** | — | — | The M5 balance plan, measured: arrival 47% at tier 1 from a fresh start (the start's 56-bay car park holds 168 fans), 100% with car parks; 10% at tier 2 fresh, 70-81% with car parks; an 18 of ~5,900 m fits the starting land on every seed (~$190k seeded); with the proposals a careful player reaches tier 3 in year 4. Knob recommended for "careless out-saves careful": sponsors x (1 + (rep-50)/50). |
 | T091+T090 | #160, #159 | `arena/T091-T090-growth` | `.claude/worktrees/t166` | 5187 | P22 (RISKY): grown-town roads keep off the course, then the town grows from the range outward; range:gate gains P22 2.7's growth bands; then T098's range20 fixture, `?fixture=` and bench stages. Classic games unchanged (nightly numbers). Agent: the ground agent. |
-| T174 | #424 | `arena/T174-hole-card` | `.claude/worktrees/t160` | 5186 | P23-UX Phase 2 P2-4, the hole card: select a hole → par, lengths, grow-in, areas, checks with Fix; pin/tee drags that never re-plan or charge; Edit, Delete (refund stated); renumber by dragging badges. Existing data only (D7.3). Agent: the lot agent. |
+| T175 | #429 | `arena/T175-greenkeeping-stopgap` | `.claude/worktrees/t160` | 5186 | P23-UX P2-5 + P2-9: Greenkeeping as a rail tool (today's Grass panel, actions armed; locked until the first grown hole; Overseed, Re-turf) and the clubhouse's "Draw a drive" stopgap (back armed at the same spot). Agent: the lot agent. |
 | T112 | #199 | `arena/T112-sharp` (PR #394) | `.claude/worktrees/t112` | — | **Approved, merge HELD for the morning restart:** a lock change makes the 5174 auto-updater run `npm ci` in theme-consistency (the live 5191 studio holds sharp there; the lot agent's t160 uses it by junction). Morning order: stop 5191 → merge #394 → let npm ci finish → restart 5191 and 5174. All shipped bytes identical on 0.35.5; audit 0. |
 
 **Two coding agents at a time (the owner, 2026-10-26: first "maybe just too many background tasks?" after the studio tab died with the
@@ -95,6 +95,11 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
    (the sharp bump). See the History sections below and `gh issue list --label arena --state open`.
 
 ### Done recently (newest first; details in each PR)
+- 2026-10-27 04:34: **T174 #426 the hole card** (P23-UX P2-4): select a hole by its map badge (new: drawn at each hole's first tee),
+  its Holes panel badge or a click with Select → par, lengths per tee, grow-in per surface, areas, checks with Fix (arms the brush,
+  the marker or Edit hole); pin and tee drags never re-plan or charge (`markerMove`, refused off their surface); Edit hole; Delete
+  (confirms "no refund", "up to N m²" cleared); renumber by swapping badges (grid, plans, pins, tees, painted areas follow). Also fixed: the
+  rail/panel box swallowed map clicks under a short panel. Shots `E:/ClaudeTemp/T174/shots/`.
 - 2026-10-27 04:19: **T091 #422 grown-town roads keep off the course**: every golf game's town roads keep 6 tiles off the golf land (old
   starts could cross the course before); `short()` counts only lots that can build; a range start's town lays a leg every game hour,
   anchored between its seed and its built lots, legs near golf land (40 tiles) penalised; a grown industrial district 200-280 tiles toward
