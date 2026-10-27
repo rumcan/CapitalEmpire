@@ -11,6 +11,7 @@ import type { Prop } from './types';
 import { castsShadow, contactShadow, placeholderBoxes, type ContactShadow, type ShadowSpot } from './shadow-shape';
 import { lookOf } from './newart';
 import { vectorMesh, type VectorRange } from './shadow-vector';
+import { GLOW_LAYER, LAMP_FLOATS } from './sim/car-lamps';
 
 /** anything drawn like a prop: library item, anchor (tiles), flip, scale, footprint (tiles) */
 export interface Drawable { item: number; x: number; y: number; flip: boolean; scale: number; x0: number; y0: number; x1: number; y1: number; /** a moving car (SimClient.visible): already drawn at CAR_SCALE */ moving?: boolean;
@@ -18,7 +19,10 @@ export interface Drawable { item: number; x: number; y: number; flip: boolean; s
    *  painter's order and casts no shadow (what holds it up casts its own) */
   lift?: number;
   /** drawn tinted (T176: a tree New hole's Build would clear): a warm red multiplied in, so the art's own darks stay dark */
-  tint?: boolean }
+  tint?: boolean;
+  /** its lamps (T192: a car's lit brake lights, sim/car-lamps.ts; LAMP_FLOATS each: world X, Y, radius, brightness): glow instances packed
+   *  right after its picture in its tile's painter's order, so whatever is drawn nearer covers them like the car itself */
+  lamps?: number[] }
 /** every car is drawn this much smaller than its art, parked (props of kind car, about the middle of their footprint) and moving (SimClient.visible,
  *  about the car's centre): the owner, 2026-10-19, "20% smaller", the parked cars too */
 export { CAR_SCALE };
@@ -101,6 +105,21 @@ function packSprite(d0: Drawable, out: Float32Array, o: number, i: number, j: nu
   let x0 = d0.x0, y0 = d0.y0, x1 = d0.x1, y1 = d0.y1;
   if (placeholder(l.item) && !l.hidden) { const f = contactShadow(it, spotOf(d0, l), out.subarray(o, o + 4))?.foot; if (f) [x0, y0, x1, y1] = f; }
   out[o + 16] = worldX(x1, y1); out[o + 17] = worldY(x1, y1); out[o + 18] = worldX(x0, y1); out[o + 19] = worldX(x1, y0);
+}
+/** a lamp's glow instance (T192): a square of its radius about its point, drawn by the sprite program as a soft disc (gl.ts FS_SPRITE, layer
+ *  GLOW_LAYER), clipped to the tile like the car it belongs to; it casts no shadow and asks the atlas for nothing */
+export function packLamp(lamps: ArrayLike<number>, k: number, out: Float32Array, o: number, i: number, j: number) {
+  const X = lamps[k]!, Y = lamps[k + 1]!, r = lamps[k + 2]!;
+  out[o] = X - r; out[o + 1] = Y - r; out[o + 2] = X + r; out[o + 3] = Y + r;
+  out[o + 4] = 0; out[o + 5] = 0; out[o + 6] = 1; out[o + 7] = 1;
+  out[o + 8] = GLOW_LAYER; out[o + 9] = lamps[k + 3]!; out[o + 10] = 0; out[o + 11] = -1;
+  clip(out, o + 12, i, j);
+  out[o + 16] = 0; out[o + 17] = 0; out[o + 18] = 0; out[o + 19] = 0;
+}
+/** the world px box a drawable's lamps reach, grown into r (x0 y0 x1 y1) */
+function lampBox(d: Drawable, r: number[]) {
+  const L = d.lamps; if (!L) return;
+  for (let k = 0; k + LAMP_FLOATS - 1 < L.length; k += LAMP_FLOATS) { const X = L[k]!, Y = L[k + 1]!, q = L[k + 2]!; r[0] = Math.min(r[0]!, X - q); r[1] = Math.min(r[1]!, Y - q); r[2] = Math.max(r[2]!, X + q); r[3] = Math.max(r[3]!, Y + q); }
 }
 /** a drawable's contact shadow as packShadow packs it (null: none), its picture's rect `rect` (spriteRect) when known */
 export function contactOf(d: Drawable, rect: ArrayLike<number> = spriteRect(d)): ContactShadow | null {
@@ -237,7 +256,7 @@ export class SpriteTiles {
     const byTile = new Map<number, { d: Drawable; r: number[] }[]>();
     while (this.rbuf.length < movers.length) this.rbuf.push([0, 0, 0, 0]);
     for (let m = 0; m < movers.length; m++) {
-      const d = movers[m], r = spriteRect(d, this.rbuf[m]);
+      const d = movers[m], r = spriteRect(d, this.rbuf[m]); lampBox(d, r);
       for (let j = Math.floor(r[1] / CHUNK_H); j <= Math.floor(r[3] / CHUNK_H); j++) for (let i = Math.floor(r[0] / CHUNK_W); i <= Math.floor(r[2] / CHUNK_W); i++) {
         const k = tkey(i, j); let l = byTile.get(k); if (!l) byTile.set(k, (l = [])); l.push({ d, r });
       }
@@ -253,7 +272,8 @@ export class SpriteTiles {
       if (!t && !mv) continue;
       if (t) this.prepare(t);
       const nProps = t ? t.order!.length : 0, nMv = mv ? mv.length : 0;
-      this.ensure(at + (nProps + nMv) * SPRITE_STRIDE, sat + (t ? t.shadows.length : 0) + nMv * SHADOW_STRIDE);
+      let nLamps = 0; if (mv) for (const m of mv) nLamps += (m.d.lamps?.length ?? 0) / LAMP_FLOATS;
+      this.ensure(at + (nProps + nMv + nLamps) * SPRITE_STRIDE, sat + (t ? t.shadows.length : 0) + nMv * SHADOW_STRIDE);
       const s = this.stream, ss = this.shadowStream, d: TileDraw = { i, j, shadows: 0, sprites: 0 };
       if (t) { ss.set(t.shadows, sat); sat += t.shadows.length; d.shadows += t.shadows.length / SHADOW_STRIDE; }
       // (a mover with a vector shadow packs no T141 shape: packVector below)
@@ -278,9 +298,11 @@ export class SpriteTiles {
         for (const sl of slot) {
           if (t && sl.pos > pi) { s.set(t.packed.subarray(pi * SPRITE_STRIDE, sl.pos * SPRITE_STRIDE), at); at += (sl.pos - pi) * SPRITE_STRIDE; pi = sl.pos; }
           packSprite(sl.m, s, at, i, j); at += SPRITE_STRIDE;
+          // (T192: its lamps right after it, so what is nearer covers them as it covers the car)
+          const L = sl.m.lamps; if (L) for (let k = 0; k + LAMP_FLOATS - 1 < L.length; k += LAMP_FLOATS) { packLamp(L, k, s, at, i, j); at += SPRITE_STRIDE; }
         }
         if (t && pi < nProps) { s.set(t.packed.subarray(pi * SPRITE_STRIDE), at); at += (nProps - pi) * SPRITE_STRIDE; }
-        d.sprites = nProps + nMv;
+        d.sprites = nProps + nMv + nLamps;
       }
       draws.push(d);
     }

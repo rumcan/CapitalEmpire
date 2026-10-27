@@ -6,9 +6,7 @@
 // their frozen presets (their generated lots looked worse); a v1 or v2 town composes exactly as before. Headless.
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
-import crypto from 'node:crypto';
-import { compose, groupBaseItem, lotLayout, lotPreset, lotPresets, lotModelVersion, pickedPreset, setGeneratedLots, setLotModel, type ComposeState, type LotGeom } from '../src/game/lots/compose';
+import { compose, groupBase, groupBaseItem, lotLayout, lotPreset, lotPresets, lotModelVersion, pickedPreset, setGeneratedLots, setLotModel, type ComposeState, type LotGeom } from '../src/game/lots/compose';
 import { LATEST, LOT_MODELS } from '../src/game/lots/lot-models';
 import { groupOf } from '../src/game/lots/learn';
 import { groupsBlock, groupsFrom } from '../src/game/lots/group-data';
@@ -52,8 +50,7 @@ describe('lots on the fly for every use (T169)', () => {
     assert.deepEqual(groupsFrom(back), g);
     assert.equal(groupsBlock({}), '');
   });
-  it('3. a v1 or v2 town composes exactly as before (pinned on main before T169), and a v3 town\'s house lots as a v2 town\'s', (t) => {
-    const sha = (f: string) => crypto.createHash('sha1').update(fs.readFileSync(f)).digest('hex').slice(0, 12);
+  it('3. a v1 or v2 town draws every use but houses as ?oldlots, the same every time; a v3 town\'s house lots as a v2 town\'s', () => {
     const was = lotModelVersion();
     // every use: the frozen presets of each, every state and facing
     const lots = (['res', 'com', 'ind', 'park', 'civic', 'tour'] as const).flatMap(u => lotsOf(u, 20));
@@ -64,9 +61,13 @@ describe('lots on the fly for every use (T169)', () => {
     setLotModel(3); const res3 = houses.map(l => JSON.stringify(compose(l.g, l.st)));
     setLotModel(was);
     assert.deepEqual(res3, res2, "v3's house lots are v2's");
-    const data = [sha('src/game/lots/lot-presets.json'), sha('scripts/assets/scale-overrides.json'), sha('scripts/assets/removed.json')].join(',');
-    if (data !== '86289001229b,83f0ac47e796,a083234bb6ef') { t.skip(`the owner's data changed (${data}): the pinned hashes no longer apply`); return; }
-    assert.deepEqual([h1, h2], [PIN.v1, PIN.v2]);
+    // (T202: the pinned v1 and v2 hashes followed the owner's data and skipped since it changed: the rule they stood for) a v1 or v2 town draws
+    // every use but houses from its frozen presets, as ?oldlots does (they generate no use group), the same every time
+    setLotModel(1); assert.equal(hash(1), h1, 'v1: the same every time'); assert.equal(hash(2), h2, 'v2: the same every time');
+    const others = lots.filter(l => l.p.use !== 'res');
+    setGeneratedLots(false); const old = others.map(l => JSON.stringify(compose(l.g, l.st))); setGeneratedLots(true);
+    for (const v of [1, 2]) { setLotModel(v); assert.deepEqual(others.map(l => JSON.stringify(compose(l.g, l.st))), old, `v${v}: the other uses as ?oldlots`); }
+    setLotModel(was);
   });
   it('4. per shipped group: the same lot lays the same, nothing outside it or overlapping beyond the rule, nothing on a drive, a walk or the car park', () => {
     setGeneratedLots(true); setLotModel(3);
@@ -98,6 +99,8 @@ describe('lots on the fly for every use (T169)', () => {
   it('5. the base stays: every building, fence, car and car park piece of the frozen preset is drawn; the shops and the owner\'s presets compose as ?oldlots', () => {
     setLotModel(3);
     for (const use of ['ind', 'park', 'civic', 'tour'] as const) for (const l of lotsOf(use, 20)) {
+      // T198: a gas station (a canopy its only building) is laid whole by its plan (gas-station.ts), its canopy moved onto its forecourt
+      if (groupBase(lotPreset(l.g, l.st)!).gas) continue;
       setGeneratedLots(false); const old = compose(l.g, l.st).props.filter(q => q.from && groupBaseItem(q.id, -1) && !q.street); setGeneratedLots(true);
       const now = compose(l.g, l.st).props.filter(q => q.from);
       for (const q of old) if (BY.get(q.id) && groupBaseItem(q.id, 0)) assert.ok(now.some(x => x.id === q.id && Math.abs(x.x - q.x) < 1e-6 && Math.abs(x.y - q.y) < 1e-6), `${l.p.id}: ${q.id} kept`);
@@ -138,5 +141,3 @@ describe('lots on the fly for every use (T169)', () => {
     assert.deepEqual(new Set(a.filter(l => l.group === 'open').map(l => l.use)), new Set(['park', 'civic', 'tour']));
   });
 });
-/** the hashes of test 3's lots under v1 and v2, measured on main at a651dd6 (before T169) */
-const PIN = { v1: 'f7478701', v2: 'edf7ad52' };

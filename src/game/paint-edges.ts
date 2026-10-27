@@ -47,7 +47,8 @@ export const EDGE_LOOKS: Readonly<Record<EdgeProfile, Readonly<EdgeLook> | null>
   water: { feather: 0.45, bevel: 0, light: 0, dark: 0, shadow: 0, shadowLen: 0, sunken: false },
   turf: { feather: 0.6, bevel: 0.55, light: 0.22, dark: 0.29, shadow: 0.3, shadowLen: 0.55, sunken: false },
   raised: { feather: 0.55, bevel: 0.75, light: 0.42, dark: 0.53, shadow: 0.57, shadowLen: 0.95, sunken: false },
-  sunken: { feather: 0.25, bevel: 1.8, light: 0.48, dark: 0.95, shadow: 0, shadowLen: 0, sunken: true },
+  // T196: a bunker's lip a touch softer (feather 0.25 -> 0.35 tiles, the dark side 0.95 -> 0.8): its light and shade kept, no hard line
+  sunken: { feather: 0.35, bevel: 1.8, light: 0.48, dark: 0.8, shadow: 0, shadowLen: 0, sunken: true },
 };
 
 /** the sunlight's colour (warm), RGB 0..255: the light mask images carry it (the renderer's textured shine uses its own warm tint) */
@@ -380,4 +381,41 @@ export function areaShadeImages(f: EdgeField, s: number, withLight = true, feath
   // the light's box: its px grown by one (the bilinear stretch reaches half a px past them)
   const lightBox: [number, number, number, number] | null = light ? [f.x0 + (u0 - 1) / f.res, f.y0 + (v0 - 1) / f.res, f.x0 + (u1 + 2) / f.res, f.y0 + (v1 + 2) / f.res] : null;
   return { shade: img(shade), light: img(light), lightBox };
+}
+
+/** T196 (the owner, 2026-10-27: "the hard line between golf textures like green texture to fringe. this should be blurred to be a shadow not
+ *  a hard line"): a course surface's joint with its own collar (a green with its fringe, a tee with its cut) was a crisp dark mowing line.
+ *  It is now a soft shade on the lower side, the two textures cross-fading over the band:
+ *  - feather: the higher surface's texture fades out over the collar this far past the joint, tiles (a cross-fade, as a soft run's feather);
+ *  - shade: the strongest shade at the joint, alpha of SHADE_RGB multiplied (T110: textured, cool), on a joint turned straight from the sun;
+ *  - len: how far the shade reaches into the lower side (the collar), tiles; inner: the share of len it reaches back over the higher surface
+ *    (a blur, not a step at the line);
+ *  - lit: the shade's weight on a joint turned straight to the sun (the weight ramps smoothly to 1 on one turned away). */
+export const JOINT_SOFT = { feather: 0.3, shade: 0.34, len: 0.5, inner: 0.45, lit: 0.4 } as const;
+/** the joint shade's weight for a joint whose outward normal (toward the collar) has `facing` = n · sun: lit facing the sun, 1 turned away,
+ *  smooth in between (no step between neighbouring segments) */
+export function jointShadeWeight(facing: number): number { return JOINT_SOFT.lit + (1 - JOINT_SOFT.lit) * smooth01((0.4 - facing) / 1.2); }
+/** the joint shade's alpha at d tiles from the joint (d >= 0 on the collar, the lower side; d < 0 over the higher surface), weight w: its peak at
+ *  the joint, falling smoothly to 0 at len outside and inner x len inside. Continuous: no hard step anywhere */
+export function jointShadeAlpha(d: number, w: number, L = 0.6): number {
+  const len = jointLen(L), reach = d >= 0 ? len : len * JOINT_SOFT.inner;
+  return JOINT_SOFT.shade * w * (1 - smooth01(Math.abs(d) / reach));
+}
+/** the joint's shade reach at cache level L, tiles: JOINT_SOFT.len, widened at far zooms so it spans at least 4 cache px (a blur, never a
+ *  hairline), at most 1.5 tiles */
+export function jointLen(L: number): number { return Math.min(1.5, Math.max(JOINT_SOFT.len, 4 / (TILE_PX * Math.max(L, 1e-3)))); }
+/** the joint's cross-fade at cache level L, tiles: JOINT_SOFT.feather, widened so it spans at least 2.5 cache px, at most 1.5 tiles */
+export function jointFeather(L: number): number { return Math.min(1.5, Math.max(JOINT_SOFT.feather, 2.5 / (TILE_PX * Math.max(L, 1e-3)))); }
+/** the strokes that lay jointShadeAlpha's falloff on one side of the joint (each stroke centred on it, clipped to that side): n strokes,
+ *  widest first, half-widths evenly from reach down, each with the alpha that makes the stack follow a x (1 - smooth01(d / reach)) at the middle
+ *  of the band it adds (stacked: the coverage at d is that of the strokes wider than 2d) */
+export function jointRamp(reach: number, a: number, n = 8): { half: number; alpha: number }[] {
+  const m = Math.max(2, Math.round(n)), out: { half: number; alpha: number }[] = [];
+  let prev = 0; // the coverage the wider strokes already give, as 1 - prod(1 - alpha)
+  for (let k = 0; k < m; k++) {
+    const half = reach * (1 - k / m), target = a * (1 - smooth01(1 - (k + 0.5) / m)); // the falloff at the middle of the band this stroke adds
+    const alpha = prev >= 1 ? 0 : Math.max(0, (target - prev) / (1 - prev));
+    out.push({ half, alpha }); prev = 1 - (1 - prev) * (1 - alpha);
+  }
+  return out;
 }

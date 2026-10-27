@@ -62,3 +62,15 @@ export function escapeLadder(l: EscLadder): EscStep {
   l.select();
   return 'select';
 }
+
+/** what a number key does (T202, #529; plan P23-UX 6.2 P2-8): 'surface', the course brush's surfaces while the Holes tool is in hand (1-7 in
+ *  its panel: paint-tool.ts key takes them first); 'class', the road classes while the town's Build is in hand (1-6, its flyout's classes in
+ *  order: network.ts KEY_CLASSES); else 'group', the nth rail group after Select (its flyout opens: App.tsx railKey). Before T202 1-6 picked a
+ *  road class and the road tool from any tool. i: the key's index from 0 */
+export type NumberKeyUse = { k: 'surface' | 'class' | 'group'; i: number };
+export function numberKeyUse(uiTool: Tool, n: number): NumberKeyUse | null {
+  if (!(n >= 1 && n <= 9) || !Number.isInteger(n)) return null;
+  if (uiTool === 'course') return n <= 7 ? { k: 'surface', i: n - 1 } : null;
+  if (uiTool === 'road') return n <= 6 ? { k: 'class', i: n - 1 } : null;
+  return n <= 6 ? { k: 'group', i: n - 1 } : null;
+}

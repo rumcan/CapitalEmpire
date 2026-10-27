@@ -33,6 +33,13 @@
 // tiles healed with one shared strip (see OWNER). The provisional fairway and putting-green families stay as they were, the old option.
 // T170 (#395): once the art session finishes that MID set (tile-0x.png, made with a common collar so any tile meets any tile), it ships as
 // made when it tiles cleanly as it is (across any two tiles within HEAL_LIMIT x the inside): the shared strip is kept for a raw set only.
+// T191 (#497; the owner: "theres a bunch of new art from the art generator. can you add it to the game, should be some grass in there too"):
+// fringe, a new material (eight-tiles/fringe/{near,mid,far}-v1: finished sets, the four tiles each level's export-report.json names), ships
+// provisionally as made when it tiles cleanly (MEASURED: its seams across any two tiles recorded, healed with one shared strip if not); the
+// putting green's v2 MID and FAR sets ship in a new family, putting-green-v2 (NEAR: the owner's putting-green painting, as putting-green-paint
+// has it), as made when they meet themselves. The old families are pinned to the sets they shipped (PIN), so they stay byte-identical: the old
+// option. The scene paintings (scene-backgrounds/fringe *-background-anchored-v1, putting-green *-uniform-background-v2) heal to x1.02-1.08 the
+// inside, the sets to x0.97-1.16 as made: the sets ship (four tiles a level, never one painting repeated: the owner's no-repeating-pattern rule).
 //
 // Adding the next family: its handoff lands in READY-MATERIALS (with its canonical selection), run this script, then map it to a surface in
 // src/game/painted-surfaces.json (or in the studio's Painted tab). KIND below names the kind of family each material is (the studio's picker).
@@ -64,9 +71,14 @@ const LEVELS = ['near', 'mid', 'far'];
 const QUALITY = 90;
 /** the kind of family each material is (painted-families.ts PaintedKind: the studio lists a surface's fitting kinds first) */
 const KIND = { 'golden-fescue': 'grass', lake: 'water', 'pale-green-bushes': 'grass', 'pine-straw': 'cut', 'sand-ripples': 'sand', 'sand-raked': 'sand', desert: 'sand', dirt: 'cut', 'sand-long-grass': 'sand', 'long-grass': 'grass', swamp: 'water', fairway: 'grass', 'putting-green': 'grass', 'first-cut': 'grass' };
-const NAME = { 'golden-fescue': 'Golden fescue', lake: 'Lake water', 'sand-ripples': 'Sand ripples', fairway: 'Fairway', 'putting-green': 'Putting green', 'long-grass': 'Long grass' };
-/** the families that ship provisionally until their handoff (T153, the lead's decision on #327): the course's fairway, green and rough */
-const PROVISIONAL = ['fairway', 'putting-green', 'long-grass'];
+const NAME = { 'golden-fescue': 'Golden fescue', lake: 'Lake water', 'sand-ripples': 'Sand ripples', fairway: 'Fairway', 'putting-green': 'Putting green', 'long-grass': 'Long grass', fringe: 'Fringe' };
+/** the families that ship provisionally until their handoff (T153, the lead's decision on #327): the course's fairway, green and rough; T191:
+ *  the fringe */
+const PROVISIONAL = ['fairway', 'putting-green', 'long-grass', 'fringe'];
+/** T191: a provisional family pinned to the sets it shipped (its newest folder moved on: the new set ships in a family of its own) */
+const PIN = { 'putting-green': { mid: 'mid-v1', far: 'far-v1' } };
+/** T191: provisional families whose finished sets are measured across any two tiles (shipped as made within HEAL_LIMIT, else one shared strip) */
+const MEASURED = new Set(['fringe']);
 /** the owner's own paintings (T162, #350): their folders, each with its source.json; the heal's band (px of each edge) and its limit (a healed
  *  wrap at most this many times the painting's own neighbour difference inside) */
 /** T165 (#365): also the art session's fairway and putting-green paintings. Per folder: `bridge` 'match' heals with the bridge where the
@@ -78,6 +90,9 @@ const OWNER = [
   { folder: 'art/owner-supplied/rough-20261026' },
   { folder: 'art/owner-supplied/fairway-20261026', bridge: 'match', stripes: true },
   { folder: 'art/owner-supplied/putting-green-20261026', bridge: 'match', shared: { mid: 'putting-green' } },
+  // T191: the putting green with the art session's v2 MID and FAR sets (as made when they meet themselves), NEAR the owner's painting as above
+  { folder: 'art/owner-supplied/putting-green-20261026', bridge: 'match', id: 'putting-green-v2', name: 'Putting green (v2)', materialId: 'paint:putting-green-v2', shared: { mid: 'putting-green@mid-v2', far: 'putting-green@far-v2' },
+    why: { mid: "the art session's putting-green v2 MID set (T191)", far: "the art session's putting-green v2 FAR set (T191)" } },
 ];
 const HEAL_BAND = 48, HEAL_LIMIT = 1.25, STRIPE_MIN_FRAC = 0.8, STRIPE_GAIN = 0.25;
 const TILE_IDS = ['tile-01', 'tile-02', 'tile-03', 'tile-04'];
@@ -168,11 +183,14 @@ for (const f of ready.ready) {
   plan.push({ material, id: gameId(material), materialId: f.id, key: f.canonicalSelection.sha256, selection: { file: selPath, sha256: f.canonicalSelection.sha256 }, light: sel.light ?? null, levels });
 }
 
+const m2 = m => ({ lr: r2(m.lr), tb: r2(m.tb), h: r2(m.h), v: r2(m.v) });
+/** the heal's own result is held to HEAL_LIMIT x the inside, on its pixels (the WebP's numbers are recorded as they ship) */
+const withinLimit = (m, what) => { if (m.lr > HEAL_LIMIT * m.h || m.tb > HEAL_LIMIT * m.v) fail(`${what}: healed wrap LR ${r2(m.lr)} / TB ${r2(m.tb)} is more than ${HEAL_LIMIT}x the inside (${r2(m.h)} / ${r2(m.v)}): widen HEAL_BAND`); };
 /* ---- the provisional families (T153): the newest complete set of four tiles per level, as the art session left them ---- */
 const LEVEL_DIR = /^(near|mid|far)-v(\d+)$/;
 /** a level's newest complete set in a family's folder: a finished `tile-0x.png` set (newest folder first), else a raw `tile-0x-v<k>.raw.png`
  *  set (newest folder, then newest k, first); null when no folder holds all four */
-function provisionalSet(material, level) {
+function provisionalSet(material, level, only = null) {
   // The owner's green MID fallback must follow a ready family's explicit selection, even if newer experiments exist on disk.
   // Its canonical selection and actual appearance decision were hash-checked above.
   const accepted = plan.find(p => p.material === material && p.selection);
@@ -182,7 +200,7 @@ function provisionalSet(material, level) {
   }
   const dir = `${EIGHT}/${material}`;
   if (!fs.existsSync(rel(dir))) return null;
-  const folders = fs.readdirSync(rel(dir)).map(n => n.match(LEVEL_DIR)).filter(m => m && m[1] === level && fs.statSync(rel(`${dir}/${m[0]}`)).isDirectory()).sort((a, b) => +b[2] - +a[2]).map(m => m[0]).filter(name => {
+  const folders = fs.readdirSync(rel(dir)).map(n => n.match(LEVEL_DIR)).filter(m => m && m[1] === level && fs.statSync(rel(`${dir}/${m[0]}`)).isDirectory() && (!only || m[0] === only)).sort((a, b) => +b[2] - +a[2]).map(m => m[0]).filter(name => {
     const reviewDir = `${dir}/${name}/review`;
     if (!fs.existsSync(rel(reviewDir))) return true;
     const held = fs.readdirSync(rel(reviewDir)).filter(n => /^appearance-(?:decision|review)(?:-v\d+)?\.json$/.test(n)).some(n => {
@@ -213,8 +231,11 @@ for (const material of PROVISIONAL) {
   const levels = {};
   let light = null;
   for (const level of LEVELS) {
-    const s = provisionalSet(material, level);
+    const s = provisionalSet(material, level, PIN[material]?.[level] ?? null);
     if (!s) { console.warn(`prep-painted-tiles: ${material} ${level}: no complete set of four tiles; ${material} is left out`); break; }
+    // T191: a finished set's four tiles are the ones its export report names (never a repair input or a guide)
+    const rep = readJson(`${s.folder}/export-report.json`);
+    if (rep?.variants && s.stage === 'finished tiles') { const named = rep.variants.map(v => String(v.file ?? '').split('/').pop()); if (!s.files.every(f => named.includes(f.split('/').pop()))) fail(`${s.folder}: its tiles are not the ones export-report.json names`); }
     const tiles = [];
     for (const [i, file] of s.files.entries()) {
       const buf = fs.readFileSync(rel(file)), meta = await sharp(buf).metadata();
@@ -232,6 +253,18 @@ for (const material of PROVISIONAL) {
     const cropped = tiles.filter(t => t.crop).map(t => `${t.id} ${t.crop.from.join('x')}`);
     const status = [s.stage, cropped.length ? `cropped to the set's ${native.join('x')}: ${cropped.join(', ')}` : null, report?.status ? `prepare-report: ${report.status}${Array.isArray(report.dimensions) ? ` (master ${report.dimensions.join('x')})` : ''}` : null, prov?.reviewStatus ? `review: ${prov.reviewStatus}` : null].filter(Boolean).join('; ');
     levels[level] = { folder: s.folder, native, decision: { file: null, sha256: null }, tiles, revision: s.revision, status };
+    // T191: a measured family: its seams across any two tiles; as made within HEAL_LIMIT x the inside, else one shared strip (as T165/T170)
+    if (MEASURED.has(material)) {
+      const dec = await Promise.all(tiles.map(t => (t.crop ? sharp(t.buf).extract({ left: 0, top: 0, width: native[0], height: native[1] }) : sharp(t.buf)).raw().toBuffer({ resolveWithObject: true })));
+      const [w, ht, ch] = [native[0], native[1], dec[0].info.channels], px = dec.map(d => d.data);
+      const before = setMismatch(px, w, ht, ch), asMade = s.stage === 'finished tiles' && before.lr <= HEAL_LIMIT * before.h && before.tb <= HEAL_LIMIT * before.v;
+      const res = asMade ? null : healShared(px, w, ht, ch, HEAL_BAND), pics = res ? res.tiles : px, done = res ? setMismatch(res.tiles, w, ht, ch) : before;
+      withinLimit(done, `${s.folder} (${res ? 'shared strip' : 'finished set'})`);
+      tiles.forEach((t, i) => { t.raw = { data: pics[i], width: w, height: ht, channels: ch }; });
+      const fallback = `the art session's ${s.stage === 'finished tiles' ? 'finished' : 'raw'} ${s.revision} tiles (T191)`;
+      levels[level].heal = res ? { method: HEAL_SHARED, band: HEAL_BAND, centre: res.centre, fallback, before: m2(before), healed: m2(done) } : { method: HEAL_NONE, band: 0, fallback, before: m2(before), healed: m2(done) };
+      levels[level].status = null;
+    }
   }
   if (Object.keys(levels).length !== LEVELS.length) continue;
   const key = sha256(Buffer.from(LEVELS.flatMap(l => levels[l].tiles.map(t => t.sha256)).join(':')));
@@ -242,11 +275,8 @@ for (const material of PROVISIONAL) {
 /** where the owner's art is read: this checkout (it is committed here), or --art (the tests' fixtures) */
 const OWNER_ART = path.resolve(arg('--art') ?? ROOT);
 const orel = p => path.join(OWNER_ART, p);
-const m2 = m => ({ lr: r2(m.lr), tb: r2(m.tb), h: r2(m.h), v: r2(m.v) });
 /** the interior (inside the outer HEAL_BAND px of each edge) of a healed picture is its source's exactly */
 const sameInterior = (a, b, w, ht, ch, what) => { for (let y = HEAL_BAND; y < ht - HEAL_BAND; y++) for (let i = (y * w + HEAL_BAND) * ch, e = (y * w + w - HEAL_BAND) * ch; i < e; i++) if (a[i] !== b[i]) fail(`${what}: the heal changed the interior at (${Math.floor(i / ch) % w}, ${y})`); };
-/** the heal's own result is held to HEAL_LIMIT x the inside, on its pixels (the WebP's numbers are recorded as they ship) */
-const withinLimit = (m, what) => { if (m.lr > HEAL_LIMIT * m.h || m.tb > HEAL_LIMIT * m.v) fail(`${what}: healed wrap LR ${r2(m.lr)} / TB ${r2(m.tb)} is more than ${HEAL_LIMIT}x the inside (${r2(m.h)} / ${r2(m.v)}): widen HEAL_BAND`); };
 for (const o of OWNER) {
   const folder = o.folder, srcRel = `${folder}/source.json`;
   if (!fs.existsSync(orel(srcRel))) { console.warn(`prep-painted-tiles: no ${srcRel} under ${OWNER_ART}; its family is left out`); continue; }
@@ -257,8 +287,9 @@ for (const o of OWNER) {
   for (const level of LEVELS) {
     const sharedFrom = o.shared?.[level];
     if (sharedFrom) {
-      // T165: this level falls back to the raw provisional set of `sharedFrom`, healed with one shared strip (any tile meets any tile)
-      const s = provisionalSet(sharedFrom, level);
+      // T165: this level falls back to the raw provisional set of `sharedFrom`, healed with one shared strip (any tile meets any tile); T191:
+      // 'material@folder' names the folder (putting-green@mid-v2), else the family's pinned or newest set
+      const [sm, sf] = sharedFrom.split('@'), s = provisionalSet(sm, level, sf ?? PIN[sm]?.[level] ?? null);
       if (!s) fail(`${folder} ${level}: no provisional ${sharedFrom} ${level} set for the shared-strip heal`);
       const raws = [];
       for (const [i, file] of s.files.entries()) { const buf = fs.readFileSync(rel(file)), { data, info } = await sharp(buf).raw().toBuffer({ resolveWithObject: true }); raws.push({ id: TILE_IDS[i], sha256: sha256(buf), source: file, data, w: info.width, h: info.height, ch: info.channels }); }
@@ -275,7 +306,7 @@ for (const o of OWNER) {
       const pics = res ? res.tiles : px, done = res ? setMismatch(res.tiles, w, ht, ch) : before;
       withinLimit(done, `${folder} ${level} (${res ? 'shared strip' : 'finished set'})`);
       const tiles = raws.map((r, i) => ({ id: r.id, sha256: r.sha256, source: r.source, raw: { data: pics[i], width: w, height: ht, channels: ch }, ...(r.w !== w || r.h !== ht ? { crop: { from: [r.w, r.h], removedRight: r.w - w, removedBottom: r.h - ht } } : {}) }));
-      const fallback = `the painting ${src.levels[level]?.file ?? level} is not used (tiled, its bright corner repeats as a block pattern); ${sharedFrom}'s ${res ? `raw ${s.revision} tiles` : `finished ${s.revision} tiles, as the art session made them,`} instead`;
+      const fallback = o.why?.[level] ? `${o.why[level]}: ${res ? `raw ${s.revision} tiles, healed with one shared strip` : `finished ${s.revision} tiles, as the art session made them`}` : `the painting ${src.levels[level]?.file ?? level} is not used (tiled, its bright corner repeats as a block pattern); ${sharedFrom}'s ${res ? `raw ${s.revision} tiles` : `finished ${s.revision} tiles, as the art session made them,`} instead`;
       levels[level] = { folder: s.folder, native: [w, ht], decision: { file: null, sha256: null }, tiles, revision: `${s.revision}-${res ? 'shared' : 'finished'}`, status: null,
         heal: res ? { method: HEAL_SHARED, band: HEAL_BAND, centre: res.centre, fallback, before: m2(before), healed: m2(done) } : { method: HEAL_NONE, band: 0, fallback, before: m2(before), healed: m2(done) } };
       keyParts.push(res ? `${level}:${HEAL_SHARED}/${HEAL_BAND}@${res.centre.x},${res.centre.y}:${tiles.map(t => t.sha256).join(',')}` : `${level}:${HEAL_NONE}:${tiles.map(t => t.sha256).join(',')}`);
@@ -312,7 +343,7 @@ for (const o of OWNER) {
   // that laid it. The rough (T162: the middle bridge, no crop) keeps its key.
   const plain = !o.bridge && !o.stripes && !o.shared;
   const key = plain ? sha256(Buffer.from(LEVELS.map(l => levels[l].tiles[0].sha256).join(':') + `|${HEAL_METHOD}/${HEAL_BAND}`)) : sha256(Buffer.from(keyParts.join('|')));
-  plan.push({ material: fam.id, id: gameId(fam.id), materialId: src.id ?? `owner:${path.basename(folder)}`, name: fam.name, kind: fam.kind ?? 'grass', key, selection: null, provisional: fam.provisional !== false, owner: srcRel, light: src.light ?? null, levels });
+  plan.push({ material: o.id ?? fam.id, id: gameId(o.id ?? fam.id), materialId: o.materialId ?? src.id ?? `owner:${path.basename(folder)}`, name: o.name ?? fam.name, kind: fam.kind ?? 'grass', key, selection: null, provisional: fam.provisional !== false, owner: srcRel, light: src.light ?? null, levels });
 }
 
 // ---- write the WebPs and the manifest

@@ -5,7 +5,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { CLASS, RoadNetwork, type Leg } from '../src/game/network';
 import { NetEditor } from '../src/game/netops';
-import { LotMap, type Lot } from '../src/game/lots/lots';
+import { LotMap, lotRingClear, ringClear, type Lot } from '../src/game/lots/lots';
 
 (globalThis as unknown as { Path2D: unknown }).Path2D ??= class { moveTo() {} lineTo() {} arc() {} arcTo() {} closePath() {} rect() {} };
 
@@ -71,4 +71,18 @@ test('only empty lots shrink or go; a road laid through a kept lot takes it (the
   b.e.addLegs([leg(victim.c.x, 100, victim.c.x, 140)], CLASS.gravel, 0); b.e.commit();
   const r = b.lm.update(b.e.net, null, keep);
   assert.ok(r.removed.includes(victim.key) && !b.lm.lots.has(victim.key), 'a road through it takes it');
+});
+
+// T195 (#507): a mini-roundabout (a painted island in the crossing) keeps no lot out (lotRingClear 0), so a corner lot the town has started
+// stands when the crossing gets one; a roundabout's circle still does (ringClear). Measured on the range gate's minis player, seed 1, seasons
+// 6-12: 4-93 built or building lots a season lost (their centres 11.5-14 tiles from a mini) before, none after
+test('a mini-roundabout keeps no lot out; a roundabout still keeps its circle clear', () => {
+  for (const type of ['mini', 'roundabout'] as const) {
+    const e = new NetEditor(new RoadNetwork());
+    e.addLegs([leg(40, 100, 360, 100)], CLASS.gravel!, 0); e.addLegs([leg(200, 20, 200, 180)], CLASS.gravel!, 0); e.commit();
+    const node = e.net.nodeAt({ x: 200, y: 100 })!;
+    e.setNodeType(node, type); e.commit();
+    assert.ok(node.rb > 0 && ringClear(node) > node.rb, `a ${type} has a circle (rb ${node.rb})`);
+    assert.equal(lotRingClear(node), type === 'mini' ? 0 : ringClear(node), type);
+  }
 });

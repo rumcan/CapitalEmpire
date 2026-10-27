@@ -48,10 +48,12 @@ export class PropsTool {
   /** T187: where the tool was opened from (Decoration: the course; Town decoration: the town), the group it opened on (Town decoration ›
    *  Buildings), and All (the whole catalogue, not only the place's) */
   where: 'course' | 'town' = 'course'; group: DecorGroup | null = null; all = false;
+  /** T193: the group the toolbar's flyout opened (Props ▸ Plants): the panel shows its cards alone; null: every group */
+  focus: DecorGroup | null = null;
   /** opens the tool's view: its place and group (the item in hand goes down when the place changes) */
   setView(where: 'course' | 'town', group: DecorGroup | null = null): void {
     if (where !== this.where) { this.hand = null; this.ghost = null; this.drag = null; }
-    this.where = where; this.group = group; this.ctx.emit();
+    this.where = where; this.group = group; this.focus = null; this.ctx.emit();
   }
   /** the ghost at the cursor (the item in hand, or the prop being moved), null off the map */
   ghost: DecorGhost | null = null;

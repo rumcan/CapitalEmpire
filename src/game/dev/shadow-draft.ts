@@ -157,6 +157,20 @@ export function draftShadow(pic: DraftPicture, kind: DraftKind, shear: { sx: num
       let hh = (foot - y) * ry; if ((near - y) * ry < minH) continue; hh = Math.max(0, hh) * hk;
       const gx = X(x), gy = Y(foot), px = gx + hh * sx, py = gy + hh * sy;
       pts.push(px, py, hh); L = Math.min(L, px); R = Math.max(R, px); T = Math.min(T, py); B = Math.max(B, py);
+      // (T185) where the ground line steps between this column and a neighbour (a wall standing on its own base beside a chimney, a downpipe,
+      // a porch standing lower in front), the pixel lands along the step too: the wall goes on behind what stands in front, so the two
+      // shadows meet with no lit sliver between them (a sliver the whole height of the shadow long)
+      for (const nx of [x - 1, x + 1]) {
+        if (nx < 0 || nx >= w || bot[nx]! < 0) continue;
+        const gn = back[nx]! < g[nx]! && y < back[nx]! ? back[nx]! : g[nx]!;
+        if (Math.abs(gn - near) <= 1.5 || y >= Math.min(gn, near)) continue;
+        const n = Math.min(64, Math.ceil(Math.abs(gn - near)));
+        for (let k = 1; k < n; k++) {
+          const f2 = near + (gn - near) * k / n, ft = gb[x]! < f2 ? Math.min(f2, Math.max(gb[x]!, y + hcap)) : f2, h2 = Math.max(0, (ft - y) * ry) * hk;
+          const qx = gx + h2 * sx, qy = Y(ft) + h2 * sy;
+          pts.push(qx, qy, h2); L = Math.min(L, qx); R = Math.max(R, qx); T = Math.min(T, qy); B = Math.max(B, qy);
+        }
+      }
     }
     if (pts.length >= 9) {
       const leafy = kind === 'tree' || kind === 'plant', cs = Math.max(rx, ry, (R - L) / 360, (B - T) / 360);

@@ -255,6 +255,10 @@ export class Textures {
   private tilePics = new Map<string, (Cnv | ImageBitmap)[]>();
   /** how many decoded tile-set tiles and painted pictures this worker keeps (a light boot's are smaller, T157: ground-protocol.ts WorkerLimits) */
   tileLimit = MAX_TILE_SOURCES; paintedLimit = MAX_PAINTED_SOURCES;
+  /** T194: the pictures the bake in hand lays (its tile set band, its painted pictures), never trimmed from the caches by a decode that finishes
+   *  meanwhile (an earlier bake's look-ahead, a prewarm): such a trim took a yard's lawn tiles away before the bake drew them, and the lawn was
+   *  left out of that chunk, its fescue showing at the yard's edges and corners where the chunks met */
+  private tilePinned: ReadonlySet<string> = new Set(); private paintedPinned: ReadonlySet<string> = new Set();
   private tileLoads = new Map<string, Promise<void>>();
   /** the art level the next bake is for (set by preparePainted) */
   get paintedArtLevel() { return this.paintedLevel; }
@@ -318,15 +322,16 @@ export class Textures {
       }
       return pending;
     }));
-    trimLru(this.tilePics, new Set([...urls, ...keep]), this.tileLimit, chain => { for (const m of chain) if (m instanceof ImageBitmap) m.close(); });
+    trimLru(this.tilePics, new Set([...urls, ...keep, ...this.tilePinned]), this.tileLimit, chain => { for (const m of chain) if (m instanceof ImageBitmap) m.close(); });
   }
   /** before a bake: the tile set families among `variants` at tile spec `ts`: the band's tiles decoded (awaited), the next band's started
-   *  (when the camera is near its switch: tilesAhead) */
-  async prepareTiles(variants: Iterable<string>, ts = this.tileTs) {
+   *  (when the camera is near its switch: tilesAhead); pin (a bake: not a prewarm): its band's tiles are the ones the caches keep (T194) */
+  async prepareTiles(variants: Iterable<string>, ts = this.tileTs, pin = true) {
     this.tileTs = ts;
     const now = new Set<string>(), ahead = new Set<string>();
     for (const v of variants) { const p = this.paintedOf(v); if (p?.tiled) this.tileUrlsAt(p.tiled, ts, now, ahead); }
     for (const u of now) ahead.delete(u);
+    if (pin) this.tilePinned = now;
     if (ahead.size) void this.decodeTiles(ahead, now);
     await this.decodeTiles(now, ahead);
   }
@@ -349,21 +354,24 @@ export class Textures {
       }
       return pending;
     }));
-    trimLru(this.paintedPics, urls, this.paintedLimit);
+    trimLru(this.paintedPics, new Set([...urls, ...this.paintedPinned]), this.paintedLimit);
   }
   /** before a bake at art level L (CSS zoom, painted-grass-lod.ts grassZoomLevels): decodes the pictures the given textures need at that level
-   *  (one or two per look), never all of them; the `near` textures take their near painting whatever the level (the course walls' cut faces) */
-  async preparePainted(L: number, variants: Iterable<string>, near: Iterable<string> = []) {
+   *  (one or two per look), never all of them; the `near` textures take their near painting whatever the level (the course walls' cut faces);
+   *  pin false for a prewarm (decoded ahead, not laid now: the bake in hand keeps its pictures pinned, T194) */
+  async preparePainted(L: number, variants: Iterable<string>, near: Iterable<string> = [], pin = true) {
     this.paintedLevel = L;
     const urls = new Set<string>(), vs = [...variants];
     for (const v of vs) { const p = this.paintedOf(v); if (p && !p.tiled) for (const w of this.paintedWeights(p)) urls.add(p[w.detail].src); }
     for (const v of near) { const p = this.paintedOf(v); if (p) urls.add(p.near.src); }
-    await Promise.all([this.decodePainted(urls), this.prepareTiles(vs)]);
+    if (pin) this.paintedPinned = urls;
+    await Promise.all([this.decodePainted(urls), this.prepareTiles(vs, this.tileTs, pin)]);
   }
   /** before a planner bake: the far pictures of the given textures (the planner lays the map grass's far painting, painted-families.ts) */
   async preparePlanner(variants: Iterable<string>) {
     const urls = new Set<string>();
     for (const v of variants) { const p = this.paintedOf(v); if (p) urls.add(p.far.src); }
+    this.paintedPinned = new Set([...this.paintedPinned, ...urls]);
     await this.decodePainted(urls);
   }
   /** a decoded picture's mip with at least `px` pixels across (the full picture when none is that small; mips made on first use), or null

@@ -4,7 +4,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { ATLAS_MIP0, LIBRARY } from '../src/game/library';
-import { lookOf, maxDrawScale, thumbItem } from '../src/game/newart';
+import { SIZE_HI, baselineOf, lookOf, maxDrawScale, thumbItem } from '../src/game/newart';
 import { PIXEL_LIMIT, PIXEL_SLACK, atlasMip0, pixelLimit } from '../src/game/sizes';
 import { ZOOM_MAX } from '../src/game/iso';
 import { spriteRect } from '../src/game/sprites';
@@ -48,7 +48,8 @@ test('no sprite of the whole library is ever drawn past its pixels at the closes
       const d = drawable(i, 300 + (i % 40) * 13, 300 + Math.floor(i / 40) * 11, flip, scale), r = drawnScale(d);
       if (!r) continue;
       drawn++;
-      const lim = pixelLimit(r.item);
+      // T190: drawn at most at its pixels' limit, or at 1.5 times its baseline when that is more (a little soft at the closest zoom there)
+      const lim = Math.max(pixelLimit(r.item), SIZE_HI * baselineOf(r.item) * (r.item.kind === 'car' ? CAR_SCALE : 1)); // a parked car is drawn CAR_SCALE smaller
       assert.ok(r.k <= lim * PIXEL_SLACK + 1e-6, `${it.id} at ${scale} is drawn as ${r.item.id} at ${r.k.toFixed(3)}, past its limit ${lim.toFixed(3)}`);
       if (lookOf(d).scale < scale - 1e-9 && lookOf(d).item === i) capped++;
     }
@@ -74,7 +75,8 @@ test('a parked car is drawn CAR_SCALE smaller than its scale, so its limit is CA
   const lim = PIXEL_LIMIT[i]!;
   const parked = lookOf({ item: i, x: 5, y: 5, flip: false, scale: lim / CAR_SCALE }), moving = { item: i, x: 5, y: 5, flip: false, scale: lim * 1.5, moving: true };
   assert.ok(Math.abs(parked.scale - lim / CAR_SCALE) < 1e-9, 'a parked car at its limit over CAR_SCALE is not capped');
-  assert.ok(Math.abs(lookOf(moving).scale - lim) < 1e-9, 'a moving car past its limit is capped at it');
+  const cap = Math.max(lim, SIZE_HI * baselineOf(LIBRARY[i]!)); // T190: or 1.5 times its model's size when that is more
+  assert.ok(Math.abs(lookOf(moving).scale - Math.min(lim * 1.5, cap)) < 1e-9, 'a moving car past its cap is capped at it');
 });
 
 test('no stand-in is drawn above its native pixels, whatever the footprint it stands in for; below its limit it fills the footprint, centred on it', () => {

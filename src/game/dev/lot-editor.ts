@@ -29,7 +29,7 @@ import { spriteRect, type Drawable } from '../sprites';
 import { worldX, worldY } from '../iso';
 import { OWNER_SCALE, TABLE_SCALE } from '../lots/scales';
 import { carOwnerScale, carSizeId, foldCarSizes } from '../ext/car-art';
-import { lookOf, maxDrawScale } from '../newart';
+import { lookOf, maxDrawScale, refreshSizeRange, softAt } from '../newart';
 import { compose, lotPreset, lotPresets, lotPresetsMeta, onLotPresetsReload, setLotPresets, type PresetDrop } from '../lots/compose';
 import { formatPresets, type LotPreset, type PresetProp } from '../lots/presets';
 import { detach } from '../lots/derive';
@@ -73,7 +73,9 @@ const CAR_IDS = LIBRARY.filter(it => it.kind === 'car').map(it => it.id);
 /** a vehicle: the composer draws a parked car at the road cars' size whatever its scale */
 const isCar = (id: string) => /^cars:/.test(id) || LIBRARY[INDEX.get(id) ?? -1]?.cat === 'Vehicles';
 /** the message for a grow the picture's pixels refuse (as the studio refuses it) */
-const refused = (id: string, lim: number) => `${id}: as big as its picture allows (drawn x${lim.toFixed(2)}): it pixelates above that`;
+const refused = (id: string, lim: number) => `${id}: as big as it goes (drawn x${lim.toFixed(2)}: 1.5 times its size, or its picture's pixels when they allow more)`;
+/** T190: a size note: past its picture's pixels a sprite is a little soft at the closest zoom (never refused below 1.5 times its size) */
+const softNote = (id: string, scale: number, moving?: boolean) => { const i = INDEX.get(id); return i !== undefined && softAt(i, scale, moving) ? ' · soft at the closest zoom (its picture has fewer pixels)' : ''; };
 /** a sprite as the lots draw it: its library index at a footprint centre (world tiles), scale and flip, with its footprint (what spriteRect
  *  and lookOf read) */
 function drawable(id: string, cx: number, cy: number, s: number, flip: boolean): Drawable | null {
@@ -478,7 +480,7 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
       // the drawn size (the preset's scale x the owner scale, a car's its owner size) never past the picture's pixels in any of its views
       const own = ownerScaleOf(q.id), lim = artLimit(q.id), next = growWithin(q.scale * own, a === 'bigger' ? GROW : 1 / GROW, lim);
       if (next === null) return say(refused(q.id, lim));
-      e = { op: 'scale', prop: s.index, factor: next / (q.scale * own) };
+      e = { op: 'scale', prop: s.index, factor: next / (q.scale * own) }; note = softNote(q.id, next);
     } else if (a === 'turn') {
       // a turn the picture cannot show (no four views, no other facing) is refused, not saved as a change nobody sees
       const k = s.frame.q + q.view, now = turned(q.id, k), next = turned(q.id, k + 1);
@@ -509,7 +511,7 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
       // a car's size is read from the studio file when the game loads (ext/car-art carOwnerScale), so it shows after a reload
       if (car) { undo.push({ kind: 'file', file: 'scale-overrides.json', text }); return say(`${id}: size ${out[id]} saved to scale-overrides.json; every car of this model is drawn at that size after a reload of the game`); }
       // scales.ts reads the studio sizes at runtime: the lots take the new size now (the dev server may reload the page to apply it everywhere)
-      const apply = (s: (v: string) => number | undefined) => { for (const v of views) { const k = s(v); if (k === undefined) delete OWNER_SCALE[v]; else OWNER_SCALE[v] = k; } recomposeKeeping(); };
+      const apply = (s: (v: string) => number | undefined) => { for (const v of views) { const k = s(v); if (k === undefined) delete OWNER_SCALE[v]; else OWNER_SCALE[v] = k; } refreshSizeRange(); recomposeKeeping(); };
       apply(() => out[id]);
       undo.push({ kind: 'file', file: 'scale-overrides.json', text, restore: () => apply(v => before.find(b => b[0] === v)?.[1]) });
       say(`${id}: size ${out[id]} saved to scale-overrides.json; the game draws it at that size now`);
@@ -528,6 +530,7 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
       const lim = Math.min(4, maxDrawScale(p.item)), next = growWithin(p.scale, a === 'bigger' ? GROW : 1 / GROW, lim);
       if (next === null) { undo.pop(); say(refused(LIBRARY[p.item]!.id, lim)); return; }
       p.scale = Math.max(0.2, next);
+      if (softAt(p.item, p.scale)) { game.devPropChanged(p); say(`${a} (the save)${softNote(LIBRARY[p.item]!.id, p.scale)}`); return; }
     }
     else if (a === 'move') { p.x += dx; p.y += dy; }
     else { const t = turned(LIBRARY[p.item]!.id, 1), i = INDEX.get(t.id); if (i !== undefined && i !== p.item) p.item = i; else if (t.flip) p.flip = !p.flip; else { undo.pop(); say('this sprite has no other view'); return; } }

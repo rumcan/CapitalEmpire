@@ -2494,6 +2494,60 @@ The `--player` run (harness `playerUpgrade`) works like this:
   - It shows once, when 3 or more built zones are over the line and Upgrade is open, and it points at the Upgrade tool.
   - It has tests in ext-progressive-ui.
 
+## T184: junction rules that work, the jam hint at the Junction tool, a fair road challenge (2026-10-27, #464; PRs #468 and #470)
+
+The owner, after #443's diagnosis:
+
+> "Yes: fix the junction rules (equal crossings first-come, queue-aware routing, roundabout entry speed), point the jam hint at the Junction tool, then retune the road challenge with a player who places junction tools."
+
+**PR 1 (#468): the traffic code.**
+- **Equal crossings first come.** A plain crossing of four or more arms of one class has no major road: every arm yields at one priority, served in the order cars waited, and nothing gets STOP.
+- **The router sees live queues.** A link lane whose head car waits at its line costs that wait plus 2 s for each car behind it.
+- **A deadlock breaker.** A car that has waited 20 s at a plain, stop or yield line goes when the box is clear.
+- **Ring entries** use the ring car's own speed plus what it can gain in 4 s.
+- **Tests:** `tests/junction-rules.test.ts`, 6 tests. With the breaker disabled, the breaker test fails at the tow.
+
+Gates before (main 9974d10) and after:
+
+| Gate | Before | After |
+| --- | --- | --- |
+| sim | towed 679 | **towed 88** |
+| town | pop 5,094 | pop 5,094 (identical) |
+| towns, event, biz | pass | pass |
+| range, no player, year 20 (seeds 1-3) | 1,664 / 3,601; 2,012 / 4,408; 1,555 / 3,629 | **2,145 / 5,308; 1,905 / 4,826; 1,893 / 4,789**, still jammed (3.2-3.5x ideal) |
+| **fix:gate** | (a) B 78.9 s vs A 89.4 s a trip: PASS | (a) B 77.7 s vs **A 71.7 s: FAIL** |
+
+- **range** was re-banded from the measured numbers.
+- **fix:gate fails** because the new rules made A, the town left alone, 20% faster, while B's corridor class-upgrade puts major roads, and with them STOP signs, back on its crossings.
+  - Variants I tried: B with lights on its 5 junctions, 75.8 s; B with 5 mini-roundabouts instead of upgrades, 82.4 s. Both fail.
+  - **Proposal:** rescan for a scenario at capacity under the new rules, as #285 did. fix:gate is unchanged until the lead decides.
+
+**PR 2 (#470): the hint and a fair challenge.**
+- **`JAM_HINT`** points at the Junction tool first ("all-way stops or mini-roundabouts on the worst crossings"), then Roads: Upgrade.
+- **The `range:gate --player` player.** Each season it puts all-way stops ($300 each) on the jammed crossings (LOS E or F, 100 or more vehicle-seconds lost), and upgrades roads only where a link itself is the bottleneck. None was, on any seed.
+- **Results:** P22's bands are met on seeds 1-3, never broke, and every check passes.
+
+| Seed | Year 20 lots / residents | All-way stops | Spent | Treasury at its lowest |
+| --- | --- | --- | --- | --- |
+| 1 | 2,122 / 5,266 | 253 | $75,900 | $607,900 |
+| 2 | 1,913 / 4,984 | 215 | $64,500 | $606,580 |
+| 3 | 1,878 / 4,777 | 194 | $58,200 | $606,580 |
+
+- **No tuning was needed.** That is because, with PR 1's rules, the town left alone already reaches P22's bands. The jam is still there: trips take 3.2-3.5x their ideal time, and 40-50% of zones are over the decline line.
+- **What each lever buys:**
+  - All-way stops are cheap and take no land, but barely change the jam.
+  - Mini-roundabouts cut it: seed 1 at season 20 is 2.85x and 23 zones, against 3.44x and 44 with no player. But a mini re-cuts its corner lots (558 on seed 1, 230 minis for $345k), and the town then misses its bands: 1,806 / 1,799 / 1,739 lots, and seed 1's centre at 420 tiles.
+  - The first player turned jammed minis into one-lane roundabouts at about $8,000 each and went broke by season 14.
+- **For the owner:** the jam is real but no longer stops growth, and the cheap lever (stops) does not relieve it. Making minis keep their corner lots would make the Junction tool the lever that pays.
+- **Step time.** (k) now checks the 99.9th-percentile second at 150 ms; the worst second is printed.
+  - The worst second is noise on this shared PC: the same run twice gave 67.8 and 47.6 ms.
+  - Seed 1's stop player measured 130 then 72 ms at that percentile.
+  - 150 ms a sim second is 15 ms per 100 ms step, inside GAME-PLAN 2.3's 25 ms a tick.
+- **The fixture** comes from the stop player: 2,122 lots, 5,266 residents, 34 KB gzipped.
+- **Screenshots of a jam:** not taken.
+  - The dev game, loading the no-player fixture and running 12 town hours at 4x, showed no red zone (access at most 1.11, about 950 cars).
+  - The headless jam builds over seasons of trips that are not saved with the town.
+
 ### Accepted terrain source delivery (#383, 2026-10-27)
 
 Committed the source authority that the packed painted-terrain manifest already referenced: READY, four canonical selections, their

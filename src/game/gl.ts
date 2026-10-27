@@ -12,6 +12,7 @@ import { atlasMip0 } from './sizes';
 import { CONTACT_LEAN } from './shadow-shape';
 import { CONTACT_AO, VERTEX_FLOATS, type VectorMesh } from './shadow-vector';
 import { SHADOW_AMBIENT } from './cast-shadow';
+import { BRAKE_LIGHT } from './sim/car-lamps';
 
 /** floats per sprite instance: rect x0 y0 x1 y1 (world px), uv u0 v0 u1 v1, layer, alpha, cullable, foot line (world px; < 0: casts no shadow),
  *  clip x0 y0 x1 y1 (world px), foot: the footprint's near corner x y and its left and right corners' x (world px; the cast shadows stand on it) */
@@ -70,6 +71,14 @@ precision highp float; precision highp int;
 ${atlas}
 in vec3 vUV; in float vAlpha; in vec2 vW; flat in vec4 vClip; flat in float vTint; out vec4 o;
 void main() {
+  // T192: a lamp's glow (sim/car-lamps.ts, layer GLOW_LAYER: no atlas page): a soft disc of the brake lights' red, added (alpha 0), drawn in
+  // the painter's order right after its car, so nearer sprites cover it (the branch is the same for a whole instance)
+  if (vUV.z < -0.5) {
+    if (vW.x < vClip.x || vW.y < vClip.y || vW.x >= vClip.z || vW.y >= vClip.w) discard;
+    vec2 q = vUV.xy * 2.0 - 1.0; float d = dot(q, q); if (d >= 1.0) discard;
+    float f = (1.0 - d) * (1.0 - d);
+    o = vec4(vec3(${BRAKE_LIGHT.colour.map(v => v.toFixed(3)).join(', ')}) * (vAlpha * f), 0.0); return;
+  }
   vec4 c = atlasTex(vUV.xy, vUV.z);
   if (vW.x < vClip.x || vW.y < vClip.y || vW.x >= vClip.z || vW.y >= vClip.w) discard;
   if (c.a < 0.004) discard;
@@ -189,15 +198,26 @@ void main() {
   o = vec4(a);
 }`;
 // the shadow layer laid on the ground once (T185): one full-screen triangle, each pixel multiplied by the shadow colour's multiplier at its
-// coverage (cast-shadow.ts shadowMultiplier: mix(1, SHADOW_AMBIENT, a), a multiply, so the ground keeps its texture)
+// coverage (cast-shadow.ts shadowMultiplier: mix(1, SHADOW_AMBIENT, a), a multiply, so the ground keeps its texture). T186: the layer's
+// green holds the ground's own baked shade as a coverage (drawShadeMask): the ground is already that dark, so a sprite shadow darkens it
+// only as far as it is darker than that, M(s) / M(b), and not at all where the baked shade is the darker (the max of the two, not the product)
 const VS_FULL = `#version 300 es
 void main() { vec2 p = vec2(float((gl_VertexID & 1) << 2) - 1.0, float((gl_VertexID & 2) << 1) - 1.0); gl_Position = vec4(p, 0.0, 1.0); }`;
 const FS_LAYER = `#version 300 es
 precision highp float;
 uniform sampler2D uLayer; uniform vec3 uAmbient; out vec4 o;
 void main() {
-  float a = texelFetch(uLayer, ivec2(gl_FragCoord.xy), 0).r; if (a < 0.002) discard;
-  o = vec4(mix(vec3(1.0), uAmbient, a), 1.0);
+  vec2 sb = texelFetch(uLayer, ivec2(gl_FragCoord.xy), 0).rg; if (sb.r < sb.g + 0.002) discard;
+  o = vec4(mix(vec3(1.0), uAmbient, sb.r) / mix(vec3(1.0), uAmbient, sb.g), 1.0);
+}`;
+// T186: a ground chunk's baked shade mask (ground-cache.ts Tile.shade: the multiplier its bake laid, white where none) into the shadow layer's
+// green, as the coverage of the one shadow colour as dark (by luminance): 1 - lum = a * (1 - lum(SHADOW_AMBIENT)); the darkest wins (MAX)
+const FS_SHADEMASK = `#version 300 es
+precision highp float;
+uniform sampler2D uTex; in vec2 vUV; out vec4 o;
+void main() {
+  float l = dot(texture(uTex, vUV).rgb, vec3(0.299, 0.587, 0.114));
+  o = vec4(0.0, clamp((1.0 - l) / ${(1 - (0.299 * SHADOW_AMBIENT[0] + 0.587 * SHADOW_AMBIENT[1] + 0.114 * SHADOW_AMBIENT[2])).toFixed(5)}, 0.0, 1.0), 0.0, 0.0);
 }`;
 const VS_POINT = `#version 300 es
 layout(location=0) in vec2 aPos; layout(location=1) in vec4 aCol;
@@ -222,8 +242,9 @@ type Prog = { p: WebGLProgram; u: Record<string, WebGLUniformLocation | null> };
 
 export class GLRenderer {
   gl: WebGL2RenderingContext;
-  private quad: Prog; private shadow: Prog; private point: Prog; private vec: Prog; private layerProg: Prog;
-  /** the shadow layer (T185): a screen-sized coverage texture (R8) and its framebuffer; open between beginShadows and endShadows */
+  private quad: Prog; private shadow: Prog; private point: Prog; private vec: Prog; private layerProg: Prog; private shadeProg: Prog;
+  /** the shadow layer (T185): a screen-sized coverage texture (RG8: red the sprite shadows, green the ground's baked shade, T186) and its
+   *  framebuffer; open between beginShadows and endShadows */
   private layerTex: WebGLTexture | null = null; private layerFbo: WebGLFramebuffer | null = null; private layerW = 0; private layerH = 0;
   private layerOpen = false; private layerUsed = false;
   /** the vector shadows' mesh textures (initVector) */
@@ -246,6 +267,7 @@ export class GLRenderer {
     this.point = this.program(VS_POINT, FS_POINT, ['uCam', 'uScreen', 'uSize', 'uSoft']);
     this.vec = this.program(VS_VEC, FS_VEC, ['uCam', 'uScreen', 'uShear', 'uMul', 'uFar', 'uVerts', 'uIdx']);
     this.layerProg = this.program(VS_FULL, FS_LAYER, ['uLayer', 'uAmbient']);
+    this.shadeProg = this.program(VS_QUAD, FS_SHADEMASK, ['uRect', 'uCam', 'uScreen', 'uUV', 'uTex']);
     this.dyn = gl.createBuffer()!;
     this.maskTex = gl.createTexture()!; this.emptyTex = gl.createTexture()!;
     for (const t of [this.maskTex, this.emptyTex]) { gl.bindTexture(gl.TEXTURE_2D, t); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 255])); this.texParams(gl.TEXTURE_2D, false); }
@@ -357,7 +379,7 @@ export class GLRenderer {
     if (!this.layerTex || this.layerW !== cw || this.layerH !== ch) {
       if (this.layerTex) gl.deleteTexture(this.layerTex);
       this.layerTex = gl.createTexture()!; gl.bindTexture(gl.TEXTURE_2D, this.layerTex);
-      gl.texStorage2D(gl.TEXTURE_2D, 1, gl.R8, Math.max(1, cw), Math.max(1, ch));
+      gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RG8, Math.max(1, cw), Math.max(1, ch));
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
       this.layerFbo ??= gl.createFramebuffer()!;
@@ -368,14 +390,26 @@ export class GLRenderer {
     gl.viewport(0, 0, cw, ch); gl.disable(gl.SCISSOR_TEST);
     gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
     gl.blendEquation(gl.MAX); gl.blendFunc(gl.ONE, gl.ONE);
+    // (the sprite shadows write red only; drawShadeMask green only)
+    gl.colorMask(true, false, false, false);
     this.layerOpen = true; this.layerUsed = false;
+  }
+  /** T186: a ground chunk's baked shade mask (ground-cache.ts Tile.shade) over world rect x0 y0 x1 y1 (uv: the part of the mask it covers),
+   *  into the open shadow layer's green: where the ground is already shaded, a sprite shadow darkens it only past that (endShadows) */
+  drawShadeMask(tex: WebGLTexture, X0: number, Y0: number, X1: number, Y1: number, uv: readonly number[] = [0, 0, 1, 1]) {
+    if (!this.layerOpen) return;
+    const gl = this.gl, pr = this.shadeProg; gl.useProgram(pr.p); this.camUniforms(pr);
+    gl.uniform4f(pr.u.uRect, X0, Y0, X1, Y1); gl.uniform4f(pr.u.uUV, uv[0]!, uv[1]!, uv[2]!, uv[3]!);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, tex); gl.uniform1i(pr.u.uTex, 0);
+    gl.colorMask(false, true, false, false); gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4); gl.colorMask(true, false, false, false);
+    this.stats.draws++;
   }
   /** Close the shadow layer and lay it on the screen: every pixel times the shadow colour's multiplier at its coverage (a multiply: the ground
    *  keeps its texture). Nothing drawn into it: nothing laid */
   endShadows() {
     if (!this.layerOpen) return;
     const gl = this.gl, pr = this.layerProg;
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null); gl.blendEquation(gl.FUNC_ADD);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null); gl.blendEquation(gl.FUNC_ADD); gl.colorMask(true, true, true, true);
     this.layerOpen = false;
     if (this.layerUsed) {
       gl.useProgram(pr.p); gl.uniform3f(pr.u.uAmbient, SHADOW_AMBIENT[0], SHADOW_AMBIENT[1], SHADOW_AMBIENT[2]);

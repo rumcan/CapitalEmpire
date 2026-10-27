@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-27 08:50)
+## START HERE (kept current by the lead; last updated 2026-10-27 17:00)
 
 **Paste-ready start prompts for every role are in `docs/START-PROMPTS.md`:** the lead, a coding ticket, and the other sessions in this
 repo. The weekly usage cap is close (2026-10-26), so any chat may stop at any moment.
@@ -35,14 +35,12 @@ are unchanged. Green/fringe remain separate pending handoffs.
 
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |
-| T185 hints → T186 | #466, #474 | fresh branches | `.claude/worktrees/t185` (node_modules a junction) | 5188 | The shadow agent (Opus): #473 (no compounding) and #482 (the base) merged; now per-picture hand hints from the after sheets, then T186 (sprite shadows vs the ground's baked shade: max). |
-| T184 | #464 | fresh branches | `.claude/worktrees/t166` | 5187 | **The owner approved (diagnosis #443):** PR 1 junction rules (equal crossings first-come, queue-aware routing + a deadlock breaker, roundabout entry at the ring car's real speed; every gate before/after); PR 2 `JAM_HINT` at the Junction tool, `range:gate --player` placing junction tools, P22 bands on seeds 1-3 without going broke (tune prices, town income, growth in that order). Agent: the ground agent. |
-| (lot agent) | — | — | `.claude/worktrees/t160` | 5186 | Idle, waiting for the owner's call on the town's **block grass** (each road block's soft-patch lawn from the old emerald/sage/olive/straw set over the fescue: the owner sees a pale green overlay): remove it from blocks (recommended), swap its looks to the new paintings, or lower its share. |
-| T112 | #199 | `arena/T112-sharp` (PR #394) | `.claude/worktrees/t112` | — | **Approved, merge HELD for the morning restart:** a lock change makes the 5174 auto-updater run `npm ci` in theme-consistency (the live 5191 studio holds sharp there; the lot agent's t160 uses it by junction). Morning order: stop 5191 → merge #394 → let npm ci finish → restart 5191 and 5174. All shipped bytes identical on 0.35.5; audit 0. |
+| T204 | #534 | `arena/T204-rugged-edges` (fresh from main 17be1f2) | `.claude/worktrees/t160` | 5186 | **Agent 1 (started 15:30).** The owner's rugged grass edges: outlines drawn with rounded corners and a world-space wobble (gameplay cells unchanged), tall grass (fescue, long grass, rough) spilling over shorter grass and dirt in a tufted fringe with a cool shade under it, hard surfaces keep their line; bake +1 ms a chunk at most. Sub-steps: painted areas, course layers, the spill. To resume: the issue's last comment. |
+| T195 step 3 | #507 (reopened) | `arena/T195-fixgate-scan` (fresh from main) | `.claude/worktrees/t166` | — | **Agent 2 (started 14:50, Opus high: range work).** fix:gate FAILS on main since T184's junction rules: pick a scenario at capacity from the finished scans (`E:/ClaudeTemp/T195/scan1-5.log`), document it in fix-gate.ts's header, regenerate the range20 fixture with the minis player. Scenario and docs only, never traffic. Steps 1-2 merged (#522). |
+| ART-RUN | — | none (art files, untracked, as Codex keeps them) | the main checkout's `art/theme-consistency/` (read-only git) | — | **Image-generation agent (started 16:40; not a coding agent: it runs on RUN's servers).** The owner: "use credits as many as you want and via the same acc that published trick or treat ... follow the same steps the other ai does". It runs Codex's material pipeline (`art/theme-consistency/MATERIAL-TEXTURE-BATCHES.md`, the fairway and first-cut job files) with RUN.world's image model (rundot, rumcan@gmail.com, 33,075 credits at the start), raw outputs at the jobs' paths with provenance. Nothing goes into the game until the owner picks. Codex keeps the sands, desert, dirt and the rest. To resume: `E:/ClaudeTemp/ART-RUN/PROGRESS.md`. |
+| T112 | #199 | `arena/T112-sharp` (PR #394) | `.claude/worktrees/t112` | — | **Approved, merge HELD for the owner:** a lock change makes the 5174 auto-updater run `npm ci` in theme-consistency, whose node_modules the live 5191 studio holds (sharp). Order: the owner stops 5191 → merge #394 → let npm ci finish → restart 5191 and 5174. All shipped bytes identical on 0.35.5; audit 0. |
 | P05 | #68 | PR #413 **open for the owner's approval** | — | — | The M5 balance plan, measured: arrival 47% at tier 1 from a fresh start (the start's 56-bay car park holds 168 fans), 100% with car parks; 10% at tier 2 fresh, 70-81% with car parks; an 18 of ~5,900 m fits the starting land on every seed (~$190k seeded); with the proposals a careful player reaches tier 3 in year 4. Knob recommended for "careless out-saves careful": sponsors x (1 + (rep-50)/50). |
-| T184 | #464 | fresh branches | `.claude/worktrees/t166` | 5187 | **The owner approved (diagnosis #443):** PR 1 junction rules (equal crossings first-come, queue-aware routing + a deadlock breaker, roundabout entry at the ring car's real speed; every gate before/after); PR 2 `JAM_HINT` at the Junction tool, `range:gate --player` placing junction tools, P22 bands on seeds 1-3 without going broke (tune prices, town income, growth in that order). Agent: the ground agent. |
-| (lot agent) | — | — | `.claude/worktrees/t160` | 5186 | Idle, waiting for the owner's call on the town's **block grass** (each road block's soft-patch lawn from the old emerald/sage/olive/straw set over the fescue: the owner sees a pale green overlay): remove it from blocks (recommended), swap its looks to the new paintings, or lower its share. |
-| T112 | #199 | `arena/T112-sharp` (PR #394) | `.claude/worktrees/t112` | — | **Approved, merge HELD for the morning restart:** a lock change makes the 5174 auto-updater run `npm ci` in theme-consistency (the live 5191 studio holds sharp there; the lot agent's t160 uses it by junction). Morning order: stop 5191 → merge #394 → let npm ci finish → restart 5191 and 5174. All shipped bytes identical on 0.35.5; audit 0. |
+| T183 / T168 | #459, PR #486 | `lead/garage-eight-views-20261026`, `lead/terrain-ready-20261026` | `worktrees/*` | 5193 | **Codex (the art AI), not ours:** reviewed diagonal parking garages (189 commits ahead of its remote, uncommitted files: Codex's to commit); PR #486 commits accepted terrain sources (+357k lines, 445 files): review with the art session before merging. Its studio 5193 is Codex's. |
 
 **Two coding agents at a time (the owner, 2026-10-26: first "maybe just too many background tasks?" after the studio tab died with the
 PC at 1.5 GB free, then "start up two coding agents"):** keep two coding agents running, start the next queue ticket when one lands, no
@@ -69,12 +67,21 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
 `docs/START-PROMPTS.md`.
 
 ### Queue (in order)
-- **OVERNIGHT 2026-10-26 → 27 (the owner, 21:10: "make sure you guys keep coding till tomorrow morning. im going to bed. if you dono what
-  to do, i trust you to make the best decision. try your best").** The lead keeps two agents busy; a session cron (`054b2391`, :13 and :53
-  from 22:00 to 07:53) wakes the lead to review/merge/dispatch. Order: **T166 #370** the game's RAM (ground workers' texture packs) →
-  **T161** (after T160, the lot agent) → **T167 #371** removed pictures never drawn (stand-ins; owner data untouched) → **T154 phase 2**
-  (#330, the eight-heading contract, code only) → **T112 #199** (sharp) → real failures from the 02:00 nightly go first. Morning: a summary
-  with screenshots for the owner.
+- **Restart 2026-10-27 14:50 (the owner: "we switched to another acc that now ran out of usage. please check status and start up development").**
+  The other account's lead merged #511-#530 (car lights, lawns, gas station, flyouts, Land for sale, main green). At its limit it left T202's
+  work uncommitted (saved as WIP c8bbbcd) and three ground PRs open (#514 T196, #518 T197, #522 T195 1-2: reviewed, typechecked together,
+  merged). The 12 last 3D people finished on 2026-10-26 and are committed on `art/people-ground-20261024` (0bd25f4): T203 #531.
+  Housekeeping: T174-T177, T179, T184 closed (merged earlier). The 5174 auto-updater ran 5 times over; the owner approved stopping 4
+  (one left, bash PID 31220). Still listening, not ours: a stray vite on 5189 (an agent's, gone since 07:50) and the dead lot lab's 5241.
+- **Next, in order, when an agent lands:** **T207 #546** (the owner, 16:55: a paved drive on their own land and the practice area refused
+  with "Roads cannot cross a business"; the preview showed it gold; course drives refused only by real structures; range work: Opus high)
+  → **T205 #538** (the owner, 15:45: the hole card's Edit hole does nothing, the hole badge does not read as
+  Edit hole, ugly scrollbars and a cut-off status line in Course › Holes; reproduce the dead Edit first; the issue and its comment have the design)
+  → **T206 #540** (the owner, 15:55-16:50: a Facilities group on the rail with Practice tools of their own, putting green and chipping
+  green and bunker, placed as a whole, not the hole brushes; Plants (trees, bushes, flowers) and Decoration under Facilities; Course ▸ Cart
+  paths & roads, the roads on the player's property, directly below Buildings; range work: Opus high) → **T203 #531** the last
+  12 people in the game → **T112 #199** (merge #394 when the owner stops
+  5191) → **T149 #312** (waits for the owner's FAR-anchor choice) → **T199 #517** swamp (waits for swamp tiles) → the lists below.
 - **P25 #348 lots generated on the fly** (the owner: "start over with the lot presets we need a workflow that gets us to generating perfect
   lots on the fly"): hard rules + learned per-sector taste (T158 wizard, in flight) → T159 bootstrap from the existing presets + a 12-lot
   gallery → T160 the generator in the game, seeded per lot, model as data → T161 pairs, densities by state, a 50-seed exam sheet. The
@@ -103,6 +110,58 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
    (the sharp bump). See the History sections below and `gh issue list --label arena --state open`.
 
 ### Done recently (newest first; details in each PR)
+- 2026-10-27 16:40: **#543 the course wears the lawns' new grass** (the owner: town lawns' grass is not the course's): fairway and the range's outfield on the `fringe` tile family (as the yard lawns, #516), first cut the same at 1.25 scale, a little darker; the old families stay in Studio › Painted. GOLF-ART-LIST section 10: greenkeeping's 16 grass families x 5 conditions, 20 soils, 12 decal sheets to regenerate in the painted style (T016's 2026-10-22 set predates it). T206 also takes the tree brush (the owner: "no idea how to plant trees"; today only under Town decoration ▸ Paint ▸ Plants).
+- 2026-10-27 16:30: **the big golf art list** (the owner: "I need a big art list and what angle it should be"): `docs/GOLF-ART-LIST.md` replaces the range list; angle codes (A four views, A8, B one view, C top-down, D eight facings, R run pieces, P a person's A-pose picture), 141 items: range, fun targets, practice rock features, palms and lights, pros and memberships, storage and maintenance, the course, the clubhouse, the tournament, ground pictures, people.
+- 2026-10-27 15:30: **T202 #536 Help › Keys**: ? / F1 / the top bar's ? open a Keys sheet built from the rail's tool table (every key once, locks dimmed with their reason, vertical scroll only); 1-6 open the rail groups' flyouts (Holes keeps 1-7 for surfaces, Build 1-6 for road classes); the lot lab's ? opens the same sheet; the 5 self-skipping version tests are rules and run.
+- 2026-10-27 14:50: **#533 the range art list** (the owner: a list for the image generator): `docs/RANGE-ART-LIST.md` (now `docs/GOLF-ART-LIST.md`), four shared prompt blocks and 21 items (buildings, signs, props, the picker cart, ground pictures) with sizes, ids, stand-ins and priorities; the 3D clips and P3 ideas apart.
+- 2026-10-27 14:45: **T196 #514 soft course borders** (the green-to-fringe and tee joints a soft cool shade, no hard line), **T197 #518 zoom without glitches** (idle prebake of the next zooms' chunks, band switches crossfade, provisional bakes retried), **T195 #522 minis keep their corner lots** (lotRingClear; the range gate's player uses minis). Typecheck clean on the three together.
+- 2026-10-27 13:21: **#528 main green (2033 pass, 0 fail)**: compose, house-alloc, lot-taste, lot-wizard and train-every-use check rules, not the owner's
+  data (presets, allocations, samples, the Rebuild's art), so a studio save no longer breaks them.
+- 2026-10-27 13:14: **T200 #526 Land for sale** (P23-UX P2-6): Course ▸ Land for sale; an overlay of buyable blocks by price band ($ / $$ / $$$
+  with labels), unbuyable ones hatched with an ✕ and a reason (public road, water, not adjacent), your land outlined; a click opens a card
+  (size, class, price, what is on it, what it adds) with Buy, never buying at once; a brush or New hole refused for "not your land" offers
+  it. Town blocks stay buyable (houses bought out at the land price, as GOLF-PLAN 4.4).
+- 2026-10-27 12:54: **T193 #523 flyout submenus** (the owner: "i want sub menus ... open all more to the side with more levels"): rail groups open
+  cascading flyouts (Traffic ▸ Roads ▸ Build ▸ classes by family; Course ▸ Holes ▸ Shape by hand ▸ surfaces); a leaf shows a small tool
+  panel with a breadcrumb and back arrow; Esc/map click closes; keyboard walks them; locked rows show their reason; **no horizontal
+  scrollbars** (`npm run ui:overflow`: 388 looks at 1366/1600 x 100/125%, 0 failures).
+- 2026-10-27 12:05: **the lawns, for real**: **T194 #519** the root cause of fescue showing in chunk-shaped pieces through yards and blocks: the
+  ground worker's tile cache was trimmed by a decode finishing mid-bake, so drawLawns dropped the lawn from that chunk (textures.ts now
+  pins the bake's pictures); block grass under share 1 lies over the rough. **#513** the living ground's lush/patchy in the rough (+ the
+  owner's Painted edits saved: green putting-green, dirt cutaway-earth). **#516** yard lawns in the textured fringe (the fairway
+  painting is smooth zoomed out). **#520** tests check the painting rules, not the owner's Painted choices. **T198 #515** the gas
+  station composes properly (forecourt, the Gas Shop, bays). **T192 #511** car lights. No swamp art yet: T199 #517 waits for tiles.
+- 2026-10-27 11:28: **T192 #511 car lights**: no headlights, beams or turn signals; brake lights half size (8.8 px) and brightness (0.5),
+  on the car body, drawn in the sprite pass right after their own car (nearer sprites cover them; none seen from the front); no fps
+  loss. `BRAKE_LIGHT.alpha` in `sim/car-lamps.ts` is the knob if they read too faint at night. The shadow agent is done for now.
+- 2026-10-27 11:19: **T191 #499 the new ground art, used everywhere** (the owner: "make sure it gets used everywhere"): `fringe` (new, provisional,
+  only the export-report tiles) on the fringe surface and every collar round greens; `putting-green-v2` (MID/FAR the v2 sets, NEAR the
+  owner's painting) on the green, `lawnUpgraded`, and the range's target and practice greens. Nothing wears the old putting-green
+  families now; they stay as the option. Seams within 1.16x inside. Found: a stale MID chunk after the first zoom (to T197).
+- 2026-10-27 11:16: **T184 #468 + #470 junction rules that work** (the owner approved): equal crossings first-come (no arbitrary major, no STOP),
+  queue-aware routing (a link costs its head car's wait + 2 s a car), a 20 s deadlock breaker, roundabout entries judged by the ring car's
+  real speed; sim:gate towed 679 → 88; town/towns/event/biz as before; range bands pass for every player. The jam hint points at the
+  Junction tool; `--player` places all-way stops ($300) and reaches P22 on seeds 1-3 never broke ($58-76k over 20 seasons). **fix:gate
+  FAILS** (A 20% faster; B's class upgrade brings STOP back): re-scan in T195. Minis relieve the jam best but re-cut corner lots: T195.
+- 2026-10-27 10:57: **#500 the owner's studio work saved to main** (lot presets +2,132 lines, wizard samples, allocations, sizes, the Rebuild's
+  atlas/views/axis pages, new parking-garage views), committed from a separate index; the 5174 checkout then moved to main with
+  `reset --mixed` (its files untouched; clean). Lawns: lot lawns cover the whole lot (share 1); block grass is soft patches at the
+  owner's blockShare over the fescue; the living ground's thin/bare patches near fences and trees let the fescue show.
+- 2026-10-27 10:25: **T189 #495 block grass in the new paintings + Erase back**: the town's block grass wears long-grass and rough-owner
+  (local contrast 14.8 / 11.0 at 30%, against the old looks' ~5 flat wash; sage, straw and the flat greens dropped; blockShare
+  untouched; the old families still offered in Studio › Painted). The lot lab's **⌫ Erase (E)** mode and Eraser swatch: drag erases under
+  the brush (any material, O for only the picked one), a click removes a whole patch, Del the outlined one; one undo per stroke.
+- 2026-10-27 10:12: **T190 #492 every sprite sizes 0.5-1.5x at least** (the owner: "always alow ... atleast 50% bigger or smaller"):
+  the cap is max(pixel limit, 1.5 x baseline) in lookOf, maxDrawScale, the lab's steps, the engine's scaleOf and the studio card; past its
+  pixels a sprite draws a little soft at the closest zoom ("soft at the closest zoom" note, never a block); the Rebuild packs each
+  picture at the largest scale the owner's presets draw it (read only, capped at 1.5).
+- 2026-10-27 10:07: **T185 done (#491)**: the draft fills the shadow across a wall base's step (chimneys, downpipes, lower porches: no lit
+  slivers; the hotel's lit corner hole gone); 606 pictures re-drafted; shadows in 3+ pieces 11 → 0, holes 31 → 20 (the rest real gaps),
+  detached 5 → 2. #466 and #474 closed. Tools for later hand fixes in `E:/ClaudeTemp/T185/an/` and `tools/`. The shadow agent is done.
+- 2026-10-27 09:54: **T186 #485 sprite shadows take the max with the baked ground shade**: the bake mirrors its shade into a quarter-size
+  mask; the shadow layer is RG8 (sprites red, baked green), composited M(s)/M(b) (no darker band where a tree shadow crosses a green's
+  edge or a bunker lip); `__game.shadeMax = false` shows the old product; bake 5.4 → 5.9 ms. **The pixel limit vs sizes:** the owner's newer
+  rule (at least ±50% for every sprite) beats the 2026-10-24 "no pixelating" cap: T190.
 - 2026-10-27 08:50: **T188 #481 the Season card and guide anchors** (P23-UX P2-2, P2-3): the founding chip "◔ 0/9 holes" opens a Season
   card (the month, the founding checklist with Fix buttons that arm and pulse the tool, after founding the tournament plan, the Course
   stats moved in); the duplicate round pill gone in free seasons; `data-guide` anchors and a gold pulse (`GuidePulse.tsx`) for Show me and
@@ -179,7 +238,7 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
 - 2026-10-27 04:19: **T091 #422 grown-town roads keep off the course**: every golf game's town roads keep 6 tiles off the golf land (old
   starts could cross the course before); `short()` counts only lots that can build; a range start's town lays a leg every game hour,
   anchored between its seed and its built lots, legs near golf land (40 tiles) penalised; a grown industrial district 200-280 tiles toward
-  the nearer exit. Classic games untouched. T090 builds on it. The lead typechecks PRs in a sparse `.claude/worktrees/lead-tc` (no art,
+  the nearer exit. Classic games untouched. T090 builds on it. The lead typechecks PRs in a sparse `worktrees/lead-typecheck` (moved from `.claude/worktrees/lead-tc`, which agent cleanups removed twice) (no art,
   docs, assets; node_modules a junction: remove it with [System.IO.Directory]::Delete first).
 - 2026-10-27 04:08: **T096 #423 the range's look**: most was already built by P24/T086 (props turn with the plot, the range ground group,
   golfers at the bays); added: the range's outfield and target greens are managed grass (`driving-range`, `golf-green` families, grass

@@ -41,7 +41,7 @@ export const RAIL: readonly RailItem[] = [
     { id: 'buildings', label: 'Buildings', key: '', icon: 'house', only: 'golf' },
     // Greenkeeping (plan P23-UX P2-5, T175): the Grass panel as a tool, its care armed like a brush; it opens with the first grown hole
     { id: 'greenkeeping', label: 'Greenkeeping', key: '', icon: 'trees', only: 'golf' },
-  ], extras: [{ id: 'event', label: 'Tournament', icon: 'calendar' }] },
+  ], extras: [{ id: 'event', label: 'Tournament', icon: 'calendar' }, { id: 'land', label: 'Land for sale', icon: 'terrain' }] },
   { id: 'decor', label: 'Decoration', icon: 'leaf', key: 'Z', section: 'course', group: 'course', tools: [
     { id: 'path', label: 'Paths', key: '', icon: 'sidewalk' },
     { id: 'props', label: 'Props', key: 'Z', icon: 'leaf', only: 'golf', view: { where: 'course' } },

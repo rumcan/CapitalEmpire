@@ -188,10 +188,11 @@ describe('first-run hints and the stuck player (T117)', () => {
     assert.notEqual(nextFirstRunHint(f({ seasonsDone: 1, playableHoles: 1 }))?.id, STUCK_HINT.id);
   });
 
-  it('a jammed town (T178) shows the jam hint, pointing at Upgrade, once Upgrade is open; Got it dismisses it', () => {
+  it('a jammed town (T178) shows the jam hint, pointing at the Junction tool (T184), once it is open; Got it dismisses it', () => {
     assert.equal(nextFirstRunHint(f({ playableHoles: 3, townJammed: true }))?.id, JAM_HINT.id);
-    assert.equal(JAM_HINT.targetTool, 'lane');
-    assert.notEqual(nextFirstRunHint(f({ playableHoles: 1, townJammed: true }))?.id, JAM_HINT.id, 'Upgrade still locked at stage 2');
+    assert.equal(JAM_HINT.targetTool, 'junction', 'the Junction tool first (T184)');
+    assert.ok(JAM_HINT.body.indexOf('Junctions') < JAM_HINT.body.indexOf('Roads: Upgrade'), 'junction tools before road upgrades');
+    assert.notEqual(nextFirstRunHint(f({ playableHoles: 1, townJammed: true }))?.id, JAM_HINT.id, 'Junctions still locked at stage 2');
     assert.equal(nextFirstRunHint(f({ playableHoles: 1, townJammed: true, advancedMode: true }))?.id, JAM_HINT.id, 'every tool shown');
     assert.notEqual(nextFirstRunHint(f({ playableHoles: 3, townJammed: true, dismissedHints: [JAM_HINT.id] }))?.id, JAM_HINT.id);
     assert.equal(nextFirstRunHint(f({ playableHoles: 3 }))?.id, 'hint-connect-road-and-park', 'no jam, no hint');

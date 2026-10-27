@@ -4,6 +4,7 @@ import { galleryPeople, hash, queuePeople, walkerPeople, type CrowdPerson } from
 import { FACING_ROW, Pedestrians, sidewalks, type Door, type WalkerView } from './ext/pedestrians';
 import { GRASS_ACTION_NAME, GrassManagement, grassSurface, type GrassAction, type GrassCellView, type GrassScope, type GrassSettings } from './ext/grass-management';
 import { drawGhostBlueprint, drawGhostHint, drawGhostPoly, drawGhostRing, drawRefusedMarks, ghostStatus, type GhostBlueprint, type GhostView } from './ext/ghost-preview';
+import { drawRefusedCross, strokeHatch } from './ext/refused-mark';
 import { busGhostLabel, costLabel, markerGhost, structureGhost, tollGhostLabel } from './ext/event-ghost';
 import { CourseCursor, type CursorView } from './ext/course-cursor';
 import { browserCursorTexture } from './ext/course-cursor/tex';
@@ -18,18 +19,17 @@ import { GroundCache } from './ground-cache';
 import { GAME_BOOT, clampCentre, flatTerrain, type BootOptions } from './boot';
 import { TILE_BANDS, TILES_REVISION, anchorAt, bandAt, bandRange, bandsAhead, cellOf, cellsIn, coverageOf, drawnScale, nearUntil, nextBand, tiledFamily, tileIndex, tilePermutation, tileScreenPx, tileSize, tileSpec } from './painted-tiles';
 import { paintedSurfaces } from './painted-surfaces-live';
-import { chunkLayers, pictureCurrent } from './ground-layers';
+import { chunkLayers, pictureCurrent, prebakeTargets } from './ground-layers';
 import { clampGrassArt, grassZoomLevels, type GrassArt } from './painted-grass-lod';
 import { lotBatch, type CourseTex, type LotPatch } from './ground-protocol';
 import { BLOCK_MAX_AREA, enclosedBlocks } from './blocks';
 import { blockLawn, lotLawn } from './lawns';
 import { PaintTool } from './paint-tool';
 import { courseBandOf, courseTexOf } from './course-look';
-import { escapeLadder, pickTool, switchSideMode, type EscCard, type EscLadder, type SideMode } from './tool-modes';
+import { escapeLadder, numberKeyUse, pickTool, switchSideMode, type EscCard, type EscLadder, type SideMode } from './tool-modes';
 import type { PresetProp } from './golf/holepreset';
 import { OWNER_SCALE, STUDIO_SCALE } from './lots/scales';
 import { turned } from './lots/preset-art';
-import { PIXEL_LIMIT, PIXEL_SLACK } from './sizes';
 import { RangeHost } from './golf/rangehost';
 import { PropsTool } from './golf/propstool';
 import { DECOR_BY_KEY, lotTouches, propTuple, sellBack, tupleMarks } from './golf/decor';
@@ -112,7 +112,8 @@ import { parkRideNeeds } from './golf/parkride';
 import { applyCourseConsultantQuality, effectiveGrowInClockMonth, findGolfCard, isGolfCardId, parkRideNeedsWithCards } from './golf/golfcards';
 import type { CourseFacts } from './golf/tour';
 import { surfaceOfTex } from './golf/costs';
-import { adjacentBlockPrice, buyAdjacentBlock, COURSE_LAND_MSG, LAND_BLOCK, blockAt, blockOnRoad, blockOnWater, pointInLand, polyInParcels, type LandRoad, type ParcelLandClass } from './golf/parcels';
+import { buyAdjacentBlock, COURSE_LAND_MSG, blockOnRoad, blockOnWater, pointInLand, polyInParcels, type LandRoad, type ParcelLandClass } from './golf/parcels';
+import { BAND_LABEL, LandSale } from './golf/land-sale';
 import { buildCourseStatsPanel, type CourseStatsPanel } from './golf/coursestats';
 import { TILE_M, type CourseArea, type CourseLayout, type GolfSurface } from './golf/types';
 import { deriveHoles, surfaceAt, validateMarkerPlacement } from './golf/holes';
@@ -262,6 +263,14 @@ type CourseAreaRec = CourseArea & { hole?: number; tex: PaintTex };
 /** a piece of a screen-space label at (x, y), left-aligned, filled in col and outlined in the stroke style; returns the x after it */
 /** T151: the world labels' keys for the labels with no object of their own (a town by its index, a zone, a gallery spot, a stop): a number per kind's
  *  range, so a label keeps its slot from frame to frame */
+/** T200: Land for sale's price bands on the map: a fill, an edge and the label's ink (the band's $ label goes with it: never colour alone) */
+/** T200: how long a brush's "not your land" refusal keeps its Land for sale button after the pointer moves on (ms) */
+const LAND_REFUSAL_MS = 5000;
+const LAND_BAND_COL = {
+  cheap: { fill: 'rgba(52, 211, 153, 0.22)', edge: 'rgba(52, 211, 153, 0.9)', ink: '#d1fae5' },
+  fair: { fill: 'rgba(250, 204, 21, 0.22)', edge: 'rgba(250, 204, 21, 0.9)', ink: '#fef9c3' },
+  dear: { fill: 'rgba(251, 113, 133, 0.22)', edge: 'rgba(251, 113, 133, 0.9)', ink: '#ffe4e6' },
+} as const;
 const LABEL_KEY = { town: 1e6, growth: 2e6, stopped: 2.1e6, gallery: 3e6, waiting: 4e6, landHover: 6e6, stadium: 6e6 + 1 } as const; // (7e6: parking-overlay.ts's lots with no road)
 
 interface Build { legs: Leg[]; cls: RoadClass; t0: number; dur: number; total: number; cum: number[] }
@@ -469,7 +478,7 @@ export class Game {
     addPiece: (p, key) => {
       const t = turned(p.id, p.q), item = LIB_INDEX.get(t.id); if (item === undefined) return null;
       // the studio's size wins; never past the pixels its atlas holds (sizes.ts), so the footprint and shadow match what is drawn
-      const it = LIBRARY[item]!, scale = Math.min(PIXEL_LIMIT[item]! * PIXEL_SLACK, STUDIO_SCALE[it.id] ?? (p.fit ? 64 * p.fit / it.w : p.scale ?? OWNER_SCALE[it.id] ?? 1));
+      const it = LIBRARY[item]!, scale = Math.min(maxDrawScale(item), STUDIO_SCALE[it.id] ?? (p.fit ? 64 * p.fit / it.w : p.scale ?? OWNER_SCALE[it.id] ?? 1));
       return this.addProp(item, p.x, p.y, t.flip, scale, key, p.lift || p.foot ? { lift: p.lift, foot: p.foot } : undefined);
     },
     removeProp: p => this.removeProp(p), setGround: (k, p) => this.setLotGround(k, p),
@@ -510,7 +519,7 @@ export class Game {
   /** the Props tool (plan P24 Phase 3, T131: golf/propstool.ts): the decor the player places, moves, turns and sells; its appeal feeds the range */
   readonly decor: PropsTool = new PropsTool({
     golf: () => this.golfMode && !!this.golf, item: id => LIB_INDEX.get(id), idOf: p => LIBRARY[p.item]!.id,
-    scaleOf: (item, want) => { const it = LIBRARY[item]!; return Math.min(PIXEL_LIMIT[item]! * PIXEL_SLACK, want ?? STUDIO_SCALE[it.id] ?? OWNER_SCALE[it.id] ?? 1); },
+    scaleOf: (item, want) => { const it = LIBRARY[item]!; return Math.min(maxDrawScale(item), want ?? STUDIO_SCALE[it.id] ?? OWNER_SCALE[it.id] ?? 1); },
     footprint: (item, x, y, k) => { const f = this.footprint(LIBRARY[item]!, x, y, false, k); return [f.x0, f.y0, f.x1, f.y1]; },
     spot: {
       owned: (x, y) => this.ownedAt(x, y),
@@ -560,7 +569,6 @@ export class Game {
   /** the city worker (cars, parcels, town): created with the game, so the town grows whenever the sim runs */
   traffic: SimClient;
   /** car light points, reused each frame (grown to 7 points per sim slot) */
-  private lightBuf = new Float32Array(0);
   // perf
   /** the townspeople on the sidewalks (ext/pedestrians): the sidewalks follow the network (net.version), one walker per two
    *  built lots (at most PED_MAX), walking in real time while the game runs; drawn at the Street tier as movers */
@@ -587,7 +595,7 @@ export class Game {
   private frameTimes: number[] = [];
   // input
   /** a drag in progress; build: a right-button press in the road tool (released without moving, it builds the route, as Enter) */
-  private dragging: null | { kind: 'pan' | 'bulldoze' | 'park'; sx: number; sy: number; camX: number; camY: number; moved: boolean; build?: boolean; aim?: Pt; /** a Select click's hole under it (0: none; T174) */ hole?: number } = null;
+  private dragging: null | { kind: 'pan' | 'bulldoze' | 'park'; sx: number; sy: number; camX: number; camY: number; moved: boolean; build?: boolean; aim?: Pt; /** a Select click's hole under it (0: none; T174) */ hole?: number; /** T200: a click on Land for sale's overlay (it opens the block's card on release, never buys) */ land?: Pt } = null;
   /** the Paint tool: painted ground areas, its settings and the outline being drawn (docs/PAINT-TOOL.md) */
   paint = new PaintTool({ progress: () => this.bump('pieces'), setLotGround: (k, p) => { this.paintRev++; this.setLotGround(k, p); }, emit: () => this.emit(), save: () => this.scheduleSave(), toast: (t, k) => this.toast(t, k), affine: o => this.paintAffine(o), placeProps: (ps, seed) => this.placePresetProps(ps, seed), golfMode: () => this.golfMode, money: () => this.money, spend: n => this.traffic.spend('construction', n), ownedLand: pts => !this.golf || polyInParcels(this.golf.parcels ?? [this.golf.parcel], pts), currentMonth: () => !this.golf ? 0 : this.golfMonthIndex(), plant: (ids, x, y, r, spacing, size, seed) => this.plantProps(ids, x, y, r, spacing, size, seed), unplant: (x, y, r) => this.unplantProps(x, y, r), plantPool: k => plantPool(LIBRARY, k), courseHeight: () => this.courseHeight, roadsNear: (x, y, r) => { let k = 0; return [...this.net.segsNear({ x, y }, r)].map(s => ({ id: ++k, ax: s.a.x, ay: s.a.y, bx: s.b.x, by: s.b.y, halfWidthTiles: s.cls.h + s.cls.walk })); }, roadRev: () => this.net.version, heightChanged:b => { this.courseHeightChanged(unionCourseBox(b, this.flattenRoadsIn(b))!); },
     journal: { begin: () => { this.propLog = { added: [], removed: [] }; }, end: () => { const j = this.propLog; this.propLog = null; return j && (j.added.length || j.removed.length) ? j : null; }, undo: j => this.swapProps(j as PropLog, true), redo: j => this.swapProps(j as PropLog, false) },
@@ -1887,6 +1895,31 @@ export class Game {
   /** a ground chunk may bake with the living ground: its prop cells are sent (sent now when dirty) and the forest and town-tree cells within reach
    *  are planted (plantForest plants them, nearest first, as far out as this reach: LIVING_PLANT_MARGIN), so it never bakes once without its
    *  trees and again with them */
+  /** the zooms ahead of z that prebake readies (T197), nearest first: out to the planner map's switch (a zoom out uncovers ground round the
+   *  view, and crosses into the district chunks), and one step in (the middle of the view at the next finer level) */
+  static readonly PREBAKE_ZOOMS = [1 / 1.6, 1 / 3, 1 / 6, 1 / 10, 1.6];
+  /** chunks prebake asks for at most at once (it asks again only when they are baked: GroundCache.idle) */
+  static readonly PREBAKE_PER_FRAME = 3;
+  /** prebake waits this long after the zoom last changed, ms */
+  static readonly PREBAKE_SETTLE_MS = 350;
+  /** the zoom prebake last saw, and the time before which it waits */
+  private prebakeZ = 0; private prebakeHold = 0;
+  /** T197 (the owner: "zooming in and out glitches the textures alot"): a zoom showed the planner map, a blurry low-detail picture, under every
+   *  chunk it brought into view until that chunk baked (about half the frames of a zoom sweep, up to 120 chunks at once). While the view's
+   *  ground is done (GroundCache.idle) the chunks of the views a zoom reaches next (PREBAKE_ZOOMS) are asked for at the lowest priority, a few
+   *  a frame: the other tier's over the whole view there, this tier's only off the screen (a chunk on screen keeps its picture: one picture a
+   *  chunk, so readying another level would blur it now). Their pictures count against the cache's pixel budget as any (evict: the least
+   *  recently used go first) */
+  private prebake(z: number, kind: 'g' | 'm' | 'p', X0: number, Y0: number, X1: number, Y1: number, now: number) {
+    const cam = this.cam, view = { X: cam.X, Y: cam.Y, cw: this.cw, ch: this.ch, dpr: this.dpr, z, kind, box: [X0, Y0, X1, Y1] as const, band: this.tileBand };
+    const levels = { levels: (zz: number) => grassZoomLevels(zz, this.dpr), spec: (zz: number, b: number | null) => tileSpec(nextBand(zz, b), this.dpr), zMin: PLANNER_Z, zMax: ZOOM_MAX, chunk: { g: [CHUNK_W, CHUNK_H] as [number, number], m: [MID_W, MID_H] as [number, number] } };
+    const has = (k: 'g' | 'm', i: number, j: number) => { const t = this.ground.tile(k, i, j); return !!t.tex && !t.stale; };
+    for (const p of prebakeTargets(view, levels, Game.PREBAKE_ZOOMS, has, Game.PREBAKE_PER_FRAME)) {
+      const w = p.kind === 'm' ? MID_W : CHUNK_W, h = p.kind === 'm' ? MID_H : CHUNK_H;
+      if (this.ground.livingActive && !this.casterReady(p.i * w, p.j * h, (p.i + 1) * w, (p.j + 1) * h)) continue;
+      this.ground.need(this.ground.tile(p.kind, p.i, p.j), p.L, p.pri, now, p.artL, p.ts);
+    }
+  }
   private casterReady(X0: number, Y0: number, X1: number, Y1: number): boolean {
     const a = tileOf(X0, Y0), b = tileOf(X1, Y0), c = tileOf(X0, Y1), d = tileOf(X1, Y1), g = CASTER_REACH;
     const tx0 = Math.min(a.x, b.x, c.x, d.x) - g, tx1 = Math.max(a.x, b.x, c.x, d.x) + g, ty0 = Math.min(a.y, b.y, c.y, d.y) - g, ty1 = Math.max(a.y, b.y, c.y, d.y) + g;
@@ -3219,8 +3252,10 @@ export class Game {
   const side = this.tool === 'select';
   if (this.tool === 'greenkeeping' && e.button === 0 && !this.keys.has(' ')) { this.grassTarget = this.tileAt(mx, my); if (this.grassAction) this.careGrass(this.grassAction); this.emit(); return; } // T175
   if (side && this.grassPanel && e.button === 0 && !this.keys.has(' ')) { this.grassTarget = this.tileAt(mx, my); if (this.grassAction) this.careGrass(this.grassAction); this.emit(); return; }
-  if (side && this.landMode && this.landHover && e.button === 0) {
-  this.buyLandBlock(this.landHover.rect);
+  // T200: Land for sale: a press pans the map as ever; a click (no drag) opens the block's card on release (pointerUp), never buys
+  if (side && this.landMode && e.button === 0 && !this.keys.has(' ')) {
+  this.overlay.setPointerCapture(e.pointerId);
+  this.dragging = { kind: 'pan', sx: mx, sy: my, camX: this.cam.X, camY: this.cam.Y, moved: false, land: this.tileAt(mx, my) };
   return;
   }
   this.overlay.setPointerCapture(e.pointerId);
@@ -3292,20 +3327,9 @@ export class Game {
   this.ghostMouse = { mx, my };
   if (this.badgeDrag) { const b = this.badgeDrag; b.mx = mx; b.my = my; if (Math.hypot(mx - b.sx, my - b.sy) > 4) b.moved = true; } // T174
   this.hover = this.tileAt(mx, my);
-  if (this.landMode && this.golf && this.hover) {
-  // the block under the pointer, lined up with the owned land (a range start's parcel is off the map's 40-tile lattice: golf/parcels.ts blockAt)
-  // a public road stays public: no block that would take its tiles (the course grows on the other sides, or beyond the road)
-  const cand = blockAt(this.golf.parcels ?? [this.golf.parcel], this.hover.x, this.hover.y, LAND_BLOCK, MAP, r => this.blockOnPublicRoad(r));
-  if (cand) {
-  const info = this.blockLandClass(cand);
-  const price = adjacentBlockPrice({ rect: cand, ...info, townPop: this.traffic.pop });
-  this.landHover = { rect: cand, price, landClass: info.landClass };
-  } else {
-  this.landHover = null;
-  }
-  } else if (this.landMode) {
-  this.landHover = null;
-  }
+  // T200: the overlay's block under the pointer (a refused one too: its reason shows by the pointer)
+  if (this.landMode && this.golf && this.hover) this.land.move(this.hover.x, this.hover.y);
+  else if (this.landMode) this.land.hover = null;
   const d = this.dragging;
     if (d) {
       if (Math.abs(mx - d.sx) + Math.abs(my - d.sy) > 3) d.moved = true;
@@ -3337,6 +3361,7 @@ export class Game {
     if (d?.kind === 'park') this.parkRelease();
     // a click (no drag) on the course aims the owner's open shot (P4b)
     if (d?.kind === 'pan' && d.aim && !d.moved) this.aimAt(d.aim);
+    if (d?.kind === 'pan' && d.land && !d.moved && this.landMode) { this.land.click(d.land.x, d.land.y); this.emit(); }
     // a right click (no drag) in the road tool builds the route drawn so far, as Enter does (the owner, 2026-10-19); a right drag still pans
     if (d?.kind === 'pan' && d.build && !d.moved && this.tool === 'road' && this.route.length > 1) this.finishRoute();
     if (this.paintOn) { this.paint.pointerUp(this.paintTol); this.courseCursor.release(); }
@@ -3466,7 +3491,15 @@ export class Game {
       case 'y': case 'Y': this.setTool('downgrade'); break;
       case 'v': case 'V': this.setTool('select'); break;
       case 'z': case 'Z': if (!e.ctrlKey && !e.metaKey && this.golfMode) this.setTool('props'); break;
-      case '1': case '2': case '3': case '4': case '5': case '6': { const c = KEY_CLASSES[+e.key - 1]; if (c && !this.refuseLocked('road')) { this.roadClass = c; this.setTool('road'); } break; }
+      // T202 (#529): 1-6 open the rail's groups in order (the App opens the group's flyout: railKey); with the town's Build in hand they stay its
+      // road classes, and with Holes in hand 1-7 its surfaces (paint-tool.ts key took them above): tool-modes.ts numberKeyUse. Before T202 they
+      // picked a road class and the road tool from any tool
+      case '1': case '2': case '3': case '4': case '5': case '6': {
+        const u = numberKeyUse(this.uiTool, +e.key);
+        if (u?.k === 'group') this.railKey?.(u.i + 1);
+        else if (u?.k === 'class') { const c = KEY_CLASSES[u.i]; if (c && !this.refuseLocked('road')) { this.roadClass = c; this.setTool('road'); } }
+        break;
+      }
       case '+': case '=': this.zoomAt(clampZoom(this.cam.z * ZOOM_STEP)); break;
       case '-': case '_': this.zoomAt(clampZoom(this.cam.z / ZOOM_STEP)); break;
       case ' ': e.preventDefault(); if (!e.repeat) this.spacePanned = false; break;
@@ -3476,6 +3509,10 @@ export class Game {
       case 'Tab': if (this.tool === 'junction') { e.preventDefault(); if (!e.repeat) this.flipJunction(e.shiftKey ? -1 : 1); } else if (this.tool === 'road') { e.preventDefault(); if (!e.repeat) this.flipVariant(e.shiftKey ? -1 : 1); } break;
     }
   }
+  /** T202: the number keys' rail groups (the App sets it: the nth group after Select opens its flyout, Bulldoze picks its tool); null: none */
+  railKey: ((n: number) => void) | null = null;
+  /** T202: Help › Keys (the App sets it): whether it is open, and opening or closing it (the lot lab's ? opens it instead of its own list) */
+  keysSheet: { open(): boolean; show(on: boolean): void } | null = null;
   /** the App's own menus and cards for Esc (Help, the gear menu, Course stats): which are open, and closing one (the App sets it) */
   uiCards: { open(): Partial<Record<EscCard, boolean>>; close(c: EscCard): void } | null = null;
   /** the Esc ladder's rungs (tool-modes.ts): the open cards (the App's, the Event catalogue, the Grass panel, the Budget or Bottlenecks
@@ -3509,6 +3546,7 @@ export class Game {
     if (this.route.length) { this.cancelRoute(); return true; }
     if (this.selected) { this.selected = null; this.emit(); return true; }
     if (this.selectedGolfMarker) { this.selectedGolfMarker = null; this.emit(); return true; }
+    if (this.landMode && this.land.card) { this.land.cancel(); this.emit(); return true; }
     if (this.landMode || this.holesTool) { this.toggleSideMode(this.landMode ? 'landMode' : 'holesTool'); return true; }
     return false;
   }
@@ -4018,16 +4056,35 @@ export class Game {
     const rect = (x: number, y: number, w: number, h: number) => { this.setIso(ctx); ctx.beginPath(); ctx.rect(x, y, w, h); ctx.setTransform(1, 0, 0, 1, 0, 0); };
     for (const r of parcels) {
     rect(r[0], r[1], r[2], r[3]);
-    ctx.strokeStyle = 'rgba(234, 179, 8, 0.7)'; ctx.lineWidth = 1.5 * dpr; ctx.setLineDash([4 * dpr, 4 * dpr]); ctx.stroke(); ctx.setLineDash([]);
+    // (T200: your land outlined clearly while Land for sale is open)
+    ctx.strokeStyle = this.landMode ? 'rgba(250, 204, 21, 0.95)' : 'rgba(234, 179, 8, 0.7)'; ctx.lineWidth = (this.landMode ? 3 : 1.5) * dpr; ctx.setLineDash([4 * dpr, 4 * dpr]); ctx.stroke(); ctx.setLineDash([]);
     }
-    if (this.landMode && this.landHover) {
-    const h = this.landHover, hr = h.rect;
-    rect(hr[0], hr[1], hr[2], hr[3]);
-    ctx.fillStyle = 'rgba(34, 197, 94, 0.2)'; ctx.fill();
-    ctx.strokeStyle = '#22c55e'; ctx.lineWidth = 2 * dpr; ctx.stroke();
-    const c = this.screen(hr[0] + hr[2] / 2, hr[1] + hr[3] / 2);
-    // the land tool's price at the hovered parcel: a hint, so the map's labels make way for it (T151)
-    this.labels.text(LABEL_KEY.landHover, PRI.hint, `$${h.price.toLocaleString()} (${h.landClass})`, c.x, c.y, `bold ${12 * dpr}px ui-sans-serif, system-ui, sans-serif`, 12 * dpr, '#f8fafc', LABEL_OUTLINE, 3 * dpr);
+    // T200: Land for sale: every block for sale tinted by its price band, with its band's $ label and its price (colour never alone, T180);
+    // a block you cannot buy hatched with a small ✕ (its reason by the pointer); the block under the pointer and the card's outlined
+    if (this.landMode) {
+    const offers = this.land.offers(), hov = this.land.hover, card = this.land.card, font = `bold ${12 * dpr}px ui-sans-serif, system-ui, sans-serif`;
+    for (const o of offers) {
+      const r = o.rect, on = hov === o || (card !== null && card.rect.join() === r.join());
+      rect(r[0] + 0.4, r[1] + 0.4, r[2] - 0.8, r[3] - 0.8);
+      if (o.why) {
+        ctx.save(); ctx.fillStyle = 'rgba(70, 60, 60, 0.28)'; ctx.fill(); ctx.clip();
+        const cs = [this.screen(r[0], r[1]), this.screen(r[0] + r[2], r[1]), this.screen(r[0], r[1] + r[3]), this.screen(r[0] + r[2], r[1] + r[3])];
+        strokeHatch(ctx, Math.min(...cs.map(c => c.x)), Math.min(...cs.map(c => c.y)), Math.max(...cs.map(c => c.x)), Math.max(...cs.map(c => c.y)), dpr, 'rgba(255, 220, 210, 0.75)', 0.55);
+        ctx.restore();
+        rect(r[0] + 0.4, r[1] + 0.4, r[2] - 0.8, r[3] - 0.8);
+        ctx.strokeStyle = on ? '#fca5a5' : 'rgba(252, 165, 165, 0.55)'; ctx.lineWidth = (on ? 2.5 : 1.2) * dpr; ctx.setLineDash([5 * dpr, 4 * dpr]); ctx.stroke(); ctx.setLineDash([]);
+        const c = this.screen(r[0] + r[2] / 2, r[1] + r[3] / 2); drawRefusedCross(ctx, c.x, c.y, dpr);
+        continue;
+      }
+      const band = LAND_BAND_COL[o.band ?? 'fair'];
+      ctx.fillStyle = band.fill; ctx.fill();
+      ctx.strokeStyle = on ? '#fff7d6' : band.edge; ctx.lineWidth = (on ? 3 : 1.5) * dpr; ctx.stroke();
+      const c = this.screen(r[0] + r[2] / 2, r[1] + r[3] / 2);
+      // a count's rank: the band and the price stay readable over the trees' names (T151)
+      this.labels.text(o, on ? PRI.hint : PRI.count, `${BAND_LABEL[o.band ?? 'fair']} · $${o.price.toLocaleString()}`, c.x, c.y, font, 12 * dpr, band.ink, LABEL_OUTLINE, 3 * dpr);
+    }
+    // the reason a block under the pointer cannot be bought, by the pointer
+    if (hov?.why && this.hover) { const c = this.screen(this.hover.x, this.hover.y); this.labels.text(LABEL_KEY.landHover, PRI.hint, hov.why, c.x, c.y - 22 * dpr, font, 12 * dpr, '#fecaca', LABEL_OUTLINE, 3 * dpr); }
     }
     }
     ctx.lineJoin = 'miter'; ctx.textAlign = 'start'; ctx.textBaseline = 'alphabetic';
@@ -4332,8 +4389,54 @@ export class Game {
   /** golf mode: a new game is a golf game (one town, the old nine, the season); the stadium and the Business tool are off */
   get golfMode(): boolean { return this.golf !== null; }
   landMode = false;
-  landHover: { rect: [number, number, number, number]; price: number; landClass: ParcelLandClass } | null = null;
+  /** T200 (#524): Land for sale: the blocks for sale next to your land, the one under the pointer and the card's (golf/land-sale.ts) */
+  readonly land: LandSale = new LandSale({
+    parcels: () => (this.golf ? this.golf.parcels ?? [this.golf.parcel] : []), map: MAP,
+    classOf: r => this.blockLandClass(r), onRoad: r => this.blockOnPublicRoad(r), pop: () => this.traffic.pop,
+    version: () => { let n = 0; for (const l of this.traffic.lots.values()) if (l.level >= 1) n++; return `${this.net.version}|${n}`; },
+  });
   toggleLandMode() { this.toggleSideMode('landMode'); }
+  /** T200: opens Land for sale (Course › Land for sale, the top bar's Land chip, a refusal's button), centred on tile point at when given */
+  openLandSale(at?: Pt | null) {
+    if (!this.golf) return;
+    if (!this.landMode) this.toggleSideMode('landMode');
+    this.land.cancel();
+    if (at) { this.camEase = null; this.cam.X = at.x; this.cam.Y = at.y; this.clampCam(); }
+    this.emit();
+  }
+  /** T200: closes Land for sale (its card and the overlay) */
+  closeLandSale() { if (this.landMode) this.toggleSideMode('landMode'); this.land.cancel(); this.emit(); }
+  /** T200: Buy on the card: exactly the card's block at the card's price (land-sale.ts LandSale.buy checks it is still that), else why not */
+  buyLandCard(): boolean {
+    const r = this.land.buy(this.money);
+    if (!r.ok) { this.toast(r.why, 'warn'); this.emit(); return false; }
+    const ok = this.buyLandBlock(r.rect, r.price);
+    if (ok) this.land.cancel();
+    this.emit();
+    return ok;
+  }
+  /** T200: where a course brush is refused for "not your land" (the tile under the pointer), for the refusal's Land for sale button; null else */
+  landRefusalAt(): Pt | null {
+    if (!this.golf || this.tool !== 'course' || this.landMode) return null;
+    const now = performance.now();
+    if (this.hover && this.courseCursor.state.kind === 'refused' && /not your land/i.test(this.courseCursor.hint)) this.landRefused = { at: { x: Math.round(this.hover.x), y: Math.round(this.hover.y) }, t: now };
+    return this.landRefused && now - this.landRefused.t < LAND_REFUSAL_MS ? this.landRefused.at : null;
+  }
+  /** the last "not your land" refusal of a course brush: where and when (landRefusalAt) */
+  private landRefused: { at: Pt; t: number } | null = null;
+  /** T200: the trees standing on a block (its card: cleared as you build there) */
+  treesOn(r: [number, number, number, number]): number {
+    const [x0, y0, x1, y1] = [r[0], r[1], r[0] + r[2], r[1] + r[3]], N = MAP / FOREST_CELL, at = (x: number, y: number) => x >= x0 && x < x1 && y >= y0 && y < y1;
+    let n = 0;
+    // the planted forest and town trees (by forest cell), then the placed tree props
+    for (const map of [this.forest, this.townTrees]) for (const [k, ps] of map) {
+      const ci = k % N, cj = Math.floor(k / N);
+      if (!boxNear([x0, y0, x1, y1], ci * FOREST_CELL, cj * FOREST_CELL, (ci + 1) * FOREST_CELL, (cj + 1) * FOREST_CELL, 0)) continue;
+      for (const p of ps) if (at(p.x, p.y)) n++;
+    }
+    for (const p of this.propGrid.query([x0, y0, x1, y1])) if (LIBRARY[p.item]?.kind === 'tree' && at((p.x0 + p.x1) / 2, (p.y0 + p.y1) / 2)) n++;
+    return n;
+  }
   /** the Grass panel's button: opens the panel (in Select) or closes it */
   toggleGrassPanel() { if (this.golfMode) { this.setTool(this.tool === 'greenkeeping' ? 'select' : 'greenkeeping'); return; } this.toggleSideMode('grassPanel'); } // T175: Greenkeeping in golf games
   /** opens side mode k (the Grass panel, Land, Holes, Event) and closes the others, or closes k: opening one switches to Select and picking a
@@ -4345,7 +4448,7 @@ export class Game {
   }
   /** what a closed side mode leaves behind: the land block under the pointer, the picked pin or tee, the structure in hand, the armed grass care */
   private tidySideModes() {
-  if (!this.landMode) this.landHover = null;
+  if (!this.landMode) { this.land.hover = null; this.land.cancel(); }
   if (!this.holesTool && !this.markerDrag) this.selectedGolfMarker = null;
   if (!this.eventTool) this.eventStructurePending = null;
   if (!this.grassPanel) this.grassAction = null;
@@ -4378,25 +4481,28 @@ export class Game {
     }
     return blockOnRoad(r, roads);
   }
-  buyLandBlock(r: [number, number, number, number]) {
-  if (!this.golf) return;
-  if (this.blockOnPublicRoad(r)) { this.toast('A public road runs here: it stays public', 'warn'); return; }
+  /** buys block r (T200: at price when given: refused if the price has moved since); true when bought */
+  buyLandBlock(r: [number, number, number, number], price?: number): boolean {
+  if (!this.golf) return false;
+  if (this.blockOnPublicRoad(r)) { this.toast('A public road runs here: it stays public', 'warn'); return false; }
   const parcels = this.golf.parcels ?? [this.golf.parcel];
   const info = this.blockLandClass(r);
   const res = buyAdjacentBlock(parcels, { rect: r, ...info, townPop: this.traffic.pop }, this.money);
   if (!res.ok) {
   this.toast(res.reason ?? 'Cannot buy this block', 'warn');
-  return;
+  return false;
   }
+  if (price !== undefined && res.price !== price) { this.toast(`The price changed: now $${res.price.toLocaleString()}`, 'warn'); return false; }
   this.golf.parcels = res.parcels;
   this.golf.parcel = res.bounds;
   this.fitCourseGrid(); // the course grid holds the new land
   this.sendGolf(); // the town keeps off the new land too
   this.traffic.spend('construction', res.price);
   this.scheduleSave();
-  this.toast(`Purchased ${info.landClass} block ($${res.price.toLocaleString()})`);
-  this.landHover = null;
+  this.toast(`Bought ${info.landClass} land: $${res.price.toLocaleString()}`);
+  this.land.hover = null;
   this.emit();
+  return true;
   }
   /** the golf HUD's view (null outside golf mode) */
   lastGolfMonth = -1;
@@ -4701,7 +4807,7 @@ export class Game {
     this.tollDefs = []; this.tollSegs.clear(); this.tollHover = null; for (const k of this.tollGround) this.setLotGround(k, null); this.tollGround.clear();
     this.busDefs = []; this.busPick = null; this.busHover = null; this.paint.clear(); this.dropCourseGrid();
     this.golf = null; this.townPts = []; this.golfProps.clear(); this.golfStructureProps.clear(); this.range.drop(); this.range.cardOpen = false;
-    this.landMode = false; this.landHover = null; this.holesTool = false; this.selectedGolfMarker = null;
+    this.landMode = false; this.land.hover = null; this.land.cancel(); this.holesTool = false; this.selectedGolfMarker = null;
     this.eventTool = false; this.eventStructurePending = null; this.lastGolfMonth = -1;
     // the last game's season card and calendar year do not carry over (T135: the new game's clock starts again in the city worker)
     this.seasonReport = null; this.seenYear = 0; this.foundTick = 0;
@@ -5346,7 +5452,7 @@ export class Game {
       for (let gy = gy0; gy <= gy1; gy++) for (let gx = gx0; gx <= gx1; gx++) { const u = (p * G + gy) * G + gx; if (mark[u] === 0) touched.push(u); mark[u] += share; }
     };
     for (let o = 0; o < floats; o += SPRITE_STRIDE) {
-      if (!(stream[o + 9]! > 0)) continue; // hidden
+      if (!(stream[o + 9]! > 0) || stream[o + 8]! < 0) continue; // hidden, or a lamp's glow (T192: no atlas page)
       // the part of the picture on screen: its rect clipped to its tile and the view, in its uv rect
       const x0 = stream[o]!, y0 = stream[o + 1]!, x1 = stream[o + 2]!, y1 = stream[o + 3]!, w = x1 - x0, h = y1 - y0;
       const cx0 = Math.max(x0, stream[o + 12]!, X0), cy0 = Math.max(y0, stream[o + 13]!, Y0), cx1 = Math.min(x1, stream[o + 14]!, X1), cy1 = Math.min(y1, stream[o + 15]!, Y1);
@@ -5379,9 +5485,14 @@ export class Game {
   private groundBlendAt = Infinity;
   private groundBlendOtherTier = false;
   /** the last target's tile spec, and whether the zoom transition in progress is a band (or DPR) switch (cut once the whole view has it) */
-  private groundTs = -1; private groundCut = false;
+  private groundTs = -1;
+  /** whether the last ground switch was a tile band step (T145; T197: it crossfades now as any switch; read by scripts/perf/zoom-sweep.mjs) */
+  groundCut = false;
   /** the tile set families' band (T150, painted-tiles.ts nextBand: from the CSS zoom with hysteresis, never magnified; saved with the camera) */
   tileBand: number | null = null;
+  /** T186: sprite shadows over the ground's baked shade take the max of the two, not their product (the dev switch: window.__game.shadeMax =
+   *  false shows them multiplied, as before, for a comparison) */
+  shadeMax = true;
   /** the dev readout of the tile set families (T145, T150; App.tsx TilesPanel, shown with the Developer panel: ?debug, F3 or the gear menu): the camera's
    *  band, its anchor zoom (where it draws at its native pixels), how big it is drawn against native, and the zooms the band shows over; for each
    *  tile set family a surface wears, its set, the tiles in view, a tile's width on screen in device px and how many whole tiles the view shows;
@@ -5431,6 +5542,9 @@ export class Game {
     };
     if (tier === 'planner') {
       drawPlan();
+      // T197: the planner map shown, the district chunks a zoom in reaches are baked ahead meanwhile (as at the other tiers)
+      if (z !== this.prebakeZ) { this.prebakeZ = z; this.prebakeHold = now + Game.PREBAKE_SETTLE_MS; }
+      if (this.ground.idle && now >= this.prebakeHold) this.prebake(z, 'p', X0, Y0, X1, Y1, now);
       // vehicles as dots coloured by type
       const tr = this.traffic;
       if (tr) {
@@ -5447,8 +5561,9 @@ export class Game {
       if (!Number.isFinite(this.groundBlendAt)) {
         let complete = true;
         for (let j = j0; j <= j1 && complete; j++) for (let i = i0; i <= i1; i++) { const t = this.ground.tile(kind, i, j); if (!pictureCurrent(t, L, artL, ts) || t.stale) { complete = false; break; } }
-        // a step switch (T145: another tile set, or another tile size) cuts once every chunk on screen has it: never a crossfade of two sets
-        if (complete) this.groundBlendAt = this.groundCut ? now - 180 : now;
+        // a step switch (T145: another tile set, or another tile size) shows once every chunk on screen has it, then crossfades over the same
+        // 180 ms as a zoom level (T197: it cut, a visible jump of the whole ground's texture at a band switch)
+        if (complete) this.groundBlendAt = now;
       }
       const zoomBlend = Number.isFinite(this.groundBlendAt) ? Math.max(0, Math.min(1, (now - this.groundBlendAt) / 180)) : 0;
       // a chunk not baked yet shows its piece of the planner map meanwhile, asked for before any chunk (one planner bake covers 8 x 8 chunks:
@@ -5460,6 +5575,7 @@ export class Game {
         if (p.tex) gl.drawChunk(p.tex, X, Y, X + CW, Y + CH, false, 1, [(X - pi * PLAN_W) / PLAN_W, (Y - pj * PLAN_H) / PLAN_H, (X + CW - pi * PLAN_W) / PLAN_W, (Y + CH - pj * PLAN_H) / PLAN_H]);
       }
       const mask = this.revealMask(now); if (mask) gl.setMask(mask);
+      const shadeMasks: { tex: WebGLTexture; r: readonly [number, number, number, number] }[] = [];
       let baked = true;
       for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
         const t = this.ground.tile(kind, i, j); if (!t.tex) baked = false;
@@ -5474,10 +5590,16 @@ export class Game {
         const fallback = lay.fallback ? this.ground.zoomFallback(kind, r, now) : [];
         for (const picture of fallback) gl.drawChunk(picture.tex, ...picture.rect, false, 1, picture.uv);
         if (lay.top && (lay.top !== lay.base || fallback.length)) gl.drawChunk(lay.top, ...r, false, lay.topAlpha);
+        // (T186: the shade its picture baked in, for the sprite shadows to take the max with; only while that picture is the one drawn)
+        if (t.shade && (lay.base === t.tex || lay.top === t.tex)) shadeMasks.push({ tex: t.shade, r });
         if (t.fadeFrom && Number.isFinite(this.groundBlendAt) && (zoomBlend < 1 || !Number.isFinite(t.fadeStart))) t.fadeStart = this.groundBlendAt;
       }
       // T188: the first view's ground is baked (the welcome card waits for it)
       if (baked && !this.firstViewBaked && this.ready) { this.firstViewBaked = true; this.emit(); }
+      // T197: the view done, the chunks a zoom would need next are baked ahead, a few a frame at the lowest priority
+      // (not while the zoom moves: a bake ahead in flight would hold up the next chunk on screen)
+      if (z !== this.prebakeZ) { this.prebakeZ = z; this.prebakeHold = now + Game.PREBAKE_SETTLE_MS; }
+      if (this.ground.idle && now >= this.prebakeHold) this.prebake(z, kind, X0, Y0, X1, Y1, now);
       // ---- the map grid and the course half grid (T100): over the ground and its paint, hidden on the roads, under every shadow and sprite
       if (this.gridLayer.draw(gl.gl, gl.view, z, this.dpr, gridShown(this.showGrid, this.tool), this.courseBuilding, this.gridLand(), this.net)) gl.stats.draws++;
       // the dev tools' ground lines (the lot lab's Lot grid): the same place, under every shadow and sprite
@@ -5488,7 +5610,8 @@ export class Game {
       const c = [tileOf(X0, Y0), tileOf(X1, Y0), tileOf(X0, Y1), tileOf(X1, Y1)], pad = 6;
       // cars in tunnels are not drawn (the sim client skips them)
       const bx0 = Math.min(...c.map(p => p.x)) - pad, by0 = Math.min(...c.map(p => p.y)) - pad, bx1 = Math.max(...c.map(p => p.x)) + pad, by1 = Math.max(...c.map(p => p.y)) + pad;
-      const cars: Drawable[] = this.traffic ? this.traffic.visible(bx0, by0, bx1, by1) : [];
+      // (T192: with their brake lights from the closest zooms down to 8%, drawn in the sprite pass right after each car)
+      const cars: Drawable[] = this.traffic ? this.traffic.visible(bx0, by0, bx1, by1, cam.z >= 0.08) : [];
       // at the street tier the townspeople and the crowd (the galleries' fans, the queues, the walking parties) are the movers, merged in by depth
       const movers = tier === 'street' ? cars.concat(this.peds.n ? this.pedMovers(bx0, by0, bx1, by1) : [], this.crowdMovers(bx0, by0, bx1, by1, now / 1000), this.range.movers_(bx0, by0, bx1, by1)) : cars;
       // with the living ground the trees plant over every chunk on screen and as far out as a chunk's caster reach (a chunk bakes once its trees
@@ -5497,16 +5620,15 @@ export class Game {
       else this.plantForest(X0, Y0, X1, Y1);
       const f = this.sprites.frame(vis, movers), shadows = this.shadowStrength > 0;
       this.streamAtlas(f.stream, f.floats, X0, Y0, X1, Y1);
-      // car lights (night): lamps and beam glows of the cars in the same box, uploaded with the sprites
-      const tr = this.traffic, lightOn = !!tr && cam.z >= 0.08;
-      if (tr && lightOn && this.lightBuf.length < tr.n * 7 * POINT_STRIDE) this.lightBuf = new Float32Array(tr.n * 7 * POINT_STRIDE);
-      const lt = tr && lightOn ? tr.lights(bx0, by0, bx1, by1, ze, Math.floor(now / 350) % 2 === 0, this.lightBuf) : null;
+      // (T192: no car light overlay any more: no headlights, beams or turn signals; the brake lights are glow instances in the sprite stream)
       const vecOn = shadows || this.cast.on;
-      const [sAt, pAt, lAt, ...vAt] = gl.uploadParts([[f.shadows, shadows ? f.shadowFloats : 0], [f.stream, f.floats], [this.lightBuf, lt ? (lt.small + lt.beams) * POINT_STRIDE : 0],
+      const [sAt, pAt, ...vAt] = gl.uploadParts([[f.shadows, shadows ? f.shadowFloats : 0], [f.stream, f.floats],
         ...f.vec.map(v => [v.data, vecOn ? v.floats : 0] as [Float32Array, number])]);
       // the shadows into one layer, the darkest winning where they overlap, laid on the ground once (T185: gl.ts beginShadows): the cast
       // shadows (cast-shadow.ts), faded out by night, then the contact shadows, the vector shadows; then the sprites
       gl.beginShadows();
+      // the ground's own baked shade first (T186: the sprite shadows darken it only past that, never a product)
+      if (this.shadeMax) for (const m of shadeMasks) gl.drawShadeMask(m.tex, ...m.r);
       if (this.cast.on) { const sh = castShear(this.cast); gl.drawCast(pAt, f.floats / SPRITE_STRIDE, sh.sx, sh.sy, this.cast.strength * (1 - this.nightAmount())); }
       // the contact shadows lean toward the cast shadows' side (away from the sun), blob and box alike (shadow-shape.ts contactLean, T141)
       const lean = contactLean(this.cast);
@@ -5520,7 +5642,6 @@ export class Game {
       }
       gl.endShadows();
       gl.drawSprites(pAt, f.floats / SPRITE_STRIDE, tier === 'district' ? 7 * this.dpr : 0);
-      if (lt) { gl.drawPoints(lAt, lt.small, Math.max(2, 0.55 * 64 * ze), true); gl.drawPoints(lAt + lt.small * POINT_STRIDE, lt.beams, Math.max(4, 2.6 * 64 * ze), true); }
     }
     this.gl.atlas?.pump();
     this.ground.pump(); this.ground.settle(now); this.ground.evict(now);

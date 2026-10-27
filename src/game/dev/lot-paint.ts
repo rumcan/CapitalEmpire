@@ -156,3 +156,25 @@ export function applyStroke(patches: readonly PresetPatch[], m: Material, w: num
 export function cellsOf(patches: readonly PresetPatch[], tex: string, w: number, d: number): Grid {
   const g = grid(w, d); for (const p of patches) if (p.tex === tex && !(p.lines && p.lines.length)) rasterize(g, p.pts); return g;
 }
+
+// ---- Erase (T189, #487; the owner: "can you also put the lots groun erase back ?")
+/** the cells a stroke takes out of every material (Erase with "any material"): each material's patches without lines (applyStroke, erasing);
+ *  the lined patches (parking bays, furrows) stay. A new array: the patches before are the stroke's undo */
+export function eraseAny(patches: readonly PresetPatch[], w: number, d: number, cells: Iterable<number>): PresetPatch[] {
+  const list = [...cells], mats = new Map<string, Material>();
+  for (const p of patches) if (!(p.lines && p.lines.length) && !mats.has(p.tex)) mats.set(p.tex, { kind: p.kind, tex: p.tex });
+  let out: PresetPatch[] = [...patches];
+  for (const m of mats.values()) out = applyStroke(out, m, w, d, list, true);
+  return out;
+}
+/** the patch a click in Erase takes out whole (the old ground tool's Erase, before T183): the last one drawn whose polygon holds the point, any
+ *  material, lined or not; -1 none */
+export function patchIndexAt(patches: readonly PresetPatch[], x: number, y: number): number {
+  for (let i = patches.length - 1; i >= 0; i--) if (inside(patches[i]!.pts, x, y)) return i;
+  return -1;
+}
+/** whether a stroke is a click (it moved less than half a cell): Erase then takes the patch under it out whole */
+export function isClick(path: readonly number[]): boolean {
+  let far = 0; for (let k = 2; k + 1 < path.length; k += 2) far = Math.max(far, Math.hypot(path[k]! - path[0]!, path[k + 1]! - path[1]!));
+  return far < CELL / 2;
+}
