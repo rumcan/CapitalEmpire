@@ -6,8 +6,6 @@
 // their frozen presets (their generated lots looked worse); a v1 or v2 town composes exactly as before. Headless.
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
-import crypto from 'node:crypto';
 import { compose, groupBase, groupBaseItem, lotLayout, lotPreset, lotPresets, lotModelVersion, pickedPreset, setGeneratedLots, setLotModel, type ComposeState, type LotGeom } from '../src/game/lots/compose';
 import { LATEST, LOT_MODELS } from '../src/game/lots/lot-models';
 import { groupOf } from '../src/game/lots/learn';
@@ -52,8 +50,7 @@ describe('lots on the fly for every use (T169)', () => {
     assert.deepEqual(groupsFrom(back), g);
     assert.equal(groupsBlock({}), '');
   });
-  it('3. a v1 or v2 town draws every use but houses as ?oldlots, the same every time; a v3 town\'s house lots as a v2 town\'s', (t) => {
-    const sha = (f: string) => crypto.createHash('sha1').update(fs.readFileSync(f)).digest('hex').slice(0, 12);
+  it('3. a v1 or v2 town draws every use but houses as ?oldlots, the same every time; a v3 town\'s house lots as a v2 town\'s', () => {
     const was = lotModelVersion();
     // every use: the frozen presets of each, every state and facing
     const lots = (['res', 'com', 'ind', 'park', 'civic', 'tour'] as const).flatMap(u => lotsOf(u, 20));
@@ -70,7 +67,7 @@ describe('lots on the fly for every use (T169)', () => {
     const others = lots.filter(l => l.p.use !== 'res');
     setGeneratedLots(false); const old = others.map(l => JSON.stringify(compose(l.g, l.st))); setGeneratedLots(true);
     for (const v of [1, 2]) { setLotModel(v); assert.deepEqual(others.map(l => JSON.stringify(compose(l.g, l.st))), old, `v${v}: the other uses as ?oldlots`); }
-    setLotModel(was); void sha; void t;
+    setLotModel(was);
   });
   it('4. per shipped group: the same lot lays the same, nothing outside it or overlapping beyond the rule, nothing on a drive, a walk or the car park', () => {
     setGeneratedLots(true); setLotModel(3);

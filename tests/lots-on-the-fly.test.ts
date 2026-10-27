@@ -4,8 +4,6 @@
 // is today's composition, a town saved with model v1 keeps composing with v1 after v2 ships, and nothing overlaps or leaves the lot. Headless.
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
-import crypto from 'node:crypto';
 import { addLotModel, compose, layModelFrom, lotModelVersion, lotSeed, pickedPreset, setGeneratedLots, setLotModel, type ComposeState, type LotGeom } from '../src/game/lots/compose';
 import { LATEST, LOT_MODELS } from '../src/game/lots/lot-models';
 import { LU, LV } from '../src/game/lots/town';
@@ -18,7 +16,6 @@ import { isBuilding } from '../src/game/mirror';
 
 (globalThis as unknown as { Path2D: unknown }).Path2D ??= class { moveTo() {} lineTo() {} arc() {} arcTo() {} closePath() {} rect() {} };
 
-const fnv = (s: string) => { let h = 0x811c9dc5; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193); } return (h >>> 0).toString(16); };
 /** the reference lots: 240 seeded lots of every use, state, size and facing (the same set T160 measured main's composition on) */
 function referenceLots(): { g: LotGeom; st: ComposeState }[] {
   const r = mulberry(0x7160), out: { g: LotGeom; st: ComposeState }[] = [];

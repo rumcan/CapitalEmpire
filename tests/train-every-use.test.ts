@@ -3,8 +3,6 @@
 // lot's use; Ship model plans the next version with its exam picture (dev-save.ts shipPlan); v1-v4 towns compose as before. Headless.
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
-import crypto from 'node:crypto';
 import { compose, layModelFrom, lotPresets, lotModelVersion, setGeneratedLots, setLotModel, type ComposeState, type LotGeom } from '../src/game/lots/compose';
 import { LATEST, LOT_MODELS } from '../src/game/lots/lot-models';
 import { groupsFrom } from '../src/game/lots/group-data';
@@ -113,6 +111,7 @@ describe('train every use in the lot lab (T173)', () => {
       const old = at(4, false), com = lots.map((l, i) => (l.use === 'com' ? i : -1)).filter(i => i >= 0);
       assert.ok(com.every(i => h[2]![i] === old[i]), 'v3: the shops on their frozen presets (as ?oldlots)');
       assert.ok(com.some(i => h[3]![i] !== old[i]), 'v4: the shops generated');
+      for (const v of [0, 1, 2]) assert.ok(h[v]!.some((x, i) => x !== h[3]![i]), `a v${v + 1} town never composes with v4's model`);
     } finally { setLotModel(was); setGeneratedLots(true); }
   });
 });

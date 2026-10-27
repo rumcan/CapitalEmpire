@@ -837,7 +837,10 @@ export function installLotLab(game: Game): () => void {
   /** the Neighbours on or off (N): staged round the lot, or dropped */
   function setNeigh(v: boolean) { neighOn = v; neighbours(); message = v ? (use === 'farm' ? 'a farm has no neighbours here (it stands alone on its country road)' : `neighbours on: ${neighs.length} lots round this one, as the game draws them (not edited)`) : ''; }
   /** the keys overlay on or off */
-  function toggleHelp(v = shell.help.style.display === 'none') { shell.help.style.display = v ? 'flex' : 'none'; }
+  /** the keys (T202): the game's Help › Keys sheet, the lab's keys under their heading (App.tsx sets game.keysSheet); the lab's own list
+   *  (drawHelp) only when no App is there to draw it */
+  function helpShown(): boolean { return game.keysSheet ? game.keysSheet.open() : shell.help.style.display !== 'none'; }
+  function toggleHelp(v = !helpShown()) { if (game.keysSheet) game.keysSheet.show(v); else shell.help.style.display = v ? 'flex' : 'none'; }
   /** the house allocation of a house (its base id): the compass of the road angles it suits (lit green; this lot's road outlined), the states it
    *  suits, whether it suits this lot, how many of its pool and family suit this lot, and Everything / Clear. A click toggles one and saves it */
   function allocBox(id: string, title: string): HTMLElement {
@@ -1166,7 +1169,7 @@ export function installLotLab(game: Game): () => void {
   const onKey = (e: KeyboardEvent) => {
     if (!started || typing(e.target)) return;
     const mod = e.ctrlKey || e.metaKey;
-    const plain = !mod && !e.altKey, k = e.key.toLowerCase(), helpOn = shell.help.style.display !== 'none';
+    const plain = !mod && !e.altKey, k = e.key.toLowerCase(), helpOn = helpShown();
     // T183: the mode keys come first (in the wizard too): B Draw (the last material), V or Esc back to Select, [ ] the brush, R Shape; Ctrl+Z in
     // Draw takes the last stroke back (the editor's undo; the wizard's own while it runs)
     if (!helpOn && !gallery.on() && use !== 'farm') {

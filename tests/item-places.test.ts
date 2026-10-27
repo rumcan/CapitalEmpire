@@ -3,8 +3,6 @@
 // item at one of its anchors and a row as a row (lot-gen.ts); model v4 ships them; a v1, v2 or v3 town composes exactly as before. Headless.
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
-import crypto from 'node:crypto';
 import { anchorOf, buildPlaces, emptyPlaces, learnPlaces, placesData, placesFrom, placesOf, pointAt, rowOf, type PlaceLot } from '../src/game/lots/places';
 import { generateLayout } from '../src/game/lots/lot-gen';
 import { buildModel, sampleItem, type Box, type ItemKind, type Sample, type SectorLot } from '../src/game/lots/learn';

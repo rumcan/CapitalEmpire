@@ -31,7 +31,7 @@ import { Rail } from './ui/Rail';
 import { RAIL, entryKey, pickEntry, railEntries, railItemOf, type RailItem, type RailTool } from './ui/rail-items';
 import { Flyouts } from './ui/Flyouts';
 import { KeysSheet } from './ui/KeysSheet';
-import { keySheet, numberedGroups } from './ui/keymap';
+import { keySheet, numberedGroups, type LabKeys } from './ui/keymap';
 import { indicesOf, leavesOf, menuOf, type MenuCtx, type MenuRow } from './ui/flyout-menu';
 import { GRASS_COST } from './game/ext/grass-management/management';
 import { DECOR_GROUPS } from './game/golf/decor';
@@ -117,12 +117,20 @@ export default function App() {
   const [help, setHelp] = useState(false);
   /** T202: the Help card's tab: the keys (Help › Keys: the ? button, ? and F1) or how it works */
   const [helpTab, setHelpTab] = useState<'keys' | 'how'>('keys');
-  /** T202: the lot lab's keys (dev builds, ?lotlab: its own heading on the Keys sheet) */
-  const [labKeys, setLabKeys] = useState<readonly [string, readonly [string, string][]][] | null>(null);
+  /** T202: the lot lab's keys (dev builds, ?lotlab: the Keys sheet there is the lab's, under its own heading) */
+  const [labKeys, setLabKeys] = useState<LabKeys | null>(null);
   useEffect(() => { if (import.meta.env.DEV && new URLSearchParams(location.search).has('lotlab')) void import('./game/dev/lot-lab-ui').then(m => setLabKeys(m.KEYS)); }, []);
-  // T202: ? and F1 open Help › Keys (not while typing; the lab's own ? opens its overlay first)
+  /** whether Help is open, for the engine's keysSheet hook (the lab's ? asks between renders) */
+  const helpOpen = useRef(false);
+  helpOpen.current = help;
+  // T202: ? and F1 open Help › Keys, and close it again (not while typing; in the lot lab its own ? handler opens this sheet: game.keysSheet)
   useEffect(() => {
-    const k = (e: KeyboardEvent) => { const t = (e.target as HTMLElement | null)?.tagName; if (t === 'INPUT' || t === 'TEXTAREA' || e.ctrlKey || e.metaKey || e.altKey) return; if (e.key === '?' || e.key === 'F1') { e.preventDefault(); setHelpTab('keys'); setHelp(true); } };
+    const k = (e: KeyboardEvent) => {
+      const t = (e.target as HTMLElement | null)?.tagName;
+      if (t === 'INPUT' || t === 'TEXTAREA' || t === 'SELECT' || e.ctrlKey || e.metaKey || e.altKey || (e.key !== '?' && e.key !== 'F1')) return;
+      e.preventDefault(); if (e.repeat) return;
+      const on = !helpOpen.current; setHelpTab('keys'); setHelp(on);
+    };
     window.addEventListener('keydown', k); return () => window.removeEventListener('keydown', k);
   }, []);
   /** the settings menu (Save, New game, Empty map) open under its gear */
@@ -224,14 +232,16 @@ export default function App() {
     const box = railBox.current, s = currentUiScale() || 1, top = el && box ? (el.getBoundingClientRect().top - box.getBoundingClientRect().top) / s : 0;
     setFly({ item: r.id, path, keyboard, top: Math.max(0, Math.round(top)) });
   };
-  /** T202: the number keys: the nth rail group after Select opens its flyout (the keyboard leads in it); Bulldoze, with no flyout, picks its tool;
-   *  a locked group says why */
-  if (game) game.railKey = n => {
+  /** T202: Help › Keys for the engine (the lot lab's ? and its button open it) */
+  if (game) game.keysSheet = { open: () => helpOpen.current, show: on => { helpOpen.current = on; setHelpTab('keys'); setHelp(on); } };
+  /** T202: the number keys (engine.ts keyDown, tool-modes.ts numberKeyUse): the nth rail group after Select opens its flyout, the keyboard
+   *  leading in it (the same key again closes it); Bulldoze, with no flyout, picks its tool; a locked group says why. The lab has no rail */
+  if (game) game.railKey = lab ? null : n => {
     const r = numberedGroups(game.golfMode, !!game.range.scene)[n - 1]; if (!r) return;
     const e = railEntries(game.toolUi(), game.golfMode, game.uiTool, { range: !!game.range.scene }).find(x => x.item.id === r.id);
     if (e?.locked) { game.toast(`${r.label}: ${e.locked}`); return; }
     const el = railRef.current?.querySelector<HTMLElement>(`[data-rail="${r.id}"]`) ?? undefined;
-    if (menuFor(r).length) { openFly(r, el, true); return; }
+    if (menuFor(r).length) { if (fly?.item === r.id) setFly(null); else openFly(r, el, true); return; }
     setFly(null); activeRail.current = r.id; const t = pickEntry(r, game.golfMode, game.toolUi(), null); if (t) openEntry(r.id, t);
   };
   /** T193: a leaf picked in a flyout: its tool (the Props tool's view with it), then what it names (the road class, the junction, the surface ...) */
@@ -681,9 +691,10 @@ export default function App() {
           <Minimap game={game} />
           {dev && <PerfPanel game={game} />}
           {dev && <TilesPanel game={game} />}
-          {help && <Help tab={helpTab} onTab={setHelpTab} onClose={() => setHelp(false)} keys={game ? keySheet({ golf: game.golfMode, ui: game.toolUi(), range: !!game.range.scene, ...(labKeys ? { lab: labKeys } : {}) }) : []} />}
         </>
       )}
+      {/* T202: Help (the lab too: its ? opens the Keys sheet, its own keys under their heading) */}
+      {game && game.ready && help && <Help tab={lab ? 'keys' : helpTab} onTab={setHelpTab} onClose={() => setHelp(false)} lab={lab} keys={keySheet({ golf: game.golfMode, ui: game.toolUi(), range: !!game.range.scene, lab: lab ? labKeys ?? [] : null })} />}
         </div>
   );
 }
@@ -1736,15 +1747,15 @@ function hintFor(g: Game) {
 }
 
 /** Help (T202: two tabs: Keys, the Keys sheet, and How it works) */
-function Help({ onClose, tab, onTab, keys }: { onClose: () => void; tab: 'keys' | 'how'; onTab: (t: 'keys' | 'how') => void; keys: ReturnType<typeof keySheet> }) {
+function Help({ onClose, tab, onTab, keys, lab }: { onClose: () => void; tab: 'keys' | 'how'; onTab: (t: 'keys' | 'how') => void; keys: ReturnType<typeof keySheet>; lab: boolean }) {
   return (
     <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
       <div className={`help-card rounded-2xl border border-white/10 bg-slate-950 p-6 text-sm text-slate-200 shadow-2xl ${tab === 'keys' ? 'help-card-wide' : 'max-w-xl'}`} onClick={e => e.stopPropagation()} role="dialog" aria-label="Help" data-testid="help">
         <div className="flex flex-wrap items-center gap-2">
-          <div className="seg" role="tablist">
+          {lab ? <div className="text-lg font-bold text-amber-200">Keys</div> : <div className="seg" role="tablist">
             <button role="tab" aria-selected={tab === 'keys'} className={tab === 'keys' ? 'on' : ''} onClick={() => onTab('keys')} data-testid="help-keys">Keys</button>
             <button role="tab" aria-selected={tab === 'how'} className={tab === 'how' ? 'on' : ''} onClick={() => onTab('how')}>How it works</button>
-          </div>
+          </div>}
           <span className="ml-auto text-[12px] text-slate-400"><span className="keycap">?</span> or <span className="keycap">F1</span> opens this · <span className="keycap">Esc</span> closes</span>
         </div>
         {tab === 'keys' ? <KeysSheet sections={keys} /> : <>

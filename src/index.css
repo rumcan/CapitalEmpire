@@ -213,8 +213,8 @@
 .keys-card { min-width: 0; border-radius: 0.7rem; border: 1px solid var(--line); background: rgba(255, 255, 255, 0.03); padding: 0.5rem 0.65rem; }
 .keys-title { margin-bottom: 0.25rem; font-weight: 700; color: var(--ink); }
 .keys-rows { display: flex; flex-direction: column; gap: 0.22rem; }
-.keys-row { display: grid; grid-template-columns: minmax(4.2rem, max-content) minmax(0, 1fr); gap: 0.5rem; align-items: baseline; font-size: 12.5px; }
-.keys-row dt { min-width: 0; }
+.keys-row { display: grid; grid-template-columns: fit-content(45%) minmax(0, 1fr); gap: 0.5rem; align-items: baseline; font-size: 12.5px; }
+.keys-row dt { min-width: 3.2rem; }
 .keys-row dt .keycap { white-space: normal; overflow-wrap: anywhere; }
 .keys-row dd { min-width: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.3rem; color: #d6d0c2; overflow-wrap: anywhere; }
 .keys-row-locked { opacity: 0.6; }

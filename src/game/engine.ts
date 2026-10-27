@@ -26,7 +26,7 @@ import { BLOCK_MAX_AREA, enclosedBlocks } from './blocks';
 import { blockLawn, lotLawn } from './lawns';
 import { PaintTool } from './paint-tool';
 import { courseBandOf, courseTexOf } from './course-look';
-import { escapeLadder, pickTool, switchSideMode, type EscCard, type EscLadder, type SideMode } from './tool-modes';
+import { escapeLadder, numberKeyUse, pickTool, switchSideMode, type EscCard, type EscLadder, type SideMode } from './tool-modes';
 import type { PresetProp } from './golf/holepreset';
 import { OWNER_SCALE, STUDIO_SCALE } from './lots/scales';
 import { turned } from './lots/preset-art';
@@ -3491,11 +3491,14 @@ export class Game {
       case 'y': case 'Y': this.setTool('downgrade'); break;
       case 'v': case 'V': this.setTool('select'); break;
       case 'z': case 'Z': if (!e.ctrlKey && !e.metaKey && this.golfMode) this.setTool('props'); break;
-      // T202: 1-6 pick the rail's groups in order (the App opens the group's flyout: railKey); in the road tool they stay its classes (as the
-      // course brush's 1-7 stay its surfaces while its panel is open: paint-tool.ts key, above)
+      // T202 (#529): 1-6 open the rail's groups in order (the App opens the group's flyout: railKey); with the town's Build in hand they stay its
+      // road classes, and with Holes in hand 1-7 its surfaces (paint-tool.ts key took them above): tool-modes.ts numberKeyUse. Before T202 they
+      // picked a road class and the road tool from any tool
       case '1': case '2': case '3': case '4': case '5': case '6': {
-        if (this.tool !== 'road' && this.railKey) { this.railKey(+e.key); break; }
-        const c = KEY_CLASSES[+e.key - 1]; if (c && !this.refuseLocked('road')) { this.roadClass = c; this.setTool('road'); } break;
+        const u = numberKeyUse(this.uiTool, +e.key);
+        if (u?.k === 'group') this.railKey?.(u.i + 1);
+        else if (u?.k === 'class') { const c = KEY_CLASSES[u.i]; if (c && !this.refuseLocked('road')) { this.roadClass = c; this.setTool('road'); } }
+        break;
       }
       case '+': case '=': this.zoomAt(clampZoom(this.cam.z * ZOOM_STEP)); break;
       case '-': case '_': this.zoomAt(clampZoom(this.cam.z / ZOOM_STEP)); break;
@@ -3508,6 +3511,8 @@ export class Game {
   }
   /** T202: the number keys' rail groups (the App sets it: the nth group after Select opens its flyout, Bulldoze picks its tool); null: none */
   railKey: ((n: number) => void) | null = null;
+  /** T202: Help › Keys (the App sets it): whether it is open, and opening or closing it (the lot lab's ? opens it instead of its own list) */
+  keysSheet: { open(): boolean; show(on: boolean): void } | null = null;
   /** the App's own menus and cards for Esc (Help, the gear menu, Course stats): which are open, and closing one (the App sets it) */
   uiCards: { open(): Partial<Record<EscCard, boolean>>; close(c: EscCard): void } | null = null;
   /** the Esc ladder's rungs (tool-modes.ts): the open cards (the App's, the Event catalogue, the Grass panel, the Budget or Bottlenecks
