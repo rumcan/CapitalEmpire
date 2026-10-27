@@ -164,7 +164,7 @@ const GAME_DAY = 1440, GAME_HOUR = 60;
 /** a range start's founding season as its season card shows it (plan P22 2.5.3): the season's year, the season's business takings ($: the range,
  *  and the clubhouse once placed), the residents, the invitation checklist at the season's end, and whether the tour had invited the player (too
  *  late for this season) */
-export interface SeasonReport { year: number; takings: number; residents: number; check: InviteCheck; invited: boolean; /** the range business's season (P24, T129) */ range?: RangeCounts }
+export interface SeasonReport { year: number; takings: number; residents: number; check: InviteCheck; invited: boolean; /** the range business's season (P24, T129) */ range?: RangeCounts; /** T221: the residents the club's earnings make room for (City.townRoom) */ room?: number }
 /** the most townspeople walking at once */
 const PED_MAX = 3000;
 /** the sim speeds the time controls offer (sim s per s); 0 is paused */
@@ -3309,7 +3309,7 @@ export class Game {
     if (tournamentDue(g.invited?.at, boundary)) return;
     const year = yearOf(this.seasonsDone());
     g.founding = (g.founding ?? 0) + 1;
-    this.seasonReport = { year, takings: l.business, residents: this.traffic.pop, check: this.inviteCheck()!, invited: !!g.invited, ...(g.range ? { range: { ...g.range.season } } : {}) };
+    this.seasonReport = { year, takings: l.business, residents: this.traffic.pop, check: this.inviteCheck()!, invited: !!g.invited, ...(g.range ? { range: { ...g.range.season } } : {}), ...(this.traffic.room !== null ? { room: this.traffic.room } : {}) };
     this.scheduleSave();
   }
   private yearCheck() {

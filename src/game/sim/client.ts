@@ -56,6 +56,8 @@ export class SimClient {
   lots = new Map<string, LotView>();
   /** the town's residents, jobs and built lots (from the last town message) and the growth option id */
   pop = 0; jobs = 0; built = 0; option = 'balanced';
+  /** T221: a range start's room, the residents its earnings allow (City.townRoom; null in other games) */
+  room: number | null = null;
   /** the access per zone (256, 1 = free flow) from the last town message, and the zones with a built lot (1) */
   access: Float32Array = new Float32Array(256).fill(1); builtZone = new Uint8Array(256);
   /** called with the events of each town message (after the lots are updated) */
@@ -286,7 +288,7 @@ export class SimClient {
     if (m.t === 'townBoost') { this.onTownBoost?.(m.v); return; }
     if (m.t === 'town') {
       for (const e of m.events) { const v = this.lots.get(e.key); if (v) { v.use = e.use; v.level = e.level; v.decline = e.decline; v.seed = e.seed; v.since = e.since; } }
-      this.pop = m.pop; this.jobs = m.jobs; this.built = m.built; this.access = m.access;
+      this.pop = m.pop; this.jobs = m.jobs; this.built = m.built; this.access = m.access; this.room = m.room ?? null;
       this.builtZone.fill(0);
       for (const v of this.lots.values()) if (v.level >= LV.BUILT && v.use) this.builtZone[zoneOf(v.o[0] + v.u[0] * v.w / 2 + v.n[0] * v.d / 2, v.o[1] + v.u[1] * v.w / 2 + v.n[1] * v.d / 2)] = 1;
       this.onTown?.(m.events); return;

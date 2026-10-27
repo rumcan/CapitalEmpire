@@ -4,7 +4,12 @@
 // from 06:30), and the range's golfers (golf/rangebiz.ts RangeSim) stepped every 0.1 sim s on the town clock with the engine's demand (tier 1,
 // the exits, the town's residents, no props, the practice greens), as golf/rangehost.ts steps them. By default the player does nothing: no
 // upgrade, no hole. With --player (T178) a player upgrades the town's jammed roads each season (see NO_PLAYER and PLAYER below).
-//   npm run range:gate -- [seed = 1] [days = 20] [seasons = 20] [--player]
+//   npm run range:gate -- [seed = 1] [days = 20] [seasons = 20] [--player] [--careless]
+//
+// T221 (#610): the town grows toward the room the club's money made gives it (City.townRoom), so the run books a club's income each game hour
+// (harness bookEarnings: the range's takings plus the campaign simulator's year): a careful club's by default, a careless one's with
+// --careless. Each season prints the money made and the room; (n) the residents never pass the room by more than a home's worth (2% + 10).
+// The bands (h) are the careful club's; a careless run prints its curve and skips them.
 //
 // The town's own traffic (#442, the T048 leave-time fix) jams its gravel streets from about season 7-8, and its houses decline. The owner,
 // 2026-10-27: "Its gravel streets then jam from about season 7, houses decline ... this is seposed to happen btw. the guy hasto upgrade his
@@ -52,12 +57,12 @@
 // and p99 under 0.25 ms (several times main's, for a slower machine; the worker's own budget is 25 ms a step).
 import fs from 'node:fs';
 import path from 'node:path';
-import { RANGE_DAY, playerUpgrade, rangeClock, rangeDemand, setupRange, stepSecond, type RangeHarness } from './harness';
+import { RANGE_DAY, bookEarnings, playerUpgrade, rangeClock, rangeDemand, setupRange, stepSecond, type Earner, type RangeHarness } from './harness';
 import { SEASON_LEN } from '../../src/game/golf/calendar';
 import { LV } from '../../src/game/lots/town';
 import type { LotMap } from '../../src/game/lots/lots';
 
-const argv = process.argv.slice(2).filter(a => !a.startsWith('--')), player = process.argv.includes('--player');
+const argv = process.argv.slice(2).filter(a => !a.startsWith('--')), player = process.argv.includes('--player'), earner: Earner = process.argv.includes('--careless') ? 'careless' : 'careful';
 const seed = Number(argv[0] ?? 1), days = Math.max(1, Math.round(Number(argv[1] ?? 20))), seasons = Math.max(0, Math.round(Number(argv[2] ?? 20)));
 /** the growth bands (P22 2.7.2): lots [lo, hi] and residents [lo, hi] by year; the centre's reach (tiles) by year; the ribbon's distance and share */
 const GROWTH = {
@@ -152,7 +157,7 @@ const cityMs: number[] = [], rangeMs: number[] = [], out: Day[] = [];
 let cur: Day | null = null, lastDay = -1, takingsAt = 0, owed = 0;
 const newDay = (day: number): Day => ({ day, golfers: 0, lost: 0, noPark: 0, takings: 0, pop: 0, built: 0, carsAt5: null, visitsAt5: null, samples: 0, overlaps: 0, minGap: null, maxCars: 0 });
 const total = Math.max(days * RANGE_DAY, seasons * SEASON_LEN);
-interface Season { season: number; holes: number; success: number; built: number; lots: number; pop: number; builds: number; legs: number; centreD: number | null; ribbon: number; nearLand: number; onLand: number; ratio: number; zones: number; badZones: number; county: number; gateShare: number; money: number; upSegs: number; upCost: number; upTiles: number; upMinis: number; upRings: number }
+interface Season { season: number; holes: number; success: number; earned: number; room: number; built: number; lots: number; pop: number; builds: number; legs: number; centreD: number | null; ribbon: number; nearLand: number; onLand: number; ratio: number; zones: number; badZones: number; county: number; gateShare: number; money: number; upSegs: number; upCost: number; upTiles: number; upMinis: number; upRings: number }
 const seasonsOut: Season[] = [];
 let firstLeg = -1, firstLot = -1, builds = 0, legsN = 0, season = 1;
 let ratioAt: [number, number] = [0, 0];
@@ -183,13 +188,13 @@ function closeSeason(k: number) {
   // the county road's junctions with the town's streets: the busiest one's share of their traffic (T178: one junction carrying most trips wants a second)
   const rep = h.city.report(0), county = rep.junctions.filter(j => { const nd = h.city.net.nodeAt({ x: j.x, y: j.y }); return !!nd && nd.segs.some(sg => sg.cls.id === 'road') && nd.segs.some(sg => sg.town && (sg.cls.id === 'gravel' || sg.cls.id === 'street')); });
   const through = county.reduce((a, j) => a + j.through, 0), gate1 = through > 0 ? Math.max(...county.map(j => j.through)) / through : 0;
-  const z: Season = { season: k, holes: holesIn(k), success: successIn(k), built: town.built, lots: town.built, pop: town.pop, builds, legs: legsN, centreD: m ? Math.round(Math.hypot(sx / m - seedPt.x, sy / m - seedPt.y)) : null, ribbon: m ? far / m : 0, nearLand, onLand , ratio: r2(ratio), zones: zs.length, badZones: zs.filter(a => a > DECLINE).length, county: county.length, gateShare: r2(gate1), money: Math.round((h.city as unknown as { budget: { money: number } }).budget.money), upSegs: roadsSeason.segs, upCost: roadsSeason.cost, upTiles: roadsSeason.tiles, upMinis: roadsSeason.minis, upRings: roadsSeason.rings };
+  const z: Season = { season: k, holes: holesIn(k), success: successIn(k), earned: Math.round((h.city as unknown as { budget: { earned: number } }).budget.earned), room: h.city.townRoom() ?? 0, built: town.built, lots: town.built, pop: town.pop, builds, legs: legsN, centreD: m ? Math.round(Math.hypot(sx / m - seedPt.x, sy / m - seedPt.y)) : null, ribbon: m ? far / m : 0, nearLand, onLand , ratio: r2(ratio), zones: zs.length, badZones: zs.filter(a => a > DECLINE).length, county: county.length, gateShare: r2(gate1), money: Math.round((h.city as unknown as { budget: { money: number } }).budget.money), upSegs: roadsSeason.segs, upCost: roadsSeason.cost, upTiles: roadsSeason.tiles, upMinis: roadsSeason.minis, upRings: roadsSeason.rings };
   seasonsOut.push(z); builds = 0; legsN = 0;
   if (k % 5 === 0) console.log(`  the town's events so far: ${JSON.stringify(kinds)}`);
-  console.log(`season ${String(k).padStart(2)} (holes ${z.holes}, success ${z.success}): lots built ${z.built}, residents ${z.pop}, builds ${z.builds}, legs ${z.legs}; centre ${z.centreD ?? '-'} tiles from the seed, ${(100 * z.ribbon).toFixed(1)}% over ${GROWTH.RIBBON}; town segs near the golf land ${z.nearLand}, lots on it ${z.onLand}; trips ${z.ratio}x ideal, ${z.badZones}/${z.zones} zones over ${DECLINE}; treasury $${z.money}${player ? `, ${z.upMinis} mini-roundabouts, ${z.upRings} all-way stops, ${z.upSegs} segs upgraded (${z.upTiles} tiles) for $${z.upCost}` : ''}; county junctions ${z.county}, the busiest ${Math.round(100 * z.gateShare)}%`);
+  console.log(`season ${String(k).padStart(2)} (holes ${z.holes}, success ${z.success}): money made $${z.earned}, room ${z.room}; lots built ${z.built}, residents ${z.pop}, builds ${z.builds}, legs ${z.legs}; centre ${z.centreD ?? '-'} tiles from the seed, ${(100 * z.ribbon).toFixed(1)}% over ${GROWTH.RIBBON}; town segs near the golf land ${z.nearLand}, lots on it ${z.onLand}; trips ${z.ratio}x ideal, ${z.badZones}/${z.zones} zones over ${DECLINE}; treasury $${z.money}${player ? `, ${z.upMinis} mini-roundabouts, ${z.upRings} all-way stops, ${z.upSegs} segs upgraded (${z.upTiles} tiles) for $${z.upCost}` : ''}; county junctions ${z.county}, the busiest ${Math.round(100 * z.gateShare)}%`);
 }
 for (let s = 1; s <= total; s++) {
-  const r = stepSecond(h, s); cityMs.push(h.stepMs);
+  const r = stepSecond(h, s); cityMs.push(h.stepMs); bookEarnings(h, s, earner);
   if (r.grow) { legsN += r.grow.length; if (firstLeg < 0) firstLeg = s; }
   for (const e of r.events) { kinds[e.kind] = (kinds[e.kind] ?? 0) + 1; if (e.kind === 'build') { builds++; if (firstLot < 0) firstLot = s; } }
   // the player run: this season's upgrades are made at its end, and the next season's line reports them
@@ -242,15 +247,18 @@ const yr = (k: number) => seasonsOut.find(z => z.season === k);
 const inBand = (v: number, b?: [number, number]) => !b || (v >= b[0] && v <= b[1]);
 const growth = seasons ? {
   g_first: firstLeg > 0 && firstLeg <= GROWTH.FIRST_LEG_H * 60 && firstLot > 0 && firstLot <= GROWTH.FIRST_LOT_H * 60,
-  h_bands: [1, 5, 10, 20].every(k => !yr(k) || (inBand(yr(k)!.built, (player ? GROWTH : NO_PLAYER).lots[k]) && inBand(yr(k)!.pop, (player ? GROWTH : NO_PLAYER).pop[k]))),
+  h_bands: earner === 'careless' || [1, 5, 10, 20].every(k => !yr(k) || (inBand(yr(k)!.built, (player ? GROWTH : NO_PLAYER).lots[k]) && inBand(yr(k)!.pop, (player ? GROWTH : NO_PLAYER).pop[k]))),
   i_land: seasonsOut.every(z => z.nearLand === 0 && z.onLand === 0),
   j_compact: [5, 20].every(k => !yr(k) || (yr(k)!.centreD ?? 0) <= GROWTH.centre[k]!) && (!yr(5) || yr(5)!.ribbon < GROWTH.RIBBON_SHARE),
   k_builds_steps: seasonsOut.every(z => z.builds > 0) && mean(cityMs) < GROWTH.STEP_MEAN && q(cityMs, 0.999) < GROWTH.STEP_P999,
   // the player run never goes broke (T184: the owner's fair challenge)
   m_money: !player || seasonsOut.every(z => z.money >= 0),
+  // T221: the town stops at its room (a home's worth over, and the upgrades and recoveries of a game hour)
+  n_room: seasonsOut.every(z => z.pop <= z.room * 1.02 + 10),
 } : {};
 Object.assign(checks, growth);
 if (seasons) console.log(`[range] ${player ? 'player run' : 'no-player run'}, seed ${seed}${player ? `: ${roads.minis} mini-roundabouts, ${roads.rings} all-way stops, ${roads.segs} segs upgraded (${roads.tiles} tiles) for $${roads.cost}, ${roads.lotsLost} lots re-cut; the treasury at its lowest $${Math.min(...seasonsOut.map(z => z.money))}` : ''}`);
+if (seasons) console.log(`[range] ${earner} club, seed ${seed}, money made / residents (room): ${[1, 3, 5, 10, 20].filter(k => yr(k)).map(k => `season ${k}: $${yr(k)!.earned.toLocaleString('en-US')} / ${yr(k)!.pop} (${yr(k)!.room})`).join('; ')}`);
 if (seasons) console.log(`[range] growth, seed ${seed}: first leg at ${firstLeg} s, first lot at ${firstLot} s; ${[1, 5, 10, 20].filter(k => yr(k)).map(k => `year ${k}: ${yr(k)!.built} lots, ${yr(k)!.pop} residents, centre ${yr(k)!.centreD}`).join('; ')}; ribbon at year 5 ${yr(5) ? (100 * yr(5)!.ribbon).toFixed(1) + '%' : '-'}; City.step over ${seasons} seasons mean ${r2(mean(cityMs))} ms, p99.9 ${r2(q(cityMs, 0.999))} ms, max ${r2(Math.max(...cityMs))}`);
 const pass = Object.values(checks).every(Boolean);
 console.log(`[range] seed ${seed}, ${out.length} town days: golfers ${golfers} (a day ${Math.min(...gd)}-${Math.max(...gd)}), lost ${lost} (${r1(100 * lost / Math.max(1, golfers + lost))}%), takings $${Math.round(takings)} (a day $${Math.round(Math.min(...td))}-$${Math.round(Math.max(...td))}); `
@@ -258,5 +266,5 @@ console.log(`[range] seed ${seed}, ${out.length} town days: golfers ${golfers} (
   + `pop ${out.at(-1)?.pop ?? 0}; City.step mean ${stats.cityMean} ms p99 ${stats.cityP99} max ${stats.cityMax}; RangeSim.step mean ${stats.rangeMean} ms p99 ${stats.rangeP99} max ${stats.rangeMax}`);
 console.log(`[range] checks: ${Object.entries(checks).map(([k, v]) => `${k} ${v ? 'ok' : 'FAIL'}`).join(', ')} => ${pass ? 'PASS' : 'FAIL'}`);
 fs.mkdirSync('output/sim', { recursive: true });
-fs.writeFileSync(path.join('output/sim', `range-gate-${seed}.json`), JSON.stringify({ seed, days, seasons, player, roads, seasonsOut, firstLeg, firstLot, growth: GROWTH, setupMs: Math.round(setupMs), out, golfers, lost, takings, samples, overlaps, where, stats, checks, pass, owed: Math.round(owed), thresholds: T }, null, 1));
+fs.writeFileSync(path.join('output/sim', `range-gate-${seed}.json`), JSON.stringify({ seed, days, seasons, player, earner, roads, seasonsOut, firstLeg, firstLot, growth: GROWTH, setupMs: Math.round(setupMs), out, golfers, lost, takings, samples, overlaps, where, stats, checks, pass, owed: Math.round(owed), thresholds: T }, null, 1));
 process.exit(pass ? 0 : 1);

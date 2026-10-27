@@ -32,13 +32,16 @@ const HOUR = 60, DAY = 1440;
 /** residents and jobs by use (index = LU) and level (BUILT, UPGRADED) */
 const POP: number[][] = [[0, 0], [3, 5], [0, 0], [0, 0], [0, 0], [0, 0]];
 const JOBS: number[][] = [[0, 0], [0, 0], [3, 5], [6, 10], [3, 6], [8, 12]];
+/** T221: a home's residents when built, and what its upgrade adds (POP's RES row) */
+const HOME_POP = POP[LU.RES]![0]!, HOME_UP = POP[LU.RES]![1]! - HOME_POP;
 /** the seeded noise on land use scores (+-), the candidates kept for the weighted pick */
 const NOISE = 0.15, PICK_TOP = 400;
 /** the lot sides of a pick: any lot, only those on gravel (the town's land with towns), only those on paved roads (the player's, with towns);
  *  a grown town's (T090): its own (on a town seg of any class, or gravel), the player's (on the player's paved roads) */
 const ANY = 0, GRAVEL = 1, PAVED = 2, OWN = 3, PLAYER = 4;
-/** a range start's grown town (T090, plan P22 2.3.2-2.3.3): the holes the player has built and the tournaments' success factor */
-export interface GrownOpts { holes: number; success: number }
+/** a range start's grown town (T090, plan P22 2.3.2-2.3.3): the holes the player has built and the tournaments' success factor; T221 (#610): the
+ *  residents it has room for (cap: the City's golf/towngrowth.ts earnedTarget of the money made; absent or Infinity: no limit) */
+export interface GrownOpts { holes: number; success: number; cap?: number }
 /** T090: the compact rings' falloff of a lot dc tiles from the anchored centre with `built` lots built: exp(-dc / (GROWN_RING0 + GROWN_RING_K x sqrt(built))) */
 export const grownRing = (dc: number, built: number): number => Math.exp(-dc / (GROWN_RING0 + GROWN_RING_K * Math.sqrt(Math.max(0, built))));
 /** the base target share of built+building lots by use (index = LU; GOV is a quota, not a share; the option scales these), and the lots before shares count */
@@ -95,7 +98,12 @@ export class Town {
   grown: GrownOpts | null = null; private grownCen: Pt = { x: 0, y: 0 };
   /** T090: a grown town from now on (or the seeded rules again with null); a new town's accumulator starts at 1, so its first lot starts in the
    *  first growth hour */
-  setGrown(g: GrownOpts | null) { if (g && !this.grown && this.built === 0 && this.acc < 1) this.acc = 1; this.grown = g ? { holes: Math.max(0, g.holes), success: Math.max(0, g.success) } : null; }
+  setGrown(g: GrownOpts | null) {
+    if (g && !this.grown && this.built === 0 && this.acc < 1) this.acc = 1;
+    this.grown = g ? { holes: Math.max(0, g.holes), success: Math.max(0, g.success), cap: g.cap ?? this.grown?.cap ?? Infinity } : null;
+  }
+  /** T221: the residents the grown town's lots building now will bring (Town.step counts them each game hour: a lot building as a home) */
+  pending = 0;
   popK: number[] = []; builtK: number[] = []; govK: number[] = [];
 
   constructor(seed: number) { this.seed = seed >>> 0; this.rs = this.seed; }
@@ -191,34 +199,39 @@ export class Town {
     if (this.hour % 24 === 0) this.dirty = true;
     for (let z = 0; z < 256; z++) { if (this.access[z] > 1.8) { if (this.bad[z] < 0) this.bad[z] = T; } else this.bad[z] = -1; }
     if (this.dirty) this.rescan();
-    // the lots: construction, then upgrade, decline, recovery and clearing of the built ones
+    // the lots: construction, then upgrade, decline, recovery and clearing of the built ones. T221: a grown town at its room (the cap: the residents
+    // now and those its homes building will bring) starts no lot and upgrades no home; it never loses one for it (decline keeps its own rules)
+    const g = this.grown, cap = g?.cap ?? Infinity;
+    let pend = 0;
     for (const s of this.states.values()) {
-      if (s.level === LV.BUILDING) { if (T - s.since >= (this.grown ? GROWN_BUILD_S : DAY / 2) / this.speed) { this.set(s, s.use, LV.BUILT, s.decline, T); ev.push(this.evt(s, 'complete')); } continue; }
+      if (s.level === LV.BUILDING) { if (T - s.since >= (this.grown ? GROWN_BUILD_S : DAY / 2) / this.speed) { this.set(s, s.use, LV.BUILT, s.decline, T); ev.push(this.evt(s, 'complete')); } else if (s.use === LU.RES) pend += HOME_POP; continue; }
       if (s.level < LV.BUILT) continue;
-      const g = this.geo.get(s.key)!, c = g.c, z = zoneOf(c.x, c.y), a = this.access[z];
+      const gg = this.geo.get(s.key)!, c = gg.c, z = zoneOf(c.x, c.y), a = this.access[z];
       if (s.decline === 3 && T - s.since >= 2 * DAY) { this.set(s, LU.NONE, LV.EMPTY, 0, T); ev.push(this.evt(s, 'clear')); continue; }
       if (s.decline > 0 && a < 1.5) {
         if (this.rnd() < 0.05) { this.set(s, s.use, s.level, s.decline - 1, T); ev.push(this.evt(s, 'recover')); }
       } else if (s.decline < 3 && this.bad[z] >= 0 && T - this.bad[z] >= 2 * DAY) {
         if (this.rnd() < 0.03) { this.set(s, s.use, s.level, s.decline + 1, T); ev.push(this.evt(s, 'decline')); }
-      } else if (s.level === LV.BUILT && g.cls !== 'gravel' && a < 1.3 && T - s.since >= 3 * DAY) {
-        if (this.rnd() < 0.04) { this.set(s, s.use, LV.UPGRADED, s.decline, T); ev.push(this.evt(s, 'upgrade')); }
+      } else if (s.level === LV.BUILT && gg.cls !== 'gravel' && a < 1.3 && T - s.since >= 3 * DAY) {
+        if (this.rnd() < 0.04 && (s.use !== LU.RES || this.pop + pend + HOME_UP <= cap)) { this.set(s, s.use, LV.UPGRADED, s.decline, T); ev.push(this.evt(s, 'upgrade')); }
       }
     }
+    this.pending = pend;
     // the growth: civic quota first, then the fraction of lots per hour. With town centres the town grows on gravel only, and slower;
     // the player's paved roads grow PAVED_RATE lots a game hour on their own accumulator (the rates: config.ts)
     if (this.govN < this.govTarget()) this.placeGov(ctx, T, ev);
     // T090: a range start's grown town: its own lots at its own rate (more with holes and with built lots, times success), the player's paved
     // roads at PAVED_RATE, both drawn toward the anchored centre
-    const g = this.grown;
+    // T221: both stop at the town's room (the cap, residents): a lot starts while the residents now and to come are under it
     if (g && this.centres.length) {
       this.grownCen = this.anchoredCentre();
+      let room = cap - this.pop - pend;
       this.acc += (GROWN_BASE + GROWN_PER_HOLE * Math.min(18, g.holes) + GROWN_PER_BUILT * this.built) * g.success / 24 * this.speed;
       let n = Math.floor(this.acc); this.acc -= n;
-      for (; n > 0; n--) { const l = this.pick(ctx, OWN); if (!l) break; this.startBuild(l, ctx, T, ev); }
+      for (; n > 0 && room > 0; n--) { const l = this.pick(ctx, OWN); if (!l) break; if (this.startBuild(l, ctx, T, ev) === LU.RES) { room -= HOME_POP; this.pending += HOME_POP; } }
       this.accP += PAVED_RATE * this.speed;
       let m = Math.floor(this.accP); this.accP -= m;
-      for (; m > 0; m--) { const l = this.pick(ctx, PLAYER); if (!l) break; this.startBuild(l, ctx, T, ev); }
+      for (; m > 0 && room > 0; m--) { const l = this.pick(ctx, PLAYER); if (!l) break; if (this.startBuild(l, ctx, T, ev) === LU.RES) { room -= HOME_POP; this.pending += HOME_POP; } }
       return;
     }
     const towns = this.centres.length > 0;
@@ -233,9 +246,10 @@ export class Town {
   }
 
   /** a lot starts building (EMPTY to BUILDING: a 'build' event) with a use drawn for it */
-  private startBuild(l: Lot, ctx: TownCtx, T: number, ev: TownEvent[]) {
+  private startBuild(l: Lot, ctx: TownCtx, T: number, ev: TownEvent[]): number {
     const use = this.useFor(l, ctx), s = this.states.get(l.key)!;
     this.set(s, use, LV.BUILDING, 0, T); ev.push(this.evt(s, 'build'));
+    return use;
   }
 
   /** the zone growth of a lot's zone if the lot is reachable, else 0 */

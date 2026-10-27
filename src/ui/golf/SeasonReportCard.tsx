@@ -2,6 +2,7 @@
 // the results: the season's takings, the residents and the tour's invitation checklist. One button, Continue; the clock never stops for it.
 import type { SeasonReport } from '../../game/engine';
 import { Icon } from '../Icon';
+import { roomLine } from '../../game/golf/towngrowth';
 
 const money = (n: number) => '$' + Math.round(n).toLocaleString();
 const tick = (ok: boolean) => <span className={ok ? 'text-emerald-400' : 'text-rose-400'}>{ok ? '✓' : '✗'}</span>;
@@ -26,6 +27,9 @@ export function SeasonReportCard({ report, onContinue }: { report: SeasonReport;
             <div className="text-base font-bold text-white">{report.residents.toLocaleString()}</div>
           </div>
         </div>
+        {report.room !== undefined && (
+          <div className="rounded-xl border border-white/10 bg-white/5 p-2 text-center text-xs text-slate-300" data-testid="season-room">{roomLine(report.residents, report.room)}</div>
+        )}
         {report.range && (
           <div className="rounded-xl border border-white/10 bg-white/5 p-2 text-center text-xs text-slate-300" data-testid="season-range">
             The range: {Math.round(report.range.golfers).toLocaleString()} golfers seen, {Math.round(report.range.buckets).toLocaleString()} buckets sold, {money(report.range.takings)} taken{report.range.lost > 0 ? `, ${Math.round(report.range.lost).toLocaleString()} drove on at the queue` : ''}
