@@ -6,6 +6,7 @@ import {
   FALLBACK_TEE_BEHIND,
   FALLBACK_TEE_PAST,
   GUIDE,
+  INVITE_HOLD_S,
   GUIDE_STEPS,
   LEGACY_HINT_STEP,
   RANGE_GUIDE,
@@ -19,6 +20,7 @@ import {
   type GuideFacts,
 } from '../src/game/ext/progressive-ui/guide';
 import { plotOfFront } from '../src/game/golf/range';
+import { RAMP_TOAST, rampToast } from '../src/game/ext/progressive-ui';
 import { inPractice, practiceArea } from '../src/game/golf/practice';
 
 /** a default guide facts record */
@@ -234,5 +236,29 @@ describe("a range start's guide steps (P22 2.8, T095)", () => {
       const far = alongX ? Math.max(plot[0] + plot[2] + FALLBACK_TEE_PAST, pa.box[2] + FALLBACK_PRACTICE_PAST) : Math.max(plot[1] + plot[3] + FALLBACK_TEE_PAST, pa.box[3] + FALLBACK_PRACTICE_PAST);
       if (alongX) assert.equal(w.x, Math.min(far, parcel[0] + parcel[2] - 2)); else assert.equal(w.y, Math.min(far, parcel[1] + parcel[3] - 2));
     }
+  });
+
+  it('16. the invitation step holds INVITE_HOLD_S after the invitation came this session, then Play the tournament; an older one goes straight on', () => {
+    const nine = range({ holes: 9, clubhouse: true, invited: true });
+    assert.equal(guideStep({ ...nine, invitedAgoS: 0 })?.id, 'guide-range-invite');
+    assert.equal(guideStep({ ...nine, invitedAgoS: INVITE_HOLD_S - 0.5 })?.id, 'guide-range-invite');
+    assert.equal(guideStep({ ...nine, invitedAgoS: INVITE_HOLD_S })?.id, 'guide-range-tournament');
+    assert.equal(guideStep(nine)?.id, 'guide-range-tournament');
+    // not invited: the step stays whatever the clock says
+    assert.equal(guideStep({ ...nine, invited: false, invitedAgoS: 99 })?.id, 'guide-range-invite');
+  });
+});
+
+describe('the ramp toast (T132; T095: none when the tools were open already)', () => {
+  it('17. a step that rises toasts; the same step, an open tool set (Show every tool now, the dev unlock) or New hole after a hole does not', () => {
+    assert.equal(rampToast(0, 1, { open: false, holes: 0 }), RAMP_TOAST[1]);
+    assert.equal(rampToast(2, 3, { open: false, holes: 0 }), RAMP_TOAST[3]);
+    assert.equal(rampToast(1, 1, { open: false, holes: 0 }), null);
+    assert.equal(rampToast(0, 3, { open: true, holes: 1 }), null);
+    assert.equal(rampToast(0, 1, { open: true, holes: 0 }), null);
+    assert.equal(rampToast(2, 3, { open: false, holes: 1 }), null);
+    assert.equal(rampToast(1, 2, { open: false, holes: 1 }), RAMP_TOAST[2]);
+    assert.equal(rampToast(undefined, 3, { open: false, holes: 0 }), null);
+    assert.equal(rampToast(0, undefined, { open: false, holes: 0 }), null);
   });
 });

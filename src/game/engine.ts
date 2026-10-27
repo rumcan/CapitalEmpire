@@ -130,7 +130,7 @@ import { MapGridLayer } from './ext/map-grid/layer';
 import { MoneyFloats, addCash, drawMoneyFloats, rangeFloat, type MoneyEvent } from './moneyfloats';
 import { ColumnPlacer, PRI } from './label-place';
 import { LABEL_OUTLINE, WorldLabels } from './world-labels';
-import { FIRST_PAR3_M, RAMP_TOAST, RANGE_CARD_SEEN, STUCK_PLAY_SEC, advanceProgress, computeProgressiveUiState, emptyProgress, fallbackTeeSpot, guideStep, nextFirstRunHint, normalizeProgress, progressFacts, rampLock, type FirstRunHint, type GuideFacts, type PlayerProgressFacts, type ProgressiveUiState } from './ext/progressive-ui';
+import { FIRST_PAR3_M, RANGE_CARD_SEEN, STUCK_PLAY_SEC, advanceProgress, computeProgressiveUiState, emptyProgress, fallbackTeeSpot, guideStep, nextFirstRunHint, normalizeProgress, progressFacts, rampLock, rampToast, type FirstRunHint, type GuideFacts, type PlayerProgressFacts, type ProgressiveUiState } from './ext/progressive-ui';
 
 /** New hole's camera framing eases this long at most (ms; P23 4.4) */
 const CAM_EASE_MS = 400;
@@ -2760,6 +2760,8 @@ export class Game {
     return { check: this.inviteCheck()!, invited: !!g.invited, due: tournamentDue(g.invited?.at, next) };
   }
   // ---------- a range start's first minute (plan P22 2.8, T095) ----------
+  /** when the tour's invitation came in this session (performance.now, ms; 0: not this session) */
+  private invitedAt = 0;
   /** the holes with a par, as the last progress check counted them */
   private holesBuilt = 0;
   /** whether the tee ring is drawn (the progress check sets it: a range start's New hole in hand before its first hole) */
@@ -2797,11 +2799,15 @@ export class Game {
     const at = g.dir === 0 ? { x: cx, y: d.y + d.h + off } : g.dir === 1 ? { x: d.x - off, y: cy } : g.dir === 2 ? { x: cx, y: d.y - off } : { x: d.x + d.w + off, y: cy };
     return (this.rangeRoadName = this.roadNameAt(at));
   }
+  /** whether a new range game's town is still unnamed: its name comes with its first finished building ("Pine Hollow is on the map") */
+  private townUnnamed(): boolean { const g = this.golf; return g?.start === 'range' && g.progress?.ramp !== undefined && !this.firstSeen('town-named'); }
+  /** town i's name as the map and the minimap say it, or null while a new range game's town is unnamed (P22 2.8) */
+  townName(i: number): string | null { return i === 0 && this.townUnnamed() ? null : this.names.town(i); }
   /** the top bar's title (P22 2.8), its big line and its small one: a new range game's range ("Driving Range", "on County Road 36") until its
    *  town is named, then the town ("Pine Hollow", "Town Builder"); null in other games (the game's own title) */
   titleName(): { name: string; sub: string } | null {
     const g = this.golf; if (g?.start !== 'range') return null;
-    if (g.progress?.ramp === undefined || this.firstSeen('town-named')) return { name: this.names.town(0), sub: 'Town Builder' };
+    if (!this.townUnnamed()) return { name: this.names.town(0), sub: 'Town Builder' };
     const r = this.rangeRoad(); return { name: 'Driving Range', sub: r ? `on ${r}` : 'on the county road' };
   }
   /** the welcome card (P22 2.8): once per new range game, while it is new (under WELCOME_PLAY_S of play when loaded), until it is closed.
@@ -2841,6 +2847,7 @@ export class Game {
     const f: GuideFacts = {
       pieces: p.pieces, roads: p.roads, parks: p.parks, structures: p.structures, kinds: {}, runs: this.traffic.round.runs, holes: this.holesBuilt,
       tutorial: 'on', step: p.seen.includes('welcome') ? 2 : 1, start: 'range', clubhouse: this.bizDefs.some(d => d.type === 'clubhouse'), invited: !!g.invited,
+      ...(this.invitedAt ? { invitedAgoS: (performance.now() - this.invitedAt) / 1000 } : {}),
       progress: p.ramp !== undefined,
     };
     const st = guideStep(f);
@@ -2856,7 +2863,7 @@ export class Game {
     const g = this.golf; if (g?.start !== 'range' || g.invited || ++this.foundTick % 30) return;
     if (!this.inviteCheck()?.met) return;
     const c = this.traffic.clockTime(performance.now()), next = Math.floor(c / GAME_DAY) * GAME_DAY + GAME_DAY;
-    g.invited = { at: c };
+    g.invited = { at: c }; this.invitedAt = performance.now(); // the guide holds its invitation step a moment (T095)
     this.sendGolf(); this.scheduleSave();
     this.toast(`The tour invites you: the ${tierInfo(1).name} at the end of ${tournamentDue(c, next) ? 'this' : 'next'} season`, 'good');
     this.emit();
@@ -4097,7 +4104,8 @@ export class Game {
     const p = this.golf?.progress; if (!p || ++this.progTick % 10) return;
     const f = this.playerProgressFacts(), was = p.ramp;
     if (f && advanceProgress(p, f, this.uiTool)) { this.scheduleSave(); this.emit(); }
-    if (was !== undefined && p.ramp !== undefined && p.ramp > was) this.toast(RAMP_TOAST[p.ramp]!, 'good'); // a ramp step opens (T132)
+    // a ramp step opens (T132); not when its tools were open already, nor New hole's once a hole exists (T095)
+    const rt = rampToast(was, p.ramp, { open: this.unlockAll || p.advanced, holes: f?.playableHoles ?? 0 }); if (rt) this.toast(rt, 'good');
     this.range.hint = !!f && !!nextFirstRunHint(f)?.id.startsWith('hint-practice'); // the practice area's outline brightens while its hint is up
     this.range.practiceLocked = !!f && rampLock(f, 'course') !== null; // until the first upgrade the practice area says what opens it
     this.holesBuilt = f?.playableHoles ?? 0;
@@ -5533,7 +5541,8 @@ export class Game {
     const dpr = this.dpr, font = `bold ${16 * dpr}px sans-serif`;
     this.townPts.forEach((c, i) => {
       const s = this.screen(c.x, c.y);
-      this.labels.text(LABEL_KEY.town + i, PRI.name, this.names.town(i), s.x, s.y, font, 16 * dpr, '#ffffff', '#0f172a', 4 * dpr);
+      const name = this.townName(i); if (!name) return; // a new range game's town has no name yet (T095)
+      this.labels.text(LABEL_KEY.town + i, PRI.name, name, s.x, s.y, font, 16 * dpr, '#ffffff', '#0f172a', 4 * dpr);
     });
   }
 
