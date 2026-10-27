@@ -54,7 +54,10 @@ export class PracticeTool {
 
   // ---- the pointer and the keys
   /** the cursor moved: the ghost follows (css px) */
-  move(mx: number, my: number): void { this.at = this.ctx.tileAt(mx, my); this.refresh(); }
+  move(mx: number, my: number): void {
+    const was = this.ghost?.label ?? ''; this.at = this.ctx.tileAt(mx, my); this.refresh();
+    if ((this.ghost?.label ?? '') !== was) this.ctx.emit(); // the panel's and the pill's words follow (the refusal, the price)
+  }
   /** the pointer left the map */
   leave(): void { this.at = null; this.ghost = null; }
   /** a click: builds the ghost, or says why not */
