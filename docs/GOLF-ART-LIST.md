@@ -593,3 +593,28 @@ Each sheet holds four independent overlays laid over any grass; transparent ever
 | `maintenance` | aeration core holes, a topdressing sand film, sprinkler wet circles, a hole plug |
 | `leaves-litter` | scattered autumn leaves (maple red, oak brown, gold) |
 | `surface-transitions` | soft ragged grass-to-soil edges |
+
+---
+
+## 11. Iconic places (T219, #594)
+The owner, 2026-10-27: "custom build some iconic places for the map that we reuse each time like the drive in and a highschool etc". The library
+already has the drive-in's marquee (`world:drivein_marquee`), the schools (`world:school`, `world:primary_school`), the school bus, the diner,
+the water towers, a silo, a windmill and a fountain. These pieces are missing:
+
+**142. Drive-in movie screen** · **A** · 20 x 3 m, 12 high · P1.
+> Subject: a 1985 drive-in theatre's big outdoor movie screen, about 20 m wide and 12 m high: a plain white screen face (blank, a faint glow from the projector at night) on a tall timber frame braced at the back with diagonal timbers and a service ladder, a small projection booth's light visible below it. Front and back are both real: the back shows the bracing.
+
+**143. Drive-in speaker post** · **B** · 0.3 m, 1.2 high · P1. Two variants.
+> Subject: a drive-in theatre's speaker post: a short grey steel post with two small chrome window speakers hanging from it on curly cables, one a little crooked.
+
+**144. Drive-in ticket booth** · **A** · 2.5 x 2 m, 3 high · P1.
+> Subject: a small 1950s-style drive-in ticket booth: white walls, a red-and-yellow striped canopy, a sliding window with a counter on the driver's side, a little neon star on the roof (lit, no words).
+
+**145. Football goalposts** · **A** · 6 x 1 m, 9 high · P1.
+> Subject: an American football goalpost: a single yellow gooseneck post on padding with the crossbar and two tall uprights.
+
+**146. Bleachers** · **A** · 20 x 6 m, 4 high · P1. Two lengths (10 and 20 m).
+> Subject: aluminium school bleachers: five rows of grey benches on a steel frame with a handrail at the back, a stair at one end, empty.
+
+**147. Running track and field** · **C** · 100 x 60 m · P1. Top-down.
+> Subject: seen from straight above, a high school football field: striped mown grass with white yard lines (no numbers), end zones, inside a red-brown running track with white lane lines curving round both ends.
