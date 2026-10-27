@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-27 04:08)
+## START HERE (kept current by the lead; last updated 2026-10-27 04:19)
 
 **Paste-ready start prompts for every role are in `docs/START-PROMPTS.md`:** the lead, a coding ticket, and the other sessions in this
 repo. The weekly usage cap is close (2026-10-26), so any chat may stop at any moment.
@@ -95,6 +95,11 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
    (the sharp bump). See the History sections below and `gh issue list --label arena --state open`.
 
 ### Done recently (newest first; details in each PR)
+- 2026-10-27 04:19: **T091 #422 grown-town roads keep off the course**: every golf game's town roads keep 6 tiles off the golf land (old
+  starts could cross the course before); `short()` counts only lots that can build; a range start's town lays a leg every game hour,
+  anchored between its seed and its built lots, legs near golf land (40 tiles) penalised; a grown industrial district 200-280 tiles toward
+  the nearer exit. Classic games untouched. T090 builds on it. The lead typechecks PRs in a sparse `.claude/worktrees/lead-tc` (no art,
+  docs, assets; node_modules a junction: remove it with [System.IO.Directory]::Delete first).
 - 2026-10-27 04:08: **T096 #423 the range's look**: most was already built by P24/T086 (props turn with the plot, the range ground group,
   golfers at the bays); added: the range's outfield and target greens are managed grass (`driving-range`, `golf-green` families, grass
   catalog `PRESET_FAMILY`), a turning/placement test, and the range kit P2 → P1 in GOLF-SPRITES with art requests (mats strip, target-green
