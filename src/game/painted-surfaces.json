@@ -10,7 +10,7 @@
   "rough": { "family": "rough-owner", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "fescue": { "family": "golden-fescue", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "bunker": { "family": "sand-raked", "version": null, "scale": 0.5, "tint": "#fff6ec", "tone": 0 },
-  "waste": { "family": "sand-ripples-tiles", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
+  "waste": { "family": "desert-run", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "water": { "family": "lake", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "growSoil": { "family": "underground-earth", "version": "v2", "scale": 0.5, "tint": "#9aa8f0", "tone": -0.05 },
   "base": { "family": "golden-fescue", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
