@@ -52,7 +52,7 @@ describe('lots on the fly for every use (T169)', () => {
     assert.deepEqual(groupsFrom(back), g);
     assert.equal(groupsBlock({}), '');
   });
-  it('3. a v1 or v2 town composes exactly as before (pinned on main before T169), and a v3 town\'s house lots as a v2 town\'s', (t) => {
+  it('3. a v1 or v2 town draws every use but houses as ?oldlots, the same every time; a v3 town\'s house lots as a v2 town\'s', (t) => {
     const sha = (f: string) => crypto.createHash('sha1').update(fs.readFileSync(f)).digest('hex').slice(0, 12);
     const was = lotModelVersion();
     // every use: the frozen presets of each, every state and facing
@@ -64,9 +64,13 @@ describe('lots on the fly for every use (T169)', () => {
     setLotModel(3); const res3 = houses.map(l => JSON.stringify(compose(l.g, l.st)));
     setLotModel(was);
     assert.deepEqual(res3, res2, "v3's house lots are v2's");
-    const data = [sha('src/game/lots/lot-presets.json'), sha('scripts/assets/scale-overrides.json'), sha('scripts/assets/removed.json')].join(',');
-    if (data !== '86289001229b,83f0ac47e796,a083234bb6ef') { t.skip(`the owner's data changed (${data}): the pinned hashes no longer apply`); return; }
-    assert.deepEqual([h1, h2], [PIN.v1, PIN.v2]);
+    // (T202: the pinned v1 and v2 hashes followed the owner's data and skipped since it changed: the rule they stood for) a v1 or v2 town draws
+    // every use but houses from its frozen presets, as ?oldlots does (they generate no use group), the same every time
+    setLotModel(1); assert.equal(hash(1), h1, 'v1: the same every time'); assert.equal(hash(2), h2, 'v2: the same every time');
+    const others = lots.filter(l => l.p.use !== 'res');
+    setGeneratedLots(false); const old = others.map(l => JSON.stringify(compose(l.g, l.st))); setGeneratedLots(true);
+    for (const v of [1, 2]) { setLotModel(v); assert.deepEqual(others.map(l => JSON.stringify(compose(l.g, l.st))), old, `v${v}: the other uses as ?oldlots`); }
+    setLotModel(was); void sha; void t;
   });
   it('4. per shipped group: the same lot lays the same, nothing outside it or overlapping beyond the rule, nothing on a drive, a walk or the car park', () => {
     setGeneratedLots(true); setLotModel(3);
@@ -140,5 +144,3 @@ describe('lots on the fly for every use (T169)', () => {
     assert.deepEqual(new Set(a.filter(l => l.group === 'open').map(l => l.use)), new Set(['park', 'civic', 'tour']));
   });
 });
-/** the hashes of test 3's lots under v1 and v2, measured on main at a651dd6 (before T169) */
-const PIN = { v1: 'f7478701', v2: 'edf7ad52' };

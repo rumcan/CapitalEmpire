@@ -6,7 +6,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import crypto from 'node:crypto';
-import { addLotModel, compose, lotModelVersion, lotSeed, pickedPreset, setGeneratedLots, setLotModel, type ComposeState, type LotGeom } from '../src/game/lots/compose';
+import { addLotModel, compose, layModelFrom, lotModelVersion, lotSeed, pickedPreset, setGeneratedLots, setLotModel, type ComposeState, type LotGeom } from '../src/game/lots/compose';
 import { LATEST, LOT_MODELS } from '../src/game/lots/lot-models';
 import { LU, LV } from '../src/game/lots/town';
 import { mulberry } from '../src/game/iso';
@@ -65,16 +65,22 @@ describe('lots generated on the fly (T160)', () => {
     const fh = referenceLots().find(l => frozenHouse(l) && l.st.decline === 0)!, gen = compose(fh.g, fh.st), oldc = (setGeneratedLots(false), compose(fh.g, fh.st)); setGeneratedLots(true);
     assert.ok(gen.props.filter(p => p.from).length <= 1 && oldc.props.filter(p => p.from).length > 1, 'only the house comes from the frozen preset');
   });
-  it('3. ?oldlots is today\'s composition: the reference lots hash as main did (when the data files are the ones main was measured with)', (t) => {
-    const sha = (f: string) => crypto.createHash('sha1').update(fs.readFileSync(f)).digest('hex').slice(0, 12);
-    const data = [sha('src/game/lots/lot-presets.json'), sha('scripts/assets/scale-overrides.json'), sha('scripts/assets/removed.json')].join(',');
-    if (data !== '86289001229b,83f0ac47e796,a083234bb6ef') { t.skip(`the owner's data changed since T160 (${data}): the reference hash no longer applies`); return; }
+  // (T202: the pinned hash here followed the owner's presets, sizes and removals, and skipped since they changed: the rule it stood for)
+  it('3. ?oldlots draws each lot from its frozen preset: every item that is not the street\'s, a fence or a decline\'s comes from the lot\'s own preset; the same every time', () => {
     setGeneratedLots(false);
-    const h = fnv(JSON.stringify(referenceLots().map(l => compose(l.g, l.st))));
-    setGeneratedLots(true);
-    // main's hash at T160 was 9e414f77; T167 (#371) draws a stand-in for every picture the owner removed (the presets that place one), so today's is
-    assert.equal(h, 'c0ff5edb');
+    try {
+      let drawn = 0;
+      for (const l of referenceLots()) {
+        const p = pickedPreset(l.g, l.st), c = compose(l.g, l.st);
+        assert.equal(JSON.stringify(compose(l.g, l.st)), JSON.stringify(c), 'the same every time');
+        if (!p) continue;
+        for (const q of c.props) if (q.from) { assert.equal(q.from.preset, p.id, `${p.id}: ${q.id} from another preset`); drawn++; }
+        if (p.props.some(q => { const it = LIBRARY[INDEX.get(q.id) ?? -1]; return !!it && isBuilding(it); }) && l.st.decline < 3) assert.ok(c.props.some(q => q.from), `${p.id}: drawn from its preset`);
+      }
+      assert.ok(drawn > 100, `${drawn} items drawn from the presets`);
+    } finally { setGeneratedLots(true); }
   });
+
   it('4. a town keeps its lot model: one saved with v1 composes with v1 after another ships; an unknown version falls back below it', () => {
     assert.ok(LOT_MODELS[1], 'v1 ships'); assert.ok(LATEST >= 1);
     const lots = examLots().filter(frozenHouse).slice(0, 12), was = lotModelVersion(), nv = LATEST + 1;
@@ -89,17 +95,21 @@ describe('lots generated on the fly (T160)', () => {
     setLotModel(nv + 50); assert.equal(lotModelVersion(), nv, 'a version not shipped: the nearest below');
     setLotModel(was);
   });
-  it('7. a town saved with v1 composes its generated lots as it did before T161 (pairs and densities came with v2)', (t) => {
-    const sha = (f: string) => crypto.createHash('sha1').update(fs.readFileSync(f)).digest('hex').slice(0, 12);
-    const data = [sha('src/game/lots/lot-presets.json'), sha('scripts/assets/scale-overrides.json'), sha('scripts/assets/removed.json')].join(',');
-    if (data !== '86289001229b,83f0ac47e796,a083234bb6ef') { t.skip(`the owner's data changed since T160 (${data}): the reference hash no longer applies`); return; }
-    const was = lotModelVersion();
-    setGeneratedLots(true); setLotModel(1);
-    const h = fnv(JSON.stringify([...examLots(), ...referenceLots()].map(l => compose(l.g, l.st))));
-    setLotModel(was);
-    // measured on main at 2c18a47 (T167 merged), before T161
-    assert.equal(h, 'b7c7756c');
+  // (T202: the pinned hash here followed the owner's data and skipped since it changed: the rule it stood for)
+  it('7. a town saved with v1 lays its generated lots without the taste (pairs and densities came with v2), the same every time', () => {
+    const v1 = layModelFrom(LOT_MODELS[1]), v2 = layModelFrom(LOT_MODELS[2]);
+    assert.equal(v1.pairs, undefined, 'v1 has no pairs'); assert.ok([...v1.kinds.values()].every(k => k === undefined), 'v1 has no densities');
+    assert.ok(v2.pairs && [...v2.kinds.values()].some(k => k !== undefined), 'v2 has both');
+    const was = lotModelVersion(), lots = [...examLots(), ...referenceLots()].filter(frozenHouse).slice(0, 30);
+    try {
+      setGeneratedLots(true); setLotModel(1);
+      const a = lots.map(l => JSON.stringify(compose(l.g, l.st)));
+      setLotModel(2); const b = lots.map(l => JSON.stringify(compose(l.g, l.st)));
+      setLotModel(1); assert.deepEqual(lots.map(l => JSON.stringify(compose(l.g, l.st))), a, 'v1: the same every time, after v2');
+      assert.ok(a.some((x, i) => x !== b[i]), 'the taste of v2 lays them otherwise');
+    } finally { setLotModel(was); }
   });
+
   it('6. a generated lot keeps every building of its frozen preset (the house, a garage, a shed), and nothing generated stands on one', () => {
     setGeneratedLots(true);
     const many = [...examLots(), ...referenceLots()].filter(frozenHouse);

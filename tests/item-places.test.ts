@@ -81,17 +81,29 @@ describe('items know their place (T171)', () => {
     assert.deepEqual(back.places, v4.places);
     assert.deepEqual(groupsFrom(back), groupsFrom(v4));
   });
-  it('6. a v1, v2 or v3 town composes exactly as before (pinned on main before T171)', (t) => {
-    const sha = (f: string) => crypto.createHash('sha1').update(fs.readFileSync(f)).digest('hex').slice(0, 12);
-    const data = [sha('src/game/lots/lot-presets.json'), sha('scripts/assets/scale-overrides.json'), sha('scripts/assets/removed.json')].join(',');
-    if (data !== '86289001229b,83f0ac47e796,a083234bb6ef') { t.skip(`the owner's data changed (${data})`); return; }
+  // (T202: the pinned hashes here followed the owner's presets, sizes and removals, and skipped since they changed: the rules they stood for)
+  it('6. a v1, v2 or v3 town composes with its own model: the same every time, whatever another version composed meanwhile; a use its model does not generate draws its frozen preset as ?oldlots', () => {
     const LUOF: Record<string, number> = { res: LU.RES, com: LU.COM, park: LU.COM, ind: LU.IND, tour: LU.TOUR, civic: LU.GOV };
     const frozen = (use: string) => lotPresets().filter(p => p.use === use && !p.curated && !p.approved && !p.whole && !p.derived && p.road === undefined);
-    const lotsOf = (use: PresetUse, n: number) => { const list = frozen(use), N = [{ x: 0, y: 1 }, { x: 1, y: 0 }, { x: 0, y: -1 }, { x: -1, y: 0 }], r = mulberry(0x169); return Array.from({ length: n }, (_, i) => { const p = list[Math.floor(r() * list.length)]!, nn = N[i % 4]!; return { g: { o: { x: 300 + 50 * (i % 20), y: 300 + 50 * Math.floor(i / 20) }, u: { x: -nn.y, y: nn.x }, n: nn, w: p.w, d: p.d } as LotGeom, st: { use: LUOF[use]!, level: p.state === 'upgraded' ? LV.UPGRADED : LV.BUILT, decline: p.state === 'declined' ? 2 : 0, seed: i, preset: p.id } as ComposeState }; }); };
-    const lots = (['res', 'com', 'ind', 'park', 'civic', 'tour'] as const).flatMap(u => lotsOf(u, 20)), was = lotModelVersion();
-    setGeneratedLots(true);
-    const h = [1, 2, 3].map(v => { setLotModel(v); return fnv(JSON.stringify(lots.map(l => compose(l.g, l.st)))); });
-    setLotModel(was);
-    assert.deepEqual(h, ['f7478701', 'edf7ad52', 'b0534b73']);
+    const lotsOf = (use: PresetUse, n: number) => { const list = frozen(use), N = [{ x: 0, y: 1 }, { x: 1, y: 0 }, { x: 0, y: -1 }, { x: -1, y: 0 }], r = mulberry(0x169); return Array.from({ length: n }, (_, i) => { const p = list[Math.floor(r() * list.length)]!, nn = N[i % 4]!; return { use, g: { o: { x: 300 + 50 * (i % 20), y: 300 + 50 * Math.floor(i / 20) }, u: { x: -nn.y, y: nn.x }, n: nn, w: p.w, d: p.d } as LotGeom, st: { use: LUOF[use]!, level: p.state === 'upgraded' ? LV.UPGRADED : LV.BUILT, decline: p.state === 'declined' ? 2 : 0, seed: i, preset: p.id } as ComposeState }; }); };
+    const lots = (['res', 'com', 'ind', 'park', 'civic', 'tour'] as const).flatMap(u => lotsOf(u, 8)), was = lotModelVersion();
+    const at = (v: number, gen = true) => { setGeneratedLots(gen); setLotModel(v); const out = lots.map(l => fnv(JSON.stringify(compose(l.g, l.st)))); setGeneratedLots(true); return out; };
+    try {
+      const first = [1, 2, 3].map(v => at(v));
+      // the same every time, and after the other versions composed (no version leaks into another)
+      assert.deepEqual([3, 2, 1].map(v => at(v)).reverse(), first);
+      const old = at(LATEST, false);
+      for (const v of [1, 2, 3]) {
+        const groups = groupsFrom(LOT_MODELS[v]) as Record<string, { on?: boolean } | undefined>;
+        lots.forEach((l, i) => {
+          if (l.use === 'res') return;
+          const g = l.use === 'com' ? 'com' : l.use === 'ind' ? 'ind' : 'open';
+          if (!groups[g]?.on) assert.equal(first[v - 1]![i], old[i], `v${v} ${l.use}: not generated, its frozen preset as ?oldlots`);
+        });
+      }
+      // the houses' taste came with v2: a v1 town's house lots are laid without it
+      const res = lots.map((l, i) => (l.use === 'res' ? i : -1)).filter(i => i >= 0);
+      assert.ok(res.some(i => first[0]![i] !== first[1]![i]), 'v1 and v2 lay the house lots differently');
+    } finally { setLotModel(was); setGeneratedLots(true); }
   });
 });
