@@ -8,6 +8,7 @@ import { familyWeights, lookColour, lookKey, LOOK_RANGES, resolveFamily, type Le
 import { clampSurfaces, lookOfTex, type PresetRef, type SurfacesFile } from './painted-surfaces';
 import { bandOf, specBand, tiledFamily, tileSpec, TILE_BANDS, TILES_REVISION, type TileBand, type TiledFamily } from './painted-tiles';
 import { ASPHALT_MEAN, type GroundArt, LEAF_CELL, LEAF_COLS, LEAVES, LOT_ASPHALT_M, POOL_ANCHOR, PPM, SLAB_CELL, SLAB_COUNT, SLAB_TOP } from './ground-art';
+import { litPixel } from './lamp-reflect';
 
 /** Ground materials, following the town builder's ground renderer (scripts/lib/town-scene.mjs):
  *  - asphalt: the owner's painted asphalt (flattened), laid in 1.6 m hex patches with random offsets so it never repeats,
@@ -29,28 +30,7 @@ const BASE_W = 2048, BASE_H = 1024;
 export const MOSAIC_TILES = 12, MOSAIC_PX = 96;
 const LEAF = ['#c8561e', '#e08a2a', '#a8321c', '#d9b13b', '#b8451d', '#e6a23a', '#8f2d14', '#f0c040'];
 
-/* manifest.json light response: brightness added (DMU) and local-contrast gain (DSG) per channel, by intensity bucket IB */
-const IB = [0, 0.05, 0.15, 0.25, 0.35, 0.45, 0.55, 0.65, 0.75, 0.85, 0.95, 1];
-const DMU = [
-  [0, 16.76, 46.07, 78.8, 107.09, 134.12, 158.92, 170.35, 189.37, 200.48, 203.72, 203.72],
-  [0, 5.94, 15.45, 26.45, 37.96, 52.13, 67.37, 80.68, 109.8, 124.57, 153.05, 153.05],
-  [0, -3.62, -11.36, -18.76, -24.21, -26.76, -30.88, -32.08, -19.45, -18.64, -6.87, -6.87]];
-const DSG = [
-  [0, 8.15, 19.72, 26.77, 29.02, 27.95, 27.86, 32.33, 21.16, 0, 0, 0],
-  [0, 3.27, 9.8, 15.27, 20.71, 23.44, 29.76, 37.91, 37.43, 34.72, 25.59, 25.59],
-  [0, 0.95, 0.86, 0.55, 1.29, 4.02, 9.32, 16.99, 27.67, 31.84, 34.4, 34.4]];
-for (let b = 1; b < IB.length; b++) DSG[0][b] = Math.max(DSG[0][b], Math.min(30, DSG[0][b - 1]));
-const LUMA0 = 0.3 * ASPHALT_MEAN[0] + 0.59 * ASPHALT_MEAN[1] + 0.11 * ASPHALT_MEAN[2];
-function tbl(t: number[], I: number) { if (I <= 0) return 0; if (I >= 1) return t[t.length - 1]; let i = 1; while (IB[i] < I) i++; const f = (I - IB[i - 1]) / (IB[i] - IB[i - 1]); return t[i - 1] + (t[i] - t[i - 1]) * f; }
-/** town-scene.mjs litAsphalt: the painting's response to lamp light at intensity I, applied to one pixel */
-function litPixel(c: number[], I: number) {
-  const z = clamp((0.3 * c[0] + 0.59 * c[1] + 0.11 * c[2] - LUMA0) / 8.8, -3, 3);
-  for (let k = 0; k < 3; k++) c[k] = c[k] + tbl(DMU[k], I) + z * tbl(DSG[k], I);
-  if (c[0] > 140) { const k = smooth(140, 200, c[0]); c[1] = Math.min(c[1], c[1] * (1 - k) + c[0] * 0.9 * k); }
-  const mx = Math.max(c[0], c[1], c[2]);
-  if (mx > 248) { const over = mx - 248, k = 248 / mx; c[0] = c[0] * k + over * 0.42; c[1] = c[1] * k + over * 0.36; c[2] = c[2] * k + over * 0.3; }
-  for (let i = 0; i < 3; i++) c[i] = clamp(c[i], 0, 255);
-}
+// the painting's lamp-light response (litPixel) is in lamp-reflect.ts (T215: the GPU's camera specular runs the same tables)
 
 export { canvas, ctx2d, type Cnv, type C2D };
 async function loadImage(src: string) { const r = await fetch(src); if (!r.ok) throw new Error('image ' + src.slice(0, 40)); return createImageBitmap(await r.blob()); }

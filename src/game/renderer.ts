@@ -5,6 +5,7 @@ import { fbm, maskFrom, smooth } from './canvas2d';
 import { EAGER_PHOTO } from './grass-art';
 import { PAINT_TEXES, isPaintPhoto, type PaintTex } from './paint';
 import { POOL_ANCHOR, PPM, SLAB_CELL } from './ground-art';
+import { POOL_SHARES, SPEC_MASK_K } from './lamp-reflect';
 import { LOT_DECALS } from './lot-decals';
 import { clampDecals, drawDecals, flatSquash, placeDecals } from './map-decals';
 import { layOnGround } from './base-grass';
@@ -367,6 +368,14 @@ export class GroundPainter {
   casters = new CasterStore(); living = { on: true, debug: false };
   /** T204: the rugged edges on (the default) or off (the dev switch, GroundCache.setRugged) */
   rugged = true;
+  /** T215: the street lamps' reflection pools go onto a per-chunk reflection mask (the camera specular lights the road by it on the GPU, gl.ts
+   *  FS_QUAD) instead of into the road picture (the dev switch window.__game.specCam, GroundCache.setSpecCam; off, the default, bakes them as before) */
+  specCam = false;
+  /** T215: the reflection mask of the bake in progress (a SPEC_MASK_K-th of the chunk's size each way, opaque black, the pools' intensity in
+   *  red), made only when the chunk has a pool on its asphalt; null between bakes, in a planner bake and with specCam off */
+  private specMask: OffscreenCanvas | null = null;
+  /** the reflection mask of the bake just done (the worker transfers it), or null when it has none */
+  takeSpecMask(): OffscreenCanvas | null { const m = this.specMask; this.specMask = null; return m; }
   private leafPic: Cnv | null = null; private leafChunks = new Map<string, Cnv>();
   /** the influence grids and masks of the last few chunks, by chunk and sources (living-ground.ts livingSignature) */
   private livingMade = new Map<string, LivingMade>();
@@ -619,7 +628,7 @@ export class GroundPainter {
   paintPlan(i: number, j: number, L: number): Cnv {
     const W = Math.round(PLAN_W * L), H = Math.round(PLAN_H * L), X0 = i * PLAN_W, Y0 = j * PLAN_H;
     const cv = canvas(W, H), ctx = ctx2d(cv);
-    this.shadeMask = null; // (T186: a planner bake keeps no shade mask)
+    this.shadeMask = null; this.specMask = null; // (T186, T215: a planner bake keeps no shade or reflection mask)
     const M = new DOMMatrix([HW * L, HH * L, -HW * L, HH * L, -X0 * L, -Y0 * L]);
     const box = GroundPainter.tileBox(X0, Y0, X0 + PLAN_W, Y0 + PLAN_H, 2), [tx0, ty0, tx1, ty1] = box;
     // the tile set families (T145) lay their tiles here as on the ground chunks (planTiled), at the camera's band (the furthest zoom: FAR)
@@ -892,6 +901,7 @@ export class GroundPainter {
     this.chunkNow = { key: `${lite ? 'm' : 'g'}${i},${j}@${L}`, L, box, M, Minv, W, H }; this.toned.clear(); this.bakeKeys.clear(); this.tilesUsed = false; this.provisional = false;
     // T186: the shade mask (a quarter of the chunk's size), white (no shade) until a shade is laid on it; none for a district chunk (its
     // sprites' shadows are a few px: the far meshes)
+    this.specMask = null;
     if (lite) this.shadeMask = null;
     else { const mc = new OffscreenCanvas(Math.max(1, Math.ceil(W / SHADE_MASK_K)), Math.max(1, Math.ceil(H / SHADE_MASK_K))), mg = mc.getContext('2d')!; mg.fillStyle = '#fff'; mg.fillRect(0, 0, mc.width, mc.height); this.shadeMask = { cv: mc, g: scaledContext(mg, 1 / SHADE_MASK_K), used: false }; }
     const minW = 1 / (TILE_PX * L), net = this.net.view([tx0 - 8, ty0 - 8, tx1 + 8, ty1 + 8], !lite), tex = this.tex;
@@ -1150,13 +1160,27 @@ export class GroundPainter {
       const pools = net.pools.filter(p => p.x >= tx0 - 8 && p.x <= tx1 + 8 && p.y >= ty0 - 8 && p.y <= ty1 + 8);
       if (pools.length) {
         const rotA = Math.PI / 2 - tex.stampAngle, sc = 1.2 / (2 * PPM);
-        for (const [variant, stamp] of [['lit1', tex.pool1], ['lit2', tex.pool2]] as const) {
+        /** a pool's stamp transform (chunk px): the stamp's anchor on the pool, its streak turned to the screen's */
+        const stampAt = (p: (typeof pools)[number]) => {
+          const S = M.transformPoint(new DOMPoint(p.x, p.y));
+          return new DOMMatrix([1, 0, 0, 1, S.x, S.y]).multiply(new DOMMatrix([Math.cos(rotA), Math.sin(rotA), -Math.sin(rotA), Math.cos(rotA), 0, 0])).multiply(new DOMMatrix([1, 0, 0, 1, -S.x, -S.y])).multiply(M).multiply(new DOMMatrix([sc, 0, 0, sc, p.x, p.y])).multiply(new DOMMatrix([1, 0, 0, 1, -POOL_ANCHOR[0], -POOL_ANCHOR[1]]));
+        };
+        if (this.specCam) {
+          // T215: the pools' coverage (each stamp at its strength, through the asphalt mask) onto the reflection mask instead, a SPEC_MASK_K-th
+          // of the chunk's size: red = 0.4 pool1 + 0.5 pool2, the stamp's intensity (lamp-reflect.ts poolIntensity); the GPU lights the road
+          // by it times the camera falloff (gl.ts FS_QUAD), so the road picture keeps no pool
+          const k = 1 / SPEC_MASK_K, mw = Math.max(1, Math.ceil(W * k)), mh = Math.max(1, Math.ceil(H * k)), Sk = new DOMMatrix([k, 0, 0, k, 0, 0]);
+          const mc = new OffscreenCanvas(mw, mh), mg = mc.getContext('2d')!; mg.fillStyle = '#000'; mg.fillRect(0, 0, mw, mh); mg.globalCompositeOperation = 'lighter';
+          ([[POOL_SHARES[0], tex.pool1], [POOL_SHARES[1], tex.pool2]] as const).forEach(([share, stamp]) => {
+            const pm = this.buffer('specPool', mw, mh), pg = ctx2d(pm); pg.imageSmoothingEnabled = true;
+            for (const p of pools) { pg.setTransform(Sk.multiply(stampAt(p))); pg.globalAlpha = p.strength; pg.drawImage(stamp, 0, 0); }
+            pg.setTransform(1, 0, 0, 1, 0, 0); pg.globalAlpha = 1; pg.globalCompositeOperation = 'destination-in'; pg.drawImage(asphMask, 0, 0, W * k, H * k); pg.globalCompositeOperation = 'source-over';
+            mg.globalAlpha = share; mg.drawImage(pm, 0, 0);
+          });
+          this.specMask = mc;
+        } else for (const [variant, stamp] of [['lit1', tex.pool1], ['lit2', tex.pool2]] as const) {
           const pm = this.buffer('poolMask', W, H), pg = ctx2d(pm); pg.imageSmoothingEnabled = true;
-          for (const p of pools) {
-            const S = M.transformPoint(new DOMPoint(p.x, p.y));
-            const T = new DOMMatrix([1, 0, 0, 1, S.x, S.y]).multiply(new DOMMatrix([Math.cos(rotA), Math.sin(rotA), -Math.sin(rotA), Math.cos(rotA), 0, 0])).multiply(new DOMMatrix([1, 0, 0, 1, -S.x, -S.y])).multiply(M).multiply(new DOMMatrix([sc, 0, 0, sc, p.x, p.y])).multiply(new DOMMatrix([1, 0, 0, 1, -POOL_ANCHOR[0], -POOL_ANCHOR[1]]));
-            pg.setTransform(T); pg.globalAlpha = p.strength; pg.drawImage(stamp, 0, 0);
-          }
+          for (const p of pools) { pg.setTransform(stampAt(p)); pg.globalAlpha = p.strength; pg.drawImage(stamp, 0, 0); }
           const lit = this.buffer('lit', W, H), lg = ctx2d(lit); lg.setTransform(M); lg.fillStyle = this.groundPattern(lg, tex.mosaicFor(variant, L)); lg.fillRect(tx0, ty0, tx1 - tx0, ty1 - ty0);
           through(lit, pm); through(lit, asphMask); composite(lit);
         }

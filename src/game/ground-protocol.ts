@@ -147,6 +147,9 @@ export type ToWorker =
   | { t: 'living'; on: boolean; debug: boolean }
   /** T204: the rugged edges (the wobble, rounded corners and the tall grass's spill) on or off (the dev switch, for comparing looks and bake times) */
   | { t: 'rugged'; on: boolean }
+  /** T215: the street lamps' reflection pools onto a per-chunk reflection mask for the camera specular (on) or baked into the road (off, the
+   *  default): the dev switch window.__game.specCam; every chunk is baked again */
+  | { t: 'specCam'; on: boolean }
   /** the course height light's strength (T126: the gear menu's Slope light, 0 = off): every chunk is baked again */
   | { t: 'slopeLight'; strength: number }
   /** the tile set bands to decode ahead (painted-tiles.ts bandsAhead: the camera is near their switch; T150), sent when they change */
@@ -164,6 +167,9 @@ export type FromWorker =
   | { t: 'texpack'; snaps: TexSnapshot[] }
   | { t: 'tile'; id: number; kind: TileKind; i: number; j: number; L: number; artL?: number; /** the step it was baked at, and whether it laid a tile set family (T145) */ ts?: number; tiled?: boolean; /** T197: a tile set's tiles were not decoded for part of it (it fell back to the photo): bake it again soon */ prov?: boolean; bmp: ImageBitmap;
       /** T186: the baked shade's multiplier at a quarter of the chunk's size (renderer.ts takeShadeMask); none when the bake laid no shade */
-      shade?: ImageBitmap; ms: number }
+      shade?: ImageBitmap;
+      /** T215: the street lamps' reflection mask at a SPEC_MASK_K-th of the chunk's size (renderer.ts takeSpecMask: the pools' intensity in red);
+       *  none with specCam off or no pool on the chunk's asphalt */
+      spec?: ImageBitmap; ms: number }
   | { t: 'error'; message: string }
   | { t: 'log'; message: string };
