@@ -397,7 +397,9 @@ test('the tile sets join the families, laid as authored; fescue, water, the map 
     assert.deepEqual((surfacesFile.surfaces as Record<string, unknown>)[key], neutral('rough-owner'), `${key} in painted-surfaces.json`);
   }
   assert.ok(tiledFamily('long-grass'), 'long grass stays in the manifest');
-  for (const id of ['long-grass', 'fairway', 'putting-green']) {
+  // T189 (the owner: the block grass in the new paintings): the town lawns wear the long grass (canonical since T170) and the owner's rough
+  assert.deepEqual(S.lawns.map(l => l.family), ['long-grass', 'rough-owner']);
+  for (const id of ['fairway', 'putting-green']) {
     assert.ok(tiledFamily(id), `${id} stays in the manifest (the old option)`);
     assert.ok(![...Object.values(S.surfaces), ...S.lawns, ...Object.values(S.presets)].some(l => l.family === id), `${id} unmapped`);
   }
@@ -405,7 +407,7 @@ test('the tile sets join the families, laid as authored; fescue, water, the map 
   // tees keep the old green until a family is chosen for them; the first cut keeps its family too
   for (const t of ['golfTee', 'golfFirstCut']) { const l = lookOfTex(t, S); if (l) assert.ok(!familyById(l.family)!.tiled, `${t} keeps its family`); }
   assert.equal(S.surfaces.tee!.family, 'emerald-short');
-  for (const l of S.lawns) assert.ok(!familyById(l.family)!.tiled, 'no town lawn wears a tile set');
+  for (const l of S.lawns) assert.ok(familyById(l.family)!.tiled, 'T189: every town lawn wears a tile set (the new paintings), laid as authored');
   assert.deepEqual(S.surfaces.fescue, { family: 'golden-fescue', version: null, scale: 1, tint: '#ffffff', tone: 0 });
   assert.deepEqual(S.surfaces.water, { family: 'lake', version: null, scale: 1, tint: '#ffffff', tone: 0 });
 });

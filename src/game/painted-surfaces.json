@@ -34,12 +34,8 @@
   "wallBank": { "family": "underground-earth", "version": "v2", "scale": 0.533, "tint": "#6a74c8", "tone": -0.1 }
  },
  "lawns": [
-  { "family": "emerald-short", "version": null, "scale": 0.75, "tint": "#ffffff", "tone": -0.1, "weight": 2 },
-  { "family": "emerald-medium", "version": null, "scale": 1, "tint": "#ffffff", "tone": -0.12, "weight": 2 },
-  { "family": "sage-short", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0, "weight": 2 },
-  { "family": "sage-medium", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0.04, "weight": 1 },
-  { "family": "olive-short", "version": null, "scale": 1, "tint": "#ffffff", "tone": -0.12, "weight": 1 },
-  { "family": "straw-short", "version": null, "scale": 1, "tint": "#ffffff", "tone": -0.15, "weight": 0.6 }
+  { "family": "long-grass", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0, "weight": 2 },
+  { "family": "rough-owner", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0, "weight": 2 }
  ],
  "presets": {
   "lawns": { "family": "emerald-short", "version": null, "scale": 0.75, "tint": "#ffffff", "tone": 0 },

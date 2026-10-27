@@ -94,9 +94,12 @@ test('every surface of the game wears a painted family: golf, map, town lawns, l
   assert.equal(S.river!.family, 'lake', 'rivers draw the lake');
   for (const k of ['base', 'outside', 'meadow', 'dry', 'worn', 'lush', 'patchy', 'woodland']) assert.equal(S[k]!.family, 'golden-fescue', k);
   for (const k of ['wallTurf', 'wallBank']) assert.equal(S[k]!.family, 'underground-earth'); assert.equal(S.wallSand!.family, 'underground-sand');
-  // the town lawns differ in palette and length
-  assert.ok(f.lawns.length >= 4); assert.ok(new Set(f.lawns.map(l => l.family)).size >= 4);
-  assert.ok(new Set(f.lawns.map(l => l.family.split('-')[0])).size >= 3, 'at least three palettes');
+  // T189 (the owner: "Keep the block grass but swap its looks to the new paintings and drop the pale sage"): the town lawns are the new
+  // paintings with their texture (the long grass, the owner's rough), no sage; the old families stay in the manifest (the studio offers them)
+  assert.deepEqual(f.lawns.map(l => l.family), ['long-grass', 'rough-owner']);
+  assert.ok(!f.lawns.some(l => /^sage-/.test(l.family)), 'no pale sage');
+  assert.ok(f.lawns.every(l => l.weight > 0));
+  for (const id of ['emerald-short', 'sage-short', 'olive-short', 'straw-short']) assert.ok(resolveFamily({ family: id, version: null, scale: 1 }), `${id} is kept as the old option`);
 });
 
 test('a texture finds its look: photo ids, presets by their golf surface (fescue by id), a preset\'s own look, the lawn slots', () => {

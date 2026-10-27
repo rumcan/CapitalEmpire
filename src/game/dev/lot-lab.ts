@@ -35,7 +35,7 @@ import { worldX, worldY, ZOOM_MAX, ZOOM_MIN } from '../iso';
 import { composeFarm, type FarmParcel } from '../ext/farms/farms';
 import type { ComposeState, LotGeom } from '../lots/compose-core';
 import { compose, lotPresets, setLotPresets } from '../lots/compose';
-import { approvedFor, bucketOf, fitPreset, presetsFor, WHOLE_FRONT, type LotPreset, type PresetDecal, type PresetState, type PresetUse, type Road } from '../lots/presets';
+import { approvedFor, bucketOf, fitPreset, presetsFor, WHOLE_FRONT, type LotPreset, type PresetDecal, type PresetPatch, type PresetState, type PresetUse, type Road } from '../lots/presets';
 import { frameOf, quarterOfRoad, toFrame, toWorld, type Pt, type PresetFrame } from '../lots/preset-frame';
 import { presetFromComposition } from '../lots/preset-from';
 import { LU, LV } from '../lots/town';
@@ -44,7 +44,7 @@ import type { LotDecal } from '../lot-decals';
 import decalSheet from '../../assets/ground/lot-decals.webp';
 import { replacePreset } from './lot-edit';
 import { armPlacing, editorAct, editorDeselect, editorOnly, editorSel, editorText, pauseEditor, pushEditorUndo, saveLotPresets, setHouseFilter, thumb, type EditorSel, type LabAct } from './lot-editor';
-import { BRUSH_DEFAULT, CELL, applyStroke, grid, rectCells, stepBrush, strokeCells } from './lot-paint';
+import { BRUSH_DEFAULT, CELL, applyStroke, eraseAny, grid, isClick, patchIndexAt, rectCells, stepBrush, strokeCells } from './lot-paint';
 import { mainBuilding, swapHouse } from './lot-select';
 import { allowedHouse, artLimit, baseOf, classWords, frameHalf, isHouseLike, otherHouse, suitCounts, type HouseOk } from './lot-houses';
 import { neighbourLots, planInPlace, planNewLot, type Neighbour } from './lot-lab-plan';
@@ -155,6 +155,11 @@ export function installLotLab(game: Game): () => void {
    *  its path and cells so far; erasing; Shape's corners) */
   let paint: Swatch | null = null, lastSw: Swatch = SWATCHES.find(s => s.tex === 'concrete') ?? SWATCHES[0]!, brushR = BRUSH_DEFAULT, shape = false, brushAt: Pt | null = null;
   let stroke: { id: string; sw: Swatch; w: number; d: number; path: number[]; cells: Set<number>; erase: boolean; x0: number; y0: number; x1: number; y1: number; wiz: boolean } | null = null;
+  /** T189 (#487; the owner: "can you also put the lots groun erase back ?"): Erase is the third mode (paint === ERASER): a drag erases ground
+   *  under the brush (any material, or only the picked one: eraseOnly, lastSw), a click takes the patch under it out whole (the old ground tool's
+   *  Erase), Del the patch under the pointer (outlined: hoverPatch); the same brush, sizes, banner and undo as Draw */
+  const ERASER: Swatch = { name: 'Eraser', kind: 'yard', tex: '__erase__', col: '#f87171' };
+  let eraseOnly = false, hoverPatch = -1;
   /** the decal mode: 'place' (a press on the lot adds the armed decal decalId; Shift keeps placing) or null (off: a click on a decal selects it,
    *  through the editor, with the sprites) */
   let decalMode: 'place' | null = null, decalId = '';
@@ -194,8 +199,8 @@ export function installLotLab(game: Game): () => void {
   const palette = makePalette(shell, {
     sprite: id => { setPaint(null); setDeco(null); message = armPlacing(id) ? `placing ${id}: click on the lot (Shift+click places more, Esc stops)` : 'the map editor is not on yet'; render(); },
     decal: id => { setDeco('place', id); message = `placing ${id}: press on the lot (Shift keeps placing, Esc stops)`; render(); palette.draw(); },
-    paint: sw => { setPaint(sw === 'erase' ? lastSw : sw); render(); palette.draw(); },
-    armed: () => ({ decal: decalMode === 'place' ? decalId : null, paint }),
+    paint: sw => { setPaint(sw === 'erase' ? (paint === ERASER ? null : ERASER) : sw); render(); palette.draw(); },
+    armed: () => ({ decal: decalMode === 'place' ? decalId : null, paint: paint === ERASER ? 'erase' : paint }),
     decalThumb,
     folded: v => shell.fold('palette', v),
   });
@@ -390,8 +395,11 @@ export function installLotLab(game: Game): () => void {
       const r = shape ? 0.3 : brushR, pts: string[] = [];
       for (let k = 0; k < 32; k++) { const a = (k / 32) * Math.PI * 2; pts.push(S(b.x + r * Math.cos(a), b.y + r * Math.sin(a))); }
       brushEl.setAttribute('d', `M${pts.join('L')}Z${shape ? `M${S(b.x - 0.6, b.y)}L${S(b.x + 0.6, b.y)}M${S(b.x, b.y - 0.6)}L${S(b.x, b.y + 0.6)}` : ''}`);
-      brushEl.setAttribute('stroke', stroke?.erase ? '#f87171' : '#fde68a');
+      brushEl.setAttribute('stroke', stroke?.erase || paint === ERASER ? '#f87171' : '#fde68a');
     } else brushEl.setAttribute('d', '');
+    // Erase: the patch under the pointer outlined (a click takes it out whole; so does Del)
+    const hp = paint === ERASER && !s ? groundNow()?.patches[hoverPatch] : undefined;
+    if (hp) { let d = ''; for (let i = 0; i + 1 < hp.pts.length; i += 2) d += `${i ? 'L' : 'M'}${S(hp.pts[i]!, hp.pts[i + 1]!)}`; preview.setAttribute('d', d + 'Z'); preview.setAttribute('fill', 'rgba(248,113,113,.18)'); preview.setAttribute('stroke', '#f87171'); }
   }
   /** the mode banner over the map while drawing: the material, what a drag does, the keys */
   function drawBanner() {
@@ -399,6 +407,13 @@ export function installLotLab(game: Game): () => void {
     const a = shell.free(), sw = el('span', `display:inline-block;width:14px;height:14px;border-radius:3px;border:1px solid #fde68a;background:${paint.col}`);
     banner.style.display = 'flex'; banner.style.left = `${(a.L + a.R) / 2}px`; banner.style.top = `${a.T + 40}px`;
     const size = `${brushR} tile${brushR === 1 ? '' : 's'}`;
+    if (paint === ERASER) {
+      banner.style.borderColor = '#f87171';
+      banner.replaceChildren(el('span', 'font-weight:800;color:#fca5a5', '⌫ Erasing:'), el('span', '', eraseOnly ? `only ${lastSw.name}` : 'any material'),
+        el('span', 'opacity:.9', `· drag to erase · click takes a whole patch out · Del the outlined patch · [ ] brush ${size} · O ${eraseOnly ? 'any material' : `only ${lastSw.name}`} · Esc or V back to Select`));
+      return;
+    }
+    banner.style.borderColor = '#fde68a';
     banner.replaceChildren(el('span', 'font-weight:800;color:#fde68a', '✎ Drawing:'), sw, el('span', '', paint.name),
       el('span', 'opacity:.9', `· ${shape ? 'Shape: drag a rectangle' : 'drag to paint'} · Shift+drag erases · [ ] brush ${size} · R ${shape ? 'brush' : 'Shape'} · Esc or V back to Select`));
   }
@@ -591,10 +606,10 @@ export function installLotLab(game: Game): () => void {
   function setPaint(v: Swatch | null): void {
     // a stroke in progress is laid first: switching never drops it (nor the editor's selection: the editor is only paused)
     if (stroke) finishStroke();
-    paint = v; if (v) lastSw = v;
+    paint = v; if (v && v !== ERASER) lastSw = v; hoverPatch = -1;
     if (v !== null) decalMode = null;
     pauseEditor(v !== null || decalMode !== null || wizard.on());
-    message = v ? `Draw: ${v.name}` : message.startsWith('Draw:') ? '' : message;
+    message = v === ERASER ? `Erase: ${eraseOnly ? `only ${lastSw.name}` : 'any material'}` : v ? `Draw: ${v.name}` : /^(Draw|Erase):/.test(message) ? '' : message;
     drawPaint();
   }
   /** the current lab preset resized to w2 x d2 (tiles): fitted to the new size (fitPreset: the far side moves, props past the edge dropped), curated, set in the model (and the draft); the size select set to its bucket when this size has it; the lot staged again at the new size (the street fresh, the camera fitted); the presets saved */
@@ -793,7 +808,9 @@ export function installLotLab(game: Game): () => void {
     // T183: the mode switch, lit: Select (the editor's, or the wizard's select) or Draw (a ground material)
     const modes = use === 'farm' ? [] : [
       btn('↖ Select (V)', paint === null ? ON : BTN, () => { setPaint(null); render(); palette.draw(); }, wizard.on() ? 'Select: click an offered item, Shift or Ctrl+click adds, drag a box; Del deletes' : 'Select: click, Shift+click or drag a box to pick sprites and decals; move, copy and paste them'),
-      btn(paint ? `✎ Draw: ${paint.name} (B)` : '✎ Draw (B)', paint !== null ? `${ON}border-color:#fde68a;color:#fef3c7;` : BTN, () => { setPaint(paint ? null : lastSw); render(); palette.draw(); }, 'Draw a ground material (pick one under Ground in the palette): drag paints with a round brush, Shift+drag erases, [ ] brush size, R Shape (a rectangle), Esc or V back to Select'),
+      btn(paint && paint !== ERASER ? `✎ Draw: ${paint.name} (B)` : '✎ Draw (B)', paint !== null && paint !== ERASER ? `${ON}border-color:#fde68a;color:#fef3c7;` : BTN, () => { setPaint(paint && paint !== ERASER ? null : lastSw); render(); palette.draw(); }, 'Draw a ground material (pick one under Ground in the palette): drag paints with a round brush, Shift+drag erases, [ ] brush size, R Shape (a rectangle), Esc or V back to Select'),
+      btn('⌫ Erase (E)', paint === ERASER ? `${ON}border-color:#f87171;color:#fecaca;` : BTN, () => { setPaint(paint === ERASER ? null : ERASER); render(); palette.draw(); }, 'Erase ground: drag erases under the brush, a click takes a whole patch out, Del the outlined patch; [ ] brush size; O any material or only the picked one; Esc or V back to Select'),
+      ...(paint === ERASER ? [btn(eraseOnly ? `only ${lastSw.name} (O)` : 'any material (O)', BTN, () => { eraseOnly = !eraseOnly; setPaint(ERASER); render(); }, 'what a drag erases: every material, or only the last one picked or drawn')] : []),
       bar()];
     // the wizard's own bar while it runs (its keys as buttons), the view toggles kept
     if (wizard.on()) { t.replaceChildren(...modes, ...wizard.bar(), bar(), ...views); return; }
@@ -1051,6 +1068,29 @@ export function installLotLab(game: Game): () => void {
     else void act(() => generate(1));
   }
   /** what a stroke paints: the wizard's lot while the wizard runs (its own undo; saved with the sample), else the lab's preset */
+  /** the ground a stroke or a click works on now: the wizard's lot while it runs, else the lab's preset */
+  function groundNow(): { w: number; d: number; patches: PresetPatch[] } | null {
+    if (wizard.on()) return wizard.ground();
+    const p = curPreset(); return p ? { w: p.w, d: p.d, patches: p.patches } : null;
+  }
+  /** Erase's click (and Del): the patch under the point taken out whole (lot-paint.ts patchIndexAt: the last one drawn there, any material),
+   *  one undo step; says so when there is none */
+  function removePatch(wiz: boolean, id: string, x: number, y: number): void {
+    if (wiz) {
+      const l = wizard.ground(); if (!l) return;
+      const i = patchIndexAt(l.patches, x, y); if (i < 0) { message = 'no painted patch there'; render(); return; }
+      const tex = l.patches[i]!.tex; wizard.setGround(l.patches.filter((_, k) => k !== i), `erased a ${tex} patch`); hoverPatch = -1;
+      message = `erased a ${tex} patch on the wizard's lot (Ctrl+Z undoes)`; render(); return;
+    }
+    const p = lotPresets().find(q => q.id === id); if (!p) return;
+    const i = patchIndexAt(p.patches, x, y); if (i < 0) { message = 'no painted patch there'; render(); return; }
+    const before = p.patches, tex = before[i]!.tex; hoverPatch = -1;
+    void act(async () => {
+      await commitLab(p, { patches: before.filter((_, k) => k !== i) });
+      pushEditorUndo(async () => { const now = lotPresets().find(q => q.id === p.id); if (now) await commitLab(now, { patches: before }); }, `erased a ${tex} patch`);
+      message = `erased a ${tex} patch, saved (Ctrl+Z undoes)`;
+    });
+  }
   function strokeTarget(): { id: string; w: number; d: number; wiz: boolean } | null {
     if (wizard.on()) { const l = wizard.ground(); return l ? { id: WIZARD_ID, w: l.w, d: l.d, wiz: true } : null; }
     const p = curPreset(); return p ? { id: p.id, w: p.w, d: p.d, wiz: false } : null;
@@ -1065,7 +1105,8 @@ export function installLotLab(game: Game): () => void {
     if (!t) { message = 'Generate a lot first'; render(); return; }
     if (!q) return;
     const x = within(q.x, 0, t.w), y = within(q.y, 0, t.d), sx = snapHalf(q.x, t.w), sy = snapHalf(q.y, t.d);
-    stroke = { id: t.id, sw: m, w: t.w, d: t.d, path: [x, y], cells: shape ? new Set() : strokeCells(grid(t.w, t.d), [x, y], brushR), erase: e.shiftKey, x0: sx, y0: sy, x1: sx, y1: sy, wiz: t.wiz };
+    const er = m === ERASER, rect = shape && !er;
+    stroke = { id: t.id, sw: m, w: t.w, d: t.d, path: [x, y], cells: rect ? new Set() : strokeCells(grid(t.w, t.d), [x, y], brushR), erase: e.shiftKey || er, x0: sx, y0: sy, x1: sx, y1: sy, wiz: t.wiz };
     brushAt = q; drawPaint();
   };
   /** the pointer in Draw: the brush circle follows it; a stroke adds the brush's cells along the way (Shape: the rectangle's far corner) */
@@ -1073,13 +1114,14 @@ export function installLotLab(game: Game): () => void {
     if (paint === null) return;
     const q = e.target instanceof HTMLCanvasElement ? framePt(e) : null, s = stroke;
     brushAt = q;
+    if (paint === ERASER && !s) { const gnd = groundNow(); hoverPatch = gnd && q ? patchIndexAt(gnd.patches, q.x, q.y) : -1; }
     // over the map the brush is the only cursor: the game's and the editor's hover outlines stay off (a right-drag still pans)
     if (q && !s && !(e.buttons & 2)) e.stopImmediatePropagation();
     if (s) {
       e.preventDefault(); e.stopImmediatePropagation();
       if (q) {
         const x = within(q.x, 0, s.w), y = within(q.y, 0, s.d);
-        if (shape) { s.x1 = snapHalf(q.x, s.w); s.y1 = snapHalf(q.y, s.d); }
+        if (shape && s.sw !== ERASER) { s.x1 = snapHalf(q.x, s.w); s.y1 = snapHalf(q.y, s.d); }
         else { const n = s.path.length; for (const c of strokeCells(grid(s.w, s.d), [s.path[n - 2]!, s.path[n - 1]!, x, y], brushR)) s.cells.add(c); s.path.push(x, y); }
       }
     }
@@ -1096,18 +1138,23 @@ export function installLotLab(game: Game): () => void {
   function finishStroke(): void {
     const s = stroke; stroke = null; drawPaint();
     if (!s) return;
-    if (shape && (Math.abs(s.x1 - s.x0) < 0.5 || Math.abs(s.y1 - s.y0) < 0.5)) { message = 'Shape: drag at least half a tile each way'; render(); return; }
-    const cells = shape ? rectCells(grid(s.w, s.d), s.x0, s.y0, s.x1, s.y1) : s.cells;
+    const er = s.sw === ERASER, rect = shape && !er;
+    if (rect && (Math.abs(s.x1 - s.x0) < 0.5 || Math.abs(s.y1 - s.y0) < 0.5)) { message = 'Shape: drag at least half a tile each way'; render(); return; }
+    // Erase: a click takes the patch under it out whole (the old ground tool's Erase)
+    if (er && isClick(s.path)) { removePatch(s.wiz, s.id, s.path[0]!, s.path[1]!); return; }
+    const cells = rect ? rectCells(grid(s.w, s.d), s.x0, s.y0, s.x1, s.y1) : s.cells;
     if (!cells.size) return;
-    const what = `${s.erase ? 'erased' : 'painted'} ${s.sw.name}`;
+    const what = er ? `erased ${eraseOnly ? lastSw.name : 'the ground'}` : `${s.erase ? 'erased' : 'painted'} ${s.sw.name}`;
+    /** the stroke on a lot's patches: Erase takes the cells out of every material (or only the picked one); Draw lays or (Shift) erases its own */
+    const laid = (ps: readonly PresetPatch[], w: number, d: number) => (er ? (eraseOnly ? applyStroke(ps, lastSw, w, d, cells, true) : eraseAny(ps, w, d, cells)) : applyStroke(ps, s.sw, w, d, cells, s.erase));
     if (s.wiz) {
       const l = wizard.ground(); if (!l) return;
-      wizard.setGround(applyStroke(l.patches, s.sw, l.w, l.d, cells, s.erase), what);
+      wizard.setGround(laid(l.patches, l.w, l.d), what);
       message = `${what} on the wizard's lot (Ctrl+Z undoes; saved with the sample)`; render(); return;
     }
     const p = lotPresets().find(q => q.id === s.id);
     if (!p) { message = 'Generate a lot first'; render(); return; }
-    const before = p.patches, next = applyStroke(before, s.sw, p.w, p.d, cells, s.erase);
+    const before = p.patches, next = laid(before, p.w, p.d);
     void act(async () => {
       await commitLab(p, { patches: next });
       pushEditorUndo(async () => { const now = lotPresets().find(q => q.id === p.id); if (now) await commitLab(now, { patches: before }); }, what);
@@ -1124,7 +1171,10 @@ export function installLotLab(game: Game): () => void {
     // Draw takes the last stroke back (the editor's undo; the wizard's own while it runs)
     if (!helpOn && !gallery.on() && use !== 'farm') {
       const drawKey = !plain ? null
-        : k === 'b' && !e.shiftKey ? () => setPaint(paint ? null : lastSw)
+        : k === 'b' && !e.shiftKey ? () => setPaint(paint && paint !== ERASER ? null : lastSw)
+          : k === 'e' && !e.shiftKey ? () => setPaint(paint === ERASER ? null : ERASER)
+          : paint === ERASER && k === 'o' ? () => { eraseOnly = !eraseOnly; setPaint(ERASER); }
+          : paint === ERASER && (e.key === 'Delete' || e.key === 'Backspace') && !wizard.on() ? () => { const b = brushAt; if (b && hoverPatch >= 0) { const t = strokeTarget(); if (t) removePatch(t.wiz, t.id, b.x, b.y); } else message = 'point at a painted patch (it is outlined), then Del'; }
           : paint === null ? null
             : k === 'v' || e.key === 'Escape' ? () => setPaint(null)
               : e.key === '[' || e.key === ']' ? () => { brushR = stepBrush(brushR, e.key === ']' ? 1 : -1); message = `brush ${brushR} tile${brushR === 1 ? '' : 's'}`; }
