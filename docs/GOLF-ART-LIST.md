@@ -52,6 +52,9 @@ stays a Studio option. Ground textures follow [art/GROUND-TEXTURE-METHOD.md](art
 | Brown fescue (town blocks) | 🎨 `fescue-brown-run` made; on hold until the leaves (T220) land, the owner's call |
 | Greenkeeping conditions (section 10) | after the course surfaces |
 
+### The concept look (section 12)
+The owner's target picture, 2026-10-27: items 149-175, still to make. Ground textures 149-153 come first: the concept's greens. The plan is in [art/CONCEPT-LOOK.md](art/CONCEPT-LOOK.md).
+
 ### List items done
 Ground (section 8 and the range ground): ✅ 131 Pond bank, ✅ 132 Grow-in, ✅ 135 Flower bed soil (#630); 🎨 133 Field parking, 🎨 21 range tee divots (#630, in the Studio, no ground wears them yet); 130 Pond water skipped (the lake is in). 134 Event matting deferred (quilting would break its panel grid). 🎨 19 the hitting mat (top-down, made, not drawn yet); 20, 27, 147 retakes next. The range and practice sprites still draw labelled stand-ins.
 
@@ -665,3 +668,98 @@ for the ticket booth (144), `world:goalposts` (145), `world:bleachers` (146), an
 (147) is painted ground for now (`dirt` round a `preset:fairway` field with white yard lines). The library's own drive-in screen
 (`variation:ref-building-drive-in-screen-b0bccc2a-plain:1`) is not used: its footprint (1 x 8) runs across its picture, so three of its four
 facings draw it off its lot, and its face carries "Maple Falls Drive-In" (every town is named differently).
+
+## 12. The concept look (the owner's target, 2026-10-27)
+
+The owner: "this is the look and feel we need to get to". The reference is `docs/art/concept/maple-falls-concept.webp`; what it needs from
+the code and why is in [art/CONCEPT-LOOK.md](art/CONCEPT-LOOK.md). **Attach the concept as the second reference on every item here**,
+after `theme-authoritative.png`, as a style and colour reference only: never copy its layout, buildings or UI.
+
+### Ground textures (the owner's method, not block C)
+Make these by [art/GROUND-TEXTURE-METHOD.md](art/GROUND-TEXTURE-METHOD.md): RUN repaints the layer into a game screenshot, then the tile is
+sliced and tiles 2-4 are quilted. Add the concept as RUN's style reference, and ask for its colours: "repaint the [area] as [the item],
+in the colours, light and painted style of the second picture". The game draws mowing bands, leaves and edges itself: paint plain turf.
+
+**149. Concept fairway grass** · ground · P1. Lush, saturated mid-green, closely mown, a very fine even grain, warm golden-hour light; NO
+mowing stripes painted in. For the fairway and the range outfield. Codex has a fairway job: keep whichever set matches the concept.
+
+**150. Concept first cut** · ground · P1. The collar: a little darker and a touch longer than 149, the same green family.
+
+**151. Concept green** · ground · P1. The smoothest, finest and brightest turf; for the greens and the range's target greens.
+
+**152. Concept rough** · ground · P1. A deeper green, longer grass in soft clumps, a few fallen autumn leaves. Green, not gold.
+
+**153. Lawn and meadow** · ground · P1. Two sets. Lawn: soft ordinary green garden grass with small clover patches, for the yards and the
+town blocks. Meadow: the same green, a little longer and uneven, a few tiny wildflowers, for the map's open ground.
+
+**154. Deep pond water** · ground · P1. Dark teal-green still water, darker toward the middle, soft ripples, a faint reflection of a warm
+sky. It replaces item 130.
+
+**155. Lake water with a soft swell** · ground · P2. Deep blue-teal open water, a gentle wave pattern, small warm glints.
+
+**156. Plaza paving** · ground · P1. Warm sandstone and red-brick pavers in a herringbone, for the clubhouse plaza and a town square.
+
+**157. Building-site dirt** · ground · P2. Graded bare earth with tyre and track marks and a few stones. Try `dirt-run` first.
+
+### Water features
+**158. Pond-edge boulders** · **R** · 1 x 4 m a piece · P1.
+> Subject: a pond's rim of rounded grey granite boulders of mixed sizes, set tight along the edge, moss and a few small autumn flowers between them, the stones dark and wet at the waterline. The water side of the piece faces the screen's lower edge. Make an inner corner and an outer corner as the extra items.
+
+**159. Fountain jet** · **B** · 1.5 m across, 4 m high · P1. Four frames of a loop.
+> Subject: a single tall fountain jet of water rising from a still pond's surface, a crown of spray at its top, a ring of ripples and foam at its foot, the water white-blue catching warm light. Only the water: no basin, no pond. Four frames of the same jet in one row, the spray shapes moving, so they loop.
+
+**160. Lily pads** · **C** decal sheet on magenta, four variants · P1.
+> Subject: seen from straight above, a cluster of round green lily pads of mixed sizes floating flat, a few with a notch, two white water-lily flowers with yellow centres. Four different clusters in a 2x2 grid on flat pure magenta.
+
+**161. Lake-shore rocks** · **R** · 2 x 4 m a piece · P2.
+> Subject: a rocky lake shore of large weathered granite boulders and flat slabs, lichen on top, dark and wet at the bottom, a little pale sand between them.
+
+### Planting
+**162. Autumn shrubs** · **B** · 1-1.5 m · P1. Six variants: burning bush in scarlet, golden spirea, a clipped green boxwood ball, a
+red-twig dogwood with orange leaves, a blue-green juniper, an ornamental grass with pale cream plumes. No pink or purple (the magenta key).
+> Subject: one garden shrub (the variant named above), full and round, in autumn colour, standing on its own.
+
+**163. Autumn flower clumps** · **B** · 0.6 m · P1. Six variants: chrysanthemums in red, yellow, orange, white and bronze, and a clump
+of black-eyed Susans. No pink or purple.
+> Subject: one dense mounded clump of garden chrysanthemums (the colour named above) in full bloom, the flowers small and many, dark green leaves showing at the bottom.
+
+**164. Clipped hedge** · **R** · 0.7 m deep, 0.9 m high · P1.
+> Subject: a neatly clipped dark-green boxwood hedge with a flat top and straight sides, a few autumn leaves caught on top.
+
+**165. Low fieldstone garden wall** · **R** · 0.5 m deep, 0.7 m high · P2.
+> Subject: a low dry-stone garden wall of rounded grey and brown fieldstones with a flat capstone row, moss in the joints.
+
+**166. Tree-line conifers** · **B** · four variants · P2. Only if the library's conifers run short for framing holes. Tall narrow spruces
+and white pines, 12-18 m high.
+
+### The club
+**167. The country club clubhouse** · **A** · 36 x 22 m, 14 m high · P1. The club's top tier, the concept's clubhouse. Identity: the
+concept, the large brick building behind the patio with the red umbrellas.
+> Subject: a grand New England country club clubhouse: red brick with white trim, many steep gables and dormers, a dark grey slate roof, three brick chimneys, a white columned portico at the entrance, a long covered veranda along the front, tall windows warmly lit from inside, flower boxes. No patio furniture and no lettering.
+
+### Building sites
+**168. Excavator** · **A** · 3 x 9 m, 3.5 m high · P1.
+> Subject: a yellow tracked excavator parked with its arm folded and the bucket resting on the ground, a dark cab, dried mud on the tracks. The 1985 look, no lettering.
+
+**169. Timber frame going up** · **A** · 12 x 9 m, 3 m high · P1.
+> Subject: a house under construction: pale new timber wall studs and plates standing on a grey concrete slab, window and door openings framed, no roof yet, a ladder leaning on one wall, a few stacked studs on the slab.
+
+**170. Lumber stacks** · **B** · 3 variants · P1.
+> Subject: a stack of new pale timber planks on two bearers, strapped, a few loose planks on top.
+
+**171. Dirt and gravel heaps** · **B** · 3 variants · P1.
+> Subject: one heap of loose brown earth (or grey gravel, or pale sand), about 3 m across, a shovel stuck in its side.
+
+**172. Survey stakes** · **B** · 2 variants · P2. The game draws the white dashed boundary itself.
+> Subject: a wooden survey stake with orange flagging tape tied at the top, driven into bare earth.
+
+### On the course
+**173. Hire golf cart** · **D** · 1.2 x 2.4 m, 1.8 m high · P1. The fleet cart (item 56 is the pro's own).
+> Subject: a white 1985 two-seater golf cart with a cream canopy on four posts, a bag rack at the back holding two golf bags, small headlights. No people and no lettering.
+
+### UI pictures
+**174. Build-tool tiles** · one sheet of 12 · P1. The build flyouts' tools as small illustrated scenes, as in the concept's Golf Course panel.
+> Subject: twelve tiny isometric dioramas in a 4x3 grid, each on its own dark navy rounded square, the light from the upper right: a tee box, a fairway, a green with a flag, a bunker, a pond, rough grass, a clump of autumn trees, a group of boulders, a curving cart path, a small clubhouse, the range bays, a flower bed. The same scale and style in every tile; no lettering.
+
+**175. Top-bar icons** · one sheet of 6 on magenta · P2.
+> Subject: six small flat painted icons in a row, gold and cream with a dark outline: a bundle of banknotes, a smiling face, two golfers, a maple leaf, a sun, a cloud. No lettering.
