@@ -368,7 +368,8 @@ export default function App() {
             </div>
           </div>
 
-          <div className="absolute left-3 top-[var(--hud-top,5.75rem)] z-20 flex items-start gap-2">
+          {/* T174: the box round the rail and the panel takes no clicks itself (it is as tall as the rail, so it covered the map under a short panel) */}
+          <div className="pointer-events-none absolute left-3 top-[var(--hud-top,5.75rem)] z-20 flex items-start gap-2 [&>*]:pointer-events-auto">
             {/* P23 P1-E: the same places from minute zero; a tool not open yet stays dimmed in place with what unlocks it, a new one says NEW */}
             <Rail entries={railEntries(ui, game.golfMode, game.uiTool)} onPick={r => game.setTool(last.current[r.id] ?? r.tools[0]!.id)} onLocked={(r, why) => game.toast(`${r.label}: ${why}`)} />
             <div className="glass w-[330px] max-h-[calc(100vh-var(--hud-top,5.75rem)-8.25rem)] overflow-y-auto p-3" data-tool={game.uiTool}>

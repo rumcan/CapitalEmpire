@@ -43,6 +43,7 @@ export function HoleCard({ game, right = 'right-3' }: { game: Game; right?: stri
           </div>
           <div className="mt-0.5 text-[13px] text-slate-300">{c.par ? `Par ${c.par} · ${length} m` : 'No par yet: it needs a pin and a tee'}</div>
           <div className={`mt-0.5 flex items-center gap-1.5 text-[12px] ${state.tone}`} data-testid="hole-state"><span aria-hidden className="font-bold">{state.icon}</span>{state.word}</div>
+          {bad.length > 0 && c.ready !== null && <div className="mt-0.5 flex items-center gap-1.5 text-[12px] text-sky-300"><span aria-hidden className="font-bold">◔</span>growing · ready {monthIndexLabel(c.ready)}</div>}
         </div>
         <button className="btn-icon" onClick={() => game.closeHoleCard()} title="Close (Esc)" aria-label="Close the hole card"><Icon name="close" size={18} /></button>
       </div>

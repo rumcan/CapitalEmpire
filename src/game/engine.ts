@@ -2283,7 +2283,7 @@ export class Game {
     this.selectedGolfMarker = null;
     this.scheduleSave();
     this.emit();
-    this.toast(`Moved Hole ${hole} ${kind === 'pin' ? 'pin' : kind + ' tee'} to (${Math.round(x)}, ${Math.round(y)})`);
+    this.toast(`Hole ${hole}'s ${kind === 'pin' ? 'pin' : kind + ' tee marker'} moved: no re-plan, no charge`); // T174: the player's words (P23 4.9)
     return true;
     }
 
