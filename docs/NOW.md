@@ -73,7 +73,8 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
   merged). The 12 last 3D people finished on 2026-10-26 and are committed on `art/people-ground-20261024` (0bd25f4): T203 #531.
   Housekeeping: T174-T177, T179, T184 closed (merged earlier). The 5174 auto-updater ran 5 times over; the owner approved stopping 4
   (one left, bash PID 31220). Still listening, not ours: a stray vite on 5189 (an agent's, gone since 07:50) and the dead lot lab's 5241.
-- **Next, in order, when an agent lands:** the golf play tickets, **T210 #555** the
+- **Next, in order, when an agent lands:** **T220 #605** many more fallen leaves in the town and backyards, baked into the ground (the
+  owner: "without making the game slower") → the golf play tickets, **T210 #555** the
   results wait for the last group → **T211 #556** pace of play → **T208 #553 everyday golf** (golfers play your course every day and pay
   green fees; today it is only a yearly number) → **T212 #557** putt, chip, tee-up and coach clips → **T213 #558** caddies, carts,
   celebrations → **T214 #559** club pros and memberships (plan first) → then **T112 #199** (merge #394 when the owner stops 5191) →
