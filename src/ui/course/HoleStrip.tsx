@@ -56,7 +56,7 @@ export function HoleStrip({ game }: { game: Game }) {
             </button>
           );
         })}
-        {cv && !cv.started && built.length > 0 && <span className="hole-badge hole-empty hole-badge-on" title={`Hole ${cur}: empty, painted by hand`}>{cur}</span>}
+        {cv && !cv.started && built.length > 0 && <span className="hole-badge hole-empty hole-badge-on" title={`Hole ${cur}: empty, painted by hand`}>{`Hole ${cur}`}</span>}
         <div className="relative">
           <button className="hole-badge hole-add" aria-haspopup="menu" aria-expanded={menu} title="New hole" onClick={() => setMenu(!menu)}>+ <span aria-hidden>▾</span></button>
           {menu && (

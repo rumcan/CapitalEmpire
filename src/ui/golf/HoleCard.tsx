@@ -22,7 +22,8 @@ function useHoleCard(game: Game): HoleCardView | null { return game.holeCardView
 /** a two-step action: ask, then do (the card's Delete) */
 function useConfirm(): [boolean, () => void, () => void] { const [on, set] = useState(false); return [on, () => set(true), () => set(false)]; }
 
-/** the card, beside the map's right edge (left of an open side panel, as the range card) */
+/** the card, beside the map's right edge (left of an open side panel, as the range card); its height in the UI scale's own units (--vh-ui:
+ *  78vh ran past the screen's bottom at 125%, T205's overflow check) */
 export function HoleCard({ game, right = 'right-3' }: { game: Game; right?: string }) {
   const c = useHoleCard(game), [asking, ask, unask] = useConfirm();
   if (!c) return null;
@@ -32,7 +33,7 @@ export function HoleCard({ game, right = 'right-3' }: { game: Game; right?: stri
   /** this hole's editor is open in the Holes panel ("Edit hole n"): Edit hole has nothing more to open (T205) */
   const editing = game.paint.editingHole === c.n;
   return (
-    <section className={`pointer-events-auto absolute ${right} top-[var(--hud-top,6rem)] z-20 max-h-[78vh] w-[340px] overflow-y-auto overflow-x-hidden rounded-xl border border-[var(--gold-line)] bg-slate-950/90 p-3 text-[13px] text-slate-200 shadow-2xl backdrop-blur`} data-testid="hole-card" aria-label={`Hole ${c.n}`}>
+    <section className={`pointer-events-auto absolute ${right} top-[var(--hud-top,6rem)] z-20 max-h-[calc(var(--vh-ui,100vh)-var(--hud-top,6rem)-4.5rem)] w-[340px] overflow-y-auto overflow-x-hidden rounded-xl border border-[var(--gold-line)] bg-slate-950/90 p-3 text-[13px] text-slate-200 shadow-2xl backdrop-blur`} data-testid="hole-card" aria-label={`Hole ${c.n}`}>
       <div className="flex items-start justify-between gap-2 border-b border-white/10 pb-2">
         <div>
           <div className="flex items-center gap-2">
