@@ -39,10 +39,17 @@ const COMPOSED_BYTES = 64 << 20;
 const PAINT_CELL = 128;
 /** a painted composition of a chunk: its picture, the cells composed so far, its size in bytes */
 /** a chunk's living ground as made (drawLiving): its influence grid, its masks, and its variants' rugged edges (T204) */
-type LivingMade = { grid: InfluenceGrid; masks: LivingMasks | null; edges?: Map<string, LivingEdge | null> };
-/** a living-ground variant's rugged edge (GroundPainter.livingEdge): its region, its own tufts reaching out, and the tufts of the grass round it
- *  reaching back in */
-type LivingEdge = { region: Path2D; blades: Path2D; back: Path2D };
+type LivingMade = { grid: InfluenceGrid; masks: LivingMasks | null; edges?: Map<string, Path2D | null> };
+/** T204: the tufts along a living-ground variant's edge, as dashed strokes of its outline (a dash across a wide butt-capped stroke is a blade
+ *  standing across the edge; Skia lays thousands of them natively, where building them as shapes in script cost tens of ms a chunk): per
+ *  layer, how far the blades reach each way (tiles) and the dash pattern (blade width, gap, ... tiles: from a hash, long and uneven so no
+ *  period shows along an edge; three layers of different periods together never line up). out: the variant's tufts over the grass round it;
+ *  back: the grass round it reaching back in (fewer) */
+const TUFT_DASH = (seed: number, n: number, w0: number, w1: number, g0: number, g1: number) => { const d: number[] = []; let h = seed >>> 0; const r = () => { h = Math.imul(h ^ (h >>> 15), 2246822519) + 0x9e3779b9 >>> 0; return h / 4294967296; }; for (let k = 0; k < n; k++) d.push(w0 + (w1 - w0) * r(), g0 + (g1 - g0) * r()); return d; };
+const TUFTS = {
+  out: [{ len: 0.1, dash: TUFT_DASH(11, 41, 0.04, 0.08, 0.03, 0.12) }, { len: 0.28, dash: TUFT_DASH(23, 37, 0.04, 0.07, 0.08, 0.35) }, { len: 0.55, dash: TUFT_DASH(37, 29, 0.035, 0.06, 0.3, 1.1) }],
+  back: [{ len: 0.12, dash: TUFT_DASH(41, 33, 0.04, 0.07, 0.1, 0.4) }, { len: 0.3, dash: TUFT_DASH(53, 31, 0.035, 0.06, 0.35, 1.2) }],
+} as const;
 type PaintedEntry = { buf: Cnv; cells: Uint8Array; bytes: number };
 /** T204: a painted area's or lot lawn's drawn form (GroundPainter.ruggedOf): the patch as drawn (its outline rounded and wobbled), its kind, its
  *  winding (1: a side's (dy, -dx) points outward) */
@@ -53,7 +60,7 @@ const SPILLS_ON: ReadonlySet<RuggedKind> = new Set<RuggedKind>(['short']);
 const SPILL_BUCKET = 16;
 /** one bucket of a course chunk's spill: the tall layer outside (o), its tile box (grown by what its blades and bands reach), its blades and
  *  its shade bands (the runs moved a quarter and a half of the band into the turf) */
-type SpillBucket = { o: number; box: BBox; blades: Path2D; near: Path2D; far: Path2D };
+type SpillBucket = { o: number; box: BBox; blades: Path2D[]; near: Path2D; far: Path2D };
 /** a run (flat x y) cut into pieces by the S-tile square each piece lies in (by its first piece's middle; each piece's last point is the
  *  next one's first), with that middle */
 function splitRun(p: ArrayLike<number>, S: number): { p: number[]; x: number; y: number }[] {
@@ -121,6 +128,19 @@ const GROUND_PHOTO = new Map<string, string>([['dirt', 'dirt'], ['gravel', 'grav
  *  still has 43 px a tile at 3x, above the 38 the closest zoom asks for */
 const GROUND_SCALE = new Map<string, number>([['roadgravel', 3]]);
 /** a patch's polygon as a closed path (tile space), all its points in order */
+/** T204: blades (triangles, six numbers each; pick: by index, which to take) as paths of at most BLADES_PER_PATH each: one path of thousands
+ *  of small closed shapes grows slower than linearly to build in a worker (measured: 9,000 blades, 175 ms), a few hundred stay cheap */
+const BLADES_PER_PATH = 256;
+function bladePaths(tri: ArrayLike<number>, pick?: (b: number, tx: number, ty: number) => boolean, out: Path2D[] = []): Path2D[] {
+  let p: Path2D | null = null, n = 0;
+  for (let b = 0, q = 0; q + 5 < tri.length; b++, q += 6) {
+    const tx = tri[q + 4]!, ty = tri[q + 5]!;
+    if (pick && !pick(b, tx, ty)) continue;
+    if (!p || n >= BLADES_PER_PATH) { p = new Path2D(); out.push(p); n = 0; }
+    p.moveTo(tri[q]!, tri[q + 1]!); p.lineTo(tri[q + 2]!, tri[q + 3]!); p.lineTo(tx, ty); p.closePath(); n++;
+  }
+  return out;
+}
 /** a closed polygon as a path; a long one (a rugged outline, T204: its patch keeps the array) made once and kept (paths are never changed) */
 const polyPaths = new WeakMap<readonly number[], Path2D>();
 const polyPath = (pts: number[]) => {
@@ -350,28 +370,15 @@ export class GroundPainter {
   private leafPic: Cnv | null = null; private leafChunks = new Map<string, Cnv>();
   /** the influence grids and masks of the last few chunks, by chunk and sources (living-ground.ts livingSignature) */
   private livingMade = new Map<string, LivingMade>();
-  /** T204: a living-ground variant's rugged edge over a chunk (made once per chunk and sources, with its masks): the region where its mask passes
-   *  its level (LIVING_EDGE; living-ground maskContours), and the tufts of its grass reaching out over the ground round it (rugged-edges
-   *  spillBlades from the region's outline, the variant's side the tall side), by blade scale */
-  private livingEdge(made: LivingMade, m: LivingMasks, key: 'lush' | 'thin', k: number): LivingEdge | null {
-    const e = (made.edges ??= new Map()), id = key + ':' + k;
-    let r = e.get(id);
+  /** T204: a living-ground variant's region over a chunk (made once per chunk and sources, with its masks): where its mask passes its level
+   *  (LIVING_EDGE; living-ground maskContours), as a path (its rings, even-odd) */
+  private livingEdge(made: LivingMade, m: LivingMasks, key: 'lush' | 'thin'): Path2D | null {
+    const e = (made.edges ??= new Map());
+    let r = e.get(key);
     if (r === undefined) {
       const rings = maskContours(m[key], m.W, m.H, m.x0, m.y0, m.res, LIVING_EDGE[key]);
-      if (!rings.length) r = null;
-      else {
-        const region = new Path2D(), blades = new Path2D(), back = new Path2D();
-        const add = (p: Path2D, t: number[]) => { for (let i = 0; i + 5 < t.length; i += 6) { p.moveTo(t[i]!, t[i + 1]!); p.lineTo(t[i + 2]!, t[i + 3]!); p.lineTo(t[i + 4]!, t[i + 5]!); p.closePath(); } };
-        for (const q of rings) {
-          ringPath(region, q);
-          // the ring runs with the variant on its (dy, -dx) side (maskContours' winding): its tufts reach out from there; fewer of the grass
-          // round it reach back in (so the two interlock)
-          const c = [...q, q[0]!, q[1]!];
-          add(blades, spillBlades(c, 1, k)); add(back, spillBlades(c, -1, 2 * k));
-        }
-        r = { region, blades, back };
-      }
-      e.set(id, r);
+      if (!rings.length) r = null; else { r = new Path2D(); for (const q of rings) ringPath(r, q); }
+      e.set(key, r);
     }
     return r;
   }
@@ -397,17 +404,18 @@ export class GroundPainter {
     let m = this.courseSpills.get(c); if (!m) this.courseSpills.set(c, m = new Map());
     let out = m.get(k);
     if (!out) {
-      const by = new Map<string, SpillBucket>(), S = SPILL_BUCKET;
+      const by = new Map<string, SpillBucket>(), tris = new Map<SpillBucket, number[]>(), S = SPILL_BUCKET;
       const at = (o: number, x: number, y: number) => {
         const i = Math.floor(x / S), j = Math.floor(y / S), key = `${o}:${i}:${j}`;
-        let b = by.get(key); if (!b) by.set(key, b = { o, box: [i * S - 1, j * S - 1, (i + 1) * S + 1, (j + 1) * S + 1], blades: new Path2D(), near: new Path2D(), far: new Path2D() });
+        let b = by.get(key); if (!b) { by.set(key, b = { o, box: [i * S - 1, j * S - 1, (i + 1) * S + 1, (j + 1) * S + 1], blades: [], near: new Path2D(), far: new Path2D() }); tris.set(b, []); }
         return b;
       };
       for (const r of c.spill ?? []) {
         const tri = spillBlades(r.p, 1, k);
-        for (let q = 0; q + 5 < tri.length; q += 6) { const b = at(r.o, tri[q + 4]!, tri[q + 5]!).blades; b.moveTo(tri[q]!, tri[q + 1]!); b.lineTo(tri[q + 2]!, tri[q + 3]!); b.lineTo(tri[q + 4]!, tri[q + 5]!); b.closePath(); }
+        for (let q = 0; q + 5 < tri.length; q += 6) { const t = tris.get(at(r.o, tri[q + 4]!, tri[q + 5]!))!; for (let k = 0; k < 6; k++) t.push(tri[q + k]!); }
         for (const pc of splitRun(r.p, S)) { const b = at(r.o, pc.x, pc.y); offsetRun(b.near, pc.p, 1, SPILL.band / 4); offsetRun(b.far, pc.p, 1, SPILL.band / 2); }
       }
+      for (const [b, t] of tris) bladePaths(t, undefined, b.blades);
       out = [...by.values()]; m.set(k, out);
     }
     return out;
@@ -465,14 +473,9 @@ export class GroundPainter {
       set = { tri: Float32Array.from(tri), own: Int32Array.from(own) }; (f.blades ??= new Map()).set(k, set);
     }
     // the blades of the tall stretches near the chunk, and those stretches' shade bands
-    const blades = new Path2D(), nearP = new Path2D(), farP = new Path2D(), tri = set.tri, own = set.own;
-    let some = false;
-    for (let b = 0, q = 0; q + 5 < tri.length; b++, q += 6) {
-      const tx = tri[q + 4]!, ty = tri[q + 5]!, o = own[b]!;
-      if (tx < x0 || tx > x1 || ty < y0 || ty > y1 || !(tall[o] || tall[(o + 1) % n])) continue;
-      blades.moveTo(tri[q]!, tri[q + 1]!); blades.lineTo(tri[q + 2]!, tri[q + 3]!); blades.lineTo(tx, ty); blades.closePath(); some = true;
-    }
-    if (!some) return;
+    const nearP = new Path2D(), farP = new Path2D(), own = set.own;
+    const blades = bladePaths(set.tri, (b, tx, ty) => tx >= x0 && tx <= x1 && ty >= y0 && ty <= y1 && (tall[own[b]!] === 1 || tall[(own[b]! + 1) % n] === 1));
+    if (!blades.length) return;
     const band = (p: ArrayLike<number>) => { offsetRun(nearP, p, f.side, SPILL.band / 4); offsetRun(farP, p, f.side, SPILL.band / 2); };
     if (tall.every(v => v)) band([...ring, ring[0]!, ring[1]!]);
     else for (let i = 0; i < n; i++) if (tall[i] && !tall[(i + n - 1) % n]) { const p: number[] = []; for (let q = i; tall[q % n]; q++) p.push(ring[2 * (q % n)]!, ring[2 * (q % n) + 1]!); if (p.length >= 4) band(p); }
@@ -482,15 +485,15 @@ export class GroundPainter {
    *  edge moved a quarter and a half of the band in, stroked half and full width, so it is strongest at the edge) and the blades moved toward
    *  the shadows (145 degrees on screen), all multiplied in the cool shade (T110: the ground keeps its texture) and laid on the shade mask
    *  too (T186); then the blades in `fill`, the tall ground's own picture (tone: its course tone over them) */
-  private layBlades(ctx: C2D, M: DOMMatrix, blades: Path2D, near: Path2D, far: Path2D, fill: CanvasPattern | string, tone?: (draw: () => void) => void) {
+  private layBlades(ctx: C2D, M: DOMMatrix, blades: readonly Path2D[], near: Path2D, far: Path2D, fill: CanvasPattern | string, tone?: (draw: () => void) => void) {
     const shade = (g: C2D) => {
       g.save(); g.setTransform(M); g.globalCompositeOperation = 'multiply'; g.fillStyle = g.strokeStyle = SHADE_TINT; g.lineCap = 'butt'; g.lineJoin = 'round';
       g.globalAlpha = SPILL.bandA / 2; g.lineWidth = SPILL.band; g.stroke(far); g.lineWidth = SPILL.band / 2; g.stroke(near);
-      g.globalAlpha = SPILL.shadeA; g.translate(SPILL_SHADE_OFF[0], SPILL_SHADE_OFF[1]); g.fill(blades);
+      g.globalAlpha = SPILL.shadeA; g.translate(SPILL_SHADE_OFF[0], SPILL_SHADE_OFF[1]); for (const b of blades) g.fill(b);
       g.restore();
     };
     shade(ctx); this.onShadeMask(shade);
-    ctx.save(); ctx.setTransform(M); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; ctx.fillStyle = fill; ctx.fill(blades); tone?.(() => ctx.fill(blades)); ctx.restore();
+    ctx.save(); ctx.setTransform(M); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; ctx.fillStyle = fill; for (const b of blades) ctx.fill(b); if (tone) for (const b of blades) tone(() => ctx.fill(b)); ctx.restore();
   }
   /** T204: each course chunk as it is drawn, by its patch (made once a patch): for the ground chunks, and for the district chunks (their
    *  lines split coarser: RUGGED.courseStepLite) */
@@ -1284,15 +1287,24 @@ export class GroundPainter {
      *  edges are on; false (nothing laid) when they are off */
     const rugged = (layer: Cnv, key: 'lush' | 'thin') => {
       if (!this.rugged) return false;
-      const e = this.livingEdge(made!, m, key, Math.max(2, spillScale(L, TILE_PX)));
-      if (!e) return true;
-      // the grass round it as it is now (copied as the variant is drawn over it): the tufts reaching back in are cut from it
-      const under = vg.createPattern(vg.canvas, 'no-repeat');
-      vg.save(); vg.setTransform(M); vg.clip(e.region, 'evenodd'); vg.setTransform(1, 0, 0, 1, 0, 0); vg.globalCompositeOperation = 'source-over'; vg.globalAlpha = 1; vg.drawImage(layer, 0, 0); vg.restore();
-      const p = vg.createPattern(layer, 'no-repeat'); if (!p) return true;
-      p.setTransform(Minv); vg.save(); vg.setTransform(M); vg.globalCompositeOperation = 'source-over'; vg.globalAlpha = 1; vg.fillStyle = p; vg.fill(e.blades);
-      if (under) { under.setTransform(Minv); vg.fillStyle = under; vg.fill(e.back); }
-      vg.restore();
+      const region = this.livingEdge(made!, m, key);
+      if (!region) return true;
+      // the blades' width at least about a cache px (fewer, wider blades further out); the grass round it as it is now (copied as the variant
+      // is drawn over it): the tufts reaching back into the lush grass are cut from it, at the closest levels only (further out they are a
+      // px or two, not worth the copy)
+      const k = spillScale(L, TILE_PX), under = key === 'lush' && k === 1 ? vg.createPattern(vg.canvas, 'no-repeat') : null, p = vg.createPattern(layer, 'no-repeat');
+      vg.save(); vg.setTransform(M); vg.clip(region, 'evenodd'); vg.setTransform(1, 0, 0, 1, 0, 0); vg.globalCompositeOperation = 'source-over'; vg.globalAlpha = 1; vg.drawImage(layer, 0, 0); vg.restore();
+      const tufts = (style: CanvasPattern | null, layers: readonly { len: number; dash: readonly number[] }[], inside: boolean) => {
+        if (!style) return;
+        style.setTransform(Minv);
+        vg.save(); vg.setTransform(M);
+        if (inside) vg.clip(region, 'evenodd');
+        else { const o = new Path2D(); o.rect(box[0] - 3, box[1] - 3, box[2] - box[0] + 6, box[3] - box[1] + 6); o.addPath(region); vg.clip(o, 'evenodd'); }
+        vg.globalCompositeOperation = 'source-over'; vg.globalAlpha = 1; vg.strokeStyle = style; vg.lineCap = 'butt'; vg.lineJoin = 'bevel';
+        for (const t of layers) { vg.setLineDash(k === 1 ? t.dash as number[] : t.dash.map(v => v * k)); vg.lineWidth = 2 * t.len; vg.stroke(region); }
+        vg.restore();
+      };
+      if (k <= 2) { tufts(p, TUFTS.out, false); tufts(under, TUFTS.back, true); }
       return true;
     };
     // lush: richer, denser grass along fences, walls and hedges, near water and on the verges: the grass laid over itself (its strokes' contrast
@@ -1630,13 +1642,13 @@ export class GroundPainter {
      *  from the ground under the course where the map's grass meets the turf */
     const spill = () => {
       const k = spillScale(L, TILE_PX), x0 = box[0] - 1, y0 = box[1] - 1, x1 = box[2] + 1, y1 = box[3] + 1;
-      const by = new Map<number, { blades: Path2D; near: Path2D; far: Path2D; box: BBox }>();
+      const by = new Map<number, { blades: Path2D[]; near: Path2D; far: Path2D; box: BBox }>();
       for (const c of cs) {
         if (!c.spill?.length) continue;
         for (const b of this.courseSpillOf(c, k)) {
           if (b.box[2] < x0 || b.box[0] > x1 || b.box[3] < y0 || b.box[1] > y1) continue;
-          let e = by.get(b.o); if (!e) by.set(b.o, e = { blades: new Path2D(), near: new Path2D(), far: new Path2D(), box: [Infinity, Infinity, -Infinity, -Infinity] });
-          e.blades.addPath(b.blades); e.near.addPath(b.near); e.far.addPath(b.far);
+          let e = by.get(b.o); if (!e) by.set(b.o, e = { blades: [], near: new Path2D(), far: new Path2D(), box: [Infinity, Infinity, -Infinity, -Infinity] });
+          e.blades.push(...b.blades); e.near.addPath(b.near); e.far.addPath(b.far);
           e.box = [Math.min(e.box[0], b.box[0]), Math.min(e.box[1], b.box[1]), Math.max(e.box[2], b.box[2]), Math.max(e.box[3], b.box[3])];
         }
       }
