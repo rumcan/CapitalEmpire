@@ -50,6 +50,7 @@ import { formatMultiDayStatus } from './game/golf/multiday';
 import { decorInfo } from './game/golf/decor';
 import { Icon, type IconName } from './ui/Icon';
 import { NightPanel } from './ui/NightPanel';
+import { GradePanel } from './ui/GradePanel';
 import { RoadThumb } from './ui/RoadThumb';
 import { Thumb } from './ui/Thumb';
 import { Minimap } from './ui/Minimap';
@@ -508,6 +509,7 @@ export default function App() {
                         <span className="w-10 text-right tabular-nums">{show}</span>
                       </label>
                     ))}
+                    <GradePanel game={game} bump={bump} />
                     <NightPanel game={game} bump={bump} />
                     <button className="btn w-full" onClick={() => { setMenu(false); game.save(); }} data-tip="Saved automatically; force a save now">Save</button>
                     <button className="btn w-full" onClick={() => { setMenu(false); void game.downloadSave(); }} data-tip="Download the save as a .cesave file (for a bug report, or to carry it to another computer)">Download save</button>
