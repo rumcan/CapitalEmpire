@@ -671,7 +671,11 @@ export class City {
   /** after a network batch: the parcels that changed, the reachable segs, the town's lots */
   private lotsOps(): { lotsAdded: Lot[]; lotsRemoved: string[]; events: TownEvent[] } {
     const t0 = performance.now();
-    const { added, removed } = this.lots.update(this.net, this.cls);
+    // T177: in a range start's grown town a lot the town has started or built keeps its footprint through the re-partition (new streets
+    // partition round it). Classic towns keep today's partition: there the block lots' subdivision replacing the frontage is what fills a
+    // town's interior (with the rule, town:gate's town reached 4,395 residents in 40 days instead of 5,094)
+    const keep = this.golf?.start === 'range' ? (key: string) => (this.town.states.get(key)?.level ?? LV.EMPTY) >= LV.BUILDING : undefined;
+    const { added, removed } = this.lots.update(this.net, this.cls, keep);
     this.reach = this.centres.length ? reachableFrom(this.net, [this.ctx.entry, ...this.centres], [Infinity, ...this.centres.map(() => 80)]) : reachableSegs(this.net, this.ctx.entry);
     const events = this.town.onLots(added, removed);
     this.lotsMs = performance.now() - t0;

@@ -220,6 +220,37 @@ function segLots(net: RoadNetwork, s: Seg, terr: Uint8Array | null, out: Lot[], 
   }
 }
 
+/** the seg a kept lot fronts after an edit (T177): its own while it stands, else the piece of its road its front now lies on (a road split by a
+ *  new junction keeps its lots: the lattice keys them across the split): parallel to the lot, the front's foot within its span, the front at its
+ *  verge. Null when its road is gone */
+function frontSeg(net: RoadNetwork, l: Lot): Seg | null {
+  if (net.segs.has(l.seg)) return l.seg;
+  for (const s of net.segsNear(l.front, 4)) {
+    if (s.kind !== SK.GROUND) continue;
+    const dv = sub(s.b, s.a), L = vlen(dv); if (L < 1e-6) continue;
+    const u = mul(dv, 1 / L); if (Math.abs(dot(u, l.u)) < 0.999) continue;
+    const t = dot(sub(l.front, s.a), u); if (t < -0.5 || t > L + 0.5) continue;
+    const off = Math.abs(dot(sub(l.front, s.a), perp(u))); if (Math.abs(off - (s.cls.h + s.cls.walk)) < 0.6) return s;
+  }
+  return null;
+}
+/** whether a road other than the lot's own frontage now reaches into the lot (T177: a kept lot gives way only to a road through it; the street
+ *  planner never lays one through a lot that is not empty, lots/roads.ts valid): a point of the seg, every half tile, within its verge of the lot */
+function roadThrough(net: RoadNetwork, l: Lot, own: Seg): boolean {
+  for (const s of net.segsNear(l.c, l.w + l.d + 24)) {
+    if (s === own || s.kind !== SK.GROUND) continue;
+    const v = s.cls.h + s.cls.walk - TOL, dv = sub(s.b, s.a), L = vlen(dv), n = Math.max(1, Math.ceil(L * 2));
+    // the lot's own road, split: parallel, on its front line
+    const u = L > 1e-6 ? mul(dv, 1 / L) : dv;
+    if (L > 1e-6 && Math.abs(dot(u, l.u)) > 0.999 && Math.abs(Math.abs(dot(sub(l.front, s.a), perp(u))) - (s.cls.h + s.cls.walk)) < 0.6) continue;
+    for (let k = 0; k <= n; k++) {
+      const p = { x: s.a.x + dv.x * k / n, y: s.a.y + dv.y * k / n }, w = sub(p, l.o), a = dot(w, l.u), b = dot(w, l.n);
+      if (a > -v && a < l.w + v && b > -v && b < l.d + v) return true;
+    }
+  }
+  return false;
+}
+
 /** The parcels of a road network. Call update() after every RoadNetwork.rebuild, with the terrain classes (null = no terrain check). */
 export class LotMap {
   /** the lots by key */
@@ -230,8 +261,10 @@ export class LotMap {
   /** the cut of each block (blocklots.ts), by block key: cleared with the block, and reset when it grows past CUT_CAP */
   private cuts = new Map<string, BlockCut>();
 
-  /** after net.rebuild: recompute the lots near the edit; returns the keys removed and the lots added (a lot whose key keeps its rectangle keeps its object) */
-  update(net: RoadNetwork, terrainCls: Uint8Array | null): { added: Lot[]; removed: string[] } {
+  /** after net.rebuild: recompute the lots near the edit; returns the keys removed and the lots added (a lot whose key keeps its rectangle keeps its object).
+   *  keep(key): a lot the town has started or built (T177): it keeps its footprint while its road stands and no road runs through it, and the new
+   *  lots (block lots and frontage lots alike) partition round it; only empty lots are cut, shrunk or re-keyed by an edit */
+  update(net: RoadNetwork, terrainCls: Uint8Array | null, keep?: (key: string) => boolean): { added: Lot[]; removed: string[] } {
     this.terr = terrainCls;
     const added: Lot[] = [], removed: string[] = [];
     // the scope: the box of the edit (the touched nodes, their segs, the lots of the segs that are gone), padded
@@ -255,6 +288,12 @@ export class LotMap {
       else if (lotTouches(l, Zr)) { old.set(l.key, l); fixed.push(l); }
     }
     for (const l of old.values()) { this.lots.delete(l.key); this.grid.remove(l); }
+    // the kept lots (T177): accepted first, as they stand, on the piece of their road they now front
+    if (keep) for (const l of old.values()) {
+      if (!keep(l.key)) continue;
+      const s = frontSeg(net, l); if (!s || roadThrough(net, l, s) || inRing(net, l)) continue;
+      l.seg = s; this.lots.set(l.key, l); this.grid.add(l, boxOf(l));
+    }
     // 2. the block lots first (they win every overlap), then the candidates of the segs in scope and the fixed lots, in priority order
     const items: Lot[] = [], subs: number[][] = [], subBoxes: BBox[] = [];
     // a finite scope reads only the segs near it: a block that touches the scope is at most ~70 tiles across (BLOCK_REACH covers its sides and insets)
@@ -279,6 +318,7 @@ export class LotMap {
     for (const l of rest) items.push(l);
     // 3. accept in priority order: a lot that overlaps an accepted one is dropped
     for (const c of items) {
+      if (this.lots.get(c.key) === old.get(c.key) && old.has(c.key)) continue; // kept as it stood (T177)
       if (this.clashes(c)) continue;
       const prev = old.get(c.key);
       let lot: Lot;
