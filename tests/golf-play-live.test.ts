@@ -48,11 +48,14 @@ function world(seed: number) {
 /** the input that plays a turn as the model suggests it */
 const suggest = (t: OwnerTurn) => ({ holeIdx: t.holeIdx, stroke: t.stroke, club: t.suggested.club, aim: t.suggested.aim, power: t.suggested.power });
 
-test('live: the owner group has no shots after playRound with live (its golfers done at Infinity), the others are played', () => {
+test('live: after playRound with live the day stops at the owner’s first strike: his group has no shots (done at Infinity), and the groups behind wait for him (T211)', () => {
   const { view, f, gs, gi } = world(3), p = playRound(view, f, gs, 3, { live: gi }), inLive = new Set(gs[gi]!.players);
+  assert.equal(gi, 0, 'the owner is in the first group');
   assert.ok(p.shots.every(s => !inLive.has(s.golfer)), 'no shots for the live group');
   for (const id of inLive) { assert.deepEqual(p.strokes[id], new Array<number>(18).fill(0)); assert.equal(p.done[id], Infinity); }
-  for (const g of f) if (!inLive.has(g.id)) assert.ok(Number.isFinite(p.done[g.id]!) && p.strokes[g.id]!.every(k => k >= 1), `golfer ${g.id} is played`);
+  // every other group is behind him: nobody has teed off before he has, and nobody is done
+  assert.equal(p.shots.length, 0, 'the groups behind wait for the owner’s group');
+  for (const g of f) if (!inLive.has(g.id)) assert.equal(p.done[g.id], Infinity, `golfer ${g.id} not done yet`);
 });
 
 test('live: advance gives the owner his first turn on hole 0, from the tee, at the group tee time', () => {
