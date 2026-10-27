@@ -14,6 +14,7 @@ import type { TownClock } from './sim/townclock';
 import type { Seg } from './network';
 import type { GolfSave } from './golf/mode';
 import type { GrassSave } from './ext/grass-management';
+import type { DaySave } from './event/daysave';
 
 const DB = 'capital-empire', STORE = 'saves', SLOT = 'town', V2_KEY = 'maple-falls-town-v2';
 export const SAVE_VERSION = 5;
@@ -111,6 +112,10 @@ export interface SaveV5 {
   speed?: number;
   /** the golf game's state (golf/mode.ts; optional, no version bump; missing = a legacy classic game, which loads as before) */
   golf?: GolfSave;
+  /** the tournament day under way (T209, event/daysave.ts: the clocks, the surge, the crowd, the car parks, going home): written only while a golf round
+   *  is in its surge or eval on the tournament day, so the round resumes where it was (City.resumeDay). Optional, no version bump; missing = as before
+   *  (a surge restores as free) */
+  tourney?: DaySave;
   /** the build that wrote this save (T044; optional, informational only, never used to refuse a save) */
   build?: { app: string; sha: string };
 }
@@ -125,6 +130,9 @@ const V2_IDS = ['world:house_1', 'world:house_3', 'world:house_4', 'gen:house-du
   'world:fence_picket_x', 'world:fence_picket_y', 'world:fence_iron_x', 'world:fence_iron_y', 'gen:fence-privacy-wood',
   'gen:trash-cans-row', 'gen:kids-bikes', 'expansion:trampoline', 'expansion:doghouse', 'expansion:basketball-hoop', 'expansion:washing-line'];
 
+/** the save with the tournament day under way (T209, SaveV5.tourney) added last; with none, the very same object, so every other save is byte for byte
+ *  as before */
+export function withTourney(d: SaveV5, tourney: DaySave | null): SaveV5 { return tourney ? { ...d, tourney } : d; }
 export async function writeSave(d: SaveV5) { const buf = await gzip(JSON.stringify({ ...d, build: BUILD })); await store.put(SLOT, buf); return buf.byteLength; }
 /** the save migrations, one step per version: step `from` turns a save of that version into the next one's shape; upgradeSave runs them in order */
 export const MIGRATIONS: { from: number; up(d: any): any }[] = [

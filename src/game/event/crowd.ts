@@ -2,6 +2,7 @@
 // gate), each lot stop's queue (a FIFO of parties), the fans on each bus by town, each gate's queue (golf, LEAD.md M2.1: a FIFO of parties
 // admitted at the gate's rate) and the fans at the doors (inside). City drives it (see City.step); the counts add up: parked * PARTY =
 // walking + at a stop + on a bus + at a gate + at the doors.
+import type { CrowdSave } from './daysave';
 
 /** a group of n fans of town walking straight from (x, y) to (tx, ty) (tiles): stage 0 to the lot stop of route (then it queues there), stage 1 to a
  *  door (then the fans are at the doors), stage 2 to gate `route` (then it queues there), stage 3 (already inside) to gallery spot `route`
@@ -133,6 +134,35 @@ export class Crowd {
     for (const b of this.bus) if (b) for (let k = 0; k < this.towns; k++) onBus[k]! += b[k]!;
     for (const q of this.gateQ) for (const p of q) atGate[p.town]! += p.n;
     return { fans: this.fans.slice(), atStop, onBus, atGate };
+  }
+  /** the crowd as the save keeps it (T209, see daysave.ts). The buses are not saved: the fans on board (routeOf: a bus slot's route, -1 none) are back at
+   *  the front of their route's queue, as when a bus is lost (requeue); the onIn and onBack hooks, the grace and lateAt are the City's to set again */
+  save(routeOf: (slot: number) => number): CrowdSave {
+    const r1 = (v: number) => Math.round(v * 100) / 100, walkers: number[] = [];
+    for (const w of this.walkers) walkers.push(r1(w.x), r1(w.y), r1(w.tx), r1(w.ty), w.n, w.town, w.stage, w.route);
+    const queue = this.queue.map(q => q.map(p => ({ town: p.town, n: p.n })));
+    this.bus.forEach((b, slot) => {
+      const q = b ? queue[routeOf(slot)] : undefined;
+      if (b && q) for (let k = b.length - 1; k >= 0; k--) if (b[k]! > 0) q.unshift({ town: k, n: b[k]! });
+    });
+    return { walkers, queue: queue.map(q => q.flatMap(p => [p.town, p.n])), fans: this.fans.slice(), gateQ: this.gateQ.map(q => q.flatMap(p => [p.town, p.n, p.since ?? 0])),
+      gate: { ...this.gate }, gallery: this.gallery.slice() };
+  }
+  /** the crowd's walkers, queues, fans, gates and galleries from a save (T209): kept to this crowd's towns, routes, gates and spots (a list longer than
+   *  the save's keeps its zeros; a party or a group of a town or a place that is not there any more is dropped) */
+  load(s: CrowdSave): void {
+    const T = this.towns, town = (k: number) => k >= 0 && k < T;
+    this.walkers = [];
+    for (let i = 0; i + 7 < s.walkers.length; i += 8) {
+      const [x, y, tx, ty, n, k, stage, route] = s.walkers.slice(i, i + 8) as number[];
+      if (town(k!) && stage! >= 0 && stage! <= 4) this.walkers.push({ x: x!, y: y!, tx: tx!, ty: ty!, n: n!, town: k!, stage: stage as Walker['stage'], route: route! });
+    }
+    const parties = (a: number[], w: number): Party[] => { const out: Party[] = []; for (let i = 0; i + w - 1 < a.length; i += w) if (town(a[i]!)) out.push(w === 3 ? { town: a[i]!, n: a[i + 1]!, since: a[i + 2]! } : { town: a[i]!, n: a[i + 1]! }); return out; };
+    this.queue = this.queue.map((_, r) => parties(s.queue[r] ?? [], 2));
+    this.gateQ = this.gateQ.map((_, g) => parties(s.gateQ[g] ?? [], 3));
+    this.fans = this.fans.map((_, k) => s.fans[k] ?? 0);
+    this.gallery = this.gallery.map((_, i) => s.gallery[i] ?? 0);
+    this.gate = { ...s.gate };
   }
   /** the fans per town still walking (the walker groups) */
   walking(): number[] {
