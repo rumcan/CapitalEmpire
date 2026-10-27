@@ -648,6 +648,17 @@ function chainRing(B: Build) {
   B.run(CHAIN, 0.4, D - 0.4, W - 0.4, D - 0.4);
 }
 
+/** T219 (P27): an iconic place's whole preset (lots/iconic.ts) on its own footprint, drawn as a whole preset draws (its props kept as authored,
+ *  each turned to the footprint's facing, never mirrored; its patches; its decals as the ground marks; nothing procedural). Deterministic */
+export function composeWhole(lot: LotGeom, preset: LotPreset, seed: number): Composition {
+  const B = new Build(lot, mulberry(mix(seed, 219)));
+  B.keepAll = true; B.loose = true;
+  const frame = frameOf(lot), fit = fitPreset(preset, lot.w, lot.d);
+  fromPreset(B, lot, { use: LU.GOV, level: LV.BUILT, decline: 0, seed }, { preset, fit, frame });
+  decalMarks(B, frame, fit.decals);
+  return B.done();
+}
+
 /** The composition of a lot in a given state: deterministic from the lot, its use, level, decline and seed (and the presets). */
 export function compose(lot: LotGeom, st: ComposeState, drops?: PresetDrop[]): Composition {
   const B = new Build(lot, mulberry(mix(st.seed, st.use, st.level, st.decline)));

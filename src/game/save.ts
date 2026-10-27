@@ -85,6 +85,9 @@ export interface SaveV5 {
   round?: RoundSave;
   /** the car parks as [x, y, w, h] tiles, ids 1..n in this order (optional, no version bump; missing = none) */
   parks?: [number, number, number, number][];
+  /** T219 (P27): the iconic places on the map as [id, x, y, q] (lots/iconic.ts PlaceTuple: the front corner, tiles, and the street's quarter turn;
+   *  optional, no version bump; missing = none placed yet: the town places them again as it reaches their size) */
+  places?: [string, number, number, number][];
   /** the toll gates as [ax, ay, bx, by, booths] (the plaza's ends, inbound a → b; ids 1..n in this order; optional, no version bump; missing = none) */
   tolls?: [number, number, number, number, number][];
   /** the shuttle bus routes as [park, sx, sy, dx, dy, buses, seats, town] (the lot stop and the doors stop, tiles; town: the town's index, -1 for a route

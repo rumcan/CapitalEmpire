@@ -8,6 +8,7 @@ import type { Tool } from '../game/types';
 import type { ProgressiveUiState } from '../game/ext/progressive-ui';
 import type { IconName } from './Icon';
 import { entryKey, extraLock, toolLock, toolNew, toolsIn, type RailItem, type RailTool } from './rail-items';
+import { GREENKEEPING } from '../game/features';
 
 /** what a leaf does besides picking its tool (App.tsx runs it) */
 export type LeafAct =
@@ -89,7 +90,7 @@ export function menuOf(item: RailItem, c: MenuCtx): MenuRow[] {
       // T206: the roads on your property (the course's cart paths and drives), directly below Buildings; town roads stay in Traffic
       const p = byId('path');
       if (p) { const r = group('paths', p.label, 'sidewalk', classes(p, c.paths), p); if (r) rows.push({ ...r, note: 'Roads and cart paths on your property' }); }
-      const g = byId('greenkeeping');
+      const g = GREENKEEPING ? byId('greenkeeping') : undefined; // hidden for now (features.ts)
       if (g) rows.push(group('greenkeeping', 'Greenkeeping', 'trees', [leaf(g, 'Grass care', undefined, 'trees'), ...c.cares.map(x => leaf(g, x.name, { k: 'care', id: x.id }))], g));
       if (c.golf) for (const x of item.extras ?? []) rows.push({ key: `extra:${x.id}`, label: x.label, icon: x.icon, leaf: { item: item.id, entry: { id: 'select', label: x.label, key: '', icon: x.icon }, act: x.id === 'land' ? { k: 'land' } : { k: 'event' } }, why: extraLock(c.ui, x) });
       break;

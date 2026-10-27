@@ -58,11 +58,13 @@ import { SeasonCard } from './ui/golf/SeasonCard';
 import { seasonChip, seasonPhase } from './ui/golf/season';
 import { GuidePulse } from './ui/GuidePulse';
 import { GrassManagementPanel } from './ui/GrassManagementPanel';
+import { GREENKEEPING } from './game/features';
 import { formatPercent } from './ui/TournamentResults';
 import { SeasonReportCard } from './ui/golf/SeasonReportCard';
 import { GolfLeaderboard } from './ui/GolfLeaderboard';
 import { ShotPanel } from './ui/ShotPanel';
 import { RangeCard } from './ui/golf/RangeCard';
+import { PlaceCard } from './ui/PlaceCard';
 import { LandPanel } from './ui/golf/LandPanel';
 import { WelcomeCard } from './ui/golf/WelcomeCard';
 import { TooltipLayer } from './ui/Tooltip';
@@ -411,7 +413,7 @@ export default function App() {
                 <button className="btn-icon" onClick={() => game.zoomAt(clampZoom(game.cam.z / ZOOM_STEP))} data-tip="Zoom out (-)"><Icon name="zoom-out" size={20} /></button>
                 <button className="btn-icon" onClick={() => game.zoomAt(clampZoom(game.cam.z * ZOOM_STEP))} data-tip="Zoom in (+)"><Icon name="zoom-in" size={20} /></button>
               </div>
-              <button className={`btn ${game.grassPanel ? 'on' : ''}`} onClick={() => game.toggleGrassPanel()} data-tip={game.golfMode ? `Greenkeeping: keep the course's turf${game.toolLock('greenkeeping') ? ` (${game.toolLock('greenkeeping')})` : ''}` : 'Inspect and maintain course and town grass'}>Grass</button>
+              {GREENKEEPING && <button className={`btn ${game.grassPanel ? 'on' : ''}`} onClick={() => game.toggleGrassPanel()} data-tip={game.golfMode ? `Greenkeeping: keep the course's turf${game.toolLock('greenkeeping') ? ` (${game.toolLock('greenkeeping')})` : ''}` : 'Inspect and maintain course and town grass'}>Grass</button>}
               <div className="relative">
                 <button className={`btn-icon ${menu ? 'on' : ''}`} onClick={() => setMenu(!menu)} data-tip="Settings"><Icon name="gear" size={22} /></button>
                 {menu && (
@@ -478,6 +480,11 @@ export default function App() {
                       <span className="w-16 shrink-0">Slope light</span>
                       <input type="range" className="min-w-0 flex-1" min={0} max={2} step={0.05} value={game.slopeLight} onChange={e => { game.setSlopeLight(+e.target.value); bump(); }} />
                       <span className="w-10 text-right tabular-nums">{Math.round(game.slopeLight * 100)}%</span>
+                    </label>
+                    <label className="flex items-center gap-2 px-2 py-2 text-sm" data-tip="Fallen leaves baked into the ground: carpets under the trees, drifts along the fences, walls and houses, a scatter over the yards and sidewalks, and leaves in the gutters under the street trees (T220). 100% = the default, 0 = only the leaves there were before">
+                      <span className="w-16 shrink-0">Fallen leaves</span>
+                      <input type="range" className="min-w-0 flex-1" min={0} max={2} step={0.1} value={game.leafDensity} onChange={e => { game.setLeafDensity(+e.target.value); bump(); }} />
+                      <span className="w-10 text-right tabular-nums">{Math.round(game.leafDensity * 100)}%</span>
                     </label>
                     {dev && (
                       <label className="flex cursor-pointer items-center gap-2 px-2 py-1 text-xs" data-tip="Developer: the ground shows the living ground's influence maps instead of the grass: lush green, thin orange, bare brown, litter red, shade blue-grey">
@@ -574,7 +581,7 @@ export default function App() {
               {game.tool === 'paint' && <PaintPanel game={game} />}
               {game.uiTool === 'course' && <CoursePanel game={game} looks={looksOpen} onLooks={setLooks} />}
               {game.uiTool === 'buildings' && <BuildingsPanel game={game} />}
-              {game.tool === 'greenkeeping' && <GrassManagementPanel game={game} docked />}
+              {GREENKEEPING && game.tool === 'greenkeeping' && <GrassManagementPanel game={game} docked />}
               {game.tool === 'props' && <PropsPanel game={game} />}
               {game.tool === 'practice' && <PracticePanel game={game} />}
               {game.tool === 'park' && <ParkPanel game={game} dev={dev} />}
@@ -636,7 +643,7 @@ export default function App() {
           </div>
           )}
           {game.panel === 'budget' && <BudgetPanel game={game} />}
-          {game.grassPanel && game.tool !== 'greenkeeping' && <GrassManagementPanel game={game} />}
+          {GREENKEEPING && game.grassPanel && game.tool !== 'greenkeeping' && <GrassManagementPanel game={game} />}
           {courseStats && (
           <div className={`pointer-events-auto absolute ${game.panel ? 'right-[19.5rem]' : 'right-3'} top-[var(--hud-top,6rem)] z-20`}>
           <CourseStatsPanel stats={courseStats} onClose={() => setCourseStats(null)} onSelectHole={h => { if (game.holesTool) game.selectGolfMarker(h, 'pin'); else { const pin = game.golf?.pins.find(p => p.hole === h); if (pin) game.jumpTo(pin.x, pin.y); } }} />
@@ -677,6 +684,7 @@ export default function App() {
           {game.seasonReport && game.traffic.round.stage === 'free' && <SeasonReportCard report={game.seasonReport} onContinue={() => game.dismissSeasonReport()} />}
           {(() => { const w = !game.seasonReport ? game.welcomeView() : null; return w && <WelcomeCard road={w.road} newHole={w.newHole} onGo={() => game.closeWelcome(true)} onClose={() => game.closeWelcome(false)} />; })()}
           {(() => { const rc = game.rangeCard(); return rc && <RangeCard view={rc} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.openRangeCard(false)} onPrice={p => game.setRangePrice(p)} onBuy={id => game.buyRangeUpgrade(id)} onShowPractice={() => game.showPracticeArea()} onBuildPractice={id => { game.openRangeCard(false); activeRail.current = 'facilities'; game.armPractice(id, true); }} practiceWhy={game.toolLock('practice')} />; })()}
+          {(() => { const pc = game.placeCard(); return pc && <PlaceCard view={pc} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.closePlaceCard()} />; })()}
           {game.holeCardHole !== null && <HoleCard game={game} right={game.panel ? 'right-[19.5rem]' : 'right-3'} />}
           {game.eventMode && !game.site && !game.golfMode && (
             <div className={`pointer-events-auto absolute ${game.panel ? 'right-[19.5rem]' : 'right-3'} top-[var(--hud-top,6rem)] z-20 flex items-center gap-3 glass p-3 text-sm`}>

@@ -16,7 +16,8 @@ export type Box = [number, number, number, number];
 /* ---- casters: the things standing on the ground, as flat Float32Array records the engine sends the ground workers ---- */
 /** floats per caster record: kind, then six numbers by kind (tiles):
  *  - FENCE, HEDGE, WALL: the line x0, y0, x1, y1, its half thickness, 0;
- *  - TREE: the trunk x, y, the canopy radius, leafiness (1 a broadleaf tree, about 0.5 a conifer), 0, 0;
+ *  - TREE: the trunk x, y, the canopy radius, leafiness (1 a broadleaf tree, about 0.5 a conifer), the colour its leaves fall in (T220,
+ *    leaf-fall.ts MOOD + 1; 0 unknown) and how bare it stands (0.35 full .. 1 near bare; 0 unknown): treeLeaves;
  *  - BUSH: its centre x, y, its radius, 0, 0, 0;
  *  - BUILDING: its footprint x0, y0, x1, y1, its door x, y (NaN when it has none) */
 export const CASTER_STRIDE = 7;
@@ -87,12 +88,14 @@ export class CasterStore {
   }
   /** every key whose name starts with prefix goes (a new map: the forest and town-tree cells) */
   dropPrefix(prefix: string) { for (const k of [...this.keys.keys()]) if (k.startsWith(prefix)) this.drop(k); }
-  /** the records whose influence boxes touch box b, packed */
-  query(b: Box): Float32Array {
+  /** the records whose influence boxes touch box b, packed; skip: the keys starting with it are left out (T220: the fallen leaves leave the
+   *  forest's out) */
+  query(b: Box, skip?: string): Float32Array {
     const C = CasterStore.CELL, seen = new Set<string>(), parts: { recs: Float32Array; ks: number[] }[] = []; let n = 0;
     for (let cy = Math.floor(b[1] / C); cy <= Math.floor(b[3] / C); cy++) for (let cx = Math.floor(b[0] / C); cx <= Math.floor(b[2] / C); cx++) {
       for (const key of this.grid.get((cy + 64) * 4096 + cx + 64) ?? []) {
         if (seen.has(key)) continue; seen.add(key);
+        if (skip && key.startsWith(skip)) continue;
         const e = this.keys.get(key)!; if (e.box[2] < b[0] || e.box[0] > b[2] || e.box[3] < b[1] || e.box[1] > b[3]) continue;
         const ks: number[] = [];
         for (let k = 0; k < e.recs.length / CASTER_STRIDE; k++) { const q = casterBox(e.recs, k); if (q[2] >= b[0] && q[0] <= b[2] && q[3] >= b[1] && q[1] <= b[3]) ks.push(k); }
@@ -437,11 +440,18 @@ export function casterOf(p: CasterInput, out: number[]) {
     const alongX = wx >= wy, t = Math.max(0.04, (alongX ? wy : wx) / 2);
     return void out.push(kind, alongX ? p.x0 : cx, alongX ? cy : p.y0, alongX ? p.x1 : cx, alongX ? cy : p.y1, Math.min(t, 0.6), 0);
   }
-  if (kind === CK.TREE) return void out.push(CK.TREE, cx, cy, Math.max(0.4, p.across / 2 * 0.9), p.conifer ? 0.5 : 1, 0, 0);
+  if (kind === CK.TREE) { const [mood, bare] = treeLeaves(p.id); return void out.push(CK.TREE, cx, cy, Math.max(0.4, p.across / 2 * 0.9), p.conifer ? 0.5 : 1, mood, bare); }
   if (kind === CK.BUSH) return void out.push(CK.BUSH, cx, cy, Math.max(0.25, p.across / 2 * 0.8), 0, 0, 0);
   // a building is at least a small shed (a pin flag or a sign drawn as a building block is not)
   if (wx * wy < 2) return;
   out.push(CK.BUILDING, p.x0, p.y0, p.x1, p.y1, p.door ? p.door.x : NaN, p.door ? p.door.y : NaN);
+}
+/** T220: the colour a tree's leaves fall in (leaf-fall.ts MOOD + 1: a maple's reds, an oak's browns, a birch's golds, else a mix) and how bare
+ *  it stands (its picture's foliage: near-bare 1, open 0.7, patchy 0.6, moderate 0.35, else 0.5), from its library id */
+export function treeLeaves(id: string): [number, number] {
+  const s = id.toLowerCase(), mood = /maple|crimson/.test(s) ? 1 : /oak/.test(s) ? 2 : /birch|gold|aspen/.test(s) ? 3 : 4;
+  const bare = /near-bare|bare/.test(s) ? 1 : /open/.test(s) ? 0.7 : /patchy/.test(s) ? 0.6 : /moderate/.test(s) ? 0.35 : 0.5;
+  return [mood, bare];
 }
 /** a building's door: the middle of the footprint's side that faces the nearest road point (q), on that side; null without a road near */
 export function doorToward(x0: number, y0: number, x1: number, y1: number, q: { x: number; y: number } | null): { x: number; y: number } | null {

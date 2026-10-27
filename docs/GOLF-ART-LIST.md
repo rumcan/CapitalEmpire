@@ -34,14 +34,26 @@ stays a Studio option. Ground textures follow [art/GROUND-TEXTURE-METHOD.md](art
 | --- | --- |
 | First cut | ✅ `first-cut-run` (#586); also every lawn (#591) |
 | Tee | ✅ `tee-run` (#590) |
-| Fringe | 🎨 MID and FAR made; NEAR refused by RUN's safety filter (8 tries), retried with a new frame; held until NEAR exists |
-| Rough | ⏳ the art agent |
+| Fringe | held: the RUN set came out too flat at NEAR (the owner's no-flat-wash rule); the textured fringe in the game stays |
+| Desert (Waste area sand) | ✅ `desert-run` (#612), from the art session's painting, the store removed |
+| Swamp | ✅ `swamp-run` (#614), RUN-painted; on the map with T199 #517 |
+| Dirt (Dirt surface, farm fields) | ✅ `dirt-run` (#616, #617), from the art session's painting, the store removed |
+| Raked sand (bunkers) | ✅ `sand-raked-run` (#620) |
+| Putting green (greens, range targets) | ✅ `putting-green-run` (#621) |
+| Rough | 🎨 `rough-run` (#621) offered; the owner's own rough stays on the course |
+| The map's fescue blending | ✅ blends with dirt (#621, the owner) |
 | Fairway | Codex (18 of 24 jobs done) |
 | Golden fescue, lake, putting green v2 | ✅ (the art session, earlier) |
+| Pond bank (river banks, creek beds) | ✅ `pond-bank-run` (#630) |
+| Grow-in soil | ✅ `grow-in-run` (#630) |
+| Bark mulch (flower beds) | ✅ `flower-bed-soil-run` (#630), the Paint tool's Bark mulch |
+| Field parking | 🎨 `field-parking-run` (#630) in Studio › Painted; no grass car park wears it yet |
+| Range tee, divots | 🎨 `range-tee-divots-run` (#630) in Studio › Painted; goes on the range tee with T223 #622 |
+| Brown fescue (town blocks) | 🎨 `fescue-brown-run` made; on hold until the leaves (T220) land, the owner's call |
 | Greenkeeping conditions (section 10) | after the course surfaces |
 
 ### List items done
-None of items 1-147 is in the game yet: the range and practice items still draw labelled stand-ins.
+Ground (section 8 and the range ground): ✅ 131 Pond bank, ✅ 132 Grow-in, ✅ 135 Flower bed soil (#630); 🎨 133 Field parking, 🎨 21 range tee divots (#630, in the Studio, no ground wears them yet); 130 Pond water skipped (the lake is in). 134 Event matting deferred (quilting would break its panel grid). 🎨 19 the hitting mat (top-down, made, not drawn yet); 20, 27, 147 retakes next. The range and practice sprites still draw labelled stand-ins.
 
 ## The angles
 
@@ -184,13 +196,13 @@ tees use the same marker.
 
 ### Range ground
 
-**19. Hitting mat** (`golf:range-mats`) · **C** · 4.2 x 6 m a bay · P1 **(stand-in)**. The left and right edges must join seamlessly.
+🎨 **19. Hitting mat** (made: `run-top/golf-range-mats/golf-range-mats-top-v1.png`, not drawn yet) (`golf:range-mats`) · **C** · 4.2 x 6 m a bay · P1 **(stand-in)**. The left and right edges must join seamlessly.
 > Subject: golf:range-mats, ONE driving-range hitting mat seen from straight above, about 4.2 m wide and 6 m deep: a concrete pad with a slightly worn green artificial-turf mat on it, a white rubber tee near the front edge, two or three white range balls beside it, a scuffed, flattened strike zone behind the tee. The left and right edges of the picture continue the concrete and must tile seamlessly when two copies are placed side by side.
 
 **20. Target green** (`golf:range-target-green`) · **C** · 12-20 m across · P1 **(stand-in)**.
 > Subject: golf:range-target-green, one round driving-range target green seen from straight above, filling the square: a smooth fine-cut inner green, a lighter mown collar ring round it, a faint darker ring at its outer edge where it meets the coarser outfield grass (the outfield shows only in the corners), a cup at the exact centre (no flag), a few white range balls lying scattered on it. No mowing stripes.
 
-**21. Divot-scarred range tee turf** (texture) · **C** · a 16 m square · P1 **(stand-in)**.
+🎨 **21. Divot-scarred range tee turf** (`range-tee-divots-run`, #630; on the range tee with T223) (texture) · **C** · a 16 m square · P1 **(stand-in)**.
 > Subject: a seamless ground texture of a busy driving range's tee turf seen from straight above, covering a 16 x 16 m area: short green fairway grass scarred with many small divots (oval patches of bare brown soil and torn turf, some filled with green-tinted sand), a few loose white golf tees and broken tee pieces. It must tile seamlessly on all four edges with no visible repeat: no single distinctive divot or patch that the eye picks out when it repeats.
 
 ### Range extras (new)
@@ -509,11 +521,11 @@ short: the shared block carries the rules. In the game already: `golf:grandstand
 | # | Picture | Prompt | P |
 | --- | --- | --- | --- |
 | 130 | Pond water | still dark green-blue water with soft ripples and a faint reflection of the sky, no edges | P1 |
-| 131 | Pond bank | wet brown mud with reeds and small stones, fading to grass | P1 |
-| 132 | Grow-in | bare brown soil with tiny green seedlings in faint rows | P1 |
-| 133 | Field parking | mown grass with tyre ruts and worn patches | P1 |
+| 131 | ✅ Pond bank | wet brown mud with reeds and small stones, fading to grass | P1 |
+| 132 | ✅ Grow-in | bare brown soil with tiny green seedlings in faint rows | P1 |
+| 133 | 🎨 Field parking | mown grass with tyre ruts and worn patches | P1 |
 | 134 | Event matting | interlocking grey plastic walkway panels laid on grass | P2 |
-| 135 | Flower bed soil | dark bark mulch over soil, a few fallen petals | P1 |
+| 135 | ✅ Flower bed soil | dark bark mulch over soil, a few fallen petals | P1 |
 
 ---
 
@@ -645,3 +657,11 @@ the water towers, a silo, a windmill and a fountain. These pieces are missing:
 
 **147. Running track and field** · **C** · 100 x 60 m · P1. Top-down.
 > Subject: seen from straight above, a high school football field: striped mown grass with white yard lines (no numbers), end zones, inside a red-brown running track with white lane lines curving round both ends.
+
+**In the game now (T219):** both places are built (`src/game/lots/iconic-places.json`), with labelled stand-ins: the blank golf leaderboard
+(`golf:leaderboard`) for the screen (142), `world:speaker_post` for the speaker posts (143), the car park attendant kiosk (`ce:parking-kiosk`)
+for the ticket booth (144), `world:goalposts` (145), `world:bleachers` (146), and `town:utility_pole` for a flag pole (new: **148. Flag pole**
+· **B** · 0.3 m, 9 high · P2: a white school flag pole on a small concrete base with the flag hanging limp, its rope against the pole). The track
+(147) is painted ground for now (`dirt` round a `preset:fairway` field with white yard lines). The library's own drive-in screen
+(`variation:ref-building-drive-in-screen-b0bccc2a-plain:1`) is not used: its footprint (1 x 8) runs across its picture, so three of its four
+facings draw it off its lot, and its face carries "Maple Falls Drive-In" (every town is named differently).

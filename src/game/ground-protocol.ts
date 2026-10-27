@@ -151,6 +151,8 @@ export type ToWorker =
   | { t: 'rugged'; on: boolean }
   /** T218: the fairways' mowing stripes on (the default) or off (the dev switch, for comparing looks and bake times) */
   | { t: 'stripes'; on: boolean }
+  /** T220: the fallen leaves' density (the gear menu's Fallen leaves, leaf-fall.ts; 0 = none, the ground as before T220): every chunk is baked again */
+  | { t: 'leaves'; density: number }
   /** T215: the street lamps' reflection pools onto a per-chunk reflection mask for the camera specular (on) or baked into the road (off, the
    *  default): the dev switch window.__game.specCam; every chunk is baked again */
   | { t: 'specCam'; on: boolean }

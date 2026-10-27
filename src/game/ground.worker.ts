@@ -103,6 +103,7 @@ const handle = async (m: ToWorker) => {
       case 'living': painter.living = { on: m.on, debug: m.debug }; break;
       case 'rugged': painter.rugged = m.on; break;
       case 'stripes': painter.stripes = m.on; break;
+      case 'leaves': painter.leafDensity = m.density; break;
       case 'specCam': painter.specCam = m.on; break;
       case 'slopeLight': painter.slopeLight = m.strength; break;
       case 'lotground': {
@@ -306,6 +307,7 @@ function memProbe(): Record<string, number> {
   add('tex.fixed', ['slabs', 'leaves', 'pool1', 'pool2', 'decals', 'soil', 'lotDecals', 'nature'].map(k => T[k]));
   for (const k of ['grassImages', 'toned', 'planPics', 'wallPics', 'composed', 'scratch', 'leafChunks', 'livingMade']) add('painter.' + k, P[k]);
   add('painter.leafPic', [P.leafPic]);
+  add('painter.leafAtlases', [...(P.leafAtlases as Map<number, { cv: OffscreenCanvas }>).values()].map(a => a.cv));
   return out;
 }
 /** the photo textures (lazy, not built yet) a lot patch lays: a lawn's photo, a painted area's fill, border and mix, a course chunk's surfaces
