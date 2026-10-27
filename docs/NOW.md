@@ -74,13 +74,11 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
   Housekeeping: T174-T177, T179, T184 closed (merged earlier). The 5174 auto-updater ran 5 times over; the owner approved stopping 4
   (one left, bash PID 31220). Still listening, not ours: a stray vite on 5189 (an agent's, gone since 07:50) and the dead lot lab's 5241.
 - **The concept look (the owner, 21:30: "this is the look and feel we need to get to"):** `docs/art/CONCEPT-LOOK.md` (#635) has the reference, the gaps and the code work in order; its art is GOLF-ART-LIST section 12 (items 149-175). **Waiting on the owner:** step 1, green ground (the map, the blocks and the yards go green; it reverses #625 and the map half of #621). Step 2, a golden-hour colour grade, is the next code ticket after the owner's queue.
-- **Next, in order, when an agent lands:** (the drive-in screen #594 and T199 #517 are running) a desert range start (desert outfield, a dirt tee, upgrades to turf the tee
-  and grass the outfield; the home yard in desert; range work: Opus high; the tee's upgrade can wear `range-tee-divots-run`, #630) → **T224 #623** big roundabouts clear what is in the way with a
-  price, or refuse with the reason → **T222 #618** rough backyards early (fescue, dirt, desert), dirt veg gardens, a desert Waste area brush (the owner) → the golf play tickets, **T210 #555** the
+- **Next, in order, when an agent lands:** (the drive-in screen #594 and T199 #517 are running) **T222 #618** rough backyards early (fescue, dirt, desert), dirt veg gardens, a desert Waste area brush (the owner) → the golf play tickets, **T210 #555** the
   results wait for the last group → **T211 #556** pace of play → **T208 #553 everyday golf** (golfers play your course every day and pay
   green fees; today it is only a yearly number) → **T212 #557** putt, chip, tee-up and coach clips → **T213 #558** caddies, carts,
   celebrations → **T214 #559** club pros and memberships (plan first) → then **T112 #199** (merge #394 when the owner stops 5191) →
-  **T149 #312** (waits for the owner's FAR-anchor choice) → **T199 #517** swamp (waits for swamp tiles) → the lists below.
+  **T149 #312** (waits for the owner's FAR-anchor choice) → the lists below.
   (Golf play P1-P4 is on main from #258; the owner asked for its tickets on 2026-10-27, 18:05. T215 #561 stays open for the owner's call on
   water and roads by day.)
 - **P25 #348 lots generated on the fly** (the owner: "start over with the lot presets we need a workflow that gets us to generating perfect
