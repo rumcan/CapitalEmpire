@@ -255,6 +255,9 @@ export class GroundPainter {
   private toned = new Map<string, PaintedEntry>(); private bakeKeys = new Set<string>();
   /** the bake in progress laid a tile set family (T145): its chunk then depends on the tile spec (GroundCache re-bakes it on a band or DPR change) */
   tilesUsed = false;
+  /** T197 (the lot agent's T191 finding: a yard baked golden at the district zoom on a fresh page): the bake in progress fell back to the photo
+   *  where a tile set's tiles were not decoded yet (tiledBuf null): its chunk is baked again soon (GroundCache: prov), so no placeholder stays */
+  provisional = false;
   /** T186: the baked shade's multiplier, mirrored (the owner, 2026-10-27: "two shadows blocking the same light does not multiply a shadow"):
    *  every shade the bake darkens the ground with (the hillshade, the course height's shade, the painted areas' and the course's edge shade and
    *  cast shadows, the course walls' cast shadows) is laid again onto a white chunk-sized mask, so the mask holds how dark the ground already is
@@ -390,7 +393,7 @@ export class GroundPainter {
     const M = new DOMMatrix([HW * L, HH * L, -HW * L, HH * L, -X0 * L, -Y0 * L]);
     const box = GroundPainter.tileBox(X0, Y0, X0 + PLAN_W, Y0 + PLAN_H, 2), [tx0, ty0, tx1, ty1] = box;
     // the tile set families (T145) lay their tiles here as on the ground chunks (planTiled), at the camera's band (the furthest zoom: FAR)
-    this.chunkNow = { key: `p${i},${j}@${L}`, L, box, M, Minv: M.inverse(), W, H }; this.toned.clear(); this.bakeKeys.clear(); this.tilesUsed = false;
+    this.chunkNow = { key: `p${i},${j}@${L}`, L, box, M, Minv: M.inverse(), W, H }; this.toned.clear(); this.bakeKeys.clear(); this.tilesUsed = false; this.provisional = false;
     ctx.fillStyle = '#2c3a20'; ctx.fillRect(0, 0, W, H);
     ctx.setTransform(M);
     // the map grass: its look's far painting (it covers the map once, so it never repeats), else its flat colour
@@ -619,7 +622,7 @@ export class GroundPainter {
         g.drawImage(img, a - ox, b - oy, a2 - a, b2 - b);
       }
       return true;
-    }) ? base.buf : null;
+    }) ? base.buf : (this.provisional = true, null);
   }
   /** a tile set family's fill for the planner chunk being baked (its course surfaces), or null when the texture is no tile set */
   private planTiled(g: C2D, t: string): CanvasPattern | null {
@@ -656,7 +659,7 @@ export class GroundPainter {
     const pats = new Map<TexName, CanvasPattern>();
     const pat = (n: TexName) => { let p = pats.get(n); if (!p) { p = this.photoFill(ctx, n, L) ?? this.screenPattern(ctx, n, L, X0, Y0, Minv); pats.set(n, p); } return p; };
     const box = GroundPainter.tileBox(X0, Y0, X0 + CW, Y0 + CH), [tx0, ty0, tx1, ty1] = box, vis = (b: BBox) => b[2] >= tx0 && b[0] <= tx1 && b[3] >= ty0 && b[1] <= ty1;
-    this.chunkNow = { key: `${lite ? 'm' : 'g'}${i},${j}@${L}`, L, box, M, Minv, W, H }; this.toned.clear(); this.bakeKeys.clear(); this.tilesUsed = false;
+    this.chunkNow = { key: `${lite ? 'm' : 'g'}${i},${j}@${L}`, L, box, M, Minv, W, H }; this.toned.clear(); this.bakeKeys.clear(); this.tilesUsed = false; this.provisional = false;
     // T186: the shade mask (a quarter of the chunk's size), white (no shade) until a shade is laid on it; none for a district chunk (its
     // sprites' shadows are a few px: the far meshes)
     if (lite) this.shadeMask = null;

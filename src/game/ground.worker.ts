@@ -198,7 +198,7 @@ const handle = async (m: ToWorker) => {
         if (tex.missing.size) { const keys = [...tex.missing]; tex.missing.clear(); painter.takeShadeMask(); putAside(m, Promise.all(keys.map(k => tex.whenMade(k)))); break; }
         lastBake = performance.now(); if (deferring && m.kind !== 'p') aheadOf(m);
         const bmp = cv.transferToImageBitmap(), sm = m.kind === 'p' ? null : painter.takeShadeMask(), shade = sm ? sm.transferToImageBitmap() : undefined;
-        post({ t: 'tile', id: m.id, kind: m.kind, i: m.i, j: m.j, L: m.L, artL: m.artL ?? m.L, ts: m.ts, tiled: painter.tilesUsed, bmp, shade, ms: performance.now() - t0 }, shade ? [bmp, shade] : [bmp]);
+        post({ t: 'tile', id: m.id, kind: m.kind, i: m.i, j: m.j, L: m.L, artL: m.artL ?? m.L, ts: m.ts, tiled: painter.tilesUsed, prov: painter.provisional, bmp, shade, ms: performance.now() - t0 }, shade ? [bmp, shade] : [bmp]);
         break;
       }
     }
