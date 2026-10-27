@@ -13,6 +13,7 @@
     "assets:scales": "node scripts/assets/prep-scales.mjs",
     "lots:freeze": "node scripts/assets/freeze-lot-presets.mjs",
     "lots:check": "node scripts/assets/freeze-lot-presets.mjs --check",
+    "lots:exam": "node scripts/lots/exam.mjs",
     "typecheck": "tsc --noEmit -p .",
     "bench": "node scripts/perf/bench.mjs",
     "worker:test": "bash scripts/worker/run.sh \"npm test\"",
@@ -23,6 +24,8 @@
     "fix:gate": "esbuild scripts/sim/fix-gate.ts --bundle --platform=node --format=esm --loader:.webp=empty --loader:.png=empty --outfile=output/sim/fix-gate.mjs --log-level=warning && node output/sim/fix-gate.mjs",
     "event:gate": "esbuild scripts/sim/event-gate.ts --bundle --platform=node --format=esm --loader:.webp=empty --loader:.png=empty --outfile=output/sim/event-gate.mjs --log-level=warning && node output/sim/event-gate.mjs",
     "biz:gate": "esbuild scripts/sim/biz-gate.ts --bundle --platform=node --format=esm --loader:.webp=empty --loader:.png=empty --outfile=output/sim/biz-gate.mjs --log-level=warning && node output/sim/biz-gate.mjs",
+    "range:gate": "esbuild scripts/sim/range-gate.ts --bundle --platform=node --format=esm --loader:.webp=empty --loader:.png=empty --outfile=output/sim/range-gate.mjs --log-level=warning && node output/sim/range-gate.mjs",
+    "range:fixture": "esbuild scripts/sim/range-fixture.ts --bundle --platform=node --format=esm --loader:.webp=empty --loader:.png=empty --outfile=output/sim/range-fixture.mjs --log-level=warning && node output/sim/range-fixture.mjs",
     "terrain:preview": "esbuild scripts/terrain/preview.ts --bundle --platform=node --format=esm --outfile=output/terrain/preview.mjs --log-level=warning && node output/terrain/preview.mjs"
   },
   "dependencies": {

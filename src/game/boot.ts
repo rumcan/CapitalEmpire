@@ -14,9 +14,11 @@ export interface BootOptions {
   sim: boolean;
   /** the sprite atlas's budget in compressed MB (an RGBA8 fallback takes 4x); null: GAME-PLAN's by the screen (atlas-pages.ts atlasBudget) */
   atlasMB: number | null;
-  /** decoded atlas page levels kept for the next loads (null: atlas-gl.ts KEEP_LEVELS, 6; each up to a whole page, 16 MB at mip 0) */
+  /** decoded atlas page levels kept for the next loads (null: atlas-gl.ts KEEP_LEVELS, 6; each up to a whole page, 16 MB at mip 0). T172: the
+   *  game keeps 2, as the lab: the streamed levels are about 4 MB each, so 8 MB instead of 24, a few more decodes on a pan and no cell later */
   atlasKeep: number | null;
-  /** GPU pixels for the baked ground chunks (ground-cache.ts budgetPx) */
+  /** GPU pixels for the baked ground chunks (ground-cache.ts budgetPx). T172: the game's 32e6 (128 MB of RGBA8; was 48e6): after a 30 s pan
+   *  112 MB instead of 158, after 20 jumps 99 instead of 172, with as many bakes and the same fill times */
   groundPx: number;
   /** what each ground worker keeps decoded: tile-set tiles (textures.ts MAX_TILE_SOURCES) and painted pictures (MAX_PAINTED_SOURCES); null: the game's */
   tileSources: number | null; paintedSources: number | null;
@@ -24,10 +26,19 @@ export interface BootOptions {
   eagerPhotos: readonly string[] | null;
   /** the ground workers draw their canvases on the CPU (willReadFrequently) instead of the GPU */
   softCanvases: boolean;
-  /** the ground workers make their procedural textures (textures.ts PAINTED_NAMES) on first use, not all up front */
+  /** the ground workers make their procedural textures (textures.ts PAINTED_NAMES) and their photos' mosaics on first use, not all up front
+   *  (T157 the lab's; T166 the game's too) */
   lazyTextures: boolean;
-  /** the ground workers read and write the browser's texture cache (IndexedDB); the light boot only reads it (it holds one pack: the game's) */
+  /** with lazyTextures, the grass's tints (textures.ts GRASS_TINTS) are made on first use too (the lab's). The game makes them up front: every
+   *  chunk lays them, so making them later saves nothing, and up front they are the same pixels as ever (a tint made per level differs by a
+   *  rounding) */
+  lazyTints: boolean;
+  /** the ground workers write their texture pack to the browser's cache (IndexedDB) */
   saveTextureCache: boolean;
+  /** the ground workers read a cached pack (IndexedDB) instead of building one (T157: the light boot only reads it, the game's). T166: the game
+   *  neither reads nor writes it: with its textures made on first use its pack builds in about 1.3 s, the first view is baked as soon as with
+   *  a cached pack, and the write kept about the pack's size in the browser process (and delayed the first start's first view by 3 s) */
+  readTextureCache: boolean;
   /** the map box (tiles) the boot lives in: the camera's centre stays over it; null: the whole map */
   box: BBox | null;
   /** the furthest zoom (null: the game's ZOOM_MIN) */
@@ -44,9 +55,49 @@ export interface BootOptions {
 
 /** the plain game's boot: what the engine always did */
 export const GAME_BOOT: Readonly<BootOptions> = Object.freeze({
-  kind: 'game', groundWorkers: null, sim: true, atlasMB: null, atlasKeep: null, groundPx: 48e6, tileSources: null, paintedSources: null, eagerPhotos: null,
-  saveTextureCache: true, softCanvases: false, lazyTextures: false, box: null, zoomMin: null, trees: true, moneyFloats: true, save: true, map: 'valley',
+  kind: 'game', groundWorkers: 1, sim: true, atlasMB: null, atlasKeep: 2, groundPx: 32e6, tileSources: null, paintedSources: null, eagerPhotos: null,
+  saveTextureCache: false, readTextureCache: false, softCanvases: false, lazyTextures: true, lazyTints: false, box: null, zoomMin: null, trees: true, moneyFloats: true, save: true, map: 'valley',
 });
+
+/* ---- T166 (#370): the game's ground workers' memory levers, and a dev build's way to measure them one at a time ---- */
+/** the levers by name, each the boot options it sets when on (off: the game's values before T166) */
+export const GROUND_LEVERS = {
+  /** the procedural textures and the photos' mosaics made on first use (each worker builds only what its chunks lay) */
+  lazy: { on: { lazyTextures: true }, off: { lazyTextures: false } },
+  /** the workers' canvases on the CPU (willReadFrequently) instead of the GPU */
+  soft: { on: { softCanvases: true }, off: { softCanvases: false } },
+  /** one ground worker: one texture pack instead of one per worker (the CPU's cores allowed three here) */
+  one: { on: { groundWorkers: 1 }, off: { groundWorkers: null } },
+  /** the texture pack read from and written to the browser's cache (IndexedDB), as the game did before T166 */
+  cache: { on: { saveTextureCache: true, readTextureCache: true }, off: { saveTextureCache: false, readTextureCache: false } },
+  /** two ground workers (to compare; listed after one, it wins) */
+  two: { on: { groundWorkers: 2 }, off: {} },
+} as const satisfies Record<string, { on: Partial<BootOptions>; off: Partial<BootOptions> }>;
+export type GroundLever = keyof typeof GROUND_LEVERS;
+/** a game boot with exactly the named levers on (a dev build's ?ground=lazy,one; ?ground=old: the game before T166, only the cache on);
+ *  unknown names are ignored. GAME_BOOT has the ones T166 kept: lazy and one (and the cache off) */
+export function withGroundLevers(boot: BootOptions, spec: string): BootOptions {
+  const on = new Set(spec.split(',').map(s => s.trim()));
+  if (on.has('old')) on.add('cache'); // the game before T166: one worker per spare core, every texture up front, the cache read and written
+  const out: BootOptions = { ...boot };
+  for (const [name, l] of Object.entries(GROUND_LEVERS)) Object.assign(out, on.has(name) ? l.on : l.off);
+  return out;
+}
+
+/* ---- T172 (#403): a dev build's way to measure the memory budgets one at a time ---- */
+/** the numeric boot options a dev build's ?boot=<key>:<value>,... may set (a value of null: the game's own default) */
+export const BOOT_NUMBERS = ['atlasMB', 'atlasKeep', 'groundPx', 'tileSources', 'paintedSources'] as const;
+/** a boot with the named numbers set (?boot=atlasKeep:2,tileSources:12); unknown keys and values that are not numbers are ignored */
+export function withBootNumbers(boot: BootOptions, spec: string): BootOptions {
+  const out: BootOptions = { ...boot };
+  for (const part of spec.split(',')) {
+    const [k, v] = part.split(':').map(s => s.trim()) as [string, string | undefined];
+    if (!(BOOT_NUMBERS as readonly string[]).includes(k)) continue;
+    const n = v === 'null' ? null : Number(v); if (n !== null && !Number.isFinite(n)) continue;
+    if (k === 'groundPx') { if (n !== null) out.groundPx = n; } else (out as unknown as Record<string, number | null>)[k] = n;
+  }
+  return out;
+}
 
 /** the world rect (px at zoom 1) the camera's centre keeps to over a tile box: the box's corners' bounding rect (the iso diamond's) */
 export function boxView(b: BBox): { X0: number; Y0: number; X1: number; Y1: number } {

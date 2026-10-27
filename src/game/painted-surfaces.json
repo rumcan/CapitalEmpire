@@ -1,9 +1,9 @@
 {
  "v": 1,
  "surfaces": {
-  "green": { "family": "putting-green", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
-  "fringe": { "family": "putting-green", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
-  "fairway": { "family": "fairway", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
+  "green": { "family": "putting-green-paint", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
+  "fringe": { "family": "putting-green-paint", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
+  "fairway": { "family": "fairway-paint", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "firstCut": { "family": "emerald-medium", "version": null, "scale": 1, "tint": "#ffffff", "tone": -0.04 },
   "tee": { "family": "emerald-short", "version": null, "scale": 0.5, "tint": "#ffffff", "tone": 0.03 },
   "sod": { "family": "emerald-short", "version": "v1", "scale": 0.75, "tint": "#ffffff", "tone": 0 },
@@ -24,8 +24,8 @@
   "woodland": { "family": "golden-fescue", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "outside": { "family": "golden-fescue", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "lawn": { "family": "emerald-short", "version": null, "scale": 0.75, "tint": "#ffffff", "tone": 0 },
-  "lawnBuilt": { "family": "fairway", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
-  "lawnUpgraded": { "family": "putting-green", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
+  "lawnBuilt": { "family": "fairway-paint", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
+  "lawnUpgraded": { "family": "putting-green-paint", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "lawnDeclined": { "family": "rough-owner", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "lush": { "family": "golden-fescue", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "patchy": { "family": "golden-fescue", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },

@@ -18,6 +18,11 @@ export const ITEM_KINDS: readonly ItemKind[] = ['tree', 'bush', 'flowerbed', 'pr
 export type Sector = 'verge' | 'fence' | 'near' | 'drive' | 'front' | 'back' | 'left' | 'right' | 'front-left' | 'front-right' | 'back-left' | 'back-right';
 export const SECTORS: readonly Sector[] = ['verge', 'fence', 'near', 'drive', 'front', 'back', 'left', 'right', 'front-left', 'front-right', 'back-left', 'back-right'];
 export const SECTOR_NAMES: Readonly<Record<Sector, string>> = { verge: 'street verge', fence: 'fence line', near: 'near the house', drive: 'driveway strip', front: 'front yard', back: 'back yard', left: 'left side', right: 'right side', 'front-left': 'front-left corner', 'front-right': 'front-right corner', 'back-left': 'back-left corner', 'back-right': 'back-right corner' };
+/** T169: the use groups the lot model learns apart: houses (res), shops and offices (com), industry (ind), the open uses (park, civic, tour); a
+ *  farm draws its own preset whole (none) */
+export type UseGroup = 'res' | 'com' | 'ind' | 'open';
+export const USE_GROUPS: readonly UseGroup[] = ['res', 'com', 'ind', 'open'];
+export const groupOf = (use: PresetUse): UseGroup | null => (use === 'res' ? 'res' : use === 'com' ? 'com' : use === 'ind' ? 'ind' : use === 'farm' ? null : 'open');
 /** a house size class as the model keys it ('none': a lot with no house) */
 export type HouseClass = 'small' | 'medium' | 'large' | 'none';
 export const CLASSES: readonly HouseClass[] = ['small', 'medium', 'large', 'none'];
@@ -74,7 +79,10 @@ export const sectorArea = (l: SectorLot, s: Sector) => sectorRects(l, s).reduce(
 export interface SampleItem { id: string; kind: ItemKind; x: number; y: number; nx: number; ny: number; side: 'front' | 'back' | 'left' | 'right' | 'inside'; house: number; street: number; sector: Sector; kept: boolean }
 /** a sample's context: the lot's type, state, size (tiles) and road angle; its house (library id, size class, footprint w x d tiles; null id: none);
  *  the generator's seed when the lot was generated (lot-gen.ts: the same lot again) */
-export interface SampleCtx { use: PresetUse; state: PresetState; w: number; d: number; road: Road; house: string | null; cls: HouseClass; hw: number; hd: number; seed?: number }
+export interface SampleCtx { use: PresetUse; state: PresetState; w: number; d: number; road: Road; house: string | null; cls: HouseClass; hw: number; hd: number; seed?: number;
+  /** T171: the lot's features its items' places are read against (lots/places.ts): the main building's box and the drives' and car parks' boxes
+   *  (lot frame, tiles); absent in older samples (their items count for the sectors only) */
+  hb?: Box; paved?: Box[] }
 /** where a sample comes from (P25): the wizard (each offered item kept or deleted), a preset (every item in it "kept here": the owner's presets as
  *  a head start) or the gallery (a whole lot judged at once: verdict up or down) */
 export type SampleSource = 'wizard' | 'preset' | 'gallery';
@@ -107,9 +115,12 @@ export function readSample(v: unknown): Sample | null {
   if (o.src !== undefined && !['wizard', 'preset', 'gallery'].includes(o.src)) return null;
   if (o.verdict !== undefined && o.verdict !== 'up' && o.verdict !== 'down') return null;
   if (c.seed !== undefined && !fin(c.seed)) return null;
+  const box4 = (b: unknown): b is Box => Array.isArray(b) && b.length === 4 && b.every(fin);
+  if (c.hb !== undefined && !box4(c.hb)) return null;
+  if (c.paved !== undefined && !(Array.isArray(c.paved) && c.paved.every(box4))) return null;
   const items: SampleItem[] = [];
   for (const i of o.items) { const r = readItem(i); if (!r) return null; items.push(r); }
-  return { id: o.id, at: o.at, ctx: { use: c.use as PresetUse, state: c.state as PresetState, w: c.w!, d: c.d!, road: c.road as Road, house: c.house ?? null, cls: c.cls!, hw: c.hw!, hd: c.hd!, ...(c.seed !== undefined ? { seed: c.seed } : {}) }, items,
+  return { id: o.id, at: o.at, ctx: { use: c.use as PresetUse, state: c.state as PresetState, w: c.w!, d: c.d!, road: c.road as Road, house: c.house ?? null, cls: c.cls!, hw: c.hw!, hd: c.hd!, ...(c.seed !== undefined ? { seed: c.seed } : {}), ...(c.hb ? { hb: c.hb } : {}), ...(c.paved ? { paved: c.paved } : {}) }, items,
     ...(o.src !== undefined ? { src: o.src } : {}), ...(o.verdict !== undefined ? { verdict: o.verdict } : {}) };
 }
 /** the file read: its valid samples, in order (a bad one is dropped) */
@@ -123,13 +134,17 @@ export function formatLearning(f: LearnFile): string {
   return f.samples.length ? `{\n "v": 1,\n "samples": [\n${f.samples.map(s => `  ${JSON.stringify(s)}`).join(',\n')}\n ]\n}\n` : '{\n "v": 1,\n "samples": []\n}\n';
 }
 /** the samples merged (POST /__dev/learning): the file's samples with each new one appended (one whose id the file has already is skipped), so
- *  two people's saves keep both. Refused: a file that does not parse, an add that is not a list of valid samples */
+ *  two people's saves keep both; a preset's sample (src 'preset', id preset:<preset id>) replaces its earlier one in place, so learning from the
+ *  presets again follows their edits without counting them twice. Refused: a file that does not parse, an add that is not a list of valid samples */
 export function mergeSamples(fileText: string, add: unknown): { ok: true; text: string; count: number } | { ok: false; error: string } {
   let file: LearnFile;
   try { file = parseLearning(fileText.trim() ? JSON.parse(fileText) : {}); } catch { return { ok: false, error: 'lot-learning.json on disk does not parse' }; }
   if (!Array.isArray(add)) return { ok: false, error: 'add must be a list of samples' };
   const have = new Set(file.samples.map(s => s.id)), out = file.samples.slice();
-  for (const v of add) { const s = readSample(v); if (!s) return { ok: false, error: 'add holds an invalid sample' }; if (!have.has(s.id)) { have.add(s.id); out.push(s); } }
+  for (const v of add) {
+    const s = readSample(v); if (!s) return { ok: false, error: 'add holds an invalid sample' };
+    if (!have.has(s.id)) { have.add(s.id); out.push(s); } else if (s.src === 'preset') { const i = out.findIndex(o => o.id === s.id); out[i] = s; }
+  }
   return { ok: true, text: formatLearning({ v: 1, samples: out }), count: out.length };
 }
 
@@ -170,18 +185,29 @@ export const countOf = (m: Model, c: HouseClass, k: ItemKind, s: Sector): Count 
 /** a sector drawn for an item by the model (r() in [0, 1)): each sector of the lot weighted by its keep rate (squared: the model's word counts)
  *  times the square root of its area (so a large yard is not swamped by a thin band, nor a band starved); null when the lot has none */
 export function drawSector(m: Model, c: HouseClass, k: ItemKind, l: SectorLot, r: () => number, skip: ReadonlySet<Sector> = new Set()): Sector | null {
-  const ws = SECTORS.map(s => { if (skip.has(s)) return 0; const a = sectorArea(l, s); return a > 0.25 ? keepRate(m, c, k, s) ** 2 * Math.sqrt(a) : 0; }), tot = ws.reduce((a, b) => a + b, 0);
+  const ws = sectorWeights(m, c, k, l).map((w, i) => (skip.has(SECTORS[i]!) ? 0 : w)), tot = ws.reduce((a, b) => a + b, 0);
   if (!(tot > 0)) return null;
   let t = r() * tot;
   for (let i = 0; i < SECTORS.length; i++) { t -= ws[i]!; if (t < 0) return SECTORS[i]!; }
   return SECTORS[SECTORS.length - 1]!;
 }
 
-/** the wizard's counter: the samples, by house class; each sample's share of offered items kept, in order (the trend), the mean of the first and
- *  the last ten */
-export function learningStats(samples: readonly Sample[]): { total: number; byClass: Record<HouseClass, number>; shares: number[]; first: number; last: number } {
-  const byClass = { small: 0, medium: 0, large: 0, none: 0 } as Record<HouseClass, number>, shares: number[] = [];
-  for (const s of samples) { byClass[s.ctx.cls]++; if (s.items.length) shares.push(s.items.filter(i => i.kept).length / s.items.length); }
+/** each sector's weight in drawSector, in SECTORS order: its keep rate squared times the square root of its area (0 for a sector of the lot
+ *  under a quarter tile) */
+export function sectorWeights(m: Model, c: HouseClass, k: ItemKind, l: SectorLot): number[] {
+  return SECTORS.map(s => { const a = sectorArea(l, s); return a > 0.25 ? keepRate(m, c, k, s) ** 2 * Math.sqrt(a) : 0; });
+}
+/** the wizard's counter: the samples, by house class and by source; each wizard sample's share of offered items kept, in order (the trend: the
+ *  presets keep everything and the gallery judges whole lots, so they are left out of it), the mean of the first and the last ten; the gallery's
+ *  lots judged and the share judged up */
+export function learningStats(samples: readonly Sample[]): { total: number; byClass: Record<HouseClass, number>; bySrc: Record<SampleSource, number>; shares: number[]; first: number; last: number; judged: number; up: number } {
+  const byClass = { small: 0, medium: 0, large: 0, none: 0 } as Record<HouseClass, number>, bySrc: Record<SampleSource, number> = { wizard: 0, preset: 0, gallery: 0 }, shares: number[] = [];
+  let judged = 0, up = 0;
+  for (const s of samples) {
+    byClass[s.ctx.cls]++; bySrc[s.src ?? 'wizard']++;
+    if ((s.src ?? 'wizard') === 'wizard' && s.items.length) shares.push(s.items.filter(i => i.kept).length / s.items.length);
+    if (s.verdict) { judged++; if (s.verdict === 'up') up++; }
+  }
   const mean = (a: number[]) => (a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0);
-  return { total: samples.length, byClass, shares, first: mean(shares.slice(0, 10)), last: mean(shares.slice(-10)) };
+  return { total: samples.length, byClass, bySrc, shares, first: mean(shares.slice(0, 10)), last: mean(shares.slice(-10)), judged, up: judged ? up / judged : 0 };
 }

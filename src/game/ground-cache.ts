@@ -35,6 +35,8 @@ export interface Tile {
 }
 /** the least time between two bakes of a ground chunk that course edits keep re-staling, ms */
 export const COURSE_HOLD_MS = 150;
+/** the bakes the ground cache keeps the worker time of (bakeLog) */
+export const BAKE_LOG = 4096;
 const key = (k: TileKind, i: number, j: number) => (k === 'g' ? 0 : k === 'm' ? 1 : 2) * 1e10 + (j + 2048) * 65536 + (i + 32768);
 const SIZE: Record<TileKind, [number, number]> = { g: [CHUNK_W, CHUNK_H], m: [MID_W, MID_H], p: [PLAN_W, PLAN_H] };
 
@@ -42,9 +44,17 @@ export class GroundCache {
   tiles = new Map<number, Tile>();
   /** the lot patches last sent, by lot key (to find the old boxes of edits) */
   private lotPatches = new Map<string, LotPatch[]>();
-  private workers: Worker[] = []; private inflight: number[] = []; private reqs = new Map<number, { t: Tile; gen: number; w: number }>();
+  private workers: Worker[] = []; private inflight: number[] = []; private reqs = new Map<number, { t: Tile; gen: number; w: number; at: number }>();
   private nextId = 1; private want: { t: Tile; L: number; artL: number; ts: number; pri: number }[] = [];
   ready = 0; private isReady: boolean[] = []; errors: string[] = []; bakeMs = 0; baked = 0;
+  /** T166: the worker ms of the last BAKE_LOG bakes (a ring: entry n % BAKE_LOG is bake n; scripts/perf/memory.mjs reads their median and p95),
+   *  when the first chunk landed (performance.now ms since the page loaded) and how long the builder took to have its textures (ms) */
+  bakeLog: number[] = []; firstTileAt = 0; texMs = 0;
+  /** T168: each bake's wait, from its request to its picture landing (ms, the same ring as bakeLog): what a stall in the worker costs the view */
+  waitLog: number[] = [];
+  /** T168: textures the open tool can lay, made ahead by the workers while idle (each name once) */
+  private warmed = new Set<string>();
+  prewarm(tex: Iterable<string>) { const fresh = [...tex].filter(t => !this.warmed.has(t)); if (!fresh.length) return; for (const t of fresh) this.warmed.add(t); this.broadcast({ t: 'prewarm', tex: fresh }); }
   /** the builder worker writes the textures to this browser's cache after a fresh start: seconds in which a bake sent to it waits (T134: the
    *  planner pieces asked for first landed 5 s late), so it takes none while it has peers */
   private saving: boolean[] = [];
@@ -181,7 +191,7 @@ export class GroundCache {
       let best = -1; for (let i = 0; i < this.workers.length; i++) if (this.isReady[i] && this.inflight[i] < 2 && (!this.saving[i] || this.workers.length === 1) && (best < 0 || this.inflight[i] < this.inflight[best])) best = i;
       if (best < 0) break;
       const id = this.nextId++; w.t.pendingL = w.L; w.t.pendingArtL = w.artL; w.t.pendingTs = w.ts; this.inflight[best]++;
-      this.reqs.set(id, { t: w.t, gen: w.t.gen, w: best });
+      this.reqs.set(id, { t: w.t, gen: w.t.gen, w: best, at: performance.now() });
       this.workers[best].postMessage({ t: 'paint', id, kind: w.t.kind, i: w.t.i, j: w.t.j, L: w.L, artL: w.artL, ts: w.ts } satisfies ToWorker);
     }
     this.want = [];
@@ -190,7 +200,7 @@ export class GroundCache {
   /** the hold on chunks a course edit re-stales (COURSE_HOLD_MS; the benchmark tries others) */
   courseHoldMs = COURSE_HOLD_MS;
   private onMessage(w: number, m: FromWorker) {
-    if (m.t === 'ready') { this.ready++; this.isReady[w] = true; this.saving[w] = !!m.saving; return; }
+    if (m.t === 'ready') { this.ready++; this.isReady[w] = true; this.saving[w] = !!m.saving; if (w === 0) this.texMs = m.ms; return; }
     if (m.t === 'saved') { this.saving[w] = false; return; }
     if (m.t === 'error') { this.errors.push(m.message); console.error('[ground worker]', m.message); return; }
     if (m.t === 'log') { console.log(`[ground worker ${w}]`, m.message); return; }
@@ -198,6 +208,7 @@ export class GroundCache {
     const r = this.reqs.get(m.id); this.reqs.delete(m.id); this.inflight[w]--;
     if (!r) { m.bmp.close(); return; }
     const t = r.t; t.pendingL = 0; t.pendingArtL = 0; t.pendingTs = -1;
+    this.bakeLog[this.baked % BAKE_LOG] = m.ms; this.waitLog[this.baked % BAKE_LOG] = performance.now() - r.at; if (!this.firstTileAt) this.firstTileAt = performance.now();
     this.bakeMs += m.ms; this.baked++;
     // edited while baking: it will be asked for again, and keeps the picture it has meanwhile; one with none shows this one (stale, so it is
     // still asked for again: the ground before the edit for a bake, rather than nothing; T134, the startup's edits did this to the planner pieces)

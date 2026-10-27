@@ -10,7 +10,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-26 midday)
+## START HERE (kept current by the lead; last updated 2026-10-27 06:30)
 
 **Paste-ready start prompts for every role are in `docs/START-PROMPTS.md`:** the lead, a coding ticket, and the other sessions in this
 repo. The weekly usage cap is close (2026-10-26), so any chat may stop at any moment.
@@ -34,11 +34,13 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 ### In flight
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |
-| T164 | (new) | `arena/T164-main-tests` | `.claude/worktrees/t157` | 5188 | Main's two test failures after the #353 Rebuild: the drawn shadow for `expansion:stationwagon-rear`, and compose's RES side yard (gen-house-ranch-long at 1.01 tiles after the owner's size change). |
-| T154 | #330 | `arena/T154-new-art` | `.claude/worktrees/t154` | — | **Phase 1 merged (#345).** Phase 2 waits: the eight-heading contract (a building on a 45° road picks its cardinal view, `AXIS_SETS`); the new subjects' diagonal views are art work (listed in GOLF-SPRITES.md). |
-| T152 | #325 | `arena/T152-car-spacing` (d3bdbf1) | `.claude/worktrees/t152` | — | **Paused** for the art (the owner). Root cause: the range's own cars (`rangebiz.ts:803/832/723`) are placed by their own clock; fixed in rangebiz.ts only (overlaps -75-82% with the 44-bay lot, money identical). **Owner's decision needed:** at full demand the one-lane drive and the building's ramp cannot carry the cars at a car's gap (wider drive, second ramp, faster car-park speeds, or the queue limiting sales). Left: three gates, shots, PR. |
-| T159 | #348 | from origin/main | `.claude/worktrees/t155` | 5186 | P25 step 2: the existing presets as "kept here" samples + the 12-lot gallery (thumbs up/down, click one to fix it in the wizard). T163 merged (#359). |
-| T112 | #199 | `arena/T112-sharp` (1872f0e) | `.claude/worktrees/t112` | — | **Paused** for T153: sharp 0.35.5 in, all packed art identical (260 images byte-identical; 16 view PNGs only re-tagged), still to do: the KTX2 check, the studio check, audit/typecheck/suite/build, the PR. Resume from #199. |
+| T178→ | #442 (+#445) | `arena/T098-fixture-traffic` | `.claude/worktrees/t166` | 5187 | **The owner (06:15): "this is seposed to happen btw. the guy hasto upgrade his town roads".** The self-paving design is dropped. #442 (golf towns finally drive) merges with range:gate run two ways: unattended (stalls/declines: banded as measured) and a scripted player upgrading the most jammed streets (must reach P22 2.7's bands; upgrades and money per season reported); a jam hint if the game shows none. Agent: the ground agent. |
+| T181, T182 | #453, #454 | fresh branches | `.claude/worktrees/t160` | 5186 | **The owner's morning asks:** (1) remove the transparent colour mask over lawns (likely `drawManagedGrass` testing the lawn's preset, not its painted lawn); (2) the toolbar regrouped: COURSE (Driving range · Course · Decoration) and TOWN (Traffic · Town decoration), no key letters on the rail (keys kept in the tooltip). Agent: the lot agent. |
+| T112 | #199 | `arena/T112-sharp` (PR #394) | `.claude/worktrees/t112` | — | **Approved, merge HELD for the morning restart:** a lock change makes the 5174 auto-updater run `npm ci` in theme-consistency (the live 5191 studio holds sharp there; the lot agent's t160 uses it by junction). Morning order: stop 5191 → merge #394 → let npm ci finish → restart 5191 and 5174. All shipped bytes identical on 0.35.5; audit 0. |
+| P05 | #68 | PR #413 **open for the owner's approval** | — | — | The M5 balance plan, measured: arrival 47% at tier 1 from a fresh start (the start's 56-bay car park holds 168 fans), 100% with car parks; 10% at tier 2 fresh, 70-81% with car parks; an 18 of ~5,900 m fits the starting land on every seed (~$190k seeded); with the proposals a careful player reaches tier 3 in year 4. Knob recommended for "careless out-saves careful": sponsors x (1 + (rep-50)/50). |
+| T178→ | #442 (+#445) | `arena/T098-fixture-traffic` | `.claude/worktrees/t166` | 5187 | **The owner (06:15): "this is seposed to happen btw. the guy hasto upgrade his town roads".** The self-paving design is dropped. #442 (golf towns finally drive) merges with range:gate run two ways: unattended (stalls/declines: banded as measured) and a scripted player upgrading the most jammed streets (must reach P22 2.7's bands; upgrades and money per season reported); a jam hint if the game shows none. Agent: the ground agent. |
+| T181, T182 | #453, #454 | fresh branches | `.claude/worktrees/t160` | 5186 | **The owner's morning asks:** (1) remove the transparent colour mask over lawns (likely `drawManagedGrass` testing the lawn's preset, not its painted lawn); (2) the toolbar regrouped: COURSE (Driving range · Course · Decoration) and TOWN (Traffic · Town decoration), no key letters on the rail (keys kept in the tooltip). Agent: the lot agent. |
+| T112 | #199 | `arena/T112-sharp` (PR #394) | `.claude/worktrees/t112` | — | **Approved, merge HELD for the morning restart:** a lock change makes the 5174 auto-updater run `npm ci` in theme-consistency (the live 5191 studio holds sharp there; the lot agent's t160 uses it by junction). Morning order: stop 5191 → merge #394 → let npm ci finish → restart 5191 and 5174. All shipped bytes identical on 0.35.5; audit 0. |
 
 **Two coding agents at a time (the owner, 2026-10-26: first "maybe just too many background tasks?" after the studio tab died with the
 PC at 1.5 GB free, then "start up two coding agents"):** keep two coding agents running, start the next queue ticket when one lands, no
@@ -53,6 +55,10 @@ studio for the owner; an agent's check studio (5193) is stopped before it report
 worktree `.claude/worktrees/lot-presets` are dead: the owner closes the servers, then the worktree goes. The owner restored
 `variation:gen-house-l-shape-e0e3b328-plain:1` for its 9 lot presets (#294); `tests/lot-presets-json.test.ts` passes again.
 
+**2026-10-27 nightly** (main `81a66c0`, run by the lead with a haiku-runner at 02:30; **no scheduled nightly task exists**,
+`E:/ClaudeTemp/nightly/2026-10-27.md`): typecheck, **1906/1906 tests**, the build, sim, town, towns, fix, event and biz gates **all PASS**.
+Gap: no gate covers the range start (T098).
+
 **2026-10-26 manual regression** (main `d750592`, `E:/ClaudeTemp/nightly/2026-10-26-manual.md`): typecheck, 1697/1697 tests, the build,
 sim, town, towns and biz gates PASS; fix and event gates FAIL (#285). towns/event/biz had not run for days (no .webp loader; fixed by #286).
 
@@ -61,10 +67,21 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
 `docs/START-PROMPTS.md`.
 
 ### Queue (in order)
+- **OVERNIGHT 2026-10-26 → 27 (the owner, 21:10: "make sure you guys keep coding till tomorrow morning. im going to bed. if you dono what
+  to do, i trust you to make the best decision. try your best").** The lead keeps two agents busy; a session cron (`054b2391`, :13 and :53
+  from 22:00 to 07:53) wakes the lead to review/merge/dispatch. Order: **T166 #370** the game's RAM (ground workers' texture packs) →
+  **T161** (after T160, the lot agent) → **T167 #371** removed pictures never drawn (stand-ins; owner data untouched) → **T154 phase 2**
+  (#330, the eight-heading contract, code only) → **T112 #199** (sharp) → real failures from the 02:00 nightly go first. Morning: a summary
+  with screenshots for the owner.
 - **P25 #348 lots generated on the fly** (the owner: "start over with the lot presets we need a workflow that gets us to generating perfect
   lots on the fly"): hard rules + learned per-sector taste (T158 wizard, in flight) → T159 bootstrap from the existing presets + a 12-lot
   gallery → T160 the generator in the game, seeded per lot, model as data → T161 pairs, densities by state, a 50-seed exam sheet. The
   presets file stays (archive, one-off overrides). Same agent as T155/T158.
+- **Scene-background paintings (checked 2026-10-26 evening, main checkout, untracked):** `art/theme-consistency/generated/ground/scene-backgrounds/<material>/`
+  holds one building-free painting a level (`*-background-anchored-v1.raw.png`, ~1742x903) for fairway, putting-green, lake, sand-raked,
+  sand-ripples, golden-fescue and long-grass; desert and dirt only the version with the shop. `long-grass/*-uniform-background-v2` = the
+  owner's rough already in the game (#360, same sha256). Fairway and putting-green go in through T165; lake, sands and fescue keep the
+  art session's seam-repaired READY tiles unless the owner prefers the paintings.
 - **Texture art status (2026-10-26 15:30):** the art session (Codex; `art/theme-consistency/material-texture-batches/ACTIVE-WORK.json`)
   has finished 2 of its 14 families (golden fescue, lake: in the game). sand-ripples has raw variants, sand-raked 2/12, desert/dirt
   anchors only; fairway, putting-green, first-cut, long-grass and the rest have job files and no pictures yet. Each lands through
@@ -84,6 +101,140 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
    (the sharp bump). See the History sections below and `gh issue list --label arena --state open`.
 
 ### Done recently (newest first; details in each PR)
+- 2026-10-27 06:30: **T180 #451 not by colour alone** (P23-UX D8.1): refused cells hatched with an ✕ (one module `ext/refused-mark.ts`:
+  the brush, New hole's left-out cells, blocked footprints, the clubhouse and props ghosts); icons beside ten colour-only states
+  (`ui/status-icon.ts`); body text 13 px, secondary 12 px; WCAG AA: `text-slate-500` on panels (2.9:1) → slate-400 (5.3:1).
+- 2026-10-27 06:26: **T095 #419 the first minute of a range start** (squash-merged on the owner's word): welcome card (follows the ramp),
+  the founding line in the Tier sub-line, the tee ring, three toasts, the 7-step range guide, the unnamed town until "is on the map". The
+  lead merged main in first (engine field renamed `playableHoles`: T090 has a `holesBuilt()` method).
+- 2026-10-27 06:03: **T179 #448 accessibility first pass** (P23-UX P2-7): one styled tooltip (`ui/Tooltip.tsx`) replaces 44 browser titles on
+  the rail and top bar (name, key, the lock's reason: "Roads R 🔒 Unlocks with your third hole or the tour's invitation"); the gold
+  focus ring extended to every control; a **UI scale** setting (90/100/110/125%, UI layer only, kept per browser). The top bar stays one
+  row at 1366x768 up to 110%; at 125% it wraps to two rows. Shots `E:/ClaudeTemp/T179/shots/`.
+- 2026-10-27 05:53: **T177 #441 a grown town keeps its started lots**: in a range start's town a started or built lot keeps its footprint;
+  new block and frontage lots fill round it; it goes only if its road goes or a road runs through it. Lost started/built lots over
+  20 seasons: 327/425/516 (seeds 1-3; **277-409 built houses removed**) → **0**. range:gate bands pass (`GROWN_PLAN_H` stays 0.5: growth
+  is street-limited); town:gate unchanged (the rule is range starts only: in classic towns subdividing closed blocks fills the interior).
+- 2026-10-27 05:34: **#440 main's tests green again** (the hole badge's new title and drag-slot class from T174).
+- 2026-10-27 05:14: **T098 #436 the grown-town fixture, loader and bench**: `npm run range:fixture` → `tests/fixtures/saves/golf-v5-range-20y.json`
+  (seed 1 after 20 seasons: 2,391 lots, 6,648 residents; 36 KB gzipped; save-fixtures test 9); dev-only `?fixture=range20` (not in
+  dist; never touches the player's save); bench `&start=range` and `&fixture=range20` stages all under budget (range20 8%: 0.86 / 2.0 ms CPU,
+  10,884 instances; no cars yet: fixed next). Note for the owner: the course land shows as the map's autumn field grass, not mown green.
+- 2026-10-27 05:11: **T176 #435 New hole's ghost extras** (P23-UX P2-10): the trees a Build clears are tinted (a warm rust in the sprite
+  shader, their own light and shade kept; shadows unchanged) and counted as an info check ("42 trees cleared"), the same set the Build
+  clears (the clearing code and the ghost share two rules); the ghost draws the collar band the Build lays (first cut, fringe, bunker
+  lip, water bank; not charged); map labels and the Build pill fade to 30% within 60 px of the pointer. Shots `E:/ClaudeTemp/T176/shots/`.
+- 2026-10-27 04:58: **T090 #428 the town grows from the range outward** (P22 2.3, RISKY): a range start's town grows its own lots at
+  `(30 + 3 x holes + 0.04 x built) x success` a season (success set by each tournament, saved as `GolfSave.townBoost`), picks fall off
+  from its anchored centre, a lot builds in 240 s, a street every half game hour, the first street and lot ~60 s in at 1x (P22 2.8);
+  career grants pay in range starts; fixed: a young town measured its first pick from the map exit. range:gate holds P22 2.7's bands
+  over 20 seasons on seeds 1-3 (year 20: 2,056-2,391 lots, 5,610-6,648 residents; no street within 6 tiles of the golf land); classic
+  gates identical to the nightly; suite 1926/1926. Finding for a ticket: ~30% of started lots are lost when new streets re-partition
+  the frontage (lots.ts). Shots `E:/ClaudeTemp/T090/`.
+- 2026-10-27 04:52: **T175 #431 Greenkeeping on the rail + the clubhouse stopgap** (P23-UX P2-5, P2-9): Greenkeeping is a COURSE tool
+  (no free key), locked until the first hole is grown in ("hole 1 ready Mar 1985"), then never again; its panel is the Grass panel with
+  its cares armed (Overseed, Re-Turf: renamed from seed/sod), Esc drops the armed care; the top-bar Grass button picks it in golf games.
+  A clubhouse refused for want of a drive offers **Draw a drive** (Paths › gravel drive from the nearest road); the drive built, Buildings
+  comes back with the clubhouse armed at the spot. Shots `E:/ClaudeTemp/T175/shots/`.
+- 2026-10-27 04:34: **T174 #426 the hole card** (P23-UX P2-4): select a hole by its map badge (new: drawn at each hole's first tee),
+  its Holes panel badge or a click with Select → par, lengths per tee, grow-in per surface, areas, checks with Fix (arms the brush,
+  the marker or Edit hole); pin and tee drags never re-plan or charge (`markerMove`, refused off their surface); Edit hole; Delete
+  (confirms "no refund", "up to N m²" cleared); renumber by swapping badges (grid, plans, pins, tees, painted areas follow). Also fixed: the
+  rail/panel box swallowed map clicks under a short panel. Shots `E:/ClaudeTemp/T174/shots/`.
+- 2026-10-27 04:19: **T091 #422 grown-town roads keep off the course**: every golf game's town roads keep 6 tiles off the golf land (old
+  starts could cross the course before); `short()` counts only lots that can build; a range start's town lays a leg every game hour,
+  anchored between its seed and its built lots, legs near golf land (40 tiles) penalised; a grown industrial district 200-280 tiles toward
+  the nearer exit. Classic games untouched. T090 builds on it. The lead typechecks PRs in a sparse `.claude/worktrees/lead-tc` (no art,
+  docs, assets; node_modules a junction: remove it with [System.IO.Directory]::Delete first).
+- 2026-10-27 04:08: **T096 #423 the range's look**: most was already built by P24/T086 (props turn with the plot, the range ground group,
+  golfers at the bays); added: the range's outfield and target greens are managed grass (`driving-range`, `golf-green` families, grass
+  catalog `PRESET_FAMILY`), a turning/placement test, and the range kit P2 → P1 in GOLF-SPRITES with art requests (mats strip, target-green
+  decal, a golfer teeing up). range:gate identical.
+- 2026-10-27 03:50: **T092 #418 map exits feed the town's visits**: the tourist catchment (clubhouse, tourism, casino) is one per map exit
+  on a range start (`visitExits`; classic games keep one entry), its kerb on the lane into the map; the range itself already drew per
+  exit through RangeSim (P24 D2), so no worker range cars. All gates as the nightly; range:gate identical. In a new game 15 range cars in
+  75 s, 8 and 7 from each end. Suite 1915/1915.
+- 2026-10-27 03:09: **T098 #415 the range gate** (`npm run range:gate -- [seed] [days]`, 20 town days in ~10 s, deterministic): a fresh
+  range start headless (`harness.ts setupRange`), held to bands from main's numbers: golfers 31-40 a day, takings $7.2-9.6k, lost ~40% (4
+  bays), no car left at 05:00, range cars overlapping ≤2% (1.1% today, at the car park entrance and aisles), step times. Seeds 1-3 PASS;
+  other gates unchanged; suite 1911/1911. The range20 fixture, `?fixture=` and bench stages wait for T090 (#159).
+- 2026-10-27 02:23: **T173 #410 train every use in the lab**: the wizard and gallery follow the lab's lot type (shops, industry, car
+  parks/civic/tour) with the game's own layout path and the live model (presets as the head start + the owner's samples, weighted per
+  group: shops x4, industry x4, open x11); **Ship model** renders a 24-lot exam (shipped vs live) over the lab and ships on "Ship"
+  (`lot-models/v<N>.exam.jpg`, then the model, then the index); counters per group; palette thumbs at mip 2. "Learn from the presets"
+  removed (the presets are always the head start). Shots `E:/ClaudeTemp/T173/`.
+- 2026-10-27 02:06: **T172 #408 the game's RAM step 2**: the main-thread heap 214 → 127 MB (the terrain label buffer and shadow mesh
+  data let go after use, the picking alpha as bits), the atlas keeps 2 decoded levels (24 → 8 MB), the ground chunk cache 32e6 px (after a
+  pan 158 → 112 MB). Pixel-identical, no pop-in, bench fps as main; suite 1900/1900. Dropped: 12 tile sources (bake waits doubled).
+  **Owner's call:** the dev server's sprite atlas is 383 MB RGBA8 in VRAM (production 96 MB BC7): serve the build's KTX2 pages in dev
+  (production look, but a studio Rebuild would need the ~90 s KTX2 encode) or a smaller RGBA8 budget (some blurry cells on pans).
+- 2026-10-27 01:42: **T171 #405 items know their place** (model v4 LATEST; v1-v3 unchanged): per-item anchors (kerb, door/front, sides,
+  back, fence line, drive/parking edge, corner) and rows; **shops now generate** (a "composed" group lays each known item by its own count at
+  its learnt place: bench, rack and bin at the kerb, hvac, cabinet and dumpster by the side, a hedge where the back fence is free); houses
+  and industry use anchors (mailbox and bins at the kerb, planting along the front, piles along fences); car parks, civic and tour keep v3
+  (anchors made them plainer). Compose time unchanged (55.7 ms, 507 lots generated). Shots `E:/ClaudeTemp/T171/`.
+- 2026-10-27 01:14: **T110 #402 textured light and shadow** (the owner's art rule): paint-tool area rims are a shine textured by the
+  area's own colours, 0.2 m inside the edge; their shadows and dark rims multiply one cool shade `SHADE_RGB` (112,120,152), the same as the
+  course shadows; bunker floor light inset; the Course puck's flat screen washes and cream edge line now textured and inset. Hillshade,
+  collars, walls and banks were already compliant; kerbs (2-3 px) and water (no glints) left; prop/tree shadows are T141/T142's. Bake
+  time within noise. For the owner's eye: the puck reads slightly softer without its cream line. Shots `E:/ClaudeTemp/T110/shots/`.
+- 2026-10-27 00:47: **T169 #399 lots on the fly for more uses** (model v3 LATEST; v1/v2 towns unchanged): **industry on** (junk-yard
+  props varied lot to lot), **car parks, civic, tour on**; **shops off** (their frozen lots are composed: hedges along the fence, racks and
+  benches by the door, dumpster at the back; per-kind positions laid them worse: T171). A generated lot keeps its preset's buildings,
+  patches, fences, street items, parked cars and car-park furniture; no plant on paving except along the fence; no tree within 2.5 tiles of
+  a main building's front. Town compose 49.3 → 52.7 ms. Exams and game shots in `E:/ClaudeTemp/T169/`.
+- 2026-10-27 00:25: **T170 #397 main green again + the art session's newer tiles**: `RangeSim.newDay` test knows `noPark`/`taken`; the
+  painted-tiles manifest test skips with "art moved: re-run prep-painted-tiles" when the art folder moved (strict otherwise). Shipped:
+  long-grass canonical (no longer provisional; seams 38.7 → 18.7 NEAR), putting-green finished sets, and **putting-green-paint MID from the
+  finished mid-v1 set as made** (new heal method `finished-set-as-made`: it already tiles; T165's fallback grid bands gone). Suite 1888/1888.
+  For the owner's eye: the collar's inner cut shows as a faint angular tone edge inside each MID green tile (the art session's report too).
+- 2026-10-27 23:57: **T152 #391 range cars keep their distance**: cars keep a car's gap in their lane; building-bound golfers share cars
+  (1-4 a car, mean 2.05, seeded by the visit) and the drive's two halves and the building's two lanes in/out carry them; golfers,
+  takings and car hours identical. Overlapping moving cars a day: with the building 547k → 22.4k (−96%), 44-bay lot 31.7k → 6.9k (−78%).
+  sim/town/fix/event gates pass (fix:gate −11.8% as main). Not taken: a queue cap (−48% golfers), faster car-park speeds.
+- 2026-10-26 ~23:00: **T168 #389 no first-use stall**: lazy textures built in 5 ms slices; a chunk that meets an unmade texture waits aside
+  while the others bake; idle test-bakes of the 8 chunks round the last one make ahead only what the map lays; the Course tool prewarms its
+  brushes; a row-at-a-time noise 4.6x faster. Cold-start bake max 978 → 158 ms, memory idle 3,466 → 3,047 MB (all Edge), the ground
+  pixel-identical. **Heads-up:** the lead's typecheck worktree `.claude/worktrees/lead2-read` was removed by someone at 22:43; git run in
+  its empty folder fell through to the main checkout (a checkout there aborted, nothing changed). Check a folder is a worktree before git.
+- 2026-10-26 ~23:00 → 23:50: the usage limit stopped the lead and the lot agent; both resumed at 23:51.
+- 2026-10-26 ~22:45: **T154 phase 2 #386 eight headings**: on a 45° road a building with a screen-axis set faces its street (road 1 → N,
+  3 → E, 5 → S, 7 → W; never mirrored; footprint from the set). 14 buildings have sets (five parking garages, bakery, grocery, pharmacy,
+  three industrials, `world:house_0/1/3`); the owner's 45° presets use houses without sets, so a real 45° street looks the same: 65 of
+  the 74 buildings the presets place lack sets (missing-views list in `docs/GOLF-SPRITES.md`, `world:house_5` first). `?oldheadings`
+  for comparison. **#387** the presets test accepts removed pictures (T167 stand-ins): main's two lot-presets-json failures fixed.
+- 2026-10-26 ~22:25: **T161 #384 pairs, densities by state, the exam** (`lots/taste.ts`): partners learnt within 2.5 tiles (doghouse +
+  sandbox + oak, mailbox + bins, hvac + cabinet); densities by state (upgraded lush, decrepit junky); **model v2 is LATEST** (a v1 town
+  composes exactly as before: a save without `lotModel` stays v1, so the owner's existing town keeps v1; a new game uses v2). `npm run
+  lots:exam` renders 50 fixed lots (4 axis roads x 3 states x sizes) as a contact sheet (`E:/ClaudeTemp/T161/exam/`).
+- 2026-10-26 ~22:10: **T166 #380 the game's RAM about halved** (the owner: "we need to optimise the app"): one ground worker instead of three
+  (three baked no faster: one GPU process), lazy procedural textures and photo mosaics, no IndexedDB texture pack (the old one deleted once).
+  All Edge processes idle 5,895 → 3,316 MB, after a pan 5,949 → 2,910, after 10 jumps 7,095 → 3,671; VRAM 3.4-4.3 → 1.5-1.9 GB; browser
+  process 455 → 56 MB; ready 5.9 → 3.0 s; bakes faster (bench 15.7 → 9.4 ms, district fps 47-54 → 57-59). The ground pixel-identical
+  (NEAR 202 of 924,800 px by ≤2 levels). CPU canvases tried and dropped (bakes 9 → 38 ms). Cost: a ~1 s stall the first time a texture is
+  needed (T168). Dev switch `?ground=old|lazy,one,two,soft,cache` and `scripts/perf/memory.mjs` measure each lever.
+- 2026-10-26 ~22:00: **#376 generated lots keep their garages and sheds** (every building of the frozen preset stays; nothing generated
+  lands on them). **T167 #377 removed pictures are never drawn**: the declined presets placed the removed rundown house (70), derelict
+  two-storey (35) and fire station (48), so decrepit streets had no houses; now the house is an allocated dwelling of its size class that
+  fits the band (seeded by the lot), another building one of its kind within 40% of its footprint, expansions and props left out; a badge in
+  the lot lab marks each stand-in; the owner's files only read. Decrepit streets now show ordinary houses: real decrepit house art is an
+  art request. Main typechecks with both, lot suites 42/42. The lead typechecks PRs in `.claude/worktrees/lead2-read` (node_modules is a
+  junction to theme-consistency's: remove it with [System.IO.Directory]::Delete before removing the worktree).
+- 2026-10-26 ~21:45: **T160 #374 lots generated on the fly**: a house lot whose preset is frozen (not the owner's own) keeps its house,
+  drive, walk, street items and fence; its plants, props, cars and decals come from the generator (`lot-gen.ts`) with the shipped model
+  `lots/lot-models/v1.json` (87 presets, 2,709 items), seeded by street key + slot + state; the save records `lotModel` (missing = v1);
+  the lab's "Ship model" writes the next version; `?oldlots` composes as before. Compose of a whole town ~54 → ~32 ms (a `carOwnerScale`
+  memo). Known: garages/sheds dropped (follow-up in flight); decrepit houses not drawn (before too: T167).
+- 2026-10-26 ~21:20: **T165 #369 fairway and putting green from the new paintings** (`art/owner-supplied/{fairway,putting-green}-20261026`,
+  families `fairway-paint`, `putting-green-paint`): edges healed with a matched bridge (no seam line); the putting green MID falls back to
+  the raw MID tiles with one shared strip (the painting's bright corner repeated). The fairway's mowing stripes fan out in perspective,
+  so no crop lines them up: a soft stripe kink stays at the wrap. Straight stripes need a fairway painted without perspective (or without
+  stripes: the game draws its own mowing bands). Old `fairway` / `putting-green` families kept as the option.
+- 2026-10-26 evening: **T164 #361 + #366 main's tests green after the Rebuild**: a frozen house preset's house keeps its yards at today's
+  sizes (`compose.ts houseYards`: moved along the frontage into its band; `pickedPreset` prefers presets whose house fits);
+  `draft-shadows.mjs` drops shadow entries for pictures the library no longer has; newart-default pins no stand-in count. **T159 #364**
+  the lab's "Learn from the presets" (every item on the owner's lab and edited presets a kept sample, learnt again in place) and the
+  **lot gallery** (a dozen generated lots, Good / Bad each, Space saves and lays the next, Fix opens one in the wizard).
 - 2026-10-26: **T162 #360 the owner's rough** (`art/owner-supplied/rough-20261026`, family `rough-owner`, one tile a level): edges healed once
   in the asset step (`scripts/assets/tile-heal.mjs`, wrap-bridge 48 px); `rough` and `lawnDeclined` wear it. **T163 #359 parked cars vs the
   studio size**: sizes always matched; a studio save now reaches the running dev game at once (`lots/scales-live.ts`), and cards past a

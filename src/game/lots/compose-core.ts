@@ -22,7 +22,7 @@ import { CAR_SCALE, carFootprint, carHeading, carOwnerScale } from '../ext/car-a
 
 /** a placed prop; street is set (true) only for an item on the sidewalk in front of the lot (a lay-by's bays take none: see engine placeLot);
  *  from: the preset it was drawn from and its prop index there (compose.ts; the dev editor maps an edit back to the preset by it) */
-export interface Placed { id: string; x: number; y: number; flip: boolean; scale: number; street?: true; from?: { preset: string; prop: number } }
+export interface Placed { id: string; x: number; y: number; flip: boolean; scale: number; street?: true; from?: { preset: string; prop: number }; /** T167: drawn in place of this removed picture */ standIn?: string }
 export interface Composition { props: Placed[]; ground: LotPatch[] }
 /** a preset prop a lot leaves out: the preset and the prop's index there, its sprite id as drawn, and why (past the lot line, overlaps <id>
  *  NN%, the fit, the decline) */
@@ -34,10 +34,10 @@ export type Pt = { x: number; y: number };
 export type Box4 = [number, number, number, number];
 /** a placed candidate: the anchor (ground point) and its footprint in world tiles; from: a preset prop's source (see Placed), which done()
  *  keeps off the patch check and the plant cap (the owner placed it) */
-export interface Item { id: string; x: number; y: number; flip: boolean; s: number; fp: Box4; car: boolean; wheel: boolean; fence: boolean; boundary: boolean; street: boolean; plant: boolean; /** stands on the paving (a drive's pay boom) */ paved?: boolean; from?: { preset: string; prop: number } }
+export interface Item { id: string; x: number; y: number; flip: boolean; s: number; fp: Box4; car: boolean; wheel: boolean; fence: boolean; boundary: boolean; street: boolean; plant: boolean; /** stands on the paving (a drive's pay boom) */ paved?: boolean; from?: { preset: string; prop: number }; standIn?: string; /** T154 Phase 2: a building facing a road at 45 degrees: its footprint the square inside its world box (fp), turned 45 degrees */ diag?: boolean }
 /** a sprite at a size and orientation: its footprint relative to the anchor */
 export interface Spec { id: string; s: number; flip: boolean; h: Box4 }
-export interface Opt { flip?: boolean; mul?: number; street?: boolean; plant?: boolean; boundary?: boolean; paved?: boolean; from?: { preset: string; prop: number } }
+export interface Opt { flip?: boolean; mul?: number; street?: boolean; plant?: boolean; boundary?: boolean; paved?: boolean; from?: { preset: string; prop: number }; standIn?: string; diag?: boolean }
 export interface Patch { kind: 'drive' | 'walk' | 'lot' | 'yard' | 'bed'; tex: LotPatch['tex']; quad: number[]; lines?: number[] }
 export interface Pair { x: string; y: string }
 
@@ -76,6 +76,9 @@ export function boxOf(id: string, s: number, flip: boolean): Box4 {
 /** a seeded pick; '' from an empty list (put() ignores unknown ids) */
 export const pick = (r: () => number, a: string[]): string => a[Math.floor(r() * a.length)] ?? '';
 export const clamp = (v: number, a: number, b: number) => (v < a ? a : v > b ? b : v);
+/** the house band: the gap between the drive and the house (or its garage), and the side yard on the far side from the drive (tiles): the old
+ *  layouts lay a house in it (legacy-layout.ts res), and the runtime composer keeps a frozen preset's house in it (compose.ts houseYards) */
+export const DRIVE_GAP = 0.5, SIDE_YARD = 1.4;
 /** a pool for a sprite drawn flipped: lettering reads backwards when mirrored, so a flipped lot keeps only the plain sprites, and a lettering
  *  sprite with east-facing art (EAST_FACING) stays (it is drawn as that art, unflipped). Unflipped keeps the whole pool. */
 export const plain = (list: string[], flip: boolean | undefined) => (flip ? list.filter(id => EAST_FACING[id] !== undefined || !hasLettering(id, BY.get(id)?.name)) : list);
@@ -196,7 +199,7 @@ export class Build {
     const it = BY.get(g.id)!, car = it.cat === 'Vehicles', cc = car ? this.fitCar(g, c) : c;
     if (!cc) return null;
     const h = g.h, x = cc.x - (h[0] + h[2]) / 2, y = cc.y - (h[1] + h[3]) / 2;
-    const item: Item = { id: g.id, x, y, flip: g.flip, s: g.s, fp: [x + h[0], y + h[1], x + h[2], y + h[3]], car, wheel: g.id === WHEEL, fence: it.kind === 'fencex' || it.kind === 'fencey' || g.id === 'world:hedge', boundary: !!o.boundary, street: !!o.street, plant: !!o.plant, ...(o.paved ? { paved: true } : {}), ...(o.from ? { from: o.from } : {}) };
+    const item: Item = { id: g.id, x, y, flip: g.flip, s: g.s, fp: [x + h[0], y + h[1], x + h[2], y + h[3]], car, wheel: g.id === WHEEL, fence: it.kind === 'fencex' || it.kind === 'fencey' || g.id === 'world:hedge', boundary: !!o.boundary, street: !!o.street, plant: !!o.plant, ...(o.paved ? { paved: true } : {}), ...(o.from ? { from: o.from } : {}), ...(o.standIn ? { standIn: o.standIn } : {}), ...(o.diag ? { diag: true } : {}) };
     this.items.push(item); return item;
   }
   /** a spec with its footprint centre at a lot-frame point (a along u, b along n) */
@@ -333,10 +336,11 @@ export class Build {
   clearDrives() {
     for (let i = this.items.length - 1; i >= 0; i--) { const it = this.items[i]!; if (it.boundary && this.patches.some(p => p.kind === 'drive' && hit(it.fp, p.quad))) this.items.splice(i, 1); }
   }
-  /** is the footprint inside the lot (REACH past the sides and the back, VERGE into the front for street items) */
+  /** is the footprint inside the lot (REACH past the sides and the back, VERGE into the front for street items): its corners (a building facing a
+   *  road at 45 degrees, diag: its turned square's, the midpoints of its world box's sides) */
   inside(it: Item): boolean {
-    const [x0, y0, x1, y1] = it.fp, minB = it.street ? -VERGE : -REACH;
-    for (const [x, y] of [[x0, y0], [x1, y0], [x1, y1], [x0, y1]]) {
+    const [x0, y0, x1, y1] = it.fp, minB = it.street ? -VERGE : -REACH, mx = (x0 + x1) / 2, my = (y0 + y1) / 2;
+    for (const [x, y] of it.diag ? [[mx, y0], [x1, my], [mx, y1], [x0, my]] : [[x0, y0], [x1, y0], [x1, y1], [x0, y1]]) {
       const dx = x - this.o.x, dy = y - this.o.y, a = dx * this.u.x + dy * this.u.y, b = dx * this.n.x + dy * this.n.y;
       if (a < -REACH || a > this.W + REACH || b < minB || b > this.D + REACH) return false;
     }
@@ -372,7 +376,7 @@ export class Build {
         if (over) { drop(it, `overlaps ${over.id} ${Math.round(100 * share(over.fp, it.fp))}%`); continue; }
         ups++;
       }
-      acc.push(it); const p: Placed = { id: it.id, x: it.x, y: it.y, flip: it.flip, scale: it.s }; if (it.street) p.street = true; if (it.from) p.from = it.from; props.push(p);
+      acc.push(it); const p: Placed = { id: it.id, x: it.x, y: it.y, flip: it.flip, scale: it.s }; if (it.street) p.street = true; if (it.from) p.from = it.from; if (it.standIn) p.standIn = it.standIn; props.push(p);
     }
     const ground: LotPatch[] = this.patches.map(p => (p.lines ? { pts: p.quad, tex: p.tex, lines: p.lines } : { pts: p.quad, tex: p.tex }));
     // the decals last, bounded by the lot grown 2 tiles (a decal is up to 4 m across)

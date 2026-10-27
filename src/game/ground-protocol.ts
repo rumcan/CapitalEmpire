@@ -116,7 +116,11 @@ export type TileKind = 'g' | 'm' | 'p';
 /** a light boot's limits for a ground worker (T157, boot.ts): the decoded tile-set tiles and painted pictures it keeps (null: the game's),
  *  the photo textures it builds up front (null: all of grass-art.ts EAGER_PHOTO), whether it may write the browser's texture cache, whether
  *  it draws its canvases on the CPU (soft), and whether its procedural textures are made on first use (lazy) */
-export interface WorkerLimits { tiles: number | null; painted: number | null; eager: string[] | null; saveCache: boolean; soft: boolean; lazy: boolean }
+export interface WorkerLimits { tiles: number | null; painted: number | null; eager: string[] | null; saveCache: boolean; soft: boolean; lazy: boolean;
+  /** with lazy, the grass's tints made on first use too (a light boot's; T166: the game makes them up front) */
+  tints?: boolean;
+  /** T166: a cached pack is read (absent: yes; the game's: no, it builds its own and the old cache is deleted) */
+  readCache?: boolean }
 export type ToWorker =
   | { t: 'grass'; cells: GrassCellView[]; strength: number; heat: boolean; mowing: boolean }
   | { t: 'init'; art: GroundArt & { grassMix?: BaseGrassArt; presets?: PhotoTexEntry[]; grassArt?: GrassArt }; terrain: Uint8Array; height: Float32Array; waters: Waterway[]; build: boolean; peers: number; limits?: WorkerLimits }
@@ -141,6 +145,10 @@ export type ToWorker =
   | { t: 'slopeLight'; strength: number }
   /** the tile set bands to decode ahead (painted-tiles.ts bandsAhead: the camera is near their switch; T150), sent when they change */
   | { t: 'tilesAhead'; bands: number[] }
+  /** T168: textures the open tool can lay (the Course tool's brushes), made ahead while the worker is idle */
+  | { t: 'prewarm'; tex: string[] }
+  /** T172: report the pixels the worker holds, by owner (a 'log' line `mem {...}`, MB of RGBA8; scripts/perf/memory.mjs) */
+  | { t: 'memProbe' }
   | { t: 'paint'; id: number; kind: TileKind; i: number; j: number; L: number; artL?: number; /** the tile spec the tile set families are laid at (painted-tiles.ts tileSpec: the band and the DPR; T145, T150) */ ts?: number };
 
 export type FromWorker =

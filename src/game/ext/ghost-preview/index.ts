@@ -1,6 +1,7 @@
 // Shared translucent ghost and wireframe preview module for build tools (UIX revamp T018).
 // Pure TypeScript, no DOM globals: works with engine.ts overlay views and headless unit tests.
 // Units: world coordinates and widths in tiles of 2 m; screen coordinates in CSS pixels; money in $.
+import { drawRefusedCross, HATCH_LIGHT, polyCentre, strokeHatch } from '../refused-mark';
 
 /** a 2D point in world tiles (2 m per tile) or screen CSS pixels */
 export interface GhostPt { x: number; y: number }
@@ -164,12 +165,14 @@ export function drawGhostPoly(
   v: GhostView,
   pts: readonly number[],
   status: GhostStatus,
-  opts?: { fillColor?: string; dashed?: boolean; lineWidthPx?: number; borderWidthTiles?: number; borderColor?: string },
+  opts?: { fillColor?: string; dashed?: boolean; lineWidthPx?: number; borderWidthTiles?: number; borderColor?: string; cross?: boolean },
 ): void {
   if (pts.length < 6) return;
   const ctx = v.ctx, dpr = v.dpr, { fill, stroke } = colorsForStatus(status, opts?.fillColor);
   v.setIso(ctx); ctx.beginPath(); traceFlat(ctx, pts, true); ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.fillStyle = fill; ctx.fill();
+  // refused (T180, not by colour alone): a hatch inside it, at a fixed screen pitch
+  if (status === 'invalid') hatchPoly(v, pts);
   if (opts?.borderWidthTiles && opts.borderWidthTiles > 0 && status !== 'invalid') {
     v.setIso(ctx); ctx.beginPath(); traceFlat(ctx, pts, true);
     ctx.save(); ctx.clip();
@@ -184,6 +187,35 @@ export function drawGhostPoly(
   if (opts?.dashed !== false) ctx.setLineDash([GHOST_STYLE.dashOnPx * dpr, GHOST_STYLE.dashOffPx * dpr]);
   ctx.stroke();
   if (opts?.dashed !== false) ctx.setLineDash([]);
+  if (status === 'invalid' && opts?.cross !== false) { const c = polyCentre(pts), p = v.screen(c.x, c.y); drawRefusedCross(ctx, p.x, p.y, dpr); }
+}
+
+/** a refused footprint's hatch (T180): the polygon (tiles) as the clip, the hatch over its box on screen */
+function hatchPoly(v: GhostView, pts: readonly number[]): void {
+  const ctx = v.ctx, n = pts.length >> 1;
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (let i = 0; i < n; i++) { const p = v.screen(pts[2 * i]!, pts[2 * i + 1]!); if (p.x < x0) x0 = p.x; if (p.x > x1) x1 = p.x; if (p.y < y0) y0 = p.y; if (p.y > y1) y1 = p.y; }
+  ctx.save();
+  v.setIso(ctx); ctx.beginPath(); traceFlat(ctx, pts, true); ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clip();
+  strokeHatch(ctx, x0, y0, x1, y1, v.dpr, HATCH_LIGHT, 0.75);
+  ctx.restore();
+}
+
+/** a refused footprint drawn elsewhere (the clubhouse's and the Props ghost's rects): the hatch inside the polygon (tiles) and the ✕, at its
+ *  centre, or (front) by its front corner, 16 css px in, where a building's picture standing on the footprint does not cover it */
+export function drawRefusedMarks(v: GhostView, pts: readonly number[], at: 'centre' | 'front' = 'centre'): void {
+  if (pts.length < 6) return;
+  hatchPoly(v, pts);
+  const c = polyCentre(pts), p = v.screen(c.x, c.y);
+  if (at === 'front') {
+    let f = p;
+    for (let i = 0; i + 1 < pts.length; i += 2) { const q = v.screen(pts[i]!, pts[i + 1]!); if (q.y > f.y) f = q; }
+    const dx = p.x - f.x, dy = p.y - f.y, L = Math.hypot(dx, dy), k = L > 0 ? Math.min(1, (16 * v.dpr) / L) : 0;
+    drawRefusedCross(v.ctx, f.x + dx * k, f.y + dy * k, v.dpr);
+    return;
+  }
+  drawRefusedCross(v.ctx, p.x, p.y, v.dpr);
 }
 
 /** draws an axis-aligned or rotated ghost footprint rectangle in world tiles */
@@ -240,6 +272,7 @@ export function drawGhostRing(
     ctx.strokeStyle = stroke; ctx.lineWidth = 1.5 * dpr; ctx.stroke();
     ctx.setLineDash([]);
   }
+  if (status === 'invalid') { const p = v.screen(cx, cy); drawRefusedCross(ctx, p.x, p.y, dpr); }
 }
 
 /** draws a snap indicator (amber ring on node/end/edge, cross-tick on road, small dot on grid) */

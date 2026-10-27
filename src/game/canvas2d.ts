@@ -27,6 +27,30 @@ export function fbm(seed: number, W: number, H: number, cells: number, oct = 3) 
   const layers = Array.from({ length: oct }, (_, i) => valueNoise(seed + i * 17, cells << i, Math.max(1, Math.round(cells * H / W)) << i, W, H));
   return (x: number, y: number) => { let s = 0, a = 0.5, n = 0; for (let i = 0; i < oct; i++) { s += a * layers[i](x, y); n += a; a *= 0.5; } return s / n; };
 }
+/** T168: fbm a whole row at a time, out[x] = fbm(seed, W, H, cells, oct)(x, y) to the last bit: the same arithmetic in the same order, each
+ *  layer's per-column part (its cell, weight and neighbour) and per-row part worked out once instead of for every pixel (several times faster) */
+export function fbmRows(seed: number, W: number, H: number, cells: number, oct = 3) {
+  const layers = Array.from({ length: oct }, (_, i) => {
+    const cols = cells << i, rows = Math.max(1, Math.round(cells * H / W)) << i, r = mulberry(seed + i * 17), g = new Float32Array(cols * rows);
+    for (let k = 0; k < g.length; k++) g[k] = r();
+    const cw = W / cols, ch = H / rows, ii = new Int32Array(W), i1 = new Int32Array(W), su = new Float64Array(W);
+    for (let x = 0; x < W; x++) { const u = x / cw, i0 = Math.floor(u), fu = u - i0; su[x] = fu * fu * (3 - 2 * fu); ii[x] = ((i0 % cols) + cols) % cols; i1[x] = (ii[x]! + 1) % cols; }
+    return { cols, rows, g, ch, ii, i1, su };
+  });
+  const amps: number[] = []; let a = 0.5, n = 0; for (let i = 0; i < oct; i++) { amps.push(a); n += a; a *= 0.5; }
+  return (y: number, out: Float64Array) => {
+    out.fill(0, 0, W);
+    for (let i = 0; i < oct; i++) {
+      const L = layers[i]!, v = y / L.ch, j0 = Math.floor(v), fv = v - j0, sv = fv * fv * (3 - 2 * fv), jj = ((j0 % L.rows) + L.rows) % L.rows, j1 = (jj + 1) % L.rows, A = amps[i]!;
+      const r0 = jj * L.cols, r1 = j1 * L.cols, g = L.g;
+      for (let x = 0; x < W; x++) {
+        const s = L.su[x]!, p = L.ii[x]!, q = L.i1[x]!, ga = g[r0 + p]!, gb = g[r0 + q]!, gc = g[r1 + p]!, gd = g[r1 + q]!;
+        out[x] = out[x]! + A * ((ga + (gb - ga) * s) * (1 - sv) + (gc + (gd - gc) * s) * sv);
+      }
+    }
+    for (let x = 0; x < W; x++) out[x] = out[x]! / n;
+  };
+}
 /** a grey+alpha mask canvas from a scalar field */
 export function maskFrom(W: number, H: number, f: (x: number, y: number) => number) {
   const c = canvas(W, H), g = ctx2d(c), d = g.createImageData(W, H), D = d.data;

@@ -1,0 +1,55 @@
+{
+ "schema": 1,
+ "id": "paint:putting-green-20261026",
+ "what": "The art session's putting-green paintings, one per zoom level (scene-backgrounds/putting-green/*-background-anchored-v1, the town study with its building removed), brought in by T165 (#365). Kept here unchanged; scripts/assets/prep-painted-tiles.mjs checks each file against its sha256 below, heals its edges once so it tiles with itself and ships it as the tile family putting-green-paint (MID: the raw provisional tiles healed with one shared strip instead, see the prep script).",
+ "family": {
+  "id": "putting-green-paint",
+  "name": "Putting green (painting)",
+  "kind": "grass",
+  "provisional": true
+ },
+ "art": {
+  "date": "2026-10-26",
+  "session": "the art session (scene-backgrounds, remove-only-scale-anchor)",
+  "issue": "https://github.com/rumcan/CapitalEmpire/issues/365"
+ },
+ "light": "UPPER RIGHT toward LOWER LEFT",
+ "levels": {
+  "near": {
+   "file": "near.png",
+   "sha256": "e61d1d0832558291773cdbfdbca7f39a69e02de9d15072a58f348cc76b3c16c4",
+   "size": [
+    1743,
+    902
+   ],
+   "from": "art/theme-consistency/generated/ground/scene-backgrounds/putting-green/near-background-anchored-v1.raw.png",
+   "generator": "C:/Users/RAMPAGE/.codex/generated_images/01a16c0b-bcad-7e71-a5d0-0281b98562b9/exec-9e9b0517-ec76-417b-b6a6-2c07632c7cc8.png",
+   "lighting": "UPPER RIGHT → LOWER LEFT",
+   "reviewStatus": "pending reference appearance, object-removal and lighting review"
+  },
+  "mid": {
+   "file": "mid.png",
+   "sha256": "489b6afd7f7226b334f1eb693c4b0fb885e768f381d1d7ceb1eb38f8fed419cd",
+   "size": [
+    1744,
+    902
+   ],
+   "from": "art/theme-consistency/generated/ground/scene-backgrounds/putting-green/mid-background-anchored-v1.raw.png",
+   "generator": "C:/Users/RAMPAGE/.codex/generated_images/01a16c0b-bcad-7e71-a5d0-0281b98562b9/exec-fac4ffce-6a6e-4ef3-bbb4-2b66487fcc95.png",
+   "lighting": "UPPER RIGHT → LOWER LEFT",
+   "reviewStatus": "pending reference appearance, object-removal and lighting review"
+  },
+  "far": {
+   "file": "far.png",
+   "sha256": "64ab32b0bfed474eb817c85009baf0c0934b95a15a674c68fd8015152feed06f",
+   "size": [
+    1742,
+    903
+   ],
+   "from": "art/theme-consistency/generated/ground/scene-backgrounds/putting-green/far-background-anchored-v1.raw.png",
+   "generator": "C:/Users/RAMPAGE/.codex/generated_images/01a16c0b-bcad-7e71-a5d0-0281b98562b9/exec-2a8d1cb7-873b-410e-8e23-9bf204579530.png",
+   "lighting": "UPPER RIGHT → LOWER LEFT",
+   "reviewStatus": "pending reference appearance, object-removal and lighting review"
+  }
+ }
+}

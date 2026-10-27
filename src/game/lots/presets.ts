@@ -25,7 +25,7 @@ export interface PresetDecal { id: string; x: number; y: number; scale: number; 
 export interface LotPreset { id: string; use: PresetUse; state: PresetState; w: number; d: number; props: PresetProp[]; patches: PresetPatch[]; curated?: boolean; road?: Road; approved?: boolean; whole?: boolean; decals?: PresetDecal[]; derived?: string; detached?: string }
 /** a preset fitted to a lot: its props, patches and decals as new objects (tiles of the lot), each prop's index in the preset's props (from), how
  *  many props were dropped for lying outside it, and its decals kept inside it */
-export interface Fitted { props: PresetProp[]; patches: PresetPatch[]; from: number[]; dropped: number; decals: PresetDecal[] }
+export interface Fitted { props: PresetProp[]; patches: PresetPatch[]; from: number[]; dropped: number; decals: PresetDecal[]; /** T167: by prop, the removed picture it stands in for (undefined: its own) */ standIn?: (string | undefined)[] }
 
 /** the size bucket step (tiles): a lot's width and depth are rounded to it */
 export const BUCKET = 2;

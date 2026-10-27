@@ -3,7 +3,7 @@
 // game, the flat map is plain ground, the cached pack filter keeps what a light worker uses, and the lab's atlas plan keeps mip-0 cells.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { GAME_BOOT, boxView, clampCentre, flatTerrain, lightPack } from '../src/game/boot';
+import { GAME_BOOT, GROUND_LEVERS, boxView, clampCentre, flatTerrain, lightPack, withGroundLevers } from '../src/game/boot';
 import { LAB_BOX, LAB_EAGER_PHOTOS, LAB_ZOOM_MIN, bootFor, labBoot, labBox } from '../src/game/dev/lab-boot';
 import { HH, HW, MAP, ZOOM_MIN, worldX, worldY } from '../src/game/iso';
 import { HS, TC } from '../src/game/terrain/types';
@@ -12,10 +12,28 @@ import { EAGER_PHOTO } from '../src/game/grass-art';
 
 test('the game boots as it always did: every option at the engine\'s old value', () => {
   assert.deepEqual({ ...GAME_BOOT }, {
-    kind: 'game', groundWorkers: null, sim: true, atlasMB: null, atlasKeep: null, groundPx: 48e6, tileSources: null, paintedSources: null, eagerPhotos: null,
-    saveTextureCache: true, softCanvases: false, lazyTextures: false, box: null, zoomMin: null, trees: true, moneyFloats: true, save: true, map: 'valley',
+    // T166 (#370): one ground worker, its textures made on first use (the grass tints up front), no texture cache read or written
+    kind: 'game', groundWorkers: 1, sim: true, atlasMB: null, atlasKeep: 2, groundPx: 32e6, tileSources: null, paintedSources: null, eagerPhotos: null,
+    saveTextureCache: false, readTextureCache: false, softCanvases: false, lazyTextures: true, lazyTints: false, box: null, zoomMin: null, trees: true, moneyFloats: true, save: true, map: 'valley',
   });
   assert.ok(Object.isFrozen(GAME_BOOT));
+});
+
+test('T166: a dev build\'s ?ground=<levers> boots the game with exactly those ground levers on; old is the game before T166', () => {
+  const old = withGroundLevers({ ...GAME_BOOT }, 'old');
+  // before T166: a worker per spare core (null: the engine's 1 to 3), every texture up front, the cache read and written, GPU canvases
+  assert.deepEqual({ groundWorkers: old.groundWorkers, lazyTextures: old.lazyTextures, softCanvases: old.softCanvases, saveTextureCache: old.saveTextureCache, readTextureCache: old.readTextureCache },
+    { groundWorkers: null, lazyTextures: false, softCanvases: false, saveTextureCache: true, readTextureCache: true });
+  // the kept levers are what GAME_BOOT has on
+  assert.deepEqual(withGroundLevers({ ...GAME_BOOT }, 'lazy,one'), { ...GAME_BOOT });
+  // one at a time; unknown names ignored; two after one wins
+  assert.equal(withGroundLevers({ ...GAME_BOOT }, 'soft').softCanvases, true); assert.equal(withGroundLevers({ ...GAME_BOOT }, 'soft').lazyTextures, false);
+  assert.equal(withGroundLevers({ ...GAME_BOOT }, 'lazy,one,two').groundWorkers, 2); assert.deepEqual(withGroundLevers({ ...GAME_BOOT }, 'lazy,one,nonsense'), { ...GAME_BOOT });
+  assert.deepEqual(Object.keys(GROUND_LEVERS).sort(), ['cache', 'lazy', 'one', 'soft', 'two']);
+  // only a dev build reads it, and never for the lab
+  assert.deepEqual(bootFor('?ground=old', false), { ...GAME_BOOT }, 'a build ignores ?ground');
+  assert.equal(bootFor('?ground=old', true).groundWorkers, null); assert.equal(bootFor('?ground=old', true).lazyTextures, false);
+  assert.equal(bootFor('?lotlab&ground=old', true).kind, 'lab'); assert.equal(bootFor('?lotlab&ground=old', true).groundWorkers, 1);
 });
 
 test('only ?lotlab on a dev build boots light', () => {

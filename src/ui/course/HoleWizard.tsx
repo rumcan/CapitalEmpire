@@ -1,5 +1,6 @@
 import type { Game } from '../../game/engine';
 import { SURF } from '../../game/ext/course-grid';
+import { affordKind, statusIcon } from '../status-icon';
 import { SURF_SURFACE } from '../../game/ext/course-grid/areas';
 import { aboutMoney, planShape, type WizCheck } from '../../game/ext/hole-wizard';
 import { growInMonths } from '../../game/golf/costs';
@@ -53,7 +54,7 @@ export function HoleWizardPanel({ game }: { game: Game }) {
       )}
       {w.step !== 'shape' && <p className="sub-line mt-1.5">{w.suggestM > 0 && step === 1 ? `Point the way: the green sits ${w.suggestM} m out, a par-3 to start with. Esc moves the tee again.` : ASK[step]}</p>}
       {w.suggestM > 0 && w.step !== 'shape' && (
-        <div className="mt-1.5 flex items-center justify-between gap-2 text-[11px]" data-testid="wiz-par3">
+        <div className="mt-1.5 flex items-center justify-between gap-2 text-[12px]" data-testid="wiz-par3">
           <span className="text-emerald-300">Suggested: a {w.suggestM} m par-3 for your first hole</span>
           <button className="chip" title="Place the green anywhere, at any length" onClick={() => { w.suggestM = 0; game.emit(); }}>Any length</button>
         </div>
@@ -114,7 +115,7 @@ function Planting({ game }: { game: Game }) {
           ? `Sod: ready now, ${ratio} times the price of Seed; nine holes like this would cost about ${aboutMoney(9 * k.sod)}.`
           : `Seed: playable in ${grow}. Sod is ready now but costs ${ratio} times as much: nine holes like this would cost about ${aboutMoney(9 * k.sod)}.`}
       </p>
-      <p className="wiz-money">{`Nine holes like this: about ${aboutMoney(9 * cost)} · you have `}<b className={have >= cost ? 'text-emerald-300' : 'text-red-300'}>{aboutMoney(have)}</b></p>
+      <p className="wiz-money">{`Nine holes like this: about ${aboutMoney(9 * cost)} · you have `}<b className={have >= cost ? 'text-emerald-300' : 'text-red-300'}>{`${aboutMoney(have)} ${statusIcon(affordKind(cost, have))}`}</b></p>
     </section>
   );
 }
@@ -128,8 +129,8 @@ function Checks({ game, rows }: { game: Game; rows: WizCheck[] }) {
       <ul className="wiz-checks">
         {rows.map(r => (
           <li key={r.id} data-check={r.id} className={`wiz-${r.kind}`}>
-            <span className="wiz-mark" aria-hidden>{r.kind === 'block' ? '✕' : r.kind === 'warn' ? '!' : '✓'}</span>
-            <span className="min-w-0 flex-1">{r.kind === 'block' ? <span className="sr-only">Blocks Build: </span> : r.kind === 'warn' ? <span className="sr-only">Warning: </span> : null}{r.text}</span>
+            <span className="wiz-mark" aria-hidden>{r.kind === 'block' ? '✕' : r.kind === 'warn' ? '!' : r.kind === 'info' ? 'i' : '✓'}</span>
+            <span className="min-w-0 flex-1">{r.kind === 'block' ? <span className="sr-only">Blocks Build: </span> : r.kind === 'warn' ? <span className="sr-only">Warning: </span> : r.kind === 'info' ? <span className="sr-only">Info: </span> : null}{r.text}</span>
             {r.fix === 'seed' && <button className="chip" onClick={() => { p.plantKind = 'seed'; game.emit(); }}>Use Seed</button>}
             {r.show && r.kind !== 'ok' && <button className="chip" onClick={() => p.showMe(r.show!)}>Show me</button>}
           </li>

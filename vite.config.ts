@@ -5,7 +5,7 @@ import { fileURLToPath, pathToFileURL } from "url";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig, type Plugin } from "vite";
-import { ALLOC_PATH, checkDevRequest, checkDevSave, devSavePath, LEARN_PATH, mergeAllocations, mergePresets, mergeSamples } from "./src/game/dev/dev-save";
+import { ALLOC_PATH, checkDevRequest, checkDevSave, devSavePath, LEARN_PATH, mergeAllocations, mergePresets, mergeSamples, MODELS_DIR, shipPlan } from "./src/game/dev/dev-save";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -112,6 +112,37 @@ function devSave(): Plugin {
             const m = mergeSamples(text, add);
             if (!m.ok) { reply(res, 403, { error: m.error }); return done(); }
             writeAtomic(file, m.text, e => { if (e) reply(res, 500, { error: String(e) }); else reply(res, 200, { ok: true, count: m.count }); done(); });
+          })).catch(e => { if (!res.headersSent) reply(res, 500, { error: String(e) }); });
+        });
+      });
+      // the lot lab's Ship model (T160): the model posted becomes the next version, v<N>.json beside the others, and the index is written again;
+      // one request at a time (two people shipping at once get two versions, never one lost)
+      let shipping: Promise<void> = Promise.resolve();
+      server.middlewares.use("/__dev/lot-model", (req, res) => {
+        const no = foreign(req); if (no) return reply(res, 403, { error: no });
+        if (req.method !== "POST") return reply(res, 405, { error: "POST only" });
+        let raw = "";
+        req.setEncoding("utf8");
+        // (T173: the exam picture rides along, a JPEG of a few MB)
+        req.on("data", (c: string) => { raw += c; if (raw.length > 16 * 1024 * 1024) req.destroy(); });
+        req.on("end", () => {
+          let body: { data?: unknown; from?: unknown; exam?: unknown };
+          try { body = JSON.parse(raw) as { data?: unknown; from?: unknown; exam?: unknown }; } catch { return reply(res, 400, { error: "the body is not JSON" }); }
+          shipping = shipping.then(() => new Promise<void>(done => {
+            const dir = path.join(__dirname, MODELS_DIR);
+            const have = fs.existsSync(dir) ? fs.readdirSync(dir).map(f => /^v(\d+)\.json$/.exec(f)).filter((m): m is RegExpExecArray => !!m).map(m => +m[1]!) : [];
+            // T173: the plan (dev-save.ts shipPlan): the exam picture, the model, the index, written in that order (the index last: a half ship never shows)
+            const plan = shipPlan(have, body.data, typeof body.from === "string" ? body.from.slice(0, 300) : "shipped from the lot lab", body.exam);
+            if (!plan) { reply(res, 403, { error: "not a lot model ({ counts: { class|kind|sector: [offered, kept] } }) or its exam not a JPEG" }); return done(); }
+            fs.mkdirSync(dir, { recursive: true });
+            const write = (k: number): void => {
+              const f = plan.files[k];
+              if (!f) { reply(res, 200, { ok: true, version: plan.version }); return done(); }
+              const next = (e: unknown) => { if (e) { reply(res, 500, { error: String(e) }); return done(); } write(k + 1); };
+              if (typeof f.content === "string") writeAtomic(path.join(dir, f.name), f.content, next);
+              else fs.writeFile(path.join(dir, f.name), f.content, next);
+            };
+            write(0);
           })).catch(e => { if (!res.headersSent) reply(res, 500, { error: String(e) }); });
         });
       });

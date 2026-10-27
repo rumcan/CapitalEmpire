@@ -45,6 +45,8 @@ export async function loadCached(key: string, keep?: (name: string) => boolean):
     return { names: ix.map(i => v.names[i]!), bitmaps: await Promise.all(ix.map(i => createImageBitmap(v.blobs[i]!))), curb: v.curb, stampAngle: v.stampAngle };
   } catch { return null; }
 }
+/** T166: the cached pack deleted (the game no longer keeps one: boot.ts readTextureCache); a lab open beside it only finds none and builds */
+export function dropCache() { try { indexedDB.deleteDatabase('capital-empire-textures'); } catch { /* none */ } }
 export async function saveCached(key: string, t: Textures) {
   try {
     const e = entries(t), blobs = await Promise.all(e.map(x => x[1].convertToBlob({ type: 'image/png' })));

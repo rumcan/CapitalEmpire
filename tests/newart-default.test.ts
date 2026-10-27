@@ -22,9 +22,10 @@ test('the default: no URL flag, so buildings only are swapped (?oldart and ?newa
 });
 
 test('by default every building is drawn as itself when it is new art, else as a new-art stand-in of its family on its footprint, never mirrored', () => {
-  let swapped = 0;
+  let swapped = 0, lacking = 0, buildings = 0;
   LIBRARY.forEach((it, i) => {
     if (!isBuilding(it) || it.kind === 'lot' || !inventory(it)) return;
+    buildings++; if (!isNew(it.id)) lacking++;
     for (const flip of [false, true]) {
       const d = { item: i, flip, scale: 1.5, x: 100 + i, y: 200 - i }, look = lookOf(d);
       // drawn as itself (at its pixel limit when 1.5 is past it: sizes.ts)
@@ -36,7 +37,9 @@ test('by default every building is drawn as itself when it is new art, else as a
       swapped++;
     }
   });
-  assert.ok(swapped > 50, `${swapped} pictures swapped`);
+  // the stand-ins thin out as the new art comes in (over 50 swaps before T154's art, 44 after the Rebuild of 2026-10-26), so no count of them is
+  // pinned (T164): every building still without its new art was checked above, unflipped and flipped; the loop saw the whole art inventory
+  assert.ok(buildings > 100, `${buildings} buildings of the art inventory (${lacking} drawn as stand-ins, ${swapped} swaps checked)`);
 });
 
 test('by default a tree that is not generated is drawn as itself (trees keep their art unless ?newart)', () => {

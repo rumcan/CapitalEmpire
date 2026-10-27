@@ -57,7 +57,7 @@ export function NightPanel({ game, bump }: { game: Game; bump: () => void }) {
           const k: LightKey = t.key, v = n.types[k];
           return (
             <div key={k} className="mt-1 border-t border-white/5 pt-1">
-              <div className="px-2 py-0.5 text-[11px] opacity-80">{t.label}</div>
+              <div className="px-2 py-0.5 text-[12px] opacity-80">{t.label}</div>
               <Row label="Size" value={v.r} min={0} max={20} step={0.1} show={`${v.r.toFixed(1)} m`} set={r => set({ types: { ...n.types, [k]: { ...v, r } } })} />
               <Row label="Strength" value={v.i} min={0} max={1} step={0.01} show={pct(v.i)} set={i => set({ types: { ...n.types, [k]: { ...v, i } } })} />
             </div>

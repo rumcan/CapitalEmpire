@@ -8,6 +8,7 @@
 // Units: positions in tiles of 2 m; widths, lengths and areas in metres and m²; cells of 1 m (0.5 tile); money in $.
 
 import { CELL_T, SURF, diffCost, type Grid, type GridDiff, type Pt } from '../course-grid';
+import { collarCells } from './extras';
 import {
   CORRIDOR_M, decodePlan, defaultPlan, edgeOffset, encodePlan, planAims, planChanges, planGeom, planHandles, planInfo, rasterPlanBox, widthAt,
   type HolePlan, type PlanGeom, type PlanInfo, type PlanRaster,
@@ -64,7 +65,7 @@ export type LandWhy = 'off' | 'range' | '';
 export interface WizRoad { ax: number; ay: number; bx: number; by: number; name: string }
 /** a row of New hole's check table (P23 4.4): a block (Build waits), a warning (Build goes ahead) or a check passed; its words; the fix the
  *  card offers ('seed': plant Seed instead of Sod); the points (tiles) its Show me frames */
-export interface WizCheck { id: string; kind: 'block' | 'warn' | 'ok'; text: string; fix?: 'seed'; show?: Pt[] }
+export interface WizCheck { id: string; kind: 'block' | 'warn' | 'ok' | 'info'; text: string; fix?: 'seed'; show?: Pt[] }
 /** one step of the wizard's own undo (P23 4.4: Ctrl+Z takes back a click or a drag, not the last hole): the step, the tee, the plan and the
  *  green's turn before the change, and what the change was */
 interface WizSnap { step: WizStep; tee: Pt | null; plan: HolePlan | null; turnOff: number; label: string }
@@ -159,6 +160,8 @@ export interface WizardHost {
   roads?(box: readonly [number, number, number, number]): WizRoad[];
   /** the holes as lines from tee to pin, for the too-close warning (a hole with a plan uses its plan's centre line instead) */
   holeLines?(): { hole: number; line: Pt[] }[];
+  /** the trees the ghost's Build would clear (T176: Engine.wizardTrees, throttled with the ghost), for the info row; missing: none counted */
+  treesCleared?(): number;
 }
 
 /** what a Build would do now: the dry diff (hole-plan planChanges), its price, counts, the cells as row runs for the overlay, and the
@@ -183,6 +186,9 @@ export interface WizardGhost {
   practice: number; practiceRuns: Int32Array;
   /** the back tee or the pin on the practice area (Build waits) */
   teePractice: boolean; greenPractice: boolean;
+  /** the collar ring the Build lays round its surfaces (T176: course-blobs' automatic collars, extras.ts collarCells): row runs (cy, a, b, s) in
+   *  grid cells, s the surface whose collar it is, and per surface its outline (as edges) */
+  collarRuns: Int32Array; collarEdges: Map<number, Float32Array>;
 }
 
 /** the build animation (P21 3.5): the line draws itself, then the built cells pop along it in arc-length order */
@@ -191,6 +197,31 @@ export interface Ripple { t0: number; runs: Int32Array; delay: Float32Array; lin
 export const RIPPLE_LINE_MS = 300, RIPPLE_SPREAD_MS = 600, RIPPLE_POP_MS = 450;
 
 /** the outline segments of a set of row runs (each row's runs sorted, disjoint): the edges between a covered cell and an uncovered one */
+/** the collar ring the cells laid (diff idx, s1, n: grid indices, sorted) bring, as row runs on the grid (cy, a, b, s) and per surface its edges:
+ *  a window round the laid cells (the widest collar's reach past them), its surfaces once built, and extras.ts collarCells */
+function collarRing(g: Grid, idx: Uint32Array, s1: Uint8Array, n: number): { runs: Int32Array; edges: Map<number, Float32Array> } {
+  if (!n) return { runs: new Int32Array(0), edges: new Map() };
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (let k = 0; k < n; k++) { const i = idx[k]!, cx = i % g.w, cy = (i - cx) / g.w; if (cx < x0) x0 = cx; if (cx > x1) x1 = cx; if (cy < y0) y0 = cy; if (cy > y1) y1 = cy; }
+  const pad = 3; x0 = Math.max(0, x0 - pad); y0 = Math.max(0, y0 - pad); x1 = Math.min(g.w - 1, x1 + pad); y1 = Math.min(g.h - 1, y1 + pad);
+  const w = x1 - x0 + 1, h = y1 - y0 + 1, after = new Uint8Array(w * h), laid = new Map<number, number>();
+  for (let y = 0; y < h; y++) after.set(g.surf.subarray((y0 + y) * g.w + x0, (y0 + y) * g.w + x0 + w), y * w);
+  for (let k = 0; k < n; k++) { const i = idx[k]!, cx = i % g.w, cy = (i - cx) / g.w, j = (cy - y0) * w + (cx - x0); after[j] = s1[k]!; if (s1[k]) laid.set(j, s1[k]!); }
+  const ring = collarCells(after, w, h, laid), rows = new Map<number, Map<number, number[]>>(), runs: number[] = [];
+  // row runs per surface, in index order
+  const byS = new Map<number, number[]>();
+  for (const [j, s] of ring) { let l = byS.get(s); if (!l) byS.set(s, (l = [])); l.push(j); }
+  for (const [s, js] of byS) {
+    js.sort((p, q) => p - q);
+    let a = -1, b = -1, cy = -1;
+    const flush = () => { if (cy < 0) return; runs.push(cy, a, b, s); let m = rows.get(s); if (!m) rows.set(s, (m = new Map())); let r = m.get(cy); if (!r) m.set(cy, (r = [])); r.push(a, b); };
+    for (const j of js) { const x = (j % w) + x0, y = Math.floor(j / w) + y0; if (y === cy && x === b + 1) { b = x; continue; } flush(); cy = y; a = b = x; }
+    flush();
+  }
+  const edges = new Map<number, Float32Array>();
+  for (const [s, m] of rows) edges.set(s, runEdges(m));
+  return { runs: Int32Array.from(runs), edges };
+}
 function runEdges(rows: Map<number, number[]>): Float32Array {
   const out: number[] = [];
   const minus = (A: readonly number[], B: readonly number[] | undefined, y: number) => {
@@ -551,8 +582,10 @@ export class HoleWizard {
       }
       if (y0 >= 0) pr.push(y0, a0, b0);
     }
+    // the collar ring (T176): round the cells the Build lays, over the window's surfaces once built
+    const ring = collarRing(g, idx, s1, dn);
     this.ghostVal = {
-      diff, cost, laid, cleared, refused: refused.length, runs: Int32Array.from(runs), edges, gx0: g.x0, gy0: g.y0, info, geom,
+      diff, cost, laid, cleared, refused: refused.length, runs: Int32Array.from(runs), edges, gx0: g.x0, gy0: g.y0, info, geom, collarRuns: ring.runs, collarEdges: ring.edges,
       teeOk: okAt(pl.tee.x, pl.tee.y), greenOk: okAt(pl.green.x, pl.green.y),
       refusedIdx: Int32Array.from(refused), practice, practiceRuns: Int32Array.from(pr),
       teePractice: inPb(pl.tee.x, pl.tee.y), greenPractice: inPb(pl.green.x, pl.green.y),
@@ -593,6 +626,9 @@ export class HoleWizard {
     if (!has('land') && !has('range') && !has('practice')) out.push({ id: 'ok-land', kind: 'ok', text: 'Tee and green on your land' });
     if (!has('road')) out.push({ id: 'ok-road', kind: 'ok', text: 'No road across the hole' });
     if (!has('near')) out.push({ id: 'ok-near', kind: 'ok', text: `No other hole within ${NEAR_M} m` });
+    // the trees in the way (P23 4.4's table, T176): info, the trees tinted on the map
+    const trees = this.host.treesCleared?.() ?? 0;
+    if (trees > 0) out.push({ id: 'trees', kind: 'info', text: `${trees} tree${trees === 1 ? '' : 's'} cleared` });
     return out;
   }
   /** the warnings of the check table (see checks), cached */

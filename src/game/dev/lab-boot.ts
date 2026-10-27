@@ -15,7 +15,7 @@
 // This module is pure (no DOM, no GL): the engine and App.tsx read its answers, the tests check them (tests/lab-boot.test.ts).
 import { MAP } from '../iso';
 import type { BBox } from '../network';
-import { GAME_BOOT, type BootOptions } from '../boot';
+import { GAME_BOOT, withBootNumbers, withGroundLevers, type BootOptions } from '../boot';
 
 /** the side of the lab's map box in tiles: the lab street (90 tiles each way of its centre, engine.ts stageLab, also on a diagonal), the lab
  *  lot and its neighbours (two each way along the street, three across: lot-lab-plan.ts neighbourLots) with room to spare */
@@ -37,7 +37,7 @@ export function labBox(): BBox {
 export function labBoot(): BootOptions {
   return {
     kind: 'lab', groundWorkers: 1, sim: false, atlasMB: 16, atlasKeep: 2, groundPx: 16e6, tileSources: 8, paintedSources: 6, eagerPhotos: LAB_EAGER_PHOTOS,
-    saveTextureCache: false, softCanvases: true, lazyTextures: true, box: labBox(), zoomMin: LAB_ZOOM_MIN, trees: false, moneyFloats: false, save: false, map: 'flat',
+    saveTextureCache: false, readTextureCache: true, softCanvases: true, lazyTextures: true, lazyTints: true, box: labBox(), zoomMin: LAB_ZOOM_MIN, trees: false, moneyFloats: false, save: false, map: 'flat',
   };
 }
 
@@ -45,5 +45,9 @@ export function labBoot(): BootOptions {
  *  game as before T157 (to compare, or if the light boot ever misses something) */
 export function bootFor(search: string, dev: boolean): BootOptions {
   const q = new URLSearchParams(search);
-  return dev && q.has('lotlab') && !q.has('fullboot') ? labBoot() : { ...GAME_BOOT };
+  if (dev && q.has('lotlab') && !q.has('fullboot')) return labBoot();
+  // T166: a dev build's ?ground=<levers> boots the game with exactly those ground-worker levers on (boot.ts GROUND_LEVERS; ?ground=old: none);
+  // T172: and ?boot=<key>:<value>,... sets its memory budgets (boot.ts BOOT_NUMBERS)
+  const boot = dev && q.has('ground') ? withGroundLevers({ ...GAME_BOOT }, q.get('ground') ?? '') : { ...GAME_BOOT };
+  return dev && q.has('boot') ? withBootNumbers(boot, q.get('boot') ?? '') : boot;
 }

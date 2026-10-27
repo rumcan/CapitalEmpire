@@ -26,7 +26,7 @@ painted with the Paint tool (textures, section 6). Sprites are the objects that 
 | Art (atlas id) | Use in golf mode |
 | --- | --- |
 | `business:golf-clubhouse`, `golf-pro-shop`, `golf-cart-garage`, `golf-halfway-pavilion` | The clubhouse area and the halfway house |
-| `business:golf-practice-net`, `golf-driving-range` | The practice area (the range as a placeable set until the range kit, P2) |
+| `business:golf-practice-net`, `golf-driving-range` | The practice area; `golf-driving-range` is also the range's covered bays (`rangeScene`, until the range kit below, P1) |
 | `business:golf-bench-course-map`, `golf-patio-table`, `golf-mower`, `golf-bag-trolley`, `golf-footbridge` | Course furniture |
 | `business:golf-pin-red`, `golf-pin-yellow`, `golf-pin-red-equipment` | Flagsticks (until the new pin set) |
 | `business:golf-cart-sw`, `golf-cart-se` | Golf carts (two facings: needs the 8-facing set, P1) |
@@ -61,7 +61,7 @@ candidates to drop from the atlas for GPU memory: the Halloween sets (monsters, 
 | Sprinklers spraying | 0.3 + spray | 3 frames | evening flavour | P3 |
 | Flower beds and planters by tees | 2–4 | 4 | the beauty score | P2 |
 | Practice green flags (short, numbered) | 0.8 | 5 | - | P2 |
-| Range kit: target flags, distance boards, ball dispenser, hitting bay dividers, mats, ball-picker cart | various | sets | the practice range (tier 3 need) | P2 |
+| Range kit: target flags, distance boards, ball dispenser, hitting bay dividers, mats, ball-picker cart | various | sets | the driving range every range start opens with (P22 T096; the rows are in "The range business kit" below) | P1 |
 | Bag drop stand, bag racks, club storage | 2–4 | front, rear | by the clubhouse | P2 |
 
 ## 4. The tournament (temporary structures)
@@ -171,7 +171,7 @@ so 1024 px is plenty (section 1).
 ## Course piece props (T030b)
 - Still missing: tee steps, a bunker rake, a pond waterfall, pond rocks, and pond reeds (reeds use the roadside ornamental grass for now). They plug into `PIECE_PROP_SPRITE` in `src/game/ext/course-pieces/index.ts` (a sprite id, or `null` until the art exists).
 
-## The range business kit (plan P24 Phase 1, T129, and the World of Golf extras, T133: art requests)
+## The range business kit (plan P24 Phase 1, T129, the World of Golf extras, T133, and the range's look, P22 T096: art requests)
 The opening range (`golf/rangebiz.ts rangeScene`) stands these in with labelled stand-ins ("Stand In for ..."); each goes in by its id in
 `rangeScene`. Four views (NE, SE, SW, NW as the building sheets: the front in NE and NW), sun at the upper right, shadows at 145°, early
 autumn dusk, no lettering in the art unless said.
@@ -193,6 +193,9 @@ autumn dusk, no lettering in the art unless said.
 | The player's cottage (`golf:home-cottage`, four views, T133) | 6 x 5 / 5 | `world:house_4` ("Stand In for the player's cottage") | a modest whitewashed cottage with a corrugated-iron roof, a small stoep with a bench, a water tank on a stand at its side, a satellite dish | P2 |
 | Golf pro coaching pose (`golf_coach`, the 3D golfers' 8 facings, T133) | 1 / 1.8 | the golfer's idle frame and the drive clip | a coach standing side-on to the pupil, one hand out pointing at the ball, then miming a slow half swing; 8 frames | P2 |
 | Divot-scarred range tee (texture) | 16 m | the tee turf | listed in section 6 | P1 |
+| Hitting mats strip (`golf:range-mats`, T096; one mat a bay, the bays 2.5 tiles apart) | 4.2 x 6 per bay / 0.05 | each open bay's dark pad (an `asphaltDark` patch) and a green tee square (scene patches) | a top-down decal of one artificial-turf hitting mat on a concrete pad: worn green turf, a white rubber tee, two or three range balls, a scuffed strike zone; tiles side by side into a strip, so its left and right edges match | P1 |
+| Target green decal (`golf:range-target-green`, T096) | 12-20 across (radius 3-5 tiles) | the `range-green` preset disc with a raised, feathered collar (`ScenePatch` 'target') | a top-down round range target green: a smooth inner green, a lighter collar ring, a faint darker ring at the edge, a cup at the centre for the flag, a few balls lying on it; laid at any size, never rotated into a different look | P1 |
+| Range golfer at a mat (`golf_range_tee_up`, the 3D golfers' 8 facings, T096) | 1 / 1.8 | the golfer's idle frame between drives, then the drive clip (`golf_drive`) | a golfer at a hitting mat between shots: bends to take a ball from the bucket at the mat, tees it up, stands up for a practice waggle; then the existing drive clip; 8 frames | P1 |
 | Car park building (`golf:range-carpark`, four views, T146) | 18 x 26 / 12 (ground, three decks and the open roof deck) | **In (T154):** `ce:parking-garage-6storey`, the art model's parking garage (five covered levels at 36 cars: GARAGE_CARS 180), drawn from its screen-axis views (N, E, S, W, one per quarter turn) at scale 0.6 so it sits inside the footprint; no label. **Still wanted:** its four diagonal views NE, SE, SW, NW (`parking-garage-6storey-8views`: the eight-view contract), so it lines up with the range's lot, whose edges run along the world axes | the existing 6-storey parking garage (brick columns with cream caps, warm-grey floor bands, dark green rails, warm ceiling lights, the rear-right stair tower, the green P sign by the ramp) turned to the four diagonal headings. The house lighting: the sun at the upper right, shadows at 145°; never mirrored, each view its own picture. `rangeScene` places it at frame u 49..58, v 2..15 with its foot, its ramp facing the frame's +u | P1 |
 
 ## Practice facilities (plan P24 Phase 2, T130: art requests)
@@ -224,6 +227,33 @@ The shops and houses with screen-axis sets (`town:bakery`, `town:grocery`, `town
 `_1`, `_3`) keep their diagonal views; their N, E, S, W views are extra headings (`view:<id>:n|e|s|w`) the roads at 45 degrees take in T154 Phase 2.
 The world trash can's set had no crops yet (cut from its sheet by its subjects) and the 4-, 5- and 6-storey car parks' half-cell crops clip
 their subject (re-cut from the sheet the same way): the art model may want to review those cuts.
+
+## Buildings on the roads at 45 degrees: their cardinal views wanted (T154 Phase 2)
+On a road at 45 degrees a building with a screen-axis set faces its street. A lot's front faces its street: N on road 1, E on 3, S on 5, W on 7
+(`lots/preset-art.ts roadView`). It is never mirrored, and its footprint and anchor come from the set. A building without a set is drawn in its
+diagonal view, at 45 degrees to the road, as before. 14 buildings have a set: the five parking garages, `town:bakery`, `town:grocery`,
+`town:pharmacy`, the three industrial variations, and `world:house_0`, `_1` and `_3`. A variation (`variation:<base>-<hash>:1`) is its own picture
+and needs its own set. **Wanted: the N, E, S, W views** of the buildings below, as eight-view sheets (`<slug>-8views-vN`: the existing four views
+kept byte for byte, plus the four cardinal ones). The buildings the owner's presets of the 45-degree roads draw today come first (counted
+2026-10-27 over `lot-presets.json`):
+| Building (id) | Presets at 45 degrees | P |
+| --- | --- | --- |
+| House 5 (`world:house_5`) | 13 (12 approved) | P1 |
+| Colonial L-shape, double garage, variation 1 (`variation:gen-house-l-shape-e0e3b328-plain:1`), and its base `gen:house-l-shape` | 3 + 1 | P1 |
+| House 2 (`world:house_2`) and its variation `variation:world-house_2-north-332663ab-plain:1` | 2 + 1 | P1 |
+| House 0, variation 1 (`variation:world-house_0-51fa4b80-plain:1`) | 1 | P2 |
+| House Large, variation 1 (`variation:ref-building-house-large-20cb9f9e-plain:1`) | 1 | P2 |
+| Ranch L-shape, corner porch, variation 1 (`variation:gen-house-l-ranch-18552ce5-plain:1`) | 1 | P2 |
+| House Dormer, variation 1 (`variation:ref-building-house-dormer-b4413f08-plain:1`); Bellamy Hardware, variation 1 (`variation:town-hardware-bf36737f-plain:1`) | 1 draft each | P2 |
+| House back, shed and garden (`gen:back-shed-garden`); weathered timber outhouse (`expansion:outhouse`) | 1 each | P2 |
+
+All the presets place 74 different buildings; 65 of them have no set yet (houses 28, industry 14, shops and services 9, landmarks 9, yard
+buildings 5). The library holds 165 building subjects, 14 of them with a set. By how often the presets place them, the next ones wanted are:
+`town:postoffice` (193), `expansion:boarded-store-rear` and its variation (42 + 82), `expansion:lean-to-shed` (73), `world:school` (56),
+`expansion:outhouse` (53), `world:arcade` and its variation (51 + 45), `expansion:derelict-two-storey` (49), `static:garage_brick-v2` and its
+variation (39 + 32), `ref:building-gas-canopy` (39), `world:house_5` (38), `world:video` (38), `world:diner` (38), `world:video_rental` (37),
+`world:snack_bar` (35), `expansion:rundown-house` (34), `town:laundromat` (33), `static:garage_timber` (31), `ref:landmark-water-tower` (27),
+`static:garage_brick` (26), `world:house_2` (25), `world:house_4` (20).
 
 ## Props kit (plan P24 Phase 3, T131: art requests)
 The Props tool (`golf/decor.ts DECOR`) shows these as labelled stand-ins ("Stand In for ..." on the card and once per kind on the map); each
