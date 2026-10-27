@@ -691,6 +691,34 @@ export class Game {
     if (s && h && Math.hypot(h.x - s.x, h.y - s.y) > 0.25) this.moveGolfMarker(s.hole, s.kind, h.x, h.y);
     this.selectedGolfMarker = null; this.emit();
   }
+  /** the hole badges drawn on the map last frame (css px boxes) and the one being dragged (T174: a click opens the card, a drop on another
+   *  badge renumbers) */
+  private badgeBoxes: { n: number; x: number; y: number; w: number; h: number }[] = [];
+  private badgeDrag: { n: number; sx: number; sy: number; mx: number; my: number; moved: boolean } | null = null;
+  /** the hole badges on the map (P23 4.3's badges, T174): at each hole's first tee, its number with its state's icon beside its colour (✓ ready,
+   *  ◔ growing, ! needs attention); the card's hole ringed in gold; the badge being dragged follows the pointer. From the street tier down to 6% */
+  private drawHoleBadges(ctx: CanvasRenderingContext2D) {
+    this.badgeBoxes = [];
+    const g = this.golf; if (!g || this.cam.z < 0.06) return;
+    const views = this.courseHoleViews(), grow = this.holesGrowing(), d = this.dpr, font = `700 ${12 * d}px ui-sans-serif, system-ui, sans-serif`;
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.font = font; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    for (const v of views) {
+      if (!v.started) continue;
+      const t = g.tees.find(q => q.hole === v.n && q.kind === 'back') ?? g.tees.find(q => q.hole === v.n); if (!t) continue;
+      const st = !v.ok ? { icon: '!', bg: '#b45309' } : grow.has(v.n) ? { icon: '◔', bg: '#0369a1' } : { icon: '✓', bg: '#15803d' };
+      const drag = this.badgeDrag?.n === v.n && this.badgeDrag.moved, p = this.screen(t.x, t.y);
+      const cx = drag ? this.badgeDrag!.mx * d : p.x, cy = drag ? this.badgeDrag!.my * d : p.y - 26 * d;
+      const text = `${st.icon} ${v.n}`, w = ctx.measureText(text).width + 14 * d, h = 20 * d;
+      ctx.globalAlpha = drag ? 0.85 : 1;
+      ctx.beginPath(); ctx.roundRect(cx - w / 2, cy - h / 2, w, h, h / 2); ctx.fillStyle = st.bg; ctx.fill();
+      ctx.lineWidth = (this.holeCardHole === v.n ? 3 : 1.5) * d; ctx.strokeStyle = this.holeCardHole === v.n ? '#fcd34d' : 'rgba(15,23,42,0.9)'; ctx.stroke();
+      ctx.fillStyle = '#fff'; ctx.fillText(text, cx, cy + 0.5 * d); ctx.globalAlpha = 1;
+      if (!drag) this.badgeBoxes.push({ n: v.n, x: (cx - w / 2) / d, y: (cy - h / 2) / d, w: w / d, h: h / d });
+    }
+    ctx.textAlign = 'start'; ctx.textBaseline = 'alphabetic';
+  }
+  /** the badge under css point (mx, my), or 0 */
+  private badgeAt(mx: number, my: number): number { for (let i = this.badgeBoxes.length - 1; i >= 0; i--) { const b = this.badgeBoxes[i]!; if (mx >= b.x - 3 && mx <= b.x + b.w + 3 && my >= b.y - 3 && my <= b.y + b.h + 3) return b.n; } return 0; }
   goToHole(n: number) { this.paint.setHole(n); const b = this.paint.holeBox(n); if (b) this.lookAt((b[0] + b[2]) / 2, (b[1] + b[3]) / 2); }
   /** the golf land the town never builds on: the course and every parcel the player owns (tiles, [x, y, w, h]) */
   private golfLand(): [number, number, number, number][] { const g = this.golf; return g ? [g.course, ...(g.parcels ?? [g.parcel])] : []; }
@@ -2996,6 +3024,7 @@ export class Game {
  this.placeEventStructure({ typeId: this.eventStructurePending.typeId, mode: this.eventStructurePending.mode, x: Math.round(this.hover.x), y: Math.round(this.hover.y) });  
  return;  
  }  
+ if (side && e.button === 0 && !this.keys.has(' ')) { const b = this.badgeAt(mx, my); if (b) { this.overlay.setPointerCapture(e.pointerId); this.badgeDrag = { n: b, sx: mx, sy: my, mx, my, moved: false }; return; } } // T174: a hole badge
  if (side && this.holeCardHole !== null && e.button === 0 && !this.keys.has(' ') && this.holeCardGrab()) return; // T174: the card's pin and tee markers drag
  if (side && this.holesTool && this.golf && this.hover && e.button === 0) {
     if (this.selectedGolfMarker) {
@@ -3056,6 +3085,7 @@ export class Game {
   pointerMove(e: PointerEvent) {
   const mx = e.offsetX, my = e.offsetY;
   this.ghostMouse = { mx, my };
+  if (this.badgeDrag) { const b = this.badgeDrag; b.mx = mx; b.my = my; if (Math.hypot(mx - b.sx, my - b.sy) > 4) b.moved = true; } // T174
   this.hover = this.tileAt(mx, my);
   if (this.landMode && this.golf && this.hover) {
   // the block under the pointer, lined up with the owned land (a range start's parcel is off the map's 40-tile lattice: golf/parcels.ts blockAt)
@@ -3096,6 +3126,7 @@ export class Game {
   pointerUp() {
     const d = this.dragging; this.moneyAt(this.hover); // T147: a spend this release makes floats up here
     if (this.markerDrag) this.holeCardDrop(); // T174
+    if (this.badgeDrag) { const b = this.badgeDrag, to = b.moved ? this.badgeAt(b.mx, b.my) : 0; this.badgeDrag = null; if (!b.moved) this.openHoleCard(b.n); else if (to && to !== b.n) this.renumberHole(b.n, to); this.emit(); }
     if (d?.kind === 'pan' && d.hole !== undefined && !d.moved) { if (d.hole) this.openHoleCard(d.hole); else this.closeHoleCard(); }
     if (d?.kind === 'park') this.parkRelease();
     // a click (no drag) on the course aims the owner's open shot (P4b)
@@ -5441,6 +5472,7 @@ export class Game {
     if (this.traffic && this.cam.z >= DISTRICT_Z) { this.drawDisasters(ctx); this.drawSignals(ctx); this.drawIncidents(ctx); }
     if (this.tool === 'junction') { if (this.cam.z >= PLANNER_Z) this.drawJunctionBadges(ctx); this.drawSelectedJunction(ctx); }
     this.drawFlow(ctx);
+    this.drawHoleBadges(ctx); // T174
     if (this.showParkDemand) this.drawParkDemand(ctx);
     this.drawInspect(ctx);
     this.drawGroundOverlays(ctx);
