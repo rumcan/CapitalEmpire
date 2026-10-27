@@ -1,5 +1,6 @@
 // Golf tournament results screen view component (docs/GOLF-PLAN.md sections 2.3, 5.4, 7, and 8.1). React presentational component.
 import type { TournamentDayScore } from '../game/golf/tournamentday';
+import { trendKind, withIcon } from './status-icon';
 import { tierInfo } from '../game/golf/tour';
 
 /** format currency with explicit sign for net results */
@@ -157,7 +158,7 @@ export function TournamentResults({ score, tier, year, prevReputation, onContinu
         <div className="mt-3 flex items-center justify-between border-t border-white/10 pt-2 text-sm font-bold">
           <span>Net Tournament Profit:</span>
           <span className={`text-base tabular-nums ${m.net >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-            {formatResultMoney(m.net, true)}
+            {withIcon(trendKind(m.net), formatResultMoney(m.net, true))}
           </span>
         </div>
       </div>

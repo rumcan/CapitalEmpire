@@ -7,6 +7,7 @@ import { CELL_T, SURF } from '../course-grid';
 import { CORRIDOR_M } from '../hole-plan';
 import { NO_CHANGES, REFUSED, RIPPLE_LINE_MS, RIPPLE_POP_MS, type HoleWizard, type PlanHandle, type WizardGhost } from './index';
 import { labelFade } from './extras';
+import { drawRefusedCross, refusedPatches, type RefusedPatch } from '../refused-mark';
 /** the collar ring's look by the surface it collars (T176): the first cut round fairway and tee, the fringe round the green, the lip and bank */
 const COLLAR_LOOK: Record<number, { fill: string; edge: string }> = {
   [SURF.fairway]: { fill: 'rgba(150,196,96,0.5)', edge: 'rgba(214,240,170,0.85)' },
@@ -93,6 +94,15 @@ function fillRuns(v: WizardView, runs: Int32Array, gx0: number, gy0: number, s: 
   ctx.globalAlpha = alpha; ctx.fillStyle = fill; ctx.fill(); ctx.globalAlpha = 1;
 }
 
+/** each ghost's left-out patches (where their ✕ marks sit), kept with the ghost */
+const patchesOf = new WeakMap<WizardGhost, RefusedPatch[]>();
+/** the cells left out (T180, not by colour alone): the red hatch, and a small ✕ on each patch of them (the biggest few) */
+export function drawRefused(v: WizardView, gh: WizardGhost): void {
+  hatchRuns(v, gh.runs, gh.gx0, gh.gy0, HATCH_RED, REFUSED);
+  let ps = patchesOf.get(gh); if (!ps) patchesOf.set(gh, (ps = refusedPatches(gh.runs, REFUSED)));
+  for (const p of ps) { const q = v.screen(gh.gx0 + p.cx * CELL_T, gh.gy0 + p.cy * CELL_T); drawRefusedCross(v.ctx, q.x, q.y, v.dpr); }
+}
+
 /** the ghost: per label (in draw order) its runs filled and its outline stroked crisp along the cell edges */
 function drawGhost(v: WizardView, gh: WizardGhost) {
   const ctx = v.ctx, d = v.dpr;
@@ -104,7 +114,7 @@ function drawGhost(v: WizardView, gh: WizardGhost) {
     for (let k = 0; k < e.length; k += 4) { ctx.moveTo(gh.gx0 + e[k]! * CELL_T, gh.gy0 + e[k + 1]! * CELL_T); ctx.lineTo(gh.gx0 + e[k + 2]! * CELL_T, gh.gy0 + e[k + 3]! * CELL_T); }
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.lineCap = 'square'; ctx.strokeStyle = look.edge; ctx.lineWidth = (s === SURF.rough ? 1 : 1.3) * d; ctx.stroke(); ctx.lineCap = 'butt';
-    if (s === REFUSED) hatchRuns(v, gh.runs, gh.gx0, gh.gy0, HATCH_RED, REFUSED);
+    if (s === REFUSED) drawRefused(v, gh);
   }
   // the collar ring the Build lays round its surfaces (T176): what you see is what is built
   for (const [s, e] of gh.collarEdges) {

@@ -52,6 +52,7 @@ import { RangeCard } from './ui/golf/RangeCard';
 import { TooltipLayer } from './ui/Tooltip';
 import { UI_SCALES, applyUiScale, currentUiScale, saveUiScale } from './ui/uiScale';
 import { HoleCard } from './ui/golf/HoleCard';
+import { affordKind, balanceKind, statusIcon, trendKind, withIcon } from './ui/status-icon';
 import stadiumArt from './assets/ui/art/stadium.webp';
 
 /** the top bar on one row (P23 4.11, T135): its golf chips (and the invitation's whole sentence) show their words only from 2200 px; narrower,
@@ -172,14 +173,14 @@ export default function App() {
   const shownTools = item ? item.tools.filter(t => !ui || (ui.visibleTools as string[]).includes(t.id)) : [];
 
   /** the top bar's money figure (a button: it opens the budget) */
-  const treasury = (g: Game) => <Stat icon="bank" label="Treasury" value={g.unlimited ? '∞' : money(g.money)} tone={g.money < 0 ? 'text-red-300' : 'text-emerald-300'} sub={debtDays ? `bankrupt in ${DEBT_DAYS - debtDays} days` : undefined} subTone="text-red-300" onClick={() => { g.panel = g.panel === 'budget' ? null : 'budget'; g.emit(); }} />;
+  const treasury = (g: Game) => <Stat icon="bank" label="Treasury" value={g.unlimited ? '∞' : withIcon(balanceKind(g.money), money(g.money))} tone={g.money < 0 ? 'text-red-300' : 'text-emerald-300'} sub={debtDays ? `bankrupt in ${DEBT_DAYS - debtDays} days` : undefined} subTone="text-red-300" onClick={() => { g.panel = g.panel === 'budget' ? null : 'budget'; g.emit(); }} />;
   /** the population, jobs, day and daily income: inline in classic mode, in the Treasury drawer in golf mode (T035) */
   const moreStats = (g: Game) => (
     <>
       <Stat icon="people" label="Population" value={g.traffic.pop.toLocaleString()} />
       <Stat icon="briefcase" label="Jobs" value={g.traffic.jobs.toLocaleString()} />
       <Stat icon="sun" label="Day" value={String(g.day)} sub={hhmm(g.clock())} />
-      <Stat icon="income" label="Daily income" value={(net >= 0 ? '+' : '') + money(net)} tone={net >= 0 ? 'text-emerald-300' : 'text-red-300'} />
+      <Stat icon="income" label="Daily income" value={withIcon(trendKind(net), (net >= 0 ? '+' : '') + money(net))} tone={net >= 0 ? 'text-emerald-300' : 'text-red-300'} />
     </>
   );
 
@@ -762,7 +763,7 @@ function EvalScreen({ game }: { game: Game }) {
  <div>
  <div className="text-[10px] uppercase text-slate-400">Reputation</div>
  <div className="text-base font-bold text-white">
- {ye.prevRep} → <span className={ye.rep >= ye.prevRep ? 'text-emerald-400' : 'text-rose-400'}>{ye.rep}</span>
+ {ye.prevRep} → <span className={ye.rep >= ye.prevRep ? 'text-emerald-400' : 'text-rose-400'}>{withIcon(trendKind(ye.rep - ye.prevRep), String(ye.rep))}</span>
  </div>
  </div>
  <div>
@@ -1110,7 +1111,7 @@ function RoadPanel({ game, scope }: { game: Game; scope: 'town' | 'course' }) {
       </>}
       <div className="mt-2 rounded-lg bg-white/5 p-2 text-xs">
         <div className="flex justify-between"><span className="text-slate-400">Route</span><span>{game.route.length} point{game.route.length === 1 ? '' : 's'} · {Math.round(len * 2)} m</span></div>
-        <div className="flex justify-between"><span className="text-slate-400">Cost</span><span className={cost + comp.comp > game.money ? 'text-red-300' : 'text-emerald-300'}>{money(cost)}</span></div>
+        <div className="flex justify-between"><span className="text-slate-400">Cost</span><span className={cost + comp.comp > game.money ? 'text-red-300' : 'text-emerald-300'}>{withIcon(affordKind(cost + comp.comp, game.money), money(cost))}</span></div>
         {comp.n > 0 && <div className="flex justify-between"><span className="text-slate-400">Compensation</span><span className="text-red-300">{money(comp.comp)} <span className="text-slate-500">({comp.n} building{comp.n === 1 ? '' : 's'})</span></span></div>}
         {block && <div className="mt-1 text-xs text-red-300">{block}</div>}
       </div>
@@ -1265,7 +1266,7 @@ function TollPanel({ game }: { game: Game }) {
       <div className="mt-2 rounded-lg bg-white/5 p-2 text-xs">
         <div className="flex justify-between"><span className="text-slate-400">Toll per car</span><span>{money(price)}</span></div>
         <div className="flex justify-between"><span className="text-slate-400">Booths per new gate</span><span>{game.tollBooths}</span></div>
-        <div className="flex justify-between"><span className="text-slate-400">Cost of a new gate</span><span className={cost > game.money ? 'text-red-300' : 'text-emerald-300'}>{money(cost)}</span></div>
+        <div className="flex justify-between"><span className="text-slate-400">Cost of a new gate</span><span className={cost > game.money ? 'text-red-300' : 'text-emerald-300'}>{withIcon(affordKind(cost, game.money), money(cost))}</span></div>
       </div>
       <div className="mt-2 max-h-64 overflow-y-auto">
         {game.tollDefs.length === 0 && <p className="text-xs text-slate-400">No toll gates yet.</p>}
@@ -1292,7 +1293,7 @@ function BusPanel({ game }: { game: Game }) {
       <div className="mt-2 rounded-lg bg-white/5 p-2 text-xs">
         <div className="flex justify-between"><span className="text-slate-400">Buses per new route</span><span>{game.busFleet}</span></div>
         <div className="flex justify-between"><span className="text-slate-400">Seats per bus</span><span>{game.busSeats}</span></div>
-        <div className="flex justify-between"><span className="text-slate-400">Cost of a new route</span><span className={cost > game.money ? 'text-red-300' : 'text-emerald-300'}>{cost ? money(cost) : 'free (the starting kit)'}</span></div>
+        <div className="flex justify-between"><span className="text-slate-400">Cost of a new route</span><span className={cost > game.money ? 'text-red-300' : 'text-emerald-300'}>{cost ? withIcon(affordKind(cost, game.money), money(cost)) : 'free (the starting kit)'}</span></div>
       </div>
       <div className="mt-2 max-h-64 overflow-y-auto">
         {game.busDefs.length === 0 && <p className="text-xs text-slate-400">No bus routes yet.</p>}
@@ -1506,7 +1507,7 @@ function CarPanel({ game }: { game: Game }) {
         <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
           <span className="text-slate-400">Speed</span><span className="tabular-nums">{Math.round(c.v * 3.6)} km/h (limit {Math.round(c.vmax * 3.6)})</span>
           <span className="text-slate-400">Going to</span><span>{GOING[c.tag] ?? 'driving around'}</span>
-          <span className="text-slate-400">Trip so far</span><span className={`tabular-nums ${tone}`}>{mmss(c.tripS)} (ideal {mmss(c.idealS)}, {ratio.toFixed(1)}×)</span>
+          <span className="text-slate-400">Trip so far</span><span className={`tabular-nums ${tone}`}>{ratio > 1.3 ? `${statusIcon('warn')} ` : ''}{mmss(c.tripS)} (ideal {mmss(c.idealS)}, {ratio.toFixed(1)}×)</span>
           <span className="text-slate-400">Distance left</span><span className="tabular-nums">{Math.round(Math.hypot(c.dx - c.x, c.dy - c.y) * 2)} m</span>
         </div>
         <div className="mt-2 flex gap-1">

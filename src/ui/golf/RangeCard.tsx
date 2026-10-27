@@ -5,6 +5,7 @@ import type { RangeCardView } from '../../game/golf/rangehost';
 import { PRICE_MAX, PRICE_MIN, PROPS_APPEAL_CAP, dayDemand, priceFactor, rangeScale } from '../../game/golf/rangesave';
 import { appealText } from '../../game/golf/decor';
 import { Icon } from '../Icon';
+import { statusIcon } from '../status-icon';
 
 const money = (n: number) => '$' + Math.round(n).toLocaleString();
 
@@ -24,7 +25,7 @@ export function RangeCard({ view, onClose, onPrice, onBuy, onShowPractice, right
       <div className="grid grid-cols-3 gap-1.5 text-center">
         <Tile label="Today" value={`${Math.round(today.golfers)}`} sub="golfers" />
         <Tile label="Hitting" value={`${today.playing}/${st.bays}`} sub={st.tier2 ? `${view.upstairs} upstairs · ${today.queue} queued` : `${today.queue} queued`} />
-        <Tile label="Lost" value={`${Math.round(today.lost)}`} sub="drove on" tone={today.lost > 0 ? 'text-rose-300' : 'text-white'} />
+        <Tile label="Lost" value={`${today.lost > 0 ? `${statusIcon('warn')} ` : ''}${Math.round(today.lost)}`} sub="drove on" tone={today.lost > 0 ? 'text-rose-300' : 'text-white'} />
       </div>
       <div className="flex items-center justify-between gap-2 rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-xs" data-testid="range-parking" title="The range's car park: its golfers' cars parked now of its bays (the lot's and the car park building's), and the cars that drove on today because it was full">
         <span className="text-slate-300">Parking: <span className="font-semibold text-white">{view.parking.parked}/{view.parking.bays}</span> cars{view.parking.garage ? <span className="text-slate-500"> · building {view.parking.garage.parked}/{view.parking.garage.cars}</span> : null}</span>
