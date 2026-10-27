@@ -1558,7 +1558,7 @@ export class Game {
     if (fixName) this.saveBlocked = true;
     // the bench's game scenes (T098, bench.ts benchGame): ?bench&start=range tours a new range start, ?bench&fixture=range20 the grown town;
     // a plain ?bench builds the synthetic city. Neither scene ever saves
-    const benchScene = !opts.bench ? null : fixture ? 'fixture' as const : new URLSearchParams(location.search).get('start') === 'range' ? 'range' as const : null;
+    const benchScene = !opts.bench ? null : fixture ? 'fixture' as const : new URLSearchParams(location.search).get('start') === 'range' ? 'range' as const : new URLSearchParams(location.search).get('start') === 'town' ? 'golf' as const : null;
     if (benchScene) { this.benchMode = true; this.saveBlocked = true; }
     const read = opts.bench || fixName || !this.boot.save ? null : await readSave(); if (this.dead) return;
     const save = fixture ?? read?.save ?? null;

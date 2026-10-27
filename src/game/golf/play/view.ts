@@ -4,7 +4,7 @@
 import { clipFrame, golferRow, rowToward } from '../../crowdview';
 import { GOLFER_CLIPS } from '../../library';
 import { TILE_M } from '../types';
-import { FLIGHT_TIME, PICK_UP, PUTT_FLIGHT, offOf, stateAt, walkMin } from './round';
+import { FLIGHT_TIME, PICK_UP, PUTT_FLIGHT, offOf, stateAt, stateOne, walkMin } from './round';
 import { OWNER_ADDRESS } from './owner';
 import type { OwnerTurn } from './live';
 import type { CourseView, GolferState, Pt, RoundPlan, Shot } from './types';
@@ -50,6 +50,8 @@ export class PlayView {
   private k: Int32Array; private swingAt: Float64Array; private tee: Float64Array; private lx: Float64Array; private ly: Float64Array; private rows: Uint8Array;
   /** whether an update has run: the first one swings nothing (the shots struck before it, a page load mid-round, are shown at rest) */
   private started = false;
+  /** T208: per golfer id, whether the last update played him back (an update given `only` skips the others: they swing nothing when they come back) */
+  private seen: Uint8Array;
   /** the shots per golfer as indexed, and how many the plan had then (a live group appends shots: the index follows) */
   private count = -1;
 
@@ -57,7 +59,7 @@ export class PlayView {
     this.plan = plan; this.view = view;
     const size = Math.max(0, ...plan.golfers.map(g => g.id)) + 1;
     this.k = new Int32Array(size); this.swingAt = new Float64Array(size).fill(-Infinity); this.tee = new Float64Array(size);
-    this.lx = new Float64Array(size); this.ly = new Float64Array(size); this.rows = new Uint8Array(size);
+    this.lx = new Float64Array(size); this.ly = new Float64Array(size); this.rows = new Uint8Array(size); this.seen = new Uint8Array(size);
     this.shots = Array.from({ length: size }, () => [] as Shot[]);
     this.index();
     for (const gr of plan.groups) for (const id of gr.players) this.tee[id] = gr.tee;
@@ -66,14 +68,18 @@ export class PlayView {
   /** the playback at a game minute of the day and real seconds (now). A golfer's newest shot that the minute has passed since the last update starts
    *  its swing and its flight at now; a shot the minute has gone back before is forgotten without a swing. Then the people (not the done, nor the
    *  waiting more than LEAD_MIN before their tee) and the balls (in the air, or at rest unless holed). `pending` is the owner's turn while his stroke
-   *  is not played yet (P4b; see pendingAt): his walk to the ball and his address there, facing `aim` (his open shot's aim; else the suggested aim) */
-  update(minute: number, now: number, pending: OwnerTurn | null = null, aim: Pt | null = null): void {
+   *  is not played yet (P4b; see pendingAt): his walk to the ball and his address there, facing `aim` (his open shot's aim; else the suggested aim).
+   *  T208: with `only` (per golfer id, 1: play him back), the others are skipped, their states not even worked out (everyday golf's groups off the
+   *  screen); one coming back swings nothing for the shots he struck meanwhile */
+  update(minute: number, now: number, pending: OwnerTurn | null = null, aim: Pt | null = null, only: Uint8Array | null = null): void {
     if (this.count !== this.plan.shots.length) this.index();
-    const states = stateAt(this.plan, this.view, minute, this.states), fresh = this.started, drive = GOLFER_CLIPS.golf_drive;
+    const G = this.plan.golfers, states = only ? this.states : stateAt(this.plan, this.view, minute, this.states), drive = GOLFER_CLIPS.golf_drive;
     const pa = pending ? (aim ?? pending.suggested.aim) : null;
     let np = 0, nb = 0;
-    for (let i = 0; i < states.length; i++) {
-      const s = states[i]!, id = s.golfer, list = this.shots[id]!, mine = pending !== null && pa !== null && id === pending.golfer;
+    for (let i = 0; i < G.length; i++) {
+      if (only) { const gid = G[i]!.id; if (!only[gid]) { this.seen[gid] = 0; continue; } states[i] = stateOne(this.plan, this.view, gid, minute, states[i] ?? { golfer: gid, hole: 0, x: 0, y: 0, action: 'waiting', ball: null, flight: null, strokes: 0, toPar: 0, thru: 0 }); }
+      const s = states[i]!, id = s.golfer, list = this.shots[id]!, mine = pending !== null && pa !== null && id === pending.golfer, fresh = this.started && (!only || this.seen[id] === 1);
+      this.seen[id] = 1;
       if (mine) this.pendingAt(s, minute, pending);
       // the shots struck by the minute: the newest of them is the one in play
       const old = this.k[id]!;

@@ -93,12 +93,16 @@ const stage = (name: string) => STAGES.find(st => st.name === name)!;
 export const SCENE_STAGES: Record<BenchScene, Stage[]> = {
   range: [stage('street 17% pan'), stage('district 4.5% pan')],
   fixture: [stage('street 30% pan'), stage('district 8% pan')],
+  // T208: the old start's course on an ordinary day (?bench&start=town, &golfers=N for a busy day): 30% and 15% over the course, slow pans
+  golf: [{ name: 'course 30% pan', z: 0.3, vx: 500, vy: 200, secs: 6 }, { name: 'course 15% pan', z: 0.15, vx: 900, vy: 350, secs: 6 }],
 };
-export type BenchScene = 'range' | 'fixture';
+export type BenchScene = 'range' | 'fixture' | 'golf';
 
 /** the grown-town scene's town time: 08:00, the morning peak (the fixture is saved at 06:30, the range's morning), and the time the tour
  *  waits after the clock moves, for the commute to fill the roads (15 s: 36 town minutes on the 10-minute town day) */
 const SCENE_MINUTE = 8 * 60, WARM_MS = 15000;
+/** T208: the course scene's town time, 11:00: the morning's groups are all out and the afternoon's are teeing off */
+const GOLF_MINUTE = 11 * 60;
 
 /** The bench's game scenes (T098, issue #168), toured on the game the engine made in place of the synthetic city: `range` (?bench&start=range)
  *  the new range start; `fixture` (?bench&fixture=range20, dev/fixtures.ts) the range start's grown town at year 20, its town clock moved on
@@ -111,6 +115,11 @@ export function benchGame(g: Game, scene: BenchScene) {
   g.onFrame = () => {
     if (!g.ready || (g.lotsPending > 0 && performance.now() - t0 < 30000)) return;
     if (scene === 'fixture' && !warm) { const T = g.traffic; T.setTownClock(jumpTo(T.town, T.simTime(performance.now()), SCENE_MINUTE, T.town.rate)); warm = performance.now(); }
+    // T208: the course scene at GOLF_MINUTE (the most golfers out on an ordinary day), the camera over the course's middle
+    if (scene === 'golf' && !warm) {
+      const T = g.traffic; T.setTownClock(jumpTo(T.town, T.simTime(performance.now()), GOLF_MINUTE, T.town.rate)); warm = performance.now();
+      const c = g.golf?.course; if (c) g.lookAt(c[0] + c[2] / 2, c[1] + c[3] / 2, 0.3);
+    }
     if (warm && performance.now() - warm < WARM_MS) return;
     g.onFrame = null;
     const at = townTimeOf(g.traffic.town, g.traffic.simTime(performance.now())), clock = `${String(at.hour).padStart(2, '0')}:${String(at.minute).padStart(2, '0')}`;
