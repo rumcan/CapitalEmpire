@@ -84,10 +84,11 @@ import { townTreeCell } from './towntrees';
 import type { BendMode, LibItem, LineStyle, Prop, Tool } from './types';
 import { LK, LaneGraph, laneAt, laneOff } from './sim/lanes';
 import { LU, LV, type LotTuple } from './lots/town';
-import { acrossLines, compose, farmPreset, fenceOnly, isCarPark, lotModelVersion, lotPresets, pickedPreset, setLotModel, type ComposeState, type FenceLines, type LotGeom, type Placed } from './lots/compose';
+import { acrossLines, compose, composeWhole, farmPreset, fenceOnly, isCarPark, lotModelVersion, lotPresets, pickedPreset, setLotModel, type ComposeState, type FenceLines, type LotGeom, type Placed } from './lots/compose';
 import { LATEST as LATEST_LOT_MODEL } from './lots/lot-models';
 import { stateOf } from './lots/presets';
 import { LotMap } from './lots/lots';
+import { PLACE_DEFS, duePlaces, findSite, placeBox, placeDef, placeGeom, placeName, placeTuples, placesFromTuples, type PlacedPlace, type SiteSeg } from './lots/iconic';
 import { TOWN_BLOCKS, TOWN_POP, townCentres, townGrid } from './lots/seedtowns';
 import { Names, RoadNames } from './ext/names';
 import { FarmMap, claimedLots, composeFarm } from './ext/farms';
@@ -330,6 +331,8 @@ const LIB_INDEX = new Map(LIBRARY.map((it, i) => [it.id, i] as const));
 const isLotProp = (p: Prop) => !!p.auto && (p.auto.startsWith('lot:') || p.auto.startsWith('farm:'));
 /** the farms composed per frame at most (the rest wait in the queue), so a big network does not stall a frame */
 const FARMS_PER_FRAME = 4;
+/** T219: how long a place with no free site waits before the next search (ms) */
+const PLACE_RETRY_MS = 30000;
 /** the lot fills by use * 4 + decline (EMPTY, RES green, COM blue, IND orange, TOUR magenta, GOV white), darker with each decline step */
 /** a business's rect fill by family (alpha 0.5): sports amber, leisure violet, tourism teal, transport sky blue, property lime */
 const FAMILY_FILL: Record<BusinessType['family'], string> = { sports: 'rgba(245,158,11,0.5)', leisure: 'rgba(139,92,246,0.5)', tourism: 'rgba(20,184,166,0.5)', transport: 'rgba(14,165,233,0.5)', property: 'rgba(132,204,22,0.5)' };
@@ -1250,6 +1253,9 @@ export class Game {
   private parkDrag: null | { x0: number; y0: number; x1: number; y1: number; def: CarParkDef; park: CarPark | null; why: string; cost: number; mx: number; my: number } = null;
   /** the car parks as the player placed them (saved; ids 1..n), and their builds on the network by index (null: no frontage now, drawn red) */
   parkDefs: CarParkDef[] = []; private parkBuilt: (CarPark | null)[] = [];
+  /** T219 (P27): the iconic places on the map (saved; lots/iconic.ts), their props by id, when the next site search may run (ms: none free
+   *  waits PLACE_RETRY_MS), and the place whose card is open */
+  places: PlacedPlace[] = []; private placeProps = new Map<string, Prop[]>(); private placeTryAt = 0; selectedPlace: string | null = null;
   /** the parked car props by key park:{id}:{i}, and the time of the last sync of them (ms) */
   private parkCars = new Map<string, Prop>(); private parkSyncAt = -Infinity;
   /** the toll gates as the player placed them (saved; ids 1..n), their plaza segs by id (only while the gate stands), their ground keys, the booths a new gate gets,
@@ -1430,7 +1436,7 @@ export class Game {
     // every road class, junction (the roundabout without its card), tunnel and signal tier open from the start (?unlock=0 plays the unlocks)
     this.sandboxUnlock = q.has('unlock') ? q.get('unlock') === '1' : dev;
     this.traffic.onGrow = (legs) => this.townGrow(legs);
-    this.traffic.onTown = (events) => { for (const e of events) this.lotQueue.add(e.key); this.townFirsts(events); };
+    this.traffic.onTown = (events) => { for (const e of events) this.lotQueue.add(e.key); this.townFirsts(events); this.placesCheck(); };
     // a lot whose road was widened (or narrowed) keeps its house but moves back to the new verge: composed again there, not left over the road
     this.traffic.onLotsMoved = (keys) => { for (const k of keys) this.lotQueue.add(k); };
     this.traffic.onLedger = (l) => {
@@ -1817,7 +1823,9 @@ export class Game {
     const cg = this.courseGrid, grid = !!cg && boxNear([cg.x0, cg.y0, cg.x0 + cg.w * CELL_T, cg.y0 + cg.h * CELL_T], x0, y0, x1, y1, g);
     const rb = this.range.scene?.box, pb = this.range.scene?.practice.box; // the driving range's plot and its practice area keep clear of trees (P24, T129, T130)
     const lab = this.labClear; // the lot lab's lot and street keep clear of trees (stageLab): only the lot's own art shows round its props
+    const places = this.placeBoxes().filter(b => boxNear(b, x0, y0, x1, y1, g)); // T219: the iconic places keep clear of trees
     const free = (x: number, y: number, r: number) => {
+      for (const b of places) if (x > b[0]! - r && x < b[2]! + r && y > b[1]! - r && y < b[3]! + r) return false;
       if (lab && x > lab[0] - r && x < lab[2] + r && y > lab[1] - r && y < lab[3] + r) return false;
       if (rb && x > rb[0] - r && x < rb[2] + r && y > rb[1] - r && y < rb[3] + r) return false;
       if (pb && x > pb[0] - r && x < pb[2] + r && y > pb[1] - r && y < pb[3] + r) return false;
@@ -2066,7 +2074,7 @@ export class Game {
     const starter = v.level !== LV.EMPTY && this.starterIn(v);
     this.houseChanged(key, v, v.level >= LV.BUILT || starter);
     if (v.level === LV.EMPTY || starter) {
-      if (this.onGolfLand(lotBoxOf(v.o, v.u, v.n, v.w, v.d))) { this.dropLot(key); return; }
+      if (this.onGolfLand(lotBoxOf(v.o, v.u, v.n, v.w, v.d)) || this.onPlace(lotBoxOf(v.o, v.u, v.n, v.w, v.d))) { this.dropLot(key); return; }
       const across = acrossLines(g), lines: FenceLines = starter ? { side: true, back: true } : { side: this.houseAt(across.side, key), back: !!across.back && this.houseAt(across.back, key) };
       if (lines.side || lines.back) this.placeFence(key, g, v.seed, lines); else this.dropLot(key);
       return;
@@ -2185,6 +2193,104 @@ export class Game {
     // the lawn wears its look state's (T155: built the fairway, upgraded the putting green, declined the rough)
     const lawn = built ? lotLawn(key, g, undefined, stateOf(st.level, st.decline)) : null; this.setLotGround(key, lawn ? [lawn, ...c.ground] : c.ground);
   }
+  // ---------- T219 (P27): the iconic places (lots/iconic.ts)
+  /** the iconic places' footprints (world tiles) */
+  private placeBoxes(): [number, number, number, number][] { const out: [number, number, number, number][] = []; for (const p of this.places) { const d = placeDef(p.id); if (d) out.push(placeBox(p, d)); } return out; }
+  /** a box (tiles [x0, y0, x1, y1]) overlapping an iconic place by more than half a tile */
+  private onPlace(b: ArrayLike<number>): boolean {
+    for (const q of this.placeBoxes()) if (Math.min(b[2]!, q[2]) - Math.max(b[0]!, q[0]) > 0.5 && Math.min(b[3]!, q[3]) - Math.max(b[1]!, q[1]) > 0.5) return true;
+    return false;
+  }
+  /** a golf town that has reached a place's residents and has not got it gets it now, on the best free frontage (findSite); one place a check,
+   *  and none while no site is free (tried again PLACE_RETRY_MS later). Classic games have none */
+  private placesCheck() {
+    if (!this.golf || !this.terrain || this.benchMode || performance.now() < this.placeTryAt) return;
+    const def = duePlaces(this.traffic.pop, new Set(this.places.map(p => p.id)))[0]; if (!def) return;
+    const centre = this.townPts[0] ?? this.townCentreOfLots(); if (!centre) return;
+    const segs: SiteSeg[] = [];
+    for (const s of this.net.segs) {
+      if (s.kind !== 0 || s.cls.family === 'course' || s.cls.family === 'cart') continue;
+      segs.push({ key: `${Math.round(s.a.x * 10)},${Math.round(s.a.y * 10)}|${Math.round(s.b.x * 10)},${Math.round(s.b.y * 10)}`, ax: s.a.x, ay: s.a.y, bx: s.b.x, by: s.b.y, off: s.cls.h + s.cls.walk, order: s.cls.order });
+    }
+    const site = findSite(def, { segs, centre, seed: this.seed, free: b => this.placeFree(b) });
+    if (!site) { this.placeTryAt = performance.now() + PLACE_RETRY_MS; return; }
+    this.places.push(site); this.syncPlaces(); this.scheduleSave();
+    this.toast(`${placeName(def, this.townName(0))} has opened`);
+  }
+  /** the centre of the town's built lots (a game without a town point), or null */
+  private townCentreOfLots(): { x: number; y: number } | null {
+    let x = 0, y = 0, n = 0;
+    for (const l of this.traffic.lots.values()) if (l.level >= LV.BUILT) { x += l.o[0]; y += l.o[1]; n++; }
+    return n ? { x: x / n, y: y / n } : null;
+  }
+  /** is a place's footprint free: on the map, no road (its verge included), water, golf land, stadium site, business, car park, painted area,
+   *  other place, lot that is not EMPTY, or a prop that is neither a lot's nor an auto tree */
+  private placeFree(b: [number, number, number, number]): boolean {
+    if (b[0] < 4 || b[1] < 4 || b[2] > MAP - 4 || b[3] > MAP - 4) return false;
+    if (this.net.rectOcc(b[0] + 0.5, b[1] + 0.5, b[2] - 0.5, b[3] - 0.5) > 0) return false;
+    for (let y = Math.floor(b[1]); y < b[3]; y += 2) for (let x = Math.floor(b[0]); x < b[2]; x += 2) { const c = this.terrain.cls[y * MAP + x]; if (c === TC.WATER || c === TC.CREEK || c === TC.BANK) return false; }
+    if (this.onGolfLand(b) || this.onPlace([b[0] - 2, b[1] - 2, b[2] + 2, b[3] + 2])) return false;
+    const hit = (x: number, y: number, w: number, h: number, m: number) => x - m < b[2] && x + w + m > b[0] && y - m < b[3] && y + h + m > b[1];
+    if (this.bizDefs.some(d => hit(d.x, d.y, d.w, d.h, 2)) || this.parkDefs.some(d => hit(d.x, d.y, d.w, d.h, 2))) return false;
+    if (this.paint.areas.some(a => { const q = ptsBox(a.pts); return hit(q[0]!, q[1]!, q[2]! - q[0]!, q[3]! - q[1]!, 1); })) return false;
+    if (this.lotsUnder({ x: b[0] + 0.6, y: b[1] + 0.6, w: b[2] - b[0] - 1.2, h: b[3] - b[1] - 1.2 })) return false;
+    const hits = new Set<Prop>(); this.propGrid.query(b, hits);
+    for (const p of hits) { if (p.auto?.startsWith('lot:')) continue; if (!p.auto || LIBRARY[p.item]!.kind !== 'tree') return false; }
+    return true;
+  }
+  /** the places' land to the city worker (the town never builds there), and each place's props and ground composed again */
+  private syncPlaces() {
+    this.traffic.setPlaces(this.placeBoxes().map(b => [b[0], b[1], b[2] - b[0], b[3] - b[1]]));
+    for (const id of [...this.placeProps.keys()]) if (!this.places.some(p => p.id === id)) this.dropPlace(id);
+    for (const p of this.places) this.placePlace(p);
+  }
+  /** the stand-in labels of the places' props (the first prop of each stand-in id of a place: "Stand In for <its art>") */
+  private placeStandIns: { p: Prop; text: string }[] = [];
+  /** a place's props, labels and ground go */
+  private dropPlace(id: string) {
+    const ps = this.placeProps.get(id), key = 'place:' + id;
+    if (ps) { for (const p of ps) if (this.props.has(p)) this.removeProp(p); this.placeProps.delete(id); }
+    this.setLotGround(key, null);
+    this.placeStandIns = this.placeStandIns.filter(l => l.p.auto !== key);
+  }
+  /** a place composes (compose.ts composeWhole) as auto props ('place:' + id, never saved) and its ground; the auto trees in its footprint go,
+   *  the town trees round it are planted again, the empty lots under it are drawn again (they draw nothing now) */
+  private placePlace(pl: PlacedPlace) {
+    const def = placeDef(pl.id); if (!def) return;
+    this.dropPlace(pl.id);
+    const g = placeGeom(pl, def), box = placeBox(pl, def), key = 'place:' + pl.id, c = composeWhole(g, def.preset, this.seed ^ 0x219), ps: Prop[] = [], seen = new Set<string>();
+    const hits = new Set<Prop>(); this.propGrid.query(box, hits);
+    for (const p of hits) if (p.auto && !p.auto.startsWith('place:') && !p.auto.startsWith('lot:') && LIBRARY[p.item]?.kind === 'tree') { this.removeProp(p); if (this.autoByKey.get(p.auto) === p) this.autoByKey.delete(p.auto); }
+    for (const q of c.props) {
+      const i = LIB_INDEX.get(q.id); if (i === undefined) continue;
+      const p = this.addProp(i, q.x, q.y, q.flip, q.scale, key); ps.push(p);
+      const src = q.from ? def.preset.props[q.from.prop]?.id : undefined, si = src ? def.standIns[src] : undefined;
+      if (src && si && !seen.has(src)) { seen.add(src); this.placeStandIns.push({ p, text: `Stand In for ${si}` }); }
+    }
+    this.placeProps.set(pl.id, ps); this.setLotGround(key, c.ground);
+    this.dropTownTrees(box[0], box[1], box[2], box[3]);
+    for (const l of this.traffic.lots.values()) { const b = lotBoxOf(l.o, l.u, l.n, l.w, l.d); if (b[0]! < box[2] && b[2]! > box[0] && b[1]! < box[3] && b[3]! > box[1]) this.lotQueue.add(l.key); }
+  }
+  /** the iconic places' names over their centres (world labels of the first rank, as the businesses', on a dark plate), from the district zoom in */
+  private drawPlaceNames() {
+    if (this.cam.z < DISTRICT_Z || !this.places.length) return;
+    const dpr = this.dpr, font = `bold ${12 * dpr}px ui-sans-serif, system-ui, sans-serif`, town = this.townName(0);
+    for (const p of this.places) {
+      const def = placeDef(p.id); if (!def) continue;
+      const b = placeBox(p, def), c = this.screen((b[0] + b[2]) / 2, (b[1] + b[3]) / 2);
+      const l = this.labels.text('place:' + p.id, PRI.name, placeName(def, town), c.x, c.y, font, 12 * dpr, '#fde68a', LABEL_OUTLINE, 3 * dpr);
+      l.bg = 'rgba(2,6,23,0.72)'; l.radius = 5 * dpr; l.w = l.w1 + 12 * dpr; l.h = 19 * dpr;
+    }
+  }
+  /** the open place card (T219): the place's name, what it is, the residents it opened at, its size (m) and its stand-ins; null when none is open */
+  placeCard(): { id: string; name: string; kind: string; pop: number; w: number; d: number; standIns: string[]; town: number } | null {
+    const id = this.selectedPlace; if (!id) return null;
+    const p = this.places.find(q => q.id === id), def = placeDef(id); if (!p || !def) return null;
+    return { id, name: placeName(def, this.townName(0)), kind: def.kind, pop: def.pop, w: def.preset.w * 2, d: def.preset.d * 2, standIns: [...new Set(Object.values(def.standIns))], town: this.traffic.pop };
+  }
+  closePlaceCard() { this.selectedPlace = null; this.emit(); }
+  /** the places every map gets (dev: window.__game.placeDefs) */
+  readonly placeDefs = PLACE_DEFS;
   /** the farms follow the network (ext/farms): the parcels of the changed country roads are derived again (all after a load or a
    *  new valley); the parcels that went lose their props and ground, the new ones queue to compose */
   private farmsUpdate(full = false) {
@@ -2295,6 +2401,7 @@ export class Game {
     this.syncLamps(); this.sendBlocks(false); this.syncBlockLawns();
     this.ground.invalidateAll(); this.ground.courseHeight(this.courseHeight.data, [0, 0, MAP, MAP]); this.syncParks(); this.parking.sync(); this.traffic.setBusinesses(this.bizDefs); this.syncTolls(true); this.traffic.setBusRoutes(this.busDefs);
     this.farmsUpdate(true);
+    this.syncPlaces();
     // the worker's golf state (a new game or a load of one; a classic game turns it off)
     this.sendGolf();
     this.syncGolfProps();
@@ -2467,7 +2574,7 @@ export class Game {
     }
 
   // ---------- road routing ----------
-  setTool(t: Tool) { const wasGk = this.tool === 'greenkeeping'; if (t === 'business' && this.golfMode) return; /* golf mode: the game places the clubhouse, so no Business tool */ if (this.refuseLocked(t)) return; /* P23 4.10: a locked tool says what unlocks it */ const scope = t === 'path' ? 'course' : t === 'road' ? 'town' : this.roadScope; if (t === 'path') t = 'road'; /* T084: Paths & drives is the road tool on the course */ const cScope = t === 'buildings' ? 'buildings' : t === 'course' ? 'holes' : this.courseScope; if (t === 'buildings') t = 'course'; /* P23 P1-E: Buildings is the course tool's clubhouse scope */ if (this.tool !== t || scope !== this.roadScope || cScope !== this.courseScope) { this.paint.cancel(); this.cancelRoute(); this.selected = null; this.selectedJunction = null; this.parkDrag = null; this.parking.drag = null; this.tollHover = null; this.bizHover = null; this.busPick = null; this.busHover = null; this.laneHover = null; this.decor.cancel(); this.practice.cancel(); } this.tool = t; if (pickTool(this, t)) this.tidySideModes(); /* P23 P1-A: a build tool closes the Grass panel, Land, Holes and Event */ if (t === 'road') this.setRoadScope(scope); if (t === 'course') this.courseScope = cScope; if (t !== 'course' || cScope === 'holes') { this.clubPlacing = false; this.halfwayPlacing = false; } else if (this.golf && !this.bizDefs.some(d => d.type === 'clubhouse')) this.clubPlacing = true; /* Buildings arms the clubhouse until it stands */ if (t === 'course') { this.paint.enterCourse(); this.ground.prewarm(brushTextures()); /* T168: what its brushes lay, made ahead */ } else if (t === 'paint') this.paint.enterPaint(); /* T175: Greenkeeping's panel is the Grass panel; leaving it puts its care down */ if (t === 'greenkeeping') this.grassPanel = true; else if (wasGk) { this.grassPanel = false; this.grassAction = null; } this.emit(); }
+  setTool(t: Tool) { const wasGk = this.tool === 'greenkeeping'; if (t === 'business' && this.golfMode) return; /* golf mode: the game places the clubhouse, so no Business tool */ if (this.refuseLocked(t)) return; /* P23 4.10: a locked tool says what unlocks it */ const scope = t === 'path' ? 'course' : t === 'road' ? 'town' : this.roadScope; if (t === 'path') t = 'road'; /* T084: Paths & drives is the road tool on the course */ const cScope = t === 'buildings' ? 'buildings' : t === 'course' ? 'holes' : this.courseScope; if (t === 'buildings') t = 'course'; /* P23 P1-E: Buildings is the course tool's clubhouse scope */ if (this.tool !== t || scope !== this.roadScope || cScope !== this.courseScope) { this.paint.cancel(); this.cancelRoute(); this.selected = null; this.selectedPlace = null; this.selectedJunction = null; this.parkDrag = null; this.parking.drag = null; this.tollHover = null; this.bizHover = null; this.busPick = null; this.busHover = null; this.laneHover = null; this.decor.cancel(); this.practice.cancel(); } this.tool = t; if (pickTool(this, t)) this.tidySideModes(); /* P23 P1-A: a build tool closes the Grass panel, Land, Holes and Event */ if (t === 'road') this.setRoadScope(scope); if (t === 'course') this.courseScope = cScope; if (t !== 'course' || cScope === 'holes') { this.clubPlacing = false; this.halfwayPlacing = false; } else if (this.golf && !this.bizDefs.some(d => d.type === 'clubhouse')) this.clubPlacing = true; /* Buildings arms the clubhouse until it stands */ if (t === 'course') { this.paint.enterCourse(); this.ground.prewarm(brushTextures()); /* T168: what its brushes lay, made ahead */ } else if (t === 'paint') this.paint.enterPaint(); /* T175: Greenkeeping's panel is the Grass panel; leaving it puts its care down */ if (t === 'greenkeeping') this.grassPanel = true; else if (wasGk) { this.grassPanel = false; this.grassAction = null; } this.emit(); }
   /** the snap radius in tiles: about 14 screen px (at least 2 tiles) */
   private snapRadius() { return Math.max(2, 14 / (HW * this.cam.z)); }
   /** the road tool's snap under the cursor, or null with no cursor */
@@ -3340,6 +3447,9 @@ export class Game {
         const p = this.propAt(mx, my), tl = this.tileAt(mx, my);
         // the range's own props and its front open the range card (P24, T129)
         if (p?.auto?.startsWith('range:') || (!p && this.range.hit(tl.x, tl.y))) { this.openRangeCard(true); return; }
+        // T219: an iconic place's props open its card
+        if (p?.auto?.startsWith('place:')) { this.selected = null; this.selectedPlace = p.auto.slice(6); this.emit(); return; }
+        this.selectedPlace = null;
         if (p) { this.selected = p; this.emit(); return; }
         this.selected = null; this.emit();
         if (this.showFlow) { const t = this.tileAt(mx, my); this.traffic.watchAt(t.x, t.y); this.emit(); }
@@ -3592,6 +3702,7 @@ export class Game {
     if (this.busPick) { this.busPick = null; this.busHover = null; this.emit(); return true; }
     if (this.route.length) { this.cancelRoute(); return true; }
     if (this.selected) { this.selected = null; this.emit(); return true; }
+    if (this.selectedPlace) { this.closePlaceCard(); return true; }
     if (this.selectedGolfMarker) { this.selectedGolfMarker = null; this.emit(); return true; }
     if (this.landMode && this.land.card) { this.land.cancel(); this.emit(); return true; }
     if (this.landMode || this.holesTool) { this.toggleSideMode(this.landMode ? 'landMode' : 'holesTool'); return true; }
@@ -4783,6 +4894,7 @@ export class Game {
       lots: [...this.traffic.lots.values()].filter(l => l.level !== LV.EMPTY).map((l): LotTuple => [l.key, l.use, l.level, l.decline, l.seed, l.since]),
       simT: this.traffic.simTime(performance.now()), shift: this.traffic.stats.clock - this.traffic.stats.simT, townClock: this.traffic.town, budget: this.traffic.budget, career: this.traffic.career, round: this.traffic.round,
       parks: this.parkDefs.map((d): [number, number, number, number] => [d.x, d.y, d.w, d.h]),
+      places: placeTuples(this.places),
       tolls: this.tollDefs.map((d): [number, number, number, number, number] => [d.ax, d.ay, d.bx, d.by, d.booths]),
       buses: this.busDefs.map((d): [number, number, number, number, number, number, number, number] => [d.park, +d.sx.toFixed(3), +d.sy.toFixed(3), +d.dx.toFixed(3), +d.dy.toFixed(3), d.buses, d.seats, d.town ?? -1]),
       cardsApplied: this.cardsApplied,
@@ -4829,6 +4941,7 @@ export class Game {
       const index = new Map(LIBRARY.map((it, i) => [it.id, i]));
       for (const t of d.props) { const [id, x, y, flip, scale] = t, i = index.get(id); if (i !== undefined) Object.assign(this.addProp(i, x, y, !!flip, scale), tupleMarks(t)); }
       if (d.parks) this.parkDefs = d.parks.map(([x, y, w, h], k) => ({ id: k + 1, x, y, w, h }));
+      this.places = placesFromTuples(d.places);
       if (d.tolls) this.tollDefs = d.tolls.map(([ax, ay, bx, by, booths], k) => ({ id: k + 1, ax, ay, bx, by, booths }));
       if (d.buses) this.busDefs = d.buses.map(([park, sx, sy, dx, dy, buses, seats, town], k) => ({ id: k + 1, park, sx, sy, dx, dy, buses, seats, ...(town !== undefined && town >= 0 ? { town } : {}) }));
       this.paint.load(d.paints as PaintTuple[] | undefined);
@@ -4869,6 +4982,8 @@ export class Game {
     for (const k of this.blockLawns) this.setLotGround(k, null); this.blockLawns.clear();
     this.lotProps.clear(); this.lotQueue.clear(); this.staged.clear(); this.labLot = null; this.labClear = null; this.perf.lotProps = 0;
     this.dropAllFarms();
+    for (const id of [...this.placeProps.keys()]) this.dropPlace(id);
+    this.places = []; this.placeTryAt = 0; this.selectedPlace = null;
     this.traffic.setGolf(false, 1, 0);
     this.traffic.setBudget(null, null); this.showWin = false; this.route = []; this.selected = null; this.builds = [];
   }
@@ -6011,6 +6126,7 @@ export class Game {
     this.drawGroundOverlays(ctx);
     this.drawStadium(ctx);
     this.drawBusinesses(ctx);
+    this.drawPlaceNames();
     if (this.showStandIns) this.drawStandIns();
     this.drawParks(ctx);
     this.drawParkPreview(ctx);
@@ -6174,6 +6290,7 @@ export class Game {
     for (const p of this.businessProps) this.standInPill(p, p, ze);
     for (const l of this.range.labels) this.standInPill(l, l.p, ze, l.text);
     for (const l of this.decor.labels) this.standInPill(l, l.p, ze, l.text);
+    for (const l of this.placeStandIns) this.standInPill(l, l.p, ze, l.text);
   }
   /** one stand-in's label pill (drawStandIns), if p is drawn as a stand-in and its label is on screen: a world label (key: the prop, or the
    *  scene's label) */

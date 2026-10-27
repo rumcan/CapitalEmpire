@@ -168,6 +168,8 @@ export class SimClient {
   startRound() { this.post({ t: 'round', op: 'start' }); }
   /** the car parks (the full list, each time): the worker builds their bays and entrances on the network it has */
   setParks(defs: CarParkDef[]) { this.post({ t: 'parks', defs }); }
+  /** T219: the iconic places' land (tiles, [x, y, w, h], the full list each time): the town never builds there (City.setPlaces) */
+  setPlaces(rects: [number, number, number, number][]) { this.post({ t: 'places', rects }); }
   /** the player's businesses (the full list, each time): the worker's stadium site follows (see City.setBusinesses) */
   setBusinesses(defs: BizDef[]) { this.post({ t: 'businesses', defs }); }
   /** golf mode on (with the tournament's tier and its reputation: the season ends with it) or off (see City.setGolf) */

@@ -325,6 +325,7 @@ export class City {
     const s = this.site;
     if (s && x > s.x - 6 && x < s.x + s.w + 6 && y > s.y - 6 && y < s.y + s.h + 6) return true;
     if (this.golf) for (const [gx, gy, gw, gh] of this.golfLand) if (x > gx - 6 && x < gx + gw + 6 && y > gy - 6 && y < gy + gh + 6) return true;
+    for (const [px, py, pw, ph] of this.placeLand) if (x > px - 2 && x < px + pw + 2 && y > py - 2 && y < py + ph + 2) return true;
     for (const b of this.businesses) if (b.type !== 'stadium' && x > b.x - 2 && x < b.x + b.w + 2 && y > b.y - 2 && y < b.y + b.h + 2) return true;
     for (const p of this.parkDefs) { const b = parkBox(p); if (x > b.x - 4 && x < b.x + b.w + 4 && y > b.y - 4 && y < b.y + b.h + 4) return true; }
     for (const r of this.rowDefs) { const b = rowBox(r); if (x > b.x - 2 && x < b.x + b.w + 2 && y > b.y - 2 && y < b.y + b.h + 2) return true; }
@@ -368,10 +369,21 @@ export class City {
   /** a lot on land the event uses: its box overlaps the stadium site or a car park (padded by a tile), or another business (padded by 2 tiles), or
    *  the golf land (the course and the player's parcels), so the town never builds there */
   private reserved(l: Lot): boolean {
-    if (!this.site && !this.parkDefs.length && !this.rowDefs.length && !this.businesses.length && !this.golfLand.length) return false;
+    if (!this.site && !this.parkDefs.length && !this.rowDefs.length && !this.businesses.length && !this.golfLand.length && !this.placeLand.length) return false;
     const [x0, y0, x1, y1] = lotBox(l);
     const hit = (r: { x: number; y: number; w: number; h: number }) => x1 > r.x - 1 && x0 < r.x + r.w + 1 && y1 > r.y - 1 && y0 < r.y + r.h + 1;
-    return (!!this.site && hit(this.site)) || this.parkDefs.some(p => hit(parkBox(p))) || this.rowDefs.some(r => hit(rowBox(r))) || this.businesses.some(b => b.type !== 'stadium' && hit({ x: b.x - 1, y: b.y - 1, w: b.w + 2, h: b.h + 2 })) || this.onGolfLand(l);
+    return (!!this.site && hit(this.site)) || this.parkDefs.some(p => hit(parkBox(p))) || this.rowDefs.some(r => hit(rowBox(r))) || this.businesses.some(b => b.type !== 'stadium' && hit({ x: b.x - 1, y: b.y - 1, w: b.w + 2, h: b.h + 2 })) || this.onGolfLand(l) || this.onLand(l, this.placeLand);
+  }
+  /** T219 (P27): the iconic places' land (the engine's, lots/iconic.ts: tiles, [x, y, w, h]): no lot builds there and the town's roads keep off */
+  private placeLand: [number, number, number, number][] = [];
+  /** the iconic places' land, the full list each time: a town lot on it (a building site or a house, which the engine's free check leaves out
+   *  but a lot may have started since) goes as the course's lots go; its 'clear' events are returned */
+  setPlaces(rects: [number, number, number, number][]): TownEvent[] {
+    this.placeLand = rects.map(r => [r[0], r[1], r[2], r[3]]);
+    const out: TownEvent[] = [];
+    for (const key of [...this.town.states.keys()]) { const l = this.lots.lots.get(key); if (l && this.onLand(l, this.placeLand)) { const e = this.town.clear(key); if (e) out.push(e); } }
+    if (out.length) this.syncHour = -1;
+    return out;
   }
   /** the golf land: the course first, then the parcels the player owns (tiles, [x, y, w, h]; empty in a classic game); the game hour the
    *  course was last cleared of town lots */
