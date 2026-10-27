@@ -2864,15 +2864,14 @@ export class Game {
     return course ? obs : [...structureObstacles(this.rangeStructs()), ...obs];
   }
   /** the placed (not a lot's, not a tree's) props near a ring of outer edge rb and widest walk, with what each does to it: a placed prop goes (the
-   *  big ones refuse it: bulldoze them first), a piece of the range's scene or of an iconic place refuses it, named (T224) */
+   *  big ones refuse it: bulldoze them first), a piece of the range's scene refuses it, named (the iconic places refuse by their footprint: placeStructures) (T224) */
   private ringPropList(n: Node, rb: number, walk: number, kind: string): RingProp<Prop>[] {
     const R = rb + walk, out: RingProp<Prop>[] = [];
     for (const p of this.propGrid.query([n.x - R, n.y - R, n.x + R, n.y + R])) {
       let refuse: string | null = null;
       if (p.auto) {
         if (p.auto.startsWith('range:')) refuse = ringWhy(kind, rangePieceName(p.auto));
-        else if (p.auto.startsWith('place:')) { const d = placeDef(p.auto.slice(6)); refuse = ringWhy(kind, d ? inSentence(placeName(d, this.townName(0))) : 'a place'); }
-        else continue; // the town's trees and a lot's own props follow the network and the lot
+        else continue; // an iconic place's pieces are inside its footprint, which refuses (placeStructures); the town's trees and a lot's props follow the network and the lot
       } else if (LIBRARY[p.item].big && LIBRARY[p.item].kind !== 'car') refuse = `${LIBRARY[p.item].name} is in the way — bulldoze it first`;
       out.push({ p, box: [p.x0, p.y0, p.x1, p.y1], refuse });
     }

@@ -69,20 +69,21 @@ export function lotsInRing(lots: Iterable<RingLot>, x: number, y: number, rb: nu
   return out;
 }
 
-/** judges a ring: the first obstacle its disc reaches (named), else the first prop that cannot be cleared, else the lots it takes and their price.
- *  A refusal carries no lots and no price (nothing is taken) */
+/** judges a ring: the first piece it reaches that cannot be cleared (the range's sign, a big prop: the most particular thing is named), else the first
+ *  obstacle its disc reaches (named: a business, a car park, the range's structures, an iconic place, a toll plaza), else the lots it takes and
+ *  their price and the props that go. A refusal carries no lots and no price (nothing is taken) */
 export function judgeRing<P>(r: RingInput<P>): RingVerdict<P> {
   const none: RingVerdict<P> = { why: '', outline: [], props: [], lots: [], comp: 0, lotOutlines: [] };
   if (!ringGrows(r.now, r.kind, r.rb, r.walk)) return none;
-  const disc = ringDisc(r.x, r.y, r.rb, r.walk), o = inTheWayOfDisc(disc, r.obstacles);
-  if (o) return { ...none, why: ringWhy(r.name, o.name ?? 'something'), outline: [[...o.outline]] };
-  const props: P[] = [];
+  const disc = ringDisc(r.x, r.y, r.rb, r.walk), reached: RingProp<P>[] = [];
   for (const q of r.props) {
     const dx = Math.max(q.box[0] - r.x, 0, r.x - q.box[2]), dy = Math.max(q.box[1] - r.y, 0, r.y - q.box[3]);
-    if (!(dx * dx + dy * dy < disc.r * disc.r)) continue;
-    if (q.refuse) return { ...none, why: q.refuse, outline: [boxPoly(q.box)] };
-    props.push(q.p);
+    if (dx * dx + dy * dy < disc.r * disc.r) reached.push(q);
   }
+  const stuck = reached.find(q => q.refuse);
+  if (stuck) return { ...none, why: stuck.refuse!, outline: [boxPoly(stuck.box)] };
+  const o = inTheWayOfDisc(disc, r.obstacles);
+  if (o) return { ...none, why: ringWhy(r.name, o.name ?? 'something'), outline: [[...o.outline]] };
   const lots = lotsInRing(r.lots, r.x, r.y, r.rb, r.walk, r.kind);
-  return { why: '', outline: [], props, lots, comp: lots.reduce((s, l) => s + compensation(l), 0), lotOutlines: lots.map(lotPoly) };
+  return { why: '', outline: [], props: reached.map(q => q.p), lots, comp: lots.reduce((s, l) => s + compensation(l), 0), lotOutlines: lots.map(lotPoly) };
 }
