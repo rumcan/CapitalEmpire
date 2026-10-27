@@ -221,7 +221,7 @@ describe('the guide offers New hole to a stuck player (T117)', () => {
   it('with the guide off, no hole after one season or 20 minutes brings back New hole; a hole, or neither mark, does not', () => {
     assert.equal(guideShown(g({ seasons: 1 }))?.id, GUIDE_STUCK.id);
     assert.equal(guideShown(g({ playS: STUCK_PLAY_SEC }))?.id, GUIDE_STUCK.id);
-    assert.deepEqual(GUIDE_STUCK.target, { ui: 'rail-course', map: 'newHoleSpot' });
+    assert.deepEqual(GUIDE_STUCK.target, { ui: 'new-hole', map: 'newHoleSpot' }); // T188: the New hole button's anchor (it falls back to the Course group's)
     assert.equal(guideShown(g()), null);
     assert.equal(guideShown(g({ seasons: 1, holes: 1 })), null);
     // while the guide runs, it shows its own step

@@ -34,6 +34,10 @@ import { RangeHost } from './golf/rangehost';
 import { PropsTool } from './golf/propstool';
 import { DECOR_BY_KEY, lotTouches, propTuple, sellBack, tupleMarks } from './golf/decor';
 import { HALFWAY_COST, halfwaySpotWhy, halfwayTakings } from './golf/halfway';
+import { guideTable, type GuideEvent } from './ext/progressive-ui/guide';
+import { welcomeReady } from './golf/firstview';
+/** the hints' anchors (T188: their Show me pulses the control) where the hint is no guide step */
+const HINT_ANCHOR: Readonly<Record<string, string>> = { 'hint-range-open': 'range-chip', 'hint-range-upgrade': 'range-chip', 'hint-range-props': 'rail-decor', 'hint-range-first-hole': 'new-hole' };
 import { RANGE_LABEL_Z, defaultRangeBiz, parkLabel, practiceAppeal, rangeMapLabel, rangeNewSeason, rangeScene, rangeStats, type RangeCounts, type RangeUpgradeId } from './golf/rangebiz';
 import { areaAt, brushTextures, toTuple, type PaintTuple, type PaintTex } from './paint';
 import { CELL_T, SURF, cellAt, diffBox, encodeGrid, fillPolygon, fitGrid, landGridBox, makeGrid, paintStroke, type Grid as CourseGrid, type GridDiff, type GridSave } from './ext/course-grid';
@@ -360,6 +364,8 @@ export class Game {
   /** T080 atlas streaming (streamAtlas): screen px per cell this frame, the cells marked, the near cells (rebuilt every few frames) */
   private atlasMark = new Float32Array(0); private atlasTouched: number[] = []; private atlasNear: PageWant[] = []; private atlasNearAt = -1e9;
   ready = false; loadProgress = 0;
+  /** when the game became ready (performance.now ms; T188: the welcome card's wait for the ground gives up after WELCOME_WAIT_MS) */
+  readyAt = 0;
   // tools
   tool: Tool = 'road'; roadClass: ClassId = 'street'; bendMode: BendMode = 90; lineStyle: LineStyle = 0;
   /** the road tool's scope (T084): 'course' when the Course menu's Paths & drives opened it (it lays the course's cart paths and drives), 'town'
@@ -589,7 +595,7 @@ export class Game {
     grid: () => this.courseGrid, gridChanged: (d, flush) => { this.range.practiceCells(this.courseGrid, d); this.courseGridChanged(d, flush); }, gridAreas: () => this.gridAreaList(),
     // the course keeps off the driving range's own plot (its hut, mats, car park and the field its golfers hit into), the rest of your land is
     // the course's; the brush's footprint and the wizard say which refusal it is
-    ownedAt: (x, y) => this.ownedAt(x, y) && !this.onRangePlot(x, y), landWhy: (x, y) => (this.onRangePlot(x, y) ? 'range' : this.ownedAt(x, y) ? '' : 'off'), plans: () => this.golf?.plans ?? [], setPlans: p => this.setGolfPlans(p), pinOf: n => this.golf?.pins.find(q => q.hole === n) ?? null,
+    ownedAt: (x, y) => this.ownedAt(x, y) && !this.onRangePlot(x, y), landWhy: (x, y) => (this.onRangePlot(x, y) ? 'range' : this.ownedAt(x, y) ? '' : 'off'), plans: () => this.golf?.plans ?? [], setPlans: p => this.setGolfPlans(p), holeBuilt: () => this.guideEvent('hole'), pinOf: n => this.golf?.pins.find(q => q.hole === n) ?? null,
     // New hole (P23 4.4, T119): the camera framing, the practice area (P24 D24), and what its warnings measure against
     fitView: (pts, zoomIn) => this.fitView(pts, zoomIn), practiceBox: () => (this.golf?.start === 'range' ? this.range.scene?.practice.box ?? null : null),
     // a range start's ramp (P24 Phase 4a, T132): New hole waits for the range, and the first hole is suggested as a par-3
@@ -1484,7 +1490,7 @@ export class Game {
     if (benchScene) { const { benchGame } = await import('./bench'); if (this.dead) return; benchGame(this, benchScene); }
     await new Promise<void>(res => { const wait = () => (this.ground.ready || this.dead ? res() : setTimeout(wait, 30)); wait(); });
     if (this.dead) return;
-    this.ready = true; tick(1);
+    this.ready = true; this.readyAt = performance.now(); tick(1);
     if (readNote) this.toast(readNote.text, readNote.kind);
     this.last = performance.now();
     this.raf = requestAnimationFrame(this.frame);
@@ -2995,7 +3001,34 @@ export class Game {
   }
   /** the welcome card (P22 2.8): once per new range game, while it is new (under WELCOME_PLAY_S of play when loaded), until it is closed.
    *  newHole: New hole is open (the card's button then builds the first hole; while P24's ramp holds it, the button opens the range) */
+  /** whether the first view's ground is baked (T188, P23-UX P2-3: the welcome card waits for it, never a black map behind it): set once every
+   *  chunk on screen has a picture */
+  firstViewBaked = false;
+  /** the control the guide points at (T188: a data-guide anchor; the UI pulses a ring on it) until when (performance.now ms) */
+  guideAnchor: { id: string; until: number } | null = null;
+  /** pulses the anchor id for ms (the guide's Show me, a Fix) */
+  pulseAnchor(id: string, ms = 3600) { this.guideAnchor = { id, until: performance.now() + ms }; this.emit(); }
+  /** the guide's last event (T188: a hole built, the clubhouse placed, a car park built) and when: the hint bar says it a moment */
+  guideDone: { text: string; at: number } | null = null;
+  /** an engine event moves the guide on at once (T188): the progress is counted on the next frame (not ten frames on), the hint bar says what
+   *  was done, and the next step's anchor pulses */
+  guideEvent(e: GuideEvent) {
+    if (this.golf?.start !== 'range') return;
+    this.progTick = 9; if (e === 'hole') this.playableHoles++;
+    this.guideDone = { text: e === 'hole' ? 'Hole built' : e === 'clubhouse' ? 'Clubhouse placed' : 'Car park built', at: performance.now() };
+    const h = this.guideHint(), st = h ? guideTable({ start: 'range' }).find(x => x.id === h.id) : null;
+    if (st?.target.ui) this.pulseAnchor(st.target.ui);
+    this.emit();
+  }
+  /** a founding checklist item's Fix (T188, ui/golf/season.ts FIX): its tool armed (New hole, the car park, the clubhouse) and its anchor pulsed */
+  armFix(id: 'holes' | 'carpark' | 'clubhouse') {
+    if (id === 'holes') { if (this.playableHoles < 1) this.startFirstHole(); else if (!this.refuseLocked('course')) { this.setTool('course'); this.paint.setPlan(); } }
+    else if (id === 'carpark') { if (!this.refuseLocked('park')) this.setTool('park'); }
+    else if (!this.refuseLocked('buildings')) this.placeClubhouse(true);
+    this.pulseAnchor(id === 'holes' ? 'new-hole' : id === 'carpark' ? 'tool-park' : 'clubhouse-card');
+  }
   welcomeView(): { road: string; newHole: boolean } | null {
+    if (!welcomeReady(this.firstViewBaked, performance.now() - this.readyAt)) return null; // T188: the card waits for the ground
     const g = this.golf, p = g?.progress;
     if (g !== this.welcomeFor) { this.welcomeFor = g; this.welcomeFresh = !!p && p.playS < WELCOME_PLAY_S; }
     if (g?.start !== 'range' || !p || p.ramp === undefined || !this.welcomeFresh || p.seen.includes('welcome') || this.playableHoles > 0) return null;
@@ -3789,7 +3822,7 @@ export class Game {
     this.setBizDefs([...this.bizDefs, { ...h.def, id: Math.max(0, ...this.bizDefs.map(d => d.id)) + 1 }]);
     this.traffic.setBusinesses(this.bizDefs); this.farmsUpdate();
     if (this.golf) { let best = Infinity; for (const d of h.site.doors) { const g = this.roadGapOf(d.x, d.y, 0, 0); if (g < best) { best = g; this.golf.clubhouse = { x: d.x, y: d.y }; } } }
-    this.clubPlacing = false; this.bizHover = null;
+    this.clubPlacing = false; this.bizHover = null; this.guideEvent('clubhouse');
     this.scheduleSave(); this.toast(`Clubhouse built (-$${CLUBHOUSE_RANGE_COST.toLocaleString()}): green fees start, and the tournament's crowd will head here`, 'good'); this.emit();
   }
   /** demolishes a business by id (the stadium between rounds only): half its build cost comes back, and the worker drops it */
@@ -3861,7 +3894,7 @@ export class Game {
     if (!pd.park) { this.toast('Car park: no road along its sides', 'warn'); return; }
     if (pd.cost > this.money) { this.toast(`Not enough money: a car park this size costs $${pd.cost.toLocaleString()}`, 'warn'); return; }
     const id = Math.max(0, ...this.parkDefs.map(d => d.id)) + 1, bays = pd.park.bays.length;
-    this.parkDefs.push({ ...pd.def, id }); this.bump('parks');
+    this.parkDefs.push({ ...pd.def, id }); this.bump('parks'); this.guideEvent('carpark');
     this.dropTownTrees(pd.def.x, pd.def.y, pd.def.x + pd.def.w, pd.def.y + pd.def.h);
     this.traffic.spend('construction', pd.cost);
     this.syncParks();
@@ -4414,6 +4447,9 @@ export class Game {
   }
   /** a hint's Show me (T130, T132): the camera on the spot it means and its tool in hand */
   showHint(id: string) {
+    // T188: the anchor the hint means pulses (a ring on the control), after its tool is in hand (below)
+    const st = guideTable({ start: 'range' }).find(x => x.id === id), anchor = st?.target.ui ?? HINT_ANCHOR[id];
+    if (anchor) queueMicrotask(() => this.pulseAnchor(anchor));
     const sc = this.range.scene;
     if (id === 'guide-range-hole') { this.startFirstHole(); return; } // T095: the guide's Show me
     if (id === 'guide-range-nine') { this.setTool('course'); this.paint.setPlan(); this.emit(); return; }
@@ -5428,8 +5464,9 @@ export class Game {
       }
       const mask = this.revealMask(now); if (mask) gl.setMask(mask);
       const shadeMasks: { tex: WebGLTexture; r: readonly [number, number, number, number] }[] = [];
+      let baked = true;
       for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
-        const t = this.ground.tile(kind, i, j);
+        const t = this.ground.tile(kind, i, j); if (!t.tex) baked = false;
         if (!this.ground.livingActive || this.casterReady(i * CW, j * CH, (i + 1) * CW, (j + 1) * CH)) this.ground.need(t, L, dist((i + 0.5) * CW, (j + 0.5) * CH), now, artL, ts);
         const r = [i * CW, j * CH, (i + 1) * CW, (j + 1) * CH] as const;
         if (t.prev && now < t.prevUntil) { gl.drawChunk(t.prev, ...r); if (t.tex && t.tex !== t.prev && mask) gl.drawChunk(t.tex, ...r, true); continue; }
@@ -5445,6 +5482,8 @@ export class Game {
         if (t.shade && (lay.base === t.tex || lay.top === t.tex)) shadeMasks.push({ tex: t.shade, r });
         if (t.fadeFrom && Number.isFinite(this.groundBlendAt) && (zoomBlend < 1 || !Number.isFinite(t.fadeStart))) t.fadeStart = this.groundBlendAt;
       }
+      // T188: the first view's ground is baked (the welcome card waits for it)
+      if (baked && !this.firstViewBaked && this.ready) { this.firstViewBaked = true; this.emit(); }
       // ---- the map grid and the course half grid (T100): over the ground and its paint, hidden on the roads, under every shadow and sprite
       if (this.gridLayer.draw(gl.gl, gl.view, z, this.dpr, gridShown(this.showGrid, this.tool), this.courseBuilding, this.gridLand(), this.net)) gl.stats.draws++;
       // the dev tools' ground lines (the lot lab's Lot grid): the same place, under every shadow and sprite
