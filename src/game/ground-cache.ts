@@ -102,6 +102,9 @@ export class GroundCache {
   /** T204: the rugged edges on or off (the dev switch: window.__game.ground.setRugged(false) compares the looks and the bake times) */
   rugged = true;
   setRugged(on: boolean) { if (on === this.rugged) return; this.rugged = on; this.broadcast({ t: 'rugged', on }); this.invalidateAll(); }
+  /** T218: the fairways' mowing stripes on or off (the dev switch: window.__game.ground.setStripes(false) compares the looks and the bake times) */
+  stripes = true;
+  setStripes(on: boolean) { if (on === this.stripes) return; this.stripes = on; this.broadcast({ t: 'stripes', on }); this.invalidateAll(); }
   /** T215: the street lamps' reflection pools as the camera specular (on: each chunk's pools go onto its reflection mask, lit on the GPU by the
    *  camera falloff, gl.ts FS_QUAD) or baked into the road picture as before (off, the default); the dev switch window.__game.specCam */
   specCam = false;

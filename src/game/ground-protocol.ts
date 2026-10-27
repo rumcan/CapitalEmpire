@@ -38,14 +38,16 @@ export interface CourseTex { tex: string; sc: number; a: number; t?: 1 | 2; ta?:
  *  - `e`: how its edge is drawn (paint-edges.ts profile: raised green and tee, turf fairway, sunken bunker, water, flat rough and fescue);
  *  - `collar`: its automatic collar (first cut, fringe, the bunker's grass lip, the pond's bank): band rings (even-odd: the surface is
  *    cut out) and the band's outer edges, in its own texture;
- *  - `stripes`: on the fairway, each hole's centre line (tee, aim points, pin) for the mowing stripes (T075), for the holes whose
- *    fairway cells reach this chunk */
+ *  - `stripes`: on the fairway, its mowing stripes (T218, ext/course-grid stripeAreas; drawn by renderer courseStripes), one entry per hole
+ *    whose fairway cells reach this chunk: the hole (0: cells of no hole, or of a hole with no line yet: the default direction), its playing
+ *    line (tee, aim points, pin; flat tiles), its share of the chunk when there are two or more (runs: boxes x0 y0 x1 y1, tiles) and a: the
+ *    hook for greenkeeping's mow angle (the way the mower drives, degrees in tile space; course-stripes holeStripeLegs), absent until set */
 export interface CourseLayer extends CourseTex { s: number; e: EdgeProfile; fill: Float32Array[]; edges: Float32Array[];
   /** its edges sorted by the heights on their sides (ext/course-walls, T099): soft (feathered) and joint (a crisp mowing line against its own
    *  collar) runs; the rest of its edges are walls (CoursePatch.walls) or hidden under a later layer, drawn crisp. Absent: feather all edges */
   soft?: Float32Array[]; joint?: Float32Array[];
   /** its collar band (w: the band's width in tiles, the course look's Border; its outward feather never reaches past it, so a hairline stays one) */
-  collar?: CourseTex & { n: 'first-cut' | 'fringe' | 'lip' | 'bank'; w?: number; fill: Float32Array[]; edges: Float32Array[]; soft?: Float32Array[] }; stripes?: { hole: number; line: number[] }[] }
+  collar?: CourseTex & { n: 'first-cut' | 'fringe' | 'lip' | 'bank'; w?: number; fill: Float32Array[]; edges: Float32Array[]; soft?: Float32Array[] }; stripes?: { hole: number; line: number[]; runs?: Float32Array; a?: number }[] }
 /** a course wall (ext/course-walls WallRun, T099): its top edge as x, y, drop triples (tiles, tiles, metres), the higher side on the left so the
  *  face looks along the right-hand normal toward the camera; lo: the layer code it hangs over (2 s a surface's fill, 2 s + 1 its collar, 0 the
  *  map grass), drawn just after that layer; m: its material (0 turf, 1 sand, 2 water) */
@@ -147,6 +149,8 @@ export type ToWorker =
   | { t: 'living'; on: boolean; debug: boolean }
   /** T204: the rugged edges (the wobble, rounded corners and the tall grass's spill) on or off (the dev switch, for comparing looks and bake times) */
   | { t: 'rugged'; on: boolean }
+  /** T218: the fairways' mowing stripes on (the default) or off (the dev switch, for comparing looks and bake times) */
+  | { t: 'stripes'; on: boolean }
   /** T215: the street lamps' reflection pools onto a per-chunk reflection mask for the camera specular (on) or baked into the road (off, the
    *  default): the dev switch window.__game.specCam; every chunk is baked again */
   | { t: 'specCam'; on: boolean }
