@@ -121,13 +121,13 @@ async function measure(entries: AuditEntry[]) {
       const d = g.getImageData(px0, py0, pw, ph).data, rowMin = new Float64Array(ph).fill(Infinity), rowMax = new Float64Array(ph).fill(-Infinity);
       let top = -1, bottom = -1, ox0 = Infinity, ox1 = -Infinity;
       for (let y = 0; y < ph; y++) for (let x = 0; x < pw; x++) if (d[(y * pw + x) * 4 + 3]! > 128) { if (top < 0) top = y; bottom = y; if (x < rowMin[y]!) rowMin[y] = x; if (x > rowMax[y]!) rowMax[y] = x; ox0 = Math.min(ox0, x); ox1 = Math.max(ox1, x); }
-      if (bottom < 0) { out.push({ id: it.id, empty: true }); continue; }
+      if (bottom < 0) { out.push({ id: it.id, scale: k, flip: e.flip, empty: true }); continue; }
       const band = Math.max(2, Math.round((bottom - top) * 0.12)); let bx0 = Infinity, bx1 = -Infinity, sum = 0, n = 0;
       for (let y = bottom - band; y <= bottom; y++) if (rowMax[y]! >= 0) { bx0 = Math.min(bx0, rowMin[y]!); bx1 = Math.max(bx1, rowMax[y]!); sum += (rowMin[y]! + rowMax[y]!) / 2; n++; }
       // texels to display px (the trimmed quad), then to world px about the anchor at the prop's scale (mirrored when flipped)
       const sx = (q[2] - q[0]) / pw, sy = (q[3] - q[1]) / ph, X = (t: number) => { const dx = q[0] + (t + 0.5) * sx; return ((e.flip ? it.w - dx : dx) - it.ax) * k; }, Y = (t: number) => (q[1] + (t + 0.5) * sy - it.ay) * k;
       const a = X(bx0), b = X(bx1), c = X(ox0), dd = X(ox1);
-      out.push({ id: it.id, top: Y(top), bottom: Y(bottom), base: [Math.min(a, b), Math.max(a, b)], baseC: X(sum / n), wide: [Math.min(c, dd), Math.max(c, dd)] });
+      out.push({ id: it.id, scale: k, flip: e.flip, top: Y(top), bottom: Y(bottom), base: [Math.min(a, b), Math.max(a, b)], baseC: X(sum / n), wide: [Math.min(c, dd), Math.max(c, dd)] });
     }
   }
   return out;
