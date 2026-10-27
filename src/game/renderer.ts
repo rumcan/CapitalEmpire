@@ -29,7 +29,7 @@ import { HEIGHT_LIGHT_STRENGTH, HL_MASK, LUMA_SIGMA_PER_L, heightLightGrid, heig
 import { PaintedGround, type LayLevel } from './painted-ground';
 import { coversMap } from './painted-families';
 import { bandOf, cellsIn, snappedCell, tileIndex, tileKey, tilePermutation, tileSize } from './painted-tiles';
-import { WOODLAND, lawnTexFor } from './painted-surfaces';
+import { BLOCK_UNDER, WOODLAND, lawnTexFor } from './painted-surfaces';
 import { BLEND_WAVES, blendAlpha, blendNoise, trimLru } from './painted-grass-lod';
 import { LIVING_AO, CasterStore, COURSE_GRASSY, COURSE_WATER, SHADOW_DIR, debugImage, grassyTex, influence, livingMasks, livingQueryBox, livingRes, livingSignature, waterTex, type Box, type InfluenceGrid, type LivingMasks, type RoadPiece, type WaterLine } from './living-ground';
 /** the bytes of painted compositions a worker keeps (a chunk's look is about 3 MB at the closest zoom; the bake in progress keeps all of its own) */
@@ -1182,12 +1182,21 @@ export class GroundPainter {
       const lw = p.lawn!, pb = quadBox(p.pts), r = [Math.max(pb[0], box[0]) - 1, Math.max(pb[1], box[1]) - 1, Math.min(pb[2], box[2]) + 1, Math.min(pb[3], box[3]) + 1];
       if (r[2] <= r[0] || r[3] <= r[1] || !isPaintPhoto(p.tex) || !this.tex.has(t)) continue;
       const path = polyPath(p.pts), G = new DOMMatrix().rotateSelf(0, 0, lw.a);
-      if (lw.share >= 1) {
+      /** the whole patch in texture t */
+      const fill = (t: string) => {
         const painted = this.paintedFill(ctx, t, r as BBox), src = painted ? null : this.tex.sourceFor(t, L);
         ctx.save(); ctx.setTransform(M); ctx.clip(path);
         ctx.fillStyle = painted ?? (src ? this.groundPattern(ctx, src.img, G, src.period) : this.groundPattern(ctx, this.tex.mosaicFor(t, L), G, this.tex.periodOf(t)));
         ctx.fillRect(r[0], r[1], r[2] - r[0], r[3] - r[1]); ctx.restore();
-      } else this.drawBlend(ctx, { t, s: lw.share, f: lw.soft, p: lw.patch }, 1, G, path, 'nonzero', r, L, X0, Y0, M, Minv);
+      };
+      if (lw.share >= 1) fill(t);
+      else {
+        // T194 (the owner: "fescue should also not coming through on edges of any of the green textures"): a block's grass in soft patches
+        // lies over the rough, not the map's fescue: the whole block is the rough first (BLOCK_UNDER), its preset over the share of it
+        // (the owner's blockShare: how much of the block is its preset, the rest the rough)
+        if (this.tex.has(BLOCK_UNDER)) fill(BLOCK_UNDER);
+        this.drawBlend(ctx, { t, s: lw.share, f: lw.soft, p: lw.patch }, 1, G, path, 'nonzero', r, L, X0, Y0, M, Minv);
+      }
     }
   }
   /** a second texture laid over a surface in soft patches (a painted area's Blend with, PatchPaint m; a course look's; a road block's lawn): the
