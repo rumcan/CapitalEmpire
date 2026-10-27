@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-27 22:50)
+## START HERE (kept current by the lead; last updated 2026-10-27 23:10)
 
 **Paste-ready start prompts for every role are in `docs/START-PROMPTS.md`:** the lead, a coding ticket, and the other sessions in this
 repo. The weekly usage cap is close (2026-10-26), so any chat may stop at any moment.
@@ -73,7 +73,9 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
   merged). The 12 last 3D people finished on 2026-10-26 and are committed on `art/people-ground-20261024` (0bd25f4): T203 #531.
   Housekeeping: T174-T177, T179, T184 closed (merged earlier). The 5174 auto-updater ran 5 times over; the owner approved stopping 4
   (one left, bash PID 31220). Still listening, not ours: a stray vite on 5189 (an agent's, gone since 07:50) and the dead lot lab's 5241.
-- **Next, in order, when an agent lands:** **T199 #517** small streams become swamp wearing `swamp-run`, with T215's camera glint on its pools
+- **Next, in order, when an agent lands:** **T223 #622** a desert range start (desert outfield, a dirt tee, upgrades to turf the tee
+  and grass the outfield; the home yard in desert; range work: Opus high) → **T224 #623** big roundabouts clear what is in the way with a
+  price, or refuse with the reason → **T219 next step (#594 comment)** the drive-in uses the library's real drive-in screen → **T199 #517** small streams become swamp wearing `swamp-run`, with T215's camera glint on its pools
   (the owner) → **T222 #618** rough backyards early (fescue, dirt, desert), dirt veg gardens, a desert Waste area brush (the owner) → the golf play tickets, **T210 #555** the
   results wait for the last group → **T211 #556** pace of play → **T208 #553 everyday golf** (golfers play your course every day and pay
   green fees; today it is only a yearly number) → **T212 #557** putt, chip, tee-up and coach clips → **T213 #558** caddies, carts,
@@ -109,6 +111,7 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
    (the sharp bump). See the History sections below and `gh issue list --label arena --state open`.
 
 ### Done recently (newest first; details in each PR)
+- 2026-10-27 23:05: **the scene paintings are all in** (the owner's top priority): #620 raked sand on the bunkers, #621 the putting green on every green and the range's targets, the map's fescue now blends with **dirt** (the living ground's lush patches: the owner), and the RUN rough offered as a family (the owner's own rough stays on the course).
 - 2026-10-27 22:40: **T219 #615 iconic places**: the drive-in and the high school on every map (whole presets in `lots/iconic-places.json`, placed once by residents, named after the town, cards; stand-ins for art 142-148; follow-up: the drive-in's screen to the end of the car rows). **The scene paintings** (the owner's top priority): **#614 swamp** (`swamp-run`, RUN-painted; on the map with T199), **#616 dirt** (store removed; Painted › Dirt), **#617 farm fields** on the new dirt.
 - 2026-10-27 22:05: **T218 #609 fairway stripes** (the owner): light mowing bands across each hole's line of play (doglegs per leg), the range outfield's look; `ground.setStripes`. **#612 the desert** (the owner's top priority): the art session's desert painting, the store quilted away, four quilted tiles a level, on Painted › Waste area sand. The RUN fringe is held (too flat at NEAR).
 - 2026-10-27 21:40: **#608 the dev server grows the town at the game's speed** (the owner: "grows too fast"; it was 20x by default on the dev server; `?grow=N` for tests).
