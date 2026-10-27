@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-27 09:54)
+## START HERE (kept current by the lead; last updated 2026-10-27 10:07)
 
 **Paste-ready start prompts for every role are in `docs/START-PROMPTS.md`:** the lead, a coding ticket, and the other sessions in this
 repo. The weekly usage cap is close (2026-10-26), so any chat may stop at any moment.
@@ -27,7 +27,6 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 ### In flight
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |
-| T185 hints → T186 | #466, #474 | fresh branches | `.claude/worktrees/t185` (node_modules a junction) | 5188 | The shadow agent (Opus): #473 (no compounding) and #482 (the base) merged; now per-picture hand hints from the after sheets, then T186 (sprite shadows vs the ground's baked shade: max). |
 | T184 | #464 | fresh branches | `.claude/worktrees/t166` | 5187 | **The owner approved (diagnosis #443):** PR 1 junction rules (equal crossings first-come, queue-aware routing + a deadlock breaker, roundabout entry at the ring car's real speed; every gate before/after); PR 2 `JAM_HINT` at the Junction tool, `range:gate --player` placing junction tools, P22 bands on seeds 1-3 without going broke (tune prices, town income, growth in that order). Agent: the ground agent. |
 | T190 → T189 | #489, #487 | fresh branches | `.claude/worktrees/t160` | 5186 | (1) **urgent** (the owner is blocked in the lot lab): every sprite sizable at least 0.5-1.5x its baseline (cap max(pixel limit, 1.5x); the Rebuild packs bigger where the art allows; a "soft at the closest zoom" note otherwise; cars too); (2) T189 block grass in the new paintings + Erase back. Agent: the lot agent. |
 | T112 | #199 | `arena/T112-sharp` (PR #394) | `.claude/worktrees/t112` | — | **Approved, merge HELD for the morning restart:** a lock change makes the 5174 auto-updater run `npm ci` in theme-consistency (the live 5191 studio holds sharp there; the lot agent's t160 uses it by junction). Morning order: stop 5191 → merge #394 → let npm ci finish → restart 5191 and 5174. All shipped bytes identical on 0.35.5; audit 0. |
@@ -95,6 +94,9 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
    (the sharp bump). See the History sections below and `gh issue list --label arena --state open`.
 
 ### Done recently (newest first; details in each PR)
+- 2026-10-27 10:07: **T185 done (#491)**: the draft fills the shadow across a wall base's step (chimneys, downpipes, lower porches: no lit
+  slivers; the hotel's lit corner hole gone); 606 pictures re-drafted; shadows in 3+ pieces 11 → 0, holes 31 → 20 (the rest real gaps),
+  detached 5 → 2. #466 and #474 closed. Tools for later hand fixes in `E:/ClaudeTemp/T185/an/` and `tools/`. The shadow agent is done.
 - 2026-10-27 09:54: **T186 #485 sprite shadows take the max with the baked ground shade**: the bake mirrors its shade into a quarter-size
   mask; the shadow layer is RG8 (sprites red, baked green), composited M(s)/M(b) (no darker band where a tree shadow crosses a green's
   edge or a bunker lip); `__game.shadeMax = false` shows the old product; bake 5.4 → 5.9 ms. **The pixel limit vs sizes:** the owner's newer
