@@ -661,13 +661,14 @@ the water towers, a silo, a windmill and a fountain. These pieces are missing:
 **147. Running track and field** · **C** · 100 x 60 m · P1. Top-down.
 > Subject: seen from straight above, a high school football field: striped mown grass with white yard lines (no numbers), end zones, inside a red-brown running track with white lane lines curving round both ends.
 
-**In the game now (T219):** both places are built (`src/game/lots/iconic-places.json`), with labelled stand-ins: the blank golf leaderboard
-(`golf:leaderboard`) for the screen (142), `world:speaker_post` for the speaker posts (143), the car park attendant kiosk (`ce:parking-kiosk`)
-for the ticket booth (144), `world:goalposts` (145), `world:bleachers` (146), and `town:utility_pole` for a flag pole (new: **148. Flag pole**
+**In the game now (T219):** both places are built (`src/game/lots/iconic-places.json`), with labelled stand-ins for the speaker posts (143: `world:speaker_post`), the car park
+attendant kiosk (`ce:parking-kiosk`) for the ticket booth (144), `world:goalposts` (145), `world:bleachers` (146), and `town:utility_pole` for a flag pole (new: **148. Flag pole**
 · **B** · 0.3 m, 9 high · P2: a white school flag pole on a small concrete base with the flag hanging limp, its rope against the pole). The track
-(147) is painted ground for now (`dirt` round a `preset:fairway` field with white yard lines). The library's own drive-in screen
-(`variation:ref-building-drive-in-screen-b0bccc2a-plain:1`) is not used: its footprint (1 x 8) runs across its picture, so three of its four
-facings draw it off its lot, and its face carries "Maple Falls Drive-In" (every town is named differently).
+(147) is painted ground for now (`dirt` round a `preset:fairway` field with white yard lines). **The screen (142) is no longer a stand-in** (T219b): the drive-in uses the library's own
+drive-in screen (`variation:ref-building-drive-in-screen-b0bccc2a-plain:1`, four views), drawn through `src/game/lots/art-fix.ts`, which gives it the
+footprint that fits its pictures (5.5 x 1.2 tiles; the library keeps the old sprite's 1 x 8, across them), its true ground point, and the view whose face
+looks at the cars at each facing (its SE and NW sheets are the other way round from the game's order). Item 142 stays open only for the town's own
+name: the picture's face is painted "Maple Falls Drive-In" (accepted for now: a new drive-in screen that reads blank or "DRIVE-IN" would replace it).
 
 ## 12. The concept look (the owner's target, 2026-10-27)
 
