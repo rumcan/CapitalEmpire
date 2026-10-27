@@ -82,13 +82,14 @@ import { slopeField } from './terrain-paint';
 import { CONIFER_IDS, FOREST_CELL, FOREST_VIEW_MARGIN, forestCell, forestCellRange, type ForestTree } from './forest';
 import { CHUNK_CASTER_REACH, LIVING_PLANT_MARGIN, casterKind, casterOf, doorToward, pxAcross, CK } from './living-ground';
 import { LEAF_DENSITY_DEFAULT, clampLeafDensity } from './leaf-fall';
+import { ROUGH_YARDS_DEFAULT, clampRoughYards, roughShare, roughSig, roughYard } from './rough-yards';
 import { townTreeCell } from './towntrees';
 import type { BendMode, LibItem, LineStyle, Prop, Tool } from './types';
 import { LK, LaneGraph, laneAt, laneOff } from './sim/lanes';
 import { LU, LV, type LotTuple } from './lots/town';
 import { acrossLines, compose, composeWhole, farmPreset, fenceOnly, isCarPark, lotModelVersion, lotPresets, pickedPreset, setLotModel, type ComposeState, type FenceLines, type LotGeom, type Placed } from './lots/compose';
 import { LATEST as LATEST_LOT_MODEL } from './lots/lot-models';
-import { stateOf } from './lots/presets';
+import { stateOf, type PresetState } from './lots/presets';
 import { LotMap } from './lots/lots';
 import { PLACE_DEFS, duePlaces, findSite, placeBox, placeDef, placeGeom, placeName, placeTuples, placesFromTuples, type PlacedPlace, type SiteSeg } from './lots/iconic';
 import { TOWN_BLOCKS, TOWN_POP, townCentres, townGrid } from './lots/seedtowns';
@@ -1451,6 +1452,7 @@ export class Game {
     this.ground.slopeLight = this.slopeLight;
     try { const v = parseFloat(localStorage.getItem('capitalempire.leafDensity') ?? ''); if (Number.isFinite(v)) this.leafDensity = clampLeafDensity(v); } catch { /* the default */ }
     this.ground.leafDensity = this.leafDensity;
+    try { const v = parseFloat(localStorage.getItem('capitalempire.roughYards') ?? ''); if (Number.isFinite(v)) this.roughYards = clampRoughYards(v); } catch { /* the default */ }
     try { const n = localStorage.getItem('capitalempire.night'); if (n) this.night = clampNight(JSON.parse(n)); } catch { /* the defaults */ }
     try { const d = JSON.parse(localStorage.getItem('capitalempire.townday') ?? 'null'); if (d && typeof d === 'object') this.townDay = { minutes: Math.min(30, Math.max(0.5, +d.minutes || 10)), traffic: Math.min(4, Math.max(0, Number.isFinite(+d.traffic) ? +d.traffic : 1)) }; } catch { /* the defaults */ }
     this.traffic.setTownDay(this.townDay.minutes, this.townDay.traffic);
@@ -1465,7 +1467,7 @@ export class Game {
     // every road class, junction (the roundabout without its card), tunnel and signal tier open from the start (?unlock=0 plays the unlocks)
     this.sandboxUnlock = q.has('unlock') ? q.get('unlock') === '1' : dev;
     this.traffic.onGrow = (legs) => this.townGrow(legs);
-    this.traffic.onTown = (events) => { for (const e of events) this.lotQueue.add(e.key); this.townFirsts(events); this.placesCheck(); };
+    this.traffic.onTown = (events) => { for (const e of events) this.lotQueue.add(e.key); this.townFirsts(events); this.placesCheck(); this.roughCheck(); };
     // a lot whose road was widened (or narrowed) keeps its house but moves back to the new verge: composed again there, not left over the road
     this.traffic.onLotsMoved = (keys) => { for (const k of keys) this.lotQueue.add(k); };
     this.traffic.onLedger = (l) => {
@@ -2027,6 +2029,26 @@ export class Game {
     try { localStorage.setItem('capitalempire.leafDensity', String(this.leafDensity)); } catch { /* storage may be unavailable */ }
     this.ground.setLeafDensity(this.leafDensity); this.emit();
   }
+  /** T222: the share of the town's house lots that wear a rough yard (rough-yards.ts), the gear menu's Rough yards: 0 (all mown) to 2, 1 the
+   *  default schedule (about 40% in a new town, falling to about 10% by 3,000 residents); kept across reloads */
+  roughYards = ROUGH_YARDS_DEFAULT;
+  setRoughYards(v: number) {
+    this.roughYards = clampRoughYards(v);
+    try { localStorage.setItem('capitalempire.roughYards', String(this.roughYards)); } catch { /* storage may be unavailable */ }
+    this.roughCheck(true); this.emit();
+  }
+  /** each placed house lot's yard inputs and whether it is rough now (placeLot), to find the yards the share has crossed */
+  private yardRough = new Map<string, { seed: number; home: boolean; state: PresetState | null; sig: string }>();
+  /** the share (in hundredths) the yards were last checked at */
+  private roughAt = -1;
+  /** the town grew (or the knob moved): when the rough share has moved by a hundredth, the lots whose yard it crossed are composed again (a rough
+   *  yard turns to lawn as the town grows, never back; their props are the same: compose draws from the lot's seed alone) */
+  private roughCheck(force = false) {
+    const q = Math.round(roughShare(this.traffic.pop, this.roughYards) * 100);
+    if (!force && q === this.roughAt) return;
+    this.roughAt = q;
+    for (const [key, y] of this.yardRough) if (roughSig(roughYard(y.seed, y.home, y.state, this.traffic.pop, this.roughYards)) !== y.sig) this.lotQueue.add(key);
+  }
   /** street lamps light the road: their reflection pools are part of the ground picture */
   syncLamps() {
     const pts = [...this.lampProps].map(p => ({ x: (p.x0 + p.x1) / 2, y: (p.y0 + p.y1) / 2 }));
@@ -2176,7 +2198,7 @@ export class Game {
   private dropLot(key: string) {
     const old = this.lotProps.get(key);
     if (old) { for (const p of old) if (this.props.has(p)) { this.removeProp(p); this.perf.lotProps--; } this.lotProps.delete(key); }
-    this.setLotGround(key, null);
+    this.setLotGround(key, null); this.yardRough.delete(key);
   }
   // ---------- the dev lot editor's hooks (P20 / T071: src/game/dev/lot-editor.ts, dev builds only)
   /** the preset prop each lot prop drawn from a preset came from (compose Placed.from): the dev editor maps a sprite back to its preset */
@@ -2227,7 +2249,10 @@ export class Game {
     // empty lot shows its block's grass
     const built = ps.some(p => { const it = LIBRARY[p.item]!; return !!it.block || (it.big && it.kind !== 'car'); });
     // the lawn wears its look state's (T155: built the fairway, upgraded the putting green, declined the rough)
-    const lawn = built ? lotLawn(key, g, undefined, stateOf(st.level, st.decline)) : null; this.setLotGround(key, lawn ? [lawn, ...c.ground] : c.ground);
+    // T222: a new or poor town's house lots wear rough yards in patches (rough-yards.ts: from the lot's own seed and the town's size; upgraded lots stay mown)
+    const state = stateOf(st.level, st.decline), home = st.use === LU.RES, rough = built ? roughYard(st.seed, home, state, this.traffic.pop, this.roughYards) : null;
+    if (built) this.yardRough.set(key, { seed: st.seed, home, state, sig: roughSig(rough) });
+    const lawn = built ? lotLawn(key, g, undefined, state, rough) : null; this.setLotGround(key, lawn ? [lawn, ...c.ground] : c.ground);
   }
   // ---------- T219 (P27): the iconic places (lots/iconic.ts)
   /** the iconic places' footprints (world tiles) */
@@ -5085,7 +5110,7 @@ export class Game {
     this.cardsApplied = 0; this.setCardFields([]); this.traffic.round = new Round().view();
     for (const k of this.lotProps.keys()) this.setLotGround(k, null);
     for (const k of this.blockLawns) this.setLotGround(k, null); this.blockLawns.clear();
-    this.lotProps.clear(); this.lotQueue.clear(); this.staged.clear(); this.labLot = null; this.labClear = null; this.perf.lotProps = 0;
+    this.lotProps.clear(); this.yardRough.clear(); this.roughAt = -1; this.lotQueue.clear(); this.staged.clear(); this.labLot = null; this.labClear = null; this.perf.lotProps = 0;
     this.dropAllFarms();
     for (const id of [...this.placeProps.keys()]) this.dropPlace(id);
     this.places = []; this.placeTryAt = 0; this.selectedPlace = null;

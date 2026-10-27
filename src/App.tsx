@@ -486,6 +486,11 @@ export default function App() {
                       <input type="range" className="min-w-0 flex-1" min={0} max={2} step={0.1} value={game.leafDensity} onChange={e => { game.setLeafDensity(+e.target.value); bump(); }} />
                       <span className="w-10 text-right tabular-nums">{Math.round(game.leafDensity * 100)}%</span>
                     </label>
+                    <label className="flex items-center gap-2 px-2 py-2 text-sm" data-tip="How many of the town's house lots have rough yards: patches of golden fescue, bare dirt and desert instead of a mown lawn, mostly in the back yard (T222). About 40% of them in a new town, falling to about 10% by 3,000 residents; upgraded homes are always mown. 100% = that schedule, 0 = every yard mown">
+                      <span className="w-16 shrink-0">Rough yards</span>
+                      <input type="range" className="min-w-0 flex-1" min={0} max={2} step={0.1} value={game.roughYards} onChange={e => { game.setRoughYards(+e.target.value); bump(); }} />
+                      <span className="w-10 text-right tabular-nums">{Math.round(game.roughYards * 100)}%</span>
+                    </label>
                     {dev && (
                       <label className="flex cursor-pointer items-center gap-2 px-2 py-1 text-xs" data-tip="Developer: the ground shows the living ground's influence maps instead of the grass: lush green, thin orange, bare brown, litter red, shade blue-grey">
                         <input type="checkbox" checked={game.groundDebug} onChange={e => { game.setGroundDebug(e.target.checked); bump(); }} />
