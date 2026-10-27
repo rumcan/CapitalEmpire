@@ -48,6 +48,13 @@ export const DRIVER_MIX = { aggressive: 0.15, cautious: 0.15, truckShare: 0 };
 const SIG_MARGIN = 0.5;
 /** a roundabout entry or inner exit gives way to ring traffic that is within this many metres of the crossing (standing or not), plus 4 s of its travel */
 const RING_GAP = 10;
+/** how far a ring car travels in the 4 s an entry looks ahead (T184): at its own speed, plus what it can gain by accelerating (CAR.a) in that
+ *  time, never more than its lane's limit allows. Before, every ring car counted as if it ran at its lane's limit, so a slow or queued car
+ *  anywhere on a mini's few-car ring held every entry */
+export function ringReach(v: number, vmax: number): number { return Math.min(4 * Math.max(v, vmax), 4 * v + 8 * CAR.a); }
+/** the deadlock breaker (T184): a car that has waited this many seconds at a junction's line goes when the box is clear, whoever has the
+ *  right of way (the cars in the box and the grants still count, and the room beyond it); before, it waited for the tow (TOW_ANY) */
+export const BREAK_WAIT = 20;
 /** a roundabout exit waits while a car on the ring lane it leaves from has its rear within this many metres of the point it diverges */
 const DIVERGE = 6;
 /** a ring exit's gap to a car coming on an outer ring lane it crosses: s at its speed, and m at least (4 s / 10 m: no overlaps on the
@@ -900,6 +907,8 @@ export class Sim {
    *  with right of way (higher priority, or equal priority and waiting longer) */
   private clearOf(i: number, C: Lane): boolean {
     const lanes = this.g.lanes, Q = this.onLane, S = this.s, LEN = this.len, V = this.v, lLen = this.lLen, P = this.plan, pI = this.pi;
+    // not at a signal (its phases keep order) nor on a ring (its entries look along it): a car stuck past BREAK_WAIT at a plain, stop or yield line
+    const breaker = this.wait[i]! >= BREAK_WAIT && C.ctl !== CTL.SIGNAL && !(C.node && C.node.rb > 0);
     for (const cf of C.conflicts) {
       const c2 = cf.lane, L2 = lanes[c2]!;
       if (cf.merge) {
@@ -910,6 +919,8 @@ export class Sim {
       } else for (const w of Q[c2]) if (S[w] - LEN[w] < cf.os + 1) return false;
       if (this.granted[c2].length) return false;
       if (L2.ctl === CTL.SIGNAL && this.signalState(L2) === SIG.RED) continue;
+      // the deadlock breaker: a car that has waited BREAK_WAIT s goes once the conflict lane and its grants are clear, whoever is coming
+      if (breaker) continue;
       if (L2.prio > C.prio) {
         // at a roundabout entry a car on the ring that is coming (or standing) within RING_GAP m plus 4 s of its travel holds the crossing;
         // a ring exit crossing the outer lanes takes a short gap instead (with the entry rule an inner-lane exit waited for 40 m of empty
@@ -920,7 +931,7 @@ export class Sim {
           if (this.grant[w] >= 0 || P[w]![pI[w] + 1] !== c2) continue;
           const dist = lLen[p] - S[w] + cf.os;
           // (a ring car may speed up to its lane's limit before it reaches the crossing, so the faster of the two counts)
-          if (ringX) { if (dist < RING_GAP + 4 * Math.max(V[w]!, this.lVmax[p]!)) return false; continue; }
+          if (ringX) { if (dist < RING_GAP + ringReach(V[w]!, this.lVmax[p]!)) return false; continue; }
           // a ring exit crossing the outer lanes: an ordinary gap (EXIT_MIN m, EXIT_GAP s at the other car's speed)
           if (C.node!.rb > 0) { if (dist < EXIT_MIN || (V[w] >= 0.5 && dist / V[w] < EXIT_GAP)) return false; continue; }
           if (V[w] < 0.5) continue;
@@ -949,7 +960,7 @@ export class Sim {
         for (const w of Q[p]) {
           if (this.grant[w] >= 0) continue;
           const plan = P[w]!, k = plan.indexOf(c2, pI[w]); if (k < 0 || k > pI[w] + depth + 1) continue;
-          if (lLen[p] - S[w] + base < RING_GAP + 4 * Math.max(V[w]!, this.lVmax[p]!)) return true;
+          if (lLen[p] - S[w] + base < RING_GAP + ringReach(V[w]!, this.lVmax[p]!)) return true;
         }
         if (lanes[p]!.kind === LK.RING && base + lLen[p] < far) nxt.push([p, base + lLen[p]]);
       }

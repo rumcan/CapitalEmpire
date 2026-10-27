@@ -266,6 +266,33 @@ export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave): 
   };
 }
 
+/** the structures' footprints in the plot frame (T207: u0 u1 v0 v1, about each picture's spot): the shop (the pro shop, or the tin-and-tarp
+ *  shack's stand-in), the player's home by stage, the coffee kiosk; the covered bays' roofs run from just behind the path behind them (a cart
+ *  path laid along it passes) to just behind the golfers' spots */
+const SHOP_FOOT: [number, number, number, number] = [31, 37, 5.5, 11.5], SHACK_FOOT: [number, number, number, number] = [32.3, 35.7, 7, 10];
+const HOME_FOOT: readonly [number, number, number, number][] = [[6, 13, 5.6, 9.6], [6.4, 12.8, 4.2, 10.6], [5, 16, 2.8, 11.6]];
+const HOME_WORDS: readonly string[] = ['your caravan', 'your cottage', 'your house'];
+const KIOSK_FOOT: [number, number, number, number] = [KIOSK.u - 1.4, KIOSK.u + 1.4, KIOSK.v - 1.4, KIOSK.v + 1.4], BAYS_V: [number, number] = [17.2, ROOF_V[1]];
+/** the range's buildings and pieces with a footprint (T207, #546): what the player's own cart paths and drives may not run into on the range's
+ *  land, each a world box (x0 y0 x1 y1) named for the refusal ("Roads cannot cross the pro shop"): the shop, the player's home, the covered bays
+ *  and the deck over them, the coffee kiosk and the car park building, as the save has them. The rest of the range's land (the yard, the sign,
+ *  the grass between, the outfield and the tee box) is the player's to cross */
+export function rangeStructures(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave): { name: string; box: [number, number, number, number] }[] {
+  const st = rangeStats(s), P = (u: number, v: number) => plotPoint(plot, facing, u, v);
+  const box = ([u0, u1, v0, v1]: readonly [number, number, number, number]): [number, number, number, number] => { const a = P(u0, v0), b = P(u1, v1); return [Math.min(a.x, b.x), Math.min(a.y, b.y), Math.max(a.x, b.x), Math.max(a.y, b.y)]; };
+  const out: { name: string; box: [number, number, number, number] }[] = [{ name: 'the pro shop', box: box(st.proShop ? SHOP_FOOT : SHACK_FOOT) }];
+  const home = homeStage(s); out.push({ name: HOME_WORDS[home]!, box: box(HOME_FOOT[home]!) });
+  const open = openSlots(st.lowerBays);
+  if (st.covered || st.tier2) for (let g = 0; g < open.length; g += 4) {
+    const k0 = open[g]!, k1 = open[Math.min(open.length, g + 4) - 1]!;
+    if (!st.covered && (k1 < DECK_SLOT0 || k0 >= DECK_SLOT0 + TIER2_BAYS)) continue;
+    out.push({ name: st.covered ? 'the covered bays' : 'the upper deck', box: box([slotU(k0) - 1.2, slotU(k1) + 1.2, BAYS_V[0], BAYS_V[1]]) });
+  }
+  if (st.kiosk) out.push({ name: 'the coffee kiosk', box: box(KIOSK_FOOT) });
+  if (st.parking) out.push({ name: 'the car park building', box: box(GARAGE) });
+  return out;
+}
+
 /** the player's home and its yard's props by stage (T133): the caravan with its washing line, braai, camp chairs and cooler; the cottage (a small
  *  house facing the road, a stand-in) with a brick braai, a swing seat, a birdhouse and flower beds; the house (the farmhouse with its porch) with
  *  a garage, a glasshouse, a fire pit and more beds. Keys stay where the piece stays, so a move re-lays only what changed */

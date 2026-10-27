@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { FLOW_COLS, Game, HEAT_COLS, HIST_RAMP, LOS_COL, SPEEDS, UPGRADE_COST } from './game/engine';
 import { ROW_BAY_COST, rowLots } from './game/event/rows';
 import { LIBRARY } from './game/library';
@@ -27,10 +28,18 @@ import { CoursePanel } from './ui/course/CoursePanel';
 import { BuildingsPanel } from './ui/course/BuildingsPanel';
 import { PropsPanel } from './ui/course/PropsPanel';
 import { MyLooksCard } from './ui/course/MyLooks';
-import { Rail, NewBadge } from './ui/Rail';
-import { railEntries, railItemOf, toolNew } from './ui/rail-items';
+import { Rail } from './ui/Rail';
+import { RAIL, entryKey, pickEntry, railEntries, railItemOf, type RailItem, type RailTool } from './ui/rail-items';
+import { Flyouts } from './ui/Flyouts';
+import { KeysSheet } from './ui/KeysSheet';
+import { keySheet, numberedGroups, type LabKeys } from './ui/keymap';
+import { indicesOf, leavesOf, menuOf, type MenuCtx, type MenuRow } from './ui/flyout-menu';
+import { GRASS_COST } from './game/ext/grass-management/management';
+import { DECOR_GROUPS } from './game/golf/decor';
+import { PLANT_KINDS } from './game/plant';
+import { newHole } from './ui/course/HoleStrip';
 import { SurfaceMark } from './ui/course/SurfaceMark';
-import { BRUSH_PRESETS } from './game/paint';
+import { BRUSH_PRESETS, MENU_TEXES } from './game/paint';
 import { STRUCTURES } from './game/golf/tents';
 import { findGolfCard, type GolfCardDef } from './game/golf/golfcards';
 import { getTournamentWeather } from './game/golf/weather';
@@ -43,12 +52,16 @@ import { RoadThumb } from './ui/RoadThumb';
 import { Thumb } from './ui/Thumb';
 import { Minimap } from './ui/Minimap';
 import { CourseStatsPanel } from './ui/CourseStatsPanel';
+import { SeasonCard } from './ui/golf/SeasonCard';
+import { seasonChip, seasonPhase } from './ui/golf/season';
+import { GuidePulse } from './ui/GuidePulse';
 import { GrassManagementPanel } from './ui/GrassManagementPanel';
 import { formatPercent } from './ui/TournamentResults';
 import { SeasonReportCard } from './ui/golf/SeasonReportCard';
 import { GolfLeaderboard } from './ui/GolfLeaderboard';
 import { ShotPanel } from './ui/ShotPanel';
 import { RangeCard } from './ui/golf/RangeCard';
+import { LandPanel } from './ui/golf/LandPanel';
 import { WelcomeCard } from './ui/golf/WelcomeCard';
 import { TooltipLayer } from './ui/Tooltip';
 import { UI_SCALES, applyUiScale, currentUiScale, saveUiScale } from './ui/uiScale';
@@ -66,6 +79,25 @@ const money = (n: number) => '$' + Math.round(n).toLocaleString();
 const sgn = (n: number) => (n < 0 ? '−' : '+') + money(Math.abs(n));
 /** the price line of a locked road class or junction type: the residents it unlocks at */
 const lockText = (pop: number) => `🔒 ${pop.toLocaleString()} residents`;
+/** T193: the road families' captions in the flyouts */
+const FAMILY_NAME: Record<string, string> = { small: 'Small', medium: 'Medium', large: 'Large', rural: 'Rural', cart: 'Cart paths', course: 'Course drives' };
+/** T193: the game's lists the toolbar's flyouts are built from (flyout-menu.ts MenuCtx): the road classes and junctions with their locks, the
+ *  course brushes shown at this stage, the cares, the props' groups, the paint's materials and plants, the range card's sections */
+function menuCtx(game: Game): MenuCtx {
+  const ui = game.toolUi(), cls = (list: typeof ROAD_TYPES) => list.map(t => ({ id: t.id, name: CLASS[t.id]!.name, family: FAMILY_NAME[t.family] ?? t.family, why: game.classOpen(t.id) ? null : game.classLockWhy(t.id) }));
+  return {
+    golf: game.golfMode, ui,
+    roads: cls(ROAD_TYPES), paths: cls(COURSE_TYPES),
+    junctions: JUNCTION_KINDS.map(t => { const lk = game.junctionOpen(t) ? null : unlockOf('junction', t); return { id: t, name: SEG_NAME[t], why: game.junctionOpen(t) ? null : game.eventMode ? `${SEG_NAME[t]} needs the Roundabout card` : lk ? `Unlocks at ${lk.pop.toLocaleString()} residents` : 'Not open yet' }; }),
+    surfaces: BRUSH_PRESETS.filter(b => !ui || (ui.visibleCourseBrushes as string[]).includes(b.kind)).map(b => ({ id: b.kind, name: b.name })),
+    cares: (Object.keys(GRASS_COST) as string[]).map(k => ({ id: k, name: k[0]!.toUpperCase() + k.slice(1) })),
+    propGroups: DECOR_GROUPS.filter(g => g.id !== 'buildings').map(g => ({ id: g.id, name: g.name })),
+    materials: MENU_TEXES.map(t => ({ id: t.id, name: t.name, col: t.col })),
+    plants: PLANT_KINDS.map(k => ({ id: k.kind, name: k.name, col: k.col })),
+    newHoleWhy: ui?.newHoleLock ?? null,
+    range: game.range.scene ? [{ id: 'card', name: 'Range card' }, { id: 'range-practice', name: 'Practice facilities' }, { id: 'range-extras', name: 'Kiosk and academy' }, { id: 'range-upgrades', name: 'Upgrades' }] : [],
+  };
+}
 /** the game clock as HH:MM */
 const hhmm = (c: { hour: number; minute: number }) => `${String(c.hour).padStart(2, '0')}:${String(c.minute).padStart(2, '0')}`;
 /** a game hour of the day as HH:00 */
@@ -84,6 +116,24 @@ export default function App() {
   const lab = boot.kind === 'lab';
   const [, bump] = useReducer((x: number) => x + 1, 0);
   const [help, setHelp] = useState(false);
+  /** T202: the Help card's tab: the keys (Help › Keys: the ? button, ? and F1) or how it works */
+  const [helpTab, setHelpTab] = useState<'keys' | 'how'>('keys');
+  /** T202: the lot lab's keys (dev builds, ?lotlab: the Keys sheet there is the lab's, under its own heading) */
+  const [labKeys, setLabKeys] = useState<LabKeys | null>(null);
+  useEffect(() => { if (import.meta.env.DEV && new URLSearchParams(location.search).has('lotlab')) void import('./game/dev/lot-lab-ui').then(m => setLabKeys(m.KEYS)); }, []);
+  /** whether Help is open, for the engine's keysSheet hook (the lab's ? asks between renders) */
+  const helpOpen = useRef(false);
+  helpOpen.current = help;
+  // T202: ? and F1 open Help › Keys, and close it again (not while typing; in the lot lab its own ? handler opens this sheet: game.keysSheet)
+  useEffect(() => {
+    const k = (e: KeyboardEvent) => {
+      const t = (e.target as HTMLElement | null)?.tagName;
+      if (t === 'INPUT' || t === 'TEXTAREA' || t === 'SELECT' || e.ctrlKey || e.metaKey || e.altKey || (e.key !== '?' && e.key !== 'F1')) return;
+      e.preventDefault(); if (e.repeat) return;
+      const on = !helpOpen.current; setHelpTab('keys'); setHelp(on);
+    };
+    window.addEventListener('keydown', k); return () => window.removeEventListener('keydown', k);
+  }, []);
   /** the settings menu (Save, New game, Empty map) open under its gear */
   const [menu, setMenu] = useState(false);
   /** the UI scale in force (T179: Settings; applied at boot from this browser's storage) */
@@ -97,9 +147,11 @@ export default function App() {
   const [backupsOpen, setBackupsOpen] = useState(false);
   const [armedBackup, setArmedBackup] = useState<string | null>(null);
   useEffect(() => { if (!menu || !game) { setBackupsOpen(false); setArmedBackup(null); return; } void game.saveBackups().then(setBackups); }, [menu, game]);
-  const [courseStats, setCourseStats] = useState<ReturnType<Game['courseStatsView']>>(null);  
+  const [courseStats, setCourseStats] = useState<ReturnType<Game['courseStatsView']>>(null);
+  /** T188: the Season card (the season chip opens it: the year, the founding checklist or the tournament plan, the Course stats) */
+  const [seasonOpen, setSeasonOpen] = useState(false);
   // Esc closes the topmost menu or card before it reaches the tool (P23 P1-A): the engine's Esc ladder asks which of these are open
-  useEffect(() => { if (game) game.uiCards = { open: () => ({ help, menu, looks: looksOpen, stats: !!courseStats }), close: c => (c === 'help' ? setHelp(false) : c === 'menu' ? setMenu(false) : c === 'looks' ? setLooks(false) : setCourseStats(null)) }; });
+  useEffect(() => { if (game) game.uiCards = { open: () => ({ help, menu, looks: looksOpen, stats: !!courseStats || seasonOpen }), close: c => (c === 'help' ? setHelp(false) : c === 'menu' ? setMenu(false) : c === 'looks' ? setLooks(false) : (setCourseStats(null), setSeasonOpen(false))) }; });
   /** the Developer toggle (see devStart): the gear menu's checkbox and F3 set it; remembered */
   const [dev, setDevState] = useState(devStart);
   const devRef = useRef(dev);
@@ -107,6 +159,15 @@ export default function App() {
   useEffect(() => { const f3 = (e: KeyboardEvent) => { if (e.key === 'F3') { e.preventDefault(); setDev(!devRef.current); } }; window.addEventListener('keydown', f3); return () => window.removeEventListener('keydown', f3); }, []);
   /** the last tool picked in each rail item, so an item returns to it */
   const last = useRef<Record<string, Tool>>({});
+  /** T182: the rail item the player opened last (Props sits in both decorations: the one opened is the one lit) */
+  const activeRail = useRef<string | null>(null);
+  /** T187: the entry last opened in each rail item (its entryKey: Town decoration's Props or its Buildings) */
+  const lastEntry = useRef<Record<string, string>>({});
+  /** T193: the open flyouts (the rail item, the rows opened at first, whether the keyboard leads, the item's button's top in the rail's box) */
+  const [fly, setFly] = useState<{ item: string; path: number[]; keyboard: boolean; top: number } | null>(null);
+  /** T193: the leaf last picked in each rail item (its row keys and its labels: the tool panel's back arrow and breadcrumb) */
+  const lastLeaf = useRef<Record<string, { keys: string[]; crumb: string[]; tool: Tool }>>({});
+  const railRef = useRef<HTMLElement | null>(null), railBox = useRef<HTMLDivElement | null>(null);
   /** Holes > More options > My looks (P23 decision 3): the surface style editor's card beside the Holes panel; Esc closes it first */
   const [looks, setLooks] = useState(false);
   const looksOpen = looks && game?.uiTool === 'course';
@@ -156,8 +217,68 @@ export default function App() {
   const toasts = game ? game.toasts.filter(t => performance.now() - t.t < 4000) : [];
   const net = game?.ledger?.net ?? 0, debtDays = game?.traffic.budget.debtDays ?? 0;
   // the rail item of the tool in hand (the road tool on the course is Paths, the course tool's clubhouse scope Buildings: game.uiTool)
-  const item = game ? railItemOf(game.uiTool) : undefined;
+  const item = game ? railItemOf(game.uiTool, activeRail.current) : undefined;
+  /** T187: opens a rail entry: the Props tool's view first (its place and group), then its tool; remembered as the item's last */
+  const openEntry = (itemId: string, t: RailTool) => {
+    if (!game) return;
+    activeRail.current = itemId; lastEntry.current[itemId] = entryKey(t);
+    if (t.view) game.decor.setView(t.view.where, t.view.group ?? null);
+    game.setTool(t.id);
+  };
   if (game && item) last.current[item.id] = game.uiTool;
+  /** T193: a rail item's flyout rows (none: Select and Bulldoze, a click picks their tool) */
+  const menuFor = (r: RailItem): MenuRow[] => (game ? menuOf(r, menuCtx(game)) : []);
+  /** T193: opens a rail item's flyout beside its button */
+  const openFly = (r: RailItem, el: HTMLElement | undefined, keyboard: boolean, path: number[] = []) => {
+    const box = railBox.current, s = currentUiScale() || 1, top = el && box ? (el.getBoundingClientRect().top - box.getBoundingClientRect().top) / s : 0;
+    setFly({ item: r.id, path, keyboard, top: Math.max(0, Math.round(top)) });
+  };
+  /** T202: Help › Keys for the engine (the lot lab's ? and its button open it) */
+  if (game) game.keysSheet = { open: () => helpOpen.current, show: on => { helpOpen.current = on; setHelpTab('keys'); setHelp(on); } };
+  /** T202: the number keys (engine.ts keyDown, tool-modes.ts numberKeyUse): the nth rail group after Select opens its flyout, the keyboard
+   *  leading in it (the same key again closes it); Bulldoze, with no flyout, picks its tool; a locked group says why. The lab has no rail */
+  if (game) game.railKey = lab ? null : n => {
+    const r = numberedGroups(game.golfMode, !!game.range.scene)[n - 1]; if (!r) return;
+    const e = railEntries(game.toolUi(), game.golfMode, game.uiTool, { range: !!game.range.scene }).find(x => x.item.id === r.id);
+    if (e?.locked) { game.toast(`${r.label}: ${e.locked}`); return; }
+    const el = railRef.current?.querySelector<HTMLElement>(`[data-rail="${r.id}"]`) ?? undefined;
+    if (menuFor(r).length) { if (fly?.item === r.id) setFly(null); else openFly(r, el, true); return; }
+    setFly(null); activeRail.current = r.id; const t = pickEntry(r, game.golfMode, game.toolUi(), null); if (t) openEntry(r.id, t);
+  };
+  /** T193: a leaf picked in a flyout: its tool (the Props tool's view with it), then what it names (the road class, the junction, the surface ...) */
+  const pickLeaf = (row: MenuRow) => {
+    if (!game || !row.leaf) return;
+    const { item: itemId, entry, act } = row.leaf, r = RAIL.find(x => x.id === itemId);
+    const rows = r ? menuFor(r) : [], hit = leavesOf(rows).find(l => l.row.key === row.key);
+    if (hit) { let col: MenuRow[] | undefined = rows; const crumb: string[] = []; for (const k of hit.path) { const x: MenuRow | undefined = col?.find(q => q.key === k); if (!x) break; crumb.push(x.label); col = x.children; } lastLeaf.current[itemId] = { keys: hit.path, crumb, tool: entry.id }; }
+    setFly(null);
+    if (act?.k === 'event') { if (!game.eventTool) game.toggleEventTool(); game.emit(); return; }
+    // T200: Course › Land for sale: the overlay (a side mode in Select: another tool closes it)
+    if (act?.k === 'land') { activeRail.current = itemId; if (game.range.cardOpen) game.openRangeCard(false); game.openLandSale(); return; }
+    if (act?.k === 'range') {
+      activeRail.current = itemId; game.setTool('select'); game.openRangeCard(true); game.emit();
+      // the section scrolled to the card's top (inside the card: scrollIntoView would scroll the page too)
+      if (act.section) window.setTimeout(() => { const el = document.querySelector<HTMLElement>(`[data-testid="${act.section}"]`), card = el?.closest<HTMLElement>('.overflow-y-auto'); if (el && card) card.scrollTop += el.getBoundingClientRect().top - card.getBoundingClientRect().top - 8; }, 60);
+      return;
+    }
+    if (game.range.cardOpen) game.openRangeCard(false);
+    openEntry(itemId, entry);
+    const p = game.paint;
+    switch (act?.k) {
+      case 'road': game.pickType(act.id as Parameters<Game['pickType']>[0]); break;
+      case 'junction': game.brush = act.id as typeof game.brush; break;
+      case 'surface': p.setBrush(act.id as Parameters<typeof p.setBrush>[0]); break;
+      case 'newHole': newHole(game); break;
+      case 'club': if (!game.bizDefs.some(d => d.type === 'clubhouse')) game.placeClubhouse(true); break;
+      case 'halfway': game.placeHalfway(true); break;
+      case 'care': game.grassAction = act.id as typeof game.grassAction; break;
+      case 'props': if (act.group !== 'buildings') game.decor.focus = act.group as typeof game.decor.focus; break;
+      case 'paint': p.setMode('draw'); p.setStyle({ tex: act.tex as Parameters<typeof p.setStyle>[0]['tex'] }); break;
+      case 'plant': p.setPlant(act.id as Parameters<typeof p.setPlant>[0]); break;
+      case 'paintMode': p.setMode(act.id as Parameters<typeof p.setMode>[0]); break;
+    }
+    game.emit();
+  };
   /** the golf HUD's view (null outside golf mode): the top bar's tier and month */
   const gv = game?.golfMode ? game.golfView() : null, fv = game?.golfMode ? game.foundingView() : null;
   /** a range start's founding season before the invitation (P22 2.8, T095): "Founding season · n of 9 holes"; and the title's place (the range's,
@@ -172,10 +293,11 @@ export default function App() {
   const hint = ui ? ui.activeHint ?? game?.guideHint() ?? null : null; // T095: a range start's guide step when no other hint is up
   /** the Course brush's words (T118): what a click does (the surface, the hole it joins or starts, the price a cell) and the state; golf mode always shows them while a surface is armed */
   const courseHint = game?.courseHint() ?? '';
+  /** T200: where the brush was last refused for "not your land" (a few seconds: the pointer may leave the map for the pill's button) */
+  const landAt = game?.golfMode ? game.landRefusalAt() : null;
   /** the surface keys in force: 1 to the last surface the progressive unlocks show (BRUSH_PRESETS' order, as PaintTool.key reads them) */
   const surfaceKeys = Math.max(1, ...BRUSH_PRESETS.map((b, i) => (!ui || (ui.visibleCourseBrushes as string[]).includes(b.kind) ? i + 1 : 0)));
   /** the open item's tools that the progressive unlocks show (the segmented row of Roads and Transport) */
-  const shownTools = item ? item.tools.filter(t => !ui || (ui.visibleTools as string[]).includes(t.id)) : [];
 
   /** the top bar's money figure (a button: it opens the budget) */
   const treasury = (g: Game) => <Stat icon="bank" label="Treasury" value={g.unlimited ? '∞' : withIcon(balanceKind(g.money), money(g.money))} tone={g.money < 0 ? 'text-red-300' : 'text-emerald-300'} sub={debtDays ? `bankrupt in ${DEBT_DAYS - debtDays} days` : undefined} subTone="text-red-300" onClick={() => { g.panel = g.panel === 'budget' ? null : 'budget'; g.emit(); }} />;
@@ -188,10 +310,16 @@ export default function App() {
       <Stat icon="income" label="Daily income" value={withIcon(trendKind(net), (net >= 0 ? '+' : '') + money(net))} tone={net >= 0 ? 'text-emerald-300' : 'text-red-300'} />
     </>
   );
+  /** T202: Help (the Keys sheet and How it works); in the lot lab the lab's keys alone, drawn on the page over the lab's panels (the lab hides
+   *  the App's layer under them: lot-lab.ts) */
+  const helpCard = game && game.ready && help
+    ? <Help tab={lab ? 'keys' : helpTab} onTab={setHelpTab} onClose={() => setHelp(false)} lab={lab} keys={keySheet({ golf: game.golfMode, ui: game.toolUi(), range: !!game.range.scene, lab: lab ? labKeys ?? [] : null })} />
+    : null;
 
   return (
     <div className="ui-root fixed inset-0 overflow-hidden bg-[#1b2816] text-slate-100 select-none" style={{ fontFamily: 'ui-sans-serif, system-ui, sans-serif' }}>
       <TooltipLayer />
+      {game && <GuidePulse anchor={game.guideAnchor} />}
       <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
       <canvas
         ref={overlayRef}
@@ -235,16 +363,18 @@ export default function App() {
                       under 1900 px, the chips' words and the invitation's sentence under 2200 px go into their tooltips; the traffic views are in the
                       gear menu */}
                   {/* T095 (P22 2.8): before the tour's invitation the Tier's line says the founding season's holes (one row at 1366-1920 px, T135) */}
-                  <Stat icon="trophy" label="Tier" value={`T${gv.tier}`} sub={founding ? withIcon('growing', founding) : gv.tierName} subClass="max-[1599px]:hidden" subTone={founding ? 'font-semibold text-amber-300' : undefined} subTestId={founding ? 'founding-chip' : undefined} title={founding ? `${founding}: the tour invites you with ${fv!.check.holesNeeded} holes, a car park and a clubhouse (Tier ${gv.tier}: ${gv.tierName})` : `Tier ${gv.tier}: ${gv.tierName}`} tone="text-amber-200" />
-                  <Stat icon="calendar" label="Month" value={gv.month} sub={gv.live ? 'Tournament day' : `${Math.ceil(gv.monthsLeft)} ${Math.ceil(gv.monthsLeft) === 1 ? 'month' : 'months'} to ${fv && !fv.due ? 'season end' : 'the tournament'}`} />
-                  {game.golf?.start === 'range' && <button className={`chip ${game.range.cardOpen ? 'chip-on' : ''}`} onClick={() => game.openRangeCard()} data-tip="The driving range: golfers, takings, bucket price and upgrades" aria-label="Range" data-testid="range-chip"><Icon name="income" size={16} /><span className={WIDE}>Range</span></button>}
-                  {fv?.invited && game.traffic.round.runs === 0 && !gv.live && <span className="flex items-center gap-1 whitespace-nowrap rounded-md border border-amber-400/40 bg-amber-400/15 px-2 py-1 text-xs font-semibold text-amber-200" data-testid="invite-pill" data-tip={`The tour's invitation: the Club Championship at the end of ${fv.due ? 'this' : 'next'} season (the first tournament is held at the end of the season it names)`}><Icon name="trophy" size={14} /><span className="min-[2200px]:hidden">Invited</span><span className={WIDE}>The Club Championship: end of {fv.due ? 'this' : 'next'} season</span></span>}
+                  <Stat icon="trophy" label="Tier" value={`T${gv.tier}`} sub={gv.tierName} subClass="max-[1599px]:hidden" title={founding ? `${founding}: the tour invites you with ${fv!.check.holesNeeded} holes, a car park and a clubhouse (Tier ${gv.tier}: ${gv.tierName})` : `Tier ${gv.tier}: ${gv.tierName}`} tone="text-amber-200" />
+                  <Stat icon="calendar" label="Month" guide="month" value={gv.month} sub={gv.live ? 'Tournament day' : `${Math.ceil(gv.monthsLeft)} ${Math.ceil(gv.monthsLeft) === 1 ? 'month' : 'months'} to ${fv && !fv.due ? 'season end' : 'the tournament'}`} />
+                  {game.golf?.start === 'range' && <button className={`chip ${game.range.cardOpen ? 'chip-on' : ''}`} onClick={() => game.openRangeCard()} data-tip="The driving range: golfers, takings, bucket price and upgrades" aria-label="Range" data-testid="range-chip" data-guide="range-chip"><Icon name="income" size={16} /><span className={WIDE}>Range</span></button>}
+                  {fv?.invited && game.traffic.round.runs === 0 && !gv.live && <span className="flex items-center gap-1 whitespace-nowrap rounded-md border border-amber-400/40 bg-amber-400/15 px-2 py-1 text-xs font-semibold text-amber-200" data-testid="invite-pill" data-guide="invite-pill" data-tip={`The tour's invitation: the Club Championship at the end of ${fv.due ? 'this' : 'next'} season (the first tournament is held at the end of the season it names)`}><Icon name="trophy" size={14} /><span className="min-[2200px]:hidden">Invited</span><span className={WIDE}>The Club Championship: end of {fv.due ? 'this' : 'next'} season</span></span>}
                   {gv.live && (() => { const w = getTournamentWeather(game.seed, game.traffic.round.stage === 'eval' && game.traffic.round.last ? game.traffic.round.last.run : game.traffic.round.runs + 1); return <span className="rounded-md border border-amber-400/40 bg-amber-400/15 px-2 py-1 text-xs font-semibold text-amber-200" data-tip={w.summary}>{w.icon} {w.label}</span>; })()}
-                  {chip('courseStats') && <button className={`chip ${courseStats ? 'chip-on' : ''}`} onClick={() => setCourseStats(courseStats ? null : (game.courseStatsView() ?? null))} data-tip="Course stats and scorecard" aria-label="Course"><Icon name="trophy" size={16} /><span className={WIDE}>Course</span></button>}
-                  {chip('land') && <button className={`chip ${game.landMode ? 'chip-on' : ''}`} onClick={() => { game.toggleLandMode(); bump(); }} data-tip="Land: buy adjacent land parcels" aria-label="Land"><Icon name="compass" size={16} /><span className={WIDE}>Land</span></button>}
+                  {/* T188 (P23-UX P2-2): the season chip opens the Season card (the founding checklist or the tournament plan, and the Course stats, which had a
+                      chip of their own); in a founding season it says the holes ("◔ 3/9 holes", T095's founding line) */}
+                  {chip('courseStats') && (() => { const ph = seasonPhase(fv, game.traffic.round.runs); return <button className={`chip ${seasonOpen ? 'chip-on' : ''} ${ph === 'founding' ? 'font-semibold text-amber-300' : ''}`} onClick={() => { setSeasonOpen(!seasonOpen); setCourseStats(null); }} data-guide="season-chip" data-testid={ph === 'founding' ? 'founding-chip' : 'season-chip'} data-tip={founding ? `${founding}: the tour invites you with ${fv!.check.holesNeeded} holes, a car park and a clubhouse. Open the season's checklist and Course stats` : "The season: its tournament plan and the Course stats"} aria-label="Season"><Icon name="calendar" size={16} />{ph === 'founding' && fv ? <><span className="max-[1599px]:hidden">{seasonChip(ph, fv.check)}</span><span className="min-[1600px]:hidden">{`◔ ${Math.min(fv.check.holes, fv.check.holesNeeded)}/${fv.check.holesNeeded}`}</span></> : <span className={WIDE}>{seasonChip(ph, fv?.check)}</span>}</button>; })()}
+                  {chip('land') && <button className={`chip ${game.landMode ? 'chip-on' : ''}`} onClick={() => { if (game.landMode) game.closeLandSale(); else game.openLandSale(); bump(); }} data-tip="Land for sale: the blocks next to your land, priced; click one to see it, Buy on its card (also Course › Land for sale)" aria-label="Land for sale"><Icon name="compass" size={16} /><span className={WIDE}>Land</span></button>}
                   {chip('holes') && <button className={`chip ${game.holesTool ? 'chip-on' : ''}`} onClick={() => { game.toggleHolesTool(); bump(); }} data-tip="Holes: move pins and tee markers" aria-label="Holes"><Icon name="pin" size={16} /><span className={WIDE}>Holes</span></button>}
- {chip('event') && <button className={`chip ${game.eventTool ? 'chip-on' : ''}`} onClick={() => { game.toggleEventTool(); bump(); }} data-tip="Event: the event structures catalogue" aria-label="Event"><Icon name="buildings" size={16} /><span className={WIDE}>Event</span></button>}
- {chip('skipTournament') && <button className="chip disabled:opacity-40" disabled={game.traffic.skipping || gv.live} onClick={() => game.skipToTournament()} data-tip={fv && !fv.due ? `Skip to the end of the season (no tournament yet: ${fv.invited ? 'the first one closes the next season' : fv.check.text})` : 'Skip to the tournament (end of August)'} aria-label={fv && !fv.due ? 'Skip to season end' : 'Skip to tournament'}><Icon name="skip" size={16} /><span className={WIDE}>{fv && !fv.due ? 'Skip to season end' : 'Skip to tournament'}</span></button>}
+ {chip('event') && <button data-guide="chip-event" className={`chip ${game.eventTool ? 'chip-on' : ''}`} onClick={() => { game.toggleEventTool(); bump(); }} data-tip="Event: the event structures catalogue" aria-label="Event"><Icon name="buildings" size={16} /><span className={WIDE}>Event</span></button>}
+ {chip('skipTournament') && <button data-guide="chip-skip" className="chip disabled:opacity-40" disabled={game.traffic.skipping || gv.live} onClick={() => game.skipToTournament()} data-tip={fv && !fv.due ? `Skip to the end of the season (no tournament yet: ${fv.invited ? 'the first one closes the next season' : fv.check.text})` : 'Skip to the tournament (end of August)'} aria-label={fv && !fv.due ? 'Skip to season end' : 'Skip to tournament'}><Icon name="skip" size={16} /><span className={WIDE}>{fv && !fv.due ? 'Skip to season end' : 'Skip to tournament'}</span></button>}
                 </>
               ) : game.eventMode
                 ? <Stat icon="trophy" label="Level" value={String(game.traffic.round.xp)} sub={`${game.traffic.round.cards.length} cards`} tone="text-amber-200" />
@@ -381,24 +511,44 @@ export default function App() {
                 )}
               </div>
               {dev && ON_PC && <a className="btn" href={STUDIO_URL} target="studio" rel="noopener" title="The sprite studio (5179): sprites, lots, holes, the ground grass and map decals. Its Rebuild game sprites rebuilds this game: reload to see it">Studio</a>}
-              <button className="btn-icon" onClick={() => setHelp(true)} data-tip="How it works"><Icon name="help" size={22} /></button>
+              <button className="btn-icon" onClick={() => { setHelpTab('keys'); setHelp(true); }} data-tip="Help: the keys and how it works" data-tip-key="? or F1" aria-label="Help"><Icon name="help" size={22} /></button>
             </div>
           </div>
 
           {/* T174: the box round the rail and the panel takes no clicks itself (it is as tall as the rail, so it covered the map under a short panel) */}
-          <div className="pointer-events-none absolute left-3 top-[var(--hud-top,5.75rem)] z-20 flex items-start gap-2 [&>*]:pointer-events-auto">
+          <div ref={railBox} className={`pointer-events-none absolute left-3 top-[var(--hud-top,5.75rem)] ${fly ? 'z-40' : 'z-20'} flex items-start gap-2 [&>*]:pointer-events-auto`}>
             {/* P23 P1-E: the same places from minute zero; a tool not open yet stays dimmed in place with what unlocks it, a new one says NEW */}
-            <Rail entries={railEntries(ui, game.golfMode, game.uiTool)} onPick={r => game.setTool(last.current[r.id] ?? r.tools[0]!.id)} onLocked={(r, why) => game.toast(`${r.label}: ${why}`)} />
-            <div className="glass w-[330px] max-h-[calc(100vh-var(--hud-top,5.75rem)-8.25rem)] overflow-y-auto p-3" data-tool={game.uiTool}>
-              {shownTools.length > 1 && (
-                <div className="seg mb-3">
-                  {shownTools.map(t => (
-                    <button key={t.id} className={game.uiTool === t.id ? 'on' : ''} onClick={() => game.setTool(t.id)} title={t.key ? `${t.label} (${t.key})` : t.label}><Icon name={t.icon} size={16} />{t.label}{toolNew(ui, t.id) && <NewBadge />}</button>
-                  ))}
+            {/* T182: the groups (Driving range, Course, Decoration · Traffic, Town decoration); the range opens its card; a group opens its last tool, else its first open one */}
+            {/* T193: a group opens its flyout (a click again, Esc or a click on the map closes it); Select and Bulldoze pick their tool */}
+            <Rail navRef={railRef} open={fly?.item ?? null} entries={railEntries(ui, game.golfMode, game.uiTool, { active: item?.id, range: !!game.range.scene, rangeOpen: game.range.cardOpen })}
+              onPick={(r, keyboard, el) => {
+                if (menuFor(r).length) { if (fly?.item === r.id) setFly(null); else openFly(r, el, !!keyboard); return; }
+                setFly(null);
+                activeRail.current = r.id;
+                if (game.range.cardOpen) game.openRangeCard(false);
+                const e = pickEntry(r, game.golfMode, ui, lastEntry.current[r.id] ?? last.current[r.id]);
+                if (e) openEntry(r.id, e); else game.toast(`${r.label}: nothing open here yet`);
+              }}
+              onHover={(r, el) => { if (fly && fly.item !== r.id && menuFor(r).length) openFly(r, el, false); }}
+              onLocked={(r, why) => game.toast(`${r.label}: ${why}`)} />
+            {fly && (() => { const r = RAIL.find(x => x.id === fly.item), rows = r ? menuFor(r) : []; return rows.length ? (
+              <Flyouts key={fly.item} rows={rows} top={fly.top} left={(railRef.current?.offsetWidth ?? 96) + 8} startPath={fly.path} keyboard={fly.keyboard} railRef={railRef}
+                onLeaf={pickLeaf} onLocked={row => game.toast(`${row.label}: ${row.why}`)} onClose={() => setFly(null)} />
+            ) : null; })()}
+            <div className={`glass tool-panel w-[330px] max-h-[calc(var(--vh-ui,100vh)-var(--hud-top,5.75rem)-8.25rem)] overflow-y-auto overflow-x-hidden p-3 ${fly ? 'hidden' : ''}`} data-tool={game.uiTool} data-testid="tool-panel">
+              {/* T193: the tool's place in its menus (its leaf's path) and a back arrow that reopens its flyout there; the group's tools are no
+                  longer stacked here: they are in the flyouts */}
+              {item && game.uiTool !== 'select' && menuFor(item).length > 0 && (
+                <div className="tool-crumb" data-testid="tool-crumb">
+                  <button className="btn-icon tool-back" aria-label={`Back to the ${item.label} menu`} data-tip={`Back to the ${item.label} menu`}
+                    onClick={e => { const rows = menuFor(item), l = lastLeaf.current[item.id], el = railRef.current?.querySelector<HTMLElement>(`[data-rail="${item.id}"]`) ?? undefined; openFly(item, el, e.detail === 0, l ? indicesOf(rows, l.keys.slice(0, -1)) : []); }}>
+                    <Icon name="left" size={16} />
+                  </button>
+                  <span className="tool-crumb-text">{[item.label, ...(lastLeaf.current[item.id]?.tool === game.uiTool ? lastLeaf.current[item.id]!.crumb : [])].join(' › ')}</span>
                 </div>
               )}
-              {game.uiTool === 'road' && <RoadPanel game={game} scope="town" />}
-              {game.uiTool === 'path' && <RoadPanel game={game} scope="course" />}
+              {game.uiTool === 'road' && <RoadPanel game={game} scope="town" compact />}
+              {game.uiTool === 'path' && <RoadPanel game={game} scope="course" compact />}
               {game.tool === 'lane' && (
                 <Panel title="Upgrade roads" icon="up" desc="Click a straight run of road to take it one size up: gravel → street → road → arterial → six-lane; avenue → boulevard → grand. On the course: walking path → dirt path → cement slabs → paved cart path; gravel drive → paved → avenue. You pay only the difference.">
                   <p className="text-xs text-slate-300">Right-click a one-way road to reverse it.</p>
@@ -409,7 +559,7 @@ export default function App() {
                   <p className="text-xs text-slate-300">Right-click a one-way road to reverse it.</p>
                 </Panel>
               )}
-              {game.tool === 'junction' && <JunctionPanel game={game} />}
+              {game.tool === 'junction' && <JunctionPanel game={game} compact />}
               {game.tool === 'bulldoze' && (
                 <Panel title="Bulldoze" icon="bulldozer">
                   <p className="text-xs text-slate-300">Click an object to remove it (half its price is refunded). Click or drag along a road to tear it up piece by piece — the ends become cul-de-sacs and curbs, corners, crossings and markings redraw themselves instantly.</p>
@@ -424,7 +574,8 @@ export default function App() {
               {game.tool === 'toll' && <TollPanel game={game} />}
               {game.tool === 'business' && <BusinessPanel game={game} />}
               {game.tool === 'bus' && <BusPanel game={game} />}
-              {game.tool === 'select' && <SelectPanel game={game} />}
+              {game.tool === 'select' && game.landMode && <LandPanel game={game} />}
+              {game.tool === 'select' && !game.landMode && <SelectPanel game={game} />}
             </div>
             {looksOpen && <MyLooksCard game={game} onClose={() => setLooks(false)} />}
           </div>
@@ -438,14 +589,16 @@ export default function App() {
             <div className={`flex items-center gap-2 glass rounded-full! px-4 py-1.5 text-xs ${gv ? 'pointer-events-auto' : ''}`}>
               <Icon name="info" size={18} />
               {gv && hint
-                ? <><span data-testid="hint-text"><b>{hint.title}</b> · {hint.body}</span>{hint.show && <button className="chip chip-on" data-testid={hint.id.startsWith('hint-practice') ? 'hint-show-practice' : 'hint-show'} onClick={() => { game.showHint(hint.id); bump(); }}>Show me</button>}<button className="chip" onClick={() => { game.dismissHint(hint.id); bump(); }}>Got it</button></>
+                ? <>{game.guideDone && performance.now() - game.guideDone.at < 6000 && <span className="font-semibold text-emerald-300" data-testid="guide-done">✓ {game.guideDone.text} · next:</span>}<span data-testid="hint-text"><b>{hint.title}</b> · {hint.body}</span>{hint.show && <button className="chip chip-on" data-testid={hint.id.startsWith('hint-practice') ? 'hint-show-practice' : 'hint-show'} onClick={() => { game.showHint(hint.id); bump(); }}>Show me</button>}<button className="chip" onClick={() => { game.dismissHint(hint.id); bump(); }}>Got it</button></>
                 : <span>{keyed(hintFor(game))}</span>}
             </div>
             )}
             {gv && courseHint && (
-            <div className="flex items-center gap-2 glass rounded-full! px-4 py-1.5 text-xs" data-testid="course-pill">
+            <div className={`flex items-center gap-2 glass rounded-full! px-4 py-1.5 text-xs ${landAt ? 'pointer-events-auto' : ''}`} data-testid="course-pill">
               <SurfaceMark kind={game.paint.brushKind} size={24} />
               <span className="text-slate-100">{courseHint}</span>
+              {/* T200: a brush refused for "not your land" offers the land for sale there */}
+              {landAt && <button className="chip chip-on whitespace-nowrap" data-testid="refusal-land" onClick={() => game.openLandSale(landAt)}>Land for sale</button>}
               <span className="whitespace-nowrap text-slate-300">· <span className="keycap">1–{surfaceKeys}</span> switch surface · <span className="keycap">Esc</span> stop</span>
             </div>
             )}
@@ -500,7 +653,8 @@ export default function App() {
           </div>
           </div>
           )}
-          {game.site && game.traffic.round.stage !== 'eval' && <RoundPanel game={game} />}
+          {game.site && game.traffic.round.stage !== 'eval' && !(game.golfMode && game.traffic.round.stage === 'free') && <RoundPanel game={game} />}
+          {seasonOpen && game.golfMode && game.traffic.round.stage !== 'eval' && <SeasonCard game={game} onClose={() => setSeasonOpen(false)} onSelectHole={h => { const pin = game.golf?.pins.find(p => p.hole === h); if (pin) game.lookAt(pin.x, pin.y); }} />}
           {game.site && game.traffic.round.stage === 'eval' && <EvalScreen game={game} />}
           {game.site && game.playBoard() && <GolfLeaderboard game={game} />}
           {game.shotState() && <ShotPanel game={game} />}
@@ -543,9 +697,10 @@ export default function App() {
           <Minimap game={game} />
           {dev && <PerfPanel game={game} />}
           {dev && <TilesPanel game={game} />}
-          {help && <Help onClose={() => setHelp(false)} />}
         </>
       )}
+      {/* T202: Help (the lab too: its ? opens the Keys sheet, its own keys under their heading) */}
+      {helpCard && (lab ? createPortal(helpCard, document.body) : helpCard)}
         </div>
   );
 }
@@ -594,9 +749,9 @@ function PerfPanel({ game }: { game: Game }) {
 }
 
 /** a top-bar figure: its icon (in a square, when given), its label, value and a line under it; bar (0 to 1) draws a thin progress bar under that */
-function Stat({ label, value, sub, tone, subTone, subClass, subTestId, title, bar, onClick, icon }: { label: string; value: string; sub?: string; tone?: string; subTone?: string; subClass?: string; subTestId?: string; title?: string; bar?: number; onClick?: () => void; icon?: IconName }) {
+function Stat({ label, value, sub, tone, subTone, subClass, subTestId, title, bar, onClick, icon, guide }: { label: string; value: string; sub?: string; tone?: string; subTone?: string; subClass?: string; subTestId?: string; title?: string; bar?: number; onClick?: () => void; icon?: IconName; guide?: string }) {
   return (
-    <div className={`flex items-center gap-2.5 px-1 ${onClick ? 'cursor-pointer rounded-lg hover:bg-white/5' : ''}`} onClick={onClick} data-tip={title}>
+    <div className={`flex items-center gap-2.5 px-1 ${onClick ? 'cursor-pointer rounded-lg hover:bg-white/5' : ''}`} onClick={onClick} data-tip={title} data-guide={guide}>
       {icon && <div className="glass-2 hidden h-8 w-8 shrink-0 place-items-center min-[1900px]:grid"><Icon name={icon} size={24} /></div>}
       <div>
         <div className="label-caps">{label}</div>
@@ -751,7 +906,7 @@ function EvalScreen({ game }: { game: Game }) {
  const book = ye ? computeTournamentCloseBook(ye, last.tickets ?? 0, game.courseAreaList(), last.upkeep, last.toll ?? 0) : null;
  return (
  <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center p-4">
- <div className="pointer-events-auto max-h-full w-[560px] max-w-full space-y-3 overflow-y-auto rounded-2xl border border-white/10 bg-slate-950/90 p-5 text-slate-200 shadow-2xl backdrop-blur">
+ <div className="pointer-events-auto max-h-full w-[560px] max-w-full space-y-3 overflow-y-auto rounded-2xl border border-white/10 bg-slate-950/90 p-5 text-slate-200 shadow-2xl backdrop-blur" data-guide="results">
  <div className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-400/80">{gv ? `${gv.tierName} · ${last.run === 1 ? 'First' : 'Year ' + last.run} tournament` : `Stadium · Level ${last.level} · Run ${last.run}`}</div>
  {ye && (
  <div className="rounded-xl border border-white/10 bg-white/5 p-3 text-xs">
@@ -1023,7 +1178,7 @@ const VARIANT_ICON: Record<string, IconName> = { '': 'road', tr: 'trees', gr: 'f
 
 /** the road tool's panel: the town's roads (scope town: the Roads menu) or the course's cart paths and drives (scope course: the Course menu's
  *  Paths & drives, T084); the same drawing, snapping and pricing either way */
-function RoadPanel({ game, scope }: { game: Game; scope: 'town' | 'course' }) {
+function RoadPanel({ game, scope, compact = false }: { game: Game; scope: 'town' | 'course'; compact?: boolean }) {
   const course = scope === 'course', families = course ? COURSE_FAMILIES_UI : ROAD_FAMILIES, types = course ? COURSE_TYPES : ROAD_TYPES;
   const legs = game.previewLegs(), block = game.routeBlock(legs);
   const len = game.net.legsLength(legs);
@@ -1035,17 +1190,18 @@ function RoadPanel({ game, scope }: { game: Game; scope: 'town' | 'course' }) {
   const [openFam, setOpenFam] = useState<Family | 'none' | null>(null);
   const isOpen = (f: Family) => openFam === null ? f === curFam : openFam === f;
   return (
-    <Panel title={course ? 'Paths' : 'Road Construction'} icon={course ? 'sidewalk' : 'road'} desc={course ? 'The streets of your course town: cart paths and drives, laid the way roads are built. Click to start, click again for each bend or stop. Points snap to junctions, paths, roads and the 1 m half grid of the course.' : 'Draw a connected route: click to start, click again for each bend or stop. Points snap to junctions, roads and the grid; crossings become junctions.'}>
+    <Panel title={course ? 'Paths' : 'Road Construction'} icon={course ? 'sidewalk' : 'road'} desc={course ? 'The streets of your course town: cart paths and drives, laid the way roads are built. Click to start, click again for each bend or stop; double-click or Enter to build, right-click to take back a point. Points snap to junctions, paths, roads and the 1 m half grid of the course.' : 'Draw a connected route: click to start, click again for each bend or stop; double-click or Enter to build, right-click to take back a point. Points snap to junctions, roads and the grid; crossings become junctions.'}>
       <div className="mt-2 flex flex-col gap-2">
-        {families.map(f => { const ex = isOpen(f.id); return (
+        {/* T193 (compact: the toolbar's flyouts pick the class): the picked class alone, under its family's name */}
+        {(compact ? families.filter(f => f.id === curFam) : families).map(f => { const ex = compact || isOpen(f.id); return (
           <div key={f.id}>
-            <button className="mb-1 flex w-full items-baseline gap-2 text-left" onClick={() => setOpenFam(ex ? 'none' : f.id)} aria-expanded={ex}>
+            {compact ? <div className="label-caps mb-1">{f.label}</div> : <button className="mb-1 flex w-full items-baseline gap-2 text-left" onClick={() => setOpenFam(ex ? 'none' : f.id)} aria-expanded={ex}>
               <span className="label-caps">{f.label}</span>
               <span className="min-w-0 flex-1 truncate text-[12px] text-[var(--muted)]">{f.desc}</span>
               {!ex && f.id === curFam && <span className="shrink-0 text-xs font-semibold text-[var(--gold)]">{curName}</span>}
               <Icon name={ex ? 'up' : 'down'} size={12} />
-            </button>
-            {ex && types.filter(t => t.family === f.id).map(t => {
+            </button>}
+            {ex && types.filter(t => t.family === f.id && (!compact || t.id === curType?.id)).map(t => {
               // a locked card: a course path held back by the unlock stage says so (T117), a course drive shows its tour level, a town class the
               // career milestone that unlocks it (greyed either way)
               const c = CLASS[t.id]!, open = game.classOpen(t.id), tier = courseTierNeeded(t.id), lk = open ? null : unlockOf('class', t.id), lock = open ? null : game.courseStageLock(t.id) ? '🔒 First hole' : tier !== null ? `🔒 Tour level ${tier}` : lk ? lockText(lk.pop) : '🔒', on = game.cls.base === t.id;
@@ -1123,11 +1279,11 @@ function RoadPanel({ game, scope }: { game: Game; scope: 'town' | 'course' }) {
         {block && <div className="mt-1 text-xs text-red-300">{block}</div>}
       </div>
       <div className="mt-2 flex gap-1">
-        <button className="chip chip-on flex-1 disabled:opacity-40" disabled={game.route.length < 2} onClick={() => game.finishRoute()}>Build route ⏎</button>
-        <button className="chip" disabled={!game.route.length} onClick={() => game.undoRoutePoint()} title="Backspace">Undo</button>
+        <button className="chip chip-on flex-1 disabled:opacity-40" disabled={game.route.length < 2} onClick={() => game.finishRoute()} title="Build the route (Enter, or double-click the last point)">Build route ⏎</button>
+        <button className="chip" disabled={!game.route.length} onClick={() => game.routeInput('backspace')} title="Take back the last point (Backspace or right-click)">Undo</button>
         <button className="chip" disabled={!game.route.length} onClick={() => game.cancelRoute()} title="Esc">Cancel</button>
       </div>
-      <p className="mt-2 text-[12px] text-slate-400">Double-click the last point, press Enter or right-click to build. To widen or narrow a road, use Upgrade (N) or Downgrade (Y). Trees and small items in the way are cleared; buildings block the route.</p>
+      <p className="mt-2 text-[12px] text-slate-400">Double-click the last point or press Enter to build; right-click or Backspace takes back the last point. To widen or narrow a road, use Upgrade (N) or Downgrade (Y). Trees and small items in the way are cleared; buildings block the route.</p>
     </Panel>
   );
 }
@@ -1329,7 +1485,7 @@ const JUNCTION_KINDS: JunctionKind[] = ['plain', 'stop', 'mini', 'signal', 'roun
 /** the one-line help under the Type control for the types with no options */
 const KIND_HELP: Record<string, string> = { stop: 'Every approach stops; the car that waited longest goes first.', mini: 'A painted island; drivers give way to the circle and take turns.' };
 /** the junction tool's panel: the brush cards (Select, then Plain, All-way stop, Mini-roundabout, Lights and Roundabout with its ring-lane chips), then the selected junction (SelectedJunction) */
-function JunctionPanel({ game }: { game: Game }) {
+function JunctionPanel({ game, compact = false }: { game: Game; compact?: boolean }) {
   const b = game.brush, n = game.selectedNode();
   const hint = b === 'select' ? 'Hover a junction to outline it and click to select it. Tab flips the type under the pointer; Esc deselects, then returns to Select.'
     : b === 'plain' ? 'Click a junction to make it plain. Right-click resets a junction to plain (free).'
@@ -1349,11 +1505,12 @@ function JunctionPanel({ game }: { game: Game }) {
   return (
     <Panel title="Junctions" icon="junction">
       <div className="mt-1 grid grid-cols-1 gap-1">
-        <button className={`card ${b === 'select' ? 'card-on' : ''}`} onClick={() => { game.brush = 'select'; game.emit(); }}>
+        {/* T193 (compact: the toolbar's flyouts pick the junction): the picked one alone */}
+        {(!compact || b === 'select') && <button className={`card ${b === 'select' ? 'card-on' : ''}`} onClick={() => { game.brush = 'select'; game.emit(); }}>
           <div className="flex w-full items-center justify-between text-xs"><span className="font-semibold text-slate-100">Select</span><span className="text-amber-300">free</span></div>
           <div className="text-[12px] text-slate-400">Click a junction to select it and set its type and options</div>
-        </button>
-        {JUNCTION_KINDS.map(t => {
+        </button>}
+        {JUNCTION_KINDS.filter(t => !compact || t === b).map(t => {
           const lk = game.junctionOpen(t) ? null : unlockOf('junction', t)!, spec = JUNCTIONS.find(j => j.id === t)!, on = b === t;
           return (
             <div key={t} className="space-y-1">
@@ -1573,7 +1730,7 @@ function SelectPanel({ game }: { game: Game }) {
 
 function hintFor(g: Game) {
   switch (g.tool) {
-    case 'road': return (g.route.length ? `Route: ${g.route.length} point(s) — click to extend, double-click, Enter or right-click to build, Backspace to undo, Esc to cancel, Shift for a straight 45° run` : `BUILDING NEW ROADS — Draw a connected route: click where the ${g.cls.name.toLowerCase()} should start${VARIANTS[g.cls.base]!.length > 1 ? ' · Tab flips the variant' : ''}`) + ' · E: replace';
+    case 'road': return (g.route.length ? `Route: ${g.route.length} point(s) — click to extend, double-click or Enter to build, right-click or Backspace to take back a point, Esc to cancel, Shift for a straight 45° run` : `BUILDING NEW ROADS — Draw a connected route: click where the ${g.cls.name.toLowerCase()} should start${VARIANTS[g.cls.base]!.length > 1 ? ' · Tab flips the variant' : ''}`) + ' · E: replace';
     case 'junction': {
       const s = g.selectedNode(), h = g.hoverNode, what = g.brush === 'signal' ? 'traffic lights' : g.brush === 'roundabout' ? `a ${g.ringLanes}-lane roundabout` : g.brush === 'stop' ? 'an all-way stop' : g.brush === 'mini' ? 'a mini-roundabout' : 'plain';
       if (g.brush === 'select') return s ? 'Click a corner’s + or × to add or remove its slipway (lights) · Esc deselects, then returns to Select' : h ? 'Click to select this junction · Tab flips its type' : 'Hover a junction to outline it · click to select it · Tab flips the type';
@@ -1595,11 +1752,20 @@ function hintFor(g: Game) {
   }
 }
 
-function Help({ onClose }: { onClose: () => void }) {
+/** Help (T202: two tabs: Keys, the Keys sheet, and How it works) */
+function Help({ onClose, tab, onTab, keys, lab }: { onClose: () => void; tab: 'keys' | 'how'; onTab: (t: 'keys' | 'how') => void; keys: ReturnType<typeof keySheet>; lab: boolean }) {
   return (
-    <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
-      <div className="max-w-xl rounded-2xl border border-white/10 bg-slate-950 p-6 text-sm text-slate-200 shadow-2xl" onClick={e => e.stopPropagation()}>
-        <div className="text-lg font-bold text-amber-200">How Maple Falls works</div>
+    <div className={`${lab ? 'fixed' : 'absolute'} inset-0 z-40 flex items-center justify-center bg-black/60 p-4`} style={lab ? { zIndex: 75 } : undefined} onClick={onClose}>
+      <div className={`help-card rounded-2xl border border-white/10 bg-slate-950 p-6 text-sm text-slate-200 shadow-2xl ${tab === 'keys' ? 'help-card-wide' : 'max-w-xl'}`} onClick={e => e.stopPropagation()} role="dialog" aria-label="Help" data-testid="help">
+        <div className="flex flex-wrap items-center gap-2">
+          {lab ? <div className="text-lg font-bold text-amber-200">Keys</div> : <div className="seg" role="tablist">
+            <button role="tab" aria-selected={tab === 'keys'} className={`px-4 ${tab === 'keys' ? 'on' : ''}`} onClick={() => onTab('keys')} data-testid="help-keys">Keys</button>
+            <button role="tab" aria-selected={tab === 'how'} className={`px-4 whitespace-nowrap ${tab === 'how' ? 'on' : ''}`} onClick={() => onTab('how')}>How it works</button>
+          </div>}
+          <span className="ml-auto text-[12px] text-slate-400"><span className="keycap">?</span> or <span className="keycap">F1</span> opens this · <span className="keycap">Esc</span> closes</span>
+        </div>
+        {tab === 'keys' ? <KeysSheet sections={keys} /> : <>
+        <div className="mt-3 text-lg font-bold text-amber-200">How Maple Falls works</div>
         <ul className="mt-3 list-disc space-y-1.5 pl-5 text-slate-300">
           <li><b>Roads</b> are drawn as connected routes, exactly like the town builder: click points, finish with Enter or a double-click. Everything on the ground — asphalt, kerbs, sidewalk slabs, rounded corners, crossings, centre lines, manholes and drains — is generated geometry, so a new road appears instantly, no ground rebuild.</li>
           <li>The surfaces are <b>lit relief</b>, like the builder's bake: the asphalt is a cracked mosaic of facets and the sidewalk is slabs, each with a height-field; a cold key light from the upper-left shades them and puts specular glints on the facets that face it, markings are painted into the relief, kerbs get a bright top edge and a gutter shadow, and fallen leaves pile up against every kerb.</li>
@@ -1613,7 +1779,7 @@ function Help({ onClose }: { onClose: () => void }) {
           <li>Space pauses (tap it; hold it and drag to pan); , and . change the speed; H skips to the next rush hour.</li>
           <li>F shows traffic flow and junction levels of service; B lists the worst bottlenecks (click one to jump there).</li>
           <li>With the select tool, click a car to inspect its trip; with the flow overlay on, click a junction to see where its traffic comes from and goes.</li>
-        </ul>
+        </ul></>}
         <button className="btn mt-5" onClick={onClose}>Close</button>
       </div>
     </div>

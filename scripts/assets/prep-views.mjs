@@ -24,6 +24,7 @@
 //    of a building kind it misses) as done (its four views in the game) or missing (none generated yet, or every version withheld, and why).
 //    No building is ever mirrored (src/game/mirror.ts): a missing one is drawn as its old picture, unflipped, until its views land.
 import fs from 'node:fs';
+import { presetScales } from './preset-scales.mjs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
@@ -114,7 +115,9 @@ const NEED = await (async () => {
   } catch (error) { console.warn(`stand-in sizes not read (every building packed for its own size only): ${error.message}`); return {}; }
 })();
 /** the scale a building's views are packed for: its own (the studio's size, else the table's), or more when a building drawn as it needs more */
-const packFor = id => Math.max(1, owner(id), NEED[id] ?? 0);
+// T190: a lot preset that draws a building bigger (up to 1.5 times its size) counts as drawn: its views are packed that big
+const PRESET_SCALE = presetScales(root);
+const packFor = id => Math.max(1, owner(id) * (PRESET_SCALE.get(id) ?? 1), NEED[id] ?? 0);
 // the buildings of the game: the inventory's buildings and baked lots (east:<id> is its subject's east view), and any library sprite of a
 // building kind the inventory has not seen (not one it files elsewhere or leaves out, such as the golf equipment, nor a removed id)
 const inventory = JSON.parse(fs.readFileSync(path.join(root, 'art/theme-consistency/inventory.json'), 'utf8'));

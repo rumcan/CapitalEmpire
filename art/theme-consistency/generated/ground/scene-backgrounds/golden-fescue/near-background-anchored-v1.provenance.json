@@ -1,0 +1,28 @@
+{
+  "id": "ground-background:golden-fescue",
+  "material": "golden-fescue",
+  "zoom": "near",
+  "version": 1,
+  "stage": "remove-only-scale-anchor",
+  "source": "art/theme-consistency/generated/ground/scene-backgrounds/golden-fescue/near-anchored-v1.raw.png",
+  "output": "art/theme-consistency/generated/ground/scene-backgrounds/golden-fescue/near-background-anchored-v1.raw.png",
+  "provenance": "art/theme-consistency/generated/ground/scene-backgrounds/golden-fescue/near-background-anchored-v1.provenance.json",
+  "prompt": "Make one small local edit to this exact image: remove the single brick shop near the centre, its attached little step and its immediate building shadow. Fill ONLY that occupied area by continuing the immediately adjacent golden fescue grass naturally across it.\nLeave the rest of the image as it is. Preserve its camera, framing, resolution, grass blade/tuft sizes, golden/ochre colours, olive shadows, pale seedheads, brushwork, density patches and light from the upper right toward the lower left. Do not restyle, smooth, enlarge, shrink, redistribute or redraw the surrounding field. Do not change exposure, contrast or perspective.\nThe result is the same grass background with that one last building erased. No objects or new features remain. Deliver the same wide PNG image.",
+  "generator": "image_gen",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-b841b717-923e-4919-9110-ff86150ee7bd.png",
+  "date": "2026-10-26",
+  "processing": "Native imagegen output copied unchanged. Second edit requested to remove only lastshop and itscontactshadow.",
+  "reviewStatus": "Owner approved appearance on2026-10-26; selectedeight-tileNEARappearance source; independentreviewvisuallymatchesgrassscale/theme; generatorrepaintedotherpixels, notpixel-identicalremoval",
+  "integrationStatus": "art-only-not-integrated",
+  "raw": {
+    "file": "art/theme-consistency/generated/ground/scene-backgrounds/golden-fescue/near-background-anchored-v1.raw.png",
+    "sha256": "d435a4a73c2e9c6318ebef400b30926ff48231e3a96f48623a51267c2617dd57",
+    "dimensions": [
+      1742,
+      903
+    ],
+    "bytes": 3527795
+  },
+  "sourceSha256": "e8f63f69a4722d99dc0f37a3c5f3c117cd9f09da8aee63bd31bef6f372506f08",
+  "ownerAccepted": true
+}

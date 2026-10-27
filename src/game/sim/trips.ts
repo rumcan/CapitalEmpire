@@ -8,7 +8,7 @@ import { dot, norm, perp, sub, type Seg } from '../network';
 import type { Lot } from '../lots/lots';
 import { LU } from '../lots/town';
 import type { Sim } from './sim';
-import { townHourIndex } from './townclock';
+import { simTimeAt, townHourIndex } from './townclock';
 
 /** sim seconds per in-game day: one game minute per sim second */
 export const DAY = 1440;
@@ -244,7 +244,9 @@ export class LotTrips {
     for (const r of this.homes) {
       r.acc += r.pop * k; const n = Math.floor(r.acc); r.acc -= n;
       for (let j = 0; j < n; j++) {
-        const due = (H + this.rnd()) * hl;
+        // when the trip may leave, in sim seconds: a golf game's hour H is a town hour, so its minutes go through the town clock (T098: they
+        // were compared with sim seconds as they were, so a golf town's trips left hours late, and on a day faster than a minute a second never)
+        const at = H + this.rnd(), due = free ? simTimeAt(sim.town, at * 60) : at * hl;
         if (evening) { const o = this.pick(this.jobsL, this.jobC, r.lot); if (o) this.add(sim, o, r.lot, due, LU.RES); }
         else if (morning) { const d = this.pick(this.jobsL, this.jobC, r.lot); if (d) this.add(sim, r, d.lot, due, d.use); }
         else {

@@ -1,0 +1,10 @@
+{
+ "id": "ce:parking-garage-6storey",
+ "version": "parking-garage-6storey-4views-v3",
+ "files": {
+  "NE": "d38b2f6a4c0ef846ba2f7b10f2a59fa0fb801c01b7ce705775af4b0849c93659",
+  "SE": "d88e937102ce7acd40c508358e0585d94a09a2bfdcd2fc809c0058ae369eefc2",
+  "SW": "5434394b0425ad46f47d60f6abee430dc764a5481c3e5fd4833ad88e92c29b78",
+  "NW": "f1aa309007fc1929f9168f4d7417030b770e5eb26170cc92cb8279beb65922a8"
+ }
+}

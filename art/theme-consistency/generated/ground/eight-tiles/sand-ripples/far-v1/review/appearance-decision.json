@@ -1,0 +1,110 @@
+{
+  "schema": 1,
+  "reviewedDate": "2026-10-26",
+  "reviewer": "/root/course_texture_exports",
+  "material": "sand-ripples",
+  "zoom": "far",
+  "revision": "v1",
+  "activeVariants": 4,
+  "decision": "accepted-for-art-appearance",
+  "scope": "Saved-PNG native material and shuffled adjacency review; not runtime integration or owner signoff",
+  "materialIdentity": "Pale golden painted sand with broad grouped low-frequency ripple fields matching the independent far camera source, with no giant isolated dune object.",
+  "lighting": "Creamy upper-right ridge edges and softer lower-left troughs remain coherent. Whole-frame exposure stays even; no dark edge, spotlight or vignette.",
+  "adjacency": "Four-tile and both shuffled actual-PNG layouts read as continuous material without conspicuous straight joins, central cross, rectangular collar, low-frequency tonal frame or brightness step.",
+  "nativeCuts": "Native master half-height, tile03 left and tile04 top crops inspected. Some irregular pixel-selection transitions remain locally traceable at native magnification; they do not form a conspicuous grid or straight repair line in the reviewed two/four-tile layouts. No claim of invisible cuts under arbitrary enlargement.",
+  "objectRemoval": "No shop, road, parking footprint, foliage, UI, text, unrelated shadow or magenta guide remnant visible.",
+  "composition": "Four distinct interior ripple arrangements with compatible shared border art. Shared borders repeat by construction; no runtime randomisation/blending is used.",
+  "nativeEvidence": [
+    {
+      "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/far-v1/review/master-halfheight-native.png",
+      "sha256": "d305eefc6802c45efd09e14a3673ca6df0709d25e40b56e33d2a732a5744861c"
+    },
+    {
+      "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/far-v1/review/tile03-left-native.png",
+      "sha256": "049250fde3c6fd6fbca83df709baab66a3c0eebda170e35225b7ea8bfb588adf"
+    },
+    {
+      "file": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/far-v1/review/tile04-top-native.png",
+      "sha256": "2e3cf27a51bec8e6c9a794e50afcffaf1e65c493ec45191785d49f12d6f8352b"
+    }
+  ],
+  "limits": [
+    "Art review only; no live game, coverage, performance or owner-signoff claim.",
+    "NEAR/MID/FAR are independent paintings, not shared geography or resized copies.",
+    "Separate gameplay material layers; no interior blending, mirror, flip or rotation."
+  ],
+  "files": [
+    {
+      "file": "tile-01.png",
+      "sha256": "0fe1f45db93497274ae0ef6bb72cda084c8dc0b095c0eaad4b364db5583658f2",
+      "dimensions": [
+        1742,
+        902
+      ],
+      "bytes": 2924142
+    },
+    {
+      "file": "tile-02.png",
+      "sha256": "631464152105852da796dad3c905db9854ecb902c6e65be7e0d238457b9802d3",
+      "dimensions": [
+        1742,
+        902
+      ],
+      "bytes": 2986245
+    },
+    {
+      "file": "tile-03.png",
+      "sha256": "2c0736acfe9ee3d839e93eac1ae2a54b2ff8a686af2ca3fc950e5d87a63bccee",
+      "dimensions": [
+        1742,
+        902
+      ],
+      "bytes": 2962250
+    },
+    {
+      "file": "tile-04.png",
+      "sha256": "aac6706aff0dd3064504471332b38fe149b65273a45070c6ed4cd3bc64f198fa",
+      "dimensions": [
+        1742,
+        902
+      ],
+      "bytes": 2944200
+    },
+    {
+      "file": "review-four-tiles.png",
+      "sha256": "28d08d9205d4d2cba9dc8bf2da7ffb0b882f8fbc6584f2db1fb9b0e185aa558c",
+      "dimensions": [
+        1742,
+        902
+      ],
+      "bytes": 2624069
+    },
+    {
+      "file": "review-order-a.png",
+      "sha256": "5bc61a52aec36dbbff63174ed5158d4b7d04ed70d420b6062ba78ae815c11533",
+      "dimensions": [
+        1024,
+        530
+      ],
+      "bytes": 910100
+    },
+    {
+      "file": "review-order-b.png",
+      "sha256": "3088b0c776eafd92d4e633b6c9cf849b19b1b750576c4b81429bb3a52e1cd52d",
+      "dimensions": [
+        1024,
+        530
+      ],
+      "bytes": 909677
+    },
+    {
+      "file": "common-collar-master.png",
+      "sha256": "2e5c007fe74cef91b3ad3da3e01a258a14b7f78362b85c2082b6e852c4255134",
+      "dimensions": [
+        1742,
+        902
+      ],
+      "bytes": 2965043
+    }
+  ]
+}

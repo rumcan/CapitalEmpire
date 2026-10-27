@@ -76,7 +76,8 @@ tour-level pros went 8 to 11 under on the short old nine), and a click to aim se
 **Decision 1, recorded:** the played competition is one 18-hole round on the tournament day; the tier table's extra days
 (`tour.ts` TIERS `days`, `practiceDays`) are left as they are, because setting them to 1 would put a whole multi-day crowd into the one
 played day (50,000 fans at tier 5) and change the year-end money; say if the economy should be one day too.
-**Open:** a reload during a tournament day comes back as a fresh day (the round's surge is not restored by the save today), so the
+**Open (tickets since 2026-10-27: T209 #554 resume after a reload, T210 #555 the results screen, T211 #556 pace of play, T212 #557 the
+putt and chip clips, T213 #558 caddies, carts and celebrations; and T208 #553 everyday golf, T214 #559 pros and memberships):** a reload during a tournament day comes back as a fresh day (the round's surge is not restored by the save today), so the
 owner's round cannot resume after a reload yet, although his inputs are saved and replay (tested); the results screen opens at the
 15:00 kick-off while golf goes on (the leaderboard stays, the champion follows when the last group is in); putts use the drive clip's
 address frames (no putt clip in Meshy's library); no caddies, carts or celebrations yet; the groups behind the owner's do not wait

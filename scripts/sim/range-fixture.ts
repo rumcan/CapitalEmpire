@@ -3,10 +3,13 @@
 // as the engine saves a game (engine.ts save: SaveV5) with the course land empty and green (no holes in the save: P22 2.3.4's year 20 with the
 // course still to build) and the camera on the town. It is read by tests/save-fixtures.test.ts (it loads; under 2 MB gzipped), the dev
 // ?fixture=range20 loader (engine.ts) and the bench's &fixture=range20 stage (bench.ts).
-//   npm run range:fixture -- [seed = 1] [seasons = 20]   (writes tests/fixtures/saves/golf-v5-range-20y.json)
+//   npm run range:fixture -- [seed = 1] [seasons = 20] [--player]   (writes tests/fixtures/saves/golf-v5-range-20y.json)
+// --player (T178, T184, T195): a player puts mini-roundabouts on the town's jammed crossings (the Junction tool) and upgrades bottleneck roads at each season's end
+// (harness playerUpgrade, as range:gate --player does: 60 fixes and 20 upgrades a season at most), so
+// the fixture is a healthy grown town; the committed fixture is made with it. Without it, the town left alone jams and declines.
 import fs from 'node:fs';
 import { gzipSync } from 'node:zlib';
-import { setupRange, stepSecond } from './harness';
+import { playerUpgrade, setupRange, stepSecond } from './harness';
 import { SEASON_LEN } from '../../src/game/golf/calendar';
 import { GAME_DAY } from '../../src/game/budget';
 import { LV, type LotTuple } from '../../src/game/lots/town';
@@ -17,7 +20,9 @@ import type { Budget } from '../../src/game/budget';
 import type { Career } from '../../src/game/career';
 import { emptyProgress } from '../../src/game/ext/progressive-ui/progress';
 
-const seed = Number(process.argv[2] ?? 1), seasons = Math.max(1, Math.round(Number(process.argv[3] ?? 20)));
+const argv = process.argv.slice(2).filter(a => !a.startsWith('--')), player = process.argv.includes('--player');
+const seed = Number(argv[0] ?? 1), seasons = Math.max(1, Math.round(Number(argv[1] ?? 20)));
+const roads = { segs: 0, cost: 0 };
 const OUT = 'tests/fixtures/saves/golf-v5-range-20y.json';
 /** range-gate.ts's scripted course and success of season k (1-based) */
 const holesIn = (k: number) => (k <= 1 ? 2 : k <= 5 ? 9 : 18), successIn = (k: number) => (k <= 2 ? 1 : 1.2);
@@ -28,6 +33,7 @@ setSeason(1);
 for (let s = 1; s <= seasons * SEASON_LEN; s++) {
   stepSecond(h, s);
   if (s % SEASON_LEN === 0 && s < seasons * SEASON_LEN) setSeason(s / SEASON_LEN + 1);
+  if (player && s % SEASON_LEN === 0 && s < seasons * SEASON_LEN) { const r = playerUpgrade(h, 60, 20, 0, 'mini'); roads.segs += r.segs + r.minis + r.rings; roads.cost += r.cost; }
 }
 const city = h.city, I = city as unknown as { budget: Budget; career: Career }, sim = city.sim, site = R.start.site, c = site.centre;
 const lots: LotTuple[] = [...city.town.states.values()].filter(st => st.level !== LV.EMPTY).map(st => [st.key, st.use, st.level, st.decline, st.seed, st.since]);
@@ -46,4 +52,4 @@ const save: SaveV5 = {
 };
 const json = JSON.stringify(save), gz = gzipSync(json).length;
 fs.writeFileSync(OUT, json + '\n');
-console.log(`[fixture] seed ${seed}, ${seasons} seasons in ${((performance.now() - t0) / 1000).toFixed(1)} s: ${lots.length} lots (${city.town.built} built), ${city.town.pop} residents, ${save.segs.length} segs; ${(json.length / 1024).toFixed(0)} KB, ${(gz / 1024).toFixed(0)} KB gzipped -> ${OUT}`);
+console.log(`[fixture] seed ${seed}, ${seasons} seasons${player ? `, a player making ${roads.segs} junction fixes and road upgrades for $${roads.cost}` : ''} in ${((performance.now() - t0) / 1000).toFixed(1)} s: ${lots.length} lots (${city.town.built} built), ${city.town.pop} residents, ${save.segs.length} segs; ${(json.length / 1024).toFixed(0)} KB, ${(gz / 1024).toFixed(0)} KB gzipped -> ${OUT}`);

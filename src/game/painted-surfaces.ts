@@ -10,6 +10,9 @@ import type { PresetState } from './lots/presets';
 /** the woodland floor's texture id when the painted art is on (renderer.ts lays it under the forests; with the photo grass the floor is the
  *  course's Fescue, terrain-paint.ts WOODLAND_TEX) */
 export const WOODLAND = 'woodland';
+/** T194: what a town block's grass lies over where its soft patches leave the block (the rough's texture: the rough's painted look, the owner's
+ *  rough paintings), never the map's fescue */
+export const BLOCK_UNDER = 'golfRough';
 export type SurfaceGroup = 'Golf' | 'Map' | 'Town' | 'Living ground' | 'Course walls';
 /** a surface the studio lists by its plain name: the textures it stands for (a photo texture id, or a preset's golf surface), its group and the
  *  families that fit it (the picker shows those first) */

@@ -25,5 +25,9 @@ export function jumpTo(c: TownClock, t: number, at: number, rate: number): TownC
   return { t0: t, m0: at > dm ? m - dm + at : m - dm + 1440 + at, rate };
 }
 
+/** the sim time at which the clock reads town minute m (the inverse of townMinute on this piece; a stopped clock gives its t0). A town
+ *  hour's trips leave at sim times, so their times go through this (LotTrips, T098: town minutes are not sim seconds) */
+export function simTimeAt(c: TownClock, m: number): number { return c.rate > 0 ? c.t0 + (m - c.m0) / c.rate : c.t0; }
+
 /** the town hour index (cumulative hours) at sim time t */
 export function townHourIndex(c: TownClock, t: number): number { return Math.floor(townMinute(c, t) / 60); }

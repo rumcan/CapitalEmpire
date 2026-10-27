@@ -32,8 +32,10 @@ describe('the lot wizard (T158)', () => {
     const s = sample('a', [['trees:oak', 'tree', 6, 14, true], ['bush', 'bush', 10.2, 6, false]]);
     assert.deepEqual(readSample(JSON.parse(JSON.stringify(s))), s, 'a sample reads back');
     assert.equal(readSample({ ...s, items: [{ ...s.items[0], kind: 'rocket' }] }), null, 'a bad item makes it invalid');
-    // the shipped file is empty: nobody's training data is committed with the code
-    assert.equal(parseLearning(FILE).samples.length, 0);
+    // the shipped file is the owner's (the lab's samples, T201: not pinned): every sample in it is valid and reads back as written
+    const shipped = parseLearning(FILE);
+    assert.equal(shipped.samples.length, ((FILE as { samples?: unknown[] }).samples ?? []).length, 'no sample of the shipped file is dropped');
+    for (const x of shipped.samples) assert.deepEqual(readSample(JSON.parse(JSON.stringify(x))), x);
   });
   it('2. sectors: every named sector, in order; the same place is the same sector on every road angle', () => {
     const at = (x: number, y: number) => sectorOf(LOT, x, y);

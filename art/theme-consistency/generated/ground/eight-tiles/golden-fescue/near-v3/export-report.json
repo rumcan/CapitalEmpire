@@ -1,0 +1,721 @@
+{
+  "schema": 1,
+  "material": "golden-fescue",
+  "zoom": "near",
+  "status": "exported-file-contract-only-visual-review-required",
+  "source": {
+    "file": "art/theme-consistency/generated/ground/scene-backgrounds/golden-fescue/near-background-anchored-v1.raw.png",
+    "sha256": "d435a4a73c2e9c6318ebef400b30926ff48231e3a96f48623a51267c2617dd57",
+    "pixelSha256": "08d096fc8f043725eccb9ae831bcdf2682a2bc8f074cc00e9317327ea3ad5ba8",
+    "dimensions": [
+      1742,
+      903
+    ]
+  },
+  "crop": {
+    "left": 0,
+    "top": 0,
+    "width": 1742,
+    "height": 902,
+    "removedRightPixels": 0,
+    "removedBottomPixels": 1
+  },
+  "rollPixels": [
+    871,
+    451
+  ],
+  "dimensions": [
+    1742,
+    902
+  ],
+  "collarPixels": 64,
+  "patchSpanPixels": 256,
+  "repairInputs": {
+    "northSouth": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/near-v3/full-north-south-repair-input.png",
+    "westEast": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/near-v3/full-west-east-repair-input.png"
+  },
+  "repairOutputCrops": {
+    "northSouth": {
+      "left": 743,
+      "top": 387,
+      "width": 256,
+      "height": 128
+    },
+    "westEast": {
+      "left": 807,
+      "top": 323,
+      "width": 128,
+      "height": 256
+    }
+  },
+  "smallPatchDiagnosticsOnly": true,
+  "generationRule": "Always edit the FULL scene-sized repair input to preserve apparent grass scale. Small patches are diagnostics/extraction only, never imagegen edit targets.",
+  "processing": "Minimum-error cut paths select either common-master or unique-variant native pixels at unchanged coordinates. Outer collar stays exact. No paint, recolour, blend, noise, mirror or rotation.",
+  "compositeMethod": "minimum-error-cut",
+  "repairContext": "full-frame-bands",
+  "repairs": {
+    "northSouth": {
+      "file": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/near-v1/full-north-south-repair-v2.raw.png",
+      "sha256": "2081fe4922dbda4e44a0e777e00e826a8197d9af606d86e15c61930d8bda396e",
+      "pixelSha256": "ef75fc859b8125ed1bcefddbd5919d3794777ac80f96b82e369f7a750ac6c06b",
+      "dimensions": [
+        1742,
+        903
+      ],
+      "explicitCrop": {
+        "left": 743,
+        "top": 387,
+        "width": 256,
+        "height": 128
+      },
+      "fullFrameCrop": {
+        "left": 0,
+        "top": 0,
+        "width": 1742,
+        "height": 902
+      },
+      "processing": "Exact native crop from full-frame AI repair",
+      "fullBandCrop": {
+        "left": 743,
+        "top": 0,
+        "width": 256,
+        "height": 902
+      }
+    },
+    "westEast": {
+      "file": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/near-v1/full-west-east-repair-v2.raw.png",
+      "sha256": "70a710ad8ca719972ba39c12b36c1efa3eea1c01acf85061f200fa3329dbeff7",
+      "pixelSha256": "3b2e8da2d20aedb8b6bfcb17a8b71240482e369ad7802415ca366017537feb4f",
+      "dimensions": [
+        1743,
+        902
+      ],
+      "explicitCrop": {
+        "left": 807,
+        "top": 323,
+        "width": 128,
+        "height": 256
+      },
+      "fullFrameCrop": {
+        "left": 0,
+        "top": 0,
+        "width": 1742,
+        "height": 902
+      },
+      "processing": "Exact native crop from full-frame AI repair",
+      "fullBandCrop": {
+        "left": 0,
+        "top": 323,
+        "width": 1742,
+        "height": 256
+      }
+    }
+  },
+  "commonMaster": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/near-v3/common-collar-master.png",
+  "commonMasterPixelSha256": "12a467a4417af00c903d846dea608e9c93fdc22274a5dc4cc079ace27796ef22",
+  "commonCutPaths": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/near-v3/common-collar-cut-paths.json",
+  "variants": [
+    {
+      "id": "tile-01",
+      "source": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/near-v1/tile-01-v1.raw.png",
+        "sha256": "621e8346f2952579675fd5e9b706ab2713aa5cd765742ddb672eb435f4cbae33",
+        "pixelSha256": "004c2dc4d096a0698e18b9c6216d8be6d25fa3bb8bf331dbc2f8197f7d6c6853",
+        "dimensions": [
+          1743,
+          902
+        ]
+      },
+      "explicitCrop": {
+        "left": 0,
+        "top": 0,
+        "width": 1742,
+        "height": 902
+      },
+      "interiorPixelSha256": "78bc692d6edc9463126cbf061886ac6a3ce539c4e0c1c2e08e59c6808b6a2e69",
+      "file": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/near-v3/tile-01.png",
+      "pixelSha256": "d3787eaca0f7ebb9ea8f0a37219586794ff35ba4ec122b831b4da1dc0c986ed5",
+      "collarPixelSha256": "a40745ce8a2ab4465c9878887a22cb7e9b9555d7f7a8239a455b72f10f17c916",
+      "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/near-v3/tile-01.cut-paths.json",
+      "variantSelectedPixels": 1055185
+    },
+    {
+      "id": "tile-02",
+      "source": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/near-v1/tile-02-v1.raw.png",
+        "sha256": "11e873142c0e04d8468ff1026f03406443c412d1f530ccd04140de256f5ff922",
+        "pixelSha256": "61e4514cceac795827ed52bbfa5d1364a21e7196830d18b880f0473e34a238b1",
+        "dimensions": [
+          1743,
+          902
+        ]
+      },
+      "explicitCrop": {
+        "left": 0,
+        "top": 0,
+        "width": 1742,
+        "height": 902
+      },
+      "interiorPixelSha256": "a6f997f19f4433a100c48248decfb14ebd1ab48f69e22bcc0e895afc40dc6369",
+      "file": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/near-v3/tile-02.png",
+      "pixelSha256": "7e23dad1e8b5b5d418c245d25c04d92e6f95aac6b0dec83c645fa60eb9b50594",
+      "collarPixelSha256": "a40745ce8a2ab4465c9878887a22cb7e9b9555d7f7a8239a455b72f10f17c916",
+      "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/near-v3/tile-02.cut-paths.json",
+      "variantSelectedPixels": 947975
+    },
+    {
+      "id": "tile-03",
+      "source": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/near-v1/tile-03-v1.raw.png",
+        "sha256": "76e5590afe0a444017c68a73078666094f151a0d7401dfbcf60c96e513934c75",
+        "pixelSha256": "0e12290771be1637ba6120159ba1c24168ebd57875ad9c25c7c94788cbd02b32",
+        "dimensions": [
+          1742,
+          903
+        ]
+      },
+      "explicitCrop": {
+        "left": 0,
+        "top": 0,
+        "width": 1742,
+        "height": 902
+      },
+      "interiorPixelSha256": "27f4c0fe02eab2af1ff19cd4fd6fcd40b7a37cb728fd54dd00f1d81bfa92de32",
+      "file": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/near-v3/tile-03.png",
+      "pixelSha256": "d6259b5f128f8d5271b266e448f91c20dee29c758838a4feef9f9d8e19324ef1",
+      "collarPixelSha256": "a40745ce8a2ab4465c9878887a22cb7e9b9555d7f7a8239a455b72f10f17c916",
+      "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/near-v3/tile-03.cut-paths.json",
+      "variantSelectedPixels": 1056513
+    },
+    {
+      "id": "tile-04",
+      "source": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/near-v1/tile-04-v1.raw.png",
+        "sha256": "9e63e20e723c0a67a37d38557509b88865604571be23f705506c650b461770d5",
+        "pixelSha256": "08ccc929567f6650bb9992319ae9f912f0f77f83afd1b3766b35321285644d2e",
+        "dimensions": [
+          1743,
+          902
+        ]
+      },
+      "explicitCrop": {
+        "left": 0,
+        "top": 0,
+        "width": 1742,
+        "height": 902
+      },
+      "interiorPixelSha256": "2c673cd4dacc1adfb8aeadcfdcf2c00a261088a8a9adc4b463335c053ee3ade1",
+      "file": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/near-v3/tile-04.png",
+      "pixelSha256": "c74bd3f3bfc0f57e7e58bb555d41430e732dc8d1836b4405ad032a1801b4ccc1",
+      "collarPixelSha256": "a40745ce8a2ab4465c9878887a22cb7e9b9555d7f7a8239a455b72f10f17c916",
+      "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/near-v3/tile-04.cut-paths.json",
+      "variantSelectedPixels": 978033
+    },
+    {
+      "id": "tile-05",
+      "source": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/near-v1/tile-05-v1.raw.png",
+        "sha256": "bb77ed7f63baeabf83f473c2a8574ce055a1dfcae7ee5d88bff732a777c65d0f",
+        "pixelSha256": "8431fdbe8a9ba82dde407bd61ea9d4e1dd692a5589d23742d35b208ceae014ed",
+        "dimensions": [
+          1743,
+          902
+        ]
+      },
+      "explicitCrop": {
+        "left": 0,
+        "top": 0,
+        "width": 1742,
+        "height": 902
+      },
+      "interiorPixelSha256": "7cb4c0b8ef0235ed607aed2f6a3e929927aeba9c1f4cdb522743163145e2d460",
+      "file": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/near-v3/tile-05.png",
+      "pixelSha256": "d7aad337308977bc8e8304d0af2fc618f12d7e6aeebeb847c0ec2347b0cd1516",
+      "collarPixelSha256": "a40745ce8a2ab4465c9878887a22cb7e9b9555d7f7a8239a455b72f10f17c916",
+      "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/near-v3/tile-05.cut-paths.json",
+      "variantSelectedPixels": 963237
+    },
+    {
+      "id": "tile-06",
+      "source": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/near-v1/tile-06-v1.raw.png",
+        "sha256": "83781ffa287dbd4a0bb713ed48d3ebce4c52ca18481242d44b895603bc07df3d",
+        "pixelSha256": "b7c55600e6a74526fd5ad893d46d7bd5faff7affb8ac90ea67b73244e2a2f2e4",
+        "dimensions": [
+          1743,
+          902
+        ]
+      },
+      "explicitCrop": {
+        "left": 0,
+        "top": 0,
+        "width": 1742,
+        "height": 902
+      },
+      "interiorPixelSha256": "39aa59826850914996ff2bcbdda9581a4289460cce3e8f4b90e187748ccc14a5",
+      "file": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/near-v3/tile-06.png",
+      "pixelSha256": "b912844cd3aa2c3d7aad166bf55306a2998978ec15e541aed417ad19e8b7b166",
+      "collarPixelSha256": "a40745ce8a2ab4465c9878887a22cb7e9b9555d7f7a8239a455b72f10f17c916",
+      "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/near-v3/tile-06.cut-paths.json",
+      "variantSelectedPixels": 1007920
+    },
+    {
+      "id": "tile-07",
+      "source": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/near-v1/tile-07-v1.raw.png",
+        "sha256": "f71183e1c35a17341522550ccb36c4598a6b53152b5351ed576302503b2e146e",
+        "pixelSha256": "eed6359b808f39e1cd72dcfc748ad488fb9b212c34e5705ece95c08f7e5c0074",
+        "dimensions": [
+          1743,
+          902
+        ]
+      },
+      "explicitCrop": {
+        "left": 0,
+        "top": 0,
+        "width": 1742,
+        "height": 902
+      },
+      "interiorPixelSha256": "6c89ed0dab9fbf0cab23cab0b96c067547c9da9b7b1b91bddc03ec3ada66378c",
+      "file": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/near-v3/tile-07.png",
+      "pixelSha256": "b91aa34f698acf6ef3299c6ef788df5fdf3e13899fee5f0f766084032081088b",
+      "collarPixelSha256": "a40745ce8a2ab4465c9878887a22cb7e9b9555d7f7a8239a455b72f10f17c916",
+      "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/near-v3/tile-07.cut-paths.json",
+      "variantSelectedPixels": 1058368
+    },
+    {
+      "id": "tile-08",
+      "source": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/near-v1/tile-08-v1.raw.png",
+        "sha256": "571d0ff63c8ed3cb3ce933aca37c47d23064d237b8a4d5c389f2def54f463da9",
+        "pixelSha256": "e66002a4ddd15f0a48b92974c0e4da87f83ad86780f7840375c53a06c29748aa",
+        "dimensions": [
+          1743,
+          902
+        ]
+      },
+      "explicitCrop": {
+        "left": 0,
+        "top": 0,
+        "width": 1742,
+        "height": 902
+      },
+      "interiorPixelSha256": "da8fe24b95eabc760c3033ed64e208c461238da59668b216b467a49dfda5aad2",
+      "file": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/near-v3/tile-08.png",
+      "pixelSha256": "fea90354e0cc4554d3696a79fa9469773375b810c4a588ed072a835e40da3557",
+      "collarPixelSha256": "a40745ce8a2ab4465c9878887a22cb7e9b9555d7f7a8239a455b72f10f17c916",
+      "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/near-v3/tile-08.cut-paths.json",
+      "variantSelectedPixels": 933640
+    }
+  ],
+  "tileCount": 8,
+  "authoredLevel": "near",
+  "lighting": "UPPER RIGHT toward LOWER LEFT",
+  "orientation": {
+    "allowRotate": false,
+    "allowMirror": false
+  },
+  "displayContract": {
+    "targetVisibleTiles": [
+      4,
+      8
+    ],
+    "maximumVisibleTiles": 8,
+    "switchBeforeExceeding": 8,
+    "nextDetailSetRequired": true,
+    "geography": "No fixed world extent is implied by these camera-scale source plates."
+  },
+  "pairChecks": [
+    {
+      "a": "tile-01",
+      "b": "tile-01",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-01",
+      "b": "tile-02",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-01",
+      "b": "tile-03",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-01",
+      "b": "tile-04",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-01",
+      "b": "tile-05",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-01",
+      "b": "tile-06",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-01",
+      "b": "tile-07",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-01",
+      "b": "tile-08",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-02",
+      "b": "tile-01",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-02",
+      "b": "tile-02",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-02",
+      "b": "tile-03",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-02",
+      "b": "tile-04",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-02",
+      "b": "tile-05",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-02",
+      "b": "tile-06",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-02",
+      "b": "tile-07",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-02",
+      "b": "tile-08",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-03",
+      "b": "tile-01",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-03",
+      "b": "tile-02",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-03",
+      "b": "tile-03",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-03",
+      "b": "tile-04",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-03",
+      "b": "tile-05",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-03",
+      "b": "tile-06",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-03",
+      "b": "tile-07",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-03",
+      "b": "tile-08",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-04",
+      "b": "tile-01",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-04",
+      "b": "tile-02",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-04",
+      "b": "tile-03",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-04",
+      "b": "tile-04",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-04",
+      "b": "tile-05",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-04",
+      "b": "tile-06",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-04",
+      "b": "tile-07",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-04",
+      "b": "tile-08",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-05",
+      "b": "tile-01",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-05",
+      "b": "tile-02",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-05",
+      "b": "tile-03",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-05",
+      "b": "tile-04",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-05",
+      "b": "tile-05",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-05",
+      "b": "tile-06",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-05",
+      "b": "tile-07",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-05",
+      "b": "tile-08",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-06",
+      "b": "tile-01",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-06",
+      "b": "tile-02",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-06",
+      "b": "tile-03",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-06",
+      "b": "tile-04",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-06",
+      "b": "tile-05",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-06",
+      "b": "tile-06",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-06",
+      "b": "tile-07",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-06",
+      "b": "tile-08",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-07",
+      "b": "tile-01",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-07",
+      "b": "tile-02",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-07",
+      "b": "tile-03",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-07",
+      "b": "tile-04",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-07",
+      "b": "tile-05",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-07",
+      "b": "tile-06",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-07",
+      "b": "tile-07",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-07",
+      "b": "tile-08",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-08",
+      "b": "tile-01",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-08",
+      "b": "tile-02",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-08",
+      "b": "tile-03",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-08",
+      "b": "tile-04",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-08",
+      "b": "tile-05",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-08",
+      "b": "tile-06",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-08",
+      "b": "tile-07",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    },
+    {
+      "a": "tile-08",
+      "b": "tile-08",
+      "rightToLeftRgbMae": 11.486,
+      "bottomToTopRgbMae": 8.965
+    }
+  ],
+  "commonCollarPixelSha256": "a40745ce8a2ab4465c9878887a22cb7e9b9555d7f7a8239a455b72f10f17c916",
+  "cutOverlapPixels": 128,
+  "warnings": [
+    "Shared outer pixels guarantee the same joins for every ordering, not artistic seam acceptance.",
+    "Inspect collar/interior boundaries, all edge-repair endpoints and shuffled four/eight tile views.",
+    "No live game integration or reconstructed orthographic projection is claimed."
+  ]
+}

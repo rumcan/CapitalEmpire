@@ -8,7 +8,7 @@ import type { Prop } from '../types';
 import type { Pt } from '../network';
 import type { RangeScene } from './rangebiz';
 import { turned } from '../lots/preset-art';
-import { DECOR_BY_KEY, decorAppeal, decorSpotWhy, inPoly, sellBack, type Box, type DecorItem, type DecorSpot } from './decor';
+import { DECOR_BY_KEY, decorAppeal, decorSpotWhy, inPoly, sellBack, standsIn, type Box, type DecorGroup, type DecorItem, type DecorSpot } from './decor';
 
 /** what the tool needs of the engine */
 export interface PropsHostCtx {
@@ -45,6 +45,16 @@ const SCAN_EVERY = 30;
 export class PropsTool {
   /** the item in hand (its key; null: none) and the view it is turned to (0..3) */
   hand: string | null = null; view: 0 | 1 | 2 | 3 = 0;
+  /** T187: where the tool was opened from (Decoration: the course; Town decoration: the town), the group it opened on (Town decoration ›
+   *  Buildings), and All (the whole catalogue, not only the place's) */
+  where: 'course' | 'town' = 'course'; group: DecorGroup | null = null; all = false;
+  /** T193: the group the toolbar's flyout opened (Props ▸ Plants): the panel shows its cards alone; null: every group */
+  focus: DecorGroup | null = null;
+  /** opens the tool's view: its place and group (the item in hand goes down when the place changes) */
+  setView(where: 'course' | 'town', group: DecorGroup | null = null): void {
+    if (where !== this.where) { this.hand = null; this.ghost = null; this.drag = null; }
+    this.where = where; this.group = group; this.focus = null; this.ctx.emit();
+  }
   /** the ghost at the cursor (the item in hand, or the prop being moved), null off the map */
   ghost: DecorGhost | null = null;
   /** the props tool's stand-in labels: the first placed prop of each stand-in kind */
@@ -172,7 +182,7 @@ export class PropsTool {
       },
       overlaps: b => { for (const p of this.ctx.propsIn(b)) if (p !== ignore && b[0] < p.x1 - 0.05 && b[2] > p.x0 + 0.05 && b[1] < p.y1 - 0.05 && b[3] > p.y0 + 0.05) return this.ctx.propName(p); return ''; },
     };
-    let why = decorSpotWhy(box, spot);
+    let why = decorSpotWhy(box, spot, standsIn(d, this.where));
     if (!why && !ignore && d.price > this.ctx.money()) why = `Not enough money: it costs $${d.price.toLocaleString()}`;
     return { item, x, y, scale, box, why, label: why || (ignore ? `Move ${d.name.toLowerCase()} here` : `${d.name} · $${d.price.toLocaleString()}`) };
   }

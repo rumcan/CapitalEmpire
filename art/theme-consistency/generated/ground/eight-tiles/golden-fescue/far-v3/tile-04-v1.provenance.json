@@ -1,0 +1,21 @@
+{
+  "id": "ground-background:golden-fescue",
+  "material": "golden-fescue",
+  "zoom": "far",
+  "stage": "independently-authored-field-variation",
+  "version": 1,
+  "variant": "tile-04",
+  "source": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/far-v2/tile-01-v2.raw.png",
+  "output": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/far-v3/tile-04-v1.raw.png",
+  "provenance": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/far-v3/tile-04-v1.provenance.json",
+  "prompt": "Edit this exact complete grass field into a DIFFERENT PATCH OF THE SAME GOLDEN FESCUE, at the same FAR aerial camera and apparent grass size. Give the interior a genuinely different organic arrangement of fine flowing grass and irregular little gold/tawny/olive density groups. Use a balanced but irregular new field arrangement with small denser gold groups and off-centre low olive breaks.\nKeep the exact fine narrow grass-stroke size, low tuft scale, golden/ochre/tawny palette, muted olive undergrowth, painted game-art brushwork and average exposure from this full picture. Do not zoom in/out, enlarge blades, shrink them to noise, turn grass into broad leaf flakes or reuse the same composition as a shifted/mirrored copy.\nKeep the grass colours and context near every edge as closely as possible while the different interior grows naturally into them. Keep the whole field continuous: no straight horizontal/vertical lines, quadrant divisions, rectangular brightness frames, paths or ornamental stripes. Light stays from UPPER RIGHT toward LOWER LEFT, with soft fine grass self-shading and no global gradient, vignette, objects, trees, buildings, UI or text. Return one full wide PNG grass background, requested1742x902pixels.",
+  "date": "2026-10-26",
+  "generator": "image_gen",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-0e9b2b5a-9541-491c-8b0b-3dcbe7f56d48.png",
+  "sourceSha256": "93f50f4873363fc555995bb24c5047e669b4f114484a4d3711580e9af71eacef",
+  "processing": "Native generator output copied byte-for-byte; direct scene removal. No code repaint, recolour, warp or resample.",
+  "camera": "Same far source screenshot camera and apparent surface detail scale requested; no declared top-down/world coverage.",
+  "lighting": "UPPER RIGHT → LOWER LEFT",
+  "integrationStatus": "art-only-not-integrated",
+  "reviewStatus": "pending reference appearance, object-removal and lighting review"
+}

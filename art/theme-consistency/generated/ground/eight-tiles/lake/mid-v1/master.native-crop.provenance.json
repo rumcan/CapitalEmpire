@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "source": {
+    "file": "art/theme-consistency/generated/ground/eight-tiles/lake/mid-v1/tile-01-v1.raw.png",
+    "sha256": "6ef0e9f26071990515b4229a82f0c5a30614284b58d437c7a3a0128b464a27f8",
+    "dimensions": [
+      1745,
+      901
+    ]
+  },
+  "crop": {
+    "left": 0,
+    "top": 0,
+    "width": 1744,
+    "height": 900
+  },
+  "output": {
+    "file": "art/theme-consistency/generated/ground/eight-tiles/lake/mid-v1/master.native-crop.png",
+    "sha256": "4760fde4dfdff276a2d7dbdd2debb2f7ef1f72a06a4026faf1b95a5f117e0bde"
+  },
+  "processing": "Exact native pixel crop to common even dimensions; no resample or upscale."
+}

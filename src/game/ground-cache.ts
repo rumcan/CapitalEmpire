@@ -21,6 +21,8 @@ import { pictureCurrent } from './ground-layers';
 export interface Tile {
   kind: TileKind; i: number; j: number;
   tex: WebGLTexture | null; texL: number; texArtL: number; px: number;
+  /** T186: its picture's baked shade multiplier (renderer.ts takeShadeMask, a quarter of its size; gl.ts drawShadeMask), null when it has none */
+  shade: WebGLTexture | null;
   /** the picture before the last edit, kept for the build reveal */
   prev: WebGLTexture | null; prevUntil: number;
   /** A short zoom-resolution crossfade; independent of the construction reveal picture. */
@@ -33,6 +35,10 @@ export interface Tile {
    *  stroke re-staling the same chunks every send: each is re-baked at most every COURSE_HOLD_MS, showing its last picture meanwhile) */
   baked: number; hold: number;
 }
+/** T197: how long a provisional picture (a tile set not decoded yet) shows before its chunk is asked for again, ms */
+export const PROVISIONAL_RETRY_MS = 400;
+/** how many times running a chunk is baked again for a tile set not decoded (a tile that never decodes: it keeps its photo after these) */
+export const PROVISIONAL_TRIES = 4;
 /** the least time between two bakes of a ground chunk that course edits keep re-staling, ms */
 export const COURSE_HOLD_MS = 150;
 /** the bakes the ground cache keeps the worker time of (bakeLog) */
@@ -47,6 +53,9 @@ export class GroundCache {
   private workers: Worker[] = []; private inflight: number[] = []; private reqs = new Map<number, { t: Tile; gen: number; w: number; at: number }>();
   private nextId = 1; private want: { t: Tile; L: number; artL: number; ts: number; pri: number }[] = [];
   ready = 0; private isReady: boolean[] = []; errors: string[] = []; bakeMs = 0; baked = 0;
+  /** T197: the provisional pictures that landed (a tile set not decoded yet: baked again) */
+  provisional = 0;
+  private provTries = new WeakMap<Tile, number>();
   /** T166: the worker ms of the last BAKE_LOG bakes (a ring: entry n % BAKE_LOG is bake n; scripts/perf/memory.mjs reads their median and p95),
    *  when the first chunk landed (performance.now ms since the page loaded) and how long the builder took to have its textures (ms) */
   bakeLog: number[] = []; firstTileAt = 0; texMs = 0;
@@ -159,7 +168,7 @@ export class GroundCache {
 
   tile(kind: TileKind, i: number, j: number) {
     const k = key(kind, i, j); let t = this.tiles.get(k);
-    if (!t) { t = { kind, i, j, tex: null, texL: 0, texArtL: 0, px: 0, prev: null, prevUntil: 0, fadeFrom: null, fadeStart: 0, fadePx: 0, gen: 0, stale: false, pendingL: 0, pendingArtL: 0, used: 0, baked: 0, hold: 0, texTs: -1, texTiled: false, pendingTs: -1 }; this.tiles.set(k, t); }
+    if (!t) { t = { kind, i, j, tex: null, texL: 0, texArtL: 0, px: 0, shade: null, prev: null, prevUntil: 0, fadeFrom: null, fadeStart: 0, fadePx: 0, gen: 0, stale: false, pendingL: 0, pendingArtL: 0, used: 0, baked: 0, hold: 0, texTs: -1, texTiled: false, pendingTs: -1 }; this.tiles.set(k, t); }
     return t;
   }
   /** mark the chunks over a tile-space box stale; keepPrev keeps the current picture for the build reveal */
@@ -197,6 +206,8 @@ export class GroundCache {
     this.want = [];
   }
   get busy() { return this.inflight.reduce((s, v) => s + v, 0); }
+  /** T197: nothing asked for this frame and no bake in flight: the view's ground is done, and chunks ahead may be baked (Engine.prebake) */
+  get idle() { return this.want.length === 0 && this.busy === 0; }
   /** the hold on chunks a course edit re-stales (COURSE_HOLD_MS; the benchmark tries others) */
   courseHoldMs = COURSE_HOLD_MS;
   private onMessage(w: number, m: FromWorker) {
@@ -206,21 +217,28 @@ export class GroundCache {
     if (m.t === 'log') { console.log(`[ground worker ${w}]`, m.message); return; }
     if (m.t === 'texpack') { m.snaps.forEach((snap, k) => this.workers[k + 1]?.postMessage({ t: 'textures', snap } satisfies ToWorker, snap.bitmaps)); return; }
     const r = this.reqs.get(m.id); this.reqs.delete(m.id); this.inflight[w]--;
-    if (!r) { m.bmp.close(); return; }
+    if (!r) { m.bmp.close(); m.shade?.close(); return; }
     const t = r.t; t.pendingL = 0; t.pendingArtL = 0; t.pendingTs = -1;
     this.bakeLog[this.baked % BAKE_LOG] = m.ms; this.waitLog[this.baked % BAKE_LOG] = performance.now() - r.at; if (!this.firstTileAt) this.firstTileAt = performance.now();
     this.bakeMs += m.ms; this.baked++;
     // edited while baking: it will be asked for again, and keeps the picture it has meanwhile; one with none shows this one (stale, so it is
     // still asked for again: the ground before the edit for a bake, rather than nothing; T134, the startup's edits did this to the planner pieces)
     const edited = r.gen !== t.gen;
-    if (edited && t.tex) { m.bmp.close(); return; }
+    if (edited && t.tex) { m.bmp.close(); m.shade?.close(); return; }
     const u0 = performance.now();
     // a new tile spec (T145, T150: a band switch or a DPR change) keeps the old picture until the whole view has the new one too (engine.ts: then a cut, never a crossfade between sets)
     const ts = m.ts ?? 0, stepChanged = (t.texTiled || !!m.tiled) && t.texTs !== ts;
     const old = t.tex, oldL = t.texL, oldPx = t.px, artL = m.artL ?? m.L, fade = old && (oldL !== m.L || t.texArtL !== artL || stepChanged) && !t.stale && t.kind !== 'p' && !t.prev;
     if (t.fadeFrom && t.fadeFrom !== old && t.fadeFrom !== t.prev) this.gl.deleteTexture(t.fadeFrom);
     t.fadeFrom = null; t.fadePx = 0;
+    // (T186: the shade mask goes with the new picture: the fading old picture shows over the new mask meanwhile, a few frames)
+    if (t.shade) this.gl.deleteTexture(t.shade);
+    t.shade = m.shade ? this.gl.textureFrom(m.shade) : null; m.shade?.close();
     t.tex = this.gl.textureFrom(m.bmp); t.texL = m.L; t.texArtL = artL; t.texTs = ts; t.texTiled = !!m.tiled; t.px = m.bmp.width * m.bmp.height; t.stale = edited; t.baked = u0; m.bmp.close();
+    // T197: a picture that fell back to the photo where a tile set was not decoded yet shows meanwhile and is asked for again after a short
+    // hold (the tiles decode on the way), so a placeholder never stays
+    if (m.prov && !edited) { this.provisional++; const k = (this.provTries.get(t) ?? 0) + 1; this.provTries.set(t, k); if (k <= PROVISIONAL_TRIES) { t.stale = true; t.hold = u0 + PROVISIONAL_RETRY_MS; } }
+    else this.provTries.delete(t);
     if (fade) { t.fadeFrom = old; t.fadeStart = Infinity; t.fadePx = oldPx; }
     else if (old && old !== t.prev) this.gl.deleteTexture(old);
     const u1 = performance.now(); this.upCount++; this.upMs += u1 - u0;
@@ -233,7 +251,7 @@ export class GroundCache {
     this.residentPx = px + held; this.peakPx = Math.max(this.peakPx, this.residentPx);
     if (px <= this.budgetPx) return;
     const old = [...this.tiles.values()].filter(t => t.tex && t.used !== now).sort((a, b) => a.used - b.used);
-    for (const t of old) { if (px <= this.budgetPx * 0.8) break; px -= t.px + t.fadePx; this.gl.deleteTexture(t.tex!); t.tex = null; if (t.prev) { this.gl.deleteTexture(t.prev); t.prev = null; } if (t.fadeFrom) { this.gl.deleteTexture(t.fadeFrom); t.fadeFrom = null; t.fadePx = 0; } }
+    for (const t of old) { if (px <= this.budgetPx * 0.8) break; px -= t.px + t.fadePx; this.gl.deleteTexture(t.tex!); t.tex = null; if (t.shade) { this.gl.deleteTexture(t.shade); t.shade = null; } if (t.prev) { this.gl.deleteTexture(t.prev); t.prev = null; } if (t.fadeFrom) { this.gl.deleteTexture(t.fadeFrom); t.fadeFrom = null; t.fadePx = 0; } }
   }
   /** release reveal pictures whose animation is over */
   settle(now: number) { for (const t of this.tiles.values()) {

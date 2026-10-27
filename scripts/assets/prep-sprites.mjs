@@ -11,6 +11,7 @@
 // Sprites are trimmed to their alpha and padded with a gutter wide enough to survive the smallest mip.
 // Writes src/assets/atlas/sprites-<page>-<mip>.webp and src/game/library.ts.
 import fs from 'node:fs';
+import { presetScales } from './preset-scales.mjs';
 import path from 'node:path';
 import sharp from 'sharp';
 import { ROOT, TOT, fromBranch, fromExport, libraryItems } from './source.mjs';
@@ -45,7 +46,9 @@ const SCALES = JSON.parse((await fromBranch('town/builder-in-repo', 'scripts/tow
 const OWNER = { ...Object.fromEntries(Object.entries(SCALES).filter(([, v]) => typeof v?.scale === 'number').map(([k, v]) => [k, v.scale])), ...SCALE_OVERRIDES };
 const FOREST = new Set([...read('src/game/forest.ts').matchAll(/'([a-z]+:[^']+)'/g)].map(m => m[1]));
 // a car (Vehicles) is sized by its model in the studio (model.mjs: every facing and view of one car shares the model's size, T143): packed for it
-const maxScale = id => Math.max(1, ((items[id]?.cat === 'Vehicles' ? carModelSize(SCALE_OVERRIDES, carModel(id)) : undefined) ?? OWNER[id] ?? 0) * 1.05, FOREST.has(id) ? 1.5 : 0);
+// T190: a lot preset that draws a sprite bigger (up to 1.5 times its size, the owner's range) counts as drawn: its picture is packed that big
+const PRESET_SCALE = presetScales(ROOT);
+const maxScale = id => Math.max(1, ((items[id]?.cat === 'Vehicles' ? carModelSize(SCALE_OVERRIDES, carModel(id)) : undefined) ?? OWNER[id] ?? 0) * 1.05 * (PRESET_SCALE.get(id) ?? 1), FOREST.has(id) ? 1.5 : 0);
 // every item of one export category (the Lot Composer kit takes whole categories)
 const all = c => Object.keys(items).filter(id => items[id].cat === c);
 // an id may sit in several lists: the first list that names it wins (see `seen` in step 1)

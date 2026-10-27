@@ -1,0 +1,21 @@
+{
+  "id": "ground-background:golden-fescue",
+  "material": "golden-fescue",
+  "zoom": "mid",
+  "variant": "tile-04",
+  "stage": "independently-authored-field-variation",
+  "version": 1,
+  "source": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/mid-v1/common-collar-master.png",
+  "output": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/mid-v1/tile-04-v1.raw.png",
+  "provenance": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/mid-v1/tile-04-v1.provenance.json",
+  "prompt": "Edit this entire golden fescue field into a DIFFERENT PATCH OF THE SAME GRASS, preserving its exact MEDIUM aerial viewing height, camera and apparent grass size. Create a different balanced interior with many uneven fine-grass groups and a few gently denser golden areas, no large focal clump or empty clearing.\nKeep the material's narrow flowing golden/ochre/tawny grass strokes and soft olive undergrowth. Keep the fine painted game-art detail at the SAME SIZE it already has in this full wide reference. Do not zoom in/out, enlarge or shrink the grass, create rounded broad curled leaf flakes or redesign its texture into another material. The newly arranged interior should be distinct, not a translated, rotated or mirrored copy of the current arrangement.\nRetain the outermost64pixels of grass and their colour context as closely as possible. Connect the new interior naturally to that surrounding edge grass. Remove all artificial straight joins, quadrant divisions, frames or rectangular brightness bands present in the reference. Keep average brightness and gold/olive/tawny mixture consistent; no global exposure gradient or dark border.\nUpper-right tips remain gently lit and lower-left grass self-shading stays soft: sunlight FROM UPPER RIGHT TOWARDS LOWER LEFT. No shadows from objects. No buildings, trees, roads, objects, text, UI, collage or vignette. Return ONE complete full wide continuous grass-background PNG, requested1742x902pixels, at the same viewing scale.",
+  "date": "2026-10-26",
+  "generator": "image_gen",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-998b10bc-c2d2-4dec-862f-3d25cb44d9a2.png",
+  "sourceSha256": "ac6006b4a2e61931dcadb9c77facf5d20f7082b12a5feaa6c073cf76baa804c3",
+  "processing": "Native generator output copied byte-for-byte; direct scene removal. No code repaint, recolour, warp or resample.",
+  "camera": "Same mid source screenshot camera and apparent surface detail scale requested; no declared top-down/world coverage.",
+  "lighting": "UPPER RIGHT → LOWER LEFT",
+  "integrationStatus": "art-only-not-integrated",
+  "reviewStatus": "pending reference appearance, object-removal and lighting review"
+}

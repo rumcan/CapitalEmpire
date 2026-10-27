@@ -1,0 +1,20 @@
+{
+  "id": "material-texture:sand-ripples:near:independent-variant-1",
+  "material": "sand-ripples",
+  "zoom": "near",
+  "stage": "independent-variant-1",
+  "source": "art/theme-consistency/generated/ground/scene-backgrounds/sand-ripples/near-background-anchored-v1.raw.png",
+  "output": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/near-v1/tile-01-v1.raw.png",
+  "provenance": "art/theme-consistency/generated/ground/eight-tiles/sand-ripples/near-v1/tile-01-v1.provenance.json",
+  "prompt": "Edit this FULL clean background image into a different natural arrangement of the SAME surface at the SAME near camera and apparent feature size. CHOSEN MATERIAL: warm pale golden sand with natural fine shallow wind ripples, creamy highlights and soft ochre troughs, broad confident painted groups, no giant dunes.. Preserve all fine plants, grain, ripples or mowing bands that belong to this named surface; remove only unrelated scene objects.\nMake variation 1 of four: rearrange the soft density/colour groups and small material details organically, avoiding a repeated landmark composition. Preserve the source's overall mean exposure, colour balance, painted style, detail size, lighting from UPPER RIGHT toward LOWER LEFT and quiet edge context. No brightness frame, straight colour boundary, central cross, panel division, formal stripes unless they are the reference's mowing/rake bands, or copied small repeated motif. No building, tree, road, cast scene shadow, UI, label, object or blank area. Do not zoom, change projection, upscale the plants or redesign the material. Work from this unshifted full background, not a rolled or tiled composite. Deliver one complete same-size wide PNG.\nThis is PURE SAND: remove grass tufts, bushes, flowers, separate rocks, litter and debris even if they were present in the source scene. Preserve only the sand surface and its natural shallow wind ripples. No objects or building footprints remain.",
+  "promptRevision": "v3-pure-sand",
+  "date": "2026-10-26",
+  "generator": "image_gen",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-c59038c6-0685-4868-bc21-35bbe5f1289d.png",
+  "sourceSha256": "1f6aec73e6f03e7b125b9fdf7ea7651d6b587bcb6c41c54f9f961b7e62e167f1",
+  "processing": "Native generator output copied byte-for-byte; direct scene removal. No code repaint, recolour, warp or resample.",
+  "camera": "Same near source screenshot camera and apparent surface detail scale requested; no declared top-down/world coverage.",
+  "lighting": "UPPER RIGHT → LOWER LEFT",
+  "integrationStatus": "art-only-not-integrated",
+  "reviewStatus": "pending reference appearance, object-removal and lighting review"
+}

@@ -3,8 +3,6 @@
 // lot's use; Ship model plans the next version with its exam picture (dev-save.ts shipPlan); v1-v4 towns compose as before. Headless.
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
-import crypto from 'node:crypto';
 import { compose, layModelFrom, lotPresets, lotModelVersion, setGeneratedLots, setLotModel, type ComposeState, type LotGeom } from '../src/game/lots/compose';
 import { LATEST, LOT_MODELS } from '../src/game/lots/lot-models';
 import { groupsFrom } from '../src/game/lots/group-data';
@@ -34,13 +32,21 @@ function wizardOf(use: PresetUse, k: number, seed: number) {
 }
 
 describe('train every use in the lot lab (T173)', () => {
-  it('1. the live model with no training is the latest shipped one (learnt from the same presets)', () => {
-    const d = liveModelData(lotPresets(), [], L4) as Record<string, unknown>;
-    for (const k of ['anchors', 'pairs', 'density', 'places']) assert.deepEqual(d[k], L4[k], k);
-    assert.deepEqual(groupsFrom(d), groupsFrom(L4), 'every group as v4');
-    // the houses' keep counts: as v4's but the two items whose house footprint T154 turned (4 counts of 127)
-    const a = d.counts as Record<string, number[]>, b = L4.counts as Record<string, number[]>, diff = Object.keys({ ...a, ...b }).filter(k => JSON.stringify(a[k]) !== JSON.stringify(b[k]));
-    assert.ok(diff.length <= 4, diff.join(', '));
+  // (T201: until 2026-10-27 this compared the live model with v4's numbers, which were learnt from the presets of their day: the owner edits the
+  // presets in the studio, so the rules stand instead of the numbers)
+  it("1. the live model with no training is the presets' own: the same every time, shaped as the shipped one, and it follows the presets", () => {
+    const P = lotPresets(), d = liveModelData(P, [], L4) as Record<string, unknown>;
+    assert.deepEqual(liveModelData(P, [], L4), d, 'the same every time');
+    // shaped as v4: its blocks, and its groups with v4's on and off
+    for (const k of ['counts', 'anchors', 'pairs', 'density', 'places']) assert.ok(d[k] !== undefined, `${k} learnt`);
+    const g = groupsFrom(d), g4 = groupsFrom(L4);
+    assert.deepEqual(Object.keys(g).sort(), Object.keys(g4).sort(), "v4's groups");
+    for (const k of Object.keys(g4) as (keyof typeof g4)[]) assert.equal(g[k]!.on, g4[k]!.on, `${k}: on as v4`);
+    // learnt from the presets: without a use's frozen presets that use's group learns another model; the houses' counts follow the house presets
+    const noInd = liveModelData(P.filter(p => p.use !== 'ind'), [], L4) as Record<string, unknown>;
+    assert.notDeepEqual(groupsFrom(noInd).ind, g.ind, 'the works follow their presets'); assert.deepEqual(groupsFrom(noInd).com, g.com, 'the shops do not');
+    const fewer = liveModelData(P.filter((p, i) => p.use !== 'res' || i % 2 === 0), [], L4) as Record<string, unknown>;
+    assert.notDeepEqual(fewer.counts, d.counts, 'the houses follow their presets');
   });
   it('2. a shop lot\'s sample trains the shops, not the houses; a house lot\'s the houses, not the shops; a gallery lot judged Bad trains nothing', () => {
     const { lot } = wizardOf('com', 3, 11), base = liveModelData(lotPresets(), [], L4);
@@ -93,16 +99,19 @@ describe('train every use in the lot lab (T173)', () => {
     assert.deepEqual(shipPlan([1, 2, 3, 4], liveModelData(lotPresets(), [], L4), 'test')!.files.map(f => f.name), ['v5.json', 'index.ts']);
     assert.equal(LATEST, 4, 'nothing shipped by the test');
   });
-  it('5. v1-v4 towns compose exactly as before (pinned on main before T173)', (t) => {
-    const sha = (f: string) => crypto.createHash('sha1').update(fs.readFileSync(f)).digest('hex').slice(0, 12);
-    const data = [sha('src/game/lots/lot-presets.json'), sha('scripts/assets/scale-overrides.json'), sha('scripts/assets/removed.json')].join(',');
-    if (data !== '86289001229b,83f0ac47e796,a083234bb6ef') { t.skip(`the owner's data changed (${data})`); return; }
+  // (T202: the pinned hashes here followed the owner's presets, sizes and removals, and skipped since they changed: the rules they stood for)
+  it('5. v1-v4 towns each compose with their own model, the same every time; v4 generates the shops, v3 keeps them on their frozen presets', () => {
     const LUOF: Record<string, number> = { res: LU.RES, com: LU.COM, park: LU.COM, ind: LU.IND, tour: LU.TOUR, civic: LU.GOV };
-    const lotsOf = (use: PresetUse, n: number) => { const list = frozen(use), N = [{ x: 0, y: 1 }, { x: 1, y: 0 }, { x: 0, y: -1 }, { x: -1, y: 0 }], r = mulberry(0x169); return Array.from({ length: n }, (_, i) => { const p = list[Math.floor(r() * list.length)]!, nn = N[i % 4]!; return { g: { o: { x: 300 + 50 * (i % 20), y: 300 + 50 * Math.floor(i / 20) }, u: { x: -nn.y, y: nn.x }, n: nn, w: p.w, d: p.d } as LotGeom, st: { use: LUOF[use]!, level: p.state === 'upgraded' ? LV.UPGRADED : LV.BUILT, decline: p.state === 'declined' ? 2 : 0, seed: i, preset: p.id } as ComposeState }; }); };
-    const lots = (['res', 'com', 'ind', 'park', 'civic', 'tour'] as const).flatMap(u => lotsOf(u, 20)), was = lotModelVersion();
-    setGeneratedLots(true);
-    const h = [1, 2, 3, 4].map(v => { setLotModel(v); return fnv(JSON.stringify(lots.map(l => compose(l.g, l.st)))); });
-    setLotModel(was);
-    assert.deepEqual(h, ['f7478701', 'edf7ad52', 'b0534b73', '6501f3d8']);
+    const lotsOf = (use: PresetUse, n: number) => { const list = frozen(use), N = [{ x: 0, y: 1 }, { x: 1, y: 0 }, { x: 0, y: -1 }, { x: -1, y: 0 }], r = mulberry(0x169); return Array.from({ length: n }, (_, i) => { const p = list[Math.floor(r() * list.length)]!, nn = N[i % 4]!; return { use, g: { o: { x: 300 + 50 * (i % 20), y: 300 + 50 * Math.floor(i / 20) }, u: { x: -nn.y, y: nn.x }, n: nn, w: p.w, d: p.d } as LotGeom, st: { use: LUOF[use]!, level: p.state === 'upgraded' ? LV.UPGRADED : LV.BUILT, decline: p.state === 'declined' ? 2 : 0, seed: i, preset: p.id } as ComposeState }; }); };
+    const lots = (['res', 'com', 'ind'] as const).flatMap(u => lotsOf(u, 10)), was = lotModelVersion();
+    const at = (v: number, gen = true) => { setGeneratedLots(gen); setLotModel(v); const out = lots.map(l => fnv(JSON.stringify(compose(l.g, l.st)))); setGeneratedLots(true); return out; };
+    try {
+      const h = [1, 2, 3, 4].map(v => at(v));
+      assert.deepEqual([4, 3, 2, 1].map(v => at(v)).reverse(), h, 'each version the same every time, whatever another composed meanwhile');
+      const old = at(4, false), com = lots.map((l, i) => (l.use === 'com' ? i : -1)).filter(i => i >= 0);
+      assert.ok(com.every(i => h[2]![i] === old[i]), 'v3: the shops on their frozen presets (as ?oldlots)');
+      assert.ok(com.some(i => h[3]![i] !== old[i]), 'v4: the shops generated');
+      for (const v of [0, 1, 2]) assert.ok(h[v]!.some((x, i) => x !== h[3]![i]), `a v${v + 1} town never composes with v4's model`);
+    } finally { setLotModel(was); setGeneratedLots(true); }
   });
 });

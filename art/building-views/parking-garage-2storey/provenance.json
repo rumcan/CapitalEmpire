@@ -1,0 +1,252 @@
+{
+  "id": "ce:parking-garage-2storey",
+  "slug": "parking-garage-2storey",
+  "storeys": 2,
+  "category": "buildings",
+  "date": "2026-10-27",
+  "output": "art/theme-consistency/generated/buildings/parking-garage-2storey-4views-v3.png",
+  "provenance": "art/theme-consistency/generated/buildings/parking-garage-2storey-4views-v3.provenance.json",
+  "viewSet": "diagonal-4",
+  "viewsOrder": [
+    "NE",
+    "SE",
+    "SW",
+    "NW"
+  ],
+  "views": {
+    "NE": "art/theme-consistency/generated/buildings/parking-garage-2storey-diagonal-singles-v3/NE.raw.png",
+    "SE": "art/theme-consistency/generated/buildings/parking-garage-2storey-diagonal-singles-v3/NW.raw.png",
+    "SW": "art/theme-consistency/generated/buildings/parking-garage-2storey-diagonal-singles-v3/SW.raw.png",
+    "NW": "art/theme-consistency/generated/buildings/parking-garage-2storey-diagonal-singles-v3/SE.raw.png"
+  },
+  "sourceProvenance": [
+    {
+      "view": "NE",
+      "file": "art/theme-consistency/generated/buildings/parking-garage-2storey-diagonal-singles-v3/NE.provenance.json",
+      "sha256": "739c1c3dbd65387ead594e7e96efda14a713abd39fa963b17e39e00cbfbdd6d0",
+      "generatorDeclaredView": "NE"
+    },
+    {
+      "view": "SE",
+      "file": "art/theme-consistency/generated/buildings/parking-garage-2storey-diagonal-singles-v3/NW.provenance.json",
+      "sha256": "89f05c32efd0675e8778c2a1fe60ac26481be69f93c83aa3763cbbb685a4e25e",
+      "generatorDeclaredView": "NW"
+    },
+    {
+      "view": "SW",
+      "file": "art/theme-consistency/generated/buildings/parking-garage-2storey-diagonal-singles-v3/SW.provenance.json",
+      "sha256": "612365c57f5d7a484f620f01b8caaecbdec49a87a742c9d097661088cf124a62",
+      "generatorDeclaredView": "SW"
+    },
+    {
+      "view": "NW",
+      "file": "art/theme-consistency/generated/buildings/parking-garage-2storey-diagonal-singles-v3/SE.provenance.json",
+      "sha256": "6910a2bed2ec103ccfba929b2783d4bf1d00ee167c79de22f4f7eccecaa18206",
+      "generatorDeclaredView": "SE"
+    }
+  ],
+  "generation": "Four independent built-in image_gen outputs, each geometry-guide-only plus theme reference. Sheet is native pixel assembly, not generated multiview duplication.",
+  "lighting": "Screen upper right toward lower left",
+  "geometryReview": {
+    "status": "accepted-for-art-appearance",
+    "proof": "output/garage-angle-export/road-proofs-v3/review.json",
+    "targetSlopes": [
+      0.5,
+      -0.5
+    ],
+    "note": "Measured slopes are approximate. No declaration of exact road alignment or runtime integration.",
+    "reviewDate": "2026-10-27",
+    "reviewer": "Primary art agent",
+    "scope": "Primary inspected the full native sheet and road-overlay proofs: distinct physical quarter-turns, correct storeys, clear alpha. Art review only; not owner approval or live integration.",
+    "measuredTolerance": "Painterly lower-footing fits vary by approximately 0.3–3.0 degrees from the 26.565 degree road directions. No mathematical-exactness claim.",
+    "evidence": [
+      {
+        "file": "art/theme-consistency/generated/buildings/parking-garage-2storey-4views-v3/review/NE.road-proof.png",
+        "sha256": "299a0edbe064d80cd02aa6c2edea0da82dc6d18bff57b226efc8047fa3a190d4"
+      },
+      {
+        "file": "art/theme-consistency/generated/buildings/parking-garage-2storey-4views-v3/review/SE.road-proof.png",
+        "sha256": "d88e5849d3df7626974e38dccab410c5fc616d2428c73048748f7a07d6934a3b"
+      },
+      {
+        "file": "art/theme-consistency/generated/buildings/parking-garage-2storey-4views-v3/review/SW.road-proof.png",
+        "sha256": "944ceec1b58f668ebba4b0013950805f688928e36d1f219d8ba71024d5736bec"
+      },
+      {
+        "file": "art/theme-consistency/generated/buildings/parking-garage-2storey-4views-v3/review/NW.road-proof.png",
+        "sha256": "df9c1299381bff0ce7590d8a0d59f44f7202e612a3793a8c7db42d7c1a782227"
+      }
+    ]
+  },
+  "runtimeIntegrated": false,
+  "studioIntegrated": false,
+  "integrationStatus": "ready",
+  "visualReviewStatus": "accepted-for-art-appearance",
+  "engineViewToGeneratorDeclaredView": {
+    "NE": "NE",
+    "SE": "NW",
+    "SW": "SW",
+    "NW": "SE"
+  },
+  "directionCorrection": "The generator guide uses the opposite quarter-turn ordering to the engine. Canonical SE uses the original NW picture (front facing +x); canonical NW uses original SE (rear visible, front facing -x). Native pixels are unchanged; no mirror, warp or repaint.",
+  "diagonalExport": {
+    "schema": 1,
+    "id": "ce:parking-garage-2storey",
+    "viewSet": "diagonal-4",
+    "viewsOrder": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "sheet": "art/theme-consistency/generated/buildings/parking-garage-2storey-4views-v3.png",
+    "sheetSha256": "96828cffb8a7cac8a39092071550afc29c052055e73f965c2e9a712291fd8d75",
+    "nativeSheetPixels": [
+      2508,
+      2508
+    ],
+    "processing": "Four independently generated native RGBA sources copied into transparent padded cells byte-for-byte. No resizing, repainting, mirroring, warping or alpha edits.",
+    "fileContractStatus": "passed",
+    "visualReviewStatus": "pending-primary-review",
+    "integrationStatus": "ready",
+    "issues": [],
+    "views": {
+      "NE": {
+        "nativeFile": "art/theme-consistency/generated/buildings/parking-garage-2storey-4views-v3/NE.native.png",
+        "nativePixels": [
+          1254,
+          1254
+        ],
+        "nativeSha256": "2044259c372048fc3ee9c810d7ee1a5ba351a3ece2d2b14d4a2ff150f36e1882",
+        "pixelSha256": "8f21c912a6a436cc556848e8a5ac79c5bf944e0a479f15c3800a66633a3e8ed3",
+        "sourceFile": "art/theme-consistency/generated/buildings/parking-garage-2storey-diagonal-singles-v3/NE.raw.png",
+        "sourceSha256": "33589fd1904fd130360529eeeab9594f007c284cdfb9467bea73462303764288",
+        "sourcePixels": [
+          1254,
+          1254
+        ],
+        "sourceOffset": [
+          0,
+          0
+        ],
+        "sourceRect": {
+          "left": 0,
+          "top": 0,
+          "width": 1254,
+          "height": 1254
+        },
+        "alphaAtLeast16Pixels": 447854,
+        "alphaAtLeast16EdgePixels": 0,
+        "corners": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "exactSourceRgba": true
+      },
+      "SE": {
+        "nativeFile": "art/theme-consistency/generated/buildings/parking-garage-2storey-4views-v3/SE.native.png",
+        "nativePixels": [
+          1254,
+          1254
+        ],
+        "nativeSha256": "4f2a59cfabfe630df15b4df28df09e652a76db5b9e4bc5a84fc03e2d8b377d58",
+        "pixelSha256": "76c792e07cc04458dd6ed14d3b3c9656b5e9dbc68048cc48360f4315c7586309",
+        "sourceFile": "art/theme-consistency/generated/buildings/parking-garage-2storey-diagonal-singles-v3/NW.raw.png",
+        "sourceSha256": "9526ca8c5b62c33cf95ee9cd383163128e89c3bda5180a55e20c7b5c0e2048a8",
+        "sourcePixels": [
+          1254,
+          1254
+        ],
+        "sourceOffset": [
+          0,
+          0
+        ],
+        "sourceRect": {
+          "left": 1254,
+          "top": 0,
+          "width": 1254,
+          "height": 1254
+        },
+        "alphaAtLeast16Pixels": 531680,
+        "alphaAtLeast16EdgePixels": 0,
+        "corners": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "exactSourceRgba": true
+      },
+      "SW": {
+        "nativeFile": "art/theme-consistency/generated/buildings/parking-garage-2storey-4views-v3/SW.native.png",
+        "nativePixels": [
+          1254,
+          1254
+        ],
+        "nativeSha256": "8b03095ac463ed17c6fc3a1a41807286bde135a4c090d2ca1bfa9526d01210a9",
+        "pixelSha256": "e3eb20b84046e6a476973a265ebd851538b61e4b5aa6262bae8a9ad3b6a44565",
+        "sourceFile": "art/theme-consistency/generated/buildings/parking-garage-2storey-diagonal-singles-v3/SW.raw.png",
+        "sourceSha256": "bcfc9a4d5e1065688d487e2e4161cf23f919b2c6bd13566bb08de85dccc403fc",
+        "sourcePixels": [
+          1254,
+          1254
+        ],
+        "sourceOffset": [
+          0,
+          0
+        ],
+        "sourceRect": {
+          "left": 0,
+          "top": 1254,
+          "width": 1254,
+          "height": 1254
+        },
+        "alphaAtLeast16Pixels": 363245,
+        "alphaAtLeast16EdgePixels": 0,
+        "corners": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "exactSourceRgba": true
+      },
+      "NW": {
+        "nativeFile": "art/theme-consistency/generated/buildings/parking-garage-2storey-4views-v3/NW.native.png",
+        "nativePixels": [
+          1254,
+          1254
+        ],
+        "nativeSha256": "1a45fe53d91c9618650682aa8e827c5cd5a0ddd7146ddbd31d4203878b0d5982",
+        "pixelSha256": "f10c222815de686b9ce0c6b5e54634a7bee746e7d061bec2622db9e90d56490d",
+        "sourceFile": "art/theme-consistency/generated/buildings/parking-garage-2storey-diagonal-singles-v3/SE.raw.png",
+        "sourceSha256": "1ff185d4461a7733786431b110e304c667c0064c5f8e02e237f7e28e4ebb14de",
+        "sourcePixels": [
+          1254,
+          1254
+        ],
+        "sourceOffset": [
+          0,
+          0
+        ],
+        "sourceRect": {
+          "left": 1254,
+          "top": 1254,
+          "width": 1254,
+          "height": 1254
+        },
+        "alphaAtLeast16Pixels": 451947,
+        "alphaAtLeast16EdgePixels": 0,
+        "corners": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "exactSourceRgba": true
+      }
+    }
+  }
+}

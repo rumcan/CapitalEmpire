@@ -1,0 +1,76 @@
+{
+  "schema": 1,
+  "reviewedDate": "2026-10-26",
+  "reviewer": "/root/fescue_scale_review",
+  "material": "golden-fescue",
+  "zoom": "far",
+  "revision": "v4",
+  "activeVariants": 4,
+  "decision": "accepted-for-art-appearance",
+  "scope": "Independent visual review of the saved FAR PNGs and adjacency proofs; not live integration or owner signoff",
+  "previousHold": "The prior common-left-collar straight stroke/brightness cutoff around nativey442..443 is no longer visible in the common master or inspected final native band. The fuller guided west/east repair removes that actual defect.",
+  "nativeReview": "The native common-master left strip and finaltile03 strip retain fine curved grass flow across the old line. Local irregular cut/stroke transitions remain on close inspection, but they no longer form the old straight join or an obvious low-frequency tonal frame.",
+  "adjacency": "The1742x902 four-tile proof and both shuffled layouts read as coherent golden fields without a conspicuous straight cross, rectangular collar or brightness step at the reviewed proof scale.",
+  "materialAndLight": "Gold/tawny grass, muted olive shade and consistent upper-right highlights/lower-left soft shading remain coherent. The four interiors have different density arrangements. Shared borders repeat by construction; no conspicuous border lattice stood out in the reviewed layouts.",
+  "nativeEvidence": {
+    "folder": "output/fescue-far-v4-review",
+    "crop": {
+      "left": 0,
+      "top": 365,
+      "width": 700,
+      "height": 170
+    },
+    "files": [
+      "common-master-native-y442-band.png",
+      "tile03-final-native-y442-band.png"
+    ]
+  },
+  "limits": [
+    "Saved artwork only; no runtime, application, tests or art modified by this reviewer.",
+    "Acceptance does not certify invisible cuts at every magnification, map coverage or gameplay performance.",
+    "No endorsement of runtime blending or material randomisation; gameplay material layers remain separate.",
+    "NEAR/MID/FAR are independent paintings, not matching-layout or resized versions of one another."
+  ],
+  "files": [
+    {
+      "file": "tile-01.png",
+      "sha256": "d709c13fc5822433334830498e24bfbaca46312d7344f7de11c60cd82af23091",
+      "bytes": 4626616
+    },
+    {
+      "file": "tile-02.png",
+      "sha256": "fb796090b17c2cc5c226eeb2c1fec5a95043031b1a3b7ee5c0561d99d74e874b",
+      "bytes": 4712617
+    },
+    {
+      "file": "tile-03.png",
+      "sha256": "fc107d1d3defbafb3ff1203b1531a905e13dafa09c4a13e5d3c7d7e0ebd68f6d",
+      "bytes": 4595063
+    },
+    {
+      "file": "tile-04.png",
+      "sha256": "192b7f06d6922516f305165a186e9a72d31bc611f17c6f64c13fb9b9c15bb88a",
+      "bytes": 4614330
+    },
+    {
+      "file": "review-four-tiles.png",
+      "sha256": "745a6a7d6ef16ef1d73418d0cef92aab49ba92a7828bb331f9fcc9a1fec66665",
+      "bytes": 4019594
+    },
+    {
+      "file": "review-order-a.png",
+      "sha256": "83e7d3d9885767e758ac14e70071cf4d9ce511b8570d9980d54abf24384748ae",
+      "bytes": 1375649
+    },
+    {
+      "file": "review-order-b.png",
+      "sha256": "c83cc3543f2caa7d70c876be3d38d49db9ceca8e1bccd8c693655a3c9363687f",
+      "bytes": 1390774
+    },
+    {
+      "file": "common-collar-master.png",
+      "sha256": "0da42d8548b7daa3005f07e0ad762823642bfc62f75ce60dffa8676a151842ea",
+      "bytes": 4607768
+    }
+  ]
+}

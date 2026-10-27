@@ -1,0 +1,98 @@
+{
+  "schema": 1,
+  "material": "long-grass",
+  "zoom": "mid",
+  "master": "art/theme-consistency/generated/ground/eight-tiles/long-grass/mid-v2/master.native-crop.png",
+  "outputFolder": "art/theme-consistency/generated/ground/eight-tiles/long-grass/mid-v2",
+  "collarPixels": 64,
+  "patchSpanPixels": 256,
+  "repairRaws": {
+    "northSouth": "art/theme-consistency/generated/ground/eight-tiles/long-grass/mid-v2/full-north-south-repair-v2.raw.png",
+    "westEast": "art/theme-consistency/generated/ground/eight-tiles/long-grass/mid-v2/full-west-east-repair-v2.raw.png"
+  },
+  "repairFullFrameCrops": {
+    "northSouth": {
+      "left": 0,
+      "top": 0,
+      "width": 1742,
+      "height": 900
+    },
+    "westEast": {
+      "left": 0,
+      "top": 0,
+      "width": 1742,
+      "height": 900
+    }
+  },
+  "variants": [
+    {
+      "id": "tile-01",
+      "raw": "art/theme-consistency/generated/ground/eight-tiles/long-grass/mid-v2/tile-01-v2.raw.png",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 1742,
+        "height": 900
+      }
+    },
+    {
+      "id": "tile-02",
+      "raw": "art/theme-consistency/generated/ground/eight-tiles/long-grass/mid-v2/tile-02-v2.raw.png",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 1742,
+        "height": 900
+      }
+    },
+    {
+      "id": "tile-03",
+      "raw": "art/theme-consistency/generated/ground/eight-tiles/long-grass/mid-v2/tile-03-v2.raw.png",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 1742,
+        "height": 900
+      }
+    },
+    {
+      "id": "tile-04",
+      "raw": "art/theme-consistency/generated/ground/eight-tiles/long-grass/mid-v2/tile-04-v2.raw.png",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 1742,
+        "height": 900
+      }
+    }
+  ],
+  "lighting": "UPPER RIGHT toward LOWER LEFT, only local tuft highlights; uniform ambient exposure across frame",
+  "minVisibleTiles": 2,
+  "maxVisibleTiles": 4,
+  "allowRotate": false,
+  "allowMirror": false,
+  "compositeMethod": "minimum-error-cut",
+  "cutOverlapPixels": 128,
+  "repairCutMarginPixels": 64,
+  "repairContext": "full-frame-bands",
+  "appearanceSourceCamera": "mid separately authored full-scene field; no mips, macro enlargement, matching geography or runtime blending",
+  "sourceSelection": {
+    "file": "art/theme-consistency/material-texture-batches/long-grass/uniform-variants-v2.jobs.json",
+    "sha256": "38cf80c7f12dd09d5dac43321f38eeafc1e5b3481f81e8dd56e06c17038a66e7"
+  },
+  "reviewStatus": "v2 preparation only; v1 held; uniform exposure and all native joins require human appearance review",
+  "repairCrops": {
+    "northSouth": {
+      "left": 743,
+      "top": 386,
+      "width": 256,
+      "height": 128
+    },
+    "westEast": {
+      "left": 807,
+      "top": 322,
+      "width": 128,
+      "height": 256
+    }
+  }
+}

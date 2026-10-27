@@ -133,3 +133,45 @@ test('the sprites: a picture with a shape packs one instance (mirrored with its 
   VECTOR.on = true;
   assert.ok(vectorMesh().nVerts > 0);
 });
+
+// T185 (the owner, 2026-10-27: "shadows are not starting at the base of a sprite")
+/** is ground point p (display px) inside the draft's landed cast (its rings at the default sun), or within `slack` px of it */
+function castCovers(d: { s?: number[][] }, p: [number, number], slack = 1.5) {
+  const rings = (d.s ?? []).map(r => { const o: [number, number][] = []; for (let i = 0; i + 2 < r.length; i += 3) o.push([r[i]! + r[i + 2]! * sun.sx, r[i + 1]! + r[i + 2]! * sun.sy]); return o; });
+  let inside = false; for (const r of rings) for (let i = 0, j = r.length - 1; i < r.length; j = i++) { const a = r[i]!, b = r[j]!; if ((a[1] > p[1]) !== (b[1] > p[1]) && p[0] < (b[0] - a[0]) * (p[1] - a[1]) / (b[1] - a[1]) + a[0]) inside = !inside; }
+  if (inside) return true;
+  for (const r of rings) for (let i = 0; i < r.length; i++) { const a = r[i]!, b = r[(i + 1) % r.length]!, dx = b[0] - a[0], dy = b[1] - a[1], l = dx * dx + dy * dy, t = l ? Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / l)) : 0; if (Math.hypot(p[0] - a[0] - t * dx, p[1] - a[1] - t * dy) <= slack) return true; }
+  return false;
+}
+test('T185 draft: a tree\'s shadow runs from its trunk\'s foot (its own band), its pool on the trunk, not on a low branch', () => {
+  // a 6 px trunk at x 40 from the foot (y 119) to a round canopy (y 10..70), and a low branch hanging to the left down to y 117
+  const tree = draftShadow(pic(100, 120, 40, 119, (x, y) => (x >= 37 && x < 43 && y > 60) || (x - 40) ** 2 + (y - 40) ** 2 < 900 || (x >= 2 && x < 26 && y >= 100 && y <= 117)), 'tree', sun)!;
+  // the trunk's shadow: every point from its foot to its top (h 0..48) lies in the cast
+  for (let h = 0; h <= 48; h += 4) assert.ok(castCovers(tree, [0 + h * sun.sx, 0 + h * sun.sy]), `the trunk's shadow at h ${h}`);
+  // the pool sits on the trunk (x 0 about the anchor), though the branch's touching run is wider
+  const tx = xs(tree.c![0]!, 2); assert.ok(Math.abs((Math.max(...tx) + Math.min(...tx)) / 2) < 3, `the pool on the trunk: ${(Math.max(...tx) + Math.min(...tx)) / 2}`);
+});
+test("T185 draft: a wall standing behind a lower porch casts from its own base; a thin leg's shadow reaches its foot", () => {
+  // a box with V-shaped walls 160 px tall (base y 279 - |x - 60| / 2) and a low slab in front of its right half, its corner 16 px below the
+  // left wall's base line drawn on: the old ground line ran under the slab's diamond, 16 px below the left wall's base
+  const box = (x: number, y: number) => y <= 279 - Math.abs(x - 60) / 2 && y >= 119 - Math.abs(x - 60) / 2;
+  const slab = (x: number, y: number) => x >= 62 && x < 118 && y <= 310 - Math.abs(x - 90) / 2 && y >= 290 - Math.abs(x - 90) / 2;
+  const house = draftShadow(pic(121, 320, 60, 279, (x, y) => box(x, y) || slab(x, y)), 'building', sun)!;
+  for (let x = 6; x <= 50; x += 4) assert.ok(castCovers(house, [x - 60, -(60 - x) / 2]), `the left wall's base at x ${x}`);
+  // a table 900 px wide: a top on two 2 px legs 780 px apart, 280 px tall (the draft's grid is 2.5 px a cell here, a leg under one cell):
+  // both legs' feet lie in the cast
+  const table = draftShadow(pic(900, 300, 450, 299, (x, y) => (y >= 20 && y < 40 && x >= 50 && x < 850) || ((x === 60 || x === 61 || x === 840 || x === 841) && y >= 20)), 'prop', sun)!;
+  assert.ok(castCovers(table, [60.5 - 450, 0], 3) && castCovers(table, [840.5 - 450, 0], 3), "both legs' feet");
+});
+test('T185 draft: a vehicle seen end on with its mirrors out at the top casts about its width tall, not its length', () => {
+  // a bus from behind: 50 px wide, 140 px of picture (its length running back), mirrors sticking out 24 px either side near the top
+  const bus = draftShadow(pic(110, 150, 55, 149, (x, y) => (x >= 30 && x < 80 && y >= 8) || ((x < 6 || x >= 104) && y >= 20 && y < 34) || (y >= 24 && y < 28)), 'vehicle', sun)!;
+  const hMax = Math.max(...bus.s!.flatMap(r => r.filter((_, i) => i % 3 === 2)));
+  assert.ok(hMax <= 0.9 * 110 + 2, `stands at most about its width tall: ${hMax}`);
+});
+test('T185 draft: where the ground line steps between two columns (a wall beside a chimney or a lower porch), no lit sliver runs down the shadow', () => {
+  // a building's two halves on two bases: the left wall's foot at y 179, the right half's 15 px lower (standing in front) at y 194
+  const house = draftShadow(pic(120, 220, 60, 194, (x, y) => (x >= 10 && x < 60 && y >= 40 && y <= 179) || (x >= 60 && x < 110 && y >= 40 && y <= 194)), 'building', sun)!;
+  // the line between the two halves' shadows, from the step's foot up the shadow: covered all along
+  for (let h = 10; h <= 120; h += 10) { const p: [number, number] = [60 - 60 + h * sun.sx, (179 + 194) / 2 - 194 + 0.5 + h * sun.sy]; assert.ok(castCovers(house, p), `the step's shadow at h ${h}`); }
+});

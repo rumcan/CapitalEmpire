@@ -90,7 +90,7 @@ export function RangeCard({ view, onClose, onPrice, onBuy, onShowPractice, right
         <span className="text-slate-300">Your home: <span className="font-semibold text-white">{view.home.name}</span></span>
         <span className="text-slate-400">{view.home.next ? `${view.home.next.name} at ${money(view.home.next.at)} taken (${money(view.home.total)} so far)` : `${money(view.home.total)} taken in all`}</span>
       </div>
-      <div className="space-y-1.5">
+      <div className="space-y-1.5" data-testid="range-upgrades">
         <div className="text-[12px] uppercase text-slate-400">Upgrades</div>
         {view.upgrades.map(u => (
           <div key={u.id} className={`rounded-lg border p-2 text-xs ${u.owned ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-white/5 bg-white/5'}`}>

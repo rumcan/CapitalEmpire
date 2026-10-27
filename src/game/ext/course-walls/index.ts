@@ -65,7 +65,9 @@ export interface WallShade { cast: number; castA: number; soft: number; softPx: 
 export function wallShade(s: number = DEFAULT_SHADOW): WallShade {
   const v = Math.min(1, Math.max(0, Number.isFinite(s) ? s : DEFAULT_SHADOW));
   const fade = Math.min(1, v / SHADOW_HAIRLINE), t = Math.max(0, (v - SHADOW_HAIRLINE) / (1 - SHADOW_HAIRLINE)), mix = (a: number, b: number) => a + (b - a) * t;
-  return { cast: WALL_SHADOW * mix(0.15, 1), castA: fade * mix(0.14, 0.34), soft: mix(0.03, 0.12), softPx: mix(1, 3), softA: fade * mix(0.28, 0.45), line: mix(0.012, 0.05), linePx: mix(0.6, 1.5), lineA: fade * mix(0.4, 0.8) };
+  // T196 (the owner, 2026-10-27: borders "blurred to be a shadow not a hard line"): the hairline's contact is soft, its tight line wider and
+  // lighter (it was 0.6 px at 0.4: a crisp dark line round every bunker lip and tee); strong (s = 1) is unchanged
+  return { cast: WALL_SHADOW * mix(0.15, 1), castA: fade * mix(0.14, 0.34), soft: mix(0.05, 0.12), softPx: mix(2, 3), softA: fade * mix(0.3, 0.45), line: mix(0.025, 0.05), linePx: mix(1.2, 1.5), lineA: fade * mix(0.18, 0.8) };
 }
 /** whose Shadow a wall takes: a bunker's or a pond's cut face (it drops into the sand or the water) the bunker's or the pond's, any other the
  *  raised surface on its higher side (a green's, a tee's or a fairway's bank) */

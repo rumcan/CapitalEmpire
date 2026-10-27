@@ -1,0 +1,10 @@
+{
+ "id": "ce:parking-garage-2storey",
+ "version": "parking-garage-2storey-4views-v3",
+ "files": {
+  "NE": "2044259c372048fc3ee9c810d7ee1a5ba351a3ece2d2b14d4a2ff150f36e1882",
+  "SE": "4f2a59cfabfe630df15b4df28df09e652a76db5b9e4bc5a84fc03e2d8b377d58",
+  "SW": "8b03095ac463ed17c6fc3a1a41807286bde135a4c090d2ca1bfa9526d01210a9",
+  "NW": "1a45fe53d91c9618650682aa8e827c5cd5a0ddd7146ddbd31d4203878b0d5982"
+ }
+}

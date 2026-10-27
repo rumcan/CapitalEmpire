@@ -1,0 +1,21 @@
+{
+  "id": "ground-background:golden-fescue",
+  "material": "golden-fescue",
+  "zoom": "far",
+  "stage": "remove-inherited-horizontal-join",
+  "version": 2,
+  "variant": "tile-02",
+  "source": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/far-v2/FAR02repair-guide.png",
+  "output": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/far-v2/tile-02-v2.raw.png",
+  "provenance": "art/theme-consistency/generated/ground/eight-tiles/golden-fescue/far-v2/tile-02-v2.provenance.json",
+  "prompt": "Remove the bright magenta horizontal guide stripe from this exact full golden grass field picture. Reveal and continue the grass behind it, connecting the flowing golden fescue immediately above and below it.\nKeep the SAME far aerial camera, full wide framing, apparent fine grass/blade size, brushwork, gold/tawny/olive palette, irregular field-density groups and upper-right-to-lower-left light. This is a small local removal in the existing picture, not a new close view. Do not zoom, enlarge plants, change exposure or create broad leaf flakes.\nErase every magenta pixel. Fill the stripe area with the same naturally continuous fine flowing grass, leaving NO straight horizontal line, shade step, band, path or artificial division. Keep the rest of the field's material, composition and scale as closely as possible. No new objects, text, borders or vignette. Return the complete wide PNG field picture at its original viewing scale.",
+  "date": "2026-10-26",
+  "generator": "image_gen",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-54f5b77a-e306-49d4-b3ff-918b2c574e79.png",
+  "sourceSha256": "76b1a11d7d648eecb8c762a0815ffdbe654b04f4203b1a27a0e398180d796c4d",
+  "processing": "Native generator output copied byte-for-byte; direct scene removal. No code repaint, recolour, warp or resample.",
+  "camera": "Same far source screenshot camera and apparent surface detail scale requested; no declared top-down/world coverage.",
+  "lighting": "UPPER RIGHT → LOWER LEFT",
+  "integrationStatus": "art-only-not-integrated",
+  "reviewStatus": "pending reference appearance, object-removal and lighting review"
+}

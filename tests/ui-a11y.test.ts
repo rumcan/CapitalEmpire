@@ -9,21 +9,20 @@ import { UI_SCALES, UI_SCALE_KEY, clampUiScale, loadUiScale, saveUiScale } from 
 
 const facts = (over: Partial<PlayerProgressFacts> = {}): PlayerProgressFacts => ({ advancedMode: false, playableHoles: 0, seasonsDone: 0, invited: false, elapsedSeconds: 30, roadsBuilt: 0, carParksBuilt: 0, eventStructuresPlaced: 0, ...over });
 
-test("a rail tool's tooltip: its name and key; locked, what unlocks it (the stages' words)", () => {
+test("a rail group's tooltip: its name and key; locked, what unlocks it (the stages' words)", () => {
   const es = railEntries(computeProgressiveUiState(facts()), true, 'course');
-  const paint = es.find(e => e.item.id === 'paint')!, holes = es.find(e => e.item.id === 'holes')!, roads = es.find(e => e.item.id === 'roads')!;
-  assert.deepEqual(railTip(paint), { name: 'Paint', key: 'A', why: 'Unlocks with your first hole' });
-  assert.equal(tipText(railTip(paint)), 'Paint (A) · Unlocks with your first hole');
-  assert.deepEqual(railTip(holes), { name: 'Holes', key: 'C' }, 'an open tool: no reason');
-  assert.equal(tipText(railTip(roads)), "Roads (R) · Unlocks with your third hole or the tour's invitation");
-  const paths = es.find(e => e.item.id === 'paths')!;
-  assert.deepEqual(railTip(paths), { name: 'Paths' }, 'no key: none shown');
+  const traffic = es.find(e => e.item.id === 'traffic')!, course = es.find(e => e.item.id === 'course')!, town = es.find(e => e.item.id === 'towndecor')!;
+  const why3 = "Unlocks with your third hole or the tour's invitation";
+  assert.deepEqual(railTip(traffic), { name: 'Traffic', key: 'R', why: why3 });
+  assert.equal(tipText(railTip(traffic)), `Traffic (R) · ${why3}`);
+  assert.deepEqual(railTip(course), { name: 'Course', key: 'C' }, 'an open group: no reason');
+  assert.deepEqual(railTip(town), { name: 'Town decoration', key: 'A' }, 'open: its Props is (Paint stays locked inside it)');
   // the data attributes the tooltip layer reads
-  assert.deepEqual(tipAttrs(railTip(paint)), { 'data-tip': 'Paint', 'data-tip-key': 'A', 'data-tip-why': 'Unlocks with your first hole' });
+  assert.deepEqual(tipAttrs(railTip(traffic)), { 'data-tip': 'Traffic', 'data-tip-key': 'R', 'data-tip-why': why3 });
   assert.deepEqual(tipAttrs({ name: 'Grass' }), { 'data-tip': 'Grass' });
-  // opened at stage 2, Paint loses its reason
-  const s2 = railEntries(computeProgressiveUiState(facts({ playableHoles: 1 })), true, 'course').find(e => e.item.id === 'paint')!;
-  assert.equal(tipText(railTip(s2)), 'Paint (A)');
+  // opened at stage 3, Traffic loses its reason
+  const s3 = railEntries(computeProgressiveUiState(facts({ playableHoles: 3 })), true, 'course').find(e => e.item.id === 'traffic')!;
+  assert.equal(tipText(railTip(s3)), 'Traffic (R)');
 });
 
 test('the UI scale: 90, 100, 110 and 125%; anything else to the nearest, nonsense to 100%', () => {

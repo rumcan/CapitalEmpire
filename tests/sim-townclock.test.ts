@@ -3,7 +3,11 @@
 // after the round closes. npm test (bundled by esbuild, run by node --test; no DOM, no canvas).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { townClockFor, townMinute, townTimeOf, retime, jumpTo, townHourIndex, type TownClock } from '../src/game/sim/townclock';
+import { townClockFor, townMinute, townTimeOf, retime, jumpTo, townHourIndex, simTimeAt, type TownClock } from '../src/game/sim/townclock';
+import { LotTrips } from '../src/game/sim/trips';
+import type { Sim } from '../src/game/sim/sim';
+import type { Lot } from '../src/game/lots/lots';
+import { LU } from '../src/game/lots/town';
 import { City } from '../src/game/city';
 import type { BizDef } from '../src/game/business/state';
 import { MAP } from '../src/game/iso';
@@ -108,4 +112,23 @@ test('golf City: the tournament day reads 05:00 at its start at rate 1, and the 
   assert.equal(city.round.stage, 'free', 'the round is free again');
   assert.equal(city.tourneyDay, false, 'the tournament day has ended');
   assert.ok(Math.abs(city.sim.town.rate - 1440 / 600) < 1e-9, `the normal rate is back (${city.sim.town.rate})`);
+});
+
+test('simTimeAt is townMinute backwards on a piece (a stopped clock gives its t0)', () => {
+  const c: TownClock = { t0: 120, m0: 390, rate: 2.4 };
+  for (const t of [120, 133.5, 600, 28800]) assert.ok(Math.abs(simTimeAt(c, townMinute(c, t)) - t) < 1e-6, `t ${t}`);
+  assert.equal(simTimeAt({ t0: 50, m0: 300, rate: 0 }, 900), 50);
+});
+
+test("a golf town hour's lot trips leave within that hour in sim seconds (T098: town minutes are not sim seconds)", () => {
+  let seed = 7;
+  const lt = new LotTrips(() => (seed = (seed * 16807) % 2147483647) / 2147483647);
+  const lot = (key: string, x: number, y: number) => ({ key, c: { x, y } }) as unknown as Lot;
+  lt.setBuilt([{ lot: lot('home', 100, 100), use: LU.RES, pop: 1000, jobs: 0 }, { lot: lot('work', 120, 100), use: LU.COM, pop: 0, jobs: 200 }]);
+  // 08:00 on day 3 at sim time 100, a 600 s day (2.4 town minutes a sim second): the hour is 25 sim seconds long
+  const rate = 1440 / 600, t = 100, sim = { townFree: true, town: { t0: t, m0: 2 * 1440 + 8 * 60, rate }, t, dayLen: 600, townTraffic: 1, stats: { dropped: 0 } } as unknown as Sim;
+  lt.step(sim);
+  const due = (lt as unknown as { busy: { pend: { due: number }[] }[] }).busy.flatMap(r => r.pend.map(p => p.due));
+  assert.ok(due.length > 0, 'the morning hour makes trips');
+  for (const d of due) assert.ok(d >= t && d < t + 60 / rate, `a trip leaves at sim ${d.toFixed(1)}, within 08:00-09:00 (sim ${t}-${t + 60 / rate})`);
 });

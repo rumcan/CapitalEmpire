@@ -1,5 +1,8 @@
 # Golf sprites and textures: what to make (v6, 2026-10-21)
 
+**The image generator's list, with prompts and the angle every item needs:** [GOLF-ART-LIST.md](GOLF-ART-LIST.md) (2026-10-27: the range, fun
+targets, practice areas, pros and memberships, storage and maintenance, the course, the clubhouse, the tournament, people).
+
 The art the golf events game needs ([GOLF-PLAN.md](GOLF-PLAN.md)): course furniture, the tournament's temporary structures,
 people, vehicles and the painted surfaces. **Nothing here is a whole hole:** greens, fairways, tees, bunkers and water are
 painted with the Paint tool (textures, section 6). Sprites are the objects that stand on them.
@@ -172,6 +175,7 @@ so 1024 px is plenty (section 1).
 - Still missing: tee steps, a bunker rake, a pond waterfall, pond rocks, and pond reeds (reeds use the roadside ornamental grass for now). They plug into `PIECE_PROP_SPRITE` in `src/game/ext/course-pieces/index.ts` (a sprite id, or `null` until the art exists).
 
 ## The range business kit (plan P24 Phase 1, T129, the World of Golf extras, T133, and the range's look, P22 T096: art requests)
+**Paste-ready prompts for every item below and in "Practice facilities":** [GOLF-ART-LIST.md](GOLF-ART-LIST.md) section 1 (2026-10-27).
 The opening range (`golf/rangebiz.ts rangeScene`) stands these in with labelled stand-ins ("Stand In for ..."); each goes in by its id in
 `rangeScene`. Four views (NE, SE, SW, NW as the building sheets: the front in NE and NW), sun at the upper right, shadows at 145°, early
 autumn dusk, no lettering in the art unless said.
@@ -268,3 +272,13 @@ in NE and NW), sun at the upper right, shadows at 145°, early autumn dusk, no l
 | Tiered garden fountain, small (`golf:prop-fountain-small`, four views) | 2 x 2 / 1.8 | none (the plaza fountain is real art) | a two-tier cast-stone fountain in a round basin, water spilling from the top bowl, wet stone darker | P2 |
 | Stone entrance arch (`golf:prop-entrance-arch`, four views) | 5 x 1 / 4 | none (the ivy garden arch is real art) | a dressed-stone arch on two pillars over a path, a blank stone keystone, low hedges either side | P2 |
 | Classical urn on plinth (`golf:prop-urn`) | 0.8 x 0.8 / 1.6 | none | a stone urn on a square plinth spilling trailing ivy and white petunias | P2 |
+
+## Town buildings (T187, Town decoration › Buildings: art requests)
+The few buildings a golf game's player adds to the town (`golf/decor.ts DECOR`, group `buildings`) use the library's own art: the plaza fountain
+(`ref:landmark-fountain-v2`), the bus shelter (`town:bus_stop`), the toilet block (`golf:toilet-block`) and the white chapel (`variation:world-church-44e76535-plain:1`).
+These are missing and offered only once drawn (four views, sun at the upper right, shadows at 145°, early autumn dusk, no lettering):
+| Sprite (id to use) | Footprint (m) / height | Today | Prompt (short) | P |
+| --- | --- | --- | --- | --- |
+| Park bandstand (`town:bandstand`, four views) | 6 x 6 / 5 | `world:gazebo` is a stand-in (not offered) | an octagonal white timber bandstand on a low brick base, a green shingled roof with a small cupola, steps on one side | P1 |
+| Bronze statue on a plinth (`town:statue-founder`, four views) | 2 x 2 / 4 | none | a bronze figure of a town founder in a frock coat on a dressed-stone plinth, a little green patina | P2 |
+| Town hall annex (`town:townhall-annex`, four views) | 12 x 8 / 7 | none | a small two-storey brick civic building with a white portico and a flag, autumn trees beside it | P2 |

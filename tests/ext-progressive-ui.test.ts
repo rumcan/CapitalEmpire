@@ -8,6 +8,7 @@ import {
   GUIDE_STUCK,
   STUCK_HINT,
   STUCK_PLAY_SEC,
+  JAM_HINT,
   TOOL_GROUP,
   TOOL_STAGE,
   computeProgressiveUiState,
@@ -187,6 +188,16 @@ describe('first-run hints and the stuck player (T117)', () => {
     assert.notEqual(nextFirstRunHint(f({ seasonsDone: 1, playableHoles: 1 }))?.id, STUCK_HINT.id);
   });
 
+  it('a jammed town (T178) shows the jam hint, pointing at the Junction tool (T184), once it is open; Got it dismisses it', () => {
+    assert.equal(nextFirstRunHint(f({ playableHoles: 3, townJammed: true }))?.id, JAM_HINT.id);
+    assert.equal(JAM_HINT.targetTool, 'junction', 'the Junction tool first (T184)');
+    assert.ok(JAM_HINT.body.indexOf('Junctions') < JAM_HINT.body.indexOf('Roads: Upgrade'), 'junction tools before road upgrades');
+    assert.notEqual(nextFirstRunHint(f({ playableHoles: 1, townJammed: true }))?.id, JAM_HINT.id, 'Junctions still locked at stage 2');
+    assert.equal(nextFirstRunHint(f({ playableHoles: 1, townJammed: true, advancedMode: true }))?.id, JAM_HINT.id, 'every tool shown');
+    assert.notEqual(nextFirstRunHint(f({ playableHoles: 3, townJammed: true, dismissedHints: [JAM_HINT.id] }))?.id, JAM_HINT.id);
+    assert.equal(nextFirstRunHint(f({ playableHoles: 3 }))?.id, 'hint-connect-road-and-park', 'no jam, no hint');
+  });
+
   it('no hint points at a locked tool: stage 2 has none after the first hole, stage 3 walks the town tools', () => {
     assert.equal(nextFirstRunHint(f({ playableHoles: 1 })), null);
     assert.equal(nextFirstRunHint(f({ playableHoles: 3 }))?.id, 'hint-connect-road-and-park');
@@ -211,7 +222,7 @@ describe('the guide offers New hole to a stuck player (T117)', () => {
   it('with the guide off, no hole after one season or 20 minutes brings back New hole; a hole, or neither mark, does not', () => {
     assert.equal(guideShown(g({ seasons: 1 }))?.id, GUIDE_STUCK.id);
     assert.equal(guideShown(g({ playS: STUCK_PLAY_SEC }))?.id, GUIDE_STUCK.id);
-    assert.deepEqual(GUIDE_STUCK.target, { ui: 'rail-course', map: 'newHoleSpot' });
+    assert.deepEqual(GUIDE_STUCK.target, { ui: 'new-hole', map: 'newHoleSpot' }); // T188: the New hole button's anchor (it falls back to the Course group's)
     assert.equal(guideShown(g()), null);
     assert.equal(guideShown(g({ seasons: 1, holes: 1 })), null);
     // while the guide runs, it shows its own step

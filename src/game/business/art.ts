@@ -5,7 +5,7 @@ import { drawnAs } from '../mirror';
 import { OWNER_SCALE, STUDIO_SCALE } from '../lots/scales';
 
 /** The representative delivered sprite for each business's catalogue card. */
-export const BUSINESS_IMAGE: Record<BusinessId, string> = { stadium: 'stadium', sportsbar: 'sportsbar', buscompany: 'buscompany', diner: 'diner', taxi: 'taxi', golf: 'golf-clubhouse', estate: 'estate-villa', fishing: 'fishing-lodge', tackle: 'tackle', casino: 'casino', hotel: 'hotel', motel: 'motel', clubhouse: 'golf-clubhouse', range: 'golf-driving-range' };
+export const BUSINESS_IMAGE: Record<BusinessId, string> = { stadium: 'stadium', sportsbar: 'sportsbar', buscompany: 'buscompany', diner: 'diner', taxi: 'taxi', golf: 'golf-clubhouse', estate: 'estate-villa', fishing: 'fishing-lodge', tackle: 'tackle', casino: 'casino', hotel: 'hotel', motel: 'motel', clubhouse: 'golf-clubhouse', range: 'golf-driving-range' , halfway: 'golf-halfway-pavilion' };
 // Positions and sizes are fractions of the canonical parcel; R exchanges its world axes. A size of 0 draws the sprite at its own map size (the
 // studio's size; never stretched past its art); an id with a ':' is a library id as it is (else 'business:' + id). A sprite the owner sized in the
 // sprite studio is drawn at that size whatever its share (the owner, 2026-10-24: "I need to be able to fix the sizes of all of the stuff in the
@@ -29,6 +29,8 @@ const LAYOUT: Record<BusinessId, Piece[]> = {
   // the starting clubhouse is a tin-and-tarp shack (the owner, 2026-10-22: start with a poor clubhouse; the grand clubhouse, the pro shop and the
   // cart garage are built later), at its own size
   clubhouse: [['golf:clubhouse-shanty', .5, .5, 0]],
+  // the halfway house (T187): the pavilion, at its own size
+  halfway: [['golf-halfway-pavilion', .5, .5, 0]],
   // the driving range draws its own scene (plan P24, T129: golf/rangebiz.ts rangeScene: the shop, the caravan, the mats, the greens, the fence)
   range: [],
   fishing: [ ['fishing-lodge', .45, .45, .38], ['fishing-cabin', .18, .2, .18], ['fishing-cabin', .18, .7, .18],

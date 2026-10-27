@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "id": "material-texture:long-grass:near:reuse-approved-tone-tile01-v3",
+  "material": "long-grass",
+  "zoom": "near",
+  "stage": "exact-reuse-not-regeneration",
+  "source": {
+    "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/near-v2/tile-01.png",
+    "sha256": "d4063847d0c60c6f2a0f0f030d791e50afe4936109dd60a3311dd3036a8a05d1",
+    "nativePixels": [
+      1742,
+      902
+    ]
+  },
+  "output": {
+    "file": "art/theme-consistency/generated/ground/eight-tiles/long-grass/near-v3/tile-01-v3.raw.png",
+    "sha256": "d4063847d0c60c6f2a0f0f030d791e50afe4936109dd60a3311dd3036a8a05d1"
+  },
+  "processing": "Byte-for-byte reuse of near-v2/tile-01.png as tone authority. No image generation, decode/re-encode, repaint, recolour or resize."
+}
