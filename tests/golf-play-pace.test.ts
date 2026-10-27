@@ -123,8 +123,10 @@ test('pace: a group waiting on a tee tees off the moment the group ahead clears 
       if (st.length) long++;
       for (const s of st) {
         assert.equal(s.action, 'waiting', `hole ${h}: golfer ${s.golfer} waits on the tee at ${mid.toFixed(2)}`);
-        assert.ok(Math.hypot(s.x - view.holes[h]!.tee.x, s.y - view.holes[h]!.tee.y) < 1e-9, 'on the tee');
+        assert.ok(Math.hypot(s.x - view.holes[h]!.tee.x, s.y - view.holes[h]!.tee.y) <= 3, 'on the tee (after the first, just behind it)');
       }
+      // after the first tee they stand apart, each at his place, not on one point
+      if (h > 0) for (let i = 0; i < st.length; i++) for (let k = i + 1; k < st.length; k++) assert.ok(Math.hypot(st[i]!.x - st[k]!.x, st[i]!.y - st[k]!.y) >= 1, `hole ${h}: golfers ${st[i]!.golfer} and ${st[k]!.golfer} apart`);
     }
   }
   assert.ok(long >= 2, `the playback checked on ${long} long tee waits`);
@@ -242,4 +244,20 @@ test('board: the wait line ("waiting on the 7th tee", "waiting for the 3rd green
   const s = slowMiddle([1, 0.05, 1], 8), q = playRound(view, s.f, s.gs, 1), w = q.pace!.waves[0]!;
   assert.equal(waveLine(q, view, w), `Marshal: The G. G group is waved through on the ${ordinal(w.hole + 1)}; the G. D group stands aside`);
   assert.match(waveLine({ ...q, golfers: [...q.golfers.slice(0, 6), { ...q.golfers[6]!, owner: true }, ...q.golfers.slice(7)] }, view, w), /^Marshal: Your group is waved through on the \d+(st|nd|rd|th); the G\. D group stands aside$/);
+});
+
+test('pace: no wave-through chain: a group waved through on a hole does not wave the next group on there (a packed tier-1 field with a slow second group)', () => {
+  const view = course();
+  let total = 0;
+  for (const seed of [1, 2, 3, 7]) {
+    const f = makeField(1, seed).map(x => ({ ...x })), gs = teeTimes(f, seed).map((gr, i) => ({ tee: 450 + 8 * i, players: gr.players.slice() }));
+    for (const k of [0, 2]) for (const id of gs[k]!.players) Object.assign(f[id]!, { skill: 1, pro: true });
+    for (const id of gs[1]!.players) Object.assign(f[id]!, { skill: 0.05, pro: false });
+    const p = playRound(view, f, gs, seed), waves = p.pace!.waves;
+    total += waves.length;
+    for (const w of waves) assert.ok(!waves.some(x => x.hole === w.hole && x.slow === w.through), `seed ${seed}: the group waved through on hole ${w.hole} waves nobody there (${JSON.stringify(waves)})`);
+    noGreenOverlap(p, gs, `packed seed ${seed}`);
+    assert.ok(waves.length <= gs.length, `seed ${seed}: ${waves.length} wave-throughs for ${gs.length} groups`);
+  }
+  assert.ok(total >= 1, 'the slow group is waved past at least once');
 });

@@ -3,7 +3,7 @@
 // The stepping (HoleRun, GroupRun) is shared by playRound and the owner's live group (live.ts), so both keep one time model.
 import { TILE_M } from '../types';
 import { carryM, chooseShot, hitShot, putt, rng } from './shot';
-import type { Club, CourseView, Golfer, Group, GolferState, Lie, Pace, Pt, RoundPlan, Shot, Standing, Wait } from './types';
+import type { Club, CourseView, Golfer, Group, GolferState, Lie, Pace, PlayHole, Pt, RoundPlan, Shot, Standing, Wait } from './types';
 
 /** the walking pace (metres per game minute) */
 export const WALK_M = 72;
@@ -35,6 +35,10 @@ export const PICK_UP = 10;
 export const STEP_TILES = 4;
 /** the holed golfers of a group stand apart across that direction: (slot - 1) times this, tiles (slot: his place in the group, 0..3) */
 export const SPREAD_TILES = 1.2;
+/** T211: a group waiting on a tee (after the first) stands this far behind it, away from the hole, spread across by slot as at a step-off (tiles) */
+export const TEE_BACK = 1.5;
+/** T211: the minutes a waiting golfer takes to step up from his place behind the tee to the tee, before his address */
+export const STEP_IN = 0.1;
 
 /** the walk in game minutes between two points */
 export const walkMin = (a: Pt, b: Pt): number => Math.hypot(b.x - a.x, b.y - a.y) * TILE_M / WALK_M;
@@ -161,6 +165,9 @@ export class GroupRun {
   readonly behind: (GroupRun | null)[];
   /** T211: the last hole it waited on the group ahead (-1: none), and the groups it was waved through (it never waves them back) */
   waited = -1; readonly passed: GroupRun[] = [];
+  /** T211: the hole it was last waved through on (-1: none): it does not wave others through there (the groups held up behind a slow group would all
+   *  look slow on that tee and wave each other on) */
+  waved = -1;
   private c: PlayCtx; private gr: Group;
   constructor(c: PlayCtx, gr: Group, idx: number) {
     const N = c.view.holes.length;
@@ -246,13 +253,14 @@ export class Field {
     const p = run.next(); return !!p && run.timeOf(p) > run.strikeAt(p) + 1e-9;
   }
   /** a group at its next tee: it waves the group behind through when it holds two holes open and that group is held up by it (it stands aside: hold),
-   *  else begins the hole behind the group that began it last. A group never waves back a group that went through it, nor one it went through */
+   *  else begins the hole behind the group that began it last. A group never waves back a group that went through it, nor one it went through, and a
+   *  group waved through on a hole does not wave others through there */
   private begin(g: GroupRun): void {
     const h = g.h, a = this.lastOn[h]!, N = this.c.view.holes.length;
-    if (!g.hold && a && h >= 1 && h + 2 < N && a.teedOff(h + 2)) {
+    if (!g.hold && g.waved !== h && a && h >= 1 && h + 2 < N && a.teedOff(h + 2)) {
       const b = g.behind[h - 1];
       if (b && b.h === h - 1 && b.teedOff(h - 1) && this.heldBy(b, g) && !g.passed.includes(b) && !b.passed.includes(g)) {
-        g.hold = b; b.passed.push(g); this.c.pace.waves.push({ t: g.ready, hole: h, slow: g.idx, through: b.idx }); return;
+        g.hold = b; b.passed.push(g); b.waved = h; this.c.pace.waves.push({ t: g.ready, hole: h, slow: g.idx, through: b.idx }); return;
       }
     }
     g.hold = null;
@@ -325,10 +333,17 @@ export function appendShots(plan: RoundPlan, shots: Shot[]): void {
  *  the shot before), whether it is the golfer's last on its hole, the flight's length, and on the last shot of a hole the step-off (off) */
 interface Row { s: Shot; hole: number; last: boolean; dur: number; ws: number; we: number; wf: Pt; wt: Pt; off: Off | null }
 /** a golfer's tee time and his shots' rows in order */
-interface Track { tee: number; g: number; rows: Row[] }
+interface Track { tee: number; g: number; slot: number; rows: Row[] }
 /** the playback index of a plan, built once per plan and view */
 interface Cache { view: CourseView; tracks: Track[] }
 const cache = new WeakMap<RoundPlan, Cache>();
+
+/** T211: where a golfer of a group waits on a hole's tee: TEE_BACK behind it (away from its first aim point) and spread across by his slot (0..3) */
+export function teeSpot(hole: PlayHole, slot: number): Pt {
+  const t = hole.tee, a = hole.line[1] ?? hole.pin, dx = a.x - t.x, dy = a.y - t.y, L = Math.hypot(dx, dy), ux = L > 0 ? dx / L : 1, uy = L > 0 ? dy / L : 0;
+  const k = (slot - 1) * SPREAD_TILES;
+  return { x: t.x - ux * TEE_BACK - uy * k, y: t.y - uy * TEE_BACK + ux * k };
+}
 
 /** T211: the minute group g reached the tee of hole h (plan.pace), or `or` when it is not known (a plan made by hand) */
 function arriveOf(plan: RoundPlan, g: number, h: number, or: number): number { const a = plan.pace?.arrive[g]?.[h]; return a !== undefined && Number.isFinite(a) ? a : or; }
@@ -345,8 +360,8 @@ function teeWalk(off: Off, tee: Pt, A: number, by: number): { ws: number; we: nu
  *  group waits its turn */
 function build(plan: RoundPlan, view: CourseView): Cache {
   const holes = view.holes, size = plan.strokes.length, slot: number[] = [], tracks: Track[] = [];
-  plan.groups.forEach((gr, g) => { gr.players.forEach((id, k) => { slot[id] = k; tracks[id] = { tee: gr.tee, g, rows: [] }; }); });
-  for (let id = 0; id < size; id++) if (!tracks[id]) tracks[id] = { tee: 0, g: -1, rows: [] };
+  plan.groups.forEach((gr, g) => { gr.players.forEach((id, k) => { slot[id] = k; tracks[id] = { tee: gr.tee, g, slot: k, rows: [] }; }); });
+  for (let id = 0; id < size; id++) if (!tracks[id]) tracks[id] = { tee: 0, g: -1, slot: 0, rows: [] };
   for (const s of plan.shots) {
     const tr = tracks[s.golfer]!, pr = tr.rows[tr.rows.length - 1];
     const first = s.stroke === 1, wf = first ? s.from : pr!.s.from, ws = first ? s.t : pr!.s.t, we = first ? s.t : ws + walkMin(wf, s.from);
@@ -359,7 +374,8 @@ function build(plan: RoundPlan, view: CourseView): Cache {
     const toward = r.hole + 1 < holes.length ? holes[r.hole + 1]!.tee : r.s.from;
     r.off = offOf(r.s.holed ? r.s.to : r.s.from, holes[r.hole]!.pin, toward, slot[r.s.golfer]!, r.s.t + r.dur); // the cup, else where he stood (a pick-up)
     const nx = tr.rows[i + 1];
-    if (nx) { const w = teeWalk(r.off, nx.wt, arriveOf(plan, tr.g, nx.hole, nx.s.t), nx.s.t); nx.wf = r.off.at; nx.ws = w.ws; nx.we = w.we; }
+    // (to his place behind the tee, where he waits: teeSpot; he steps up to the tee for his shot)
+    if (nx) { nx.wt = teeSpot(holes[nx.hole]!, tr.slot); const w = teeWalk(r.off, nx.wt, arriveOf(plan, tr.g, nx.hole, nx.s.t), nx.s.t - STEP_IN - ADDRESS_TIME); nx.wf = r.off.at; nx.ws = w.ws; nx.we = w.we; }
   });
   return { view, tracks };
 }
@@ -428,7 +444,7 @@ function stateOf(plan: RoundPlan, c: Cache, id: number, m: number, out: GolferSt
         // his group and waits on the tee, as the row of his tee shot will have it
         const h = rows[cur]!.hole, A = h + 1 < N ? arriveOf(plan, tr.g, h + 1, Infinity) : Infinity;
         if (Number.isFinite(A)) {
-          const tee = holes[h + 1]!.tee, w = teeWalk(off, tee, A, Infinity);
+          const tee = teeSpot(holes[h + 1]!, tr.slot), w = teeWalk(off, tee, A, Infinity);
           if (m >= w.ws) { out.hole = h + 1; if (m < w.we) { walkAt(off.at, tee, w.ws, w.we, m, out); out.action = 'walk'; } else { out.x = tee.x; out.y = tee.y; out.action = 'waiting'; } return out; }
         }
         out.hole = h; out.action = 'holed'; out.x = off.at.x; out.y = off.at.y; return out;
@@ -454,6 +470,12 @@ function stateOf(plan: RoundPlan, c: Cache, id: number, m: number, out: GolferSt
   // at his ball: the address in the last part before the strike; before it, on a tee, waiting for his turn or for the group ahead (T211)
   out.x = j.s.from.x; out.y = j.s.from.y; out.ball = j.s.from;
   out.action = m >= j.s.t - ADDRESS_TIME ? (j.s.club === 'putter' ? 'putt' : 'address') : j.s.stroke === 1 ? 'waiting' : 'walk';
+  // on a tee after the first he waits at his place behind it (the row's walk ends there), and steps up to the tee in the STEP_IN before his address
+  if (j.s.stroke === 1 && j.hole > 0 && m < j.s.t - ADDRESS_TIME) {
+    const a = j.s.t - ADDRESS_TIME - STEP_IN;
+    if (m < a) { out.x = j.wt.x; out.y = j.wt.y; }
+    else { walkAt(j.wt, j.s.from, a, a + STEP_IN, m, out); out.action = 'walk'; }
+  }
   return out;
 }
 
