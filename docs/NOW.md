@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-27 01:42)
+## START HERE (kept current by the lead; last updated 2026-10-27 02:06)
 
 **Paste-ready start prompts for every role are in `docs/START-PROMPTS.md`:** the lead, a coding ticket, and the other sessions in this
 repo. The weekly usage cap is close (2026-10-26), so any chat may stop at any moment.
@@ -27,10 +27,10 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 ### In flight
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |
-| T172 | #403 | `arena/T172-ram-step2` | `.claude/worktrees/t166` | 5187 | The game's RAM step 2: measure the main thread, the atlas (6 kept levels in the game), the GPU process and the other workers; take each lever with no visible, pop-in or speed cost. Agent: the ground agent. |
+| nightly | — | main (detached) | `.claude/worktrees/t166` | — | **No scheduled nightly task exists** (checked 02:06). The lead runs it with a haiku-runner: typecheck, npm test, build, the six gates, one at a time → `E:/ClaudeTemp/nightly/2026-10-27.md`. The ground agent's next ticket waits for it (RAM). |
 | T112 | #199 | `arena/T112-sharp` (PR #394) | `.claude/worktrees/t112` | — | **Approved, merge HELD for the morning restart:** a lock change makes the 5174 auto-updater run `npm ci` in theme-consistency (the live 5191 studio holds sharp there; the lot agent's t160 uses it by junction). Morning order: stop 5191 → merge #394 → let npm ci finish → restart 5191 and 5174. All shipped bytes identical on 0.35.5; audit 0. |
 | T173 | #406 | `arena/T173-train-every-use` | `.claude/worktrees/t160` | 5186 | P25: the wizard and gallery train every use (shops, industry, open lots) with the game's own layout path; Ship model renders the exam (live vs shipped) and ships on the owner's click (`lot-models/v<N>.exam.jpg`); counters per group; palette thumbs at mip 2. Agent: the lot agent. |
-| T172 | #403 | `arena/T172-ram-step2` | `.claude/worktrees/t166` | 5187 | The game's RAM step 2: measure the main thread, the atlas (6 kept levels in the game), the GPU process and the other workers; take each lever with no visible, pop-in or speed cost. Agent: the ground agent. |
+| nightly | — | main (detached) | `.claude/worktrees/t166` | — | **No scheduled nightly task exists** (checked 02:06). The lead runs it with a haiku-runner: typecheck, npm test, build, the six gates, one at a time → `E:/ClaudeTemp/nightly/2026-10-27.md`. The ground agent's next ticket waits for it (RAM). |
 | T112 | #199 | `arena/T112-sharp` (PR #394) | `.claude/worktrees/t112` | — | **Approved, merge HELD for the morning restart:** a lock change makes the 5174 auto-updater run `npm ci` in theme-consistency (the live 5191 studio holds sharp there; the lot agent's t160 uses it by junction). Morning order: stop 5191 → merge #394 → let npm ci finish → restart 5191 and 5174. All shipped bytes identical on 0.35.5; audit 0. |
 
 **Two coding agents at a time (the owner, 2026-10-26: first "maybe just too many background tasks?" after the studio tab died with the
@@ -88,6 +88,11 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
    (the sharp bump). See the History sections below and `gh issue list --label arena --state open`.
 
 ### Done recently (newest first; details in each PR)
+- 2026-10-27 02:06: **T172 #408 the game's RAM step 2**: the main-thread heap 214 → 127 MB (the terrain label buffer and shadow mesh
+  data let go after use, the picking alpha as bits), the atlas keeps 2 decoded levels (24 → 8 MB), the ground chunk cache 32e6 px (after a
+  pan 158 → 112 MB). Pixel-identical, no pop-in, bench fps as main; suite 1900/1900. Dropped: 12 tile sources (bake waits doubled).
+  **Owner's call:** the dev server's sprite atlas is 383 MB RGBA8 in VRAM (production 96 MB BC7): serve the build's KTX2 pages in dev
+  (production look, but a studio Rebuild would need the ~90 s KTX2 encode) or a smaller RGBA8 budget (some blurry cells on pans).
 - 2026-10-27 01:42: **T171 #405 items know their place** (model v4 LATEST; v1-v3 unchanged): per-item anchors (kerb, door/front, sides,
   back, fence line, drive/parking edge, corner) and rows; **shops now generate** (a "composed" group lays each known item by its own count at
   its learnt place: bench, rack and bin at the kerb, hvac, cabinet and dumpster by the side, a hedge where the back fence is free); houses
