@@ -1,7 +1,7 @@
 // T193 (#502; the owner: "horizontal menu sliders" are not cool): no rail, flyout or tool panel overflows sideways or off the screen. Opens the
 // game (every tool shown: Settings > Show every tool now) at 1366 x 768 and 1600 x 900, at 100% and 125% UI scale; opens every rail group's
 // flyout and every submenu in it; picks every leaf and looks at the tool panel it opens (and the Junctions panel with a junction selected, where
-// the roundabout's note once sat over a horizontal scrollbar). A box fails when it is wider than it shows (its content scrolls or is cut
+// the roundabout's note once sat over a horizontal scrollbar), and Help › Keys (T202: F1, the Keys sheet scrolled through). A box fails when it is wider than it shows (its content scrolls or is cut
 // sideways), when any element in it scrolls sideways, or when it passes the screen's edge. Nothing is saved: every POST is answered here.
 //   npm run ui:overflow -- --url http://localhost:5173 [--channel msedge|chrome] [--quick]
 import { chromium } from 'playwright-core';
@@ -15,7 +15,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 const check = () => {
   const out = [], W = innerWidth, H = innerHeight, se = document.scrollingElement;
   if (se && (se.scrollTop || se.scrollLeft)) out.push(['the page', `scrolled (${se.scrollLeft}, ${se.scrollTop})`]);
-  const boxes = [...document.querySelectorAll('[data-testid="rail"], [data-flyout-col], [data-testid="tool-panel"]')].filter(e => e.offsetParent !== null);
+  const boxes = [...document.querySelectorAll('[data-testid="rail"], [data-flyout-col], [data-testid="tool-panel"], [data-testid="help"]')].filter(e => e.offsetParent !== null);
   for (const b of boxes) {
     const name = b.getAttribute('data-testid') ?? `flyout ${b.getAttribute('data-flyout-col')}`, r = b.getBoundingClientRect();
     if (b.scrollWidth > b.clientWidth + 1) out.push([name, `content ${b.scrollWidth}px wide in ${b.clientWidth}px`]);
@@ -101,9 +101,18 @@ try {
     // the Junctions panel with a junction selected (its type row and the roundabout's note)
     const sel = await p.evaluate(() => { const g = window.__game, nodes = [...(g.net.nodes?.values?.() ?? [])], n = nodes.find(x => x.arms?.length >= 3) ?? nodes.find(x => x.arms?.length >= 2); if (!n) return false; g.setTool('junction'); g.brush = 'select'; g.selectedJunction = n; g.emit(); return true; });
     if (sel) { await sleep(400); await look('Junctions, a junction selected'); }
+    // Help › Keys (T202): F1 opens it; its top and its end (it scrolls vertically only)
+    await p.keyboard.press('Escape'); await p.keyboard.press('Escape'); await sleep(150);
+    await p.keyboard.press('F1'); await sleep(400);
+    if (!(await p.$('[data-testid="keys-sheet"]'))) fails.push(`${tag} · Help › Keys: F1 did not open it`);
+    else {
+      await look('Help › Keys');
+      await p.evaluate(() => { const c = document.querySelector('[data-testid="help"]'); c.scrollTop = c.scrollHeight; }); await sleep(150);
+      await look('Help › Keys, scrolled to its end');
+    }
     await ctx.close();
     console.log(`${tag}: looked ${looked} times so far, ${fails.length} failures so far`);
   }
 } finally { await browser.close(); }
 if (fails.length) { console.log(`FAIL: ${fails.length}`); for (const f of fails.slice(0, 60)) console.log('  ' + f); process.exit(1); }
-console.log(`OK: no rail, flyout or tool panel overflows (${looked} looks, ${SIZES.length} sizes x ${SCALES.length} UI scales)`);
+console.log(`OK: no rail, flyout, tool panel or Help › Keys overflows (${looked} looks, ${SIZES.length} sizes x ${SCALES.length} UI scales)`);
