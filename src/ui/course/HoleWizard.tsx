@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import type { Game } from '../../game/engine';
 import { SURF } from '../../game/ext/course-grid';
 import { affordKind, statusIcon } from '../status-icon';
@@ -26,8 +27,12 @@ export function HoleWizardPanel({ game }: { game: Game }) {
   const step = w.step === 'tee' ? 0 : w.step === 'green' ? 1 : 2;
   const cur = p.brushHole, canEdit = w.step === 'tee' && p.hasPlan(cur);
   const nums = w.base ? [] : p.planNumbers();
+  // T205: the editor opening (New hole, or Edit hole from the card or the status line, scrolled down to the badges) brings the panel back to
+  // its top, so "New hole n" / "Edit hole n" and its steps show
+  const ref = useRef<HTMLDivElement>(null), opened = w.base ? w.hole : 0;
+  useEffect(() => { const panel = ref.current?.closest('[data-testid="tool-panel"]'); if (panel) panel.scrollTop = 0; }, [opened]);
   return (
-    <div className="wizard-card" data-primary="wizard">
+    <div className="wizard-card" data-primary="wizard" ref={ref}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span className="wiz-title">{w.base ? `Edit hole ${w.hole}` : `New hole ${w.hole}`}</span>
         {nums.length > 1 && (
@@ -67,7 +72,7 @@ export function HoleWizardPanel({ game }: { game: Game }) {
       )}
       <div className="mt-1.5 flex flex-wrap gap-1">
         {w.base && w.step === 'shape' && <button className="chip" title="Clears the hole's planned cells (your touch-ups stay); undo brings it back" onClick={() => p.deletePlan()}>Delete hole</button>}
-        {canEdit && <button className="chip" onClick={() => p.editPlan(cur)}>{`Edit hole ${cur}`}</button>}
+        {canEdit && <button className="chip" onClick={() => game.editHole(cur)}>{`Edit hole ${cur}`}</button>}
         <button className="chip" title="Back to the brush" onClick={() => p.setBrush(p.brushKind)}>Done</button>
       </div>
     </div>

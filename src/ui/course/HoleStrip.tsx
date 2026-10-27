@@ -19,9 +19,10 @@ export function holeState(v: HoleView, grow: string): HoleState {
   return { kind: 'ready', icon: '✓', word: 'ready' };
 }
 
-/** the Holes panel's Your holes (P23 4.3): a badge per hole that exists, each with its icon as well as its colour, the current one ringed (a
+/** the Holes panel's Your holes (P23 4.3): a badge per hole that exists ("Hole 1", T205), each with its icon as well as its colour, the current one ringed (a
  *  click makes it current, moves the camera there and opens its hole card, T174; dragged onto another badge, the two trade numbers, D4.12), and the "+" badge (New hole ▾: Plan a hole · From a saved hole · An empty hole to
- *  paint by hand); one status line under them for the current hole ("Hole 1 · par 4 · 342 m · growing · ready Mar 1985") and, when it needs
+ *  paint by hand); one status line under them for the current hole ("Hole 1 · par 4 · 342 m · growing · ready Mar 1985", wrapping, then
+ *  ✎ Edit hole 1, T205) and, when it needs
  *  attention, what it is missing */
 export function HoleStrip({ game }: { game: Game }) {
   const p = game.paint, views = game.courseHoleViews(), cur = p.brushHole, cv = views[cur - 1];
@@ -36,6 +37,9 @@ export function HoleStrip({ game }: { game: Game }) {
   const empty = () => { const f = p.nextFreeHole(); if (!f) { game.toast(`All ${HOLE_COUNT} holes are in use`, 'warn'); return; } game.goToHole(f); p.setBrush(p.brushKind); };
   const pick = (f: () => void) => () => { setMenu(false); f(); };
   const missing = cv?.started && !cv.ok ? [...cv.checks.filter(c => !c.ok).map(c => c.label), ...cv.warnings].slice(0, 3) : [];
+  /** T205: the status line's ✎ Edit hole n goes straight into New hole's editor on the current hole (a hole New hole planned); while that
+   *  editor is open it reads "Editing hole n" */
+  const planned = !!cv?.started && p.hasPlan(cur), editing = planned && p.editingHole === cur;
   return (
     <section data-section="holes" className="mt-3">
       <div className="sec-head"><h3 className="label-caps">Your holes</h3>{scored.length > 1 && <span className="sec-note">{`${scored.length} holes · par ${totalPar} · ${totalM} m`}</span>}</div>
@@ -48,7 +52,7 @@ export function HoleStrip({ game }: { game: Game }) {
               draggable onDragStart={e => { e.dataTransfer.setData('text/plain', String(v.n)); e.dataTransfer.effectAllowed = 'move'; setDrag(v.n); }} onDragEnd={() => setDrag(0)}
               onDragOver={e => { if (drag && drag !== v.n) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; } }}
               onDrop={e => { e.preventDefault(); const from = +e.dataTransfer.getData('text/plain') || drag; setDrag(0); if (from && from !== v.n) game.renumberHole(from, v.n); }}>
-              <span className="hole-icon" aria-hidden>{st.icon}</span>{v.n}
+              <span className="hole-icon" aria-hidden>{st.icon}</span>{`Hole ${v.n}`}
             </button>
           );
         })}
@@ -65,9 +69,10 @@ export function HoleStrip({ game }: { game: Game }) {
         </div>
       </div>
       <div className="status-line mt-1.5" data-status>
-        {!cv ? '' : cv.started
+        <span className="min-w-0">{!cv ? '' : cv.started
           ? `Hole ${cur}${cv.par ? ` · par ${cv.par} · ${cv.lengthM} m` : ''} · ${curState!.word}`
-          : built.length ? `Hole ${cur} · empty: paint a green and a tee` : 'No holes yet: New hole plans one for you'}
+          : built.length ? `Hole ${cur} · empty: paint a green and a tee` : 'No holes yet: New hole plans one for you'}</span>
+        {planned && <button className="chip" disabled={editing} onClick={() => game.editHole(cur)} title={editing ? `Hole ${cur}'s editor is open above: drag the tee, the green or the line, then Build` : `New hole's editor on hole ${cur}: drag the tee, the green or the line; Build to save`} data-testid="status-edit">{editing ? `Editing hole ${cur}` : `✎ Edit hole ${cur}`}</button>}
       </div>
       {missing.length > 0 && (
         <ul className="mt-1 flex flex-col gap-0.5">

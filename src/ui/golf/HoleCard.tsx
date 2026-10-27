@@ -1,6 +1,7 @@
 // The hole card (plan P23-UX 6.2 P2-4, T174): a selected hole's facts as the game has them (D7.3: par, lengths from each tee, grow-in, its
 // surfaces' areas, its checks and warnings), each check with the Fix that arms the tool that mends it; the pin and tee markers dragged on the map
-// while it is open (no re-plan, no charge); Edit hole (New hole's editor); Delete with a confirm that states the refund; the number, which
+// while it is open (no re-plan, no charge); Edit hole (New hole's editor on it, framed, with a toast; "Editing hole n" while that editor is open,
+// T205); Delete with a confirm that states the refund; the number, which
 // trades places with another hole's (D4.12, as dragging the Holes panel's badges). Opened by a hole's badge in the Holes panel or a click on the
 // hole with Select; Esc or ✕ closes it. In New hole's card style; colour never alone (P23 D8.1: ✓ ◔ ! ✗ beside the colours, 13 px body).
 import { useState } from 'react';
@@ -28,8 +29,10 @@ export function HoleCard({ game, right = 'right-3' }: { game: Game; right?: stri
   const bad = c.checks.filter(k => !k.ok), state = bad.length ? { icon: '!', word: 'needs attention', tone: 'text-amber-300' } : c.ready !== null ? { icon: '◔', word: `growing · ready ${monthIndexLabel(c.ready)}`, tone: 'text-sky-300' } : { icon: '✓', word: 'ready', tone: 'text-emerald-300' };
   const length = c.tees[0]?.m ?? 0, del = deleteNote(c);
   const others = game.courseHoleViews().filter(v => v.n !== c.n);
+  /** this hole's editor is open in the Holes panel ("Edit hole n"): Edit hole has nothing more to open (T205) */
+  const editing = game.paint.editingHole === c.n;
   return (
-    <section className={`pointer-events-auto absolute ${right} top-[var(--hud-top,6rem)] z-20 max-h-[78vh] w-[340px] overflow-y-auto rounded-xl border border-[var(--gold-line)] bg-slate-950/90 p-3 text-[13px] text-slate-200 shadow-2xl backdrop-blur`} data-testid="hole-card" aria-label={`Hole ${c.n}`}>
+    <section className={`pointer-events-auto absolute ${right} top-[var(--hud-top,6rem)] z-20 max-h-[78vh] w-[340px] overflow-y-auto overflow-x-hidden rounded-xl border border-[var(--gold-line)] bg-slate-950/90 p-3 text-[13px] text-slate-200 shadow-2xl backdrop-blur`} data-testid="hole-card" aria-label={`Hole ${c.n}`}>
       <div className="flex items-start justify-between gap-2 border-b border-white/10 pb-2">
         <div>
           <div className="flex items-center gap-2">
@@ -83,10 +86,14 @@ export function HoleCard({ game, right = 'right-3' }: { game: Game; right?: stri
       <p className="sub-line mt-2">Drag the pin or a tee marker on the map to move it: no re-plan, no charge. It stays on its green or tee.</p>
 
       {!asking ? (
-        <div className="mt-2 flex flex-wrap gap-1.5">
-          <button className="chip" disabled={!c.planned} onClick={() => game.editHole(c.n)} title={c.planned ? "New hole's editor: drag the line, the tee and the green" : 'Painted by hand: shape it with the brush'} data-testid="hole-edit"><Icon name="pin" size={14} />Edit hole</button>
-          <button className="chip" disabled={!c.planned} onClick={ask} title={c.planned ? 'Clears what New hole laid for it, after a confirm' : 'Painted by hand: erase it with the brush'} data-testid="hole-delete"><Icon name="bulldozer" size={14} />Delete</button>
-        </div>
+        <>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {/* T205: Edit hole always shows what it did: the editor opens on this hole, framed, with a toast; while it is open it says so */}
+            <button className="chip" disabled={!c.planned || editing} onClick={() => game.editHole(c.n)} title={editing ? `Hole ${c.n}'s editor is open in the Holes panel: drag the tee, the green or the line, then Build` : c.planned ? "New hole's editor: drag the tee, the green or the line; Build to save" : 'Painted by hand: shape it with the brush'} data-testid="hole-edit"><Icon name="pin" size={14} />{editing ? `Editing hole ${c.n}` : 'Edit hole'}</button>
+            <button className="chip" disabled={!c.planned} onClick={ask} title={c.planned ? 'Clears what New hole laid for it, after a confirm' : 'Painted by hand: erase it with the brush'} data-testid="hole-delete"><Icon name="bulldozer" size={14} />Delete</button>
+          </div>
+          {!c.planned && <p className="sub-line mt-1" data-testid="hole-edit-why">Painted by hand: shape it with the brush. Edit hole and Delete are for holes New hole planned.</p>}
+        </>
       ) : (
         <div className="mt-2 rounded-lg border border-rose-400/40 bg-rose-500/10 p-2" role="alertdialog" aria-label={`Delete hole ${c.n}?`} data-testid="hole-delete-confirm">
           <div className="font-semibold text-rose-200">Delete hole {c.n}?</div>
