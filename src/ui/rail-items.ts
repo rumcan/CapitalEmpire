@@ -5,12 +5,12 @@
 // Each group is one rail item; its panel shows its tools in a row at the top (in sections where a group has several kinds: Traffic's Roads,
 // Junctions and Transport). The tools move in whole; nothing is removed. Props sits in both decorations (the same tool, the group the player
 // opened it from is the one lit). The same places from minute zero: a group whose every tool is locked stays in place, dimmed, with what unlocks
-// it; a locked tool inside an open group stays in its row, dimmed, with its lock and why; NEW marks a group with a tool opened past stage 1 and not
-// opened yet (the seen ids are T117's, saved in golf.progress: the tools' and the old groups' ids, so old saves keep theirs). No key letters on
+// it; a locked tool inside an open group stays in its row, dimmed, with its lock and why; NEW marks a group with a tool opened past stage 1 until
+// one of them is opened (the seen ids are T117's, saved in golf.progress: the tools' ids, so old saves keep theirs). No key letters on
 // the rail (the owner: "also remove the shortcut key indicators"): the keys still work and the tooltip names them. Pure TypeScript, no DOM (the
 // rail's buttons are Rail.tsx, the tool row App.tsx); the icon names are types only.
 import type { Tool } from '../game/types';
-import { CHIP_STAGE, STAGE_WHY, type GolfChipId, type ProgressiveUiState, type RailGroupId } from '../game/ext/progressive-ui';
+import { CHIP_STAGE, NEW_BADGE_IDS, STAGE_WHY, type GolfChipId, type ProgressiveUiState, type RailGroupId } from '../game/ext/progressive-ui';
 import type { IconName } from './Icon';
 import type { TipParts } from './tip';
 
@@ -101,7 +101,10 @@ export function railEntries(ui: ProgressiveUiState | null, golf: boolean, uiTool
     const tools = toolsIn(r, golf);
     if (!tools.length) continue;
     const locked = golf && ui && !r.action && tools.every(t => toolLock(ui, t.id)) ? toolLock(ui, tools.find(t => toolLock(ui, t.id))!.id) : null;
-    const isNew = golf && !!ui && !locked && !r.action && ((ui.newGroups as string[]).includes(r.group) && r.group !== 'course' || tools.some(t => (ui.newTools as string[]).includes(t.id)));
+    // NEW: a tool of the group is new and none of its badged tools has been opened yet (opening one clears the group's badge; the row keeps the
+    // others' own badges until they are opened)
+    const newT = (t: RailTool) => (ui!.newTools as string[]).includes(t.id), opened = (t: RailTool) => NEW_BADGE_IDS.includes(t.id) && !newT(t) && !toolLock(ui, t.id);
+    const isNew = golf && !!ui && !locked && !r.action && tools.some(newT) && !tools.some(opened);
     const on = r.action === 'range' ? !!v.rangeOpen : lit === r;
     out.push({ item: r, on, locked, isNew, heading: r.section !== last ? r.section : null });
     last = r.section;

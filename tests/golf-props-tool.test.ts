@@ -36,10 +36,12 @@ test('the catalogue: four groups of real library pictures, a price of $50 to $15
   assert.equal(appealText(0.12), '+12%'); assert.equal(appealText(0.005), '+0.5%');
 });
 
-test('the rail: Props sits in the Course group of golf games, after Buildings, on Z', () => {
-  const i = RAIL.findIndex(r => r.id === 'props'), r = RAIL[i]!;
-  assert.equal(RAIL[i - 1]!.id, 'buildings'); assert.equal(r.section, 'course'); assert.equal(r.only, 'golf'); assert.equal(r.key, 'Z');
-  assert.ok(!RAIL.some(q => q !== r && q.tools.some(t => t.key === 'Z')), 'Z is no other tool\'s key');
+test("the rail (T182): Props sits in both decorations (the course's and the town's) of golf games, on Z", () => {
+  const holds = RAIL.filter(r => r.tools.some(t => t.id === 'props'));
+  assert.deepEqual(holds.map(r => r.id), ['decor', 'towndecor']);
+  for (const r of holds) { const t = r.tools.find(x => x.id === 'props')!; assert.equal(t.only, 'golf'); assert.equal(t.key, 'Z'); }
+  assert.equal(holds[0]!.section, 'course'); assert.equal(holds[1]!.section, 'town');
+  assert.ok(!RAIL.some(q => q.tools.some(t => t.key === 'Z' && t.id !== 'props')), "Z is no other tool's key");
 });
 
 /** a map for the spot check: owned x 0..100, a road at y 50..52, water at x 80..90, a green disc at (20, 20), a bunker at (30, 20) */
