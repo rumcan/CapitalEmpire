@@ -8,6 +8,7 @@ import { HALFWAY_COST, HALFWAY_TEE_REACH, halfwaySpotWhy, halfwayTakings, type H
 import { BUSINESS, knownBusinesses } from '../src/game/business/catalogue';
 import { businessArt } from '../src/game/business/art';
 import { LIBRARY } from '../src/game/library';
+import { drawnAsStandIn } from '../src/game/newart';
 import { RAIL, entryKey, pickEntry, railItemsOf, toolsIn } from '../src/ui/rail-items';
 
 const by = (k: string) => DECOR_BY_KEY.get(k)!;
@@ -26,17 +27,21 @@ test('props by place: the category table, the filter by the group opened from, A
   assert.equal(CAT_PLACE['Street furniture'], 'both'); assert.equal(CAT_PLACE['Business artwork'], 'course'); assert.equal(CAT_PLACE['Golf tournament'], 'course');
   assert.equal(placeOf(by('bench')), 'both'); assert.equal(placeOf(by('lamp')), 'both'); assert.equal(placeOf(by('flower-bed')), 'both');
   assert.equal(placeOf(by('trolley')), 'course'); assert.equal(placeOf(by('board')), 'course'); assert.equal(placeOf(by('statue')), 'course', 'the golfer statue stand-in');
-  assert.equal(placeOf(by('fountain')), 'both'); assert.equal(placeOf(by('town-gazebo')), 'town', 'a town building is the town\'s whatever its category');
+  assert.equal(placeOf(by('fountain')), 'both'); assert.equal(placeOf(by('toilet-block')), 'town', "a town building is the town's whatever its category (the toilets are Golf tournament art)");
   assert.equal(placeOf({ group: 'plants', id: 'no:such' }), 'both', 'a category not listed: both');
   const course = DECOR.filter(d => shownIn(d, 'course')).map(d => d.key), town = DECOR.filter(d => shownIn(d, 'town')).map(d => d.key);
-  assert.ok(course.includes('trolley') && course.includes('bench') && !course.includes('town-gazebo'));
-  assert.ok(town.includes('bench') && town.includes('town-gazebo') && !town.includes('trolley') && !town.includes('board'));
+  assert.ok(course.includes('trolley') && course.includes('bench') && !course.includes('chapel'));
+  assert.ok(town.includes('bench') && town.includes('chapel') && !town.includes('trolley') && !town.includes('board'));
   assert.equal(DECOR.filter(d => shownIn(d, 'course', true)).length, DECOR.length, 'All shows every item');
   assert.equal(standsIn(by('bench'), 'town'), 'town'); assert.equal(standsIn(by('bench'), 'course'), 'course'); assert.equal(standsIn(by('trolley'), 'town'), 'course');
   // every catalogue item has its picture in the library, the town's buildings too
   const ids = new Set(LIBRARY.map(i => i.id));
   for (const d of DECOR) assert.ok(ids.has(d.id), d.key);
-  assert.deepEqual(DECOR.filter(d => d.group === 'buildings').map(d => [d.key, d.appeal]), [['town-gazebo', 0], ['town-fountain', 0], ['bus-shelter', 0], ['toilet-block', 0], ['chapel', 0]], 'decoration: no economy');
+  assert.deepEqual(DECOR.filter(d => d.group === 'buildings').map(d => [d.key, d.appeal]), [['town-fountain', 0], ['bus-shelter', 0], ['toilet-block', 0], ['chapel', 0]], 'decoration: no economy');
+  // the library's own art only: none of the town's buildings is drawn as a stand-in (the library's gazebo is one, so it is not offered)
+  const idx = new Map(LIBRARY.map((i, k) => [i.id, k]));
+  for (const d of DECOR.filter(q => q.group === 'buildings')) assert.equal(drawnAsStandIn(idx.get(d.id)!), false, d.key);
+  assert.equal(drawnAsStandIn(idx.get('world:gazebo')!), true);
 });
 
 test("the town's spot rule: off your land, off the town's lots, on the grass between them", () => {
@@ -71,8 +76,8 @@ test('the halfway house: its spot (by a tee, off the play, its front on a path),
   assert.equal(art.length, 1); assert.equal(LIBRARY[art[0]!.item]!.id.replace(/^view:/, '').replace(/:(nw|se|sw)$/, ''), 'business:golf-halfway-pavilion');
   // a save keeps it (the business list: knownBusinesses keeps a type the catalogue has), and a town building's prop keeps its catalogue key
   assert.deepEqual(knownBusinesses([def], 'test'), [def]);
-  const t = propTuple('world:gazebo', { x: 31.5, y: 31.5, flip: false, scale: 1, decor: 'town-gazebo' });
-  assert.deepEqual(JSON.parse(JSON.stringify(t)), ['world:gazebo', 31.5, 31.5, 0, 1, 0, 'town-gazebo']);
-  assert.deepEqual(tupleMarks(JSON.parse(JSON.stringify(t))), { decor: 'town-gazebo' });
+  const t = propTuple('town:bus_stop', { x: 31.5, y: 31.5, flip: false, scale: 1, decor: 'bus-shelter' });
+  assert.deepEqual(JSON.parse(JSON.stringify(t)), ['town:bus_stop', 31.5, 31.5, 0, 1, 0, 'bus-shelter']);
+  assert.deepEqual(tupleMarks(JSON.parse(JSON.stringify(t))), { decor: 'bus-shelter' });
   assert.equal(decorKeyOf('chapel'), 'chapel');
 });

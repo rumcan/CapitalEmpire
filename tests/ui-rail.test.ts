@@ -46,7 +46,7 @@ describe('the rail: the groups, in the same places at every stage (T182)', () =>
     assert.equal(es.find(e => e.on)?.item.id, 'traffic');
     const town = RAIL.find(r => r.id === 'towndecor')!;
     assert.deepEqual(toolsIn(town, false).map(t => t.id), ['paint', 'business']);
-    assert.deepEqual(toolsIn(town, true).map(t => t.id), ['paint', 'props']);
+    assert.deepEqual(toolsIn(town, true).map(t => t.id), ['paint', 'props', 'props'], 'T187: its Props and its Buildings (the Props tool town views)');
     assert.deepEqual(toolsIn(RAIL.find(r => r.id === 'course')!, false).map(t => t.id), ['course']);
   });
   it('every tool is reachable from exactly one group (Props from both decorations), and the groups hold what the owner asked', () => {

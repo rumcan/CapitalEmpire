@@ -268,3 +268,13 @@ in NE and NW), sun at the upper right, shadows at 145°, early autumn dusk, no l
 | Tiered garden fountain, small (`golf:prop-fountain-small`, four views) | 2 x 2 / 1.8 | none (the plaza fountain is real art) | a two-tier cast-stone fountain in a round basin, water spilling from the top bowl, wet stone darker | P2 |
 | Stone entrance arch (`golf:prop-entrance-arch`, four views) | 5 x 1 / 4 | none (the ivy garden arch is real art) | a dressed-stone arch on two pillars over a path, a blank stone keystone, low hedges either side | P2 |
 | Classical urn on plinth (`golf:prop-urn`) | 0.8 x 0.8 / 1.6 | none | a stone urn on a square plinth spilling trailing ivy and white petunias | P2 |
+
+## Town buildings (T187, Town decoration › Buildings: art requests)
+The few buildings a golf game's player adds to the town (`golf/decor.ts DECOR`, group `buildings`) use the library's own art: the plaza fountain
+(`ref:landmark-fountain-v2`), the bus shelter (`town:bus_stop`), the toilet block (`golf:toilet-block`) and the white chapel (`variation:world-church-44e76535-plain:1`).
+These are missing and offered only once drawn (four views, sun at the upper right, shadows at 145°, early autumn dusk, no lettering):
+| Sprite (id to use) | Footprint (m) / height | Today | Prompt (short) | P |
+| --- | --- | --- | --- | --- |
+| Park bandstand (`town:bandstand`, four views) | 6 x 6 / 5 | `world:gazebo` is a stand-in (not offered) | an octagonal white timber bandstand on a low brick base, a green shingled roof with a small cupola, steps on one side | P1 |
+| Bronze statue on a plinth (`town:statue-founder`, four views) | 2 x 2 / 4 | none | a bronze figure of a town founder in a frock coat on a dressed-stone plinth, a little green patina | P2 |
+| Town hall annex (`town:townhall-annex`, four views) | 12 x 8 / 7 | none | a small two-storey brick civic building with a white portico and a flag, autumn trees beside it | P2 |

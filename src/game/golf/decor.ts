@@ -66,8 +66,8 @@ export const DECOR: readonly DecorItem[] = [
   { key: 'flagpole', name: 'Flag pole', group: 'furniture', kind: 'sign', id: 'business:golf-pin-red', price: 500, appeal: APPEAL.flagpole, scale: 0.6, standIn: 'Club flag pole', desc: 'A tall white pole flying the club flag' },
   // ---- the town's buildings (T187, Town decoration › Buildings; the owner: "a few buildings that you can add to the town"): the library's own
   //      art only. Decoration: the game models no town attractiveness or land value for them to raise, so they add nothing but the look (appeal 0;
-  //      the range's appeal counts the props near it alone). A statue and a town hall annex have no art yet (docs/GOLF-SPRITES.md)
-  { key: 'town-gazebo', name: 'Bandstand gazebo', group: 'buildings', kind: 'stone', id: 'world:gazebo', price: 8000, appeal: 0, desc: 'A white bandstand for the park: summer concerts on the green' },
+  //      the range's appeal counts the props near it alone). A bandstand (the library's gazebo is a stand-in), a statue and a town hall annex
+//      have no art yet (docs/GOLF-SPRITES.md "Town buildings")
   { key: 'town-fountain', name: 'Park fountain', group: 'buildings', kind: 'water', id: 'ref:landmark-fountain-v2', price: 12000, appeal: 0, desc: 'A tiered stone fountain for a square or a park corner' },
   { key: 'bus-shelter', name: 'Bus shelter', group: 'buildings', kind: 'small', id: 'town:bus_stop', price: 1500, appeal: 0, desc: 'A covered bench by the road for the bus' },
   { key: 'toilet-block', name: 'Public toilets', group: 'buildings', kind: 'stone', id: 'golf:toilet-block', price: 9000, appeal: 0, desc: 'A small toilet block for a park or a square' },
