@@ -12,12 +12,14 @@ import type { Prop } from '../src/game/types';
 
 const LIB = new Map(LIBRARY.map((it, i) => [it.id, i]));
 
-test('the catalogue: four groups of real library pictures, a price of $50 to $15,000 and an appeal each; stand-ins are named', () => {
-  assert.deepEqual(DECOR_GROUPS.map(g => g.id), ['plants', 'water', 'stone', 'furniture']);
+test('the catalogue: four groups of real library pictures (and the T187 town buildings), a price of $50 to $15,000 and an appeal each; stand-ins are named', () => {
+  assert.deepEqual(DECOR_GROUPS.map(g => g.id), ['plants', 'water', 'stone', 'furniture', 'buildings']);
   for (const g of DECOR_GROUPS) assert.ok(DECOR.some(d => d.group === g.id), g.id);
   assert.equal(new Set(DECOR.map(d => d.key)).size, DECOR.length, 'the keys are unique (they are saved)');
   for (const d of DECOR) {
     assert.ok(LIB.has(d.id), `${d.key}: ${d.id} is in the library`);
+    // T187: the town's buildings are decoration (appeal 0) and a chapel costs more
+    if (d.group === 'buildings') { assert.equal(d.appeal, 0, `${d.key} appeal`); assert.ok(d.price >= 500 && d.price <= 100000, `${d.key} price`); assert.equal(sellBack(d), Math.round(d.price / 2)); continue; }
     assert.ok(d.price >= 50 && d.price <= 15000, `${d.key} price`);
     assert.ok(d.appeal > 0 && d.appeal <= 0.15, `${d.key} appeal`);
     assert.ok(d.name && !/stand in/i.test(d.name) && d.desc, `${d.key}: a plain name`);

@@ -4,7 +4,7 @@
 // stays the main income and a good spin-off pays for itself in about ten game days. Pure TS, no DOM.
 
 /** a business type's id */
-export type BusinessId = 'stadium' | 'sportsbar' | 'buscompany' | 'diner' | 'taxi' | 'golf' | 'estate' | 'fishing' | 'tackle' | 'casino' | 'hotel' | 'motel' | 'clubhouse' | 'range';
+export type BusinessId = 'stadium' | 'sportsbar' | 'buscompany' | 'diner' | 'taxi' | 'golf' | 'estate' | 'fishing' | 'tackle' | 'casino' | 'hotel' | 'motel' | 'clubhouse' | 'range' | 'halfway';
 /** how a business earns: event (the stadium's rounds), visit (customers drive to its door during its hours), fleet (fares from its vehicles),
  *  estate (lots it sells as the town builds on them) */
 export type BusinessKind = 'event' | 'visit' | 'fleet' | 'estate';
@@ -88,10 +88,16 @@ const CLUBHOUSE: BusinessType = { id: 'clubhouse', name: 'Clubhouse', family: 'l
 const RANGE: BusinessType = { id: 'range', name: 'Driving range', family: 'leisure', kind: 'visit', footprint: { w: 70, h: 24 }, buildCost: 0, upkeepPerDay: 2000, pricePerVisitor: 60, party: 2,
   hours: [7, 22], rate: 80, tau: 8, max: 1, townMin: 0, water: false, unlock: { parent: null }, spinOffs: [],
   blurb: 'Your first golf business: drivers on the county road pull in to hit a bucket.' };
+/** the halfway house (T187, golf/halfway.ts): Course › Buildings places it on the course by a tee, like the clubhouse; the clubhouse's kind with no
+ *  cars of its own (rate 0: golfers walk to it from the course), so City never routes cars to it; its takings are the golfers passing (a share
+ *  of the clubhouse's visitors, booked by the engine: golf/halfway.ts halfwayTakings); its price is HALFWAY_COST, its upkeep City's as any */
+const HALFWAY: BusinessType = { id: 'halfway', name: 'Halfway house', family: 'leisure', kind: 'visit', footprint: { w: 8, h: 6 }, buildCost: 0, upkeepPerDay: 60, pricePerVisitor: 4, party: 1,
+  hours: [7, 19], rate: 0, tau: 6, max: 1, townMin: 0, water: false, unlock: { parent: null }, spinOffs: [],
+  blurb: 'Drinks and a sandwich between the nines: golfers stop on their way round.' };
 /** the clubhouse's price in a range start, $ (plan P22 2.5.2: the player places it; the old start's game-placed clubhouse is free) */
 export const CLUBHOUSE_RANGE_COST = 45000;
 /** a type by id (the clubhouse and the driving range too, though they are not in BUSINESSES) */
-export const BUSINESS: Record<BusinessId, BusinessType> = Object.fromEntries([...BUSINESSES, CLUBHOUSE, RANGE].map(b => [b.id, b])) as Record<BusinessId, BusinessType>;
+export const BUSINESS: Record<BusinessId, BusinessType> = Object.fromEntries([...BUSINESSES, CLUBHOUSE, RANGE, HALFWAY].map(b => [b.id, b])) as Record<BusinessId, BusinessType>;
 /** the businesses whose type today's catalogue has: a save made by another branch may name a type it does not (the engine's drawing and the city's
  *  visit plan would throw on every frame), so those are dropped, with one warning naming their types (where: who loaded them). T135 */
 export function knownBusinesses<T extends { type: string }>(defs: readonly T[], where: string): T[] {
