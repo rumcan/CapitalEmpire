@@ -29,9 +29,12 @@ import type { BayRowDef } from '../event/rows';
 import type { CurbDef } from '../event/curb';
 import type { BusRouteDef } from '../event/bus';
 import type { BizDef, BizStats, BizView } from '../business/state';
+import type { DaySave } from '../event/daysave';
 
 /** frames arrive this often, ms: a car is drawn between the last two frames over that time */
 const FRAME_MS = 100;
+/** how long the engine's save waits for the worker's tournament day (T209, daySave), ms */
+const DAY_WAIT_MS = 1500;
 /** a car that moved this far (tiles) between two frames was respawned or re-planned: drawn at its new place, not lerped */
 const JUMP = 3;
 /** the round before any frame: free, level 1, no runs */
@@ -188,6 +191,19 @@ export class SimClient {
   private sendTownDay() { this.dayLen = this.golfOn ? Math.max(24, Math.round(this.townMinutes * 60)) : 1440; this.post({ t: 'townDay', dayLen: this.dayLen, traffic: this.golfOn ? this.townTraffic : 1, free: this.golfOn }); }
   /** the town day's clock from a save (after townState, and after the golf setup so dayLen is current; see townclock.ts): the worker runs it at the normal rate */
   setTownClock(clock: TownClock) { this.post({ t: 'townClock', clock }); }
+  /** T209: the tournament day as the save keeps it (City.daySave, asked of the worker): null when no tournament day is under way, without a worker, or
+   *  with no answer within DAY_WAIT_MS (the save is then written without it, as before) */
+  daySave(): Promise<DaySave | null> {
+    if (!this.worker) return Promise.resolve(null);
+    const id = ++this.dayAsk;
+    return new Promise(res => {
+      const done = (d: DaySave | null) => { clearTimeout(timer); this.dayWait.delete(id); res(d); }, timer = setTimeout(() => done(null), DAY_WAIT_MS);
+      this.dayWait.set(id, done); this.post({ t: 'daySave', id });
+    });
+  }
+  private dayAsk = 0; private dayWait = new Map<number, (d: DaySave | null) => void>();
+  /** T209: a saved tournament day resumes (after townState and setTownClock; City.resumeDay): the saved round and the day */
+  resumeDay(round: RoundSave | undefined, day: DaySave) { this.post({ t: 'resumeDay', round, day }); }
   /** dev test hook: n cars sent to car park id's entrances (round-robin), for the browser check */
   parkTest(id: number, n: number) { this.post({ t: 'parkTest', id, n }); }
   /** the toll gates as the player placed them (the full list): the worker builds their booths (see City.setTolls) */
@@ -256,6 +272,7 @@ export class SimClient {
     if (m.t === 'watch') { if (this.watching) this.watch = { node: m.node, n: m.n, lines: m.lines }; return; }
     if (m.t === 'site') { this.site = m.site; return; }
     if (m.t === 'biz') { this.biz = m.list; this.onBiz?.(); return; }
+    if (m.t === 'daySave') { this.dayWait.get(m.id)?.(m.day); return; }
     if (m.t === 'heatGeom') { this.heatGeom = m.geom; this.heatGeomVersion = m.version; return; }
     if (m.t === 'heat') { this.heatRatio = m.ratio; this.heatDens = m.dens; this.heatHist = m.hist; this.parkDemand = m.pdem; this.heatAt = performance.now(); return; }
     if (m.t === 'disasters') { this.disasters = m.active; this.onDisasters?.(m.notes); return; }
