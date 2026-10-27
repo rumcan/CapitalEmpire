@@ -4,6 +4,7 @@
 // drawn by sprites.ts spriteRect). A size past the picture's pixels is drawn at its limit by both. A studio size changed while the game runs
 // reaches its lots (lots/scales-live.ts): the tables in place, the car facings again. Headless.
 import { describe, it } from 'node:test';
+import { SIZE_HI, maxDrawScale } from '../src/game/newart';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { LIBRARY } from '../src/game/library';
@@ -27,7 +28,7 @@ const drawnOf = new Function(`${lines.join('\n')}\nreturn drawnOf;`)() as (s: Re
 /** a car's card as the studio builds it (server.mjs /api/sprites: its model's size, CAR_SCALE; size-report.ts: sharp, the picture's limit) and its
  *  drawn width at zoom Z (studio.html stage(): the quad's width x k x K) */
 function cardWidth(id: string): number {
-  const it = LIBRARY[INDEX.get(id)!]!, s = { id, quad: it.quad, scale: carModelSize(STUDIO_SCALE, carModel(id)) ?? 1, carScale: CAR_SCALE, sharp: PIXEL_LIMIT[INDEX.get(id)!]! * PIXEL_SLACK / CAR_SCALE };
+  const it = LIBRARY[INDEX.get(id)!]!, s = { id, quad: it.quad, scale: carModelSize(STUDIO_SCALE, carModel(id)) ?? 1, carScale: CAR_SCALE, sharp: PIXEL_LIMIT[INDEX.get(id)!]! * PIXEL_SLACK / CAR_SCALE, cap: maxDrawScale(INDEX.get(id)!) };
   const d = drawnOf(s); return (d.quad[2]! - d.quad[0]!) * d.k * Z;
 }
 /** a car composed on a lot as the engine places it (its scale, the footprint at it) and its drawn width at zoom Z (sprites.ts spriteRect) */
@@ -54,15 +55,18 @@ describe('parked cars on lots match the studio card (T163)', () => {
     // the car parks' cars (the facings) too
     for (let t = 0; t < 2; t++) for (let d = 0; d < 4; d++) { const f = parkedCar(t, d), id = LIBRARY[f.item]!.id; assert.ok(Math.abs(gameWidth(id, f.size) - cardWidth(id)) < 0.01, id); }
   });
-  it('2. a size past the picture\'s pixels: the lot draws it at its limit, and so does the card (before, the card showed the size asked)', () => {
+  it('2. a size past the picture\'s pixels (T190: the studio size is the baseline, drawn as asked, soft past its pixels): the lot and the card agree', () => {
     const was = { ...STUDIO_SCALE }, model = carModel(lotCars()[0]!.id);
     try {
       applyStudioScales({ ...was, [model]: 3 });
       const cars = lotCars();
       for (const c of cars) if (carModel(c.id) === model) {
         const g = gameWidth(c.id, c.scale), card = cardWidth(c.id), asked = (LIBRARY[INDEX.get(c.id)!]!.quad[2] - LIBRARY[INDEX.get(c.id)!]!.quad[0]) * 3 * CAR_SCALE * Z;
-        assert.ok(g < asked * 0.9, `${c.id} is drawn at its limit (${g.toFixed(1)} px, asked ${asked.toFixed(1)})`);
+        assert.ok(Math.abs(g - asked) < 0.01, `${c.id} is drawn at the size asked (${g.toFixed(1)} px, asked ${asked.toFixed(1)})`);
         assert.ok(Math.abs(g - card) < 0.01, `${c.id}: lot ${g.toFixed(2)} px, card ${card.toFixed(2)} px`);
+        // a preset or a lab step past 1.5 times that is capped there, by both
+        const big = 3 * SIZE_HI * 1.4, gb = gameWidth(c.id, big), capW = (LIBRARY[INDEX.get(c.id)!]!.quad[2] - LIBRARY[INDEX.get(c.id)!]!.quad[0]) * Math.max(PIXEL_LIMIT[INDEX.get(c.id)!]! / CAR_SCALE, 3 * SIZE_HI) * CAR_SCALE * Z;
+        assert.ok(Math.abs(gb - capW) < 0.05, `${c.id} past 1.5x is drawn at its cap (${gb.toFixed(1)} px, cap ${capW.toFixed(1)})`);
       }
     } finally { applyStudioScales(was); }
   });

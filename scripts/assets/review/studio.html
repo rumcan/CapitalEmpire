@@ -86,7 +86,8 @@ function cats(){const c=[...new Set(all.filter(s=>!removed[s.id]).map(s=>s.cat))
  *  its pixels (the game draws it at its cap there: newart.ts lookOf) */
 // a sprite drawn as itself past its sharp size is drawn at its pixels' limit (newart.ts lookOf: sharp / PIXEL_SLACK, src/game/sizes.ts), so its
 // card shows that size too (T163: a car's card was drawn at the size asked while the lots drew it at its limit)
-const PIXEL_SLACK=1.02,ownK=s=>s.sharp!=null&&s.scale>s.sharp?s.sharp/PIXEL_SLACK:s.scale;
+// T190: the cap is the larger of its pixels' limit and 1.5 times its size (s.cap; a report from before it: its sharp size): soft past sharp, drawn as asked up to the cap
+const PIXEL_SLACK=1.02,capOf=s=>s.cap??s.sharp,ownK=s=>capOf(s)!=null&&s.scale>capOf(s)?capOf(s)/PIXEL_SLACK:s.scale;
 const drawnOf=s=>s.drawn?{id:s.drawn.id,quad:s.drawn.quad,k:Math.min(s.scale*s.drawn.fill,s.drawn.cap)}:{id:s.id,quad:s.quad,k:ownK(s)*(s.carScale||1)};
 // a card's picture is a WebP sized for the card (T144, server.mjs sized()): its long side at the next size step above what the card shows in device px
 // (the steps of scripts/assets/review/thumb-size.mjs, repeated here: this script cannot import), so the slider reuses the server's cache and the
@@ -108,7 +109,8 @@ function sizeLine(s){
   const past=s.sharp!=null&&s.scale>s.sharp*1.001;
   // drawn above its sharp size: its source picture allows more (native), which a Rebuild (Rebuild game sprites) packs in
   const more=past&&s.native!=null&&s.native>s.sharp*1.01?` · drawn at this size once packed again (Rebuild game sprites)`:'';
-  return el('div',{className:'size'+(past?' warn':'')},stand,past?`pixelates above ×${s.sharp.toFixed(2)}: drawn at its pixels, smaller than asked${more}`:`sharp up to ×${(s.sharp??0).toFixed(2)}`,s.sizeId&&s.sizeId!==s.id?el('b',{textContent:` · the size of ${s.sizeId}`}):'');
+  const capped=past&&capOf(s)!=null&&s.scale>capOf(s)*1.001;
+  return el('div',{className:'size'+(past?' warn':'')},stand,capped?`as big as it goes (×${capOf(s).toFixed(2)}): drawn smaller than asked${more}`:past?`soft at the closest zoom above ×${s.sharp.toFixed(2)} (its picture has fewer pixels)${more}`:`sharp up to ×${(s.sharp??0).toFixed(2)}`,s.sizeId&&s.sizeId!==s.id?el('b',{textContent:` · the size of ${s.sizeId}`}):'');
 }
 // every sprite is shown, in batches of 200: the sentinel at the end of the grid pulls in the next batch when it scrolls into view
 const more=el('div',{className:'more',style:'flex-basis:100%;height:1px'});

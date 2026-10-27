@@ -16,7 +16,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { ATLAS_MIP0, ATLAS_PAGES, LIBRARY } from '../../../src/game/library';
 import { OWNER_SCALE, TABLE_SCALE } from '../../../src/game/lots/scales';
-import { lookOf, standInCandidates } from '../../../src/game/newart';
+import { lookOf, maxDrawScale, standInCandidates } from '../../../src/game/newart';
 import { PIXEL_LIMIT, PIXEL_SLACK, atlasRes } from '../../../src/game/sizes';
 import { VIEW_ART } from '../../../src/game/views-library';
 import { AXIS_SETS } from '../../../src/game/axis-library';
@@ -155,6 +155,8 @@ LIBRARY.forEach((it, i) => {
     scale, base: TABLE_SCALE[sizeIdOf(it.id)] ?? 1, sizeId: sizeIdOf(it.id),
     drawn: l.hidden ? null : { id: n.id, name: n.name, quad: n.quad, scale: l.scale, fill: l.item === i ? 1 : span(it) / span(n), cap: PIXEL_LIMIT[l.item]! * PIXEL_SLACK },
     sharp: sharp === null ? null : +sharp.toFixed(3), native: native === null ? null : +native.toFixed(3),
+    // T190: the largest size it is drawn at (its pixels' limit, or 1.5 times its size when that is more: soft past sharp, never refused)
+    cap: self && !l.hidden ? +maxDrawScale(i).toFixed(3) : null,
   };
 });
 process.stdout.write(JSON.stringify(out));
