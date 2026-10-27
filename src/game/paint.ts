@@ -328,10 +328,11 @@ export const BRUSH_PRESETS: { kind: BrushKind; name: string; r: number; style: O
   { kind: 'rough', name: 'Rough', r: 8, style: clampStyle({ ...DEFAULT_STYLE, tex: S('rough', 'golfRough'), border: 0 }) },
   { kind: 'bunker', name: 'Bunker', r: 2, style: clampStyle({ ...DEFAULT_STYLE, tex: S('bunker', 'bunkerSand'), border: 2, btex: S('rough', 'golfRough') }) },
   { kind: 'water', name: 'Water', r: 4, style: clampStyle({ ...DEFAULT_STYLE, tex: S('water', 'waterDark'), border: 2, btex: 'dirt' }) },
-  { kind: 'path', name: 'Cart path', r: 1, style: clampStyle({ ...DEFAULT_STYLE, tex: S('path', 'asphalt'), border: 0 }) },
   // T222 (the owner, 2026-10-27: "add desert as a waste bunker in the course"): the Waste area, the course grid's waste surface (the desert, Painted ›
-  // Waste area sand). Last, so the keys 1-7 stay as they were (it is key 8); priced like a bunker (golf/costs.ts) and played as sand (golf/play)
+  // Waste area sand). Key 7, before the cart path (stage 3 only, now key 8), so the keys 1-6 stay as they were and the stage 2 keys run 1-7 with no gap;
+  // priced like a bunker (golf/costs.ts) and played as sand (golf/play)
   { kind: 'waste', name: 'Waste area', r: 3, style: clampStyle({ ...DEFAULT_STYLE, tex: S('waste', 'wasteSand'), border: 0 }) },
+  { kind: 'path', name: 'Cart path', r: 1, style: clampStyle({ ...DEFAULT_STYLE, tex: S('path', 'asphalt'), border: 0 }) },
 ];
 
 /** the textures the Course tool's brushes lay (fills and borders): the ground workers make them ahead when the tool opens (T168) */

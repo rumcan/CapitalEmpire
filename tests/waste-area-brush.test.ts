@@ -29,20 +29,20 @@ function click(g: ReturnType<typeof makeGrid>, tool: PaintTool): number[] {
   return out;
 }
 
-test('Shape by hand lists the Waste area: key 8 (the first seven keys keep their surfaces), a grid brush, open from stage 2 with the bunker', () => {
-  const last = BRUSH_PRESETS[BRUSH_PRESETS.length - 1]!;
+test('Shape by hand lists the Waste area: key 7 (keys 1-6 keep their surfaces; the cart path moves to 8), a grid brush, open from stage 2 with the bunker', () => {
+  const last = BRUSH_PRESETS[6]!;
   assert.equal(last.kind, 'waste'); assert.equal(last.name, 'Waste area');
-  assert.deepEqual(BRUSH_PRESETS.slice(0, 7).map(b => b.kind), ['fairway', 'green', 'tee', 'rough', 'bunker', 'water', 'path'], 'keys 1-7 as before');
+  assert.deepEqual(BRUSH_PRESETS.map(b => b.kind), ['fairway', 'green', 'tee', 'rough', 'bunker', 'water', 'waste', 'path'], 'keys 1-6 as before, the Waste area 7, the cart path (stage 3) 8');
   assert.ok(GRID_KINDS.includes('waste'), 'it paints the course grid');
   assert.equal(BRUSH_STAGE.waste, BRUSH_STAGE.bunker);
   assert.equal(surfaceOfTex(last.style.tex), 'waste', 'its texture is the waste surface\'s (the owner\'s preset for it, else the waste sand)');
   assert.equal(SURF_SURFACE[SURF.waste], 'waste');
 });
 
-test('the Waste area brush lays the waste surface on the course grid (key 8 arms it), and only that', () => {
+test('the Waste area brush lays the waste surface on the course grid (key 7 arms it), and only that', () => {
   const { g, tool } = golfTool();
   tool.setBrush('fairway'); tool.setBrushCells(2); tool.cursor = { x: 90.3, y: 200.6 };
-  assert.equal(tool.key({ key: '8', preventDefault() {} } as KeyboardEvent), true, 'key 8 is taken');
+  assert.equal(tool.key({ key: '7', preventDefault() {} } as KeyboardEvent), true, 'key 7 is taken');
   assert.equal(tool.brushKind, 'waste');
   const changed = click(g, tool);
   assert.ok(changed.length >= 4, `a 2 m square brush lays its cells (${changed.length})`);

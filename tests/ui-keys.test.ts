@@ -144,8 +144,8 @@ describe('the number keys (T202)', () => {
       assert.deepEqual(numberKeyUse('road', n), { k: 'class', i: n - 1 });
       assert.deepEqual(numberKeyUse('course', n), { k: 'surface', i: n - 1 });
     }
-    assert.deepEqual(numberKeyUse('course', 7), { k: 'surface', i: 6 }, 'the seventh surface');
-    assert.deepEqual(numberKeyUse('course', 8), { k: 'surface', i: 7 }, 'T222: the eighth surface, the Waste area');
+    assert.deepEqual(numberKeyUse('course', 7), { k: 'surface', i: 6 }, 'the seventh surface (the Waste area)');
+    assert.deepEqual(numberKeyUse('course', 8), { k: 'surface', i: 7 }, 'T222: the eighth surface (the cart path, after the Waste area)');
     assert.equal(numberKeyUse('course', 9), null, 'no ninth');
     assert.equal(BRUSH_PRESETS.length, 8, 'eight surfaces');
     assert.equal(numberKeyUse('select', 7), null, 'no seventh group');
