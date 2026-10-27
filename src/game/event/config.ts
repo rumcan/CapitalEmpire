@@ -116,6 +116,18 @@ export const TOWN_RATE_PER_BUILT = 0.02;
 export const PAVED_RATE = 6;
 /** with town centres: the town lays at most one gravel leg every this many game hours, times the speed */
 export const GRAVEL_EVERY_H = 6;
+/** T090 (plan P22 2.3.3): a range start's grown town builds (GROWN_BASE + GROWN_PER_HOLE x min(holes, 18) + GROWN_PER_BUILT x built lots) x
+ *  success lots a season (a town day of the Town's: 24 growth hours), on its own land (the county road and its streets, gravel); the player's
+ *  paved roads keep PAVED_RATE */
+export const GROWN_BASE = 30, GROWN_PER_HOLE = 3, GROWN_PER_BUILT = 0.04;
+/** T090: a grown town's lot builds in this many sim s (2 game months), not half a season */
+export const GROWN_BUILD_S = 240;
+/** T090 (plan P22 2.3.2): the compact rings: a lot's pick weight times exp(-dc / (GROWN_RING0 + GROWN_RING_K x sqrt(built))), dc its distance to the
+ *  anchored centre (halfway between the seed and the built lots' mean) */
+export const GROWN_RING0 = 120, GROWN_RING_K = 12;
+/** T090 (plan P22 2.3.3): the success after a tournament: clamp(GROWN_SUCCESS0 + GROWN_SUCCESS_K x the round's town growth rate, GROWN_SUCCESS_MIN,
+ *  GROWN_SUCCESS_MAX); 1 in founding seasons */
+export const GROWN_SUCCESS0 = 0.7, GROWN_SUCCESS_K = 8, GROWN_SUCCESS_MIN = 0.7, GROWN_SUCCESS_MAX = 1.8;
 /** with town centres: a lot's price, $ (times its frontage class value: CLASS_VALUE in budget.ts), paid to the player when the town builds on a lot on a paved road */
 export const LOT_PRICE = 2000;
 /** with town centres: the share of a lot's price the player is paid for it (see LOT_PRICE) */

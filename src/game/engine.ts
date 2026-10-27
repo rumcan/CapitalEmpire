@@ -638,6 +638,7 @@ export class Game {
     const item = LIB_INDEX.get(sprId);
     if (item !== undefined) this.golfProps.set(kind === 'pin' ? 'pin:' + hole : `tee:${hole}:${kind}`, this.addProp(item, x, y, false, MARKER_SCALE[kind]));
     if (kind === 'pin') g.pins.push({ hole, x, y, auto: true }); else g.tees.push({ hole, kind, x, y, auto: true });
+    if (kind === 'pin' && g.start === 'range') this.sendGolf(); // T090: a new hole speeds a range start's town
   }
   /** removes a pin or tee marker and its prop (if there is one) */
   private removeGolfMarker(hole: number, kind: MarkerKind) {
@@ -1179,6 +1180,8 @@ export class Game {
     if (!boot.moneyFloats) this.showMoneyFloats = false;
     // T147: the money floats' sources: every spend (placed ones float), the range's sales and lost golfers
     this.traffic.onSpend = (k, n) => this.spent(k, n);
+    // T090: a range start's town success after a tournament, kept in the save (sent back with the golf state on load)
+    this.traffic.onTownBoost = v => { if (this.golf?.start === 'range') { this.golf.townBoost = v; this.scheduleSave(); } };
     this.range.sim.onMoney = e => { const c = this.range.scene?.counter, f = rangeFloat(e, c ?? null); if (f) this.floatMoney(f); };
     try { const v = parseFloat(localStorage.getItem('capitalempire.shadows') ?? ''); if (Number.isFinite(v)) this.shadowStrength = Math.max(0, Math.min(2, v)); } catch { /* default 1.1 */ }
     try { this.vectorShadows = VECTOR.on = localStorage.getItem('capitalempire.vectorShadows') !== '0'; } catch { /* default on */ }
@@ -2190,7 +2193,7 @@ export class Game {
     }
     if (kind === 'pin') {
     const p = this.golf.pins.find(q => q.hole === hole);
-    if (p) { p.x = x; p.y = y; } else this.golf.pins.push({ hole, x, y });
+    if (p) { p.x = x; p.y = y; } else { this.golf.pins.push({ hole, x, y }); if (this.golf.start === 'range') this.sendGolf(); } // T090: a new hole speeds a range start's town
     } else {
     const t = this.golf.tees.find(q => q.hole === hole && q.kind === kind);
     if (t) { t.x = x; t.y = y; } else this.golf.tees.push({ hole, kind, x, y });
@@ -3251,7 +3254,9 @@ export class Game {
     }
   }
   /** the golf state for the city worker: on or off, the tier, the reputation, the golf land, and a range start's start and exits */
-  private sendGolf() { const g = this.golf; this.traffic.setGolf(!!g, g?.tier ?? 1, g?.rep ?? 0, this.golfLand(), g?.start === 'range' ? { start: 'range', exits: g.exits, invited: g.invited } : undefined); }
+  private sendGolf() { const g = this.golf; this.traffic.setGolf(!!g, g?.tier ?? 1, g?.rep ?? 0, this.golfLand(), g?.start === 'range' ? { start: 'range', exits: g.exits, invited: g.invited, holes: this.holesBuilt(), townBoost: g.townBoost } : undefined); }
+  /** T090: the holes the player has built (a pin each): a range start's town grows faster with them (plan P22 2.3.3) */
+  private holesBuilt(): number { return new Set((this.golf?.pins ?? []).map(p => p.hole)).size; }
   /** the terrain of the valley for the city worker: its classes, the highway entry (a range start's: its map exit nearer the town; the start
    *  block's centre if none) and the seed */
   private sendTerrain() {

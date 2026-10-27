@@ -176,7 +176,9 @@ export class SimClient {
   /** the player's businesses (the full list, each time): the worker's stadium site follows (see City.setBusinesses) */
   setBusinesses(defs: BizDef[]) { this.post({ t: 'businesses', defs }); }
   /** golf mode on (with the tournament's tier and its reputation: the season ends with it) or off (see City.setGolf) */
-  setGolf(on: boolean, tier: number, rep: number, land?: [number, number, number, number][], range?: { start?: 'range'; exits?: Pt[]; invited?: { at: number } }) { this.post({ t: 'golf', on, tier, rep, land, start: range?.start, exits: range?.exits, invited: range?.invited }); this.golfOn = on; this.sendTownDay(); }
+  setGolf(on: boolean, tier: number, rep: number, land?: [number, number, number, number][], range?: { start?: 'range'; exits?: Pt[]; invited?: { at: number }; holes?: number; townBoost?: number }) { this.post({ t: 'golf', on, tier, rep, land, start: range?.start, exits: range?.exits, invited: range?.invited, holes: range?.holes, townBoost: range?.townBoost }); this.golfOn = on; this.sendTownDay(); }
+  /** T090: told a range start's new town success after a tournament (the engine keeps it in the save) */
+  onTownBoost: ((v: number) => void) | null = null;
   /** the town day (LEAD.md M1): in a golf game the town lives a day of townMinutes (real minutes at 1x; one sim second is one game minute)
    *  with its own commute, separate from the season; townTraffic scales its lot trips. A classic game keeps the classic day (DAY). */
   golfOn = false; townMinutes = 10; townTraffic = 1;
@@ -270,6 +272,7 @@ export class SimClient {
       for (let i = 0; i + 3 < m.legs.length; i += 4) legs.push({ a: { x: m.legs[i], y: m.legs[i + 1] }, b: { x: m.legs[i + 2], y: m.legs[i + 3] } });
       this.onGrow?.(legs); return;
     }
+    if (m.t === 'townBoost') { this.onTownBoost?.(m.v); return; }
     if (m.t === 'town') {
       for (const e of m.events) { const v = this.lots.get(e.key); if (v) { v.use = e.use; v.level = e.level; v.decline = e.decline; v.seed = e.seed; v.since = e.since; } }
       this.pop = m.pop; this.jobs = m.jobs; this.built = m.built; this.access = m.access;
