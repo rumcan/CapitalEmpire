@@ -157,6 +157,8 @@ export type ToWorker =
   /** T215: the street lamps' reflection pools onto a per-chunk reflection mask for the camera specular (on) or baked into the road (off, the
    *  default): the dev switch window.__game.specCam; every chunk is baked again */
   | { t: 'specCam'; on: boolean }
+  /** T199: the small streams drawn as swamp (on, the default) or as their old creek bed (the dev switch, for comparing looks and bake times) */
+  | { t: 'swamp'; on: boolean }
   /** the course height light's strength (T126: the gear menu's Slope light, 0 = off): every chunk is baked again */
   | { t: 'slopeLight'; strength: number }
   /** the tile set bands to decode ahead (painted-tiles.ts bandsAhead: the camera is near their switch; T150), sent when they change */
@@ -177,6 +179,9 @@ export type FromWorker =
       shade?: ImageBitmap;
       /** T215: the street lamps' reflection mask at a SPEC_MASK_K-th of the chunk's size (renderer.ts takeSpecMask: premultiplied, alpha the
        *  pools' intensity on the asphalt, colour the road's local mean times it); none with specCam off or no lamp pool on the chunk */
-      spec?: ImageBitmap; ms: number }
+      spec?: ImageBitmap;
+      /** T199: the swamp's gloss mask at a GLOSS.maskK-th of the chunk's size (renderer.ts takeGlossMask: premultiplied, alpha the pools' gloss,
+       *  colour each pool's local mean times it); none with specCam off or no swamp on the chunk */
+      gloss?: ImageBitmap; ms: number }
   | { t: 'error'; message: string }
   | { t: 'log'; message: string };

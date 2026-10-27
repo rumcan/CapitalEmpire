@@ -37,6 +37,8 @@ export const SURFACES: readonly SurfaceDef[] = [
   { key: 'dirt', name: 'Dirt and bare soil', group: 'Map', tex: ['dirt', 'rockyDirt', 'rockyDirtAlt'], kinds: ['cut', 'sand'] },
   { key: 'bank', name: 'River banks and creek beds', group: 'Map', tex: ['bank', 'creek'], kinds: ['cut', 'sand'] },
   { key: 'river', name: 'River and creek water', group: 'Map', tex: ['water'], kinds: ['water'] },
+  // T199: the small streams' banks widen into swamp (swamp.ts); unpainted, a stream keeps its old creek bed
+  { key: 'swamp', name: 'Swamp (round the small streams)', group: 'Map', tex: ['swamp'], kinds: ['water', 'grass'] },
   { key: 'field', name: 'Farm fields', group: 'Map', tex: ['field'], kinds: ['cut', 'grass'] },
   { key: 'woodland', name: 'Woodland floor (under the trees; the forests on the planner map)', group: 'Map', tex: [WOODLAND], kinds: ['grass', 'cut'] },
   { key: 'outside', name: 'Outside the map', group: 'Map', tex: ['outside'], kinds: ['grass'] },

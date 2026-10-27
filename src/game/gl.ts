@@ -14,6 +14,7 @@ import { CONTACT_AO, VERTEX_FLOATS, type VectorMesh } from './shadow-vector';
 import { SHADOW_AMBIENT } from './cast-shadow';
 import { BRAKE_LIGHT } from './sim/car-lamps';
 import { SPEC_LIGHT_GLSL, SPEC_MASK_K } from './lamp-reflect';
+import { GLOSS, GLOSS_LIGHT_GLSL } from './swamp';
 
 /** floats per sprite instance: rect x0 y0 x1 y1 (world px), uv u0 v0 u1 v1, layer, alpha, cullable, foot line (world px; < 0: casts no shadow),
  *  clip x0 y0 x1 y1 (world px), foot: the footprint's near corner x y and its left and right corners' x (world px; the cast shadows stand on it) */
@@ -56,12 +57,17 @@ void main() {
 // road's local mean the mask holds premultiplied in rgb) at the mask's intensity (alpha) times the camera falloff, 1 within uSpec.x of the centre
 // and 0 past uSpec.y (the distance in device px over half the longer side: round on any screen). The mask is a SPEC_MASK_K-th of the
 // chunk's size (its uv scaled to the px it covers). No mask (uSpec.z 0): the chunk as before
+// T199: the swamp's pools catch the camera's sky glint (swamp.ts): a chunk with a gloss mask (uGloss.z > 0: its gain) lights its pools toward
+// the cool sky (glossLight: by the gloss, the pixel's own water key and its texture, its distance from the pool's local mean the mask holds
+// premultiplied in rgb) times the same camera falloff (uGloss.x, uGloss.y). The mask is a GLOSS.maskK-th of the chunk's size. No mask (uGloss.z
+// 0): the chunk as before
 const FS_QUAD = `#version 300 es
 precision highp float;
 uniform sampler2D uTex; uniform sampler2D uMask; uniform int uMode; uniform vec2 uScreen; uniform float uAlpha;
-uniform sampler2D uSpecTex; uniform vec4 uSpec;
+uniform sampler2D uSpecTex; uniform vec4 uSpec; uniform sampler2D uGlossTex; uniform vec4 uGloss;
 in vec2 vUV; out vec4 o;
 ${SPEC_LIGHT_GLSL}
+${GLOSS_LIGHT_GLSL}
 void main() {
   vec4 c = texture(uTex, vUV);
   if (uSpec.z > 0.0) {
@@ -69,6 +75,13 @@ void main() {
     if (m.a > 0.002) {
       float d = length(gl_FragCoord.xy - 0.5 * uScreen) / (0.5 * max(uScreen.x, uScreen.y));
       c.rgb = specLight(c.rgb * 255.0, vec4(m.rgb / m.a * 255.0, m.a), (1.0 - smoothstep(uSpec.x, uSpec.y, d)) * uSpec.z) / 255.0;
+    }
+  }
+  if (uGloss.z > 0.0) {
+    vec4 g = texture(uGlossTex, vUV * vec2(textureSize(uTex, 0)) / (${GLOSS.maskK.toFixed(1)} * vec2(textureSize(uGlossTex, 0))));
+    if (g.a > 0.002) {
+      float d = length(gl_FragCoord.xy - 0.5 * uScreen) / (0.5 * max(uScreen.x, uScreen.y));
+      c.rgb = glossLight(c.rgb * 255.0, vec4(g.rgb / g.a * 255.0, g.a), (1.0 - smoothstep(uGloss.x, uGloss.y, d)) * uGloss.z) / 255.0;
     }
   }
   if (uMode == 1) c *= texture(uMask, vec2(gl_FragCoord.x / uScreen.x, 1.0 - gl_FragCoord.y / uScreen.y)).a;
@@ -291,7 +304,7 @@ export class GLRenderer {
     const gl = canvas.getContext('webgl2', { alpha: false, antialias: false, premultipliedAlpha: true, preserveDrawingBuffer: false, powerPreference: 'high-performance' });
     if (!gl) throw new Error('WebGL2 is not available');
     this.gl = gl;
-    this.quad = this.program(VS_QUAD, FS_QUAD, ['uRect', 'uCam', 'uScreen', 'uUV', 'uTex', 'uMask', 'uMode', 'uAlpha', 'uSpecTex', 'uSpec']);
+    this.quad = this.program(VS_QUAD, FS_QUAD, ['uRect', 'uCam', 'uScreen', 'uUV', 'uTex', 'uMask', 'uMode', 'uAlpha', 'uSpecTex', 'uSpec', 'uGlossTex', 'uGloss']);
     this.shadow = this.program(VS_SHADOW, FS_SHADOW, ['uCam', 'uScreen', 'uStrength', 'uShift', 'uMinPx']);
     this.point = this.program(VS_POINT, FS_POINT, ['uCam', 'uScreen', 'uSize', 'uSoft']);
     this.vec = this.program(VS_VEC, FS_VEC, ['uCam', 'uScreen', 'uShear', 'uMul', 'uFar', 'uVerts', 'uIdx', 'uMinPx']);
@@ -362,6 +375,11 @@ export class GLRenderer {
   /** T215: the camera specular this frame (engine.ts: lamp-reflect.ts specGain and the knobs), or null (specCam off): the falloff's inner and
    *  outer radius and the gain a chunk drawn with a reflection mask lights its pools by */
   spec: { inner: number; outer: number; gain: number } | null = null;
+  /** T199: the swamp's camera glint this frame (engine.ts: swamp.ts glossGain and T215's knobs), or null (specCam off): the falloff's inner and
+   *  outer radius and the gain a chunk drawn with a gloss mask lights its pools by */
+  gloss: { inner: number; outer: number; gain: number } | null = null;
+  /** T199: a chunk picture's swamp gloss mask (GroundCache.glossOf), looked up by the picture itself, so it goes wherever its picture is drawn */
+  glossOf: ((tex: WebGLTexture) => WebGLTexture | null) | null = null;
   /** the build-reveal mask (alpha), in screen space */
   setMask(src: OffscreenCanvas | HTMLCanvasElement | null) {
     if (!src) return; const gl = this.gl; gl.bindTexture(gl.TEXTURE_2D, this.maskTex);
@@ -379,14 +397,18 @@ export class GLRenderer {
     const v = this.view, sx = (X: number) => Math.round((X - v.X) * v.ze + v.cw / 2), sy = (Y: number) => Math.round((Y - v.Y) * v.ze + v.ch / 2);
     return [sx(X0), sy(Y0), sx(X1), sy(Y1)];
   }
-  /** a baked chunk; masked = draw through the reveal mask; spec = its picture's reflection mask (T215, GroundCache.specOf), lit by this.spec */
+  /** a baked chunk; masked = draw through the reveal mask; spec = its picture's reflection mask (T215, GroundCache.specOf), lit by this.spec;
+   *  and its swamp gloss mask (T199, glossOf), lit by this.gloss */
   drawChunk(tex: WebGLTexture, X0: number, Y0: number, X1: number, Y1: number, masked = false, alpha = 1, uv: readonly number[] = FULL_UV, spec: WebGLTexture | null = null) {
     const gl = this.gl, pr = this.quad, sp = spec && this.spec && this.spec.gain > 0 ? this.spec : null; gl.useProgram(pr.p); this.camUniforms(pr);
+    const gloss = this.gloss && this.gloss.gain > 0 && this.glossOf ? this.glossOf(tex) : null, gs = gloss ? this.gloss : null;
     gl.uniform4f(pr.u.uRect, X0, Y0, X1, Y1); gl.uniform4f(pr.u.uUV, uv[0], uv[1], uv[2], uv[3]); gl.uniform1i(pr.u.uMode, masked ? 1 : 0); gl.uniform1f(pr.u.uAlpha, alpha);
     gl.uniform4f(pr.u.uSpec, sp ? sp.inner : 0, sp ? sp.outer : 1, sp ? sp.gain : 0, 0);
     gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, tex); gl.uniform1i(pr.u.uTex, 0);
     gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, masked ? this.maskTex : this.emptyTex); gl.uniform1i(pr.u.uMask, 1);
     gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D, sp ? spec : this.emptyTex); gl.uniform1i(pr.u.uSpecTex, 2);
+    gl.uniform4f(pr.u.uGloss, gs ? gs.inner : 0, gs ? gs.outer : 1, gs ? gs.gain : 0, 0);
+    gl.activeTexture(gl.TEXTURE3); gl.bindTexture(gl.TEXTURE_2D, gs ? gloss : this.emptyTex); gl.uniform1i(pr.u.uGlossTex, 3);
     gl.activeTexture(gl.TEXTURE0);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4); this.stats.draws++;
   }
