@@ -37,7 +37,10 @@ export const SURF_EDGE: readonly EdgeProfile[] = ['flat', 'flat', 'flat', 'water
 export interface CourseLooks { surf: readonly (CourseTex | undefined)[]; collar: Readonly<Record<'first-cut' | 'fringe' | 'lip' | 'bank', CourseTex>>;
   border?: readonly (number | undefined)[]; shadow?: readonly (number | undefined)[]; height?: readonly (number | undefined)[];
   /** each surface's own collar look by surface id (the course look's Border texture, scale, angle and tone; a missing one: collar by name) */
-  band?: readonly (CourseTex | undefined)[] }
+  band?: readonly (CourseTex | undefined)[];
+  /** T227: the grass a bunker's lip band wears with the course finish on (the fairway's first cut), when the bunker's Border texture is its
+   *  default; absent: its own look */
+  lipGrass?: CourseTex }
 /** a course texture's fields alone (a look may carry more) */
 const texOf = (t: CourseTex): CourseTex => ({ tex: t.tex, sc: t.sc, a: t.a, ...(t.t ? { t: t.t, ta: t.ta ?? 0, tc: t.tc ?? '#000000' } : {}), ...(t.m ? { m: { ...t.m } } : {}) });
 
@@ -149,8 +152,9 @@ export function coursePatch(g: Grid, cx: number, cy: number, looks: CourseLooks,
     const look = looks.surf[o.surf]!, r = cw.runs.get(layerCode(o.surf, false));
     const L: CourseLayer = { s: o.surf, ...texOf(look), e: SURF_EDGE[o.surf] ?? 'flat', fill: f32(fill), edges: f32(edges), soft: f32(r?.soft ?? []), joint: f32(r?.joint ?? []) };
     const col = styles[o.surf]?.collar;
-    if (ce && col) { const cl = looks.band?.[o.surf] ?? looks.collar[col.name], [cf, cE] = ce; L.collar = { n: col.name, ...texOf(cl), w: col.width * CELL_T, fill: f32(cf), edges: f32(cE), soft: f32(cw.runs.get(layerCode(o.surf, true))?.soft ?? []) }; }
-    if (o.surf === SURF.fairway && o.fill.length) { const st = stripeAreas(g, cx, cy, lines); if (st) L.stripes = st; }
+    if (ce && col) { const cl = looks.band?.[o.surf] ?? looks.collar[col.name], [cf, cE] = ce; L.collar = { n: col.name, ...texOf(cl), w: col.width * CELL_T, fill: f32(cf), edges: f32(cE), soft: f32(cw.runs.get(layerCode(o.surf, true))?.soft ?? []), ...(col.name === 'lip' && looks.lipGrass ? { g: texOf(looks.lipGrass) } : {}) }; }
+    // the mowing stripes' holes: the fairway's (T218) and the green's (T227: the course finish's fine stripes, along its hole's line of play)
+    if ((o.surf === SURF.fairway || o.surf === SURF.green) && o.fill.length) { const st = stripeAreas(g, cx, cy, lines, o.surf); if (st) L.stripes = st; }
     if (L.fill.length || L.collar) layers.push(L);
   }
   if (!layers.length) return null;
@@ -183,8 +187,8 @@ export type StripeArea = NonNullable<CourseLayer['stripes']>[number];
  *  there are two or more, each has its share of the chunk as boxes (runs, x0 y0 x1 y1 in tiles, rows of cells merged down): the cells whose
  *  nearest fairway cell is its (a walk out from the fairway cells in rings, a tie to the lower hole). Every chunk walks the same cells round
  *  its seams the same way, so where an outline can lie (a few cells from its fairway) the shares agree across chunks. null: no fairway cell
- *  within reach */
-export function stripeAreas(g: Grid, cx: number, cy: number, lines?: ReadonlyMap<number, readonly number[]>): StripeArea[] | null {
+ *  within reach. surf: the surface whose cells are walked (T227: the green's, for its fine stripes; the fairway's by default) */
+export function stripeAreas(g: Grid, cx: number, cy: number, lines?: ReadonlyMap<number, readonly number[]>, surf: number = SURF.fairway): StripeArea[] | null {
   const { i0, j0, n } = chunkCells(g, cx, cy), M = STRIPE_WALK, W = n + 2 * M, lab = new Int16Array(W * W).fill(-1), dist = new Uint16Array(W * W).fill(0xffff);
   const lineOf = (h: number) => { const l = h > 0 ? lines?.get(h) : undefined; return l && l.length >= 4 ? l : null; };
   let cur: number[] = [];
@@ -192,7 +196,7 @@ export function stripeAreas(g: Grid, cx: number, cy: number, lines?: ReadonlyMap
     const j = j0 - M + y; if (j < 0 || j >= g.h) continue;
     for (let x = 0; x < W; x++) {
       const i = i0 - M + x; if (i < 0 || i >= g.w) continue;
-      const c = j * g.w + i; if (g.surf[c] !== SURF.fairway) continue;
+      const c = j * g.w + i; if (g.surf[c] !== surf) continue;
       const h = g.hole[c]!, k = y * W + x; lab[k] = lineOf(h) ? h : 0; dist[k] = 0; cur.push(k);
     }
   }

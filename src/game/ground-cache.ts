@@ -16,7 +16,8 @@ import GroundWorker from './ground.worker?worker';
 import type { GrassCellView } from './ext/grass-management';
 import { casterChange } from './living-ground';
 import { LEAF_DENSITY_DEFAULT, clampLeafDensity } from './leaf-fall';
-import { onPaintedSurfaces, paintedSurfaces } from './painted-surfaces-live';
+import { onPaintedSurfaces, paintedSurfaces, setPaintedSurfaces } from './painted-surfaces-live';
+import { finishOf, type CourseFinish } from './course-finish';
 import { pictureCurrent } from './ground-layers';
 
 export interface Tile {
@@ -114,6 +115,13 @@ export class GroundCache {
   /** T218: the fairways' mowing stripes on or off (the dev switch: window.__game.ground.setStripes(false) compares the looks and the bake times) */
   stripes = true;
   setStripes(on: boolean) { if (on === this.stripes) return; this.stripes = on; this.broadcast({ t: 'stripes', on }); this.invalidateAll(); }
+  /** T227: the course finish (course-finish.ts: the fairway and outfield bands, the green stripes, the darker collar, the bunker lips) as the
+   *  surfaces file has it (Studio > Painted > Course finish) */
+  get courseFinish(): CourseFinish { return finishOf(paintedSurfaces()); }
+  /** T227: sets some of the course finish's knobs (the rest stay), as a studio save does: every chunk is baked again, and the engine lays the
+   *  collars again when their width changed. The dev switch window.__game.ground.setCourseFinish({ on: false }) compares the look before T227
+   *  and the bake times */
+  setCourseFinish(f: Partial<CourseFinish>) { const cur = paintedSurfaces(); setPaintedSurfaces({ ...cur, course: { ...finishOf(cur), ...f } }); }
   /** T215: the street lamps' reflection pools as the camera specular (on: each chunk's pools go onto its reflection mask, lit on the GPU by the
    *  camera falloff, gl.ts FS_QUAD) or baked into the road picture as before (off, the default); the dev switch window.__game.specCam */
   specCam = false;

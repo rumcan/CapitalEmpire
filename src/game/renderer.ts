@@ -15,6 +15,7 @@ import { HS, TC, type Waterway } from './terrain/types';
 import { makeNoise } from './terrain/noise';
 import { WOODLAND_TEX, classAlpha, rockAlpha, shadeField, shadeRGBA, slopeField, waterBox, waterShape } from './terrain-paint';
 import { fairwayStripeLook, holeStripeLegs, legArea, type StripeLook } from './course-stripes';
+import { LIP, collarToneOf, finishMow, finishOf, finishStripeLook, greenStripeLook, lipRuns, tonedCollar, type CourseFinish } from './course-finish';
 import { quadBox, type CourseLayer, type CoursePatch, type CourseRim, type CourseTex, type CourseWall, type LotPatch, type MowStripes, type PatchTex } from './ground-protocol';
 import { DRAW_ORDER, FaceForm, GREEN_FACE, STAIR_TREAD, SURF_HEIGHT, SUN_DIR, WALL_DROP, WALL_PX_PER_M, WALL_TEX, WallMat, defaultShadow, faceLight, faceScale, isOverlay, layerCode, shadowOwner, slopeLight, stairSteps, wallShade, type Stair, type WallShade } from './ext/course-walls';
 import { SURF } from './ext/course-grid';
@@ -1782,6 +1783,8 @@ export class GroundPainter {
    *  fairway's stripes only (no feathers, shades, bands or edges; the stripes read at every zoom, as the range outfield's do) */
   private drawCourses(ctx: C2D, cs: CoursePatch[], L: number, X0: number, Y0: number, M: DOMMatrix, Minv: DOMMatrix, box: BBox, lite: boolean, under: CanvasPattern | null = null) {
     const r = [box[0] - 1, box[1] - 1, box[2] + 1, box[3] + 1], res = courseRes(L);
+    // T227: the course finish (course-finish.ts): the greens' fine stripes, the collar's tone, the bunkers' lips (the bands: step 8)
+    const fin = this.finish(), green = greenStripeLook(fin, FAIRWAY_STRIPES), collarTone = collarToneOf(fin), lip = fin.on ? fin.lip : 0;
     /** a course texture as a fill style on g: painted (its look, composed over the part `need` of the chunk), the photo or preset in tile space
      *  (turned and scaled about the origin), else the screen texture */
     const style = (g: C2D, t: CourseTex, need?: BBox) => {
@@ -1802,14 +1805,15 @@ export class GroundPainter {
       g.globalCompositeOperation = t.t === 1 ? 'multiply' : 'screen'; g.globalAlpha = (t.ta ?? 0) * k; g.fillStyle = g.strokeStyle = t.tc ?? '#000000'; draw();
       g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1;
     };
-    /** rings filled even-odd in t: the fill, its blend with a second texture in soft patches (never periodic), then its tone (course-look.ts) */
-    const fill = (t: CourseTex, rings: readonly ArrayLike<number>[]) => {
+    /** rings filled even-odd in t: the fill, its blend with a second texture in soft patches (never periodic), then its tone (course-look.ts);
+     *  extra: a second tone over it (T227: the course finish's collar, a multiply that keeps the texture) */
+    const fill = (t: CourseTex, rings: readonly ArrayLike<number>[], extra?: CourseTex | null) => {
       if (!rings.length) return;
       const clip = ringsOf(rings), need = boxOf(rings);
       if (need[2] <= need[0] || need[3] <= need[1]) return;
       ctx.save(); ctx.setTransform(M); ctx.clip(clip, 'evenodd'); ctx.fillStyle = style(ctx, t, need); ctx.fillRect(need[0], need[1], need[2] - need[0], need[3] - need[1]); ctx.restore();
       if (t.m && !lite) this.drawBlend(ctx, t.m, t.sc, new DOMMatrix().rotateSelf(0, 0, t.a).scaleSelf(t.sc, t.sc), clip, 'evenodd', need, L, X0, Y0, M, Minv);
-      if (t.t) { ctx.save(); ctx.setTransform(M); ctx.clip(clip, 'evenodd'); toneOver(ctx, t, 1, () => ctx.fillRect(need[0], need[1], need[2] - need[0], need[3] - need[1])); ctx.restore(); }
+      for (const q of extra ? [t, extra] : [t]) if (q.t) { ctx.save(); ctx.setTransform(M); ctx.clip(clip, 'evenodd'); toneOver(ctx, q, 1, () => ctx.fillRect(need[0], need[1], need[2] - need[0], need[3] - need[1])); ctx.restore(); }
     };
     /** polylines (a closed one repeats its first point) as one path */
     const linesOf = (lines: readonly ArrayLike<number>[]) => {
@@ -1824,12 +1828,12 @@ export class GroundPainter {
     };
     /** soft edge polylines stroked in t, FEATHER_STEPS strokes from 2f wide down, alpha 1 / (n - k): out to f tiles past the edge the coverage
      *  falls linearly (butt ends: a polyline cut at a chunk seam meets its neighbour's end square on) */
-    const feather = (t: CourseTex, lines: readonly ArrayLike<number>[], f: number) => {
+    const feather = (t: CourseTex, lines: readonly ArrayLike<number>[], f: number, extra?: CourseTex | null) => {
       if (!lines.length || f <= 0) return;
       const p = linesOf(lines), n = FEATHER_STEPS, need = boxOf(lines, f + 1);
       if (need[2] <= need[0] || need[3] <= need[1]) return;
       ctx.save(); ctx.setTransform(M); ctx.lineJoin = 'round'; ctx.lineCap = 'butt'; const st = style(ctx, t, need);
-      for (let k = 0; k < n; k++) { ctx.strokeStyle = st; ctx.globalAlpha = 1 / (n - k); ctx.lineWidth = 2 * f * (1 - k / n); ctx.stroke(p); toneOver(ctx, t, 1 / (n - k), () => ctx.stroke(p)); }
+      for (let k = 0; k < n; k++) { ctx.strokeStyle = st; ctx.globalAlpha = 1 / (n - k); ctx.lineWidth = 2 * f * (1 - k / n); ctx.stroke(p); toneOver(ctx, t, 1 / (n - k), () => ctx.stroke(p)); if (extra) toneOver(ctx, extra, 1 / (n - k), () => ctx.stroke(p)); }
       ctx.restore();
     };
     /** an edge image over the tiles from (x0, y0), stretched onto ctx through the chunk transform with the op */
@@ -1947,11 +1951,17 @@ export class GroundPainter {
         const over = isOverlay(code) && allWalls.length > 0;
         if (over) { const keep = new Path2D(); keep.rect(r[0]!, r[1]!, r[2]! - r[0]!, r[3]! - r[1]!); keep.addPath(wallFaces(allWalls)); ctx.save(); ctx.setTransform(M); ctx.clip(keep, 'evenodd'); }
         // a thin band (the Border slider) feathers no wider than itself, but never under 0.6 of the flat feather (T196: no crisp outer line)
-        if (!lite) for (const { l } of ls) if (l.collar) feather(l.collar, l.collar.soft ?? l.collar.edges, Math.min(flatF, Math.max(l.collar.w ?? flatF, 0.6 * flatF)));
+        // T227: the course finish's darker collar (every first cut, the greens' fringe): a multiply over its fill and its feathers alike
+        // and a bunker's lip band in the fairway's first cut (its g: the bunker sits in the collar, as in the concept), toned as the collar
+        const tex = (l: CourseLayer): CourseTex => (fin.on && l.collar!.g ? l.collar!.g : l.collar!);
+        const tone = (l: CourseLayer): CourseTex | null => (collarTone && l.collar && (tonedCollar(l.collar.n) || (fin.on && l.collar.g)) ? { tex: '', sc: 1, a: 0, t: 1, ta: collarTone.ta, tc: collarTone.tc } : null);
+        if (!lite) for (const { l } of ls) if (l.collar) feather(tex(l), l.collar.soft ?? l.collar.edges, Math.min(flatF, Math.max(l.collar.w ?? flatF, 0.6 * flatF)), tone(l));
         // T196: every edge of a raised band (a green's fringe, a tee's cut) softened a little, its walls' tops too: the band's texture fades
         // over the top of the face hanging from it (a pond's bank keeps its own wet edge)
-        if (!lite && code !== layerCode(SURF.water, true)) for (const { l } of ls) if (l.collar) feather(l.collar, l.collar.edges, wallF);
-        for (const { l } of ls) if (l.collar) fill(l.collar, l.collar.fill);
+        if (!lite && code !== layerCode(SURF.water, true)) for (const { l } of ls) if (l.collar) feather(tex(l), l.collar.edges, wallF, tone(l));
+        for (const { l } of ls) if (l.collar) fill(tex(l), l.collar.fill, tone(l));
+        // T227: the bunker's raised grass lip round the sand (its lip band): lit on its far side, a light shade on its near side
+        if (lip > 0 && !lite && code === layerCode(SURF.bunker, true)) this.bunkerGrassLip(ctx, ls.map(q => q.l), L, M, lip);
         // a pond's bank: wet soil fading out from the water's edge into the grass, and a few stones
         if (!lite && code === layerCode(SURF.water, true)) this.courseBank(ctx, ls.flatMap(q => q.l.edges), ringsOfCode(code), L, M);
         if (over) ctx.restore();
@@ -1987,6 +1997,8 @@ export class GroundPainter {
           if (im && lb) this.areaLight(ctx, im, lb, edgePath, q.x0, q.y0, res, L, M, 0, SHINE_TINT);
           put(q.im.dark, q.x0, q.y0, 'multiply'); this.onShadeMask(m => put(q.im.dark, q.x0, q.y0, 'multiply', m));
         }
+        // 5b, T227: the bunker's lip on the sand: the dark crescent inside its far rim, the light near lip (under the walls drawn after it)
+        if (lip > 0 && !lite && s === SURF.bunker) this.bunkerSandLip(ctx, ls.map(q => q.l), L, M, lip);
         if (!lite) {                                                                               // 6
           const joints = ls.flatMap(q => q.l.joint ?? []);
           // T196: a soft shade on the collar side (the lower surface), reaching a little back over the surface, stronger turned from the sun:
@@ -1994,7 +2006,8 @@ export class GroundPainter {
           if (joints.length) { const up = ringsOfCode(code), down = ringsOfCode(code | 1); this.courseJointShade(ctx, joints, L, M, up, down); this.onShadeMask(m => this.courseJointShade(m, joints, L, M, up, down)); }
         }
         rims(code);                                                                                // 7
-        if (this.stripes && s === SURF.fairway) for (const { c, l } of ls) this.courseStripes(ctx, c, l, r, M, lite); // 8 (T218)
+        if (this.stripes && s === SURF.fairway) { const fl = finishStripeLook(fin, FAIRWAY_STRIPES); for (const { c, l } of ls) this.courseStripes(ctx, c, l, r, M, lite, fl ?? FAIRWAY_STRIPES, !!fl); } // 8 (T218; T227 the finish's bands)
+        if (this.stripes && s === SURF.green && green) for (const { c, l } of ls) this.courseStripes(ctx, c, l, r, M, lite, green, true); // 8 (T227: the greens' fine stripes)
         if (s === SURF.fairway && !lite && this.rugged) spill();                                                   // 9: the tall grass's spill (T204)
       }
       walls(code);
@@ -2492,13 +2505,15 @@ export class GroundPainter {
   }
   /** a shine laid on ctx inside a mask, textured by the ground under it (the owner's rule T110): the light added is the ground's own colour
    *  squared (so it lands on its mid-tones and highlights and leaves its dark gaps dark) times a warm tint and k, through the mask's alpha.
-   *  box: the cache px rect to work in; mask draws the shine's alpha into the buffer (destination-in), under whatever transform it sets */
-  private shine(ctx: C2D, box: [number, number, number, number] | null, tint: string, k: number, mask: (g: C2D) => void) {
+   *  box: the cache px rect to work in; mask draws the shine's alpha into the buffer (destination-in), under whatever transform it sets.
+   *  squared false (T227's mowing bands): the ground's own colour, not squared, times the tint: a lift in proportion to the texture (its hue
+   *  and contrast kept, its gaps still darkest), for a broad light that must not turn the grass more saturated */
+  private shine(ctx: C2D, box: [number, number, number, number] | null, tint: string, k: number, mask: (g: C2D) => void, squared = true) {
     if (!box) return;
     const [x, y, w, h] = box, A = this.buffer('shine', ctx.canvas.width, ctx.canvas.height), a = ctx2d(A);
     a.save(); a.setTransform(1, 0, 0, 1, 0, 0);
     a.globalCompositeOperation = 'copy'; a.drawImage(ctx.canvas as CanvasImageSource, x, y, w, h, x, y, w, h);
-    a.globalCompositeOperation = 'multiply'; a.drawImage(A as CanvasImageSource, x, y, w, h, x, y, w, h); a.fillStyle = tint; a.fillRect(x, y, w, h);
+    a.globalCompositeOperation = 'multiply'; if (squared) a.drawImage(A as CanvasImageSource, x, y, w, h, x, y, w, h); a.fillStyle = tint; a.fillRect(x, y, w, h);
     a.globalCompositeOperation = 'destination-in'; mask(a);
     a.restore();
     ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = 'lighter';
@@ -2583,8 +2598,9 @@ export class GroundPainter {
    *  share of that (legArea: a dogleg's legs split at each bend's bisector); hole 0 in the default direction. Clipped to the layer's rings
    *  (its wobbled outline, even-odd: never across the walls drawn after it, and inside T204's spill, drawn next) and to the chunk's own box,
    *  moved by the same wobble as its rings (courseOwnBox), so two chunks never stripe the same ground twice. In world tiles: the bands of
-   *  neighbouring chunks meet */
-  private courseStripes(ctx: C2D, c: CoursePatch, l: CourseLayer, r: readonly number[], M: DOMMatrix, lite: boolean) {
+   *  neighbouring chunks meet. look: T218's (FAIRWAY_STRIPES), or T227's course finish (its bands, or a green's fine stripes), laid textured
+   *  (mowBands) when `textured` */
+  private courseStripes(ctx: C2D, c: CoursePatch, l: CourseLayer, r: readonly number[], M: DOMMatrix, lite: boolean, look: StripeLook = FAIRWAY_STRIPES, textured = false) {
     const st = l.stripes; if (!st?.length || !l.fill.length) return;
     const S = c.size, x0 = c.cx * S, y0 = c.cy * S, pad = RUGGED.limit + 0.2;
     const b = [Math.max(r[0]!, x0 - pad), Math.max(r[1]!, y0 - pad), Math.min(r[2]!, x0 + S + pad), Math.min(r[3]!, y0 + S + pad)];
@@ -2604,13 +2620,13 @@ export class GroundPainter {
         if (eb[2]! <= eb[0]! || eb[3]! <= eb[1]!) continue;
         ctx.save(); ctx.clip(p);
       }
-      const legs = holeStripeLegs(e.line, FAIRWAY_STRIPES, e.a);
-      if (legs.length === 1) this.mowStripes(ctx, legs[0]!.m, eb);
+      const legs = holeStripeLegs(e.line, look, e.a);
+      if (legs.length === 1) this.layBands(ctx, legs[0]!.m, eb, M, textured);
       else for (let i = 0; i < legs.length; i++) {
         const q = legArea(legs, i, eb); if (!q.length) continue;
         const p = new Path2D(); ringPath(p, q); let qx0 = Infinity, qy0 = Infinity, qx1 = -Infinity, qy1 = -Infinity;
         for (let k = 0; k + 1 < q.length; k += 2) { qx0 = Math.min(qx0, q[k]!); qx1 = Math.max(qx1, q[k]!); qy0 = Math.min(qy0, q[k + 1]!); qy1 = Math.max(qy1, q[k + 1]!); }
-        ctx.save(); ctx.clip(p); this.mowStripes(ctx, legs[i]!.m, [qx0, qy0, qx1, qy1]); ctx.restore();
+        ctx.save(); ctx.clip(p); this.layBands(ctx, legs[i]!.m, [qx0, qy0, qx1, qy1], M, textured); ctx.restore();
       }
       if (e.runs) ctx.restore();
     }
@@ -2741,7 +2757,8 @@ export class GroundPainter {
     if (st.t) { ctx.globalCompositeOperation = st.t === 1 ? 'multiply' : 'screen'; ctx.globalAlpha = st.ta ?? 0; ctx.fillStyle = st.tc ?? '#000000'; ctx.fillRect(r[0], r[1], r[2] - r[0], r[3] - r[1]); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; }
     this.drawManagedGrass(ctx, [p], box, L);
     // the mowing stripes last on the fill (T132: the range's outfield), at every zoom
-    if (st.mw) this.mowStripes(ctx, st.mw, r);
+    // T227: with the course finish, the fairways' bands (course-finish finishMow: along the range's line of play, textured)
+    if (st.mw) { const fm = finishMow(st.mw, this.finish(), FAIRWAY_STRIPES); if (fm) this.mowBands(ctx, fm, r, M); else this.mowStripes(ctx, st.mw, r); }
     if (st.b > 0) {
       if (!soft) { ctx.strokeStyle = 'rgba(0,0,0,0.28)'; ctx.lineWidth = 2 * st.b + 0.08; ctx.stroke(path); }
       const ramp = soft > 0 && st.bt !== 'kerb' && st.bt !== 'slabs' ? bandRamp(st.b, soft) : [{ half: st.b, alpha: 1 }];
@@ -2771,6 +2788,112 @@ export class GroundPainter {
     }
     ctx.restore();
   }
+  /** a stripe set laid by T218's mowStripes, or (textured: T227's course finish) by mowBands */
+  private layBands(ctx: C2D, m: MowStripes, r: number[], M: DOMMatrix, textured: boolean) { if (textured) this.mowBands(ctx, m, r, M); else this.mowStripes(ctx, m, r); }
+  /** T227: the course finish's mowing bands (course-finish finishStripeLook, finishMow) over tile box r, under the caller's clip and the chunk
+   *  transform M: alternate bands along (ux, uy), each band's edges softened by f. They modulate the grass and keep its detail (the owner's
+   *  rules): the dark ones a multiply of the dark colour at k (the texture scaled, never washed), the light ones a shine textured by the grass
+   *  itself (shine, not squared: its own colour times the light colour at l, through the light bands' mask), a lift in proportion to the
+   *  texture, so its tips brighten most, its gaps stay dark and its hue holds */
+  private mowBands(ctx: C2D, m: MowStripes, r: number[], M: DOMMatrix) {
+    const w = Math.max(0.25, m.w), corners = [[r[0]!, r[1]!], [r[2]!, r[1]!], [r[0]!, r[3]!], [r[2]!, r[3]!]] as const;
+    let s0 = Infinity, s1 = -Infinity, t0 = Infinity, t1 = -Infinity;
+    for (const [x, y] of corners) { const dx = x - m.ox, dy = y - m.oy, s = dx * m.ux + dy * m.uy, t = -dx * m.uy + dy * m.ux; s0 = Math.min(s0, s); s1 = Math.max(s1, s); t0 = Math.min(t0, t); t1 = Math.max(t1, t); }
+    const e = Math.min(0.49, Math.max(0.001, m.f * 0.5)), k0 = Math.floor(s0 / w), k1 = Math.ceil(s1 / w);
+    /** band k's fill: its colour at alpha a across it, ramped in and out over its soft edge */
+    const band = (g: C2D, k: number, rgb: string, a: number) => {
+      const gr = g.createLinearGradient(k * w, 0, (k + 1) * w, 0);
+      gr.addColorStop(0, `rgba(${rgb},0)`); gr.addColorStop(e, `rgba(${rgb},${a.toFixed(3)})`); gr.addColorStop(1 - e, `rgba(${rgb},${a.toFixed(3)})`); gr.addColorStop(1, `rgba(${rgb},0)`);
+      g.fillStyle = gr; g.fillRect(k * w, t0, w, t1 - t0);
+    };
+    const rgbOf = (hex: string) => `${parseInt(hex.slice(1, 3), 16)},${parseInt(hex.slice(3, 5), 16)},${parseInt(hex.slice(5, 7), 16)}`;
+    if (m.k > 0) {
+      ctx.save(); ctx.transform(m.ux, m.uy, -m.uy, m.ux, m.ox, m.oy); ctx.globalCompositeOperation = 'multiply';
+      const dc = rgbOf(m.dc); for (let k = k0; k < k1; k++) if (k & 1) band(ctx, k, dc, Math.min(1, m.k));
+      ctx.restore();
+    }
+    if (!(m.l > 0)) return;
+    const box = this.cacheBox(M, r[0]!, r[1]!, r[2]!, r[3]!, ctx); if (!box) return;
+    const B = this.bufferKeep('bandMask', ctx.canvas.width, ctx.canvas.height), g = ctx2d(B);
+    g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(box[0], box[1], box[2], box[3]); g.setTransform(M); g.transform(m.ux, m.uy, -m.uy, m.ux, m.ox, m.oy);
+    for (let k = k0; k < k1; k++) if (!(k & 1)) band(g, k, '255,255,255', 1);
+    g.restore();
+    this.shine(ctx, box, m.lc, m.l, a => { a.setTransform(1, 0, 0, 1, 0, 0); a.drawImage(B, box[0], box[1], box[2], box[3], box[0], box[1], box[2], box[3]); }, false);
+  }
+  /** T227: a bunker layer's edges sorted for its lip (course-finish lipRuns: the far and the near rim, each in weight steps), as paths, with
+   *  their tile box; made once a layer (T217's pattern: a re-bake draws the kept paths) */
+  private lipCache = new WeakMap<CourseLayer, { far: (Path2D | null)[]; near: (Path2D | null)[]; box: number[] }>();
+  private lipPaths(l: CourseLayer) {
+    let v = this.lipCache.get(l); if (v) return v;
+    const runs = lipRuns(l.edges), box = [Infinity, Infinity, -Infinity, -Infinity];
+    const paths = (bins: number[][]) => bins.map(b => {
+      if (!b.length) return null;
+      const p = new Path2D();
+      for (let i = 0; i + 3 < b.length; i += 4) { p.moveTo(b[i]!, b[i + 1]!); p.lineTo(b[i + 2]!, b[i + 3]!); box[0] = Math.min(box[0]!, b[i]!, b[i + 2]!); box[1] = Math.min(box[1]!, b[i + 1]!, b[i + 3]!); box[2] = Math.max(box[2]!, b[i]!, b[i + 2]!); box[3] = Math.max(box[3]!, b[i + 1]!, b[i + 3]!); }
+      return p;
+    });
+    v = { far: paths(runs.far), near: paths(runs.near), box }; this.lipCache.set(l, v);
+    return v;
+  }
+  /** T227: the lips' rims of every bunker layer here: per weight step, one path of all the layers' segments, and their tile box (null: none) */
+  private lipRims(ls: readonly CourseLayer[]) {
+    const far: (Path2D | null)[] = [], near: (Path2D | null)[] = [], box = [Infinity, Infinity, -Infinity, -Infinity];
+    for (const l of ls) {
+      const v = this.lipPaths(l);
+      for (const [to, from] of [[far, v.far], [near, v.near]] as const) from.forEach((p, i) => { if (!p) return; if (!to[i]) to[i] = new Path2D(); to[i]!.addPath(p); });
+      box[0] = Math.min(box[0]!, v.box[0]!); box[1] = Math.min(box[1]!, v.box[1]!); box[2] = Math.max(box[2]!, v.box[2]!); box[3] = Math.max(box[3]!, v.box[3]!);
+    }
+    return box[2]! < box[0]! ? null : { far, near, box };
+  }
+  /** T227: a light band along rims (by weight step: weight i / (n - 1)) laid as a shine textured by what is under it (the owner's light rule,
+   *  T110: inset from the edge by a gap, ramped in, strongest just past it and fading out over w), clipped to `clip` (even-odd), strength k */
+  private rimShine(ctx: C2D, rims: readonly (Path2D | null)[], clip: Path2D, box: number[], gap: number, w: number, k: number, L: number, M: DOMMatrix) {
+    const R = gap + w + 0.1, cb = this.cacheBox(M, box[0]! - R, box[1]! - R, box[2]! + R, box[3]! + R, ctx); if (!cb) return;
+    const px = 1 / (TILE_PX * L), n = rims.length, B = this.bufferKeep('lipMask', ctx.canvas.width, ctx.canvas.height), g = ctx2d(B);
+    g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(cb[0], cb[1], cb[2], cb[3]); g.setTransform(M); g.clip(clip, 'evenodd');
+    g.lineCap = 'round'; g.lineJoin = 'round';
+    rims.forEach((p, i) => { if (!p) return; const wt = i / Math.max(1, n - 1); for (const [hw, a] of [[gap + w, 0.5], [gap + 0.55 * w, 0.5]] as const) { g.strokeStyle = `rgba(255,255,255,${(a * wt).toFixed(3)})`; g.lineWidth = Math.max(2 * px, 2 * hw); g.stroke(p); } });
+    g.globalCompositeOperation = 'destination-out';
+    for (const [hw, a] of [[gap + 0.06, 0.5], [gap, 1]] as const) { g.strokeStyle = `rgba(0,0,0,${a})`; g.lineWidth = Math.max(px, 2 * hw); for (const p of rims) if (p) g.stroke(p); }
+    g.restore();
+    this.shine(ctx, cb, SHINE_TINT, k, a => { a.setTransform(1, 0, 0, 1, 0, 0); a.drawImage(B, cb[0], cb[1], cb[2], cb[3], cb[0], cb[1], cb[2], cb[3]); });
+  }
+  /** T227: a cool shade along rims (by weight step), falling from a at the rim to none `reach` away (paint-edges jointRamp: smooth, no hard
+   *  line), multiplied so the texture under it stays (T110), clipped to `clip` (even-odd); onto the shade mask too (shadow: it is a shade); off: the
+   *  rims moved that many tiles along (1, 1), straight down the screen (a far rim's shade starts at its wall's foot) */
+  private rimShade(ctx: C2D, rims: readonly (Path2D | null)[], clip: Path2D, reach: number, a: number, shadow: boolean, M: DOMMatrix, off = 0) {
+    const [r, gc, b] = SHADE_RGB, n = rims.length;
+    const lay = (g: C2D) => {
+      g.save(); g.setTransform(M); g.clip(clip, 'evenodd'); if (off) g.setTransform(M.translate(off, off)); g.globalCompositeOperation = 'multiply'; g.lineJoin = 'round'; g.lineCap = 'round';
+      rims.forEach((p, i) => { if (!p) return; for (const st of jointRamp(reach, Math.min(0.95, a * i / Math.max(1, n - 1)))) { if (st.alpha <= 0) continue; g.strokeStyle = `rgba(${r},${gc},${b},${st.alpha.toFixed(4)})`; g.lineWidth = 2 * st.half; g.stroke(p); } });
+      g.restore();
+    };
+    lay(ctx); if (shadow) this.onShadeMask(lay);
+  }
+  /** T227: a bunker's lip on its sand (course-finish LIP; the sun at the upper right): the dark crescent inside its far rim (the rim facing the
+   *  sun, whose lip shades the sand under it: a cool multiply that keeps the sand's texture, from the rim fading in over LIP.reach) and the light
+   *  near lip (the rim turned from the sun, whose slope faces it: a shine textured by the sand, a gap inside the rim). Each rim segment by its
+   *  weight (smooth from side-on: no step), clipped to the sand; k the lip strength. Drawn before the walls, so the far wall's face stays on top */
+  private bunkerSandLip(ctx: C2D, ls: readonly CourseLayer[], L: number, M: DOMMatrix, k: number) {
+    const rims = this.lipRims(ls); if (!rims) return;
+    const sand = new Path2D(); for (const l of ls) for (const q of l.fill) ringPath(sand, q);
+    // the crescent starts at the far wall's foot (its face hangs WALL_DROP tiles a metre down the screen, course-walls), so it is not hidden
+    this.rimShade(ctx, rims.far, sand, LIP.reach, LIP.dark * k, true, M, LIP.foot * WALL_DROP * Math.abs(SURF_HEIGHT[SURF.bunker] ?? 0));
+    this.rimShine(ctx, rims.near, sand, rims.box, LIP.gap, LIP.w, LIP.light * k, L, M);
+  }
+  /** T227: the bunker's thin raised grass lip round the sand (its lip band, course-walls 'lip'): its outer slope lit on the far side (a shine
+   *  textured by the grass, inset a gap from the sand's edge, fading out across the band) and lightly shaded on the near side (turned from the
+   *  sun), clipped to the band; k the lip strength */
+  private bunkerGrassLip(ctx: C2D, ls: readonly CourseLayer[], L: number, M: DOMMatrix, k: number) {
+    const with_ = ls.filter(l => l.collar?.fill.length); if (!with_.length) return;
+    const rims = this.lipRims(with_); if (!rims) return;
+    const band = new Path2D(); let bw = 0;
+    for (const l of with_) { for (const q of l.collar!.fill) ringPath(band, q); bw = Math.max(bw, l.collar!.w ?? 0.5); }
+    this.rimShine(ctx, rims.far, band, rims.box, LIP.grassGap, Math.max(0.1, bw - LIP.grassGap), LIP.grass * k, L, M);
+    this.rimShade(ctx, rims.near, band, bw, LIP.shade * k, false, M);
+  }
+  /** T227: the course finish the surfaces file carries (course-finish.ts; Studio > Painted > Course finish) */
+  private finish(): CourseFinish { return finishOf(this.tex.surfaces); }
   /** sidewalk slab sprites in a running bond over the rectangle r (tiles), in texture space: a tile is G (u, v), so the
    *  slabs turn with the area; the seeds depend on the cell only, so neighbouring chunks agree */
   private slabGrid(g: C2D, G: DOMMatrix, r: number[], M: DOMMatrix) {

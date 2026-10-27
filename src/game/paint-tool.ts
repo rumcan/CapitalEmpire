@@ -117,6 +117,9 @@ function loadBrush(): Record<BrushKind, BrushSet> {
 }
 /** what the tool needs from the engine: the lot ground, redraws, saves, toasts, the css px projection of tiles (affine A: tile (x, y) is at (A[0] + x*A[2] + y*A[4], A[1] + x*A[3] + y*A[5])), and the props of a placed golf hole (returns how many were placed) */
 export interface PaintHost { setLotGround(key: string, patches: LotPatch[] | null): void; emit(): void; save(): void; toast(text: string, kind?: 'info' | 'warn'): void; affine(out: number[]): void; placeProps(ps: PresetProp[], seed: number): number; golfMode?: () => boolean; money?: () => number; spend?: (n: number) => void; ownedLand?: (pts: number[]) => boolean; currentMonth?: () => number;
+  /** T227: the collar width (metres) the Border slider starts from for surface s when the player has set none (the course finish's: the
+   *  fairway's first cut, the green's fringe); undefined: BLOB_STYLE's */
+  collarDefault?(s: number): number | undefined;
   /** the player did something that counts toward the tool unlocks (T033) */
   progress?(what: 'piece'): void;
   /** the road segments near tile (x, y) within r tiles, as snap targets for a cart path (T031) */
@@ -486,7 +489,7 @@ export class PaintTool {
    *  first cut, the bunker's lip, the pond's bank), or null when the kind has none */
   courseBorder(kind: BrushKind = this.brushKind): number | null {
     const b = BORDER_KINDS[kind]; if (!b) return null;
-    return this.brush[kind].bw ?? BLOB_STYLE[b.s]!.collar!.width;
+    return this.brush[kind].bw ?? this.host.collarDefault?.(b.s) ?? BLOB_STYLE[b.s]!.collar!.width;
   }
   /** sets a kind's collar band width (metres, BORDER_MIN_M hairline .. BORDER_MAX_M), remembered with its brush look; the course is drawn
    *  again (throttled while the slider is dragged) */

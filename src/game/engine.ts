@@ -19,7 +19,8 @@ import { CULL_MIN_PX, FULL_UV, GLRenderer, POINT_STRIDE, SHADOW_STRIDE, SPRITE_S
 import { GroundCache } from './ground-cache';
 import { GAME_BOOT, clampCentre, flatTerrain, type BootOptions } from './boot';
 import { TILE_BANDS, TILES_REVISION, anchorAt, bandAt, bandRange, bandsAhead, cellOf, cellsIn, coverageOf, drawnScale, nearUntil, nextBand, tiledFamily, tileIndex, tilePermutation, tileScreenPx, tileSize, tileSpec } from './painted-tiles';
-import { paintedSurfaces } from './painted-surfaces-live';
+import { onPaintedSurfaces, paintedSurfaces } from './painted-surfaces-live';
+import { collarDefault, finishBorders, finishOf } from './course-finish';
 import { chunkLayers, pictureCurrent, prebakeTargets } from './ground-layers';
 import { clampGrassArt, grassZoomLevels, type GrassArt } from './painted-grass-lod';
 import { lotBatch, type CourseTex, type LotPatch } from './ground-protocol';
@@ -647,7 +648,7 @@ export class Game {
   /** a drag in progress; build: a right-button press in the road tool (released without moving, it builds the route, as Enter) */
   private dragging: null | { kind: 'pan' | 'bulldoze' | 'park'; sx: number; sy: number; camX: number; camY: number; moved: boolean; /** T207: a road tool right-click: on release without a drag it takes back the last point */ back?: boolean; aim?: Pt; /** a Select click's hole under it (0: none; T174) */ hole?: number; /** T200: a click on Land for sale's overlay (it opens the block's card on release, never buys) */ land?: Pt } = null;
   /** the Paint tool: painted ground areas, its settings and the outline being drawn (docs/PAINT-TOOL.md) */
-  paint = new PaintTool({ progress: () => this.bump('pieces'), setLotGround: (k, p) => { this.paintRev++; this.setLotGround(k, p); }, emit: () => this.emit(), save: () => this.scheduleSave(), toast: (t, k) => this.toast(t, k), affine: o => this.paintAffine(o), placeProps: (ps, seed) => this.placePresetProps(ps, seed), golfMode: () => this.golfMode, money: () => this.money, spend: n => this.traffic.spend('construction', n), ownedLand: pts => !this.golf || polyInParcels(this.golf.parcels ?? [this.golf.parcel], pts), currentMonth: () => !this.golf ? 0 : this.golfMonthIndex(), plant: (ids, x, y, r, spacing, size, seed) => this.plantProps(ids, x, y, r, spacing, size, seed), unplant: (x, y, r) => this.unplantProps(x, y, r), plantPool: k => plantPool(LIBRARY, k), courseHeight: () => this.courseHeight, roadsNear: (x, y, r) => { let k = 0; return [...this.net.segsNear({ x, y }, r)].map(s => ({ id: ++k, ax: s.a.x, ay: s.a.y, bx: s.b.x, by: s.b.y, halfWidthTiles: s.cls.h + s.cls.walk })); }, roadRev: () => this.net.version, heightChanged:b => { this.courseHeightChanged(unionCourseBox(b, this.flattenRoadsIn(b))!); },
+  paint = new PaintTool({ collarDefault: s => collarDefault(s, finishOf(paintedSurfaces())) ?? undefined, progress: () => this.bump('pieces'), setLotGround: (k, p) => { this.paintRev++; this.setLotGround(k, p); }, emit: () => this.emit(), save: () => this.scheduleSave(), toast: (t, k) => this.toast(t, k), affine: o => this.paintAffine(o), placeProps: (ps, seed) => this.placePresetProps(ps, seed), golfMode: () => this.golfMode, money: () => this.money, spend: n => this.traffic.spend('construction', n), ownedLand: pts => !this.golf || polyInParcels(this.golf.parcels ?? [this.golf.parcel], pts), currentMonth: () => !this.golf ? 0 : this.golfMonthIndex(), plant: (ids, x, y, r, spacing, size, seed) => this.plantProps(ids, x, y, r, spacing, size, seed), unplant: (x, y, r) => this.unplantProps(x, y, r), plantPool: k => plantPool(LIBRARY, k), courseHeight: () => this.courseHeight, roadsNear: (x, y, r) => { let k = 0; return [...this.net.segsNear({ x, y }, r)].map(s => ({ id: ++k, ax: s.a.x, ay: s.a.y, bx: s.b.x, by: s.b.y, halfWidthTiles: s.cls.h + s.cls.walk })); }, roadRev: () => this.net.version, heightChanged:b => { this.courseHeightChanged(unionCourseBox(b, this.flattenRoadsIn(b))!); },
     journal: { begin: () => { this.propLog = { added: [], removed: [] }; }, end: () => { const j = this.propLog; this.propLog = null; return j && (j.added.length || j.removed.length) ? j : null; }, undo: j => this.swapProps(j as PropLog, true), redo: j => this.swapProps(j as PropLog, false) },
     changed: pins => this.syncCourseMarkers(pins),
     grid: () => this.courseGrid, gridChanged: (d, flush) => { this.range.practiceCells(this.courseGrid, d); this.courseGridChanged(d, flush); }, gridAreas: () => this.gridAreaList(),
@@ -938,7 +939,19 @@ export class Game {
     const band: (CourseTex | undefined)[] = [];
     band[SURF.fairway] = courseBandOf('fairway', b.fairway.style, collar['first-cut']); band[SURF.tee] = courseBandOf('tee', b.tee.style, collar['first-cut']);
     band[SURF.green] = courseBandOf('green', b.green.style, collar.fringe); band[SURF.bunker] = courseBandOf('bunker', b.bunker.style, collar.lip); band[SURF.water] = courseBandOf('water', b.water.style, collar.bank);
-    return { surf, collar, band, border: this.paint.courseBorders(), shadow: this.paint.courseShadows(), height: this.paint.surfaceHeights() };
+    // T227: with the course finish a bunker sits in the fairway's first cut (its lip band's grass), unless the player gave it a Border texture
+    const lipGrass = band[SURF.bunker]?.tex === collar.lip.tex ? band[SURF.fairway] : undefined;
+    return { surf, collar, band, border: this.courseBorders(), shadow: this.paint.courseShadows(), height: this.paint.surfaceHeights(), ...(lipGrass ? { lipGrass } : {}) };
+  }
+  /** the collar widths the course is laid with, by surface id: the Border slider's where the player set one, else the course finish's (T227:
+   *  the fairway's first cut and the green's fringe; course-finish finishBorders), else BLOB_STYLE's */
+  private courseBorders(): (number | undefined)[] { return finishBorders(this.paint.courseBorders(), finishOf(paintedSurfaces())); }
+  /** T227: the finish's collar widths the course was last laid with (a surfaces save that changes them lays every chunk again) */
+  private finishCollars = '';
+  private finishCollarKey(): string { return finishBorders([], finishOf(paintedSurfaces())).join(','); }
+  private watchFinish(): () => void {
+    this.finishCollars = this.finishCollarKey();
+    return onPaintedSurfaces(() => { const k = this.finishCollarKey(); if (k !== this.finishCollars) { this.finishCollars = k; this.resendCourse(); } });
   }
   private cpCache: { ver: number; g: CourseGrid; segs: number[] } | null = null;
   /** the cart paths and drives near the course grid as flat segments ax, ay, bx, by (tiles): the tees' stairs face the nearest (T127) */
@@ -1022,7 +1035,7 @@ export class Game {
    *  The work is the contour worker's: the patches land a few ms later, all of one job in the same frame */
   sendCourseChunks(box: readonly number[], stale = false, at = performance.now()) {
     const g = this.contourGrid(); if (!g) return;
-    const reach = courseEditReach(widestCollar(courseStyles(this.paint.courseBorders()))), R = reach + COURSE_PATCH_REACH; // a wide Border reaches further
+    const reach = courseEditReach(widestCollar(courseStyles(this.courseBorders()))), R = reach + COURSE_PATCH_REACH; // a wide Border reaches further
     this.queueChunks(courseChunksIn(g, box, reach), stale ? [box[0]! - R, box[1]! - R, box[2]! + R, box[3]! + R] : null, at);
   }
   /** chunks for the contour worker: a job now, or (one in flight) merged into the next */
@@ -1474,6 +1487,7 @@ export class Game {
     this.ground.slopeLight = this.slopeLight;
     try { const v = parseFloat(localStorage.getItem('capitalempire.leafDensity') ?? ''); if (Number.isFinite(v)) this.leafDensity = clampLeafDensity(v); } catch { /* the default */ }
     this.ground.leafDensity = this.leafDensity;
+    this.unfinish?.(); this.unfinish = this.watchFinish();
     try { const v = parseFloat(localStorage.getItem('capitalempire.roughYards') ?? ''); if (Number.isFinite(v)) this.roughYards = clampRoughYards(v); } catch { /* the default */ }
     try { const n = localStorage.getItem('capitalempire.night'); if (n) this.night = clampNight(JSON.parse(n)); } catch { /* the defaults */ }
     try { const d = JSON.parse(localStorage.getItem('capitalempire.townday') ?? 'null'); if (d && typeof d === 'object') this.townDay = { minutes: Math.min(30, Math.max(0.5, +d.minutes || 10)), traffic: Math.min(4, Math.max(0, Number.isFinite(+d.traffic) ? +d.traffic : 1)) }; } catch { /* the defaults */ }
@@ -1698,7 +1712,9 @@ export class Game {
     return false;
   }
   dead = false;
-  destroy() { this.dead = true; cancelAnimationFrame(this.raf); clearTimeout(this.saveTimer); clearTimeout(this.blocksTimer); clearTimeout(this.lotBlocksTimer); this.ground.terminate(); this.traffic?.terminate(); this.contour.terminate(); this.areaWorker.terminate(); }
+  /** T227: stops watching the surfaces file for the course finish's collar widths */
+  private unfinish: (() => void) | null = null;
+  destroy() { this.dead = true; this.unfinish?.(); this.unfinish = null; cancelAnimationFrame(this.raf); clearTimeout(this.saveTimer); clearTimeout(this.blocksTimer); clearTimeout(this.lotBlocksTimer); this.ground.terminate(); this.traffic?.terminate(); this.contour.terminate(); this.areaWorker.terminate(); }
 
   // ---------- geometry helpers ----------
   resize() {
