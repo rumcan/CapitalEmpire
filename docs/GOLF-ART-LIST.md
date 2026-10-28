@@ -202,7 +202,7 @@ tees use the same marker.
 🎨 **19. Hitting mat** (made: `run-top/golf-range-mats/golf-range-mats-top-v1.png`, not drawn yet) (`golf:range-mats`) · **C** · 4.2 x 6 m a bay · P1 **(stand-in)**. The left and right edges must join seamlessly.
 > Subject: golf:range-mats, ONE driving-range hitting mat seen from straight above, about 4.2 m wide and 6 m deep: a concrete pad with a slightly worn green artificial-turf mat on it, a white rubber tee near the front edge, two or three white range balls beside it, a scuffed, flattened strike zone behind the tee. The left and right edges of the picture continue the concrete and must tile seamlessly when two copies are placed side by side.
 
-**20. Target green** (`golf:range-target-green`) · **C** · 12-20 m across · P1 **(stand-in)**.
+🎨 **20. Target green** (top-down retake made: `run-top/golf-range-target-green/`) (`golf:range-target-green`) · **C** · 12-20 m across · P1 **(stand-in)**.
 > Subject: golf:range-target-green, one round driving-range target green seen from straight above, filling the square: a smooth fine-cut inner green, a lighter mown collar ring round it, a faint darker ring at its outer edge where it meets the coarser outfield grass (the outfield shows only in the corners), a cup at the exact centre (no flag), a few white range balls lying scattered on it. No mowing stripes.
 
 🎨 **21. Divot-scarred range tee turf** (`range-tee-divots-run`, #630; on the range tee with T223) (texture) · **C** · a 16 m square · P1 **(stand-in)**.
@@ -229,7 +229,7 @@ The owner, 2026-10-27: "how about better more fun range targets". Big, bright th
 read from far away. Each stands on the outfield grass; a ball that lands in or on one would count as a hit. They are new: the game
 needs a ticket to offer them (a range upgrade, "Fun targets").
 
-**27. Bullseye target green** · **C** · 16-24 m across · P1. A target green painted as a giant archery target.
+🎨 **27. Bullseye target green** (top-down retake made: `run-top/golf-range-bullseye-target/`) · **C** · 16-24 m across · P1. A target green painted as a giant archery target.
 > Subject: a giant round driving-range target seen from straight above, filling the square: concentric rings mown and painted into the turf, white, red, white, red, with a bright yellow bullseye green at the centre holding a cup, the rings slightly irregular as if hand-painted on grass, a few white balls lying in the rings.
 
 **28. Island target green** · **A** · 20 x 16 m, 1 high · P1. A small green on an island in a pond.
@@ -265,7 +265,7 @@ as their decoration.
 
 ### Rock features
 
-**36. Boulders** · **B** · 0.8-2.5 m · P1. Make three sizes, three variants each.
+🎨 **36. Boulders** (9 made: small, medium, large x a, b, c; T231 #671) · **B** · 0.8-2.5 m · P1. Make three sizes, three variants each.
 > Subject: one weathered sandstone boulder sitting in the grass, rounded, with lichen patches and a little moss on its shaded side. Make nine pictures: small (0.8 m), medium (1.5 m) and large (2.5 m), three different shapes each.
 
 **37. Rock cluster with ornamental grass** · **B** · 3 x 2 m · P1. Three variants.
@@ -288,7 +288,7 @@ as their decoration.
 
 ### Palm trees
 
-**43. Palm trees** · **B** · 3-10 m high · P1. Three species, three variants each (height and lean), cold-hardy palms that suit a 1985
+🎨 **43. Palm trees** (9 palms made; T231 #671) · **B** · 3-10 m high · P1. Three species, three variants each (height and lean), cold-hardy palms that suit a 1985
 resort-style club. Evergreen: no autumn colours.
 > Subject: one palm tree with no ground under it. Make nine pictures: (a) a windmill palm (Trachycarpus), hairy brown trunk, fan leaves, 4, 5 and 6 m high; (b) a Canary Island date palm, thick diamond-patterned trunk, a big round crown of arching fronds, 6, 8 and 10 m high; (c) a dwarf fan palm clump (Chamaerops), several short trunks, 2, 3 and 3.5 m high. Each slightly different lean.
 
@@ -297,7 +297,7 @@ resort-style club. Evergreen: no autumn colours.
 
 ### Lights
 
-**45. Practice green lamp post** · **B** · 3.5 m high · P1. Two variants.
+🎨 **45. Practice green lamp post** (single and twin made; T231 #671) · **B** · 3.5 m high · P1. Two variants.
 > Subject: a traditional golf club lamp post about 3.5 m high: a dark green cast-iron post with a fluted base and a glass lantern on top, glowing warm; variant two with a twin lantern arm.
 
 **46. Path bollard light** · **B** · 0.9 m high · P1.
@@ -671,7 +671,7 @@ the water towers, a silo, a windmill and a fountain. These pieces are missing:
 **146. Bleachers** · **A** · 20 x 6 m, 4 high · P1. Two lengths (10 and 20 m).
 > Subject: aluminium school bleachers: five rows of grey benches on a steel frame with a handrail at the back, a stair at one end, empty.
 
-**147. Running track and field** · **C** · 100 x 60 m · P1. Top-down.
+🎨 **147. Running track and field** (top-down made: `run-top/iconic-running-track-field/`) · **C** · 100 x 60 m · P1. Top-down.
 > Subject: seen from straight above, a high school football field: striped mown grass with white yard lines (no numbers), end zones, inside a red-brown running track with white lane lines curving round both ends.
 
 **In the game now (T219):** both places are built (`src/game/lots/iconic-places.json`), with labelled stand-ins for the speaker posts (143: `world:speaker_post`), the car park
