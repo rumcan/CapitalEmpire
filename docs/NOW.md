@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-28 21:00 SAST)
+## START HERE (kept current by the lead; last updated 2026-10-28 22:15 SAST)
 
 **Taking over as lead?** This section is the one start document. Paste this into a new Claude Code chat (desktop app, Code tab), on any
 account, with the folder `E:\Repos\CapitalEmpire\worktrees\lead-typecheck`:
@@ -67,7 +67,7 @@ never commit there.)
 | Ticket | Issue | Branch / worktree | State and next step |
 | --- | --- | --- | --- |
 | T262 | #769 | `arena/T262-grass-shine` (its worktree `.claude/worktrees/agent-a0e42bfca4d14578c`; port 5186); PR #792 **held** | **Phase 1 done ~20:30: verdict yes, source d** (the bump derived in the shader from the chunk's own colour: as good as per-family bump maps at half the cost, follows the stripes). **Phase 2 running** on the same branch: drop c/a/a4 and the bump maps, every grass family weighted, no sheen under sprite shadows if cheap, Studio knobs beside SpecLook, default on (off stays an option). Merge #792 when phase 2 reports (it becomes Closes #769). |
-| T263 | #771 | `arena/T263-hole-ground` (a fresh worktree; port 5187) | **Started ~19:30.** New hole's Build shapes the hole's ground (fairway rolls, mounds and swales, a tilted green; the tee level), priced in the pill, in the same undo step, behind a "Shape the ground" tick box (default on); saved holes carry it; Edit Hole Layout never reshapes. |
+| T263 | #771 | `arena/T263-hole-ground` (its worktree `.claude/worktrees/agent-a7511adc517f4f94a`; port 5187); PR #797 **not merged yet** | **Built ~22:00** (Build shapes the hole: rolls, mounds, a 1-2% green, a level tee; in Build's undo; "Shape the ground" tick box; My holes carry it). **Sent back:** at the default Slope light the shaping can't be seen, and it cost about \$33-38k a hole at the brush's \$15/m³. Now: a stronger course-height light on gentle slopes (readable at strength 1, steep brush banks not harsher), and the build rate `SHAPE_RATE_M3` = \$5/m³ (about \$11-12k a par 4). Merge when it reports. |
 
 **Held, waiting on the owner (not agents):**
 - **#394 T112** (sharp 0.35): approved, merge held until the owner stops the 5191 studio (the lock change makes the auto-updater run
