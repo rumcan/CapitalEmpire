@@ -204,6 +204,8 @@ export interface ClubCardView {
   today: { members: number; visitors: number; inMembers: number; inVisitors: number; fees: number; turned: number; out: number; parked: number; next: number | null; waiting: number; waitMin: number; waitAvg: number; worst: number };
   season: { days: number; members: number; visitors: number; fees: number; expected: number; waitAvg: number; paceRep: number };
   clubMembers: number; fee: number; scale: number;
+  /** T237: the car parks within walking distance of the door (golf/walkserve.ts), nearest walk first (the engine adds them) */
+  lots?: { id: number; bays: number; m: number }[];
 }
 
 /** the clubhouse card's view from the day book, the day's playback (null: none: a tournament day, no holes) and the minute */

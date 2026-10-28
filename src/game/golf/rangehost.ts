@@ -13,7 +13,7 @@ import { hash3, paintOf } from '../car-paint';
 import { PRESETS, presetTex, surfacePreset, type Stripes } from '../paint-presets';
 import { SURFACE_TEX } from './paintcourse';
 import type { GolfSurface } from './types';
-import { RangeSim, garageSlots, rangeScene, rangeStats, upgradeWhy, walkwayOf, withPrice, withUpgrade, RANGE_UPGRADES, type CarSlot, type DemandCtx, type RangeBizSave, type RangeClock, type RangeScene, type RangeUpgradeId, type ScenePatch, type ScenePiece } from './rangebiz';
+import { RangeSim, garageSlots, rangeCounter, rangeScene, rangeStats, upgradeWhy, walkwayOf, withPrice, withUpgrade, RANGE_UPGRADES, type CarSlot, type DemandCtx, type RangeBizSave, type RangeClock, type RangeScene, type RangeUpgradeId, type ScenePatch, type ScenePiece } from './rangebiz';
 import { CELL_T, type Grid, type GridDiff } from '../ext/course-grid';
 import { inPractice, practiceWords, scanPractice, type PracticeScan, type PracticeState } from './practice';
 import { PRACTICE_APPEAL, PRACTICE_FEE, PRACTICE_IDS, practiceAppeal, rangeScale, rangeUpkeep, type PracticeId } from './rangesave';
@@ -28,11 +28,14 @@ import { paintedSurfaces } from '../painted-surfaces-live';
 export interface RangeHostCtx {
   /** the range state in the save (null: not a range start), the plot and its facing (null: no range business) */
   biz(): RangeBizSave | null; plot(): { rect: Rect; facing: 0 | 1 | 2 | 3 } | null;
-  /** the range's car park: its bays (point and heading) and its entrance; null while it is not built */
-  carPark(): { bays: CarSlot[]; entrance: Pt } | null;
+  /** the range's car parks (T237: those within walking distance of door, the shop's counter: golf/walkserve.ts): their bays (point, heading
+   *  and each one's entrance), the first one's entrance and a key that changes with them; null while none is built in reach */
+  carPark(door: Pt): { bays: CarSlot[]; entrance: Pt; key?: string } | null;
   /** the range's car park (the lot on the plot) laid on rect (world) instead (T146: it keeps its near half beside the car park building); missing:
    *  the lot stays as it is */
   fitPark?(rect: Rect): void;
+  /** T237: the car parks within walking distance of door (golf/walkserve.ts), nearest walk first: their ids, bays and walks (m); missing: none */
+  lots?(door: Pt): { id: number; bays: number; m: number }[];
   /** T239: the range car park's ground as its upgrades have it (packed dirt, gravel, paved: the lot's bays, ground and gate props follow) */
   parkGround?(g: LotGround): void;
   /** T239: the cart paths (every Cart paths & roads path) with a leg in the world box (x0 y0 x1 y1), and the network's version (bumped by
@@ -123,11 +126,11 @@ export class RangeHost {
     const b0 = this.ctx.biz();
     // T239: the car park's ground follows its upgrades (dirt, gravel, paved), before its bays are read
     if (b0 && this.ctx.plot()) this.ctx.parkGround?.(lotGround(b0));
-    const b = b0, pl = this.ctx.plot(), cp = this.ctx.carPark();
+    const b = b0, pl = this.ctx.plot(), cp = pl ? this.ctx.carPark(rangeCounter(pl.rect, pl.facing)) : null;
     // the home's stage (T133) re-lays the yard as the lifetime takings grow; T258: the studio's range art (the mats and greens as pictures or
     // stand-ins, the bullseye) re-lays the ground when the owner saves it
     const home = b ? homeStage(b) : 0, look = this.look();
-    const key = b && pl ? `${pl.rect.join(',')}:${pl.facing}:${b.owned.join(',')}:${cp ? cp.bays.length : -1}:${home}:${look.mats}:${look.greens}:${look.bullseye}` : '';
+    const key = b && pl ? `${pl.rect.join(',')}:${pl.facing}:${b.owned.join(',')}:${cp ? cp.key ?? cp.bays.length : -1}:${home}:${look.mats}:${look.greens}:${look.bullseye}` : '';
     if (!force && key === this.key) { this.syncWalk(); return; }
     this.key = key;
     if (!b || !pl) { this.drop(); return; }
@@ -421,7 +424,9 @@ export class RangeHost {
       upstairs: this.sim.today.upstairs,
       // the car park (T146): the range's cars parked now of its bays (the lot's and the building's), the cars a full car park turned away today,
       // and the building's own count
-      parking: { parked: this.sim.parked(), bays: this.sim.parkBays, turned: this.sim.today.noPark, garage: st.parking ? { parked: this.sim.parked(true), cars: GARAGE_CARS } : null },
+      parking: { parked: this.sim.parked(), bays: this.sim.parkBays, turned: this.sim.today.noPark, garage: st.parking ? { parked: this.sim.parked(true), cars: GARAGE_CARS } : null,
+        // T237: the car parks within walking distance of the shop (golf/walkserve.ts), nearest walk first
+        lots: this.scene ? this.ctx.lots?.(this.scene.counter) ?? [] : [] },
     };
   }
 }
