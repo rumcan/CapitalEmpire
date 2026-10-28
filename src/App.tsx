@@ -30,7 +30,7 @@ import { PropsPanel } from './ui/course/PropsPanel';
 import { PracticePanel } from './ui/course/PracticePanel';
 import { MyLooksCard } from './ui/course/MyLooks';
 import { Rail } from './ui/Rail';
-import { RAIL, drawerEntries, drawerOf, entryKey, pickEntry, railEntries, railItemOf, type RailItem, type RailTool } from './ui/rail-items';
+import { RAIL, drawerEntries, drawerOf, entryKey, pickEntry, railEntries, railItemOf, toolDrawer, type RailItem, type RailTool } from './ui/rail-items';
 import { Flyouts } from './ui/Flyouts';
 import { TownFooter } from './ui/TownFooter';
 import { KeysSheet } from './ui/KeysSheet';
@@ -573,14 +573,18 @@ export default function App() {
             const rail = {
               open: fly?.item ?? null,
               onPick: (r: RailItem, keyboard?: boolean, el?: HTMLElement) => {
-                if (menuFor(r).length) { if (fly?.item === r.id) setFly(null); else openFly(r, el, !!keyboard); return; }
+                // the owner, 2026-10-29: "footer menu now never closes": a second click on a lit footer group (its flyout open) closes the flyout
+                // and puts its tool down too, so the panel above the footer closes with it (the side drawer keeps its tool, as before)
+                if (menuFor(r).length) { if (fly?.item === r.id) { setFly(null); if (drawerOf(r) === 'footer' && activeRail.current === r.id && toolDrawer(game.uiTool, activeRail.current) === 'footer') game.setTool('select'); } else openFly(r, el, !!keyboard); return; }
                 setFly(null);
                 activeRail.current = r.id;
                 if (game.range.cardOpen) game.openRangeCard(false);
                 const e = pickEntry(r, game.golfMode, ui, lastEntry.current[r.id] ?? last.current[r.id]);
                 if (e) openEntry(r.id, e); else game.toast(`${r.label}: nothing open here yet`);
               },
-              onHover: (r: RailItem, el: HTMLElement) => { if (fly && fly.item !== r.id && menuFor(r).length) openFly(r, el, false); },
+              // the owner, 2026-10-29: Traffic and Town decoration open on a click, never on hover: hovering never opens or swaps to a footer group's
+              // flyout, and never swaps away from one (the side drawer's groups still follow the pointer while one of theirs is open, T193)
+              onHover: (r: RailItem, el: HTMLElement) => { const openR = fly ? RAIL.find(x => x.id === fly.item) : undefined; if (fly && fly.item !== r.id && menuFor(r).length && drawerOf(r) === 'side' && (!openR || drawerOf(openR) === 'side')) openFly(r, el, false); },
               onLocked: (r: RailItem, why: string) => game.toast(`${r.label}: ${why}`),
             };
             const flyR = fly ? RAIL.find(x => x.id === fly.item) : undefined, flyRows = flyR ? menuFor(flyR) : [], up = !!flyR && drawerOf(flyR) === 'footer';
@@ -588,58 +592,68 @@ export default function App() {
               <Flyouts key={fly.item} rows={flyRows} top={fly.top} left={up ? fly.left : (railRef.current?.offsetWidth ?? 96) + 8} up={up} startPath={fly.path} keyboard={fly.keyboard} railRefs={[railRef, footRef]}
                 onLeaf={pickLeaf} onLocked={row => game.toast(`${row.label}: ${row.why}`)} onClose={() => setFly(null)} />
             ) : null;
+            // T255 (#739, the owner 2026-10-29: "these windows need to move to the center footer where town moved to"): the tool's panel (its crumb
+            // and its body, one JSX) stands in the drawer its group sits in: a club tool's in the left tool panel, a town tool's (Traffic, Town
+            // decoration) docked above the town footer. Paint and Props, in both, follow the group they were opened from (the rail's lit group)
+            const dock = toolDrawer(game.uiTool, activeRail.current), idle = game.tool === 'select' && !game.landMode && !game.selected;
+            const toolBody = (<>
+            {/* T193: the tool's place in its menus (its leaf's path) and a back arrow that reopens its flyout there; the group's tools are no
+                longer stacked here: they are in the flyouts */}
+            {item && game.uiTool !== 'select' && menuFor(item).length > 0 && (
+              <div className="tool-crumb" data-testid="tool-crumb">
+                <button className="btn-icon tool-back" aria-label={`Back to the ${item.label} menu`} data-tip={`Back to the ${item.label} menu`}
+                  onClick={e => { const rows = menuFor(item), l = lastLeaf.current[item.id], el = railButton(item.id); openFly(item, el, e.detail === 0, l ? indicesOf(rows, l.keys.slice(0, -1)) : []); }}>
+                  <Icon name="left" size={16} />
+                </button>
+                <span className="tool-crumb-text">{[item.label, ...(lastLeaf.current[item.id]?.tool === game.uiTool ? lastLeaf.current[item.id]!.crumb : [])].join(' › ')}</span>
+              </div>
+            )}
+            {game.uiTool === 'road' && <RoadPanel game={game} scope="town" compact />}
+            {game.uiTool === 'path' && <RoadPanel game={game} scope="course" compact />}
+            {game.tool === 'lane' && (
+              <Panel title="Upgrade roads" icon="up" desc="Click a straight run of road to take it one size up: gravel → street → road → arterial → six-lane; avenue → boulevard → grand. On the course: walking path → dirt path → cement slabs → paved cart path; gravel drive → paved → avenue. You pay only the difference.">
+                <p className="text-xs text-slate-300">Right-click a one-way road to reverse it.</p>
+              </Panel>
+            )}
+            {game.tool === 'downgrade' && (
+              <Panel title="Downgrade roads" icon="down" desc="Click a straight run of road to take it one size down the same ladder. The difference is refunded.">
+                <p className="text-xs text-slate-300">Right-click a one-way road to reverse it.</p>
+              </Panel>
+            )}
+            {game.tool === 'junction' && <JunctionPanel game={game} compact />}
+            {game.tool === 'bulldoze' && (
+              <Panel title="Bulldoze" icon="bulldozer">
+                <p className="text-xs text-slate-300">Click an object to remove it (half its price is refunded). Click or drag along a road to tear it up piece by piece — the ends become cul-de-sacs and curbs, corners, crossings and markings redraw themselves instantly.</p>
+              </Panel>
+            )}
+            {game.tool === 'paint' && <PaintPanel game={game} />}
+            {game.uiTool === 'course' && <CoursePanel game={game} looks={looksOpen} onLooks={setLooks} />}
+            {game.uiTool === 'buildings' && <BuildingsPanel game={game} />}
+            {GREENKEEPING && game.tool === 'greenkeeping' && <GrassManagementPanel game={game} docked />}
+            {game.tool === 'props' && <PropsPanel game={game} />}
+            {game.tool === 'practice' && <PracticePanel game={game} />}
+            {game.tool === 'park' && <ParkPanel game={game} dev={dev} />}
+            {game.tool === 'toll' && <TollPanel game={game} />}
+            {game.tool === 'business' && <BusinessPanel game={game} />}
+            {game.tool === 'bus' && <BusPanel game={game} />}
+            {game.tool === 'select' && game.landMode && <LandPanel game={game} />}
+            {game.tool === 'select' && !game.landMode && <SelectPanel game={game} />}
+            </>);
             return <>
           {/* T250: the town footer: the TOWN groups, centred along the bottom clear of the minimap and the bottom cards; its flyouts open upward */}
-          <TownFooter {...rail} entries={drawerEntries(entries, 'footer')} boxRef={footBox} navRef={footRef} flyouts={up ? flyouts : null} raised={up} />
+          <TownFooter {...rail} entries={drawerEntries(entries, 'footer')} boxRef={footBox} navRef={footRef} flyouts={up ? flyouts : null} raised={up} panel={dock === 'footer' && !idle ? { tool: game.uiTool, body: toolBody } : null} onClosePanel={() => { setFly(null); game.setTool('select'); }} />
           <div ref={railBox} className={`pointer-events-none absolute left-3 top-[var(--hud-top,5.75rem)] ${sideFly ? 'z-40' : 'z-20'} flex items-start gap-2 [&>*]:pointer-events-auto`}>
             {/* P23 P1-E: the same places from minute zero; a tool not open yet stays dimmed in place with what unlocks it, a new one says NEW */}
             {/* T182: the groups (Driving range, Course, Facilities (T206) · Traffic, Town decoration); the range opens its card; a group opens its last tool, else its first open one */}
             {/* T193: a group opens its flyout (a click again, Esc or a click on the map closes it); Select and Bulldoze pick their tool */}
             <Rail {...rail} navRef={railRef} entries={drawerEntries(entries, 'side')} />
             {!up && flyouts}
-            <div className={`glass tool-panel w-[330px] max-h-[calc(var(--vh-ui,100vh)-var(--hud-top,5.75rem)-8.25rem)] overflow-y-auto overflow-x-hidden p-3 ${sideFly || (game.tool === 'select' && !game.landMode && !game.selected) ? 'hidden' : ''}`} data-tool={game.uiTool} data-testid="tool-panel">
-              {/* T193: the tool's place in its menus (its leaf's path) and a back arrow that reopens its flyout there; the group's tools are no
-                  longer stacked here: they are in the flyouts */}
-              {item && game.uiTool !== 'select' && menuFor(item).length > 0 && (
-                <div className="tool-crumb" data-testid="tool-crumb">
-                  <button className="btn-icon tool-back" aria-label={`Back to the ${item.label} menu`} data-tip={`Back to the ${item.label} menu`}
-                    onClick={e => { const rows = menuFor(item), l = lastLeaf.current[item.id], el = railButton(item.id); openFly(item, el, e.detail === 0, l ? indicesOf(rows, l.keys.slice(0, -1)) : []); }}>
-                    <Icon name="left" size={16} />
-                  </button>
-                  <span className="tool-crumb-text">{[item.label, ...(lastLeaf.current[item.id]?.tool === game.uiTool ? lastLeaf.current[item.id]!.crumb : [])].join(' › ')}</span>
-                </div>
-              )}
-              {game.uiTool === 'road' && <RoadPanel game={game} scope="town" compact />}
-              {game.uiTool === 'path' && <RoadPanel game={game} scope="course" compact />}
-              {game.tool === 'lane' && (
-                <Panel title="Upgrade roads" icon="up" desc="Click a straight run of road to take it one size up: gravel → street → road → arterial → six-lane; avenue → boulevard → grand. On the course: walking path → dirt path → cement slabs → paved cart path; gravel drive → paved → avenue. You pay only the difference.">
-                  <p className="text-xs text-slate-300">Right-click a one-way road to reverse it.</p>
-                </Panel>
-              )}
-              {game.tool === 'downgrade' && (
-                <Panel title="Downgrade roads" icon="down" desc="Click a straight run of road to take it one size down the same ladder. The difference is refunded.">
-                  <p className="text-xs text-slate-300">Right-click a one-way road to reverse it.</p>
-                </Panel>
-              )}
-              {game.tool === 'junction' && <JunctionPanel game={game} compact />}
-              {game.tool === 'bulldoze' && (
-                <Panel title="Bulldoze" icon="bulldozer">
-                  <p className="text-xs text-slate-300">Click an object to remove it (half its price is refunded). Click or drag along a road to tear it up piece by piece — the ends become cul-de-sacs and curbs, corners, crossings and markings redraw themselves instantly.</p>
-                </Panel>
-              )}
-              {game.tool === 'paint' && <PaintPanel game={game} />}
-              {game.uiTool === 'course' && <CoursePanel game={game} looks={looksOpen} onLooks={setLooks} />}
-              {game.uiTool === 'buildings' && <BuildingsPanel game={game} />}
-              {GREENKEEPING && game.tool === 'greenkeeping' && <GrassManagementPanel game={game} docked />}
-              {game.tool === 'props' && <PropsPanel game={game} />}
-              {game.tool === 'practice' && <PracticePanel game={game} />}
-              {game.tool === 'park' && <ParkPanel game={game} dev={dev} />}
-              {game.tool === 'toll' && <TollPanel game={game} />}
-              {game.tool === 'business' && <BusinessPanel game={game} />}
-              {game.tool === 'bus' && <BusPanel game={game} />}
-              {game.tool === 'select' && game.landMode && <LandPanel game={game} />}
-              {game.tool === 'select' && !game.landMode && <SelectPanel game={game} />}
+            {/* T255: a club tool's panel (and Select's) in the left tool panel; a town tool's is docked above the town footer (TownFooter) */}
+            {dock === 'side' && (
+            <div className={`glass tool-panel w-[330px] max-h-[calc(var(--vh-ui,100vh)-var(--hud-top,5.75rem)-8.25rem)] overflow-y-auto overflow-x-hidden p-3 ${sideFly || idle ? 'hidden' : ''}`} data-tool={game.uiTool} data-testid="tool-panel" data-dock="side">
+              {toolBody}
             </div>
+            )}
             {looksOpen && <MyLooksCard game={game} onClose={() => setLooks(false)} />}
           </div>
             </>;
@@ -647,9 +661,10 @@ export default function App() {
 
           {/* the hint bar, centred in the lane between the minimap's town chip and the stats card. Golf mode (T035): the first-run hint, with its Got it;
               and while a course surface is armed (T118), always the Course pill: what a click lays (the surface's disc and mark, the hole it joins, the
-              price a cell, the state's words) and how to switch or stop; no bar without either. T250: it stands above the town footer (--foot-top) */}
+              price a cell, the state's words) and how to switch or stop; no bar without either. T250: it stands above the town footer; T255: and above a
+              town tool's panel docked on it (--foot-stack) */}
           {(!gv || hint || courseHint || (game.tool === 'practice' && game.practice.kind)) && (
-          <div className="pointer-events-none absolute bottom-[calc(var(--foot-top,0px)+0.5rem)] left-[24.5rem] right-[15.5rem] z-20 flex flex-col items-center gap-1.5">
+          <div className="pointer-events-none absolute bottom-[calc(var(--foot-stack,0px)+0.5rem)] left-[24.5rem] right-[15.5rem] z-20 flex flex-col items-center gap-1.5">
             {(!gv || hint) && (
             <div className={`flex items-center gap-2 glass rounded-full! px-4 py-1.5 text-xs ${gv ? 'pointer-events-auto' : ''}`}>
               <Icon name="info" size={18} />
