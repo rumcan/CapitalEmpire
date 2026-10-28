@@ -220,6 +220,8 @@ function site(B: Build, home: boolean, angled: boolean) {
   B.put(pick(r, SITE_KIT.long), 1.6, D - 4);
   B.put(pick(r, SITE_KIT.storage), W - 2.2, D - 1.4);
   if (r() < 0.5) B.put(pick(r, JUNK), W / 2, D - 1.5);
+  // the cable spool (#776: T232 gave its spot to a heap and lost it), last, at a free spot, so every piece before it lies as it did
+  putClear(B, pick(r, SITE_KIT.spool), spots);
 }
 
 /** a vacant lot: a few weeds and a tree */
