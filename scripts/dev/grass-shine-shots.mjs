@@ -3,8 +3,10 @@
 // fairway, a green and a town lawn (?start=town) at 30% and 15%; a frame strip panning across the fairway at 30% (the highlight sliding over
 // the blades); and the numbers per source: the frame's draw time (synchronous: the draw then a 1 px read that waits for the GPU) and its GPU
 // time (EXT_disjoint_timer_query_webgl2, when the browser has it), the bake times, and the GPU bytes of the shine's layers.
-//   node scripts/dev/grass-shine-shots.mjs --base http://127.0.0.1:5186/ --out E:/ClaudeTemp/T262 [--only shots,strip,numbers]
-//     [--modes off,d,c,a,a4] [--spots fairway,green,lawn] [--look '{"strength":1}'] [--strip d] [--tag v2]
+//   node scripts/dev/grass-shine-shots.mjs --base http://127.0.0.1:5186/ --out E:/ClaudeTemp/T262 [--only shots,strip,flip,numbers] [--frames 20]
+//     [--start fixture=range20 (the page's query: the lawn spot needs the grown town's lots)] [--modes off,d,c,a,a4] [--spots fairway,green,lawn] [--look '{"strength":1}'] [--strip d] [--tag v2] [--dpr 2] [--amplify 20]
+// --amplify N: while the GPU time is measured every ground chunk is drawn N times over itself (gl.drawChunk), so the ground pass's cost (the
+// shine's shader) stands out from the rest of the frame on a fast GPU; the GPU result is then the ground pass's ms per frame x N plus the rest
 // Needs a dev server (vite) on --base. One headless Edge, closed when done; a fresh profile, so each start is a new game.
 import { chromium } from 'playwright-core';
 import sharp from 'sharp';
@@ -14,7 +16,7 @@ import { join } from 'node:path';
 const args = process.argv.slice(2), opt = (k, d) => { const i = args.indexOf(`--${k}`); return i >= 0 ? args[i + 1] : d; };
 const base = opt('base', 'http://127.0.0.1:5186/'), out = opt('out', 'output/grass-shine'), look = JSON.parse(opt('look', '{}')), tag = opt('tag', '') ? `-${opt('tag', '')}` : '';
 const only = new Set(opt('only', 'shots,strip,numbers').split(',')), modes = opt('modes', 'off,d,c,a,a4').split(','), spotsWanted = opt('spots', 'fairway,green,lawn').split(',');
-const stripMode = opt('strip', 'd'), zooms = opt('zooms', '0.3,0.15').split(',').map(Number);
+const start = opt('start', 'start=town'), stripMode = opt('strip', 'd'), zooms = opt('zooms', '0.3,0.15').split(',').map(Number), dpr = +opt('dpr', '1'), amplify = +opt('amplify', '1');
 const W = 1280, H = 800;
 mkdirSync(out, { recursive: true });
 const browser = await chromium.launch({ channel: 'msedge', headless: true, args: ['--enable-gpu', '--ignore-gpu-blocklist', '--use-angle=d3d11'] });
@@ -35,11 +37,11 @@ const setMode = async (page, m) => {
 };
 const report = { look, modes };
 try {
-  const ctx = await browser.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: 1 });
+  const ctx = await browser.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: dpr });
   const page = await ctx.newPage();
   page.on('pageerror', e => console.log('[pageerror]', e.message));
   page.on('console', m => { if (m.type() === 'error' || /grass shine/.test(m.text())) console.log('[console]', m.text().slice(0, 300)); });
-  await page.goto(`${base}?start=town&stamp=0`);
+  await page.goto(`${base}?${start}&stamp=0`, { timeout: 240000, waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => window.__game?.ready, null, { timeout: 240000 });
   await page.addStyleTag({ content: '* { visibility: hidden !important } canvas { visibility: visible !important }' });
   await page.evaluate(look => { const g = window.__game; g.prebake = () => {}; g.setSpeed(0); g.setShowGrid?.(false); window.__night = 0; g.nightAmount = () => window.__night; g.setShine(look); }, look);
@@ -61,7 +63,9 @@ try {
     }
     let lawn = null, area = 0;
     for (const ps of g.ground.lotPatches.values()) for (const p of ps) {
-      if (!p.lawn || p.lawn.share < 1) continue;
+      // a lot's grass lawn (its look state built or upgraded: painted-surfaces.ts STATE_LAWN), not an untended yard; a new town's block lawns
+      // wear the desert (painted-surfaces.json lawns), so the grown town's fixture has them (--start fixture=range20)
+      if (!p.lawn || p.lawn.share < 1 || p.lawn.z < 1 || p.lawn.rough || !['built', 'upgraded'].includes(p.lawn.st)) continue;
       let a = 0; const q = p.pts; for (let k = 0; k < q.length; k += 2) { const k2 = (k + 2) % q.length; a += q[k] * q[k2 + 1] - q[k2] * q[k + 1]; } a = Math.abs(a) / 2;
       if (a > area) { area = a; let x = 0, y = 0; for (let k = 0; k < q.length; k += 2) { x += q[k]; y += q[k + 1]; } lawn = { x: x / (q.length / 2), y: y / (q.length / 2), area: Math.round(a) }; }
     }
@@ -105,6 +109,29 @@ try {
     // and the same strip's frames whole, on, for a short flip-book
     report.strip = file;
   }
+  // ---- the pan capture (a flip-book, an animated WebP): the camera panning across the fairway at 30%, FLIP frames, each the whole
+  //      screen at half size, off on the left and stripMode on the right at the same camera
+  if (only.has('flip') && spots.fairway) {
+    const N = +opt('frames', '20'), z = 0.3, X = (spots.fairway.x - spots.fairway.y) * 64, Y = (spots.fairway.x + spots.fairway.y) * 32, sides = [];
+    for (const m of ['off', stripMode]) {
+      await setMode(page, m); const frames = [];
+      for (let i = 0; i < N; i++) {
+        const f = -0.3 + 0.6 * i / (N - 1);
+        await page.evaluate(([X, Y, f, z, W, H]) => { const g = window.__game; g.camEase = null; g.cam.z = z; g.cam.X = X + f * W / z; g.cam.Y = Y + f * 0.4 * H / z; }, [X, Y, f, z, W, H]);
+        await settle(page, i ? 300 : 900);
+        frames.push(await sharp(await page.screenshot({ type: 'png' })).resize(W / 2, H / 2).png().toBuffer());
+      }
+      sides.push(frames);
+    }
+    const lab = m => Buffer.from(`<svg width="${W / 2}" height="24" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="24" fill="#000" opacity="0.55"/><text x="8" y="17" font-family="Arial" font-size="15" fill="#fff">${m}</text></svg>`);
+    const both = [];
+    for (let i = 0; i < N; i++) both.push(await sharp({ create: { width: W + 6, height: H / 2, channels: 3, background: '#000' } }).composite([{ input: sides[0][i], left: 0, top: 0 }, { input: sides[1][i], left: W / 2 + 6, top: 0 }, { input: lab('off'), left: 0, top: 0 }, { input: lab(`grass shine on (${stripMode})`), left: W / 2 + 6, top: 0 }]).png().toBuffer());
+    const anim = sharp(both, { join: { animated: true } });
+    // (an animated WebP: a GIF of the same frames is three times its size)
+    const webp = join(out, `pan-fairway-30pct-${stripMode}${tag}.webp`);
+    await anim.webp({ quality: 80, delay: Array(N).fill(160), loop: 0 }).toFile(webp);
+    console.log(webp); report.flip = webp;
+  }
   // ---- the numbers, at the fairway: per source (three rounds, alternating) the bake times of the view (invalidateAll), the frame's draw time
   //      and GPU time (240 frames), and the shine's GPU bytes
   if (only.has('numbers') && spots.fairway) {
@@ -128,21 +155,25 @@ try {
           return { draw: { median: +ts[120].toFixed(2), p95: +ts[228].toFixed(2), mean: +(ts.reduce((a, b) => a + b, 0) / ts.length).toFixed(2) } };
         });
         // the GPU queries' results come a frame or two later
-        const gpu = await page.evaluate(async () => {
+        const gpu = await page.evaluate(async amplify => {
           const g = window.__game, gl = g.gl.gl, ext = gl.getExtension('EXT_disjoint_timer_query_webgl2'); if (!ext) return null;
-          cancelAnimationFrame(g.raf); const qs = [];
-          for (let i = 0; i < 120; i++) { const q = gl.createQuery(); gl.beginQuery(ext.TIME_ELAPSED_EXT, q); g.draw(performance.now()); gl.endQuery(ext.TIME_ELAPSED_EXT); qs.push(q); }
-          g.raf = requestAnimationFrame(g.frame);
+          const orig = g.gl.drawChunk; if (amplify > 1) g.gl.drawChunk = function (...a) { for (let k = 0; k < amplify; k++) orig.apply(this, a); };
+          // (a warm-up keeps the GPU's clocks up; each query times BATCH frames drawn back to back, so the result is ms per frame)
+          cancelAnimationFrame(g.raf); const qs = [], BATCH = 8, px = new Uint8Array(4);
+          for (let i = 0; i < 60; i++) g.draw(performance.now());
+          gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
+          for (let i = 0; i < 40; i++) { const q = gl.createQuery(); gl.beginQuery(ext.TIME_ELAPSED_EXT, q); for (let k = 0; k < BATCH; k++) g.draw(performance.now()); gl.endQuery(ext.TIME_ELAPSED_EXT); qs.push(q); }
+          g.gl.drawChunk = orig; g.raf = requestAnimationFrame(g.frame);
           const res = [];
           for (let tries = 0; tries < 200 && res.length < qs.length; tries++) {
             await new Promise(r => setTimeout(r, 16));
             if (gl.getParameter(ext.GPU_DISJOINT_EXT)) return { disjoint: true };
-            while (res.length < qs.length && gl.getQueryParameter(qs[res.length], gl.QUERY_RESULT_AVAILABLE)) res.push(gl.getQueryParameter(qs[res.length], gl.QUERY_RESULT) / 1e6);
+            while (res.length < qs.length && gl.getQueryParameter(qs[res.length], gl.QUERY_RESULT_AVAILABLE)) res.push(gl.getQueryParameter(qs[res.length], gl.QUERY_RESULT) / 1e6 / BATCH);
           }
           for (const q of qs) gl.deleteQuery(q);
           res.sort((a, b) => a - b);
           return res.length ? { median: +res[res.length >> 1].toFixed(3), p95: +res[Math.floor(res.length * 0.95)].toFixed(3), n: res.length } : null;
-        });
+        }, amplify);
         (report.frame[key] ??= []).push(t.draw); (report.gpu[key] ??= []).push(gpu);
         if (round === 0) report.mem[key] = await page.evaluate(() => { const g = window.__game; return { groundMB: +(g.ground.residentPx * 4 / 1048576).toFixed(1), shineMB: +(g.ground.shineBytes / 1048576).toFixed(2), bumpArrMB: +((g.ground.grassShine === 'c' ? g.gl.bumpArrBytes : 0) / 1048576).toFixed(2), chunks: [...g.ground.tiles.values()].filter(t => t.tex).length }; });
         console.log(key, JSON.stringify({ frame: t.draw, gpu, bake: report.bake[key].at(-1), mem: report.mem[key] }));

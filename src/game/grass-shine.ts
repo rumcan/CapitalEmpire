@@ -66,7 +66,7 @@ export function shineWeight(tex: string, family: string | null | undefined, weig
  *  side, along the sun's mirror from the screen's centre: nearer, the glint is smaller and slides faster as the camera pans), night (the share
  *  lost after dusk) */
 export interface ShineLook { strength: number; gloss: number; bump: number; eye: number; night: number }
-export const SHINE_LOOK: ShineLook = { strength: 1, gloss: 24, bump: 0.6, eye: 1.5, night: 0.9 };
+export const SHINE_LOOK: ShineLook = { strength: 0.8, gloss: 24, bump: 0.6, eye: 1.5, night: 0.9 };
 const clamp = (v: number, a: number, b: number) => (v < a ? a : v > b ? b : v);
 const num = (v: unknown, d: number, a: number, b: number) => (typeof v === 'number' && Number.isFinite(v) ? clamp(v, a, b) : d);
 export function clampShineLook(s: Partial<ShineLook> | null | undefined): ShineLook {
@@ -140,7 +140,7 @@ export const GRASS_SHINE_GLSL = `vec3 grassShine(vec3 c, float z, vec2 slope, fl
   vec3 H = normalize(L + V);
   float s = pow(max(dot(N, H), 0.0), uShineLook.x);
   // the blade tops (above the local mean) and green pixels only: a path, sand or a shadow laid over the grass takes none
-  float tip = smoothstep(-0.3, 1.2, z), key = smoothstep(0.004, 0.04, c.g - max(c.r * 0.93, c.b));
+  float tip = mix(0.3, 1.0, smoothstep(-1.0, 1.2, z)), key = smoothstep(0.004, 0.04, c.g - max(c.r * 0.93, c.b));
   // T110's textured light (its own colour squared), half of it whitened: a sheen is the sun's colour more than the grass's
   float l = dot(c, vec3(0.3, 0.59, 0.11));
   return c + (w * k * s * tip * key * ${g(SHINE_AMOUNT)}) * mix(c * c, vec3(1.3 * l * l), ${g(SHINE_WHITE)}) * vec3(${SHINE_TINT.map(g).join(', ')});

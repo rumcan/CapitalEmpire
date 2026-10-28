@@ -390,6 +390,9 @@ export class GLRenderer {
     if (!gl) throw new Error('WebGL2 is not available');
     this.gl = gl;
     this.quad = this.program(VS_QUAD, FS_QUAD, ['uRect', 'uCam', 'uScreen', 'uUV', 'uTex', 'uMask', 'uMode', 'uAlpha', 'uSpecTex', 'uSpec', 'uGlossTex', 'uGloss', 'uShineMask', 'uShineBump', 'uBumpArr', 'uShine', 'uShineLook', 'uBumpFam', 'uBumpPerm']);
+    // (T262: the grass shine's samplers on their own units, once: 4 its mask, 5 its bump layer, 6 the families' bump maps)
+    gl.useProgram(this.quad.p); gl.uniform1i(this.quad.u.uShineMask!, 4); gl.uniform1i(this.quad.u.uShineBump!, 5); gl.uniform1i(this.quad.u.uBumpArr!, 6);
+    this.emptyArr = gl.createTexture()!; gl.bindTexture(gl.TEXTURE_2D_ARRAY, this.emptyArr); gl.texStorage3D(gl.TEXTURE_2D_ARRAY, 1, gl.R8, 1, 1, 1); gl.bindTexture(gl.TEXTURE_2D_ARRAY, null);
     this.shadow = this.program(VS_SHADOW, FS_SHADOW, ['uCam', 'uScreen', 'uStrength', 'uShift', 'uMinPx']);
     this.point = this.program(VS_POINT, FS_POINT, ['uCam', 'uScreen', 'uSize', 'uSoft']);
     this.vec = this.program(VS_VEC, FS_VEC, ['uCam', 'uScreen', 'uShear', 'uMul', 'uFar', 'uVerts', 'uIdx', 'uMinPx']);
@@ -474,7 +477,8 @@ export class GLRenderer {
   shineOf: ((tex: WebGLTexture) => { mask: WebGLTexture; bump: WebGLTexture | null } | null) | null = null;
   /** T262 (source 3): every bump map tile in one R8 array with its mips (bumpArray), or null until loaded; its GPU bytes */
   bumpArr: WebGLTexture | null = null; bumpArrBytes = 0;
-  private emptyArr: WebGLTexture | null = null;
+  /** an empty R8 texture array for unit 6 while no bump maps are drawn */
+  private emptyArr!: WebGLTexture;
   /** T262: the families' bump tiles (pictures w x h each, in layer order) into one R8 texture array with its mips */
   bumpArray(pics: ImageBitmap[], w: number, h: number) {
     const gl = this.gl, t = gl.createTexture()!, levels = Math.floor(Math.log2(Math.max(w, h))) + 1;
@@ -587,11 +591,12 @@ export class GLRenderer {
     // T262: the grass shine (its mask, its bump layer or the families' bump maps), units 4 to 6
     const so = this.shine && this.shine.gain > 0 && this.shineOf ? this.shineOf(tex) : null, sh = so && (this.shine!.src !== 1 || so.bump) && (this.shine!.src !== 3 || this.bumpArr) ? this.shine : null;
     gl.uniform4f(pr.u.uShine, sh ? sh.inner : 0, sh ? sh.outer : 1, sh ? sh.gain : 0, sh ? sh.src : 0);
+    // (units 4 to 6 always hold a texture of their sampler's kind, the empty ones while the shine is off: ANGLE checks every sampler's unit at
+    // the draw, read or not, and another pass may have left an integer texture there; the sampler units themselves are set once)
     if (sh) { gl.uniform4f(pr.u.uShineLook, sh.gloss, sh.bump, sh.eye, sh.bumpK); gl.uniform4fv(pr.u.uBumpFam, sh.fam); gl.uniform4fv(pr.u.uBumpPerm, sh.perm); }
-    gl.activeTexture(gl.TEXTURE4); gl.bindTexture(gl.TEXTURE_2D, sh ? so!.mask : this.emptyTex); gl.uniform1i(pr.u.uShineMask, 4);
-    gl.activeTexture(gl.TEXTURE5); gl.bindTexture(gl.TEXTURE_2D, sh && so!.bump ? so!.bump : this.emptyTex); gl.uniform1i(pr.u.uShineBump, 5);
-    if (!this.emptyArr) { this.emptyArr = gl.createTexture()!; gl.bindTexture(gl.TEXTURE_2D_ARRAY, this.emptyArr); gl.texStorage3D(gl.TEXTURE_2D_ARRAY, 1, gl.R8, 1, 1, 1); }
-    gl.activeTexture(gl.TEXTURE6); gl.bindTexture(gl.TEXTURE_2D_ARRAY, sh && sh.src === 3 && this.bumpArr ? this.bumpArr : this.emptyArr); gl.uniform1i(pr.u.uBumpArr, 6); gl.activeTexture(gl.TEXTURE3);
+    gl.activeTexture(gl.TEXTURE4); gl.bindTexture(gl.TEXTURE_2D, sh ? so!.mask : this.emptyTex);
+    gl.activeTexture(gl.TEXTURE5); gl.bindTexture(gl.TEXTURE_2D, sh && so!.bump ? so!.bump : this.emptyTex);
+    gl.activeTexture(gl.TEXTURE6); gl.bindTexture(gl.TEXTURE_2D_ARRAY, sh && sh.src === 3 && this.bumpArr ? this.bumpArr : this.emptyArr);
     gl.activeTexture(gl.TEXTURE0);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4); this.stats.draws++;
   }
