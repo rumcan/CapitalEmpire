@@ -41,6 +41,7 @@ import { LIBRARY } from '../library';
 import { drawnAsStandIn } from '../newart';
 import { GAS_SHOP, GAS_SHOP_FALLBACK, WHEEL_STOP, gasPlan, isCanopy, isOpenStructure, matchBays } from './gas-station';
 import { LATEST, LOT_MODELS } from './lot-models';
+import { lotPickup, parkedAs } from '../vehicles';
 import { KIT_FLOWERS, KIT_HEDGE, KIT_SHRUBS } from '../kit';
 export { isCarPark, type Composition, type ComposeState, type LotGeom, type Placed, type PresetDrop } from './compose-core';
 
@@ -424,13 +425,18 @@ function fromPreset(B: Build, lot: LotGeom, st: ComposeState, p: { preset: LotPr
   fit.props.forEach((q, k) => {
     // T154 Phase 2: on a road at 45 degrees a building with a screen-axis set faces its street (preset-art.ts drawnView), else its view is turned
     // T219: an iconic place draws a fixed picture (art-fix.ts) as its facing turns it, on its true footprint; a car's scale is its owner size (ownerScaleOf), the engine draws it at CAR_SCALE times that
-    const s = q.scale * ownerScaleOf(q.id), fx = B.artFix ? fixedArt(q.id, f.q + q.view, s) : null;
-    const t = fx ? { id: fx.id, flip: false, diag: false } : drawnView(q.id, f, q.view), it = BY.get(t.id);
+    // T236: a farm's or a junk yard's yellow pickup is the rusty one on about half of them (vehicles.ts lotPickup)
+    const qid = preset.use === 'farm' || st.use === LU.IND ? lotPickup(q.id, st.seed, k) : q.id;
+    const s = q.scale * ownerScaleOf(qid), fx = B.artFix ? fixedArt(qid, f.q + q.view, s) : null;
+    const t = fx ? { id: fx.id, flip: false, diag: false } : drawnView(qid, f, q.view), it = BY.get(t.id);
     if (!it) return;
-    const car = it.cat === 'Vehicles';
+    // (a car as the preset has it: the rusty pickup in a yellow one's place is thinned as it would have been)
+    const car = qid === q.id ? it.cat === 'Vehicles' : BY.get(q.id)?.cat === 'Vehicles';
     if (car && (B.noCars || (st.decline === 1 && B.r() >= CAR_KEEP_D1))) { B.drops?.push({ preset: preset.id, prop: fit.from[k]!, id: t.id, why: B.noCars ? 'no cars on a derelict lot' : 'cars thinned on a shabby lot' }); return; }
+    // T236: a parked wagon takes the car park mix's vehicle for its spot (vehicles.ts parkedAs: at the wagon's size, standing where it stood)
+    const c = toWorld(f, q.x, q.y), pa = fx ? null : parkedAs(t.id, s, footprintOf(t.id, s, t.flip), c.x, c.y);
     // a whole preset's prop in front of the lot is a street item (the verge: done() keeps it there, as it keeps a procedural one)
-    const item = B.atW({ id: t.id, s, flip: t.flip, h: fx ? fx.h : footprintOf(t.id, s, t.flip) }, toWorld(f, q.x, q.y), { ...(fx ? { foot: true } : {}), plant: it.kind === 'tree' || it.kind === 'bush', ...(fit.from[k]! >= 0 ? { from: { preset: preset.id, prop: fit.from[k]! } } : { paved: true }), street: preset.whole === true && q.y < 0, ...(fit.standIn?.[k] ? { standIn: fit.standIn[k] } : {}), ...(t.diag ? { diag: true } : {}) });
+    const item = B.atW({ id: pa ? pa.id : t.id, s, flip: t.flip, h: fx ? fx.h : pa!.h }, c, { ...(fx ? { foot: true } : {}), plant: it.kind === 'tree' || it.kind === 'bush', ...(fit.from[k]! >= 0 ? { from: { preset: preset.id, prop: fit.from[k]! } } : { paved: true }), street: preset.whole === true && q.y < 0, ...(fit.standIn?.[k] ? { standIn: fit.standIn[k] } : {}), ...(t.diag ? { diag: true } : {}) });
     if (item && !item.fence && !item.wheel) ups++;
     if (isBuilding(it)) { const fp = footprintOf(t.diag ? t.id : q.id, s, false), hw = t.diag ? (fp[2] - fp[0]) / (2 * Math.SQRT2) : (q.view % 2 ? fp[3] - fp[1] : fp[2] - fp[0]) / 2; if (hw > big) { big = hw; main = [q.x - hw, q.x + hw]; } }
   });
@@ -540,8 +546,8 @@ function generatedItems(B: Build, lot: LotGeom, st: ComposeState, p: { preset: L
   for (const it of layoutOf(lot, p, state, hi, group)) {
     if (it.kind === 'decal') { decalMarks(B, f, [{ id: it.id, x: it.x, y: it.y, scale: 1, alpha: 1 }]); continue; }
     if (it.kind === 'car' && (B.noCars || (st.decline === 1 && B.r() >= CAR_KEEP_D1))) continue;
-    const t = turned(it.id, f.q), s = ownerScaleOf(it.id);
-    B.atW({ id: t.id, s, flip: t.flip, h: footprintOf(t.id, s, t.flip) }, toWorld(f, it.x, it.y), { plant: it.kind === 'tree' || it.kind === 'bush' || it.kind === 'flowerbed', ...(it.kind === 'car' ? { paved: true } : {}) });
+    const t = turned(it.id, f.q), s = ownerScaleOf(it.id), c = toWorld(f, it.x, it.y), pa = parkedAs(t.id, s, footprintOf(t.id, s, t.flip), c.x, c.y); // (T236: a parked wagon takes the mix's vehicle)
+    B.atW({ id: pa.id, s, flip: t.flip, h: pa.h }, c, { plant: it.kind === 'tree' || it.kind === 'bush' || it.kind === 'flowerbed', ...(it.kind === 'car' ? { paved: true } : {}) });
   }
 }
 /** the items the generator lays on a house lot's base (generatedItems; preset frame, tiles): seeded by the lot, with the shipped model and its taste

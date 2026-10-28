@@ -66,7 +66,8 @@ import { inQuad, type CurbDef } from './event/curb';
 import { CAR_SCALE, SpriteTiles, spriteRect, VECTOR, type Drawable } from './sprites';
 import { releaseVectorMeshData, vectorMeshData } from './shadow-vector';
 import { readSave, writeSave, withTourney, clearSave, backupTownSlot, SAVE_VERSION, segRec, exportSaveBytes, importSaveBytes, listSaveBackups, readBackup, deleteBackup, type SaveV5 } from './save';
-import { CAR_COLOURS, carHeading, facings, parkedCar } from './traffic';
+import { CAR_COLOURS, carHeading, facings } from './traffic';
+import { bayCar, bayFoot, isWagon } from './vehicles';
 import { DayBook, clubCardView, dayCourse, dayPace, dayPlan, feeScale, normalizeDaySave, seasonPaceRep, type ClubCardView, type DayInputs, type DayRoster } from './golf/everyday';
 import { DayView, type ClubGround } from './golf/everydayview';
 import { carOwnerScale } from './ext/car-art';
@@ -4704,10 +4705,11 @@ export class Game {
     const want = pk && v ? workerShown(v.parked, n) : 0;
     for (let i = 0; i < want; i++) {
       const key = `park:${id}:${i}`, have = this.parkCars.get(key);
-      const bay = pk!.bays[workerBay(i, n, shared)]!, facing = parkedCar(i, bay.dir), x = bay.x - facing.ox, y = bay.y - facing.oy;
-      if (have && this.props.has(have) && have.x === x && have.y === y) continue;
+      // T236: the bay's car from the vehicle mix (vehicles.ts bayCar: always the same vehicle in the same bay, a picture it has at the bay's heading)
+      const bay = pk!.bays[workerBay(i, n, shared)]!, facing = bayCar(bay.dir, bay.x, bay.y), x = bay.x - facing.ox, y = bay.y - facing.oy;
+      if (have && this.props.has(have) && have.x === x && have.y === y && have.item === facing.item) continue;
       if (have && this.props.has(have)) this.removeProp(have);
-      this.parkCars.set(key, this.addProp(facing.item, x, y, facing.flip, facing.size, key));
+      this.parkCars.set(key, this.addProp(facing.item, x, y, facing.flip, facing.size, key, isWagon(facing.item) ? undefined : { foot: bayFoot(facing, bay.x, bay.y) }));
     }
     for (let i = want; ; i++) { const key = `park:${id}:${i}`, p = this.parkCars.get(key); if (!p) break; this.removeProp(p); this.parkCars.delete(key); }
   }
