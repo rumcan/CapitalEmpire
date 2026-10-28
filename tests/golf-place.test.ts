@@ -111,7 +111,7 @@ test('golfTownClasses: the 8 legs of the main axis are avenues, every other leg 
 
 test('T237: the club car park is never behind the clubhouse in screen space; beside it on a spur off the drive where the drive side is', () => {
   // each side of the town by water on the other three: the course lies that way (dir 0 north .. 3 west)
-  const only: ((x: number, y: number) => boolean)[] = [(x, y) => y > 860, (x, y) => x < 1180, (x, y) => y < 1180, (x, y) => x > 860];
+  const only: ((x: number, y: number) => boolean)[] = [(_x, y) => y > 860, x => x < 1180, (_x, y) => y < 1180, x => x > 860];
   const dirs = new Set<number>();
   for (const pred of only) {
     const cls = water((x, y) => pred(x, y) && !(x >= 860 && x < 1190 && y >= 860 && y < 1190)), p = placeCourse(cls, CENTRE, endsOf(cls, CENTRE), 1);

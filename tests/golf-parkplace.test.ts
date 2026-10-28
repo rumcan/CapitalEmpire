@@ -76,7 +76,7 @@ test('a set-back range (T237): its junction on the road SETBACK further out, its
   const neu = rangeScene(plot, f, paved({ ...defaultRangeBiz(), setback: SETBACK })), old = rangeScene(plot, f, paved(defaultRangeBiz()));
   assert.deepEqual(neu.J, P(72, -NEAR - SETBACK));
   assert.deepEqual(old.J, P(72, -NEAR));
-  const [u0, u1, v0, v1] = rangeLot(SETBACK);
+  const [u0, , v0, v1] = rangeLot(SETBACK);
   assert.ok(v1 < 0 && v0 === -SETBACK, 'the lot in the strip, short of the plot');
   assert.deepEqual(neu.anchors.lot[0], P(u0, v0));
   const lamps = neu.pieces.filter(p => p.key.startsWith('lot-lamp'));
