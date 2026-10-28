@@ -7,7 +7,7 @@ import { PAINT_TEXES, isPaintPhoto, type PaintTex } from './paint';
 import { exposeClip, exposeDraw, exposed, exposureOf } from './exposure';
 import { POOL_ANCHOR, PPM, SLAB_CELL } from './ground-art';
 import { POOL_SHARES, SPEC_MASK_K } from './lamp-reflect';
-import { GLOSS, RIVER_BAND, RIVER_SWAMP, SWAMP, SwampField, glossTile, riverStreams, swampStreams } from './swamp';
+import { GLOSS, RIVER_BAND, RIVER_SWAMP, SWAMP, SwampField, glossTile, riverStreams, swampStreams, type BandAlpha } from './swamp';
 import { RIVER_CUT, drawRiverCut } from './river-cut';
 import { REFLECT, SITE, WaterField, fieldPad, fieldRes, glintImage, hexRgb, riverLook, waterImages, waterLookActive, waterLookOf, type WaterLook } from './water-look';
 import { LOT_DECALS } from './lot-decals';
@@ -484,6 +484,10 @@ export class GroundPainter {
   /** T199: the swamp band of the bake in progress (its cover over the chunk's tile box, res samples a tile, from x0 y0), which the living ground
    *  leaves alone; null when the chunk lays none */
   private swampNow: { cv: Cnv; x0: number; y0: number; res: number } | null = null;
+  /** T265: the river's band over the bake in progress, as its field made it (before the cut; null a: none on this chunk), so the fallen leaves
+   *  read it there instead of asking the field point by point (each new lattice point of a point query costs a pass over the river's
+   *  segments: thousands under a belt's trees); null outside a ground chunk's bake */
+  private riverNow: { a: BandAlpha | null; x0: number; y0: number; res: number } | null = null;
   /** T199: the gloss mask of the bake in progress (a GLOSS.maskK-th of the chunk's size each way, premultiplied as a canvas is: alpha the
    *  swamp's pools' gloss, colour each pool's local mean colour times it; gl.ts glossLight lights the pools by it), made only with specCam on
    *  where the chunk lays the swamp's tile set, or (T230, waterOver) any pond or river; null otherwise */
@@ -1457,7 +1461,7 @@ export class GroundPainter {
     this.chunkNow = { key: `${lite ? 'm' : 'g'}${i},${j}@${L}`, L, box, M, Minv, W, H }; this.toned.clear(); this.bakeKeys.clear(); this.tilesUsed = false; this.provisional = false;
     // T186: the shade mask (a quarter of the chunk's size), white (no shade) until a shade is laid on it; none for a district chunk (its
     // sprites' shadows are a few px: the far meshes)
-    this.specMask = null; this.glossMask = null; this.swampNow = null; this.waterNow = undefined;
+    this.specMask = null; this.glossMask = null; this.swampNow = null; this.waterNow = undefined; this.riverNow = null;
     if (lite) this.shadeMask = null;
     else { const mc = new OffscreenCanvas(Math.max(1, Math.ceil(W / SHADE_MASK_K)), Math.max(1, Math.ceil(H / SHADE_MASK_K))), mg = mc.getContext('2d')!; mg.fillStyle = '#fff'; mg.fillRect(0, 0, mc.width, mc.height); this.shadeMask = { cv: mc, g: scaledContext(mg, 1 / SHADE_MASK_K), used: false }; }
     const minW = 1 / (TILE_PX * L), net = this.net.view([tx0 - 8, ty0 - 8, tx1 + 8, ty1 + 8], !lite), tex = this.tex;
@@ -1495,6 +1499,7 @@ export class GroundPainter {
     // T265: and the river's band (swamp.ts RIVER_BAND, asked of its field alike), cut short of the roads, bridges, lots, painted areas and the
     //      course (riverCut), merged with the streams' into one band (swampBand): one layer, one gloss, one cover the living ground leaves alone
     const sw = this.swampOn() ? this.swampField.alpha(tx0, ty0, bw, bh, cres) : null, rres = Math.min(cres, RIVER_RES), rv = this.riverSwampOn() ? this.riverField.alpha(tx0, ty0, bw, bh, rres) : null;
+    if (this.riverSwampOn()) this.riverNow = { a: rv, x0: tx0, y0: ty0, res: rres };
     const sband = sw || rv ? this.swampBand(sw, rv, tx0, ty0, cres, rv ? this.riverCut(net, rv.box, lite) : null, rres) : null;
     // (T265: the swamp's tile set straight through the band, swampLayer: no composed buffer a chunk, whose room in the cache is the grass's; a
     //  painted look composed and laid as before)
@@ -3662,7 +3667,12 @@ export class GroundPainter {
     const blocked = (x: number, y: number) => {
       if (x < 0 || y < 0 || x >= MAP || y >= MAP || this.terrain[Math.floor(y) * MAP + Math.floor(x)]! > TC.PATCH) return true;
       if (swampy && this.swampField.cover(x, y) > 0.5) return true; // (T199: the streams' swamp is water too)
-      if (riverSwampy && this.riverField.cover(x, y) > 0.5) return true; // (T265: and the river's)
+      // (T265: and the river's: from the bake's own band where it has one, nearest sample)
+      if (riverSwampy) {
+        const rn = this.riverNow;
+        if (!rn) { if (this.riverField.cover(x, y) > 0.5) return true; }
+        else if (rn.a) { const u = Math.floor((x - rn.x0) * rn.res), v = Math.floor((y - rn.y0) * rn.res); if (u >= 0 && v >= 0 && u < rn.a.W && v < rn.a.H && rn.a.data[(v * rn.a.W + u) * 4 + 3]! > 127) return true; }
+      }
       for (const c of courses) if (courseCovers(c, x, y)) return true;
       for (const q of off) if (x >= q.b[0] && x <= q.b[2] && y >= q.b[1] && y <= q.b[3] && inPoly(q.pts, x, y)) return true;
       return false;

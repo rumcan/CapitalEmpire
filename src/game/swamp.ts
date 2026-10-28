@@ -141,6 +141,8 @@ const ALPHA_MEMO = 48;
 /** a band's cover over a tile box (SwampField alpha) */
 export interface BandAlpha { data: Uint8ClampedArray; W: number; H: number; box: [number, number, number, number] }
 const NONE: readonly number[] = [];
+/** T265: the lattice's scratch of each segment's distances (grown as needed, never shrunk) */
+let LAT_D = new Float64Array(1 << 16);
 
 /** segment records: ax ay bx by (tiles), the half widths at a and b, then the box (grown by the widest half width, SOFT_OUT and the soft
  *  union's reach) */
@@ -225,15 +227,17 @@ export class SwampField {
    *  segment visits the points its box holds (no point tests every segment), first for the nearest distance, then for the soft sum in the
    *  list's order, so every value is edge()'s exactly */
   private lattice(list: readonly number[], i0: number, j0: number, ni: number, nj: number, st: number, H: Float64Array | null = null): Float64Array {
-    const s = this.segs, L = this.look, M = new Float64Array(ni * nj).fill(Infinity), S = new Float64Array(ni * nj);
-    for (const i of list) {
-      const a = Math.max(0, Math.ceil(s[i + 6]! / st) - i0), b = Math.min(ni - 1, Math.floor(s[i + 8]! / st) - i0), c = Math.max(0, Math.ceil(s[i + 7]! / st) - j0), d = Math.min(nj - 1, Math.floor(s[i + 9]! / st) - j0);
-      for (let y = c; y <= d; y++) for (let x = a; x <= b; x++) { const k = y * ni + x, v = this.segDist(i, (i0 + x) * st, (j0 + y) * st); if (v < M[k]!) { M[k] = v; if (H) H[k] = this.segHw(i, (i0 + x) * st, (j0 + y) * st); } }
-    }
-    for (const i of list) {
-      const a = Math.max(0, Math.ceil(s[i + 6]! / st) - i0), b = Math.min(ni - 1, Math.floor(s[i + 8]! / st) - i0), c = Math.max(0, Math.ceil(s[i + 7]! / st) - j0), d = Math.min(nj - 1, Math.floor(s[i + 9]! / st) - j0);
-      for (let y = c; y <= d; y++) for (let x = a; x <= b; x++) { const k = y * ni + x, m = M[k]!; if (!(m < L.softOut)) continue; const v = this.segDist(i, (i0 + x) * st, (j0 + y) * st) - m; if (v < L.softReach) S[k] += Math.exp(-v / L.soft); }
-    }
+    const s = this.segs, L = this.look, n = ni * nj, M = new Float64Array(n).fill(Infinity), S = new Float64Array(n);
+    // (T265: each segment's distances kept from the first pass for the second, so each is worked out once: the same values, half the work)
+    const need = list.length * n; if (LAT_D.length < need) LAT_D = new Float64Array(Math.max(need, LAT_D.length * 2)); const D = LAT_D;
+    list.forEach((i, li) => {
+      const a = Math.max(0, Math.ceil(s[i + 6]! / st) - i0), b = Math.min(ni - 1, Math.floor(s[i + 8]! / st) - i0), c = Math.max(0, Math.ceil(s[i + 7]! / st) - j0), d = Math.min(nj - 1, Math.floor(s[i + 9]! / st) - j0), o = li * n;
+      for (let y = c; y <= d; y++) for (let x = a; x <= b; x++) { const k = y * ni + x, v = this.segDist(i, (i0 + x) * st, (j0 + y) * st); D[o + k] = v; if (v < M[k]!) { M[k] = v; if (H) H[k] = this.segHw(i, (i0 + x) * st, (j0 + y) * st); } }
+    });
+    list.forEach((i, li) => {
+      const a = Math.max(0, Math.ceil(s[i + 6]! / st) - i0), b = Math.min(ni - 1, Math.floor(s[i + 8]! / st) - i0), c = Math.max(0, Math.ceil(s[i + 7]! / st) - j0), d = Math.min(nj - 1, Math.floor(s[i + 9]! / st) - j0), o = li * n;
+      for (let y = c; y <= d; y++) for (let x = a; x <= b; x++) { const k = y * ni + x, m = M[k]!; if (!(m < L.softOut)) continue; const v = D[o + k]! - m; if (v < L.softReach) S[k] += Math.exp(-v / L.soft); }
+    });
     for (let k = 0; k < M.length; k++) { const m = M[k]!; M[k] = m < L.softOut ? this.softEdge(m, S[k]!) : L.out; }
     return M;
   }
