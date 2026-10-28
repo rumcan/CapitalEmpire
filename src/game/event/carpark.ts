@@ -19,6 +19,9 @@ export interface CarParkDef {
   /** T239: an unpaved lot (the range start's car park before it is paved): packed dirt or gravel, its cars in loose rows (golf/rangelot.ts
    *  looseBays: fewer bays, unmarked, a little askew); absent: paved */
   ground?: LooseGround;
+  /** T237: the golf layout (lotPlan): the rows in pairs about their aisles from the frontage edge in, every bay nose-in off its aisle, a cross
+   *  aisle at the far end joining the aisles, and a mouth through the first row at each entrance; absent: the first version's rows (bayGrid) */
+  cross?: true;
 }
 /** a bay: its centre (world tiles), its facing (0 +x, 1 +y, 2 -x, 3 -y: the nearest of the four to its heading), its heading (hx, hy) and the row
  *  direction (tx, ty) along the frontage (both unit vectors, world) */
@@ -163,11 +166,123 @@ export function bayGrid(d: CarParkDef, side: 0 | 1 | 2 | 3, entrances: Pt[]): Ba
   return keyed.map(k => k.b);
 }
 
+/** T237: the golf layout of a car park (CarParkDef.cross) in its own frame: t along the frontage (0..L), q the depth from the frontage edge
+ *  (0..D). Rows of bays in units of [row][aisle][row] from the frontage edge in (each row opens onto the aisle beside it, so every bay is parked
+ *  nose-in off an aisle), and a last [row][aisle] where a unit no longer fits; the bays a row (n, BAY_W / sin(bay) apart from 1 tile in) stop
+ *  short of the cross aisle at the far end (t in [L - AISLE, L]), which joins the aisles; the entrances' mouths (their t) cut the first row */
+export interface LotPlan {
+  L: number; D: number; pitch: number; depth: number; n: number;
+  /** each row's depth span, its aisle (index into aisles) and the way a car moves into its bays (+1: deeper, its aisle on the frontage side) */
+  rows: { q0: number; q1: number; aisle: number; into: 1 | -1 }[];
+  /** the aisles' centre lines (q) */
+  aisles: number[];
+  /** the cross aisle's centre line (t) and the entrances' mouths (t, sorted) */
+  cross: number; mouths: number[];
+}
+/** a car park's mouth through its first row (tiles along the frontage, either side of an entrance) */
+export const MOUTH_HALF = 2.25;
+/** the golf layout's plan of park d on frontage side `side` with its entrances (world: their t is read in the park's frame) */
+export function lotPlan(d: CarParkDef, side: 0 | 1 | 2 | 3, entrances: Pt[]): LotPlan {
+  const vert = side % 2 === 0, { s, c } = BAY_SC[d.bay ?? 90], pitch = BAY_W / s, depth = BAY_D * s + BAY_W * c;
+  const L = vert ? d.h : d.w, D = vert ? d.w : d.h, n = Math.max(0, Math.floor((L - 2 - AISLE) / pitch));
+  const rows: LotPlan['rows'] = [], aisles: number[] = [];
+  let q = 0;
+  while (q + 2 * depth + AISLE <= D + 1e-9) {
+    aisles.push(q + depth + AISLE / 2);
+    rows.push({ q0: q, q1: q + depth, aisle: aisles.length - 1, into: -1 }, { q0: q + depth + AISLE, q1: q + 2 * depth + AISLE, aisle: aisles.length - 1, into: 1 });
+    q += 2 * depth + AISLE;
+  }
+  if (q + depth + AISLE <= D + 1e-9) { aisles.push(q + depth + AISLE / 2); rows.push({ q0: q, q1: q + depth, aisle: aisles.length - 1, into: -1 }); }
+  const mouths = entrances.map(e => planOf(d, side, e).t).sort((a, b) => a - b);
+  return { L, D, pitch, depth, n, rows, aisles, cross: L - AISLE / 2, mouths };
+}
+/** the world point of (t, q) in the plan's frame on frontage side `side` of park d (q from the frontage edge in) */
+export function planPoint(d: CarParkDef, side: 0 | 1 | 2 | 3, t: number, q: number): Pt {
+  const vert = side % 2 === 0, edge = side === 0 ? d.w : side === 1 ? d.h : 0, sg = side === 0 || side === 1 ? -1 : 1;
+  return toWorld(d, vert ? { x: edge + sg * q, y: t } : { x: t, y: edge + sg * q });
+}
+/** the plan's (t, q) of world point p in park d on side `side` */
+export function planOf(d: CarParkDef, side: 0 | 1 | 2 | 3, p: Pt): { t: number; q: number } {
+  const l = toLocal(d, p), vert = side % 2 === 0;
+  return vert ? { t: l.y, q: side === 0 ? d.w - l.x : l.x } : { t: l.x, q: side === 1 ? d.h - l.y : l.y };
+}
+/** the golf layout's bays (lotPlan): each row's n bays nose-in off its aisle (heading into the bay, away from the aisle), the first row's bays in
+ *  an entrance's mouth left out; sorted by the distance to the nearest entrance (ties: the row order) */
+function crossGrid(d: CarParkDef, side: 0 | 1 | 2 | 3, entrances: Pt[]): Bay[] {
+  const P = lotPlan(d, side, entrances), vert = side % 2 === 0, T: Pt = vert ? { x: 0, y: 1 } : { x: 1, y: 0 }, F = parkFrame(d), { s, c } = BAY_SC[d.bay ?? 90];
+  const bays: Bay[] = [];
+  P.rows.forEach((r, ri) => {
+    // the car's heading: into the bay, deeper (away from the frontage: OUT[side + 2]) or toward the frontage (OUT[side]), turned toward T at an angle
+    const f = OUT[r.into > 0 ? (side + 2) % 4 : side]!, hw = vecW(F, s * f.x + c * T.x, s * f.y + c * T.y), tw = vecW(F, T.x, T.y);
+    let wd = 0, best = -Infinity;
+    for (let k = 0; k < 4; k++) { const dot = hw.x * OUT[k]!.x + hw.y * OUT[k]!.y; if (dot > best) { best = dot; wd = k; } }
+    for (let k = 0; k < P.n; k++) {
+      const t = 1 + (k + 0.5) * P.pitch;
+      if (ri === 0 && P.mouths.some(m => Math.abs(t - m) < MOUTH_HALF + P.pitch / 2)) continue;
+      const p = planPoint(d, side, t, (r.q0 + r.q1) / 2);
+      bays.push({ x: p.x, y: p.y, dir: wd as 0 | 1 | 2 | 3, hx: hw.x, hy: hw.y, tx: tw.x, ty: tw.y });
+    }
+  });
+  const keyed = bays.map(b => { let m = Infinity; for (const e of entrances) m = Math.min(m, Math.hypot(b.x - e.x, b.y - e.y)); return { b, m }; });
+  keyed.sort((p, q) => p.m - q.m);
+  return keyed.map(k => k.b);
+}
+/** the row of the golf layout a point stands in (by its depth), or the first */
+function rowAt(P: LotPlan, q: number): LotPlan['rows'][number] | undefined { return P.rows.find(r => q >= r.q0 - 1e-6 && q <= r.q1 + 1e-6) ?? P.rows[0]; }
+/** T237: the way a car drives from its car park's mouth to bay b (world points, the golf layout: lotPlan): from the frontage edge at the nearest
+ *  entrance in through the first row to its aisle, along the aisles (by the cross aisle to another one) to the aisle point in front of b. The
+ *  car parks nose-in from there, and leaves backing out to it and the same way back. Empty for a car park without the golf layout */
+export function bayDrive(pk: CarPark, b: Pt): Pt[] {
+  if (!pk.cross) return [];
+  const P = lotPlan(pk, pk.side, pk.entrances), at = planOf(pk, pk.side, b), r = rowAt(P, at.q);
+  if (!r || !P.mouths.length) return [];
+  const qa = P.aisles[r.aisle]!, q0 = P.aisles[0]!, m = P.mouths.reduce((a, x) => (Math.abs(x - at.t) < Math.abs(a - at.t) ? x : a), P.mouths[0]!);
+  const W = (t: number, q: number) => planPoint(pk, pk.side, t, q), out: Pt[] = [W(m, 0), W(m, q0)];
+  if (r.aisle !== 0) out.push(W(P.cross, q0), W(P.cross, qa));
+  out.push(W(at.t, qa));
+  return out;
+}
+/** T237: the way a golfer walks from point f on car park pk's edge (its footpath's end) to the aisle point in front of bay b (world points, the
+ *  golf layout): the shortest of in by the near end's walk (t 0.6: past the islands), by the cross aisle, or by a mouth, then along b's aisle;
+ *  never across the rows of bays. Empty without the golf layout */
+export function bayWalk(pk: CarPark, b: Pt, f: Pt): Pt[] {
+  if (!pk.cross) return [];
+  const P = lotPlan(pk, pk.side, pk.entrances), at = planOf(pk, pk.side, b), r = rowAt(P, at.q);
+  if (!r) return [];
+  const F = planOf(pk, pk.side, f), qa = P.aisles[r.aisle]!, q0 = P.aisles[0]!, fq = Math.min(P.D - 0.6, Math.max(0.6, F.q));
+  const W = (t: number, q: number) => planPoint(pk, pk.side, t, q);
+  const len = (ps: Pt[]) => { let n = 0; for (let i = 1; i < ps.length; i++) n += Math.hypot(ps[i]!.x - ps[i - 1]!.x, ps[i]!.y - ps[i - 1]!.y); return n; };
+  const ways: Pt[][] = [[f, W(0.6, fq), W(0.6, qa), W(at.t, qa)], [f, W(P.cross, fq), W(P.cross, qa), W(at.t, qa)]];
+  for (const m of P.mouths) ways.push([f, W(m, 0), W(m, q0), ...(r.aisle !== 0 ? [W(P.cross, q0), W(P.cross, qa)] : []), W(at.t, qa)]);
+  // the shortest way clear of the bays (a way along the lot's edge behind a row runs over its bays' noses), else the shortest
+  ways.sort((x, y) => len(x) - len(y));
+  return ways.find(w => clearOfBays(w, pk.bays)) ?? ways[0]!;
+}
+/** whether polyline w keeps off every bay (each bay's rect, BAY_D along its heading by BAY_W across, less a hand's breadth), sampled every 0.25 tile */
+function clearOfBays(w: Pt[], bays: readonly Bay[]): boolean {
+  for (let i = 1; i < w.length; i++) {
+    const a = w[i - 1]!, b = w[i]!, n = Math.max(1, Math.ceil(Math.hypot(b.x - a.x, b.y - a.y) / 0.25));
+    for (let k = 0; k <= n; k++) {
+      const x = a.x + (b.x - a.x) * k / n, y = a.y + (b.y - a.y) * k / n;
+      for (const q of bays) { const dx = x - q.x, dy = y - q.y; if (Math.abs(dx * q.hx + dy * q.hy) < BAY_D / 2 - 0.15 && Math.abs(dx * q.tx + dy * q.ty) < BAY_W / 2 - 0.15) return false; }
+    }
+  }
+  return true;
+}
+/** T237: where a golfer may step on and off car park pk on foot (world points, the golf layout): each aisle's two ends at the lot's sides, the
+ *  cross aisle's two ends (the frontage edge and the far edge) and the mouths; the footpath starts at the one nearest the door. Empty without
+ *  the golf layout */
+export function lotExits(pk: CarPark): Pt[] {
+  if (!pk.cross) return [];
+  const P = lotPlan(pk, pk.side, pk.entrances), W = (t: number, q: number) => planPoint(pk, pk.side, t, q);
+  return [...P.aisles.flatMap(q => [W(0, q), W(P.L, q)]), W(P.cross, 0), W(P.cross, P.D), ...P.mouths.map(m => W(m, 0))];
+}
+
 /** a built car park of def d on net, or null: no frontage, or fewer than 10 bays. pv is the frontage's outward normal, turned into the world */
 export function buildPark(net: RoadNetwork, d: CarParkDef): CarPark | null {
   const f = frontage(net, d);
   if (!f) return null;
-  const grid = bayGrid(d, f.side, f.entrances);
+  const grid = d.cross ? crossGrid(d, f.side, f.entrances) : bayGrid(d, f.side, f.entrances);
   if (grid.length < 10) return null;
   const bays = d.ground ? looseBays(grid, d.ground) : grid;
   const F = parkFrame(d), pv = vecW(F, -OUT[f.side]!.x, -OUT[f.side]!.y);

@@ -80,6 +80,17 @@ try {
     await page.evaluate(() => { window.__night = 0.85; }); await settle(page, 1500); await shot(page, 'paved-dusk-30pct');
     await page.evaluate(() => { window.__night = 0; });
   }
+  if (only.has('walk') && pk()) {
+    // cars arriving by the entrance along the aisles, golfers walking in on the footpath: the paved lot, the sim on, a few frames
+    await own(page, ['gravel', 'pave']);
+    await page.evaluate(() => { const g = window.__game; g.setSpeed(3); });
+    // (until the range is busy: a dozen of its cars in, some of them walking)
+    await page.waitForFunction(() => window.__game.range.sim.parked() >= 8, null, { timeout: 90000, polling: 500 }).catch(() => console.log('  (the range stayed quiet)'));
+    const [x, y] = mid(pk()), c = sp.counter;
+    await look(page, (x + c[0]) / 2, (y + c[1]) / 2, 0.3); await page.evaluate(() => { window.__game.setSpeed(1); });
+    for (let i = 1; i <= 3; i++) { await page.waitForTimeout(1600); await shot(page, `walk-${i}-30pct`); }
+    await page.evaluate(() => { window.__game.setSpeed(0); });
+  }
   if (only.has('preview')) {
     // the Car park tool: a lot dragged across the road from the range (its serve lines), then one far down the road ("Too far to walk")
     await page.evaluate(() => { const g = window.__game; g.setTool('park'); g.emit(); });
