@@ -9,7 +9,7 @@ import { readFileSync } from 'node:fs';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server.edge';
 import { advanceProgress, computeProgressiveUiState, emptyProgress, progressFacts, type CourseProgress } from '../src/game/ext/progressive-ui';
-import { RAIL, railEntries, toolLock, toolsIn } from '../src/ui/rail-items';
+import { RAIL, drawerOf, railEntries, toolLock, toolsIn } from '../src/ui/rail-items';
 import { KEY_PARTS, keySheet, numberedGroups, type KeySection } from '../src/ui/keymap';
 import { KeysSheet } from '../src/ui/KeysSheet';
 import { numberKeyUse } from '../src/game/tool-modes';
@@ -55,7 +55,7 @@ describe('Help › Keys (T202)', () => {
     const parts = s.map(x => x.part).filter((p, i, a) => a.indexOf(p) === i);
     assert.deepEqual(parts, ['top', 'course', 'town', 'general']);
     assert.deepEqual(KEY_PARTS.map(p => p.part), ['top', 'course', 'town', 'general', 'lab']);
-    assert.deepEqual(s.filter(x => x.part === 'top').map(x => x.id), ['rail', 'anywhere'], 'the rail and the keys that work anywhere first');
+    assert.deepEqual(s.filter(x => x.part === 'top').map(x => x.id), ['drawer', 'footer', 'anywhere'], 'T250: the two drawers and the keys that work anywhere first');
     for (const r of RAIL) for (const t of toolsIn(r, true)) {
       const row = toolRows(s).find(x => x.tool === t.id); if (!t.key || !row || !r.section || t.id === 'props') continue;
       assert.equal(s.find(x => x.rows.includes(row))!.part, r.section, `${t.id} under ${r.section}`);
@@ -93,9 +93,9 @@ describe('Help › Keys (T202)', () => {
       const row = h.match(new RegExp(`<div class="keys-row keys-row-locked" data-key-row="${r.keys.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}" data-key-tool="${r.tool}"[^>]*>[\\s\\S]*?</div>`))?.[0] ?? '';
       assert.ok(row.includes('aria-disabled="true"') && row.includes(r.why!.replace(/'/g, '&#x27;')), `${r.tool}: dimmed with its reason`);
     }
-    // the numbered groups carry the rail's group lock
-    const rail = s.find(x => x.id === 'rail')!, entries = railEntries(ui, true, 'select', {});
-    for (const r of rail.rows.filter(x => /^\d$/.test(x.keys))) {
+    // the numbered groups carry the rail's group lock, in both drawers (T250)
+    const entries = railEntries(ui, true, 'select', {});
+    for (const r of s.filter(x => x.id === 'drawer' || x.id === 'footer').flatMap(x => x.rows).filter(x => /^\d$/.test(x.keys))) {
       const g = numberedGroups(true, false)[+r.keys - 1]!;
       assert.equal(r.why ?? null, entries.find(e => e.item.id === g.id)!.locked, `${g.id}'s lock`);
     }
@@ -132,11 +132,24 @@ describe('the number keys (T202)', () => {
     const order = (golf: boolean, range: boolean) => railEntries(null, golf, 'select', { range }).map(e => e.item.id).filter(id => id !== 'select');
     assert.deepEqual(numberedGroups(true, true).map(r => r.id), ['range', 'course', 'facilities', 'traffic', 'towndecor', 'bulldoze']);
     for (const g of GAMES) assert.deepEqual(numberedGroups(g.golf, g.range).map(r => r.id), order(g.golf, g.range).slice(0, 6), JSON.stringify(g));
-    // the sheet's rail card names them by number
-    const rail = keySheet({ golf: true, range: true, ui: null }).find(x => x.id === 'rail')!;
-    assert.deepEqual(rail.rows.filter(r => /^\d$/.test(r.keys)).map(r => r.keys), ['1', '2', '3', '4', '5', '6']);
-    assert.equal(rail.rows.find(r => r.keys === '6')!.what, 'Bulldoze', 'Bulldoze has no flyout: its number picks it');
-    assert.equal(rail.rows.find(r => r.keys === '3')!.what, 'the Facilities menu', 'T206: Facilities in Decoration\'s place');
+    // T250: the sheet's drawer cards name them by number, as laid out: the course drawer's top to bottom, the town footer's left to right; the
+    // numbers are the ones they had (the course drawer's 1-3 and Bulldoze's 6, the footer's 4 and 5)
+    const sheet = keySheet({ golf: true, range: true, ui: null }), card = (id: string) => sheet.find(x => x.id === id)!;
+    const nums = (id: string) => card(id).rows.filter(r => /^\d$/.test(r.keys)).map(r => [r.keys, r.what]);
+    assert.equal(card('drawer').title, 'The course drawer (left)'); assert.equal(card('footer').title, 'The town footer (bottom)');
+    assert.deepEqual(nums('drawer'), [['1', 'the Driving range menu'], ['2', 'the Course menu'], ['3', 'the Facilities menu'], ['6', 'Bulldoze']], 'Bulldoze has no flyout: its number picks it');
+    assert.deepEqual(nums('footer'), [['4', 'the Traffic menu'], ['5', 'the Town decoration menu']]);
+    assert.deepEqual(card('drawer').rows.map(r => r.keys), ['V', '1', '2', '3', '6', 'X'], 'Select first, Bulldoze\'s key last');
+    // the classic town game: the course drawer's Course and Bulldoze, the footer's Traffic and Town decoration
+    const town = keySheet({ golf: false, range: false, ui: null });
+    assert.deepEqual(town.find(x => x.id === 'drawer')!.rows.filter(r => /^\d$/.test(r.keys)).map(r => [r.keys, r.what]), [['1', 'the Course menu'], ['4', 'Bulldoze']]);
+    assert.deepEqual(town.find(x => x.id === 'footer')!.rows.map(r => [r.keys, r.what]), [['2', 'the Traffic menu'], ['3', 'the Town decoration menu']]);
+    // each number once across both cards; each card's numbers are its drawer's groups
+    for (const g of GAMES) {
+      const s = keySheet({ ...g, ui: null }), all = s.filter(x => x.part === 'top').flatMap(x => x.rows).filter(r => /^\d$/.test(r.keys)).map(r => +r.keys);
+      assert.deepEqual([...all].sort(), numberedGroups(g.golf, g.range).map((_, i) => i + 1), JSON.stringify(g));
+      for (const id of ['drawer', 'footer'] as const) for (const r of s.find(x => x.id === id)!.rows.filter(x => /^\d$/.test(x.keys))) assert.equal(drawerOf(numberedGroups(g.golf, g.range)[+r.keys - 1]!), id === 'drawer' ? 'side' : 'footer');
+    }
   });
   it('2. a tool that uses them keeps them: Holes its surfaces (1-9), the town\'s Build its road classes (1-6); elsewhere they open the groups', () => {
     for (const n of [1, 2, 3, 4, 5, 6]) {
