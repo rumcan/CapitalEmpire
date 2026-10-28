@@ -62,13 +62,20 @@ export const defaultShadow = (s: number) => (s === GREEN ? 0 : s === BUNKER ? BU
  *  foot as a soft wide stroke and a tight dark line (widths in tiles, with their least widths in screen px, and alphas). From none to the
  *  hairline the hairline's strokes fade in; the hairline is a thin soft contact line with a faint short cast, not a broad dark band; from
  *  there to 1 they widen and darken to the full cast shadow and contact shade */
-export interface WallShade { cast: number; castA: number; soft: number; softPx: number; softA: number; line: number; linePx: number; lineA: number }
+export interface WallShade { cast: number; castA: number; soft: number; softPx: number; softA: number; line: number; linePx: number; lineA: number;
+  /** T267: a bunker's cut face in its own shade (the owner, 2026-10-29: "theres no shadow on the bunker inner wall. that part is in the shadow
+   *  and should be very dark"): the cool multiply's strength on a face turned fully from the sun, 0 none, 1 at BUNKER_SHADOW, up to FACE_SHADE_MAX
+   *  (over 1: a second pass, darker still) */
+  face: number }
+/** the strongest self-shade on a bunker's cut face (Shadow 1) */
+export const FACE_SHADE_MAX = 1.6;
 export function wallShade(s: number = DEFAULT_SHADOW): WallShade {
   const v = Math.min(1, Math.max(0, Number.isFinite(s) ? s : DEFAULT_SHADOW));
   const fade = Math.min(1, v / SHADOW_HAIRLINE), t = Math.max(0, (v - SHADOW_HAIRLINE) / (1 - SHADOW_HAIRLINE)), mix = (a: number, b: number) => a + (b - a) * t;
   // T196 (the owner, 2026-10-27: borders "blurred to be a shadow not a hard line"): the hairline's contact is soft, its tight line wider and
   // lighter (it was 0.6 px at 0.4: a crisp dark line round every bunker lip and tee); strong (s = 1) is unchanged
-  return { cast: WALL_SHADOW * mix(0.15, 1), castA: fade * mix(0.14, 0.34), soft: mix(0.05, 0.12), softPx: mix(2, 3), softA: fade * mix(0.3, 0.45), line: mix(0.025, 0.05), linePx: mix(1.2, 1.5), lineA: fade * mix(0.18, 0.8) };
+  return { cast: WALL_SHADOW * mix(0.15, 1), castA: fade * mix(0.14, 0.34), soft: mix(0.05, 0.12), softPx: mix(2, 3), softA: fade * mix(0.3, 0.45), line: mix(0.025, 0.05), linePx: mix(1.2, 1.5), lineA: fade * mix(0.18, 0.8),
+    face: Math.min(FACE_SHADE_MAX, v / BUNKER_SHADOW) };
 }
 /** whose Shadow a wall takes: a bunker's or a pond's cut face (it drops into the sand or the water) the bunker's or the pond's, any other the
  *  raised surface on its higher side (a green's, a tee's or a fairway's bank) */

@@ -2553,6 +2553,19 @@ export class GroundPainter {
       const shadow = [new Path2D(), new Path2D(), new Path2D()], foot = new Path2D(), tufts = [new Path2D(), new Path2D()];
       const T = look.tuft, SK = lite ? undefined : look.streak, streaks = [new Path2D(), new Path2D()];
       let shade = false;
+      // T267 (#808; the owner, 2026-10-29: "theres no shadow on the bunker inner wall. that part is in the shadow and should be very dark"): a
+      // bunker's cut face turned from the sun lies in its own shade, a cool multiply over its bands q0..q1 (the texture stays) by the bunker's
+      // Shadow (WallShade.face: none at 0, full at the default 0.3, a second pass past it) and by how far each stretch turns from the sun (its
+      // light step), so it runs on into the cast shadow on the sand while the lit near face keeps its light
+      const faceShade = (q0: number, q1: number) => {
+        if (!(sh.face > 0)) return;
+        ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = SHADE_TINT;
+        for (let pass = 0; pass < 2; pass++) {
+          const k = pass ? sh.face - 1 : Math.min(1, sh.face); if (k <= 0) break;
+          for (let b = 0; b < NB; b++) { const a = k * Math.pow(1 - b / (NB - 1), 1.2); if (a < 0.01) continue; ctx.globalAlpha = a; for (let q = q0; q < q1; q++) ctx.fill(bands[q * NB + b]!); }
+        }
+        ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+      };
       for (const w of runs) {
         const p = w.p, n = p.length / 3; if (n < 2) continue;
         // per point: its drop (tiles along (1, 1)) and, from its normal, its light and how much it turns from the sun
@@ -2662,12 +2675,14 @@ export class GroundPainter {
         ctx.strokeStyle = `rgba(${T.col.join(',')},${T.a})`; ctx.stroke(tufts[0]!);
         ctx.strokeStyle = `rgba(${T.col.map(v => Math.round(v * 1.35)).join(',')},${(T.a * 0.8).toFixed(2)})`; ctx.stroke(tufts[1]!);
       }
+      if (li === WallMat.Sand) faceShade(0, nb);
       ctx.restore();
       if (clip && !lite) {
         // the top band once more, unclipped: its top is the higher layer's own edge, exact (the clip runs along that edge and would leave a
         // hairline of the ground under it)
         ctx.save(); ctx.setTransform(M); ctx.fillStyle = rgb(mixRGB(look.bands[0]![0], look.bands[0]![1], 0.25)); ctx.fill(bases[0]!);
         for (let b = 0; b < NB; b++) { const band = look.bands[0]!; ctx.fillStyle = rgb(mixRGB(band[0], band[1], b / (NB - 1))); ctx.fill(bands[b]!); }
+        if (li === WallMat.Sand) faceShade(0, 1);
         ctx.restore();
       }
     }
