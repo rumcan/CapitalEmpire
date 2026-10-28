@@ -6,7 +6,7 @@
 // The engine gives it a small context, so its own edits stay a few lines.
 // T231 (the concept kit): one-view items with several pictures (variants: R steps to the next); runs (the hedge: press, drag along the map's x or
 // y axis and let go to lay its pieces end to end, priced a piece); the fountain jet, placeable only in water; and the pond actions: the Stone
-// pond edge (the pond under the cursor gets its boulders and lily pads, golf/ponds.ts, priced a stone; on a stone-edged pond it gives back the
+// pond edge (the pond under the cursor gets its boulders and lily pads, golf/ponds.ts, priced a piece (a boulder, a stone run piece or a plant of the rim); on a stone-edged pond it gives back the
 // natural edge for half) and the Fountain pond (a round pond dug where it is placed, with its stone edge and a jet, all one undo step).
 import type { Prop } from '../types';
 import type { Pt } from '../network';
@@ -270,11 +270,11 @@ export class PropsTool {
     if (!n) { this.ghost = { ...base, why: 'Too small for a stone edge', label: 'Too small for a stone edge', noPic: true }; return; }
     if (pondHasStones(this.ctx.pondMarks?.() ?? [], pond)) {
       const back = Math.round(n * d.price / 2);
-      this.ghost = { ...base, why: '', label: `Natural edge: take its ${n} stones and the lily pads away (+$${back.toLocaleString()})`, noPic: true }; return;
+      this.ghost = { ...base, why: '', label: `Natural edge: take its ${n} pieces and the lily pads away (+$${back.toLocaleString()})`, noPic: true }; return;
     }
-    const cost = n * d.price, why = cost > this.ctx.money() ? `Not enough money: ${n} stones cost $${cost.toLocaleString()}` : '';
+    const cost = n * d.price, why = cost > this.ctx.money() ? `Not enough money: ${n} pieces cost $${cost.toLocaleString()}` : '';
     this.ghosts = this.pieceGhosts(pieces);
-    this.ghost = { ...base, why, label: why || `Stones round this pond: ${n} stones · $${cost.toLocaleString()}, and lily pads`, noPic: true };
+    this.ghost = { ...base, why, label: why || `Boulders and planting round this pond: ${n} pieces · $${cost.toLocaleString()}, and lily pads`, noPic: true };
   }
   private placeEdge(d: DecorItem, g: DecorGhost): void {
     const pond = this.ctx.pondAt?.(g.x, g.y) ?? null; if (!pond || !this.ctx.setPondMarks) return;
@@ -282,7 +282,7 @@ export class PropsTool {
     const spent = has ? -Math.round(n * d.price / 2) : n * d.price;
     this.ctx.step(has ? 'Natural pond edge' : 'Stone pond edge', () => { this.ctx.setPondMarks!(setPondEdge(marks, pond, !has, g.x, g.y)); this.ctx.spend(spent); return spent; });
     this.ghosts = []; this.changed();
-    this.ctx.toast(has ? `The pond has its natural edge again (+$${(-spent).toLocaleString()})` : `Stones round the pond: ${n} stones (-$${spent.toLocaleString()})`, 'good');
+    this.ctx.toast(has ? `The pond has its natural edge again (+$${(-spent).toLocaleString()})` : `Boulders and planting round the pond: ${n} pieces (-$${spent.toLocaleString()})`, 'good');
   }
   /** the Fountain pond at the cursor: its round footprint (the land's checks), its stones and the jet in the middle */
   private pondGhost(d: DecorItem, t: Pt): void {
