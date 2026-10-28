@@ -64,7 +64,7 @@ never commit there.)
 
 ### 3. In flight
 
-**T272 #816 — menu art v2:** `lead/ui-tool-tiles-v2-20261028`, `worktrees/ui-tool-tiles-v2-20261028`. Next: explicit v1/v2 sheet name mapping in `prep-ui-tool-tiles.mjs`; add twelve distinct v2 assets and real Course/Facilities menu aliases, preserving v1 output bytes. Source is primary-approved item181, native1448x1086. No generator/worker/task/quota changes. Validate actual4x3 cuts, old asset hashes, focused menu mapping checks and typecheck, then parent-reviewed PR.
+**T272 #816 - menu art v2:** PR #818, `lead/ui-tool-tiles-v2-20261028`, `worktrees/ui-tool-tiles-v2-20261028`. Twelve new assets and Course/Facilities aliases are implemented; native source1448x1086 and exact4x3 crops recorded in `art/ui-tool-tiles/sheet-v2.json`. All12 v1 runtime hashes unchanged; focused importer/menu checks21/21 PASS. Initial default typecheck PASS; resumed1536MB-capped attempt exhausted its heap (no code diagnostic). Next: fresh default typecheck and actual UI screenshot when shared memory permits, then parent review/merge. No generator/worker/task/quota or owner-file changes.
 
 **Two agents running (a new lead took over at ~15:00 on 2026-10-28; the old lead's agents stopped at the usage limit ~14:00):**
 | Ticket | Issue | Branch / worktree | State and next step |
