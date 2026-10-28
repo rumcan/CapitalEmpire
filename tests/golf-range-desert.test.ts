@@ -113,7 +113,8 @@ test('the range\'s presets: each has its painted look; the mown outfield, its st
   // only the mown outfield has stripes (T218), and the fairways still take theirs from it
   for (const id of Object.values(RANGE_PRESET)) assert.equal(PRESETS.find(q => q.id === id)!.stripes.on, id === RANGE_PRESET.outfield, `${id}: stripes`);
   assert.equal(FAIRWAY_STRIPE_PRESET, RANGE_PRESET.outfield);
-  // the course's tees keep the tee surface's look; the range's turf is managed as a tee (the desert and dirt are no grass)
-  assert.equal(S.surfaces.tee!.family, 'tee-run');
+  // the course's tees wear the fairway's grass, no mowing lines (the owner, 2026-10-28: "the grass texture on the tee is just not defined enough. it
+  // should be like the fairway with no lines"; tee-run stays a Studio option); the range's turf is managed as a tee (the desert and dirt are no grass)
+  assert.equal(S.surfaces.tee!.family, S.surfaces.fairway!.family);
   assert.equal(PRESET_FAMILY[RANGE_PRESET.teeTurf], 'golf-tee'); assert.equal(PRESET_FAMILY[RANGE_PRESET.desert], undefined); assert.equal(PRESET_FAMILY[RANGE_PRESET.teeDirt], undefined);
 });
