@@ -90,7 +90,7 @@ async function editHoleShot() {
 try {
   if (!only || only === 'edit') await editHoleShot();
   if (only === 'edit') process.exit(0);
-  const { ctx, page } = await open('?start=town');
+  const { ctx, page } = await open(opt('url', '?start=town'));
   await page.evaluate(() => { const g = window.__game; g.setTool('course'); g.paint.setHole?.(1); g.emit(); });
   await sleep(800);
   const more = page.locator('[data-section="more"] .more-head').first();
@@ -150,7 +150,11 @@ try {
   console.log('spot', JSON.stringify(spot));
   if (spot) {
     await page.evaluate(() => document.documentElement.classList.add('noui'));
-    for (const [name, sm] of [['square', null], ['round25', 0.25], ['round100', 1]]) {
+    // --finish '{"bowl":0}': the course finish's knobs for these shots (ground.setCourseFinish; bowl 0 is the bunkers before T253 part 2)
+    const fx = JSON.parse(opt('finish', '{}'));
+    if (Object.keys(fx).length) await page.evaluate(fx => window.__game.ground.setCourseFinish(fx), fx);
+    const variants = opt('variants', 'square,round25,round100').split(',');
+    for (const [name, sm] of [['square', null], ['round25', 0.25], ['round100', 1]].filter(([n]) => variants.includes(n))) {
       await roundOff(page, sm);
       for (const z of [30, 15]) {
         await look(page, spot.x, spot.y, z / 100); await settle(page, 2500);

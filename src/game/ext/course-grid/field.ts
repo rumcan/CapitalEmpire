@@ -39,10 +39,12 @@ export function courseImages(f: EdgeField, look: Readonly<EdgeLook>, feather: nu
 /** the edge field over tiles [x0, x0 + w) x [y0, y0 + h) at res px per tile, out to reach tiles from the boundary: inside = even-odd of
  *  rings (flat closed rings, tiles), d = signed distance to the nearest edge polyline (+ inside, clamped to +-reach), sun = the outward
  *  direction's sun facing there (rounded about a polyline's corners and ends); no seams. Cost: one scanline pass for inside, then the px
- *  within reach of each segment, so it scales with the edges' length, not the box */
-export function lineField(rings: readonly ArrayLike<number>[], edges: readonly ArrayLike<number>[], x0: number, y0: number, w: number, h: number, res: number, reach: number): EdgeField {
+ *  within reach of each segment, so it scales with the edges' length, not the box. near (T253): also the nearest boundary point of each px
+ *  within reach (nx, ny, tiles; the px itself beyond reach) */
+export function lineField(rings: readonly ArrayLike<number>[], edges: readonly ArrayLike<number>[], x0: number, y0: number, w: number, h: number, res: number, reach: number, near = false): EdgeField & { nx?: Float32Array; ny?: Float32Array } {
   const W = Math.max(1, Math.ceil(w * res)), H = Math.max(1, Math.ceil(h * res)), N = W * H;
   const d = new Float32Array(N).fill(reach), sun = new Float32Array(N), seam = new Uint8Array(N), inside = new Uint8Array(N);
+  const nx = near ? new Float32Array(N) : null, ny = near ? new Float32Array(N) : null;
   // inside: even-odd crossings of every ring along each px row
   const xs: number[] = [];
   for (let v = 0; v < H; v++) {
@@ -83,6 +85,7 @@ export function lineField(rings: readonly ArrayLike<number>[], edges: readonly A
         const ex = tx - (ax + dx * t), ey = ty - (ay + dy * t), dist = Math.sqrt(ex * ex + ey * ey), k = v * W + u;
         if (dist >= d[k]!) continue;
         d[k] = dist; any ||= dist < reach;
+        if (nx) { nx[k] = tx - ex; ny![k] = ty - ey; }
         // past a segment's end the facing turns with the direction from the boundary to the px (outside) or back (inside), so corners and
         // the polyline's ends round smoothly from one segment's light to the next
         sun[k] = (t <= 0 || t >= 1) && dist > 1e-4 ? ((inside[k] ? -1 : 1) * (ex * sx + ey * sy)) / dist : fEdge;
@@ -90,5 +93,5 @@ export function lineField(rings: readonly ArrayLike<number>[], edges: readonly A
     }
   }
   for (let k = 0; k < N; k++) if (!inside[k]) d[k] = -d[k]!;
-  return { x0, y0, W, H, res, d, sun, seam, any };
+  return { x0, y0, W, H, res, d, sun, seam, any, ...(nx ? { nx, ny: ny! } : {}) };
 }
