@@ -125,6 +125,7 @@ const GOLF_MINUTE = 11 * 60;
  *  game is ready and a loaded town's lots are composed (at most 30 s) */
 export function benchGame(g: Game, scene: BenchScene) {
   g.benchMode = true;
+  if (new URLSearchParams(location.search).get('tourOnly') === '1') (g.ground as unknown as { firstBakes: Map<string, number> | null }).firstBakes = new Map();
   // T265: ?belts=0 (bench.mjs --belts 0): the tree belts off for the run (Engine.setRiverTrees), the forest and the town trees as before
   if (new URLSearchParams(location.search).get('belts') === '0') (g as unknown as { setRiverTrees?: (on: boolean) => void }).setRiverTrees?.(false);
   // T265: ?riverSwamp=0 (bench.mjs --riverSwamp 0): the river's swamp off for the run (GroundCache.setRiverSwamp)
@@ -188,7 +189,7 @@ function startTour(g: Game, info: Record<string, unknown>, stages: Stage[] = STA
       if (s >= stages.length) {
         g.onFrame = null;
         // (?tourOnly=1, bench.mjs --tourOnly 1: the tour alone, without the bake and frame checks after it)
-        if (follow && new URLSearchParams(location.search).get('tourOnly') === '1') { finish(bakeStats(g, bake0)); return; }
+        if (follow && new URLSearchParams(location.search).get('tourOnly') === '1') { info.firstBakes = Object.fromEntries((g.ground as unknown as { firstBakes: Map<string, number> | null }).firstBakes ?? []); finish(bakeStats(g, bake0)); return; }
         if (follow) { const bakes = bakeStats(g, bake0); bakeStage(g, follow(0), [0.3, 0.15, 0.08], r => { results.push(...r); frameStage(g, follow, r2 => { results.push(...r2); finish(bakes); }); }); return; }
         if (info.course) { const at = info.course as { x: number; y: number }; paintStage(g, at, r => { results.push(r); wizardStage(g, at, r2 => { results.push(r2); finish(); }); }); return; }
         finish();

@@ -157,6 +157,9 @@ export class GroundCache {
    *  comparing the looks and the bake times) */
   riverSwamp = true;
   setRiverSwamp(on: boolean) { if (on === this.riverSwamp) return; this.riverSwamp = on; this.broadcast({ t: 'riverSwamp', on }); this.invalidateAll(); }
+  /** T265, the bench (?tourOnly=1): each chunk picture's first bake ms by kind, chunk and level, so two runs (the river's swamp on and off)
+   *  pair the same chunks' first bakes; null (the default) keeps none */
+  firstBakes: Map<string, number> | null = null;
   /** T265, the bench: every worker paints its last bakes of this kind again, the river's swamp on and off by turns, and answers each paint's ms */
   private abWait = new Map<number, (m: { on: number[]; off: number[] }) => void>();
   bakeAB(kind: 'g' | 'm', reps: number, cold = false): Promise<{ on: number[]; off: number[] }> {
@@ -309,6 +312,7 @@ export class GroundCache {
     const r = this.reqs.get(m.id); this.reqs.delete(m.id); this.inflight[w]--;
     if (!r) { m.bmp.close(); m.shade?.close(); m.spec?.close(); m.gloss?.close(); return; }
     const t = r.t; t.pendingL = 0; t.pendingArtL = 0; t.pendingTs = -1;
+    if (this.firstBakes) { const k = `${m.kind}${m.i},${m.j}@${m.L}`; if (!this.firstBakes.has(k)) this.firstBakes.set(k, m.ms); } // (T265: the bench's first-bake pairs)
     this.bakeLog[this.baked % BAKE_LOG] = m.ms; this.waitLog[this.baked % BAKE_LOG] = performance.now() - r.at; if (!this.firstTileAt) this.firstTileAt = performance.now();
     this.bakeMs += m.ms; this.shineLog[this.baked % BAKE_LOG] = m.shineMs ?? 0; this.baked++;
     // edited while baking: it will be asked for again, and keeps the picture it has meanwhile; one with none shows this one (stale, so it is
