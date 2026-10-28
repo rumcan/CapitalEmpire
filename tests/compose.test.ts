@@ -156,14 +156,16 @@ test('fitting the presets to the test town drops under 5% of their props', () =>
   assert.ok(dropped < 0.05 * props, `${dropped} of ${props} props dropped by fitting`);
 });
 
-test('neighbours along a street never draw the same preset', () => {
+test('neighbours along a street never draw the same lot: a shop or house its own picture (T270), any other its own preset (a venue: its preset or its picture)', () => {
   let pairs = 0;
+  // the biggest building a fitted preset draws (its base view: the one picture whatever the lot's facing)
+  const main = (p: NonNullable<ReturnType<typeof lotPreset>>) => { let id = '', a = 0; for (const q of p.fit.props) { const it = byId.get(q.id); if (!it || !isBuilding(it) || !it.big) continue; const f = footprintOf(q.id, q.scale, false), s = (f[2] - f[0]) * (f[3] - f[1]); if (s > a) { a = s; id = q.id; } } return id; };
   for (const use of USES) for (const [level, decline] of [[LV.BUILT, 0], [LV.UPGRADED, 0], [LV.BUILT, 2]] as const) {
-    const rows = new Map<string, { slot: number; id: string; w: number; d: number }[]>();
+    const rows = new Map<string, { slot: number; id: string; w: number; d: number }[]>(), byPicture = decline < 2 && (use === LU.COM || use === LU.RES), venue = decline < 2 && use === LU.TOUR;
     for (const lot of LOTS) {
       if (lot.key.startsWith('blk:')) continue;
       const st: ComposeState = { use, level, decline, seed: use === LU.COM ? 50 : 1 }, p = lotPreset(lot, st)!;
-      const k = streetKey(lot); let r = rows.get(k); if (!r) rows.set(k, (r = [])); r.push({ slot: streetSlot(lot), id: p.preset.id, w: lot.w, d: lot.d });
+      const k = streetKey(lot); let r = rows.get(k); if (!r) rows.set(k, (r = [])); r.push({ slot: streetSlot(lot), id: byPicture ? main(p) || p.preset.id : venue ? `${p.preset.id}|${main(p)}` : p.preset.id, w: lot.w, d: lot.d });
     }
     for (const r of rows.values()) { r.sort((a, b) => a.slot - b.slot); for (let i = 1; i < r.length; i++) if (r[i].slot - r[i - 1].slot === 1 && r[i].w === r[i - 1].w && r[i].d === r[i - 1].d) { pairs++; assert.notEqual(r[i].id, r[i - 1].id, `two neighbours draw ${r[i].id}`); } }
   }
