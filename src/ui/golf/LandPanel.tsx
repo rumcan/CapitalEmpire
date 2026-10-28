@@ -44,7 +44,7 @@ export function LandPanel({ game }: { game: Game }) {
             {card.why && <p className="land-why" data-testid="land-why">{card.why}</p>}
             {short && <p className="land-why">{`You have ${money(game.money)} ${statusIcon(affordKind(card.price, game.money))}`}</p>}
             <div className="mt-2 flex flex-wrap gap-1.5">
-              {!card.why && <button className="chip chip-on" data-testid="land-buy" disabled={short} onClick={() => game.buyLandCard()}>{`Buy · ${money(card.price)}`}</button>}
+              {!card.why && <button className="chip chip-on" data-testid="land-buy" data-guide="land-buy" disabled={short} onClick={() => game.buyLandCard()}>{`Buy · ${money(card.price)}`}</button>}
               <button className="chip" data-testid="land-cancel" onClick={() => { game.land.cancel(); game.emit(); }}>Cancel</button>
             </div>
           </section>

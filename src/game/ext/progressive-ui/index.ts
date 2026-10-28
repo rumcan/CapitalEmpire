@@ -59,6 +59,9 @@ export interface PlayerProgressFacts {
   practice?: { putting: 'none' | 'small' | 'nobunker' | 'open'; chipping: 'none' | 'small' | 'nobunker' | 'open' };
   /** T239: a guided range start's practice area is still land for sale (its hint says buy it first); missing = no */
   practiceForSale?: boolean;
+  /** T239: a range start's guided build is on step n (1..7, guide.ts RANGE_GUIDE): the tools open along its steps, and its card replaces the
+   *  ramp's hints; missing: no guide running (skipped, finished, an old save's, not a range start) */
+  guideStep?: number;
   /** a range start's ramp from the range to the first hole (plan P24 Phase 4a, T132); missing outside range starts */
   ramp?: RampFacts;
   /** the town's streets are jammed (T178): at least JAM_ZONES zones with built lots are over the decline line (the engine's access, the
@@ -127,6 +130,8 @@ export interface ProgressiveUiState {
   ramp: RampStep | null;
   /** why New hole is not open yet (a range start before ramp step 3: the Holes panel shows the button locked with it), or null */
   newHoleLock: string | null;
+  /** T239: why a top-bar chip is held back other than by its stage (Land for sale until the guided build's practice area step) */
+  chipLocks?: Partial<Record<GolfChipId, string>>;
 }
 
 /** the stuck player's fallback (P23 4.2): with no hole after 20 minutes of play (or one season), stage 2 opens and the hint offers New hole */
@@ -273,6 +278,14 @@ export const RAMP_TAKINGS = 20000;
 /** the ramp step each tool opens at in a range start (the rest follow the stages): Holes and Paths with the first upgrade (to paint the
  *  practice greens), Props once the putting green opens, Buildings (the clubhouse) with New hole */
 export const RAMP_TOOL_STEP: Readonly<Partial<Record<UiToolId, RampStep>>> = Object.freeze({ course: 1, path: 1, practice: 1, props: 2, buildings: 3 }); // T206: the practice tools open with the first range upgrade, as the brushes that painted them did
+/** T239: the guided build's step from which a ramp tool is open whatever the ramp (a skipped step still opens the next one's tools): the paths
+ *  with the walking path, Holes and Facilities › Practice with the practice area, Buildings with the first hole. New hole and the rest of
+ *  ramp step 3 open at the first hole's step (rampEarned), Land for sale at the practice area's (computeProgressiveUiState) */
+export const GUIDE_TOOL_STEP: Readonly<Partial<Record<UiToolId, number>>> = Object.freeze({ path: 3, course: 6, practice: 6, buildings: 7 });
+/** T239: the guided build's steps that open Land for sale and New hole */
+export const GUIDE_LAND_STEP = 6, GUIDE_HOLE_STEP = 7;
+/** T239: Land for sale's lock while the guide holds it */
+export const GUIDE_LAND_WHY = "Opens at the guide's practice area step (step 6)";
 /** what opens each ramp step, as a locked tool's tooltip says it */
 export const RAMP_WHY: Readonly<Record<RampStep, string>> = Object.freeze({
   0: '',
@@ -299,7 +312,7 @@ export const FIRST_PAR3_M = 150;
  *  the putting green open; 1 with a range upgrade; else 0 (outside range starts: 3) */
 export function rampEarned(f: PlayerProgressFacts): RampStep {
   const r = f.ramp; if (!r) return 3;
-  if (f.playableHoles >= 1 || f.seasonsDone >= 1 || r.seasonTakings >= RAMP_TAKINGS) return 3;
+  if (f.playableHoles >= 1 || f.seasonsDone >= 1 || r.seasonTakings >= RAMP_TAKINGS || (f.guideStep ?? 0) >= GUIDE_HOLE_STEP) return 3; // (T239: the guide's hole step)
   if (f.practice?.putting === 'open') return 2;
   if (r.upgrades >= 1) return 1;
   return 0;
@@ -310,7 +323,8 @@ export function rampStep(f: PlayerProgressFacts): RampStep | null {
 }
 /** why tool t is held back by the ramp, or null (open, not a range start, or every tool shown) */
 export function rampLock(f: PlayerProgressFacts, t: UiToolId): string | null {
-  const s = rampStep(f), need = RAMP_TOOL_STEP[t];
+  const s = rampStep(f), need = RAMP_TOOL_STEP[t], g = GUIDE_TOOL_STEP[t];
+  if (g !== undefined && f.guideStep !== undefined && f.guideStep >= g) return null; // T239: open along the guide's steps
   return s === null || f.advancedMode || need === undefined || s >= need ? null : RAMP_WHY[need];
 }
 
@@ -358,7 +372,7 @@ export function nextFirstRunHint(f: PlayerProgressFacts): FirstRunHint | null {
   // the jam's hint points at the Junction tool, so only once it is open
   if (f.townJammed && (f.advancedMode || stage >= TOOL_STAGE.junction!) && !dismissed.has(JAM_HINT.id)) return JAM_HINT;
   // a range start (T132): the ramp's hints until the first hole (never Step 1's: the range is the job), then the stages' as everywhere
-  if (f.ramp && f.playableHoles < 1) return rampHint(f, dismissed);
+  if (f.ramp && f.playableHoles < 1) return f.guideStep !== undefined ? null : rampHint(f, dismissed); // (T239: the guide's card says it while it runs)
   // a range start's practice facilities first (T130): the putting green, then the chipping green and bunker
   const [pp, pc] = PRACTICE_HINTS;
   if (!f.ramp && f.practice && f.playableHoles < 1) {
@@ -412,7 +426,8 @@ export function computeProgressiveUiState(f: PlayerProgressFacts): ProgressiveUi
     newGroups: visibleGroups.filter(id => !adv && (GROUP_STAGE[id] ?? 1) > 1 && !seen.has(id)),
     newTools: visibleTools.filter(id => isNew(id, TOOL_STAGE[id])),
     // T239: a range start's Land for sale opens with the practice area (ramp step 1): the guided start buys its practice area there
-    visibleGolfChips: ramp !== null && ramp >= 1 && !openAt(CHIP_STAGE, stage, adv).includes('land') ? [...openAt(CHIP_STAGE, stage, adv), 'land'] : openAt(CHIP_STAGE, stage, adv),
+    // (with the guide running: from its practice area step)
+    visibleGolfChips: ramp !== null && (f.guideStep !== undefined ? f.guideStep >= GUIDE_LAND_STEP : ramp >= 1) && !openAt(CHIP_STAGE, stage, adv).includes('land') ? [...openAt(CHIP_STAGE, stage, adv), 'land'] : openAt(CHIP_STAGE, stage, adv),
     // a range start paints its practice greens and bunker by hand from stage 1 (T130)
     visibleCourseBrushes: f.practice ? [...new Set<CourseBrushId>([...openAt(BRUSH_STAGE, stage, adv), 'green', 'bunker'])] : openAt(BRUSH_STAGE, stage, adv),
     shapeByHand: adv || stage >= 2 || !!f.practice,
@@ -422,6 +437,7 @@ export function computeProgressiveUiState(f: PlayerProgressFacts): ProgressiveUi
     activeHint: nextFirstRunHint(f),
     ramp,
     newHoleLock: ramp !== null && ramp < 3 ? RAMP_WHY[3] : null,
+    ...(ramp !== null && f.guideStep !== undefined && f.guideStep < GUIDE_LAND_STEP && !openAt(CHIP_STAGE, stage, adv).includes('land') ? { chipLocks: { land: GUIDE_LAND_WHY } } : {}),
   };
 }
 

@@ -97,7 +97,7 @@ export function toolLock(ui: ProgressiveUiState | null, t: Tool): string | null 
 /** an extra's lock reason: its top-bar chip not shown yet (the stage that shows it), null when open */
 export function extraLock(ui: ProgressiveUiState | null, x: RailExtra): string | null {
   if (!ui || (ui.visibleGolfChips as string[]).includes(x.id)) return null;
-  return STAGE_WHY[CHIP_STAGE[x.id]] || 'Not open yet';
+  return ui.chipLocks?.[x.id as GolfChipId] ?? STAGE_WHY[CHIP_STAGE[x.id]] || 'Not open yet';
 }
 /** whether a tool carries a NEW badge (open past stage 1 and not opened yet) */
 export const toolNew = (ui: ProgressiveUiState | null, t: Tool): boolean => !!ui && (ui.newTools as string[]).includes(t);

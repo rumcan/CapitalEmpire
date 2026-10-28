@@ -40,7 +40,7 @@ import { DECOR_BY_KEY, inPoly, lotTouches, propTuple, sellBack, tupleMarks } fro
 import { CELL as POND_CELL, discOutline, lilyPads, normalizePondMarks, pieceKey, pondAt, pondId, shorePieces, type Pond, type PondPiece } from './golf/ponds';
 import { fountainAt, fountainFrame } from './kit';
 import { HALFWAY_COST, halfwaySpotWhy, halfwayTakings } from './golf/halfway';
-import { guideTable, type GuideEvent } from './ext/progressive-ui/guide';
+import { RANGE_GUIDE, guideTable, newRangeGuide, rangeGuideCurrent, rangeGuideLines, rangeGuideOff, rangeGuideSkip, rangeGuideTick, type GuideEvent, type GuideLine } from './ext/progressive-ui/guide';
 import { welcomeReady } from './golf/firstview';
 /** the hints' anchors (T188: their Show me pulses the control) where the hint is no guide step */
 const HINT_ANCHOR: Readonly<Record<string, string>> = { 'hint-range-open': 'range-chip', 'hint-range-upgrade': 'range-chip', 'hint-range-props': 'rail-facilities', 'hint-range-first-hole': 'new-hole' };
@@ -165,7 +165,7 @@ import { MapGridLayer } from './ext/map-grid/layer';
 import { MoneyFloats, addCash, drawMoneyFloats, rangeFloat, type MoneyEvent } from './moneyfloats';
 import { ColumnPlacer, PRI } from './label-place';
 import { LABEL_OUTLINE, WorldLabels } from './world-labels';
-import { FIRST_PAR3_M, JAM_ZONES, RANGE_CARD_SEEN, STUCK_PLAY_SEC, advanceProgress, computeProgressiveUiState, emptyProgress, fallbackTeeSpot, guideStep, nextFirstRunHint, normalizeProgress, progressFacts, rampLock, rampToast, type FirstRunHint, type GuideFacts, type PlayerProgressFacts, type ProgressiveUiState } from './ext/progressive-ui';
+import { FIRST_PAR3_M, JAM_ZONES, RANGE_CARD_SEEN, STUCK_PLAY_SEC, advanceProgress, computeProgressiveUiState, emptyProgress, fallbackTeeSpot, nextFirstRunHint, normalizeProgress, progressFacts, rampLock, rampToast, type FirstRunHint, type GuideFacts, type PlayerProgressFacts, type ProgressiveUiState } from './ext/progressive-ui';
 
 /** New hole's camera framing eases this long at most (ms; P23 4.4) */
 const CAM_EASE_MS = 400;
@@ -1891,7 +1891,7 @@ export class Game {
       this.setBizDefs([{ id: 1, type: 'range', x: fx, y: fy, w: fw, h: fh }]);
       this.parkDefs = [{ id: 1, x: px, y: py, w: pw, h: ph, ground: 'dirt' }]; // T239: the car park starts as packed dirt
       // the ramp from the range to the first hole starts at the range card (P24 Phase 4a, T132)
-      this.golf = s.save; this.golf.progress = { ...emptyProgress(), ramp: 0 };
+      this.golf = s.save; this.golf.progress = { ...emptyProgress(), ramp: 0, guide: newRangeGuide() }; // T239: the guided build's card
       // the range business (P24, T129): the starting range (T239: the guided build: no walkway laid, the player lays its path; the practice area
       // beside the car park is land for sale until bought)
       this.golf.range = defaultRangeBiz();
@@ -3666,8 +3666,6 @@ export class Game {
     return { check: this.inviteCheck()!, invited: !!g.invited, due: tournamentDue(g.invited?.at, next) };
   }
   // ---------- a range start's first minute (plan P22 2.8, T095) ----------
-  /** when the tour's invitation came in this session (performance.now, ms; 0: not this session) */
-  private invitedAt = 0;
   /** the holes with a par, as the last progress check counted them */
   private playableHoles = 0;
   /** whether the tee ring is drawn (the progress check sets it: a range start's New hole in hand before its first hole) */
@@ -3737,9 +3735,7 @@ export class Game {
     if (this.golf?.start !== 'range') return;
     this.progTick = 9; if (e === 'hole') this.playableHoles++;
     this.guideDone = { text: e === 'hole' ? 'Hole built' : e === 'clubhouse' ? 'Clubhouse placed' : 'Car park built', at: performance.now() };
-    const h = this.guideHint(), st = h ? guideTable({ start: 'range' }).find(x => x.id === h.id) : null;
-    if (st?.target.ui) this.pulseAnchor(st.target.ui);
-    this.emit();
+    this.emit(); // (T239: the guide's card ticks its step at the next check)
   }
   /** a founding checklist item's Fix (T188, ui/golf/season.ts FIX): its tool armed (New hole, the car park, the clubhouse) and its anchor pulsed */
   armFix(id: 'holes' | 'carpark' | 'clubhouse') {
@@ -3760,7 +3756,8 @@ export class Game {
   closeWelcome(go: boolean) {
     const v = this.welcomeView(), p = this.golf?.progress;
     if (p && !p.seen.includes('welcome')) { p.seen.push('welcome'); this.scheduleSave(); }
-    if (go && v) { if (v.newHole) this.startFirstHole(); else this.showHint('hint-range-open'); }
+    const cur = rangeGuideCurrent(p?.guide); // T239: the guide's current step's Show me
+    if (go && v) { if (cur !== undefined) this.guideShowMe(RANGE_GUIDE[cur - 1]!.id); else if (v.newHole) this.startFirstHole(); else this.showHint('hint-range-open'); }
     this.emit();
   }
   /** Build the first hole (the welcome card, the guide's Show me): Course on New hole, the camera on the ring's tee spot */
@@ -3776,22 +3773,69 @@ export class Game {
     const front: [number, number, number, number] = [d.x, d.y, d.w, d.h], plot = plotOfFront(front, g.dir);
     return fallbackTeeSpot(plot, front, g.parcel, g.dir, practiceArea(plot, g.dir).box); // off the practice area beside the plot (T130)
   }
-  /** a new range game's guide step as a hint (P22 2.8, T095): the hint bar shows it when no other hint is up. From hole 1 on in practice: until
-   *  then the ramp's hints teach the range, and the welcome card was step 1. Null when its hint was dismissed (Got it), the guide is done, or the
-   *  game is no new range game */
-  guideHint(): FirstRunHint | null {
-    const g = this.golf, p = g?.progress; if (g?.start !== 'range' || !p) return null;
-    const f: GuideFacts = {
+  /** a range start's guide step as a hint (P22 2.8, T095). T239: the guided build's card (rangeGuideView) lists the steps instead, so the hint
+   *  bar shows none (a range save from before T239 has no guide) */
+  guideHint(): FirstRunHint | null { return null; }
+  // ---------- T239: the range start's guided build (guide.ts RANGE_GUIDE; ui/golf/RangeGuideCard.tsx)
+  /** the facts the guided build's steps read */
+  private rangeGuideFacts(): GuideFacts | null {
+    const g = this.golf, p = g?.progress, b = g?.range; if (g?.start !== 'range' || !p || !b) return null;
+    return {
       pieces: p.pieces, roads: p.roads, parks: p.parks, structures: p.structures, kinds: {}, runs: this.traffic.round.runs, holes: this.playableHoles,
-      tutorial: 'on', step: p.seen.includes('welcome') ? 2 : 1, start: 'range', clubhouse: this.bizDefs.some(d => d.type === 'clubhouse'), invited: !!g.invited,
-      ...(this.invitedAt ? { invitedAgoS: (performance.now() - this.invitedAt) / 1000 } : {}),
-      progress: p.ramp !== undefined,
+      tutorial: 'on', step: 1, start: 'range', golfers: b.total.golfers, owned: b.owned, walkway: this.range.hasWalkway(), practiceForSale: this.practiceForSale(),
+      putting: this.range.practiceFacts()?.putting ?? 'none',
     };
-    const st = guideStep(f);
-    if (!st || st.n < 2 || p.dismissed.includes(st.id)) return null;
-    if (st.n === 2 && this.toolUi()?.newHoleLock) return null; // New hole still waits for the ramp, whose hints say so
-    const hole = st.id === 'guide-range-hole' || st.id === 'guide-range-nine';
-    return { id: st.id, stage: 1, title: st.title, body: st.body, targetTool: hole ? 'course' : st.id === 'guide-range-clubhouse' ? 'buildings' : 'select', show: hole || st.id === 'guide-range-clubhouse' };
+  }
+  /** the guide's card: its lines (null: no guide running) and whether it is folded */
+  rangeGuideView(): { lines: GuideLine[]; folded: boolean } | null {
+    const lines = rangeGuideLines(this.golf?.progress?.guide); return lines ? { lines, folded: this.guideFolded } : null;
+  }
+  /** the guide's card folded to its current line (the player's; not saved) */
+  guideFolded = false;
+  /** ticks the steps whose builds are done (a few times a second), pays each its reward and says so */
+  private rangeGuideCheck() {
+    const gd = this.golf?.progress?.guide; if (!gd || gd.off) return;
+    const f = this.rangeGuideFacts(); if (!f) return;
+    const ticked = rangeGuideTick(gd, f); if (!ticked.length) return;
+    for (const s of ticked) {
+      const r = s.reward ?? 0; if (r > 0) this.traffic.spend('construction', -r); // (the reward offsets the builds: booked against construction)
+      this.toast(`Guide: ${s.title} ✓${r > 0 ? ` (+$${r.toLocaleString()})` : ''}`, 'good');
+    }
+    if (!rangeGuideLines(gd)) this.toast('The guide is done: your range is built. Grow it, and the course, your way', 'good');
+    this.scheduleSave(); this.emit();
+  }
+  /** Skip on a guide line (no reward), or Skip guide (id null): the whole card goes */
+  skipGuideStep(id: string | null) {
+    const gd = this.golf?.progress?.guide; if (!gd) return;
+    if (id === null) rangeGuideOff(gd); else if (!rangeGuideSkip(gd, id)) return;
+    this.scheduleSave(); this.emit();
+  }
+  /** the rings the walking path step points at (T239: the car park's edge, the shack's counter, the tee's back), until a time */
+  private guideRings: { pts: Pt[]; until: number } | null = null;
+  /** Show me on a guide line: the tool or card it needs, the camera on its spot and its control pulsed */
+  guideShowMe(id: string) {
+    const st = RANGE_GUIDE.find(s => s.id === id), sc = this.range.scene; if (!st || !sc) return;
+    const b = this.golf?.range, P = (u: number, v: number) => { const o = sc.anchors.lot[0]!; return { x: o.x + sc.roadDir.x * (u - 49) + sc.rangeSide.x * (v - 2), y: o.y + sc.roadDir.y * (u - 49) + sc.rangeSide.y * (v - 2) }; };
+    const card = (anchor: string, at: Pt, z: number) => { this.setTool('select'); this.lookAt(at.x, at.y, z); this.openRangeCard(true); queueMicrotask(() => this.pulseAnchor(anchor)); };
+    switch (st.n) {
+      case 1: card('range-takings', sc.counter, RANGE_CAM_ZOOM); return;
+      case 2: card('range-buy-greens', P(35, 50), 0.15); return;
+      case 3: {
+        if (this.refuseLocked('path')) return;
+        const c = sc.carEdge, s = sc.counter, t = P(30, 17); this.lookAt((c.x + t.x) / 2, (c.y + t.y) / 2, 0.3);
+        if (this.range.cardOpen) this.openRangeCard(false);
+        this.setTool('path'); this.roadClass = 'cart-walk'; // Course › Cart paths & roads, its Walking path
+        this.guideRings = { pts: [c, s, t], until: performance.now() + 20000 };
+        queueMicrotask(() => this.pulseAnchor('rail-course')); this.emit(); return;
+      }
+      case 4: card(b?.owned.includes('gravel') ? 'range-buy-pave' : 'range-buy-gravel', P(59, 10), 0.3); return;
+      case 5: card('range-buy-teeturf', P(35, 21), 0.3); return;
+      case 6:
+        if (this.practiceForSale()) { this.showPracticeSale(); queueMicrotask(() => this.pulseAnchor('land-buy')); }
+        else { this.showPracticeArea(); queueMicrotask(() => this.pulseAnchor('rail-facilities')); }
+        return;
+      default: this.startFirstHole(); queueMicrotask(() => this.pulseAnchor('new-hole')); return;
+    }
   }
   private foundTick = 0;
   /** the tour's invitation (range starts, about twice a second): the moment the checklist is met, golf.invited is the clock's time, the worker
@@ -3800,7 +3844,7 @@ export class Game {
     const g = this.golf; if (g?.start !== 'range' || g.invited || ++this.foundTick % 30) return;
     if (!this.inviteCheck()?.met) return;
     const c = this.traffic.clockTime(performance.now()), next = Math.floor(c / GAME_DAY) * GAME_DAY + GAME_DAY;
-    g.invited = { at: c }; this.invitedAt = performance.now(); // the guide holds its invitation step a moment (T095)
+    g.invited = { at: c };
     this.sendGolf(); this.scheduleSave();
     this.toast(`The tour invites you: the ${tierInfo(1).name} at the end of ${tournamentDue(c, next) ? 'this' : 'next'} season`, 'good');
     this.emit();
@@ -5306,6 +5350,7 @@ export class Game {
    *  opened (its NEW badge goes) */
   private progressCheck() {
     const p = this.golf?.progress; if (!p || ++this.progTick % 10) return;
+    this.rangeGuideCheck(); // T239: the guided build's steps tick
     const f = this.playerProgressFacts(), was = p.ramp;
     if (f && advanceProgress(p, f, this.uiTool)) { this.scheduleSave(); this.emit(); }
     // a ramp step opens (T132); not when its tools were open already, nor New hole's once a hole exists (T095)
@@ -5326,9 +5371,7 @@ export class Game {
     const st = guideTable({ start: 'range' }).find(x => x.id === id), anchor = st?.target.ui ?? HINT_ANCHOR[id];
     if (anchor) queueMicrotask(() => this.pulseAnchor(anchor));
     const sc = this.range.scene;
-    if (id === 'guide-range-hole') { this.startFirstHole(); return; } // T095: the guide's Show me
-    if (id === 'guide-range-nine') { this.setTool('course'); this.paint.setPlan(); this.emit(); return; }
-    if (id === 'guide-range-clubhouse') { this.setTool('buildings'); return; }
+    if (id.startsWith('guide-range-')) { this.guideShowMe(id); return; } // T239: the guided build's Show me
     if (id.startsWith('hint-practice')) { if (this.practiceForSale()) this.showPracticeSale(); else this.showPracticeArea(); return; } // T239: for sale: Land for sale on it
     if ((id === 'hint-range-open' || id === 'hint-range-upgrade') && sc) { this.lookAt(sc.counter.x, sc.counter.y, RANGE_CAM_ZOOM); this.setTool('select'); this.openRangeCard(true); return; }
     if (id === 'hint-range-props' && sc) { this.lookAt(sc.counter.x, sc.counter.y, 0.3); this.setTool('props'); return; }
@@ -6779,9 +6822,11 @@ export class Game {
       ctx.beginPath(); ctx.arc(s.x, s.y, r, 0, Math.PI * 2); ctx.stroke(); ctx.globalAlpha = 1;
     }
     // the tee ring (P22 2.8, T095): a gold ring pulsing out from the suggested tee while a range start's first New hole is in hand
+    // (T239: and the guide's rings, the walking path's ends while its Show me holds them)
+    const gr = this.guideRings && now < this.guideRings.until && !this.range.hasWalkway() ? this.guideRings.pts : [];
     const ts = this.teeRingOn ? this.teeSpot() : null;
-    if (ts) {
-      const s = this.screen(ts.x, ts.y), ph = (now % 1600) / 1600, d = this.dpr, R = 16 * d;
+    for (const at of ts ? [ts, ...gr] : gr) {
+      const s = this.screen(at.x, at.y), ph = (now % 1600) / 1600, d = this.dpr, R = 16 * d;
       ctx.globalAlpha = 0.35; ctx.fillStyle = '#fde68a'; ctx.beginPath(); ctx.arc(s.x, s.y, R, 0, Math.PI * 2); ctx.fill();
       for (const [r, a] of [[R, 1], [R + 34 * ph * d, 1 - ph]] as const) {
         ctx.globalAlpha = a * 0.7; ctx.strokeStyle = '#0f172a'; ctx.lineWidth = 6 * d; ctx.beginPath(); ctx.arc(s.x, s.y, r, 0, Math.PI * 2); ctx.stroke();

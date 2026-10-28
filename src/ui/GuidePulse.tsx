@@ -24,6 +24,8 @@ export function GuidePulse({ anchor }: { anchor: { id: string; until: number } |
   useEffect(() => {
     cancelAnimationFrame(raf.current);
     if (!anchor) { setBox(null); return; }
+    // T239: a control scrolled out of its panel (a range card's upgrade) is brought into view once
+    anchorElement(anchor.id)?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
     const step = () => {
       if (performance.now() > anchor.until) { setBox(null); return; }
       const el = anchorElement(anchor.id), r = el?.getBoundingClientRect();

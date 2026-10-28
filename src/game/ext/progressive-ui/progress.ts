@@ -2,13 +2,17 @@
 // since plan P24 T132 a range start's ramp step reached.
 // Pure TypeScript, no DOM. index.ts re-exports this file, so the imports from './index' are type-only or read inside function bodies (no
 // import-cycle surprises).
+import { normalizeRangeGuide, rangeGuideCurrent, type RangeGuideSave } from './guide';
 import { NEW_BADGE_IDS, RAMP_TOOL_STEP, TOOL_GROUP, TOOL_STAGE, rampEarned, rampLock, resolveOnboardingStage, type OnboardingStage, type PlayerProgressFacts, type RampFacts, type RampStep, type UiToolId } from './index';
 
 /** what the player did in this golf game (saved in GolfSave.progress): course pieces placed, road builds, car parks, event structures, real play
  *  seconds, the hints dismissed, Settings > "Show every tool now" (advanced), the highest unlock stage reached (T117; it never falls) and the
  *  tool and rail group ids opened since they unlocked (T117: their NEW badges are gone); ramp: a new range game's ramp step reached (T132: it
  *  never falls; missing: no ramp, as in every other start and in a range save from before T132, which keeps every tool) */
-export interface GolfProgress { pieces: number; roads: number; parks: number; structures: number; playS: number; dismissed: string[]; advanced: boolean; stage: OnboardingStage; seen: string[]; ramp?: RampStep }
+export interface GolfProgress { pieces: number; roads: number; parks: number; structures: number; playS: number; dismissed: string[]; advanced: boolean; stage: OnboardingStage; seen: string[]; ramp?: RampStep;
+  /** T239: a new range game's guided build (guide.ts RANGE_GUIDE: the steps ticked and skipped, the guide skipped); missing: no guide card (every
+   *  other start, and a range save from before T239) */
+  guide?: RangeGuideSave }
 
 /** a new game's progress: nothing done yet, stage 1 (a new range game sets ramp 0 itself) */
 export function emptyProgress(): GolfProgress { return { pieces: 0, roads: 0, parks: 0, structures: 0, playS: 0, dismissed: [], advanced: false, stage: 1, seen: [] }; }
@@ -36,6 +40,7 @@ export function normalizeProgress(p: Partial<GolfProgress> | null | undefined): 
     seen: old ? NEW_BADGE_IDS.slice() : strings(q.seen),
   };
   if (!old && typeof q.ramp === 'number' && Number.isFinite(q.ramp)) out.ramp = Math.min(3, Math.max(0, Math.floor(q.ramp))) as RampStep;
+  const g = out.ramp !== undefined ? normalizeRangeGuide(q.guide) : null; if (g) out.guide = g; // T239: the guided build (a ramp's only)
   return out;
 }
 
@@ -55,6 +60,8 @@ export function progressFacts(p: GolfProgress, c: CourseProgress): PlayerProgres
     roadsBuilt: p.roads, carParksBuilt: p.parks, eventStructuresPlaced: p.structures, dismissedHints: p.dismissed,
   };
   if (c.range) f.ramp = { ...c.range, reached: p.ramp ?? 3, fresh: p.ramp !== undefined, cardSeen: p.seen.includes(RANGE_CARD_SEEN) };
+  // T239: the guided build's step while it runs (the unlocks follow it)
+  const gs = c.range ? rangeGuideCurrent(p.guide) : undefined; if (gs !== undefined) f.guideStep = gs;
   return f;
 }
 
