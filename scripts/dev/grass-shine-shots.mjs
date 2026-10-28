@@ -4,7 +4,7 @@
 // (synchronous: the draw then a 1 px read that waits for the GPU), its GPU time (EXT_disjoint_timer_query_webgl2, when the browser has it), the
 // bake times and the GPU bytes of the weight masks.
 //   node scripts/dev/grass-shine-shots.mjs --base http://127.0.0.1:5186/ --out E:/ClaudeTemp/T262 [--only shots,strip,flip,numbers] [--frames 20]
-//     [--start fixture=range20] [--modes off,on] [--spots fairway,green,rough,lawn] [--look '{"strength":1}'] [--tag v2] [--dpr 2] [--amplify 20]
+//     [--start fixture=range20] [--seed N (the map)] [--at tee:688,619 (spots by hand, tiles; with --spots tee)] [--rounds 5 (--only pan)] [--modes off,on] [--spots fairway,green,rough,lawn] [--look '{"strength":1}'] [--tag v2] [--dpr 2] [--amplify 20]
 // --amplify N: while the GPU time is measured every ground chunk is drawn N times over itself (gl.drawChunk), so the ground pass's cost (the
 // shine's shader) stands out from the rest of the frame on a fast GPU; the GPU result is then the ground pass's ms per frame x N plus the rest
 // Needs a dev server (vite) on --base. One headless Edge, closed when done; a fresh profile, so each start is a new game.
@@ -39,7 +39,7 @@ try {
   const page = await ctx.newPage();
   page.on('pageerror', e => console.log('[pageerror]', e.message));
   page.on('console', m => { if (m.type() === 'error' || /grass shine/.test(m.text())) console.log('[console]', m.text().slice(0, 300)); });
-  await page.goto(`${base}?${start}&stamp=0`, { timeout: 240000, waitUntil: "domcontentloaded" });
+  await page.goto(`${base}?${start}&stamp=0${opt('seed', '') ? `&seed=${opt('seed', '')}` : ''}`, { timeout: 240000, waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => window.__game?.ready, null, { timeout: 240000 });
   await page.addStyleTag({ content: '* { visibility: hidden !important } canvas { visibility: visible !important }' });
   await page.evaluate(look => { const g = window.__game; g.prebake = () => {}; g.setSpeed(0); g.setShowGrid?.(false); window.__night = 0; g.nightAmount = () => window.__night; g.setShine?.(look); }, look);
@@ -76,8 +76,12 @@ try {
       if (a > area) { area = a; let x = 0, y = 0; for (let k = 0; k < q.length; k += 2) { x += q[k]; y += q[k + 1]; } lawn = { x: x / (q.length / 2), y: y / (q.length / 2), area: Math.round(a) }; }
     }
     out.lawn = lawn;
+    // the range's tee turf (a painted area), when the start has one
+    for (const ps of g.ground.lotPatches.values()) for (const p of ps) if (p.paint && /range-tee/.test(p.tex) && !out.rangeTee) { const q = p.pts; let x = 0, y = 0; for (let k = 0; k < q.length; k += 2) { x += q[k]; y += q[k + 1]; } out.rangeTee = { x: x / (q.length / 2), y: y / (q.length / 2) }; }
     return out;
   });
+  // --at name:x,y;name:x,y (tiles): spots by hand (a hole's tee)
+  for (const a of opt('at', '').split(';').filter(Boolean)) { const [n, xy] = a.split(':'), [x, y] = xy.split(',').map(Number); spots[n] = { x, y }; }
   console.log('spots', JSON.stringify(spots)); report.spots = spots;
   const look_ = (x, y, z) => page.evaluate(([x, y, z]) => { const g = window.__game; g.camEase = null; g.lookAt(x, y, z); }, [x, y, z]);
   // ---- the stills: each spot at each zoom, off and every source
@@ -137,6 +141,26 @@ try {
     const webp = join(out, `pan-fairway-30pct-${stripMode}${tag}.webp`);
     await anim.webp({ quality: 80, delay: Array(N).fill(160), loop: 0 }).toFile(webp);
     console.log(webp); report.flip = webp;
+  }
+  // ---- the frame's CPU alone (--only pan): per zoom, --rounds pans over the fairway (the same as the numbers' pan), for a side by side of
+  //      two builds on one map (--seed)
+  if (only.has('pan') && spots.fairway) {
+    report.pan = {};
+    for (const z of zooms) {
+      await look_(spots.fairway.x, spots.fairway.y, z); await settle(page);
+      for (let round = 0; round < +opt('rounds', '5'); round++) {
+        const pan = await page.evaluate(async z => {
+          const g = window.__game, x0 = g.cam.X, y0 = g.cam.Y, v = z >= 0.25 ? [500, 200] : z >= 0.12 ? [900, 350] : [1600, 600], cpu = [], t0 = performance.now(); let last = t0;
+          g.camEase = null;
+          await new Promise(res => { const step = now => { const dt = Math.min(0.05, (now - last) / 1000), t = (now - t0) / 1000, dir = Math.floor(t / 1.5) % 2 ? -1 : 1; last = now; g.cam.z = z; g.cam.X += v[0] * dt * dir; g.cam.Y += v[1] * dt * dir; if (t > 0.5) cpu.push(g.perf.cpuMs); if (t < 6.5) requestAnimationFrame(step); else res(); }; requestAnimationFrame(step); });
+          g.cam.X = x0; g.cam.Y = y0; cpu.sort((a, b) => a - b);
+          return { avg: +(cpu.reduce((a, b) => a + b, 0) / Math.max(1, cpu.length)).toFixed(3), p95: +(cpu[Math.floor(0.95 * cpu.length)] ?? 0).toFixed(3), n: cpu.length };
+        }, z);
+        (report.pan[`${Math.round(z * 100)}pct`] ??= []).push(pan); await settle(page, 300);
+      }
+      console.log(`${Math.round(z * 100)}pct`, JSON.stringify(report.pan[`${Math.round(z * 100)}pct`]));
+    }
+    writeFileSync(join(out, `pan${tag}.json`), JSON.stringify(report.pan, null, 2));
   }
   // ---- the numbers, at the fairway: per mode (three rounds, alternating) the bake times of the view (invalidateAll) and their masks' share,
   //      the frame's CPU time while the camera pans (6 s, the bench's speeds), its draw time and GPU time (240 frames), and the masks' GPU bytes

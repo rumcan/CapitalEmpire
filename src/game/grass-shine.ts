@@ -27,8 +27,11 @@ export const SHINE_INSET = [14, 60] as const;
  *  have no mask: the fade keeps that switch from showing) */
 export const SHINE_ZOOM = [0.105, 0.14] as const;
 
-/** the surfaces' shine groups, most shine first (the issue's rule: greens and fairways most; then the fringe, first cut and tee; then the
- *  town lawns, the map's grass and the range's outfield; rough, long grass and fescue least, but never none) */
+/** the surfaces' shine groups, most shine first (the issue's rule: greens and fairways most; then the fringe and first cut; then the town
+ *  lawns, the map's grass and the range's outfield; rough, long grass and fescue least, but never none). Tees take very little: their paint
+ *  (tee-run) is already the brightest, most contrasty turf, and any more light read as grainy lime (the owner, 2026-10-28: "the grass on
+ *  these tees are horrible"). The green's weight is under the fairway's because its paint is smooth: its flat blades catch the whole sheen
+ *  near the screen's centre (measured at 30%: the green +7 luma, the fairway +2, the tee +2) */
 export type ShineGroup = 'green' | 'fairway' | 'fringe' | 'firstCut' | 'tee' | 'lawn' | 'map' | 'outfield' | 'rough' | 'longGrass' | 'fescue';
 export const SHINE_GROUPS: readonly { key: ShineGroup; label: string }[] = [
   { key: 'green', label: 'Greens' }, { key: 'fairway', label: 'Fairways' }, { key: 'fringe', label: 'Fringe' }, { key: 'firstCut', label: 'First cut' },
@@ -37,7 +40,7 @@ export const SHINE_GROUPS: readonly { key: ShineGroup; label: string }[] = [
 ];
 export type ShineWeights = Record<ShineGroup, number>;
 export const SHINE_WEIGHTS: Readonly<ShineWeights> = {
-  green: 1, fairway: 0.9, fringe: 0.7, firstCut: 0.65, tee: 0.7, lawn: 0.5, map: 0.4, outfield: 0.5, rough: 0.3, longGrass: 0.22, fescue: 0.2,
+  green: 0.55, fairway: 0.9, fringe: 0.5, firstCut: 0.45, tee: 0.2, lawn: 0.4, map: 0.35, outfield: 0.4, rough: 0.25, longGrass: 0.18, fescue: 0.15,
 };
 /** each texture's group by its name (a painted surface's key, a preset's or a picture's name without its prefix; renderer.ts lays the map's
  *  own grass, the terrain's ground, meadow and woodland floor, as 'map') */
@@ -69,6 +72,8 @@ export function shineWeight(tex: string, kind: string | null | undefined, w: Rea
  *  normals' tilt per unit of slope), eye (the eye's distance over half the screen's longer side, along the sun's mirror from the screen's
  *  centre: nearer, the glint slides faster as the camera pans) and night (the share lost after dusk) */
 export interface ShineLook { on: boolean; strength: number; size: number; weights: ShineWeights; bump: number; eye: number; night: number }
+/** where the game remembers the look (engine.ts; v2 from the softer look of 2026-10-28: a look saved before it is not read) */
+export const SHINE_KEY = 'capitalempire.grassShine.v2';
 /** the highlight's exponent at size 1 */
 export const SHINE_GLOSS = 24;
 export const SHINE_LOOK: Readonly<ShineLook> = { on: true, strength: 0.8, size: 1, weights: { ...SHINE_WEIGHTS }, bump: 0.6, eye: 1.5, night: 0.9 };
@@ -94,8 +99,12 @@ export const SUN_SCREEN = (() => {
 })();
 /** the sun's colour on the blades (a warm white: the T110 shine's) */
 export const SHINE_TINT = [1.0, 0.96, 0.82] as const;
-/** the highlight's amount (the colour-squared gain at full weight, strength 1) and how much of it is whitened (the sun's colour, not the grass's) */
-export const SHINE_AMOUNT = 1.0, SHINE_WHITE = 0.5;
+/** the highlight's amount (the colour-squared gain at full weight, strength 1) and how much of it is whitened (the sun's colour, not the
+ *  grass's). Measured at the screen's centre at 30% (the box of scripts/dev/grass-shine-shots.mjs's stills): a green +6 luma and +20% grain at
+ *  most; at 1.0 (#792) it was +32 luma and twice the grain, the tees +17 and +39% */
+export const SHINE_AMOUNT = 0.3, SHINE_WHITE = 0.7;
+/** the blade tops' share: the shine on a pixel below its local mean is this much of one above it (higher: a softer sheen, less grain) */
+export const SHINE_TIP_FLOOR = 0.6;
 /** the chunk colour's luminance high-pass spread (a radius-1.5 Laplacian on the baked chunk, measured on the fairway, green and lawn at 30%),
  *  so its heights come out in standard deviations */
 export const LUM_HP_STD = 0.022;
@@ -155,7 +164,7 @@ export const GRASS_SHINE_GLSL = `vec3 grassShine(vec3 c, float z, vec2 slope, fl
   // the blade tops (above the local mean) most; grass-coloured pixels only, green to golden (a grey path, a blue pond, a red leaf or the
   // sand of a bunker laid over the grass takes little or none)
   float mx = max(c.r, max(c.g, c.b)), mn = min(c.r, min(c.g, c.b));
-  float tip = mix(0.3, 1.0, smoothstep(-1.0, 1.2, z));
+  float tip = mix(${g(SHINE_TIP_FLOOR)}, 1.0, smoothstep(-1.0, 1.2, z));
   float key = smoothstep(0.42, 0.55, c.g / max(c.r, 0.001)) * (1.0 - smoothstep(0.72, 0.86, c.b / max(c.g, 0.001))) * smoothstep(0.16, 0.3, (mx - mn) / max(mx, 0.001));
   // T110's textured light (its own colour squared), half of it whitened: a sheen is the sun's colour more than the grass's
   float l = dot(c, vec3(0.3, 0.59, 0.11));
