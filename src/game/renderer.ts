@@ -1382,18 +1382,41 @@ export class GroundPainter {
    *  the tiles drawn straight into a scratch layer over the band's cells (exact: a copy each), cut to the band (destination-in), then laid
    *  over those px of the chunk (as layer() laid the composed swamp through the band before; no composed buffer kept). false when a tile is
    *  not decoded (provisional: baked again) */
-  private swampLayer(ctx: C2D, tp: TiledPick, sband: { cv: Cnv; box: BBox }, x0: number, y0: number, res: number): boolean {
-    const c = this.chunkNow!, [i0, j0, i1, j1] = this.cellsOf(sband.box), rx = i0 * PAINT_CELL, ry = j0 * PAINT_CELL, rw = Math.min(c.W, i1 * PAINT_CELL) - rx, rh = Math.min(c.H, j1 * PAINT_CELL) - ry;
-    if (rw <= 0 || rh <= 0) return true;
-    const b = this.bufferAtLeast('swampLayer', c.W, c.H), g = ctx2d(b); // (it only grows: chunks of every level share it, never resized between them)
-    g.save(); g.clearRect(rx, ry, rw, rh); g.beginPath(); g.rect(rx, ry, rw, rh); g.clip();
-    const ok = this.tilesInto(g, tp, [rx, ry, rw, rh], true);
-    if (ok) { g.setTransform(c.M); g.globalCompositeOperation = 'destination-in'; g.imageSmoothingEnabled = true; g.drawImage(sband.cv, x0, y0, sband.cv.width / res, sband.cv.height / res); }
-    g.restore();
-    if (!ok) { this.provisional = true; return false; }
-    ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; ctx.drawImage(b, rx, ry, rw, rh, rx, ry, rw, rh); ctx.restore();
+  private swampLayer(ctx: C2D, tp: TiledPick, sband: { cv: Cnv; box: BBox }, x0: number, y0: number, res: number, covers: readonly { a: BandAlpha; res: number }[] = []): boolean {
+    const c = this.chunkNow!, [i0, j0, i1, j1] = this.cellsOf(sband.box);
+    if (i1 <= i0 || j1 <= j0) return true;
+    // the cells the band lies on (its samples, every other one, mapped to the chunk's px), grown by a cell: each row's runs of them are laid,
+    // not the band's whole box (a river crossing a chunk on the slant covers a strip of it)
+    const cw = i1 - i0, ch = j1 - j0, on = new Uint8Array(cw * ch), m = c.M;
+    if (covers.length) {
+      for (const { a, res: r } of covers) for (let v = 0; v < a.H; v += 2) for (let u = 0; u < a.W; u += 2) {
+        if (!a.data[(v * a.W + u) * 4 + 3]) continue;
+        const x = x0 + (u + 0.5) / r, y = y0 + (v + 0.5) / r, ci = Math.floor((m.a * x + m.c * y + m.e) / PAINT_CELL) - i0, cj = Math.floor((m.b * x + m.d * y + m.f) / PAINT_CELL) - j0;
+        for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) { const ii = ci + di, jj = cj + dj; if (ii >= 0 && jj >= 0 && ii < cw && jj < ch) on[jj * cw + ii] = 1; }
+      }
+    } else on.fill(1);
+    const runs: [number, number, number, number][] = [];
+    for (let j = 0; j < ch; j++) for (let i = 0; i < cw; i++) {
+      if (!on[j * cw + i]) continue;
+      let e = i; while (e + 1 < cw && on[j * cw + e + 1]) e++;
+      const rx = (i0 + i) * PAINT_CELL, ry = (j0 + j) * PAINT_CELL, rw = Math.min(c.W, (i0 + e + 1) * PAINT_CELL) - rx, rh = Math.min(c.H, (j0 + j + 1) * PAINT_CELL) - ry;
+      if (rw > 0 && rh > 0) runs.push([rx, ry, rw, rh]);
+      i = e;
+    }
+    // straight onto the chunk (whole there: the ground under it is laid): the band cut out of it (destination-out), then the tiles laid into
+    // the hole (destination-over): the ground times one less the band plus the tiles times the band, as a layer laid through the band gives,
+    // with no scratch layer to clear and lay
+    if (!this.tilesReady(tp)) { this.provisional = true; return false; }
+    for (const [rx, ry, rw, rh] of runs) {
+      ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.beginPath(); ctx.rect(rx, ry, rw, rh); ctx.clip();
+      ctx.setTransform(c.M); ctx.globalCompositeOperation = 'destination-out'; ctx.imageSmoothingEnabled = true; ctx.drawImage(sband.cv, x0, y0, sband.cv.width / res, sband.cv.height / res);
+      ctx.globalCompositeOperation = 'destination-over'; this.tilesInto(ctx, tp, [rx, ry, rw, rh], true);
+      ctx.restore();
+    }
     return true;
   }
+  /** T265: a tile set family's tiles at the bake's band are all decoded (swampLayer cuts the ground only when it can lay them) */
+  private tilesReady(tp: TiledPick): boolean { const band = bandOf(this.tex.tileTs); return tp.urls[band].every(u => !!this.tex.tileImage(u)); }
   /** T199: the swamp's gloss over the chunk being baked (swamp.ts): each tile's gloss (glossTileOf) laid where tiledBuf lays its picture, over
    *  the band's box, at a GLOSS.maskK-th of the chunk's size; then cut to the band (its cover, swampNow) and off the stream's water and lip (cut,
    *  tile space). null when a tile is not decoded */
@@ -1504,7 +1527,7 @@ export class GroundPainter {
     // (T265: the swamp's tile set straight through the band, swampLayer: no composed buffer a chunk, whose room in the cache is the grass's; a
     //  painted look composed and laid as before)
     const swTiles = sband ? this.tex.paintedOf('swamp')?.tiled : undefined, swBuf = sband && !swTiles ? this.paintedBuf('swamp', sband.box) : null;
-    const swLaid = !!sband && (swTiles ? this.swampLayer(ctx, swTiles, sband, tx0, ty0, sband.res) : !!swBuf);
+    const swLaid = !!sband && (swTiles ? this.swampLayer(ctx, swTiles, sband, tx0, ty0, sband.res, [...(sw ? [{ a: sw, res: cres }] : []), ...(rv ? [{ a: rv, res: rres }] : [])]) : !!swBuf);
     const creekSwamp = !!(sw && swLaid);
     if (sband && swLaid) {
       const sb = sband.cv, sr = sband.res;
