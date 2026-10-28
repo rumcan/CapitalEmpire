@@ -10,6 +10,7 @@ import { busGhostLabel, costLabel, markerGhost, structureGhost, tollGhostLabel }
 import { CourseCursor, type CursorView } from './ext/course-cursor';
 import { browserCursorTexture } from './ext/course-cursor/tex';
 import { getTournamentWeather } from './golf/weather';
+import { clubTitle, type ClubTitle } from './golf/clubtitle';
 import { CLASS, FLAG_COST, Grid, classOf, courseRoadOpen, courseTierNeeded, isCourseClass, JUNCTIONS, KEY_CLASSES, RoadNetwork, SLIP_CORNER_COST, SPEED_BONUS_KMH, RB_LANE, ringRadius, NARROWER, VARIANTS as CLASS_VARIANTS, WIDER, SK, add, dot, mul, norm, perp, sub, unionBox, variantCost, vlen, type AutoProp, type BBox, type ClassId, type Leg, type Node, type NodeType, type PieceSel, type Pt, type PortalRec, type RoadClass, type Seg, type SegKind, type TypeId } from './network';
 import { NetEditor, applyNodeEntry, netToOps, nodeEntry, straightChain } from './netops';
 import { TIER_BADGE, flagRule, isLights, junctionCorners, slipPlan, slipsOn, type Corner } from './junctions';
@@ -3685,12 +3686,16 @@ export class Game {
   private townUnnamed(): boolean { const g = this.golf; return g?.start === 'range' && g.progress?.ramp !== undefined && !this.firstSeen('town-named'); }
   /** town i's name as the map and the minimap say it, or null while a new range game's town is unnamed (P22 2.8) */
   townName(i: number): string | null { return i === 0 && this.townUnnamed() ? null : this.names.town(i); }
-  /** the top bar's title (P22 2.8), its big line and its small one: a new range game's range ("Driving Range", "on County Road 36") until its
-   *  town is named, then the town ("Pine Hollow", "Town Builder"); null in other games (the game's own title) */
-  titleName(): { name: string; sub: string } | null {
-    const g = this.golf; if (g?.start !== 'range') return null;
-    if (!this.townUnnamed()) return { name: this.names.town(0), sub: 'Town Builder' };
-    const r = this.rangeRoad(); return { name: 'Driving Range', sub: r ? `on ${r}` : 'on the county road' };
+  /** the tournament run whose weather the game shows now (1-based, as getTournamentWeather takes it): the one the tournament chip and the grass
+   *  read (during the evaluation the run just played, else the next). The title's weather is the month's in this run, so August's is the tournament's */
+  weatherRun(): number { const r = this.traffic.round; return r.stage === 'eval' && r.last ? r.last.run : r.runs + 1; }
+  /** the top bar's title (T235, #690; the concept's): in a golf game the club's name (golf/clubtitle.ts: "Maple Falls Driving Range" before a
+   *  range start's first hole, "... Golf Club", "... Golf & Country Club" from tier 4) over "Year 3 • October • Sunny 16°C"; null in a classic
+   *  town game (the old "Maple Falls / Town Builder"). holes: the course's holes with a tee and a pin (the founding chip's), counted here when not given */
+  titleName(holes: number = this.inviteCheck()?.holes ?? 0): ClubTitle | null {
+    const g = this.golf; if (!g) return null;
+    const r = this.traffic.round, c = this.traffic.clockTime(performance.now()) - (r.stage !== 'free' ? 1 : 0), range = g.start === 'range';
+    return clubTitle({ seed: this.seed, seasons: this.seasonsDone(), month: seasonMonth(c), run: this.weatherRun(), range, holes, tier: g.tier, road: range && holes < 1 ? this.rangeRoad() : '' });
   }
   /** the welcome card (P22 2.8): once per new range game, while it is new (under WELCOME_PLAY_S of play when loaded), until it is closed.
    *  newHole: New hole is open (the card's button then builds the first hole; while P24's ramp holds it, the button opens the range) */

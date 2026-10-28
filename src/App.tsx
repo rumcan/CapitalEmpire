@@ -58,6 +58,7 @@ import { CourseStatsPanel } from './ui/CourseStatsPanel';
 import { SeasonCard } from './ui/golf/SeasonCard';
 import { seasonChip, seasonPhase } from './ui/golf/season';
 import { GuidePulse } from './ui/GuidePulse';
+import { ClubTitleText } from './ui/ClubTitle';
 import { GrassManagementPanel } from './ui/GrassManagementPanel';
 import { GREENKEEPING } from './game/features';
 import { formatPercent } from './ui/TournamentResults';
@@ -297,7 +298,7 @@ export default function App() {
   /** a range start's founding season before the invitation (P22 2.8, T095): "Founding season · n of 9 holes"; and the title's place (the range's,
    *  then the town's once named) */
   const founding = fv && gv && !fv.invited && game!.traffic.round.runs === 0 && !gv.live ? `Founding season · ${Math.min(fv.check.holes, fv.check.holesNeeded)} of ${fv.check.holesNeeded} holes` : null;
-  const title = game?.ready ? game.titleName() : null;
+  const title = game?.ready ? game.titleName(fv?.check.holes) : null; // T235: the club's name and date in a golf game (null: the classic town game's old line)
   /** the tool visibility in force (T033 progressive unlocks; null shows everything) */
   const ui = game?.toolUi() ?? null;
   /** whether a golf top-bar chip is shown under the progressive unlocks */
@@ -363,12 +364,18 @@ export default function App() {
         <>
           <div ref={topBar} className="pointer-events-none absolute left-0 right-0 top-0 z-30 flex flex-wrap items-start justify-between gap-2 p-3">
             <div className="pointer-events-auto glass flex items-center gap-1.5 px-3 py-2 min-[1600px]:gap-3 min-[1600px]:px-4">
-              <div className="flex items-center gap-2.5">
+              {/* T235 (#690, the concept's title): in a golf game the club's name over "Year 3 • October • Sunny 16°C" (ui/ClubTitle.tsx); its full
+                  text is the tooltip, on the leaf too, so it is there where the words are hidden. The classic town game keeps its old line */}
+              <div className="flex items-center gap-2.5" data-tip={title?.tip} data-testid="title-block">
                 <Icon name="leaf" size={38} />
-                <div className={gv ? 'max-[1899px]:hidden' : 'max-[1599px]:hidden'}>{/* the golf bar's title from 1900 px (T135: one row) */}
-                  <div className="max-w-[12rem] truncate whitespace-nowrap font-display text-2xl font-bold leading-tight text-[var(--gold-hi)]" data-testid="title-name" title={title ? `${title.name} · ${title.sub}` : undefined}>{title?.name ?? 'Maple Falls'}</div>
-                  <div className="label-caps max-w-[12rem] truncate whitespace-nowrap">{title?.sub ?? 'Town Builder'}</div>
-                </div>
+                {title ? (
+                  <div className="max-[1899px]:hidden">{/* the golf bar's title from 1900 px (T135: one row) */}<ClubTitleText title={title} /></div>
+                ) : (
+                  <div className="max-[1599px]:hidden">
+                    <div className="max-w-[12rem] truncate whitespace-nowrap font-display text-2xl font-bold leading-tight text-[var(--gold-hi)]" data-testid="title-name">Maple Falls</div>
+                    <div className="label-caps max-w-[12rem] truncate whitespace-nowrap">Town Builder</div>
+                  </div>
+                )}
               </div>
               <div className="h-9 w-px bg-white/10" />
               {gv ? (
@@ -392,7 +399,7 @@ export default function App() {
                   {game.golf?.start === 'range' && <button className={`chip ${game.range.cardOpen ? 'chip-on' : ''}`} onClick={() => game.openRangeCard()} data-tip="The driving range: golfers, takings, bucket price and upgrades" aria-label="Range" data-testid="range-chip" data-guide="range-chip"><Icon name="income" size={16} /><span className={WIDE}>Range</span></button>}
                   {game.hasClubhouse && <button className={`chip ${game.clubCardOpen ? 'chip-on' : ''}`} onClick={() => game.openClubCard()} data-tip="The clubhouse: today's members, visitors, green fees and waits" aria-label="Clubhouse" data-testid="club-chip"><Icon name="house" size={16} /><span className={WIDE}>Club</span></button>}
                   {fv?.invited && game.traffic.round.runs === 0 && !gv.live && <span className="flex items-center gap-1 whitespace-nowrap rounded-md border border-amber-400/40 bg-amber-400/15 px-2 py-1 text-xs font-semibold text-amber-200" data-testid="invite-pill" data-guide="invite-pill" data-tip={`The tour's invitation: the Club Championship at the end of ${fv.due ? 'this' : 'next'} season (the first tournament is held at the end of the season it names)`}><Icon name="trophy" size={14} /><span className="min-[2200px]:hidden">Invited</span><span className={WIDE}>The Club Championship: end of {fv.due ? 'this' : 'next'} season</span></span>}
-                  {gv.live && (() => { const w = getTournamentWeather(game.seed, game.traffic.round.stage === 'eval' && game.traffic.round.last ? game.traffic.round.last.run : game.traffic.round.runs + 1); return <span className="rounded-md border border-amber-400/40 bg-amber-400/15 px-2 py-1 text-xs font-semibold text-amber-200" data-tip={w.summary}>{w.icon} {w.label}</span>; })()}
+                  {gv.live && (() => { const w = getTournamentWeather(game.seed, game.weatherRun()); return <span className="rounded-md border border-amber-400/40 bg-amber-400/15 px-2 py-1 text-xs font-semibold text-amber-200" data-tip={w.summary}>{w.icon} {w.label}</span>; })()}
                   {/* T188 (P23-UX P2-2): the season chip opens the Season card (the founding checklist or the tournament plan, and the Course stats, which had a
                       chip of their own); in a founding season it says the holes ("◔ 3/9 holes", T095's founding line) */}
                   {chip('courseStats') && (() => { const ph = seasonPhase(fv, game.traffic.round.runs); return <button className={`chip ${seasonOpen ? 'chip-on' : ''} ${ph === 'founding' ? 'font-semibold text-amber-300' : ''}`} onClick={() => { setSeasonOpen(!seasonOpen); setCourseStats(null); }} data-guide="season-chip" data-testid={ph === 'founding' ? 'founding-chip' : 'season-chip'} data-tip={founding ? `${founding}: the tour invites you with ${fv!.check.holesNeeded} holes, a car park and a clubhouse. Open the season's checklist and Course stats` : "The season: its tournament plan and the Course stats"} aria-label="Season"><Icon name="calendar" size={16} />{ph === 'founding' && fv ? <><span className="max-[1599px]:hidden">{seasonChip(ph, fv.check)}</span><span className="min-[1600px]:hidden">{`◔ ${Math.min(fv.check.holes, fv.check.holesNeeded)}/${fv.check.holesNeeded}`}</span></> : <span className={WIDE}>{seasonChip(ph, fv?.check)}</span>}</button>; })()}
