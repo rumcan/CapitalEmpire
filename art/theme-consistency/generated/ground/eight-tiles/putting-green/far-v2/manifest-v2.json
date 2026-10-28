@@ -1,0 +1,145 @@
+{
+  "schema": 1,
+  "material": "putting-green",
+  "zoom": "far",
+  "master": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v2/master.native-crop.png",
+  "outputFolder": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v2",
+  "collarPixels": 64,
+  "patchSpanPixels": 256,
+  "repairRaws": {
+    "northSouth": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v2/full-north-south-repair-v2.raw.png",
+    "westEast": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v2/full-west-east-repair-v2.raw.png"
+  },
+  "repairFullFrameCrops": {
+    "northSouth": {
+      "left": 0,
+      "top": 0,
+      "width": 1742,
+      "height": 902
+    },
+    "westEast": {
+      "left": 0,
+      "top": 0,
+      "width": 1742,
+      "height": 902
+    }
+  },
+  "variants": [
+    {
+      "id": "tile-01",
+      "raw": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v2/tile-01-v2.raw.png",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 1742,
+        "height": 902
+      }
+    },
+    {
+      "id": "tile-02",
+      "raw": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v2/tile-02-v2.raw.png",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 1742,
+        "height": 902
+      }
+    },
+    {
+      "id": "tile-03",
+      "raw": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v2/tile-03-v2.raw.png",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 1742,
+        "height": 902
+      }
+    },
+    {
+      "id": "tile-04",
+      "raw": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v2/tile-04-v2.raw.png",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 1742,
+        "height": 902
+      }
+    }
+  ],
+  "lighting": "Uniform overall ambient exposure. Screen upper-right highlights occur only on tiny local painted turf strokes; shallow undersides toward lower-left.",
+  "materialMeaning": "Very short smooth fine pale-to-medium green putting turf, clearly finer and shorter than fairway. No flags, holes or course objects.",
+  "independentlyAuthoredHeight": true,
+  "minVisibleTiles": 2,
+  "maxVisibleTiles": 4,
+  "allowRotate": false,
+  "allowMirror": false,
+  "compositeMethod": "minimum-error-cut",
+  "cutOverlapPixels": 128,
+  "repairCutMarginPixels": 64,
+  "repairContext": "full-frame-bands",
+  "repairCrops": {
+    "northSouth": {
+      "left": 743,
+      "top": 387,
+      "width": 256,
+      "height": 128
+    },
+    "westEast": {
+      "left": 807,
+      "top": 323,
+      "width": 128,
+      "height": 256
+    }
+  },
+  "sourceRecords": [
+    {
+      "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v2/tile-01-v2.raw.png",
+      "sha256": "38235a30c00c49150427e136df90ee9859c576860affadb5b11e8bca2252bc45",
+      "nativePixels": [
+        1742,
+        903
+      ],
+      "provenance": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v2/tile-01-v2.provenance.json",
+        "sha256": "6b89e9107d184b2aeb38ebbade037ccaa3efcd63655ae27a606e3175ee465133"
+      }
+    },
+    {
+      "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v2/tile-02-v2.raw.png",
+      "sha256": "814f995c50c0b689137e201349cbacfa68f47e6986ff76de9d1d4b6f3e510e98",
+      "nativePixels": [
+        1742,
+        903
+      ],
+      "provenance": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v2/tile-02-v2.provenance.json",
+        "sha256": "6981fd56aada5649dbdbcd5846d838095f9d2c78a6c73df2cdc43a9a1b25b6af"
+      }
+    },
+    {
+      "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v2/tile-03-v2.raw.png",
+      "sha256": "324184ee7e1536209fd5692ee6fed8fe3ea956b258c5242fcd37d4c74e277034",
+      "nativePixels": [
+        1742,
+        903
+      ],
+      "provenance": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v2/tile-03-v2.provenance.json",
+        "sha256": "e37b40f3660d2b3ddde8b5de6253ac998ed6e29691fd379eea0c8e2555d301cf"
+      }
+    },
+    {
+      "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v2/tile-04-v2.raw.png",
+      "sha256": "9c5e3956454cba3d2d3540c23136d6f65e198b6cd22ba728381cbac9d9e887ff",
+      "nativePixels": [
+        1742,
+        903
+      ],
+      "provenance": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v2/tile-04-v2.provenance.json",
+        "sha256": "edc233d5ff55e68be1644a9cc1ab692b923ba308acabd0aa4d7efa0cb1f2f729"
+      }
+    }
+  ],
+  "reviewStatus": "Prepared only. Native and shuffled appearance review required; file and border checks do not approve artwork."
+}

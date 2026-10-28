@@ -1,0 +1,125 @@
+{
+  "schema": 1,
+  "reviewedDate": "2026-10-27",
+  "reviewer": "/root",
+  "recordedBy": "/root/art_export_resume",
+  "material": "fringe",
+  "zoom": "far",
+  "revision": "far-v1",
+  "decision": "accepted-for-art-appearance",
+  "activeVariants": 4,
+  "scope": "Primary inspected all six selected saved-PNG shuffled four-tile proofs and native crosses, plus native collar evidence. Saved-art approval only; no owner signoff or game/studio integration claim.",
+  "materialIdentity": "Distinct short emerald-green putting apron/fringe, a little coarser and darker than putting green; not first-cut rough.",
+  "lighting": "Even overall exposure, with upper-right illumination expressed in local painted turf strokes only. No broad upper-right bright region/lower-left dark region or edge frame in the inspected proofs.",
+  "adjacency": "No old hard cross, conspicuous rectangular/jigsaw brush-grain transition or lighting frame in inspected shuffled/native evidence. Soft natural local painted variation remains.",
+  "nativeCuts": "Native pixel-selection boundaries may remain locally traceable under arbitrary enlargement; no unlimited-zoom invisibility claim.",
+  "objectRemoval": "No retained building, road, tree, UI/text, cast scene shadow or magenta annotation seen in inspected final artwork.",
+  "files": [
+    {
+      "file": "tile-01.png",
+      "sha256": "5e3044e2aeaea07d9a019e09d1cc3194722aa8d5df51880f771943e508b2f582",
+      "dimensions": [
+        1742,
+        902
+      ],
+      "bytes": 4116625
+    },
+    {
+      "file": "tile-02.png",
+      "sha256": "dcb06e7f287027451dc8cd0470f40357b733582fc3d46aeadc74843091f164fd",
+      "dimensions": [
+        1742,
+        902
+      ],
+      "bytes": 3786183
+    },
+    {
+      "file": "tile-03.png",
+      "sha256": "b93aef8fd92fd9c8d6fb9cfdda148e347cce343d5ab54336d1ea164ba8626581",
+      "dimensions": [
+        1742,
+        902
+      ],
+      "bytes": 3805615
+    },
+    {
+      "file": "tile-04.png",
+      "sha256": "d4e63a0120c76b91858384c1a57b6c5378e8e05da5b5d0d779bb4edd291935d9",
+      "dimensions": [
+        1742,
+        902
+      ],
+      "bytes": 3963801
+    }
+  ],
+  "evidence": [
+    {
+      "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/review/four-tiles-shuffled-screen.png",
+      "sha256": "e0c1c745e4f0983785100e1563974c3c2db69c53fd7c87dda4e9e4e9879add4d",
+      "bytes": 3301860,
+      "nativePixels": [
+        1742,
+        902
+      ]
+    },
+    {
+      "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/review/four-tiles-shuffled-native.png",
+      "sha256": "38c50652a40dc7a194ad4dfaf5422d188c29357b84379f8d4b78c0ed56c50cde",
+      "bytes": 13214827,
+      "nativePixels": [
+        3484,
+        1804
+      ]
+    },
+    {
+      "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/review/two-tiles-horizontal-native.png",
+      "sha256": "5ba6c90fdc041644005e4550b8227d666c8a82dd4c15289094336c2ba644ccab",
+      "bytes": 6906073,
+      "nativePixels": [
+        3484,
+        902
+      ]
+    },
+    {
+      "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/review/two-tiles-vertical-native.png",
+      "sha256": "126467c5ef6d52ae1a77329e06d844b40e4389f1178ba24c9bdb1906e6804c28",
+      "bytes": 7590037,
+      "nativePixels": [
+        1742,
+        1804
+      ]
+    },
+    {
+      "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/review/final-cross-native.png",
+      "sha256": "73ef6c0a80e791ced16330b2c6cd31be06992ef7d22238fbc3def7be7245d3a9",
+      "bytes": 834983,
+      "nativePixels": [
+        700,
+        460
+      ]
+    },
+    {
+      "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/review/final-tile03-left-native.png",
+      "sha256": "634202307604c4d670c27229699d6af41a20165fefc4eab2e5fe7fc171e6c079",
+      "bytes": 348502,
+      "nativePixels": [
+        360,
+        400
+      ]
+    },
+    {
+      "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/review/final-tile04-top-native.png",
+      "sha256": "6de3908bd88462468a911de1e9a19975e1095fa1e34d67bd77ab8ae43c0178ad",
+      "bytes": 336385,
+      "nativePixels": [
+        560,
+        240
+      ]
+    }
+  ],
+  "limits": [
+    "Saved-art acceptance is separate from runtime mapping, live scale/coverage and owner approval.",
+    "Preserve separately owner-selected image bands and gameplay mappings; do not automatically replace them with this canonical selection.",
+    "No runtime interior material blend, rotation, mirror or flip."
+  ]
+}

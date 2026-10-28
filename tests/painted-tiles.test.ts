@@ -45,14 +45,15 @@ function webpSize(buf: Buffer): [number, number] {
 
 /** the accepted families (READY-MATERIALS' canonical selections, in its order), then the provisional ones (T153: no handoff yet) */
 // T170 (#395): long grass is through the art session's handoff (its canonical selection in READY-MATERIALS): accepted, no longer provisional
-const ACCEPTED = ['painted:golden-fescue', 'painted:lake', 'painted:sand-ripples', 'painted:long-grass'];
+const ACCEPTED = ['painted:golden-fescue', 'painted:lake', 'painted:sand-ripples', 'painted:long-grass', 'painted:putting-green', 'painted:fringe'];
 // T191 (#497): the fringe, new, provisional (the art session's finished v1 sets, measured and shipped as made)
 // T225 (#631): the RUN families (the art session's RUN sets, shipped as made, no handoff yet: #590, #612, #620, #625, #630) are provisional too,
 // listed in the manifest's order (painted-tiles.json); the owner picks which one each surface wears (Studio › Painted)
-const PROVISIONAL = ['painted:fairway', 'painted:putting-green', 'painted:fringe',
-  'painted:first-cut-run', 'painted:tee-run', 'painted:desert-run', 'painted:swamp-run', 'painted:dirt-run', 'painted:sand-raked-run',
-  'painted:putting-green-run', 'painted:rough-run', 'painted:pond-bank-run', 'painted:grow-in-run', 'painted:field-parking-run',
-  'painted:flower-bed-soil-run', 'painted:range-tee-divots-run', 'painted:lawn-concept-run', 'painted:meadow-concept-run', 'painted:rough-concept-run', 'painted:fairway-concept-run', 'painted:first-cut-concept-run', 'painted:green-concept-run', 'painted:pond-concept-run'];
+const PROVISIONAL = ['fairway', 'putting-green',
+  'first-cut-run', 'tee-run', 'desert-run', 'swamp-run', 'dirt-run', 'sand-raked-run',
+  'putting-green-run', 'rough-run', 'pond-bank-run', 'grow-in-run', 'field-parking-run',
+  'flower-bed-soil-run', 'range-tee-divots-run', 'lawn-concept-run', 'meadow-concept-run', 'rough-concept-run', 'fairway-concept-run', 'first-cut-concept-run', 'green-concept-run', 'pond-concept-run'];
+
 /** the owner's own paintings (T162) and the art session's fairway and putting-green paintings (T165): provisional too, one tile a level, from
  *  art/owner-supplied (committed in this repo); a level may instead be a provisional family's raw tiles healed with one shared strip (T165) */
 // T191: the putting green with the v2 MID and FAR sets (NEAR the owner's painting), an owner family like putting-green-paint
@@ -78,12 +79,12 @@ const familyKey = (f: TiledFamily) => {
 };
 
 test('the manifest ships only the ready families\' primary tiles and the provisional families\' chosen four: four a level, three authored sets each, files at native size', () => {
-  assert.deepEqual(TILED_FAMILIES.map(f => f.materialId), [...ACCEPTED, ...PROVISIONAL, ...OWNER]);
-  const ids = { 'golden-fescue': { near: ['tile-01', 'tile-03', 'tile-06', 'tile-08'], mid: FOUR, far: FOUR }, lake: { near: FOUR, mid: FOUR, far: FOUR }, 'sand-ripples-tiles': { near: FOUR, mid: FOUR, far: FOUR }, 'long-grass': { near: FOUR, mid: FOUR, far: FOUR } } as const;
-  const sets = { 'golden-fescue': { near: 'near-v3', mid: 'mid-v2', far: 'far-v4' }, lake: { near: 'near-v1', mid: 'mid-v1', far: 'far-v1' }, 'sand-ripples-tiles': { near: 'near-v1', mid: 'mid-v1', far: 'far-v1' }, 'long-grass': { near: 'near-v3', mid: 'mid-v2', far: 'far-v2' } } as const;
+  assert.deepEqual(TILED_FAMILIES.map(f => f.materialId), [...ACCEPTED, ...PROVISIONAL.map(id => `painted:${id}`), ...OWNER]);
+  const ids = { 'golden-fescue': { near: ['tile-01', 'tile-03', 'tile-06', 'tile-08'], mid: FOUR, far: FOUR }, lake: { near: FOUR, mid: FOUR, far: FOUR }, 'sand-ripples-tiles': { near: FOUR, mid: FOUR, far: FOUR }, 'long-grass': { near: FOUR, mid: FOUR, far: FOUR }, 'putting-green-finished': { near: FOUR, mid: FOUR, far: FOUR }, fringe: { near: FOUR, mid: FOUR, far: FOUR } } as const;
+  const sets = { 'golden-fescue': { near: 'near-v3', mid: 'mid-v2', far: 'far-v4' }, lake: { near: 'near-v1', mid: 'mid-v1', far: 'far-v1' }, 'sand-ripples-tiles': { near: 'near-v1', mid: 'mid-v1', far: 'far-v1' }, 'long-grass': { near: 'near-v3', mid: 'mid-v2', far: 'far-v2' }, 'putting-green-finished': { near: 'near-v1', mid: 'mid-v2', far: 'far-v2' }, fringe: { near: 'near-v1', mid: 'mid-v1', far: 'far-v1' } } as const;
   for (const f of TILED_FAMILIES) {
     const files = new Set<string>(), material = f.materialId.replace(/^painted:/, '');
-    assert.equal(!!f.provisional, PROVISIONAL.includes(f.materialId) || OWNER.includes(f.materialId), `${f.id}: provisional exactly while it has no handoff`);
+    assert.equal(!!f.provisional, PROVISIONAL.includes(f.id) || OWNER.includes(f.materialId), `${f.id}: the accepted alias does not relabel the separately pinned legacy option`);
     assert.equal(!!f.owner, OWNER.includes(f.materialId), `${f.id}: an owner family exactly when made from the owner's paintings`);
     if (f.provisional) assert.equal(f.selection, null, 'no canonical selection yet'); else assert.match(f.selection!.sha256, /^[0-9a-f]{64}$/);
     for (const b of TILE_BANDS) {
@@ -91,7 +92,7 @@ test('the manifest ships only the ready families\' primary tiles and the provisi
       if (f.owner && (lv.heal?.method === SHARED || lv.heal?.method === HEAL_AS_MADE)) {
         // T165: a level that falls back to a provisional family's raw tiles, healed with one shared strip; T170: or to its finished tiles, as
         // made (checked in its own test below)
-        assert.deepEqual(lv.tiles.map(t => t.id), FOUR); assert.equal(lv.decision.file, null); assert.ok(/-(shared|finished)$/.test(lv.revision), lv.revision);
+        assert.deepEqual(lv.tiles.map(t => t.id), FOUR); if (lv.decision.file) assert.match(lv.decision.sha256!, /^[a-f0-9]{64}$/); assert.ok(/-(shared|finished)$/.test(lv.revision), lv.revision);
         assert.ok(lv.folder.startsWith('art/theme-consistency/generated/ground/eight-tiles/'), lv.folder);
       } else if (f.owner) {
         // T162, T165: the painting of the level, one tile, from its own folder (hash-recorded; the heal is checked in its own test below)
@@ -407,6 +408,7 @@ test('the tile sets join the families, laid as authored; the map grass, rivers, 
   for (const [t, key] of [['golfTee', 'tee'], ['golfFirstCut', 'firstCut']] as const) {
     assert.equal(lookOfTex(t, S)!.family, S.surfaces[key]!.family, t); assert.ok(familyById(S.surfaces[key]!.family)?.tiled, `${key} wears a tile set`);
   }
+
   for (const l of S.lawns) assert.ok(familyById(l.family)!.tiled, 'T189: every town lawn wears a tile set (the new paintings), laid as authored');
   assert.deepEqual(S.surfaces.fescue, { family: 'golden-fescue', version: null, scale: 1, tint: '#ffffff', tone: 0 });
   assert.deepEqual(S.surfaces.water, { family: 'pond-concept-run', version: null, scale: 1, tint: '#ffffff', tone: 0 }); // (T230: the concept's water)
@@ -590,17 +592,17 @@ test('the fairway and putting-green paintings (T165, #365): unchanged in the rep
   for (const id of ['fairway', 'putting-green']) for (const b of TILE_BANDS) { const lv = tiledFamily(id)!.levels[b]; assert.equal(lv.tiles.length, 4); assert.equal(lv.heal, undefined); }
 });
 
-test("T191 (#497): the fringe (new) and the putting green's v2 MID and FAR ship as made; the old families keep the sets they shipped", () => {
+test("T191/T217: canonical fringe and a separate complete green option preserve the old pinned families and owner NEAR", () => {
   const fam = (id: string) => TILED_FAMILIES.find(f => f.id === id)!;
   const fr = fam('fringe'), v2 = fam('putting-green-v2'), old = fam('putting-green'), paint = fam('putting-green-paint');
   assert.ok(fr && v2 && old && paint);
-  assert.equal(fr.name, 'Fringe'); assert.equal(fr.kind, 'grass'); assert.equal(fr.provisional, true);
+  assert.equal(fr.name, 'Fringe'); assert.equal(fr.kind, 'grass'); assert.equal(fr.provisional, undefined); assert.ok(fr.selection);
   for (const l of ['near', 'mid', 'far'] as const) {
     const L = fr.levels[l];
     assert.equal(L.tiles.length, 4, `fringe ${l}: four tiles`);
     assert.match(L.folder, new RegExp(`eight-tiles/fringe/${l}-v1$`));
-    assert.deepEqual(L.tiles.map(t => t.source!.split('/').pop()), ['tile-01.png', 'tile-02.png', 'tile-03.png', 'tile-04.png'], 'the exported tiles, never a repair input');
-    assert.equal(L.heal!.method, 'finished-set-as-made'); assert.ok(L.heal!.before.lr <= 1.25 * L.heal!.before.h && L.heal!.before.tb <= 1.25 * L.heal!.before.v, `fringe ${l}: within 1.25x the inside`);
+    assert.deepEqual(L.tiles.map(t => t.id), ['tile-01', 'tile-02', 'tile-03', 'tile-04']);
+    assert.ok(L.decision.file?.endsWith('/review/appearance-decision.json')); assert.equal(L.heal, undefined, 'accepted art ships without another heal');
   }
   for (const l of ['mid', 'far'] as const) {
     const L = v2.levels[l];
@@ -608,6 +610,11 @@ test("T191 (#497): the fringe (new) and the putting green's v2 MID and FAR ship 
     assert.ok(L.heal!.before.lr <= 1.25 * L.heal!.before.h && L.heal!.before.tb <= 1.25 * L.heal!.before.v, `v2 ${l}: within 1.25x the inside`);
   }
   assert.equal(v2.levels.near.tiles[0]!.sha256, paint.levels.near.tiles[0]!.sha256, "v2's NEAR is the owner's putting-green painting");
+  const finished = fam('putting-green-finished');
+  assert.ok(finished && !finished.provisional && finished.selection); assert.equal(finished.name, 'Putting green (fine turf)');
+  assert.equal(familyById(finished.id)!.tiled, true);
+  assert.equal(finished.levels.near.tiles.length, 4, 'the new option has its own four-tile NEAR, not copies of the owner painting');
+  assert.notEqual(finished.id, old.id);
   // T191 brought them in on every green surface; the owner tunes which surface wears which in Studio › Painted (#513 put the green back on
   // putting-green): the range's target greens resolve to a known family and the fringe surface to the fringe
   const S = clampSurfaces(surfacesFile);

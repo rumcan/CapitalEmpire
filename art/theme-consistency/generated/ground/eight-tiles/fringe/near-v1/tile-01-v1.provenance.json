@@ -1,0 +1,22 @@
+{
+  "id": "material-texture:fringe:near:matched-variant-1-v1",
+  "material": "fringe",
+  "zoom": "near",
+  "stage": "matched-variant-v1",
+  "source": "art/theme-consistency/generated/ground/scene-backgrounds/fringe/near-background-anchored-v1.raw.png",
+  "output": "art/theme-consistency/generated/ground/eight-tiles/fringe/near-v1/tile-01-v1.raw.png",
+  "provenance": "art/theme-consistency/generated/ground/eight-tiles/fringe/near-v1/tile-01-v1.provenance.json",
+  "prompt": "Edit this FULL nearwidefield into independent natural arrangement number1 of the SAME short emerald-green golfgreenfringe/apron turf, slightlylonger/coarserthangreen butstilldensecloselyclipped.\nPreserve EXACT camera, apparent grassfeature size, brushscale/softness, meanexposure, greenpalette anddensity throughout. Rearrange ONLY subtle tinyshortturf flecks organically through middle60percent, no largecontrastgroups, broadwindrows/stripes,mounds ornewfeature. Keep the entire outer200pixelperimeter nearly identical inmeanexposure, colour andfinebrushappearance; do notframeit oroutlineit. Anychangedclumpis replacedbyequallybrightshortturf. ALLcorners,edgesandcentremusthaveuniformmeanbrightness/greenbalance. No sunnyupperrightregion/darklowerleftregion,spotlight,vignette,cloudshadow orpanel. Upperrightlight ONLY localtinystrokehighlightsandshortlowerleftundersides, diffuseambientfillallover.\nNo zoom, crop, reprojection,isometricresquash,magnifiedgrassblades,bushes,hairs,photographicgrain,sandpapernoise,hardlandmarks,trees,building,road,UI,text orobjects. Keep samefullwide nativePNG dimensions. This is a nearindependentlyauthored image, not anotherheight enlarged.\nFINAL productionconstraint: it is alargeinterchangeablegroundpainting, so maintainquietcompatibleedges andmatchingmeanexposure, no smalltilingpatterns, nopatchboundary.",
+  "date": "2026-10-27",
+  "generator": "built-in image_gen",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-8c765ddd-aac0-4830-8157-920f16efd00d.png",
+  "referenceHashes": [
+    {
+      "file": "art/theme-consistency/generated/ground/scene-backgrounds/fringe/near-background-anchored-v1.raw.png",
+      "sha256": "dd242c903caa8f55f5f5a83e7723e56709d0ac381462c105a003adb4a14835e7"
+    }
+  ],
+  "lighting": "screen upper-right toward lower-left; even macro exposure for ground",
+  "integrationStatus": "pending-visual-review",
+  "processing": "Native generator output copied byte-for-byte; no repaint, resample, mirror, recolour or transform."
+}

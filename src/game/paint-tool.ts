@@ -585,7 +585,7 @@ export class PaintTool {
   private saveBrush() { try { localStorage.setItem(BRUSH_KEY, JSON.stringify(this.brush)); } catch { /* storage may be unavailable */ } }
 
   /** the golf brush: paints the kind (its preset's style, the panel shows it) for the brush hole; the outline and the selection are dropped */
-  setBrush(kind: BrushKind) { this.leaveEditPaint(); const run = this.runOn() ? this.runPts.slice() : null; this.mode = 'brush'; this.brushKind = kind; this.style = { ...this.brush[kind].style }; this.cancel(); if (run && this.runOn()) this.runPts = run; this.selected = 0; this.hover = 0; this.hoverH = null; this.host.emit(); } // a run in progress keeps its bends when only the surface changes (T122)
+  setBrush(kind: BrushKind) { this.leaveEditPaint(); const run = this.runOn() ? this.runPts.slice() : null; this.mode = 'brush'; this.brushKind = kind; this.rubOut = false; /* picking a surface paints it (the owner: Bunker in hand drew rough while Erase stayed on) */ this.style = { ...this.brush[kind].style }; this.cancel(); if (run && this.runOn()) this.runPts = run; this.selected = 0; this.hover = 0; this.hoverH = null; this.host.emit(); } // a run in progress keeps its bends when only the surface changes (T122)
 
   /** the Course tool's Shape method: click corners (or lasso) to lay the kind for the current hole, in its preset's style */
   setShape(kind: BrushKind) { this.leaveEditPaint(); this.mode = 'draw'; this.brushKind = kind; this.style = { ...this.brush[kind].style }; this.cancel(); this.selected = 0; this.hover = 0; this.hoverH = null; this.host.emit(); }
@@ -633,7 +633,7 @@ export class PaintTool {
     if (this.wizard.drag) this.wizard.release();
     if (!kind) { if (this.mode === 'brush') { this.cancel(); this.mode = 'plan'; this.editPaint = 0; this.pill = null; this.host.emit(); } return true; }
     this.cancel(); this.dropRun();
-    this.mode = 'brush'; this.editPaint = n; this.brushHole = n; this.brushKind = kind; this.style = { ...this.brush[kind].style };
+    this.mode = 'brush'; this.editPaint = n; this.brushHole = n; this.brushKind = kind; this.rubOut = false; this.style = { ...this.brush[kind].style };
     this.selected = 0; this.hover = 0; this.hoverH = null; this.host.emit(); return true;
   }
   /** leaves Edit hole's brush (another tool or mode, Done, Build, Cancel): its stroke marks go with it */
