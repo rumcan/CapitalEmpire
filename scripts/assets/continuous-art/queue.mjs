@@ -14,7 +14,7 @@ export function parseCatalogue(markdown){
     items.push({key:id??`list:${match[1]}`,id,itemNumber:Number(match[1]),name:match[2].replace(/[✅🎨⏳]/gu,'').trim(),angle,
       owner:angle==='A'?'Codex':['B','C','P'].includes(angle)?'RUN':'unassigned',
       priority:/\b(P[123])\b/.exec(heading)?.[1]??'P3',
-      authorityClaim:/✅/.test(heading)?'in-game-claimed':/🎨/.test(heading)?'made-claimed':/⏳/.test(heading)?'active-claimed':'unmarked',
+      authorityClaim:/✅|\((?:already\s+)?in\s+(?:the\s+)?game\)/i.test(heading)?'in-game-claimed':/🎨/.test(heading)?'made-claimed':/⏳/.test(heading)?'active-claimed':'unmarked',
       sourceBlockSha256:sha(Buffer.from(block)),line:markdown.slice(0,match.index).split('\n').length});
   }
   return items;
@@ -49,11 +49,11 @@ export async function snapshotQueue(config,reviewedTokens={}){
     const artReview=artifacts.some(art=>art.review==='accepted-hash-bound')?'accepted-hash-bound':artifacts.some(art=>art.review==='held')?'held':artifacts.length?'pending':'not-generated';
     return {...item,artifacts,generation:artifacts.length?'existing-raw':'missing',artReview,integration:'not-verified',mergedOnMain:'not-verified',reviewToken,
       eligible:item.owner==='Codex'&&item.angle==='A'&&item.authorityClaim==='unmarked'&&!artifacts.length&&!excluded.has(item.id),
-      reviewEligible:item.owner==='Codex'&&artifacts.length>0&&artReview!=='accepted-hash-bound'&&!reviewedTokens[reviewToken]&&!excluded.has(item.id),reserved:excluded.has(item.id)};
+      reviewEligible:item.owner==='Codex'&&item.authorityClaim!=='in-game-claimed'&&artifacts.length>0&&artReview!=='accepted-hash-bound'&&!reviewedTokens[reviewToken]&&!excluded.has(item.id),reserved:excluded.has(item.id)};
   });
   const candidates=items.filter(item=>item.eligible).sort((a,b)=>a.priority.localeCompare(b.priority)||a.itemNumber-b.itemNumber);
   const preferred=candidates.find(item=>item.id===config.firstItemId),reviews=items.filter(item=>item.reviewEligible).sort((a,b)=>a.priority.localeCompare(b.priority)||a.itemNumber-b.itemNumber);
-  const selected=preferred??reviews.find(item=>item.id===config.firstItemId)??reviews[0]??candidates[0]??null;
+  const selected=preferred??candidates[0]??reviews[0]??null;
   const next=selected?{...selected,action:selected.reviewEligible?'review-existing':'generate'}:null;
   const byOwnerAngle={};for(const item of items){const key=item.owner+':'+(item.angle??'unspecified');byOwnerAngle[key]=(byOwnerAngle[key]??0)+1;}
   return {schema:1,refreshedAt:new Date().toISOString(),authorityFile:config.authorityFile,authoritySha256,markdown,items,next,
