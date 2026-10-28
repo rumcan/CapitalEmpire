@@ -4,12 +4,13 @@
 //   yards    house lots' front yards with the kit (clipped hedges, shrubs, mums) at 30%
 //   practice the practice area dressed with boulders, palms and the practice green lamp posts, at dusk (the lamps lit), 30%
 //   menus    the Facilities flyout's Plants (the Palms brush) and the Props panel's Plants, Water, Stone and Furniture cards
-//   sheet    the pond and the yards beside the owner's concept picture (docs/art/concept/maple-falls-concept.webp)
+//   sheet    the pond, the yards and the town's pond beside the owner's concept picture (docs/art/concept/maple-falls-concept.webp), from the
+//            shots of the run or those already in --out
 //   node scripts/dev/kit-shots.mjs --base http://127.0.0.1:5186/ --out E:/ClaudeTemp/T231 [--only pond,town,yards,practice,menus,sheet] [--seed 1]
 // Needs a dev server (vite) on --base. One headless Edge, closed when done; a fresh profile, so each start is a new game.
 import { chromium } from 'playwright-core';
 import sharp from 'sharp';
-import { mkdirSync } from 'node:fs';
+import { existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 
 const args = process.argv.slice(2), opt = (k, d) => { const i = args.indexOf(`--${k}`); return i >= 0 ? args[i + 1] : d; };
@@ -83,7 +84,7 @@ try {
     await shot(page, 'probe-town');
     await ctx.close();
   }
-  if (only.has('pond') || only.has('sheet')) {
+  if (only.has('pond')) {
     const { page, ctx } = await open();
     const p = (await ponds(page))[0]; console.log('pond', JSON.stringify(p));
     await hideUi(page);
@@ -103,11 +104,11 @@ try {
     console.log('kit', JSON.stringify(await kitCount(page)));
     await ctx.close();
   }
-  if (only.has('town') || only.has('yards') || only.has('sheet')) {
+  if (only.has('town') || only.has('yards')) {
     const { page, ctx } = await open('?fixture=range20&stamp=0'); // the range start's grown town (year 20): its houses and yards
     const town = await page.evaluate(() => window.__game.golf.town);
     await hideUi(page);
-    if (only.has('yards') || only.has('sheet')) {
+    if (only.has('yards')) {
       // the town's house lots are composed near the view: look at the town, wait, then at the yard with the most of the kit round it
       await look(page, town.x, town.y, 0.3); await settle(page, 2500);
       const spot = await page.evaluate(() => {
@@ -213,13 +214,17 @@ try {
   if (only.has('sheet')) {
     // the pond and a yard beside the concept
     const concept = await sharp('docs/art/concept/maple-falls-concept.webp').resize(W, H, { fit: 'cover' }).png().toBuffer();
-    const tiles = [files.pond, files.yards].filter(Boolean);
+    // (the shots of this run, else the ones already in --out: a sheet alone is made from them)
+    const have = (f, name) => f ?? (existsSync(join(out, `${name}.jpg`)) ? join(out, `${name}.jpg`) : null);
+    files.pond = have(files.pond, 'pond-stones-lilies-jet-30pct'); files.yards = have(files.yards, 'yards-hedges-shrubs-mums-30pct'); files.town = have(files.town, 'town-fountain-pond-30pct');
+    const tiles = [files.pond, files.yards, files.town].filter(Boolean);
     const comp = [{ input: concept, left: 0, top: 0 }, ...tiles.map((f, i) => ({ input: f, left: W * ((i + 1) % 2), top: H * Math.floor((i + 1) / 2) }))];
     const rows = Math.ceil((tiles.length + 1) / 2);
     const label = (t, x, y) => ({ input: Buffer.from(`<svg width="${W}" height="40"><rect width="100%" height="40" fill="rgba(0,0,0,0.55)"/><text x="16" y="27" font-family="sans-serif" font-size="20" fill="#f1e3b5">${t}</text></svg>`), left: x, top: y });
     comp.push(label('The concept (docs/art/concept/maple-falls-concept.webp)', 0, 0));
     if (files.pond) comp.push(label('T231: a course pond, Stone pond edge, lily pads, fountain jet (30%)', W, 0));
     if (files.yards) comp.push(label('T231: house yards, clipped hedges, shrubs, mums (30%)', 0, H));
+    if (files.town) comp.push(label('T231: a Fountain pond in the town (30%)', W, H));
     await sharp({ create: { width: W * 2, height: H * rows, channels: 3, background: '#000' } }).composite(comp).jpeg({ quality: 88 }).toFile(join(out, 'sheet-beside-concept.jpg'));
     console.log(join(out, 'sheet-beside-concept.jpg'));
   }
