@@ -2,6 +2,7 @@
 import type { CourseStatsPanel } from '../game/golf/coursestats';
 import { tierInfo } from '../game/golf/tour';
 import { Icon } from './Icon';
+import { TEE_KINDS, TEE_SET } from '../game/golf/teesets';
 import { formatCurrency, formatHoleLength, parColorClass, qualityBadgeClass } from './coursestatsFormat';
 export { formatCurrency, formatHoleLength, parColorClass, qualityBadgeClass };
 /** props for CourseStatsPanel */
@@ -110,8 +111,7 @@ export function CourseStatsPanel({ stats, onClose, onSelectHole, bare }: CourseS
               <tr>
                 <th className="px-2 py-1">Hole</th>
                 <th className="px-1 py-1">Par</th>
-                <th className="px-2 py-1 text-right">Back</th>
-                <th className="px-2 py-1 text-right">Member</th>
+                {TEE_KINDS.map(k => <th key={k} className="px-2 py-1 text-right" title={`The ${TEE_SET[k].colour} tees: ${TEE_SET[k].who}`}>{TEE_SET[k].name}</th>)}
                 <th className="px-2 py-1">Status</th>
               </tr>
             </thead>
@@ -124,11 +124,16 @@ export function CourseStatsPanel({ stats, onClose, onSelectHole, bare }: CourseS
                 >
                   <td className="px-2 py-1 font-bold text-white">#{h.hole}</td>
                   <td className={`px-1 py-1 font-semibold ${parColorClass(h.par)}`}>P{h.par}</td>
-                  <td className="px-2 py-1 text-right tabular-nums text-slate-200">
-                    {h.lengthM}m
-                    {Math.abs(h.riseM) >= 0.5 && <div className="text-[12px] text-slate-400">plays {h.playsLikeM}m ({h.riseM > 0 ? '+' : ''}{h.riseM} m)</div>}
-                  </td>
-                  <td className="px-2 py-1 text-right tabular-nums text-slate-400">{h.memberLengthM}m</td>
+                  {/* T254: each tee set's length (blue, white, yellow, red; – where the hole has none); the plays-like line under the back-most */}
+                  {TEE_KINDS.map((k, i) => {
+                    const s = (h.sets ?? []).find(q => q.kind === k), first = (h.sets ?? [])[0]?.kind === k || (!h.sets?.length && i === 0);
+                    return (
+                      <td key={k} className={`px-2 py-1 text-right tabular-nums ${first ? 'text-slate-200' : 'text-slate-400'}`} data-set={k}>
+                        {s ? `${s.lengthM}m` : !h.sets?.length && i === 0 ? `${h.lengthM}m` : '–'}
+                        {first && Math.abs(h.riseM) >= 0.5 && <div className="text-[12px] text-slate-400">plays {h.playsLikeM}m ({h.riseM > 0 ? '+' : ''}{h.riseM} m)</div>}
+                      </td>
+                    );
+                  })}
                   <td className="px-2 py-1 text-[12px]">
                     {h.warnings.length === 0 ? (
                       <span className="text-emerald-400">✓ OK</span>

@@ -23,7 +23,8 @@ const tierOf = (tier: number): number => Math.min(5, Math.max(1, Math.round(tier
 export const PRO_SKILL: readonly (readonly [number, number])[] = [[0.40, 0.62], [0.45, 0.70], [0.50, 0.80], [0.55, 0.90], [0.60, 1.0]];
 export const AM_SKILL: readonly (readonly [number, number])[] = [[0.15, 0.50], [0.15, 0.50], [0.20, 0.55], [0.20, 0.55], [0.20, 0.55]];
 
-/** a tournament's field at a tier (1..5): 24 to 72 golfers, all of one sex (men 60% of the time), the pro share by tier, unique names.
+/** a tournament's field at a tier (1..5): 24 to 72 golfers, all of one sex (men 60% of the time), the pro share by tier, unique names, all from
+ *  the blue (championship) tees (T254).
  *  The same tier and seed always give the same field */
 export function makeField(tier: number, seed: number): Golfer[] {
   const k = tierOf(tier), size = SIZES[k - 1], pros = Math.round(PRO_SHARE[k - 1] * size);
@@ -40,7 +41,7 @@ export function makeField(tier: number, seed: number): Golfer[] {
     used.add(name);
     // the skill by the tier's ranges (PRO_SKILL, AM_SKILL)
     const [lo, hi] = (pro ? PRO_SKILL : AM_SKILL)[k - 1]!, skill = lo + (hi - lo) * r();
-    out.push({ id, name, sex, pro, skill, look: Math.floor(r() * 5) });
+    out.push({ id, name, sex, pro, skill, look: Math.floor(r() * 5), tees: 'back' }); // T254: a tournament is played from the blue tees
   }
   return out;
 }

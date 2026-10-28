@@ -4,7 +4,8 @@ import { evaluateCourseHeightQuality, type CourseHeightField } from '../ext/cour
 import { courseStats, deriveHoles, parFromLength, type CourseStats, type Hole } from './holes';
 import { courseTerrain } from './hole-terrain';
 import { missingFor, tierInfo, type CourseFacts, type Need } from './tour';
-import type { CourseLayout } from './types';
+import type { CourseLayout, TeeKind } from './types';
+import { TEE_KINDS, TEE_SET, teeSetsTerm } from './teesets';
 
 /** quality lost per hole whose green is over 6% steep (T038), and the most it can cost */
 export const STEEP_GREEN_PENALTY = 4, STEEP_GREEN_CAP = 12;
@@ -57,6 +58,8 @@ export interface HolePanelRow {
   riseM: number;
   playable: boolean;
   warnings: string[];
+  /** T254: each tee set's length (m), back (blue) to front (red): the scorecard's columns */
+  sets: { kind: TeeKind; lengthM: number }[];
 }
 
 /** full view model for the course stats panel */
@@ -73,6 +76,8 @@ export interface CourseStatsPanel {
   steepGreenHoles: number[];
   /** the slope adjustments to the quality score (T038): steep greens, steep fairways (both ≤ 0), the character bonus (≥ 0) */
   slopeQuality: { steepGreens: number; steepFairways: number; shaped: number };
+  /** T254: the "for every golfer" term (0..3 quality points, already counted in qualityScore): more tee sets a hole, a little more appeal */
+  everyGolfer: number;
   tier: number;
   nextTier: number | null;
   missingForCurrent: (Need | 'holes' | 'length')[];
@@ -96,6 +101,7 @@ export function toHoleRow(h: Hole): HolePanelRow {
     riseM: 0,
     playable: h.line.length >= 2,
     warnings: h.warnings.slice(),
+    sets: (h.sets ?? []).map(s => ({ kind: s.kind, lengthM: s.lengthM })),
   };
 }
 
@@ -191,7 +197,10 @@ export function buildCourseStatsPanel(layout: CourseLayout, tier = 1, have: Read
   if (steepFair.length > 0) qualityHints.push(`Smooth the steep fairway${steepFair.length === 1 ? '' : 's'} on hole${steepFair.length === 1 ? '' : 's'} ${steepFair.join(', ')}`);
  }
  const warningCount = rows.reduce((s, r) => s + r.warnings.length, 0);
- qualityScore = Math.max(0, Math.min(100, qualityScore + (hq?.bonusPoints ?? 0) + slopeQuality.steepGreens + slopeQuality.steepFairways + slopeQuality.shaped));
+ // T254: for every golfer: the tee sets a hole has (blue, white, yellow, red) lift the appeal a little
+ const every = teeSetsTerm(holes);
+ if (every.avg > 0 && every.avg < TEE_KINDS.length) qualityHints.push(`Add tee sets for every golfer (${TEE_KINDS.map(k => TEE_SET[k].name).join(', ')}): ${every.avg.toFixed(1)} a hole now`);
+ qualityScore = Math.max(0, Math.min(100, qualityScore + (hq?.bonusPoints ?? 0) + slopeQuality.steepGreens + slopeQuality.steepFairways + slopeQuality.shaped + every.points));
   const clampedTier = tierInfo(tier).tier;
   const nextTier = clampedTier < 5 ? clampedTier + 1 : null;
   const facts: CourseFacts = { holes: totals.holes, lengthM: totals.lengthM, have };
@@ -214,6 +223,7 @@ export function buildCourseStatsPanel(layout: CourseLayout, tier = 1, have: Read
     heightBonus: hq?.bonusPoints ?? 0,
     steepGreenHoles: hq?.steepGreenHoles ?? [],
     slopeQuality,
+    everyGolfer: every.points,
     tier: clampedTier,
     nextTier,
     missingForCurrent,

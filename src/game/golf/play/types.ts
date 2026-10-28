@@ -1,19 +1,24 @@
 // The golf round's types (docs/GOLF-PLAY.md, the P1 contract): the field, the tee times, the shots and the state of each golfer through the day.
 // Times are game minutes of the tournament day; distances are tiles unless a name says M (metres). Pure TS, no DOM.
 import type { Pt } from '../holes';
+import type { TeeKind } from '../types';
 export type { Pt };
 
 /** the surface a ball lies on: tee, fairway, rough, fescue (deep grass), bunker, green, water, or out of bounds */
 export type Lie = 'tee' | 'fairway' | 'rough' | 'fescue' | 'bunker' | 'green' | 'water' | 'out';
-/** one hole to play: its number, par, tee, pin and playing line (the tee, the aim points, the pin) */
-export interface PlayHole { n: number; par: 3 | 4 | 5; tee: Pt; pin: Pt; line: Pt[] }
+/** one hole to play: its number, par, tee, pin and playing line (the tee, the aim points, the pin; the tee set furthest back). T254: sets, each
+ *  tee set's tee and line, back (blue) to front (red) (absent: the one tee) */
+export interface PlayHole { n: number; par: 3 | 4 | 5; tee: Pt; pin: Pt; line: Pt[]; sets?: { kind: TeeKind; tee: Pt; line: Pt[] }[] }
 /** the course a round is played on: the holes in play order (a 9-hole course is listed twice) and the lie at any point */
 export interface CourseView { holes: PlayHole[]; lieAt(x: number, y: number): Lie }
 /** a golfer's sex: the field's looks come from the golfer art of the matching sex */
 export type Sex = 'm' | 'w';
 /** a golfer: a unique id (0..size-1), name, sex, whether a pro, skill (0..1), look (0..4, the art variant), and the owner's golfer. T213 (entourage.ts):
  *  the cart he rides (an index shared by the two golfers of a cart; absent: he walks) and whether a caddie walks with him */
-export interface Golfer { id: number; name: string; sex: Sex; pro: boolean; skill: number; look: number; owner?: boolean; cart?: number; caddie?: boolean }
+export interface Golfer { id: number; name: string; sex: Sex; pro: boolean; skill: number; look: number; owner?: boolean; cart?: number; caddie?: boolean;
+  /** T254: the tee set he plays from (golf/teesets.ts: a tournament's field the blue, everyday golfers by who they are, the owner his choice); on a
+   *  hole without it, the nearest set there is. Absent: the hole's set furthest back */
+  tees?: TeeKind }
 /** a tee time: the game minute and the golfer ids in the group */
 export interface Group { tee: number; players: number[] }
 /** a club, or the putter */

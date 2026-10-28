@@ -127,7 +127,7 @@ describe('T238: the brush shape and Edit hole\'s paint', () => {
     p.wizard = { step: 'shape', base: { hole: 1 }, hole: 1, plan: null, ghost: () => null, check: () => ({ ok: true, why: '' }), checks: () => [] };
     p.editingHole = 1;
     let h = render(g);
-    assert.match(h, /data-primary="wizard"[\s\S]*Edit hole 1/);
+    assert.match(h, /data-primary="wizard"[\s\S]*Edit Hole Layout 1/, 'T254: the panel reads Edit Hole Layout');
     assert.match(h, /data-section="edit-paint"[\s\S]*Paint hole 1/);
     assert.equal((h.match(/data-swatch=/g) ?? []).length, 8, 'the stage\'s surfaces, Long grass with them');
     assert.doesNotMatch(h, /swatch-on/, 'none in hand yet: the plan\'s handles alone');

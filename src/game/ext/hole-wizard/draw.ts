@@ -187,7 +187,8 @@ function drawPill(v: WizardView, w: HoleWizard, gh: WizardGhost, mouse: { mx: nu
   const ctx = v.ctx, d = v.dpr, c = w.check(), g = v.screen(pl.green.x, pl.green.y);
   // a block says itself on the pill, in red (P23 4.4: "The green is off your land"); an edit with no change says so, greyed
   const same = c.id === 'same', bad = !c.ok && !same;
-  const text = c.ok ? `Build · $${(gh.cost + extra).toLocaleString()}` : same ? NO_CHANGES : (c.why.split(':')[0] ?? 'Build');
+  // T254: Edit Hole Layout's Build moves the markers only: no price on it
+  const text = c.ok ? (w.base ? 'Move tees and flag' : `Build · $${(gh.cost + extra).toLocaleString()}`) : same ? NO_CHANGES : (c.why.split(':')[0] ?? 'Build');
   ctx.font = `bold ${Math.round(12 * d)}px ui-sans-serif, system-ui, sans-serif`;
   const tw = ctx.measureText(text).width, bw = tw + 22 * d, bh = 24 * d, x0 = Math.round(g.x - bw / 2), y0 = Math.round(g.y + 22 * d);
   // T176: near the pointer (not on the pill itself: it is a button) the pill fades, so it never hides the spot being placed

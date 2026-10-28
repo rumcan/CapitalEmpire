@@ -31,7 +31,8 @@ import { SURF_SURFACE, mergeMany, plantMonth, polyCells, surfOfSurface, type Gri
 import { unitBuildCost } from './golf/costs';
 import { GREEN_M2_STEP as GREEN_STEP, HoleWizard, decodePlans, encodePlans, withPlan, withoutPlan } from './ext/hole-wizard';
 import { drawWizard } from './ext/hole-wizard/draw';
-import { planClear, type HolePlan } from './ext/hole-plan';
+import { planClear, planInfo, type HolePlan } from './ext/hole-plan';
+import type { Pin, TeeMark } from './golf/types';
 /** whether a painted area has completed its grow-in (sod or non-seed areas are mature at once) */  
 export function isAreaMature(a: PaintArea, currentMonth: number): boolean {  
  if (!a.plantKind || a.plantKind === 'sod') return true;  
@@ -86,7 +87,9 @@ interface AreaSnap { ids: number[]; ts: PaintTuple[]; keys: string[]; nextId: nu
  *  the course grid cells it changed (T078: one merged diff) and the hole plans before and after it (as JSON; null when they did not change) */
 interface UndoStep { label: string; before: AreaSnap; after: AreaSnap; props: PropJournal | null; spent: number; height: CourseHeightStep | null; grid: GridDiff | null; plans: { before: string; after: string } | null;
   /** T256: the looks owners the step gave, took or changed (a hole seeded, deleted, saved or placed), each before and after (null: none) */
-  looks?: [string, LookSet | null, LookSet | null][] }
+  looks?: [string, LookSet | null, LookSet | null][];
+  /** T254: Edit Hole Layout's step: the pins and tee markers before and after (Engine.markersKey) */
+  markers?: { before: string; after: string } }
 /** the most undo steps kept */
 const UNDO_MAX = 100;
 /** the most course-grid cells the undo steps keep in all (13 bytes a cell: about 26 MB); the oldest steps go first */
@@ -209,7 +212,17 @@ export interface PaintHost { setLotGround(key: string, patches: LotPatch[] | nul
   holeBuilt?(hole: number): void
   /** T229: New hole's Build with Frame with trees on: plants the built hole's frame (golf/holeframe.ts) inside the Build's undo step and pays
    *  for it; returns what it spent ($, net of the trees it took away) and the trees it planted and left out (not enough money) */
-  frameBuilt?(hole: number, plan: HolePlan): { spent: number; planted: number; left: number }
+  frameBuilt?(hole: number, plan: HolePlan, layout?: boolean): { spent: number; planted: number; left: number }
+  /** T254: Edit Hole Layout's Build (inside its undo step, the plan saved): hole n's tee markers and flag go with the plan's tee and green (from base
+   *  to plan; golf/teesets.ts layoutMarkers); no grass is laid. Returns the warnings the moved markers stand with (off their turf) */
+  layoutBuilt?(hole: number, base: HolePlan, plan: HolePlan): string[]
+  /** T254: the golf game's pins and tee markers as text, and their setter: an Edit Hole Layout step's undo and redo carry them */
+  markersKey?(): string
+  setMarkers?(key: string): void
+  /** T254: a saved hole placed as hole n: its tee sets' markers (tiles) */
+  placeTees?(n: number, tees: readonly { kind: TeeMark['kind']; x: number; y: number }[]): void
+  /** T254: hole n's pin and tee markers (Edit Hole Layout's warnings) */
+  markersOf?(hole: number): { pin: Pin | null; tees: readonly TeeMark[] }
   /** T229: the frame trees New hole's ghost would plant (their points, tiles; conifer: drawn darker), for the map's preview */
   frameGhost?(): readonly { x: number; y: number; conifer?: boolean }[]
   /** T229: what that frame costs ($), added to the Build pill's price */
@@ -376,6 +389,7 @@ export class PaintTool {
     roads: b => this.host.publicRoads?.(b) ?? [],
     holeLines: () => this.host.holeLines?.() ?? [],
     treesCleared: () => this.host.treesCleared?.() ?? 0,
+    markersOf: n => this.host.markersOf?.(n) ?? { pin: null, tees: [] },
   });
   private pill: { x: number; y: number; w: number; h: number } | null = null;
   /** when plan mode last told the panel (ms; drags tell it at most every 150 ms) */
@@ -785,7 +799,7 @@ export class PaintTool {
     if (!this.hasPlan(n)) { this.host.toast(`Hole ${n} was painted by hand: shape it with the brush`, 'info'); return false; }
     if (this.editingHole !== n && !this.editPlan(n)) return false;
     this.host.fitView?.(this.wizard.planView(), true);
-    this.host.toast(`Editing hole ${n}: drag the tee, the green or the line; Build to save`);
+    this.host.toast(`Edit Hole Layout, hole ${n}: drag the tee, the green or the line; Build moves the tee markers and the flag (no grass is laid)`);
     return true;
   }
   /** Build (the gold pill or Enter): lays the plan's cells exactly as the ghost shows them, saves the plan (golf.aims follow it), charges
@@ -797,6 +811,7 @@ export class PaintTool {
     if (!c.ok || !gh) { this.host.toast(c.why, 'warn'); return false; }
     const hole = plan.hole, editing = !!w.base;
     if (this.editPaint) { this.cancel(); this.leaveEditPaint(); this.mode = 'plan'; } // T238: Edit hole's brush goes down with the Build
+    if (editing) return this.buildLayout(w.base!, plan);
     this.begin(editing ? `edit hole ${hole}` : `build hole ${hole}`);
     this.seedLooks(holeOwner(hole)); // T256: a new hole starts from the course default's looks
     applyDiff(g, gh.diff, false);
@@ -814,6 +829,47 @@ export class PaintTool {
     this.host.save();
     if (!editing) this.host.holeBuilt?.(hole);
     this.host.toast(`Hole ${hole} ${editing ? 'replanned' : 'built'}: par ${gh.info.par}, ${gh.info.lengthM} m${gh.cost ? `, $${gh.cost.toLocaleString()}` : ''}${fr?.planted ? `; framed with ${fr.planted} trees ($${fr.spent.toLocaleString()})` : ''}${fr?.left ? `, ${fr.left} left out: not enough money` : ''}`, fr?.left ? 'warn' : undefined);
+    this.host.emit(); return true;
+  }
+  /** T254 (#736): "Add tee" (the hole card): a new tee set's box (outline pts, tiles x0 y0 x1 y1 ...) painted into hole n as tee turf, priced like a
+   *  tee (the cells that change, Seed or Sod as the brush), one undo step. Cells off your land, on the practice area or kept by another hole are left
+   *  out. Returns the cells laid and the price, or null (with a toast) when none could be or the money is short */
+  addTeeBox(n: number, pts: readonly number[], label: string): { cells: number; cost: number } | null {
+    const g = this.host.grid?.(); if (!g || n < 1 || pts.length < 6) return null;
+    const own = this.host.ownedAt, prac = this.host.practiceAt, golf = !!this.host.golfMode?.();
+    const allow = (i: number) => { const c = cellCentre(g, i); if ((own && !own(c.x, c.y)) || prac?.(c.x, c.y)) return false; const h = g.hole[i]!; return !h || h === n; };
+    const P: { x: number; y: number }[] = []; for (let k = 0; k + 1 < pts.length; k += 2) P.push({ x: pts[k]!, y: pts[k + 1]! });
+    this.begin(label);
+    const d = fillPolygon(g, P, SURF.tee, n, plantMonth(this.plantKind, this.host.currentMonth?.()), { allow });
+    const cost = golf ? Math.round(diffCost(d, s => unitBuildCost(SURF_SURFACE[s] ?? 'other', this.plantKind))) : 0, money = golf ? this.host.money?.() ?? 0 : Infinity;
+    let out: { cells: number; cost: number } | null = null;
+    if (!d.n) this.host.toast('No room for a tee box there: your land, the practice area or another hole is in the way', 'warn');
+    else if (cost > money) { applyDiff(g, d, true); this.host.toast(`Not enough money: the tee box costs $${cost.toLocaleString()} · you have $${Math.round(money).toLocaleString()}`, 'warn'); }
+    else { this.gridApply(d); if (cost) { this.host.spend?.(cost); if (this.tx) this.tx.spent += cost; } out = { cells: d.n, cost }; }
+    this.commit();
+    if (out) this.host.save();
+    return out;
+  }
+  /** T254 (#736): Edit Hole Layout's Build: the plan is saved (the line of play, the bends and the landing zones follow it), the tee markers and the
+   *  flag move with the plan's tee and green, and no cell is laid, cleared or regrown: the course grid and the hole's looks stay exactly as they are
+   *  (the player fixes the course with the paint brushes). With Frame with trees on, the hole's frame trees left in the new line of play go (half
+   *  back, as the bulldozer) and none are planted: the trees are not moved needlessly. One undo step, the markers in it */
+  private buildLayout(base: HolePlan, plan: HolePlan): boolean {
+    const w = this.wizard, hole = plan.hole, before = this.host.markersKey?.() ?? null;
+    this.begin(`edit hole ${hole} layout`);
+    this.host.setPlans?.(encodePlans(withPlan(decodePlans(this.host.plans?.()), plan)));
+    const warn = this.host.layoutBuilt?.(hole, base, plan) ?? [];
+    const fr = this.frameTrees && this.host.frameBuilt ? this.host.frameBuilt(hole, plan, true) : null; if (fr && this.tx) this.tx.spent += fr.spent;
+    const depth = this.undos.length, top0 = this.undos[depth - 1];
+    this.commit();
+    const top = this.undos[this.undos.length - 1], after = this.host.markersKey?.() ?? null;
+    if (top && top !== top0 && before !== null && after !== null && before !== after) top.markers = { before, after };
+    this.brushHole = hole;
+    w.built(typeof performance !== 'undefined' ? performance.now() : 0, this.nextFreeHole());
+    w.suggestM = 0; this.pill = null;
+    this.host.save();
+    const v = w.geomOf(plan), info = planInfo(plan, v);
+    this.host.toast(`Hole ${hole}'s layout moved: par ${info.par}, ${info.lengthM} m. No grass laid${warn.length ? `. ${warn[0]}` : ': fix the course with the paint brushes'}`, warn.length ? 'warn' : undefined);
     this.host.emit(); return true;
   }
   /** deletes the plan being edited and its cells (those still as the plan laid them; your touch-ups stay), as one undo step (no refund) */
@@ -923,6 +979,7 @@ export class PaintTool {
     // its frame trees, with Frame with trees on
     if (gh.trees && this.host.placeFrame) { const r = this.host.placeFrame(n, gh.placed.props); if (this.tx) this.tx.spent += r; }
     this.commit();
+    this.host.placeTees?.(n, gh.placed.tees); // T254: its tee sets
     this.brushHole = n; this.host.save(); this.host.holeBuilt?.(n);
     this.host.toast(`${h.name} placed as hole ${n}${gh.cost ? `: $${gh.cost.toLocaleString()}` : ''}${gh.note ? ` (${gh.note})` : ''}`);
     this.myHole = null; this.myGhost = null; this.setPlan();
@@ -1107,6 +1164,7 @@ export class PaintTool {
   private gridStep(u: UndoStep, undo: boolean) {
     const g = this.host.grid?.();
     if (u.grid && g) { applyDiff(g, u.grid, undo); this.host.gridChanged?.(u.grid, true); }
+    if (u.markers) this.host.setMarkers?.(undo ? u.markers.before : u.markers.after); // T254
     if (u.plans) {
       try {
         // [plans, pond marks]: each part goes back only when it changed (T231)
