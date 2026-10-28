@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-28 19:35 SAST)
+## START HERE (kept current by the lead; last updated 2026-10-28 20:45 SAST)
 
 **Taking over as lead?** This section is the one start document. Paste this into a new Claude Code chat (desktop app, Code tab), on any
 account, with the folder `E:\Repos\CapitalEmpire\worktrees\lead-typecheck`:
@@ -64,7 +64,7 @@ never commit there.)
 **Two agents running (a new lead took over at ~15:00 on 2026-10-28; the old lead's agents stopped at the usage limit ~14:00):**
 | Ticket | Issue | Branch / worktree | State and next step |
 | --- | --- | --- | --- |
-| T262 | #769 | `arena/T262-grass-shine` (a fresh worktree; port 5186) | **Started ~17:30.** Phase 1 only: the grass bump map on the fairway, the green and one town lawn, the four options (a-d) benched, a verdict with stills and a pan strip. Phase 2 (every grass, the Studio knobs) only after the lead's yes. |
+| T262 | #769 | `arena/T262-grass-shine` (its worktree `.claude/worktrees/agent-a0e42bfca4d14578c`; port 5186); PR #792 **held** | **Phase 1 done ~20:30: verdict yes, source d** (the bump derived in the shader from the chunk's own colour: as good as per-family bump maps at half the cost, follows the stripes). **Phase 2 running** on the same branch: drop c/a/a4 and the bump maps, every grass family weighted, no sheen under sprite shadows if cheap, Studio knobs beside SpecLook, default on (off stays an option). Merge #792 when phase 2 reports (it becomes Closes #769). |
 | T263 | #771 | `arena/T263-hole-ground` (a fresh worktree; port 5187) | **Started ~19:30.** New hole's Build shapes the hole's ground (fairway rolls, mounds and swales, a tilted green; the tee level), priced in the pill, in the same undo step, behind a "Shape the ground" tick box (default on); saved holes carry it; Edit Hole Layout never reshapes. |
 
 **Held, waiting on the owner (not agents):**
