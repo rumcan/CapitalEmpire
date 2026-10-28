@@ -28,7 +28,7 @@ import { lotBatch, type CourseTex, type LotPatch } from './ground-protocol';
 import { BLOCK_MAX_AREA, enclosedBlocks } from './blocks';
 import { blockLawn, lotLawn } from './lawns';
 import { PaintTool } from './paint-tool';
-import { courseBandOf, courseTexOf } from './course-look';
+import { courseTexOf, surfaceBands } from './course-look';
 import { escapeLadder, numberKeyUse, pickTool, switchSideMode, type EscCard, type EscLadder, type SideMode } from './tool-modes';
 import type { PresetProp } from './golf/holepreset';
 import { OWNER_SCALE, STUDIO_SCALE } from './lots/scales';
@@ -1010,14 +1010,11 @@ export class Game {
     const b = this.paint.brush, look = courseTexOf;
     const pre = (s: string, old: string) => ({ tex: surfacePreset(s) ?? old, sc: 1, a: 0 });
     const surf = [undefined, look(b.rough.style), pre('fescue', 'golfFescue'), look(b.water.style), look(b.fairway.style), look(b.tee.style), look(b.bunker.style), pre('waste', 'wasteSand'), look(b.green.style), look(b.longGrass.style)]; // T238: the long grass (id 9) wears its brush's look
-    // the bank is laid in the rough's grass (the renderer paints its wet soil and stones, T099); the Border, Shadow and Height sliders ride along
-    const rough = { tex: b.rough.style.tex, sc: b.rough.style.scale, a: b.rough.style.angle };
-    const collar = { 'first-cut': pre('firstCut', 'golfFirstCut'), fringe: pre('fringe', 'golfFringe'), lip: rough, bank: rough };
-    const band: (CourseTex | undefined)[] = [];
-    band[SURF.fairway] = courseBandOf('fairway', b.fairway.style, collar['first-cut']); band[SURF.tee] = courseBandOf('tee', b.tee.style, collar['first-cut']);
-    band[SURF.green] = courseBandOf('green', b.green.style, collar.fringe); band[SURF.bunker] = courseBandOf('bunker', b.bunker.style, collar.lip); band[SURF.water] = courseBandOf('water', b.water.style, collar.bank);
-    // T227: with the course finish a bunker sits in the fairway's first cut (its lip band's grass), unless the player gave it a Border texture
-    const lipGrass = band[SURF.bunker]?.tex === collar.lip.tex ? band[SURF.fairway] : undefined;
+    // the bank is laid in the rough's grass (the renderer paints its wet soil and stones, T099); the Border, Shadow and Height sliders ride along.
+    // T227: with the course finish a bunker sits in the fairway's first cut (its lip band's grass), unless the player gave it a Border texture.
+    // T252: course-look.ts surfaceBands works the bands out (the Holes swatches and the brush cursor's chip show the same borders)
+    const { collar, band: by, lipGrass } = surfaceBands(b), band: (CourseTex | undefined)[] = [];
+    band[SURF.fairway] = by.fairway; band[SURF.tee] = by.tee; band[SURF.green] = by.green; band[SURF.bunker] = by.bunker; band[SURF.water] = by.water;
     return { surf, collar, band, border: this.courseBorders(), shadow: this.paint.courseShadows(), height: this.paint.surfaceHeights(), ...(lipGrass ? { lipGrass } : {}) };
   }
   /** the collar widths the course is laid with, by surface id: the Border slider's where the player set one, else the course finish's (T227:
@@ -1521,7 +1518,9 @@ export class Game {
   private parkView: ParkOverlayView = { ctx: null as unknown as CanvasRenderingContext2D, dpr: 1, setIso: c => this.setIso(c), screen: (x, y) => this.screen(x, y) };
   /** the brush's cursor (T081, T108, T109): the cells a click paints on the half grid (by the grid's brush rules, the skipped ones with their
    *  reason, the price; re-run when the grid, the hole or Rub out change), the course grid round them and the surface chip beside the pointer */
-  private courseCursor = new CourseCursor({ texture: browserCursorTexture(), why: () => this.paint.brushSkipWhy(), cost: () => this.paint.brushCellCost(), rev: () => (this.courseGrid?.rev ?? 0) * 64 + this.paint.brushHole * 2 + (this.paint.rubOut ? 1 : 0), money: () => this.money, zone: (x, y) => this.range.zoneAt(x, y) });
+  /** T252: the brush cursor's photo source (the painted looks' pictures, loaded once): its chip and the Holes swatches' pucks share it */
+  readonly cursorTexture = browserCursorTexture();
+  private courseCursor = new CourseCursor({ texture: this.cursorTexture, finish: () => finishOf(paintedSurfaces()), looks: paintedSurfaces, why: () => this.paint.brushSkipWhy(), cost: () => this.paint.brushCellCost(), rev: () => (this.courseGrid?.rev ?? 0) * 64 + this.paint.brushHole * 2 + (this.paint.rubOut ? 1 : 0), money: () => this.money, zone: (x, y) => this.range.zoneAt(x, y) });
   private cursorView: CursorView = { ze: 1, camX: 0, camY: 0, cw: 1, ch: 1, dpr: 1 };
   /** the hint pill's words for the Course brush (T118: what a click does: the surface, the hole it joins or starts, the price a cell, and the state); '' otherwise */
   courseHint(): string {
@@ -4237,7 +4236,7 @@ export class Game {
       case 'v': case 'V': this.setTool('select'); break;
       case 'z': case 'Z': if (!e.ctrlKey && !e.metaKey && this.golfMode) this.setTool('props'); break;
       // T202 (#529): 1-6 open the rail's groups in order (the App opens the group's flyout: railKey); with the town's Build in hand they stay its
-      // road classes, and with Holes in hand 1-7 its surfaces (paint-tool.ts key took them above): tool-modes.ts numberKeyUse. Before T202 they
+      // road classes, and with Holes in hand 1-8 its surfaces (paint-tool.ts key took them above): tool-modes.ts numberKeyUse. Before T202 they
       // picked a road class and the road tool from any tool
       case '1': case '2': case '3': case '4': case '5': case '6': {
         const u = numberKeyUse(this.uiTool, +e.key);

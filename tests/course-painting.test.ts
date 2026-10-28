@@ -7,7 +7,7 @@
 // Headless: the Paint tool with stand-in hosts.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { BRUSH_PRESETS } from '../src/game/paint';
+import { BRUSH_PRESETS, SURFACE_BRUSHES } from '../src/game/paint';
 import { GRID_KINDS, PaintTool, type PaintHost } from '../src/game/paint-tool';
 import { CELL_T, SURF, SURF_ORDER, cellAt, decodeGrid, encodeGrid, makeGrid, paintDisc, surfAbove, type Grid } from '../src/game/ext/course-grid';
 import { SURF_SURFACE, gridAreas } from '../src/game/ext/course-grid/areas';
@@ -127,7 +127,7 @@ test('Esc puts the brush down (the plan\'s handles alone), the number keys pick 
   const o = golf(), { g, tool } = o;
   assert.ok(tool.editHole(1));
   const key = (k: string) => tool.key({ key: k, ctrlKey: false, metaKey: false, altKey: false, shiftKey: false, preventDefault() {} } as unknown as KeyboardEvent);
-  assert.equal(key('9'), true); assert.equal(tool.mode, 'brush'); assert.equal(tool.brushKind, 'longGrass', 'key 9 is Long grass'); assert.equal(tool.editingHole, 1);
+  assert.equal(key('8'), true); assert.equal(tool.mode, 'brush'); assert.equal(tool.brushKind, 'longGrass', 'key 8 is Long grass (T252: no cart path brush)'); assert.equal(tool.editingHole, 1);
   assert.equal(key('5'), true); assert.equal(tool.brushKind, 'bunker');
   assert.equal(key('Escape'), true); assert.equal(tool.mode, 'plan', 'Esc puts the brush down'); assert.equal(tool.editingHole, 1, 'Edit hole stays open');
   assert.ok(tool.setEditBrush('longGrass'));
@@ -189,11 +189,12 @@ test('round strokes make round greens and bunkers: the outline the course draws 
 });
 
 // ---------- Long grass ----------
-test('Long grass is a brush (key 9, the next free key after the cart path, at stage 2), a grid surface between the rough and the fescue', () => {
-  const k = BRUSH_PRESETS.findIndex(b => b.kind === 'longGrass');
-  assert.equal(k, 8, 'key 9'); assert.equal(BRUSH_PRESETS[7]!.kind, 'path', 'after the cart path');
-  assert.equal(BRUSH_PRESETS[k]!.name, 'Long grass'); assert.ok(GRID_KINDS.includes('longGrass')); assert.equal(BRUSH_STAGE.longGrass, BRUSH_STAGE.rough);
-  assert.equal(surfaceOfTex(BRUSH_PRESETS[k]!.style.tex), 'longGrass'); assert.equal(SURF_SURFACE[SURF.longGrass], 'longGrass');
+test('Long grass is a brush (T252: key 8, the cart path brush gone, at stage 2), a grid surface between the rough and the fescue', () => {
+  const k = SURFACE_BRUSHES.findIndex(b => b.kind === 'longGrass');
+  assert.equal(k, 7, 'key 8'); assert.equal(SURFACE_BRUSHES[6]!.kind, 'waste', 'after the Waste area'); assert.ok(!SURFACE_BRUSHES.some(b => b.kind === 'path'), 'no cart path brush');
+  assert.ok(BRUSH_PRESETS.some(b => b.kind === 'path'), 'the cart path keeps its look (old saves, the Stamps)');
+  assert.equal(SURFACE_BRUSHES[k]!.name, 'Long grass'); assert.ok(GRID_KINDS.includes('longGrass')); assert.equal(BRUSH_STAGE.longGrass, BRUSH_STAGE.rough);
+  assert.equal(surfaceOfTex(SURFACE_BRUSHES[k]!.style.tex), 'longGrass'); assert.equal(SURF_SURFACE[SURF.longGrass], 'longGrass');
   assert.equal(SURF.longGrass, 9, 'the next free id: ids 0-8 keep their meaning');
   assert.deepEqual(SURF_ORDER, [SURF.none, SURF.rough, SURF.longGrass, SURF.fescue, SURF.water, SURF.fairway, SURF.tee, SURF.bunker, SURF.waste, SURF.green]);
   assert.ok(surfAbove(SURF.longGrass, SURF.rough) && surfAbove(SURF.fescue, SURF.longGrass) && surfAbove(SURF.fairway, SURF.longGrass));
@@ -206,7 +207,7 @@ test('Long grass lays: over the rough and the map grass, under the fairway and t
   const { g, tool } = golfTool();
   tool.setBrush('rough'); tool.setBrushCells(4); tool.cursor = { x: 100, y: 200 }; click(g, tool);
   const i = cellAt(g, 100, 200); assert.equal(g.surf[i], SURF.rough);
-  assert.equal(tool.key({ key: '9', preventDefault() {} } as unknown as KeyboardEvent), true); assert.equal(tool.brushKind, 'longGrass', 'key 9 arms it');
+  assert.equal(tool.key({ key: '8', preventDefault() {} } as unknown as KeyboardEvent), true); assert.equal(tool.brushKind, 'longGrass', 'key 8 arms it');
   tool.setBrushCells(2); const laid = click(g, tool); assert.ok(laid.length >= 4); for (const j of laid) assert.equal(g.surf[j], SURF.longGrass);
   tool.cursor = { x: 110, y: 210 }; const open = click(g, tool); assert.ok(open.length >= 4, 'over the map grass'); for (const j of open) assert.equal(g.surf[j], SURF.longGrass);
   // the rough slides under it (long grass is drawn above the rough), the fairway goes over it

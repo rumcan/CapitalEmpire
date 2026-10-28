@@ -6,6 +6,7 @@
 // Bottlenecks card), then the tool steps back or drops what is in hand (a route, a stroke, an outline, a piece, a selection), then the tool
 // is put down for Select.
 import type { Tool } from './types';
+import { SURFACE_BRUSHES } from './paint';
 
 /** the side modes: the engine's flags of the Grass panel and the Land, Holes and Event switches */
 export type SideMode = 'grassPanel' | 'landMode' | 'holesTool' | 'eventTool';
@@ -63,14 +64,14 @@ export function escapeLadder(l: EscLadder): EscStep {
   return 'select';
 }
 
-/** what a number key does (T202, #529; plan P23-UX 6.2 P2-8): 'surface', the course brush's surfaces while the Holes tool is in hand (1-7 in
+/** what a number key does (T202, #529; plan P23-UX 6.2 P2-8): 'surface', the course brush's surfaces while the Holes tool is in hand (1-8 in
  *  its panel: paint-tool.ts key takes them first); 'class', the road classes while the town's Build is in hand (1-6, its flyout's classes in
  *  order: network.ts KEY_CLASSES); else 'group', the nth rail group after Select (its flyout opens: App.tsx railKey). Before T202 1-6 picked a
  *  road class and the road tool from any tool. i: the key's index from 0 */
 export type NumberKeyUse = { k: 'surface' | 'class' | 'group'; i: number };
 export function numberKeyUse(uiTool: Tool, n: number): NumberKeyUse | null {
   if (!(n >= 1 && n <= 9) || !Number.isInteger(n)) return null;
-  if (uiTool === 'course') return n <= 9 ? { k: 'surface', i: n - 1 } : null; // T222: the seventh surface is the Waste area, the eighth the cart path; T238: the ninth Long grass
+  if (uiTool === 'course') return n <= SURFACE_BRUSHES.length ? { k: 'surface', i: n - 1 } : null; // T222: the seventh surface is the Waste area; T252: the eighth Long grass (no cart path brush)
   if (uiTool === 'road') return n <= 6 ? { k: 'class', i: n - 1 } : null;
   return n <= 6 ? { k: 'group', i: n - 1 } : null;
 }

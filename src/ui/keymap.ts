@@ -6,7 +6,7 @@
 // lab's keys under their own heading (lot-lab-ui.ts KEYS: the lab's own table). Pure TypeScript, no DOM: KeysSheet.tsx draws it.
 import type { Tool } from '../game/types';
 import type { ProgressiveUiState } from '../game/ext/progressive-ui';
-import { BRUSH_PRESETS } from '../game/paint';
+import { SURFACE_BRUSHES } from '../game/paint';
 import { CLASS, KEY_CLASSES } from '../game/network';
 import { RAIL, drawerOf, railEntries, toolLock, toolsIn, type RailItem } from './rail-items';
 
@@ -36,7 +36,7 @@ const menuless = (r: RailItem): boolean => !r.action && r.tools.length === 1;
  *  parking-tool.ts key); the number keys' rows come from the lists they pick from */
 const inHand = (): { title: string; tool: Tool; alt?: true; rows: [string, string][] }[] => [
   { title: 'Holes in hand', tool: 'course', rows: [
-    [`1 – ${BRUSH_PRESETS.length}`, `the surface: ${BRUSH_PRESETS.map(b => b.name.toLowerCase()).join(', ')}`], ['[ / ]', 'a smaller / bigger brush or green'],
+    [`1 – ${SURFACE_BRUSHES.length}`, `the surface: ${SURFACE_BRUSHES.map(b => b.name.toLowerCase()).join(', ')}`], ['[ / ]', 'a smaller / bigger brush or green'],
     ['R', 'turn the stamp, the hole or the green'], ['Enter', 'finish the shape or the run'], ['Backspace', 'take back the last corner'],
     ['PageUp / PageDown', 'the picked area up / down a layer']] },
   // T206: Facilities ▸ Practice (golf/practicetool.ts key) and Facilities ▸ Plants (the Paint tool's plant brush: paint-tool.ts key)

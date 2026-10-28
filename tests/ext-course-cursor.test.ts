@@ -334,13 +334,13 @@ test('rub out (T125): the dashed footprint is exactly the cells a click takes ba
   assert.equal(cur.state.kind, 'refused'); assert.deepEqual(cur.state.label, [LAND_WHY.off]);
   assert.equal(cur.hint, 'Rub out · 1 cell refused: not your land');
   // the rough brush gives back the land's own grass: the rough strip is taken too, and the pill says so
-  tool.setBrush('rough'); tool.setBrushCells(4); tool.cursor = { x: 90.2, y: 214.6 };
+  tool.setBrush('rough'); tool.rubOut = true; tool.setBrushCells(4); tool.cursor = { x: 90.2, y: 214.6 }; // #730: a surface pick ends Erase
   const fr = foot();
   assert.equal(fr.length, 16); assert.deepEqual(fr, clickChanges(g, tool));
   assert.equal(cur.hint, 'Rub out · 16 cells back to grass · no refund');
   tool.undo();
   // the per-hole option: only the current hole's cells, and the pill names it
-  tool.setBrush('fairway'); tool.setHole(2); tool.rubHoleOnly = true; tool.cursor = { x: 99.4, y: 201.1 };
+  tool.setBrush('fairway'); tool.rubOut = true; tool.setHole(2); tool.rubHoleOnly = true; tool.cursor = { x: 99.4, y: 201.1 };
   const fh = foot();
   assert.ok(fh.length > 0 && fh.length < 16, "only hole 2's green");
   assert.deepEqual(fh, clickChanges(g, tool));
@@ -514,7 +514,7 @@ test('switching and stopping (T118, the owner): number keys switch the surface, 
   frame(cur, tool);
   assert.match(cur.hint, /^Painting Fairway · /);
   const sprites = cur.stats.sprites;
-  // the keys follow BRUSH_PRESETS: 1 fairway, 2 green, 3 tee, 4 rough, 5 bunker, 6 water, 7 waste area (T222), 8 cart path
+  // the keys follow SURFACE_BRUSHES: 1 fairway, 2 green, 3 tee, 4 rough, 5 bunker, 6 water, 7 waste area (T222), 8 long grass (T252: no cart path brush)
   for (const [k, kind, name] of [['2', 'green', 'Green'], ['3', 'tee', 'Tee'], ['4', 'rough', 'Rough'], ['5', 'bunker', 'Bunker'], ['6', 'water', 'Water'], ['1', 'fairway', 'Fairway']] as const) {
     assert.equal(key(k), true, `key ${k} is taken`);
     assert.equal(tool.brushKind, kind);

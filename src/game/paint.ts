@@ -330,16 +330,21 @@ export const BRUSH_PRESETS: { kind: BrushKind; name: string; r: number; style: O
   { kind: 'bunker', name: 'Bunker', r: 2, style: clampStyle({ ...DEFAULT_STYLE, tex: S('bunker', 'bunkerSand'), border: 2, btex: S('rough', 'golfRough') }) },
   { kind: 'water', name: 'Water', r: 4, style: clampStyle({ ...DEFAULT_STYLE, tex: S('water', 'waterDark'), border: 2, btex: 'dirt' }) },
   // T222 (the owner, 2026-10-27: "add desert as a waste bunker in the course"): the Waste area, the course grid's waste surface (the desert, Painted ›
-  // Waste area sand). Key 7, before the cart path (stage 3 only, now key 8), so the keys 1-6 stay as they were and the stage 2 keys run 1-7 with no gap;
+  // Waste area sand). Key 7 (T252: the cart path brush is gone, SURFACE_BRUSHES), so the keys 1-6 stay as they were and the stage 2 keys run 1-7 with no gap;
   // priced like a bunker (golf/costs.ts) and played as sand (golf/play)
   { kind: 'waste', name: 'Waste area', r: 3, style: clampStyle({ ...DEFAULT_STYLE, tex: S('waste', 'wasteSand'), border: 0 }) },
   { kind: 'path', name: 'Cart path', r: 1, style: clampStyle({ ...DEFAULT_STYLE, tex: S('path', 'asphalt'), border: 0 }) },
   // T238 (the owner, 2026-10-28: "the current course rough being a long grass option the player can add"): Long grass, the course grid's
   // long grass surface, wearing the owner's rough paintings (Painted › Long grass: rough-owner) now the rough wears the town lawns' grass
-  // (#696). Key 9, the next free key after the cart path; drawn between the rough and the fescue, priced like the rough (golf/costs.ts) and
+  // (#696). Key 8 (T252: was 9, after the cart path brush that went); drawn between the rough and the fescue, priced like the rough (golf/costs.ts) and
   // played as heavy rough, the deep grass lie (golf/play)
   { kind: 'longGrass', name: 'Long grass', r: 6, style: clampStyle({ ...DEFAULT_STYLE, tex: S('longGrass', 'golfLongGrass'), border: 0 }) },
 ];
+/** T252 (the owner, 2026-10-28: "remove cart path from that menu. cart paths are part of the paths section"): the surfaces the course brush
+ *  paints, in their keys' order (Shape by hand's and Edit hole's swatches, the keys 1-8, the Holes flyout, Help › Keys): every brush but the
+ *  cart path, which Course › Cart paths & roads lays. BRUSH_PRESETS keeps the cart path's style: old saves' cart-path areas and cells, and the
+ *  Stamps' cart path piece, still wear it */
+export const SURFACE_BRUSHES = BRUSH_PRESETS.filter(b => b.kind !== 'path');
 
 /** the textures the Course tool's brushes lay (fills and borders): the ground workers make them ahead when the tool opens (T168) */
 export function brushTextures(): string[] { return [...new Set(BRUSH_PRESETS.flatMap(b => [b.style.tex, ...(b.style.border > 0 ? [b.style.btex] : [])]))]; }

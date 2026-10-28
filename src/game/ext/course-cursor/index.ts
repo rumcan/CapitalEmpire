@@ -38,6 +38,9 @@ import { HH, HW } from '../../iso';
 import { CAST, castShear } from '../../cast-shadow';
 import { DARK_RGB, edgeProfileOf, type EdgeProfile } from '../../paint-edges';
 import { BORDER_TEXES, borderW, roundCorners, type PaintArea } from '../../paint';
+import { puckBandOf, type BandName, type BrushLooks, type PuckBand } from '../../course-look';
+import { DEFAULT_COURSE_FINISH, LIP, type CourseFinish } from '../../course-finish';
+import { SUN_TILE_DIR } from '../course-height';
 import { SURF_SURFACE, surfOfSurface } from '../course-grid/areas';
 import { surfaceOfTex, unitBuildCost } from '../../golf/costs';
 import { LAND_WHY, type PaintTool } from '../../paint-tool';
@@ -81,6 +84,10 @@ export interface CursorEnv {
   /** what the cells at tile (x, y) are besides a hole ('' for a hole: the course): a range start's practice area (T130) lays no hole, so the
    *  hint pill says what it builds there instead of the hole a click joins */
   zone?: ((x: number, y: number) => string) | null;
+  /** T252: the course finish (painted-surfaces' course block: the collar tone, the bunker's lip in the first cut) the chip's border follows
+   *  (default: the tuned look), and the painted surfaces file as it is now (its change draws the chip's look again) */
+  finish?: (() => CourseFinish) | null;
+  looks?: (() => unknown) | null;
 }
 
 /** what a click would do (plan P23 4.9): ready to lay, protected (some cells keep a higher surface), refused (some cells cannot take the
@@ -91,7 +98,7 @@ export type CursorStateKind = 'ready' | 'protected' | 'refused' | 'erase' | 'noc
 export interface CursorState { kind: CursorStateKind; dragging: boolean; label: string[]; bad: boolean[] }
 
 /** the mark a surface's disc carries, so surfaces are told apart without colour (T118) */
-export type MarkKind = 'flag' | 'stripes' | 'peg' | 'tufts' | 'wisps' | 'grains' | 'pebbles' | 'ripples' | 'lanes' | 'none';
+export type MarkKind = 'flag' | 'stripes' | 'peg' | 'tufts' | 'wisps' | 'grains' | 'pebbles' | 'ripples' | 'lanes' | 'eraser' | 'none';
 export const MARKS: Readonly<Record<string, MarkKind>> = {
   green: 'flag', fairway: 'stripes', tee: 'peg', rough: 'tufts', longGrass: 'wisps', fescue: 'wisps', bunker: 'grains', waste: 'pebbles', water: 'ripples', path: 'lanes', grass: 'none',
 };
@@ -507,8 +514,8 @@ function shineOn(g: CanvasRenderingContext2D, tint: string, k: number, mask: (m:
 /** paints a puck sprite for a brush of R tiles whose top face is rx, ry device px across (so s = rx / (R sqrt2 HW) device px per world px:
  *  the map scale it was bucketed at): the wall, the top face in the brush's photo with its tone and border band, the sun's light and shade,
  *  the rim lights, then outside the face erase's dashed line and the surface's mark on its badge (T138: nothing over the face) */
-function paintPuck(g: CanvasRenderingContext2D, st: PuckStyle, kind: string, erase: boolean, withBand: boolean, R: number, rx: number, ry: number, thick: number, pad: number, d: number, tex: CursorTexture | null | undefined, top = 0) {
-  const cx = pad + rx, cy = top + pad + ry, look = LOOKS[kind] ?? LOOKS.fairway!, s = rx / (R * SQ2 * HW), E = R + 2, mark = markOf(kind);
+function paintPuck(g: CanvasRenderingContext2D, st: PuckStyle, kind: string, erase: boolean, withBand: boolean, R: number, rx: number, ry: number, thick: number, pad: number, d: number, tex: CursorTexture | null | undefined, top = 0, pb: PuckBand | null = null, badge = true) {
+  const cx = pad + rx, cy = top + pad + ry, look = LOOKS[kind] ?? LOOKS.fairway!, s = rx / (R * SQ2 * HW), E = R + 2, mark: MarkKind = erase ? 'eraser' : markOf(kind);
   const profile: EdgeProfile = edgeProfileOf(kind === 'path' ? null : kind, st.tex, st.border > 0 ? st.btex : undefined);
   /** a tile-space pattern of texture t (scale k, angle a degrees) for the current tile-space transform, or its swatch colour */
   const fillOf = (t: string, k: number, a: number): CanvasPattern | string => {
@@ -529,7 +536,12 @@ function paintPuck(g: CanvasRenderingContext2D, st: PuckStyle, kind: string, era
   const lay = (t: string, k: number, a: number) => { g.save(); iso(); g.fillStyle = fillOf(t, k, a); g.fillRect(-E, -E, 2 * E, 2 * E); g.restore(); };
   /** fills the clip with a colour in an operation */
   const wash = (col: string, op: GlobalCompositeOperation) => { g.globalCompositeOperation = op; g.fillStyle = col; g.fillRect(0, 0, g.canvas.width, g.canvas.height); g.globalCompositeOperation = 'source-over'; };
-  if (look.wall === 'water') {
+  if (erase) {
+    // T252: Erase's chip is a rubber eraser: the pink rubber's side, its paper sleeve's on the right
+    g.fillStyle = RUBBER_SIDE; g.fillRect(0, 0, g.canvas.width, g.canvas.height);
+    g.beginPath(); g.moveTo(cx + SLEEVE_AT[1] * rx, 0); g.lineTo(g.canvas.width, 0); g.lineTo(g.canvas.width, g.canvas.height); g.lineTo(cx + SLEEVE_AT[1] * rx, g.canvas.height); g.closePath();
+    g.fillStyle = SLEEVE_SIDE; g.fill();
+  } else if (look.wall === 'water') {
     // deep water under a thin bank of the border's ground
     const wg = g.createLinearGradient(0, cy, 0, cy + ry + thick);
     wg.addColorStop(0, '#2c6d8e'); wg.addColorStop(1, '#0d2a3e');
@@ -568,11 +580,15 @@ function paintPuck(g: CanvasRenderingContext2D, st: PuckStyle, kind: string, era
 
   // ---- the top face: the brush's photo in tile space (its period, scale and angle), its tone, its border band inside the edge
   g.save(); iso(); g.beginPath(); g.arc(0, 0, R, 0, Math.PI * 2); g.clip();
-  g.fillStyle = fillOf(st.tex, st.scale, st.angle); g.fillRect(-R, -R, 2 * R, 2 * R);
-  if (st.tone) { g.globalCompositeOperation = st.tone === 1 ? 'multiply' : 'screen'; g.globalAlpha = st.toneAmt; g.fillStyle = st.tint; g.fillRect(-R, -R, 2 * R, 2 * R); g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1; }
+  g.fillStyle = erase ? RUBBER : fillOf(st.tex, st.scale, st.angle); g.fillRect(-R, -R, 2 * R, 2 * R);
+  if (erase) paintSleeve(g, cx, cy, rx, ry, d);
+  else if (st.tone) { g.globalCompositeOperation = st.tone === 1 ? 'multiply' : 'screen'; g.globalAlpha = st.toneAmt; g.fillStyle = st.tint; g.fillRect(-R, -R, 2 * R, 2 * R); g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1; }
+  // T252: the surface's real border on the course grid (course-look puckBandOf: the green's fringe, the first cut round a fairway or a tee,
+  // a bunker's grass lip, a pond's bank), in its texture and tone, inside the rim (on the course it lies outside the cells)
+  if (pb && !erase) paintBand(g, pb, R, fillOf);
   // the border band of a painted area (first cut round a fairway, fringe round a green), the painter's width held to a third of the puck so
-  // the surface reads; on the course grid the collars are laid outside the cells (course-blobs), so the puck is the surface alone
-  const bw = withBand && st.border > 0 ? Math.min(borderW(st.border), 0.34 * R) : 0;
+  // the surface reads
+  const bw = !pb && !erase && withBand && st.border > 0 ? Math.min(borderW(st.border), 0.34 * R) : 0;
   if (bw > 0 && st.btex !== 'kerb') {
     g.strokeStyle = fillOf(st.btex, st.bscale, st.bangle);
     g.lineWidth = 2 * bw; g.stroke();
@@ -633,8 +649,56 @@ function paintPuck(g: CanvasRenderingContext2D, st: PuckStyle, kind: string, era
     g.strokeStyle = '#fff6ee'; g.lineWidth = 1.2 * u; g.stroke();
     g.setLineDash([]); g.lineCap = 'round';
   }
-  // ---- the surface's mark on its badge, at the upper right outside the face
-  paintBadge(g, mark, cx + BADGE.dx * u, cy + BADGE.dy * u, u);
+  // ---- the surface's mark on its badge, at the upper right outside the face (T252: erase's is an eraser; a swatch has none)
+  if (badge) paintBadge(g, mark, cx + BADGE.dx * u, cy + BADGE.dy * u, u);
+}
+
+/** T252: Erase's rubber eraser chip: the rubber's top and side, the paper sleeve's top and side, its print line, and where the sleeve's left
+ *  edge crosses the face's top and bottom (a share of the face's half width from its centre: slanted like the iso tile axis) */
+const RUBBER = '#ef9097', RUBBER_SIDE = '#b85861', SLEEVE = '#f1f3f7', SLEEVE_SIDE = '#b9bfca', SLEEVE_INK = 'rgba(64,104,186,0.75)', SLEEVE_AT = [0.02, 0.32] as const;
+/** the sleeve on the eraser's top face (g clipped to the face): the right part past a slanted edge, a dark line on that edge and a blue print line */
+function paintSleeve(g: CanvasRenderingContext2D, cx: number, cy: number, rx: number, ry: number, d: number) {
+  g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
+  const x0 = cx + SLEEVE_AT[0] * rx, x1 = cx + SLEEVE_AT[1] * rx;
+  g.beginPath(); g.moveTo(x0, cy - ry); g.lineTo(cx + rx, cy - ry); g.lineTo(cx + rx, cy + ry); g.lineTo(x1, cy + ry); g.closePath(); g.fillStyle = SLEEVE; g.fill();
+  g.beginPath(); g.moveTo(x0, cy - ry); g.lineTo(x1, cy + ry); g.strokeStyle = 'rgba(40,24,32,0.6)'; g.lineWidth = Math.max(1, 0.9 * d); g.stroke();
+  g.beginPath(); g.moveTo(x0 + 0.38 * rx, cy - ry); g.lineTo(x1 + 0.38 * rx, cy + ry); g.strokeStyle = SLEEVE_INK; g.lineWidth = Math.max(1, 1.6 * d); g.stroke();
+  g.restore();
+}
+
+/** T252: each band's width across the puck, a share of its radius (the course's own widths would fill the 4 m face): the collars and the bank
+ *  read as a clear ring, the bunker's lip as a thin one */
+export const PUCK_BAND_W: Readonly<Record<BandName, number>> = { 'first-cut': 0.2, fringe: 0.17, lip: 0.12, bank: 0.22 };
+/** the bank's wet soil, from the water's edge into the bank: each stroke's width (a share of the bank's) and colour (renderer courseBank's) */
+const WET: readonly (readonly [number, string])[] = [[0.62, 'rgba(92,70,42,0.22)'], [0.42, 'rgba(78,58,36,0.3)'], [0.24, 'rgba(62,46,30,0.38)'], [0.1, 'rgba(44,34,24,0.5)']];
+/** paints a surface's band inside the top face (g in tile space round the face's centre, clipped to it; R its radius in tiles): the band's
+ *  texture, its look's tone, the course finish's collar tone (a multiply that keeps the texture), and a pond bank's wet soil toward the water */
+function paintBand(g: CanvasRenderingContext2D, pb: PuckBand, R: number, fillOf: (t: string, k: number, a: number) => CanvasPattern | string) {
+  const W = PUCK_BAND_W[pb.name] * R, t = pb.tex;
+  const ring = () => { g.beginPath(); g.arc(0, 0, R, 0, Math.PI * 2); };
+  g.save(); g.lineWidth = 2 * W;
+  ring(); g.strokeStyle = fillOf(t.tex, t.sc, t.a); g.stroke();
+  if (t.t && t.tc) { g.globalCompositeOperation = t.t === 1 ? 'multiply' : 'screen'; g.globalAlpha = t.ta ?? 0.5; g.strokeStyle = t.tc; ring(); g.stroke(); }
+  if (pb.tone) { g.globalCompositeOperation = 'multiply'; g.globalAlpha = pb.tone.ta; g.strokeStyle = pb.tone.tc; ring(); g.stroke(); }
+  g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1;
+  if (pb.name === 'bank') {
+    // the wet soil darkening toward the water: strokes from the water's edge, clipped to the band
+    g.beginPath(); g.arc(0, 0, R, 0, Math.PI * 2); g.arc(0, 0, R - W, 0, Math.PI * 2, true); g.clip();
+    for (const [w, c] of WET) { g.beginPath(); g.arc(0, 0, R - W, 0, Math.PI * 2); g.lineWidth = 2 * w * W; g.strokeStyle = c; g.stroke(); }
+  }
+  if (pb.name === 'lip') {
+    // the bunker's lip (T227): a dark crescent on the sand inside the far rim, the one toward the sun (a cool multiply that keeps the sand's
+    // texture), fading round to nothing on the near side
+    const r = R - W, sx = SUN_TILE_DIR.x * r, sy = SUN_TILE_DIR.y * r;
+    g.save(); g.beginPath(); g.arc(0, 0, r, 0, Math.PI * 2); g.clip();
+    const cg = g.createLinearGradient(sx, sy, -0.15 * sx, -0.15 * sy);
+    cg.addColorStop(0, shade(0.5 * LIP.dark)); cg.addColorStop(0.45, shade(0.18 * LIP.dark)); cg.addColorStop(1, shade(0));
+    g.globalCompositeOperation = 'multiply'; g.strokeStyle = cg; g.lineWidth = 2 * 0.3 * R; g.beginPath(); g.arc(0, 0, r, 0, Math.PI * 2); g.stroke();
+    g.restore();
+  }
+  // the joint where the surface meets its band: a fine dark line, so the border reads at 40 px
+  g.beginPath(); g.arc(0, 0, R - W, 0, Math.PI * 2); g.lineWidth = 0.05 * R; g.strokeStyle = pb.name === 'bank' ? 'rgba(30,22,14,0.45)' : 'rgba(20,30,12,0.3)'; g.stroke();
+  g.restore();
 }
 
 /** the mark's badge (T138): its centre from the top face's centre and its radius, css px at the chip's CHIP_CSS (they scale with the chip):
@@ -746,6 +810,16 @@ export function paintBadge(g: CanvasRenderingContext2D, mark: MarkKind, X: numbe
       g.beginPath(); chord(0); g.setLineDash([1.3 * u, 1.5 * u]); g.lineCap = 'butt'; g.lineWidth = 0.9 * u; g.stroke(); g.setLineDash([]);
       break;
     }
+    case 'eraser': {
+      // T252: Erase: a rubber eraser, tilted, its pink rubber end down left and its light sleeve up right
+      g.translate(X, Y); g.rotate(-Math.PI / 4);
+      const w = 4.6 * u, h = 2.5 * u;
+      g.beginPath(); g.rect(-w, -h, w, 2 * h); g.fillStyle = '#f08a8a'; g.fill();
+      g.beginPath(); g.rect(0, -h, w, 2 * h); g.fillStyle = '#f4efe2'; g.fill();
+      g.beginPath(); g.rect(-w, -h, 2 * w, 2 * h); g.strokeStyle = 'rgba(30,16,16,0.9)'; g.lineWidth = 0.7 * u; g.stroke();
+      g.beginPath(); g.moveTo(0, -h); g.lineTo(0, h); g.stroke();
+      break;
+    }
   }
   g.restore();
 }
@@ -811,7 +885,10 @@ export class CourseCursor {
   /** the chip sprites (LRU) and the one in use */
   private sprites = new Map<string, Sprite>();
   private spr: Sprite | null = null;
-  private sk = { kind: '', st: null as PuckStyle | null, erase: false, band: true, d: 0, rev: -1, tex: '', scale: 0, angle: 0, border: -1, btex: '', tone: -1 };
+  private sk = { kind: '', st: null as PuckStyle | null, erase: false, band: true, d: 0, rev: -1, pb: null as PuckBand | null, looks: null as unknown, tex: '', scale: 0, angle: 0, border: -1, btex: '', tone: -1 };
+  /** the painted surfaces files seen, numbered (a new file: a new number in the sprites' keys, so a look changed in the studio is drawn again) */
+  private looksSeen: unknown = null; private looksNo = 0;
+  private looksN(f: unknown): number { if (f !== this.looksSeen) { this.looksSeen = f; this.looksNo++; } return this.looksNo; }
   /** whether the last footprint laid on the course grid had a price (a golf game): the words show the price a cell */
   private golf = false;
   /** the erase chip's plain-grass style and the rough style it was made from */
@@ -962,7 +1039,7 @@ export class CourseCursor {
     this.words(tool, kind, this.pressed, erase, grid ? f.count : -1, nKept, nRef, nKept ? fp.whyKept : '', nRef ? fp.whyRefused : '', price, money);
     this.footprint(ctx, fp, f.ax * CELL_T, f.ay * CELL_T, v, look, kind, erase, grid);
     const ck = erase && grid ? backKind(tool.brushKind) : tool.brushKind;
-    this.chip(ctx, v, cx, cy, ck, erase && grid ? this.backStyle(tool, ck) : st, erase, !grid, d, now, dt);
+    this.chip(ctx, v, cx, cy, ck, erase && grid ? this.backStyle(tool, ck) : st, erase, !grid, d, now, dt, grid && !erase ? this.bandOf(tool) : null);
     // a stroke in progress splashes lightly as it travels
     if (this.pressed && Math.hypot(x - this.trailX, y - this.trailY) > Math.max(1.5, size)) { this.splash(x, y, size, look, now, false); this.trailX = x; this.trailY = y; }
     return true;
@@ -1003,7 +1080,7 @@ export class CourseCursor {
     this.footprint(ctx, fp, f.ax * CELL_T, f.ay * CELL_T, v, look, kind, erase, grid);
     if (active) this.runLine(ctx, v, path, tool.runPts.length >> 1, look);
     const ck = erase && grid ? backKind(tool.brushKind) : tool.brushKind;
-    this.chip(ctx, v, cx, cy, ck, erase && grid ? this.backStyle(tool, ck) : st, erase, !grid, d, now, dt);
+    this.chip(ctx, v, cx, cy, ck, erase && grid ? this.backStyle(tool, ck) : st, erase, !grid, d, now, dt, grid && !erase ? this.bandOf(tool) : null);
     return true;
   }
   /** the run's line through its bends (path, tiles; the first placed of them are bends, the last point where the next click lands): a thin
@@ -1169,7 +1246,7 @@ export class CourseCursor {
 
   /** the chip beside the pointer at tile (cx, cy): its contact shadow, then the sprite squashed about its foot, and beside it the state's
    *  words (none at rest) */
-  private chip(ctx: CanvasRenderingContext2D, v: CursorView, cx: number, cy: number, kind: string, st: PuckStyle, erase: boolean, band: boolean, d: number, now: number, dt: number) {
+  private chip(ctx: CanvasRenderingContext2D, v: CursorView, cx: number, cy: number, kind: string, st: PuckStyle, erase: boolean, band: boolean, d: number, now: number, dt: number, pb: PuckBand | null = null) {
     const ze = v.ze, rx = (CHIP_CSS / 2) * d, ry = rx * (HH / HW);
     const mx = ((cx - cy) * HW - v.camX) * ze + v.cw / 2, my = ((cx + cy) * HH - v.camY) * ze + v.ch / 2;
     // to the lower right of the pointer; flipped to its left or above it near the screen's edges
@@ -1177,7 +1254,7 @@ export class CourseCursor {
     this.motion(gx, gy, ry, d, now, dt);
     const m = this.mo, x = Math.round(this.px), y = Math.round(this.py);
     this.last.rx = rx; this.last.ry = ry; this.last.x = x; this.last.y = y;
-    const sp = this.sprite(kind, st, erase, band, d);
+    const sp = this.sprite(kind, st, erase, band, d, pb);
     const h = this.hov + m.thick * 0.5, shx = x + SHEAR.sx * h, shy = y + SHEAR.sy * h;
     const sw = sp.sh.width * m.sx, shh = sp.sh.height;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -1237,13 +1314,22 @@ export class CourseCursor {
     ctx.globalAlpha = 1; ctx.setTransform(1, 0, 0, 1, 0, 0);
   }
 
-  /** the chip sprite for this look (band: with its border band) at this dpr, from the cache, painted when missing */
-  private sprite(kind: string, st: PuckStyle, erase: boolean, band: boolean, d: number): Sprite {
-    const rev = this.env.texture?.rev() ?? 0, k = this.sk;
-    if (this.spr && k.kind === kind && k.st === st && k.erase === erase && k.band === band && k.d === d && k.rev === rev
+  /** T252: the border the chip shows on the course grid for the surface in hand (course-look puckBandOf), worked out again only when a look it
+   *  reads or the finish changes (a frame allocates none) */
+  private bm = { kind: '', st: null as unknown, fw: null as unknown, ro: null as unknown, fin: null as CourseFinish | null, pb: null as PuckBand | null };
+  private bandOf(tool: CursorTool): PuckBand | null {
+    const b = tool.brush as BrushLooks, st = b[tool.brushKind as keyof BrushLooks]?.style, fw = b.fairway?.style, ro = b.rough?.style, fin = this.env.finish?.() ?? DEFAULT_COURSE_FINISH, m = this.bm;
+    if (m.kind !== tool.brushKind || m.st !== st || m.fw !== fw || m.ro !== ro || m.fin !== fin) Object.assign(m, { kind: tool.brushKind, st, fw, ro, fin, pb: puckBandOf(tool.brushKind, b, fin) });
+    return m.pb;
+  }
+  /** the chip sprite for this look (band: with its border band; pb: T252's real border on the course grid) at this dpr, from the cache,
+   *  painted when missing */
+  private sprite(kind: string, st: PuckStyle, erase: boolean, band: boolean, d: number, pb: PuckBand | null = null): Sprite {
+    const rev = this.env.texture?.rev() ?? 0, looks = this.env.looks?.() ?? null, k = this.sk;
+    if (this.spr && k.kind === kind && k.st === st && k.erase === erase && k.band === band && k.d === d && k.rev === rev && k.pb === pb && k.looks === looks
       && k.tex === st.tex && k.scale === st.scale && k.angle === st.angle && k.border === st.border && k.btex === st.btex && k.tone === st.tone) return this.spr;
-    Object.assign(k, { kind, st, erase, band, d, rev, tex: st.tex, scale: st.scale, angle: st.angle, border: st.border, btex: st.btex, tone: st.tone });
-    const key = `${kind}|${st.tex}|${st.scale}|${st.angle}|${st.border}|${st.btex}|${st.bscale}|${st.bangle}|${st.tone}|${st.toneAmt}|${st.tint}|${erase ? 1 : 0}|${band ? 1 : 0}|${d}|${rev}`;
+    Object.assign(k, { kind, st, erase, band, d, rev, pb, looks, tex: st.tex, scale: st.scale, angle: st.angle, border: st.border, btex: st.btex, tone: st.tone });
+    const key = `${kind}|${st.tex}|${st.scale}|${st.angle}|${st.border}|${st.btex}|${st.bscale}|${st.bangle}|${st.tone}|${st.toneAmt}|${st.tint}|${erase ? 1 : 0}|${band ? 1 : 0}|${d}|${rev}|${bandKey(pb)}|${this.looksN(looks)}`;
     let sp = this.sprites.get(key);
     if (sp) { this.sprites.delete(key); this.sprites.set(key, sp); return (this.spr = sp); }
     const sr = (CHIP_CSS / 2) * d, sry = sr * (HH / HW), thick = thickOf(sry, d), pad = Math.ceil(3 * d + 2);
@@ -1251,7 +1337,7 @@ export class CourseCursor {
     const top = Math.max(Math.ceil(4 * d), Math.ceil((BADGE.r - BADGE.dy + 0.5) * d - sry - pad)), wide = Math.max(2 * sr + 2 * pad, pad + sr + (BADGE.dx + BADGE.r + 0.5) * d);
     const make = this.env.canvas ?? domCanvas;
     const c = make(Math.ceil(wide), Math.ceil(2 * sry + thick + 2 * pad + top)), g = c.getContext('2d');
-    if (g) paintPuck(g, st, kind, erase, band, CHIP_R, sr, sry, thick, pad, d, this.env.texture, top);
+    if (g) paintPuck(g, st, kind, erase, band, CHIP_R, sr, sry, thick, pad, d, this.env.texture, top, pb);
     const sh = make(Math.ceil(2 * sr * 1.3 + 4), Math.ceil(2 * sry * 1.3 + 4)), gs = sh.getContext('2d');
     if (gs) paintShadow(gs, sr, sry);
     sp = { key, c, sh, rx: sr, ry: sry, thick, pad, top };
@@ -1300,6 +1386,22 @@ export class CourseCursor {
     B.length = j;
     ctx.globalAlpha = 1;
   }
+}
+
+/** a band's part of a sprite's key ('' none) */
+const bandKey = (pb: PuckBand | null) => (pb ? `${pb.name}:${pb.tex.tex}:${pb.tex.sc}:${pb.tex.a}:${pb.tex.t ?? 0}:${pb.tex.ta ?? 0}:${pb.tex.tc ?? ''}:${pb.tone ? `${pb.tone.tc}${pb.tone.ta}` : ''}` : '');
+
+/** T252: a surface's swatch puck (Shape by hand's and Edit hole's swatches): the brush cursor's chip, drawn the same way (paintPuck: the
+ *  surface's texture through its look, its real border on the course), `css` px wide at dpr d, without the mark's badge (the swatch names it),
+ *  on a canvas from `make`. `tex` is the cursor's photo source (null: the swatch colours). Returns the canvas and whether every picture it
+ *  needed was there (false: a picture was still loading; draw it again when tex.rev() moves) */
+export function swatchPuck(make: (w: number, h: number) => SpriteCanvas, kind: string, st: PuckStyle, pb: PuckBand | null, css: number, d: number, tex: CursorTexture | null | undefined): { c: SpriteCanvas; whole: boolean } {
+  let whole = true;
+  const t: CursorTexture | null = tex ? { pick: (id, px) => { const r = tex.pick(id, px); if (!r) whole = false; return r; }, rev: () => tex.rev() } : null;
+  const sr = (css / 2) * d, sry = sr * (HH / HW), thick = thickOf(sry, d), pad = Math.ceil(2 * d + 1);
+  const c = make(Math.ceil(2 * sr + 2 * pad), Math.ceil(2 * sry + thick + 2 * pad)), g = c.getContext('2d');
+  if (g) paintPuck(g, st, kind, false, !pb, CHIP_R * (css / CHIP_CSS), sr, sry, thick, pad, d, t, 0, pb, false);
+  return { c, whole };
 }
 
 /** a DOM canvas (the default sprite canvas) */
