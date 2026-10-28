@@ -1,0 +1,22 @@
+{
+  "id": "material-texture:putting-green:mid:repair-north-south-v2",
+  "material": "putting-green",
+  "zoom": "mid",
+  "stage": "repair-north-south-v2",
+  "source": "art/theme-consistency/generated/ground/eight-tiles/putting-green/mid-v2/full-north-south-repair-box-guide.png",
+  "output": "art/theme-consistency/generated/ground/eight-tiles/putting-green/mid-v2/full-north-south-repair-v2.raw.png",
+  "provenance": "art/theme-consistency/generated/ground/eight-tiles/putting-green/mid-v2/full-north-south-repair-v2.provenance.json",
+  "prompt": "Edit this FULL wide mid camera image very conservatively. Remove ONLY the bright magenta BOX and reconstruct naturally continuous matching very short pale-to-medium green putting turf. Preserve the EXACT apparent grass size, painterly grain, tiny close-mown flecks, density, average exposure and palette of the adjacent image. The putting turf is exceptionally SHORT, smooth and tightly clipped, finer and shorter than fairway; no rough tufts, coarse brush grain or enlarged individual blades. Keep all unmarked artwork as close as possible. Make the box disappear without a hard cross, jagged grain/brightness patch, rectangular boundary or density stripe. The entire image has EVEN mean exposure: no brighter upper-right region, darker lower-left region, dark edge frame, spotlight, cloud shadow or vignette. Upper-right light appears ONLY in tiny local turf strokes with shallow lower-left undersides; uniform ambient fill everywhere. No zoom, crop, perspective change, blur, buildings, trees, roads, flowers, objects, text, UI or remaining magenta. Return the complete same-size wide opaque PNG. Final production constraint: this is a large interchangeable ground painting whose native detail grain and tone must match its neighbouring field exactly.",
+  "date": "2026-10-27",
+  "generator": "built-in image_gen",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-5f806a31-1402-4a0d-8a3d-ad5c141c7873.png",
+  "referenceHashes": [
+    {
+      "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/mid-v2/full-north-south-repair-box-guide.png",
+      "sha256": "f4fcd78ddea60785aaa6e6681028afa74dfcbc65ceb792731e913711de887038"
+    }
+  ],
+  "lighting": "screen upper-right toward lower-left; even macro exposure for ground",
+  "integrationStatus": "pending-visual-review",
+  "processing": "Native generator output copied byte-for-byte; no repaint, resample, mirror, recolour or transform."
+}

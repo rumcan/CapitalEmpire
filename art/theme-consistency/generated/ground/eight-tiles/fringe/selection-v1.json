@@ -1,0 +1,833 @@
+{
+  "schema": 1,
+  "id": "painted:fringe",
+  "materialId": "painted:fringe",
+  "material": "fringe",
+  "date": "2026-10-27",
+  "versionedSelection": "art/theme-consistency/generated/ground/eight-tiles/fringe/selection-v1.json",
+  "canonicalSelection": "art/theme-consistency/generated/ground/eight-tiles/fringe/canonicalselection.json",
+  "status": "three-authored-sets-independent-art-appearance-passed",
+  "acceptanceScope": "Hash-bound primary saved-art visual review only; not owner signoff or live game/studio integration",
+  "materialMeaning": "Distinct short emerald-green putting apron/fringe, a little coarser and darker than putting green; not first-cut rough.",
+  "light": "Upper-right local painted stroke highlights toward lower-left; even whole-field ambient exposure",
+  "displayContract": {
+    "minVisibleTiles": 2,
+    "maxVisibleTiles": 4,
+    "switchBeforeExceeding": 4,
+    "primaryVariantsPerSet": 4,
+    "allowFlip": false,
+    "allowMirror": false,
+    "allowRotate": false
+  },
+  "detailRelationship": "Three independently authored camera-detail paintings; not mips, resized copies or matching geography",
+  "materialLayer": {
+    "separate": true,
+    "runtimeBlending": false,
+    "runtimeRandomisation": false
+  },
+  "runtimeIntegrated": false,
+  "runtimeMappingAuthority": "Preserve separately owner-selected artwork and any existing gameplay material choices. This handoff publishes accepted generated art, not authority to replace owner bands or reinterpret fringe as first-cut rough.",
+  "sets": {
+    "near": {
+      "folder": "art/theme-consistency/generated/ground/eight-tiles/fringe/near-v1",
+      "nativePixels": [
+        1742,
+        902
+      ],
+      "revision": "near-v1",
+      "status": "accepted-for-art-appearance",
+      "primaryTileIds": [
+        "tile-01",
+        "tile-02",
+        "tile-03",
+        "tile-04"
+      ],
+      "primaryTiles": [
+        {
+          "id": "tile-01",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/near-v1/tile-01.png",
+          "sha256": "5558f542707adc79ed930098f0e22a02d3113b4831189047f027e5e30d595bf0",
+          "bytes": 3794620,
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1742,
+            "height": 902
+          },
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/near-v1/tile-01-v1.raw.png",
+            "sha256": "ca58e4d458ba22900b1b9368ce73961424add1831f184d9423b637e94950d0fd",
+            "bytes": 2333619,
+            "nativePixels": [
+              1742,
+              903
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/near-v1/tile-01-v1.provenance.json",
+              "sha256": "73f75247f66d104f1efa7adfeb19955bee8bd9a2fa65dfb768ce20eb8543cf7d",
+              "bytes": 2539
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/near-v1/tile-01-v1.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/fringe/near-v1/tile-01.cut-paths.json"
+        },
+        {
+          "id": "tile-02",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/near-v1/tile-02.png",
+          "sha256": "41e40ef2c6259d7a11f574b7ca0d70505b42f4cc901a9e3e52d14e9d678ab5b2",
+          "bytes": 3874979,
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1742,
+            "height": 902
+          },
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/near-v1/tile-02-v1.raw.png",
+            "sha256": "03342ceb9af987957ad63f3ad74fe0b2445d2a421f442c712e0a75729763a3b6",
+            "bytes": 2399507,
+            "nativePixels": [
+              1742,
+              903
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/near-v1/tile-02-v1.provenance.json",
+              "sha256": "768cfafb53ed58a4e6c34ae224a5b38dc3e8d01bd17329720a6592b5549535cd",
+              "bytes": 2539
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/near-v1/tile-02-v1.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/fringe/near-v1/tile-02.cut-paths.json"
+        },
+        {
+          "id": "tile-03",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/near-v1/tile-03.png",
+          "sha256": "3bc399e2ce4a1254a29e72d48096976d33df1bc6e1adcd46982a4ee4e56a7d06",
+          "bytes": 3802116,
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1742,
+            "height": 902
+          },
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/near-v1/tile-03-v1.raw.png",
+            "sha256": "6bd13c1010a7a20489f70fe7f12935592b4633cfd36d32fc515b652f1cd10e68",
+            "bytes": 2333876,
+            "nativePixels": [
+              1742,
+              903
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/near-v1/tile-03-v1.provenance.json",
+              "sha256": "d9c9994cf77689acac1fe08a5b1efc633de4889f83ef1b65f9f3342fcc1c41ab",
+              "bytes": 2539
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/near-v1/tile-03-v1.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/fringe/near-v1/tile-03.cut-paths.json"
+        },
+        {
+          "id": "tile-04",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/near-v1/tile-04.png",
+          "sha256": "206b82a1283aa8ba7cb5c897bb41d236c1036a9b108bcb7ecb197259523d78d8",
+          "bytes": 3826865,
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1742,
+            "height": 902
+          },
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/near-v1/tile-04-v1.raw.png",
+            "sha256": "3eb21191d0f5e39711742a1caaca9b64554a2c8045ad2fd9ceb95a138431e6e4",
+            "bytes": 2317498,
+            "nativePixels": [
+              1742,
+              903
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/near-v1/tile-04-v1.provenance.json",
+              "sha256": "5c3af3169b09eb6b8c48a196c663e9f062f73507f8e7015b454c49071577bfbf",
+              "bytes": 2539
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/near-v1/tile-04-v1.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/fringe/near-v1/tile-04.cut-paths.json"
+        }
+      ],
+      "visualDecision": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/near-v1/review/appearance-decision.json",
+        "sha256": "2c471719edca76b614015c04e518ef3dfea2aa82ef30ed7865a684162fbbc242",
+        "bytes": 4576
+      },
+      "sourceManifest": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/near-v1/manifest-v1.json",
+        "sha256": "eb77bcac95adaf59a0f21c2f55bce1c510f741f195bcd3257effec60afdf94a4",
+        "bytes": 4719
+      },
+      "exportReport": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/near-v1/export-report.json",
+        "sha256": "e0afbf76e41ca1d9e13bd9009a31db4dc99405540362f728e383a5747123cf23",
+        "bytes": 10975
+      },
+      "proofs": [
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/near-v1/review/four-tiles-shuffled-screen.png",
+          "sha256": "122ee47c630cf480f7b99c9d1b5dbc10d7021769990be278ee678c7127a706cc",
+          "bytes": 3199692,
+          "nativePixels": [
+            1742,
+            902
+          ]
+        },
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/near-v1/review/four-tiles-shuffled-native.png",
+          "sha256": "f1f96d833cc736af3ff6d7b6749a93ffb283290965b26e721a0b8582d17807d9",
+          "bytes": 12550534,
+          "nativePixels": [
+            3484,
+            1804
+          ]
+        },
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/near-v1/review/two-tiles-horizontal-native.png",
+          "sha256": "a72a1be4982b2a56ae3db621dd28cde0ffaa40b729ff7b0681aa0681605a80a9",
+          "bytes": 6218015,
+          "nativePixels": [
+            3484,
+            902
+          ]
+        },
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/near-v1/review/two-tiles-vertical-native.png",
+          "sha256": "c44131a785f3858527155189e27e75a52afdd013eb5a7f164c358fd5df7d8193",
+          "bytes": 7675404,
+          "nativePixels": [
+            1742,
+            1804
+          ]
+        },
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/near-v1/review/final-cross-native.png",
+          "sha256": "57eea48eec12a075fe9484cc2e35130b8aed4e909b58ed1bf6b6390a5774c52e",
+          "bytes": 775312,
+          "nativePixels": [
+            700,
+            460
+          ]
+        },
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/near-v1/review/final-tile03-left-native.png",
+          "sha256": "aa5137634cc4af86412574201447f3109e910be8ac84406ca073c31f40c18495",
+          "bytes": 349485,
+          "nativePixels": [
+            360,
+            400
+          ]
+        },
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/near-v1/review/final-tile04-top-native.png",
+          "sha256": "33d10a51b783322b8081277b9fc1575d4cfd584a400aaf85bd9a32204bf4d772",
+          "bytes": 328865,
+          "nativePixels": [
+            560,
+            240
+          ]
+        }
+      ],
+      "sharedRepairs": {
+        "northSouth": {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/near-v1/full-north-south-repair-v1.raw.png",
+          "sha256": "70683222dfbb2a6bbd3689b8859de394d6ecfa24b3fe5270fb4c8d118866d435",
+          "bytes": 2312098,
+          "nativePixels": [
+            1743,
+            902
+          ],
+          "provenance": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/near-v1/full-north-south-repair-v1.provenance.json",
+            "sha256": "e0b1e9d3887feed8f9b7e56ec2127ca313e5d1634c2fc3855b1f23bfbb0fe670",
+            "bytes": 2457
+          }
+        },
+        "westEast": {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/near-v1/full-west-east-repair-v1.raw.png",
+          "sha256": "ecb25d48631c2bc6e6889defc50500672642ad3877839cfddf72a0f3bb90b35c",
+          "bytes": 2271861,
+          "nativePixels": [
+            1743,
+            902
+          ],
+          "provenance": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/near-v1/full-west-east-repair-v1.provenance.json",
+            "sha256": "28f2f6b928b7ddd7bee3231a30f0c041aa015a048f7681adf50f5aa445aebef4",
+            "bytes": 2445
+          }
+        }
+      }
+    },
+    "mid": {
+      "folder": "art/theme-consistency/generated/ground/eight-tiles/fringe/mid-v1",
+      "nativePixels": [
+        1742,
+        902
+      ],
+      "revision": "mid-v1",
+      "status": "accepted-for-art-appearance",
+      "primaryTileIds": [
+        "tile-01",
+        "tile-02",
+        "tile-03",
+        "tile-04"
+      ],
+      "primaryTiles": [
+        {
+          "id": "tile-01",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/mid-v1/tile-01.png",
+          "sha256": "f23e2aca2bd811547ef371de5338ecebd64ab85fb16eb7f219e4650abda6ab2e",
+          "bytes": 4061758,
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1742,
+            "height": 902
+          },
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/mid-v1/tile-01-v1.raw.png",
+            "sha256": "880ec568e253368cf2986700a06b923acddc8ba8244d83fa3de336b05cb58749",
+            "bytes": 2779951,
+            "nativePixels": [
+              1744,
+              902
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/mid-v1/tile-01-v1.provenance.json",
+              "sha256": "427d8e7d683d541d2f001c1b43c531fe07716e01e658f7868e76f9d53abbcdb0",
+              "bytes": 2531
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/mid-v1/tile-01-v1.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/fringe/mid-v1/tile-01.cut-paths.json"
+        },
+        {
+          "id": "tile-02",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/mid-v1/tile-02.png",
+          "sha256": "60ad6a8b74f2a322b5d639f944ff073f8e62eab8602304377eeb8103232445f3",
+          "bytes": 3983736,
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1742,
+            "height": 902
+          },
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/mid-v1/tile-02-v1.raw.png",
+            "sha256": "05c8336691512198229c0e19cbca9ef0b78747a5dc76a20587fa54d995d65501",
+            "bytes": 2744208,
+            "nativePixels": [
+              1744,
+              902
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/mid-v1/tile-02-v1.provenance.json",
+              "sha256": "da9d359e06c3a290d329eb5a9283f519b193cbad2bad2fed78a3e295d526e71a",
+              "bytes": 2531
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/mid-v1/tile-02-v1.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/fringe/mid-v1/tile-02.cut-paths.json"
+        },
+        {
+          "id": "tile-03",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/mid-v1/tile-03.png",
+          "sha256": "b5f8b55cb9a6b18486d625a08c82c3eaa6aa32d0ac9f3d962e42064f41b2e5c5",
+          "bytes": 3789465,
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1742,
+            "height": 902
+          },
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/mid-v1/tile-03-v1.raw.png",
+            "sha256": "bdd7269f21efd257c2ec0f90e9ca377d24996ff659fe65fb377ddad48aaca533",
+            "bytes": 2266017,
+            "nativePixels": [
+              1744,
+              902
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/mid-v1/tile-03-v1.provenance.json",
+              "sha256": "dda31d866ad869c81b5791d2768e07a8cb1725899cfacbd43e05c19d07adb0de",
+              "bytes": 2531
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/mid-v1/tile-03-v1.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/fringe/mid-v1/tile-03.cut-paths.json"
+        },
+        {
+          "id": "tile-04",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/mid-v1/tile-04.png",
+          "sha256": "687c55c1e12ea56306e526cbe472b54131b4c012649c65af9284e976ee30fdea",
+          "bytes": 3833920,
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1742,
+            "height": 902
+          },
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/mid-v1/tile-04-v1.raw.png",
+            "sha256": "b3045941786bdd0ba690c9d562a43fab1b1c1629473375896d2afbb4c48387e0",
+            "bytes": 2437648,
+            "nativePixels": [
+              1743,
+              902
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/mid-v1/tile-04-v1.provenance.json",
+              "sha256": "99feb8268c6a0c44f77446f8f1cee439b0ee2698ba626cb4665523b28b086533",
+              "bytes": 2531
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/mid-v1/tile-04-v1.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/fringe/mid-v1/tile-04.cut-paths.json"
+        }
+      ],
+      "visualDecision": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/mid-v1/review/appearance-decision.json",
+        "sha256": "a7954a5a362db10058548100cdbab3bf323a36ac95c6d82dc749c083c657eabc",
+        "bytes": 4567
+      },
+      "sourceManifest": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/mid-v1/manifest-v1.json",
+        "sha256": "8600740253fae13440176cf3f93fd45fafb9b062e8aaf925945215d759b2923d",
+        "bytes": 4702
+      },
+      "exportReport": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/mid-v1/export-report.json",
+        "sha256": "c1e05d95fe9842619f480fce9bed4134e32eeabb9f46d00f3eb0e881e729e751",
+        "bytes": 10955
+      },
+      "proofs": [
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/mid-v1/review/four-tiles-shuffled-screen.png",
+          "sha256": "791eebebc257d836b58d6047b92e063266995012eea1168e50d386e5ad578350",
+          "bytes": 3354990,
+          "nativePixels": [
+            1742,
+            902
+          ]
+        },
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/mid-v1/review/four-tiles-shuffled-native.png",
+          "sha256": "d0181bf2585e0d320355c590c3da405b1ffb6821dae6691acc16178a9d757e10",
+          "bytes": 13335737,
+          "nativePixels": [
+            3484,
+            1804
+          ]
+        },
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/mid-v1/review/two-tiles-horizontal-native.png",
+          "sha256": "55b76df29a990fcb6b4bd13946109ee7185d74f279b093acb385fcfeae5dee93",
+          "bytes": 6729386,
+          "nativePixels": [
+            3484,
+            902
+          ]
+        },
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/mid-v1/review/two-tiles-vertical-native.png",
+          "sha256": "63129eff8f6b0a5a471f835bac73dd0300adcee2d030608b3968916efc7fd739",
+          "bytes": 7771604,
+          "nativePixels": [
+            1742,
+            1804
+          ]
+        },
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/mid-v1/review/final-cross-native.png",
+          "sha256": "4a4ec2a2308e7ee5d27af2eabc8a5bf2555311f5b43b3349fb359ccb41e2ba63",
+          "bytes": 820927,
+          "nativePixels": [
+            700,
+            460
+          ]
+        },
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/mid-v1/review/final-tile03-left-native.png",
+          "sha256": "71fea38f4295bc9b0dd22c4e7fbe08a8c2036d1c00d34e2b9fc1d6410473addc",
+          "bytes": 342247,
+          "nativePixels": [
+            360,
+            400
+          ]
+        },
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/mid-v1/review/final-tile04-top-native.png",
+          "sha256": "151e9485afe42f0d487d40ad899816dc1706d417678446be2a3817f9f8ed6407",
+          "bytes": 331848,
+          "nativePixels": [
+            560,
+            240
+          ]
+        }
+      ],
+      "sharedRepairs": {
+        "northSouth": {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/mid-v1/full-north-south-repair-v1.raw.png",
+          "sha256": "dc28cf4446747269530e2b6a3f4346b574cc81676b394bdbb5df0fb3f64c7b66",
+          "bytes": 2621032,
+          "nativePixels": [
+            1743,
+            902
+          ],
+          "provenance": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/mid-v1/full-north-south-repair-v1.provenance.json",
+            "sha256": "e7e4a85826d3c5ab6692f5c6a02eb5c8c1799582a93ec7a92ce0b38de006f011",
+            "bytes": 2450
+          }
+        },
+        "westEast": {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/mid-v1/full-west-east-repair-v1.raw.png",
+          "sha256": "085a72557f693f116d58a6f879d2dfc26d75170d99961a3032574c1422eefad1",
+          "bytes": 2601934,
+          "nativePixels": [
+            1743,
+            902
+          ],
+          "provenance": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/mid-v1/full-west-east-repair-v1.provenance.json",
+            "sha256": "10eca9c9530a945aa43452437166ada5d50d398122c19f1b28214284b2a20eaa",
+            "bytes": 2438
+          }
+        }
+      }
+    },
+    "far": {
+      "folder": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1",
+      "nativePixels": [
+        1742,
+        902
+      ],
+      "revision": "far-v1",
+      "status": "accepted-for-art-appearance",
+      "primaryTileIds": [
+        "tile-01",
+        "tile-02",
+        "tile-03",
+        "tile-04"
+      ],
+      "primaryTiles": [
+        {
+          "id": "tile-01",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/tile-01.png",
+          "sha256": "5e3044e2aeaea07d9a019e09d1cc3194722aa8d5df51880f771943e508b2f582",
+          "bytes": 4116625,
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1742,
+            "height": 902
+          },
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/tile-01-v1.raw.png",
+            "sha256": "f444e0e9f20abcfb90e7d78c17e441e2c20324602a10edffd3ca8bfc371135f7",
+            "bytes": 3017594,
+            "nativePixels": [
+              1742,
+              903
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/tile-01-v1.provenance.json",
+              "sha256": "19ba2e6eb08f0941e0da18eb99db038ca0558e9a6661ad9b3d5aa105846c88ed",
+              "bytes": 2531
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/tile-01-v1.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/tile-01.cut-paths.json"
+        },
+        {
+          "id": "tile-02",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/tile-02.png",
+          "sha256": "dcb06e7f287027451dc8cd0470f40357b733582fc3d46aeadc74843091f164fd",
+          "bytes": 3786183,
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1742,
+            "height": 902
+          },
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/tile-02-v1.raw.png",
+            "sha256": "2246b06fc552a4c8c6c65325b003d6cd6ee2951c7a997c5a83d8a390b243102a",
+            "bytes": 2219642,
+            "nativePixels": [
+              1742,
+              903
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/tile-02-v1.provenance.json",
+              "sha256": "8c1849945fa960abbfc574258bbe0c1157caeb14c966969a161080f4294cbdf9",
+              "bytes": 2531
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/tile-02-v1.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/tile-02.cut-paths.json"
+        },
+        {
+          "id": "tile-03",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/tile-03.png",
+          "sha256": "b93aef8fd92fd9c8d6fb9cfdda148e347cce343d5ab54336d1ea164ba8626581",
+          "bytes": 3805615,
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1742,
+            "height": 902
+          },
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/tile-03-v1.raw.png",
+            "sha256": "74f43b753708a8bdc1228bff2b1e740903fc8a8a7dcf93124b98f4607ecb6de0",
+            "bytes": 2512055,
+            "nativePixels": [
+              1742,
+              903
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/tile-03-v1.provenance.json",
+              "sha256": "6bc20dc3a6d31d2a6f8fe823bc32d022faacf006d9015eee18b1dcc486d5b58c",
+              "bytes": 2531
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/tile-03-v1.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/tile-03.cut-paths.json"
+        },
+        {
+          "id": "tile-04",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/tile-04.png",
+          "sha256": "d4e63a0120c76b91858384c1a57b6c5378e8e05da5b5d0d779bb4edd291935d9",
+          "bytes": 3963801,
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1742,
+            "height": 902
+          },
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/tile-04-v1.raw.png",
+            "sha256": "943eeb2ed82843b1585ac1a0f5ea1c794c8378fed994238acb7982e189baf611",
+            "bytes": 2620204,
+            "nativePixels": [
+              1742,
+              903
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/tile-04-v1.provenance.json",
+              "sha256": "c7efbe96be02a4f363e0835ab8a9b4c254c3f22ca618c6d7707b60e9475e2ed7",
+              "bytes": 2531
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/tile-04-v1.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/tile-04.cut-paths.json"
+        }
+      ],
+      "visualDecision": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/review/appearance-decision.json",
+        "sha256": "a38009c078c2340998bf40003155bc9c670cc048a66d60b4ee91479dcaf79ba7",
+        "bytes": 4567
+      },
+      "sourceManifest": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/manifest-v1.json",
+        "sha256": "9d84c3b183468e599efcc36263804179a2d301408fee862b02e4e8bfbbe95ba8",
+        "bytes": 4702
+      },
+      "exportReport": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/export-report.json",
+        "sha256": "2a2a1a3e1febbc035e8b4d4d3ab78557fd9598d744393ecaab014d8d322dacc3",
+        "bytes": 10956
+      },
+      "proofs": [
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/review/four-tiles-shuffled-screen.png",
+          "sha256": "e0c1c745e4f0983785100e1563974c3c2db69c53fd7c87dda4e9e4e9879add4d",
+          "bytes": 3301860,
+          "nativePixels": [
+            1742,
+            902
+          ]
+        },
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/review/four-tiles-shuffled-native.png",
+          "sha256": "38c50652a40dc7a194ad4dfaf5422d188c29357b84379f8d4b78c0ed56c50cde",
+          "bytes": 13214827,
+          "nativePixels": [
+            3484,
+            1804
+          ]
+        },
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/review/two-tiles-horizontal-native.png",
+          "sha256": "5ba6c90fdc041644005e4550b8227d666c8a82dd4c15289094336c2ba644ccab",
+          "bytes": 6906073,
+          "nativePixels": [
+            3484,
+            902
+          ]
+        },
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/review/two-tiles-vertical-native.png",
+          "sha256": "126467c5ef6d52ae1a77329e06d844b40e4389f1178ba24c9bdb1906e6804c28",
+          "bytes": 7590037,
+          "nativePixels": [
+            1742,
+            1804
+          ]
+        },
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/review/final-cross-native.png",
+          "sha256": "73ef6c0a80e791ced16330b2c6cd31be06992ef7d22238fbc3def7be7245d3a9",
+          "bytes": 834983,
+          "nativePixels": [
+            700,
+            460
+          ]
+        },
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/review/final-tile03-left-native.png",
+          "sha256": "634202307604c4d670c27229699d6af41a20165fefc4eab2e5fe7fc171e6c079",
+          "bytes": 348502,
+          "nativePixels": [
+            360,
+            400
+          ]
+        },
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/review/final-tile04-top-native.png",
+          "sha256": "6de3908bd88462468a911de1e9a19975e1095fa1e34d67bd77ab8ae43c0178ad",
+          "bytes": 336385,
+          "nativePixels": [
+            560,
+            240
+          ]
+        }
+      ],
+      "sharedRepairs": {
+        "northSouth": {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/full-north-south-repair-v1.raw.png",
+          "sha256": "c605b80d7ce87101f745a9614514e2f314bc2404f3039b46b5020e762c26021c",
+          "bytes": 2750364,
+          "nativePixels": [
+            1742,
+            903
+          ],
+          "provenance": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/full-north-south-repair-v1.provenance.json",
+            "sha256": "a3d220c765184dc3d30c1270ca8121a47e5de140778ef44de8d9819b64852796",
+            "bytes": 2450
+          }
+        },
+        "westEast": {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/full-west-east-repair-v1.raw.png",
+          "sha256": "964e6f69378e76b5957bd5efea02ccccfbef785b10fb070e372ff902920c6008",
+          "bytes": 2754339,
+          "nativePixels": [
+            1743,
+            902
+          ],
+          "provenance": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/full-west-east-repair-v1.provenance.json",
+            "sha256": "6566d0c1332819a880dca9f0e0dd29150b1fc89c3668543424fae4f6321e6266",
+            "bytes": 2438
+          }
+        }
+      }
+    }
+  }
+}
