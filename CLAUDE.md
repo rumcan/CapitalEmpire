@@ -5,6 +5,8 @@
 > the progress protocol and the restart checklist. Every ticket is a GitHub issue. Its agent pushes the branch and comments on the
 > issue after every sub-step, so the work survives a lost chat or a change of Claude account (the owner, 2026-10-26).
 > Background on the game and how the lead works: `docs/LEAD.md`.
+> Where the older sections below differ from NOW.md "START HERE" and AGENT-BRIEF.md (PROGRESS.md, the Haiku agents, the worker PC, the
+> nightly task), those two win: they are kept current (2026-10-28). A new lead's paste-ready start prompt is at the top of START HERE.
 > **Asked to make the spectator / crowd art or the 3D people?** Start with `docs/HANDOVER-PEOPLE.md` (the state and next steps), then `docs/SPECTATOR-ART.md`.
 
 Two agents share this repo (from 2026-10-21): the second agent writes the game code, the first chat does the art with the owner;
