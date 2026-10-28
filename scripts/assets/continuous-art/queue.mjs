@@ -20,10 +20,12 @@ export function parseCatalogue(markdown){
   return items;
 }
 async function filesUnder(folder){const out=[];async function walk(dir){let entries;try{entries=await fs.readdir(dir,{withFileTypes:true});}catch(error){if(error.code==='ENOENT')return;throw error;}for(const entry of entries){const file=path.join(dir,entry.name);if(entry.isDirectory()){if(!['node_modules','.git','ground'].includes(entry.name))await walk(file);}else if(entry.name.endsWith('.provenance.json'))out.push(file);}}await walk(folder);return out;}
-async function artInventory(roots){
+async function artInventory(roots,catalogue){
   const byId=new Map(),byNumber=new Map();
+  const relevantIds=new Set(catalogue.map(item=>item.id).filter(Boolean)),relevantNumbers=new Set(catalogue.map(item=>item.itemNumber));
   for(const root of roots)for(const file of await filesUnder(path.join(root,'art/theme-consistency/generated'))){
     let prov;try{prov=await readJson(file);}catch{continue;}if(!prov?.id)continue;
+    if(!relevantIds.has(prov.id)&&!relevantNumbers.has(Number(prov.brief?.item??prov.catalogueItem)))continue;
     const sibling=file.replace(/\.provenance\.json$/,'.png'),candidates=[prov.output,prov.rawFile,sibling].filter(value=>typeof value==='string');
     let image=null;for(const candidate of candidates){const resolved=path.isAbsolute(candidate)?candidate:path.resolve(root,candidate);try{const bytes=await fs.readFile(resolved);image={file:resolved,sha256:sha(bytes),bytes:bytes.length};break;}catch{}}
     if(!image)continue;
@@ -40,10 +42,10 @@ async function artInventory(roots){
 }
 export async function snapshotQueue(config,reviewedTokens={}){
   const markdown=await fs.readFile(config.authorityFile,'utf8'),authoritySha256=sha(Buffer.from(markdown));
-  const inventory=await artInventory(config.inventoryRoots??[config.repoRoot]);
+  const catalogue=parseCatalogue(markdown),inventory=await artInventory(config.inventoryRoots??[config.repoRoot],catalogue);
   const reservations=await readJson(config.reservationsFile,{items:[]});
   const excluded=new Set([...(config.excludeIds??[]),...(reservations.items??[]).filter(item=>item.owner!=='continuous-worker'&&!item.released).map(item=>item.id)]);
-  const items=parseCatalogue(markdown).map(item=>{
+  const items=catalogue.map(item=>{
     const artifacts=inventory.byId.get(item.id)??inventory.byNumber.get(item.itemNumber)??[];
     const reviewToken=item.key+':'+sha(Buffer.from([...new Set(artifacts.map(art=>art.sha256))].sort().join('|')));
     const artReview=artifacts.some(art=>art.review==='accepted-hash-bound')?'accepted-hash-bound':artifacts.some(art=>art.review==='held')?'held':artifacts.length?'pending':'not-generated';

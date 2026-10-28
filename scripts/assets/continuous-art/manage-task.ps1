@@ -52,6 +52,7 @@ if($Action -eq 'Stop') {
       if($isSupervisor -or $isWorker) { & taskkill.exe /PID ([string]$ownedPid) /T /F | Out-Null }
     }
   }
+  Stop-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
 }
 Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue | Select-Object TaskName,State,Actions,Triggers
 Get-ScheduledTaskInfo -TaskName $TaskName -ErrorAction SilentlyContinue | Select-Object LastRunTime,LastTaskResult,NextRunTime
