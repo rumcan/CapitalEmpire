@@ -304,3 +304,16 @@ the tile's navy square; a second sheet in 174's style would finish the panel (on
 
 All twelve are art 181, one sheet in the ChatGPT queue (`docs/art/CHATGPT-IMAGE-QUEUE.md`, first). Sheet order, row by row: waste,
 halfway-house, your-holes, tournament / land, bushes, palms, props / furniture, long-grass, chipping, build.
+
+## Waterside trees (T265, #794: art requests)
+The tree belts along the rivers and creeks (`src/game/river-trees.ts`) deal the library's broadleaf trees, birches and aspens first, and some
+spruces and firs; the library has no waterside species of its own. Wanted, each as four views (ne, se, sw, nw, `gen:tree-<name>:<view>` like
+the generated trees), the light from the upper right, shadows at 145°, autumn colours to sit with the maples and birches, never mirrored:
+| Tree | Look | P |
+| --- | --- | --- |
+| `willow-weeping` | a broad weeping willow, its long drooping fronds reaching the ground, gold-green to yellow in autumn | P1 |
+| `alder` | a narrow, many-stemmed alder by the water, dark green going olive and brown, small cones | P2 |
+| `swamp-snag` | a dead grey tree standing in the swamp, broken top, a little moss at its foot (the woods' snags are drier) | P2 |
+
+Until they come, the belts use the existing pools (`BELT_BROAD_DEAL`, `BELT_CONIFER_DEAL`, the woods' dead snags in the swamp); a new species
+goes into `FOREST_BROADLEAF` (or a waterside pool in `river-trees.ts`) and `tree-sun.ts` measures its lit side.
