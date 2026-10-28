@@ -132,7 +132,7 @@ test('Round off is saved with the look: ticked and its Smoothness kept, unticked
   assert.equal(on.round, true); assert.equal(on.smooth, 0.73);
   assert.equal(roundOfStyle(on), 0.73);
   const off = clampStyle({ ...on, round: false });
-  assert.equal(off.round, false, 'unticked is kept (the bunker's default would tick it again)'); assert.equal(off.smooth, 0.73, 'the slider is kept');
+  assert.equal(off.round, false, 'unticked is kept: the default of a bunker would tick it again'); assert.equal(off.smooth, 0.73, 'the slider is kept');
   assert.equal(roundOfStyle(off), undefined);
   assert.ok(lookChanged(on, off) && lookChanged(on, { ...on, smooth: 0.2 }), 'a change to either redraws the course');
   const saved = normalizeBook(JSON.parse(JSON.stringify({ h3: { bunker: on } })))!;
