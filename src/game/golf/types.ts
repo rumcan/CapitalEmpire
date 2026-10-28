@@ -16,6 +16,11 @@ export interface TeeMark {
   /** placed by the Course tool from the painted tee (it goes with the tee) */ auto?: boolean;
   /** T254: put here by Edit Hole Layout: it stays even off the tee turf (the card warns) until the player moves it or paints a tee under it */ held?: boolean;
 }
+/** T268 (#809): a tee box Place or Add tee laid for a set (GolfSave.teeBoxes, by `hole:kind`; golf/teeplace.ts): its centre (tiles), heading
+ *  (radians), size (1: 14 x 8 m), the hole it was laid for, and the ground it covered: u, the cells it changed as they were; z, the heights its
+ *  level pad changed, before and after. Moving or removing the set puts that ground back. Kept off TeeMark so the markers stay small (the hole
+ *  views key their caches on the markers' text every frame) */
+export interface TeeBoxRec { x: number; y: number; a: number; s: number; n: number; u: string; z?: string }
 /** a hole's pin (the flagstick), standing on its green */
 export interface Pin {
   hole: number; x: number; y: number;

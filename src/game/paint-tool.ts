@@ -33,6 +33,7 @@ import { GREEN_M2_STEP as GREEN_STEP, HoleWizard, decodePlans, encodePlans, with
 import { drawWizard } from './ext/hole-wizard/draw';
 import { planClear, planInfo, type HolePlan } from './ext/hole-plan';
 import type { Pin, TeeMark } from './golf/types';
+import type { TeeStepEdit } from './golf/teeplace';
 /** whether a painted area has completed its grow-in (sod or non-seed areas are mature at once) */  
 export function isAreaMature(a: PaintArea, currentMonth: number): boolean {  
  if (!a.plantKind || a.plantKind === 'sod') return true;  
@@ -939,6 +940,32 @@ export class PaintTool {
     this.commit();
     if (out) this.host.save();
     return out;
+  }
+  /** T268 (#809): a tee set's box laid, moved or removed by hand (Engine.placeTee, removeTeeSet, Add tee) as one undo step: work runs inside it with
+   *  the step's own edits (cells already changed on the grid, heights set, money spent) and moves the set's markers; the pins and tee markers before
+   *  and after go in the step (Engine.markersKey, as Edit Hole Layout's), so undo takes the markers back with the grass and the ground. With Edit
+   *  Hole Layout open the step is ordered against the plan's own drags (undoTop). False without a course grid */
+  teeStep(label: string, work: (e: TeeStepEdit) => void): boolean {
+    const g = this.host.grid?.(); if (!g) return false;
+    const f = this.host.courseHeight?.() ?? null, before = this.host.markersKey?.() ?? null, top0 = this.undos[this.undos.length - 1], snap0 = this.snapshot();
+    this.begin(label);
+    work({
+      grid: g, field: f, month: plantMonth(this.plantKind, this.host.currentMonth?.()), plant: this.plantKind,
+      cells: d => this.gridApply(d),
+      heights: (box, set) => { if (!f) return; this.hj.touch(f, box); set(f); f.rev++; this.host.heightChanged?.(box); },
+      spend: n => { if (!(n > 0)) return; this.host.spend?.(n); if (this.tx) this.tx.spent += n; },
+    });
+    this.commit();
+    const after = this.host.markersKey?.() ?? null, moved = before !== null && after !== null && before !== after;
+    let top = this.undos[this.undos.length - 1];
+    // a set taken off a box another set stands on changes its markers alone: the step is made for them
+    if ((!top || top === top0) && moved) { top = { label, before: snap0, after: this.snapshot(), props: null, spent: 0, height: null, grid: null, plans: null }; this.undos.push(top); this.redos = []; this.host.changed?.(); }
+    if (top && top !== top0) {
+      if (moved) top.markers = { before: before!, after: after! };
+      if (this.planOpen && this.wizard.base) this.editMarks.push(this.wizard.depth);
+    }
+    this.host.save(); this.host.emit();
+    return true;
   }
   /** T254 (#736): Edit Hole Layout's Build: the plan is saved (the line of play, the bends and the landing zones follow it), the tee markers and the
    *  flag move with the plan's tee and green, and no cell is laid, cleared or regrown: the course grid and the hole's looks stay exactly as they are

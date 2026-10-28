@@ -76,10 +76,11 @@ export function addTeeSpot(kind: TeeKind, sets: readonly { kind: TeeKind; x: num
   return { at: { x: o.x + d.x * s, y: o.y + d.y * s }, dir: d };
 }
 
-/** a new set's tee box, 14 x 8 m: a rounded strip (a stadium) along dir, centred on at; its outline x0 y0 x1 y1 ... (tiles) */
+/** a new set's tee box, 14 x 8 m: a rounded strip (a stadium) along dir, centred on at; its outline x0 y0 x1 y1 ... (tiles). T268: scale sizes it
+ *  (Place's [ ], golf/teeplace.ts TEE_SCALE_MIN..MAX) */
 export const BOX_LEN_M = 14, BOX_WID_M = 8;
-export function teeBox(at: Pt, dir: Pt): number[] {
-  const r = BOX_WID_M / 2 / TILE_M, half = (BOX_LEN_M - BOX_WID_M) / 2 / TILE_M, ux = dir.x, uy = dir.y, nx = -uy, ny = ux, out: number[] = [], steps = 8;
+export function teeBox(at: Pt, dir: Pt, scale = 1): number[] {
+  const r = BOX_WID_M / 2 / TILE_M * scale, half = (BOX_LEN_M - BOX_WID_M) / 2 / TILE_M * scale, ux = dir.x, uy = dir.y, nx = -uy, ny = ux, out: number[] = [], steps = 8;
   const f = { x: at.x + ux * half, y: at.y + uy * half }, b = { x: at.x - ux * half, y: at.y - uy * half };
   for (let i = 0; i <= steps; i++) { const t = -Math.PI / 2 + Math.PI * i / steps, c = Math.cos(t), sn = Math.sin(t); out.push(f.x + (ux * c + nx * sn) * r, f.y + (uy * c + ny * sn) * r); }
   for (let i = 0; i <= steps; i++) { const t = -Math.PI / 2 + Math.PI * i / steps, c = Math.cos(t), sn = Math.sin(t); out.push(b.x - (ux * c + nx * sn) * r, b.y - (uy * c + ny * sn) * r); }
