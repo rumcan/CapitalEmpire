@@ -4,15 +4,11 @@
 // lamp, fountain, decal, and fencex / fencey for the hedge's run pieces) keep them out of every pool that picks by kind (the lots' trees and bushes,
 // the hole presets, the farms, the plant brushes' trees), so no lot, hole or farm drawn before them changes; they join the places named for
 // them: the Props tool (golf/decor.ts), the plant brushes (plant.ts), the ponds (golf/ponds.ts) and the yards (lots/compose.ts kitYard).
-// One picture each, the sun at the upper right as painted: never mirrored (mirror.ts drawnAs), but for T257's natural things (kitMirrors).
+// One picture each, the sun at the upper right as painted: never mirrored (mirror.ts drawnAs; the owner, 2026-10-28).
 // Pure TS, no DOM.
 
 /** a kit id */
 export const isKit = (id: string): boolean => id.startsWith('kit:');
-/** T257 (#747, the lead's call): the kit's natural one-view things, which a flip mirrors (one picture, two looks): the boulders, the shrubs, the
- *  flower clumps and the palms. Never the lamps, the hedge's pieces and end, the pond edge's pieces, the jet or the lily pads */
-export const KIT_MIRRORS = /^kit:(boulder|shrub|flowers|palm)-/;
-export const kitMirrors = (id: string): boolean => KIT_MIRRORS.test(id);
 
 /** the six autumn shrubs (162), 1-1.5 m */
 export const KIT_SHRUBS = ['kit:shrub-burning-bush', 'kit:shrub-golden-spirea', 'kit:shrub-boxwood-ball', 'kit:shrub-red-twig-dogwood', 'kit:shrub-blue-juniper', 'kit:shrub-plume-grass'] as const;

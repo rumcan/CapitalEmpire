@@ -2270,13 +2270,13 @@ export class Game {
   }
   /** o (T133, the range's scene): lift, drawn this high above its spot (world px); foot, its footprint (world tiles x0 y0 x1 y1) in place of its
    *  library boxes' (business art's boxes are 1 x 1 placeholders, too small for the painter's order of what stands round it); own (T257): a
-   *  Props tool prop, its flip as the player turned it (a tree keeps it rather than its sun's) */
+   *  Props tool prop */
   addProp(item: number, x: number, y: number, flip: boolean, scale: number, auto?: string, o?: { lift?: number; foot?: readonly [number, number, number, number]; own?: boolean }): Prop {
     // no building is ever mirrored (mirror.ts): a flip draws the four-view art turned (its partner view), any other building unflipped
     const [id, f0] = drawnAs(LIBRARY[item]!, flip); if (id !== LIBRARY[item]!.id) item = LIB_INDEX.get(id) ?? item; flip = f0;
-    // no tree is mirrored at random: the sun comes from the right, so a tree is drawn mirrored only when its art is lit from the left (tree-sun.ts)
-    // (T257: but a Props tool tree as the player turned it)
-    if (LIBRARY[item]!.kind === 'tree' && !o?.own) flip = TREE_MIRROR.has(LIBRARY[item]!.id);
+    // no tree is mirrored at random: the sun comes from the right, so a tree is drawn mirrored only when its art is lit from the left (tree-sun.ts);
+    // a Props tool tree too (the owner, 2026-10-28: "make sure we never mirror a bush or tree or plant. always sun from top right")
+    if (LIBRARY[item]!.kind === 'tree') flip = TREE_MIRROR.has(LIBRARY[item]!.id);
     const f = o?.foot ? { x0: o.foot[0], y0: o.foot[1], x1: o.foot[2], y1: o.foot[3] } : this.footprint(LIBRARY[item], x, y, flip, scale);
     const p: Prop = { uid: this.nextUid++, item, x, y, flip, scale, ...f };
     if (auto) p.auto = auto;

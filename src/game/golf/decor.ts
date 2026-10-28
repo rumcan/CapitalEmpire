@@ -30,9 +30,9 @@ export interface DecorItem { key: string; name: string; group: DecorGroup; kind:
   pond?: 'edge' | 'make';
   /** what the price is for, when not the item ("a stone", "a piece") */
   per?: string;
-  /** T257: a one-view natural thing (a rock, a plant, a tree): it has no front to keep right, so R also mirrors it (each picture, then its
-   *  mirror, then the next picture), and a mixed brush mirrors it at random. Never set on anything with a front or lettering (signs,
-   *  furniture, buildings, statues) or that runs along an axis (a hedge, a bed): those never mirror */
+  /** T257: a one-view natural thing (a rock, a plant, a tree). Never set on anything with a front or lettering (signs, furniture, buildings,
+   *  statues) or that runs along an axis (a hedge, a bed). Nothing is mirrored, natural or not (the owner, 2026-10-28: "make sure we never mirror a bush or tree or plant. always sun from top right"): R steps a natural
+   *  thing through its pictures */
   natural?: true;
   /** T257: the cards of one family (a boulder's three shapes at one size): a placed picture takes the card that shows it (its name) */
   family?: string;
@@ -57,7 +57,7 @@ export const APPEAL = { plant: 0.01, fountain: 0.15, well: 0.03, statue: 0.08, p
 export const POND_R = 3.5, STONE_PRICE = 60;
 
 /** T257: the boulders' cards, three shapes at each size (36: small 0.8 m, medium 1.5 m, large 2.5 m), each its own card named for its shape;
- *  R steps through its size's shapes, each then mirrored. The first shape keeps T231's key (a saved prop keeps its card) */
+ *  R steps through its size's shapes (never mirrored). The first shape keeps T231's key (a saved prop keeps its card) */
 const BOULDER_SIZES = [
   { s: 's', ids: KIT_BOULDERS.small, price: 150, appeal: APPEAL.boulder, size: '0.8 m', names: ['Small round boulder', 'Small domed boulder', 'Small square boulder'], desc: ['A weathered sandstone boulder, lichen and moss', 'A domed sandstone stone, moss at its foot', 'A squared-off block of sandstone'] },
   { s: 'm', ids: KIT_BOULDERS.medium, price: 350, appeal: APPEAL.boulderBig, size: '1.5 m', names: ['Round boulder', 'Long boulder', 'Standing stone'], desc: ['A rounded sandstone boulder: a rock feature by a green or a path', 'A long, low sandstone boulder to edge a bed or a path', 'An upright standing stone'] },
@@ -65,7 +65,7 @@ const BOULDER_SIZES = [
 ] as const;
 const BOULDER_CARDS: DecorItem[] = BOULDER_SIZES.flatMap(b => b.ids.map((id, j): DecorItem => ({
   key: `kit-boulder-${b.s}${j ? `-${'abc'[j]}` : ''}`, name: b.names[j]!, group: 'stone', kind: 'stone', id, variants: [...b.ids.slice(j), ...b.ids.slice(0, j)],
-  family: `kit-boulder-${b.s}`, natural: true, price: b.price, appeal: b.appeal, desc: `${b.desc[j]}, ${b.size} (R: mirrored, then another shape)`,
+  family: `kit-boulder-${b.s}`, natural: true, price: b.price, appeal: b.appeal, desc: `${b.desc[j]}, ${b.size} (R: another shape)`,
 })));
 /** T257: the mixed brushes' picks: every boulder card; the kit's shrubs, mums and palms as their cards */
 const MIX_ROCKS = BOULDER_CARDS.map(d => ({ key: d.key, id: d.id }));
@@ -82,6 +82,10 @@ export const DECOR: readonly DecorItem[] = [
   { key: 'shrub-hydrangea', name: 'Hydrangea shrub', group: 'plants', kind: 'plant', id: 'town:hydrangea', natural: true, price: 60, appeal: APPEAL.plant, desc: 'An ornamental flowering shrub' },
   { key: 'grass-ornamental', name: 'Ornamental grass', group: 'plants', kind: 'plant', id: 'town:ornamental_grass', natural: true, price: 50, appeal: APPEAL.plant, desc: 'A tall clump of ornamental grass' },
   { key: 'fern', name: 'Fern clump', group: 'plants', kind: 'plant', id: 'town:fern', natural: true, price: 50, appeal: APPEAL.plant, desc: 'A soft green fern for shady beds' },
+  // the owner, 2026-10-28: "add some of the bushes and ferns sprites from the town to the course": the town's garden bushes, and a mixed brush of
+  // the town's bushes, ferns and grasses
+  { key: 'bush-town', name: 'Garden bush', group: 'plants', kind: 'plant', id: 'world:bush_0', variants: ['world:bush_0', 'world:bush_1', 'world:bush_2'], natural: true, price: 60, appeal: APPEAL.plant, desc: "The town's garden bushes, three shapes (R: the next)" },
+  { key: 'town-plants-mixed', name: 'Bushes and ferns, mixed', group: 'plants', kind: 'plant', id: 'town:fern', mix: [{ key: 'bush-town', id: 'world:bush_0' }, { key: 'bush-town', id: 'world:bush_1' }, { key: 'bush-town', id: 'world:bush_2' }, { key: 'fern', id: 'town:fern' }, { key: 'grass-ornamental', id: 'town:ornamental_grass' }, { key: 'shrub-hydrangea', id: 'town:hydrangea' }], natural: true, price: 60, appeal: APPEAL.plant, desc: "The town's bushes, ferns, grasses and hydrangeas, a different one at every spot: click, or drag a border" },
   { key: 'hedge', name: 'Clipped hedge', group: 'plants', kind: 'plant', id: 'world:hedge', price: 80, appeal: APPEAL.plant, desc: 'A low box hedge: edge a path or a bed' },
   { key: 'flower-bed', name: 'Flower bed', group: 'plants', kind: 'plant', id: 'landscape:flowerbed-daisies', price: 150, appeal: APPEAL.plant, desc: 'A bed of white daisies in a timber edge' },
   { key: 'flower-bed-lavender', name: 'Lavender bed', group: 'plants', kind: 'plant', id: 'landscape:flowerbed-lavender', price: 160, appeal: APPEAL.plant, desc: 'A bed of lavender: colour and scent by the path' },
@@ -94,17 +98,17 @@ export const DECOR: readonly DecorItem[] = [
   // T229: a tree of a hole's frame (the hole card's and New hole's Frame with trees, golf/holeframe.ts): a plant as the others (its appeal near the
   //       range, half its price back when bulldozed); not in the panel (hidden): its picture is whichever conifer or autumn tree the frame dealt
   { key: FRAME_TREE_KEY, name: 'Course tree', group: 'plants', kind: 'plant', id: 'gen:tree-maple-scarlet:ne', natural: true, price: FRAME_TREE_PRICE, appeal: APPEAL.plant, hidden: true, desc: "A tree of a hole's frame: conifers and autumn broadleaves along the rough's edge" },
-  // T231: the concept kit (kit.ts): one-view pictures, R steps through the kind's pictures (T257: each, then its mirror); the hedge is a run
+  // T231: the concept kit (kit.ts): one-view pictures, R steps through the kind's pictures (never mirrored); the hedge is a run
   // (drag it like a fence). T257: the mixed brushes drop a different one at every spot of a click or a drag
   { key: 'kit-shrubs-mixed', name: 'Shrubs, mixed', group: 'plants', kind: 'plant', id: KIT_SHRUBS[3], mix: KIT_SHRUBS.map(id => ({ key: 'kit-shrub', id })), natural: true, price: 90, appeal: APPEAL.plant, desc: 'A different autumn shrub at every spot: click, or drag along a bed' },
   { key: 'kit-mums-mixed', name: 'Mums, mixed', group: 'plants', kind: 'plant', id: KIT_FLOWERS[1], mix: KIT_FLOWERS.map(id => ({ key: 'kit-mums', id })), natural: true, price: 50, appeal: APPEAL.plant, desc: 'A different flower clump at every spot: click, or drag along a bed' },
   { key: 'kit-palms-mixed', name: 'Palms, mixed', group: 'plants', kind: 'plant', id: KIT_PALMS.canary[0], mix: MIX_PALMS, natural: true, price: 250, per: 'to $650', appeal: APPEAL.plant, desc: 'Windmill, Canary and dwarf fan palms, a different one at every spot: click, or drag' },
-  { key: 'kit-shrub', name: 'Autumn shrub', group: 'plants', kind: 'plant', id: KIT_SHRUBS[0], variants: KIT_SHRUBS, natural: true, price: 90, appeal: APPEAL.plant, desc: 'Burning bush, golden spirea, boxwood, dogwood, juniper or plume grass (R: mirrored, then the next)' },
-  { key: 'kit-mums', name: 'Mum clump', group: 'plants', kind: 'plant', id: KIT_FLOWERS[0], variants: KIT_FLOWERS, natural: true, price: 50, appeal: APPEAL.plant, desc: 'Chrysanthemums in red, yellow, orange, white or bronze, or black-eyed Susans (R: mirrored, then the next)' },
+  { key: 'kit-shrub', name: 'Autumn shrub', group: 'plants', kind: 'plant', id: KIT_SHRUBS[0], variants: KIT_SHRUBS, natural: true, price: 90, appeal: APPEAL.plant, desc: 'Burning bush, golden spirea, boxwood, dogwood, juniper or plume grass (R: the next)' },
+  { key: 'kit-mums', name: 'Mum clump', group: 'plants', kind: 'plant', id: KIT_FLOWERS[0], variants: KIT_FLOWERS, natural: true, price: 50, appeal: APPEAL.plant, desc: 'Chrysanthemums in red, yellow, orange, white or bronze, or black-eyed Susans (R: the next)' },
   { key: 'kit-hedge', name: 'Hedge row', group: 'plants', kind: 'plant', id: KIT_HEDGE.x, run: KIT_HEDGE, price: 70, per: 'a piece', appeal: APPEAL.hedge, desc: 'A clipped box hedge: drag along a path or a bed to lay it, 4 m a piece' },
-  { key: 'kit-palm-windmill', name: 'Windmill palm', group: 'plants', kind: 'plant', id: KIT_PALMS.windmill[0], variants: KIT_PALMS.windmill, natural: true, price: 350, appeal: APPEAL.plant, desc: 'A hardy fan palm, 4 to 6 m (R: mirrored, then the next)' },
-  { key: 'kit-palm-canary', name: 'Canary palm', group: 'plants', kind: 'plant', id: KIT_PALMS.canary[0], variants: KIT_PALMS.canary, natural: true, price: 650, appeal: APPEAL.plant, desc: 'A Canary Island date palm, 6 to 10 m (R: mirrored, then the next)' },
-  { key: 'kit-palm-fan', name: 'Dwarf fan palm', group: 'plants', kind: 'plant', id: KIT_PALMS.fan[0], variants: KIT_PALMS.fan, natural: true, price: 250, appeal: APPEAL.plant, desc: 'A clump of dwarf fan palms, 2 to 3.5 m (R: mirrored, then the next)' },
+  { key: 'kit-palm-windmill', name: 'Windmill palm', group: 'plants', kind: 'plant', id: KIT_PALMS.windmill[0], variants: KIT_PALMS.windmill, natural: true, price: 350, appeal: APPEAL.plant, desc: 'A hardy fan palm, 4 to 6 m (R: the next)' },
+  { key: 'kit-palm-canary', name: 'Canary palm', group: 'plants', kind: 'plant', id: KIT_PALMS.canary[0], variants: KIT_PALMS.canary, natural: true, price: 650, appeal: APPEAL.plant, desc: 'A Canary Island date palm, 6 to 10 m (R: the next)' },
+  { key: 'kit-palm-fan', name: 'Dwarf fan palm', group: 'plants', kind: 'plant', id: KIT_PALMS.fan[0], variants: KIT_PALMS.fan, natural: true, price: 250, appeal: APPEAL.plant, desc: 'A clump of dwarf fan palms, 2 to 3.5 m (R: the next)' },
   // ---- water
   { key: 'fountain', name: 'Plaza fountain', group: 'water', kind: 'water', id: 'ref:landmark-fountain-v2', price: 12000, appeal: APPEAL.fountain, desc: 'A tiered stone fountain: the centrepiece of the front' },
   { key: 'well', name: 'Wishing well', group: 'water', kind: 'water', id: 'expansion:wooden-well', price: 1200, appeal: APPEAL.well, desc: 'A covered garden well: golfers toss a coin for luck' },
@@ -161,15 +165,15 @@ export function familyKey(d: DecorItem, id: string): string {
   for (const e of DECOR) if (e.family === d.family && e.id === id) return e.key;
   return d.key;
 }
-/** what a mixed brush drops at a spot (tiles; the cursor's lattice): one of its picks and which way round, the same every time at that spot
- *  (a hash of the spot and the brush), so a drag over the same ground lays the same stones */
+/** what a mixed brush drops at a spot (tiles; the cursor's lattice): one of its picks, the same every time at that spot (a hash of the spot and
+ *  the brush), so a drag over the same ground lays the same stones; never mirrored (flip is always false: the sun stays at the upper right) */
 export function mixPick(d: DecorItem, x: number, y: number): { key: string; id: string; flip: boolean } | null {
   const m = d.mix; if (!m?.length) return null;
   let h = Math.imul(Math.round(x * 4) | 0, 0x27d4eb2d) ^ Math.imul(Math.round(y * 4) | 0, 0x165667b1);
   for (let i = 0; i < d.key.length; i++) h = Math.imul(h ^ d.key.charCodeAt(i), 0x85ebca6b);
   h ^= h >>> 15; h = Math.imul(h, 0xc2b2ae35); h ^= h >>> 13; h = Math.imul(h, 0x27d4eb2d); h ^= h >>> 16;
   const u = h >>> 0, pick = m[u % m.length]!;
-  return { key: pick.key, id: pick.id, flip: !!(d.natural && (u >>> 20) & 1) };
+  return { key: pick.key, id: pick.id, flip: false };
 }
 
 // ---------------------------------------------------------------- the place (T187: props by place)

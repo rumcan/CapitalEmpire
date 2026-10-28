@@ -33,7 +33,7 @@ export interface PropsHostCtx {
   propsIn(b: Box): Iterable<Prop>; props(): Iterable<Prop>; propName(p: Prop): string;
   /** the range's scene (null: not a range start) */
   scene(): RangeScene | null;
-  /** places a prop (T257: flip, mirrored: only ever asked for a natural item; the engine keeps it as asked) */
+  /** places a prop (flip: never asked for since 2026-10-28; the engine never mirrors a natural thing, mirror.ts) */
   addProp(item: number, x: number, y: number, scale: number, flip?: boolean): Prop; removeProp(p: Prop): void;
   /** T257: whether a placed prop is mirrored as the player turned it (default: its flip) */
   flipOf?(p: Prop): boolean;
@@ -69,7 +69,7 @@ export class PropsTool {
   /** the item in hand (its key; null: none) and the view it is turned to (0..3; T231: a variant item's picture, 0..n-1) */
   hand: string | null = null; view = 0;
   /** T257: the item in hand mirrored (a natural item's second look) and its size (SIZE_MIN..SIZE_MAX of its catalogue size) */
-  flip = false; size = 1;
+  size = 1;
   /** T257: a mixed brush's drag: the spots it lays when the button comes up */
   private stroke: DecorGhost[] | null = null;
   /** T231: the extra pictures the ghost draws (a run's other pieces, a pond's stones), each with its footprint */
@@ -100,12 +100,11 @@ export class PropsTool {
     if (d.variants?.length) return this.ctx.item(d.variants[((q % d.variants.length) + d.variants.length) % d.variants.length]!) ?? this.ctx.item(d.id);
     return this.ctx.item(turned(d.id, q).id) ?? this.ctx.item(d.id);
   }
-  /** how R turns an item (T257): through its four views (four-view art), through its looks (a natural one-view item: each picture, then
-   *  mirrored), through its pictures (T231's variants), or not at all (one picture with a front; a run, a pond, a mixed brush) */
-  turnMode(d: DecorItem): 'views' | 'looks' | 'pictures' | 'none' {
+  /** how R turns an item (T257): through its four views (four-view art), through its pictures (T231's variants), or not at all (one picture;
+   *  a run, a pond, a mixed brush). Nothing is ever mirrored (the owner, 2026-10-28: "make sure we never mirror a bush or tree or plant. always sun from top right") */
+  turnMode(d: DecorItem): 'views' | 'pictures' | 'none' {
     if (d.run || d.pond || d.mix) return 'none';
     if (!d.variants && turned(d.id, 1).id !== d.id) return 'views';
-    if (d.natural) return 'looks';
     return (d.variants?.length ?? 0) > 1 ? 'pictures' : 'none';
   }
   /** whether R turns the item at all */
@@ -124,7 +123,7 @@ export class PropsTool {
   // ---- the panel's actions
   /** picks (or, picked again, puts down) an item of the catalogue */
   pick(key: string | null): void {
-    this.hand = key && key !== this.hand && DECOR_BY_KEY.has(key) ? key : null; this.view = 0; this.flip = false; this.size = 1; this.ghost = null; this.ghosts = []; this.drag = null; this.runFrom = null; this.stroke = null;
+    this.hand = key && key !== this.hand && DECOR_BY_KEY.has(key) ? key : null; this.view = 0; this.size = 1; this.ghost = null; this.ghosts = []; this.drag = null; this.runFrom = null; this.stroke = null;
     if (this.hand) this.ctx.select(null);
     this.ctx.emit();
   }
@@ -218,21 +217,18 @@ export class PropsTool {
     if (this.hand) {
       const d = DECOR_BY_KEY.get(this.hand)!, mode = this.turnMode(d);
       if (d.run || d.pond) { this.ctx.toast(d.run ? `${d.name}: drag it along the map; it follows your drag` : `${d.name}: round, the same from every side`, 'info'); this.ctx.emit(); return; }
-      if (d.mix) { this.ctx.toast(`${d.name}: every spot picks its own, and which way round`, 'info'); this.ctx.emit(); return; }
-      // T257: a natural item's next look: mirrored, then the next picture unmirrored
-      if (mode === 'looks') { if (!this.flip) this.flip = true; else { this.flip = false; this.view = (this.view + 1) % this.views(d); } }
-      else if (mode !== 'none') this.view = (this.view + 1) % this.views(d);
-      else this.ctx.toast(`${d.name}: one picture, with a front that is never mirrored`, 'info');
+      if (d.mix) { this.ctx.toast(`${d.name}: every spot picks its own`, 'info'); this.ctx.emit(); return; }
+      if (mode !== 'none') this.view = (this.view + 1) % this.views(d);
+      else this.ctx.toast(`${d.name}: one picture, never mirrored (the sun stays at the upper right)`, 'info');
       if (this.ghost) this.ghost = this.handGhost(d, this.ghost.x, this.ghost.y);
       this.ctx.emit(); return;
     }
     const s = this.selection(); if (!s) return;
     const mode = this.turnMode(s.d);
-    if (mode === 'none') { this.ctx.toast(`${s.d.name}: one picture, with a front that is never mirrored`, 'info'); return; }
-    // T231: a variant item steps to its next picture where it stands; T257: a natural one is mirrored first, then the next picture
-    const vs = s.d.variants, cur = this.ctx.idOf(s.p), was = this.flipOf(s.p), k = vs ? vs.indexOf(cur) : -1;
-    const stepPic = () => (vs ? (k < 0 ? cur : vs[(k + 1) % vs.length]!) : cur);
-    const [next, flip] = mode === 'views' ? [turned(cur, 1).id, false] : mode === 'looks' ? (was ? [stepPic(), false] : [cur, true]) : [stepPic(), false];
+    if (mode === 'none') { this.ctx.toast(`${s.d.name}: one picture, never mirrored (the sun stays at the upper right)`, 'info'); return; }
+    // T231: a variant item steps to its next picture where it stands (never mirrored)
+    const vs = s.d.variants, cur = this.ctx.idOf(s.p), k = vs ? vs.indexOf(cur) : -1;
+    const next = mode === 'views' ? turned(cur, 1).id : vs ? (k < 0 ? cur : vs[(k + 1) % vs.length]!) : cur, flip = false;
     const item = this.ctx.item(next); if (item === undefined) return;
     const g = this.ghostOf(s.d, item, s.p.x, s.p.y, s.p.scale, s.p, { flip }); if (g.why) { this.ctx.toast(g.why, 'warn'); return; }
     this.ctx.step(`Turn ${s.d.name.toLowerCase()}`, () => { const q = this.remake(s.p, item, s.p.x, s.p.y, { flip, key: familyKey(s.d, next) }); this.ctx.select(q); return 0; });
@@ -294,11 +290,11 @@ export class PropsTool {
     return { item, x, y, scale, box, why, flip: !!o.flip, ...(o.key ? { key: o.key } : {}), price,
       label: why || (ignore ? `Move ${d.name.toLowerCase()} here` : `${name}${size}${look} · $${price.toLocaleString()}`) };
   }
-  /** T257: the ghost of the item in hand at (x, y): its picture at view, mirrored as turned, at its size and price */
+  /** T257: the ghost of the item in hand at (x, y): its picture at view, at its size and price */
   private handGhost(d: DecorItem, x: number, y: number): DecorGhost | null {
     const item = this.pictureOf(d, this.view); if (item === undefined) return null;
-    const flip = this.flip && this.turnMode(d) === 'looks', id = this.ctx.idOf({ item } as Prop);
-    return this.ghostOf(d, item, x, y, this.scaleAt(d, item, this.size), null, { flip, price: sizedPrice(d.price, this.size), size: this.size, key: familyKey(d, id) });
+    const id = this.ctx.idOf({ item } as Prop);
+    return this.ghostOf(d, item, x, y, this.scaleAt(d, item, this.size), null, { price: sizedPrice(d.price, this.size), size: this.size, key: familyKey(d, id) });
   }
 
   // ---- T257: the mixed brushes
