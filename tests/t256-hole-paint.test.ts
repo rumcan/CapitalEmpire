@@ -170,7 +170,7 @@ function twoBunkers() {
   return g;
 }
 const pre = (_s: string, old: string) => ({ tex: old, sc: 1, a: 0 });
-function looksOf(b: Partial<Record<BrushKind, { style: LookStyle }>>): CourseLooks { const s = courseLookSet(b, pre); return { surf: s.surf, collar: s.collar, band: s.band, ...(s.lipGrass ? { lipGrass: s.lipGrass } : {}) }; }
+function looksOf(b: Partial<Record<BrushKind, { style: LookStyle }>>): CourseLooks { const s = courseLookSet(b, pre); return { surf: s.surf, collar: s.collar, band: s.band, ...(s.lipGrass ? { lipGrass: s.lipGrass } : {}), ...(s.round ? { round: s.round } : {}) }; }
 const dflt = Object.fromEntries(BRUSH_PRESETS.map(p => [p.kind, { style: p.style }])) as Partial<Record<BrushKind, { style: LookStyle }>>;
 
 test('the chunks wear each owner\'s look: two holes\' bunkers in one chunk in two sands; owners alike lay exactly as before (old saves unchanged)', () => {

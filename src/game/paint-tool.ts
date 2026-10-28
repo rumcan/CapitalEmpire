@@ -15,7 +15,7 @@ import { dab, fillPoly, stroke as brushStroke, trace as traceMask, type Mask } f
 import { MAP } from './iso';
 import { holePreset, kindOfTex, placeHole, storedHolePreset, type HolePreset, type PresetProp, type StoredHole } from './golf/holepreset';
 import HOLE_PRESETS from './golf/hole-presets.json';
-import { EARTHWORK_PER_M3, areaBuildCost, growInMonths, surfaceOfTex, type PlantKind } from './golf/costs';  
+import { EARTHWORK_PER_M3, SHAPE_RATE_M3, areaBuildCost, growInMonths, surfaceOfTex, type PlantKind } from './golf/costs';  
 import { PLANT_KINDS, clampPlant, type PlantBrushKind, type PlantSet } from './plant';
 import { drawGhostPoly, drawGhostRing, drawGhostSnap, ghostStatus } from './ext/ghost-preview';
 import { edgeProfileOf } from './paint-edges';
@@ -67,11 +67,11 @@ function loadFrameTrees(): boolean { try { return localStorage.getItem(FRAME_KEY
 const SHAPE_KEY = 'capitalempire.shapeGround';
 function loadShapeGround(): boolean { try { return localStorage.getItem(SHAPE_KEY) !== '0'; } catch { return true; } }
 /** T263: the price ($) of setting the field's samples to a saved hole's heights: the earth moved (the cut carried to the fills, max(cut,
- *  fill) m³, as New hole's shaping) at EARTHWORK_PER_M3 */
+ *  fill) m³, as New hole's shaping) at SHAPE_RATE_M3 (built with the hole) */
 function heightsEarth(f: CourseHeightField, hs: readonly { k: number; h: number }[]): number {
   let up = 0, down = 0;
   for (const q of hs) { const dh = q.h - f.data[q.k]!; if (dh > 0) up += dh; else down -= dh; }
-  return Math.round(Math.max(up, down) * COURSE_CELL_M2 * EARTHWORK_PER_M3);
+  return Math.round(Math.max(up, down) * COURSE_CELL_M2 * SHAPE_RATE_M3);
 }
 
 export type PaintMode = 'draw' | 'pick' | 'erase' | 'hole' | 'brush' | 'plant' | 'piece' | 'height' | 'plan' | 'myhole';
@@ -900,11 +900,12 @@ export class PaintTool {
     this.groundVal = { gh, rev: f.rev, road, v };
     return v;
   }
-  /** T263: the earthworks New hole's Build would do: the earth moved (m³) and its price ($: EARTHWORK_PER_M3 a m³ in a golf game), or null
+  /** T263: the earthworks New hole's Build would do: the earth moved (m³) and its price ($: SHAPE_RATE_M3 a m³ in a golf game, shaped while
+   *  the hole is built, a third of the Ground height brush's rework rate), or null
    *  when it shapes nothing (Shape the ground off, Edit Hole Layout, no plan to build) */
   groundCost(): { m3: number; cost: number } | null {
     const s = this.groundShape(); if (!s.k.length) return null;
-    return { m3: s.m3, cost: this.host.golfMode?.() ? Math.round(s.m3 * EARTHWORK_PER_M3) : 0 };
+    return { m3: s.m3, cost: this.host.golfMode?.() ? Math.round(s.m3 * SHAPE_RATE_M3) : 0 };
   }
   /** T263: New hole's Shape the ground on or off (remembered) */
   setShapeGround(on: boolean): void { this.shapeGround = on; this.groundVal = null; try { localStorage.setItem(SHAPE_KEY, on ? '1' : '0'); } catch { /* storage may be unavailable */ } this.host.emit(); }
@@ -912,7 +913,7 @@ export class PaintTool {
    *  re-bakes the ground there, its earthworks are paid; 'short' (nothing laid) when the money left after the grass does not cover them */
   private shapeBuilt(shape: HoleGroundShape): { m3: number; cost: number } | 'short' | null {
     const f = this.host.courseHeight?.(); if (!f || !shape.k.length || !shape.box) return null;
-    const golf = !!this.host.golfMode?.(), cost = golf ? Math.round(shape.m3 * EARTHWORK_PER_M3) : 0;
+    const golf = !!this.host.golfMode?.(), cost = golf ? Math.round(shape.m3 * SHAPE_RATE_M3) : 0;
     if (golf && cost > (this.host.money?.() ?? 0)) return 'short';
     this.hj.touch(f, shape.box);
     const b = applyHoleGround(f, shape); if (b) this.host.heightChanged?.(b);

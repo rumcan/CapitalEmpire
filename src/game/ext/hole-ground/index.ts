@@ -2,8 +2,10 @@
 // new hole's Build shapes (New hole's "Shape the ground", on by default), worked out from the plan and the cells the Build lays, on the course
 // height field (ext/course-height: 4 m samples, ±3 m). It is designed, not noise:
 // - **fairway rolls**: a seeded knot curve along the line of play, crest to trough 0.3-0.8 m over 20-40 m, cosine-eased between knots (smooth,
-//   never periodic: every spacing and swing is drawn afresh), the swing capped by its run so no roll is steeper than about 3% (with the ridges'
-//   skew and the gentle cross tilt the fairway stays under 4%); past the fairway the rolls fade to a share of themselves;
+//   never periodic: every spacing and swing is drawn afresh), the swing capped by its run so no roll is steeper than about 3%; past the fairway
+//   the rolls fade to a share of themselves. The light comes from one sun (the upper right): a hole that runs across it would show its rolls
+//   side-on, so the more a hole runs across the sun, the more its ridges lean toward it (skew) and the more its fairway tilts from side to side
+//   (the cross tilt), the rolls' swing capped to keep the whole under SLOPE_MAX (3.8%: the landing zones stay under 4%);
 // - **mounds** (0.5-1.5 m, cosine-squared domes, flanks up to about 1 in 4 so the slope light reads them) in the rough beside the fairway and
 //   round the back and sides of the green, kept off the playing surfaces and clear of bunkers (T253's lips and grass mounds round the sand
 //   are shading; these sit beyond them);
@@ -18,11 +20,12 @@
 //   every sample whose bilinear reach touches one stays exactly as it is, the samples round it fade in over 3.
 // The result is a list of samples with their heights before and after and the earth moved: the cut (Σ of the drops) carried to the fills (Σ of
 // the rises), what is short brought in and what is over taken away, so max(cut, fill) m³ (× COURSE_CELL_M2 a metre of a sample); for a
-// one-way job, as a Ground height brush dab, that is the brush's own measure (estimateCourseBrushM3, Σ|Δh|), priced at the same
-// EARTHWORK_PER_M3. applyHoleGround writes it (touch the journal first). Pure: no DOM, deterministic, node-testable.
+// one-way job, as a Ground height brush dab, that is the brush's own measure (estimateCourseBrushM3, Σ|Δh|); the Build prices it at
+// golf/costs SHAPE_RATE_M3 (shaped while the hole is built: a third of the brush's rework rate). applyHoleGround writes it (touch the journal
+// first). Pure: no DOM, deterministic, node-testable.
 // Units: tiles (2 m) for places, metres for heights and along-the-line distances, samples (4 m) for the masks' distances.
 import { CELL_T, SURF, type Grid, type GridDiff } from '../course-grid';
-import { CH_SIZE, CH_STEP, COURSE_CELL_M2, clampCourseHeightM, type CourseHeightField, type CourseRoadCorridor, type CourseTileBox } from '../course-height';
+import { CH_SIZE, CH_STEP, COURSE_CELL_M2, SUN_TILE_DIR, clampCourseHeightM, type CourseHeightField, type CourseRoadCorridor, type CourseTileBox } from '../course-height';
 import { widthAt, type HolePlan, type PlanGeom } from '../hole-plan';
 
 /** the shaping's rules (metres, m/m, samples) */
@@ -30,14 +33,18 @@ export const HOLE_GROUND = {
   /** the fairway rolls: crest to trough minM..maxM over a run of minLenM..maxLenM, the swing at most grade × the run (cosine easing: its
    *  steepest slope is π/2 × grade, 3.1%) */
   roll: { minM: 0.3, maxM: 0.8, minLenM: 20, maxLenM: 40, grade: 0.02 },
-  /** the rolls' ridges lean across the line by up to this (along-line metres per lateral metre) */
-  skew: 0.2,
-  /** the gentle cross tilt: a knot curve of slopes (±grade) every minLenM..maxLenM along the line, saturating satM out from the line */
-  cross: { grade: 0.005, minLenM: 60, maxLenM: 100, satM: 20 },
+  /** the rolls' ridges lean across the line (along-line metres per lateral metre): min on a hole that runs toward the sun, up to min + across on
+   *  one that runs across it (toward the sun's side), ± jitter */
+  skew: { min: 0.1, across: 0.35, jitter: 0.05 },
+  /** the cross tilt: a knot curve of slopes (± grade, up to grade + across on a hole across the sun) every minLenM..maxLenM along the line,
+   *  saturating satM out from the line */
+  cross: { grade: 0.005, across: 0.004, minLenM: 60, maxLenM: 100, satM: 20 },
+  /** the steepest the rolls, their lean and the cross tilt make the fairway together (m/m; the landing zones stay under 4%) */
+  slopeMax: 0.038,
   /** the rolls' share in the rough (they fade from 1 a sample past the playing surfaces to this 4 samples out) */
   rollRough: 0.25,
-  /** the mounds beside the fairway: height minM..maxM (lower ones likelier), radius 5 m + 3.5 m per metre of height
-   *  (flanks up to about 1 in 4, so the slope light reads them), one every gapMinM..gapMaxM */
+  /** the mounds beside the fairway: height minM..maxM (the upper half likelier, so they read in the slope light), radius 5 m + 3.5 m per metre
+   *  of height (flanks up to about 1 in 4), one every gapMinM..gapMaxM; round the green 0.7-1.3 m */
   mound: { minM: 0.5, maxM: 1.5, gapMinM: 35, gapMaxM: 70 },
   /** the green: its tilt (m/m, front low, back high), its front lifted liftMin..liftMax (m) off the approach, its plane held hold samples past
    *  its cells, blended out over blend */
@@ -121,24 +128,24 @@ export function knotAt(k: Knots, x: number): number {
 }
 /** the fairway rolls over lengthM metres (and a run either side): each step a run of minLenM..maxLenM and a swing of minM..min(maxM,
  *  grade × run), up after a crest's down and down after a trough's up (a swing smaller than the way back to level keeps going the same way) */
-export function rollKnots(seed: number, lengthM: number): Knots {
+export function rollKnots(seed: number, lengthM: number, grade: number = HOLE_GROUND.roll.grade): Knots {
   const r = rng(seed ^ 0x1b873593), R = HOLE_GROUND.roll, s: number[] = [], v: number[] = [];
   let at = -R.maxLenM - R.maxLenM * r(), h = (r() - 0.5) * 0.4;
   s.push(at); v.push(h);
   while (at < lengthM + R.maxLenM) {
-    const run = R.minLenM + (R.maxLenM - R.minLenM) * r(), top = Math.max(R.minM, Math.min(R.maxM, R.grade * run));
-    const swing = R.minM + (top - R.minM) * r();
+    const lo = Math.min(R.maxLenM, Math.max(R.minLenM, R.minM / grade)), run = lo + (R.maxLenM - lo) * r(), top = Math.max(R.minM, Math.min(R.maxM, grade * run));
+    const swing = R.minM + (top - R.minM) * Math.sqrt(r()); // the bigger swings likelier (the rolls read in the light)
     h = h >= 0 ? h - swing : h + swing;
     at += run; s.push(at); v.push(h);
   }
   return { s: Float64Array.from(s), v: Float64Array.from(v) };
 }
 /** the cross tilt's slopes along the line (±grade, a knot every minLenM..maxLenM) */
-function crossKnots(seed: number, lengthM: number): Knots {
+function crossKnots(seed: number, lengthM: number, grade: number): Knots {
   const r = rng(seed ^ 0x2545f491), C = HOLE_GROUND.cross, s: number[] = [], v: number[] = [];
   let at = -C.maxLenM * r();
-  while (at < lengthM + C.maxLenM) { s.push(at); v.push((r() * 2 - 1) * C.grade); at += C.minLenM + (C.maxLenM - C.minLenM) * r(); }
-  s.push(at); v.push((r() * 2 - 1) * C.grade);
+  while (at < lengthM + C.maxLenM) { s.push(at); v.push((r() * 2 - 1) * grade); at += C.minLenM + (C.maxLenM - C.minLenM) * r(); }
+  s.push(at); v.push((r() * 2 - 1) * grade);
   return { s: Float64Array.from(s), v: Float64Array.from(v) };
 }
 
@@ -268,8 +275,17 @@ export function shapeHoleGround(inp: HoleGroundInput): HoleGroundShape {
     along[k] = bs; across[k] = bd * 2;
   }
   // 5. the rolls and the cross tilt (blurred once each way: a tight bend's inside, where the nearest stretch of line jumps, stays smooth)
-  const rollK = rollKnots(seed, L), crossK = crossKnots(seed, L), rs = rng(seed);
-  const skew = (rs() * 2 - 1) * P.skew, D = new Float32Array(S);
+  // how much the hole runs across the sun (0: toward it or away, 1: across), from its tee to its green; its ridges lean to the sun's side
+  const tl = Math.hypot(plan.green.x - plan.tee.x, plan.green.y - plan.tee.y) || 1, tx = (plan.green.x - plan.tee.x) / tl, ty = (plan.green.y - plan.tee.y) / tl;
+  const tSun = tx * SUN_TILE_DIR.x + ty * SUN_TILE_DIR.y, nSun = -ty * SUN_TILE_DIR.x + tx * SUN_TILE_DIR.y, crossSun = 1 - Math.abs(tSun);
+  const rs = rng(seed), K = P.skew, lean = K.min + K.across * crossSun, cg = P.cross.grade + P.cross.across * crossSun;
+  const skew = (tSun * nSun >= 0 ? 1 : -1) * lean + (rs() * 2 - 1) * K.jitter;
+  // the rolls' steepest (A = π/2 × grade) such that with the lean and the cross tilt (c1: its change along the line 20 m out) the fairway
+  // stays under slopeMax: (A + c1)² + (kMax A + cg)² <= slopeMax²
+  const kMax = lean + K.jitter, c1 = (Math.PI / 2) * ((2 * cg) / P.cross.minLenM) * P.cross.satM, Tm = P.slopeMax;
+  const qa = 1 + kMax * kMax, qb = c1 + kMax * cg, qc = c1 * c1 + cg * cg - Tm * Tm;
+  const A = Math.max(0, (-qb + Math.sqrt(Math.max(0, qb * qb - qa * qc))) / qa), grade = Math.min(P.roll.grade, A / (Math.PI / 2));
+  const rollK = rollKnots(seed, L, grade), crossK = crossKnots(seed, L, cg), D = new Float32Array(S);
   for (let k = 0; k < S; k++) {
     if (!wt[k]) continue;
     const s = along[k]!, d = across[k]!, e = 1 - (1 - P.rollRough) * smooth((dPlay[k]! - 1) / 3);
@@ -288,7 +304,7 @@ export function shapeHoleGround(inp: HoleGroundInput): HoleGroundShape {
   let side = rs() < 0.5 ? -1 : 1;
   for (let sM = Math.max(plan.fwStart + 15, 45) + rs() * 20; sM < L - gR - 20; sM += M.gapMinM + (M.gapMaxM - M.gapMinM) * rs()) {
     if (rs() > 0.15) {
-      const h = M.minM + (M.maxM - M.minM) * rs() ** 1.5, R = 5 + 3.5 * h;
+      const h = M.minM + (M.maxM - M.minM) * Math.sqrt(rs()), R = 5 + 3.5 * h;
       const hw = Math.max(9, widthAt(plan, sM, geom) / 2 + 3), cr = Math.max(30, hw + 2), off = Math.min(hw + 3 + 0.5 * R, cr - 0.2 * R);
       const q = nearAt(sM);
       feats.push({ kind: 'mound', x: q.x + (side * q.nx * off) / 2, y: q.y + (side * q.ny * off) / 2, h, r: R / 2 });
@@ -306,7 +322,7 @@ export function shapeHoleGround(inp: HoleGroundInput): HoleGroundShape {
   }
   const cnt = 2 + Math.floor(rs() * 3);
   for (let m = 0; m < cnt; m++) {
-    const deg = 60 + (240 * (m + 0.5 + 0.6 * (rs() - 0.5))) / cnt, h = M.minM + 0.7 * rs(), R = 5 + 3 * h;
+    const deg = 60 + (240 * (m + 0.5 + 0.6 * (rs() - 0.5))) / cnt, h = M.minM + 0.2 + 0.6 * rs(), R = 5 + 3 * h;
     const gap = Math.abs(((((deg - hollowDeg) % 360) + 540) % 360) - 180); // degrees between it and the swale (0..180)
     if (gap < 45) continue;
     const u = dirAt(deg), dist = gR + 14 + 0.3 * R;

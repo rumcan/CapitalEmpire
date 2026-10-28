@@ -12,7 +12,7 @@ import { greenPolygon, planChanges, planGeom, teePolygon, widthAt, type HolePlan
 import { decodePlans, newPlan } from '../src/game/ext/hole-wizard';
 import { HOLE_GROUND, applyHoleGround, knotAt, rollKnots, shapeHoleGround, type HoleGroundInput } from '../src/game/ext/hole-ground';
 import { landingSpots } from '../src/game/golf/holeframe';
-import { EARTHWORK_PER_M3 } from '../src/game/golf/costs';
+import { EARTHWORK_PER_M3, SHAPE_RATE_M3 } from '../src/game/golf/costs';
 import { captureHole } from '../src/game/golf/myholes';
 import { PaintTool, type PaintHost } from '../src/game/paint-tool';
 
@@ -174,7 +174,8 @@ test("New hole's Build shapes the ground in its own undo step, priced with the g
   tool.setShapeGround(true);
   plan(40, 120, 230, 120);
   const gh = tool.wizard.ghost()!, e = tool.groundCost()!;
-  assert.ok(e && e.m3 > 500, 'the earthworks are worked out before the Build'); assert.equal(e.cost, Math.round(e.m3 * EARTHWORK_PER_M3), 'at the Ground height brush\'s rate');
+  assert.ok(e && e.m3 > 500, 'the earthworks are worked out before the Build'); assert.equal(e.cost, Math.round(e.m3 * SHAPE_RATE_M3), 'at the shaping rate: built with the hole');
+  assert.equal(SHAPE_RATE_M3 * 3, EARTHWORK_PER_M3, "a third of the Ground height brush's rework rate");
   assert.equal(tool.groundShape(), tool.groundShape(), 'once a ghost');
   const before = f.data.slice(), money = st.money;
   assert.ok(tool.buildPlan());
@@ -246,7 +247,7 @@ test('a saved hole (My holes) carries its shaping and places it again, priced as
   tool.pointerMove({ x: 40, y: 500 }, 40 * PX, 500 * PX); tool.pointerDown({ x: 40, y: 500 }, 40 * PX, 500 * PX); tool.pointerUp(0.5);
   for (const q of gh.placed.heights) assert.equal(f.data[q.k], Math.fround(q.h), 'its ground, placed again');
   assert.equal(money - st.money, gh.cost, 'charged the ghost\'s price');
-  assert.ok(gh.cost >= Math.round(Math.max(earth, sunk) * 16 * EARTHWORK_PER_M3), 'which takes in its earthworks');
+  assert.ok(gh.cost >= Math.round(Math.max(earth, sunk) * 16 * SHAPE_RATE_M3), 'which takes in its earthworks');
   tool.undo();
   assert.equal(diffs(before, f.data), 0, 'Undo restores the field exactly');
 });
