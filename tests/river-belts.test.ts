@@ -105,6 +105,9 @@ test('T265 the river\'s swamp stops short of a road and a lot (river-cut.ts): wh
   // a lot: gone inside it and within half its margin, soft past that, whole past the margin
   assert.equal(at(60, 130), 0); assert.equal(at(70 + RIVER_CUT.lot * 0.4, 130), 0); assert.equal(at(70 + RIVER_CUT.lot * 0.8, 130), 0.5); assert.equal(at(70 + RIVER_CUT.lot + 0.3, 130), 1);
   assert.equal(at(100, 160), 1, 'nothing built: the swamp whole');
+  // a district chunk (soft false): one pass, three quarters of the margin whole
+  const far = (x: number, y: number) => leftAt(g => drawRiverCut(g, shapes, false), closed, x, y);
+  assert.equal(far(100, 104.5 + RIVER_CUT.road * 0.7), 0); assert.equal(far(100, 104.5 + RIVER_CUT.road * 0.8), 1); assert.equal(far(70 + RIVER_CUT.lot * 0.7, 130), 0);
 });
 
 test('T265 the renderer: the river\'s band with the streams\', under the river\'s bank, cut short of what is built, its own dev switch', () => {

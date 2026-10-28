@@ -665,7 +665,7 @@ export class GroundPainter {
     }
     if (!feats.length && !brs.length && !shapes.length) return null;
     const bridges = brs.map(b => { const path = new Path2D(); b.pts.forEach((q, i) => (i ? path.lineTo(q.x, q.y) : path.moveTo(q.x, q.y))); return { path, hw: b.hw }; });
-    return g => drawRiverCut<Path2D>(g, { feats, bridges, shapes });
+    return g => drawRiverCut<Path2D>(g, { feats, bridges, shapes }, !lite);
   }
   private leafPic: Cnv | null = null; private leafChunks = new Map<string, Cnv>();
   /** T220: the fallen leaves' density (the gear menu's Fallen leaves, GroundCache.setLeafDensity; 0: none, the ground exactly as before T220) */

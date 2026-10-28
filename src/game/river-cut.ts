@@ -21,10 +21,10 @@ export interface CutShapes<P> {
 }
 
 /** the cut onto g (its composite already destination-out, its transform tile space): two passes, the margin at half alpha, then half the margin
- *  whole */
-export function drawRiverCut<P>(g: CutCtx<P>, s: CutShapes<P>): void {
+ *  whole; soft false (a district chunk: the margin a pixel or two) one pass, three quarters of the margin whole */
+export function drawRiverCut<P>(g: CutCtx<P>, s: CutShapes<P>, soft = true): void {
   g.lineJoin = 'round'; g.fillStyle = g.strokeStyle = '#000';
-  for (const [alpha, k] of [[0.5, 1], [1, 0.5]] as const) {
+  for (const [alpha, k] of soft ? ([[0.5, 1], [1, 0.5]] as const) : ([[1, 0.75]] as const)) {
     g.globalAlpha = alpha; const R = RIVER_CUT.road * k, P = RIVER_CUT.lot * k;
     for (const f of s.feats) { g.lineCap = f.cap; if (f.kind === 'stroke') { g.lineWidth = f.w + 2 * R; g.stroke(f.path); } else { g.fill(f.path); g.lineWidth = 2 * R; g.stroke(f.path); } }
     g.lineCap = 'round'; for (const b of s.bridges) { g.lineWidth = 2 * (b.hw + R); g.stroke(b.path); }
