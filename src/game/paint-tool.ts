@@ -115,6 +115,11 @@ function loadCells(): number { try { const n = Number(localStorage.getItem(CELLS
 /** T238: the square brush's last size, remembered apart, so Square after Round comes back at it (1 to 4 cells) */
 const SQUARE_KEY = 'capitalempire.brushSquare';
 function loadSquare(cells: number): number { if (cells > 0) return cells; try { const n = Number(localStorage.getItem(SQUARE_KEY) ?? 1); return Number.isInteger(n) && n >= 1 && n <= 4 ? n : 1; } catch { return 1; } }
+/** the owner, 2026-10-29: "add a toggle to replace or layer on the painting everywhere ... usually rough doesnt paint over faitways. you
+ *  toggle it and now it does paint over it": Layer under (a stroke slides past the surfaces drawn above it, the default) or Replace (it
+ *  paints over whatever is there), remembered */
+const REPLACE_KEY = 'capitalempire.brushReplace';
+function loadReplace(): boolean { try { return localStorage.getItem(REPLACE_KEY) === '1'; } catch { return false; } }
 /** the brush presets: BRUSH_PRESETS, each replaced by its saved edit (a missing or bad save keeps the defaults; no storage keeps them too) */
 function loadBrush(): Record<BrushKind, BrushSet> {
   const out = {} as Record<BrushKind, BrushSet>;
@@ -456,6 +461,9 @@ export class PaintTool {
   /** the Course brush on the course grid (T109): a square of brushCells x brushCells mini-grid cells (1 m each; 1 the default, 2 one town
    *  square, 3, 4), or the round brush of the surface's radius (0: T238's Round, in Shape by hand and Edit hole) */
   brushCells: number = loadCells();
+  /** Replace (paint over every surface) or Layer under (slide past the ones drawn above: rough under a fairway), remembered */
+  paintReplace: boolean = loadReplace();
+  setPaintReplace(on: boolean) { this.paintReplace = on; try { localStorage.setItem(REPLACE_KEY, on ? '1' : '0'); } catch { /* storage may be unavailable */ } this.host.emit(); }
   /** T238: the square brush's last size (1 to 4 cells; remembered), what Square goes back to */
   squareCells: number = loadSquare(this.brushCells);
   /** T238 (the owner, 2026-10-28: "give me a round isometric brish option so i can draw round bunkers and greens"): the brush's shape, Square
@@ -1139,16 +1147,16 @@ export class PaintTool {
   brushCellCost(): ((x: number, y: number) => number) | null {
     const g = this.courseGrid(), s = g ? surfOfSurface(this.brushKind) : 0; if (!g || !s || this.rubOut || !this.host.golfMode?.()) return null;
     const h = this.brushHole, unit = unitBuildCost(SURF_SURFACE[s] ?? 'other', this.plantKind);
-    return (x, y) => { const i = cellAt(g, x, y); return i < 0 || (g.surf[i] === s && g.hole[i] === h) || surfAbove(g.surf[i]!, s) ? 0 : unit; };
+    return (x, y) => { const i = cellAt(g, x, y); return i < 0 || (g.surf[i] === s && g.hole[i] === h) || (!this.paintReplace && surfAbove(g.surf[i]!, s)) ? 0 : unit; };
   }
-  /** the brush rules on grid g: 'below' (a stroke slides past the surfaces drawn above it, as the old layers did) and owned
+  /** the brush rules on grid g: 'below' (a stroke slides past the surfaces drawn above it, as the old layers did; Replace: 'any') and owned
    *  cells only; a rub out (T125) takes every cell rubWhy lets it (it lays the base over them, carved: no 'below', no course-grid rub) */
   private gridOpts(g: Grid, erase: boolean, s = surfOfSurface(this.brushKind)): PaintOpts {
     if (erase) { const why = this.rubWhy(g); return { allow: i => !why(i), carve: true }; } // carved: the drawn course leaves the gap open
     const own = this.landRule(), prac = practiceSurf(s) ? this.host.practiceAt : undefined, prop = this.property;
     // T206: a green or bunker never goes into the practice area (Facilities ▸ Practice builds there; painted ones of old saves stay)
     // T256: the property's brush never takes a hole's cell (a hole's brush takes the property's, and another hole's, as before)
-    return { over: 'below', allow: i => { if (prop && g.hole[i]! > 0) return false; if (!own && !prac) return true; const c = cellCentre(g, i); return (!own || own(c.x, c.y)) && !prac?.(c.x, c.y); } };
+    return { over: this.paintReplace ? 'any' : 'below', allow: i => { if (prop && g.hole[i]! > 0) return false; if (!own && !prac) return true; const c = cellCentre(g, i); return (!own || own(c.x, c.y)) && !prac?.(c.x, c.y); } };
   }
   /** T256: the land the brush may paint: your land (Range › Build: the range's plot too), else your land off the range's plot (the holes) */
   private landRule(): ((x: number, y: number) => boolean) | undefined { return this.property ? this.host.landAt ?? this.host.ownedAt : this.host.ownedAt; }
