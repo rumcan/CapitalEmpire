@@ -23,6 +23,8 @@ const byId = new Map(LIBRARY.map(i => [i.id, i]));
 /** the footprint of a placed prop in world tiles (the engine's footprint: the union of its boxes, a car at CAR_SCALE) */
 function fpOf(p: Placed): [number, number, number, number] {
   const it = byId.get(p.id)!;
+  // T236: a car of the vehicle mix stands on its own footprint (Placed.foot: the body at its owner size), drawn at CAR_SCALE of it
+  if (p.foot) { const f = p.foot, cx = (f[0] + f[2]) / 2, cy = (f[1] + f[3]) / 2, k = it.kind === 'car' ? CAR_SCALE : 1, hx = (f[2] - f[0]) * k / 2, hy = (f[3] - f[1]) * k / 2; return [cx - hx, cy - hy, cx + hx, cy + hy]; }
   let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
   for (const b of it.boxes) {
     const k = p.scale * (it.kind === 'car' ? CAR_SCALE : 1), hx = (p.flip ? b.hy : b.hx) * k / 2, hy = (p.flip ? b.hx : b.hy) * k / 2, dx = (p.flip ? b.dy : b.dx) * k / 2, dy = (p.flip ? b.dx : b.dy) * k / 2;

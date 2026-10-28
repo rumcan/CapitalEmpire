@@ -57,7 +57,7 @@ Before that switch:
 | Greenkeeping conditions (section 10) | after the course surfaces |
 
 ### The concept look (section 12)
-The owner's target picture, 2026-10-27: items 149-175. ✅ 153 lawn on every yard (#663); 🎨 153 meadow and 152 rough in the Studio; ✅ 149-151 the fairway, first cut and green on the course and the range (#666). 🎨 154 pond water (T230 #679); ✅ 158-160 the pond kit, 162-164 the shrubs, flowers and hedge, and 36, 43, 45 in the game (T231 #671); 169-171 the building-site kit (T232 #673; 168 the excavator blocked in RUN); ✅ 174 the build-tool tiles in the game (T233 #674). Ground textures 149-153 come first: the concept's greens. The plan is in [art/CONCEPT-LOOK.md](art/CONCEPT-LOOK.md).
+The owner's target picture, 2026-10-27: items 149-175, and 178-179 the eight-facing pickup and sedan (T236 #693: the driving cars' colours). ✅ 153 lawn on every yard (#663); 🎨 153 meadow and 152 rough in the Studio; ✅ 149-151 the fairway, first cut and green on the course and the range (#666). 🎨 154 pond water (T230 #679); ✅ 158-160 the pond kit, 162-164 the shrubs, flowers and hedge, and 36, 43, 45 in the game (T231 #671); 169-171 the building-site kit (T232 #673; 168 the excavator blocked in RUN); ✅ 174 the build-tool tiles in the game (T233 #674). Ground textures 149-153 come first: the concept's greens. The plan is in [art/CONCEPT-LOOK.md](art/CONCEPT-LOOK.md).
 
 ### Set the scene, portraits and you (section 13, P28)
 The owner's 2026-10-28 asks: items 200-235 and 240-327 (about 115 places, most with a run-down and an upgraded picture), still to make, except batch 1 (200-204, 211; 17 pictures in `art/theme-consistency/generated/scenes/`). Batch 2 (the P1 places 205-222) after RUN's cap resets; the rest needs a credit top-up.
@@ -779,6 +779,26 @@ concept, the large brick building behind the patio with the red umbrellas.
 field (the small events' amateurs, the everyday visitors) are drawn with `business:golf-cart-sw` and `-se`, the only two facings there are (the front to
 the screen's lower left or lower right); a cart driving up the screen shows the nearer of the two. The eight facings fix that (`CART_ART` in `engine.ts`).
 > Subject: a white 1985 two-seater golf cart with a cream canopy on four posts, a bag rack at the back holding two golf bags, small headlights. No people and no lettering.
+
+### Vehicles (T236, #693: colour in the streets and car parks)
+T228 recoloured the two wood-panel wagons in the shader; the audit (T236) found no paint clean on either (patchy hoods, orange rims, painted
+chrome), so painting is off and the cars keep their art's colours. The car parks now mix in the library's old cars (the yellow pickup, the
+world cars, the compacts), but those have only one to six facings, so they only park in bays they have a view for; **every car that drives
+is still one of the two wagons**, burgundy or navy (the traffic, the range's and the club's golfers' cars). Eight-facing vehicles in new
+colours fix that: the game adds each to the drivers (`vehicles.ts` `VEHICLES`, all eight views) and to the bays. **Each colour is its own
+set of eight pictures**: never recoloured in code. Size them as the wagons (`art/cars/burgundy-wagon/`: a 4.5 m car about 200 px wide in
+its SE view); attach that SE picture as the scale and camera reference after the style references.
+**RUN's multi-view turns have failed before** (the excavator, item 168: the views did not hold one rigid machine; the four-view pilot): make
+each facing its own generation, matched to the first, and reject a set where the length, wheelbase, colour or trim changes between facings,
+or where a facing is a mirrored copy of another (the sun must stay at the upper right in all eight).
+
+**178. 1985 pickup truck, three colours** · **D** · 5 x 1.9 m, 1.8 m high · P1. Three sets: white, bright red, forest green (the library's
+pickup is mustard yellow and the wagons burgundy and navy: not those).
+> Subject: a 1985 full-size American pickup truck, a squared-off regular cab and a long open bed (empty), chrome front bumper and grille, round headlights, steel wheels with small hubcaps, painted solid [colour]. Clean and well kept, no rust, no lettering, no number plate text.
+
+**179. 1985 sedan, three colours** · **D** · 4.8 x 1.8 m, 1.4 m high · P1. Three sets: white, silver-grey metallic, black (the street's
+commonest colours, which the car parks still lack).
+> Subject: a 1985 American four-door family sedan, a long boxy body with a formal roofline, chrome bumpers and window trim, a full-width grille, rectangular headlights, whitewall tyres, painted solid [colour]. No wood panels, no vinyl roof, no lettering, no number plate text.
 
 ### UI pictures
 ✅ **174. Build-tool tiles** (`ui/golf-build-tool-tiles-sheet-v1.png`; in the game, T233 #674: cut by `scripts/assets/prep-ui-tool-tiles.mjs` into `src/assets/ui/tiles/`, shown on the Course and Facilities flyouts' tools by `ui/tool-tiles.ts`; the tools still without one are requested in GOLF-SPRITES.md "Build-tool tiles") · one sheet of 12 · P1. The build flyouts' tools as small illustrated scenes, as in the concept's Golf Course panel.
