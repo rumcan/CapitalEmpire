@@ -5,7 +5,7 @@
 // mip main drew (the chain stays each picture the halving of the one before); the bake in hand's pictures are never dropped.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { GROUND_GPU_BYTES, TILE_CACHE_BYTES, TILE_CACHE_MIN, TileCache, halfOf, picBytes, tileCacheBudget, type Pic } from '../src/game/tile-cache';
+import { GROUND_GPU_BYTES, TILE_CACHE_BYTES, TILE_CACHE_MIN, TILE_SLACK, TileCache, halfOf, picBytes, tileCacheBudget, type Pic } from '../src/game/tile-cache';
 import { TILE_BANDS, TILED_FAMILIES, snappedCell, tilePermutation, tileIndex, tilePx, tileSize, tileSpec, type TileBand } from '../src/game/painted-tiles';
 import { grassZoomLevels } from '../src/game/painted-grass-lod';
 
@@ -42,9 +42,14 @@ test('the tile cache budget: the ground\'s 192 MB less the chunk pictures\' budg
   for (const px of [16e6, 24e6, 32e6, 44e6]) for (const w of [1, 2, 3]) assert.ok(px * 4 + tileCacheBudget(px, w) * w <= GROUND_GPU_BYTES + w, `${px} px, ${w} workers`);
   assert.equal(tileCacheBudget(48e6, 1), TILE_CACHE_MIN, 'a boot whose chunks take it all keeps the least');
   // followed as the chunk pictures come and go: what they hold leaves the rest, never less than their budget leaves
-  assert.equal(tileCacheBudget(32e6, 1, 10e6), 192 * MB - 40 * MB, 'chunks holding 40 MB leave the tiles 152');
+  assert.equal(tileCacheBudget(32e6, 1, 10e6), 192 * MB - 40 * MB - TILE_SLACK, 'chunks holding 40 MB leave the tiles 152, less the slack');
   assert.equal(tileCacheBudget(32e6, 1, 40e6), 64 * MB, 'a chunk landing past their budget takes nothing from the tiles');
-  for (const held of [0, 5e6, 20e6, 32e6]) assert.ok(held * 4 + tileCacheBudget(32e6, 1, held) <= GROUND_GPU_BYTES, `${held} px held`);
+  assert.equal(tileCacheBudget(32e6, 1, 30e6), 64 * MB, 'never less than the budget leaves');
+  for (const held of [0, 1e6, 5e6, 12.3e6, 20e6, 29.9e6, 32e6]) for (const w of [1, 2]) {
+    const b = tileCacheBudget(32e6, w, held);
+    assert.ok(held * 4 + b * w <= GROUND_GPU_BYTES, `${held} px held, ${w} workers`);
+    if (b * w > 64 * MB + w) assert.ok(held * 4 + b * w <= GROUND_GPU_BYTES - TILE_SLACK, `${held} px held, ${w} workers: the slack kept`);
+  }
 });
 
 test('tilePx is the widest cell a level\'s tiles take in a chunk raster (the mip a bake draws must be that wide)', () => {

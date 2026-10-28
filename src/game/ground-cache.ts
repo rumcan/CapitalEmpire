@@ -83,12 +83,12 @@ export class GroundCache {
   tileBytes: number | null = null;
   /** T272: the tile budget the workers were last sent */
   private sentTileBytes = 0;
-  /** T272: the workers' tile budget follows the chunk pictures held (residentPx): sent when it moves 4 MB or more (the chunks and the tiles
-   *  together stay inside the 192 MB, the tiles taking what the chunks leave) */
+  /** T272: the workers' tile budget follows the chunk pictures held (residentPx; tileCacheBudget's steps): sent when it changes (the chunks and
+   *  the tiles together stay inside the 192 MB, the tiles taking what the chunks leave) */
   private syncTileBudget() {
     if (this.tileBytes != null || !this.workers.length) return;
     const b = tileCacheBudget(this.budgetPx, this.workers.length, this.residentPx);
-    if (Math.abs(b - this.sentTileBytes) < 4e6) return;
+    if (b === this.sentTileBytes) return;
     this.sentTileBytes = b; this.broadcast({ t: 'tileBudget', bytes: b });
   }
   /** the baked pictures' pixels on the GPU at the last evict (chunks, their zoom crossfade and build reveal pictures), and the most so far */

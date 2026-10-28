@@ -28,12 +28,16 @@ export const GROUND_GPU_BYTES = 192 * MB;
 export const TILE_CACHE_MIN = 16 * MB;
 /** a worker's tile cache before its init says otherwise (the game's: 192 MB less its 128 MB of chunk pictures, one worker) */
 export const TILE_CACHE_BYTES = 64 * MB;
-/** a worker's tile cache in bytes: what groundPx pixels of chunk pictures (RGBA8) leave of GROUND_GPU_BYTES (at least TILE_CACHE_MIN), shared
- *  by the workers, each of which holds its own; with heldPx (the pixels the chunk pictures hold now, ground-cache.ts residentPx), what they
- *  leave, never less than groundPx's (their budget: a chunk picture landing past it before its eviction takes nothing from the tiles) */
+/** following the chunk pictures held, the tiles take what they leave less this (one bake's new mips before the trim after it, the swamp's
+ *  glosses, the step), in steps of TILE_STEP (so a few chunks coming and going send nothing) */
+export const TILE_SLACK = 8 * MB, TILE_STEP = 4 * MB;
+/** a worker's tile cache in bytes: what groundPx pixels of chunk pictures (RGBA8, their budget) leave of GROUND_GPU_BYTES (at least
+ *  TILE_CACHE_MIN), shared by the workers, each of which holds its own. With heldPx (the pixels the chunk pictures hold now, ground-cache.ts
+ *  residentPx) below their budget: what those leave, less TILE_SLACK, a TILE_STEP below; never less than the budget's share */
 export function tileCacheBudget(groundPx: number, workers: number, heldPx = groundPx): number {
-  const px = Math.min(Math.max(0, groundPx), Math.max(0, heldPx));
-  return Math.floor(Math.max(TILE_CACHE_MIN, GROUND_GPU_BYTES - px * 4) / Math.max(1, Math.round(workers)));
+  const budget = Math.max(0, groundPx), held = Math.max(0, heldPx), floor = GROUND_GPU_BYTES - budget * 4;
+  const free = held < budget ? Math.max(floor, Math.floor((GROUND_GPU_BYTES - held * 4 - TILE_SLACK) / TILE_STEP) * TILE_STEP) : floor;
+  return Math.floor(Math.max(TILE_CACHE_MIN, free) / Math.max(1, Math.round(workers)));
 }
 /** the width of the mip halving makes of a picture w px wide (textures.ts downscale's rounding) */
 export const halfOf = (w: number) => Math.max(1, Math.round(w * 0.5));
