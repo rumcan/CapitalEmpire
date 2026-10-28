@@ -279,6 +279,8 @@ export class Textures {
     return out;
   }
   isPainted(variant: string) { return !!this.paintedOf(variant); }
+  /** T247: the painted family a texture is laid with (its surface's look), or null when it is laid as its photo */
+  familyOf(variant: string): string | null { return this.paintedOf(variant) ? lookOfTex(variant, this.surfaces, this.presetRefs)?.family ?? null : null; }
   /** a painted texture's mean colour as its look shows it (the planner's colour, a swatch), or null */
   paintedMean(variant: string) { return this.paintedOf(variant)?.mean ?? null; }
   /** the levels a painted look blends at the current art level (painted-families.ts familyWeights) */

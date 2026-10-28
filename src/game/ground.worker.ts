@@ -103,6 +103,7 @@ const handle = async (m: ToWorker) => {
       }
       case 'living': painter.living = { on: m.on, debug: m.debug }; break;
       case 'rugged': painter.rugged = m.on; break;
+      case 'softDirt': painter.softDirt = m.on; break;
       case 'stripes': painter.stripes = m.on; break;
       case 'leaves': painter.leafDensity = m.density; break;
       case 'specCam': painter.specCam = m.on; break;
