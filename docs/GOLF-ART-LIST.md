@@ -807,6 +807,14 @@ commonest colours, which the car parks still lack).
 - **180d planting tufts**: six tufts for the gaps: ferns, a sedge, cattails, a low juniper, golden grass, a small red-leaf shrub (no pink or purple: the magenta key).
 Lit from the upper right, never mirrored, on flat pure magenta.
 
+**Farms** (the owner, 2026-10-29: "lets add some corn fields to the art work so we can plant tehse fields you created for the farms and make a better texture for the un planted fields and maybe make some orchards quickly with some treees all in a line and have the actual famrshouses further wawa from the road, deeper in land with a row of trees down the dirt road to the house like they do on farms to break the wind"). Made in ChatGPT; prompts in [art/CHATGPT-IMAGE-QUEUE.md](art/CHATGPT-IMAGE-QUEUE.md) "Farms". The code is T259.
+
+**185. Corn field** · ground, the owner's method · P1. Two stages: **young** (short green corn in straight rows over brown soil) and **ripe** (tall golden-tan corn, dry tassels, autumn). Rows run along the map's x axis; the game turns them by the field's direction. Plus a **stubble** stage (cut stalks after the harvest).
+**186. Ploughed field** · ground, the owner's method · P1. Freshly ploughed dark brown soil in neat parallel furrows with a few clods and stones; replaces the plain dirt look of unplanted fields.
+**187. Orchard trees** · **B**, four variants · P1. Apple trees in autumn: a round canopy, red apples, a few fallen under it; a pear tree; a young apple tree; an apple tree half bare with yellow leaves. Each about 4-5 m high, pruned low and wide like orchard trees. No pink or purple.
+**188. Windbreak poplars** · **B**, three variants · P1. Tall narrow Lombardy poplars, 15-20 m, in autumn gold, green-gold and half bare; planted in a line along a farm lane.
+**189. Farm lane** · ground · P2. A two-rut dirt farm lane with a grass strip down the middle (or use the dirt path textures if they read right).
+
 ### UI pictures
 ✅ **174. Build-tool tiles** (`ui/golf-build-tool-tiles-sheet-v1.png`; in the game, T233 #674: cut by `scripts/assets/prep-ui-tool-tiles.mjs` into `src/assets/ui/tiles/`, shown on the Course and Facilities flyouts' tools by `ui/tool-tiles.ts`; the tools still without one are requested in GOLF-SPRITES.md "Build-tool tiles") · one sheet of 12 · P1. The build flyouts' tools as small illustrated scenes, as in the concept's Golf Course panel.
 > Subject: twelve tiny isometric dioramas in a 4x3 grid, each on its own dark navy rounded square, the light from the upper right: a tee box, a fairway, a green with a flag, a bunker, a pond, rough grass, a clump of autumn trees, a group of boulders, a curving cart path, a small clubhouse, the range bays, a flower bed. The same scale and style in every tile; no lettering.

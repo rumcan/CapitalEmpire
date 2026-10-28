@@ -129,6 +129,40 @@ Subject: golf:range-floodlight, a tall galvanised-steel floodlight mast at a dri
 The same object exactly (same design, colours, size and light), turned so its LEFT side and FRONT show (the front now faces the screen's lower right). Not a mirror image: draw the left side as it really is. Same flat pure magenta background, same isometric camera, sun still at the screen upper right.
 ```
 
+## Farms (items 185-188; the owner, 2026-10-29)
+**Ground textures (185, 186) use the owner's method:** take a game screenshot of a farm field at about 30% zoom (and one at 10%). Upload it to ChatGPT with `theme-authoritative.png`, and ask it to repaint only the field, keeping the camera, the light and everything else. The lead slices the field out and makes the tiles. Save the repainted screenshots to `art/theme-consistency/generated/ground/farm/<slug>-<zoom>.png`.
+
+**185 corn, young**: save as `corn-young-30.png` (and `corn-young-10.png`)
+```text
+Repaint ONLY the brown field in this game screenshot as a young corn field in early summer: knee-high bright green corn plants in perfectly straight parallel rows over brown soil, the rows running from the upper left toward the lower right of the picture, gaps of soil between the rows. Keep everything else in the picture exactly as it is: the same camera, the same isometric angle, the same light from the upper right, the same scale and texture detail as the game's ground. Detailed illustrated style. No people, no machinery, no text.
+```
+**185 corn, ripe**: save as `corn-ripe-30.png` (and `-10`)
+```text
+Repaint ONLY the brown field in this game screenshot as a ripe autumn corn field: tall dry golden-tan corn in perfectly straight parallel rows, tassels on top, leaves rustling, the rows running from the upper left toward the lower right. Keep everything else exactly as it is: camera, angle, light from the upper right, scale. Detailed illustrated style. No people, no machinery, no text.
+```
+**185 corn, stubble**: save as `corn-stubble-30.png` (and `-10`)
+```text
+Repaint ONLY the brown field in this game screenshot as a harvested corn field: short cut corn stalks in straight rows over pale brown soil, some flattened straw between the rows. Keep everything else exactly as it is. Detailed illustrated style. No people, no machinery, no text.
+```
+**186 ploughed field**: save as `ploughed-30.png` (and `-10`)
+```text
+Repaint ONLY the brown field in this game screenshot as a freshly ploughed field: rich dark brown soil turned in neat parallel furrows running from the upper left toward the lower right, a few clods and small stones, damp in the furrow bottoms. Keep everything else exactly as it is: camera, angle, light from the upper right, scale. Detailed illustrated style. No text.
+```
+
+**Sprites (187, 188)** on flat pure magenta, one picture per variant. Attach `theme-authoritative.png`. Save to `art/theme-consistency/generated/trees/`.
+
+**187 orchard trees**: save as `orchard-apple-red-1view-v1.png`, `orchard-pear-1view-v1.png`, `orchard-apple-young-1view-v1.png`, `orchard-apple-bare-1view-v1.png`
+```text
+ONE fruit tree, centred, one view, on a SQUARE image with a FLAT PURE MAGENTA background (#FF00FF, one uniform colour edge to edge); the tree itself has NO magenta, pink or purple and a crisp outline. An orchard [apple tree in autumn with a round, low, wide pruned canopy, red apples among the leaves, a few fallen apples at its foot] about 4-5 m high, on a short trunk. Fixed parallel 2:1 isometric camera, verticals vertical, detailed illustrated style of the reference. Sun at the SCREEN UPPER RIGHT, a tiny soft contact shadow toward the lower left. No ground, no text; 15% clear space round it.
+```
+(For the others, swap the bracket for: "pear tree in autumn with green-gold leaves and pears"; "young apple tree, 2.5 m, thin trunk, a few apples"; "apple tree half bare, yellow leaves falling, a few apples left".)
+
+**188 windbreak poplars**: save as `poplar-gold-1view-v1.png`, `poplar-greengold-1view-v1.png`, `poplar-bare-1view-v1.png`
+```text
+ONE tall narrow Lombardy poplar tree, centred, one view, on a SQUARE image with a FLAT PURE MAGENTA background (#FF00FF); the tree has NO magenta, pink or purple and a crisp outline. A column-shaped poplar about 18 m high and only 3 m wide, [in full autumn gold], the kind farmers plant in a line along a lane to break the wind. Fixed parallel 2:1 isometric camera, verticals vertical, detailed illustrated style of the reference. Sun at the SCREEN UPPER RIGHT, a tiny contact shadow toward the lower left. No ground, no text; 10% clear space round it.
+```
+(For the others: "green turning gold"; "half bare, a few yellow leaves left".)
+
 ## Next: the grey stone water border (item 180; the owner, 2026-10-28)
 Sprites on flat pure magenta, so the game can key them out. Attach `art/theme-consistency/references/theme-authoritative.png` and the concept picture. Save each picture to `art/theme-consistency/generated/landscaping/` under the name given.
 
