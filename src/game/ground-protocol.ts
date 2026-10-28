@@ -15,6 +15,7 @@ import type { ShineWeights } from './grass-shine';
 export interface ShineMaskData { w: number; h: number; data: Uint8Array }
 import type { RoughMix } from './rough-yards';
 import type { SurfacesFile } from './painted-surfaces';
+import type { TileCacheStats } from './textures';
 
 /** a painted area's look (the Paint tool, docs/PAINT-TOOL.md): texture scale s, angle a (degrees, tile space, about the map origin), border width b (tiles, 0 = none),
  *  border texture bt (a patch texture or 'kerb'), draw order z (the area's id); the optional tone of the fill: t 1 darker or 2 lighter at strength ta (0..1), drawn
@@ -216,6 +217,8 @@ export type ToWorker =
   | { t: 'prewarm'; tex: string[] }
   /** T172: report the pixels the worker holds, by owner (a 'log' line `mem {...}`, MB of RGBA8; scripts/perf/memory.mjs) */
   | { t: 'memProbe' }
+  /** T272, the bench: each baked chunk's reply carries the tile cache's counts (tc) */
+  | { t: 'tileStats'; on: boolean }
   | { t: 'paint'; id: number; kind: TileKind; i: number; j: number; L: number; artL?: number; /** the tile spec the tile set families are laid at (painted-tiles.ts tileSpec: the band and the DPR; T145, T150) */ ts?: number };
 
 export type FromWorker =
@@ -236,6 +239,9 @@ export type FromWorker =
       gloss?: ImageBitmap;
       /** T262: the grass shine's weight mask (grass-shine.ts: SHINE_TEXEL world px a texel, spanning the chunk, one channel); none with the shine off or
        *  no grass on the chunk */
-      shine?: ShineMaskData; /** T262: the worker ms its weight mask took (in ms) */ shineMs?: number; ms: number }
+      shine?: ShineMaskData; /** T262: the worker ms its weight mask took (in ms) */ shineMs?: number; ms: number;
+      /** T272: the ms the bake waited for its pictures to decode (before ms), the ms of ms spent scaling tile set pictures (mips, pre-scaled
+       *  copies), and (the bench's tileStats on) the worker's tile cache counts so far */
+      prepMs?: number; scaleMs?: number; tc?: TileCacheStats }
   | { t: 'error'; message: string }
   | { t: 'log'; message: string };

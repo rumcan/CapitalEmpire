@@ -56,9 +56,9 @@ export const MAX_PAINTED_CHAINS = 6;
 /** a blend's side at most, px (2048: 48 m at 42.7 px a metre, enough for the closest zoom on a dpr-2 screen) */
 export const PAINTED_MAX_PX = 2048;
 /** Map insertion order is the LRU: drop the oldest keys past the limit, never a protected one */
-export function trimLru<T>(map: Map<string, T>, protectedKeys: ReadonlySet<string>, limit: number, drop?: (v: T) => void) {
+export function trimLru<T>(map: Map<string, T>, protectedKeys: ReadonlySet<string>, limit: number, drop?: (v: T, key: string) => void) {
   let size = map.size;
-  for (const [key, v] of map) { if (size <= limit) break; if (!protectedKeys.has(key)) { map.delete(key); drop?.(v); size--; } }
+  for (const [key, v] of map) { if (size <= limit) break; if (!protectedKeys.has(key)) { map.delete(key); drop?.(v, key); size--; } }
 }
 
 const hash2 = (x: number, y: number, s: number) => { let h = Math.imul(x, 374761393) ^ Math.imul(y, 668265263) ^ Math.imul(s, 2246822519); h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };

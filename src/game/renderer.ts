@@ -577,10 +577,13 @@ export class GroundPainter {
   private exactTiles = new Map<string, Cnv>();
   private exactTile(url: string, img: Cnv | ImageBitmap, w: number, h: number): Cnv {
     const k = `${url}@${w}x${h}`, have = this.exactTiles.get(k); if (have) { this.exactTiles.delete(k); this.exactTiles.set(k, have); return have; }
-    const c = canvas(w, h), g = ctx2d(c); g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'medium'; g.drawImage(img, 0, 0, w, h);
+    const t0 = performance.now(), c = canvas(w, h), g = ctx2d(c); g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'medium'; g.drawImage(img, 0, 0, w, h);
     this.exactTiles.set(k, c); trimLru(this.exactTiles, new Set([k]), EXACT_TILES);
+    this.tex.tileStats.scaleMs += performance.now() - t0; this.tex.tileStats.scales++;
     return c;
   }
+  /** T272: the bytes the painter's own tile copies hold (the swamp's pre-scaled tiles and their glosses) */
+  tileCopyBytes(): number { let n = 0; for (const c of this.exactTiles.values()) n += c.width * c.height * 4; for (const c of this.glossTiles.values()) n += c.width * c.height * 4; return n; }
   /** T230: the water field of the bake in progress (water-look.ts WaterField: where the chunk's rivers, course ponds and painted water lie,
    *  each sample's distance from its shore and the shore's reflections), made the first time a water site asks (waterOver), with its look;
    *  undefined until then, null when the look is off and the glint too, or the chunk has no water */

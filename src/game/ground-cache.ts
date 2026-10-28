@@ -22,6 +22,7 @@ import { REFLECT, clampWaterLook, waterLookOf, type WaterLook } from './water-lo
 import type { PaintedLook } from './painted-families';
 import { pictureCurrent } from './ground-layers';
 import { SHINE_WEIGHTS, type ShineWeights } from './grass-shine';
+import type { TileCacheStats } from './textures';
 
 export interface Tile {
   kind: TileKind; i: number; j: number;
@@ -160,6 +161,10 @@ export class GroundCache {
   /** T265, the bench (?tourOnly=1): each chunk picture's first bake ms by kind, chunk and level, so two runs (the river's swamp on and off)
    *  pair the same chunks' first bakes; null (the default) keeps none */
   firstBakes: Map<string, number> | null = null;
+  /** T272, the bench: each bake's wait for its pictures' decodes and its ms scaling tile set pictures (the same ring as bakeLog), and each
+   *  worker's tile cache counts as its last bake reported them (setTileStats on) */
+  prepLog: number[] = []; scaleLog: number[] = []; tileStats: (TileCacheStats | undefined)[] = [];
+  setTileStats(on: boolean) { this.broadcast({ t: 'tileStats', on }); }
   /** T265, the bench: every worker paints its last bakes of this kind again, the river's swamp on and off by turns, and answers each paint's ms */
   private abWait = new Map<number, (m: { on: number[]; off: number[] }) => void>();
   bakeAB(kind: 'g' | 'm', reps: number, cold = false): Promise<{ on: number[]; off: number[] }> {
@@ -314,6 +319,7 @@ export class GroundCache {
     const t = r.t; t.pendingL = 0; t.pendingArtL = 0; t.pendingTs = -1;
     if (this.firstBakes) { const k = `${m.kind}${m.i},${m.j}@${m.L}`; if (!this.firstBakes.has(k)) this.firstBakes.set(k, m.ms); } // (T265: the bench's first-bake pairs)
     this.bakeLog[this.baked % BAKE_LOG] = m.ms; this.waitLog[this.baked % BAKE_LOG] = performance.now() - r.at; if (!this.firstTileAt) this.firstTileAt = performance.now();
+    this.prepLog[this.baked % BAKE_LOG] = m.prepMs ?? 0; this.scaleLog[this.baked % BAKE_LOG] = m.scaleMs ?? 0; if (m.tc) this.tileStats[w] = m.tc;
     this.bakeMs += m.ms; this.shineLog[this.baked % BAKE_LOG] = m.shineMs ?? 0; this.baked++;
     // edited while baking: it will be asked for again, and keeps the picture it has meanwhile; one with none shows this one (stale, so it is
     // still asked for again: the ground before the edit for a bake, rather than nothing; T134, the startup's edits did this to the planner pieces)

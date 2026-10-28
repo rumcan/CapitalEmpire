@@ -4,6 +4,9 @@
 // --start town (T208): the old start's course on an ordinary day at 11:00, 30% and 15%; --golfers N: a busy day of N visitors; --seed N: the map; --everyday 0: no everyday golf (the same scene before) (a dev server)
 // --frame 1 (T229, a dev server): every hole framed with trees at the start (golf/holeframe.ts), the bench's after
 // --river 1 (T265, a dev server, with --fixture range20): the camera follows the river through the town at 30%, 15% and 8%, then each zoom's chunks are baked again (the bakes' median; on the branch with the river's swamp on and off)
+// --zooms 30,15,8 (T272, a dev server): the scene's tour at these zooms instead of its own; every stage reports its bakes (median and p95 of the
+//   bake, its wait for decodes and its tile scaling) and the tile caches' decodes, redecodes and drops by family and their MB; --out <tag>: the
+//   JSON's name gets the tag (alternating runs); --boot k:v,... (T172's ?boot=, e.g. tileSources:24)
 // --golfPace main|daynight|walk|long|mix (T266, a dev server): everyday golf's pace option for the run (golf/pace.ts)
 // --grassShine on|off (T262, a dev server): the grass shine for the run (grass-shine.ts; on by default, as the player left it otherwise; off: the ground as before)
 // --ground (T166, a dev server): the game's ground-worker levers for the run (boot.ts GROUND_LEVERS, e.g. lazy,w1; old: none)
@@ -24,7 +27,7 @@ if (args.includes('--serve')) {
 }
 const size = opt('size', '1'), dpr = +opt('dpr', '1'), shots = args.includes('--shots');
 // the game scenes (T098, bench.ts benchGame): --start range tours a new range start (17%, 4.5%), --fixture range20 the grown town (30%, 8%; a dev server)
-const scene = (opt('start', '') ? '&start=' + opt('start', '') : '') + (opt('fixture', '') ? '&fixture=' + opt('fixture', '') : ''), tag = scene.replace(/[&=]/g, '-') + (opt('grassShine', '') ? '-shine-' + opt('grassShine', '') : '') + (opt('river', '') ? '-river' : '') + (opt('bakeab', '') ? '-bakeab' : '');
+const scene = (opt('start', '') ? '&start=' + opt('start', '') : '') + (opt('fixture', '') ? '&fixture=' + opt('fixture', '') : ''), tag = scene.replace(/[&=]/g, '-') + (opt('grassShine', '') ? '-shine-' + opt('grassShine', '') : '') + (opt('river', '') ? '-river' : '') + (opt('bakeab', '') ? '-bakeab' : '') + (opt('zooms', '') ? '-z' + opt('zooms', '').replace(/,/g, '-') : '') + (opt('out', '') ? '-' + opt('out', '') : '');
 const out = path.resolve('output/bench'); fs.rmSync(out, { recursive: true, force: true }); fs.mkdirSync(out, { recursive: true });
 let browser, page, gpu = 'unknown';
 // headless Chrome on the worker sometimes starts without WebGL (GPU unknown): relaunch instead of waiting for nothing
@@ -38,7 +41,7 @@ const logs = [];
 page.on('console', m => { const t = m.text(); if (/\[bench\]|error|Error/.test(t)) { logs.push(t); console.log('[page]', t.slice(0, 300)); } });
 page.on('pageerror', e => console.log('[pageerror]', e.message));
 page.on('crash', () => console.log('[crash] the page crashed'));
-await page.goto(`${base}?bench=${size}${scene}${args.includes("--course") ? "&course=1" : ""}${opt("courseSend", "") ? "&courseSend=" + opt("courseSend", "") : ""}${opt("courseHold", "") ? "&courseHold=" + opt("courseHold", "") : ""}${opt("ground", "") ? "&ground=" + opt("ground", "") : ""}${["golfers", "seed", "everyday", "frame", "grassShine", "river", "bakeab", "tourOnly", "belts", "riverSwamp", "golfPace"].map(k => opt(k, "") ? `&${k}=${opt(k, "")}` : "").join("")}`); // --course: the old nine laid as a course grid under the tour (T077)
+await page.goto(`${base}?bench=${size}${scene}${args.includes("--course") ? "&course=1" : ""}${opt("courseSend", "") ? "&courseSend=" + opt("courseSend", "") : ""}${opt("courseHold", "") ? "&courseHold=" + opt("courseHold", "") : ""}${opt("ground", "") ? "&ground=" + opt("ground", "") : ""}${["golfers", "seed", "everyday", "frame", "grassShine", "river", "bakeab", "tourOnly", "belts", "riverSwamp", "golfPace", "zooms", "boot"].map(k => opt(k, "") ? `&${k}=${opt(k, "")}` : "").join("")}`); // --course: the old nine laid as a course grid under the tour (T077)
 gpu = await page.evaluate(() => { const gl = document.createElement('canvas').getContext('webgl2'); const d = gl?.getExtension('WEBGL_debug_renderer_info'); return d ? gl.getParameter(d.UNMASKED_RENDERER_WEBGL) : 'unknown'; });
 }
 console.log('GPU:', gpu);
