@@ -15,8 +15,14 @@ export const borderAt = (pos: number) => BORDER_MIN_M + (BORDER_MAX_M - BORDER_M
  *  position 0 is none, the rest the same curve as the course's, a hairline to 8 m */
 export const paintBorderPos = (b: number) => (b > 0 ? Math.max(1, borderPos(2 * borderW(b))) : 0);
 export const paintBorderAt = (pos: number) => (pos > 0 ? borderStep(borderAt(pos) / 2) : 0);
+/** T260 (#763): the course Border slider's position for a width in metres, and back: position 0 is none (no band at all), the rest the same
+ *  curve, a hairline to BORDER_MAX_M (as the painted area's slider, paintBorderPos) */
+export const courseBorderPos = (m: number) => (m > 0 ? Math.max(1, borderPos(m)) : 0);
+export const courseBorderAt = (pos: number) => (pos > 0 ? borderAt(pos) : 0);
 /** a width as the slider reads it */
 export const borderLabel = (m: number) => (m < 0.15 ? 'hairline' : m < 1 ? `${Math.round(m * 100)} cm` : `${m.toFixed(1)} m`);
+/** a brush's name in the plural, lower case (Tee box: tee boxes, Bunker: bunkers, Water: ponds) */
+const plural = (name: string) => { const n = name.toLowerCase(); return n === 'water' ? 'ponds' : /(s|sh|ch|x)$/.test(n) ? `${n}es` : `${n}s`; };
 /** a Shadow value as the slider reads it (0 none, SHADOW_HAIRLINE the hairline, 1 strong) */
 export const shadowLabel = (s: number) => (s <= 0.005 ? 'none' : Math.abs(s - SHADOW_HAIRLINE) < 0.015 ? 'hairline' : s >= 0.98 ? 'strong' : `${Math.round(s * 100)}%`);
 
@@ -32,15 +38,24 @@ export const heightLabel = (m: number, tee: boolean) => `${m.toFixed(2)} m${!tee
 export function CourseEdges({ game }: { game: Game }) {
   const p = game.paint, kind = p.brushKind, band = BORDER_KINDS[kind], bw = p.courseBorder(kind), sh = p.courseShadow(kind), ht = p.surfaceHeight(kind), hr = band ? HEIGHT_RANGE[band.s] : null;
   const name = BRUSH_PRESETS.find(b => b.kind === kind)?.name ?? '';
+  // T260 (#763; the owner, 2026-10-29: "an accordion for border that doesnt open anything"): never empty. A surface with no band on the
+  // course grid (the waste area, the rough, the long grass) reads Border: none with a note; a banded one's slider starts at none
   return (
-    <div className="mt-2">
-      {band && bw !== null && (
-        <div className="flex items-center gap-2 text-[12px] text-slate-400" title={`The ${band.band} round every ${name.toLowerCase()}: from a hairline to ${BORDER_MAX_M} m`}>
+    <div className="mt-2" data-edges={kind}>
+      {band && bw !== null ? (<>
+        <div className="flex items-center gap-2 text-[12px] text-slate-400" title={`The ${band.band} round every ${name.toLowerCase()}: none, a hairline, up to ${BORDER_MAX_M} m`}>
           <span className="w-12 shrink-0">Border</span>
-          <input type="range" aria-label={`Border: the ${band.band} round every ${name.toLowerCase()}`} min={0} max={STEPS} step={1} value={borderPos(bw)} onChange={e => p.setCourseBorder(borderAt(+e.target.value))} className="min-w-0 flex-1" />
-          <span className="w-16 text-right text-xs text-slate-200">{borderLabel(bw)}</span>
+          <input type="range" aria-label={`Border: the ${band.band} round every ${name.toLowerCase()}`} min={0} max={STEPS} step={1} value={courseBorderPos(bw)} onChange={e => p.setCourseBorder(courseBorderAt(+e.target.value))} className="min-w-0 flex-1" />
+          <span className="w-16 text-right text-xs text-slate-200" data-border={bw > 0 ? 'on' : 'none'}>{bw > 0 ? borderLabel(bw) : 'none'}</span>
         </div>
-      )}
+        {!(bw > 0) && <div className="text-[11px] text-slate-500">{`No ${band.band} round the ${plural(name)}: slide right to lay one.`}</div>}
+      </>) : (<>
+        <div className="flex items-center gap-2 text-[12px] text-slate-400" title={`The ${name.toLowerCase()} has no border band on the course`}>
+          <span className="w-12 shrink-0">Border</span>
+          <span className="text-xs text-slate-200" data-border="none">none</span>
+        </div>
+        <div className="text-[11px] text-slate-500">{`The ${name.toLowerCase()} has no border band on the course.`}</div>
+      </>)}
       {sh !== null && (
         <div className="mt-1 flex items-center gap-2 text-[12px] text-slate-400" title={`The shadow of every ${name.toLowerCase()}'s raised or sunken edge: none, a hairline contact line, up to a strong cast shadow`}>
           <span className="w-12 shrink-0">Shadow</span>

@@ -14,6 +14,7 @@ Folder: `E:\Repos\CapitalEmpire\worktrees\lead-typecheck` (the lead's own worktr
 You are the new lead on CapitalEmpire (GitHub rumcan/CapitalEmpire), a 1985 golf events manager game. Your folder is
 E:\Repos\CapitalEmpire\worktrees\lead-typecheck. First run `git status` (commit nothing that is not yours), then
 `git fetch origin && git checkout -B lead/takeover-<date> origin/main`, and read docs/NOW.md section "START HERE" there and follow it.
+Load the sq-distortion-check skill once (.claude/skills/sq-distortion-check/SKILL.md) and apply it all session.
 ```
 NOW.md "START HERE" holds everything else: what to read, how to restart the agents and the 5174 auto-updater, the owner's rules, what is in
 flight, the queue, and the owner's art that is waiting.

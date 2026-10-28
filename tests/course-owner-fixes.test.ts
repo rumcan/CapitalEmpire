@@ -206,8 +206,8 @@ test('4b. the Border slider in the Paint tool: per surface, remembered with the 
   tool.setCourseBorder(6);
   assert.equal(tool.courseBorder(), 6);
   assert.equal(st.looks, 1, 'the course is drawn again');
-  tool.setCourseBorder(0, 'bunker');
-  assert.equal(tool.courseBorder('bunker'), BORDER_MIN_M, 'never below a hairline');
+  tool.setCourseBorder(0.01, 'bunker');
+  assert.equal(tool.courseBorder('bunker'), BORDER_MIN_M, 'a border is never below a hairline (T260: 0 is none)');
   const b = tool.courseBorders();
   assert.equal(b[SURF.green], 6); assert.equal(b[SURF.bunker], BORDER_MIN_M); assert.equal(b[SURF.fairway], undefined, 'untouched: the default');
   // a style edit or a radius change keeps the border

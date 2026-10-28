@@ -165,6 +165,8 @@ function collarRings(width: number): { whole: number; part: number } {
 }
 /** the most cells a collar of this width reaches past its surface */
 export const collarReach = (width: number) => { const r = collarRings(width); return r.whole + (r.part > 0 ? 1 : 0); };
+/** whether a collar lays a band at all (T260: a Border of none keeps the collar entry at width 0, which lays nothing: no cells, no rings) */
+export const collarLaid = (c: CollarStyle | undefined): boolean => !!c && collarReach(c.width) > 0;
 
 /** the grid's surface ids over a cell window, OUTSIDE where the window leaves the grid */
 function readSurf(g: Grid, ci0: number, cj0: number, cw: number, ch: number): Uint8Array {
@@ -690,7 +692,7 @@ function surfaceChains(g: Grid, s: number, st: BlobStyle, box: BlobBox, withColl
   const a0 = Math.floor((box.x0 - CHUNK_MARGIN - g.x0) / LATTICE), a1 = Math.ceil((box.x1 + CHUNK_MARGIN - g.x0) / LATTICE);
   const b0 = Math.floor((box.y0 - CHUNK_MARGIN - g.y0) / LATTICE), b1 = Math.ceil((box.y1 + CHUNK_MARGIN - g.y0) / LATTICE);
   const L: Lat = { a0, b0, na: a1 - a0 + 1, nb: b1 - b0 + 1 };
-  const col = withCollar ? st.collar : undefined;
+  const col = withCollar && collarLaid(st.collar) ? st.collar : undefined;
   const rings = col ? collarRings(col.width) : { whole: 0, part: 0 };
   const close = Math.max(0, Math.round(st.close)), cw0 = rings.whole + (rings.part > 0 ? 1 : 0);
   const pad = 3 + 2 * close + cw0;
@@ -800,7 +802,7 @@ export function chunkOutlines(g: Grid, cx: number, cy: number, size = 64, styles
     const st = styles[s] ?? { close: 0, relax: 0 };
     const sc = surfaceChains(g, s, st, box, true);
     // a thin collar (under 0.4 m) is simplified finer, with its surface, so the band keeps its width all round instead of breaking up
-    const tol = st.collar ? Math.min(SIMPLIFY_TOL, Math.max(0.004, 0.2 * st.collar.width * CELL)) : SIMPLIFY_TOL;
+    const tol = st.collar && collarLaid(st.collar) ? Math.min(SIMPLIFY_TOL, Math.max(0.004, 0.2 * st.collar.width * CELL)) : SIMPLIFY_TOL;
     presimplify(sc.chains, cb, tol);
     const fill = fillRings(g, sc.oS, sc.chains, gb, tol), edges = edgeLines(g, sc.chains, cb, tol);
     const o: SurfaceOutline = { surf: s, fill, edges };

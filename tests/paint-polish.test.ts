@@ -86,9 +86,12 @@ test('the swatch uses the surface\'s family: its puck wears the painted tile its
   for (const b of SURFACE_BRUSHES) {
     const look = puckLookOf(b.kind, brush)!;
     assert.equal(familyOf(look.st.tex), fileFamily(b.kind), `${b.name} wears its painted family`);
-    assert.equal(look.pb?.name ?? null, SURFACE_BAND[b.kind] ?? null, `${b.name}'s border`);
+    // T260: by default only the fairway's first cut and the green's fringe are laid; a tee, a bunker and a pond have none
+    assert.equal(look.pb?.name ?? null, b.kind === 'fairway' || b.kind === 'green' ? SURFACE_BAND[b.kind]! : null, `${b.name}'s border`);
+    // with a Border set, every banded surface shows its band
+    assert.equal(puckLookOf(b.kind, brush, 1)!.pb?.name ?? null, SURFACE_BAND[b.kind] ?? null, `${b.name}'s border, set`);
   }
-  const band = (kind: string, fin = DEFAULT_COURSE_FINISH) => puckBandOf(kind, brush, fin)!;
+  const band = (kind: string, fin = DEFAULT_COURSE_FINISH) => puckBandOf(kind, brush, fin, 1)!;
   // the green's fringe, the fairway's and the tee's first cut: the collar's own family, in the course finish's darker collar tone
   assert.equal(familyOf(band('green').tex.tex), fileFamily('fringe'));
   for (const k of ['fairway', 'tee']) { assert.equal(band(k).name, 'first-cut'); assert.equal(familyOf(band(k).tex.tex), fileFamily('firstCut')); assert.equal(band(k).tone?.tc, COLLAR_TINT); }
@@ -138,7 +141,7 @@ test('the cursor follows the surface in hand: its chip is the surface\'s puck (i
   }
   // the bunker never shows the fairway's puck
   tool.setBrush('bunker'); const asked = frame(2000), fw = brush.fairway!.style.tex;
-  assert.ok(!asked.includes(fw) || puckBandOf('bunker', brush, DEFAULT_COURSE_FINISH)!.tex.tex !== fw, 'no fairway face on the bunker chip');
+  assert.ok(!asked.includes(fw) || puckBandOf('bunker', brush, DEFAULT_COURSE_FINISH, 1)!.tex.tex !== fw, 'no fairway face on the bunker chip');
   // Erase: an eraser (its pink rubber and paper sleeve), the dashed line round it, the eraser on its badge; no surface's face
   tool.rubOut = true; const n = made.length, erased = frame(3000);
   assert.equal(cur.state.kind === 'erase' || cur.state.kind === 'nochange', true);
