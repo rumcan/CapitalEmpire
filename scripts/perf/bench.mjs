@@ -43,7 +43,7 @@ gpu = await page.evaluate(() => { const gl = document.createElement('canvas').ge
 console.log('GPU:', gpu);
 let shot = 0;
 const t0 = Date.now();
-while (Date.now() - t0 < 240000) {
+while (Date.now() - t0 < 420000) {
   const r = await page.evaluate(() => ({ done: !!window.__bench, ready: !!window.__game?.ready, tier: window.__game?.perf.tier, z: window.__game?.cam.z })).catch(() => null);
   if (!r) break;
   if (shots && r.ready && Date.now() - t0 > 2000 * (shot + 1)) { await page.screenshot({ path: path.join(out, `tour-${String(shot).padStart(2, '0')}-${r.tier}-${(r.z * 100).toFixed(1)}.png`) }); shot++; }

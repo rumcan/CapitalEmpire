@@ -177,7 +177,7 @@ function startTour(g: Game, info: Record<string, unknown>, stages: Stage[] = STA
       s++; t = 0; frames = []; cpu = []; inst = draws = upload = up = 0; stageSim = 0; g.cam.X = startX; g.cam.Y = startY; plantMax = 0; plantFrames = 0; along = 0;
       if (s >= stages.length) {
         g.onFrame = null;
-        if (follow) { const bakes = bakeStats(g, bake0); bakeStage(g, follow(0), [0.3, 0.08], r => { results.push(...r); finish(bakes); }); return; }
+        if (follow) { const bakes = bakeStats(g, bake0); bakeStage(g, follow(0), [0.3, 0.08], r => { results.push(...r); frameStage(g, follow, r2 => { results.push(...r2); finish(bakes); }); }); return; }
         if (info.course) { const at = info.course as { x: number; y: number }; paintStage(g, at, r => { results.push(r); wizardStage(g, at, r2 => { results.push(r2); finish(); }); }); return; }
         finish();
       }
@@ -281,6 +281,34 @@ function bakeStage(g: Game, c: { X: number; Y: number }, zooms: number[], done: 
         for (let b = Math.max(b0, g.ground.baked - g.ground.bakeLog.length); b < g.ground.baked; b++) a.push(g.ground.bakeLog[b % g.ground.bakeLog.length]!);
         pooled.set(stage, a); k++; next();
       }
+    };
+  };
+  next();
+}
+
+/** T265: the belts' frame check along the river (the same page, so the PC's other load falls alike on both): at 30%, 15% and 8%, the belts
+ *  on and off by turns (Engine.setRiverTrees, the branch; main as it is), twice each: 2.5 s for the cells to be planted again, then 4 s of
+ *  the river pan, the frames' cpu ms pooled (avg, p95) with the most instances */
+function frameStage(g: Game, follow: (s: number) => { X: number; Y: number }, done: (r: Record<string, unknown>[]) => void) {
+  const eg = g as unknown as { setRiverTrees?: (on: boolean) => void }, out: Record<string, unknown>[] = [];
+  const runs: { st: Stage; on: boolean | null }[] = [];
+  for (const st of RIVER_STAGES) for (let r = 0; r < 2; r++) { if (eg.setRiverTrees) runs.push({ st, on: true }, { st, on: false }); else runs.push({ st, on: null }); }
+  const pooled = new Map<string, { cpu: number[]; inst: number }>();
+  let k = 0, t = 0, along = 0;
+  const next = () => {
+    if (k >= runs.length) {
+      eg.setRiverTrees?.(true); g.onFrame = null;
+      for (const [stage, v] of pooled) { const a = [...v.cpu].sort((p, q) => p - q), q = (p: number) => a[Math.min(a.length - 1, Math.floor(p * a.length))] ?? 0; out.push({ stage, frames: a.length, cpuAvgMs: +(a.reduce((p, x) => p + x, 0) / Math.max(1, a.length)).toFixed(2), cpuP95Ms: +q(0.95).toFixed(2), maxInstances: v.inst }); }
+      done(out); return;
+    }
+    const r = runs[k]!; if (r.on !== null) eg.setRiverTrees!(r.on);
+    t = -2.5; along = 0; const c0 = follow(0); g.cam = { X: c0.X, Y: c0.Y, z: r.st.z };
+    const stage = `frames ${r.st.name}${r.on === null ? '' : r.on ? ' belts on' : ' belts off'}`, v = pooled.get(stage) ?? { cpu: [], inst: 0 }; pooled.set(stage, v);
+    g.onFrame = (_now, dt) => {
+      t += dt; if (t < 0) return;
+      const dir = Math.floor(t / 2) % 2 ? -1 : 1; along += Math.hypot(r.st.vx, r.st.vy) * dt * dir; const c = follow(along); g.cam.X = c.X; g.cam.Y = c.Y; g.cam.z = r.st.z;
+      if (t > 0.2) { v.cpu.push(g.perf.cpuMs); v.inst = Math.max(v.inst, g.perf.instances); }
+      if (t >= 4) { k++; next(); }
     };
   };
   next();
