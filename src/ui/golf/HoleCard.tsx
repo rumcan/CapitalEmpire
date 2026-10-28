@@ -93,21 +93,41 @@ export function HoleCard({ game, right = 'right-3' }: { game: Game; right?: stri
           <div className="mt-2 flex flex-wrap gap-1.5">
             {/* T205: Edit hole always shows what it did: the editor opens on this hole, framed, with a toast; while it is open it says so */}
             <button className={`chip ${editing ? 'chip-editing' : 'disabled:opacity-40'}`} disabled={!c.planned || editing} onClick={() => game.editHole(c.n)} title={editing ? `Hole ${c.n}'s editor is open in the Holes panel: drag the tee, the green or the line, then Build` : c.planned ? "New hole's editor: drag the tee, the green or the line; Build to save" : 'Painted by hand: shape it with the brush'} data-testid="hole-edit"><Icon name="pin" size={14} />{editing ? `Editing hole ${c.n}` : 'Edit hole'}</button>
-            <button className="chip disabled:opacity-40" disabled={!c.planned} onClick={ask} title={c.planned ? 'Clears what New hole laid for it, after a confirm' : 'Painted by hand: erase it with the brush'} data-testid="hole-delete"><Icon name="bulldozer" size={14} />Delete</button>
+            <button className="chip" onClick={ask} title="Delete the hole with its paint, or keep its grass as your property's paint, after a confirm" data-testid="hole-delete"><Icon name="bulldozer" size={14} />Delete</button>
+            {/* T256: the hole with its cells, plan, heights and looks (and its frame trees) as a My holes entry */}
+            <SaveHole game={game} n={c.n} />
           </div>
-          {!c.planned && <p className="sub-line mt-1" data-testid="hole-edit-why">Painted by hand: shape it with the brush. Edit hole and Delete are for holes New hole planned.</p>}
+          {!c.planned && <p className="sub-line mt-1" data-testid="hole-edit-why">Painted by hand: shape it with the brush. Edit hole is for holes New hole planned.</p>}
         </>
       ) : (
         <div className="mt-2 rounded-lg border border-rose-400/40 bg-rose-500/10 p-2" role="alertdialog" aria-label={`Delete hole ${c.n}?`} data-testid="hole-delete-confirm">
           <div className="font-semibold text-rose-200">Delete hole {c.n}?</div>
           <p className="mt-0.5 text-[12px] text-slate-300">{del.text}</p>
-          <div className="mt-1.5 flex gap-1.5">
-            <button className="chip border-rose-400/60 text-rose-100" onClick={() => { unask(); game.deleteHole(c.n); }} autoFocus>Delete hole {c.n} · {del.refund ? `refund $${del.refund.toLocaleString('en-US')}` : 'no refund'}</button>
+          {/* T256 (#743): the hole owns its paint: delete it all, or leave its grass as your property's paint; one undo step either way */}
+          <div className="mt-1.5 flex flex-wrap gap-1.5">
+            <button className="chip border-rose-400/60 text-rose-100" onClick={() => { unask(); game.deleteHole(c.n, false); }} autoFocus data-testid="hole-delete-all">Delete hole and its grass · {del.refund ? `refund $${del.refund.toLocaleString('en-US')}` : 'no refund'}</button>
+            <button className="chip border-amber-300/60 text-amber-100" onClick={() => { unask(); game.deleteHole(c.n, true); }} data-testid="hole-delete-keep">Delete hole, keep the grass</button>
             <button className="chip" onClick={unask}>Keep it</button>
           </div>
         </div>
       )}
     </section>
+  );
+}
+
+/** T256 (#743): Save hole: the hole as a "My holes" entry (its cells, plan, ground height and looks; its frame trees when ticked), named;
+ *  New hole's "From My holes" places it again, in this game or another */
+function SaveHole({ game, n }: { game: Game; n: number }) {
+  const [open, setOpen] = useState(false), [name, setName] = useState(''), [trees, setTrees] = useState(true);
+  if (!game.saveMyHole) return null; // (a stub game in the tests has none)
+  if (!open) return <button className="chip" onClick={() => { setName(`Hole ${n}`); setOpen(true); }} title="Keep this hole (its grass, plan, ground height and looks) in My holes, to build it again" data-testid="hole-save"><Icon name="pin" size={14} />Save hole</button>;
+  return (
+    <div className="mt-1 flex w-full flex-wrap items-center gap-1.5 rounded-lg border border-white/10 p-2" data-testid="hole-save-form">
+      <input className="min-w-0 flex-1 rounded bg-slate-900 px-2 py-1 text-[13px]" aria-label="The saved hole's name" value={name} maxLength={40} onChange={e => setName(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { game.saveMyHole(n, name, trees); setOpen(false); } e.stopPropagation(); }} autoFocus />
+      <label className="flex items-center gap-1 text-[12px]"><input type="checkbox" checked={trees} onChange={e => setTrees(e.target.checked)} />With its frame trees</label>
+      <button className="chip chip-on" onClick={() => { game.saveMyHole(n, name, trees); setOpen(false); }} data-testid="hole-save-go">Save to My holes</button>
+      <button className="chip" onClick={() => setOpen(false)}>Cancel</button>
+    </div>
   );
 }
 

@@ -8,6 +8,7 @@ import { PAINT_TEXES, SURFACE_BRUSHES, type BrushKind } from '../../game/paint';
 import { EARTHWORK_PER_M3 } from '../../game/golf/costs';
 import { SQUARE_SIZES } from '../../game/ext/course-cursor/snap';
 import { plainName } from '../../PaintPanel';
+import { lookWhat } from '../../game/golf/looks';
 import { SurfaceMark } from './SurfaceMark';
 import { swatchPuckOf, useSwatchPucks } from './swatch-puck';
 
@@ -72,6 +73,10 @@ export function BrushShape({ game, brush, arm }: { game: Game; brush: boolean; a
   const go = (f: () => void) => () => { if (!brush) arm?.(); f(); };
   return (
     <>
+      <div className="mt-2 flex flex-wrap items-center gap-1.5" role="group" aria-label="Paint over" data-replace={p.paintReplace ? 'replace' : 'layer'}>
+        <button className={`chip ${!p.paintReplace ? 'chip-on' : ''}`} aria-pressed={!p.paintReplace} title="Layer under: the brush slides past the surfaces drawn above it (rough stays under a fairway, a fairway under a green)" onClick={() => p.setPaintReplace(false)}>Layer under</button>
+        <button className={`chip ${p.paintReplace ? 'chip-on' : ''}`} aria-pressed={p.paintReplace} title="Replace: the brush paints over whatever is there (rough over a fairway, fairway over a green)" onClick={() => p.setPaintReplace(true)}>Replace</button>
+      </div>
       <div className="mt-2 flex flex-wrap items-center gap-1.5" role="group" aria-label="Brush shape" data-shape={round ? 'round' : 'square'}>
         <button className={`chip ${brush && !round ? 'chip-on' : ''}`} aria-pressed={brush && !round} title="Square: whole 1 m cells, 1 to 4 a side" onClick={go(() => p.setBrushShape('square'))}><ShapeGlyph round={false} />Square</button>
         <button className={`chip ${brush && round ? 'chip-on' : ''}`} aria-pressed={brush && round} title="Round: a circle on the map, for round greens and bunkers (the slider sizes it)" onClick={go(() => p.setBrushShape('round'))}><ShapeGlyph round />Round</button>
@@ -102,11 +107,13 @@ export const lookName = (tex: string) => plainName(PAINT_TEXES.find(t => t.id ==
  *  (App's state: Esc closes it first). A look is course-wide: every cell of that surface on the course wears it, on every hole. `arm` takes
  *  the surface brush in hand first (the card edits the brush's look) */
 export function LooksEntry({ game, looks, onLooks, arm }: { game: Game; looks: boolean; onLooks?: (open: boolean) => void; arm: () => void }) {
-  const p = game.paint, name = SURFACE_BRUSHES.find(b => b.kind === p.brushKind)?.name ?? '', tex = p.brush[p.brushKind]?.style.tex ?? '';
+  // T256 (#743): a look belongs to where it is painted: the hole in hand, the property (Range › Build), a facility; the entry says whose
+  const p = game.paint, name = SURFACE_BRUSHES.find(b => b.kind === p.brushKind)?.name ?? '', owner = p.lookOwner ?? 'default';
+  const tex = (p.lookOf ? p.lookOf(owner, p.brushKind)?.tex : p.brush[p.brushKind]?.style.tex) ?? '', what = lookWhat(p.brushKind, owner);
   return (
     <div className="flex items-center justify-between gap-2" data-testid="looks-entry">
       <span>My looks</span>
-      <button className={`chip ${looks ? 'chip-on' : ''}`} data-looks aria-pressed={looks} title={`${name}'s look: every ${name.toLowerCase()} on the course wears it, on every hole; the puck at the pointer shows it`} onClick={() => { arm(); onLooks?.(!looks); }}>{`${name}: ${lookName(tex)}`} <span aria-hidden>▸</span></button>
+      <button className={`chip ${looks ? 'chip-on' : ''}`} data-looks aria-pressed={looks} title={`${what}: only they wear this look (the others keep their own); the puck at the pointer shows it`} onClick={() => { arm(); onLooks?.(!looks); }}>{`${name}: ${lookName(tex)}`} <span aria-hidden>▸</span></button>
     </div>
   );
 }

@@ -52,7 +52,10 @@ export { snapDab, squarePoly, squareStart, SQUARE_SIZES } from './snap';
 // ---- inputs ----
 
 /** what the cursor reads from the Paint tool each frame (PaintTool fits it) */
-export type CursorTool = Pick<PaintTool, 'mode' | 'brushKind' | 'brush' | 'rubOut' | 'rubHoleOnly' | 'cursor' | 'piece' | 'brushSquare' | 'strokeSpent' | 'strokeCells' | 'brushHole' | 'plantKind' | 'usedHoles' | 'runOn' | 'runPath' | 'runPts'>;
+export type CursorTool = Pick<PaintTool, 'mode' | 'brushKind' | 'brush' | 'rubOut' | 'rubHoleOnly' | 'cursor' | 'piece' | 'brushSquare' | 'strokeSpent' | 'strokeCells' | 'brushHole' | 'plantKind' | 'usedHoles' | 'runOn' | 'runPath' | 'runPts'> & Partial<Pick<PaintTool, 'brushLooks'>>;
+/** T256: the looks the chip wears: the owner's in hand (the hole painted, the property; PaintTool.brushLooks), else the brushes' (the course
+ *  default) */
+const looksOf = (tool: CursorTool): BrushLooks => tool.brushLooks ?? (tool.brush as BrushLooks);
 /** the camera, filled in by the engine each frame (one object, reused): device px per world px (ze = zoom x dpr), the world px at the
  *  overlay's centre (camX, camY), the overlay's size in device px (cw, ch) and the dpr */
 export interface CursorView { ze: number; camX: number; camY: number; cw: number; ch: number; dpr: number }
@@ -972,9 +975,10 @@ export class CourseCursor {
     w.zone = zone; w.kind = kind; w.drag = drag; w.erase = erase; w.brush = brush; w.mode = mode; w.hole = hole; w.fresh = fresh; w.unit = unit; w.n = n; w.kept = kept; w.ref = ref; w.whyK = whyK; w.whyR = whyR; w.price = price; w.money = m; w.cells = cells; w.spent = spent; w.grid = grid; w.only = only;
     const s = this.state, name = nameOf(brush), back = lower(nameOf(backKind(brush)));
     // the hole a click joins: a cart path belongs to no hole; a hole with nothing yet is started by the stroke
-    const joins = surf > 0 ? (zone ? ` · ${zone}` : fresh ? ` · starts Hole ${hole}` : ` · Hole ${hole}`) : '', verb = mode === 'draw' ? 'Shaping' : 'Painting';
+    // T256: hole 0 is Range › Build's brush: the property's paint ("Painting Fairway · your property")
+    const prop = hole === 0, joins = surf > 0 ? (zone ? ` · ${zone}` : prop ? ' · your property' : fresh ? ` · starts Hole ${hole}` : ` · Hole ${hole}`) : '', verb = mode === 'draw' ? 'Shaping' : 'Painting';
     // a rub out on the course grid (T125) takes every course surface under it back to rough (grass for the rough brush), whatever the brush
-    const rub = erase && grid && surf > 0, rubBase = `Rub out${only ? ` · Hole ${hole} only` : ''}`;
+    const rub = erase && grid && surf > 0, rubBase = `Rub out${only || prop ? (prop ? ' · your property only' : ` · Hole ${hole} only`) : ''}`;
     const base = rub ? rubBase : `${verb} ${name}${joins}${unit >= 0 ? ` · ${unit$(unit)} a cell` : ''}`;
     s.label.length = 0; s.bad.length = 0;
     // the drag total: the cells the stroke has laid and what they cost
@@ -985,12 +989,14 @@ export class CourseCursor {
       case 'refused': hint = `${base} · ${cellsOf(ref)} refused: ${lower(whyR)}`; break;
       case 'nochange': hint = rub ? `${rubBase} · nothing to rub out here` : `${verb} ${name}${joins} · already ${lower(name)} here${this.golf ? ' · $0' : ''}`; break;
       case 'erase': hint = rub ? `${rubBase} · ${n >= 0 ? `${cellsOf(n)} ` : ''}back to ${back}${this.golf ? ' · no refund' : ''}`
-        : `Erasing ${lower(name)}${surf > 0 ? ` · Hole ${hole}` : ''}${n >= 0 ? ` · ${cellsOf(n)}` : ''}${surf > 0 ? ` back to ${back}` : ''}${this.golf ? ' · no refund' : ''}`; break;
+        : `Erasing ${lower(name)}${surf > 0 ? (prop ? ' · your property' : ` · Hole ${hole}`) : ''}${n >= 0 ? ` · ${cellsOf(n)}` : ''}${surf > 0 ? ` back to ${back}` : ''}${this.golf ? ' · no refund' : ''}`; break;
       case 'short': hint = `${verb} ${name}${joins} · ${money$(price)} · you have ${money$(m)}`; break;
     }
     // a refusal with its reason, or money short, by the disc
     if (kind === 'short') { s.label.push(`${name} · ${money$(price)} · you have ${money$(m)}`); s.bad.push(true); }
     else if (ref > 0) { s.label.push(n > 0 ? `${cellsOf(ref)}: ${lower(whyR)}` : whyR); s.bad.push(true); }
+    // T256: Range › Build says so by the disc at rest, so the property's brush is never taken for a hole's
+    else if (prop && surf > 0 && !s.label.length) { s.label.push(erase ? 'Erasing your property' : 'Painting your property'); s.bad.push(false); }
     this.setHint(hint);
   }
 
@@ -1014,7 +1020,7 @@ export class CourseCursor {
   /** the footprint, the grid and the chip for the brush with the pointer at tile (cx, cy): the dab sits on the half grid's nearest corner;
    *  the state (T118) follows from the footprint: refused and kept cells, a footprint that changes nothing, a price over the treasury */
   private drawBrush(ctx: CanvasRenderingContext2D, v: CursorView, tool: CursorTool, cx: number, cy: number, now: number, dt: number): boolean {
-    const set = tool.brush[tool.brushKind], r = set.r, st = set.style, erase = this.pressed ? this.pressErase : tool.rubOut;
+    const set = tool.brush[tool.brushKind], r = set.r, st = looksOf(tool)[tool.brushKind]?.style ?? set.style, erase = this.pressed ? this.pressErase : tool.rubOut; // T256: the owner's look
     const base = LOOKS[tool.brushKind] ?? LOOKS.fairway!, d = v.dpr, n = tool.brushSquare();
     // the dab's middle and size: the square brush's n x n cells (T109), or the round brush on the nearest cell corner (T108)
     const x = n ? (squareStart(cx, n) + n / 2) * CELL_T : snapDab(cx), y = n ? (squareStart(cy, n) + n / 2) * CELL_T : snapDab(cy), size = n ? (n * CELL_T) / 2 : r;
@@ -1046,7 +1052,7 @@ export class CourseCursor {
   }
   /** the style of the chip a rub out shows: the rough brush's own, or plain grass made from it (kept, so its sprite is reused) */
   private backStyle(tool: CursorTool, back: string): PuckStyle {
-    const rough = (tool.brush as Record<string, { style: PuckStyle } | undefined>).rough?.style ?? tool.brush[tool.brushKind].style;
+    const rough = (looksOf(tool) as Record<string, { style: PuckStyle } | undefined>).rough?.style ?? tool.brush[tool.brushKind].style;
     if (back !== 'grass') return rough;
     if (this.backFrom !== rough || !this.backSt) { this.backFrom = rough; this.backSt = { ...rough, tex: 'grass', border: 0, tone: 0 }; }
     return this.backSt;
@@ -1058,7 +1064,7 @@ export class CourseCursor {
   private drawRun(ctx: CanvasRenderingContext2D, v: CursorView, tool: CursorTool, cx: number, cy: number, now: number, dt: number): boolean {
     const n = tool.brushSquare(), path = tool.runPath(), k = path.length;
     if (k < 2) return this.drawBrush(ctx, v, tool, cx, cy, now, dt);
-    const st = tool.brush[tool.brushKind].style, erase = tool.rubOut, base = LOOKS[tool.brushKind] ?? LOOKS.fairway!, d = v.dpr, active = tool.runPts.length > 0;
+    const st = looksOf(tool)[tool.brushKind]?.style ?? tool.brush[tool.brushKind].style, erase = tool.rubOut, base = LOOKS[tool.brushKind] ?? LOOKS.fairway!, d = v.dpr, active = tool.runPts.length > 0;
     const ex = path[k - 2]!, ey = path[k - 1]!;
     this.zoneNow = this.env.zone?.(ex, ey) ?? '';
     this.drawGrid(ctx, v, ex, ey, (n * CELL_T) / 2);
@@ -1114,8 +1120,9 @@ export class CourseCursor {
       && w.whyK === whyK && w.whyR === whyR && w.price === price && w.money === m && w.len === len && w.nf === nf && w.grid === grid && w.only === only && w.zone === zone) return;
     Object.assign(w, { kind, active, erase, brush, hole, fresh, unit, n, kept, ref, whyK, whyR, price, money: m, len, nf, grid, only, zone });
     const s = this.state, name = nameOf(brush), back = lower(nameOf(backKind(brush)));
-    const joins = surf > 0 ? (zone ? ` · ${zone}` : fresh ? ` · starts Hole ${hole}` : ` · Hole ${hole}`) : '';
-    const rub = erase && grid && surf > 0, head = rub ? `Run · rub out${only ? ` · Hole ${hole} only` : ''}` : `Run ${name}${joins}`;
+    // T256: hole 0 is Range › Build's brush: the property's paint
+    const joins = surf > 0 ? (zone ? ` · ${zone}` : hole === 0 ? ' · your property' : fresh ? ` · starts Hole ${hole}` : ` · Hole ${hole}`) : '';
+    const rub = erase && grid && surf > 0, head = rub ? `Run · rub out${only ? (hole === 0 ? ' · your property only' : ` · Hole ${hole} only`) : ''}` : `Run ${name}${joins}`;
     const tail = active ? ' · click each bend · double-click, Enter or right-click finishes' : ' · click a start';
     const long = active ? ` · ${len} m` : '';
     let hint = `${head}${long}${!rub && unit >= 0 ? ` · ${unit$(unit)} a cell` : ''}`;
@@ -1158,7 +1165,7 @@ export class CourseCursor {
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.lineJoin = 'miter'; ctx.lineCap = 'butt';
     if (bad) this.refusedTint(ctx, pc.shape.loops, pc.ax * CELL_T, pc.ay * CELL_T, v, NaN, NaN);
     else this.footprint(ctx, pc.shape, pc.ax * CELL_T, pc.ay * CELL_T, v, pc.look, 'ready', false, false);
-    const set = (tool.brush as Record<string, { style: PuckStyle } | undefined>)[pc.kind];
+    const set = (looksOf(tool) as Record<string, { style: PuckStyle } | undefined>)[pc.kind];
     if (set) this.chip(ctx, v, cx, cy, pc.kind, set.style, false, false, d, now, dt);
     return true;
   }
@@ -1318,7 +1325,7 @@ export class CourseCursor {
    *  reads or the finish changes (a frame allocates none) */
   private bm = { kind: '', st: null as unknown, fw: null as unknown, ro: null as unknown, fin: null as CourseFinish | null, pb: null as PuckBand | null };
   private bandOf(tool: CursorTool): PuckBand | null {
-    const b = tool.brush as BrushLooks, st = b[tool.brushKind as keyof BrushLooks]?.style, fw = b.fairway?.style, ro = b.rough?.style, fin = this.env.finish?.() ?? DEFAULT_COURSE_FINISH, m = this.bm;
+    const b = looksOf(tool), st = b[tool.brushKind as keyof BrushLooks]?.style, fw = b.fairway?.style, ro = b.rough?.style, fin = this.env.finish?.() ?? DEFAULT_COURSE_FINISH, m = this.bm;
     if (m.kind !== tool.brushKind || m.st !== st || m.fw !== fw || m.ro !== ro || m.fin !== fin) Object.assign(m, { kind: tool.brushKind, st, fw, ro, fin, pb: puckBandOf(tool.brushKind, b, fin) });
     return m.pb;
   }

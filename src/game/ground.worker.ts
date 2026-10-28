@@ -16,7 +16,7 @@ import { WALL_TEX } from './ext/course-walls';
 import { softCanvases } from './canvas2d';
 import { BLOCK_UNDER, WOODLAND, lawnTexFor } from './painted-surfaces';
 import { roughTexes } from './rough-yards';
-import type { LotPatch } from './ground-protocol';
+import { layerTexes, type LotPatch } from './ground-protocol';
 
 const scope = self as unknown as DedicatedWorkerGlobalScope;
 const terrain = new Uint8Array(MAP * MAP), net = new RoadNetwork(), tex = new Textures();
@@ -156,7 +156,7 @@ const handle = async (m: ToWorker) => {
             need.add(p.tex);
             if (p.paint?.b) need.add(p.paint.bt);
             if (p.paint?.m) need.add(p.paint.m.t);
-            if (p.course) { for (const l of p.course.layers) for (const t of [l, ...(l.collar ? [l.collar] : [])]) { need.add(t.tex); if (t.m) need.add(t.m.t); } if (p.course.walls?.length) for (const w of WALL_TEX) near.add(w); }
+            if (p.course) { for (const l of p.course.layers) for (const t of layerTexes(l)) need.add(t); if (p.course.walls?.length) for (const w of WALL_TEX) near.add(w); } // T256: its alternate looks too
             // a town lawn wears one of the painted lawns (painted-surfaces.ts lawnSlot), picked by where it lies
             // (a lot's lawn wears its look state's, T155: lawnTexFor)
             if (p.lawn && tex.paintedOn) { const t = lawnTexFor(p.lawn, p.pts, tex.surfaces); if (t) need.add(t); }
@@ -176,7 +176,7 @@ const handle = async (m: ToWorker) => {
           // the tile set families the planner piece's course surfaces wear (their tiles at the camera's band: FAR at the furthest zoom)
           const box = GroundPainter.tileBox(m.i * PLAN_W, m.j * PLAN_H, (m.i + 1) * PLAN_W, (m.j + 1) * PLAN_H, 2), course = new Set<string>(['grass', 'meadow', 'outside', WOODLAND_TEX, WOODLAND]);
           if (painter.swampIn(box)) course.add('swamp'); // (T199: the streams' swamp)
-          for (const p of painter.lotsIn(box)) if (p.course) for (const l of p.course.layers) for (const t of [l, ...(l.collar ? [l.collar] : [])]) course.add(t.tex);
+          for (const p of painter.lotsIn(box)) if (p.course) for (const l of p.course.layers) for (const t of [l, ...(l.collar ? [l.collar] : []), ...(l.alts ?? []).flatMap(a => [a.look, ...(a.band ? [a.band] : [])])]) course.add(t.tex);
           await tex.prepareTiles(course);
         }
         // T168: the photos this chunk's lots and course lay, not built yet: the chunk is put aside until they are, the others go on
@@ -326,6 +326,6 @@ function patchPhotos(p: LotPatch): string[] {
   // has: ensure's own test; a painted texture (its family's pictures, decoded before the bake) needs no photo (T168: never built)
   const out: string[] = [], add = (t: string | undefined) => { if (t && isPaintPhoto(t) && !eager.has(t) && !tex.isPainted(t) && !tex.has(t)) out.push(t); };
   if (p.lawn) { add(p.tex); if (p.lawn.rough) for (const t of roughTexes(p.lawn.rough)) add(t); } else if (p.paint) { add(p.tex); if (p.paint.b > 0) add(p.paint.bt); if (p.paint.m) add(p.paint.m.t); }
-  if (p.course) { for (const l of p.course.layers) { add(l.tex); if (l.collar) add(l.collar.tex); } if (p.course.walls?.length) for (const t of WALL_TEX) add(t); }
+  if (p.course) { for (const l of p.course.layers) { add(l.tex); if (l.collar) add(l.collar.tex); for (const a of l.alts ?? []) { add(a.look.tex); if (a.band) add(a.band.tex); } } if (p.course.walls?.length) for (const t of WALL_TEX) add(t); }
   return out;
 }

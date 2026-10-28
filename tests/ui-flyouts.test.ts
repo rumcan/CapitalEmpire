@@ -73,7 +73,8 @@ describe('the flyouts: sub-menus to the side, as many levels as the tools have (
   });
   it('Facilities ▸ Practice ▸ the facilities · Plants ▸ Trees, Bushes, Flowers · Decoration ▸ Props ▸ by group (T206); Town decoration ▸ Paint ▸ Areas ▸ the materials, Plants ▸ ... · Props ▸ · Buildings', () => {
     const d = menuOf(RAIL.find(r => r.id === 'facilities')!, ALL), td = menuOf(RAIL.find(r => r.id === 'towndecor')!, ALL);
-    assert.deepEqual(labels(d), ['Practice', 'Plants', 'Decoration']);
+    assert.deepEqual(labels(d), ['Practice', 'Plants', 'Decoration', 'Build on your property']); // T256: the property's paint, gold
+    assert.deepEqual(find(d, 'Build on your property').leaf?.act, { k: 'build' }); assert.equal(find(d, 'Build on your property').gold, true);
     assert.deepEqual(labels(find(d, 'Practice').children!), ['Putting green', 'Chipping green and bunker']);
     assert.deepEqual(find(d, 'Practice', 'Putting green').leaf?.act, { k: 'practice', id: 'putting' });
     assert.equal(find(d, 'Practice', 'Putting green').leaf?.entry.id, 'practice', 'its own building tool, not the hole brushes');
@@ -95,8 +96,10 @@ describe('the flyouts: sub-menus to the side, as many levels as the tools have (
     assert.deepEqual(labels(menuOf(RAIL.find(r => r.id === 'towndecor')!, ctx(false, null))), ['Paint', 'Buildings']);
   });
   it('the Driving range ▸ the range card and its sections; Select and Bulldoze have no flyout (a click picks them)', () => {
-    assert.deepEqual(labels(menuOf(RAIL.find(r => r.id === 'range')!, ALL)), ['Range card', 'Practice facilities']);
-    assert.deepEqual(menuOf(RAIL.find(r => r.id === 'range')!, ALL).map(r => r.leaf?.act), [{ k: 'range', section: null }, { k: 'range', section: 'range-practice' }]);
+    assert.deepEqual(labels(menuOf(RAIL.find(r => r.id === 'range')!, ALL)), ['Range card', 'Practice facilities', 'Build']);
+    assert.deepEqual(menuOf(RAIL.find(r => r.id === 'range')!, ALL).map(r => r.leaf?.act), [{ k: 'range', section: null }, { k: 'range', section: 'range-practice' }, { k: 'build' }]);
+    // T256: Build, gold: the course tool with the property's brush
+    const b = menuOf(RAIL.find(r => r.id === 'range')!, ALL)[2]!; assert.equal(b.gold, true); assert.equal(b.leaf?.entry.id, 'course');
     for (const id of ['select', 'bulldoze']) assert.deepEqual(menuOf(RAIL.find(r => r.id === id)!, ALL), [], id);
   });
   it('every tool of every group is reachable by a flyout path, golf and classic (the Props tool from both decorations, by its view)', () => {
@@ -232,7 +235,7 @@ describe('the tool tiles (T233)', () => {
     assert.equal(find(courseRows, 'Cart paths & roads').note, 'Roads and cart paths on your property', 'its tooltip kept');
   });
   it("Facilities: Practice and its greens, Plants and its Trees and Flowers, Decoration and its Props' Stone (the rocks), Water and Plants", () => {
-    assert.deepEqual(tiles(fac), ['Practice=range-bays', 'Plants=trees', 'Decoration=rocks']);
+    assert.deepEqual(tiles(fac), ['Practice=range-bays', 'Plants=trees', 'Decoration=rocks', 'Build on your property']);
     assert.deepEqual(tiles(find(fac, 'Practice').children!), ['Putting green=green', 'Chipping green and bunker=bunker']);
     assert.deepEqual(tiles(find(fac, 'Plants').children!), ['Trees=trees', 'Bushes', 'Flowers=flower-bed']);
     assert.equal(find(fac, 'Plants', 'Bushes').swatch, '#3b5', 'no tile: its swatch');

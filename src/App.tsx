@@ -186,7 +186,7 @@ export default function App() {
   const footRef = useRef<HTMLElement | null>(null), footBox = useRef<HTMLDivElement | null>(null);
   /** Holes > More options > My looks (P23 decision 3): the surface style editor's card beside the Holes panel; Esc closes it first */
   const [looks, setLooks] = useState(false);
-  const looksOpen = looks && game?.uiTool === 'course';
+  const looksOpen = looks && (game?.uiTool === 'course' || (game?.tool === 'practice' && !!game.practice.kind)); // T256: a facility's looks too
   useEffect(() => { if (!looksOpen && looks) setLooks(false); }, [looksOpen, looks]);
   /** the bankrupt overlay's 'Keep watching' (cleared once the city is no longer bankrupt) */
   const [watch, setWatch] = useState(false);
@@ -280,6 +280,9 @@ export default function App() {
     if (act?.k === 'event') { if (!game.eventTool) game.toggleEventTool(); game.emit(); return; }
     // T200: Course › Land for sale: the overlay (a side mode in Select: another tool closes it)
     if (act?.k === 'land') { activeRail.current = itemId; if (game.range.cardOpen) game.openRangeCard(false); game.openLandSale(); return; }
+    // T256: Range › Build (and Facilities › Build on your property): the holes' painting tools on your property
+    if (act?.k === 'build') { activeRail.current = itemId; game.openPropertyPaint(); return; }
+    if (act?.k === 'newHole' || act?.k === 'holes' || act?.k === 'surface') game.paint.setProperty(false); // the Holes panel's tools paint holes
     if (act?.k === 'range') {
       activeRail.current = itemId; game.setTool('select'); game.openRangeCard(true); game.emit();
       // the section scrolled to the card's top (inside the card: scrollIntoView would scroll the page too)
@@ -631,7 +634,7 @@ export default function App() {
             {game.uiTool === 'buildings' && <BuildingsPanel game={game} />}
             {GREENKEEPING && game.tool === 'greenkeeping' && <GrassManagementPanel game={game} docked />}
             {game.tool === 'props' && <PropsPanel game={game} />}
-            {game.tool === 'practice' && <PracticePanel game={game} />}
+            {game.tool === 'practice' && <PracticePanel game={game} looks={looksOpen} onLooks={setLooks} />}
             {game.tool === 'park' && <ParkPanel game={game} dev={dev} />}
             {game.tool === 'toll' && <TollPanel game={game} />}
             {game.tool === 'business' && <BusinessPanel game={game} />}
