@@ -53,7 +53,7 @@ stays a Studio option. Ground textures follow [art/GROUND-TEXTURE-METHOD.md](art
 | Greenkeeping conditions (section 10) | after the course surfaces |
 
 ### The concept look (section 12)
-The owner's target picture, 2026-10-27: items 149-175. ✅ 153 lawn on every yard (#663); 🎨 153 meadow and 152 rough in the Studio; ✅ 149-151 the fairway, first cut and green on the course and the range (#666). Ground textures 149-153 come first: the concept's greens. The plan is in [art/CONCEPT-LOOK.md](art/CONCEPT-LOOK.md).
+The owner's target picture, 2026-10-27: items 149-175. ✅ 153 lawn on every yard (#663); 🎨 153 meadow and 152 rough in the Studio; ✅ 149-151 the fairway, first cut and green on the course and the range (#666). 🎨 154 pond water, 158-160 the pond kit, 162 shrubs (4 of 6) and 164 the hedge are made; the kit goes in with T231 #671. Ground textures 149-153 come first: the concept's greens. The plan is in [art/CONCEPT-LOOK.md](art/CONCEPT-LOOK.md).
 
 ### List items done
 Ground (section 8 and the range ground): ✅ 131 Pond bank, ✅ 132 Grow-in, ✅ 135 Flower bed soil (#630); 🎨 133 Field parking, 🎨 21 range tee divots (#630, in the Studio, no ground wears them yet); 130 Pond water skipped (the lake is in). 134 Event matting deferred (quilting would break its panel grid). 🎨 19 the hitting mat (top-down, made, not drawn yet); 20, 27, 147 retakes next. The range and practice sprites still draw labelled stand-ins.
@@ -706,7 +706,7 @@ mowing stripes painted in. For the fairway and the range outfield. Codex has a f
 ✅ **153. Lawn and meadow** (lawn: `lawn-concept-run` v2 on every yard, #663; meadow: `meadow-concept-run` v2 in Studio › Painted, for the map when the owner says) · ground · P1. Two sets. Lawn: soft ordinary green garden grass with small clover patches, for the yards and the
 town blocks. Meadow: the same green, a little longer and uneven, a few tiny wildflowers, for the map's open ground.
 
-**154. Deep pond water** · ground · P1. Dark teal-green still water, darker toward the middle, soft ripples, a faint reflection of a warm
+🎨 **154. Deep pond water** (`pond-concept-run` tiles-v3, shipped with T230 #669) · ground · P1. Dark teal-green still water, darker toward the middle, soft ripples, a faint reflection of a warm
 sky. It replaces item 130.
 
 **155. Lake water with a soft swell** · ground · P2. Deep blue-teal open water, a gentle wave pattern, small warm glints.
@@ -716,20 +716,20 @@ sky. It replaces item 130.
 **157. Building-site dirt** · ground · P2. Graded bare earth with tyre and track marks and a few stones. Try `dirt-run` first.
 
 ### Water features
-**158. Pond-edge boulders** · **R** · 1 x 4 m a piece · P1.
+🎨 **158. Pond-edge boulders** (`landscaping/golf-pond-edge-boulders-pieces-v1.png`; into the game with T231 #671) · **R** · 1 x 4 m a piece · P1.
 > Subject: a pond's rim of rounded grey granite boulders of mixed sizes, set tight along the edge, moss and a few small autumn flowers between them, the stones dark and wet at the waterline. The water side of the piece faces the screen's lower edge. Make an inner corner and an outer corner as the extra items.
 
-**159. Fountain jet** · **B** · 1.5 m across, 4 m high · P1. Four frames of a loop.
+🎨 **159. Fountain jet** (`props/golf-fountain-jet-4frames-v1.png`; T231) · **B** · 1.5 m across, 4 m high · P1. Four frames of a loop.
 > Subject: a single tall fountain jet of water rising from a still pond's surface, a crown of spray at its top, a ring of ripples and foam at its foot, the water white-blue catching warm light. Only the water: no basin, no pond. Four frames of the same jet in one row, the spray shapes moving, so they loop.
 
-**160. Lily pads** · **C** decal sheet on magenta, four variants · P1.
+🎨 **160. Lily pads** (`landscaping/golf-lily-pads-top-v1.png`; T231) · **C** decal sheet on magenta, four variants · P1.
 > Subject: seen from straight above, a cluster of round green lily pads of mixed sizes floating flat, a few with a notch, two white water-lily flowers with yellow centres. Four different clusters in a 2x2 grid on flat pure magenta.
 
 **161. Lake-shore rocks** · **R** · 2 x 4 m a piece · P2.
 > Subject: a rocky lake shore of large weathered granite boulders and flat slabs, lichen on top, dark and wet at the bottom, a little pale sand between them.
 
 ### Planting
-**162. Autumn shrubs** · **B** · 1-1.5 m · P1. Six variants: burning bush in scarlet, golden spirea, a clipped green boxwood ball, a
+🎨 **162. Autumn shrubs** (4 of 6 made: boxwood, dogwood, juniper, plume grass; T231) · **B** · 1-1.5 m · P1. Six variants: burning bush in scarlet, golden spirea, a clipped green boxwood ball, a
 red-twig dogwood with orange leaves, a blue-green juniper, an ornamental grass with pale cream plumes. No pink or purple (the magenta key).
 > Subject: one garden shrub (the variant named above), full and round, in autumn colour, standing on its own.
 
@@ -737,7 +737,7 @@ red-twig dogwood with orange leaves, a blue-green juniper, an ornamental grass w
 of black-eyed Susans. No pink or purple.
 > Subject: one dense mounded clump of garden chrysanthemums (the colour named above) in full bloom, the flowers small and many, dark green leaves showing at the bottom.
 
-**164. Clipped hedge** · **R** · 0.7 m deep, 0.9 m high · P1.
+🎨 **164. Clipped hedge** (`landscaping/golf-clipped-hedge-pieces-v1.png`; T231) · **R** · 0.7 m deep, 0.9 m high · P1.
 > Subject: a neatly clipped dark-green boxwood hedge with a flat top and straight sides, a few autumn leaves caught on top.
 
 **165. Low fieldstone garden wall** · **R** · 0.5 m deep, 0.7 m high · P2.
