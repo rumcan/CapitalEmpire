@@ -8,7 +8,7 @@ import { TC } from '../src/game/terrain';
 import { CONIFER_IDS, FOREST_CELL, TREE_POOL_IDS, type ForestTree } from '../src/game/forest';
 import { CREEK_BAND, RIVER_BAND, RIVER_SWAMP, RIVER_SWAMP_OUT, SWAMP, SWAMP_OUT, SwampField, riverStreams, riverStretchAt, swampStreams } from '../src/game/swamp';
 import { RIVER_CUT, drawRiverCut, type CutCtx } from '../src/game/river-cut';
-import { BELT, BELT_SNAG_DEAL, beltField, beltProfile, riverBeltCell } from '../src/game/river-trees';
+import { BELT, BELT_SNAG_DEAL, beltField, beltProfile, beltSwamp, riverBeltCell } from '../src/game/river-trees';
 import type { Waterway } from '../src/game/terrain/types';
 
 /** a straight river along x at y (tiles), w wide, its points 8 tiles apart (as the generator resamples it) */
@@ -135,7 +135,7 @@ const W = wetMap(), F = beltField(7, W.waters);
 const cellsOf = (x0: number, y0: number, x1: number, y1: number) => { const out: [number, number][] = []; for (let cj = Math.floor(y0 / FOREST_CELL); cj <= Math.floor(y1 / FOREST_CELL); cj++) for (let ci = Math.floor(x0 / FOREST_CELL); ci <= Math.floor(x1 / FOREST_CELL); ci++) out.push([ci, cj]); return out; };
 const plantAll = (free: (x: number, y: number, r: number) => boolean = () => true) => cellsOf(0, 200, 999, 700).flatMap(([ci, cj]) => riverBeltCell(7, W.cls, null, F, ci, cj, free));
 const all = plantAll();
-const distOf = (t: ForestTree) => F.water.nearest(F.water.near(t.x, t.y, t.x, t.y), t.x, t.y, { d: 0, kind: 0, nx: 0, ny: 0 });
+const distOf = (t: ForestTree) => F.water.nearest(F.water.near(t.x, t.y, t.x, t.y), t.x, t.y, { d: 0, kind: 0, nx: 0, ny: 0, hw: 0 });
 
 test('T265 the belts: deterministic cell by cell, thick near the bank and thinning out over 10-40 m, gaps where the water shows', () => {
   assert.deepEqual(riverBeltCell(7, W.cls, null, F, 5, 4, () => true), riverBeltCell(7, W.cls, null, F, 5, 4, () => true), 'the same cell, the same trees');
@@ -183,10 +183,14 @@ test('T265 the belts: broadleaf first, some conifers, a few trees and dead snags
   const ids = new Set(TREE_POOL_IDS), conifers = all.filter(t => CONIFER_IDS.has(t.id)).length / all.length;
   assert.ok(conifers > 0.05 && conifers < 0.3, `conifers ${(conifers * 100).toFixed(0)}%`);
   const snags = new Set(BELT_SNAG_DEAL.ids), swampOf = (t: ForestTree) => Math.max(F.creekSwamp.cover(t.x, t.y), F.riverSwamp.cover(t.x, t.y));
+  let wet = 0, agree = 0;
   for (const t of all) {
     assert.ok(ids.has(t.id), `${t.id} is a library tree of the pools`); assert.equal(t.flip, false, 'never mirrored (#775: the engine turns it by the sun)');
-    if (snags.has(t.id)) assert.ok(swampOf(t) > 0.5, 'a dead snag only in the swamp');
+    const b = beltSwamp(F, distOf(t), t.x, t.y);
+    if (snags.has(t.id)) { assert.ok(b > 0.5, 'a dead snag only in the swamp'); assert.ok(swampOf(t) > 0.05, 'where the ground lays swamp'); }
+    if (swampOf(t) > 0.95) { wet++; if (b > 0.5) agree++; }
   }
+  assert.ok(wet > 10 && agree / wet > 0.8, `the belt's swamp is the ground's, to a tile or so: ${agree} of ${wet}`);
   assert.ok(new Set(all.map(t => t.id)).size > 25, 'many kinds: no visible repeat');
   // the creek's swamp: a few trees stand in it, more just past it
   const creekTrees = all.filter(t => t.x > 580 && t.y > 480), inSwamp = creekTrees.filter(t => F.creekSwamp.cover(t.x, t.y) > 0.9).length, rimOf = creekTrees.filter(t => { const d = distOf(t).d; return d > SWAMP.reach + 2 && d < SWAMP.reach + 7; }).length;
