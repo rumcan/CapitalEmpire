@@ -143,6 +143,12 @@ export function benchGame(g: Game, scene: BenchScene) {
     console.log('[bench] scene', info);
     // T265: ?river=1, the river through the town (its point nearest the first town's centre)
     const town = g.townPts[0], follow = scene === 'fixture' && new URLSearchParams(location.search).get('river') === '1' && town ? riverFollow(g, town.x, town.y) : null;
+    // (?river=1&bakeab=1, bench.mjs --river 1 --bakeab 1: only the bake check, on a fresh page: no tour before it, so no long session's heap and
+    //  caches in the paints)
+    if (follow && new URLSearchParams(location.search).get('bakeab') === '1') {
+      const c = follow(0); bakeStage(g, c, [0.3, 0.15, 0.08], r => { const out = { ...info, river: true, bakeOnly: true, stages: r }; (window as unknown as { __bench: unknown }).__bench = out; console.log('[bench] results', JSON.stringify(out, null, 1)); });
+      return;
+    }
     if (follow) { const c = follow(0); g.cam.X = c.X; g.cam.Y = c.Y; startTour(g, { ...info, river: true }, RIVER_STAGES, follow); return; }
     startTour(g, info, SCENE_STAGES[scene]);
   };
