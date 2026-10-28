@@ -138,8 +138,8 @@ export function heightLightGrid(h: Float32Array, box: CourseTileBox | readonly n
     const gx = (Hg[c + 1]! - Hg[c - 1]!) / (4 * step), gy = (Hg[c + HWd]! - Hg[c - HWd]!) / (4 * step);
     // the sun on the normal tilted with the gentle ground's gain (the shade and the lift), and on the one tilted by LIGHT_EXAG alone (the inset
     // highlight's ramp: it keeps its place down the slope, so a gentle roll's top never catches the highlight)
-    const xg = lightExag(gx * gx + gy * gy), nx = -xg * gx, ny = -xg * gy, ndl = (nx * lx + ny * ly + lz) / Math.hypot(nx, ny, 1);
-    const ex0 = -LIGHT_EXAG * gx, ey0 = -LIGHT_EXAG * gy, ndl0 = (ex0 * lx + ey0 * ly + lz) / Math.hypot(ex0, ey0, 1);
+    const xg = lightExag(gx * gx + gy * gy), nx = -xg * gx, ny = -xg * gy, ndl = (nx * lx + ny * ly + lz) / Math.sqrt(nx * nx + ny * ny + 1);
+    const ex0 = -LIGHT_EXAG * gx, ey0 = -LIGHT_EXAG * gy, ndl0 = (ex0 * lx + ey0 * ly + lz) / Math.sqrt(ex0 * ex0 + ey0 * ey0 + 1);
     // cast: the march toward the sun; a point is shaded where the ground ahead rises above the sun's ray (exaggerated heights, metres)
     let cast = 0;
     for (let d = step; d <= CAST_REACH + 1e-9 && cast < 1; d += step) {
@@ -151,11 +151,13 @@ export function heightLightGrid(h: Float32Array, box: CourseTileBox | readonly n
     let ring = 0;
     for (const r of AO_RADII) for (const [cx, cy] of RING) ring += at(ii + cx * r * res, jj + cy * r * res);
     const below = ring / (RING.length * AO_RADII.length) - H0, ao = below > 0 ? Math.min(1, below * LIGHT_EXAG * AO_K) : 0;
-    let rel = AMBIENT * (1 - ao) + (1 - AMBIENT) * Math.max(0, ndl) / lz * (1 - cast) - 1;
-    if (Math.abs(rel) < 1e-5) rel = 0; // flat ground (or a level plateau) stays exactly as it is
+    // flat ground (or a level plateau) stays exactly as it is: judged on the plain response, so the gentle gain lights no more of the ground
+    // than before (the chunk's lit rect, and what the bake composites, stay the same)
+    const rel0 = AMBIENT * (1 - ao) + (1 - AMBIENT) * Math.max(0, ndl0) / lz * (1 - cast) - 1;
+    const rel = Math.abs(rel0) < 1e-5 ? 0 : AMBIENT * (1 - ao) + (1 - AMBIENT) * Math.max(0, ndl) / lz * (1 - cast) - 1;
     const o = (j * w + i) * HL_STRIDE; out[o + 3] = cast; out[o + 4] = ao;
     if (rel === 0) continue;
-    const lift = rel > 0 ? Math.min(1, rel / REL_MAX) : 0, rel0 = AMBIENT * (1 - ao) + (1 - AMBIENT) * Math.max(0, ndl0) / lz * (1 - cast) - 1;
+    const lift = rel > 0 ? Math.min(1, rel / REL_MAX) : 0;
     out[o] = rel < 0 ? Math.min(1, gentleDark(-rel)) : 0; out[o + 1] = lift; out[o + 2] = rel0 > 0 ? smooth(SPEC_LO, SPEC_HI, Math.min(1, rel0 / REL_MAX)) : 0;
     if (i < qi0) qi0 = i; if (i > qi1) qi1 = i; if (j < qj0) qj0 = j; if (j > qj1) qj1 = j;
   }
