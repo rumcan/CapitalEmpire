@@ -55,6 +55,9 @@ stays a Studio option. Ground textures follow [art/GROUND-TEXTURE-METHOD.md](art
 ### The concept look (section 12)
 The owner's target picture, 2026-10-27: items 149-175. ✅ 153 lawn on every yard (#663); 🎨 153 meadow and 152 rough in the Studio; ✅ 149-151 the fairway, first cut and green on the course and the range (#666). 🎨 154 pond water (T230 #679); ✅ 158-160 the pond kit, 162-164 the shrubs, flowers and hedge, and 36, 43, 45 in the game (T231 #671); 169-171 the building-site kit (T232 #673; 168 the excavator blocked in RUN); ✅ 174 the build-tool tiles in the game (T233 #674). Ground textures 149-153 come first: the concept's greens. The plan is in [art/CONCEPT-LOOK.md](art/CONCEPT-LOOK.md).
 
+### Set the scene, portraits and you (section 13, P28)
+The owner's 2026-10-28 asks: items 200-235, still to make. The art agent starts with the range's run-down and upgraded pairs (200-204) and the video store (211).
+
 ### List items done
 Ground (section 8 and the range ground): ✅ 131 Pond bank, ✅ 132 Grow-in, ✅ 135 Flower bed soil (#630); 🎨 133 Field parking, 🎨 21 range tee divots (#630, in the Studio, no ground wears them yet); 130 Pond water skipped (the lake is in). 134 Event matting deferred (quilting would break its panel grid). 🎨 19 the hitting mat (top-down, made, not drawn yet); 20, 27, 147 retakes next. The range and practice sprites still draw labelled stand-ins.
 
@@ -779,3 +782,60 @@ the screen's lower left or lower right); a cart driving up the screen shows the 
 
 **175. Top-bar icons** · one sheet of 6 on magenta · P2.
 > Subject: six small flat painted icons in a row, gold and cream with a dark outline: a bundle of banknotes, a smiling face, two golfers, a maple leaf, a sun, a cloud. No lettering.
+
+## 13. Set the scene, portraits and you (P28, the owner 2026-10-28)
+
+The owner: "I want lots of "Set the scene" artwork that shows you scene images of what is currently in focus ... a nostalgic 1980s
+america close up of the building or inside the building or outside ... both a starting poor run down "set the scene" image and a later
+upgraded nice looking one. even the towns people get healthier and better looking as your driving range and course does better."
+The design is in [plans/P28.md](plans/P28.md). Items are numbered from 200 to stay clear of other sections.
+
+### The shared blocks for this section
+**S. A set-the-scene picture** (one wide painted image, RUN's strength: no turns).
+> One painted illustration, 16:9, of the place described below, as a warm, nostalgic 1985 small-town America scene, in the detailed illustrated style of reference 1 (and the colours of the concept picture, reference 2). A cinematic eye-level or slightly raised view, the kind a film would open on. Late-afternoon autumn light, warm sun from the upper right, long soft shadows. Period details only: 1985 cars, signs, clothes, technology (no phones, no LEDs, no modern logos). A few people going about their day where it fits, never posing. No text other than the signs the place would really have (the place's name may appear on its sign), no UI, no frame, no caption.
+For each item: make the **run-down** version (hard times: faded paint, weeds, dust, makeshift repairs, few people) and the **upgraded**
+version (good times: fresh paint, tidy planting, busy, proud). Same viewpoint and composition in both, so the card can swap them.
+
+**Q. A portrait.**
+> One painted head-and-shoulders portrait, 1:1, of the person described below, in the detailed illustrated style of reference 1: a 1985 small-town American, period hair and clothes, looking at the viewer with a natural expression, soft warm light from the upper right, a plain warm painted background. No text, no frame, no props unless named.
+For each archetype: a **hard times** version (tired, worn or dated clothes, a little unkempt) and a **good times** version (healthy,
+well dressed, confident). Same person, same pose, same framing.
+
+### The range and the club (S, run-down and upgraded)
+**200. The range from the road**: a desert driving range off a county road: a tin-and-tarp shack, four mats on dirt, a dirt car park, a hand-painted sign. Upgraded: a striped green outfield with target greens, covered bays, a paved car park, the clubhouse beyond. P1.
+**201. The hitting bays, close**: run-down: worn mats on packed dirt, a split bucket of balls, a bent divider, a dusty tee line. Upgraded: covered bays with lights, fresh mats on turf, a ball dispenser, golfers mid-swing. P1.
+**202. Inside your home**: three stages: the caravan (cramped 1985 trailer: a fold-down table with a ledger and coffee, a small TV, a golf bag by the door), the cottage, the farmhouse (a warm kitchen, trophies on a shelf). P1.
+**203. The pro shop**: run-down: inside the tin shack, a counter of plywood, a few used clubs, a cash box. Upgraded: the pro shop with racks of clubs, a glass counter, shirts on hangers. P1.
+**204. The practice green**: run-down: a patchy green with one flag on dirt. Upgraded: a manicured putting green with flags, golfers putting. P1.
+**205. The car park**: run-down: a dirt lot with a few dusty cars. Upgraded: paved bays, lamps, tree islands, a full lot. P2.
+**206. The clubhouse, outside**: one per tier, from the starter clubhouse to the grand country club (167). P1.
+**207. The clubhouse, inside**: the bar and lounge, one per tier (a few stools and a TV, then wood panelling and leather). P1.
+**208. The halfway house**: a small snack hut by the 9th, then a smart pavilion. P2.
+**209. A hole on your course**: run-down: a scrubby young fairway, thin grass. Upgraded: the concept's look (striped fairway, bunkers, autumn woods, a pond). P1.
+**210. Tournament day**: a few folding chairs and a chalkboard; then grandstands, flags and a crowd. P2.
+
+### The town (S, outside and inside where named; run-down and upgraded)
+**211. The video store**: outside: a strip-mall video rental store with posters in the window and a lit sign (run-down: faded posters, a flickering sign; upgraded: neon, new-release cut-outs, a queue). Inside: rows of VHS boxes, a new-releases wall, a clerk at the counter, a drop box. P1.
+**212. The diner**: outside: a chrome diner. Inside: booths, a counter with stools, pie under glass, a waitress with coffee. P1.
+**213. The gas station**: pumps, a little shop, a mechanic in the bay. P1.
+**214. The motel**: a roadside motel with a vacancy sign, cars at the doors. P2.
+**215. The sports bar**: outside, and inside with the golf on the TV. P2.
+**216. The fish-and-tackle shop**: outside, and inside with rods and lures. P2.
+**217. The drive-in at night**: cars facing the screen, the projector beam. P1.
+**218. The high school**: Friday night football under the lights. P2.
+**219. Main Street**: the downtown street of shops. P1.
+**220. A family house and yard**: run-down: peeling paint, a dry yard, an old car. Upgraded: fresh paint, a green lawn with leaves, kids' bikes, a hedge. P1.
+**221. A farm**: a farmhouse, a barn and fields. P2.
+**222. Town hall and the mayor's office**: for the Mayor's Cup. P1.
+**223. The hotel, the casino, the stadium**: one each, late-game, upgraded only. P3.
+**224. The junk yard**: run-down only. P3.
+
+### People (Q, hard times and good times)
+**230. Townspeople portraits, 48 archetypes**: three ages (20-30, 30-50, 50-70) x two sexes x eight jobs: farmer, mechanic, teacher, shop clerk, diner waitress or cook, office worker, nurse, retiree; plus 8 more: a high school kid, a video store clerk, a gas attendant, a construction worker, a banker, the sheriff, the mayor, a club golfer. Each in hard times and good times. P1.
+**231. Club people portraits**: the head pro, a teaching pro, the membership secretary, a greenkeeper, a caddie, the starter, a bartender, a tour pro (P26 and T213's people). Each in hard times and good times. P1.
+**232. Your portraits**: 12 looks (men and women, ages 25-60), matching the player's 3D looks (233). P1.
+
+### You in 3D (P, the 3D pipeline: `docs/HANDOVER-PEOPLE.md`)
+**233. The player's 12 looks**: A-pose pictures for the 3D pipeline (block P), 1985 golf-casual clothes, one per look in 232. P1.
+**234. The player's clips**: idle, idle with a club twirl, watching, talking (a hand gesture), walking, the drive, the putt and the chip (T212's clips), a fist pump and a cap tip (177). Meshy's library or RUN's animate. P1.
+**235. The townspeople's good-times clothes**: a second, smarter clothing set for the townspeople models already in the game (block P), so the 3D town looks healthier as the club does well (T245). P2.
