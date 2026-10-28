@@ -34,7 +34,7 @@ const open = async url => {
   const ctx = await browser.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: 1 });
   const page = await ctx.newPage();
   page.on('pageerror', e => console.log('[pageerror]', e.message));
-  page.on('console', m => { if (m.type() === 'error' || m.text().startsWith('[soft]')) console.log('[console]', m.text().slice(0, 600)); });
+  page.on('console', m => { if (m.type() === 'error' || m.text().startsWith('[soft')) console.log('[console]', m.text().slice(0, 600)); });
   await page.goto(url);
   await page.waitForFunction(() => window.__game?.ready, null, { timeout: 240000 });
   await page.addStyleTag({ content: '* { visibility: hidden !important } canvas { visibility: visible !important }' });

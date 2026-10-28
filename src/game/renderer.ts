@@ -68,8 +68,12 @@ type PaintedEntry = { buf: Cnv; cells: Uint8Array; bytes: number };
 type RuggedForm = { q: LotPatch; kind: RuggedKind; side: 1 | -1; /** its spill's blades by blade scale (each blade's outline point: own) */ blades?: Map<number, { tri: Float32Array; own: Int32Array }> };
 /** T247: a dirt area's soft band over the chunk being baked, from its patch and drawn outline (null: none here, it keeps its hard outline), and
  *  what the bands of a chunk may meet: the areas near it, the course (as drawn), and which areas are drawn after a given one */
-type SoftBand = (p0: LotPatch, ring: readonly number[], seam: number, grass?: boolean) => { a: SoftImage; p: SoftImage } | null;
-type SoftCtx = { cands: readonly LotPatch[]; courses: readonly CoursePatch[]; rank: (p: LotPatch) => readonly [number, number, number] };
+type SoftBand = (p0: LotPatch, ring: readonly number[], seam: number, grass?: boolean) => SoftBandImg | null;
+/** a band's images and whether the ground it blends into is only partly in its draw group's copy of the ground (own: it copies its own) */
+type SoftBandImg = { a: SoftImage; p: SoftImage; own: boolean };
+/** inSnap: whether ground under a band (an area, or a course surface) is in the copy of the ground taken when the area's draw group began
+ *  (the lawns' after the road blocks', the lot ground's after the lawns, the painted areas' after the course) */
+type SoftCtx = { cands: readonly LotPatch[]; courses: readonly CoursePatch[]; rank: (p: LotPatch) => readonly [number, number, number]; inSnap: (self: LotPatch, q: LotPatch | string) => boolean };
 /** the kinds of area the tall grass spills over (a hard one only in a few tufts) */
 const SPILLS_ON: ReadonlySet<RuggedKind> = new Set<RuggedKind>(['short']);
 /** a course chunk's spill paths are bucketed in squares this many tiles a side (a bake adds only the buckets near it) */
@@ -152,7 +156,7 @@ const LIVING_MADE = 12;
 const LIVING_EDGES = 128;
 /** T247: the chunks whose living-ground soft band (soft-edges softMaskImage: a byte a px over the lush region's box) a worker keeps, and the
  *  chunks whose dirt areas' soft bands it keeps (by area: the band's images and the weights they were made for) */
-const LIVING_SOFTS = 48, SOFT_MEMO_CHUNKS = 48, SOFT_MEMO_AREAS = 32;
+const LIVING_SOFTS = 48, SOFT_MEMO_CHUNKS = 48, SOFT_MEMO_AREAS = 1024;
 /** T220: the fallen leaves (leaf-fall.ts): the chunks whose stamps a worker keeps as placed (a few kB each), and the share of the leaves the
  *  traffic leaves on a road by its family (a busy road's are blown away) */
 const LEAF_MEMO = 128;
@@ -586,19 +590,19 @@ export class GroundPainter {
   private softPatch(q: LotPatch): boolean { return this.softTex(q.lawn ? this.lawnTexOf(q) : q.tex); }
   /** T247: the dirt areas' soft bands by chunk (its key holds the level) and drawn outline, with what they were made from (the areas near, the
    *  course and the road network's version: an edit there makes them again) */
-  private softMemo = new Map<string, Map<readonly number[], { cands: readonly LotPatch[]; courses: readonly CoursePatch[]; ver: number; img: { a: SoftImage; p: SoftImage } | null }>>();
+  private softMemo = new Map<string, Map<readonly number[], { cands: readonly LotPatch[]; courses: readonly CoursePatch[]; ver: number; img: SoftBandImg | null }>>();
   /** T247: a dirt or desert area's soft band over the chunk being baked (soft-edges softRingImages over its drawn outline `ring`, weighted by what
    *  it meets: softWeights), made once per chunk, outline and neighbours (T217's pattern: a re-bake lays it again without making it); null when
    *  it has none here (it keeps its hard outline). seam: the cell size whose seams take no band (a painted area's, COURSE_CELL); grass: a lawn
    *  laid over earlier dirt or desert (softWeights) */
-  private softBandOf(self: LotPatch, ring: readonly number[], sc: SoftCtx, L: number, box: BBox, seam: number, grass = false): { a: SoftImage; p: SoftImage } | null {
+  private softBandOf(self: LotPatch, ring: readonly number[], sc: SoftCtx, L: number, box: BBox, seam: number, grass = false): SoftBandImg | null {
     const ck = this.chunkNow!.key, ver = this.net.version;
     let by = this.softMemo.get(ck);
     if (by) { this.softMemo.delete(ck); this.softMemo.set(ck, by); } else { this.softMemo.set(ck, by = new Map()); trimLru(this.softMemo, new Set([ck]), SOFT_MEMO_CHUNKS); }
     const had = by.get(ring);
     if (had && had.ver === ver && sameList(had.cands, sc.cands) && sameList(had.courses, sc.courses)) { by.delete(ring); by.set(ring, had); return had.img; }
-    const wts = this.softWeights(self, ring, sc, L, box, grass);
-    const img = wts ? softRingImages(ring, wts, [box[0] - 1, box[1] - 1, box[2] + 1, box[3] + 1], softWidth(L), softRes(L), seam) : null;
+    const wts = this.softWeights(self, ring, sc, L, box, grass), im = wts ? softRingImages(ring, wts.w, [box[0] - 1, box[1] - 1, box[2] + 1, box[3] + 1], softWidth(L), softRes(L), seam) : null;
+    const img = im && wts ? { ...im, own: wts.own } : null;
     by.delete(ring); by.set(ring, { cands: sc.cands, courses: sc.courses, ver, img });
     for (const k of by.keys()) { if (by.size <= SOFT_MEMO_AREAS) break; by.delete(k); }
     return img;
@@ -610,13 +614,14 @@ export class GroundPainter {
    *  and leave tufts inside the dirt as a seam), or paving, water, a sand trap, the course or a road lies outside. Only the points near the chunk
    *  are read (the rest count as 1: their band never reaches it). null when it is 0 all round near the chunk. grass: the area is a lawn and
    *  blends only into earlier dirt or desert under and round it (a lot's lawn on a desert block: dirt meeting lawn from the lawn's side) */
-  private softWeights(self: LotPatch, ring: readonly number[], sc: SoftCtx, L: number, box: BBox, grass = false): Float32Array | null {
+  private softWeights(self: LotPatch, ring: readonly number[], sc: SoftCtx, L: number, box: BBox, grass = false): { w: Float32Array; own: boolean } | null {
     const n = ring.length >> 1; if (n < 3) return null;
     const w = softWidth(L), h = w / 2, ease = Math.max(SOFT.ease, SOFT.easeK * w), g = h + ease + 3;
     // the depths read each side of the outline: just past it, about the middle of the half band, and the band's edge
     const depths = [Math.min(SOFT.probe, h), Math.min(h, Math.max(SOFT.probe, h / 2)), h];
     const x0 = box[0] - g, y0 = box[1] - g, x1 = box[2] + g, y1 = box[3] + g, side = signedArea(ring as number[]) >= 0 ? 1 : -1, myRank = sc.rank(self);
     const later = (q: LotPatch) => { const o = sc.rank(q); return o[0] !== myRank[0] ? o[0] > myRank[0] : o[1] !== myRank[1] ? o[1] > myRank[1] : o[2] >= myRank[2]; };
+    const texOf = (q: LotPatch) => (q.lawn ? this.lawnTexOf(q) : q.tex), selfTex = texOf(self);
     const above = (a: LotPatch, b: LotPatch) => rankAbove(sc.rank(a), sc.rank(b));
     // the ground that may lie across the band: the other areas near (as drawn), and the roads and cart paths near the area
     // (only those whose drawn box comes within the band of the outline's box)
@@ -647,10 +652,12 @@ export class GroundPainter {
       for (let q = 0; q < sc.courses.length && cs < 0; q++) cs = courseSurfAt(sc.courses[q]!, x, y);
       if (cs >= 0 && (courseLater || !top || rankAbove(courseRank, sc.rank(top)))) return courseLater || grass || !COURSE_GRASSY.has(cs) ? undefined : `course:${cs}`;
       if (grass) return top && this.softPatch(top) ? top : undefined;
+      // (the same dirt round it: nothing to blend, no band)
+      if (top && texOf(top) === selfTex) return undefined;
       if (top) { const k = ruggedKind(top.tex, top.paint && top.paint.b > 0 ? top.paint.bt : undefined); if (!(top.lawn || k === 'tall' || k === 'short' || this.softTex(top.tex))) return undefined; }
       return top;
     };
-    const raw = new Float32Array(n).fill(1); let any = false, zero = false;
+    const raw = new Float32Array(n).fill(1); let any = false, zero = false, own = false;
     for (let i = 0; i < n; i++) {
       const x = ring[2 * i]!, y = ring[2 * i + 1]!; if (x < x0 || x > x1 || y < y0 || y > y1) { any = true; continue; }
       const hh = (i + n - 1) % n, j = (i + 1) % n, nx0 = (ring[2 * j + 1]! - ring[2 * hh + 1]!) * side, ny0 = -(ring[2 * j]! - ring[2 * hh]!) * side, l = Math.hypot(nx0, ny0);
@@ -672,21 +679,22 @@ export class GroundPainter {
         }
         if (!open) break;
       }
-      if (open) any = true; else { raw[i] = 0; zero = true; }
+      if (open) { any = true; if (was !== null && was !== undefined && !sc.inSnap(self, was)) own = true; } else { raw[i] = 0; zero = true; }
     }
     if (!any) return null;
-    return zero ? easeWeights(ring, raw, ease) : raw;
+    return { w: zero ? easeWeights(ring, raw, ease) : raw, own };
   }
   /** T247: a dirt or desert area drawn with its soft band: the ground under its band copied (what it blends into), the area drawn hard (draw, as
    *  before), then over the band the area's own fill (fill: laid under the chunk transform with no clip of its own, past its outline) and that
    *  ground mixed by the band's share, laid where the band is (its weights eased to the hard outline elsewhere). Without a band here the area is
    *  just drawn */
-  private softArea(ctx: C2D, img: { a: SoftImage; p: SoftImage } | null, M: DOMMatrix, draw: () => void, fill: (g: C2D, r: number[]) => void) {
+  private softArea(ctx: C2D, img: SoftBandImg | null, M: DOMMatrix, draw: () => void, fill: (g: C2D, r: number[]) => void, snap: Cnv | null = null) {
     const W = ctx.canvas.width, H = ctx.canvas.height, a = img?.a, rect = a ? GroundPainter.pxRect(M, a.x0, a.y0, a.x0 + a.W / a.r, a.y0 + a.H / a.r, W, H) : null;
     if (!img || !a || !rect) { draw(); return; }
     // the ground before the area (what the band blends into)
+    // (from the draw group's copy when it holds all of it: one copy of the chunk a group, not one an area, which would stall the bake)
     const [rx, ry, rw, rh] = rect, ar = this.bufferAtLeast('softAround', W, H), ag = ctx2d(ar);
-    ag.clearRect(rx, ry, rw, rh); ag.drawImage(ctx.canvas, rx, ry, rw, rh, rx, ry, rw, rh);
+    ag.clearRect(rx, ry, rw, rh); ag.drawImage(snap && !img.own ? snap : ctx.canvas, rx, ry, rw, rh, rx, ry, rw, rh);
     draw();
     // the area's fill through its share, laid over that ground (the mix), kept where the band is, then laid over the area as drawn
     const s = this.bufferAtLeast('softLay', W, H), sg = ctx2d(s);
@@ -1334,7 +1342,12 @@ export class GroundPainter {
     const sc: SoftCtx | null = softOn ? {
       cands: softCands, courses: softCands.filter(p => p.course).map(p => this.warpedCourse(p.course!, lite)),
       rank: rankOf,
+      inSnap: (self, q) => { const g = rankOf(self)[0]; return typeof q === 'string' ? g === 2 : g === 0 ? !!q.lawn && q.lawn.z < 1 : g === 1 ? !!q.lawn : rankOf(q)[0] < 2; },
     } : null;
+    /** T247: a copy of the chunk as baked so far (the ground a draw group's soft bands blend into), into the scratch buffer `name` */
+    const snapshot = (name: string) => { const c = this.bufferAtLeast(name, W, H), g = ctx2d(c); g.clearRect(0, 0, c.width, c.height); g.drawImage(ctx.canvas, 0, 0); return c; };
+    const anySoft = sc ? softCands.some(q => this.softPatch(q)) : false;
+    let lotSnap: Cnv | null = null;
     /** T247: a dirt area's soft band over this chunk from its drawn outline (null: none here, it keeps its hard outline) */
     const softBand = (p0: LotPatch, ring: readonly number[], seam: number, grass = false) => (sc ? this.softBandOf(p0, ring, sc, L, box, seam, grass) : null);
     /** the lot ground patches of a list: each in its surface and rim, then its lines (furrows, white and yellow bays) */
@@ -1348,7 +1361,7 @@ export class GroundPainter {
         // T247: a lot's dirt (a dirt car park, a vegetable bed, a building site, a field) with its soft band where it meets grass
         if (sc && this.softTex(p.tex)) {
           const fill = pat(p.tex as TexName);
-          this.softArea(ctx, softBand(p, p.pts, 0), M, () => { ctx.fillStyle = fill; ctx.fill(path); }, (g, r) => { g.fillStyle = fill; g.fillRect(r[0]!, r[1]!, r[2]! - r[0]!, r[3]! - r[1]!); });
+          this.softArea(ctx, softBand(p, p.pts, 0), M, () => { ctx.fillStyle = fill; ctx.fill(path); }, (g, r) => { g.fillStyle = fill; g.fillRect(r[0]!, r[1]!, r[2]! - r[0]!, r[3]! - r[1]!); }, lotSnap);
           continue;
         }
         if (p.tex === 'slabs') { ctx.save(); ctx.clip(path); ctx.fillStyle = tex.curb.top; ctx.fill(path); if (!lite) this.slabGrid(ctx, new DOMMatrix(), quadBox(p.pts), M); ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = pat('grime'); ctx.fill(path); ctx.restore(); ctx.setTransform(M); }
@@ -1373,10 +1386,18 @@ export class GroundPainter {
     // ---- 1a. the lawns (lawns.ts): the road blocks' grass in soft patches, then each lot's own lawn, under the lots' own ground
     // T204: the ground under them all as baked so far, when some patch here takes the tall grass's spill (cut from it)
     const under = lite ? null : this.spillUnder(ctx, all, M, Minv, W, H), laid = [...lawns.map(p => (p.lawn!.z >= 1 ? this.ruggedOf(p).q : p)), ...rest];
-    if (lawns.length) { this.drawLawns(ctx, lawns, L, X0, Y0, M, Minv, box, under, laid, sc ? softBand : null); ctx.setTransform(M); this.drawManagedGrass(ctx, lawns.map(p => (p.lawn!.z >= 1 ? this.ruggedOf(p).q : p)), box, L); }
+    if (lawns.length) {
+      // (T247: the road blocks' grass first, then a copy of the ground for the lots' lawns' soft bands, then the lots' lawns: the same order)
+      const low = lawns.filter(p => p.lawn!.z < 1), high = lawns.filter(p => p.lawn!.z >= 1);
+      this.drawLawns(ctx, low, L, X0, Y0, M, Minv, box, under, laid, sc ? softBand : null); ctx.setTransform(M);
+      const lawnSnap = anySoft && high.some(p => p.lawn!.share >= 1) ? snapshot('softSnap') : null;
+      this.drawLawns(ctx, high, L, X0, Y0, M, Minv, box, under, laid, sc ? softBand : null, lawnSnap); ctx.setTransform(M);
+      this.drawManagedGrass(ctx, lawns.map(p => (p.lawn!.z >= 1 ? this.ruggedOf(p).q : p)), box, L);
+    }
+    if (sc && rest.some(p => this.softTex(p.tex))) lotSnap = snapshot('softSnap');
     drawLots(rest);
     // ---- 1a'. painted areas (the Paint tool) in id order: over the lot ground, under the bridges and roads
-    if (paints.length) { this.drawPaints(ctx, paints, L, X0, Y0, M, Minv, box, lite, under, laid, sc ? softBand : null); ctx.setTransform(M); }
+    if (paints.length) { this.drawPaints(ctx, paints, L, X0, Y0, M, Minv, box, lite, under, laid, sc ? softBand : null, anySoft ? () => snapshot('softSnap') : null); ctx.setTransform(M); }
     // ---- 1a'''. the course height's light (T028b, T126): its slopes lit by the sun at the upper right and shaded away from it, its steep rises'
     //      cast shadows and its hollows' occlusion, over the grass, the lots and the painted course, under the living ground, car parks and roads
     if (this.courseAny && this.slopeLight > 0) { const hl = heightLightGrid(this.courseH, box, lite ? 1 : 2); if (hl) this.heightLight(ctx, hl, M, W, H, L); ctx.setTransform(M); }
@@ -1878,7 +1899,7 @@ export class GroundPainter {
     return m;
   }
   /** the lawns of a chunk (lawns.ts): each in its texture (a preset, turned by its angle), all of the patch or through the soft-patch mask (drawBlend) */
-  private drawLawns(ctx: C2D, lawns: LotPatch[], L: number, X0: number, Y0: number, M: DOMMatrix, Minv: DOMMatrix, box: BBox, under: CanvasPattern | null = null, laid: readonly LotPatch[] = [], softBand: SoftBand | null = null) {
+  private drawLawns(ctx: C2D, lawns: LotPatch[], L: number, X0: number, Y0: number, M: DOMMatrix, Minv: DOMMatrix, box: BBox, under: CanvasPattern | null = null, laid: readonly LotPatch[] = [], softBand: SoftBand | null = null, snap: Cnv | null = null) {
     for (const p0 of lawns) {
       // T204: a lot's lawn with its outline rounded and wobbled (its own pts still pick its look); a road block's grass lies under the
       // sidewalks that ring it, as it is
@@ -1897,7 +1918,7 @@ export class GroundPainter {
       };
       // T247: a lot's lawn of dirt or desert with its soft band where it meets grass (the fill laid on past its outline over the band)
       // (and a lot's grass lawn over a desert block: its band where the desert lies under and round it)
-      if (lw.share >= 1 && softBand && lw.z >= 1) this.softArea(ctx, softBand(p0, p.pts, 0, !this.softTex(t)), M, () => fill(t), (g, rr) => fill(t, g, rr, false));
+      if (lw.share >= 1 && softBand && lw.z >= 1) this.softArea(ctx, softBand(p0, p.pts, 0, !this.softTex(t)), M, () => fill(t), (g, rr) => fill(t, g, rr, false), snap);
       else if (lw.share >= 1) fill(t);
       else {
         // T194 (the owner: "fescue should also not coming through on edges of any of the green textures"): a block's grass in soft patches
@@ -1974,7 +1995,7 @@ export class GroundPainter {
    *  slider: a cool multiply inside the edges turned from the sun and a textured light a gap inside those turned to it, both clipped to the area)
    *  and its feather (paint-edges.ts: images from its outline, made when the chunk bakes, never per frame), and laid over the chunk after the
    *  shadow it casts on the ground below */
-  private drawPaints(ctx: C2D, paints: LotPatch[], L: number, X0: number, Y0: number, M: DOMMatrix, Minv: DOMMatrix, box: BBox, lite: boolean, under: CanvasPattern | null = null, others: readonly LotPatch[] = [], softBand: SoftBand | null = null) {
+  private drawPaints(ctx: C2D, paints: LotPatch[], L: number, X0: number, Y0: number, M: DOMMatrix, Minv: DOMMatrix, box: BBox, lite: boolean, under: CanvasPattern | null = null, others: readonly LotPatch[] = [], softBand: SoftBand | null = null, snapOf: (() => Cnv) | null = null) {
     const res = edgeRes(L);
     let layer: Cnv | null = null;
     /** an edge image over the tiles from (x0, y0) (res px a tile), stretched onto g through the chunk transform (bilinear) with the op */
@@ -1983,7 +2004,7 @@ export class GroundPainter {
       const s = this.buffer('small', img.W, img.H); ctx2d(s).putImageData(new ImageData(img.data as Uint8ClampedArray<ArrayBuffer>, img.W, img.H), 0, 0);
       g.save(); g.setTransform(M); g.globalCompositeOperation = op; g.globalAlpha = 1; g.imageSmoothingEnabled = true; g.drawImage(s, x0, y0, img.W / res, img.H / res); g.restore();
     };
-    let course = false;
+    let course = false, snap: Cnv | null = null;
     // T204: the ground laid so far as drawn (the lawns, the lots, the painted areas before this one: the spill over an area reads the map's grass
     // just outside it only where none of them lies) and the course as drawn
     const drawn: LotPatch[] = [...others], courses = paints.filter(q => q.course).map(q => this.warpedCourse(q.course!, lite));
@@ -1991,6 +2012,8 @@ export class GroundPainter {
       // the course chunks (all z 0, so side by side in the order) draw together, surface by surface, so a chunk's lower surface never
       // lands over its neighbour's higher one at a seam
       if (p0.course) { if (!course) { course = true; this.drawCourses(ctx, courses, L, X0, Y0, M, Minv, box, lite, under); } continue; }
+      // T247: the copy of the ground the painted areas' soft bands blend into, once the course is down
+      if (snapOf && !snap) snap = snapOf();
       // T204: drawn with its outline rounded and wobbled (a soft area; paving and paths keep their line)
       const rf = this.ruggedOf(p0), p = rf.q;
       // T204: then the tall grass's spill over its edges where the map's grass meets them (a hard area's few tufts)
@@ -2003,7 +2026,7 @@ export class GroundPainter {
       if (softBand && this.softTex(p.tex) && !(p.paint!.b > 0) && !sh && (!look || look === EDGE_LOOKS.flat)) {
         const plain = { ...p, paint: { ...p.paint!, b: 0 } };
         this.softArea(ctx, softBand(p0, p.pts, COURSE_CELL), M, () => this.drawPaint(ctx, p, L, X0, Y0, M, Minv, box, lite, 0),
-          (g, r) => this.drawPaint(g, { ...plain, pts: [r[0]!, r[1]!, r[2]!, r[1]!, r[2]!, r[3]!, r[0]!, r[3]!] }, L, X0, Y0, M, Minv, box, lite, 0, true));
+          (g, r) => this.drawPaint(g, { ...plain, pts: [r[0]!, r[1]!, r[2]!, r[1]!, r[2]!, r[3]!, r[0]!, r[3]!] }, L, X0, Y0, M, Minv, box, lite, 0, true), snap);
         ctx.setTransform(M); spill(); continue;
       }
       if (!look && !sh) { this.drawPaint(ctx, p, L, X0, Y0, M, Minv, box, lite, 0); wet(ctx); spill(); continue; }
