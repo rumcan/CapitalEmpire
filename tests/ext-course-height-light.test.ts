@@ -6,7 +6,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { CH_SIZE, CH_STEP, SUN_TILE_DIR } from '../src/game/ext/course-height';
 import {
-  CAST_SLOPE, GENTLE_GAIN, HEIGHT_LIGHT_REACH, HEIGHT_LIGHT_STRENGTH, HL_STRIDE, LIGHT_EXAG, LUMA_BLOCK, applyHeightLight, lightExag, clampHeightLight, heightLightGrid, heightLightPictures,
+  CAST_SLOPE, GENTLE_GAIN, HEIGHT_LIGHT_REACH, gentleDark, HEIGHT_LIGHT_STRENGTH, HL_STRIDE, LIGHT_EXAG, LUMA_BLOCK, applyHeightLight, lightExag, clampHeightLight, heightLightGrid, heightLightPictures,
   heightLightRect, liftMask, sampleHeightLight, specMask, splineHeight, type HeightLightGrid,
 } from '../src/game/ext/course-height/light';
 
@@ -38,8 +38,8 @@ describe('course height light: the direction of the light', () => {
     assert.ok(shade.dark > 0.1 && shade.lift === 0, `the slope facing away is darker (dark ${shade.dark})`);
     assert.ok(shade.cast === 0, 'a gentle mound casts no shadow: its far side is form-shaded only');
     const top = sampleHeightLight(g, 500, 500);
-    // (T263: gentle ground's gain lights the last gentle slopes round the top a little, a fifth of the slope's light at most)
-    assert.ok(top.dark < 0.05 && top.lift < 0.2 * lit.lift, `its rounded top is near flat light (dark ${top.dark}, lift ${top.lift}; the slope's ${lit.lift})`);
+    // (T263: gentle ground's gain lights and shades the last gentle slopes round the top a little: under a third of its slopes')
+    assert.ok(top.dark < 0.3 * shade.dark && top.lift < 0.3 * lit.lift, `its rounded top is near flat light (dark ${top.dark}, lift ${top.lift}; the slopes' ${shade.dark}, ${lit.lift})`);
     // flat ground well clear of the mound (but inside the grid) is not lit or shaded at all
     for (const [x, y] of [[530, 500], [500, 470], [470, 530]] as const) { const p = sampleHeightLight(g, x, y); assert.equal(p.dark + p.lift + p.spec, 0, `flat at ${x},${y}`); }
   });
@@ -49,6 +49,9 @@ describe('course height light: the direction of the light', () => {
     let prev = 0; for (let s = 0; s <= 1.0001; s += 0.0005) { const v = s * lightExag(s * s); assert.ok(v >= prev - 1e-12, `monotonic at ${s}`); prev = v; }
     assert.ok(lightExag(0.02 ** 2) / LIGHT_EXAG > 4, 'a 2% roll: more than 4 times'); assert.ok(lightExag(0.45 ** 2) / LIGHT_EXAG < 1.07, 'a 45% bank: as it was');
     assert.equal(lightExag(0) / LIGHT_EXAG, 1 + GENTLE_GAIN);
+    // the shade's boost: 2.4 times on the gentlest, none from the knee on, and it deepens with the shade everywhere
+    let pd = 0; for (let d = 0; d <= 1.0001; d += 0.0005) { const v = gentleDark(d); assert.ok(v >= pd - 1e-12, `the shade deepens at ${d}`); pd = v; }
+    assert.ok(Math.abs(gentleDark(0.01) / 0.01 - 2.4) < 0.01); assert.equal(gentleDark(0.5), 0.5);
     // a 2% slope down toward the sun's far side (facing it), 60 tiles across: plainly lit, and no highlight on so gentle a slope
     const ramp = field((x, y) => { const u = (x - 500) * SUN_TILE_DIR.x + (y - 500) * SUN_TILE_DIR.y; return Math.abs(x - 500) < 40 && Math.abs(y - 500) < 40 ? -0.04 * u + 1.6 : 0; }); // lower toward the sun
     const g = heightLightGrid(ramp, box(500, 500, 10), 2)!, p = sampleHeightLight(g, 500, 500);

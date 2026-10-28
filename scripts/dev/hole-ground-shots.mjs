@@ -65,7 +65,7 @@ try {
     console.log('built', JSON.stringify(await build(page)));
     await hideUi(page);
     // the green and its surround at 30%; the drive's landing zone at 30%; the whole hole at 15%
-    for (const light of [1, 2]) {
+    for (const light of opt('lights', '1,2').split(',').map(Number)) {
       const tag = light === 1 ? '' : '-light2';
       if (light !== 1) await page.evaluate(v => window.__game.setSlopeLight(v), light);
       await look(page, HOLE.green.x - 6, HOLE.green.y + 4, 0.3); await settle(page, 3000); files[`${mode}Green${tag}`] = await shot(page, `hole-30pct-green-shape-${mode}${tag}`);
@@ -102,7 +102,9 @@ try {
       await look(page, at.x, at.y, 0.3); await settle(page, 2000);
       for (let r = 0; r < 5; r++) {
         const n0 = await page.evaluate(() => { const g = window.__game; g.ground.invalidateAll(); return g.ground.baked; });
-        await settle(page, 600);
+        // until the bakes stop landing for 1.5 s (at most 30 s)
+        await page.waitForFunction(() => { const g = window.__game.ground, now = performance.now(); if (g.baked !== window.__lastN) { window.__lastN = g.baked; window.__lastT = now; } return now - (window.__lastT ?? now) > 1500; }, null, { timeout: 30000, polling: 100 }).catch(() => console.log('  (bakes still landing after 30 s)'));
+        await page.evaluate(() => { window.__lastN = -1; window.__lastT = undefined; });
         ms.push(...await page.evaluate(n0 => { const g = window.__game.ground, out = []; for (let n = n0; n < g.baked; n++) out.push(g.bakeLog[n % g.bakeLog.length]); return out; }, n0));
       }
     }

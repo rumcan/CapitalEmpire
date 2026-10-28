@@ -37,6 +37,12 @@ export const LIGHT_EXAG = 2.2;
  *  sculpted steep with the Ground height brush stays as it was. The lit slope still grows with the real one everywhere (the gain is under 8,
  *  so s times it never turns back) */
 export const GENTLE_GAIN = 7.5, GENTLE_SLOPE = 0.04;
+/** T263: the shade on gentle ground answers more too (the cool multiply is weaker than the lift for the same slope): a shade d under
+ *  GENTLE_DARK_KNEE is d × (1 + GENTLE_DARK × (1 − smoothstep(d / knee))), up to 2.4 times on the gentlest, the same from the knee on (a
+ *  steep bank's shade as it was); it still deepens with d everywhere (the boost is under 1.45: 1 − 9t² + 8t³ >= −0.69) */
+export const GENTLE_DARK = 1.4, GENTLE_DARK_KNEE = 0.25;
+/** the shade d (0..1) with gentle ground's boost */
+export const gentleDark = (d: number) => { const t = d >= GENTLE_DARK_KNEE ? 1 : d / GENTLE_DARK_KNEE; return d * (1 + GENTLE_DARK * (1 - t * t * (3 - 2 * t))); };
 /** the light's normal tilt per metre per metre of slope at slope² s2: LIGHT_EXAG with the gentle ground's gain */
 export const lightExag = (s2: number) => LIGHT_EXAG * (1 + GENTLE_GAIN / (1 + s2 / (GENTLE_SLOPE * GENTLE_SLOPE)));
 /** the sky's share of the light on flat ground; the sun gives the rest */
@@ -150,7 +156,7 @@ export function heightLightGrid(h: Float32Array, box: CourseTileBox | readonly n
     const o = (j * w + i) * HL_STRIDE; out[o + 3] = cast; out[o + 4] = ao;
     if (rel === 0) continue;
     const lift = rel > 0 ? Math.min(1, rel / REL_MAX) : 0, rel0 = AMBIENT * (1 - ao) + (1 - AMBIENT) * Math.max(0, ndl0) / lz * (1 - cast) - 1;
-    out[o] = rel < 0 ? Math.min(1, -rel) : 0; out[o + 1] = lift; out[o + 2] = rel0 > 0 ? smooth(SPEC_LO, SPEC_HI, Math.min(1, rel0 / REL_MAX)) : 0;
+    out[o] = rel < 0 ? Math.min(1, gentleDark(-rel)) : 0; out[o + 1] = lift; out[o + 2] = rel0 > 0 ? smooth(SPEC_LO, SPEC_HI, Math.min(1, rel0 / REL_MAX)) : 0;
     if (i < qi0) qi0 = i; if (i > qi1) qi1 = i; if (j < qj0) qj0 = j; if (j > qj1) qj1 = j;
   }
   if (qi1 < 0) return null;
