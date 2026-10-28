@@ -37,3 +37,17 @@ test('R turns the same composition and exchanges world axes; no picture is mirro
     assert.ok(Math.abs((turned[i].y - 30) - (normal[i].x - 20)) < 1e-8);
   }
 });
+
+test('the starter clubhouse is drawn at the clubhouse footprint on any parcel (the owner, 2026-10-28: "monterous", then "too smal", then "good now")', async () => {
+  const { BUSINESS } = await import('../src/game/business/catalogue');
+  const { footprintSpan, lookOf } = await import('../src/game/newart');
+  const fp = BUSINESS.clubhouse.footprint, want = (fp.w + fp.h) / 2;
+  // the town start's 40 x 24 venue and a clubhouse the player placed at the catalogue's 20 x 12: the same picture size
+  for (const [w, h] of [[40, 24], [fp.w, fp.h]] as const) {
+    const [p] = businessArt({ id: 1, type: 'clubhouse', x: 100, y: 200, w, h }, LIBRARY, index);
+    assert.ok(p, `a clubhouse prop on ${w} x ${h}`);
+    const look = lookOf(p!), n = LIBRARY[look.item]!;
+    // the grand clubhouse stands in for the shack: its picture spans the footprint (not 4x it, as its 1 x 1 placeholder box made it)
+    assert.ok(Math.abs(footprintSpan(n) * look.scale - want) < 0.01, `${w} x ${h}: drawn span ${footprintSpan(n) * look.scale} = ${want}`);
+  }
+});

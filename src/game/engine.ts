@@ -152,6 +152,7 @@ import { CHEER_TILES, DayFinish, LiveGroup, OWNER_ADDRESS, OWNER_ART, OWNER_SKIL
 import { holeViews, markerPlan, tagByHole, type HoleView, type MarkerKind } from './golf/holeview';
 import { CAST, castShear, clampCast, type CastShadow } from './cast-shadow';
 import { SPEC_LOOK, clampSpecLook, specGain, type SpecLook } from './lamp-reflect';
+import { SHINE_LOOK, clampShineLook, shineExponent, shineGain, type ShineLook, type ShineWeights } from './grass-shine';
 import { clampGrade, gradeFrame, loadGrade, saveGrade, type GradeSettings } from './grade';
 import { glossGain } from './swamp';
 import { contactLean } from './shadow-shape';
@@ -1994,6 +1995,11 @@ export class Game {
     try { localStorage.removeItem('capitalempire.grassArt'); } catch { /* the old gear menu's Grass setting: gone, the painted art always */ }
     this.grassArt = import.meta.env.DEV && new URLSearchParams(location.search).get('grass') === 'photo' ? 'photo' : 'painted';
     this.ground.grassArt = this.grassArt;
+    // T262: the grass shine's look as the player left it (the gear menu's Grass shine; on by default), and ?grassShine=off|on (the dev server:
+    // the bench's before and after)
+    try { const s = localStorage.getItem('capitalempire.grassShine'); if (s) this.shine = clampShineLook(JSON.parse(s)); } catch { /* the default look */ }
+    { const q = new URLSearchParams(location.search).get('grassShine'); if (import.meta.env.DEV && (q === 'on' || q === 'off')) this.shine = { ...this.shine, on: q === 'on' }; }
+    this.ground.grassShine = this.shine.on; this.ground.shineWeights = { ...this.shine.weights };
     try { this.groundVariety = localStorage.getItem('capitalempire.groundVariety') !== '0'; } catch { /* the default, on */ }
     this.ground.living = { on: this.groundVariety, debug: false };
     try { const v = parseFloat(localStorage.getItem('capitalempire.slopeLight') ?? ''); if (Number.isFinite(v)) this.slopeLight = clampHeightLight(v); } catch { /* light.json's */ }
@@ -6904,6 +6910,23 @@ export class Game {
   set specCam(on: boolean) { this.ground.setSpecCam(!!on); this.emit(); }
   spec: SpecLook = { ...SPEC_LOOK };
   setSpec(p: Partial<SpecLook>) { this.spec = clampSpecLook({ ...this.spec, ...p }); this.emit(); }
+  /** T262 (#769): the grass catches the camera's shine (grass-shine.ts), on T215's falloff: on by default; the gear menu's Grass shine (its
+   *  switch, strength, gloss size and per-surface weights, beside T215's knobs; remembered), window.__game.setShine({ on, strength, size, weights,
+   *  bump, eye, night }). The switch and the weights are baked into each chunk's weight mask, so changing them bakes the ground again (the
+   *  weights a moment after the last change, as a slider is dragged); the rest are the shader's */
+  get grassShine(): boolean { return this.shine.on; }
+  set grassShine(on: boolean) { this.setShine({ on: !!on }); }
+  shine: ShineLook = clampShineLook(SHINE_LOOK);
+  private shineSend = 0;
+  setShine(p: Partial<Omit<ShineLook, 'weights'>> & { weights?: Partial<ShineWeights> }) {
+    this.shine = clampShineLook({ ...this.shine, ...p, weights: { ...this.shine.weights, ...p.weights } });
+    try { localStorage.setItem('capitalempire.grassShine', JSON.stringify(this.shine)); } catch { /* storage may be unavailable */ }
+    clearTimeout(this.shineSend);
+    const send = () => this.ground.setGrassShine(this.shine.on, this.shine.weights);
+    if (p.weights) this.shineSend = window.setTimeout(send, 350); else send();
+    this.emit();
+  }
+
   /** the dev readout of the tile set families (T145, T150; App.tsx TilesPanel, shown with the Developer panel: ?debug, F3 or the gear menu): the camera's
    *  band, its anchor zoom (where it draws at its native pixels), how big it is drawn against native, and the zooms the band shows over; for each
    *  tile set family a surface wears, its set, the tiles in view, a tile's width on screen in device px and how many whole tiles the view shows;
@@ -6995,6 +7018,9 @@ export class Game {
       // the picture itself
       gl.gloss = this.ground.specCam ? { inner: this.spec.inner, outer: this.spec.outer, gain: glossGain(this.spec, this.nightAmount()) } : null;
       gl.glossOf ??= tex => this.ground.glossOf(tex);
+      // T262: the grass shine's falloff (T215's), gain (by day, by the zoom) and look this frame; each picture's weight mask by the picture
+      gl.shine = this.ground.grassShine ? { inner: this.spec.inner, outer: this.spec.outer, gain: shineGain(this.shine, this.nightAmount(), cam.z), exponent: shineExponent(this.shine), bump: this.shine.bump, eye: this.shine.eye } : null;
+      gl.shineOf ??= tex => this.ground.shineOf(tex);
       const spec = (tex: WebGLTexture | null) => this.ground.specOf(tex);
       const shadeMasks: { tex: WebGLTexture; r: readonly [number, number, number, number] }[] = [];
       let baked = true;

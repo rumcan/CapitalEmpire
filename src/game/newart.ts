@@ -12,6 +12,7 @@
 //   above what the atlas holds): it is drawn at its limit instead. Only the drawing: the footprint, collisions and saves keep the prop's scale.
 //   The packs size the pictures for this: prep-views.mjs packs each stand-in for the largest size any building drawn as it needs (standInNeeds).
 import { LIBRARY } from './library';
+import { TW } from './iso';
 import { isBuilding } from './mirror';
 import { BUILDING_IDS, VIEW_ART, unmirror } from './views-library';
 import { AXIS_HEADING } from './axis-library';
@@ -62,7 +63,12 @@ export function standInFamily(it: LibItem): string | null {
   return `cat:${it.cat || it.kind}`;
 }
 const classOf = standInFamily;
-const span = (it: LibItem) => { const b = it.boxes[0]; return b ? b.hx + b.hy : 1; };
+/** a picture's footprint span (hx + hy, tiles). Business artwork carries a 1 x 1 placeholder box (it is laid as a share of its parcel, business/
+ *  art.ts), so its span is read from its picture's width (TW / 2 px per tile of span at scale 1): the grand clubhouse standing in for the starter
+ *  shack was drawn four times its size, filling the shack's 8.5 tiles with a box of 2 (the owner, 2026-10-28: "the clubhouse sprite is still
+ *  monterous") */
+export const footprintSpan = (it: LibItem): number => { const b = it.boxes[0]; return !b ? 1 : it.kind === 'business' && b.hx === 1 && b.hy === 1 ? it.w / (TW / 2) : b.hx + b.hy; };
+const span = footprintSpan;
 /** the stand-ins of each family: new art, the front (NE) views only for buildings (a flip turns them, unmirror) */
 const POOL = new Map<string, number[]>();
 LIBRARY.forEach((it, i) => {
