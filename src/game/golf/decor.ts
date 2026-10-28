@@ -42,7 +42,7 @@ export const PROPS_DECAY = 0.8;
 export const APPEAL = { plant: 0.01, fountain: 0.15, well: 0.03, statue: 0.08, pillar: 0.015, arch: 0.025, bench: 0.01, seatBig: 0.015, small: 0.005, board: 0.03, flagpole: 0.015,
   // T231: the concept kit. A jet in a pond is a smaller centrepiece than the tiered fountain (a Fountain pond's appeal is its jet's); boulders count with
   // the stonework by size; a hedge piece as half a plant (a row of them is one hedge); the lamps as the small things
-  jet: 0.06, boulder: 0.01, boulderBig: 0.015, boulderLarge: 0.02, hedge: 0.005 } as const;
+  jet: 0.06, boulder: 0.01, boulderBig: 0.015, boulderLarge: 0.02, hedge: 0.005, pondEdge: 0.02 } as const;
 
 /** T231: the Fountain pond's radius (tiles: 10 m across) and what a stone of a pond's edge costs ($) */
 export const POND_R = 3.5, STONE_PRICE = 60;
@@ -72,7 +72,7 @@ export const DECOR: readonly DecorItem[] = [
   { key: FRAME_TREE_KEY, name: 'Course tree', group: 'plants', kind: 'plant', id: 'gen:tree-maple-scarlet:ne', price: FRAME_TREE_PRICE, appeal: APPEAL.plant, hidden: true, desc: "A tree of a hole's frame: conifers and autumn broadleaves along the rough's edge" },
   // T231: the concept kit (kit.ts): one-view pictures, R steps through the kind's pictures; the hedge is a run (drag it like a fence)
   { key: 'kit-shrub', name: 'Autumn shrub', group: 'plants', kind: 'plant', id: KIT_SHRUBS[0], variants: KIT_SHRUBS, price: 90, appeal: APPEAL.plant, desc: 'Burning bush, golden spirea, boxwood, dogwood, juniper or plume grass (R: the next)' },
-  { key: 'kit-mums', name: 'Mum clump', group: 'plants', kind: 'plant', id: KIT_FLOWERS[0], variants: KIT_FLOWERS, price: 40, appeal: APPEAL.plant, desc: 'Chrysanthemums in red, yellow, orange, white or bronze, or black-eyed Susans (R: the next)' },
+  { key: 'kit-mums', name: 'Mum clump', group: 'plants', kind: 'plant', id: KIT_FLOWERS[0], variants: KIT_FLOWERS, price: 50, appeal: APPEAL.plant, desc: 'Chrysanthemums in red, yellow, orange, white or bronze, or black-eyed Susans (R: the next)' },
   { key: 'kit-hedge', name: 'Hedge row', group: 'plants', kind: 'plant', id: KIT_HEDGE.x, run: KIT_HEDGE, price: 70, per: 'a piece', appeal: APPEAL.hedge, desc: 'A clipped box hedge: drag along a path or a bed to lay it, 4 m a piece' },
   { key: 'kit-palm-windmill', name: 'Windmill palm', group: 'plants', kind: 'plant', id: KIT_PALMS.windmill[0], variants: KIT_PALMS.windmill, price: 350, appeal: APPEAL.plant, desc: 'A hardy fan palm, 4 to 6 m (R: the next)' },
   { key: 'kit-palm-canary', name: 'Canary palm', group: 'plants', kind: 'plant', id: KIT_PALMS.canary[0], variants: KIT_PALMS.canary, price: 650, appeal: APPEAL.plant, desc: 'A Canary Island date palm, 6 to 10 m (R: the next)' },
@@ -83,7 +83,7 @@ export const DECOR: readonly DecorItem[] = [
   // T231: the ponds (golf/ponds.ts): a jet in the water, a round pond with its jet and stones, and a stone edge for any pond
   { key: 'kit-fountain', name: 'Fountain jet', group: 'water', kind: 'water', id: KIT_FOUNTAIN[0], water: 'in', price: 3500, appeal: APPEAL.jet, desc: 'A tall jet of water: only in a pond or a lake' },
   { key: 'kit-pond', name: 'Fountain pond', group: 'water', kind: 'water', id: KIT_POND_EDGE.outer, pond: 'make', price: 9000, appeal: APPEAL.jet, desc: 'A round pond 14 m across with a stone edge and a jet: for the clubhouse or a square' },
-  { key: 'kit-pond-stones', name: 'Stone pond edge', group: 'water', kind: 'stone', id: KIT_POND_EDGE.x, pond: 'edge', price: STONE_PRICE, per: 'a stone', appeal: 0, desc: "Boulders round a pond's shore and lily pads on its water; click the pond again for its natural edge" },
+  { key: 'kit-pond-stones', name: 'Stone pond edge', group: 'water', kind: 'stone', id: KIT_POND_EDGE.x, pond: 'edge', price: STONE_PRICE, per: 'a stone', appeal: APPEAL.pondEdge, desc: "Boulders round a pond's shore and lily pads on its water; click the pond again for its natural edge" },
   // ---- stone
   { key: 'statue', name: 'Golfer statue', group: 'stone', kind: 'statue', id: 'expansion:coin-horse-ride', price: 6000, appeal: APPEAL.statue, standIn: 'Bronze golfer statue', desc: 'A bronze golfer at the top of his swing, on a stone plinth' },
   { key: 'pillar', name: 'Stone pillar', group: 'stone', kind: 'stone', id: 'world:grave_2', price: 400, appeal: APPEAL.pillar, standIn: 'Stone pillar', desc: 'A dressed stone column with a ball finial: pair them at a gate' },

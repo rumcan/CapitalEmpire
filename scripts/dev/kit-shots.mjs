@@ -164,7 +164,7 @@ try {
       return { key, none: true };
     };
     const placed = [];
-    for (const [key, dx, dy, turns] of [['kit-boulder-l', -9, -4, 0], ['kit-boulder-m', -7, -7, 1], ['kit-boulder-s', -5, -8, 2], ['kit-boulder-m', 8, 7, 2], ['kit-palm-canary', -10, 2, 2], ['kit-palm-windmill', 9, -6, 1], ['kit-palm-fan', -4, 8, 1], ['kit-lamp', -6, -2, 0], ['kit-lamp-twin', 6, 3, 0], ['kit-lamp', 4, -5, 0], ['kit-shrub', 2, 9, 0], ['kit-mums', 3, 10, 0]]) {
+    for (const [key, dx, dy, turns] of [['kit-boulder-l', -7, -2, 0], ['kit-boulder-m', -6, -5, 1], ['kit-boulder-s', -4, -6, 2], ['kit-boulder-m', 6, 5, 2], ['kit-boulder-s', 7, 4, 1], ['kit-palm-canary', -8, 1, 2], ['kit-palm-canary', -6, 4, 1], ['kit-palm-windmill', 7, -4, 1], ['kit-palm-fan', -3, 6, 1], ['kit-palm-fan', 4, 6, 2], ['kit-lamp', -5, -1, 0], ['kit-lamp-twin', 5, 2, 0], ['kit-lamp', 3, -4, 0], ['kit-shrub', 1, 6, 0], ['kit-mums', 2, 7, 0], ['kit-mums', 0, 7, 3]]) {
       if (turns) await page.evaluate(([key, n]) => { const g = window.__game; g.setTool('props'); g.decor.setView('course'); g.decor.pick(key); for (let i = 0; i < n; i++) g.decor.turn(); }, [key, turns]);
       placed.push(turns ? await (async () => { for (let r = 0; r <= 6; r += 0.5) for (let a = 0; a < 8; a++) { const x = area.x + dx + Math.cos(a * Math.PI / 4) * r, y = area.y + dy + Math.sin(a * Math.PI / 4) * r; const gh = await page.evaluate(([x, y, W, H]) => { const g = window.__game; g.camEase = null; g.lookAt(x, y, 0.3); g.decor.move(W / 2, H / 2); const q = g.decor.ghost; return q ? { why: q.why, x: q.x, y: q.y } : null; }, [x, y, W, H]); if (gh && !gh.why) { await click(page); return { key, x: gh.x, y: gh.y, turned: turns }; } } return { key, none: true }; })() : await put(key, dx, dy));
     }
@@ -177,13 +177,17 @@ try {
   if (only.has('menus')) {
     const { page, ctx } = await open();
     // Facilities > Plants (the brushes: Trees, Bushes, Flowers, Palms) and Decoration > Props > the groups
-    await page.hover('[data-rail="facilities"]'); await page.waitForTimeout(500);
+    await page.click('[data-rail="facilities"]'); await page.waitForTimeout(700);
     const row = async (level, text) => { const el = page.locator(`[data-flyout-col="${level}"] [role="menuitem"]`, { hasText: text }).first(); await el.hover(); await page.waitForTimeout(400); };
     await row(0, 'Plants'); files.menuPlants = await shot(page, 'menu-facilities-plants', { x: 0, y: 0, width: 760, height: 560 });
-    await row(0, 'Decoration'); await row(1, 'Props'); files.menuProps = await shot(page, 'menu-facilities-decoration-props', { x: 0, y: 0, width: 760, height: 560 });
+    // Plants > Palms: the plant brush's panel with the palms listed
+    { const el = page.locator('[data-flyout-col="1"] [role="menuitem"]', { hasText: 'Palms' }).first(); await el.click(); await page.waitForTimeout(800); files.menuPalms = await shot(page, 'menu-plant-brush-palms'); }
+    await page.click('[data-rail="facilities"]'); await page.waitForTimeout(700);
+    await row(0, 'Decoration'); await row(1, 'Props'); files.menuProps = await shot(page, 'menu-facilities-decoration-props', { x: 0, y: 0, width: 900, height: 560 });
+    { const el = page.locator('[data-flyout-col="2"] [role="menuitem"]', { hasText: 'All props' }).first(); await el.click(); await page.waitForTimeout(800); }
     // the Props panel: every group's cards (the kit's among them), a pond edge in hand
     await page.mouse.move(W - 10, H - 10);
-    await page.evaluate(() => { const g = window.__game; g.setTool('props'); g.decor.setView('course'); g.decor.focus = null; g.emit(); });
+    await page.evaluate(() => { const g = window.__game; g.decor.pick('kit-pond-stones'); g.emit(); });
     await page.waitForTimeout(600);
     const panel = await page.locator('[data-panel="props"]').boundingBox();
     console.log('panel', JSON.stringify(panel));
@@ -202,8 +206,8 @@ try {
       console.log(join(out, 'menu-props-panel.jpg'));
     }
     // the Paint tool's plant brushes with Palms picked (its pictures listed)
-    await page.evaluate(() => { const g = window.__game; g.setTool('paint'); g.paint.setPlant('palms'); g.emit(); }); await page.waitForTimeout(600);
-    files.menuPalms = await shot(page, 'menu-plant-brush-palms');
+    // (the plant brush's panel was taken above)
+
     await ctx.close();
   }
   if (only.has('sheet')) {

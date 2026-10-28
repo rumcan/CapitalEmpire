@@ -321,11 +321,13 @@ export class PropsTool {
       placed.push({ key: d.key, x: p.x, y: p.y });
       if (d.standIn && !seen.has(d.key)) { seen.add(d.key); labels.push({ p, text: `Stand In for ${d.standIn}` }); }
     }
+    // T231: a stone-edged pond counts once, at its mark (the stones are its edge, not props of their own)
+    const props = placed.length, marks = this.ctx.pondMarks?.() ?? []; for (let k = 0; k + 1 < marks.length; k += 2) placed.push({ key: 'kit-pond-stones', x: marks[k]!, y: marks[k + 1]! });
     this.labels = labels;
     const sc = this.ctx.scene(), was = this.appealV;
     this.appealV = sc ? decorAppeal(placed, rangeAnchors(sc)) : 0; this.appealScene = sc;
-    if (!force && (was !== this.appealV || placed.length !== this.count)) this.ctx.emit();
-    this.count = placed.length;
+    if (!force && (was !== this.appealV || props !== this.count)) this.ctx.emit();
+    this.count = props;
   }
   /** the appeal the placed props add to the range now (0 without a range) */
   appeal(): number { if (this.appealScene !== this.ctx.scene()) this.scan(true); return this.appealV; }
