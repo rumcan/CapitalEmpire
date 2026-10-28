@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-29 02:00 SAST)
+## START HERE (kept current by the lead; last updated 2026-10-29 02:40 SAST)
 
 **Taking over as lead?** This section is the one start document. Paste this into a new Claude Code chat (desktop app, Code tab), on any
 account, with the folder `E:\Repos\CapitalEmpire\worktrees\lead-typecheck`:
@@ -70,7 +70,7 @@ never commit there.)
 | Ticket | Issue | Branch / worktree | State and next step |
 | --- | --- | --- | --- |
 | T265 | #794 | `arena/T265-river-swamp-trees` (a fresh worktree; port 5186) | **Started ~00:15.** The river's swamp band and dense tree belts along every river and creek, under the owner's hard performance limits (belts +0.5 ms a frame, swamp +1 ms a bake, main vs branch at 30/15/8%, thin or stop). |
-| T266 | #800 | `arena/T266-golf-pace` (a fresh worktree; port 5187) | **Started ~00:50.** A prototype with a verdict: a day/night clock, capped walking speeds, a longer day, or a mix, each behind `?golfPace=`; s per hole, walk speed vs cars, real minutes per game month, money per real hour, frame cost (at most +0.3 ms). The lead picks, then it builds. |
+| T266 | #800 | `arena/T266-golf-pace` (its worktree `.claude/worktrees/agent-ae0c4aafcbac0c92d`; port 5187) | **Prototype done; the lead picked option 4, the mix** (golf hours at 1.5 game min/s with a 40 s night; walking capped at 2.8 m/s, carts 5.6 m/s, soft fades between shots; golfers 0.25x a car instead of 15.6x). Months and money unchanged (months run on the season clock; a longer Town day does not slow them). Building: on by default, "Golf pace: Watchable / Fast" in the gear menu, the cap on the tournament day too, a check of the range's +9%. Captures `E:/ClaudeTemp/T266/out/`. |
 
 **Held, waiting on the owner (not agents):**
 - **#394 T112** (sharp 0.35): approved, merge held until the owner stops the 5191 studio (the lock change makes the auto-updater run
