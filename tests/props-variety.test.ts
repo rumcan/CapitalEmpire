@@ -11,7 +11,7 @@ import { DECOR, DECOR_BY_KEY, SIZE_MAX, SIZE_MIN, clampSize, familyKey, mixPick,
 import { PropsTool, type PropsHostCtx } from '../src/game/golf/propstool';
 import { VECTOR_SHADOWS, vectorFallback } from '../src/game/shadow-vector';
 import { VECTOR, vecOf } from '../src/game/sprites';
-import { drawnAs } from '../src/game/mirror';
+import { NATURAL_KINDS, drawnAs } from '../src/game/mirror';
 import { hasLettering } from '../src/game/lots/lettering';
 import { masterPath, thumbBox, thumbSource } from '../src/ui/thumb-source';
 import type { Prop } from '../src/game/types';
@@ -106,12 +106,12 @@ test('the variety: each boulder shape is its own card (three shapes at each size
   assert.equal(DECOR_BY_KEY.get('kit-rocks-mixed')!.group, 'stone'); for (const k of ['kit-shrubs-mixed', 'kit-mums-mixed', 'kit-palms-mixed']) assert.equal(DECOR_BY_KEY.get(k)!.group, 'plants');
 });
 
-test('a mixed brush is deterministic per spot: the same pick at the same spot, every boulder and both ways round over a field', () => {
+test('a mixed brush is deterministic per spot: the same pick at the same spot, every boulder over a field, never mirrored (the owner, 2026-10-28)', () => {
   const d = DECOR_BY_KEY.get('kit-rocks-mixed')!, seen = new Set<string>(), flips = new Set<boolean>();
   for (let y = 0; y < 20; y += 0.25) for (let x = 0; x < 20; x += 0.25) {
     const a = mixPick(d, x, y)!, b = mixPick(d, x, y)!; assert.deepEqual(a, b); seen.add(a.id); flips.add(a.flip);
   }
-  assert.equal(seen.size, 9, 'all nine boulders'); assert.equal(flips.size, 2, 'both ways round');
+  assert.equal(seen.size, 9, 'all nine boulders'); assert.deepEqual([...flips], [false], 'never mirrored');
   assert.notDeepEqual([0, 1, 2, 3, 4, 5].map(k => mixPick(d, k, 0)!.id), [0, 1, 2, 3, 4, 5].map(k => mixPick(DECOR_BY_KEY.get('kit-shrubs-mixed')!, k, 0)!.id));
   // the tool: two players dragging the same line lay the same stones, as one undo step, none overlapping; a click drops one
   const lay = () => {
@@ -139,40 +139,39 @@ test('a mixed brush is deterministic per spot: the same pick at the same spot, e
   assert.equal(c.props.size, 1); assert.equal(LIBRARY[p.item]!.id, m.id); assert.equal(p.decor, m.key); assert.equal(p.flip, m.flip);
 });
 
-test('R and [ ]: a rock in hand mirrors, steps its shapes and sizes 80% to 120% (the price follows); the same on a placed one; saved and loaded', () => {
+test('R and [ ]: a rock in hand steps its shapes (never mirrored) and sizes 80% to 120% (the price follows); the same on a placed one; saved and loaded', () => {
   const h = host(), t = new PropsTool(h.ctx);
   t.pick('kit-boulder-m'); t.move(10, 10);
-  assert.ok(t.key(key('r'))); assert.equal(t.flip, true); assert.equal(t.ghost!.flip, true); assert.match(t.ghost!.label, /mirrored/);
-  t.turn(); assert.equal(t.flip, false); assert.equal(LIBRARY[t.ghost!.item]!.id, KIT_BOULDERS.medium[1], 'then the next shape');
-  t.turn(); // the long boulder, mirrored
+  assert.ok(t.key(key('r'))); assert.equal(t.ghost!.flip, false); assert.doesNotMatch(t.ghost!.label, /mirrored/);
+  assert.equal(LIBRARY[t.ghost!.item]!.id, KIT_BOULDERS.medium[1], 'the next shape');
   for (let k = 0; k < 6; k++) t.key(key('['));
   assert.equal(t.size, SIZE_MIN, 'held at 80%'); assert.match(t.ghost!.label, /80%/); assert.equal(t.ghost!.price, 280); assert.equal(t.ghost!.scale, 0.8);
   t.down(10, 10);
   const p = [...h.props][0]!;
-  assert.equal(LIBRARY[p.item]!.id, KIT_BOULDERS.medium[1]); assert.equal(p.flip, true); assert.equal(p.scale, 0.8);
+  assert.equal(LIBRARY[p.item]!.id, KIT_BOULDERS.medium[1]); assert.equal(p.flip, false); assert.equal(p.scale, 0.8);
   assert.equal(p.decor, 'kit-boulder-m-b', 'the card of the shape placed'); assert.equal(1e6 - h.money(), 280); assert.equal(sellBack(DECOR_BY_KEY.get('kit-boulder-m-b')!, 0.8), 140);
-  // the placed one: ] twice (it pays the difference), R (the next look: unmirrored, the next shape)
+  // the placed one: ] twice (it pays the difference), R (the next shape)
   t.pick(null); h.ctx.select(p);
   t.key(key(']')); t.key(key(']'));
-  let q = h.sel()!; assert.ok(Math.abs(q.scale - 0.9) < 1e-9); assert.equal(q.flip, true, 'keeps its look'); assert.deepEqual(h.steps.slice(-2).map(s => s.spent), [sizedPrice(350, 0.85) - 280, sizedPrice(350, 0.9) - sizedPrice(350, 0.85)]);
+  let q = h.sel()!; assert.ok(Math.abs(q.scale - 0.9) < 1e-9); assert.equal(q.flip, false, 'never mirrored'); assert.deepEqual(h.steps.slice(-2).map(s => s.spent), [sizedPrice(350, 0.85) - 280, sizedPrice(350, 0.9) - sizedPrice(350, 0.85)]);
   t.key(key('r')); q = h.sel()!;
   assert.equal(LIBRARY[q.item]!.id, KIT_BOULDERS.medium[2]); assert.equal(q.flip, false); assert.equal(q.decor, 'kit-boulder-m-c'); assert.ok(Math.abs(q.scale - 0.9) < 1e-9, 'keeps its size');
-  t.key(key('r')); q = h.sel()!; assert.equal(q.flip, true);
+  t.key(key('r')); q = h.sel()!; assert.equal(q.flip, false); assert.equal(LIBRARY[q.item]!.id, KIT_BOULDERS.medium[0], 'round to the first shape');
   for (let k = 0; k < 9; k++) t.key(key(']'));
   q = h.sel()!; assert.ok(Math.abs(q.scale - SIZE_MAX) < 1e-9, 'held at 120%'); assert.equal(t.sizeOf(q, DECOR_BY_KEY.get(q.decor!)!), 1.2);
   // shrinking gives half the difference back
   const before = h.money(); t.key(key('[')); assert.equal(h.money() - before, Math.round((sizedPrice(350, 1.2) - sizedPrice(350, 1.15)) / 2));
-  // the save: the flip and the scale ride in the tuple (fields 4 and 5), with its card; loaded, they are the same (a kit rock mirrors)
+  // the save: the flip and the scale ride in the tuple (fields 4 and 5), with its card; a T257 save's mirrored rock loads unmirrored
   q = h.sel()!; const tup = propTuple(LIBRARY[q.item]!.id, q), back = JSON.parse(JSON.stringify(tup));
-  assert.deepEqual(back.slice(3, 7), [1, q.scale, 0, 'kit-boulder-m-c']); assert.deepEqual(tupleMarks(back), { decor: 'kit-boulder-m-c' });
-  assert.deepEqual(drawnAs(LIBRARY[LIB.get(back[0])!]!, !!back[3]), [back[0], true], 'loaded mirrored');
+  assert.deepEqual(back.slice(3, 7), [0, q.scale, 0, q.decor]); assert.deepEqual(tupleMarks(back), { decor: q.decor });
+  assert.deepEqual(drawnAs(LIBRARY[LIB.get(back[0])!]!, true), [back[0], false], 'a mirrored save loads unmirrored');
   // an old save's rock (T231: unmirrored, its size, the size's key) loads as it was, at 100%
   const old = ['kit:boulder-small-b', 5, 5, 0, 1, 0, 'kit-boulder-s'];
   assert.deepEqual(tupleMarks(old), { decor: 'kit-boulder-s' }); assert.deepEqual(drawnAs(LIBRARY[LIB.get('kit:boulder-small-b')!]!, false), ['kit:boulder-small-b', false]);
   assert.equal(clampSize(1), 1); assert.equal(sizedPrice(350), 350); assert.equal(sizedPrice(50, 0.85), 45);
 });
 
-test('fronts never mirror: R turns or steps everything else, but only a natural thing (a rock, a plant, a tree) is ever mirrored', () => {
+test('nothing mirrors (the owner, 2026-10-28: "make sure we never mirror a bush or tree or plant. always sun from top right"): R turns views or steps pictures', () => {
   for (const d of DECOR) {
     // natural things are plants and stones only: never furniture, a sign, a building, a statue, a stand-in, anything lettered or laid as a run
     if (d.natural) {
@@ -181,13 +180,13 @@ test('fronts never mirror: R turns or steps everything else, but only a natural 
     }
     const h = host(), t = new PropsTool(h.ctx); if (d.run || d.pond) continue;
     t.pick(d.key); t.move(20, 20); let mirrored = false;
-    for (let k = 0; k < 8; k++) { t.turn(); mirrored ||= t.flip || !!t.ghost?.flip; }
-    // (a natural one-view card mirrors on R; a mixed brush's picks are mirrored at random, all natural; nothing else ever)
-    if (!d.natural) assert.ok(!mirrored, `${d.key} never mirrors`);
-    else if (t.turnMode(d) === 'looks') assert.ok(mirrored, `${d.key} mirrors on R`);
-    // placed, R on it never mirrors a front either
+    for (let k = 0; k < 8; k++) { t.turn(); mirrored ||= !!t.ghost?.flip; }
+    assert.ok(!mirrored, `${d.key} never mirrors`);
+    // placed, R on it never mirrors it either; and the engine draws no natural thing mirrored whatever it is asked (mirror.ts)
     t.pick(d.key); t.down(20, 20); t.pick(null); const p = [...h.props][0]; if (!p) continue;
-    h.ctx.select(p); for (let k = 0; k < 4; k++) { t.turn(); assert.ok(!(h.sel() ?? p).flip || t.turnMode(d) === 'looks', `${d.key} placed`); }
+    assert.ok(!p.flip, `${d.key} placed unmirrored`);
+    h.ctx.select(p); for (let k = 0; k < 4; k++) { t.turn(); assert.ok(!(h.sel() ?? p).flip, `${d.key} turned`); }
+    const it = LIBRARY[LIB.get(d.id)!]!; if (NATURAL_KINDS.has(it.kind)) assert.equal(drawnAs(it, true)[1], false, `${d.id} drawn unmirrored`);
   }
   for (const k of ['bench', 'board', 'flagpole', 'statue', 'lamp', 'kit-lamp', 'chapel', 'bus-shelter', 'pot-terracotta']) assert.ok(!DECOR_BY_KEY.get(k)!.natural, k);
 });

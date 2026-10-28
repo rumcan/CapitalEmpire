@@ -7,6 +7,7 @@
 > Background on the game and how the lead works: `docs/LEAD.md`.
 > Where the older sections below differ from NOW.md "START HERE" and AGENT-BRIEF.md (PROGRESS.md, the Haiku agents, the worker PC, the
 > nightly task), those two win: they are kept current (2026-10-28). A new lead's paste-ready start prompt is at the top of START HERE.
+> **Every lead applies the owner's reasoning skill** `sq-distortion-check` (`.claude/skills/`; load it once a session).
 > **Asked to make the spectator / crowd art or the 3D people?** Start with `docs/HANDOVER-PEOPLE.md` (the state and next steps), then `docs/SPECTATOR-ART.md`.
 
 Two agents share this repo (from 2026-10-21): the second agent writes the game code, the first chat does the art with the owner;

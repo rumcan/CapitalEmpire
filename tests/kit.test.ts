@@ -5,7 +5,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { ATLAS_PAGES, LIBRARY } from '../src/game/library';
 import { MB, atlasBudget, planAtlas } from '../src/game/atlas-pages';
-import { KIT_BOULDERS, KIT_FLOWERS, KIT_FOUNTAIN, KIT_HEDGE, KIT_LAMPS, KIT_LILIES, KIT_PALM_IDS, KIT_POND_EDGE, KIT_SHRUBS, fountainAt, fountainFrame, isKit, kitMirrors } from '../src/game/kit';
+import { KIT_BOULDERS, KIT_FLOWERS, KIT_FOUNTAIN, KIT_HEDGE, KIT_LAMPS, KIT_LILIES, KIT_PALM_IDS, KIT_POND_EDGE, KIT_SHRUBS, fountainAt, fountainFrame, isKit } from '../src/game/kit';
 import { APPEAL, DECOR, DECOR_BY_KEY, decorAppeal, decorSpotWhy, type Box, type DecorSpot } from '../src/game/golf/decor';
 import { PropsTool, type PropsHostCtx } from '../src/game/golf/propstool';
 import { PLANT_KINDS, plantPool } from '../src/game/plant';
@@ -54,18 +54,16 @@ test('the atlas: the kit is in the library on the golf page, packed apart from t
   }
 });
 
-test('the kit joins no pool that picks by kind: the lots\' learned pools, the composer\'s trees and bushes, the Trees brush; only its natural things mirror', () => {
+test('the kit joins no pool that picks by kind: the lots\' learned pools, the composer\'s trees and bushes, the Trees brush; none of it ever mirrors', () => {
   const pools = kindPools();
   for (const [k, ids] of Object.entries(pools)) assert.ok(!ids.some(isKit), `the ${k} pool has kit art`);
   assert.ok(!TREES.some(isKit) && !BUSHES.some(isKit), 'the composer\'s trees and bushes');
   assert.ok(!plantPool(LIBRARY, 'trees').some(p => isKit(p.id)), 'the Trees brush stays autumn broadleaves and conifers');
-  // T257 (the lead's call): the boulders, shrubs, mums and palms mirror when flipped (one picture, two looks); the lamps, the hedge, the pond
-  // edge's pieces, the jet and the lily pads never
+  // the owner, 2026-10-28: "make sure we never mirror a bush or tree or plant. always sun from top right": no kit picture mirrors, its
+  // boulders, shrubs, mums and palms included (T257 had mirrored those)
   const natural = new Set<string>([...KIT_SHRUBS, ...KIT_FLOWERS, ...KIT_BOULDERS.small, ...KIT_BOULDERS.medium, ...KIT_BOULDERS.large, ...KIT_PALM_IDS]);
-  for (const id of KIT_IDS) {
-    assert.deepEqual(drawnAs(BY.get(id)!.it, true), [id, natural.has(id)], `${id} ${natural.has(id) ? 'mirrors' : 'is never mirrored'}`);
-    assert.deepEqual(drawnAs(BY.get(id)!.it, false), [id, false]); assert.equal(kitMirrors(id), natural.has(id));
-  }
+  assert.ok(natural.size > 20);
+  for (const id of KIT_IDS) for (const f of [true, false]) assert.deepEqual(drawnAs(BY.get(id)!.it, f), [id, false], `${id} is never mirrored`);
   // shadows by kind: lily pads and the jet none, a palm a tree's
   assert.equal(kindOf(BY.get(KIT_LILIES[0])!.it), 'none'); assert.equal(kindOf(BY.get(KIT_FOUNTAIN[0])!.it), 'none'); assert.equal(kindOf(BY.get(KIT_PALM_IDS[0]!)!.it), 'tree');
   // the lamp posts are lamps (lit at night: their glows and the lamps' ground light)
@@ -147,12 +145,12 @@ test('a hedge is a run: press, drag along the map and let go lays its pieces end
   t.down(60, 60); t.move(70, 60); assert.ok(t.esc()); t.up(); assert.equal(props.length, 7, 'Esc laid nothing');
 });
 
-test('R steps a variant item through its pictures, each then mirrored (T257: a natural thing); the jet loops its four frames', () => {
+test('R steps a variant item through its pictures, never mirrored (the owner, 2026-10-28); the jet loops its four frames', () => {
   const { t } = tool(), d = DECOR_BY_KEY.get('kit-shrub')!;
   t.pick('kit-shrub');
-  const seen = Array.from({ length: 2 * d.variants!.length + 1 }, (_, k) => { if (k) t.turn(); return `${LIBRARY[t.pictureOf(d, t.view)!]!.id}${t.flip ? ' mirrored' : ''}`; });
-  assert.deepEqual(seen.slice(0, -1), KIT_SHRUBS.flatMap(id => [id, `${id} mirrored`])); assert.equal(seen.at(-1), KIT_SHRUBS[0], 'and round again');
-  assert.ok(t.turns(d)); assert.equal(t.turnMode(d), 'looks');
+  const seen = Array.from({ length: d.variants!.length + 1 }, (_, k) => { if (k) t.turn(); return LIBRARY[t.pictureOf(d, t.view)!]!.id; });
+  assert.deepEqual(seen.slice(0, -1), [...KIT_SHRUBS]); assert.equal(seen.at(-1), KIT_SHRUBS[0], 'and round again');
+  assert.ok(t.turns(d)); assert.equal(t.turnMode(d), 'pictures'); assert.ok(!t.ghost?.flip);
   const frames = Array.from({ length: 8 }, (_, k) => fountainAt(k / 7));
   assert.ok(new Set(frames).size === 4 && frames.every(f => fountainFrame(f) >= 0));
   assert.equal(fountainFrame('kit:boulder-small-a'), -1);
