@@ -125,6 +125,10 @@ const GOLF_MINUTE = 11 * 60;
  *  game is ready and a loaded town's lots are composed (at most 30 s) */
 export function benchGame(g: Game, scene: BenchScene) {
   g.benchMode = true;
+  // T265: ?belts=0 (bench.mjs --belts 0): the tree belts off for the run (Engine.setRiverTrees), the forest and the town trees as before
+  if (new URLSearchParams(location.search).get('belts') === '0') (g as unknown as { setRiverTrees?: (on: boolean) => void }).setRiverTrees?.(false);
+  // T265: ?riverSwamp=0 (bench.mjs --riverSwamp 0): the river's swamp off for the run (GroundCache.setRiverSwamp)
+  if (new URLSearchParams(location.search).get('riverSwamp') === '0') (g.ground as unknown as { setRiverSwamp?: (on: boolean) => void }).setRiverSwamp?.(false);
   const t0 = performance.now();
   let warm = 0;
   g.onFrame = () => {
