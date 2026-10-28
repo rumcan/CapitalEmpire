@@ -442,6 +442,7 @@
      492,
      494
     ],
+    "recolor": "green pads (T234)",
     "sha256": "30097da167ce59eb9945fcdc6002c00e552e89aef815ca477d1cccb7492541ab",
     "id": "golf:lily-pads",
     "generationId": "60d46ec2-ae44-456a-810f-35507d833bb2",
@@ -478,6 +479,7 @@
      1000,
      491
     ],
+    "recolor": "green pads (T234)",
     "sha256": "30097da167ce59eb9945fcdc6002c00e552e89aef815ca477d1cccb7492541ab",
     "id": "golf:lily-pads",
     "generationId": "60d46ec2-ae44-456a-810f-35507d833bb2",
@@ -514,6 +516,7 @@
      500,
      997
     ],
+    "recolor": "green pads (T234)",
     "sha256": "30097da167ce59eb9945fcdc6002c00e552e89aef815ca477d1cccb7492541ab",
     "id": "golf:lily-pads",
     "generationId": "60d46ec2-ae44-456a-810f-35507d833bb2",
@@ -550,6 +553,7 @@
      1006,
      1002
     ],
+    "recolor": "green pads (T234)",
     "sha256": "30097da167ce59eb9945fcdc6002c00e552e89aef815ca477d1cccb7492541ab",
     "id": "golf:lily-pads",
     "generationId": "60d46ec2-ae44-456a-810f-35507d833bb2",
