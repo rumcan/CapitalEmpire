@@ -35,6 +35,8 @@ export interface Prop {
   uid: number;
   /** drawn tinted (T176: a tree New hole's Build would clear; sprites.ts Drawable.tint) */
   tint?: boolean;
+  /** a car's paint (T228, car-paint.ts; sprites.ts Drawable.paint): set by addProp for a car from where it stands */
+  paint?: number;
   /** index into LIBRARY */
   item: number;
   x: number;

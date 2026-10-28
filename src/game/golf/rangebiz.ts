@@ -483,8 +483,8 @@ export type RangePerson = CrowdPerson & { lift: number };
 export interface RangeDraw {
   /** the golfers on foot (walking, queued, hitting) as crowd people (group 1), the academy's pro among them (T133) */
   people: RangePerson[]; nPeople: number;
-  /** the cars (driving or parked): point, heading (radians, world) and type */
-  cars: { x: number; y: number; ang: number; type: number }[]; nCars: number;
+  /** the cars (driving or parked): point, heading (radians, world), type and its golfer's visit (T228: its paint; -1 the ball picker) */
+  cars: { x: number; y: number; ang: number; type: number; id: number }[]; nCars: number;
   /** the ball picker cart (T133; null: none): where it is, and whether it is out on its lanes (it is also the last of the cars) */
   picker: { x: number; y: number; out: boolean } | null;
 }
@@ -1021,11 +1021,11 @@ export class RangeSim {
       // yet; a car waiting to pull out stands parked, its first leg backing out of the bay, and in the car park building is not drawn)
       const rc = v.rc;
       if (rc) {
-        if (rc.c > 0 || (rc.out && !rc.inside)) { const c = C[nc] ?? (C[nc] = { x: 0, y: 0, ang: 0, type: 0 }); nc++; c.x = rc.x; c.y = rc.y; c.ang = rc.c > 0 ? rc.ang : rc.ang + Math.PI; c.type = v.car; }
+        if (rc.c > 0 || (rc.out && !rc.inside)) { const c = C[nc] ?? (C[nc] = { x: 0, y: 0, ang: 0, type: 0, id: -1 }); nc++; c.x = rc.x; c.y = rc.y; c.ang = rc.c > 0 ? rc.ang : rc.ang + Math.PI; c.type = v.car; c.id = v.id; }
       } else if (v.stage >= S.WalkShop && v.stage <= S.WalkCar) {
         // parked (in the car park building, T146: inside it, not drawn)
         const sl = this.slots[v.slot];
-        if (sl && !sl.inside) { const c = C[nc] ?? (C[nc] = { x: 0, y: 0, ang: 0, type: 0 }); nc++; c.x = sl.x; c.y = sl.y; c.ang = Math.atan2(sl.hy, sl.hx); c.type = v.car; }
+        if (sl && !sl.inside) { const c = C[nc] ?? (C[nc] = { x: 0, y: 0, ang: 0, type: 0, id: -1 }); nc++; c.x = sl.x; c.y = sl.y; c.ang = Math.atan2(sl.hy, sl.hx); c.type = v.car; c.id = v.id; }
       }
       if (v.stage < S.WalkShop || v.stage > S.WalkCar) continue;
       const p = P[np] ?? (P[np] = { x: 0, y: 0, group: 1, person: 0, row: 0, frame: 0, lift: 0 }); np++;
@@ -1066,7 +1066,7 @@ export class RangeSim {
     }
     // the ball picker cart (T133): parked by the outfield by day, out on its lanes after closing (the last of the cars)
     if (sc?.picker) {
-      const out = this.pickT >= 0, c = C[nc] ?? (C[nc] = { x: 0, y: 0, ang: 0, type: 0 }); nc++;
+      const out = this.pickT >= 0, c = C[nc] ?? (C[nc] = { x: 0, y: 0, ang: 0, type: 0, id: -1 }); nc++; c.id = -1;
       if (out) { c.x = this.pickAt.x; c.y = this.pickAt.y; c.ang = this.pickAt.ang; } else { c.x = sc.picker.home.x; c.y = sc.picker.home.y; c.ang = sc.picker.ang; }
       c.type = PICKER_CAR; d.picker = { x: c.x, y: c.y, out };
     }

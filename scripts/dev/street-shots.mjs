@@ -79,7 +79,7 @@ try {
       const g = window.__game, { isCarPark } = await import('/src/game/lots/compose.ts');
       const d = g.parkDefs[0], lot = [...g.traffic.lots.values()].find(l => isCarPark(l));
       return { range: d ? { x: d.x + d.w / 2, y: d.y + d.h / 2, bays: g.parkBuilt[0]?.bays.length, worker: g.traffic.parks.find(p => p.id === d.id)?.parked ?? 0, range: g.range.sim.parked(false) } : null,
-        lot: lot ? { x: lot.o.x + lot.u.x * lot.w / 2 + lot.n.x * lot.d / 2, y: lot.o.y + lot.u.y * lot.w / 2 + lot.n.y * lot.d / 2, key: lot.key } : null };
+        lot: lot ? { x: lot.o[0] + lot.u[0] * lot.w / 2 + lot.n[0] * lot.d / 2, y: lot.o[1] + lot.u[1] * lot.w / 2 + lot.n[1] * lot.d / 2, key: lot.key } : null };
     });
     report.parks = parks; console.log('parks', JSON.stringify(parks));
     await page.evaluate(() => window.__game.setSpeed(0));
@@ -96,7 +96,13 @@ try {
       return d ? { x: d.x + d.w / 2, y: d.y + d.h / 2, bays: pk.bays.length, parked: g.dayPlay ? g.dayPlay.view.parkedNow(g.dayMinute) : 0 } : null;
     });
     report.club = club; console.log('club', JSON.stringify(club));
-    await page.evaluate(() => window.__game.setSpeed(0));
+    // the start's club car park stands behind the clubhouse (up the screen): the clubhouse's big pictures are lifted off for these shots
+    report.lifted = await page.evaluate(async () => {
+      const g = window.__game, { LIBRARY } = await import('/src/game/library.ts'), door = g.golf.clubhouse; let n = 0;
+      g.setSpeed(0);
+      for (const p of [...g.props]) { const it = LIBRARY[p.item]; if (it.big && it.kind !== 'car' && Math.hypot((p.x0 + p.x1) / 2 - door.x, (p.y0 + p.y1) / 2 - door.y) < 25) { g.removeProp(p); n++; } }
+      return n;
+    });
     if (club) for (const z of [0.3, 0.15]) { await look(page, club.x, club.y, z); await settle(page); (files[`club${Math.round(z * 100)}`] = await shot(page, `club-carpark-${Math.round(z * 100)}pct`)); }
     await ctx.close();
   }
