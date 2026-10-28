@@ -135,6 +135,10 @@ export type Drawer = 'side' | 'footer';
 export const drawerOf = (r: RailItem): Drawer => (r.section === 'town' ? 'footer' : 'side');
 /** a drawer's entries, in the rail's order (railEntries' headings hold: each drawer's first item under a heading carries it) */
 export const drawerEntries = (es: readonly RailEntry[], d: Drawer): RailEntry[] => es.filter(e => drawerOf(e.item) === d);
+/** T255 (#739, the owner 2026-10-29: "these windows need to move to the center footer where town moved to"): the drawer a tool's panel stands
+ *  in: its group's (railItemOf: the one the player opened it from when that holds it, the rail's lit group), so a town tool's panel docks above
+ *  the town footer and a club tool's keeps the left tool panel; Paint and Props, in both, follow the group they were opened from */
+export const toolDrawer = (t: Tool, active?: string | null): Drawer => { const r = railItemOf(t, active); return r ? drawerOf(r) : 'side'; };
 
 /** a rail item's tooltip (T179): its name, its key (if it has one) and, locked, what unlocks it (the stages' and the ramp's words) */
 export function railTip(e: RailEntry): TipParts {

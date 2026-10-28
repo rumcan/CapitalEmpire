@@ -2,17 +2,19 @@
 // in Course below Buildings): Select · COURSE: Driving range, Course, Facilities · TOWN:
 // Traffic, Town decoration · Bulldoze; every tool reachable from its group (Props from both decorations); the ramp's locks per group and per
 // tool inside a group; NEW per group; no key letters on the rail (the tooltip names them); old saves' seen ids. T250 (#721): the rail split
-// into the course drawer on the left and the town footer along the bottom, and where the footer stands. npm test (bundled by esbuild, run by
-// node --test; the buttons render with react-dom/server).
+// into the course drawer on the left and the town footer along the bottom, and where the footer stands. T255 (#739): a town tool's panel docks
+// above the footer, a club tool's keeps the left panel, the shared tools' follow the group they were opened from, and where the footer panel
+// stands. npm test (bundled by esbuild, run by node --test; the buttons render with react-dom/server).
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { createElement, isValidElement, type ReactElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server.edge';
 import { advanceProgress, computeProgressiveUiState, emptyProgress, progressFacts, STAGE_WHY, type CourseProgress, type GolfProgress } from '../src/game/ext/progressive-ui';
 import { readFileSync } from 'node:fs';
-import { RAIL, drawerEntries, drawerOf, extraLock, pickTool, railEntries, railItemOf, railItemsOf, railTip, toolLock, toolNew, toolSections, toolsIn, type RailEntry } from '../src/ui/rail-items';
-import { FOOT_GAP, FOOT_MARGIN, footerPlace, freeStretches, type FootPlace } from '../src/ui/footer-layout';
+import { RAIL, drawerEntries, drawerOf, extraLock, pickTool, railEntries, railItemOf, railItemsOf, railTip, toolDrawer, toolLock, toolNew, toolSections, toolsIn, type RailEntry } from '../src/ui/rail-items';
+import { FOOT_GAP, FOOT_MARGIN, PANEL_W, footerPlace, freeStretches, panelPlace, type FootPlace } from '../src/ui/footer-layout';
 import { Rail } from '../src/ui/Rail';
+import { TownFooter } from '../src/ui/TownFooter';
 import type { Tool } from '../src/game/types';
 import { GREENKEEPING } from '../src/game/features';
 
@@ -225,7 +227,8 @@ describe('the two drawers: the course drawer on the left, the town footer along 
     assert.match(css, /\.rail-tab\.rail-tab-foot \{[^}]*height: 42px;/);
     assert.match(css, /\.rail-foot-compact \.rail-tab\.rail-tab-foot \{ width: 46px;/);
     assert.doesNotMatch(css.match(/\.rail-foot \{[^}]*\}/)?.[0] ?? '', /overflow-x: (auto|scroll)/);
-    assert.match(readFileSync('src/App.tsx', 'utf8'), /bottom-\[calc\(var\(--foot-top,0px\)\+0\.5rem\)\][^"]*z-20 flex flex-col items-center/, 'the hint bar stands above the footer');
+    // T255: the hint bar stands above the footer and above a town tool's panel docked on it (--foot-stack: TownFooter sets both)
+    assert.match(readFileSync('src/App.tsx', 'utf8'), /bottom-\[calc\(var\(--foot-stack,0px\)\+0\.5rem\)\][^"]*z-20 flex flex-col items-center/, 'the hint bar stands above the footer');
   });
   it('locks and NEW in the footer as on the rail: stage 1 Traffic locked in place with its why; stage 2 Town decoration says NEW', () => {
     const f1 = draw(railEntries(uiOf(played(0), 0), true, 'course'), 'footer'), traffic = button(f1, 'traffic');
@@ -270,5 +273,81 @@ describe('the town footer moves aside of the minimap and the bottom cards (T250)
     // a panel, the range card and the guide card beside them (right-41rem), the leaderboard at the right: a stretch between holds the compact bar
     const blocks: [number, number][] = [[w - 656 - 330, w - 656], [w - 12 - 288, w - 12]], q = at(w, blocks);
     assert.equal(q.lift.length, 0, 'no card moves'); clear(q, w, blocks);
+  });
+});
+
+// T255 (#739, the owner 2026-10-29, of the Upgrade roads panel in the left tool panel: "these windows need to move to the center footer where
+// town moved to"): a tool's panel stands in the drawer its group sits in; Paint and Props, in both, follow the group they were opened from
+describe("a tool's panel stands in its group's drawer: a town tool's above the footer, a club tool's in the left panel (T255)", () => {
+  const TOWN: Tool[] = ['road', 'lane', 'downgrade', 'junction', 'bus', 'park', 'toll', 'business'];
+  it('the road panels (Build, Upgrade, Downgrade), Junctions, Transport (bus, car park, toll) and Town decoration dock above the footer; the club tools, Select and Bulldoze keep the left panel', () => {
+    for (const t of TOWN) assert.equal(toolDrawer(t), 'footer', t);
+    for (const t of ALL_TOOLS.filter(x => !TOWN.includes(x) && x !== 'paint' && x !== 'props')) assert.equal(toolDrawer(t), 'side', t);
+    assert.deepEqual(['select', 'course', 'path', 'buildings', 'practice', 'bulldoze'].map(t => toolDrawer(t as Tool)), Array(6).fill('side'));
+    assert.equal(toolDrawer('paint'), 'footer', "Paint is Town decoration's (Facilities' Plants is its second home)");
+    assert.equal(toolDrawer('props'), 'side', 'Props opens with Facilities first');
+  });
+  it("Paint and Props follow the group they were opened from (the rail's lit group, active), in the golf and the classic game", () => {
+    assert.equal(toolDrawer('paint', 'facilities'), 'side', 'Facilities ▸ Plants: the left panel'); assert.equal(toolDrawer('paint', 'towndecor'), 'footer');
+    assert.equal(toolDrawer('props', 'towndecor'), 'footer', 'Town decoration ▸ Props: above the footer'); assert.equal(toolDrawer('props', 'facilities'), 'side');
+    assert.equal(toolDrawer('paint', 'traffic'), 'footer', 'a group that does not hold it: its own'); assert.equal(toolDrawer('props', 'course'), 'side');
+    // the panel always stands in the drawer of the group the rail lights, whichever group was opened last
+    for (const golf of [true, false]) for (const t of ALL_TOOLS) for (const active of [null, ...RAIL.map(r => r.id)]) {
+      const on = railEntries(null, golf, t, { active, range: golf }).find(e => e.on);
+      if (on) assert.equal(toolDrawer(t, active), drawerOf(on.item), `${golf ? 'golf' : 'classic'} ${t} opened from ${active}`);
+    }
+  });
+  it("drawn: one panel body in one of two containers: the left tool panel, or the footer panel (the left one's width and look, opening upward, scrolling vertically only)", () => {
+    const ref = { current: null }, foot = (panel: { tool: string; body: ReactElement } | null, raised = false) => renderToStaticMarkup(createElement(TownFooter, {
+      entries: drawerEntries(railEntries(null, true, 'lane'), 'footer'), onPick: () => {}, onLocked: () => {}, boxRef: ref, navRef: ref, panel, raised,
+    }));
+    const body = createElement('p', null, 'Upgrade roads'), f = foot({ tool: 'lane', body });
+    assert.match(f, /<div class="glass tool-panel tool-panel-foot pointer-events-auto w-\[330px\] overflow-y-auto overflow-x-hidden p-3 "[^>]*data-tool="lane" data-testid="tool-panel" data-dock="footer"[^>]*><p>Upgrade roads<\/p><\/div>/);
+    assert.match(foot({ tool: 'lane', body }, true), /tool-panel-foot [^"]* hidden"/, "the footer's flyouts open where it stands: it makes way");
+    assert.doesNotMatch(foot(null), /tool-panel/, 'a club tool in hand: no footer panel');
+    const app = readFileSync('src/App.tsx', 'utf8');
+    assert.match(app, /const dock = toolDrawer\(game\.uiTool, activeRail\.current\)/);
+    assert.match(app, /panel=\{dock === 'footer' && !idle \? \{ tool: game\.uiTool, body: toolBody \} : null\}/);
+    assert.match(app, /\{dock === 'side' && \([\s\S]{0,40}<div className=\{`glass tool-panel w-\[330px\][^`]*overflow-y-auto overflow-x-hidden[^`]*`\}[^>]*data-dock="side">\s*\{toolBody\}/);
+    // the panels' JSX is written once (the crumb, its back arrow and every tool's panel are toolBody's)
+    for (const tag of ['data-testid="tool-crumb"', '<RoadPanel game={game} scope="town"', '<JunctionPanel', '<ParkPanel', '<BusPanel', '<TollPanel', '<PaintPanel', '<PropsPanel', 'title="Upgrade roads"'])
+      assert.equal(app.split(tag).length - 1, 1, tag);
+    const css = readFileSync('src/index.css', 'utf8'), rule = css.match(/\.tool-panel-foot \{[^}]*\}/)?.[0] ?? '';
+    assert.match(rule, /position: absolute; bottom: calc\(100% \+ 8px\);/, 'docked above the footer, opening upward');
+    assert.match(rule, /max-height: min\(calc\(var\(--vh-ui, 100vh\) - var\(--hud-top, 5\.75rem\) - var\(--foot-top, 0px\) - 1rem\), calc\(var\(--vh-ui, 100vh\) \* 0\.6\)\)/);
+    assert.doesNotMatch(rule, /overflow-x: (auto|scroll)/);
+    assert.match(readFileSync('src/ui/ShotPanel.tsx', 'utf8'), /bottom-\[calc\(var\(--foot-stack,0px\)\+0\.75rem\)\]/, 'the shot panel stands above it too');
+  });
+});
+
+// T255: where the footer panel stands (footer-layout.ts panelPlace): centred on the footer where that is clear, else moved aside to the free
+// stretch nearest the footer's middle that holds it, never over the minimap or a card; with no room, in the left tool panel's place (null)
+describe('the footer panel moves aside of the minimap and the cards, like the footer (T255)', () => {
+  const MAP: [number, number] = [12, 225];
+  const at = (w: number, cx: number, blocks: [number, number][] = []) => panelPlace({ w, laneL: 0, blocks: [MAP, ...blocks], cx, width: PANEL_W });
+  const clear = (x: number | null, w: number, blocks: [number, number][]) => {
+    assert.notEqual(x, null); const l = x!, r = l + PANEL_W;
+    assert.ok(l >= FOOT_MARGIN && r <= w - FOOT_MARGIN, `on screen (${l}-${r})`);
+    for (const [a, b] of [MAP, ...blocks]) assert.ok(r + FOOT_GAP <= a || l >= b + FOOT_GAP, `clear of ${a}-${b} (${l}-${r})`);
+  };
+  it('1366, 1920 and 2560 px with no card beside it: centred on the footer', () => {
+    for (const w of [1366, 1920, 2560]) { const x = at(w, w / 2); assert.equal(x, Math.round(w / 2 - PANEL_W / 2), `${w}`); clear(x, w, []); }
+    assert.equal(at(1366, 531), 531 - PANEL_W / 2, 'the footer moved aside: the panel stays centred on it');
+  });
+  it('beside the range card, the guide card and the leaderboard at their places: never over them, as near the footer as they allow', () => {
+    // 1366: the range card (right-3, 340 px) and the guide card beside it (right-23rem, 330 px): the stretch between the minimap and the guide card
+    const busy: [number, number][] = [[1366 - 12 - 340, 1366 - 12], [1366 - 368 - 330, 1366 - 368]], x = at(1366, 531, busy);
+    clear(x, 1366, busy); assert.equal(x, 1366 - 368 - 330 - FOOT_GAP - PANEL_W, 'against the guide card, nearest the footer');
+    for (const w of [1366, 1920, 2560]) for (const right of [12, 312, 368]) for (const width of [288, 330, 340]) {
+      const blocks: [number, number][] = [[w - right - width, w - right]], p = at(w, w / 2, blocks);
+      clear(p, w, blocks);
+    }
+    // the leaderboard (right-3, w-72) or the guide card at right-3: the panel stays centred
+    for (const w of [1366, 1920]) for (const width of [288, 330]) assert.equal(at(w, w / 2, [[w - 12 - width, w - 12]]), Math.round(w / 2 - PANEL_W / 2));
+  });
+  it("no stretch holds it (125% UI on 1366 with the range card and the guide card): null, it takes the left tool panel's place", () => {
+    const w = 1093, busy: [number, number][] = [[w - 12 - 340, w - 12], [w - 368 - 330, w - 368]];
+    assert.equal(at(w, w / 2, busy), null);
+    assert.notEqual(at(w, w / 2, [[w - 12 - 340, w - 12]]), null, 'the range card alone leaves it room');
   });
 });

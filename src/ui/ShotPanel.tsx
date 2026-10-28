@@ -19,7 +19,7 @@ export function ShotPanel({ game }: { game: Game }) {
   // where 100% sits on the slider (a putt's 100% is its full length to the pin, at the middle of its 50% to 150%)
   const full = ((1 - range[0]!) / (range[1]! - range[0]!)) * 100;
   return (
-    <div className="pointer-events-auto absolute bottom-[calc(var(--foot-top,0px)+0.75rem)] left-1/2 z-20 w-[26rem] max-w-[calc(100vw-1.5rem)] -translate-x-1/2 glass p-3 text-slate-200">
+    <div className="pointer-events-auto absolute bottom-[calc(var(--foot-stack,0px)+0.75rem)] left-1/2 z-20 w-[26rem] max-w-[calc(100vw-1.5rem)] -translate-x-1/2 glass p-3 text-slate-200">
       <div className="flex items-baseline justify-between gap-2">
         <span className="font-display text-sm font-bold tracking-wide text-[var(--gold-hi)] uppercase">Your shot</span>
         <span className="text-xs tabular-nums text-slate-300">Hole {t.hole} · Par {t.par} · Stroke {t.stroke}</span>
