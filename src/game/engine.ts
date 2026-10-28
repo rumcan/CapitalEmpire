@@ -75,6 +75,7 @@ import { readSave, writeSave, withTourney, clearSave, backupTownSlot, SAVE_VERSI
 import { CAR_COLOURS, carHeading, facings } from './traffic';
 import { bayCar, bayFoot, isWagon } from './vehicles';
 import { DayBook, clubCardView, dayCourse, dayPace, dayPlan, feeScale, normalizeDaySave, seasonPaceRep, type ClubCardView, type DayInputs, type DayRoster } from './golf/everyday';
+import { choosePin, greenAt, pinIn, pinLine, pinReport, pinSlot, rollDayPins, withDayPins, type DayPin, type GreenShape } from './golf/daypins';
 import { DAY_CAR_CAP, DayView, type ClubGround } from './golf/everydayview';
 import { carOwnerScale } from './ext/car-art';
 import { SimClient, type LotView } from './sim/client';
@@ -124,7 +125,7 @@ import { WIN_POP, classUnlocked, junctionUnlocked, tunnelsUnlocked, unlockOf } f
 import type { DisasterNote } from './city';
 import type { DisasterKind } from './ext/disasters';
 import { normalizeGolfSave, type GolfPlaySave, type GolfSave, type GolfView } from './golf/mode';
-import { createCourseHeightField, flattenCourseCorridor, loadCourseHeight, saveCourseHeight, unionBox as unionCourseBox, type CourseHeightField, type CourseHeightSaveChunk, type CourseTileBox } from './ext/course-height';
+import { courseSlopeAt, createCourseHeightField, flattenCourseCorridor, loadCourseHeight, saveCourseHeight, unionBox as unionCourseBox, type CourseHeightField, type CourseHeightSaveChunk, type CourseTileBox } from './ext/course-height';
 import { HEIGHT_LIGHT_STRENGTH, clampHeightLight } from './ext/course-height/light';
 import { planGolfGame } from './golf/start';
 import { RANGE_CAM_ZOOM, planRangeStart } from './golf/rangestart';
@@ -758,6 +759,9 @@ export class Game {
    *  none on the course now), the played course (rebuilt when the holes change: its key), and the clubhouse card's open state */
   private dayBook: DayBook | null = null; private dayPlay: { view: DayView; day: number; key: string } | null = null;
   private dayCourse: { view: CourseView; key: string; at: number } | null = null; clubCardOpen = false;
+  /** T269: the greens the cups are cut on (by hole: the key of the grid's rev, the placed pin and the approach they were found for), the day pins'
+   *  revision (bumped when a cup moves: the flags and the play follow), the revision the flags stand at, and when the cups were last checked */
+  private greens = new Map<number, { key: string; g: GreenShape | null }>(); private pinRev = 0; private flagRev = -1; private pinsCheckedAt = 0; private pinsCheckKey = '';
   /** T233: the top bar's money chip: the treasury as the golf months go by (its change a month); the course rating's quality, worked out at most
    *  every RATING_MS (Course stats derives the holes) */
   private monthMoney = new MonthMoney(); private ratingAt = -Infinity; private ratingOf: { quality: number | null; holes: number } = { quality: null, holes: 0 };
@@ -984,6 +988,7 @@ export class Game {
     // the markers' props are keyed by hole (the pin of hole 9 is yellow): drop both holes' and put them back under their new numbers
     for (const h of [a, b]) for (const k of ['pin', ...TEE_KINDS] as const) { const key = k === 'pin' ? 'pin:' + h : `tee:${h}:${k}`, pr = this.golfProps.get(key); if (pr) { this.removeProp(pr); this.golfProps.delete(key); } }
     g.pins = r.pins; g.tees = r.tees; g.aims = r.aims; g.plans = encodePlans(r.plans);
+    if (g.dayPins) { const sw = (q: DayPin) => (q.hole === a ? { ...q, hole: b } : q.hole === b ? { ...q, hole: a } : q); g.dayPins = { ...g.dayPins, today: g.dayPins.today.map(sw), prev: g.dayPins.prev.map(sw) }; this.pinRev++; } // T269: so do the day's cups
     for (const p of this.props) if (p.frame === a) p.frame = b; else if (p.frame === b) p.frame = a; // T229: the frame trees follow their hole
     // T256: so do their looks
     const bk = g.looks; if (bk) { const la = bk[holeOwner(a)], lb = bk[holeOwner(b)]; if (lb) bk[holeOwner(a)] = lb; else delete bk[holeOwner(a)]; if (la) bk[holeOwner(b)] = la; else delete bk[holeOwner(b)]; this.paint.looksRev++; }
@@ -1086,6 +1091,7 @@ export class Game {
     const item = LIB_INDEX.get(sprId);
     if (item !== undefined) this.golfProps.set(kind === 'pin' ? 'pin:' + hole : `tee:${hole}:${kind}`, this.addProp(item, x, y, false, MARKER_SCALE[kind]));
     if (kind === 'pin') g.pins.push({ hole, x, y, auto: !held, ...(held ? { held } : {}) }); else g.tees.push({ hole, kind, x, y, auto: !held, ...(held ? { held } : {}) });
+    if (kind === 'pin') this.setTodayPin(hole, x, y); // T269: a pin put down is today's cup
     if (kind === 'pin' && g.start === 'range') this.sendGolf(); // T090: a new hole speeds a range start's town
   }
   /** removes a pin or tee marker and its prop (if there is one) */
@@ -3352,10 +3358,13 @@ export class Game {
     const key = 'pin:' + pin.hole;
     const id = pin.hole === 9 ? PIN_YELLOW_ID : PIN_RED_ID;
     const item = LIB_INDEX.get(id);
+    // (T269: the flag stands on the day's cup, today's or yesterday's, else on the placed pin)
+    const dp = this.golf.dayPins, at = [pin, ...(dp ? [pinIn(dp.today, pin.hole), pinIn(dp.prev, pin.hole)] : [])].filter((q): q is DayPin | typeof pin => !!q);
     for (const p of this.props) {
-    if (p.item === item && Math.hypot(p.x - pin.x, p.y - pin.y) < 2) { this.golfProps.set(key, p); break; }
+    if (p.item === item && at.some(q => Math.hypot(p.x - q.x, p.y - q.y) < 2)) { this.golfProps.set(key, p); break; }
     }
     }
+    this.flagRev = -1; // (T269: the flags are put on today's cups again)
     // the pictures that stood in for the tee markers before T111 (a flagstick, the bag trolley): a save's prop of one on a tee goes (never a pin's)
     const oldTee = new Set(OLD_TEE_IDS.flatMap(id => LIB_INDEX.get(id) ?? [])), pinProps = new Set(this.golfProps.values()), tees = this.golf.tees ?? [];
     for (const p of [...this.props]) if (oldTee.has(p.item) && !pinProps.has(p) && tees.some(t => Math.hypot(p.x - t.x, p.y - t.y) < 2)) this.removeProp(p);
@@ -3414,6 +3423,7 @@ export class Game {
     }
     const holes0 = this.holesBuilt();
     this.golf.pins = r.pins; this.golf.tees = r.tees;
+    if (kind === 'pin') this.setTodayPin(hole, x, y); // T269: the pin dragged is today's cup
     if (this.golf.start === 'range' && this.holesBuilt() !== holes0) this.sendGolf(); // T090: a new hole speeds a range start's town
     this.selectedGolfMarker = null;
     this.scheduleSave();
@@ -4388,7 +4398,8 @@ export class Game {
     return;
     }
     for (const pin of this.golf.pins) {
-    if (Math.hypot(this.hover.x - pin.x, this.hover.y - pin.y) <= 3) {
+    const cup = this.todayPin(pin.hole) ?? pin; // (T269: or its flag on the day's cup)
+    if (Math.hypot(this.hover.x - pin.x, this.hover.y - pin.y) <= 3 || Math.hypot(this.hover.x - cup.x, this.hover.y - cup.y) <= 3) {
     this.selectGolfMarker(pin.hole, 'pin'); return;
     }
     }
@@ -6615,10 +6626,87 @@ export class Game {
     const g = this.golf; if (!g) return null;
     const c = this.dayCourse;
     if (c && now - c.at < 2000) return c;
-    const key = JSON.stringify([g.tees, g.pins, g.aims]);
+    const key = JSON.stringify([g.tees, g.pins, g.aims, g.dayPins?.today ?? null]); // (T269: and the day's cups)
     if (c && c.key === key) { c.at = now; return c; }
     this.dayCourse = { view: dayCourse(this.playCourse(g)), key, at: now }; // (each hole once: a 9-hole course is a 9-hole round)
     return this.dayCourse;
+  }
+  // ---------- T269 (#810): the day's pins (golf/daypins.ts) ----------
+  /** today's cup of hole n: the day's (golf.dayPins), else its placed pin; null: no pin */
+  todayPin(n: number): Pt | null {
+    const g = this.golf; if (!g) return null;
+    const t = g.dayPins ? pinIn(g.dayPins.today, n) : null; if (t) return t;
+    return g.pins.find(p => p.hole === n) ?? null;
+  }
+  /** sets hole n's cup today (a pin put down or dragged is today's cup) */
+  private setTodayPin(n: number, x: number, y: number) {
+    const s = this.golf?.dayPins; if (!s) return; // (no day pins yet: the placed pins are today's)
+    const t = pinIn(s.today, n); if (t) { t.x = x; t.y = y; } else s.today.push({ hole: n, x, y });
+    this.pinRev++; this.dayCourse = null;
+  }
+  /** the point before hole n's pin on its line of play (its last aim point, else its back tee); null: none */
+  private approachOf(n: number): Pt | null {
+    const g = this.golf; if (!g) return null;
+    const aims = (g.aims ?? []).filter(q => q.hole === n).sort((p, q) => p.order - q.order), a = aims[aims.length - 1];
+    if (a) return { x: a.x, y: a.y };
+    const t = g.tees.find(q => q.hole === n && q.kind === 'back') ?? g.tees.find(q => q.hole === n);
+    return t ? { x: t.x, y: t.y } : null;
+  }
+  /** hole n's green round its placed pin (golf/daypins.ts greenAt), kept until the grid, the pin or its approach changes */
+  private greenOf(n: number): GreenShape | null {
+    const g = this.golf, grid = this.courseGrid; if (!g || !grid) return null;
+    const pin = g.pins.find(p => p.hole === n); if (!pin) return null;
+    const from = this.approachOf(n), key = `${grid.rev}|${pin.x},${pin.y}|${from ? `${from.x},${from.y}` : ''}`, c = this.greens.get(n);
+    if (c?.key === key) return c.g;
+    const gr = greenAt(grid, n, pin.x, pin.y, from); this.greens.set(n, { key, g: gr }); return gr;
+  }
+  /** the rota's new cup for hole n on town day `day`, away from yesterday's (golf/daypins.ts choosePin on its green, on T263's slopes) */
+  private nextPin(day: number, n: number, prev: Pt): Pt | null {
+    const { depth, side } = pinSlot(day, n), f = this.courseHeight;
+    return choosePin(this.greenOf(n), depth, side, prev, f.rev ? (x, y) => courseSlopeAt(f, x, y).mag : null, this.seed, day, n);
+  }
+  /** T269, each frame in golf: a new town day cuts every hole's cup anew (rollDayPins; an old save's cups are its placed pins); every 2 s, when the
+   *  grid or the pins changed, a cup no longer on its hole's green goes back to the placed pin. The flags follow the cups */
+  private updateDayPins(now: number) {
+    const g = this.golf; if (!g) return;
+    const tr = this.traffic, day = townTimeOf(tr.town, tr.simTime(now)).day;
+    if (!g.dayPins || g.dayPins.day !== day) {
+      g.dayPins = rollDayPins(g.dayPins ?? null, day, g.pins.map(p => ({ hole: p.hole, x: p.x, y: p.y })), (n, prev) => this.nextPin(day, n, prev));
+      this.pinRev++; this.dayCourse = null; this.scheduleSave();
+    }
+    if (now - this.pinsCheckedAt >= 2000) { this.pinsCheckedAt = now; this.checkDayPins(); }
+    if (this.flagRev !== this.pinRev) this.syncFlags();
+  }
+  /** the day's cups against the course (when the grid or the pins changed): a hole with no cup today is given its placed pin, and a cup no longer on
+   *  its hole's green (repainted, the pin moved) goes back to the placed pin */
+  private checkDayPins() {
+    const g = this.golf, grid = this.courseGrid, s = g?.dayPins; if (!g || !s) return;
+    const key = () => `${grid?.rev ?? -1}|${this.pinRev}|${g.pins.length}`; if (key() === this.pinsCheckKey) return;
+    let moved = false;
+    for (const p of g.pins) {
+      const t = pinIn(s.today, p.hole);
+      if (!t) { s.today.push({ hole: p.hole, x: p.x, y: p.y }); moved = true; continue; }
+      if (!grid || (t.x === p.x && t.y === p.y)) continue;
+      const i = cellAt(grid, t.x, t.y);
+      if (i < 0 || grid.surf[i] !== SURF.green || grid.hole[i] !== p.hole) { t.x = p.x; t.y = p.y; moved = true; }
+    }
+    if (moved) { this.pinRev++; this.dayCourse = null; this.scheduleSave(); }
+    this.pinsCheckKey = key();
+  }
+  /** where hole n's flag stands now: today's cup */
+  private shownPin(n: number): Pt | null { return this.todayPin(n); }
+  /** the flags (the pins' props, golfProps) to the cups shown now: moved in place (propChanged; a flag casts nothing, so no ground re-bakes) */
+  private syncFlags() {
+    const g = this.golf; this.flagRev = this.pinRev; if (!g) return;
+    for (const p of g.pins) {
+      const pr = this.golfProps.get('pin:' + p.hole), at = this.shownPin(p.hole); if (!pr || !at) continue;
+      if (Math.abs(pr.x - at.x) > 1e-6 || Math.abs(pr.y - at.y) > 1e-6) { pr.x = at.x; pr.y = at.y; this.propChanged(pr); }
+    }
+  }
+  /** T269: the hole card's line for hole n's cup today ("back left · 24 m on, 5 m from the left edge"); null: no green to read it on */
+  todayPinText(n: number): string | null {
+    const p = this.todayPin(n), gr = p ? this.greenOf(n) : null;
+    return p && gr ? pinLine(pinReport(gr, p)) : null;
   }
   /** T208: the club's ground for the everyday golfers' walks and cars: the clubhouse's door, and the car park that serves it (T237: the nearest
    *  walk of those within WALK_SERVE_M, golf/walkserve.ts; none in reach: no bays, so the golfers find no parking) with its bays (nearest the
@@ -6775,7 +6863,8 @@ export class Game {
       const s = i >= 0 ? (p ? golfSurfaceOf(p) : SURF_SURFACE[d]) : null;
       return s ?? surfaceAt(d !== c && c ? areasBut(c) : areas, x, y);
     };
-    return makeCourseView(deriveHoles(areas, g.tees, g.pins, g.aims), surfAt);
+    // T269: play reads the day's cups (golf/daypins.ts): the pin and the end of each line; the par and the tees are the placed pin's
+    return withDayPins(makeCourseView(deriveHoles(areas, g.tees, g.pins, g.aims), surfAt), n => this.todayPin(n));
   }
   /** the round of a tournament key from the save: the save's owner play when it is this tournament's (buildPlay replays his inputs). A save the course no
    *  longer fits (its inputs throw) is dropped, and the day is played without him */
@@ -7064,7 +7153,7 @@ export class Game {
     this.ground.tilesAhead(bandsAhead(z, tb));
     const tier = z < PLANNER_Z ? 'planner' : z < DISTRICT_Z ? 'district' : 'street'; this.perf.tier = tier;
     // the golf round moves on before the movers (the golfers) and the overlay (the balls) read it
-    this.updatePlay(now); this.updateEveryday(now);
+    this.updateDayPins(now); this.updatePlay(now); this.updateEveryday(now); // T269: the day's cups first, so the day's play reads them
     if (this.golf) this.monthMoney.note(this.golfMonthAt(now), this.money); // T233: the money chip's change a month
     // T226: the colour grade this frame (grade.ts: none when off, easing off after dusk; the scene then draws straight to the screen)
     gl.grade = this.boot.kind === 'game' ? gradeFrame(this.grade, this.nightAmount()) : null;
