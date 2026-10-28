@@ -2256,8 +2256,9 @@ export class GroundPainter {
         draw(); ctx.restore();
       }
     };
-    /** the lit top edges on layer hi, clipped to it (a green's a hairline: its raised edge reads by a thin light, the owner 2026-10-25) */
-    const rims = (hi: number) => { const rs = rimsOn.get(hi); if (rs && !lite) this.courseRims(ctx, rs, L, M, hi ? ringsOfCode(hi) : null, hi >> 1 === SURF.green ? 0.35 : 1); };
+    /** the lit top edges on layer hi, clipped to it (a green's a hairline: its raised edge reads by a thin light, the owner 2026-10-25; T260:
+     *  a tee's own top too, lit where it has no first cut round it: on its bright grass a full band read as a lime line) */
+    const rims = (hi: number) => { const rs = rimsOn.get(hi); if (rs && !lite) this.courseRims(ctx, rs, L, M, hi ? ringsOfCode(hi) : null, hi >> 1 === SURF.green || hi === layerCode(SURF.tee, false) ? 0.35 : 1); };
     walls(0); rims(0);
     for (const code of DRAW_ORDER) {
       const s = code >> 1, ls = layers(s), bk = banksAt.get(code);
