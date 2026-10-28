@@ -40,6 +40,7 @@ import { ROUGH_SOFT, ROUGH_TEX, roughBack, type RoughKind, type RoughMix } from 
 import { BLEND_WAVES, blendAlpha, blendNoise, trimLru } from './painted-grass-lod';
 import { LEAF_DENSITY_DEFAULT, PIC_REACH, STAMP, layLeaves, leafSignature, type LeafRoad } from './leaf-fall';
 import { leafAtlasAt, type LeafAtlas } from './leaf-atlas';
+import { SURVEY_COL, SURVEY_DASH, SURVEY_W } from './lots/survey';
 import { LIVING_AO, LIVING_EDGE, maskContours, CasterStore, COURSE_GRASSY, COURSE_WATER, SHADOW_DIR, debugImage, grassyTex, influence, livingMasks, livingQueryBox, livingRes, livingSignature, waterTex, type Box, type InfluenceGrid, type LivingMasks, type RoadPiece, type WaterLine } from './living-ground';
 /** the bytes of painted compositions a worker keeps (a chunk's look is about 3 MB at the closest zoom; the bake in progress keeps all of its own) */
 const COMPOSED_BYTES = 64 << 20;
@@ -1189,6 +1190,9 @@ export class GroundPainter {
     // ---- 1a". the lots' flat decals (leaf drifts, worn grass, oil stains, litter, mud) on top of all their ground (T183: the lawn, the lot's
     //      patches, the painted areas, the living ground's streaks and the car parks), under the bridges, roads and sprites
     if (marks.length) { this.drawMarks(ctx, marks, L, M, box); ctx.setTransform(M); }
+    // ---- 1a"'. T232: the survey lines (a building site's plot, the player's empty land: lots/survey.ts): white dashes over the decals
+    const surveys = marks.filter(p => p.survey && p.lines?.length);
+    if (surveys.length) { this.drawSurvey(ctx, surveys, minW); ctx.setTransform(M); }
     // ---- 1b. bridge decks under the road: the shadow on the water, the piers, the deck's fascia and top
     for (const b of brs) {
       const path = linePath(b.pts, false);
@@ -3030,6 +3034,14 @@ export class GroundPainter {
     drawDecals(ctx, placeDecals(box, MAP_DECALS, ground), this.tex, L, M);
   }
 
+  /** T232: the survey lines (lots/survey.ts), in the chunk's transform (tiles): each side a run of dashes from its corner, at least 1.5 px wide */
+  private drawSurvey(ctx: C2D, patches: LotPatch[], minW: number) {
+    ctx.save(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+    ctx.lineCap = 'butt'; ctx.lineJoin = 'miter'; ctx.setLineDash(SURVEY_DASH as number[]); ctx.lineDashOffset = 0;
+    ctx.strokeStyle = SURVEY_COL; ctx.lineWidth = Math.max(SURVEY_W, 1.5 * minW); ctx.beginPath();
+    for (const p of patches) for (let k = 0, l = p.lines!; k + 3 < l.length; k += 4) { ctx.moveTo(l[k]!, l[k + 1]!); ctx.lineTo(l[k + 2]!, l[k + 3]!); }
+    ctx.stroke(); ctx.restore();
+  }
   /** the lots' flat decals: each centred on its ground point, scaled and mirrored; the top-down ones (flatSquash) at half height, lying on the ground */
   private drawMarks(ctx: C2D, patches: LotPatch[], L: number, M: DOMMatrix, box: BBox) {
     const [tx0, ty0, tx1, ty1] = box, img = this.tex.lotDecals;

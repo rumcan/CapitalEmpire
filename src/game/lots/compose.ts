@@ -131,26 +131,65 @@ const SITE_KIT = {
   storage: names(['construction:pallet-stack', 'construction:mesh-rolls']).concat(withVariations(['expansion:pallet-stack'])),
   rubble: withVariations(['expansion:concrete-rubble']), spool: withVariations(['expansion:cable-spool']), forklift: withVariations(['expansion:forklift']),
 };
-/** a dirt construction site: a digger, varied supplies, rubble, a cable spool and a pickup; no building */
-function site(B: Build) {
-  B.allMarks = true;
-  const { W, D, r, flip } = B;
-  B.pave('yard', 0.3, 0.3, W - 0.3, D - 0.3, 'dirt');
-  // The digger's source faces +X, so mirror it for streets along the other axis (+Y).
-  // Give the machine priority over the smaller props; done() applies the usual lot and collision checks.
-  B.put('construction:digger', W / 2 - 0.6, D / 2 + 1, { flip: !flip });
+/** T232 (#673, the concept's building sites): the site kit (prep-site-kit.mjs, on the construction page): lumber stacks (170), heaps of earth,
+ *  gravel and sand (171), and the timber frame going up (169) in its two views, view 1 where the lot's street lies toward the camera (+X or
+ *  +Y), view 2 (the frame turned half round) where it lies away; the excavator (168) is the library's digger. None is ever mirrored */
+export const SITE_LUMBER = names(['construction:site-lumber-a', 'construction:site-lumber-b', 'construction:site-lumber-c']);
+export const SITE_HEAPS = names(['construction:site-heap-earth', 'construction:site-heap-gravel', 'construction:site-heap-sand']);
+export const TIMBER_FRAME = ['construction:timber-frame-1', 'construction:timber-frame-2'] as const;
+export const DIGGER = 'construction:digger';
+/** the kit's ids (the tests: a lot shows them only while it builds) */
+export const SITE_PIECES: ReadonlySet<string> = new Set([...SITE_LUMBER, ...SITE_HEAPS, ...TIMBER_FRAME, DIGGER]);
+/** a site's bare dirt reaches this close to its lot's lines (tiles: the survey line runs SURVEY_INSET in, on the dirt); a house frame stands this
+ *  far back from the front line (a front yard's depth) */
+const SITE_DIRT = 0.1, FRAME_SETBACK = 1.6;
+/** the frame's view for a lot: view 1 when its street lies toward the camera (+X or +Y), else view 2 */
+export const frameView = (B: Pick<Build, 'F'>): string => TIMBER_FRAME[B.F.x > 0.5 || B.F.y > 0.5 ? 0 : 1];
+
+/** a building site (a lot while it builds, LV.BUILDING): bare dirt (the Dirt surface, dirt-run) to the white dashed survey line round the plot; a
+ *  house's timber frame where the house will stand (a lot on the map axes that holds it), lumber stacks beside it, heaps and the digger behind;
+ *  the other uses' sites the digger in the middle, heaps, lumber and the old supplies, rubble, a cable spool and a pickup. Every piece as
+ *  painted (nothing mirrored); done() keeps the first of two that overlap, so the frame, then the digger, win */
+function site(B: Build, home: boolean, angled: boolean) {
+  B.allMarks = true; B.surveyed = true;
+  const { W, D, r } = B;
+  B.pave('yard', SITE_DIRT, SITE_DIRT, W - SITE_DIRT, D - SITE_DIRT, 'dirt');
+  const heap = () => pick(r, SITE_HEAPS), lumber = () => pick(r, SITE_LUMBER);
+  if (home) {
+    // the frame where the house will stand: across the middle (a little to one side), set back as a house is
+    const id = frameView(B), [fw, fd] = B.fit(id, false);
+    const fits = !angled && fw + 1 <= W && FRAME_SETBACK + fd + 0.5 <= D;
+    const fa = fits ? W / 2 + (r() - 0.5) * Math.max(0, W - fw - 1.6) * 0.5 : W / 2, fb = FRAME_SETBACK + fd / 2;
+    if (fits) B.put(id, fa, fb);
+    const a0 = fits ? fa - fw / 2 : W / 2, a1 = fits ? fa + fw / 2 : W / 2, back = fits ? fb + fd / 2 : D * 0.35;
+    // behind it: the digger (it dug the footings) and the heaps it left; beside it: lumber for the walls
+    const [dw, dd] = B.fit(DIGGER, false);
+    B.put(DIGGER, W / 2 + (r() - 0.5) * Math.max(0, W - dw - 1.2), Math.max(back + dd / 2 + 0.2, D - dd / 2 - 0.6));
+    B.put(heap(), 1.4 + r() * 0.4, D - 1.5);
+    B.put(heap(), W - 1.5 - r() * 0.4, D - 1.7);
+    B.put(lumber(), a0 / 2, fb + (r() - 0.5));
+    B.put(lumber(), (a1 + W) / 2, fb + 0.6 + (r() - 0.5));
+    if (r() < 0.6) B.put(lumber(), (a1 + W) / 2, Math.max(1.4, FRAME_SETBACK - 0.2));
+    B.put(pick(r, SITE_KIT.masonry), a0 / 2, Math.min(D - 1, back + 0.8));
+    B.vehicle(PICKUPS, a0 > W - a1 ? a0 / 2 : (a1 + W) / 2, 0.5);
+    B.mark('mud', W / 2, Math.min(D - 1, back + 0.8), 1.2); B.mark('expansion:mud-footprints', W / 2, FRAME_SETBACK - 0.6); B.mark('expansion:mud-arc', W * 0.7, D - 2.2); B.marksIn('gravel', 1, 1, W - 1, D - 1, 2);
+    return;
+  }
+  // the digger in the middle (as painted: it faces +X), then the heaps and lumber, the supplies, rubble, a spool and a pickup
+  B.put(DIGGER, W / 2 - 0.6, D / 2 + 1);
+  B.put(heap(), W - 1.6, D * 0.3);
+  B.put(lumber(), 1.5, D - 2);
   B.put(pick(r, SITE_KIT.masonry), 1.2, 1.6);
   B.put(pick(r, SITE_KIT.masonry), 2.5, 1.2);
   B.put(pick(r, SITE_KIT.rubble), W - 1.6, 2.2);
-  B.put(pick(r, SITE_KIT.aggregate), W - 1.5, D * 0.3);
-  B.put(pick(r, SITE_KIT.spool), W - 1.4, D - 2.2);
-  if (r() < 0.4) B.put(pick(r, SITE_KIT.forklift), W / 2 + 1.5, D / 2, { flip });
+  B.put(heap(), W - 1.5, D - 2.2);
+  if (r() < 0.4) B.put(pick(r, SITE_KIT.forklift), W / 2 + 1.5, D / 2);
   B.put(pick(r, SITE_KIT.rubble), W / 2 - 2.6, D / 2 - 0.4);
   B.vehicle(PICKUPS, W / 2, 0.8);
   B.mark('mud', W / 2, 2.4, 1.2); B.mark('expansion:mud-footprints', W / 2, D / 2); B.mark('expansion:mud-arc', W * 0.7, D - 2.2); B.marksIn('gravel', 1, 1, W - 1, D - 1, 2);
-  B.put(pick(r, SITE_KIT.long), 1.6, D - 1.8, { flip });
+  B.put(pick(r, SITE_KIT.long), 1.6, D - 4);
   B.put(pick(r, SITE_KIT.storage), W - 2.2, D - 1.4);
-  if (r() < 0.5) B.put(pick(r, JUNK), W / 2, D - 1.5, { flip });
+  if (r() < 0.5) B.put(pick(r, JUNK), W / 2, D - 1.5);
 }
 
 /** a vacant lot: a few weeds and a tree */
@@ -675,8 +714,9 @@ export function compose(lot: LotGeom, st: ComposeState, drops?: PresetDrop[]): C
   const edge = () => { boundaryFence(B, lot); B.clearDrives(); };
   const p = use ? lp : null;
   if (st.use === LU.NONE || st.level === LV.EMPTY) { vacant(B); edge(); }
+  // (T232: a lot under construction is a site, an angled one too: its dirt and survey line follow the lot)
+  else if (st.level === LV.BUILDING) { site(B, st.use === LU.RES, angled); edge(); }
   else if (angled && !p) { green(B); edge(); }
-  else if (st.level === LV.BUILDING) { site(B); edge(); }
   else if (!p || !use) { vacant(B); edge(); }
   else if (GENERATED && use === 'res' && frozenHouse(p.preset)) {
     // T160: the base of the frozen preset (its house, drive and walk), its street items and boundary fence; the yard from the generator

@@ -87,6 +87,9 @@ export interface LotPatch { pts: number[] /* x0 y0 x1 y1 ... (tiles, in order) *
    *  look state (T155: its state's lawn, painted-surfaces.ts lawnTexFor); rough: a new or poor town's untended yard (T222, rough-yards.ts): fescue, dirt or desert in soft patches over the mown lawn */ lawn?: { a: number; share: number; soft: number; patch: number; z: number; st?: 'built' | 'upgraded' | 'declined'; rough?: RoughMix }; /** markings over the road (on-street parking): only its lines are drawn, white, with the road's own markings */ top?: boolean; /** the colour of its lines (parking bays; absent: worn off-white) */ lineCol?: 'yellow';
   /** an on-street parking lay-by cut into the sidewalk: drawn after the roads, over the sidewalk and the kerb, with its own kerb on the outer side */ layby?: boolean;
   /** T228: a lot's driveway (lots/compose-core.ts): its mouth on the road gets a cut (street-marks.ts driveCuts) */ drive?: true;
+  /** T232: a survey line round a plot (lots/survey.ts: a building site, the player's empty land): always with tex 'marks' (nothing filled), its
+   *  lines drawn white and dashed with the lots' decals, over all their ground and under the roads */
+  survey?: true;
   /** T228: a cut in the roads' white edge lines (a driveway's mouth, a bus stop): nothing is drawn, the edge lines inside pts are erased.
    *  Always with top, so every other painter passes it by */ cut?: true;
   /** a course chunk (the course grid, T078): drawn with the painted areas (by its z) from its layers; pts is its chunk box grown by

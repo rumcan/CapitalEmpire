@@ -92,6 +92,9 @@ import { townTreeCell } from './towntrees';
 import type { BendMode, LibItem, LineStyle, Prop, Tool } from './types';
 import { LK, LaneGraph, laneAt, laneOff } from './sim/lanes';
 import { LU, LV, type LotTuple } from './lots/town';
+import { rectPlot, surveyPatch } from './lots/survey';
+/** T232: a bought block's survey line runs this far inside its edges (tiles), clear of a neighbour's line */
+const LAND_SURVEY_INSET = 0.6;
 import { acrossLines, compose, composeWhole, farmPreset, fenceOnly, isCarPark, lotModelVersion, lotPresets, pickedPreset, setLotModel, type ComposeState, type FenceLines, type LotGeom, type Placed } from './lots/compose';
 import { LATEST as LATEST_LOT_MODEL } from './lots/lot-models';
 import { stateOf, type PresetState } from './lots/presets';
@@ -2423,6 +2426,52 @@ export class Game {
     for (const p of this.lotHits) { const it = LIBRARY[p.item]; if (!p.auto && it.big && it.kind !== 'car') return true; }
     return false;
   }
+  // ---------- T232: the player's land pegged out (lots/survey.ts; the concept: "bought land is bare dirt inside a white dashed line")
+  /** the survey lines on the ground, by ground key ('survey:' + the plot), the signature they were laid for, and the frame count of the check */
+  private surveyKeys = new Set<string>(); private surveySig = ''; private surveyTick = 0;
+  /** the player's empty land pegged out until it is built on (checked twice a second, laid again only when something it reads changed): every
+   *  block bought through Land for sale (T200: the parcels after the first, the start's land) with its survey line and its own ground; every town
+   *  lot the bulldozer cleared on the player's land (golf.cleared) with the line and bare dirt (the Dirt surface). A cleared plot built on is
+   *  done with (dropped from the save); a bought block shows its line again if all on it goes */
+  private syncSurvey() {
+    const g = this.golf;
+    const sig = g ? `${(g.parcels ?? []).length}|${(g.cleared ?? []).length}|${this.courseGrid?.rev ?? 0}|${this.paintRev}|${this.net.version}|${this.props.size}|${(g.structures ?? []).length}` : '';
+    if (sig === this.surveySig) return;
+    this.surveySig = sig;
+    const want = new Map<string, LotPatch[]>();
+    if (g) {
+      for (const r of (g.parcels ?? []).slice(1)) {
+        if (this.builtOn([r[0], r[1], r[0] + r[2], r[1] + r[3]])) continue;
+        const s = surveyPatch(rectPlot(r), LAND_SURVEY_INSET); if (s) want.set(`survey:${r.join(',')}`, [s]);
+      }
+      if (g.cleared?.length) {
+        g.cleared = g.cleared.filter(c => !this.builtOn(lotBoxOf([c[0]!, c[1]!], [c[2]!, c[3]!], [c[4]!, c[5]!], c[6]!, c[7]!)));
+        for (const c of g.cleared) {
+          const plot = { o: { x: c[0]!, y: c[1]! }, u: { x: c[2]!, y: c[3]! }, n: { x: c[4]!, y: c[5]! }, w: c[6]!, d: c[7]! }, s = surveyPatch(plot);
+          const P = (a: number, b: number) => [plot.o.x + plot.u.x * a + plot.n.x * b, plot.o.y + plot.u.y * a + plot.n.y * b], e = 0.1;
+          const dirt: LotPatch = { pts: [P(e, e), P(plot.w - e, e), P(plot.w - e, plot.d - e), P(e, plot.d - e)].flat(), tex: 'dirt' };
+          want.set(`survey:c:${c.join(',')}`, s ? [dirt, s] : [dirt]);
+        }
+        if (!g.cleared.length) delete g.cleared;
+      }
+    }
+    for (const k of this.surveyKeys) if (!want.has(k)) this.setLotGround(k, null);
+    for (const [k, p] of want) if (!this.surveyKeys.has(k)) this.setLotGround(k, p);
+    this.surveyKeys = new Set(want.keys());
+  }
+  /** whether the player has built anything on a box of its land (tiles x0 y0 x1 y1): a course surface in the grid, a painted area, a structure,
+   *  a building of its own (a big prop that is no car), a road or cart path */
+  private builtOn(b: readonly number[]): boolean {
+    const [x0, y0, x1, y1] = b as [number, number, number, number], cg = this.courseGrid;
+    if (cg) for (let y = y0 + 0.25; y < y1; y += 1) for (let x = x0 + 0.25; x < x1; x += 1) { const i = cellAt(cg, x, y); if (i >= 0 && cg.surf[i] !== SURF.none) return true; }
+    for (const a of this.paint.areas) { const q = ptsBox(a.pts); if (q[0]! < x1 && q[2]! > x0 && q[1]! < y1 && q[3]! > y0) return true; }
+    for (const s of this.golf?.structures ?? []) if (s.x >= x0 && s.x <= x1 && s.y >= y0 && s.y <= y1) return true;
+    for (const p of this.propGrid.query([x0, y0, x1, y1])) { const it = LIBRARY[p.item]!; if (!p.auto && it.big && it.kind !== 'car') return true; }
+    for (const s of this.net.segsNear({ x: (x0 + x1) / 2, y: (y0 + y1) / 2 }, Math.hypot(x1 - x0, y1 - y0) / 2 + 2)) {
+      for (let k = 0; k <= 8; k++) { const x = s.a.x + (s.b.x - s.a.x) * k / 8, y = s.a.y + (s.b.y - s.a.y) * k / 8; if (x > x0 && x < x1 && y > y0 && y < y1) return true; }
+    }
+    return false;
+  }
   /** the road blocks' lawns on the ground (lawns.ts), by ground key ('lawn:' + block key), and the timer of the next sync after an edit */
   private blockLawns = new Set<string>(); private blockLawnTimer = 0;
   /** every road block gets its lawn (lawns.ts blockLawn): blocks that went lose theirs, new ones get one; a block whose corners stayed keeps it */
@@ -3715,6 +3764,8 @@ export class Game {
     const c = compensation(v), name = LOT_NAME[v.use] ?? 'lot';
     if (c > this.money) { this.toast(`Not enough money: buying out this ${name} costs $${c.toLocaleString()}`, 'warn'); return; }
     this.traffic.buyLot(v.key);
+    // T232: a lot cleared on the player's own land is pegged out (bare dirt in a survey line) until it builds there (syncSurvey)
+    if (this.golf && this.onGolfLand(lotBoxOf(v.o, v.u, v.n, v.w, v.d))) { (this.golf.cleared ??= []).push([v.o[0], v.o[1], v.u[0], v.u[1], v.n[0], v.n[1], v.w, v.d].map(x => +x.toFixed(3))); this.surveySig = ''; this.scheduleSave(); }
     this.toast(`Bought and cleared ${name} for $${c.toLocaleString()}`, 'good');
     this.emit();
   }
@@ -5412,6 +5463,7 @@ export class Game {
     this.cardsApplied = 0; this.setCardFields([]); this.traffic.round = new Round().view();
     for (const k of this.lotProps.keys()) this.setLotGround(k, null);
     for (const k of this.blockLawns) this.setLotGround(k, null); this.blockLawns.clear();
+    for (const k of this.surveyKeys) this.setLotGround(k, null); this.surveyKeys.clear(); this.surveySig = '';
     this.lotProps.clear(); this.yardRough.clear(); this.roughAt = -1; this.lotQueue.clear(); this.staged.clear(); this.labLot = null; this.labClear = null; this.perf.lotProps = 0;
     this.dropAllFarms();
     for (const id of [...this.placeProps.keys()]) this.dropPlace(id);
@@ -6165,6 +6217,7 @@ export class Game {
     const pdt = this.lastFrame ? Math.min(0.25, (now - this.lastFrame) / 1000) : 0; this.lastFrame = now; const gp = this.golf?.progress; if (gp && this.speed > 0 && gp.playS < STUCK_PLAY_SEC) gp.playS += pdt;
     this.perf.courseMs = this.cMs; this.cMs = 0; this.perf.lotFlushMs = 0;
     if (this.grassWait.size) { const tg = performance.now(); this.courseGrass(1); this.cMs += performance.now() - tg; }
+    if (++this.surveyTick % 30 === 0) this.syncSurvey(); // T232
     this.applyLotQueue(); this.applyFarmQueue(); if (this.cgDirty && performance.now() - this.cgSentAt >= this.courseSendMs) { const tc = performance.now(); this.flushCourse(); this.cMs += performance.now() - tc; } this.watchHoleLines(performance.now()); this.flushLotGround(); this.flushCasters(); this.laybyLots();
     // the farms yield to the lots the town builds on (checked about once a second: the count walks every lot)
     if (this.farmsEnabled && ++this.farmTick % 60 === 0 && this.farmMap.stale(claimedLots(this.traffic.lots), this.site, this.farmParks().length)) this.farmsUpdate(true);

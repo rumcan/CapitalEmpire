@@ -21,6 +21,9 @@ export interface GolfSave {
  v: 1; tier: number; rep: number; poorYears?: number; town: Pt; course: Rect; parcel: Rect; dir: 0 | 1 | 2 | 3;
  tees: TeeMark[]; pins: Pin[]; aims: AimPoint[]; clubhouse: Pt;
  parcels?: Rect[];
+ /** T232: the town lots the bulldozer cleared on the player's land, pegged out (bare dirt in a survey line) until the player builds there: each
+  *  the lot's corner o (x, y), its frame u (x, y) and n (x, y), its width and depth (tiles). Missing: none */
+ cleared?: number[][];
  structures?: PlacedEventStructure[];
  cards?: string[];
  /** the course height field as sparse chunks (T027); missing = flat */
