@@ -2,19 +2,16 @@
 // data-tip (its name), data-tip-key (its key, if any) and data-tip-why (why it is locked or refused, if it is); the one TooltipLayer shows it on
 // hover after TIP_DELAY_MS and at once on keyboard focus, beside the control, with role="tooltip" and the control's aria-describedby.
 import { useEffect, useRef, useState } from 'react';
-import type { TipParts } from './tip';
+import { tipPlace, type TipParts, type TipSide } from './tip';
 export { tipAttrs, tipText, type TipParts } from './tip';
 
 /** how long the pointer rests on a control before its tooltip shows, ms */
 export const TIP_DELAY_MS = 450;
 
 
-interface Shown { el: HTMLElement; parts: TipParts; x: number; y: number; side: 'right' | 'below' }
-/** where a control's tooltip stands: to the right of a control near the left edge (the rail), else below it, centred */
-function place(el: HTMLElement): { x: number; y: number; side: 'right' | 'below' } {
-  const r = el.getBoundingClientRect();
-  return r.left < 140 ? { x: r.right + 8, y: r.top + r.height / 2, side: 'right' } : { x: r.left + r.width / 2, y: r.bottom + 8, side: 'below' };
-}
+interface Shown { el: HTMLElement; parts: TipParts; x: number; y: number; side: TipSide }
+/** where a control's tooltip stands: beside the course drawer's, above the town footer's (T250), else below (tip.ts tipPlace) */
+const place = (el: HTMLElement) => tipPlace(el.getBoundingClientRect(), window.innerHeight);
 const partsOf = (el: HTMLElement): TipParts => ({ name: el.dataset.tip ?? '', ...(el.dataset.tipKey ? { key: el.dataset.tipKey } : {}), ...(el.dataset.tipWhy ? { why: el.dataset.tipWhy } : {}) });
 
 /** the one tooltip of the page (mounted once, in App) */
@@ -43,11 +40,12 @@ export function TooltipLayer() {
       document.removeEventListener('focusin', focus); document.removeEventListener('focusout', blur); document.removeEventListener('keydown', key);
     };
   }, []);
-  // placed once its size is known: beside the rail's control (its middle), else centred below the control; kept inside the window
+  // placed once its size is known: beside the rail's control (its middle), else centred below (or, near the bottom, above) the control; kept
+  // inside the window
   useEffect(() => {
     const b = box.current; if (!b || !tip) return;
     const r = b.getBoundingClientRect(), W = window.innerWidth, H = window.innerHeight;
-    let left = tip.side === 'right' ? tip.x : tip.x - r.width / 2, top = tip.side === 'right' ? tip.y - r.height / 2 : tip.y;
+    let left = tip.side === 'right' ? tip.x : tip.x - r.width / 2, top = tip.side === 'right' ? tip.y - r.height / 2 : tip.side === 'above' ? tip.y - r.height : tip.y;
     left = Math.min(Math.max(6, left), W - 6 - r.width); top = Math.min(Math.max(6, top), H - 6 - r.height);
     b.style.left = `${left}px`; b.style.top = `${top}px`; b.style.visibility = 'visible';
   }, [tip]);

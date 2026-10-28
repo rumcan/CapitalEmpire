@@ -23,7 +23,7 @@ export function GolfLeaderboard({ game }: { game: Game }) {
   if (!b) return null;
   const join = game.canJoinTournament();
   return (
-    <div className={`pointer-events-auto absolute ${game.panel ? 'right-[19.5rem]' : 'right-3'} bottom-3 z-20 w-72 max-w-[calc(100vw-1.5rem)] max-h-[calc(100vh-var(--hud-top,6rem)-19rem)] overflow-y-auto glass p-3`}>
+    <div className={`pointer-events-auto absolute ${game.panel ? 'right-[19.5rem]' : 'right-3'} bottom-3 z-20 w-72 max-w-[calc(100vw-1.5rem)] max-h-[calc(100vh-var(--hud-top,6rem)-19rem)] overflow-y-auto glass p-3`} data-testid="leaderboard">
       <div className="flex items-baseline justify-between gap-2">
         <span className="font-display text-sm font-bold tracking-wide text-[var(--gold-hi)] uppercase">Leaderboard</span>
         <span className="text-sm font-bold tabular-nums text-[var(--gold-hi)]">{clock(b.minute)}</span>
