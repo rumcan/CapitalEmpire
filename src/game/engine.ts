@@ -152,7 +152,7 @@ import { CHEER_TILES, DayFinish, LiveGroup, OWNER_ADDRESS, OWNER_ART, OWNER_SKIL
 import { holeViews, markerPlan, tagByHole, type HoleView, type MarkerKind } from './golf/holeview';
 import { CAST, castShear, clampCast, type CastShadow } from './cast-shadow';
 import { SPEC_LOOK, clampSpecLook, specGain, type SpecLook } from './lamp-reflect';
-import { SHINE_LOOK, clampShineLook, shineExponent, shineGain, type ShineLook, type ShineWeights } from './grass-shine';
+import { SHINE_KEY, SHINE_LOOK, clampShineLook, shineExponent, shineGain, type ShineLook, type ShineWeights } from './grass-shine';
 import { clampGrade, gradeFrame, loadGrade, saveGrade, type GradeSettings } from './grade';
 import { glossGain } from './swamp';
 import { contactLean } from './shadow-shape';
@@ -1997,7 +1997,8 @@ export class Game {
     this.ground.grassArt = this.grassArt;
     // T262: the grass shine's look as the player left it (the gear menu's Grass shine; on by default), and ?grassShine=off|on (the dev server:
     // the bench's before and after)
-    try { const s = localStorage.getItem('capitalempire.grassShine'); if (s) this.shine = clampShineLook(JSON.parse(s)); } catch { /* the default look */ }
+    // (SHINE_KEY v2: the softer look after the owner's tees, 2026-10-28; a look saved before it is dropped, so the new defaults reach everyone)
+    try { localStorage.removeItem('capitalempire.grassShine'); const s = localStorage.getItem(SHINE_KEY); if (s) this.shine = clampShineLook(JSON.parse(s)); } catch { /* the default look */ }
     { const q = new URLSearchParams(location.search).get('grassShine'); if (import.meta.env.DEV && (q === 'on' || q === 'off')) this.shine = { ...this.shine, on: q === 'on' }; }
     this.ground.grassShine = this.shine.on; this.ground.shineWeights = { ...this.shine.weights };
     try { this.groundVariety = localStorage.getItem('capitalempire.groundVariety') !== '0'; } catch { /* the default, on */ }
@@ -6920,7 +6921,7 @@ export class Game {
   private shineSend = 0;
   setShine(p: Partial<Omit<ShineLook, 'weights'>> & { weights?: Partial<ShineWeights> }) {
     this.shine = clampShineLook({ ...this.shine, ...p, weights: { ...this.shine.weights, ...p.weights } });
-    try { localStorage.setItem('capitalempire.grassShine', JSON.stringify(this.shine)); } catch { /* storage may be unavailable */ }
+    try { localStorage.setItem(SHINE_KEY, JSON.stringify(this.shine)); } catch { /* storage may be unavailable */ }
     clearTimeout(this.shineSend);
     const send = () => this.ground.setGrassShine(this.shine.on, this.shine.weights);
     if (p.weights) this.shineSend = window.setTimeout(send, 350); else send();
