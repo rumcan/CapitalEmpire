@@ -3,7 +3,8 @@ import type { LotPatch } from './ground-protocol';
 import { lookChanged, type BrushLooks, type LookStyle } from './course-look';
 import { LOOK_KINDS, copyLook, copySet, defaultSet as defaultSetOf, holeOwner, lookOf as bookLook, ownerHole, seedOwner, type FacilityOwner, type LookBook, type LookSet } from './golf/looks';
 import { placeMyHole, type MyHole, type Placed } from './golf/myholes';
-import { CH_SIZE, CH_STEP } from './ext/course-height';
+import { CH_SIZE, CH_STEP, COURSE_CELL_M2 } from './ext/course-height';
+import { NO_GROUND, applyHoleGround, shapeHoleGround, type HoleGroundShape } from './ext/hole-ground';
 /** T256: a saved hole's ghost at the cursor: the hole number it takes (0: none free), where its cells land, those laid and left out, why it
  *  cannot go ('' when it can) or a note on the cells left out, its price ($: its cells and its frame trees) and the frame trees it plants */
 export interface MyGhost { n: number; placed: Placed; laid: { i: number; s: number }[]; out: number[]; why: string; note: string; cost: number; trees: number }
@@ -28,7 +29,7 @@ import { SQUARE_SIZES, snapDab, squarePoly, squareRun, squareStart } from './ext
 import { runCells, runPoint, straightTo } from './ext/course-cursor/run';
 import { SURF_SURFACE, mergeMany, plantMonth, polyCells, surfOfSurface, type GridArea } from './ext/course-grid/areas';
 import { unitBuildCost } from './golf/costs';
-import { GREEN_M2_STEP as GREEN_STEP, HoleWizard, decodePlans, encodePlans, withPlan, withoutPlan } from './ext/hole-wizard';
+import { GREEN_M2_STEP as GREEN_STEP, HoleWizard, decodePlans, encodePlans, withPlan, withoutPlan, type WizardGhost } from './ext/hole-wizard';
 import { drawWizard } from './ext/hole-wizard/draw';
 import { planClear, planInfo, type HolePlan } from './ext/hole-plan';
 import type { Pin, TeeMark } from './golf/types';
@@ -62,6 +63,16 @@ function loadPlant(): Record<PlantBrushKind, PlantSet> {
 /** T229: the localStorage key of New hole's Frame with trees toggle ('0' off; anything else, or nothing, on) */
 const FRAME_KEY = 'capitalempire.frameTrees';
 function loadFrameTrees(): boolean { try { return localStorage.getItem(FRAME_KEY) !== '0'; } catch { return true; } }
+/** T263: the localStorage key of New hole's Shape the ground toggle ('0' off; anything else, or nothing, on) */
+const SHAPE_KEY = 'capitalempire.shapeGround';
+function loadShapeGround(): boolean { try { return localStorage.getItem(SHAPE_KEY) !== '0'; } catch { return true; } }
+/** T263: the price ($) of setting the field's samples to a saved hole's heights: the earth moved (the cut carried to the fills, max(cut,
+ *  fill) m³, as New hole's shaping) at EARTHWORK_PER_M3 */
+function heightsEarth(f: CourseHeightField, hs: readonly { k: number; h: number }[]): number {
+  let up = 0, down = 0;
+  for (const q of hs) { const dh = q.h - f.data[q.k]!; if (dh > 0) up += dh; else down -= dh; }
+  return Math.round(Math.max(up, down) * COURSE_CELL_M2 * EARTHWORK_PER_M3);
+}
 
 export type PaintMode = 'draw' | 'pick' | 'erase' | 'hole' | 'brush' | 'plant' | 'piece' | 'height' | 'plan' | 'myhole';
 /** the golf holes a course has (the Course tool's hole strip) */
@@ -348,6 +359,10 @@ export class PaintTool {
   plantKind: PlantKind = 'seed';
   /** T229: New hole's Frame with trees: Build plants the hole's frame too (on by default; the toggle is remembered) */
   frameTrees = loadFrameTrees();
+  /** T263 (#771): New hole's Shape the ground: Build shapes the hole's ground too (ext/hole-ground; on by default, the toggle remembered) */
+  shapeGround = loadShapeGround();
+  /** T263: the shaping worked out for the wizard's ghost (kept until the ghost, the heights or the roads change) */
+  private groundVal: { gh: WizardGhost; rev: number; road: number; v: HoleGroundShape } | null = null;
   brush: Record<BrushKind, BrushSet> = loadBrush();
   /** plant mode: the plant brush in use and each kind's brush (remembered); the drag in progress (erasing or not, the last dab) */
   plantBrush: PlantBrushKind = 'trees';
@@ -833,7 +848,8 @@ export class PaintTool {
     return true;
   }
   /** Build (the gold pill or Enter): lays the plan's cells exactly as the ghost shows them, saves the plan (golf.aims follow it), charges
-   *  the cells that change, all as one undo step; then the ripple plays and the wizard waits for the next hole's tee */
+   *  the cells that change, shapes the hole's ground (T263: Shape the ground on; its earthworks charged after the grass, left out when the
+   *  money is short), all as one undo step; then the ripple plays and the wizard waits for the next hole's tee */
   buildPlan(): boolean {
     const w = this.wizard, g = this.courseGrid(), plan = w.plan;
     if (!g || w.step !== 'shape' || !plan) return false;
@@ -842,12 +858,16 @@ export class PaintTool {
     const hole = plan.hole, editing = !!w.base;
     if (this.editPaint) { this.cancel(); this.leaveEditPaint(); this.mode = 'plan'; } // T238: Edit hole's brush goes down with the Build
     if (editing) return this.buildLayout(w.base!, plan);
+    const shape = this.groundShape(); // T263: worked out on the grid as it is, before the Build lays its cells
     this.begin(editing ? `edit hole ${hole}` : `build hole ${hole}`);
     this.seedLooks(holeOwner(hole)); // T256: a new hole starts from the course default's looks
     applyDiff(g, gh.diff, false);
     this.gridApply(gh.diff);
     this.host.setPlans?.(encodePlans(withPlan(decodePlans(this.host.plans?.()), plan)));
     if (gh.cost > 0) { this.host.spend?.(gh.cost); if (this.tx) this.tx.spent += gh.cost; }
+    // T263: Shape the ground (on by default): the hole's earthworks, in the same undo step (the height journal keeps the field as it was), paid
+    // for after the grass; short of money, the hole is laid on the ground as it is
+    const earth = this.shapeBuilt(shape);
     // T229: Frame with trees (on by default): the hole's frame goes in with it, in the same undo step, paid for by the host
     const fr = this.frameTrees && this.host.frameBuilt ? this.host.frameBuilt(hole, plan) : null; if (fr && this.tx) this.tx.spent += fr.spent;
     this.pinHint = new Map([[hole, { x: plan.green.x, y: plan.green.y }]]);
@@ -858,8 +878,47 @@ export class PaintTool {
     this.pill = null;
     this.host.save();
     if (!editing) this.host.holeBuilt?.(hole);
-    this.host.toast(`Hole ${hole} ${editing ? 'replanned' : 'built'}: par ${gh.info.par}, ${gh.info.lengthM} m${gh.cost ? `, $${gh.cost.toLocaleString()}` : ''}${fr?.planted ? `; framed with ${fr.planted} trees ($${fr.spent.toLocaleString()})` : ''}${fr?.left ? `, ${fr.left} left out: not enough money` : ''}`, fr?.left ? 'warn' : undefined);
+    const ground = earth === 'short' ? '; not enough money to shape the ground: laid as it is' : earth ? `; ground shaped, ${Math.round(earth.m3).toLocaleString()} m³${earth.cost ? ` ($${earth.cost.toLocaleString()})` : ''}` : '';
+    this.host.toast(`Hole ${hole} ${editing ? 'replanned' : 'built'}: par ${gh.info.par}, ${gh.info.lengthM} m${gh.cost ? `, $${gh.cost.toLocaleString()}` : ''}${ground}${fr?.planted ? `; framed with ${fr.planted} trees ($${fr.spent.toLocaleString()})` : ''}${fr?.left ? `, ${fr.left} left out: not enough money` : ''}`, fr?.left || earth === 'short' ? 'warn' : undefined);
     this.host.emit(); return true;
+  }
+  /** T263 (#771): what New hole's Build would shape: the wizard's plan in the shape step (a new hole, not Edit Hole Layout), Shape the ground
+   *  on, a height field: the shaping (ext/hole-ground) of the cells the ghost lays, on the grid as it is, kept off the roads and cart paths
+   *  near it, other holes, the practice area and land you do not own; worked out once a ghost (again when the heights or the roads change).
+   *  NO_GROUND otherwise */
+  groundShape(): HoleGroundShape {
+    const w = this.wizard, pl = w.plan, f = this.host.courseHeight?.() ?? null, g = this.courseGrid();
+    if (!this.shapeGround || w.base || w.step !== 'shape' || !pl || !f || !g) return NO_GROUND;
+    const gh = w.ghost(); if (!gh || !gh.diff.n) return NO_GROUND;
+    const road = this.host.roadRev?.() ?? 0, c = this.groundVal;
+    if (c && c.gh === gh && c.rev === f.rev && c.road === road) return c.v;
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const q of gh.geom.line) { x0 = Math.min(x0, q.x); y0 = Math.min(y0, q.y); x1 = Math.max(x1, q.x); y1 = Math.max(y1, q.y); }
+    const roads = this.host.roadsNear?.((x0 + x1) / 2, (y0 + y1) / 2, Math.hypot(x1 - x0, y1 - y0) / 2 + 40) ?? [];
+    const own = this.host.ownedAt, prac = this.host.practiceAt;
+    const v = shapeHoleGround({ grid: g, hole: pl.hole, plan: pl, geom: gh.geom, diff: gh.diff, field: f, roads, ...(own ? { owned: (x: number, y: number) => own(x, y) } : {}), ...(prac ? { practice: (x: number, y: number) => prac(x, y) } : {}) });
+    this.groundVal = { gh, rev: f.rev, road, v };
+    return v;
+  }
+  /** T263: the earthworks New hole's Build would do: the earth moved (m³) and its price ($: EARTHWORK_PER_M3 a m³ in a golf game), or null
+   *  when it shapes nothing (Shape the ground off, Edit Hole Layout, no plan to build) */
+  groundCost(): { m3: number; cost: number } | null {
+    const s = this.groundShape(); if (!s.k.length) return null;
+    return { m3: s.m3, cost: this.host.golfMode?.() ? Math.round(s.m3 * EARTHWORK_PER_M3) : 0 };
+  }
+  /** T263: New hole's Shape the ground on or off (remembered) */
+  setShapeGround(on: boolean): void { this.shapeGround = on; this.groundVal = null; try { localStorage.setItem(SHAPE_KEY, on ? '1' : '0'); } catch { /* storage may be unavailable */ } this.host.emit(); }
+  /** T263: lays a Build's shaping inside the open undo step: the journal keeps the blocks it touches, the field takes its heights, the engine
+   *  re-bakes the ground there, its earthworks are paid; 'short' (nothing laid) when the money left after the grass does not cover them */
+  private shapeBuilt(shape: HoleGroundShape): { m3: number; cost: number } | 'short' | null {
+    const f = this.host.courseHeight?.(); if (!f || !shape.k.length || !shape.box) return null;
+    const golf = !!this.host.golfMode?.(), cost = golf ? Math.round(shape.m3 * EARTHWORK_PER_M3) : 0;
+    if (golf && cost > (this.host.money?.() ?? 0)) return 'short';
+    this.hj.touch(f, shape.box);
+    const b = applyHoleGround(f, shape); if (b) this.host.heightChanged?.(b);
+    if (cost > 0) { this.host.spend?.(cost); if (this.tx) this.tx.spent += cost; }
+    this.groundVal = null;
+    return { m3: shape.m3, cost };
   }
   /** T254 (#736): "Add tee" (the hole card): a new tee set's box (outline pts, tiles x0 y0 x1 y1 ...) painted into hole n as tee turf, priced like a
    *  tee (the cells that change, Seed or Sod as the brush), one undo step. Cells off your land, on the practice area or kept by another hole are left
@@ -956,7 +1015,8 @@ export class PaintTool {
    *  hole prices them; its frame trees with Frame with trees on) and the hole number it takes; null with no hole in hand or off the grid */
   myHoleGhost(t: { x: number; y: number } | null = this.cursor): MyGhost | null {
     const h = this.myHole, g = this.courseGrid(); if (!h || !g || !t) return null;
-    const tcx = Math.floor((t.x - g.x0) / CELL_T), tcy = Math.floor((t.y - g.y0) / CELL_T), key = `${tcx},${tcy},${this.myTurn},${g.rev},${this.plantKind},${this.frameTrees}`;
+    const f = this.host.courseHeight?.() ?? null;
+    const tcx = Math.floor((t.x - g.x0) / CELL_T), tcy = Math.floor((t.y - g.y0) / CELL_T), key = `${tcx},${tcy},${this.myTurn},${g.rev},${this.plantKind},${this.frameTrees},${f?.rev ?? -1}`;
     if (this.myGhost?.key === key) return this.myGhost.v;
     const n = this.nextFreeHole(), p = placeMyHole(h, g, tcx, tcy, this.myTurn, n || 1), own = this.host.ownedAt, prac = this.host.practiceAt;
     const laid: { i: number; s: number }[] = [], out: number[] = [], whys = new Map<string, number>();
@@ -969,9 +1029,11 @@ export class PaintTool {
       if (g.surf[c.i] !== c.s && this.host.golfMode?.()) cost += unitBuildCost(SURF_SURFACE[c.s] ?? 'other', this.plantKind);
     }
     const trees = this.frameTrees ? p.props.length : 0, treeCost = trees * (this.host.frameTreePrice?.() ?? 0);
+    // T263: its ground height (its shaping) is earthworks too, measured as New hole's Build: the cut carried to the fills, max(cut, fill) m³
+    const earth = this.host.golfMode?.() && f ? heightsEarth(f, p.heights) : 0;
     const top = [...whys].sort((a, b) => b[1] - a[1])[0]?.[0] ?? '';
     const why = !n ? `All ${HOLE_COUNT} holes are in use: delete one first` : !laid.length ? top || 'Nothing to lay here' : out.length > p.cells.length / 4 ? `${out.length.toLocaleString()} cells left out: ${top.toLowerCase()}` : '';
-    const v: MyGhost = { n, placed: p, laid, out, why, note: out.length && !why ? `${out.length.toLocaleString()} cells left out: ${top.toLowerCase()}` : '', cost: Math.round(cost) + treeCost, trees };
+    const v: MyGhost = { n, placed: p, laid, out, why, note: out.length && !why ? `${out.length.toLocaleString()} cells left out: ${top.toLowerCase()}` : '', cost: Math.round(cost) + treeCost + earth, trees };
     this.myGhost = { key, v }; return v;
   }
   /** a click with a saved hole in hand: it goes in as the next free hole, priced as New hole (the cells that change, its frame trees), with
@@ -994,14 +1056,18 @@ export class PaintTool {
       this.gridApply(d);
     }
     if (spent > 0) { this.host.spend?.(spent); this.tx!.spent += spent; }
-    // its ground height (its own edits, set where they were)
+    // its ground height (its own edits and its shaping, set where they were; T263: paid as earthworks)
     const f = this.host.courseHeight?.(), hs = gh.placed.heights;
     if (f && hs.length) {
       let i0 = Infinity, j0 = Infinity, i1 = -Infinity, j1 = -Infinity;
       for (const q of hs) { const i = q.k % CH_SIZE, j = (q.k - i) / CH_SIZE; i0 = Math.min(i0, i); j0 = Math.min(j0, j); i1 = Math.max(i1, i); j1 = Math.max(j1, j); }
-      const box: CourseTileBox = [i0 * CH_STEP, j0 * CH_STEP, i1 * CH_STEP, j1 * CH_STEP];
+      // T263: the box takes in the last sample's whole block too (the journal touches each block the box overlaps: an end on a block's first
+      // sample left that block out, and undo missed it)
+      const box: CourseTileBox = [i0 * CH_STEP, j0 * CH_STEP, (i1 + 1) * CH_STEP, (j1 + 1) * CH_STEP];
+      const earth = this.host.golfMode?.() ? heightsEarth(f, hs) : 0;
       this.hj.touch(f, box); for (const q of hs) f.data[q.k] = q.h; f.rev++;
       this.host.heightChanged?.(box);
+      if (earth > 0) { this.host.spend?.(earth); this.tx!.spent += earth; }
     }
     // its plan (Edit hole works on it) and its pin
     const plan = gh.placed.plan;
@@ -1971,7 +2037,7 @@ export class PaintTool {
   /** the overlay preview: the outline being drawn (draw); the selected area, shaded, with its handles (draw and pick); a drag's candidate that cannot be applied, in red; the hovered area (pick and erase) */
   drawPreview(v: PaintView) {
     // the plan's ghost, handles and Build pill (T238: under Edit hole's brush too)
-    if (this.planOpen) { if (this.frameTrees) this.drawFrameGhost(v); this.pill = drawWizard(v, this.wizard, this.mouse, typeof performance !== 'undefined' ? performance.now() : 0, reducedMotion(), this.frameTrees ? Math.max(0, this.host.frameCost?.() ?? 0) : 0, this.mode !== 'height' || this.onHandle()); if (this.mode === 'plan') return; }
+    if (this.planOpen) { if (this.frameTrees) this.drawFrameGhost(v); this.pill = drawWizard(v, this.wizard, this.mouse, typeof performance !== 'undefined' ? performance.now() : 0, reducedMotion(), (this.frameTrees ? Math.max(0, this.host.frameCost?.() ?? 0) : 0) + (this.groundCost()?.cost ?? 0), this.mode !== 'height' || this.onHandle()); if (this.mode === 'plan') return; }
     if (this.mode === 'piece') { this.drawPiece(v); return; }
     if (this.mode === 'height') { if (!(this.editInHand && this.onHandle())) this.drawHeight(v); return; } // T252: over a handle in Edit hole, the plan's label
     if (this.mode === 'draw') this.drawOutline(v);

@@ -4,7 +4,7 @@ import { SURF } from '../../game/ext/course-grid';
 import { affordKind, statusIcon } from '../status-icon';
 import { SURF_SURFACE } from '../../game/ext/course-grid/areas';
 import { aboutMoney, planShape, type WizCheck } from '../../game/ext/hole-wizard';
-import { growInMonths } from '../../game/golf/costs';
+import { EARTHWORK_PER_M3, growInMonths } from '../../game/golf/costs';
 import { FRAME_TREE_PRICE } from '../../game/golf/holeframe';
 import { SURFACE_BRUSHES, type BrushKind } from '../../game/paint';
 import { BrushShape, GroundHeight, LooksEntry, SurfaceSwatches, surfaceKeysOf } from './BrushControls';
@@ -30,8 +30,9 @@ export function HoleWizardPanel({ game, looks = false, onLooks }: { game: Game; 
   const gh = w.step !== 'tee' && w.plan ? w.ghost() : null;
   const c = w.step === 'shape' ? w.check() : null;
   const checks = w.step === 'shape' ? w.checks() : [];
-  // T229: Frame with trees on: the Build's price is the hole's and its frame's
-  const fr = w.step === 'shape' && p.frameTrees ? game.wizardFrame?.() : null, total = (gh?.cost ?? 0) + Math.max(0, fr?.price ?? 0);
+  // T229: Frame with trees on: the Build's price is the hole's and its frame's; T263: and with Shape the ground on, its earthworks
+  const fr = w.step === 'shape' && p.frameTrees ? game.wizardFrame?.() : null, earth = w.step === 'shape' ? p.groundCost() : null;
+  const total = (gh?.cost ?? 0) + Math.max(0, fr?.price ?? 0) + (earth?.cost ?? 0);
   const step = w.step === 'tee' ? 0 : w.step === 'green' ? 1 : 2;
   const cur = p.brushHole, canEdit = w.step === 'tee' && p.hasPlan(cur);
   const nums = w.base ? [] : p.planNumbers();
@@ -77,6 +78,7 @@ export function HoleWizardPanel({ game, looks = false, onLooks }: { game: Game; 
       {w.base && w.step === 'shape' && <EditPaint game={game} looks={looks} onLooks={onLooks} />}
       {gh && !w.base && <Planting game={game} /> /* T254: Edit Hole Layout plants nothing */}
       {gh && w.step === 'shape' && !w.base && <Frame game={game} cost={gh.cost} />}
+      {gh && w.step === 'shape' && !w.base && <Ground game={game} cost={gh.cost} />}
       {checks.length > 0 && <Checks game={game} rows={checks} />}
       {w.step === 'shape' && (
         <p className="wiz-keys">Drag the line to bend it · amber handles widen · <kbd>R</kbd> turns the green · <kbd>[</kbd> <kbd>]</kbd> size it · <kbd>Ctrl</kbd>+<kbd>Z</kbd> undoes a drag{w.base ? ' or a stroke' : ''} · <kbd>Esc</kbd> steps back</p>
@@ -171,6 +173,7 @@ function EditPaint({ game, looks, onLooks }: { game: Game; looks: boolean; onLoo
 function Stats({ game }: { game: Game }) {
   const w = game.paint.wizard, gh = w.ghost(), pl = w.plan; if (!gh || !pl) return null;
   const split = w.split(), rest = [...split].filter(([s]) => !SPLIT.some(([q]) => q === s)).reduce((a, [, v]) => a + v.cost, 0);
+  const earth = w.step === 'shape' && !w.base ? game.paint.groundCost() : null; // T263: Shape the ground's earthworks
   return (
     <div className="wiz-stats">
       <div className="wiz-par">{`Par ${gh.info.par} · ${gh.info.lengthM} m`}</div>
@@ -182,6 +185,7 @@ function Stats({ game }: { game: Game }) {
             return <div key={s}><dt>{s === SURF.green || s === SURF.tee ? `${name} · ${v.cells.toLocaleString()} m²` : name}</dt><dd>{money(v.cost)}</dd></div>;
           })}
           {rest > 0 && <div><dt>Other</dt><dd>{money(rest)}</dd></div>}
+          {earth && earth.cost > 0 && <div data-testid="wiz-split-earth"><dt>{`Earthworks · ${Math.round(earth.m3).toLocaleString()} m³`}</dt><dd>{money(earth.cost)}</dd></div>}
         </dl>
       )}
     </div>
@@ -226,6 +230,24 @@ function Frame({ game, cost }: { game: Game; cost: number }) {
       </div>
       <p className="sub-line mt-1">{on ? `Clumps along the rough's edge, ${money(FRAME_TREE_PRICE)} a tree, clear of the line of play, the landing zones, paths, water and the cart lanes. Bulldoze one to open a view.` : 'Build plants no trees: frame the hole later from its card.'}</p>
       {short && <p className="mt-1 text-[12px] text-amber-300"><span aria-hidden>! </span>Not enough money for all of it: Build plants the clumps the rest pays for.</p>}
+    </section>
+  );
+}
+
+/** T263 (#771): Shape the ground, on by default, beside Frame with trees: Build shapes the new hole's ground too (ext/hole-ground: gentle rolls
+ *  along the fairway, low mounds and a swale in the rough, the green tilted up from front to back, the tee level), priced as earthworks (the
+ *  earth moved, m³, at the Ground height brush's rate) in the same undo step. Off: the hole is laid on the ground as it is */
+function Ground({ game, cost }: { game: Game; cost: number }) {
+  const p = game.paint, on = p.shapeGround, e = on ? p.groundCost() : null, short = !!e && e.cost > 0 && game.money < cost + e.cost;
+  return (
+    <section className="mt-2" aria-label="Ground" data-testid="wiz-ground">
+      <h4 className="sub-head">Ground</h4>
+      <div className="flex items-center justify-between gap-2">
+        <button className={`chip ${on ? 'chip-on' : ''}`} aria-pressed={on} data-testid="wiz-ground-toggle" title="Gentle rolls along the fairway, low mounds and a swale in the rough, the green tilted up from front to back; the tee stays level, and roads, paths and other holes are left as they are" onClick={() => p.setShapeGround(!on)}>{on ? '✓ Shape the ground' : 'Shape the ground'}</button>
+        <span className="tabular-nums text-[13px] font-semibold" data-testid="wiz-ground-price">{!on ? 'Off' : e ? `${Math.round(e.m3).toLocaleString()} m³ · ${money(e.cost)}` : 'Nothing to shape here'}</span>
+      </div>
+      <p className="sub-line mt-1">{on ? `Rolls along the fairway, mounds round it and the green, the green tilted front to back. Earthworks ${money(EARTHWORK_PER_M3)} a m³; Undo takes them back with the grass.` : 'Build lays the hole on the ground as it is: shape it later with Edit hole\'s Ground height.'}</p>
+      {short && <p className="mt-1 text-[12px] text-amber-300"><span aria-hidden>! </span>Not enough money for the earthworks too: Build lays the hole on the ground as it is.</p>}
     </section>
   );
 }
