@@ -16,7 +16,7 @@ export const SKIP_CAT = new Set(['Townspeople', 'Spectators', 'Golfers']);
 /** a sprite's group, from its kind and category (whole words: "Street furniture" is no tree) */
 export function spriteGroup(it: Pick<LibItem, 'id' | 'kind' | 'cat' | 'big'>): 'plants' | 'props' | 'buildings' | 'vehicles' {
   if (it.kind === 'car' || it.cat === 'Vehicles' || it.id.startsWith('cars:')) return 'vehicles';
-  if (it.kind === 'tree' || it.kind === 'bush' || it.kind === 'plant' || /\b(trees?|plants?|vegetation|flowers?|hedges?|shrubs?|bush(es)?|garden beds?|grass(es)?)\b/i.test(it.cat)) return 'plants';
+  if (it.kind === 'tree' || it.kind === 'bush' || it.kind === 'plant' || it.kind === 'shrub' || it.kind === 'flower' || it.kind === 'palm' || /\b(trees?|plants?|vegetation|flowers?|hedges?|shrubs?|bush(es)?|garden beds?|grass(es)?)\b/i.test(it.cat)) return 'plants';
   if (it.kind === 'building' || it.kind === 'house' || it.kind === 'venue' || it.kind === 'lot' || it.big) return 'buildings';
   return 'props';
 }
@@ -39,6 +39,8 @@ export function itemKind(it: LibItem, i: number, area = ownArea(it.id)): ItemKin
   // the town's lots leave the screen-axis art (its pictures, view:... and the sets' first) to the Props tool and the lab (T154): the generator,
   // which lays the town's lots on the map axes (T160), never offers it
   if (!placeable(it, i) || it.id.startsWith('view:') || AXIS_HEADING[it.id] !== undefined || isFence(it.id)) return null;
+  // T231: the concept kit joins no learned pool (so no lot drawn before it changes): the yards take it by their own draws (compose.ts kitYard)
+  if (it.id.startsWith('kit:')) return null;
   const g = spriteGroup(it), t = `${it.id} ${it.name}`.toLowerCase();
   // a car a house keeps on its drive: no bus, no truck
   if (g === 'vehicles') return it.kind === 'car' && area <= MAX_AREA.car && !/bus|truck|tractor|trailer/i.test(`${it.id} ${it.name}`) ? 'car' : null;

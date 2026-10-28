@@ -35,7 +35,9 @@ import { turned } from './lots/preset-art';
 import { RangeHost } from './golf/rangehost';
 import { PropsTool } from './golf/propstool';
 import { PracticeTool } from './golf/practicetool';
-import { DECOR_BY_KEY, lotTouches, propTuple, sellBack, tupleMarks } from './golf/decor';
+import { DECOR_BY_KEY, inPoly, lotTouches, propTuple, sellBack, tupleMarks } from './golf/decor';
+import { CELL as POND_CELL, discOutline, lilyPads, normalizePondMarks, pieceKey, pondAt, pondId, shorePieces, type Pond, type PondPiece } from './golf/ponds';
+import { fountainAt, fountainFrame } from './kit';
 import { HALFWAY_COST, halfwaySpotWhy, halfwayTakings } from './golf/halfway';
 import { guideTable, type GuideEvent } from './ext/progressive-ui/guide';
 import { welcomeReady } from './golf/firstview';
@@ -43,7 +45,7 @@ import { welcomeReady } from './golf/firstview';
 const HINT_ANCHOR: Readonly<Record<string, string>> = { 'hint-range-open': 'range-chip', 'hint-range-upgrade': 'range-chip', 'hint-range-props': 'rail-facilities', 'hint-range-first-hole': 'new-hole' };
 import { RANGE_LABEL_Z, defaultRangeBiz, parkLabel, practiceAppeal, rangeMapLabel, rangeNewSeason, rangeScene, rangeStats, rangeStructures, type RangeCounts, type RangeUpgradeId } from './golf/rangebiz';
 import { areaAt, brushTextures, toTuple, type PaintTuple, type PaintTex } from './paint';
-import { CELL_T, SURF, cellAt, diffBox, encodeGrid, fillPolygon, fitGrid, landGridBox, makeGrid, paintStroke, type Grid as CourseGrid, type GridDiff, type GridSave } from './ext/course-grid';
+import { CELL_T, SURF, cellAt, diffBox, encodeGrid, fillPolygon, fitGrid, landGridBox, makeGrid, paintDisc, paintStroke, type Grid as CourseGrid, type GridDiff, type GridSave } from './ext/course-grid';
 import { STAIR_REACH } from './ext/course-walls';
 import { SURFACE_TEX_ID, SURF_SURFACE, areaRank, growingHoles, ringArea, type GridArea } from './ext/course-grid/areas';
 import { aimsFromPlans, decodePlans, encodePlans, frameView, planSeed, type FreeRect, type WizardGhost } from './ext/hole-wizard';
@@ -85,7 +87,7 @@ import { buildPark, parkCost, parkValid, type CarPark, type CarParkDef, type Par
 import { TC, classAt, generateTerrain, makeNoise, type Noise, type Terrain } from './terrain';
 import { slopeField } from './terrain-paint';
 import { CONIFER_IDS, FOREST_CELL, FOREST_VIEW_MARGIN, forestCell, forestCellRange, type ForestTree } from './forest';
-import { CHUNK_CASTER_REACH, LIVING_PLANT_MARGIN, casterKind, casterOf, doorToward, pxAcross, CK } from './living-ground';
+import { CHUNK_CASTER_REACH, LIVING_PLANT_MARGIN, casterKind, casterOf, doorToward, pxAcross, waterTex, CK } from './living-ground';
 import { LEAF_DENSITY_DEFAULT, clampLeafDensity } from './leaf-fall';
 import { ROUGH_YARDS_DEFAULT, clampRoughYards, roughShare, roughSig, roughYard } from './rough-yards';
 import { townTreeCell } from './towntrees';
@@ -586,7 +588,13 @@ export class Game {
       course: (x, y) => { const g = this.courseGrid, i = g ? cellAt(g, x, y) : -1, v = i >= 0 ? g!.surf[i] : 0; return v === SURF.green ? 'green' : v === SURF.bunker ? 'bunker' : ''; },
       // T187: a town prop keeps off the town's lots (its houses grow there)
       lot: b => lotTouches(this.traffic.lots.values(), b),
+      // T231: the fountain jet stands only in water: the map's lakes and rivers, the course's water and painted ponds
+      wet: (x, y) => { const c = this.terrain.cls[Math.floor(y) * MAP + Math.floor(x)]; return c === TC.WATER || this.pondWet(Math.floor(x / POND_CELL), Math.floor(y / POND_CELL)); },
     },
+    // T231: the ponds (golf/ponds.ts): the still water under a tile, the edge marks (undo carries them) and the Fountain pond's water
+    pondAt: (x, y) => pondAt(x, y, this.pondWet),
+    pondMarks: () => this.golf?.ponds ?? [], setPondMarks: m => this.setPondMarks(m),
+    digPond: (x, y, r, where) => this.digPond(x, y, r, where),
     propsIn: b => this.propGrid.query(b), props: () => this.props, propName: p => (p.decor ? DECOR_BY_KEY.get(p.decor)?.name : p.auto === 'range:shop' ? 'the shop' : undefined) ?? LIBRARY[p.item]!.name,
     scene: () => this.range.scene,
     addProp: (item, x, y, k) => this.addProp(item, x, y, false, k), removeProp: p => { this.removeProp(p); if (LIBRARY[p.item]!.kind === 'lamp') this.syncLamps(); },
@@ -692,7 +700,7 @@ export class Game {
     // the course keeps off the driving range's own plot (its hut, mats, car park and the field its golfers hit into), the rest of your land is
     // the course's; the brush's footprint and the wizard say which refusal it is
     practiceAt: (x, y) => this.golf?.start === 'range' && !!this.range.scene && inPractice(this.range.scene.practice, x, y), // T206
-    ownedAt: (x, y) => this.ownedAt(x, y) && !this.onRangePlot(x, y), landWhy: (x, y) => (this.onRangePlot(x, y) ? 'range' : this.ownedAt(x, y) ? '' : 'off'), plans: () => this.golf?.plans ?? [], setPlans: p => this.setGolfPlans(p), holeBuilt: () => this.guideEvent('hole'), pinOf: n => this.golf?.pins.find(q => q.hole === n) ?? null,
+    ownedAt: (x, y) => this.ownedAt(x, y) && !this.onRangePlot(x, y), landWhy: (x, y) => (this.onRangePlot(x, y) ? 'range' : this.ownedAt(x, y) ? '' : 'off'), plans: () => this.golf?.plans ?? [], setPlans: p => this.setGolfPlans(p), pondMarks: () => this.golf?.ponds ?? [], setPondMarks: m => this.setPondMarks(m), holeBuilt: () => this.guideEvent('hole'), pinOf: n => this.golf?.pins.find(q => q.hole === n) ?? null,
     // New hole (P23 4.4, T119): the camera framing, the practice area (P24 D24), and what its warnings measure against
     fitView: (pts, zoomIn) => this.fitView(pts, zoomIn), practiceBox: () => (this.golf?.start === 'range' ? this.range.scene?.practice.box ?? null : null),
     // a range start's ramp (P24 Phase 4a, T132): New hole waits for the range, and the first hole is suggested as a par-3
@@ -2026,13 +2034,14 @@ export class Game {
     this.props.add(p); this.propGrid.add(p, [p.x0, p.y0, p.x1, p.y1]); this.sprites.add(p); this.casterTouched(p);
     if (this.propLog) this.propLog.added.push(p);
     if (LIBRARY[item].kind === 'lamp') this.lampProps.add(p);
+    if (LIBRARY[item].kind === 'fountain') this.fountainProps.add(p); // T231: the jets loop their frames (animateFountains)
     if (LIBRARY[item].big && LIBRARY[item].kind !== 'car') this.scheduleBlocks(isLotProp(p)); // cars are not building blocks (sendBlocks skips them)
     return p;
   }
   removeProp(p: Prop) {
     if (!this.props.delete(p)) return;
     if (this.propLog) { const k = this.propLog.added.indexOf(p); if (k >= 0) this.propLog.added.splice(k, 1); else this.propLog.removed.push(p); }
-    this.propGrid.remove(p); this.sprites.remove(p); this.lampProps.delete(p); this.casterTouched(p);
+    this.propGrid.remove(p); this.sprites.remove(p); this.lampProps.delete(p); this.fountainProps.delete(p); this.casterTouched(p);
     if (p.auto) this.autoByKey.delete(p.auto);
     if (this.selected === p) this.selected = null;
     if (LIBRARY[p.item].big && LIBRARY[p.item].kind !== 'car') this.scheduleBlocks(isLotProp(p));
@@ -2290,6 +2299,80 @@ export class Game {
     if (!force && q === this.roughAt) return;
     this.roughAt = q;
     for (const [key, y] of this.yardRough) if (roughSig(roughYard(y.seed, y.home, y.state, this.traffic.pop, this.roughYards)) !== y.sig) this.lotQueue.add(key);
+  }
+  // ---------------------------------------------------------------- T231: the ponds' stone edges, lily pads and fountain jets (golf/ponds.ts)
+  /** the fountain jets on the map (props of kind fountain) */
+  private fountainProps = new Set<Prop>();
+  /** what the laid edges were laid for (the course grid, the painted areas, the marks and the jets), and the frame count to the next look */
+  private pondKey = ''; private pondTick = 0;
+  /** the painted water areas (boxed) and the paint revision they were read at */
+  private pondPaint: { rev: number; n: number; areas: { pts: number[]; b: [number, number, number, number] }[] } | null = null;
+  /** still water on the ponds' 1 m lattice: the course's water cells and the painted water areas (the map's lakes and rivers are no pond) */
+  private pondWet = (cx: number, cy: number): boolean => {
+    const x = (cx + 0.5) * POND_CELL, y = (cy + 0.5) * POND_CELL, g = this.courseGrid;
+    if (g) { const i = cellAt(g, x, y); if (i >= 0 && g.surf[i] === SURF.water) return true; }
+    let pp = this.pondPaint;
+    if (!pp || pp.rev !== this.paintRev || pp.n !== this.paint.areas.length) {
+      const areas = this.paint.areas.filter(a => waterTex(a.tex)).map(a => { const b = ptsBox(a.pts); return { pts: a.pts, b: [b[0]!, b[1]!, b[2]!, b[3]!] as [number, number, number, number] }; });
+      pp = this.pondPaint = { rev: this.paintRev, n: this.paint.areas.length, areas };
+    }
+    for (const a of pp.areas) if (x >= a.b[0] && x <= a.b[2] && y >= a.b[1] && y <= a.b[3] && inPoly(a.pts, x, y)) return true;
+    return false;
+  };
+  /** sets the ponds' edge marks (the Props tool's Stone pond edge and Fountain pond; undo and redo): the edges are laid again */
+  private setPondMarks(m: number[]) {
+    if (!this.golf) return;
+    const n = normalizePondMarks(m); if (n.length) this.golf.ponds = n; else delete this.golf.ponds;
+    this.pondTick = Infinity; this.scheduleSave();
+  }
+  /** the Fountain pond's water at (x, y), r tiles round, inside the open undo step: the course's water cells on your land (the course grid),
+   *  a painted water area in the town; false when nothing could be dug */
+  private digPond(x: number, y: number, r: number, where: 'course' | 'town'): boolean {
+    if (where === 'course') {
+      if (!this.courseGrid) return false;
+      let n = 0; const m = this.golfMonthIndex();
+      this.paint.gridEdit('dig a pond', g => { const d = paintDisc(g, x, y, r, SURF.water, 0, m); n = d.n; return { diffs: [d], spent: 0 }; });
+      return n > 0;
+    }
+    this.paint.addArea(discOutline(x, y, r), { tex: 'waterDark', border: 0, radius: 0 });
+    return true;
+  }
+  /** once a frame: the edges are laid again when what they stand on changed (looked at every 15 frames), and the jets step their frames */
+  private pondsFrame(now: number) {
+    if (++this.pondTick >= 15) {
+      this.pondTick = 0;
+      const jets = [...this.fountainProps].map(p => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).sort().join(';');
+      const key = `${this.courseGrid?.rev ?? -1}|${this.paintRev}|${this.paint.areas.length}|${(this.golf?.ponds ?? []).join(',')}|${jets}`;
+      if (key !== this.pondKey) { this.pondKey = key; this.layPonds(); }
+    }
+    this.animateFountains(now);
+  }
+  /** lays every stone-edged pond's stones and lily pads (auto props pond:..., never saved): the pieces whose key did not change stay, the
+   *  others go or come; a pond with two marks is laid once */
+  private layPonds() {
+    const marks = this.golf?.ponds ?? [], want = new Map<string, PondPiece>(), seen = new Set<number>();
+    const jets = [...this.fountainProps].map(p => ({ x: p.x, y: p.y }));
+    for (let k = 0; k + 1 < marks.length; k += 2) {
+      const pond: Pond | null = pondAt(marks[k]!, marks[k + 1]!, this.pondWet); if (!pond) continue;
+      const id = pondId(pond); if (seen.has(id)) continue; seen.add(id);
+      for (const q of [...shorePieces(pond), ...lilyPads(pond, jets)]) want.set(pieceKey(q), q);
+    }
+    for (const [key, p] of [...this.autoByKey]) if (key.startsWith('pond:') && !want.has(key)) this.removeProp(p);
+    for (const [key, q] of want) {
+      if (this.autoByKey.has(key)) continue;
+      const item = LIB_INDEX.get(q.id); if (item === undefined) continue;
+      this.autoByKey.set(key, this.addProp(item, q.x, q.y, false, q.s, key));
+    }
+  }
+  /** the jets loop their four frames (each its own phase, so two side by side do not pulse together) */
+  private animateFountains(now: number) {
+    if (!this.fountainProps.size) return;
+    const t = now / 1000;
+    for (const p of this.fountainProps) {
+      const item = LIB_INDEX.get(fountainAt(t, (p.uid * 5) % 4));
+      if (item === undefined || item === p.item || fountainFrame(LIBRARY[p.item]!.id) < 0) continue;
+      p.item = item; this.sprites.update(p);
+    }
   }
   /** street lamps light the road: their reflection pools are part of the ground picture */
   syncLamps() {
@@ -5393,7 +5476,7 @@ export class Game {
   private reset() {
     this.courseHeight = createCourseHeightField(); this.chSave = null;
     this.grass.clear(); this.grassZones.clear(); this.grassSim = -1; this.grassElapsed = 0; this.grassTrafficT = -1; this.grassPedOut.fill(0); this.grassCarAlive.fill(0); this.grassTarget = null; this.grassAction = null;
-    this.edit.clear(); this.snapshot = null;
+    this.edit.clear(); this.snapshot = null; this.pondKey = ''; // T231: the ponds' edges are laid again for the loaded game
     for (const p of [...this.props]) this.removeProp(p);
     this.sprites.clear(); this.autoByKey.clear(); this.forest.clear(); this.perf.forest = 0; this.townTrees.clear(); this.perf.townTrees = 0; this.lotBoxes.clear(); this.paintBoxes.clear();
     this.ground.dropCasters('f:'); this.ground.dropCasters('t:');
@@ -6196,7 +6279,7 @@ export class Game {
     if (this.traffic?.cash.length) { if (this.showMoneyFloats) addCash(this.floats, this.traffic.cash, now / 1000, this.cam.z); this.traffic.cash.length = 0; }
     if (this.golf?.start === 'range') { this.range.sync(); this.range.step(); }
     if (this.golf) this.halfwayStep();
-    if (this.golf) this.decor.frame();
+    if (this.golf) { this.decor.frame(); this.pondsFrame(now); } // T231: the ponds' stone edges and the jets
     this.updatePeds(dt);
     this.updateGrass();
     // the followed car: the camera centres on its interpolated place (the info itself comes at 10 Hz)
@@ -6948,16 +7031,22 @@ export class Game {
   private decorDraw: Drawable = { item: 0, x: 0, y: 0, flip: false, scale: 1, x0: 0, y0: 0, x1: 0, y1: 0, moving: false };
   private drawDecorGhost(ctx: CanvasRenderingContext2D) {
     const g = this.tool === 'props' ? this.decor.ghost : null, m = this.ghostMouse; if (!g) return;
-    this.drawBizRect(ctx, g.box[0], g.box[1], g.box[2] - g.box[0], g.box[3] - g.box[1], g.why ? 'rgba(230,80,80,0.4)' : 'rgba(60,200,90,0.4)');
-    const d = this.decorDraw; d.item = g.item; d.x = g.x; d.y = g.y; d.scale = g.scale;
-    const l = lookOf(d), it = LIBRARY[l.item]!, [page, u0, v0, u1, v1] = it.tex, image = this.pageImage0(page);
-    if (image && !l.hidden) {
-      const ze = this.cam.z * this.dpr, r = spriteRect(d), x = (r[0] - this.cam.X) * ze + this.cw / 2, y = (r[1] - this.cam.Y) * ze + this.ch / 2;
-      ctx.save(); ctx.globalAlpha = g.why ? 0.4 : 0.75;
-      ctx.drawImage(image, u0 * image.naturalWidth, v0 * image.naturalHeight, (u1 - u0) * image.naturalWidth, (v1 - v0) * image.naturalHeight, x, y, (r[2] - r[0]) * ze, (r[3] - r[1]) * ze);
-      ctx.restore();
+    // T231: a run's other pieces and a pond's stones are drawn first, each over its footprint, back to front
+    const all = [...this.decor.ghosts].sort((a, b) => a.x + a.y - b.x - b.y);
+    if (!g.noPic) all.push(g);
+    for (const q of all) {
+      this.drawBizRect(ctx, q.box[0], q.box[1], q.box[2] - q.box[0], q.box[3] - q.box[1], q.why ? 'rgba(230,80,80,0.4)' : 'rgba(60,200,90,0.4)');
+      const d = this.decorDraw; d.item = q.item; d.x = q.x; d.y = q.y; d.scale = q.scale;
+      const l = lookOf(d), it = LIBRARY[l.item]!, [page, u0, v0, u1, v1] = it.tex, image = this.pageImage0(page);
+      if (image && !l.hidden) {
+        const ze = this.cam.z * this.dpr, r = spriteRect(d), x = (r[0] - this.cam.X) * ze + this.cw / 2, y = (r[1] - this.cam.Y) * ze + this.ch / 2;
+        ctx.save(); ctx.globalAlpha = q.why ? 0.4 : 0.75;
+        ctx.drawImage(image, u0 * image.naturalWidth, v0 * image.naturalHeight, (u1 - u0) * image.naturalWidth, (v1 - v0) * image.naturalHeight, x, y, (r[2] - r[0]) * ze, (r[3] - r[1]) * ze);
+        ctx.restore();
+      }
+      if (q.why) this.refusedRect(ctx, q.box[0], q.box[1], q.box[2] - q.box[0], q.box[3] - q.box[1]);
     }
-    if (g.why) this.refusedRect(ctx, g.box[0], g.box[1], g.box[2] - g.box[0], g.box[3] - g.box[1]);
+    if (g.noPic && g.why) this.refusedRect(ctx, g.box[0], g.box[1], g.box[2] - g.box[0], g.box[3] - g.box[1]);
     if (m) this.hintAt(ctx, m.mx, m.my, g.label, !!g.why);
   }
   /** T206: Facilities ▸ Practice in hand: the practice area's outline and the facility's ghost (green, sand and mat, see-through; red with the

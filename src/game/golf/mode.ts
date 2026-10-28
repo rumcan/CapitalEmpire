@@ -52,6 +52,8 @@ export interface GolfSave {
  /** everyday golf (T208, golf/everyday.ts DaySave): the town day in play, its check-ins paid and the season's play so far. Missing: none yet (a save
   *  from before T208 starts with the day under way, booking the check-ins still to come) */
  everyday?: DaySave;
+ /** T231: the ponds' edge marks, flat x y pairs (tiles): a pond with a mark in it has the stone edge (golf/ponds.ts); missing: every pond natural */
+ ponds?: number[];
 }
 
 /** the owner's play as saved (GolfSave.play): the tournament's key (the round's count), his sex, the inputs he played in order, and how many of them
@@ -78,7 +80,7 @@ export function normalizeGolfSave(g: Partial<GolfSave> | null | undefined): Golf
   if (!g || !g.town || !g.course || !g.clubhouse) return null;
   const parcel: Rect = g.parcel ?? g.parcels?.[0] ?? g.course;
   // the range start's fields (plan P22 2.6) are taken out and put back only when well formed, so an old start's save normalizes as before
-  const { start, exits, townBoost, invited, founding, play, range, everyday, ...rest } = g;
+  const { start, exits, townBoost, invited, founding, play, range, everyday, ponds, ...rest } = g;
   const out: GolfSave = {
     ...rest,
     v: 1,
@@ -100,5 +102,7 @@ export function normalizeGolfSave(g: Partial<GolfSave> | null | undefined): Golf
   if (typeof founding === 'number' && Number.isFinite(founding) && founding > 0) out.founding = Math.floor(founding);
   const pl = normalizePlaySave(play); if (pl) out.play = pl;
   const ed = normalizeDaySave(everyday); if (ed) out.everyday = ed;
+  // T231: the pond marks, finite pairs only (golf/ponds.ts normalizePondMarks: none kept means the field stays out)
+  if (Array.isArray(ponds)) { const m: number[] = []; for (let k = 0; k + 1 < ponds.length; k += 2) { const x = ponds[k], y = ponds[k + 1]; if (Number.isFinite(x) && Number.isFinite(y)) m.push(x!, y!); } if (m.length) out.ponds = m; }
   return out;
 }

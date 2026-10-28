@@ -17,6 +17,8 @@ export const isBuilding = (it: LibItem) => BUILDING_IDS.has(it.id) || KINDS.has(
 export function drawnAs(it: LibItem, flip: boolean): [string, boolean] {
   const a = AXIS_TURN[it.id]; if (a !== undefined) return [flip ? a : it.id, false];
   if (it.id.startsWith('east:') && !VIEW_ART.has(it.id)) return [it.id.slice(5), false];
+  // T231: the concept kit is one picture each, lit from the upper right as painted: never mirrored (a plant brush's random flip included)
+  if (it.id.startsWith('kit:')) return [it.id, false];
   const [id, f] = unmirror(it.id, flip);
   return [id, f && !isBuilding(it)];
 }

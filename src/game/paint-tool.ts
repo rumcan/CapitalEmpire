@@ -163,6 +163,9 @@ export interface PaintHost { setLotGround(key: string, patches: LotPatch[] | nul
   /** the golf game's hole plans (save tuples) and their setter: undo and redo carry them */
   plans?(): unknown[];
   setPlans?(p: unknown[]): void;
+  /** T231: the ponds' edge marks (GolfSave.ponds: a pond with a mark in it is edged with stones) and their setter: undo and redo carry them */
+  pondMarks?(): number[];
+  setPondMarks?(m: number[]): void;
   /** hole n's pin (the New hole wizard's walk label), if it has one */
   pinOf?(hole: number): { x: number; y: number } | null;
   /** New hole (P23 4.4, T119): the camera frames tiles pts beside the panel (after the tee and the green clicks, and Show me); zoomIn false
@@ -766,8 +769,8 @@ export class PaintTool {
   private snapshot(): AreaSnap { const ts = this.areas.map(a => toTuple(a)); return { ids: this.areas.map(a => a.id), ts, keys: ts.map(t => JSON.stringify(t)), nextId: this.nextId }; }
   /** starts an undoable action (a nested begin joins the open one) */
   private begin(label: string, looks = false) { if (this.tx) { this.tx.depth++; return; } this.tx = { before: this.snapshot(), spent: 0, depth: 1, label, gd: [], plans: this.plansKey(), ...(looks ? { looks } : {}) }; this.host.journal?.begin(); this.hj.begin(); }
-  /** the hole plans as text (undo compares and restores them) */
-  private plansKey(): string { return JSON.stringify(this.host.plans?.() ?? []); }
+  /** the hole plans and the ponds' edge marks (T231) as text (undo compares and restores them) */
+  private plansKey(): string { return JSON.stringify([this.host.plans?.() ?? [], this.host.pondMarks?.() ?? []]); }
   /** ends an undoable action: it becomes an undo step when it changed the areas or the props, or spent money (the redo steps are dropped) */
   private commit() {
     const t = this.tx; if (!t || --t.depth > 0) return;
@@ -804,7 +807,14 @@ export class PaintTool {
   private gridStep(u: UndoStep, undo: boolean) {
     const g = this.host.grid?.();
     if (u.grid && g) { applyDiff(g, u.grid, undo); this.host.gridChanged?.(u.grid, true); }
-    if (u.plans && this.host.setPlans) { try { this.host.setPlans(JSON.parse(undo ? u.plans.before : u.plans.after) as unknown[]); } catch { /* the text is our own JSON */ } }
+    if (u.plans) {
+      try {
+        // [plans, pond marks]: each part goes back only when it changed (T231)
+        const [p0, m0] = JSON.parse(u.plans.before) as [unknown[], number[]], [p1, m1] = JSON.parse(u.plans.after) as [unknown[], number[]];
+        if (JSON.stringify(p0) !== JSON.stringify(p1)) this.host.setPlans?.(undo ? p0 : p1);
+        if (JSON.stringify(m0) !== JSON.stringify(m1)) this.host.setPondMarks?.(undo ? m0 : m1);
+      } catch { /* the text is our own JSON */ }
+    }
   }
   /** the course grid the Course tool paints a golf surface into: the golf game's grid (null: course areas are painted, as in a classic game) */
   private courseGrid(): Grid | null { return this.course && this.host.golfMode?.() ? this.host.grid?.() ?? null : null; }
@@ -1285,6 +1295,14 @@ export class PaintTool {
   this.host.save(); this.host.emit();
   }
 
+  /** T231: lays a painted area from outside (the Props tool's Fountain pond in the town: a round area of water), inside the open undo step
+   *  (the caller's step); its ground bakes at once */
+  addArea(pts: number[], style: Partial<Omit<PaintArea, 'id' | 'pts'>>): PaintArea {
+    this.begin('paint area');
+    const m = this.host.currentMonth?.() ?? 0, a: PaintArea = { ...DEFAULT_STYLE, ...style, id: this.nextId++, pts: pts.slice(), plantedMonth: m };
+    this.areas.push(a); this.send(a, m); this.commit();
+    return a;
+  }
   /** removes an area and its ground (it re-bakes at once) */
   remove(id: number) {
     const i = this.areas.findIndex(a => a.id === id); if (i < 0) return;
