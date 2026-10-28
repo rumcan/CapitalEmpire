@@ -117,7 +117,7 @@ import { growReadyLabel, hintWithGrow } from './golf/growlabel';
 import { computeTournamentCloseBook, computeYearEnd, type YearEndResult } from './golf/yearend';
 import { countParkedCars } from './golf/parkingfee';
 import { driveCuts, stopCut } from './street-marks';
-import { bodyOf, hash3, paintAt, paintOf } from './car-paint';
+import { TYPE_PAINTS, bodyOf, paintAt } from './car-paint';
 import { baysBox, boxesMeet, workerBay, workerShown, type TileBox } from './parked-cars';
 import { parkRideNeeds } from './golf/parkride';
 import { applyCourseConsultantQuality, effectiveGrowInClockMonth, findGolfCard, isGolfCardId, parkRideNeedsWithCards } from './golf/golfcards';
@@ -5696,7 +5696,7 @@ export class Game {
     for (let k = 0; k < v.cars.length; k++) {
       const c = v.cars[k]!, f = F[c.type % 5]![carHeading(c.ang)]!, z = CAR_SCALE * f.size;
       const dr = this.dayCarDraw[k] ?? (this.dayCarDraw[k] = { item: 0, x: 0, y: 0, flip: false, scale: CAR_SCALE, x0: 0, y0: 0, x1: 0, y1: 0, moving: true });
-      dr.item = f.item; dr.flip = f.flip; dr.scale = z; dr.moving = true; dr.paint = paintOf(hash3(c.type, 0xd4)); // (T228: a paint per car type)
+      dr.item = f.item; dr.flip = f.flip; dr.scale = z; dr.moving = true; dr.paint = TYPE_PAINTS[c.type % TYPE_PAINTS.length]; // (T228: a paint per car type)
       dr.x = c.x - f.ox * z; dr.y = c.y - f.oy * z; dr.x0 = c.x - f.hx * z; dr.x1 = c.x + f.hx * z; dr.y0 = c.y - f.hy * z; dr.y1 = c.y + f.hy * z;
       this.dayCarOut.push(dr);
     }

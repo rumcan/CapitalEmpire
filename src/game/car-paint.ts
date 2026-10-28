@@ -41,6 +41,9 @@ export function paintOf(seed: number): number {
   for (let k = 0; k < SHARE.length; k++) { r -= SHARE[k]!; if (r < 0) return k; }
   return 0;
 }
+/** the paints of the five car types (traffic.ts facings: type % 2 the model) when nothing else tells a car apart (the club's everyday golfers'
+ *  cars, T208's playback: a car is known only by its type): white, red, silver, blue, yellow, so the five looks differ */
+export const TYPE_PAINTS = [1, 5, 2, 6, 7] as const;
 /** a parked car's paint from where it stands (tiles; to a twentieth of a tile, so the same bay or lot spot always gets the same) */
 export const paintAt = (x: number, y: number): number => paintOf(hash3(Math.round(x * 20), Math.round(y * 20), 0x7a228));
 

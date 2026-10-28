@@ -50,7 +50,7 @@ const clockTo = async (page, minute, secs) => {
 const report = { tag };
 const files = {};
 try {
-  if (only.has('town') || only.has('sheet')) {
+  if (only.has('town') || only.has('sheet') || only.has('bake')) {
     const { page, ctx } = await open(`${base}?fixture=range20`);
     // ---- the busiest town junction (the most town nodes of 3+ arms within 40 tiles), its roads within 34 tiles upgraded gravel -> street
     const town = await page.evaluate(async () => {
@@ -69,11 +69,30 @@ try {
     });
     report.town = town; console.log('town', JSON.stringify(town));
     await page.evaluate(() => window.__game.setSpeed(0));
-    if (town) {
+    const shots = only.has('town') || only.has('sheet');
+    if (town && shots) {
       for (const z of [0.3, 0.15]) { await look(page, town.x, town.y, z); await settle(page, 2500); (files[`junction${Math.round(z * 100)}`] = await shot(page, `junction-${Math.round(z * 100)}pct`)); }
       if (town.street) for (const z of [0.3, 0.15]) { await look(page, town.street.x, town.street.y, z); await settle(page); (files[`street${Math.round(z * 100)}`] = await shot(page, `street-${Math.round(z * 100)}pct`)); }
     }
+    // ---- the bake time of the road chunks round the junction (the edge lines and their cuts are baked into them): every chunk in view baked
+    //      again (invalidateAll), --reps times at 30% and 8%, the worker ms of each bake
+    if (town && only.has('bake')) {
+      report.bake = {};
+      for (const z of [0.3, 0.08]) {
+        await look(page, town.x, town.y, z); await settle(page);
+        const all = [];
+        for (let rep = 0; rep < +opt('reps', '4'); rep++) {
+          const n0 = await page.evaluate(() => { const g = window.__game; g.ground.invalidateAll(); return g.ground.baked; });
+          await settle(page);
+          all.push(...await page.evaluate(n0 => { const g = window.__game, l = []; for (let k = n0; k < g.ground.baked; k++) l.push(g.ground.bakeLog[k % 4096]); return l; }, n0));
+        }
+        const s = [...all].sort((a, b) => a - b), q = f => s.length ? s[Math.min(s.length - 1, Math.floor(f * s.length))] : 0;
+        report.bake[`${Math.round(z * 100)}pct`] = { bakes: s.length, median: +q(0.5).toFixed(1), p95: +q(0.95).toFixed(1), mean: +(s.reduce((a, b) => a + b, 0) / (s.length || 1)).toFixed(2) };
+      }
+      console.log('bake', JSON.stringify(report.bake));
+    }
     // ---- the town's car parks after the morning's golfers came: the range's car park (P n/44) and a public car park lot
+    if (!shots) { await ctx.close(); } else {
     await clockTo(page, 9 * 60, 20);
     const parks = await page.evaluate(async () => {
       const g = window.__game, { isCarPark } = await import('/src/game/lots/compose.ts');
@@ -86,6 +105,7 @@ try {
     if (parks.range) for (const z of [0.3, 0.15]) { await look(page, parks.range.x, parks.range.y, z); await settle(page); (files[`rangepark${Math.round(z * 100)}`] = await shot(page, `range-carpark-${Math.round(z * 100)}pct`)); }
     if (parks.lot) for (const z of [0.3, 0.15]) { await look(page, parks.lot.x, parks.lot.y, z); await settle(page); (files[`lotpark${Math.round(z * 100)}`] = await shot(page, `town-carpark-lot-${Math.round(z * 100)}pct`)); }
     await ctx.close();
+    }
   }
   // ---- the club's car park on a busy everyday day (T208: 60 visitors, 11:00)
   if (only.has('club') || only.has('sheet')) {
