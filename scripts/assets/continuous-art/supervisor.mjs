@@ -33,6 +33,11 @@ export async function validCheckpoint(checkpoint,queue,config){
     if(bytes.length<33||bytes.subarray(0,8).toString('hex')!=='89504e470d0a1a0a'||bytes.subarray(12,16).toString()!=='IHDR'||bytes.readUInt32BE(16)<1||bytes.readUInt32BE(20)<1||sha(bytes)!==artifact.sha256)return false;
     try{await sharp(bytes,{limitInputPixels:100000000}).raw().toBuffer();}catch{return false;}
     if(reviewing&&!queue.next.artifacts.some(prior=>path.resolve(prior.file)===path.resolve(artifact.file)&&prior.sha256===artifact.sha256))return false;
+    if(!reviewing){
+      const candidates=[resolved.replace(/\.png$/i,'.provenance.json'),resolved.replace(/\.raw\.png$/i,'.provenance.json')];
+      let correctId=false;for(const file of [...new Set(candidates)]){try{const provenance=await readJson(file);if(provenance?.id===checkpoint.itemId){correctId=true;break;}}catch{}}
+      if(!correctId)return false;
+    }
   }
   return true;
 }

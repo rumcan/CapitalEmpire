@@ -26,7 +26,7 @@ if($Action -eq 'Install') {
   $arguments='-NoProfile -NonInteractive -WindowStyle Hidden -ExecutionPolicy Bypass -File "'+$wrapper+'" -Config "'+[IO.Path]::GetFullPath($Config)+'"'
   $taskAction=New-ScheduledTaskAction -Execute $shell -Argument $arguments -WorkingDirectory $program
   $trigger=New-ScheduledTaskTrigger -Once -At (Get-Date).AddMinutes(1) -RepetitionInterval (New-TimeSpan -Minutes 5)
-  $taskSettings=New-ScheduledTaskSettingsSet -MultipleInstances IgnoreNew -StartWhenAvailable -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -ExecutionTimeLimit ([TimeSpan]::Zero)
+  $taskSettings=New-ScheduledTaskSettingsSet -MultipleInstances IgnoreNew -WakeToRun -StartWhenAvailable -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -ExecutionTimeLimit ([TimeSpan]::Zero)
   Register-ScheduledTask -TaskName $TaskName -Action $taskAction -Trigger $trigger -Settings $taskSettings -Description 'Owner-requested built-in imagegen worker. Durable UTC five-hour quota backoff, exact dedicated thread, true alpha, live-list refresh.' -Force | Out-Null
   Write-Output ('Installed immutable program '+$program)
 }

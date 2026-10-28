@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "id": "golf:range-coffee-kiosk",
+  "decision": "accepted-for-art-appearance",
+  "reviewer": "Primary artwork agent /root",
+  "reviewedAtUtc": "2026-10-28T08:23:58.8181897Z",
+  "basis": "Primary viewed the full native source sheet: real two front-side turns, style/materials, blank menu boards, fixed upper-right light, complete transparent silhouettes pass. Not owner approval or live integration.",
+  "files": [
+    {
+      "file": "E:/Repos/CapitalEmpire/art/theme-consistency/generated/buildings/golf-range-coffee-kiosk-2views-v1.png",
+      "sha256": "5241862da793f431fefae6851c6ba0fd4f947694bc0894b367c658b1f34b6e38"
+    }
+  ],
+  "geometry": "pending-measurement",
+  "physicalCalibration": "pending",
+  "integration": "pending",
+  "main": "pending"
+}

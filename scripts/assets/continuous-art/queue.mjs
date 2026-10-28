@@ -45,7 +45,7 @@ export async function snapshotQueue(config,reviewedTokens={}){
   const excluded=new Set([...(config.excludeIds??[]),...(reservations.items??[]).filter(item=>item.owner!=='continuous-worker'&&!item.released).map(item=>item.id)]);
   const items=parseCatalogue(markdown).map(item=>{
     const artifacts=inventory.byId.get(item.id)??inventory.byNumber.get(item.itemNumber)??[];
-    const reviewToken=item.key+':'+sha(Buffer.from(artifacts.map(art=>art.sha256+art.provenanceSha256).sort().join('|')));
+    const reviewToken=item.key+':'+sha(Buffer.from([...new Set(artifacts.map(art=>art.sha256))].sort().join('|')));
     const artReview=artifacts.some(art=>art.review==='accepted-hash-bound')?'accepted-hash-bound':artifacts.some(art=>art.review==='held')?'held':artifacts.length?'pending':'not-generated';
     return {...item,artifacts,generation:artifacts.length?'existing-raw':'missing',artReview,integration:'not-verified',mergedOnMain:'not-verified',reviewToken,
       eligible:item.owner==='Codex'&&item.angle==='A'&&item.authorityClaim==='unmarked'&&!artifacts.length&&!excluded.has(item.id),

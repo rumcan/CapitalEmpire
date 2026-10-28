@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "jobs": [
+    {
+      "schema": 1,
+      "id": "golf:range-sign",
+      "slug": "golf-range-sign",
+      "category": "props",
+      "angleCode": "A",
+      "viewSet": "two-front-diagonals",
+      "viewOrder": [
+        "front-right",
+        "left-front"
+      ],
+      "widthM": 4,
+      "depthM": 0.5,
+      "heightM": 3,
+      "priority": "P1",
+      "date": "2026-10-28",
+      "references": [
+        "art/theme-consistency/references/theme-authoritative.png",
+        "art/theme-consistency/references/golf-country-club-owner-20261028.png",
+        "art/theme-consistency/references/rotation-guide-v1.png"
+      ],
+      "output": "art/theme-consistency/generated/props/golf-range-sign-2views-v1.png",
+      "provenance": "art/theme-consistency/generated/props/golf-range-sign-2views-v1.provenance.json",
+      "transparent": true,
+      "prompt": "Create one isolated game prop in TWO genuinely different isometric views side by side. Reference 1 is the established Maple Bean hand-painted miniature town style. Reference 2 is the owner's additional Golf & Country Club style reference: match its richly illustrated practical golf furnishings, painterly materials, warm green/cream palette, readable shapes and sunny warm highlights. Copy neither screenshot's scenery, buildings nor user interface into this sprite. Reference 3 is geometry only: use ONLY its top-left FRONT+RIGHT orientation for the left image and bottom-right LEFT+FRONT orientation for the right image. Ignore the other two cells, all reference-diagram lettering, circles, colors and layout.\nSubject golf:range-sign, a weathered roadside sign at a modest 1985 driving range. One rectangular warm white painted timber board with a dark forest-green wooden trim, fixed on two stout timber posts, approximately 4m wide, 0.5m deep, 3m tall including posts. On the front, a small red golf flag on a green pictogram at its physical LEFT, followed by the words DRIVING RANGE in large clear dark-green capitals, correctly spelled and readable left-to-right in BOTH views. Same sign with same slightly chipped trim, two front bolts and timber grain in both views. Do not invent a different sign or reverse the lettering. Board is plain planks behind its face; no attached bushes, lawn, terrain island, planter, lamps or concrete platform.\nExactly TWO complete props, equal physical scale, separately drawn real 90 degree turns, not mirrored duplicates. LEFT view FRONT+RIGHT has its front long edge sloping down-right at +0.5. RIGHT view LEFT+FRONT has its front long edge sloping up-right at -0.5. Fixed orthographic parallel 2:1 game camera, ground axes +/-26.565 degrees, vertical posts vertical, view down about30 degrees. Both views show the front and a distinct narrow side thickness and post construction. Keep the flag pictogram on the same physical front-left of the sign when turned.\nSun remains at SCREEN UPPER RIGHT in BOTH views: golden upper-right highlights, cooler left undersides, gentle self-occlusion within the timber. Turn the object, never the light. Detailed stylized hand-painted miniature, broad readable strokes, no photographic grain.\nOutput one square PNG with REAL TRANSPARENT ALPHA. Absolutely no background, magenta, colored backdrop, checkerboard, floor, grass, pavement, vignette, grey cast-shadow patch, scene, labels, arrows, border or extra objects. Generous clear outer margins and center gutter; both posts and board fully in each half, no clipping. Exactly two views.",
+      "brief": {
+        "file": "worktrees/theme-consistency/docs/GOLF-ART-LIST.md",
+        "item": 5,
+        "sha256": "2b7bb3cddb05861387b7af3e46b31586c1aac67f45077d63b028f6dea22c7868"
+      }
+    }
+  ]
+}

@@ -26,7 +26,7 @@ powershell -NoProfile -File scripts/assets/continuous-art/manage-task.ps1 -Actio
 powershell -NoProfile -File scripts/assets/continuous-art/manage-task.ps1 -Action Start
 ```
 
-Installation copies reviewed modules, wrapper and manager into an immutable hash-recorded `E:/ClaudeTemp/continuous-art/program/<revision>/`. The scheduled action references that stable snapshot, never the temporary source checkout. It uses the recorded Node executable and root's existing Sharp dependency via a junction, without an install or dependency copy. Keep the configured dedicated worker checkout while active; moving/removing it requires updating `config.worktree` first. Do not delete the worker thread/state to restart a batch.
+Installation copies reviewed modules, wrapper and manager into an immutable hash-recorded `E:/ClaudeTemp/continuous-art/program/<revision>/`. The scheduled action references that stable snapshot, never the temporary source checkout. It uses the recorded Node executable and root's existing Sharp dependency via a junction, without an install or dependency copy. Keep the configured dedicated worker checkout while active; moving/removing it requires updating `config.worktree` first. Do not delete the worker thread/state to restart a batch. The task requests wake from sleep and runs missed ticks when available; the PC must be powered on/wake-capable and the user's authenticated account/session must be available. It cannot run while the machine is shut down or bypass expired sign-in. Launcher-level module/config errors are saved under `launcher/` even when supervisor startup fails.
 
 Use the deployed manager path recorded in `installation.json`:
 

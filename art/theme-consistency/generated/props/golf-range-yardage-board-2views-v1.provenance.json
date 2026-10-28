@@ -1,0 +1,45 @@
+{
+  "schema": 1,
+  "id": "golf:range-yardage-board",
+  "slug": "golf-range-yardage-board",
+  "category": "props",
+  "angleCode": "A",
+  "viewSet": "two-front-diagonals",
+  "viewOrder": [
+    "front-right",
+    "left-front"
+  ],
+  "widthM": 2,
+  "depthM": 0.5,
+  "heightM": 2.5,
+  "priority": "P1",
+  "date": "2026-10-28",
+  "references": [
+    "art/theme-consistency/references/theme-authoritative.png",
+    "art/theme-consistency/references/rotation-guide-v1.png"
+  ],
+  "output": "art/theme-consistency/generated/props/golf-range-yardage-board-2views-v1.raw.png",
+  "provenance": "art/theme-consistency/generated/props/golf-range-yardage-board-2views-v1.provenance.json",
+  "transparent": false,
+  "prompt": "Reference1 is ONLY STYLE authority: detailed hand-painted illustrated miniature game art matching Maple Bean's warm cream painted timber, dark green painted trim, softly weathered readable broad brush forms and warm early-autumn 1985 dusk. Reference2 is ONLY camera geometry: use its TOP LEFT FRONT+RIGHT orientation and BOTTOM RIGHT LEFT+FRONT orientation. Ignore all other reference2 cells and all diagram colors, lettering, markers and layout.\nGenerate ONE physical driving-range yardage board in exactly TWO distinct views SIDE BY SIDE on a square image. LEFT HALF: front+right; RIGHT HALF: left+front, same sign genuinely turned90degrees, never mirrored or duplicated. Identical physical height and scale in both, whole objects and red finials visible. Parallel orthographic2:1isometric camera lookingdown30degrees; ground axes26.565degrees up/down, straight verticalposts. The left sign's long FRONT lower edge runs down-right slope+0.5; the right sign's same FRONT lower edge runs up-right slope-0.5. No head-on square-front or end-on pose.\nSubject golf:range-yardage-board, 2metres wide, halfmetre deep, 2.5metres high. A large RECTANGULAR blank warm-white painted timber signboard enclosed in a deep forest-green wooden frame, on exactly TWO slim white timber posts. Plain completely blank front face, no lettering/numbers/pictograms. A small RED triangular flag finial on a short stem atop the sign at its physical LEFTpost. Subtle thin timber side thickness, dark green back bracing can show at the far edges; no massive concrete feet or plinth. Two small brass front bolts in the physical upper-left and lower-right frame corners retain their positions in the two turns. A few small weathering chips on the lower rail; same construction both views.\nLighting fixed at SCREEN UPPER RIGHT in both views, warm top/right highlights, cool left undersides, gentle ambient occlusion only within the sign construction. Turn the sign, never the lighting. Reference1 style, readable elegant practical game prop, no photorealism.\nEntire outside background is FLAT PURE MAGENTA #FF00FF RGB255,0,255, uniform through every gap between the posts, with absolutely no gradients, floor, cast ground shadow, grass, pavement, grey patch, vignette or scenery. Subject itself contains no magenta, pink or purple. Generous clean outer and center margins: no contact between views, no clipped flags, no border, arrows, labels, text or UI. Exactly two real turns of ONEsign.",
+  "brief": {
+    "file": "worktrees/theme-consistency/docs/GOLF-ART-LIST.md",
+    "item": 6,
+    "sha256": "d22ac58c3c541211b35a8b859a0aeae927197b1db9866b4bc11daffd33e4d4cd"
+  },
+  "generator": "built-in image_gen",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-6d725f4c-0623-418b-8efc-9c260534fc0c.png",
+  "referenceHashes": [
+    {
+      "file": "art/theme-consistency/references/theme-authoritative.png",
+      "sha256": "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2"
+    },
+    {
+      "file": "art/theme-consistency/references/rotation-guide-v1.png",
+      "sha256": "8d60d56c563159d06a052d472856e067366834957936b942a749934883fd2e3c"
+    }
+  ],
+  "lighting": "screen upper-right toward lower-left; even macro exposure for ground",
+  "integrationStatus": "pending-visual-review",
+  "processing": "Native generator output copied byte-for-byte; no repaint, resample, mirror, recolour or transform."
+}

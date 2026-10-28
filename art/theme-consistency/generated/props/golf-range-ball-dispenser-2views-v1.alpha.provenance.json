@@ -1,0 +1,95 @@
+{
+  "schema": 1,
+  "id": "golf:range-ball-dispenser",
+  "slug": "golf-range-ball-dispenser",
+  "angleCode": "A",
+  "viewSet": "two-front-diagonals",
+  "viewOrder": [
+    "front-right",
+    "left-front"
+  ],
+  "widthM": 1.5,
+  "depthM": 1,
+  "heightM": 2,
+  "sourceRaw": {
+    "file": "art/theme-consistency/generated/props/golf-range-ball-dispenser-2views-v1.raw.png",
+    "sha256": "8cec2799d486a11a4377b2bfece01054ad486cf6b7cdc2c6709ce7fc337fa30d"
+  },
+  "sourceProvenance": {
+    "file": "art/theme-consistency/generated/props/golf-range-ball-dispenser-2views-v1.provenance.json",
+    "sha256": "98540d5952960fcfc8d29e202c01630fea514338cf42c97de923126e46ac3f8f"
+  },
+  "output": "art/theme-consistency/generated/props/golf-range-ball-dispenser-2views-v1.alpha.png",
+  "sha256": "e9b350d55423f8204daff1a1055687fe0d801c95b40c1d2df749d945edcd6651",
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "transparent": true,
+  "processing": {
+    "operation": "One-time existing magenta key; no generation, repaint, resampling, mirror or rotation.",
+    "script": "scripts/assets/key-magenta.mjs",
+    "scriptSha256": "3c3ac8235ab34e422ddfc0cd00d360a0678474e809dfb5c6bc960c1ce029f287",
+    "options": {
+      "solid": 0.92,
+      "clear": 0.15,
+      "despill": "keep",
+      "despillStrength": 1,
+      "despeckle": 400,
+      "haze": 40,
+      "hazeSoft": 6,
+      "linear": false
+    },
+    "date": "2026-10-28"
+  },
+  "views": [
+    {
+      "name": "front-right",
+      "file": "art/theme-consistency/generated/props/golf-range-ball-dispenser-2views-v1.alpha/front-right.native.png",
+      "sha256": "1eb0b11ae82124752779df7095f565882dacac4d283e26d6b0f1681664a476b4",
+      "sourceRect": {
+        "left": 0,
+        "top": 0,
+        "width": 627,
+        "height": 1254
+      },
+      "visibleAbove8": 347828,
+      "fullyClear": 438430,
+      "bounds": {
+        "left": 74,
+        "top": 191,
+        "width": 503,
+        "height": 844
+      },
+      "outerBoundaryVisible": 0
+    },
+    {
+      "name": "left-front",
+      "file": "art/theme-consistency/generated/props/golf-range-ball-dispenser-2views-v1.alpha/left-front.native.png",
+      "sha256": "f9960ffdf4975a022dcd2749921d3b27ce3d46d1b5a600ad7f2ef82dc0022033",
+      "sourceRect": {
+        "left": 627,
+        "top": 0,
+        "width": 627,
+        "height": 1254
+      },
+      "visibleAbove8": 345085,
+      "fullyClear": 441173,
+      "bounds": {
+        "left": 50,
+        "top": 206,
+        "width": 533,
+        "height": 796
+      },
+      "outerBoundaryVisible": 0
+    }
+  ],
+  "visualReviewStatus": "accepted-style-alpha-distinct-views",
+  "integrationStatus": "pending-geometry-and-physical-calibration",
+  "appearanceDecision": {
+    "file": "art/theme-consistency/generated/props/golf-range-ball-dispenser-2views-v1.alpha/review/appearance-decision.json",
+    "sha256": "bd5bcc8a85417b16364b2b856598941e2400cebd46960a1a24d90b00c1a91334"
+  },
+  "geometryReviewStatus": "pending",
+  "physicalCalibrationStatus": "pending"
+}
