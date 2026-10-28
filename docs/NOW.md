@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-28 13:45 SAST)
+## START HERE (kept current by the lead; last updated 2026-10-28 14:10 SAST)
 
 **Taking over as lead?** This section is the one start document. Paste this into a new Claude Code chat (desktop app, Code tab), on any
 account, with the folder `E:\Repos\CapitalEmpire\worktrees\lead-typecheck`:
@@ -11,6 +11,7 @@ account, with the folder `E:\Repos\CapitalEmpire\worktrees\lead-typecheck`:
 You are the new lead on CapitalEmpire (GitHub rumcan/CapitalEmpire), a 1985 golf events manager game. Your folder is
 E:\Repos\CapitalEmpire\worktrees\lead-typecheck. First run `git status` (commit nothing that is not yours), then
 `git fetch origin && git checkout -B lead/takeover-<date> origin/main`, and read docs/NOW.md section "START HERE" there and follow it.
+Load the sq-distortion-check skill once (.claude/skills/sq-distortion-check/SKILL.md) and apply it all session.
 ```
 (Do not read the docs in `E:\Repos\CapitalEmpire` itself: that checkout sits on an old side branch, `arena/T026-course-height`, with an
 old CLAUDE.md and NOW.md. `worktrees/theme-consistency` is the owner's live 5174 checkout, kept on main by the auto-updater: read it,
@@ -21,6 +22,9 @@ never commit there.)
 ### 1. Read, then restart (about 10 minutes)
 1. Read `CLAUDE.md`, this section, then `docs/AGENT-BRIEF.md` (the agent rules, the brief template, the progress protocol, the ports, the
    restart checklist). `docs/LEAD.md` is background on the game.
+   **Load the owner's reasoning skill once:** `.claude/skills/sq-distortion-check/SKILL.md` (the Skill tool, `sq-distortion-check`; about 300
+   words, the short form of the owner's Google Doc). The owner, 2026-10-28: "all AIs that lead the game like this chat does apply this skill";
+   "make sure the new skill does not use a ton of extra tokens": load it once a session, not every turn, and never paste the full Google Doc.
 2. The owner's game is http://localhost:5174 (also http://192.168.0.2:5174 on the LAN), served from `worktrees/theme-consistency`, which
    `bash E:/ClaudeTemp/autoupdate-5174.sh` fast-forwards to main every minute (log `E:/ClaudeTemp/autoupdate-5174.log`). If the log is
    older than a few minutes, start the auto-updater in the background (one only). If 5174 is down, start `.claude/launch.json`'s
@@ -57,10 +61,12 @@ never commit there.)
 - The owner wants screenshots of every visible change. Commits end with the `Co-Authored-By:` line, PR bodies with the Claude Code line.
 
 ### 3. In flight
-| Ticket | Issue | Branch | Port | State |
-| --- | --- | --- | --- | --- |
-| T261 | #766 | `arena/T261-tone-exposure` | 5186 | **Agent 1 (started 2026-10-28 ~13:10).** The style editor's Tone does nothing: find why (suspects: the waste area wears its preset, `course-look.ts courseLookSet`; T256's per-owner looks), fix it, and make Tone one Exposure slider that darkens or lightens the texture itself (no flat tint; old saves map across). |
-| T260 | #763 | `arena/T260-border-none` | 5187 | **Agent 2 (started ~13:25).** No collar band by default except the fairway's first cut and the green's fringe; Border can be none; the style editor's Border section and More options › Edges never show an empty heading (the owner: "Edges is just a heading on hole one"). |
+**No agent is running (2026-10-28 ~14:00):** the account hit its usage limit and both agents stopped; their work is pushed, and the old lead's
+agents cannot be resumed from a new chat. Pick them up from their branches:
+| Ticket | Issue | Branch | State and next step |
+| --- | --- | --- | --- |
+| T260 | #763 | `arena/T260-border-none` (6b7983c) | **Built, PR not opened.** No collar band by default except the fairway's first cut and the green's fringe; Border can be none; the Border section and More options › Edges never show an empty heading. Next: review the diff, merge origin/main (#775 landed since), typecheck, run its tests, see `E:/ClaudeTemp/T260/`, open the PR (Closes #763), merge. The issue's last comment has the steps. |
+| T237 | #694 | `arena/T237-car-parks` (df7335c) | **Barely started** (only a screenshot script). Start an agent on the branch with the issue (body plus the owner's expansion comment). |
 
 **Held, waiting on the owner (not agents):**
 - **#394 T112** (sharp 0.35): approved, merge held until the owner stops the 5191 studio (the lock change makes the auto-updater run
@@ -73,6 +79,8 @@ never commit there.)
 deliveries come as PRs to review. The 3D people session's handover is `docs/HANDOVER-PEOPLE.md`.
 
 ### 4. Queue (in order; start the next when an agent lands)
+0. **#776 [nightly]** three tests that already fail on main (construction sites, the kit atlas order after T258's range art, a four-view
+   building drawn mirrored): small, first.
 1. **T253 #735** Round off + Smoothness for every painted area, in Edges (and the style editor), and bunkers like the owner's reference
    (`docs/art/reference/bunkers-and-pond-reference.png`). After T260 (both touch the Edges section and paint-tool.ts).
 2. **T237 #694** car parks: the range set back from the road for frontage parking, car parks that look like car parks, a 150 m walking
@@ -99,7 +107,9 @@ deliveries come as PRs to review. The 3D people session's handover is `docs/HAND
 3. **Farms** (185-189): for T259. 4. **The grey stone border** (180): for T249. 5. **Scenes batch 2**: for P28 T242.
 
 ### 6. Latest merges (2026-10-28)
-#770 the town footer in the bottom right corner · #768 T254 Edit Hole Layout moves only the tees and flag, four tee sets (blue, white,
+#775 no bush, tree, plant or rock is ever mirrored (the sun stays at the upper right) and the town's bushes and ferns in the course's
+Props · #773 T261 Tone is one Exposure slider (the texture's own pixels darker or lighter) and the Waste area wears its style · #772 this
+handover · #770 the town footer in the bottom right corner · #768 T254 Edit Hole Layout moves only the tees and flag, four tee sets (blue, white,
 yellow, red) · #765 T258 the range's mats and target greens as pictures, `prep-range-art.mjs` · #761 Layer under / Replace · #758 T256
 Range › Build and per-owner looks. Older: "Done recently" below.
 
