@@ -97,6 +97,9 @@ import { LEAF_DENSITY_DEFAULT, clampLeafDensity } from './leaf-fall';
 import { ROUGH_YARDS_DEFAULT, clampRoughYards, roughShare, roughSig, roughYard } from './rough-yards';
 import { townTreeCell } from './towntrees';
 import { BELT, beltField, riverBeltCell, type BeltField } from './river-trees';
+/** T265: a frame plants its second tree cell only while its planting has taken under this (ms): two heavy cells (a forest cell with its belt)
+ *  are planted a frame apart, so no frame carries both */
+const PLANT_FRAME_MS = 1;
 import type { BendMode, LibItem, LineStyle, Prop, Tool } from './types';
 import { LK, LaneGraph, laneAt, laneOff } from './sim/lanes';
 import { LU, LV, type LotTuple } from './lots/town';
@@ -2389,6 +2392,7 @@ export class Game {
     todo.sort((p, q) => dd(p) - dd(q));
     const t0 = performance.now();
     for (let k = 0; k < Math.min(2, todo.length); k++) {
+      if (k > 0 && performance.now() - t0 > PLANT_FRAME_MS) break; // (T265: a second cell only while the frame's planting is short: no two heavy cells in one frame)
       const q = todo[k]!, key = q % NN;
       if (q >= NN) this.plantTownCell(key, key % N, Math.floor(key / N)); else this.plantCell(key, key % N, Math.floor(key / N));
     }

@@ -183,6 +183,8 @@ function startTour(g: Game, info: Record<string, unknown>, stages: Stage[] = STA
       s++; t = 0; frames = []; cpu = []; inst = draws = upload = up = 0; stageSim = 0; g.cam.X = startX; g.cam.Y = startY; plantMax = 0; plantFrames = 0; along = 0;
       if (s >= stages.length) {
         g.onFrame = null;
+        // (?tourOnly=1, bench.mjs --tourOnly 1: the tour alone, without the bake and frame checks after it)
+        if (follow && new URLSearchParams(location.search).get('tourOnly') === '1') { finish(bakeStats(g, bake0)); return; }
         if (follow) { const bakes = bakeStats(g, bake0); bakeStage(g, follow(0), [0.3, 0.15, 0.08], r => { results.push(...r); frameStage(g, follow, r2 => { results.push(...r2); finish(bakes); }); }); return; }
         if (info.course) { const at = info.course as { x: number; y: number }; paintStage(g, at, r => { results.push(r); wizardStage(g, at, r2 => { results.push(r2); finish(); }); }); return; }
         finish();
