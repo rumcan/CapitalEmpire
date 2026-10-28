@@ -25,7 +25,10 @@ export interface PatchPaint { s: number; a: number; b: number; bt: string; z: nu
    *  darker, lc / dc the colours washed in, t the tint, f the soft edge (0 hard .. 1 a smooth wave) */
   mw?: MowStripes }
 /** a painted area's mowing stripes (PatchPaint.mw) */
-export interface MowStripes { ux: number; uy: number; ox: number; oy: number; w: number; l: number; k: number; lc: string; dc: string; t: number; f: number }
+export interface MowStripes { ux: number; uy: number; ox: number; oy: number; w: number; l: number; k: number; lc: string; dc: string; t: number; f: number;
+  /** T227: the line of play's direction (tiles, unit), so the course finish can lay its bands along or across it (course-finish finishMow);
+   *  absent: the stripes keep their own look */
+  lx?: number; ly?: number }
 
 /** a texture as a course layer lays it: the texture (a paint texture or preset), its scale and angle (degrees, tile space about the origin);
  *  and the rest of the course look (the brush's style, course-look.ts): its tone (t: 1 Multiply, 2 Screen of the tint tc at strength ta) and
@@ -39,7 +42,8 @@ export interface CourseTex { tex: string; sc: number; a: number; t?: 1 | 2; ta?:
  *  - `e`: how its edge is drawn (paint-edges.ts profile: raised green and tee, turf fairway, sunken bunker, water, flat rough and fescue);
  *  - `collar`: its automatic collar (first cut, fringe, the bunker's grass lip, the pond's bank): band rings (even-odd: the surface is
  *    cut out) and the band's outer edges, in its own texture;
- *  - `stripes`: on the fairway, its mowing stripes (T218, ext/course-grid stripeAreas; drawn by renderer courseStripes), one entry per hole
+ *  - `stripes`: on the fairway (and on the green, T227: the course finish's fine stripes), its mowing stripes (T218, ext/course-grid
+ *    stripeAreas; drawn by renderer courseStripes), one entry per hole
  *    whose fairway cells reach this chunk: the hole (0: cells of no hole, or of a hole with no line yet: the default direction), its playing
  *    line (tee, aim points, pin; flat tiles), its share of the chunk when there are two or more (runs: boxes x0 y0 x1 y1, tiles) and a: the
  *    hook for greenkeeping's mow angle (the way the mower drives, degrees in tile space; course-stripes holeStripeLegs), absent until set */
@@ -48,7 +52,10 @@ export interface CourseLayer extends CourseTex { s: number; e: EdgeProfile; fill
    *  collar) runs; the rest of its edges are walls (CoursePatch.walls) or hidden under a later layer, drawn crisp. Absent: feather all edges */
   soft?: Float32Array[]; joint?: Float32Array[];
   /** its collar band (w: the band's width in tiles, the course look's Border; its outward feather never reaches past it, so a hairline stays one) */
-  collar?: CourseTex & { n: 'first-cut' | 'fringe' | 'lip' | 'bank'; w?: number; fill: Float32Array[]; edges: Float32Array[]; soft?: Float32Array[] }; stripes?: { hole: number; line: number[]; runs?: Float32Array; a?: number }[] }
+  collar?: CourseTex & { n: 'first-cut' | 'fringe' | 'lip' | 'bank'; w?: number; fill: Float32Array[]; edges: Float32Array[]; soft?: Float32Array[];
+    /** T227: a bunker's lip band's grass with the course finish on (course-finish.ts: the fairway's first cut, so the bunker sits in the collar
+     *  as in the concept); absent: its own look (the player picked a Border texture for the bunker) */
+    g?: CourseTex }; stripes?: { hole: number; line: number[]; runs?: Float32Array; a?: number }[] }
 /** a course wall (ext/course-walls WallRun, T099): its top edge as x, y, drop triples (tiles, tiles, metres), the higher side on the left so the
  *  face looks along the right-hand normal toward the camera; lo: the layer code it hangs over (2 s a surface's fill, 2 s + 1 its collar, 0 the
  *  map grass), drawn just after that layer; m: its material (0 turf, 1 sand, 2 water) */

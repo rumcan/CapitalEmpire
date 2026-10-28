@@ -52,7 +52,7 @@ const ACCEPTED = ['painted:golden-fescue', 'painted:lake', 'painted:sand-ripples
 const PROVISIONAL = ['painted:fairway', 'painted:putting-green', 'painted:fringe',
   'painted:first-cut-run', 'painted:tee-run', 'painted:desert-run', 'painted:swamp-run', 'painted:dirt-run', 'painted:sand-raked-run',
   'painted:putting-green-run', 'painted:rough-run', 'painted:pond-bank-run', 'painted:grow-in-run', 'painted:field-parking-run',
-  'painted:flower-bed-soil-run', 'painted:range-tee-divots-run'];
+  'painted:flower-bed-soil-run', 'painted:range-tee-divots-run', 'painted:lawn-concept-run', 'painted:meadow-concept-run', 'painted:rough-concept-run'];
 /** the owner's own paintings (T162) and the art session's fairway and putting-green paintings (T165): provisional too, one tile a level, from
  *  art/owner-supplied (committed in this repo); a level may instead be a provisional family's raw tiles healed with one shared strip (T165) */
 // T191: the putting green with the v2 MID and FAR sets (NEAR the owner's painting), an owner family like putting-green-paint
