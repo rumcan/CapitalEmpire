@@ -106,12 +106,12 @@ test('the variety: each boulder shape is its own card (three shapes at each size
   assert.equal(DECOR_BY_KEY.get('kit-rocks-mixed')!.group, 'stone'); for (const k of ['kit-shrubs-mixed', 'kit-mums-mixed', 'kit-palms-mixed']) assert.equal(DECOR_BY_KEY.get(k)!.group, 'plants');
 });
 
-test('a mixed brush is deterministic per spot: the same pick at the same spot, every boulder and both ways round over a field', () => {
+test('a mixed brush is deterministic per spot: the same pick at the same spot, every boulder over a field, never mirrored (the owner, 2026-10-28)', () => {
   const d = DECOR_BY_KEY.get('kit-rocks-mixed')!, seen = new Set<string>(), flips = new Set<boolean>();
   for (let y = 0; y < 20; y += 0.25) for (let x = 0; x < 20; x += 0.25) {
     const a = mixPick(d, x, y)!, b = mixPick(d, x, y)!; assert.deepEqual(a, b); seen.add(a.id); flips.add(a.flip);
   }
-  assert.equal(seen.size, 9, 'all nine boulders'); assert.equal(flips.size, 2, 'both ways round');
+  assert.equal(seen.size, 9, 'all nine boulders'); assert.deepEqual([...flips], [false], 'never mirrored');
   assert.notDeepEqual([0, 1, 2, 3, 4, 5].map(k => mixPick(d, k, 0)!.id), [0, 1, 2, 3, 4, 5].map(k => mixPick(DECOR_BY_KEY.get('kit-shrubs-mixed')!, k, 0)!.id));
   // the tool: two players dragging the same line lay the same stones, as one undo step, none overlapping; a click drops one
   const lay = () => {
