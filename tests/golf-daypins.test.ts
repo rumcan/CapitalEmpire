@@ -126,7 +126,7 @@ test('withDayPins plays the day\'s cup: the pin and every line\'s end move, the 
   const h: PlayHole = { n: 1, par: 4, tee: { x: 0, y: 0 }, pin: { x: 0, y: 100 }, line: [{ x: 0, y: 0 }, { x: 5, y: 50 }, { x: 0, y: 100 }],
     sets: [{ kind: 'back', tee: { x: 0, y: 0 }, line: [{ x: 0, y: 0 }, { x: 5, y: 50 }, { x: 0, y: 100 }] }, { kind: 'forward', tee: { x: 0, y: 20 }, line: [{ x: 0, y: 20 }, { x: 0, y: 100 }] }] };
   const h2: PlayHole = { n: 2, par: 3, tee: { x: 50, y: 0 }, pin: { x: 50, y: 60 }, line: [{ x: 50, y: 0 }, { x: 50, y: 60 }] };
-  const view: CourseView = { holes: [h, h2, h], lieAt: () => 'fairway' };
+  const view: CourseView = { holes: [h, h2, { ...h }], lieAt: () => 'fairway' }; // (makeCourseView's repeat: a new object on the same line)
   const out = withDayPins(view, n => (n === 1 ? { x: 3, y: 96 } : null));
   assert.notEqual(out, view);
   const o = out.holes[0]!;
@@ -134,7 +134,7 @@ test('withDayPins plays the day\'s cup: the pin and every line\'s end move, the 
   assert.equal(o.par, 4); assert.deepEqual(o.tee, { x: 0, y: 0 });
   assert.deepEqual(o.sets!.map(s => s.line[s.line.length - 1]), [{ x: 3, y: 96 }, { x: 3, y: 96 }]);
   assert.deepEqual(out.holes[2]!.pin, { x: 3, y: 96 }, 'a 9-hole course\'s second nine too');
-  assert.equal(out.holes[2], out.holes[0], 'a hole listed twice stays one object (its repeats share their line)');
+  assert.equal(out.holes[2]!.line, out.holes[0]!.line, 'a hole listed twice keeps one line for its repeats');
   assert.equal(dayCourse(out).holes.length, 2, 'so the everyday round still plays each hole once');
   assert.equal(out.holes[1], h2, 'a hole with no day cup is as placed');
   assert.deepEqual(h.pin, { x: 0, y: 100 }, 'the course view given is not changed');
