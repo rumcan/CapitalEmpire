@@ -45,7 +45,7 @@ Autumn trees and conifers, colonial houses with warm windows, lamps, the sun at 
 | 6 | **Trees frame the holes** (done, #677) | When a hole is built, an optional priced tree line (spruce, pine and maple clumps) along the outer edge of its rough. | a ticket |
 | 7 | **Streets and car parks** (done, #667) | Zebra crossings at junctions and white edge lines. Car parks draw parked cars to match their count (the range already shows "P 6/44"). | a ticket |
 | 8 | **Fuller yards** (done, T231 #671: clipped hedges, autumn shrubs and mums on house lots by draws of their own, lots/compose.ts kitYard; the hedge also a run in Decoration) | The lot composer lays hedges, flower beds and fences once art 162-165 lands. | after the art |
-| 9 | **Building sites** (T232 #673, running) | Bought land shows bare dirt inside a white dashed line. Buildings rise with the construction kit (art 168-172). | a ticket |
+| 9 | **Building sites** (done, #682) | Bought land shows bare dirt inside a white dashed line. Buildings rise with the construction kit (art 168-172). | a ticket |
 | 10 | **UI** (done, T233 #674) | Stat chips in the top bar (money and its change a month, reputation, golfers a month, course rating: `ui/StatChips.tsx`, `golf/topstats.ts`). The build tools as illustrated tiles (art 174, `ui/tool-tiles.ts`): the Course and Facilities flyouts lay a level with tiles out as a grid of them. | a ticket |
 | 11 | **Life on the course** (T211 #655 done; T208 #553 running) | Golfers playing and carts on the paths: already queued as T208 and T213. | queued |
 

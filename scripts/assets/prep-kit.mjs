@@ -55,8 +55,8 @@ export const KIT = [
   ] },
   // 159: the jet, four frames of a loop in four 344 px columns, 4 m high and 1.5 m across: cut alike so the frames stand on one spot
   { sheet: 'props/golf-fountain-jet-4frames-v1.png', cut: 'columns', n: 4, out: [0, 1, 2, 3].map(f => ({ slug: `fountain-jet-${f}`, name: `Fountain jet (frame ${f + 1})`, kind: 'fountain', tall: 4, box: 0.75 })) },
-  // 160: four lily clusters, top-down, on a 2 x 2 grid, about 2.4 m across
-  { sheet: 'landscaping/golf-lily-pads-top-v1.png', cut: 'grid2', out: ['a', 'b', 'c', 'd'].map(v => ({ slug: `lily-pads-${v}`, name: `Lily pads (${v})`, kind: 'decal', flat: 2.4 })) },
+  // 160: four lily clusters, top-down, on a 2 x 2 grid, about 2.4 m across (T234: greenPads, the autumn pads' hue moved toward green)
+  { sheet: 'landscaping/golf-lily-pads-top-v1.png', cut: 'grid2', recolor: greenPads, out: ['a', 'b', 'c', 'd'].map(v => ({ slug: `lily-pads-${v}`, name: `Lily pads (${v})`, kind: 'decal', flat: 2.4 })) },
   // 162 shrubs, 163 flower clumps (0.6 m), 36 boulders, 43 palms, 45 lamp posts (3.5 m)
   ...SHRUBS.map(([s, n, m]) => one(`landscaping/golf-shrub-${s}-1view-v1.png`, `shrub-${s}`, n, 'shrub', { across: m, box: m * 0.35 })),
   ...FLOWERS.map(([s, n]) => one(`landscaping/golf-flowers-${s}-1view-v1.png`, `flowers-${s}`, n, 'flower', { across: 0.6, box: 0.25 })),
@@ -113,6 +113,36 @@ function baseX(rgba, w, h) {
   let sum = 0, n = 0;
   for (let y = h - 1; y >= Math.max(0, h - Math.max(3, Math.round(h * 0.05))); y--) for (let x = 0; x < w; x++) { const a = rgba[(y * w + x) * 4 + 3]; if (a > 128) { sum += x; n++; } }
   return n ? sum / n : w / 2;
+}
+
+/** T234 (#683): the lily art is painted in autumn colours, olive pads with orange and brown rims: only 9-24% of a cluster's pixels have a green
+ *  hue (mean colour about 130, 120, 50), and on the dark water at 30% zoom a cluster read as a small gold dot, not a green pad. The hue of the
+ *  pads (and their rims) moves toward green (hue 60 degrees to 108, an orange rim at 30 to 98, a green at 100 to 116), a little more saturated and
+ *  no brighter. What is left as painted: the white petals (low saturation) and the flowers' bright orange-yellow centres (high value), so a
+ *  cluster reads as green pads with white flowers. Set GREEN_PADS = false to keep the art as the art agent painted it. */
+const GREEN_PADS = true;
+function greenPads(p) {
+  if (!GREEN_PADS) return p;
+  const ss = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+  const out = Buffer.from(p.rgba);
+  for (let i = 0; i < out.length; i += 4) {
+    if (out[i + 3] === 0) continue;
+    const r = out[i] / 255, g = out[i + 1] / 255, b = out[i + 2] / 255, mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
+    if (d === 0) continue;
+    let h = mx === r ? ((g - b) / d + 6) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; h *= 60;
+    const sat = d / mx, v = mx;
+    if (h > 120 && h < 345) continue; // only the reds, oranges, yellows and greens
+    const hh = h >= 345 ? h - 360 : h; // -15 .. 120
+    const w = ss(0.3, 0.5, sat) * (1 - ss(0.8, 0.93, v));
+    if (w <= 0) continue;
+    const target = Math.min(118, Math.max(96, 108 + (hh - 60) * 0.3)); // the new hue of a hue hh
+    const nh = (hh + (target - hh) * w + 360) % 360, ns = Math.min(1, sat * (1 + 0.12 * w));
+    // hsv -> rgb
+    const c = v * ns, x = c * (1 - Math.abs(((nh / 60) % 2) - 1)), m = v - c, k = Math.floor(nh / 60) % 6;
+    const [rr, gg, bb] = [[c, x, 0], [x, c, 0], [0, c, x], [0, x, c], [x, 0, c], [c, 0, x]][k];
+    out[i] = Math.round((rr + m) * 255); out[i + 1] = Math.round((gg + m) * 255); out[i + 2] = Math.round((bb + m) * 255);
+  }
+  return { ...p, rgba: out };
 }
 
 /** cut one source into its pieces: { rgba, w, h } each, in the order of the entry's out list */
@@ -193,6 +223,7 @@ for (const entry of KIT) {
   if (!fs.existsSync(file)) { console.log(`${entry.sheet}: not made yet, skipped`); continue; }
   const buf = fs.readFileSync(file), prov = (() => { try { return JSON.parse(fs.readFileSync(file.replace(/\.png$/, '.provenance.json'), 'utf8')); } catch { return {}; } })();
   let pieces = await cutSheet(entry, file);
+  if (entry.recolor) pieces = pieces.map(entry.recolor);
   if (entry.cut === 'grid2') pieces = await Promise.all(pieces.map(layFlat));
   for (const [i, o] of entry.out.entries()) {
     const p = pieces[i], g = geometry(o, p);
@@ -206,7 +237,7 @@ for (const entry of KIT) {
       id: `kit:${o.slug}`, name: o.name, cat: 'Concept kit', kind: o.kind, ...geo, solid: o.kind === 'decal' || o.kind === 'fountain' ? 0 : 1, big: false, door: false, cost: COST[o.kind] ?? 100,
       ...(glows.length ? { glows } : {}),
       ...(len !== undefined ? { run: { axis: o.run.axis, len } } : {}),
-      src: { sheet: entry.sheet, rect: p.rect, sha256: sha(buf), id: prov.id, generationId: prov.generationId, model: prov.runModel ?? prov.model, review: prov.reviewStatus },
+      src: { sheet: entry.sheet, rect: p.rect, ...(entry.recolor && GREEN_PADS ? { recolor: 'green pads (T234)' } : {}), sha256: sha(buf), id: prov.id, generationId: prov.generationId, model: prov.runModel ?? prov.model, review: prov.reviewStatus },
     });
     review.push({ slug: o.slug, png, g });
     console.log(`kit:${o.slug} ${o.kind}: ${p.w}x${p.h} px cut from ${entry.sheet} [${p.rect.join(',')}] -> ${g.w.toFixed(0)}x${g.h.toFixed(0)} display px${len !== undefined ? `, ${len.toFixed(2)} m a piece` : ''}${glows.length ? `, ${glows.length} glows` : ''}`);

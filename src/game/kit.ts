@@ -11,6 +11,8 @@ export const isKit = (id: string): boolean => id.startsWith('kit:');
 
 /** the six autumn shrubs (162), 1-1.5 m */
 export const KIT_SHRUBS = ['kit:shrub-burning-bush', 'kit:shrub-golden-spirea', 'kit:shrub-boxwood-ball', 'kit:shrub-red-twig-dogwood', 'kit:shrub-blue-juniper', 'kit:shrub-plume-grass'] as const;
+/** the ornamental grass with cream plumes among them (T234: the tufts in a pond rim's gaps) */
+export const KIT_PLUME = 'kit:shrub-plume-grass';
 /** the six flower clumps (163), 0.6 m */
 export const KIT_FLOWERS = ['kit:flowers-mums-red', 'kit:flowers-mums-yellow', 'kit:flowers-mums-orange', 'kit:flowers-mums-white', 'kit:flowers-mums-bronze', 'kit:flowers-black-eyed-susans'] as const;
 /** the boulders (36): small 0.8 m, medium 1.5 m, large 2.5 m, three shapes each */

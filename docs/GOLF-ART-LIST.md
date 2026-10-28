@@ -716,13 +716,13 @@ sky. It replaces item 130.
 **157. Building-site dirt** · ground · P2. Graded bare earth with tyre and track marks and a few stones. Try `dirt-run` first.
 
 ### Water features
-✅ **158. Pond-edge boulders** (`landscaping/golf-pond-edge-boulders-pieces-v1.png`; in the game, T231 #671: Stone pond edge; laid at 8 x 2 m a piece, the stones at the boulders' scale) · **R** · 1 x 4 m a piece · P1.
+✅ **158. Pond-edge boulders** (`landscaping/golf-pond-edge-boulders-pieces-v1.png`; in the game, T231 #671: Stone pond edge; laid at 8 x 2 m a piece, the stones at the boulders' scale; T234 #683: not a ring wall: the pieces vary 0.8-1.2 and stand in 0-0.5 m from the shore, short gaps (about 10% of the shore) hold a plume-grass tuft (162) or a single boulder (36), the corners in a round pond's staircase loosened; ponds.ts) · **R** · 1 x 4 m a piece · P1.
 > Subject: a pond's rim of rounded grey granite boulders of mixed sizes, set tight along the edge, moss and a few small autumn flowers between them, the stones dark and wet at the waterline. The water side of the piece faces the screen's lower edge. Make an inner corner and an outer corner as the extra items.
 
 ✅ **159. Fountain jet** (`props/golf-fountain-jet-4frames-v1.png`; in the game, T231 #671: Fountain jet and Fountain pond, animated) · **B** · 1.5 m across, 4 m high · P1. Four frames of a loop.
 > Subject: a single tall fountain jet of water rising from a still pond's surface, a crown of spray at its top, a ring of ripples and foam at its foot, the water white-blue catching warm light. Only the water: no basin, no pond. Four frames of the same jet in one row, the spray shapes moving, so they loop.
 
-✅ **160. Lily pads** (`landscaping/golf-lily-pads-top-v1.png`; in the game, T231 #671: on stone-edged ponds) · **C** decal sheet on magenta, four variants · P1.
+✅ **160. Lily pads** (`landscaping/golf-lily-pads-top-v1.png`; in the game, T231 #671: on stone-edged ponds; T234 #683: the art is autumn olive and orange, so prep-kit.mjs moves its hue toward green (greenPads; GREEN_PADS = false keeps it as painted; switch it off if the art agent repaints it green) and a cluster is laid 3.4-4.8 m across so it reads at 30% zoom) · **C** decal sheet on magenta, four variants · P1.
 > Subject: seen from straight above, a cluster of round green lily pads of mixed sizes floating flat, a few with a notch, two white water-lily flowers with yellow centres. Four different clusters in a 2x2 grid on flat pure magenta.
 
 **161. Lake-shore rocks** · **R** · 2 x 4 m a piece · P2.
