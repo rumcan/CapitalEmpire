@@ -327,3 +327,7 @@ button.stat-chip:hover { background: rgba(255, 255, 255, 0.06); }
 .keys-row-locked, .keys-card-locked { opacity: 0.6; }
 .keys-title { display: flex; align-items: center; gap: 0.3rem; }
 .keys-why { flex-basis: 100%; font-size: 11.5px; color: var(--muted); }
+
+/* the footer panel's close button (the owner, 2026-10-29: "footer menu now never closes") */
+.tool-panel-foot .tool-crumb { padding-right: 2rem; }
+.tool-panel-close { position: absolute; top: 0.5rem; right: 0.5rem; z-index: 1; }

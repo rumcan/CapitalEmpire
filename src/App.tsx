@@ -576,14 +576,18 @@ export default function App() {
             const rail = {
               open: fly?.item ?? null,
               onPick: (r: RailItem, keyboard?: boolean, el?: HTMLElement) => {
-                if (menuFor(r).length) { if (fly?.item === r.id) setFly(null); else openFly(r, el, !!keyboard); return; }
+                // the owner, 2026-10-29: "footer menu now never closes": a second click on a lit footer group (its flyout open) closes the flyout
+                // and puts its tool down too, so the panel above the footer closes with it (the side drawer keeps its tool, as before)
+                if (menuFor(r).length) { if (fly?.item === r.id) { setFly(null); if (drawerOf(r) === 'footer' && activeRail.current === r.id && toolDrawer(game.uiTool, activeRail.current) === 'footer') game.setTool('select'); } else openFly(r, el, !!keyboard); return; }
                 setFly(null);
                 activeRail.current = r.id;
                 if (game.range.cardOpen) game.openRangeCard(false);
                 const e = pickEntry(r, game.golfMode, ui, lastEntry.current[r.id] ?? last.current[r.id]);
                 if (e) openEntry(r.id, e); else game.toast(`${r.label}: nothing open here yet`);
               },
-              onHover: (r: RailItem, el: HTMLElement) => { if (fly && fly.item !== r.id && menuFor(r).length) openFly(r, el, false); },
+              // the owner, 2026-10-29: Traffic and Town decoration open on a click, never on hover: hovering never opens or swaps to a footer group's
+              // flyout, and never swaps away from one (the side drawer's groups still follow the pointer while one of theirs is open, T193)
+              onHover: (r: RailItem, el: HTMLElement) => { const openR = fly ? RAIL.find(x => x.id === fly.item) : undefined; if (fly && fly.item !== r.id && menuFor(r).length && drawerOf(r) === 'side' && (!openR || drawerOf(openR) === 'side')) openFly(r, el, false); },
               onLocked: (r: RailItem, why: string) => game.toast(`${r.label}: ${why}`),
             };
             const flyR = fly ? RAIL.find(x => x.id === fly.item) : undefined, flyRows = flyR ? menuFor(flyR) : [], up = !!flyR && drawerOf(flyR) === 'footer';
@@ -640,7 +644,7 @@ export default function App() {
             </>);
             return <>
           {/* T250: the town footer: the TOWN groups, centred along the bottom clear of the minimap and the bottom cards; its flyouts open upward */}
-          <TownFooter {...rail} entries={drawerEntries(entries, 'footer')} boxRef={footBox} navRef={footRef} flyouts={up ? flyouts : null} raised={up} panel={dock === 'footer' && !idle ? { tool: game.uiTool, body: toolBody } : null} />
+          <TownFooter {...rail} entries={drawerEntries(entries, 'footer')} boxRef={footBox} navRef={footRef} flyouts={up ? flyouts : null} raised={up} panel={dock === 'footer' && !idle ? { tool: game.uiTool, body: toolBody } : null} onClosePanel={() => { setFly(null); game.setTool('select'); }} />
           <div ref={railBox} className={`pointer-events-none absolute left-3 top-[var(--hud-top,5.75rem)] ${sideFly ? 'z-40' : 'z-20'} flex items-start gap-2 [&>*]:pointer-events-auto`}>
             {/* P23 P1-E: the same places from minute zero; a tool not open yet stays dimmed in place with what unlocks it, a new one says NEW */}
             {/* T182: the groups (Driving range, Course, Facilities (T206) · Traffic, Town decoration); the range opens its card; a group opens its last tool, else its first open one */}
