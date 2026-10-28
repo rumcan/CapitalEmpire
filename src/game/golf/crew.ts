@@ -6,9 +6,9 @@
 //    and walks back to the cart. Every green is done before the first group can reach it (its tee time on that hole plus CUP_LEAD): the walks take
 //    their time at the walk cap where the deadlines leave room, and are hurried (the pacer fades) where they do not. Then, on his holes, the
 //    greens due today (the walk-behind, a few passes along the approach) and the sands (a few rake strokes), each when no group is on the hole;
-//  - the **mower operators** cut the fairways due today, one pass along each of T218's stripe bands (a mown event each: the band's fresh stripe),
-//    the ride-on at the cart cap. When a group is due on the hole the mower pulls off into the rough and waits for it to pass; a wait longer than
-//    WAIT_HOME leaves the rest of that fairway for another day. Then the rough due today, one pass down each side;
+//  - the **mower operators** cut the fairways due today, one pass along each of the fairway's stripe bands (a mown event each: the band's fresh
+//    stripe), the ride-on at the cart cap, a segment at a time. When a group is due on the hole the mower pulls off the fairway and waits for it to
+//    pass; a wait longer than WAIT_HOME leaves the rest of that fairway for another day. Then the rough due today, one pass down each side;
 //  - everyone goes back to the yard at the shift's end (the greenkeepers' GK_HOME, the mowers' MO_HOME), or when the day's work is done.
 // With the caps (pace: #821's watchable golfers), a motion's time is its length at the cap, so the screen shows it at the cap; long drives between
 // holes run at a cart's real speed (the pacer fades them, as the golfers' walks). Deterministic: no draw at all. Pure TS; game minutes, tiles.
@@ -25,11 +25,11 @@ export const CUT_MIN = 3.5, FILL_MIN = 2, SET_MIN = 0.5;
 export const CUP_LEAD = 6;
 /** a worker who would wait longer than this for a hole leaves it (game minutes) */
 export const WAIT_HOME = 60;
+/** a turn between two passes longer than this (tiles) is a drive, not mown (the rough's crossing to the fairway's other side) */
+const TURN_T = 8;
 /** the real speeds, tiles a game minute (2 m tiles: a walk 4.8 km/h, the utility cart 19 km/h, the ride-on mowing 6.6 km/h, the walk-behind 3.6,
  *  the rotary 6, a rake stroke 1.4) */
 export const SPEED = { walk: 40, cart: 160, reel: 55, push: 30, rotary: 50, rake: 12 } as const;
-/** a mower pulls off this far into the rough to let a group by (tiles) */
-const ASIDE_T = 4;
 
 /** what a worker does on a leg, and the vehicle he rides or works (none: on foot; push: the walk-behind he walks behind) */
 export type Act = 'walk' | 'drive' | 'mow' | 'push' | 'rake' | 'kneel' | 'stand' | 'wait' | 'away';
@@ -198,13 +198,16 @@ function mowHole(sh: Shift, i: number, passes: readonly Pass[], veh: Veh, real: 
     if (clash(win, sh.t, len + turn)) {
       const s = firstFree(win, sh.t, len + turn);
       if (s - sh.t > WAIT_HOME || s + len > home) return;
-      // pull off into the rough, wait for the group, come back
-      const L = dist(p.ax, p.ay, p.bx, p.by) || 1, ox = p.ax + (p.ax - p.bx) / L * ASIDE_T, oy = p.ay + (p.ay - p.by) / L * ASIDE_T, side = mins(ASIDE_T, real, C);
-      sh.go(ox, oy, 'drive', veh, side); sh.stay(Math.max(sh.t, s - side), 'wait', veh); sh.go(p.ax, p.ay, 'drive', veh, side);
+      // pull off the fairway (the pass's way off it: sideways to the rough, or back past its end) and wait for the group to pass, then come back
+      const sx = p.sx ?? 0, sy = p.sy ?? 0, d = Math.hypot(sx, sy), side = d > 0.1 ? mins(d, real, C) : 0;
+      if (side) sh.go(p.ax + sx, p.ay + sy, 'drive', veh, side);
+      sh.stay(Math.max(sh.t, s - side), 'wait', veh);
+      if (side) sh.go(p.ax, p.ay, 'drive', veh, side);
     }
     sh.go(p.bx, p.by, 'mow', veh, len);
-    if (mown) mown.push({ hole: n, band: p.band, leg: p.leg, t: sh.t });
-    if (q) sh.go(q.ax, q.ay, 'mow', veh, turn);
+    if (mown && p.last !== false) mown.push({ hole: n, band: p.band, leg: p.leg, t: sh.t });
+    // (the turn to the next pass: mown when it is the turn at the fairway's end, a drive when it crosses to the other side)
+    if (q) sh.go(q.ax, q.ay, dist(p.bx, p.by, q.ax, q.ay) > TURN_T ? 'drive' : 'mow', veh, turn);
   }
 }
 
@@ -281,3 +284,39 @@ export function legAt(w: Worker, m: number): CrewLeg | null { const i = legIndex
 
 /** the crew needed for a course of `holes` holes (part 3 lets the player hire them): a greenkeeper and a mower operator each nine holes */
 export function crewFor(holes: number): { gk: number; mo: number } { const n = Math.ceil(Math.max(0, holes) / 9); return { gk: n, mo: n }; }
+
+/** the crew as the save keeps it (GolfSave.crew): the holes whose stripes run the other way (phase: the last full cut ran that way), and the town
+ *  day each hole's fairway was last cut whole (mown: [hole, day]; a cut finished today is in its phase already, so today's fresh stripes are not
+ *  drawn again over it). Missing: no hole flipped, none cut */
+export interface CrewSave { phase: number[]; mown: [number, number][] }
+/** a saved crew, well formed (missing or bad: none flipped, none cut) */
+export function normalizeCrewSave(s: Partial<CrewSave> | null | undefined): CrewSave {
+  const fin = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
+  const phase = Array.isArray(s?.phase) ? [...new Set(s!.phase.filter(h => fin(h) && h > 0))].sort((a, b) => a - b) : [];
+  const mown: [number, number][] = [], had = new Set<number>();
+  if (Array.isArray(s?.mown)) for (const e of s!.mown) if (Array.isArray(e) && fin(e[0]) && fin(e[1]) && e[0] > 0 && !had.has(e[0])) { had.add(e[0]); mown.push([e[0], Math.floor(e[1])]); }
+  return { phase, mown };
+}
+
+/** the grounds crew's cut of each hole at minute m (ground-protocol stripes f: [phase, leg, band]): the saved phase, and today's fresh stripes behind
+ *  the mower (the last band cut by m, from the day's mown events: the bands below it, of its leg and the legs before, flipped again), except on a
+ *  hole whose whole cut today is already in its phase (save.mown). Only the holes with something to draw */
+export function crewFlips(save: CrewSave, day: CrewDay | null, today: number, m: number): Map<number, number[]> {
+  const out = new Map<number, number[]>(), ph = new Set(save.phase), done = new Map(save.mown);
+  for (const h of ph) out.set(h, [1, -1, 0]);
+  if (day) for (const e of day.mown) {
+    if (e.t > m) break;
+    if (done.get(e.hole) === today) continue;
+    out.set(e.hole, [ph.has(e.hole) ? 1 : 0, e.leg, e.band + 1]);
+  }
+  return out;
+}
+
+/** the holes whose whole fairway is cut by minute m today: every band of its passes has its mown event by m (passes: per hole, its fairway passes) */
+export function fullyCut(day: CrewDay, passes: ReadonlyMap<number, readonly Pass[]>, m: number): number[] {
+  const got = new Map<number, Set<string>>();
+  for (const e of day.mown) { if (e.t > m) break; let s = got.get(e.hole); if (!s) got.set(e.hole, (s = new Set())); s.add(`${e.leg}:${e.band}`); }
+  const out: number[] = [];
+  for (const [h, s] of got) { const ps = passes.get(h); if (!ps?.length) continue; const all = new Set(ps.map(p => `${p.leg}:${p.band}`)); if ([...all].every(k => s.has(k))) out.push(h); }
+  return out;
+}

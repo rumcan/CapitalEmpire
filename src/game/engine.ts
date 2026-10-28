@@ -21,7 +21,7 @@ import { GroundCache } from './ground-cache';
 import { GAME_BOOT, clampCentre, flatTerrain, type BootOptions } from './boot';
 import { TILE_BANDS, TILES_REVISION, anchorAt, bandAt, bandRange, bandsAhead, cellOf, cellsIn, coverageOf, drawnScale, nearUntil, nextBand, tiledFamily, tileIndex, tilePermutation, tileScreenPx, tileSize, tileSpec } from './painted-tiles';
 import { onPaintedSurfaces, paintedSurfaces } from './painted-surfaces-live';
-import { borderDefault, finishBorders, finishOf } from './course-finish';
+import { borderDefault, finishBorders, finishOf, finishStripeLook } from './course-finish';
 import { chunkLayers, pictureCurrent, prebakeTargets } from './ground-layers';
 import { clampGrassArt, grassZoomLevels, type GrassArt } from './painted-grass-lod';
 import { lotBatch, type CourseTex, type LotPatch } from './ground-protocol';
@@ -77,7 +77,7 @@ import { bayCar, bayFoot, isWagon } from './vehicles';
 import { DayBook, clubCardView, dayCourse, dayPace, dayPlan, feeScale, normalizeDaySave, seasonPaceRep, type ClubCardView, type DayInputs, type DayRoster } from './golf/everyday';
 import { choosePin, greenAt, pinIn, pinLine, pinReport, pinSlot, rollDayPins, withDayPins, type DayPin, type GreenShape } from './golf/daypins';
 import { crewCells, crewGround, type CrewGround } from './golf/crewground';
-import { crewDay, crewFor, holeWindows, rotaJobs, type CrewDay, type Veh as CrewVeh } from './golf/crew';
+import { crewDay, crewFlips, crewFor, fullyCut, holeWindows, normalizeCrewSave, rotaJobs, type CrewDay, type Veh as CrewVeh } from './golf/crew';
 import { CrewView, cupSetAt } from './golf/crewview';
 import { fairwayStripeLook } from './course-stripes';
 import { DAY_CAR_CAP, DayView, type ClubGround } from './golf/everydayview';
@@ -1651,7 +1651,7 @@ export class Game {
     this.cgWait = null; this.cgJob = true;
     const chunks: number[] = []; for (const k of w.chunks) chunks.push(Math.floor(k / 4096), k % 4096);
     const now = this.growMonth();
-    this.contour.chunks({ chunks, looks: this.courseLooks(), now, lines: [...this.holeLines()], paths: this.coursePaths() }, (out, ms) => {
+    this.contour.chunks({ chunks, looks: this.courseLooks(), now, lines: [...this.holeLines()], paths: this.coursePaths(), flips: [...this.mowFlips()] }, (out, ms) => {
       this.perf.courseJobMs = ms; this.perf.courseJobChunks = chunks.length / 2;
       const t0 = performance.now();
       this.cgJob = false;
@@ -6816,7 +6816,8 @@ export class Game {
     const grid = this.courseGrid, g = this.golf; if (!grid || !g) return new Map();
     const lines = this.holeLines(), key = `${grid.rev}|${JSON.stringify([...lines])}`;
     if (this.crewGrounds?.key === key) return this.crewGrounds.m;
-    const cells = crewCells(grid), look = fairwayStripeLook(), m = new Map<number, CrewGround>();
+    // (the bands the ground draws: T227's finish's, along the line, else T218's own)
+    const cells = crewCells(grid), base = fairwayStripeLook(), look = finishStripeLook(finishOf(paintedSurfaces()), base) ?? base, m = new Map<number, CrewGround>();
     for (const p of g.pins) {
       const next = g.tees.find(t => t.hole === p.hole + 1 && t.kind === 'back') ?? g.tees.find(t => t.hole === p.hole + 1) ?? null;
       m.set(p.hole, crewGround(grid, p.hole, cells.get(p.hole), lines.get(p.hole), look, this.greenOf(p.hole), next));
@@ -6839,6 +6840,38 @@ export class Game {
     const pace = capped(this.golfPace);
     const cd = crewDay({ holes: crew, yard: { x: yard.x, y: yard.y }, gk: size.gk, mo: size.mo, ...jobs, windows, firstOn, pace: pace ? { walk: WALK_CAP * spm, cart: CART_CAP * spm } : null });
     this.crew = { day: cd, view: new CrewView(cd, pace ? { walk: WALK_CAP, cart: CART_CAP } : null), town: day, nextCup: -Infinity };
+  }
+  /** T269: the grounds crew's cut of each hole now (golf/crew.ts crewFlips: the saved phases and today's fresh stripes behind the mowers), as the
+   *  course chunks carry it (CourseJob flips) */
+  private mowFlips(): Map<number, number[]> {
+    const g = this.golf; if (!g) return new Map();
+    return crewFlips(normalizeCrewSave(g.crew), this.crew?.day ?? null, this.crew?.town ?? -1, this.dayMinute);
+  }
+  /** T269: the stripes follow the mowers: every LINES_EVERY_MS the holes' cuts are compared with those last sent, and a hole's chunks round its line
+   *  are sent again when its cut moved (a band cut: a few chunks once a pass); a fairway cut whole today takes its new phase into the save */
+  private flipsSeen = new Map<number, string>(); private flipsAt = 0;
+  private watchMowFlips(now: number) {
+    if (now - this.flipsAt < LINES_EVERY_MS) return; this.flipsAt = now;
+    const g = this.golf, c = this.crew; if (!g || !this.courseGrid) return;
+    // a fairway cut whole today: its phase flips in the save (drawn the same: the cut covered it)
+    if (c) {
+      const done = fullyCut(c.day, new Map([...this.crewGroundsNow()].map(([h, q]) => [h, q.passes])), this.dayMinute), sv = normalizeCrewSave(g.crew), had = new Map(sv.mown);
+      let changed = false;
+      for (const h of done) if (had.get(h) !== c.town) { const ph = new Set(sv.phase); if (ph.has(h)) ph.delete(h); else ph.add(h); sv.phase = [...ph].sort((a, b) => a - b); had.set(h, c.town); changed = true; }
+      if (changed) { sv.mown = [...had]; g.crew = sv; this.scheduleSave(); }
+    }
+    const cur = this.mowFlips(), lines = this.holeLines(), moved = new Set<number>();
+    for (const [h, f] of cur) { const k = f.join(','); if (this.flipsSeen.get(h) !== k) moved.add(h); }
+    for (const h of this.flipsSeen.keys()) if (!cur.has(h)) moved.add(h);
+    if (!moved.size) return;
+    this.flipsSeen = new Map([...cur].map(([h, f]) => [h, f.join(',')]));
+    const R = LINES_REACH;
+    for (const h of moved) {
+      const l = lines.get(h); if (!l) continue;
+      let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+      for (let k = 0; k + 1 < l.length; k += 2) { x0 = Math.min(x0, l[k]!); y0 = Math.min(y0, l[k + 1]!); x1 = Math.max(x1, l[k]!); y1 = Math.max(y1, l[k + 1]!); }
+      this.sendCourseChunks([x0 - R, y0 - R, x1 + R, y1 + R]);
+    }
   }
   /** no crew today (a tournament day, no clubhouse or no holes): the flags stand on today's cups */
   private dropCrew() { if (this.crew) { this.crew = null; this.syncFlags(); } }
@@ -7258,7 +7291,7 @@ export class Game {
     this.perf.courseMs = this.cMs; this.cMs = 0; this.perf.lotFlushMs = 0;
     if (this.grassWait.size) { const tg = performance.now(); this.courseGrass(1); this.cMs += performance.now() - tg; }
     if (++this.surveyTick % 30 === 0) this.syncSurvey(); // T232
-    this.applyLotQueue(); this.applyFarmQueue(); if (this.cgDirty && performance.now() - this.cgSentAt >= this.courseSendMs) { const tc = performance.now(); this.flushCourse(); this.cMs += performance.now() - tc; } this.watchHoleLines(performance.now()); this.flushLotGround(); this.flushCasters(); this.laybyLots();
+    this.applyLotQueue(); this.applyFarmQueue(); if (this.cgDirty && performance.now() - this.cgSentAt >= this.courseSendMs) { const tc = performance.now(); this.flushCourse(); this.cMs += performance.now() - tc; } this.watchHoleLines(performance.now()); this.watchMowFlips(performance.now()); this.flushLotGround(); this.flushCasters(); this.laybyLots();
     // the farms yield to the lots the town builds on (checked about once a second: the count walks every lot)
     if (this.farmsEnabled && ++this.farmTick % 60 === 0 && this.farmMap.stale(claimedLots(this.traffic.lots), this.site, this.farmParks().length)) this.farmsUpdate(true);
     if (this.traffic.round.cards.length > this.cardsApplied) this.applyCards();
