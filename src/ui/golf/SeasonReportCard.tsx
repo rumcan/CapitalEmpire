@@ -43,7 +43,7 @@ export function SeasonReportCard({ report, onContinue }: { report: SeasonReport;
             <span>clubhouse {tick(c.clubhouse)}</span>
           </div>
         </div>
-        <button className="btn-gold w-full py-2 text-sm" onClick={onContinue}><Icon name="start" size={18} />Continue</button>
+        <button className="btn-gold w-full py-2 text-sm" onClick={onContinue}><Icon name="play" size={18} />Continue</button>
       </div>
     </div>
   );
