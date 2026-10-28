@@ -11,7 +11,7 @@
   "fescue": { "family": "golden-fescue", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "bunker": { "family": "sand-raked-run", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "waste": { "family": "desert-run", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
-  "water": { "family": "lake", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
+  "water": { "family": "pond-concept-run", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "growSoil": { "family": "grow-in-run", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "base": { "family": "golden-fescue", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "meadow": { "family": "golden-fescue", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },

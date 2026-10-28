@@ -75,7 +75,32 @@ function draw() {
     const d = el('div', { className: 'li' + (sel === 'finish' ? ' on' : '') }, el('span', {}, 'Bands, collar, green stripes, bunker lips', el('small', { textContent: F.course ? (F.course.on === false ? ' off' : ' tuned here') : ' the tuned look' })));
     d.onclick = () => { sel = 'finish'; draw(); }; list.append(d);
   }
+  // T230: the water look (a studio from before T230 sends no knobs: the item is left out)
+  if (D.water) {
+    head('Water look (the concept\'s water)');
+    const d = el('div', { className: 'li' + (sel === 'water' ? ' on' : '') }, el('span', {}, 'Depth, light edge, reflections', el('small', { textContent: F.water ? (F.water.on === false ? ' off' : ' tuned here') : ' the tuned look' })));
+    d.onclick = () => { sel = 'water'; draw(); }; list.append(d);
+  }
   editor();
+}
+/** T230: the water look's knobs (src/game/water-look.ts), kept in the file's water block (none: the tuned look); a dev game from this checkout
+ *  re-bakes with them at once on Save */
+function waterEditor() {
+  const R = D.water.ranges, cur = { ...D.water.defaults, ...(F.water ?? {}) };
+  const set = c => { F.water = { ...cur, ...c }; draw(); msg(''); };
+  side.append(el('h3', { style: 'margin:4px 0 6px', textContent: 'Water look' }),
+    hint('The concept\'s water (docs/art/CONCEPT-LOOK.md step 5): ponds, lakes and rivers deeper and more teal toward the middle, lighter at the edge with a hint of the bed, and soft dark reflections of the trees and buildings on the shore. Baked into the ground over the water\'s own picture (Pond water, River and creek water above). Off: the water exactly as before; with Lake water on both surfaces, the old water.'));
+  const cb = el('input', { type: 'checkbox', checked: !!cur.on, style: 'min-width:0;margin-right:6px' }); cb.onchange = () => set({ on: cb.checked });
+  const slider = (label, key, step, fmt) => {
+    const [lo, hi] = R[key], out = el('span', { className: 'scale', textContent: fmt(cur[key]) }), r = el('input', { type: 'range', min: lo, max: hi, step, value: cur[key], style: 'min-width:0;flex:1' });
+    r.oninput = () => { out.textContent = fmt(+r.value); }; r.onchange = () => set({ [key]: +r.value });
+    return el('div', { className: 'prow', style: 'max-width:640px' }, el('span', { style: 'width:130px', textContent: label }), r, out);
+  };
+  const pct = v => `${Math.round(v * 100)}%`;
+  side.append(el('label', { className: 'hint', style: 'display:flex;align-items:center;margin:4px 0' }, cb, 'On (off: the water as before T230)'),
+    slider('Depth (ponds)', 'depth', 0.01, pct), slider('Depth (rivers)', 'riverDepth', 0.01, pct), slider('Full depth at', 'reach', 0.5, v => `${(+v).toFixed(1)} tiles (${(v * 2).toFixed(0)} m) from the shore`),
+    slider('Light edge', 'edge', 0.01, pct), slider('Reflections', 'reflect', 0.01, pct),
+    el('div', { className: 'bar', style: 'margin-top:8px' }, btn('Reset to the tuned look', () => { delete F.water; draw(); msg(''); })));
 }
 /** T227: the course finish's knobs (src/game/course-finish.ts), kept in the file's course block (none: the tuned look); a dev game from this
  *  checkout re-bakes with them at once on Save */
@@ -105,6 +130,7 @@ const tiledSets = f => LEVEL_NAMES.map(l => f.pick[l]).join(', ');
 function editor() {
   side.innerHTML = '';
   if (sel === 'finish' && D.finish) { finishEditor(); return; }
+  if (sel === 'water' && D.water) { waterEditor(); return; }
   const o = lookOf(sel), look = o.look;
   side.append(el('h3', { style: 'margin:4px 0 6px', textContent: o.name }));
   if (o.preset) {

@@ -52,7 +52,7 @@ const ACCEPTED = ['painted:golden-fescue', 'painted:lake', 'painted:sand-ripples
 const PROVISIONAL = ['painted:fairway', 'painted:putting-green', 'painted:fringe',
   'painted:first-cut-run', 'painted:tee-run', 'painted:desert-run', 'painted:swamp-run', 'painted:dirt-run', 'painted:sand-raked-run',
   'painted:putting-green-run', 'painted:rough-run', 'painted:pond-bank-run', 'painted:grow-in-run', 'painted:field-parking-run',
-  'painted:flower-bed-soil-run', 'painted:range-tee-divots-run', 'painted:lawn-concept-run', 'painted:meadow-concept-run', 'painted:rough-concept-run', 'painted:fairway-concept-run', 'painted:first-cut-concept-run', 'painted:green-concept-run'];
+  'painted:flower-bed-soil-run', 'painted:range-tee-divots-run', 'painted:lawn-concept-run', 'painted:meadow-concept-run', 'painted:rough-concept-run', 'painted:fairway-concept-run', 'painted:first-cut-concept-run', 'painted:green-concept-run', 'painted:pond-concept-run'];
 /** the owner's own paintings (T162) and the art session's fairway and putting-green paintings (T165): provisional too, one tile a level, from
  *  art/owner-supplied (committed in this repo); a level may instead be a provisional family's raw tiles healed with one shared strip (T165) */
 // T191: the putting green with the v2 MID and FAR sets (NEAR the owner's painting), an owner family like putting-green-paint
@@ -388,7 +388,9 @@ test('the tile sets join the families, laid as authored; the map grass, rivers, 
   assert.equal(FAMILIES.filter(f => f.tiled).length, TILED_FAMILIES.length);
   const S = clampSurfaces(surfacesFile);
   assert.equal(lookOfTex('golfFescue', S)!.family, 'golden-fescue'); assert.equal(lookOfTex('preset:fescue', S, PRESETS)!.family, 'golden-fescue');
-  for (const t of ['waterDark', 'waterDeep', 'waterClear']) assert.equal(lookOfTex(t, S)!.family, 'lake', t);
+  // T230 (#669): the ponds wear the concept's deep pond water (GOLF-ART-LIST 154); the rivers keep the brighter lake (the lead, 2026-10-28:
+  // the concept's lake is a bright turquoise; water-look.ts shades both)
+  for (const t of ['waterDark', 'waterDeep', 'waterClear']) assert.equal(lookOfTex(t, S)!.family, 'pond-concept-run', t);
   // the map's open grass draws golden fescue and rivers draw lake (the owner, 2026-10-26: "all the map water and grass needs to be replaced
   // aswell"; main 003153a); the course turf keeps its families
   assert.equal(lookOfTex('water', S)!.family, 'lake', 'rivers and creeks draw the lake');
@@ -407,7 +409,7 @@ test('the tile sets join the families, laid as authored; the map grass, rivers, 
   }
   for (const l of S.lawns) assert.ok(familyById(l.family)!.tiled, 'T189: every town lawn wears a tile set (the new paintings), laid as authored');
   assert.deepEqual(S.surfaces.fescue, { family: 'golden-fescue', version: null, scale: 1, tint: '#ffffff', tone: 0 });
-  assert.deepEqual(S.surfaces.water, { family: 'lake', version: null, scale: 1, tint: '#ffffff', tone: 0 });
+  assert.deepEqual(S.surfaces.water, { family: 'pond-concept-run', version: null, scale: 1, tint: '#ffffff', tone: 0 }); // (T230: the concept's water)
 });
 
 test('separate gameplay layers: water and fescue keep their places in the course\'s layer order (fairway over rough, green over its ground)', () => {

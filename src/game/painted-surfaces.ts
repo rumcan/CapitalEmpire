@@ -1,6 +1,7 @@
 import { clampLook, DEFAULT_LOOK, familyById, type PaintedKind, type PaintedLook } from './painted-families';
 import type { PresetState } from './lots/presets';
 import { clampCourseFinish, type CourseFinish } from './course-finish';
+import { clampWaterLook, type WaterLook } from './water-look';
 
 /** Which hand-painted family each surface of the game wears (#147, T128): the golf surfaces, the town's lawns (several looks, one picked per lot
  *  and per road block so streets are not uniform), the map's ground, the living ground's lush and patchy grass, the course walls' cut faces,
@@ -61,8 +62,9 @@ const TEX_SURFACE = new Map<string, string>(SURFACES.flatMap(s => s.tex.map(t =>
 /** a town lawn's look and how often it is picked (its weight among the lawns) */
 export interface LawnLook extends PaintedLook { weight: number }
 /** the file: the surfaces' looks by key, the town lawns, and the presets with a look of their own (by preset id); T227: the course finish's
- *  knobs (course-finish.ts: the fairway bands, the green stripes, the collar, the bunker lips; absent: the tuned look) */
-export interface SurfacesFile { v: 1; surfaces: Record<string, PaintedLook>; lawns: LawnLook[]; presets: Record<string, PaintedLook>; course?: CourseFinish }
+ *  knobs (course-finish.ts: the fairway bands, the green stripes, the collar, the bunker lips; absent: the tuned look); T230: the water look's
+ *  (water-look.ts: the depth toward the middle, the light edge, the shore's reflections; absent: the tuned look, `on: false` the water as before) */
+export interface SurfacesFile { v: 1; surfaces: Record<string, PaintedLook>; lawns: LawnLook[]; presets: Record<string, PaintedLook>; course?: CourseFinish; water?: WaterLook }
 export const LAWN_SLOTS = 8;
 /** a lawn's texture id (the town's lawns, when the painted art is on: one per lot and per road block, picked by lawnSlot) */
 export const lawnTex = (i: number) => `lawn:${i}`;
@@ -79,7 +81,7 @@ export function clampSurfaces(f: unknown): SurfacesFile {
     const l = clampLook(v), w = (v as { weight?: unknown })?.weight;
     if (l) lawns.push({ ...l, weight: Math.round(Math.min(10, Math.max(0, typeof w === 'number' && Number.isFinite(w) ? w : 1)) * 100) / 100 });
   }
-  return { v: 1, surfaces, lawns, presets, ...(o.course && typeof o.course === 'object' ? { course: clampCourseFinish(o.course) } : {}) };
+  return { v: 1, surfaces, lawns, presets, ...(o.course && typeof o.course === 'object' ? { course: clampCourseFinish(o.course) } : {}), ...(o.water && typeof o.water === 'object' ? { water: clampWaterLook(o.water) } : {}) };
 }
 /** what the game knows of a preset: its id, the golf surface it stands for, and the old painted set it named (T082) */
 export interface PresetRef { id: string; surface?: string | null; painted?: string | null }
