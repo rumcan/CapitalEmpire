@@ -1,0 +1,34 @@
+{
+  "schema": 1,
+  "id": "golf:stone-boulders-grey",
+  "catalogueItem": 180,
+  "subjobKey": "180c-single-boulders",
+  "decision": "accepted-for-art-appearance",
+  "reviewer": "primary art review",
+  "ownerApprovalClaim": false,
+  "files": [
+    {
+      "file": "art/theme-consistency/generated/landscaping/golf-stone-boulders-grey-v1.png",
+      "sha256": "6b945954fcbd5b877a55fa613c8372c93ed731d3cbaff700df55b3239f85b77b"
+    }
+  ],
+  "subjects": [
+    "small-grey",
+    "broad-rosegrey",
+    "tall-fern",
+    "moss-split",
+    "broad-golden-grass",
+    "pale-fern"
+  ],
+  "checks": {
+    "count": 6,
+    "distinctSilhouettes": true,
+    "lighting": "consistent screen upper-right; lower-left shading",
+    "background": "Native alpha confirmed by actual-pixel sampling AND composite on blue. Generator preview displays RGB from fully transparent halo pixels; they are invisible when composited correctly.",
+    "style": "Painted grey and rose-grey granite planes, ferns/moss/golden grass match supplied references",
+    "completeSilhouettes": true
+  },
+  "canonical": "v1; v2 unnecessary background-extraction experiment retained as alternate, not selected",
+  "geometry": "organic boulders; no invented road-aligned rectangular base",
+  "integration": "pending separate native crops, physical sizing, library registration and runtime/Studio proof"
+}

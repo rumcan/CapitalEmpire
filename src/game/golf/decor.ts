@@ -7,7 +7,7 @@ import type { Pt } from '../network';
 import { PROPS_APPEAL_CAP } from './rangesave';
 import { LIBRARY } from '../library';
 import { FRAME_TREE_KEY, FRAME_TREE_PRICE } from './holeframe';
-import { KIT_BOULDERS, KIT_FLOWERS, KIT_FOUNTAIN, KIT_HEDGE, KIT_LAMPS, KIT_PALMS, KIT_POND_EDGE, KIT_SHRUBS, type RunKit } from '../kit';
+import { KIT_BOULDERS, KIT_FLOWERS, KIT_FOUNTAIN, KIT_GREY_GRANITE, KIT_HEDGE, KIT_LAMPS, KIT_PALMS, KIT_POND_EDGE, KIT_SHRUBS, KIT_WATER_EDGE_PLANTS, type RunKit } from '../kit';
 
 /** the panel's groups, in order (T187: Buildings, the few the player adds to the town: Town decoration's) */
 export type DecorGroup = 'plants' | 'water' | 'stone' | 'furniture' | 'buildings';
@@ -109,6 +109,8 @@ export const DECOR: readonly DecorItem[] = [
   { key: 'kit-palm-windmill', name: 'Windmill palm', group: 'plants', kind: 'plant', id: KIT_PALMS.windmill[0], variants: KIT_PALMS.windmill, natural: true, price: 350, appeal: APPEAL.plant, desc: 'A hardy fan palm, 4 to 6 m (R: the next)' },
   { key: 'kit-palm-canary', name: 'Canary palm', group: 'plants', kind: 'plant', id: KIT_PALMS.canary[0], variants: KIT_PALMS.canary, natural: true, price: 650, appeal: APPEAL.plant, desc: 'A Canary Island date palm, 6 to 10 m (R: the next)' },
   { key: 'kit-palm-fan', name: 'Dwarf fan palm', group: 'plants', kind: 'plant', id: KIT_PALMS.fan[0], variants: KIT_PALMS.fan, natural: true, price: 250, appeal: APPEAL.plant, desc: 'A clump of dwarf fan palms, 2 to 3.5 m (R: the next)' },
+  // T274: individually selectable authored plants, never mirrored or substituted for existing plants.
+  ...KIT_WATER_EDGE_PLANTS.map((p): DecorItem => ({ key: p.id.slice(4), name: p.name, group: 'plants', kind: 'plant', id: p.id, natural: true, price: 90, appeal: APPEAL.plant, desc: `Painted pond-edge planting, ${p.metres} m ${p.dimension === 'height' ? 'high' : 'across'}; one genuine view, fixed upper-right light` })),
   // ---- water
   { key: 'fountain', name: 'Plaza fountain', group: 'water', kind: 'water', id: 'ref:landmark-fountain-v2', price: 12000, appeal: APPEAL.fountain, desc: 'A tiered stone fountain: the centrepiece of the front' },
   { key: 'well', name: 'Wishing well', group: 'water', kind: 'water', id: 'expansion:wooden-well', price: 1200, appeal: APPEAL.well, desc: 'A covered garden well: golfers toss a coin for luck' },
@@ -124,6 +126,8 @@ export const DECOR: readonly DecorItem[] = [
   // mixed: a different shape, size and turn at every spot of a click or a drag
   { key: 'kit-rocks-mixed', name: 'Rocks, mixed', group: 'stone', kind: 'stone', id: KIT_BOULDERS.medium[1], mix: MIX_ROCKS, natural: true, price: 150, per: 'to $800', appeal: APPEAL.boulder, desc: 'A different boulder at every spot, small to large, any shape, either way round: click, or drag' },
   ...BOULDER_CARDS,
+  // T274: the grey/rose-grey granite set is additive; the sandstone cards and mixed brush stay intact.
+  ...KIT_GREY_GRANITE.map((p): DecorItem => ({ key: p.id.slice(4), name: p.name, group: 'stone', kind: 'stone', id: p.id, natural: true, price: p.metres <= 0.8 ? 150 : p.metres <= 1.5 ? 350 : 800, appeal: p.metres <= 0.8 ? APPEAL.boulder : p.metres <= 1.5 ? APPEAL.boulderBig : APPEAL.boulderLarge, desc: `Painted grey granite, ${p.metres} m across; one genuine view, fixed upper-right light` })),
   // ---- furniture: seats +1% (the map bench +1.5%), small things +0.5%, signs (the board +3%, a flag pole +1.5%)
   { key: 'bench', name: 'Park bench', group: 'furniture', kind: 'seat', id: 'view:world:bench:n', price: 300, appeal: APPEAL.bench, desc: 'A slatted bench to watch the golfers from' },
   { key: 'bench-map', name: 'Course-map bench', group: 'furniture', kind: 'seat', id: 'business:golf-bench-course-map', price: 600, appeal: APPEAL.seatBig, desc: 'A bench beside a board with the course map' },

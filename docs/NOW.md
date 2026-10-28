@@ -66,6 +66,8 @@ never commit there.)
 
 ### 3. In flight
 
+**T274 #823 - accepted organic landscaping:** `lead/grey-granite-kit-20261028`, `worktrees/grey-granite-kit-20261028`. Native six-boulder and six water-edge plant sheets are ART-approved; separate tail collection on the existing golf atlas preserves every old library index and atlas rectangle. Next: verify native component-aware crops (all nonzero-alpha source pixels retained), add twelve individually placeable decor cards, pack and check page/GPU room, typecheck, focused tests, actual game/Studio proofs, parent review/merge. No new generation, owner curation or worker/timer edits.
+
 **T272 #816 - menu art v2:** PR #818 ready for parent review, `lead/ui-tool-tiles-v2-20261028`, `worktrees/ui-tool-tiles-v2-20261028`. Twelve new assets and Course/Facilities aliases implemented; native source1448x1086 and exact4x3 crops in `art/ui-tool-tiles/sheet-v2.json`. All12 v1 hashes unchanged; fresh default typecheck PASS and focused checks21/21 PASS. Seven actual-game menu captures show all12 new icons loaded, with0pageerrors (`art/theme-consistency/reviews/T272-menu-tiles/`). Own5189 and Edge stopped. No generator/worker/task/quota or owner-file changes. Next: lead review/merge, then remove worktree.
 
 **Two agents running (a new lead took over at ~15:00 on 2026-10-28; the old lead's agents stopped at the usage limit ~14:00):**

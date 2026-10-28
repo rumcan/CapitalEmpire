@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "id": "golf:water-edge-plants",
+  "catalogueItem": 180,
+  "subjobKey": "180d-planting-tufts",
+  "decision": "accepted-for-art-appearance",
+  "reviewer": "primary visual review against native blue-background composite",
+  "ownerApprovalClaim": false,
+  "files": [
+    {
+      "file": "art/theme-consistency/generated/landscaping/golf-water-edge-plants-v1.png",
+      "sha256": "54bf835b51be8625794ce242761053144d7e878a3e420bb21d8f0b2dec4e6c08"
+    }
+  ],
+  "subjects": [
+    "fern",
+    "sedge",
+    "cattails",
+    "blue-green-juniper",
+    "golden-grass",
+    "red-autumn-shrub"
+  ],
+  "checks": {
+    "distinctSubjects": 6,
+    "completeSilhouettes": true,
+    "nativeAlpha": true,
+    "background": "actual solid-blue composite clear; preview RGB underalpha0 not baked atmosphere",
+    "lighting": "all six lit from screen upper-right with soft lower-left shading",
+    "style": "painted leaf planes, warm gold/green/red foliage and cool juniper match supplied game theme"
+  },
+  "geometry": "organic planting; no rectangular ground bases. Native crops must follow actual silhouettes/gutters, not assume equal512px cells.",
+  "integration": "pending native exports, physical sizing and game/Studio registration"
+}

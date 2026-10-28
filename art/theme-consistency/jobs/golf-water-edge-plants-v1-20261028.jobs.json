@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "jobs": [
+    {
+      "schema": 1,
+      "id": "golf:water-edge-plants",
+      "catalogueItem": 180,
+      "subjobKey": "180d-planting-tufts",
+      "category": "landscaping",
+      "transparent": true,
+      "requiresLibraryRegistration": true,
+      "output": "art/theme-consistency/generated/landscaping/golf-water-edge-plants-v1.png",
+      "provenance": "art/theme-consistency/generated/landscaping/golf-water-edge-plants-v1.provenance.json",
+      "references": [
+        "art/theme-consistency/references/theme-authoritative.png",
+        "art/theme-consistency/references/golf-country-club-owner-20261028.png"
+      ],
+      "prompt": "Use case: stylized-concept. SIX separate isolated WATER-EDGE PLANT SPRITES for the same warm illustrated golf-town game as reference1 and reference2. A square PNG with TRUE TRANSPARENT ALPHA, arranged3columns x2rows with clearly separated silhouettes and generous gutters. One plant percell,6total.\nTop row leftto right: a lush green fern clump with gracefully unfurling fronds; a dense green sedge tussock with arching narrow leaves; a small clump of cattails with upright green blades and three slim brown seedheads.\nBottom row leftto right: a low spreading blue-green juniper shrub; a soft tuft of golden autumn grass with finearching stems; a small dense red-leaf autumn shrub with warm scarlet andrustleaves.\nThese are small planting elements about0.5–1m across orhigh (cattails naturally taller), for gaps between greygranite pond-edge boulders. Detailed HAND-PAINTED stylized game art, broad readable leaf masses and elegant brushstrokes, gentle volume, no photographic texture/noise. Fixed PARALLEL2:1 dimetric game camera with ground-plane axes+/-26.565degrees, verticalstemsvertical, looking down enough to see tops/centres. All6plants use the SAME sun fixed at SCREEN UPPER RIGHT, warmrightedges and softlowerleftshading, balancedexposure. Keep eachWHOLE foliage silhouette withno leavescutatcellborder;15percent clearspace wherepossible. Roots hidden directly in leafbase, no soilmound, rocks, flowerpot, grass lawn, floor, water, ground tile, detachedcastshadow, bloom/glow/haze, text, letters, watermark, UI or colouredbackground. Transparency clear right up to the real leaf/stemedges; foliage itself opaque. Exactlyone6-sprite sheet."
+    }
+  ]
+}

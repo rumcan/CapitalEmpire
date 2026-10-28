@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "date": "2026-10-28",
+  "status": "queued-specific-held-view-correction; obey current automatic backoff",
+  "jobs": [
+    {
+      "schema": 1,
+      "id": "golf:range-coffee-kiosk",
+      "category": "buildings",
+      "stage": "targeted-structural-projection-v3",
+      "subjobKey": "3-golf-range-coffee-kiosk-view1",
+      "transparent": true,
+      "background": "native-alpha",
+      "references": [
+        "art/theme-consistency/references/theme-authoritative.png",
+        "art/theme-consistency/references/golf-country-club-owner-20261028.png",
+        "art/theme-consistency/references/coffee-kiosk-front-right-geometry-v2.png"
+      ],
+      "output": "art/theme-consistency/generated/buildings/golf-range-coffee-kiosk-view1-v3.png",
+      "provenance": "art/theme-consistency/generated/buildings/golf-range-coffee-kiosk-view1-v3.provenance.json",
+      "replaces": {
+        "file": "E:/Repos/CapitalEmpire/art/theme-consistency/generated/buildings/golf-range-coffee-kiosk-view1-v2.png",
+        "sha256": "70f2800e1a60b74f6f966ab97fcdc409592e24bd3817fbee6d3e5af2044ce329",
+        "reason": "Held measured front structural base+0.422279,3.6717degree error versus required+0.5. Side-0.510857 is already close. This specific held view needs redraw, not duplication or software warp."
+      },
+      "prompt": "Use case: style-transfer. IMAGE3 IS THE EDIT TARGET: paint the supplied building drawing into finished game artwork WITHOUT CHANGING ITS PROJECTED SHAPE. Images1and2 are PAINT STYLE references only. Keep every wallcorner, roofcorner and exact straight base/eave/ridge direction from image3. Do not use the reference scenes' camera or crop. Retain image3's complete canvas and surrounding clear space. Remove its grey background and coloured guide strokes in the finished transparent PNG.\nRender golf:range-coffee-kiosk, a1985 coffee hut,3m frontage,2.5m depth,3m high: cream horizontal timber boards, deep forest-green cornerposts and rectangular baseframe, darkslate shingle gabledroof. FRONT is the broad SCREEN-LEFT face of image3; add servinghatch, fold-down oakcounter, red-and-white striped canvasawning, chromeespressomachine and paper cups in hatch, blank greenchalkboard on front's physicalleft, smallwarmlightinside. Right side plain creamtimber.\nCRITICAL geometry invariant: front base extends from(250,600) to(550,750) on the1000square drawing, a TRUE slope+0.5. Right base extends(550,750) to(800,625), slope-0.5. ALL front siding/counter/eaves parallel the firstline; right-siding/eaves parallel secondline. Roofridge from(375,237.5) to(675,387.5), slope+0.5. Verticals remainvertical. Preserve these proportions if nativeoutputdimensionsdiffer. These specific edges MUST NOT flatten to+.42 or turnperspective. Parallel2:1 dimetric projection, no vanishingpoint. Building is an actual rectangularobject, not a distorted photograph.\nRichhand-painted stylized materialfinish matchingfirstreference, confidentbrushes, readabletimber/shingles, warmcream/deepgreen/coolslate. Sun fixed at SCREEN UPPER RIGHT, shadowshading lowerleft, no backgroundlightgradient. One complete front-and-right building with genuine transparentalpha, no ground/floor/platform/lawn/scenery, people, text orwatermark. No extrusion beyondthefootprint except smallawning/counter. Output one square PNG, oneviewonly.",
+      "catalogueItem": 3,
+      "continuousPlanOverride": true,
+      "executionStatus": "queued-specific-held-view-correction"
+    }
+  ]
+}

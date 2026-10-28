@@ -22,6 +22,24 @@ export const KIT_BOULDERS = {
   medium: ['kit:boulder-medium-a', 'kit:boulder-medium-b', 'kit:boulder-medium-c'],
   large: ['kit:boulder-large-a', 'kit:boulder-large-b', 'kit:boulder-large-c'],
 } as const;
+/** T274: six independently painted grey granite shapes (180c), their actual width in metres. */
+export const KIT_GREY_GRANITE = [
+  { id: 'kit:granite-small-grey', name: 'Small grey granite boulder', metres: 0.6 },
+  { id: 'kit:granite-broad-rosegrey', name: 'Broad rose-grey granite boulder', metres: 1.1 },
+  { id: 'kit:granite-tall-fern', name: 'Tall granite boulder with fern', metres: 1.8 },
+  { id: 'kit:granite-moss-split', name: 'Mossy split granite boulder', metres: 0.8 },
+  { id: 'kit:granite-golden-grass', name: 'Granite boulder with golden grass', metres: 1.5 },
+  { id: 'kit:granite-pale-fern', name: 'Pale granite boulder with fern', metres: 2 },
+] as const;
+/** T274: separate water-edge plant cards (180d). Cattails measure height; other plants measure width. */
+export const KIT_WATER_EDGE_PLANTS = [
+  { id: 'kit:water-edge-fern', name: 'Water-edge fern', metres: 1, dimension: 'width' },
+  { id: 'kit:water-edge-sedge', name: 'Water-edge sedge', metres: 0.8, dimension: 'width' },
+  { id: 'kit:water-edge-cattails', name: 'Water-edge cattails', metres: 1.5, dimension: 'height' },
+  { id: 'kit:water-edge-juniper', name: 'Water-edge juniper', metres: 1, dimension: 'width' },
+  { id: 'kit:water-edge-golden-grass', name: 'Water-edge golden grass', metres: 0.75, dimension: 'width' },
+  { id: 'kit:water-edge-red-shrub', name: 'Water-edge red shrub', metres: 0.9, dimension: 'width' },
+] as const;
 /** the palms (43): windmill 4-6 m, Canary 6-10 m, dwarf fan clumps 2-3.5 m */
 export const KIT_PALMS = {
   windmill: ['kit:palm-windmill-4m', 'kit:palm-windmill-5m', 'kit:palm-windmill-6m'],

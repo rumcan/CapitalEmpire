@@ -1,0 +1,59 @@
+{
+  "schema": 1,
+  "id": "golf:water-edge-plants",
+  "decision": "accepted-for-art-appearance",
+  "reviewer": "Primary art lead, actual native-12-blue.png composite reviewed 2026-10-28",
+  "ownerApprovalClaim": false,
+  "source": {
+    "file": "art/theme-consistency/generated/landscaping/golf-water-edge-plants-v1.png",
+    "sha256": "54bf835b51be8625794ce242761053144d7e878a3e420bb21d8f0b2dec4e6c08",
+    "dimensions": [
+      1536,
+      1024
+    ]
+  },
+  "files": [
+    {
+      "file": "art/theme-consistency/generated/landscaping/golf-water-edge-plants-v1.png",
+      "sha256": "54bf835b51be8625794ce242761053144d7e878a3e420bb21d8f0b2dec4e6c08"
+    },
+    {
+      "file": "art/theme-consistency/generated/landscaping/golf-water-edge-plants-v1/01-water-edge-fern.native.png",
+      "sha256": "19dfbd580b81781ffa05413c8d9639b8943c708dda239cec6bd3e9203420fb54"
+    },
+    {
+      "file": "art/theme-consistency/generated/landscaping/golf-water-edge-plants-v1/02-water-edge-sedge.native.png",
+      "sha256": "a14c158882678fb0d32da78b5fa0570addcc98b3e57c62339b59711b6159220c"
+    },
+    {
+      "file": "art/theme-consistency/generated/landscaping/golf-water-edge-plants-v1/03-water-edge-cattails.native.png",
+      "sha256": "e6d01a550d61e2d0ff9b09be52ee78418ae77399fa4fe487858a774af452ed86"
+    },
+    {
+      "file": "art/theme-consistency/generated/landscaping/golf-water-edge-plants-v1/04-water-edge-juniper.native.png",
+      "sha256": "de1bf513983d0cb8207872502e772bc3da877b57333c143f6bdff795fe0124d2"
+    },
+    {
+      "file": "art/theme-consistency/generated/landscaping/golf-water-edge-plants-v1/05-water-edge-golden-grass.native.png",
+      "sha256": "b556bfcc50b6e5950b46aa790e0d50b04a9ed9ea1fbd83a60044c63059402ec2"
+    },
+    {
+      "file": "art/theme-consistency/generated/landscaping/golf-water-edge-plants-v1/06-water-edge-red-shrub.native.png",
+      "sha256": "47da0d4c450bf036f99c71056942005fdc88fb1d4ba52e2feecc6101036f36c1"
+    },
+    {
+      "file": "art/theme-consistency/generated/landscaping/golf-water-edge-plants-v1/native-export.json",
+      "sha256": "4403bd2a3276c59c06bda421bce8e2ba3dba11ba9fb63fe4ac680a0aec6c004e"
+    }
+  ],
+  "checks": {
+    "completeSilhouettes": true,
+    "distinctSubjects": 6,
+    "nativeAlpha": true,
+    "noNeighborContamination": true,
+    "lighting": "screen upper-right toward lower-left",
+    "sourcePixels": "All nonzero-alpha RGBA pixels preserved exactly once; zero changed or duplicated source pixels"
+  },
+  "physicalSizing": "Authored dimensions recorded; actual game/Studio calibration proof pending",
+  "integration": "pending separate game/Studio verification"
+}

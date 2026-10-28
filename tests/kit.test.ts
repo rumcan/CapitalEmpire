@@ -5,7 +5,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { ATLAS_PAGES, LIBRARY } from '../src/game/library';
 import { MB, atlasBudget, planAtlas } from '../src/game/atlas-pages';
-import { KIT_BOULDERS, KIT_FLOWERS, KIT_FOUNTAIN, KIT_HEDGE, KIT_LAMPS, KIT_LILIES, KIT_PALM_IDS, KIT_POND_EDGE, KIT_SHRUBS, fountainAt, fountainFrame, isKit } from '../src/game/kit';
+import { KIT_BOULDERS, KIT_FLOWERS, KIT_FOUNTAIN, KIT_GREY_GRANITE, KIT_HEDGE, KIT_LAMPS, KIT_LILIES, KIT_PALM_IDS, KIT_POND_EDGE, KIT_SHRUBS, KIT_WATER_EDGE_PLANTS, fountainAt, fountainFrame, isKit } from '../src/game/kit';
 import { APPEAL, DECOR, DECOR_BY_KEY, decorAppeal, decorSpotWhy, type Box, type DecorSpot } from '../src/game/golf/decor';
 import { PropsTool, type PropsHostCtx } from '../src/game/golf/propstool';
 import { PLANT_KINDS, plantPool } from '../src/game/plant';
@@ -47,8 +47,10 @@ test('the atlas: the kit is in the library on the golf page, packed apart from t
   // the kit is appended in one run after every library item before it (no saved index moves). The appends made after it may follow it, and only
   // they: #582's supplemental views (extra-views-library.ts, on their own pages) and T258's range art (range:*, on the golf page). (#776: this
   // asked for the kit last, which #582 ended; the lead, 2026-10-28: no saved index may move, so the later appends stay after the kit)
-  const later = (it: (typeof LIBRARY)[number]) => EXTRA_VIEW_BASE.has(it.id) || it.id.startsWith('range:');
-  const kitAt = LIBRARY.flatMap((it, i) => (isKit(it.id) ? [i] : [])), firstKit = kitAt[0]!, lastKit = kitAt[kitAt.length - 1]!;
+  const organicTail = new Set<string>([...KIT_GREY_GRANITE, ...KIT_WATER_EDGE_PLANTS].map(p => p.id));
+  const later = (it: (typeof LIBRARY)[number]) => EXTRA_VIEW_BASE.has(it.id) || it.id.startsWith('range:') || organicTail.has(it.id);
+  const originalKit = new Set<string>(KIT_IDS);
+  const kitAt = LIBRARY.flatMap((it, i) => (originalKit.has(it.id) ? [i] : [])), firstKit = kitAt[0]!, lastKit = kitAt[kitAt.length - 1]!;
   assert.equal(lastKit - firstKit + 1, kitAt.length, 'the kit is one run in the library');
   assert.deepEqual(LIBRARY.slice(lastKit + 1).filter(it => !later(it)).map(it => it.id), [], 'only the later appends follow the kit');
   assert.deepEqual(LIBRARY.slice(0, firstKit).filter(later).map(it => it.id), [], 'no later append comes before the kit (the kit\'s indices hold)');

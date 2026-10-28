@@ -1,0 +1,59 @@
+{
+  "schema": 1,
+  "id": "golf:stone-boulders-grey",
+  "decision": "accepted-for-art-appearance",
+  "reviewer": "Primary art lead, actual native-12-blue.png composite reviewed 2026-10-28",
+  "ownerApprovalClaim": false,
+  "source": {
+    "file": "art/theme-consistency/generated/landscaping/golf-stone-boulders-grey-v1.png",
+    "sha256": "6b945954fcbd5b877a55fa613c8372c93ed731d3cbaff700df55b3239f85b77b",
+    "dimensions": [
+      1536,
+      1024
+    ]
+  },
+  "files": [
+    {
+      "file": "art/theme-consistency/generated/landscaping/golf-stone-boulders-grey-v1.png",
+      "sha256": "6b945954fcbd5b877a55fa613c8372c93ed731d3cbaff700df55b3239f85b77b"
+    },
+    {
+      "file": "art/theme-consistency/generated/landscaping/golf-stone-boulders-grey-v1/01-granite-small-grey.native.png",
+      "sha256": "88e8a0302a16f969e1a352c75bc25b6b89000fded957f0fa7a39f281bfb186fe"
+    },
+    {
+      "file": "art/theme-consistency/generated/landscaping/golf-stone-boulders-grey-v1/02-granite-broad-rosegrey.native.png",
+      "sha256": "38d88dc7768243adb1f33567c08f10e9eb11ce69d4a17d424cc7e6eabbe8c124"
+    },
+    {
+      "file": "art/theme-consistency/generated/landscaping/golf-stone-boulders-grey-v1/03-granite-tall-fern.native.png",
+      "sha256": "46a6f6950a07694a9cdc6bbcf867062b72dff292548ab84a798b30ac62f39dd5"
+    },
+    {
+      "file": "art/theme-consistency/generated/landscaping/golf-stone-boulders-grey-v1/04-granite-moss-split.native.png",
+      "sha256": "64c362be50bd94706eef4196721a526c0c2a468ef29cc863db364f3823287f77"
+    },
+    {
+      "file": "art/theme-consistency/generated/landscaping/golf-stone-boulders-grey-v1/05-granite-golden-grass.native.png",
+      "sha256": "b527c6a7f80122ccec7bfc36a6b2b141182a6cdb115f366200a76dbfc9796fe0"
+    },
+    {
+      "file": "art/theme-consistency/generated/landscaping/golf-stone-boulders-grey-v1/06-granite-pale-fern.native.png",
+      "sha256": "299a383df4dedba410882d16541f1eb2502ed3a633a934bdf039515a900e8b26"
+    },
+    {
+      "file": "art/theme-consistency/generated/landscaping/golf-stone-boulders-grey-v1/native-export.json",
+      "sha256": "2565f3fa0fc6197fedf8cbc9a6f169d7e885c26617017afdf848e8e2598f98fd"
+    }
+  ],
+  "checks": {
+    "completeSilhouettes": true,
+    "distinctSubjects": 6,
+    "nativeAlpha": true,
+    "noNeighborContamination": true,
+    "lighting": "screen upper-right toward lower-left",
+    "sourcePixels": "All nonzero-alpha RGBA pixels preserved exactly once; zero changed or duplicated source pixels"
+  },
+  "physicalSizing": "Authored dimensions recorded; actual game/Studio calibration proof pending",
+  "integration": "pending separate game/Studio verification"
+}

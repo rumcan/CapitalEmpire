@@ -1,0 +1,149 @@
+{
+  "schema": 1,
+  "id": "golf:stone-boulders-grey",
+  "source": {
+    "file": "art/theme-consistency/generated/landscaping/golf-stone-boulders-grey-v1.png",
+    "sha256": "6b945954fcbd5b877a55fa613c8372c93ed731d3cbaff700df55b3239f85b77b",
+    "dimensions": [
+      1536,
+      1024
+    ]
+  },
+  "sourceAppearance": {
+    "file": "art/theme-consistency/generated/landscaping/golf-stone-boulders-grey-v1.appearance.json",
+    "sha256": "3060919437c6e3a2b7c095b458297aed6cc0379f83d552c3355f562930424171"
+  },
+  "processing": "Native RGBA pixels assigned once by nearest alpha>8 subject core; mask separates neighboring silhouettes, no resample/repaint/flip/warp. Every nonzero-alpha source pixel preserved exactly once.",
+  "subjects": [
+    {
+      "id": "kit:granite-small-grey",
+      "name": "Small grey granite boulder",
+      "metres": 0.6,
+      "dimension": "width",
+      "file": "art/theme-consistency/generated/landscaping/golf-stone-boulders-grey-v1/01-granite-small-grey.native.png",
+      "sha256": "88e8a0302a16f969e1a352c75bc25b6b89000fded957f0fa7a39f281bfb186fe",
+      "sourceRect": {
+        "left": 0,
+        "top": 15,
+        "width": 430,
+        "height": 515
+      },
+      "coreBounds": {
+        "left": 81,
+        "top": 240,
+        "width": 269,
+        "height": 182
+      },
+      "nonzeroPixels": 41286
+    },
+    {
+      "id": "kit:granite-broad-rosegrey",
+      "name": "Broad rose-grey granite boulder",
+      "metres": 1.1,
+      "dimension": "width",
+      "file": "art/theme-consistency/generated/landscaping/golf-stone-boulders-grey-v1/02-granite-broad-rosegrey.native.png",
+      "sha256": "38d88dc7768243adb1f33567c08f10e9eb11ce69d4a17d424cc7e6eabbe8c124",
+      "sourceRect": {
+        "left": 426,
+        "top": 5,
+        "width": 597,
+        "height": 547
+      },
+      "coreBounds": {
+        "left": 493,
+        "top": 194,
+        "width": 479,
+        "height": 254
+      },
+      "nonzeroPixels": 97259
+    },
+    {
+      "id": "kit:granite-tall-fern",
+      "name": "Tall granite boulder with fern",
+      "metres": 1.8,
+      "dimension": "width",
+      "file": "art/theme-consistency/generated/landscaping/golf-stone-boulders-grey-v1/03-granite-tall-fern.native.png",
+      "sha256": "46a6f6950a07694a9cdc6bbcf867062b72dff292548ab84a798b30ac62f39dd5",
+      "sourceRect": {
+        "left": 976,
+        "top": 15,
+        "width": 548,
+        "height": 496
+      },
+      "coreBounds": {
+        "left": 1059,
+        "top": 75,
+        "width": 443,
+        "height": 373
+      },
+      "nonzeroPixels": 130893
+    },
+    {
+      "id": "kit:granite-moss-split",
+      "name": "Mossy split granite boulder",
+      "metres": 0.8,
+      "dimension": "width",
+      "file": "art/theme-consistency/generated/landscaping/golf-stone-boulders-grey-v1/04-granite-moss-split.native.png",
+      "sha256": "64c362be50bd94706eef4196721a526c0c2a468ef29cc863db364f3823287f77",
+      "sourceRect": {
+        "left": 0,
+        "top": 523,
+        "width": 456,
+        "height": 501
+      },
+      "coreBounds": {
+        "left": 52,
+        "top": 619,
+        "width": 344,
+        "height": 296
+      },
+      "nonzeroPixels": 81948
+    },
+    {
+      "id": "kit:granite-golden-grass",
+      "name": "Granite boulder with golden grass",
+      "metres": 1.5,
+      "dimension": "width",
+      "file": "art/theme-consistency/generated/landscaping/golf-stone-boulders-grey-v1/05-granite-golden-grass.native.png",
+      "sha256": "b527c6a7f80122ccec7bfc36a6b2b141182a6cdb115f366200a76dbfc9796fe0",
+      "sourceRect": {
+        "left": 439,
+        "top": 525,
+        "width": 607,
+        "height": 491
+      },
+      "coreBounds": {
+        "left": 467,
+        "top": 606,
+        "width": 541,
+        "height": 320
+      },
+      "nonzeroPixels": 133553
+    },
+    {
+      "id": "kit:granite-pale-fern",
+      "name": "Pale granite boulder with fern",
+      "metres": 2,
+      "dimension": "width",
+      "file": "art/theme-consistency/generated/landscaping/golf-stone-boulders-grey-v1/06-granite-pale-fern.native.png",
+      "sha256": "299a383df4dedba410882d16541f1eb2502ed3a633a934bdf039515a900e8b26",
+      "sourceRect": {
+        "left": 990,
+        "top": 485,
+        "width": 532,
+        "height": 539
+      },
+      "coreBounds": {
+        "left": 1054,
+        "top": 513,
+        "width": 459,
+        "height": 414
+      },
+      "nonzeroPixels": 156240
+    }
+  ],
+  "pixelCoverage": {
+    "originalNonzero": 641179,
+    "preservedNonzero": 641179
+  }
+}

@@ -322,7 +322,7 @@ fs.writeFileSync(path.join(ROOT, 'src/game/library.ts'), [
   "import { appendEast } from './east-library';",
   "import { appendBusinesses } from './business-library';",
   "import { appendConstruction } from './construction-library';",
-  "import { appendGolf, appendKit } from './golf-library';",
+  "import { appendGolf, appendKit, appendRangeArt, appendLandscapeArt } from './golf-library';",
   "import { appendViews } from './views-library';",
   "import { appendTrees } from './trees-library';",
   "import { appendAxisViews } from './axis-library';",
@@ -360,7 +360,9 @@ fs.writeFileSync(path.join(ROOT, 'src/game/library.ts'), [
   'appendTrees(LIBRARY, ATLAS_PAGES);',
   'appendAxisViews(LIBRARY, ATLAS_PAGES);',
   'appendKit(LIBRARY); // T231: the concept kit (on the golf page), appended before supplemental views',
-  'appendExtraViews(LIBRARY, ATLAS_PAGES);', ''].join('\n'));
+  'appendExtraViews(LIBRARY, ATLAS_PAGES);',
+  'appendRangeArt(LIBRARY); // T258: range art on the existing golf page',
+  'appendLandscapeArt(LIBRARY); // T274: accepted organic art at the tail, on the same golf page', ''].join('\n'));
 console.log(`walkers: ${people.length} people, ${walkers.length} frames; frame fixes: ${flipped.length ? flipped.join(', ') : 'none'}`);
 console.log(`spectators: ${spec.people.length} people, ${spec.frames.length} frames; golfers: ${golf.people.length} people, ${golf.frames.length} frames`);
 console.log(`walk frames still needed: ${needed.length}${needed.length ? ` (${needed.join(', ')})` : ''}`);

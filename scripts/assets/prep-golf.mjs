@@ -91,7 +91,17 @@ for (const it of rangeItems) {
   range.push({ it, file, width: Math.max(1, Math.min(meta.width, Math.round(it.w * k))), height: Math.max(1, Math.min(meta.height, Math.round(it.h * k))) });
 }
 range.sort((a, b) => b.height - a.height);
-const all = [...pieces, ...kit, ...range];
+// T274: accepted organic sheets have a separate tail collection. Never insert into KIT's height-sorted
+// library: extra-view and range indices already follow it in saved games. Existing atlas rects stay put.
+const LANDSCAPING_DIR = path.join(root, 'art/landscaping-kit'), landscapeItems = fs.existsSync(path.join(LANDSCAPING_DIR, 'items.json')) ? JSON.parse(fs.readFileSync(path.join(LANDSCAPING_DIR, 'items.json'), 'utf8')).items : [];
+const landscaping = [];
+for (const it of landscapeItems) {
+  const file = path.join(LANDSCAPING_DIR, `${it.id.slice('kit:'.length)}.webp`);
+  if (!fs.existsSync(file)) throw new Error(`Missing landscaping master ${it.id}`);
+  const k = 0.6 * Math.max(1, SCALE_OVERRIDES[it.id] ?? 1), meta = await sharp(file).metadata();
+  landscaping.push({ it, file, width: Math.max(1, Math.min(meta.width, Math.round(it.w * k))), height: Math.max(1, Math.min(meta.height, Math.round(it.h * k))) });
+}
+const all = [...pieces, ...kit, ...range, ...landscaping];
 function fits(page) {
   let x = GUT, y = GUT, rowH = 0;
   for (const p of all) {
@@ -138,6 +148,16 @@ for (const p of range) {
   rangeOut.push({ ...lib, tex: [0, x / PAGE, y / PAGE, (x + width) / PAGE, (y + height) / PAGE], quad: [0, 0, it.w, it.h] });
   x += width + GUT; rowH = Math.max(rowH, height);
 }
+const landscapingOut = [];
+for (const p of landscaping) {
+  const { it, width, height } = p;
+  if (x + width + GUT > PAGE) { x = GUT; y += rowH + GUT; rowH = 0; }
+  if (width + 2 * GUT > PAGE || y + height + GUT > PAGE) throw new Error(`Atlas overflow packing ${it.id}`);
+  composite.push({ input: await sharp(p.file).resize(width, height, { kernel: 'lanczos3', fit: 'fill' }).sharpen({ sigma: 0.5 }).png().toBuffer(), left: x, top: y });
+  const { src, ...lib } = it;
+  landscapingOut.push({ ...lib, tex: [0, x / PAGE, y / PAGE, (x + width) / PAGE, (y + height) / PAGE], quad: [0, 0, it.w, it.h] });
+  x += width + GUT; rowH = Math.max(rowH, height);
+}
 const full = await sharp({ create: { width: PAGE, height: PAGE, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } }).composite(composite).png().toBuffer();
 for (let mip = 0; mip < 5; mip++) await sharp(full).resize(PAGE >> mip, PAGE >> mip).webp({ quality: 92, alphaQuality: 100 }).toFile(path.join(out, `golf-${mip}.webp`));
 // Ignored review artifacts: full-resolution individual cutouts and an enlarged atlas showing the final packed pixels.
@@ -176,8 +196,14 @@ fs.writeFileSync(path.join(root, 'src/game/golf-library.ts'), [
   'export function appendRangeArt(library: LibItem[]) {',
   "  if (golfPage < 0) throw new Error('appendRangeArt before appendGolf');",
   '  for (const item of RANGE) if (!removed.has(item.id)) library.push({ ...item, tex: [golfPage, ...item.tex.slice(1)] as LibItem["tex"] });',
+  '}',
+  '/** T274: native-alpha landscaping, appended last on the existing golf page; all previous saved indices stay fixed. */',
+  `const LANDSCAPING: LibItem[] = ${JSON.stringify(landscapingOut)};`,
+  'export function appendLandscapeArt(library: LibItem[]) {',
+  "  if (golfPage < 0) throw new Error('appendLandscapeArt before appendGolf');",
+  '  for (const item of LANDSCAPING) if (!removed.has(item.id)) library.push({ ...item, tex: [golfPage, ...item.tex.slice(1)] as LibItem["tex"] });',
   '}', ''
 ].join('\n'));
 // T258: the page's use (the packed rects' share of its area, and its lowest shelf)
-const used = [...items, ...kitOut, ...rangeOut].reduce((s, it) => s + (it.tex[3] - it.tex[1]) * (it.tex[4] - it.tex[2]), 0);
-console.log(`Prepared ${items.length} golf sprites, ${kitOut.length} kit sprites and ${rangeOut.length} range sprites on one ${PAGE} x ${PAGE} supplemental page (rows to y ${y + rowH} of ${PAGE}, ${(100 * used).toFixed(1)}% of its area); cutouts and contact sheet: ${review}.`);
+const used = [...items, ...kitOut, ...rangeOut, ...landscapingOut].reduce((s, it) => s + (it.tex[3] - it.tex[1]) * (it.tex[4] - it.tex[2]), 0);
+console.log(`Prepared ${items.length} golf sprites, ${kitOut.length} kit sprites, ${rangeOut.length} range sprites and ${landscapingOut.length} landscaping sprites on one ${PAGE} x ${PAGE} supplemental page (rows to y ${y + rowH} of ${PAGE}, ${(100 * used).toFixed(1)}% of its area); cutouts and contact sheet: ${review}.`);
