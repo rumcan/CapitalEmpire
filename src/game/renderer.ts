@@ -7,6 +7,7 @@ import { PAINT_TEXES, isPaintPhoto, type PaintTex } from './paint';
 import { POOL_ANCHOR, PPM, SLAB_CELL } from './ground-art';
 import { POOL_SHARES, SPEC_MASK_K } from './lamp-reflect';
 import { GLOSS, SWAMP, SwampField, glossTile, swampStreams } from './swamp';
+import { REFLECT, SITE, WaterField, fieldPad, fieldRes, glintImage, hexRgb, riverLook, waterImages, waterLookActive, waterLookOf, type WaterLook } from './water-look';
 import { LOT_DECALS } from './lot-decals';
 import { clampDecals, drawDecals, flatSquash, placeDecals } from './map-decals';
 import { layOnGround } from './base-grass';
@@ -165,6 +166,8 @@ const PLAN_ASPHALT = '#3c4150';
 const PAINT_COL = new Map(PAINT_TEXES.map(t => [t.id as string, t.col] as [string, string]));
 /** the painted ground textures a photo (grass-art PHOTO_TEX) replaces in the ground layers: lot patches, verges, gravel roads (the dark grey
  *  Asphalt photo, the owner's call 2026-10-21), water, and the river and creek banks (the dirt photo, the owner 2026-10-21) */
+/** T230: the photo water textures' mean colours (paint.ts's swatches), the glint's local mean where the water wears no painted look */
+const WATER_PHOTO_MEAN: Readonly<Record<string, string>> = { water: '#0f2431', waterDark: '#0f2431', waterDeep: '#0d2330', waterClear: '#164959' };
 const GROUND_PHOTO = new Map<string, string>([['dirt', 'dirt'], ['gravel', 'gravel'], ['roadgravel', 'asphalt'], ['field', 'field'], ['water', 'waterDark'], ['bank', 'dirt'], ['creek', 'dirt']]);
 /** a ground photo drawn this many times its size (the owner, 2026-10-21: the gravel roads' asphalt "a lot" bigger); the hex-mixed mosaic
  *  still has 43 px a tile at 3x, above the 38 the closest zoom asks for */
@@ -432,13 +435,60 @@ export class GroundPainter {
   private swampNow: { cv: Cnv; x0: number; y0: number; res: number } | null = null;
   /** T199: the gloss mask of the bake in progress (a GLOSS.maskK-th of the chunk's size each way, premultiplied as a canvas is: alpha the
    *  swamp's pools' gloss, colour each pool's local mean colour times it; gl.ts glossLight lights the pools by it), made only with specCam on
-   *  where the chunk lays the swamp's tile set; null otherwise */
+   *  where the chunk lays the swamp's tile set, or (T230, waterOver) any pond or river; null otherwise */
   private glossMask: OffscreenCanvas | null = null;
   /** the gloss mask of the bake just done (the worker transfers it), or null when it has none */
   takeGlossMask(): OffscreenCanvas | null { const m = this.glossMask; this.glossMask = null; return m; }
   /** T199: each swamp tile's gloss (swamp.ts glossTile), by the tile's URL: made once per tile, the first time a bake lays it with the glint on
    *  (one read back of the tile, never of a chunk) */
   private glossTiles = new Map<string, Cnv>();
+  /** T230: the water field of the bake in progress (water-look.ts WaterField: where the chunk's rivers, course ponds and painted water lie,
+   *  each sample's distance from its shore and the shore's reflections), made the first time a water site asks (waterOver), with its look;
+   *  undefined until then, null when the look is off and the glint too, or the chunk has no water */
+  private waterNow: { f: WaterField; look: WaterLook } | null | undefined = undefined;
+  /** T230: the chunk's water field (waterNow), made now if not yet */
+  private waterField(lite: boolean): { f: WaterField; look: WaterLook } | null {
+    if (this.waterNow !== undefined) return this.waterNow;
+    const look = waterLookOf(this.tex.surfaces), c = this.chunkNow;
+    if (!c || (!waterLookActive(look) && !this.specCam)) return (this.waterNow = null);
+    const f = WaterField.over(c.box, fieldPad(look), fieldRes(c.L, lite)), fb = f.box;
+    // the rivers, and the course's water and the painted water areas over the field's box (a pond reaching in from past the chunk counts: its
+    // shore sets the depth here), each as it is drawn (the warped course, the rugged outline)
+    for (const w of this.waters) if (w.w.kind === 'river' && w.box[2] >= fb[0] && w.box[0] <= fb[2] && w.box[3] >= fb[1] && w.box[1] <= fb[3]) f.waterway(w.w.pts, SITE.river);
+    for (const p of this.lotsIn(fb)) {
+      if (p.top || p.layby) continue;
+      if (p.course) { for (const l of this.warpedCourse(p.course, lite).layers) if (l.s === COURSE_WATER && l.fill.length) f.rings(l.fill, SITE.course); }
+      else if (p.paint && waterTex(p.tex)) f.rings([this.ruggedOf(p).q.pts], SITE.paint);
+    }
+    if (!f.any()) return (this.waterNow = null);
+    f.shore(Math.max(look.reach, 3));
+    if (look.on && look.reflect > 0) f.reflect(this.casters.query([fb[0] - REFLECT.reach - 3, fb[1] - REFLECT.reach - 3, fb[2], fb[3]]));
+    return (this.waterNow = { f, look });
+  }
+  /** T230: the water look over one water site just drawn on g (its samples of the chunk's water field), clipped to its shape (clip, tile
+   *  space): the light edge (a screen toward the bed's colour), then the depth and the shore's reflections (a multiply), then the deep's blue lift and the reflections'
+   *  own colours (a faint screen), all curves over the water's own pixels (water-look.ts waterImages, waterPixel its twin); and with the glint
+   *  on (specCam), the site's gloss onto the chunk's gloss mask beside the
+   *  swamp's (water-look.ts glintImage: inset from the shore, its colour the shaded water's mean, `tex` the water's texture). The look off
+   *  and the glint off: nothing at all */
+  private waterOver(g: C2D, site: number, clip: () => Path2D, tex: string, lite: boolean) {
+    const w = this.waterField(lite); if (!w) return;
+    // (a river's water: the rivers' own depth strength, water-look.ts riverLook)
+    const { f } = w, look = site === SITE.river ? riverLook(w.look) : w.look, c = this.chunkNow!, im = waterImages(f, site, look);
+    const lay = (to: C2D, data: Uint8ClampedArray) => { const s = this.buffer('waterTone', f.W, f.H); ctx2d(s).putImageData(new ImageData(data as Uint8ClampedArray<ArrayBuffer>, f.W, f.H), 0, 0); to.drawImage(s, f.x0, f.y0, f.W / f.res, f.H / f.res); };
+    if (im.edge || im.shade || im.tint) {
+      g.save(); g.setTransform(c.M); g.clip(clip()); g.imageSmoothingEnabled = true; g.globalAlpha = 1;
+      if (im.edge) { g.globalCompositeOperation = 'screen'; lay(g, im.edge); }
+      if (im.shade) { g.globalCompositeOperation = 'multiply'; lay(g, im.shade); }
+      if (im.tint) { g.globalCompositeOperation = 'screen'; lay(g, im.tint); }
+      g.restore();
+    }
+    if (!this.specCam) return;
+    const gi = glintImage(f, site, look, hexRgb(this.tex.paintedMean(tex) ?? WATER_PHOTO_MEAN[tex] ?? WATER_PHOTO_MEAN.waterDark));
+    if (!gi) return;
+    const K = GLOSS.maskK, mask = (this.glossMask ??= new OffscreenCanvas(Math.max(1, Math.ceil(c.W / K)), Math.max(1, Math.ceil(c.H / K)))), m = mask.getContext('2d')!;
+    m.save(); m.setTransform(new DOMMatrix([1 / K, 0, 0, 1 / K, 0, 0]).multiply(c.M)); m.clip(clip()); m.imageSmoothingEnabled = true; m.imageSmoothingQuality = 'medium'; m.globalCompositeOperation = 'source-over'; lay(m, gi); m.restore();
+  }
   /** T199: the streams are swamp: the switch on and the surface painted (the same for every chunk, so the living ground's banks agree) */
   private swampOn() { return this.swamp && !!this.tex.paintedOf('swamp'); }
   /** T199: a stream's swamp may reach into the tile box (the worker decodes the swamp's tiles only for such a chunk) */
@@ -1029,7 +1079,7 @@ export class GroundPainter {
     this.chunkNow = { key: `${lite ? 'm' : 'g'}${i},${j}@${L}`, L, box, M, Minv, W, H }; this.toned.clear(); this.bakeKeys.clear(); this.tilesUsed = false; this.provisional = false;
     // T186: the shade mask (a quarter of the chunk's size), white (no shade) until a shade is laid on it; none for a district chunk (its
     // sprites' shadows are a few px: the far meshes)
-    this.specMask = null; this.glossMask = null; this.swampNow = null;
+    this.specMask = null; this.glossMask = null; this.swampNow = null; this.waterNow = undefined;
     if (lite) this.shadeMask = null;
     else { const mc = new OffscreenCanvas(Math.max(1, Math.ceil(W / SHADE_MASK_K)), Math.max(1, Math.ceil(H / SHADE_MASK_K))), mg = mc.getContext('2d')!; mg.fillStyle = '#fff'; mg.fillRect(0, 0, mc.width, mc.height); this.shadeMask = { cv: mc, g: scaledContext(mg, 1 / SHADE_MASK_K), used: false }; }
     const minW = 1 / (TILE_PX * L), net = this.net.view([tx0 - 8, ty0 - 8, tx1 + 8, ty1 + 8], !lite), tex = this.tex;
@@ -1079,6 +1129,8 @@ export class GroundPainter {
     // (T186: its shade on the mask, not its light: only when it shades anything)
     if (this.shadeMask) { const d = hs.data.slice(); let any = false; for (let k = 3; k < d.length; k += 4) { if (d[k - 1]! >= 160) d[k] = 0; else if (d[k]! > 4) any = true; } if (any) this.onShadeMask(g => overlay(g, { data: d, W: hs.W, H: hs.H }, sres)); }
     if (rivers.length) layer('water', g => shore(g, rivers, 0, 0.3), water);
+    // T230: the river's depth, light edge and reflections (water-look.ts), clipped to its water; with the glint on, its gloss
+    if (rivers.length) this.waterOver(ctx, SITE.river, () => { const p = new Path2D(); for (const w of rivers) waterShape(p, w.w.pts, 0.3, box); return p; }, 'water', lite);
 
     const walk = net.walkF.filter(f => vis(f.bbox)), asph = net.asphF.filter(f => vis(f.bbox));
     const med = net.medianF.filter(f => vis(f.bbox)), isl = net.islandF.filter(f => vis(f.bbox));
@@ -1738,7 +1790,9 @@ export class GroundPainter {
       // T204: then the tall grass's spill over its edges where the map's grass meets them (a hard area's few tufts)
       const spill = () => { if (under) this.areaSpill(ctx, rf, drawn, courses, L, M, box, under); drawn.push(p); };
       const look = p.paint!.e ? EDGE_LOOKS[p.paint!.e] ?? null : null, sh = areaShadow(p.paint!.sh);
-      if (!look && !sh) { this.drawPaint(ctx, p, L, X0, Y0, M, Minv, box, lite, 0); spill(); continue; }
+      // T230: a painted water area's depth, light edge and reflections (water-look.ts), clipped to its outline; with the glint on, its gloss
+      const wet = (g: C2D) => { if (waterTex(p.tex)) this.waterOver(g, SITE.paint, () => polyPath(p.pts), p.tex, lite); };
+      if (!look && !sh) { this.drawPaint(ctx, p, L, X0, Y0, M, Minv, box, lite, 0); wet(ctx); spill(); continue; }
       const feather = look ? featherTiles(look, L) : 0, reach = Math.max(look ? edgeReach(look, feather) : 0, areaShadeReach(sh, feather)), eb = edgeBox(quadBox(p.pts), box, reach);
       if (!eb) { drawn.push(p); continue; }
       const [ex0, ey0, ex1, ey1] = eb, field = edgeField(p.pts, ex0, ey0, ex1 - ex0, ey1 - ey0, res, reach, COURSE_CELL);
@@ -1747,7 +1801,7 @@ export class GroundPainter {
       if (im) { put(ctx, im.shadow, ex0, ey0, 'multiply'); this.onShadeMask(m => put(m, im.shadow, ex0, ey0, 'multiply')); }
       layer ??= this.buffer('paintEdge', ctx.canvas.width, ctx.canvas.height);
       const g = ctx2d(layer), path = polyPath(p.pts);
-      this.drawPaint(g, p, L, X0, Y0, M, Minv, box, lite, feather);
+      this.drawPaint(g, p, L, X0, Y0, M, Minv, box, lite, feather); wet(g);
       if (im) {
         // the bevel's light rim: a shine textured by the area's own colours a small gap inside where its edge reads (T110), then its dark rim
         const lb = litBox(im.light, ex0, ey0, res);
@@ -2005,6 +2059,8 @@ export class GroundPainter {
           if (im && lb) this.areaLight(ctx, im, lb, edgePath, q.x0, q.y0, res, L, M, 0, SHINE_TINT);
           put(q.im.dark, q.x0, q.y0, 'multiply'); this.onShadeMask(m => put(q.im.dark, q.x0, q.y0, 'multiply', m));
         }
+        // 5a, T230: the pond's depth, light edge and reflections (water-look.ts), clipped to the course's water; with the glint on, its gloss
+        if (s === SURF.water) this.waterOver(ctx, SITE.course, () => ringsOfCode(code), ls[0]!.l.tex, lite);
         // 5b, T227: the bunker's lip on the sand: the dark crescent inside its far rim, the light near lip (under the walls drawn after it)
         if (lip > 0 && !lite && s === SURF.bunker) this.bunkerSandLip(ctx, ls.map(q => q.l), L, M, lip);
         if (!lite) {                                                                               // 6
