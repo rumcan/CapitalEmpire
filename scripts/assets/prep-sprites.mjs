@@ -326,6 +326,7 @@ fs.writeFileSync(path.join(ROOT, 'src/game/library.ts'), [
   "import { appendViews } from './views-library';",
   "import { appendTrees } from './trees-library';",
   "import { appendAxisViews } from './axis-library';",
+  "import { appendExtraViews } from './extra-views-library';",
   ...imports, '',
   `/** atlas pages: one row per page, one url per mip (scale ${MIP0} x 2^-mip of native) */`,
   `export const ATLAS_PAGES: string[][] = [${pageRows.join(', ')}];`,
@@ -358,7 +359,8 @@ fs.writeFileSync(path.join(ROOT, 'src/game/library.ts'), [
   'appendViews(LIBRARY, ATLAS_PAGES);',
   'appendTrees(LIBRARY, ATLAS_PAGES);',
   'appendAxisViews(LIBRARY, ATLAS_PAGES);',
-  'appendKit(LIBRARY); // T231: the concept kit (on the golf page), last', ''].join('\n'));
+  'appendKit(LIBRARY); // T231: the concept kit (on the golf page), appended before supplemental views',
+  'appendExtraViews(LIBRARY, ATLAS_PAGES);', ''].join('\n'));
 console.log(`walkers: ${people.length} people, ${walkers.length} frames; frame fixes: ${flipped.length ? flipped.join(', ') : 'none'}`);
 console.log(`spectators: ${spec.people.length} people, ${spec.frames.length} frames; golfers: ${golf.people.length} people, ${golf.frames.length} frames`);
 console.log(`walk frames still needed: ${needed.length}${needed.length ? ` (${needed.join(', ')})` : ''}`);

@@ -40,7 +40,7 @@ export interface RailItem {
 export const RAIL: readonly RailItem[] = [
   { id: 'select', label: 'Select', icon: 'compass', key: 'V', section: null, group: 'select', tools: [{ id: 'select', label: 'Select / Pan', key: 'V', icon: 'compass' }] },
   // COURSE
-  { id: 'range', label: 'Driving range', icon: 'pin', key: '', section: 'course', group: 'course', tools: [{ id: 'select', label: 'Range card', key: '', icon: 'pin' }], only: 'golf', action: 'range' },
+  { id: 'range', label: 'Range', icon: 'pin', key: '', section: 'course', group: 'course', tools: [{ id: 'select', label: 'Range card', key: '', icon: 'pin' }], only: 'golf', action: 'range' },
   { id: 'course', label: 'Course', icon: 'trophy', key: 'C', section: 'course', group: 'course', tools: [
     { id: 'course', label: 'Holes', key: 'C', icon: 'trophy' },
     { id: 'buildings', label: 'Buildings', key: '', icon: 'house', only: 'golf' },
@@ -127,6 +127,14 @@ export function railEntries(ui: ProgressiveUiState | null, golf: boolean, uiTool
   }
   return out;
 }
+
+/** T250 (#721, the owner 2026-10-28: "lets have course on the left drawer and have a new footer drawer for town"): the two drawers the rail is
+ *  split into: the course drawer on the left (Select, the COURSE groups, Bulldoze) and the town footer along the bottom (the TOWN groups).
+ *  The groups, their tools and their order in RAIL are unchanged; a group's drawer is its section's */
+export type Drawer = 'side' | 'footer';
+export const drawerOf = (r: RailItem): Drawer => (r.section === 'town' ? 'footer' : 'side');
+/** a drawer's entries, in the rail's order (railEntries' headings hold: each drawer's first item under a heading carries it) */
+export const drawerEntries = (es: readonly RailEntry[], d: Drawer): RailEntry[] => es.filter(e => drawerOf(e.item) === d);
 
 /** a rail item's tooltip (T179): its name, its key (if it has one) and, locked, what unlocks it (the stages' and the ramp's words) */
 export function railTip(e: RailEntry): TipParts {

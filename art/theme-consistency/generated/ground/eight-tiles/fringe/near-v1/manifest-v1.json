@@ -1,0 +1,145 @@
+{
+  "schema": 1,
+  "material": "fringe",
+  "zoom": "near",
+  "master": "art/theme-consistency/generated/ground/eight-tiles/fringe/near-v1/master.native-crop.png",
+  "outputFolder": "art/theme-consistency/generated/ground/eight-tiles/fringe/near-v1",
+  "collarPixels": 64,
+  "patchSpanPixels": 256,
+  "repairRaws": {
+    "northSouth": "art/theme-consistency/generated/ground/eight-tiles/fringe/near-v1/full-north-south-repair-v1.raw.png",
+    "westEast": "art/theme-consistency/generated/ground/eight-tiles/fringe/near-v1/full-west-east-repair-v1.raw.png"
+  },
+  "repairFullFrameCrops": {
+    "northSouth": {
+      "left": 0,
+      "top": 0,
+      "width": 1742,
+      "height": 902
+    },
+    "westEast": {
+      "left": 0,
+      "top": 0,
+      "width": 1742,
+      "height": 902
+    }
+  },
+  "variants": [
+    {
+      "id": "tile-01",
+      "raw": "art/theme-consistency/generated/ground/eight-tiles/fringe/near-v1/tile-01-v1.raw.png",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 1742,
+        "height": 902
+      }
+    },
+    {
+      "id": "tile-02",
+      "raw": "art/theme-consistency/generated/ground/eight-tiles/fringe/near-v1/tile-02-v1.raw.png",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 1742,
+        "height": 902
+      }
+    },
+    {
+      "id": "tile-03",
+      "raw": "art/theme-consistency/generated/ground/eight-tiles/fringe/near-v1/tile-03-v1.raw.png",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 1742,
+        "height": 902
+      }
+    },
+    {
+      "id": "tile-04",
+      "raw": "art/theme-consistency/generated/ground/eight-tiles/fringe/near-v1/tile-04-v1.raw.png",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 1742,
+        "height": 902
+      }
+    }
+  ],
+  "lighting": "Uniform overall ambient exposure. Screen upper-right highlights occur only on tiny local painted turf strokes; shallow undersides toward lower-left.",
+  "materialMeaning": "Distinct short golf green fringe/apron turf: slightly longer/coarser and darker than putting green, still clean close-mown; NOT first-cut rough.",
+  "independentlyAuthoredHeight": true,
+  "minVisibleTiles": 2,
+  "maxVisibleTiles": 4,
+  "allowRotate": false,
+  "allowMirror": false,
+  "compositeMethod": "minimum-error-cut",
+  "cutOverlapPixels": 128,
+  "repairCutMarginPixels": 64,
+  "repairContext": "full-frame-bands",
+  "repairCrops": {
+    "northSouth": {
+      "left": 743,
+      "top": 387,
+      "width": 256,
+      "height": 128
+    },
+    "westEast": {
+      "left": 807,
+      "top": 323,
+      "width": 128,
+      "height": 256
+    }
+  },
+  "sourceRecords": [
+    {
+      "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/near-v1/tile-01-v1.raw.png",
+      "sha256": "ca58e4d458ba22900b1b9368ce73961424add1831f184d9423b637e94950d0fd",
+      "nativePixels": [
+        1742,
+        903
+      ],
+      "provenance": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/near-v1/tile-01-v1.provenance.json",
+        "sha256": "73f75247f66d104f1efa7adfeb19955bee8bd9a2fa65dfb768ce20eb8543cf7d"
+      }
+    },
+    {
+      "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/near-v1/tile-02-v1.raw.png",
+      "sha256": "03342ceb9af987957ad63f3ad74fe0b2445d2a421f442c712e0a75729763a3b6",
+      "nativePixels": [
+        1742,
+        903
+      ],
+      "provenance": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/near-v1/tile-02-v1.provenance.json",
+        "sha256": "768cfafb53ed58a4e6c34ae224a5b38dc3e8d01bd17329720a6592b5549535cd"
+      }
+    },
+    {
+      "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/near-v1/tile-03-v1.raw.png",
+      "sha256": "6bd13c1010a7a20489f70fe7f12935592b4633cfd36d32fc515b652f1cd10e68",
+      "nativePixels": [
+        1742,
+        903
+      ],
+      "provenance": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/near-v1/tile-03-v1.provenance.json",
+        "sha256": "d9c9994cf77689acac1fe08a5b1efc633de4889f83ef1b65f9f3342fcc1c41ab"
+      }
+    },
+    {
+      "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/near-v1/tile-04-v1.raw.png",
+      "sha256": "3eb21191d0f5e39711742a1caaca9b64554a2c8045ad2fd9ceb95a138431e6e4",
+      "nativePixels": [
+        1742,
+        903
+      ],
+      "provenance": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/near-v1/tile-04-v1.provenance.json",
+        "sha256": "5c3af3169b09eb6b8c48a196c663e9f062f73507f8e7015b454c49071577bfbf"
+      }
+    }
+  ],
+  "reviewStatus": "Prepared only. Native and shuffled appearance review required; file and border checks do not approve artwork."
+}

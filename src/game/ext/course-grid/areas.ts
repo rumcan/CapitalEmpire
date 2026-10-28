@@ -2,7 +2,7 @@
 // blob per surface and hole (the automatic collars included), so deriveHoles, holeViews, markerPlan, tagByHole, courseQuality and the
 // costs keep their inputs; `rasterAreas` lays old golf-surface paint areas into the grid (the load migration); and the planting month
 // each cell stores. Pure TypeScript, no DOM, deterministic. Units: tiles of 2 m for every coordinate; cells of 1 m (0.5 tile).
-import { CELL_T, SURF, fillPolygon, isCarved, type Grid, type GridDiff, mergeDiffs } from './index';
+import { CELL_T, N_SURF, SURF, SURF_ORDER, fillPolygon, isCarved, surfRank, type Grid, type GridDiff, mergeDiffs } from './index';
 import { BLOB_STYLE, blobOutlines, type CollarStyle } from '../course-blobs';
 import type { CourseArea, GolfSurface } from '../../golf/types';
 import type { PaintTex } from '../../paint';
@@ -36,13 +36,13 @@ export function growingHoles(g: Grid, now: number): Map<number, number> {
 // ---- surfaces ----
 
 /** the golf surface of each surface id (none is map grass) */
-export const SURF_SURFACE: readonly (GolfSurface | null)[] = [null, 'rough', 'fescue', 'water', 'fairway', 'tee', 'bunker', 'waste', 'green'];
+export const SURF_SURFACE: readonly (GolfSurface | null)[] = [null, 'rough', 'fescue', 'water', 'fairway', 'tee', 'bunker', 'waste', 'green', 'longGrass'];
 /** the golf surface each automatic collar counts as (the bank is rocky dirt: no turf) */
 export const COLLAR_SURFACE: Readonly<Record<CollarStyle['name'], GolfSurface>> = { 'first-cut': 'firstCut', fringe: 'fringe', lip: 'rough', bank: 'other' };
 /** a texture id each golf surface reads back as (golf/costs.ts surfaceOfTex gives the surface again; the game's own course photos) */
 export const SURFACE_TEX_ID: Readonly<Record<GolfSurface, PaintTex>> = {
   green: 'golfGreen', fringe: 'golfFringe', tee: 'golfTee', fairway: 'golfFairway', firstCut: 'golfFirstCut', rough: 'golfRough',
-  fescue: 'golfFescue', bunker: 'bunkerSand', waste: 'wasteSand', water: 'waterDark', path: 'spectatorPath', other: 'rockyDirt',
+  fescue: 'golfFescue', longGrass: 'golfLongGrass', bunker: 'bunkerSand', waste: 'wasteSand', water: 'waterDark', path: 'spectatorPath', other: 'rockyDirt',
 } as Record<GolfSurface, PaintTex>;
 /** the surface id a golf surface paints into the grid, or 0 when it has none (fringe and first cut are automatic collars now, cart
  *  paths are the road tool's, other is not course) */
@@ -50,6 +50,7 @@ export function surfOfSurface(s: GolfSurface | null | undefined): number {
   switch (s) {
     case 'rough': return SURF.rough; case 'fescue': return SURF.fescue; case 'water': return SURF.water; case 'fairway': return SURF.fairway;
     case 'tee': return SURF.tee; case 'bunker': return SURF.bunker; case 'waste': return SURF.waste; case 'green': return SURF.green;
+    case 'longGrass': return SURF.longGrass;
     default: return 0;
   }
 }
@@ -72,17 +73,17 @@ export function gridAreas(g: Grid, holes?: Iterable<number>): GridArea[] {
   const want = holes ? new Uint8Array(256) : null;
   if (holes && want) for (const h of holes) if (h >= 0 && h < 256) want[h] = 1;
   // one pass: per (surface, hole) the cell box, the count, the seeded count and their month sum
-  const K = 9 * 256, bx0 = new Int32Array(K).fill(2147483647), by0 = new Int32Array(K).fill(2147483647), bx1 = new Int32Array(K).fill(-1), by1 = new Int32Array(K).fill(-1);
+  const K = N_SURF * 256, bx0 = new Int32Array(K).fill(2147483647), by0 = new Int32Array(K).fill(2147483647), bx1 = new Int32Array(K).fill(-1), by1 = new Int32Array(K).fill(-1);
   const cnt = new Float64Array(K), seeded = new Float64Array(K), msum = new Float64Array(K);
   for (let j = 0, i = 0; j < g.h; j++) for (let c = 0; c < g.w; c++, i++) {
-    const s = g.surf[i]; if (!s || s > 8) continue;
+    const s = g.surf[i]; if (!s || s >= N_SURF) continue;
     const h = g.hole[i]; if (want && !want[h]) continue;
     const k = s * 256 + h;
     if (c < bx0[k]) bx0[k] = c; if (c > bx1[k]) bx1[k] = c; if (j < by0[k]) by0[k] = j; if (j > by1[k]) by1[k] = j;
     cnt[k]++; const m = g.month[i]; if (m) { seeded[k]++; msum[k] += m; }
   }
   const out: GridArea[] = [];
-  for (let s = 1; s <= 8; s++) for (let h = 0; h < 256; h++) {
+  for (const s of SURF_ORDER) if (s) for (let h = 0; h < 256; h++) {
     const k = s * 256 + h; if (!cnt[k]) continue;
     const st = BLOB_STYLE[s] ?? { close: 0, relax: 0 }, col = st.collar;
     const plant = (SURF_GROW_MONTHS[s] ?? 0) > 0 && seeded[k] * 2 >= cnt[k] ? { plantKind: 'seed' as const, plantedMonth: Math.round(msum[k] / seeded[k]) - MONTH_BASE } : {};
@@ -105,8 +106,9 @@ export function gridAreas(g: Grid, holes?: Iterable<number>): GridArea[] {
   return out;
 }
 
-/** the draw-order rank of a grid area: by surface id, a collar band just before its surface (sort ascending, then by hole) */
-export function areaRank(a: Pick<GridArea, 's' | 'collar' | 'hole'>): number { return (a.s * 2 + (a.collar ? 0 : 1)) * 256 + a.hole; }
+/** the draw-order rank of a grid area: by its surface's draw rank (course-grid SURF_RANK), a collar band just before its surface (sort
+ *  ascending, then by hole) */
+export function areaRank(a: Pick<GridArea, 's' | 'collar' | 'hole'>): number { return (surfRank(a.s) * 2 + (a.collar ? 0 : 1)) * 256 + a.hole; }
 
 /** a painted area to lay into the grid: its outline (tiles, corners already rounded), its golf surface, hole and month value */
 export interface RasterArea { pts: number[]; surface: GolfSurface | null; hole?: number; month: number }

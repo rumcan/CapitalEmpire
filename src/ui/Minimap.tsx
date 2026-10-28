@@ -139,7 +139,7 @@ export function Minimap({ game }: { game: Game }) {
   const line2 = near >= 0 ? (named ? 'Town' : 'Not named yet') : 'Overview';
 
   return (
-    <div className="pointer-events-auto absolute bottom-3 left-3 z-20 flex items-end gap-2" onPointerDown={stop} onPointerMove={stop} onPointerUp={stop}>
+    <div className="pointer-events-auto absolute bottom-3 left-3 z-20 flex items-end gap-2" data-testid="minimap" onPointerDown={stop} onPointerMove={stop} onPointerUp={stop}>
       <div className="glass p-1.5 relative">
         <canvas
           ref={canvasRef}

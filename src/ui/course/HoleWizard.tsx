@@ -6,6 +6,8 @@ import { SURF_SURFACE } from '../../game/ext/course-grid/areas';
 import { aboutMoney, planShape, type WizCheck } from '../../game/ext/hole-wizard';
 import { growInMonths } from '../../game/golf/costs';
 import { FRAME_TREE_PRICE } from '../../game/golf/holeframe';
+import { BRUSH_PRESETS, type BrushKind } from '../../game/paint';
+import { BrushShape, SurfaceSwatches } from './BrushControls';
 
 const STEPS = ['Tee', 'Green', 'Shape'] as const;
 /** what each step asks for, under the steps */
@@ -68,11 +70,12 @@ export function HoleWizardPanel({ game }: { game: Game }) {
         </div>
       )}
       {gh && <Stats game={game} />}
+      {w.base && w.step === 'shape' && <EditPaint game={game} />}
       {gh && <Planting game={game} />}
       {gh && w.step === 'shape' && <Frame game={game} cost={gh.cost} />}
       {checks.length > 0 && <Checks game={game} rows={checks} />}
       {w.step === 'shape' && (
-        <p className="wiz-keys">Drag the line to bend it · amber handles widen · <kbd>R</kbd> turns the green · <kbd>[</kbd> <kbd>]</kbd> size it · <kbd>Ctrl</kbd>+<kbd>Z</kbd> undoes a drag · <kbd>Esc</kbd> steps back</p>
+        <p className="wiz-keys">Drag the line to bend it · amber handles widen · <kbd>R</kbd> turns the green · <kbd>[</kbd> <kbd>]</kbd> size it · <kbd>Ctrl</kbd>+<kbd>Z</kbd> undoes a drag{w.base ? ' or a stroke' : ''} · <kbd>Esc</kbd> steps back</p>
       )}
       <div className="mt-1.5 flex flex-wrap gap-1">
         {w.base && w.step === 'shape' && <button className="chip" title="Clears the hole's planned cells (your touch-ups stay); undo brings it back" onClick={() => p.deletePlan()}>Delete hole</button>}
@@ -80,6 +83,28 @@ export function HoleWizardPanel({ game }: { game: Game }) {
         <button className="chip" title="Back to the brush" onClick={() => p.setBrush(p.brushKind)}>Done</button>
       </div>
     </div>
+  );
+}
+
+/** T238 (the owner, 2026-10-28: "editinghole should be where you can also paint and add to the holes grass"): Edit hole's paint section, the
+ *  Shape by hand surfaces (keys 1–9), the brush's shape (Square or Round) and size, and Erase. A stroke paints into this hole, one undo step
+ *  a stroke; the plan's handles stay on the map and still drag; the paint stays when Edit hole closes. The lit surface again (or Esc) puts the
+ *  brush down */
+function EditPaint({ game }: { game: Game }) {
+  const p = game.paint, n = p.editingHole, on = p.mode === 'brush' && p.planOpen;
+  const name = BRUSH_PRESETS.find(b => b.kind === p.brushKind)?.name ?? '';
+  const pick = (k: BrushKind) => p.setEditBrush(on && p.brushKind === k ? null : k);
+  return (
+    <section className="mt-2" aria-label="Paint this hole" data-section="edit-paint">
+      <h4 className="sub-head">{`Paint hole ${n}`}</h4>
+      <SurfaceSwatches game={game} on={on ? p.brushKind : null} pick={pick} />
+      <BrushShape game={game} brush={on} arm={() => p.setEditBrush(p.brushKind)} />
+      <div className="mt-2 flex flex-wrap items-center gap-1.5">
+        <button className={`chip ${on && p.rubOut ? 'chip-on' : ''}`} aria-pressed={on && p.rubOut} title="Erase takes the top surface under the brush (hold Alt for a moment while brushing); no refund" onClick={() => { const v = !(on && p.rubOut); if (!on) p.setEditBrush(p.brushKind); p.rubOut = v; game.emit(); }}>Erase</button>
+        {on && <button className="chip" title="Put the brush down: the plan's handles alone (Esc)" onClick={() => p.setEditBrush(null)}>Handles only</button>}
+      </div>
+      <p className="sub-line mt-1">{on ? `Drag on the map to paint ${name.toLowerCase()} into hole ${n}; the tee, the green and the bends still drag. Esc puts the brush down.` : `Pick a surface to paint into hole ${n} (keys 1–9); the tee, the green and the bends still drag.`}</p>
+    </section>
   );
 }
 

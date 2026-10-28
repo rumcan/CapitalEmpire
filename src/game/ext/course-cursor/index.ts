@@ -93,12 +93,12 @@ export interface CursorState { kind: CursorStateKind; dragging: boolean; label: 
 /** the mark a surface's disc carries, so surfaces are told apart without colour (T118) */
 export type MarkKind = 'flag' | 'stripes' | 'peg' | 'tufts' | 'wisps' | 'grains' | 'pebbles' | 'ripples' | 'lanes' | 'none';
 export const MARKS: Readonly<Record<string, MarkKind>> = {
-  green: 'flag', fairway: 'stripes', tee: 'peg', rough: 'tufts', fescue: 'wisps', bunker: 'grains', waste: 'pebbles', water: 'ripples', path: 'lanes', grass: 'none',
+  green: 'flag', fairway: 'stripes', tee: 'peg', rough: 'tufts', longGrass: 'wisps', fescue: 'wisps', bunker: 'grains', waste: 'pebbles', water: 'ripples', path: 'lanes', grass: 'none',
 };
 /** the mark of a brush kind's disc ('none' for plain grass and anything unknown) */
 export const markOf = (kind: string): MarkKind => MARKS[kind] ?? 'none';
 /** the name a surface goes by in the words (the hint pill, the labels) */
-const NAMES: Readonly<Record<string, string>> = { fairway: 'Fairway', green: 'Green', tee: 'Tee', rough: 'Rough', fescue: 'Fescue', bunker: 'Bunker', waste: 'Waste', water: 'Water', path: 'Cart path', grass: 'Grass' };
+const NAMES: Readonly<Record<string, string>> = { fairway: 'Fairway', green: 'Green', tee: 'Tee', rough: 'Rough', longGrass: 'Long grass', fescue: 'Fescue', bunker: 'Bunker', waste: 'Waste', water: 'Water', path: 'Cart path', grass: 'Grass' };
 const nameOf = (kind: string) => NAMES[kind] ?? kind.charAt(0).toUpperCase() + kind.slice(1);
 /** a skip reason that refuses the cell outright (off your land, the driving range's plot, off the grid) rather than keeping a higher surface */
 const REFUSALS = new Set<string>([...Object.values(LAND_WHY), 'Off the course land', 'Skipped']);
@@ -142,6 +142,7 @@ const LOOKS: Readonly<Record<string, Look>> = {
   green: { glow: '#7dffb0', core: '#e8fff1', fill: '#6fe39b', wall: 'turf', splash: 'dirt', surf: SURF.green },
   tee: { glow: '#a6f78a', core: '#efffe8', fill: '#8ee070', wall: 'turf', splash: 'dirt', surf: SURF.tee },
   rough: { glow: '#dcee7c', core: '#fcffe2', fill: '#c4d867', wall: 'turf', splash: 'dirt', surf: SURF.rough },
+  longGrass: { glow: '#b8d86a', core: '#f6ffde', fill: '#8fae4c', wall: 'turf', splash: 'dirt', surf: SURF.longGrass }, // T238
   fescue: { glow: '#ecd97a', core: '#fff8de', fill: '#d6c063', wall: 'turf', splash: 'dirt', surf: SURF.fescue },
   bunker: { glow: '#ffd98f', core: '#fff7e2', fill: '#f2cf8a', wall: 'sand', splash: 'sand', surf: SURF.bunker },
   waste: { glow: '#f3cf94', core: '#fff4e0', fill: '#e2bf86', wall: 'sand', splash: 'sand', surf: SURF.waste },

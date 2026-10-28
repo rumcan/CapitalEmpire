@@ -386,7 +386,7 @@ export function debugImage(g: InfluenceGrid): Uint8ClampedArray {
 /* ---- which ground the variety lies on ---- */
 /** the grass textures (ground textures, Paint photos and presets) the variety lies on: the rest (paving, soil, sand, water, the course's managed
  *  turf) keeps its look */
-const GRASSY = new Set(['grass', 'grassDry', 'meadow', 'lawnLush', 'lawnWorn', 'lawnClover', 'golfRough', 'golfFescue', 'meadowLush', 'meadowFlowers', 'preset:lawns', 'preset:fescue', 'preset:rough']);
+const GRASSY = new Set(['grass', 'grassDry', 'meadow', 'lawnLush', 'lawnWorn', 'lawnClover', 'golfRough', 'golfLongGrass', 'golfFescue', 'meadowLush', 'meadowFlowers', 'preset:lawns', 'preset:fescue', 'preset:rough']);
 export const grassyTex = (tex: string) => GRASSY.has(tex);
 /** water textures (a painted pond): their outline is a shore */
 export const waterTex = (tex: string) => tex === 'water' || tex.startsWith('water');

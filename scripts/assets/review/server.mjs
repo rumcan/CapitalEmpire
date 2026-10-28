@@ -54,7 +54,7 @@ const CAR_SCALE = +(/export const CAR_SCALE = ([\d.]+)/.exec(fs.readFileSync(pat
 
 // ---------------------------------------------------------------- sizes: every sprite as the game draws it (review/size-report.ts)
 const SIZE_SRC = path.join(ROOT, 'scripts/assets/review/size-report.ts'), SIZE_OUT = path.join(ROOT, 'output/review/size-report.mjs');
-const SIZE_INPUTS = [SIZE_SRC, path.join(ROOT, 'scripts/assets/scale-overrides.json'), ...['library', 'views-library', 'axis-library', 'trees-library', 'cars-library', 'east-library', 'business-library',
+const SIZE_INPUTS = [SIZE_SRC, path.join(ROOT, 'scripts/assets/scale-overrides.json'), ...['library', 'views-library', 'axis-library', 'extra-views-library', 'extra-views', 'trees-library', 'cars-library', 'east-library', 'business-library',
   'construction-library', 'golf-library', 'newart', 'sizes', 'lots/scales', 'lots/studio-base'].map(f => path.join(ROOT, 'src/game', `${f}.ts`))];
 let sizes = { stamp: '', data: {} }, sizing = null;
 /** the size report: id -> { scale, base, sizeId, drawn: { id, name, quad, scale, fill, cap } | null, sharp, native, and the picture's atlas rect and page },
@@ -108,6 +108,8 @@ function library() {
 }
 /** the screen-axis sets (src/game/axis-library.ts AXIS_SETS, T154): subject id -> its [N, E, S, W] pictures; {} before the first pack */
 function axisSets() { try { return JSON.parse(/export const AXIS_SETS[^=]*= ({.*});/.exec(fs.readFileSync(path.join(ROOT, 'src/game/axis-library.ts'), 'utf8'))[1]); } catch { return {}; } }
+/** accepted garage diagonal sets; the existing card/base picture is still N, never reinterpreted as NE */
+function extraSets() { try { return JSON.parse(/export const EXTRA_VIEW_SETS[^=]*= ({.*});/.exec(fs.readFileSync(path.join(ROOT, 'src/game/extra-views-library.ts'), 'utf8'))[1]); } catch { return {}; } }
 // the appended libraries: the item array (one line in cars and businesses, several in east) and the page file for a page index
 const APPENDED = [
   { file: 'src/game/cars-library.ts', re: /ITEMS: LibItem\[\] = (\[[\s\S]*?\]);\n/, page: p => `src/assets/cars/cars-${p}.webp` },
@@ -136,7 +138,8 @@ async function picture(id, s) {
   fs.writeFileSync(f, png); fs.writeFileSync(stamp, version); return { png, version };
 }
 /** a sprite's spec for the thumbnail routes: a sprite the game has (the library), else a view the four-view art appends (size-report.ts: its tex and page) */
-const specOf = id => library().find(x => x.id === id) ?? sizes.data[id];
+// The fresh game-size report already names every upright's actual page and crop. Avoid re-parsing the whole library for each of eight thumbnails.
+const specOf = id => sizes.data[id]?.page ? sizes.data[id] : library().find(x => x.id === id) ?? sizes.data[id];
 /** a sprite's picture for the thumbnail route (PNG, up to 1200 px: the person cursor, the Lots tab, the removed snapshot) */
 async function thumb(id) { return (await picture(id, specOf(id))).png; }
 /** a Library card's picture (T144): WebP with its long side at most s device px (s one of thumb-size.mjs's steps), made from the PNG above and cached
@@ -416,9 +419,9 @@ http.createServer(async (req, res) => {
       // The card shows all four as thumbnails (/thumb/<id>) and sizes all four; the views are not cards of their own, so the east one is left out of the grid
       // A subject with a screen-axis set (axis-library.ts AXIS_SETS, T154) shows its N, E, S, W pictures too (a new subject's N view is its own picture;
       // a prop keeps its old picture as the card's, its four new views beside it), all sized together
-      const axis = axisSets();
+      const axis = axisSets(), garages = extraSets();
       const viewsOf = id => {
-        const se = rep[`east:${id}`] ? `east:${id}` : `view:${id}:se`, four = rep[`view:${id}:sw`] && rep[`view:${id}:nw`] ? [{ dir: 'NE', id }, { dir: 'SE', id: se }, { dir: 'SW', id: `view:${id}:sw` }, { dir: 'NW', id: `view:${id}:nw` }] : [];
+        const se = rep[`east:${id}`] ? `east:${id}` : `view:${id}:se`, four = garages[id] ? garages[id].map((v, i) => ({ dir: ['NE', 'SE', 'SW', 'NW'][i], id: v })).filter(v => rep[v.id]) : rep[`view:${id}:sw`] && rep[`view:${id}:nw`] ? [{ dir: 'NE', id }, { dir: 'SE', id: se }, { dir: 'SW', id: `view:${id}:sw` }, { dir: 'NW', id: `view:${id}:nw` }] : [];
         const ax = (axis[id] ?? []).map((v, i) => ({ dir: 'NESW'[i], id: v })).filter(v => rep[v.id]), all = [...four, ...ax];
         return all.length ? all : null;
       };

@@ -12,6 +12,7 @@ import {
   CELL_T,
   SURF,
   laidMonth,
+  surfAbove,
   type Grid,
   type GridDiff,
   type Pt,
@@ -710,7 +711,7 @@ function playerSurf(s: number): boolean {
  * - a cell in the old footprint and not the new goes back to none (hole 0, month 0), only if it still holds the old plan's surface
  *   for this hole;
  * - a cell in the new footprint takes the new surface if it still holds the old plan's surface for this hole, or else if its
- *   surface is lower or equal ('below'); a cell whose surface stays and only joins the hole keeps its planted month;
+ *   surface is drawn lower or equal ('below', course-grid surfAbove); a cell whose surface stays and only joins the hole keeps its planted month;
  *   rough and fescue over the map grass are established at once (course-grid laidMonth: it is already grass);
  * - other holes' cells and the player's water, bunkers and waste never change.
  * A cell allow refuses is never changed. The old and new rasters (made without allow) may be passed in when the caller has them;
@@ -758,7 +759,7 @@ export function planChanges(
       if (ch !== 0 && ch !== hole) { skipped?.(i, 'hole', nv); continue; }
       if (playerSurf(cs)) continue;
       const holdsOld = ov !== 0 && ch === hole && cs === ov;
-      if (!holdsOld && cs > nv) continue;
+      if (!holdsOld && surfAbove(cs, nv)) continue;
       if (cs === nv && ch === hole) continue;
       const cm = gm[i]!;
       acc.push(i, cs, ch, cm, nv, hole, cs === nv ? cm : laidMonth(nv, cs, cm, month));

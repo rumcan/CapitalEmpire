@@ -1,0 +1,56 @@
+{
+  "schema": 1,
+  "material": "putting-green",
+  "zoom": "near",
+  "revision": "v1",
+  "decision": "pending-primary-appearance-review",
+  "reviewer": "/root/rough_export_resume",
+  "scope": "Saved-art inspection only, no runtime or owner approval",
+  "files": [
+    {
+      "file": "tile-01.png",
+      "sha256": "d10c9b85e4b88844e10744b13856b528a6945eda829b8e8d308159bb90a9318f"
+    },
+    {
+      "file": "tile-02.png",
+      "sha256": "2e94c9d4229fe31a28c195f656f3f67b8a880875cde9c30e984cc3d6f829e127"
+    },
+    {
+      "file": "tile-03.png",
+      "sha256": "22cdccfb1735d333e36fcd5fb50f010b9b7df7e2d221af92aa147604ae6c2ac2"
+    },
+    {
+      "file": "tile-04.png",
+      "sha256": "535da39cb352777ae7a99e0043618486a49c32da1995b4230c95d88c5174046a"
+    },
+    {
+      "file": "review/four-tiles-shuffled-screen.png",
+      "sha256": "3be2616c7504b842d27925be8192568a694888449549c10eabca7cba1157879c"
+    },
+    {
+      "file": "review/final-cross-native.png",
+      "sha256": "c5c283f3f406767dfeffbbe76a2984e2bf7ab892b68e4cb9a692f58f70152756"
+    },
+    {
+      "file": "review/final-tile03-left-native.png",
+      "sha256": "5d49adc098e6fcb08b5a096808b67f25d25a1f9b7286ba94c0e908163dbee999"
+    },
+    {
+      "file": "review/final-tile04-top-native.png",
+      "sha256": "a24cffbb2902dd348061488adc8683378604ac823be0e896a33d2629bdcaef28"
+    }
+  ],
+  "inspected": [
+    "screen-sized shuffled four-tile arrangement",
+    "native central cross",
+    "native tile03 left and tile04 top collar/interior"
+  ],
+  "findings": [
+    "Fine close-mown surface retained.",
+    "Macro directional gradient is very small and no conspicuous hard panel in inspected proof.",
+    "Primary acceptance still pending."
+  ],
+  "visualAccepted": false,
+  "liveGameIntegrated": false,
+  "illuminationReport": "output/putting-green-export/final-illumination-report.json"
+}

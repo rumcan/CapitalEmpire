@@ -5,16 +5,14 @@
  * relax calms staircase waves; the result is clipped per chunk into fill rings, edge polylines and collar rings.
  * Pure TS, no DOM. Units: tiles of 2 m for every input and output coordinate; cells of 1 m (0.5 tile) for radii and widths. */
 
-import { CELL_T, SURF, type Grid } from '../course-grid';
+import { CELL_T, SURF, SURF_ORDER, surfAbove, type Grid } from '../course-grid';
 
 // ---- the course grid (T072): origin (x0, y0) in tiles, w x h cells of CELL_T tiles, surf row-major (j * w + i, as cellAt) ----
 
 /** tiles per course-grid cell */
 const CELL = CELL_T;
-/** the surface ids this module names (course-grid's SURF, in draw order) */
-const { none: NONE, rough: ROUGH, fescue: FESCUE, water: WATER, fairway: FAIRWAY, tee: TEE, waste: WASTE, green: GREEN } = SURF;
-/** the number of surface ids (0..8) */
-const N_SURF = Object.keys(SURF).length;
+/** the surface ids this module names (course-grid's SURF; the draw order is SURF_ORDER) */
+const { none: NONE, rough: ROUGH, fescue: FESCUE, water: WATER, fairway: FAIRWAY, tee: TEE, waste: WASTE, green: GREEN, longGrass: LONG } = SURF;
 /** a window cell outside the grid (never claimed, never a collar) */
 const OUTSIDE = 255;
 
@@ -71,12 +69,13 @@ export const BLOB_STYLE: readonly BlobStyle[] = [
   /* none */ { close: 0, relax: 0 },
   /* rough */ { close: 2, relax: 1 },
   /* fescue */ { close: 2, relax: 1 },
-  /* water */ { close: 2, relax: 2, collar: { name: 'bank', width: 1, over: [NONE, ROUGH, FESCUE] } },
-  /* fairway */ { close: 2, relax: 2, collar: { name: 'first-cut', width: 2, over: [NONE, ROUGH, FESCUE] } },
-  /* tee */ { close: 0, relax: 2, collar: { name: 'first-cut', width: 1, over: [NONE, ROUGH, FESCUE] } },
-  /* bunker */ { close: 1, relax: 1, collar: { name: 'lip', width: 1, over: [NONE, ROUGH, FESCUE, FAIRWAY, TEE, WASTE, GREEN] } },
+  /* water */ { close: 2, relax: 2, collar: { name: 'bank', width: 1, over: [NONE, ROUGH, FESCUE, LONG] } },
+  /* fairway */ { close: 2, relax: 2, collar: { name: 'first-cut', width: 2, over: [NONE, ROUGH, FESCUE, LONG] } },
+  /* tee */ { close: 0, relax: 2, collar: { name: 'first-cut', width: 1, over: [NONE, ROUGH, FESCUE, LONG] } },
+  /* bunker */ { close: 1, relax: 1, collar: { name: 'lip', width: 1, over: [NONE, ROUGH, FESCUE, LONG, FAIRWAY, TEE, WASTE, GREEN] } },
   /* waste */ { close: 1, relax: 1 },
-  /* green */ { close: 1, relax: 2, collar: { name: 'fringe', width: 1, over: [NONE, ROUGH, FESCUE, FAIRWAY, TEE, WASTE] } },
+  /* green */ { close: 1, relax: 2, collar: { name: 'fringe', width: 1, over: [NONE, ROUGH, FESCUE, LONG, FAIRWAY, TEE, WASTE] } },
+  /* long grass (T238: the rough's old look, drawn between the rough and the fescue) */ { close: 2, relax: 1 },
 ];
 
 // ---- outputs ----
@@ -221,10 +220,10 @@ function erode(src: Uint8Array, cw: number, ch: number, r: number): Uint8Array {
 }
 
 /** whether a closing of surface s may lay it over a cell of surface t: any surface drawn above it (it hides the extra), a lower
- * surface only when it is flat ground (the map grass, rough, fescue, fairway), never a cell off the grid. So a fillet never covers
- * a pond, and a green's never eats into a bunker, a tee or waste (T099: each of those has its own height and its walls stand on
+ * surface only when it is flat ground (the map grass, rough, long grass, fescue, fairway), never a cell off the grid. So a fillet never
+ * covers a pond, and a green's never eats into a bunker, a tee or waste (T099: each of those has its own height and its walls stand on
  * its own outline) */
-function claimable(s: number, t: number): boolean { return t !== OUTSIDE && t !== s && (t > s || (t <= FAIRWAY && t !== WATER)); }
+function claimable(s: number, t: number): boolean { return t !== OUTSIDE && t !== s && (surfAbove(t, s) || (t !== WATER && !surfAbove(t, FAIRWAY))); }
 /** the droplet field of a cover at global cell coordinates (u, v) (u = (x - grid.x0) / 0.5): the point lies inside the outline
  * contoured from it where the field is at least ISO_T (course-walls reads the drawn layers this way) */
 export function coverField(c: CellCover, u: number, v: number): number { return fieldAt(c, u, v); }
@@ -779,7 +778,7 @@ function surfacesNear(g: Grid, box: BlobBox, pad: number): number[] {
   const seen = new Uint8Array(256);
   for (let j = j0; j <= j1; j++) { const row = j * g.w; for (let i = i0; i <= i1; i++) seen[g.surf[row + i]] = 1; }
   const out: number[] = [];
-  for (let s = 1; s < N_SURF; s++) if (seen[s]) out.push(s);
+  for (const s of SURF_ORDER) if (s && seen[s]) out.push(s);
   return out;
 }
 

@@ -28,9 +28,9 @@ export const COURSE_EDIT_REACH = courseEditReach();
 export const BORDER_MIN_M = 0.1, BORDER_MAX_M = 8;
 
 /** each surface id's edge profile (paint-edges.ts): greens and tees raised, fairways turf, bunkers sunken, water, the rest flat */
-export const SURF_EDGE: readonly EdgeProfile[] = ['flat', 'flat', 'flat', 'water', 'turf', 'raised', 'sunken', 'flat', 'raised'];
+export const SURF_EDGE: readonly EdgeProfile[] = ['flat', 'flat', 'flat', 'water', 'turf', 'raised', 'sunken', 'flat', 'raised', 'flat'];
 
-/** the textures a course chunk lays: per surface id (index 1..8; a missing one is not drawn) and per collar; with the course look's
+/** the textures a course chunk lays: per surface id (index 1..9; a missing one is not drawn) and per collar; with the course look's
  *  Border, Shadow and Height, all by surface id: each surface's collar band width in metres (the Border slider; a missing one keeps
  *  BLOB_STYLE's), the Shadow of its walls (0 none .. 1 strong; a missing one: course-walls defaultShadow, none for a green, else the
  *  hairline) and a tee's or green's height in metres (the Height slider, T127; a missing one: course-walls SURF_HEIGHT) */

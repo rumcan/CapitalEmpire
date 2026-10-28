@@ -30,8 +30,9 @@ import { PropsPanel } from './ui/course/PropsPanel';
 import { PracticePanel } from './ui/course/PracticePanel';
 import { MyLooksCard } from './ui/course/MyLooks';
 import { Rail } from './ui/Rail';
-import { RAIL, entryKey, pickEntry, railEntries, railItemOf, type RailItem, type RailTool } from './ui/rail-items';
+import { RAIL, drawerEntries, drawerOf, entryKey, pickEntry, railEntries, railItemOf, type RailItem, type RailTool } from './ui/rail-items';
 import { Flyouts } from './ui/Flyouts';
+import { TownFooter } from './ui/TownFooter';
 import { KeysSheet } from './ui/KeysSheet';
 import { keySheet, numberedGroups, type LabKeys } from './ui/keymap';
 import { indicesOf, leavesOf, menuOf, type MenuCtx, type MenuRow } from './ui/flyout-menu';
@@ -175,11 +176,14 @@ export default function App() {
   const activeRail = useRef<string | null>(null);
   /** T187: the entry last opened in each rail item (its entryKey: Town decoration's Props or its Buildings) */
   const lastEntry = useRef<Record<string, string>>({});
-  /** T193: the open flyouts (the rail item, the rows opened at first, whether the keyboard leads, the item's button's top in the rail's box) */
-  const [fly, setFly] = useState<{ item: string; path: number[]; keyboard: boolean; top: number } | null>(null);
+  /** T193: the open flyouts (the rail item, the rows opened at first, whether the keyboard leads, the item's button's top in the rail's box;
+   *  T250: a town footer item's, its button's left edge in the footer's box) */
+  const [fly, setFly] = useState<{ item: string; path: number[]; keyboard: boolean; top: number; left: number } | null>(null);
   /** T193: the leaf last picked in each rail item (its row keys and its labels: the tool panel's back arrow and breadcrumb) */
   const lastLeaf = useRef<Record<string, { keys: string[]; crumb: string[]; tool: Tool }>>({});
   const railRef = useRef<HTMLElement | null>(null), railBox = useRef<HTMLDivElement | null>(null);
+  /** T250 (#721): the town footer's bar and its box (the course drawer is railRef's) */
+  const footRef = useRef<HTMLElement | null>(null), footBox = useRef<HTMLDivElement | null>(null);
   /** Holes > More options > My looks (P23 decision 3): the surface style editor's card beside the Holes panel; Esc closes it first */
   const [looks, setLooks] = useState(false);
   const looksOpen = looks && game?.uiTool === 'course';
@@ -240,11 +244,20 @@ export default function App() {
   if (game && item) last.current[item.id] = game.uiTool;
   /** T193: a rail item's flyout rows (none: Select and Bulldoze, a click picks their tool) */
   const menuFor = (r: RailItem): MenuRow[] => (game ? menuOf(r, menuCtx(game)) : []);
-  /** T193: opens a rail item's flyout beside its button */
+  /** T193: opens a rail item's flyout beside its button (T250: a town footer item's above its button) */
   const openFly = (r: RailItem, el: HTMLElement | undefined, keyboard: boolean, path: number[] = []) => {
-    const box = railBox.current, s = currentUiScale() || 1, top = el && box ? (el.getBoundingClientRect().top - box.getBoundingClientRect().top) / s : 0;
-    setFly({ item: r.id, path, keyboard, top: Math.max(0, Math.round(top)) });
+    const s = currentUiScale() || 1;
+    if (drawerOf(r) === 'footer') {
+      const box = footBox.current, left = el && box ? (el.getBoundingClientRect().left - box.getBoundingClientRect().left) / s : 0;
+      setFly({ item: r.id, path, keyboard, top: 0, left: Math.max(0, Math.round(left)) }); return;
+    }
+    const box = railBox.current, top = el && box ? (el.getBoundingClientRect().top - box.getBoundingClientRect().top) / s : 0;
+    setFly({ item: r.id, path, keyboard, top: Math.max(0, Math.round(top)), left: 0 });
   };
+  /** T250: a group's button, in whichever drawer holds it */
+  const railButton = (id: string): HTMLElement | undefined => (railRef.current?.querySelector<HTMLElement>(`[data-rail="${id}"]`) ?? footRef.current?.querySelector<HTMLElement>(`[data-rail="${id}"]`)) ?? undefined;
+  /** T250: the side drawer's flyouts are open (the tool panel beside it makes way; the town footer's open above it and leave it be) */
+  const sideFly = !!fly && drawerOf(RAIL.find(x => x.id === fly.item) ?? RAIL[0]!) === 'side';
   /** T202: Help › Keys for the engine (the lot lab's ? and its button open it) */
   if (game) game.keysSheet = { open: () => helpOpen.current, show: on => { helpOpen.current = on; setHelpTab('keys'); setHelp(on); } };
   /** T202: the number keys (engine.ts keyDown, tool-modes.ts numberKeyUse): the nth rail group after Select opens its flyout, the keyboard
@@ -253,7 +266,7 @@ export default function App() {
     const r = numberedGroups(game.golfMode, !!game.range.scene)[n - 1]; if (!r) return;
     const e = railEntries(game.toolUi(), game.golfMode, game.uiTool, { range: !!game.range.scene }).find(x => x.item.id === r.id);
     if (e?.locked) { game.toast(`${r.label}: ${e.locked}`); return; }
-    const el = railRef.current?.querySelector<HTMLElement>(`[data-rail="${r.id}"]`) ?? undefined;
+    const el = railButton(r.id);
     if (menuFor(r).length) { if (fly?.item === r.id) setFly(null); else openFly(r, el, true); return; }
     setFly(null); activeRail.current = r.id; const t = pickEntry(r, game.golfMode, game.toolUi(), null); if (t) openEntry(r.id, t);
   };
@@ -553,32 +566,44 @@ export default function App() {
           </div>
 
           {/* T174: the box round the rail and the panel takes no clicks itself (it is as tall as the rail, so it covered the map under a short panel) */}
-          <div ref={railBox} className={`pointer-events-none absolute left-3 top-[var(--hud-top,5.75rem)] ${fly ? 'z-40' : 'z-20'} flex items-start gap-2 [&>*]:pointer-events-auto`}>
-            {/* P23 P1-E: the same places from minute zero; a tool not open yet stays dimmed in place with what unlocks it, a new one says NEW */}
-            {/* T182: the groups (Driving range, Course, Facilities (T206) · Traffic, Town decoration); the range opens its card; a group opens its last tool, else its first open one */}
-            {/* T193: a group opens its flyout (a click again, Esc or a click on the map closes it); Select and Bulldoze pick their tool */}
-            <Rail navRef={railRef} open={fly?.item ?? null} entries={railEntries(ui, game.golfMode, game.uiTool, { active: item?.id, range: !!game.range.scene, rangeOpen: game.range.cardOpen })}
-              onPick={(r, keyboard, el) => {
+          {(() => {
+            // T250 (#721): the rail split in two: the course drawer on the left (Select, the COURSE groups, Bulldoze) and the town footer along
+            // the bottom (the TOWN groups); the same groups, states and keys, one handler for both
+            const entries = railEntries(ui, game.golfMode, game.uiTool, { active: item?.id, range: !!game.range.scene, rangeOpen: game.range.cardOpen });
+            const rail = {
+              open: fly?.item ?? null,
+              onPick: (r: RailItem, keyboard?: boolean, el?: HTMLElement) => {
                 if (menuFor(r).length) { if (fly?.item === r.id) setFly(null); else openFly(r, el, !!keyboard); return; }
                 setFly(null);
                 activeRail.current = r.id;
                 if (game.range.cardOpen) game.openRangeCard(false);
                 const e = pickEntry(r, game.golfMode, ui, lastEntry.current[r.id] ?? last.current[r.id]);
                 if (e) openEntry(r.id, e); else game.toast(`${r.label}: nothing open here yet`);
-              }}
-              onHover={(r, el) => { if (fly && fly.item !== r.id && menuFor(r).length) openFly(r, el, false); }}
-              onLocked={(r, why) => game.toast(`${r.label}: ${why}`)} />
-            {fly && (() => { const r = RAIL.find(x => x.id === fly.item), rows = r ? menuFor(r) : []; return rows.length ? (
-              <Flyouts key={fly.item} rows={rows} top={fly.top} left={(railRef.current?.offsetWidth ?? 96) + 8} startPath={fly.path} keyboard={fly.keyboard} railRef={railRef}
+              },
+              onHover: (r: RailItem, el: HTMLElement) => { if (fly && fly.item !== r.id && menuFor(r).length) openFly(r, el, false); },
+              onLocked: (r: RailItem, why: string) => game.toast(`${r.label}: ${why}`),
+            };
+            const flyR = fly ? RAIL.find(x => x.id === fly.item) : undefined, flyRows = flyR ? menuFor(flyR) : [], up = !!flyR && drawerOf(flyR) === 'footer';
+            const flyouts = fly && flyRows.length ? (
+              <Flyouts key={fly.item} rows={flyRows} top={fly.top} left={up ? fly.left : (railRef.current?.offsetWidth ?? 96) + 8} up={up} startPath={fly.path} keyboard={fly.keyboard} railRefs={[railRef, footRef]}
                 onLeaf={pickLeaf} onLocked={row => game.toast(`${row.label}: ${row.why}`)} onClose={() => setFly(null)} />
-            ) : null; })()}
-            <div className={`glass tool-panel w-[330px] max-h-[calc(var(--vh-ui,100vh)-var(--hud-top,5.75rem)-8.25rem)] overflow-y-auto overflow-x-hidden p-3 ${fly ? 'hidden' : ''}`} data-tool={game.uiTool} data-testid="tool-panel">
+            ) : null;
+            return <>
+          {/* T250: the town footer: the TOWN groups, centred along the bottom clear of the minimap and the bottom cards; its flyouts open upward */}
+          <TownFooter {...rail} entries={drawerEntries(entries, 'footer')} boxRef={footBox} navRef={footRef} flyouts={up ? flyouts : null} raised={up} />
+          <div ref={railBox} className={`pointer-events-none absolute left-3 top-[var(--hud-top,5.75rem)] ${sideFly ? 'z-40' : 'z-20'} flex items-start gap-2 [&>*]:pointer-events-auto`}>
+            {/* P23 P1-E: the same places from minute zero; a tool not open yet stays dimmed in place with what unlocks it, a new one says NEW */}
+            {/* T182: the groups (Driving range, Course, Facilities (T206) · Traffic, Town decoration); the range opens its card; a group opens its last tool, else its first open one */}
+            {/* T193: a group opens its flyout (a click again, Esc or a click on the map closes it); Select and Bulldoze pick their tool */}
+            <Rail {...rail} navRef={railRef} entries={drawerEntries(entries, 'side')} />
+            {!up && flyouts}
+            <div className={`glass tool-panel w-[330px] max-h-[calc(var(--vh-ui,100vh)-var(--hud-top,5.75rem)-8.25rem)] overflow-y-auto overflow-x-hidden p-3 ${sideFly || (game.tool === 'select' && !game.landMode && !game.selected) ? 'hidden' : ''}`} data-tool={game.uiTool} data-testid="tool-panel">
               {/* T193: the tool's place in its menus (its leaf's path) and a back arrow that reopens its flyout there; the group's tools are no
                   longer stacked here: they are in the flyouts */}
               {item && game.uiTool !== 'select' && menuFor(item).length > 0 && (
                 <div className="tool-crumb" data-testid="tool-crumb">
                   <button className="btn-icon tool-back" aria-label={`Back to the ${item.label} menu`} data-tip={`Back to the ${item.label} menu`}
-                    onClick={e => { const rows = menuFor(item), l = lastLeaf.current[item.id], el = railRef.current?.querySelector<HTMLElement>(`[data-rail="${item.id}"]`) ?? undefined; openFly(item, el, e.detail === 0, l ? indicesOf(rows, l.keys.slice(0, -1)) : []); }}>
+                    onClick={e => { const rows = menuFor(item), l = lastLeaf.current[item.id], el = railButton(item.id); openFly(item, el, e.detail === 0, l ? indicesOf(rows, l.keys.slice(0, -1)) : []); }}>
                     <Icon name="left" size={16} />
                   </button>
                   <span className="tool-crumb-text">{[item.label, ...(lastLeaf.current[item.id]?.tool === game.uiTool ? lastLeaf.current[item.id]!.crumb : [])].join(' › ')}</span>
@@ -617,12 +642,14 @@ export default function App() {
             </div>
             {looksOpen && <MyLooksCard game={game} onClose={() => setLooks(false)} />}
           </div>
+            </>;
+          })()}
 
           {/* the hint bar, centred in the lane between the minimap's town chip and the stats card. Golf mode (T035): the first-run hint, with its Got it;
               and while a course surface is armed (T118), always the Course pill: what a click lays (the surface's disc and mark, the hole it joins, the
-              price a cell, the state's words) and how to switch or stop; no bar without either */}
+              price a cell, the state's words) and how to switch or stop; no bar without either. T250: it stands above the town footer (--foot-top) */}
           {(!gv || hint || courseHint || (game.tool === 'practice' && game.practice.kind)) && (
-          <div className="pointer-events-none absolute bottom-3 left-[24.5rem] right-[15.5rem] z-20 flex flex-col items-center gap-1.5">
+          <div className="pointer-events-none absolute bottom-[calc(var(--foot-top,0px)+0.5rem)] left-[24.5rem] right-[15.5rem] z-20 flex flex-col items-center gap-1.5">
             {(!gv || hint) && (
             <div className={`flex items-center gap-2 glass rounded-full! px-4 py-1.5 text-xs ${gv ? 'pointer-events-auto' : ''}`}>
               <Icon name="info" size={18} />
@@ -1463,7 +1490,7 @@ function BizCard({ game, b, free }: { game: Game; b: BusinessType; free: boolean
       })}
       {open && (b.family === 'tourism' || b.id === 'casino') && <TouristLine game={game} />}
       {!open && <p className="mt-1 text-amber-200">{unlockText(b, game.ownedBiz())}</p>}
-      {open && under && <button className="btn mt-2" onClick={() => game.selectBizType(b.id)}>{sel ? 'Selected' : 'Build'}</button>}
+      {open && under && <button className="btn-gold mt-2" onClick={() => game.selectBizType(b.id)}>{sel ? 'Selected' : 'Build'}</button>}
       {open && under && sel && <p className="mt-1 text-amber-200">Click open land to build it · R rotates</p>}
     </div>
   );
@@ -1828,7 +1855,7 @@ function hintFor(g: Game) {
       const h = g.laneHover, up = g.tool === 'lane', head = up ? 'UPGRADE' : 'DOWNGRADE', rev = ' · Right-click a one-way road to reverse it';
       if (!h || !h.segs.length) return `${head} — hover a straight road: its run lights up; click to take it one size ${up ? 'up (you pay the difference)' : 'down (the difference is refunded)'}` + rev;
       return (h.why || `${head} — click to make this ${h.segs.length > 1 ? 'run' : 'road'} ${h.to!.name.toLowerCase()} ${h.cost < 0 ? `(refund ${money(-h.cost)})` : `for ${money(h.cost + h.comp)}${h.comp ? ` (${money(h.comp)} compensation for the buildings its ring clears)` : ''}`}`) + rev; }
-    case 'course': { const q = g.paint, ch = g.courseHint(); return q.mode === 'brush' ? `${ch ? `${ch} ·` : `COURSE (hole ${q.brushHole}, ${q.brushKind}):`} drag to paint · Alt-drag erases · [ ] size · 1–7 surfaces · Ctrl+Z undo` : q.mode === 'draw' ? `COURSE (hole ${q.brushHole}, ${q.brushKind} shape): click corners, double-click or Enter closes · Esc back to the brush · Ctrl+Z undo` : q.mode === 'hole' ? `COURSE: click to place ${q.holeSlot ? 'preset ' + q.holeSlot : 'a generated hole'} · R turns · Esc back to the brush` : q.mode === 'plant' ? `COURSE (plants: ${q.plantBrush}): drag to plant · Alt-drag removes what these brushes planted · [ ] size` : 'COURSE: pick a surface (1–7) to paint'; }
+    case 'course': { const q = g.paint, ch = g.courseHint(); return q.mode === 'brush' ? `${ch ? `${ch} ·` : `COURSE (hole ${q.brushHole}, ${q.brushKind}):`} drag to paint · Alt-drag erases · [ ] size · 1–9 surfaces · Ctrl+Z undo` : q.mode === 'draw' ? `COURSE (hole ${q.brushHole}, ${q.brushKind} shape): click corners, double-click or Enter closes · Esc back to the brush · Ctrl+Z undo` : q.mode === 'hole' ? `COURSE: click to place ${q.holeSlot ? 'preset ' + q.holeSlot : 'a generated hole'} · R turns · Esc back to the brush` : q.mode === 'plant' ? `COURSE (plants: ${q.plantBrush}): drag to plant · Alt-drag removes what these brushes planted · [ ] size` : 'COURSE: pick a surface (1–7) to paint'; }
     case 'bulldoze': return 'Click objects or roads to remove them (roads refund their value)';
     case 'paint': return g.paint.mode === 'draw' ? (g.paint.pts.length ? `PAINT: ${g.paint.pts.length / 2} corner(s) — click the first corner, double-click or Enter to close · Backspace undoes · Esc cancels` : 'PAINT: click the corners of a shape, or press and drag to paint an outline freehand · Tab: Draw, Pick, Erase') : g.paint.mode === 'pick' ? 'PAINT: click an area to pick it and change its look · Page Up / Down moves it over / under (Shift: to the front / back) · Delete removes it · Esc: back to Draw · Tab: the next mode' : g.paint.mode === 'hole' ? 'GOLF HOLE: click to place (tee at the click) · R turns · Esc back to Draw' : g.paint.mode === 'brush' ? `BRUSH (${g.paint.brushKind}, hole ${g.paint.brushHole}): drag to paint · Alt-drag erases · [ ] size · Esc back to Draw` : g.paint.mode === 'plant' ? `PLANT (${g.paint.plantBrush}): drag to plant · Alt-drag removes what these brushes planted · [ ] size · Esc back to Draw` : 'PAINT: click an area to erase it';
     case 'select': return g.hoverRoad ? `${g.hoverRoad} · Drag to pan · scroll to zoom · WASD / arrows move the camera · R roads · J junctions · X bulldoze` : 'Drag to pan · scroll to zoom · WASD / arrows move the camera · R roads · J junctions · X bulldoze';

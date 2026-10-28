@@ -1,0 +1,125 @@
+{
+  "schema": 1,
+  "reviewedDate": "2026-10-27",
+  "reviewer": "/root",
+  "recordedBy": "/root/art_export_resume",
+  "material": "putting-green",
+  "zoom": "mid",
+  "revision": "mid-v2",
+  "decision": "accepted-for-art-appearance",
+  "activeVariants": 4,
+  "scope": "Primary inspected all six selected saved-PNG shuffled four-tile proofs and native crosses, plus native collar evidence. Saved-art approval only; no owner signoff or game/studio integration claim.",
+  "materialIdentity": "Very short smooth fine pale-to-medium green putting turf, finer/shorter than fairway; no course objects.",
+  "lighting": "Even overall exposure, with upper-right illumination expressed in local painted turf strokes only. No broad upper-right bright region/lower-left dark region or edge frame in the inspected proofs.",
+  "adjacency": "No old hard cross, conspicuous rectangular/jigsaw brush-grain transition or lighting frame in inspected shuffled/native evidence. Soft natural local painted variation remains.",
+  "nativeCuts": "Native pixel-selection boundaries may remain locally traceable under arbitrary enlargement; no unlimited-zoom invisibility claim.",
+  "objectRemoval": "No retained building, road, tree, UI/text, cast scene shadow or magenta annotation seen in inspected final artwork.",
+  "files": [
+    {
+      "file": "tile-01.png",
+      "sha256": "71c331f1f72d54a22f7b303679000ff68b517028aaafc1b13a5687505ec67da0",
+      "dimensions": [
+        1744,
+        900
+      ],
+      "bytes": 3659015
+    },
+    {
+      "file": "tile-02.png",
+      "sha256": "e7a30ebea923b053be835575256402fb404180aca7d97fc79a20e1cfbdfa0a70",
+      "dimensions": [
+        1744,
+        900
+      ],
+      "bytes": 3815283
+    },
+    {
+      "file": "tile-03.png",
+      "sha256": "b0bcfd8890287495c58614a115a5cd54d48d9d9f22b858bd2aea2259078ab9fb",
+      "dimensions": [
+        1744,
+        900
+      ],
+      "bytes": 3667138
+    },
+    {
+      "file": "tile-04.png",
+      "sha256": "3393088ba27e35eecdd2361ac5b9645d378f7d6a32a648e037fb117184c4e016",
+      "dimensions": [
+        1744,
+        900
+      ],
+      "bytes": 3686582
+    }
+  ],
+  "evidence": [
+    {
+      "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/mid-v2/review/four-tiles-shuffled-screen.png",
+      "sha256": "6010f25f31ba772b7980ce190dd80b84592cc594c5fc368d78bc1cdca68c9f7f",
+      "bytes": 3242235,
+      "nativePixels": [
+        1742,
+        899
+      ]
+    },
+    {
+      "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/mid-v2/review/four-tiles-shuffled-native.png",
+      "sha256": "6b5f439b4e67d1a96f8e875bb1cbe6ff8e3a31fdf6ace9a8d7951fe0f93a55c5",
+      "bytes": 12826783,
+      "nativePixels": [
+        3488,
+        1800
+      ]
+    },
+    {
+      "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/mid-v2/review/two-tiles-horizontal-native.png",
+      "sha256": "7b973c16c0371573c5cce7c0bfe44bb1841a6bb2f4316ba6b05097dd2a54aaca",
+      "bytes": 6265090,
+      "nativePixels": [
+        3488,
+        900
+      ]
+    },
+    {
+      "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/mid-v2/review/two-tiles-vertical-native.png",
+      "sha256": "4a4e36ad051ff8a0f01775bae484b32ebf97d116b6a4b912c2bc2831a7c65c0b",
+      "bytes": 7480528,
+      "nativePixels": [
+        1744,
+        1800
+      ]
+    },
+    {
+      "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/mid-v2/review/final-cross-native.png",
+      "sha256": "fc9b2719cbb106a88e267e3cf85885670860524d88890210853164052fd39478",
+      "bytes": 751239,
+      "nativePixels": [
+        700,
+        460
+      ]
+    },
+    {
+      "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/mid-v2/review/final-tile03-left-native.png",
+      "sha256": "fcaab5e5053276a074371ea28086a0202d1bea4b0100f68d48828f0f342a5f1b",
+      "bytes": 342788,
+      "nativePixels": [
+        360,
+        400
+      ]
+    },
+    {
+      "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/mid-v2/review/final-tile04-top-native.png",
+      "sha256": "fa3bce5c1fac42409bc3d3d3f727ad065d5cf1688f0c6450ed22a369fa7a8335",
+      "bytes": 314896,
+      "nativePixels": [
+        560,
+        240
+      ]
+    }
+  ],
+  "limits": [
+    "Saved-art acceptance is separate from runtime mapping, live scale/coverage and owner approval.",
+    "Preserve separately owner-selected image bands and gameplay mappings; do not automatically replace them with this canonical selection.",
+    "No runtime interior material blend, rotation, mirror or flip."
+  ]
+}

@@ -1,0 +1,833 @@
+{
+  "schema": 1,
+  "id": "painted:putting-green",
+  "materialId": "painted:putting-green",
+  "material": "putting-green",
+  "date": "2026-10-27",
+  "versionedSelection": "art/theme-consistency/generated/ground/eight-tiles/putting-green/selection-uniform-v2.json",
+  "canonicalSelection": "art/theme-consistency/generated/ground/eight-tiles/putting-green/canonicalselection.json",
+  "status": "three-authored-sets-independent-art-appearance-passed",
+  "acceptanceScope": "Hash-bound primary saved-art visual review only; not owner signoff or live game/studio integration",
+  "materialMeaning": "Very short smooth fine pale-to-medium green putting turf, finer/shorter than fairway; no course objects.",
+  "light": "Upper-right local painted stroke highlights toward lower-left; even whole-field ambient exposure",
+  "displayContract": {
+    "minVisibleTiles": 2,
+    "maxVisibleTiles": 4,
+    "switchBeforeExceeding": 4,
+    "primaryVariantsPerSet": 4,
+    "allowFlip": false,
+    "allowMirror": false,
+    "allowRotate": false
+  },
+  "detailRelationship": "Three independently authored camera-detail paintings; not mips, resized copies or matching geography",
+  "materialLayer": {
+    "separate": true,
+    "runtimeBlending": false,
+    "runtimeRandomisation": false
+  },
+  "runtimeIntegrated": false,
+  "runtimeMappingAuthority": "Preserve separately owner-selected artwork and any existing gameplay material choices. This handoff publishes accepted generated art, not authority to replace owner bands or reinterpret fringe as first-cut rough.",
+  "sets": {
+    "near": {
+      "folder": "art/theme-consistency/generated/ground/eight-tiles/putting-green/near-v1",
+      "nativePixels": [
+        1742,
+        902
+      ],
+      "revision": "near-v1",
+      "status": "accepted-for-art-appearance",
+      "primaryTileIds": [
+        "tile-01",
+        "tile-02",
+        "tile-03",
+        "tile-04"
+      ],
+      "primaryTiles": [
+        {
+          "id": "tile-01",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/near-v1/tile-01.png",
+          "sha256": "d10c9b85e4b88844e10744b13856b528a6945eda829b8e8d308159bb90a9318f",
+          "bytes": 3626292,
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1742,
+            "height": 902
+          },
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/near-v1/tile-01-v1.raw.png",
+            "sha256": "5061034cbd044cbcbba5f4fdb21bb2863ff3c2cc30b35cf3108ab5063a9b820b",
+            "bytes": 2642620,
+            "nativePixels": [
+              1743,
+              902
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/near-v1/tile-01-v1.provenance.json",
+              "sha256": "dc126b26f662adcfdb562cd4de135ce917b0cc04cdd68489f6a4c548a6154ecb",
+              "bytes": 2513
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/near-v1/tile-01-v1.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/putting-green/near-v1/tile-01.cut-paths.json"
+        },
+        {
+          "id": "tile-02",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/near-v1/tile-02.png",
+          "sha256": "2e94c9d4229fe31a28c195f656f3f67b8a880875cde9c30e984cc3d6f829e127",
+          "bytes": 3632818,
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1742,
+            "height": 902
+          },
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/near-v1/tile-02-v1.raw.png",
+            "sha256": "113357acb3b4707da618c6c072cffaf568380bd13d41dc39cadd8594e052f036",
+            "bytes": 2661918,
+            "nativePixels": [
+              1743,
+              902
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/near-v1/tile-02-v1.provenance.json",
+              "sha256": "fb8087dd5e46a32cc8fcb7d50d691e6f7c677fcf1aa63a278e9d88aa63ef2ac6",
+              "bytes": 2513
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/near-v1/tile-02-v1.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/putting-green/near-v1/tile-02.cut-paths.json"
+        },
+        {
+          "id": "tile-03",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/near-v1/tile-03.png",
+          "sha256": "22cdccfb1735d333e36fcd5fb50f010b9b7df7e2d221af92aa147604ae6c2ac2",
+          "bytes": 3695914,
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1742,
+            "height": 902
+          },
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/near-v1/tile-03-v1.raw.png",
+            "sha256": "68056437e788129e1cad9c8f5fa62eba85463ccfbb6f227523a42f679720e8ec",
+            "bytes": 2706188,
+            "nativePixels": [
+              1743,
+              902
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/near-v1/tile-03-v1.provenance.json",
+              "sha256": "0a8e9ce99281fec6d05e8bc9a5be98144c57c98821b73e18ef100a8a4726e32d",
+              "bytes": 2513
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/near-v1/tile-03-v1.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/putting-green/near-v1/tile-03.cut-paths.json"
+        },
+        {
+          "id": "tile-04",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/near-v1/tile-04.png",
+          "sha256": "535da39cb352777ae7a99e0043618486a49c32da1995b4230c95d88c5174046a",
+          "bytes": 3583868,
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1742,
+            "height": 902
+          },
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/near-v1/tile-04-v1.raw.png",
+            "sha256": "15505b35d2c02f6898c17da9245fb1cd9aaea28dc0f9cdd1dc1e6a03176141bb",
+            "bytes": 2563983,
+            "nativePixels": [
+              1743,
+              902
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/near-v1/tile-04-v1.provenance.json",
+              "sha256": "9ecad1d683e081dfd9f543ba9799c5ce20225a503eb225207e17be361c5c2537",
+              "bytes": 2513
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/near-v1/tile-04-v1.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/putting-green/near-v1/tile-04.cut-paths.json"
+        }
+      ],
+      "visualDecision": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/near-v1/review/appearance-decision.json",
+        "sha256": "901b7380a704b8f2a4f9a5740a344a534bab889ea7f62057a2b0aeebcc87a5de",
+        "bytes": 4617
+      },
+      "sourceManifest": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/near-v1/manifest-v1.json",
+        "sha256": "7d5de0d4c9092193743348eebf6cb1db934cf16066b92064b0d33e623ab5b4f2",
+        "bytes": 2825
+      },
+      "exportReport": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/near-v1/export-report.json",
+        "sha256": "d0703b99e43426193e030085fb6c79faa16d796c3ac64cbda045d2908c60c763",
+        "bytes": 11116
+      },
+      "proofs": [
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/near-v1/review/four-tiles-shuffled-screen.png",
+          "sha256": "3be2616c7504b842d27925be8192568a694888449549c10eabca7cba1157879c",
+          "bytes": 3148170,
+          "nativePixels": [
+            1742,
+            902
+          ]
+        },
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/near-v1/review/four-tiles-shuffled-native.png",
+          "sha256": "c86f4f6e567a5f45cefedba8fa43447608e1ae40f241a2185c400f83557fd32e",
+          "bytes": 12608373,
+          "nativePixels": [
+            3484,
+            1804
+          ]
+        },
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/near-v1/review/two-tiles-horizontal-native.png",
+          "sha256": "d682f48cbbe965d24a343174ba9b636bdc77e73a3cd2d335784279ba84df9375",
+          "bytes": 6065406,
+          "nativePixels": [
+            3484,
+            902
+          ]
+        },
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/near-v1/review/two-tiles-vertical-native.png",
+          "sha256": "c2be025905781932db97cee7ccd5cfa57e8fa0f952624240ef171c26f7ab0d4b",
+          "bytes": 7326881,
+          "nativePixels": [
+            1742,
+            1804
+          ]
+        },
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/near-v1/review/final-cross-native.png",
+          "sha256": "c5c283f3f406767dfeffbbe76a2984e2bf7ab892b68e4cb9a692f58f70152756",
+          "bytes": 748505,
+          "nativePixels": [
+            700,
+            460
+          ]
+        },
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/near-v1/review/final-tile03-left-native.png",
+          "sha256": "5d49adc098e6fcb08b5a096808b67f25d25a1f9b7286ba94c0e908163dbee999",
+          "bytes": 342573,
+          "nativePixels": [
+            360,
+            400
+          ]
+        },
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/near-v1/review/final-tile04-top-native.png",
+          "sha256": "a24cffbb2902dd348061488adc8683378604ac823be0e896a33d2629bdcaef28",
+          "bytes": 308330,
+          "nativePixels": [
+            560,
+            240
+          ]
+        }
+      ],
+      "sharedRepairs": {
+        "northSouth": {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/near-v1/full-north-south-repair-v1.raw.png",
+          "sha256": "a56888e3de1deeaa7cc6e4711515ef3b74c25ee678eb707b8f20930a38338c8d",
+          "bytes": 2497160,
+          "nativePixels": [
+            1743,
+            902
+          ],
+          "provenance": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/near-v1/full-north-south-repair-v1.provenance.json",
+            "sha256": "59246ac6e2ebd6a765d1f1e7a537b78ab13c79ef444798a356a794f47e19a945",
+            "bytes": 2563
+          }
+        },
+        "westEast": {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/near-v1/full-west-east-repair-v1.raw.png",
+          "sha256": "b53e607be59a4d23f60a467b207bd38e2aef3d62136a89d1096225c38f1f1262",
+          "bytes": 2433336,
+          "nativePixels": [
+            1742,
+            903
+          ],
+          "provenance": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/near-v1/full-west-east-repair-v1.provenance.json",
+            "sha256": "da7dcadb909c84175aba2258035bdc3a373fe6b2c21a4c5097bf2991b8284666",
+            "bytes": 2553
+          }
+        }
+      }
+    },
+    "mid": {
+      "folder": "art/theme-consistency/generated/ground/eight-tiles/putting-green/mid-v2",
+      "nativePixels": [
+        1744,
+        900
+      ],
+      "revision": "mid-v2",
+      "status": "accepted-for-art-appearance",
+      "primaryTileIds": [
+        "tile-01",
+        "tile-02",
+        "tile-03",
+        "tile-04"
+      ],
+      "primaryTiles": [
+        {
+          "id": "tile-01",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/mid-v2/tile-01.png",
+          "sha256": "71c331f1f72d54a22f7b303679000ff68b517028aaafc1b13a5687505ec67da0",
+          "bytes": 3659015,
+          "nativePixels": [
+            1744,
+            900
+          ],
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1744,
+            "height": 900
+          },
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/mid-v2/tile-01-v2.raw.png",
+            "sha256": "aa3f5ef1d96b7e3d2d86fe8373d0176f961525d9bc2d3b8d8d76ce505f2ceb50",
+            "bytes": 2384342,
+            "nativePixels": [
+              1744,
+              901
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/mid-v2/tile-01-v2.provenance.json",
+              "sha256": "bd46e285cae50d7b8f9d1bcb11695382226ab469eabfa350578c05b69d072dc7",
+              "bytes": 2514
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/mid-v2/tile-01-v2.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/putting-green/mid-v2/tile-01.cut-paths.json"
+        },
+        {
+          "id": "tile-02",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/mid-v2/tile-02.png",
+          "sha256": "e7a30ebea923b053be835575256402fb404180aca7d97fc79a20e1cfbdfa0a70",
+          "bytes": 3815283,
+          "nativePixels": [
+            1744,
+            900
+          ],
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1744,
+            "height": 900
+          },
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/mid-v2/tile-02-v2.raw.png",
+            "sha256": "e3c92a2c850e69540c78990b274644b594da0c0027bc67b1e95fd656ff2c41a3",
+            "bytes": 2513297,
+            "nativePixels": [
+              1744,
+              902
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/mid-v2/tile-02-v2.provenance.json",
+              "sha256": "b0797f8acf5a29775592825441742874a17f7bf3c361313d375c0001ac13824e",
+              "bytes": 2514
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/mid-v2/tile-02-v2.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/putting-green/mid-v2/tile-02.cut-paths.json"
+        },
+        {
+          "id": "tile-03",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/mid-v2/tile-03.png",
+          "sha256": "b0bcfd8890287495c58614a115a5cd54d48d9d9f22b858bd2aea2259078ab9fb",
+          "bytes": 3667138,
+          "nativePixels": [
+            1744,
+            900
+          ],
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1744,
+            "height": 900
+          },
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/mid-v2/tile-03-v2.raw.png",
+            "sha256": "56bd3cdc49d08bd8244bc7caadd5d23de66a0a4c0cc15bba1f2ecfb9a9959f37",
+            "bytes": 2431927,
+            "nativePixels": [
+              1744,
+              902
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/mid-v2/tile-03-v2.provenance.json",
+              "sha256": "c71184a94a2490baeac7083aead4dc9c54c1d527df815920d74e840d2f38a4d0",
+              "bytes": 2514
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/mid-v2/tile-03-v2.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/putting-green/mid-v2/tile-03.cut-paths.json"
+        },
+        {
+          "id": "tile-04",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/mid-v2/tile-04.png",
+          "sha256": "3393088ba27e35eecdd2361ac5b9645d378f7d6a32a648e037fb117184c4e016",
+          "bytes": 3686582,
+          "nativePixels": [
+            1744,
+            900
+          ],
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1744,
+            "height": 900
+          },
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/mid-v2/tile-04-v2.raw.png",
+            "sha256": "bf40f55743a362f0bc3edaaac62e82bb61468ee6e3f4470740c4dfdd23d443c2",
+            "bytes": 2405617,
+            "nativePixels": [
+              1744,
+              902
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/mid-v2/tile-04-v2.provenance.json",
+              "sha256": "96120060ce6252d3c6fcfe7de486d5e82d7180cefcfac51ee2951b9b75cdf760",
+              "bytes": 2514
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/mid-v2/tile-04-v2.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/putting-green/mid-v2/tile-04.cut-paths.json"
+        }
+      ],
+      "visualDecision": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/mid-v2/review/appearance-decision.json",
+        "sha256": "aafb942e8ebe611e398905ac661b9cd2ddb904b627bcef0332f8dcaf736ba319",
+        "bytes": 4608
+      },
+      "sourceManifest": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/mid-v2/manifest-v2.json",
+        "sha256": "0ea82a557377d41848b21e794f8241e9328366cacc4393635a3d4e8c429d50ed",
+        "bytes": 4809
+      },
+      "exportReport": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/mid-v2/export-report.json",
+        "sha256": "d6b6b40a1edeac9879e46e3e9a4023d6eac78be3b9ee84101322a3c8e77386d6",
+        "bytes": 11079
+      },
+      "proofs": [
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/mid-v2/review/four-tiles-shuffled-screen.png",
+          "sha256": "6010f25f31ba772b7980ce190dd80b84592cc594c5fc368d78bc1cdca68c9f7f",
+          "bytes": 3242235,
+          "nativePixels": [
+            1742,
+            899
+          ]
+        },
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/mid-v2/review/four-tiles-shuffled-native.png",
+          "sha256": "6b5f439b4e67d1a96f8e875bb1cbe6ff8e3a31fdf6ace9a8d7951fe0f93a55c5",
+          "bytes": 12826783,
+          "nativePixels": [
+            3488,
+            1800
+          ]
+        },
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/mid-v2/review/two-tiles-horizontal-native.png",
+          "sha256": "7b973c16c0371573c5cce7c0bfe44bb1841a6bb2f4316ba6b05097dd2a54aaca",
+          "bytes": 6265090,
+          "nativePixels": [
+            3488,
+            900
+          ]
+        },
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/mid-v2/review/two-tiles-vertical-native.png",
+          "sha256": "4a4e36ad051ff8a0f01775bae484b32ebf97d116b6a4b912c2bc2831a7c65c0b",
+          "bytes": 7480528,
+          "nativePixels": [
+            1744,
+            1800
+          ]
+        },
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/mid-v2/review/final-cross-native.png",
+          "sha256": "fc9b2719cbb106a88e267e3cf85885670860524d88890210853164052fd39478",
+          "bytes": 751239,
+          "nativePixels": [
+            700,
+            460
+          ]
+        },
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/mid-v2/review/final-tile03-left-native.png",
+          "sha256": "fcaab5e5053276a074371ea28086a0202d1bea4b0100f68d48828f0f342a5f1b",
+          "bytes": 342788,
+          "nativePixels": [
+            360,
+            400
+          ]
+        },
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/mid-v2/review/final-tile04-top-native.png",
+          "sha256": "fa3bce5c1fac42409bc3d3d3f727ad065d5cf1688f0c6450ed22a369fa7a8335",
+          "bytes": 314896,
+          "nativePixels": [
+            560,
+            240
+          ]
+        }
+      ],
+      "sharedRepairs": {
+        "northSouth": {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/mid-v2/full-north-south-repair-v2.raw.png",
+          "sha256": "87faa73db03e1e39321170662b8dce1e7ad27ee85dc34769dc8bc8cef0cd67df",
+          "bytes": 2312696,
+          "nativePixels": [
+            1746,
+            901
+          ],
+          "provenance": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/mid-v2/full-north-south-repair-v2.provenance.json",
+            "sha256": "e3ace4b7f98eadf447132dab2dcf6419f5c018ecca8ac3e1ad6e56292584b969",
+            "bytes": 2523
+          }
+        },
+        "westEast": {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/mid-v2/full-west-east-repair-v2.raw.png",
+          "sha256": "aa262131396d4a2e3423c6f8477cfa04fb6bb0c0a695250426f875363ed4da44",
+          "bytes": 2389740,
+          "nativePixels": [
+            1746,
+            901
+          ],
+          "provenance": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/mid-v2/full-west-east-repair-v2.provenance.json",
+            "sha256": "94612c50159dded8a6ce600923f34311be91e263ed6f6da1ad04fd4f24fbec19",
+            "bytes": 2511
+          }
+        }
+      }
+    },
+    "far": {
+      "folder": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v2",
+      "nativePixels": [
+        1742,
+        902
+      ],
+      "revision": "far-v2",
+      "status": "accepted-for-art-appearance",
+      "primaryTileIds": [
+        "tile-01",
+        "tile-02",
+        "tile-03",
+        "tile-04"
+      ],
+      "primaryTiles": [
+        {
+          "id": "tile-01",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v2/tile-01.png",
+          "sha256": "f3d0c31703c3cb641345404b4d2c32a62bf1288c0c529ba4d0f552deceb99d19",
+          "bytes": 3536547,
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1742,
+            "height": 902
+          },
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v2/tile-01-v2.raw.png",
+            "sha256": "38235a30c00c49150427e136df90ee9859c576860affadb5b11e8bca2252bc45",
+            "bytes": 2569788,
+            "nativePixels": [
+              1742,
+              903
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v2/tile-01-v2.provenance.json",
+              "sha256": "6b89e9107d184b2aeb38ebbade037ccaa3efcd63655ae27a606e3175ee465133",
+              "bytes": 2514
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v2/tile-01-v2.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v2/tile-01.cut-paths.json"
+        },
+        {
+          "id": "tile-02",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v2/tile-02.png",
+          "sha256": "b29ee8c9fc9ccd760e91bae375bf4e8ca42a9f3176926ba384235969b516cad8",
+          "bytes": 3508723,
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1742,
+            "height": 902
+          },
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v2/tile-02-v2.raw.png",
+            "sha256": "814f995c50c0b689137e201349cbacfa68f47e6986ff76de9d1d4b6f3e510e98",
+            "bytes": 2497308,
+            "nativePixels": [
+              1742,
+              903
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v2/tile-02-v2.provenance.json",
+              "sha256": "6981fd56aada5649dbdbcd5846d838095f9d2c78a6c73df2cdc43a9a1b25b6af",
+              "bytes": 2514
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v2/tile-02-v2.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v2/tile-02.cut-paths.json"
+        },
+        {
+          "id": "tile-03",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v2/tile-03.png",
+          "sha256": "13933737f4443288a625925d3506902acb885112cc6006916b688a515fd74d03",
+          "bytes": 3502708,
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1742,
+            "height": 902
+          },
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v2/tile-03-v2.raw.png",
+            "sha256": "324184ee7e1536209fd5692ee6fed8fe3ea956b258c5242fcd37d4c74e277034",
+            "bytes": 2510144,
+            "nativePixels": [
+              1742,
+              903
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v2/tile-03-v2.provenance.json",
+              "sha256": "e37b40f3660d2b3ddde8b5de6253ac998ed6e29691fd379eea0c8e2555d301cf",
+              "bytes": 2514
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v2/tile-03-v2.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v2/tile-03.cut-paths.json"
+        },
+        {
+          "id": "tile-04",
+          "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v2/tile-04.png",
+          "sha256": "ce8d97a4016445095721be8c0558552d5a94db4dea1f917a17377aafaf763968",
+          "bytes": 3493478,
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "nativeCrop": {
+            "left": 0,
+            "top": 0,
+            "width": 1742,
+            "height": 902
+          },
+          "rawSource": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v2/tile-04-v2.raw.png",
+            "sha256": "9c5e3956454cba3d2d3540c23136d6f65e198b6cd22ba728381cbac9d9e887ff",
+            "bytes": 2504169,
+            "nativePixels": [
+              1742,
+              903
+            ],
+            "provenance": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v2/tile-04-v2.provenance.json",
+              "sha256": "edc233d5ff55e68be1644a9cc1ab692b923ba308acabd0aa4d7efa0cb1f2f729",
+              "bytes": 2514
+            },
+            "prompt": {
+              "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v2/tile-04-v2.provenance.json",
+              "jsonPointer": "/prompt"
+            }
+          },
+          "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v2/tile-04.cut-paths.json"
+        }
+      ],
+      "visualDecision": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v2/review/appearance-decision.json",
+        "sha256": "d66e0fcc91e86439599b3d2a208b2df2a779bd63b3b8e869e0dfaa5cc03203c5",
+        "bytes": 4608
+      },
+      "sourceManifest": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v2/manifest-v2.json",
+        "sha256": "472cc37e8175163738695177681675d8aa2f46a4dfab5d52f187262643c830a7",
+        "bytes": 4809
+      },
+      "exportReport": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v2/export-report.json",
+        "sha256": "b0e0dd09d75236f18311f8873e520643680d9d90deb286493b940216aa73a3ce",
+        "bytes": 11095
+      },
+      "proofs": [
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v2/review/four-tiles-shuffled-screen.png",
+          "sha256": "3d3ec63e391812a76451dec320c14d43bbb73296a5f4b3fb07f9c9a6db9f9d76",
+          "bytes": 2969565,
+          "nativePixels": [
+            1742,
+            902
+          ]
+        },
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v2/review/four-tiles-shuffled-native.png",
+          "sha256": "203df00d6511ac237eac90f5ccd1ec84e260ce9ce6651e7e6e8430e3ff881ad5",
+          "bytes": 11880486,
+          "nativePixels": [
+            3484,
+            1804
+          ]
+        },
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v2/review/two-tiles-horizontal-native.png",
+          "sha256": "c004e5109c657b31e7589f68d33ef93cdc1162bdef5ff7cc089e6b8d0c4ac42b",
+          "bytes": 5993399,
+          "nativePixels": [
+            3484,
+            902
+          ]
+        },
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v2/review/two-tiles-vertical-native.png",
+          "sha256": "1d6f3f89fe48fc40262518049857cdf3c3bdf0c1282813634c2fa5d21f2101b4",
+          "bytes": 7009697,
+          "nativePixels": [
+            1742,
+            1804
+          ]
+        },
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v2/review/final-cross-native.png",
+          "sha256": "7d4eea57cb01a15c7db4333ab57bfc9dade2acd9779b1f053d0206a8fb05dfe7",
+          "bytes": 726150,
+          "nativePixels": [
+            700,
+            460
+          ]
+        },
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v2/review/final-tile03-left-native.png",
+          "sha256": "fb1eebb3753302a8ddc83aeaed6bc01b5de2691e28def2a2b9d19e5b503b6e28",
+          "bytes": 319591,
+          "nativePixels": [
+            360,
+            400
+          ]
+        },
+        {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v2/review/final-tile04-top-native.png",
+          "sha256": "677afaf02f1da00d088a59dac0333077942afeeb55cde65e1af3737917d3fc8d",
+          "bytes": 296735,
+          "nativePixels": [
+            560,
+            240
+          ]
+        }
+      ],
+      "sharedRepairs": {
+        "northSouth": {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v2/full-north-south-repair-v2.raw.png",
+          "sha256": "538ce27d8bcbe96fe31dcb8da53a3f453a8b6a83f29cf290a2845c0521fe6661",
+          "bytes": 2439259,
+          "nativePixels": [
+            1743,
+            902
+          ],
+          "provenance": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v2/full-north-south-repair-v2.provenance.json",
+            "sha256": "a6356fa8870b6d07cfa4e8129738558a477a418ab8a048314ca1a4be754baa38",
+            "bytes": 2523
+          }
+        },
+        "westEast": {
+          "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v2/full-west-east-repair-v2.raw.png",
+          "sha256": "2e59a93baba01454cdf486a40a3b0c705d8e4acf0dcf7f2aef0445390813db6e",
+          "bytes": 2411416,
+          "nativePixels": [
+            1742,
+            903
+          ],
+          "provenance": {
+            "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v2/full-west-east-repair-v2.provenance.json",
+            "sha256": "5c809a8d0a0b5dba7c24ac26a0c078016184c28a2a11185860f83e9f05e9515d",
+            "bytes": 2511
+          }
+        }
+      }
+    }
+  }
+}

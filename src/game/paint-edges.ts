@@ -74,7 +74,7 @@ export function edgeProfileOf(surface: string | null | undefined, tex: string, b
     case 'fairway': return 'turf';
     case 'bunker': return 'sunken';
     case 'water': return 'water';
-    case 'fringe': case 'firstCut': case 'rough': case 'fescue': case 'waste': case 'path': case 'other': return 'flat';
+    case 'fringe': case 'firstCut': case 'rough': case 'longGrass': case 'fescue': case 'waste': case 'path': case 'other': return 'flat';
   }
   if (tex.startsWith('water')) return 'water';
   if (PAVED.test(tex)) return 'crisp';

@@ -3,12 +3,11 @@ import type { Game } from '../../game/engine';
 import { BRUSH_PRESETS, PAINT_TEXES } from '../../game/paint';
 import { PLANT_KINDS } from '../../game/plant';
 import { PIECE_BUTTONS } from '../../game/ext/course-pieces';
-import { SQUARE_SIZES } from '../../game/ext/course-cursor/snap';
 import { EARTHWORK_PER_M3 } from '../../game/golf/costs';
 import { PlantControls, plainName } from '../../PaintPanel';
 import { LockMark } from '../Rail';
 import { ToolHead } from '../ToolHead';
-import { SurfaceMark } from './SurfaceMark';
+import { BrushShape, SurfaceSwatches, brushOkOf } from './BrushControls';
 import { HoleStrip, newHole } from './HoleStrip';
 import { HoleWizardPanel } from './HoleWizard';
 import { CourseEdges } from './CourseEdges';
@@ -30,7 +29,8 @@ export const lookName = (tex: string) => plainName(PAINT_TEXES.find(t => t.id ==
  *  looks / onLooks: Holes > More options > My looks (the style editor's card beside the panel: App's state, so Esc closes it first) */
 export function CoursePanel({ game, looks = false, onLooks }: { game: Game; looks?: boolean; onLooks?: (open: boolean) => void }) {
   const p = game.paint, ui = game.toolUi();
-  const shape = !ui || ui.shapeByHand, plan = p.mode === 'plan', lock = ui?.newHoleLock ?? null;
+  // New hole's editor on screen (T238: Edit hole with a brush in hand too): its card in New hole's place, Shape by hand under it hidden
+  const shape = !ui || ui.shapeByHand, plan = p.planOpen, lock = ui?.newHoleLock ?? null;
   // ↶ ↷ name what they take back (P23 4.3); in New hole its own clicks and drags come first (P23 4.4, T119)
   const un = p.topUndo, re = p.topRedo;
   return (
@@ -62,52 +62,25 @@ export function CoursePanel({ game, looks = false, onLooks }: { game: Game; look
   );
 }
 
-/** a k x k grid of dots, the size pills' glyph */
-function SizeGlyph({ k }: { k: number }) {
-  const s = 12, d = s / k;
-  return (
-    <svg width={s} height={s} viewBox={`0 0 ${s} ${s}`} aria-hidden className="shrink-0">
-      {Array.from({ length: k * k }, (_, i) => <rect key={i} x={(i % k) * d + 0.6} y={Math.floor(i / k) * d + 0.6} width={d - 1.2} height={d - 1.2} rx={k === 1 ? 2 : 0.6} fill="currentColor" />)}
-    </svg>
-  );
-}
-
-/** Shape by hand (P23 4.3, 4.5): the surfaces as marked swatches (keys 1–8), the brush sizes ([ ]), Brush and Erase */
+/** Shape by hand (P23 4.3, 4.5): the surfaces as marked swatches (keys 1–9), the brush's shape (T238: Square or Round) and size ([ ]),
+ *  Brush and Erase */
 function ShapeByHand({ game }: { game: Game }) {
-  const p = game.paint, ui = game.toolUi(), brushOk = (k: string) => !ui || (ui.visibleCourseBrushes as string[]).includes(k);
+  const p = game.paint, brushOk = brushOkOf(game);
   const keys = Math.max(1, ...BRUSH_PRESETS.map((b, i) => (brushOk(b.kind) ? i + 1 : 0)));
   const brush = p.mode === 'brush', cells = p.brushCells, armed = brush || p.mode === 'draw' || p.mode === 'piece', run = brush && !!p.brushRun && cells > 0;
   const name = BRUSH_PRESETS.find(b => b.kind === p.brushKind)?.name ?? '';
   return (
     <section data-section="shape" className="mt-3">
       <div className="sec-head"><h3 className="label-caps">Shape by hand</h3><span className="sec-note">{`1 m cells · keys 1–${keys}`}</span></div>
-      <div className="swatches" role="group" aria-label="Surface">
-        {BRUSH_PRESETS.map((b, i) => {
-          if (!brushOk(b.kind)) return null;
-          const on = armed && p.brushKind === b.kind;
-          return (
-            <button key={b.kind} data-swatch={b.kind} aria-pressed={on} title={`${b.name} (key ${i + 1})`} className={`swatch ${on ? 'swatch-on' : ''}`} onClick={() => (p.mode === 'draw' ? p.setShape(b.kind) : p.setBrush(b.kind))}>
-              <span className="swatch-disc"><SurfaceMark kind={b.kind} size={34} /></span>
-              <span className="swatch-key" aria-hidden>{i + 1}</span>
-              <span className="swatch-name">{b.name}</span>
-            </button>
-          );
-        })}
-      </div>
-      <div className="mt-2 flex flex-wrap items-center gap-1.5" role="group" aria-label="Brush size">
-        {SQUARE_SIZES.map(k => (
-          <button key={k} className={`chip ${brush && cells === k ? 'chip-on' : ''}`} aria-pressed={brush && cells === k} title={k === 1 ? 'One 1 m cell ([ ] size)' : `${k * k} cells, ${k} m a side${k === 2 ? ': one town square' : ''} ([ ] size)`} onClick={() => { if (!brush) p.setBrush(p.brushKind); p.setBrushCells(k); }}>
-            <SizeGlyph k={k} />{k === 1 ? '1' : `${k}×${k}`}
-          </button>
-        ))}
-      </div>
+      <SurfaceSwatches game={game} on={armed ? p.brushKind : null} pick={k => (p.mode === 'draw' ? p.setShape(k) : p.setBrush(k))} />
+      <BrushShape game={game} brush={brush} arm={() => p.setBrush(p.brushKind)} />
       <div className="mt-2 flex flex-wrap items-center gap-1.5">
         {/* Brush | Run (T122, P23 4.5): the brush paints where you click and drag; Run lays a strip like a road, from click to click */}
         <div className="flex items-center gap-1.5" role="group" aria-label="Brush or Run" data-method={run ? 'run' : 'brush'}>
           <button className={`chip ${brush && !run ? 'chip-on' : ''}`} aria-pressed={brush && !run} title={`Paint ${name} for hole ${p.brushHole}: click a cell, drag a run`} onClick={() => p.setBrushRun(false)}>Brush</button>
           {game.golfMode && <button className={`chip ${run ? 'chip-on' : ''}`} aria-pressed={run} title={`Run: lay a strip of ${name} as wide as the size, like a road: click a start, click each bend, then double-click, Enter or right-click. Shift keeps a leg straight`} onClick={() => p.setBrushRun(true)}>Run</button>}
         </div>
-        <button className={`chip ${brush && p.rubOut ? 'chip-on' : ''}`} aria-pressed={brush && p.rubOut} title={`Erase takes the top surface under the ${run ? 'run' : 'brush'} (hold Alt for a moment while brushing); no refund`} onClick={() => { p.rubOut = !(brush && p.rubOut); if (!brush) p.setBrush(p.brushKind); else game.emit(); }}>Erase</button>
+        <button className={`chip ${brush && p.rubOut ? 'chip-on' : ''}`} aria-pressed={brush && p.rubOut} title={`Erase takes the top surface under the ${run ? 'run' : 'brush'} (hold Alt for a moment while brushing); no refund`} onClick={() => { const v = !(brush && p.rubOut); if (!brush) p.setBrush(p.brushKind); p.rubOut = v; game.emit(); }}>Erase</button>
       </div>
       {!game.golfMode && brush && <div className="sub-line mt-1.5">{`Click paints ${name} for hole ${p.brushHole}; drag paints a run. Alt-drag or Erase rubs out. [ ] size.`}</div>}
     </section>
@@ -119,15 +92,16 @@ function Sub({ title, children }: { title: string; children: ReactNode }) {
   return <div className="mt-2.5"><h4 className="sub-head">{title}</h4>{children}</div>;
 }
 
-/** More options (P23 4.3): one collapsed drawer in labelled sections, remembered for the session: Shapes (Lasso, Round, Stamps), Look (My
+/** More options (P23 4.3): one collapsed drawer in labelled sections, remembered for the session: Shapes (Lasso, Stamps; T238 moved Round
+ *  to Shape by hand), Look (My
  *  looks: each surface's look and the style editor, decision 3), Edges (T123's Border and Shadow of the surface in the brush), Planting
  *  (Seed or Sod), and Hole · plants · ground (saved holes, editing a
  *  planned hole, the plant brushes, the ground's height). While one of its tools is in hand it stays open; closing it puts that tool down */
 function MoreOptions({ game, looks, onLooks }: { game: Game; looks: boolean; onLooks?: (open: boolean) => void }) {
   const p = game.paint, ui = game.toolUi(), fine = (k: string) => !ui || (ui.visibleFineControls as string[]).includes(k);
   const [open, setOpenState] = useState(() => sessionFlag(MORE_KEY));
-  const more = MORE_MODES.has(p.mode) || (p.mode === 'brush' && p.brushCells === 0), shown = open || more || looks;
-  const setOpen = (on: boolean) => { setOpenState(on); setSessionFlag(MORE_KEY, on); if (!on) { if (more) p.setBrush(p.brushKind); if (more && p.brushCells === 0) p.setBrushCells(1); onLooks?.(false); } };
+  const more = MORE_MODES.has(p.mode), shown = open || more || looks;
+  const setOpen = (on: boolean) => { setOpenState(on); setSessionFlag(MORE_KEY, on); if (!on) { if (more) p.setBrush(p.brushKind); onLooks?.(false); } };
   const n = p.brushHole, name = BRUSH_PRESETS.find(b => b.kind === p.brushKind)?.name ?? '', br = p.brush[p.brushKind];
   const help = p.mode === 'height'
     ? `Drag to ${p.heightMode} the ground (subtle: ±3 m at most). Smooth evens out bumps, Flatten brings it back to level. Roads stay flat. [ ] size.${game.golfMode ? ` Earthworks cost $${EARTHWORK_PER_M3} a m³.` : ''}`
@@ -147,15 +121,8 @@ function MoreOptions({ game, looks, onLooks }: { game: Game; looks: boolean; onL
           <Sub title="Shapes">
             <div className="flex flex-wrap gap-1.5">
               <button className={`chip ${p.mode === 'draw' ? 'chip-on' : ''}`} aria-pressed={p.mode === 'draw'} title="Lasso: click corners, or press and drag an outline" onClick={() => p.setShape(p.brushKind)}>Lasso</button>
-              <button className={`chip ${p.mode === 'brush' && p.brushCells === 0 ? 'chip-on' : ''}`} aria-pressed={p.mode === 'brush' && p.brushCells === 0} title="A round brush, sized in tiles" onClick={() => { if (p.mode !== 'brush') p.setBrush(p.brushKind); p.setBrushCells(0); }}>Round</button>
               <button className={`chip ${p.mode === 'piece' ? 'chip-on' : ''}`} aria-pressed={p.mode === 'piece'} title="Stamps: the big ready-made shapes (pear fairway, kidney green, pond...), stamped on the mini grid" onClick={() => p.setPiece(p.pieceArch)}>Stamps</button>
             </div>
-            {p.mode === 'brush' && p.brushCells === 0 && (
-              <div className="mt-1.5 flex items-center gap-2">
-                <input type="range" aria-label="Round brush size" min={0.5} max={20} step={0.5} value={br.r} onChange={e => p.setBrushR(+e.target.value)} className="min-w-0 flex-1" />
-                <span className="w-16 text-right">{`${br.r} tiles`}</span>
-              </div>
-            )}
             {p.mode === 'piece' && (
               <>
                 <div className="mt-1.5 flex flex-wrap gap-1.5">

@@ -355,6 +355,13 @@ const baseEdgeStyles: EdgeStyle[] = [
     shade: { width: 0.8, blend: 'multiply', color: '#233018', alpha: 0.22 },
     drop: { offset: 0.4, soft: 0.8, alpha: 0.16 },
   },
+  /* long grass (9, T238): flat and soft like the rough and the fescue */ {
+    profile: 'flat',
+    feather: 1.1,
+    rim: null,
+    shade: { width: 0.6, blend: 'multiply', color: '#233018', alpha: 0.06 },
+    drop: null,
+  },
 ];
 
 /** each golf surface's edge style table (P21 section 3.4), indexed by SURF id and collar names */

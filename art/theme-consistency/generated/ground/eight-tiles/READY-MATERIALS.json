@@ -1,9 +1,9 @@
 {
   "schema": 1,
-  "date": "2026-10-26",
+  "date": "2026-10-27",
   "purpose": "Actual material PNG sets ready for implementation; only explicitly hash-bound accepted families listed",
-  "readyFamilyCount": 4,
-  "primaryPngCount": 48,
+  "readyFamilyCount": 6,
+  "primaryPngCount": 72,
   "preservedOptionalPngCount": 4,
   "ready": [
     {
@@ -230,6 +230,124 @@
       "artStatus": "accepted-for-art-appearance",
       "runtimeIntegrated": false,
       "runtimeMappingAuthority": "Generated art only; do not replace owner-supplied rough-20261026 or T162 runtime mapping automatically."
+    },
+    {
+      "id": "painted:putting-green",
+      "material": "putting-green",
+      "runtimeId": "putting-green-finished",
+      "runtimeName": "Putting green (fine turf)",
+      "canonicalSelection": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/canonicalselection.json",
+        "sha256": "f7c8e582dc2d82509958773e427d255fbfb1372d12be9acc33a612b6929adf76",
+        "bytes": 33550
+      },
+      "primaryPngCount": 12,
+      "preservedOptionalPngCount": 0,
+      "levels": {
+        "near": {
+          "folder": "art/theme-consistency/generated/ground/eight-tiles/putting-green/near-v1",
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "primaryTileIds": [
+            "tile-01",
+            "tile-02",
+            "tile-03",
+            "tile-04"
+          ],
+          "visualDecision": "art/theme-consistency/generated/ground/eight-tiles/putting-green/near-v1/review/appearance-decision.json"
+        },
+        "mid": {
+          "folder": "art/theme-consistency/generated/ground/eight-tiles/putting-green/mid-v2",
+          "nativePixels": [
+            1744,
+            900
+          ],
+          "primaryTileIds": [
+            "tile-01",
+            "tile-02",
+            "tile-03",
+            "tile-04"
+          ],
+          "visualDecision": "art/theme-consistency/generated/ground/eight-tiles/putting-green/mid-v2/review/appearance-decision.json"
+        },
+        "far": {
+          "folder": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v2",
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "primaryTileIds": [
+            "tile-01",
+            "tile-02",
+            "tile-03",
+            "tile-04"
+          ],
+          "visualDecision": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v2/review/appearance-decision.json"
+        }
+      },
+      "artStatus": "accepted-for-art-appearance",
+      "runtimeIntegrated": false,
+      "runtimeMappingAuthority": "Preserve separately owner-selected artwork and any existing gameplay material choices. This handoff publishes accepted generated art, not authority to replace owner bands or reinterpret fringe as first-cut rough."
+    },
+    {
+      "id": "painted:fringe",
+      "material": "fringe",
+      "canonicalSelection": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/canonicalselection.json",
+        "sha256": "89b9abfff097e27c8b93623a8311ab25662c0589f81626c36f7c432c5785f44e",
+        "bytes": 32787
+      },
+      "primaryPngCount": 12,
+      "preservedOptionalPngCount": 0,
+      "levels": {
+        "near": {
+          "folder": "art/theme-consistency/generated/ground/eight-tiles/fringe/near-v1",
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "primaryTileIds": [
+            "tile-01",
+            "tile-02",
+            "tile-03",
+            "tile-04"
+          ],
+          "visualDecision": "art/theme-consistency/generated/ground/eight-tiles/fringe/near-v1/review/appearance-decision.json"
+        },
+        "mid": {
+          "folder": "art/theme-consistency/generated/ground/eight-tiles/fringe/mid-v1",
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "primaryTileIds": [
+            "tile-01",
+            "tile-02",
+            "tile-03",
+            "tile-04"
+          ],
+          "visualDecision": "art/theme-consistency/generated/ground/eight-tiles/fringe/mid-v1/review/appearance-decision.json"
+        },
+        "far": {
+          "folder": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1",
+          "nativePixels": [
+            1742,
+            902
+          ],
+          "primaryTileIds": [
+            "tile-01",
+            "tile-02",
+            "tile-03",
+            "tile-04"
+          ],
+          "visualDecision": "art/theme-consistency/generated/ground/eight-tiles/fringe/far-v1/review/appearance-decision.json"
+        }
+      },
+      "artStatus": "accepted-for-art-appearance",
+      "runtimeIntegrated": false,
+      "runtimeMappingAuthority": "Preserve separately owner-selected artwork and any existing gameplay material choices. This handoff publishes accepted generated art, not authority to replace owner bands or reinterpret fringe as first-cut rough."
     }
   ],
   "remainingFamilies": [
@@ -239,7 +357,6 @@
     "first-cut",
     "pale-green-bushes",
     "pine-straw",
-    "putting-green",
     "sand-long-grass",
     "sand-raked",
     "swamp"

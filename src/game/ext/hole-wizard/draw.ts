@@ -76,7 +76,7 @@ function hatchRuns(v: WizardView, runs: Int32Array, gx0: number, gy0: number, co
 }
 const OTHER = { fill: 'rgba(200,200,200,0.35)', edge: 'rgba(255,255,255,0.8)' };
 /** the draw order of the run labels: cleared, rough, fairway, tee, green, refused on top */
-const ORDER = [0, SURF.rough, SURF.fescue, SURF.water, SURF.fairway, SURF.tee, SURF.bunker, SURF.waste, SURF.green, REFUSED];
+const ORDER = [0, SURF.rough, SURF.longGrass, SURF.fescue, SURF.water, SURF.fairway, SURF.tee, SURF.bunker, SURF.waste, SURF.green, REFUSED];
 
 /** the runs with label s as one path (tiles, under the iso transform), filled */
 function fillRuns(v: WizardView, runs: Int32Array, gx0: number, gy0: number, s: number, fill: string, alpha = 1, delay?: Float32Array, t?: number) {

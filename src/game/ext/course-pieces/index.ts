@@ -29,7 +29,7 @@ export function snapTargets(areas: readonly (Pick<PaintArea, 'id' | 'pts' | 'kin
   const out: SnapTargetArea[] = [];
   for (const a of areas) {
     const k = a.kind ?? (a.order === undefined && a.tex ? kindOfTex(a.tex) : undefined);
-    if (k && k !== 'rough' && k !== 'waste') out.push({ id: a.id, kind: k, pts: a.pts, ...(a.hole ? { hole: a.hole } : {}) });
+    if (k && k !== 'rough' && k !== 'waste' && k !== 'longGrass') out.push({ id: a.id, kind: k, pts: a.pts, ...(a.hole ? { hole: a.hole } : {}) });
   }
   return out;
 }

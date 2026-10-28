@@ -188,7 +188,7 @@ export function dressCourse(layout: CourseLayout, seed: number): DressedProp[] {
     for (const [a, b] of allSegs) if (ptSeg(x, y, a, b) < TREE_LINE_CLEAR) return false;
     for (const tp of treePts) if (Math.hypot(x - tp.x, y - tp.y) < TREE_MIN_SPACING) return false;
     const surf = surfaceAt(layout.areas, x, y);
-    return surf === 'rough' || surf === 'fescue' || surf === 'other';
+    return surf === 'rough' || surf === 'longGrass' || surf === 'fescue' || surf === 'other';
   };
 
   for (const h of holes) {

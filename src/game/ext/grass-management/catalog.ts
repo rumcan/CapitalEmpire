@@ -18,7 +18,7 @@ export const PRESET_FAMILY: Readonly<Record<string, GrassSurface>> = { 'range-ou
 export function grassSurface(tex: string, lawn = false, presetSurface?: string | null): GrassSurface | null {
   if (lawn) return 'residential-lawn';
   if (tex.startsWith('preset:') && PRESET_FAMILY[tex.slice(7)]) return PRESET_FAMILY[tex.slice(7)]!;
-  if (tex.startsWith('preset:')) { const families: Record<string, GrassSurface> = { green: 'golf-green', fairway: 'golf-fairway', tee: 'golf-tee', fringe: 'golf-fringe', firstCut: 'golf-first-cut', rough: 'golf-rough', fescue: 'golf-fescue' }; return presetSurface ? families[presetSurface] ?? null : null; }
-  const known: Record<string, GrassSurface> = { grass: 'town-park', grassDry: 'road-verge', lawnLush: 'residential-lawn', lawnWorn: 'residential-lawn', lawnClover: 'clover-lawn', golfGreen: 'golf-green', golfFairway: 'golf-fairway', golfTee: 'golf-tee', golfFringe: 'golf-fringe', golfFirstCut: 'golf-first-cut', golfRough: 'golf-rough', golfFescue: 'golf-fescue', golfSod: 'golf-fairway', meadowLush: 'meadow', meadowFlowers: 'meadow' };
+  if (tex.startsWith('preset:')) { const families: Record<string, GrassSurface> = { green: 'golf-green', fairway: 'golf-fairway', tee: 'golf-tee', fringe: 'golf-fringe', firstCut: 'golf-first-cut', rough: 'golf-rough', longGrass: 'golf-rough', fescue: 'golf-fescue' }; return presetSurface ? families[presetSurface] ?? null : null; }
+  const known: Record<string, GrassSurface> = { grass: 'town-park', grassDry: 'road-verge', lawnLush: 'residential-lawn', lawnWorn: 'residential-lawn', lawnClover: 'clover-lawn', golfGreen: 'golf-green', golfFairway: 'golf-fairway', golfTee: 'golf-tee', golfFringe: 'golf-fringe', golfFirstCut: 'golf-first-cut', golfRough: 'golf-rough', golfLongGrass: 'golf-rough', golfFescue: 'golf-fescue', golfSod: 'golf-fairway', meadowLush: 'meadow', meadowFlowers: 'meadow' };
   return known[tex] ?? null;
 }

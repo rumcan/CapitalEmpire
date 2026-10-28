@@ -63,7 +63,7 @@ export function RangeCard({ view, onClose, onPrice, onBuy, onShowPractice, onBui
             <div className="flex items-center justify-between gap-2">
               <span className="font-medium text-white">{f.name}</span>
               {f.state === 'open' ? <span className="text-emerald-300">Open</span>
-                : onBuildPractice ? <button className="chip disabled:opacity-40" disabled={!!practiceWhy} title={practiceWhy || `Pick the ${f.name.toLowerCase()} and place it in the practice area`} onClick={() => onBuildPractice(f.id)} data-testid={`range-practice-build-${f.id}`}>Build</button>
+                : onBuildPractice ? <button className="chip chip-on disabled:opacity-40" disabled={!!practiceWhy} title={practiceWhy || `Pick the ${f.name.toLowerCase()} and place it in the practice area`} onClick={() => onBuildPractice(f.id)} data-testid={`range-practice-build-${f.id}`}>Build</button>
                 : <span className={f.state === 'none' ? 'text-slate-400' : 'text-amber-300'}>{f.state === 'none' ? 'Not built' : 'Not open yet'}</span>}
             </div>
             <div className="text-[12px] text-slate-400">{f.words}</div>
@@ -101,7 +101,7 @@ export function RangeCard({ view, onClose, onPrice, onBuy, onShowPractice, onBui
             <div className="flex items-center justify-between gap-2">
               <span className="font-medium text-white">{u.name}</span>
               {u.owned ? <span className="text-emerald-300">Built</span> : (
-                <button className="chip disabled:opacity-40" disabled={!!u.why} title={u.why || `Build for ${money(u.cost)}`} onClick={() => onBuy(u.id)} data-testid={`range-buy-${u.id}`}>Build {money(u.cost)}</button>
+                <button className="chip chip-on disabled:opacity-40" disabled={!!u.why} title={u.why || `Build for ${money(u.cost)}`} onClick={() => onBuy(u.id)} data-testid={`range-buy-${u.id}`}>Build {money(u.cost)}</button>
               )}
             </div>
             <div className="text-[12px] text-slate-400">{u.effect}</div>
