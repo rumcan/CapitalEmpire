@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-28 23:55 SAST)
+## START HERE (kept current by the lead; last updated 2026-10-29 00:15 SAST)
 
 **Taking over as lead?** This section is the one start document. Paste this into a new Claude Code chat (desktop app, Code tab), on any
 account, with the folder `E:\Repos\CapitalEmpire\worktrees\lead-typecheck`:
@@ -66,7 +66,7 @@ never commit there.)
 **Two agents running (a new lead took over at ~15:00 on 2026-10-28; the old lead's agents stopped at the usage limit ~14:00):**
 | Ticket | Issue | Branch / worktree | State and next step |
 | --- | --- | --- | --- |
-| T262 | #769 | phase 1 + most of phase 2 **merged** (#792 at c393d0b, the owner asked); the rest on `arena/T262-grass-shine-p2` (its worktree `.claude/worktrees/agent-a0e42bfca4d14578c`; port 5186), a new PR "Closes #769" | The shine is **on by default** on main. Left: every family weighted, no sheen under sprite shadows if cheap, the Studio knobs, the main-vs-branch perf table against the owner's limits (+0.3 ms a frame, +1 ms a bake, +3 MB). **The owner: "the grass on these tees are horrible"** (hole 1's tee, bright grainy lime): the owner then chose "like the fairway with no lines": #802 (the tee wears `fairway-concept-run`); the agent keeps the tee's shine no stronger than the fairway's. |
+| T265 | #794 | `arena/T265-river-swamp-trees` (a fresh worktree; port 5186) | **Started ~00:15.** The river's swamp band and dense tree belts along every river and creek, under the owner's hard performance limits (belts +0.5 ms a frame, swamp +1 ms a bake, main vs branch at 30/15/8%, thin or stop). |
 | T263 | #771 (reopened) | **merged** as built (#797 at 769c79b, the owner asked); part 2 on `arena/T263-hole-ground-p2` (its worktree `.claude/worktrees/agent-a7511adc517f4f94a`; port 5187), a new PR "Closes #771" | Part 2: the shaping reads at the default Slope light (a stronger course-height light on gentle slopes; steep brush banks no harsher) and is built at `SHAPE_RATE_M3` = \$5/m³ (about \$11-12k a par 4; main charges the brush's \$15 until it lands). |
 
 **Held, waiting on the owner (not agents):**
@@ -82,10 +82,6 @@ deliveries come as PRs to review. The 3D people session's handover is `docs/HAND
 **T258 #749 continuous-art follow-up** (`lead/continuous-art-plans-20261029`): generic live-source AI plans and one exact subjob per batch, explicit versioned corrections, held review metadata and lossless native/live-only reuse. Current live priority181 is respected; 180a-v3 remains explicitly queued, v1/v2 held and b/c/d pending. Reviewed source art/proofs are in this branch; runtime registration remains separate. Quota retry2026-10-28T15:32:44.457Z is unchanged. Typecheck/focused fixtures pass; final fresh-main checks and PR/deployment next.
 
 ### 4. Queue (in order; start the next when an agent lands)
-0. **T265 #794** (the owner, 2026-10-28: "can we have the swamp texture around the wider river too please and somemore trees bunching
-   along rivers and creeks on mass"): the river's swamp band (swamp.ts `swampStreams` is creeks only today), dense tree belts along every river
-   and creek. **A hard performance gate** (the owner: "dont screw performance"; the limits are on #794: main vs branch at 30/15/8%, belts
-   at most +0.5 ms a frame, the swamp at most +1 ms a bake, thin or stop). **First: start it when T262 or T263 lands.**
 1. **T266 #800** golfers play at hyper speed (the owner): golf mode's town day is 10 real minutes, so everyday golf plays at 2.4 game minutes a
    real second (a hole in about 6 s; golfers about 140x faster than the cars). A prototype with a verdict: a day/night clock, capped walking speeds,
    a longer day, or a mix. Until then the gear menu's Town day slider (up to 30 min) slows it, and the months with it.
@@ -109,6 +105,8 @@ deliveries come as PRs to review. The 3D people session's handover is `docs/HAND
 3. **Farms** (185-189): for T259. 4. **The grey stone border** (180): for T249. 5. **Scenes batch 2**: for P28 T242.
 
 ### 6. Latest merges (2026-10-28)
+#804 T262 part 2: the grass shine a third as strong, the tee 0.1 and the green 0.55 (the cause of the owner's "horrible" tees: #792's
+sheen on bright, smooth paint), the knobs in the gear menu's Night panel, within the owner's limits (frame +0.04-0.07 ms, bake +0.2/+0.6 ms) ·
 #802 the course tees wear the fairway's grass, no lines (the owner: "not defined enough. it should be like the fairway with no lines";
 `tee-run` stays a Studio option) · #799 the starter clubhouse at the clubhouse footprint (the owner: "monterous"; the grand stand-in was drawn 4x its size: business art's 1 x 1
 placeholder box; `newart.ts` `footprintSpan`; the owner: "good now") · #797 T263 and #792 T262 merged as they stood (the owner asked) ·
