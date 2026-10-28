@@ -1,0 +1,409 @@
+{
+  "url": "http://localhost:5189/?start=range&unlock=0",
+  "errors": [],
+  "goldTileLabel": {
+    "normal": "rgb(255, 209, 102)",
+    "hover": "rgb(255, 209, 102)"
+  },
+  "records": [
+    {
+      "name": "course-menu",
+      "rows": [
+        {
+          "column": "0",
+          "text": "▸\nHoles\n▸\nBuildings\n▸\nCart paths & roads\nTournament\nLand for sale",
+          "images": [
+            {
+              "src": "/src/assets/ui/tiles/golf-hole.webp",
+              "width": 144,
+              "height": 144
+            },
+            {
+              "src": "/src/assets/ui/tiles/clubhouse.webp",
+              "width": 144,
+              "height": 144
+            },
+            {
+              "src": "/src/assets/ui/tiles/cart-path.webp",
+              "width": 144,
+              "height": 144
+            },
+            {
+              "src": "/src/assets/ui/tiles/grandstand-scoreboard.webp",
+              "width": 144,
+              "height": 144
+            },
+            {
+              "src": "/src/assets/ui/tiles/land-plot.webp",
+              "width": 144,
+              "height": 144
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "course-surfaces",
+      "rows": [
+        {
+          "column": "0",
+          "text": "▸\nHoles\n▸\nBuildings\n▸\nCart paths & roads\nTournament\nLand for sale",
+          "images": [
+            {
+              "src": "/src/assets/ui/tiles/golf-hole.webp",
+              "width": 144,
+              "height": 144
+            },
+            {
+              "src": "/src/assets/ui/tiles/clubhouse.webp",
+              "width": 144,
+              "height": 144
+            },
+            {
+              "src": "/src/assets/ui/tiles/cart-path.webp",
+              "width": 144,
+              "height": 144
+            },
+            {
+              "src": "/src/assets/ui/tiles/grandstand-scoreboard.webp",
+              "width": 144,
+              "height": 144
+            },
+            {
+              "src": "/src/assets/ui/tiles/land-plot.webp",
+              "width": 144,
+              "height": 144
+            }
+          ]
+        },
+        {
+          "column": "1",
+          "text": "New hole\nYour holes\n▸\nShape by hand",
+          "images": [
+            {
+              "src": "/src/assets/ui/tiles/golf-hole.webp",
+              "width": 144,
+              "height": 144
+            },
+            {
+              "src": "/src/assets/ui/icons/pin.webp",
+              "width": 68,
+              "height": 68
+            },
+            {
+              "src": "/src/assets/ui/tiles/fairway.webp",
+              "width": 144,
+              "height": 144
+            }
+          ]
+        },
+        {
+          "column": "2",
+          "text": "Fairway\nGreen\nTee\nRough\nBunker\nWater\nWaste area\nLong grass",
+          "images": [
+            {
+              "src": "/src/assets/ui/tiles/fairway.webp",
+              "width": 144,
+              "height": 144
+            },
+            {
+              "src": "/src/assets/ui/tiles/green.webp",
+              "width": 144,
+              "height": 144
+            },
+            {
+              "src": "/src/assets/ui/tiles/tee.webp",
+              "width": 144,
+              "height": 144
+            },
+            {
+              "src": "/src/assets/ui/tiles/rough.webp",
+              "width": 144,
+              "height": 144
+            },
+            {
+              "src": "/src/assets/ui/tiles/bunker.webp",
+              "width": 144,
+              "height": 144
+            },
+            {
+              "src": "/src/assets/ui/tiles/pond.webp",
+              "width": 144,
+              "height": 144
+            },
+            {
+              "src": "/src/assets/ui/tiles/waste-sand.webp",
+              "width": 144,
+              "height": 144
+            },
+            {
+              "src": "/src/assets/ui/tiles/long-grass.webp",
+              "width": 144,
+              "height": 144
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "course-buildings",
+      "rows": [
+        {
+          "column": "0",
+          "text": "▸\nHoles\n▸\nBuildings\n▸\nCart paths & roads\nTournament\nLand for sale",
+          "images": [
+            {
+              "src": "/src/assets/ui/tiles/golf-hole.webp",
+              "width": 144,
+              "height": 144
+            },
+            {
+              "src": "/src/assets/ui/tiles/clubhouse.webp",
+              "width": 144,
+              "height": 144
+            },
+            {
+              "src": "/src/assets/ui/tiles/cart-path.webp",
+              "width": 144,
+              "height": 144
+            },
+            {
+              "src": "/src/assets/ui/tiles/grandstand-scoreboard.webp",
+              "width": 144,
+              "height": 144
+            },
+            {
+              "src": "/src/assets/ui/tiles/land-plot.webp",
+              "width": 144,
+              "height": 144
+            }
+          ]
+        },
+        {
+          "column": "1",
+          "text": "Clubhouse\nHalfway house",
+          "images": [
+            {
+              "src": "/src/assets/ui/tiles/clubhouse.webp",
+              "width": 144,
+              "height": 144
+            },
+            {
+              "src": "/src/assets/ui/tiles/snack-hut.webp",
+              "width": 144,
+              "height": 144
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "facilities-menu",
+      "rows": [
+        {
+          "column": "0",
+          "text": "▸\nPractice\n▸\nPlants\n▸\nDecoration\nBuild on your property",
+          "images": [
+            {
+              "src": "/src/assets/ui/tiles/range-bays.webp",
+              "width": 144,
+              "height": 144
+            },
+            {
+              "src": "/src/assets/ui/tiles/trees.webp",
+              "width": 144,
+              "height": 144
+            },
+            {
+              "src": "/src/assets/ui/tiles/street-furniture.webp",
+              "width": 144,
+              "height": 144
+            },
+            {
+              "src": "/src/assets/ui/tiles/surveyor-turf.webp",
+              "width": 144,
+              "height": 144
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "facilities-practice",
+      "rows": [
+        {
+          "column": "0",
+          "text": "▸\nPractice\n▸\nPlants\n▸\nDecoration\nBuild on your property",
+          "images": [
+            {
+              "src": "/src/assets/ui/tiles/range-bays.webp",
+              "width": 144,
+              "height": 144
+            },
+            {
+              "src": "/src/assets/ui/tiles/trees.webp",
+              "width": 144,
+              "height": 144
+            },
+            {
+              "src": "/src/assets/ui/tiles/street-furniture.webp",
+              "width": 144,
+              "height": 144
+            },
+            {
+              "src": "/src/assets/ui/tiles/surveyor-turf.webp",
+              "width": 144,
+              "height": 144
+            }
+          ]
+        },
+        {
+          "column": "1",
+          "text": "Putting green\nChipping green and bunker",
+          "images": [
+            {
+              "src": "/src/assets/ui/tiles/green.webp",
+              "width": 144,
+              "height": 144
+            },
+            {
+              "src": "/src/assets/ui/tiles/chipping-green.webp",
+              "width": 144,
+              "height": 144
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "facilities-plants",
+      "rows": [
+        {
+          "column": "0",
+          "text": "▸\nPractice\n▸\nPlants\n▸\nDecoration\nBuild on your property",
+          "images": [
+            {
+              "src": "/src/assets/ui/tiles/range-bays.webp",
+              "width": 144,
+              "height": 144
+            },
+            {
+              "src": "/src/assets/ui/tiles/trees.webp",
+              "width": 144,
+              "height": 144
+            },
+            {
+              "src": "/src/assets/ui/tiles/street-furniture.webp",
+              "width": 144,
+              "height": 144
+            },
+            {
+              "src": "/src/assets/ui/tiles/surveyor-turf.webp",
+              "width": 144,
+              "height": 144
+            }
+          ]
+        },
+        {
+          "column": "1",
+          "text": "Trees\nBushes\nFlowers\nPalms",
+          "images": [
+            {
+              "src": "/src/assets/ui/tiles/trees.webp",
+              "width": 144,
+              "height": 144
+            },
+            {
+              "src": "/src/assets/ui/tiles/autumn-shrubs.webp",
+              "width": 144,
+              "height": 144
+            },
+            {
+              "src": "/src/assets/ui/tiles/flower-bed.webp",
+              "width": 144,
+              "height": 144
+            },
+            {
+              "src": "/src/assets/ui/tiles/palms.webp",
+              "width": 144,
+              "height": 144
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "facilities-props",
+      "rows": [
+        {
+          "column": "0",
+          "text": "▸\nPractice\n▸\nPlants\n▸\nDecoration\nBuild on your property",
+          "images": [
+            {
+              "src": "/src/assets/ui/tiles/range-bays.webp",
+              "width": 144,
+              "height": 144
+            },
+            {
+              "src": "/src/assets/ui/tiles/trees.webp",
+              "width": 144,
+              "height": 144
+            },
+            {
+              "src": "/src/assets/ui/tiles/street-furniture.webp",
+              "width": 144,
+              "height": 144
+            },
+            {
+              "src": "/src/assets/ui/tiles/surveyor-turf.webp",
+              "width": 144,
+              "height": 144
+            }
+          ]
+        },
+        {
+          "column": "1",
+          "text": "Props\n▸",
+          "images": [
+            {
+              "src": "/src/assets/ui/icons/leaf.webp",
+              "width": 73,
+              "height": 68
+            }
+          ]
+        },
+        {
+          "column": "2",
+          "text": "All props\nPlants\nWater\nStone\nFurniture",
+          "images": [
+            {
+              "src": "/src/assets/ui/icons/leaf.webp",
+              "width": 73,
+              "height": 68
+            },
+            {
+              "src": "/src/assets/ui/tiles/flower-bed.webp",
+              "width": 144,
+              "height": 144
+            },
+            {
+              "src": "/src/assets/ui/tiles/pond.webp",
+              "width": 144,
+              "height": 144
+            },
+            {
+              "src": "/src/assets/ui/tiles/rocks.webp",
+              "width": 144,
+              "height": 144
+            },
+            {
+              "src": "/src/assets/ui/tiles/patio-table.webp",
+              "width": 144,
+              "height": 144
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

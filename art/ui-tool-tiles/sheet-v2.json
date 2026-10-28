@@ -1,0 +1,267 @@
+{
+  "schema": 1,
+  "version": "v2",
+  "source": {
+    "file": "art/theme-consistency/generated/ui/golf-build-tool-tiles-sheet-v2.png",
+    "sha256": "b8fe637c1ff3b6bfa301ea6597732ae4030b0bb54c1b9149423367325947527b",
+    "dimensions": [
+      1448,
+      1086
+    ]
+  },
+  "grid": {
+    "columns": 4,
+    "rows": 3,
+    "detectedRows": [
+      [
+        42,
+        347
+      ],
+      [
+        379,
+        695
+      ],
+      [
+        725,
+        1042
+      ]
+    ],
+    "detectedColumns": [
+      [
+        44,
+        362
+      ],
+      [
+        392,
+        709
+      ],
+      [
+        738,
+        1056
+      ],
+      [
+        1085,
+        1404
+      ]
+    ]
+  },
+  "processing": "Source unchanged; detected card crops, normal UI resize to144px, rounded-corner alpha mask, WebP encoding.",
+  "tiles": [
+    {
+      "name": "waste-sand",
+      "row": 0,
+      "column": 0,
+      "sourceRect": {
+        "left": 52,
+        "top": 43,
+        "width": 303,
+        "height": 303
+      },
+      "file": "src/assets/ui/tiles/waste-sand.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "478210e3a058f4f87ab012815f24e5f31130102fa2286b72410ca4a69aaaf18c",
+      "bytes": 4242
+    },
+    {
+      "name": "snack-hut",
+      "row": 0,
+      "column": 1,
+      "sourceRect": {
+        "left": 399,
+        "top": 43,
+        "width": 303,
+        "height": 303
+      },
+      "file": "src/assets/ui/tiles/snack-hut.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "5e49d7cca205f83b70eb41ed78eb3956ef14ca5f3808bf8eb42740a564b3a245",
+      "bytes": 4360
+    },
+    {
+      "name": "golf-hole",
+      "row": 0,
+      "column": 2,
+      "sourceRect": {
+        "left": 746,
+        "top": 43,
+        "width": 303,
+        "height": 303
+      },
+      "file": "src/assets/ui/tiles/golf-hole.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "f4ecff90e27c97b08866c350fc0c81c9e0d2eb04d1bf32a3798da31b60960262",
+      "bytes": 4270
+    },
+    {
+      "name": "grandstand-scoreboard",
+      "row": 0,
+      "column": 3,
+      "sourceRect": {
+        "left": 1093,
+        "top": 43,
+        "width": 303,
+        "height": 303
+      },
+      "file": "src/assets/ui/tiles/grandstand-scoreboard.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "60d50a70f5413144182612f286efe4015af0709a6f22bf03002e5d6e87f2cd65",
+      "bytes": 4646
+    },
+    {
+      "name": "land-plot",
+      "row": 1,
+      "column": 0,
+      "sourceRect": {
+        "left": 46,
+        "top": 380,
+        "width": 314,
+        "height": 314
+      },
+      "file": "src/assets/ui/tiles/land-plot.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "f973d32e3b99905b62f9cb70ef9988614cfd3eb9a1f942c41950303d2d2628ae",
+      "bytes": 4102
+    },
+    {
+      "name": "autumn-shrubs",
+      "row": 1,
+      "column": 1,
+      "sourceRect": {
+        "left": 394,
+        "top": 380,
+        "width": 314,
+        "height": 314
+      },
+      "file": "src/assets/ui/tiles/autumn-shrubs.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "f21712d815c41a4ec623520ee47fd71c9e476c4ef8835ce5f2b3e378fc71e4ca",
+      "bytes": 5110
+    },
+    {
+      "name": "palms",
+      "row": 1,
+      "column": 2,
+      "sourceRect": {
+        "left": 740,
+        "top": 380,
+        "width": 314,
+        "height": 314
+      },
+      "file": "src/assets/ui/tiles/palms.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "33ed588eae7ef08bf1863998d66cd6280f038c0b64d8c04607bf81f42f48a5e7",
+      "bytes": 5478
+    },
+    {
+      "name": "street-furniture",
+      "row": 1,
+      "column": 3,
+      "sourceRect": {
+        "left": 1088,
+        "top": 380,
+        "width": 314,
+        "height": 314
+      },
+      "file": "src/assets/ui/tiles/street-furniture.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "95224edbb6f192043c9b2ba64b03894e8bb129afcb45173bfea9c8bf28aded66",
+      "bytes": 4072
+    },
+    {
+      "name": "patio-table",
+      "row": 2,
+      "column": 0,
+      "sourceRect": {
+        "left": 46,
+        "top": 726,
+        "width": 315,
+        "height": 315
+      },
+      "file": "src/assets/ui/tiles/patio-table.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "a0ac4e3944f36baa5d6d3bf1b10eda424e52fcb15fd8eaee4a4b200595009846",
+      "bytes": 4612
+    },
+    {
+      "name": "long-grass",
+      "row": 2,
+      "column": 1,
+      "sourceRect": {
+        "left": 393,
+        "top": 726,
+        "width": 315,
+        "height": 315
+      },
+      "file": "src/assets/ui/tiles/long-grass.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "6853c321ce3bf06301de903623f32ddb798b7528f4c5dc4af73eb716b69fd7fc",
+      "bytes": 4948
+    },
+    {
+      "name": "chipping-green",
+      "row": 2,
+      "column": 2,
+      "sourceRect": {
+        "left": 740,
+        "top": 726,
+        "width": 315,
+        "height": 315
+      },
+      "file": "src/assets/ui/tiles/chipping-green.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "ffd4287ae1ad902da98d326d9c8dab60813653b3096358c24fa69e7420739eac",
+      "bytes": 4086
+    },
+    {
+      "name": "surveyor-turf",
+      "row": 2,
+      "column": 3,
+      "sourceRect": {
+        "left": 1087,
+        "top": 726,
+        "width": 315,
+        "height": 315
+      },
+      "file": "src/assets/ui/tiles/surveyor-turf.webp",
+      "dimensions": [
+        144,
+        144
+      ],
+      "sha256": "77d14d4a5a1135647d652bb8d69d4aa4c069ef15faa19e8ca5e3c03adb204d8c",
+      "bytes": 4370
+    }
+  ]
+}

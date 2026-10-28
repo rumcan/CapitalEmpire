@@ -1,0 +1,50 @@
+{
+  "schema": 1,
+  "id": "golf:build-tool-tiles",
+  "category": "ui",
+  "catalogueItem": 181,
+  "subjobKey": "181-golf-build-tool-tiles-sheet",
+  "date": "2026-10-28",
+  "stage": "new-menu-subjects-v2",
+  "background": "opaque-charcoal-with-navy-rounded-cards",
+  "transparent": false,
+  "references": [
+    "art/theme-consistency/generated/ui/golf-build-tool-tiles-sheet-v1.png"
+  ],
+  "output": "art/theme-consistency/generated/ui/golf-build-tool-tiles-sheet-v2.png",
+  "provenance": "art/theme-consistency/generated/ui/golf-build-tool-tiles-sheet-v2.provenance.json",
+  "grid": {
+    "columns": 4,
+    "rows": 3
+  },
+  "subjects": [
+    "waste-sand",
+    "snack-hut",
+    "golf-hole",
+    "grandstand-scoreboard",
+    "land-plot",
+    "autumn-shrubs",
+    "palms",
+    "street-furniture",
+    "patio-table",
+    "long-grass",
+    "chipping-green",
+    "surveyor-turf"
+  ],
+  "prompt": "Make one picture: a sheet of twelve tiny isometric dioramas in a 4 x 3 grid, in exactly the style, scale and framing of the attached tile sheet. Each scene sits on its own dark navy (#1E2A44) rounded square; the squares are the same size, evenly spaced, and do not touch, on a flat charcoal (#1C1F26) background. Light from the upper right, soft shadows falling to the lower left, warm autumn colours, 1985. No lettering, numbers or logos anywhere. Row by row, left to right:\nRow 1: (1) a patch of pale waste sand with scattered pebbles, dry grass tufts and a little desert scrub; (2) a small timber snack hut with a red-and-white striped awning and a bench; (3) a whole tiny golf hole: a tee at the near end, a fairway running away to a green with a red flag; (4) a small white grandstand and a blank scoreboard beside a green with a flag.\nRow 2: (5) a bare dirt plot inside a white dashed line with a blank For Sale post; (6) a few autumn shrubs, scarlet burning bush and golden spirea; (7) two palm trees on a sandy grass patch; (8) a bench, a lamp post and a planter on a small paved square.\nRow 3: (9) a patio table with a red umbrella and two chairs; (10) a patch of tall, wispy golden-green long grass, longer and looser than rough; (11) a small chipping green with a flag, a bunker beside it and a few golf balls; (12) surveyor's stakes with orange tape and a wheelbarrow of turf on a lawn edge.\nUse the attached existing twelve-card sheet as the ONLY style and layout reference. These twelve subjects are NEW menu cards, not repetitions of the original sheet's subjects. Keep all twelve navy rounded frames square and uniform, four across and three down, with full charcoal outer margin and clear charcoal gutters. Entire dioramas fit within their own card without touching frames or neighbours. Blank sign faces, scoreboard and all other objects: no text of any kind. Output one opaque 4:3 landscape PNG about1536x1152 or larger, preserving the reference's square-card layout.",
+  "authority": {
+    "file": "worktrees/theme-consistency/docs/art/CHATGPT-IMAGE-QUEUE.md",
+    "sha256": "fec8ef7e426a3efb0596e206f63ce945fc43bfc295da01af582c3710873d80f9"
+  },
+  "generator": "built-in image_gen",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-6be49ee3-92b5-4a7f-95ed-50da8a64c227.png",
+  "referenceHashes": [
+    {
+      "file": "art/theme-consistency/generated/ui/golf-build-tool-tiles-sheet-v1.png",
+      "sha256": "6c02339c56474af6ae64e953972244a6bc4d9d716c30b8d080d3893a9e5d2b6f"
+    }
+  ],
+  "lighting": "screen upper-right toward lower-left; even macro exposure for ground",
+  "integrationStatus": "pending-visual-review",
+  "processing": "Native generator output copied byte-for-byte; no repaint, resample, mirror, recolour or transform."
+}
