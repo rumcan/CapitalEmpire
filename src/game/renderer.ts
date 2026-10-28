@@ -3034,11 +3034,11 @@ export class GroundPainter {
     drawDecals(ctx, placeDecals(box, MAP_DECALS, ground), this.tex, L, M);
   }
 
-  /** T232: the survey lines (lots/survey.ts), in the chunk's transform (tiles): each side a run of dashes from its corner, at least 1.5 px wide */
+  /** T232: the survey lines (lots/survey.ts), in the chunk's transform (tiles): each side a run of dashes from its corner, at least 2 px wide */
   private drawSurvey(ctx: C2D, patches: LotPatch[], minW: number) {
     ctx.save(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
     ctx.lineCap = 'butt'; ctx.lineJoin = 'miter'; ctx.setLineDash(SURVEY_DASH as number[]); ctx.lineDashOffset = 0;
-    ctx.strokeStyle = SURVEY_COL; ctx.lineWidth = Math.max(SURVEY_W, 1.5 * minW); ctx.beginPath();
+    ctx.strokeStyle = SURVEY_COL; ctx.lineWidth = Math.max(SURVEY_W, 2 * minW); ctx.beginPath();
     for (const p of patches) for (let k = 0, l = p.lines!; k + 3 < l.length; k += 4) { ctx.moveTo(l[k]!, l[k + 1]!); ctx.lineTo(l[k + 2]!, l[k + 3]!); }
     ctx.stroke(); ctx.restore();
   }

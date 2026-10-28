@@ -92,7 +92,7 @@ import { townTreeCell } from './towntrees';
 import type { BendMode, LibItem, LineStyle, Prop, Tool } from './types';
 import { LK, LaneGraph, laneAt, laneOff } from './sim/lanes';
 import { LU, LV, type LotTuple } from './lots/town';
-import { rectPlot, surveyPatch } from './lots/survey';
+import { surveyBlocks, surveyPatch } from './lots/survey';
 /** T232: a bought block's survey line runs this far inside its edges (tiles), clear of a neighbour's line */
 const LAND_SURVEY_INSET = 0.6;
 import { acrossLines, compose, composeWhole, farmPreset, fenceOnly, isCarPark, lotModelVersion, lotPresets, pickedPreset, setLotModel, type ComposeState, type FenceLines, type LotGeom, type Placed } from './lots/compose';
@@ -2440,10 +2440,9 @@ export class Game {
     this.surveySig = sig;
     const want = new Map<string, LotPatch[]>();
     if (g) {
-      for (const r of (g.parcels ?? []).slice(1)) {
-        if (this.builtOn([r[0], r[1], r[0] + r[2], r[1] + r[3]])) continue;
-        const s = surveyPatch(rectPlot(r), LAND_SURVEY_INSET); if (s) want.set(`survey:${r.join(',')}`, [s]);
-      }
+      // (adjacent empty blocks pegged out as one plot: surveyBlocks leaves out the sides they share)
+      const empty = (g.parcels ?? []).slice(1).filter(r => !this.builtOn([r[0], r[1], r[0] + r[2], r[1] + r[3]]));
+      for (const s of surveyBlocks(empty, LAND_SURVEY_INSET)) if (s) want.set(`survey:${s.lines!.join(',')}`, [s]);
       if (g.cleared?.length) {
         g.cleared = g.cleared.filter(c => !this.builtOn(lotBoxOf([c[0]!, c[1]!], [c[2]!, c[3]!], [c[4]!, c[5]!], c[6]!, c[7]!)));
         for (const c of g.cleared) {

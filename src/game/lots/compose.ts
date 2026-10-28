@@ -17,8 +17,8 @@ import { isBuilding } from '../mirror';
 import { LU, LV } from './town';
 import {
   BUSHES, BY, Build, CHAIN, DEAD_TREES, DRIVE_GAP, JUNK, MARK_ID, PARK_PIECES, PICKUPS, PRIVACY, SCHOOL_SIGNS, SIDE_YARD, TREES, clamp, isCarPark, mix,
-  names, patchTex, pick, specFit, withVariations,
-  type Composition, type ComposeState, type LotGeom, type Pt, type PresetDrop,
+  names, patchTex, pick, share, specFit, withVariations,
+  type Box4, type Composition, type ComposeState, type LotGeom, type Pt, type PresetDrop,
 } from './compose-core';
 import { approvedFor, bucketOf, fitPreset, parsePresets, pickPreset, presetsFor, stateOf, type Fitted, type LotPreset, type PresetDecal, type PresetMeta, type PresetProp, type PresetState, type PresetUse, type Road } from './presets';
 import { AXIS_PROPS, drawnView, footprintOf, ownerScaleOf, roadView, turned } from './preset-art';
@@ -146,6 +146,27 @@ const SITE_DIRT = 0.1, FRAME_SETBACK = 1.6;
 /** the frame's view for a lot: view 1 when its street lies toward the camera (+X or +Y), else view 2 */
 export const frameView = (B: Pick<Build, 'F'>): string => TIMBER_FRAME[B.F.x > 0.5 || B.F.y > 0.5 ? 0 : 1];
 
+/** a site piece keeps this far inside its lot's lines (tiles: within the survey line), and may share this much of its footprint with another */
+const SITE_IN = 0.35, SITE_SHARE = 0.05;
+/** T232: a piece at the first of the spots (lot frame a, b: its footprint's centre) where its footprint lies within the survey line and clear of
+ *  the uprights laid so far (so the kit never piles up, and a spot taken passes to the next), and out of the frame's screen shadow when given
+ *  (the frame's footprint centre and its half width across the screen, x - y tiles: a piece whose ground point is above the frame's on screen and
+ *  within its width stands behind its walls and is lost); nothing when none is free. Its size is drawn once */
+function putClear(B: Build, id: string, spots: readonly (readonly [number, number])[], shade?: { x: number; y: number; t: number }): boolean {
+  const g = B.spec(id); if (!g) return false;
+  const h = g.h, hw = (h[2] - h[0]) / 2, hd = (h[3] - h[1]) / 2;
+  for (const [a, b] of spots) {
+    const c = B.P(a, b), fp: Box4 = [c.x - hw, c.y - hd, c.x + hw, c.y + hd];
+    if (shade) { const dx = c.x - shade.x, dy = c.y - shade.y; if (dx + dy < -0.3 && Math.abs(dx - dy) < shade.t + 0.6 * (hw + hd)) continue; }
+    const inside = [[fp[0], fp[1]], [fp[2], fp[1]], [fp[2], fp[3]], [fp[0], fp[3]]].every(([x, y]) => {
+      const dx = x! - B.o.x, dy = y! - B.o.y, la = dx * B.u.x + dy * B.u.y, lb = dx * B.n.x + dy * B.n.y;
+      return la >= SITE_IN - 1e-9 && la <= B.W - SITE_IN + 1e-9 && lb >= SITE_IN - 1e-9 && lb <= B.D - SITE_IN + 1e-9;
+    });
+    if (!inside || B.items.some(it => !it.fence && share(it.fp, fp) > SITE_SHARE)) continue;
+    return !!B.atW(g, c);
+  }
+  return false;
+}
 /** a building site (a lot while it builds, LV.BUILDING): bare dirt (the Dirt surface, dirt-run) to the white dashed survey line round the plot; a
  *  house's timber frame where the house will stand (a lot on the map axes that holds it), lumber stacks beside it, heaps and the digger behind;
  *  the other uses' sites the digger in the middle, heaps, lumber and the old supplies, rubble, a cable spool and a pickup. Every piece as
@@ -155,34 +176,40 @@ function site(B: Build, home: boolean, angled: boolean) {
   const { W, D, r } = B;
   B.pave('yard', SITE_DIRT, SITE_DIRT, W - SITE_DIRT, D - SITE_DIRT, 'dirt');
   const heap = () => pick(r, SITE_HEAPS), lumber = () => pick(r, SITE_LUMBER);
+  /** the spots in a seeded turn (the same lot lays the same; neighbours differ) */
+  const turn = <T,>(l: T[]): T[] => { const k = Math.floor(r() * l.length); return [...l.slice(k), ...l.slice(0, k)]; };
   if (home) {
     // the frame where the house will stand: across the middle (a little to one side), set back as a house is
     const id = frameView(B), [fw, fd] = B.fit(id, false);
     const fits = !angled && fw + 1 <= W && FRAME_SETBACK + fd + 0.5 <= D;
     const fa = fits ? W / 2 + (r() - 0.5) * Math.max(0, W - fw - 1.6) * 0.5 : W / 2, fb = FRAME_SETBACK + fd / 2;
-    if (fits) B.put(id, fa, fb);
-    const a0 = fits ? fa - fw / 2 : W / 2, a1 = fits ? fa + fw / 2 : W / 2, back = fits ? fb + fd / 2 : D * 0.35;
-    // behind it: the digger (it dug the footings) and the heaps it left; beside it: lumber for the walls
+    const fr = fits ? B.put(id, fa, fb) : null;
+    // the free ground round it: the strips beside it (to a0, from a1) and behind it (from back); nothing in its screen shadow
+    const a0 = fits ? fa - fw / 2 : W / 2, a1 = fits ? fa + fw / 2 : W / 2, back = fits ? fb + fd / 2 : D * 0.35, L = a0 / 2, R = (a1 + W) / 2;
+    const shade = fr ? { x: (fr.fp[0] + fr.fp[2]) / 2, y: (fr.fp[1] + fr.fp[3]) / 2, t: (fr.fp[2] - fr.fp[0] + fr.fp[3] - fr.fp[1]) / 2 } : undefined;
+    // the digger (it dug the footings): behind the frame, else beside it
     const [dw, dd] = B.fit(DIGGER, false);
-    B.put(DIGGER, W / 2 + (r() - 0.5) * Math.max(0, W - dw - 1.2), Math.max(back + dd / 2 + 0.2, D - dd / 2 - 0.6));
-    B.put(heap(), 1.4 + r() * 0.4, D - 1.5);
-    B.put(heap(), W - 1.5 - r() * 0.4, D - 1.7);
-    B.put(lumber(), a0 / 2, fb + (r() - 0.5));
-    B.put(lumber(), (a1 + W) / 2, fb + 0.6 + (r() - 0.5));
-    if (r() < 0.6) B.put(lumber(), (a1 + W) / 2, Math.max(1.4, FRAME_SETBACK - 0.2));
-    B.put(pick(r, SITE_KIT.masonry), a0 / 2, Math.min(D - 1, back + 0.8));
-    B.vehicle(PICKUPS, a0 > W - a1 ? a0 / 2 : (a1 + W) / 2, 0.5);
+    putClear(B, DIGGER, [[W / 2 + (r() - 0.5) * Math.max(0, W - dw - 1.2), D - dd / 2 - 0.5], [dw / 2 + 0.5, D - dd / 2 - 0.5], [W - dw / 2 - 0.5, D - dd / 2 - 0.5],
+      ...turn<[number, number]>([[L, back - dd / 2], [R, back - dd / 2], [L, D / 2], [R, D / 2], [L, fb], [R, fb], [L, dd / 2 + 0.5], [R, dd / 2 + 0.5]])], shade);
+    // the heaps it left: the back corners, else beside the frame; lumber for the walls beside it, else in front or behind
+    const heaps: [number, number][] = turn([[1.2, D - 1.1], [W - 1.2, D - 1.1], [L, D - 1.1], [R, D - 1.1], [L, back - 0.6], [R, back - 0.6], [W / 2, D - 1.1], [L, 1.2], [R, 1.2]]);
+    putClear(B, heap(), heaps, shade); putClear(B, heap(), heaps, shade);
+    const stacks: [number, number][] = turn([[L, fb], [R, fb], [L, FRAME_SETBACK], [R, FRAME_SETBACK], [L, back], [R, back], [W / 2, D - 1.2], [W / 2, 0.9]]);
+    putClear(B, lumber(), stacks, shade); putClear(B, lumber(), stacks, shade);
+    if (r() < 0.6) putClear(B, lumber(), stacks, shade);
+    putClear(B, pick(r, SITE_KIT.masonry), stacks, shade);
+    B.vehicle(PICKUPS, a0 > W - a1 ? L : R, 0.5);
     B.mark('mud', W / 2, Math.min(D - 1, back + 0.8), 1.2); B.mark('expansion:mud-footprints', W / 2, FRAME_SETBACK - 0.6); B.mark('expansion:mud-arc', W * 0.7, D - 2.2); B.marksIn('gravel', 1, 1, W - 1, D - 1, 2);
     return;
   }
   // the digger in the middle (as painted: it faces +X), then the heaps and lumber, the supplies, rubble, a spool and a pickup
   B.put(DIGGER, W / 2 - 0.6, D / 2 + 1);
-  B.put(heap(), W - 1.6, D * 0.3);
-  B.put(lumber(), 1.5, D - 2);
+  const spots: [number, number][] = turn([[W - 1.6, D * 0.3], [1.5, D - 2], [W - 1.5, D - 2.2], [1.4, D * 0.4], [W / 2, D - 1.2], [W - 1.4, 1.4]]);
+  putClear(B, heap(), spots); putClear(B, lumber(), spots);
   B.put(pick(r, SITE_KIT.masonry), 1.2, 1.6);
   B.put(pick(r, SITE_KIT.masonry), 2.5, 1.2);
   B.put(pick(r, SITE_KIT.rubble), W - 1.6, 2.2);
-  B.put(heap(), W - 1.5, D - 2.2);
+  putClear(B, heap(), spots);
   if (r() < 0.4) B.put(pick(r, SITE_KIT.forklift), W / 2 + 1.5, D / 2);
   B.put(pick(r, SITE_KIT.rubble), W / 2 - 2.6, D / 2 - 0.4);
   B.vehicle(PICKUPS, W / 2, 0.8);

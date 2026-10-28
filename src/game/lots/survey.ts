@@ -37,3 +37,27 @@ export function surveyPatch(p: Plot, inset = SURVEY_INSET): LotPatch | null {
 }
 /** a map-axis rectangle [x, y, w, h] (tiles: the player's land) as a plot */
 export const rectPlot = (r: readonly [number, number, number, number]): Plot => ({ o: { x: r[0], y: r[1] }, u: { x: 1, y: 0 }, n: { x: 0, y: 1 }, w: r[2], d: r[3] });
+type Rect = readonly [number, number, number, number];
+/** whether block q lies against side k of block r edge to edge (k: 0 top, the -y side; 1 right; 2 bottom; 3 left), the whole side */
+function against(r: Rect, q: Rect, k: number): boolean {
+  const e = 1e-6;
+  if (k === 0 || k === 2) { if (Math.abs(q[0] - r[0]) > e || Math.abs(q[2] - r[2]) > e) return false; return k === 0 ? Math.abs(q[1] + q[3] - r[1]) < e : Math.abs(r[1] + r[3] - q[1]) < e; }
+  if (Math.abs(q[1] - r[1]) > e || Math.abs(q[3] - r[3]) > e) return false;
+  return k === 1 ? Math.abs(r[0] + r[2] - q[0]) < e : Math.abs(q[0] + q[2] - r[0]) < e;
+}
+/** the player's empty land pegged out (map-axis blocks [x, y, w, h], tiles), each block's patch (null: nothing to draw): its survey line on its
+ *  outer sides only, inset tiles in. A side another block of the list lies against edge to edge is left out, and the sides meeting it run on to
+ *  the block's edge, so adjacent blocks read as one plot with one line round it */
+export function surveyBlocks(rects: readonly Rect[], inset = SURVEY_INSET): (LotPatch | null)[] {
+  return rects.map(r => {
+    const open = [0, 1, 2, 3].map(k => rects.some(q => q !== r && against(r, q, k)));
+    const iT = open[0] ? 0 : inset, iR = open[1] ? 0 : inset, iB = open[2] ? 0 : inset, iL = open[3] ? 0 : inset;
+    const x0 = r[0] + iL, y0 = r[1] + iT, x1 = r[0] + r[2] - iR, y1 = r[1] + r[3] - iB;
+    if (x1 - x0 < 0.5 || y1 - y0 < 0.5) return null;
+    const c = [[x0, y0], [x1, y0], [x1, y1], [x0, y1]], lines: number[] = [];
+    for (let k = 0; k < 4; k++) if (!open[k]) { const s = c[k]!, e = c[(k + 1) % 4]!; lines.push(+s[0]!.toFixed(3), +s[1]!.toFixed(3), +e[0]!.toFixed(3), +e[1]!.toFixed(3)); }
+    if (!lines.length) return null;
+    const g = SURVEY_W, pts = [x0 - g, y0 - g, x1 + g, y0 - g, x1 + g, y1 + g, x0 - g, y1 + g].map(v => +v.toFixed(3));
+    return { pts, tex: 'marks', lines, survey: true };
+  });
+}

@@ -11,7 +11,7 @@ import { DIGGER, SITE_HEAPS, SITE_LUMBER, SITE_PIECES, TIMBER_FRAME, frameView }
 import { LU, LV } from '../src/game/lots/town';
 import { LIBRARY } from '../src/game/library';
 import { parsePresets } from '../src/game/lots/presets';
-import { SURVEY_INSET, rectPlot, surveyLines, surveyPatch } from '../src/game/lots/survey';
+import { SURVEY_INSET, rectPlot, surveyBlocks, surveyLines, surveyPatch } from '../src/game/lots/survey';
 import PRESET_FIXTURE from './fixtures/lot-presets.json';
 
 { const f = parsePresets(PRESET_FIXTURE); setLotPresets(f.presets, f.meta); }
@@ -79,6 +79,21 @@ test('the survey line follows the plot: four sides SURVEY_INSET inside its lines
   assert.deepEqual(surveyLines(rectPlot([0, 0, 1, 1])), []); assert.equal(surveyPatch(rectPlot([0, 0, 1, 1])), null);
 });
 
+test('the player\'s adjacent empty blocks are pegged out as one plot: one line round them all, none along the sides they share', () => {
+  const a: [number, number, number, number] = [100, 100, 40, 40], b: [number, number, number, number] = [100, 140, 40, 40], c: [number, number, number, number] = [140, 100, 40, 40], lone: [number, number, number, number] = [300, 300, 40, 40];
+  const ps = surveyBlocks([a, b, c, lone], 0.6);
+  // a lone block: its four sides, as surveyPatch draws them
+  assert.deepEqual(ps[3]!.lines, surveyPatch(rectPlot(lone), 0.6)!.lines);
+  // the L of three: every segment on the union's outline (0.6 in), none inside it
+  const segs: number[][] = []; for (const p of ps.slice(0, 3)) for (let k = 0; k + 3 < p!.lines!.length; k += 4) segs.push(p!.lines!.slice(k, k + 4));
+  const onOutline = (x: number, y: number) => [100.6, 179.4].some(v => Math.abs(x - v) < 1e-6) || [100.6, 179.4].some(v => Math.abs(y - v) < 1e-6) || (Math.abs(x - 139.4) < 1e-6 && y >= 139.4) || (Math.abs(y - 139.4) < 1e-6 && x >= 139.4);
+  for (const s of segs) assert.ok(onOutline(s[0]!, s[1]!) && onOutline(s[2]!, s[3]!), `a segment inside the plot: ${s.join(',')}`);
+  // the outline's length: the L's perimeter (80 + 80 + 40 + 40 + 40 + 40 = 320 tiles) less the insets (the inner corner's two sides stop an
+  // inset short of it: a gap no longer than a dash's)
+  const len = segs.reduce((t, s) => t + Math.hypot(s[2]! - s[0]!, s[3]! - s[1]!), 0);
+  assert.ok(len <= 320 - 8 * 0.6 + 1e-6 && len >= 320 - 8 * 0.6 - 2 * 0.6 - 1e-6, `outline ${len}`);
+});
+
 test('a site is bare dirt to the line: one Dirt patch over the lot, inside its lines, under the line', () => {
   for (const l of LOTS) {
     const c = site(l, LU.RES, 11), dirt = c.ground.filter(g => g.tex === 'dirt'), at = c.ground.findIndex(g => g.survey);
@@ -114,6 +129,14 @@ test('a house going up: its timber frame (view 1 where the street lies toward th
     // where the house will stand: set back from the front, inside the lot
     const q = toLot(l, fr[0]!.x, fr[0]!.y);
     assert.ok(q.b > 1 && q.b < l.d - 2, `${l.key}: the frame ${q.b.toFixed(2)} tiles in`);
+    // and round it the kit: on a house lot of the town's sizes (10 x 12 tiles or more) the digger, two heaps, two lumber stacks or more; on a
+    // smaller one what fits, two pieces at least
+    const n = (ids: readonly string[]) => c.props.filter(p => ids.includes(p.id)).length;
+    if (l.w >= 10 && l.d >= 12) { assert.equal(n([DIGGER]), 1, `${l.key}: no digger`); assert.equal(n(SITE_HEAPS), 2, `${l.key}: heaps`); assert.ok(n(SITE_LUMBER) >= 2, `${l.key}: lumber`); }
+    else assert.ok(n([DIGGER, ...SITE_HEAPS, ...SITE_LUMBER]) >= 2, `${l.key} (${l.w} x ${l.d}): a bare frame`);
+    // none of it lost behind the frame's walls: no piece's ground point above the frame's on screen and within its width
+    const f = fr[0]!, fb = byId.get(f.id)!.boxes[0]!, half = (fb.hx + fb.hy) * f.scale / 2;
+    for (const p of c.props) if (SITE_PIECES.has(p.id) && p !== f) { const dx = p.x - f.x, dy = p.y - f.y; assert.ok(!(dx + dy < -0.3 && Math.abs(dx - dy) < half), `${l.key}: ${p.id} behind the frame`); }
     framed++; if (fr[0]!.id === TIMBER_FRAME[0]) v1++; else v2++;
   }
   assert.ok(framed >= 20 && v1 > 0 && v2 > 0, `${framed} framed (${v1} view 1, ${v2} view 2)`);
