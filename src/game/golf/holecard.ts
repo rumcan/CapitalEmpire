@@ -2,7 +2,8 @@
 // from each tee marker, its grow-in (the hole's and each surface's), its surfaces' areas, and its checks and warnings, each with the Fix that arms
 // the tool that mends it; the note Delete's confirm states; and the renumbering of two holes (D4.12: badges dragged), which swaps every place a
 // hole number lives so the routing and the walk check follow. No quality score, golfers or fees, and no Move. Pure TS, no DOM.
-import { holeLine, lineLength, validateMarkerPlacement } from './holes';
+import { holeLine, lineLength, parFromLength, validateMarkerPlacement } from './holes';
+import { FLAG_OFF, TEE_KINDS } from './teesets';
 import type { HoleView } from './holeview';
 import { TILE_M, type AimPoint, type CourseArea, type GolfSurface, type Pin, type TeeMark } from './types';
 import { MONTH_BASE, SURF_SURFACE } from '../ext/course-grid/areas';
@@ -19,8 +20,10 @@ export interface HoleCardCheck { id: string; text: string; ok: boolean; warn: bo
 /** the hole card's facts */
 export interface HoleCardView {
   n: number; par: 3 | 4 | 5 | 0;
-  /** the length from each tee marker there is (m), back first */
-  tees: { kind: TeeMark['kind']; m: number }[];
+  /** the length from each tee set there is (m) and its par, back (blue) first */
+  tees: { kind: TeeMark['kind']; m: number; par: 3 | 4 | 5 }[];
+  /** T254: the sets "Add tee" can lay (the hole has a line and not that set), back to front */
+  addable: TeeMark['kind'][];
   /** the hole's grow-in month (the game month all of it is grown in; null: grown in) */
   ready: number | null;
   /** its surfaces, the biggest first */
@@ -49,19 +52,20 @@ export function holeAreas(g: Grid | null, n: number, now: number, shift = 0): Ho
     .sort((a, b) => b.m2 - a.m2 || ORDER.indexOf(a.surface) - ORDER.indexOf(b.surface));
 }
 
-/** the length of hole n from each of its tee markers to its pin (m), back first; none without a pin */
-export function teeLengths(n: number, pins: readonly Pin[], tees: readonly TeeMark[], aims: readonly AimPoint[]): { kind: TeeMark['kind']; m: number }[] {
+/** the length of hole n from each of its tee sets to its pin (m) with that set's par, back (blue) first; none without a pin */
+export function teeLengths(n: number, pins: readonly Pin[], tees: readonly TeeMark[], aims: readonly AimPoint[]): { kind: TeeMark['kind']; m: number; par: 3 | 4 | 5 }[] {
   const pin = pins.find(p => p.hole === n); if (!pin) return [];
   const a = aims.filter(q => q.hole === n);
-  return (['back', 'middle', 'forward'] as const).flatMap(kind => {
-    const t = tees.find(q => q.hole === n && q.kind === kind);
-    return t ? [{ kind, m: Math.round(lineLength(holeLine(t, a, pin)) * TILE_M) }] : [];
+  return TEE_KINDS.flatMap(kind => {
+    const t = tees.find(q => q.hole === n && q.kind === kind); if (!t) return [];
+    const m = Math.round(lineLength(holeLine(t, a, pin)) * TILE_M);
+    return [{ kind, m, par: parFromLength(m) }];
   });
 }
 
 /** the walk from hole n's green (its pin) to the next number's first tee (m), or null when either is missing */
 export function walkToNext(n: number, pins: readonly Pin[], tees: readonly TeeMark[]): number | null {
-  const pin = pins.find(p => p.hole === n), next = tees.find(t => t.hole === n + 1 && t.kind === 'back') ?? tees.find(t => t.hole === n + 1);
+  const pin = pins.find(p => p.hole === n), next = TEE_KINDS.map(k => tees.find(t => t.hole === n + 1 && t.kind === k)).find(t => t);
   return pin && next ? Math.round(Math.hypot(pin.x - next.x, pin.y - next.y) * TILE_M) : null;
 }
 
@@ -72,20 +76,25 @@ const CHECK_FIX: Readonly<Record<string, HoleFix>> = {
   'Fairway painted': { kind: 'brush', surface: 'fairway' },
   'Pin on the green': { kind: 'marker', marker: 'pin' },
   'Tee markers on the tee': { kind: 'marker', marker: 'back' },
+  // T254: a marker Edit Hole Layout left off its turf: paint the turf under it
+  [FLAG_OFF]: { kind: 'brush', surface: 'green' },
 };
+/** the Fix of a check's label (T254: "The red tee is off the tee turf: …" paints a tee) */
+const fixOf = (label: string): HoleFix | null => CHECK_FIX[label] ?? (/ tee is off the tee turf/.test(label) ? { kind: 'brush', surface: 'tee' } : null);
 
 /** the hole card for hole view v: the markers, the hole's surfaces (holeAreas), its grow-in month and whether it has New hole's plan. The
  *  warnings are deriveHoles' (holes.ts), said with their numbers: the long walk with its metres, too close with the hole's number; the ones a
  *  new line mends carry Edit hole as their Fix when the hole has a plan */
 export function holeCard(v: HoleView, o: { pins: readonly Pin[]; tees: readonly TeeMark[]; aims: readonly AimPoint[]; areas: HoleCardArea[]; ready: number | null; planned: boolean }): HoleCardView {
-  const checks: HoleCardCheck[] = v.checks.map((c, i) => ({ id: `check-${i}`, text: c.label, ok: c.ok, warn: false, fix: c.ok ? null : CHECK_FIX[c.label] ?? null }));
+  const checks: HoleCardCheck[] = v.checks.map((c, i) => ({ id: `check-${i}`, text: c.label, ok: c.ok, warn: false, fix: c.ok ? null : fixOf(c.label) }));
   v.warnings.forEach((w, i) => {
     let text = w, fix: HoleFix | null = o.planned ? { kind: 'edit' } : null;
     if (w === 'Long walk to the next tee') { const m = walkToNext(v.n, o.pins, o.tees); text = m === null ? w : `A ${m} m walk to hole ${v.n + 1}'s tee`; fix = null; }
     else { const close = /^Too close to hole (\d+)$/.exec(w); if (close) text = `Too close to hole ${close[1]}: golfers there are in range`; }
     checks.push({ id: `warn-${i}`, text, ok: false, warn: true, fix });
   });
-  return { n: v.n, par: v.par, tees: teeLengths(v.n, o.pins, o.tees, o.aims), ready: o.ready, areas: o.areas, checks, planned: o.planned };
+  const tees = teeLengths(v.n, o.pins, o.tees, o.aims), addable = tees.length ? TEE_KINDS.filter(k => !tees.some(t => t.kind === k)) : [];
+  return { n: v.n, par: v.par, tees, addable, ready: o.ready, areas: o.areas, checks, planned: o.planned };
 }
 
 /** what Delete's confirm states for hole n (T174; T256: the hole owns its paint): its choice, all its cells (touch-ups included) back to the

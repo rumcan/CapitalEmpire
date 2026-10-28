@@ -1,11 +1,15 @@
 // The golf holes (docs/GOLF-PLAN.md section 4.2): the playing line, lengths, par and warnings, derived from the painted course. Pure TS, no DOM.
-import type { AimPoint, CourseArea, GolfSurface, Pin, TeeMark } from './types';
+import type { AimPoint, CourseArea, GolfSurface, Pin, TeeKind, TeeMark } from './types';
 import { TILE_M } from './types';
+import { TEE_KINDS, TEE_SET } from './teesets';
 
 /** a point in tiles */
 export type Pt = { x: number; y: number };
-/** a derived hole: its number, par (from the length), the championship and member lengths (metres), the playing line (tiles) and its warnings */
-export interface Hole { n: number; par: 3 | 4 | 5; lengthM: number; memberLengthM: number; line: Pt[]; warnings: string[] }
+/** one tee set of a hole (T254): its kind, its length to the pin (m), its par and its playing line (tiles: its tee, the aims, the pin) */
+export interface HoleSet { kind: TeeKind; lengthM: number; par: 3 | 4 | 5; line: Pt[] }
+/** a derived hole: its number, par (from the length), the championship and member lengths (metres), the playing line (tiles) and its warnings. T254:
+ *  sets, each tee set's length, par and line, back to front (a hole with a line has one at least; the line and lengthM are the first set's) */
+export interface Hole { n: number; par: 3 | 4 | 5; lengthM: number; memberLengthM: number; line: Pt[]; warnings: string[]; sets?: HoleSet[] }
 /** the course totals over its playable holes (those with a pin and a tee) */
 export interface CourseStats { holes: number; par: number; lengthM: number; memberLengthM: number; mix: { 3: number; 4: number; 5: number } }
 
@@ -32,7 +36,7 @@ export interface MarkerValidation { ok: boolean; reason?: string }
 /** validates that a pin lies on a green and a tee marker lies on a tee area */
 export function validateMarkerPlacement(
  areas: CourseArea[],
- kind: 'pin' | 'back' | 'middle' | 'forward',
+ kind: 'pin' | TeeKind,
  x: number,
  y: number,
 ): MarkerValidation {
@@ -40,7 +44,7 @@ export function validateMarkerPlacement(
  if (kind === 'pin') {
  if (surface !== 'green') return { ok: false, reason: 'A pin must be placed on a green' };
  } else {
- if (surface !== 'tee') return { ok: false, reason: `A ${kind} tee marker must be placed on a tee` };
+ if (surface !== 'tee') return { ok: false, reason: `A ${TEE_SET[kind].colour} tee marker must be placed on a tee` };
  }
  return { ok: true };
  }
@@ -128,7 +132,8 @@ export function deriveHoles(areas: CourseArea[], tees: TeeMark[], pins: Pin[], a
     const pin = pins.find(p => p.hole === n) ?? null;
     const back = tees.find(t => t.hole === n && t.kind === 'back') ?? null;
     const mid = tees.find(t => t.hole === n && t.kind === 'middle') ?? null;
-    const start = back ?? mid ?? tees.find(t => t.hole === n && t.kind === 'forward') ?? null;
+    // the line starts at the set furthest back (T254: blue, white, yellow, red)
+    const mine = TEE_KINDS.flatMap(k => tees.find(t => t.hole === n && t.kind === k) ?? []), start = mine[0] ?? null;
     const holeAims = aims.filter(a => a.hole === n);
     const warnings: string[] = [];
     if (!pin) warnings.push('No pin');
@@ -144,7 +149,9 @@ export function deriveHoles(areas: CourseArea[], tees: TeeMark[], pins: Pin[], a
       for (const s of S) { const f = surfaceAt(areas, s.x, s.y); if (f && PLAYABLE.has(f)) on++; }
       if (on < 0.7 * S.length) warnings.push('Most of the line is off the course');
     }
-    holes.push({ n, par: line.length ? parFromLength(lengthM) : 4, lengthM, memberLengthM, line, warnings });
+    // T254: each set's own line, length and par
+    const sets = pin && line.length ? mine.map(t => { const l = holeLine(t, holeAims, pin), m = Math.round(lineLength(l) * TILE_M); return { kind: t.kind, lengthM: m, par: parFromLength(m), line: l }; }) : [];
+    holes.push({ n, par: line.length ? parFromLength(lengthM) : 4, lengthM, memberLengthM, line, warnings, ...(sets.length ? { sets } : {}) });
     starts.push(start ? { x: start.x, y: start.y } : null);
     pinAt.push(pin ? { x: pin.x, y: pin.y } : null);
     const L = line.length ? lineLength(line) : 0;

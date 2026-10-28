@@ -298,3 +298,9 @@ the tile's navy square; a second sheet in 174's style would finish the panel (on
 | `palms` | Facilities › Plants › Palms | two palms on a sandy grass patch | P2 |
 | `props` | Facilities › Decoration › Props, All props | a bench, a lamp post and a planter on a paved square | P2 |
 | `furniture` | Decoration › Props › Furniture | a patio table with a red umbrella and two chairs | P2 |
+| `long-grass` | Course › Shape by hand › Long grass (wears `rough` today) | a patch of tall, wispy golden-green long grass, looser than rough | P1 |
+| `chipping` | Facilities › Practice › Chipping green and bunker (wears `bunker` today) | a small chipping green with a flag, a bunker beside it, a few balls | P2 |
+| `build` | Facilities › Build on your property; Range › Build | surveyor's stakes with orange tape and a wheelbarrow of turf on a lawn edge | P2 |
+
+All twelve are art 181, one sheet in the ChatGPT queue (`docs/art/CHATGPT-IMAGE-QUEUE.md`, first). Sheet order, row by row: waste,
+halfway-house, your-holes, tournament / land, bushes, palms, props / furniture, long-grass, chipping, build.

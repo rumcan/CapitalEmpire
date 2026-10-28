@@ -9,6 +9,7 @@ import { AM_SKILL, GOLFER_NAMES } from './play/field';
 import { playRound } from './play/round';
 import { dayEntourage } from './play/entourage';
 import { rng } from './play/shot';
+import { everydaySet } from './teesets';
 import type { CourseView, Golfer, Group, RoundPlan, Sex } from './play/types';
 
 /** the first and the last everyday tee time (07:00 and 15:00: an 18-hole round of about four and a half hours is in by the clubhouse's 19:00 close) */
@@ -110,7 +111,9 @@ export function dayRoster(seed: number, day: number, inp: DayInputs): DayRoster 
       do name = `${firsts[Math.floor(r() * firsts.length)]} ${GOLFER_NAMES.last[Math.floor(r() * GOLFER_NAMES.last.length)]}`; while (used.has(name) && ++tries < 20);
       used.add(name);
       const [lo, hi] = g.member ? MEMBER_SKILL : VISITOR_SKILL;
-      golfers.push({ id, name, sex, pro: false, skill: lo + (hi - lo) * r(), look: Math.floor(r() * 5) });
+      const skill = lo + (hi - lo) * r();
+      // T254: his tee set: the ladies and the beginners the red, the seniors the yellow (his own draw, so the roster's stream is as before), the rest the white
+      golfers.push({ id, name, sex, pro: false, skill, look: Math.floor(r() * 5), tees: everydaySet(sex, skill, rng(s, -8, id)()) });
       players.push(id);
     }
     const arrive = tee - ARRIVE_LEAD - ARRIVE_JITTER * r(), fee = g.member ? 0 : g.size * GREEN_FEE_PER_ROUND;

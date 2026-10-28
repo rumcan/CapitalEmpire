@@ -13,12 +13,17 @@ import { CH_SIZE, CH_STEP, clampCourseHeightM, type CourseHeightField } from '..
 import { decodePlan, encodePlan, type HolePlan } from '../ext/hole-plan';
 import { normalizeBook, type LookSet } from './looks';
 import type { StoredHole } from './holepreset';
+import type { TeeKind } from './types';
+import { isTeeKind } from './teesets';
 
 /** a saved hole (the player's "My holes"): StoredHole's name and props (its frame trees; areas stay empty: the cells hold its surfaces), with
  *  v, facing: the quarter turns it faced when saved ((x, y) -> (-y, x) a turn; 0 faces +x), cells: x y surface triples (cell offsets from
  *  the tee cell, turned to face +x), plan: its plan's save tuple in the same frame (tiles from the tee cell's centre), heights: i j metres
- *  triples (height sample offsets from the tee's sample, turned), looks: its looks, par and m: its par and length when saved */
-export interface MyHole extends StoredHole { v: 1; facing: 0 | 1 | 2 | 3; cells: number[]; plan?: unknown; heights?: number[]; looks?: LookSet; par?: number; m?: number }
+ *  triples (height sample offsets from the tee's sample, turned), looks: its looks, par and m: its par and length when saved; T254: tees, its tee
+ *  sets' markers (kind and tiles from the tee cell's centre, turned) */
+export interface MyHole extends StoredHole { v: 1; facing: 0 | 1 | 2 | 3; cells: number[]; plan?: unknown; heights?: number[]; looks?: LookSet; par?: number; m?: number; tees?: SavedTee[] }
+/** a saved hole's tee set: its kind and its markers' spot (tiles) */
+export interface SavedTee { kind: TeeKind; x: number; y: number }
 
 /** the most My holes kept (the oldest goes first) */
 export const MY_HOLES_MAX = 24;
@@ -45,7 +50,7 @@ function movePlan(p: HolePlan, ox: number, oy: number, q: number, mx: number, my
 
 /** what saving hole n needs: the grid, its plan (null: painted by hand), its tee and pin (tiles), the height field, its looks, its frame
  *  trees (sprite id, tile place, flip, scale), its name, par and length */
-export interface CaptureCtx { grid: Grid; plan: HolePlan | null; tee: { x: number; y: number }; pin: { x: number; y: number } | null; field?: CourseHeightField | null; looks?: LookSet | null; frame?: readonly { id: string; x: number; y: number; flip: boolean; scale: number }[]; name: string; par?: number; m?: number }
+export interface CaptureCtx { grid: Grid; plan: HolePlan | null; tee: { x: number; y: number }; pin: { x: number; y: number } | null; field?: CourseHeightField | null; looks?: LookSet | null; frame?: readonly { id: string; x: number; y: number; flip: boolean; scale: number }[]; name: string; par?: number; m?: number; tees?: readonly SavedTee[] }
 /** hole n as a My holes entry (null when it has no cell) */
 export function captureHole(n: number, c: CaptureCtx): MyHole | null {
   const g = c.grid, tcx = Math.floor((c.tee.x - g.x0) / CELL_T), tcy = Math.floor((c.tee.y - g.y0) / CELL_T);
@@ -73,13 +78,15 @@ export function captureHole(n: number, c: CaptureCtx): MyHole | null {
     }
   }
   const props = (c.frame ?? []).map(t => { const [a, b] = turn(t.x - ox, t.y - oy, back); return { id: t.id, x: Math.round(a * 100) / 100, y: Math.round(b * 100) / 100, flip: t.flip, scale: t.scale }; });
-  return { v: 1, name: c.name.trim().slice(0, 40) || `Hole ${n}`, areas: [], props, facing, cells, ...(plan ? { plan } : {}), ...(heights.length ? { heights } : {}), ...(c.looks ? { looks: JSON.parse(JSON.stringify(c.looks)) as LookSet } : {}), ...(c.par ? { par: c.par } : {}), ...(c.m ? { m: c.m } : {}) };
+  // T254: its tee sets, as its frame trees
+  const tees = (c.tees ?? []).map(t => { const [a, b] = turn(t.x - ox, t.y - oy, back); return { kind: t.kind, x: Math.round(a * 100) / 100, y: Math.round(b * 100) / 100 }; });
+  return { v: 1, name: c.name.trim().slice(0, 40) || `Hole ${n}`, areas: [], props, facing, cells, ...(plan ? { plan } : {}), ...(heights.length ? { heights } : {}), ...(c.looks ? { looks: JSON.parse(JSON.stringify(c.looks)) as LookSet } : {}), ...(c.par ? { par: c.par } : {}), ...(c.m ? { m: c.m } : {}), ...(tees.length ? { tees } : {}) };
 }
 
 /** a saved hole placed with its tee cell at grid cell (tcx, tcy), turned q quarter turns from its saved frame (q = facing: as it was saved),
  *  as hole n: its cells (grid cell indices with their surfaces; cells off the grid are left out), its plan, its height samples (sample index,
  *  metres) and its frame trees (tiles) */
-export interface Placed { cells: { i: number; s: number }[]; plan: HolePlan | null; heights: { k: number; h: number }[]; props: { id: string; x: number; y: number; flip: boolean; scale: number }[]; box: [number, number, number, number] }
+export interface Placed { cells: { i: number; s: number }[]; plan: HolePlan | null; heights: { k: number; h: number }[]; props: { id: string; x: number; y: number; flip: boolean; scale: number }[]; box: [number, number, number, number]; tees: SavedTee[] }
 export function placeMyHole(h: MyHole, g: Grid, tcx: number, tcy: number, q: number, n: number): Placed {
   const cells: { i: number; s: number }[] = [], ox = g.x0 + (tcx + 0.5) * CELL_T, oy = g.y0 + (tcy + 0.5) * CELL_T;
   let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
@@ -96,7 +103,8 @@ export function placeMyHole(h: MyHole, g: Grid, tcx: number, tcy: number, q: num
     if (i >= 0 && j >= 0 && i < CH_SIZE && j < CH_SIZE) heights.push({ k: j * CH_SIZE + i, h: clampCourseHeightM(h.heights[k + 2]!) });
   }
   const props = h.props.map(t => { const [a, b] = turn(t.x, t.y, q); return { ...t, x: a + ox, y: b + oy }; });
-  return { cells, plan, heights, props, box: cells.length ? [g.x0 + x0 * CELL_T, g.y0 + y0 * CELL_T, g.x0 + (x1 + 1) * CELL_T, g.y0 + (y1 + 1) * CELL_T] : [ox, oy, ox, oy] };
+  const tees = (h.tees ?? []).map(t => { const [a, b] = turn(t.x, t.y, q); return { kind: t.kind, x: a + ox, y: b + oy }; });
+  return { tees, cells, plan, heights, props, box: cells.length ? [g.x0 + x0 * CELL_T, g.y0 + y0 * CELL_T, g.x0 + (x1 + 1) * CELL_T, g.y0 + (y1 + 1) * CELL_T] : [ox, oy, ox, oy] };
 }
 
 /** a saved hole from a save or the browser (null when it is not one: no cells, a bad number) */
@@ -108,7 +116,8 @@ export function normalizeMyHole(raw: unknown): MyHole | null {
   const props = (Array.isArray(r.props) ? r.props : []).filter(p => p && typeof p.id === 'string' && Number.isFinite(p.x) && Number.isFinite(p.y)).map(p => ({ id: p.id, x: p.x, y: p.y, flip: !!p.flip, scale: Number.isFinite(p.scale) ? p.scale : 1 }));
   const looks = normalizeBook({ h1: r.looks })?.h1;
   const facing = (Number.isInteger(r.facing) ? (((r.facing! % 4) + 4) % 4) : 0) as 0 | 1 | 2 | 3;
-  return { v: 1, name: typeof r.name === 'string' && r.name.trim() ? r.name.trim().slice(0, 40) : 'My hole', areas: [], props, facing, cells: cells.slice(), ...(r.plan !== undefined && decodePlan(r.plan) ? { plan: r.plan } : {}), ...(heights?.length ? { heights } : {}), ...(looks ? { looks } : {}), ...(Number.isFinite(r.par) ? { par: r.par } : {}), ...(Number.isFinite(r.m) ? { m: r.m } : {}) };
+  const seen = new Set<string>(), tees = (Array.isArray(r.tees) ? r.tees : []).filter(t => t && isTeeKind(t.kind) && Number.isFinite(t.x) && Number.isFinite(t.y) && !seen.has(t.kind) && !!seen.add(t.kind)).map(t => ({ kind: t.kind, x: t.x, y: t.y }));
+  return { v: 1, name: typeof r.name === 'string' && r.name.trim() ? r.name.trim().slice(0, 40) : 'My hole', areas: [], props, facing, cells: cells.slice(), ...(r.plan !== undefined && decodePlan(r.plan) ? { plan: r.plan } : {}), ...(heights?.length ? { heights } : {}), ...(looks ? { looks } : {}), ...(Number.isFinite(r.par) ? { par: r.par } : {}), ...(Number.isFinite(r.m) ? { m: r.m } : {}), ...(tees.length ? { tees } : {}) };
 }
 /** My holes from a save (the bad ones left out, at most MY_HOLES_MAX) */
 export function normalizeMyHoles(raw: unknown): MyHole[] {

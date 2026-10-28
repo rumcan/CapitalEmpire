@@ -8,6 +8,7 @@ import { ADDRESS_TIME, STEP_IN, stateAt, teeSpot, walkMin } from './play/round';
 import { PlayView, type PlayBall, type PlayPerson } from './play/view';
 import type { CartPaths, PlayCart } from './play/carts';
 import type { CourseView, Pt, RoundPlan } from './play/types';
+import { holeFrom } from './play/courseview';
 import type { DayRoster } from './everyday';
 
 /** a car's drive between the car park's entrance and its bay (game minutes) */
@@ -70,7 +71,8 @@ export class DayView {
     plan.groups.forEach((gr, g) => {
       const tr = this.trips[g]!, inf = roster.info[g]!; tr.arrive = inf.arrive;
       gr.players.forEach((id, slot) => {
-        const spot = holes.length ? teeSpot(holes[0]!, slot) : door, e = end[id] ? { x: end[id]!.x, y: end[id]!.y } : door;
+        const spot = holes.length ? teeSpot(holeFrom(holes[0]!, plan.golfers[id]?.tees), slot) : door, // T254: behind his own set's tee
+          e = end[id] ? { x: end[id]!.x, y: end[id]!.y } : door;
         const home = cp ? cp.homeMinute(id) : Infinity, rides = Number.isFinite(home);
         this.legs[id] = { g, slot, first: first[id]!, done: rides ? home : plan.done[id] ?? Infinity, end: rides ? door : e, spot, w1: 0, w2: walkMin(door, spot), w3: 0 };
       });
@@ -145,7 +147,7 @@ export class DayView {
         let px: number, py: number, hx = 0, hy = 0, walking = true;
         if (minute < L.first) {
           // before the round: the car to the door, the desk, the door to his place behind the first tee, waiting there, stepping up to the tee
-          const tee = this.view.holes[0]?.tee ?? L.spot, stepMin = Math.max(STEP_IN, walkMin(L.spot, tee));
+          const h0 = this.view.holes[0], tee = h0 ? holeFrom(h0, this.plan.golfers[id]?.tees).tee : L.spot, stepMin = Math.max(STEP_IN, walkMin(L.spot, tee));
           const t1 = tr.arrive + L.w1, t2 = tr.desk, t3 = t2 + L.w2, step = L.first - ADDRESS_TIME - stepMin;
           if (minute < t1) { const u = L.w1 > 0 ? (minute - tr.arrive) / L.w1 : 1; px = at.x + (door.x - at.x) * u; py = at.y + (door.y - at.y) * u; hx = door.x - at.x; hy = door.y - at.y; }
           else if (minute < t2) { px = door.x; py = door.y; walking = false; hx = L.spot.x - door.x; hy = L.spot.y - door.y; }

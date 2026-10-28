@@ -104,7 +104,8 @@ test('T038: a flat height field adds no slope adjustments and leaves the score u
 });
 
 test('T038: a steep green (over 6%) costs 4 quality, and the height bonus still counts', () => {
-  const layout = generateOldNine(SITE, 4);
+  // one tee set a hole (T254's "for every golfer" term stays 0), so the flat score is not capped at 100 and the sums stay exact
+  const old = generateOldNine(SITE, 4), layout = { ...old, tees: old.tees.filter(t => t.kind === 'back') };
   const have = new Set<Need>(['carpark']);
   const centroid = (pts: number[]) => { let x = 0, y = 0; for (let k = 0; k + 1 < pts.length; k += 2) { x += pts[k]!; y += pts[k + 1]!; } const n = pts.length / 2; return { x: x / n, y: y / n }; };
   const flat = buildCourseStatsPanel(layout, 1, have, 7, { field: createCourseHeightField(), areas: layout.areas });

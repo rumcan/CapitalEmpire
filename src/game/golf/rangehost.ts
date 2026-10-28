@@ -20,6 +20,9 @@ import { PRACTICE_APPEAL, PRACTICE_FEE, PRACTICE_IDS, practiceAppeal, rangeScale
 import { PRI } from '../label-place';
 import { LABEL_OUTLINE, type WorldLabels } from '../world-labels';
 import { COFFEE, EXTRA_IDS, GARAGE_CARS, HOME_AT, HOME_NAME, KIOSK_SHARE, LESSON, LESSON_SHARE, homeStage, lotGround, needsOf, type HomeStage, type LotGround } from './rangesave';
+import { RANGE_PIC_TEX } from './range-pics';
+import { rangeLookOf, type RangeLook } from './range-look';
+import { paintedSurfaces } from '../painted-surfaces-live';
 
 /** what the host needs of the engine */
 export interface RangeHostCtx {
@@ -55,6 +58,10 @@ export interface RangeHostCtx {
  *  game texture; the rest are ground textures as they are */
 function patchTex(s: ScenePatch['surf']): LotPatch['tex'] {
   if (s === 'concrete') return 'pad'; // the Paint tool's concrete
+  // T258: the range's pictures (golf/range-pics.ts), laid flat by the patch's lay
+  if (s === 'mats') return RANGE_PIC_TEX.mats;
+  if (s === 'targetGreen') return RANGE_PIC_TEX.green;
+  if (s === 'bullseye') return RANGE_PIC_TEX.bullseye;
   if (s === 'dirt' || s === 'grassDry' || s === 'asphaltDark' || s === 'gravel') return s;
   // the range's own presets (T132, T223: the owner tunes them in the studio), else the nearest game texture
   if (s in RANGE_PRESET) { const own = rangePreset(s as RangePresetKey); return own ? presetTex(own.id) : PRESET_FALLBACK[s as RangePresetKey](); }
@@ -105,6 +112,11 @@ export class RangeHost {
    *  practice greens' cup flags (auto props by key) */
   practice: PracticeScan | null = null; private scanG: Grid | null = null; private scanRev = -1; private scanAgo = 0; private cups = new Map<string, Prop>(); private cupKey = '';
   constructor(private ctx: RangeHostCtx, seed: number) { this.sim = new RangeSim(seed, GOLFER_PEOPLE.length); }
+  /** T258: the range's ground art in place of the studio's (a test's, the console's: window.__game.range.lookOverride; null: the studio's) */
+  lookOverride: RangeLook | null = null;
+  /** T258: the range's ground art: the mats and the target greens as their pictures or their stand-ins, and the bullseye green (the studio's
+   *  Painted > Range art, painted-surfaces.json `range`: golf/range-look.ts) */
+  look(): RangeLook { return this.lookOverride ?? rangeLookOf(paintedSurfaces()); }
 
   /** the scene laid again when the range's state, its plot or its car park changed (cheap to call every frame: a key compares them) */
   sync(force = false): void {
@@ -112,16 +124,17 @@ export class RangeHost {
     // T239: the car park's ground follows its upgrades (dirt, gravel, paved), before its bays are read
     if (b0 && this.ctx.plot()) this.ctx.parkGround?.(lotGround(b0));
     const b = b0, pl = this.ctx.plot(), cp = this.ctx.carPark();
-    // the home's stage (T133) re-lays the yard as the lifetime takings grow
-    const home = b ? homeStage(b) : 0;
-    const key = b && pl ? `${pl.rect.join(',')}:${pl.facing}:${b.owned.join(',')}:${cp ? cp.bays.length : -1}:${home}` : '';
+    // the home's stage (T133) re-lays the yard as the lifetime takings grow; T258: the studio's range art (the mats and greens as pictures or
+    // stand-ins, the bullseye) re-lays the ground when the owner saves it
+    const home = b ? homeStage(b) : 0, look = this.look();
+    const key = b && pl ? `${pl.rect.join(',')}:${pl.facing}:${b.owned.join(',')}:${cp ? cp.bays.length : -1}:${home}:${look.mats}:${look.greens}:${look.bullseye}` : '';
     if (!force && key === this.key) { this.syncWalk(); return; }
     this.key = key;
     if (!b || !pl) { this.drop(); return; }
     // the player moved house (T133): toasted once, never on a load
     if (this.home >= 0 && home > this.home) this.ctx.toast(`You moved into the ${HOME_NAME[home].toLowerCase()}: the range has taken $${HOME_AT[home - 1]!.toLocaleString()}`, 'good');
     this.home = home;
-    const sc = rangeScene(pl.rect, pl.facing, b);
+    const sc = rangeScene(pl.rect, pl.facing, b, { look });
     // the props: kept where the key and picture stay, the rest made again
     const want = new Map(sc.pieces.map(p => [p.key, p]));
     for (const [k, p] of this.props) { const w = want.get(k); if (!w || !this.scene || !sameSpot(this.scene.pieces.find(q => q.key === k), w)) { this.ctx.removeProp(p); this.props.delete(k); } }
@@ -130,7 +143,8 @@ export class RangeHost {
     // laid as painted areas (the Paint tool's path, which knows the presets), in the scene's order and under anything the player paints
     // (T132: the target greens raised with a sun-lit edge in feathered collars, the outfield's stripes laid on its top)
     const mw = outfieldStripes(sc, rangePreset('outfield')?.stripes);
-    this.ctx.setGround('range:ground', sc.patches.map((p, i) => ({ pts: p.pts, tex: patchTex(p.surf), paint: { s: 1, a: 0, b: 0, bt: 'kerb', z: -1e6 + i, ...(p.edge ? { e: p.edge } : {}), ...(p.mow && mw ? { mw } : {}) } })));
+    // (T258: a picture laid flat by its lay: its turn, scale and corner)
+    this.ctx.setGround('range:ground', sc.patches.map((p, i) => ({ pts: p.pts, tex: patchTex(p.surf), paint: { s: p.lay?.s ?? 1, a: p.lay?.a ?? 0, b: 0, bt: 'kerb', z: -1e6 + i, ...(p.edge ? { e: p.edge } : {}), ...(p.mow && mw ? { mw } : {}), ...(p.lay ? { o: [p.lay.x, p.lay.y] as [number, number] } : {}) } })));
     if (!this.scene) { this.ctx.clearTrees(sc.box); this.ctx.clearTrees(sc.practice.box); }
     // the old start's cement walkway, laid once (an old save's first load); T239: a guided start's walkway is the player's to lay
     if (b.paths === false) { this.ctx.layPaths(sc.paths); b.paths = true; this.ctx.save(); }

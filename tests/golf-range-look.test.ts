@@ -3,7 +3,7 @@
 // greens greens: ext/grass-management PRESET_FAMILY).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { defaultRangeBiz, rangeScene, withUpgrade, type RangeBizSave, type RangeUpgradeId } from '../src/game/golf/rangebiz';
+import { defaultRangeBiz, isTargetGreen, rangeScene, withUpgrade, type RangeBizSave, type RangeUpgradeId } from '../src/game/golf/rangebiz';
 import { plotPoint } from '../src/game/golf/range';
 import { RANGE_PRESET } from '../src/game/golf/rangehost';
 import { PRESET_FAMILY, grassSurface } from '../src/game/ext/grass-management/catalog';
@@ -70,7 +70,7 @@ test('the ground turns with the plot too: every patch the same in the plot frame
     assert.equal(sc[0]!.patches.filter(p => p.surf === (grass ? 'desert' : 'outfield')).length, 0, `${name}: no other outfield`);
     if (grass) assert.ok(sc[0]!.patches.find(p => p.surf === 'outfield')!.mow, `${name}: the outfield carries its mowing stripes`);
     else assert.ok(!sc[0]!.patches.find(p => p.surf === 'desert')!.mow, `${name}: the desert has no stripes`);
-    assert.equal(sc[0]!.patches.filter(p => p.surf === 'target').length, sc[0]!.targets.length, `${name}: a target green under each flag`);
+    assert.equal(sc[0]!.patches.filter(isTargetGreen).length, sc[0]!.targets.length, `${name}: a target green under each flag`);
   }
 });
 

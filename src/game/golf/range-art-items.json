@@ -1,0 +1,13 @@
+{
+ "note": "T258: the driving range's stand-ins the owner makes in ChatGPT (docs/art/CHATGPT-IMAGE-QUEUE.md 'First: the driving range's stand-ins'; GOLF-ART-LIST section 1). slug: the file name's stem under art/theme-consistency/generated/buildings/ (<slug>-view1-vN.png and <slug>-view2-vN.png for code A, <slug>-1view-vN.png for B); box: the footprint in metres (front width, depth); high: metres; size: 'box' sizes the picture by its footprint (its width spans the footprint's diamond, as T232's site kit), 'tall' by its height (64 px a metre, the uprights' scale, as T231's kit); piece: the range scene's piece key (rangebiz.ts rangeScene) the picture replaces (a prefix: every key starting with it).",
+ "items": [
+  { "slug": "golf-clubhouse-shanty", "item": 1, "code": "A", "name": "Tin-and-tarp pro shop", "box": [12, 8], "high": 4, "size": "box", "piece": "shop" },
+  { "slug": "golf-range-sign", "item": 5, "code": "A", "name": "Driving Range road sign", "box": [4, 0.5], "high": 3, "size": "box", "piece": "sign" },
+  { "slug": "golf-range-deck", "item": 2, "code": "A", "name": "Double-deck hitting stand", "box": [20, 7], "high": 7, "size": "box", "piece": "roof" },
+  { "slug": "golf-range-coffee-kiosk", "item": 3, "code": "A", "name": "Coffee kiosk", "box": [3, 2.5], "high": 3, "size": "box", "piece": "kiosk" },
+  { "slug": "golf-range-ball-dispenser", "item": 11, "code": "A", "name": "Ball dispenser", "box": [1.5, 1], "high": 2, "size": "box", "piece": "dispenser" },
+  { "slug": "golf-range-yardage-board", "item": 6, "code": "A", "name": "Yardage board", "box": [2, 0.5], "high": 2.5, "size": "box", "piece": "board" },
+  { "slug": "golf-range-distance-post", "item": 7, "code": "B", "name": "Distance marker post", "box": [0.5, 0.5], "high": 1.5, "size": "tall", "piece": "mark" },
+  { "slug": "golf-range-floodlight", "item": 10, "code": "A", "name": "Floodlight mast", "box": [1, 1], "high": 12, "size": "tall", "piece": "light" }
+ ]
+}

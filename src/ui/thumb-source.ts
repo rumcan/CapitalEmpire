@@ -12,12 +12,15 @@ const glob = (g: () => Record<string, string>): Record<string, string> => { try 
 const MASTER_URLS: Readonly<Record<string, string>> = Object.fromEntries(Object.entries({
   ...glob(() => import.meta.glob('../../art/concept-kit/*.webp', { eager: true, query: '?url', import: 'default' }) as Record<string, string>),
   ...glob(() => import.meta.glob('../../art/construction/site-kit/*.webp', { eager: true, query: '?url', import: 'default' }) as Record<string, string>),
+  // T258: the range's ChatGPT art (prep-range-art.mjs; none until the owner's pictures land)
+  ...glob(() => import.meta.glob('../../art/range-kit/*.webp', { eager: true, query: '?url', import: 'default' }) as Record<string, string>),
 }).map(([k, v]) => [k.replace(/^(\.\.\/)+/, ''), v]));
 
-/** the repo path of a library picture's full-resolution master, or null: the concept kit's (kit:<slug>) and the building-site kit's
- *  (construction:site-<...>, construction:timber-frame-<n>) */
+/** the repo path of a library picture's full-resolution master, or null: the concept kit's (kit:<slug>), the building-site kit's
+ *  (construction:site-<...>, construction:timber-frame-<n>) and T258's range art (range:<slug>-<view>) */
 export function masterPath(id: string): string | null {
   if (id.startsWith('kit:')) return `art/concept-kit/${id.slice(4)}.webp`;
+  if (id.startsWith('range:')) return `art/range-kit/${id.slice(6)}.webp`;
   const m = /^construction:(site-[a-z0-9-]+|timber-frame-\d+)$/.exec(id);
   return m ? `art/construction/site-kit/${m[1]}.webp` : null;
 }
