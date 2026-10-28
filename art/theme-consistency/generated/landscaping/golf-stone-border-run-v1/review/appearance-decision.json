@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "id": "golf:stone-border-run",
+  "date": "2026-10-28",
+  "reviewer": "Primary art agent /root",
+  "decision": "accepted-for-style-alpha",
+  "scope": "Granite/foliage palette, painted theme and true alpha pass. This is NOT geometry or modular join approval.",
+  "ownerApprovalClaim": false,
+  "artifacts": [
+    {
+      "file": "art/theme-consistency/generated/landscaping/golf-stone-border-run-v1.png",
+      "sha256": "c3069dfa59efce3aa14ba21d2ece2546491f91e245bc870f6c3703af88c2d6ad"
+    },
+    {
+      "file": "art/theme-consistency/generated/landscaping/golf-stone-border-run-v1/x-run.native.png",
+      "sha256": "bb7e302f98773846c976f25a52b56b29e5bf90bc243803e83fa8ca9ee6bee137"
+    },
+    {
+      "file": "art/theme-consistency/generated/landscaping/golf-stone-border-run-v1/y-run.native.png",
+      "sha256": "aac2d7aadcf9b7a3e60bfe7cc180add52689e5bf356ec74483c866ba48b67df1"
+    }
+  ],
+  "geometry": "held",
+  "physicalCalibration": "pending",
+  "integration": "pending"
+}

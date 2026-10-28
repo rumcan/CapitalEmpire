@@ -5,6 +5,7 @@
 import type { RangeCardView } from '../../game/golf/rangehost';
 import { PRICE_MAX, PRICE_MIN, PROPS_APPEAL_CAP, dayDemand, priceFactor, rangeScale } from '../../game/golf/rangesave';
 import { appealText } from '../../game/golf/decor';
+import { WALK_SERVE_M, lotsLine } from '../../game/golf/walkserve';
 import { Icon } from '../Icon';
 import { statusIcon } from '../status-icon';
 
@@ -32,6 +33,8 @@ export function RangeCard({ view, onClose, onPrice, onBuy, onShowPractice, onBui
         <span className="text-slate-300">Parking: <span className="font-semibold text-white">{view.parking.parked}/{view.parking.bays}</span> cars{view.parking.garage ? <span className="text-slate-400"> · building {view.parking.garage.parked}/{view.parking.garage.cars}</span> : null}</span>
         <span className={view.parking.turned > 0 ? 'font-semibold text-rose-300' : 'text-slate-400'}>{view.parking.turned} turned away today{view.parking.turned > 0 && !st.parking ? ' (car park full)' : ''}</span>
       </div>
+      {/* T237: the car parks within walking distance of the shop (golf/walkserve.ts): only their bays count for the range */}
+      <div className={`rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-xs ${view.parking.lots.length ? 'text-slate-300' : 'font-semibold text-rose-300'}`} data-testid="range-lots" title={`A car park serves the range when its nearest bay is within ${WALK_SERVE_M} m of walking (about 2 minutes) of the shop; car parks further away add no bays`}>{lotsLine(view.parking.lots)}</div>
       <div className="grid grid-cols-2 gap-1.5 text-center" data-guide="range-takings">
         <Tile label="Season takings" value={money(biz.season.takings)} sub={`${Math.round(biz.season.buckets).toLocaleString()} buckets`} tone="text-emerald-300" />
         <Tile label="Demand a day" value={`${want}`} sub={`room for ${cap}`} />

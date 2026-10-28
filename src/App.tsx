@@ -11,6 +11,7 @@ import { isLights, junctionCorners, slipRule } from './game/junctions';
 import { PLANNER_Z, ZOOM_STEP, clampZoom } from './game/iso';
 import { GROWTH_OPTIONS } from './game/lots/town';
 import { shortName } from './game/ext/names';
+import { WALK_SERVE_M, serveLine } from './game/golf/walkserve';
 import { parkPanelControls, busHowTo, tollHowTo } from './game/ext/progressive-ui';
 import { Budget, DEBT_DAYS, GAME_DAY, LOAN, LOAN_RATE } from './game/budget';
 import { compare, type Delta, type Window } from './game/beforeafter';
@@ -1444,14 +1445,18 @@ function ParkPanel({ game, dev }: { game: Game; dev: boolean }) {
       {mode === 'rect' && show.has('parkList') && <div className="mt-2 max-h-64 overflow-y-auto">
         {game.parkDefs.length === 0 && <p className="text-xs text-slate-400">No car parks yet.</p>}
         {game.parkDefs.map(d => {
-          const v = views.find(q => q.id === d.id);
+          const v = views.find(q => q.id === d.id), sv = game.golf ? game.parkServes(d.id) : null;
           return (
-            <div key={d.id} className="flex items-center justify-between gap-2 py-1 text-xs">
-              <span className="tabular-nums text-slate-200">#{d.id} · {v ? `${v.bays} bays · ${v.parked}/${v.turned}` : 'no road along it'}</span>
-              <span className="flex gap-1">
-                <button className="btn" onClick={() => game.goToPark(d.id)}>Go</button>
-                {show.has('parkTest') && <button className="btn" onClick={() => game.parkTest(d.id, 50)}>Test 50 cars</button>}
-              </span>
+            <div key={d.id} className="py-1 text-xs" data-testid={`park-row-${d.id}`}>
+              <div className="flex items-center justify-between gap-2">
+                <span className="tabular-nums text-slate-200">#{d.id} · {v ? `${v.bays} bays · ${v.parked}/${v.turned}` : 'no road along it'}</span>
+                <span className="flex gap-1">
+                  <button className="btn" onClick={() => game.goToPark(d.id)}>Go</button>
+                  {show.has('parkTest') && <button className="btn" onClick={() => game.parkTest(d.id, 50)}>Test 50 cars</button>}
+                </span>
+              </div>
+              {/* T237: what it serves within walking distance (golf/walkserve.ts) */}
+              {sv && <div className={sv.length ? 'text-emerald-300' : 'text-rose-300'} data-testid={`park-serves-${d.id}`} title={`A car park serves a venue when its nearest bay is within ${WALK_SERVE_M} m of walking (about 2 minutes) of the venue's door`}>{serveLine(sv)}</div>}
             </div>
           );
         })}

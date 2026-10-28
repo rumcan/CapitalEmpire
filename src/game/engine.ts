@@ -46,7 +46,7 @@ import { RANGE_GUIDE, guideTable, newRangeGuide, rangeGuideCurrent, rangeGuideLi
 import { welcomeReady } from './golf/firstview';
 /** the hints' anchors (T188: their Show me pulses the control) where the hint is no guide step */
 const HINT_ANCHOR: Readonly<Record<string, string>> = { 'hint-range-open': 'range-chip', 'hint-range-upgrade': 'range-chip', 'hint-range-props': 'rail-facilities', 'hint-range-first-hole': 'new-hole' };
-import { RANGE_LABEL_Z, defaultRangeBiz, parkLabel, practiceAppeal, rangeMapLabel, rangeNewSeason, rangeStats, rangeStructures, type RangeCounts, type RangeUpgradeId } from './golf/rangebiz';
+import { RANGE_LABEL_Z, defaultRangeBiz, parkLabel, rangeKeepOut, practiceAppeal, rangeMapLabel, rangeNewSeason, rangeStats, rangeStructures, type RangeCounts, type RangeUpgradeId } from './golf/rangebiz';
 import { areaAt, brushTextures, toTuple, type BrushKind, type PaintTuple, type PaintTex } from './paint';
 import { CELL_T, SURF, cellAt, cellCentre, diffBox, encodeGrid, fillPolygon, fitGrid, landGridBox, makeGrid, paintDisc, paintStroke, type Grid as CourseGrid, type GridDiff, type GridSave } from './ext/course-grid';
 import { STAIR_REACH } from './ext/course-walls';
@@ -88,7 +88,7 @@ import { BAY_D, BAY_W, BOOTH_W, BUS_ROUTE_COST, BUS_SEATS, CARDS, DECK_SEATS, PD
 import { Round, SIGNAL_TIER_YEAR, SPEED_TIER_YEAR, signalTierOpen, speedTierOpen } from './event/round';
 import type { BusRouteDef } from './event/bus';
 import { plazaEdge, plazaIslands, plazaKey, plazaLocal, plazaOutline, plazaPoint, plazaQuads, type TollDef } from './event/toll';
-import { buildPark, parkCost, parkValid, type CarPark, type CarParkDef, type ParkView } from './event/carpark';
+import { bayDrive, bayWalk, buildPark, parkCost, parkValid, type CarPark, type CarParkDef, type ParkView } from './event/carpark';
 import { TC, classAt, generateTerrain, makeNoise, type Noise, type Terrain } from './terrain';
 import { slopeField } from './terrain-paint';
 import { CONIFER_IDS, FOREST_CELL, FOREST_VIEW_MARGIN, forestCell, forestCellRange, type ForestTree } from './forest';
@@ -122,6 +122,10 @@ import { planGolfGame } from './golf/start';
 import { RANGE_CAM_ZOOM, planRangeStart } from './golf/rangestart';
 import { CLUB_REACH, clubhouseSpotWhy, plotOfFront, rangeLayout } from './golf/range';
 import { PRACTICE_LOT_NAME, inPractice, practiceArea } from './golf/practice';
+import { baysByDoor, servesOf, servingParks, type Serve, type Venue } from './golf/walkserve';
+import { drawServePreview } from './walkserve-overlay';
+import { hiddenBy, rangeKeepOutWhy, snapToRoad, type Building } from './golf/parkplace';
+import { footStart, parkLook, type ParkLook } from './event/parklook';
 import { dressCourse } from './golf/dressing';
 import { FIRST_TEE, MONTH_LEN, SEASON_LEN, SEASON_START, monthIndexLabel, monthsLeft, seasonLabel, seasonMonth, yearOf } from './golf/calendar';
 import { MonthMoney, golfersAMonth, type TopStats } from './golf/topstats';
@@ -541,15 +545,15 @@ export class Game {
   readonly range: RangeHost = new RangeHost({
     biz: () => (this.golf?.start === 'range' ? (this.golf.range ??= defaultRangeBiz()) : null),
     plot: () => { const g = this.golf, d = g?.start === 'range' ? this.bizDefs.find(b => b.type === 'range') : undefined; return g && d ? { rect: plotOfFront([d.x, d.y, d.w, d.h], g.dir), facing: g.dir } : null; },
-    carPark: () => this.rangeCarPark(),
+    carPark: door => this.rangeCarPark(door), lots: door => this.lotsFor(door),
     // the car park building (T146) takes the lot's far half: the lot keeps its near half (the bays under the building go, the ground re-bakes)
     fitPark: r => {
-      const d = this.parkDefs.find(q => this.onRangePlot(q.x + q.w / 2, q.y + q.h / 2)); if (!d || (d.x === r[0] && d.y === r[1] && d.w === r[2] && d.h === r[3])) return;
-      d.x = r[0]; d.y = r[1]; d.w = r[2]; d.h = r[3]; this.syncParks(); this.scheduleSave();
+      const d = this.rangeLotDef(); if (!d || (d.x === r[0] && d.y === r[1] && d.w === r[2] && d.h === r[3])) return;
+      d.x = r[0]; d.y = r[1]; d.w = r[2]; d.h = r[3]; const b = this.golf?.range; if (b?.lot) b.lot = [r[0], r[1], r[2], r[3]]; this.syncParks(); this.scheduleSave();
     },
     // T239: the range car park's ground follows its upgrades: packed dirt and gravel are unpaved lots (loose bays, no lines, no barriers)
     parkGround: g => {
-      const d = this.parkDefs.find(q => this.onRangePlot(q.x + q.w / 2, q.y + q.h / 2)), want = g === 'paved' ? undefined : g; if (!d || d.ground === want) return;
+      const d = this.rangeLotDef(), want = g === 'paved' ? undefined : g; if (!d || d.ground === want) return;
       if (want) d.ground = want; else delete d.ground;
       this.syncParks();
     },
@@ -576,14 +580,66 @@ export class Game {
   }, 0x7a29);
   /** the hint's Show me (T130): the camera on the practice area at 30% with the brush that builds its next facility */
   showPracticeArea() { const t = this.range.practiceTarget(); if (!t) return; this.lookAt(t.x, t.y, 0.3); this.armPractice(t.kind, true); this.emit(); } // T206: the facility's own tool, not the brush
-  /** the range's car park (the one on the range plot) as the range's golfers park in it: its bays and entrance, cached per built park */
-  private rangeCarPark(): { bays: { x: number; y: number; hx: number; hy: number }[]; entrance: Pt } | null {
-    const k = this.parkDefs.findIndex(d => this.onRangePlot(d.x + d.w / 2, d.y + d.h / 2)), pk = k >= 0 ? this.parkBuilt[k] : null;
-    if (!pk || !pk.entrances.length || !pk.bays.length) return null;
-    if (this.rangePk?.pk !== pk) this.rangePk = { pk, v: { bays: pk.bays.map(b => ({ x: b.x, y: b.y, hx: b.hx, hy: b.hy })), entrance: pk.entrances[0]! } };
+  /** the range's car parks as the range's golfers park in them (T237: every car park that serves the range's door, golf/walkserve.ts: its nearest
+   *  bay within WALK_SERVE_M; a car park further away adds no bays, so with none in reach the range's drivers turn away as at a full one): their
+   *  bays nearest the door first (doorBays), each with its car park's entrance, cached while the serving parks stay the same */
+  private rangeCarPark(door: Pt): { bays: { x: number; y: number; hx: number; hy: number; e: Pt; pid: number; drive: Pt[]; walk: Pt[] }[]; entrance: Pt; key: string } | null {
+    const parks: CarPark[] = [];
+    for (const pk of this.parkBuilt) if (pk && pk.entrances.length && pk.bays.length) parks.push(pk);
+    const serving = servingParks(parks, door, pk => pk.bays);
+    if (!serving.length) { this.rangePk = null; return null; }
+    const key = `${Math.round(door.x * 4)},${Math.round(door.y * 4)}|${serving.map(s => `${s.park.id}:${s.park.bays.length}`).join(',')}`;
+    if (this.rangePk?.v.key !== key || serving.some(s => !this.rangePk!.pks.has(s.park))) {
+      // (T237: each bay with its drive from its car park's mouth along the aisles, and the walk from the car park's footpath along them)
+      const all = serving.flatMap(s => { const f = this.footStart(s.park); return baysByDoor(s.park.bays, door).map(b => ({ x: b.x, y: b.y, hx: b.hx, hy: b.hy, e: s.park.entrances[0]!, pid: s.park.id, drive: bayDrive(s.park, b), walk: f ? bayWalk(s.park, b, f) : [] })); });
+      this.rangePk = { pks: new Set(serving.map(s => s.park)), v: { bays: baysByDoor(all, door), entrance: serving[0]!.park.entrances[0]!, key } };
+    }
     return this.rangePk.v;
   }
-  private rangePk: { pk: CarPark; v: { bays: { x: number; y: number; hx: number; hy: number }[]; entrance: Pt } } | null = null;
+  private rangePk: { pks: Set<CarPark>; v: { bays: { x: number; y: number; hx: number; hy: number; e: Pt; pid: number; drive: Pt[]; walk: Pt[] }[]; entrance: Pt; key: string } } | null = null;
+  /** T237: the range's own car park (the one its upgrades gravel and pave, and the car park building trims): the save's lot rect (a new game's,
+   *  in the frontage strip), else the car park on the range's plot (an old save's) */
+  private rangeLotDef(): CarParkDef | undefined {
+    const r = this.golf?.range?.lot;
+    if (r) return this.parkDefs.find(q => q.x === r[0] && q.y === r[1] && q.w === r[2] && q.h === r[3]);
+    return this.parkDefs.find(q => this.onRangePlot(q.x + q.w / 2, q.y + q.h / 2));
+  }
+  /** T237: the venues a car park can serve (golf/walkserve.ts): the range's shop counter, the clubhouse's door, the first tee, the practice area's
+   *  way in (once it is the player's: a guided start's is land for sale) and a tournament's gates */
+  venues(): Venue[] {
+    const g = this.golf; if (!g) return [];
+    const out: Venue[] = [], sc = this.range.scene;
+    if (sc) out.push({ id: 'range', door: sc.counter });
+    if (this.bizDefs.some(d => d.type === 'clubhouse')) out.push({ id: 'clubhouse', door: g.clubhouse });
+    let t1: Pt | null = null, h1 = Infinity;
+    for (const t of g.tees) if (t.hole > 0 && t.hole < h1) { h1 = t.hole; t1 = { x: t.x, y: t.y }; }
+    if (t1) out.push({ id: 'tee', door: t1 });
+    if (sc && g.start === 'range' && !g.practiceLot) out.push({ id: 'practice', door: sc.practice.entry });
+    for (const s of g.structures ?? []) if (s.typeId === 'gate') out.push({ id: 'gates', door: { x: s.x, y: s.y } });
+    return out;
+  }
+  /** T237: the car parks within walking distance of a door (golf/walkserve.ts), nearest walk first: id, bays and walk (m) (the range's and the
+   *  clubhouse's cards) */
+  lotsFor(door: Pt): { id: number; bays: number; m: number }[] {
+    const parks: CarPark[] = []; for (const pk of this.parkBuilt) if (pk && pk.bays.length) parks.push(pk);
+    return servingParks(parks, door, pk => pk.bays).map(s => ({ id: s.park.id, bays: s.park.bays.length, m: s.m }));
+  }
+  /** T237: what a built car park serves (the venues within WALK_SERVE_M of its nearest bay, nearest first; golf/walkserve.ts) */
+  parkServes(id: number): Serve[] {
+    const k = this.parkDefs.findIndex(d => d.id === id), pk = k >= 0 ? this.parkBuilt[k] : null;
+    return pk ? servesOf(pk.bays, this.venues()) : [];
+  }
+  /** T237: a car park's bays in the order its drivers take them: nearest the door of the nearest venue it serves first (the range's and the
+   *  club's golfers take them from the front, the worker's cars there from the back: parkCarsOf); a car park serving nothing keeps its own order
+   *  (nearest an entrance first). Cached per built park and the venues */
+  private doorBays(pk: CarPark): CarPark['bays'] {
+    const vs = this.venues(), vk = vs.map(v => `${v.id}${Math.round(v.door.x)},${Math.round(v.door.y)}`).join(';'), c = this.doorBaysOf.get(pk);
+    if (c && c.vk === vk) return c.bays;
+    const s = servesOf(pk.bays, vs)[0], bays = s ? baysByDoor(pk.bays, s.venue.door) : pk.bays;
+    this.doorBaysOf.set(pk, { vk, bays });
+    return bays;
+  }
+  private doorBaysOf = new WeakMap<CarPark, { vk: string; bays: CarPark['bays'] }>();
   /** a new range game's town day starts at 06:30 (P24 D16), so the first golfers turn in within the first minute */
   private rangeMorning() { if (this.golf?.start === 'range') this.traffic.setTownClock({ t0: this.traffic.simTime(performance.now()), m0: 390, rate: 1440 / this.traffic.dayLen }); }
   /** the range card (null: closed, or not a range start) */
@@ -2115,7 +2171,8 @@ export class Game {
       this.golf = s.save; this.golf.progress = { ...emptyProgress(), ramp: 0, guide: newRangeGuide() }; // T239: the guided build's card
       // the range business (P24, T129): the starting range (T239: the guided build: no walkway laid, the player lays its path; the practice area
       // beside the car park is land for sale until bought)
-      this.golf.range = defaultRangeBiz();
+      // (T237: its plot set back from the road, its car park in the frontage strip that leaves)
+      this.golf.range = { ...defaultRangeBiz(), setback: site.setback, lot: [px, py, pw, ph] };
       const pb = practiceArea(site.rangePlot, site.dir).box; this.golf.practiceLot = [Math.round(pb[0]), Math.round(pb[1]), Math.round(pb[2] - pb[0]), Math.round(pb[3] - pb[1])];
       const [hx, hy, hw, hh] = rangeLayout(site.rangePlot, site.dir).hut.rect, cx = hx + hw / 2, cy = hy + hh / 2;
       this.cam.X = worldX(cx, cy); this.cam.Y = worldY(cx, cy); this.cam.z = RANGE_CAM_ZOOM;
@@ -4883,9 +4940,26 @@ export class Game {
     const pd = this.parkDrag; if (!pd) return;
     const t = this.tileAt(mx, my);
     pd.x1 = Math.round(t.x); pd.y1 = Math.round(t.y); pd.mx = mx; pd.my = my;
-    const def: CarParkDef = { id: 0, x: Math.min(pd.x0, pd.x1), y: Math.min(pd.y0, pd.y1), w: Math.abs(pd.x1 - pd.x0), h: Math.abs(pd.y1 - pd.y0) };
-    pd.def = def; pd.cost = parkCost(def); pd.why = parkValid(def, this.terrain.cls, this.net, this.site, this.parkDefs) || (this.lotsUnder(def) ? 'buildings stand there' : '');
+    const raw: CarParkDef = { id: 0, x: Math.min(pd.x0, pd.x1), y: Math.min(pd.y0, pd.y1), w: Math.abs(pd.x1 - pd.x0), h: Math.abs(pd.y1 - pd.y0) };
+    // T237: a rectangle beside a road snaps onto its verge (the road its frontage, the entrance on it)
+    const def = raw.w > 0 && raw.h > 0 ? snapToRoad(this.net, raw) ?? raw : raw;
+    // the preview is laid as syncParks will build it (a golf game's layout), so its bays, serve line and toast count the bays it gets
+    if (this.golf) def.cross = true;
+    pd.def = def; pd.cost = parkCost(def); pd.why = parkValid(def, this.terrain.cls, this.net, this.site, this.parkDefs) || (this.lotsUnder(def) ? 'buildings stand there' : '') || this.parkSpotWhy(def);
     pd.park = pd.why ? null : buildPark(this.net, def);
+  }
+  /** T237: why a car park cannot stand on rect d in golf ('' when it can): over the driving range (its tee box, outfield, shop or yard), or a
+   *  spot a club building hides in screen space (golf/parkplace.ts) */
+  private parkSpotWhy(d: CarParkDef): string {
+    const g = this.golf; if (!g) return '';
+    const rd = g.start === 'range' ? this.bizDefs.find(b => b.type === 'range') : undefined, plot = rd ? plotOfFront([rd.x, rd.y, rd.w, rd.h], g.dir) : null;
+    const keep = plot ? rangeKeepOutWhy(d, rangeKeepOut(plot, g.dir, g.range?.setback ?? 0)) : ''; if (keep) return keep;
+    const bs: Building[] = [];
+    for (const b of this.bizDefs) if (b.type === 'clubhouse' || b.type === 'halfway') bs.push({ rect: [b.x, b.y, b.w, b.h], name: b.type === 'clubhouse' ? 'the clubhouse' : 'the halfway house' });
+    if (plot) bs.push({ rect: rangeLayout(plot, g.dir).hut.rect, name: 'the pro shop' });
+    const gb = this.range.scene?.garage?.box; if (gb) bs.push({ rect: [gb[0], gb[1], gb[2] - gb[0], gb[3] - gb[1]], name: 'the car park building' });
+    const hid = hiddenBy(d, bs);
+    return hid ? `Hidden behind ${hid.name}: place it beside or in front of it` : '';
   }
   /** whether a lot of the town that is not EMPTY overlaps rect r (its box against r) */
   private lotsUnder(r: { x: number; y: number; w: number; h: number }): boolean {
@@ -4912,6 +4986,9 @@ export class Game {
   }
   /** the car parks' builds on the network (after each network change and on load), and the list to the city worker (which builds them too) */
   private syncParks() {
+    // T237: a golf game's car parks are laid in the golf layout (carpark.ts lotPlan: rows nose-in off their aisles, a cross aisle, a mouth at
+    // each entrance); the city worker builds them from the same defs, so its bays and the game's agree
+    for (const d of this.parkDefs) { if (this.golf) d.cross = true; else delete d.cross; }
     this.parkBuilt = this.parkDefs.map(d => buildPark(this.net, d));
     this.traffic.setParks(this.parkDefs);
     this.parkGrounds(); this.syncGates();
@@ -4945,7 +5022,7 @@ export class Game {
   }
   /** the car parks' asphalt and bay lines, baked into the ground like a lot's car park (key park:{id}); a car park gone, or without a frontage, drops its patch */
   private parkGrounds() {
-    const keep = new Set<string>();
+    const keep = new Set<string>(), looks = new Map<number, ParkLook>();
     this.parkDefs.forEach((d, k) => {
       const pk = this.parkBuilt[k]; if (!pk) return;
       const key = `park:${d.id}`, lines: number[] = [];
@@ -4954,10 +5031,60 @@ export class Game {
         else for (const o of [-BAY_W / 2, BAY_W / 2]) lines.push(b.x + o, b.y - BAY_D / 2, b.x + o, b.y + BAY_D / 2);
       }
       // T239: an unpaved lot (the range start's car park before it is paved) is its ground alone: packed dirt or gravel, no painted bays
-      keep.add(key); this.setLotGround(key, [{ pts: [d.x, d.y, d.x + d.w, d.y, d.x + d.w, d.y + d.h, d.x, d.y + d.h], tex: d.ground ?? 'asphalt', ...(d.ground ? {} : { lines }) }]);
+      // T237: a paved one in golf has the concept's look (event/parklook.ts): its kerbs and planting islands over the asphalt, its footpath
+      const look = this.golf && !d.ground ? parkLook(pk, this.lookDoor(pk), this.clubWalls()) : null;
+      if (look) looks.set(d.id, look);
+      keep.add(key); this.setLotGround(key, [{ pts: [d.x, d.y, d.x + d.w, d.y, d.x + d.w, d.y + d.h, d.x, d.y + d.h], tex: d.ground ?? 'asphalt', ...(d.ground ? {} : { lines }) },
+        ...(look ? look.over.map((o): LotPatch => ({ pts: o.pts, tex: o.tex, park: true })) : []), ...(look?.path ?? []).map((q): LotPatch => ({ pts: q.pts, tex: q.tex }))]);
     });
     for (const key of this.parkGround) if (!keep.has(key)) this.setLotGround(key, null);
-    this.parkGround = keep;
+    this.parkGround = keep; this.parkLooks = looks; this.lookKey = this.venueKey();
+    this.syncLookProps();
+  }
+  /** T237: each paved car park's look (event/parklook.ts) by its id, as parkGrounds laid it last, and the venues' key it was laid for */
+  private parkLooks = new Map<number, ParkLook>(); private lookKey = '';
+  /** T237: the props of the car parks' looks (look:{id}:{k}: the islands' trees, lamps and shrubs), auto and never saved */
+  private lookProps = new Map<string, Prop>();
+  /** T237: the venues' key (their kinds and doors): a car park's look follows the venue it serves (its footpath, the bays' order) */
+  private venueKey(): string { return this.venues().map(v => `${v.id}${Math.round(v.door.x)},${Math.round(v.door.y)}`).join(';'); }
+  /** T237: the door a car park's footpath runs to: the nearest venue it serves (the range's: the walkway's end at its car parks, so the path
+   *  meets the range's own path past the shop); null when it serves none */
+  private lookDoor(pk: CarPark): Pt | null {
+    const s = servesOf(pk.bays, this.venues())[0]; if (!s) return null;
+    return s.venue.id === 'range' ? this.range.scene?.carEdge ?? s.venue.door : s.venue.door;
+  }
+  /** T237: where a car park's walkers step off it: the start of its footpath (the point of its edge nearest the door it serves: event/parklook
+   *  footpath), null when it serves none */
+  private footStart(pk: CarPark): Pt | null {
+    const door = this.lookDoor(pk); return door ? footStart(pk, door) : null;
+  }
+  /** T237: the far end of a footpath leg (the centre of its end side: event/parklook strip's corners 1 and 2) */
+  private pathMid(p: { pts: number[] }): Pt { return { x: (p.pts[2]! + p.pts[4]!) / 2, y: (p.pts[3]! + p.pts[5]!) / 2 }; }
+  /** T237: the club's buildings' footprints (a footpath ends at the first one's face) */
+  private clubWalls(): [number, number, number, number][] {
+    const out: [number, number, number, number][] = [];
+    for (const b of this.bizDefs) if (b.type === 'clubhouse' || b.type === 'halfway') out.push([b.x, b.y, b.w, b.h]);
+    const g = this.golf, rd = g?.start === 'range' ? this.bizDefs.find(b => b.type === 'range') : undefined;
+    if (g && rd) out.push(rangeLayout(plotOfFront([rd.x, rd.y, rd.w, rd.h], g.dir), g.dir).hut.rect);
+    return out;
+  }
+  /** T237: the looks' props as parkGrounds laid them: a prop whose spot or picture moved is replaced, the gone ones removed (trees are never
+   *  mirrored: addProp turns only the trees lit from the left, tree-sun.ts); the lamps light at night (syncLamps) */
+  private syncLookProps() {
+    const want = new Map<string, { item: number; x: number; y: number; scale: number }>();
+    for (const [id, look] of this.parkLooks) look.props.forEach((q, k) => {
+      const item = LIB_INDEX.get(q.id); if (item === undefined) return;
+      const b = LIBRARY[item]!.boxes[0]; if (!b) return;
+      want.set(`look:${id}:${k}`, { item, x: q.x - b.dx * q.scale / 2, y: q.y - b.dy * q.scale / 2, scale: q.scale });
+    });
+    let lamps = false;
+    for (const [key, p] of this.lookProps) {
+      const w = want.get(key);
+      if (w && w.item === p.item && w.x === p.x && w.y === p.y && this.props.has(p)) continue;
+      lamps ||= LIBRARY[p.item]!.kind === 'lamp'; this.removeProp(p); this.lookProps.delete(key);
+    }
+    for (const [key, w] of want) if (!this.lookProps.has(key)) { this.lookProps.set(key, this.addProp(w.item, w.x, w.y, false, w.scale, key)); lamps ||= LIBRARY[w.item]!.kind === 'lamp'; }
+    if (lamps) this.syncLamps();
   }
   /** the ground patch keys of the car parks (park:{id}) baked now */
   private parkGround = new Set<string>();
@@ -4975,8 +5102,10 @@ export class Game {
   private syncParkCars(now: number) {
     if (now - this.parkSyncAt < 500) return;
     this.parkSyncAt = now;
+    // T237: the car parks' looks follow the venues they serve (a clubhouse placed, the range's scene laid on a load): laid again when those move
+    if (this.golf && this.parkDefs.length && this.venueKey() !== this.lookKey) this.parkGrounds();
     const views = new Map(this.traffic.parks.map(v => [v.id, v])), view = this.viewTileBox;
-    const shared = (pk: CarPark | null) => !!pk && (pk === this.rangePk?.pk || pk === this.dayPark);
+    const shared = (pk: CarPark | null) => !!pk && (!!this.rangePk?.pks.has(pk) || pk === this.dayPark);
     for (let k = 0; k < this.parkDefs.length; k++) { const pk = this.parkBuilt[k] ?? null; if (this.parkInView(pk, view)) this.parkCarsOf(this.parkDefs[k]!.id, pk, views, shared(pk)); }
     // the bay rows' lots and on-street runs park the same way; the ones gone lose their cars
     const ids = new Set<number>();
@@ -5002,7 +5131,7 @@ export class Game {
     for (let i = 0; i < want; i++) {
       const key = `park:${id}:${i}`, have = this.parkCars.get(key);
       // T236: the bay's car from the vehicle mix (vehicles.ts bayCar: always the same vehicle in the same bay, a picture it has at the bay's heading)
-      const bay = pk!.bays[workerBay(i, n, shared)]!, facing = bayCar(bay.dir, bay.x, bay.y), x = bay.x - facing.ox, y = bay.y - facing.oy;
+      const bay = (shared ? this.doorBays(pk!) : pk!.bays)[workerBay(i, n, shared)]!, facing = bayCar(bay.dir, bay.x, bay.y), x = bay.x - facing.ox, y = bay.y - facing.oy;
       if (have && this.props.has(have) && have.x === x && have.y === y && have.item === facing.item) continue;
       if (have && this.props.has(have)) this.removeProp(have);
       this.parkCars.set(key, this.addProp(facing.item, x, y, facing.flip, facing.size, key, isWagon(facing.item) ? undefined : { foot: bayFoot(facing, bay.x, bay.y) }));
@@ -5036,7 +5165,7 @@ export class Game {
       const parked = this.traffic.parks.find(q => q.id === d.id)?.parked ?? 0, c = this.screen(d.x + d.w / 2, d.y + d.h / 2);
       // the range's car park also holds the range sim's cars, which the worker never sees (T132)
       // (T146: the cars in the car park building are counted over it, not here)
-      const label = parkLabel(parked, (pk && pk === this.rangePk?.pk ? this.range.sim.parked(false) : 0) + (pk && pk === this.dayPark && this.dayPlay ? this.dayPlay.view.parkedNow(this.dayMinute) : 0), pk ? pk.bays.length : 0); // (T208: and the everyday golfers' cars)
+      const label = parkLabel(parked, (pk && this.rangePk?.pks.has(pk) ? this.range.sim.parkedIn(pk.id) : 0) + (pk && pk === this.dayPark && this.dayPlay ? this.dayPlay.view.parkedNow(this.dayMinute) : 0), pk ? pk.bays.length : 0); // (T208: and the everyday golfers' cars)
       // a count: a world label of the second rank (T151)
       this.labels.text(d, PRI.count, label, c.x, c.y, `bold ${12 * dpr}px ui-sans-serif, system-ui, sans-serif`, 12 * dpr, '#f8fafc', LABEL_OUTLINE, 3 * dpr);
     }
@@ -5083,11 +5212,26 @@ export class Game {
   /** the car park drag: the rect green where parkValid allows it, else red; its bays and entrances when it can be built; and the verdict at the cursor
    *  (the reason, or the cost short of the money, or the bays and the cost) */
   private drawParkPreview(ctx: CanvasRenderingContext2D) {
-    const pd = this.parkDrag; if (!pd) return;
+    const pd = this.parkDrag;
+    // T237: the Car park tool shows each venue's walking ring before a drag too, so the player sees where a car park would serve
+    if (!pd) { if (this.tool === 'park') { const vs = this.venues(); if (vs.length) drawServePreview({ ctx, dpr: this.dpr, screen: (x, y) => this.screen(x, y), setIso: c => this.setIso(c) }, vs, [], p => p, NaN, NaN); } return; }
     const d = pd.def, pk = pd.park, v = this.ghostView(ctx), g = ghostStatus(pd.why, pd.cost, this.money, `${pk ? pk.bays.length : 0} bays`);
     drawGhostBlueprint(v, { status: g.status, rects: [{ rect: { x: d.x, y: d.y, w: d.w, h: d.h } }] });
     if (pk) { this.bayOutlines(ctx, pk.bays); drawGhostBlueprint(v, { status: g.status, entrances: pk.entrances }); }
     drawGhostHint(v, pd.mx, pd.my, g.label, g.bad);
+    // T237: the walking distance (golf/walkserve.ts): each venue's ring, the lines to the venues this car park would serve, and the verdict
+    if (d.w > 0 && d.h > 0) this.drawServe(ctx, pk ? pk.bays : [], [d.x, d.y, d.w, d.h], pd.mx, pd.my);
+  }
+  /** T237: the walking-distance preview for a car park being placed (its bays, or its rect while it has none) at the pointer (CSS px) */
+  private drawServe(ctx: CanvasRenderingContext2D, bays: readonly Pt[], rect: [number, number, number, number], mx: number, my: number) {
+    const venues = this.venues(); if (!venues.length) return;
+    const serves = servesOf(bays, venues, rect);
+    const from = (door: Pt): Pt => {
+      if (!bays.length) return { x: clamp(door.x, rect[0], rect[0] + rect[2]), y: clamp(door.y, rect[1], rect[1] + rect[3]) };
+      let best = bays[0]!, bd = Infinity; for (const b of bays) { const q = Math.hypot(b.x - door.x, b.y - door.y); if (q < bd) { bd = q; best = b; } }
+      return best;
+    };
+    drawServePreview({ ctx, dpr: this.dpr, screen: (x, y) => this.screen(x, y), setIso: c => this.setIso(c) }, venues, serves, from, mx, my);
   }
 
   // ---------- toll gates (Phase 5 step 5b) ----------
@@ -5867,6 +6011,7 @@ export class Game {
     this.sprites.clear(); this.autoByKey.clear(); this.forest.clear(); this.perf.forest = 0; this.townTrees.clear(); this.perf.townTrees = 0; this.lotBoxes.clear(); this.paintBoxes.clear();
     this.ground.dropCasters('f:'); this.ground.dropCasters('t:');
     this.parkCars.clear(); this.parkDefs = []; this.parkBuilt = []; this.parkDrag = null; for (const k of this.parkGround) this.setLotGround(k, null); this.parkGround.clear();
+    for (const p of this.lookProps.values()) this.removeProp(p); this.lookProps.clear(); this.parkLooks.clear(); this.lookKey = ''; // (T237)
     this.parking.clear(); this.extraParks = []; this.extraCarIds.clear(); this.gateProps.clear();
     this.tollDefs = []; this.tollSegs.clear(); this.tollHover = null; for (const k of this.tollGround) this.setLotGround(k, null); this.tollGround.clear();
     this.busDefs = []; this.busPick = null; this.busHover = null; this.paint.clear(); this.dropCourseGrid();
@@ -6373,15 +6518,17 @@ export class Game {
     this.dayCourse = { view: dayCourse(this.playCourse(g)), key, at: now }; // (each hole once: a 9-hole course is a 9-hole round)
     return this.dayCourse;
   }
-  /** T208: the club's ground for the everyday golfers' walks and cars: the clubhouse's door, and the car park nearest it (within 120 tiles) with its bays
-   *  (in the car park's own order, nearest its entrances first, as the worker parks its cars: the tournament's and the everyday golfers' never share a day) and its first entrance */
+  /** T208: the club's ground for the everyday golfers' walks and cars: the clubhouse's door, and the car park that serves it (T237: the nearest
+   *  walk of those within WALK_SERVE_M, golf/walkserve.ts; none in reach: no bays, so the golfers find no parking) with its bays (nearest the
+   *  door first, doorBays: the worker's cars there fill from the far end; the tournament's and the everyday golfers' never share a day) and its first entrance */
   private clubGround(g: GolfSave): ClubGround {
-    const door = g.clubhouse;
-    let best: CarPark | null = null, bd = 120;
-    this.parkDefs.forEach((d, k) => { const pk = this.parkBuilt[k]; if (!pk || !pk.bays.length) return; const dd = rectDist(door, d.x, d.y, d.w, d.h); if (dd < bd) { bd = dd; best = pk; } });
-    const pk = best as CarPark | null; this.dayPark = pk;
+    const door = g.clubhouse, parks: CarPark[] = [];
+    for (const pk of this.parkBuilt) if (pk && pk.bays.length) parks.push(pk);
+    const pk = servingParks(parks, door, q => q.bays)[0]?.park ?? null; this.dayPark = pk;
     if (!pk) return { door, bays: [], entrance: null };
-    return { door, bays: pk.bays.map(b => ({ x: b.x, y: b.y, hx: b.hx, hy: b.hy })), entrance: pk.entrances[0] ?? null };
+    // (T237: each bay's drive from the mouth along the aisles, and its golfers' walk to the door: along the aisles to the footpath, then on it)
+    const f = this.footStart(pk), foot = this.parkLooks.get(pk.id)?.path ?? [], via = foot.length > 1 ? [this.pathMid(foot[0]!)] : [];
+    return { door, bays: this.doorBays(pk).map(b => ({ x: b.x, y: b.y, hx: b.hx, hy: b.hy, drive: bayDrive(pk, b), walk: f ? [...bayWalk(pk, b, f).reverse(), ...via] : [] })), entrance: pk.entrances[0] ?? null };
   }
   /** T213: the course's cart paths for the carts (golf/play/carts.ts): the network's cart paths (not the narrow walking paths) and course drives, as
    *  straight centre lines; null with none */
@@ -6415,7 +6562,7 @@ export class Game {
   clubCard(): ClubCardView | null {
     const g = this.golf, bk = this.dayBook;
     if (!this.clubCardOpen || !g || !bk || !this.bizDefs.some(d => d.type === 'clubhouse')) return null;
-    return clubCardView(bk, this.dayPlay?.view ?? null, this.dayMinute, this.traffic.round.stage === 'free', g.rep, feeScale(this.traffic.dayLen));
+    return { ...clubCardView(bk, this.dayPlay?.view ?? null, this.dayMinute, this.traffic.round.stage === 'free', g.rep, feeScale(this.traffic.dayLen)), lots: this.lotsFor(g.clubhouse) }; // (T237: its car parks)
   }
   /** T208: opens or closes the clubhouse card (the select tool's click on the clubhouse, the top bar's Club chip) */
   openClubCard(open = !this.clubCardOpen) { this.clubCardOpen = open && !!this.golf && this.bizDefs.some(d => d.type === 'clubhouse'); if (this.clubCardOpen && this.range.cardOpen) this.range.cardOpen = false; this.emit(); }

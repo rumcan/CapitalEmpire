@@ -28,7 +28,24 @@ const STEP_S = 0.37;
 
 /** the club's ground as the walks need it: the clubhouse's door, the club car park's bays (point and heading) and its entrance (null: no car park: the
  *  golfers come and go at the door) */
-export interface ClubGround { door: Pt; bays: { x: number; y: number; hx: number; hy: number }[]; entrance: Pt | null }
+export interface ClubGround { door: Pt; bays: { x: number; y: number; hx: number; hy: number;
+  /** T237: the drive from the car park's mouth along its aisles to the aisle point in front of the bay (the car parks nose-in from there), and
+   *  the walk from the car to the door (along the aisles to the footpath, then on it); absent or empty: straight */
+  drive?: Pt[]; walk?: Pt[] }[]; entrance: Pt | null }
+/** T237: the point and heading (unit) u (0..1) of the way along polyline pts, by length */
+const P_OUT = { x: 0, y: 0, hx: 0, hy: 0 };
+export function polyAt(pts: readonly Pt[], u: number): { x: number; y: number; hx: number; hy: number } {
+  let L = 0; for (let i = 1; i < pts.length; i++) L += Math.hypot(pts[i]!.x - pts[i - 1]!.x, pts[i]!.y - pts[i - 1]!.y);
+  let d = Math.max(0, Math.min(1, u)) * L;
+  for (let i = 1; i < pts.length; i++) {
+    const a = pts[i - 1]!, b = pts[i]!, l = Math.hypot(b.x - a.x, b.y - a.y);
+    if (d <= l || i === pts.length - 1) { const k = l > 0 ? Math.min(1, d / l) : 1; P_OUT.x = a.x + (b.x - a.x) * k; P_OUT.y = a.y + (b.y - a.y) * k; P_OUT.hx = l > 0 ? (b.x - a.x) / l : 0; P_OUT.hy = l > 0 ? (b.y - a.y) / l : 0; return P_OUT; }
+    d -= l;
+  }
+  const p = pts[0] ?? { x: 0, y: 0 }; P_OUT.x = p.x; P_OUT.y = p.y; P_OUT.hx = 0; P_OUT.hy = 0; return P_OUT;
+}
+/** T237: the walk (game minutes) along a polyline: its legs' walks */
+function walkPath(pts: readonly Pt[]): number { let m = 0; for (let i = 1; i < pts.length; i++) m += walkMin(pts[i - 1]!, pts[i]!); return m; }
 /** a car to draw: its point (tiles), heading angle (radians, atan2 of the tile direction) and its type (0..4) */
 export interface DayCar { x: number; y: number; ang: number; type: number }
 
@@ -86,9 +103,10 @@ export class DayView {
         if (b >= 0) free[b] = Infinity; // held until its leave is known (below)
       }
       // the walks: from the first car's bay (or the door) to the door and on; back to it after the round
-      const at = this.carAt(tr, 0);
       let back = -Infinity;
-      for (const id of gr.players) { const L = this.legs[id]!; L.w1 = walkMin(at, door); L.w3 = walkMin(L.end, at); back = Math.max(back, L.done + L.w3); }
+      // (T237: along the car park's aisles and its footpath, the way the golfers walk)
+      const way = this.wayIn(tr);
+      for (const id of gr.players) { const L = this.legs[id]!; L.w1 = walkPath(way); L.w3 = walkPath(this.wayBack(tr, L.end)); back = Math.max(back, L.done + L.w3); }
       tr.desk = tr.arrive + Math.max(...gr.players.map(id => this.legs[id]!.w1)) + DESK_MIN;
       tr.back = back; tr.leave = back + LEAVE_MIN;
       for (const b of tr.bays) if (b >= 0) free[b] = tr.leave + DRIVE_MIN;
@@ -110,6 +128,10 @@ export class DayView {
 
   /** where a group's car c parks: its bay, else the entrance, else the door */
   private carAt(tr: Trip, c: number): Pt { const b = tr.bays[c] ?? -1; return b >= 0 ? this.ground.bays[b]! : this.ground.entrance ?? this.ground.door; }
+  /** T237: a group's walk from its first car to the door: along the car park's aisles and footpath (ClubGround walk), else straight */
+  private wayIn(tr: Trip): Pt[] { const b = tr.bays[0] ?? -1, w = b >= 0 ? this.ground.bays[b]!.walk : undefined; return [this.carAt(tr, 0), ...(w ?? []), this.ground.door]; }
+  /** T237: a golfer's walk back to the group's first car from where his round ended: to the footpath, then back along it and the aisles */
+  private wayBack(tr: Trip, end: Pt): Pt[] { const b = tr.bays[0] ?? -1, w = b >= 0 ? this.ground.bays[b]!.walk : undefined; return [end, ...(w ? [...w].reverse() : []), this.carAt(tr, 0)]; }
 
   /** the playback at a minute of the town day and real seconds `now`, for the tile box (x0 y0 x1 y1): the people, cars and balls in or near it */
   update(minute: number, now: number, x0: number, y0: number, x1: number, y1: number): void {
@@ -128,10 +150,11 @@ export class DayView {
       // the cars: driving in, parked, driving off
       for (let c = 0; c < tr.bays.length; c++) {
         const b = tr.bays[c]!; if (b < 0) continue;
-        const bay = ground.bays[b]!, e = ground.entrance ?? bay, bayAng = Math.atan2(bay.hy, bay.hx);
-        if (minute < tr.arrive) { const u = (minute - (tr.arrive - DRIVE_MIN)) / DRIVE_MIN; if (inBox(e.x + (bay.x - e.x) * u, e.y + (bay.y - e.y) * u)) car(e.x + (bay.x - e.x) * u, e.y + (bay.y - e.y) * u, Math.atan2(bay.y - e.y, bay.x - e.x), tr.types[c]!); }
+        const bay = ground.bays[b]!, e = ground.entrance ?? bay, bayAng = Math.atan2(bay.hy, bay.hx), dr = bay.drive ?? [];
+        // (T237: in by the mouth and along the aisles, nose-in; out backing to the aisle and the same way back)
+        if (minute < tr.arrive) { const q = polyAt([e, ...dr, bay], (minute - (tr.arrive - DRIVE_MIN)) / DRIVE_MIN); if (inBox(q.x, q.y)) car(q.x, q.y, Math.atan2(q.hy, q.hx), tr.types[c]!); }
         else if (minute < tr.leave) { if (inBox(bay.x, bay.y)) car(bay.x, bay.y, bayAng, tr.types[c]!); }
-        else { const u = (minute - tr.leave) / DRIVE_MIN; if (inBox(bay.x + (e.x - bay.x) * u, bay.y + (e.y - bay.y) * u)) car(bay.x + (e.x - bay.x) * u, bay.y + (e.y - bay.y) * u, Math.atan2(e.y - bay.y, e.x - bay.x), tr.types[c]!); }
+        else { const q = polyAt([bay, ...[...dr].reverse(), e], (minute - tr.leave) / DRIVE_MIN), back = dr.length && Math.hypot(q.x - bay.x, q.y - bay.y) < Math.hypot(dr[dr.length - 1]!.x - bay.x, dr[dr.length - 1]!.y - bay.y) - 1e-6; if (inBox(q.x, q.y)) car(q.x, q.y, back ? bayAng : Math.atan2(q.hy, q.hx), tr.types[c]!); }
       }
       if (minute < tr.arrive) continue;
       // the group's hole now (T211's arrivals at the tees): its box decides whether its round is played back this frame
@@ -140,7 +163,6 @@ export class DayView {
         const A = arrive[g]!; let h = 0; while (h + 1 < A.length && A[h + 1]! <= minute) h++;
         const bx = this.boxes[h]; onScreen = !!bx && bx[2] >= x0 && bx[0] <= x1 && bx[3] >= y0 && bx[1] <= y1;
       }
-      const at = this.carAt(tr, 0);
       for (let s = 0; s < gr.players.length; s++) {
         const id = gr.players[s]!, L = this.legs[id]!, side = (s - (gr.players.length - 1) / 2) * SPREAD;
         if (minute >= L.first - ADDRESS_TIME && minute < L.done) { if (onScreen) only[id] = 1; continue; }
@@ -149,7 +171,7 @@ export class DayView {
           // before the round: the car to the door, the desk, the door to his place behind the first tee, waiting there, stepping up to the tee
           const h0 = this.view.holes[0], tee = h0 ? holeFrom(h0, this.plan.golfers[id]?.tees).tee : L.spot, stepMin = Math.max(STEP_IN, walkMin(L.spot, tee));
           const t1 = tr.arrive + L.w1, t2 = tr.desk, t3 = t2 + L.w2, step = L.first - ADDRESS_TIME - stepMin;
-          if (minute < t1) { const u = L.w1 > 0 ? (minute - tr.arrive) / L.w1 : 1; px = at.x + (door.x - at.x) * u; py = at.y + (door.y - at.y) * u; hx = door.x - at.x; hy = door.y - at.y; }
+          if (minute < t1) { const q = polyAt(this.wayIn(tr), L.w1 > 0 ? (minute - tr.arrive) / L.w1 : 1); px = q.x; py = q.y; hx = q.hx; hy = q.hy; }
           else if (minute < t2) { px = door.x; py = door.y; walking = false; hx = L.spot.x - door.x; hy = L.spot.y - door.y; }
           else if (minute < t3) { const u = L.w2 > 0 ? (minute - t2) / L.w2 : 1; px = door.x + (L.spot.x - door.x) * u; py = door.y + (L.spot.y - door.y) * u; hx = L.spot.x - door.x; hy = L.spot.y - door.y; }
           else if (minute < step) { px = L.spot.x; py = L.spot.y; walking = false; hx = tee.x - L.spot.x; hy = tee.y - L.spot.y; }
@@ -157,7 +179,7 @@ export class DayView {
         } else {
           // after the round: from where he walked off the last green back to the car; in it once he is there
           const t = minute - L.done; if (t >= L.w3) continue;
-          const u = L.w3 > 0 ? t / L.w3 : 1; px = L.end.x + (at.x - L.end.x) * u; py = L.end.y + (at.y - L.end.y) * u; hx = at.x - L.end.x; hy = at.y - L.end.y;
+          const q = polyAt(this.wayBack(tr, L.end), L.w3 > 0 ? t / L.w3 : 1); px = q.x; py = q.y; hx = q.hx; hy = q.hy;
         }
         // side by side across the way they walk
         const Lh = Math.hypot(hx, hy); if (Lh > 0 && walking) { px += -hy / Lh * side; py += hx / Lh * side; }
