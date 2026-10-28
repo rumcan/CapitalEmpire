@@ -1,5 +1,7 @@
 import { BRUSH_PRESETS, type BrushKind, type PaintArea } from './paint';
 import type { CourseTex } from './ground-protocol';
+import { surfacePreset } from './paint-presets';
+import { collarToneOf, tonedCollar, type CourseFinish } from './course-finish';
 
 /** The course look of a surface (the Course brush's style, PaintTool.brush[kind].style) as the course grid lays it (T128: every control of the
  *  style editor works on the course, the owner 2026-10-25: "there's still this Blend with function when painting the course that does nothing
@@ -30,3 +32,38 @@ export function courseBandOf(kind: BrushKind, st: LookStyle, dflt: CourseTex): C
 /** the style fields the course grid's look reads: a change to any of them draws the course again */
 export const LOOK_FIELDS = ['tex', 'scale', 'angle', 'tone', 'toneAmt', 'tint', 'mtex', 'mshare', 'msoft', 'mpatch', 'btex', 'bscale', 'bangle', 'btone', 'btoneAmt', 'btint'] as const;
 export const lookChanged = (a: Partial<LookStyle>, b: Partial<LookStyle>) => LOOK_FIELDS.some(k => a[k] !== b[k]);
+
+/** a course collar band's name (course-blobs BLOB_STYLE): the green's fringe, the fairway's and the tee's first cut, a bunker's lip, a pond's bank */
+export type BandName = 'first-cut' | 'fringe' | 'lip' | 'bank';
+/** T252: the collar band each brush's surface wears on the course grid (BLOB_STYLE's collars); the rough, the long grass, the waste area and the
+ *  cart path have none */
+export const SURFACE_BAND: Readonly<Partial<Record<BrushKind, BandName>>> = { green: 'fringe', fairway: 'first-cut', tee: 'first-cut', bunker: 'lip', water: 'bank' };
+/** the brushes' looks, as PaintTool.brush holds them */
+export type BrushLooks = Readonly<Partial<Record<BrushKind, { style: LookStyle }>>>;
+/** the collars' own textures (a Border texture the player picks replaces one: courseBandOf): the first cut's and the fringe's presets, and the
+ *  bunker's lip and the pond's bank in the rough's grass (the renderer paints the bank's wet soil and stones, T099) */
+export function collarTexes(b: BrushLooks): Record<BandName, CourseTex> {
+  const pre = (s: string, old: string): CourseTex => ({ tex: surfacePreset(s) ?? old, sc: 1, a: 0 });
+  const r = (b.rough ?? BRUSH_PRESETS.find(p => p.kind === 'rough')!).style, rough: CourseTex = { tex: r.tex, sc: r.scale, a: r.angle };
+  return { 'first-cut': pre('firstCut', 'golfFirstCut'), fringe: pre('fringe', 'golfFringe'), lip: rough, bank: rough };
+}
+/** each banded surface's collar as the course grid lays it (engine courseLooks): courseBandOf over its collar's own texture; T227: lipGrass,
+ *  the fairway's first cut a bunker's lip is laid in with the course finish, unless the player gave the bunker a Border texture of its own */
+export function surfaceBands(b: BrushLooks): { collar: Record<BandName, CourseTex>; band: Partial<Record<BrushKind, CourseTex>>; lipGrass?: CourseTex } {
+  const collar = collarTexes(b), band: Partial<Record<BrushKind, CourseTex>> = {};
+  for (const [k, n] of Object.entries(SURFACE_BAND) as [BrushKind, BandName][]) {
+    const st = (b[k] ?? BRUSH_PRESETS.find(p => p.kind === k)!).style;
+    band[k] = courseBandOf(k, st, collar[n]);
+  }
+  const lipGrass = band.bunker?.tex === collar.lip.tex ? band.fairway : undefined;
+  return { collar, band, ...(lipGrass ? { lipGrass } : {}) };
+}
+/** T252: a surface's border as its puck shows it (the Holes swatches and the brush cursor's chip): the collar band the course lays round it
+ *  (surfaceBands; with the course finish a bunker's lip in the fairway's first cut), with the finish's collar tone where the course takes it
+ *  (every first cut, the fringe, a lip laid in the first cut: renderer drawCourses) */
+export interface PuckBand { name: BandName; tex: CourseTex; tone: { tc: string; ta: number } | null }
+export function puckBandOf(kind: string, b: BrushLooks, fin: CourseFinish): PuckBand | null {
+  const name = SURFACE_BAND[kind as BrushKind]; if (!name) return null;
+  const { band, lipGrass } = surfaceBands(b), g = name === 'lip' && fin.on && lipGrass ? lipGrass : null, ct = collarToneOf(fin);
+  return { name, tex: g ?? band[kind as BrushKind]!, tone: ct && (tonedCollar(name) || g) ? ct : null };
+}

@@ -6,8 +6,8 @@ import { SURF_SURFACE } from '../../game/ext/course-grid/areas';
 import { aboutMoney, planShape, type WizCheck } from '../../game/ext/hole-wizard';
 import { growInMonths } from '../../game/golf/costs';
 import { FRAME_TREE_PRICE } from '../../game/golf/holeframe';
-import { BRUSH_PRESETS, type BrushKind } from '../../game/paint';
-import { BrushShape, SurfaceSwatches } from './BrushControls';
+import { SURFACE_BRUSHES, type BrushKind } from '../../game/paint';
+import { BrushShape, GroundHeight, LooksEntry, SurfaceSwatches, surfaceKeysOf } from './BrushControls';
 
 const STEPS = ['Tee', 'Green', 'Shape'] as const;
 /** what each step asks for, under the steps */
@@ -21,8 +21,9 @@ const money = (n: number) => `$${Math.round(n).toLocaleString()}`;
 /** the New hole wizard's card (T102, finished in T119: plan P23 4.3 and 4.4), on top of the Holes panel in New hole's place while the plan
  *  mode is on: the hole and its number (Number ▾ offers the free ones), the steps, Build · $X and Cancel on top, par and length, the price
  *  split, Seed (the default) or Sod with what each does to the season, the money line, the check table with its fixes, and the keys. The
- *  map shows the ghost, the handles, the gold Build pill and the label beside the pointer. Self-contained: it reads and drives game.paint */
-export function HoleWizardPanel({ game }: { game: Game }) {
+ *  map shows the ghost, the handles, the gold Build pill and the label beside the pointer. Self-contained: it reads and drives game.paint.
+ *  looks / onLooks: My looks' card (T252: Edit hole's paint section opens it too; App's state, as the Holes panel's) */
+export function HoleWizardPanel({ game, looks = false, onLooks }: { game: Game; looks?: boolean; onLooks?: (open: boolean) => void }) {
   const p = game.paint, w = p.wizard;
   const gh = w.step !== 'tee' && w.plan ? w.ghost() : null;
   const c = w.step === 'shape' ? w.check() : null;
@@ -70,7 +71,7 @@ export function HoleWizardPanel({ game }: { game: Game }) {
         </div>
       )}
       {gh && <Stats game={game} />}
-      {w.base && w.step === 'shape' && <EditPaint game={game} />}
+      {w.base && w.step === 'shape' && <EditPaint game={game} looks={looks} onLooks={onLooks} />}
       {gh && <Planting game={game} />}
       {gh && w.step === 'shape' && <Frame game={game} cost={gh.cost} />}
       {checks.length > 0 && <Checks game={game} rows={checks} />}
@@ -87,13 +88,17 @@ export function HoleWizardPanel({ game }: { game: Game }) {
 }
 
 /** T238 (the owner, 2026-10-28: "editinghole should be where you can also paint and add to the holes grass"): Edit hole's paint section, the
- *  Shape by hand surfaces (keys 1–9), the brush's shape (Square or Round) and size, and Erase. A stroke paints into this hole, one undo step
+ *  Shape by hand surfaces (keys 1–8), the brush's shape (Square or Round) and size, and Erase. A stroke paints into this hole, one undo step
  *  a stroke; the plan's handles stay on the map and still drag; the paint stays when Edit hole closes. The lit surface again (or Esc) puts the
- *  brush down */
-function EditPaint({ game }: { game: Game }) {
-  const p = game.paint, n = p.editingHole, on = p.mode === 'brush' && p.planOpen;
-  const name = BRUSH_PRESETS.find(b => b.kind === p.brushKind)?.name ?? '';
+ *  brush down. T252: My looks (the look of the surface in hand: course-wide, every hole wears it) and Ground height (Raise, Lower, Smooth,
+ *  Flatten: the owner, 2026-10-28: "add the sculpting too to raise and lower and flatten ground to the hole editing"), the handles still
+ *  dragging under it; picking a surface puts it down, and Ground height puts the surface brush down */
+function EditPaint({ game, looks, onLooks }: { game: Game; looks: boolean; onLooks?: (open: boolean) => void }) {
+  const p = game.paint, n = p.editingHole, on = p.mode === 'brush' && p.planOpen, height = p.mode === 'height' && p.planOpen;
+  const name = SURFACE_BRUSHES.find(b => b.kind === p.brushKind)?.name ?? '', keys = surfaceKeysOf(game);
   const pick = (k: BrushKind) => p.setEditBrush(on && p.brushKind === k ? null : k);
+  const help = on ? `Drag on the map to paint ${name.toLowerCase()} into hole ${n}; the tee, the green and the bends still drag. Esc puts the brush down.`
+    : `Pick a surface to paint into hole ${n} (keys 1–${keys}); the tee, the green and the bends still drag.`;
   return (
     <section className="mt-2" aria-label="Paint this hole" data-section="edit-paint">
       <h4 className="sub-head">{`Paint hole ${n}`}</h4>
@@ -101,9 +106,13 @@ function EditPaint({ game }: { game: Game }) {
       <BrushShape game={game} brush={on} arm={() => p.setEditBrush(p.brushKind)} />
       <div className="mt-2 flex flex-wrap items-center gap-1.5">
         <button className={`chip ${on && p.rubOut ? 'chip-on' : ''}`} aria-pressed={on && p.rubOut} title="Erase takes the top surface under the brush (hold Alt for a moment while brushing); no refund" onClick={() => { const v = !(on && p.rubOut); if (!on) p.setEditBrush(p.brushKind); p.rubOut = v; game.emit(); }}>Erase</button>
-        {on && <button className="chip" title="Put the brush down: the plan's handles alone (Esc)" onClick={() => p.setEditBrush(null)}>Handles only</button>}
+        <button className={`chip ${height ? 'chip-on' : ''}`} data-ground-height aria-pressed={height} aria-expanded={height} title="Ground height: raise, lower, smooth or flatten the ground round this hole (earthworks are paid for)" onClick={() => p.setEditHeight(height ? null : {})}>Ground height <span aria-hidden>{height ? '▾' : '▸'}</span></button>
+        {(on || height) && <button className="chip" title="Put the brush down: the plan's handles alone (Esc)" onClick={() => p.setEditBrush(null)}>Handles only</button>}
       </div>
-      <p className="sub-line mt-1">{on ? `Drag on the map to paint ${name.toLowerCase()} into hole ${n}; the tee, the green and the bends still drag. Esc puts the brush down.` : `Pick a surface to paint into hole ${n} (keys 1–9); the tee, the green and the bends still drag.`}</p>
+      {height ? <GroundHeight game={game} on={height} arm={() => p.setEditHeight()} note="The tee, the green and the bends still drag; Esc puts it down." /> : <p className="sub-line mt-1">{help}</p>}
+      <div className="mt-2">
+        <LooksEntry game={game} looks={looks} onLooks={onLooks} arm={() => { if (!on) p.setEditBrush(p.brushKind); }} />
+      </div>
     </section>
   );
 }

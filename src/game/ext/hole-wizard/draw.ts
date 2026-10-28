@@ -236,7 +236,7 @@ function drawRipple(v: WizardView, w: HoleWizard, now: number, reduced: boolean)
  * green step's tee and live ghost; the shape step's ghost, line, handles and pill; and the label beside the pointer. Returns the pill's
  * box (css px) for the click, or null. extra: what Build adds to the ghost's price ($; T229: the hole's frame of trees)
  */
-export function drawWizard(v: WizardView, w: HoleWizard, mouse: { mx: number; my: number } | null, now: number, reduced: boolean, extra = 0): { x: number; y: number; w: number; h: number } | null {
+export function drawWizard(v: WizardView, w: HoleWizard, mouse: { mx: number; my: number } | null, now: number, reduced: boolean, extra = 0, label = true): { x: number; y: number; w: number; h: number } | null {
   drawRipple(v, w, now, reduced);
   let pill: { x: number; y: number; w: number; h: number } | null = null;
   if (w.step !== 'shape') drawOthers(v, w);
@@ -264,6 +264,6 @@ export function drawWizard(v: WizardView, w: HoleWizard, mouse: { mx: number; my
       if (gh) pill = drawPill(v, w, gh, mouse, extra);
     }
   }
-  if (mouse) { const l = w.label(); v.hint(mouse.mx, mouse.my, l.text, l.bad); }
+  if (mouse && label) { const l = w.label(); v.hint(mouse.mx, mouse.my, l.text, l.bad); } // T252: none under Edit hole's height brush (its own label)
   return pill;
 }
