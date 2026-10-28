@@ -126,7 +126,7 @@ test('the Border section and More options › Edges never open empty: Border: no
     if (!BORDER_KINDS[k]) {
       assert.match(h, /data-border="none"[^>]*>none</, `${k}: Border: none`);
       assert.match(h, /has no border band on the course/, `${k}: the note`);
-      assert.doesNotMatch(h, /type="range"/, `${k}: no slider`);
+      assert.doesNotMatch(h, /type="range" aria-label="Border/, `${k}: no Border slider`); // T253: its Round off Smoothness slider is there
     } else assert.match(h, /type="range"/, `${k}: its slider`);
   }
   // a tee, a bunker and a pond start at none, with a note how to lay one; the fairway and the green at their widths

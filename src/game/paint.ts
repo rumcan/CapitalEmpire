@@ -24,7 +24,13 @@ export interface PaintArea { id: number; pts: number[]; tex: PaintTex; scale: nu
   /** its edge shade (T136, the Shadow slider beside Border width): 0 none .. 1 strong; the area reads as slightly raised, the shade on its
    *  edges turned away from the sun (paint-edges.ts areaShadeAlpha); absent = 0, as every area before it */
   shadow?: number;
+  /** T253 (#735): Round off, for a course surface's look on the course grid: round, the tick box (absent: not rounded, as every look before
+   *  it); smooth, the Smoothness slider (0..1; absent: SMOOTH_DEFAULT), kept while the box is off so ticking it again brings it back. Painted
+   *  areas keep their Corners slider instead */
+  round?: boolean; smooth?: number;
 }
+/** T253: the Smoothness a Round off starts at */
+export const SMOOTH_DEFAULT = 0.5;
 /** an area's draw order on the ground (higher draws over lower): the player's order, else its brush layer's band and then its id (the order made) */
 export const drawZ = (a: { order?: number; kind?: BrushKind; id: number }) => a.order ?? (a.kind ? BRUSH_LAYER[a.kind] * 1e6 : 0) + a.id;
 /** the golf brush's kinds: the areas a stroke paints (BRUSH_PRESETS) */
@@ -280,7 +286,7 @@ const fin = (v: number, d: number) => Number.isFinite(v) ? v : d;
 /** a copy of a style (or a whole area) with the scale, angle, border, radius and tone clamped and the textures and tint checked (unknown → paving, kerb; a bad tint → black, or white when lightening) */
 export function clampStyle<T extends Omit<PaintArea, 'id' | 'pts'>>(st: T): T {
   // the blend's fields are kept only with a known texture (they are left out, not undefined, without one); the edge shade only above 0
-  const { mtex, mshare, msoft, mpatch, shadow, ...rest } = st, s = rest as T, sh = Math.round(Math.min(1, Math.max(0, fin(shadow ?? 0, 0))) * 1000) / 1000;
+  const { mtex, mshare, msoft, mpatch, shadow, round, smooth, ...rest } = st, s = rest as T, sh = Math.round(Math.min(1, Math.max(0, fin(shadow ?? 0, 0))) * 1000) / 1000;
   const tone = Math.min(2, Math.max(0, Math.round(fin(s.tone, 0)))) as 0 | 1 | 2, btone = Math.min(2, Math.max(0, Math.round(fin(s.btone, 0)))) as 0 | 1 | 2;
   return {
     ...s,
@@ -302,6 +308,9 @@ export function clampStyle<T extends Omit<PaintArea, 'id' | 'pts'>>(st: T): T {
       ? { mtex, mshare: Math.min(1, Math.max(0, fin(mshare ?? 0.5, 0.5))), msoft: Math.min(0.5, Math.max(0.01, fin(msoft ?? 0.12, 0.12))), mpatch: Math.min(4, Math.max(0.25, fin(mpatch ?? 1, 1))) }
       : {}),
     ...(sh > 0 ? { shadow: sh } : {}),
+    // T253: Round off only when ticked, its Smoothness only when set (both left out otherwise, so an old look stays as it was)
+    ...(round === true ? { round: true } : {}),
+    ...(typeof smooth === 'number' && Number.isFinite(smooth) ? { smooth: Math.round(Math.min(1, Math.max(0, smooth)) * 100) / 100 } : {}),
   };
 }
 /** copies a (clamped) style onto an area: its optional fields that the style leaves out (the blend, the edge shade) go from the area too */
@@ -309,6 +318,8 @@ export function assignStyle(a: PaintArea, st: Omit<PaintArea, 'id' | 'pts'>): Pa
   Object.assign(a, st);
   if (!st.mtex) { delete a.mtex; delete a.mshare; delete a.msoft; delete a.mpatch; }
   if (!st.shadow) delete a.shadow;
+  if (!st.round) delete a.round;
+  if (st.smooth === undefined) delete a.smooth;
   return a;
 }
 

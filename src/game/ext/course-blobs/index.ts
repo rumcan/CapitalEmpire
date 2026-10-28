@@ -94,9 +94,129 @@ export interface SurfaceOutline { surf: number; fill: number[][]; edges: number[
    * band's, null without a collar), so a reader can tell which drawn layer covers a point (course-walls) */
   cover?: { s: CellCover; c: CellCover | null } }
 /** a window of cells: cell (ci0 + i, cj0 + j) of the grid (global cell indices) is entry j * cw + i of occ (0 empty, 1 full, 2 a partial cell
- * of weight pw: a collar's outer ring when its width is not a whole number of cells) */
-export interface CellCover { readonly occ: Uint8Array; readonly ci0: number; readonly cj0: number; readonly cw: number; readonly ch: number; readonly pw?: number }
+ * of weight pw: a collar's outer ring when its width is not a whole number of cells). T253: rq, when the window holds rounded cells, each
+ * cell's kernel code (0 the droplet kernel, q a wider one of radius KERNEL_R + RQ_STEP q: Round off), rb each cell's weight (ROUND_GROW) and
+ * rmax the widest radius in it */
+export interface CellCover { readonly occ: Uint8Array; readonly ci0: number; readonly cj0: number; readonly cw: number; readonly ch: number; readonly pw?: number; readonly rq?: Uint8Array; readonly rb?: Float32Array; readonly rmax?: number }
 
+// ---- T253 (#735): Round off ----
+// The owner, 2026-10-28: "bunkers and greens and all painted elements should have a tick box to round it with a slider to make the shape
+// rounder and smoother". A rounded surface's cells splat a wider kernel into the same droplet field, scaled so a full plane sums to the same
+// value as the droplet kernel's (KERNEL_R² / R²): a straight run of cells keeps its edge where it was, a staircase averages out into one
+// straight slope, and a corner rounds with a radius that grows with the kernel's (about 0.6 R). The field stays one function of the cells,
+// so every reader of it (the chunks' outlines, their seams, the walls' sides, the lie test: DrawnSurfaces) sees the same rounded shape.
+// A kernel never grows past what the blob can hold: each cell's radius is capped by the thickest part of the blob within reach of it (the
+// largest distance to an empty cell, ROUND_CAP), so a thin strip or a small bunker is smoothed, not wiped out. A wide kernel also pulls a
+// curved edge in (by about R² / 20 rho on a curve of radius rho), so a rounded cell weighs a little more where the blob is thin (ROUND_GROW):
+// a shape keeps its size within a few percent, a corner still rounds.
+
+/** the kernel radius (cells) of Round off's Smoothness 0 and 1 */
+export const ROUND_R_MIN = 2.25, ROUND_R_MAX = 6;
+/** the kernel radius step between codes, cells */
+export const RQ_STEP = 0.25;
+/** a cell's kernel radius cap from the blob's thickness M within reach (the largest distance, in cells, from a cell of it to an empty cell):
+ *  a + b M. A one- or two-cell strip (M 1) keeps 1.9 (it thins, it stays); a 3 x 3 (M 2) 2.8; a blob 12 cells across takes ROUND_R_MAX */
+const ROUND_CAP = [1.0, 0.9] as const;
+/** the most a distance is counted to (cells): the thickness search's reach plus one (no edge cell sees a larger one) */
+const ROUND_D = Math.ceil(ROUND_R_MAX) + 1;
+/** a rounded cell's weight: 1 + ROUND_GROW R / M (R its kernel's radius, M the blob's thickness within reach, cells), which moves an edge out by
+ *  about the R² / 20 M a curve of radius M is pulled in by */
+export const ROUND_GROW = 0.117;
+/** how many more cells a rounded surface's window reads past its lattice (the kernel, the thickness search and the distance) */
+export const ROUND_PAD = Math.ceil(ROUND_R_MAX) * 2 + ROUND_D + 1;
+/** how far (tiles) a painted cell can change a rounded outline: its kernel, the thickness search and the distance it moves */
+export const ROUND_REACH_T = ROUND_PAD * CELL_T;
+/** the kernel radius (cells) of a Smoothness (0..1) */
+export const roundRadius = (smooth: number) => ROUND_R_MIN + (ROUND_R_MAX - ROUND_R_MIN) * Math.min(1, Math.max(0, Number.isFinite(smooth) ? smooth : 0.5));
+/** about how round a convex corner comes out at a Smoothness, metres (measured on a large square: 0.61 of the kernel's radius; 1.5 m at 0,
+ *  3.7 m at 1), as the Smoothness slider reads it */
+export const roundCornerM = (smooth: number) => 0.61 * roundRadius(smooth) * CELL_T * 2;
+/** a kernel code's radius, cells (0: the droplet kernel's) */
+const rOfCode = (q: number) => KERNEL_R + RQ_STEP * q;
+/** the code of a kernel radius (0 at or under the droplet kernel's) */
+const codeOf = (r: number) => Math.max(0, Math.min(255, Math.round((r - KERNEL_R) / RQ_STEP)));
+/** per kernel code: its squared radius, its amplitude (a full plane sums to the droplet kernel's 1.227) and its splat taps, made on first use */
+const RQ_R2 = new Float64Array(256), RQ_AMP = new Float64Array(256), RQ_TAPS: ({ da: Int8Array; db: Int8Array; w: Float64Array; reach: number } | undefined)[] = [];
+function kernCode(q: number): void {
+  if (RQ_TAPS[q]) return;
+  const r = rOfCode(q), r2 = r * r, amp = (KERNEL_R / r) ** 2, reach = Math.ceil(2 * r), da: number[] = [], db: number[] = [], w: number[] = [];
+  for (let b = -reach; b <= reach; b++) for (let a = -reach; a <= reach; a++) {
+    const d2 = (a * a + b * b) / 4; if (d2 >= r2) continue;
+    const t = 1 - d2 / r2; da.push(a); db.push(b); w.push(amp * t * t * t);
+  }
+  RQ_R2[q] = r2; RQ_AMP[q] = amp; RQ_TAPS[q] = { da: Int8Array.from(da), db: Int8Array.from(db), w: Float64Array.from(w), reach };
+}
+kernCode(0);
+/** a rounded surface's Smoothness per cell: (global cell index) => the kernel radius in cells (roundRadius), 0 where the cell is not rounded */
+export type RoundCells = (cell: number) => number;
+/** a course's Round off: per surface id, its cells' kernel radii, or null where no cell of the surface is rounded */
+export type RoundOf = (s: number) => RoundCells | null;
+
+/** the kernel codes of a window's occupied cells (T253), or null when none is rounded. own: the surface's own cells (sw[i] === s) take their
+ *  radius from radius(global cell); the cells the closing or a collar added take the widest of the own cells within `spread`; every radius is
+ *  then capped by the blob's thickness within reach (ROUND_CAP) */
+function roundCodes(occ: Uint8Array, sw: Uint8Array, s: number, cw: number, ch: number, ci0: number, cj0: number, gw: number, radius: RoundCells, spread: number): { rq: Uint8Array; rb: Float32Array; rmax: number } | null {
+  const n = cw * ch, base = new Float32Array(n);
+  let any = false;
+  for (let j = 0; j < ch; j++) {
+    const gj = cj0 + j; if (gj < 0) continue;
+    for (let i = 0; i < cw; i++) {
+      const k = j * cw + i; if (sw[k] !== s) continue;
+      const gi = ci0 + i; if (gi < 0 || gi >= gw) continue;
+      const r = radius(gj * gw + gi); if (r > KERNEL_R) { base[k] = Math.min(ROUND_R_MAX, r); any = true; }
+    }
+  }
+  if (!any) return null;
+  // the cells added round the own ones (fillets, a collar band) take the widest radius of the own cells within spread (a max filter; one
+  // radius everywhere, the usual case, needs none)
+  let r0 = -1, one = true;
+  for (let k = 0; k < n && one; k++) if (sw[k] === s) { if (r0 < 0) r0 = base[k]!; else if (base[k] !== r0) one = false; }
+  const want = one ? new Float32Array(n).fill(r0) : maxFilter(base, cw, ch, spread);
+  if (!one) for (let k = 0; k < n; k++) if (sw[k] === s) want[k] = base[k]!;
+  // the thickness: each occupied cell's city-block distance to an empty one (cells beyond the window are empty), capped at ROUND_D, then
+  // the largest within the widest kernel's reach
+  const D = new Float32Array(n);
+  for (let k = 0; k < n; k++) D[k] = occ[k] ? ROUND_D : 0;
+  for (let j = 0; j < ch; j++) for (let i = 0; i < cw; i++) {
+    const k = j * cw + i; if (!D[k]) continue;
+    const l = i > 0 ? D[k - 1]! : 0, u = j > 0 ? D[k - cw]! : 0; D[k] = Math.min(D[k]!, l + 1, u + 1);
+  }
+  for (let j = ch - 1; j >= 0; j--) for (let i = cw - 1; i >= 0; i--) {
+    const k = j * cw + i; if (!D[k]) continue;
+    const r = i + 1 < cw ? D[k + 1]! : 0, d = j + 1 < ch ? D[k + cw]! : 0; D[k] = Math.min(D[k]!, r + 1, d + 1);
+  }
+  const M = maxFilter(D, cw, ch, Math.ceil(ROUND_R_MAX)), rq = new Uint8Array(n), rb = new Float32Array(n).fill(1);
+  let rmax = KERNEL_R;
+  for (let k = 0; k < n; k++) {
+    if (!occ[k] || !(want[k]! > KERNEL_R)) continue;
+    const m = Math.max(1, M[k]!), q = codeOf(Math.min(want[k]!, ROUND_CAP[0] + ROUND_CAP[1] * m));
+    if (q) { kernCode(q); rq[k] = q; const r = rOfCode(q); rb[k] = 1 + (ROUND_GROW * r * (m > 1 ? 1 : 0.5)) / m; rmax = Math.max(rmax, r); }
+  }
+  return { rq, rb, rmax };
+}
+/** the largest value within a (2h + 1)² square round each cell (separable, van Herk / Gil-Werman: three passes a line whatever h; cells beyond
+ *  the window count as 0, which no value here is below) */
+function maxFilter(src: Float32Array, cw: number, ch: number, h: number): Float32Array {
+  if (h <= 0) return src.slice();
+  const tmp = new Float32Array(cw * ch), out = new Float32Array(cw * ch), L = Math.max(cw, ch), G = new Float32Array(L), H = new Float32Array(L), w = 2 * h + 1;
+  /** the sliding max of one line (n values from `from` at `off`, step `st`) into `to`: per block of w, its running max from the block's start
+   *  (G) and to its end (H); a window spans two blocks (H at its start, G at its end), or one where it is cut by the line's ends */
+  const line = (from: Float32Array, to: Float32Array, off: number, st: number, n: number) => {
+    for (let b0 = 0; b0 < n; b0 += w) {
+      const b1 = Math.min(n, b0 + w);
+      let m = 0; for (let i = b0; i < b1; i++) { const v = from[off + i * st]!; if (v > m) m = v; G[i] = m; }
+      m = 0; for (let i = b1 - 1; i >= b0; i--) { const v = from[off + i * st]!; if (v > m) m = v; H[i] = m; }
+    }
+    const last = n - (n % w || w);
+    for (let i = 0; i < n; i++) {
+      const lo = i > h ? i - h : 0, hi = i + h < n ? i + h : n - 1;
+      to[off + i * st] = lo === 0 && hi < w ? G[hi]! : hi === n - 1 && lo >= last ? H[lo]! : H[lo]! > G[hi]! ? H[lo]! : G[hi]!;
+    }
+  };
+  for (let j = 0; j < ch; j++) line(src, tmp, j * cw, 1, cw);
+  for (let i = 0; i < cw; i++) line(tmp, out, i, cw, ch);
+  return out;
+}
 // ---- the kernel and the lattice taps ----
 
 const KR2 = KERNEL_R * KERNEL_R;
@@ -126,7 +246,7 @@ function disc(r: number): Int8Array {
 // ---- occupancy windows ----
 
 /** a window of cells (CellCover, writable) */
-interface Occ { occ: Uint8Array; ci0: number; cj0: number; cw: number; ch: number; pw?: number }
+interface Occ { occ: Uint8Array; ci0: number; cj0: number; cw: number; ch: number; pw?: number; rq?: Uint8Array; rb?: Float32Array; rmax?: number }
 
 // ---- fractional collar widths ----
 
@@ -286,6 +406,7 @@ function scratch(n: number): void {
 /** the field value and gradient (per cell) at global cell coordinates (u, v), written to FG */
 const FG = new Float64Array(3);
 function fieldGrad(o: Occ, u: number, v: number): void {
+  if (o.rq) { fieldGradR(o, u, v); return; }
   const i0 = Math.max(Math.floor(u - 0.5 - KERNEL_R) + 1, o.ci0), i1 = Math.min(Math.ceil(u - 0.5 + KERNEL_R) - 1, o.ci0 + o.cw - 1);
   const j0 = Math.max(Math.floor(v - 0.5 - KERNEL_R) + 1, o.cj0), j1 = Math.min(Math.ceil(v - 0.5 + KERNEL_R) - 1, o.cj0 + o.ch - 1);
   let f = 0, gu = 0, gv = 0;
@@ -298,6 +419,26 @@ function fieldGrad(o: Occ, u: number, v: number): void {
       if (q >= 1) continue;
       const r = 1 - q, r2 = r * r, wt = ov === 1 ? 1 : o.pw ?? 1, c = (-6 * r2 * wt) / KR2;
       f += wt * r2 * r; gu += c * dx; gv += c * dy;
+    }
+  }
+  FG[0] = f; FG[1] = gu; FG[2] = gv;
+}
+
+/** fieldGrad over a window of rounded cells (T253): each cell with its own kernel (rq) and weight (rb) */
+function fieldGradR(o: Occ, u: number, v: number): void {
+  const R = o.rmax ?? KERNEL_R, rq = o.rq!, rb = o.rb;
+  const i0 = Math.max(Math.floor(u - 0.5 - R) + 1, o.ci0), i1 = Math.min(Math.ceil(u - 0.5 + R) - 1, o.ci0 + o.cw - 1);
+  const j0 = Math.max(Math.floor(v - 0.5 - R) + 1, o.cj0), j1 = Math.min(Math.ceil(v - 0.5 + R) - 1, o.cj0 + o.ch - 1);
+  let f = 0, gu = 0, gv = 0;
+  for (let j = j0; j <= j1; j++) {
+    const dy = v - (j + 0.5), row = (j - o.cj0) * o.cw - o.ci0;
+    for (let i = i0; i <= i1; i++) {
+      const ov = o.occ[row + i];
+      if (!ov) continue;
+      const q = rq[row + i]!, r2 = q ? RQ_R2[q]! : KR2, dx = u - (i + 0.5), t = (dx * dx + dy * dy) / r2;
+      if (t >= 1) continue;
+      const r = 1 - t, rr = r * r, wt = (ov === 1 ? 1 : o.pw ?? 1) * (q ? RQ_AMP[q]! * (rb ? rb[row + i]! : 1) : 1), c = (-6 * rr * wt) / r2;
+      f += wt * rr * r; gu += c * dx; gv += c * dy;
     }
   }
   FG[0] = f; FG[1] = gu; FG[2] = gv;
@@ -364,10 +505,12 @@ function contour(o: Occ, L: Lat, keep: BlobBox | null): Chain[] {
   if (sF.length < n) { sF = new Float64Array(n); sIN = new Uint8Array(n); }
   const F = sF, IN = sIN, K = SPLAT_W.length;
   F.fill(0, 0, n);
-  // splat the cells that reach the window (centre node within 2 of it), row-major
-  const ci0 = Math.max(o.ci0, (a0 - 3) >> 1), ci1 = Math.min(o.ci0 + o.cw - 1, (a0 + na + 1) >> 1);
-  const cj0 = Math.max(o.cj0, (b0 - 3) >> 1), cj1 = Math.min(o.cj0 + o.ch - 1, (b0 + nb + 1) >> 1);
-  for (let cj = cj0; cj <= cj1; cj++) {
+  // splat the cells that reach the window (centre node within 2 of it; T253: a rounded window's widest kernel's reach), row-major
+  const rn = o.rq ? Math.ceil(2 * (o.rmax ?? KERNEL_R)) : 2;
+  const ci0 = Math.max(o.ci0, (a0 - rn - 1) >> 1), ci1 = Math.min(o.ci0 + o.cw - 1, (a0 + na + rn - 1) >> 1);
+  const cj0 = Math.max(o.cj0, (b0 - rn - 1) >> 1), cj1 = Math.min(o.cj0 + o.ch - 1, (b0 + nb + rn - 1) >> 1);
+  if (o.rq) splatRound(o, F, a0, b0, na, nb, ci0, ci1, cj0, cj1);
+  else for (let cj = cj0; cj <= cj1; cj++) {
     const row = (cj - o.cj0) * o.cw - o.ci0, bc = 2 * cj + 1 - b0;
     for (let ci = ci0; ci <= ci1; ci++) {
       const ov = o.occ[row + ci];
@@ -434,6 +577,44 @@ function contour(o: Occ, L: Lat, keep: BlobBox | null): Chain[] {
   for (const e of froms) { sNext[e] = -1; sPrev[e] = 0; sVis[e] = 0; }
   for (const e of touched) { sPrev[e] = 0; sVis[e] = 0; }
   return chains;
+}
+
+/** splats a window of rounded cells (T253) into the lattice field F: each cell with its own kernel's taps (row-major, as the droplet splat) */
+function splatRound(o: Occ, F: Float64Array, a0: number, b0: number, na: number, nb: number, ci0: number, ci1: number, cj0: number, cj1: number): void {
+  const rq = o.rq!, rb = o.rb, cw = o.cw, ch = o.ch, occ = o.occ;
+  // deep inside (every cell within the widest kernel's reach full): a node there is inside whatever its sum, and a cell whose every node is
+  // so deep need not splat at all. Counted with a summed-area table of the full cells (cells beyond the window count as empty, so near its
+  // border nothing is skipped)
+  const S = new Int32Array((cw + 1) * (ch + 1)), W = cw + 1;
+  for (let j = 0; j < ch; j++) { let run = 0; for (let i = 0; i < cw; i++) { run += occ[j * cw + i] === 1 ? 1 : 0; S[(j + 1) * W + i + 1] = S[j * W + i + 1]! + run; } }
+  /** whether every cell of the window box [i0, i1] x [j0, j1] (window indices) is full */
+  const full = (i0: number, j0: number, i1: number, j1: number) => i0 >= 0 && j0 >= 0 && i1 < cw && j1 < ch && S[(j1 + 1) * W + i1 + 1]! - S[j0 * W + i1 + 1]! - S[(j1 + 1) * W + i0]! + S[j0 * W + i0]! === (i1 - i0 + 1) * (j1 - j0 + 1);
+  const Rc = Math.ceil(o.rmax ?? KERNEL_R) + 1, DEEP = 1e9, deep = new Uint8Array(cw * ch);
+  for (let j = 0; j < ch; j++) for (let i = 0; i < cw; i++) if (occ[j * cw + i] === 1 && full(i - Rc, j - Rc, i + Rc, j + Rc)) deep[j * cw + i] = 1;
+  for (let b = 0; b < nb; b++) {
+    const cj = ((b0 + b) >> 1) - o.cj0; if (cj < 0 || cj >= ch) continue;
+    for (let a = 0, row = cj * cw - o.ci0; a < na; a++) { const ci = (a0 + a) >> 1; if (ci >= o.ci0 && ci < o.ci0 + cw && deep[row + ci]) F[b * na + a] = DEEP; }
+  }
+  for (let cj = cj0; cj <= cj1; cj++) {
+    const row = (cj - o.cj0) * o.cw - o.ci0, bc = 2 * cj + 1 - b0, wj = cj - o.cj0;
+    for (let ci = ci0; ci <= ci1; ci++) {
+      const ov = o.occ[row + ci];
+      if (!ov) continue;
+      const wi = ci - o.ci0;
+      if (full(wi - 2 * Rc, wj - 2 * Rc, wi + 2 * Rc, wj + 2 * Rc)) continue; // every node it reaches is deep
+      const q = rq[row + ci]!, T = q ? RQ_TAPS[q]! : RQ_TAPS[0]!, ac = 2 * ci + 1 - a0, K = T.w.length, R = T.reach;
+      const wt = (ov === 1 ? 1 : o.pw ?? 1) * (q && rb ? rb[row + ci]! : 1);
+      if (ac >= R && ac < na - R && bc >= R && bc < nb - R) {
+        const base = bc * na + ac;
+        for (let k = 0; k < K; k++) F[base + T.db[k]! * na + T.da[k]!] += T.w[k]! * wt;
+      } else {
+        for (let k = 0; k < K; k++) {
+          const a = ac + T.da[k]!, b = bc + T.db[k]!;
+          if (a >= 0 && b >= 0 && a < na && b < nb) F[b * na + a] += T.w[k]! * wt;
+        }
+      }
+    }
+  }
 }
 
 /** projects every marching-squares vertex onto the exact iso-line and subdivides bending segments */
@@ -687,25 +868,26 @@ function cellBox(g: Grid, b: BlobBox): BlobBox {
   return { x0: (b.x0 - g.x0) / CELL, y0: (b.y0 - g.y0) / CELL, x1: (b.x1 - g.x0) / CELL, y1: (b.y1 - g.y0) / CELL };
 }
 
-/** a surface's contours over box (tiles) plus a margin: its own (closed per style) and, when asked, its collar's */
-function surfaceChains(g: Grid, s: number, st: BlobStyle, box: BlobBox, withCollar: boolean) {
-  const a0 = Math.floor((box.x0 - CHUNK_MARGIN - g.x0) / LATTICE), a1 = Math.ceil((box.x1 + CHUNK_MARGIN - g.x0) / LATTICE);
-  const b0 = Math.floor((box.y0 - CHUNK_MARGIN - g.y0) / LATTICE), b1 = Math.ceil((box.y1 + CHUNK_MARGIN - g.y0) / LATTICE);
+/** a surface's cells over box (tiles) grown by `margin` tiles, as the outlines read them: its own, closed per style, with their kernel codes
+ *  when some are rounded (radius, T253), and its collar's when asked (the band laid round them); with the lattice window over the same box */
+function surfaceOcc(g: Grid, s: number, st: BlobStyle, box: BlobBox, withCollar: boolean, radius: RoundCells | null = null, margin = CHUNK_MARGIN) {
+  const a0 = Math.floor((box.x0 - margin - g.x0) / LATTICE), a1 = Math.ceil((box.x1 + margin - g.x0) / LATTICE);
+  const b0 = Math.floor((box.y0 - margin - g.y0) / LATTICE), b1 = Math.ceil((box.y1 + margin - g.y0) / LATTICE);
   const L: Lat = { a0, b0, na: a1 - a0 + 1, nb: b1 - b0 + 1 };
   const col = withCollar && collarLaid(st.collar) ? st.collar : undefined;
   const rings = col ? collarRings(col.width) : { whole: 0, part: 0 };
   const close = Math.max(0, Math.round(st.close)), cw0 = rings.whole + (rings.part > 0 ? 1 : 0);
-  const pad = 3 + 2 * close + cw0;
+  // T253: a rounded surface reads further, for its wider kernels and their thickness caps
+  const pad = 3 + 2 * close + cw0 + (radius ? ROUND_PAD : 0);
   const ci0 = (a0 >> 1) - pad, cj0 = (b0 >> 1) - pad, cw = (a1 >> 1) + pad + 1 - ci0, ch = (b1 >> 1) + pad + 1 - cj0;
   const sw = readSurf(g, ci0, cj0, cw, ch), cv = readCarve(g, ci0, cj0, cw, ch), n = cw * ch;
   let occ: Uint8Array = new Uint8Array(n);
   for (let i = 0; i < n; i++) occ[i] = sw[i] === s ? 1 : 0;
   if (close > 0) occ = closeCells(occ, sw, s, cw, ch, close, cv);
-  const keep = cellBox(g, { x0: box.x0 - 1, y0: box.y0 - 1, x1: box.x1 + 1, y1: box.y1 + 1 });
   const oS: Occ = { occ, ci0, cj0, cw, ch };
-  const chains = contour(oS, L, keep);
-  for (const c of chains) relaxChain(c, st.relax);
-  let oC: Occ | null = null, chainsC: Chain[] = [];
+  const rS = radius ? roundCodes(occ, sw, s, cw, ch, ci0, cj0, g.w, radius, close + 1) : null;
+  if (rS) { oS.rq = rS.rq; oS.rb = rS.rb; oS.rmax = rS.rmax; }
+  let oC: Occ | null = null;
   if (col) {
     const over = new Uint8Array(256);
     for (const t of col.over) over[t] = 1;
@@ -718,6 +900,22 @@ function surfaceChains(g: Grid, s: number, st: BlobStyle, box: BlobBox, withColl
       for (let i = 0; i < n; i++) if (!cc[i] && d2[i] && over[sw[i]] && !cv?.[i]) cc[i] = 2;
     }
     oC = rings.part > 0 ? { occ: cc, ci0, cj0, cw, ch, pw: rings.part } : { occ: cc, ci0, cj0, cw, ch };
+    // T253: a rounded surface's band rounds with it (its cells take the radius of the surface's cells they were laid round)
+    const rC = rS ? roundCodes(cc, sw, s, cw, ch, ci0, cj0, g.w, radius!, close + cw0 + 1) : null;
+    if (rC) { oC.rq = rC.rq; oC.rb = rC.rb; oC.rmax = rC.rmax; }
+  }
+  return { L, oS, oC };
+}
+
+/** a surface's contours over box (tiles) plus a margin: its own (closed per style) and, when asked, its collar's; radius: its rounded cells
+ *  (T253) */
+function surfaceChains(g: Grid, s: number, st: BlobStyle, box: BlobBox, withCollar: boolean, radius: RoundCells | null = null) {
+  const { L, oS, oC } = surfaceOcc(g, s, st, box, withCollar, radius);
+  const keep = cellBox(g, { x0: box.x0 - 1, y0: box.y0 - 1, x1: box.x1 + 1, y1: box.y1 + 1 });
+  const chains = contour(oS, L, keep);
+  for (const c of chains) relaxChain(c, st.relax);
+  let chainsC: Chain[] = [];
+  if (oC) {
     chainsC = contour(oC, L, keep);
     for (const c of chainsC) relaxChain(c, st.relax);
   }
@@ -792,15 +990,18 @@ function surfacesNear(g: Grid, box: BlobBox, pad: number): number[] {
  * cut, so neighbouring chunks' edges meet exactly. `styles` overrides BLOB_STYLE (indexed by surface id). cover: each outline also
  * carries the cells it was contoured from (SurfaceOutline.cover), and a surface near the chunk that draws nothing in it is kept, empty,
  * for its cells. */
-export function chunkOutlines(g: Grid, cx: number, cy: number, size = 64, styles: readonly BlobStyle[] = BLOB_STYLE, cover = false): SurfaceOutline[] {
+export function chunkOutlines(g: Grid, cx: number, cy: number, size = 64, styles: readonly BlobStyle[] = BLOB_STYLE, cover = false, round: RoundOf | null = null): SurfaceOutline[] {
   const box: BlobBox = { x0: cx * size, y0: cy * size, x1: (cx + 1) * size, y1: (cy + 1) * size };
   let maxCollar = 0;
   for (const st of styles) if (st?.collar) maxCollar = Math.max(maxCollar, collarReach(st.collar.width));
   const out: SurfaceOutline[] = [];
   const cb = cellBox(g, box), gb = cellBox(g, { x0: box.x0 - FILL_GROW, y0: box.y0 - FILL_GROW, x1: box.x1 + FILL_GROW, y1: box.y1 + FILL_GROW });
-  for (const s of surfacesNear(g, box, 3 + maxCollar)) {
+  // T253: a rounded surface's outline reaches up to its widest kernel past its cells (a filled inner corner), so it is looked for further
+  const near = surfacesNear(g, box, 3 + maxCollar), far = round ? surfacesNear(g, box, 3 + maxCollar + Math.ceil(ROUND_R_MAX)) : near;
+  for (const s of far) {
+    const rc = round?.(s) ?? null; if (!rc && far !== near && !near.includes(s)) continue;
     const st = styles[s] ?? { close: 0, relax: 0 };
-    const sc = surfaceChains(g, s, st, box, true);
+    const sc = surfaceChains(g, s, st, box, true, rc);
     // a thin collar (under 0.4 m) is simplified finer, with its surface, so the band keeps its width all round instead of breaking up
     const tol = st.collar && collarLaid(st.collar) ? Math.min(SIMPLIFY_TOL, Math.max(0.004, 0.2 * st.collar.width * CELL)) : SIMPLIFY_TOL;
     presimplify(sc.chains, cb, tol);
@@ -825,4 +1026,46 @@ export function chunkOutlines(g: Grid, cx: number, cy: number, size = 64, styles
 export function blobOutlines(g: Grid, surf: number, box: BlobBox, style: BlobStyle = BLOB_STYLE[surf] ?? { close: 0, relax: 0 }): number[][] {
   const sc = surfaceChains(g, surf, style, box, false);
   return fillRings(g, sc.oS, sc.chains, cellBox(g, box));
+}
+
+/** T253 (#735): the surface the course's outlines draw on top at a point, for the lie test: play keeps the grid's cells, but where a rounded
+ *  surface is near, the lie follows the drawn shape (the corner a bunker's Round off cut away plays as what is drawn there, the inner corner
+ *  it filled plays as sand). Read from the same droplet field as the chunks (each surface closed and rounded as they are; collars are not
+ *  surfaces of their own here, as before), in blocks of BLOCK cells made on first use. Where no rounded cell is within reach of a point it is
+ *  the cell's own surface, exactly the lie before T253, so a course with nothing rounded plays as it did. Make a new one when the grid or
+ *  the looks change */
+export class DrawnSurfaces {
+  /** a block's side, cells */
+  static readonly BLOCK = 32;
+  /** per block (bj * 65536 + bi): the surfaces near it in draw order and their cells, or null: no rounded cell near it */
+  private blocks = new Map<number, { surfs: number[]; occ: Occ[] } | null>();
+  constructor(private g: Grid, private styles: readonly BlobStyle[], private round: RoundOf) {}
+  /** the surface id drawn on top at tile (x, y): 0 for none (the map grass), off the grid too */
+  at(x: number, y: number): number {
+    const g = this.g, u = (x - g.x0) / CELL, v = (y - g.y0) / CELL, ci = Math.floor(u), cj = Math.floor(v);
+    if (ci < 0 || cj < 0 || ci >= g.w || cj >= g.h) return 0;
+    const s0 = g.surf[cj * g.w + ci]!;
+    // well inside one surface (no other within the widest kernel's reach): its own, as drawn and as before
+    const r = Math.ceil(ROUND_R_MAX) + 1, i0 = Math.max(0, ci - r), i1 = Math.min(g.w - 1, ci + r), j0 = Math.max(0, cj - r), j1 = Math.min(g.h - 1, cj + r);
+    let mixed = i0 !== ci - r || i1 !== ci + r || j0 !== cj - r || j1 !== cj + r;
+    for (let j = j0; j <= j1 && !mixed; j++) for (let i = i0, row = j * g.w; i <= i1; i++) if (g.surf[row + i] !== s0) { mixed = true; break; }
+    if (!mixed) return s0;
+    const bi = Math.floor(ci / DrawnSurfaces.BLOCK), bj = Math.floor(cj / DrawnSurfaces.BLOCK), key = bj * 65536 + bi;
+    let b = this.blocks.get(key);
+    if (b === undefined) { b = this.block(bi, bj); this.blocks.set(key, b); }
+    if (!b) return s0;
+    for (let k = b.surfs.length - 1; k >= 0; k--) if (fieldAt(b.occ[k]!, u, v) >= ISO_T) return b.surfs[k]!;
+    return 0;
+  }
+  private block(bi: number, bj: number): { surfs: number[]; occ: Occ[] } | null {
+    const g = this.g, B = DrawnSurfaces.BLOCK * CELL, box: BlobBox = { x0: g.x0 + bi * B, y0: g.y0 + bj * B, x1: g.x0 + (bi + 1) * B, y1: g.y0 + (bj + 1) * B };
+    const surfs = surfacesNear(g, box, 3 + Math.ceil(ROUND_R_MAX)), occ: Occ[] = [];
+    let rounded = false;
+    for (const s of surfs) {
+      const o = surfaceOcc(g, s, this.styles[s] ?? { close: 0, relax: 0 }, box, false, this.round(s), 0).oS;
+      if (o.rq) rounded = true;
+      occ.push(o);
+    }
+    return rounded ? { surfs, occ } : null;
+  }
 }
