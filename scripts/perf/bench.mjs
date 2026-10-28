@@ -3,7 +3,7 @@
 //     [--start range | --fixture range20 | --start town] [--grade off|on|blur] [--golfers N] [--seed N] [--everyday 0] [--frame 1]
 // --start town (T208): the old start's course on an ordinary day at 11:00, 30% and 15%; --golfers N: a busy day of N visitors; --seed N: the map; --everyday 0: no everyday golf (the same scene before) (a dev server)
 // --frame 1 (T229, a dev server): every hole framed with trees at the start (golf/holeframe.ts), the bench's after
-// --grassShine a|a4|c|d (T262, a dev server): the grass shine's height source for the run (grass-shine.ts; off: none, the ground as before)
+// --grassShine on|off (T262, a dev server): the grass shine for the run (grass-shine.ts; on by default, as the player left it otherwise; off: the ground as before)
 // --ground (T166, a dev server): the game's ground-worker levers for the run (boot.ts GROUND_LEVERS, e.g. lazy,w1; old: none)
 // --serve starts `vite preview` on dist/ itself (run `npm run build` first); otherwise it needs a running dev or
 // preview server at the url. Screenshots (--shots stalls frames, so only for looking) and JSON go to output/bench/.

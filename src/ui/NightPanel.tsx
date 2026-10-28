@@ -2,6 +2,7 @@
 // TrickOrTreat's town-builder night). Each change applies at once and is remembered.
 import type { Game } from '../game/engine';
 import { LIGHT_TYPES, NIGHT_DEFAULT, type LightKey, type NightSettings } from '../game/night-light';
+import { SHINE_GROUPS, SHINE_LOOK } from '../game/grass-shine';
 
 const hour = (h: number) => `${String(Math.floor(h) % 24).padStart(2, '0')}:${h % 1 ? '30' : '00'}`;
 
@@ -78,6 +79,22 @@ export function NightPanel({ game, bump }: { game: Game; bump: () => void }) {
         <Row label="Outer" value={game.spec.outer} min={0.01} max={3} step={0.01} show={game.spec.outer.toFixed(2)} set={v => { game.setSpec({ outer: v }); bump(); }} title="Past this distance from the screen's centre the reflection is gone" />
         <Row label="Strength" value={game.spec.strength} min={0} max={3} step={0.01} show={pct(game.spec.strength)} set={v => { game.setSpec({ strength: v }); bump(); }} />
         <Row label="By day" value={game.spec.day} min={0} max={1} step={0.01} show={pct(game.spec.day)} set={v => { game.setSpec({ day: v }); bump(); }} title="The share of the strength by day; after dusk the night takes it to the whole" />
+      </details>
+      {/* T262 (#769): the grass catches the camera's shine (grass-shine.ts), beside the camera's other light: on by default, remembered; the
+          switch and the weights bake the ground again, the rest apply at once */}
+      <details className="px-2 py-1 text-xs">
+        <summary className="cursor-pointer py-1">Grass shine</summary>
+        <label className="flex items-center gap-2 py-1" title="The sun's sheen on the grass, strongest in the middle of the screen, moving over the grass with the camera; greens and fairways most, the rough least; none in the shadows">
+          <input type="checkbox" checked={game.shine.on} onChange={e => { game.setShine({ on: e.target.checked }); bump(); }} />
+          <span>Sun sheen on the grass</span>
+        </label>
+        <Row label="Strength" value={game.shine.strength} min={0} max={3} step={0.01} show={pct(game.shine.strength)} set={v => { game.setShine({ strength: v }); bump(); }} />
+        <Row label="Gloss size" value={game.shine.size} min={0.25} max={4} step={0.05} show={`${game.shine.size.toFixed(2)}x`} set={v => { game.setShine({ size: v }); bump(); }} title="Larger: a broader, softer sheen; smaller: a tighter glint on the blades" />
+        <div className="mt-1 border-t border-white/5 px-2 pt-1 text-[12px] opacity-80">Per surface</div>
+        {SHINE_GROUPS.map(({ key, label }) => (
+          <Row key={key} label={label} value={game.shine.weights[key]} min={0} max={2} step={0.01} show={pct(game.shine.weights[key])} set={v => { game.setShine({ weights: { [key]: v } }); bump(); }} />
+        ))}
+        <button className="btn mt-2 w-full" onClick={() => { game.setShine({ ...SHINE_LOOK, on: game.shine.on }); bump(); }}>The default shine</button>
       </details>
     </div>
   );

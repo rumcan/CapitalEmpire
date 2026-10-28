@@ -10,9 +10,9 @@ import type { BBox } from './network';
 import type { GrassCellView } from './ext/grass-management';
 import type { EdgeProfile } from './paint-edges';
 import type { GrassArt } from './painted-grass-lod';
-import type { ShineMode } from './grass-shine';
-/** T262: a chunk's grass shine layers as plain bytes (renderer.ts takeShineMask) */
-export interface ShineMaskData { w: number; h: number; ch: 1 | 2; data: Uint8Array; bump?: { w: number; h: number; data: Uint8Array } }
+import type { ShineWeights } from './grass-shine';
+/** T262: a chunk's grass shine weight mask as plain bytes, one channel (renderer.ts takeShineMask) */
+export interface ShineMaskData { w: number; h: number; data: Uint8Array }
 import type { RoughMix } from './rough-yards';
 import type { SurfacesFile } from './painted-surfaces';
 
@@ -197,9 +197,9 @@ export type ToWorker =
   | { t: 'specCam'; on: boolean }
   /** T199: the small streams drawn as swamp (on, the default) or as their old creek bed (the dev switch, for comparing looks and bake times) */
   | { t: 'swamp'; on: boolean }
-  /** T262: the grass shine's source (grass-shine.ts ShineMode; 'off', the default: no mask, the ground as before): the dev switch
-   *  window.__game.grassShine; every chunk is baked again */
-  | { t: 'grassShine'; mode: ShineMode }
+  /** T262: the grass shine on (the default: each bake makes its weight mask) or off (none, the ground as before), and its weights per surface
+   *  group (grass-shine.ts); every chunk is baked again */
+  | { t: 'grassShine'; on: boolean; weights: ShineWeights }
   /** the course height light's strength (T126: the gear menu's Slope light, 0 = off): every chunk is baked again */
   | { t: 'slopeLight'; strength: number }
   /** the tile set bands to decode ahead (painted-tiles.ts bandsAhead: the camera is near their switch; T150), sent when they change */
@@ -224,8 +224,8 @@ export type FromWorker =
       /** T199: the swamp's gloss mask at a GLOSS.maskK-th of the chunk's size (renderer.ts takeGlossMask: premultiplied, alpha the pools' gloss,
        *  colour each pool's local mean times it); none with specCam off or no swamp on the chunk */
       gloss?: ImageBitmap;
-      /** T262: the grass shine's weight mask (grass-shine.ts: a SHINE_MASK_K-th of the chunk's size, one channel, two with mode 'c': the family's
-       *  slot) and with mode 'a' / 'a4' the bump layer (one channel); none with the shine off or no shiny grass on the chunk */
+      /** T262: the grass shine's weight mask (grass-shine.ts: a SHINE_MASK_K-th of the chunk's size, one channel); none with the shine off or
+       *  no grass on the chunk */
       shine?: ShineMaskData; ms: number }
   | { t: 'error'; message: string }
   | { t: 'log'; message: string };
