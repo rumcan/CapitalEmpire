@@ -31,8 +31,8 @@ const shot = async (page, name) => {
   await sharp(await page.screenshot({ type: 'png' })).jpeg({ quality: 90, mozjpeg: true }).toFile(file);
   console.log(file); return file;
 };
-/** the shine off or on (every chunk is baked again) */
-const setMode = (page, m) => page.evaluate(on => { window.__game.grassShine = on; }, m === 'on');
+/** the shine off or on (every chunk is baked again); 'main': no switch (a build without the shine, for the side by side) */
+const setMode = (page, m) => (m === 'main' ? Promise.resolve() : page.evaluate(on => { window.__game.grassShine = on; }, m === 'on'));
 const report = { look, modes };
 try {
   const ctx = await browser.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: dpr });
@@ -138,20 +138,29 @@ try {
     await anim.webp({ quality: 80, delay: Array(N).fill(160), loop: 0 }).toFile(webp);
     console.log(webp); report.flip = webp;
   }
-  // ---- the numbers, at the fairway: per source (three rounds, alternating) the bake times of the view (invalidateAll), the frame's draw time
-  //      and GPU time (240 frames), and the shine's GPU bytes
+  // ---- the numbers, at the fairway: per mode (three rounds, alternating) the bake times of the view (invalidateAll) and their masks' share,
+  //      the frame's CPU time while the camera pans (6 s, the bench's speeds), its draw time and GPU time (240 frames), and the masks' GPU bytes
   if (only.has('numbers') && spots.fairway) {
-    report.frame = {}; report.gpu = {}; report.bake = {}; report.mem = {};
+    report.frame = {}; report.gpu = {}; report.bake = {}; report.mem = {}; report.pan = {};
     for (const z of zooms) {
       await look_(spots.fairway.x, spots.fairway.y, z);
       for (let round = 0; round < 3; round++) for (const m of modes) {
         await setMode(page, m); await settle(page);
         const n0 = await page.evaluate(() => { const g = window.__game; g.ground.invalidateAll(); return g.ground.baked; });
         await settle(page);
-        const ms = await page.evaluate(n0 => { const g = window.__game, l = []; for (let k = n0; k < g.ground.baked; k++) l.push(g.ground.bakeLog[k % 4096]); return l; }, n0);
-        const s = [...ms].sort((a, b) => a - b), q = f => s.length ? s[Math.min(s.length - 1, Math.floor(f * s.length))] : 0;
+        const [ms, mk] = await page.evaluate(n0 => { const g = window.__game, l = [], k2 = []; for (let k = n0; k < g.ground.baked; k++) { l.push(g.ground.bakeLog[k % 4096]); k2.push(g.ground.shineLog?.[k % 4096] ?? 0); } return [l, k2]; }, n0);
+        const med = a => { const s = [...a].sort((x, y) => x - y); return s.length ? s[Math.floor(s.length / 2)] : 0; };
         const key = `${Math.round(z * 100)}pct-${m}`;
-        (report.bake[key] ??= []).push({ bakes: s.length, median: +q(0.5).toFixed(1), mean: +(s.reduce((a, b) => a + b, 0) / (s.length || 1)).toFixed(1) });
+        (report.bake[key] ??= []).push({ bakes: ms.length, median: +med(ms).toFixed(2), mean: +(ms.reduce((a, b) => a + b, 0) / (ms.length || 1)).toFixed(2), maskMedian: +med(mk).toFixed(2), maskMax: +Math.max(0, ...mk).toFixed(2) });
+        // the frame's CPU (engine perf.cpuMs) while the camera pans at the bench's speed for the zoom, there and back
+        const pan = await page.evaluate(async z => {
+          const g = window.__game, x0 = g.cam.X, y0 = g.cam.Y, v = z >= 0.25 ? [500, 200] : z >= 0.12 ? [900, 350] : [1600, 600], cpu = [], t0 = performance.now(); let last = t0;
+          g.camEase = null;
+          await new Promise(res => { const step = now => { const dt = Math.min(0.05, (now - last) / 1000), t = (now - t0) / 1000, dir = Math.floor(t / 1.5) % 2 ? -1 : 1; last = now; g.cam.z = z; g.cam.X += v[0] * dt * dir; g.cam.Y += v[1] * dt * dir; if (t > 0.5) cpu.push(g.perf.cpuMs); if (t < 6.5) requestAnimationFrame(step); else res(); }; requestAnimationFrame(step); });
+          g.cam.X = x0; g.cam.Y = y0; cpu.sort((a, b) => a - b);
+          return { avg: +(cpu.reduce((a, b) => a + b, 0) / Math.max(1, cpu.length)).toFixed(3), p95: +(cpu[Math.floor(0.95 * cpu.length)] ?? 0).toFixed(3), n: cpu.length };
+        }, z);
+        (report.pan[key] ??= []).push(pan); await settle(page);
         const t = await page.evaluate(() => {
           const g = window.__game, gl = g.gl.gl, px = new Uint8Array(4); cancelAnimationFrame(g.raf);
           for (let i = 0; i < 20; i++) { g.draw(performance.now()); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); }
@@ -181,8 +190,8 @@ try {
           return res.length ? { median: +res[res.length >> 1].toFixed(3), p95: +res[Math.floor(res.length * 0.95)].toFixed(3), n: res.length } : null;
         }, amplify);
         (report.frame[key] ??= []).push(t.draw); (report.gpu[key] ??= []).push(gpu);
-        if (round === 0) report.mem[key] = await page.evaluate(() => { const g = window.__game; return { groundMB: +(g.ground.residentPx * 4 / 1048576).toFixed(1), shineMB: +(g.ground.shineBytes / 1048576).toFixed(2), chunks: [...g.ground.tiles.values()].filter(t => t.tex).length }; });
-        console.log(key, JSON.stringify({ frame: t.draw, gpu, bake: report.bake[key].at(-1), mem: report.mem[key] }));
+        if (round === 0) report.mem[key] = await page.evaluate(() => { const g = window.__game; return { groundMB: +(g.ground.residentPx * 4 / 1048576).toFixed(1), shineMB: +((g.ground.shineBytes ?? 0) / 1048576).toFixed(3), chunks: [...g.ground.tiles.values()].filter(t => t.tex).length }; });
+        console.log(key, JSON.stringify({ pan, gpu, bake: report.bake[key].at(-1), frame: t.draw, mem: report.mem[key] }));
       }
     }
     writeFileSync(join(out, `numbers${tag}.json`), JSON.stringify(report, null, 2));

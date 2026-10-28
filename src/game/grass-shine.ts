@@ -14,12 +14,13 @@
  *  FS_QUAD). It looked the same as a bump map per grass family sampled in tile space and costs no texture, half the shader time, and follows
  *  everything the bake lays (the mowing stripes, the finish's bands, every family imported later).
  *
- *  The per-chunk weight mask (a quarter of the chunk's size each way, R8) is made by the ground worker from the surfaces' outlines in the order
+ *  The per-chunk weight mask (a fifth of the chunk's size each way, R8) is made by the ground worker from the surfaces' outlines in the order
  *  the bake lays them (renderer.ts grassShineMask; shineMaskPixels here). Pure: the node tests run it, and gl.ts builds its shader from it. */
 import { SUN_SHADOW_DEG } from './ext/course-height';
 
-/** the weight mask's size against its chunk's (a quarter each way: the weights and the inset are soft) */
-export const SHINE_MASK_K = 4;
+/** the weight mask's size against its chunk's (a fifth each way: the weights and the inset are soft; one byte a texel, so the masks of a
+ *  full ground cache, 192 MB of RGBA pictures, take 192 / (4 x 25) = 1.9 MB) */
+export const SHINE_MASK_K = 5;
 /** the inset from a shiny surface's edge (world px): no shine within the first, whole past the second */
 export const SHINE_INSET = [14, 60] as const;
 /** the zoom the shine fades out over (CSS zoom): whole from the second down, gone by the first (the district chunks, iso.ts MID_BELOW 10%,

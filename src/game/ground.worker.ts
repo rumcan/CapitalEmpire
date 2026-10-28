@@ -219,7 +219,7 @@ const handle = async (m: ToWorker) => {
         const gm = m.kind === 'p' ? null : painter.takeGlossMask(), gloss = gm ? gm.transferToImageBitmap() : undefined;
         // (T262: the grass shine's weight mask, when the shine is on and the chunk has grass)
         const shine = m.kind === 'p' ? undefined : painter.takeShineMask() ?? undefined;
-        post({ t: 'tile', id: m.id, kind: m.kind, i: m.i, j: m.j, L: m.L, artL: m.artL ?? m.L, ts: m.ts, tiled: painter.tilesUsed, prov: painter.provisional, bmp, shade, spec, gloss, shine, ms: performance.now() - t0 }, [bmp, ...(shade ? [shade] : []), ...(spec ? [spec] : []), ...(gloss ? [gloss] : []), ...(shine ? [shine.data.buffer] : [])]);
+        post({ t: 'tile', id: m.id, kind: m.kind, i: m.i, j: m.j, L: m.L, artL: m.artL ?? m.L, ts: m.ts, tiled: painter.tilesUsed, prov: painter.provisional, bmp, shade, spec, gloss, shine, shineMs: painter.shineMs, ms: performance.now() - t0 }, [bmp, ...(shade ? [shade] : []), ...(spec ? [spec] : []), ...(gloss ? [gloss] : []), ...(shine ? [shine.data.buffer] : [])]);
         break;
       }
     }

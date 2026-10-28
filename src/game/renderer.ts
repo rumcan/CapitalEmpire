@@ -487,6 +487,8 @@ export class GroundPainter {
   /** T262: the weight mask of the bake just done (grassShineMask), or null */
   private shineNow: ShineMaskData | null = null;
   takeShineMask(): ShineMaskData | null { const m = this.shineNow; this.shineNow = null; return m; }
+  /** T262: the worker ms the last bake's weight mask took (the bench's mask cost) */
+  shineMs = 0;
   /** T262: the grass shine's weight mask over the chunk just baked (grass-shine.ts), at a SHINE_MASK_K-th of the chunk's size with a margin:
    *  the map's own grass first (its terrain: the ground, meadow and woodland floor in the map's grass weight, the water, creeks and banks none),
    *  then every surface's outline in its weight (ground that is no grass in none), in the order the bake lays them: the town lawns, the lots'
@@ -1755,7 +1757,7 @@ export class GroundPainter {
     ctx.fillStyle = pat('outside'); ctx.fill(outside, 'evenodd');
     ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.lineWidth = Math.max(0.08, minW); ctx.strokeRect(0, 0, MAP, MAP);
     // ---- 12. T262: the grass shine's weight mask (and bump layer), with the shine on
-    this.shineNow = this.grassShine && !lite ? this.grassShineMask(lite, net) : null;
+    const s0 = performance.now(); this.shineNow = this.grassShine && !lite ? this.grassShineMask(lite, net) : null; this.shineMs = performance.now() - s0;
     return cv;
   }
 

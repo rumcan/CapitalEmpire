@@ -167,8 +167,9 @@ export class GroundCache {
   }
   /** T262: each chunk picture's grass shine weight mask, by picture, as its reflection mask (it goes and is deleted with it) */
   private shines = new Map<WebGLTexture, { mask: WebGLTexture; bytes: number }>();
-  /** T262: the GPU bytes the weight masks of the pictures held take now (the bench's shineMB) */
-  shineBytes = 0;
+  /** T262: the GPU bytes the weight masks of the pictures held take now (the bench's shineMB), and the worker ms of the last BAKE_LOG bakes'
+   *  masks (the same ring as bakeLog) */
+  shineBytes = 0; shineLog: number[] = [];
   shineOf(tex: WebGLTexture | null): WebGLTexture | null { return (tex && this.shines.get(tex)?.mask) ?? null; }
   /** delete a chunk picture and its reflection, gloss and shine masks */
   private dropPicture(tex: WebGLTexture) {
@@ -298,7 +299,7 @@ export class GroundCache {
     if (!r) { m.bmp.close(); m.shade?.close(); m.spec?.close(); m.gloss?.close(); return; }
     const t = r.t; t.pendingL = 0; t.pendingArtL = 0; t.pendingTs = -1;
     this.bakeLog[this.baked % BAKE_LOG] = m.ms; this.waitLog[this.baked % BAKE_LOG] = performance.now() - r.at; if (!this.firstTileAt) this.firstTileAt = performance.now();
-    this.bakeMs += m.ms; this.baked++;
+    this.bakeMs += m.ms; this.shineLog[this.baked % BAKE_LOG] = m.shineMs ?? 0; this.baked++;
     // edited while baking: it will be asked for again, and keeps the picture it has meanwhile; one with none shows this one (stale, so it is
     // still asked for again: the ground before the edit for a bake, rather than nothing; T134, the startup's edits did this to the planner pieces)
     const edited = r.gen !== t.gen;

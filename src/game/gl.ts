@@ -99,15 +99,15 @@ void main() {
   if (uShine.z > 0.0) {
     vec2 ts = vec2(textureSize(uTex, 0)), mUV = vUV * ts / (${SHINE_MASK_K.toFixed(1)} * vec2(textureSize(uShineMask, 0)));
     float wgt = texture(uShineMask, mUV).r * ${MASK_SCALE.toFixed(1)};
+    float d = length(gl_FragCoord.xy - 0.5 * uScreen) / (0.5 * max(uScreen.x, uScreen.y)), k = (1.0 - smoothstep(uShine.x, uShine.y, d)) * uShine.z;
     // out of the shadows: the shadow layer as the last frame drew it (red a sprite's shadow, green the ground's baked shade), at where this
     // pixel's world point lay on that frame's screen
-    if (wgt > 0.004 && uLayerCam.w > 0.5) {
+    if (wgt * k > 0.004 && uLayerCam.w > 0.5) {
       vec2 q = (vW - uLayerCam.xy) * uLayerCam.z + 0.5 * uLayerScreen;
       vec2 sb = texture(uShadeLayer, vec2(q.x / uLayerScreen.x, 1.0 - q.y / uLayerScreen.y)).rg;
       wgt *= 1.0 - smoothstep(${SHINE_SHADE[0]}, ${SHINE_SHADE[1]}, max(sb.r, sb.g));
     }
-    if (wgt > 0.004) {
-      float d = length(gl_FragCoord.xy - 0.5 * uScreen) / (0.5 * max(uScreen.x, uScreen.y)), k = (1.0 - smoothstep(uShine.x, uShine.y, d)) * uShine.z;
+    if (wgt * k > 0.004) {
       // the height: the luminance less its local mean (blade tops high, the gaps low), and its slope per world px (tw: the world px a texel covers)
       float tw = (uRect.z - uRect.x) / ((uUV.z - uUV.x) * ts.x);
       vec2 t = 1.5 / ts;
