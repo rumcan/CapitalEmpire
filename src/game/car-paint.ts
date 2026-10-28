@@ -4,6 +4,13 @@
 // body's mean), so the glass, chrome, tyres, lamps and wood trim keep the art. Every car has one: a parked car from where it stands (its bay or
 // its spot on a lot: always the same), a moving one from its own number. CAR_PAINT.on false draws every car in its art's own colour (the
 // look before T228, kept as an option: ?carpaint=0).
+// T236 (#693, the owner, 2026-10-28: "some one attemted to add varialtion to the cars and paineted the metalic blue car which did not work"): the
+// audit (?carpaint=audit, dev/car-paint-audit.ts; the sheets in E:/ClaudeTemp/T236) found no paint clean on both wagons at every heading. The
+// burgundy wagon's sunlit edges are orange, outside its hue band, so every paint but red and orange leaves an orange rim down its right side and
+// an orange nose at E; red and orange paint its chrome and hubcaps too. The navy wagon's lit hood front and its sills are grey, so every paint
+// leaves its hood half painted at E and W, a coloured sill line and speckle on the roof. So KEPT_PAINTS is empty: painting is off (CAR_PAINT.on
+// false) and the cars keep their art's own colours, the variety coming from the other vehicles (vehicles.ts). ?carpaint=1 turns T228's full
+// palette back on, for the art fix the shader waits for (a body mask in the art instead of a hue band).
 import { LIBRARY } from './library';
 
 /** the paints (linear-ish display RGB, 0..1), index 1..; 0 is the art's own colour. The shader's PAINTS table is built from this list */
@@ -22,12 +29,19 @@ export const PAINTS: readonly (readonly [number, number, number])[] = [
   [0.66, 0.6, 0.44], // 10 beige
   [0.72, 0.3, 0.05], // 11 orange
 ];
+/** the paints' names, as PAINTS */
+export const PAINT_NAMES = ['white', 'silver', 'black', 'grey', 'red', 'blue', 'yellow', 'green', 'teal', 'beige', 'orange'] as const;
+/** the paints the audit kept (T236: none, see above); drawn whatever the switch says */
+export const KEPT_PAINTS: readonly number[] = [];
 /** how often each paint comes up, index 0 (the art's own) first: the street's mix, mostly white, silver, black and grey, a few bright ones */
 const SHARE = [14, 18, 14, 12, 8, 9, 8, 4, 4, 3, 3, 3];
 const TOTAL = SHARE.reduce((a, b) => a + b, 0);
-/** the switch (the look before T228 when off) */
-export const CAR_PAINT = { on: true };
-try { if (typeof location !== 'undefined' && new URLSearchParams(location.search).get('carpaint') === '0') CAR_PAINT.on = false; } catch { /* no location */ }
+/** the switch: on, T228's whole palette (?carpaint=1, for the art fix); off (T236's default), only the kept paints (none: every car in its art's
+ *  own colour, the look before T228) */
+export const CAR_PAINT = { on: false };
+try { if (typeof location !== 'undefined' && new URLSearchParams(location.search).get('carpaint') === '1') CAR_PAINT.on = true; } catch { /* no location */ }
+/** whether paint k (1..PAINTS.length) is drawn: a kept one, or any with the switch on */
+export const drawnPaint = (k: number): boolean => k > 0 && k <= PAINTS.length && (CAR_PAINT.on || KEPT_PAINTS.includes(k));
 
 /** a 32-bit hash of up to three numbers */
 export function hash3(a: number, b = 0, c = 0): number {
@@ -35,10 +49,10 @@ export function hash3(a: number, b = 0, c = 0): number {
   for (const v of [a, b, c]) { h = Math.imul(h ^ (v | 0), 16777619); h ^= h >>> 13; h = Math.imul(h, 0x5bd1e995); h ^= h >>> 15; }
   return h >>> 0;
 }
-/** the paint of a seed: 0 (the art's own colour) or a palette index 1..PAINTS.length, by SHARE */
+/** the paint of a seed: 0 (the art's own colour) or a palette index 1..PAINTS.length, by SHARE; a paint not drawn (drawnPaint) is 0 */
 export function paintOf(seed: number): number {
   let r = (seed >>> 0) % TOTAL;
-  for (let k = 0; k < SHARE.length; k++) { r -= SHARE[k]!; if (r < 0) return k; }
+  for (let k = 0; k < SHARE.length; k++) { r -= SHARE[k]!; if (r < 0) return drawnPaint(k) ? k : 0; }
   return 0;
 }
 /** the paints of the five car types (traffic.ts facings: type % 2 the model) when nothing else tells a car apart (the club's everyday golfers'
@@ -53,10 +67,10 @@ export function bodyOf(item: number): number {
   if (!BODY) { BODY = new Int8Array(LIBRARY.length).fill(-1); LIBRARY.forEach((it, i) => { if (it.id.startsWith('cars:burgundy-wagon:')) BODY![i] = 0; else if (it.id.startsWith('cars:navy-wood-panel-wagon:')) BODY![i] = 1; }); }
   return BODY[item] ?? -1;
 }
-/** the code a sprite instance carries for its paint (sprites.ts packs 2 + 2 code + alpha; code 0 is T176's tint): 0 for none (no paint, the
- *  switch off, or not a car), else paint + 16 x body */
+/** the code a sprite instance carries for its paint (sprites.ts packs 2 + 2 code + alpha; code 0 is T176's tint): 0 for none (no paint, a paint
+ *  not drawn: drawnPaint, or not a car), else paint + 16 x body */
 export function paintCode(item: number, paint: number | undefined): number {
-  if (!paint || !CAR_PAINT.on) return 0;
+  if (!paint || !drawnPaint(paint)) return 0;
   const b = bodyOf(item); return b < 0 ? 0 : paint + 16 * b;
 }
 /** the alpha float of a sprite instance (sprites.ts packs it, gl.ts VS_SPRITE and VS_CAST read it back): the alpha alone, 2 + alpha for T176's

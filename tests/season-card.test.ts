@@ -10,6 +10,7 @@ import { FIX, foundingChecklist, seasonChip, seasonPhase, seasonSentence } from 
 import { GUIDE, GUIDE_STUCK, RANGE_GUIDE, applyGuideEvent, guideStep, type GuideFacts } from '../src/game/ext/progressive-ui/guide';
 import { ANCHOR_FALLBACK, anchorElement } from '../src/ui/GuidePulse';
 import { RAIL } from '../src/ui/rail-items';
+import { RANGE_UPGRADES } from '../src/game/golf/rangesave';
 import { WELCOME_WAIT_MS, allBaked, welcomeReady } from '../src/game/golf/firstview';
 
 test("the founding checklist from the tour's facts: each item's mark and progress", () => {
@@ -48,6 +49,8 @@ function anchorsInSource(): Set<string> {
   assert.match(fly, /data-guide=\{r\.leaf \? `tool-\$\{r\.leaf\.entry\.view\?\.group \?\? r\.leaf\.entry\.id\}` : undefined\}/); for (const r of RAIL) for (const t of r.tools) out.add(`tool-${t.view?.group ?? t.id}`);
   assert.match(app, /guide="month"/); out.add('month');
   assert.match(card, /data-guide=\{`fix-\$\{it\.id\}`\}/); for (const k of Object.keys(FIX)) out.add(`fix-${k}`);
+  // T239: the range card's upgrade rows (range-buy-<id>), the guide's Show me anchors
+  assert.match(readFileSync('src/ui/golf/RangeCard.tsx', 'utf8'), /data-guide=\{`range-buy-\$\{u\.id\}`\}/); for (const u of RANGE_UPGRADES) out.add(`range-buy-${u.id}`);
   return out;
 }
 
@@ -69,10 +72,11 @@ test('the pulse finds the first visible element of an anchor, else of its fallba
 });
 
 test('engine events move the range guide on at once: a hole built, the clubhouse placed, a car park built', () => {
-  const f: GuideFacts = { pieces: 0, roads: 0, parks: 0, structures: 0, kinds: {}, runs: 0, holes: 0, tutorial: 'on', step: 2, start: 'range', clubhouse: false, invited: false };
+  // T239: the guided build's last step is the first hole: a hole built meets it at once
+  const f: GuideFacts = { pieces: 0, roads: 0, parks: 0, structures: 0, kinds: {}, runs: 0, holes: 0, tutorial: 'on', step: 7, start: 'range', clubhouse: false, invited: false, golfers: 9, owned: ['greens', 'gravel', 'pave', 'teeturf'], walkway: true, practiceForSale: false, putting: 'open' };
   assert.equal(guideStep(f)?.id, 'guide-range-hole');
-  const a = applyGuideEvent(f, 'hole'); assert.equal(a.holes, 1); assert.equal(guideStep(a)?.id, 'guide-range-clubhouse');
-  const b = applyGuideEvent(a, 'clubhouse'); assert.equal(b.clubhouse, true); assert.equal(guideStep(b)?.id, 'guide-range-nine');
+  const a = applyGuideEvent(f, 'hole'); assert.equal(a.holes, 1); assert.equal(guideStep(a), null);
+  const b = applyGuideEvent(a, 'clubhouse'); assert.equal(b.clubhouse, true);
   assert.equal(applyGuideEvent(b, 'carpark').parks, 1);
   assert.equal(f.holes, 0, 'the facts before are untouched');
   // the engine raises them where they happen

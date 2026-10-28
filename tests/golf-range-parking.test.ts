@@ -14,7 +14,7 @@ import type { Rect } from '../src/game/golf/mode';
 
 const plots: Record<0 | 1 | 2 | 3, Rect> = { 0: [500, 600, 70, 150], 1: [900, 300, 150, 70], 2: [200, 200, 70, 150], 3: [1200, 1300, 150, 70] };
 const buy = (ids: RangeUpgradeId[], s = defaultRangeBiz()): RangeBizSave => ids.reduce((q, id) => withUpgrade(q, id), s);
-const GROWN: RangeUpgradeId[] = ['bays8', 'bays12', 'bays24', 'targets', 'covered', 'lights', 'dispenser', 'proshop', 'kiosk', 'picker', 'tier2', 'academy'];
+const GROWN: RangeUpgradeId[] = ['greens', 'gravel', 'pave', 'bays8', 'bays12', 'bays24', 'targets', 'covered', 'lights', 'dispenser', 'proshop', 'kiosk', 'picker', 'tier2', 'academy'];
 /** P24's grown range: 2,000 residents, $8 a bucket, props +40%, both practice greens' appeal */
 const grown = { tier: 1, exits: 2, residents: 2000, propsAppeal: 0.4, practiceAppeal: 0.21 };
 const DAY = 600, HOUR = DAY / 24;
@@ -52,7 +52,8 @@ test('the car park building: a range card upgrade after the second tier, its cos
   assert.ok(u && u.cost >= 20000 && u.upkeep > 0 && u.upkeep < u.cost / 50, `$${u.cost}, $${u.upkeep} a month`);
   assert.match(u.effect, new RegExp(`${GARAGE_CARS} cars`));
   assert.equal(upgradeWhy(buy(['bays8', 'bays12', 'covered']), 'parking', 1e9), 'Build Second tier of bays first', 'offered once the second tier makes parking the limit');
-  assert.equal(upgradeWhy(buy(['bays8', 'bays12', 'covered', 'tier2']), 'parking', 1e9), '');
+  assert.equal(upgradeWhy(buy(['bays8', 'bays12', 'covered', 'tier2']), 'parking', 1e9), 'Build Pave the car park first', 'T239: beside a paved lot');
+  assert.equal(upgradeWhy(buy(['bays8', 'bays12', 'covered', 'tier2', 'gravel', 'pave']), 'parking', 1e9), '');
   assert.equal(rangeUpkeep(buy(['bays8', 'bays12', 'covered', 'tier2', 'parking'])), 60 + 90 + 120 + 450 + u.upkeep);
   // the counters grow with the bays: one up to 9 bays, the second tier adding one
   const counters = (ids: RangeUpgradeId[]) => rangeStats(buy(ids)).counters;
@@ -67,8 +68,8 @@ test('the save: the building round-trips, an old save loads without it, a buildi
   assert.deepEqual(back.owned, s.owned); assert.equal(back.garage, true);
   // a save from before T146 (T133's shape): nothing new, no building
   const old = normalizeRangeBiz({ v: 1, owned: GROWN, price: 8, season: { takings: 5 }, total: { takings: 9 }, practice: {}, extras: {}, paths: true, tee: true });
-  assert.deepEqual(old.owned, ['teeturf', 'grass', ...GROWN], 'a save from before T223 keeps its grass'); assert.equal(old.garage, undefined); assert.ok(!rangeStats(old).parking);
-  assert.deepEqual(normalizeRangeBiz({ v: 1, owned: ['bays8', 'parking'], price: 6, garage: true, desert: true }).owned, ['bays8'], 'the building needs the second tier');
+  assert.deepEqual(old.owned, ['teeturf', 'grass', ...GROWN], 'a save from before T223 keeps its grass (and from before T239 its greens and paved lot: GROWN lists them first)'); assert.equal(old.garage, undefined); assert.ok(!rangeStats(old).parking);
+  assert.deepEqual(normalizeRangeBiz({ v: 1, owned: ['bays8', 'parking'], price: 6, garage: true, desert: true }).owned, ['greens', 'gravel', 'pave', 'bays8'], 'the building needs the second tier (T239: an old save keeps its greens and paved lot)');
   assert.equal(normalizeRangeBiz({ v: 1, owned: ['bays8'], price: 6, garage: true }).garage, undefined, 'no path flag without the building');
 });
 

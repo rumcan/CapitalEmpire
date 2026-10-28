@@ -136,6 +136,9 @@ test('car parks off screen are not looked at: the on-screen test is a box test o
 });
 
 test('car paints: deterministic, a spread of colours, only on the two car models, read back by the shader as packed', () => {
+  // (T236: painting is off by default, none of the paints being clean; ?carpaint=1 turns T228's palette on, as here)
+  assert.equal(CAR_PAINT.on, false, 'off by default');
+  CAR_PAINT.on = true;
   // a seed always gives the same paint, in 0..PAINTS.length, and a thousand bays give every paint (white, silver and black most)
   const seen = new Map<number, number>();
   for (let i = 0; i < 4000; i++) { const p = paintOf(hash3(i, 0x51)); assert.equal(p, paintOf(hash3(i, 0x51))); assert.ok(p >= 0 && p <= PAINTS.length); seen.set(p, (seen.get(p) ?? 0) + 1); }
@@ -153,4 +156,5 @@ test('car paints: deterministic, a spread of colours, only on the two car models
     assert.deepEqual(unpackAlpha(packAlpha(alpha, true, 0)), { tint: 1, alpha });
     for (const code of [1, 11, 17, 27]) { const r = unpackAlpha(packAlpha(alpha, false, code)); assert.equal(r.tint, code + 1); assert.ok(Math.abs(r.alpha - alpha) < 1e-9); }
   }
+  CAR_PAINT.on = false;
 });
