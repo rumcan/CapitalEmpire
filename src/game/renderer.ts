@@ -53,8 +53,8 @@ const COMPOSED_BYTES = 64 << 20;
 const PAINT_CELL = 128;
 /** T199: the swamp tiles' glosses a worker keeps (two bands' worth, a quarter of a MB each) */
 const GLOSS_TILES = 8;
-/** T265: the swamp's tiles a worker keeps pre-scaled to the size they land at (tiledBuf exact: the river's wide band lays many; a few MB) */
-const EXACT_TILES = 24;
+/** T265: the swamp's tiles a worker keeps pre-scaled to the size they land at (tilePlan: four tiles, a few sizes each, at the levels in view; 5-15 MB) */
+const EXACT_TILES = 48;
 /** T265: the river's swamp band's samples a tile on a ground chunk (the streams' take 4): a wide band, its rim half a tile soft, at a quarter
  *  of the work; a district chunk's at its own 1 */
 const RIVER_RES = 2;
@@ -1406,17 +1406,32 @@ export class GroundPainter {
     // straight onto the chunk (whole there: the ground under it is laid): the band cut out of it (destination-out), then the tiles laid into
     // the hole (destination-over): the ground times one less the band plus the tiles times the band, as a layer laid through the band gives,
     // with no scratch layer to clear and lay
-    if (!this.tilesReady(tp)) { this.provisional = true; return false; }
-    for (const [rx, ry, rw, rh] of runs) {
+    // (every run's tiles found first, so the ground is cut only where they can be laid)
+    const plans: ReturnType<GroundPainter['tilePlan']>[] = [];
+    for (const r of runs) { const pl = this.tilePlan(tp, r); if (!pl) { this.provisional = true; return false; } plans.push(pl); }
+    runs.forEach(([rx, ry, rw, rh], k) => {
       ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.beginPath(); ctx.rect(rx, ry, rw, rh); ctx.clip();
       ctx.setTransform(c.M); ctx.globalCompositeOperation = 'destination-out'; ctx.imageSmoothingEnabled = true; ctx.drawImage(sband.cv, x0, y0, sband.cv.width / res, sband.cv.height / res);
-      ctx.globalCompositeOperation = 'destination-over'; this.tilesInto(ctx, tp, [rx, ry, rw, rh], true);
+      ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = 'destination-over'; for (const d of plans[k]!) ctx.drawImage(d.img, d.x, d.y, d.w, d.h);
       ctx.restore();
-    }
+    });
     return true;
   }
-  /** T265: a tile set family's tiles at the bake's band are all decoded (swampLayer cuts the ground only when it can lay them) */
-  private tilesReady(tp: TiledPick): boolean { const band = bandOf(this.tex.tileTs); return tp.urls[band].every(u => !!this.tex.tileImage(u)); }
+  /** T265: the tiles a tile set family lays over the device-px rectangle rect of the chunk being baked (as tilesInto), each pre-scaled to the
+   *  size it lands at (exactTile; kept, so a tile the worker dropped and decodes again is not scaled again, nor its mips made again), with
+   *  where it goes; null when a tile is neither kept at that size nor decoded */
+  private tilePlan(tp: TiledPick, rect: readonly number[]): { img: Cnv; x: number; y: number; w: number; h: number }[] | null {
+    const c = this.chunkNow!, ts = this.tex.tileTs, band = bandOf(ts), lv = tp.fam.levels[band], urls = tp.urls[band], [w, h] = tileSize(lv, ts), perm = tilePermutation(tp.fam.id, band, urls.length);
+    const L = c.L, ox = -c.M.e, oy = -c.M.f, out: { img: Cnv; x: number; y: number; w: number; h: number }[] = [];
+    for (const q of cellsIn((rect[0]! + ox) / L, (rect[1]! + oy) / L, (rect[0]! + rect[2]! + ox) / L, (rect[1]! + rect[3]! + oy) / L, w, h)) {
+      const [a, b, a2, b2] = snappedCell(q.ix, q.iy, w, h, L), url = urls[tileIndex(perm, q.ix, q.iy)]!, tw = a2 - a, th = b2 - b, k = `${url}@${tw}x${th}`;
+      let e = this.exactTiles.get(k);
+      if (e) { this.exactTiles.delete(k); this.exactTiles.set(k, e); }
+      else { const img = this.tex.tileImage(url, tw); if (!img) return null; e = this.exactTile(url, img, tw, th); }
+      out.push({ img: e, x: a - ox, y: b - oy, w: tw, h: th });
+    }
+    return out;
+  }
   /** T199: the swamp's gloss over the chunk being baked (swamp.ts): each tile's gloss (glossTileOf) laid where tiledBuf lays its picture, over
    *  the band's box, at a GLOSS.maskK-th of the chunk's size; then cut to the band (its cover, swampNow) and off the stream's water and lip (cut,
    *  tile space). null when a tile is not decoded */
