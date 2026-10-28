@@ -10,7 +10,7 @@
 // Needs a dev server (vite) on --base. One headless Edge, closed when done. Saves are not written (non-GET requests are answered locally).
 import { chromium } from 'playwright-core';
 import sharp from 'sharp';
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const args = process.argv.slice(2), opt = (k, d) => { const i = args.indexOf(`--${k}`); return i >= 0 ? args[i + 1] : d; };
@@ -153,6 +153,35 @@ try {
     // --finish '{"bowl":0}': the course finish's knobs for these shots (ground.setCourseFinish; bowl 0 is the bunkers before T253 part 2)
     const fx = JSON.parse(opt('finish', '{}'));
     if (Object.keys(fx).length) await page.evaluate(fx => window.__game.ground.setCourseFinish(fx), fx);
+    // --bake: the ground bakes of the view (ground.invalidateAll, the worker ms of each chunk bake, bakeLog) with the T253 looks off (bowl 0:
+    // T227's lips, roll 0) and on, alternating, --reps times at 30%, 15% and 8%; and the contour worker's job for the whole course with Round
+    // off unticked and at 100% on the bunkers and the green (perf.courseJobMs)
+    if (args.includes('--bake')) {
+      const reps = +opt('reps', '3'), modes = { off: { bowl: 0, roll: 0 }, on: { bowl: 1, roll: 1 } }, report = {}, pooled = {};
+      await roundOff(page, 1);
+      for (const z of [0.3, 0.15, 0.08]) {
+        await look(page, spot.x, spot.y, z); await settle(page, 2000);
+        for (let rep = 0; rep < reps; rep++) for (const [m, f] of Object.entries(modes)) {
+          await page.evaluate(f => window.__game.ground.setCourseFinish(f), f); await settle(page, 1500);
+          const n0 = await page.evaluate(() => { const g = window.__game; g.ground.invalidateAll(); return g.ground.baked; });
+          await settle(page, 1500);
+          const ms = await page.evaluate(n0 => { const g = window.__game, l = []; for (let k = n0; k < g.ground.baked; k++) l.push(g.ground.bakeLog[k % 4096]); return l; }, n0);
+          (pooled[`${Math.round(z * 100)}%-${m}`] ??= []).push(...ms);
+        }
+      }
+      const stat = l => { const s = [...l].sort((a, b) => a - b), q = f => s[Math.min(s.length - 1, Math.floor(f * s.length))]; return { bakes: s.length, median: +q(0.5).toFixed(2), p75: +q(0.75).toFixed(2), p95: +q(0.95).toFixed(2), mean: +(s.reduce((a, b) => a + b, 0) / (s.length || 1)).toFixed(2) }; };
+      for (const [k, l] of Object.entries(pooled)) report[k] = stat(l);
+      // the contour worker: the whole course re-contoured, Round off off and on (bunkers and greens at 100%)
+      const contour = {};
+      for (let rep = 0; rep < reps; rep++) for (const [m, sm] of [['round-off', null], ['round-100', 1]]) {
+        await roundOff(page, sm); await settle(page, 1500);
+        const r = await page.evaluate(async () => { const g = window.__game; g.resendCourse(); await new Promise(res => setTimeout(res, 50)); for (let i = 0; i < 400 && g.cgJob; i++) await new Promise(res => setTimeout(res, 25)); return { ms: g.perf.courseJobMs, chunks: g.perf.courseJobChunks }; });
+        (contour[m] ??= []).push(r);
+      }
+      report.contour = contour;
+      console.log('bake', JSON.stringify(report));
+      writeFileSync(join(out, `bake-${tag}.json`), JSON.stringify(report, null, 1));
+    }
     const variants = opt('variants', 'square,round25,round100').split(',');
     for (const [name, sm] of [['square', null], ['round25', 0.25], ['round100', 1]].filter(([n]) => variants.includes(n))) {
       await roundOff(page, sm);

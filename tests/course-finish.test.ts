@@ -28,7 +28,7 @@ test('the knobs clamp: out of range, not numbers or missing take the range\'s en
   assert.deepEqual(clampCourseFinish(null), { ...D });
   assert.deepEqual(clampCourseFinish({}), { ...D });
   const c = clampCourseFinish({ on: 'yes', along: 0, bandWidth: 99, bandStrength: -1, greenWidth: Number.NaN, greenStrength: 'x', collarWidth: 0, collarTone: 5, lip: 9 });
-  assert.deepEqual(c, { on: D.on, along: D.along, bandWidth: FINISH_RANGES.bandWidth[1], bandStrength: 0, greenWidth: D.greenWidth, greenStrength: D.greenStrength, collarWidth: FINISH_RANGES.collarWidth[0], collarTone: 1, lip: 2, bowl: D.bowl });
+  assert.deepEqual(c, { on: D.on, along: D.along, bandWidth: FINISH_RANGES.bandWidth[1], bandStrength: 0, greenWidth: D.greenWidth, greenStrength: D.greenStrength, collarWidth: FINISH_RANGES.collarWidth[0], collarTone: 1, lip: 2, bowl: D.bowl, roll: D.roll });
   assert.equal(clampCourseFinish({ on: false }).on, false);
   assert.equal(clampCourseFinish({ along: false }).along, false);
   // the collar width is the Border slider's range

@@ -3,7 +3,7 @@
  * finish's bowl knob (0: the look before). Pure, Node. Units: tiles. */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { BUNKER_IN, BUNKER_OUT, BUNKER_LOOK, bunkerImages } from '../src/game/bunker-look.js';
+import { BUNKER_IN, BUNKER_OUT, BUNKER_LOOK, GREEN_ROLL_REACH, bunkerImages, greenRollImages } from '../src/game/bunker-look.js';
 import { lineField } from '../src/game/ext/course-grid/field.js';
 import { DEFAULT_COURSE_FINISH, FINISH_RANGES, clampCourseFinish } from '../src/game/course-finish.js';
 import { SUN_TILE_DIR } from '../src/game/ext/course-height/index.js';
@@ -74,4 +74,16 @@ test('the course finish carries the bowl: 1 the tuned look, 0 the bunkers before
   assert.equal(clampCourseFinish({}).bowl, 1, 'a surfaces file from before keeps the tuned look');
   assert.equal(clampCourseFinish({ bowl: 0 }).bowl, 0);
   assert.equal(clampCourseFinish({ bowl: 9 }).bowl, 2);
+});
+
+test('part 3, the green\'s edge roll: lit inside its far (sun-facing) edge, shaded at its near one, flat in the middle and far off', () => {
+  const B = bunker(20, 20, 6, 4), F = lineField([B.ring], [B.edge], 8, 8, 24, 24, 12, GREEN_ROLL_REACH), im = greenRollImages(F, 1);
+  const at = (x: number, y: number) => { const u = Math.floor((x - 8) * 12), v = Math.floor((y - 8) * 12), k = 4 * (v * F.W + u) + 3; return { light: (im.light?.data[k] ?? 0) / 255, dark: (im.dark?.data[k] ?? 0) / 255 }; };
+  // 0.3 tiles in from the rim toward and away from the sun (the rim lies about 4 tiles out along the sun's mostly-y direction)
+  const far = at(...toward(1, 3.65)), near = at(...toward(-1, 3.65)), mid = at(20, 20), off = at(...toward(1, 4 + GREEN_ROLL_REACH + 0.5));
+  assert.ok(far.light > 0.1 && far.dark === 0, `far ${JSON.stringify(far)}`);
+  assert.ok(near.dark > 0.08 && near.light === 0, `near ${JSON.stringify(near)}`);
+  assert.equal(mid.light + mid.dark, 0, 'the middle of the green is left as it is');
+  assert.equal(off.light + off.dark, 0, 'nothing past the roll');
+  assert.equal(DEFAULT_COURSE_FINISH.roll, 1); assert.equal(clampCourseFinish({ roll: 0 }).roll, 0);
 });

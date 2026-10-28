@@ -23,7 +23,7 @@ import { DRAW_ORDER, FaceForm, GREEN_FACE, STAIR_TREAD, SURF_HEIGHT, SUN_DIR, WA
 import { SURF } from './ext/course-grid';
 import { SPROUT_PERIOD, growDraws, seedColour, seedSprouts, sproutRes, type GrowDraw } from './ext/course-fx/seed';
 import { courseImages, courseRes, lineField } from './ext/course-grid/field';
-import { BUNKER_IN, BUNKER_OUT, bunkerImages } from './bunker-look';
+import { BUNKER_IN, BUNKER_OUT, GREEN_ROLL_REACH, bunkerImages, greenRollImages } from './bunker-look';
 import { type GrassCellView } from './ext/grass-management';
 import { grassOverlay } from './lawn-overlay';
 import { surfaceOfTex } from './golf/costs';
@@ -2100,7 +2100,7 @@ export class GroundPainter {
   private drawCourses(ctx: C2D, cs: CoursePatch[], L: number, X0: number, Y0: number, M: DOMMatrix, Minv: DOMMatrix, box: BBox, lite: boolean, under: CanvasPattern | null = null) {
     const r = [box[0] - 1, box[1] - 1, box[2] + 1, box[3] + 1], res = courseRes(L);
     // T227: the course finish (course-finish.ts): the greens' fine stripes, the collar's tone, the bunkers' lips (the bands: step 8)
-    const fin = this.finish(), green = greenStripeLook(fin, FAIRWAY_STRIPES), collarTone = collarToneOf(fin), bowl = fin.on ? fin.bowl : 0, lip = fin.on && !(bowl > 0) ? fin.lip : 0;
+    const fin = this.finish(), green = greenStripeLook(fin, FAIRWAY_STRIPES), collarTone = collarToneOf(fin), bowl = fin.on ? fin.bowl : 0, lip = fin.on && !(bowl > 0) ? fin.lip : 0, roll = fin.on ? fin.roll : 0;
     /** a course texture as a fill style on g: painted (its look, composed over the part `need` of the chunk), the photo or preset in tile space
      *  (turned and scaled about the origin), else the screen texture */
     const style = (g: C2D, t: CourseTex, need?: BBox) => {
@@ -2167,6 +2167,46 @@ export class GroundPainter {
       g.save(); g.setTransform(M); g.globalCompositeOperation = op; g.imageSmoothingEnabled = true; g.drawImage(s, x0, y0, img.W / res, img.H / res); g.restore();
     };
     const flatF = featherTiles(EDGE_LOOKS.flat!, L), wallF = 0.5 * jointFeather(L);
+    /** T253: edge polylines grouped by reach: each polyline's box grown by pad, boxes that overlap merged (a group's px lie within pad of its
+     *  own edges only), so each bunker or green is lit over its own box, not one box round all of them (the field and the shine cost by area) */
+    const clustersOf = (all: readonly ArrayLike<number>[], pad: number) => {
+      const out: { x0: number; y0: number; x1: number; y1: number; edges: ArrayLike<number>[] }[] = [];
+      for (const e of all) {
+        let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+        for (let k = 0; k + 1 < e.length; k += 2) { const x = e[k]!, y = e[k + 1]!; if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+        if (!(x1 >= x0)) continue;
+        let g = { x0: x0 - pad, y0: y0 - pad, x1: x1 + pad, y1: y1 + pad, edges: [e] as ArrayLike<number>[] };
+        for (let i = out.length - 1; i >= 0; i--) {
+          const o = out[i]!; if (o.x1 < g.x0 || o.x0 > g.x1 || o.y1 < g.y0 || o.y0 > g.y1) continue;
+          g = { x0: Math.min(o.x0, g.x0), y0: Math.min(o.y0, g.y0), x1: Math.max(o.x1, g.x1), y1: Math.max(o.y1, g.y1), edges: o.edges.concat(g.edges) };
+          out.splice(i, 1); i = out.length; // merged: look again (the grown box may meet more)
+        }
+        out.push(g);
+      }
+      return out;
+    };
+    /** T253 part 3: the greens' soft roll where they meet the fringe (bunker-look.ts greenRollImages), from the greens' edges (every chunk's),
+     *  per course chunk here its field over the greens' reach, a little past its box and laid clipped to it: the shade multiplied (and on the
+     *  shade mask), the light as a lift of the grass in proportion */
+    const greenRoll = (all: readonly ArrayLike<number>[]) => {
+      if (!all.length) return;
+      const R = GREEN_ROLL_REACH, gres = Math.max(2, Math.min(12, Math.round(Math.hypot(HW, HH) * L * 0.2))), G = 0.6;
+      for (const cl of clustersOf(all, R)) for (const c of cs) {
+        const bx0 = Math.max(r[0]!, c.cx * c.size), by0 = Math.max(r[1]!, c.cy * c.size), bx1 = Math.min(r[2]!, (c.cx + 1) * c.size), by1 = Math.min(r[3]!, (c.cy + 1) * c.size);
+        const x0 = Math.max(bx0 - G, cl.x0), y0 = Math.max(by0 - G, cl.y0), x1 = Math.min(bx1 + G, cl.x1), y1 = Math.min(by1 + G, cl.y1);
+        if (x1 <= x0 || y1 <= y0 || bx1 <= bx0 || by1 <= by0) continue;
+        const F = lineField(c.layers.find(q => q.s === SURF.green)?.fill ?? [], cl.edges, x0, y0, x1 - x0, y1 - y0, gres, R);
+        if (!F.any) continue;
+        const im = greenRollImages(F, roll), clip = new Path2D(); clip.rect(bx0, by0, bx1 - bx0, by1 - by0);
+        const lay = (g: C2D, img: EdgeImage) => {
+          const sm = this.buffer('small', img.W, img.H); ctx2d(sm).putImageData(new ImageData(img.data as Uint8ClampedArray<ArrayBuffer>, img.W, img.H), 0, 0);
+          g.setTransform(M); g.imageSmoothingEnabled = true; g.drawImage(sm, x0, y0, img.W / gres, img.H / gres);
+        };
+        const dk = im.dark, lt = im.light;
+        if (dk) { const mul = (g: C2D) => { g.save(); g.setTransform(M); g.clip(clip); g.globalCompositeOperation = 'multiply'; lay(g, dk); g.restore(); }; mul(ctx); this.onShadeMask(mul); }
+        if (lt) { ctx.save(); ctx.setTransform(M); ctx.clip(clip); this.shine(ctx, this.cacheBox(M, x0, y0, x0 + lt.W / gres, y0 + lt.H / gres, ctx), RIM_TINT, 1, a => lay(a, lt), false); ctx.restore(); }
+      }
+    };
     /** T253 (#735): the bunkers as the owner's reference (bunker-look.ts), from the sand's edges (all: every chunk's, so a seam is lit as one):
      *  per course chunk here, its edge field over the bunkers' reach (its own fill rings tell the sand), then the shade multiplied (and on the
      *  shade mask), the sand's light as a shine textured by the sand (squared) and the grass's as a lift in proportion; the light and shade
@@ -2174,16 +2214,14 @@ export class GroundPainter {
     const bunkerBowl = (all: readonly ArrayLike<number>[]) => {
       if (!all.length) return;
       const pxT = Math.hypot(HW, HH) * L, bres = Math.max(3, Math.min(24, Math.round(pxT * 0.4))), reach = Math.max(BUNKER_IN, BUNKER_OUT);
-      let ex0 = Infinity, ey0 = Infinity, ex1 = -Infinity, ey1 = -Infinity;
-      for (const e of all) for (let k = 0; k + 1 < e.length; k += 2) { const x = e[k]!, y = e[k + 1]!; if (x < ex0) ex0 = x; if (x > ex1) ex1 = x; if (y < ey0) ey0 = y; if (y > ey1) ey1 = y; }
       // each chunk's field reaches a little past its box (the rims' facing is blurred: both sides of a seam blur the same px) and is laid
       // clipped to its box
       const ims: { im: ReturnType<typeof bunkerImages>; x0: number; y0: number; clip: Path2D }[] = [], G = 0.6;
-      for (const c of cs) {
+      for (const cl of clustersOf(all, reach)) for (const c of cs) {
         const bx0 = Math.max(r[0]!, c.cx * c.size), by0 = Math.max(r[1]!, c.cy * c.size), bx1 = Math.min(r[2]!, (c.cx + 1) * c.size), by1 = Math.min(r[3]!, (c.cy + 1) * c.size);
-        const x0 = Math.max(bx0 - G, ex0 - BUNKER_OUT), y0 = Math.max(by0 - G, ey0 - BUNKER_OUT), x1 = Math.min(bx1 + G, ex1 + BUNKER_OUT), y1 = Math.min(by1 + G, ey1 + BUNKER_OUT);
+        const x0 = Math.max(bx0 - G, cl.x0), y0 = Math.max(by0 - G, cl.y0), x1 = Math.min(bx1 + G, cl.x1), y1 = Math.min(by1 + G, cl.y1);
         if (x1 <= x0 || y1 <= y0 || bx1 <= bx0 || by1 <= by0) continue;
-        const F = lineField(c.layers.find(q => q.s === SURF.bunker)?.fill ?? [], all, x0, y0, x1 - x0, y1 - y0, bres, reach, true);
+        const F = lineField(c.layers.find(q => q.s === SURF.bunker)?.fill ?? [], cl.edges, x0, y0, x1 - x0, y1 - y0, bres, reach, true);
         if (!F.any) continue;
         const clip = new Path2D(); clip.rect(bx0, by0, bx1 - bx0, by1 - by0);
         ims.push({ im: bunkerImages(F, bowl, pxT), x0, y0, clip });
@@ -2395,6 +2433,8 @@ export class GroundPainter {
         // T253: with the bowl on, the bowl, its rake lines and streaks, the rolled grass lip and the mounds round it instead
         if (lip > 0 && !lite && s === SURF.bunker) this.bunkerSandLip(ctx, ls.map(q => q.l), L, M, lip);
         if (bowl > 0 && !lite && s === SURF.bunker) bunkerBowl(ls.flatMap(q => q.l.edges));
+        // 5c, T253 part 3: the green's soft roll into its fringe (lit on its far, sun-facing edge, shaded on its near one)
+        if (roll > 0 && !lite && s === SURF.green) greenRoll(ls.flatMap(q => q.l.edges));
         if (!lite) {                                                                               // 6
           const joints = ls.flatMap(q => q.l.joint ?? []);
           // T196: a soft shade on the collar side (the lower surface), reaching a little back over the surface, stronger turned from the sun:
