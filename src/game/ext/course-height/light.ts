@@ -4,7 +4,8 @@
 //
 // The model, per point of a grid on the world lattice (1 m on the ground chunks), a function of the global height field alone, so two chunks
 // agree exactly at their seam:
-//  - the surface: a Catmull-Rom cubic through the 4 m height samples (its slope continuous: no facets), heights exaggerated LIGHT_EXAG times;
+//  - the surface: a Catmull-Rom cubic through the 4 m height samples (its slope continuous: no facets), heights exaggerated LIGHT_EXAG times,
+//    gentle slopes more (GENTLE_GAIN, T263: so a fairway's rolls read; steep banks as they were);
 //  - one sun at the screen's upper right (SUN_LIGHT, shadows at 145°) and a sky share AMBIENT: the brightness
 //      B = AMBIENT × (1 − ao) + (1 − AMBIENT) × max(0, n·L) / L.z × (1 − cast)
 //    is exactly 1 on flat ground (left as it is), more on slopes facing the sun, less on slopes facing away;
@@ -30,6 +31,13 @@ export const HEIGHT_LIGHT_STRENGTH = clampHeightLight((file as { strength?: unkn
 
 /** the heights' exaggeration for the light (the course height is subtle: ±3 m), as the old hillshade's */
 export const LIGHT_EXAG = 2.2;
+/** T263 (#771): gentle ground's extra response. The light tilts the normal by the slope s (m per m) times
+ *  LIGHT_EXAG × (1 + GENTLE_GAIN / (1 + (s / GENTLE_SLOPE)²)): a fairway's 1-3% rolls and a green's 1-2% tilt catch the light 4 to 6 times as
+ *  much as they did, and it fades out on steep ground (a 20% bank 1.13 times, a 45% one the Ground height brush sculpts 1.03), so steep
+ *  ground stays as it was. The lit slope still grows with the real one everywhere (the gain is under 8, so s times it never turns back) */
+export const GENTLE_GAIN = 6, GENTLE_SLOPE = 0.03;
+/** the light's normal tilt per metre per metre of slope at slope² s2: LIGHT_EXAG with the gentle ground's gain */
+export const lightExag = (s2: number) => LIGHT_EXAG * (1 + GENTLE_GAIN / (1 + s2 / (GENTLE_SLOPE * GENTLE_SLOPE)));
 /** the sky's share of the light on flat ground; the sun gives the rest */
 export const AMBIENT = 0.35;
 const { lx, ly, lz } = SUN_LIGHT;
@@ -121,7 +129,10 @@ export function heightLightGrid(h: Float32Array, box: CourseTileBox | readonly n
     const ii = i + m, jj = j + m, c = jj * HWd + ii, H0 = Hg[c]!;
     // the slope (m per m) by central differences over the lattice (two steps of 1/res tiles of 2 m)
     const gx = (Hg[c + 1]! - Hg[c - 1]!) / (4 * step), gy = (Hg[c + HWd]! - Hg[c - HWd]!) / (4 * step);
-    const nx = -LIGHT_EXAG * gx, ny = -LIGHT_EXAG * gy, ndl = (nx * lx + ny * ly + lz) / Math.hypot(nx, ny, 1);
+    // the sun on the normal tilted with the gentle ground's gain (the shade and the lift), and on the one tilted by LIGHT_EXAG alone (the inset
+    // highlight's ramp: it keeps its place down the slope, so a gentle roll's top never catches the highlight)
+    const xg = lightExag(gx * gx + gy * gy), nx = -xg * gx, ny = -xg * gy, ndl = (nx * lx + ny * ly + lz) / Math.hypot(nx, ny, 1);
+    const ex0 = -LIGHT_EXAG * gx, ey0 = -LIGHT_EXAG * gy, ndl0 = (ex0 * lx + ey0 * ly + lz) / Math.hypot(ex0, ey0, 1);
     // cast: the march toward the sun; a point is shaded where the ground ahead rises above the sun's ray (exaggerated heights, metres)
     let cast = 0;
     for (let d = step; d <= CAST_REACH + 1e-9 && cast < 1; d += step) {
@@ -137,8 +148,8 @@ export function heightLightGrid(h: Float32Array, box: CourseTileBox | readonly n
     if (Math.abs(rel) < 1e-5) rel = 0; // flat ground (or a level plateau) stays exactly as it is
     const o = (j * w + i) * HL_STRIDE; out[o + 3] = cast; out[o + 4] = ao;
     if (rel === 0) continue;
-    const lift = rel > 0 ? Math.min(1, rel / REL_MAX) : 0;
-    out[o] = rel < 0 ? Math.min(1, -rel) : 0; out[o + 1] = lift; out[o + 2] = smooth(SPEC_LO, SPEC_HI, lift);
+    const lift = rel > 0 ? Math.min(1, rel / REL_MAX) : 0, rel0 = AMBIENT * (1 - ao) + (1 - AMBIENT) * Math.max(0, ndl0) / lz * (1 - cast) - 1;
+    out[o] = rel < 0 ? Math.min(1, -rel) : 0; out[o + 1] = lift; out[o + 2] = rel0 > 0 ? smooth(SPEC_LO, SPEC_HI, Math.min(1, rel0 / REL_MAX)) : 0;
     if (i < qi0) qi0 = i; if (i > qi1) qi1 = i; if (j < qj0) qj0 = j; if (j > qj1) qj1 = j;
   }
   if (qi1 < 0) return null;

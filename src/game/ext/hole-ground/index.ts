@@ -18,8 +18,9 @@
 //   every sample whose bilinear reach touches one stays exactly as it is, the samples round it fade in over 3.
 // The result is a list of samples with their heights before and after and the earth moved: the cut (Σ of the drops) carried to the fills (Σ of
 // the rises), what is short brought in and what is over taken away, so max(cut, fill) m³ (× COURSE_CELL_M2 a metre of a sample); for a
-// one-way job, as a Ground height brush dab, that is the brush's own measure (estimateCourseBrushM3, Σ|Δh|), priced at the same
-// EARTHWORK_PER_M3. applyHoleGround writes it (touch the journal first). Pure: no DOM, deterministic, node-testable.
+// one-way job, as a Ground height brush dab, that is the brush's own measure (estimateCourseBrushM3, Σ|Δh|); the Build prices it at
+// golf/costs SHAPE_RATE_M3 (shaped while the hole is built: a third of the brush's rework rate). applyHoleGround writes it (touch the journal
+// first). Pure: no DOM, deterministic, node-testable.
 // Units: tiles (2 m) for places, metres for heights and along-the-line distances, samples (4 m) for the masks' distances.
 import { CELL_T, SURF, type Grid, type GridDiff } from '../course-grid';
 import { CH_SIZE, CH_STEP, COURSE_CELL_M2, clampCourseHeightM, type CourseHeightField, type CourseRoadCorridor, type CourseTileBox } from '../course-height';

@@ -74,6 +74,43 @@ try {
     }
     await ctx.close();
   }
+  if (only.has('bank')) {
+    // a steep bank sculpted with the Ground height brush (Raise, the biggest step, six strokes along one line: about 3 m over 12 m) north of
+    // the hole, at 30%: run before and after a change to the slope light (--tag names the shot)
+    const { page, ctx } = await open();
+    const r = await page.evaluate(() => {
+      const g = window.__game, p = g.paint; g.setTool('course'); p.setHeight({ mode: 'raise', r: 6, level: 5 });
+      const a = { x: 880, y: 432 }, b = { x: 930, y: 432 };
+      for (let k = 0; k < 6; k++) { p.pointerDown(a, 0, 0); for (let t = 0.1; t <= 1.001; t += 0.1) p.pointerMove({ x: a.x + (b.x - a.x) * t, y: a.y }, 0, 0); p.pointerUp(0.5); }
+      p.setBrush(p.brushKind); g.setTool('select');
+      const d = g.courseHeight.data; let hi = 0; for (const v of d) hi = Math.max(hi, v);
+      return { hi: +hi.toFixed(2), rev: g.courseHeight.rev };
+    });
+    console.log('bank', JSON.stringify(r));
+    await hideUi(page);
+    await look(page, 905, 432, 0.3); await settle(page, 3000); files.bank = await shot(page, `bank-30pct-brush-${opt('tag', 'now')}`);
+    await ctx.close();
+  }
+  if (only.has('bench')) {
+    // the chunk bakes at 30% over the shaped hole: every chunk in view baked again five times; the worker ms median and p95 (the slope light is
+    // a bake constant: this is what a change to it costs)
+    const { page, ctx } = await open();
+    console.log('bench', await plan(page, true)); await build(page);
+    await page.addStyleTag({ content: '* { visibility: hidden !important } canvas { visibility: visible !important }' });
+    const ms = [];
+    for (const at of [{ x: HOLE.green.x - 6, y: HOLE.green.y + 4 }, { x: HOLE.tee.x + 95, y: HOLE.tee.y + 4 }]) {
+      await look(page, at.x, at.y, 0.3); await settle(page, 2000);
+      for (let r = 0; r < 5; r++) {
+        const n0 = await page.evaluate(() => { const g = window.__game; g.ground.invalidateAll(); return g.ground.baked; });
+        await settle(page, 600);
+        ms.push(...await page.evaluate(n0 => { const g = window.__game.ground, out = []; for (let n = n0; n < g.baked; n++) out.push(g.bakeLog[n % g.bakeLog.length]); return out; }, n0));
+      }
+    }
+    ms.sort((a, b) => a - b);
+    const q = p => ms.length ? +ms[Math.min(ms.length - 1, Math.floor(p * ms.length))].toFixed(2) : null;
+    console.log(`bench: ${ms.length} bakes at 30%, worker ms median ${q(0.5)}, p95 ${q(0.95)}`);
+    await ctx.close();
+  }
   if (only.has('panel')) {
     const { page, ctx } = await open();
     console.log('plan', await plan(page, true));
