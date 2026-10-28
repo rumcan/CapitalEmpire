@@ -38,7 +38,8 @@ const inHand = (): { title: string; tool: Tool; alt?: true; rows: [string, strin
   { title: 'Holes in hand', tool: 'course', rows: [
     [`1 – ${SURFACE_BRUSHES.length}`, `the surface: ${SURFACE_BRUSHES.map(b => b.name.toLowerCase()).join(', ')}`], ['[ / ]', 'a smaller / bigger brush or green'],
     ['R', 'turn the stamp, the hole or the green'], ['Enter', 'finish the shape or the run'], ['Backspace', 'take back the last corner'],
-    ['PageUp / PageDown', 'the picked area up / down a layer']] },
+    ['PageUp / PageDown', 'the picked area up / down a layer'],
+    ['Enter (Edit Hole Layout)', 'move the tee markers and the flag to the new layout: no grass is laid']] },
   // T206: Facilities ▸ Practice (golf/practicetool.ts key) and Facilities ▸ Plants (the Paint tool's plant brush: paint-tool.ts key)
   { title: 'Practice in hand', tool: 'practice', rows: [['[ / ]', 'a smaller / bigger facility (never under what opens it)'], ['R', 'turn it'], ['Tab / Shift+Tab', 'the putting green\'s next / previous outline'], ['Click', 'build it (its price shows first)']] },
   { title: 'Plants in hand', tool: 'paint', alt: true, rows: [['Drag', 'plant trees, bushes or flowers'], ['Alt + drag', 'remove what the plant brush planted'], ['[ / ]', 'a smaller / bigger brush']] },

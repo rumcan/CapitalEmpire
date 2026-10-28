@@ -6,6 +6,7 @@ import { TILE_M } from '../types';
 import { appendShots, FLIGHT_TIME, liveField, PUTT_FLIGHT } from './round';
 import type { Due, Field, HoleRun, PlayCtx, Player } from './round';
 import { carryM, chooseShot, hitShot, putt, rng } from './shot';
+import { holeFrom } from './courseview';
 import type { Club, CourseView, Lie, Pt, RoundPlan, Shot } from './types';
 
 /** the owner's input for his shot at a turn: the hole index and stroke it answers, the club, the aim point, and the power: 0.3..1 of the club's full
@@ -110,7 +111,7 @@ export class LiveGroup {
   /** the owner's turn at the golfer p's stroke on the hole hr at minute t (his group's pace and the group ahead's gate), and the model's suggestion for his lie (on the green the putter at
    *  the pin; else the club and aim chooseShot gives, and the power that carries to the aim) */
   private turnOf(p: Player, hr: HoleRun, t: number): OwnerTurn {
-    const hole = this.ctx.view.holes[hr.h]!, sg = chooseShot(p.lie, p.ball, hole, p.skill, p.lie === 'tee'), putting = sg.club === 'putter';
+    const hole = holeFrom(this.ctx.view.holes[hr.h]!, p.set), sg = chooseShot(p.lie, p.ball, hole, p.skill, p.lie === 'tee'), putting = sg.club === 'putter'; // T254: his set's line
     const distM = Math.hypot(hole.pin.x - p.ball.x, hole.pin.y - p.ball.y) * TILE_M, dM = Math.hypot(sg.aim.x - p.ball.x, sg.aim.y - p.ball.y) * TILE_M;
     const power = putting ? 1 : clamp(dM / carryM(sg.club, p.skill), POWER[0]!, POWER[1]!);
     return { golfer: p.id, holeIdx: hr.h, hole: hole.n, par: hole.par, stroke: p.strokes + 1, t, lie: p.lie, ball: { x: p.ball.x, y: p.ball.y },

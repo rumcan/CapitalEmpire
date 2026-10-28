@@ -216,7 +216,7 @@ function MoreOptions({ game, looks, onLooks }: { game: Game; looks: boolean; onL
           <Sub title="Hole · plants · ground">
             <div className="flex flex-wrap gap-1.5">
               <button className={`chip ${p.mode === 'hole' ? 'chip-on' : ''}`} aria-pressed={p.mode === 'hole'} onClick={() => p.setMode('hole')}>Saved holes <span aria-hidden>▸</span></button>
-              {game.golfMode && p.hasPlan(n) && <button className="chip" title={`Open hole ${n}'s plan in New hole: move the tee, the green, the bends and widths`} onClick={() => p.editPlan(n)}>{`Edit hole ${n}`}</button>}
+              {game.golfMode && p.hasPlan(n) && <button className="chip" title={`Hole ${n}'s layout: move the tee, the green and the bends; the tee markers and the flag follow, no grass is laid`} onClick={() => p.editPlan(n)}>{`Edit Hole Layout ${n}`}</button>}
               <button className={`chip ${p.mode === 'plant' ? 'chip-on' : ''}`} aria-pressed={p.mode === 'plant'} onClick={() => p.setPlant(p.plantBrush)}>Plants <span aria-hidden>▸</span></button>
               <button className={`chip ${p.mode === 'height' ? 'chip-on' : ''}`} aria-pressed={p.mode === 'height'} onClick={() => p.setHeight()}>Ground height <span aria-hidden>▸</span></button>
             </div>

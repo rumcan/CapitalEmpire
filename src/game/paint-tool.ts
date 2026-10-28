@@ -214,6 +214,8 @@ export interface PaintHost { setLotGround(key: string, patches: LotPatch[] | nul
   /** T254: the golf game's pins and tee markers as text, and their setter: an Edit Hole Layout step's undo and redo carry them */
   markersKey?(): string
   setMarkers?(key: string): void
+  /** T254: a saved hole placed as hole n: its tee sets' markers (tiles) */
+  placeTees?(n: number, tees: readonly { kind: TeeMark['kind']; x: number; y: number }[]): void
   /** T254: hole n's pin and tee markers (Edit Hole Layout's warnings) */
   markersOf?(hole: number): { pin: Pin | null; tees: readonly TeeMark[] }
   /** T229: the frame trees New hole's ghost would plant (their points, tiles; conifer: drawn darker), for the map's preview */
@@ -969,6 +971,7 @@ export class PaintTool {
     // its frame trees, with Frame with trees on
     if (gh.trees && this.host.placeFrame) { const r = this.host.placeFrame(n, gh.placed.props); if (this.tx) this.tx.spent += r; }
     this.commit();
+    this.host.placeTees?.(n, gh.placed.tees); // T254: its tee sets
     this.brushHole = n; this.host.save(); this.host.holeBuilt?.(n);
     this.host.toast(`${h.name} placed as hole ${n}${gh.cost ? `: $${gh.cost.toLocaleString()}` : ''}${gh.note ? ` (${gh.note})` : ''}`);
     this.myHole = null; this.myGhost = null; this.setPlan();

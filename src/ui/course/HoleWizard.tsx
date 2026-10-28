@@ -40,7 +40,7 @@ export function HoleWizardPanel({ game, looks = false, onLooks }: { game: Game; 
   return (
     <div className="wizard-card" data-primary="wizard" ref={ref}>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className="wiz-title">{w.base ? `Edit hole ${w.hole}` : `New hole ${w.hole}`}</span>
+        <span className="wiz-title">{w.base ? `Edit Hole Layout ${w.hole}` : `New hole ${w.hole}`}</span>
         {nums.length > 1 && (
           <label className="wiz-num" title="The hole's number: a free one, or after your last hole">
             <span className="sr-only">Number</span>
@@ -57,8 +57,8 @@ export function HoleWizardPanel({ game, looks = false, onLooks }: { game: Game; 
       </ol>
       {w.step === 'shape' && (
         <div className="mt-2 flex items-center gap-1.5">
-          <button className="pill-gold wiz-build" disabled={!c?.ok} title={c?.ok ? 'Build the hole (Enter, or the gold pill by the green)' : c?.why} onClick={() => p.buildPlan()}>
-            <span className="min-w-0 flex-1">{c?.ok && gh ? `Build · ${money(total)}` : 'Build'}</span><kbd>Enter</kbd>
+          <button className="pill-gold wiz-build" disabled={!c?.ok} title={c?.ok ? (w.base ? 'Move the tee markers and the flag to this layout: no grass is laid (Enter, or the gold pill by the green)' : 'Build the hole (Enter, or the gold pill by the green)') : c?.why} onClick={() => p.buildPlan()}>
+            <span className="min-w-0 flex-1">{c?.ok && gh ? (w.base ? 'Move tees and flag' : `Build · ${money(total)}`) : 'Build'}</span><kbd>Enter</kbd>
           </button>
           <button className="chip" title="Drop this plan (Esc steps back one stage)" onClick={() => p.cancelPlan()}>Cancel</button>
         </div>
@@ -73,15 +73,15 @@ export function HoleWizardPanel({ game, looks = false, onLooks }: { game: Game; 
       )}
       {gh && <Stats game={game} />}
       {w.base && w.step === 'shape' && <EditPaint game={game} looks={looks} onLooks={onLooks} />}
-      {gh && <Planting game={game} />}
-      {gh && w.step === 'shape' && <Frame game={game} cost={gh.cost} />}
+      {gh && !w.base && <Planting game={game} /> /* T254: Edit Hole Layout plants nothing */}
+      {gh && w.step === 'shape' && !w.base && <Frame game={game} cost={gh.cost} />}
       {checks.length > 0 && <Checks game={game} rows={checks} />}
       {w.step === 'shape' && (
         <p className="wiz-keys">Drag the line to bend it · amber handles widen · <kbd>R</kbd> turns the green · <kbd>[</kbd> <kbd>]</kbd> size it · <kbd>Ctrl</kbd>+<kbd>Z</kbd> undoes a drag{w.base ? ' or a stroke' : ''} · <kbd>Esc</kbd> steps back</p>
       )}
       <div className="mt-1.5 flex flex-wrap gap-1">
         {w.base && w.step === 'shape' && <DeleteChoice game={game} n={w.base.hole} />}
-        {canEdit && <button className="chip" onClick={() => game.editHole(cur)}>{`Edit hole ${cur}`}</button>}
+        {canEdit && <button className="chip" onClick={() => game.editHole(cur)} title="Move this hole's tee markers and flag: no grass is laid">{`Edit Hole Layout ${cur}`}</button>}
         <button className="chip" title="Back to the brush" onClick={() => p.setBrush(p.brushKind)}>Done</button>
       </div>
     </div>
@@ -165,7 +165,7 @@ function Stats({ game }: { game: Game }) {
     <div className="wiz-stats">
       <div className="wiz-par">{`Par ${gh.info.par} · ${gh.info.lengthM} m`}</div>
       <div className="sub-line">{`${Math.round(gh.info.lengthM * YD)} yd · ${planShape(pl)}`}{gh.refused ? ` · ${gh.refused.toLocaleString()} m² left out` : ''}</div>
-      {w.step === 'shape' && (
+      {w.step === 'shape' && !w.base && (
         <dl className="wiz-split">
           {SPLIT.map(([s, name]) => {
             const v = split.get(s); if (!v) return null;

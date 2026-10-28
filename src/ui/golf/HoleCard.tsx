@@ -7,14 +7,13 @@
 import { useState } from 'react';
 import type { Game } from '../../game/engine';
 import { deleteNote, type HoleCardCheck, type HoleCardView } from '../../game/golf/holecard';
+import { TEE_SET } from '../../game/golf/teesets';
 import { monthIndexLabel } from '../../game/golf/calendar';
 import { SurfaceMark } from '../course/SurfaceMark';
 import { Icon } from '../Icon';
 
 /** the surfaces' names as the Holes panel says them */
 const NAME: Record<string, string> = { green: 'Green', tee: 'Tee', fairway: 'Fairway', rough: 'Rough', bunker: 'Bunker', water: 'Water', fescue: 'Fescue', waste: 'Waste area', longGrass: 'Long grass' };
-/** the tee markers' names */
-const TEE: Record<string, string> = { back: 'Back', middle: 'Middle', forward: 'Forward' };
 const m2 = (n: number) => `${n.toLocaleString('en-US')} m²`;
 
 /** the open card's facts (null: none open) */
@@ -56,8 +55,15 @@ export function HoleCard({ game, right = 'right-3' }: { game: Game; right?: stri
         <div className="wiz-stats" data-testid="hole-tees">
           <div className="text-[12px] text-[var(--muted)]">From each tee</div>
           <dl className="wiz-split">
-            {c.tees.map(t => <div key={t.kind}><dt>{TEE[t.kind]} tee</dt><dd>{t.m} m</dd></div>)}
+            {c.tees.map(t => <div key={t.kind} data-tee={t.kind}><dt><TeeDot kind={t.kind} />{TEE_SET[t.kind].name} tee · par {t.par}</dt><dd>{t.m} m</dd></div>)}
           </dl>
+          {/* T254: "Add tee: Blue / Yellow / Red": a tee box behind or ahead along the line, priced like a tee */}
+          {c.addable.length > 0 && game.addTeeSet && (
+            <div className="mt-1.5 flex flex-wrap items-center gap-1.5" data-testid="hole-add-tee">
+              <span className="text-[12px] text-[var(--muted)]">Add tee:</span>
+              {c.addable.map(k => <button key={k} className="chip" onClick={() => game.addTeeSet(c.n, k)} title={`Lay the ${TEE_SET[k].colour} tee box (${TEE_SET[k].who}) ${k === 'back' ? 'behind' : 'ahead'} along the line, priced like a tee${game.teeBoxPrice ? `: about $${game.teeBoxPrice().toLocaleString('en-US')}` : ''}`} data-add-tee={k}><TeeDot kind={k} />{TEE_SET[k].name}</button>)}
+            </div>
+          )}
         </div>
       )}
 
@@ -86,18 +92,18 @@ export function HoleCard({ game, right = 'right-3' }: { game: Game; right?: stri
 
       <FrameRow game={game} n={c.n} />
 
-      <p className="sub-line mt-2">Drag the pin or a tee marker on the map to move it: no re-plan, no charge. It stays on its green or tee.</p>
+      <p className="sub-line mt-2">Drag the pin or a tee marker on the map to move it: no re-plan, no charge. It stays on its green or tee. Edit Hole Layout moves them all with the line, and lays no grass.</p>
 
       {!asking ? (
         <>
           <div className="mt-2 flex flex-wrap gap-1.5">
             {/* T205: Edit hole always shows what it did: the editor opens on this hole, framed, with a toast; while it is open it says so */}
-            <button className={`chip ${editing ? 'chip-editing' : 'disabled:opacity-40'}`} disabled={!c.planned || editing} onClick={() => game.editHole(c.n)} title={editing ? `Hole ${c.n}'s editor is open in the Holes panel: drag the tee, the green or the line, then Build` : c.planned ? "New hole's editor: drag the tee, the green or the line; Build to save" : 'Painted by hand: shape it with the brush'} data-testid="hole-edit"><Icon name="pin" size={14} />{editing ? `Editing hole ${c.n}` : 'Edit hole'}</button>
+            <button className={`chip ${editing ? 'chip-editing' : 'disabled:opacity-40'}`} disabled={!c.planned || editing} onClick={() => game.editHole(c.n)} title={editing ? `Hole ${c.n}'s layout editor is open in the Holes panel: drag the tee, the green or the line, then Move tees and flag` : c.planned ? 'Drag the tee, the green or the line: the tee markers and the flag move, no grass is laid (fix the course with the paint brushes)' : 'Painted by hand: shape it with the brush'} data-testid="hole-edit"><Icon name="pin" size={14} />{editing ? `Editing hole ${c.n}` : 'Edit Hole Layout'}</button>
             <button className="chip" onClick={ask} title="Delete the hole with its paint, or keep its grass as your property's paint, after a confirm" data-testid="hole-delete"><Icon name="bulldozer" size={14} />Delete</button>
             {/* T256: the hole with its cells, plan, heights and looks (and its frame trees) as a My holes entry */}
             <SaveHole game={game} n={c.n} />
           </div>
-          {!c.planned && <p className="sub-line mt-1" data-testid="hole-edit-why">Painted by hand: shape it with the brush. Edit hole is for holes New hole planned.</p>}
+          {!c.planned && <p className="sub-line mt-1" data-testid="hole-edit-why">Painted by hand: shape it with the brush. Edit Hole Layout is for holes New hole planned.</p>}
         </>
       ) : (
         <div className="mt-2 rounded-lg border border-rose-400/40 bg-rose-500/10 p-2" role="alertdialog" aria-label={`Delete hole ${c.n}?`} data-testid="hole-delete-confirm">
@@ -149,10 +155,16 @@ function FrameRow({ game, n }: { game: Game; n: number }) {
   );
 }
 
+/** T254: a tee set's colour, a small ball beside its name (the colour is never alone: the name is beside it) */
+function TeeDot({ kind }: { kind: keyof typeof TEE_SET }) {
+  const s = TEE_SET[kind];
+  return <span aria-hidden className="mr-1 inline-block h-2.5 w-2.5 rounded-full align-[-1px]" style={{ background: s.fill, boxShadow: `inset 0 0 0 1px ${s.rim}` }} />;
+}
+
 /** one check: its mark (✓ ok, ✗ a check that fails, ! a warning) beside its colour, its words, and its Fix */
 function CheckRow({ game, k }: { game: Game; k: HoleCardCheck }) {
   const cls = k.ok ? 'wiz-ok' : k.warn ? 'wiz-warn' : 'wiz-block', mark = k.ok ? '✓' : k.warn ? '!' : '✗';
-  const fix = k.fix, label = !fix ? '' : fix.kind === 'edit' ? 'Edit hole' : fix.kind === 'brush' ? `Paint ${NAME[fix.surface]!.toLowerCase()}` : fix.marker === 'pin' ? 'Move the pin' : 'Move the tees';
+  const fix = k.fix, label = !fix ? '' : fix.kind === 'edit' ? 'Edit Hole Layout' : fix.kind === 'brush' ? `Paint ${NAME[fix.surface]!.toLowerCase()}` : fix.marker === 'pin' ? 'Move the pin' : 'Move the tees';
   return (
     <li className={cls}>
       <span className="wiz-mark" aria-hidden>{mark}</span>

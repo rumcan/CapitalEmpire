@@ -135,7 +135,7 @@ import { baysBox, boxesMeet, workerBay, workerShown, type TileBox } from './park
 import { parkRideNeeds } from './golf/parkride';
 import { applyCourseConsultantQuality, effectiveGrowInClockMonth, findGolfCard, isGolfCardId, parkRideNeedsWithCards } from './golf/golfcards';
 import type { CourseFacts } from './golf/tour';
-import { surfaceOfTex } from './golf/costs';
+import { surfaceOfTex, unitBuildCost } from './golf/costs';
 import { inSentence, inTheWay, rectPoly, ringWhy, routeObstacles, structureObstacles, type Obstacle, type Structure } from './route-obstacles';
 import { judgeRing, rangePieceName, ringGrows, type RingProp, type RingVerdict } from './ring-clear';
 import { isSecondTap, routeAct, type RouteInput, type Tap } from './route-input';
@@ -152,7 +152,7 @@ import { clampGrade, gradeFrame, loadGrade, saveGrade, type GradeSettings } from
 import { glossGain } from './swamp';
 import { contactLean } from './shadow-shape';
 import { MARKER_SCALE, OLD_TEE_IDS, PIN_RED_ID, PIN_YELLOW_ID, teePropId } from './golf/dressing';
-import { TEE_KINDS, TEE_SET, addTeeSpot, layoutMarkers, markerWarnings, teeBox } from './golf/teesets';
+import { BOX_LEN_M, BOX_WID_M, TEE_KINDS, TEE_SET, addTeeSpot, layoutMarkers, markerWarnings, teeBox } from './golf/teesets';
 import { FALLBACK_STRUCTURE_SPRITE, STRUCTURE_SPRITE, STRUCTURE_SPRITE_OLD } from './golf/structure-art';
 import { checkStructurePlacement, findStructureIndexAt, structureRect, structuresNeeds, type PlacedEventStructure, type StructurePlacementCheck } from './golf/eventtool';
 import { STRUCTURE } from './golf/tents';
@@ -262,7 +262,7 @@ const ownerArt = (sex: Sex): number => { const i = GOLFER_PEOPLE.findIndex(p => 
 interface GolfPlay { plan: RoundPlan; view: CourseView; pv: PlayView; key: number; art: number[]; finish: DayFinish; own: OwnerPlay | null; waves: number }
 /** the owner's play in the day (docs/GOLF-PLAY.md decision 7, P4b): his golfer's id, sex and skill, his group's tee time, his live group (live.ts), his next
  *  turn (null once his group is done), and the count of inputs he had played when he handed to the caddie (null while he plays) */
-interface OwnerPlay { id: number; sex: Sex; skill: number; tee: number; live: LiveGroup; turn: OwnerTurn | null; caddie: number | null }
+interface OwnerPlay { id: number; sex: Sex; skill: number; tee: number; live: LiveGroup; turn: OwnerTurn | null; caddie: number | null; /** T254: his tee set */ tees?: TeeKind }
 /** the owner's open shot (P4b, the shot panel): his turn and his input so far (the club, the aim point in tiles, the power: see powerFor) */
 export interface ShotState { turn: OwnerTurn; input: { club: Club; aim: Pt; power: number } }
 /** the day's leaderboard (docs/GOLF-PLAY.md decision 8): the game minute of the day, the top rows and the owner's (boardRows), the champion's line once
@@ -746,7 +746,7 @@ export class Game {
     landAt: (x, y) => this.ownedAt(x, y), lookChanged: o => this.ownerLookChanged(o),
     frameTreePrice: () => DECOR_BY_KEY.get(FRAME_TREE_KEY)?.price ?? 0, placeFrame: (n, trees) => this.placeSavedFrame(n, trees),
     // T254 (#736): Edit Hole Layout moves the markers (one undo step with them), and its warnings read where they would stand
-    layoutBuilt: (n, base, plan) => this.layoutBuilt(n, base, plan), markersKey: () => this.markersKey(), setMarkers: k => this.setMarkers(k),
+    layoutBuilt: (n, base, plan) => this.layoutBuilt(n, base, plan), placeTees: (n, tees) => this.placeTees(n, tees), markersKey: () => this.markersKey(), setMarkers: k => this.setMarkers(k),
     markersOf: n => ({ pin: this.golf?.pins.find(p => p.hole === n) ?? null, tees: this.golf?.tees.filter(t => t.hole === n) ?? [] }) });
   /** the hole plans change (a wizard build, edit or delete, or their undo and redo; T102): golf.aims follow the plans' bends, so the holes'
    *  playing lines run through them (no dogleg warning) */
@@ -856,7 +856,8 @@ export class Game {
     if (!tee) { this.toast(`Hole ${n} has nothing to save yet`, 'warn'); return false; }
     const frame = trees ? [...this.props].filter(p => p.frame === n).map(p => ({ id: LIBRARY[p.item]!.id, x: p.x, y: p.y, flip: p.flip, scale: p.scale })) : [];
     const v = this.courseHoleViews()[n - 1], m = teeLengths(n, gs.pins, gs.tees, gs.aims ?? [])[0]?.m;
-    const h = captureHole(n, { grid: g, plan, tee, pin, field: this.courseHeight, looks: gs.looks?.[holeOwner(n)] ?? null, frame, name: name || `Hole ${n}`, ...(v?.par ? { par: v.par } : {}), ...(m ? { m } : {}) });
+    const tees = gs.tees.filter(t => t.hole === n).map(t => ({ kind: t.kind, x: t.x, y: t.y })); // T254: its tee sets go with it
+    const h = captureHole(n, { grid: g, plan, tee, pin, field: this.courseHeight, looks: gs.looks?.[holeOwner(n)] ?? null, frame, name: name || `Hole ${n}`, ...(v?.par ? { par: v.par } : {}), ...(m ? { m } : {}), tees });
     if (!h) { this.toast(`Hole ${n} has nothing to save yet`, 'warn'); return false; }
     gs.myHoles = joinHoles([...(gs.myHoles ?? []).filter(q => q.name !== h.name), h], []);
     saveBrowserHoles(joinHoles(loadBrowserHoles().filter(q => q.name !== h.name), [h]));
@@ -1019,6 +1020,13 @@ export class Game {
     const grid = this.courseGrid, i = grid ? cellAt(grid, x, y) : -1;
     return (i >= 0 ? SURF_SURFACE[grid!.surf[i]!] : null) ?? surfaceAt(this.courseAreaList(), x, y);
   }
+  /** a saved hole placed as hole n (My holes, T256): its tee sets' markers where it had them (T254); the white alone when it saved none */
+  private placeTees(n: number, tees: readonly { kind: TeeKind; x: number; y: number }[]) {
+    const g = this.golf; if (!g || !tees.length) return;
+    for (const t of g.tees.filter(q => q.hole === n)) this.removeGolfMarker(n, t.kind);
+    for (const t of tees) this.setGolfMarker(n, t.kind, t.x, t.y);
+    this.holeCache = null; this.cardCache = null; this.syncCourseGates(); this.scheduleSave();
+  }
   /** the pins and tee markers as text (an Edit Hole Layout step's undo and redo carry them) */
   private markersKey(): string { const g = this.golf; return JSON.stringify(g ? [g.pins, g.tees] : [[], []]); }
   /** the pins and tee markers back as markersKey had them, their props with them */
@@ -1046,6 +1054,9 @@ export class Game {
     this.toast(`Hole ${n}: the ${TEE_SET[kind].colour} tee laid${r.cost ? ` for $${r.cost.toLocaleString()}` : ''} (${TEE_SET[kind].who})`, 'good');
     return true;
   }
+  /** "Add tee"'s price: a 14 x 8 m tee box of tee turf at the brush's planting (Seed or Sod), the cells it lays (about; the real price counts the
+   *  cells that change) */
+  teeBoxPrice(): number { return Math.round(((BOX_LEN_M - BOX_WID_M) * BOX_WID_M + Math.PI * (BOX_WID_M / 2) ** 2) * unitBuildCost('tee', this.paint.plantKind)); }
   /** each tee set's markers on the map (T254: a pair of small balls in the set's colour, drawn in code: the tee marker picture is still to come),
    *  across the line of play at each set's spot, lit from the upper right, their shadows to the lower left; from the street tier in */
   private drawTeeMarkers(ctx: CanvasRenderingContext2D) {
@@ -5790,7 +5801,7 @@ export class Game {
       curbs: this.parking.curbs.map((c): [number, number, number, number] => [c.ax, c.ay, c.bx, c.by]),
       parkFee: this.parking.fee,
       speed: this.net.speedTier,
-      golf: this.golf ? { ...this.golf, height: this.courseHeightChunks(), grid: this.gridSave(), plans: this.golf.plans?.length ? this.golf.plans : undefined, play: this.golf.play && this.traffic.round.stage !== 'free' ? this.golf.play : undefined, everyday: this.dayBook?.save ?? this.golf.everyday } : undefined,
+      golf: this.golf ? { ...this.golf, teeSets: 1 as const, height: this.courseHeightChunks(), grid: this.gridSave(), plans: this.golf.plans?.length ? this.golf.plans : undefined, play: this.golf.play && this.traffic.round.stage !== 'free' ? this.golf.play : undefined, everyday: this.dayBook?.save ?? this.golf.everyday } : undefined,
     };
     try { return await writeSave(withTourney(d, tourney)); } catch { return 0; }
   }
@@ -6490,7 +6501,7 @@ export class Game {
     const seed = Math.floor(hash(this.seed, key) * 4294967296), { plan, golfers, own } = dayRound(view, g.tier, seed, owner);
     const art = golfers.map(p => p.owner ? ownerArt(p.sex) : GOLFER_ART[p.sex][p.look % GOLFER_ART[p.sex].length]!);
     const pl: GolfPlay = { plan, view, pv: new PlayView(plan, view, { paths: this.cartPathsNow(), home: g.clubhouse }), key, art, finish: new DayFinish(), own: null, waves: -1 };
-    if (owner && own) pl.own = { id: own.id, sex: owner.owner, skill: OWNER_SKILL, tee: own.tee, live: own.live, turn: own.turn, caddie: owner.caddie };
+    if (owner && own) pl.own = { id: own.id, sex: owner.owner, skill: OWNER_SKILL, tee: own.tee, live: own.live, turn: own.turn, caddie: owner.caddie, ...(owner.tees ? { tees: owner.tees } : {}) };
     return pl;
   }
   /** the played course (docs/GOLF-PLAY.md P2a): the derived holes with a line, the lie from the course grid's surface where it is painted, else the painted
@@ -6520,9 +6531,9 @@ export class Game {
   }
   /** joins the tournament as the owner (P4b): the play is rebuilt with his golfer in the first group (the same seed and key; his first turn is due) and
    *  the save records him. `sex` picks his look: golf_am_m3 for 'm', golf_am_w1 for 'w' */
-  joinTournament(sex: Sex) {
+  joinTournament(sex: Sex, tees: TeeKind = 'middle') {
     const pl = this.play; if (!pl || !this.canJoinTournament()) return;
-    const built = this.buildPlay(pl.key, { key: pl.key, owner: sex, inputs: [], caddie: null });
+    const built = this.buildPlay(pl.key, { key: pl.key, owner: sex, inputs: [], caddie: null, tees }); // T254: from the tee set he chose
     if (!built) return;
     this.play = built; this.saveOwner(); this.emit();
   }
@@ -6582,7 +6593,7 @@ export class Game {
   /** writes the owner's play to the save (GolfSave.play): his tournament key, sex, the inputs he has played and his caddie count */
   private saveOwner() {
     const pl = this.play, o = pl?.own; if (!pl || !o || !this.golf) return;
-    this.golf.play = { key: pl.key, owner: o.sex, inputs: o.live.inputs.slice(), caddie: o.caddie };
+    this.golf.play = { key: pl.key, owner: o.sex, inputs: o.live.inputs.slice(), caddie: o.caddie, ...(o.tees ? { tees: o.tees } : {}) };
     this.scheduleSave();
   }
   /** toasts the owner's score once his group is done ("You shot 82 (+10)") */

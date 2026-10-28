@@ -1,7 +1,7 @@
 // Golf mode (G1; docs/GOLF-PLAN.md sections 2-3 and 11): what a golf game saves and what the HUD reads. A save with a `golf` field is a golf
 // game; a save without one is a legacy (classic) game and loads as before. Pure TS, no DOM.
 import type { Pt } from '../network';
-import type { AimPoint, Pin, TeeMark } from './types';
+import type { AimPoint, Pin, TeeKind, TeeMark } from './types';
 import type { PlacedEventStructure } from './eventtool';
 import type { CourseHeightSaveChunk } from '../ext/course-height';
 import type { GolfProgress } from '../ext/progressive-ui';
@@ -11,6 +11,7 @@ import { normalizeRangeBiz, type RangeBizSave } from './rangesave';
 import { normalizeDaySave, type DaySave } from './everyday';
 import { normalizeBook, type LookBook } from './looks';
 import { normalizeMyHoles, type MyHole } from './myholes';
+import { isTeeKind, migrateTees } from './teesets';
 
 /** a rectangle in tiles: top-left x, y and the size w, h */
 export type Rect = [number, number, number, number];
@@ -41,6 +42,9 @@ export interface GolfSave {
  /** T256 (#743): the looks book (golf/looks.ts): each hole's, the property's and each practice facility's looks by owner key. Missing in older
   *  saves: every hole and the property take the course default (today's course-wide looks) as their own on load, so nothing changes */
  looks?: LookBook;
+ /** T254 (#736): 1 once the tee markers are the four tee sets (blue, white, yellow, red). Missing: an older save, whose back, middle and forward
+  *  stand as the blue, white and red and whose holes with a single tee marker become the white set on load (golf/teesets.ts migrateTees) */
+ teeSets?: 1;
  /** T256: the player's saved holes ("My holes", golf/myholes.ts), kept with the game (and in the browser, across games) */
  myHoles?: MyHole[];
  /** the hole plans, one save tuple per hole (plan P21 3.7: hole, tee, green, green shape and m², turn, bends, width handles, fairway start,
@@ -72,13 +76,13 @@ export interface GolfSave {
 /** the owner's play as saved (GolfSave.play): the tournament's key (the round's count), his sex, the inputs he played in order, and how many of them
  *  he had played when he handed the rest to the caddie (null while he still plays). A replay of the inputs (then the caddie) gives the same round.
  *  Written when he joins, hits or caddies; dropped when the round is free */
-export interface GolfPlaySave { key: number; owner: 'm' | 'w'; inputs: OwnerInput[]; caddie: number | null }
+export interface GolfPlaySave { key: number; owner: 'm' | 'w'; inputs: OwnerInput[]; caddie: number | null; /** T254: the tee set he chose (absent: the white) */ tees?: TeeKind }
 
 /** a saved owner's play, or null when it is not well formed (no key, sex or inputs list); a missing caddie count is null */
 function normalizePlaySave(p: Partial<GolfPlaySave> | null | undefined): GolfPlaySave | null {
-  const key = p?.key, owner = p?.owner, inputs = p?.inputs, caddie = p?.caddie;
+  const key = p?.key, owner = p?.owner, inputs = p?.inputs, caddie = p?.caddie, tees = p?.tees;
   if (typeof key !== 'number' || !Number.isFinite(key) || (owner !== 'm' && owner !== 'w') || !Array.isArray(inputs)) return null;
-  return { key, owner, inputs, caddie: typeof caddie === 'number' && Number.isFinite(caddie) ? caddie : null };
+  return { key, owner, inputs, caddie: typeof caddie === 'number' && Number.isFinite(caddie) ? caddie : null, ...(isTeeKind(tees) ? { tees } : {}) };
 }
 
 /** a golf game's start money, $ (City.setBudget's golf treasury) */
@@ -93,7 +97,7 @@ export function normalizeGolfSave(g: Partial<GolfSave> | null | undefined): Golf
   if (!g || !g.town || !g.course || !g.clubhouse) return null;
   const parcel: Rect = g.parcel ?? g.parcels?.[0] ?? g.course;
   // the range start's fields (plan P22 2.6) are taken out and put back only when well formed, so an old start's save normalizes as before
-  const { start, exits, townBoost, invited, founding, play, range, everyday, ponds, practiceLot, looks, myHoles, ...rest } = g;
+  const { start, exits, townBoost, invited, founding, play, range, everyday, ponds, practiceLot, looks, myHoles, teeSets, ...rest } = g;
   const out: GolfSave = {
     ...rest,
     v: 1,
@@ -103,7 +107,9 @@ export function normalizeGolfSave(g: Partial<GolfSave> | null | undefined): Golf
     course: g.course,
     parcel,
     dir: g.dir ?? 0,
-    tees: g.tees ?? [],
+    // T254: an older save's tee markers become the tee sets (nothing moves); a save that has the sets keeps its well-formed markers
+    tees: teeSets === 1 ? (g.tees ?? []).filter(t => t && isTeeKind(t.kind) && Number.isFinite(t.x) && Number.isFinite(t.y)) : migrateTees(g.tees ?? []),
+    teeSets: 1,
     pins: g.pins ?? [],
     aims: g.aims ?? [],
     clubhouse: g.clubhouse,
