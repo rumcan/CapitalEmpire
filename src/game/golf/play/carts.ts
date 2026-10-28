@@ -24,6 +24,8 @@ export const DETOUR = 2.5, DETOUR_TILES = 60;
 const EDGE_MAX = 40, EDGE_STEP = 1.5, EDGE_PAD = 1.5, GREEN_PAD = 2.5;
 /** a drive off the paths is checked every SAMPLE tiles for the played surfaces it must go around */
 const SAMPLE = 6;
+/** a drive's point on a fairway moves to the rough's edge when it is within this many tiles across the way (else the drive crosses the fairway) */
+const FAIRWAY_PUSH = 14;
 /** the drive's minutes are its straight line times this (the routes wind a little) */
 const WIND = 1.3;
 /** a drive's route is worked out once its box (padded this many tiles) is near the screen */
@@ -117,15 +119,18 @@ export function edgeOf(view: CourseView, p: Pt, ux: number, uy: number, pad = ED
   return null;
 }
 
-/** the route off the paths from a to b: the straight line, each SAMPLE-tile point of it on a played surface (a fairway, green, tee or bunker, or water)
- *  moved across the way to the rough's edge */
+/** the route off the paths from a to b: the straight line, each SAMPLE-tile point of it on a played surface moved across the way to the rough's edge: a
+ *  green, a tee, a bunker or water always; a fairway when its edge is within FAIRWAY_PUSH (a drive along a fairway keeps to the rough beside it; one
+ *  across it crosses) */
 export function edgeRoute(view: CourseView, a: Pt, b: Pt): Pt[] {
   const dx = b.x - a.x, dy = b.y - a.y, L = Math.hypot(dx, dy), out: Pt[] = [a];
   if (L > 0) {
     const ux = dx / L, uy = dy / L, k = Math.floor(L / SAMPLE);
     for (let i = 1; i < k; i++) {
-      const q = { x: a.x + ux * SAMPLE * i, y: a.y + uy * SAMPLE * i };
-      out.push(cartLie(view.lieAt(q.x, q.y)) ? q : edgeOf(view, q, -uy, ux) ?? q);
+      const q = { x: a.x + ux * SAMPLE * i, y: a.y + uy * SAMPLE * i }, l = view.lieAt(q.x, q.y);
+      if (cartLie(l)) { out.push(q); continue; }
+      const e = edgeOf(view, q, -uy, ux);
+      out.push(e && (l !== 'fairway' || Math.hypot(e.x - q.x, e.y - q.y) <= FAIRWAY_PUSH) ? e : q);
     }
   }
   out.push(b);
