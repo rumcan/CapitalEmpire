@@ -138,17 +138,22 @@ export const PRACTICE_WHY = {
   near: `Too close to another practice green: keep ${GAP_M} m apart`,
   built: { putting: 'Your putting green is built: bulldoze it to build another', chipping: 'Your chipping green is built: bulldoze it to build another' } as Readonly<Record<PracticeId, string>>,
   none: 'No practice area: the driving range has one beside its car park',
+  /** T239: a guided start's practice area is land to buy first */
+  forSale: 'The practice area is for sale: buy it in Land for sale first',
 } as const;
 export type RefusalKind = 'outside' | 'land' | 'near' | 'built' | '';
 
 /** what a spot check needs: the practice area's box (tiles x0 y0 x1 y1), whether a tile is the player's, and whether that facility is open now */
-export interface SpotCtx { box: readonly [number, number, number, number]; owned?: (x: number, y: number) => boolean; open?: boolean }
+export interface SpotCtx { box: readonly [number, number, number, number]; owned?: (x: number, y: number) => boolean; open?: boolean;
+  /** T239: the practice area is still for sale (not the player's yet): every spot in it is refused with PRACTICE_WHY.forSale */
+  forSale?: boolean }
 /** why plan p cannot be built on grid g ('' when it can), and the kind: the green (with its fringe) and the rest inside the area, on your land,
  *  GAP_M clear of every green, bunker and tee already in the area, and the facility not open already */
 export function planWhy(g: Grid, p: FacilityPlan, c: PlanCells, s: SpotCtx): { why: string; kind: RefusalKind } {
   const [x0, y0, x1, y1] = s.box, inset = FRINGE_M * CELL_T;
   const inside = (pts: number[] | null, d: number) => { if (!pts) return true; for (let i = 0; i + 1 < pts.length; i += 2) { const x = pts[i]!, y = pts[i + 1]!; if (x < x0 + d || x > x1 - d || y < y0 + d || y > y1 - d) return false; } return true; };
   if (!inside(p.green, inset) || !inside(p.bunker, 0) || !inside(p.spot, 0)) return { why: PRACTICE_WHY.outside, kind: 'outside' };
+  if (s.forSale) return { why: PRACTICE_WHY.forSale, kind: 'land' };
   if (s.owned) for (const k of ['green', 'bunker', 'tee'] as const) for (const i of c[k]) { const q = cellCentre(g, i); if (!s.owned(q.x, q.y)) return { why: PRACTICE_WHY.land, kind: 'land' }; }
   if (s.open) return { why: PRACTICE_WHY.built[p.kind], kind: 'built' };
   // anything built in the area within GAP_M of the plan's outlines

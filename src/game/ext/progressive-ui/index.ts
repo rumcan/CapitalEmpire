@@ -57,6 +57,8 @@ export interface PlayerProgressFacts {
   /** a range start's practice facilities (plan P24 Phase 2, T130: golf/practice.ts PracticeState); missing outside range starts. Their hints
    *  teach the brush before the first hole, and the Green and Bunker brushes are open from stage 1 to paint them */
   practice?: { putting: 'none' | 'small' | 'nobunker' | 'open'; chipping: 'none' | 'small' | 'nobunker' | 'open' };
+  /** T239: a guided range start's practice area is still land for sale (its hint says buy it first); missing = no */
+  practiceForSale?: boolean;
   /** a range start's ramp from the range to the first hole (plan P24 Phase 4a, T132); missing outside range starts */
   ramp?: RampFacts;
   /** the town's streets are jammed (T178): at least JAM_ZONES zones with built lots are over the decline line (the engine's access, the
@@ -224,6 +226,17 @@ export const PRACTICE_HINTS: readonly FirstRunHint[] = [
   },
 ];
 
+/** T239: the putting green's hint while the practice area is still land for sale (a guided range start): buy it first (Show me opens Land for
+ *  sale on it) */
+export const PRACTICE_BUY_HINT: FirstRunHint = Object.freeze({
+  id: 'hint-practice-buy',
+  stage: 1,
+  title: 'Buy the practice area',
+  body: 'The land beside the car park is for sale: Course ▸ Land for sale, click it and Buy. Then build a putting green on it (Facilities ▸ Practice).',
+  targetTool: 'land',
+  show: true,
+});
+
 /** the stuck player's hint (P23 4.2: no hole after one season or 20 minutes of play): New hole again, even when Step 1 was dismissed */
 export const STUCK_HINT: FirstRunHint = Object.freeze({
   id: 'hint-stuck-new-hole',
@@ -269,7 +282,7 @@ export const RAMP_WHY: Readonly<Record<RampStep, string>> = Object.freeze({
 });
 /** the toast as each ramp step opens */
 export const RAMP_TOAST: Readonly<Partial<Record<RampStep, string>>> = Object.freeze({
-  1: 'The Practice area is open: build a putting green beside the car park (Facilities ▸ Practice)',
+  1: 'The Practice area opens: buy the land beside the car park (Course ▸ Land for sale), then build a putting green on it (Facilities ▸ Practice)',
   2: 'Props are open (Z): dress the range to draw more golfers',
   3: 'New hole is open: build your first hole, a par-3',
 });
@@ -313,7 +326,7 @@ export const RANGE_HINTS: Readonly<Record<'open' | 'upgrade' | 'props' | 'wait' 
 const dollars = (n: number) => '$' + Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 /** the ramp's hint for the facts until the first hole (null: none left, or every one dismissed) */
 function rampHint(f: PlayerProgressFacts, dismissed: ReadonlySet<string>): FirstRunHint | null {
-  const s = rampStep(f)!, r = f.ramp!, H = RANGE_HINTS, [pp, pc] = PRACTICE_HINTS, pr = f.practice;
+  const s = rampStep(f)!, r = f.ramp!, H = RANGE_HINTS, [pc] = PRACTICE_HINTS.slice(1), pr = f.practice, pp = f.practiceForSale ? PRACTICE_BUY_HINT : PRACTICE_HINTS[0]!;
   const pick = (...hs: (FirstRunHint | false | undefined)[]) => hs.find((h): h is FirstRunHint => !!h && !dismissed.has(h.id)) ?? null;
   const chip = pr?.putting === 'open' && pr.chipping !== 'open' && pc;
   if (s === 0) return pick(!r.cardSeen && H.open, H.upgrade);
@@ -398,7 +411,8 @@ export function computeProgressiveUiState(f: PlayerProgressFacts): ProgressiveUi
     lockedTools,
     newGroups: visibleGroups.filter(id => !adv && (GROUP_STAGE[id] ?? 1) > 1 && !seen.has(id)),
     newTools: visibleTools.filter(id => isNew(id, TOOL_STAGE[id])),
-    visibleGolfChips: openAt(CHIP_STAGE, stage, adv),
+    // T239: a range start's Land for sale opens with the practice area (ramp step 1): the guided start buys its practice area there
+    visibleGolfChips: ramp !== null && ramp >= 1 && !openAt(CHIP_STAGE, stage, adv).includes('land') ? [...openAt(CHIP_STAGE, stage, adv), 'land'] : openAt(CHIP_STAGE, stage, adv),
     // a range start paints its practice greens and bunker by hand from stage 1 (T130)
     visibleCourseBrushes: f.practice ? [...new Set<CourseBrushId>([...openAt(BRUSH_STAGE, stage, adv), 'green', 'bunker'])] : openAt(BRUSH_STAGE, stage, adv),
     shapeByHand: adv || stage >= 2 || !!f.practice,
