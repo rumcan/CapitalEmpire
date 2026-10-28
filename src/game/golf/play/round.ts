@@ -342,7 +342,7 @@ export function appendShots(plan: RoundPlan, shots: Shot[]): void {
  *  the shot before), whether it is the golfer's last on its hole, the flight's length, and on the last shot of a hole the step-off (off) */
 interface Row { s: Shot; hole: number; last: boolean; dur: number; ws: number; we: number; wf: Pt; wt: Pt; off: Off | null }
 /** a golfer's tee time and his shots' rows in order */
-interface Track { tee: number; g: number; slot: number; rows: Row[] }
+interface Track { tee: number; g: number; slot: number; rows: Row[]; /** T254: his tee set (his place behind the tee is behind his own set's) */ set?: TeeKind }
 /** the playback index of a plan, built once per plan and view */
 interface Cache { view: CourseView; tracks: Track[] }
 const cache = new WeakMap<RoundPlan, Cache>();
@@ -371,6 +371,7 @@ function build(plan: RoundPlan, view: CourseView): Cache {
   const holes = view.holes, size = plan.strokes.length, slot: number[] = [], tracks: Track[] = [];
   plan.groups.forEach((gr, g) => { gr.players.forEach((id, k) => { slot[id] = k; tracks[id] = { tee: gr.tee, g, slot: k, rows: [] }; }); });
   for (let id = 0; id < size; id++) if (!tracks[id]) tracks[id] = { tee: 0, g: -1, slot: 0, rows: [] };
+  for (const g of plan.golfers) if (g.tees && tracks[g.id]) tracks[g.id]!.set = g.tees; // T254
   // (T213: a cart's golfer moves between shots at CART_PACE of the walk, as the round timed him)
   const rides = new Uint8Array(size); for (const g of plan.golfers) if (g.cart !== undefined && !g.owner) rides[g.id] = 1;
   for (const s of plan.shots) {
@@ -386,7 +387,7 @@ function build(plan: RoundPlan, view: CourseView): Cache {
     r.off = offOf(r.s.holed ? r.s.to : r.s.from, holes[r.hole]!.pin, toward, slot[r.s.golfer]!, r.s.t + r.dur); // the cup, else where he stood (a pick-up)
     const nx = tr.rows[i + 1];
     // (to his place behind the tee, where he waits: teeSpot; he steps up to the tee for his shot)
-    if (nx) { nx.wt = teeSpot(holes[nx.hole]!, tr.slot); const w = teeWalk(r.off, nx.wt, arriveOf(plan, tr.g, nx.hole, nx.s.t), nx.s.t - STEP_IN - ADDRESS_TIME); nx.wf = r.off.at; nx.ws = w.ws; nx.we = w.we; }
+    if (nx) { nx.wt = teeSpot(holeFrom(holes[nx.hole]!, tr.set), tr.slot); const w = teeWalk(r.off, nx.wt, arriveOf(plan, tr.g, nx.hole, nx.s.t), nx.s.t - STEP_IN - ADDRESS_TIME); nx.wf = r.off.at; nx.ws = w.ws; nx.we = w.we; }
   });
   return { view, tracks };
 }
@@ -419,7 +420,7 @@ function walkAt(wf: Pt, wt: Pt, ws: number, we: number, m: number, out: GolferSt
  *  stands where he is: waiting at his tee (walked there with his group once it has finished the hole before, T211), or holed out at his step-off */
 function stateOf(plan: RoundPlan, c: Cache, id: number, m: number, out: GolferState): GolferState {
   const view = c.view, holes = view.holes, N = holes.length, tr = c.tracks[id]!, rows = tr.rows;
-  const home = N ? holes[0]!.tee : { x: 0, y: 0 }, end = N ? holes[N - 1]!.pin : home, fl = out.flight;
+  const home = N ? holeFrom(holes[0]!, tr.set).tee : { x: 0, y: 0 }, end = N ? holes[N - 1]!.pin : home, fl = out.flight;
   out.golfer = id; out.hole = 0; out.x = home.x; out.y = home.y; out.action = 'waiting'; out.ball = null; out.flight = null;
   out.strokes = 0; out.toPar = 0; out.thru = 0;
   if (m < tr.tee) return out;
@@ -455,7 +456,7 @@ function stateOf(plan: RoundPlan, c: Cache, id: number, m: number, out: GolferSt
         // his group and waits on the tee, as the row of his tee shot will have it
         const h = rows[cur]!.hole, A = h + 1 < N ? arriveOf(plan, tr.g, h + 1, Infinity) : Infinity;
         if (Number.isFinite(A)) {
-          const tee = teeSpot(holes[h + 1]!, tr.slot), w = teeWalk(off, tee, A, Infinity);
+          const tee = teeSpot(holeFrom(holes[h + 1]!, tr.set), tr.slot), w = teeWalk(off, tee, A, Infinity);
           if (m >= w.ws) { out.hole = h + 1; if (m < w.we) { walkAt(off.at, tee, w.ws, w.we, m, out); out.action = 'walk'; } else { out.x = tee.x; out.y = tee.y; out.action = 'waiting'; } return out; }
         }
         out.hole = h; out.action = 'holed'; out.x = off.at.x; out.y = off.at.y; return out;
