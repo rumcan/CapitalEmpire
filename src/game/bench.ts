@@ -119,7 +119,7 @@ function tileTotals(g: Game): TileCacheStats {
 }
 /** T272: one stage's bakes (from bake b0 on: their ms, their wait for decodes, their ms scaling tiles, median and p95) and what the tile caches
  *  did meanwhile (against the counts at its start, s0): decodes, redecodes and drops in all and by family, the caches' MB now and at most */
-function tileStage(g: Game, b0: number, s0: TileCacheStats): Record<string, unknown> {
+function tileStage(g: Game, b0: number, s0: TileCacheStats, sumPeak = 0): Record<string, unknown> {
   const n = Math.min(g.ground.baked - b0, g.ground.bakeLog.length), ms: number[] = [], prep: number[] = [], scale: number[] = [], work: number[] = [];
   for (let k = g.ground.baked - n; k < g.ground.baked; k++) { const i = k % g.ground.bakeLog.length, a = g.ground.bakeLog[i]!, b = g.ground.prepLog[i] ?? 0; ms.push(a); prep.push(b); scale.push(g.ground.scaleLog[i] ?? 0); work.push(a + b); }
   const q = (a: number[], p: number) => { const s = [...a].sort((x, y) => x - y); return +(s[Math.min(s.length - 1, Math.floor(p * s.length))] ?? 0).toFixed(2); };
@@ -132,6 +132,8 @@ function tileStage(g: Game, b0: number, s0: TileCacheStats): Record<string, unkn
     decodes: sum(dec), redecodes: sum(re), drops: sum(dr), sourceDrops: (s1.sourceDrops ?? 0) - (s0.sourceDrops ?? 0), scales: s1.scales - s0.scales, scaleMs: +(s1.scaleMs - s0.scaleMs).toFixed(1),
     paintedDecodes: s1.painted.decodes - s0.painted.decodes, paintedRedecodes: s1.painted.redecodes - s0.painted.redecodes,
     drawnPictures: s1.drawn, drawnMB: +(s1.drawnBytes / 1048576).toFixed(1), neededPictures: s1.needed ?? 0, neededMB: +((s1.neededBytes ?? 0) / 1048576).toFixed(1), tileCacheMB: +(s1.bytes / 1048576).toFixed(1), tileCachePeakMB: +(s1.peakBytes / 1048576).toFixed(1), groundCacheMB: Math.round(g.ground.residentPx * 4 / 1048576),
+    // (the chunk pictures and the tile caches together, now and at most over the stage's frames, in MB of 1e6 bytes as GAME-PLAN 2.3's 192)
+    groundPlusTilesMB: Math.round((g.ground.residentPx * 4 + s1.bytes) / 1e6), groundPlusTilesPeakMB: Math.round(Math.max(sumPeak, g.ground.residentPx * 4 + s1.bytes) / 1e6),
     byFamily,
   };
 }
@@ -203,7 +205,7 @@ function startTour(g: Game, info: Record<string, unknown>, stages: Stage[] = STA
   /** T265: the most ms a frame's tree planting took this stage (perf.plantMs, the hitch check), the frames that planted, the distance along the river */
   let plantMax = 0, plantFrames = 0, along = 0; const bake0 = g.ground.baked;
   /** T272: the stage's first bake and the tile caches' counts at its start (tileStage) */
-  let sb0 = g.ground.baked, ss0 = tileTotals(g); g.ground.setTileStats(true);
+  let sb0 = g.ground.baked, ss0 = tileTotals(g), sumPeak = 0; g.ground.setTileStats(true);
   /** the sim worker's tick time: the max per stage, and the average and max over the whole tour */
   let stageSim = 0, simSum = 0, simN = 0, simMax = 0;
   const startX = g.cam.X, startY = g.cam.Y;
@@ -219,13 +221,13 @@ function startTour(g: Game, info: Record<string, unknown>, stages: Stage[] = STA
     else { g.cam.X += st.vx * dt * dir; g.cam.Y += st.vy * dt * dir; }
     const pm = (g.perf as { plantMs?: number }).plantMs ?? 0; if (t > 1 && pm > 0) { plantMax = Math.max(plantMax, pm); plantFrames++; }
     if (st.z < PLANNER_Z / 3) { g.cam.X = 0; g.cam.Y = MAP * 32; }
-    up = Math.max(up, g.ground.uploadsThisSecond);
+    up = Math.max(up, g.ground.uploadsThisSecond); sumPeak = Math.max(sumPeak, g.ground.residentPx * 4 + tileTotals(g).bytes);
     if (t > 1) { frames.push(g.perf.frameMs); cpu.push(g.perf.cpuMs); inst = Math.max(inst, g.perf.instances); draws = Math.max(draws, g.perf.draws); upload = Math.max(upload, g.perf.uploadKB); }
     if (t >= st.secs) {
       const sorted = [...cpu].sort((a, b) => a - b), q = (p: number) => sorted[Math.min(sorted.length - 1, Math.floor(p * sorted.length))] ?? 0;
       const fAvg = frames.reduce((a, b) => a + b, 0) / Math.max(1, frames.length);
-      results.push({ stage: st.name, fps: +(1000 / fAvg).toFixed(1), cpuAvgMs: +(cpu.reduce((a, b) => a + b, 0) / Math.max(1, cpu.length)).toFixed(2), cpuP95Ms: +q(0.95).toFixed(2), maxInstances: inst, maxDraws: draws, maxUploadKB: Math.round(upload), chunkUploadsPerSec: up, uploadMsPerSec: +g.ground.uploadMsPerSecond.toFixed(1), simTickMsMax: +stageSim.toFixed(2), cars: g.perf.simActive, ...(follow ? { plantMsMax: +plantMax.toFixed(2), plantFrames } : {}), tiles: tileStage(g, sb0, ss0) });
-      sb0 = g.ground.baked; ss0 = tileTotals(g); g.ground.setTileStats(true); // (the next stage's working set counted afresh)
+      results.push({ stage: st.name, fps: +(1000 / fAvg).toFixed(1), cpuAvgMs: +(cpu.reduce((a, b) => a + b, 0) / Math.max(1, cpu.length)).toFixed(2), cpuP95Ms: +q(0.95).toFixed(2), maxInstances: inst, maxDraws: draws, maxUploadKB: Math.round(upload), chunkUploadsPerSec: up, uploadMsPerSec: +g.ground.uploadMsPerSecond.toFixed(1), simTickMsMax: +stageSim.toFixed(2), cars: g.perf.simActive, ...(follow ? { plantMsMax: +plantMax.toFixed(2), plantFrames } : {}), tiles: tileStage(g, sb0, ss0, sumPeak) });
+      sb0 = g.ground.baked; ss0 = tileTotals(g); sumPeak = 0; g.ground.setTileStats(true); // (the next stage's working set counted afresh)
       s++; t = 0; frames = []; cpu = []; inst = draws = upload = up = 0; stageSim = 0; g.cam.X = startX; g.cam.Y = startY; plantMax = 0; plantFrames = 0; along = 0;
       if (s >= stages.length) {
         g.onFrame = null;
