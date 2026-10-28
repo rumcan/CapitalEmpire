@@ -4,7 +4,7 @@ import { SURF } from '../../game/ext/course-grid';
 import { affordKind, statusIcon } from '../status-icon';
 import { SURF_SURFACE } from '../../game/ext/course-grid/areas';
 import { aboutMoney, planShape, type WizCheck } from '../../game/ext/hole-wizard';
-import { EARTHWORK_PER_M3, growInMonths } from '../../game/golf/costs';
+import { SHAPE_RATE_M3, growInMonths } from '../../game/golf/costs';
 import { FRAME_TREE_PRICE } from '../../game/golf/holeframe';
 import { SURFACE_BRUSHES, type BrushKind } from '../../game/paint';
 import { BrushShape, GroundHeight, LooksEntry, SurfaceSwatches, surfaceKeysOf } from './BrushControls';
@@ -236,7 +236,8 @@ function Frame({ game, cost }: { game: Game; cost: number }) {
 
 /** T263 (#771): Shape the ground, on by default, beside Frame with trees: Build shapes the new hole's ground too (ext/hole-ground: gentle rolls
  *  along the fairway, low mounds and a swale in the rough, the green tilted up from front to back, the tee level), priced as earthworks (the
- *  earth moved, m³, at the Ground height brush's rate) in the same undo step. Off: the hole is laid on the ground as it is */
+ *  earth moved, m³, at SHAPE_RATE_M3: shaped while the hole is built, a third of the brush's rate) in the same undo step. Off: the hole is
+ *  laid on the ground as it is */
 function Ground({ game, cost }: { game: Game; cost: number }) {
   const p = game.paint, on = p.shapeGround, e = on ? p.groundCost() : null, short = !!e && e.cost > 0 && game.money < cost + e.cost;
   return (
@@ -246,7 +247,7 @@ function Ground({ game, cost }: { game: Game; cost: number }) {
         <button className={`chip ${on ? 'chip-on' : ''}`} aria-pressed={on} data-testid="wiz-ground-toggle" title="Gentle rolls along the fairway, low mounds and a swale in the rough, the green tilted up from front to back; the tee stays level, and roads, paths and other holes are left as they are" onClick={() => p.setShapeGround(!on)}>{on ? '✓ Shape the ground' : 'Shape the ground'}</button>
         <span className="tabular-nums text-[13px] font-semibold" data-testid="wiz-ground-price">{!on ? 'Off' : e ? `${Math.round(e.m3).toLocaleString()} m³ · ${money(e.cost)}` : 'Nothing to shape here'}</span>
       </div>
-      <p className="sub-line mt-1">{on ? `Rolls along the fairway, mounds round it and the green, the green tilted front to back. Earthworks ${money(EARTHWORK_PER_M3)} a m³; Undo takes them back with the grass.` : 'Build lays the hole on the ground as it is: shape it later with Edit hole\'s Ground height.'}</p>
+      <p className="sub-line mt-1">{on ? `Rolls along the fairway, mounds round it and the green, the green tilted front to back. Shaped while it is built: ${money(SHAPE_RATE_M3)} a m³; Undo takes them back with the grass.` : 'Build lays the hole on the ground as it is: shape it later with Edit hole\'s Ground height.'}</p>
       {short && <p className="mt-1 text-[12px] text-amber-300"><span aria-hidden>! </span>Not enough money for the earthworks too: Build lays the hole on the ground as it is.</p>}
     </section>
   );

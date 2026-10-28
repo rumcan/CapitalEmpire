@@ -29,6 +29,9 @@ export const SURFACE_COST: Record<GolfSurface, SurfaceCost> = {
 
 /** earthworks: $ per m³ of earth moved by the height brush or a piece's height ops (golf mode only) */
 export const EARTHWORK_PER_M3 = 15;
+/** T263: $ per m³ of New hole's Shape the ground (and a saved hole's ground placed again): shaped while the hole is built, the machines already
+ *  on site, so a third of the brush's rework rate */
+export const SHAPE_RATE_M3 = 5;
 
 /** reverse lookup from SURFACE_TEX PaintTex ids to their GolfSurface */
 export const TEX_SURFACE: Partial<Record<PaintTex, GolfSurface>> = Object.fromEntries([
