@@ -1,10 +1,10 @@
 {
  "v": 1,
  "surfaces": {
-  "green": { "family": "putting-green-run", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
-  "fringe": { "family": "fringe", "version": null, "scale": 1, "tint": "#ffedfa", "tone": 0.04 },
-  "fairway": { "family": "fringe", "version": null, "scale": 1, "tint": "#ffedfa", "tone": 0.04 },
-  "firstCut": { "family": "first-cut-run", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
+  "green": { "family": "green-concept-run", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
+  "fringe": { "family": "first-cut-concept-run", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
+  "fairway": { "family": "fairway-concept-run", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
+  "firstCut": { "family": "first-cut-concept-run", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "tee": { "family": "tee-run", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "sod": { "family": "emerald-short", "version": "v1", "scale": 0.75, "tint": "#ffffff", "tone": 0 },
   "rough": { "family": "rough-owner", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
@@ -41,8 +41,8 @@
  "presets": {
   "lawns": { "family": "lawn-concept-run", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "path-worn": { "family": "underground-earth", "version": "v2", "scale": 0.5, "tint": "#b0b4e8", "tone": 0 },
-  "range-outfield": { "family": "fringe", "version": null, "scale": 1, "tint": "#ffedfa", "tone": 0.06 },
-  "range-green": { "family": "putting-green-run", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
+  "range-outfield": { "family": "fairway-concept-run", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
+  "range-green": { "family": "green-concept-run", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "range-outfield-desert": { "family": "desert-run", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "range-tee": { "family": "dirt-run", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "range-tee-turf": { "family": "range-tee-divots-run", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
