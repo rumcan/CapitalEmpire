@@ -5,13 +5,16 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { LIBRARY, ATLAS_PAGES } from '../src/game/library';
-import { compose, type LotGeom, type Placed } from '../src/game/lots/compose';
+import { SITE_HEAPS, compose, type LotGeom, type Placed } from '../src/game/lots/compose';
 import { OWNER_SCALE, REMOVED_IDS } from '../src/game/lots/scales';
 import { LU, LV } from '../src/game/lots/town';
 import { VIEW_ART } from '../src/game/views-library';
 
 const MATERIALS = ['timber-stack', 'brick-pallet', 'block-pallet', 'roof-tile-pallet', 'gravel-pile', 'sand-pile', 'cement-bag-pallet', 'tile-crate', 'pipe-bundle', 'steel-beams', 'rebar-bundle', 'pallet-stack', 'stone-pallet', 'mortar-tools', 'lumber-stack', 'mesh-rolls'].map(id => `construction:${id}`);
 const IDS = [...MATERIALS, 'construction:digger'], removed = new Set<string>(REMOVED_IDS);
+/** T232 (#682): the site kit's heaps of gravel and sand (SITE_HEAPS) took the supplied gravel and sand piles' place on the sites (new art used
+ *  everywhere); those piles stay in the library (the page test above) */
+const HEAPED = new Set(['construction:gravel-pile', 'construction:sand-pile']);
 const byId = new Map(LIBRARY.map(i => [i.id, i]));
 const FRAMES = [
   { u: { x: 1, y: 0 }, n: { x: 0, y: -1 } },
@@ -85,14 +88,16 @@ test('seeded building sites use the digger and every supplied material on both s
       const digger = c.props.find(p => p.id === 'construction:digger');
       if (!removed.has('construction:digger')) {
         assert.ok(digger, `seed ${seed}: no digger`);
-        assert.equal(digger.flip, Math.abs(lot.n.y) > Math.abs(lot.n.x), 'digger source faces +X; mirrored art faces +Y');
+        // T232 (#682): the digger is drawn as painted on every street axis, never mirrored (the owner's rule: nothing is mirrored)
+        assert.equal(digger.flip, false, 'the digger is never mirrored');
         const ratio = digger.scale / (OWNER_SCALE[digger.id] ?? 1);
         assert.ok(ratio >= 0.95 && ratio <= 1.05, 'digger respects studio scale and seeded size variation');
       }
       assert.ok(!c.props.some(p => p.id.includes('junkyard-crane')), 'the supplied digger replaces the scrapyard crane');
       assert.deepEqual(c, compose(lot, state(seed)), `seed ${seed}: composition changed on repeat`);
     }
-    for (const id of MATERIALS) if (!removed.has(id)) assert.ok(seen.has(id), `${id}: never placed for street normal ${JSON.stringify(frame.n)}`);
+    for (const id of MATERIALS) if (!removed.has(id) && !HEAPED.has(id)) assert.ok(seen.has(id), `${id}: never placed for street normal ${JSON.stringify(frame.n)}`);
+    for (const id of SITE_HEAPS) if (!removed.has(id)) assert.ok(seen.has(id), `${id}: never placed for street normal ${JSON.stringify(frame.n)}`);
     assert.ok([...seen].some(id => /concrete-rubble/.test(id)), 'sites retain rubble');
     assert.ok([...seen].some(id => /cable-spool/.test(id)), 'sites retain cable spools');
     assert.ok([...seen].some(id => /forklift/.test(id)), 'sites retain forklifts');

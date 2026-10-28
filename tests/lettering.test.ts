@@ -12,7 +12,7 @@ import PRESET_FIXTURE from './fixtures/lot-presets.json';
 { const f = parsePresets(PRESET_FIXTURE); setLotPresets(f.presets, f.meta); }
 import { hasLettering, LETTERING_IDS, EAST_FACING } from '../src/game/lots/lettering';
 import { EAST_PAIRS } from '../src/game/east-library';
-import { VIEW_ART, unmirror } from '../src/game/views-library';
+import { VIEW_ART } from '../src/game/views-library';
 import { AXIS_HEADING } from '../src/game/axis-library';
 import { REMOVED_IDS } from '../src/game/lots/scales';
 import { drawnAs, isBuilding } from '../src/game/mirror';
@@ -197,14 +197,18 @@ test('the four-view buildings are never mirrored: a flip is the partner view (NE
   const four = LIBRARY.filter(it => (VIEW_ART.has(it.id) || it.id.startsWith('view:')) && AXIS_HEADING[it.id] === undefined);
   assert.ok(four.length >= 40, `${four.length} four-view sprites`);
   const box = (id: string) => byId.get(id)!.boxes[0]!;
+  // a flip as the game draws it (mirror.ts drawnAs, which every prop, lot and business picture goes through): the four-view sheets' art turns by
+  // views-library.ts unmirror, the supplemental diagonal views (#582: the parking garages and painted shrubs, view:<id>:ne|se|sw|nw) by
+  // extra-views.ts extraUnmirror (#776: this asked views-library alone, which does not know them)
+  const turn = (id: string, flip: boolean) => drawnAs(byId.get(id)!, flip);
   for (const it of four) {
-    const [id, flip] = unmirror(it.id, true);
+    const [id, flip] = turn(it.id, true);
     assert.equal(flip, false, `${it.id} flipped is drawn unflipped`);
     assert.ok(byId.has(id) && id !== it.id, `${it.id} turns to ${id}`);
-    assert.deepEqual(unmirror(id, true), [it.id, false], `${id} turns back to ${it.id}`);
+    assert.deepEqual(turn(id, true), [it.id, false], `${id} turns back to ${it.id}`);
     const a = box(it.id), b = box(id);
     assert.ok(Math.abs(a.hx - b.hy) < 0.011 && Math.abs(a.hy - b.hx) < 0.011, `${it.id} and ${id}: the footprint turned`);
-    assert.deepEqual(unmirror(it.id, false), [it.id, false], `${it.id} unflipped is itself`);
+    assert.deepEqual(turn(it.id, false), [it.id, false], `${it.id} unflipped is itself`);
   }
   // a rotated business parcel draws its four-view art turned, never mirrored
   let turned = 0;

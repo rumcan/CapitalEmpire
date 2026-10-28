@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-28 14:10 SAST)
+## START HERE (kept current by the lead; last updated 2026-10-28 15:25 SAST)
 
 **Taking over as lead?** This section is the one start document. Paste this into a new Claude Code chat (desktop app, Code tab), on any
 account, with the folder `E:\Repos\CapitalEmpire\worktrees\lead-typecheck`:
@@ -61,12 +61,11 @@ never commit there.)
 - The owner wants screenshots of every visible change. Commits end with the `Co-Authored-By:` line, PR bodies with the Claude Code line.
 
 ### 3. In flight
-**No agent is running (2026-10-28 ~14:00):** the account hit its usage limit and both agents stopped; their work is pushed, and the old lead's
-agents cannot be resumed from a new chat. Pick them up from their branches:
-| Ticket | Issue | Branch | State and next step |
+**Two agents running (a new lead took over at ~15:00 on 2026-10-28; the old lead's agents stopped at the usage limit ~14:00):**
+| Ticket | Issue | Branch / worktree | State and next step |
 | --- | --- | --- | --- |
-| T260 | #763 | `arena/T260-border-none` (6b7983c) | **Built, PR not opened.** No collar band by default except the fairway's first cut and the green's fringe; Border can be none; the Border section and More options › Edges never show an empty heading. Next: review the diff, merge origin/main (#775 landed since), typecheck, run its tests, see `E:/ClaudeTemp/T260/`, open the PR (Closes #763), merge. The issue's last comment has the steps. |
-| T237 | #694 | `arena/T237-car-parks` (df7335c) | **Barely started** (only a screenshot script). Start an agent on the branch with the issue (body plus the owner's expansion comment). |
+| T237 | #694 | `arena/T237-car-parks`, in `.claude/worktrees/agent-a632f8aae171a94ae` (Opus 5.5, high effort; port 5186) | **Started ~15:20.** Lands in parts, each its own PR (`[T237] part <n>`, Part of #694): (1) the walking rule (`WALK_SERVE_M` = 150 m), the placement preview and cards; (2) the range set back + a 30-40 m frontage strip; (3) the paved look; (4) how cars and golfers use it + the bench. Lead decision: a car park beyond the walk adds no bays to that venue; drivers with no serving bay turn away as at a full car park, no separate appeal penalty. Merge each part on review + typecheck. |
+| #776 | #776 | `arena/nightly-776-tests` (a fresh worktree) | **Started ~15:20.** The three tests failing on main. Lead decision: no saved library index moves, so the kit test allows the range art after the kit. |
 
 **Held, waiting on the owner (not agents):**
 - **#394 T112** (sharp 0.35): approved, merge held until the owner stops the 5191 studio (the lock change makes the auto-updater run
@@ -79,24 +78,21 @@ agents cannot be resumed from a new chat. Pick them up from their branches:
 deliveries come as PRs to review. The 3D people session's handover is `docs/HANDOVER-PEOPLE.md`.
 
 ### 4. Queue (in order; start the next when an agent lands)
-0. **#776 [nightly]** three tests that already fail on main (construction sites, the kit atlas order after T258's range art, a four-view
-   building drawn mirrored): small, first.
 1. **T253 #735** Round off + Smoothness for every painted area, in Edges (and the style editor), and bunkers like the owner's reference
-   (`docs/art/reference/bunkers-and-pond-reference.png`). After T260 (both touch the Edges section and paint-tool.ts).
-2. **T237 #694** car parks: the range set back from the road for frontage parking, car parks that look like car parks, a 150 m walking
-   rule shown while placing.
-3. **T262 #769** grass catches the camera's shine: a bump map for every grass type, lit as the camera moves (a prototype with a verdict
+   (`docs/art/reference/bunkers-and-pond-reference.png`). Next when #776 lands (T260 is merged; both touch Edges and paint-tool.ts, so build
+   on main with #774).
+2. **T262 #769** grass catches the camera's shine: a bump map for every grass type, lit as the camera moves (a prototype with a verdict
    first; builds on T215's camera specular; the GPU budget is tight).
-4. **T263 #771** New hole shapes its ground: gentle fairway rolls, mounds and swales, a tilted green (auto, priced, undoable, a tick box).
-5. **T259 #759** farms: seasonal corn and ploughed fields, orchards in rows, farmhouses set back on a poplar-lined lane (art 185-189 from
+3. **T263 #771** New hole shapes its ground: gentle fairway rolls, mounds and swales, a tilted green (auto, priced, undoable, a tick box).
+4. **T259 #759** farms: seasonal corn and ploughed fields, orchards in rows, farmhouses set back on a poplar-lined lane (art 185-189 from
    ChatGPT; stand-ins until then).
-6. **T248 #718** water that moves: research first, two flowing textures, waves lapping at the shore.
-7. **T251 #728** balls bounce and roll on the ground (the range, the course, NPCs and you).
-8. **T249 #719** a grey stone water border with planting, switchable: waits for the owner's ChatGPT art (item 180).
-9. **P28** (you, the town and its people; `docs/plans/P28.md`): T242 #702 set-the-scene cards → T243 #703 portraits → T240 #704 your
+5. **T248 #718** water that moves: research first, two flowing textures, waves lapping at the shore.
+6. **T251 #728** balls bounce and roll on the ground (the range, the course, NPCs and you).
+7. **T249 #719** a grey stone water border with planting, switchable: waits for the owner's ChatGPT art (item 180).
+8. **P28** (you, the town and its people; `docs/plans/P28.md`): T242 #702 set-the-scene cards → T243 #703 portraits → T240 #704 your
    character → T241 #705 your skills → T244 #706 money matches → T245 #707 a healthier town → T246 #708 your tournament and the Mayor's Cup.
-10. **T214 phase 1** memberships (plan P26, #695) → **T212 #557** putt, chip, tee-up and coaching clips.
-11. Older lists: see "History: START HERE as it stood on 2026-10-28 morning" below and `gh issue list --label arena --state open`.
+9. **T214 phase 1** memberships (plan P26, #695) → **T212 #557** putt, chip, tee-up and coaching clips.
+10. Older lists: see "History: START HERE as it stood on 2026-10-28 morning" below and `gh issue list --label arena --state open`.
 
 ### 5. Waiting on the owner's ChatGPT art (`docs/art/CHATGPT-IMAGE-QUEUE.md`, in this order) and what the lead does when it lands
 1. **Art 181, the missing menu tiles** (one sheet of 12, `art/theme-consistency/generated/ui/golf-build-tool-tiles-sheet-v2.png`): cut it
@@ -107,6 +103,8 @@ deliveries come as PRs to review. The 3D people session's handover is `docs/HAND
 3. **Farms** (185-189): for T259. 4. **The grey stone border** (180): for T249. 5. **Scenes batch 2**: for P28 T242.
 
 ### 6. Latest merges (2026-10-28)
+#774 T260 Border can be none: no band round tees, bunkers and ponds by default (the fairway's first cut and the green's fringe keep
+theirs), the bunker's grass lip and the pond's wet soil kept, Border and More options › Edges never open empty (shots `E:/ClaudeTemp/T260/`) ·
 #775 no bush, tree, plant or rock is ever mirrored (the sun stays at the upper right) and the town's bushes and ferns in the course's
 Props · #773 T261 Tone is one Exposure slider (the texture's own pixels darker or lighter) and the Waste area wears its style · #772 this
 handover · #770 the town footer in the bottom right corner · #768 T254 Edit Hole Layout moves only the tees and flag, four tee sets (blue, white,
