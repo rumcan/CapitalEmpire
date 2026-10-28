@@ -4,16 +4,18 @@
 // - **fairway rolls**: a seeded knot curve along the line of play, crest to trough 0.3-0.8 m over 20-40 m, cosine-eased between knots (smooth,
 //   never periodic: every spacing and swing is drawn afresh), the swing capped by its run so no roll is steeper than about 3% (with the ridges'
 //   skew and the gentle cross tilt the fairway stays under 4%); past the fairway the rolls fade to a share of themselves;
-// - **mounds** (0.5-1.5 m, cosine-squared domes) in the rough beside the fairway and round the back and sides of the green, kept off the
-//   playing surfaces and clear of bunkers (T253's lips and grass mounds round the sand are shading; these sit beyond them);
+// - **mounds** (0.5-1.5 m, cosine-squared domes, flanks up to about 1 in 4 so the slope light reads them) in the rough beside the fairway and
+//   round the back and sides of the green, kept off the playing surfaces and clear of bunkers (T253's lips and grass mounds round the sand
+//   are shading; these sit beyond them);
 // - **hollows**: a swale beside the green and one beside each bunker in reach, past T253's mounds;
 // - the **green** a plane tilted 1-2% up from front to back, its front (and the hold's) on the approach's roll where it meets it (lifted
 //   0-0.1 m), so the run-up stays gentle and the back stands up to half a metre higher; held as one plane 2 samples past its cells so its
 //   edge slope (evaluateCourseHeightQuality's vertices) is the tilt; no false front;
 // - the **tee** level at the ground's height under it (T127 draws its raised pad on top);
-// - the **edges** blend out over the ground round the hole (1 sample inside to 3 outside its cells), and never reach a cell of another hole
-//   or the property's paint, a road's or a cart path's corridor (flattenCourseCorridor's), the practice area or land you do not own: every
-//   sample whose bilinear reach touches one stays exactly as it is, the samples round it fade in over 3.
+// - the **edges** blend out over the ground round the hole (1 sample inside to 3 outside its cells: the map's grass and the property's base
+//   grass, its rough, long grass and fescue), and never reach a cell of another hole, water, the property's built surfaces (its tees,
+//   fairways, greens, bunkers, waste), a road's or a cart path's corridor (flattenCourseCorridor's), the practice area or land you do not own:
+//   every sample whose bilinear reach touches one stays exactly as it is, the samples round it fade in over 3.
 // The result is a list of samples with their heights before and after and the earth moved: the cut (Σ of the drops) carried to the fills (Σ of
 // the rises), what is short brought in and what is over taken away, so max(cut, fill) m³ (× COURSE_CELL_M2 a metre of a sample); for a
 // one-way job, as a Ground height brush dab, that is the brush's own measure (estimateCourseBrushM3, Σ|Δh|), priced at the same
@@ -34,7 +36,8 @@ export const HOLE_GROUND = {
   cross: { grade: 0.005, minLenM: 60, maxLenM: 100, satM: 20 },
   /** the rolls' share in the rough (they fade from 1 a sample past the playing surfaces to this 4 samples out) */
   rollRough: 0.25,
-  /** the mounds beside the fairway: height minM..maxM (lower ones likelier), radius 7 m + 5 m per metre of height, one every gapMinM..gapMaxM */
+  /** the mounds beside the fairway: height minM..maxM (lower ones likelier), radius 5 m + 3.5 m per metre of height
+   *  (flanks up to about 1 in 4, so the slope light reads them), one every gapMinM..gapMaxM */
   mound: { minM: 0.5, maxM: 1.5, gapMinM: 35, gapMaxM: 70 },
   /** the green: its tilt (m/m, front low, back high), its front lifted liftMin..liftMax (m) off the approach, its plane held hold samples past
    *  its cells, blended out over blend */
@@ -217,9 +220,11 @@ export function shapeHoleGround(inp: HoleGroundInput): HoleGroundShape {
     if (!fRaw[j * W + i]) continue;
     for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) { const a = i + di, b = j + dj; if (a >= 0 && b >= 0 && a < W && b < H) isF[b * W + a] = 1; }
   }
-  // another hole's cell, or the property's paint: every sample whose bilinear reach (2 tiles each way) holds its middle is kept
+  // another hole's cell, water, or the property's built surfaces (its base grass, rough, long grass and fescue, is ground the edges blend
+  // into): every sample whose bilinear reach (2 tiles each way) holds the cell's middle is kept
   for (let cy = 0; cy < BH; cy++) for (let cx = 0; cx < BW; cx++) {
-    const c = cy * BW + cx; if (!surf[c] || hol[c] === n) continue;
+    const c = cy * BW + cx, s = surf[c]!, h = hol[c]!;
+    if (!s || (s !== SURF.water && (h === n || (!h && (s === SURF.rough || s === SURF.longGrass || s === SURF.fescue))))) continue;
     const fx = (g.x0 + (bx0 + cx + 0.5) * CELL_T) / CH_STEP - 0.5 - i0, fy = (g.y0 + (by0 + cy + 0.5) * CELL_T) / CH_STEP - 0.5 - j0;
     const a0 = Math.floor(fx), b0 = Math.floor(fy);
     for (let b = b0; b <= b0 + 1; b++) for (let a = a0; a <= a0 + 1; a++) if (a >= 0 && b >= 0 && a < W && b < H) isF[b * W + a] = 1;
@@ -283,7 +288,7 @@ export function shapeHoleGround(inp: HoleGroundInput): HoleGroundShape {
   let side = rs() < 0.5 ? -1 : 1;
   for (let sM = Math.max(plan.fwStart + 15, 45) + rs() * 20; sM < L - gR - 20; sM += M.gapMinM + (M.gapMaxM - M.gapMinM) * rs()) {
     if (rs() > 0.15) {
-      const h = M.minM + (M.maxM - M.minM) * rs() ** 1.5, R = 7 + 5 * h;
+      const h = M.minM + (M.maxM - M.minM) * rs() ** 1.5, R = 5 + 3.5 * h;
       const hw = Math.max(9, widthAt(plan, sM, geom) / 2 + 3), cr = Math.max(30, hw + 2), off = Math.min(hw + 3 + 0.5 * R, cr - 0.2 * R);
       const q = nearAt(sM);
       feats.push({ kind: 'mound', x: q.x + (side * q.nx * off) / 2, y: q.y + (side * q.ny * off) / 2, h, r: R / 2 });
@@ -296,12 +301,12 @@ export function shapeHoleGround(inp: HoleGroundInput): HoleGroundShape {
   const dirAt = (deg: number) => { const a = (deg * Math.PI) / 180, c = Math.cos(a), s = Math.sin(a); return { x: -ax * c + ay * s, y: -ay * c - ax * s }; }; // 0: the front
   const hollowDeg = (rs() < 0.5 ? 1 : -1) * (80 + 30 * rs());
   {
-    const depth = P.hollow.minM + (P.hollow.maxM - P.hollow.minM) * rs(), R = 9 + 3 * rs(), dist = gR + 9 + 0.3 * R, u = dirAt(hollowDeg);
+    const depth = P.hollow.minM + (P.hollow.maxM - P.hollow.minM) * rs(), R = 8 + 2 * rs(), dist = gR + 9 + 0.3 * R, u = dirAt(hollowDeg);
     feats.push({ kind: 'hollow', x: gx + (u.x * dist) / 2, y: gy + (u.y * dist) / 2, h: -depth, r: R / 2 });
   }
   const cnt = 2 + Math.floor(rs() * 3);
   for (let m = 0; m < cnt; m++) {
-    const deg = 60 + (240 * (m + 0.5 + 0.6 * (rs() - 0.5))) / cnt, h = M.minM + 0.7 * rs(), R = 6 + 5 * h;
+    const deg = 60 + (240 * (m + 0.5 + 0.6 * (rs() - 0.5))) / cnt, h = M.minM + 0.7 * rs(), R = 5 + 3 * h;
     const gap = Math.abs(((((deg - hollowDeg) % 360) + 540) % 360) - 180); // degrees between it and the swale (0..180)
     if (gap < 45) continue;
     const u = dirAt(deg), dist = gR + 14 + 0.3 * R;

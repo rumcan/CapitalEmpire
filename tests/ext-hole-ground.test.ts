@@ -116,10 +116,12 @@ test('the tee stays level and the green tilts 1-2% up from front to back, inside
   }
 });
 
-test("the edges blend out round the hole and never touch another hole, the property's paint, a road or cart path, the practice area or land you do not own", () => {
+test("the edges blend out round the hole over the land's and the property's grass, and never touch another hole, water, the property's built surfaces, a road or cart path, the practice area or land you do not own", () => {
   const g = makeGrid(0, 0, 900, 1200);
   paintDisc(g, 120, 142, 5, SURF.rough, 2, 0); // hole 2's rough just off hole 1's corridor (it ends 15 tiles off the line, y 135)
-  paintDisc(g, 70, 101, 3, SURF.fescue, 0, 0); // the property's paint
+  paintDisc(g, 70, 101, 3, SURF.green, 0, 0); // the property's putting green
+  paintDisc(g, 100, 128, 2, SURF.water, 0, 0); // a pond in the hole's rough
+  paintDisc(g, 110, 104, 3, SURF.fescue, 0, 0); // the property's fescue at the corridor's edge: ground, the edge blends over it
   const h = hole({ x: 40, y: 120 }, { x: 230, y: 120 }, [], 1, g);
   const path = { ax: 150, ay: 95, bx: 150, by: 146, halfWidthTiles: 1.5 }; // a cart path across the hole
   const practice = (x: number, y: number) => x >= 196 && x < 214 && y >= 98 && y < 106, owned = (_x: number, y: number) => y > 96;
@@ -127,12 +129,15 @@ test("the edges blend out round the hole and never touch another hole, the prope
   assert.ok(sh.k.length > 500, 'the hole is shaped');
   // every tile of what is kept: exactly as it was (level)
   const kept: P[] = [];
-  for (let i = 0; i < g.surf.length; i++) if (g.surf[i] && g.hole[i] !== 1) kept.push(cellCentre(g, i));
+  const base = (i: number) => !g.hole[i] && (g.surf[i] === SURF.rough || g.surf[i] === SURF.longGrass || g.surf[i] === SURF.fescue);
+  for (let i = 0; i < g.surf.length; i++) if (g.surf[i] && ((g.hole[i] !== 1 && !base(i)) || g.surf[i] === SURF.water)) kept.push(cellCentre(g, i));
   for (let y = 90; y <= 150; y += 0.5) for (let x = 140; x <= 160; x += 0.5) if (Math.abs(x - 150) < 1.5 + 2 && y >= 95 && y <= 146) kept.push({ x, y });
   for (let y = 98; y < 106; y += 0.5) for (let x = 196; x < 214; x += 0.5) kept.push({ x, y });
   for (let y = 80; y <= 96; y += 0.5) for (let x = 20; x <= 260; x += 1) kept.push({ x, y });
   let worst = 0; for (const p of kept) worst = Math.max(worst, Math.abs(sampleCourseHeight(f, p.x, p.y)));
   assert.equal(worst, 0, `${kept.length} kept points stay level`);
+  let fescue = 0; for (let i = 0; i < g.surf.length; i++) if (base(i)) { const p = cellCentre(g, i); fescue = Math.max(fescue, Math.abs(sampleCourseHeight(f, p.x, p.y))); }
+  assert.ok(fescue > 0.01, "the edge blends over the property's fescue");
   // the shaping reaches at most 3 samples (6 tiles) past the hole's cells: nothing changes farther out
   const mine = cellsOf(g, 1).map(i => cellCentre(g, i)), near = new Set<number>();
   for (const p of mine) { const i = Math.floor(p.x / CH_STEP), j = Math.floor(p.y / CH_STEP); for (let dj = -4; dj <= 4; dj++) for (let di = -4; di <= 4; di++) near.add((j + dj) * CH_SIZE + i + di); }
