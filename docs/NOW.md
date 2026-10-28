@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-29 00:15 SAST)
+## START HERE (kept current by the lead; last updated 2026-10-29 01:10 SAST)
 
 **Taking over as lead?** This section is the one start document. Paste this into a new Claude Code chat (desktop app, Code tab), on any
 account, with the folder `E:\Repos\CapitalEmpire\worktrees\lead-typecheck`:
@@ -67,7 +67,7 @@ never commit there.)
 | Ticket | Issue | Branch / worktree | State and next step |
 | --- | --- | --- | --- |
 | T265 | #794 | `arena/T265-river-swamp-trees` (a fresh worktree; port 5186) | **Started ~00:15.** The river's swamp band and dense tree belts along every river and creek, under the owner's hard performance limits (belts +0.5 ms a frame, swamp +1 ms a bake, main vs branch at 30/15/8%, thin or stop). |
-| T263 | #771 (reopened) | **merged** as built (#797 at 769c79b, the owner asked); part 2 on `arena/T263-hole-ground-p2` (its worktree `.claude/worktrees/agent-a7511adc517f4f94a`; port 5187), a new PR "Closes #771" | Part 2: the shaping reads at the default Slope light (a stronger course-height light on gentle slopes; steep brush banks no harsher) and is built at `SHAPE_RATE_M3` = \$5/m³ (about \$11-12k a par 4; main charges the brush's \$15 until it lands). |
+| T266 | #800 | `arena/T266-golf-pace` (a fresh worktree; port 5187) | **Started ~00:50.** A prototype with a verdict: a day/night clock, capped walking speeds, a longer day, or a mix, each behind `?golfPace=`; s per hole, walk speed vs cars, real minutes per game month, money per real hour, frame cost (at most +0.3 ms). The lead picks, then it builds. |
 
 **Held, waiting on the owner (not agents):**
 - **#394 T112** (sharp 0.35): approved, merge held until the owner stops the 5191 studio (the lock change makes the auto-updater run
@@ -82,19 +82,22 @@ deliveries come as PRs to review. The 3D people session's handover is `docs/HAND
 **T258 #749 continuous-art follow-up** (`lead/continuous-art-plans-20261029`): generic live-source AI plans and one exact subjob per batch, explicit versioned corrections, held review metadata and lossless native/live-only reuse. Current live priority181 is respected; 180a-v3 remains explicitly queued, v1/v2 held and b/c/d pending. Reviewed source art/proofs are in this branch; runtime registration remains separate. Quota retry2026-10-28T15:32:44.457Z is unchanged. Typecheck/focused fixtures pass; final fresh-main checks and PR/deployment next.
 
 ### 4. Queue (in order; start the next when an agent lands)
-1. **T266 #800** golfers play at hyper speed (the owner): golf mode's town day is 10 real minutes, so everyday golf plays at 2.4 game minutes a
-   real second (a hole in about 6 s; golfers about 140x faster than the cars). A prototype with a verdict: a day/night clock, capped walking speeds,
-   a longer day, or a mix. Until then the gear menu's Town day slider (up to 30 min) slows it, and the months with it.
-2. **T259 #759** farms: seasonal corn and ploughed fields, orchards in rows, farmhouses set back on a poplar-lined lane (art 185-189 from
+1. **T267 #808** the bunker's Shadow on its vertical faces too (the owner: "it looks like the sand goes underneath the fairway"); the defaults
+   (Round off 100%, Shadow 30%) are done (#807).
+2. **T270 #811** shop variety (the owner: five Video Vaults in a row): neighbours never alike, likely `newart.ts` stand-in choice.
+3. **T271 #812** create your own grass preset, option 9 in Shape by hand (plays as a base surface; a short plan first).
+4. **T268 #809** place each tee set (blue, white, yellow, red) yourself; move and remove them.
+5. **T269 #810** an active grounds crew: the holes moved each morning, mowers on the course, staff wages (a plan first; 3D people art).
+6. **T259 #759** farms: seasonal corn and ploughed fields, orchards in rows, farmhouses set back on a poplar-lined lane (art 185-189 from
    ChatGPT; stand-ins until then).
-3. **T248 #718** water that moves: research first, two flowing textures, waves lapping at the shore.
-4. **T251 #728** balls bounce and roll on the ground (the range, the course, NPCs and you).
-5. **T249 #719** a grey stone water border with planting, switchable: waits for the owner's ChatGPT art (item 180).
-6. **P28** (you, the town and its people; `docs/plans/P28.md`): T242 #702 set-the-scene cards → T243 #703 portraits → T240 #704 your
+7. **T248 #718** water that moves: research first, two flowing textures, waves lapping at the shore.
+8. **T251 #728** balls bounce and roll on the ground (the range, the course, NPCs and you).
+9. **T249 #719** a grey stone water border with planting, switchable: waits for the owner's ChatGPT art (item 180).
+10. **P28** (you, the town and its people; `docs/plans/P28.md`): T242 #702 set-the-scene cards → T243 #703 portraits → T240 #704 your
    character → T241 #705 your skills → T244 #706 money matches → T245 #707 a healthier town → T246 #708 your tournament and the Mayor's Cup.
-7. **T214 phase 1** memberships (plan P26, #695) → **T212 #557** putt, chip, tee-up and coaching clips.
-8. **T264 #787** park-and-ride: far car parks served by a shuttle bus (the owner's "later" idea from T237; not queued before the rest).
-9. Older lists: see "History: START HERE as it stood on 2026-10-28 morning" below and `gh issue list --label arena --state open`.
+11. **T214 phase 1** memberships (plan P26, #695) → **T212 #557** putt, chip, tee-up and coaching clips.
+12. **T264 #787** park-and-ride: far car parks served by a shuttle bus (the owner's "later" idea from T237; not queued before the rest).
+13. Older lists: see "History: START HERE as it stood on 2026-10-28 morning" below and `gh issue list --label arena --state open`.
 
 ### 5. Waiting on the owner's ChatGPT art (`docs/art/CHATGPT-IMAGE-QUEUE.md`, in this order) and what the lead does when it lands
 1. **Art 181, the missing menu tiles** (one sheet of 12, `art/theme-consistency/generated/ui/golf-build-tool-tiles-sheet-v2.png`): cut it
@@ -105,7 +108,8 @@ deliveries come as PRs to review. The 3D people session's handover is `docs/HAND
 3. **Farms** (185-189): for T259. 4. **The grey stone border** (180): for T249. 5. **Scenes batch 2**: for P28 T242.
 
 ### 6. Latest merges (2026-10-28)
-#804 T262 part 2: the grass shine a third as strong, the tee 0.1 and the green 0.55 (the cause of the owner's "horrible" tees: #792's
+#807 bunkers by default Round off at 100% and Shadow 30% (the owner), an unticked box kept off · #806 T263 part 2: the hole shaping
+reads at the default light (a gentle-slope gain), built at $5/m³ · #804 T262 part 2: the grass shine a third as strong, the tee 0.1 and the green 0.55 (the cause of the owner's "horrible" tees: #792's
 sheen on bright, smooth paint), the knobs in the gear menu's Night panel, within the owner's limits (frame +0.04-0.07 ms, bake +0.2/+0.6 ms) ·
 #802 the course tees wear the fairway's grass, no lines (the owner: "not defined enough. it should be like the fairway with no lines";
 `tee-run` stays a Studio option) · #799 the starter clubhouse at the clubhouse footprint (the owner: "monterous"; the grand stand-in was drawn 4x its size: business art's 1 x 1
