@@ -14,6 +14,7 @@ import { mulberry } from '../src/game/iso';
 import { CAR_SCALE } from '../src/game/ext/car-art';
 import { isBuilding } from '../src/game/mirror';
 import { footprintOf, turned } from '../src/game/lots/preset-art';
+import { vehicleHeading } from '../src/game/vehicles';
 import { toWorld } from '../src/game/lots/preset-frame';
 import { parsePresets, type PresetProp } from '../src/game/lots/presets';
 import PRESET_FIXTURE from './fixtures/lot-presets.json';
@@ -128,7 +129,10 @@ test('every built lot draws its preset: each preset prop is the picked preset\'s
       assert.equal(q.from!.preset, p.preset.id, `${lot.key}: a prop of another preset`);
       // a stand-in for a removed picture (T167) is the fitted prop's own (its id replaced), else the preset's
       const src: PresetProp = q.standIn ? p.fit.props[p.fit.from.indexOf(q.from!.prop)]! : p.preset.props[q.from!.prop]!, t = turned(src.id, p.frame.q + src.view);
-      assert.equal(q.id, t.id, `${lot.key}: ${src.id} view ${src.view} on a lot turned ${p.frame.q} drawn as ${q.id}`);
+      // (T236: a parked wagon may be drawn as another vehicle of the mix with a picture at its heading, vehicles.ts parkedAs; a farm's or junk
+      // yard's yellow pickup as the rusty one, lotPickup)
+      const mixed = /^cars:/.test(t.id) && vehicleHeading(q.id) >= 0 && vehicleHeading(q.id) === vehicleHeading(t.id), rusty = t.id === 'static:pickup_n' && q.id === 'expansion:scrap-pickup-rear';
+      if (!mixed && !rusty) assert.equal(q.id, t.id, `${lot.key}: ${src.id} view ${src.view} on a lot turned ${p.frame.q} drawn as ${q.id}`);
       assert.equal(q.flip, t.flip);
       if (isBuilding(byId.get(q.id)!)) assert.equal(q.flip, false, `${lot.key}: building ${q.id} mirrored`);
       if (q.id !== src.id) turnedViews++;

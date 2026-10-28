@@ -1,5 +1,7 @@
 # How ground textures are made: the owner's method (2026-10-27)
 
+> **2026-10-28 (the owner):** RUN.world credits are for 3D work only. The painting step below is now done in **ChatGPT's image generator** by the owner: upload the game screenshot and ask it to repaint the layer. The slicing, quilting and shipping steps are unchanged.
+
 > The owner: "screenshot the area at 3 diffrent zoom levels. get the AI generator to put the grass in where it needs to be then you take the grass from the new image where it is now in the game mockup and you slice it out and as for it to remove everything except the grass. and then you make a massive iamge with 4 tiles of that grass. **the generator never knows its making a texture. that is the secret to getting good ground texture**"
 
 **Use this for every ground layer:** grass, the greenkeeping conditions, sand, soil and water. The generator is only ever asked to paint or

@@ -119,6 +119,9 @@ export const CHAIN: Pair = { x: 'expansion:chainlink-x', y: 'expansion:chainlink
 export const SCHOOL_SIGNS = cat(i => /^variation:sign-pedestrians-school-/.test(i.id));
 export const DEAD_TREES = names(['world:tree_dead_0', 'world:tree_dead_1', 'world:tree_dead_2']);
 
+/** a footprint grown (or shrunk) by k about its centre (T236: a car's Placed.foot is the engine's footprint, its body at its owner size; the
+ *  composer's own is the drawn body, at CAR_SCALE of that) */
+const grown = (f: Box4, k: number): Box4 => { const cx = (f[0] + f[2]) / 2, cy = (f[1] + f[3]) / 2, hx = (f[2] - f[0]) * k / 2, hy = (f[3] - f[1]) * k / 2; return [cx - hx, cy - hy, cx + hx, cy + hy]; };
 /** does an axis-aligned footprint overlap a convex quad (8 numbers, corners in order); touching is not overlap */
 export function hit(fp: Box4, q: number[]): boolean {
   const axes: Pt[] = [{ x: 1, y: 0 }, { x: 0, y: 1 }];
@@ -390,7 +393,7 @@ export class Build {
         if (over) { drop(it, `overlaps ${over.id} ${Math.round(100 * share(over.fp, it.fp))}%`); continue; }
         ups++;
       }
-      acc.push(it); const p: Placed = { id: it.id, x: it.x, y: it.y, flip: it.flip, scale: it.s }; if (it.street) p.street = true; if (it.from) p.from = it.from; if (it.standIn) p.standIn = it.standIn; if (it.foot) p.foot = it.fp; props.push(p);
+      acc.push(it); const p: Placed = { id: it.id, x: it.x, y: it.y, flip: it.flip, scale: it.s }; if (it.street) p.street = true; if (it.from) p.from = it.from; if (it.standIn) p.standIn = it.standIn; if (it.foot) p.foot = it.car ? grown(it.fp, 1 / CAR_SCALE) : it.fp; props.push(p);
     }
     // (T228: a driveway says so: the engine cuts the road's edge lines at its mouth, street-marks.ts driveCuts)
     const ground: LotPatch[] = this.patches.map(p => ({ ...(p.lines ? { pts: p.quad, tex: p.tex, lines: p.lines } : { pts: p.quad, tex: p.tex }), ...(p.kind === 'drive' ? { drive: true as const } : {}) }));
