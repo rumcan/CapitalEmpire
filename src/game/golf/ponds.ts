@@ -1,16 +1,17 @@
 // Pond edges (T231, #671; docs/art/CONCEPT-LOOK.md step 5, the owner's concept look, 2026-10-27: "water with stone edges ... in town, a round
 // pond with a fountain jet"). A pond is a body of still water: the course's water cells and the painted water areas, read on the course grid's
-// 1 m lattice (CELL tiles). Its edge style is Natural (today's look: nothing is added) or Stones: the pond-edge boulder pieces (kit.ts
-// KIT_POND_EDGE) laid round its shore by themselves, with corner clusters where the shore turns, and lily pads (KIT_LILIES) scattered on its
-// still water away from the edge. A pond is Stones when one of the saved marks (GolfSave.ponds) stands in it; the engine lays the pieces again
-// whenever the water changes, keeping the ones that did not move (pondKey). Nothing lands on land: every piece's footprint lies on the pond's own
-// water (a run piece in the cell row along the shore, a corner cluster in its corner cell, a lily cluster at least LILY_EDGE cells from the edge).
-// Deterministic: the pieces from the pond's cells alone, the lily pads from a world lattice (a change elsewhere in the pond moves none of them).
-// Pure TS, no DOM; units are tiles (2 m) unless named.
-// T234 (#683): the rim is not a ring wall. Each long stretch of shore is laid as a seeded rhythm of run pieces of varied size (0.8 to 1.2 of
-// the mean), standing in from the shore line by varied amounts, with short gaps (10 to 20% of the stretch) where the grass meets the water:
-// a tuft of plume grass in most, a single boulder in some. The corners are as they were. The seed is the stretch's own place on the world
-// lattice, so a change elsewhere in the pond moves none of it.
+// 1 m lattice (CELL tiles). Its edge style is Natural (today's look: nothing is added) or Stones: the rim laid round its shore by itself (boulders
+// of the kit, KIT_BOULDERS, with plant and stone fills, shorePieces), and lily pads (KIT_LILIES) scattered on its still water away from the edge.
+// A pond is Stones when one of the saved marks (GolfSave.ponds) stands in it; the engine lays the pieces again whenever the water changes,
+// keeping the ones that did not move (pondKey).
+// T234 (#683) part 2, the boulder-led rim (the concept's ponds: fewer, bigger rounded boulders with gaps and planting between them): the shore
+// is walked as the contour of the pond's cells (shoreRuns), cut into runs where it crosses a line of the world lattice every RIM_BLOCK cells, and
+// each run is strung with large and medium boulders (item 36) a boulder every 1.5 to 3 m, half on the bank and half in the water, with now and
+// then a break holding a short fill of the small stones (the pond-edge run pieces, KIT_POND_EDGE, on a straight shore only) and plume grass,
+// shrubs and mums (KIT_PLUME, KIT_SHRUBS, KIT_FLOWERS) on the bank in the gaps. The rule on footprints: a boulder or a fill never stands more than
+// LAND_REACH (half a tile) out onto land (it may straddle the shore); the planting is wholly on the bank, off all water, within PLANT_REACH.
+// Deterministic and local: a run is laid from its own place on the lattice, so a bay dug far from it moves none of it; the lily pads come from a
+// world lattice too. Pure TS, no DOM; units are tiles (2 m) unless named.
 import { mulberry } from '../iso';
 import { KIT_BOULDERS, KIT_FLOWERS, KIT_LILIES, KIT_PLUME, KIT_POND_EDGE, KIT_SHRUBS } from '../kit';
 

@@ -25,7 +25,7 @@ export interface DecorItem { key: string; name: string; group: DecorGroup; kind:
   run?: RunKit;
   /** T231: placeable only in water (the fountain jet): every spot of its footprint on a pond, a lake or the course's water */
   water?: 'in';
-  /** T231: a pond action: 'edge' gives the pond under the cursor its stone edge (price a stone; again: back to Natural), 'make' digs a round
+  /** T231: a pond action: 'edge' gives the pond under the cursor its stone edge (price a piece, a boulder or a plant; again: back to Natural), 'make' digs a round
    *  Fountain pond (water, its stone edge and a jet) */
   pond?: 'edge' | 'make';
   /** what the price is for, when not the item ("a stone", "a piece") */
@@ -83,7 +83,7 @@ export const DECOR: readonly DecorItem[] = [
   // T231: the ponds (golf/ponds.ts): a jet in the water, a round pond with its jet and stones, and a stone edge for any pond
   { key: 'kit-fountain', name: 'Fountain jet', group: 'water', kind: 'water', id: KIT_FOUNTAIN[0], water: 'in', price: 3500, appeal: APPEAL.jet, desc: 'A tall jet of water: only in a pond or a lake' },
   { key: 'kit-pond', name: 'Fountain pond', group: 'water', kind: 'water', id: KIT_POND_EDGE.outer, pond: 'make', price: 9000, appeal: APPEAL.jet, desc: 'A round pond 14 m across with a stone edge and a jet: for the clubhouse or a square' },
-  { key: 'kit-pond-stones', name: 'Stone pond edge', group: 'water', kind: 'stone', id: KIT_POND_EDGE.x, pond: 'edge', price: STONE_PRICE, per: 'a stone', appeal: APPEAL.pondEdge, desc: "Boulders round a pond's shore and lily pads on its water; click the pond again for its natural edge" },
+  { key: 'kit-pond-stones', name: 'Stone pond edge', group: 'water', kind: 'stone', id: KIT_POND_EDGE.x, pond: 'edge', price: STONE_PRICE, per: 'a piece', appeal: APPEAL.pondEdge, desc: "Big boulders round a pond's shore with planting between them, and lily pads on its water; click the pond again for its natural edge" },
   // ---- stone
   { key: 'statue', name: 'Golfer statue', group: 'stone', kind: 'statue', id: 'expansion:coin-horse-ride', price: 6000, appeal: APPEAL.statue, standIn: 'Bronze golfer statue', desc: 'A bronze golfer at the top of his swing, on a stone plinth' },
   { key: 'pillar', name: 'Stone pillar', group: 'stone', kind: 'stone', id: 'world:grave_2', price: 400, appeal: APPEAL.pillar, standIn: 'Stone pillar', desc: 'A dressed stone column with a ball finial: pair them at a gate' },
