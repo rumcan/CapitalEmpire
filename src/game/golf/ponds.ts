@@ -7,8 +7,12 @@
 // water (a run piece in the cell row along the shore, a corner cluster in its corner cell, a lily cluster at least LILY_EDGE cells from the edge).
 // Deterministic: the pieces from the pond's cells alone, the lily pads from a world lattice (a change elsewhere in the pond moves none of them).
 // Pure TS, no DOM; units are tiles (2 m) unless named.
+// T234 (#683): the rim is not a ring wall. Each long stretch of shore is laid as a seeded rhythm of run pieces of varied size (0.8 to 1.2 of
+// the mean), standing in from the shore line by varied amounts, with short gaps (10 to 20% of the stretch) where the grass meets the water:
+// a tuft of plume grass in most, a single boulder in some. The corners are as they were. The seed is the stretch's own place on the world
+// lattice, so a change elsewhere in the pond moves none of it.
 import { mulberry } from '../iso';
-import { KIT_LILIES, KIT_POND_EDGE } from '../kit';
+import { KIT_BOULDERS, KIT_LILIES, KIT_PLUME, KIT_POND_EDGE } from '../kit';
 
 /** the lattice: a cell is 0.5 tile (1 m), the course grid's */
 export const CELL = 0.5;
@@ -58,30 +62,80 @@ export const BIG_POND_CELLS = 500;
 /** the smallest pond that gets an edge (cells): a puddle gets none */
 export const POND_MIN_CELLS = 12;
 
+/** T234, the natural rim. RIM_SCALE: a run piece's size round the stretch's mean (the weights are normalised, so the stretch is still filled);
+ *  RIM_ROWS: the rows of water in from the shore a piece may reach (a piece at 1.2 is 2.4 cells deep, and 0.25 tile in from the shore line
+ *  more); RIM_IN: the most a piece stands in from the shore line (tiles; never out, onto land); GAP_SHARE: the share of a stretch's length left
+ *  as gaps (from, to); GAP_LEN: a gap's length (tiles; 1.2 to 3 m); GAP_MIN_STRETCH: the shortest stretch that takes a gap (tiles);
+ *  GAP_TUFT, GAP_BOULDER: of the gaps, the share that take a tuft of plume grass, then a single boulder (the rest are bare grass). */
+export const RIM_SCALE: readonly [number, number] = [0.8, 1.2];
+export const RIM_ROWS = 3, RIM_IN = 0.25;
+export const GAP_SHARE: readonly [number, number] = [0.18, 0.3], GAP_LEN: readonly [number, number] = [0.6, 1.5], GAP_MIN_STRETCH = 3;
+export const GAP_TUFT = 0.5, GAP_BOULDER = 0.25;
+/** the corners in a staircase (a one-cell step from another corner, as along a round pond's diagonal; a corner at the end of a straight stretch
+ *  is as it was): the cluster shrinks to CLUSTER_SHRINK..1 of its size and moves about its block; CLUSTER_DROP of them (never two within 1.3
+ *  tiles) are swapped for a tuft of plume grass (CLUSTER_TUFT of those), a single boulder (CLUSTER_BOULDER), or bare grass (the rest) */
+export const CLUSTER_SHRINK = 0.75, CLUSTER_DROP = 0.24, CLUSTER_TUFT = 0.55, CLUSTER_BOULDER = 0.25;
+/** a footprint's side in tiles at scale 1 (the library's box: kit:shrub-plume-grass 0.525, small boulders 0.32, medium 0.6): what a gap's
+ *  tuft or boulder is fitted by (tests/ponds.test.ts checks them against the library) */
+export const PLUME_FOOT = 0.525, BOULDER_FOOT = { small: 0.32, medium: 0.6, large: 1 } as const;
+/** a single boulder dropped on a joint between two run pieces (the share of joints), in front of the rim: stones of mixed size, as in the concept */
+export const JOINT_BOULDER = 0.18;
+/** a boulder by a dice roll: in a pond of BIG_POND_CELLS or more a large one (a third of them) when it fits, else a medium, else a small one;
+ *  put(id, foot) lays it and says whether it fitted */
+const boulderBy = (pick: number, big: boolean, put: (id: string, foot: number) => boolean): boolean => {
+  const v = Math.min(2, Math.floor(pick * 3)), f = pick * 3 - v;
+  return (big && f < 0.35 && put(KIT_BOULDERS.large[v]!, BOULDER_FOOT.large)) || put(KIT_BOULDERS.medium[v]!, BOULDER_FOOT.medium) || put(KIT_BOULDERS.small[v]!, BOULDER_FOOT.small);
+};
+/** a 32-bit hash of a lattice square (the lily pads' world lattice: a pond's pads stay put when it changes elsewhere; the rim's stretches the same) */
+const hash2 = (a: number, b: number) => { let h = Math.imul(a | 0, 0x27d4eb2d) ^ Math.imul(b | 0, 0x165667b1) ^ 0x9e3779b9; h = Math.imul(h ^ (h >>> 15), 0x85ebca6b); h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35); return (h ^ (h >>> 16)) >>> 0; };
+
 /** The stones round a pond's shore: a corner cluster at every corner of its outline (an outer one where the water's outline bulges, an inner one
  *  where it turns in), and between them the run pieces along each straight stretch of shore (KIT_POND_EDGE.x along the map's x axis, .y along
  *  its y axis), as many as the stretch takes at a scale of 0.5 to 1 (a piece is two cells deep at full size: in a pond under BIG_POND_CELLS, or where the second row in is not all
  *  water, at most half size, a cell deep). A corner's cluster covers the two-by-two block of water by the corner when it can, else its one cell.
- *  Every footprint lies on the pond's water. Empty for a pond under POND_MIN_CELLS. */
+ *  T234: the run pieces vary (RIM_SCALE, RIM_IN), a long stretch has short gaps with a plume tuft or a boulder in them (GAP_*), a boulder stands on
+ *  some joints (JOINT_BOULDER), and the corners in a staircase are loosened (CLUSTER_*). Each stretch and corner is laid from its own place on the
+ *  lattice. Every footprint lies on the pond's water. Empty for a pond under POND_MIN_CELLS. */
 export function shorePieces(p: Pond): PondPiece[] {
   if (p.cells < POND_MIN_CELLS) return [];
   const out: PondPiece[] = [], E = KIT_POND_EDGE, at = (cx: number, cy: number) => inPond(p, cx, cy), large = p.cells >= BIG_POND_CELLS;
   const r3 = (v: number) => Math.round(v * 1000) / 1000;
-  // corners: each lattice vertex by the water of its four cells (nw, ne, sw, se)
+  // corners: each lattice vertex by the water of its four cells (nw, ne, sw, se); n: how many are water, 0 when the vertex is no corner
   const corner = new Set<number>(), outerCell = new Set<number>(), placed = new Set<string>(), vkey = (vx: number, vy: number) => vy * 65536 + vx;
+  const nOf = (vx: number, vy: number) => {
+    const nw = at(vx - 1, vy - 1), ne = at(vx, vy - 1), sw = at(vx - 1, vy), se = at(vx, vy), n = +nw + +ne + +sw + +se;
+    return n === 0 || n === 4 || (n === 2 && nw !== se) ? 0 : n; // two cells side by side: a straight shore
+  };
+  for (let vy = p.y0; vy <= p.y0 + p.h; vy++) for (let vx = p.x0; vx <= p.x0 + p.w; vx++) if (nOf(vx, vy)) corner.add(vkey(vx, vy));
+  // T234: a corner in a staircase (a one-cell step from another corner, as along a round pond's diagonal) is loosened (CLUSTER_SHRINK, CLUSTER_DROP);
+  // a corner at the end of a straight stretch is as it was
+  const stair = (vx: number, vy: number) => corner.has(vkey(vx + 1, vy)) || corner.has(vkey(vx - 1, vy)) || corner.has(vkey(vx, vy + 1)) || corner.has(vkey(vx, vy - 1));
+  const dropped: [number, number][] = [];
   // a corner's cluster, from vertex (vx, vy) toward (dx, dy) (each +1 or -1): over the two-by-two block of cells there when all of it is water
   // (CORNER_BIG: its footprint a tile), else in the one cell by the vertex (CORNER_SMALL: its footprint a cell)
   const cluster = (id: string, vx: number, vy: number, dx: number, dy: number) => {
     const c0 = dx > 0 ? vx : vx - 1, r0 = dy > 0 ? vy : vy - 1, block = at(c0, r0) && at(c0 + dx, r0) && at(c0, r0 + dy) && at(c0 + dx, r0 + dy);
     const big = block && large, k = big ? 1 : 0.5, x = r3(vx * CELL + dx * CELL * k), y = r3(vy * CELL + dy * CELL * k), key = `${x},${y}`;
     if (placed.has(key)) return; placed.add(key);
-    out.push({ id, x, y, s: big ? CORNER_BIG : CORNER_SMALL });
+    const s0 = big ? CORNER_BIG : CORNER_SMALL;
+    if (!stair(vx, vy)) { out.push({ id, x, y, s: s0 }); return; }
+    // the block's side (tiles); the corner's own dice (its vertex and quarter)
+    const side = k * 2 * CELL, r = mulberry(hash2(vx * 8 + (dx > 0 ? 1 : 0) + (dy > 0 ? 2 : 0) + (id === E.inner ? 4 : 0), vy));
+    const roll = r(), shrink = r(), jx = r(), jy = r(), what = r(), pick = r(), jit = r();
+    const near = dropped.some(([qx, qy]) => Math.hypot(qx - x, qy - y) < 1.3);
+    if (roll < CLUSTER_DROP && !near) {
+      dropped.push([x, y]);
+      const s = (foot: number) => { const fit = Math.min(RIM_SCALE[1], (side - 0.02) / foot); return fit < RIM_SCALE[0] ? 0 : r3(Math.max(RIM_SCALE[0], fit * (0.8 + 0.2 * jit))); };
+      const add = (fid: string, foot: number) => { const sc = s(foot); if (!sc) return false; const F = foot * sc; out.push({ id: fid, x: r3(x + (jx - 0.5) * (side - F)), y: r3(y + (jy - 0.5) * (side - F)), s: sc }); return true; };
+      if (what < CLUSTER_TUFT) add(KIT_PLUME, PLUME_FOOT); else if (what < CLUSTER_TUFT + CLUSTER_BOULDER) boulderBy(pick, large, add);
+      return;
+    }
+    const sc = r3(s0 * (CLUSTER_SHRINK + (1 - CLUSTER_SHRINK) * shrink)), F = 0.8 * sc;
+    out.push({ id, x: r3(x + (jx - 0.5) * (side - F)), y: r3(y + (jy - 0.5) * (side - F)), s: sc });
   };
   for (let vy = p.y0; vy <= p.y0 + p.h; vy++) for (let vx = p.x0; vx <= p.x0 + p.w; vx++) {
-    const nw = at(vx - 1, vy - 1), ne = at(vx, vy - 1), sw = at(vx - 1, vy), se = at(vx, vy), n = +nw + +ne + +sw + +se;
-    if (n === 0 || n === 4) continue;
-    if (n === 2 && nw !== se) continue; // two cells side by side: a straight shore
-    corner.add(vkey(vx, vy));
+    const n = nOf(vx, vy); if (!n) continue;
+    const nw = at(vx - 1, vy - 1), ne = at(vx, vy - 1), sw = at(vx - 1, vy);
     if (n === 3) {
       // inner (the shore turns in): the cluster across the vertex from the dry cell
       const [dx, dy] = !nw ? [1, 1] : !ne ? [-1, 1] : !sw ? [1, -1] : [-1, -1];
@@ -89,7 +143,7 @@ export function shorePieces(p: Pond): PondPiece[] {
       continue;
     }
     // outer (one water cell, or two across a pinch): a cluster toward each water cell at the vertex; the cell is left out of the stretches
-    for (const [ok, dx, dy] of [[nw, -1, -1], [ne, 1, -1], [sw, -1, 1], [se, 1, 1]] as const) {
+    for (const [ok, dx, dy] of [[nw, -1, -1], [ne, 1, -1], [sw, -1, 1], [at(vx, vy), 1, 1]] as const) {
       if (!ok) continue;
       outerCell.add(vkey(dx > 0 ? vx : vx - 1, dy > 0 ? vy : vy - 1)); cluster(E.outer, vx, vy, dx, dy);
     }
@@ -99,14 +153,60 @@ export function shorePieces(p: Pond): PondPiece[] {
   const lay = (axis: 'x' | 'y', line: number, side: 1 | -1, a0: number, a1: number) => {
     // a0..a1: the stretch's cells along the axis (inclusive); line: the cells' row (axis x) or column (axis y); side: where the dry land is
     const n = a1 - a0 + 1, L = n * CELL; if (L < 1) return; // a stretch under a tile is the corners'
-    // a piece at full size is two cells deep: where the second row in from the shore is not all water, half size (a cell deep)
-    let deep = true; for (let a = a0; a <= a1 && deep; a++) deep = axis === 'x' ? at(a, line - side) : at(line - side, a);
-    const most = deep && large ? 1 : 0.5, k = Math.max(1, Math.ceil(L / (E.len * most))), s = L / (k * E.len), step = L / k, depth = E.depth * s;
-    // across: the piece's footprint from the shore line into the water, depth deep (at most the rows of water there)
-    const shore = side > 0 ? (line + 1) * CELL : line * CELL, c = shore - side * depth / 2;
+    // the rows of water in from the shore along the whole stretch (the shore cell is the first), at most RIM_ROWS. A piece at full size is two
+    // cells deep: where the second row in is not all water, half size (a cell deep)
+    let rows = RIM_ROWS;
+    for (let a = a0; a <= a1 && rows > 1; a++) { let r = 1; while (r < rows && (axis === 'x' ? at(a, line - side * r) : at(line - side * r, a))) r++; rows = Math.min(rows, r); }
+    const most = rows >= 2 && large ? 1 : 0.5, sCap = Math.min(rows * CELL / E.depth, most * RIM_SCALE[1]);
+    // this stretch's own dice: its place on the world lattice (the same however the rest of the pond changes)
+    const rnd = mulberry(hash2(a0 * 4 + (axis === 'x' ? 0 : 2) + (side > 0 ? 1 : 0), line)), mix = (r: readonly [number, number]) => r[0] + (r[1] - r[0]) * rnd();
+    const shore = side > 0 ? (line + 1) * CELL : line * CELL;
+    const emit = (id: string | null, along: number, across: number, s: number) => {
+      const c = shore - side * across;
+      out.push(axis === 'x' ? { id: id ?? E.x, x: r3(along), y: r3(c), s } : { id: id ?? E.y, x: r3(c), y: r3(along), s });
+    };
+    // the gaps (GAP_SHARE of a stretch of GAP_MIN_STRETCH tiles or more), each between two pieces, so the stretch's ends meet the corners as before
+    const gaps: number[] = [];
+    if (L >= GAP_MIN_STRETCH) for (let g = Math.floor(mix(GAP_SHARE) * L / ((GAP_LEN[0] + GAP_LEN[1]) / 2) + rnd()); g > 0; g--) gaps.push(mix(GAP_LEN));
+    while (gaps.length && gaps.reduce((a, b) => a + b, 0) > GAP_SHARE[1] * 1.5 * L) gaps.pop();
+    const T = L - gaps.reduce((a, b) => a + b, 0), k = Math.max(gaps.length + 1, Math.ceil(T / (E.len * most)));
+    // the pieces' sizes: T shared out by weights of RIM_SCALE, none over sCap (what one cannot take, the rest share)
+    const w = Array.from({ length: k }, () => mix(RIM_SCALE)), sc = new Array<number>(k).fill(0);
+    let room = T, free = w.map((_, i) => i);
+    for (let guard = 0; guard <= k && free.length; guard++) {
+      const sum = free.reduce((a, i) => a + w[i]!, 0), over = free.filter(i => room * w[i]! / sum / E.len > sCap);
+      if (!over.length) { for (const i of free) sc[i] = room * w[i]! / sum / E.len; break; }
+      for (const i of over) { sc[i] = sCap; room -= sCap * E.len; }
+      free = free.filter(i => !over.includes(i));
+    }
+    // which joints between pieces are gaps
+    const joints = Array.from({ length: k - 1 }, (_, i) => i + 1);
+    for (let i = joints.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [joints[i], joints[j]] = [joints[j]!, joints[i]!]; }
+    const gapAt = new Map<number, number>(); gaps.forEach((g, i) => gapAt.set(joints[i]!, g));
+    // a piece of kit in the stretch's span [g0, g0 + gw] along, from the shore line in: of size 0.8 to 1.2, the largest that fits the span and the rows
+    const place = (id: string, foot: number, g0: number, gw: number, spot: number, inn: number, jit: number) => {
+      const fit = Math.min(RIM_SCALE[1], Math.min(gw - 0.04, rows * CELL) / foot); if (fit < RIM_SCALE[0]) return false;
+      const s = Math.round(Math.max(RIM_SCALE[0], fit * (0.8 + 0.2 * jit)) * 1000) / 1000, F = foot * s;
+      emit(id, g0 + F / 2 + (gw - F) * spot, F / 2 + Math.max(0, Math.min(rows * CELL - F, RIM_IN)) * inn, s); return true;
+    };
+    // a gap's content: a tuft of plume grass, a single boulder, or bare grass
+    const fill = (g0: number, gw: number) => {
+      const roll = rnd(), spot = rnd(), inn = rnd(), pick = rnd(), jit = rnd(), put = (id: string, foot: number) => place(id, foot, g0, gw, spot, inn, jit);
+      if (roll < GAP_TUFT) put(KIT_PLUME, PLUME_FOOT); else if (roll < GAP_TUFT + GAP_BOULDER) boulderBy(pick, large, put);
+    };
+    // a boulder on a joint between two pieces (not at a gap), in front of the rim, within a tile of the joint and the stretch
+    const stand = (joint: number) => {
+      const spot = rnd(), pick = rnd(), jit = rnd(), g0 = Math.max(a0 * CELL, joint - 0.5), g1 = Math.min((a1 + 1) * CELL, joint + 0.5);
+      boulderBy(pick, large, (id, foot) => place(id, foot, g0, g1 - g0, spot, 1, jit));
+    };
+    let along = a0 * CELL;
     for (let i = 0; i < k; i++) {
-      const along = a0 * CELL + (i + 0.5) * step;
-      out.push(axis === 'x' ? { id: E.x, x: r3(along), y: r3(c), s: r3(s) } : { id: E.y, x: r3(c), y: r3(along), s: r3(s) });
+      const g = gapAt.get(i); if (g !== undefined) { fill(along, g); along += g; }
+      const s = Math.round(sc[i]! * 1000) / 1000, len = E.len * s, depth = E.depth * s;
+      // across: the piece's footprint from the shore line (or a little in from it, RIM_IN at most, where the rows allow) into the water
+      emit(null, along + len / 2, depth / 2 + Math.max(0, Math.min(rows * CELL - depth, RIM_IN)) * rnd(), s);
+      along += len;
+      if (i + 1 < k && !gapAt.has(i + 1) && rnd() < JOINT_BOULDER) stand(along);
     }
   };
   for (const [axis, side] of [['x', -1], ['x', 1], ['y', -1], ['y', 1]] as const) {
@@ -132,12 +232,12 @@ export function shorePieces(p: Pond): PondPiece[] {
 
 /** lily pads keep at least this many cells from the shore, LILY_GAP tiles apart (one to a lattice square of that side), FOUNTAIN_CLEAR tiles
  *  from a fountain; LILY_SHARE of the squares deep enough hold one */
-export const LILY_EDGE = 3, LILY_GAP = 2.5, FOUNTAIN_CLEAR = 2, LILY_SHARE = 0.35;
-/** a 32-bit hash of a lattice square (the lily pads' world lattice: a pond's pads stay put when it changes elsewhere) */
-const hash2 = (a: number, b: number) => { let h = Math.imul(a | 0, 0x27d4eb2d) ^ Math.imul(b | 0, 0x165667b1) ^ 0x9e3779b9; h = Math.imul(h ^ (h >>> 15), 0x85ebca6b); h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35); return (h ^ (h >>> 16)) >>> 0; };
+export const LILY_EDGE = 4, LILY_GAP = 3, FOUNTAIN_CLEAR = 2.5, LILY_SHARE = 0.4;
+/** a cluster's size (T234: the art is 2.4 m across at 1, 33 px wide at 30% zoom, which read as a dot: 3.4 to 4.8 m, 50 to 70 px) */
+export const LILY_SIZE: readonly [number, number] = [1.4, 2.0];
 /** The lily pads of a pond: on the world lattice of LILY_GAP-tile squares, a square whose seeded spot lies on water at least LILY_EDGE cells from
  *  the shore (every cell within that many is water) and FOUNTAIN_CLEAR from every fountain gets a cluster (LILY_SHARE of them), its picture and
- *  size (0.8 to 1.2) from the same seed. Deterministic. */
+ *  size (LILY_SIZE) from the same seed. Deterministic. */
 export function lilyPads(p: Pond, fountains: readonly { x: number; y: number }[] = []): PondPiece[] {
   if (p.cells < POND_MIN_CELLS) return [];
   const out: PondPiece[] = [], gx0 = Math.floor(p.x0 * CELL / LILY_GAP), gy0 = Math.floor(p.y0 * CELL / LILY_GAP);
@@ -149,7 +249,7 @@ export function lilyPads(p: Pond, fountains: readonly { x: number; y: number }[]
     const x = (gx + 0.1 + 0.8 * u) * LILY_GAP, y = (gy + 0.1 + 0.8 * v) * LILY_GAP;
     if (!deep(cellOf(x), cellOf(y))) continue;
     if (fountains.some(f => (f.x - x) ** 2 + (f.y - y) ** 2 < FOUNTAIN_CLEAR ** 2)) continue;
-    out.push({ id: KIT_LILIES[Math.floor(pick * KIT_LILIES.length)]!, x: Math.round(x * 1000) / 1000, y: Math.round(y * 1000) / 1000, s: Math.round((0.8 + 0.4 * size) * 1000) / 1000 });
+    out.push({ id: KIT_LILIES[Math.floor(pick * KIT_LILIES.length)]!, x: Math.round(x * 1000) / 1000, y: Math.round(y * 1000) / 1000, s: Math.round((LILY_SIZE[0] + (LILY_SIZE[1] - LILY_SIZE[0]) * size) * 1000) / 1000 });
   }
   return out;
 }
