@@ -193,9 +193,9 @@ export class DayView {
           const h0 = this.view.holes[0], tee = h0 ? holeFrom(h0, this.plan.golfers[id]?.tees).tee : L.spot, stepMin = Math.max(STEP_IN, walkMin(L.spot, tee));
           const t1 = tr.arrive + L.w1, t2 = tr.desk, t3 = t2 + L.w2, step = L.first - ADDRESS_TIME - stepMin;
           if (minute < t1) { const q = polyAt(this.wayIn(tr), L.w1 > 0 ? (minute - tr.arrive) / L.w1 : 1); px = q.x; py = q.y; hx = q.hx; hy = q.hy; ex = door.x; ey = door.y; by = t2; }
-          else if (minute < t2) { px = door.x; py = door.y; walking = false; hx = L.spot.x - door.x; hy = L.spot.y - door.y; }
+          else if (minute < t2) { px = door.x; py = door.y; walking = false; hx = L.spot.x - door.x; hy = L.spot.y - door.y; ex = door.x; ey = door.y; by = t2; }
           else if (minute < t3) { const u = L.w2 > 0 ? (minute - t2) / L.w2 : 1; px = door.x + (L.spot.x - door.x) * u; py = door.y + (L.spot.y - door.y) * u; hx = L.spot.x - door.x; hy = L.spot.y - door.y; ex = L.spot.x; ey = L.spot.y; by = step; }
-          else if (minute < step) { px = L.spot.x; py = L.spot.y; walking = false; hx = tee.x - L.spot.x; hy = tee.y - L.spot.y; }
+          else if (minute < step) { px = L.spot.x; py = L.spot.y; walking = false; hx = tee.x - L.spot.x; hy = tee.y - L.spot.y; ex = L.spot.x; ey = L.spot.y; by = step; }
           else { const u = Math.min(1, (minute - step) / stepMin); px = L.spot.x + (tee.x - L.spot.x) * u; py = L.spot.y + (tee.y - L.spot.y) * u; hx = tee.x - L.spot.x; hy = tee.y - L.spot.y; ex = tee.x; ey = tee.y; by = L.first - ADDRESS_TIME; }
         } else {
           // after the round: from where he walked off the last green back to the car; in it once he is there

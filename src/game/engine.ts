@@ -575,7 +575,7 @@ export class Game {
     month: () => this.golfMonthIndex(), payUpkeep: n => this.spendAt(this.rangeSpot(), 'upkeep', n),
     demand: () => ({ tier: this.golf?.tier ?? 1, exits: this.golf?.exits?.length ?? 2, residents: this.traffic.pop, propsAppeal: this.decor.appeal(), practiceAppeal: this.golf?.range ? practiceAppeal(this.golf.range) : 0 }),
     dayLen: () => this.traffic.dayLen, simT: () => this.traffic.simTime(performance.now()),
-    timeLen: () => { const T = this.traffic; return this.golfMode ? 1440 / localRate(T.town, T.simTime(performance.now())) : T.dayLen; }, // (T266)
+    pace: () => { const T = this.traffic; return this.golfMode && T.town.prof ? localRate(T.town, T.simTime(performance.now())) * T.dayLen / 1440 : 1; }, // (T266)
     clock: () => { const c = this.clock(); return { hour: c.hour + c.minute / 60, day: c.day }; },
     save: () => this.scheduleSave(), toast: (t, k) => this.toast(t, k), emit: () => this.emit(),
     // the range's tee box in the course grid (T130): tee cells of no hole, laid past the brush rules (the plot is the range's), so T127's banks raise it
@@ -2192,7 +2192,7 @@ export class Game {
    *  No town streets, lots, stamp, course or clubhouse: the town grows from its seed across the road. False, with nothing laid, when no seed fits */
   private newRangeGame(): boolean {
     for (let k = 0; k < 8; k++) {
-      const seed = newSeed();
+      const seed = k === 0 && this.devSeed ? this.devSeed : newSeed(); // (T266: ?seed=N on the dev server, the same range start before and after)
       this.genTerrain(seed);
       const s = planRangeStart(this.terrain, seed);
       if (!s) continue;
