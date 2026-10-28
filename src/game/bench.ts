@@ -330,7 +330,11 @@ function bakeABStage(g: Game, c: { X: number; Y: number }, zooms: number[], ab: 
       t += dt; if (!fresh && t > 0.5) { fresh = true; g.ground.invalidateAll(); } // (the view baked again at this zoom: the workers' last bakes are its chunks)
       if (asked || t < 4.5) return;
       asked = true; const kind = g.perf.tier === 'district' ? 'm' : 'g';
-      void ab(kind, 3).then(r => { const on = stats(r.on), off = stats(r.off); out.push({ stage: `bake ${Math.round(z * 100)}% (${kind}) river swamp on`, ...on }, { stage: `bake ${Math.round(z * 100)}% (${kind}) river swamp off`, ...off, medianDeltaMs: +(on.medianMs - off.medianMs).toFixed(2) }); k++; next(); });
+      void ab(kind, 3).then(r => {
+        // (and the paired difference: each chunk's paint with the swamp less the same chunk's without, back to back; its median)
+        const on = stats(r.on), off = stats(r.off), d = r.on.map((v, i) => v - r.off[i]!).sort((p, q) => p - q), dm = d.length ? d[d.length >> 1]! : 0;
+        out.push({ stage: `bake ${Math.round(z * 100)}% (${kind}) river swamp on`, ...on }, { stage: `bake ${Math.round(z * 100)}% (${kind}) river swamp off`, ...off, medianDeltaMs: +(on.medianMs - off.medianMs).toFixed(2), pairedMedianDeltaMs: +dm.toFixed(2) }); k++; next();
+      });
     };
   };
   next();
