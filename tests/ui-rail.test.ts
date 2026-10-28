@@ -240,8 +240,8 @@ describe('the two drawers: the course drawer on the left, the town footer along 
   });
 });
 
-// T250: where the footer stands (footer-layout.ts): it moves aside: the free stretch of the bottom edge nearest the middle, full where it fits,
-// else compact; only on a crowded screen do the cards in its way move up
+// T250: where the footer stands (footer-layout.ts): it moves aside: the free stretch of the bottom edge nearest the right corner (the owner,
+// 2026-10-29: "move center footer menu to the right corner"), full where it fits, else compact; only on a crowded screen do the cards in its way move up
 describe('the town footer moves aside of the minimap and the bottom cards (T250)', () => {
   const FULL = 300, COMPACT = 116, MINI = 400;
   const at = (w: number, blocks: [number, number][] = []) => footerPlace({ w, laneL: MINI, blocks, full: FULL, compact: COMPACT });
@@ -250,26 +250,29 @@ describe('the town footer moves aside of the minimap and the bottom cards (T250)
     assert.ok(p.x >= MINI + FOOT_GAP, `clear of the minimap (${p.x})`); assert.ok(p.x + width <= w - FOOT_MARGIN, 'on screen');
     for (const [l, r] of blocks) assert.ok(p.x + width <= l || p.x >= r, `clear of the card at ${l}-${r} (${p.x}-${p.x + width})`);
   };
-  it('1366, 1920 and 2560 px with no bottom card: full, centred', () => {
-    for (const w of [1366, 1920, 2560]) { const p = at(w); assert.deepEqual(p, { x: Math.round(w / 2 - FULL / 2), compact: false, lift: [] }, `${w}`); clear(p, w, []); }
+  it('1366, 1920 and 2560 px with no bottom card: full, in the bottom right corner', () => {
+    for (const w of [1366, 1920, 2560]) { const p = at(w); assert.deepEqual(p, { x: w - FOOT_MARGIN - FULL, compact: false, lift: [] }, `${w}`); clear(p, w, []); }
   });
   it('beside the guide card and the leaderboard at their places (right-3, beside the range card, beside a panel): never over them', () => {
     for (const w of [1366, 1920, 2560]) for (const right of [12, 312, 368]) for (const width of [330, 288]) {
       const blocks: [number, number][] = [[w - right - width, w - right]], p = at(w, blocks);
       clear(p, w, blocks);
-      if (w >= 1920) assert.equal(p.compact, false, `${w}: full (${right}, ${width})`);
+      // by the corner: right of the card, full where it fits there, else compact; with no room right of it, full just left of it
+      const room = right - FOOT_GAP - FOOT_MARGIN;
+      if (room >= FULL) assert.deepEqual(p, { x: w - FOOT_MARGIN - FULL, compact: false, lift: [] }, `${w}: full in the corner (${right}, ${width})`);
+      else if (room >= COMPACT) assert.deepEqual(p, { x: w - FOOT_MARGIN - COMPACT, compact: true, lift: [] }, `${w}: compact in the corner (${right}, ${width})`);
+      else assert.deepEqual(p, { x: w - right - width - FOOT_GAP - FULL, compact: false, lift: [] }, `${w}: full left of the card (${right}, ${width})`);
     }
-    // 1366 with the range card open: the guide card beside it (right-23rem) leaves 256 px by the minimap: the compact bar there beats the full
-    // bar far off to the right
+    // 1366 with the range card open: the guide card beside it (right-23rem): the full bar in the corner right of it
     const busy: [number, number][] = [[1366 - 368 - 330, 1366 - 368]], p = at(1366, busy);
-    assert.equal(p.compact, true); clear(p, 1366, busy); assert.ok(Math.abs(p.x + COMPACT / 2 - 683) < 120, 'near the middle');
+    assert.deepEqual(p, { x: 1354 - FULL, compact: false, lift: [] }); clear(p, 1366, busy);
     assert.deepEqual(freeStretches({ w: 1366, laneL: MINI, blocks: busy }), [[410, 658], [1008, 1354]]);
   });
-  it('the last resort: no room on the bottom edge even for the compact bar: compact near the middle, the cards in its way move up', () => {
+  it('the last resort: no room on the bottom edge even for the compact bar: compact in the corner, the cards in its way move up', () => {
     const w = 1093; // 125% UI on a 1366 px screen
     const p = at(w, [[90, w - 12]]);
     assert.equal(p.compact, true); assert.deepEqual(p.lift, [0]);
-    assert.ok(p.x >= MINI + FOOT_GAP && p.x + COMPACT <= w - FOOT_MARGIN, 'clear of the minimap, on screen');
+    assert.ok(p.x >= MINI + FOOT_GAP && p.x + COMPACT <= w - FOOT_MARGIN, 'clear of the minimap, on screen'); assert.equal(p.x, w - FOOT_MARGIN - COMPACT, 'in the corner');
     // a panel, the range card and the guide card beside them (right-41rem), the leaderboard at the right: a stretch between holds the compact bar
     const blocks: [number, number][] = [[w - 656 - 330, w - 656], [w - 12 - 288, w - 12]], q = at(w, blocks);
     assert.equal(q.lift.length, 0, 'no card moves'); clear(q, w, blocks);
