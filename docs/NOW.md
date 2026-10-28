@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-29 22:50 SAST)
+## START HERE (kept current by the lead; last updated 2026-10-29 23:40 SAST)
 
 **T273 #819, range geometry source review:** branch `lead/coffee-geometry-hold-20261028`, worktree `worktrees/coffee-geometry-hold-20261028`. Native hash-bound geometry holds/proofs cover the original two-view kiosk, targeted view1-v2 and new distance post; exact source/provenance and prior style approval retained. Native front-edge errors are3.15/9.44degrees (kiosk v1),3.67degrees (kiosk v2),5.31degrees (post), so none is ready for registration. Existing queue logic already honors nested negative review decisions; no code, runtime, scheduled-worker deployment/state/timer changes. Original v1 provenance/style bytes need narrow -text rules because previous Git newline normalization invalidated their native hash bindings. Next: validate source/proof hashes and open the scoped source-only PR for lead review.
 
@@ -72,7 +72,7 @@ never commit there.)
 | Ticket | Issue | Branch / worktree | State and next step |
 | --- | --- | --- | --- |
 | T271 | #812 | `arena/T271-own-grass` (a fresh worktree; port 5186) | **Started ~22:50.** Create your own grass preset, option 9 in Shape by hand (plays as a base surface; texture, Exposure, stripes, Edges; saved with the game); a storage plan on the issue first; bake at most +0.5 ms. |
-| T270 | #811 | `arena/T270-shop-variety` (a fresh worktree; port 5187) | **Started ~22:20.** Shop variety (the owner: five Video Vaults in a row): reproduce, then neighbours never alike, a town's spread, one named business per block; no saved index moves. |
+| T268 | #809 | `arena/T268-place-tees` (a fresh worktree; port 5187) | **Started ~23:40.** Place each tee set (blue, white, yellow, red) yourself: a ghost box per colour (R turns, [ ] scales), priced, undoable, refused with a reason; move and remove; yardages and the scorecard follow. |
 
 **Held, waiting on the owner (not agents):**
 - **#394 T112** (sharp 0.35): approved, merge held until the owner stops the 5191 studio (the lock change makes the auto-updater run
@@ -89,19 +89,18 @@ deliveries come as PRs to review. The 3D people session's handover is `docs/HAND
 ### 4. Queue (in order; start the next when an agent lands)
 1. **T267 #808** the face shade is merged (#814, the lead): left, a screenshot against the owner's reference when the PC has memory free (it
    had 0.6 GB with two agents running; the browser pane has had no WebGL since, until the app restarts) and the pond's cut face if it shows the same overhang.
-2. **T268 #809** place each tee set (blue, white, yellow, red) yourself; move and remove them.
-3. **T269 #810** an active grounds crew: the holes moved each morning, mowers on the course, staff wages (a plan first; 3D people art).
-4. **T272 #825** ground tiles are decoded about 70 times a tour (found by T265): keep them decoded and pre-scaled, faster bakes everywhere.
-5. **T259 #759** farms: seasonal corn and ploughed fields, orchards in rows, farmhouses set back on a poplar-lined lane (art 185-189 from
+2. **T269 #810** an active grounds crew: the holes moved each morning, mowers on the course, staff wages (a plan first; 3D people art).
+3. **T272 #825** ground tiles are decoded about 70 times a tour (found by T265): keep them decoded and pre-scaled, faster bakes everywhere.
+4. **T259 #759** farms: seasonal corn and ploughed fields, orchards in rows, farmhouses set back on a poplar-lined lane (art 185-189 from
    ChatGPT; stand-ins until then).
-6. **T248 #718** water that moves: research first, two flowing textures, waves lapping at the shore.
-7. **T251 #728** balls bounce and roll on the ground (the range, the course, NPCs and you).
-8. **T249 #719** a grey stone water border with planting, switchable: waits for the owner's ChatGPT art (item 180).
-9. **P28** (you, the town and its people; `docs/plans/P28.md`): T242 #702 set-the-scene cards → T243 #703 portraits → T240 #704 your
+5. **T248 #718** water that moves: research first, two flowing textures, waves lapping at the shore.
+6. **T251 #728** balls bounce and roll on the ground (the range, the course, NPCs and you).
+7. **T249 #719** a grey stone water border with planting, switchable: waits for the owner's ChatGPT art (item 180).
+8. **P28** (you, the town and its people; `docs/plans/P28.md`): T242 #702 set-the-scene cards → T243 #703 portraits → T240 #704 your
    character → T241 #705 your skills → T244 #706 money matches → T245 #707 a healthier town → T246 #708 your tournament and the Mayor's Cup.
-10. **T214 phase 1** memberships (plan P26, #695) → **T212 #557** putt, chip, tee-up and coaching clips.
-11. **T264 #787** park-and-ride: far car parks served by a shuttle bus (the owner's "later" idea from T237; not queued before the rest).
-12. Older lists: see "History: START HERE as it stood on 2026-10-28 morning" below and `gh issue list --label arena --state open`.
+9. **T214 phase 1** memberships (plan P26, #695) → **T212 #557** putt, chip, tee-up and coaching clips.
+10. **T264 #787** park-and-ride: far car parks served by a shuttle bus (the owner's "later" idea from T237; not queued before the rest).
+11. Older lists: see "History: START HERE as it stood on 2026-10-28 morning" below and `gh issue list --label arena --state open`.
 
 ### 5. Waiting on the owner's ChatGPT art (`docs/art/CHATGPT-IMAGE-QUEUE.md`, in this order) and what the lead does when it lands
 1. **Art 181, the missing menu tiles** (one sheet of 12, `art/theme-consistency/generated/ui/golf-build-tool-tiles-sheet-v2.png`): cut it
@@ -112,7 +111,9 @@ deliveries come as PRs to review. The 3D people session's handover is `docs/HAND
 3. **Farms** (185-189): for T259. 4. **The grey stone border** (180): for T249. 5. **Scenes batch 2**: for P28 T242.
 
 ### 6. Latest merges (2026-10-28)
-#824 T265 the river's swamp band (in stretches and bays, stopping at roads, lots and the course) and tree belts along every river and
+#827 T270 shop variety (the owner: five Video Vaults in a row; the cause: the approved shop presets all held the Video Vault): each lot's
+business by its place on the street, no neighbour alike, houses too, `?oldshops` keeps the old; art requests in GOLF-SPRITES (six shop fronts,
+three venues, three house backs) · #824 T265 the river's swamp band (in stretches and bays, stopping at roads, lots and the course) and tree belts along every river and
 creek (thickets to 10 m, thinning by 32 m; birch, aspen, maple; within the owner's frame limits; the swamp's bake +0.1-0.3 ms by direct
 measure); willow and alder art requested · #821 T266 golf at a watchable pace (the owner: "hyper speed"): the golf hours at 1.5 game min/s with a 40 s night, walking capped at
 2.8 m/s (carts 5.6) with soft fades, the tournament's pros too; months and money unchanged; "Golf pace: Watchable / Fast" in the gear menu; the
