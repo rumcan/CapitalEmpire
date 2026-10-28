@@ -289,12 +289,12 @@ function bakeStage(g: Game, c: { X: number; Y: number }, zooms: number[], done: 
 }
 
 /** T265: the belts' frame check along the river (the same page, so the PC's other load falls alike on both): at 30%, 15% and 8%, the belts
- *  on and off by turns (Engine.setRiverTrees, the branch; main as it is), twice each: 2.5 s for the cells to be planted again, then 4 s of
+ *  on and off by turns (Engine.setRiverTrees, the branch; main as it is), three times each: 2.5 s for the cells to be planted again, then 4 s of
  *  the river pan, the frames' cpu ms pooled (avg, p95) with the most instances */
 function frameStage(g: Game, follow: (s: number) => { X: number; Y: number }, done: (r: Record<string, unknown>[]) => void) {
   const eg = g as unknown as { setRiverTrees?: (on: boolean) => void }, out: Record<string, unknown>[] = [];
   const runs: { st: Stage; on: boolean | null }[] = [];
-  for (const st of RIVER_STAGES) for (let r = 0; r < 2; r++) { if (eg.setRiverTrees) runs.push({ st, on: true }, { st, on: false }); else runs.push({ st, on: null }); }
+  for (const st of RIVER_STAGES) for (let r = 0; r < 3; r++) { if (eg.setRiverTrees) runs.push({ st, on: true }, { st, on: false }); else runs.push({ st, on: null }); }
   const pooled = new Map<string, { cpu: number[]; inst: number }>();
   let k = 0, t = 0, along = 0;
   const next = () => {
@@ -317,7 +317,7 @@ function frameStage(g: Game, follow: (s: number) => { X: number; Y: number }, do
 }
 
 /** T265: the swamp's bake check on the branch: at each zoom, over the river (the camera still at c) 3.5 s for the view's chunks to be baked,
- *  then every worker paints its last bakes of that tier again three times, the river's swamp on and off by turns (GroundCache bakeAB: one
+ *  (the view baked again), then every worker paints its last bakes of that tier again three times, the river's swamp on and off by turns (GroundCache bakeAB: one
  *  worker, one chunk, back to back, so the PC's other load falls alike on both); the paints' median, p95 and mean, on and off */
 function bakeABStage(g: Game, c: { X: number; Y: number }, zooms: number[], ab: (kind: 'g' | 'm', reps: number) => Promise<{ on: number[]; off: number[] }>, done: (r: Record<string, unknown>[]) => void) {
   const out: Record<string, unknown>[] = [];
@@ -325,9 +325,10 @@ function bakeABStage(g: Game, c: { X: number; Y: number }, zooms: number[], ab: 
   let k = 0, t = 0;
   const next = () => {
     if (k >= zooms.length) { g.onFrame = null; done(out); return; }
-    const z = zooms[k]!; g.cam = { X: c.X, Y: c.Y, z }; t = 0; let asked = false;
+    const z = zooms[k]!; g.cam = { X: c.X, Y: c.Y, z }; t = 0; let asked = false, fresh = false;
     g.onFrame = (_now, dt) => {
-      t += dt; if (asked || t < 3.5) return;
+      t += dt; if (!fresh && t > 0.5) { fresh = true; g.ground.invalidateAll(); } // (the view baked again at this zoom: the workers' last bakes are its chunks)
+      if (asked || t < 4.5) return;
       asked = true; const kind = g.perf.tier === 'district' ? 'm' : 'g';
       void ab(kind, 3).then(r => { const on = stats(r.on), off = stats(r.off); out.push({ stage: `bake ${Math.round(z * 100)}% (${kind}) river swamp on`, ...on }, { stage: `bake ${Math.round(z * 100)}% (${kind}) river swamp off`, ...off, medianDeltaMs: +(on.medianMs - off.medianMs).toFixed(2) }); k++; next(); });
     };

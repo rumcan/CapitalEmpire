@@ -137,7 +137,7 @@ const plantAll = (free: (x: number, y: number, r: number) => boolean = () => tru
 const all = plantAll();
 const distOf = (t: ForestTree) => F.water.nearest(F.water.near(t.x, t.y, t.x, t.y), t.x, t.y, { d: 0, kind: 0, nx: 0, ny: 0, hw: 0 });
 
-test('T265 the belts: deterministic cell by cell, thick near the bank and thinning out over 10-40 m, gaps where the water shows', () => {
+test('T265 the belts: deterministic cell by cell, thick near the bank and thinning out over 10-32 m, gaps where the water shows', () => {
   assert.deepEqual(riverBeltCell(7, W.cls, null, F, 5, 4, () => true), riverBeltCell(7, W.cls, null, F, 5, 4, () => true), 'the same cell, the same trees');
   assert.ok(all.length > 400, `${all.length} trees`);
   // on the river's banks (away from the creek): the density by distance past the bank, per tile of bank, on its far side (the near side and
@@ -148,7 +148,7 @@ test('T265 the belts: deterministic cell by cell, thick near the bank and thinni
   const near = band(0, 5), mid = band(8, 14), far = band(14, 20);
   const river = all.filter(t => t.x > 40 && t.x < 560 && Math.abs(t.y - 300) < 60);
   assert.ok(near > mid * 1.4 && mid > far, `thick near the bank, thinning out: ${near.toFixed(1)}, ${mid.toFixed(1)}, ${far.toFixed(1)} a tile`);
-  assert.equal(river.filter(t => Math.abs(t.y - 300) - 15 - BELT.river.bank >= BELT.reach).length, 0, 'none past 40 m');
+  assert.equal(river.filter(t => Math.abs(t.y - 300) - 15 - BELT.river.bank >= BELT.reach).length, 0, 'none past 32 m');
   assert.equal(beltProfile(0), 1); assert.equal(beltProfile(BELT.reach), 0);
   // gaps: 16-tile stretches of bank with no more than a tree or two within 6 tiles of it, on both banks, and thickets with many
   let bare = 0, thick = 0, n = 0;
