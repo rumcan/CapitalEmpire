@@ -8,7 +8,7 @@ $settings=Get-Content -LiteralPath $Config -Raw | ConvertFrom-Json
 $stateRoot=[IO.Path]::GetFullPath($settings.stateDir)
 $stopFile=Join-Path $stateRoot 'STOP.json'
 if($Action -eq 'Install') {
-  $names=@('queue.mjs','supervisor.mjs','scheduled-tick.ps1','manage-task.ps1')
+  $names=@('catalogue.mjs','planner.mjs','queue.mjs','recovery.mjs','supervisor.mjs','scheduled-tick.ps1','manage-task.ps1')
   $hashes=@($names | ForEach-Object { [ordered]@{file=$_;sha256=(Get-FileHash -LiteralPath (Join-Path $PSScriptRoot $_) -Algorithm SHA256).Hash.ToLowerInvariant()} })
   $hashText=($hashes | ConvertTo-Json -Compress)
   $algorithm=[Security.Cryptography.SHA256]::Create()

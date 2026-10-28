@@ -21,6 +21,8 @@ export function parseCatalogue(markdown){
     if(!/^\d+\./.test(m[1])||!/(?:families|conditions|decal sheets)/i.test(block)||!/^\|\s*`[\w-]+`\s*\|/m.test(block)||starts.some(x=>x.index>m.index&&x.index<end))continue;
     items.push({key:'section:'+m[1].split('.')[0],id:null,itemNumber:null,name:m[1],angle:/Angle C/i.test(block)?'C':null,section:m[1],subsection:'',block,owner:'ChatGPT',pipelineOnly:false,priority:'P3',authorityClaim:'unmarked',sourceBlockSha256:sha(Buffer.from(block)),line:markdown.slice(0,m.index).split('\n').length});
   }
+  const counts=new Map();for(const item of items)counts.set(item.key,(counts.get(item.key)??0)+1);
+  for(const item of items)if(counts.get(item.key)>1)item.key+=':'+sha(Buffer.from(item.section+'|'+item.subsection+'|'+item.name)).slice(0,12);
   return items.sort((a,b)=>a.line-b.line);
 }
 export async function readSources(config){

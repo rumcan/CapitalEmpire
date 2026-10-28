@@ -18,12 +18,19 @@ async function artInventory(roots,catalogue){
     const sibling=file.replace(/\.provenance\.json$/,'.png'),candidates=[prov.output,prov.rawFile,sibling].filter(value=>typeof value==='string');
     let image=null;for(const candidate of candidates){const resolved=path.isAbsolute(candidate)?candidate:path.resolve(root,candidate);try{const bytes=await fs.readFile(resolved);image={file:resolved,sha256:sha(bytes),bytes:bytes.length};break;}catch{}}
     if(!image)continue;
-    const blocked=prov.integrationStatus==='blocked'||/hold|blocked|reject/i.test(prov.visualReviewStatus??'')||/[\\/](?:rejected|held)(?:[\\/]|-)/i.test(image.file);
+    const blocked=prov.integrationStatus==='blocked'||/hold|held|blocked|reject/i.test(prov.visualReviewStatus??'')||/[\\/](?:rejected|held)(?:[\\/]|-)/i.test(image.file);
     const record={...image,provenance:file,provenanceSha256:sha(await fs.readFile(file)),review:blocked?'held':'pending',registration:'not-verified',main:'not-verified',directions:prov.viewsOrder??[prov.view??prov.facing].filter(Boolean),viewSet:prov.viewSet??null,subjobKey:prov.subjobKey??null};
     const decision=prov.appearanceDecision??prov.visualDecision;
     // Supplemental primary decisions preserve exact generator provenance unchanged.
     const decisionPaths=decision?.file?[{file:path.isAbsolute(decision.file)?decision.file:path.resolve(root,decision.file),sha256:decision.sha256}]:[{file:image.file.replace(/\.png$/i,'.appearance.json'),sha256:null}];
-    if(!blocked)for(const candidate of decisionPaths){try{const bytes=await fs.readFile(candidate.file);const parsed=JSON.parse(bytes),bindings=parsed.files??parsed.artifacts??[];const imageBound=bindings.some(binding=>binding.sha256===image.sha256&&(binding.file===image.file||path.basename(binding.file??'')===path.basename(image.file)));if((!candidate.sha256||sha(bytes)===candidate.sha256)&&(!parsed.id||parsed.id===prov.id)&&parsed.decision==='accepted-for-art-appearance'&&imageBound){record.review='accepted-hash-bound';record.appearanceDecision={file:candidate.file,sha256:sha(bytes)};}}catch{}}
+    for(const candidate of decisionPaths){try{
+      const bytes=await fs.readFile(candidate.file),parsed=JSON.parse(bytes),bindings=parsed.files??parsed.artifacts??[];
+      const imageBound=bindings.some(binding=>binding.sha256===image.sha256&&(binding.file===image.file||path.basename(binding.file??'')===path.basename(image.file)));
+      if((candidate.sha256&&sha(bytes)!==candidate.sha256)||(parsed.id&&parsed.id!==prov.id)||!imageBound)continue;
+      const held=parsed.visualAccepted===false||/^(?:held|blocked|rejected)(?:$|[- :])/i.test(parsed.decision??'');
+      if(held){record.review='held';record.holdReason=parsed.reason??parsed.reasons??parsed.notes??parsed.summary??parsed.decision;record.appearanceDecision={file:candidate.file,sha256:sha(bytes)};}
+      else if(!blocked&&record.review!=='held'&&parsed.decision==='accepted-for-art-appearance'){record.review='accepted-hash-bound';record.appearanceDecision={file:candidate.file,sha256:sha(bytes)};}
+    }catch{}}
     if(!byId.has(prov.id))byId.set(prov.id,[]);byId.get(prov.id).push(record);
     const number=prov.brief?.item??prov.catalogueItem;if(number){if(!byNumber.has(Number(number)))byNumber.set(Number(number),[]);byNumber.get(Number(number)).push(record);}
   }
@@ -36,7 +43,7 @@ export async function snapshotQueue(config,reviewedTokens={}){
     const artifacts=[...new Map([...(inventory.byId.get(item.id)??[]),...(inventory.byNumber.get(item.itemNumber)??[])].map(a=>[path.resolve(a.file),a])).values()];
     const reviewToken=item.key+':'+sha(Buffer.from([...new Set(artifacts.map(a=>a.sha256))].sort().join('|'))),artReview=artifacts.some(a=>a.review==='accepted-hash-bound')?'accepted-hash-bound':artifacts.some(a=>a.review==='held')?'held':artifacts.length?'pending':'not-generated';
     const linkedOutputs=linked.filter(x=>x.itemNumber===item.itemNumber),reserved=excluded.has(item.id)||reservations.some(r=>!r.subjobKey&&!r.released&&r.owner!=='continuous-worker'&&(r.id&&r.id===item.id||Number(r.catalogueItem??r.itemNumber)===item.itemNumber));
-    const value={...item,artifacts,linkedOutputs,sourceFingerprint:sha(Buffer.from(live.sourceFingerprint+':'+item.sourceBlockSha256)),generation:artifacts.length?'existing-raw':'missing',artReview,integration:'not-verified',mergedOnMain:'not-verified',reviewToken,reserved};
+    const value={...item,artifacts,linkedOutputs,sourceRecords:live.sources,sourceFingerprint:sha(Buffer.from(live.sourceFingerprint+':'+item.sourceBlockSha256)),generation:artifacts.length?'existing-raw':'missing',artReview,integration:'not-verified',mergedOnMain:'not-verified',reviewToken,reserved};
     if(config.planning===false){value.eligible=item.angle==='A'&&item.authorityClaim==='unmarked'&&!artifacts.length&&!reserved;value.reviewEligible=!item.pipelineOnly&&item.authorityClaim!=='in-game-claimed'&&artifacts.length>0&&artReview!=='accepted-hash-bound'&&!reviewedTokens[reviewToken]&&!reserved;}
     else{
       value.plan=await readPlan(config,value);value.jobs=value.plan?await jobStates(value.plan.plan,value,config,reservations):[];
@@ -51,6 +58,6 @@ export async function snapshotQueue(config,reviewedTokens={}){
   else for(const x of ordered){if(!x.eligible)continue;if(x.planNeeded){next={...x,action:'plan'};break;}if(x.pendingJobs.length){next={...x,action:'generate-subjob',job:x.pendingJobs[0],planSha256:x.plan.planSha256};break;}}
   const byOwnerAngle={};for(const x of items){const key=x.owner+':'+(x.angle??'unclassified');byOwnerAngle[key]=(byOwnerAngle[key]??0)+1;}
   return {schema:2,...live,items,next,pendingPlanning:items.filter(x=>x.planNeeded).map(x=>({key:x.key,itemNumber:x.itemNumber,angle:x.angle,status:'pending-ai-plan'})),
-    counts:{catalogue:items.length,existingRaw:items.filter(x=>x.artifacts.length).length,pendingReview:items.filter(x=>['pending','held'].includes(x.artReview)).length,eligible:items.filter(x=>x.eligible).length,pendingSubjobs:items.reduce((n,x)=>n+(x.pendingJobs?.length??0),0),waitingSubjobs:items.reduce((n,x)=>n+(x.jobs?.filter(j=>['reserved','waiting-dependency','existing-held','existing-needs-review'].includes(j.status)).length??0),0),byOwnerAngle},
+    counts:{catalogue:items.length,existingRaw:items.filter(x=>x.artifacts.length).length,pendingReview:items.filter(x=>['pending','held'].includes(x.artReview)).length,eligible:items.filter(x=>x.eligible).length,pendingDispositions:items.filter(x=>x.plan?.plan.disposition&&x.plan.plan.disposition.kind!=='already-covered').length,pendingSubjobs:items.reduce((n,x)=>n+(x.pendingJobs?.length??0),0),waitingSubjobs:items.reduce((n,x)=>n+(x.jobs?.filter(j=>['reserved','waiting-dependency','existing-held','existing-needs-review'].includes(j.status)).length??0),0),byOwnerAngle},
     completion:'Inventory/plans only. Raw, held, reserved, dependency-blocked, review, integration and 3D-pipeline work remain separate; no global completion claim.'};
 }

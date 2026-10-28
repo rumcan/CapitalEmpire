@@ -8,6 +8,9 @@ import {createInterface} from 'node:readline';
 import {fileURLToPath} from 'node:url';
 import sharp from 'sharp';
 import {snapshotQueue,readJson,writeJson,sha} from './queue.mjs';
+import {sourcesUnchanged} from './catalogue.mjs';
+import {validatePlan,planPath,planHash,readPlan,planningPrompt,subjobPrompt} from './planner.mjs';
+import {assessRecovery} from './recovery.mjs';
 export const FIVE_HOURS=5*60*60*1000;
 export const FORBIDDEN_THREADS=['01a16c0b-bcad-7e71-a5d0-0281b98562b9'];
 export function actualUsageError(event){
@@ -21,21 +24,25 @@ export function actualUsageCheckpoint(checkpoint){
     ['image_gen.imagegen','tools.image_gen__imagegen'].includes(failure.tool)&&actualUsageError({type:'error',error:failure});
 }
 export async function validCheckpoint(checkpoint,queue,config){
-  if(!checkpoint||checkpoint.authoritySha256!==queue.authoritySha256||checkpoint.itemId!==(queue.next.id??queue.next.key))return false;
+  const job=queue.next.job,expectedId=job?.id??queue.next.id??queue.next.key;
+  if(!checkpoint||checkpoint.authoritySha256!==queue.authoritySha256||checkpoint.itemId!==expectedId)return false;
+  if(queue.next.action==='plan')return checkpoint.status==='plan-complete'&&checkpoint.builtinImagegenUsed===false&&checkpoint.artifacts?.length===0&&checkpoint.sourceFingerprint===queue.next.sourceFingerprint&&await validatePlan(checkpoint.plan,queue.next,config);
+  if(job&&(checkpoint.sourceFingerprint!==queue.next.sourceFingerprint||checkpoint.planSha256!==queue.next.planSha256||checkpoint.subjobKey!==job.key||checkpoint.artifacts?.length!==1||(await readPlan(config,queue.next))?.planSha256!==queue.next.planSha256))return false;
   const reviewing=queue.next.action==='review-existing';
   if(checkpoint.status!==(reviewing?'review-checkpointed':'batch-complete')||(!reviewing&&checkpoint.builtinImagegenUsed!==true))return false;
   if(!Array.isArray(checkpoint.artifacts)||checkpoint.artifacts.length===0)return false;
   const generated=await fs.realpath(path.join(config.repoRoot,'art/theme-consistency/generated'));
   for(const artifact of checkpoint.artifacts){
     if(typeof artifact.file!=='string'||!path.isAbsolute(artifact.file)||!artifact.file.toLowerCase().endsWith('.png'))return false;
+    if(job&&path.resolve(artifact.file)!==path.resolve(job.output))return false;
     let resolved,bytes;try{resolved=await fs.realpath(artifact.file);bytes=await fs.readFile(resolved);}catch{return false;}
     const relative=path.relative(generated,resolved);if(!reviewing&&(relative.startsWith('..')||path.isAbsolute(relative)))return false;
     if(bytes.length<33||bytes.subarray(0,8).toString('hex')!=='89504e470d0a1a0a'||bytes.subarray(12,16).toString()!=='IHDR'||bytes.readUInt32BE(16)<1||bytes.readUInt32BE(20)<1||sha(bytes)!==artifact.sha256)return false;
-    try{await sharp(bytes,{limitInputPixels:100000000}).raw().toBuffer();}catch{return false;}
+    try{const picture=sharp(bytes,{limitInputPixels:100000000});await picture.raw().toBuffer();if(job){const s=await sharp(bytes).stats(),a=s.channels[3];if(job.background==='transparent'&&(!a||a.min===255||a.max===0))return false;if(job.background==='opaque'&&a&&a.min!==255)return false;}}catch{return false;}
     if(reviewing&&!queue.next.artifacts.some(prior=>path.resolve(prior.file)===path.resolve(artifact.file)&&prior.sha256===artifact.sha256))return false;
     if(!reviewing){
       const candidates=[resolved.replace(/\.png$/i,'.provenance.json'),resolved.replace(/\.raw\.png$/i,'.provenance.json')];
-      let correctId=false;for(const file of [...new Set(candidates)]){try{const provenance=await readJson(file);if(provenance?.id===checkpoint.itemId){correctId=true;break;}}catch{}}
+      let correctId=false;for(const file of [...new Set(candidates)]){try{const provenance=await readJson(file);if(provenance?.id===checkpoint.itemId&&(!job||provenance.subjobKey===job.key&&provenance.sourceFingerprint===queue.next.sourceFingerprint&&provenance.planSha256===queue.next.planSha256&&provenance.outputSha256===artifact.sha256)){correctId=true;break;}}catch{}}
       if(!correctId)return false;
     }
   }
@@ -69,10 +76,13 @@ export async function discoverBinary(config){
   for(const file of candidates){try{await fs.access(file);}catch{continue;}const result=spawnSync(file,['--version'],{encoding:'utf8',windowsHide:true}),version=/codex-cli\s+(\d+)\.(\d+)\./.exec(result.stdout??'');if(result.status===0&&version&&(Number(version[1])>=1||Number(version[2])>=164))return {file,version:result.stdout.trim()};}
   throw Error('No supported VS Code bundled Codex binary found. No npm, API or image-script fallback is allowed.');
 }
-export function workerPrompt(config,queue,batch){return `You are the DEDICATED continuous golf artwork worker, not the interactive parent. This turn handles at most ${config.maxImagesPerBatch??1} newly generated images and must checkpoint after every copied image.
+export function workerPrompt(config,queue,batch){
+  if(queue.next.action==='plan')return planningPrompt(config,queue,batch);
+  if(queue.next.action==='generate-subjob')return subjobPrompt(config,queue,batch);
+  return `You are the DEDICATED continuous golf artwork worker, not the interactive parent. This turn handles at most ${config.maxImagesPerBatch??1} newly generated images and must checkpoint after every copied image.
 Read ${config.repoRoot}/art/theme-consistency/jobs/CONTINUOUS-ART-HANDOVER.md and the current live authority ${config.authorityFile}; expected SHA256 ${queue.authoritySha256}. A frozen batch source is ${batch.sourceFile}. Re-read the live source before claiming/generating: if it changed, checkpoint status authority-changed and return without generating.
 CURRENT OWNER OVERRIDE 2026-10-28: built-in imagegen supports true alpha. Use transparent_background:true with no background. DO NOT use magenta for this built-in tool; this overrides older magenta wording in the Markdown. Keep existing good magenta originals and key them rather than regenerate for format.
-Ownership: Codex owns current A=2 genuinely different front+right/front+left views. A8 is retired for NEW work. RUN owns B/C/P; do not duplicate RUN or other active work. Existing reviewed four-view art remains useful. No mirrored/copied fake turns. Fixed game edges +/-0.5, verticals vertical; screen-upper-right light.
+Ownership: ChatGPT makes all 2D images; RUN/Meshy is for 3D only. Respect the actual item's image type/camera and active reservations. Current A is two genuinely different front+right/front+left views; A8 is retired for new work. Existing reviewed views remain useful. No mirrored/copied fake turns. Upper-right light unless this brief calls for neutral lighting.
 This batch's claimed item: ${JSON.stringify(queue.next)}. Other active reservations/exclusions: ${JSON.stringify(config.excludeIds??[])}. First validation is golf:range-coffee-kiosk; no dispenser or yardage-board duplication.
 Apply imagegen skill C:/Users/RAMPAGE/.codex/skills/.system/imagegen/SKILL.md. Use ONLY the BUILT-IN image_gen.imagegen (tools.image_gen__imagegen). First verify that tool exists. If absent, write status capability-error and stop. NO image API calls, image_gen.py/SDK/other-model fallback or account switching. View all style references ${JSON.stringify(config.styleReferences??[])} and relevant current two-view camera reference before invoking imagegen. Attach main theme first, owner's country-club additional reference second, geometry last. Country-club reference is style only: do not copy UI, roads or scenery into isolated sprites. Retain upper-right fixed light and precise game projection. Do not claim availability alone proves generation.
 Save image source immediately under ${config.repoRoot}/art/theme-consistency/generated/ with a versioned filename and exact id/prompt/reference hashes/provenance. Before imagegen, search existing generated files/root+live for this EXACT id; if an output already exists, inspect/checkpoint it and NEVER duplicate. Preserve failed takes, don't overwrite. You may crop/key/check native assets but do not mutate root runtime, index, branch, owner files/servers or merge PRs. Root checkout belongs to another old arena branch. Code work stays only in ${config.worktree}. Scratch/state/logs stay on E:.
@@ -89,15 +99,17 @@ export async function tick(config,{now=()=>Date.now(),dryRun=false,runnerOverrid
     if(await readJson(path.join(config.stateDir,'STOP.json')))return {status:'stopped'};
     const queue=await snapshotQueue(config,state.reviewedTokens??{});const {markdown,...durableQueue}=queue;await writeJson(path.join(config.stateDir,'queue.json'),durableQueue);
     state.authoritySha256=queue.authoritySha256;state.queueCounts=queue.counts;state.lastTickAt=new Date(now()).toISOString();await persist();
-    if(state.notBeforeUtc&&Date.parse(state.notBeforeUtc)>now()){state.status='usage-backoff';await persist();return {status:state.status,notBeforeUtc:state.notBeforeUtc};}
-    if(!queue.next){state.status='idle-awaiting-new-art-or-review';state.notBeforeUtc=null;await persist();return {status:state.status,counts:queue.counts};}
-    const binary=runnerOverride??await discoverBinary(config),fingerprint=sha(Buffer.from(JSON.stringify({binary,worktree:config.worktree,authoritySha256:queue.authoritySha256,item:queue.next.sourceBlockSha256,styleReferences:config.styleReferences})));
+    if(state.notBeforeUtc&&Date.parse(state.notBeforeUtc)>now()){state.status=state.status==='transient-backoff'?'transient-backoff':'usage-backoff';await persist();return {status:state.status,notBeforeUtc:state.notBeforeUtc};}
+    if(!queue.next){state.status=config.planning!==false&&(queue.counts.waitingSubjobs||queue.counts.pendingDispositions)?'waiting-deliverable-review-or-dependency':'idle-awaiting-new-art-or-review';state.notBeforeUtc=null;await persist();return {status:state.status,counts:queue.counts};}
+    const binary=runnerOverride??await discoverBinary(config),fingerprint=sha(Buffer.from(JSON.stringify({binary,worktree:config.worktree,sourceFingerprint:queue.sourceFingerprint,item:queue.next.sourceBlockSha256,job:queue.next.job?.key,planSha256:queue.next.planSha256,styleReferences:config.styleReferences})));
     if(state.needsAttention&&state.failureFingerprint===fingerprint&&!config.retryErrors)return {status:'needs-attention',error:state.lastError};
     const stamp=new Date(now()).toISOString().replace(/[:.]/g,'-'),batchDir=path.join(config.stateDir,'batches',stamp);
     await fs.mkdir(batchDir,{recursive:true});const batch={id:stamp,sourceFile:path.join(batchDir,'authority.md'),checkpointFile:path.join(batchDir,'checkpoint.json')};
-    await fs.writeFile(batch.sourceFile,markdown);const prompt=workerPrompt(config,queue,batch);await fs.writeFile(path.join(batchDir,'prompt.md'),prompt);
+    await fs.writeFile(batch.sourceFile,queue.sources.map(s=>JSON.stringify(s)+'\n'+(s.role==='catalogue'?markdown:queue.texts[s.role])).join('\n\n'));const prompt=workerPrompt(config,queue,batch);await fs.writeFile(path.join(batchDir,'prompt.md'),prompt);
     const args=runnerOverride?.args??argsForThread(state.threadId,config.worktree);if(dryRun)return {status:'dry-run',binary,args,item:queue.next,checkpointFile:batch.checkpointFile};
-    state.status='running';state.notBeforeUtc=null;state.needsAttention=false;state.activeBatch={...batch,itemId:queue.next.id??queue.next.key};state.binary=binary;await persist();
+    if(!await sourcesUnchanged(queue)){state.status='authority-changed';await persist();return {status:state.status};}
+    if(queue.next.job&&await fs.stat(queue.next.job.output).then(()=>true,()=>false)){state.status='deliverable-present';await persist();return {status:state.status};}
+    state.status='running';state.notBeforeUtc=null;state.needsAttention=false;state.activeBatch={...batch,itemId:queue.next.job?.id??queue.next.id??queue.next.key,subjobKey:queue.next.job?.key??null};state.binary=binary;await persist();
     child=spawn(binary.file,args,{cwd:config.worktree,windowsHide:true,stdio:['pipe','pipe','pipe'],env:{...process.env,TEMP:config.tempDir??'E:/ClaudeTemp',TMP:config.tempDir??'E:/ClaudeTemp'}});
     completion=new Promise(resolve=>{child.once('error',error=>resolve({code:-1,error:error.message}));child.once('close',code=>resolve({code}));});
     await lock.setWorker(child.pid);state.workerPid=child.pid;await persist();
@@ -115,10 +127,17 @@ export async function tick(config,{now=()=>Date.now(),dryRun=false,runnerOverrid
     state.workerPid=null;state.batches++;state.lastBatchId=batch.id;
     if(usage){state.status='usage-backoff';state.notBeforeUtc=new Date(now()+FIVE_HOURS).toISOString();state.lastError=checkpoint?.failure?.message||turnError||errorText;state.lastCheckpoint=checkpoint;}
     else{
-      const valid=await validCheckpoint(checkpoint,queue,config);
-      if(result.code===0&&valid){state.status=checkpoint.status;state.lastCheckpoint=checkpoint;state.needsAttention=false;state.notBeforeUtc=null;if(queue.next.action==='review-existing'){state.reviewedTokens??={};state.reviewedTokens[queue.next.reviewToken]=new Date(now()).toISOString();}}
+      const unchanged=await sourcesUnchanged(queue),valid=unchanged&&await validCheckpoint(checkpoint,queue,config);
+      const recovery=assessRecovery({exitCode:result.code,checkpoint,checkpointValid:valid,turnError,stderr:errorText,launchError:result.error,nowMs:now(),completedStatuses:['batch-complete','review-checkpointed','plan-complete']});
+      if(recovery.kind==='checkpoint'){
+        if(checkpoint.status==='plan-complete')await writeJson(planPath(config,queue.next),{schema:1,planSha256:planHash(checkpoint.plan),plan:checkpoint.plan,createdAt:new Date(now()).toISOString()});
+        state.status=checkpoint.status;state.lastCheckpoint=checkpoint;state.needsAttention=false;state.notBeforeUtc=null;state.lastError=null;state.failureFingerprint=null;state.lastWarning=recovery.warning;
+        if(queue.next.action==='review-existing'){state.reviewedTokens??={};state.reviewedTokens[queue.next.reviewToken]=new Date(now()).toISOString();}
+      }
+      else if(!unchanged){state.status='authority-changed';state.needsAttention=false;state.notBeforeUtc=null;}
       else if(result.code===0&&checkpoint?.status==='authority-changed'){state.status='authority-changed';state.notBeforeUtc=null;}
-      else{state.status='needs-attention';state.needsAttention=true;state.failureFingerprint=fingerprint;state.lastError=result.error||turnError||checkpoint?.error||errorText||'Worker did not provide a valid durable checkpoint';state.notBeforeUtc=null;}
+      else if(recovery.kind==='retry'){state.status='transient-backoff';state.notBeforeUtc=recovery.notBeforeUtc;state.needsAttention=false;state.lastError=recovery.message;}
+      else{state.status='needs-attention';state.needsAttention=true;state.failureFingerprint=fingerprint;state.lastError=recovery.message;state.notBeforeUtc=null;}
     }
     delete state.activeBatch;await persist();return {status:state.status,threadId:state.threadId,batchId:batch.id,notBeforeUtc:state.notBeforeUtc,lastError:state.lastError??null};
   }catch(error){state.status='needs-attention';state.lastError=error.message;state.needsAttention=true;await persist();return {status:state.status,error:error.message};}
