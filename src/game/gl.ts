@@ -17,7 +17,7 @@ import { SPEC_LIGHT_GLSL, SPEC_MASK_K } from './lamp-reflect';
 import { GLOSS, GLOSS_LIGHT_GLSL } from './swamp';
 import { GRADE_GLSL, blurGlsl, type GradeFrame } from './grade';
 import { CAR_PAINT_GLSL } from './car-paint';
-import { GRASS_SHINE_GLSL, LUM_HP_STD, MASK_SCALE, SHINE_MASK_K, SHINE_SHADE } from './grass-shine';
+import { GRASS_SHINE_GLSL, LUM_HP_STD, MASK_SCALE, SHINE_SHADE } from './grass-shine';
 
 /** floats per sprite instance: rect x0 y0 x1 y1 (world px), uv u0 v0 u1 v1, layer, alpha, cullable, foot line (world px; < 0: casts no shadow),
  *  clip x0 y0 x1 y1 (world px), foot: the footprint's near corner x y and its left and right corners' x (world px; the cast shadows stand on it) */
@@ -65,7 +65,7 @@ void main() {
 // premultiplied in rgb) times the same camera falloff (uGloss.x, uGloss.y). The mask is a GLOSS.maskK-th of the chunk's size. No mask (uGloss.z
 // 0): the chunk as before
 // T262: the grass catches the camera's shine (grass-shine.ts): a chunk with a weight mask (uShine.z > 0: its gain) lights its grass by the
-// slope of its own colour's luminance high-pass (four more taps), times the mask's weight (inset from the edges, 0..2 as 0..1), the same camera
+// slope of its own colour's luminance high-pass (two more taps), times the mask's weight (inset from the edges, 0..2 as 0..1), the same camera
 // falloff (uShine.x, uShine.y), and none where the last frame's shadow layer (uShadeLayer, its view in uLayerCam / uLayerScreen: each pixel's
 // world point taken to where it lay then) had a sprite's shadow or the ground's baked shade. No mask: the chunk as before
 const FS_QUAD = `#version 300 es
@@ -97,8 +97,8 @@ void main() {
     }
   }
   if (uShine.z > 0.0) {
-    vec2 ts = vec2(textureSize(uTex, 0)), mUV = vUV * ts / (${SHINE_MASK_K.toFixed(1)} * vec2(textureSize(uShineMask, 0)));
-    float wgt = texture(uShineMask, mUV).r * ${MASK_SCALE.toFixed(1)};
+    vec2 ts = vec2(textureSize(uTex, 0));
+    float wgt = texture(uShineMask, vUV).r * ${MASK_SCALE.toFixed(1)};
     float d = length(gl_FragCoord.xy - 0.5 * uScreen) / (0.5 * max(uScreen.x, uScreen.y)), k = (1.0 - smoothstep(uShine.x, uShine.y, d)) * uShine.z;
     // out of the shadows: the shadow layer as the last frame drew it (red a sprite's shadow, green the ground's baked shade), at where this
     // pixel's world point lay on that frame's screen
@@ -110,11 +110,11 @@ void main() {
     if (wgt * k > 0.004) {
       // the height: the luminance less its local mean (blade tops high, the gaps low), and its slope per world px (tw: the world px a texel covers)
       float tw = (uRect.z - uRect.x) / ((uUV.z - uUV.x) * ts.x);
+      // (two taps 1.5 texels right and down, each a bilinear mean of two texels: forward differences, half the taps of central ones)
       vec2 t = 1.5 / ts;
-      float l0 = lumOf(c.rgb), lw = lumOf(texture(uTex, vUV - vec2(t.x, 0.0)).rgb), le = lumOf(texture(uTex, vUV + vec2(t.x, 0.0)).rgb);
-      float ln = lumOf(texture(uTex, vUV - vec2(0.0, t.y)).rgb), ls = lumOf(texture(uTex, vUV + vec2(0.0, t.y)).rgb);
-      float z = (l0 - 0.25 * (lw + le + ln + ls)) / ${LUM_HP_STD};
-      vec2 sl = vec2(le - lw, ls - ln) / (3.0 * tw * ${(LUM_HP_STD * 2.5).toFixed(4)});
+      float l0 = lumOf(c.rgb), le = lumOf(texture(uTex, vUV + vec2(t.x, 0.0)).rgb), ls = lumOf(texture(uTex, vUV + vec2(0.0, t.y)).rgb);
+      float z = (l0 - 0.5 * (le + ls)) / ${LUM_HP_STD};
+      vec2 sl = vec2(le - l0, ls - l0) / (1.5 * tw * ${(LUM_HP_STD * 2.5).toFixed(4)});
       c.rgb = grassShine(c.rgb, z, sl, wgt, k);
     }
   }

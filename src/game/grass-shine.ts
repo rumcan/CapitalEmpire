@@ -10,17 +10,17 @@
  *  as T110's textured shine: each pixel gains its own colour squared (half whitened), so lit tips brighten and the dark gaps between blades
  *  stay dark; never a flat wash.
  *
- *  The height is the chunk's own colour's (phase 1's verdict, PR #792: its luminance's high-pass and slope from four more taps in gl.ts
+ *  The height is the chunk's own colour's (phase 1's verdict, PR #792: its luminance's high-pass and slope from two more taps in gl.ts
  *  FS_QUAD). It looked the same as a bump map per grass family sampled in tile space and costs no texture, half the shader time, and follows
  *  everything the bake lays (the mowing stripes, the finish's bands, every family imported later).
  *
- *  The per-chunk weight mask (a fifth of the chunk's size each way, R8) is made by the ground worker from the surfaces' outlines in the order
+ *  The per-chunk weight mask (a texel of SHINE_TEXEL world px, R8, spanning the chunk) is made by the ground worker from the surfaces' outlines in the order
  *  the bake lays them (renderer.ts grassShineMask; shineMaskPixels here). Pure: the node tests run it, and gl.ts builds its shader from it. */
 import { SUN_SHADOW_DEG } from './ext/course-height';
 
-/** the weight mask's size against its chunk's (a fifth each way: the weights and the inset are soft; one byte a texel, so the masks of a
- *  full ground cache, 192 MB of RGBA pictures, take 192 / (4 x 25) = 1.9 MB) */
-export const SHINE_MASK_K = 5;
+/** the weight mask's texel: SHINE_TEXEL world px (the weights and the inset are soft), and never under SHINE_TEXEL_PX of its chunk's own px.
+ *  One byte a texel: the masks of a full ground cache (192 MB of RGBA pictures) take at most 192 / (4 x 25) = 1.9 MB, at 30% under 1 MB */
+export const SHINE_TEXEL = 24, SHINE_TEXEL_PX = 5;
 /** the inset from a shiny surface's edge (world px): no shine within the first, whole past the second */
 export const SHINE_INSET = [14, 60] as const;
 /** the zoom the shine fades out over (CSS zoom): whole from the second down, gone by the first (the district chunks, iso.ts MID_BELOW 10%,

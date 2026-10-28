@@ -224,7 +224,7 @@ export type FromWorker =
       /** T199: the swamp's gloss mask at a GLOSS.maskK-th of the chunk's size (renderer.ts takeGlossMask: premultiplied, alpha the pools' gloss,
        *  colour each pool's local mean times it); none with specCam off or no swamp on the chunk */
       gloss?: ImageBitmap;
-      /** T262: the grass shine's weight mask (grass-shine.ts: a SHINE_MASK_K-th of the chunk's size, one channel); none with the shine off or
+      /** T262: the grass shine's weight mask (grass-shine.ts: SHINE_TEXEL world px a texel, spanning the chunk, one channel); none with the shine off or
        *  no grass on the chunk */
       shine?: ShineMaskData; /** T262: the worker ms its weight mask took (in ms) */ shineMs?: number; ms: number }
   | { t: 'error'; message: string }

@@ -19,7 +19,7 @@ import { WOODLAND_TEX, classAlpha, rockAlpha, shadeField, shadeRGBA, slopeField,
 import { fairwayStripeLook, holeStripeLegs, legArea, type StripeLook } from './course-stripes';
 import { LIP, collarToneOf, finishMow, finishOf, finishStripeLook, greenStripeLook, lipRuns, tonedCollar, type CourseFinish } from './course-finish';
 import { quadBox, type CourseLayer, type CoursePatch, type CourseRim, type CourseTex, type CourseWall, type LotPatch, type MowStripes, type PatchTex, type ShineMaskData } from './ground-protocol';
-import { SHINE_MASK_K, SHINE_WEIGHTS, maskColour, maskPad, shineMaskPixels, shineWeight, type ShineWeights } from './grass-shine';
+import { SHINE_TEXEL, SHINE_TEXEL_PX, SHINE_WEIGHTS, maskColour, maskPad, shineMaskPixels, shineWeight, type ShineWeights } from './grass-shine';
 import { DRAW_ORDER, FaceForm, GREEN_FACE, STAIR_TREAD, SURF_HEIGHT, SUN_DIR, WALL_DROP, WALL_PX_PER_M, WALL_TEX, WallMat, defaultShadow, faceLight, faceScale, isOverlay, layerCode, shadowOwner, slopeLight, stairSteps, wallShade, type Stair, type WallShade } from './ext/course-walls';
 import { SURF } from './ext/course-grid';
 import { SPROUT_PERIOD, growDraws, seedColour, seedSprouts, sproutRes, type GrowDraw } from './ext/course-fx/seed';
@@ -489,31 +489,35 @@ export class GroundPainter {
   takeShineMask(): ShineMaskData | null { const m = this.shineNow; this.shineNow = null; return m; }
   /** T262: the worker ms the last bake's weight mask took (the bench's mask cost) */
   shineMs = 0;
-  /** T262: the grass shine's weight mask over the chunk just baked (grass-shine.ts), at a SHINE_MASK_K-th of the chunk's size with a margin:
+  /** T262: the grass shine's weight mask over the chunk just baked (grass-shine.ts), a texel SHINE_TEXEL world px (or more), with a margin:
    *  the map's own grass first (its terrain: the ground, meadow and woodland floor in the map's grass weight, the water, creeks and banks none),
    *  then every surface's outline in its weight (ground that is no grass in none), in the order the bake lays them: the town lawns, the lots'
    *  ground over them, the course's layers in DRAW_ORDER with their collars and alternate looks and the painted areas, the car parks, then the
    *  roads and walks (net: the bake's own view of the network); then inset from the grass's edges (shineMaskPixels). null when no grass
    *  reaches the chunk. A small CPU canvas: its read back is cheap (never a chunk's) */
   private grassShineMask(lite: boolean, net: FxView): ShineMaskData | null {
-    const c = this.chunkNow!, K = SHINE_MASK_K, texelWorld = K / c.L, pad = maskPad(texelWorld), wts = this.shineWeights;
-    const w = Math.max(1, Math.ceil(c.W / K)), h = Math.max(1, Math.ceil(c.H / K)), W = w + 2 * pad, H = h + 2 * pad;
-    const grow = (pad * texelWorld) / HH + 1, b = c.box, big: BBox = [b[0] - grow, b[1] - grow, b[2] + grow, b[3] + grow];
-    const S = new DOMMatrix([1 / K, 0, 0, 1 / K, pad, pad]).multiply(c.M), Si = S.inverse();
+    // the mask's texel: SHINE_TEXEL world px, never under SHINE_TEXEL_PX of the chunk's own px; it spans the chunk exactly (gl.ts reads it by
+    // the chunk's own uv), with pad texels of margin all round
+    const c = this.chunkNow!, wts = this.shineWeights, tw0 = Math.max(SHINE_TEXEL, SHINE_TEXEL_PX / c.L);
+    const w = Math.max(1, Math.round(c.W / (tw0 * c.L))), h = Math.max(1, Math.round(c.H / (tw0 * c.L))), texelWorld = c.W / (w * c.L), pad = maskPad(texelWorld);
+    const W = w + 2 * pad, H = h + 2 * pad, grow = (pad * texelWorld) / HH + 1, b = c.box, big: BBox = [b[0] - grow, b[1] - grow, b[2] + grow, b[3] + grow];
+    const S = new DOMMatrix([w / c.W, 0, 0, h / c.H, pad, pad]).multiply(c.M);
     const cv = new OffscreenCanvas(W, H), m = cv.getContext('2d', { willReadFrequently: true })!;
-    const kindOf = (tex: string) => { const f = this.tex.familyOf(tex); return f ? familyById(f)?.kind ?? null : null; };
-    const weightOf = (tex: string | null) => (tex ? shineWeight(tex, kindOf(tex), wts) : 0);
+    const kinds = new Map<string, string | null>();
+    const kindOf = (tex: string) => { let k = kinds.get(tex); if (k === undefined) { const f = this.tex.familyOf(tex); k = f ? familyById(f)?.kind ?? null : null; kinds.set(tex, k); } return k; };
     let any = false;
-    // the map's grass, by the terrain's class under each texel's centre
-    const mapW = weightOf('grass'), img = m.createImageData(W, H), d = img.data, cls = this.terrain, base = maskColour(mapW > 0 ? mapW : null), mr = mapW > 0 ? +/rgb\((\d+)/.exec(base)![1]! : 0;
-    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
-      const tx = Si.a * (x + 0.5) + Si.c * (y + 0.5) + Si.e, ty = Si.b * (x + 0.5) + Si.d * (y + 0.5) + Si.f;
-      const ix = Math.floor(tx), iy = Math.floor(ty), k = cls[Math.min(MAP - 1, Math.max(0, iy)) * MAP + Math.min(MAP - 1, Math.max(0, ix))];
-      const o = 4 * (y * W + x), grassy = mapW > 0 && ix >= 0 && iy >= 0 && ix < MAP && iy < MAP && (k === TC.GROUND || k === TC.PATCH || k === TC.HILL);
-      d[o] = grassy ? mr : 0; d[o + 3] = 255; if (grassy) any = true;
-    }
-    m.putImageData(img, 0, 0);
+    // the map's grass: all of the mask, then its water, creeks and banks (the terrain's classes, tile by tile; most chunks have none) none
+    const mapW = shineWeight('grass', kindOf('grass'), wts);
+    m.fillStyle = maskColour(mapW > 0 ? mapW : null); m.fillRect(0, 0, W, H); any = mapW > 0;
     m.setTransform(S);
+    if (any) {
+      const wet = new Path2D(), cls = this.terrain; let wetAny = false;
+      for (let y = Math.max(0, Math.floor(big[1])); y < Math.min(MAP, Math.ceil(big[3])); y++) for (let x = Math.max(0, Math.floor(big[0])); x < Math.min(MAP, Math.ceil(big[2])); x++) {
+        const k = cls[y * MAP + x]; if (k === TC.GROUND || k === TC.PATCH || k === TC.HILL) continue;
+        wet.rect(x, y, 1, 1); wetAny = true;
+      }
+      if (wetAny) { m.fillStyle = '#000'; m.fill(wet); }
+    }
     const all = this.lotsIn(big).filter(p => !p.top && !p.layby);
     const isPark = (p: LotPatch) => (!!p.lines?.length || !!p.park) && p.tex !== 'field' && p.tex !== 'dirt';
     const lawns = all.filter(p => p.lawn).sort((p, q) => p.lawn!.z - q.lawn!.z), lots = all.filter(p => !p.paint && !p.course && !p.lawn && p.tex !== 'marks');
@@ -521,8 +525,8 @@ export class GroundPainter {
     /** rings (tiles, even-odd) of texture tex (null: ground that is no grass), within clip (tiles) when given, at share of its weight */
     const lay = (rings: readonly ArrayLike<number>[], tex: string | null, clip?: Path2D, share = 1) => {
       if (!rings.length) return;
+      const kind = tex === null ? 'none' : kindOf(tex), wgt = tex !== null && (kind ?? 'grass') === 'grass' ? shineWeight(tex, kind, wts) * share : 0, grass = wgt > 0;
       const path = new Path2D(); for (const q of rings) ringPath(path, q);
-      const grass = tex !== null && (kindOf(tex) ?? 'grass') === 'grass' && shineWeight(tex, kindOf(tex), wts) > 0, wgt = grass ? weightOf(tex) * share : 0;
       if (grass) any = true;
       if (clip) { m.save(); m.clip(clip); }
       m.fillStyle = maskColour(grass ? wgt : null); m.fill(path, 'evenodd');

@@ -42,7 +42,7 @@ try {
   await page.goto(`${base}?${start}&stamp=0`, { timeout: 240000, waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => window.__game?.ready, null, { timeout: 240000 });
   await page.addStyleTag({ content: '* { visibility: hidden !important } canvas { visibility: visible !important }' });
-  await page.evaluate(look => { const g = window.__game; g.prebake = () => {}; g.setSpeed(0); g.setShowGrid?.(false); window.__night = 0; g.nightAmount = () => window.__night; g.setShine(look); }, look);
+  await page.evaluate(look => { const g = window.__game; g.prebake = () => {}; g.setSpeed(0); g.setShowGrid?.(false); window.__night = 0; g.nightAmount = () => window.__night; g.setShine?.(look); }, look);
   // ---- the spots: the fairway cell with the most fairway round it, the largest green, the largest town lawn (a lot's or a block's)
   const spots = await page.evaluate(() => {
     const g = window.__game, grid = g.courseGrid, CT = 0.5, S = { rough: 1, fairway: 4, green: 8 }, out = {};
