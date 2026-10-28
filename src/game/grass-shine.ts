@@ -40,7 +40,7 @@ export const SHINE_GROUPS: readonly { key: ShineGroup; label: string }[] = [
 ];
 export type ShineWeights = Record<ShineGroup, number>;
 export const SHINE_WEIGHTS: Readonly<ShineWeights> = {
-  green: 0.55, fairway: 0.9, fringe: 0.5, firstCut: 0.45, tee: 0.2, lawn: 0.4, map: 0.35, outfield: 0.4, rough: 0.25, longGrass: 0.18, fescue: 0.15,
+  green: 0.55, fairway: 0.9, fringe: 0.5, firstCut: 0.45, tee: 0.1, lawn: 0.4, map: 0.35, outfield: 0.4, rough: 0.25, longGrass: 0.18, fescue: 0.15,
 };
 /** each texture's group by its name (a painted surface's key, a preset's or a picture's name without its prefix; renderer.ts lays the map's
  *  own grass, the terrain's ground, meadow and woodland floor, as 'map') */
