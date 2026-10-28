@@ -295,8 +295,7 @@ export default function App() {
   const gv = game?.golfMode ? game.golfView() : null, fv = game?.golfMode ? game.foundingView() : null;
   /** T233: the top bar's stat chips' figures (golf mode) */
   const stats = gv ? game!.topStats() : null;
-  /** a range start's founding season before the invitation (P22 2.8, T095): "Founding season · n of 9 holes"; and the title's place (the range's,
-   *  then the town's once named) */
+  /** a range start's founding season before the invitation (P22 2.8, T095): "Founding season · n of 9 holes" */
   const founding = fv && gv && !fv.invited && game!.traffic.round.runs === 0 && !gv.live ? `Founding season · ${Math.min(fv.check.holes, fv.check.holesNeeded)} of ${fv.check.holesNeeded} holes` : null;
   const title = game?.ready ? game.titleName(fv?.check.holes) : null; // T235: the club's name and date in a golf game (null: the classic town game's old line)
   /** the tool visibility in force (T033 progressive unlocks; null shows everything) */

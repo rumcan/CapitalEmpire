@@ -3663,7 +3663,7 @@ export class Game {
     p.seen.push(id); this.scheduleSave(); return true;
   }
   /** the town's first building starts and its first one finishes (a new range game, P22 2.8): "Someone is building a house across from your
-   *  range", then the town has its name: "Pine Hollow is on the map" (the title bar follows) */
+   *  range", then the town has its name: "Pine Hollow is on the map" (the minimap names it; the title bar says the club, T235) */
   private townFirsts(events: readonly { kind: string; use: number }[]) {
     if (this.golf?.start !== 'range') return;
     const b = events.find(e => e.kind === 'build');
