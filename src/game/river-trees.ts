@@ -38,10 +38,10 @@ const CREEK_SWAMP_REACH = SWAMP_OUT + SWAMP.soft * Math.log(4) + 0.5, RIVER_SWAM
  *    tiles clear of anything built: no dead tree beside a lot or a road);
  *  - conifer: the conifers' share; slope: no tree on a slope steeper than this (the forest's soft limit) */
 export const BELT = {
-  S: 1.9, keep: 0.9,
+  S: 2.4, keep: 0.9, size: [0.95, 1.35],
   river: { min: 2, bank: 3 }, creek: { min: 0.5, bank: 0 },
   full: 5, reach: 20,
-  clump: [-0.3, 0.12], clumpWave: 9, clumpFloor: 0.12,
+  clump: [-0.3, 0.12], clumpWave: 9, clumpFloor: 0.08,
   open: [-0.24, 0], openWave: 46,
   front: { dot: 0.35, near: 7, keep: 0.4 },
   swamp: { keep: 0.3, snag: 0.12, snagClear: 6 },
@@ -116,11 +116,12 @@ export function beltField(seed: number, waters: readonly Waterway[]): BeltField 
 }
 
 /** the swamp at (x, y) for the belt (0..1), from its nearest waterway q (WaterIndex nearest): that waterway's band (swamp.ts bandOf,
- *  riverBandOf) on the plain distance less the soft union's usual share, with its reach and rag there: the band as the ground lays it, to a
- *  tile or so, without its lattices (a planted cell asks it of every tree; the lattices' first queries made a cell take milliseconds) */
+ *  riverBandOf) on the plain distance, with its reach and rag there: the band as the ground lays it to a tile or so and never past it (the
+ *  ground's soft distance is never more than the plain one), without its lattices (a planted cell asks it of every tree; the lattices' first
+ *  queries made a cell take milliseconds) */
 export function beltSwamp(f: BeltField, q: { d: number; kind: number; hw: number }, x: number, y: number): number {
-  if (q.kind === 0) return q.d < RIVER_SWAMP_REACH && !f.riverSwamp.empty ? riverBandOf(q.d - RIVER_SWAMP.soft, riverReachAt(x, y, q.hw), riverRagAt(x, y)) : 0;
-  return q.d < CREEK_SWAMP_REACH && !f.creekSwamp.empty ? bandOf(q.d - SWAMP.soft * 0.5, reachAt(x, y), ragAt(x, y)) : 0;
+  if (q.kind === 0) return q.d < RIVER_SWAMP_REACH && !f.riverSwamp.empty ? riverBandOf(q.d, riverReachAt(x, y, q.hw), riverRagAt(x, y)) : 0;
+  return q.d < CREEK_SWAMP_REACH && !f.creekSwamp.empty ? bandOf(q.d, reachAt(x, y), ragAt(x, y)) : 0;
 }
 /** the belt's keep (0..1) at a point b tiles past the bank (the profile: thick near the water, thinning out to none at BELT.reach) */
 export const beltProfile = (b: number) => 1 - smoothstep(BELT.full, BELT.reach, b);
@@ -155,7 +156,7 @@ export function riverBeltCell(seed: number, cls: Uint8Array, slope: Float32Array
       if (slope && sampleField(slope, x, y) > BELT.slope) continue;
       if (!free(x, y, r0)) continue;
       const deal = sw > 0.5 && r() < BELT.swamp.snag && free(x, y, BELT.swamp.snagClear) ? BELT_SNAG_DEAL : r() < BELT.conifer ? BELT_CONIFER_DEAL : BELT_BROAD_DEAL;
-      const id = dealTree(deal, r()), scale = ownerSize(id) * FOREST_SIZE * (0.82 + r() * 0.36);
+      const id = dealTree(deal, r()), scale = ownerSize(id) * FOREST_SIZE * (BELT.size[0] + r() * (BELT.size[1] - BELT.size[0]));
       out.push({ x, y, id, scale, flip: false });
     }
   }

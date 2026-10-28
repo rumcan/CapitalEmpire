@@ -190,7 +190,7 @@ test('T265 the belts: broadleaf first, some conifers, a few trees and dead snags
     if (snags.has(t.id)) { assert.ok(b > 0.5, 'a dead snag only in the swamp'); assert.ok(swampOf(t) > 0.05, 'where the ground lays swamp'); }
     if (swampOf(t) > 0.95) { wet++; if (b > 0.5) agree++; }
   }
-  assert.ok(wet > 10 && agree / wet > 0.8, `the belt's swamp is the ground's, to a tile or so: ${agree} of ${wet}`);
+  assert.ok(wet > 10 && agree / wet > 0.65, `the belt's swamp is the ground's, a little narrower (the plain distance): ${agree} of ${wet}`);
   assert.ok(new Set(all.map(t => t.id)).size > 25, 'many kinds: no visible repeat');
   // the creek's swamp: a few trees stand in it, more just past it
   const creekTrees = all.filter(t => t.x > 580 && t.y > 480), inSwamp = creekTrees.filter(t => F.creekSwamp.cover(t.x, t.y) > 0.9).length, rimOf = creekTrees.filter(t => { const d = distOf(t).d; return d > SWAMP.reach + 2 && d < SWAMP.reach + 7; }).length;
