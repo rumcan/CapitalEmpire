@@ -257,20 +257,30 @@ function bakeStats(g: Game, b0: number): Record<string, number> {
   const q = (p: number) => a[Math.min(a.length - 1, Math.floor(p * a.length))] ?? 0;
   return { bakes: a.length, medianMs: +q(0.5).toFixed(2), p95Ms: +q(0.95).toFixed(2), avgMs: +(a.reduce((p, v) => p + v, 0) / Math.max(1, a.length)).toFixed(2) };
 }
-/** T265: the bake check over the river (the camera still at c): at each zoom every chunk is baked again (invalidateAll), 4 s, and the bakes'
- *  median taken; with the river's swamp switch (GroundCache.setRiverSwamp, the branch) on and then off, else (main) once as it is */
+/** T265: the bake check over the river (the camera still at c): at each zoom every chunk is baked again (invalidateAll), 4 s a run, three runs,
+ *  and the bakes' median taken over the three; with the river's swamp switch (GroundCache.setRiverSwamp, the branch) on and off by turns,
+ *  else (main) as it is */
 function bakeStage(g: Game, c: { X: number; Y: number }, zooms: number[], done: (r: Record<string, unknown>[]) => void) {
   const gc = g.ground as unknown as { setRiverSwamp?: (on: boolean) => void; invalidateAll(): void }, out: Record<string, unknown>[] = [];
-  const runs: { z: number; swamp: boolean | null }[] = [];
-  for (const z of zooms) { if (gc.setRiverSwamp) runs.push({ z, swamp: true }, { z, swamp: false }); else runs.push({ z, swamp: null }); }
+  const runs: { z: number; swamp: boolean | null }[] = [], REPS = 3;
+  for (const z of zooms) for (let r = 0; r < REPS; r++) { if (gc.setRiverSwamp) runs.push({ z, swamp: true }, { z, swamp: false }); else runs.push({ z, swamp: null }); }
+  const pooled = new Map<string, number[]>();
   let k = 0, t = 0, b0 = 0;
   const next = () => {
-    if (k >= runs.length) { gc.setRiverSwamp?.(true); g.onFrame = null; done(out); return; }
+    if (k >= runs.length) {
+      gc.setRiverSwamp?.(true); g.onFrame = null;
+      for (const [stage, a] of pooled) { a.sort((p, q) => p - q); const q = (p: number) => a[Math.min(a.length - 1, Math.floor(p * a.length))] ?? 0; out.push({ stage, bakes: a.length, medianMs: +q(0.5).toFixed(2), p95Ms: +q(0.95).toFixed(2), avgMs: +(a.reduce((p, v) => p + v, 0) / Math.max(1, a.length)).toFixed(2) }); }
+      done(out); return;
+    }
     const r = runs[k]!; g.cam = { X: c.X, Y: c.Y, z: r.z }; t = 0; b0 = -1;
     g.onFrame = (_now, dt) => {
       t += dt;
       if (b0 < 0 && t > 1.5) { if (r.swamp !== null) gc.setRiverSwamp!(r.swamp); gc.invalidateAll(); b0 = g.ground.baked; }
-      if (b0 >= 0 && t > 5.5) { out.push({ stage: `bake ${Math.round(r.z * 100)}%${r.swamp === null ? '' : r.swamp ? ' river swamp on' : ' river swamp off'}`, ...bakeStats(g, b0) }); k++; next(); }
+      if (b0 >= 0 && t > 5.5) {
+        const stage = `bake ${Math.round(r.z * 100)}%${r.swamp === null ? '' : r.swamp ? ' river swamp on' : ' river swamp off'}`, a = pooled.get(stage) ?? [];
+        for (let b = Math.max(b0, g.ground.baked - g.ground.bakeLog.length); b < g.ground.baked; b++) a.push(g.ground.bakeLog[b % g.ground.bakeLog.length]!);
+        pooled.set(stage, a); k++; next();
+      }
     };
   };
   next();
