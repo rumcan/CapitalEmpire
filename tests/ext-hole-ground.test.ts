@@ -96,7 +96,8 @@ test('the tee stays level and the green tilts 1-2% up from front to back, inside
     // the tee: every tee cell at one height, and no slope in its middle
     const tees = cellsOf(g, 1, SURF.tee).map(i => { const p = cellCentre(g, i); return sampleCourseHeight(f, p.x, p.y); });
     assert.ok(tees.length > 100 && Math.max(...tees) - Math.min(...tees) < 1e-5, `the tee is level (${(Math.max(...tees) - Math.min(...tees)).toExponential(1)} m)`);
-    const mid = line[12]!; // the line runs 1 m a point: the tee spans -2.5 m to 25.5 m along it assert.ok(courseSlopeAt(f, mid.x, mid.y).mag < 1e-5, 'flat across its middle');
+    // its middle (the line runs a point a metre: the tee spans -2.5 m to 25.5 m along it) has no slope
+    const mid = line[12]!; assert.ok(courseSlopeAt(f, mid.x, mid.y).mag < 1e-5, `flat across its middle (${courseSlopeAt(f, mid.x, mid.y).mag})`);
     // the green: its tilt 1-2%, one plane over its middle, nowhere on it steeper than 2.5%
     assert.ok(sh.tilt >= HOLE_GROUND.green.tiltMin && sh.tilt <= HOLE_GROUND.green.tiltMax, `tilt ${sh.tilt}`);
     const pin = plan.green, back = line[Math.max(0, line.length - 41)]!, al = Math.hypot(pin.x - back.x, pin.y - back.y), ax = (pin.x - back.x) / al, ay = (pin.y - back.y) / al;
