@@ -1377,7 +1377,8 @@ export class GroundPainter {
     for (const q of cellsIn(X0, Y0, X1, Y1, w, h)) {
       const [a, b, a2, b2] = snappedCell(q.ix, q.iy, w, h, L), url = urls[tileIndex(perm, q.ix, q.iy)]!, img = this.tex.tileImage(url, a2 - a);
       if (!img) return false;
-      g.drawImage(exact ? this.exactTile(url, img, a2 - a, b2 - b) : img, a - ox, b - oy, a2 - a, b2 - b);
+      const pic = exact ? this.exactTile(url, img, a2 - a, b2 - b) : img; this.tex.noteDrawn(url, pic);
+      g.drawImage(pic, a - ox, b - oy, a2 - a, b2 - b);
     }
     return true;
   }
@@ -1431,7 +1432,7 @@ export class GroundPainter {
       let e = this.exactTiles.get(k);
       if (e) { this.exactTiles.delete(k); this.exactTiles.set(k, e); }
       else { const img = this.tex.tileImage(url, tw); if (!img) return null; e = this.exactTile(url, img, tw, th); }
-      out.push({ img: e, x: a - ox, y: b - oy, w: tw, h: th });
+      this.tex.noteDrawn(url, e); out.push({ img: e, x: a - ox, y: b - oy, w: tw, h: th });
     }
     return out;
   }

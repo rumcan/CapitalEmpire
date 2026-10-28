@@ -140,7 +140,7 @@ const handle = async (m: ToWorker) => {
         painter.setLotGround(m.set, m.drop);
         break;
       }
-      case 'tileStats': tileStats = m.on; break;
+      case 'tileStats': tileStats = m.on; tex.resetDrawn(); break;
       case 'memProbe': {
         post({ t: 'log', message: 'mem ' + JSON.stringify(memProbe()) });
         break;

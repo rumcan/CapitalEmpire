@@ -211,8 +211,11 @@ function tiledUrls(t: TiledFamily): Record<TileBand, string[]> | null {
 /** T272: what a worker's tile cache did (the bench's counts, never read by a bake): the tile set pictures decoded and dropped by family and band
  *  (a redecode: one decoded again after a drop), the ms spent making their mips and pre-scaled copies (scales: how many), the bytes the cache
  *  holds now and at most, and the painted pictures' decodes (their own LRU) */
-export interface TileCacheStats { decodes: Record<string, number>; redecodes: Record<string, number>; drops: Record<string, number>; scaleMs: number; scales: number; bytes: number; peakBytes: number; painted: { decodes: number; redecodes: number; drops: number } }
-export const newTileStats = (): TileCacheStats => ({ decodes: {}, redecodes: {}, drops: {}, scaleMs: 0, scales: 0, bytes: 0, peakBytes: 0, painted: { decodes: 0, redecodes: 0, drops: 0 } });
+export interface TileCacheStats { decodes: Record<string, number>; redecodes: Record<string, number>; drops: Record<string, number>; scaleMs: number; scales: number; bytes: number; peakBytes: number; painted: { decodes: number; redecodes: number; drops: number };
+  /** the distinct tile pictures (by URL and px width) the bakes drew since the counts were last reset (noteDrawn), and their bytes: the
+   *  working set a cache that keeps only what is drawn must hold */
+  drawn: number; drawnBytes: number }
+export const newTileStats = (): TileCacheStats => ({ decodes: {}, redecodes: {}, drops: {}, scaleMs: 0, scales: 0, bytes: 0, peakBytes: 0, painted: { decodes: 0, redecodes: 0, drops: 0 }, drawn: 0, drawnBytes: 0 });
 const bump = (r: Record<string, number>, k: string) => { r[k] = (r[k] ?? 0) + 1; };
 /** the bytes of a picture (RGBA8) */
 export const picBytes = (c: { width: number; height: number }) => c.width * c.height * 4;
@@ -254,7 +257,11 @@ export class Textures {
   private tilePinned: ReadonlySet<string> = new Set(); private paintedPinned: ReadonlySet<string> = new Set();
   private tileLoads = new Map<string, Promise<void>>();
   /** T272: the tile cache's counts (TileCacheStats) and the pictures ever decoded (a decode of one of them is a redecode) */
-  tileStats = newTileStats(); private tileSeen = new Set<string>(); private paintedSeen = new Set<string>();
+  tileStats = newTileStats(); private tileSeen = new Set<string>(); private paintedSeen = new Set<string>(); private drawnSet = new Set<string>();
+  /** T272, the bench: a bake drew tile picture pic of URL url (its working set: TileCacheStats.drawn) */
+  noteDrawn(url: string, pic: { width: number; height: number }) { const k = `${url}@${pic.width}`; if (this.drawnSet.has(k)) return; this.drawnSet.add(k); this.tileStats.drawn++; this.tileStats.drawnBytes += picBytes(pic); }
+  /** T272, the bench: the working set counted afresh (each stage's own) */
+  resetDrawn() { this.drawnSet.clear(); this.tileStats.drawn = 0; this.tileStats.drawnBytes = 0; }
   /** T272: the bytes the tile set pictures and their mips hold */
   tileBytes(): number { let n = 0; for (const ch of this.tilePics.values()) for (const m of ch) n += picBytes(m); return n; }
   /** the art level the next bake is for (set by preparePainted) */

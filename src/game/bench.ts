@@ -107,13 +107,13 @@ export function zoomStages(spec: string | null): Stage[] | null {
 }
 /** T272: the tile caches' counts summed over the ground workers (as their last bakes reported them) */
 function tileTotals(g: Game): TileCacheStats {
-  const out: TileCacheStats = { decodes: {}, redecodes: {}, drops: {}, scaleMs: 0, scales: 0, bytes: 0, peakBytes: 0, painted: { decodes: 0, redecodes: 0, drops: 0 } };
+  const out: TileCacheStats = { decodes: {}, redecodes: {}, drops: {}, scaleMs: 0, scales: 0, bytes: 0, peakBytes: 0, painted: { decodes: 0, redecodes: 0, drops: 0 }, drawn: 0, drawnBytes: 0 };
   const add = (a: Record<string, number>, b: Record<string, number>) => { for (const [k, v] of Object.entries(b)) a[k] = (a[k] ?? 0) + v; };
   for (const t of g.ground.tileStats) {
     if (!t) continue;
     add(out.decodes, t.decodes); add(out.redecodes, t.redecodes); add(out.drops, t.drops);
     out.scaleMs += t.scaleMs; out.scales += t.scales; out.bytes += t.bytes; out.peakBytes += t.peakBytes;
-    out.painted.decodes += t.painted.decodes; out.painted.redecodes += t.painted.redecodes; out.painted.drops += t.painted.drops;
+    out.drawn += t.drawn; out.drawnBytes += t.drawnBytes; out.painted.decodes += t.painted.decodes; out.painted.redecodes += t.painted.redecodes; out.painted.drops += t.painted.drops;
   }
   return out;
 }
@@ -131,7 +131,7 @@ function tileStage(g: Game, b0: number, s0: TileCacheStats): Record<string, unkn
     bakes: ms.length, bakeMedianMs: q(ms, 0.5), bakeP95Ms: q(ms, 0.95), prepMedianMs: q(prep, 0.5), prepP95Ms: q(prep, 0.95), scaleMedianMs: q(scale, 0.5), scaleP95Ms: q(scale, 0.95), workMedianMs: q(work, 0.5), workP95Ms: q(work, 0.95),
     decodes: sum(dec), redecodes: sum(re), drops: sum(dr), scales: s1.scales - s0.scales, scaleMs: +(s1.scaleMs - s0.scaleMs).toFixed(1),
     paintedDecodes: s1.painted.decodes - s0.painted.decodes, paintedRedecodes: s1.painted.redecodes - s0.painted.redecodes,
-    tileCacheMB: +(s1.bytes / 1048576).toFixed(1), tileCachePeakMB: +(s1.peakBytes / 1048576).toFixed(1), groundCacheMB: Math.round(g.ground.residentPx * 4 / 1048576),
+    drawnPictures: s1.drawn, drawnMB: +(s1.drawnBytes / 1048576).toFixed(1), tileCacheMB: +(s1.bytes / 1048576).toFixed(1), tileCachePeakMB: +(s1.peakBytes / 1048576).toFixed(1), groundCacheMB: Math.round(g.ground.residentPx * 4 / 1048576),
     byFamily,
   };
 }
@@ -203,7 +203,7 @@ function startTour(g: Game, info: Record<string, unknown>, stages: Stage[] = STA
   /** T265: the most ms a frame's tree planting took this stage (perf.plantMs, the hitch check), the frames that planted, the distance along the river */
   let plantMax = 0, plantFrames = 0, along = 0; const bake0 = g.ground.baked;
   /** T272: the stage's first bake and the tile caches' counts at its start (tileStage) */
-  let sb0 = g.ground.baked, ss0 = tileTotals(g);
+  let sb0 = g.ground.baked, ss0 = tileTotals(g); g.ground.setTileStats(true);
   /** the sim worker's tick time: the max per stage, and the average and max over the whole tour */
   let stageSim = 0, simSum = 0, simN = 0, simMax = 0;
   const startX = g.cam.X, startY = g.cam.Y;
@@ -225,7 +225,7 @@ function startTour(g: Game, info: Record<string, unknown>, stages: Stage[] = STA
       const sorted = [...cpu].sort((a, b) => a - b), q = (p: number) => sorted[Math.min(sorted.length - 1, Math.floor(p * sorted.length))] ?? 0;
       const fAvg = frames.reduce((a, b) => a + b, 0) / Math.max(1, frames.length);
       results.push({ stage: st.name, fps: +(1000 / fAvg).toFixed(1), cpuAvgMs: +(cpu.reduce((a, b) => a + b, 0) / Math.max(1, cpu.length)).toFixed(2), cpuP95Ms: +q(0.95).toFixed(2), maxInstances: inst, maxDraws: draws, maxUploadKB: Math.round(upload), chunkUploadsPerSec: up, uploadMsPerSec: +g.ground.uploadMsPerSecond.toFixed(1), simTickMsMax: +stageSim.toFixed(2), cars: g.perf.simActive, ...(follow ? { plantMsMax: +plantMax.toFixed(2), plantFrames } : {}), tiles: tileStage(g, sb0, ss0) });
-      sb0 = g.ground.baked; ss0 = tileTotals(g);
+      sb0 = g.ground.baked; ss0 = tileTotals(g); g.ground.setTileStats(true); // (the next stage's working set counted afresh)
       s++; t = 0; frames = []; cpu = []; inst = draws = upload = up = 0; stageSim = 0; g.cam.X = startX; g.cam.Y = startY; plantMax = 0; plantFrames = 0; along = 0;
       if (s >= stages.length) {
         g.onFrame = null;
