@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "jobs": [
+    {
+      "schema": 1,
+      "id": "golf:range-ball-dispenser",
+      "slug": "golf-range-ball-dispenser",
+      "category": "props",
+      "angleCode": "A",
+      "viewSet": "two-front-diagonals",
+      "viewOrder": [
+        "front-right",
+        "left-front"
+      ],
+      "widthM": 1.5,
+      "depthM": 1,
+      "heightM": 2,
+      "priority": "P1",
+      "date": "2026-10-28",
+      "references": [
+        "art/theme-consistency/references/theme-authoritative.png",
+        "art/theme-consistency/references/rotation-guide-v1.png"
+      ],
+      "output": "art/theme-consistency/generated/props/golf-range-ball-dispenser-2views-v1.raw.png",
+      "provenance": "art/theme-consistency/generated/props/golf-range-ball-dispenser-2views-v1.provenance.json",
+      "transparent": false,
+      "prompt": "Reference 1 is the ONLY artistic style authority: detailed hand-painted illustrated miniature game art, bold readable painted forms, attractive warm 1985 early-autumn dusk, the same materials and finish as the Maple Bean town scene. Reference 2 is geometry ONLY: use ONLY its top-left FRONT+RIGHT object and bottom-right LEFT+FRONT object. DO NOT copy its four-panel layout, colors, text or circles.\nONE physical 1985 coin-operated driving-range ball dispenser, drawn in exactly TWO distinct isometric views side by side in one square image. LEFT CELL: see FRONT+RIGHT side; RIGHT CELL: turn the SAME object 90 degrees to see LEFT+FRONT. No rear views, no duplicated front view, never mirrored. Both front faces and both narrow side walls are visible. Front-right pose front-bottom edge slopes down-right exactly +0.5; left-front pose front-bottom edge slopes up-right exactly -0.5. Fixed parallel 2:1 camera, ground axes +26.565/-26.565 degrees, verticals vertical; look down about30 degrees, no perspective.\nThe object is a modest dark-green painted steel rectangular cabinet, 1.5 metres wide, 1 metre deep, 2 metres high. Warm cream trim, gently weathered. Front: a small chrome coin slot at upper LEFT, a blank cream instruction plate at upper RIGHT (absolutely no lettering), a lower front waist-high metal chute, a wire bucket full of small white golf balls directly under the chute. Exactly three loose white balls beside the bucket, no people. Cabinet RIGHT side has one short horizontal ventilation grille near the top; cabinet LEFT side has a small rectangular service hatch and brass padlock near the bottom. Keep all these same physical details in both real turns. Small flat roof, no attached canopy or terrain base.\nSun stays at SCREEN UPPER RIGHT in BOTH views, warm highlights on upper-right sides, cool softly shaded left planes. Turn the cabinet, not the sun. The front is cooler in the left cell and warmer in the right cell, with its coin slot still on the object's physical front-left. No mirrored illumination.\nFlat PURE MAGENTA RGB255,0,255 background everywhere outside the subjects, including all gutters and spaces in wire buckets. No magenta/pink/purple within the cabinet or objects. No gradient, floor, grass, stone plinth, grey shadow patch, vignette, ground shadow, frame, text, arrows, labels or geometry lines. Leave generous 12percent outer margins and a clear magenta center gutter. Each complete object including bucket is isolated, entirely in its own half. Exactly TWO views, same physical scale and height.",
+      "brief": {
+        "file": "worktrees/theme-consistency/docs/GOLF-ART-LIST.md",
+        "item": 11,
+        "sha256": "9839d9c115d07315ef7efda34d67521c7f25585d83c8bbe7fe1ffe6625ac917d"
+      }
+    }
+  ]
+}

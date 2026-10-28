@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "id": "golf:range-yardage-board",
+  "date": "2026-10-28",
+  "reviewer": "Primary art agent /root",
+  "decision": "accepted-for-style-alpha-and-distinct-views",
+  "scope": "Primary inspected actual keyed sheet composited over grey: clean background removal, theme and distinct front+right/left+front views pass; no visible pink halo.",
+  "ownerApprovalClaim": false,
+  "artifacts": [
+    {
+      "file": "art/theme-consistency/generated/props/golf-range-yardage-board-2views-v1.alpha.png",
+      "sha256": "61f4fe998f8a7460f8836f1eca4369b3025269e99744ca2928c4e148887fe8a9"
+    },
+    {
+      "file": "art/theme-consistency/generated/props/golf-range-yardage-board-2views-v1.alpha/front-right.native.png",
+      "sha256": "af016e4ddae00ca86082fa5c6110281aeef4a2d5c48fc389b95d35e39476a916"
+    },
+    {
+      "file": "art/theme-consistency/generated/props/golf-range-yardage-board-2views-v1.alpha/left-front.native.png",
+      "sha256": "22e8a3b21436129564d1240b6e256c2236cdb6dbf6f438564a340625b184f2e6"
+    }
+  ],
+  "pending": [
+    "Footing road-angle geometry review",
+    "Calibrate actual cabinet vertical edge or sign post using known height; whole silhouette bbox differs legitimately with projection",
+    "Game/Studio registration and integration"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "date": "2026-10-28",
+  "source": "Latest user-provided reference image in this conversation",
+  "file": "art/theme-consistency/references/golf-country-club-owner-20261028.png",
+  "sha256": "14060410b73fd9f0215c2814049119d2390e4830a614e6bf9d8dfd02b8e674df",
+  "nativePixels": [
+    1725,
+    912
+  ],
+  "role": "Additional style reference for golf turf, planting, rockwork, architecture and warm illustrated town lighting",
+  "processing": "Original PNG attachment decoded and copied byte-for-byte; no generation, resampling, recolouring or crop",
+  "authority": "Supplementary reference; preserve fixed game projection and screen upper-right light, and true transparent sprite output as directly instructed by owner"
+}

@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "id": "golf:range-sign",
+  "date": "2026-10-28",
+  "reviewer": "Primary art agent /root",
+  "decision": "accepted-for-style-alpha-and-distinct-views",
+  "scope": "Primary viewed original true-alpha source: DRIVING RANGE lettering correct in both views; distinct front-side turns, style and upper-right lighting pass.",
+  "ownerApprovalClaim": false,
+  "artifacts": [
+    {
+      "file": "art/theme-consistency/generated/props/golf-range-sign-2views-v1.png",
+      "sha256": "ca0640fd17322a611210f9a3eed5ff1532a38ac779546f21b11cecbe7aa11b0b"
+    },
+    {
+      "file": "art/theme-consistency/generated/props/golf-range-sign-2views-v1/front-right.native.png",
+      "sha256": "4a1216f8ea1a16045ce0cde3bd7064e16604a0ed9a8a7a036464f5657b447e7c"
+    },
+    {
+      "file": "art/theme-consistency/generated/props/golf-range-sign-2views-v1/left-front.native.png",
+      "sha256": "65ec5539801b1d7b09d1711a7417a8774d2c1d56230c8112f9d1c16972cf669c"
+    }
+  ],
+  "pending": [
+    "Footing road-angle geometry review",
+    "Calibrate actual vertical posts with known physical height",
+    "Game/Studio registration and integration"
+  ]
+}
