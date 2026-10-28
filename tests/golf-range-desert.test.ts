@@ -4,7 +4,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  GRASS_UPGRADES, GROUND_APPEAL, HOME_AT, RANGE_UPGRADES, defaultRangeBiz, normalizeRangeBiz, rangeScene, rangeStats, upgradeWhy, withUpgrade,
+  GRASS_UPGRADES, GROUND_APPEAL, LEGACY_UPGRADES, HOME_AT, RANGE_UPGRADES, defaultRangeBiz, normalizeRangeBiz, rangeScene, rangeStats, upgradeWhy, withUpgrade,
   type RangeBizSave, type RangeUpgradeId, type ScenePatch,
 } from '../src/game/golf/rangebiz';
 import { normalizeGolfSave, type GolfSave, type Rect } from '../src/game/golf/mode';
@@ -74,11 +74,11 @@ test('the save: a new range stays in the desert through a save and a load; a ran
   const t = buy(['teeturf']); assert.deepEqual(normalizeRangeBiz(JSON.parse(JSON.stringify(t))).owned, ['teeturf']);
   // before T223: no desert flag
   const old = normalizeRangeBiz({ v: 1, owned: ['bays8', 'targets'], price: 7, season: {}, total: { takings: 50 }, paths: true, tee: true });
-  assert.deepEqual(old.owned, [...GRASS_UPGRADES, 'bays8', 'targets']); assert.equal(old.desert, true);
+  assert.deepEqual(old.owned, [...GRASS_UPGRADES, ...LEGACY_UPGRADES, 'bays8', 'targets']); assert.equal(old.desert, true); // (T239: its greens and paved lot too)
   assert.equal(count(old, 'outfield'), 1); assert.equal(count(old, 'teeTurf'), 1); assert.equal(count(old, 'desert'), 0); assert.equal(count(old, 'teeDirt'), 0);
   assert.deepEqual(normalizeRangeBiz(JSON.parse(JSON.stringify(old))), old, 'loaded again, it stays as it is');
   // an old save that somehow lists a ground upgrade is not given it twice
-  assert.deepEqual(normalizeRangeBiz({ v: 1, owned: ['grass', 'teeturf', 'bays8'] }).owned, ['teeturf', 'grass', 'bays8']);
+  assert.deepEqual(normalizeRangeBiz({ v: 1, owned: ['grass', 'teeturf', 'bays8'] }).owned, ['teeturf', 'grass', ...LEGACY_UPGRADES, 'bays8']);
   // through the golf save (golf/mode.ts), as the game loads it
   const base = { v: 1, tier: 1, rep: 0, town: { x: 0, y: 0 }, course: [0, 0, 10, 10], parcel: [0, 0, 10, 10], dir: 2, tees: [], pins: [], aims: [], clubhouse: { x: 0, y: 0 } } as unknown as GolfSave;
   assert.deepEqual(normalizeGolfSave(JSON.parse(JSON.stringify({ ...base, start: 'range', range: defaultRangeBiz() })))!.range!.owned, []);

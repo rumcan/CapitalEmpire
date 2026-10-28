@@ -21,7 +21,9 @@ export const LAND_REFUSE = {
 
 /** a block on the overlay: its rect (tiles), its land class, what stands on it, its price ($; Infinity: none) and band, and why it cannot be
  *  bought (null: it can) */
-export interface LandOffer { rect: Rect; landClass: ParcelLandClass; houses: number; buildings: number; price: number; band: PriceBand | null; why: string | null }
+export interface LandOffer { rect: Rect; landClass: ParcelLandClass; houses: number; buildings: number; price: number; band: PriceBand | null; why: string | null;
+  /** T239: a named parcel (the practice area of a guided range start), offered whatever its size and wherever it lies */
+  name?: string }
 /** what the land sale reads from the game */
 export interface LandHost {
   /** your land (the owned rects) */
@@ -36,6 +38,9 @@ export interface LandHost {
   pop(): number;
   /** a key that changes when the roads, the town or the land change (the offers are worked out again) */
   version(): string;
+  /** T239: named parcels for sale besides the blocks (the practice area of a guided range start: inside the start's land, not the player's
+   *  until bought), priced like a block of their land class; missing: none */
+  special?(): readonly { rect: Rect; name: string }[];
 }
 /** the band of a price on a block */
 export function bandOf(price: number, rect: Rect): PriceBand | null {
@@ -57,14 +62,14 @@ export function landOffers(h: LandHost, size = LAND_BLOCK): LandOffer[] {
     const c = blockAt(parcels, x, y, size, h.map); if (!c) continue;
     const k = key(c); if (!seen.has(k)) seen.set(k, { r: c, edge: shared(c) });
   }
-  const out: LandOffer[] = [];
+  const out: LandOffer[] = (h.special?.() ?? []).map(sp => ({ ...offerOf(h, sp.rect, pop), name: sp.name }));
   for (const { r } of [...seen.values()].sort((a, c) => c.edge - a.edge || a.r[1] - c.r[1] || a.r[0] - c.r[0])) {
     if (out.some(o => rectsOverlap(o.rect, r))) continue;
     out.push(offerOf(h, r, pop));
   }
   // the ring beyond: a block's neighbour away from your land, not next to it (buy the one between first)
   const ring: LandOffer[] = [];
-  for (const o of out) for (const [dx, dy] of [[size, 0], [-size, 0], [0, size], [0, -size]] as const) {
+  for (const o of out) if (!o.name) for (const [dx, dy] of [[size, 0], [-size, 0], [0, size], [0, -size]] as const) {
     const r: Rect = [o.rect[0] + dx, o.rect[1] + dy, size, size];
     if (r[0] < 0 || r[1] < 0 || r[0] + size > h.map || r[1] + size > h.map) continue;
     if (parcels.some(p => rectsOverlap(p, r)) || isAdjacentBlock(parcels, r) || [...out, ...ring].some(q => rectsOverlap(q.rect, r))) continue;
@@ -98,7 +103,8 @@ export function offerFacts(o: LandOffer, parcels: readonly Rect[], trees = 0): {
   return {
     size: `${sqm.toLocaleString()} m² · ${o.rect[2]} × ${o.rect[3]} tiles (${side} × ${side} m)`,
     on: on.length ? on.join(', ') : 'Open ground: nothing built',
-    adds: `${sqm.toLocaleString()} m² more course land${own > 0 ? ` (+${Math.round((100 * sqm) / own)}% of yours)` : ''}`,
+    adds: o.name ? `${sqm.toLocaleString()} m² beside the range: Facilities › Practice builds its putting and chipping greens here`
+      : `${sqm.toLocaleString()} m² more course land${own > 0 ? ` (+${Math.round((100 * sqm) / own)}% of yours)` : ''}`,
   };
 }
 
@@ -111,7 +117,7 @@ export class LandSale {
   constructor(private h: LandHost) {}
   /** the overlay's blocks (see landOffers) */
   offers(): LandOffer[] {
-    const k = `${this.h.version()}|${this.h.parcels().map(key).join(';')}|${Math.round(this.h.pop())}`;
+    const k = `${this.h.version()}|${this.h.parcels().map(key).join(';')}|${Math.round(this.h.pop())}|${(this.h.special?.() ?? []).map(sp => key(sp.rect)).join(';')}`;
     if (this.cache?.k !== k) this.cache = { k, offers: landOffers(this.h) };
     return this.cache.offers;
   }

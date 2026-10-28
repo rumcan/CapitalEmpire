@@ -800,6 +800,13 @@ pickup is mustard yellow and the wagons burgundy and navy: not those).
 commonest colours, which the car parks still lack).
 > Subject: a 1985 American four-door family sedan, a long boxy body with a formal roofline, chrome bumpers and window trim, a full-width grille, rectangular headlights, whitewall tyres, painted solid [colour]. No wood panels, no vinyl roof, no lettering, no number plate text.
 
+**180. Grey stone water border, with planting** · **R** kit · P1. The owner, 2026-10-28: "we need more rocks. grey stone rocks with plants and foilage that tiles well for the border sprite that surounds water as a border you can turn on and off." Replaces the tan boulders (36, 158) on water edges; the concept's rims are grey and rose-grey granite with ferns, grasses and small shrubs between. Made in ChatGPT (RUN is 3D only): the prompts are in [art/CHATGPT-IMAGE-QUEUE.md](art/CHATGPT-IMAGE-QUEUE.md) "Grey stone water border".
+- **180a run pieces**: one 4 m piece along the map's x axis and the same along the y axis (block R), rocks of mixed sizes half in the water, planting tucked between; both ends cut so pieces join end to end.
+- **180b corners**: an inner corner and an outer corner piece (each axis pair).
+- **180c single boulders**: six grey granite boulders, 0.6-2 m, three with a fern or grass tuft at the foot.
+- **180d planting tufts**: six tufts for the gaps: ferns, a sedge, cattails, a low juniper, golden grass, a small red-leaf shrub (no pink or purple: the magenta key).
+Lit from the upper right, never mirrored, on flat pure magenta.
+
 ### UI pictures
 ✅ **174. Build-tool tiles** (`ui/golf-build-tool-tiles-sheet-v1.png`; in the game, T233 #674: cut by `scripts/assets/prep-ui-tool-tiles.mjs` into `src/assets/ui/tiles/`, shown on the Course and Facilities flyouts' tools by `ui/tool-tiles.ts`; the tools still without one are requested in GOLF-SPRITES.md "Build-tool tiles") · one sheet of 12 · P1. The build flyouts' tools as small illustrated scenes, as in the concept's Golf Course panel.
 > Subject: twelve tiny isometric dioramas in a 4x3 grid, each on its own dark navy rounded square, the light from the upper right: a tee box, a fairway, a green with a flag, a bunker, a pond, rough grass, a clump of autumn trees, a group of boulders, a curving cart path, a small clubhouse, the range bays, a flower bed. The same scale and style in every tile; no lettering.

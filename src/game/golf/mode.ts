@@ -24,6 +24,9 @@ export interface GolfSave {
  /** T232: the town lots the bulldozer cleared on the player's land, pegged out (bare dirt in a survey line) until the player builds there: each
   *  the lot's corner o (x, y), its frame u (x, y) and n (x, y), its width and depth (tiles). Missing: none */
  cleared?: number[][];
+ /** T239: a guided range start's practice area while it is still for sale (its rect, tiles): it lies in the start's land but is not the
+  *  player's until bought in Land for sale (then this goes and the rect joins parcels). Missing: the player's (an old save's own) */
+ practiceLot?: Rect;
  structures?: PlacedEventStructure[];
  cards?: string[];
  /** the course height field as sparse chunks (T027); missing = flat */
@@ -83,7 +86,7 @@ export function normalizeGolfSave(g: Partial<GolfSave> | null | undefined): Golf
   if (!g || !g.town || !g.course || !g.clubhouse) return null;
   const parcel: Rect = g.parcel ?? g.parcels?.[0] ?? g.course;
   // the range start's fields (plan P22 2.6) are taken out and put back only when well formed, so an old start's save normalizes as before
-  const { start, exits, townBoost, invited, founding, play, range, everyday, ponds, ...rest } = g;
+  const { start, exits, townBoost, invited, founding, play, range, everyday, ponds, practiceLot, ...rest } = g;
   const out: GolfSave = {
     ...rest,
     v: 1,
@@ -99,6 +102,7 @@ export function normalizeGolfSave(g: Partial<GolfSave> | null | undefined): Golf
     clubhouse: g.clubhouse,
   };
   if (start === 'range') { out.start = 'range'; out.range = normalizeRangeBiz(range); }
+  if (start === 'range' && Array.isArray(practiceLot) && practiceLot.length === 4 && practiceLot.every(v => Number.isFinite(v)) && practiceLot[2] > 0 && practiceLot[3] > 0) out.practiceLot = [...practiceLot] as Rect;
   if (Array.isArray(exits)) out.exits = exits.filter(p => p && Number.isFinite(p.x) && Number.isFinite(p.y)).map(p => ({ x: p.x, y: p.y }));
   if (typeof townBoost === 'number' && Number.isFinite(townBoost)) out.townBoost = townBoost;
   if (invited && Number.isFinite(invited.at)) out.invited = { at: invited.at };

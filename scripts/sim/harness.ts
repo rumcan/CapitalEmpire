@@ -253,8 +253,8 @@ export function setupRange(seed: number): RangeHarness {
   const cls = (x: number, y: number) => classAt(t, x, y);
   editor.addLegs(road.legs, CLASS.road, 0, road.kinds, true);
   editor.addLegs(site.drive, classOf('drive-gravel'), 0, undefined, true);
+  // T239: the guided start: no walkway laid (the walkers cross the dirt), the car park packed dirt (engine.ts newRangeGame)
   const save = defaultRangeBiz(), scene = rangeScene(site.rangePlot, site.dir, save);
-  editor.addLegs(scene.paths, classOf('cart-slab'), 0, undefined, true); save.paths = true;
   // the city's entry: the map exit nearest the town's seed (engine.ts sendTerrain); the golf state and land (sendGolf)
   const c = site.centre, entry = road.exits.reduce((a, b) => (Math.hypot(b.x - c.x, b.y - c.y) < Math.hypot(a.x - c.x, a.y - c.y) ? b : a));
   city.terrain(t.cls, entry, seed, [c], t.height, true);
@@ -262,7 +262,7 @@ export function setupRange(seed: number): RangeHarness {
   city.setGolf({ tier: golf.tier, rep: golf.rep, land: [golf.course, golf.parcel], start: 'range', exits: golf.exits });
   // the golf town day (the sim worker's 'townDay' and the engine's rangeMorning)
   const s = city.sim; s.dayLen = RANGE_DAY; s.townTraffic = 1; s.townFree = true; s.town = { t0: s.t, m0: RANGE_MORNING, rate: 1440 / RANGE_DAY };
-  const [fx, fy, fw, fh] = site.rangeFront, [px, py, pw, ph] = site.carpark, park = { id: 1, x: px, y: py, w: pw, h: ph };
+  const [fx, fy, fw, fh] = site.rangeFront, [px, py, pw, ph] = site.carpark, park = { id: 1, x: px, y: py, w: pw, h: ph, ground: 'dirt' as const };
   city.setBusinesses([{ id: 1, type: 'range', x: fx, y: fy, w: fw, h: fh }]);
   city.setParks([park]);
   // the range's golfers on its plot, parking in the car park's bays (engine.ts rangeCarPark: its built bays and first entrance)
