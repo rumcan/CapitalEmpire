@@ -138,7 +138,8 @@ async function picture(id, s) {
   fs.writeFileSync(f, png); fs.writeFileSync(stamp, version); return { png, version };
 }
 /** a sprite's spec for the thumbnail routes: a sprite the game has (the library), else a view the four-view art appends (size-report.ts: its tex and page) */
-const specOf = id => library().find(x => x.id === id) ?? sizes.data[id];
+// The fresh game-size report already names every upright's actual page and crop. Avoid re-parsing the whole library for each of eight thumbnails.
+const specOf = id => sizes.data[id]?.page ? sizes.data[id] : library().find(x => x.id === id) ?? sizes.data[id];
 /** a sprite's picture for the thumbnail route (PNG, up to 1200 px: the person cursor, the Lots tab, the removed snapshot) */
 async function thumb(id) { return (await picture(id, specOf(id))).png; }
 /** a Library card's picture (T144): WebP with its long side at most s device px (s one of thumb-size.mjs's steps), made from the PNG above and cached

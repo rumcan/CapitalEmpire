@@ -103,5 +103,5 @@ test('garage importer requires review, all crops, exact id and hashes; native co
     for (const it of prior.slice(1)) assert.equal(it.tex[0], 1, 'atlas page offset applied');
     packed.appendExtraViews(prior, pages);
     assert.equal(prior.length, 5, 'no duplicate sprite IDs on repeated append');
-  } finally { fs.rmSync(root, { recursive: true, force: true }); }
+  } finally { assert.ok(path.resolve(root).startsWith(path.resolve(fixtureFolder) + path.sep), 'cleanup stays in the isolated fixture folder'); fs.rmSync(root, { recursive: true, force: true }); }
 });

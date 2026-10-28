@@ -25,11 +25,11 @@ export function spriteGroup(it: Pick<LibItem, 'id' | 'kind' | 'cat' | 'big'>): '
 /** the screen-axis sets' first pictures (T154: the N view, the front facing screen down; R turns it through E, S, W): the lab offers a set once,
  *  by it, the extra headings of the shops, houses and props among them (view:<id>:n) */
 const AXIS_FIRST: ReadonlySet<string> = new Set(Object.values(AXIS_SETS).map(v => v[0]));
-/** Garage diagonal sets are offered once too: their explicit NE picture; R turns within the four diagonal pictures. */
-const GARAGE_FIRST: ReadonlySet<string> = new Set(Object.values(EXTRA_VIEW_SETS).map(v => v[0]));
+/** Supplemental diagonal sets are offered once too: their explicit NE picture; R turns within the four diagonal pictures. */
+const EXTRA_FIRST: ReadonlySet<string> = new Set(Object.values(EXTRA_VIEW_SETS).map(v => v[0]));
 /** whether a library sprite may be placed on a lot in the lab: not a turned view (but a screen-axis set's first) or an east copy, not a walker or
  *  one of the people, not an old building drawn as a stand-in */
-export const placeable = (it: LibItem, i: number) => (!it.id.startsWith('view:') || AXIS_FIRST.has(it.id) || GARAGE_FIRST.has(it.id)) && !it.id.startsWith('east:') && it.kind !== 'walker' && !SKIP_CAT.has(it.cat) && !drawnAsStandIn(i);
+export const placeable = (it: LibItem, i: number) => (!it.id.startsWith('view:') || AXIS_FIRST.has(it.id) || EXTRA_FIRST.has(it.id)) && !it.id.startsWith('east:') && it.kind !== 'walker' && !SKIP_CAT.has(it.cat) && !drawnAsStandIn(i);
 /** a fence, a hedge or a wall piece (it follows the lot's edge) */
 export const isFence = (id: string) => { const it = LIBRARY[INDEX.get(id) ?? -1]; return /fence|hedge|wall|railing/i.test(id) || (!!it && (it.kind.startsWith('fence') || it.cat === 'Fences')); };
 /** a tree */
