@@ -275,3 +275,17 @@ test('picking a surface paints it: Erase left on from before is put down (the ow
   assert.ok(tool.setEditBrush('bunker')); assert.equal(tool.rubOut, false, 'Edit hole: a surface picked ends Erase');
   tool.rubOut = true; tool.setBrush('green'); assert.equal(tool.rubOut, false, 'Shape by hand: the same');
 });
+
+test('Layer under or Replace (the owner: "usually rough doesnt paint over faitways. you toggle it and now it does paint over it"): rough slides under a fairway by default, Replace paints over it; remembered', () => {
+  const o = golf(), { g, tool } = o;
+  // a fairway cell of hole 1 well inside the course, away from the plan's handles
+  const hs = o.w.handles(); let spot: { x: number; y: number } | null = null;
+  for (let i = 0; i < g.surf.length && !spot; i++) { if (g.surf[i] !== SURF.fairway || g.hole[i] !== 1) continue; const c = centre(g, i); if (c.x > 60 && c.x < 200 && !hs.some(h => Math.hypot(h.x - c.x, h.y - c.y) < 6)) spot = c; }
+  assert.ok(spot, 'a fairway cell to paint over');
+  const i = cellAt(g, spot!.x, spot!.y);
+  tool.setPaintReplace(false); tool.setBrush('rough'); o.stroke(spot!, spot!);
+  assert.equal(g.surf[i], SURF.fairway, 'Layer under: the rough slides under the fairway');
+  tool.setPaintReplace(true); tool.setBrush('rough'); o.stroke(spot!, spot!);
+  assert.equal(g.surf[i], SURF.rough, 'Replace: the rough paints over the fairway');
+  tool.setPaintReplace(false);
+});

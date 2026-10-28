@@ -237,7 +237,7 @@ export const SPILL_SHADE_OFF: readonly [number, number] = [-SUN_TILE_DIR.x * SPI
 // ---- which surfaces take part ----
 
 /** hard man-made textures: their outline keeps its line (a kerb, paving, a path), only a few tufts over it */
-const HARD = /asphalt|paving|^pad$|slabs|concrete|chipSeal|gravel|kerb|path|cart|marks|brick|tarmac|road/i;
+const HARD = /asphalt|paving|^pad$|slabs|concrete|chipSeal|gravel|kerb|path|cart|marks|brick|tarmac|road|^pic:/i; // (T258: a range picture keeps its outline)
 /** tall grass: fescue, rough, long and dry grass, the meadows, the woodland floor (the map's open ground counts as tall wherever it shows) */
 const TALL = /fescue|rough|meadow|grassDry|woodland|long|wild|lawnDeclined/i;
 /** water and sand keep their own edge looks (the bank's wet soil, the bunker's lip) */

@@ -81,7 +81,31 @@ function draw() {
     const d = el('div', { className: 'li' + (sel === 'water' ? ' on' : '') }, el('span', {}, 'Depth, light edge, reflections', el('small', { textContent: F.water ? (F.water.on === false ? ' off' : ' tuned here') : ' the tuned look' })));
     d.onclick = () => { sel = 'water'; draw(); }; list.append(d);
   }
+  // T258: the range's ground art (a studio from before T258 sends no choices: the item is left out)
+  if (D.range) {
+    head('Range art (the driving range\'s ground)');
+    const r = F.range, note = r ? `${r.mats === 'stand-in' || r.greens === 'stand-in' ? ' stand-ins' : ' pictures'}` : ' the pictures';
+    const d = el('div', { className: 'li' + (sel === 'range' ? ' on' : '') }, el('span', {}, 'Hitting mats, target greens, bullseye', el('small', { textContent: note })));
+    d.onclick = () => { sel = 'range'; draw(); }; list.append(d);
+  }
   editor();
+}
+/** T258: the range's ground art (src/game/golf/range-look.ts), kept in the file's range block (none: the pictures); a dev game from this
+ *  checkout lays the range again with it at once on Save */
+function rangeEditor() {
+  const C = D.range.choices, cur = { ...D.range.defaults, ...(F.range ?? {}) };
+  const set = c => { F.range = { ...cur, ...c }; draw(); msg(''); };
+  side.append(el('h3', { style: 'margin:4px 0 6px', textContent: 'Range art' }),
+    hint('The driving range\'s ground pictures (GOLF-ART-LIST 19, 20, 27): the hitting mats and the target greens laid flat on the ground, or the stand-ins before them (the mats: a dark pad and a turf square a bay; the greens: the range green preset in a fringe and a first-cut collar). One target green may be the bullseye (a giant archery target mown into the turf): by default the 200 m green, which comes with More target greens.'));
+  const NAME = { picture: 'The picture', 'stand-in': 'The stand-in (before T258)' }, GREEN = ['None', '50 m green', '100 m green', '150 m green', '200 m green', '240 m green'];
+  const menu = (label, key, opts, name) => {
+    const s = el('select', { style: 'min-width:0' }); for (const o of opts) s.append(el('option', { value: String(o), textContent: name(o), selected: cur[key] === o }));
+    s.onchange = () => set({ [key]: typeof opts[0] === 'number' ? +s.value : s.value });
+    return el('div', { className: 'prow', style: 'max-width:640px' }, el('span', { style: 'width:130px', textContent: label }), s);
+  };
+  side.append(menu('Hitting mats', 'mats', C.mats, o => NAME[o] ?? o), menu('Target greens', 'greens', C.greens, o => NAME[o] ?? o),
+    menu('Bullseye', 'bullseye', C.bullseye, o => GREEN[o + 1] ?? String(o)),
+    el('div', { className: 'bar', style: 'margin-top:8px' }, btn('Reset to the pictures', () => { delete F.range; draw(); msg(''); })));
 }
 /** T230: the water look's knobs (src/game/water-look.ts), kept in the file's water block (none: the tuned look); a dev game from this checkout
  *  re-bakes with them at once on Save */
@@ -131,6 +155,7 @@ function editor() {
   side.innerHTML = '';
   if (sel === 'finish' && D.finish) { finishEditor(); return; }
   if (sel === 'water' && D.water) { waterEditor(); return; }
+  if (sel === 'range' && D.range) { rangeEditor(); return; }
   const o = lookOf(sel), look = o.look;
   side.append(el('h3', { style: 'margin:4px 0 6px', textContent: o.name }));
   if (o.preset) {

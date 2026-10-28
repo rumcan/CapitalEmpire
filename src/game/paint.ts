@@ -96,8 +96,9 @@ export const BORDER_TEXES: { id: BorderTex; name: string; col: string }[] = [{ i
 /** what the Paint tool offers: only the owner's presets (the textures above stay, so saved areas still draw); the border menu adds the kerb */
 export const MENU_TEXES = PAINT_TEXES.filter(t => t.id.startsWith('preset:'));
 export const BORDER_MENU: { id: BorderTex; name: string; col: string }[] = [{ id: 'kerb', name: 'Kerb', col: '#f0dfbe' }, ...MENU_TEXES];
-/** true for a texture laid in tile space (a photo of grass-art.ts PHOTO_TEX or an owner's preset), not a screen-space painting */
-export const isPaintPhoto = (t: string) => t.startsWith('preset:') || isPhotoTex(t);
+/** true for a texture laid in tile space (a photo of grass-art.ts PHOTO_TEX, an owner's preset, or T258's range pictures 'pic:<name>',
+ *  golf/range-pics.ts), not a screen-space painting */
+export const isPaintPhoto = (t: string) => t.startsWith('preset:') || t.startsWith('pic:') || isPhotoTex(t);
 /** the border width in tiles at the old whole steps (none, small, medium, large) */
 export const BORDER_W = [0, 0.25, 0.5, 1];
 /** the largest border step: a band 4 tiles (8 m) wide */

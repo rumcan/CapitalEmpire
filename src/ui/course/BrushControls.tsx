@@ -73,6 +73,10 @@ export function BrushShape({ game, brush, arm }: { game: Game; brush: boolean; a
   const go = (f: () => void) => () => { if (!brush) arm?.(); f(); };
   return (
     <>
+      <div className="mt-2 flex flex-wrap items-center gap-1.5" role="group" aria-label="Paint over" data-replace={p.paintReplace ? 'replace' : 'layer'}>
+        <button className={`chip ${!p.paintReplace ? 'chip-on' : ''}`} aria-pressed={!p.paintReplace} title="Layer under: the brush slides past the surfaces drawn above it (rough stays under a fairway, a fairway under a green)" onClick={() => p.setPaintReplace(false)}>Layer under</button>
+        <button className={`chip ${p.paintReplace ? 'chip-on' : ''}`} aria-pressed={p.paintReplace} title="Replace: the brush paints over whatever is there (rough over a fairway, fairway over a green)" onClick={() => p.setPaintReplace(true)}>Replace</button>
+      </div>
       <div className="mt-2 flex flex-wrap items-center gap-1.5" role="group" aria-label="Brush shape" data-shape={round ? 'round' : 'square'}>
         <button className={`chip ${brush && !round ? 'chip-on' : ''}`} aria-pressed={brush && !round} title="Square: whole 1 m cells, 1 to 4 a side" onClick={go(() => p.setBrushShape('square'))}><ShapeGlyph round={false} />Square</button>
         <button className={`chip ${brush && round ? 'chip-on' : ''}`} aria-pressed={brush && round} title="Round: a circle on the map, for round greens and bunkers (the slider sizes it)" onClick={go(() => p.setBrushShape('round'))}><ShapeGlyph round />Round</button>
