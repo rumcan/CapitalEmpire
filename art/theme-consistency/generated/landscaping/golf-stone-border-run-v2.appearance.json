@@ -1,0 +1,53 @@
+{
+  "schema": 1,
+  "date": "2026-10-28",
+  "id": "golf:stone-border-run",
+  "catalogueItem": 180,
+  "subjobKey": "180a-run",
+  "decision": "held-for-geometry",
+  "reviewer": "primary-art-review",
+  "files": [
+    {
+      "file": "art/theme-consistency/generated/landscaping/golf-stone-border-run-v2.png",
+      "sha256": "e0bb92276f504531c81460cfd9e72bfbe77fb3df567371c5efc5148c40b30e8e"
+    }
+  ],
+  "appearance": {
+    "style": "accepted",
+    "materials": "accepted grey and rose-grey granite, ferns, sedge and golden grass",
+    "alpha": "native transparent source complete"
+  },
+  "geometry": {
+    "status": "held",
+    "reason": "Repeated untransformed native pieces change direction at their joins and overlap termini instead of cleanly abutting. Measured lower-contact envelopes differ from the ideal road axes; not approved for modular integration.",
+    "measurements": {
+      "approximateLowerEnvelopeSlopes": [
+        0.555,
+        -0.585
+      ],
+      "approximateAxisErrorDegrees": [
+        2.45,
+        3.75
+      ],
+      "fitScatterPixels": [
+        16.7,
+        10.7
+      ],
+      "joinPhaseChangePixelsPer700": [
+        38,
+        59
+      ]
+    },
+    "limitation": "Irregular rocks provide an approximate lower-envelope fit, not an exact rectangular structural baseline."
+  },
+  "correction": {
+    "required": true,
+    "nextCandidate": "golf-stone-border-run-v3",
+    "instruction": "Use exact geometry guide plus style references ONLY; omit previous too-steep identity images. Preserve exact ground-contact positions and modular endpoints. Do not rotate, mirror, skew or repaint source pixels with code."
+  },
+  "integration": "blocked pending corrected modular geometry and later physical calibration",
+  "proofs": [
+    "art/theme-consistency/generated/landscaping/golf-stone-border-run-v2/review/native-axis-join-proof.png"
+  ],
+  "sourcePreservation": "Original PNG and original generation provenance remain unchanged."
+}

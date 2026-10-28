@@ -1,0 +1,39 @@
+{
+  "schema": 1,
+  "date": "2026-10-28",
+  "id": "golf:stone-border-run",
+  "catalogueItem": 180,
+  "subjobKey": "180a-run",
+  "decision": "held-for-geometry",
+  "reviewer": "primary-art-review",
+  "files": [
+    {
+      "file": "art/theme-consistency/generated/landscaping/golf-stone-border-run-v1.png",
+      "sha256": "c3069dfa59efce3aa14ba21d2ece2546491f91e245bc870f6c3703af88c2d6ad"
+    }
+  ],
+  "appearance": {
+    "style": "accepted",
+    "materials": "accepted grey and rose-grey granite, ferns, sedge and golden grass",
+    "alpha": "native transparent source complete"
+  },
+  "geometry": {
+    "status": "held",
+    "reason": "The two run directions are visibly too steep for the game's +/-0.5 world axes. This version is retained as style lineage only.",
+    "measurements": {
+      "approximateLowerEnvelopeSlopes": [
+        0.667,
+        -0.906
+      ]
+    },
+    "limitation": "Irregular rocks provide an approximate lower-envelope fit, not an exact rectangular structural baseline."
+  },
+  "correction": {
+    "required": true,
+    "nextCandidate": "golf-stone-border-run-v3",
+    "instruction": "Use exact geometry guide plus style references ONLY; omit previous too-steep identity images. Preserve exact ground-contact positions and modular endpoints. Do not rotate, mirror, skew or repaint source pixels with code."
+  },
+  "integration": "blocked pending corrected modular geometry and later physical calibration",
+  "proofs": [],
+  "sourcePreservation": "Original PNG and original generation provenance remain unchanged."
+}

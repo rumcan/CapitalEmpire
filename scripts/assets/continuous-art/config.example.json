@@ -2,17 +2,25 @@
   "schema": 1,
   "repoRoot": "E:/Repos/CapitalEmpire",
   "authorityFile": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/docs/GOLF-ART-LIST.md",
-  "inventoryRoots": ["E:/Repos/CapitalEmpire", "E:/Repos/CapitalEmpire/worktrees/theme-consistency"],
+  "inventoryRoots": [
+    "E:/Repos/CapitalEmpire",
+    "E:/Repos/CapitalEmpire/worktrees/theme-consistency"
+  ],
   "worktree": "E:/Repos/CapitalEmpire/worktrees/continuous-art-worker-20261028",
   "stateDir": "E:/ClaudeTemp/continuous-art",
   "tempDir": "E:/ClaudeTemp",
   "extensionRoot": "C:/Users/RAMPAGE/.vscode/extensions",
   "firstItemId": "golf:range-coffee-kiosk",
-  "excludeIds": ["golf:range-ball-dispenser", "golf:range-yardage-board", "golf:range-sign"],
+  "excludeIds": [
+    "golf:range-ball-dispenser",
+    "golf:range-yardage-board",
+    "golf:range-sign"
+  ],
   "reservationsFile": "E:/ClaudeTemp/continuous-art/reservations.json",
   "styleReferences": [
     "E:/Repos/CapitalEmpire/art/theme-consistency/references/theme-authoritative.png",
     "E:/Repos/CapitalEmpire/art/theme-consistency/references/golf-country-club-owner-20261028.png"
   ],
-  "maxImagesPerBatch": 1
+  "maxImagesPerBatch": 1,
+  "planning": true
 }
