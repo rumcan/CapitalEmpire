@@ -90,6 +90,12 @@ export function kindOf(it: LibItem): ShadowKind {
 export function ruleKind(it: LibItem): ShadowKind {
   const w = words(it);
   if (it.kind === 'lot') return 'none';
+  // T231: the concept kit's kinds: lily pads lie flat on the water and the jet is water (no shadow), a palm casts a tree's, a shrub or a
+  // flower clump a plant's, a boulder a round one
+  if (it.kind === 'decal' || it.kind === 'fountain') return 'none';
+  if (it.kind === 'palm') return 'tree';
+  if (it.kind === 'shrub' || it.kind === 'flower') return 'plant';
+  if (it.kind === 'rock') return 'round';
   if (it.kind === 'walker') return 'walker';
   if (it.kind === 'fencex' || it.kind === 'fencey') return it.kind;
   if (it.kind === 'gazebo' || any(w, ROUNDHOUSE)) return 'roundhouse';
@@ -210,7 +216,7 @@ export function contactShadow(it: LibItem, d: ShadowSpot, pic: ArrayLike<number>
 export const placeholderBoxes = (it: LibItem) => it.kind === 'business' && it.boxes.length === 1 && it.boxes[0]!.hx === 1 && it.boxes[0]!.hy === 1 && it.boxes[0]!.dx === 0 && it.boxes[0]!.dy === 0;
 
 /** does the sprite cast a cast shadow (cast-shadow.ts; an override can turn it off: a flat sprite) */
-export function castsShadow(it: LibItem): boolean { return it.kind !== 'lot' && overrideOf(it.id)?.o.cast !== false; }
+export function castsShadow(it: LibItem): boolean { return it.kind !== 'lot' && it.kind !== 'decal' && it.kind !== 'fountain' && overrideOf(it.id)?.o.cast !== false; } // (T231: lily pads lie flat, the jet is water)
 
 /** the lean uniform (gl.ts drawShadows uShift): the cast shadows' screen direction, times their length against the default; none when off */
 export function contactLean(c: { on: boolean; angle: number; length: number }): { x: number; y: number } {

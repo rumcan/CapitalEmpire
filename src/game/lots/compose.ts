@@ -17,7 +17,7 @@ import { isBuilding } from '../mirror';
 import { LU, LV } from './town';
 import {
   BUSHES, BY, Build, CHAIN, DEAD_TREES, DRIVE_GAP, JUNK, MARK_ID, PARK_PIECES, PICKUPS, PRIVACY, SCHOOL_SIGNS, SIDE_YARD, TREES, clamp, isCarPark, mix,
-  names, patchTex, pick, specFit, withVariations,
+  boxOf, names, patchTex, pick, specFit, withVariations,
   type Composition, type ComposeState, type LotGeom, type Pt, type PresetDrop,
 } from './compose-core';
 import { approvedFor, bucketOf, fitPreset, parsePresets, pickPreset, presetsFor, stateOf, type Fitted, type LotPreset, type PresetDecal, type PresetMeta, type PresetProp, type PresetState, type PresetUse, type Road } from './presets';
@@ -40,6 +40,7 @@ import { LIBRARY } from '../library';
 import { drawnAsStandIn } from '../newart';
 import { GAS_SHOP, GAS_SHOP_FALLBACK, WHEEL_STOP, gasPlan, isCanopy, isOpenStructure, matchBays } from './gas-station';
 import { LATEST, LOT_MODELS } from './lot-models';
+import { KIT_FLOWERS, KIT_HEDGE, KIT_SHRUBS } from '../kit';
 export { isCarPark, type Composition, type ComposeState, type LotGeom, type Placed, type PresetDrop } from './compose-core';
 
 /** the fence grid of a house lot, drawn as its own layer (procedural: the presets hold no fences): wooden privacy panels on the
@@ -708,5 +709,53 @@ export function compose(lot: LotGeom, st: ComposeState, drops?: PresetDrop[]): C
     B.scatter(JUNK, 0.5, B.D * 0.5, B.W - 0.5, B.D - 0.5, st.decline >= 3 ? 2 : 1);
   }
   if (st.decline >= 3) B.scatter(BUSHES, 0.5, 0.5, B.W - 0.5, B.D - 0.5, 4, { plant: true });
+  // T231: a house lot's front yard dressed with the concept kit, by draws of its own after every other (nothing drawn before moves)
+  if (KIT_YARDS.on && use === 'res' && p && frozenHouse(p.preset)) kitYard(B, st);
   return B.done();
+}
+
+// ---------- T231: the concept kit in the yards (docs/art/CONCEPT-LOOK.md step 8, "houses close together with hedges, fences, flower beds and drives")
+/** the yards' kit on (tests turn it off to show that it moves nothing else) */
+export const KIT_YARDS = { on: true };
+/** how often a yard gets each part (a seeded draw a lot): the clipped hedge along the front, the shrubs along the house's front, the mums before them */
+export const KIT_YARD_RULES = { hedge: 0.55, shrubs: 0.8, mums: 0.6, hedgeIn: 0.45, shrubGap: 1.6, decline1: 0.5 } as const;
+/** A built house lot's front yard (its own preset not the owner's: curated, approved and whole lots stay exact) gets the concept kit by draws of
+ *  its own (mulberry from the lot's seed and 231; the lot's own stream B.r is never touched, and the items go after every other, so done() keeps
+ *  every earlier item as it was: a kit item that overlaps one, stands on the drive or the walk, or comes past the plant cap is the one left out):
+ *  a clipped hedge along the front, KIT_YARD_RULES.hedgeIn inside the lot line (its pieces across the drive and the walk drop out, leaving the
+ *  gaps); autumn shrubs along the house's front, a cell apart; mums in front of them. A declining lot (decline 1) keeps about half; decline 2
+ *  and 3 none. Never mirrored. */
+function kitYard(B: Build, st: ComposeState) {
+  if (st.level < LV.BUILT || st.decline >= 2) return;
+  const r = mulberry(mix(st.seed, 231, st.level, st.decline)), R = KIT_YARD_RULES, keep = () => st.decline < 1 || r() < R.decline1;
+  // the house: the biggest building of the lot, in the lot's frame (a along the front, b in from it)
+  let house: { a0: number; a1: number; b0: number } | null = null, area = 0;
+  for (const it of B.items) {
+    const lib = BY.get(it.id); if (!lib || !lib.big || !isBuilding(lib)) continue;
+    const ar = (it.fp[2] - it.fp[0]) * (it.fp[3] - it.fp[1]); if (ar <= area) continue;
+    const ab = [[it.fp[0], it.fp[1]], [it.fp[2], it.fp[1]], [it.fp[2], it.fp[3]], [it.fp[0], it.fp[3]]].map(([x, y]) => { const dx = x! - B.o.x, dy = y! - B.o.y; return [dx * B.u.x + dy * B.u.y, dx * B.n.x + dy * B.n.y] as const; });
+    area = ar; house = { a0: Math.min(...ab.map(q => q[0])), a1: Math.max(...ab.map(q => q[0])), b0: Math.min(...ab.map(q => q[1])) };
+  }
+  const free = (id: string, s: number, c: Pt) => {
+    const h = boxOf(id, s, false), fp = [c.x + h[0], c.y + h[1], c.x + h[2], c.y + h[3]] as const;
+    return !B.items.some(it => !it.street && fp[0] < it.fp[2] - 0.02 && fp[2] > it.fp[0] + 0.02 && fp[1] < it.fp[3] - 0.02 && fp[3] > it.fp[1] + 0.02);
+  };
+  const put = (id: string, s: number, a: number, b: number) => {
+    const c = B.P(a, b);
+    if (free(id, s, c)) B.atW({ id, s, flip: false, h: boxOf(id, s, false) }, c, { plant: true });
+  };
+  // the hedge along the front, pieces 2 tiles long along the lot's u axis
+  const hedge = r() < R.hedge, alongX = Math.abs(B.u.x) >= Math.abs(B.u.y), hid = alongX ? KIT_HEDGE.x : KIT_HEDGE.y, len = KIT_HEDGE.len;
+  if (hedge && BY.has(hid)) {
+    const n = Math.floor((B.W - 1) / len), a0 = (B.W - n * len) / 2;
+    for (let i = 0; i < n; i++) if (keep()) put(hid, 1, a0 + (i + 0.5) * len, R.hedgeIn);
+  }
+  if (!house || house.b0 < 2) return;
+  // shrubs along the house's front, then mums before them
+  const shrubs = r() < R.shrubs, mums = r() < R.mums, bS = house.b0 - 0.6, bM = house.b0 - 1.35;
+  for (let a = house.a0 + 0.6; a <= house.a1 - 0.6; a += R.shrubGap) {
+    const id = KIT_SHRUBS[Math.floor(r() * KIT_SHRUBS.length)]!, s = 0.85 + 0.2 * r(), m = KIT_FLOWERS[Math.floor(r() * KIT_FLOWERS.length)]!, sm = 0.9 + 0.2 * r();
+    if (shrubs && keep()) put(id, s, a, bS);
+    if (mums && bM > 1 && keep()) { put(m, sm, a - 0.3, bM); put(m, sm, a + 0.35, bM + 0.1); }
+  }
 }
