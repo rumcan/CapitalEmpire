@@ -91,7 +91,7 @@ test('a hole painted by hand (no plan): no editor, the reason as a toast', () =>
 // ---------- the card and the Holes panel's strip ----------
 const view = (n: number): HoleView => ({ n, started: true, par: 4, lengthM: 342, memberLengthM: 330, checks: [{ label: 'Green painted', ok: true }], warnings: [], ok: true, virtual: false });
 const emptyView = (n: number): HoleView => ({ n, started: false, par: 0, lengthM: 0, memberLengthM: 0, checks: [], warnings: [], ok: false, virtual: false });
-const card = (n: number, planned = true): HoleCardView => ({ n, par: 4, tees: [{ kind: 'back', m: 342 }], ready: null, areas: [], checks: [{ id: 'green', text: 'Green painted', ok: true, warn: false, fix: null }], planned });
+const card = (n: number, planned = true): HoleCardView => ({ n, par: 4, tees: [{ kind: 'back', m: 342, par: 4 }], addable: ['middle', 'senior', 'forward'], ready: null, areas: [], checks: [{ id: 'green', text: 'Green painted', ok: true, warn: false, fix: null }], planned });
 /** a stand-in game: holes 1 and 2 built (planned unless `hand`), hole `cur` the current one, hole `open`'s card open, hole `editing`'s editor
  *  open (0: none) */
 function fakeGame(o: { cur?: number; open?: number; editing?: number; hand?: number[] } = {}) {

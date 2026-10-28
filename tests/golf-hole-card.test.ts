@@ -83,7 +83,7 @@ test('a pin or tee drag moves only that marker, never a plan or money, and is re
   const tee = markerMove(m, AREAS, 2, 'middle', 101, 31);
   assert.ok(tee.ok && tee.tees.find(t => t.hole === 2 && t.kind === 'middle')!.x === 101);
   const teeOff = markerMove(m, AREAS, 2, 'forward', 100, 60);
-  assert.equal(teeOff.ok, false); if (!teeOff.ok) assert.equal(teeOff.reason, 'A forward tee marker must be placed on a tee');
+  assert.equal(teeOff.ok, false); if (!teeOff.ok) assert.equal(teeOff.reason, 'A red tee marker must be placed on a tee');
   assert.deepEqual(PINS[0], { hole: 1, x: 90, y: 10 }, 'the inputs are not changed');
 });
 

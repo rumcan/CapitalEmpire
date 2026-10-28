@@ -46,9 +46,9 @@ describe('event ghost previews (T019)', () => {
     assert.equal(g.rings?.[0].outerR, 1.6);
   });
 
-  it('a valid middle tee is labelled as a middle tee', () => {
+  it('a valid middle tee is labelled as the white tee (T254: the sets by their colours)', () => {
     const g = markerGhost(100, 200, 3, 'middle', { ok: true });
-    assert.equal(g.label, 'Hole 3 middle tee');
+    assert.equal(g.label, 'Hole 3 white tee');
   });
 });
 

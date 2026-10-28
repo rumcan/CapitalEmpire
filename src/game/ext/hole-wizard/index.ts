@@ -13,7 +13,9 @@ import {
   CORRIDOR_M, decodePlan, defaultPlan, edgeOffset, encodePlan, planAims, planChanges, planGeom, planHandles, planInfo, rasterPlanBox, widthAt,
   type HolePlan, type PlanGeom, type PlanInfo, type PlanRaster,
 } from '../hole-plan';
-import type { AimPoint } from '../../golf/types';
+import type { AimPoint, Pin, TeeMark } from '../../golf/types';
+import { SURF_SURFACE } from '../course-grid/areas';
+import { layoutMarkers, markerWarnings } from '../../golf/teesets';
 import { worldX, worldY } from '../../iso';
 
 /** the wizard's steps: waiting for the tee click (or a click on a built plan's line, which opens it), waiting for the green click (a live
@@ -162,7 +164,16 @@ export interface WizardHost {
   holeLines?(): { hole: number; line: Pt[] }[];
   /** the trees the ghost's Build would clear (T176: Engine.wizardTrees, throttled with the ghost), for the info row; missing: none counted */
   treesCleared?(): number;
+  /** T254: hole n's pin and tee markers (Edit Hole Layout's warnings: where they would stand after the Build) */
+  markersOf?(hole: number): { pin: Pin | null; tees: readonly TeeMark[] };
 }
+
+/** T254 (#736; the owner, 2026-10-28: "if you edit the layout it does not plant new grass it just moves the start of the hole tee markers and teh
+ *  flag. it is the players job to fix the course manually"): an edit of a built hole's plan (Edit Hole Layout) lays no cells: its Build moves the
+ *  tee markers, the flag and the line of play only. The check table says so */
+export const LAYOUT_INFO = 'Moves the tee markers and the flag only: no grass is laid or cleared. Fix the course with the paint brushes';
+/** an empty diff on g's geometry (Edit Hole Layout's ghost: nothing to lay) */
+const noDiff = (g: Grid): GridDiff => ({ x0: g.x0, y0: g.y0, w: g.w, n: 0, idx: new Uint32Array(0), s0: new Uint8Array(0), h0: new Uint8Array(0), m0: new Uint16Array(0), s1: new Uint8Array(0), h1: new Uint8Array(0), m1: new Uint16Array(0) });
 
 /** what a Build would do now: the dry diff (hole-plan planChanges), its price, counts, the cells as row runs for the overlay, and the
  *  plan's info; teeOk / greenOk: the back tee and the pin stand on cells the plan may lay */
@@ -538,8 +549,9 @@ export class HoleWizard {
     }
     const refused: number[] = [];
     const allow = this.host.allow ? (i: number) => this.host.allow!(i) : undefined;
-    // a cell another hole keeps is only worth a red mark when the plan wanted a playing surface there (rough corridors overlap freely)
-    const diff = planChanges(g, this.base, pl, pl.hole, month, allow, { old, next }, (i, why, s) => { if (why === 'land' || s > SURF.rough) refused.push(i); });
+    // a cell another hole keeps is only worth a red mark when the plan wanted a playing surface there (rough corridors overlap freely).
+    // T254: Edit Hole Layout (a built hole's plan) lays nothing: the Build moves the markers and the line only
+    const diff = this.base ? noDiff(g) : planChanges(g, this.base, pl, pl.hole, month, allow, { old, next }, (i, why, s) => { if (why === 'land' || s > SURF.rough) refused.push(i); });
     const cost = Math.round(diffCost(diff, s => this.host.price(s)));
     // row runs: the diff's cells (by their new surface) and the refused cells, both in index order, merged
     const runs: number[] = [], rows = new Map<number, Map<number, number[]>>();
@@ -626,6 +638,7 @@ export class HoleWizard {
     const out: WizCheck[] = [];
     if (!c.ok) out.push({ id: c.id ?? 'block', kind: 'block', text: c.why, ...(c.id === 'money' && this.host.sod?.() ? { fix: 'seed' as const } : {}), ...(c.at ? { show: [{ ...pl[c.at] }] } : {}) });
     out.push(...this.warnings(gh));
+    if (this.base) out.push(...this.layoutWarnings(), { id: 'layout', kind: 'info', text: LAYOUT_INFO });
     const has = (id: string) => out.some(r => r.id === id);
     if (!has('land') && !has('range') && !has('practice')) out.push({ id: 'ok-land', kind: 'ok', text: 'Tee and green on your land' });
     if (!has('road')) out.push({ id: 'ok-road', kind: 'ok', text: 'No road across the hole' });
@@ -634,6 +647,18 @@ export class HoleWizard {
     const trees = this.host.treesCleared?.() ?? 0;
     if (trees > 0) out.push({ id: 'trees', kind: 'info', text: `${trees} tree${trees === 1 ? '' : 's'} cleared` });
     return out;
+  }
+  /** T254: Edit Hole Layout's warnings: the flag off the green and each tee set off the tee turf where the Build would put them (golf/teesets.ts
+   *  layoutMarkers and markerWarnings, on the grid's surfaces). The Build still goes ahead: the hole plays, the card warns until it is painted */
+  layoutWarnings(): WizCheck[] {
+    const base = this.base, pl = this.plan, g = this.host.grid(), mk = base ? this.host.markersOf?.(base.hole) : null;
+    if (!base || !pl || !g || !mk) return [];
+    const r = layoutMarkers(base, pl, mk.pin, mk.tees);
+    const surfAt = (x: number, y: number) => { const cx = Math.floor((x - g.x0) / CELL_T), cy = Math.floor((y - g.y0) / CELL_T); return cx < 0 || cy < 0 || cx >= g.w || cy >= g.h ? null : SURF_SURFACE[g.surf[cy * g.w + cx]!] ?? null; };
+    return markerWarnings(surfAt, r.pin, r.tees).map((text, i) => {
+      const t = i === 0 && r.pin && /flag/.test(text) ? r.pin : r.tees.find(q => text.includes(` ${q.kind === 'back' ? 'blue' : q.kind === 'middle' ? 'white' : q.kind === 'senior' ? 'yellow' : 'red'} tee`));
+      return { id: `layout-off-${i}`, kind: 'warn' as const, text, ...(t ? { show: [{ x: t.x, y: t.y }] } : {}) };
+    });
   }
   /** the warnings of the check table (see checks), cached */
   private warnings(gh: WizardGhost): WizCheck[] {
