@@ -52,7 +52,7 @@ export { snapDab, squarePoly, squareStart, SQUARE_SIZES } from './snap';
 // ---- inputs ----
 
 /** what the cursor reads from the Paint tool each frame (PaintTool fits it) */
-export type CursorTool = Pick<PaintTool, 'mode' | 'brushKind' | 'brush' | 'rubOut' | 'rubHoleOnly' | 'cursor' | 'piece' | 'brushSquare' | 'strokeSpent' | 'strokeCells' | 'brushHole' | 'plantKind' | 'usedHoles' | 'runOn' | 'runPath' | 'runPts'> & Partial<Pick<PaintTool, 'brushLooks'>>;
+export type CursorTool = Pick<PaintTool, 'mode' | 'brushKind' | 'brush' | 'rubOut' | 'rubHoleOnly' | 'cursor' | 'piece' | 'brushSquare' | 'strokeSpent' | 'strokeCells' | 'brushHole' | 'plantKind' | 'usedHoles' | 'runOn' | 'runPath' | 'runPts'> & Partial<Pick<PaintTool, 'brushLooks' | 'courseBorder'>>;
 /** T256: the looks the chip wears: the owner's in hand (the hole painted, the property; PaintTool.brushLooks), else the brushes' (the course
  *  default) */
 const looksOf = (tool: CursorTool): BrushLooks => tool.brushLooks ?? (tool.brush as BrushLooks);
@@ -1323,10 +1323,11 @@ export class CourseCursor {
 
   /** T252: the border the chip shows on the course grid for the surface in hand (course-look puckBandOf), worked out again only when a look it
    *  reads or the finish changes (a frame allocates none) */
-  private bm = { kind: '', st: null as unknown, fw: null as unknown, ro: null as unknown, fin: null as CourseFinish | null, pb: null as PuckBand | null };
+  private bm = { kind: '', st: null as unknown, fw: null as unknown, ro: null as unknown, fin: null as CourseFinish | null, bw: null as number | null | undefined, pb: null as PuckBand | null };
   private bandOf(tool: CursorTool): PuckBand | null {
-    const b = looksOf(tool), st = b[tool.brushKind as keyof BrushLooks]?.style, fw = b.fairway?.style, ro = b.rough?.style, fin = this.env.finish?.() ?? DEFAULT_COURSE_FINISH, m = this.bm;
-    if (m.kind !== tool.brushKind || m.st !== st || m.fw !== fw || m.ro !== ro || m.fin !== fin) Object.assign(m, { kind: tool.brushKind, st, fw, ro, fin, pb: puckBandOf(tool.brushKind, b, fin) });
+    // T260: with its Border (none: no band ring on the chip)
+    const b = looksOf(tool), st = b[tool.brushKind as keyof BrushLooks]?.style, fw = b.fairway?.style, ro = b.rough?.style, fin = this.env.finish?.() ?? DEFAULT_COURSE_FINISH, bw = tool.courseBorder?.(tool.brushKind), m = this.bm;
+    if (m.kind !== tool.brushKind || m.st !== st || m.fw !== fw || m.ro !== ro || m.fin !== fin || m.bw !== bw) Object.assign(m, { kind: tool.brushKind, st, fw, ro, fin, bw, pb: puckBandOf(tool.brushKind, b, fin, bw) });
     return m.pb;
   }
   /** the chip sprite for this look (band: with its border band; pb: T252's real border on the course grid) at this dpr, from the cache,

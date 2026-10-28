@@ -239,7 +239,8 @@ export function StyleEditor({ game, gridOnly = false }: { game: Game; gridOnly?:
           <span className="w-16 text-right text-xs text-slate-200">{`${Math.round((s.shadow ?? 0) * 100)}%`}</span>
         </div>
       </>)}
-      {(grid ? band : s.border > 0) && (
+      {/* T260: the Border texture only while a border is on (a course surface whose Border is none, or that has no band, lays none) */}
+      {(grid ? band && (p.courseBorder() ?? 0) > 0 : s.border > 0) && (
         <>
           <div className="mt-2 text-[12px] text-slate-400">Border texture</div>
           <div className="flex flex-wrap gap-1">

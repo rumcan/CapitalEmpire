@@ -22,8 +22,7 @@ import { computeSnapPiecePlacement, type CoursePieceArchetype, type CoursePieceH
 import { PIECE_BUTTONS, piecePropsOf, pieceAreas, pieceCost, pieceWhy, snapTargets } from './ext/course-pieces';
 import { CourseHeightJournal, applyCourseHeightBrush, brushBox, estimateCourseBrushM3, unionBox, type CourseHeightBrushDab, type CourseHeightBrushMode, type CourseHeightField, type CourseHeightStep, type CourseTileBox } from './ext/course-height';
 import { CELL_T, SURF, applyDiff, cellAt, cellCentre, diffCost, fillPolygon, holeCellsDiff, paintCells, paintDisc, paintStroke, surfAbove, type Grid, type GridDiff, type PaintOpts } from './ext/course-grid';
-import { BLOB_STYLE } from './ext/course-blobs';
-import { BORDER_MAX_M, BORDER_MIN_M } from './ext/course-grid/patch';
+import { borderBase, clampBorder } from './ext/course-grid/patch';
 import { HEIGHT_RANGE, SURF_HEIGHT, defaultShadow } from './ext/course-walls';
 import { SQUARE_SIZES, snapDab, squarePoly, squareRun, squareStart } from './ext/course-cursor/snap';
 import { runCells, runPoint, straightTo } from './ext/course-cursor/run';
@@ -96,7 +95,7 @@ const UNDO_MAX = 100;
 const UNDO_CELLS = 2_000_000;
 /** a brush preset's editable settings: the brush radius (tiles), the area style it paints and, for a surface with a collar on the course
  *  grid, the collar band's width in metres (bw: the Border slider), its walls' shadow (sh: the Shadow slider, 0 none .. 1 strong) and, for a
- *  raised surface, its height in metres (ht: the Height slider, T127); absent: the defaults (BLOB_STYLE's band, course-walls defaultShadow
+ *  raised surface, its height in metres (ht: the Height slider, T127); absent: the defaults (the host's collarDefault band, course-walls defaultShadow
  *  and SURF_HEIGHT) */
 type BrushSet = { r: number; style: Omit<PaintArea, 'id' | 'pts' | 'hole' | 'kind'>; bw?: number; sh?: number; ht?: number };
 /** the brush kinds whose course-grid surface has a collar band (the Border slider's surfaces), with their surface ids and the band's name */
@@ -133,7 +132,7 @@ function loadBrush(): Record<BrushKind, BrushSet> {
       const s = saved[p.kind]; if (!s || typeof s !== 'object') continue;
       const { bw, sh, ht } = s as { bw?: unknown; sh?: unknown; ht?: unknown }, hr = HEIGHT_RANGE[BORDER_KINDS[p.kind]?.s ?? 0];
       out[p.kind] = { r: Number.isFinite(s.r) ? Math.min(BR_MAX, Math.max(BR_MIN, s.r!)) : p.r, style: clampStyle({ ...p.style, ...s.style }),
-        ...(typeof bw === 'number' && Number.isFinite(bw) ? { bw: Math.min(BORDER_MAX_M, Math.max(BORDER_MIN_M, bw)) } : {}), ...(typeof sh === 'number' && Number.isFinite(sh) ? { sh: Math.min(1, Math.max(0, sh)) } : {}),
+        ...(typeof bw === 'number' && Number.isFinite(bw) ? { bw: clampBorder(bw) } : {}), ...(typeof sh === 'number' && Number.isFinite(sh) ? { sh: Math.min(1, Math.max(0, sh)) } : {}),
         ...(hr && typeof ht === 'number' && Number.isFinite(ht) ? { ht: Math.min(hr[1], Math.max(hr[0], ht)) } : {}) };
     }
   } catch { /* no storage or a bad save: the defaults */ }
@@ -142,7 +141,8 @@ function loadBrush(): Record<BrushKind, BrushSet> {
 /** what the tool needs from the engine: the lot ground, redraws, saves, toasts, the css px projection of tiles (affine A: tile (x, y) is at (A[0] + x*A[2] + y*A[4], A[1] + x*A[3] + y*A[5])), and the props of a placed golf hole (returns how many were placed) */
 export interface PaintHost { setLotGround(key: string, patches: LotPatch[] | null): void; emit(): void; save(): void; toast(text: string, kind?: 'info' | 'warn'): void; affine(out: number[]): void; placeProps(ps: PresetProp[], seed: number): number; golfMode?: () => boolean; money?: () => number; spend?: (n: number) => void; ownedLand?: (pts: number[]) => boolean; currentMonth?: () => number;
   /** T227: the collar width (metres) the Border slider starts from for surface s when the player has set none (the course finish's: the
-   *  fairway's first cut, the green's fringe); undefined: BLOB_STYLE's */
+   *  fairway's first cut, the green's fringe; T260: 0, none, round a tee, a bunker or a pond: course-finish borderDefault); undefined: the
+   *  finish off's (ext/course-grid/patch borderBase) */
   collarDefault?(s: number): number | undefined;
   /** the player did something that counts toward the tool unlocks (T033) */
   progress?(what: 'piece'): void;
@@ -566,16 +566,17 @@ export class PaintTool {
 
   // ---------- the course look's Border and Shadow (the owner's test, 2026-10-25) ----------
   /** the collar band's width in metres of a brush kind's course-grid surface (the Border slider: the green's fringe, the fairway's and tee's
-   *  first cut, the bunker's lip, the pond's bank), or null when the kind has none */
+   *  first cut, the bunker's lip, the pond's bank; 0: none, no band), or null when the kind has none. Unset: the defaults (the host's, the
+   *  course finish's first cut and fringe; T260: none round a tee, a bunker or a pond; ext/course-grid/patch borderBase) */
   courseBorder(kind: BrushKind = this.brushKind): number | null {
     const b = BORDER_KINDS[kind]; if (!b) return null;
-    return this.brush[kind].bw ?? this.host.collarDefault?.(b.s) ?? BLOB_STYLE[b.s]!.collar!.width;
+    return this.brush[kind].bw ?? this.host.collarDefault?.(b.s) ?? borderBase(b.s);
   }
-  /** sets a kind's collar band width (metres, BORDER_MIN_M hairline .. BORDER_MAX_M), remembered with its brush look; the course is drawn
-   *  again (throttled while the slider is dragged) */
+  /** sets a kind's collar band width (metres: 0 none (T260), else BORDER_MIN_M hairline .. BORDER_MAX_M), remembered with its brush look; the
+   *  course is drawn again (throttled while the slider is dragged) */
   setCourseBorder(m: number, kind: BrushKind = this.brushKind) {
     if (!BORDER_KINDS[kind] || !Number.isFinite(m)) return;
-    const w = Math.min(BORDER_MAX_M, Math.max(BORDER_MIN_M, m));
+    const w = clampBorder(m);
     if (w === this.courseBorder(kind)) return;
     this.brush[kind] = { ...this.brush[kind], bw: w }; this.saveBrush();
     this.lookSoon(); this.host.emit();

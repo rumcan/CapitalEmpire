@@ -2240,10 +2240,12 @@ export class GroundPainter {
     /** the banks drawn before layer `code` (its surface's first), kept off the fills of the ponds and bunkers drawn before it: one pass
      *  outside the boxes of the chunks that have such fills, and one in each of those boxes with its own fills cut out (one chunk's rings
      *  never overlap each other, so even-odd cuts them exactly; across chunks the 0.1-tile overlaps would not) */
-    const banksKept = (ws: readonly CourseWall[], code: number) => {
-      const draw = banks(ws), big = new Path2D(); big.rect(r[0]!, r[1]!, r[2]! - r[0]!, r[3]! - r[1]!);
-      const cut = [SURF.water, SURF.bunker].filter(s => rankOf(layerCode(s, false)) < rankOf(code));
-      const per = cs.map(c => ({ c, ls: c.layers.filter(l => cut.includes(l.s as 3 | 6) && l.fill.length) })).filter(q => q.ls.length);
+    const banksKept = (ws: readonly CourseWall[], code: number) => offFills([SURF.water, SURF.bunker].filter(s => rankOf(layerCode(s, false)) < rankOf(code)), banks(ws));
+    /** draw() everywhere but on the fills of the surfaces `cut` (T260: also a bandless pond's wet soil and a bandless bunker's grass lip, kept
+     *  off the water and the sand); draw sets its own transform */
+    const offFills = (cut: readonly number[], draw: () => void) => {
+      const big = new Path2D(); big.rect(r[0]!, r[1]!, r[2]! - r[0]!, r[3]! - r[1]!);
+      const per = cs.map(c => ({ c, ls: c.layers.filter(l => cut.includes(l.s) && l.fill.length) })).filter(q => q.ls.length);
       const boxOf = (c: CoursePatch, p: Path2D) => p.rect(c.cx * c.size, c.cy * c.size, c.size, c.size);
       ctx.save(); ctx.setTransform(M);
       if (per.length) { const p = new Path2D(big); for (const q of per) boxOf(q.c, p); ctx.clip(p, 'evenodd'); }
@@ -2277,10 +2279,19 @@ export class GroundPainter {
         // over the top of the face hanging from it (a pond's bank keeps its own wet edge)
         if (!lite && code !== layerCode(SURF.water, true)) for (const { l } of ls) if (l.collar) { const e = l.collar.edges; feather(tex(l), e, wallF, tone(l)); band(l, (t, tn) => feather(t, e, wallF, tn)); }
         for (const { l } of ls) if (l.collar) { const cf = l.collar.fill; fill(tex(l), cf, tone(l)); band(l, (t, tn) => fill(t, cf, tn)); }
+        // T260: a Border of none (CourseLayer.collar.w 0) lays no band: the bunker's grass lip and the pond's wet soil and stones lie round the
+        // sand and the water on the ground there, kept off the sand and the water (offFills)
+        const bare = ls.filter(q => q.l.collar?.w === 0).map(q => q.l), banded = ls.filter(q => q.l.collar?.w !== 0).map(q => q.l);
         // T227: the bunker's raised grass lip round the sand (its lip band): lit on its far side, a light shade on its near side
-        if (lip > 0 && !lite && code === layerCode(SURF.bunker, true)) this.bunkerGrassLip(ctx, ls.map(q => q.l), L, M, lip);
+        if (lip > 0 && !lite && code === layerCode(SURF.bunker, true)) {
+          if (banded.length) this.bunkerGrassLip(ctx, banded, L, M, lip);
+          if (bare.length) { const all = new Path2D(); all.rect(r[0]!, r[1]!, r[2]! - r[0]!, r[3]! - r[1]!); offFills([SURF.bunker], () => this.bunkerGrassLip(ctx, bare, L, M, lip, all)); }
+        }
         // a pond's bank: wet soil fading out from the water's edge into the grass, and a few stones
-        if (!lite && code === layerCode(SURF.water, true)) this.courseBank(ctx, ls.flatMap(q => q.l.edges), ringsOfCode(code), L, M);
+        if (!lite && code === layerCode(SURF.water, true)) {
+          if (banded.length) this.courseBank(ctx, banded.flatMap(l => l.edges), ringsOfCode(code), L, M);
+          if (bare.length) { const all = new Path2D(); all.rect(r[0]!, r[1]!, r[2]! - r[0]!, r[3]! - r[1]!); offFills([SURF.water], () => this.courseBank(ctx, bare.flatMap(l => l.edges), all, L, M)); }
+        }
         if (over) ctx.restore();
         rims(code);
       } else if (ls.length) {
@@ -3209,11 +3220,13 @@ export class GroundPainter {
   /** T227: the bunker's thin raised grass lip round the sand (its lip band, course-walls 'lip'): its outer slope lit on the far side (a shine
    *  textured by the grass, inset a gap from the sand's edge, fading out across the band) and lightly shaded on the near side (turned from the
    *  sun), clipped to the band; k the lip strength */
-  private bunkerGrassLip(ctx: C2D, ls: readonly CourseLayer[], L: number, M: DOMMatrix, k: number) {
-    const with_ = ls.filter(l => l.collar?.fill.length); if (!with_.length) return;
+  private bunkerGrassLip(ctx: C2D, ls: readonly CourseLayer[], L: number, M: DOMMatrix, k: number, bare: Path2D | null = null) {
+    // T260: bare (a Border of none: no lip band), the lip lies round the sand as wide as the old default band (LIP.bare), clipped to `bare`
+    // (the caller keeps it off the sand)
+    const with_ = bare ? ls.filter(l => l.fill.length) : ls.filter(l => l.collar?.fill.length); if (!with_.length) return;
     const rims = this.lipRims(with_); if (!rims) return;
-    const band = new Path2D(); let bw = 0;
-    for (const l of with_) { for (const q of l.collar!.fill) ringPath(band, q); bw = Math.max(bw, l.collar!.w ?? 0.5); }
+    const band = bare ?? new Path2D(); let bw: number = bare ? LIP.bare : 0;
+    if (!bare) for (const l of with_) { for (const q of l.collar!.fill) ringPath(band, q); bw = Math.max(bw, l.collar!.w ?? 0.5); }
     // the grass is dark (the first cut, toned): a lift in proportion to it, not squared, so the lit lip reads without turning it more saturated
     this.rimShine(ctx, rims.far, band, rims.box, LIP.grassGap, Math.max(0.1, bw - LIP.grassGap), LIP.grass * k, L, M, false);
     this.rimShade(ctx, rims.near, band, bw, LIP.shade * k, false, M);

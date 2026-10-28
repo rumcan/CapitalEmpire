@@ -52,10 +52,11 @@ const domCanvas = (w: number, h: number): SpriteCanvas => Object.assign(document
 /** re-renders the caller when a puck lands or a look changes (the Holes swatches call it) */
 export function useSwatchPucks(): number { return useSyncExternalStore(subscribe, snap, snap); }
 
-/** the surface's look and border as its puck shows them: its brush style (the look My looks sets) and the band the course lays round it */
-export function puckLookOf(kind: string, brush: BrushLooks): { st: PuckStyle; pb: PuckBand | null } | null {
+/** the surface's look and border as its puck shows them: its brush style (the look My looks sets) and the band the course lays round it
+ *  (border: its Border in metres, PaintTool.courseBorder; T260: 0 none, no band ring; absent: the defaults, puckBandOf) */
+export function puckLookOf(kind: string, brush: BrushLooks, border?: number | null): { st: PuckStyle; pb: PuckBand | null } | null {
   const st = brush[kind as BrushKind]?.style as PuckStyle | undefined; if (!st) return null;
-  return { st, pb: puckBandOf(kind, brush, finishOf(paintedSurfaces())) };
+  return { st, pb: puckBandOf(kind, brush, finishOf(paintedSurfaces()), border) };
 }
 
 /** brush kind `kind`'s swatch puck, as an image (url) and its css size; null under plain node or with no texture source (the swatch then
@@ -63,7 +64,7 @@ export function puckLookOf(kind: string, brush: BrushLooks): { st: PuckStyle; pb
 export function swatchPuckOf(game: Game, kind: BrushKind): { url: string; w: number; h: number } | null {
   const tex = (game as { cursorTexture?: CursorTexture }).cursorTexture;
   if (typeof document === 'undefined' || !tex) return null;
-  const look = puckLookOf(kind, (game.paint.brushLooks ?? game.paint.brush) as BrushLooks); if (!look) return null; // T256: the owner's looks (the hole painted, the property)
+  const look = puckLookOf(kind, (game.paint.brushLooks ?? game.paint.brush) as BrushLooks, game.paint.courseBorder?.(kind)); if (!look) return null; // T256: the owner's looks (the hole painted, the property); T260: its Border
   watchFile();
   const d = Math.min(3, Math.max(1, Math.round((typeof devicePixelRatio === 'number' ? devicePixelRatio : 1) * 2) / 2));
   const key = `${kind}|${d}|${fileNo}|${styleKey(look.st)}|${bandKey(look.pb)}`;

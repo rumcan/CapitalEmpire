@@ -62,8 +62,11 @@ export function surfaceBands(b: BrushLooks): { collar: Record<BandName, CourseTe
  *  (surfaceBands; with the course finish a bunker's lip in the fairway's first cut), with the finish's collar tone where the course takes it
  *  (every first cut, the fringe, a lip laid in the first cut: renderer drawCourses) */
 export interface PuckBand { name: BandName; tex: CourseTex; tone: { tc: string; ta: number } | null }
-export function puckBandOf(kind: string, b: BrushLooks, fin: CourseFinish): PuckBand | null {
+/** T260 (#763): border, the surface's Border in metres (PaintTool.courseBorder; 0: none, no band, so no ring); absent: the default, the
+ *  fairway's first cut and the green's fringe banded, a tee, a bunker and a pond bare */
+export function puckBandOf(kind: string, b: BrushLooks, fin: CourseFinish, border?: number | null): PuckBand | null {
   const name = SURFACE_BAND[kind as BrushKind]; if (!name) return null;
+  if (!(border === undefined || border === null ? kind === 'fairway' || kind === 'green' : border > 0)) return null;
   const { band, lipGrass } = surfaceBands(b), g = name === 'lip' && fin.on && lipGrass ? lipGrass : null, ct = collarToneOf(fin);
   return { name, tex: g ?? band[kind as BrushKind]!, tone: ct && (tonedCollar(name) || g) ? ct : null };
 }

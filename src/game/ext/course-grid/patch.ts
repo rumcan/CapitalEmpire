@@ -3,7 +3,7 @@
 // collars, the fairway's mowing lines and the growth mask; plus the chunk walk and the grow key the month tick compares.
 // Pure TypeScript, no DOM, deterministic. Units: tiles of 2 m; cells of 1 m (0.5 tile); months are game month indices.
 import { CELL_T, SURF, type Grid } from './index';
-import { BLOB_STYLE, CHUNK_MARGIN, chunkOutlines, collarReach, type BlobStyle } from '../course-blobs';
+import { BLOB_STYLE, CHUNK_MARGIN, chunkOutlines, collarLaid, collarReach, type BlobStyle } from '../course-blobs';
 import type { CourseLayer, CourseTex, LotPatch } from '../../ground-protocol';
 import type { EdgeProfile } from '../../paint-edges';
 import { MONTH_BASE } from './areas';
@@ -26,6 +26,13 @@ export const COURSE_EDIT_REACH = courseEditReach();
 /** the Border slider's range (the owner's test, 2026-10-25: "a slider to make the border huge if you want or hairline if you want"): a
  *  collar band's width in metres (= cells), from a hairline to several metres */
 export const BORDER_MIN_M = 0.1, BORDER_MAX_M = 8;
+/** a Border width held to the slider's range: 0 or less is none (T260), else a hairline to BORDER_MAX_M */
+export const clampBorder = (m: number): number => (m <= 0 ? 0 : Math.min(BORDER_MAX_M, Math.max(BORDER_MIN_M, m)));
+/** T260 (#763; the owner, 2026-10-29: "the border needs to be set to none for everything except fairways and greens who have fringe and
+ *  seconds cut as their borders by default"): the Border a surface's band is laid at when the player has set none, metres (0: none, no band):
+ *  BLOB_STYLE's for the fairway's first cut and the green's fringe (the course finish widens them: course-finish borderDefault), none for a
+ *  tee's first cut, a bunker's lip and a pond's bank (the Border slider lays them again at any width) */
+export const borderBase = (s: number): number => (s === SURF.fairway || s === SURF.green ? BLOB_STYLE[s]?.collar?.width ?? 0 : 0);
 
 /** each surface id's edge profile (paint-edges.ts): greens and tees raised, fairways turf, bunkers sunken, water, the rest flat */
 export const SURF_EDGE: readonly EdgeProfile[] = ['flat', 'flat', 'flat', 'water', 'turf', 'raised', 'sunken', 'flat', 'raised', 'flat'];
@@ -53,13 +60,14 @@ export interface CourseOwners {
 const texOf = (t: CourseTex): CourseTex => ({ tex: t.tex, sc: t.sc, a: t.a, ...(t.t ? { t: t.t, ta: t.ta ?? 0, tc: t.tc ?? '#000000' } : {}), ...(t.m ? { m: { ...t.m } } : {}) });
 
 /** BLOB_STYLE with the collars at the widths of `border` (metres = cells, by surface id; clamped to the Border slider's range; a missing or
- *  bad entry keeps the default width) */
+ *  bad entry keeps the default width). T260: 0 (or less) is none: the collar entry stays, at width 0, so the draw order's layer codes stay
+ *  the same (course-walls drawOrder, isOverlay, collarAfter), and course-blobs lays no band for it */
 export function courseStyles(border?: readonly (number | undefined)[]): readonly BlobStyle[] {
   if (!border?.length) return BLOB_STYLE;
   return BLOB_STYLE.map((st, s) => {
     const w = border[s];
     if (!st.collar || w === undefined || !Number.isFinite(w)) return st;
-    return { ...st, collar: { ...st.collar, width: Math.min(BORDER_MAX_M, Math.max(BORDER_MIN_M, w)) } };
+    return { ...st, collar: { ...st.collar, width: clampBorder(w) } };
   });
 }
 /** the widest collar of a style table, cells (the edit reach) */
@@ -164,7 +172,11 @@ export function coursePatch(g: Grid, cx: number, cy: number, looks: CourseLooks,
     const look = pick ? pick.base.surf : looks.surf[o.surf]!, r = cw.runs.get(layerCode(o.surf, false));
     const L: CourseLayer = { s: o.surf, ...texOf(look), e: SURF_EDGE[o.surf] ?? 'flat', fill: f32(fill), edges: f32(edges), soft: f32(r?.soft ?? []), joint: f32(r?.joint ?? []) };
     const lip = pick ? pick.base.lip : col?.name === 'lip' ? looks.lipGrass : undefined;
-    if (ce && col) { const cl = pick?.base.band ?? looks.band?.[o.surf] ?? looks.collar[col.name], [cf, cE] = ce; L.collar = { n: col.name, ...texOf(cl), w: col.width * CELL_T, fill: f32(cf), edges: f32(cE), soft: f32(cw.runs.get(layerCode(o.surf, true))?.soft ?? []), ...(col.name === 'lip' && lip ? { g: texOf(lip) } : {}) }; }
+    const cl = col ? pick?.base.band ?? looks.band?.[o.surf] ?? looks.collar[col.name] : null;
+    if (ce && col && cl) { const [cf, cE] = ce; L.collar = { n: col.name, ...texOf(cl), w: col.width * CELL_T, fill: f32(cf), edges: f32(cE), soft: f32(cw.runs.get(layerCode(o.surf, true))?.soft ?? []), ...(col.name === 'lip' && lip ? { g: texOf(lip) } : {}) }; }
+    // T260: a Border of none lays no band; the layer keeps the band's look with no rings (w 0): a tee's bank wears its first cut's grass as
+    // before (renderer grassOf), and the renderer lays a bunker's grass lip and a pond's wet soil round the sand and the water without a band
+    else if (col && cl && !collarLaid(col) && o.fill.length) L.collar = { n: col.name, ...texOf(cl), w: 0, fill: [], edges: [], soft: [] };
     if (pick?.alts.length) L.alts = pick.alts.map(a => ({ look: texOf(a.look.surf), ...(a.look.band ? { band: texOf(a.look.band) } : {}), ...(a.look.lip ? { g: texOf(a.look.lip) } : {}), runs: a.runs }));
     // the mowing stripes' holes: the fairway's (T218) and the green's (T227: the course finish's fine stripes, along its hole's line of play)
     if ((o.surf === SURF.fairway || o.surf === SURF.green) && o.fill.length) { const st = stripeAreas(g, cx, cy, lines, o.surf); if (st) L.stripes = st; }
