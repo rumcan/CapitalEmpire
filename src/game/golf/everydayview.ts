@@ -6,6 +6,7 @@ import { clipFrame, rowToward } from '../crowdview';
 import { GOLFER_CLIPS } from '../library';
 import { ADDRESS_TIME, STEP_IN, stateAt, teeSpot, walkMin } from './play/round';
 import { PlayView, type PlayBall, type PlayPerson } from './play/view';
+import type { CartPaths, PlayCart } from './play/carts';
 import type { CourseView, Pt, RoundPlan } from './play/types';
 import type { DayRoster } from './everyday';
 
@@ -40,15 +41,21 @@ interface Trip { bays: number[]; types: number[]; arrive: number; desk: number; 
 /** the playback of one town day's everyday golf on the club's ground */
 export class DayView {
   people: PlayPerson[] = []; balls: PlayBall[] = []; cars: DayCar[] = [];
+  /** T213: the carts on the course in the box (the golf play's, play/carts.ts: the visitors and half the members ride) */
+  carts: PlayCart[] = [];
   readonly plan: RoundPlan; readonly roster: DayRoster;
   private view: CourseView; private ground: ClubGround; private pv: PlayView;
   private legs: Leg[] = []; private trips: Trip[] = [];
   /** per group: the box of each hole (x0 y0 x1 y1, tiles, padded), the hole it is on found from plan.pace.arrive */
   private boxes: [number, number, number, number][] = [];
   private only: Uint8Array;
+  /** T213: the box of the last update (tiles x0 y0 x1 y1) */
+  private box = [0, 0, 0, 0];
 
-  constructor(plan: RoundPlan, roster: DayRoster, view: CourseView, ground: ClubGround) {
-    this.plan = plan; this.roster = roster; this.view = view; this.ground = ground; this.pv = new PlayView(plan, view);
+  constructor(plan: RoundPlan, roster: DayRoster, view: CourseView, ground: ClubGround, paths: CartPaths | null = null) {
+    this.plan = plan; this.roster = roster; this.view = view; this.ground = ground; this.pv = new PlayView(plan, view, { paths, home: ground.door });
+    // T213: a cart's golfers ride it back to the clubhouse's door after their round, and walk to their car from there
+    const cp = this.pv.cartPlay;
     const n = plan.golfers.length; this.only = new Uint8Array(n);
     const first = new Array<number>(n).fill(Infinity);
     for (const s of plan.shots) if (s.stroke === 1 && s.hole === 0 && s.t < first[s.golfer]!) first[s.golfer] = s.t;
@@ -64,7 +71,8 @@ export class DayView {
       const tr = this.trips[g]!, inf = roster.info[g]!; tr.arrive = inf.arrive;
       gr.players.forEach((id, slot) => {
         const spot = holes.length ? teeSpot(holes[0]!, slot) : door, e = end[id] ? { x: end[id]!.x, y: end[id]!.y } : door;
-        this.legs[id] = { g, slot, first: first[id]!, done: plan.done[id] ?? Infinity, end: e, spot, w1: 0, w2: walkMin(door, spot), w3: 0 };
+        const home = cp ? cp.homeMinute(id) : Infinity, rides = Number.isFinite(home);
+        this.legs[id] = { g, slot, first: first[id]!, done: rides ? home : plan.done[id] ?? Infinity, end: rides ? door : e, spot, w1: 0, w2: walkMin(door, spot), w3: 0 };
       });
     });
     for (const g of byArrive) {
@@ -107,8 +115,8 @@ export class DayView {
     const inBox = (x: number, y: number, pad = 4) => x >= x0 - pad && x <= x1 + pad && y >= y0 - pad && y <= y1 + pad;
     only.fill(0);
     let np = 0, nc = 0;
-    const person = (x: number, y: number, golfer: number, row: number, frame: number) => {
-      const p = this.people[np] ?? (this.people[np] = { x: 0, y: 0, golfer: 0, row: 0, frame: 0 }); p.x = x; p.y = y; p.golfer = golfer; p.row = row; p.frame = frame; np++;
+    const person = (x: number, y: number, golfer: number, row: number, frame: number, lift = 0) => {
+      const p = this.people[np] ?? (this.people[np] = { x: 0, y: 0, golfer: 0, row: 0, frame: 0 }); p.x = x; p.y = y; p.golfer = golfer; p.row = row; p.frame = frame; p.lift = lift; np++;
     };
     const car = (x: number, y: number, ang: number, type: number) => { const c = this.cars[nc] ?? (this.cars[nc] = { x: 0, y: 0, ang: 0, type: 0 }); c.x = x; c.y = y; c.ang = ang; c.type = type; nc++; };
     const arrive = (G.length && plan.pace) ? plan.pace.arrive : null;
@@ -157,9 +165,11 @@ export class DayView {
       }
     }
     // the rounds on screen: the golf play's playback of just those golfers
+    // (T213: with their carts, those in the box only: a cart off the screen costs a look at its hole)
+    const box = this.box; box[0] = x0; box[1] = y0; box[2] = x1; box[3] = y1; this.pv.box = box;
     this.pv.update(minute, now, null, null, only);
-    for (const p of this.pv.people) person(p.x, p.y, p.golfer, p.row, p.frame);
-    this.people.length = np; this.cars.length = nc; this.balls = this.pv.balls;
+    for (const p of this.pv.people) person(p.x, p.y, p.golfer, p.row, p.frame, p.lift ?? 0);
+    this.people.length = np; this.cars.length = nc; this.balls = this.pv.balls; this.carts = this.pv.carts;
   }
 
   /** the golfers out now: checked in and not yet back at their car (for the clubhouse card) */
