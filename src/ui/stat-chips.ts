@@ -16,6 +16,8 @@ export interface StatChipView {
 }
 
 const money = (n: number) => '$' + Math.round(n).toLocaleString('en-US');
+/** a money figure with a true minus when below zero: $842,350, −$5,000 */
+export const plainMoney = (n: number) => (n < 0 ? '−' : '') + money(Math.abs(n));
 /** a signed money figure: +$X, −$X (a true minus), or $0 */
 export const signedMoney = (n: number) => (n > 0 ? '+' : n < 0 ? '−' : '') + money(Math.abs(n));
 /** money in a few characters (the top bar narrower than 1600 px): $9,500, $842k, $1.23M, $12.4M (a true minus before it) */
@@ -39,11 +41,11 @@ export function statChips(s: TopStats, debtLeft: number | null = null): StatChip
   const unlimited = !Number.isFinite(s.money);
   const ch = s.monthChange, change = ch === null ? '' : `${changeWhen(s)}: ${signedMoney(ch)}`;
   const moneyChip: StatChipView = {
-    id: 'money', icon: 'bank', value: unlimited ? '∞' : withIcon(balanceKind(s.money), money(s.money)), ...(unlimited ? {} : { short: withIcon(balanceKind(s.money), shortMoney(s.money)) }),
+    id: 'money', icon: 'bank', value: unlimited ? '∞' : withIcon(balanceKind(s.money), plainMoney(s.money)), ...(unlimited ? {} : { short: withIcon(balanceKind(s.money), shortMoney(s.money)) }),
     ...(s.money < 0 ? { tone: 'down' as const } : {}), label: null,
     ...(debtLeft !== null && !unlimited ? { sub: `bankrupt in ${debtLeft} ${debtLeft === 1 ? 'day' : 'days'}`, subTone: 'down' as const, subAlways: true as const }
       : ch === null ? {} : { sub: withIcon(trendKind(ch), `${signedMoney(ch)}/mo`), subTone: ch > 0 ? 'up' as const : ch < 0 ? 'down' as const : 'flat' as const }),
-    tip: unlimited ? 'Money: unlimited (the dev sandbox). Click for the books' : `Money: ${money(s.money)}. ${change}${debtLeft !== null ? `. In the red: bankrupt in ${debtLeft} ${debtLeft === 1 ? 'day' : 'days'} unless the books recover` : ''}. Click for the books`,
+    tip: unlimited ? 'Money: unlimited (the dev sandbox). Click for the books' : `Money: ${plainMoney(s.money)}. ${change}${debtLeft !== null ? `. In the red: bankrupt in ${debtLeft} ${debtLeft === 1 ? 'day' : 'days'} unless the books recover` : ''}. Click for the books`,
   };
   const rating = s.quality === null ? null : courseRating(s.quality);
   return [

@@ -282,3 +282,19 @@ These are missing and offered only once drawn (four views, sun at the upper righ
 | Park bandstand (`town:bandstand`, four views) | 6 x 6 / 5 | `world:gazebo` is a stand-in (not offered) | an octagonal white timber bandstand on a low brick base, a green shingled roof with a small cupola, steps on one side | P1 |
 | Bronze statue on a plinth (`town:statue-founder`, four views) | 2 x 2 / 4 | none | a bronze figure of a town founder in a frock coat on a dressed-stone plinth, a little green patina | P2 |
 | Town hall annex (`town:townhall-annex`, four views) | 12 x 8 / 7 | none | a small two-storey brick civic building with a white portico and a flag, autumn trees beside it | P2 |
+
+## Build-tool tiles (T233, #674: art requests)
+Art 174's twelve tiles show on the Course and Facilities flyouts' tools (`ui/tool-tiles.ts`). These tools still show their icon, mark or swatch on
+the tile's navy square; a second sheet in 174's style would finish the panel (one tiny isometric diorama per tile on a dark navy rounded square
+#1E2A44, a 4 x 3 grid on charcoal #1C1F26, the light from the upper right, the same scale as 174, no lettering):
+| Tile (file name in `src/assets/ui/tiles/`) | For | Prompt (short) | P |
+| --- | --- | --- | --- |
+| `waste` | Course › Shape by hand › Waste area | a patch of pale waste sand with scattered pebbles, dry grass tufts and a little scrub | P1 |
+| `halfway-house` | Course › Buildings › Halfway house | a small timber snack hut with a striped awning and a bench | P1 |
+| `your-holes` | Course › Holes › Your holes | a tiny fairway running to a green with a flag, a tee at the near end (a whole hole) | P2 |
+| `tournament` | Course › Tournament | a small white grandstand and a scoreboard beside a green | P2 |
+| `land` | Course › Land for sale | a bare dirt plot inside a white dashed line with a For Sale post (no lettering on the sign) | P2 |
+| `bushes` | Facilities › Plants › Bushes | a few autumn shrubs, scarlet burning bush and golden spirea | P2 |
+| `palms` | Facilities › Plants › Palms | two palms on a sandy grass patch | P2 |
+| `props` | Facilities › Decoration › Props, All props | a bench, a lamp post and a planter on a paved square | P2 |
+| `furniture` | Decoration › Props › Furniture | a patio table with a red umbrella and two chairs | P2 |
