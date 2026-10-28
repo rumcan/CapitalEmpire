@@ -325,3 +325,16 @@ footprint of the existing shops (5-7 x 4-5 tiles at their owner size) so they fi
 | Pro shop and tackle (venue, `world:outfitter`, four views) | 11 x 8 / 6 | none | a timber outfitter with golf bags and fishing rods in the window, a canoe on the roof rack of a pickup outside | P2 |
 | A house back of the screened porch's size (`gen:back-porch-small`, four views) | 7 x 10 / 6 | `gen:back-screened-porch` is the only back of its size (no other back fits its lots: the lab's 14x10 house presets of roads 4 and 6 all show it) | the back of a small clapboard house with a screened porch, a grill and a hose reel, laundry on a line | P1 |
 | Two more small house backs (`gen:back-deck-small`, `gen:back-mudroom`, four views) | 7 x 10 / 6 | none | the backs of small houses: a timber deck with a kiddie pool; a mudroom door with boots, a woodpile and a garden shed | P2 |
+
+## Waterside trees (T265, #794: art requests)
+The tree belts along the rivers and creeks (`src/game/river-trees.ts`) deal the library's broadleaf trees, birches and aspens first, and some
+spruces and firs; the library has no waterside species of its own. Wanted, each as four views (ne, se, sw, nw, `gen:tree-<name>:<view>` like
+the generated trees), the light from the upper right, shadows at 145°, autumn colours to sit with the maples and birches, never mirrored:
+| Tree | Look | P |
+| --- | --- | --- |
+| `willow-weeping` | a broad weeping willow, its long drooping fronds reaching the ground, gold-green to yellow in autumn | P1 |
+| `alder` | a narrow, many-stemmed alder by the water, dark green going olive and brown, small cones | P2 |
+| `swamp-snag` | a dead grey tree standing in the swamp, broken top, a little moss at its foot (the woods' snags are drier) | P2 |
+
+Until they come, the belts use the existing pools (`BELT_BROAD_DEAL`, `BELT_CONIFER_DEAL`, the woods' dead snags in the swamp); a new species
+goes into `FOREST_BROADLEAF` (or a waterside pool in `river-trees.ts`) and `tree-sun.ts` measures its lit side.

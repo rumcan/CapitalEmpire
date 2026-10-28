@@ -91,7 +91,7 @@ export class GroundCache {
   setGrassArt(art: GrassArt) { if (art === this.grassArt) return; this.grassArt = art; this.broadcast({ t: 'grassArt', art }); this.invalidateAll(); }
   /** a light boot's worker limits (boot.ts, T157), sent with init; null: the game's */
   limits: WorkerLimits | null = null;
-  init(t: { cls: Uint8Array; height: Float32Array; waters: Waterway[] }) { const art = { ...withPresets(withBaseGrass(GROUND_ART)), grassArt: this.grassArt }, limits = this.limits ?? undefined; this.workers.forEach((wk, i) => wk.postMessage({ t: 'init', art, terrain: t.cls, height: t.height, waters: t.waters, build: i === 0, peers: this.workers.length - 1, limits } satisfies ToWorker)); this.broadcast({ t: 'living', ...this.living }); this.broadcast({ t: 'slopeLight', strength: this.slopeLight }); this.broadcast({ t: 'leaves', density: this.leafDensity }); this.broadcast({ t: 'specCam', on: this.specCam }); this.broadcast({ t: 'swamp', on: this.swamp }); this.broadcast({ t: 'grassShine', on: this.grassShine, weights: this.shineWeights }); this.broadcast({ t: 'surfaces', file: paintedSurfaces() });
+  init(t: { cls: Uint8Array; height: Float32Array; waters: Waterway[] }) { const art = { ...withPresets(withBaseGrass(GROUND_ART)), grassArt: this.grassArt }, limits = this.limits ?? undefined; this.workers.forEach((wk, i) => wk.postMessage({ t: 'init', art, terrain: t.cls, height: t.height, waters: t.waters, build: i === 0, peers: this.workers.length - 1, limits } satisfies ToWorker)); this.broadcast({ t: 'living', ...this.living }); this.broadcast({ t: 'slopeLight', strength: this.slopeLight }); this.broadcast({ t: 'leaves', density: this.leafDensity }); this.broadcast({ t: 'specCam', on: this.specCam }); this.broadcast({ t: 'swamp', on: this.swamp }); this.broadcast({ t: 'riverSwamp', on: this.riverSwamp }); this.broadcast({ t: 'grassShine', on: this.grassShine, weights: this.shineWeights }); this.broadcast({ t: 'surfaces', file: paintedSurfaces() });
     // the studio saved the painted surfaces (the dev server hot-swaps the file): every worker takes the new looks and every chunk is baked again
     this.unsurfaces?.(); this.unsurfaces = onPaintedSurfaces(file => { this.broadcast({ t: 'surfaces', file }); this.invalidateAll(); }); }
   private unsurfaces: (() => void) | null = null;
@@ -153,6 +153,19 @@ export class GroundCache {
    *  compares the looks and the bake times); every chunk is baked again */
   swamp = true;
   setSwamp(on: boolean) { if (on === this.swamp) return; this.swamp = on; this.broadcast({ t: 'swamp', on }); this.invalidateAll(); }
+  /** T265 (#794): the river's swamp band (on, the default) or the river as before (the dev switch window.__game.ground.setRiverSwamp(false), for
+   *  comparing the looks and the bake times) */
+  riverSwamp = true;
+  setRiverSwamp(on: boolean) { if (on === this.riverSwamp) return; this.riverSwamp = on; this.broadcast({ t: 'riverSwamp', on }); this.invalidateAll(); }
+  /** T265, the bench (?tourOnly=1): each chunk picture's first bake ms by kind, chunk and level, so two runs (the river's swamp on and off)
+   *  pair the same chunks' first bakes; null (the default) keeps none */
+  firstBakes: Map<string, number> | null = null;
+  /** T265, the bench: every worker paints its last bakes of this kind again, the river's swamp on and off by turns, and answers each paint's ms */
+  private abWait = new Map<number, (m: { on: number[]; off: number[] }) => void>();
+  bakeAB(kind: 'g' | 'm', reps: number, cold = false): Promise<{ on: number[]; off: number[] }> {
+    return Promise.all(this.workers.map((wk, w) => new Promise<{ on: number[]; off: number[] }>(res => { this.abWait.set(w, res); wk.postMessage({ t: 'bakeAB', kind, reps, cold } satisfies ToWorker); })))
+      .then(rs => ({ on: rs.flatMap(r => r.on), off: rs.flatMap(r => r.off) }));
+  }
   /** T199: each chunk picture's swamp gloss mask (renderer.ts takeGlossMask), by picture, as its reflection mask (it goes and is deleted with it) */
   private glosses = new Map<WebGLTexture, WebGLTexture>();
   /** the gloss mask of a chunk picture (T199 the swamp's pools, T230 its ponds and rivers), or null (specCam off, or no swamp or water on it) */
@@ -294,10 +307,12 @@ export class GroundCache {
     if (m.t === 'saved') { this.saving[w] = false; return; }
     if (m.t === 'error') { this.errors.push(m.message); console.error('[ground worker]', m.message); return; }
     if (m.t === 'log') { console.log(`[ground worker ${w}]`, m.message); return; }
+    if (m.t === 'bakeAB') { const f = this.abWait.get(w); this.abWait.delete(w); f?.(m); return; }
     if (m.t === 'texpack') { m.snaps.forEach((snap, k) => this.workers[k + 1]?.postMessage({ t: 'textures', snap } satisfies ToWorker, snap.bitmaps)); return; }
     const r = this.reqs.get(m.id); this.reqs.delete(m.id); this.inflight[w]--;
     if (!r) { m.bmp.close(); m.shade?.close(); m.spec?.close(); m.gloss?.close(); return; }
     const t = r.t; t.pendingL = 0; t.pendingArtL = 0; t.pendingTs = -1;
+    if (this.firstBakes) { const k = `${m.kind}${m.i},${m.j}@${m.L}`; if (!this.firstBakes.has(k)) this.firstBakes.set(k, m.ms); } // (T265: the bench's first-bake pairs)
     this.bakeLog[this.baked % BAKE_LOG] = m.ms; this.waitLog[this.baked % BAKE_LOG] = performance.now() - r.at; if (!this.firstTileAt) this.firstTileAt = performance.now();
     this.bakeMs += m.ms; this.shineLog[this.baked % BAKE_LOG] = m.shineMs ?? 0; this.baked++;
     // edited while baking: it will be asked for again, and keeps the picture it has meanwhile; one with none shows this one (stale, so it is

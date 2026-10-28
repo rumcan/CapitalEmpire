@@ -97,6 +97,21 @@ export const SCENE_STAGES: Record<BenchScene, Stage[]> = {
   golf: [{ name: 'course 30% pan', z: 0.3, vx: 500, vy: 200, secs: 6 }, { name: 'course 15% pan', z: 0.15, vx: 900, vy: 350, secs: 6 }],
 };
 export type BenchScene = 'range' | 'fixture' | 'golf';
+/** T265 (#794, ?bench&fixture=range20&river=1, bench.mjs --river 1): the grown town's river where it runs through the town, the camera following
+ *  the river (back and forth along its line) at 30%, 15% and 8%, with the belts and the river's swamp in view; then the bake check (bakeStage) */
+export const RIVER_STAGES: Stage[] = [{ name: 'river 30% pan', z: 0.3, vx: 900, vy: 300, secs: 6 }, { name: 'river 15% pan', z: 0.15, vx: 900, vy: 350, secs: 6 }, { name: 'river 8% pan', z: 0.08, vx: 4000, vy: 1500, secs: 6 }];
+/** T265: the river's line from its point nearest (x, y): the camera's world px at s world px along it (either way, clamped to its ends) */
+function riverFollow(g: Game, x: number, y: number): ((s: number) => { X: number; Y: number }) | null {
+  const r = g.terrain?.waters.find(w => w.kind === 'river'); if (!r || r.pts.length < 2) return null;
+  const P = r.pts.map(p => ({ X: worldX(p.x, p.y), Y: worldY(p.x, p.y) })), L = [0];
+  for (let k = 1; k < P.length; k++) L.push(L[k - 1]! + Math.hypot(P[k]!.X - P[k - 1]!.X, P[k]!.Y - P[k - 1]!.Y));
+  let k0 = 0, d = Infinity; r.pts.forEach((p, k) => { const e = Math.hypot(p.x - x, p.y - y); if (e < d) { d = e; k0 = k; } });
+  const s0 = L[k0]!;
+  return s => {
+    const t = Math.max(0, Math.min(L[L.length - 1]!, s0 + s)); let k = 1; while (k < L.length - 1 && L[k]! < t) k++;
+    const f = (t - L[k - 1]!) / Math.max(1e-6, L[k]! - L[k - 1]!); return { X: P[k - 1]!.X + (P[k]!.X - P[k - 1]!.X) * f, Y: P[k - 1]!.Y + (P[k]!.Y - P[k - 1]!.Y) * f };
+  };
+}
 
 /** the grown-town scene's town time: 08:00, the morning peak (the fixture is saved at 06:30, the range's morning), and the time the tour
  *  waits after the clock moves, for the commute to fill the roads (15 s: 36 town minutes on the 10-minute town day) */
@@ -110,6 +125,11 @@ const GOLF_MINUTE = 11 * 60;
  *  game is ready and a loaded town's lots are composed (at most 30 s) */
 export function benchGame(g: Game, scene: BenchScene) {
   g.benchMode = true;
+  if (new URLSearchParams(location.search).get('tourOnly') === '1') (g.ground as unknown as { firstBakes: Map<string, number> | null }).firstBakes = new Map();
+  // T265: ?belts=0 (bench.mjs --belts 0): the tree belts off for the run (Engine.setRiverTrees), the forest and the town trees as before
+  if (new URLSearchParams(location.search).get('belts') === '0') (g as unknown as { setRiverTrees?: (on: boolean) => void }).setRiverTrees?.(false);
+  // T265: ?riverSwamp=0 (bench.mjs --riverSwamp 0): the river's swamp off for the run (GroundCache.setRiverSwamp)
+  if (new URLSearchParams(location.search).get('riverSwamp') === '0') (g.ground as unknown as { setRiverSwamp?: (on: boolean) => void }).setRiverSwamp?.(false);
   const t0 = performance.now();
   let warm = 0;
   g.onFrame = () => {
@@ -126,13 +146,24 @@ export function benchGame(g: Game, scene: BenchScene) {
     const at = townTimeOf(g.traffic.town, g.traffic.simTime(performance.now())), clock = `${String(at.hour).padStart(2, '0')}:${String(at.minute).padStart(2, '0')}`;
     const info = { scene, ...(scene === 'golf' ? { golfersOut: g.dayOutNow() } : {}), heap: mem() as unknown as number, segs: g.net.segs.size, nodes: g.net.nodes.size, props: g.props.size, lotProps: g.perf.lotProps, lotsPending: g.lotsPending, pop: g.perf.pop, built: g.perf.built, settleMs: Math.round(performance.now() - t0), clock, carsAtStart: g.perf.simActive };
     console.log('[bench] scene', info);
+    // T265: ?river=1, the river through the town (its point nearest the first town's centre)
+    const town = g.townPts[0], follow = scene === 'fixture' && new URLSearchParams(location.search).get('river') === '1' && town ? riverFollow(g, town.x, town.y) : null;
+    // (?river=1&bakeab=1, bench.mjs --river 1 --bakeab 1: only the bake check, on a fresh page: no tour before it, so no long session's heap and
+    //  caches in the paints)
+    if (follow && new URLSearchParams(location.search).get('bakeab') === '1') {
+      const c = follow(0); bakeStage(g, c, [0.3, 0.15, 0.08], r => { const out = { ...info, river: true, bakeOnly: true, stages: r }; (window as unknown as { __bench: unknown }).__bench = out; console.log('[bench] results', JSON.stringify(out, null, 1)); });
+      return;
+    }
+    if (follow) { const c = follow(0); g.cam.X = c.X; g.cam.Y = c.Y; startTour(g, { ...info, river: true }, RIVER_STAGES, follow); return; }
     startTour(g, info, SCENE_STAGES[scene]);
   };
 }
 
-function startTour(g: Game, info: Record<string, unknown>, stages: Stage[] = STAGES) {
+function startTour(g: Game, info: Record<string, unknown>, stages: Stage[] = STAGES, follow: ((s: number) => { X: number; Y: number }) | null = null) {
   const results: Record<string, unknown>[] = [];
   let s = 0, t = -2, frames: number[] = [], cpu: number[] = [], inst = 0, draws = 0, upload = 0, up = 0;
+  /** T265: the most ms a frame's tree planting took this stage (perf.plantMs, the hitch check), the frames that planted, the distance along the river */
+  let plantMax = 0, plantFrames = 0, along = 0; const bake0 = g.ground.baked;
   /** the sim worker's tick time: the max per stage, and the average and max over the whole tour */
   let stageSim = 0, simSum = 0, simN = 0, simMax = 0;
   const startX = g.cam.X, startY = g.cam.Y;
@@ -144,24 +175,30 @@ function startTour(g: Game, info: Record<string, unknown>, stages: Stage[] = STA
     const st = stages[s];
     g.cam.z = st.z;
     const dir = Math.floor(Math.max(0, t) / 3) % 2 ? -1 : 1;
-    g.cam.X += st.vx * dt * dir; g.cam.Y += st.vy * dt * dir;
+    if (follow) { along += Math.hypot(st.vx, st.vy) * dt * dir; const c = follow(along); g.cam.X = c.X; g.cam.Y = c.Y; }
+    else { g.cam.X += st.vx * dt * dir; g.cam.Y += st.vy * dt * dir; }
+    const pm = (g.perf as { plantMs?: number }).plantMs ?? 0; if (t > 1 && pm > 0) { plantMax = Math.max(plantMax, pm); plantFrames++; }
     if (st.z < PLANNER_Z / 3) { g.cam.X = 0; g.cam.Y = MAP * 32; }
     up = Math.max(up, g.ground.uploadsThisSecond);
     if (t > 1) { frames.push(g.perf.frameMs); cpu.push(g.perf.cpuMs); inst = Math.max(inst, g.perf.instances); draws = Math.max(draws, g.perf.draws); upload = Math.max(upload, g.perf.uploadKB); }
     if (t >= st.secs) {
       const sorted = [...cpu].sort((a, b) => a - b), q = (p: number) => sorted[Math.min(sorted.length - 1, Math.floor(p * sorted.length))] ?? 0;
       const fAvg = frames.reduce((a, b) => a + b, 0) / Math.max(1, frames.length);
-      results.push({ stage: st.name, fps: +(1000 / fAvg).toFixed(1), cpuAvgMs: +(cpu.reduce((a, b) => a + b, 0) / Math.max(1, cpu.length)).toFixed(2), cpuP95Ms: +q(0.95).toFixed(2), maxInstances: inst, maxDraws: draws, maxUploadKB: Math.round(upload), chunkUploadsPerSec: up, uploadMsPerSec: +g.ground.uploadMsPerSecond.toFixed(1), simTickMsMax: +stageSim.toFixed(2), cars: g.perf.simActive });
-      s++; t = 0; frames = []; cpu = []; inst = draws = upload = up = 0; stageSim = 0; g.cam.X = startX; g.cam.Y = startY;
+      results.push({ stage: st.name, fps: +(1000 / fAvg).toFixed(1), cpuAvgMs: +(cpu.reduce((a, b) => a + b, 0) / Math.max(1, cpu.length)).toFixed(2), cpuP95Ms: +q(0.95).toFixed(2), maxInstances: inst, maxDraws: draws, maxUploadKB: Math.round(upload), chunkUploadsPerSec: up, uploadMsPerSec: +g.ground.uploadMsPerSecond.toFixed(1), simTickMsMax: +stageSim.toFixed(2), cars: g.perf.simActive, ...(follow ? { plantMsMax: +plantMax.toFixed(2), plantFrames } : {}) });
+      s++; t = 0; frames = []; cpu = []; inst = draws = upload = up = 0; stageSim = 0; g.cam.X = startX; g.cam.Y = startY; plantMax = 0; plantFrames = 0; along = 0;
       if (s >= stages.length) {
         g.onFrame = null;
+        // (?tourOnly=1, bench.mjs --tourOnly 1: the tour alone, without the bake and frame checks after it)
+        if (follow && new URLSearchParams(location.search).get('tourOnly') === '1') { info.firstBakes = Object.fromEntries((g.ground as unknown as { firstBakes: Map<string, number> | null }).firstBakes ?? []); finish(bakeStats(g, bake0)); return; }
+        if (follow) { const bakes = bakeStats(g, bake0); bakeStage(g, follow(0), [0.3, 0.15, 0.08], r => { results.push(...r); frameStage(g, follow, r2 => { results.push(...r2); finish(bakes); }); }); return; }
         if (info.course) { const at = info.course as { x: number; y: number }; paintStage(g, at, r => { results.push(r); wizardStage(g, at, r2 => { results.push(r2); finish(); }); }); return; }
         finish();
       }
     }
   };
-  function finish() {
-    const out = { ...info, cars: info.scene ? g.perf.simActive : BENCH_CARS, dpr: g.dpr, screen: `${g.cw}x${g.ch}`, groundBakes: g.ground.baked, avgBakeMs: +(g.ground.bakeMs / Math.max(1, g.ground.baked)).toFixed(1), groundCacheMB: Math.round(g.ground.residentPx * 4 / 1048576), groundCachePeakMB: Math.round(g.ground.peakPx * 4 / 1048576), shineMB: +(g.ground.shineBytes / 1048576).toFixed(2), sim: { active: g.perf.simActive, tickMsAvg: +(simSum / Math.max(1, simN)).toFixed(2), tickMsMax: +simMax.toFixed(2) }, stages: results };
+  function finish(tourBakes?: Record<string, number>) {
+    const trees = { forest: g.perf.forest, townTrees: g.perf.townTrees, belt: (g.perf as { belt?: number }).belt ?? 0 };
+    const out = { ...info, ...(tourBakes ? { tourBakes, trees } : {}), cars: info.scene ? g.perf.simActive : BENCH_CARS, dpr: g.dpr, screen: `${g.cw}x${g.ch}`, groundBakes: g.ground.baked, avgBakeMs: +(g.ground.bakeMs / Math.max(1, g.ground.baked)).toFixed(1), groundCacheMB: Math.round(g.ground.residentPx * 4 / 1048576), groundCachePeakMB: Math.round(g.ground.peakPx * 4 / 1048576), shineMB: +(g.ground.shineBytes / 1048576).toFixed(2), sim: { active: g.perf.simActive, tickMsAvg: +(simSum / Math.max(1, simN)).toFixed(2), tickMsMax: +simMax.toFixed(2) }, stages: results };
     (window as unknown as { __bench: unknown }).__bench = out;
     console.log('[bench] results', JSON.stringify(out, null, 1));
     g.toast('Benchmark finished: results in the console', 'good');
@@ -223,4 +260,97 @@ function paintStage(g: Game, at: { x: number; y: number }, done: (r: Record<stri
       done({ stage: 'course paint 30%', mouseUpMs: +upMsMouse.toFixed(2), areasJobMs: +g.perf.areasJobMs.toFixed(1), areasApplyMs: +g.perf.areasApplyMs.toFixed(2), dabs: dab.length, fps: +(1000 / (frame.reduce((p, v) => p + v, 0) / Math.max(1, frame.length))).toFixed(1), frameMs: stats(frame), dabMs: stats(dab), courseMainMsPerFrame: stats(main), cpuMs: stats(cpu), sends: lag.length, sendLagMs: stats(lag), workerJobMs: stats(job), uploadsPerSec: +(ups / 8).toFixed(1), uploadMsPerSec: +(upMs / 8).toFixed(1), groundBakes: bakes, avgBakeMs: +((g.ground.bakeMs - b0.ms) / Math.max(1, bakes)).toFixed(1) });
     }
   };
+}
+
+/** T265: the median, p95 and count of the ground bakes since bake b0 (GroundCache bakeLog, a ring of BAKE_LOG) */
+function bakeStats(g: Game, b0: number): Record<string, number> {
+  const n = Math.min(g.ground.baked - b0, g.ground.bakeLog.length), a: number[] = [];
+  for (let k = g.ground.baked - n; k < g.ground.baked; k++) a.push(g.ground.bakeLog[k % g.ground.bakeLog.length]!);
+  a.sort((p, q) => p - q);
+  const q = (p: number) => a[Math.min(a.length - 1, Math.floor(p * a.length))] ?? 0;
+  return { bakes: a.length, medianMs: +q(0.5).toFixed(2), p95Ms: +q(0.95).toFixed(2), avgMs: +(a.reduce((p, v) => p + v, 0) / Math.max(1, a.length)).toFixed(2) };
+}
+/** T265: the bake check over the river (the camera still at c): at each zoom every chunk is baked again (invalidateAll), 4 s a run, three runs,
+ *  and the bakes' median taken over the three; with the river's swamp switch (GroundCache.setRiverSwamp, the branch) on and off by turns,
+ *  else (main) as it is */
+function bakeStage(g: Game, c: { X: number; Y: number }, zooms: number[], done: (r: Record<string, unknown>[]) => void) {
+  const gc = g.ground as unknown as { setRiverSwamp?: (on: boolean) => void; invalidateAll(): void; bakeAB?: (kind: 'g' | 'm', reps: number, cold?: boolean) => Promise<{ on: number[]; off: number[] }> }, out: Record<string, unknown>[] = [];
+  // (the branch: each worker paints its last bakes again with the river's swamp on and off by turns, only the paint timed: bakeABStage)
+  if (gc.bakeAB) { bakeABStage(g, c, zooms, gc.bakeAB.bind(gc), done); return; }
+  const runs: { z: number; swamp: boolean | null }[] = [], REPS = 3;
+  for (const z of zooms) for (let r = 0; r < REPS; r++) { if (gc.setRiverSwamp) runs.push({ z, swamp: true }, { z, swamp: false }); else runs.push({ z, swamp: null }); }
+  const pooled = new Map<string, number[]>();
+  let k = 0, t = 0, b0 = 0;
+  const next = () => {
+    if (k >= runs.length) {
+      gc.setRiverSwamp?.(true); g.onFrame = null;
+      for (const [stage, a] of pooled) { a.sort((p, q) => p - q); const q = (p: number) => a[Math.min(a.length - 1, Math.floor(p * a.length))] ?? 0; out.push({ stage, bakes: a.length, medianMs: +q(0.5).toFixed(2), p95Ms: +q(0.95).toFixed(2), avgMs: +(a.reduce((p, v) => p + v, 0) / Math.max(1, a.length)).toFixed(2) }); }
+      done(out); return;
+    }
+    const r = runs[k]!; g.cam = { X: c.X, Y: c.Y, z: r.z }; t = 0; b0 = -1;
+    g.onFrame = (_now, dt) => {
+      t += dt;
+      if (b0 < 0 && t > 1.5) { if (r.swamp !== null) gc.setRiverSwamp!(r.swamp); gc.invalidateAll(); b0 = g.ground.baked; }
+      if (b0 >= 0 && t > 5.5) {
+        const stage = `bake ${Math.round(r.z * 100)}%${r.swamp === null ? '' : r.swamp ? ' river swamp on' : ' river swamp off'}`, a = pooled.get(stage) ?? [];
+        for (let b = Math.max(b0, g.ground.baked - g.ground.bakeLog.length); b < g.ground.baked; b++) a.push(g.ground.bakeLog[b % g.ground.bakeLog.length]!);
+        pooled.set(stage, a); k++; next();
+      }
+    };
+  };
+  next();
+}
+
+/** T265: the belts' frame check along the river (the same page, so the PC's other load falls alike on both): at 30%, 15% and 8%, the belts
+ *  on and off by turns (Engine.setRiverTrees, the branch; main as it is), three times each: 2.5 s for the cells to be planted again, then 4 s of
+ *  the river pan, the frames' cpu ms pooled (avg, p95) with the most instances */
+function frameStage(g: Game, follow: (s: number) => { X: number; Y: number }, done: (r: Record<string, unknown>[]) => void) {
+  const eg = g as unknown as { setRiverTrees?: (on: boolean) => void }, out: Record<string, unknown>[] = [];
+  const runs: { st: Stage; on: boolean | null }[] = [];
+  for (const st of RIVER_STAGES) for (let r = 0; r < 3; r++) { if (eg.setRiverTrees) runs.push({ st, on: true }, { st, on: false }); else runs.push({ st, on: null }); }
+  const pooled = new Map<string, { cpu: number[]; inst: number }>();
+  let k = 0, t = 0, along = 0;
+  const next = () => {
+    if (k >= runs.length) {
+      eg.setRiverTrees?.(true); g.onFrame = null;
+      for (const [stage, v] of pooled) { const a = [...v.cpu].sort((p, q) => p - q), q = (p: number) => a[Math.min(a.length - 1, Math.floor(p * a.length))] ?? 0; out.push({ stage, frames: a.length, cpuAvgMs: +(a.reduce((p, x) => p + x, 0) / Math.max(1, a.length)).toFixed(2), cpuP95Ms: +q(0.95).toFixed(2), maxInstances: v.inst }); }
+      done(out); return;
+    }
+    const r = runs[k]!; if (r.on !== null) eg.setRiverTrees!(r.on);
+    t = -2.5; along = 0; const c0 = follow(0); g.cam = { X: c0.X, Y: c0.Y, z: r.st.z };
+    const stage = `frames ${r.st.name}${r.on === null ? '' : r.on ? ' belts on' : ' belts off'}`, v = pooled.get(stage) ?? { cpu: [], inst: 0 }; pooled.set(stage, v);
+    g.onFrame = (_now, dt) => {
+      t += dt; if (t < 0) return;
+      const dir = Math.floor(t / 2) % 2 ? -1 : 1; along += Math.hypot(r.st.vx, r.st.vy) * dt * dir; const c = follow(along); g.cam.X = c.X; g.cam.Y = c.Y; g.cam.z = r.st.z;
+      if (t > 0.2) { v.cpu.push(g.perf.cpuMs); v.inst = Math.max(v.inst, g.perf.instances); }
+      if (t >= 4) { k++; next(); }
+    };
+  };
+  next();
+}
+
+/** T265: the swamp's bake check on the branch: at each zoom, over the river (the camera still at c) 3.5 s for the view's chunks to be baked,
+ *  (the view baked again), then every worker paints its last bakes of that tier again three times, the river's swamp on and off by turns (GroundCache bakeAB: one
+ *  worker, one chunk, back to back, so the PC's other load falls alike on both); the paints' median, p95 and mean, on and off */
+function bakeABStage(g: Game, c: { X: number; Y: number }, zooms: number[], ab: (kind: 'g' | 'm', reps: number, cold?: boolean) => Promise<{ on: number[]; off: number[] }>, done: (r: Record<string, unknown>[]) => void) {
+  const out: Record<string, unknown>[] = [];
+  const stats = (a: number[]) => { const s = [...a].sort((p, q) => p - q), q = (p: number) => s[Math.min(s.length - 1, Math.floor(p * s.length))] ?? 0; return { paints: s.length, medianMs: +q(0.5).toFixed(2), p95Ms: +q(0.95).toFixed(2), avgMs: +(s.reduce((p, v) => p + v, 0) / Math.max(1, s.length)).toFixed(2) }; };
+  let k = 0, t = 0;
+  const next = () => {
+    if (k >= zooms.length) { g.onFrame = null; done(out); return; }
+    const z = zooms[k]!; g.cam = { X: c.X, Y: c.Y, z }; t = 0; let asked = false, fresh = false;
+    g.onFrame = (_now, dt) => {
+      t += dt; if (!fresh && t > 0.5) { fresh = true; g.ground.invalidateAll(); } // (the view baked again at this zoom: the workers' last bakes are its chunks)
+      if (asked || t < 4.5) return;
+      asked = true; const kind = g.perf.tier === 'district' ? 'm' : 'g';
+      // (warm: the bands' alphas kept from the chunk's last bake, as an edit's or another level's bake finds them; cold: made again, a first bake's)
+      const one = (cold: boolean) => ab(kind, 3, cold).then(r => {
+        // (and the paired difference: each chunk's paint with the swamp less the same chunk's without, back to back; its median)
+        const on = stats(r.on), off = stats(r.off), d = r.on.map((v, i) => v - r.off[i]!).sort((p, q) => p - q), dm = d.length ? d[d.length >> 1]! : 0, tag = `bake ${Math.round(z * 100)}% (${kind}${cold ? ', cold' : ''})`;
+        out.push({ stage: `${tag} river swamp on`, ...on }, { stage: `${tag} river swamp off`, ...off, medianDeltaMs: +(on.medianMs - off.medianMs).toFixed(2), pairedMedianDeltaMs: +dm.toFixed(2) });
+      });
+      void one(true).then(() => one(false)).then(() => { k++; next(); });
+    };
+  };
+  next();
 }

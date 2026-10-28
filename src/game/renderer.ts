@@ -7,7 +7,8 @@ import { PAINT_TEXES, isPaintPhoto, type PaintTex } from './paint';
 import { exposeClip, exposeDraw, exposed, exposureOf } from './exposure';
 import { POOL_ANCHOR, PPM, SLAB_CELL } from './ground-art';
 import { POOL_SHARES, SPEC_MASK_K } from './lamp-reflect';
-import { GLOSS, SWAMP, SwampField, glossTile, swampStreams } from './swamp';
+import { GLOSS, RIVER_BAND, RIVER_SWAMP, SWAMP, SwampField, glossTile, riverStreams, swampStreams, type BandAlpha } from './swamp';
+import { RIVER_CUT, drawRiverCut } from './river-cut';
 import { REFLECT, SITE, WaterField, fieldPad, fieldRes, glintImage, hexRgb, riverLook, waterImages, waterLookActive, waterLookOf, type WaterLook } from './water-look';
 import { LOT_DECALS } from './lot-decals';
 import { clampDecals, drawDecals, flatSquash, placeDecals } from './map-decals';
@@ -52,6 +53,11 @@ const COMPOSED_BYTES = 64 << 20;
 const PAINT_CELL = 128;
 /** T199: the swamp tiles' glosses a worker keeps (two bands' worth, a quarter of a MB each) */
 const GLOSS_TILES = 8;
+/** T265: the swamp's tiles a worker keeps pre-scaled to the size they land at (tilePlan: four tiles, a few sizes each, at the levels in view; 5-15 MB) */
+const EXACT_TILES = 48;
+/** T265: the river's swamp band's samples a tile on a ground chunk (the streams' take 4): a wide band, its rim half a tile soft, at a quarter
+ *  of the work; a district chunk's at its own 1 */
+const RIVER_RES = 2;
 /** a painted composition of a chunk: its picture, the cells composed so far, its size in bytes */
 /** a chunk's living ground as made (drawLiving): its influence grid and its masks */
 type LivingMade = { grid: InfluenceGrid; masks: LivingMasks | null };
@@ -470,9 +476,18 @@ export class GroundPainter {
   swamp = true;
   /** T199: the streams' swamp band (swamp.ts SwampField), made with the terrain */
   private swampField = new SwampField([]);
+  /** T265 (#794): the river's swamp band (swamp.ts RIVER_BAND: past its bank, in stretches and bays, its width by the river's) on (the default)
+   *  or off (the dev switch window.__game.ground.setRiverSwamp(false): the river as before); swamp only while the surface 'swamp' is painted */
+  riverSwamp = true;
+  /** T265: the river's band (swamp.ts SwampField with RIVER_BAND), made with the terrain */
+  private riverField = new SwampField([], RIVER_BAND);
   /** T199: the swamp band of the bake in progress (its cover over the chunk's tile box, res samples a tile, from x0 y0), which the living ground
    *  leaves alone; null when the chunk lays none */
   private swampNow: { cv: Cnv; x0: number; y0: number; res: number } | null = null;
+  /** T265: the river's band over the bake in progress, as its field made it (before the cut; null a: none on this chunk), so the fallen leaves
+   *  read it there instead of asking the field point by point (each new lattice point of a point query costs a pass over the river's
+   *  segments: thousands under a belt's trees); null outside a ground chunk's bake */
+  private riverNow: { a: BandAlpha | null; x0: number; y0: number; res: number } | null = null;
   /** T199: the gloss mask of the bake in progress (a GLOSS.maskK-th of the chunk's size each way, premultiplied as a canvas is: alpha the
    *  swamp's pools' gloss, colour each pool's local mean colour times it; gl.ts glossLight lights the pools by it), made only with specCam on
    *  where the chunk lays the swamp's tile set, or (T230, waterOver) any pond or river; null otherwise */
@@ -557,6 +572,15 @@ export class GroundPainter {
   /** T199: each swamp tile's gloss (swamp.ts glossTile), by the tile's URL: made once per tile, the first time a bake lays it with the glint on
    *  (one read back of the tile, never of a chunk) */
   private glossTiles = new Map<string, Cnv>();
+  /** T265: the swamp's tiles at the px size they land at (by URL and size), drawn once as tiledBuf drew them (the same mip, smoothing and
+   *  size) so each cell is a plain copy, not a scaled draw: the river's band lays the swamp over much of a chunk */
+  private exactTiles = new Map<string, Cnv>();
+  private exactTile(url: string, img: Cnv | ImageBitmap, w: number, h: number): Cnv {
+    const k = `${url}@${w}x${h}`, have = this.exactTiles.get(k); if (have) { this.exactTiles.delete(k); this.exactTiles.set(k, have); return have; }
+    const c = canvas(w, h), g = ctx2d(c); g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'medium'; g.drawImage(img, 0, 0, w, h);
+    this.exactTiles.set(k, c); trimLru(this.exactTiles, new Set([k]), EXACT_TILES);
+    return c;
+  }
   /** T230: the water field of the bake in progress (water-look.ts WaterField: where the chunk's rivers, course ponds and painted water lie,
    *  each sample's distance from its shore and the shore's reflections), made the first time a water site asks (waterOver), with its look;
    *  undefined until then, null when the look is off and the glint too, or the chunk has no water */
@@ -607,7 +631,48 @@ export class GroundPainter {
   /** T199: the streams are swamp: the switch on and the surface painted (the same for every chunk, so the living ground's banks agree) */
   private swampOn() { return this.swamp && !!this.tex.paintedOf('swamp'); }
   /** T199: a stream's swamp may reach into the tile box (the worker decodes the swamp's tiles only for such a chunk) */
-  swampIn(b: BBox) { return this.swamp && !this.swampField.empty && this.swampField.near(b[0], b[1], b[2], b[3]).length > 0; }
+  swampIn(b: BBox) { return (this.swamp && !this.swampField.empty && this.swampField.near(b[0], b[1], b[2], b[3]).length > 0) || (this.riverSwamp && !this.riverField.empty && this.riverField.near(b[0], b[1], b[2], b[3]).length > 0); }
+  /** T265, the bench's cold bake check (bakeAB): the bands' kept alphas dropped, so the next paint makes its own */
+  clearSwampMemos() { this.swampField.clearMemo(); this.riverField.clearMemo(); }
+  /** T265: the river's band is drawn: its switch on and the surface painted */
+  private riverSwampOn() { return this.riverSwamp && !!this.tex.paintedOf('swamp'); }
+  /** T265: the swamp bands over tiles [x0, x0 + w) x [y0, y0 + h) at res samples a tile (swamp.ts SwampField alpha): the streams' (sc, T199) and
+   *  the river's (rv), the river's cut short of what is built there (cut: riverCut, on its own canvas first), merged into one canvas of alpha
+   *  (source-over: the soft union); null when neither lays any */
+  private swampBand(sc: ReturnType<SwampField['alpha']>, rv: ReturnType<SwampField['alpha']>, x0: number, y0: number, res: number, cut: ((g: C2D) => void) | null, rres = res): { cv: Cnv; box: BBox; res: number } | null {
+    if (!sc && !rv) return null;
+    // the river's band on its own canvas at its own res (rres), cut there; the streams' laid over it at theirs, the river's drawn up to it
+    let rc: Cnv | null = null;
+    if (rv) {
+      rc = this.buffer('riverBand', rv.W, rv.H); const g = ctx2d(rc);
+      g.putImageData(new ImageData(rv.data as Uint8ClampedArray<ArrayBuffer>, rv.W, rv.H), 0, 0);
+      if (cut) { g.save(); g.setTransform(rres, 0, 0, rres, -x0 * rres, -y0 * rres); g.globalCompositeOperation = 'destination-out'; cut(g); g.restore(); }
+      if (!sc) return { cv: rc, box: rv.box, res: rres };
+    }
+    const sb = this.buffer('swampBand', sc!.W, sc!.H), g = ctx2d(sb);
+    g.putImageData(new ImageData(sc!.data as Uint8ClampedArray<ArrayBuffer>, sc!.W, sc!.H), 0, 0);
+    if (!rv || !rc) return { cv: sb, box: sc!.box, res };
+    g.imageSmoothingEnabled = true; g.drawImage(rc, 0, 0, rv.W * res / rres, rv.H * res / rres);
+    return { cv: sb, box: [Math.min(sc!.box[0], rv.box[0]), Math.min(sc!.box[1], rv.box[1]), Math.max(sc!.box[2], rv.box[2]), Math.max(sc!.box[3], rv.box[3])], res };
+  }
+  /** T265: the river's band stops short of what is built near its tile box (box: the band's own over the chunk, so a district chunk's town
+   *  far from the river is never drawn; in tile space onto the band, destination-out): the
+   *  roads (their asphalt and walks) and bridges grown by RIVER_CUT.road tiles, the lots' ground, their yards, the painted areas and the course
+   *  (every surface, its rough too) grown by RIVER_CUT.lot; the outer half of each margin cut by half (a soft edge), the inner whole. What the
+   *  player bought keeps the swamp it had (the land is as it was); what they build or paint on it pushes the swamp back. null: nothing near */
+  private riverCut(net: FxView, box: BBox, lite: boolean): ((g: C2D) => void) | null {
+    const m = RIVER_CUT.road + 1, vis = (b: BBox) => b[2] >= box[0] - m && b[0] <= box[2] + m && b[3] >= box[1] - m && b[1] <= box[3] + m;
+    const feats = [...net.walkF, ...net.asphF].filter(f => vis(f.bbox)), brs = net.bridges.filter(b => vis(b.bbox));
+    const shapes: { path: Path2D; rule: CanvasFillRule }[] = [];
+    for (const p of this.lotsIn([box[0] - m, box[1] - m, box[2] + m, box[3] + m])) {
+      if (p.top || p.layby || p.tex === 'marks') continue;
+      if (p.course) { const q = new Path2D(); let any = false; for (const l of this.warpedCourse(p.course, lite).layers) for (const r of l.fill) { ringPath(q, r); any = true; } if (any) shapes.push({ path: q, rule: 'nonzero' }); continue; }
+      shapes.push({ path: polyPath(p.paint ? this.ruggedOf(p).q.pts : p.pts), rule: 'nonzero' });
+    }
+    if (!feats.length && !brs.length && !shapes.length) return null;
+    const bridges = brs.map(b => { const path = new Path2D(); b.pts.forEach((q, i) => (i ? path.lineTo(q.x, q.y) : path.moveTo(q.x, q.y))); return { path, hw: b.hw }; });
+    return g => drawRiverCut<Path2D>(g, { feats, bridges, shapes }, !lite);
+  }
   private leafPic: Cnv | null = null; private leafChunks = new Map<string, Cnv>();
   /** T220: the fallen leaves' density (the gear menu's Fallen leaves, GroundCache.setLeafDensity; 0: none, the ground exactly as before T220) */
   leafDensity = LEAF_DENSITY_DEFAULT;
@@ -990,7 +1055,7 @@ export class GroundPainter {
   /** the screen textures laid on the ground (isoImage), per source picture */
   private isoPics = new WeakMap<Cnv, Cnv>();
   /** take a new terrain: classes, height samples and waterways */
-  setTerrain(cls: Uint8Array, height: Float32Array, waters: Waterway[]) { this.terrainVer++; this.terrain.set(cls); this.shade = shadeField(height); this.slope = slopeField(height); this.waters = waters.map(w => ({ w, box: waterBox(w.pts, 4) })); this.swampField = new SwampField(swampStreams(waters)); }
+  setTerrain(cls: Uint8Array, height: Float32Array, waters: Waterway[]) { this.terrainVer++; this.terrain.set(cls); this.shade = shadeField(height); this.slope = slopeField(height); this.waters = waters.map(w => ({ w, box: waterBox(w.pts, 4) })); this.swampField = new SwampField(swampStreams(waters)); this.riverField = new SwampField(riverStreams(waters), RIVER_BAND); }
   /** a sub-rect of the course height from the main thread (samples i0.., j0.., w by h, row-major): copied in (the chunks it lights re-bake) */
   setCourse(i0: number, j0: number, w: number, h: number, data: Float32Array) {
     for (let j = 0; j < h; j++) this.courseH.set(data.subarray(j * w, (j + 1) * w), (j0 + j) * CH_SIZE + i0);
@@ -1085,10 +1150,12 @@ export class GroundPainter {
     const vis = (b: BBox) => b[2] >= tx0 && b[0] <= tx1 && b[3] >= ty0 && b[1] <= ty1, near = this.waters.filter(w => vis(w.box));
     const shape = (kind: 'river' | 'creek', extra: number, col: string) => { const p = new Path2D(); let any = false; for (const w of near) if (w.w.kind === kind) any = waterShape(p, w.w.pts, extra, box) || any; if (any) { ctx.fillStyle = col; ctx.fill(p); } };
     // T199: the streams' swamp band (as the ground's, swamp.ts), in the swamp's look, under the river's banks
-    const sa = this.swampOn() ? this.swampField.alpha(tx0, ty0, tx1 - tx0, ty1 - ty0, 0.25) : null;
-    if (sa) {
-      const sb = this.buffer('swampBand', sa.W, sa.H); ctx2d(sb).putImageData(new ImageData(sa.data as Uint8ClampedArray<ArrayBuffer>, sa.W, sa.H), 0, 0);
-      const lb = this.buffer('layer', W, H), lg = ctx2d(lb); lg.setTransform(M); lg.imageSmoothingEnabled = true; lg.drawImage(sb, tx0, ty0, sa.W / 0.25, sa.H / 0.25);
+    // (T265: and the river's, uncut: what is built is drawn over it, and a planner tile is too coarse to show a margin)
+    const sa0 = this.swampOn() ? this.swampField.alpha(tx0, ty0, tx1 - tx0, ty1 - ty0, 0.25) : null, rva = this.riverSwampOn() ? this.riverField.alpha(tx0, ty0, tx1 - tx0, ty1 - ty0, 0.25) : null;
+    const sa = sa0 ?? rva, sbd = sa ? this.swampBand(sa0, rva, tx0, ty0, 0.25, null) : null;
+    if (sa && sbd) {
+      const sb = sbd.cv;
+      const lb = this.buffer('layer', W, H), lg = ctx2d(lb); lg.setTransform(M); lg.imageSmoothingEnabled = true; lg.drawImage(sb, tx0, ty0, sb.width / sbd.res, sb.height / sbd.res);
       lg.globalCompositeOperation = 'source-in'; lg.fillStyle = this.planTiled(lg, 'swamp') ?? this.planColour('swamp'); lg.fillRect(tx0, ty0, tx1 - tx0, ty1 - ty0); lg.globalCompositeOperation = 'source-over';
       ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(lb, 0, 0); ctx.restore(); ctx.setTransform(M);
     }
@@ -1292,20 +1359,78 @@ export class GroundPainter {
     else { base = { buf: canvas(c.W, c.H), cells: new Uint8Array(cw * chh), bytes: c.W * c.H * 4 }; this.composed.set(ck, base); this.composedBytes += base.bytes; }
     this.bakeKeys.add(ck); this.tilesUsed = true;
     for (const [k, v] of this.composed) { if (this.composedBytes <= COMPOSED_BYTES) break; if (this.bakeKeys.has(k)) continue; this.composed.delete(k); this.composedBytes -= v.bytes; }
-    const band = bandOf(ts), lv = tp.fam.levels[band], urls = tp.urls[band], [w, h] = tileSize(lv, ts), perm = tilePermutation(tp.fam.id, band, urls.length);
+    return this.fillCells(base, want, (g, rect) => this.tilesInto(g, tp, rect, false)) ? base.buf : (this.provisional = true, null);
+  }
+  /** a tile set family's tiles over the device-px rectangle rect of the chunk being baked, onto g (the chunk's own px; tiledBuf's composition,
+   *  T265's swamp layer): its band's tiles on the world-anchored grid, edges snapped to whole px. exact (T265): each tile pre-scaled to the
+   *  size it lands at (exactTile), so a cell is a plain copy. false when a tile is not decoded */
+  private tilesInto(g: C2D, tp: TiledPick, rect: readonly number[], exact: boolean): boolean {
+    const c = this.chunkNow!, ts = this.tex.tileTs, band = bandOf(ts), lv = tp.fam.levels[band], urls = tp.urls[band], [w, h] = tileSize(lv, ts), perm = tilePermutation(tp.fam.id, band, urls.length);
     // the chunk's origin in its raster px (a whole number at every cache level) and its raster scale (px per world px)
     const L = c.L, ox = -c.M.e, oy = -c.M.f;
-    return this.fillCells(base, want, (g, rect) => {
-      const X0 = (rect[0] + ox) / L, Y0 = (rect[1] + oy) / L, X1 = (rect[0] + rect[2] + ox) / L, Y1 = (rect[1] + rect[3] + oy) / L;
-      // the mip drawn is at most twice the size it lands at (Textures.tileImage), so plain bilinear filtering keeps it sharp and cheap
-      g.setTransform(1, 0, 0, 1, 0, 0); g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'medium';
-      for (const q of cellsIn(X0, Y0, X1, Y1, w, h)) {
-        const [a, b, a2, b2] = snappedCell(q.ix, q.iy, w, h, L), img = this.tex.tileImage(urls[tileIndex(perm, q.ix, q.iy)]!, a2 - a);
-        if (!img) return false;
-        g.drawImage(img, a - ox, b - oy, a2 - a, b2 - b);
+    const X0 = (rect[0]! + ox) / L, Y0 = (rect[1]! + oy) / L, X1 = (rect[0]! + rect[2]! + ox) / L, Y1 = (rect[1]! + rect[3]! + oy) / L;
+    // the mip drawn is at most twice the size it lands at (Textures.tileImage), so plain bilinear filtering keeps it sharp and cheap
+    g.setTransform(1, 0, 0, 1, 0, 0); g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'medium';
+    for (const q of cellsIn(X0, Y0, X1, Y1, w, h)) {
+      const [a, b, a2, b2] = snappedCell(q.ix, q.iy, w, h, L), url = urls[tileIndex(perm, q.ix, q.iy)]!, img = this.tex.tileImage(url, a2 - a);
+      if (!img) return false;
+      g.drawImage(exact ? this.exactTile(url, img, a2 - a, b2 - b) : img, a - ox, b - oy, a2 - a, b2 - b);
+    }
+    return true;
+  }
+  /** T265: the swamp's tile set laid through the band (sband.cv: its cover over the tiles from x0 y0, res a tile) onto the chunk being baked:
+   *  the tiles drawn straight into a scratch layer over the band's cells (exact: a copy each), cut to the band (destination-in), then laid
+   *  over those px of the chunk (as layer() laid the composed swamp through the band before; no composed buffer kept). false when a tile is
+   *  not decoded (provisional: baked again) */
+  private swampLayer(ctx: C2D, tp: TiledPick, sband: { cv: Cnv; box: BBox }, x0: number, y0: number, res: number, covers: readonly { a: BandAlpha; res: number }[] = []): boolean {
+    const c = this.chunkNow!, [i0, j0, i1, j1] = this.cellsOf(sband.box);
+    if (i1 <= i0 || j1 <= j0) return true;
+    // the cells the band lies on (its samples, every other one, mapped to the chunk's px), grown by a cell: each row's runs of them are laid,
+    // not the band's whole box (a river crossing a chunk on the slant covers a strip of it)
+    const cw = i1 - i0, ch = j1 - j0, on = new Uint8Array(cw * ch), m = c.M;
+    if (covers.length) {
+      for (const { a, res: r } of covers) for (let v = 0; v < a.H; v += 2) for (let u = 0; u < a.W; u += 2) {
+        if (!a.data[(v * a.W + u) * 4 + 3]) continue;
+        const x = x0 + (u + 0.5) / r, y = y0 + (v + 0.5) / r, ci = Math.floor((m.a * x + m.c * y + m.e) / PAINT_CELL) - i0, cj = Math.floor((m.b * x + m.d * y + m.f) / PAINT_CELL) - j0;
+        for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) { const ii = ci + di, jj = cj + dj; if (ii >= 0 && jj >= 0 && ii < cw && jj < ch) on[jj * cw + ii] = 1; }
       }
-      return true;
-    }) ? base.buf : (this.provisional = true, null);
+    } else on.fill(1);
+    const runs: [number, number, number, number][] = [];
+    for (let j = 0; j < ch; j++) for (let i = 0; i < cw; i++) {
+      if (!on[j * cw + i]) continue;
+      let e = i; while (e + 1 < cw && on[j * cw + e + 1]) e++;
+      const rx = (i0 + i) * PAINT_CELL, ry = (j0 + j) * PAINT_CELL, rw = Math.min(c.W, (i0 + e + 1) * PAINT_CELL) - rx, rh = Math.min(c.H, (j0 + j + 1) * PAINT_CELL) - ry;
+      if (rw > 0 && rh > 0) runs.push([rx, ry, rw, rh]);
+      i = e;
+    }
+    // straight onto the chunk (whole there: the ground under it is laid): the band cut out of it (destination-out), then the tiles laid into
+    // the hole (destination-over): the ground times one less the band plus the tiles times the band, as a layer laid through the band gives,
+    // with no scratch layer to clear and lay
+    // (every run's tiles found first, so the ground is cut only where they can be laid)
+    const plans: ReturnType<GroundPainter['tilePlan']>[] = [];
+    for (const r of runs) { const pl = this.tilePlan(tp, r); if (!pl) { this.provisional = true; return false; } plans.push(pl); }
+    runs.forEach(([rx, ry, rw, rh], k) => {
+      ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.beginPath(); ctx.rect(rx, ry, rw, rh); ctx.clip();
+      ctx.setTransform(c.M); ctx.globalCompositeOperation = 'destination-out'; ctx.imageSmoothingEnabled = true; ctx.drawImage(sband.cv, x0, y0, sband.cv.width / res, sband.cv.height / res);
+      ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = 'destination-over'; for (const d of plans[k]!) ctx.drawImage(d.img, d.x, d.y, d.w, d.h);
+      ctx.restore();
+    });
+    return true;
+  }
+  /** T265: the tiles a tile set family lays over the device-px rectangle rect of the chunk being baked (as tilesInto), each pre-scaled to the
+   *  size it lands at (exactTile; kept, so a tile the worker dropped and decodes again is not scaled again, nor its mips made again), with
+   *  where it goes; null when a tile is neither kept at that size nor decoded */
+  private tilePlan(tp: TiledPick, rect: readonly number[]): { img: Cnv; x: number; y: number; w: number; h: number }[] | null {
+    const c = this.chunkNow!, ts = this.tex.tileTs, band = bandOf(ts), lv = tp.fam.levels[band], urls = tp.urls[band], [w, h] = tileSize(lv, ts), perm = tilePermutation(tp.fam.id, band, urls.length);
+    const L = c.L, ox = -c.M.e, oy = -c.M.f, out: { img: Cnv; x: number; y: number; w: number; h: number }[] = [];
+    for (const q of cellsIn((rect[0]! + ox) / L, (rect[1]! + oy) / L, (rect[0]! + rect[2]! + ox) / L, (rect[1]! + rect[3]! + oy) / L, w, h)) {
+      const [a, b, a2, b2] = snappedCell(q.ix, q.iy, w, h, L), url = urls[tileIndex(perm, q.ix, q.iy)]!, tw = a2 - a, th = b2 - b, k = `${url}@${tw}x${th}`;
+      let e = this.exactTiles.get(k);
+      if (e) { this.exactTiles.delete(k); this.exactTiles.set(k, e); }
+      else { const img = this.tex.tileImage(url, tw); if (!img) return null; e = this.exactTile(url, img, tw, th); }
+      out.push({ img: e, x: a - ox, y: b - oy, w: tw, h: th });
+    }
+    return out;
   }
   /** T199: the swamp's gloss over the chunk being baked (swamp.ts): each tile's gloss (glossTileOf) laid where tiledBuf lays its picture, over
    *  the band's box, at a GLOSS.maskK-th of the chunk's size; then cut to the band (its cover, swampNow) and off the stream's water and lip (cut,
@@ -1374,7 +1499,7 @@ export class GroundPainter {
     this.chunkNow = { key: `${lite ? 'm' : 'g'}${i},${j}@${L}`, L, box, M, Minv, W, H }; this.toned.clear(); this.bakeKeys.clear(); this.tilesUsed = false; this.provisional = false;
     // T186: the shade mask (a quarter of the chunk's size), white (no shade) until a shade is laid on it; none for a district chunk (its
     // sprites' shadows are a few px: the far meshes)
-    this.specMask = null; this.glossMask = null; this.swampNow = null; this.waterNow = undefined;
+    this.specMask = null; this.glossMask = null; this.swampNow = null; this.waterNow = undefined; this.riverNow = null;
     if (lite) this.shadeMask = null;
     else { const mc = new OffscreenCanvas(Math.max(1, Math.ceil(W / SHADE_MASK_K)), Math.max(1, Math.ceil(H / SHADE_MASK_K))), mg = mc.getContext('2d')!; mg.fillStyle = '#fff'; mg.fillRect(0, 0, mc.width, mc.height); this.shadeMask = { cv: mc, g: scaledContext(mg, 1 / SHADE_MASK_K), used: false }; }
     const minW = 1 / (TILE_PX * L), net = this.net.view([tx0 - 8, ty0 - 8, tx1 + 8, ty1 + 8], !lite), tex = this.tex;
@@ -1409,17 +1534,27 @@ export class GroundPainter {
     // T199: the small streams as swamp (swamp.ts): the band in the swamp's painted look, under the river's bank (a river keeps its look; the
     //      band reaches past its waterway's box, so it is asked of the field, not of the creeks in view); with the glint on, its gloss onto the
     //      chunk's gloss mask. The old creek bed while the swamp is off or unpainted, or its tiles not decoded yet (provisional: baked again)
-    const sw = this.swampOn() ? this.swampField.alpha(tx0, ty0, bw, bh, cres) : null, swBuf = sw ? this.paintedBuf('swamp', sw.box) : null;
-    if (sw && swBuf) {
-      const sb = this.buffer('swampBand', sw.W, sw.H); ctx2d(sb).putImageData(new ImageData(sw.data as Uint8ClampedArray<ArrayBuffer>, sw.W, sw.H), 0, 0);
-      this.swampNow = { cv: sb, x0: tx0, y0: ty0, res: cres };
-      layer('creek', g => { g.setTransform(M); g.imageSmoothingEnabled = true; g.drawImage(sb, tx0, ty0, sw.W / cres, sw.H / cres); }, g => { const p = g.createPattern(swBuf, 'no-repeat')!; p.setTransform(Minv); return p; });
+    // T265: and the river's band (swamp.ts RIVER_BAND, asked of its field alike), cut short of the roads, bridges, lots, painted areas and the
+    //      course (riverCut), merged with the streams' into one band (swampBand): one layer, one gloss, one cover the living ground leaves alone
+    const sw = this.swampOn() ? this.swampField.alpha(tx0, ty0, bw, bh, cres) : null, rres = Math.min(cres, RIVER_RES), rv = this.riverSwampOn() ? this.riverField.alpha(tx0, ty0, bw, bh, rres) : null;
+    if (this.riverSwampOn()) this.riverNow = { a: rv, x0: tx0, y0: ty0, res: rres };
+    const sband = sw || rv ? this.swampBand(sw, rv, tx0, ty0, cres, rv ? this.riverCut(net, rv.box, lite) : null, rres) : null;
+    // (T265: the swamp's tile set straight through the band, swampLayer: no composed buffer a chunk, whose room in the cache is the grass's; a
+    //  painted look composed and laid as before)
+    const swTiles = sband ? this.tex.paintedOf('swamp')?.tiled : undefined, swBuf = sband && !swTiles ? this.paintedBuf('swamp', sband.box) : null;
+    const swLaid = !!sband && (swTiles ? this.swampLayer(ctx, swTiles, sband, tx0, ty0, sband.res, [...(sw ? [{ a: sw, res: cres }] : []), ...(rv ? [{ a: rv, res: rres }] : [])]) : !!swBuf);
+    const creekSwamp = !!(sw && swLaid);
+    if (sband && swLaid) {
+      const sb = sband.cv, sr = sband.res;
+      this.swampNow = { cv: sb, x0: tx0, y0: ty0, res: sr };
+      if (swBuf) layer('creek', g => { g.setTransform(M); g.imageSmoothingEnabled = true; g.drawImage(sb, tx0, ty0, sb.width / sr, sb.height / sr); }, g => { const p = g.createPattern(swBuf, 'no-repeat')!; p.setTransform(Minv); return p; });
       const tp = this.specCam ? this.tex.paintedOf('swamp')?.tiled : undefined;
-      if (tp) { const cut = new Path2D(); let any = false; for (const w of creeks) any = waterShape(cut, w.w.pts, SWAMP.lip, box, SWAMP.water) || any; this.glossMask = this.swampGloss(tp, sw.box, any ? cut : null); }
+      // (the gloss off the streams' water and lip, and off the river's water and the bank's inner tile: the river keeps T230's own glint)
+      if (tp) { const cut = new Path2D(); let any = false; for (const w of creeks) any = waterShape(cut, w.w.pts, SWAMP.lip, box, SWAMP.water) || any; if (rv) for (const w of rivers) any = waterShape(cut, w.w.pts, RIVER_SWAMP.inner[1], box) || any; this.glossMask = this.swampGloss(tp, sband.box, any ? cut : null); }
     }
     if (rivers.length) layer('bank', g => shore(g, rivers, 3, 0.8));
     // the creek bed (with the swamp: a thin muddy lip round the water), then the stream's narrow water
-    if (creeks.length) { layer('creek', g => (this.swampNow ? shore(g, creeks, SWAMP.lip, SWAMP.lipFeather, SWAMP.water) : shore(g, creeks, 0.5, 0.5))); layer('water', g => shore(g, creeks, 0, SWAMP.waterFeather, SWAMP.water), water); }
+    if (creeks.length) { layer('creek', g => (creekSwamp ? shore(g, creeks, SWAMP.lip, SWAMP.lipFeather, SWAMP.water) : shore(g, creeks, 0.5, 0.5))); layer('water', g => shore(g, creeks, 0, SWAMP.waterFeather, SWAMP.water), water); }
     const sres = lite ? 0.25 : 0.5, hs = shadeRGBA(this.shade, tx0, ty0, bw, bh, sres); overlay(ctx, hs, sres); ctx.setTransform(M);
     // (T186: its shade on the mask, not its light: only when it shades anything)
     if (this.shadeMask) { const d = hs.data.slice(); let any = false; for (let k = 3; k < d.length; k += 4) { if (d[k - 1]! >= 160) d[k] = 0; else if (d[k]! > 4) any = true; } if (any) this.onShadeMask(g => overlay(g, { data: d, W: hs.W, H: hs.H }, sres)); }
@@ -3580,11 +3715,17 @@ export class GroundPainter {
     }
     const roads: LeafRoad[] = [], cx = (box[0] + box[2]) / 2, cy = (box[1] + box[3]) / 2, rr = Math.max(box[2] - box[0], box[3] - box[1]) / 2 + 4;
     for (const s of this.net.segsNear({ x: cx, y: cy }, rr)) if (s.kind !== SK.TUNNEL) roads.push({ ax: s.a.x, ay: s.a.y, bx: s.b.x, by: s.b.y, h: s.cls.h, walk: s.cls.walk, keep: LEAF_ROAD_KEEP[s.cls.family] ?? 0.6 });
-    const swampy = this.swampOn(), key = `${box[0]},${box[1]},${box[2]},${box[3]}`, sig = `${leafSignature({ casters, roads }, this.leafDensity)}:${this.terrainVer}:${swampy ? 1 : 0}:${ids.join(',')}`, have = this.leafMemo.get(key);
+    const swampy = this.swampOn(), riverSwampy = this.riverSwampOn(), key = `${box[0]},${box[1]},${box[2]},${box[3]}`, sig = `${leafSignature({ casters, roads }, this.leafDensity)}:${this.terrainVer}:${swampy ? 1 : 0}${riverSwampy ? 1 : 0}:${ids.join(',')}`, have = this.leafMemo.get(key);
     if (have && have.sig === sig) { this.leafMemo.delete(key); this.leafMemo.set(key, have); return have.stamps; }
     const blocked = (x: number, y: number) => {
       if (x < 0 || y < 0 || x >= MAP || y >= MAP || this.terrain[Math.floor(y) * MAP + Math.floor(x)]! > TC.PATCH) return true;
       if (swampy && this.swampField.cover(x, y) > 0.5) return true; // (T199: the streams' swamp is water too)
+      // (T265: and the river's: from the bake's own band where it has one, nearest sample)
+      if (riverSwampy) {
+        const rn = this.riverNow;
+        if (!rn) { if (this.riverField.cover(x, y) > 0.5) return true; }
+        else if (rn.a) { const u = Math.floor((x - rn.x0) * rn.res), v = Math.floor((y - rn.y0) * rn.res); if (u >= 0 && v >= 0 && u < rn.a.W && v < rn.a.H && rn.a.data[(v * rn.a.W + u) * 4 + 3]! > 127) return true; }
+      }
       for (const c of courses) if (courseCovers(c, x, y)) return true;
       for (const q of off) if (x >= q.b[0] && x <= q.b[2] && y >= q.b[1] && y <= q.b[3] && inPoly(q.pts, x, y)) return true;
       return false;
