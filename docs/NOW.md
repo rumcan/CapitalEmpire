@@ -77,6 +77,8 @@ never commit there.)
 **Not ours:** Codex (the art AI) keeps its own art branches (`lead/garage-eight-views-20261026` and others under `worktrees/`); its
 deliveries come as PRs to review. The 3D people session's handover is `docs/HANDOVER-PEOPLE.md`.
 
+**T258 #749 continuous-art follow-up** (`lead/continuous-art-plans-20261029`): generic live-source AI plans and one exact subjob per batch, explicit versioned corrections, held review metadata and lossless native/live-only reuse. Current live priority181 is respected; 180a-v3 remains explicitly queued, v1/v2 held and b/c/d pending. Reviewed source art/proofs are in this branch; runtime registration remains separate. Quota retry2026-10-28T15:32:44.457Z is unchanged. Typecheck/focused fixtures pass; final fresh-main checks and PR/deployment next.
+
 ### 4. Queue (in order; start the next when an agent lands)
 1. **T262 #769** grass catches the camera's shine: a bump map for every grass type, lit as the camera moves (a prototype with a verdict
    first; builds on T215's camera specular; the GPU budget is tight).
