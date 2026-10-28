@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-29 22:20 SAST)
+## START HERE (kept current by the lead; last updated 2026-10-29 22:50 SAST)
 
 **T273 #819, range geometry source review:** branch `lead/coffee-geometry-hold-20261028`, worktree `worktrees/coffee-geometry-hold-20261028`. Native hash-bound geometry holds/proofs cover the original two-view kiosk, targeted view1-v2 and new distance post; exact source/provenance and prior style approval retained. Native front-edge errors are3.15/9.44degrees (kiosk v1),3.67degrees (kiosk v2),5.31degrees (post), so none is ready for registration. Existing queue logic already honors nested negative review decisions; no code, runtime, scheduled-worker deployment/state/timer changes. Original v1 provenance/style bytes need narrow -text rules because previous Git newline normalization invalidated their native hash bindings. Next: validate source/proof hashes and open the scoped source-only PR for lead review.
 
@@ -71,7 +71,7 @@ never commit there.)
 **Two agents running (a new lead took over at ~15:00 on 2026-10-28; the old lead's agents stopped at the usage limit ~14:00):**
 | Ticket | Issue | Branch / worktree | State and next step |
 | --- | --- | --- | --- |
-| T265 | #794 | `arena/T265-river-swamp-trees` (a fresh worktree; port 5186) | **Started ~00:15.** The river's swamp band and dense tree belts along every river and creek, under the owner's hard performance limits (belts +0.5 ms a frame, swamp +1 ms a bake, main vs branch at 30/15/8%, thin or stop). |
+| T271 | #812 | `arena/T271-own-grass` (a fresh worktree; port 5186) | **Started ~22:50.** Create your own grass preset, option 9 in Shape by hand (plays as a base surface; texture, Exposure, stripes, Edges; saved with the game); a storage plan on the issue first; bake at most +0.5 ms. |
 | T270 | #811 | `arena/T270-shop-variety` (a fresh worktree; port 5187) | **Started ~22:20.** Shop variety (the owner: five Video Vaults in a row): reproduce, then neighbours never alike, a town's spread, one named business per block; no saved index moves. |
 
 **Held, waiting on the owner (not agents):**
@@ -89,9 +89,9 @@ deliveries come as PRs to review. The 3D people session's handover is `docs/HAND
 ### 4. Queue (in order; start the next when an agent lands)
 1. **T267 #808** the face shade is merged (#814, the lead): left, a screenshot against the owner's reference when the PC has memory free (it
    had 0.6 GB with two agents running; the browser pane has had no WebGL since, until the app restarts) and the pond's cut face if it shows the same overhang.
-2. **T271 #812** create your own grass preset, option 9 in Shape by hand (plays as a base surface; a short plan first).
-3. **T268 #809** place each tee set (blue, white, yellow, red) yourself; move and remove them.
-4. **T269 #810** an active grounds crew: the holes moved each morning, mowers on the course, staff wages (a plan first; 3D people art).
+2. **T268 #809** place each tee set (blue, white, yellow, red) yourself; move and remove them.
+3. **T269 #810** an active grounds crew: the holes moved each morning, mowers on the course, staff wages (a plan first; 3D people art).
+4. **T272 #825** ground tiles are decoded about 70 times a tour (found by T265): keep them decoded and pre-scaled, faster bakes everywhere.
 5. **T259 #759** farms: seasonal corn and ploughed fields, orchards in rows, farmhouses set back on a poplar-lined lane (art 185-189 from
    ChatGPT; stand-ins until then).
 6. **T248 #718** water that moves: research first, two flowing textures, waves lapping at the shore.
@@ -112,7 +112,9 @@ deliveries come as PRs to review. The 3D people session's handover is `docs/HAND
 3. **Farms** (185-189): for T259. 4. **The grey stone border** (180): for T249. 5. **Scenes batch 2**: for P28 T242.
 
 ### 6. Latest merges (2026-10-28)
-#821 T266 golf at a watchable pace (the owner: "hyper speed"): the golf hours at 1.5 game min/s with a 40 s night, walking capped at
+#824 T265 the river's swamp band (in stretches and bays, stopping at roads, lots and the course) and tree belts along every river and
+creek (thickets to 10 m, thinning by 32 m; birch, aspen, maple; within the owner's frame limits; the swamp's bake +0.1-0.3 ms by direct
+measure); willow and alder art requested · #821 T266 golf at a watchable pace (the owner: "hyper speed"): the golf hours at 1.5 game min/s with a 40 s night, walking capped at
 2.8 m/s (carts 5.6) with soft fades, the tournament's pros too; months and money unchanged; "Golf pace: Watchable / Fast" in the gear menu; the
 range about +4.7% in the browser (a note on #800) · #814 T267 a bunker's cut face in its own shade by its Shadow (the owner: "theres no shadow on the bunker inner wall") · #807 bunkers by default Round off at 100% and Shadow 30% (the owner), an unticked box kept off · #806 T263 part 2: the hole shaping
 reads at the default light (a gentle-slope gain), built at $5/m³ · #804 T262 part 2: the grass shine a third as strong, the tee 0.1 and the green 0.55 (the cause of the owner's "horrible" tees: #792's
