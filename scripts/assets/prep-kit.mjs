@@ -39,14 +39,15 @@ const PALMS = [['windmill-4m', 'Windmill palm, 4 m', 4], ['windmill-5m', 'Windmi
   ['canary-6m', 'Canary palm, 6 m', 6], ['canary-8m', 'Canary palm, 8 m', 8], ['canary-10m', 'Canary palm, 10 m', 10],
   ['dwarf-fan-2m', 'Dwarf fan palm, 2 m', 2], ['dwarf-fan-3m', 'Dwarf fan palm, 3 m', 3], ['dwarf-fan-3-5m', 'Dwarf fan palm, 3.5 m', 3.5]];
 export const KIT = [
-  // 158: two run pieces (4 x 1 m), an inner and an outer corner
+  // 158: two run pieces and an inner and an outer corner. The art list's piece is 4 x 1 m; laid at that size its stones (seven along a piece)
+  // came out about half a metre, small beside the boulders (36) at the uprights' scale, so a piece stands for 8 x 2 m: stones about a metre
   { sheet: 'landscaping/golf-pond-edge-boulders-pieces-v1.png', cut: 'pieces', out: [
-    { slug: 'pond-edge-y', name: 'Pond-edge stones (along y)', kind: 'fencey', run: { axis: 'y', len: 4, depth: 1 } },
-    { slug: 'pond-edge-x', name: 'Pond-edge stones (along x)', kind: 'fencex', run: { axis: 'x', len: 4, depth: 1 } },
-    { slug: 'pond-edge-inner', name: 'Pond-edge stones (inner corner)', kind: 'rock', across: 1.6, box: 0.8 },
-    { slug: 'pond-edge-outer', name: 'Pond-edge stones (outer corner)', kind: 'rock', across: 1.6, box: 0.8 },
+    { slug: 'pond-edge-y', name: 'Pond-edge stones (along y)', kind: 'rock', run: { axis: 'y', len: 8, depth: 2 } },
+    { slug: 'pond-edge-x', name: 'Pond-edge stones (along x)', kind: 'rock', run: { axis: 'x', len: 8, depth: 2 } },
+    { slug: 'pond-edge-inner', name: 'Pond-edge stones (inner corner)', kind: 'rock', across: 2.2, box: 0.8 },
+    { slug: 'pond-edge-outer', name: 'Pond-edge stones (outer corner)', kind: 'rock', across: 2.2, box: 0.8 },
   ] },
-  // 164: the clipped hedge, 0.7 m deep and 0.9 m high: two run pieces and an end block, 4 m a piece (the pond's and the privacy panels' length)
+  // 164: the clipped hedge, 0.7 m deep and 0.9 m high: two run pieces and an end block, 4 m a piece (the privacy panels' length)
   { sheet: 'landscaping/golf-clipped-hedge-pieces-v1.png', cut: 'pieces', out: [
     { slug: 'hedge-y', name: 'Clipped hedge (along y)', kind: 'fencey', run: { axis: 'y', len: 4, depth: 0.7 } },
     { slug: 'hedge-x', name: 'Clipped hedge (along x)', kind: 'fencex', run: { axis: 'x', len: 4, depth: 0.7 } },
@@ -54,8 +55,8 @@ export const KIT = [
   ] },
   // 159: the jet, four frames of a loop in four 344 px columns, 4 m high and 1.5 m across: cut alike so the frames stand on one spot
   { sheet: 'props/golf-fountain-jet-4frames-v1.png', cut: 'columns', n: 4, out: [0, 1, 2, 3].map(f => ({ slug: `fountain-jet-${f}`, name: `Fountain jet (frame ${f + 1})`, kind: 'fountain', tall: 4, box: 0.75 })) },
-  // 160: four lily clusters, top-down, on a 2 x 2 grid, about 1.8 m across
-  { sheet: 'landscaping/golf-lily-pads-top-v1.png', cut: 'grid2', out: ['a', 'b', 'c', 'd'].map(v => ({ slug: `lily-pads-${v}`, name: `Lily pads (${v})`, kind: 'decal', flat: 1.8 })) },
+  // 160: four lily clusters, top-down, on a 2 x 2 grid, about 2.4 m across
+  { sheet: 'landscaping/golf-lily-pads-top-v1.png', cut: 'grid2', out: ['a', 'b', 'c', 'd'].map(v => ({ slug: `lily-pads-${v}`, name: `Lily pads (${v})`, kind: 'decal', flat: 2.4 })) },
   // 162 shrubs, 163 flower clumps (0.6 m), 36 boulders, 43 palms, 45 lamp posts (3.5 m)
   ...SHRUBS.map(([s, n, m]) => one(`landscaping/golf-shrub-${s}-1view-v1.png`, `shrub-${s}`, n, 'shrub', { across: m, box: m * 0.35 })),
   ...FLOWERS.map(([s, n]) => one(`landscaping/golf-flowers-${s}-1view-v1.png`, `flowers-${s}`, n, 'flower', { across: 0.6, box: 0.25 })),

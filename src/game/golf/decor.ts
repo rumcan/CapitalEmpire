@@ -45,7 +45,7 @@ export const APPEAL = { plant: 0.01, fountain: 0.15, well: 0.03, statue: 0.08, p
   jet: 0.06, boulder: 0.01, boulderBig: 0.015, boulderLarge: 0.02, hedge: 0.005 } as const;
 
 /** T231: the Fountain pond's radius (tiles: 10 m across) and what a stone of a pond's edge costs ($) */
-export const POND_R = 2.5, STONE_PRICE = 60;
+export const POND_R = 3.5, STONE_PRICE = 60;
 
 /** the catalogue: real library art (the Trees & plants, Landscaping, Street furniture, Yard and Landmarks categories, T113's golf props) and labelled
  *  stand-ins. T154: the art model's new shrubs, beds, bench, bin and lamp post are screen-axis sets (axis-library.ts: four genuine quarter turns, R
@@ -82,7 +82,7 @@ export const DECOR: readonly DecorItem[] = [
   { key: 'well', name: 'Wishing well', group: 'water', kind: 'water', id: 'expansion:wooden-well', price: 1200, appeal: APPEAL.well, desc: 'A covered garden well: golfers toss a coin for luck' },
   // T231: the ponds (golf/ponds.ts): a jet in the water, a round pond with its jet and stones, and a stone edge for any pond
   { key: 'kit-fountain', name: 'Fountain jet', group: 'water', kind: 'water', id: KIT_FOUNTAIN[0], water: 'in', price: 3500, appeal: APPEAL.jet, desc: 'A tall jet of water: only in a pond or a lake' },
-  { key: 'kit-pond', name: 'Fountain pond', group: 'water', kind: 'water', id: KIT_POND_EDGE.outer, pond: 'make', price: 9000, appeal: APPEAL.jet, desc: 'A round pond 10 m across with a stone edge, lily pads and a jet: for the clubhouse or a square' },
+  { key: 'kit-pond', name: 'Fountain pond', group: 'water', kind: 'water', id: KIT_POND_EDGE.outer, pond: 'make', price: 9000, appeal: APPEAL.jet, desc: 'A round pond 14 m across with a stone edge and a jet: for the clubhouse or a square' },
   { key: 'kit-pond-stones', name: 'Stone pond edge', group: 'water', kind: 'stone', id: KIT_POND_EDGE.x, pond: 'edge', price: STONE_PRICE, per: 'a stone', appeal: 0, desc: "Boulders round a pond's shore and lily pads on its water; click the pond again for its natural edge" },
   // ---- stone
   { key: 'statue', name: 'Golfer statue', group: 'stone', kind: 'statue', id: 'expansion:coin-horse-ride', price: 6000, appeal: APPEAL.statue, standIn: 'Bronze golfer statue', desc: 'A bronze golfer at the top of his swing, on a stone plinth' },

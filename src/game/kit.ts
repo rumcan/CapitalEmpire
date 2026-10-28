@@ -33,8 +33,8 @@ export const KIT_LAMPS = ['kit:lamp-post-single', 'kit:lamp-post-twin'] as const
 export interface RunKit { x: string; y: string; len: number; end?: string }
 /** the clipped hedge (164): 4 m pieces, 0.7 m deep; its end block */
 export const KIT_HEDGE: RunKit = { x: 'kit:hedge-x', y: 'kit:hedge-y', len: 2, end: 'kit:hedge-end' };
-/** the pond-edge stones (158): 4 x 1 m run pieces and the corners */
-export const KIT_POND_EDGE = { x: 'kit:pond-edge-x', y: 'kit:pond-edge-y', len: 2, depth: 0.5, inner: 'kit:pond-edge-inner', outer: 'kit:pond-edge-outer' } as const;
+/** the pond-edge stones (158): run pieces 8 x 2 m (4 x 1 tiles; prep-kit.mjs says why) and the corners */
+export const KIT_POND_EDGE = { x: 'kit:pond-edge-x', y: 'kit:pond-edge-y', len: 4, depth: 1, inner: 'kit:pond-edge-inner', outer: 'kit:pond-edge-outer' } as const;
 /** the fountain jet's frames (159), a loop: FOUNTAIN_FPS frames a second */
 export const KIT_FOUNTAIN = ['kit:fountain-jet-0', 'kit:fountain-jet-1', 'kit:fountain-jet-2', 'kit:fountain-jet-3'] as const;
 export const FOUNTAIN_FPS = 7;

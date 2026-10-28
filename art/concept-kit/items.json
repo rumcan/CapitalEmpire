@@ -5,15 +5,15 @@
    "id": "kit:pond-edge-y",
    "name": "Pond-edge stones (along y)",
    "cat": "Concept kit",
-   "kind": "fencey",
-   "w": 160,
-   "h": 118.867,
-   "ax": 80,
-   "ay": 78.867,
+   "kind": "rock",
+   "w": 320,
+   "h": 237.734,
+   "ax": 160,
+   "ay": 157.734,
    "boxes": [
     {
-     "hx": 0.5,
-     "hy": 2,
+     "hx": 1,
+     "hy": 4,
      "dx": 0,
      "dy": 0
     }
@@ -21,10 +21,10 @@
    "solid": 1,
    "big": false,
    "door": false,
-   "cost": 60,
+   "cost": 300,
    "run": {
     "axis": "y",
-    "len": 4
+    "len": 8
    },
    "src": {
     "sheet": "landscaping/golf-pond-edge-boulders-pieces-v1.png",
@@ -45,15 +45,15 @@
    "id": "kit:pond-edge-x",
    "name": "Pond-edge stones (along x)",
    "cat": "Concept kit",
-   "kind": "fencex",
-   "w": 160,
-   "h": 118.767,
-   "ax": 80,
-   "ay": 78.767,
+   "kind": "rock",
+   "w": 320,
+   "h": 237.533,
+   "ax": 160,
+   "ay": 157.533,
    "boxes": [
     {
-     "hx": 2,
-     "hy": 0.5,
+     "hx": 4,
+     "hy": 1,
      "dx": 0,
      "dy": 0
     }
@@ -61,10 +61,10 @@
    "solid": 1,
    "big": false,
    "door": false,
-   "cost": 60,
+   "cost": 300,
    "run": {
     "axis": "x",
-    "len": 4
+    "len": 8
    },
    "src": {
     "sheet": "landscaping/golf-pond-edge-boulders-pieces-v1.png",
@@ -86,10 +86,10 @@
    "name": "Pond-edge stones (inner corner)",
    "cat": "Concept kit",
    "kind": "rock",
-   "w": 102.4,
-   "h": 56.681,
-   "ax": 51.568,
-   "ay": 43.881,
+   "w": 140.8,
+   "h": 77.936,
+   "ax": 70.906,
+   "ay": 65.136,
    "boxes": [
     {
      "hx": 0.8,
@@ -122,10 +122,10 @@
    "name": "Pond-edge stones (outer corner)",
    "cat": "Concept kit",
    "kind": "rock",
-   "w": 102.4,
-   "h": 75.711,
-   "ax": 51.811,
-   "ay": 62.911,
+   "w": 140.8,
+   "h": 104.102,
+   "ax": 71.24,
+   "ay": 91.302,
    "boxes": [
     {
      "hx": 0.8,
@@ -418,14 +418,14 @@
    "name": "Lily pads (a)",
    "cat": "Concept kit",
    "kind": "decal",
-   "w": 81.45,
-   "h": 41.79,
-   "ax": 40.725,
-   "ay": 20.895,
+   "w": 108.6,
+   "h": 55.72,
+   "ax": 54.3,
+   "ay": 27.86,
    "boxes": [
     {
-     "hx": 0.63,
-     "hy": 0.63,
+     "hx": 0.84,
+     "hy": 0.84,
      "dx": 0,
      "dy": 0
     }
@@ -454,14 +454,14 @@
    "name": "Lily pads (b)",
    "cat": "Concept kit",
    "kind": "decal",
-   "w": 81.45,
-   "h": 39.855,
-   "ax": 40.725,
-   "ay": 19.928,
+   "w": 108.6,
+   "h": 53.14,
+   "ax": 54.3,
+   "ay": 26.57,
    "boxes": [
     {
-     "hx": 0.63,
-     "hy": 0.63,
+     "hx": 0.84,
+     "hy": 0.84,
      "dx": 0,
      "dy": 0
     }
@@ -490,14 +490,14 @@
    "name": "Lily pads (c)",
    "cat": "Concept kit",
    "kind": "decal",
-   "w": 81.45,
-   "h": 44.233,
-   "ax": 40.725,
-   "ay": 22.117,
+   "w": 108.6,
+   "h": 58.978,
+   "ax": 54.3,
+   "ay": 29.489,
    "boxes": [
     {
-     "hx": 0.63,
-     "hy": 0.63,
+     "hx": 0.84,
+     "hy": 0.84,
      "dx": 0,
      "dy": 0
     }
@@ -526,14 +526,14 @@
    "name": "Lily pads (d)",
    "cat": "Concept kit",
    "kind": "decal",
-   "w": 81.45,
-   "h": 41.452,
-   "ax": 40.725,
-   "ay": 20.726,
+   "w": 108.6,
+   "h": 55.27,
+   "ax": 54.3,
+   "ay": 27.635,
    "boxes": [
     {
-     "hx": 0.63,
-     "hy": 0.63,
+     "hx": 0.84,
+     "hy": 0.84,
      "dx": 0,
      "dy": 0
     }

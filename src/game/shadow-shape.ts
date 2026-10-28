@@ -216,7 +216,7 @@ export function contactShadow(it: LibItem, d: ShadowSpot, pic: ArrayLike<number>
 export const placeholderBoxes = (it: LibItem) => it.kind === 'business' && it.boxes.length === 1 && it.boxes[0]!.hx === 1 && it.boxes[0]!.hy === 1 && it.boxes[0]!.dx === 0 && it.boxes[0]!.dy === 0;
 
 /** does the sprite cast a cast shadow (cast-shadow.ts; an override can turn it off: a flat sprite) */
-export function castsShadow(it: LibItem): boolean { return it.kind !== 'lot' && overrideOf(it.id)?.o.cast !== false; }
+export function castsShadow(it: LibItem): boolean { return it.kind !== 'lot' && it.kind !== 'decal' && it.kind !== 'fountain' && overrideOf(it.id)?.o.cast !== false; } // (T231: lily pads lie flat, the jet is water)
 
 /** the lean uniform (gl.ts drawShadows uShift): the cast shadows' screen direction, times their length against the default; none when off */
 export function contactLean(c: { on: boolean; angle: number; length: number }): { x: number; y: number } {
