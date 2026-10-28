@@ -9,7 +9,7 @@ import {fileURLToPath} from 'node:url';
 import sharp from 'sharp';
 import {snapshotQueue,readJson,writeJson,sha} from './queue.mjs';
 import {sourcesUnchanged} from './catalogue.mjs';
-import {validatePlan,planPath,planHash,readPlan,planningPrompt,subjobPrompt} from './planner.mjs';
+import {validatePlan,planPath,planHash,readPlan,planningPrompt,subjobPrompt,reuseExisting} from './planner.mjs';
 import {assessRecovery} from './recovery.mjs';
 export const FIVE_HOURS=5*60*60*1000;
 export const FORBIDDEN_THREADS=['01a16c0b-bcad-7e71-a5d0-0281b98562b9'];
@@ -99,6 +99,14 @@ export async function tick(config,{now=()=>Date.now(),dryRun=false,runnerOverrid
     if(await readJson(path.join(config.stateDir,'STOP.json')))return {status:'stopped'};
     const queue=await snapshotQueue(config,state.reviewedTokens??{});const {markdown,...durableQueue}=queue;await writeJson(path.join(config.stateDir,'queue.json'),durableQueue);
     state.authoritySha256=queue.authoritySha256;state.queueCounts=queue.counts;state.lastTickAt=new Date(now()).toISOString();await persist();
+    if(queue.next?.action==='copy-existing-subjob'){
+      if(!await sourcesUnchanged(queue))return {status:'authority-changed'};
+      state.lastLocalReuse=await reuseExisting(queue.next,config);
+      const reuseFile=path.join(config.stateDir,'local-reuse',new Date(now()).toISOString().replace(/[:.]/g,'-')+'-'+sha(Buffer.from(queue.next.job.key)).slice(0,12)+'.json');
+      await writeJson(reuseFile,{schema:1,status:'existing-deliverable-copied',builtinImagegenUsed:false,itemId:queue.next.job.id,subjobKey:queue.next.job.key,sourceFingerprint:queue.next.sourceFingerprint,planSha256:queue.next.planSha256,artifacts:[state.lastLocalReuse]});
+      state.lastLocalReuse.checkpointFile=reuseFile;state.localCopies=(state.localCopies??0)+1;await persist();
+      return {status:'existing-deliverable-copied',notBeforeUtc:state.notBeforeUtc??null,artifact:state.lastLocalReuse};
+    }
     if(state.notBeforeUtc&&Date.parse(state.notBeforeUtc)>now()){state.status=state.status==='transient-backoff'?'transient-backoff':'usage-backoff';await persist();return {status:state.status,notBeforeUtc:state.notBeforeUtc};}
     if(!queue.next){state.status=config.planning!==false&&(queue.counts.waitingSubjobs||queue.counts.pendingDispositions)?'waiting-deliverable-review-or-dependency':'idle-awaiting-new-art-or-review';state.notBeforeUtc=null;await persist();return {status:state.status,counts:queue.counts};}
     const binary=runnerOverride??await discoverBinary(config),fingerprint=sha(Buffer.from(JSON.stringify({binary,worktree:config.worktree,sourceFingerprint:queue.sourceFingerprint,item:queue.next.sourceBlockSha256,job:queue.next.job?.key,planSha256:queue.next.planSha256,styleReferences:config.styleReferences})));

@@ -27,17 +27,29 @@ export function parseCatalogue(markdown){
 }
 export async function readSources(config){
   const markdown=await fs.readFile(config.authorityFile,'utf8'),sources=[{file:config.authorityFile,sha256:sha(Buffer.from(markdown)),role:'catalogue'}],texts={catalogue:markdown};
-  const links=[...markdown.matchAll(/\]\(([^)]+(?:CHATGPT-IMAGE-QUEUE|GROUND-TEXTURE-METHOD)\.md)\)/g)].map(m=>path.resolve(path.dirname(config.authorityFile),m[1]));
+  const links=[...markdown.matchAll(/\]\(([^)]*(?:CHATGPT-IMAGE-QUEUE|GROUND-TEXTURE-METHOD)\.md)\)/g)].map(m=>path.resolve(path.dirname(config.authorityFile),m[1]));
   for(const file of new Set([...(config.linkedAuthorityFiles??[]),...links])){const text=await fs.readFile(file,'utf8'),role=/CHATGPT-IMAGE-QUEUE/.test(file)?'paste-ready-queue':'ground-method';sources.push({file,sha256:sha(Buffer.from(text)),role});texts[role]=text;}
-  return {markdown,sources,texts,authoritySha256:sources[0].sha256,sourceFingerprint:sha(Buffer.from(JSON.stringify(sources)))};
+  const correctionJobs=[],handover=path.resolve(config.repoRoot,'art/theme-consistency/jobs/CONTINUOUS-ART-HANDOVER.md');
+  let handoverText=null;try{handoverText=await fs.readFile(handover,'utf8');}catch(error){if(error.code!=='ENOENT')throw error;}
+  if(handoverText!==null){
+    sources.push({file:handover,sha256:sha(Buffer.from(handoverText)),role:'worker-handover'});texts['worker-handover']=handoverText;
+    for(const relative of new Set([...handoverText.matchAll(/`((?:art\/theme-consistency\/)?jobs\/[^`\s]+\.jobs\.json)`/g)].map(m=>m[1]))){
+      const file=path.resolve(config.repoRoot,relative.startsWith('art/')?relative:'art/theme-consistency/'+relative),text=await fs.readFile(file,'utf8'),role='job-brief:'+path.basename(file),source={file,sha256:sha(Buffer.from(text)),role};
+      sources.push(source);texts[role]=text;for(const job of JSON.parse(text).jobs??[])if(job.continuousPlanOverride===true&&/^queued(?:-|$)/.test(job.executionStatus??''))correctionJobs.push({...job,source});
+    }
+  }
+  return {markdown,sources,texts,correctionJobs,authoritySha256:sources[0].sha256,sourceFingerprint:sha(Buffer.from(JSON.stringify(sources)))};
 }
 export async function sourcesUnchanged(queue){for(const s of queue.sources??[])try{if(sha(await fs.readFile(s.file))!==s.sha256)return false;}catch{return false;}return true;}
 export function linkedDeliverables(text,config){
-  const out=[];let number=null,folder='',firstNumber=null;const lines=text.split(/\r?\n/);
-  for(let i=0;i<lines.length;i++){const line=lines[i],n=/^#{2,3}\s+(\d+)\b|^## .*?\(item (\d+)/i.exec(line);if(n)number=+(n[1]??n[2]);if(/^## First:/i.test(line)&&number)firstNumber=number;
-    const target=/`art\/theme-consistency\/generated\/([^`]+)\//.exec(line);if(target)folder=target[1];const output=/save as\s+`([^`]+\.png)`/i.exec(line);if(!output||!number)continue;
-    const name=output[1],label=/\*\*(\d+[a-z]),/.exec(line)?.[1],stem=path.basename(name).replace(/-v\d+\.png$/,''),tail=lines.slice(i+1).join('\n');
-    out.push({itemNumber:number,key:label?label+'-'+stem.split('-').at(-1):number+'-'+stem,output:path.resolve(config.repoRoot,'art/theme-consistency/generated',name.includes('/')?name:path.join(folder,name)),prompt:/```(?:text)?\s*\n([\s\S]*?)```/.exec(tail)?.[1]??'',sourceLine:i+1,first:number===firstNumber});
+  const out=[];let number=null,folder='',firstNumber=null,sectionStart=0;const lines=text.split(/\r?\n/);
+  for(let i=0;i<lines.length;i++){const line=lines[i],n=/^#{2,3}\s+(\d+)\b|^## .*?\(item (\d+)/i.exec(line);if(n){number=+(n[1]??n[2]);sectionStart=i;}if(/^## First:/i.test(line)&&number&&firstNumber===null)firstNumber=number;
+    const target=/`art\/theme-consistency\/generated\/([^`]+)\//.exec(line);if(target)folder=target[1];const output=/save as(?:\*\*)?\s+`([^`]+\.png)`/i.exec(line);if(!output||!number)continue;
+    const name=output[1],label=/\*\*(\d+[a-z]),/.exec(line)?.[1],stem=path.basename(name).replace(/-v\d+\.png$/,'');
+    const next=lines.findIndex((s,k)=>k>i&&(/^#{2,3}\s+(?:\d+\b|.*?\(item \d+)/i.test(s)||/save as(?:\*\*)?\s+`/i.test(s))),end=next<0?lines.length:next;
+    const after=lines.slice(i+1,end).join('\n'),before=lines.slice(sectionStart,i).join('\n'),prior=[...before.matchAll(/```(?:text)?\s*\n([\s\S]*?)```/g)];
+    const prompt=/```(?:text)?\s*\n([\s\S]*?)```/.exec(after)?.[1]??prior.at(-1)?.[1]??lines.slice(sectionStart,i).filter(s=>s.startsWith('>')).map(s=>s.replace(/^>\s?/, '')).join('\n');
+    out.push({itemNumber:number,key:label?label+'-'+stem.split('-').at(-1):number+'-'+stem,output:name.startsWith('art/theme-consistency/generated/')?path.resolve(config.repoRoot,name):path.resolve(config.repoRoot,'art/theme-consistency/generated',name.includes('/')?name:path.join(folder,name)),prompt,sourceLine:i+1,first:number===firstNumber});
   }
   return out;
 }

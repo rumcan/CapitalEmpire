@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "date": "2026-10-28",
+  "id": "golf:range-deck",
+  "decision": "accepted-for-art-appearance",
+  "reviewer": "primary-art-review",
+  "files": [
+    {
+      "file": "art/theme-consistency/generated/buildings/golf-range-deck-2views-v1.png",
+      "sha256": "cfdea8ccf10a22bbd3d85af7cde0fbe1db75bb75138af03cb9475e057d519977"
+    }
+  ],
+  "checks": {
+    "theme": "accepted with the two owner style references",
+    "turns": "two genuine front-side views, no mirrored lettering or duplicated pose",
+    "alpha": "native true alpha; no clipping; complete left stair retained",
+    "structure": "two levels and four hitting bays per level in both views",
+    "geometry": "accepted within documented painted tolerance"
+  },
+  "geometry": {
+    "approximateFrontFootingSlopes": [
+      0.467,
+      -0.47
+    ],
+    "approximateRoadAxisDeviationDegrees": [
+      1.55,
+      1.39
+    ],
+    "lineFitResidualPixels": [
+      0.4,
+      0.4
+    ],
+    "limitation": "Painted artwork is not a mathematically exact projection; physical/world calibration and engine registration remain separate."
+  },
+  "nativeExport": {
+    "splitX": 937,
+    "reason": "Left stair crosses midpoint; use the measured clear gutter, preserving all native source pixels.",
+    "folder": "art/theme-consistency/generated/buildings/golf-range-deck-2views-v1"
+  },
+  "integration": "pending physical/world calibration and runtime registration",
+  "sourcePreservation": "Original source PNG and exact generation provenance unchanged."
+}

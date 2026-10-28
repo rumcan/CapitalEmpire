@@ -1,0 +1,69 @@
+{
+  "schema": 1,
+  "id": "golf:stone-border-run",
+  "slug": "golf-stone-border-run",
+  "category": "landscaping",
+  "angleCode": "R",
+  "catalogueItem": 180,
+  "subjobKey": "180a-run",
+  "requiresLibraryRegistration": true,
+  "widthM": 4,
+  "depthM": 1.1,
+  "heightM": 1.1,
+  "date": "2026-10-28",
+  "priority": "P1",
+  "viewSet": "two-axis-run-pieces",
+  "viewOrder": [
+    "x-run",
+    "y-run"
+  ],
+  "references": [
+    "art/theme-consistency/references/stone-border-run-geometry-v1.png",
+    "art/theme-consistency/references/theme-authoritative.png",
+    "art/theme-consistency/generated/landscaping/golf-stone-border-run-v1.png",
+    "art/theme-consistency/references/golf-country-club-owner-20261028.png"
+  ],
+  "transparent": true,
+  "output": "art/theme-consistency/generated/landscaping/golf-stone-border-run-v2.png",
+  "provenance": "art/theme-consistency/generated/landscaping/golf-stone-border-run-v2.provenance.json",
+  "authorityFiles": [
+    "worktrees/theme-consistency/docs/GOLF-ART-LIST.md",
+    "worktrees/theme-consistency/docs/art/CHATGPT-IMAGE-QUEUE.md"
+  ],
+  "prompt": "EDIT image1, the exact GEOMETRY TARGET, into two richly hand-painted natural granite pond-border runs. Keep image1's canvas proportions, ground-contact marker positions and two long straight baselines EXACTLY. Left run ground centerline slope is precisely+0.500, right run precisely-0.500, 26.565 degrees, not35-40degrees. Each dashed quadrilateral describes the narrow4m by0.8m world footprint of a run; keep the stones' contact patches inside and aligned to those footprints, then remove ALL dashed lines and markers. The outlined round forms are boulder position/size guides; replace with real illustrated stone. The green spikes are small planting-position guides; replace with real ferns/sedge. No diagram colors or graphics may remain.\nImage2 is main detailed painted-miniature ART STYLE. Image3 is the earlier grey-granite/foliage design: retain its grey and rose-grey boulders, moss, ferns, sedge and golden grass, but REBUILD its previous too-steep row geometry to fit image1 EXACTLY. Image4 is additional owner town/golf STYLE only. No copied UI, scenery or background.\nExactly TWO runs of the SAME natural pond-edge design, each4metres long and about0.8metre deep, in the two game-axis directions. Rounded cool GREY and rose-grey GRANITE boulders, mixed0.4 to1metre sizes, tightly nested in a low irregular row, small rocks filling gaps, sparse moss, green ferns, sedge and a few golden grass tufts tucked between. No tan sandstone or brick wall. Low clean modular termini so runs can butt end-to-end; no attached end posts or cap. Draw NO water, no soil platform or ground beneath them. Self-occlusion only between stones and foliage. Complete rocks/leaf tips within each run's clear margin, no overlap between the two runs.\nFixed parallel2:1 isometric game camera, down30degrees. Plant stems vertical. SCREEN UPPER RIGHT warm sun on both runs, cooler lower-left underside planes; keep light on the same SCREEN side in both actual turns. Follow guide world projection exactly without rotating or flipping the final image. Detailed readable hand-painted illustration matching the two style references.\nReturn REAL TRANSPARENT PNG, same wide2:1 canvas framing as image1, with both actual runs separated on transparent alpha. No background of any color, magenta, checkerboard, vignette, grey floor, turf, lake, cast shadow patch, dashed lines, diagram colors, labels, text, buildings, people or tools. Keep exact guide ground angles and footprint geometry while replacing the guides with the detailed art.",
+  "brief": {
+    "file": "worktrees/theme-consistency/docs/GOLF-ART-LIST.md",
+    "item": 180,
+    "subjob": "a",
+    "sha256": "2b7bb3cddb05861387b7af3e46b31586c1aac67f45077d63b028f6dea22c7868"
+  },
+  "version": 2,
+  "stage": "targeted-geometry-correction",
+  "correction": {
+    "source": "art/theme-consistency/generated/landscaping/golf-stone-border-run-v1.png",
+    "reason": "Previous apparent run directions were too steep for the game's 2:1 axes; retain materials and plant theme while following exact geometry."
+  },
+  "generator": "built-in image_gen",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-45dc0eba-4ac9-4199-ac8d-58c1ac0910d2.png",
+  "referenceHashes": [
+    {
+      "file": "art/theme-consistency/references/stone-border-run-geometry-v1.png",
+      "sha256": "dff3fc9042dfd13245efbc76ae14b7b03951c9e334f75e48c62f2a15c541c639"
+    },
+    {
+      "file": "art/theme-consistency/references/theme-authoritative.png",
+      "sha256": "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2"
+    },
+    {
+      "file": "art/theme-consistency/generated/landscaping/golf-stone-border-run-v1.png",
+      "sha256": "c3069dfa59efce3aa14ba21d2ece2546491f91e245bc870f6c3703af88c2d6ad"
+    },
+    {
+      "file": "art/theme-consistency/references/golf-country-club-owner-20261028.png",
+      "sha256": "14060410b73fd9f0215c2814049119d2390e4830a614e6bf9d8dfd02b8e674df"
+    }
+  ],
+  "lighting": "screen upper-right toward lower-left; even macro exposure for ground",
+  "integrationStatus": "pending-visual-review",
+  "processing": "Native generator output copied byte-for-byte; no repaint, resample, mirror, recolour or transform."
+}

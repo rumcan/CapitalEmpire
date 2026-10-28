@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "jobs": [
+    {
+      "schema": 1,
+      "id": "golf:stone-border-run",
+      "slug": "golf-stone-border-run",
+      "category": "landscaping",
+      "angleCode": "R",
+      "catalogueItem": 180,
+      "subjobKey": "180a-run",
+      "requiresLibraryRegistration": true,
+      "widthM": 4,
+      "depthM": 1.1,
+      "heightM": 1.1,
+      "date": "2026-10-28",
+      "priority": "P1",
+      "viewSet": "two-axis-run-pieces",
+      "viewOrder": [
+        "x-run",
+        "y-run"
+      ],
+      "references": [
+        "art/theme-consistency/references/theme-authoritative.png",
+        "art/theme-consistency/references/golf-country-club-owner-20261028.png"
+      ],
+      "transparent": true,
+      "output": "art/theme-consistency/generated/landscaping/golf-stone-border-run-v1.png",
+      "provenance": "art/theme-consistency/generated/landscaping/golf-stone-border-run-v1.provenance.json",
+      "authorityFiles": [
+        "worktrees/theme-consistency/docs/GOLF-ART-LIST.md",
+        "worktrees/theme-consistency/docs/art/CHATGPT-IMAGE-QUEUE.md"
+      ],
+      "prompt": "Draw ONE modular natural pond-border design in TWO genuine orthographic isometric orientations, two separate complete run pieces SIDE BY SIDE on a transparent square canvas. Match reference1's detailed hand-painted illustrated miniature style and reference2's grey rocky water borders with dense, attractive small planted foliage. These references are STYLE ONLY: no town scene, lake, buildings, trees or interface in the result.\nThe subject is a 4 metre length of a natural pond edge, made of rounded GREY GRANITE boulders of varied sizes: small0.4m stones, medium0.7m stones and one or two1.1m stones. Cool medium grey and rose-grey granite, softly painted facet changes, subtle pale flecks, little patches of moss. NOT tan sandstone, not beige artificial blocks, no regular brickwork. Boulders are tightly but naturally nested into a continuous low narrow irregular row, not a large piled mound. Their bottom portions look half-set at the waterline but draw NO water and NO shoreline ground: just the stones and rooted foliage in their gaps.\nBetween stones tuck several SMALL green ferns, one sedge clump, a few tufts of golden grass, small moss cushions. Preserve the same recognizable sequence of largest stones and plant clumps in both orientations. Detailed attractive readable foliage as in the reference, botanically recognizable painted fern fronds, no photographic noise. Small plants, no full-sized trees. One coherent rock/plant design, drawn as two actual turns, not mirrored copies.\nLEFT RUN: long axis parallel to the game's world x direction, its baseline running from SCREEN UPPER LEFT to SCREEN LOWER RIGHT at exact slope+0.500 (26.565degrees). RIGHT RUN: same4m length lying along the world y direction, running from SCREEN LOWER LEFT to SCREEN UPPER RIGHT at slope-0.500. Parallel2:1 isometric camera looking down about30degrees, vertical stems vertical. Separate the two runs with a wide transparent gutter, equal physical scale. Both termini are low clean run ends designed so another identical4m piece can butt against them with no visible gap or doubled end rock; no standalone cap rock or post attached to the termini. Ends are part of the modular run, not a surrounding rectangular platform. Complete silhouettes, ample transparent space at all image edges.\nEarly-autumn warm light fixed at SCREEN UPPER RIGHT in both orientations; each stone and fern has warm upper-right highlights and cooler lower-left undersides, local self-occlusion between boulders. Turn the arrangement, never the lighting. Keep the overall cool grey granite colour, greenery and soft golden grass, not orange rocks.\nOutput REAL TRANSPARENT PNG ALPHA, transparent background and all outside gaps. No background of any colour, magenta, checkerboard, grey floor, dirt patch, lawn base, water, horizon, cast ground-shadow blob, vignette, frame, arrows, labels, lettering, people, buildings or tools. Exactly TWO isolated4m rock-border runs, one along each game axis, no other panels.",
+      "brief": {
+        "file": "worktrees/theme-consistency/docs/GOLF-ART-LIST.md",
+        "item": 180,
+        "subjob": "a",
+        "sha256": "2b7bb3cddb05861387b7af3e46b31586c1aac67f45077d63b028f6dea22c7868"
+      }
+    }
+  ]
+}

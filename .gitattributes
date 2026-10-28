@@ -1,3 +1,6 @@
 * text=auto eol=lf
 *.webp binary
 *.png binary
+
+# Hash-bound original provenance retains its native bytes.
+art/theme-consistency/generated/buildings/golf-range-deck-2views-v1.provenance.json -text whitespace=cr-at-eol

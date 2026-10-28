@@ -1,0 +1,1524 @@
+{
+  "schema": 1,
+  "id": "golf:range-deck",
+  "source": {
+    "file": "art/theme-consistency/generated/buildings/golf-range-deck-2views-v1.png",
+    "sha256": "cfdea8ccf10a22bbd3d85af7cde0fbe1db75bb75138af03cb9475e057d519977",
+    "dimensions": [
+      1774,
+      887
+    ]
+  },
+  "sourceProvenance": {
+    "file": "art/theme-consistency/generated/buildings/golf-range-deck-2views-v1.provenance.json",
+    "sha256": "46938f26547b180b1ba2ad1934f0ba64a22d2598135c3478e41fd81726937023"
+  },
+  "readOnlySource": true,
+  "trueAlpha": true,
+  "alpha": {
+    "fullyClear": 763941,
+    "fullyClearFraction": 0.48549256516207423,
+    "outerBoundaryVisibleAbove8": 0,
+    "lowAlpha1to8": 23373
+  },
+  "separator": {
+    "clearColumnRunAbove8": [
+      909,
+      966
+    ],
+    "splitX": 937,
+    "reason": "Actual clear gutter; equal-half splitting clips deck stair. All native pixels retained within lossless rectangles."
+  },
+  "views": [
+    {
+      "name": "front-right",
+      "file": "art/theme-consistency/generated/buildings/golf-range-deck-2views-v1/front-right.native.png",
+      "sha256": "b2850e475f0adf990282b5526b27300a5b80d9638d5d86af585665bcdee5aa5a",
+      "sourceRect": {
+        "left": 0,
+        "top": 0,
+        "width": 937,
+        "height": 887
+      },
+      "boundsAbove8": {
+        "left": 39,
+        "top": 89,
+        "width": 870,
+        "height": 737
+      },
+      "visibleAbove8": 411880,
+      "fullyClear": 406883,
+      "outerBoundaryVisibleAbove8": 0,
+      "minimumClearMarginAbove8": 28,
+      "decodedPixelIdentity": "exact source rectangle; no pixel changes"
+    },
+    {
+      "name": "left-front",
+      "file": "art/theme-consistency/generated/buildings/golf-range-deck-2views-v1/left-front.native.png",
+      "sha256": "be0196dba5c0d51716cc713b02d09b147e49214c18152f3484cfee54b1c1d599",
+      "sourceRect": {
+        "left": 937,
+        "top": 0,
+        "width": 837,
+        "height": 887
+      },
+      "boundsAbove8": {
+        "left": 30,
+        "top": 107,
+        "width": 794,
+        "height": 710
+      },
+      "visibleAbove8": 374344,
+      "fullyClear": 357058,
+      "outerBoundaryVisibleAbove8": 0,
+      "minimumClearMarginAbove8": 13,
+      "decodedPixelIdentity": "exact source rectangle; no pixel changes"
+    }
+  ],
+  "footingFits": [
+    {
+      "side": "front-right",
+      "method": "Bottom-most alpha pixel per column, 20-column median bins, median pair slopes across >=30% ROI span, median intercept. Not a fitted stone centerline or exact world footprint.",
+      "thresholdFits": [
+        {
+          "threshold": 8,
+          "roi": [
+            70,
+            620
+          ],
+          "slope": 0.4666666666666667,
+          "intercept": 517.6666666666666,
+          "angleDegrees": 25.016893478100023,
+          "absoluteDifferenceFromGameAxisDegrees": 1.5481576989779668,
+          "rmsResidualPx": 0.35073618720609057,
+          "medianAbsoluteResidualPx": 0.33333333333325754,
+          "bins": [
+            [
+              80,
+              555
+            ],
+            [
+              100,
+              564
+            ],
+            [
+              120,
+              574
+            ],
+            [
+              140,
+              583
+            ],
+            [
+              160,
+              593
+            ],
+            [
+              180,
+              602
+            ],
+            [
+              200,
+              611
+            ],
+            [
+              220,
+              620
+            ],
+            [
+              240,
+              630
+            ],
+            [
+              260,
+              639
+            ],
+            [
+              280,
+              648
+            ],
+            [
+              300,
+              658
+            ],
+            [
+              320,
+              667
+            ],
+            [
+              340,
+              676
+            ],
+            [
+              360,
+              686
+            ],
+            [
+              380,
+              695
+            ],
+            [
+              400,
+              704
+            ],
+            [
+              420,
+              713
+            ],
+            [
+              440,
+              723
+            ],
+            [
+              460,
+              732
+            ],
+            [
+              480,
+              741
+            ],
+            [
+              500,
+              751
+            ],
+            [
+              520,
+              760
+            ],
+            [
+              540,
+              770
+            ],
+            [
+              560,
+              779
+            ],
+            [
+              580,
+              789
+            ],
+            [
+              600,
+              798
+            ],
+            [
+              615,
+              805
+            ]
+          ]
+        },
+        {
+          "threshold": 64,
+          "roi": [
+            70,
+            620
+          ],
+          "slope": 0.4666666666666667,
+          "intercept": 517,
+          "angleDegrees": 25.016893478100023,
+          "absoluteDifferenceFromGameAxisDegrees": 1.5481576989779668,
+          "rmsResidualPx": 0.4364357804719941,
+          "medianAbsoluteResidualPx": 0.33333333333337123,
+          "bins": [
+            [
+              80,
+              554
+            ],
+            [
+              100,
+              564
+            ],
+            [
+              120,
+              573
+            ],
+            [
+              140,
+              582
+            ],
+            [
+              160,
+              592
+            ],
+            [
+              180,
+              601
+            ],
+            [
+              200,
+              611
+            ],
+            [
+              220,
+              620
+            ],
+            [
+              240,
+              629
+            ],
+            [
+              260,
+              639
+            ],
+            [
+              280,
+              648
+            ],
+            [
+              300,
+              657
+            ],
+            [
+              320,
+              666
+            ],
+            [
+              340,
+              676
+            ],
+            [
+              360,
+              685
+            ],
+            [
+              380,
+              694
+            ],
+            [
+              400,
+              703
+            ],
+            [
+              420,
+              713
+            ],
+            [
+              440,
+              722
+            ],
+            [
+              460,
+              732
+            ],
+            [
+              480,
+              741
+            ],
+            [
+              500,
+              750
+            ],
+            [
+              520,
+              760
+            ],
+            [
+              540,
+              769
+            ],
+            [
+              560,
+              779
+            ],
+            [
+              580,
+              788
+            ],
+            [
+              600,
+              798
+            ],
+            [
+              615,
+              805
+            ]
+          ]
+        },
+        {
+          "threshold": 128,
+          "roi": [
+            70,
+            620
+          ],
+          "slope": 0.4666666666666667,
+          "intercept": 516.6666666666666,
+          "angleDegrees": 25.016893478100023,
+          "absoluteDifferenceFromGameAxisDegrees": 1.5481576989779668,
+          "rmsResidualPx": 0.35073618720610217,
+          "medianAbsoluteResidualPx": 0.33333333333325754,
+          "bins": [
+            [
+              80,
+              554
+            ],
+            [
+              100,
+              564
+            ],
+            [
+              120,
+              573
+            ],
+            [
+              140,
+              582
+            ],
+            [
+              160,
+              591
+            ],
+            [
+              180,
+              601
+            ],
+            [
+              200,
+              610
+            ],
+            [
+              220,
+              620
+            ],
+            [
+              240,
+              629
+            ],
+            [
+              260,
+              638
+            ],
+            [
+              280,
+              647
+            ],
+            [
+              300,
+              657
+            ],
+            [
+              320,
+              666
+            ],
+            [
+              340,
+              675
+            ],
+            [
+              360,
+              685
+            ],
+            [
+              380,
+              694
+            ],
+            [
+              400,
+              703
+            ],
+            [
+              420,
+              712
+            ],
+            [
+              440,
+              722
+            ],
+            [
+              460,
+              731
+            ],
+            [
+              480,
+              741
+            ],
+            [
+              500,
+              750
+            ],
+            [
+              520,
+              759
+            ],
+            [
+              540,
+              769
+            ],
+            [
+              560,
+              778
+            ],
+            [
+              580,
+              788
+            ],
+            [
+              600,
+              797
+            ],
+            [
+              615,
+              804
+            ]
+          ]
+        }
+      ],
+      "roiSensitivity": [
+        {
+          "threshold": 128,
+          "roi": [
+            70,
+            620
+          ],
+          "slope": 0.4666666666666667,
+          "intercept": 516.6666666666666,
+          "angleDegrees": 25.016893478100023,
+          "absoluteDifferenceFromGameAxisDegrees": 1.5481576989779668,
+          "rmsResidualPx": 0.35073618720610217,
+          "medianAbsoluteResidualPx": 0.33333333333325754,
+          "bins": [
+            [
+              80,
+              554
+            ],
+            [
+              100,
+              564
+            ],
+            [
+              120,
+              573
+            ],
+            [
+              140,
+              582
+            ],
+            [
+              160,
+              591
+            ],
+            [
+              180,
+              601
+            ],
+            [
+              200,
+              610
+            ],
+            [
+              220,
+              620
+            ],
+            [
+              240,
+              629
+            ],
+            [
+              260,
+              638
+            ],
+            [
+              280,
+              647
+            ],
+            [
+              300,
+              657
+            ],
+            [
+              320,
+              666
+            ],
+            [
+              340,
+              675
+            ],
+            [
+              360,
+              685
+            ],
+            [
+              380,
+              694
+            ],
+            [
+              400,
+              703
+            ],
+            [
+              420,
+              712
+            ],
+            [
+              440,
+              722
+            ],
+            [
+              460,
+              731
+            ],
+            [
+              480,
+              741
+            ],
+            [
+              500,
+              750
+            ],
+            [
+              520,
+              759
+            ],
+            [
+              540,
+              769
+            ],
+            [
+              560,
+              778
+            ],
+            [
+              580,
+              788
+            ],
+            [
+              600,
+              797
+            ],
+            [
+              615,
+              804
+            ]
+          ]
+        },
+        {
+          "threshold": 128,
+          "roi": [
+            90,
+            600
+          ],
+          "slope": 0.4666666666666667,
+          "intercept": 516.6666666666666,
+          "angleDegrees": 25.016893478100023,
+          "absoluteDifferenceFromGameAxisDegrees": 1.5481576989779668,
+          "rmsResidualPx": 0.3755338080994015,
+          "medianAbsoluteResidualPx": 0.33333333333325754,
+          "bins": [
+            [
+              100,
+              564
+            ],
+            [
+              120,
+              573
+            ],
+            [
+              140,
+              582
+            ],
+            [
+              160,
+              591
+            ],
+            [
+              180,
+              601
+            ],
+            [
+              200,
+              610
+            ],
+            [
+              220,
+              620
+            ],
+            [
+              240,
+              629
+            ],
+            [
+              260,
+              638
+            ],
+            [
+              280,
+              647
+            ],
+            [
+              300,
+              657
+            ],
+            [
+              320,
+              666
+            ],
+            [
+              340,
+              675
+            ],
+            [
+              360,
+              685
+            ],
+            [
+              380,
+              694
+            ],
+            [
+              400,
+              703
+            ],
+            [
+              420,
+              712
+            ],
+            [
+              440,
+              722
+            ],
+            [
+              460,
+              731
+            ],
+            [
+              480,
+              741
+            ],
+            [
+              500,
+              750
+            ],
+            [
+              520,
+              759
+            ],
+            [
+              540,
+              769
+            ],
+            [
+              560,
+              778
+            ],
+            [
+              580,
+              788
+            ],
+            [
+              595,
+              795
+            ]
+          ]
+        },
+        {
+          "threshold": 128,
+          "roi": [
+            130,
+            560
+          ],
+          "slope": 0.4666666666666667,
+          "intercept": 516.6666666666666,
+          "angleDegrees": 25.016893478100023,
+          "absoluteDifferenceFromGameAxisDegrees": 1.5481576989779668,
+          "rmsResidualPx": 0.32566947363945953,
+          "medianAbsoluteResidualPx": 0.33333333333325754,
+          "bins": [
+            [
+              140,
+              582
+            ],
+            [
+              160,
+              591
+            ],
+            [
+              180,
+              601
+            ],
+            [
+              200,
+              610
+            ],
+            [
+              220,
+              620
+            ],
+            [
+              240,
+              629
+            ],
+            [
+              260,
+              638
+            ],
+            [
+              280,
+              647
+            ],
+            [
+              300,
+              657
+            ],
+            [
+              320,
+              666
+            ],
+            [
+              340,
+              675
+            ],
+            [
+              360,
+              685
+            ],
+            [
+              380,
+              694
+            ],
+            [
+              400,
+              703
+            ],
+            [
+              420,
+              712
+            ],
+            [
+              440,
+              722
+            ],
+            [
+              460,
+              731
+            ],
+            [
+              480,
+              741
+            ],
+            [
+              500,
+              750
+            ],
+            [
+              520,
+              759
+            ],
+            [
+              540,
+              769
+            ],
+            [
+              555,
+              776
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "side": "left-front",
+      "method": "Bottom-most alpha pixel per column, 20-column median bins, median pair slopes across >=30% ROI span, median intercept. Not a fitted stone centerline or exact world footprint.",
+      "thresholdFits": [
+        {
+          "threshold": 8,
+          "roi": [
+            1220,
+            1720
+          ],
+          "slope": -0.47058823529411764,
+          "intercept": 1375.764705882353,
+          "angleDegrees": -25.201123645475075,
+          "absoluteDifferenceFromGameAxisDegrees": 1.363927531602915,
+          "rmsResidualPx": 0.40128884720036784,
+          "medianAbsoluteResidualPx": 0.2941176470587834,
+          "bins": [
+            [
+              1230,
+              797
+            ],
+            [
+              1250,
+              788
+            ],
+            [
+              1270,
+              778
+            ],
+            [
+              1290,
+              769
+            ],
+            [
+              1310,
+              759
+            ],
+            [
+              1330,
+              750
+            ],
+            [
+              1350,
+              741
+            ],
+            [
+              1370,
+              731
+            ],
+            [
+              1390,
+              721
+            ],
+            [
+              1410,
+              712
+            ],
+            [
+              1430,
+              702
+            ],
+            [
+              1450,
+              693
+            ],
+            [
+              1470,
+              684
+            ],
+            [
+              1490,
+              675
+            ],
+            [
+              1510,
+              665
+            ],
+            [
+              1530,
+              656
+            ],
+            [
+              1550,
+              646
+            ],
+            [
+              1570,
+              637
+            ],
+            [
+              1590,
+              627
+            ],
+            [
+              1610,
+              618
+            ],
+            [
+              1630,
+              609
+            ],
+            [
+              1650,
+              599
+            ],
+            [
+              1670,
+              590
+            ],
+            [
+              1690,
+              581
+            ],
+            [
+              1710,
+              572
+            ],
+            [
+              1720,
+              566
+            ]
+          ]
+        },
+        {
+          "threshold": 64,
+          "roi": [
+            1220,
+            1720
+          ],
+          "slope": -0.46944444444444444,
+          "intercept": 1373.4166666666665,
+          "angleDegrees": -25.14744720820818,
+          "absoluteDifferenceFromGameAxisDegrees": 1.417603968869809,
+          "rmsResidualPx": 0.348693464240153,
+          "medianAbsoluteResidualPx": 0.27777777777760093,
+          "bins": [
+            [
+              1230,
+              796
+            ],
+            [
+              1250,
+              787
+            ],
+            [
+              1270,
+              778
+            ],
+            [
+              1290,
+              768
+            ],
+            [
+              1310,
+              758
+            ],
+            [
+              1330,
+              749
+            ],
+            [
+              1350,
+              740
+            ],
+            [
+              1370,
+              730
+            ],
+            [
+              1390,
+              721
+            ],
+            [
+              1410,
+              711
+            ],
+            [
+              1430,
+              702
+            ],
+            [
+              1450,
+              692
+            ],
+            [
+              1470,
+              683
+            ],
+            [
+              1490,
+              674
+            ],
+            [
+              1510,
+              664
+            ],
+            [
+              1530,
+              655
+            ],
+            [
+              1550,
+              646
+            ],
+            [
+              1570,
+              636
+            ],
+            [
+              1590,
+              627
+            ],
+            [
+              1610,
+              618
+            ],
+            [
+              1630,
+              608
+            ],
+            [
+              1650,
+              599
+            ],
+            [
+              1670,
+              589
+            ],
+            [
+              1690,
+              580
+            ],
+            [
+              1710,
+              571
+            ],
+            [
+              1720,
+              566
+            ]
+          ]
+        },
+        {
+          "threshold": 128,
+          "roi": [
+            1220,
+            1720
+          ],
+          "slope": -0.47,
+          "intercept": 1373.9,
+          "angleDegrees": -25.173524524530166,
+          "absoluteDifferenceFromGameAxisDegrees": 1.3915266525478245,
+          "rmsResidualPx": 0.3946761086881499,
+          "medianAbsoluteResidualPx": 0.3999999999998636,
+          "bins": [
+            [
+              1230,
+              796
+            ],
+            [
+              1250,
+              787
+            ],
+            [
+              1270,
+              777
+            ],
+            [
+              1290,
+              768
+            ],
+            [
+              1310,
+              758
+            ],
+            [
+              1330,
+              749
+            ],
+            [
+              1350,
+              740
+            ],
+            [
+              1370,
+              730
+            ],
+            [
+              1390,
+              720
+            ],
+            [
+              1410,
+              711
+            ],
+            [
+              1430,
+              701
+            ],
+            [
+              1450,
+              692
+            ],
+            [
+              1470,
+              683
+            ],
+            [
+              1490,
+              674
+            ],
+            [
+              1510,
+              664
+            ],
+            [
+              1530,
+              655
+            ],
+            [
+              1550,
+              645
+            ],
+            [
+              1570,
+              636
+            ],
+            [
+              1590,
+              627
+            ],
+            [
+              1610,
+              617
+            ],
+            [
+              1630,
+              608
+            ],
+            [
+              1650,
+              598
+            ],
+            [
+              1670,
+              589
+            ],
+            [
+              1690,
+              580
+            ],
+            [
+              1710,
+              571
+            ],
+            [
+              1720,
+              565
+            ]
+          ]
+        }
+      ],
+      "roiSensitivity": [
+        {
+          "threshold": 128,
+          "roi": [
+            1220,
+            1720
+          ],
+          "slope": -0.47,
+          "intercept": 1373.9,
+          "angleDegrees": -25.173524524530166,
+          "absoluteDifferenceFromGameAxisDegrees": 1.3915266525478245,
+          "rmsResidualPx": 0.3946761086881499,
+          "medianAbsoluteResidualPx": 0.3999999999998636,
+          "bins": [
+            [
+              1230,
+              796
+            ],
+            [
+              1250,
+              787
+            ],
+            [
+              1270,
+              777
+            ],
+            [
+              1290,
+              768
+            ],
+            [
+              1310,
+              758
+            ],
+            [
+              1330,
+              749
+            ],
+            [
+              1350,
+              740
+            ],
+            [
+              1370,
+              730
+            ],
+            [
+              1390,
+              720
+            ],
+            [
+              1410,
+              711
+            ],
+            [
+              1430,
+              701
+            ],
+            [
+              1450,
+              692
+            ],
+            [
+              1470,
+              683
+            ],
+            [
+              1490,
+              674
+            ],
+            [
+              1510,
+              664
+            ],
+            [
+              1530,
+              655
+            ],
+            [
+              1550,
+              645
+            ],
+            [
+              1570,
+              636
+            ],
+            [
+              1590,
+              627
+            ],
+            [
+              1610,
+              617
+            ],
+            [
+              1630,
+              608
+            ],
+            [
+              1650,
+              598
+            ],
+            [
+              1670,
+              589
+            ],
+            [
+              1690,
+              580
+            ],
+            [
+              1710,
+              571
+            ],
+            [
+              1720,
+              565
+            ]
+          ]
+        },
+        {
+          "threshold": 128,
+          "roi": [
+            1240,
+            1700
+          ],
+          "slope": -0.47,
+          "intercept": 1373.9,
+          "angleDegrees": -25.173524524530166,
+          "absoluteDifferenceFromGameAxisDegrees": 1.3915266525478245,
+          "rmsResidualPx": 0.36113247800035353,
+          "medianAbsoluteResidualPx": 0.20000000000027285,
+          "bins": [
+            [
+              1250,
+              787
+            ],
+            [
+              1270,
+              777
+            ],
+            [
+              1290,
+              768
+            ],
+            [
+              1310,
+              758
+            ],
+            [
+              1330,
+              749
+            ],
+            [
+              1350,
+              740
+            ],
+            [
+              1370,
+              730
+            ],
+            [
+              1390,
+              720
+            ],
+            [
+              1410,
+              711
+            ],
+            [
+              1430,
+              701
+            ],
+            [
+              1450,
+              692
+            ],
+            [
+              1470,
+              683
+            ],
+            [
+              1490,
+              674
+            ],
+            [
+              1510,
+              664
+            ],
+            [
+              1530,
+              655
+            ],
+            [
+              1550,
+              645
+            ],
+            [
+              1570,
+              636
+            ],
+            [
+              1590,
+              627
+            ],
+            [
+              1610,
+              617
+            ],
+            [
+              1630,
+              608
+            ],
+            [
+              1650,
+              598
+            ],
+            [
+              1670,
+              589
+            ],
+            [
+              1690,
+              580
+            ],
+            [
+              1700,
+              575
+            ]
+          ]
+        },
+        {
+          "threshold": 128,
+          "roi": [
+            1280,
+            1660
+          ],
+          "slope": -0.4708333333333333,
+          "intercept": 1375.0416666666665,
+          "angleDegrees": -25.212619588240766,
+          "absoluteDifferenceFromGameAxisDegrees": 1.3524315888372236,
+          "rmsResidualPx": 0.3741889377187862,
+          "medianAbsoluteResidualPx": 0.33333333333303017,
+          "bins": [
+            [
+              1290,
+              768
+            ],
+            [
+              1310,
+              758
+            ],
+            [
+              1330,
+              749
+            ],
+            [
+              1350,
+              740
+            ],
+            [
+              1370,
+              730
+            ],
+            [
+              1390,
+              720
+            ],
+            [
+              1410,
+              711
+            ],
+            [
+              1430,
+              701
+            ],
+            [
+              1450,
+              692
+            ],
+            [
+              1470,
+              683
+            ],
+            [
+              1490,
+              674
+            ],
+            [
+              1510,
+              664
+            ],
+            [
+              1530,
+              655
+            ],
+            [
+              1550,
+              645
+            ],
+            [
+              1570,
+              636
+            ],
+            [
+              1590,
+              627
+            ],
+            [
+              1610,
+              617
+            ],
+            [
+              1630,
+              608
+            ],
+            [
+              1650,
+              598
+            ],
+            [
+              1660,
+              593
+            ]
+          ]
+        }
+      ]
+    }
+  ],
+  "review": {
+    "appearance": "Primary passed style/alpha/real turns/floor count and accepted painted footing tolerance.",
+    "geometry": "accepted-painted-footing-tolerance-primary",
+    "physicalCalibration": "pending",
+    "integration": "pending",
+    "ownerApprovalClaim": false,
+    "limits": "Straight fascia fits show approx1.4–1.5° shallow versus ±0.5. Visible stone/post details are painterly. No READY or live-game claim."
+  },
+  "proof": {
+    "file": "art/theme-consistency/generated/buildings/golf-range-deck-2views-v1/review/native-footing-overlay.png",
+    "sha256": "0adfff40bbb222b5fedcb5ad219bfb8a25d8097189a74e3f44167fd139372b61"
+  },
+  "appearanceDecision": {
+    "file": "art/theme-consistency/generated/buildings/golf-range-deck-2views-v1/review/appearance-decision.json",
+    "sha256": "4949a33ce096a2aa83b93e583cc0dbf5266ec1ecef0e7da940d6b4d9594508aa"
+  }
+}

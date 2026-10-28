@@ -1,0 +1,46 @@
+{
+  "schema": 1,
+  "id": "golf:range-deck",
+  "itemNumber": 2,
+  "angleCode": "A",
+  "viewOrder": [
+    "front-right",
+    "left-front"
+  ],
+  "dimensionsM": {
+    "width": 20,
+    "depth": 7,
+    "height": 7
+  },
+  "generator": "image_gen.imagegen",
+  "builtinImagegenUsed": true,
+  "transparentBackground": true,
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a18192-f90b-7083-9bae-71e492fa53cc\\exec-0bfeb3ef-8ed9-449f-b336-4560e203593d.png",
+  "output": "E:\\Repos\\CapitalEmpire\\art\\theme-consistency\\generated\\buildings\\golf-range-deck-2views-v1.png",
+  "outputSha256": "cfdea8ccf10a22bbd3d85af7cde0fbe1db75bb75138af03cb9475e057d519977",
+  "prompt": "Use case: stylized-concept. Asset ID golf:range-deck. Generate ONE transparent game sprite sheet showing exactly TWO complete views of the SAME double-deck driving-range hitting stand section, side by side in square cells on a wide 2:1 canvas.\nREFERENCE ROLES IN ORDER: 1 authoritative Maple Bean visual theme: detailed illustrated miniature materials and warm autumn dusk. 2 supporting owner country-club style only, no UI or scenery. 3 existing single-storey covered bays: match its timber/stone/green metal construction, upgraded to two storeys and four bays per storey. 4 geometry ONLY: use top-left FRONT+RIGHT orientation for left image and bottom-right LEFT+FRONT for right image, ignoring other cells and all diagram colours, markers, text.\nSubject: one 20m long, 7m deep, 7m high TWO-STOREY open hitting stand; exactly FOUR open hitting bays on ground floor and FOUR open hitting bays directly above. Heavy honey-brown timber posts on dressed-stone piers, timber knee braces, black iron brackets. Dark forest-green standing-seam pitched metal roof, warm lanterns under eaves. Each of the eight bays has a green artificial-turf hitting mat with a small white rubber tee, waist-height dark green timber divider between bays, timber club rack. Upper storey is a timber floor on beams, with a dark green STEEL safety rail across the open front. Ground-level bays open toward same front as upper bays. No golfers.\nA steel stair with handrail climbs to upper deck at the physical RIGHT short end, positioned within the 7m depth. Preserve this asymmetry through the turn: left image exposes physical right end and stair at screen right; right image exposes physical LEFT end at screen left, with stair at the far opposite end, partly occluded as appropriate. Both short ends structurally clean/open, roof and beam termination suitable to butt beside another identical section, no oversized eave at short ends, no side buildings. Do not add fences or scenery around section.\nCAMERA: fixed orthographic parallel 2:1 isometric, look down about 30 degrees. Every ground-parallel rectangular structural edge has screen slope exactly +/-0.5 (+/-26.565 degrees), ALL vertical posts stay vertical; no perspective convergence. Left view front long edge slopes down-right +0.5 (front+right). Right view front long edge slopes up-right -0.5 (left+front). Two real separately drawn 90-degree object turns, no mirrored/copy image. Identical dimensions, roof/post/stair positions and same physical scale across views.\nLIGHTING: low warm sun fixed SCREEN UPPER RIGHT in BOTH images; warmer upper-right-facing planes, cooler left-facing planes; lamps warmly on, readable daylight; tiny contact shadow only toward screen lower left. Turn object, never sun.\nExactly two complete isolated structures. Keep full roof, piers, stair, rails and base within each cell, at least 15% transparent clear margin on every side and generous center gutter; shrink both uniformly. TRUE ALPHA PNG, absolutely no background, magenta, painted checkerboard, floor plane, lawn, roads, ground island, neighboring building, people, UI, lettering, captions or frame. 1985 period construction.",
+  "promptSha256": "c5ef21b75233dedba7f55d2937c154fb79e3937aef9723c14e5b7b5c1225bbed",
+  "references": [
+    {
+      "file": "E:\\Repos\\CapitalEmpire\\art\\theme-consistency\\references\\theme-authoritative.png",
+      "sha256": "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2"
+    },
+    {
+      "file": "E:\\Repos\\CapitalEmpire\\art\\theme-consistency\\references\\golf-country-club-owner-20261028.png",
+      "sha256": "14060410b73fd9f0215c2814049119d2390e4830a614e6bf9d8dfd02b8e674df"
+    },
+    {
+      "file": "E:\\Repos\\CapitalEmpire\\art\\theme-consistency\\exports\\buildings\\business-golf-driving-range.configured@2x.png",
+      "sha256": "d3680cb31220ee4a384cde0e6f377ef7acad16d5707e18a5ae3dba0fa4bf94ff"
+    },
+    {
+      "file": "E:\\Repos\\CapitalEmpire\\art\\theme-consistency\\references\\rotation-guide-v1.png",
+      "sha256": "8d60d56c563159d06a052d472856e067366834957936b942a749934883fd2e3c"
+    }
+  ],
+  "authoritySha256": "2b7bb3cddb05861387b7af3e46b31586c1aac67f45077d63b028f6dea22c7868",
+  "sourceBlockSha256": "017cdfc5bb28c5f8748876bc1ee74c83ab60763cbb8d33d4ee08f63f039decaa",
+  "review": "pending",
+  "integration": "pending",
+  "processing": "Native built-in output copied byte-for-byte. No transformations."
+}

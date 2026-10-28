@@ -1,0 +1,60 @@
+{
+  "schema": 1,
+  "note": "Prepared only; no generation before the saved real five-hour usage retry. Preserve v1/v2 and their holds.",
+  "jobs": [
+    {
+      "schema": 1,
+      "id": "golf:stone-border-run",
+      "slug": "golf-stone-border-run",
+      "category": "landscaping",
+      "angleCode": "R",
+      "catalogueItem": 180,
+      "subjobKey": "180a-run",
+      "requiresLibraryRegistration": true,
+      "widthM": 4,
+      "depthM": 1.1,
+      "heightM": 1.1,
+      "date": "2026-10-28",
+      "priority": "P1",
+      "viewSet": "two-axis-run-pieces",
+      "viewOrder": [
+        "x-run",
+        "y-run"
+      ],
+      "references": [
+        "art/theme-consistency/references/stone-border-run-geometry-v1.png",
+        "art/theme-consistency/references/theme-authoritative.png",
+        "art/theme-consistency/references/golf-country-club-owner-20261028.png"
+      ],
+      "transparent": true,
+      "output": "art/theme-consistency/generated/landscaping/golf-stone-border-run-v3.png",
+      "provenance": "art/theme-consistency/generated/landscaping/golf-stone-border-run-v3.provenance.json",
+      "authorityFiles": [
+        "worktrees/theme-consistency/docs/GOLF-ART-LIST.md",
+        "worktrees/theme-consistency/docs/art/CHATGPT-IMAGE-QUEUE.md"
+      ],
+      "prompt": "EDIT reference1's EXACT geometry into detailed game artwork. Reference1 is a code-native geometry diagram, NOT an artistic style. Keep its wide2:1 canvas framing and all boulders' ground-contact marker positions exactly. Do not enlarge, reflow, change camera, steepen or rotate the runs to fill the frame. The left long baseline is +0.500 and the right -0.500, exactly26.565degrees. Each dashed narrow parallelogram is a4m by0.8m ground footprint. The round base ellipses are physical contact positions: hold their centres and contact heights. Replace every diagram shape with illustrated grey granite and plants, then DELETE every dashed guide/marker/outline. Do not preserve any diagram color or graphic.\nReference2 is the established detailed hand-painted miniature-town ART STYLE. Reference3 is the owner's additional golf/town ART STYLE. Take warm light, richness and material quality from these style references; no streets, architecture, UI, text or scenery. There is deliberately NO previous incorrect run image: reconstruct directly from the correct geometry diagram.\nExactly TWO modular natural pond-border runs, one in each shown world-axis orientation. Cool mid-grey and rose-grey rounded granite boulders of mixed0.4-1m sizes, a low irregular row with small stones filling gaps; moss, SMALL green ferns, sedge and sparse golden grass nestled among them. Granite has softly painted facets and subtle flecks, not a tan sandstone wall. Preserve the diagram's small/large stone sequence in both real rotations. No trees, no surrounding ground, no soil island and NO water. Stone bottoms occupy the guide ellipses and stay aligned to the exact straight baselines; plants grow upward from the ground, not beyond the footprint ends.\nModular end treatment: both termini finish at clean cross-sections perpendicular to their long run, within the guide footprint. Use low matching end stones/foliage so identical runs can meet flush with neither gap, rounded projecting cap, doubled end boulder nor abrupt change of ground-line angle. Do not taper the whole strip to pointed rounded tips or build an end mound. These are continuous border sections, not two standalone decorative islands.\nParallel orthographic2:1 camera looking down30degrees; vertical stems vertical. Fixed SCREEN UPPER RIGHT sun in both runs, soft warm upper-right highlights and cool lower-left underside/self-occlusion. Detailed readable broad painted shapes matching the references, no photographic grain.\nREAL TRANSPARENT PNG ALPHA, exact wide frame of the geometry target, clear space between complete runs and outside them. No background color, magenta, checkerboard, floor, grass base, lake, ground shadow blob, vignette, frame, labels, letters, arrows, buildings, people or tools. Geometry/contact positions have priority: preserve the correct +/-0.5 baselines as the guides become art.",
+      "brief": {
+        "file": "worktrees/theme-consistency/docs/GOLF-ART-LIST.md",
+        "item": 180,
+        "subjob": "a",
+        "sha256": "2b7bb3cddb05861387b7af3e46b31586c1aac67f45077d63b028f6dea22c7868"
+      },
+      "version": 3,
+      "stage": "geometry-only-modular-correction",
+      "correction": {
+        "source": "art/theme-consistency/generated/landscaping/golf-stone-border-run-v2.png",
+        "decision": "art/theme-consistency/generated/landscaping/golf-stone-border-run-v2.appearance.json",
+        "reason": "Actual native axis-repeat proof exposes contact-phase drift and angle changes at joins. This is a targeted geometry/terminus correction; good old source pixels and other completed subjects must be retained."
+      },
+      "continuousPlanOverride": true,
+      "replaces": {
+        "file": "E:/Repos/CapitalEmpire/art/theme-consistency/generated/landscaping/golf-stone-border-run-v1.png",
+        "sha256": "c3069dfa59efce3aa14ba21d2ece2546491f91e245bc870f6c3703af88c2d6ad",
+        "reason": "Primary held the original geometry; v2 improved it but native repeat proof still showed join direction changes. Correct only this run using exact geometry guide plus style references, preserving v1/v2 originals."
+      },
+      "executionStatus": "queued-after-usage-backoff",
+      "earliestGenerationUtc": "2026-10-28T15:32:44.457Z"
+    }
+  ]
+}
