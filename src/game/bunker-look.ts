@@ -73,7 +73,7 @@ const farOf = (f: number) => smooth01((f + 0.15) / 0.9), nearOf = (f: number) =>
  *  at strength k (0..2); pxPerTile, the cache's px per tile (the rake lines fade out where they would alias) */
 export function bunkerImages(f: EdgeField & { nx?: Float32Array; ny?: Float32Array }, k: number, pxPerTile: number): { light: EdgeImage | null; lift: EdgeImage | null; dark: EdgeImage | null } {
   const B = BUNKER_LOOK, N = f.W * f.H, light = new Uint8ClampedArray(N * 4), lift = new Uint8ClampedArray(N * 4), dark = new Uint8ClampedArray(N * 4);
-  const rakePx = B.rake * pxPerTile, rakeK = k * smooth01((rakePx - B.rakeMinPx) / B.rakeMinPx);
+  const rakePx = B.rake * pxPerTile, rakeK = k * smooth01((rakePx - B.rakeMinPx) / B.rakeMinPx), streakK = k * smooth01((pxPerTile / B.streak - 1.5) / 1.5); // the streaks, too, only where they are a px or more apart
   let anyL = false, anyG = false, anyD = false;
   const sun = blur(f.sun, f.W, f.H, Math.round(FACING_BLUR * f.res));
   for (let v = 0; v < f.H; v++) {
@@ -95,8 +95,8 @@ export function bunkerImages(f: EdgeField & { nx?: Float32Array; ny?: Float32Arr
           da += B.rakeDark * str * groove; la += B.rakeLight * str * crest;
         }
         // the streaks down the far face: a value noise of the rim point the px lies in from (it runs on down the slope's fall line)
-        if (f.nx && sl > 0) {
-          const sn = vnoise(f.nx[q]! * B.streak + 3.1, f.ny![q]! * B.streak - 9.4, 71) - 0.5, str = B.streakA * k * sl * (0.3 + 0.7 * far);
+        if (f.nx && sl > 0 && streakK > 0) {
+          const sn = vnoise(f.nx[q]! * B.streak + 3.1, f.ny![q]! * B.streak - 9.4, 71) - 0.5, str = B.streakA * streakK * sl * (0.3 + 0.7 * far);
           if (sn < 0) da -= 2 * sn * str; else la += 1.2 * sn * str;
         }
       } else {
@@ -116,4 +116,28 @@ export function bunkerImages(f: EdgeField & { nx?: Float32Array; ny?: Float32Arr
     }
   }
   return { light: anyL ? { data: light, W: f.W, H: f.H } : null, lift: anyG ? { data: lift, W: f.W, H: f.H } : null, dark: anyD ? { data: dark, W: f.W, H: f.H } : null };
+}
+
+// ---- T253 part 3: the green's edge roll ----
+/** the green's soft roll where it meets the fringe (the reference's greens round off into their collar): the green's top curving down over
+ *  `w` tiles in from its edge and on down `out` tiles over the fringe, lit where that slope faces the sun (the far, upper-right edge),
+ *  shaded where it turns from it (the near edge), a gap in from the edge (highlights inset); alphas at strength 1 */
+export const GREEN_ROLL = { w: 0.9, out: 0.55, light: 0.4, dark: 0.32, gap: 0.04, ramp: 0.12 } as const;
+/** how far the roll reaches from the green's edge, tiles (in and out) */
+export const GREEN_ROLL_REACH = Math.max(GREEN_ROLL.w, GREEN_ROLL.out) + 0.2;
+/** a green's roll as a light mask (a shine textured by the grass, a lift in proportion) and a shade (DARK_RGB multiplied) from its edge
+ *  field, at strength k (0..2) */
+export function greenRollImages(f: EdgeField, k: number): { light: EdgeImage | null; dark: EdgeImage | null } {
+  const G = GREEN_ROLL, N = f.W * f.H, light = new Uint8ClampedArray(N * 4), dark = new Uint8ClampedArray(N * 4), sun = blur(f.sun, f.W, f.H, Math.round(FACING_BLUR * f.res));
+  let anyL = false, anyD = false;
+  for (let q = 0; q < N; q++) {
+    const d = f.d[q]!;
+    // the slope down and out (1 at the edge): inside the top's curve, outside its run-out over the fringe
+    const sl = d >= 0 ? (d < G.w ? (1 - d / G.w) * smooth01((d - G.gap) / G.ramp) : 0) : -d < G.out ? (1 + d / G.out) ** 2 : 0;
+    if (sl <= 0) continue;
+    const b = sun[q]! * sl * k;
+    if (b > 0) { const a = G.light * b; if (a > 0.004) { const p = 4 * q; light[p] = light[p + 1] = light[p + 2] = 255; light[p + 3] = Math.min(1, a) * 255; anyL = true; } }
+    else { const a = -G.dark * b; if (a > 0.004) { const p = 4 * q; dark[p] = DARK_RGB[0]; dark[p + 1] = DARK_RGB[1]; dark[p + 2] = DARK_RGB[2]; dark[p + 3] = Math.min(0.9, a) * 255; anyD = true; } }
+  }
+  return { light: anyL ? { data: light, W: f.W, H: f.H } : null, dark: anyD ? { data: dark, W: f.W, H: f.H } : null };
 }

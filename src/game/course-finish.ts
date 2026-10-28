@@ -31,20 +31,22 @@ export interface CourseFinish {
   /** T253 (#735): the bunkers as the owner's reference (bunker-look.ts: the sand bowl, its rake lines and streaks, the rolled grass lip, the
    *  mounds, the far wall's red-brown soil): 0 off (T227's lips over T110's floor shade, as before T253) .. 1 the tuned look .. 2 strong */
   bowl: number;
+  /** T253 part 3: the greens' soft roll where they meet the fringe (bunker-look.ts greenRollImages): 0 off (as before) .. 1 tuned .. 2 strong */
+  roll: number;
 }
 /** the tuned look (against the concept, at 30% and 15%) */
-export const DEFAULT_COURSE_FINISH: Readonly<CourseFinish> = { on: true, along: true, bandWidth: 3, bandStrength: 0.8, greenWidth: 0.75, greenStrength: 0.3, collarWidth: 4, collarTone: 0.45, lip: 1, bowl: 1 };
+export const DEFAULT_COURSE_FINISH: Readonly<CourseFinish> = { on: true, along: true, bandWidth: 3, bandStrength: 0.8, greenWidth: 0.75, greenStrength: 0.3, collarWidth: 4, collarTone: 0.45, lip: 1, bowl: 1, roll: 1 };
 /** the finish off: the course exactly as before T227 */
 export const FINISH_OFF: Readonly<CourseFinish> = { ...DEFAULT_COURSE_FINISH, on: false };
 /** the knobs' ranges (collarWidth: the Border slider's, ext/course-grid/patch BORDER_MIN_M .. BORDER_MAX_M) */
-export const FINISH_RANGES = { bandWidth: [1, 16], bandStrength: [0, 1], greenWidth: [0.25, 4], greenStrength: [0, 1], collarWidth: [0.1, 8], collarTone: [0, 1], lip: [0, 2], bowl: [0, 2] } as const;
+export const FINISH_RANGES = { bandWidth: [1, 16], bandStrength: [0, 1], greenWidth: [0.25, 4], greenStrength: [0, 1], collarWidth: [0.1, 8], collarTone: [0, 1], lip: [0, 2], bowl: [0, 2], roll: [0, 2] } as const;
 type Ranged = keyof typeof FINISH_RANGES;
 
 /** a finish with every knob held to its range (missing or bad: the tuned look's) */
 export function clampCourseFinish(f: unknown): CourseFinish {
   const o = (f && typeof f === 'object' ? f : {}) as Partial<Record<keyof CourseFinish, unknown>>, D = DEFAULT_COURSE_FINISH;
   const num = (k: Ranged) => { const v = o[k], [lo, hi] = FINISH_RANGES[k]; return Math.round(Math.min(hi, Math.max(lo, typeof v === 'number' && Number.isFinite(v) ? v : D[k])) * 1000) / 1000; };
-  return { on: typeof o.on === 'boolean' ? o.on : D.on, along: typeof o.along === 'boolean' ? o.along : D.along, bandWidth: num('bandWidth'), bandStrength: num('bandStrength'), greenWidth: num('greenWidth'), greenStrength: num('greenStrength'), collarWidth: num('collarWidth'), collarTone: num('collarTone'), lip: num('lip'), bowl: num('bowl') };
+  return { on: typeof o.on === 'boolean' ? o.on : D.on, along: typeof o.along === 'boolean' ? o.along : D.along, bandWidth: num('bandWidth'), bandStrength: num('bandStrength'), greenWidth: num('greenWidth'), greenStrength: num('greenStrength'), collarWidth: num('collarWidth'), collarTone: num('collarTone'), lip: num('lip'), bowl: num('bowl'), roll: num('roll') };
 }
 /** the finish a surfaces file carries (painted-surfaces.ts SurfacesFile.course), clamped and kept per file (the file is never changed) */
 const memo = new WeakMap<object, CourseFinish>();
