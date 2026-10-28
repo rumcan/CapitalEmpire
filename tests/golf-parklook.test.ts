@@ -51,20 +51,27 @@ test('a paved car park: kerbs round it open at its entrance, two islands a group
   }
   for (const p of look.props) assert.ok(inPark(pk, p), 'the props inside the car park');
   // the footpath: PATH_W wide from its edge to the door
-  assert.ok(look.path && look.path.tex === 'paving');
-  const [ax, ay, bx, by, cx, cy] = look.path!.pts as [number, number, number, number, number, number];
+  assert.ok(look.path && look.path.length === 1 && look.path[0]!.tex === 'paving');
+  const path = look.path[0]!, [ax, ay, bx, by, cx, cy] = path.pts as [number, number, number, number, number, number];
   assert.ok(Math.abs(Math.hypot(cx - bx, cy - by) - PATH_W) < 1e-9);
   assert.ok(Math.abs(bx + cx - 2 * 410) < 1e-9 && Math.abs(by + cy - 2 * (pk.y - 20)) < 1e-9, 'it ends at the door');
-  assert.ok(Math.abs((ay + look.path!.pts[7]!) / 2 - pk.y) < 1e-9 && ax >= pk.x - 1, 'it starts on the car park\'s edge');
+  assert.ok(Math.abs((ay + path.pts[7]!) / 2 - pk.y) < 1e-9 && ax >= pk.x - 1, 'it starts on the car park\'s edge');
   // the same every time
   assert.deepEqual(parkLook(park(), { x: 410, y: pk.y - 20 }), look);
 });
 
-test('a footpath ends half a tile short of a building in its way; none to a door too far or inside the park', () => {
-  const pk = park(), door = { x: 410, y: pk.y - 30 }, wall: [number, number, number, number] = [400, pk.y - 26, 20, 10];
-  const p = footpath(pk, door, [wall])!;
-  const end = { x: (p.pts[2]! + p.pts[4]!) / 2, y: (p.pts[3]! + p.pts[5]!) / 2 };
+test('a footpath goes round a building in its way in one corner, else ends half a tile short of it; none to a door too far or inside the park', () => {
+  const pk = park(), wall: [number, number, number, number] = [380, pk.y - 26, 60, 10];
+  // a door behind a wide building, straight north of the car park: no corner gets round it, so the path ends at its face
+  const p = footpath(pk, { x: 410, y: pk.y - 30 }, [wall])!;
+  assert.equal(p.length, 1);
+  const end = { x: (p[0]!.pts[2]! + p[0]!.pts[4]!) / 2, y: (p[0]!.pts[3]! + p[0]!.pts[5]!) / 2 };
   assert.ok(Math.abs(end.y - (wall[1] + wall[3] + 0.5)) < 1e-6, `ends at the wall's face (${end.y})`);
+  // a door beside a building (the old start's clubhouse: its door on the course side): round its corner, both legs clear of it
+  const club: [number, number, number, number] = [370, pk.y - 4, 28, 30], door = { x: 384, y: pk.y + 30 };
+  const r = footpath(pk, door, [club])!;
+  assert.equal(r.length, 2, 'two legs');
+  for (const leg of r) for (let k = 0; k < 8; k += 2) assert.ok(!(leg.pts[k]! > club[0] + 0.01 && leg.pts[k]! < club[0] + club[2] - 0.01 && leg.pts[k + 1]! > club[1] + 0.01 && leg.pts[k + 1]! < club[1] + club[3] - 0.01), 'clear of the building');
   assert.equal(footpath(pk, { x: 410, y: pk.y - 200 }), null);
   assert.equal(footpath(pk, { x: 410, y: pk.y + 5 }), null);
 });

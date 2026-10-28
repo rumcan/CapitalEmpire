@@ -5027,7 +5027,7 @@ export class Game {
       const look = this.golf && !d.ground ? parkLook(pk, this.lookDoor(pk), this.clubWalls()) : null;
       if (look) looks.set(d.id, look);
       keep.add(key); this.setLotGround(key, [{ pts: [d.x, d.y, d.x + d.w, d.y, d.x + d.w, d.y + d.h, d.x, d.y + d.h], tex: d.ground ?? 'asphalt', ...(d.ground ? {} : { lines }) },
-        ...(look ? look.over.map((o): LotPatch => ({ pts: o.pts, tex: o.tex, park: true })) : []), ...(look?.path ? [{ pts: look.path.pts, tex: look.path.tex } as LotPatch] : [])]);
+        ...(look ? look.over.map((o): LotPatch => ({ pts: o.pts, tex: o.tex, park: true })) : []), ...(look?.path ?? []).map((q): LotPatch => ({ pts: q.pts, tex: q.tex }))]);
     });
     for (const key of this.parkGround) if (!keep.has(key)) this.setLotGround(key, null);
     this.parkGround = keep; this.parkLooks = looks; this.lookKey = this.venueKey();
