@@ -6,7 +6,7 @@
   "sha256": "a0261d09a8e64e61421af4c0120db926c35e4260eef8e4d9c9d3848665b5b5ff",
   "date": "2026-10-26"
  },
- "revision": "763ea0d68a9e",
+ "revision": "d2ccb3098c7e",
  "display": {
   "minVisibleTiles": 2,
   "maxVisibleTiles": 4,
@@ -5051,6 +5051,217 @@
        "tb": 2.94,
        "h": 1.76,
        "v": 1.88
+      }
+     }
+    }
+   }
+  },
+  {
+   "id": "pond-concept-run",
+   "materialId": "painted:pond-concept-run",
+   "name": "Deep pond water, concept (RUN, quilted)",
+   "kind": "water",
+   "revision": "03437277a8a3",
+   "selection": null,
+   "provisional": true,
+   "light": null,
+   "mean": "#1e4342",
+   "levels": {
+    "near": {
+     "revision": "near-tiles-v3",
+     "folder": "art/theme-consistency/generated/ground/run-grass/pond-concept/near/tiles-v3",
+     "native": [
+      1376,
+      768
+     ],
+     "decision": {
+      "file": null,
+      "sha256": null
+     },
+     "tiles": [
+      {
+       "id": "tile-01",
+       "file": "tiles/pond-concept-run/near/tile-01.webp",
+       "sha256": "4a3b6855e2152963f678ba43f07fda3378d60be22dc4dd1e78b1f7f7f1ab1705",
+       "mean": "#1e4342",
+       "source": "art/theme-consistency/generated/ground/run-grass/pond-concept/near/tiles-v3/tile-01.png"
+      },
+      {
+       "id": "tile-02",
+       "file": "tiles/pond-concept-run/near/tile-02.webp",
+       "sha256": "d8ad75f07395a22422859fd268a01369f0ceb924428af1ee92108a6fb549297c",
+       "mean": "#1e4342",
+       "source": "art/theme-consistency/generated/ground/run-grass/pond-concept/near/tiles-v3/tile-02.png"
+      },
+      {
+       "id": "tile-03",
+       "file": "tiles/pond-concept-run/near/tile-03.webp",
+       "sha256": "604a0c95e04d50ec2324b70c1a199e7cc9b85a353a9dc116114623b217133b6a",
+       "mean": "#1e4342",
+       "source": "art/theme-consistency/generated/ground/run-grass/pond-concept/near/tiles-v3/tile-03.png"
+      },
+      {
+       "id": "tile-04",
+       "file": "tiles/pond-concept-run/near/tile-04.webp",
+       "sha256": "c01ebbfde0c672c2ec90183383b7ef547d14a9cd17ce93ba0da1b538844fafd7",
+       "mean": "#1e4342",
+       "source": "art/theme-consistency/generated/ground/run-grass/pond-concept/near/tiles-v3/tile-04.png"
+      }
+     ],
+     "status": "the art session's finished near-tiles-v3 tiles (T191): four tiles that meet one another as made (finished-set-as-made, no heal); across any two tiles wrap LR 1.42 -> 2.25 (inside 0.92), TB 2.42 -> 2.78 (inside 2.23)",
+     "heal": {
+      "method": "finished-set-as-made",
+      "band": 0,
+      "fallback": "the art session's finished near-tiles-v3 tiles (T191)",
+      "before": {
+       "lr": 1.42,
+       "tb": 2.42,
+       "h": 1.43,
+       "v": 2.64
+      },
+      "healed": {
+       "lr": 1.42,
+       "tb": 2.42,
+       "h": 1.43,
+       "v": 2.64
+      },
+      "after": {
+       "lr": 2.25,
+       "tb": 2.78,
+       "h": 0.92,
+       "v": 2.23
+      }
+     }
+    },
+    "mid": {
+     "revision": "mid-tiles-v3",
+     "folder": "art/theme-consistency/generated/ground/run-grass/pond-concept/mid/tiles-v3",
+     "native": [
+      1376,
+      768
+     ],
+     "decision": {
+      "file": null,
+      "sha256": null
+     },
+     "tiles": [
+      {
+       "id": "tile-01",
+       "file": "tiles/pond-concept-run/mid/tile-01.webp",
+       "sha256": "631f8c8122c1759b9b084e1b3d359b6e631d1951a1f9ecce91e73848ea6023c3",
+       "mean": "#1e4342",
+       "source": "art/theme-consistency/generated/ground/run-grass/pond-concept/mid/tiles-v3/tile-01.png"
+      },
+      {
+       "id": "tile-02",
+       "file": "tiles/pond-concept-run/mid/tile-02.webp",
+       "sha256": "adcd8f0f8bf05cdb15d654be47a750577899b3f4fc4728005d58dd7d48defc31",
+       "mean": "#1e4342",
+       "source": "art/theme-consistency/generated/ground/run-grass/pond-concept/mid/tiles-v3/tile-02.png"
+      },
+      {
+       "id": "tile-03",
+       "file": "tiles/pond-concept-run/mid/tile-03.webp",
+       "sha256": "8510852fe97d1027cd487542a855870130c0771730876a726ab8be2f6ac38f8e",
+       "mean": "#1e4342",
+       "source": "art/theme-consistency/generated/ground/run-grass/pond-concept/mid/tiles-v3/tile-03.png"
+      },
+      {
+       "id": "tile-04",
+       "file": "tiles/pond-concept-run/mid/tile-04.webp",
+       "sha256": "72dcba1b78ad35a12b947bdbd144f1dccb32be5f29f07bf799b9a2d1c9433aff",
+       "mean": "#1e4342",
+       "source": "art/theme-consistency/generated/ground/run-grass/pond-concept/mid/tiles-v3/tile-04.png"
+      }
+     ],
+     "status": "the art session's finished mid-tiles-v3 tiles (T191): four tiles that meet one another as made (finished-set-as-made, no heal); across any two tiles wrap LR 1.08 -> 1.64 (inside 0.67), TB 1.84 -> 2.49 (inside 1.55)",
+     "heal": {
+      "method": "finished-set-as-made",
+      "band": 0,
+      "fallback": "the art session's finished mid-tiles-v3 tiles (T191)",
+      "before": {
+       "lr": 1.08,
+       "tb": 1.84,
+       "h": 1.18,
+       "v": 2.02
+      },
+      "healed": {
+       "lr": 1.08,
+       "tb": 1.84,
+       "h": 1.18,
+       "v": 2.02
+      },
+      "after": {
+       "lr": 1.64,
+       "tb": 2.49,
+       "h": 0.67,
+       "v": 1.55
+      }
+     }
+    },
+    "far": {
+     "revision": "far-tiles-v3",
+     "folder": "art/theme-consistency/generated/ground/run-grass/pond-concept/far/tiles-v3",
+     "native": [
+      1376,
+      768
+     ],
+     "decision": {
+      "file": null,
+      "sha256": null
+     },
+     "tiles": [
+      {
+       "id": "tile-01",
+       "file": "tiles/pond-concept-run/far/tile-01.webp",
+       "sha256": "efbb75cd7e806d18786e093c31769ca39821648aee91cb018eafb8df7fb0f435",
+       "mean": "#1e4342",
+       "source": "art/theme-consistency/generated/ground/run-grass/pond-concept/far/tiles-v3/tile-01.png"
+      },
+      {
+       "id": "tile-02",
+       "file": "tiles/pond-concept-run/far/tile-02.webp",
+       "sha256": "b7778189ebc8b3c38bde599d99ac5dcc42b21bee15ddd4ede3e8dae5afa6fc56",
+       "mean": "#1e4342",
+       "source": "art/theme-consistency/generated/ground/run-grass/pond-concept/far/tiles-v3/tile-02.png"
+      },
+      {
+       "id": "tile-03",
+       "file": "tiles/pond-concept-run/far/tile-03.webp",
+       "sha256": "203c6104e7e7b4ab4921168f81dc9f84c331f2fcd9293cea7789bd79dfe8da23",
+       "mean": "#1e4342",
+       "source": "art/theme-consistency/generated/ground/run-grass/pond-concept/far/tiles-v3/tile-03.png"
+      },
+      {
+       "id": "tile-04",
+       "file": "tiles/pond-concept-run/far/tile-04.webp",
+       "sha256": "cd4ce17b34d22fda75fe035c879e5734686c2219a97542d861ec652f5ce95e3a",
+       "mean": "#1e4342",
+       "source": "art/theme-consistency/generated/ground/run-grass/pond-concept/far/tiles-v3/tile-04.png"
+      }
+     ],
+     "status": "the art session's finished far-tiles-v3 tiles (T191): four tiles that meet one another as made (finished-set-as-made, no heal); across any two tiles wrap LR 1.21 -> 1.82 (inside 0.68), TB 2.69 -> 3.16 (inside 2.16)",
+     "heal": {
+      "method": "finished-set-as-made",
+      "band": 0,
+      "fallback": "the art session's finished far-tiles-v3 tiles (T191)",
+      "before": {
+       "lr": 1.21,
+       "tb": 2.69,
+       "h": 1.2,
+       "v": 2.43
+      },
+      "healed": {
+       "lr": 1.21,
+       "tb": 2.69,
+       "h": 1.2,
+       "v": 2.43
+      },
+      "after": {
+       "lr": 1.82,
+       "tb": 3.16,
+       "h": 0.68,
+       "v": 2.16
       }
      }
     }
