@@ -26,7 +26,7 @@ import { RIVER_BAND, RIVER_SWAMP, RIVER_SWAMP_OUT, SWAMP, SWAMP_OUT, SwampField,
 const CREEK_SWAMP_REACH = SWAMP_OUT + SWAMP.soft * Math.log(4) + 0.5, RIVER_SWAMP_REACH = RIVER_SWAMP_OUT + RIVER_SWAMP.soft * Math.log(8) + 0.5;
 
 /** the belt's numbers (tiles):
- *  - S: the grid's spacing (the forest's); keep: the most of its points a thicket keeps; size: the trees' spread, times the forest's size
+ *  - S: the grid's spacing (wider than the forest's 2.4); keep: the most of its points a thicket keeps; size: the trees' spread, times the forest's size
  *    (bigger than the woods': fewer trees, the same mass, for the frame budget);
  *  - river, creek: min, the nearest a trunk stands past the water's edge (a river: on its bank's outer part, the bank 3 tiles) or past the
  *    channel's edge (a creek: its swamp's core); bank, where the belt's distance starts (the river's bank's outer edge, a creek's channel);
@@ -39,7 +39,7 @@ const CREEK_SWAMP_REACH = SWAMP_OUT + SWAMP.soft * Math.log(4) + 0.5, RIVER_SWAM
  *    tiles clear of anything built: no dead tree beside a lot or a road);
  *  - conifer: the conifers' share; slope: no tree on a slope steeper than this (the forest's soft limit) */
 export const BELT = {
-  S: 2.4, keep: 0.9, size: [0.95, 1.35],
+  S: 2.8, keep: 0.9, size: [1.2, 1.6],
   river: { min: 2, bank: 3 }, creek: { min: 0.5, bank: 0 },
   full: 5, reach: 16,
   clump: [-0.3, 0.12], clumpWave: 9, clumpFloor: 0.08,

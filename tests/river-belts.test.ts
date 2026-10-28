@@ -111,7 +111,7 @@ test('T265 the renderer: the river\'s band with the streams\', under the river\'
   const r = readFileSync(resolve('src/game/renderer.ts'), 'utf8'), step1 = r.slice(r.indexOf('// ---- 1. terrain:'), r.indexOf('const walk = net.walkF'));
   assert.match(r, /this\.riverField = new SwampField\(riverStreams\(waters\), RIVER_BAND\)/);
   assert.match(step1, /rv = this\.riverSwampOn\(\) \? this\.riverField\.alpha\(tx0, ty0, bw, bh, cres\) : null/);
-  assert.match(step1, /this\.swampBand\(sw, rv, tx0, ty0, cres, rv \? this\.riverCut\(net, box, lite\) : null\)/);
+  assert.match(step1, /this\.swampBand\(sw, rv, tx0, ty0, cres, rv \? this\.riverCut\(net, rv\.box, lite\) : null\)/, 'the cut: what lies near the river\'s band');
   assert.ok(step1.indexOf('this.riverField.alpha(') < step1.indexOf("layer('bank', g => shore(g, rivers, 3, 0.8))"), 'the river\'s swamp lies under its bank');
   assert.ok(step1.indexOf("layer('bank'") < step1.indexOf("this.waterOver(ctx, SITE.river"), 'the river keeps its water look and reflections over it');
   assert.equal(RIVER_SWAMP.bank, 3, 'the band rises under the bank the renderer lays 3 tiles past the water');
@@ -154,7 +154,7 @@ test('T265 the belts: deterministic cell by cell, thick near the bank and thinni
   let bare = 0, thick = 0, n = 0;
   for (let x = 40; x < 560; x += 16) for (const s of [-1, 1]) {
     const k = river.filter(t => t.x >= x && t.x < x + 16 && s * (t.y - 300) > 0 && Math.abs(t.y - 300) - 15 < BELT.river.bank + 6).length;
-    n++; if (k <= 2) bare++; if (k >= 8) thick++;
+    n++; if (k <= 1) bare++; if (k >= 5) thick++; // (a thicket: five of the belt's big trees, crowns touching)
   }
   assert.ok(bare / n >= 0.15 && bare / n < 0.6, `${bare} of ${n} stretches (nearly) bare: the water shows`);
   assert.ok(thick / n >= 0.15, `${thick} of ${n} stretches a thicket`);

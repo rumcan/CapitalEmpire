@@ -642,7 +642,8 @@ export class GroundPainter {
     const box: BBox = sc && rv ? [Math.min(sc.box[0], rv.box[0]), Math.min(sc.box[1], rv.box[1]), Math.max(sc.box[2], rv.box[2]), Math.max(sc.box[3], rv.box[3])] : a.box;
     return { cv: sb, box };
   }
-  /** T265: the river's band stops short of what is built near the chunk's tile box (drawn in tile space onto the band, destination-out): the
+  /** T265: the river's band stops short of what is built near its tile box (box: the band's own over the chunk, so a district chunk's town
+   *  far from the river is never drawn; in tile space onto the band, destination-out): the
    *  roads (their asphalt and walks) and bridges grown by RIVER_CUT.road tiles, the lots' ground, their yards, the painted areas and the course
    *  (every surface, its rough too) grown by RIVER_CUT.lot; the outer half of each margin cut by half (a soft edge), the inner whole. What the
    *  player bought keeps the swamp it had (the land is as it was); what they build or paint on it pushes the swamp back. null: nothing near */
@@ -1485,7 +1486,7 @@ export class GroundPainter {
     // T265: and the river's band (swamp.ts RIVER_BAND, asked of its field alike), cut short of the roads, bridges, lots, painted areas and the
     //      course (riverCut), merged with the streams' into one band (swampBand): one layer, one gloss, one cover the living ground leaves alone
     const sw = this.swampOn() ? this.swampField.alpha(tx0, ty0, bw, bh, cres) : null, rv = this.riverSwampOn() ? this.riverField.alpha(tx0, ty0, bw, bh, cres) : null;
-    const sband = sw || rv ? this.swampBand(sw, rv, tx0, ty0, cres, rv ? this.riverCut(net, box, lite) : null) : null;
+    const sband = sw || rv ? this.swampBand(sw, rv, tx0, ty0, cres, rv ? this.riverCut(net, rv.box, lite) : null) : null;
     // (T265: the swamp's tile set straight through the band, swampLayer: no composed buffer a chunk, whose room in the cache is the grass's; a
     //  painted look composed and laid as before)
     const swTiles = sband ? this.tex.paintedOf('swamp')?.tiled : undefined, swBuf = sband && !swTiles ? this.paintedBuf('swamp', sband.box) : null;
