@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-29 01:10 SAST)
+## START HERE (kept current by the lead; last updated 2026-10-29 02:40 SAST)
 
 **Taking over as lead?** This section is the one start document. Paste this into a new Claude Code chat (desktop app, Code tab), on any
 account, with the folder `E:\Repos\CapitalEmpire\worktrees\lead-typecheck`:
@@ -67,7 +67,7 @@ never commit there.)
 | Ticket | Issue | Branch / worktree | State and next step |
 | --- | --- | --- | --- |
 | T265 | #794 | `arena/T265-river-swamp-trees` (a fresh worktree; port 5186) | **Started ~00:15.** The river's swamp band and dense tree belts along every river and creek, under the owner's hard performance limits (belts +0.5 ms a frame, swamp +1 ms a bake, main vs branch at 30/15/8%, thin or stop). |
-| T266 | #800 | `arena/T266-golf-pace` (a fresh worktree; port 5187) | **Started ~00:50.** A prototype with a verdict: a day/night clock, capped walking speeds, a longer day, or a mix, each behind `?golfPace=`; s per hole, walk speed vs cars, real minutes per game month, money per real hour, frame cost (at most +0.3 ms). The lead picks, then it builds. |
+| T266 | #800 | `arena/T266-golf-pace` (its worktree `.claude/worktrees/agent-ae0c4aafcbac0c92d`; port 5187) | **Prototype done; the lead picked option 4, the mix** (golf hours at 1.5 game min/s with a 40 s night; walking capped at 2.8 m/s, carts 5.6 m/s, soft fades between shots; golfers 0.25x a car instead of 15.6x). Months and money unchanged (months run on the season clock; a longer Town day does not slow them). Building: on by default, "Golf pace: Watchable / Fast" in the gear menu, the cap on the tournament day too, a check of the range's +9%. Captures `E:/ClaudeTemp/T266/out/`. |
 
 **Held, waiting on the owner (not agents):**
 - **#394 T112** (sharp 0.35): approved, merge held until the owner stops the 5191 studio (the lock change makes the auto-updater run
@@ -82,8 +82,8 @@ deliveries come as PRs to review. The 3D people session's handover is `docs/HAND
 **T258 #749 continuous-art follow-up** (`lead/continuous-art-plans-20261029`): generic live-source AI plans and one exact subjob per batch, explicit versioned corrections, held review metadata and lossless native/live-only reuse. Current live priority181 is respected; 180a-v3 remains explicitly queued, v1/v2 held and b/c/d pending. Reviewed source art/proofs are in this branch; runtime registration remains separate. Quota retry2026-10-28T15:32:44.457Z is unchanged. Typecheck/focused fixtures pass; final fresh-main checks and PR/deployment next.
 
 ### 4. Queue (in order; start the next when an agent lands)
-1. **T267 #808** the bunker's Shadow on its vertical faces too (the owner: "it looks like the sand goes underneath the fairway"); the defaults
-   (Round off 100%, Shadow 30%) are done (#807).
+1. **T267 #808** the face shade is merged (#814, the lead): left, a screenshot against the owner's reference when the PC has memory free (it
+   had 0.6 GB with two agents running) and the pond's cut face if it shows the same overhang.
 2. **T270 #811** shop variety (the owner: five Video Vaults in a row): neighbours never alike, likely `newart.ts` stand-in choice.
 3. **T271 #812** create your own grass preset, option 9 in Shape by hand (plays as a base surface; a short plan first).
 4. **T268 #809** place each tee set (blue, white, yellow, red) yourself; move and remove them.
@@ -108,7 +108,7 @@ deliveries come as PRs to review. The 3D people session's handover is `docs/HAND
 3. **Farms** (185-189): for T259. 4. **The grey stone border** (180): for T249. 5. **Scenes batch 2**: for P28 T242.
 
 ### 6. Latest merges (2026-10-28)
-#807 bunkers by default Round off at 100% and Shadow 30% (the owner), an unticked box kept off · #806 T263 part 2: the hole shaping
+#814 T267 a bunker's cut face in its own shade by its Shadow (the owner: "theres no shadow on the bunker inner wall") · #807 bunkers by default Round off at 100% and Shadow 30% (the owner), an unticked box kept off · #806 T263 part 2: the hole shaping
 reads at the default light (a gentle-slope gain), built at $5/m³ · #804 T262 part 2: the grass shine a third as strong, the tee 0.1 and the green 0.55 (the cause of the owner's "horrible" tees: #792's
 sheen on bright, smooth paint), the knobs in the gear menu's Night panel, within the owner's limits (frame +0.04-0.07 ms, bake +0.2/+0.6 ms) ·
 #802 the course tees wear the fairway's grass, no lines (the owner: "not defined enough. it should be like the fairway with no lines";
