@@ -22,7 +22,7 @@ const D = DEFAULT_COURSE_FINISH;
 const store = new Map<string, string>();
 (globalThis as { localStorage?: unknown }).localStorage = { getItem: (k: string) => store.get(k) ?? null, setItem: (k: string, v: string) => { store.set(k, String(v)); }, removeItem: (k: string) => { store.delete(k); } };
 /** the Paint tool's host as the engine wires the Border: the course finish's defaults (T227), none round a tee, a bunker or a pond (T260) */
-const host = (fin = D): PaintHost => ({ setLotGround() {}, emit() {}, save() {}, toast() {}, affine() {}, placeProps: () => 0, collarDefault: s => borderDefault(s, fin) });
+const host = (fin = D): PaintHost => ({ setLotGround() {}, emit() {}, save() {}, toast() {}, affine() {}, placeProps: () => 0, plant: () => 0, unplant: () => 0, plantPool: () => [], collarDefault: s => borderDefault(s, fin) });
 const LOOKS: CourseLooks = {
   surf: [undefined, { tex: 'golfRough', sc: 1, a: 0 }, { tex: 'golfFescue', sc: 1, a: 0 }, { tex: 'waterDark', sc: 1, a: 0 }, { tex: 'golfFairway', sc: 1, a: 0 }, { tex: 'golfTee', sc: 1, a: 0 }, { tex: 'bunkerSand', sc: 1, a: 0 }, { tex: 'wasteSand', sc: 1, a: 0 }, { tex: 'golfGreen', sc: 1, a: 0 }],
   collar: { 'first-cut': { tex: 'golfFirstCut', sc: 1, a: 0 }, fringe: { tex: 'golfFringe', sc: 1, a: 0 }, lip: { tex: 'golfRough', sc: 1, a: 0 }, bank: { tex: 'rockyDirt', sc: 1, a: 0 } },
