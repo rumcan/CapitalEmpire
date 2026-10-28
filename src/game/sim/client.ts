@@ -5,6 +5,7 @@ import type { GallerySpot } from '../golf/galleries';
 import type { NetOp } from '../ground-protocol';
 import { CAR_SCALE, type Drawable } from '../sprites';
 import { carHeading, facings } from '../traffic';
+import { hash3, paintOf } from '../car-paint';
 import { zoneOf } from './routing';
 import { sigKey } from './signals';
 import { STILL, brakeLamps } from './car-lamps';
@@ -361,7 +362,8 @@ export class SimClient {
       let d = this.pool[k]; if (!d) this.pool.push((d = { item: 0, x: 0, y: 0, flip: false, scale: CAR_SCALE, x0: 0, y0: 0, x1: 0, y1: 0, moving: true }));
       // drawn at its size (CAR_SCALE times the car's owner size) about the car's centre: the anchor and footprint offsets scale with it
       const z = CAR_SCALE * f.size;
-      d.item = f.item; d.flip = f.flip; d.scale = z; d.x = x - f.ox * z; d.y = y - f.oy * z; d.x0 = x - f.hx * z; d.x1 = x + f.hx * z; d.y0 = y - f.hy * z; d.y1 = y + f.hy * z;
+      // (T228: its paint from its slot: the same car keeps its colour all its trip; a bus is no car model, so it has none)
+      d.item = f.item; d.flip = f.flip; d.scale = z; d.paint = paintOf(hash3(i, 0x51)); d.x = x - f.ox * z; d.y = y - f.oy * z; d.x0 = x - f.hx * z; d.x1 = x + f.hx * z; d.y0 = y - f.hy * z; d.y1 = y + f.hy * z;
       // its brake lights at its rear as drawn (its size: the lamps sit on the car's picture)
       const lit = lamps && (this.brake[i] === 1 || this.still[i] === 1);
       if (lit) { const L = (d.lamps ??= []), n = brakeLamps(x, y, this.ang[i]!, z, HALF[this.kind[i]! % HALF.length]! * z, true, L); L.length = n; if (!n) d.lamps = undefined; }

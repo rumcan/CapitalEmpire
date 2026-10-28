@@ -322,13 +322,17 @@ export interface Node { x: number; y: number; segs: Seg[]; type: NodeType; arms:
 export const SK = { GROUND: 0, BRIDGE: 1, TUNNEL: 2 } as const; export type SegKind = 0 | 1 | 2;
 /** town: the seg is the towns' (their seed streets, gravel and the valley's highway): no upkeep for the player and no fee from a lot beside it; absent = the player's */
 export interface Seg { a: Node; b: Node; cls: RoadClass; style: LineStyle; kind: SegKind; town?: true }
-export interface Arm { seg: Seg; other: Node; dir: Pt; nrm: Pt; ang: number; len: number; cls: RoadClass; h: number; walk: number; reachEdge: number; reachCentre: number; lineInset: number; medianInset: number; xw: number; stop: number; hasOpp: boolean }
+export interface Arm { seg: Seg; other: Node; dir: Pt; nrm: Pt; ang: number; len: number; cls: RoadClass; h: number; walk: number; reachEdge: number; reachCentre: number; lineInset: number; medianInset: number; xw: number; stop: number; hasOpp: boolean;
+  /** T228: how far from the node its white edge lines start (edgeLines classes): past its corner fillets, its zebra and stop line, a dead end's bulb */
+  edgeInset: number }
 export interface Feature { kind: 'stroke' | 'poly' | 'disc'; path: Path2D; w: number; tex: string; order: number; bbox: BBox; cap: 'butt' | 'round'; kerb: boolean }
 /** a run of sidewalk slabs: straight (along a segment side) or radial (around a corner fillet, a bulb or a roundabout) */
 export type SlabRun = { kind: 'straight'; a: Pt; b: Pt; n: Pt; w0: number; w1: number; visible: boolean; seed: number } | { kind: 'arc'; c: Pt; r0: number; r1: number; a0: number; a1: number; seed: number };
 /** a street-lamp reflection pool: lamp point on the curb (tiles) */
 export interface Pool { x: number; y: number; strength: number }
-export interface LineRec { pts: Pt[]; closed: boolean; width: number; color: string; dash: [number, number] | null; r: number; offset: number; bbox: BBox }
+export interface LineRec { pts: Pt[]; closed: boolean; width: number; color: string; dash: [number, number] | null; r: number; offset: number; bbox: BBox;
+  /** T228: a white edge line inside the kerb; the chunk bake breaks it where a lot ground patch with cut lies (a driveway, a bus stop, on-street bays) */
+  edge?: true }
 export interface Poly { path: Path2D; bbox: BBox }
 export type DecalType = 'manhole' | 'drain' | 'oil' | 'patch';
 export interface Decal { t: DecalType; x: number; y: number; ang: number; s: number; seed: number }
@@ -465,6 +469,49 @@ export function slipCorner(n: Node, A: Arm, B: Arm): { Q: Pt; R: number } | null
   const C = lineHit(add(N, mul(perp(A.dir), A.h)), A.dir, sub(N, mul(perp(B.dir), B.h)), B.dir); if (!C) return null;
   const Q = add(C, mul(norm(add(A.dir, B.dir)), R / Math.sin(phi / 2)));
   return slipIslandPts(N, A, B, Q, R) ? { Q, R } : null;
+}
+
+/* ---------- T228: white edge lines ---------- */
+/** the edge line: its centre this far inside the kerb (tiles; clear of the gutter's shade, GUTTER 0.2 in renderer.ts) and its width (tiles) */
+export const EDGE_IN = 0.32, EDGE_W = 0.12;
+/** T228 (the owner's concept, 2026-10-27: "dark asphalt with white edge lines"): the classes with a white edge line inside each kerb: the town's
+ *  kerbed roads (sidewalks, the small, medium and large families) from the street up, one-way and tree variants alike. Not the lane (one 4 m lane
+ *  with a footpath: a back lane, no centre line either), nor the rural roads (their yellow shoulder lines), the course drives or the cart paths */
+export function edgeLines(c: RoadClass): boolean {
+  return kerbed(c) && (c.family === 'small' || c.family === 'medium' || c.family === 'large') && c.base !== 'lane';
+}
+/** where the kerb of arm A of node n turns into the corner fillet it shares with arm B (B the next arm counter-clockwise when ccw, else the one
+ *  before): its distance from the node along A, as the painter rounds that corner (nodeFeatures: the same radius rule), or 0 where the corner
+ *  is not rounded (nearly straight on, or too sharp) */
+function filletReach(n: Node, A: Arm, B: Arm, ccw: boolean): number {
+  const [P, Q] = ccw ? [A, B] : [B, A], phi = (((Q.ang - P.ang) % TAU) + TAU) % TAU;
+  if (phi < 0.12 || phi > Math.PI - 0.05) return 0;
+  const slip = slipOn(n, P, Q);
+  let R = slip ? R_SLIP : Math.min(P.cls.rConcave, Q.cls.rConcave);
+  if (n.wide && !slip) R *= WIDE_CORNER;
+  if (!slip && phi < 1.2) R *= 1.2 / phi;
+  R = Math.min(R, 0.45 * Math.min(P.len, Q.len) * Math.tan(phi / 2)); if (R < 0.15) return 0;
+  const N = { x: n.x, y: n.y }, C = lineHit(add(N, mul(perp(P.dir), P.h)), P.dir, sub(N, mul(perp(Q.dir), Q.h)), Q.dir); if (!C) return 0;
+  return Math.max(0, dot(sub(C, N), A.dir) + R / Math.tan(phi / 2));
+}
+/** arm i of node n: how far from the node its edge lines start. A dead end: where its kerb meets the turning circle. A roundabout: past its
+ *  arm's fillet onto the ring. A junction (3+ arms, a mini): past the corner fillets either side of it, its zebra and its stop line, at least
+ *  past the crossing roads' edges. Two arms: past the corner fillet of a bend, and on a narrower road meeting a wider one straight on, past the
+ *  taper between them; 0 where one road simply runs on (its edge lines meet the next route's) */
+function edgeInsetOf(n: Node, arms: Arm[], i: number): number {
+  const a = arms[i]!, k = arms.length;
+  if (k === 1) { const rb = a.h + a.cls.bulb; return a.cls.bulb > 0 ? Math.sqrt(rb * rb - a.h * a.h) + 0.3 : 0.3; }
+  let t = 0;
+  if (n.rb && n.type !== 'mini') { const r = 1.5, q = (n.rb + r) ** 2 - (a.h + r) ** 2; t = (q > 0 ? Math.sqrt(q) : n.rb) + 0.2; }
+  else if (k >= 2) t = Math.max(filletReach(n, a, arms[(i + 1) % k]!, true), filletReach(n, a, arms[(i + k - 1) % k]!, false)) + 0.15;
+  if (k >= 3 || n.rb) t = Math.max(t, a.reachEdge + 0.3);
+  if (a.xw >= 0) t = Math.max(t, a.xw + 1.4 + 0.35);
+  if (a.stop >= 0) t = Math.max(t, a.stop + 0.35 + 0.3);
+  if (k === 2) {
+    const o = arms[1 - i]!;
+    if (dot(a.dir, o.dir) < -0.96 && o.h + o.walk > a.h + a.walk + 0.05) t = Math.max(t, Math.min(2.5, 0.6 * a.len) + 0.3);
+  }
+  return t;
 }
 
 /* ---------- spatial indexes ---------- */
@@ -695,7 +742,7 @@ export class RoadNetwork {
     this.lastNodes = [...A]; this.lastFull = full;
     const live = [...A].filter(n => n.segs.length && this.nodes.get(keyOf(n)) === n);
     for (const n of live) {
-      n.arms = n.segs.map(s => { const other = s.a === n ? s.b : s.a, d = sub(other, n), L = vlen(d), dir = mul(d, 1 / L); return { seg: s, other, dir, nrm: perp(dir), ang: Math.atan2(dir.y, dir.x), len: L, cls: s.cls, h: s.cls.h, walk: s.cls.walk, reachEdge: 0, reachCentre: 0, lineInset: 0, medianInset: 0, xw: -1, stop: -1, hasOpp: false }; }).sort((p, q) => p.ang - q.ang);
+      n.arms = n.segs.map(s => { const other = s.a === n ? s.b : s.a, d = sub(other, n), L = vlen(d), dir = mul(d, 1 / L); return { seg: s, other, dir, nrm: perp(dir), ang: Math.atan2(dir.y, dir.x), len: L, cls: s.cls, h: s.cls.h, walk: s.cls.walk, reachEdge: 0, reachCentre: 0, lineInset: 0, medianInset: 0, xw: -1, stop: -1, hasOpp: false, edgeInset: 0 }; }).sort((p, q) => p.ang - q.ang);
       const rl = n.rl ?? 1;
       n.rb = n.type === 'roundabout' && n.arms.length >= 2 ? ringRadius(n.arms.map(a => a.h), rl)
         : n.type === 'mini' && n.arms.length >= 3 ? Math.max(4, Math.max(...n.arms.map(a => a.h)) + 1) : 0;
@@ -752,6 +799,7 @@ export class RoadNetwork {
         const o = arms[0] === a ? arms[1] : arms[0]; a.lineInset = 0; a.medianInset = o.cls.median > 0 ? 0 : 1.5;
       } else { a.lineInset = 0; a.medianInset = 0; }
     }
+    for (let i = 0; i < k; i++) arms[i]!.edgeInset = edgeInsetOf(n, arms, i);
   }
   /** chains of the given segments between terminal nodes, then the rings left over */
   private buildRoutes(free: Set<Seg>) {
@@ -833,6 +881,12 @@ export class RoadNetwork {
     if ((cls.walkTex === 'slabs' || cls.id === 'gravel') && r.kind !== SK.BRIDGE) {
       const n = r.pts.length, a0 = r.pts[0]!, a1 = r.pts[n - 1]!, step = cls.id === 'lane' ? 12 : 8, town = cls.id === 'gravel';
       for (const s of [1, -1]) walkAlong(offsetLine(r.pts, r.closed, s * (cls.h + cls.walk * 0.62)), r.closed, s > 0 ? 4 : 4 + step / 2, step, (p, i) => { if (!r.closed && (vlen(sub(p, a0)) < 3 || vlen(sub(p, a1)) < 3)) return; fx.autoProps.push({ kind: 'lamp', x: p.x, y: p.y, i, ...(town ? { town } : {}) }); });
+    }
+    // T228: a white edge line inside each kerb, from where the kerb runs straight at each end (Arm.edgeInset); the chunk bake breaks it at the
+    // driveways, bus stops and on-street bays (cut patches, renderer.ts)
+    if (edgeLines(cls)) {
+      const eb = r.closed ? r.pts : trimPolyline(r.pts, r.a0!.edgeInset, r.a1!.edgeInset);
+      if (eb && eb.length >= 2) { const bbE = bboxOf(eb, cls.h + 0.5); for (const s of [1, -1]) fx.lines.push({ pts: eb, closed: r.closed, width: EDGE_W, color: WHITE, dash: null, r: rl, offset: s * (cls.h - EDGE_IN), bbox: bbE, edge: true }); }
     }
     const base = r.closed ? r.pts : trimPolyline(r.pts, r.a0!.lineInset, r.a1!.lineInset);
     if (base && base.length >= 2) {
