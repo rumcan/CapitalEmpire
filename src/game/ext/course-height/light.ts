@@ -32,10 +32,11 @@ export const HEIGHT_LIGHT_STRENGTH = clampHeightLight((file as { strength?: unkn
 /** the heights' exaggeration for the light (the course height is subtle: ±3 m), as the old hillshade's */
 export const LIGHT_EXAG = 2.2;
 /** T263 (#771): gentle ground's extra response. The light tilts the normal by the slope s (m per m) times
- *  LIGHT_EXAG × (1 + GENTLE_GAIN / (1 + (s / GENTLE_SLOPE)²)): a fairway's 1-3% rolls and a green's 1-2% tilt catch the light 4 to 6 times as
- *  much as they did, and it fades out on steep ground (a 20% bank 1.13 times, a 45% one the Ground height brush sculpts 1.03), so steep
- *  ground stays as it was. The lit slope still grows with the real one everywhere (the gain is under 8, so s times it never turns back) */
-export const GENTLE_GAIN = 6, GENTLE_SLOPE = 0.03;
+ *  LIGHT_EXAG × (1 + GENTLE_GAIN / (1 + (s / GENTLE_SLOPE)²)): a fairway's 1-3% rolls and a green's 1-2% tilt catch the light 6 to 8 times as
+ *  much as they did, a mound's 10% flank 2.6 times, and it fades out on steep ground (a 35% bank 1.1 times, a 45% one 1.06), so ground
+ *  sculpted steep with the Ground height brush stays as it was. The lit slope still grows with the real one everywhere (the gain is under 8,
+ *  so s times it never turns back) */
+export const GENTLE_GAIN = 7.5, GENTLE_SLOPE = 0.04;
 /** the light's normal tilt per metre per metre of slope at slope² s2: LIGHT_EXAG with the gentle ground's gain */
 export const lightExag = (s2: number) => LIGHT_EXAG * (1 + GENTLE_GAIN / (1 + s2 / (GENTLE_SLOPE * GENTLE_SLOPE)));
 /** the sky's share of the light on flat ground; the sun gives the rest */

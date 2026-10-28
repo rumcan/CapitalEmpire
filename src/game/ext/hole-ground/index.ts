@@ -37,8 +37,8 @@ export const HOLE_GROUND = {
   cross: { grade: 0.005, minLenM: 60, maxLenM: 100, satM: 20 },
   /** the rolls' share in the rough (they fade from 1 a sample past the playing surfaces to this 4 samples out) */
   rollRough: 0.25,
-  /** the mounds beside the fairway: height minM..maxM (lower ones likelier), radius 5 m + 3.5 m per metre of height
-   *  (flanks up to about 1 in 4, so the slope light reads them), one every gapMinM..gapMaxM */
+  /** the mounds beside the fairway: height minM..maxM (the upper half likelier, so they read in the slope light), radius 5 m + 3.5 m per metre
+   *  of height (flanks up to about 1 in 4), one every gapMinM..gapMaxM; round the green 0.7-1.3 m */
   mound: { minM: 0.5, maxM: 1.5, gapMinM: 35, gapMaxM: 70 },
   /** the green: its tilt (m/m, front low, back high), its front lifted liftMin..liftMax (m) off the approach, its plane held hold samples past
    *  its cells, blended out over blend */
@@ -128,7 +128,7 @@ export function rollKnots(seed: number, lengthM: number): Knots {
   s.push(at); v.push(h);
   while (at < lengthM + R.maxLenM) {
     const run = R.minLenM + (R.maxLenM - R.minLenM) * r(), top = Math.max(R.minM, Math.min(R.maxM, R.grade * run));
-    const swing = R.minM + (top - R.minM) * r();
+    const swing = R.minM + (top - R.minM) * Math.sqrt(r()); // the bigger swings likelier (the rolls read in the light)
     h = h >= 0 ? h - swing : h + swing;
     at += run; s.push(at); v.push(h);
   }
@@ -289,7 +289,7 @@ export function shapeHoleGround(inp: HoleGroundInput): HoleGroundShape {
   let side = rs() < 0.5 ? -1 : 1;
   for (let sM = Math.max(plan.fwStart + 15, 45) + rs() * 20; sM < L - gR - 20; sM += M.gapMinM + (M.gapMaxM - M.gapMinM) * rs()) {
     if (rs() > 0.15) {
-      const h = M.minM + (M.maxM - M.minM) * rs() ** 1.5, R = 5 + 3.5 * h;
+      const h = M.minM + (M.maxM - M.minM) * Math.sqrt(rs()), R = 5 + 3.5 * h;
       const hw = Math.max(9, widthAt(plan, sM, geom) / 2 + 3), cr = Math.max(30, hw + 2), off = Math.min(hw + 3 + 0.5 * R, cr - 0.2 * R);
       const q = nearAt(sM);
       feats.push({ kind: 'mound', x: q.x + (side * q.nx * off) / 2, y: q.y + (side * q.ny * off) / 2, h, r: R / 2 });
@@ -307,7 +307,7 @@ export function shapeHoleGround(inp: HoleGroundInput): HoleGroundShape {
   }
   const cnt = 2 + Math.floor(rs() * 3);
   for (let m = 0; m < cnt; m++) {
-    const deg = 60 + (240 * (m + 0.5 + 0.6 * (rs() - 0.5))) / cnt, h = M.minM + 0.7 * rs(), R = 5 + 3 * h;
+    const deg = 60 + (240 * (m + 0.5 + 0.6 * (rs() - 0.5))) / cnt, h = M.minM + 0.2 + 0.6 * rs(), R = 5 + 3 * h;
     const gap = Math.abs(((((deg - hollowDeg) % 360) + 540) % 360) - 180); // degrees between it and the swale (0..180)
     if (gap < 45) continue;
     const u = dirAt(deg), dist = gR + 14 + 0.3 * R;

@@ -47,7 +47,7 @@ describe('course height light: the direction of the light', () => {
   it('T263: gentle ground catches the light (a fairway roll of 2% several times as much as by the exaggeration alone), steep banks stay as they were', () => {
     // the lit slope grows with the real one; the gain is strong on gentle ground and fades on steep
     let prev = 0; for (let s = 0; s <= 1.0001; s += 0.0005) { const v = s * lightExag(s * s); assert.ok(v >= prev - 1e-12, `monotonic at ${s}`); prev = v; }
-    assert.ok(lightExag(0.02 ** 2) / LIGHT_EXAG > 4, 'a 2% roll: more than 4 times'); assert.ok(lightExag(0.45 ** 2) / LIGHT_EXAG < 1.04, 'a 45% bank: as it was');
+    assert.ok(lightExag(0.02 ** 2) / LIGHT_EXAG > 4, 'a 2% roll: more than 4 times'); assert.ok(lightExag(0.45 ** 2) / LIGHT_EXAG < 1.07, 'a 45% bank: as it was');
     assert.equal(lightExag(0) / LIGHT_EXAG, 1 + GENTLE_GAIN);
     // a 2% slope down toward the sun's far side (facing it), 60 tiles across: plainly lit, and no highlight on so gentle a slope
     const ramp = field((x, y) => { const u = (x - 500) * SUN_TILE_DIR.x + (y - 500) * SUN_TILE_DIR.y; return Math.abs(x - 500) < 40 && Math.abs(y - 500) < 40 ? -0.04 * u + 1.6 : 0; }); // lower toward the sun
