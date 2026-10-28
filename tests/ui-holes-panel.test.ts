@@ -155,7 +155,7 @@ describe('T238: the brush shape and Edit hole\'s paint', () => {
     h = render(g);
     assert.match(h, /data-ground-height[^>]*aria-pressed="true"/);
     assert.match(h, /data-testid="ground-height"[\s\S]*>Raise<[\s\S]*aria-pressed="true"[^>]*>Lower<[\s\S]*>Smooth<[\s\S]*>Flatten<[\s\S]*6 tiles[\s\S]*Strength 3\/5/);
-    assert.match(h, /Drag on the map to lower the ground round hole 1/);
+    assert.match(h, /Drag to lower the ground[^<]*Earthworks cost[^<]*The tee, the green and the bends still drag; Esc puts it down\./);
     assert.match(h, />Handles only</);
     assert.doesNotMatch(h, /swatch-on/, 'no surface in hand with the height brush');
   });

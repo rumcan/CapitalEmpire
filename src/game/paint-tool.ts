@@ -628,6 +628,8 @@ export class PaintTool {
   get planOpen(): boolean { return this.mode === 'plan' || (this.editTool() && this.editPaint > 0 && this.wizard.base?.hole === this.editPaint); }
   /** T252: whether the tool's mode is one Edit hole can hold in hand (its surface brush, its Ground height), the plan's handles kept on the map */
   private editTool(): boolean { return this.mode === 'brush' || this.mode === 'height'; }
+  /** T252: whether the plan's handle is dragged or under the pointer (a press there is the plan's, not the brush's) */
+  private onHandle(): boolean { const w = this.wizard; return !!w.drag || (!!w.hover && w.hover.k !== 'line'); }
   /** T252: Edit hole with a tool in hand (a surface or the ground's height): its plan's handles still drag */
   get editInHand(): boolean { return this.editTool() && this.planOpen; }
   /** T238: Edit hole's brush: a Shape by hand surface that paints into the hole open in Edit hole (its cells join that hole; the plan stays
@@ -1627,9 +1629,9 @@ export class PaintTool {
   /** the overlay preview: the outline being drawn (draw); the selected area, shaded, with its handles (draw and pick); a drag's candidate that cannot be applied, in red; the hovered area (pick and erase) */
   drawPreview(v: PaintView) {
     // the plan's ghost, handles and Build pill (T238: under Edit hole's brush too)
-    if (this.planOpen) { if (this.frameTrees) this.drawFrameGhost(v); this.pill = drawWizard(v, this.wizard, this.mouse, typeof performance !== 'undefined' ? performance.now() : 0, reducedMotion(), this.frameTrees ? Math.max(0, this.host.frameCost?.() ?? 0) : 0); if (this.mode === 'plan') return; }
+    if (this.planOpen) { if (this.frameTrees) this.drawFrameGhost(v); this.pill = drawWizard(v, this.wizard, this.mouse, typeof performance !== 'undefined' ? performance.now() : 0, reducedMotion(), this.frameTrees ? Math.max(0, this.host.frameCost?.() ?? 0) : 0, this.mode !== 'height' || this.onHandle()); if (this.mode === 'plan') return; }
     if (this.mode === 'piece') { this.drawPiece(v); return; }
-    if (this.mode === 'height') { this.drawHeight(v); return; }
+    if (this.mode === 'height') { if (!(this.editInHand && this.onHandle())) this.drawHeight(v); return; } // T252: over a handle in Edit hole, the plan's label
     if (this.mode === 'draw') this.drawOutline(v);
     if (this.mode === 'hole') { this.drawHolePreview(v); return; }
     if (this.mode === 'brush') { this.drawBrush(v); return; }

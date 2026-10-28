@@ -98,7 +98,6 @@ function EditPaint({ game, looks, onLooks }: { game: Game; looks: boolean; onLoo
   const name = SURFACE_BRUSHES.find(b => b.kind === p.brushKind)?.name ?? '', keys = surfaceKeysOf(game);
   const pick = (k: BrushKind) => p.setEditBrush(on && p.brushKind === k ? null : k);
   const help = on ? `Drag on the map to paint ${name.toLowerCase()} into hole ${n}; the tee, the green and the bends still drag. Esc puts the brush down.`
-    : height ? `Drag on the map to ${p.heightMode} the ground round hole ${n}; the tee, the green and the bends still drag. Esc puts it down.`
     : `Pick a surface to paint into hole ${n} (keys 1–${keys}); the tee, the green and the bends still drag.`;
   return (
     <section className="mt-2" aria-label="Paint this hole" data-section="edit-paint">
@@ -110,8 +109,7 @@ function EditPaint({ game, looks, onLooks }: { game: Game; looks: boolean; onLoo
         <button className={`chip ${height ? 'chip-on' : ''}`} data-ground-height aria-pressed={height} aria-expanded={height} title="Ground height: raise, lower, smooth or flatten the ground round this hole (earthworks are paid for)" onClick={() => p.setEditHeight(height ? null : {})}>Ground height <span aria-hidden>{height ? '▾' : '▸'}</span></button>
         {(on || height) && <button className="chip" title="Put the brush down: the plan's handles alone (Esc)" onClick={() => p.setEditBrush(null)}>Handles only</button>}
       </div>
-      {height && <GroundHeight game={game} on={height} arm={() => p.setEditHeight()} />}
-      <p className="sub-line mt-1">{help}</p>
+      {height ? <GroundHeight game={game} on={height} arm={() => p.setEditHeight()} note="The tee, the green and the bends still drag; Esc puts it down." /> : <p className="sub-line mt-1">{help}</p>}
       <div className="mt-2">
         <LooksEntry game={game} looks={looks} onLooks={onLooks} arm={() => { if (!on) p.setEditBrush(p.brushKind); }} />
       </div>

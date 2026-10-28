@@ -114,8 +114,8 @@ export function LooksEntry({ game, looks, onLooks, arm }: { game: Game; looks: b
 /** Ground height (T252, shared by Shape by hand's More options and Edit hole: the owner, 2026-10-28: "add the sculpting too to raise and
  *  lower and flatten ground to the hole editing"): Raise, Lower, Smooth or Flatten, the brush's size and strength, and what a drag does.
  *  `on` is whether the height brush is in hand (its chips light up only then); `arm` takes it in hand first (Shape by hand: setHeight;
- *  Edit hole: setEditHeight, the plan's handles kept). Each stroke is one undo step */
-export function GroundHeight({ game, on, arm }: { game: Game; on: boolean; arm: () => void }) {
+ *  Edit hole: setEditHeight, the plan's handles kept); `note` ends its line (Edit hole: the handles still drag). Each stroke is one undo step */
+export function GroundHeight({ game, on, arm, note = '' }: { game: Game; on: boolean; arm: () => void; note?: string }) {
   const p = game.paint, set = (o: Parameters<typeof p.setHeight>[0]) => () => { if (!on) arm(); p.setHeight(o); };
   return (
     <div data-testid="ground-height">
@@ -130,7 +130,7 @@ export function GroundHeight({ game, on, arm }: { game: Game; on: boolean; arm: 
         <button className="chip" onClick={set({ level: p.heightLevel + 1 })}>Stronger</button>
         <span>{`Strength ${p.heightLevel}/5`}</span>
       </div>
-      <div className="sub-line mt-1.5">{`Drag to ${p.heightMode} the ground (subtle: ±3 m at most). Smooth evens out bumps, Flatten brings it back to level. Roads stay flat. [ ] size.${game.golfMode ? ` Earthworks cost $${EARTHWORK_PER_M3} a m³.` : ''}`}</div>
+      <div className="sub-line mt-1.5">{`Drag to ${p.heightMode} the ground (subtle: ±3 m at most). Smooth evens out bumps, Flatten brings it back to level. Roads stay flat. [ ] size.${game.golfMode ? ` Earthworks cost $${EARTHWORK_PER_M3} a m³.` : ''}${note ? ` ${note}` : ''}`}</div>
     </div>
   );
 }
