@@ -31,7 +31,7 @@ export interface HoleCardView {
 }
 
 /** the draw order the card lists surfaces in when two have the same area (the playing ones first) */
-const ORDER: GolfSurface[] = ['green', 'tee', 'fairway', 'bunker', 'water', 'waste', 'fescue', 'rough'];
+const ORDER: GolfSurface[] = ['green', 'tee', 'fairway', 'bunker', 'water', 'waste', 'fescue', 'longGrass', 'rough'];
 
 /** hole n's surfaces in the course grid: each surface's cells (1 m² each) and, while some of them grow in, the latest month they are grown in
  *  (the game month scale: Game.holesGrowing's, shift months earlier: the grow cards). now: the grow-in month (Engine.growMonth) */

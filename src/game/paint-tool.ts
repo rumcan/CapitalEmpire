@@ -13,7 +13,7 @@ import { edgeProfileOf } from './paint-edges';
 import { computeSnapPiecePlacement, type CoursePieceArchetype, type CoursePieceHeightOp, type SnapPiecePlacement, type SnapTargetRoad } from './ext/course-snap';
 import { PIECE_BUTTONS, piecePropsOf, pieceAreas, pieceCost, pieceWhy, snapTargets } from './ext/course-pieces';
 import { CourseHeightJournal, applyCourseHeightBrush, brushBox, estimateCourseBrushM3, unionBox, type CourseHeightBrushDab, type CourseHeightBrushMode, type CourseHeightField, type CourseHeightStep, type CourseTileBox } from './ext/course-height';
-import { CELL_T, SURF, applyDiff, cellAt, cellCentre, diffCost, fillPolygon, paintCells, paintDisc, paintStroke, type Grid, type GridDiff, type PaintOpts } from './ext/course-grid';
+import { CELL_T, SURF, applyDiff, cellAt, cellCentre, diffCost, fillPolygon, paintCells, paintDisc, paintStroke, surfAbove, type Grid, type GridDiff, type PaintOpts } from './ext/course-grid';
 import { BLOB_STYLE } from './ext/course-blobs';
 import { BORDER_MAX_M, BORDER_MIN_M } from './ext/course-grid/patch';
 import { HEIGHT_RANGE, SURF_HEIGHT, defaultShadow } from './ext/course-walls';
@@ -92,7 +92,7 @@ export const BORDER_KINDS: Partial<Record<BrushKind, { s: number; band: string }
   bunker: { s: SURF.bunker, band: 'lip' }, water: { s: SURF.water, band: 'bank' },
 };
 /** the brush kinds that paint the course grid (the old painted-area border does nothing for them) */
-export const GRID_KINDS: readonly BrushKind[] = ['fairway', 'green', 'tee', 'rough', 'bunker', 'water', 'waste'];
+export const GRID_KINDS: readonly BrushKind[] = ['fairway', 'green', 'tee', 'rough', 'bunker', 'water', 'waste', 'longGrass'];
 /** the least ms between two re-draws of the course while a Border or Shadow slider is dragged (the last value always lands) */
 export const LOOK_MS = 120;
 /** the localStorage key of the edited brush presets */
@@ -839,7 +839,7 @@ export class PaintTool {
   brushCellCost(): ((x: number, y: number) => number) | null {
     const g = this.courseGrid(), s = g ? surfOfSurface(this.brushKind) : 0; if (!g || !s || this.rubOut || !this.host.golfMode?.()) return null;
     const h = this.brushHole, unit = unitBuildCost(SURF_SURFACE[s] ?? 'other', this.plantKind);
-    return (x, y) => { const i = cellAt(g, x, y); return i < 0 || (g.surf[i] === s && g.hole[i] === h) || g.surf[i]! > s ? 0 : unit; };
+    return (x, y) => { const i = cellAt(g, x, y); return i < 0 || (g.surf[i] === s && g.hole[i] === h) || surfAbove(g.surf[i]!, s) ? 0 : unit; };
   }
   /** the brush rules on grid g: 'below' (a stroke slides past the surfaces drawn above it, as the old layers did) and owned
    *  cells only; a rub out (T125) takes every cell rubWhy lets it (it lays the base over them, carved: no 'below', no course-grid rub) */
@@ -871,7 +871,7 @@ export class PaintTool {
     const g = this.courseGrid(), s = g ? surfOfSurface(this.brushKind) : 0; if (!g || !s) return null;
     if (this.rubOut) { const why = this.rubWhy(g); return (x, y) => { const i = cellAt(g, x, y); return i < 0 || !!why(i); }; }
     const o = this.gridOpts(g, false);
-    return (x, y) => { const i = cellAt(g, x, y); return i < 0 || (o.allow ? !o.allow(i) : false) || (o.over === 'below' && g.surf[i]! > s); };
+    return (x, y) => { const i = cellAt(g, x, y); return i < 0 || (o.allow ? !o.allow(i) : false) || (o.over === 'below' && surfAbove(g.surf[i]!, s)); };
   }
   /** why a Course brush dab would skip the cell at (x, y) right now ('' when it paints it; T108's footprint shows the reason), by the same rules
    *  as brushSkip; null when the brush paints areas */
@@ -883,7 +883,7 @@ export class PaintTool {
       if (rub) return rub(i);
       if (own) { const c = cellCentre(g, i); if (!own(c.x, c.y)) return LAND_WHY[this.host.landWhy?.(c.x, c.y) || 'off']; }
       if (practiceSurf(s) && this.host.practiceAt) { const c = cellCentre(g, i); if (this.host.practiceAt(c.x, c.y)) return PRACTICE_BRUSH_WHY; }
-      const top = g.surf[i]!, nm = SURF_SURFACE[top]; return top > s ? `${nm ? nm[0]!.toUpperCase() + nm.slice(1) : 'A higher surface'} stays on top` : '';
+      const top = g.surf[i]!, nm = SURF_SURFACE[top]; const nn = nm?.replace(/[A-Z]/g, c => ' ' + c.toLowerCase()); return surfAbove(top, s) ? `${nn ? nn[0]!.toUpperCase() + nn.slice(1) : 'A higher surface'} stays on top` : '';
     };
   }
   /** fills polygon pts (tiles) into grid g as surface s for hole h (the brush rules): the cells that change are charged (1 m² each at the

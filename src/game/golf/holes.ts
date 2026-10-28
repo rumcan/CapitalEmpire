@@ -10,7 +10,7 @@ export interface Hole { n: number; par: 3 | 4 | 5; lengthM: number; memberLength
 export interface CourseStats { holes: number; par: number; lengthM: number; memberLengthM: number; mix: { 3: number; 4: number; 5: number } }
 
 /** the surfaces a ball can be played from (the off-course test) */
-const PLAYABLE = new Set<GolfSurface>(['green', 'fringe', 'tee', 'fairway', 'firstCut', 'rough', 'fescue', 'bunker']);
+const PLAYABLE = new Set<GolfSurface>(['green', 'fringe', 'tee', 'fairway', 'firstCut', 'rough', 'longGrass', 'fescue', 'bunker']);
 /** the spacing (tiles) at which the line is sampled for the off-course test */
 const STEP = 1;
 /** holes whose lines come closer than this (tiles, 60 m) are too close */

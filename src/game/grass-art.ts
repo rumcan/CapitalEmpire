@@ -68,6 +68,8 @@ export const PHOTO_TEX: PhotoTexEntry[] = [
   { tex: 'golfTee', src: golfTee, mix: 4, px: 128 },
   { tex: 'golfFirstCut', src: golfFirstCut, mix: 6, px: 128 },
   { tex: 'golfFescue', src: golfFescue, mix: 6, px: 128 },
+  // T238: the course's Long grass lays the rough's photo under the Grass setting 'photo' (painted, it wears the owner's rough paintings)
+  { tex: 'golfLongGrass', src: golfRough, mix: 6, px: 128 },
   { tex: 'bunkerSand', src: bunkerSand, mix: 4, px: 128 },
   { tex: 'wasteSand', src: wasteSand, mix: 6, px: 128 },
   { tex: 'pineStraw', src: pineStraw, mix: 4, px: 128 },
