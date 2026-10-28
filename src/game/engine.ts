@@ -4713,6 +4713,12 @@ export class Game {
       if (e.key === 'r' || e.key === 'R') { this.turnTeePlace(e.shiftKey); return; }
       if (e.key === ']' || e.key === '[') { this.sizeTeePlace(e.key === ']'); return; }
     }
+    // T268: with the hole card open in Select, Ctrl+Z and Ctrl+Y take back the course's steps (a tee placed, moved or removed from the card)
+    if (this.holeCardHole !== null && !this.paintOn && (e.ctrlKey || e.metaKey) && !e.altKey) {
+      const k = e.key.toLowerCase();
+      if (k === 'z' && !e.shiftKey) { e.preventDefault(); this.paint.undoTop(); return; }
+      if (k === 'y' || (k === 'z' && e.shiftKey)) { e.preventDefault(); this.paint.redoTop(); return; }
+    }
     if (this.clubPlacing && this.tool === 'course' && (e.key === 'r' || e.key === 'R')) {
       this.bizRot = !this.bizRot; const h = this.bizHover; if (h) this.clubUpdate(h.mx, h.my); this.emit();
       return;
