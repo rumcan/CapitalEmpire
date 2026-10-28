@@ -1,0 +1,226 @@
+{
+  "purpose": "Temporary page-only review selections; no saved owner mappings changed.",
+  "readouts": [
+    {
+      "tag": "accepted-green-fringe",
+      "name": "near-30",
+      "band": "near",
+      "zoom": 0.3,
+      "scale": 0.5,
+      "dpr": 1,
+      "revision": "725301173fe5",
+      "fams": [
+        {
+          "id": "putting-green-finished",
+          "materialId": "painted:putting-green",
+          "name": "Putting green (fine turf)",
+          "surfaces": [
+            "green"
+          ],
+          "set": "near-v1",
+          "provisional": false,
+          "native": [
+            1742,
+            902
+          ],
+          "ids": [
+            "tile-01",
+            "tile-02",
+            "tile-03",
+            "tile-04"
+          ],
+          "cells": 9,
+          "areas": 3.6657917982999884,
+          "across": 1.8369690011481057,
+          "down": 1.9955654101995564,
+          "tileW": 2903.3333333333335,
+          "tileH": 1503.3333333333335,
+          "screenPx": 871
+        },
+        {
+          "id": "fringe",
+          "materialId": "painted:fringe",
+          "name": "Fringe",
+          "surfaces": [
+            "fringe"
+          ],
+          "set": "near-v1",
+          "provisional": false,
+          "native": [
+            1742,
+            902
+          ],
+          "ids": [
+            "tile-01",
+            "tile-02",
+            "tile-03",
+            "tile-04"
+          ],
+          "cells": 9,
+          "areas": 3.6657917982999884,
+          "across": 1.8369690011481057,
+          "down": 1.9955654101995564,
+          "tileW": 2903.3333333333335,
+          "tileH": 1503.3333333333335,
+          "screenPx": 871
+        }
+      ]
+    },
+    {
+      "tag": "accepted-green-fringe",
+      "name": "mid-8",
+      "band": "mid",
+      "zoom": 0.08,
+      "scale": 0.39999999999999997,
+      "dpr": 1,
+      "revision": "725301173fe5",
+      "fams": [
+        {
+          "id": "putting-green-finished",
+          "materialId": "painted:putting-green",
+          "name": "Putting green (fine turf)",
+          "surfaces": [
+            "green"
+          ],
+          "set": "mid-v2",
+          "provisional": false,
+          "native": [
+            1744,
+            900
+          ],
+          "ids": [
+            "tile-01",
+            "tile-02",
+            "tile-03",
+            "tile-04"
+          ],
+          "cells": 12,
+          "areas": 5.73394495412844,
+          "across": 2.293577981651376,
+          "down": 2.5,
+          "tileW": 8720,
+          "tileH": 4500,
+          "screenPx": 697.5999999999999
+        },
+        {
+          "id": "fringe",
+          "materialId": "painted:fringe",
+          "name": "Fringe",
+          "surfaces": [
+            "fringe"
+          ],
+          "set": "mid-v1",
+          "provisional": false,
+          "native": [
+            1742,
+            902
+          ],
+          "ids": [
+            "tile-01",
+            "tile-02",
+            "tile-03",
+            "tile-04"
+          ],
+          "cells": 12,
+          "areas": 5.727799684843732,
+          "across": 2.296211251435132,
+          "down": 2.4944567627494454,
+          "tileW": 8710,
+          "tileH": 4510,
+          "screenPx": 696.8
+        }
+      ]
+    },
+    {
+      "tag": "accepted-green-fringe",
+      "name": "far-2",
+      "band": "far",
+      "zoom": 0.02,
+      "scale": 0.39999999999999997,
+      "dpr": 1,
+      "revision": "725301173fe5",
+      "fams": [
+        {
+          "id": "putting-green-finished",
+          "materialId": "painted:putting-green",
+          "name": "Putting green (fine turf)",
+          "surfaces": [
+            "green"
+          ],
+          "set": "far-v2",
+          "provisional": false,
+          "native": [
+            1742,
+            902
+          ],
+          "ids": [
+            "tile-01",
+            "tile-02",
+            "tile-03",
+            "tile-04"
+          ],
+          "cells": 9,
+          "areas": 5.727799684843732,
+          "across": 2.296211251435132,
+          "down": 2.4944567627494454,
+          "tileW": 34840,
+          "tileH": 18040,
+          "screenPx": 696.8
+        },
+        {
+          "id": "fringe",
+          "materialId": "painted:fringe",
+          "name": "Fringe",
+          "surfaces": [
+            "fringe"
+          ],
+          "set": "far-v1",
+          "provisional": false,
+          "native": [
+            1742,
+            902
+          ],
+          "ids": [
+            "tile-01",
+            "tile-02",
+            "tile-03",
+            "tile-04"
+          ],
+          "cells": 9,
+          "areas": 5.727799684843732,
+          "across": 2.296211251435132,
+          "down": 2.4944567627494454,
+          "tileW": 34840,
+          "tileH": 18040,
+          "screenPx": 696.8
+        }
+      ]
+    }
+  ],
+  "assetRequests": [
+    "http://localhost:5188/src/assets/ground/painted/tiles/putting-green-finished/near/tile-01.webp",
+    "http://localhost:5188/src/assets/ground/painted/tiles/putting-green-finished/near/tile-02.webp",
+    "http://localhost:5188/src/assets/ground/painted/tiles/putting-green-finished/near/tile-03.webp",
+    "http://localhost:5188/src/assets/ground/painted/tiles/putting-green-finished/near/tile-04.webp",
+    "http://localhost:5188/src/assets/ground/painted/tiles/fringe/near/tile-01.webp",
+    "http://localhost:5188/src/assets/ground/painted/tiles/fringe/near/tile-02.webp",
+    "http://localhost:5188/src/assets/ground/painted/tiles/fringe/near/tile-03.webp",
+    "http://localhost:5188/src/assets/ground/painted/tiles/fringe/near/tile-04.webp",
+    "http://localhost:5188/src/assets/ground/painted/tiles/putting-green-finished/mid/tile-01.webp",
+    "http://localhost:5188/src/assets/ground/painted/tiles/putting-green-finished/mid/tile-02.webp",
+    "http://localhost:5188/src/assets/ground/painted/tiles/putting-green-finished/mid/tile-03.webp",
+    "http://localhost:5188/src/assets/ground/painted/tiles/putting-green-finished/mid/tile-04.webp",
+    "http://localhost:5188/src/assets/ground/painted/tiles/fringe/mid/tile-01.webp",
+    "http://localhost:5188/src/assets/ground/painted/tiles/fringe/mid/tile-02.webp",
+    "http://localhost:5188/src/assets/ground/painted/tiles/fringe/mid/tile-03.webp",
+    "http://localhost:5188/src/assets/ground/painted/tiles/fringe/mid/tile-04.webp",
+    "http://localhost:5188/src/assets/ground/painted/tiles/putting-green-finished/far/tile-01.webp",
+    "http://localhost:5188/src/assets/ground/painted/tiles/putting-green-finished/far/tile-02.webp",
+    "http://localhost:5188/src/assets/ground/painted/tiles/putting-green-finished/far/tile-03.webp",
+    "http://localhost:5188/src/assets/ground/painted/tiles/putting-green-finished/far/tile-04.webp",
+    "http://localhost:5188/src/assets/ground/painted/tiles/fringe/far/tile-01.webp",
+    "http://localhost:5188/src/assets/ground/painted/tiles/fringe/far/tile-02.webp",
+    "http://localhost:5188/src/assets/ground/painted/tiles/fringe/far/tile-03.webp",
+    "http://localhost:5188/src/assets/ground/painted/tiles/fringe/far/tile-04.webp"
+  ]
+}

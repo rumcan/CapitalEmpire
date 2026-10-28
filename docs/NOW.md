@@ -27,7 +27,7 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 ### In flight
 **Accepted green/fringe delivery (T217 #569, `lead/terrain-green-fringe-20261027`):** publish the two new canonical handoffs and their
 source closure; add the complete green set as `putting-green-finished`, retaining the legacy pinned green and every curated surface choice.
-Fringe keeps its existing ID and PNGs while gaining canonical acceptance. Fresh main 64b8063 merged preserving all 31 existing families and owner surface choices; scoped import adds only the complete green option and fringe canonical metadata. Typecheck and 24 focused importer/terrain tests pass. Next: actual game/Studio evidence, source upload retry and PR. #486 source delivery is merged.
+Fringe keeps its existing ID and PNGs while gaining canonical acceptance. PR #726 is uploaded, fresh main 8e7742d merged, typecheck and 24 focused tests pass. All 345 existing images, 30 other family records and current surface choices are unchanged. Mature-sod actual game NEAR/MID/FAR and Studio evidence is in art/theme-consistency/reviews/T217-green-fringe/; temporary review choices only. MID surrounding chunk differences remain and current MID/FAR coverage is 5.73 tiles, documented honestly. Next: lead review/merge; no owner mapping reset. #486 source delivery is merged.
 
 **Accepted terrain source delivery (#383, `lead/terrain-ready-20261026`):** the four accepted families' canonical selections, native PNGs,
 provenance and review proofs are being committed from the art checkout. T170 already packed these exact accepted long-grass hashes;
