@@ -75,9 +75,9 @@ describe('the Holes panel after hole 1 (stage 2)', () => {
     assert.match(h, /Hole 1 · par 4 · 342 m · ready/);
     assert.match(h, /3 holes · par 12 · 972 m/);
     assert.match(h, /data-section="shape"/);
-    assert.equal((h.match(/data-swatch=/g) ?? []).length, 8, 'eight surfaces at stage 2 (T222: the Waste area with them, T238 Long grass; the cart path waits for stage 3)');
-    assert.match(h, /data-swatch="longGrass"[^>]*title="Long grass \(key 9\)"/);
-    assert.match(h, /keys 1–9/);
+    assert.equal((h.match(/data-swatch=/g) ?? []).length, 8, 'eight surfaces at stage 2 (T222: the Waste area with them, T238 Long grass; T252: no cart path brush)');
+    assert.match(h, /data-swatch="longGrass"[^>]*title="Long grass \(key 8\)"/);
+    assert.match(h, /keys 1–8/);
     assert.match(h, /data-section="more"[\s\S]*aria-expanded="false"[\s\S]*More options[\s\S]*shapes · my looks · planting · more/);
     assert.doesNotMatch(h, /Saved holes|My looks<\/span>/, 'More options is collapsed');
   });
@@ -132,7 +132,7 @@ describe('T238: the brush shape and Edit hole\'s paint', () => {
     assert.equal((h.match(/data-swatch=/g) ?? []).length, 8, 'the stage\'s surfaces, Long grass with them');
     assert.doesNotMatch(h, /swatch-on/, 'none in hand yet: the plan\'s handles alone');
     assert.match(h, /aria-label="Brush shape"/); assert.match(h, />Erase</);
-    assert.match(h, /Pick a surface to paint into hole 1 \(keys 1–9\)/);
+    assert.match(h, /Pick a surface to paint into hole 1 \(keys 1–8\)/);
     assert.match(h, /undoes a drag or a stroke/);
     assert.doesNotMatch(h, /data-section="shape"/, 'Shape by hand stays hidden under the card');
     p.mode = 'brush'; p.planOpen = true; p.brushKind = 'longGrass';
@@ -140,6 +140,24 @@ describe('T238: the brush shape and Edit hole\'s paint', () => {
     assert.match(h, /data-swatch="longGrass" aria-pressed="true"[^>]*class="swatch swatch-on"/);
     assert.match(h, />Handles only</);
     assert.match(h, /Drag on the map to paint long grass into hole 1/);
+  });
+  it("T252: Edit hole carries My looks (the surface in hand's look, course-wide) and Ground height (Raise, Lower, Smooth, Flatten, size, strength)", () => {
+    const g = fakeGame({ ...stage2, mode: 'plan' }), p = g.paint as unknown as Record<string, unknown>;
+    p.wizard = { step: 'shape', base: { hole: 1 }, hole: 1, plan: null, ghost: () => null, check: () => ({ ok: true, why: '' }), checks: () => [] };
+    p.editingHole = 1; p.heightR = 6; p.heightLevel = 3;
+    let h = render(g);
+    const sec = h.slice(h.indexOf('data-section="edit-paint"'));
+    assert.match(sec, /data-testid="looks-entry"[\s\S]*My looks[\s\S]*data-looks[^>]*>Fairway: /, "the looks entry, in Edit hole's paint section");
+    assert.match(sec, /every fairway on the course wears it, on every hole/, 'a look is course-wide');
+    assert.match(sec, /<button[^>]*data-ground-height[^>]*aria-pressed="false"[^>]*>Ground height/);
+    assert.doesNotMatch(sec, /data-testid="ground-height"/, 'its controls show once it is in hand');
+    p.mode = 'height'; p.planOpen = true; p.heightMode = 'lower';
+    h = render(g);
+    assert.match(h, /data-ground-height[^>]*aria-pressed="true"/);
+    assert.match(h, /data-testid="ground-height"[\s\S]*>Raise<[\s\S]*aria-pressed="true"[^>]*>Lower<[\s\S]*>Smooth<[\s\S]*>Flatten<[\s\S]*6 tiles[\s\S]*Strength 3\/5/);
+    assert.match(h, /Drag to lower the ground[^<]*Earthworks cost[^<]*The tee, the green and the bends still drag; Esc puts it down\./);
+    assert.match(h, />Handles only</);
+    assert.doesNotMatch(h, /swatch-on/, 'no surface in hand with the height brush');
   });
 });
 

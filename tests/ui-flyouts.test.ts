@@ -220,12 +220,12 @@ describe('the town footer\'s flyouts open upward, their deeper levels to the sid
 // tools as the concept's illustrated tiles (art 174), a grid of tiles per level; a tool with no tile keeps its icon
 describe('the tool tiles (T233)', () => {
   const tiles = (rows: readonly MenuRow[]) => rows.filter(r => !r.caption).map(r => `${r.label}${r.tile ? `=${r.tile}` : ''}`);
-  const C = ctx(true, null, { surfaces: [{ id: 'fairway', name: 'Fairway' }, { id: 'green', name: 'Green' }, { id: 'tee', name: 'Tee' }, { id: 'rough', name: 'Rough' }, { id: 'bunker', name: 'Bunker' }, { id: 'water', name: 'Water' }, { id: 'waste', name: 'Waste area' }, { id: 'path', name: 'Cart path' }, { id: 'longGrass', name: 'Long grass' }], propGroups: [{ id: 'plants', name: 'Plants' }, { id: 'water', name: 'Water' }, { id: 'stone', name: 'Stone' }, { id: 'furniture', name: 'Furniture' }] });
+  const C = ctx(true, null, { surfaces: [{ id: 'fairway', name: 'Fairway' }, { id: 'green', name: 'Green' }, { id: 'tee', name: 'Tee' }, { id: 'rough', name: 'Rough' }, { id: 'bunker', name: 'Bunker' }, { id: 'water', name: 'Water' }, { id: 'waste', name: 'Waste area' }, { id: 'longGrass', name: 'Long grass' }], propGroups: [{ id: 'plants', name: 'Plants' }, { id: 'water', name: 'Water' }, { id: 'stone', name: 'Stone' }, { id: 'furniture', name: 'Furniture' }] });
   const courseRows = menuOf(RAIL.find(r => r.id === 'course')!, C), fac = menuOf(RAIL.find(r => r.id === 'facilities')!, C);
   it('Course: Holes, Buildings, Cart paths & roads; New hole and Shape by hand; the surfaces (the Waste area keeps its mark); the Clubhouse', () => {
     assert.deepEqual(tiles(courseRows), ['Holes=green', 'Buildings=clubhouse', 'Cart paths & roads=cart-path', 'Tournament', 'Land for sale']);
     assert.deepEqual(tiles(find(courseRows, 'Holes').children!), ['New hole=tee', 'Your holes', 'Shape by hand=fairway']);
-    assert.deepEqual(tiles(find(courseRows, 'Holes', 'Shape by hand').children!), ['Fairway=fairway', 'Green=green', 'Tee=tee', 'Rough=rough', 'Bunker=bunker', 'Water=pond', 'Waste area', 'Cart path=cart-path', 'Long grass=rough']); // T238: Long grass wears the rough's tile
+    assert.deepEqual(tiles(find(courseRows, 'Holes', 'Shape by hand').children!), ['Fairway=fairway', 'Green=green', 'Tee=tee', 'Rough=rough', 'Bunker=bunker', 'Water=pond', 'Waste area', 'Long grass=rough']); // T238: Long grass wears the rough's tile; T252: no cart path brush (Cart paths & roads lays them)
     assert.equal(find(courseRows, 'Holes', 'Shape by hand', 'Waste area').mark, 'waste', 'no tile: its pebbles mark');
     assert.deepEqual(tiles(find(courseRows, 'Buildings').children!), ['Clubhouse=clubhouse', 'Halfway house']);
     assert.deepEqual(tiles(find(courseRows, 'Cart paths & roads').children!), ['Walking path', 'Gravel drive'], 'the classes stay a list under their families');

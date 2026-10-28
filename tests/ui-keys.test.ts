@@ -13,7 +13,7 @@ import { RAIL, drawerOf, railEntries, toolLock, toolsIn } from '../src/ui/rail-i
 import { KEY_PARTS, keySheet, numberedGroups, type KeySection } from '../src/ui/keymap';
 import { KeysSheet } from '../src/ui/KeysSheet';
 import { numberKeyUse } from '../src/game/tool-modes';
-import { BRUSH_PRESETS } from '../src/game/paint';
+import { SURFACE_BRUSHES } from '../src/game/paint';
 import { KEY_CLASSES } from '../src/game/network';
 import { KEYS as LAB_KEYS } from '../src/game/dev/lot-lab-ui';
 import type { Tool } from '../src/game/types';
@@ -67,7 +67,7 @@ describe('Help › Keys (T202)', () => {
     // a tool's keys in hand sit with it, from the lists they pick from
     const holes = s.find(x => x.id === 'in:course')!, roads = s.find(x => x.id === 'in:road')!;
     assert.equal(holes.part, 'course'); assert.equal(roads.part, 'town');
-    assert.equal(holes.rows[0]!.keys, `1 – ${BRUSH_PRESETS.length}`); assert.equal(roads.rows[0]!.keys, `1 – ${KEY_CLASSES.length}`);
+    assert.equal(holes.rows[0]!.keys, `1 – ${SURFACE_BRUSHES.length}`); assert.equal(roads.rows[0]!.keys, `1 – ${KEY_CLASSES.length}`);
     assert.equal(s.filter(x => x.id === 'in:props').length, 1, 'the Props tool\'s keys in hand once (it sits in both decorations)');
     // T206: the practice tools' keys and the plant brush's, under Course (Facilities); Paint's own under Town
     const prac = s.find(x => x.id === 'in:practice')!, plants = s.find(x => x.id === 'in:paint:alt')!, paint = s.find(x => x.id === 'in:paint')!;
@@ -137,7 +137,7 @@ describe('the number keys (T202)', () => {
     const sheet = keySheet({ golf: true, range: true, ui: null }), card = (id: string) => sheet.find(x => x.id === id)!;
     const nums = (id: string) => card(id).rows.filter(r => /^\d$/.test(r.keys)).map(r => [r.keys, r.what]);
     assert.equal(card('drawer').title, 'The course drawer (left)'); assert.equal(card('footer').title, 'The town footer (bottom)');
-    assert.deepEqual(nums('drawer'), [['1', 'the Driving range menu'], ['2', 'the Course menu'], ['3', 'the Facilities menu'], ['6', 'Bulldoze']], 'Bulldoze has no flyout: its number picks it');
+    assert.deepEqual(nums('drawer'), [['1', 'the Range menu'], ['2', 'the Course menu'], ['3', 'the Facilities menu'], ['6', 'Bulldoze']], 'Bulldoze has no flyout: its number picks it');
     assert.deepEqual(nums('footer'), [['4', 'the Traffic menu'], ['5', 'the Town decoration menu']]);
     assert.deepEqual(card('drawer').rows.map(r => r.keys), ['V', '1', '2', '3', '6', 'X'], 'Select first, Bulldoze\'s key last');
     // the classic town game: the course drawer's Course and Bulldoze, the footer's Traffic and Town decoration
@@ -151,17 +151,17 @@ describe('the number keys (T202)', () => {
       for (const id of ['drawer', 'footer'] as const) for (const r of s.find(x => x.id === id)!.rows.filter(x => /^\d$/.test(x.keys))) assert.equal(drawerOf(numberedGroups(g.golf, g.range)[+r.keys - 1]!), id === 'drawer' ? 'side' : 'footer');
     }
   });
-  it('2. a tool that uses them keeps them: Holes its surfaces (1-9), the town\'s Build its road classes (1-6); elsewhere they open the groups', () => {
+  it('2. a tool that uses them keeps them: Holes its surfaces (1-8), the town\'s Build its road classes (1-6); elsewhere they open the groups', () => {
     for (const n of [1, 2, 3, 4, 5, 6]) {
       for (const t of ['select', 'bulldoze', 'junction', 'lane', 'paint', 'props', 'path', 'buildings', 'greenkeeping', 'park', 'bus', 'toll'] as Tool[]) assert.deepEqual(numberKeyUse(t, n), { k: 'group', i: n - 1 }, `${t} ${n}`);
       assert.deepEqual(numberKeyUse('road', n), { k: 'class', i: n - 1 });
       assert.deepEqual(numberKeyUse('course', n), { k: 'surface', i: n - 1 });
     }
     assert.deepEqual(numberKeyUse('course', 7), { k: 'surface', i: 6 }, 'the seventh surface (the Waste area)');
-    assert.deepEqual(numberKeyUse('course', 8), { k: 'surface', i: 7 }, 'T222: the eighth surface (the cart path, after the Waste area)');
-    assert.deepEqual(numberKeyUse('course', 9), { k: 'surface', i: 8 }, 'T238: the ninth surface (Long grass, after the cart path)');
-    assert.equal(BRUSH_PRESETS[8]!.kind, 'longGrass');
-    assert.equal(BRUSH_PRESETS.length, 9, 'nine surfaces');
+    assert.deepEqual(numberKeyUse('course', 8), { k: 'surface', i: 7 }, 'T252: the eighth surface (Long grass, after the Waste area: no cart path brush)');
+    assert.equal(numberKeyUse('course', 9), null, 'T252: no ninth surface');
+    assert.equal(SURFACE_BRUSHES[7]!.kind, 'longGrass');
+    assert.equal(SURFACE_BRUSHES.length, 8, 'eight surfaces (T252: the cart path brush gone)');
     assert.equal(numberKeyUse('select', 7), null, 'no seventh group');
     assert.equal(numberKeyUse('road', 7), null);
     assert.equal(numberKeyUse('select', 0), null);

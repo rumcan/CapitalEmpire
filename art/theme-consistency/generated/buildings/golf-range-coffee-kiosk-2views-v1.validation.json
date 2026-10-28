@@ -1,0 +1,108 @@
+{
+  "mode": "RGBA",
+  "size": [
+    1774,
+    887
+  ],
+  "alphaExtrema": [
+    0,
+    255
+  ],
+  "transparentPixels": 827113,
+  "opaquePixels": 354,
+  "partialAlphaPixels": 746071,
+  "cornersAlpha": [
+    0,
+    0,
+    0,
+    0
+  ],
+  "fullSilhouetteBBox": [
+    0,
+    20,
+    1758,
+    887
+  ],
+  "leftBBox": [
+    0,
+    20,
+    887,
+    875
+  ],
+  "rightBBox": [
+    0,
+    20,
+    871,
+    887
+  ],
+  "centreAlphaMax": 1,
+  "alphaMostCommon": [
+    [
+      0,
+      827113
+    ],
+    [
+      253,
+      589756
+    ],
+    [
+      252,
+      95580
+    ],
+    [
+      1,
+      18013
+    ],
+    [
+      251,
+      11969
+    ],
+    [
+      250,
+      5063
+    ],
+    [
+      2,
+      2741
+    ],
+    [
+      249,
+      2718
+    ],
+    [
+      248,
+      1763
+    ],
+    [
+      3,
+      1550
+    ]
+  ],
+  "silhouetteThresholdBBoxes": {
+    "2": [
+      116,
+      76,
+      1646,
+      793
+    ],
+    "16": [
+      118,
+      78,
+      1644,
+      792
+    ],
+    "128": [
+      118,
+      79,
+      1643,
+      791
+    ],
+    "250": [
+      122,
+      80,
+      1642,
+      790
+    ]
+  },
+  "notes": "Native source preserved. Extremely faint alpha pixels reach image edges; inspect thresholded silhouette separately. No cleanup applied."
+}

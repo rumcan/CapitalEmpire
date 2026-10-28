@@ -92,7 +92,7 @@ test('2. it rubs out every course surface under it, whatever the brush and the h
   assert.deepEqual(at(g, 41.6, 40.2), [SURF.rough, 4, 0], 'rough stays rough, hole and all');
   assert.deepEqual(at(g, 41.6, 41.6), [SURF.none, 0, 0], 'the grass stays grass');
   // the rough brush gives back the land's own grass: every course surface, rough included
-  tool.setBrush('rough'); click(tool, 41, 41);
+  tool.setBrush('rough'); tool.rubOut = true; click(tool, 41, 41); // #730: a surface pick ends Erase
   for (const [x, y] of [[40.2, 40.2], [41.6, 40.2], [40.2, 41.6]] as const) assert.deepEqual(at(g, x, y), [SURF.none, 0, 0]);
 });
 

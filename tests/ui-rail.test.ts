@@ -202,13 +202,14 @@ describe('the two drawers: the course drawer on the left, the town footer along 
     assert.deepEqual(drawerEntries(es, 'side').filter(e => e.heading).map(e => [e.item.id, e.heading]), [['range', 'course']]);
     assert.deepEqual(drawerEntries(es, 'footer').filter(e => e.heading).map(e => [e.item.id, e.heading]), [['traffic', 'town']]);
   });
-  it('drawn: the course drawer (its heading, Bulldoze set off by a rule) and the footer (its heading, icon and name side by side; compact: the icons alone)', () => {
+  it('drawn: the course drawer (no heading words: a rule after Select, Bulldoze set off by a rule) and the footer (no heading; icon and name side by side; compact: the icons alone)', () => {
     const es = railEntries(null, true, 'select', { range: true }), s = draw(es, 'side'), f = draw(es, 'footer'), c = draw(es, 'footer', true);
     assert.match(s, /^<nav class="glass rail-nav[^"]*" aria-label="Club tools" data-testid="rail" data-drawer="side">/);
-    assert.match(s, />Course<\/div>/); assert.doesNotMatch(s, /data-rail="(traffic|towndecor)"/);
+    assert.doesNotMatch(s, /rail-heading|>Course<\/div>/, 'no heading words (the owner)'); assert.doesNotMatch(s, /data-rail="(traffic|towndecor)"/);
+    assert.match(s, /data-rail="select"[\s\S]*?<div class="rail-sep" aria-hidden="true"><\/div><button data-rail="range"/, 'a rule between Select and the Course groups');
     assert.match(s, /data-rail="facilities"[\s\S]*?<div class="rail-sep" aria-hidden="true"><\/div><button data-rail="bulldoze"/, 'a rule between Facilities and Bulldoze');
     assert.match(f, /^<nav class="glass rail-foot " aria-label="Town tools" data-testid="rail-footer" data-drawer="footer" data-compact="false">/);
-    assert.match(f, /<div class="rail-heading rail-heading-foot">Town<\/div>/);
+    assert.doesNotMatch(f, /rail-heading|>Town<\/div>/, 'no heading words (the owner)');
     assert.doesNotMatch(f, /data-rail="(select|range|course|facilities|bulldoze)"/);
     for (const [id, label] of [['traffic', 'Traffic'], ['towndecor', 'Town decoration']] as const) {
       assert.match(button(f, id), new RegExp(`class="rail-tab rail-tab-foot [^"]*"[^>]*>[\\s\\S]*?<img [^>]*width="24"[\\s\\S]*?<span>${label}</span>`), `${id}: its icon beside its name`);

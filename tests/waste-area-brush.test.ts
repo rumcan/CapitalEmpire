@@ -2,7 +2,7 @@
 // lays the course grid's waste surface (the desert: Painted › Waste area sand wears desert-run), priced like a bunker and played as sand. Headless.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { BRUSH_PRESETS } from '../src/game/paint';
+import { BRUSH_PRESETS, SURFACE_BRUSHES } from '../src/game/paint';
 import { GRID_KINDS, PaintTool } from '../src/game/paint-tool';
 import { SURF, CELL_T, cellAt, makeGrid } from '../src/game/ext/course-grid';
 import { SURF_SURFACE, gridAreas } from '../src/game/ext/course-grid/areas';
@@ -29,10 +29,11 @@ function click(g: ReturnType<typeof makeGrid>, tool: PaintTool): number[] {
   return out;
 }
 
-test('Shape by hand lists the Waste area: key 7 (keys 1-6 keep their surfaces; the cart path moves to 8), a grid brush, open from stage 2 with the bunker', () => {
+test('Shape by hand lists the Waste area: key 7 (keys 1-6 keep their surfaces), a grid brush, open from stage 2 with the bunker', () => {
   const last = BRUSH_PRESETS[6]!;
   assert.equal(last.kind, 'waste'); assert.equal(last.name, 'Waste area');
-  assert.deepEqual(BRUSH_PRESETS.map(b => b.kind), ['fairway', 'green', 'tee', 'rough', 'bunker', 'water', 'waste', 'path', 'longGrass'], 'keys 1-6 as before, the Waste area 7, the cart path (stage 3) 8, T238: Long grass 9');
+  assert.deepEqual(BRUSH_PRESETS.map(b => b.kind), ['fairway', 'green', 'tee', 'rough', 'bunker', 'water', 'waste', 'path', 'longGrass'], 'every brush look: the cart path keeps its own (old saves, the Stamps)');
+  assert.deepEqual(SURFACE_BRUSHES.map(b => b.kind), ['fairway', 'green', 'tee', 'rough', 'bunker', 'water', 'waste', 'longGrass'], 'the keys: 1-6 as before, the Waste area 7, T252: Long grass 8 (no cart path brush)');
   assert.ok(GRID_KINDS.includes('waste'), 'it paints the course grid');
   assert.equal(BRUSH_STAGE.waste, BRUSH_STAGE.bunker);
   assert.equal(surfaceOfTex(last.style.tex), 'waste', 'its texture is the waste surface\'s (the owner\'s preset for it, else the waste sand)');

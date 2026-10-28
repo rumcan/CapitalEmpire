@@ -1,0 +1,91 @@
+{
+  "schema": 1,
+  "id": "golf:range-sign",
+  "slug": "golf-range-sign",
+  "angleCode": "A",
+  "viewSet": "two-front-diagonals",
+  "viewOrder": [
+    "front-right",
+    "left-front"
+  ],
+  "widthM": 4,
+  "depthM": 0.5,
+  "heightM": 3,
+  "sourceRaw": {
+    "file": "art/theme-consistency/generated/props/golf-range-sign-2views-v1.png",
+    "sha256": "ca0640fd17322a611210f9a3eed5ff1532a38ac779546f21b11cecbe7aa11b0b"
+  },
+  "sourceProvenance": {
+    "file": "art/theme-consistency/generated/props/golf-range-sign-2views-v1.provenance.json",
+    "sha256": "4759b57dc188169012ac16125cbd5d727709967b90928e98476d2e6e668b08af"
+  },
+  "output": "art/theme-consistency/generated/props/golf-range-sign-2views-v1.png",
+  "sha256": "ca0640fd17322a611210f9a3eed5ff1532a38ac779546f21b11cecbe7aa11b0b",
+  "dimensions": [
+    1774,
+    887
+  ],
+  "transparent": true,
+  "processing": {
+    "operation": "Lossless native half crops only; original true alpha preserved, no keying, pixel editing, resampling, rotation, mirror or generation.",
+    "date": "2026-10-28"
+  },
+  "alpha": {
+    "hasAlpha": true,
+    "fullyClear": 1093736,
+    "clearFraction": 0.6950807670358136,
+    "partialAlpha": 479488
+  },
+  "views": [
+    {
+      "name": "front-right",
+      "file": "art/theme-consistency/generated/props/golf-range-sign-2views-v1/front-right.native.png",
+      "sha256": "4a1216f8ea1a16045ce0cde3bd7064e16604a0ed9a8a7a036464f5657b447e7c",
+      "sourceRect": {
+        "left": 0,
+        "top": 0,
+        "width": 887,
+        "height": 887
+      },
+      "boundsAbove8": {
+        "left": 100,
+        "top": 103,
+        "width": 680,
+        "height": 723
+      },
+      "fullyClear": 546281,
+      "lowAlpha1to8": 19043,
+      "visibleAbove8": 221445,
+      "outerBoundaryVisible": 0
+    },
+    {
+      "name": "left-front",
+      "file": "art/theme-consistency/generated/props/golf-range-sign-2views-v1/left-front.native.png",
+      "sha256": "65ec5539801b1d7b09d1711a7417a8774d2c1d56230c8112f9d1c16972cf669c",
+      "sourceRect": {
+        "left": 887,
+        "top": 0,
+        "width": 887,
+        "height": 887
+      },
+      "boundsAbove8": {
+        "left": 123,
+        "top": 120,
+        "width": 664,
+        "height": 706
+      },
+      "fullyClear": 547455,
+      "lowAlpha1to8": 13994,
+      "visibleAbove8": 225320,
+      "outerBoundaryVisible": 0
+    }
+  ],
+  "appearanceDecision": {
+    "file": "art/theme-consistency/generated/props/golf-range-sign-2views-v1/review/appearance-decision.json",
+    "sha256": "7be6d5543e453e1dd73be4268985783ce1a92378dddc7231bde1c9819a61a8e6"
+  },
+  "visualReviewStatus": "accepted-style-alpha-distinct-views",
+  "geometryReviewStatus": "pending",
+  "physicalCalibrationStatus": "pending",
+  "integrationStatus": "pending-geometry-and-physical-calibration"
+}

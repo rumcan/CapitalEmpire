@@ -1,7 +1,7 @@
 // The Paint tool's state and input (docs/PAINT-TOOL.md "The tool (UI)"): drawing outlines by clicks or a lasso, picking, erasing, the shape handles of the selected area, and the preview. No React; the engine and PaintPanel call it.
 import type { LotPatch } from './ground-protocol';
 import { lookChanged } from './course-look';
-import { BORDER_TEXES, BRUSH_PRESETS, assignStyle, borderW, drawZ, DEFAULT_STYLE, MAX_PTS, MAX_SIDE, PAINT_TEXES, areaAt, boxOf, checkArea, clampStyle, crossings, fromTuples, insertCorner, insidePoly, moveCorner, polyBox, removeCorner, roundCorners, rotatePts, scalePts, simplify, snapPt, toTuple, translatePts, type BrushKind, type PaintArea, type PaintBox, type PaintTuple } from './paint';
+import { BORDER_TEXES, BRUSH_PRESETS, SURFACE_BRUSHES, assignStyle, borderW, drawZ, DEFAULT_STYLE, MAX_PTS, MAX_SIDE, PAINT_TEXES, areaAt, boxOf, checkArea, clampStyle, crossings, fromTuples, insertCorner, insidePoly, moveCorner, polyBox, removeCorner, roundCorners, rotatePts, scalePts, simplify, snapPt, toTuple, translatePts, type BrushKind, type PaintArea, type PaintBox, type PaintTuple } from './paint';
 import { dab, fillPoly, stroke as brushStroke, trace as traceMask, type Mask } from './brush';
 import { MAP } from './iso';
 import { holePreset, kindOfTex, placeHole, storedHolePreset, type HolePreset, type PresetProp, type StoredHole } from './golf/holepreset';
@@ -624,17 +624,35 @@ export class PaintTool {
    *  and Ctrl+Y does them again in turn (the strokes are the course's own undo steps) */
   private editMarks: number[] = [];
   private editRedo: number[] = [];
-  /** whether New hole's editor is on screen: plan mode, or Edit hole with a brush in hand (T238) */
-  get planOpen(): boolean { return this.mode === 'plan' || (this.mode === 'brush' && this.editPaint > 0 && this.wizard.base?.hole === this.editPaint); }
+  /** whether New hole's editor is on screen: plan mode, or Edit hole with a brush in hand (T238: a surface; T252: the ground's height) */
+  get planOpen(): boolean { return this.mode === 'plan' || (this.editTool() && this.editPaint > 0 && this.wizard.base?.hole === this.editPaint); }
+  /** T252: whether the tool's mode is one Edit hole can hold in hand (its surface brush, its Ground height), the plan's handles kept on the map */
+  private editTool(): boolean { return this.mode === 'brush' || this.mode === 'height'; }
+  /** T252: whether the plan's handle is dragged or under the pointer (a press there is the plan's, not the brush's) */
+  private onHandle(): boolean { const w = this.wizard; return !!w.drag || (!!w.hover && w.hover.k !== 'line'); }
+  /** T252: Edit hole with a tool in hand (a surface or the ground's height): its plan's handles still drag */
+  get editInHand(): boolean { return this.editTool() && this.planOpen; }
   /** T238: Edit hole's brush: a Shape by hand surface that paints into the hole open in Edit hole (its cells join that hole; the plan stays
    *  open); null puts the brush down (the plan's handles alone, as Edit hole opened). False when no built hole is open */
   setEditBrush(kind: BrushKind | null): boolean {
     const n = this.editingHole; if (!n) return false;
     if (this.wizard.drag) this.wizard.release();
-    if (!kind) { if (this.mode === 'brush') { this.cancel(); this.mode = 'plan'; this.editPaint = 0; this.pill = null; this.host.emit(); } return true; }
+    if (!kind) { if (this.editTool()) { this.cancel(); this.mode = 'plan'; this.editPaint = 0; this.pill = null; this.host.emit(); } return true; } // T252: the height brush too
     this.cancel(); this.dropRun();
     this.mode = 'brush'; this.editPaint = n; this.brushHole = n; this.brushKind = kind; this.rubOut = false; this.style = { ...this.brush[kind].style };
     this.selected = 0; this.hover = 0; this.hoverH = null; this.host.emit(); return true;
+  }
+  /** T252 (the owner, 2026-10-28: "add the sculpting too to raise and lower and flatten ground to the hole editing"): Edit hole's Ground height,
+   *  the height brush (Raise, Lower, Smooth, Flatten, its size and strength: setHeight's settings) working in the hole open in Edit hole, the
+   *  plan kept open: its handles still drag; each stroke is one undo step, ordered against the plan's own (undoTop). Picking a surface puts it
+   *  down (setEditBrush), and null puts it down for the handles alone. False when no built hole is open */
+  setEditHeight(o: { mode?: CourseHeightBrushMode; r?: number; level?: number } | null = {}): boolean {
+    const n = this.editingHole; if (!n) return false;
+    if (!o) return this.setEditBrush(null);
+    if (this.wizard.drag) this.wizard.release();
+    this.cancel(); this.dropRun();
+    this.mode = 'height'; this.editPaint = n; this.brushHole = n; this.rubOut = false;
+    this.setHeight(o); return true;
   }
   /** leaves Edit hole's brush (another tool or mode, Done, Build, Cancel): its stroke marks go with it */
   private leaveEditPaint() { this.editPaint = 0; this.editMarks.length = 0; this.editRedo.length = 0; }
@@ -834,7 +852,7 @@ export class PaintTool {
     if (!props && !t.spent && same && !height && !grid && !plans) return;
     this.undos.push({ label: t.label, before: t.before, after, props, spent: t.spent, height, grid, plans }); if (this.undos.length > UNDO_MAX) this.undos.shift();
     // T238: a stroke laid in Edit hole is ordered against the plan's own steps (undoTop); the course's redo goes, and Edit hole's with it
-    if (this.mode === 'brush' && this.planOpen && grid && !plans) this.editMarks.push(this.wizard.depth);
+    if (this.editInHand && (grid || height) && !plans) this.editMarks.push(this.wizard.depth); // T252: a height stroke too
     this.editRedo.length = 0;
     // a few big grid steps (a whole preset hole, a long stroke) can outweigh a hundred small ones: the steps are capped by their cells too
     let cells = 0; for (const u of this.undos) cells += u.grid?.n ?? 0;
@@ -1084,7 +1102,8 @@ export class PaintTool {
   heightDab(t: { x: number; y: number }): CourseHeightBrushDab { return { x: t.x, y: t.y, radiusTiles: this.heightR, mode: this.heightMode, strength: this.heightMode === 'raise' || this.heightMode === 'lower' ? 0.1 * this.heightLevel : 0.2 * this.heightLevel }; }
   /** height mode with these settings (mode, radius 1..32, level 1..5) */
   setHeight(o: { mode?: CourseHeightBrushMode; r?: number; level?: number } = {}) {
-    this.leaveEditPaint(); this.mode = 'height'; if (o.mode !== undefined) this.heightMode = o.mode;
+    if (!(this.mode === 'height' && this.editPaint)) this.leaveEditPaint(); // T252: Edit hole's Ground height keeps its hole open as it changes
+    this.mode = 'height'; if (o.mode !== undefined) this.heightMode = o.mode;
     if (o.r !== undefined) this.heightR = Math.min(32, Math.max(1, Math.round(o.r)));
     if (o.level !== undefined) this.heightLevel = Math.min(5, Math.max(1, Math.round(o.level)));
     this.cancel(); this.selected = 0; this.hover = 0; this.hoverH = null; this.host.emit();
@@ -1178,7 +1197,7 @@ export class PaintTool {
   /** the cursor over the overlay: a grab while dragging, a handle's own cursor over it, else the crosshair */
   get cursorStyle(): string {
     if (this.mode === 'plan') { const w = this.wizard; return w.drag ? 'grabbing' : w.hover ? (w.hover.k === 'line' || w.hover.k === 'add' ? 'copy' : 'grab') : w.lineHole ? 'pointer' : 'crosshair'; }
-    if (this.mode === 'brush' && this.planOpen) { const w = this.wizard; if (w.drag) return 'grabbing'; if (w.hover && w.hover.k !== 'line') return w.hover.k === 'add' ? 'copy' : 'grab'; } // T238
+    if (this.editInHand) { const w = this.wizard; if (w.drag) return 'grabbing'; if (w.hover && w.hover.k !== 'line') return w.hover.k === 'add' ? 'copy' : 'grab'; } // T238, T252
     if (this.drag) return 'grabbing';
     const g = this.hoverH;
     if (!g || !this.selected) return 'crosshair';
@@ -1196,7 +1215,7 @@ export class PaintTool {
   /** a press on tile t (css px mx, my): a handle of the selected area starts a drag; else draw waits for the release (a click or a lasso) and deselects; pick selects the area under it; erase removes it */
   pointerDown(t: { x: number; y: number }, mx: number, my: number, alt = false) {
     if (this.mode === 'plan') { this.planDown(t, mx, my); return; }
-    if (this.mode === 'brush' && this.planOpen && this.planPress(mx, my)) { this.planDown(t, mx, my); return; } // T238: Edit hole's handles first
+    if (this.editInHand && this.planPress(mx, my)) { this.planDown(t, mx, my); return; } // T238: Edit hole's handles first (T252: under the height brush too)
     const sel = this.selectedArea();
     if (sel) { const g = this.grabAt(sel, t, mx, my); if (g) { this.startDrag(sel, g, t); this.host.emit(); return; } }
     if (this.mode === 'hole') { this.placeHoleAt(t); return; }
@@ -1226,7 +1245,7 @@ export class PaintTool {
       if (h?.k === 'bend' && this.wizard.removeBend(h.i)) { this.host.emit(); return true; }
       return false;
     }
-    if (this.mode === 'brush' && this.planOpen && this.wizard.step === 'shape') { const h = this.wizard.pick(mx, my, this.toCss()); if (h?.k === 'bend' && this.wizard.removeBend(h.i)) { this.host.emit(); return true; } } // T238
+    if (this.editInHand && this.wizard.step === 'shape') { const h = this.wizard.pick(mx, my, this.toCss()); if (h?.k === 'bend' && this.wizard.removeBend(h.i)) { this.host.emit(); return true; } } // T238
     if (this.runOn() && this.runPts.length) { this.runRight = { mx, my }; return false; } // Run (T122): the release finishes it; a drag pans
     const sel = this.selectedArea();
     const g = sel ? this.grabAt(sel, t, mx, my) : null;
@@ -1238,7 +1257,7 @@ export class PaintTool {
   pointerMove(t: { x: number; y: number } | null, mx: number, my: number, shift = false) {
     this.cursor = t; this.mouse = { mx, my };
     // T238: Edit hole with a brush in hand: a handle's drag is the plan's; otherwise the handles light up under the pointer as it paints
-    if (this.mode === 'brush' && this.planOpen && !this.wizard.drag && !this.stroke) { const w = this.wizard, was = w.hover; w.move(t, mx, my, this.toCss()); if (was?.k !== w.hover?.k || was?.i !== w.hover?.i) this.host.emit(); }
+    if (this.editInHand && !this.wizard.drag && !this.stroke && !this.heighting) { const w = this.wizard, was = w.hover; w.move(t, mx, my, this.toCss()); if (was?.k !== w.hover?.k || was?.i !== w.hover?.i) this.host.emit(); }
     if (this.mode === 'plan' || (this.planOpen && this.wizard.drag)) {
       const w = this.wizard, was = w.drag ? null : w.hover;
       w.move(t, mx, my, this.toCss());
@@ -1527,9 +1546,9 @@ export class PaintTool {
     }
     // T238: in Edit hole the number keys pick its brush (the surface's key in Shape by hand); with the brush in hand Esc puts it down (the
     // stroke in hand first), and Enter, R and Delete stay the plan's ([ ] size the brush)
-    if (this.editingHole && e.key >= '1' && e.key <= '9' && !e.altKey) { const b = BRUSH_PRESETS[+e.key - 1]; if (b) { this.setEditBrush(b.kind); return true; } }
-    if (this.mode === 'brush' && this.planOpen) {
-      if (e.key === 'Escape') { if (this.stroke) { this.cancel(); this.host.emit(); } else this.setEditBrush(null); return true; }
+    if (this.editingHole && e.key >= '1' && e.key <= '9' && !e.altKey) { const b = SURFACE_BRUSHES[+e.key - 1]; if (b) { this.setEditBrush(b.kind); return true; } }
+    if (this.editInHand) { // T252: the height brush too
+      if (e.key === 'Escape') { if (this.stroke || this.heighting) { this.cancel(); this.host.emit(); } else this.setEditBrush(null); return true; }
       if (e.key === 'Enter' || e.key === 'r' || e.key === 'R' || e.key === 'Delete' || e.key === 'Backspace') return this.planKey(e);
     }
     if (this.mode === 'plan') return this.planKey(e);
@@ -1541,8 +1560,9 @@ export class PaintTool {
       if (e.key === ']' || e.key === '[') { this.setPieceOpts({ scale: this.pieceScale + (e.key === ']' ? 0.25 : -0.25) }); return true; }
       if (e.key === 'Escape') { this.setBrush(this.brushKind); return true; }
     }
+    // T252: the surfaces' keys 1-8 (SURFACE_BRUSHES: no cart path brush; Course › Cart paths & roads lays them)
     if (this.course && e.key >= '1' && e.key <= '9') {
-      const b = BRUSH_PRESETS[+e.key - 1]; if (!b) return false;
+      const b = SURFACE_BRUSHES[+e.key - 1]; if (!b) return false;
       if (this.mode === 'draw') this.setShape(b.kind); else this.setBrush(b.kind);
       return true;
     }
@@ -1609,9 +1629,9 @@ export class PaintTool {
   /** the overlay preview: the outline being drawn (draw); the selected area, shaded, with its handles (draw and pick); a drag's candidate that cannot be applied, in red; the hovered area (pick and erase) */
   drawPreview(v: PaintView) {
     // the plan's ghost, handles and Build pill (T238: under Edit hole's brush too)
-    if (this.planOpen) { if (this.frameTrees) this.drawFrameGhost(v); this.pill = drawWizard(v, this.wizard, this.mouse, typeof performance !== 'undefined' ? performance.now() : 0, reducedMotion(), this.frameTrees ? Math.max(0, this.host.frameCost?.() ?? 0) : 0); if (this.mode === 'plan') return; }
+    if (this.planOpen) { if (this.frameTrees) this.drawFrameGhost(v); this.pill = drawWizard(v, this.wizard, this.mouse, typeof performance !== 'undefined' ? performance.now() : 0, reducedMotion(), this.frameTrees ? Math.max(0, this.host.frameCost?.() ?? 0) : 0, this.mode !== 'height' || this.onHandle()); if (this.mode === 'plan') return; }
     if (this.mode === 'piece') { this.drawPiece(v); return; }
-    if (this.mode === 'height') { this.drawHeight(v); return; }
+    if (this.mode === 'height') { if (!(this.editInHand && this.onHandle())) this.drawHeight(v); return; } // T252: over a handle in Edit hole, the plan's label
     if (this.mode === 'draw') this.drawOutline(v);
     if (this.mode === 'hole') { this.drawHolePreview(v); return; }
     if (this.mode === 'brush') { this.drawBrush(v); return; }

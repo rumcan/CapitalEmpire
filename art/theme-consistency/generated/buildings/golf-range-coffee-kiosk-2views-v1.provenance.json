@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "id": "golf:range-coffee-kiosk",
+  "itemNumber": 3,
+  "angleCode": "A",
+  "viewOrder": [
+    "front-right",
+    "left-front"
+  ],
+  "dimensionsM": {
+    "width": 3,
+    "height": 3,
+    "depth": 2.5
+  },
+  "generator": "image_gen.imagegen",
+  "builtinImagegenUsed": true,
+  "transparentBackground": true,
+  "generatorSource": "C:/Users/RAMPAGE/.codex/generated_images/01a18192-f90b-7083-9bae-71e492fa53cc/exec-569738ff-e5ea-46c1-b990-3d0bbeae1955.png",
+  "output": "E:/Repos/CapitalEmpire/art/theme-consistency/generated/buildings/golf-range-coffee-kiosk-2views-v1.png",
+  "outputSha256": "5241862da793f431fefae6851c6ba0fd4f947694bc0894b367c658b1f34b6e38",
+  "prompt": "Use case: stylized-concept. Asset: golf:range-coffee-kiosk, game sprite sheet.\nCreate exactly TWO genuinely different views of the SAME physical small 1985 driving-range timber coffee kiosk, side by side in a single wide 2:1 transparent PNG, each half a square cell. Match reference 1's detailed illustrated miniature Maple Bean materials, painterly texture, readable architectural detail and warm autumn light. Reference 2 is supporting country-club style only; copy no UI, roads, vegetation, scenery or background. Reference 3 is geometry ONLY: use its TOP LEFT front+right orientation in the left cell, its BOTTOM RIGHT left+front orientation in the right cell. Ignore the two other diagram views and all diagram colours, labels and markers.\nSubject: approximately 3m wide x 2.5m deep x 3m high; cream painted timber plank walls, dark forest-green trim, modest dark pitched roof. Front serving hatch with a fold-down timber counter, red-and-white striped canvas awning above, chrome 1985 espresso machine and stacked paper cups visible inside, blank dark green chalk menu board beside hatch, warm interior light. Same physical design and details across both turns. Put menu board on the physical front-left of the hatch and espresso machine on the physical front-right inside, preserving that placement through rotation. Side walls cream timber. Its unseen rear has a small service door and caged gas bottle; do not relocate rear fittings onto the front just to display them.\nLEFT cell: FRONT+RIGHT, front long structural edge runs down-right at slope +0.5; right wall visible at screen right. RIGHT cell: LEFT+FRONT, front long structural edge runs up-right at slope -0.5; left wall visible at screen left. These are real 90-degree turns showing different side walls, never mirror or copy a drawing. Fixed orthographic parallel 2:1 isometric camera, all ground-parallel rectangular structure edges +/-26.565 degrees (rise/run +/-0.5), ALL verticals exactly vertical. No perspective convergence, no fisheye. Same scale and height in both cells.\nLighting fixed at SCREEN UPPER RIGHT in BOTH views: low warm sunlight, brighter upper-right surfaces and cooler left-facing planes, warm practical light inside hatch, tiny contact shadow only toward screen lower left. Turn object without rotating sun.\nFull roof, awning, counter and complete base silhouette fit in each cell; at least 15 percent empty transparent margin around each view and clear centre gutter. No people, lettering, logos, neighbouring objects, ground island, pavement, lawn, scene, UI, frame or captions. REAL ALPHA transparency, no background whatsoever, no magenta, no coloured backdrop, no checkerboard painted into image. Exactly two isolated complete kiosks.",
+  "promptSha256": "efbfb418c359b89714f8bf0cac93f82c7dd82eb530b92efb5536778b7c77c6fe",
+  "referenceHashes": [
+    {
+      "sha256": "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2",
+      "file": "E:/Repos/CapitalEmpire/art/theme-consistency/references/theme-authoritative.png"
+    },
+    {
+      "sha256": "14060410b73fd9f0215c2814049119d2390e4830a614e6bf9d8dfd02b8e674df",
+      "file": "E:/Repos/CapitalEmpire/art/theme-consistency/references/golf-country-club-owner-20261028.png"
+    },
+    {
+      "sha256": "8d60d56c563159d06a052d472856e067366834957936b942a749934883fd2e3c",
+      "file": "E:/Repos/CapitalEmpire/art/theme-consistency/references/rotation-guide-v1.png"
+    }
+  ],
+  "authorityFile": "E:/Repos/CapitalEmpire/worktrees/theme-consistency/docs/GOLF-ART-LIST.md",
+  "authoritySha256": "2b7bb3cddb05861387b7af3e46b31586c1aac67f45077d63b028f6dea22c7868",
+  "sourceBlockSha256": "3048dfdc76927129c1a9431ffde213df1716e5eb220771cb1b5a36a983020f24",
+  "review": "pending",
+  "integration": "pending",
+  "processing": "Native built-in PNG copied byte-for-byte; no mirroring, keying, crop, resampling or repainting."
+}

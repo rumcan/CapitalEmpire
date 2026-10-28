@@ -196,14 +196,17 @@ button.stat-chip:hover { background: rgba(255, 255, 255, 0.06); }
 .wiz-info { color: var(--ink); }
 .wiz-info .wiz-mark { background: rgba(56, 189, 248, 0.28); color: #bae6fd; font-style: italic; }
 .wiz-keys { margin-top: 0.5rem; font-size: 12px; line-height: 1.6; color: var(--muted); }
-.swatches { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0.2rem; }
-.swatch { position: relative; display: flex; flex-direction: column; align-items: center; gap: 0.15rem; border-radius: 0.7rem; border: 1px solid transparent; padding: 0.3rem 0.05rem 0.25rem; font-size: 12px; color: #d9d3c4; }
-.swatch:hover { border-color: var(--gold-line); }
-.swatch-disc { display: grid; place-items: center; width: 2.6rem; height: 2.6rem; border-radius: 999px; background: rgba(0, 0, 0, 0.32); box-shadow: inset 0 0 0 1px var(--line); }
-.swatch-key { position: absolute; right: 0.2rem; top: 0.05rem; font-size: 12px; font-weight: 700; color: var(--muted); }
-.swatch-on { border-color: var(--gold); background: var(--gold-wash); color: var(--gold-hi); font-weight: 700; }
-.swatch-on .swatch-disc { box-shadow: 0 0 0 2px var(--gold); }
-.swatch-on .swatch-key { color: var(--gold-hi); }
+/* T252: the Holes surfaces (Shape by hand, Edit hole): an even grid of four, each the surface's puck (its real texture and border), its name
+   on one line under it, its key in the corner; the lit one ringed in gold with room round the puck */
+.swatches { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.3rem; align-items: start; }
+.swatch { position: relative; display: flex; min-width: 0; flex-direction: column; align-items: center; gap: 0.2rem; border-radius: 0.75rem; border: 1px solid transparent; padding: 0.45rem 0.2rem 0.35rem; font-size: 12px; line-height: 1.2; color: #d9d3c4; }
+.swatch:hover { border-color: var(--gold-line); background: rgba(255, 255, 255, 0.03); }
+.swatch-puck { display: grid; place-items: center; width: 50px; height: 34px; }
+.swatch-puck img { display: block; pointer-events: none; user-select: none; }
+.swatch-key { position: absolute; right: 0.25rem; top: 0.25rem; display: grid; place-items: center; min-width: 1rem; height: 1rem; padding: 0 0.2rem; border-radius: 999px; background: rgba(0, 0, 0, 0.42); font-size: 10.5px; font-weight: 700; line-height: 1; color: var(--muted); }
+.swatch-name { max-width: 100%; text-align: center; text-wrap: balance; overflow-wrap: normal; } /* one line where it fits, else two (top-aligned across the row) */
+.swatch-on { border-color: var(--gold); background: var(--gold-wash); color: var(--gold-hi); box-shadow: inset 0 0 0 1px var(--gold); }
+.swatch-on .swatch-key { background: var(--gold); color: #1b1408; }
 .hole-badge { display: inline-flex; min-width: 2.75rem; height: 2rem; white-space: nowrap; align-items: center; justify-content: center; gap: 0.3rem; border-radius: 999px; border: 1px solid var(--line); background: rgba(255, 255, 255, 0.04); padding: 0 0.65rem; font-size: 13px; font-weight: 700; color: var(--ink); }
 .hole-badge:hover { border-color: var(--gold-line); }
 .hole-badge-on { border-color: var(--gold); box-shadow: inset 0 0 0 1px var(--gold); background: var(--gold-wash); }

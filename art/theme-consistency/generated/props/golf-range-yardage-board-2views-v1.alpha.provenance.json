@@ -1,0 +1,95 @@
+{
+  "schema": 1,
+  "id": "golf:range-yardage-board",
+  "slug": "golf-range-yardage-board",
+  "angleCode": "A",
+  "viewSet": "two-front-diagonals",
+  "viewOrder": [
+    "front-right",
+    "left-front"
+  ],
+  "widthM": 2,
+  "depthM": 0.5,
+  "heightM": 2.5,
+  "sourceRaw": {
+    "file": "art/theme-consistency/generated/props/golf-range-yardage-board-2views-v1.raw.png",
+    "sha256": "5ffb546f3f35e0e3447ff258a4e52192add720555037cf006ca49dc4be364e2e"
+  },
+  "sourceProvenance": {
+    "file": "art/theme-consistency/generated/props/golf-range-yardage-board-2views-v1.provenance.json",
+    "sha256": "765ece70ec326dddab0be7cf3e524966dc2d5ffd71bcd03187599ed3a847a332"
+  },
+  "output": "art/theme-consistency/generated/props/golf-range-yardage-board-2views-v1.alpha.png",
+  "sha256": "61f4fe998f8a7460f8836f1eca4369b3025269e99744ca2928c4e148887fe8a9",
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "transparent": true,
+  "processing": {
+    "operation": "One-time existing magenta key; no generation, repaint, resampling, mirror or rotation.",
+    "script": "scripts/assets/key-magenta.mjs",
+    "scriptSha256": "3c3ac8235ab34e422ddfc0cd00d360a0678474e809dfb5c6bc960c1ce029f287",
+    "options": {
+      "solid": 0.92,
+      "clear": 0.15,
+      "despill": "keep",
+      "despillStrength": 1,
+      "despeckle": 400,
+      "haze": 40,
+      "hazeSoft": 6,
+      "linear": false
+    },
+    "date": "2026-10-28"
+  },
+  "views": [
+    {
+      "name": "front-right",
+      "file": "art/theme-consistency/generated/props/golf-range-yardage-board-2views-v1.alpha/front-right.native.png",
+      "sha256": "af016e4ddae00ca86082fa5c6110281aeef4a2d5c48fc389b95d35e39476a916",
+      "sourceRect": {
+        "left": 0,
+        "top": 0,
+        "width": 627,
+        "height": 1254
+      },
+      "visibleAbove8": 215202,
+      "fullyClear": 571056,
+      "bounds": {
+        "left": 86,
+        "top": 117,
+        "width": 493,
+        "height": 980
+      },
+      "outerBoundaryVisible": 0
+    },
+    {
+      "name": "left-front",
+      "file": "art/theme-consistency/generated/props/golf-range-yardage-board-2views-v1.alpha/left-front.native.png",
+      "sha256": "22e8a3b21436129564d1240b6e256c2236cdb6dbf6f438564a340625b184f2e6",
+      "sourceRect": {
+        "left": 627,
+        "top": 0,
+        "width": 627,
+        "height": 1254
+      },
+      "visibleAbove8": 214478,
+      "fullyClear": 571780,
+      "bounds": {
+        "left": 78,
+        "top": 201,
+        "width": 466,
+        "height": 898
+      },
+      "outerBoundaryVisible": 0
+    }
+  ],
+  "visualReviewStatus": "accepted-style-alpha-distinct-views",
+  "integrationStatus": "pending-geometry-and-physical-calibration",
+  "appearanceDecision": {
+    "file": "art/theme-consistency/generated/props/golf-range-yardage-board-2views-v1.alpha/review/appearance-decision.json",
+    "sha256": "89f2ddd473a6c94dc8d2740383db9bbacf7d176ad00e84e7b148403411b34227"
+  },
+  "geometryReviewStatus": "pending",
+  "physicalCalibrationStatus": "pending"
+}
