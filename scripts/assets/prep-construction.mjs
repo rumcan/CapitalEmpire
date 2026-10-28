@@ -3,6 +3,8 @@
 //   materials-sheet.png: a 4 x 4 grid, read row by row (MATERIALS below);
 //   digger-sheet.png: four views in a 2 x 2 grid; only the bottom-right one is drawn in the game's isometric view (the side, front and
 //   back views are straight on, never used on lots), so only it is packed. It faces +X (its arm reaches down-right); flipped it faces +Y.
+//   site-kit/ (T232): the building-site kit's masters and items.json (prep-site-kit.mjs: lumber stacks, heaps, the timber frame's two
+//   views), packed after the digger with the display size and ground point the kit gives.
 // Footprints hx / hy are half extents in metres; world coordinates use 2 m tiles. Native projection is 64 x 32 px per tile, so a
 // sprite's native width is 64 * (hx + hy) and its height follows the picture's aspect. Writes src/assets/construction/construction-<mip>.webp
 // and src/game/construction-library.ts (appendConstruction, after the business art).
@@ -64,13 +66,20 @@ for (const [k, [id, name, hx, hy]] of MATERIALS.entries()) {
 }
 // the digger: about 6 m across its tracks and arm along X, 3 m wide
 pieces.push({ id: 'construction:digger', name: 'Digger (excavator)', hx: 3.0, hy: 1.5, png: await cut(digger, 3), big: true });
+// T232: the building-site kit (lumber stacks, heaps, the timber frame's two views), cut and sized by prep-site-kit.mjs into
+// art/construction/site-kit: packed after the digger, so the pieces above keep their place on the page (and their UVs); their display size,
+// ground point and footprint are the kit's own (items.json)
+const KIT_DIR = path.join(SRC, 'site-kit'), kit = JSON.parse(fs.readFileSync(path.join(KIT_DIR, 'items.json'), 'utf8')).items;
+for (const k of kit) {
+  pieces.push({ id: k.id, name: k.name, hx: k.boxes[0].hx, hy: k.boxes[0].hy, png: await sharp(path.join(KIT_DIR, `${k.id.slice('construction:'.length)}.webp`)).png().toBuffer(), big: k.big, geo: k });
+}
 
 // Shelf-pack at 0.6 x native with 16 px gutters and five mips. The renderer requires every array layer to be 2048 square.
 const GUT = 16, items = [], composite = [], review = path.join(root, 'output/construction-review');
 fs.mkdirSync(review, { recursive: true });
 for (const p of pieces) {
   const meta = await sharp(p.png).metadata();
-  p.w = 64 * (p.hx + p.hy); p.h = p.w * meta.height / meta.width;
+  p.w = p.geo ? p.geo.w : 64 * (p.hx + p.hy); p.h = p.geo ? p.geo.h : p.w * meta.height / meta.width;
   p.width = Math.round(p.w * 0.6); p.height = Math.round(p.h * 0.6);
   await sharp(p.png).toFile(path.join(review, `${p.id.slice('construction:'.length)}.png`));
 }
@@ -94,7 +103,7 @@ for (const p of pieces) {
   composite.push({ input: await sharp(p.png).resize(width, height, { kernel: 'lanczos3' }).sharpen({ sigma: 0.5 }).png().toBuffer(), left: x, top: y });
   // Ground point is the footprint diamond's centre at the picture's foot; projection is 32 px per 2 m tile vertically.
   const groundH = 32 * (p.hx + p.hy);
-  items.push({ id: p.id, name: p.name, cat: 'Construction', kind: 'decor', w, h, ax: w / 2, ay: h - groundH / 2, boxes: [{ hx: p.hx, hy: p.hy, dx: 0, dy: 0 }], solid: 2, big: p.big, door: false, cost: 0,
+  items.push({ id: p.id, name: p.name, cat: 'Construction', kind: 'decor', w, h, ax: p.geo ? p.geo.ax : w / 2, ay: p.geo ? p.geo.ay : h - groundH / 2, boxes: [{ hx: p.hx, hy: p.hy, dx: 0, dy: 0 }], solid: 2, big: p.big, door: false, cost: 0,
     tex: [0, x / PAGE, y / PAGE, (x + width) / PAGE, (y + height) / PAGE], quad: [0, 0, w, h] });
   x += width + GUT; rowH = Math.max(rowH, height);
 }
