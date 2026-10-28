@@ -12,6 +12,7 @@ import { PLANT_KINDS, plantPool } from '../src/game/plant';
 import { kindPools } from '../src/game/lots/item-kinds';
 import { BUSHES, TREES } from '../src/game/lots/compose-core';
 import { drawnAs } from '../src/game/mirror';
+import { EXTRA_VIEW_BASE } from '../src/game/extra-views';
 import { kindOf } from '../src/game/shadow-shape';
 import { RAIL } from '../src/ui/rail-items';
 import { menuOf, leavesOf } from '../src/ui/flyout-menu';
@@ -43,11 +44,19 @@ test('the atlas: the kit is in the library on the golf page, packed apart from t
     const p = on[a]!.tex, q = on[b]!.tex, ix = Math.min(p[3], q[3]) - Math.max(p[1], q[1]), iy = Math.min(p[4], q[4]) - Math.max(p[2], q[2]);
     assert.ok(ix <= 1e-6 || iy <= 1e-6, `${on[a]!.id} and ${on[b]!.id} overlap on the page`);
   }
-  // the kit is appended last: every kit item after every other item (no saved index moves)
-  const firstKit = LIBRARY.findIndex(it => isKit(it.id)), lastOther = LIBRARY.reduce((m, it, i) => (isKit(it.id) ? m : i), -1);
-  assert.ok(firstKit > lastOther, 'the kit comes after every other library item');
-  // the page count is that of main before T231 (74: 22 sprite and walker pages and 52 of the other packs); every page is still used
-  assert.equal(ATLAS_PAGES.length, 74, 'no atlas page added');
+  // the kit is appended in one run after every library item before it (no saved index moves). The appends made after it may follow it, and only
+  // they: #582's supplemental views (extra-views-library.ts, on their own pages) and T258's range art (range:*, on the golf page). (#776: this
+  // asked for the kit last, which #582 ended; the lead, 2026-10-28: no saved index may move, so the later appends stay after the kit)
+  const later = (it: (typeof LIBRARY)[number]) => EXTRA_VIEW_BASE.has(it.id) || it.id.startsWith('range:');
+  const kitAt = LIBRARY.flatMap((it, i) => (isKit(it.id) ? [i] : [])), firstKit = kitAt[0]!, lastKit = kitAt[kitAt.length - 1]!;
+  assert.equal(lastKit - firstKit + 1, kitAt.length, 'the kit is one run in the library');
+  assert.deepEqual(LIBRARY.slice(lastKit + 1).filter(it => !later(it)).map(it => it.id), [], 'only the later appends follow the kit');
+  assert.deepEqual(LIBRARY.slice(0, firstKit).filter(later).map(it => it.id), [], 'no later append comes before the kit (the kit\'s indices hold)');
+  // no page added for the kit: its page holds the golf art appended before it (the count was 74 before T231 and is still 74 up to the kit;
+  // #582's supplemental views brought their own pages after it)
+  const before = LIBRARY.slice(0, firstKit);
+  assert.ok(before.some(it => it.tex[0] === golf), 'the kit\'s page is the golf art\'s');
+  assert.equal(Math.max(...before.map(it => it.tex[0])) + 1, 74, 'no atlas page added up to the kit');
   for (const dpr of [1, 2]) {
     const plan = planAtlas({ pages: ATLAS_PAGES.length, size: 2048, levels: 5, bpp: 1, budget: atlasBudget(dpr), finest: dpr > 1 ? 0 : 1 });
     assert.ok(plan.bytes <= atlasBudget(dpr), `dpr ${dpr}: ${(plan.bytes / MB).toFixed(1)} MB`);
