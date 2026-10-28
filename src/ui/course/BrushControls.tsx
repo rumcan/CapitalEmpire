@@ -3,14 +3,17 @@
 // size: Square (1 to 4 cells, the pills) or Round (T238: a circle on the map, sized by the slider, which draws as a 2:1 ellipse on screen),
 // the look of the surface in hand (My looks, T252 in Edit hole too) and the ground's height (T252: Ground height in Edit hole too).
 // Self-contained: they read and drive game.paint.
+import { useState } from 'react';
 import type { Game } from '../../game/engine';
 import { PAINT_TEXES, SURFACE_BRUSHES, type BrushKind } from '../../game/paint';
+import { MAX_GRASSES } from '../../game/ext/course-grid';
+import { GRASS_FAMILIES, GRASS_KIND, GRASS_PLAYS } from '../../game/golf/grasses';
 import { EARTHWORK_PER_M3 } from '../../game/golf/costs';
 import { SQUARE_SIZES } from '../../game/ext/course-cursor/snap';
 import { plainName } from '../../PaintPanel';
 import { lookWhat } from '../../game/golf/looks';
 import { SurfaceMark } from './SurfaceMark';
-import { swatchPuckOf, useSwatchPucks } from './swatch-puck';
+import { grassPuckImage, swatchPuckOf, useSwatchPucks } from './swatch-puck';
 
 /** a k x k grid of dots, the size pills' glyph */
 export function SizeGlyph({ k }: { k: number }) {
@@ -45,22 +48,85 @@ export function surfaceKeysOf(game: Game): number {
  *  lays them), those open at this stage, in an even grid of four columns; each swatch is the surface's puck (swatch-puck.ts: its real texture
  *  and border; its marked disc under plain node), its name under it and its key in the corner. `on` is the surface in hand (none: no swatch
  *  lit), `pick` arms one */
-export function SurfaceSwatches({ game, on, pick }: { game: Game; on: BrushKind | null; pick: (kind: BrushKind) => void }) {
-  const ok = brushOkOf(game);
+export function SurfaceSwatches({ game, on, pick, pickGrass }: { game: Game; on: BrushKind | null; pick: (kind: BrushKind) => void; pickGrass?: (k: number) => void }) {
+  const ok = brushOkOf(game), p = game.paint;
+  // T271 (#812): the course's own grasses after the eight, each its puck and Shift + its place as its key, then 9, Create your own (a golf
+  // course's grid only: a classic game paints areas). A grass in hand lights its own swatch, not its carrier surface's
+  const own = game.golfMode && !!game.courseGrid && !!p.grasses, gk = on ? p.grassInHand ?? 0 : 0;
   useSwatchPucks();
   return (
-    <div className="swatches" role="group" aria-label="Surface">
-      {SURFACE_BRUSHES.map((b, i) => {
-        if (!ok(b.kind)) return null;
-        const lit = on === b.kind, puck = swatchPuckOf(game, b.kind);
-        return (
-          <button key={b.kind} data-swatch={b.kind} aria-pressed={lit} title={`${b.name} (key ${i + 1})`} className={`swatch ${lit ? 'swatch-on' : ''}`} data-puck={puck ? 'texture' : 'mark'} onClick={() => pick(b.kind)}>
-            <span className="swatch-puck">{puck ? <img src={puck.url} width={puck.w} height={puck.h} alt="" draggable={false} /> : <SurfaceMark kind={b.kind} size={40} />}</span>
-            <span className="swatch-key" aria-hidden>{i + 1}</span>
-            <span className="swatch-name">{b.name}</span>
+    <>
+      <div className="swatches" role="group" aria-label="Surface">
+        {SURFACE_BRUSHES.map((b, i) => {
+          if (!ok(b.kind)) return null;
+          const lit = on === b.kind && !gk, puck = swatchPuckOf(game, b.kind);
+          return (
+            <button key={b.kind} data-swatch={b.kind} aria-pressed={lit} title={`${b.name} (key ${i + 1})`} className={`swatch ${lit ? 'swatch-on' : ''}`} data-puck={puck ? 'texture' : 'mark'} onClick={() => pick(b.kind)}>
+              <span className="swatch-puck">{puck ? <img src={puck.url} width={puck.w} height={puck.h} alt="" draggable={false} /> : <SurfaceMark kind={b.kind} size={40} />}</span>
+              <span className="swatch-key" aria-hidden>{i + 1}</span>
+              <span className="swatch-name">{b.name}</span>
+            </button>
+          );
+        })}
+        {own && p.grasses.map((g, i) => {
+          const lit = gk === g.k, puck = grassPuckImage(game, g), play = GRASS_PLAYS.find(q => q.play === g.plays)?.name ?? '';
+          return (
+            <button key={`own-${g.k}`} data-swatch={`grass-${g.k}`} aria-pressed={lit} title={`${g.name}: your own grass, plays as ${play.toLowerCase()} (Shift+${i + 1})`} className={`swatch ${lit ? 'swatch-on' : ''}`} data-puck={puck ? 'texture' : 'mark'} onClick={() => (pickGrass ?? (k => p.setGrass(k)))(g.k)}>
+              <span className="swatch-puck">{puck ? <img src={puck.url} width={puck.w} height={puck.h} alt="" draggable={false} /> : <SurfaceMark kind={GRASS_KIND[g.plays]} size={40} />}</span>
+              <span className="swatch-key" aria-hidden>{`⇧${i + 1}`}</span>
+              <span className="swatch-name">{g.name}</span>
+            </button>
+          );
+        })}
+        {own && p.grasses.length < MAX_GRASSES && (
+          <button key="own-new" data-swatch="grass-new" aria-pressed={!!p.grassDraft && !p.grassDraft.k} title="Create your own grass: its name, how it plays, its painted grass, scale, exposure, stripes and edges (key 9)" className={`swatch ${p.grassDraft && !p.grassDraft.k ? 'swatch-on' : ''}`} onClick={() => p.openGrass()}>
+            <span className="swatch-puck"><NewGrassMark /></span>
+            <span className="swatch-key" aria-hidden>9</span>
+            <span className="swatch-name">Create your own</span>
           </button>
-        );
-      })}
+        )}
+      </div>
+      {own && <GrassInHand game={game} />}
+    </>
+  );
+}
+/** T271: More options › Edges (and Edit hole's) with a custom grass in hand: its Border, Round off and Shadow are its own, set in its editor */
+export function GrassEdgesEntry({ game }: { game: Game }) {
+  const p = game.paint, g = p.grass; if (!g) return null;
+  const parts = [g.border > 0 ? `Border ${g.border < 1 ? `${Math.round(g.border * 100)} cm` : `${g.border.toFixed(1)} m`}` : 'Border none', g.round ? `Round off ${Math.round(g.smooth * 100)}%` : 'not rounded', `Shadow ${Math.round(g.shadow * 100)}%`];
+  return (
+    <div className="mt-1 flex flex-wrap items-center gap-1.5" data-edges="grass">
+      <span className="sub-line">{parts.join(' · ')}</span>
+      <button className="chip" onClick={() => p.openGrass(g.k)}>{`Edit in ${g.name}`} <span aria-hidden>▸</span></button>
+    </div>
+  );
+}
+/** T271: Create your own's mark: an empty puck with a plus */
+function NewGrassMark() {
+  return (
+    <svg width={44} height={30} viewBox="0 0 44 30" aria-hidden>
+      <path d="M2 13 V18 A20 10 0 0 0 42 18 V13 Z" fill="rgba(74,58,40,0.85)" />
+      <ellipse cx="22" cy="13" rx="20" ry="10" fill="rgba(93,122,46,0.35)" stroke="rgba(255,246,214,0.55)" strokeWidth="1.2" strokeDasharray="3 2.5" />
+      <path d="M22 8 V18 M17 13 H27" stroke="var(--gold-hi, #f3d58a)" strokeWidth="2.2" strokeLinecap="round" />
+    </svg>
+  );
+}
+/** T271: the custom grass in hand: what it plays as, Edit (its editor) and Delete (asks first: its cells take the surface it plays as) */
+function GrassInHand({ game }: { game: Game }) {
+  const p = game.paint, g = p.grass, [ask, setAsk] = useState(0);
+  if (!g || (p.mode !== 'brush' && p.mode !== 'draw')) return null;
+  const play = GRASS_PLAYS.find(q => q.play === g.plays)?.name ?? '';
+  return (
+    <div className="mt-1.5 flex flex-wrap items-center gap-1.5" data-testid="grass-in-hand">
+      <span className="sub-line">{`${g.name} plays as ${play.toLowerCase()}`}</span>
+      {ask === g.k ? (<>
+        <span className="text-rose-300">{`Delete ${g.name}? Its cells become plain ${g.plays === 'firstCut' ? 'rough' : play.toLowerCase()}.`}</span>
+        <button className="chip" data-testid="grass-delete-yes" onClick={() => { p.deleteGrass(g.k); setAsk(0); }}>Delete</button>
+        <button className="chip" onClick={() => setAsk(0)}>Keep</button>
+      </>) : (<>
+        <button className={`chip ${p.grassDraft?.k === g.k ? 'chip-on' : ''}`} data-testid="grass-edit" onClick={() => p.openGrass(g.k)}>Edit <span aria-hidden>▸</span></button>
+        <button className="chip" data-testid="grass-delete" title={`Delete ${g.name}: its cells keep how they play and take that surface's own look (Undo brings it back)`} onClick={() => setAsk(g.k)}>Delete</button>
+      </>)}
     </div>
   );
 }
@@ -101,6 +167,8 @@ export function BrushShape({ game, brush, arm }: { game: Game; brush: boolean; a
 
 /** a texture's plain name (the brush look's: My looks), from its id */
 export const lookName = (tex: string) => plainName(PAINT_TEXES.find(t => t.id === tex)?.name ?? tex);
+/** T271: a painted grass family's name (the grass editor's texture list) */
+export const familyName = (id: string) => GRASS_FAMILIES.find(f => f.id === id)?.name ?? id;
 
 /** My looks (P23 decision 3; T252 in Edit hole too: the owner, 2026-10-28: "i dont see the button that lets me customise textures for the
  *  bunker or anything i build on this hole"): the surface in hand and its look, a button that opens the style editor's card beside the panel
@@ -110,10 +178,18 @@ export function LooksEntry({ game, looks, onLooks, arm }: { game: Game; looks: b
   // T256 (#743): a look belongs to where it is painted: the hole in hand, the property (Range › Build), a facility; the entry says whose
   const p = game.paint, name = SURFACE_BRUSHES.find(b => b.kind === p.brushKind)?.name ?? '', owner = p.lookOwner ?? 'default';
   const tex = (p.lookOf ? p.lookOf(owner, p.brushKind)?.tex : p.brush[p.brushKind]?.style.tex) ?? '', what = lookWhat(p.brushKind, owner);
+  // T271: a custom grass in hand is edited in its own editor (its look is the course's, not a hole's)
+  const g = p.grass;
+  if (g) return (
+    <div className="flex items-center justify-between gap-2" data-testid="looks-entry">
+      <span>Your grass</span>
+      <button className={`chip ${p.grassDraft?.k === g.k ? 'chip-on' : ''}`} data-looks aria-pressed={p.grassDraft?.k === g.k} title={`${g.name}: its texture, scale, exposure, stripes and edges (every cell of it on the course)`} onClick={() => { onLooks?.(false); p.openGrass(g.k); }}>{`${g.name}: ${familyName(g.family)}`} <span aria-hidden>▸</span></button>
+    </div>
+  );
   return (
     <div className="flex items-center justify-between gap-2" data-testid="looks-entry">
       <span>My looks</span>
-      <button className={`chip ${looks ? 'chip-on' : ''}`} data-looks aria-pressed={looks} title={`${what}: only they wear this look (the others keep their own); the puck at the pointer shows it`} onClick={() => { arm(); onLooks?.(!looks); }}>{`${name}: ${lookName(tex)}`} <span aria-hidden>▸</span></button>
+      <button className={`chip ${looks ? 'chip-on' : ''}`} data-looks aria-pressed={looks} title={`${what}: only they wear this look (the others keep their own); the puck at the pointer shows it`} onClick={() => { arm(); p.closeGrass?.(); onLooks?.(!looks); }}>{`${name}: ${lookName(tex)}`} <span aria-hidden>▸</span></button>
     </div>
   );
 }

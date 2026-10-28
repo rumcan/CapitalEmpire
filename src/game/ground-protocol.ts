@@ -69,7 +69,10 @@ export interface CourseLayer extends CourseTex { s: number; e: EdgeProfile; fill
   /** T256 (#743): the other looks its cells wear in this chunk (each hole, the property and each practice facility owns its looks: golf/looks.ts):
    *  each its fill, its collar band and a bunker's lip grass, drawn over the layer's own look within its share of the chunk (runs: boxes x0 y0
    *  x1 y1, tiles; ext/course-grid cellShares). Absent: the whole layer wears its own look */
-  alts?: { look: CourseTex; band?: CourseTex; g?: CourseTex; runs: Float32Array }[] }
+  alts?: { look: CourseTex; band?: CourseTex; g?: CourseTex; runs: Float32Array }[];
+  /** T271 (#812): a custom grass's layer (s its draw id, ext/course-grid CUSTOM0..): the surface it plays as (its grow-in, its stripes' look);
+   *  absent on every other layer */
+  b?: number }
 /** T256: every texture a course layer lays (its fill, its collar's, a lip's grass, its alternates' and their blends), for the bakes' preloads */
 export function layerTexes(l: CourseLayer): string[] {
   const out: string[] = [];

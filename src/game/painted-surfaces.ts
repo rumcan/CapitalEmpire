@@ -94,6 +94,9 @@ export interface PresetRef { id: string; surface?: string | null; painted?: stri
  *  the preset 'fescue' is the course's fescue, paint-presets.ts surfacePreset), a preset's own, or the old painted set a preset named */
 export function lookOfTex(tex: string, file: SurfacesFile, presets: readonly PresetRef[] = []): PaintedLook | null {
   if (tex.startsWith('lawn:')) { const l = file.lawns[+tex.slice(5)]; return l ?? null; }
+  // T271: a custom grass (golf/grasses.ts grassTex: own:<play>:<family>) wears its painted family as painted: no tint, no tone (its exposure
+  // rides on the course texture), the scale its course texture's
+  if (tex.startsWith('own:')) { const i = tex.indexOf(':', 4); return i > 0 ? clampLook({ family: tex.slice(i + 1), version: null, scale: 1, tint: '#ffffff', tone: 0 }) : null; }
   if (tex.startsWith('preset:')) {
     const id = tex.slice(7), own = file.presets[id]; if (own) return own;
     const p = presets.find(q => q.id === id), key = p?.surface ? PRESET_SURFACE[p.surface] : id === 'fescue' ? 'fescue' : undefined;
