@@ -67,10 +67,11 @@ export function captureHole(n: number, c: CaptureCtx): MyHole | null {
   // the tee cell's centre (tiles): the plan's points, the trees and the heights are kept from it
   const ox = g.x0 + (tcx + 0.5) * CELL_T, oy = g.y0 + (tcy + 0.5) * CELL_T;
   const plan = c.plan ? encodePlan(movePlan(c.plan, ox, oy, back, 0, 0, 1)) : undefined;
-  // the height samples over the hole's box (and a margin: the banks round it) that are not level
+  // the height samples over the hole's box (and a margin: the banks round it; T263: New hole's shaping blends out 3 samples, 6 tiles, past
+  // the hole's cells) that are not level
   const heights: number[] = [], f = c.field;
   if (f) {
-    const pad = 4, bx0 = g.x0 + x0 * CELL_T - pad, by0 = g.y0 + y0 * CELL_T - pad, bx1 = g.x0 + (x1 + 1) * CELL_T + pad, by1 = g.y0 + (y1 + 1) * CELL_T + pad;
+    const pad = 8, bx0 = g.x0 + x0 * CELL_T - pad, by0 = g.y0 + y0 * CELL_T - pad, bx1 = g.x0 + (x1 + 1) * CELL_T + pad, by1 = g.y0 + (y1 + 1) * CELL_T + pad;
     const ti = Math.round(ox / CH_STEP), tj = Math.round(oy / CH_STEP);
     for (let j = Math.max(0, Math.floor(by0 / CH_STEP)); j <= Math.min(CH_SIZE - 1, Math.ceil(by1 / CH_STEP)); j++) for (let i = Math.max(0, Math.floor(bx0 / CH_STEP)); i <= Math.min(CH_SIZE - 1, Math.ceil(bx1 / CH_STEP)); i++) {
       const h = f.data[j * CH_SIZE + i]!; if (Math.abs(h) < 0.005) continue;
