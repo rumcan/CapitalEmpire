@@ -388,10 +388,11 @@ test('the tile sets join the families, laid as authored; the map grass, rivers, 
   assert.equal(FAMILIES.filter(f => f.tiled).length, TILED_FAMILIES.length);
   const S = clampSurfaces(surfacesFile);
   assert.equal(lookOfTex('golfFescue', S)!.family, 'golden-fescue'); assert.equal(lookOfTex('preset:fescue', S, PRESETS)!.family, 'golden-fescue');
-  for (const t of ['waterDark', 'waterDeep', 'waterClear']) assert.equal(lookOfTex(t, S)!.family, 'lake', t);
-  // the map's open grass draws golden fescue and rivers draw lake (the owner, 2026-10-26: "all the map water and grass needs to be replaced
-  // aswell"; main 003153a); the course turf keeps its families
-  assert.equal(lookOfTex('water', S)!.family, 'lake', 'rivers and creeks draw the lake');
+  // T230 (#669): the ponds and the rivers wear the concept's deep pond water (GOLF-ART-LIST 154); lake stays a choice in the studio
+  for (const t of ['waterDark', 'waterDeep', 'waterClear']) assert.equal(lookOfTex(t, S)!.family, 'pond-concept-run', t);
+  // the map's open grass draws golden fescue (the owner, 2026-10-26: "all the map water and grass needs to be replaced aswell"; main
+  // 003153a), the rivers the concept's water (T230); the course turf keeps its families
+  assert.equal(lookOfTex('water', S)!.family, 'pond-concept-run', 'rivers and creeks draw the concept\'s water');
   for (const t of ['grass', 'meadow']) assert.equal(lookOfTex(t, S)!.family, 'golden-fescue', `the map's ${t}`);
   // T153 (#327): the course's turf and waste areas wear the new sets, neutral (the tile sets are laid as authored); T165 (#365): the fairway,
   // the greens and their fringes the art session's paintings (fairway-paint, putting-green-paint), the old provisional sets kept unmapped
@@ -407,7 +408,7 @@ test('the tile sets join the families, laid as authored; the map grass, rivers, 
   }
   for (const l of S.lawns) assert.ok(familyById(l.family)!.tiled, 'T189: every town lawn wears a tile set (the new paintings), laid as authored');
   assert.deepEqual(S.surfaces.fescue, { family: 'golden-fescue', version: null, scale: 1, tint: '#ffffff', tone: 0 });
-  assert.deepEqual(S.surfaces.water, { family: 'lake', version: null, scale: 1, tint: '#ffffff', tone: 0 });
+  assert.deepEqual(S.surfaces.water, { family: 'pond-concept-run', version: null, scale: 1, tint: '#ffffff', tone: 0 }); // (T230: the concept's water)
 });
 
 test('separate gameplay layers: water and fescue keep their places in the course\'s layer order (fairway over rough, green over its ground)', () => {
