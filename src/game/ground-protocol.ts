@@ -23,7 +23,10 @@ export interface PatchPaint { s: number; a: number; b: number; bt: string; z: nu
   /** mowing stripes laid last on its top (T132, the driving range's outfield; the T075 rule: stripes over the surface, never baked under it), from a
    *  preset's Stripes: bands w tiles wide alternating (light first) along the unit (ux, uy) from (ox, oy) in tiles; l / k how much lighter /
    *  darker, lc / dc the colours washed in, t the tint, f the soft edge (0 hard .. 1 a smooth wave) */
-  mw?: MowStripes }
+  mw?: MowStripes;
+  /** T258: where its texture's pattern starts (tiles: the corner of one period, turned by a about it; absent: the tile grid's origin). A range
+   *  picture (golf/range-pics.ts) is laid flat with it: one picture exactly over its mat or green */
+  o?: [number, number] }
 /** a painted area's mowing stripes (PatchPaint.mw) */
 export interface MowStripes { ux: number; uy: number; ox: number; oy: number; w: number; l: number; k: number; lc: string; dc: string; t: number; f: number;
   /** T227: the line of play's direction (tiles, unit), so the course finish can lay its bands along or across it (course-finish finishMow);
@@ -90,7 +93,7 @@ export interface CoursePatch { cx: number; cy: number; size: number; layers: Cou
   spill?: { p: Float32Array; o: number }[]; z: number }
 
 /** a ground patch: a polygon (lots: an oriented quad; painted areas: any simple polygon) in tile space, and its surface */
-export interface LotPatch { pts: number[] /* x0 y0 x1 y1 ... (tiles, in order) */; tex: 'paving' | 'pad' | 'concrete' | 'asphalt' | 'lotAsphalt' | 'dirt' | 'rockyDirt' | 'rockyDirtAlt' | 'gravel' | 'field' | 'slabs' | 'asphaltDark' | 'asphaltWorn' | 'roadgravel' | 'grass' | 'bunkerSand' | 'wasteSand' | 'golfLongGrass' | 'pineStraw' | 'barkMulch' | 'spectatorPath' | 'woodChips' | 'grassDry' | 'asphaltPatched' | 'chipSeal' | 'concreteStained' | 'concreteCracked' | 'concreteOld' | 'concreteWeathered' | 'waterDark' | 'waterDeep' | 'waterClear' | GrassTex | 'marks' | `preset:${string}`; lines?: number[] /* parking bay lines: x0 y0 x1 y1 ... (tiles) */;
+export interface LotPatch { pts: number[] /* x0 y0 x1 y1 ... (tiles, in order) */; tex: 'paving' | 'pad' | 'concrete' | 'asphalt' | 'lotAsphalt' | 'dirt' | 'rockyDirt' | 'rockyDirtAlt' | 'gravel' | 'field' | 'slabs' | 'asphaltDark' | 'asphaltWorn' | 'roadgravel' | 'grass' | 'bunkerSand' | 'wasteSand' | 'golfLongGrass' | 'pineStraw' | 'barkMulch' | 'spectatorPath' | 'woodChips' | 'grassDry' | 'asphaltPatched' | 'chipSeal' | 'concreteStained' | 'concreteCracked' | 'concreteOld' | 'concreteWeathered' | 'waterDark' | 'waterDeep' | 'waterClear' | GrassTex | 'marks' | `preset:${string}` | `pic:${string}`; lines?: number[] /* parking bay lines: x0 y0 x1 y1 ... (tiles) */;
   /** tex 'marks' (nothing filled; pts only bound it): flat decals (lot-decals.ts), five numbers each: index, x, y (tiles, the decal's centre), scale (negative: mirrored), alpha */
   marks?: number[]; paint?: PatchPaint; /** a lawn (lawns.ts): the texture (a preset) laid under the lots' own ground, turned by a (degrees), over share of the
    *  patch in soft patches (1: all of it; soft: the patches' edge, patch: their size, 1 = 24 tiles a period); z: blocks 0 under lots 1; st: a lot's

@@ -80,7 +80,18 @@ for (const it of kitItems) {
   kit.push({ it, file, width: Math.max(1, Math.min(meta.width, Math.round(it.w * k))), height: Math.max(1, Math.min(meta.height, Math.round(it.h * k))) });
 }
 kit.sort((a, b) => b.height - a.height);
-const all = [...pieces, ...kit];
+// T258: the range art (art/range-kit, made by prep-range-art.mjs from the owner's ChatGPT pictures: the range's buildings and signs, two views
+// each), after the kit in the same shelves (the golf art and the kit keep their places), tallest first, at 0.6 x their display size (their
+// studio size when bigger); listed as RANGE, appended by appendRangeArt after every other library (no saved index moves)
+const RANGE_DIR = path.join(root, 'art/range-kit'), rangeItems = fs.existsSync(path.join(RANGE_DIR, 'items.json')) ? JSON.parse(fs.readFileSync(path.join(RANGE_DIR, 'items.json'), 'utf8')).items : [];
+const range = [];
+for (const it of rangeItems) {
+  const file = path.join(RANGE_DIR, `${it.id.slice('range:'.length)}.webp`); if (!fs.existsSync(file)) { console.log(`${it.id}: no master`); continue; }
+  const k = 0.6 * Math.max(1, SCALE_OVERRIDES[it.id] ?? 1), meta = await sharp(file).metadata();
+  range.push({ it, file, width: Math.max(1, Math.min(meta.width, Math.round(it.w * k))), height: Math.max(1, Math.min(meta.height, Math.round(it.h * k))) });
+}
+range.sort((a, b) => b.height - a.height);
+const all = [...pieces, ...kit, ...range];
 function fits(page) {
   let x = GUT, y = GUT, rowH = 0;
   for (const p of all) {
@@ -116,6 +127,17 @@ for (const p of kit) {
   kitOut.push({ ...lib, tex: [0, x / PAGE, y / PAGE, (x + width) / PAGE, (y + height) / PAGE], quad: [0, 0, it.w, it.h] });
   x += width + GUT; rowH = Math.max(rowH, height);
 }
+// T258: the range art after the kit, in the same shelves
+const rangeOut = [];
+for (const p of range) {
+  const { it, width, height } = p;
+  if (x + width + GUT > PAGE) { x = GUT; y += rowH + GUT; rowH = 0; }
+  if (width + 2 * GUT > PAGE || y + height + GUT > PAGE) throw new Error(`Atlas overflow packing ${it.id}`);
+  composite.push({ input: await sharp(p.file).resize(width, height, { kernel: 'lanczos3', fit: 'fill' }).sharpen({ sigma: 0.5 }).png().toBuffer(), left: x, top: y });
+  const { src, ...lib } = it;
+  rangeOut.push({ ...lib, tex: [0, x / PAGE, y / PAGE, (x + width) / PAGE, (y + height) / PAGE], quad: [0, 0, it.w, it.h] });
+  x += width + GUT; rowH = Math.max(rowH, height);
+}
 const full = await sharp({ create: { width: PAGE, height: PAGE, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } }).composite(composite).png().toBuffer();
 for (let mip = 0; mip < 5; mip++) await sharp(full).resize(PAGE >> mip, PAGE >> mip).webp({ quality: 92, alphaQuality: 100 }).toFile(path.join(out, `golf-${mip}.webp`));
 // Ignored review artifacts: full-resolution individual cutouts and an enlarged atlas showing the final packed pixels.
@@ -147,6 +169,15 @@ fs.writeFileSync(path.join(root, 'src/game/golf-library.ts'), [
   'export function appendKit(library: LibItem[]) {',
   "  if (golfPage < 0) throw new Error('appendKit before appendGolf');",
   '  for (const item of KIT) if (!removed.has(item.id)) library.push({ ...item, tex: [golfPage, ...item.tex.slice(1)] as LibItem["tex"] });',
+  '}',
+  '/** T258: the range art (art/range-kit, prep-range-art.mjs: the owner\'s ChatGPT buildings and signs), on the golf page */',
+  `const RANGE: LibItem[] = ${JSON.stringify(rangeOut)};`,
+  '/** T258: the range art, after every other library (it shares the golf page: appendGolf must have run), so no saved index moves */',
+  'export function appendRangeArt(library: LibItem[]) {',
+  "  if (golfPage < 0) throw new Error('appendRangeArt before appendGolf');",
+  '  for (const item of RANGE) if (!removed.has(item.id)) library.push({ ...item, tex: [golfPage, ...item.tex.slice(1)] as LibItem["tex"] });',
   '}', ''
 ].join('\n'));
-console.log(`Prepared ${items.length} golf sprites and ${kitOut.length} kit sprites on one ${PAGE} x ${PAGE} supplemental page (rows to y ${y + rowH}); cutouts and contact sheet: ${review}.`);
+// T258: the page's use (the packed rects' share of its area, and its lowest shelf)
+const used = [...items, ...kitOut, ...rangeOut].reduce((s, it) => s + (it.tex[3] - it.tex[1]) * (it.tex[4] - it.tex[2]), 0);
+console.log(`Prepared ${items.length} golf sprites, ${kitOut.length} kit sprites and ${rangeOut.length} range sprites on one ${PAGE} x ${PAGE} supplemental page (rows to y ${y + rowH} of ${PAGE}, ${(100 * used).toFixed(1)}% of its area); cutouts and contact sheet: ${review}.`);

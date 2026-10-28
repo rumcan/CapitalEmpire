@@ -6,6 +6,7 @@ import {
   DEMAND_RATE, PRICE_MAX, PRICE_MIN, RANGE_UPGRADES, RangeSim, START_BAYS, arrivalRate, dayDemand, defaultRangeBiz, normalizeRangeBiz, priceFactor,
   rangeScale, rangeScene, rangeStats, saleValue, skippedVisits, upgradeWhy, withPrice, withUpgrade, type CarSlot, type RangeBizSave, type RangeUpgradeId,
 } from '../src/game/golf/rangebiz';
+import { RANGE_STAND_INS } from '../src/game/golf/range-look';
 import { normalizeGolfSave, type GolfSave, type Rect } from '../src/game/golf/mode';
 import { RANGE_PASS_POP } from '../src/game/golf/range';
 
@@ -84,7 +85,9 @@ test('the scene: inside the plot for every facing, the mats and greens follow th
       for (const pa of sc.patches) for (let i = 0; i < pa.pts.length; i += 2) assert.ok(inPlot(pa.pts[i]!, pa.pts[i + 1]!), `facing ${f}: a ${pa.surf} patch on the plot`);
       for (const l of sc.paths) assert.ok(inPlot(l.a.x, l.a.y) && inPlot(l.b.x, l.b.y), 'the paths on the plot');
       assert.equal(new Set(sc.pieces.map(q => q.key)).size, sc.pieces.length, 'unique keys');
-      assert.equal(sc.bays.length, st.bays); assert.equal(sc.patches.filter(q => q.surf === 'asphaltDark').length, st.bays, 'a pad under each open bay');
+      // (T258: the mats' picture is one strip along the open bays; the stand-in a pad under each)
+      assert.equal(sc.bays.length, st.bays); assert.equal(sc.patches.filter(q => q.surf === 'mats').length, 1, 'the mats along the open bays');
+      assert.equal(rangeScene(p, f, s, { look: RANGE_STAND_INS }).patches.filter(q => q.surf === 'asphaltDark').length, st.bays, 'the stand-in: a pad under each open bay');
       assert.equal(sc.targets.length, st.targets); assert.equal(sc.pieces.filter(q => q.key.startsWith('flag')).length, st.targets);
       assert.equal(sc.pieces.filter(q => q.key.startsWith('board')).length, st.targets > 2 ? st.targets : 0);
       assert.equal(sc.pieces.filter(q => q.key.startsWith('light')).length, st.lights ? 8 : 0);
