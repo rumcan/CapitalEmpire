@@ -4941,6 +4941,8 @@ export class Game {
     const raw: CarParkDef = { id: 0, x: Math.min(pd.x0, pd.x1), y: Math.min(pd.y0, pd.y1), w: Math.abs(pd.x1 - pd.x0), h: Math.abs(pd.y1 - pd.y0) };
     // T237: a rectangle beside a road snaps onto its verge (the road its frontage, the entrance on it)
     const def = raw.w > 0 && raw.h > 0 ? snapToRoad(this.net, raw) ?? raw : raw;
+    // the preview is laid as syncParks will build it (a golf game's layout), so its bays, serve line and toast count the bays it gets
+    if (this.golf) def.cross = true;
     pd.def = def; pd.cost = parkCost(def); pd.why = parkValid(def, this.terrain.cls, this.net, this.site, this.parkDefs) || (this.lotsUnder(def) ? 'buildings stand there' : '') || this.parkSpotWhy(def);
     pd.park = pd.why ? null : buildPark(this.net, def);
   }
