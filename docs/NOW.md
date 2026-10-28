@@ -58,6 +58,8 @@ never commit there.)
 - **UI:** side-opening flyouts, never a sideways scrollbar. The club's tools are in the left drawer; the town's in the footer, which stands
   in the bottom right corner (#770).
 - **The town's traffic jams are the player's job** (they upgrade roads); never auto-fix congestion.
+- **Performance is a gate** (the owner, 2026-10-28: "dont screw performance"): a ticket that adds things to draw or bake benches main
+  vs branch and gets a stated ms ceiling in its brief; thin it until it fits, or stop and report; never merge over GAME-PLAN 2.3's budgets.
 - The owner wants screenshots of every visible change. Commits end with the `Co-Authored-By:` line, PR bodies with the Claude Code line.
 
 ### 3. In flight
@@ -82,7 +84,8 @@ deliveries come as PRs to review. The 3D people session's handover is `docs/HAND
 ### 4. Queue (in order; start the next when an agent lands)
 0. **T265 #794** (the owner, 2026-10-28: "can we have the swamp texture around the wider river too please and somemore trees bunching
    along rivers and creeks on mass"): the river's swamp band (swamp.ts `swampStreams` is creeks only today), dense tree belts along every river
-   and creek, benched. **First: start it when T262 or T263 lands.**
+   and creek. **A hard performance gate** (the owner: "dont screw performance"; the limits are on #794: main vs branch at 30/15/8%, belts
+   at most +0.5 ms a frame, the swamp at most +1 ms a bake, thin or stop). **First: start it when T262 or T263 lands.**
 1. **T259 #759** farms: seasonal corn and ploughed fields, orchards in rows, farmhouses set back on a poplar-lined lane (art 185-189 from
    ChatGPT; stand-ins until then).
 2. **T248 #718** water that moves: research first, two flowing textures, waves lapping at the shore.
