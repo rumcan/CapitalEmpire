@@ -5,7 +5,7 @@ import { BUSINESS, BUSINESSES, START_SAT, dailyDemand } from '../src/game/busine
 import { CLUB_REACH, RANGE_BAYS, RANGE_FRONT, RANGE_PASS_POP, RANGE_PLOT, RANGE_TARGETS, clubhouseSpotOk, clubhouseSpotWhy, plotPoint, rangeLayout, type ClubSpotCtx, type RangeLayout } from '../src/game/golf/range';
 import { CLASS, type Leg } from '../src/game/network';
 import { generateTerrain } from '../src/game/terrain';
-import { planRangeStart } from '../src/game/golf/rangestart';
+import { NEAR, planRangeStart } from '../src/game/golf/rangestart';
 import type { Rect } from '../src/game/golf/mode';
 import type { Pt } from '../src/game/network';
 
@@ -102,25 +102,33 @@ function ctx(r: Rect, clubs = 0, course: (x: number, y: number) => boolean = () 
   return { clubs, owned: (x, y) => x >= px && x < px + pw && y >= py && y < py + ph, plot: PLAN.site.rangePlot, course, roadGap: roadGap(r) };
 }
 
+/** a rect in seed 1's site frame (T237: the site moved with the range's set-back, so the spots are laid relative to it): s across the drive,
+ *  toward the side away from the range plot, t from the road's centre line along the drive */
+function spotAt(s0: number, s1: number, t0: number, t1: number): Rect {
+  const J = PLAN.site.J, e = PLAN.site.drive[0]!.b, L = Math.hypot(e.x - J.x, e.y - J.y), t = { x: (e.x - J.x) / L, y: (e.y - J.y) / L };
+  const n = { x: -t.y, y: t.x }, [qx, qy, qw, qh] = PLAN.site.rangePlot, k = (qx + qw / 2 - J.x) * n.x + (qy + qh / 2 - J.y) * n.y > 0 ? -1 : 1;
+  const P = (a: number, b: number) => ({ x: J.x + n.x * k * a + t.x * b, y: J.y + n.y * k * a + t.y * b }), A = P(s0, t0), B = P(s1, t1);
+  return [Math.min(A.x, B.x), Math.min(A.y, B.y), Math.abs(B.x - A.x), Math.abs(B.y - A.y)];
+}
+
 test("clubhouseSpotOk accepts a spot on the drive's verge on the player's land, beside the range", () => {
-  // seed 1: the county road runs east-west at y = 880 (J = 1000, 880), the drive north to y = 858, the range plot east of it (x 1002-1072)
-  assert.deepEqual(PLAN.site.J, { x: 1000, y: 880 });
-  const spot: Rect = [974, 834, 24, 40];
+  // seed 1: a clubhouse beside the drive on the side away from the range plot, from the parcel's road edge in
+  const spot = spotAt(2, 26, NEAR, NEAR + 40);
   assert.equal(clubhouseSpotWhy(spot, ctx(spot)), '');
   assert.ok(clubhouseSpotOk(spot, ctx(spot)));
 });
 
 test('clubhouseSpotOk refuses a second clubhouse, a spot off the parcel, over the range plot, over the course, through a road or far from any', () => {
-  const ok: Rect = [974, 834, 24, 40];
+  const ok = spotAt(2, 26, NEAR, NEAR + 40);
   assert.equal(clubhouseSpotWhy(ok, ctx(ok, 1)), 'You have a clubhouse already');
-  const off: Rect = [974, 850, 24, 40];
+  const off = spotAt(2, 26, NEAR - 16, NEAR + 24);
   assert.match(clubhouseSpotWhy(off, ctx(off)), /Off your land/);
   const [qx, qy] = PLAN.site.rangePlot, onPlot: Rect = [qx + 10, qy + 40, 40, 24];
   assert.equal(clubhouseSpotWhy(onPlot, ctx(onPlot)), 'The driving range is there');
-  assert.equal(clubhouseSpotWhy(ok, ctx(ok, 0, (x, y) => x > 980 && y > 860)), 'The course is there');
-  const across: Rect = [990, 834, 24, 40];
+  assert.equal(clubhouseSpotWhy(ok, ctx(ok, 0, (x, y) => x > ok[0] + 6 && y > ok[1] + 6 && x < ok[0] + ok[2] && y < ok[1] + ok[3])), 'The course is there');
+  const across = spotAt(-12, 12, NEAR, NEAR + 40);
   assert.equal(clubhouseSpotWhy(across, { ...ctx(across), plot: null }), 'A road runs through it', 'over the drive');
-  const far: Rect = [800, 500, 40, 24];
+  const far = spotAt(60, 100, 150, 174);
   assert.ok(roadGap(far) > CLUB_REACH);
   assert.match(clubhouseSpotWhy(far, ctx(far)), /beside a drive/);
   for (const r of [off, onPlot, far]) assert.equal(clubhouseSpotOk(r, ctx(r)), false);

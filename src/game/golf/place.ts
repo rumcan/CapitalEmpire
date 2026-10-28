@@ -8,6 +8,7 @@ import { TC } from '../terrain/types';
 import type { ClassId, Leg, Pt } from '../network';
 import type { Rect } from './mode';
 import type { CourseLayout } from './types';
+import { HIDDEN_MAX, hiddenShare } from './parkplace';
 
 /** course sizes tried in order, [across, along] tiles (across: perpendicular to the town axis; along: away from the town) */
 export const COURSE_SIZES: [number, number][] = [[300, 450], [270, 400], [240, 360]];
@@ -23,13 +24,20 @@ const D0 = 20, DSTEP = 10;
 const DOOR = 3;
 /** the car park's near edge sits this many tiles off the drive's centre line */
 const PARK_OFF = 3;
+/** T237: how far up the screen the clubhouse's picture stands over the ground behind it (tiles along -x -y): the big clubhouse covers a car park
+ *  right behind it entirely (T228), so one there is moved beside it */
+const CLUB_REACH_UP = 24;
+/** T237: the car park beside the venue (when the drive's side of it is behind the clubhouse in screen space): its spur leaves the drive this many
+ *  tiles before the drive's end, and the car park stands PARK_OFF off the spur, VENUE_GAP off the venue's side */
+const SPUR_BACK = 8, VENUE_GAP = 3;
 /** the drive corridor: every tile within this many tiles of its centre line must be buildable */
 const DRIVE_HALF = 2;
 /** the course's playable share of its rect: open land or hills (a course rolls over hills; the rest may be water, creek or bank) */
 const COURSE_BUILD = 0.98;
 
 /** a placed course: dir (the side of the town the course lies on: 0 north, 1 east, 2 south, 3 west), the course rect, the venue and the car park
- *  (rects: top-left x, y and size w, h, tiles), and the drive: one leg from the town's edge to the venue's door */
+ *  (rects: top-left x, y and size w, h, tiles), and the drive: one leg from the town's edge to the venue's door (T237: and a spur to the car park
+ *  beside the venue, where the drive's side of it is behind the clubhouse in screen space) */
 export interface CoursePlan { dir: 0 | 1 | 2 | 3; course: Rect; venue: Rect; carpark: Rect; drive: Leg[] }
 
 /** the top-left tile (x0, y0) of the town grid around centre (tiles, n blocks each way) and its middle lines ax (vertical) and ay (horizontal), as townGrid lays them */
@@ -84,11 +92,27 @@ export function placeCourse(cls: Uint8Array, centre: Pt, ends: Pt[], seed: numbe
       if (dist > CLUB_MAX) break;
       if (dist < CLUB_MIN) continue;
       const course = frame(dir, E, D + VENUE[1], D + VENUE[1] + along, -across / 2, across / 2);
-      const carpark = frame(dir, E, D - PARK[1], D, -(PARK_OFF + PARK[0]), -PARK_OFF);
       const corridor = frame(dir, E, 0, D - DOOR, -DRIVE_HALF, DRIVE_HALF);
-      if (!inside(course, SITE_MARGIN) || !inside(venue, SITE_MARGIN) || !inside(carpark, SITE_MARGIN)) continue;
-      if (count(course, H) < COURSE_BUILD * course[2] * course[3] || !full(venue) || !full(carpark) || !full(corridor)) continue;
-      return { dir, course, venue, carpark, drive: [{ a: at(dir, E, 0, 0), b: at(dir, E, D - DOOR, 0) }] };
+      if (!inside(course, SITE_MARGIN) || !inside(venue, SITE_MARGIN)) continue;
+      if (count(course, H) < COURSE_BUILD * course[2] * course[3] || !full(venue) || !full(corridor)) continue;
+      const drive: Leg = { a: at(dir, E, 0, 0), b: at(dir, E, D - DOOR, 0) };
+      // the car park: beside the drive before the venue, its entrance on the drive; T237: where that is behind the clubhouse in screen space
+      // (the camera looks from +x +y: dir 1 and 2 put the town's side of the venue up the screen), beside the venue on the side in front, on a
+      // spur off the drive (its entrance on the spur)
+      const before = frame(dir, E, D - PARK[1], D, -(PARK_OFF + PARK[0]), -PARK_OFF);
+      const hid = (r: Rect) => hiddenShare({ x: r[0], y: r[1], w: r[2], h: r[3] }, { rect: venue, name: 'the clubhouse', reach: CLUB_REACH_UP }) > HIDDEN_MAX;
+      const ok = (r: Rect) => inside(r, SITE_MARGIN) && full(r);
+      if (!hid(before)) { if (ok(before)) return { dir, course, venue, carpark: before, drive: [drive] }; continue; }
+      let side: Pick<CoursePlan, 'carpark' | 'drive'> | null = null;
+      for (const k of [1, -1]) {
+        const t0 = VENUE[0] / 2 + VENUE_GAP, sp = D - SPUR_BACK, park = k > 0 ? frame(dir, E, sp + PARK_OFF, sp + PARK_OFF + PARK[1], t0, t0 + PARK[0]) : frame(dir, E, sp + PARK_OFF, sp + PARK_OFF + PARK[1], -t0 - PARK[0], -t0);
+        const spur = frame(dir, E, sp - DRIVE_HALF, sp + DRIVE_HALF, Math.min(0, k * (t0 + PARK[0])), Math.max(0, k * (t0 + PARK[0])));
+        if (hid(park) || !ok(park) || !full(spur)) continue;
+        side = { carpark: park, drive: [drive, { a: at(dir, E, sp, 0), b: at(dir, E, sp, k * (t0 + PARK[0])) }] }; break;
+      }
+      // (no room beside it: the old spot behind it, as before)
+      if (side) return { dir, course, venue, ...side };
+      if (ok(before)) return { dir, course, venue, carpark: before, drive: [drive] };
     }
   }
   return null;

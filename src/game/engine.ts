@@ -547,12 +547,12 @@ export class Game {
     carPark: door => this.rangeCarPark(door), lots: door => this.lotsFor(door),
     // the car park building (T146) takes the lot's far half: the lot keeps its near half (the bays under the building go, the ground re-bakes)
     fitPark: r => {
-      const d = this.parkDefs.find(q => this.onRangePlot(q.x + q.w / 2, q.y + q.h / 2)); if (!d || (d.x === r[0] && d.y === r[1] && d.w === r[2] && d.h === r[3])) return;
-      d.x = r[0]; d.y = r[1]; d.w = r[2]; d.h = r[3]; this.syncParks(); this.scheduleSave();
+      const d = this.rangeLotDef(); if (!d || (d.x === r[0] && d.y === r[1] && d.w === r[2] && d.h === r[3])) return;
+      d.x = r[0]; d.y = r[1]; d.w = r[2]; d.h = r[3]; const b = this.golf?.range; if (b?.lot) b.lot = [r[0], r[1], r[2], r[3]]; this.syncParks(); this.scheduleSave();
     },
     // T239: the range car park's ground follows its upgrades: packed dirt and gravel are unpaved lots (loose bays, no lines, no barriers)
     parkGround: g => {
-      const d = this.parkDefs.find(q => this.onRangePlot(q.x + q.w / 2, q.y + q.h / 2)), want = g === 'paved' ? undefined : g; if (!d || d.ground === want) return;
+      const d = this.rangeLotDef(), want = g === 'paved' ? undefined : g; if (!d || d.ground === want) return;
       if (want) d.ground = want; else delete d.ground;
       this.syncParks();
     },
@@ -595,6 +595,13 @@ export class Game {
     return this.rangePk.v;
   }
   private rangePk: { pks: Set<CarPark>; v: { bays: { x: number; y: number; hx: number; hy: number; e: Pt; pid: number }[]; entrance: Pt; key: string } } | null = null;
+  /** T237: the range's own car park (the one its upgrades gravel and pave, and the car park building trims): the save's lot rect (a new game's,
+   *  in the frontage strip), else the car park on the range's plot (an old save's) */
+  private rangeLotDef(): CarParkDef | undefined {
+    const r = this.golf?.range?.lot;
+    if (r) return this.parkDefs.find(q => q.x === r[0] && q.y === r[1] && q.w === r[2] && q.h === r[3]);
+    return this.parkDefs.find(q => this.onRangePlot(q.x + q.w / 2, q.y + q.h / 2));
+  }
   /** T237: the venues a car park can serve (golf/walkserve.ts): the range's shop counter, the clubhouse's door, the first tee, the practice area's
    *  way in (once it is the player's: a guided start's is land for sale) and a tournament's gates */
   venues(): Venue[] {
@@ -2160,7 +2167,8 @@ export class Game {
       this.golf = s.save; this.golf.progress = { ...emptyProgress(), ramp: 0, guide: newRangeGuide() }; // T239: the guided build's card
       // the range business (P24, T129): the starting range (T239: the guided build: no walkway laid, the player lays its path; the practice area
       // beside the car park is land for sale until bought)
-      this.golf.range = defaultRangeBiz();
+      // (T237: its plot set back from the road, its car park in the frontage strip that leaves)
+      this.golf.range = { ...defaultRangeBiz(), setback: site.setback, lot: [px, py, pw, ph] };
       const pb = practiceArea(site.rangePlot, site.dir).box; this.golf.practiceLot = [Math.round(pb[0]), Math.round(pb[1]), Math.round(pb[2] - pb[0]), Math.round(pb[3] - pb[1])];
       const [hx, hy, hw, hh] = rangeLayout(site.rangePlot, site.dir).hut.rect, cx = hx + hw / 2, cy = hy + hh / 2;
       this.cam.X = worldX(cx, cy); this.cam.Y = worldY(cx, cy); this.cam.z = RANGE_CAM_ZOOM;
@@ -4939,7 +4947,7 @@ export class Game {
   private parkSpotWhy(d: CarParkDef): string {
     const g = this.golf; if (!g) return '';
     const rd = g.start === 'range' ? this.bizDefs.find(b => b.type === 'range') : undefined, plot = rd ? plotOfFront([rd.x, rd.y, rd.w, rd.h], g.dir) : null;
-    const keep = plot ? rangeKeepOutWhy(d, rangeKeepOut(plot, g.dir)) : ''; if (keep) return keep;
+    const keep = plot ? rangeKeepOutWhy(d, rangeKeepOut(plot, g.dir, g.range?.setback ?? 0)) : ''; if (keep) return keep;
     const bs: Building[] = [];
     for (const b of this.bizDefs) if (b.type === 'clubhouse' || b.type === 'halfway') bs.push({ rect: [b.x, b.y, b.w, b.h], name: b.type === 'clubhouse' ? 'the clubhouse' : 'the halfway house' });
     if (plot) bs.push({ rect: rangeLayout(plot, g.dir).hut.rect, name: 'the pro shop' });

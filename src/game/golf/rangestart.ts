@@ -19,8 +19,15 @@ const BEND_STEP = 80;
 const MAX_BRIDGES = 2, MOUNTAIN_END = 4000;
 /** the range plot's gap to the drive's centre line, tiles (the plot and its front: golf/range.ts RANGE_PLOT, RANGE_FRONT) */
 export const DRIVE_GAP = 2;
-/** the car park, [along the road, deep] tiles, its gap to the drive's centre line and to the road side of the front */
-const PARK: [number, number] = [20, 16], PARK_OFF = 3, PARK_IN = 2;
+/** the car park, [along the road, deep] tiles, and its gap to the drive's centre line. T237: it stands in the frontage strip, its edge on the
+ *  parcel's road edge (the county road its frontage: the entrance on the road), its back FRONT_SPARE short of the range's plot */
+const PARK: [number, number] = [20, 16], PARK_OFF = 3;
+/** T237: the range's car park's size, [along the road, deep] tiles (the scene's lot in the frontage strip: rangebiz.ts) */
+export const RANGE_LOT: readonly [number, number] = PARK;
+/** T237 (#694, the owner: "move the entire driving range forward so we can make bigger and bigger parking lots along the road"): the range's plot
+ *  (the tee line, the shop, the outfield) stands this far behind the parcel's road edge (36 m), leaving a frontage strip along the road where car
+ *  parks grow lot by lot, their entrances on the road; a car park in it never reaches the tee box (the plot's own front, 36 m more, lies between) */
+export const SETBACK = 18;
 /** the drive runs this far past the road side of the front (so its far end is beside the car park) */
 const DRIVE_IN = 16;
 /** the town seed's distance across the road from J, tiles */
@@ -50,6 +57,9 @@ export interface CountyRoad { legs: Leg[]; kinds: SegKind[]; exits: [Pt, Pt]; ed
 export interface RangeSite {
   J: Pt; axis: 'x' | 'y'; side: 1 | -1; dir: 0 | 1 | 2 | 3;
   parcel: Rect; rangePlot: Rect; rangeFront: Rect; carpark: Rect; drive: Leg[]; centre: Pt;
+  /** T237: the range's set-back from the parcel's road edge (tiles: SETBACK) and the frontage strip it leaves along the road (the parcel's width
+   *  by the set-back: the car parks' land) */
+  setback: number; strip: Rect;
 }
 /** the golf state of a range start: a GolfSave with its start and exits */
 export type RangeSave = GolfSave & { start: 'range'; exits: Pt[] };
@@ -180,21 +190,22 @@ function candidates(t: Terrain): Pt[] {
 }
 
 /** the site at J for axis and side with a parcel of [along the road, deep] tiles, by plan 2.1.2 (shifted DRIVE_GAP off the drive: the drive's
- *  corridor stays off the range plot and the range's door lands on the drive), or null when a fit rule fails: the parcel PARCEL_BUILD playable, the
+ *  corridor stays off the range plot and the range's door lands on the drive; T237: the plot SETBACK behind the parcel's road edge, the car park
+ *  in the frontage strip that leaves, beside the drive, on the road), or null when a fit rule fails: the parcel PARCEL_BUILD playable, the
  *  range front, car park and drive corridor all buildable, the town window across the road TOWN_BUILD buildable, all of it SITE_MARGIN from the edges */
 function siteAt(I: ReturnType<typeof integrals>, J: Pt, axis: 'x' | 'y', side: 1 | -1, size: [number, number]): RangeSite | null {
   const f = frameOf(axis, side), [along, deep] = size, s0 = -DRIVE_GAP - RANGE_PLOT[0];
   const parcel = rectOf(J, f, s0, s0 + along, NEAR, NEAR + deep);
-  const rangePlot = rectOf(J, f, s0, -DRIVE_GAP, NEAR, NEAR + RANGE_PLOT[1]);
-  const rangeFront = rectOf(J, f, s0, -DRIVE_GAP, NEAR, NEAR + RANGE_FRONT);
-  const carpark = rectOf(J, f, -PARK_OFF - PARK[0], -PARK_OFF, NEAR + PARK_IN, NEAR + PARK_IN + PARK[1]);
-  const corridor = rectOf(J, f, -2, 2, Math.floor(VERGE), NEAR + DRIVE_IN);
+  const B = NEAR + SETBACK, rangePlot = rectOf(J, f, s0, -DRIVE_GAP, B, B + RANGE_PLOT[1]);
+  const rangeFront = rectOf(J, f, s0, -DRIVE_GAP, B, B + RANGE_FRONT);
+  const carpark = rectOf(J, f, -PARK_OFF - PARK[0], -PARK_OFF, NEAR, NEAR + PARK[1]), strip = rectOf(J, f, s0, s0 + along, NEAR, B);
+  const corridor = rectOf(J, f, -2, 2, Math.floor(VERGE), B + DRIVE_IN);
   const town = rectOf(J, f, -TOWN_WINDOW[0] / 2, TOWN_WINDOW[0] / 2, -NEAR - TOWN_WINDOW[1], -NEAR);
   const area = (r: Rect) => r[2] * r[3];
   for (const r of [parcel, town]) if (!inside(r, SITE_MARGIN)) return null;
   if (I.count(rangeFront, I.S) !== area(rangeFront) || I.count(carpark, I.S) !== area(carpark) || I.count(corridor, I.S) !== area(corridor)) return null;
   if (I.count(parcel, I.H) < PARCEL_BUILD * area(parcel) || I.count(town, I.S) < TOWN_BUILD * area(town)) return null;
-  return { J, axis, side, dir: f.dir, parcel, rangePlot, rangeFront, carpark, drive: [{ a: J, b: at(J, f, 0, NEAR + DRIVE_IN) }], centre: at(J, f, 0, -SEED_ACROSS) };
+  return { J, axis, side, dir: f.dir, parcel, rangePlot, rangeFront, carpark, drive: [{ a: J, b: at(J, f, 0, B + DRIVE_IN) }], centre: at(J, f, 0, -SEED_ACROSS), setback: SETBACK, strip };
 }
 
 /** the site and its road: sizes (COURSE_SIZES) outermost, then the axes (the one with more open edges first: fewer road ends in the mountains),
@@ -223,7 +234,7 @@ export function placeRangeSite(t: Terrain, seed: number): RangeSite | null { ret
 /** the door point of the range front: the middle of its side on the drive, tiles */
 function frontDoor(s: RangeSite): Pt {
   const f = frameOf(s.axis, s.side);
-  return at(s.J, f, -DRIVE_GAP, NEAR + RANGE_FRONT / 2);
+  return at(s.J, f, -DRIVE_GAP, NEAR + s.setback + RANGE_FRONT / 2);
 }
 
 /** a new range start on a terrain for a seed (plan 2.1): the county road, the site, the golf state (start 'range', tier 1, the starting
