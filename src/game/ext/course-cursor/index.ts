@@ -39,6 +39,7 @@ import { CAST, castShear } from '../../cast-shadow';
 import { DARK_RGB, edgeProfileOf, type EdgeProfile } from '../../paint-edges';
 import { BORDER_TEXES, borderW, roundCorners, type PaintArea } from '../../paint';
 import { puckBandOf, type BandName, type BrushLooks, type PuckBand } from '../../course-look';
+import { exposeDraw, exposureOf } from '../../exposure';
 import { DEFAULT_COURSE_FINISH, LIP, type CourseFinish } from '../../course-finish';
 import { SUN_TILE_DIR } from '../course-height';
 import { SURF_SURFACE, surfOfSurface } from '../course-grid/areas';
@@ -59,8 +60,9 @@ const looksOf = (tool: CursorTool): BrushLooks => tool.brushLooks ?? (tool.brush
 /** the camera, filled in by the engine each frame (one object, reused): device px per world px (ze = zoom x dpr), the world px at the
  *  overlay's centre (camX, camY), the overlay's size in device px (cw, ch) and the dpr */
 export interface CursorView { ze: number; camX: number; camY: number; cw: number; ch: number; dpr: number }
-/** the look a chip takes from a brush style (the painted area's own fields) */
-export type PuckStyle = Pick<PaintArea, 'tex' | 'scale' | 'angle' | 'border' | 'btex' | 'tone' | 'toneAmt' | 'tint' | 'bscale' | 'bangle'>;
+/** the look a chip takes from a brush style (the painted area's own fields; T261: the tone and the border's tone drawn as exposure, the tint
+ *  unread) */
+export type PuckStyle = Pick<PaintArea, 'tex' | 'scale' | 'angle' | 'border' | 'btex' | 'tone' | 'toneAmt' | 'tint' | 'bscale' | 'bangle'> & Partial<Pick<PaintArea, 'btone' | 'btoneAmt'>>;
 /** a photo for a texture at a wanted px a tile: the picture and the tiles one repeat covers (null: not loaded, or no photo) */
 export interface CursorTexture { pick(tex: string, pxPerTile: number): { img: CanvasImageSource & { width: number }; period: number } | null; rev(): number }
 /** a 2D canvas the cursor can draw its sprites on */
@@ -583,9 +585,10 @@ function paintPuck(g: CanvasRenderingContext2D, st: PuckStyle, kind: string, era
 
   // ---- the top face: the brush's photo in tile space (its period, scale and angle), its tone, its border band inside the edge
   g.save(); iso(); g.beginPath(); g.arc(0, 0, R, 0, Math.PI * 2); g.clip();
-  g.fillStyle = erase ? RUBBER : fillOf(st.tex, st.scale, st.angle); g.fillRect(-R, -R, 2 * R, 2 * R);
+  const topFill = erase ? RUBBER : fillOf(st.tex, st.scale, st.angle);
+  g.fillStyle = topFill; g.fillRect(-R, -R, 2 * R, 2 * R);
   if (erase) paintSleeve(g, cx, cy, rx, ry, d);
-  else if (st.tone) { g.globalCompositeOperation = st.tone === 1 ? 'multiply' : 'screen'; g.globalAlpha = st.toneAmt; g.fillStyle = st.tint; g.fillRect(-R, -R, 2 * R, 2 * R); g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1; }
+  else if (st.tone) exposeDraw(g, exposureOf(st.tone, st.toneAmt), topFill, () => g.fillRect(-R, -R, 2 * R, 2 * R)); // T261: its exposure
   // T252: the surface's real border on the course grid (course-look puckBandOf: the green's fringe, the first cut round a fairway or a tee,
   // a bunker's grass lip, a pond's bank), in its texture and tone, inside the rim (on the course it lies outside the cells)
   if (pb && !erase) paintBand(g, pb, R, fillOf);
@@ -593,9 +596,10 @@ function paintPuck(g: CanvasRenderingContext2D, st: PuckStyle, kind: string, era
   // the surface reads
   const bw = !pb && !erase && withBand && st.border > 0 ? Math.min(borderW(st.border), 0.34 * R) : 0;
   if (bw > 0 && st.btex !== 'kerb') {
-    g.strokeStyle = fillOf(st.btex, st.bscale, st.bangle);
-    g.lineWidth = 2 * bw; g.stroke();
-    g.globalAlpha = 0.5; g.lineWidth = 2 * bw * 1.35; g.stroke(); g.globalAlpha = 1;
+    const bandFill = fillOf(st.btex, st.bscale, st.bangle), bx = st.btone ? exposureOf(st.btone, st.btoneAmt) : 1;
+    g.strokeStyle = bandFill;
+    g.lineWidth = 2 * bw; g.stroke(); exposeDraw(g, bx, bandFill, () => g.stroke());
+    g.globalAlpha = 0.5; g.lineWidth = 2 * bw * 1.35; g.stroke(); exposeDraw(g, bx, bandFill, () => g.stroke(), 0.5); g.globalAlpha = 1;
   }
   g.restore();
 
@@ -675,13 +679,15 @@ export const PUCK_BAND_W: Readonly<Record<BandName, number>> = { 'first-cut': 0.
 /** the bank's wet soil, from the water's edge into the bank: each stroke's width (a share of the bank's) and colour (renderer courseBank's) */
 const WET: readonly (readonly [number, string])[] = [[0.62, 'rgba(92,70,42,0.22)'], [0.42, 'rgba(78,58,36,0.3)'], [0.24, 'rgba(62,46,30,0.38)'], [0.1, 'rgba(44,34,24,0.5)']];
 /** paints a surface's band inside the top face (g in tile space round the face's centre, clipped to it; R its radius in tiles): the band's
- *  texture, its look's tone, the course finish's collar tone (a multiply that keeps the texture), and a pond bank's wet soil toward the water */
+ *  texture, its look's exposure (T261), the course finish's collar tone (a multiply that keeps the texture), and a pond bank's wet soil toward
+ *  the water */
 function paintBand(g: CanvasRenderingContext2D, pb: PuckBand, R: number, fillOf: (t: string, k: number, a: number) => CanvasPattern | string) {
   const W = PUCK_BAND_W[pb.name] * R, t = pb.tex;
   const ring = () => { g.beginPath(); g.arc(0, 0, R, 0, Math.PI * 2); };
   g.save(); g.lineWidth = 2 * W;
-  ring(); g.strokeStyle = fillOf(t.tex, t.sc, t.a); g.stroke();
-  if (t.t && t.tc) { g.globalCompositeOperation = t.t === 1 ? 'multiply' : 'screen'; g.globalAlpha = t.ta ?? 0.5; g.strokeStyle = t.tc; ring(); g.stroke(); }
+  const tex = fillOf(t.tex, t.sc, t.a);
+  ring(); g.strokeStyle = tex; g.stroke();
+  exposeDraw(g, t.x, tex, () => { ring(); g.stroke(); }); // T261: the band look's exposure
   if (pb.tone) { g.globalCompositeOperation = 'multiply'; g.globalAlpha = pb.tone.ta; g.strokeStyle = pb.tone.tc; ring(); g.stroke(); }
   g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1;
   if (pb.name === 'bank') {
@@ -1337,7 +1343,7 @@ export class CourseCursor {
     if (this.spr && k.kind === kind && k.st === st && k.erase === erase && k.band === band && k.d === d && k.rev === rev && k.pb === pb && k.looks === looks
       && k.tex === st.tex && k.scale === st.scale && k.angle === st.angle && k.border === st.border && k.btex === st.btex && k.tone === st.tone) return this.spr;
     Object.assign(k, { kind, st, erase, band, d, rev, pb, looks, tex: st.tex, scale: st.scale, angle: st.angle, border: st.border, btex: st.btex, tone: st.tone });
-    const key = `${kind}|${st.tex}|${st.scale}|${st.angle}|${st.border}|${st.btex}|${st.bscale}|${st.bangle}|${st.tone}|${st.toneAmt}|${st.tint}|${erase ? 1 : 0}|${band ? 1 : 0}|${d}|${rev}|${bandKey(pb)}|${this.looksN(looks)}`;
+    const key = `${kind}|${st.tex}|${st.scale}|${st.angle}|${st.border}|${st.btex}|${st.bscale}|${st.bangle}|${st.tone}|${st.toneAmt}|${st.btone ?? 0}|${st.btoneAmt ?? 0}|${erase ? 1 : 0}|${band ? 1 : 0}|${d}|${rev}|${bandKey(pb)}|${this.looksN(looks)}`;
     let sp = this.sprites.get(key);
     if (sp) { this.sprites.delete(key); this.sprites.set(key, sp); return (this.spr = sp); }
     const sr = (CHIP_CSS / 2) * d, sry = sr * (HH / HW), thick = thickOf(sry, d), pad = Math.ceil(3 * d + 2);
@@ -1397,7 +1403,7 @@ export class CourseCursor {
 }
 
 /** a band's part of a sprite's key ('' none) */
-const bandKey = (pb: PuckBand | null) => (pb ? `${pb.name}:${pb.tex.tex}:${pb.tex.sc}:${pb.tex.a}:${pb.tex.t ?? 0}:${pb.tex.ta ?? 0}:${pb.tex.tc ?? ''}:${pb.tone ? `${pb.tone.tc}${pb.tone.ta}` : ''}` : '');
+const bandKey = (pb: PuckBand | null) => (pb ? `${pb.name}:${pb.tex.tex}:${pb.tex.sc}:${pb.tex.a}:${pb.tex.x ?? 1}:${pb.tone ? `${pb.tone.tc}${pb.tone.ta}` : ''}` : '');
 
 /** T252: a surface's swatch puck (Shape by hand's and Edit hole's swatches): the brush cursor's chip, drawn the same way (paintPuck: the
  *  surface's texture through its look, its real border on the course), `css` px wide at dpr d, without the mark's badge (the swatch names it),

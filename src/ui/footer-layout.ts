@@ -1,9 +1,10 @@
-// The town footer's place (T250, #721): a slim bar centred along the bottom of the screen, clear of the minimap at the lower left and of the
+// The town footer's place (T250, #721): a slim bar along the bottom of the screen, clear of the minimap at the lower left and of the
 // cards at the bottom (the guide card, the leaderboard; a tall right-hand card such as the range card when it reaches the footer's band).
-// The rule: the footer moves aside. It stands in the free stretch of the bottom edge nearest the screen's middle, in its full form (icon and
-// name) where that fits, else in its compact form (icons only, the names in the tooltip); a full bar far off the middle loses to a compact one
-// near it (COMPACT_COST). Only when no stretch holds even the compact bar (a crowded screen: 125% UI on a 1366 px screen with a panel, the
-// range card and the guide card all open) does it stand compact near the middle, and the cards in its way move up above it (lift). Pure
+// The owner, 2026-10-29: "move center footer menu to the right corner": it stands in the bottom right corner (FOOT_ANCHOR).
+// The rule: the footer moves aside. It stands in the free stretch of the bottom edge nearest the screen's right corner, in its full form (icon
+// and name) where that fits, else in its compact form (icons only, the names in the tooltip); a full bar far off the corner loses to a compact
+// one near it (COMPACT_COST). Only when no stretch holds even the compact bar (a crowded screen: 125% UI on a 1366 px screen with a panel, the
+// range card and the guide card all open) does it stand compact in the corner, and the cards in its way move up above it (lift). Pure
 // TypeScript, no DOM: TownFooter.tsx measures the screen and the cards and applies the result. All sizes in the UI layer's px.
 // T255 (#739, the owner 2026-10-29: "these windows need to move to the center footer where town moved to"): a town tool's panel docks above
 // the footer (panelPlace), centred on it, and moves aside the same way: the free stretch nearest the footer's middle that holds it, clear of
@@ -16,6 +17,11 @@ export const FOOT_MARGIN = 12, FOOT_GAP = 10, COMPACT_COST = 160;
 export const FOOT_BOTTOM = 12;
 /** the forms' widths before they are measured (the first frame) */
 export const FOOT_EST = { full: 300, compact: 116 } as const;
+/** where the footer stands on a w px wide screen: as near this point of the bottom edge as the cards allow (the right corner) */
+export const FOOT_ANCHOR = (w: number) => w;
+/** the half width of the bottom edge's middle (the shot panel's 26rem): the hint bar and the shot panel stand above the footer (and its
+ *  panel) only where those reach into it */
+export const MID_HALF = 208;
 
 export interface FootPlace { x: number; compact: boolean; lift: number[] }
 export interface FootRoom {
@@ -54,7 +60,7 @@ export function nearest(free: readonly (readonly [number, number])[], w: number,
 /** where the footer stands (its left edge), in which form, and the cards that move up above it (indices into blocks; none but in the last
  *  resort) */
 export function footerPlace(o: FootRoom): FootPlace {
-  const cx = o.w / 2, free = freeStretches(o);
+  const cx = FOOT_ANCHOR(o.w), free = freeStretches(o);
   let best: FootPlace | null = null, cost = Infinity;
   for (const [compact, w] of [[false, o.full], [true, o.compact]] as const) {
     const n = nearest(free, w, cx), c = n ? n.off + (compact ? COMPACT_COST : 0) : Infinity;

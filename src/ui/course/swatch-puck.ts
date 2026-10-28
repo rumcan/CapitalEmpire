@@ -1,5 +1,5 @@
 // T252 (#731; the owner, 2026-10-28: "change the icon the the puck with the actual texture with the border it has"): the Holes swatches' pucks.
-// Each is the brush cursor's chip drawn small (ext/course-cursor swatchPuck: the surface's own painted tile through its look's tint and tone,
+// Each is the brush cursor's chip drawn small (ext/course-cursor swatchPuck: the surface's own painted tile through its look's exposure (T261),
 // with the border the course lays round it: the green's fringe, the first cut round a fairway or a tee, a bunker's lip, a pond's bank; the
 // rough, the long grass and the waste area plain), made once into an image and kept by its look, so the swatch and the cursor show the same
 // puck. A look changed (My looks, or Studio › Painted saving the surfaces file) gives a new key and the puck is made again; a picture still
@@ -45,8 +45,8 @@ function waitFor(tex: CursorTexture) {
 }
 
 /** a look's part of a puck's key */
-const styleKey = (st: PuckStyle) => `${st.tex}|${st.scale}|${st.angle}|${st.border}|${st.btex}|${st.bscale}|${st.bangle}|${st.tone}|${st.toneAmt}|${st.tint}`;
-const bandKey = (pb: PuckBand | null) => (pb ? `${pb.name}|${pb.tex.tex}|${pb.tex.sc}|${pb.tex.a}|${pb.tex.t ?? 0}|${pb.tex.ta ?? 0}|${pb.tex.tc ?? ''}|${pb.tone ? `${pb.tone.tc}${pb.tone.ta}` : ''}` : '-');
+const styleKey = (st: PuckStyle) => `${st.tex}|${st.scale}|${st.angle}|${st.border}|${st.btex}|${st.bscale}|${st.bangle}|${st.tone}|${st.toneAmt}|${st.btone ?? 0}|${st.btoneAmt ?? 0}`;
+const bandKey = (pb: PuckBand | null) => (pb ? `${pb.name}|${pb.tex.tex}|${pb.tex.sc}|${pb.tex.a}|${pb.tex.x ?? 1}|${pb.tone ? `${pb.tone.tc}${pb.tone.ta}` : ''}` : '-');
 const domCanvas = (w: number, h: number): SpriteCanvas => Object.assign(document.createElement('canvas'), { width: w, height: h });
 
 /** re-renders the caller when a puck lands or a look changes (the Holes swatches call it) */
