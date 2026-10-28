@@ -32,13 +32,15 @@ export function CoursePanel({ game, looks = false, onLooks }: { game: Game; look
   const shape = !ui || ui.shapeByHand, plan = p.planOpen, lock = ui?.newHoleLock ?? null;
   // ↶ ↷ name what they take back (P23 4.3); in New hole its own clicks and drags come first (P23 4.4, T119)
   const un = p.topUndo, re = p.topRedo;
+  // T256 (#743): Range › Build: the same painting tools, on your property (cells of no hole)
+  if (p.property) return <PropertyPanel game={game} looks={looks} onLooks={onLooks} />;
   return (
     <div className="tp" data-panel="holes">
       <ToolHead icon="trophy" title="Holes" desc="Each hole is a park: build it, then shape it">
         <button className="round-btn" disabled={!un} aria-label={un ? `Undo ${un}` : 'Nothing to undo'} title={un ? `Undo: ${un} (Ctrl+Z)` : 'Nothing to undo'} onClick={() => p.undoTop()}>↶</button>
         <button className="round-btn" disabled={!re} aria-label={re ? `Redo ${re}` : 'Nothing to redo'} title={re ? `Redo: ${re} (Ctrl+Y)` : 'Nothing to redo'} onClick={() => p.redoTop()}>↷</button>
       </ToolHead>
-      {plan ? <HoleWizardPanel game={game} looks={looks} onLooks={onLooks} /> : (
+      {p.mode === 'myhole' && p.myHole ? <MyHolePlace game={game} /> : plan ? <HoleWizardPanel game={game} looks={looks} onLooks={onLooks} /> : (
         <button className={`pill-gold ${lock ? 'opacity-50' : ''}`} data-primary="new-hole" data-guide="new-hole" aria-disabled={!!lock} title={lock ? `New hole: ${lock}` : 'Click the tee, then the green: the whole hole is planned, ready to shape and build'} onClick={() => newHole(game)}>
           <span className="pill-plus" aria-hidden>{lock ? <LockMark size={12} /> : '+'}</span>
           <span className="min-w-0"><span className="block">New hole</span>{lock ? <small data-testid="new-hole-lock">{lock}</small> : !shape && <small>Click a tee, then a green</small>}</span>
@@ -70,6 +72,8 @@ function ShapeByHand({ game }: { game: Game }) {
   return (
     <section data-section="shape" className="mt-3">
       <div className="sec-head"><h3 className="label-caps">Shape by hand</h3><span className="sec-note">{`1 m cells · keys 1–${keys}`}</span></div>
+      {/* T256: whose paint the brush lays: this hole's (Range › Build paints your property) */}
+      {game.golfMode && armed && <div className="paint-owner" data-testid="paint-owner">{`Painting hole ${p.brushHole}`}</div>}
       <SurfaceSwatches game={game} on={armed ? p.brushKind : null} pick={k => (p.mode === 'draw' ? p.setShape(k) : p.setBrush(k))} />
       <BrushShape game={game} brush={brush} arm={() => p.setBrush(p.brushKind)} />
       <div className="mt-2 flex flex-wrap items-center gap-1.5">
@@ -82,6 +86,64 @@ function ShapeByHand({ game }: { game: Game }) {
       </div>
       {!game.golfMode && brush && <div className="sub-line mt-1.5">{`Click paints ${name} for hole ${p.brushHole}; drag paints a run. Alt-drag or Erase rubs out. [ ] size.`}</div>}
     </section>
+  );
+}
+
+/** T256 (#743; the owner, 2026-10-29: "add a build button that gets you to the same painting tools we have for holes but these painting tool
+ *  work on you range and practice area and around the whole property, they are not connected to you hole"): Range › Build's panel. The
+ *  holes' painting tools (the surfaces, Square or Round, Brush or Run, Erase, My looks, Ground height) on your property: they lay cells of no
+ *  hole, never touch a hole's, and hole edits and deletes never touch them. Done goes back to the Holes panel */
+function PropertyPanel({ game, looks, onLooks }: { game: Game; looks: boolean; onLooks?: (open: boolean) => void }) {
+  const p = game.paint, brush = p.mode === 'brush', height = p.mode === 'height', run = brush && !!p.brushRun && p.brushCells > 0, keys = surfaceKeysOf(game);
+  const name = BRUSH_PRESETS.find(b => b.kind === p.brushKind)?.name ?? '', un = p.topUndo, re = p.topRedo;
+  return (
+    <div className="tp" data-panel="property">
+      <ToolHead icon="terrain" title="Build" desc="Paint your property: the range, the practice area and the rest of your land">
+        <button className="round-btn" disabled={!un} aria-label={un ? `Undo ${un}` : 'Nothing to undo'} title={un ? `Undo: ${un} (Ctrl+Z)` : 'Nothing to undo'} onClick={() => p.undoTop()}>↶</button>
+        <button className="round-btn" disabled={!re} aria-label={re ? `Redo ${re}` : 'Nothing to redo'} title={re ? `Redo: ${re} (Ctrl+Y)` : 'Nothing to redo'} onClick={() => p.redoTop()}>↷</button>
+      </ToolHead>
+      <div className="paint-owner" data-testid="paint-owner">Painting your property</div>
+      <p className="sub-line mt-1.5 leading-snug">Not part of any hole: editing or deleting a hole never touches it, and it never paints over a hole. Priced as the course.</p>
+      <section data-section="shape" className="mt-3">
+        <div className="sec-head"><h3 className="label-caps">Surfaces</h3><span className="sec-note">{`1 m cells · keys 1–${keys}`}</span></div>
+        <SurfaceSwatches game={game} on={brush ? p.brushKind : null} pick={k => p.setBrush(k)} />
+        <BrushShape game={game} brush={brush} arm={() => p.setBrush(p.brushKind)} />
+        <div className="mt-2 flex flex-wrap items-center gap-1.5">
+          <div className="flex items-center gap-1.5" role="group" aria-label="Brush or Run" data-method={run ? 'run' : 'brush'}>
+            <button className={`chip ${brush && !run ? 'chip-on' : ''}`} aria-pressed={brush && !run} title={`Paint ${name} on your property: click a cell, drag a run`} onClick={() => p.setBrushRun(false)}>Brush</button>
+            <button className={`chip ${run ? 'chip-on' : ''}`} aria-pressed={run} title={`Run: lay a strip of ${name} as wide as the size, like a road`} onClick={() => p.setBrushRun(true)}>Run</button>
+          </div>
+          <button className={`chip ${brush && p.rubOut ? 'chip-on' : ''}`} aria-pressed={brush && p.rubOut} title="Erase takes your property's top surface under the brush (never a hole's); no refund" onClick={() => { const v = !(brush && p.rubOut); if (!brush) p.setBrush(p.brushKind); p.rubOut = v; game.emit(); }}>Erase</button>
+          <button className={`chip ${height ? 'chip-on' : ''}`} data-ground-height aria-pressed={height} aria-expanded={height} title="Ground height: raise, lower, smooth or flatten your land (earthworks are paid for)" onClick={() => (height ? p.setBrush(p.brushKind) : p.setHeight())}>Ground height <span aria-hidden>{height ? '▾' : '▸'}</span></button>
+        </div>
+        {height && <GroundHeight game={game} on arm={() => p.setHeight()} />}
+      </section>
+      <div className="mt-2.5"><h4 className="sub-head">Look</h4><LooksEntry game={game} looks={looks} onLooks={onLooks} arm={() => { if (p.mode !== 'brush') p.setBrush(p.brushKind); }} /></div>
+      <div className="mt-3 flex flex-wrap gap-1.5">
+        <button className="chip" title="Back to the Holes panel: its brush paints the hole in hand" onClick={() => p.setProperty(false)} data-testid="property-done">Done · back to Holes</button>
+      </div>
+    </div>
+  );
+}
+
+/** T256: New hole's "From My holes": the saved hole in hand as a ghost on the map (R turns it, a click builds it as the next free hole, priced
+ *  as New hole); Esc or Back returns to New hole */
+function MyHolePlace({ game }: { game: Game }) {
+  const p = game.paint, h = p.myHole!, gh = p.myHoleGhost(), turns = ['as saved', 'a quarter turn', 'half a turn', 'three quarters'];
+  return (
+    <div className="wizard-card" data-primary="myhole" data-testid="myhole-place">
+      <span className="wiz-title">{`From My holes · ${h.name}`}</span>
+      <p className="sub-line mt-1.5">{`Click on the map to build it as hole ${gh?.n || p.nextFreeHole()}: its grass, plan, ground height and looks${h.props.length ? ` (and ${h.props.length} frame trees with Frame with trees on)` : ''}. R turns it.`}</p>
+      <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+        <button className="chip" onClick={() => p.turnMyHole(true)} title="Turn it back (Shift+R)">↺</button>
+        <span>{`Turned ${turns[(p.myTurn - h.facing + 4) % 4] ?? ''}`}</span>
+        <button className="chip" onClick={() => p.turnMyHole()} title="Turn it (R)">↻</button>
+      </div>
+      {gh && <p className={`mt-1.5 leading-snug ${gh.why ? 'text-rose-300' : ''}`} data-testid="myhole-status">{gh.why || `Hole ${gh.n} · $${gh.cost.toLocaleString()}${gh.note ? ` · ${gh.note}` : ''}`}</p>}
+      <div className="mt-1.5 flex flex-wrap gap-1.5">
+        <button className="chip" onClick={() => p.setMyHole(null)}>Back to New hole</button>
+      </div>
+    </div>
   );
 }
 

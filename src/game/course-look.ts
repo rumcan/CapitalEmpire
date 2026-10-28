@@ -67,3 +67,16 @@ export function puckBandOf(kind: string, b: BrushLooks, fin: CourseFinish): Puck
   const { band, lipGrass } = surfaceBands(b), g = name === 'lip' && fin.on && lipGrass ? lipGrass : null, ct = collarToneOf(fin);
   return { name, tex: g ?? band[kind as BrushKind]!, tone: ct && (tonedCollar(name) || g) ? ct : null };
 }
+
+/** T256: what the course grid lays for one set of looks (the course default's, or one owner's: a hole, the property, a facility): each surface
+ *  id's fill (courseTexOf; the fescue and the waste area wear their presets, pre), the collars by name, each banded surface's own band, and with
+ *  the course finish a bunker's lip grass (surfaceBands). The engine's CourseLooks takes the default's as its base and an owner's where it differs */
+export interface CourseLookSet { surf: (CourseTex | undefined)[]; collar: Record<BandName, CourseTex>; band: (CourseTex | undefined)[]; lipGrass?: CourseTex }
+export function courseLookSet(b: BrushLooks, pre: (s: string, old: string) => CourseTex): CourseLookSet {
+  const st = (k: BrushKind) => (b[k] ?? BRUSH_PRESETS.find(p => p.kind === k)!).style;
+  // by surface id (ext/course-grid SURF): rough 1, fescue 2, water 3, fairway 4, tee 5, bunker 6, waste 7, green 8, long grass 9 (T238: its brush's look)
+  const surf = [undefined, courseTexOf(st('rough')), pre('fescue', 'golfFescue'), courseTexOf(st('water')), courseTexOf(st('fairway')), courseTexOf(st('tee')), courseTexOf(st('bunker')), pre('waste', 'wasteSand'), courseTexOf(st('green')), courseTexOf(st('longGrass'))];
+  const { collar, band: by, lipGrass } = surfaceBands(b), band: (CourseTex | undefined)[] = [];
+  band[4] = by.fairway; band[5] = by.tee; band[8] = by.green; band[6] = by.bunker; band[3] = by.water;
+  return { surf, collar, band, ...(lipGrass ? { lipGrass } : {}) };
+}

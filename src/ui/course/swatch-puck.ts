@@ -63,7 +63,7 @@ export function puckLookOf(kind: string, brush: BrushLooks): { st: PuckStyle; pb
 export function swatchPuckOf(game: Game, kind: BrushKind): { url: string; w: number; h: number } | null {
   const tex = (game as { cursorTexture?: CursorTexture }).cursorTexture;
   if (typeof document === 'undefined' || !tex) return null;
-  const look = puckLookOf(kind, game.paint.brush as BrushLooks); if (!look) return null;
+  const look = puckLookOf(kind, (game.paint.brushLooks ?? game.paint.brush) as BrushLooks); if (!look) return null; // T256: the owner's looks (the hole painted, the property)
   watchFile();
   const d = Math.min(3, Math.max(1, Math.round((typeof devicePixelRatio === 'number' ? devicePixelRatio : 1) * 2) / 2));
   const key = `${kind}|${d}|${fileNo}|${styleKey(look.st)}|${bandKey(look.pb)}`;

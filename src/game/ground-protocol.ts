@@ -55,7 +55,17 @@ export interface CourseLayer extends CourseTex { s: number; e: EdgeProfile; fill
   collar?: CourseTex & { n: 'first-cut' | 'fringe' | 'lip' | 'bank'; w?: number; fill: Float32Array[]; edges: Float32Array[]; soft?: Float32Array[];
     /** T227: a bunker's lip band's grass with the course finish on (course-finish.ts: the fairway's first cut, so the bunker sits in the collar
      *  as in the concept); absent: its own look (the player picked a Border texture for the bunker) */
-    g?: CourseTex }; stripes?: { hole: number; line: number[]; runs?: Float32Array; a?: number }[] }
+    g?: CourseTex }; stripes?: { hole: number; line: number[]; runs?: Float32Array; a?: number }[];
+  /** T256 (#743): the other looks its cells wear in this chunk (each hole, the property and each practice facility owns its looks: golf/looks.ts):
+   *  each its fill, its collar band and a bunker's lip grass, drawn over the layer's own look within its share of the chunk (runs: boxes x0 y0
+   *  x1 y1, tiles; ext/course-grid cellShares). Absent: the whole layer wears its own look */
+  alts?: { look: CourseTex; band?: CourseTex; g?: CourseTex; runs: Float32Array }[] }
+/** T256: every texture a course layer lays (its fill, its collar's, a lip's grass, its alternates' and their blends), for the bakes' preloads */
+export function layerTexes(l: CourseLayer): string[] {
+  const out: string[] = [];
+  for (const t of [l, l.collar, l.collar?.g, ...(l.alts ?? []).flatMap(a => [a.look, a.band, a.g])]) if (t) { out.push(t.tex); if (t.m) out.push(t.m.t); }
+  return out;
+}
 /** a course wall (ext/course-walls WallRun, T099): its top edge as x, y, drop triples (tiles, tiles, metres), the higher side on the left so the
  *  face looks along the right-hand normal toward the camera; lo: the layer code it hangs over (2 s a surface's fill, 2 s + 1 its collar, 0 the
  *  map grass), drawn just after that layer; m: its material (0 turf, 1 sand, 2 water) */

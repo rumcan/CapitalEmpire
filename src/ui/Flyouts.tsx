@@ -146,7 +146,7 @@ export function Flyouts({ rows, top, left, up = false, startPath = [], keyboard 
                 {...(grid && r.why ? { 'data-tip': `${r.label}: ${r.why}` } : r.note && !r.why ? { 'data-tip': r.note } : {})}
                 {...(grid && r.tile ? { 'data-tile': r.tile } : {})}
                 aria-haspopup={r.children ? 'menu' : undefined} aria-expanded={r.children ? opened : undefined} aria-disabled={r.why ? true : undefined}
-                className={`flyout-row ${grid ? 'flyout-tile' : ''} ${opened ? 'flyout-row-open' : ''} ${r.why ? 'flyout-row-locked' : ''}`}
+                className={`flyout-row ${grid ? 'flyout-tile' : ''} ${opened ? 'flyout-row-open' : ''} ${r.why ? 'flyout-row-locked' : ''}${r.gold ? ' flyout-row-gold' : ''}`}
                 onMouseEnter={() => (r.children && !r.why ? open(level, index, false) : shut(level))}
                 onClick={() => {
                   if (r.why) { onLocked(r); return; }
