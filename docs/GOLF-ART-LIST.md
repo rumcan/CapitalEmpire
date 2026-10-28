@@ -23,7 +23,11 @@ the art can be made now, and a small ticket places it in the game. **(in the gam
 **The owner's standing rules:** finished art goes straight into the game without asking ("put stuff in the game, dont ask"); the old look
 stays a Studio option. Ground textures follow [art/GROUND-TEXTURE-METHOD.md](art/GROUND-TEXTURE-METHOD.md).
 
-**Who makes what:**
+**Who makes what** (the owner, 2026-10-28: "use the run.world credits for 3d work. we wont top up, we will use the chat gpt image generator for iamges"):
+- **ChatGPT's image generator** (the owner runs it) makes every 2D picture from now on: scenes, portraits, ground layers, sprites on magenta. The next prompts, ready to paste, with file names: [art/CHATGPT-IMAGE-QUEUE.md](art/CHATGPT-IMAGE-QUEUE.md).
+- **RUN.world** is for 3D only: the people pipeline (models from A-pose pictures, clips). No more RUN images.
+
+Before that switch:
 - **RUN.world** (the art agent, the owner's RUN account): ground textures by the owner's method (RUN paints tile 1 into a game screenshot,
   tiles 2-4 quilted); top-down pictures (C); one-view sprites (B) on magenta; people's A-pose pictures (P).
 - **Codex** (the art session): four-view sheets (A, A8). RUN's four turns did not hold one object in the pilot. The one-view-per-call
