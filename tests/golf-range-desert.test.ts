@@ -99,13 +99,17 @@ test('the home yard: the desert for the caravan and the cottage, a lawn for the 
 
 test('the range\'s presets: each has its painted look; the mown outfield, its stripes and the course\'s tee are as before', () => {
   const S = clampSurfaces(surfacesFile), presets = PRESETS.map(p => ({ id: p.id, surface: p.surface, painted: p.painted }));
-  const want: Record<keyof typeof RANGE_PRESET, string> = { outfield: 'fringe', target: 'putting-green-run', desert: 'desert-run', teeDirt: 'dirt-run', teeTurf: 'range-tee-divots-run', yard: 'desert-run' };
+  // which painting each preset wears is the owner's (Studio › Painted; T225's rule: no pins on the owner's picks), so this checks that each
+  // has a known look and that the upgrades change the ground: the turfed tee is not the dirt tee, the grassed outfield not the desert
+  const fam = {} as Record<keyof typeof RANGE_PRESET, string>;
   for (const [k, id] of Object.entries(RANGE_PRESET) as [keyof typeof RANGE_PRESET, string][]) {
     const p = PRESETS.find(q => q.id === id); assert.ok(p, `${k}: preset ${id}`);
     assert.equal(p.lawn, false, `${id}: never a town lawn`);
     const look = lookOfTex(`preset:${id}`, S, presets); assert.ok(look, `${id}: a painted look`);
-    assert.equal(look.family, want[k], `${id}: wears ${want[k]}`); assert.ok(knownFamily(look.family), `${look.family} is in the manifest`);
+    assert.ok(knownFamily(look.family), `${look.family} is in the manifest`); fam[k] = look.family;
   }
+  assert.notEqual(fam.teeTurf, fam.teeDirt, 'Turf the tee box changes the tee\'s ground');
+  assert.notEqual(fam.outfield, fam.desert, 'Grass the outfield changes the outfield\'s ground');
   // only the mown outfield has stripes (T218), and the fairways still take theirs from it
   for (const id of Object.values(RANGE_PRESET)) assert.equal(PRESETS.find(q => q.id === id)!.stripes.on, id === RANGE_PRESET.outfield, `${id}: stripes`);
   assert.equal(FAIRWAY_STRIPE_PRESET, RANGE_PRESET.outfield);
