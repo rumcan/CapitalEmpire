@@ -59,12 +59,12 @@ export const POND_R = 3.5, STONE_PRICE = 60;
 /** T257: the boulders' cards, three shapes at each size (36: small 0.8 m, medium 1.5 m, large 2.5 m), each its own card named for its shape;
  *  R steps through its size's shapes, each then mirrored. The first shape keeps T231's key (a saved prop keeps its card) */
 const BOULDER_SIZES = [
-  { s: 's', ids: KIT_BOULDERS.small, name: 'Small boulder', price: 150, appeal: APPEAL.boulder, size: '0.8 m', shapes: ['rounded', 'domed', 'squared'], desc: ['A weathered sandstone boulder, lichen and moss', 'A domed sandstone stone, moss at its foot', 'A squared-off block of sandstone'] },
-  { s: 'm', ids: KIT_BOULDERS.medium, name: 'Boulder', price: 350, appeal: APPEAL.boulderBig, size: '1.5 m', shapes: ['rounded', 'long', 'standing'], desc: ['A rounded sandstone boulder: a rock feature by a green or a path', 'A long, low sandstone boulder to edge a bed or a path', 'An upright standing stone'] },
-  { s: 'l', ids: KIT_BOULDERS.large, name: 'Large boulder', price: 800, appeal: APPEAL.boulderLarge, size: '2.5 m', shapes: ['layered', 'split pair', 'cracked block'], desc: ['A big layered sandstone rock, for a practice area or the entrance', 'A big rock split in two', 'A big cracked block of sandstone'] },
+  { s: 's', ids: KIT_BOULDERS.small, price: 150, appeal: APPEAL.boulder, size: '0.8 m', names: ['Small round boulder', 'Small domed boulder', 'Small square boulder'], desc: ['A weathered sandstone boulder, lichen and moss', 'A domed sandstone stone, moss at its foot', 'A squared-off block of sandstone'] },
+  { s: 'm', ids: KIT_BOULDERS.medium, price: 350, appeal: APPEAL.boulderBig, size: '1.5 m', names: ['Round boulder', 'Long boulder', 'Standing stone'], desc: ['A rounded sandstone boulder: a rock feature by a green or a path', 'A long, low sandstone boulder to edge a bed or a path', 'An upright standing stone'] },
+  { s: 'l', ids: KIT_BOULDERS.large, price: 800, appeal: APPEAL.boulderLarge, size: '2.5 m', names: ['Large layered rock', 'Large split rock', 'Large cracked rock'], desc: ['A big layered sandstone rock, for a practice area or the entrance', 'A big rock split in two', 'A big cracked block of sandstone'] },
 ] as const;
 const BOULDER_CARDS: DecorItem[] = BOULDER_SIZES.flatMap(b => b.ids.map((id, j): DecorItem => ({
-  key: `kit-boulder-${b.s}${j ? `-${'abc'[j]}` : ''}`, name: `${b.name}, ${b.shapes[j]}`, group: 'stone', kind: 'stone', id, variants: [...b.ids.slice(j), ...b.ids.slice(0, j)],
+  key: `kit-boulder-${b.s}${j ? `-${'abc'[j]}` : ''}`, name: b.names[j]!, group: 'stone', kind: 'stone', id, variants: [...b.ids.slice(j), ...b.ids.slice(0, j)],
   family: `kit-boulder-${b.s}`, natural: true, price: b.price, appeal: b.appeal, desc: `${b.desc[j]}, ${b.size} (R: mirrored, then another shape)`,
 })));
 /** T257: the mixed brushes' picks: every boulder card; the kit's shrubs, mums and palms as their cards */

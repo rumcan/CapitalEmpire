@@ -245,7 +245,7 @@ export class PropsTool {
       const d = DECOR_BY_KEY.get(this.hand)!;
       if (!this.scales(d)) { this.ctx.toast(`${d.name}: laid at its own size`, 'info'); return; }
       this.size = clampSize(this.size + dir * SIZE_STEP);
-      if (this.ghost && !this.stroke) { const t = { x: this.ghost.x, y: this.ghost.y }; this.ghost = d.mix ? this.ghost : this.handGhost(d, t.x, t.y); if (d.mix) this.mixGhost(d, t); }
+      if (this.ghost && !this.stroke) { const t = { x: this.ghost.x, y: this.ghost.y }; if (d.mix) this.mixGhost(d, t); else this.ghost = this.handGhost(d, t.x, t.y); }
       this.ctx.emit(); return;
     }
     const s = this.selection(); if (!s || !this.scales(s.d)) return;
@@ -312,13 +312,28 @@ export class PropsTool {
   private mixGhost(d: DecorItem, t: Pt): void {
     const g = this.pickGhost(d, snap(t.x), snap(t.y));
     if (!this.stroke) { this.ghost = g; this.ghosts = []; return; }
-    const st = this.stroke, cost = st.reduce((a, q) => a + (q.price ?? 0), 0), gap = 0.15;
-    if (g && !g.why && cost + (g.price ?? 0) <= this.ctx.money() && !st.some(q => g.box[0] < q.box[2] + gap && g.box[2] > q.box[0] - gap && g.box[1] < q.box[3] + gap && g.box[3] > q.box[1] - gap)) st.push(g);
+    // (a stroke's spots stand a little apart, so the stones read as a scatter, not a wall: the next spot is as far from the last as the last's
+    // reach, the brush's biggest pick's and a gap, whatever is picked there, so a small pick is no likelier than a big one; and clear of all)
+    const st = this.stroke, cost = st.reduce((a, q) => a + (q.price ?? 0), 0), gap = 0.3, last = st[st.length - 1];
+    const half = (q: DecorGhost) => Math.max(q.box[2] - q.box[0], q.box[3] - q.box[1]) / 2;
+    const far = (q: DecorGhost) => !last || Math.hypot(q.x - last.x, q.y - last.y) >= half(last) + this.mixReach(d) + gap;
+    if (g && !g.why && far(g) && cost + (g.price ?? 0) <= this.ctx.money() && !st.some(q => g.box[0] < q.box[2] + gap && g.box[2] > q.box[0] - gap && g.box[1] < q.box[3] + gap && g.box[3] > q.box[1] - gap)) st.push(g);
     const n = st.length, total = st.reduce((a, q) => a + (q.price ?? 0), 0);
     if (!n) { this.ghost = g; this.ghosts = []; return; }
     this.ghosts = st.slice(0, -1);
     this.ghost = { ...st[n - 1]!, label: `${d.name}: ${n} · $${total.toLocaleString()} (let go to place ${n > 1 ? 'them' : 'it'})` };
   }
+  /** the half width (tiles) of a mixed brush's biggest pick's footprint at the hand's size */
+  private mixReach(d: DecorItem): number {
+    const k = `${d.key}@${this.size}`; let r = this.reach.get(k);
+    if (r === undefined) {
+      r = 0;
+      for (const m of d.mix ?? []) { const pd = DECOR_BY_KEY.get(m.key), item = this.ctx.item(m.id); if (!pd || item === undefined) continue; const b = this.ctx.footprint(item, 0, 0, this.scaleAt(pd, item, this.size)); r = Math.max(r, (b[2] - b[0]) / 2, (b[3] - b[1]) / 2); }
+      this.reach.set(k, r);
+    }
+    return r;
+  }
+  private reach = new Map<string, number>();
   /** lays the mixed brush's stroke (one undo step), or says why nothing could be */
   private placeStroke(): void {
     const d = this.hand ? DECOR_BY_KEY.get(this.hand) : undefined, st = this.stroke ?? [], why = this.ghost?.why;

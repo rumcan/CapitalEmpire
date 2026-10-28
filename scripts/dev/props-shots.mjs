@@ -6,7 +6,8 @@
 //   lamps    the practice green lamp posts among a few rocks and shrubs at dusk (the lamps lit), 30%
 //   panel    the Props panel's Stone and Plants cards and the plant brush's Bushes and Palms at 1920 x 1080
 //   variety  (after T257) the nine boulder shapes, a Rocks, mixed drag and the mixed shrubs, mums and palms, 30%
-//   flip     (after T257) one rock as placed, flipped with R and scaled with [ and ] (80% and 120%), 30% and 60%
+//   flip     (after T257) one rock as placed, flipped with R and scaled with [ and ] (80% and 120%), 30%
+// 30% is the closest zoom (ZOOM_MAX): each scene also gets its middle enlarged 2.5x (<name>-x2.5.jpg) to see the shadows' feet.
 //   node scripts/dev/props-shots.mjs --base http://127.0.0.1:5186/ --out E:/ClaudeTemp/T257 --tag before [--only rocks,shrubs,...]
 // Needs a dev server (vite) on --base. One headless Edge, closed when done; a fresh profile, so each start is a new game.
 import { chromium } from 'playwright-core';
@@ -25,10 +26,13 @@ const settle = async (page, ms = 900) => {
   await page.waitForFunction(() => { const g = window.__game; window.__calm = g.ground.busy === 0 ? window.__calm + 1 : 0; return window.__calm > 20; }, null, { timeout: 60000, polling: 50 }).catch(() => console.log('  (settle timed out)'));
   await page.waitForTimeout(400);
 };
-const shot = async (page, name, clip) => {
-  const file = join(out, `${tag}-${name}.jpg`);
-  await sharp(await page.screenshot({ type: 'png', ...(clip ? { clip } : {}) })).jpeg({ quality: 90, mozjpeg: true }).toFile(file);
-  console.log(file); return file;
+const shot = async (page, name, clip, zoom) => {
+  const file = join(out, `${tag}-${name}.jpg`), png = await page.screenshot({ type: 'png', ...(clip ? { clip } : {}) });
+  await sharp(png).jpeg({ quality: 90, mozjpeg: true }).toFile(file);
+  console.log(file);
+  // the middle of a scene, enlarged (the closest zoom is 30%)
+  if (zoom) { const m = await sharp(png).metadata(), w = Math.round(m.width / 2.5), h = Math.round(m.height / 2.5); const z = join(out, `${tag}-${name}-x2.5.jpg`); await sharp(png).extract({ left: Math.round((m.width - w) / 2), top: Math.round((m.height - h) / 2), width: w, height: h }).resize(m.width, m.height, { kernel: 'lanczos3' }).jpeg({ quality: 90 }).toFile(z); console.log(z); }
+  return file;
 };
 const hideUi = page => page.addStyleTag({ content: '* { visibility: hidden !important } canvas { visibility: visible !important }' });
 const look = (page, x, y, z) => page.evaluate(([x, y, z]) => { const g = window.__game; g.camEase = null; g.lookAt(x, y, z); }, [x, y, z]);
@@ -40,8 +44,22 @@ const open = async (W = 1280, H = 800) => {
   await page.goto(`${base}?start=range&seed=${seed}`);
   await page.waitForFunction(() => window.__game?.ready, null, { timeout: 240000 });
   await page.evaluate(() => { const g = window.__game; g.prebake = () => {}; g.setSpeed(0); window.__night = 0; g.nightAmount = () => window.__night; g.traffic.spend('construction', -2000000); });
-  // the range plot's open grass behind the shop (the player's land from the start: the practice area is bought later)
-  const area = await page.evaluate(() => { const shop = window.__game.range.scene.pieces.find(q => q.key === 'shop'); return { x: shop.x - 4, y: shop.y - 26 }; });
+  // open grass of the player's land (the range plot: the practice area is bought later): the first spot from the shop outward where a large
+  // boulder may stand at every point of a 10 x 9 lattice 3 tiles apart (no road, water, building or prop in the way)
+  const area = await page.evaluate(([W, H]) => {
+    const g = window.__game, shop = g.range.scene.pieces.find(q => q.key === 'shop');
+    g.setTool('props'); g.decor.setView('course'); g.decor.pick('kit-boulder-l');
+    const ok = (x, y) => { g.camEase = null; g.lookAt(x, y, 0.3); g.decor.move(W / 2, H / 2); const q = g.decor.ghost; return q && !q.why; };
+    let found = null;
+    for (let r = 0; r <= 80 && !found; r += 4) for (let a = 0; a < Math.max(1, Math.round(r * 1.5)) && !found; a++) {
+      const cx = Math.round(shop.x + Math.cos(a / Math.max(1, Math.round(r * 1.5)) * 2 * Math.PI) * r), cy = Math.round(shop.y + Math.sin(a / Math.max(1, Math.round(r * 1.5)) * 2 * Math.PI) * r);
+      let all = true; for (let j = -4; j <= 4 && all; j++) for (let i = -4; i <= 5 && all; i++) all = ok(cx + i * 3, cy + j * 3);
+      if (all) found = { x: cx, y: cy };
+    }
+    g.decor.pick(null); g.setTool('select');
+    return found ?? { x: shop.x - 4, y: shop.y - 26 };
+  }, [W, H]);
+  console.log('area', JSON.stringify(area));
   return { page, ctx, area, W, H };
 };
 /** places library picture `id` as catalogue item `key` at the first free spot from (x, y) outward (the Props tool's own check with the item in
@@ -75,15 +93,15 @@ try {
     for (const [k, id, dx, dy] of [['kit-lamp', 'kit:lamp-post-single', -8, 8], ['kit-lamp-twin', 'kit:lamp-post-twin', -4, 8], ['kit-lamp', 'kit:lamp-post-single', 0, 8], ['kit-boulder-m', B.m[1], -6, 10], ['kit-shrub', SHRUBS[2], -2, 10], ['kit-boulder-s', B.s[2], -9, 10]]) log.push(await place(s, k, id, area.x + dx, area.y + dy));
     console.log('placed', JSON.stringify(log.filter(Boolean).filter(p => p.none)));
     await hideUi(page);
-    if (only.has('rocks')) { await look(page, area.x - 1, area.y - 9.5, 0.3); await settle(page, 1800); await shot(page, 'rocks-30pct'); await look(page, area.x - 1, area.y - 9.5, 0.6); await settle(page, 1200); await shot(page, 'rocks-60pct'); }
-    if (only.has('shrubs')) { await look(page, area.x, area.y + 0.7, 0.3); await settle(page, 1200); await shot(page, 'shrub-bed-30pct'); }
-    if (only.has('palms')) { await look(page, area.x + 11, area.y - 2, 0.3); await settle(page, 1200); await shot(page, 'palms-30pct'); }
-    if (only.has('lamps')) { await page.evaluate(() => { window.__night = 0.72; }); await look(page, area.x - 4, area.y + 9, 0.3); await settle(page, 1500); await shot(page, 'lamps-dusk-30pct'); await page.evaluate(() => { window.__night = 0; }); }
+    if (only.has('rocks')) { await look(page, area.x - 1, area.y - 9.5, 0.3); await settle(page, 1800); await shot(page, 'rocks-30pct', null, true); }
+    if (only.has('shrubs')) { await look(page, area.x, area.y + 0.7, 0.3); await settle(page, 1200); await shot(page, 'shrub-bed-30pct', null, true); }
+    if (only.has('palms')) { await look(page, area.x + 11, area.y - 2, 0.3); await settle(page, 1200); await shot(page, 'palms-30pct', null, true); }
+    if (only.has('lamps')) { await page.evaluate(() => { window.__night = 0.72; }); await look(page, area.x - 4, area.y + 9, 0.3); await settle(page, 1500); await shot(page, 'lamps-dusk-30pct', null, true); await page.evaluate(() => { window.__night = 0; }); }
     await s.ctx.close();
   }
-  if (only.has('variety') || only.has('flip')) {
+  if (only.has('variety')) {
     const s = await open(), { page, area } = s;
-    if (only.has('variety')) {
+    {
       // the nine shapes, each its own card (placed by its key)
       const keys = await page.evaluate(() => [...document.querySelectorAll('[data-card^="prop-kit-boulder"]')].length);
       const log = [];
@@ -100,32 +118,35 @@ try {
       console.log('mixed rocks', await drag('kit-rocks-mixed', area.x + 5, area.y - 10, area.x + 13, area.y - 4));
       console.log('mixed shrubs', await drag('kit-shrubs-mixed', area.x - 6, area.y + 1, area.x + 4, area.y + 1));
       console.log('mixed mums', await drag('kit-mums-mixed', area.x - 6, area.y + 2.6, area.x + 4, area.y + 2.6));
-      console.log('mixed palms', await drag('kit-palms-mixed', area.x + 6, area.y + 2, area.x + 14, area.y + 6));
+      console.log('mixed palms', await drag('kit-palms-mixed', area.x - 2, area.y + 9, area.x + 8, area.y + 1));
       await hideUi(page);
-      await look(page, area.x + 2, area.y - 6, 0.3); await settle(page, 1800); await shot(page, 'variety-boulders-30pct');
-      await look(page, area.x + 2, area.y + 2.5, 0.3); await settle(page, 1200); await shot(page, 'variety-mixed-plants-30pct');
-      await page.addStyleTag({ content: '* { visibility: visible !important }' });
+      await look(page, area.x + 2, area.y - 6, 0.3); await settle(page, 1800); await shot(page, 'variety-boulders-30pct', null, true);
+      await look(page, area.x + 1, area.y + 4, 0.3); await settle(page, 1200); await shot(page, 'variety-mixed-plants-30pct', null, true);
     }
-    if (only.has('flip')) {
+    await s.ctx.close();
+  }
+  if (only.has('flip')) {
+    const s = await open(), { page, area } = s;
+    {
       // one rock as placed, one flipped (R twice: the next look is the mirror), one at 80% and one at 120% ([ and ]), all with the tool's keys
       const put = (presses, x, y) => page.evaluate(([presses, x, y, W, H]) => {
         const g = window.__game, key = e => ({ key: e, ctrlKey: false, metaKey: false, altKey: false, shiftKey: false, preventDefault() {} });
-        g.setTool('props'); g.decor.setView('course'); g.decor.pick('kit-boulder-m'); g.camEase = null; g.lookAt(x, y, 0.3);
+        g.setTool('props'); g.decor.setView('course'); g.decor.pick('kit-boulder-l-b'); g.camEase = null; g.lookAt(x, y, 0.3);
         for (const p of presses) g.decor.key(key(p));
         g.decor.move(W / 2, H / 2); const gh = g.decor.ghost, label = gh?.label; g.decor.down(W / 2, H / 2); g.decor.up();
         g.decor.pick(null); g.setTool('select'); return label;
       }, [presses, x, y, s.W, s.H]);
-      const fx = area.x + 3, fy = area.y + 9;
-      console.log('as placed', await put([], fx - 4.5, fy));
-      console.log('flipped', await put(['r'], fx - 1.5, fy));
-      console.log('80%', await put(['[', '[', '[', '['], fx + 1.5, fy));
-      console.log('120% flipped', await put([']', ']', ']', ']', 'r'], fx + 4.5, fy));
-      // the ghost's label at 110%: the size in the cursor label
-      await page.evaluate(([x, y, W, H]) => { const g = window.__game, key = e => ({ key: e, ctrlKey: false, metaKey: false, altKey: false, shiftKey: false, preventDefault() {} }); g.setTool('props'); g.decor.setView('course'); g.decor.pick('kit-boulder-l'); g.camEase = null; g.lookAt(x, y, 0.3); g.decor.key(key(']')); g.decor.key(key(']')); g.decor.move(W / 2, H / 2 + 60); window.__ghostMouse = true; }, [fx, fy + 4, s.W, s.H]);
-      await page.mouse.move(s.W / 2, s.H / 2 + 60); await page.waitForTimeout(300);
+      // in a row across the screen (x up, y down: the screen's right), 2.4 tiles apart
+      const at = k => [area.x + k * 2.4, area.y - k * 2.4];
+      console.log('as placed', await put([], ...at(-1.5)));
+      console.log('flipped', await put(['r'], ...at(-0.5)));
+      console.log('80%', await put(['[', '[', '[', '['], ...at(0.5)));
+      console.log('120% flipped', await put([']', ']', ']', ']', 'r'], ...at(1.5)));
+      // a large rock in hand at 110%, below the row: the size in the cursor label (the game draws it at the mouse)
       await page.addStyleTag({ content: '* { visibility: hidden !important } canvas { visibility: visible !important }' });
-      await look(page, fx, fy + 1.5, 0.3); await page.mouse.move(s.W / 2 + 1, s.H / 2 + 120); await settle(page, 1500); await shot(page, 'rock-flipped-scaled-30pct');
-      await look(page, fx, fy + 0.5, 0.6); await page.mouse.move(s.W / 2 + 2, s.H / 2 + 200); await settle(page, 1200); await shot(page, 'rock-flipped-scaled-60pct');
+      await page.evaluate(([x, y]) => { const g = window.__game, key = e => ({ key: e, ctrlKey: false, metaKey: false, altKey: false, shiftKey: false, preventDefault() {} }); g.setTool('props'); g.decor.setView('course'); g.decor.pick('kit-boulder-l'); g.camEase = null; g.lookAt(x, y, 0.3); g.decor.key(key(']')); g.decor.key(key(']')); }, [area.x, area.y]);
+      await page.mouse.move(s.W / 2, s.H / 2 + 110); await page.waitForTimeout(300); await page.mouse.move(s.W / 2 + 1, s.H / 2 + 112);
+      await settle(page, 1500); await shot(page, 'rock-flipped-scaled-30pct', null, true);
     }
     await s.ctx.close();
   }
@@ -136,8 +157,23 @@ try {
     await page.waitForTimeout(1500);
     for (const grp of ['stone', 'plants']) {
       await page.evaluate(grp => { const g = window.__game; g.decor.focus = grp; g.emit(); }, grp); await page.waitForTimeout(2500);
-      const box = await page.locator('[data-panel="props"]').boundingBox();
-      if (box) await shot(page, `panel-${grp}-1920`, { x: Math.max(0, box.x - 8), y: Math.max(0, box.y - 8), width: Math.min(1920 - box.x + 8, box.width + 16), height: Math.min(1080 - Math.max(0, box.y - 8), box.height + 16) });
+      // the whole group: the panel's scroller stepped down a screen at a time and the pieces stacked
+      const scroller = await page.evaluateHandle(() => { let el = document.querySelector('[data-panel="props"]'); while (el && el.scrollHeight <= el.clientHeight + 2) el = el.parentElement; if (el) el.scrollTop = 0; return el; });
+      const box = await page.locator('[data-panel="props"]').boundingBox(), parts = [];
+      if (!box) continue;
+      for (let k = 0; k < 6; k++) {
+        await page.waitForTimeout(900);
+        const view = await scroller.evaluate(el => { if (!el) return null; const r = el.getBoundingClientRect(); return { y: Math.max(0, r.y), h: Math.min(r.height, innerHeight - Math.max(0, r.y)) }; });
+        const clip = { x: Math.max(0, box.x - 8), y: view ? view.y : 0, width: Math.min(1920 - box.x + 8, box.width + 16), height: view ? view.h : 1080 };
+        parts.push({ png: await page.screenshot({ type: 'png', clip }), clip });
+        const step = await scroller.evaluate(el => { if (!el) return 0; const b = el.scrollTop; el.scrollTop += el.clientHeight - 40; return el.scrollTop - b; });
+        if (!step) break; parts[parts.length - 1].next = step;
+      }
+      // stack: each next piece starts where the scroll moved it (its first clientHeight - step rows repeat the last piece's bottom)
+      const comp = []; let top = 0, height = 0;
+      for (const [i, q] of parts.entries()) { const skip = i ? q.clip.height - parts[i - 1].next : 0; const img = skip > 0 ? await sharp(q.png).extract({ left: 0, top: skip, width: q.clip.width, height: q.clip.height - skip }).toBuffer() : q.png; comp.push({ input: img, left: 0, top }); const h = q.clip.height - Math.max(0, skip); top += h; height = top; }
+      const file = join(out, `${tag}-panel-${grp}-1920.jpg`);
+      await sharp({ create: { width: parts[0].clip.width, height, channels: 4, background: '#101418' } }).composite(comp).jpeg({ quality: 92 }).toFile(file); console.log(file);
     }
     // the plant brush (Facilities > Plants): Bushes and Palms
     for (const kind of ['bushes', 'palms']) {

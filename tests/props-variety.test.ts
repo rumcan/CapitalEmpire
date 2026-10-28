@@ -126,6 +126,14 @@ test('a mixed brush is deterministic per spot: the same pick at the same spot, e
   // each rock is its own card at its own price
   let cost = 0; for (const [id, , , , k] of a.list) { const c = DECOR_BY_KEY.get(k!)!; assert.equal(c.id, id, `${k} shows its own shape`); cost += c.price; }
   assert.equal(a.h.steps[0]!.spent, cost); assert.equal(1e6 - a.h.money(), cost);
+  // a long drag (footprints of their real sizes): every pick about as often as the others, a small one no likelier than a big one
+  for (const k of ['kit-rocks-mixed', 'kit-palms-mixed', 'kit-shrubs-mixed']) {
+    const e = host(); e.ctx.footprint = (i, x, y, s) => { const b = LIBRARY[i]!.boxes[0]!, hx = b.hx / 2 * s, hy = b.hy / 2 * s; return [x - hx, y - hy, x + hx, y + hy]; };
+    const tt = new PropsTool(e.ctx), d = DECOR_BY_KEY.get(k)!; tt.pick(k); tt.down(10, 10); for (let i = 1; i <= 4000; i++) tt.move(10 + i * 0.25, 10); tt.up();
+    const n = new Map<string, number>(); for (const p of e.props) n.set(LIBRARY[p.item]!.id, (n.get(LIBRARY[p.item]!.id) ?? 0) + 1);
+    const all = e.props.size, want = all / d.mix!.length;
+    for (const m of d.mix!) assert.ok((n.get(m.id) ?? 0) > 0.5 * want && (n.get(m.id) ?? 0) < 1.6 * want, `${k}: ${m.id} ${n.get(m.id) ?? 0} of ${all}`);
+  }
   const c = host(), t = new PropsTool(c.ctx); t.pick('kit-palms-mixed'); t.down(50, 50); t.up();
   const p = [...c.props][0]!, m = mixPick(DECOR_BY_KEY.get('kit-palms-mixed')!, 50, 50)!;
   assert.equal(c.props.size, 1); assert.equal(LIBRARY[p.item]!.id, m.id); assert.equal(p.decor, m.key); assert.equal(p.flip, m.flip);
