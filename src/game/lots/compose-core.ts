@@ -17,6 +17,7 @@ import { hasLettering, EAST_FACING } from './lettering';
 import { drawnAs } from '../mirror';
 import { AXIS_HEADING } from '../axis-library';
 import { LOT_DECALS } from '../lot-decals';
+import { surveyPatch } from './survey';
 import { parkedCar } from '../traffic';
 import { CAR_SCALE, carFootprint, carHeading, carOwnerScale } from '../ext/car-art';
 
@@ -159,6 +160,8 @@ export class Build {
   drops: PresetDrop[] | null = null;
   /** a building site keeps all its ground decals (mud, footprints, gravel); every other lot keeps only its leaves (the owner, 2026-10-22) */
   allMarks = false;
+  /** T232: a building site is pegged out: done() adds the white dashed survey line round the lot (lots/survey.ts) */
+  surveyed = false;
   readonly r: () => number;
 
   constructor(lot: LotGeom, r: () => number) {
@@ -391,6 +394,8 @@ export class Build {
     }
     // (T228: a driveway says so: the engine cuts the road's edge lines at its mouth, street-marks.ts driveCuts)
     const ground: LotPatch[] = this.patches.map(p => ({ ...(p.lines ? { pts: p.quad, tex: p.tex, lines: p.lines } : { pts: p.quad, tex: p.tex }), ...(p.kind === 'drive' ? { drive: true as const } : {}) }));
+    // (T232: a building site's survey line, over its ground)
+    if (this.surveyed) { const s = surveyPatch({ o: this.o, u: this.u, n: this.n, w: this.W, d: this.D }); if (s) ground.push(s); }
     // the decals last, bounded by the lot grown 2 tiles (a decal is up to 4 m across)
     if (this.marks.length) ground.push({ pts: this.quad(-2, -2, this.W + 2, this.D + 2), tex: 'marks', marks: this.marks });
     return { props, ground };

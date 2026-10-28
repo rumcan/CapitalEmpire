@@ -752,16 +752,16 @@ concept, the large brick building behind the patio with the red umbrellas.
 > Subject: a grand New England country club clubhouse: red brick with white trim, many steep gables and dormers, a dark grey slate roof, three brick chimneys, a white columned portico at the entrance, a long covered veranda along the front, tall windows warmly lit from inside, flower boxes. No patio furniture and no lettering.
 
 ### Building sites
-**168. Excavator** **BLOCKED in RUN** (the two views did not hold one rigid machine; T232 uses the library's construction vehicles) · **A** · 3 x 9 m, 3.5 m high · P1.
+**168. Excavator** **BLOCKED in RUN** (the two views did not hold one rigid machine; T232 draws the library's digger, `construction:digger`, 6 x 3 m, unmirrored) · **A** · 3 x 9 m, 3.5 m high · P1.
 > Subject: a yellow tracked excavator parked with its arm folded and the bucket resting on the ground, a dark cab, dried mud on the tracks. The 1985 look, no lettering.
 
-🎨 **169. Timber frame going up** (`buildings/golf-timber-frame-2views-v1.png`, provisional; T232 #673) · **A** · 12 x 9 m, 3 m high · P1.
+🎨 **169. Timber frame going up** (`buildings/golf-timber-frame-2views-v1.png`, provisional; in the game, T232 #673: `construction:timber-frame-1` and `-2`, 10.4 m square, a house site's frame. The two views are one frame turned half round, not a quarter: view 1 where the street lies toward the camera, view 2 where away. View 2 lacks the ladder) · **A** · 12 x 9 m, 3 m high · P1.
 > Subject: a house under construction: pale new timber wall studs and plates standing on a grey concrete slab, window and door openings framed, no roof yet, a ladder leaning on one wall, a few stacked studs on the slab.
 
-🎨 **170. Lumber stacks** (a, b, c; T232) · **B** · 3 variants · P1.
+🎨 **170. Lumber stacks** (a, b, c; in the game, T232: `construction:site-lumber-a`, `-b`, `-c`) · **B** · 3 variants · P1.
 > Subject: a stack of new pale timber planks on two bearers, strapped, a few loose planks on top.
 
-🎨 **171. Dirt and gravel heaps** (earth, gravel, sand; T232) · **B** · 3 variants · P1.
+🎨 **171. Dirt and gravel heaps** (earth, gravel, sand; in the game, T232: `construction:site-heap-earth`, `-gravel`, `-sand`, 3 m across) · **B** · 3 variants · P1.
 > Subject: one heap of loose brown earth (or grey gravel, or pale sand), about 3 m across, a shovel stuck in its side.
 
 **172. Survey stakes** · **B** · 2 variants · P2. The game draws the white dashed boundary itself.
