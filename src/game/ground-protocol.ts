@@ -56,7 +56,9 @@ export interface CourseLayer extends CourseTex { s: number; e: EdgeProfile; fill
   /** its edges sorted by the heights on their sides (ext/course-walls, T099): soft (feathered) and joint (a crisp mowing line against its own
    *  collar) runs; the rest of its edges are walls (CoursePatch.walls) or hidden under a later layer, drawn crisp. Absent: feather all edges */
   soft?: Float32Array[]; joint?: Float32Array[];
-  /** its collar band (w: the band's width in tiles, the course look's Border; its outward feather never reaches past it, so a hairline stays one) */
+  /** its collar band (w: the band's width in tiles, the course look's Border; its outward feather never reaches past it, so a hairline stays one).
+   *  T260: w 0, a Border of none: no rings, only the band's look (a tee's bank wears it; the renderer lays a bunker's grass lip and a pond's wet
+   *  soil and stones round the sand and the water with no band) */
   collar?: CourseTex & { n: 'first-cut' | 'fringe' | 'lip' | 'bank'; w?: number; fill: Float32Array[]; edges: Float32Array[]; soft?: Float32Array[];
     /** T227: a bunker's lip band's grass with the course finish on (course-finish.ts: the fairway's first cut, so the bunker sits in the collar
      *  as in the concept); absent: its own look (the player picked a Border texture for the bunker) */

@@ -53,9 +53,12 @@ test('off is the look before T227: T218\'s stripes, BLOB_STYLE\'s collars, no to
   assert.equal(greenStripeLook(FINISH_OFF, BASE), null);
   assert.equal(collarToneOf(FINISH_OFF), null);
   for (const s of [SURF.fairway, SURF.green, SURF.tee, SURF.bunker]) assert.equal(collarDefault(s, FINISH_OFF), null);
+  // T260: off, the fairway's first cut and the green's fringe are BLOB_STYLE's; a tee, a bunker and a pond have none; a set Border stays
   const border = [undefined, undefined, undefined, undefined, 1.5];
-  assert.deepEqual(finishBorders(border, FINISH_OFF), border);
-  assert.deepEqual(finishBorders([], FINISH_OFF), []);
+  const off = finishBorders(border, FINISH_OFF);
+  assert.equal(off[SURF.fairway], 1.5); assert.equal(off[SURF.green], 1);
+  for (const s of [SURF.tee, SURF.bunker, SURF.water]) assert.equal(off[s], 0);
+  assert.equal(finishBorders([], FINISH_OFF)[SURF.fairway], 2);
   const pre = PRESETS.find(p => p.id === RANGE_PRESET.outfield)!;
   const mw = outfieldStripes({ aim: { x: 0, y: -1 }, roadDir: { x: 1, y: 0 }, mowFrom: { x: 5, y: 5 } }, { ...pre.stripes, on: true })!;
   assert.equal(finishMow(mw, FINISH_OFF, BASE), null);
@@ -128,7 +131,7 @@ test('the range outfield wears the fairways\' bands along its line of play (Gras
 test('the collar: wider by default on fairways and greens (a Border the player set wins), toned on every first cut and fringe', () => {
   const b = finishBorders([], D);
   assert.equal(b[SURF.fairway], D.collarWidth); assert.equal(b[SURF.green], D.collarWidth / 2);
-  assert.equal(b[SURF.tee], undefined); assert.equal(b[SURF.bunker], undefined);
+  assert.equal(b[SURF.tee], 0); assert.equal(b[SURF.bunker], 0); assert.equal(b[SURF.water], 0); // T260: none
   assert.equal(finishBorders([], { ...D, collarWidth: 1 })[SURF.green], 1, 'the fringe at least BLOB_STYLE\'s metre');
   const own: (number | undefined)[] = []; own[SURF.fairway] = 1.5;
   assert.equal(finishBorders(own, D)[SURF.fairway], 1.5);

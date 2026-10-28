@@ -9,6 +9,7 @@
 // ground chunks (renderer.ts drawCourses). Pure: no DOM, importable from node tests.
 import type { MowStripes } from './ground-protocol';
 import { SURF } from './ext/course-grid';
+import { borderBase } from './ext/course-grid/patch';
 import { SUN_TILE_DIR } from './ext/course-height';
 import type { StripeLook } from './course-stripes';
 
@@ -100,18 +101,25 @@ export function collarDefault(s: number, f: CourseFinish): number | null {
   if (s === SURF.green) return Math.max(1, Math.round(f.collarWidth * 50) / 100);
   return null;
 }
-/** the Border widths by surface id (paint-tool courseBorders: the ones the player set) with the finish's defaults filled in where unset */
+/** T260 (#763): the Border a surface's band is laid at when the player has set none (metres; 0: none): the fairway's first cut and the
+ *  green's fringe at the finish's widths (BLOB_STYLE's with the finish off), none round a tee, a bunker or a pond */
+export function borderDefault(s: number, f: CourseFinish): number { return collarDefault(s, f) ?? borderBase(s); }
+/** the surfaces with a collar band (course-blobs BLOB_STYLE), whose Border the defaults fill in */
+const BANDED = [SURF.water, SURF.fairway, SURF.tee, SURF.bunker, SURF.green];
+/** the Border widths by surface id (paint-tool courseBorders: the ones the player set) with the defaults filled in where unset: the finish's
+ *  first cut and fringe (T227), none for the rest (T260: a tee's, a bunker's or a pond's band only where the player set a Border) */
 export function finishBorders(border: readonly (number | undefined)[], f: CourseFinish): (number | undefined)[] {
   const out = border.slice();
-  for (const s of [SURF.fairway, SURF.green]) if (out[s] === undefined) { const w = collarDefault(s, f); if (w !== null) out[s] = w; }
+  for (const s of BANDED) if (out[s] === undefined) out[s] = borderDefault(s, f);
   return out;
 }
 
 // ---------- the bunker lips ----------
 /** the lips' numbers at lip strength 1, tiles and alphas: the dark crescent inside the far rim (a cool multiply that keeps the sand's texture,
  *  reaching `reach` in from `foot` of the far wall's drop down the screen), the light near lip (a textured shine a gap inside the near rim, `w` wide), the raised grass lip round the sand (on the
- *  lip band: a shine on its far side, inset from the sand's edge by a gap; a light shade on its near side) */
-export const LIP = { dark: 0.7, reach: 1.1, foot: 0.85, light: 0.75, gap: 0.07, w: 0.36, grass: 0.4, grassGap: 0.05, shade: 0.3 } as const;
+ *  lip band: a shine on its far side, inset from the sand's edge by a gap; a light shade on its near side); bare: the grass lip's width round
+ *  a bunker with no lip band (T260, a Border of none: on the ground round the sand, as wide as the old default band, 1 m) */
+export const LIP = { dark: 0.7, reach: 1.1, foot: 0.85, light: 0.75, gap: 0.07, w: 0.36, grass: 0.4, grassGap: 0.05, shade: 0.3, bare: 0.5 } as const;
 /** how many weight steps a rim is drawn in */
 export const LIP_BINS = 4;
 /** a segment's sun facing: its outward normal (dy, -dx) (the surface lies on the left of travel, course-grid patch edges) against the sun at the
