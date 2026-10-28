@@ -163,8 +163,8 @@ export class PropsTool {
   }
   /** a prop made again at a new spot or picture (a move or a turn: remove and add, so the undo journal sees it), keeping its kind and size */
   private remake(p: Prop, item: number, x: number, y: number): Prop {
-    const key = p.decor!; this.ctx.removeProp(p);
-    const q = this.ctx.addProp(item, x, y, p.scale); q.decor = key; return q;
+    const key = p.decor!, frame = p.frame; this.ctx.removeProp(p);
+    const q = this.ctx.addProp(item, x, y, p.scale); q.decor = key; if (frame) q.frame = frame; return q; // T229: a frame tree keeps its hole
   }
   private changed(): void { this.tick = SCAN_EVERY; this.scan(true); this.ctx.save(); this.ctx.emit(); }
 

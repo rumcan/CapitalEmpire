@@ -23,7 +23,7 @@ import { SURF_SURFACE, mergeMany, plantMonth, polyCells, surfOfSurface, type Gri
 import { unitBuildCost } from './golf/costs';
 import { GREEN_M2_STEP as GREEN_STEP, HoleWizard, decodePlans, encodePlans, withPlan, withoutPlan } from './ext/hole-wizard';
 import { drawWizard } from './ext/hole-wizard/draw';
-import { planClear } from './ext/hole-plan';
+import { planClear, type HolePlan } from './ext/hole-plan';
 /** whether a painted area has completed its grow-in (sod or non-seed areas are mature at once) */  
 export function isAreaMature(a: PaintArea, currentMonth: number): boolean {  
  if (!a.plantKind || a.plantKind === 'sod') return true;  
@@ -51,6 +51,9 @@ function loadPlant(): Record<PlantBrushKind, PlantSet> {
   for (const k of PLANT_KINDS) out[k.kind] = clampPlant(saved && typeof saved === 'object' ? saved[k.kind] : undefined, k.kind);
   return out;
 }
+/** T229: the localStorage key of New hole's Frame with trees toggle ('0' off; anything else, or nothing, on) */
+const FRAME_KEY = 'capitalempire.frameTrees';
+function loadFrameTrees(): boolean { try { return localStorage.getItem(FRAME_KEY) !== '0'; } catch { return true; } }
 
 export type PaintMode = 'draw' | 'pick' | 'erase' | 'hole' | 'brush' | 'plant' | 'piece' | 'height' | 'plan';
 /** the golf holes a course has (the Course tool's hole strip) */
@@ -182,7 +185,14 @@ export interface PaintHost { setLotGround(key: string, patches: LotPatch[] | nul
   /** a course surface's look (a brush style) changed: the grid's chunks are drawn again in it */
   courseLook?(): void
   /** T188: a hole was built with New hole (not a replan): the guide moves on at once */
-  holeBuilt?(hole: number): void }
+  holeBuilt?(hole: number): void
+  /** T229: New hole's Build with Frame with trees on: plants the built hole's frame (golf/holeframe.ts) inside the Build's undo step and pays
+   *  for it; returns what it spent ($, net of the trees it took away) and the trees it planted and left out (not enough money) */
+  frameBuilt?(hole: number, plan: HolePlan): { spent: number; planted: number; left: number }
+  /** T229: the frame trees New hole's ghost would plant (their points, tiles; conifer: drawn darker), for the map's preview */
+  frameGhost?(): readonly { x: number; y: number; conifer?: boolean }[]
+  /** T229: what that frame costs ($), added to the Build pill's price */
+  frameCost?(): number }
 /** the ghost's fill by texture (the hole preview): the green, fairway, water and sand; other areas are only outlined */
 const GHOST_FILL: Record<string, string> = { golfGreen: 'rgba(120,200,120,0.35)', golfFairway: 'rgba(150,210,120,0.25)', waterDark: 'rgba(70,120,200,0.35)', bunkerSand: 'rgba(230,210,150,0.4)' };
 /** what the preview needs to draw (the engine's overlay helpers) */
@@ -288,6 +298,8 @@ export class PaintTool {
   rubHoleOnly = false;
   /** seed (grows in) or sod: how a golf area painted now is planted */
   plantKind: PlantKind = 'seed';
+  /** T229: New hole's Frame with trees: Build plants the hole's frame too (on by default; the toggle is remembered) */
+  frameTrees = loadFrameTrees();
   brush: Record<BrushKind, BrushSet> = loadBrush();
   /** plant mode: the plant brush in use and each kind's brush (remembered); the drag in progress (erasing or not, the last dab) */
   plantBrush: PlantBrushKind = 'trees';
@@ -615,6 +627,8 @@ export class PaintTool {
     this.gridApply(gh.diff);
     this.host.setPlans?.(encodePlans(withPlan(decodePlans(this.host.plans?.()), plan)));
     if (gh.cost > 0) { this.host.spend?.(gh.cost); if (this.tx) this.tx.spent += gh.cost; }
+    // T229: Frame with trees (on by default): the hole's frame goes in with it, in the same undo step, paid for by the host
+    const fr = this.frameTrees && this.host.frameBuilt ? this.host.frameBuilt(hole, plan) : null; if (fr && this.tx) this.tx.spent += fr.spent;
     this.pinHint = new Map([[hole, { x: plan.green.x, y: plan.green.y }]]);
     this.commit();
     this.brushHole = hole;
@@ -623,7 +637,7 @@ export class PaintTool {
     this.pill = null;
     this.host.save();
     if (!editing) this.host.holeBuilt?.(hole);
-    this.host.toast(`Hole ${hole} ${editing ? 'replanned' : 'built'}: par ${gh.info.par}, ${gh.info.lengthM} m${gh.cost ? `, $${gh.cost.toLocaleString()}` : ''}`);
+    this.host.toast(`Hole ${hole} ${editing ? 'replanned' : 'built'}: par ${gh.info.par}, ${gh.info.lengthM} m${gh.cost ? `, $${gh.cost.toLocaleString()}` : ''}${fr?.planted ? `; framed with ${fr.planted} trees ($${fr.spent.toLocaleString()})` : ''}${fr?.left ? `, ${fr.left} left out: not enough money` : ''}`, fr?.left ? 'warn' : undefined);
     this.host.emit(); return true;
   }
   /** deletes the plan being edited and its cells (those still as the plan laid them; your touch-ups stay), as one undo step (no refund) */
@@ -641,6 +655,8 @@ export class PaintTool {
     this.host.save(); this.host.toast(`Hole ${hole} deleted: ${d.n.toLocaleString()} cells cleared`);
     this.host.emit(); return true;
   }
+  /** T229: New hole's Frame with trees on or off (remembered) */
+  setFrameTrees(on: boolean): void { this.frameTrees = on; try { localStorage.setItem(FRAME_KEY, on ? '1' : '0'); } catch { /* storage may be unavailable */ } this.host.emit(); }
   /** drops the plan on screen (Cancel, as Esc): the wizard waits for a tee again (a new hole keeps its number) */
   cancelPlan(): void { const w = this.wizard; w.start(w.base ? this.nextFreeHole() || w.hole : w.hole); this.pill = null; this.host.emit(); }
   /** the wizard's tile to css px mapping (the overlay's projection) */
@@ -1493,9 +1509,22 @@ export class PaintTool {
     return ol;
   }
 
+  /** T229: the frame New hole's Build would plant, under the ghost's handles: a soft dot per tree (dark for a conifer, russet for an autumn tree) */
+  private drawFrameGhost(v: PaintView) {
+    const ts = this.host.frameGhost?.() ?? []; if (!ts.length) return;
+    const ctx = v.ctx, o = v.screen(0, 0), e = v.screen(1, 0), r = Math.max(3.5 * v.dpr, Math.hypot(e.x - o.x, e.y - o.y) * 1.1);
+    ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.lineWidth = Math.max(1, v.dpr);
+    for (const t of ts) {
+      const p = v.screen(t.x, t.y);
+      ctx.beginPath(); ctx.ellipse(p.x, p.y, r, r * 0.6, 0, 0, Math.PI * 2);
+      ctx.fillStyle = t.conifer ? 'rgba(22, 64, 38, 0.7)' : 'rgba(176, 72, 32, 0.7)'; ctx.fill();
+      ctx.strokeStyle = 'rgba(255, 240, 200, 0.8)'; ctx.stroke();
+    }
+    ctx.restore();
+  }
   /** the overlay preview: the outline being drawn (draw); the selected area, shaded, with its handles (draw and pick); a drag's candidate that cannot be applied, in red; the hovered area (pick and erase) */
   drawPreview(v: PaintView) {
-    if (this.mode === 'plan') { this.pill = drawWizard(v, this.wizard, this.mouse, typeof performance !== 'undefined' ? performance.now() : 0, reducedMotion()); return; }
+    if (this.mode === 'plan') { if (this.frameTrees) this.drawFrameGhost(v); this.pill = drawWizard(v, this.wizard, this.mouse, typeof performance !== 'undefined' ? performance.now() : 0, reducedMotion(), this.frameTrees ? Math.max(0, this.host.frameCost?.() ?? 0) : 0); return; }
     if (this.mode === 'piece') { this.drawPiece(v); return; }
     if (this.mode === 'height') { this.drawHeight(v); return; }
     if (this.mode === 'draw') this.drawOutline(v);

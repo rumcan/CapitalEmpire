@@ -53,7 +53,7 @@ stays a Studio option. Ground textures follow [art/GROUND-TEXTURE-METHOD.md](art
 | Greenkeeping conditions (section 10) | after the course surfaces |
 
 ### The concept look (section 12)
-The owner's target picture, 2026-10-27: items 149-175. ✅ 153 lawn on every yard (#663); 🎨 153 meadow and 152 rough in the Studio; ✅ 149-151 the fairway, first cut and green on the course and the range (#666). Ground textures 149-153 come first: the concept's greens. The plan is in [art/CONCEPT-LOOK.md](art/CONCEPT-LOOK.md).
+The owner's target picture, 2026-10-27: items 149-175. ✅ 153 lawn on every yard (#663); 🎨 153 meadow and 152 rough in the Studio; ✅ 149-151 the fairway, first cut and green on the course and the range (#666). 🎨 154 pond water, 158-160 the pond kit, 162-164 the shrubs, flowers and hedge are made (T231 #671); 169-171 the building-site kit (T232 #673; 168 the excavator blocked in RUN); 174 the build-tool tiles (T233 #674). Ground textures 149-153 come first: the concept's greens. The plan is in [art/CONCEPT-LOOK.md](art/CONCEPT-LOOK.md).
 
 ### List items done
 Ground (section 8 and the range ground): ✅ 131 Pond bank, ✅ 132 Grow-in, ✅ 135 Flower bed soil (#630); 🎨 133 Field parking, 🎨 21 range tee divots (#630, in the Studio, no ground wears them yet); 130 Pond water skipped (the lake is in). 134 Event matting deferred (quilting would break its panel grid). 🎨 19 the hitting mat (top-down, made, not drawn yet); 20, 27, 147 retakes next. The range and practice sprites still draw labelled stand-ins.
@@ -202,7 +202,7 @@ tees use the same marker.
 🎨 **19. Hitting mat** (made: `run-top/golf-range-mats/golf-range-mats-top-v1.png`, not drawn yet) (`golf:range-mats`) · **C** · 4.2 x 6 m a bay · P1 **(stand-in)**. The left and right edges must join seamlessly.
 > Subject: golf:range-mats, ONE driving-range hitting mat seen from straight above, about 4.2 m wide and 6 m deep: a concrete pad with a slightly worn green artificial-turf mat on it, a white rubber tee near the front edge, two or three white range balls beside it, a scuffed, flattened strike zone behind the tee. The left and right edges of the picture continue the concrete and must tile seamlessly when two copies are placed side by side.
 
-**20. Target green** (`golf:range-target-green`) · **C** · 12-20 m across · P1 **(stand-in)**.
+🎨 **20. Target green** (top-down retake made: `run-top/golf-range-target-green/`) (`golf:range-target-green`) · **C** · 12-20 m across · P1 **(stand-in)**.
 > Subject: golf:range-target-green, one round driving-range target green seen from straight above, filling the square: a smooth fine-cut inner green, a lighter mown collar ring round it, a faint darker ring at its outer edge where it meets the coarser outfield grass (the outfield shows only in the corners), a cup at the exact centre (no flag), a few white range balls lying scattered on it. No mowing stripes.
 
 🎨 **21. Divot-scarred range tee turf** (`range-tee-divots-run`, #630; on the range tee with T223) (texture) · **C** · a 16 m square · P1 **(stand-in)**.
@@ -229,7 +229,7 @@ The owner, 2026-10-27: "how about better more fun range targets". Big, bright th
 read from far away. Each stands on the outfield grass; a ball that lands in or on one would count as a hit. They are new: the game
 needs a ticket to offer them (a range upgrade, "Fun targets").
 
-**27. Bullseye target green** · **C** · 16-24 m across · P1. A target green painted as a giant archery target.
+🎨 **27. Bullseye target green** (top-down retake made: `run-top/golf-range-bullseye-target/`) · **C** · 16-24 m across · P1. A target green painted as a giant archery target.
 > Subject: a giant round driving-range target seen from straight above, filling the square: concentric rings mown and painted into the turf, white, red, white, red, with a bright yellow bullseye green at the centre holding a cup, the rings slightly irregular as if hand-painted on grass, a few white balls lying in the rings.
 
 **28. Island target green** · **A** · 20 x 16 m, 1 high · P1. A small green on an island in a pond.
@@ -265,7 +265,7 @@ as their decoration.
 
 ### Rock features
 
-**36. Boulders** · **B** · 0.8-2.5 m · P1. Make three sizes, three variants each.
+🎨 **36. Boulders** (9 made: small, medium, large x a, b, c; T231 #671) · **B** · 0.8-2.5 m · P1. Make three sizes, three variants each.
 > Subject: one weathered sandstone boulder sitting in the grass, rounded, with lichen patches and a little moss on its shaded side. Make nine pictures: small (0.8 m), medium (1.5 m) and large (2.5 m), three different shapes each.
 
 **37. Rock cluster with ornamental grass** · **B** · 3 x 2 m · P1. Three variants.
@@ -288,7 +288,7 @@ as their decoration.
 
 ### Palm trees
 
-**43. Palm trees** · **B** · 3-10 m high · P1. Three species, three variants each (height and lean), cold-hardy palms that suit a 1985
+🎨 **43. Palm trees** (9 palms made; T231 #671) · **B** · 3-10 m high · P1. Three species, three variants each (height and lean), cold-hardy palms that suit a 1985
 resort-style club. Evergreen: no autumn colours.
 > Subject: one palm tree with no ground under it. Make nine pictures: (a) a windmill palm (Trachycarpus), hairy brown trunk, fan leaves, 4, 5 and 6 m high; (b) a Canary Island date palm, thick diamond-patterned trunk, a big round crown of arching fronds, 6, 8 and 10 m high; (c) a dwarf fan palm clump (Chamaerops), several short trunks, 2, 3 and 3.5 m high. Each slightly different lean.
 
@@ -297,7 +297,7 @@ resort-style club. Evergreen: no autumn colours.
 
 ### Lights
 
-**45. Practice green lamp post** · **B** · 3.5 m high · P1. Two variants.
+🎨 **45. Practice green lamp post** (single and twin made; T231 #671) · **B** · 3.5 m high · P1. Two variants.
 > Subject: a traditional golf club lamp post about 3.5 m high: a dark green cast-iron post with a fluted base and a glass lantern on top, glowing warm; variant two with a twin lantern arm.
 
 **46. Path bollard light** · **B** · 0.9 m high · P1.
@@ -671,7 +671,7 @@ the water towers, a silo, a windmill and a fountain. These pieces are missing:
 **146. Bleachers** · **A** · 20 x 6 m, 4 high · P1. Two lengths (10 and 20 m).
 > Subject: aluminium school bleachers: five rows of grey benches on a steel frame with a handrail at the back, a stair at one end, empty.
 
-**147. Running track and field** · **C** · 100 x 60 m · P1. Top-down.
+🎨 **147. Running track and field** (top-down made: `run-top/iconic-running-track-field/`) · **C** · 100 x 60 m · P1. Top-down.
 > Subject: seen from straight above, a high school football field: striped mown grass with white yard lines (no numbers), end zones, inside a red-brown running track with white lane lines curving round both ends.
 
 **In the game now (T219):** both places are built (`src/game/lots/iconic-places.json`), with labelled stand-ins for the speaker posts (143: `world:speaker_post`), the car park
@@ -706,7 +706,7 @@ mowing stripes painted in. For the fairway and the range outfield. Codex has a f
 ✅ **153. Lawn and meadow** (lawn: `lawn-concept-run` v2 on every yard, #663; meadow: `meadow-concept-run` v2 in Studio › Painted, for the map when the owner says) · ground · P1. Two sets. Lawn: soft ordinary green garden grass with small clover patches, for the yards and the
 town blocks. Meadow: the same green, a little longer and uneven, a few tiny wildflowers, for the map's open ground.
 
-**154. Deep pond water** · ground · P1. Dark teal-green still water, darker toward the middle, soft ripples, a faint reflection of a warm
+🎨 **154. Deep pond water** (`pond-concept-run` tiles-v3, shipped with T230 #669) · ground · P1. Dark teal-green still water, darker toward the middle, soft ripples, a faint reflection of a warm
 sky. It replaces item 130.
 
 **155. Lake water with a soft swell** · ground · P2. Deep blue-teal open water, a gentle wave pattern, small warm glints.
@@ -716,28 +716,28 @@ sky. It replaces item 130.
 **157. Building-site dirt** · ground · P2. Graded bare earth with tyre and track marks and a few stones. Try `dirt-run` first.
 
 ### Water features
-**158. Pond-edge boulders** · **R** · 1 x 4 m a piece · P1.
+🎨 **158. Pond-edge boulders** (`landscaping/golf-pond-edge-boulders-pieces-v1.png`; into the game with T231 #671) · **R** · 1 x 4 m a piece · P1.
 > Subject: a pond's rim of rounded grey granite boulders of mixed sizes, set tight along the edge, moss and a few small autumn flowers between them, the stones dark and wet at the waterline. The water side of the piece faces the screen's lower edge. Make an inner corner and an outer corner as the extra items.
 
-**159. Fountain jet** · **B** · 1.5 m across, 4 m high · P1. Four frames of a loop.
+🎨 **159. Fountain jet** (`props/golf-fountain-jet-4frames-v1.png`; T231) · **B** · 1.5 m across, 4 m high · P1. Four frames of a loop.
 > Subject: a single tall fountain jet of water rising from a still pond's surface, a crown of spray at its top, a ring of ripples and foam at its foot, the water white-blue catching warm light. Only the water: no basin, no pond. Four frames of the same jet in one row, the spray shapes moving, so they loop.
 
-**160. Lily pads** · **C** decal sheet on magenta, four variants · P1.
+🎨 **160. Lily pads** (`landscaping/golf-lily-pads-top-v1.png`; T231) · **C** decal sheet on magenta, four variants · P1.
 > Subject: seen from straight above, a cluster of round green lily pads of mixed sizes floating flat, a few with a notch, two white water-lily flowers with yellow centres. Four different clusters in a 2x2 grid on flat pure magenta.
 
 **161. Lake-shore rocks** · **R** · 2 x 4 m a piece · P2.
 > Subject: a rocky lake shore of large weathered granite boulders and flat slabs, lichen on top, dark and wet at the bottom, a little pale sand between them.
 
 ### Planting
-**162. Autumn shrubs** · **B** · 1-1.5 m · P1. Six variants: burning bush in scarlet, golden spirea, a clipped green boxwood ball, a
+🎨 **162. Autumn shrubs** (all 6 made; T231) · **B** · 1-1.5 m · P1. Six variants: burning bush in scarlet, golden spirea, a clipped green boxwood ball, a
 red-twig dogwood with orange leaves, a blue-green juniper, an ornamental grass with pale cream plumes. No pink or purple (the magenta key).
 > Subject: one garden shrub (the variant named above), full and round, in autumn colour, standing on its own.
 
-**163. Autumn flower clumps** · **B** · 0.6 m · P1. Six variants: chrysanthemums in red, yellow, orange, white and bronze, and a clump
+🎨 **163. Autumn flower clumps** (all 6 made: mums red, yellow, orange, white, bronze, black-eyed Susans; T231 #671) · **B** · 0.6 m · P1. Six variants: chrysanthemums in red, yellow, orange, white and bronze, and a clump
 of black-eyed Susans. No pink or purple.
 > Subject: one dense mounded clump of garden chrysanthemums (the colour named above) in full bloom, the flowers small and many, dark green leaves showing at the bottom.
 
-**164. Clipped hedge** · **R** · 0.7 m deep, 0.9 m high · P1.
+🎨 **164. Clipped hedge** (`landscaping/golf-clipped-hedge-pieces-v1.png`; T231) · **R** · 0.7 m deep, 0.9 m high · P1.
 > Subject: a neatly clipped dark-green boxwood hedge with a flat top and straight sides, a few autumn leaves caught on top.
 
 **165. Low fieldstone garden wall** · **R** · 0.5 m deep, 0.7 m high · P2.
@@ -752,16 +752,16 @@ concept, the large brick building behind the patio with the red umbrellas.
 > Subject: a grand New England country club clubhouse: red brick with white trim, many steep gables and dormers, a dark grey slate roof, three brick chimneys, a white columned portico at the entrance, a long covered veranda along the front, tall windows warmly lit from inside, flower boxes. No patio furniture and no lettering.
 
 ### Building sites
-**168. Excavator** · **A** · 3 x 9 m, 3.5 m high · P1.
+**168. Excavator** **BLOCKED in RUN** (the two views did not hold one rigid machine; T232 uses the library's construction vehicles) · **A** · 3 x 9 m, 3.5 m high · P1.
 > Subject: a yellow tracked excavator parked with its arm folded and the bucket resting on the ground, a dark cab, dried mud on the tracks. The 1985 look, no lettering.
 
-**169. Timber frame going up** · **A** · 12 x 9 m, 3 m high · P1.
+🎨 **169. Timber frame going up** (`buildings/golf-timber-frame-2views-v1.png`, provisional; T232 #673) · **A** · 12 x 9 m, 3 m high · P1.
 > Subject: a house under construction: pale new timber wall studs and plates standing on a grey concrete slab, window and door openings framed, no roof yet, a ladder leaning on one wall, a few stacked studs on the slab.
 
-**170. Lumber stacks** · **B** · 3 variants · P1.
+🎨 **170. Lumber stacks** (a, b, c; T232) · **B** · 3 variants · P1.
 > Subject: a stack of new pale timber planks on two bearers, strapped, a few loose planks on top.
 
-**171. Dirt and gravel heaps** · **B** · 3 variants · P1.
+🎨 **171. Dirt and gravel heaps** (earth, gravel, sand; T232) · **B** · 3 variants · P1.
 > Subject: one heap of loose brown earth (or grey gravel, or pale sand), about 3 m across, a shovel stuck in its side.
 
 **172. Survey stakes** · **B** · 2 variants · P2. The game draws the white dashed boundary itself.
@@ -774,7 +774,7 @@ the screen's lower left or lower right); a cart driving up the screen shows the 
 > Subject: a white 1985 two-seater golf cart with a cream canopy on four posts, a bag rack at the back holding two golf bags, small headlights. No people and no lettering.
 
 ### UI pictures
-**174. Build-tool tiles** · one sheet of 12 · P1. The build flyouts' tools as small illustrated scenes, as in the concept's Golf Course panel.
+🎨 **174. Build-tool tiles** (`ui/golf-build-tool-tiles-sheet-v1.png`; T233 #674) · one sheet of 12 · P1. The build flyouts' tools as small illustrated scenes, as in the concept's Golf Course panel.
 > Subject: twelve tiny isometric dioramas in a 4x3 grid, each on its own dark navy rounded square, the light from the upper right: a tee box, a fairway, a green with a flag, a bunker, a pond, rough grass, a clump of autumn trees, a group of boulders, a curving cart path, a small clubhouse, the range bays, a flower bed. The same scale and style in every tile; no lettering.
 
 **175. Top-bar icons** · one sheet of 6 on magenta · P2.

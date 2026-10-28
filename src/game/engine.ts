@@ -46,7 +46,9 @@ import { areaAt, brushTextures, toTuple, type PaintTuple, type PaintTex } from '
 import { CELL_T, SURF, cellAt, diffBox, encodeGrid, fillPolygon, fitGrid, landGridBox, makeGrid, paintStroke, type Grid as CourseGrid, type GridDiff, type GridSave } from './ext/course-grid';
 import { STAIR_REACH } from './ext/course-walls';
 import { SURFACE_TEX_ID, SURF_SURFACE, areaRank, growingHoles, ringArea, type GridArea } from './ext/course-grid/areas';
-import { aimsFromPlans, decodePlans, encodePlans, frameView, type FreeRect, type WizardGhost } from './ext/hole-wizard';
+import { aimsFromPlans, decodePlans, encodePlans, frameView, planSeed, type FreeRect, type WizardGhost } from './ext/hole-wizard';
+import type { HolePlan } from './ext/hole-plan';
+import { FRAME_CONIFER_IDS, FRAME_RULES, FRAME_TREE_KEY, cartLanes, frameHole, framePrice, landingSpots, type FrameSite, type FrameTree } from './golf/holeframe';
 import { FOREST_CLEAR, LABEL_FADE_ALPHA, LABEL_FADE_PX, TOWN_CLEAR, plantedTreeCleared, propTreeCleared, treesCleared, type NearTree } from './ext/hole-wizard/extras';
 import { holeAreas, holeCard, markerMove, swapHoleNumbers, type HoleCardView, type HoleFix } from './golf/holecard';
 import { isCourseArea, loadCourseGrid, migrateAreas } from './ext/course-grid/migrate';
@@ -291,6 +293,20 @@ const COURSE_SEND_MS = 100;
 /** T218: how often (ms) the holes' playing lines are compared with the last look (engine watchHoleLines), and how far round a line that moved
  *  its chunks are sent again (tiles: the fairway's stripes turn with it; a fairway lies within this of its line) */
 const LINES_EVERY_MS = 250, LINES_REACH = 40;
+/** T229: New hole's frame is worked out once its ghost has held still this long (ms) */
+const FRAME_SETTLE_MS = 220;
+/** T229: a hole's frame as it would go in now: the trees to plant, its frame trees now in play (they go) and how many it keeps */
+interface FramePlan { hole: number; trees: FrameTree[]; stale: Prop[]; kept: number }
+/** T229: the hole card's Frame with trees: the trees it would plant and their price, the frame trees it would take away and their refund, and
+ *  how many frame trees the hole has */
+export interface HoleFrameView { trees: number; price: number; stale: number; refund: number; has: number }
+/** T229: what a frame did, as its toast says it */
+function frameToast(n: number, r: { spent: number; planted: number; left: number; gone: number }): string {
+  const parts = [r.planted ? `Hole ${n} framed with ${r.planted} tree${r.planted === 1 ? '' : 's'}` : `Hole ${n}'s frame`];
+  if (r.gone) parts.push(`${r.gone} out of play taken away`);
+  if (r.left) parts.push(`${r.left} left out: not enough money`);
+  return `${parts.join(', ')}${r.spent > 0 ? ` (-$${r.spent.toLocaleString()})` : r.spent < 0 ? ` (+$${(-r.spent).toLocaleString()})` : ''}`;
+}
 /** the least time between two workings-out of the featured holes (the crowd follows the play, docs/GOLF-PLAY.md decision 6), real ms */
 const FEATURED_EVERY_MS = 2000;
 /** the welcome card shows only in a range game loaded with less play than this, seconds (P22 2.8: once per new game; older saves never see it) */
@@ -685,6 +701,7 @@ export class Game {
     landBox: () => { const L = this.golf ? this.golfLand() : []; if (!L.length) return null; return [Math.min(...L.map(r => r[0])), Math.min(...L.map(r => r[1])), Math.max(...L.map(r => r[0] + r[2])), Math.max(...L.map(r => r[1] + r[3]))]; },
     publicRoads: b => [...this.net.segsNear({ x: (b[0] + b[2]) / 2, y: (b[1] + b[3]) / 2 }, Math.hypot(b[2] - b[0], b[3] - b[1]) / 2 + 4)].filter(s => s.kind !== SK.TUNNEL && !isCourseClass(s.cls.id)).map(s => ({ ax: s.a.x, ay: s.a.y, bx: s.b.x, by: s.b.y, name: this.roadNameOfSeg(s) })),
     treesCleared: () => this.ghostTrees.set.length, // T176
+    frameBuilt: (h, p) => this.frameBuilt(h, p), frameGhost: () => this.wizardFrameTrees(), frameCost: () => this.wizardFrame()?.price ?? 0, // T229
     holeLines: () => { const g = this.golf; if (!g) return []; return g.pins.flatMap(p => { const t = g.tees.find(q => q.hole === p.hole && q.kind === 'back') ?? g.tees.find(q => q.hole === p.hole); return t ? [{ hole: p.hole, line: [{ x: t.x, y: t.y }, { x: p.x, y: p.y }] }] : []; }); },
     courseLook: () => this.resendCourse() });
   /** the hole plans change (a wizard build, edit or delete, or their undo and redo; T102): golf.aims follow the plans' bends, so the holes'
@@ -761,6 +778,7 @@ export class Game {
     // the markers' props are keyed by hole (the pin of hole 9 is yellow): drop both holes' and put them back under their new numbers
     for (const h of [a, b]) for (const k of ['pin', 'back', 'middle', 'forward'] as const) { const key = k === 'pin' ? 'pin:' + h : `tee:${h}:${k}`, pr = this.golfProps.get(key); if (pr) { this.removeProp(pr); this.golfProps.delete(key); } }
     g.pins = r.pins; g.tees = r.tees; g.aims = r.aims; g.plans = encodePlans(r.plans);
+    for (const p of this.props) if (p.frame === a) p.frame = b; else if (p.frame === b) p.frame = a; // T229: the frame trees follow their hole
     for (const m of [...g.pins.filter(q => q.hole === a || q.hole === b).map(q => ({ ...q, kind: 'pin' as const })), ...g.tees.filter(q => q.hole === a || q.hole === b)]) {
       const item = LIB_INDEX.get(m.kind === 'pin' ? (m.hole === 9 ? PIN_YELLOW_ID : PIN_RED_ID) : m.kind === 'back' ? TEE_BACK_ID : m.kind === 'middle' ? TEE_MIDDLE_ID : TEE_FORWARD_ID);
       if (item !== undefined) this.golfProps.set(m.kind === 'pin' ? 'pin:' + m.hole : `tee:${m.hole}:${m.kind}`, this.addProp(item, m.x, m.y, false, MARKER_SCALE[m.kind]));
@@ -1199,6 +1217,165 @@ export class Game {
   }
   /** the grid's surface id at tile (x, y) (0: none or no grid) */
   courseSurfAt(x: number, y: number): number { const g = this.courseGrid; if (!g) return 0; const i = cellAt(g, x, y); return i >= 0 ? g.surf[i]! : 0; }
+  // ---------- T229: trees frame the holes (golf/holeframe.ts; the hole card's and New hole's Frame with trees) ----------
+  /** bumped when frame trees are planted or taken away (the card's frame is worked out again) */
+  private frameRev = 0;
+  /** the hole card's frame (its key: the hole, the grid, the frame trees, the props, the markers) */
+  private cardFrame: { key: string; v: HoleFrameView | null } | null = null;
+  /** New hole's frame for its ghost: worked out once the ghost has held still for FRAME_SETTLE_MS (a drag does not wait on it) */
+  private ghostFrame: { ghost: WizardGhost | null; since: number; done: boolean; v: FramePlan | null; pts?: { of: FramePlan; pts: { x: number; y: number; conifer: boolean }[] } } = { ghost: null, since: 0, done: true, v: null };
+  /** what a hole's frame stands on: the course grid as it is (or as New hole's ghost would leave it), the holes' lines of play and the cart
+   *  lanes, and the map's own checks (the land, water, paths and roads, car parks and buildings, painted ground, props and planted trees near);
+   *  own: the hole's frame trees planted already. Null without a course grid or a line for the hole */
+  private frameSite(n: number, o: { ghost?: WizardGhost | null; plan?: HolePlan | null } = {}): { site: FrameSite; own: Prop[] } | null {
+    const gs = this.golf, g = this.courseGrid; if (!gs || !g || n < 1) return null;
+    let surf = (i: number) => g.surf[i]!, hole = (i: number) => g.hole[i]!;
+    const d = o.ghost?.diff;
+    if (d && d.n && d.w === g.w && d.x0 === g.x0 && d.y0 === g.y0) {
+      const at = new Map<number, number>(); for (let k = 0; k < d.n; k++) at.set(d.idx[k]!, k);
+      surf = i => { const k = at.get(i); return k === undefined ? g.surf[i]! : d.s1[k]!; };
+      hole = i => { const k = at.get(i); return k === undefined ? g.hole[i]! : d.h1[k]!; };
+    }
+    // the lines of play (T218's: the back tee, the aim points, the pin); a plan in hand gives this hole's
+    const lines = new Map<number, Pt[]>();
+    for (const [h, l] of this.holeLines()) { const pts: Pt[] = []; for (let k = 0; k + 1 < l.length; k += 2) pts.push({ x: l[k]!, y: l[k + 1]! }); lines.set(h, pts); }
+    const pl = o.plan ?? decodePlans(gs.plans ?? []).find(p => p.hole === n) ?? null;
+    // a plan in hand, or a built plan whose markers have not landed yet (they are fitted after the Build): the plan's tee, bends and green
+    if (pl && (o.plan || !lines.has(n))) lines.set(n, [pl.tee, ...pl.bends, pl.green].map(p => ({ x: p.x, y: p.y })));
+    const line = lines.get(n); if (!line || line.length < 2) return null;
+    let L = 0; for (let k = 1; k < line.length; k++) L += Math.hypot(line[k]!.x - line[k - 1]!.x, line[k]!.y - line[k - 1]!.y);
+    const lanes = cartLanes([...lines].map(([h, l]) => ({ hole: h, tee: l[0]!, pin: l[l.length - 1]! })), gs.clubhouse ?? null);
+    // the box the frame can reach, and what stands in it: the hole's own frame trees, the planted forest and town trees, the painted areas
+    const R = FRAME_RULES, reach = R.corridor + R.bandOut + R.landingPush + 4;
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const p of line) { x0 = Math.min(x0, p.x - reach); y0 = Math.min(y0, p.y - reach); x1 = Math.max(x1, p.x + reach); y1 = Math.max(y1, p.y + reach); }
+    const box: BBox = [x0, y0, x1, y1], own: Prop[] = [];
+    for (const p of this.propGrid.query(box)) if (p.frame === n && p.decor === FRAME_TREE_KEY) own.push(p);
+    own.sort((a, b) => a.uid - b.uid);
+    const mine = new Set(own), trunks = new Map<number, number[]>(), N = MAP / FOREST_CELL, B = 4, key = (x: number, y: number) => Math.floor(y / B) * 4096 + Math.floor(x / B);
+    for (const map of [this.forest, this.townTrees]) for (const [k, ps] of map) {
+      const ci = k % N, cj = Math.floor(k / N);
+      if (!boxNear(box, ci * FOREST_CELL, cj * FOREST_CELL, (ci + 1) * FOREST_CELL, (cj + 1) * FOREST_CELL, 0)) continue;
+      for (const p of ps) {
+        const bx = LIBRARY[p.item]!.boxes[0]!, tx = p.x + bx.dx * p.scale / 2, ty = p.y + bx.dy * p.scale / 2;
+        let l = trunks.get(key(tx, ty)); if (!l) trunks.set(key(tx, ty), l = []); l.push(tx, ty);
+      }
+    }
+    const paints = this.paint.areas.filter(a => boxNear(ptsBox(a.pts), x0, y0, x1, y1, 2));
+    const pb = gs.start === 'range' ? this.range.scene?.practice.box ?? null : null, m2 = R.treeMin * R.treeMin;
+    const ok = (x: number, y: number): boolean => {
+      if (!this.ownedAt(x, y) || this.onRangePlot(x, y)) return false;
+      if (pb && x > pb[0] - 2 && x < pb[2] + 2 && y > pb[1] - 2 && y < pb[3] + 2) return false;
+      // water within a tile: the map's (lakes, creeks, banks) and the course's ponds
+      for (let ty = Math.floor(y - 1); ty <= Math.floor(y + 1); ty++) for (let tx = Math.floor(x - 1); tx <= Math.floor(x + 1); tx++) {
+        if (tx < 1 || ty < 1 || tx >= MAP - 1 || ty >= MAP - 1) return false;
+        const c = this.terrain.cls[ty * MAP + tx]; if (c === TC.WATER || c === TC.CREEK || c === TC.BANK) return false;
+      }
+      for (let k = 0; k < 9; k++) { const i = cellAt(g, x + (k % 3) - 1, y + Math.floor(k / 3) - 1); if (i >= 0 && surf(i) === SURF.water) return false; }
+      // a road, a cart path, a drive or a sidewalk within 1.5 tiles (T213's carts drive the paths), a car park or a building within 2
+      if (this.net.rectOcc(x - 1.5, y - 1.5, x + 1.5, y + 1.5)) return false;
+      for (const b of this.parkDefs) if (x > b.x - 2 && x < b.x + b.w + 2 && y > b.y - 2 && y < b.y + b.h + 2) return false;
+      for (const b of this.bizDefs) if (x > b.x - 2 && x < b.x + b.w + 2 && y > b.y - 2 && y < b.y + b.h + 2) return false;
+      if (paints.length && areaAt(paints, x, y)) return false;
+      // a prop near (a bench, a marker, another hole's frame tree; this hole's own are its keep): treeMin from its foot, a tile off a big one
+      for (const p of this.propGrid.query([x - 3, y - 3, x + 3, y + 3])) {
+        if (mine.has(p)) continue;
+        if (LIBRARY[p.item]!.big) { if (x > p.x0 - 1 && x < p.x1 + 1 && y > p.y0 - 1 && y < p.y1 + 1) return false; continue; }
+        if (((p.x0 + p.x1) / 2 - x) ** 2 + ((p.y0 + p.y1) / 2 - y) ** 2 < m2) return false;
+      }
+      // a planted forest or town tree within treeMin: the woods frame it there already
+      for (let j = Math.floor((y - 3) / B); j <= Math.floor((y + 3) / B); j++) for (let i = Math.floor((x - 3) / B); i <= Math.floor((x + 3) / B); i++) {
+        const l = trunks.get(j * 4096 + i); if (!l) continue;
+        for (let k = 0; k < l.length; k += 2) if ((l[k]! - x) ** 2 + (l[k + 1]! - y) ** 2 < m2) return false;
+      }
+      return true;
+    };
+    const site: FrameSite = {
+      hole: n, seed: pl?.seed || planSeed(n), line, others: [...lines].filter(([h]) => h !== n).map(([, l]) => l), lanes, ok,
+      grid: { x0: g.x0, y0: g.y0, w: g.w, h: g.h, surf, hole },
+      ...(pl ? { landings: landingSpots(L * 2, pl.widths) } : {}),
+    };
+    return { site, own };
+  }
+  /** hole n's frame as it would go in now (see frameSite): the trees to plant, its frame trees now in play (to go) and how many it keeps */
+  private framePlan(n: number, o: { ghost?: WizardGhost | null; plan?: HolePlan | null } = {}): FramePlan | null {
+    const s = this.frameSite(n, o); if (!s) return null;
+    const r = frameHole(s.site, s.own.map(p => ({ x: p.x, y: p.y })));
+    return { hole: n, trees: r.trees, stale: r.stale.map(i => s.own[i]!), kept: s.own.length - r.stale.length };
+  }
+  /** a frame plan planted (inside the caller's undo step): its stale trees go (half their price back, as the bulldozer), then its clumps go in,
+   *  whole clumps while the money lasts (free: the dev's and the bench's frame); returns what it spent ($, net), the trees planted and left out */
+  private plantFrame(f: FramePlan, free = false): { spent: number; planted: number; left: number; gone: number } {
+    const d = DECOR_BY_KEY.get(FRAME_TREE_KEY)!, price = free ? 0 : d.price;
+    let spent = 0, planted = 0, left = 0;
+    for (const p of f.stale) { this.removeProp(p); if (!free) spent -= sellBack(d); }
+    const clumps = new Map<number, FrameTree[]>(); for (const t of f.trees) { let l = clumps.get(t.clump); if (!l) clumps.set(t.clump, l = []); l.push(t); }
+    let money = free ? Infinity : this.money - spent;
+    for (const ts of clumps.values()) {
+      const go = ts.flatMap(t => { const i = LIB_INDEX.get(t.id); if (i === undefined) return []; const k = Math.min(maxDrawScale(i), t.scale); return this.canPlace(LIBRARY[i]!, t.x, t.y, false, k) ? [] : [{ i, t, k }]; });
+      if (go.length < FRAME_RULES.min || go.length * price > money) { left += ts.length; continue; }
+      for (const { i, t, k } of go) { const p = this.addProp(i, t.x, t.y, false, k); p.decor = FRAME_TREE_KEY; p.frame = f.hole; }
+      planted += go.length; spent += go.length * price; money -= go.length * price;
+    }
+    if (spent) this.traffic.spend('construction', spent);
+    if (planted || f.stale.length) { this.frameRev++; this.scheduleSave(); }
+    return { spent, planted, left, gone: f.stale.length };
+  }
+  /** the hole card's Frame with trees (T229): what it would plant now and for what, what it takes away, and how many frame trees the hole has */
+  holeFrameView(n: number): HoleFrameView | null {
+    const g = this.golf, cg = this.courseGrid; if (!g || !cg) return null;
+    const key = `${n}|${cg.rev}|${this.frameRev}|${this.props.size}|${this.gaRev}|${JSON.stringify(g.pins.filter(p => p.hole === n))}|${JSON.stringify(g.tees.filter(t => t.hole === n))}|${g.plans?.length ?? 0}`;
+    if (this.cardFrame?.key === key) return this.cardFrame.v;
+    const f = this.framePlan(n), d = DECOR_BY_KEY.get(FRAME_TREE_KEY)!;
+    const v = f ? { trees: f.trees.length, price: framePrice(f.trees.length, d.price), stale: f.stale.length, refund: f.stale.length * sellBack(d), has: f.kept + f.stale.length } : null;
+    this.cardFrame = { key, v };
+    return v;
+  }
+  /** Frame with trees on hole n (the hole card): its frame planted as one undo step (Ctrl+Z takes the trees and the money back); the toast says
+   *  what it did. free: the dev's and the bench's frame (?frame=1) */
+  frameHoleTrees(n: number, free = false): number {
+    const f = this.framePlan(n); if (!f) { if (!free) this.toast(`Hole ${n} has no line of play to frame yet`, 'warn'); return 0; }
+    if (!f.trees.length && !f.stale.length) { if (!free) this.toast(`Hole ${n} is framed already: no room for more clumps`, 'info'); return 0; }
+    let r = { spent: 0, planted: 0, left: 0, gone: 0 };
+    if (free) r = this.plantFrame(f, true);
+    else this.paint.step(`frame hole ${n}`, () => (r = this.plantFrame(f)).spent);
+    if (!free) this.toast(frameToast(n, r), r.left ? 'warn' : 'good');
+    this.emit(); return r.planted;
+  }
+  /** every hole with a line of play framed, in number order (free: the dev's ?frame=1 and the bench); returns the trees planted */
+  frameAllHoles(free = false): number {
+    const holes = new Set([...this.holeLines().keys(), ...decodePlans(this.golf?.plans ?? []).map(p => p.hole)]);
+    let n = 0; for (const h of [...holes].sort((a, b) => a - b)) n += this.frameHoleTrees(h, free);
+    return n;
+  }
+  /** New hole's Build with Frame with trees on (PaintTool.buildPlan, inside its undo step): the new or edited hole's frame on the built grid;
+   *  returns what it spent and the trees it planted and left out (Build's toast says them) */
+  private frameBuilt(n: number, plan: HolePlan): { spent: number; planted: number; left: number } {
+    const f = this.framePlan(n, { plan }); if (!f || (!f.trees.length && !f.stale.length)) return { spent: 0, planted: 0, left: 0 };
+    return this.plantFrame(f);
+  }
+  /** New hole's frame for its ghost (the panel's Frame with trees row): trees and price, or null while it is worked out or the toggle is off */
+  wizardFrame(): { trees: number; price: number; stale: number } | null {
+    const f = this.ghostFrame.v; if (!f || !this.paint.frameTrees) return null;
+    const d = DECOR_BY_KEY.get(FRAME_TREE_KEY)!;
+    return { trees: f.trees.length, price: framePrice(f.trees.length, d.price) - f.stale.length * sellBack(d), stale: f.stale.length };
+  }
+  /** each frame: New hole's frame is worked out again once its ghost has held still for FRAME_SETTLE_MS (the toggle on) */
+  private ghostFrameCheck(now: number) {
+    const c = this.ghostFrame, on = this.paint.frameTrees && this.tool === 'course' && this.paint.mode === 'plan';
+    const gh = on ? this.paint.wizard.ghost() : null;
+    if (gh !== c.ghost) { c.ghost = gh; c.since = now; c.done = !gh; if (!gh && c.v) { c.v = null; this.emit(); } return; }
+    if (c.done || now - c.since < FRAME_SETTLE_MS) return;
+    const pl = this.paint.wizard.plan; c.done = true;
+    c.v = gh && pl ? this.framePlan(pl.hole, { ghost: gh, plan: pl }) : null;
+    this.emit();
+  }
+  /** the frame New hole's ghost would plant, for its overlay: the trees' points (tiles) and whether each is a conifer, or none */
+  wizardFrameTrees(): readonly { x: number; y: number; conifer: boolean }[] {
+    const c = this.ghostFrame; if (!this.paint.frameTrees || !c.ghost || !c.v) return [];
+    if (c.pts?.of !== c.v) c.pts = { of: c.v, pts: c.v.trees.map(t => ({ x: t.x, y: t.y, conifer: FRAME_CONIFER_IDS.has(t.id) })) };
+    return c.pts.pts;
+  }
   /** the grid's course areas (gridAreas), in draw order. The holes an edit touched are worked out again by the areas worker: until they
    *  land this is the list as it was (the panel and the markers follow when they do) */
   gridAreaList(): GridArea[] {
@@ -1283,7 +1460,8 @@ export class Game {
   private swapProps(j: PropLog, back: boolean): PropLog {
     const kill = back ? j.added : j.removed, revive = back ? j.removed : j.added;
     for (const p of kill) this.removeProp(p);
-    const out = revive.map(p => { const q = this.addProp(p.item, p.x, p.y, p.flip, p.scale); if (p.plant) q.plant = p.plant; if (p.decor) q.decor = p.decor; return q; });
+    const out = revive.map(p => { const q = this.addProp(p.item, p.x, p.y, p.flip, p.scale); if (p.plant) q.plant = p.plant; if (p.decor) q.decor = p.decor; if (p.frame) q.frame = p.frame; return q; });
+    if (j.added.some(p => p.frame) || j.removed.some(p => p.frame)) this.frameRev++; // T229
     this.scheduleSave();
     return back ? { added: kill, removed: out } : { added: out, removed: kill };
   }
@@ -1619,6 +1797,7 @@ export class Game {
     const tl = performance.now();
     this.ground.init(this.terrain);
     this.sendTerrain(); this.afterLoad();
+    if (import.meta.env.DEV && this.golf && new URLSearchParams(location.search).get('frame') === '1') this.frameAllHoles(true); // T229: ?frame=1, every hole framed (the bench's after)
     if (this.stampPending) { this.stampPending = false; this.traffic.stamp(TOWN_POP); this.scheduleSave(); }
     if (loaded) {
       this.traffic.townState(loaded.lots ?? [], loaded.simT ?? 0, loaded.budget, loaded.money, loaded.career, loaded.shift ?? 0, loaded.round, loaded.bizStats); this.traffic.setTownClock(loaded.townClock ?? townClockFor(this.traffic.dayLen));
@@ -1915,7 +2094,10 @@ export class Game {
     const rb = this.range.scene?.box, pb = this.range.scene?.practice.box; // the driving range's plot and its practice area keep clear of trees (P24, T129, T130)
     const lab = this.labClear; // the lot lab's lot and street keep clear of trees (stageLab): only the lot's own art shows round its props
     const places = this.placeBoxes().filter(b => boxNear(b, x0, y0, x1, y1, g)); // T219: the iconic places keep clear of trees
+    // T229: a hole's frame trees (props): a planted tree keeps 2 tiles off them, so the woods never grow through a frame
+    const frames: number[] = []; if (grid) for (const p of this.propGrid.query([x0 - g, y0 - g, x1 + g, y1 + g])) if (p.frame) frames.push(p.x, p.y);
     const free = (x: number, y: number, r: number) => {
+      for (let k = 0; k < frames.length; k += 2) if ((frames[k]! - x) ** 2 + (frames[k + 1]! - y) ** 2 < (r + 2) ** 2) return false;
       for (const b of places) if (x > b[0]! - r && x < b[2]! + r && y > b[1]! - r && y < b[3]! + r) return false;
       if (lab && x > lab[0] - r && x < lab[2] + r && y > lab[1] - r && y < lab[3] + r) return false;
       if (rb && x > rb[0] - r && x < rb[2] + r && y > rb[1] - r && y < rb[3] + r) return false;
@@ -5987,7 +6169,7 @@ export class Game {
     // the farms yield to the lots the town builds on (checked about once a second: the count walks every lot)
     if (this.farmsEnabled && ++this.farmTick % 60 === 0 && this.farmMap.stale(claimedLots(this.traffic.lots), this.site, this.farmParks().length)) this.farmsUpdate(true);
     if (this.traffic.round.cards.length > this.cardsApplied) this.applyCards();
-    this.yearCheck(); this.foundingCheck(); this.progressCheck(); this.ghostTreesCheck(); // T176
+    this.yearCheck(); this.foundingCheck(); this.progressCheck(); this.ghostTreesCheck(); this.ghostFrameCheck(performance.now()); // T176, T229
     const t0 = performance.now();
     const dt = Math.min(0.05, (now - this.last) / 1000), frameMs = now - this.last; this.last = now;
     this.resize();
