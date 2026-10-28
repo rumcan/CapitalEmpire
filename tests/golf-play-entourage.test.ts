@@ -243,7 +243,7 @@ test('determinism: the same seed gives the same entourage, the same cart stops a
   assert.deepEqual(run(), run());
 });
 
-test('performance: a full tour field with caddies and a cart field play back cheaply; carts off the screen work out no routes', () => {
+test('performance: a full tour field with caddies and a cart field play back cheaply; carts off the screen work out no routes', t => {
   const view = course(), P = paths(view);
   for (const tier of [2, 5]) {
     const { plan } = dayRound(view, tier, 3, null), pv = new PlayView(plan, view, { paths: P });
@@ -251,6 +251,7 @@ test('performance: a full tour field with caddies and a cart field play back che
     const t0 = performance.now(); let n = 0;
     for (let m = 600; m < 700; m += 0.25) { pv.update(m, m); n++; }
     const ms = (performance.now() - t0) / n;
+    t.diagnostic(`tier ${tier}: ${plan.golfers.length} golfers, ${ms.toFixed(3)} ms a playback update`);
     assert.ok(ms < 3, `tier ${tier}: ${ms.toFixed(3)} ms an update`);
   }
   // a box far from the course: no cart drawn, no drive's route worked out

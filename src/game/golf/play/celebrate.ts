@@ -1,6 +1,6 @@
 // T213 (#558): the celebrations. A golfer who holes out for a birdie or better (an eagle, an albatross, an ace on a par 3) celebrates once his ball
 // drops: a short fist pump stand-in (the golfer clips have no fist pump or cap tip: the swing's high finish, turned to the camera, with a little hop; the
-// art gap is GOLF-ART-LIST item 175), and the gallery near him plays its cheer clip. Pure TS, no DOM.
+// art gap is GOLF-ART-LIST item 177), and the gallery near him plays its cheer clip. Pure TS, no DOM.
 import type { CourseView, RoundPlan, Shot } from './types';
 
 /** a celebration lasts this many real seconds, from the moment the ball drops */

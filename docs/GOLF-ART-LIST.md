@@ -555,6 +555,19 @@ clips; the game renders the eight facings (`docs/HANDOVER-PEOPLE.md`). 31 people
 **141. Shop assistant and bag boy** · P2. Clips: walk, idle, carry a bag.
 > Subject: (a) a young pro shop assistant in a club polo shirt and slacks; (b) a teenage bag boy in a white shirt, green shorts and a cap.
 
+**176. Tour caddie** · P1 (T213 #558: the game draws a stand-in). Clips: walk carrying the bag on the shoulder, idle standing with the bag, set the bag
+down, hold the flag. The tour's pros (tiers 3-5) each walk with a caddie who stands off the green while they putt. `staff_caddie_m` was made on
+2026-10-24 (`art/spectators/staff_caddie_m`, walk and idle, no bag) but is packed nowhere; the game draws `spec_m_polo_visor` labelled "Stand In for
+caddie", with the bag trolley (`business:golf-bag-trolley`) beside him. Wanted: that caddie (or a woman too) with a tour bag on his shoulder in every
+frame, packed with the spectators so the game can draw him (`CADDIE_ART` in `engine.ts`).
+> Subject: a 1985 tour caddie, a fit man in his 30s: a plain white caddie bib over a navy polo shirt, khaki shorts, a plain white cap, white sneakers, a
+> large leather tour golf bag full of clubs on a strap over his right shoulder. No logos, no lettering, no number on the bib.
+
+**177. Golfer celebration clips** · P1 (T213 #558: the game plays a stand-in pose). For every golfer of the cast (`golf_pro_*`, `golf_am_*`): a fist
+pump (one arm, about 1 s) and a cap tip (about 1 s), as one-shot sheets like `golf_drive`. Meshy's library has `Victory_Cheer` (59) and `Seated_Fist_Pump`
+(304, seated); no standing fist pump or cap tip, so a hand-keyed clip or Mixamo (`docs/HANDOVER-PEOPLE.md` 1c). Until then a golfer who holes a birdie or
+better holds the swing's high finish, turned to the camera, with a little hop (`celebrate.ts`, `view.ts` POSE_T).
+
 ---
 
 ## Already in the game (no new art needed)
@@ -755,7 +768,9 @@ concept, the large brick building behind the patio with the red umbrellas.
 > Subject: a wooden survey stake with orange flagging tape tied at the top, driven into bare earth.
 
 ### On the course
-**173. Hire golf cart** · **D** · 1.2 x 2.4 m, 1.8 m high · P1. The fleet cart (item 56 is the pro's own).
+**173. Hire golf cart** · **D** · 1.2 x 2.4 m, 1.8 m high · P1. The fleet cart (item 56 is the pro's own). **Art gap (T213 #558):** the carts in the
+field (the small events' amateurs, the everyday visitors) are drawn with `business:golf-cart-sw` and `-se`, the only two facings there are (the front to
+the screen's lower left or lower right); a cart driving up the screen shows the nearer of the two. The eight facings fix that (`CART_ART` in `engine.ts`).
 > Subject: a white 1985 two-seater golf cart with a cream canopy on four posts, a bag rack at the back holding two golf bags, small headlights. No people and no lettering.
 
 ### UI pictures

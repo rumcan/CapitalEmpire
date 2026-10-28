@@ -223,7 +223,7 @@ function crowdDrawable(out: Drawable[], k: number, p: CrowdPerson) {
   // (T213: a slot may have held a caddie's bag or a hopping golfer last frame)
   d.lift = undefined; d.scale = 1; d.flip = false; d.moving = false;
 }
-/** T213: the caddie's stand-in (no caddie is packed yet: GOLF-ART-LIST item 175; the made `staff_caddie_m` waits in art/spectators), a spectator in a
+/** T213: the caddie's stand-in (no caddie is packed yet: GOLF-ART-LIST item 176; the made `staff_caddie_m` waits in art/spectators), a spectator in a
  *  polo and visor, as an index into SPECTATOR_PEOPLE; and its label */
 const CADDIE_ART = Math.max(0, SPECTATOR_PEOPLE.findIndex(p => p.id === 'spectator:spec_m_polo_visor')), CADDIE_LABEL = 'Stand In for caddie';
 /** T213: the hire cart's two facings (GOLF-ART-LIST item 173 asks for eight: the nearest of the two is drawn), the caddie's bag (the bag trolley), and
