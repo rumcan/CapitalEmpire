@@ -21,7 +21,7 @@ export const frameHalf = (f: { q: number; u: { x: number; y: number }; n: { x: n
   return { ha: Math.abs(f.u.x) * hx + Math.abs(f.u.y) * hy, hb: Math.abs(f.n.x) * hx + Math.abs(f.n.y) * hy };
 };
 /** a rear or back-of-house set (the old rear views and the house backs): never dealt as a lot's front building */
-const REAR = /-north-|gen[:-]back-|[-_]rear(?![a-z])/;
+export const REAR = /-north-|gen[:-]back-|[-_]rear(?![a-z])/;
 /** the size classes' names, small to large */
 export const CLASS_NAMES = ['small', 'medium', 'large'] as const;
 

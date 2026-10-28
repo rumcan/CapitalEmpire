@@ -305,6 +305,27 @@ the tile's navy square; a second sheet in 174's style would finish the panel (on
 All twelve are art 181, one sheet in the ChatGPT queue (`docs/art/CHATGPT-IMAGE-QUEUE.md`, first). Sheet order, row by row: waste,
 halfway-house, your-holes, tournament / land, bushes, palms, props / furniture, long-grass, chipping, build.
 
+## Shop fronts, venues and house backs for variety (T270, #811: art requests)
+Shop lots now show the shop their place calls for (`lots/variety.ts`): eight shop fronts (`SHOP_PALETTE`: bakery, Maple Falls Grocery,
+pharmacy, Video, laundry, Video Vault, fish and tackle, barbershop) take turns along every street, so neighbours never match, but a town of
+16 shops shows each one about twice, and the two named ones (Video Vault, Maple Falls Grocery) about once in eight. More shop fronts spread
+them thinner; the tour lots have only three venues (`VENUE_PALETTE`), so two venues can still match two or three lots apart. Each in four views
+(the NE view's id below, `east:`/`view:<id>:sw`/`:nw` as the others), sun at the upper right, shadows at 145°, early autumn dusk, about the
+footprint of the existing shops (5-7 x 4-5 tiles at their owner size) so they fit the presets' spots:
+| Sprite (id to use) | Footprint (m) / height | Today | Prompt (short) | P |
+| --- | --- | --- | --- | --- |
+| Hardware store (`town:hardware`, four views) | 13 x 9 / 7 | only the straight-on `variation:town-hardware-...-plain:1` (frontal.ts: never on a lot) | a two-storey brick hardware store "Bellamy Hardware" with a green awning, tools and paint cans in the windows, a wheelbarrow out front | P1 |
+| Florist (`town:florist`, four views) | 10 x 8 / 6 | none | a narrow timber shop front painted sage green, buckets of mums and pumpkins on the sidewalk, a striped awning, a hand-painted sign "Petal & Stem" | P1 |
+| Book and record shop (`town:books`, four views) | 10 x 9 / 6 | none | a brick shop with a deep bay window full of books and LPs, a wooden sign "Second Chapter", warm lamp light inside | P1 |
+| Hair salon (`town:salon`, four views) | 9 x 8 / 5 | none | a single-storey stucco salon with a pink neon "Curl Up & Dye" sign, two chairs visible through the window | P2 |
+| Shoe repair and tailor (`town:cobbler`, four views) | 8 x 8 / 6 | none | a small two-storey brick shop, a hanging boot sign, "Main St Shoe Repair" painted on the glass | P2 |
+| Bank branch (`town:bank`, four views) | 13 x 10 / 8 | none | a small sandstone bank with two columns, a clock over the door, "Maple Falls Savings" carved on the lintel | P2 |
+| Ice cream parlour (venue, `world:ice_cream`, four views) | 9 x 8 / 5 | none | a pastel candy-striped parlour with a giant cone on the roof, café tables out front | P1 |
+| Mini golf hut (venue, `world:minigolf_hut`, four views) | 8 x 7 / 5 | none | a timber hut with a windmill gable and a ticket window, a putter rack and a little course flag beside it | P1 |
+| Pro shop and tackle (venue, `world:outfitter`, four views) | 11 x 8 / 6 | none | a timber outfitter with golf bags and fishing rods in the window, a canoe on the roof rack of a pickup outside | P2 |
+| A house back of the screened porch's size (`gen:back-porch-small`, four views) | 7 x 10 / 6 | `gen:back-screened-porch` is the only back of its size (no other back fits its lots: the lab's 14x10 house presets of roads 4 and 6 all show it) | the back of a small clapboard house with a screened porch, a grill and a hose reel, laundry on a line | P1 |
+| Two more small house backs (`gen:back-deck-small`, `gen:back-mudroom`, four views) | 7 x 10 / 6 | none | the backs of small houses: a timber deck with a kiddie pool; a mudroom door with boots, a woodpile and a garden shed | P2 |
+
 ## Waterside trees (T265, #794: art requests)
 The tree belts along the rivers and creeks (`src/game/river-trees.ts`) deal the library's broadleaf trees, birches and aspens first, and some
 spruces and firs; the library has no waterside species of its own. Wanted, each as four views (ne, se, sw, nw, `gen:tree-<name>:<view>` like
