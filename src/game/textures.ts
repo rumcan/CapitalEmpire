@@ -3,10 +3,11 @@ import { canvas, clamp, ctx2d, fbm, fbmRows, smooth, type C2D, type Cnv } from '
 import { DEFAULT_MIX, mixGrass, type BaseGrassArt } from './base-grass';
 import { EAGER_PHOTO, PHOTO_SIZE, PHOTO_TEX, photoPeriod, type GrassTex, type PhotoTexEntry } from './grass-art';
 import { paintedUrl, VARIANT_SETS } from './painted-grass-art';
-import { MAX_PAINTED_SOURCES, trimLru, type GrassArt, type GrassDetail, type GrassDetailWeight } from './painted-grass-lod';
+import { grassZoomLevels, MAX_PAINTED_SOURCES, trimLru, type GrassArt, type GrassDetail, type GrassDetailWeight } from './painted-grass-lod';
 import { familyWeights, lookColour, lookKey, LOOK_RANGES, resolveFamily, type LevelArt, type PaintedKind } from './painted-families';
 import { clampSurfaces, lookOfTex, type PresetRef, type SurfacesFile } from './painted-surfaces';
-import { bandOf, specBand, tiledFamily, tileSpec, TILE_BANDS, TILES_REVISION, type TileBand, type TiledFamily } from './painted-tiles';
+import { bandOf, specBand, specDpr, switchIn, switchOut, tiledFamily, tilePx, tileSpec, TILE_BANDS, TILES_REVISION, type TileBand, type TiledFamily } from './painted-tiles';
+import { picBytes, TileCache } from './tile-cache';
 import { ASPHALT_MEAN, type GroundArt, LEAF_CELL, LEAF_COLS, LEAVES, LOT_ASPHALT_M, POOL_ANCHOR, PPM, SLAB_CELL, SLAB_COUNT, SLAB_TOP } from './ground-art';
 import { litPixel } from './lamp-reflect';
 import { RANGE_PICS } from './golf/range-pics';
@@ -195,9 +196,8 @@ function lotMosaic(src: Cnv) {
 export type PaintedPick = { key: string; kind: PaintedKind; legacy: boolean; tint: string; tone: number; mean: string; tiled?: TiledPick } & Record<GrassDetail, { src: string; metres: number; px: number }>;
 /** a tile set family's pick (T145, painted-tiles.ts): the family and each band's four tile URLs, in the manifest's order */
 export interface TiledPick { fam: TiledFamily; urls: Record<TileBand, string[]> }
-/** decoded tile pictures a worker keeps (each about 6 MB): one band of the six tile set families a course hole shows since T153 (fescue,
- *  lake, sand ripples, fairway, putting green; the rough: the owner's paintings since T162, one tile a band), so chunks wearing different
- *  families do not decode them again in turn; the least recently used past this go, never the current bake's or the band about to be needed */
+/** full-size tile set decodes a worker keeps at most (each about 6 MB; T272: the mips the bakes draw are kept under the tile cache's byte
+ *  budget, tile-cache.ts, and the sources go first, so this only caps a light boot's, T157) */
 export const MAX_TILE_SOURCES = 24;
 /** T272: each tile set picture's family (by URL, tiledUrls), for the tile cache's counts */
 const TILE_FAMILY = new Map<string, string>();
@@ -212,13 +212,16 @@ function tiledUrls(t: TiledFamily): Record<TileBand, string[]> | null {
  *  (a redecode: one decoded again after a drop), the ms spent making their mips and pre-scaled copies (scales: how many), the bytes the cache
  *  holds now and at most, and the painted pictures' decodes (their own LRU) */
 export interface TileCacheStats { decodes: Record<string, number>; redecodes: Record<string, number>; drops: Record<string, number>; scaleMs: number; scales: number; bytes: number; peakBytes: number; painted: { decodes: number; redecodes: number; drops: number };
+  /** the full-size decodes dropped while their mips stay (the branch's cache; main drops a tile whole) */
+  sourceDrops?: number;
+  /** the distinct tile pictures the bakes' preparations needed (drawn or not) since the last reset, and their bytes (the branch) */
+  needed?: number; neededBytes?: number;
   /** the distinct tile pictures (by URL and px width) the bakes drew since the counts were last reset (noteDrawn), and their bytes: the
    *  working set a cache that keeps only what is drawn must hold */
   drawn: number; drawnBytes: number }
 export const newTileStats = (): TileCacheStats => ({ decodes: {}, redecodes: {}, drops: {}, scaleMs: 0, scales: 0, bytes: 0, peakBytes: 0, painted: { decodes: 0, redecodes: 0, drops: 0 }, drawn: 0, drawnBytes: 0 });
 const bump = (r: Record<string, number>, k: string) => { r[k] = (r[k] ?? 0) + 1; };
-/** the bytes of a picture (RGBA8) */
-export const picBytes = (c: { width: number; height: number }) => c.width * c.height * 4;
+export { picBytes };
 export interface CurbColours { joint: string; top: string; face: string[]; gutter: string[]; faceHidden: string }
 export interface LeafSprite { i: number; dim: number; round: boolean }
 
@@ -246,24 +249,50 @@ export class Textures {
    *  each bake), and the other bands to decode ahead (painted-tiles.ts bandsAhead: the camera's, sent when they change) */
   tileTs = tileSpec(0, 1);
   tilesAhead: readonly number[] = [];
-  /** the tile set families' decoded tiles (by URL, an LRU of MAX_TILE_SOURCES; the decoded bitmap itself, no canvas copy) with their mip
-   *  chains, and the decodes in progress */
-  private tilePics = new Map<string, (Cnv | ImageBitmap)[]>();
-  /** how many decoded tile-set tiles and painted pictures this worker keeps (a light boot's are smaller, T157: ground-protocol.ts WorkerLimits) */
-  tileLimit = MAX_TILE_SOURCES; paintedLimit = MAX_PAINTED_SOURCES;
-  /** T194: the pictures the bake in hand lays (its tile set band, its painted pictures), never trimmed from the caches by a decode that finishes
-   *  meanwhile (an earlier bake's look-ahead, a prewarm): such a trim took a yard's lawn tiles away before the bake drew them, and the lawn was
-   *  left out of that chunk, its fescue showing at the yard's edges and corners where the chunks met */
+  /** T272: the tile set families' pictures (tile-cache.ts: by URL, each tile's decode and its mips, and the swamp's copies pre-scaled to the
+   *  px they land at, T265), under the worker's share of the ground's GPU budget (its init's tileBytes), the least recently used going first
+   *  and a decode once its mip is made; and the decodes in progress */
+  readonly tiles = this.tileCache();
+  /** how many painted pictures this worker keeps (a light boot's are fewer, T157: ground-protocol.ts WorkerLimits; its decoded tile set
+   *  sources: tiles.maxSources) */
+  paintedLimit = MAX_PAINTED_SOURCES;
+  /** T272: the raster level (chunk px per world px) of the bake the next preparation is for (the worker sets it with each paint): the tile px
+   *  each tile set picture is made ready at */
+  tileL = 0.3;
+  /** the tile cache, its pictures halved as the mips always were (downscale) and closed when dropped, with the bench's counts (a tile dropped
+   *  whole, a decode dropped while its mips stay, a mip or copy made) */
+  private tileCache() {
+    const c = new TileCache<Cnv | ImageBitmap>({
+      decode: loadImage,
+      halve: p => downscale(p as Cnv, 0.5),
+      close: p => { if (p instanceof ImageBitmap) p.close(); else { p.width = 0; p.height = 0; } },
+    });
+    c.on = {
+      decode: u => { const fam = TILE_FAMILY.get(u) ?? '?'; bump(this.tileStats.decodes, fam); if (this.tileSeen.has(u)) bump(this.tileStats.redecodes, fam); this.tileSeen.add(u); },
+      error: (_u, err) => console.warn('[painted tiles]', String(err)),
+      drop: (u, what) => { if (what === 'tile') bump(this.tileStats.drops, TILE_FAMILY.get(u) ?? '?'); else if (what === 'source') this.tileStats.sourceDrops = (this.tileStats.sourceDrops ?? 0) + 1; },
+      scale: ms => { this.tileStats.scaleMs += ms; this.tileStats.scales++; },
+    };
+    return c;
+  }
+  /** T194: the pictures the bake in hand lays (its tile set band, at the px it lays them, its painted pictures), never trimmed from the caches
+   *  by a decode that finishes meanwhile (an earlier bake's look-ahead, a prewarm): such a trim took a yard's lawn tiles away before the bake
+   *  drew them, and the lawn was left out of that chunk, its fescue showing at the yard's edges and corners where the chunks met */
   private tilePinned: ReadonlySet<string> = new Set(); private paintedPinned: ReadonlySet<string> = new Set();
-  private tileLoads = new Map<string, Promise<void>>();
   /** T272: the tile cache's counts (TileCacheStats) and the pictures ever decoded (a decode of one of them is a redecode) */
   tileStats = newTileStats(); private tileSeen = new Set<string>(); private paintedSeen = new Set<string>(); private drawnSet = new Set<string>();
   /** T272, the bench: a bake drew tile picture pic of URL url (its working set: TileCacheStats.drawn) */
   noteDrawn(url: string, pic: { width: number; height: number }) { const k = `${url}@${pic.width}`; if (this.drawnSet.has(k)) return; this.drawnSet.add(k); this.tileStats.drawn++; this.tileStats.drawnBytes += picBytes(pic); }
+  /** T272, the bench: a bake's preparation needed tile picture pic of URL url (drawn or not: TileCacheStats.needed) */
+  private noteNeeded(url: string, pic: { width: number; height: number }) { const k = `${url}@${pic.width}`; if (this.neededSet.has(k)) return; this.neededSet.add(k); this.tileStats.needed = (this.tileStats.needed ?? 0) + 1; this.tileStats.neededBytes = (this.tileStats.neededBytes ?? 0) + picBytes(pic); }
+  private neededSet = new Set<string>();
   /** T272, the bench: the working set counted afresh (each stage's own) */
-  resetDrawn() { this.drawnSet.clear(); this.tileStats.drawn = 0; this.tileStats.drawnBytes = 0; }
-  /** T272: the bytes the tile set pictures and their mips hold */
-  tileBytes(): number { let n = 0; for (const ch of this.tilePics.values()) for (const m of ch) n += picBytes(m); return n; }
+  resetDrawn() { this.drawnSet.clear(); this.tileStats.drawn = 0; this.tileStats.drawnBytes = 0; this.neededSet.clear(); this.tileStats.needed = 0; this.tileStats.neededBytes = 0; }
+  /** T272: the bytes the tile set pictures, their mips and copies hold */
+  tileBytes(): number { return this.tiles.bytes; }
+  /** T272: after a bake: the decodes its mips were made from dropped, and the tile cache back within its budget (the bake's new mips and copies
+   *  counted) */
+  trimTiles() { this.tiles.afterBake(); }
   /** the art level the next bake is for (set by preparePainted) */
   get paintedArtLevel() { return this.paintedLevel; }
   /** which family each surface wears (painted-surfaces.json, sent by the main thread and again whenever the studio saves it) */
@@ -309,48 +338,47 @@ export class Textures {
   paintedMean(variant: string) { return this.paintedOf(variant)?.mean ?? null; }
   /** the levels a painted look blends at the current art level (painted-families.ts familyWeights) */
   paintedWeights(p: PaintedPick): GrassDetailWeight[] { return p.tiled ? [{ detail: bandOf(this.tileTs), weight: 1 }] : familyWeights(p, this.paintedLevel); }
-  /** a tile set's URLs at a tile spec: its band's four into `now`; the bands the camera is about to switch to (tilesAhead) into `ahead`
-   *  (decoded before the camera switches to them) */
-  private tileUrlsAt(t: TiledPick, ts: number, now: Set<string>, ahead: Set<string>) {
-    const b = specBand(ts);
-    for (const u of t.urls[TILE_BANDS[b]!]) now.add(u);
-    for (const n of this.tilesAhead) if (n !== b && TILE_BANDS[n]) for (const u of t.urls[TILE_BANDS[n]!]) ahead.add(u);
+  /** a tile set's URLs at a tile spec, each with the px it is laid at (its cells' widest, painted-tiles.ts tilePx): its band's four, at the bake's
+   *  raster level (tileL), into `now`; the bands the camera is about to switch to (tilesAhead) into `ahead`, at the raster level the first
+   *  chunks after that switch are baked at (decoded and their mips made before the camera switches to them) */
+  private tileUrlsAt(t: TiledPick, ts: number, now: Map<string, number>, ahead: Map<string, number>) {
+    const b = specBand(ts), band = TILE_BANDS[b]!, px = tilePx(t.fam.levels[band], ts, this.tileL), put = (m: Map<string, number>, u: string, v: number) => m.set(u, Math.max(m.get(u) ?? 0, v));
+    for (const u of t.urls[band]) put(now, u, px);
+    for (const n of this.tilesAhead) {
+      const nb = TILE_BANDS[n]; if (n === b || !nb) continue;
+      // (zooming out, the coarser set takes over just below its switchOut; zooming in, the finer one just above this band's switchIn)
+      const z = n > b ? switchOut(n) * (1 - 1e-6) : switchIn(b) * (1 + 1e-6), tsn = ts - b + n, pxn = tilePx(t.fam.levels[nb], tsn, grassZoomLevels(z, specDpr(ts)).rasterL);
+      for (const u of t.urls[nb]) put(ahead, u, pxn);
+    }
   }
-  /** decodes tile pictures not decoded yet (the LRU keeps `keep` and the batch itself) */
-  private async decodeTiles(urls: Set<string>, keep: ReadonlySet<string> = new Set()) {
-    await Promise.all([...urls].map(src => {
-      const have = this.tilePics.get(src); if (have) { this.tilePics.delete(src); this.tilePics.set(src, have); return null; }
-      let pending = this.tileLoads.get(src);
-      if (!pending) {
-        const fam = TILE_FAMILY.get(src) ?? '?'; bump(this.tileStats.decodes, fam); if (this.tileSeen.has(src)) bump(this.tileStats.redecodes, fam); this.tileSeen.add(src);
-        pending = loadImage(src).then(img => { this.tilePics.set(src, [img]); }, err => console.warn('[painted tiles]', String(err)))
-          .finally(() => this.tileLoads.delete(src));
-        this.tileLoads.set(src, pending);
-      }
-      return pending;
-    }));
-    this.tileStats.peakBytes = Math.max(this.tileStats.peakBytes, this.tileBytes()); // (before the trim: the most it held)
-    const drop = (chain: (Cnv | ImageBitmap)[], k: string) => { bump(this.tileStats.drops, TILE_FAMILY.get(k) ?? '?'); for (const m of chain) if (m instanceof ImageBitmap) m.close(); };
-    trimLru(this.tilePics, new Set([...urls, ...keep, ...this.tilePinned]), this.tileLimit, drop);
+  /** makes the tile set pictures in `want` ready at their px (painted-tiles.ts tilePx; tile-cache.ts prepare: one with a mip that wide kept is
+   *  only marked used, one not is decoded, its mip made at once and the decode dropped, so a tile listed but not laid this bake stays ready and
+   *  the cache never holds a bake's decodes all at once); then the cache is trimmed, never dropping these, `keep` or the bake in hand's (T194) */
+  private async decodeTiles(want: ReadonlyMap<string, number>, keep: ReadonlyMap<string, number> = new Map()) {
+    await this.tiles.prepare(want, [...keep.keys(), ...this.tilePinned]);
+    for (const [src, px] of want) { const pic = this.tiles.peek(src, px); if (pic) this.noteNeeded(src, pic); }
   }
-  /** before a bake: the tile set families among `variants` at tile spec `ts`: the band's tiles decoded (awaited), the next band's started
-   *  (when the camera is near its switch: tilesAhead); pin (a bake: not a prewarm): its band's tiles are the ones the caches keep (T194) */
+  /** before a bake: the tile set families among `variants` at tile spec `ts` (and the raster level tileL): the band's tiles made ready (awaited),
+   *  the next band's started (when the camera is near its switch: tilesAhead); pin (a bake: not a prewarm): its band's tiles are the ones the
+   *  caches keep (T194) */
   async prepareTiles(variants: Iterable<string>, ts = this.tileTs, pin = true) {
     this.tileTs = ts;
-    const now = new Set<string>(), ahead = new Set<string>();
+    const now = new Map<string, number>(), ahead = new Map<string, number>();
     for (const v of variants) { const p = this.paintedOf(v); if (p?.tiled) this.tileUrlsAt(p.tiled, ts, now, ahead); }
-    for (const u of now) ahead.delete(u);
-    if (pin) this.tilePinned = now;
+    for (const u of now.keys()) ahead.delete(u);
+    if (pin) this.tilePinned = new Set(now.keys());
     if (ahead.size) void this.decodeTiles(ahead, now);
     await this.decodeTiles(now, ahead);
   }
-  /** a decoded tile's mip with at least `px` pixels across (made on first use), or null when it is not decoded */
-  tileImage(src: string, px = Infinity): Cnv | ImageBitmap | null {
-    const chain = this.tilePics.get(src); if (!chain) return null;
-    while (chain[chain.length - 1]!.width > 96 && chain[chain.length - 1]!.width / 2 >= px) { const t0 = performance.now(); chain.push(downscale(chain[chain.length - 1]! as Cnv, 0.5)); this.tileStats.scaleMs += performance.now() - t0; this.tileStats.scales++; }
-    let img = chain[0]!; for (const m of chain) { if (m.width >= px) img = m; else break; }
-    return img;
-  }
+  /** a tile set picture's mip with at least `px` pixels across (made on first use, kept: tile-cache.ts), or null when it is not decoded (or
+   *  only its smaller mips are kept) */
+  tileImage(src: string, px = Infinity): Cnv | ImageBitmap | null { return this.tiles.image(src, px); }
+  /** T272: a tile set picture at its full decoded size (the swamp's gloss is made from it), or null when it was dropped (the next preparation
+   *  decodes it again: the bake asking is provisional) */
+  tileSource(src: string): Cnv | ImageBitmap | null { return this.tiles.source(src); }
+  /** T265, T272: a tile set picture pre-scaled to exactly w x h px, kept with its mips (make: from the mip a w-px cell draws), or null when that
+   *  mip is not there */
+  tileExact(src: string, w: number, h: number, make: (from: Cnv | ImageBitmap) => Cnv): Cnv | null { return this.tiles.exact(src, w, h, make) as Cnv | null; }
   /** decodes pictures (by URL) that are not decoded yet; a picture that fails to load leaves its texture on its photo */
   private async decodePainted(urls: Set<string>) {
     await Promise.all([...urls].map(src => {
@@ -539,8 +567,10 @@ export class Textures {
     return { img, period };
   }
   /** true when a texture can be laid in this worker: its photo built (the eager ones always are; a lazy photo once ensure has run), or its painted
-   *  family's pictures for the current art level decoded */
-  has(variant: string) { const p = this.paintedOf(variant); return !!p && (p.tiled ? p.tiled.urls[bandOf(this.tileTs)].every(u => this.tilePics.has(u)) : this.paintedWeights(p).every(w => this.paintedPics.has(p[w.detail].src))) || this.built(variant); }
+   *  family's pictures for the current art level decoded (a tile set's, T272: at the px the bake in hand lays them) */
+  has(variant: string) { const p = this.paintedOf(variant); return !!p && (p.tiled ? this.tilesReady(p.tiled) : this.paintedWeights(p).every(w => this.paintedPics.has(p[w.detail].src))) || this.built(variant); }
+  /** T272: a tile set's band's tiles are ready at the px the bake in hand lays them (its tile spec and raster level) */
+  private tilesReady(t: TiledPick) { const band = bandOf(this.tileTs), px = tilePx(t.fam.levels[band], this.tileTs, this.tileL); return t.urls[band].every(u => this.tiles.ready(u, px)); }
   /** true when its photo (tile-space mosaic) is built, whatever the Grass setting */
   built(variant: string) { return this.mosaics.has(variant) || this.lazyMosaics.has(variant) || this.building.has('mosaic:' + variant); }
   /** a light boot's photo mosaics not made yet (T157: build's lazy): the photo's source is built (Paint areas draw it, sourceFor); its hex-mixed

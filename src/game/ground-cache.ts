@@ -23,6 +23,7 @@ import type { PaintedLook } from './painted-families';
 import { pictureCurrent } from './ground-layers';
 import { SHINE_WEIGHTS, type ShineWeights } from './grass-shine';
 import type { TileCacheStats } from './textures';
+import { tileCacheBudget } from './tile-cache';
 
 export interface Tile {
   kind: TileKind; i: number; j: number;
@@ -77,6 +78,8 @@ export class GroundCache {
   uploadsThisSecond = 0; uploadMsPerSecond = 0; private upCount = 0; private upMs = 0; private upT = 0;
   /** GPU pixel budget for baked chunks (RGBA, so x4 bytes) */
   budgetPx = 48e6;
+  /** T272: each worker's tile cache in bytes, or null: tileCacheBudget (its share of the ground's GPU budget that budgetPx leaves) */
+  tileBytes: number | null = null;
   /** the baked pictures' pixels on the GPU at the last evict (chunks, their zoom crossfade and build reveal pictures), and the most so far */
   residentPx = 0; peakPx = 0;
   constructor(public gl: GLRenderer, workers = Math.max(1, Math.min(3, (navigator.hardwareConcurrency || 4) - 2))) {
@@ -92,7 +95,7 @@ export class GroundCache {
   setGrassArt(art: GrassArt) { if (art === this.grassArt) return; this.grassArt = art; this.broadcast({ t: 'grassArt', art }); this.invalidateAll(); }
   /** a light boot's worker limits (boot.ts, T157), sent with init; null: the game's */
   limits: WorkerLimits | null = null;
-  init(t: { cls: Uint8Array; height: Float32Array; waters: Waterway[] }) { const art = { ...withPresets(withBaseGrass(GROUND_ART)), grassArt: this.grassArt }, limits = this.limits ?? undefined; this.workers.forEach((wk, i) => wk.postMessage({ t: 'init', art, terrain: t.cls, height: t.height, waters: t.waters, build: i === 0, peers: this.workers.length - 1, limits } satisfies ToWorker)); this.broadcast({ t: 'living', ...this.living }); this.broadcast({ t: 'slopeLight', strength: this.slopeLight }); this.broadcast({ t: 'leaves', density: this.leafDensity }); this.broadcast({ t: 'specCam', on: this.specCam }); this.broadcast({ t: 'swamp', on: this.swamp }); this.broadcast({ t: 'riverSwamp', on: this.riverSwamp }); this.broadcast({ t: 'grassShine', on: this.grassShine, weights: this.shineWeights }); this.broadcast({ t: 'surfaces', file: paintedSurfaces() });
+  init(t: { cls: Uint8Array; height: Float32Array; waters: Waterway[] }) { const art = { ...withPresets(withBaseGrass(GROUND_ART)), grassArt: this.grassArt }, limits = this.limits ?? undefined; const tileBytes = this.tileBytes ?? tileCacheBudget(this.budgetPx, this.workers.length); this.workers.forEach((wk, i) => wk.postMessage({ t: 'init', art, terrain: t.cls, height: t.height, waters: t.waters, build: i === 0, peers: this.workers.length - 1, limits, tileBytes } satisfies ToWorker)); this.broadcast({ t: 'living', ...this.living }); this.broadcast({ t: 'slopeLight', strength: this.slopeLight }); this.broadcast({ t: 'leaves', density: this.leafDensity }); this.broadcast({ t: 'specCam', on: this.specCam }); this.broadcast({ t: 'swamp', on: this.swamp }); this.broadcast({ t: 'riverSwamp', on: this.riverSwamp }); this.broadcast({ t: 'grassShine', on: this.grassShine, weights: this.shineWeights }); this.broadcast({ t: 'surfaces', file: paintedSurfaces() });
     // the studio saved the painted surfaces (the dev server hot-swaps the file): every worker takes the new looks and every chunk is baked again
     this.unsurfaces?.(); this.unsurfaces = onPaintedSurfaces(file => { this.broadcast({ t: 'surfaces', file }); this.invalidateAll(); }); }
   private unsurfaces: (() => void) | null = null;

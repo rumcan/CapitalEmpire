@@ -169,7 +169,9 @@ export interface WorkerLimits { tiles: number | null; painted: number | null; ea
   readCache?: boolean }
 export type ToWorker =
   | { t: 'grass'; cells: GrassCellView[]; strength: number; heat: boolean; mowing: boolean }
-  | { t: 'init'; art: GroundArt & { grassMix?: BaseGrassArt; presets?: PhotoTexEntry[]; grassArt?: GrassArt }; terrain: Uint8Array; height: Float32Array; waters: Waterway[]; build: boolean; peers: number; limits?: WorkerLimits }
+  | { t: 'init'; art: GroundArt & { grassMix?: BaseGrassArt; presets?: PhotoTexEntry[]; grassArt?: GrassArt }; terrain: Uint8Array; height: Float32Array; waters: Waterway[]; build: boolean; peers: number; limits?: WorkerLimits;
+      /** T272: the bytes this worker's tile cache may hold (tile-cache.ts tileCacheBudget: its share of the ground's GPU budget) */
+      tileBytes?: number }
   | { t: 'textures'; snap: TexSnapshot }
   /** the game's Grass setting changed (painted or photo): every chunk is baked again */
   | { t: 'grassArt'; art: GrassArt }

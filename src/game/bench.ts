@@ -113,7 +113,7 @@ function tileTotals(g: Game): TileCacheStats {
     if (!t) continue;
     add(out.decodes, t.decodes); add(out.redecodes, t.redecodes); add(out.drops, t.drops);
     out.scaleMs += t.scaleMs; out.scales += t.scales; out.bytes += t.bytes; out.peakBytes += t.peakBytes;
-    out.drawn += t.drawn; out.drawnBytes += t.drawnBytes; out.painted.decodes += t.painted.decodes; out.painted.redecodes += t.painted.redecodes; out.painted.drops += t.painted.drops;
+    out.drawn += t.drawn; out.drawnBytes += t.drawnBytes; out.sourceDrops = (out.sourceDrops ?? 0) + (t.sourceDrops ?? 0); out.needed = (out.needed ?? 0) + (t.needed ?? 0); out.neededBytes = (out.neededBytes ?? 0) + (t.neededBytes ?? 0); out.painted.decodes += t.painted.decodes; out.painted.redecodes += t.painted.redecodes; out.painted.drops += t.painted.drops;
   }
   return out;
 }
@@ -129,9 +129,9 @@ function tileStage(g: Game, b0: number, s0: TileCacheStats): Record<string, unkn
   for (const f of [...fams].sort()) byFamily[f] = [dec[f] ?? 0, re[f] ?? 0, dr[f] ?? 0];
   return {
     bakes: ms.length, bakeMedianMs: q(ms, 0.5), bakeP95Ms: q(ms, 0.95), prepMedianMs: q(prep, 0.5), prepP95Ms: q(prep, 0.95), scaleMedianMs: q(scale, 0.5), scaleP95Ms: q(scale, 0.95), workMedianMs: q(work, 0.5), workP95Ms: q(work, 0.95),
-    decodes: sum(dec), redecodes: sum(re), drops: sum(dr), scales: s1.scales - s0.scales, scaleMs: +(s1.scaleMs - s0.scaleMs).toFixed(1),
+    decodes: sum(dec), redecodes: sum(re), drops: sum(dr), sourceDrops: (s1.sourceDrops ?? 0) - (s0.sourceDrops ?? 0), scales: s1.scales - s0.scales, scaleMs: +(s1.scaleMs - s0.scaleMs).toFixed(1),
     paintedDecodes: s1.painted.decodes - s0.painted.decodes, paintedRedecodes: s1.painted.redecodes - s0.painted.redecodes,
-    drawnPictures: s1.drawn, drawnMB: +(s1.drawnBytes / 1048576).toFixed(1), tileCacheMB: +(s1.bytes / 1048576).toFixed(1), tileCachePeakMB: +(s1.peakBytes / 1048576).toFixed(1), groundCacheMB: Math.round(g.ground.residentPx * 4 / 1048576),
+    drawnPictures: s1.drawn, drawnMB: +(s1.drawnBytes / 1048576).toFixed(1), neededPictures: s1.needed ?? 0, neededMB: +((s1.neededBytes ?? 0) / 1048576).toFixed(1), tileCacheMB: +(s1.bytes / 1048576).toFixed(1), tileCachePeakMB: +(s1.peakBytes / 1048576).toFixed(1), groundCacheMB: Math.round(g.ground.residentPx * 4 / 1048576),
     byFamily,
   };
 }
