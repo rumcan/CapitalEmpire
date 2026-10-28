@@ -6,10 +6,10 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { LIBRARY } from '../src/game/library';
 import { OWNER_SCALE } from '../src/game/lots/scales';
-import { drawnAsStandIn, standInCandidates, standInNeeds } from '../src/game/newart';
+import { drawnAsStandIn, footprintSpan, standInCandidates, standInNeeds } from '../src/game/newart';
 import { VIEW_ART } from '../src/game/views-library';
 
-const span = (i: number) => { const b = LIBRARY[i]!.boxes[0]; return b ? b.hx + b.hy : 1; };
+const span = (i: number) => footprintSpan(LIBRARY[i]!);
 const own = (i: number) => OWNER_SCALE[LIBRARY[i]!.id] ?? 1;
 
 test('every stand-in is packed for the largest size any building drawn as it needs', () => {

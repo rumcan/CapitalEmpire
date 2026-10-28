@@ -4,7 +4,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { ATLAS_MIP0, LIBRARY } from '../src/game/library';
-import { SIZE_HI, baselineOf, lookOf, maxDrawScale, thumbItem } from '../src/game/newart';
+import { SIZE_HI, baselineOf, footprintSpan, lookOf, maxDrawScale, thumbItem } from '../src/game/newart';
 import { PIXEL_LIMIT, PIXEL_SLACK, atlasMip0, pixelLimit } from '../src/game/sizes';
 import { ZOOM_MAX } from '../src/game/iso';
 import { spriteRect } from '../src/game/sprites';
@@ -90,7 +90,7 @@ test('no stand-in is drawn above its native pixels, whatever the footprint it st
       swapped++;
       const n = LIBRARY[l.item]!, lim = PIXEL_LIMIT[l.item]!;
       assert.ok(l.scale <= lim * PIXEL_SLACK + 1e-9, `${it.id} at ${scale}: stand-in ${n.id} drawn at ${l.scale.toFixed(3)}, past its limit ${lim.toFixed(3)}`);
-      const span = (x: LibItem) => x.boxes[0]!.hx + x.boxes[0]!.hy, fill = scale * span(it) / span(n);
+      const span = footprintSpan, fill = scale * span(it) / span(n);
       if (fill <= lim * PIXEL_SLACK) { assert.ok(Math.abs(l.scale - fill) < 1e-6, `${it.id}: ${n.id} fills its footprint`); fills++; }
       else { assert.ok(Math.abs(l.scale - lim) < 1e-9, `${it.id}: ${n.id} is drawn at its limit`); atCap++; }
       // centred: the stand-in's footprint centre is the building's footprint centre
@@ -108,7 +108,7 @@ test('a stand-in is picked to fit within its pixels when its family has one that
     if (!isBuilding(it) || it.kind === 'lot') return;
     const d = drawable(i, 40, 60, false, OWNER_SCALE[it.id] ?? 1), l = lookOf(d);
     if (l.item === i || l.hidden) return;
-    const span = (x: LibItem) => x.boxes[0]!.hx + x.boxes[0]!.hy, n = LIBRARY[l.item]!, fill = d.scale * span(it) / span(n);
+    const span = footprintSpan, n = LIBRARY[l.item]!, fill = d.scale * span(it) / span(n);
     if (fill <= PIXEL_LIMIT[l.item]! * PIXEL_SLACK) fit++;
   });
   assert.ok(fit > 20, `${fit} old buildings drawn as a stand-in that fills their footprint within its pixels`);
