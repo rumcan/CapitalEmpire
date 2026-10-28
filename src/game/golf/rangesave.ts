@@ -81,7 +81,7 @@ export const RANGE_UPGRADES: readonly RangeUpgrade[] = [
   // T239: the guided start's first builds: the target greens, the car park's gravel, then its paving
   { id: 'greens', name: 'Target greens', cost: 2500, upkeep: 20, effect: 'Three target greens with flags at 50, 100 and 150 m: something to aim at, +10% visitors' },
   { id: 'gravel', name: 'Gravel the car park', cost: 3000, upkeep: 20, effect: `Gravel over the packed dirt: tidier rows, room for ${Math.round(100 * LOT_SHARE.gravel)}% of a paved lot's cars (dirt: ${Math.round(100 * LOT_SHARE.dirt)}%)` },
-  { id: 'pave', name: 'Pave the car park', cost: 8000, upkeep: 60, needs: 'gravel', effect: 'Asphalt with painted bays and lamps: every bay of the lot, so no car drives on at the busy hours' },
+  { id: 'pave', name: 'Pave the car park', cost: 8000, upkeep: 60, needs: 'gravel', effect: 'Asphalt with painted bays and lamps, kerbs, tree islands and a footpath in: every bay of the lot, so no car drives on at the busy hours' },
   { id: 'bays8', name: '8 hitting bays', cost: 8000, upkeep: 60, effect: 'Four more mats on the tee box: twice the golfers at once' },
   { id: 'bays12', name: '12 hitting bays', cost: 14000, upkeep: 90, needs: 'bays8', effect: 'Four more mats: a longer queue fits before cars drive on' },
   { id: 'bays24', name: '24 hitting bays', cost: 40000, upkeep: 300, needs: 'bays12', effect: 'The whole tee box in mats' },

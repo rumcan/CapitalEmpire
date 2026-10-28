@@ -1353,7 +1353,7 @@ export class GroundPainter {
     // T247: a lot's lawn of dirt or desert with a soft band (soft-edges.ts) is drawn after the other lawns at its level, so the band blends into them
     const softOn = this.softDirt, softLawn = (p: LotPatch) => softOn && p.lawn!.z >= 1 && p.lawn!.share >= 1 && this.softTex(this.lawnTexOf(p)) ? 1 : 0;
     const lawns = all.filter(p => p.lawn).sort((a, b) => a.lawn!.z - b.lawn!.z || (softOn ? softLawn(a) - softLawn(b) : 0)), marks = all.filter(p => p.tex === 'marks'), lots = all.filter(p => !p.paint && !p.course && !p.lawn && p.tex !== 'marks'), paints = all.filter(p => p.paint || p.course).sort((a, b) => paintZ(a) - paintZ(b));
-    const isPark = (p: LotPatch) => !!p.lines?.length && p.tex !== 'field' && p.tex !== 'dirt', parks = lots.filter(isPark), rest = lots.filter(p => !isPark(p));
+    const isPark = (p: LotPatch) => (!!p.lines?.length || !!p.park) && p.tex !== 'field' && p.tex !== 'dirt', parks = lots.filter(isPark), rest = lots.filter(p => !isPark(p));
     // T247: what the dirt areas' soft bands may meet: the areas near the chunk (out to the band's reach), the course, and the order they are
     // drawn in (lawns, lot ground, painted areas, car parks; an area drawn later or alongside keeps the hard edge between them)
     const sw0 = softOn ? softWidth(L) : 0, sReach = softOn ? sw0 / 2 + Math.max(SOFT.ease, SOFT.easeK * sw0) + Math.max(SOFT.probe, SOFT.probeK * sw0) + 4 : 0;
