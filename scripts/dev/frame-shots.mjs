@@ -55,8 +55,8 @@ try {
     console.log('plan', await plan(page, false));
     const built = await page.evaluate(() => { const g = window.__game, n = g.paint.wizard.hole; const ok = g.paint.buildPlan(); g.paint.setBrush(g.paint.brushKind); g.setTool('select'); return { ok, n }; });
     console.log('built', JSON.stringify(built));
-    // the view: beside the hole's landing zone, on its lower side, at 30%
-    const at = { x: HOLE.tee.x + (HOLE.green.x - HOLE.tee.x) * 0.7, y: HOLE.tee.y + (HOLE.green.y - HOLE.tee.y) * 0.7 + 14 };
+    // the view: round the green, its approach and the frame behind and beside it, at 30%
+    const at = { x: HOLE.green.x - 4, y: HOLE.green.y + 6 };
     await hideUi(page);
     if (only.has('hole')) { await look(page, at.x, at.y, 0.3); await settle(page); files.before = await shot(page, 'hole-30pct-before'); }
     const framed = await page.evaluate(n => { const g = window.__game, v = g.holeFrameView(n); const k = g.frameHoleTrees(n); return { view: v, planted: k, again: g.holeFrameView(n) }; }, built.n);
@@ -83,6 +83,13 @@ try {
     files.panel = await shot(page, 'newhole-frame-toggle');
     const box = await page.evaluate(() => { const r = document.querySelector('[data-testid="wiz-frame"]')?.getBoundingClientRect(); return r ? { x: r.x, y: r.y, width: r.width, height: r.height } : null; });
     if (box) files.panelZoom = await shot(page, 'newhole-frame-toggle-row', { x: Math.max(0, box.x - 8), y: Math.max(0, box.y - 40), width: Math.min(W, box.width + 16), height: Math.min(H, box.height + 56) });
+    // the hole card's Trees row on a hole of the old nine (hole 3), its price on the button
+    await page.evaluate(() => { const g = window.__game; g.paint.cancelPlan(); g.paint.setBrush(g.paint.brushKind); g.setTool('select'); g.openHoleCard(3); });
+    await page.waitForTimeout(600);
+    await page.evaluate(() => document.querySelector('[data-testid="hole-frame"]')?.scrollIntoView({ block: 'center' }));
+    await page.waitForTimeout(300);
+    const card = await page.evaluate(() => { const r = document.querySelector('[data-testid="hole-card"]')?.getBoundingClientRect(); return r ? { x: r.x, y: r.y, width: r.width, height: r.height } : null; });
+    if (card) files.card = await shot(page, 'holecard-frame-row', card);
     await ctx.close();
   }
   if (only.has('sheet') && files.course15) {

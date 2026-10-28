@@ -28,14 +28,14 @@ export const FRAME_RULES = {
   /** two trees at least treeMin apart; a clump's next tree within link of one of its trees; two clumps' trees at least gap apart */
   treeMin: 2.6, link: 4.2, gap: 8,
   /** clump seeds at least this far apart, and this share of them left out (the wider gaps: the views) */
-  clumpSpacing: 20, skip: 0.2,
+  clumpSpacing: 16, skip: 0.15,
   /** the trees in a clump */
   min: 3, max: 9,
 } as const;
 export type FrameRules = typeof FRAME_RULES;
 
 /** what a frame tree costs ($): the plant brush is free and the Props tool's ornamental maple $300; the frame's young nursery trees come by the
- *  hundred at a third of that, so a 340 m hole's frame (about 65 trees) costs about a third of its seeded surfaces */
+ *  hundred at a third of that: a 340 m par 4's frame (about 90 trees) costs about half its seeded surfaces, an eighth of them sodded */
 export const FRAME_TREE_PRICE = 100;
 /** the Props tool's catalogue key a frame tree carries (golf/decor.ts: its name, its price, its appeal, half back when bulldozed) */
 export const FRAME_TREE_KEY = 'tree-frame';
@@ -232,7 +232,7 @@ export function frameHole(site: FrameSite, keep: readonly Pt[] = [], rules: Fram
     const mine: Pt[] = [s];
     for (let a = 0; a < tries && mine.length < Math.min(target, R.max); a++) {
       const b = mine[Math.floor(rnd() * mine.length)]!, ang = rnd() * Math.PI * 2, r = R.treeMin + rnd() * (R.link - R.treeMin);
-      const x = b.x + Math.cos(ang) * r, y = b.y + Math.sin(ang) * r;
+      const x = Math.round((b.x + Math.cos(ang) * r) * 100) / 100, y = Math.round((b.y + Math.sin(ang) * r) * 100) / 100; // the points as the trees keep them
       if (!farFrom(x, y, mine, m2) || !farFrom(x, y, trees, g2) || !farFrom(x, y, kept, g2) || !ok(x, y)) continue;
       mine.push({ x, y });
     }
