@@ -1385,7 +1385,7 @@ export class GroundPainter {
   private swampLayer(ctx: C2D, tp: TiledPick, sband: { cv: Cnv; box: BBox }, x0: number, y0: number, res: number): boolean {
     const c = this.chunkNow!, [i0, j0, i1, j1] = this.cellsOf(sband.box), rx = i0 * PAINT_CELL, ry = j0 * PAINT_CELL, rw = Math.min(c.W, i1 * PAINT_CELL) - rx, rh = Math.min(c.H, j1 * PAINT_CELL) - ry;
     if (rw <= 0 || rh <= 0) return true;
-    const b = this.bufferKeep('swampLayer', c.W, c.H), g = ctx2d(b);
+    const b = this.bufferAtLeast('swampLayer', c.W, c.H), g = ctx2d(b); // (it only grows: chunks of every level share it, never resized between them)
     g.save(); g.clearRect(rx, ry, rw, rh); g.beginPath(); g.rect(rx, ry, rw, rh); g.clip();
     const ok = this.tilesInto(g, tp, [rx, ry, rw, rh], true);
     if (ok) { g.setTransform(c.M); g.globalCompositeOperation = 'destination-in'; g.imageSmoothingEnabled = true; g.drawImage(sband.cv, x0, y0, sband.cv.width / res, sband.cv.height / res); }
