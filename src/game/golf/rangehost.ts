@@ -332,6 +332,8 @@ export class RangeHost {
   hint = false;
   /** the practice area is not open yet (a range start's ramp, T132: it opens with the first range upgrade): its label says so */
   practiceLocked = false;
+  /** T239: the practice area's price while it is land for sale (null: the player's) */
+  practiceSale: number | null = null;
   private drawPractice(c: CanvasRenderingContext2D, screen: (x: number, y: number) => { x: number; y: number }, zoom: number, dpr: number, on: (p: { x: number; y: number }, m?: number) => boolean, labels: WorldLabels): void {
     const sc = this.scene!, pa = sc.practice, p = this.practice;
     if (zoom >= 0.03 && !(p ? p.built : this.ctx.biz()?.practice.putting.open)) {
@@ -345,7 +347,7 @@ export class RangeHost {
         // the area's name and (at the street tier) its hint under it: one world label (T151) whose box holds both lines
         const px = Math.round(dpr * 13), lw = 3 * dpr, l = labels.text(pa, PRI.area, 'Practice area', q.x, q.y, `700 ${px}px system-ui, sans-serif`, px, '#ecfccb', 'rgba(10,30,10,0.85)', lw);
         if (zoom >= 0.12) {
-          const sf = `600 ${Math.round(px * 0.8)}px system-ui, sans-serif`, t = this.practiceLocked ? 'Opens with your first range upgrade' : 'Build a putting green here (Facilities ▸ Practice)';
+          const sf = `600 ${Math.round(px * 0.8)}px system-ui, sans-serif`, t = this.practiceSale !== null ? `For sale: $${this.practiceSale.toLocaleString()} (Course ▸ Land for sale)` : this.practiceLocked ? 'Opens with your first range upgrade' : 'Build a putting green here (Facilities ▸ Practice)';
           // the box from the name's top to the hint's foot, its centre moved down to the middle
           const top = q.y - px / 2 - lw / 2, foot = q.y + px * 1.3 + px * 0.4 + lw / 2, mid = (top + foot) / 2;
           l.sub = t; l.subFont = sf; l.subFill = '#d9f99d'; l.w = Math.max(l.w, labels.width(sf, t) + lw); l.h = foot - top;

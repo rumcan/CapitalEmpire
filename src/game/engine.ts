@@ -44,7 +44,7 @@ import { guideTable, type GuideEvent } from './ext/progressive-ui/guide';
 import { welcomeReady } from './golf/firstview';
 /** the hints' anchors (T188: their Show me pulses the control) where the hint is no guide step */
 const HINT_ANCHOR: Readonly<Record<string, string>> = { 'hint-range-open': 'range-chip', 'hint-range-upgrade': 'range-chip', 'hint-range-props': 'rail-facilities', 'hint-range-first-hole': 'new-hole' };
-import { RANGE_LABEL_Z, defaultRangeBiz, parkLabel, practiceAppeal, rangeMapLabel, rangeNewSeason, rangeScene, rangeStats, rangeStructures, type RangeCounts, type RangeUpgradeId } from './golf/rangebiz';
+import { RANGE_LABEL_Z, defaultRangeBiz, parkLabel, practiceAppeal, rangeMapLabel, rangeNewSeason, rangeStats, rangeStructures, type RangeCounts, type RangeUpgradeId } from './golf/rangebiz';
 import { areaAt, brushTextures, toTuple, type PaintTuple, type PaintTex } from './paint';
 import { CELL_T, SURF, cellAt, diffBox, encodeGrid, fillPolygon, fitGrid, landGridBox, makeGrid, paintDisc, paintStroke, type Grid as CourseGrid, type GridDiff, type GridSave } from './ext/course-grid';
 import { STAIR_REACH } from './ext/course-walls';
@@ -964,6 +964,12 @@ export class Game {
   ownedAt(x: number, y: number): boolean {
     const q = this.golf?.practiceLot; if (q && x >= q[0] && x < q[0] + q[2] && y >= q[1] && y < q[1] + q[3]) return false; // T239: for sale until bought
     for (const [rx, ry, rw, rh] of this.golfLand()) if (x >= rx && x < rx + rw && y >= ry && y < ry + rh) return true; return false;
+  }
+  /** T239: Land for sale opened on the practice area for sale, its card open (the hint's and the guide's Show me) */
+  showPracticeSale() {
+    const q = this.golf?.practiceLot; if (!q) return;
+    const x = q[0] + q[2] / 2, y = q[1] + q[3] / 2; this.setTool('select'); if (this.range.cardOpen) this.openRangeCard(false);
+    this.openLandSale(); this.lookAt(x, y, 0.15); this.land.click(x, y); this.emit();
   }
   /** T239: whether a guided range start's practice area is still land for sale */
   practiceForSale(): boolean { return !!this.golf?.practiceLot; }
@@ -5282,6 +5288,7 @@ export class Game {
     const range = b ? { upgrades: b.owned.length, seasonTakings: b.season.takings, propsPlaced: this.decor.appeal() > 0 } : undefined;
     const f = p ? progressFacts(p, { holes: this.courseHoleViews().filter(h => h.par > 0).length, seasons: this.seasonsDone(), invited: !!g!.invited, range }) : null;
     const pr = f && this.range.practiceFacts(); if (f && pr) f.practice = pr; // a range start's practice facilities (T130): their hints and brushes
+    if (f && this.practiceForSale()) f.practiceForSale = true; // T239: its hint says buy it first
     if (f && b) { // a range start's town jam (T178): zones with built lots over the decline line (the access overlay's red)
       const T = this.traffic; let jam = 0; for (let z = 0; z < 256; z++) if (T.builtZone[z] && T.access[z]! > 1.8) jam++;
       f.townJammed = jam >= JAM_ZONES;
@@ -5305,6 +5312,7 @@ export class Game {
     const rt = rampToast(was, p.ramp, { open: this.unlockAll || p.advanced, holes: f?.playableHoles ?? 0 }); if (rt) this.toast(rt, 'good');
     this.range.hint = !!f && !!nextFirstRunHint(f)?.id.startsWith('hint-practice'); // the practice area's outline brightens while its hint is up
     this.range.practiceLocked = !!f && rampLock(f, 'course') !== null; // until the first upgrade the practice area says what opens it
+    this.range.practiceSale = this.golf?.practiceLot ? this.land.offers().find(o => o.name === PRACTICE_LOT_NAME)?.price ?? null : null; // T239: its price
     this.playableHoles = f?.playableHoles ?? 0;
     // the tee ring (P22 2.8): a range start's New hole in hand before its first hole
     this.teeRingOn = this.golf?.start === 'range' && this.uiTool === 'course' && this.paint.mode === 'plan' && this.playableHoles < 1;
@@ -5321,7 +5329,7 @@ export class Game {
     if (id === 'guide-range-hole') { this.startFirstHole(); return; } // T095: the guide's Show me
     if (id === 'guide-range-nine') { this.setTool('course'); this.paint.setPlan(); this.emit(); return; }
     if (id === 'guide-range-clubhouse') { this.setTool('buildings'); return; }
-    if (id.startsWith('hint-practice')) { this.showPracticeArea(); return; }
+    if (id.startsWith('hint-practice')) { if (this.practiceForSale()) this.showPracticeSale(); else this.showPracticeArea(); return; } // T239: for sale: Land for sale on it
     if ((id === 'hint-range-open' || id === 'hint-range-upgrade') && sc) { this.lookAt(sc.counter.x, sc.counter.y, RANGE_CAM_ZOOM); this.setTool('select'); this.openRangeCard(true); return; }
     if (id === 'hint-range-props' && sc) { this.lookAt(sc.counter.x, sc.counter.y, 0.3); this.setTool('props'); return; }
     if (id === 'hint-range-first-hole') {

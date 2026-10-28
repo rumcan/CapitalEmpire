@@ -9,8 +9,9 @@ export type LooseGround = 'dirt' | 'gravel';
 export const LOT_SHARE: Readonly<Record<LooseGround, number>> = { dirt: 0.55, gravel: 0.8 };
 /** how far a loose car stands off its bay's spot (tiles, along the row and along its heading) and turns off its heading (radians), by ground */
 const SLOP: Readonly<Record<LooseGround, { along: number; deep: number; turn: number }>> = {
-  dirt: { along: 0.35, deep: 0.3, turn: 0.14 },
-  gravel: { along: 0.15, deep: 0.12, turn: 0.06 },
+  // (along the row at most an eighth of a bay's 2.5 m, so two neighbours never touch; turned at most 4 degrees on dirt, 2 on gravel)
+  dirt: { along: 0.12, deep: 0.3, turn: 0.07 },
+  gravel: { along: 0.06, deep: 0.12, turn: 0.035 },
 };
 
 /** a bay as the builder makes it: its centre, its facing (0..3), its heading and its row's direction (unit vectors) */
