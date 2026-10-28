@@ -2621,7 +2621,7 @@ export class Game {
     const c = compose(g, st), ps: Prop[] = [];
     for (const q of c.props) {
       const i = LIB_INDEX.get(q.id); if (i === undefined || (q.street && this.inLayby(i, q))) continue;
-      const p = this.addProp(i, q.x, q.y, q.flip, q.scale, 'lot:' + key); ps.push(p);
+      const p = this.addProp(i, q.x, q.y, q.flip, q.scale, 'lot:' + key, q.foot ? { foot: q.foot } : undefined); ps.push(p); // q.foot: a parked car of the mix (T236, vehicles.ts parkedAs) on its body footprint
       if (q.from) this.lotFrom.set(p, q.from);
     }
     this.lotProps.set(key, ps); this.perf.lotProps += ps.length;
@@ -2771,7 +2771,7 @@ export class Game {
     const f = this.farmMap.farms.get(key); if (!f) return;
     this.dropFarm(key);
     const fp = farmPreset(f.p), c = fp ? compose({ o: f.p.o, u: f.p.u, n: f.p.n, w: f.p.w, d: f.p.d }, { use: LU.NONE, level: LV.BUILT, decline: 0, seed: f.seed, preset: fp.id }) : composeFarm(f.p, f.seed), ps: Prop[] = [], pk = 'farm:' + key;
-    for (const q of c.props) { const i = LIB_INDEX.get(q.id); if (i !== undefined) ps.push(this.addProp(i, q.x, q.y, q.flip, q.scale, pk)); }
+    for (const q of c.props) { const i = LIB_INDEX.get(q.id); if (i !== undefined) ps.push(this.addProp(i, q.x, q.y, q.flip, q.scale, pk, q.foot ? { foot: q.foot } : undefined)); }
     this.farmProps.set(key, ps); this.setLotGround(pk, c.ground);
   }
   /** the dev switch (window.__game.farmsOn(false)): farms on (the default) or off; off removes every farm's props and ground */

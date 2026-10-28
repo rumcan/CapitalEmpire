@@ -10,7 +10,7 @@ import { frameOf } from '../src/game/lots/preset-frame';
 import { hasSprite } from '../src/game/lots/preset-art';
 import { ART_FIXES, FRONT_DIR, fixedArt } from '../src/game/lots/art-fix';
 import { LIBRARY } from '../src/game/library';
-import { CAR_DIRECTIONS } from '../src/game/ext/car-art';
+import { vehicleHeading } from '../src/game/vehicles';
 
 (globalThis as unknown as { Path2D: unknown }).Path2D ??= class { moveTo() {} lineTo() {} arc() {} arcTo() {} closePath() {} rect() {} };
 
@@ -136,9 +136,10 @@ const SCREEN = 'variation:ref-building-drive-in-screen-b0bccc2a-plain:1', fix = 
 const LONG_X = new Set([SCREEN, `view:${SCREEN}:sw`]);
 const lib = new Map(LIBRARY.map(i => [i.id, i]));
 /** the world direction a car picture's heading looks (preset-art.ts CAR8: the heading's index times an eighth turn, atan2 over the world x, y) */
+// (T236: a wagon or a vehicle of the mix the parked wagons take, vehicles.ts parkedAs)
 const carDir = (id: string) => {
-  const m = /^cars:.+:(SE|S|SW|W|NW|N|NE|E)$/.exec(id); if (!m) return null;
-  const a = CAR_DIRECTIONS.indexOf(m[1] as typeof CAR_DIRECTIONS[number]) * Math.PI / 4;
+  const h = vehicleHeading(id); if (h < 0) return null;
+  const a = h * Math.PI / 4;
   return { x: Math.round(Math.cos(a)) + 0, y: Math.round(Math.sin(a)) + 0 };
 };
 

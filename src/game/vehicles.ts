@@ -46,6 +46,8 @@ export const RUSTY_PICKUP: Vehicle = { model: 'expansion:scrap-pickup-rear', nam
 export const RUSTY_PICKUPS: Readonly<Record<string, 'n' | 's'>> = { 'expansion:scrap-pickup-rear': 'n', 'variation:expansion-scrap-pickup-rear-7e2d1193:4': 's' };
 
 const INDEX = new Map(LIBRARY.map((it, i) => [it.id, i] as const));
+/** the heading (0..7) a vehicle's picture stands for (the rusty pickup's too), or -1 for a picture of no vehicle here */
+export function vehicleHeading(id: string): number { for (const v of [...VEHICLES, RUSTY_PICKUP]) { const h = v.views.indexOf(id); if (h >= 0) return h; } return -1; }
 /** the vehicles with all eight headings: the ones that may drive (the two wagons) */
 export const DRIVERS: readonly Vehicle[] = VEHICLES.filter(v => v.views.every(id => id !== null));
 /** the vehicles with a picture at heading h (0..7) that the library has */
