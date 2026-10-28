@@ -177,7 +177,7 @@ function startTour(g: Game, info: Record<string, unknown>, stages: Stage[] = STA
       s++; t = 0; frames = []; cpu = []; inst = draws = upload = up = 0; stageSim = 0; g.cam.X = startX; g.cam.Y = startY; plantMax = 0; plantFrames = 0; along = 0;
       if (s >= stages.length) {
         g.onFrame = null;
-        if (follow) { const bakes = bakeStats(g, bake0); bakeStage(g, follow(0), [0.3, 0.08], r => { results.push(...r); frameStage(g, follow, r2 => { results.push(...r2); finish(bakes); }); }); return; }
+        if (follow) { const bakes = bakeStats(g, bake0); bakeStage(g, follow(0), [0.3, 0.15, 0.08], r => { results.push(...r); frameStage(g, follow, r2 => { results.push(...r2); finish(bakes); }); }); return; }
         if (info.course) { const at = info.course as { x: number; y: number }; paintStage(g, at, r => { results.push(r); wizardStage(g, at, r2 => { results.push(r2); finish(); }); }); return; }
         finish();
       }
@@ -261,7 +261,9 @@ function bakeStats(g: Game, b0: number): Record<string, number> {
  *  and the bakes' median taken over the three; with the river's swamp switch (GroundCache.setRiverSwamp, the branch) on and off by turns,
  *  else (main) as it is */
 function bakeStage(g: Game, c: { X: number; Y: number }, zooms: number[], done: (r: Record<string, unknown>[]) => void) {
-  const gc = g.ground as unknown as { setRiverSwamp?: (on: boolean) => void; invalidateAll(): void }, out: Record<string, unknown>[] = [];
+  const gc = g.ground as unknown as { setRiverSwamp?: (on: boolean) => void; invalidateAll(): void; bakeAB?: (kind: 'g' | 'm', reps: number) => Promise<{ on: number[]; off: number[] }> }, out: Record<string, unknown>[] = [];
+  // (the branch: each worker paints its last bakes again with the river's swamp on and off by turns, only the paint timed: bakeABStage)
+  if (gc.bakeAB) { bakeABStage(g, c, zooms, gc.bakeAB.bind(gc), done); return; }
   const runs: { z: number; swamp: boolean | null }[] = [], REPS = 3;
   for (const z of zooms) for (let r = 0; r < REPS; r++) { if (gc.setRiverSwamp) runs.push({ z, swamp: true }, { z, swamp: false }); else runs.push({ z, swamp: null }); }
   const pooled = new Map<string, number[]>();
@@ -309,6 +311,25 @@ function frameStage(g: Game, follow: (s: number) => { X: number; Y: number }, do
       const dir = Math.floor(t / 2) % 2 ? -1 : 1; along += Math.hypot(r.st.vx, r.st.vy) * dt * dir; const c = follow(along); g.cam.X = c.X; g.cam.Y = c.Y; g.cam.z = r.st.z;
       if (t > 0.2) { v.cpu.push(g.perf.cpuMs); v.inst = Math.max(v.inst, g.perf.instances); }
       if (t >= 4) { k++; next(); }
+    };
+  };
+  next();
+}
+
+/** T265: the swamp's bake check on the branch: at each zoom, over the river (the camera still at c) 3.5 s for the view's chunks to be baked,
+ *  then every worker paints its last bakes of that tier again three times, the river's swamp on and off by turns (GroundCache bakeAB: one
+ *  worker, one chunk, back to back, so the PC's other load falls alike on both); the paints' median, p95 and mean, on and off */
+function bakeABStage(g: Game, c: { X: number; Y: number }, zooms: number[], ab: (kind: 'g' | 'm', reps: number) => Promise<{ on: number[]; off: number[] }>, done: (r: Record<string, unknown>[]) => void) {
+  const out: Record<string, unknown>[] = [];
+  const stats = (a: number[]) => { const s = [...a].sort((p, q) => p - q), q = (p: number) => s[Math.min(s.length - 1, Math.floor(p * s.length))] ?? 0; return { paints: s.length, medianMs: +q(0.5).toFixed(2), p95Ms: +q(0.95).toFixed(2), avgMs: +(s.reduce((p, v) => p + v, 0) / Math.max(1, s.length)).toFixed(2) }; };
+  let k = 0, t = 0;
+  const next = () => {
+    if (k >= zooms.length) { g.onFrame = null; done(out); return; }
+    const z = zooms[k]!; g.cam = { X: c.X, Y: c.Y, z }; t = 0; let asked = false;
+    g.onFrame = (_now, dt) => {
+      t += dt; if (asked || t < 3.5) return;
+      asked = true; const kind = g.perf.tier === 'district' ? 'm' : 'g';
+      void ab(kind, 3).then(r => { const on = stats(r.on), off = stats(r.off); out.push({ stage: `bake ${Math.round(z * 100)}% (${kind}) river swamp on`, ...on }, { stage: `bake ${Math.round(z * 100)}% (${kind}) river swamp off`, ...off, medianDeltaMs: +(on.medianMs - off.medianMs).toFixed(2) }); k++; next(); });
     };
   };
   next();

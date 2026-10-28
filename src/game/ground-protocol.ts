@@ -199,6 +199,9 @@ export type ToWorker =
   | { t: 'swamp'; on: boolean }
   /** T265: the river's swamp band (on, the default) or the river as before (the dev switch) */
   | { t: 'riverSwamp'; on: boolean }
+  /** T265, the bench (bench.ts bakeAB): the worker's last few bakes of this kind painted again reps times, the river's swamp on and off by
+   *  turns, each paint timed (the worker answers with bakeAB) */
+  | { t: 'bakeAB'; kind: 'g' | 'm'; reps: number }
   /** T262: the grass shine on (the default: each bake makes its weight mask) or off (none, the ground as before), and its weights per surface
    *  group (grass-shine.ts); every chunk is baked again */
   | { t: 'grassShine'; on: boolean; weights: ShineWeights }
@@ -213,6 +216,8 @@ export type ToWorker =
   | { t: 'paint'; id: number; kind: TileKind; i: number; j: number; L: number; artL?: number; /** the tile spec the tile set families are laid at (painted-tiles.ts tileSpec: the band and the DPR; T145, T150) */ ts?: number };
 
 export type FromWorker =
+  /** T265, the bench: each paint's ms, the river's swamp on and off (bakeAB) */
+  | { t: 'bakeAB'; on: number[]; off: number[] }
   /** saving: the builder still writes the textures to this browser's cache (a fresh profile), seconds in which its bakes wait; 'saved' when done */
   | { t: 'ready'; ms: number; saving?: boolean }
   | { t: 'saved' }

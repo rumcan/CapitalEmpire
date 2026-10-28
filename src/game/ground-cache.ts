@@ -157,6 +157,12 @@ export class GroundCache {
    *  comparing the looks and the bake times) */
   riverSwamp = true;
   setRiverSwamp(on: boolean) { if (on === this.riverSwamp) return; this.riverSwamp = on; this.broadcast({ t: 'riverSwamp', on }); this.invalidateAll(); }
+  /** T265, the bench: every worker paints its last bakes of this kind again, the river's swamp on and off by turns, and answers each paint's ms */
+  private abWait = new Map<number, (m: { on: number[]; off: number[] }) => void>();
+  bakeAB(kind: 'g' | 'm', reps: number): Promise<{ on: number[]; off: number[] }> {
+    return Promise.all(this.workers.map((wk, w) => new Promise<{ on: number[]; off: number[] }>(res => { this.abWait.set(w, res); wk.postMessage({ t: 'bakeAB', kind, reps } satisfies ToWorker); })))
+      .then(rs => ({ on: rs.flatMap(r => r.on), off: rs.flatMap(r => r.off) }));
+  }
   /** T199: each chunk picture's swamp gloss mask (renderer.ts takeGlossMask), by picture, as its reflection mask (it goes and is deleted with it) */
   private glosses = new Map<WebGLTexture, WebGLTexture>();
   /** the gloss mask of a chunk picture (T199 the swamp's pools, T230 its ponds and rivers), or null (specCam off, or no swamp or water on it) */
@@ -298,6 +304,7 @@ export class GroundCache {
     if (m.t === 'saved') { this.saving[w] = false; return; }
     if (m.t === 'error') { this.errors.push(m.message); console.error('[ground worker]', m.message); return; }
     if (m.t === 'log') { console.log(`[ground worker ${w}]`, m.message); return; }
+    if (m.t === 'bakeAB') { const f = this.abWait.get(w); this.abWait.delete(w); f?.(m); return; }
     if (m.t === 'texpack') { m.snaps.forEach((snap, k) => this.workers[k + 1]?.postMessage({ t: 'textures', snap } satisfies ToWorker, snap.bitmaps)); return; }
     const r = this.reqs.get(m.id); this.reqs.delete(m.id); this.inflight[w]--;
     if (!r) { m.bmp.close(); m.shade?.close(); m.spec?.close(); m.gloss?.close(); return; }
