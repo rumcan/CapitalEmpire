@@ -53,7 +53,7 @@ stays a Studio option. Ground textures follow [art/GROUND-TEXTURE-METHOD.md](art
 | Greenkeeping conditions (section 10) | after the course surfaces |
 
 ### The concept look (section 12)
-The owner's target picture, 2026-10-27: items 149-175. ✅ 153 lawn on every yard (#663); 🎨 153 meadow and 152 rough in the Studio; ✅ 149-151 the fairway, first cut and green on the course and the range (#666). 🎨 154 pond water, 158-160 the pond kit, 162-164 the shrubs, flowers and hedge are made (T231 #671); 169-171 the building-site kit (T232 #673; 168 the excavator blocked in RUN); 174 the build-tool tiles (T233 #674). Ground textures 149-153 come first: the concept's greens. The plan is in [art/CONCEPT-LOOK.md](art/CONCEPT-LOOK.md).
+The owner's target picture, 2026-10-27: items 149-175. ✅ 153 lawn on every yard (#663); 🎨 153 meadow and 152 rough in the Studio; ✅ 149-151 the fairway, first cut and green on the course and the range (#666). 🎨 154 pond water (T230 #679); ✅ 158-160 the pond kit, 162-164 the shrubs, flowers and hedge, and 36, 43, 45 in the game (T231 #671); 169-171 the building-site kit (T232 #673; 168 the excavator blocked in RUN); 174 the build-tool tiles (T233 #674). Ground textures 149-153 come first: the concept's greens. The plan is in [art/CONCEPT-LOOK.md](art/CONCEPT-LOOK.md).
 
 ### List items done
 Ground (section 8 and the range ground): ✅ 131 Pond bank, ✅ 132 Grow-in, ✅ 135 Flower bed soil (#630); 🎨 133 Field parking, 🎨 21 range tee divots (#630, in the Studio, no ground wears them yet); 130 Pond water skipped (the lake is in). 134 Event matting deferred (quilting would break its panel grid). 🎨 19 the hitting mat (top-down, made, not drawn yet); 20, 27, 147 retakes next. The range and practice sprites still draw labelled stand-ins.
@@ -265,7 +265,7 @@ as their decoration.
 
 ### Rock features
 
-🎨 **36. Boulders** (9 made: small, medium, large x a, b, c; T231 #671) · **B** · 0.8-2.5 m · P1. Make three sizes, three variants each.
+✅ **36. Boulders** (9 made; in the game, T231 #671: Decoration › Stone, Small boulder, Boulder, Large boulder, R the shape) · **B** · 0.8-2.5 m · P1. Make three sizes, three variants each.
 > Subject: one weathered sandstone boulder sitting in the grass, rounded, with lichen patches and a little moss on its shaded side. Make nine pictures: small (0.8 m), medium (1.5 m) and large (2.5 m), three different shapes each.
 
 **37. Rock cluster with ornamental grass** · **B** · 3 x 2 m · P1. Three variants.
@@ -288,7 +288,7 @@ as their decoration.
 
 ### Palm trees
 
-🎨 **43. Palm trees** (9 palms made; T231 #671) · **B** · 3-10 m high · P1. Three species, three variants each (height and lean), cold-hardy palms that suit a 1985
+✅ **43. Palm trees** (9 made; in the game, T231 #671: Facilities › Plants › Palms, and Decoration › Plants) · **B** · 3-10 m high · P1. Three species, three variants each (height and lean), cold-hardy palms that suit a 1985
 resort-style club. Evergreen: no autumn colours.
 > Subject: one palm tree with no ground under it. Make nine pictures: (a) a windmill palm (Trachycarpus), hairy brown trunk, fan leaves, 4, 5 and 6 m high; (b) a Canary Island date palm, thick diamond-patterned trunk, a big round crown of arching fronds, 6, 8 and 10 m high; (c) a dwarf fan palm clump (Chamaerops), several short trunks, 2, 3 and 3.5 m high. Each slightly different lean.
 
@@ -297,7 +297,7 @@ resort-style club. Evergreen: no autumn colours.
 
 ### Lights
 
-🎨 **45. Practice green lamp post** (single and twin made; T231 #671) · **B** · 3.5 m high · P1. Two variants.
+✅ **45. Practice green lamp post** (single and twin; in the game, T231 #671: Decoration › Furniture, lit at night) · **B** · 3.5 m high · P1. Two variants.
 > Subject: a traditional golf club lamp post about 3.5 m high: a dark green cast-iron post with a fluted base and a glass lantern on top, glowing warm; variant two with a twin lantern arm.
 
 **46. Path bollard light** · **B** · 0.9 m high · P1.
@@ -716,28 +716,28 @@ sky. It replaces item 130.
 **157. Building-site dirt** · ground · P2. Graded bare earth with tyre and track marks and a few stones. Try `dirt-run` first.
 
 ### Water features
-🎨 **158. Pond-edge boulders** (`landscaping/golf-pond-edge-boulders-pieces-v1.png`; into the game with T231 #671) · **R** · 1 x 4 m a piece · P1.
+✅ **158. Pond-edge boulders** (`landscaping/golf-pond-edge-boulders-pieces-v1.png`; in the game, T231 #671: Stone pond edge; laid at 8 x 2 m a piece, the stones at the boulders' scale) · **R** · 1 x 4 m a piece · P1.
 > Subject: a pond's rim of rounded grey granite boulders of mixed sizes, set tight along the edge, moss and a few small autumn flowers between them, the stones dark and wet at the waterline. The water side of the piece faces the screen's lower edge. Make an inner corner and an outer corner as the extra items.
 
-🎨 **159. Fountain jet** (`props/golf-fountain-jet-4frames-v1.png`; T231) · **B** · 1.5 m across, 4 m high · P1. Four frames of a loop.
+✅ **159. Fountain jet** (`props/golf-fountain-jet-4frames-v1.png`; in the game, T231 #671: Fountain jet and Fountain pond, animated) · **B** · 1.5 m across, 4 m high · P1. Four frames of a loop.
 > Subject: a single tall fountain jet of water rising from a still pond's surface, a crown of spray at its top, a ring of ripples and foam at its foot, the water white-blue catching warm light. Only the water: no basin, no pond. Four frames of the same jet in one row, the spray shapes moving, so they loop.
 
-🎨 **160. Lily pads** (`landscaping/golf-lily-pads-top-v1.png`; T231) · **C** decal sheet on magenta, four variants · P1.
+✅ **160. Lily pads** (`landscaping/golf-lily-pads-top-v1.png`; in the game, T231 #671: on stone-edged ponds) · **C** decal sheet on magenta, four variants · P1.
 > Subject: seen from straight above, a cluster of round green lily pads of mixed sizes floating flat, a few with a notch, two white water-lily flowers with yellow centres. Four different clusters in a 2x2 grid on flat pure magenta.
 
 **161. Lake-shore rocks** · **R** · 2 x 4 m a piece · P2.
 > Subject: a rocky lake shore of large weathered granite boulders and flat slabs, lichen on top, dark and wet at the bottom, a little pale sand between them.
 
 ### Planting
-🎨 **162. Autumn shrubs** (all 6 made; T231) · **B** · 1-1.5 m · P1. Six variants: burning bush in scarlet, golden spirea, a clipped green boxwood ball, a
+✅ **162. Autumn shrubs** (all 6; in the game, T231 #671: Plants › Bushes, Decoration › Plants, the yards) · **B** · 1-1.5 m · P1. Six variants: burning bush in scarlet, golden spirea, a clipped green boxwood ball, a
 red-twig dogwood with orange leaves, a blue-green juniper, an ornamental grass with pale cream plumes. No pink or purple (the magenta key).
 > Subject: one garden shrub (the variant named above), full and round, in autumn colour, standing on its own.
 
-🎨 **163. Autumn flower clumps** (all 6 made: mums red, yellow, orange, white, bronze, black-eyed Susans; T231 #671) · **B** · 0.6 m · P1. Six variants: chrysanthemums in red, yellow, orange, white and bronze, and a clump
+✅ **163. Autumn flower clumps** (all 6; in the game, T231 #671: Plants › Flowers, Decoration › Plants, the yards) · **B** · 0.6 m · P1. Six variants: chrysanthemums in red, yellow, orange, white and bronze, and a clump
 of black-eyed Susans. No pink or purple.
 > Subject: one dense mounded clump of garden chrysanthemums (the colour named above) in full bloom, the flowers small and many, dark green leaves showing at the bottom.
 
-🎨 **164. Clipped hedge** (`landscaping/golf-clipped-hedge-pieces-v1.png`; T231) · **R** · 0.7 m deep, 0.9 m high · P1.
+✅ **164. Clipped hedge** (`landscaping/golf-clipped-hedge-pieces-v1.png`; in the game, T231 #671: Decoration › Plants › Hedge row, a run, and the yards) · **R** · 0.7 m deep, 0.9 m high · P1.
 > Subject: a neatly clipped dark-green boxwood hedge with a flat top and straight sides, a few autumn leaves caught on top.
 
 **165. Low fieldstone garden wall** · **R** · 0.5 m deep, 0.7 m high · P2.

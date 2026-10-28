@@ -1,7 +1,7 @@
 // The concept's kit (T231, #671; docs/art/CONCEPT-LOOK.md steps 5 and 8): the library ids of the art agent's boulders, palms, shrubs, flower
 // clumps, practice-green lamp posts, the pond-edge stones, the clipped hedge, the fountain jet's frames and the lily pads (prep-kit.mjs cuts
 // them, prep-golf.mjs packs them on the golf page, golf-library.ts appendKit lists them last). Their own kinds (shrub, flower, palm, rock,
-// lamp, fountain, decal, and fencex / fencey for the run pieces) keep them out of every pool that picks by kind (the lots' trees and bushes,
+// lamp, fountain, decal, and fencex / fencey for the hedge's run pieces) keep them out of every pool that picks by kind (the lots' trees and bushes,
 // the hole presets, the farms, the plant brushes' trees), so no lot, hole or farm drawn before them changes; they join the places named for
 // them: the Props tool (golf/decor.ts), the plant brushes (plant.ts), the ponds (golf/ponds.ts) and the yards (lots/compose.ts kitYard).
 // Never mirrored (mirror.ts drawnAs): one picture each, the sun at the upper right as painted. Pure TS, no DOM.
