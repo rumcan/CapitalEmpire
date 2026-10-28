@@ -8,6 +8,8 @@ import { growInMonths } from '../../game/golf/costs';
 import { FRAME_TREE_PRICE } from '../../game/golf/holeframe';
 import { SURFACE_BRUSHES, type BrushKind } from '../../game/paint';
 import { BrushShape, GroundHeight, LooksEntry, SurfaceSwatches, surfaceKeysOf } from './BrushControls';
+import { CourseEdges } from './CourseEdges';
+import { GRID_KINDS } from '../../game/paint-tool';
 
 const STEPS = ['Tee', 'Green', 'Shape'] as const;
 /** what each step asks for, under the steps */
@@ -150,6 +152,14 @@ function EditPaint({ game, looks, onLooks }: { game: Game; looks: boolean; onLoo
         {(on || height) && <button className="chip" title="Put the brush down: the plan's handles alone (Esc)" onClick={() => p.setEditBrush(null)}>Handles only</button>}
       </div>
       {height ? <GroundHeight game={game} on={height} arm={() => p.setEditHeight()} note="The tee, the green and the bends still drag; Esc puts it down." /> : <p className="sub-line mt-1">{help}</p>}
+      {/* T253 (#735; the owner, 2026-10-28, editing hole 1: "Edges is just a heading ... there is no checkbox or slider yet to make shit
+          rounder"): the surface in hand's Edges, as in More options: its Border, Round off and Smoothness (this hole's look), Shadow, Height */}
+      {on && GRID_KINDS.includes(p.brushKind) && (
+        <div className="mt-2" data-section="edit-edges">
+          <h4 className="sub-head">Edges</h4>
+          <CourseEdges game={game} />
+        </div>
+      )}
       <div className="mt-2">
         <LooksEntry game={game} looks={looks} onLooks={onLooks} arm={() => { if (!on) p.setEditBrush(p.brushKind); }} />
       </div>

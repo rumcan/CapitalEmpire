@@ -9,7 +9,7 @@ import { CH_SIZE, CH_STEP } from './ext/course-height';
 export interface MyGhost { n: number; placed: Placed; laid: { i: number; s: number }[]; out: number[]; why: string; note: string; cost: number; trees: number }
 /** T256: a saved hole's ghost colours, by surface id */
 const GHOST_SURF: Record<number, string> = { 1: 'rgba(78,122,50,0.4)', 2: 'rgba(168,160,96,0.45)', 3: 'rgba(74,127,200,0.55)', 4: 'rgba(111,174,74,0.5)', 5: 'rgba(155,201,106,0.6)', 6: 'rgba(230,210,154,0.65)', 7: 'rgba(200,180,138,0.55)', 8: 'rgba(143,209,106,0.65)', 9: 'rgba(93,122,46,0.45)' };
-import { BORDER_TEXES, BRUSH_PRESETS, SURFACE_BRUSHES, assignStyle, borderW, drawZ, DEFAULT_STYLE, MAX_PTS, MAX_SIDE, PAINT_TEXES, areaAt, boxOf, checkArea, clampStyle, crossings, fromTuples, insertCorner, insidePoly, moveCorner, polyBox, removeCorner, roundCorners, rotatePts, scalePts, simplify, snapPt, toTuple, translatePts, type BrushKind, type PaintArea, type PaintBox, type PaintTuple } from './paint';
+import { BORDER_TEXES, BRUSH_PRESETS, SMOOTH_DEFAULT, SURFACE_BRUSHES, assignStyle, borderW, drawZ, DEFAULT_STYLE, MAX_PTS, MAX_SIDE, PAINT_TEXES, areaAt, boxOf, checkArea, clampStyle, crossings, fromTuples, insertCorner, insidePoly, moveCorner, polyBox, removeCorner, roundCorners, rotatePts, scalePts, simplify, snapPt, toTuple, translatePts, type BrushKind, type PaintArea, type PaintBox, type PaintTuple } from './paint';
 import { dab, fillPoly, stroke as brushStroke, trace as traceMask, type Mask } from './brush';
 import { MAP } from './iso';
 import { holePreset, kindOfTex, placeHole, storedHolePreset, type HolePreset, type PresetProp, type StoredHole } from './golf/holepreset';
@@ -563,6 +563,35 @@ export class PaintTool {
   /** the cells the stroke in progress has laid or rubbed out so far (0 with none; the cursor's drag total, T118) */
   get strokeCells(): number { return this.stroke?.grid?.cells ?? 0; }
   setBrushR(r: number) { const k = this.brushKind; this.brush[k] = { ...this.brush[k], r: Math.min(BR_MAX, Math.max(BR_MIN, Number.isFinite(r) ? r : this.brush[k].r)) }; this.saveBrush(); this.host.emit(); }
+
+  // ---------- T253 (#735): Round off and Smoothness ----------
+  /** the Round off of a course surface's look, as the owner in hand wears it (lookOwner: the hole open in Edit hole or in hand in Shape by
+   *  hand, the property, a facility, or My looks' Course default), or null for a kind not on the course grid. on: the tick box; smooth: the
+   *  Smoothness slider (0..1, SMOOTH_DEFAULT until set) */
+  roundOff(kind: BrushKind = this.brushKind): { on: boolean; smooth: number } | null {
+    if (!GRID_KINDS.includes(kind)) return null;
+    const st = this.host.golfMode?.() ? this.lookOf(this.lookOwner, kind) : this.brush[kind].style;
+    return { on: !!st.round, smooth: st.smooth ?? SMOOTH_DEFAULT };
+  }
+  /** ticks Round off or sets the Smoothness of a course surface's look for the owner in hand, in any tool (the Edges section is shown in
+   *  Shape by hand, Edit hole and My looks alike): an owner's look takes it and only its cells are drawn again; the course default (no golf
+   *  owner, or My looks' Course default) is the brush preset, which new holes start from. Saved with the look (the game save's looks book) */
+  setRoundOff(c: { round?: boolean; smooth?: number }, kind: BrushKind = this.brushKind) {
+    if (!GRID_KINDS.includes(kind)) return;
+    const owner = this.lookOwner, book = owner !== 'default' && this.host.golfMode?.() ? this.host.lookBook?.() : null;
+    if (book) {
+      const was = bookLook(book, owner, kind, this.dflt), next = clampStyle({ ...was, ...c }) as LookStyle;
+      seedOwner(book, owner, this.dflt); book[owner]![kind] = next;
+      this.looksRev++; this.host.save();
+      if (lookChanged(next, was)) this.lookSoon(owner);
+    } else {
+      const was = this.brush[kind].style;
+      this.brush[kind] = { ...this.brush[kind], style: clampStyle({ ...was, ...c }) }; this.saveBrush();
+      if (this.courseGrid() && lookChanged(this.brush[kind].style, was)) this.lookSoon();
+    }
+    if (kind === this.brushKind) this.style = clampStyle({ ...this.style, ...c });
+    this.host.emit();
+  }
 
   // ---------- the course look's Border and Shadow (the owner's test, 2026-10-25) ----------
   /** the collar band's width in metres of a brush kind's course-grid surface (the Border slider: the green's fringe, the fairway's and tee's

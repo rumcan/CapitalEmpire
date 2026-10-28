@@ -3,6 +3,7 @@ import { BORDER_MAX_M, BORDER_MIN_M } from '../../game/ext/course-grid/patch';
 import { BORDER_KINDS } from '../../game/paint-tool';
 import { BRUSH_PRESETS, borderStep, borderW } from '../../game/paint';
 import { HEIGHT_RANGE, ROCK_FROM, ROCK_STEEP_H, SHADOW_HAIRLINE, STAIR_MIN_H } from '../../game/ext/course-walls';
+import { roundCornerM } from '../../game/ext/course-blobs';
 
 /** the Border slider's steps: its position (0..STEPS) maps to a width on a square curve, so the hairline end has fine control and the far
  *  end reaches several metres */
@@ -26,6 +27,8 @@ const plural = (name: string) => { const n = name.toLowerCase(); return n === 'w
 /** a Shadow value as the slider reads it (0 none, SHADOW_HAIRLINE the hairline, 1 strong) */
 export const shadowLabel = (s: number) => (s <= 0.005 ? 'none' : Math.abs(s - SHADOW_HAIRLINE) < 0.015 ? 'hairline' : s >= 0.98 ? 'strong' : `${Math.round(s * 100)}%`);
 
+/** T253: a Smoothness as the slider reads it: its share and about how round a corner comes out */
+export const smoothLabel = (v: number) => `${Math.round(v * 100)}% · ${roundCornerM(v).toFixed(1)} m`;
 /** a Height as the slider reads it, with the form a tee takes there (T127: a grass bank, rock with stairs, a steep rock face) */
 export const heightLabel = (m: number, tee: boolean) => `${m.toFixed(2)} m${!tee ? '' : m < STAIR_MIN_H ? ' · bank' : m < ROCK_FROM ? ' · bank, steps' : m < 0.75 * ROCK_STEEP_H ? ' · rock, steps' : ' · rock face'}`;
 
@@ -36,7 +39,7 @@ export const heightLabel = (m: number, tee: boolean) => `${m.toFixed(2)} m${!tee
  *  a green stands (T127: a tee's bank turns to rock with stairs from ROCK_FROM, a steep rock face higher). All apply live (the course is
  *  drawn again as the slider moves) and are remembered with the brush look */
 export function CourseEdges({ game }: { game: Game }) {
-  const p = game.paint, kind = p.brushKind, band = BORDER_KINDS[kind], bw = p.courseBorder(kind), sh = p.courseShadow(kind), ht = p.surfaceHeight(kind), hr = band ? HEIGHT_RANGE[band.s] : null;
+  const p = game.paint, kind = p.brushKind, band = BORDER_KINDS[kind], bw = p.courseBorder(kind), sh = p.courseShadow(kind), ht = p.surfaceHeight(kind), hr = band ? HEIGHT_RANGE[band.s] : null, rd = p.roundOff(kind);
   const name = BRUSH_PRESETS.find(b => b.kind === kind)?.name ?? '';
   // T260 (#763; the owner, 2026-10-29: "an accordion for border that doesnt open anything"): never empty. A surface with no band on the
   // course grid (the waste area, the rough, the long grass) reads Border: none with a note; a banded one's slider starts at none
@@ -55,6 +58,20 @@ export function CourseEdges({ game }: { game: Game }) {
           <span className="text-xs text-slate-200" data-border="none">none</span>
         </div>
         <div className="text-[11px] text-slate-500">{`The ${name.toLowerCase()} has no border band on the course.`}</div>
+      </>)}
+      {/* T253 (#735; the owner, 2026-10-28: "bunkers and greens and all painted elements should have a tick box to round it with a slider to
+          make the shape rounder and smoother"): every course surface. The look in hand takes it (the hole open in Edit hole or in hand, the
+          property, a facility, My looks' Course default), so only its cells are rounded; play still reads the cells, the lie the drawn shape */}
+      {rd && (<>
+        <label className="mt-1 flex items-center gap-2 text-[12px] text-slate-300" data-round={rd.on ? 'on' : 'off'} title={`Round off every ${name.toLowerCase()} ${p.lookOwner === 'default' ? 'new holes start with' : 'here'}: its stepped 1 m outline becomes a smooth curve, its corners rounded`}>
+          <input type="checkbox" aria-label={`Round off every ${name.toLowerCase()}`} checked={rd.on} onChange={e => p.setRoundOff({ round: e.target.checked })} />
+          <span>Round off</span>
+        </label>
+        <div className={`mt-1 flex items-center gap-2 text-[12px] ${rd.on ? 'text-slate-400' : 'text-slate-600'}`} title="Smoothness: how far the outline is smoothed, from just the steps gone to broad rounded corners (about how round a corner comes out)">
+          <span className="w-[4.5rem] shrink-0">Smoothness</span>
+          <input type="range" aria-label={`Smoothness of every ${name.toLowerCase()}`} min={0} max={100} step={1} disabled={!rd.on} value={Math.round(rd.smooth * 100)} onChange={e => p.setRoundOff({ smooth: +e.target.value / 100 })} className="min-w-0 flex-1" />
+          <span className="w-20 text-right text-xs text-slate-200 whitespace-nowrap" data-smooth={Math.round(rd.smooth * 100)}>{rd.on ? smoothLabel(rd.smooth) : 'off'}</span>
+        </div>
       </>)}
       {sh !== null && (
         <div className="mt-1 flex items-center gap-2 text-[12px] text-slate-400" title={`The shadow of every ${name.toLowerCase()}'s raised or sunken edge: none, a hairline contact line, up to a strong cast shadow`}>

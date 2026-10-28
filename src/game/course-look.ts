@@ -1,4 +1,4 @@
-import { BRUSH_PRESETS, type BrushKind, type PaintArea } from './paint';
+import { BRUSH_PRESETS, SMOOTH_DEFAULT, type BrushKind, type PaintArea } from './paint';
 import type { CourseTex } from './ground-protocol';
 import { surfacePreset } from './paint-presets';
 import { collarToneOf, tonedCollar, type CourseFinish } from './course-finish';
@@ -34,7 +34,7 @@ export function courseBandOf(kind: BrushKind, st: LookStyle, dflt: CourseTex): C
 }
 /** the style fields the course grid's look reads: a change to any of them draws the course again (the tints ride along: T261 no longer draws
  *  them, but a look that differs only in one is still another look) */
-export const LOOK_FIELDS = ['tex', 'scale', 'angle', 'tone', 'toneAmt', 'tint', 'mtex', 'mshare', 'msoft', 'mpatch', 'btex', 'bscale', 'bangle', 'btone', 'btoneAmt', 'btint'] as const;
+export const LOOK_FIELDS = ['tex', 'scale', 'angle', 'tone', 'toneAmt', 'tint', 'mtex', 'mshare', 'msoft', 'mpatch', 'btex', 'bscale', 'bangle', 'btone', 'btoneAmt', 'btint', 'round', 'smooth'] as const;
 export const lookChanged = (a: Partial<LookStyle>, b: Partial<LookStyle>) => LOOK_FIELDS.some(k => a[k] !== b[k]);
 
 /** a course collar band's name (course-blobs BLOB_STYLE): the green's fringe, the fairway's and the tee's first cut, a bunker's lip, a pond's bank */
@@ -79,7 +79,11 @@ export function puckBandOf(kind: string, b: BrushLooks, fin: CourseFinish, borde
  *  id's fill (courseTexOf; the fescue, which has no brush, wears its preset, pre; T261: the waste area its brush's look, as every surface with
  *  a brush does: it wore its preset since before it had a brush, so the style editor never reached it), the collars by name, each banded surface's own band, and with
  *  the course finish a bunker's lip grass (surfaceBands). The engine's CourseLooks takes the default's as its base and an owner's where it differs */
-export interface CourseLookSet { surf: (CourseTex | undefined)[]; collar: Record<BandName, CourseTex>; band: (CourseTex | undefined)[]; lipGrass?: CourseTex }
+export interface CourseLookSet { surf: (CourseTex | undefined)[]; collar: Record<BandName, CourseTex>; band: (CourseTex | undefined)[]; lipGrass?: CourseTex;
+  /** T253 (#735): each rounded surface's Smoothness (0..1) by surface id, where its look has Round off ticked; absent when none has */
+  round?: (number | undefined)[] }
+/** T253: a look's Round off as the course grid lays it: its Smoothness when the box is ticked, else undefined */
+export const roundOfStyle = (st: LookStyle): number | undefined => (st.round ? st.smooth ?? SMOOTH_DEFAULT : undefined);
 export function courseLookSet(b: BrushLooks, pre: (s: string, old: string) => CourseTex): CourseLookSet {
   const st = (k: BrushKind) => (b[k] ?? BRUSH_PRESETS.find(p => p.kind === k)!).style;
   // by surface id (ext/course-grid SURF): rough 1, fescue 2, water 3, fairway 4, tee 5, bunker 6, waste 7 (T261: its brush's look), green 8,
@@ -87,5 +91,8 @@ export function courseLookSet(b: BrushLooks, pre: (s: string, old: string) => Co
   const surf = [undefined, courseTexOf(st('rough')), pre('fescue', 'golfFescue'), courseTexOf(st('water')), courseTexOf(st('fairway')), courseTexOf(st('tee')), courseTexOf(st('bunker')), courseTexOf(st('waste')), courseTexOf(st('green')), courseTexOf(st('longGrass'))];
   const { collar, band: by, lipGrass } = surfaceBands(b), band: (CourseTex | undefined)[] = [];
   band[4] = by.fairway; band[5] = by.tee; band[8] = by.green; band[6] = by.bunker; band[3] = by.water;
-  return { surf, collar, band, ...(lipGrass ? { lipGrass } : {}) };
+  // T253: Round off by surface id (the fescue has no brush, so no Round off)
+  const round: (number | undefined)[] = [], rk: [number, BrushKind][] = [[1, 'rough'], [3, 'water'], [4, 'fairway'], [5, 'tee'], [6, 'bunker'], [7, 'waste'], [8, 'green'], [9, 'longGrass']];
+  for (const [s, k] of rk) { const r = roundOfStyle(st(k)); if (r !== undefined) round[s] = r; }
+  return { surf, collar, band, ...(lipGrass ? { lipGrass } : {}), ...(round.length ? { round } : {}) };
 }
