@@ -205,7 +205,7 @@ tees use the same marker.
 🎨 **20. Target green** (top-down retake made: `run-top/golf-range-target-green/`) (`golf:range-target-green`) · **C** · 12-20 m across · P1 **(stand-in)**.
 > Subject: golf:range-target-green, one round driving-range target green seen from straight above, filling the square: a smooth fine-cut inner green, a lighter mown collar ring round it, a faint darker ring at its outer edge where it meets the coarser outfield grass (the outfield shows only in the corners), a cup at the exact centre (no flag), a few white range balls lying scattered on it. No mowing stripes.
 
-🎨 **21. Divot-scarred range tee turf** (`range-tee-divots-run`, #630; on the range tee with T223) (texture) · **C** · a 16 m square · P1 **(stand-in)**.
+**21. Divot-scarred range tee turf** (`range-tee-divots-run`, #630: **rejected by the owner**, 2026-10-28: the divots read as litter, "please find diffrent grass"; the turfed tee wears `green-concept-run`; the family stays a Studio option) (texture) · **C** · a 16 m square · P1 **(stand-in)**.
 > Subject: a seamless ground texture of a busy driving range's tee turf seen from straight above, covering a 16 x 16 m area: short green fairway grass scarred with many small divots (oval patches of bare brown soil and torn turf, some filled with green-tinted sand), a few loose white golf tees and broken tee pieces. It must tile seamlessly on all four edges with no visible repeat: no single distinctive divot or patch that the eye picks out when it repeats.
 
 ### Range extras (new)
