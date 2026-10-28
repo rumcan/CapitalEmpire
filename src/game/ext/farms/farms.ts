@@ -14,6 +14,7 @@ import type { Pt } from '../../network';
 import type { Composition, Placed } from '../../lots/compose';
 import { OWNER_SCALE } from '../../lots/scales';
 import { TC } from '../../terrain/types';
+import { RUSTY_PICKUPS } from '../../vehicles';
 
 /** one rural parcel fronting a road: the frame origin (front-left corner, tiles), u along the road, n away from it;
  *  w (frontage) and d (depth) in tiles, side +1 to the left of a -> b and -1 to the right; key stable across seg splits */
@@ -245,8 +246,8 @@ class FB {
     if (!pool.length) return 0;
     let best = -2; const ties: string[] = [];
     for (const id of pool) {
-      const m = /_([news])(-v2)?$/.exec(id); if (!m) continue;
-      const f = FACE[m[1]], dd = f.x * this.F.x + f.y * this.F.y;
+      const l = RUSTY_PICKUPS[id] ?? /_([news])(-v2)?$/.exec(id)?.[1]; if (!l) continue;
+      const f = FACE[l], dd = f.x * this.F.x + f.y * this.F.y;
       if (dd > best + 1e-9) { best = dd; ties.length = 0; ties.push(id); } else if (dd > best - 1e-9) ties.push(id);
     }
     const g = this.spec(pick(this.r, ties));
@@ -414,7 +415,8 @@ export function composeFarm(p: FarmParcel, seed: number): Composition {
   // the working yard: tractor before the barn, a trailer by the shed, the pickup on the drive, clutter, the windmill
   if (r() < 0.75) B.put('expansion:farm-tractor', L.ba, L.bb - L.bd / 2 - 1.8, { veh: true });
   if (r() < 0.35) B.put('expansion:utility-trailer', clamp(L.ba + L.bw / 2 + 1.6, 1.6, W - 1.6), L.bb + L.bd / 2 + 1.2, { veh: true });
-  if (r() < 0.85) { const span = B.vehicle(PICKUPS.length ? PICKUPS : CARS, L.driveA, 2.2); if (span && r() < 0.3) B.vehicle(CARS, L.driveA, 2.4 + span); }
+  // (T236: the yard's pickup is the yellow or the rusty one: vehicles.ts RUSTY_PICKUPS, farm and junk lots only)
+  if (r() < 0.85) { const span = B.vehicle(PICKUPS.length ? [...PICKUPS, ...Object.keys(RUSTY_PICKUPS)] : CARS, L.driveA, 2.2); if (span && r() < 0.3) B.vehicle(CARS, L.driveA, 2.4 + span); }
   B.scatter(names(['expansion:lumber-bundle', 'expansion:pallet-stack', 'expansion:oil-drums']), Math.max(1, L.ba - L.bw / 2), L.bb + L.bd / 2 + 0.8, Math.min(W - 1, L.ba + L.bw / 2), Math.min(D - 1, L.yardB1), 2);
   if (r() < 0.25) B.put('ref:landmark-windmill', r() < 0.5 ? 2 : W - 2, L.yardB1 - 1.8);
   // the house garden behind the farmhouse, then the gate furniture
