@@ -7,7 +7,7 @@ import crypto from 'node:crypto';
 import sharp from 'sharp';
 import {tick,FIVE_HOURS} from './supervisor.mjs';
 import {snapshotQueue} from './queue.mjs';
-import {planPath,planHash,readPlan} from './planner.mjs';
+import {planPath,planHash,readPlan,validatePlan} from './planner.mjs';
 
 // Fake Node children and fixtures only. Never load the production config or launch Codex/imagegen.
 const home='E:/ClaudeTemp/T258-review';await fs.mkdir(home,{recursive:true});const run=await fs.mkdtemp(path.join(home,'subjobs-'));
@@ -125,4 +125,39 @@ test('already-covered accepts a decoded non-held source with exact live evidence
   const f=await fixture({sourceText:'**1. Existing boulder** (`golf:vehicle`) · **B** · P1\n'+quote+'\n'}),file=path.join(f.generated,'boulder-v1.png'),bytes=await fs.readFile(f.alpha);await fs.copyFile(f.alpha,file);await fs.writeFile(file.replace(/\.png$/,'.provenance.json'),JSON.stringify({id:'golf:vehicle',output:file}));
   const q=await snapshotQueue(f.config),source=q.sources[0];f.plan.jobs=[];f.plan.coverage='The one requested source already exists; visual review and integration remain separate.';f.plan.disposition={kind:'already-covered',reason:'Existing exact source, without a new image call',evidence:{file:source.file,sha256:source.sha256,quote},artifacts:[{file,sha256:hash(bytes)}]};
   assert.equal((await planStep(f)).status,'plan-complete');assert.equal((await snapshotQueue(f.config)).next,null);
+});
+
+test('reuse live-only exact B deliverable copies unchanged files locally without bypassing quota',async()=>{
+  const f=await fixture({sourceText:'**1. Boulder** (`golf:vehicle`) · **B** · P1\nOne existing boulder picture.\n'});f.plan.jobs=f.plan.jobs.slice(0,1);
+  const j=f.plan.jobs[0],live=path.join(f.base,'live'),relative=path.relative(f.generated,j.output),liveGenerated=path.join(live,'art/theme-consistency/generated'),source=path.join(liveGenerated,relative);
+  f.config.inventoryRoots.push(live);await fs.mkdir(path.dirname(source),{recursive:true});
+  const unrelated=path.join(liveGenerated,'vehicles','other-name-v1.png');await fs.copyFile(f.alpha,unrelated);await fs.writeFile(unrelated.replace(/\.png$/,'.provenance.json'),JSON.stringify({id:j.id,subjobKey:j.key,output:unrelated}));
+  await fs.mkdir(path.dirname(planPath(f.config,{key:f.plan.itemKey})),{recursive:true});await fs.writeFile(planPath(f.config,{key:f.plan.itemKey}),JSON.stringify({planSha256:planHash(f.plan),plan:f.plan}));
+  assert.equal((await snapshotQueue(f.config)).next.action,'generate-subjob','same ID at another filename does not fulfill this deliverable');
+  await fs.copyFile(f.alpha,source);const pngHash=hash(await fs.readFile(source)),provenance=Buffer.from(JSON.stringify({id:j.id,subjobKey:j.key,output:source,prompt:'Original exact source; preserve these bytes.'},null,2).replaceAll('\n','\r\n')+'\r\n');
+  await fs.writeFile(source.replace(/\.png$/,'.provenance.json'),provenance);const decision=Buffer.from(JSON.stringify({id:j.id,decision:'accepted-for-art-appearance',files:[{file:source,sha256:pngHash}]}));await fs.writeFile(source.replace(/\.png$/,'.appearance.json'),decision);
+  const q=await snapshotQueue(f.config);assert.equal(q.next.action,'copy-existing-subjob');assert.equal(q.next.job.sourceArtifact.file,source);
+  const deadline=new Date(f.now+FIVE_HOURS).toISOString();await fs.writeFile(path.join(f.config.stateDir,'state.json'),JSON.stringify({schema:1,status:'usage-backoff',threadId:'11111111-2222-3333-4444-555555555555',batches:0,notBeforeUtc:deadline}));
+  const startedFile=path.join(f.base,'must-not-launch');const result=await invoke(f,{startedFile});assert.equal(result.status,'existing-deliverable-copied');assert.equal(result.notBeforeUtc,deadline);
+  assert.equal(await fs.access(startedFile).then(()=>true,()=>false),false);assert.equal(hash(await fs.readFile(j.output)),pngHash);assert.ok((await fs.readFile(j.output.replace(/\.png$/,'.provenance.json'))).equals(provenance));assert.ok((await fs.readFile(j.output.replace(/\.png$/,'.appearance.json'))).equals(decision));
+  const s=await state(f);assert.equal(s.notBeforeUtc,deadline);assert.equal(s.batches,0);assert.equal(s.threadId,'11111111-2222-3333-4444-555555555555');assert.equal(s.lastLocalReuse.builtinImagegenUsed,false);
+});
+
+test('reuse accepted native crop proves pixel identity and records honest derived provenance',async()=>{
+  const f=await fixture({sourceText:'**1. Accepted source view** (`golf:vehicle`) · **A** · P1\nReuse the explicitly exported front-right view.\n'});f.plan.jobs=f.plan.jobs.slice(0,1);const j=f.plan.jobs[0],folder=path.join(f.generated,'source-views-v1');await fs.mkdir(folder,{recursive:true});
+  const whole=path.join(folder,'whole-v1.png'),crop=path.join(folder,'front-right.native.png'),exportFile=path.join(folder,'native-export.json'),provFile=whole.replace(/\.png$/,'.provenance.json'),decisionFile=whole.replace(/\.png$/,'.appearance.json');
+  const wholeBytes=await fs.readFile(f.alpha),rect={left:2,top:3,width:9,height:10},cropBytes=await sharp(wholeBytes).extract(rect).png().toBuffer(),provBytes=Buffer.from(JSON.stringify({id:j.id,output:whole,prompt:'Exact unchanged original generation provenance.'})+'\r\n');
+  await fs.writeFile(whole,wholeBytes);await fs.writeFile(crop,cropBytes);await fs.writeFile(provFile,provBytes);
+  const report={id:j.id,source:{file:whole,sha256:hash(wholeBytes)},sourceProvenance:{file:provFile,sha256:hash(provBytes)},views:[{name:'front-right',file:crop,sha256:hash(cropBytes),sourceRect:rect}]};const exportBytes=Buffer.from(JSON.stringify(report));await fs.writeFile(exportFile,exportBytes);
+  const decision={id:j.id,decision:'accepted-for-art-appearance',files:[{file:whole,sha256:hash(wholeBytes)},{file:crop,sha256:hash(cropBytes)}]},decisionBytes=Buffer.from(JSON.stringify(decision));await fs.writeFile(decisionFile,decisionBytes);
+  j.reuse={file:crop,sha256:hash(cropBytes),exportFile,exportSha256:hash(exportBytes),view:'front-right',inventoryRoot:f.config.repoRoot};
+  let item=(await snapshotQueue(f.config)).items[0];assert.equal(await validatePlan(f.plan,item,f.config),true);
+  await fs.appendFile(exportFile,' ');assert.equal(await validatePlan(f.plan,item,f.config),false,'changed export bytes invalidate reuse');await fs.writeFile(exportFile,exportBytes);
+  const wrongCrop=await sharp({create:{width:rect.width,height:rect.height,channels:4,background:{r:220,g:30,b:40,alpha:0.7}}}).png().toBuffer();await fs.writeFile(crop,wrongCrop);
+  const wrongReport=structuredClone(report);wrongReport.views[0].sha256=hash(wrongCrop);const wrongExport=Buffer.from(JSON.stringify(wrongReport));await fs.writeFile(exportFile,wrongExport);const wrongDecision=structuredClone(decision);wrongDecision.files[1].sha256=hash(wrongCrop);await fs.writeFile(decisionFile,JSON.stringify(wrongDecision));const wrongPlan=structuredClone(f.plan);wrongPlan.jobs[0].reuse.sha256=hash(wrongCrop);wrongPlan.jobs[0].reuse.exportSha256=hash(wrongExport);
+  item=(await snapshotQueue(f.config)).items[0];assert.equal(await validatePlan(wrongPlan,item,f.config),false,'even rebound hashes cannot hide different decoded crop pixels');
+  await fs.writeFile(crop,cropBytes);await fs.writeFile(exportFile,exportBytes);await fs.writeFile(decisionFile,decisionBytes);await fs.mkdir(path.dirname(planPath(f.config,{key:f.plan.itemKey})),{recursive:true});await fs.writeFile(planPath(f.config,{key:f.plan.itemKey}),JSON.stringify({planSha256:planHash(f.plan),plan:f.plan}));
+  const q=await snapshotQueue(f.config);assert.equal(q.next.action,'copy-existing-subjob');const deadline=new Date(f.now+FIVE_HOURS).toISOString();await fs.writeFile(path.join(f.config.stateDir,'state.json'),JSON.stringify({schema:1,status:'usage-backoff',threadId:'11111111-2222-3333-4444-555555555555',batches:0,notBeforeUtc:deadline}));
+  const startedFile=path.join(f.base,'must-not-launch');const result=await invoke(f,{startedFile});assert.equal(result.status,'existing-deliverable-copied');assert.equal(await fs.access(startedFile).then(()=>true,()=>false),false);assert.ok((await fs.readFile(j.output)).equals(cropBytes));assert.ok((await fs.readFile(provFile)).equals(provBytes));
+  const derived=JSON.parse(await fs.readFile(j.output.replace(/\.png$/,'.provenance.json'),'utf8'));assert.equal(derived.builtinImagegenUsed,false);assert.equal(derived.generator,'native-source-reuse');assert.equal(derived.outputSha256,hash(cropBytes));assert.equal(derived.derivedFrom.sourceFile,whole);assert.equal((await state(f)).notBeforeUtc,deadline);
 });

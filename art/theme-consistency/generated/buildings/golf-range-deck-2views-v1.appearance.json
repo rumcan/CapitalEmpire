@@ -8,6 +8,14 @@
     {
       "file": "art/theme-consistency/generated/buildings/golf-range-deck-2views-v1.png",
       "sha256": "cfdea8ccf10a22bbd3d85af7cde0fbe1db75bb75138af03cb9475e057d519977"
+    },
+    {
+      "file": "art/theme-consistency/generated/buildings/golf-range-deck-2views-v1/front-right.native.png",
+      "sha256": "b2850e475f0adf990282b5526b27300a5b80d9638d5d86af585665bcdee5aa5a"
+    },
+    {
+      "file": "art/theme-consistency/generated/buildings/golf-range-deck-2views-v1/left-front.native.png",
+      "sha256": "be0196dba5c0d51716cc713b02d09b147e49214c18152f3484cfee54b1c1d599"
     }
   ],
   "checks": {
