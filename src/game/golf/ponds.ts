@@ -93,7 +93,9 @@ const hash2 = (a: number, b: number) => { let h = Math.imul(a | 0, 0x27d4eb2d) ^
  *  where it turns in), and between them the run pieces along each straight stretch of shore (KIT_POND_EDGE.x along the map's x axis, .y along
  *  its y axis), as many as the stretch takes at a scale of 0.5 to 1 (a piece is two cells deep at full size: in a pond under BIG_POND_CELLS, or where the second row in is not all
  *  water, at most half size, a cell deep). A corner's cluster covers the two-by-two block of water by the corner when it can, else its one cell.
- *  Every footprint lies on the pond's water. Empty for a pond under POND_MIN_CELLS. */
+ *  T234: the run pieces vary (RIM_SCALE, RIM_IN), a long stretch has short gaps with a plume tuft or a boulder in them (GAP_*), a boulder stands on
+ *  some joints (JOINT_BOULDER), and the corners in a staircase are loosened (CLUSTER_*). Each stretch and corner is laid from its own place on the
+ *  lattice. Every footprint lies on the pond's water. Empty for a pond under POND_MIN_CELLS. */
 export function shorePieces(p: Pond): PondPiece[] {
   if (p.cells < POND_MIN_CELLS) return [];
   const out: PondPiece[] = [], E = KIT_POND_EDGE, at = (cx: number, cy: number) => inPond(p, cx, cy), large = p.cells >= BIG_POND_CELLS;
