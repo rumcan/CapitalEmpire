@@ -3,31 +3,29 @@
 The owner (2026-10-26): "make sure all the claudes running at the moment can start new chats at any time we are getting close to our
 weekly cap".
 
-Open a new Claude Code chat (desktop app, Code tab) with the folder `E:\Repos\CapitalEmpire`, on any account, and paste the prompt for
-the role. Each prompt points to files and GitHub issues that are kept current. Nothing depends on an old chat's history.
+Open a new Claude Code chat (desktop app, Code tab) on any account, with the folder the prompt names, and paste the prompt for the role.
+Each prompt points to files and GitHub issues that are kept current. Nothing depends on an old chat's history.
+**Read the docs from origin/main, never from `E:\Repos\CapitalEmpire` itself:** that checkout sits on an old side branch with an old
+CLAUDE.md and NOW.md (2026-10-28: `arena/T026-course-height`).
 
 ## The lead (runs everything else)
+Folder: `E:\Repos\CapitalEmpire\worktrees\lead-typecheck` (the lead's own worktree).
 ```
-You are the lead on CapitalEmpire (E:\Repos\CapitalEmpire, GitHub rumcan/CapitalEmpire), a golf events manager game.
-Read CLAUDE.md, then docs/NOW.md section "START HERE", then docs/AGENT-BRIEF.md. Then:
-1. Restart the 5174 auto-updater in the background: bash E:/ClaudeTemp/autoupdate-5174.sh. If http://localhost:5174 is down, start the
-   .claude/launch.json config "lead-game" (it must serve worktrees/theme-consistency, never the main checkout).
-2. Read the newest report in E:/ClaudeTemp/nightly/ and any open [nightly] issue; fix real failures first.
-3. Resume every in-progress ticket (gh issue list --label status:in-progress). For each: read the issue's last progress comment
-   ("To resume"), commit any WIP left in its worktree (git worktree list), and start an agent on its branch with AGENT-BRIEF's template.
-4. Review and merge finished PRs (AGENT-BRIEF section 1), remove merged worktrees, keep NOW.md "START HERE" current after every merge
-   or dispatch, and send me the screenshots.
-5. Then work NOW.md's queue in order.
-Delegate the coding to agents, test only the touched code by day (the full regression runs nightly), merge on typecheck, the agent's own
-tests and your review, and keep me posted with screenshots. I test on http://localhost:5174.
+You are the new lead on CapitalEmpire (GitHub rumcan/CapitalEmpire), a 1985 golf events manager game. Your folder is
+E:\Repos\CapitalEmpire\worktrees\lead-typecheck. First run `git status` (commit nothing that is not yours), then
+`git fetch origin && git checkout -B lead/takeover-<date> origin/main`, and read docs/NOW.md section "START HERE" there and follow it.
+Load the sq-distortion-check skill once (.claude/skills/sq-distortion-check/SKILL.md) and apply it all session.
 ```
+NOW.md "START HERE" holds everything else: what to read, how to restart the agents and the 5174 auto-updater, the owner's rules, what is in
+flight, the queue, and the owner's art that is waiting.
 
 ## A coding ticket (one per in-progress issue)
 ```
 You are a developer on CapitalEmpire (E:\Repos\CapitalEmpire, GitHub rumcan/CapitalEmpire), a golf events manager game.
-Your ticket is T<nnn>, GitHub issue #<n>. Read CLAUDE.md and docs/AGENT-BRIEF.md, then the issue and its comments; the last
-progress comment ends with "To resume". Check out the branch it names: `git worktree list` shows if a worktree still has it; otherwise
-`git -c checkout.workers=1 worktree add .claude/worktrees/t<nnn> <branch>`. Commit any WIP left there, then carry on.
+Your ticket is T<nnn>, GitHub issue #<n>. Read the issue and its comments; the last progress comment ends with "To resume". Check out
+the branch it names: `git worktree list` shows if a worktree still has it; otherwise
+`git -c checkout.workers=1 worktree add .claude/worktrees/t<nnn> <branch>`. Work only in that worktree: read its CLAUDE.md and
+docs/AGENT-BRIEF.md (not the main checkout's, which are old). Commit any WIP left there, then carry on.
 Follow AGENT-BRIEF's rules (disk, memory, ports, tests, art, PR) and its progress protocol: push and comment on the issue after every
 sub-step, ending with "To resume". Open the PR when done; do not merge (the lead merges).
 ```
@@ -46,5 +44,6 @@ Each keeps its own handover doc with a start prompt at the top. Paste that promp
     80da0db (the owner approved): `git show origin/art/people-ground-20261024:docs/HANDOVER-PEOPLE.md`.
   - **Batch loop:** a loop makes the last 12 people (`make-cast-loop.sh` in a hidden Git Bash, restarted 2026-10-26 05:37 UTC). It waits
     out RUN's daily cap and dies if the app or PC stops, so a new chat restarts it as the handover says.
-- **Nightly regression:** a scheduled task ("CapitalEmpire nightly regression", about 02:06). It needs no prompt, but it needs its
-  commands allowed so it can run unattended. Its report goes to `E:/ClaudeTemp/nightly/<date>.md`.
+- **Nightly regression:** planned as a scheduled task ("CapitalEmpire nightly regression", about 02:00) but **not set up yet**
+  (2026-10-28): the last full run was by hand on 2026-10-27 (`E:/ClaudeTemp/nightly/2026-10-27.md`, all green). Its report goes to
+  `E:/ClaudeTemp/nightly/<date>.md`.

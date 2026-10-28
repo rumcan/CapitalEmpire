@@ -21,14 +21,16 @@ import { GroundCache } from './ground-cache';
 import { GAME_BOOT, clampCentre, flatTerrain, type BootOptions } from './boot';
 import { TILE_BANDS, TILES_REVISION, anchorAt, bandAt, bandRange, bandsAhead, cellOf, cellsIn, coverageOf, drawnScale, nearUntil, nextBand, tiledFamily, tileIndex, tilePermutation, tileScreenPx, tileSize, tileSpec } from './painted-tiles';
 import { onPaintedSurfaces, paintedSurfaces } from './painted-surfaces-live';
-import { collarDefault, finishBorders, finishOf } from './course-finish';
+import { borderDefault, finishBorders, finishOf } from './course-finish';
 import { chunkLayers, pictureCurrent, prebakeTargets } from './ground-layers';
 import { clampGrassArt, grassZoomLevels, type GrassArt } from './painted-grass-lod';
 import { lotBatch, type CourseTex, type LotPatch } from './ground-protocol';
 import { BLOCK_MAX_AREA, enclosedBlocks } from './blocks';
 import { blockLawn, lotLawn } from './lawns';
 import { PaintTool } from './paint-tool';
-import { courseTexOf, surfaceBands } from './course-look';
+import { courseLookSet, type LookStyle } from './course-look';
+import { FACILITY_OWNERS, LOOK_KINDS, holeOwner, ownerHole, seedOwner, type FacilityOwner } from './golf/looks';
+import { facilityAt } from './golf/practicebuild';
 import { escapeLadder, numberKeyUse, pickTool, switchSideMode, type EscCard, type EscLadder, type SideMode } from './tool-modes';
 import type { PresetProp } from './golf/holepreset';
 import { OWNER_SCALE, STUDIO_SCALE } from './lots/scales';
@@ -45,17 +47,18 @@ import { welcomeReady } from './golf/firstview';
 /** the hints' anchors (T188: their Show me pulses the control) where the hint is no guide step */
 const HINT_ANCHOR: Readonly<Record<string, string>> = { 'hint-range-open': 'range-chip', 'hint-range-upgrade': 'range-chip', 'hint-range-props': 'rail-facilities', 'hint-range-first-hole': 'new-hole' };
 import { RANGE_LABEL_Z, defaultRangeBiz, parkLabel, practiceAppeal, rangeMapLabel, rangeNewSeason, rangeStats, rangeStructures, type RangeCounts, type RangeUpgradeId } from './golf/rangebiz';
-import { areaAt, brushTextures, toTuple, type PaintTuple, type PaintTex } from './paint';
-import { CELL_T, SURF, cellAt, diffBox, encodeGrid, fillPolygon, fitGrid, landGridBox, makeGrid, paintDisc, paintStroke, type Grid as CourseGrid, type GridDiff, type GridSave } from './ext/course-grid';
+import { areaAt, brushTextures, toTuple, type BrushKind, type PaintTuple, type PaintTex } from './paint';
+import { CELL_T, SURF, cellAt, cellCentre, diffBox, encodeGrid, fillPolygon, fitGrid, landGridBox, makeGrid, paintDisc, paintStroke, type Grid as CourseGrid, type GridDiff, type GridSave } from './ext/course-grid';
 import { STAIR_REACH } from './ext/course-walls';
 import { SURFACE_TEX_ID, SURF_SURFACE, areaRank, growingHoles, ringArea, type GridArea } from './ext/course-grid/areas';
 import { aimsFromPlans, decodePlans, encodePlans, frameView, planSeed, type FreeRect, type WizardGhost } from './ext/hole-wizard';
 import type { HolePlan } from './ext/hole-plan';
 import { FRAME_CONIFER_IDS, FRAME_RULES, FRAME_TREE_KEY, cartLanes, frameHole, framePrice, landingSpots, type FrameSite, type FrameTree } from './golf/holeframe';
 import { FOREST_CLEAR, LABEL_FADE_ALPHA, LABEL_FADE_PX, TOWN_CLEAR, plantedTreeCleared, propTreeCleared, treesCleared, type NearTree } from './ext/hole-wizard/extras';
-import { holeAreas, holeCard, markerMove, swapHoleNumbers, type HoleCardView, type HoleFix } from './golf/holecard';
+import { holeAreas, holeCard, markerMove, swapHoleNumbers, teeLengths, type HoleCardView, type HoleFix } from './golf/holecard';
+import { captureHole, joinHoles, loadBrowserHoles, sameHole, saveBrowserHoles, type MyHole } from './golf/myholes';
 import { isCourseArea, loadCourseGrid, migrateAreas } from './ext/course-grid/migrate';
-import { COURSE_PATCH_REACH, courseChunksIn, courseEditReach, courseGrowKey, courseKey, courseStyles, growStatic, widestCollar, type CourseLooks } from './ext/course-grid/patch';
+import { COURSE_PATCH_REACH, courseChunksIn, courseEditReach, courseGrowKey, courseKey, courseStyles, growStatic, widestCollar, type CourseLooks, type CourseOwners } from './ext/course-grid/patch';
 import { CourseContour, type CourseChunkOut } from './course-contour';
 import { surfacePreset } from './paint-presets';
 import { plantPoints, plantPool, type PlantBrushKind } from './plant';
@@ -132,14 +135,14 @@ import { baysBox, boxesMeet, workerBay, workerShown, type TileBox } from './park
 import { parkRideNeeds } from './golf/parkride';
 import { applyCourseConsultantQuality, effectiveGrowInClockMonth, findGolfCard, isGolfCardId, parkRideNeedsWithCards } from './golf/golfcards';
 import type { CourseFacts } from './golf/tour';
-import { surfaceOfTex } from './golf/costs';
+import { surfaceOfTex, unitBuildCost } from './golf/costs';
 import { inSentence, inTheWay, rectPoly, ringWhy, routeObstacles, structureObstacles, type Obstacle, type Structure } from './route-obstacles';
 import { judgeRing, rangePieceName, ringGrows, type RingProp, type RingVerdict } from './ring-clear';
 import { isSecondTap, routeAct, type RouteInput, type Tap } from './route-input';
 import { buyAdjacentBlock, COURSE_LAND_MSG, blockOnRoad, blockOnWater, pointInLand, polyInParcels, type LandRoad, type ParcelLandClass } from './golf/parcels';
 import { BAND_LABEL, LandSale } from './golf/land-sale';
 import { buildCourseStatsPanel, type CourseStatsPanel } from './golf/coursestats';
-import { TILE_M, type CourseArea, type CourseLayout, type GolfSurface } from './golf/types';
+import { TILE_M, type CourseArea, type CourseLayout, type GolfSurface, type Pin, type TeeKind, type TeeMark } from './golf/types';
 import { deriveHoles, surfaceAt, validateMarkerPlacement, type Hole } from './golf/holes';
 import { CHEER_TILES, DayFinish, LiveGroup, OWNER_ADDRESS, OWNER_ART, OWNER_SKILL, POWER, PUTT_POWER, PlayView, allowedClubs, cartPaths, type CartPaths, type PlayCart, boardRows, carryM, championLine, dayRound, makeCourseView, powerFor, resultsDue, shortName as golferShort, stateAt, standings, toParText, waitText, waveLine, type BoardRow, type Club, type CourseView, type OwnerTurn, type RoundPlan, type Sex } from './golf/play';
 import { holeViews, markerPlan, tagByHole, type HoleView, type MarkerKind } from './golf/holeview';
@@ -148,7 +151,8 @@ import { SPEC_LOOK, clampSpecLook, specGain, type SpecLook } from './lamp-reflec
 import { clampGrade, gradeFrame, loadGrade, saveGrade, type GradeSettings } from './grade';
 import { glossGain } from './swamp';
 import { contactLean } from './shadow-shape';
-import { MARKER_SCALE, OLD_TEE_IDS, PIN_RED_ID, PIN_YELLOW_ID, TEE_BACK_ID, TEE_FORWARD_ID, TEE_MIDDLE_ID } from './golf/dressing';
+import { MARKER_SCALE, OLD_TEE_IDS, PIN_RED_ID, PIN_YELLOW_ID, teePropId } from './golf/dressing';
+import { BOX_LEN_M, BOX_WID_M, TEE_KINDS, TEE_SET, addTeeSpot, layoutMarkers, markerWarnings, teeBox } from './golf/teesets';
 import { FALLBACK_STRUCTURE_SPRITE, STRUCTURE_SPRITE, STRUCTURE_SPRITE_OLD } from './golf/structure-art';
 import { checkStructurePlacement, findStructureIndexAt, structureRect, structuresNeeds, type PlacedEventStructure, type StructurePlacementCheck } from './golf/eventtool';
 import { STRUCTURE } from './golf/tents';
@@ -258,7 +262,7 @@ const ownerArt = (sex: Sex): number => { const i = GOLFER_PEOPLE.findIndex(p => 
 interface GolfPlay { plan: RoundPlan; view: CourseView; pv: PlayView; key: number; art: number[]; finish: DayFinish; own: OwnerPlay | null; waves: number }
 /** the owner's play in the day (docs/GOLF-PLAY.md decision 7, P4b): his golfer's id, sex and skill, his group's tee time, his live group (live.ts), his next
  *  turn (null once his group is done), and the count of inputs he had played when he handed to the caddie (null while he plays) */
-interface OwnerPlay { id: number; sex: Sex; skill: number; tee: number; live: LiveGroup; turn: OwnerTurn | null; caddie: number | null }
+interface OwnerPlay { id: number; sex: Sex; skill: number; tee: number; live: LiveGroup; turn: OwnerTurn | null; caddie: number | null; /** T254: his tee set */ tees?: TeeKind }
 /** the owner's open shot (P4b, the shot panel): his turn and his input so far (the club, the aim point in tiles, the power: see powerFor) */
 export interface ShotState { turn: OwnerTurn; input: { club: Club; aim: Pt; power: number } }
 /** the day's leaderboard (docs/GOLF-PLAY.md decision 8): the game minute of the day, the top rows and the owner's (boardRows), the champion's line once
@@ -613,7 +617,10 @@ export class Game {
     digPond: (x, y, r, where) => this.digPond(x, y, r, where),
     propsIn: b => this.propGrid.query(b), props: () => this.props, propName: p => (p.decor ? DECOR_BY_KEY.get(p.decor)?.name : p.auto === 'range:shop' ? 'the shop' : undefined) ?? LIBRARY[p.item]!.name,
     scene: () => this.range.scene,
-    addProp: (item, x, y, k) => this.addProp(item, x, y, false, k), removeProp: p => { this.removeProp(p); if (LIBRARY[p.item]!.kind === 'lamp') this.syncLamps(); },
+    // T257: a natural prop the player mirrored (R) keeps that look; a tree's mirror is on top of its sun's (tree-sun.ts: drawn mirrored when its
+    // art is lit from the left), so flipOf reads back the player's
+    addProp: (item, x, y, k, flip = false) => this.addProp(item, x, y, this.treeLit(item) !== flip, k, undefined, { own: true }), removeProp: p => { this.removeProp(p); if (LIBRARY[p.item]!.kind === 'lamp') this.syncLamps(); },
+    flipOf: p => p.flip !== this.treeLit(p.item),
     propAt: (mx, my) => this.propAt(mx, my), tileAt: (mx, my) => this.tileAt(mx, my),
     selected: () => this.selected, select: p => { this.selected = p; }, hover: p => { this.hoverProp = p; },
     money: () => this.money, spend: n => this.traffic.spend('construction', n),
@@ -637,7 +644,9 @@ export class Game {
     if (this.tool === 'practice') this.practice.arm(kind, show);
   }
   /** what a placed prop sells for (the bulldozer, Delete): half a Props tool item's price (T131), else half its library price, nothing for a plant */
-  private sellValue(p: Prop): number { const d = p.decor ? DECOR_BY_KEY.get(p.decor) : undefined; return d ? sellBack(d) : p.plant ? 0 : Math.round(LIBRARY[p.item]!.cost * 0.5); }
+  private sellValue(p: Prop): number { const d = p.decor ? DECOR_BY_KEY.get(p.decor) : undefined; return d ? sellBack(d, this.decor.sizeOf(p, d)) : p.plant ? 0 : Math.round(LIBRARY[p.item]!.cost * 0.5); }
+  /** T257: whether a library item is a tree drawn mirrored for its sun (tree-sun.ts: its art lit from the left) */
+  private treeLit(item: number): boolean { const it = LIBRARY[item]!; return it.kind === 'tree' && TREE_MIRROR.has(it.id); }
   /** the before / after snapshot (the bottlenecks panel): the game hour it was taken at, the window before (null: no traffic on record yet), and the next rush, [start, end] in absolute game hours */
   snapshot: { at: number; before: Window | null; after: [number, number] } | null = null;
   /** a ring pulsed for 4 s where the camera jumped (see jumpTo): the tile and the time (performance.now, ms) */
@@ -712,7 +721,7 @@ export class Game {
   /** a drag in progress; build: a right-button press in the road tool (released without moving, it builds the route, as Enter) */
   private dragging: null | { kind: 'pan' | 'bulldoze' | 'park'; sx: number; sy: number; camX: number; camY: number; moved: boolean; /** T207: a road tool right-click: on release without a drag it takes back the last point */ back?: boolean; aim?: Pt; /** a Select click's hole under it (0: none; T174) */ hole?: number; /** T200: a click on Land for sale's overlay (it opens the block's card on release, never buys) */ land?: Pt } = null;
   /** the Paint tool: painted ground areas, its settings and the outline being drawn (docs/PAINT-TOOL.md) */
-  paint = new PaintTool({ collarDefault: s => collarDefault(s, finishOf(paintedSurfaces())) ?? undefined, progress: () => this.bump('pieces'), setLotGround: (k, p) => { this.paintRev++; this.setLotGround(k, p); }, emit: () => this.emit(), save: () => this.scheduleSave(), toast: (t, k) => this.toast(t, k), affine: o => this.paintAffine(o), placeProps: (ps, seed) => this.placePresetProps(ps, seed), golfMode: () => this.golfMode, money: () => this.money, spend: n => this.traffic.spend('construction', n), ownedLand: pts => !this.golf || polyInParcels(this.golf.parcels ?? [this.golf.parcel], pts), currentMonth: () => !this.golf ? 0 : this.golfMonthIndex(), plant: (ids, x, y, r, spacing, size, seed) => this.plantProps(ids, x, y, r, spacing, size, seed), unplant: (x, y, r) => this.unplantProps(x, y, r), plantPool: k => plantPool(LIBRARY, k), courseHeight: () => this.courseHeight, roadsNear: (x, y, r) => { let k = 0; return [...this.net.segsNear({ x, y }, r)].map(s => ({ id: ++k, ax: s.a.x, ay: s.a.y, bx: s.b.x, by: s.b.y, halfWidthTiles: s.cls.h + s.cls.walk })); }, roadRev: () => this.net.version, heightChanged:b => { this.courseHeightChanged(unionCourseBox(b, this.flattenRoadsIn(b))!); },
+  paint = new PaintTool({ collarDefault: s => borderDefault(s, finishOf(paintedSurfaces())), progress: () => this.bump('pieces'), setLotGround: (k, p) => { this.paintRev++; this.setLotGround(k, p); }, emit: () => this.emit(), save: () => this.scheduleSave(), toast: (t, k) => this.toast(t, k), affine: o => this.paintAffine(o), placeProps: (ps, seed) => this.placePresetProps(ps, seed), golfMode: () => this.golfMode, money: () => this.money, spend: n => this.traffic.spend('construction', n), ownedLand: pts => !this.golf || polyInParcels(this.golf.parcels ?? [this.golf.parcel], pts), currentMonth: () => !this.golf ? 0 : this.golfMonthIndex(), plant: (ids, x, y, r, spacing, size, seed) => this.plantProps(ids, x, y, r, spacing, size, seed), unplant: (x, y, r) => this.unplantProps(x, y, r), plantPool: k => plantPool(LIBRARY, k), courseHeight: () => this.courseHeight, roadsNear: (x, y, r) => { let k = 0; return [...this.net.segsNear({ x, y }, r)].map(s => ({ id: ++k, ax: s.a.x, ay: s.a.y, bx: s.b.x, by: s.b.y, halfWidthTiles: s.cls.h + s.cls.walk })); }, roadRev: () => this.net.version, heightChanged:b => { this.courseHeightChanged(unionCourseBox(b, this.flattenRoadsIn(b))!); },
     journal: { begin: () => { this.propLog = { added: [], removed: [] }; }, end: () => { const j = this.propLog; this.propLog = null; return j && (j.added.length || j.removed.length) ? j : null; }, undo: j => this.swapProps(j as PropLog, true), redo: j => this.swapProps(j as PropLog, false) },
     changed: pins => this.syncCourseMarkers(pins),
     grid: () => this.courseGrid, gridChanged: (d, flush) => { this.range.practiceCells(this.courseGrid, d); this.courseGridChanged(d, flush); }, gridAreas: () => this.gridAreaList(),
@@ -728,9 +737,17 @@ export class Game {
     landBox: () => { const L = this.golf ? this.golfLand() : []; if (!L.length) return null; return [Math.min(...L.map(r => r[0])), Math.min(...L.map(r => r[1])), Math.max(...L.map(r => r[0] + r[2])), Math.max(...L.map(r => r[1] + r[3]))]; },
     publicRoads: b => [...this.net.segsNear({ x: (b[0] + b[2]) / 2, y: (b[1] + b[3]) / 2 }, Math.hypot(b[2] - b[0], b[3] - b[1]) / 2 + 4)].filter(s => s.kind !== SK.TUNNEL && !isCourseClass(s.cls.id)).map(s => ({ ax: s.a.x, ay: s.a.y, bx: s.b.x, by: s.b.y, name: this.roadNameOfSeg(s) })),
     treesCleared: () => this.ghostTrees.set.length, // T176
-    frameBuilt: (h, p) => this.frameBuilt(h, p), frameGhost: () => this.wizardFrameTrees(), frameCost: () => this.wizardFrame()?.price ?? 0, // T229
+    frameBuilt: (h, p, layout) => this.frameBuilt(h, p, layout), frameGhost: () => this.wizardFrameTrees(), frameCost: () => this.wizardFrame()?.price ?? 0, // T229
     holeLines: () => { const g = this.golf; if (!g) return []; return g.pins.flatMap(p => { const t = g.tees.find(q => q.hole === p.hole && q.kind === 'back') ?? g.tees.find(q => q.hole === p.hole); return t ? [{ hole: p.hole, line: [{ x: t.x, y: t.y }, { x: p.x, y: p.y }] }] : []; }); },
-    courseLook: () => this.resendCourse() });
+    courseLook: () => this.resendCourse(),
+    // T256 (#743): the looks book (each hole's, the property's and each facility's looks), the facility My looks edits, your land for Range ›
+    // Build (the range's plot too), and an owner's look changed: its cells alone are drawn again
+    lookBook: () => (this.golf ? (this.golf.looks ??= {}) : null), facility: () => (this.tool === 'practice' ? this.practice.kind : null),
+    landAt: (x, y) => this.ownedAt(x, y), lookChanged: o => this.ownerLookChanged(o),
+    frameTreePrice: () => DECOR_BY_KEY.get(FRAME_TREE_KEY)?.price ?? 0, placeFrame: (n, trees) => this.placeSavedFrame(n, trees),
+    // T254 (#736): Edit Hole Layout moves the markers (one undo step with them), and its warnings read where they would stand
+    layoutBuilt: (n, base, plan) => this.layoutBuilt(n, base, plan), placeTees: (n, tees) => this.placeTees(n, tees), markersKey: () => this.markersKey(), setMarkers: k => this.setMarkers(k),
+    markersOf: n => ({ pin: this.golf?.pins.find(p => p.hole === n) ?? null, tees: this.golf?.tees.filter(t => t.hole === n) ?? [] }) });
   /** the hole plans change (a wizard build, edit or delete, or their undo and redo; T102): golf.aims follow the plans' bends, so the holes'
    *  playing lines run through them (no dogleg warning) */
   private setGolfPlans(p: unknown[]) {
@@ -775,7 +792,10 @@ export class Game {
     if (f.kind === 'edit') { this.editHole(n); return; }
     if (f.kind === 'brush') { this.setTool('course'); if (this.tool !== 'course') return; this.paint.setHole(n); this.paint.setBrush(f.surface); this.emit(); return; }
     if (!this.holesTool) this.toggleHolesTool();
-    this.selectGolfMarker(n, f.marker);
+    // T254: the tees' Fix picks up the hole's first set (blue, white, yellow, red: the one off its tee first)
+    const g = this.golf, areas = this.courseAreaList(), mine = TEE_KINDS.flatMap(k => g?.tees.find(t => t.hole === n && t.kind === k) ?? []);
+    const tee = mine.find(t => surfaceAt(areas, t.x, t.y) !== 'tee') ?? mine[0];
+    this.selectGolfMarker(n, f.marker === 'pin' ? 'pin' : tee?.kind ?? 'middle');
   }
   /** Edit hole (the hole card, the Holes panel's status line): New hole's editor on hole n's plan, framed by the camera, with a toast
    *  (PaintTool.editHole; T205: when it is already open it stays, drags and all); the card closes. False with a toast for a hole painted by
@@ -790,10 +810,78 @@ export class Game {
     if (!shown && typeof requestAnimationFrame === 'function') { const pts = this.paint.wizard.planView(); requestAnimationFrame(() => this.fitView(pts, true)); }
     return true;
   }
-  /** Delete (after the card's confirm): hole n's plan and the cells it laid (PaintTool.deletePlan: no refund, your touch-ups stay) */
-  deleteHole(n: number): boolean {
-    this.setTool('course'); if (this.tool !== 'course' || !this.paint.editPlan(n)) return false;
-    const ok = this.paint.deletePlan(); if (ok) this.closeHoleCard(); return ok;
+  /** Delete (after the card's confirm; T256, #743): hole n with its paint, as one undo step (PaintTool.deleteHole): "Delete hole and its
+   *  grass" (keep false) takes every cell of the hole back to the land, touch-ups included, with no refund, and its frame trees (T229) with
+   *  it; "Delete hole, keep the grass" (keep true) leaves its cells as your property's paint and its frame trees as plain trees. Its plan and
+   *  its looks go either way; the property's paint and the other holes' stay */
+  deleteHole(n: number, keep = false): boolean {
+    const ok = this.paint.deleteHole(n, keep, () => {
+      for (const p of [...this.props]) {
+        if (p.frame !== n) continue;
+        this.removeProp(p);
+        if (keep) { const q = this.addProp(p.item, p.x, p.y, p.flip, p.scale); if (p.decor) q.decor = p.decor; }
+      }
+      this.frameRev++;
+    });
+    if (ok) { this.closeHoleCard(); this.holeCache = null; this.cardCache = null; }
+    return ok;
+  }
+  // ---------- T256 (#743): Range › Build, My holes ----------
+  /** Range › Build (and Facilities › Build on your property): the course tool with the property's brush (the same painting tools as the holes,
+   *  painting cells of no hole: the range, the practice area, the rest of your land) */
+  openPropertyPaint(kind: BrushKind = this.paint.brushKind === 'path' ? 'fairway' : this.paint.brushKind) {
+    if (!this.golf || !this.courseGrid) { this.toast('Build paints a golf course\'s land', 'warn'); return; }
+    if (this.range.cardOpen) this.openRangeCard(false);
+    this.setTool('course'); if (this.tool !== 'course') return;
+    this.paint.setProperty(true, kind); this.emit();
+  }
+  private myHolesMemo: { key: string; v: MyHole[] } | null = null; private myHolesRev = 0;
+  /** My holes: this game's saved holes, then the browser's from other games (the same hole once) */
+  myHoles(): MyHole[] {
+    const key = `${this.myHolesRev}|${this.golf?.myHoles?.length ?? -1}`;
+    if (this.myHolesMemo?.key !== key) this.myHolesMemo = { key, v: joinHoles(this.golf?.myHoles ?? [], loadBrowserHoles()) };
+    return this.myHolesMemo.v;
+  }
+  /** Save hole (the hole card): hole n as a My holes entry named name, its frame trees with it when trees: kept in the game and the browser
+   *  (one of the same name is replaced); false with a toast when the hole has no cell */
+  saveMyHole(n: number, name: string, trees = true): boolean {
+    const gs = this.golf, g = this.courseGrid; if (!gs || !g) return false;
+    const plan = decodePlans(gs.plans ?? []).find(p => p.hole === n) ?? null, pin = gs.pins.find(p => p.hole === n) ?? null;
+    let tee: Pt | null = plan?.tee ?? gs.tees.find(t => t.hole === n && t.kind === 'back') ?? gs.tees.find(t => t.hole === n) ?? null;
+    if (!tee) { // a hole painted by hand with no marker yet: its tee cells' middle, else its first cell
+      let x = 0, y = 0, k = 0, first = -1;
+      for (let i = 0; i < g.hole.length; i++) { if (g.hole[i] !== n || g.surf[i] === SURF.none) continue; if (first < 0) first = i; if (g.surf[i] === SURF.tee) { const c = cellCentre(g, i); x += c.x; y += c.y; k++; } }
+      tee = k ? { x: x / k, y: y / k } : first >= 0 ? cellCentre(g, first) : null;
+    }
+    if (!tee) { this.toast(`Hole ${n} has nothing to save yet`, 'warn'); return false; }
+    const frame = trees ? [...this.props].filter(p => p.frame === n).map(p => ({ id: LIBRARY[p.item]!.id, x: p.x, y: p.y, flip: p.flip, scale: p.scale })) : [];
+    const v = this.courseHoleViews()[n - 1], m = teeLengths(n, gs.pins, gs.tees, gs.aims ?? [])[0]?.m;
+    const tees = gs.tees.filter(t => t.hole === n).map(t => ({ kind: t.kind, x: t.x, y: t.y })); // T254: its tee sets go with it
+    const h = captureHole(n, { grid: g, plan, tee, pin, field: this.courseHeight, looks: gs.looks?.[holeOwner(n)] ?? null, frame, name: name || `Hole ${n}`, ...(v?.par ? { par: v.par } : {}), ...(m ? { m } : {}), tees });
+    if (!h) { this.toast(`Hole ${n} has nothing to save yet`, 'warn'); return false; }
+    gs.myHoles = joinHoles([...(gs.myHoles ?? []).filter(q => q.name !== h.name), h], []);
+    saveBrowserHoles(joinHoles(loadBrowserHoles().filter(q => q.name !== h.name), [h]));
+    this.myHolesRev++; this.scheduleSave(); this.emit();
+    this.toast(`Hole ${n} saved to My holes as "${h.name}": New hole › From My holes builds it again`, 'good');
+    return true;
+  }
+  /** takes a saved hole out of My holes (this game's and the browser's) */
+  forgetMyHole(h: MyHole) {
+    const gs = this.golf; if (gs?.myHoles) gs.myHoles = gs.myHoles.filter(q => !sameHole(q, h));
+    saveBrowserHoles(loadBrowserHoles().filter(q => !sameHole(q, h)));
+    this.myHolesRev++; this.scheduleSave(); this.emit();
+  }
+  /** a saved hole's frame trees planted for hole n (inside the placing undo step), each paid for as a frame tree while the money lasts;
+   *  returns what it spent ($) */
+  private placeSavedFrame(n: number, trees: readonly { id: string; x: number; y: number; flip: boolean; scale: number }[]): number {
+    const d = DECOR_BY_KEY.get(FRAME_TREE_KEY), price = d?.price ?? 0; let spent = 0;
+    for (const t of trees) {
+      const i = LIB_INDEX.get(t.id); if (i === undefined || this.money - spent < price) continue;
+      const k = Math.min(maxDrawScale(i), t.scale); if (this.canPlace(LIBRARY[i]!, t.x, t.y, false, k)) continue;
+      const p = this.addProp(i, t.x, t.y, t.flip, k); p.decor = FRAME_TREE_KEY; p.frame = n; spent += price;
+    }
+    if (spent) this.traffic.spend('construction', spent);
+    this.frameRev++; return spent;
   }
   /** renumbering (D4.12): hole a's badge dropped on hole b's: the two trade numbers wherever a number lives (golf/holecard.ts
    *  swapHoleNumbers: the grid's hole layer, the plans, the pins, tees and aim points, the painted areas); the markers' props follow; the
@@ -803,11 +891,13 @@ export class Game {
     const before = grid ? grid.hole.slice() : null;
     const r = swapHoleNumbers(a, b, { grid, pins: g.pins, tees: g.tees, aims: g.aims ?? [], plans: decodePlans(g.plans ?? []), areas: this.paint.areas });
     // the markers' props are keyed by hole (the pin of hole 9 is yellow): drop both holes' and put them back under their new numbers
-    for (const h of [a, b]) for (const k of ['pin', 'back', 'middle', 'forward'] as const) { const key = k === 'pin' ? 'pin:' + h : `tee:${h}:${k}`, pr = this.golfProps.get(key); if (pr) { this.removeProp(pr); this.golfProps.delete(key); } }
+    for (const h of [a, b]) for (const k of ['pin', ...TEE_KINDS] as const) { const key = k === 'pin' ? 'pin:' + h : `tee:${h}:${k}`, pr = this.golfProps.get(key); if (pr) { this.removeProp(pr); this.golfProps.delete(key); } }
     g.pins = r.pins; g.tees = r.tees; g.aims = r.aims; g.plans = encodePlans(r.plans);
     for (const p of this.props) if (p.frame === a) p.frame = b; else if (p.frame === b) p.frame = a; // T229: the frame trees follow their hole
+    // T256: so do their looks
+    const bk = g.looks; if (bk) { const la = bk[holeOwner(a)], lb = bk[holeOwner(b)]; if (lb) bk[holeOwner(a)] = lb; else delete bk[holeOwner(a)]; if (la) bk[holeOwner(b)] = la; else delete bk[holeOwner(b)]; this.paint.looksRev++; }
     for (const m of [...g.pins.filter(q => q.hole === a || q.hole === b).map(q => ({ ...q, kind: 'pin' as const })), ...g.tees.filter(q => q.hole === a || q.hole === b)]) {
-      const item = LIB_INDEX.get(m.kind === 'pin' ? (m.hole === 9 ? PIN_YELLOW_ID : PIN_RED_ID) : m.kind === 'back' ? TEE_BACK_ID : m.kind === 'middle' ? TEE_MIDDLE_ID : TEE_FORWARD_ID);
+      const item = LIB_INDEX.get(m.kind === 'pin' ? (m.hole === 9 ? PIN_YELLOW_ID : PIN_RED_ID) : teePropId(m.kind));
       if (item !== undefined) this.golfProps.set(m.kind === 'pin' ? 'pin:' + m.hole : `tee:${m.hole}:${m.kind}`, this.addProp(item, m.x, m.y, false, MARKER_SCALE[m.kind]));
     }
     if (grid && before && r.cells.length) {
@@ -897,13 +987,14 @@ export class Game {
     this.syncCourseGates(); // the galleries follow the greens and tees
     this.scheduleSave(); this.emit();
   }
-  /** places or moves a pin or tee marker with its prop, marked auto (it goes when its green or tee is gone) */
-  private setGolfMarker(hole: number, kind: MarkerKind, x: number, y: number) {
+  /** places or moves a pin or tee marker with its prop, marked auto (it goes when its green or tee is gone); held (T254, Edit Hole Layout): it
+   *  stays where it is put, off its turf or not */
+  private setGolfMarker(hole: number, kind: MarkerKind, x: number, y: number, held = false) {
     const g = this.golf!; this.removeGolfMarker(hole, kind);
-    const sprId = kind === 'pin' ? (hole === 9 ? PIN_YELLOW_ID : PIN_RED_ID) : kind === 'back' ? TEE_BACK_ID : kind === 'middle' ? TEE_MIDDLE_ID : TEE_FORWARD_ID;
+    const sprId = kind === 'pin' ? (hole === 9 ? PIN_YELLOW_ID : PIN_RED_ID) : teePropId(kind);
     const item = LIB_INDEX.get(sprId);
     if (item !== undefined) this.golfProps.set(kind === 'pin' ? 'pin:' + hole : `tee:${hole}:${kind}`, this.addProp(item, x, y, false, MARKER_SCALE[kind]));
-    if (kind === 'pin') g.pins.push({ hole, x, y, auto: true }); else g.tees.push({ hole, kind, x, y, auto: true });
+    if (kind === 'pin') g.pins.push({ hole, x, y, auto: !held, ...(held ? { held } : {}) }); else g.tees.push({ hole, kind, x, y, auto: !held, ...(held ? { held } : {}) });
     if (kind === 'pin' && g.start === 'range') this.sendGolf(); // T090: a new hole speeds a range start's town
   }
   /** removes a pin or tee marker and its prop (if there is one) */
@@ -912,6 +1003,79 @@ export class Game {
     if (prop) { this.removeProp(prop); this.golfProps.delete(key); }
     const L: { hole: number; kind?: string }[] = kind === 'pin' ? g.pins : g.tees;
     for (let i = L.length - 1; i >= 0; i--) if (L[i]!.hole === hole && (kind === 'pin' || L[i]!.kind === kind)) L.splice(i, 1);
+  }
+  // ---------- T254 (#736): Edit Hole Layout and the four tee sets ----------
+  /** Edit Hole Layout's Build (PaintTool.buildLayout, inside its undo step, the plan already saved): hole n's tee sets and flag go with the plan's tee
+   *  and green (golf/teesets.ts layoutMarkers: held there, off their turf or not); no cell changes. Returns the warnings they now stand with */
+  private layoutBuilt(n: number, base: HolePlan, plan: HolePlan): string[] {
+    const g = this.golf; if (!g) return [];
+    const pin = g.pins.find(p => p.hole === n) ?? null, tees = g.tees.filter(t => t.hole === n), r = layoutMarkers(base, plan, pin, tees);
+    if (r.moved.pin && r.pin) this.setGolfMarker(n, 'pin', r.pin.x, r.pin.y, true);
+    if (r.moved.tees) for (const t of r.tees) this.setGolfMarker(n, t.kind, t.x, t.y, true);
+    this.holeCache = null; this.cardCache = null; this.syncCourseGates(); this.scheduleSave();
+    return markerWarnings((x, y) => this.surfaceHere(x, y), r.pin, r.tees);
+  }
+  /** the course surface at tile (x, y): the course grid's where it is painted, else the painted areas' (null: none) */
+  private surfaceHere(x: number, y: number): GolfSurface | null {
+    const grid = this.courseGrid, i = grid ? cellAt(grid, x, y) : -1;
+    return (i >= 0 ? SURF_SURFACE[grid!.surf[i]!] : null) ?? surfaceAt(this.courseAreaList(), x, y);
+  }
+  /** a saved hole placed as hole n (My holes, T256): its tee sets' markers where it had them (T254); the white alone when it saved none */
+  private placeTees(n: number, tees: readonly { kind: TeeKind; x: number; y: number }[]) {
+    const g = this.golf; if (!g || !tees.length) return;
+    for (const t of g.tees.filter(q => q.hole === n)) this.removeGolfMarker(n, t.kind);
+    for (const t of tees) this.setGolfMarker(n, t.kind, t.x, t.y);
+    this.holeCache = null; this.cardCache = null; this.syncCourseGates(); this.scheduleSave();
+  }
+  /** the pins and tee markers as text (an Edit Hole Layout step's undo and redo carry them) */
+  private markersKey(): string { const g = this.golf; return JSON.stringify(g ? [g.pins, g.tees] : [[], []]); }
+  /** the pins and tee markers back as markersKey had them, their props with them */
+  private setMarkers(key: string) {
+    const g = this.golf; if (!g) return;
+    let v: [Pin[], TeeMark[]]; try { v = JSON.parse(key); } catch { return; }
+    for (const p of [...g.pins]) this.removeGolfMarker(p.hole, 'pin');
+    for (const t of [...g.tees]) this.removeGolfMarker(t.hole, t.kind);
+    for (const p of v[0]) { this.setGolfMarker(p.hole, 'pin', p.x, p.y, !!p.held); const q = g.pins[g.pins.length - 1]!; if (p.auto === undefined) delete q.auto; else q.auto = p.auto; }
+    for (const t of v[1]) { this.setGolfMarker(t.hole, t.kind, t.x, t.y, !!t.held); const q = g.tees[g.tees.length - 1]!; if (t.auto === undefined) delete q.auto; else q.auto = t.auto; }
+    this.holeCache = null; this.cardCache = null; this.syncCourseGates(); this.scheduleSave(); this.emit();
+  }
+  /** "Add tee" (the hole card): hole n's set `kind` laid as a new 14 x 8 m tee box behind or ahead along the line of play (golf/teesets.ts
+   *  addTeeSpot), painted as tee turf and priced like a tee (one undo step), its pair of markers on it. False with a toast when it cannot */
+  addTeeSet(n: number, kind: TeeKind): boolean {
+    const g = this.golf; if (!g || !this.courseGrid) return false;
+    const h = deriveHoles(this.courseAreaList(), g.tees, g.pins, g.aims ?? []).find(q => q.n === n);
+    if (!h || h.line.length < 2) { this.toast(`Hole ${n} needs a flag and a tee before another tee set`, 'warn'); return false; }
+    const at = addTeeSpot(kind, g.tees.filter(t => t.hole === n), h.line);
+    if (!at) { this.toast(`Hole ${n} has the ${TEE_SET[kind].colour} tees already`, 'info'); return false; }
+    const r = this.paint.addTeeBox(n, teeBox(at.at, at.dir), `add the ${TEE_SET[kind].colour} tee to hole ${n}`);
+    if (!r) return false;
+    this.setGolfMarker(n, kind, Math.round(at.at.x * 100) / 100, Math.round(at.at.y * 100) / 100);
+    this.holeCache = null; this.cardCache = null; this.syncCourseGates(); this.scheduleSave(); this.emit();
+    this.toast(`Hole ${n}: the ${TEE_SET[kind].colour} tee laid${r.cost ? ` for $${r.cost.toLocaleString()}` : ''} (${TEE_SET[kind].who})`, 'good');
+    return true;
+  }
+  /** "Add tee"'s price: a 14 x 8 m tee box of tee turf at the brush's planting (Seed or Sod), the cells it lays (about; the real price counts the
+   *  cells that change) */
+  teeBoxPrice(): number { return Math.round(((BOX_LEN_M - BOX_WID_M) * BOX_WID_M + Math.PI * (BOX_WID_M / 2) ** 2) * unitBuildCost('tee', this.paint.plantKind)); }
+  /** each tee set's markers on the map (T254: a pair of small balls in the set's colour, drawn in code: the tee marker picture is still to come),
+   *  across the line of play at each set's spot, lit from the upper right, their shadows to the lower left; from the street tier in */
+  private drawTeeMarkers(ctx: CanvasRenderingContext2D) {
+    const g = this.golf; if (!g || !g.tees.length || this.cam.z < 0.1) return;
+    const d = this.dpr, a = this.screen(0, 0), b = this.screen(1, 0), tilePx = Math.hypot(b.x - a.x, b.y - a.y), r = Math.max(2.2 * d, tilePx * 0.22);
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    for (const t of g.tees) {
+      const pin = g.pins.find(p => p.hole === t.hole), aim = (g.aims ?? []).filter(q => q.hole === t.hole).sort((p, q) => p.order - q.order)[0] ?? pin;
+      let ux = 1, uy = 0; if (aim) { const L = Math.hypot(aim.x - t.x, aim.y - t.y); if (L > 1e-6) { ux = (aim.x - t.x) / L; uy = (aim.y - t.y) / L; } }
+      const set = TEE_SET[t.kind], half = 1.6; // the pair stands 3.2 tiles (6.4 m) apart, across the line
+      for (const sgn of [-1, 1]) {
+        const p = this.screen(t.x - uy * half * sgn, t.y + ux * half * sgn);
+        if (p.x < -r || p.y < -r || p.x > this.cw + r || p.y > this.ch + r) continue;
+        ctx.beginPath(); ctx.ellipse(p.x - r * 0.35, p.y + r * 0.45, r * 1.05, r * 0.5, 0, 0, Math.PI * 2); ctx.fillStyle = 'rgba(20,30,40,0.28)'; ctx.fill();
+        ctx.beginPath(); ctx.arc(p.x, p.y - r * 0.6, r, 0, Math.PI * 2); ctx.fillStyle = set.fill; ctx.fill();
+        ctx.lineWidth = Math.max(1, 0.9 * d); ctx.strokeStyle = set.rim; ctx.stroke();
+        ctx.beginPath(); ctx.arc(p.x + r * 0.32, p.y - r * 0.95, r * 0.32, 0, Math.PI * 2); ctx.fillStyle = 'rgba(255,255,255,0.55)'; ctx.fill();
+      }
+    }
   }
   /** a golf game's painted course by hole (golf/holeview.ts tagByHole): untagged course areas take the hole they belong to (a hole tag, no
    *  brush kind), so the Course tool's strip and checks see the holes */
@@ -1001,24 +1165,77 @@ export class Game {
       if (gone.size) { this.paint.takeAreas(a => gone.has(a)); this.paintRev++; this.scheduleSave(); }
     } else this.fitCourseGrid();
     this.gaDirty = null; this.gaRev++;
+    this.seedLooks(); // T256: every owner wears today's looks as its own (an old save changes nothing)
     this.resendCourse();
     this.syncCourseMarkers(undefined, true);
   }
-  /** the textures the grid's surfaces wear: the Course brushes' looks (texture, scale, angle, tone and Blend with: course-look.ts), the course
-   *  presets for fescue and waste and the collars, each surface's own collar band (its Border texture, scale, angle and tone) */
+  /** the textures the grid's surfaces wear: the Course brushes' looks (texture, scale, angle, exposure and Blend with: course-look.ts; T261 the
+   *  waste area's too), the course presets for fescue and the collars, each surface's own collar band (its Border texture, scale, angle and
+   *  exposure) */
   private courseLooks(): CourseLooks {
-    const b = this.paint.brush, look = courseTexOf;
     const pre = (s: string, old: string) => ({ tex: surfacePreset(s) ?? old, sc: 1, a: 0 });
-    const surf = [undefined, look(b.rough.style), pre('fescue', 'golfFescue'), look(b.water.style), look(b.fairway.style), look(b.tee.style), look(b.bunker.style), pre('waste', 'wasteSand'), look(b.green.style), look(b.longGrass.style)]; // T238: the long grass (id 9) wears its brush's look
     // the bank is laid in the rough's grass (the renderer paints its wet soil and stones, T099); the Border, Shadow and Height sliders ride along.
     // T227: with the course finish a bunker sits in the fairway's first cut (its lip band's grass), unless the player gave it a Border texture.
-    // T252: course-look.ts surfaceBands works the bands out (the Holes swatches and the brush cursor's chip show the same borders)
-    const { collar, band: by, lipGrass } = surfaceBands(b), band: (CourseTex | undefined)[] = [];
-    band[SURF.fairway] = by.fairway; band[SURF.tee] = by.tee; band[SURF.green] = by.green; band[SURF.bunker] = by.bunker; band[SURF.water] = by.water;
-    return { surf, collar, band, border: this.courseBorders(), shadow: this.paint.courseShadows(), height: this.paint.surfaceHeights(), ...(lipGrass ? { lipGrass } : {}) };
+    // T252: course-look.ts surfaceBands works the bands out (the Holes swatches and the brush cursor's chip show the same borders).
+    // T256: the course default's looks are the base; each hole, the property and each facility wear their own (courseOwners)
+    const { surf, collar, band, lipGrass } = courseLookSet(this.paint.brush, pre), own = this.courseOwners(pre);
+    return { surf, collar, band, border: this.courseBorders(), shadow: this.paint.courseShadows(), height: this.paint.surfaceHeights(), ...(lipGrass ? { lipGrass } : {}), ...(own ? { own } : {}) };
   }
-  /** the collar widths the course is laid with, by surface id: the Border slider's where the player set one, else the course finish's (T227:
-   *  the fairway's first cut and the green's fringe; course-finish finishBorders), else BLOB_STYLE's */
+  /** T256 (#743): the looks each owner wears on the course grid (golf/looks.ts): the property's (the cells of no hole), each hole's and each
+   *  practice facility's (the cells of no hole in its footprint, zones); owners that look alike share one entry; undefined when every owner
+   *  looks as the course default does (the chunks lay exactly as before T256) */
+  private courseOwners(pre: (s: string, old: string) => CourseTex): CourseOwners | undefined {
+    const book = this.golf?.looks; if (!book) return undefined;
+    const base = JSON.stringify(courseLookSet(this.paint.brush, pre)), keys = new Map<string, number>(), looks: CourseOwners['looks'][number][] = [];
+    const idx = (o: string): number => {
+      if (!book[o]) return -1;
+      const v: Partial<Record<BrushKind, { style: LookStyle }>> = {};
+      for (const k of LOOK_KINDS) v[k] = { style: this.paint.lookOf(o, k) };
+      const set = courseLookSet(v, pre), key = JSON.stringify(set); if (key === base) return -1;
+      let i = keys.get(key); if (i === undefined) { i = looks.length; keys.set(key, i); looks.push(set); }
+      return i;
+    };
+    const hole: number[] = [idx('property')];
+    for (const o of Object.keys(book)) { const n = ownerHole(o); if (n) hole[n] = idx(o); }
+    const zones: number[] = [];
+    for (const f of FACILITY_OWNERS) { const k = idx(f), b = k === hole[0] ? null : this.facilityBox(f); if (b) zones.push(k, b[0], b[1], b[2], b[3]); }
+    if (!looks.length) return undefined;
+    for (let n = 0; n < hole.length; n++) hole[n] ??= -1;
+    return { looks, hole, ...(zones.length ? { zones } : {}) };
+  }
+  private facBoxes: { rev: number; g: CourseGrid; v: Map<string, [number, number, number, number] | null> } | null = null;
+  /** T256: a built practice facility's footprint (its green, bunker and chip mat's cells, practicebuild facilityAt) as a tile box grown by
+   *  its fringe and lip, or null (none built); kept until the grid changes */
+  facilityBox(f: FacilityOwner): [number, number, number, number] | null {
+    const g = this.courseGrid, sc = this.range.scene; if (!g || !sc || this.golf?.start !== 'range') return null;
+    if (this.facBoxes?.g !== g || this.facBoxes.rev !== g.rev) this.facBoxes = { rev: g.rev, g, v: new Map() };
+    const m = this.facBoxes.v; if (m.has(f)) return m.get(f)!;
+    const c = this.range.practice?.[f]?.centre, at = c ? facilityAt(g, sc.practice.box, c.x, c.y) : null;
+    let b: [number, number, number, number] | null = null;
+    if (at?.cells.length) {
+      let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+      for (const i of at.cells) { const p = cellCentre(g, i); x0 = Math.min(x0, p.x); y0 = Math.min(y0, p.y); x1 = Math.max(x1, p.x); y1 = Math.max(y1, p.y); }
+      const pad = 2.5; b = [x0 - pad, y0 - pad, x1 + pad, y1 + pad];
+    }
+    m.set(f, b); return b;
+  }
+  /** T256: the looks book of a golf game: an old save's (or a new game's) owners take today's course default as their own (the property, the
+   *  facilities and every hole on the grid or in a plan), so nothing changes on load; a new hole is given its own on its first paint */
+  private seedLooks() {
+    const gs = this.golf; if (!gs) return;
+    const book = gs.looks ??= {}, g = this.courseGrid, holes = new Set<number>();
+    if (g) for (let i = 0; i < g.hole.length; i++) { const h = g.hole[i]!; if (h && g.surf[i] !== SURF.none) holes.add(h); }
+    for (const p of decodePlans(gs.plans ?? [])) holes.add(p.hole);
+    for (const o of ['property', ...FACILITY_OWNERS, ...[...holes].map(h => holeOwner(h))]) seedOwner(book, o, this.paint.dflt);
+    this.paint.looksRev++;
+  }
+  /** T256: owner o's looks changed: only its cells are drawn again (a hole's box; a facility's; the property's: every chunk) */
+  private ownerLookChanged(o: string) {
+    const n = ownerHole(o), b = n ? this.paint.holeBox(n) : o === 'putting' || o === 'chipping' ? this.facilityBox(o) : null;
+    if (b) this.sendCourseChunks(b); else this.resendCourse();
+  }
+  /** the collar widths the course is laid with, by surface id: the Border slider's where the player set one, else the defaults (course-finish
+   *  finishBorders: T227's first cut and fringe with the course finish, BLOB_STYLE's without; T260: none round a tee, a bunker or a pond) */
   private courseBorders(): (number | undefined)[] { return finishBorders(this.paint.courseBorders(), finishOf(paintedSurfaces())); }
   /** T227: the finish's collar widths the course was last laid with (a surfaces save that changes them lays every chunk again) */
   private finishCollars = '';
@@ -1385,8 +1602,9 @@ export class Game {
   }
   /** New hole's Build with Frame with trees on (PaintTool.buildPlan, inside its undo step): the new or edited hole's frame on the built grid;
    *  returns what it spent and the trees it planted and left out (Build's toast says them) */
-  private frameBuilt(n: number, plan: HolePlan): { spent: number; planted: number; left: number } {
-    const f = this.framePlan(n, { plan }); if (!f || (!f.trees.length && !f.stale.length)) return { spent: 0, planted: 0, left: 0 };
+  private frameBuilt(n: number, plan: HolePlan, layout = false): { spent: number; planted: number; left: number } {
+    const f0 = this.framePlan(n, { plan }), f = f0 && layout ? { ...f0, trees: [] } : f0; // T254: a layout edit plants none, it only takes the trees now in play
+    if (!f || (!f.trees.length && !f.stale.length)) return { spent: 0, planted: 0, left: 0 };
     return this.plantFrame(f);
   }
   /** New hole's frame for its ghost (the panel's Frame with trees row): trees and price, or null while it is worked out or the toggle is off */
@@ -1402,7 +1620,8 @@ export class Game {
     if (gh !== c.ghost) { c.ghost = gh; c.since = now; c.done = !gh; if (!gh && c.v) { c.v = null; this.emit(); } return; }
     if (c.done || now - c.since < FRAME_SETTLE_MS) return;
     const pl = this.paint.wizard.plan; c.done = true;
-    c.v = gh && pl ? this.framePlan(pl.hole, { ghost: gh, plan: pl }) : null;
+    const fp = gh && pl ? this.framePlan(pl.hole, { ghost: gh, plan: pl }) : null;
+    c.v = fp && this.paint.wizard.base ? { ...fp, trees: [] } : fp; // T254: Edit Hole Layout plants no trees (it takes the ones now in play)
     this.emit();
   }
   /** the frame New hole's ghost would plant, for its overlay: the trees' points (tiles) and whether each is a conifer, or none */
@@ -1495,7 +1714,7 @@ export class Game {
   private swapProps(j: PropLog, back: boolean): PropLog {
     const kill = back ? j.added : j.removed, revive = back ? j.removed : j.added;
     for (const p of kill) this.removeProp(p);
-    const out = revive.map(p => { const q = this.addProp(p.item, p.x, p.y, p.flip, p.scale); if (p.plant) q.plant = p.plant; if (p.decor) q.decor = p.decor; if (p.frame) q.frame = p.frame; return q; });
+    const out = revive.map(p => { const q = this.addProp(p.item, p.x, p.y, p.flip, p.scale, undefined, p.decor ? { own: true } : undefined); if (p.plant) q.plant = p.plant; if (p.decor) q.decor = p.decor; if (p.frame) q.frame = p.frame; return q; });
     if (j.added.some(p => p.frame) || j.removed.some(p => p.frame)) this.frameRev++; // T229
     this.scheduleSave();
     return back ? { added: kill, removed: out } : { added: out, removed: kill };
@@ -1530,7 +1749,7 @@ export class Game {
   }
   /** whether the Paint tool or Holes may lay what is in hand: Holes at stage 1 is New hole only (P23 4.2, 4.3), so outside New hole its brush,
    *  hidden with Shape by hand, lays nothing and draws no footprint or disc */
-  get brushOpen(): boolean { if (this.tool !== 'course' || this.paint.planOpen) return true; const ui = this.toolUi(); return !ui || ui.shapeByHand; }
+  get brushOpen(): boolean { if (this.tool !== 'course' || this.paint.planOpen || this.paint.property || this.paint.mode === 'myhole') return true; /* T256: Range › Build and From My holes are open from the start */ const ui = this.toolUi(); return !ui || ui.shapeByHand; }
   /** the cursor hint's change last told to the UI, and when (the pill follows within 100 ms, never more than ten times a second) */
   private hintSeen = 0; private hintEmitAt = 0;
   /** the map grid and the course half grid (T100), drawn between the ground and the sprites */
@@ -2051,11 +2270,13 @@ export class Game {
     if (n) this.scheduleSave(); return n;
   }
   /** o (T133, the range's scene): lift, drawn this high above its spot (world px); foot, its footprint (world tiles x0 y0 x1 y1) in place of its
-   *  library boxes' (business art's boxes are 1 x 1 placeholders, too small for the painter's order of what stands round it) */
-  addProp(item: number, x: number, y: number, flip: boolean, scale: number, auto?: string, o?: { lift?: number; foot?: readonly [number, number, number, number] }): Prop {
+   *  library boxes' (business art's boxes are 1 x 1 placeholders, too small for the painter's order of what stands round it); own (T257): a
+   *  Props tool prop */
+  addProp(item: number, x: number, y: number, flip: boolean, scale: number, auto?: string, o?: { lift?: number; foot?: readonly [number, number, number, number]; own?: boolean }): Prop {
     // no building is ever mirrored (mirror.ts): a flip draws the four-view art turned (its partner view), any other building unflipped
     const [id, f0] = drawnAs(LIBRARY[item]!, flip); if (id !== LIBRARY[item]!.id) item = LIB_INDEX.get(id) ?? item; flip = f0;
-    // no tree is mirrored at random: the sun comes from the right, so a tree is drawn mirrored only when its art is lit from the left (tree-sun.ts)
+    // no tree is mirrored at random: the sun comes from the right, so a tree is drawn mirrored only when its art is lit from the left (tree-sun.ts);
+    // a Props tool tree too (the owner, 2026-10-28: "make sure we never mirror a bush or tree or plant. always sun from top right")
     if (LIBRARY[item]!.kind === 'tree') flip = TREE_MIRROR.has(LIBRARY[item]!.id);
     const f = o?.foot ? { x0: o.foot[0], y0: o.foot[1], x1: o.foot[2], y1: o.foot[3] } : this.footprint(LIBRARY[item], x, y, flip, scale);
     const p: Prop = { uid: this.nextUid++, item, x, y, flip, scale, ...f };
@@ -2941,15 +3162,15 @@ export class Game {
     this.emit();
     }
     holesTool = false;
-    selectedGolfMarker: { hole: number; kind: 'pin' | 'back' | 'middle' | 'forward'; x: number; y: number } | null = null;
+    selectedGolfMarker: { hole: number; kind: MarkerKind; x: number; y: number } | null = null;
     toggleHolesTool() { this.toggleSideMode('holesTool'); }
-    selectGolfMarker(hole: number, kind: 'pin' | 'back' | 'middle' | 'forward') {
+    selectGolfMarker(hole: number, kind: MarkerKind) {
     if (!this.golf) return;
     const pt = kind === 'pin' ? this.golf.pins.find(p => p.hole === hole) : this.golf.tees.find(t => t.hole === hole && t.kind === kind);
     if (pt) {
     this.selectedGolfMarker = { hole, kind, x: pt.x, y: pt.y };
     this.jumpTo(pt.x, pt.y);
-    this.toast(`Selected Hole ${hole} ${kind === 'pin' ? 'pin' : kind + ' tee'}. Click a new position on the course to move it.`);
+    this.toast(`Selected Hole ${hole} ${kind === 'pin' ? 'pin' : TEE_SET[kind].colour + ' tee'}. Click a new position on the course to move it.`);
     this.emit();
     }
     }
@@ -2979,7 +3200,7 @@ export class Game {
     for (const p of [...this.props]) if (oldTee.has(p.item) && !pinProps.has(p) && tees.some(t => Math.hypot(p.x - t.x, p.y - t.y) < 2)) this.removeProp(p);
     for (const tee of tees) {
     const key = `tee:${tee.hole}:${tee.kind}`;
-    const id = tee.kind === 'back' ? TEE_BACK_ID : tee.kind === 'middle' ? TEE_MIDDLE_ID : TEE_FORWARD_ID;
+    const id = teePropId(tee.kind);
     const item = LIB_INDEX.get(id);
     if (item === undefined) continue; // no tee marker picture yet (golf/dressing.ts TEE_MARKER_ID)
     for (const p of this.props) {
@@ -3012,7 +3233,7 @@ export class Game {
     this.golfStructureProps.set(s.id, found);
     }
     }
-    moveGolfMarker(hole: number, kind: 'pin' | 'back' | 'middle' | 'forward', x: number, y: number): boolean {
+    moveGolfMarker(hole: number, kind: MarkerKind, x: number, y: number): boolean {
     if (!this.golf) return false;
     const areas: CourseArea[] = this.courseAreaList();
     // the move itself is golf/holecard.ts markerMove (T174): the markers only, never a re-plan or a charge; refused off its surface
@@ -3024,7 +3245,7 @@ export class Game {
     const key = kind === 'pin' ? 'pin:' + hole : `tee:${hole}:${kind}`;
     const oldProp = this.golfProps.get(key);
     if (oldProp) this.removeProp(oldProp);
-    const sprId = kind === 'pin' ? (hole === 9 ? PIN_YELLOW_ID : PIN_RED_ID) : (kind === 'back' ? TEE_BACK_ID : kind === 'middle' ? TEE_MIDDLE_ID : TEE_FORWARD_ID);
+    const sprId = kind === 'pin' ? (hole === 9 ? PIN_YELLOW_ID : PIN_RED_ID) : teePropId(kind);
     const item = LIB_INDEX.get(sprId);
     if (item !== undefined) {
     const newProp = this.addProp(item, x, y, false, MARKER_SCALE[kind]);
@@ -3036,12 +3257,12 @@ export class Game {
     this.selectedGolfMarker = null;
     this.scheduleSave();
     this.emit();
-    this.toast(`Hole ${hole}'s ${kind === 'pin' ? 'pin' : kind + ' tee marker'} moved: no re-plan, no charge`); // T174: the player's words (P23 4.9)
+    this.toast(`Hole ${hole}'s ${kind === 'pin' ? 'pin' : TEE_SET[kind].colour + ' tee marker'} moved: no re-plan, no charge`); // T174: the player's words (P23 4.9)
     return true;
     }
 
   // ---------- road routing ----------
-  setTool(t: Tool) { const wasGk = this.tool === 'greenkeeping'; if (t === 'business' && this.golfMode) return; /* golf mode: the game places the clubhouse, so no Business tool */ if (this.refuseLocked(t)) return; /* P23 4.10: a locked tool says what unlocks it */ const scope = t === 'path' ? 'course' : t === 'road' ? 'town' : this.roadScope; if (t === 'path') t = 'road'; /* T084: Paths & drives is the road tool on the course */ const cScope = t === 'buildings' ? 'buildings' : t === 'course' ? 'holes' : this.courseScope; if (t === 'buildings') t = 'course'; /* P23 P1-E: Buildings is the course tool's clubhouse scope */ if (this.tool !== t || scope !== this.roadScope || cScope !== this.courseScope) { this.paint.cancel(); this.cancelRoute(); this.selected = null; this.selectedPlace = null; this.selectedJunction = null; this.parkDrag = null; this.parking.drag = null; this.tollHover = null; this.bizHover = null; this.busPick = null; this.busHover = null; this.laneHover = null; this.decor.cancel(); this.practice.cancel(); } this.tool = t; if (pickTool(this, t)) this.tidySideModes(); /* P23 P1-A: a build tool closes the Grass panel, Land, Holes and Event */ if (t === 'road') this.setRoadScope(scope); if (t === 'course') this.courseScope = cScope; if (t !== 'course' || cScope === 'holes') { this.clubPlacing = false; this.halfwayPlacing = false; } else if (this.golf && !this.bizDefs.some(d => d.type === 'clubhouse')) this.clubPlacing = true; /* Buildings arms the clubhouse until it stands */ if (t === 'course') { this.paint.enterCourse(); this.ground.prewarm(brushTextures()); /* T168: what its brushes lay, made ahead */ } else if (t === 'paint') this.paint.enterPaint(); /* T175: Greenkeeping's panel is the Grass panel; leaving it puts its care down */ if (t === 'greenkeeping') this.grassPanel = true; else if (wasGk) { this.grassPanel = false; this.grassAction = null; } this.emit(); }
+  setTool(t: Tool) { if (t !== 'course') this.paint.setProperty(false); /* T256: Range › Build ends with the course tool */ const wasGk = this.tool === 'greenkeeping'; if (t === 'business' && this.golfMode) return; /* golf mode: the game places the clubhouse, so no Business tool */ if (this.refuseLocked(t)) return; /* P23 4.10: a locked tool says what unlocks it */ const scope = t === 'path' ? 'course' : t === 'road' ? 'town' : this.roadScope; if (t === 'path') t = 'road'; /* T084: Paths & drives is the road tool on the course */ const cScope = t === 'buildings' ? 'buildings' : t === 'course' ? 'holes' : this.courseScope; if (t === 'buildings') t = 'course'; /* P23 P1-E: Buildings is the course tool's clubhouse scope */ if (this.tool !== t || scope !== this.roadScope || cScope !== this.courseScope) { this.paint.cancel(); this.cancelRoute(); this.selected = null; this.selectedPlace = null; this.selectedJunction = null; this.parkDrag = null; this.parking.drag = null; this.tollHover = null; this.bizHover = null; this.busPick = null; this.busHover = null; this.laneHover = null; this.decor.cancel(); this.practice.cancel(); } this.tool = t; if (pickTool(this, t)) this.tidySideModes(); /* P23 P1-A: a build tool closes the Grass panel, Land, Holes and Event */ if (t === 'road') this.setRoadScope(scope); if (t === 'course') this.courseScope = cScope; if (t !== 'course' || cScope === 'holes') { this.clubPlacing = false; this.halfwayPlacing = false; } else if (this.golf && !this.bizDefs.some(d => d.type === 'clubhouse')) this.clubPlacing = true; /* Buildings arms the clubhouse until it stands */ if (t === 'course') { this.paint.enterCourse(); this.ground.prewarm(brushTextures()); /* T168: what its brushes lay, made ahead */ } else if (t === 'paint') this.paint.enterPaint(); /* T175: Greenkeeping's panel is the Grass panel; leaving it puts its care down */ if (t === 'greenkeeping') this.grassPanel = true; else if (wasGk) { this.grassPanel = false; this.grassAction = null; } this.emit(); }
   /** the snap radius in tiles: about 14 screen px (at least 2 tiles) */
   private snapRadius() { return Math.max(2, 14 / (HW * this.cam.z)); }
   /** the road tool's snap under the cursor, or null with no cursor */
@@ -5581,7 +5802,7 @@ export class Game {
       curbs: this.parking.curbs.map((c): [number, number, number, number] => [c.ax, c.ay, c.bx, c.by]),
       parkFee: this.parking.fee,
       speed: this.net.speedTier,
-      golf: this.golf ? { ...this.golf, height: this.courseHeightChunks(), grid: this.gridSave(), plans: this.golf.plans?.length ? this.golf.plans : undefined, play: this.golf.play && this.traffic.round.stage !== 'free' ? this.golf.play : undefined, everyday: this.dayBook?.save ?? this.golf.everyday } : undefined,
+      golf: this.golf ? { ...this.golf, teeSets: 1 as const, height: this.courseHeightChunks(), grid: this.gridSave(), plans: this.golf.plans?.length ? this.golf.plans : undefined, play: this.golf.play && this.traffic.round.stage !== 'free' ? this.golf.play : undefined, everyday: this.dayBook?.save ?? this.golf.everyday } : undefined,
     };
     try { return await writeSave(withTourney(d, tourney)); } catch { return 0; }
   }
@@ -5614,7 +5835,8 @@ export class Game {
       this.net.rebuild(true);
       for (const entry of d.nodes) applyNodeEntry(this.edit, entry);
       const index = new Map(LIBRARY.map((it, i) => [it.id, i]));
-      for (const t of d.props) { const [id, x, y, flip, scale] = t, i = index.get(id); if (i !== undefined) Object.assign(this.addProp(i, x, y, !!flip, scale), tupleMarks(t)); }
+      // (T257: a Props tool prop keeps its saved flip, a tree's too: as the player turned it)
+      for (const t of d.props) { const [id, x, y, flip, scale] = t, i = index.get(id), m = tupleMarks(t); if (i !== undefined) Object.assign(this.addProp(i, x, y, !!flip, scale, undefined, m.decor ? { own: true } : undefined), m); }
       if (d.parks) this.parkDefs = d.parks.map(([x, y, w, h], k) => ({ id: k + 1, x, y, w, h }));
       this.places = placesFromTuples(d.places);
       if (d.tolls) this.tollDefs = d.tolls.map(([ax, ay, bx, by, booths], k) => ({ id: k + 1, ax, ay, bx, by, booths }));
@@ -6280,7 +6502,7 @@ export class Game {
     const seed = Math.floor(hash(this.seed, key) * 4294967296), { plan, golfers, own } = dayRound(view, g.tier, seed, owner);
     const art = golfers.map(p => p.owner ? ownerArt(p.sex) : GOLFER_ART[p.sex][p.look % GOLFER_ART[p.sex].length]!);
     const pl: GolfPlay = { plan, view, pv: new PlayView(plan, view, { paths: this.cartPathsNow(), home: g.clubhouse }), key, art, finish: new DayFinish(), own: null, waves: -1 };
-    if (owner && own) pl.own = { id: own.id, sex: owner.owner, skill: OWNER_SKILL, tee: own.tee, live: own.live, turn: own.turn, caddie: owner.caddie };
+    if (owner && own) pl.own = { id: own.id, sex: owner.owner, skill: OWNER_SKILL, tee: own.tee, live: own.live, turn: own.turn, caddie: owner.caddie, ...(owner.tees ? { tees: owner.tees } : {}) };
     return pl;
   }
   /** the played course (docs/GOLF-PLAY.md P2a): the derived holes with a line, the lie from the course grid's surface where it is painted, else the painted
@@ -6310,9 +6532,9 @@ export class Game {
   }
   /** joins the tournament as the owner (P4b): the play is rebuilt with his golfer in the first group (the same seed and key; his first turn is due) and
    *  the save records him. `sex` picks his look: golf_am_m3 for 'm', golf_am_w1 for 'w' */
-  joinTournament(sex: Sex) {
+  joinTournament(sex: Sex, tees: TeeKind = 'middle') {
     const pl = this.play; if (!pl || !this.canJoinTournament()) return;
-    const built = this.buildPlay(pl.key, { key: pl.key, owner: sex, inputs: [], caddie: null });
+    const built = this.buildPlay(pl.key, { key: pl.key, owner: sex, inputs: [], caddie: null, tees }); // T254: from the tee set he chose
     if (!built) return;
     this.play = built; this.saveOwner(); this.emit();
   }
@@ -6372,7 +6594,7 @@ export class Game {
   /** writes the owner's play to the save (GolfSave.play): his tournament key, sex, the inputs he has played and his caddie count */
   private saveOwner() {
     const pl = this.play, o = pl?.own; if (!pl || !o || !this.golf) return;
-    this.golf.play = { key: pl.key, owner: o.sex, inputs: o.live.inputs.slice(), caddie: o.caddie };
+    this.golf.play = { key: pl.key, owner: o.sex, inputs: o.live.inputs.slice(), caddie: o.caddie, ...(o.tees ? { tees: o.tees } : {}) };
     this.scheduleSave();
   }
   /** toasts the owner's score once his group is done ("You shot 82 (+10)") */
@@ -6986,6 +7208,7 @@ export class Game {
     if (this.traffic && this.cam.z >= DISTRICT_Z) { this.drawDisasters(ctx); this.drawSignals(ctx); this.drawIncidents(ctx); }
     if (this.tool === 'junction') { if (this.cam.z >= PLANNER_Z) this.drawJunctionBadges(ctx); this.drawSelectedJunction(ctx); }
     this.drawFlow(ctx);
+    this.drawTeeMarkers(ctx); // T254
     this.drawHoleBadges(ctx); // T174
     if (this.showParkDemand) this.drawParkDemand(ctx);
     this.drawInspect(ctx);
@@ -7203,12 +7426,14 @@ export class Game {
     if (!g.noPic) all.push(g);
     for (const q of all) {
       this.drawBizRect(ctx, q.box[0], q.box[1], q.box[2] - q.box[0], q.box[3] - q.box[1], q.why ? 'rgba(230,80,80,0.4)' : 'rgba(60,200,90,0.4)');
-      const d = this.decorDraw; d.item = q.item; d.x = q.x; d.y = q.y; d.scale = q.scale;
+      const d = this.decorDraw; d.item = q.item; d.x = q.x; d.y = q.y; d.scale = q.scale; d.flip = !!q.flip;
       const l = lookOf(d), it = LIBRARY[l.item]!, [page, u0, v0, u1, v1] = it.tex, image = this.pageImage0(page);
       if (image && !l.hidden) {
-        const ze = this.cam.z * this.dpr, r = spriteRect(d), x = (r[0] - this.cam.X) * ze + this.cw / 2, y = (r[1] - this.cam.Y) * ze + this.ch / 2;
+        const ze = this.cam.z * this.dpr, r = spriteRect(d), x = (r[0] - this.cam.X) * ze + this.cw / 2, y = (r[1] - this.cam.Y) * ze + this.ch / 2, w = (r[2] - r[0]) * ze;
         ctx.save(); ctx.globalAlpha = q.why ? 0.4 : 0.75;
-        ctx.drawImage(image, u0 * image.naturalWidth, v0 * image.naturalHeight, (u1 - u0) * image.naturalWidth, (v1 - v0) * image.naturalHeight, x, y, (r[2] - r[0]) * ze, (r[3] - r[1]) * ze);
+        // (T257: a mirrored look drawn mirrored about its rect)
+        if (l.flip) { ctx.translate(x + w, y); ctx.scale(-1, 1); ctx.translate(-x, -y); }
+        ctx.drawImage(image, u0 * image.naturalWidth, v0 * image.naturalHeight, (u1 - u0) * image.naturalWidth, (v1 - v0) * image.naturalHeight, x, y, w, (r[3] - r[1]) * ze);
         ctx.restore();
       }
       if (q.why) this.refusedRect(ctx, q.box[0], q.box[1], q.box[2] - q.box[0], q.box[3] - q.box[1]);

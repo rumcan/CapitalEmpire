@@ -27,10 +27,10 @@ test('autoPin uses the hint on the green, else the largest green; autoTees lines
   for (const p of [t.back, t.middle, t.forward]) assert.ok(insidePoly(box(0, -3, 10, 6), p.x, p.y));
 });
 
-test('markerPlan places a pin on each painted green and three tee markers on each tee, and keeps markers already on them', () => {
+test('markerPlan places a pin on each painted green and the white tee set on each tee (T254: New hole lays a white tee), and keeps markers already on them', () => {
   const areas = [...hole(1, 100, 100, 180), ...hole(2, 100, 300, 120)];
   const ops = markerPlan(areas, [], []);
-  assert.equal(ops.filter(o => o.kind === 'pin').length, 2); assert.equal(ops.filter(o => o.kind !== 'pin').length, 6);
+  assert.equal(ops.filter(o => o.kind === 'pin').length, 2); assert.deepEqual(ops.filter(o => o.kind !== 'pin').map(o => o.kind), ['middle', 'middle']);
   const m = applyPlan([], [], ops);
   assert.ok(m.pins.every(p => p.auto)); assert.deepEqual(markerPlan(areas, m.pins, m.tees), []);
 });

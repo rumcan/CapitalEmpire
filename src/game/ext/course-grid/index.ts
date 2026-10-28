@@ -137,6 +137,16 @@ export function applyDiff(g: Grid, d: GridDiff, undo: boolean): void {
   if (d.n) g.rev++;
 }
 
+/** T256: the diff that takes every cell of hole n off it, without changing g: keep false clears each to none (the land's own grass: hole 0,
+ *  month 0, not carved), keep true keeps its surface and month as a cell of no hole (the property's paint). Other holes' and the property's
+ *  cells are never in it */
+export function holeCellsDiff(g: Grid, n: number, keep: boolean): GridDiff {
+  const idx: number[] = [];
+  if (n > 0) for (let i = 0; i < g.hole.length; i++) if (g.hole[i] === n && g.surf[i] !== SURF.none) idx.push(i);
+  const k = idx.length, I = Uint32Array.from(idx), s0 = Uint8Array.from(idx, i => g.surf[i]!), m0 = Uint16Array.from(idx, i => g.month[i]!), c0 = Uint8Array.from(idx, i => g.carve?.[i] ?? 0);
+  return { x0: g.x0, y0: g.y0, w: g.w, n: k, idx: I, s0, h0: new Uint8Array(k).fill(n), m0, s1: keep ? s0.slice() : new Uint8Array(k), h1: new Uint8Array(k), m1: keep ? m0.slice() : new Uint16Array(k), c0, c1: keep ? c0.slice() : new Uint8Array(k) };
+}
+
 /** merges two diffs made in order (a, then b) into one: per cell the earlier before value and the later after value win; cells that end where they began are dropped. The result's indices are on the bounding box of its cells. */
 export function mergeDiffs(a: GridDiff, b: GridDiff): GridDiff {
   return mergeAll([a, b]);

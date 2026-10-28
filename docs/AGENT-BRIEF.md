@@ -105,6 +105,14 @@ full path with one line on what it shows; what is left; confirmation that every 
   are a cool multiply that keeps the texture. No visible repeating texture (mowing stripes excepted, drawn last on top). No old photo
   textures. Nothing mirrored: pictures turn to one of four views. Stand-ins are labelled "Stand In for <name>", and missing art goes
   into `docs/GOLF-SPRITES.md` as requests.
+- **Art supply (the owner, 2026-10-28):** RUN.world credits are for 3D only (people and their clips). Every 2D picture comes from ChatGPT's
+  image generator, which the owner runs from `docs/art/CHATGPT-IMAGE-QUEUE.md`. An agent that needs new 2D art never generates it: it
+  draws a labelled stand-in and adds the request to `docs/GOLF-SPRITES.md` (the lead turns it into a prompt in the queue).
+- **No flat colour washes** over ground textures (they hide the detail); local streaks, soil and leaves are fine. New art replaces every use
+  of the old picture or material, and the old look stays an option.
+- **UI:** menus open side flyouts with levels, never a sideways scrollbar or one long column. The club's tools are in the left drawer, the
+  town's in the footer (bottom right).
+- **The town's traffic jams are the player's job** (they upgrade the roads): never auto-fix congestion.
 - **Commits** start `[T<nnn>] …` and end with the `Co-Authored-By:` line the session's attribution names.
 - **PR:**
   - Before opening it, `git fetch origin && git merge origin/main`, then re-run the typecheck (tests come after the PR, see Tests above).

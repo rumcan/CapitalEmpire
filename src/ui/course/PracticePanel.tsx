@@ -12,7 +12,7 @@ const BLURB: Readonly<Record<PracticeId, string>> = {
   chipping: 'A chipping green with a practice bunker beside it and a mat to chip from.',
 };
 
-export function PracticePanel({ game }: { game: Game }) {
+export function PracticePanel({ game, looks = false, onLooks }: { game: Game; looks?: boolean; onLooks?: (open: boolean) => void }) {
   const pt = game.practice, k = pt.kind, scan = game.range.practice, area = !!game.range.scene;
   return (
     <div className="tp" data-panel="practice">
@@ -51,11 +51,20 @@ export function PracticePanel({ game }: { game: Game }) {
               </div>
             </div>
           )}
+          {/* T256 (#743): the facility owns its looks (its green, its bunker, its mat): My looks edits this facility's alone */}
+          {game.golfMode && onLooks && (
+            <div className="flex items-center justify-between gap-2" data-testid="practice-looks">
+              <span>My looks</span>
+              <button className={`chip ${looks ? 'chip-on' : ''}`} aria-pressed={looks} title={`The looks of the ${FACILITY_NAME[k].toLowerCase()}: its own, apart from the holes' and your property's`} onClick={() => { if (!looks) game.paint.pickLook(['green', 'bunker', 'tee'].includes(game.paint.brushKind) ? game.paint.brushKind : 'green'); onLooks(!looks); }}>{`${FACILITY_NAME[k]}'s looks`} <span aria-hidden>▸</span></button>
+            </div>
+          )}
           <p className={`leading-snug ${pt.ghost?.why ? 'text-rose-300' : ''}`} data-testid="practice-status">{pt.status}</p>
           <p className="sub-line leading-snug">Click to build it. Ctrl+Z takes it back; the bulldozer removes a built one (half its price back).</p>
         </div>
       )}
       {area && <button className="chip mt-3" onClick={() => pt.showArea()} data-testid="practice-show-area">Show area</button>}
+      {/* T256: the same painting tools as the holes, on your property (the practice area, the range, the rest of your land) */}
+      {game.golfMode && <button className="pill-gold mt-3" onClick={() => game.openPropertyPaint()} data-testid="practice-build" title="Paint your property: the practice area, the range and the rest of your land, apart from the holes"><span className="min-w-0">Build on your property</span></button>}
     </div>
   );
 }

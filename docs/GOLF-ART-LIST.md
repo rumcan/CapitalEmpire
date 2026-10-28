@@ -63,7 +63,7 @@ The owner's target picture, 2026-10-27: items 149-175, and 178-179 the eight-fac
 The owner's 2026-10-28 asks: items 200-235 and 240-327 (about 115 places, most with a run-down and an upgraded picture), still to make, except batch 1 (200-204, 211; 17 pictures in `art/theme-consistency/generated/scenes/`). Batch 2 (the P1 places 205-222) after RUN's cap resets; the rest needs a credit top-up.
 
 ### List items done
-Ground (section 8 and the range ground): ✅ 131 Pond bank, ✅ 132 Grow-in, ✅ 135 Flower bed soil (#630); 🎨 133 Field parking, 🎨 21 range tee divots (#630, in the Studio, no ground wears them yet); 130 Pond water skipped (the lake is in). 134 Event matting deferred (quilting would break its panel grid). 🎨 19 the hitting mat (top-down, made, not drawn yet); 20, 27, 147 retakes next. The range and practice sprites still draw labelled stand-ins.
+Ground (section 8 and the range ground): ✅ 131 Pond bank, ✅ 132 Grow-in, ✅ 135 Flower bed soil (#630); 🎨 133 Field parking, 🎨 21 range tee divots (#630, in the Studio, no ground wears them yet); 130 Pond water skipped (the lake is in). 134 Event matting deferred (quilting would break its panel grid). ✅ 19 the hitting mat, ✅ 20 the target green and ✅ 27 the bullseye (the 200 m green) laid flat on the range's ground (T258, #755; the stand-ins a Studio option); 147 retake next. The range and practice sprites still draw labelled stand-ins until the owner's ChatGPT views land (`node scripts/assets/prep-range-art.mjs` puts them in).
 
 ## The angles
 
@@ -206,10 +206,10 @@ tees use the same marker.
 
 ### Range ground
 
-🎨 **19. Hitting mat** (made: `run-top/golf-range-mats/golf-range-mats-top-v1.png`, not drawn yet) (`golf:range-mats`) · **C** · 4.2 x 6 m a bay · P1 **(stand-in)**. The left and right edges must join seamlessly.
+✅ **19. Hitting mat** (in the game, T258: `run-top/golf-range-mats/golf-range-mats-top-v1.png` laid flat a bay at the game's 5 m bay pitch, 6.7 m deep) (`golf:range-mats`) · **C** · 4.2 x 6 m a bay · P1. The left and right edges must join seamlessly.
 > Subject: golf:range-mats, ONE driving-range hitting mat seen from straight above, about 4.2 m wide and 6 m deep: a concrete pad with a slightly worn green artificial-turf mat on it, a white rubber tee near the front edge, two or three white range balls beside it, a scuffed, flattened strike zone behind the tee. The left and right edges of the picture continue the concrete and must tile seamlessly when two copies are placed side by side.
 
-🎨 **20. Target green** (top-down retake made: `run-top/golf-range-target-green/`) (`golf:range-target-green`) · **C** · 12-20 m across · P1 **(stand-in)**.
+✅ **20. Target green** (in the game, T258: `run-top/golf-range-target-green/` laid flat, its green the target's size) (`golf:range-target-green`) · **C** · 12-20 m across · P1.
 > Subject: golf:range-target-green, one round driving-range target green seen from straight above, filling the square: a smooth fine-cut inner green, a lighter mown collar ring round it, a faint darker ring at its outer edge where it meets the coarser outfield grass (the outfield shows only in the corners), a cup at the exact centre (no flag), a few white range balls lying scattered on it. No mowing stripes.
 
 **21. Divot-scarred range tee turf** (`range-tee-divots-run`, #630: **rejected by the owner**, 2026-10-28: the divots read as litter, "please find diffrent grass"; the turfed tee wears `green-concept-run`; the family stays a Studio option) (texture) · **C** · a 16 m square · P1 **(stand-in)**.
@@ -236,7 +236,7 @@ The owner, 2026-10-27: "how about better more fun range targets". Big, bright th
 read from far away. Each stands on the outfield grass; a ball that lands in or on one would count as a hit. They are new: the game
 needs a ticket to offer them (a range upgrade, "Fun targets").
 
-🎨 **27. Bullseye target green** (top-down retake made: `run-top/golf-range-bullseye-target/`) · **C** · 16-24 m across · P1. A target green painted as a giant archery target.
+✅ **27. Bullseye target green** (in the game, T258: the 200 m green, 23.6 m across; the Studio's Range art can move it or turn it off) · **C** · 16-24 m across · P1. A target green painted as a giant archery target.
 > Subject: a giant round driving-range target seen from straight above, filling the square: concentric rings mown and painted into the turf, white, red, white, red, with a bright yellow bullseye green at the centre holding a cup, the rings slightly irregular as if hand-painted on grass, a few white balls lying in the rings.
 
 **28. Island target green** · **A** · 20 x 16 m, 1 high · P1. A small green on an island in a pond.
@@ -807,9 +807,19 @@ commonest colours, which the car parks still lack).
 - **180d planting tufts**: six tufts for the gaps: ferns, a sedge, cattails, a low juniper, golden grass, a small red-leaf shrub (no pink or purple: the magenta key).
 Lit from the upper right, never mirrored, on flat pure magenta.
 
+**Farms** (the owner, 2026-10-29: "lets add some corn fields to the art work so we can plant tehse fields you created for the farms and make a better texture for the un planted fields and maybe make some orchards quickly with some treees all in a line and have the actual famrshouses further wawa from the road, deeper in land with a row of trees down the dirt road to the house like they do on farms to break the wind"). Made in ChatGPT; prompts in [art/CHATGPT-IMAGE-QUEUE.md](art/CHATGPT-IMAGE-QUEUE.md) "Farms". The code is T259.
+
+**185. Corn field** · ground, the owner's method · P1. Two stages: **young** (short green corn in straight rows over brown soil) and **ripe** (tall golden-tan corn, dry tassels, autumn). Rows run along the map's x axis; the game turns them by the field's direction. Plus a **stubble** stage (cut stalks after the harvest).
+**186. Ploughed field** · ground, the owner's method · P1. Freshly ploughed dark brown soil in neat parallel furrows with a few clods and stones; replaces the plain dirt look of unplanted fields.
+**187. Orchard trees** · **B**, four variants · P1. Apple trees in autumn: a round canopy, red apples, a few fallen under it; a pear tree; a young apple tree; an apple tree half bare with yellow leaves. Each about 4-5 m high, pruned low and wide like orchard trees. No pink or purple.
+**188. Windbreak poplars** · **B**, three variants · P1. Tall narrow Lombardy poplars, 15-20 m, in autumn gold, green-gold and half bare; planted in a line along a farm lane.
+**189. Farm lane** · ground · P2. A two-rut dirt farm lane with a grass strip down the middle (or use the dirt path textures if they read right).
+
 ### UI pictures
 ✅ **174. Build-tool tiles** (`ui/golf-build-tool-tiles-sheet-v1.png`; in the game, T233 #674: cut by `scripts/assets/prep-ui-tool-tiles.mjs` into `src/assets/ui/tiles/`, shown on the Course and Facilities flyouts' tools by `ui/tool-tiles.ts`; the tools still without one are requested in GOLF-SPRITES.md "Build-tool tiles") · one sheet of 12 · P1. The build flyouts' tools as small illustrated scenes, as in the concept's Golf Course panel.
 > Subject: twelve tiny isometric dioramas in a 4x3 grid, each on its own dark navy rounded square, the light from the upper right: a tee box, a fairway, a green with a flag, a bunker, a pond, rough grass, a clump of autumn trees, a group of boulders, a curving cart path, a small clubhouse, the range bays, a flower bed. The same scale and style in every tile; no lettering.
+
+**181. Build-tool tiles, sheet 2** (the owner, 2026-10-29: "some menu items stuff waiting for a cute mini isometric icon") · one sheet of 12 in 174's style · P1. The flyout rows that still show an icon on 174's navy square: Waste area, Halfway house, Your holes, Tournament, Land for sale, Bushes, Palms, All props, Furniture, Long grass (it wears the rough's tile), the chipping green (it wears the bunker's) and Build on your property. The prompt is in `docs/art/CHATGPT-IMAGE-QUEUE.md` (first in the queue); the file `ui/golf-build-tool-tiles-sheet-v2.png`; the list and file names in GOLF-SPRITES.md "Build-tool tiles".
 
 **175. Top-bar icons** · one sheet of 6 on magenta · P2.
 > Subject: six small flat painted icons in a row, gold and cream with a dark outline: a bundle of banknotes, a smiling face, two golfers, a maple leaf, a sun, a cloud. No lettering.

@@ -9,6 +9,7 @@ import { clampSurfaces, lookOfTex, type PresetRef, type SurfacesFile } from './p
 import { bandOf, specBand, tiledFamily, tileSpec, TILE_BANDS, TILES_REVISION, type TileBand, type TiledFamily } from './painted-tiles';
 import { ASPHALT_MEAN, type GroundArt, LEAF_CELL, LEAF_COLS, LEAVES, LOT_ASPHALT_M, POOL_ANCHOR, PPM, SLAB_CELL, SLAB_COUNT, SLAB_TOP } from './ground-art';
 import { litPixel } from './lamp-reflect';
+import { RANGE_PICS } from './golf/range-pics';
 
 /** Ground materials, following the town builder's ground renderer (scripts/lib/town-scene.mjs):
  *  - asphalt: the owner's painted asphalt (flattened), laid in 1.6 m hex patches with random offsets so it never repeats,
@@ -215,9 +216,10 @@ export class Textures {
   /** asphalt mosaics in tile space, by variant ('base' | 'lit1' | 'lit2') and mip (px per tile) */
   mosaics = new Map<string, Cnv[]>();
   /** the period in tiles of each photo texture (photoPeriod: MOSAIC_TILES unless it is a plain tile with its own), and the lazy builds in progress */
-  periods = new Map<string, number>(PHOTO_TEX.map(p => [p.tex, photoPeriod(p, MOSAIC_TILES)]));
-  /** the photo textures this worker can build: grass-art.ts PHOTO_TEX and the owner's texture presets (paint-presets-saved.ts, sent with the art) */
-  photos: PhotoTexEntry[] = PHOTO_TEX;
+  periods = new Map<string, number>([...PHOTO_TEX, ...RANGE_PICS].map(p => [p.tex, photoPeriod(p, MOSAIC_TILES)]));
+  /** the photo textures this worker can build: grass-art.ts PHOTO_TEX, T258's range pictures (golf/range-pics.ts: built on first use) and the
+   *  owner's texture presets (paint-presets-saved.ts, sent with the art) */
+  photos: PhotoTexEntry[] = [...PHOTO_TEX, ...RANGE_PICS];
   /** each built photo's full-resolution source canvas (sourceFor: a large Paint scale shows it, not the mosaic) */
   photoSrc = new Map<string, Cnv>();
   private photoBuilds = new Map<string, Promise<void>>();
@@ -279,6 +281,8 @@ export class Textures {
     return out;
   }
   isPainted(variant: string) { return !!this.paintedOf(variant); }
+  /** T247: the painted family a texture is laid with (its surface's look), or null when it is laid as its photo */
+  familyOf(variant: string): string | null { return this.paintedOf(variant) ? lookOfTex(variant, this.surfaces, this.presetRefs)?.family ?? null : null; }
   /** a painted texture's mean colour as its look shows it (the planner's colour, a swatch), or null */
   paintedMean(variant: string) { return this.paintedOf(variant)?.mean ?? null; }
   /** the levels a painted look blends at the current art level (painted-families.ts familyWeights) */
@@ -385,7 +389,7 @@ export class Textures {
   /** what every worker takes from the art, whether it builds the textures or restores them from a snapshot or the browser cache: the
    *  owner's texture presets and how the base grass lies (its angle and tilt) */
   configure(art: GroundArt & { grassMix?: BaseGrassArt; presets?: PhotoTexEntry[]; grassArt?: GrassArt }) {
-    if (art.presets?.length) { this.photos = [...PHOTO_TEX, ...art.presets]; for (const p of art.presets) this.periods.set(p.tex, photoPeriod(p, MOSAIC_TILES)); }
+    if (art.presets?.length) { this.photos = [...PHOTO_TEX, ...RANGE_PICS, ...art.presets]; for (const p of art.presets) this.periods.set(p.tex, photoPeriod(p, MOSAIC_TILES)); }
     this.presetRefs = (art.presets ?? []).filter(p => p.tex.startsWith('preset:')).map(p => ({ id: p.tex.slice(7), surface: p.surface ?? null, painted: p.painted ?? null }));
     this.paintedOn = art.grassArt !== 'photo'; this.picks.clear();
     this.grassLay = { angle: art.grassMix?.mix.angle ?? DEFAULT_MIX.angle, tilt: art.grassMix?.mix.tilt ?? DEFAULT_MIX.tilt };

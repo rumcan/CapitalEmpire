@@ -4,8 +4,10 @@
 // "Play in it" (as a man or a woman); once he is in it says when he tees off. After the 15:00 kick-off it says the results wait for the last group (and
 // offers them early); when the last group walks onto the 18th a banner names it and offers to watch it (T210).
 // T211: a group waiting on the group ahead shows it under its golfer's row ("waiting on the 7th tee").
-import { useEffect, useReducer } from 'react';
+import { useEffect, useReducer, useState } from 'react';
 import type { Game } from '../game/engine';
+import type { TeeKind } from '../game/golf/types';
+import { TEE_KINDS, TEE_SET } from '../game/golf/teesets';
 
 /** a game minute of the day as HH:MM */
 const clock = (m: number) => { const t = Math.floor(m) % 1440; return `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`; };
@@ -17,6 +19,7 @@ const COLS = 'grid-cols-[2.25rem_1fr_2.5rem_2.5rem]';
 /** the board panel (nothing with no play): its title row ("Leaderboard" and the game time), the join row while he may join, the rows, and the champion's line */
 export function GolfLeaderboard({ game }: { game: Game }) {
   const [, tick] = useReducer((x: number) => x + 1, 0);
+  const [tees, setTees] = useState<TeeKind>('middle'); // T254: the owner's tees (P28 chooses)
   // the board refreshes itself twice a second (the interval is cleared on unmount)
   useEffect(() => { const iv = window.setInterval(tick, 500); return () => clearInterval(iv); }, []);
   const b = game.playBoard();
@@ -31,9 +34,16 @@ export function GolfLeaderboard({ game }: { game: Game }) {
       {join && (
         <div className="mt-2 flex items-center justify-between gap-2 rounded bg-white/5 px-2 py-1.5 text-xs text-slate-200">
           <span>Play in it</span>
+          {/* T254: you choose your tees (the field plays the blue) */}
+          <label className="flex items-center gap-1" title="The tee set you play from: the field plays the blue (championship) tees">
+            <span className="sr-only">Your tees</span>
+            <select className="rounded bg-slate-900 px-1 py-0.5" value={tees} onChange={e => setTees(e.target.value as TeeKind)} data-testid="join-tees">
+              {TEE_KINDS.map(k => <option key={k} value={k}>{TEE_SET[k].name} tees</option>)}
+            </select>
+          </label>
           <span className="flex gap-1">
-            <button className="chip" onClick={() => game.joinTournament('m')}>as a man</button>
-            <button className="chip" onClick={() => game.joinTournament('w')}>as a woman</button>
+            <button className="chip" onClick={() => game.joinTournament('m', tees)}>as a man</button>
+            <button className="chip" onClick={() => game.joinTournament('w', tees)}>as a woman</button>
           </span>
         </div>
       )}

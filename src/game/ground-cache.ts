@@ -125,6 +125,10 @@ export class GroundCache {
   /** T204: the rugged edges on or off (the dev switch: window.__game.ground.setRugged(false) compares the looks and the bake times) */
   rugged = true;
   setRugged(on: boolean) { if (on === this.rugged) return; this.rugged = on; this.broadcast({ t: 'rugged', on }); this.invalidateAll(); }
+  /** T247: the soft dirt edges on (the default) or off (the dev switch: window.__game.ground.setSoftDirt(false) shows the look before T247 and
+   *  compares the bake times) */
+  softDirt = true;
+  setSoftDirt(on: boolean) { if (on === this.softDirt) return; this.softDirt = on; this.broadcast({ t: 'softDirt', on }); this.invalidateAll(); }
   /** T218: the fairways' mowing stripes on or off (the dev switch: window.__game.ground.setStripes(false) compares the looks and the bake times) */
   stripes = true;
   setStripes(on: boolean) { if (on === this.stripes) return; this.stripes = on; this.broadcast({ t: 'stripes', on }); this.invalidateAll(); }

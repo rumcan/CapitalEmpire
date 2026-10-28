@@ -27,7 +27,7 @@ const AIMS: AimPoint[] = [];
 const view = (n: number, over: Partial<HoleView> = {}): HoleView => ({ n, started: true, par: 4, lengthM: 164, memberLengthM: 160, checks: [{ label: 'Green painted', ok: true }, { label: 'Tee painted', ok: true }, { label: 'Fairway painted', ok: true }, { label: 'Pin on the green', ok: true }, { label: 'Tee markers on the tee', ok: true }], warnings: [], ok: true, virtual: false, ...over });
 
 test("the card's facts from a fixture course: lengths from each tee, the walk to the next tee, the surfaces' areas and their grow-in", () => {
-  assert.deepEqual(teeLengths(1, PINS, TEES, AIMS), [{ kind: 'back', m: 164 }, { kind: 'middle', m: 160 }, { kind: 'forward', m: 156 }]);
+  assert.deepEqual(teeLengths(1, PINS, TEES, AIMS), [{ kind: 'back', m: 164, par: 3 }, { kind: 'middle', m: 160, par: 3 }, { kind: 'forward', m: 156, par: 3 }], 'each set length and par (T254: blue, white, red)');
   assert.deepEqual(teeLengths(3, PINS, TEES, AIMS), [], 'no pin, no lengths');
   assert.equal(walkToNext(1, PINS, TEES), Math.round(Math.hypot(100 - 90, 28 - 10) * 2));
   assert.equal(walkToNext(2, PINS, TEES), null, 'no hole 3');
@@ -65,7 +65,7 @@ test('each failing check carries the Fix that arms its tool; warnings are said w
   assert.equal(hand.planned, false);
   assert.ok(hand.checks.filter(k => k.warn).every(k => k.fix === null));
   // D7.3: existing data only: no quality, golfers or fees in the card
-  assert.deepEqual(Object.keys(c).sort(), ['areas', 'checks', 'n', 'par', 'planned', 'ready', 'tees']);
+  assert.deepEqual(Object.keys(c).sort(), ['addable', 'areas', 'checks', 'n', 'par', 'planned', 'ready', 'tees']); // T254: the sets Add tee can lay
 });
 
 test('a pin or tee drag moves only that marker, never a plan or money, and is refused off its surface with the reason', () => {
@@ -83,7 +83,7 @@ test('a pin or tee drag moves only that marker, never a plan or money, and is re
   const tee = markerMove(m, AREAS, 2, 'middle', 101, 31);
   assert.ok(tee.ok && tee.tees.find(t => t.hole === 2 && t.kind === 'middle')!.x === 101);
   const teeOff = markerMove(m, AREAS, 2, 'forward', 100, 60);
-  assert.equal(teeOff.ok, false); if (!teeOff.ok) assert.equal(teeOff.reason, 'A forward tee marker must be placed on a tee');
+  assert.equal(teeOff.ok, false); if (!teeOff.ok) assert.equal(teeOff.reason, 'A red tee marker must be placed on a tee');
   assert.deepEqual(PINS[0], { hole: 1, x: 90, y: 10 }, 'the inputs are not changed');
 });
 
@@ -91,7 +91,8 @@ test("Delete states its refund, and the refund is the rule's: none (course work 
   const n = deleteNote({ n: 3, areas: [{ surface: 'fairway', m2: 2600, ready: null }, { surface: 'green', m2: 550, ready: 7 }, { surface: 'tee', m2: 120, ready: null }] });
   assert.equal(n.refund, 0);
   assert.equal(n.m2, 3270);
-  assert.match(n.text, /Up to 3,270 m² of hole 3/);
+  assert.match(n.text, /All 3,270 m² of hole 3, touch-ups included/);
+  assert.match(n.text, /Keep the grass/); // T256: the choice
   assert.match(n.text, /No refund/);
   assert.match(n.text, /pin and tee markers go/);
 });

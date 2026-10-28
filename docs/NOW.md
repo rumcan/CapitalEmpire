@@ -1,129 +1,121 @@
 # NOW: the live work log
 
-## Historical preparation: parking garage diagonal views (2026-10-26)
-- Branch `lead/garage-eight-views-20261026`, isolated worktree `worktrees/garage-eight-views-20261026`, based on main `fffca10`.
-- Implemented: scoped `prep-garage-views.mjs` (also called by `prep-views.mjs`), append-only `garage-views-library`, shared Studio sizing/eight labelled thumbnails, explicit diagonal picker IDs and lot-lab NE-set entry; R turns within that diagonal set. Original base/N/E/S/W IDs and indices stay intact. Automatic selection for arbitrary road angles remains T154 Phase 2.
-- Checks before artwork: typecheck PASS, 8 focused importer/axis checks PASS (including execution of the generated append function on a fixture: existing base object/index unchanged, four records appended, atlas offset applied, no duplicate IDs), production build PASS (38.8 s). Default `npm test` failed allocating Node semi-space; serial execution of the test bundles then completed: 1847 total, 1839 pass, 7 fail, 1 skip. The missing owner-rough source was a sparse-checkout omission: adding that tracked path makes painted-tiles.test pass (16 pass, 1 skip). Six other failures are outside this garage change: RES side-yard, RangeSim.newDay, two curated-lot JSON checks, new-art swapped count and stationwagon shadow. Logs: `output/garage-full-tests-serial.log`, `output/garage-painted-recheck.log`. No full-suite pass is claimed.
-- Next action: await primary's reviewed v2 (v1 diagonal sheets rejected for duplicate corners/slopes/clipping), import only provenance `integrationStatus: ready` with all four native crops and matching storey count. Inspect actual game and Studio after packing; no art is integrated or on main from this branch yet.
-- Do not ship unreviewed PNGs. Existing axis garage 4/5/6-storey floor counts are disputed and retained as a known art issue; no silent relabelling in this code change. Rough v2 art remains the primary art session's priority.
-
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-29 10:10
+## START HERE (kept current by the lead; last updated 2026-10-28 15:55 SAST)
 
-**Paste-ready start prompts for every role are in `docs/START-PROMPTS.md`:** the lead, a coding ticket, and the other sessions in this
-repo. The weekly usage cap is close (2026-10-26), so any chat may stop at any moment.
+**Taking over as lead?** This section is the one start document. Paste this into a new Claude Code chat (desktop app, Code tab), on any
+account, with the folder `E:\Repos\CapitalEmpire\worktrees\lead-typecheck`:
+```
+You are the new lead on CapitalEmpire (GitHub rumcan/CapitalEmpire), a 1985 golf events manager game. Your folder is
+E:\Repos\CapitalEmpire\worktrees\lead-typecheck. First run `git status` (commit nothing that is not yours), then
+`git fetch origin && git checkout -B lead/takeover-<date> origin/main`, and read docs/NOW.md section "START HERE" there and follow it.
+Load the sq-distortion-check skill once (.claude/skills/sq-distortion-check/SKILL.md) and apply it all session.
+```
+(Do not read the docs in `E:\Repos\CapitalEmpire` itself: that checkout sits on an old side branch, `arena/T026-course-height`, with an
+old CLAUDE.md and NOW.md. `worktrees/theme-consistency` is the owner's live 5174 checkout, kept on main by the auto-updater: read it,
+never commit there.)
 
-**If you are a new AI, maybe on another Claude account, after a switch-over or a crash:**
-1. Read `CLAUDE.md`, this section, then `docs/AGENT-BRIEF.md`. That file holds the agent rules, the brief template, the progress
-   protocol, the ports and the restart checklist.
-2. Restart the 5174 auto-updater (`bash E:/ClaudeTemp/autoupdate-5174.sh` in the background). If http://localhost:5174 is down, start the
-   `.claude/launch.json` config `lead-game`. **5174 must serve `worktrees/theme-consistency`, never the main checkout.**
-3. Read the newest `E:/ClaudeTemp/nightly/<date>.md` and any open `[nightly]` issue. Real failures come first.
-4. Resume every in-flight ticket below: read its issue's last progress comment, commit any WIP left in its worktree, and start an agent on
-   its branch with AGENT-BRIEF's template.
-5. Then take the queue in order. Ask the owner only the questions marked as theirs.
+**Dates:** entries this week dated 2026-10-29 in this file were written on 2026-10-28 (a mislabel); the times are SAST.
 
-**Tests never block a merge** (the owner, 2026-10-26): the lead merges on review + typecheck; agents run their tests after the PR, in
-parallel, and push fixes as follow-up PRs (AGENT-BRIEF sections 1 and 5).
+### 1. Read, then restart (about 10 minutes)
+1. Read `CLAUDE.md`, this section, then `docs/AGENT-BRIEF.md` (the agent rules, the brief template, the progress protocol, the ports, the
+   restart checklist). `docs/LEAD.md` is background on the game.
+   **Load the owner's reasoning skill once:** `.claude/skills/sq-distortion-check/SKILL.md` (the Skill tool, `sq-distortion-check`; about 300
+   words, the short form of the owner's Google Doc). The owner, 2026-10-28: "all AIs that lead the game like this chat does apply this skill";
+   "make sure the new skill does not use a ton of extra tokens": load it once a session, not every turn, and never paste the full Google Doc.
+2. The owner's game is http://localhost:5174 (also http://192.168.0.2:5174 on the LAN), served from `worktrees/theme-consistency`, which
+   `bash E:/ClaudeTemp/autoupdate-5174.sh` fast-forwards to main every minute (log `E:/ClaudeTemp/autoupdate-5174.log`). If the log is
+   older than a few minutes, start the auto-updater in the background (one only). If 5174 is down, start `.claude/launch.json`'s
+   `lead-game`. The studio is 5191 (config `studio`): the owner's, never touch it.
+3. `gh issue list --label status:in-progress`: only live tickets carry that label (cleaned 2026-10-28). For each, read the last progress
+   comment, commit any WIP in its worktree (`git worktree list`), and start an agent on its branch (AGENT-BRIEF section 3's template).
+   An agent that stopped on a usage limit is resumed with SendMessage, not restarted, while its worktree exists.
+4. Read the newest `E:/ClaudeTemp/nightly/<date>.md` and any open `[nightly]` issue, if there are any (no scheduled nightly exists yet; the last full run, 2026-10-27, was all green).
+5. Then the queue (section 4), two coding agents at a time.
 
-**The owner tests on http://localhost:5174.** The owner pre-approves the lead's recommended decisions (state them in chat). The lead
-merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of every change.
+### 2. How the lead works (the owner's rules, in force)
+- **The lead designs, briefs, reviews and merges; agents code.** Each ticket: a GitHub issue (labels `arena`, `golf` for course work,
+  `status:in-progress` while an agent works), an agent from the Agent tool (`general-purpose`, `isolation: "worktree"`, in the
+  background) briefed with AGENT-BRIEF section 3. Small fixes (a few lines) the lead may do itself.
+- **Two coding agents at a time** (16 GB PC). Agent dev servers on 5186 and 5187. When one reports: review the diff's risky parts, check
+  the branch holds origin/main and typechecks, `gh pr merge <n> --merge`, `git worktree remove --force <its worktree>`, update this
+  section, start the next ticket.
+- **Tests never block a merge:** merge on review + typecheck; tests run after, fixes come as follow-up PRs; the full suite is nightly.
+- **The lead's own checks:** work only in `worktrees/lead-typecheck`, on fresh branch names (`lead/<what>`), never `git stash`, never
+  switch a branch in a folder an agent works in. Docs-only PRs: commit, push, PR, merge. To see a change in the game, add a temporary
+  `lead-check` config to `E:/Repos/CapitalEmpire/.claude/launch.json` (npm `--prefix E:/Repos/CapitalEmpire/worktrees/lead-typecheck run dev
+  -- --port 5188 --strictPort`), open `http://localhost:5188/?start=town`, then stop it and remove the config.
+- **Stop what you start** (servers, tests, headless browsers) before you report; never touch 5174 or 5191.
+- **Disk:** never the C: drive; temp files in `E:/ClaudeTemp`, npm cache `E:/npm-cache`.
+- **The owner pre-approves the lead's recommended decisions:** take them and say so in chat. Ask only questions that are truly theirs.
+- **Art:** RUN.world credits are for 3D only (people, clips). Every 2D picture comes from ChatGPT, which the owner runs from
+  `docs/art/CHATGPT-IMAGE-QUEUE.md`: the lead writes ready-to-paste prompts there, in order, with the file name to save, and puts the files
+  in the game when the owner says they are in. Finished art goes straight in, without asking; the old look stays an option. New art
+  replaces every use of the old picture or material. The sun is at the upper right, shadows fall at 145°. No flat colour washes over
+  textures; no visible repeating ground patterns; highlights follow the texture.
+- **UI:** side-opening flyouts, never a sideways scrollbar. The club's tools are in the left drawer; the town's in the footer, which stands
+  in the bottom right corner (#770).
+- **The town's traffic jams are the player's job** (they upgrade roads); never auto-fix congestion.
+- The owner wants screenshots of every visible change. Commits end with the `Co-Authored-By:` line, PR bodies with the Claude Code line.
 
-### Art integration T183 (#459)
+### 3. In flight
+**Two agents running (a new lead took over at ~15:00 on 2026-10-28; the old lead's agents stopped at the usage limit ~14:00):**
+| Ticket | Issue | Branch / worktree | State and next step |
+| --- | --- | --- | --- |
+| T237 | #694 | `arena/T237-car-parks`, in `.claude/worktrees/agent-a632f8aae171a94ae` (Opus 5.5, high effort; port 5186) | **Started ~15:20.** Lands in parts, each its own PR (`[T237] part <n>`, Part of #694): (1) the walking rule (`WALK_SERVE_M` = 150 m), the placement preview and cards; (2) the range set back + a 30-40 m frontage strip; (3) the paved look; (4) how cars and golfers use it + the bench. Lead decision: a car park beyond the walk adds no bays to that venue; drivers with no serving bay turn away as at a full car park, no separate appeal penalty. Merge each part on review + typecheck. |
+| T253 | #735 | `arena/T253-round-off` (a fresh worktree; port 5187) | **Started ~15:55.** Lands in parts (`[T253] part <n>`, Part of #735): (1) Round off + Smoothness in Edges, Edit hole and the style editor (per area and as the brush default; saves; the lie test follows the drawn shape); (2) bunkers like the reference, reworking T227's crescent and lip; (3) the green's edge roll + bake and bench numbers. Merge each part on review + typecheck. |
 
-Branch `lead/garage-eight-views-20261026`, worktree `worktrees/garage-eight-views-20261026`: reviewed native diagonal views for all five parking-garage storey counts and four shrubs (36 pictures). Existing axis IDs and saved indices stay intact; new diagonal sets append once, share Studio sizes and use the actual road heading. Canonical SE/NW names are losslessly corrected from the generator labels. Source art, crop hashes and primary reviews accompany normal packed assets. PR #582: actual engine lot-lab proof on road headings 0/1/2/4/6 has correct authored directions, no mirrored props and zero page errors. Studio visibly loads eight labelled thumbnails for all nine subjects; evidence in `E:/ClaudeTemp/T183/`. Main `6d1e964` is merged; the concept kit stays before supplemental views, preserving existing indices. Shadow audit changes only the 36 new view records. Final typecheck/focused tests are next, followed by lead review/merge. Own check servers 5189/5193 are stopped; no main integration claim before the PR merges.
+**Held, waiting on the owner (not agents):**
+- **#394 T112** (sharp 0.35): approved, merge held until the owner stops the 5191 studio (the lock change makes the auto-updater run
+  `npm ci` in theme-consistency, whose `sharp` the studio holds). Order: owner stops 5191 → merge → let npm ci finish → restart 5191.
+- **#413 P05** the M5 balance plan: open for the owner's approval.
+- **T149 #312** painted terrain follow-ups: waits for the owner's FAR-anchor choice.
+- **The concept look** (`docs/art/CONCEPT-LOOK.md`): step 1, green ground, waits for the owner.
 
-### In flight
+**Not ours:** Codex (the art AI) keeps its own art branches (`lead/garage-eight-views-20261026` and others under `worktrees/`); its
+deliveries come as PRs to review. The 3D people session's handover is `docs/HANDOVER-PEOPLE.md`.
 
-**T258 #749 continuous art subjobs** (`lead/continuous-art-plans-20261029`, own sparse worktree): extending catalogue parsing and durable AI plans to every 2D family, with exact independent deliverables and live linked-source hashes. Existing T250 task/thread/state remain untouched; only 180a-run is reserved to primary, 180b/c/d remain pending. Plan/subjob dispatch, strict source/plan/id/PNG/alpha checks and immutable deployment module list are implemented; 48 focused planner/recovery/end-to-end fixtures and 23 legacy supervisor checks pass. Added hash-bound sidecar-held reasons and effective-prompt guards. Typecheck passes. Root handover and explicit queued correction are source-bound; newest live queue ordering is followed (now item181 before stand-ins and180). Local live-only/native-export reuse copies verified pixels without generation. The reviewed deck and held grey v1/v2 sources/proofs are staged with explicit v3 correction, not runtime readiness. Next: final targeted reuse fixtures, fresh-main PR and reviewed deployment; real worker quota notBefore2026-10-28T15:32:44.457Z remains unchanged.
+**T258 #749 continuous-art follow-up** (`lead/continuous-art-plans-20261029`): generic live-source AI plans and one exact subjob per batch, explicit versioned corrections, held review metadata and lossless native/live-only reuse. Current live priority181 is respected; 180a-v3 remains explicitly queued, v1/v2 held and b/c/d pending. Reviewed source art/proofs are in this branch; runtime registration remains separate. Quota retry2026-10-28T15:32:44.457Z is unchanged. Typecheck/focused fixtures pass; final fresh-main checks and PR/deployment next.
 
-**Accepted green/fringe delivery (T217 #569, `lead/terrain-green-fringe-20261027`):** publish the two new canonical handoffs and their
-source closure; add the complete green set as `putting-green-finished`, retaining the legacy pinned green and every curated surface choice.
-Fringe keeps its existing ID and PNGs while gaining canonical acceptance. PR #726 is uploaded, fresh main 8e7742d merged, typecheck and 24 focused tests pass. All 345 existing images, 30 other family records and current surface choices are unchanged. Mature-sod actual game NEAR/MID/FAR and Studio evidence is in art/theme-consistency/reviews/T217-green-fringe/; temporary review choices only. MID surrounding chunk differences remain and current MID/FAR coverage is 5.73 tiles, documented honestly. Next: lead review/merge; no owner mapping reset. #486 source delivery is merged.
+### 4. Queue (in order; start the next when an agent lands)
+1. **T262 #769** grass catches the camera's shine: a bump map for every grass type, lit as the camera moves (a prototype with a verdict
+   first; builds on T215's camera specular; the GPU budget is tight).
+2. **T263 #771** New hole shapes its ground: gentle fairway rolls, mounds and swales, a tilted green (auto, priced, undoable, a tick box).
+3. **T259 #759** farms: seasonal corn and ploughed fields, orchards in rows, farmhouses set back on a poplar-lined lane (art 185-189 from
+   ChatGPT; stand-ins until then).
+4. **T248 #718** water that moves: research first, two flowing textures, waves lapping at the shore.
+5. **T251 #728** balls bounce and roll on the ground (the range, the course, NPCs and you).
+6. **T249 #719** a grey stone water border with planting, switchable: waits for the owner's ChatGPT art (item 180).
+7. **P28** (you, the town and its people; `docs/plans/P28.md`): T242 #702 set-the-scene cards → T243 #703 portraits → T240 #704 your
+   character → T241 #705 your skills → T244 #706 money matches → T245 #707 a healthier town → T246 #708 your tournament and the Mayor's Cup.
+8. **T214 phase 1** memberships (plan P26, #695) → **T212 #557** putt, chip, tee-up and coaching clips.
+9. Older lists: see "History: START HERE as it stood on 2026-10-28 morning" below and `gh issue list --label arena --state open`.
 
-**Accepted terrain source delivery (#383, `lead/terrain-ready-20261026`):** the four accepted families' canonical selections, native PNGs,
-provenance and review proofs are being committed from the art checkout. T170 already packed these exact accepted long-grass hashes;
-this delivery preserves those packed bytes and the owner's `rough-owner` mapping. Also guard asset preparation against explicitly held
-appearance reviews and make the green fallback follow a future canonical selection. Verified 440 source files, 717 path/hash bindings and
-all 48 primary native/packed sizes, with zero missing references or mismatches. Typecheck and the three focused prep fixtures pass.
-Next: review and merge the source delivery PR. No full suite/build, new browser session or owner server changes were needed; runtime pixels
-are unchanged. Green/fringe remain separate pending handoffs.
+### 5. Waiting on the owner's ChatGPT art (`docs/art/CHATGPT-IMAGE-QUEUE.md`, in this order) and what the lead does when it lands
+1. **Art 181, the missing menu tiles** (one sheet of 12, `art/theme-consistency/generated/ui/golf-build-tool-tiles-sheet-v2.png`): cut it
+   with `scripts/assets/prep-ui-tool-tiles.mjs` (give it the sheet and a second NAMES table: waste, halfway-house, your-holes, tournament /
+   land, bushes, palms, props / furniture, long-grass, chipping, build), add the names to `src/ui/tool-tiles.ts` and point the rows at them
+   (`SURFACE_TILE`, `ROW_TILE`, `PLANT_TILE`, `PRACTICE_TILE`, `PROP_GROUP_TILE`, the Course extras in `src/ui/flyout-menu.ts`).
+2. **The range's stand-in buildings** (8 slugs, two views each): `node scripts/assets/prep-range-art.mjs` puts them in (T258 #765 built it).
+3. **Farms** (185-189): for T259. 4. **The grey stone border** (180): for T249. 5. **Scenes batch 2**: for P28 T242.
 
-| Ticket | Issue | Branch | Worktree | Port | State |
-| --- | --- | --- | --- | --- | --- |
-| T255 | #739 | `arena/T255-footer-panels` | an `isolation: worktree` agent | 5187 | **Agent 2 (Opus, started 11:20).** A town tool's panel opens above the footer (roads, junctions, transport, Town decoration's Paint and Props), the club's keep the left panel; shared tools follow where they were opened. To resume: #739. |
-| T235 | #690 | `arena/T235-title` | an `isolation: worktree` agent | 5186 | **Agent 2 (Sonnet, started 10:45).** The top bar's title as the concept's: the club's name growing with it (Driving Range, Golf Club, Golf & Country Club) over "Year N • Month • Weather °C"; one row down to 1366 px. To resume: #690. |
-| ART-RUN | — | none (art files, untracked, as Codex keeps them) | the main checkout's `art/theme-consistency/generated/ground/run-grass/` (read-only git) | — | **Image-generation agent (RUN.world, rumcan@gmail.com; not a coding agent).** The owner's method (`docs/art/GROUND-TEXTURE-METHOD.md`) works at RUN's own 1376x768 with no resampling. **First cut v1** (all three bands) made from one frame's quarters: 688x384 tiles, about 16 a view, so repeats show (FAR a tone checkerboard). **What works (first cut NEAR, approved by the lead):** tile 1 by the owner's method in RUN; **tiles 2-4 by image quilting from tile 1** (`E:/ClaudeTemp/ART-RUN/scripts/quilt.mjs`, Efros-Freeman, 192 px patches, min-error cuts, the shared border a plain quilt too), no RUN calls: the 4x4 has no grid, no seams, tone within 0.3. **Failed and dropped:** four independent screenshots (RUN paints a different lawn each time) and outpainting (RUN copies what it sees; a strip anchor leaves a straight line). **First cut is IN THE GAME** (#586, the owner: "yes merge"): family `first-cut-run`, shipped by `prep-painted-tiles.mjs` `RUN_SETS` from `run-grass/first-cut/<band>/tiles-v3b` (run it from a worktree on main with `--art E:/Repos/CapitalEmpire --owner-art <the worktree>`; without `--owner-art` the owner's paintings drop out; ship only the family you mean to: the art session's READY-MATERIALS has moved on for fringe and putting green, unreviewed). **The tee is IN THE GAME** (#590, `tee-run`). **The owner's rule from now on: finished art goes straight in, no asking** ("put stuff in the game, dont ask just do it we can always remove it later"; the old look stays a Studio option). **Blocks and lawns, waiting for the leaves (the owner, 20:30):** the town blocks wear the desert (#625); the owner found dirt beside the bright lawns poor, then: "the dirt and grass blend will work when you add more leaves. so try that first". So nothing changes until T220's leaves land. Ready if still wanted after: branch `lead/blocks-fescue` (PARKED, not merged: blocks a browner golden fescue, the block under-layer the fescue, lot lawns duller), and the art agent's `fescue-brown-run` (a new browner fescue for the blocks: MADE, all three bands, `run-grass/fescue-brown/<band>/tiles-v1`, kind grass; the owner has its sheet `E:/ClaudeTemp/ART-RUN/FESCUE-BROWN-in-the-game-contact.png`; on hold until the leaves land). **TOP PRIORITY for the art agent (the owner, this evening: "priority above all else"):** the art session's scene paintings in `art/theme-consistency/generated/ground/scene-backgrounds/` made into tile sets and shipped: desert, swamp (find its source or make it in RUN with the owner's method; T199 #517 waits for it), dirt, sand-raked, then any painting that beats a provisional set in the game. Tile 1 = the painting (desert and dirt: the shop left out), tiles 2-4 quilted, no resampling; RUN only where quilting cannot fix it. The lead ships each material as it lands (`prep-painted-tiles.mjs` RUN_SETS, then a surface mapping). **The fringe is HELD:** MID and FAR are made (`run-grass/fringe/{mid,far}/tiles-v1`), but RUN's safety filter refused every NEAR fringe edit (8 tries); a family needs all three levels and a borrowed NEAR would jump in colour. A fresh art agent (the first one's context ran long; it resumes from `E:/ClaudeTemp/ART-RUN/PROGRESS.md`) retries NEAR once with a new screenshot and wording, else marks it blocked. **Standing order (the owner, this evening): the art agent keeps making the art list** (`docs/GOLF-ART-LIST.md`, its Progress section marks what is done): the fringe, the rough, section 8's ground pictures, the range's top-down pictures (19, 20, 21, 27, 147), a one-view sprite pilot (36, 43, 45) then the B items, and the A items as **two views** (the owner: "two diffrent angles of each thing same lighting from top right always": front+right and left+front, never mirrored). Its item status: `E:/ClaudeTemp/ART-RUN/ART-LIST-STATUS.json`; the lead integrates and marks the list. Sprites need atlas room (GPU 95.8 / 96 MB): retire old Halloween sprites first. The game must show view 1 or 2 by facing (a small code change when the first two-view items land). **Sprites stay with Codex:** RUN's four-view turns failed the pilot (views not one rigid object, no margins; the magenta key itself was clean). Every RUN generation is deleted from the library once on disk (0 left at the last check). **The art agent stopped at 21:10 on RUN's DAILY image cap** ("[AI_POLICY_BUDGET_EXHAUSTED] Daily user credit cap reached for imageGen"; 19,875 credits left, 4,800 spent today): resume it after the reset with a fresh agent from `E:/ClaudeTemp/ART-RUN/PROGRESS.md` (its end lists the next steps: retakes of 20, 27, 147 with the v2 prompts, then the sprite pilot 36/43/45 on magenta, then the shack as two views). 134 Event matting is deferred (quilting breaks a panel grid). 19 the hitting mat is made (top-down, `run-top/golf-range-mats/golf-range-mats-top-v1.png`), not drawn yet; quilting costs none. To resume: `E:/ClaudeTemp/ART-RUN/PROGRESS.md`. |
-| T112 | #199 | `arena/T112-sharp` (PR #394) | `.claude/worktrees/t112` | — | **Approved, merge HELD for the owner:** a lock change makes the 5174 auto-updater run `npm ci` in theme-consistency, whose node_modules the live 5191 studio holds (sharp). Order: the owner stops 5191 → merge #394 → let npm ci finish → restart 5191 and 5174. All shipped bytes identical on 0.35.5; audit 0. |
-| P05 | #68 | PR #413 **open for the owner's approval** | — | — | The M5 balance plan, measured: arrival 47% at tier 1 from a fresh start (the start's 56-bay car park holds 168 fans), 100% with car parks; 10% at tier 2 fresh, 70-81% with car parks; an 18 of ~5,900 m fits the starting land on every seed (~$190k seeded); with the proposals a careful player reaches tier 3 in year 4. Knob recommended for "careless out-saves careful": sponsors x (1 + (rep-50)/50). |
-| T183 / T168 | #459, PR #486 | `lead/garage-eight-views-20261026`, `lead/terrain-ready-20261026` | `worktrees/*` | 5193 | **Codex (the art AI), not ours:** reviewed diagonal parking garages (189 commits ahead of its remote, uncommitted files: Codex's to commit); PR #486 commits accepted terrain sources (+357k lines, 445 files): review with the art session before merging. Its studio 5193 is Codex's. |
+### 6. Latest merges (2026-10-28)
+#779 [nightly] #776 fixed: building sites have their cable spool again (T232 dropped it); the kit, construction and lettering tests
+follow the code (#582's extra views sit after the kit; nothing is drawn mirrored) · #774 T260 Border can be none: no band round tees, bunkers and ponds by default (the fairway's first cut and the green's fringe keep
+theirs), the bunker's grass lip and the pond's wet soil kept, Border and More options › Edges never open empty (shots `E:/ClaudeTemp/T260/`) ·
+#775 no bush, tree, plant or rock is ever mirrored (the sun stays at the upper right) and the town's bushes and ferns in the course's
+Props · #773 T261 Tone is one Exposure slider (the texture's own pixels darker or lighter) and the Waste area wears its style · #772 this
+handover · #770 the town footer in the bottom right corner · #768 T254 Edit Hole Layout moves only the tees and flag, four tee sets (blue, white,
+yellow, red) · #765 T258 the range's mats and target greens as pictures, `prep-range-art.mjs` · #761 Layer under / Replace · #758 T256
+Range › Build and per-owner looks. Older: "Done recently" below.
 
-**Two coding agents at a time (the owner, 2026-10-26: first "maybe just too many background tasks?" after the studio tab died with the
-PC at 1.5 GB free, then "start up two coding agents"):** keep two coding agents running, start the next queue ticket when one lands, no
-more (the owner allowed a third for T157 on 2026-10-26); each runs one heavy process at a time. Both stopped once at the usage limit (13:50) and were resumed: an agent that stops on a
-limit is resumed with a message, not restarted.
-
-**One studio (the owner, 2026-10-26: "when a studio is running it is the only studio and any changes made affect the actual game
-sprites"; "put the studio on the network for all pcs on network to edit").** The lot lab's branch is on main (#290): the only studio is
-port 5191 from `worktrees/theme-consistency`, the checkout of the owner's 5174 game, both on the LAN (http://192.168.0.2:5191 and
-http://192.168.0.2:5174; launch configs `studio` with `STUDIO_HOST=0.0.0.0`, `lead-game` with `--host 0.0.0.0`). Never start a second
-studio for the owner; an agent's check studio (5193) is stopped before it reports. The old lot lab servers (5241, 5242) and its
-worktree `.claude/worktrees/lot-presets` are dead: the owner closes the servers, then the worktree goes. The owner restored
-`variation:gen-house-l-shape-e0e3b328-plain:1` for its 9 lot presets (#294); `tests/lot-presets-json.test.ts` passes again.
-
-**2026-10-27 nightly** (main `81a66c0`, run by the lead with a haiku-runner at 02:30; **no scheduled nightly task exists**,
-`E:/ClaudeTemp/nightly/2026-10-27.md`): typecheck, **1906/1906 tests**, the build, sim, town, towns, fix, event and biz gates **all PASS**.
-Gap: no gate covers the range start (T098).
-
-**2026-10-26 manual regression** (main `d750592`, `E:/ClaudeTemp/nightly/2026-10-26-manual.md`): typecheck, 1697/1697 tests, the build,
-sim, town, towns and biz gates PASS; fix and event gates FAIL (#285). towns/event/biz had not run for days (no .webp loader; fixed by #286).
-
-Each agent pushes its branch and comments on its issue after every sub-step,
-ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D spectators) keep their own handover docs; see
-`docs/START-PROMPTS.md`.
-
-### Queue (in order)
-- **Restart 2026-10-27 14:50 (the owner: "we switched to another acc that now ran out of usage. please check status and start up development").**
-  The other account's lead merged #511-#530 (car lights, lawns, gas station, flyouts, Land for sale, main green). At its limit it left T202's
-  work uncommitted (saved as WIP c8bbbcd) and three ground PRs open (#514 T196, #518 T197, #522 T195 1-2: reviewed, typechecked together,
-  merged). The 12 last 3D people finished on 2026-10-26 and are committed on `art/people-ground-20261024` (0bd25f4): T203 #531.
-  Housekeeping: T174-T177, T179, T184 closed (merged earlier). The 5174 auto-updater ran 5 times over; the owner approved stopping 4
-  (one left, bash PID 31220). Still listening, not ours: a stray vite on 5189 (an agent's, gone since 07:50) and the dead lot lab's 5241.
-- **The concept look (the owner, 21:30: "this is the look and feel we need to get to"):** `docs/art/CONCEPT-LOOK.md` (#635) has the reference, the gaps and the code work in order; its art is GOLF-ART-LIST section 12 (items 149-175). **Waiting on the owner:** step 1, green ground (the map, the blocks and the yards go green; it reverses #625 and the map half of #621). Step 2, a golden-hour colour grade, is the next code ticket after the owner's queue.
-- **Next, in order, when an agent lands:** (T247 #717 and T255 #739 are running) **T257 #747** props: real shadows on rocks and plants, sharp thumbnails, every variant shown and a "mixed" brush, R turns (rocks and plants flip too) and [ ] scales 80-120% (the owner) → **T256 #743** paint your property apart from holes (Range › Build); each hole and practice facility owns its paint AND its looks (editing a bunker on one hole no longer changes every bunker); delete or save a hole with them (the owner) → **T254 #736** Edit Hole Layout moves only the tees and the flag (no regrowing), four tee sets blue, white, yellow, red (the owner) → **T253 #735** round and smooth any painted area (a tick box and a slider) and bunkers like the owner's reference (`docs/art/reference/bunkers-and-pond-reference.png`; after T252) → **T248 #718** water that moves (research first, two flowing textures, waves lapping at the shore) → **T251 #728** balls bounce and roll on the ground (the range, the course, NPCs and you; the owner) → **T249 #719** a grey stone water border with planting on any water (waits for the owner's ChatGPT art, item 180) → (done: **T239 #699** the range start as a guided build (the owner, 2026-10-28: the car park starts as dirt, no walkway beside the tee, the player builds the target greens, the path and the car park, and buys the practice area, all taught by `RANGE_GUIDE`; Opus high, two phases) and **T238 #697** course painting (these two can run side by side) (paint inside Edit hole, a round isometric brush, Long grass as a surface: the owner, 2026-10-28) → **T237 #694** the course car park (placement, look, how people use it: the owner) → **P28** (the owner, 2026-10-28: you, the town and its people; `docs/plans/P28.md`, art GOLF-ART-LIST section 13): T242 #702 set-the-scene cards → T243 #703 people's cards and portraits → T240 #704 your character → T241 #705 your skills → T244 #706 money matches → T245 #707 a healthier town → T246 #708 your tournament and the Mayor's Cup (the art first: the art agent on 200-204 and 211) → **T214 phase 1** memberships (plan P26 merged #695; the owner's questions Q1-Q5 taken as recommended, pre-approved, until the owner says otherwise) → the golf play tickets: **T212 #557** putt, chip, tee-up and coach clips → then **T112 #199** (merge #394 when the owner stops 5191) →
-  **T149 #312** (waits for the owner's FAR-anchor choice) → the lists below.
-  (Golf play P1-P4 is on main from #258; the owner asked for its tickets on 2026-10-27, 18:05. T215 #561 stays open for the owner's call on
-  water and roads by day.)
-- **P25 #348 lots generated on the fly** (the owner: "start over with the lot presets we need a workflow that gets us to generating perfect
-  lots on the fly"): hard rules + learned per-sector taste (T158 wizard, in flight) → T159 bootstrap from the existing presets + a 12-lot
-  gallery → T160 the generator in the game, seeded per lot, model as data → T161 pairs, densities by state, a 50-seed exam sheet. The
-  presets file stays (archive, one-off overrides). Same agent as T155/T158.
-- **Scene-background paintings (checked 2026-10-26 evening, main checkout, untracked):** `art/theme-consistency/generated/ground/scene-backgrounds/<material>/`
-  holds one building-free painting a level (`*-background-anchored-v1.raw.png`, ~1742x903) for fairway, putting-green, lake, sand-raked,
-  sand-ripples, golden-fescue and long-grass; desert and dirt only the version with the shop. `long-grass/*-uniform-background-v2` = the
-  owner's rough already in the game (#360, same sha256). Fairway and putting-green go in through T165; lake, sands and fescue keep the
-  art session's seam-repaired READY tiles unless the owner prefers the paintings.
-- **Texture art status (2026-10-26 15:30):** the art session (Codex; `art/theme-consistency/material-texture-batches/ACTIVE-WORK.json`)
-  has finished 2 of its 14 families (golden fescue, lake: in the game). sand-ripples has raw variants, sand-raked 2/12, desert/dirt
-  anchors only; fairway, putting-green, first-cut, long-grass and the rest have job files and no pictures yet. Each lands through
-  READY-MATERIALS → `node scripts/assets/prep-painted-tiles.mjs` → a surface in Studio › Painted.
-0b. **T149 #312 painted terrain follow-ups** (waits for the owner's FAR-anchor choice after T150): real game-vs-proof comparisons (T145's side-by-sides were invalid), the in-band zoom steps
-   (the owner's call), seams, DPR 2 softness, rivers.
-1. **The nightly.** The owner should allow the nightly session's commands so it runs unattended. fix:gate's new default (seed 1 day 60)
-   passes by 1.8 points only: if it flips, retune the scenario (#298's header has the scan table), do not touch traffic.
-2. **The owner's new grass paintings**, when they arrive. Import them with `scripts/assets/prep-painted-families.mjs` (the families list
-   in the script), then map them per surface in Studio › Painted.
-3. **P24 follow-ups:**
-   - the putt, chip and coaching clips;
-   - real art for the stand-ins in `docs/GOLF-SPRITES.md` (the range, practice and props kits).
-4. **The owner's call:** the top bar's chip words are icons only below 2200 px (T135). Bring the words back at 1920 if the owner asks.
-5. **Older lists:** T110's rest of the game (paint-edges rims, water glints, prop and tree shadows: T141 covers the props); P23 Phase 2
-   (one Streets tool, holes drawn like a road, season and hole cards); P22 T090-T098; P21 T101 and T103-T107; M2/M3 leftovers; T112
-   (the sharp bump). See the History sections below and `gh issue list --label arena --state open`.
-
-### Done recently (newest first; details in each PR)
+### 7. Done recently (newest first; details in each PR)
+- 2026-10-29 15:20: **#765 T258 range art**: the hitting mats (19) and target greens (20, 27) are laid as ground pictures (the bullseye on the 200 m green; the stand-ins stay a Studio › Painted › Range art option); `scripts/assets/prep-range-art.mjs` waits for the owner's ChatGPT buildings (none yet). **Art 181** queued first in ChatGPT: the menu tiles still missing (the owner: "some menu items stuff waiting for a cute mini isometric icon"). **T260 #763** Border defaults and **T261 #766** Tone as exposure filed.
+- 2026-10-29 14:10: **#761 Layer under / Replace** on every paint brush (the owner): Replace paints over higher surfaces (rough over a fairway). **#758 T256**: Range › Build paints the property (no hole); each hole, the property and each practice facility own their looks (`golf/looks.ts`, "Editing Bunkers on hole 9", Course default, Apply to all holes); Delete hole with or without its grass; Save hole to My holes and New hole › From My holes. Left: border width, shadow and height still course-wide. **#757 T257 props**: the kit's 55 pictures had no vector shadows (detached blobs): drafted; sharp thumbnails from the masters; nine boulder cards and "mixed" brushes; R mirrors natural props, [ ] scales 80-120%.
+- 2026-10-29 13:10: **#754** footer menus open on a click, close on the next (with the panel), and the panel has a close button (the owner). **The range's stand-in buildings**: none replaced yet (RUN's two-view turns failed; 2D now ChatGPT): their prompts are first in `docs/art/CHATGPT-IMAGE-QUEUE.md`; T258 draws the made mats and target greens and picks up the owner's ChatGPT files.
+- 2026-10-29 12:00: **#751 T255 the town tools' panels open above the footer** (roads, junctions, transport, Town decoration's Paint and Props; shared tools follow where they were opened; capped at 60% height; moves aside of the bottom cards; one known gap at 125% UI on 1366 px with two cards open). **#750 T247 soft dirt edges**: the dirt-to-fescue (and desert, dirt car park, dirt tee) edge is a noise-broken band about 3/6/9/10 tiles at 30/15/8/4% (the old edge was a fixed-pixel cut, and T217 skipped the tufts at far bands); bake +0.3 ms at 30%, about +2 ms at 8% on range20 (borderline, noisy: watch it in the nightly bench).
 - 2026-10-29 11:15: **#745 T252 course painting polish**: real-texture swatch pucks with their borders (one painter for swatches and the cursor), an even grid, My looks and Ground height in Edit hole, an eraser cursor, no Cart path swatch (Long grass key 8). Looks are course-wide today: T256 makes them per hole and per facility (the owner).
 - 2026-10-29 10:40: **#741** the rail says Range, no Course/Town heading words; **#742** Build buttons in gold (the owner).
 - 2026-10-29 10:20: **#738** the tool panel closes on Select with nothing selected (the owner).
@@ -495,6 +487,124 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
 - **Disk:** E: has about 30-45 GB free. Each agent worktree with node_modules is about 4.3 GB. Remove it as soon as its PR merges.
 - **Others in the repo:** other sessions work here too (branches `lead/golf-play`, the people session's `worktrees/people-ground`,
   `finite-atlas-runtime-20261026`). Do not touch their worktrees.
+
+## History: START HERE as it stood on 2026-10-28 morning (superseded by START HERE above; kept for its notes)
+
+**Paste-ready start prompts for every role are in `docs/START-PROMPTS.md`:** the lead, a coding ticket, and the other sessions in this
+repo. The weekly usage cap is close (2026-10-26), so any chat may stop at any moment.
+
+**If you are a new AI, maybe on another Claude account, after a switch-over or a crash:**
+1. Read `CLAUDE.md`, this section, then `docs/AGENT-BRIEF.md`. That file holds the agent rules, the brief template, the progress
+   protocol, the ports and the restart checklist.
+2. Restart the 5174 auto-updater (`bash E:/ClaudeTemp/autoupdate-5174.sh` in the background). If http://localhost:5174 is down, start the
+   `.claude/launch.json` config `lead-game`. **5174 must serve `worktrees/theme-consistency`, never the main checkout.**
+3. Read the newest `E:/ClaudeTemp/nightly/<date>.md` and any open `[nightly]` issue. Real failures come first.
+4. Resume every in-flight ticket below: read its issue's last progress comment, commit any WIP left in its worktree, and start an agent on
+   its branch with AGENT-BRIEF's template.
+5. Then take the queue in order. Ask the owner only the questions marked as theirs.
+
+**Tests never block a merge** (the owner, 2026-10-26): the lead merges on review + typecheck; agents run their tests after the PR, in
+parallel, and push fixes as follow-up PRs (AGENT-BRIEF sections 1 and 5).
+
+**The owner tests on http://localhost:5174.** The owner pre-approves the lead's recommended decisions (state them in chat). The lead
+merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of every change.
+
+### Art integration T183 (#459)
+
+Branch `lead/garage-eight-views-20261026`, worktree `worktrees/garage-eight-views-20261026`: reviewed native diagonal views for all five parking-garage storey counts and four shrubs (36 pictures). Existing axis IDs and saved indices stay intact; new diagonal sets append once, share Studio sizes and use the actual road heading. Canonical SE/NW names are losslessly corrected from the generator labels. Source art, crop hashes and primary reviews accompany normal packed assets. PR #582: actual engine lot-lab proof on road headings 0/1/2/4/6 has correct authored directions, no mirrored props and zero page errors. Studio visibly loads eight labelled thumbnails for all nine subjects; evidence in `E:/ClaudeTemp/T183/`. Main `6d1e964` is merged; the concept kit stays before supplemental views, preserving existing indices. Shadow audit changes only the 36 new view records. Final typecheck/focused tests are next, followed by lead review/merge. Own check servers 5189/5193 are stopped; no main integration claim before the PR merges.
+
+### In flight
+**Accepted green/fringe delivery (T217 #569, `lead/terrain-green-fringe-20261027`):** publish the two new canonical handoffs and their
+source closure; add the complete green set as `putting-green-finished`, retaining the legacy pinned green and every curated surface choice.
+Fringe keeps its existing ID and PNGs while gaining canonical acceptance. PR #726 is uploaded, fresh main 8e7742d merged, typecheck and 24 focused tests pass. All 345 existing images, 30 other family records and current surface choices are unchanged. Mature-sod actual game NEAR/MID/FAR and Studio evidence is in art/theme-consistency/reviews/T217-green-fringe/; temporary review choices only. MID surrounding chunk differences remain and current MID/FAR coverage is 5.73 tiles, documented honestly. Next: lead review/merge; no owner mapping reset. #486 source delivery is merged.
+
+**Accepted terrain source delivery (#383, `lead/terrain-ready-20261026`):** the four accepted families' canonical selections, native PNGs,
+provenance and review proofs are being committed from the art checkout. T170 already packed these exact accepted long-grass hashes;
+this delivery preserves those packed bytes and the owner's `rough-owner` mapping. Also guard asset preparation against explicitly held
+appearance reviews and make the green fallback follow a future canonical selection. Verified 440 source files, 717 path/hash bindings and
+all 48 primary native/packed sizes, with zero missing references or mismatches. Typecheck and the three focused prep fixtures pass.
+Next: review and merge the source delivery PR. No full suite/build, new browser session or owner server changes were needed; runtime pixels
+are unchanged. Green/fringe remain separate pending handoffs.
+
+| Ticket | Issue | Branch | Worktree | Port | State |
+| --- | --- | --- | --- | --- | --- |
+| T254 | #736 | `arena/T254-tees` | an `isolation: worktree` agent | 5187 | **Agent 2 (Opus high, started 14:05).** Edit Hole Layout moves only the tees and the flag (no regrowing, warnings when off the green or tee); four tee sets blue, white, yellow, red on the existing back/middle/forward markers. To resume: #736. |
+| T261 | #766 | `arena/T261-tone-exposure` | an `isolation: worktree` agent | 5186 | **Agent 1 (Opus, started 15:20).** The style editor's Tone does nothing (find why: the waste area wears its preset; T256's per-owner looks) and becomes an exposure filter (one slider, darker to lighter of the texture itself, no flat tint; old saves map across). The owner, 2026-10-29. |
+| ART-RUN | — | none (art files, untracked, as Codex keeps them) | the main checkout's `art/theme-consistency/generated/ground/run-grass/` (read-only git) | — | **Image-generation agent (RUN.world, rumcan@gmail.com; not a coding agent).** The owner's method (`docs/art/GROUND-TEXTURE-METHOD.md`) works at RUN's own 1376x768 with no resampling. **First cut v1** (all three bands) made from one frame's quarters: 688x384 tiles, about 16 a view, so repeats show (FAR a tone checkerboard). **What works (first cut NEAR, approved by the lead):** tile 1 by the owner's method in RUN; **tiles 2-4 by image quilting from tile 1** (`E:/ClaudeTemp/ART-RUN/scripts/quilt.mjs`, Efros-Freeman, 192 px patches, min-error cuts, the shared border a plain quilt too), no RUN calls: the 4x4 has no grid, no seams, tone within 0.3. **Failed and dropped:** four independent screenshots (RUN paints a different lawn each time) and outpainting (RUN copies what it sees; a strip anchor leaves a straight line). **First cut is IN THE GAME** (#586, the owner: "yes merge"): family `first-cut-run`, shipped by `prep-painted-tiles.mjs` `RUN_SETS` from `run-grass/first-cut/<band>/tiles-v3b` (run it from a worktree on main with `--art E:/Repos/CapitalEmpire --owner-art <the worktree>`; without `--owner-art` the owner's paintings drop out; ship only the family you mean to: the art session's READY-MATERIALS has moved on for fringe and putting green, unreviewed). **The tee is IN THE GAME** (#590, `tee-run`). **The owner's rule from now on: finished art goes straight in, no asking** ("put stuff in the game, dont ask just do it we can always remove it later"; the old look stays a Studio option). **Blocks and lawns, waiting for the leaves (the owner, 20:30):** the town blocks wear the desert (#625); the owner found dirt beside the bright lawns poor, then: "the dirt and grass blend will work when you add more leaves. so try that first". So nothing changes until T220's leaves land. Ready if still wanted after: branch `lead/blocks-fescue` (PARKED, not merged: blocks a browner golden fescue, the block under-layer the fescue, lot lawns duller), and the art agent's `fescue-brown-run` (a new browner fescue for the blocks: MADE, all three bands, `run-grass/fescue-brown/<band>/tiles-v1`, kind grass; the owner has its sheet `E:/ClaudeTemp/ART-RUN/FESCUE-BROWN-in-the-game-contact.png`; on hold until the leaves land). **TOP PRIORITY for the art agent (the owner, this evening: "priority above all else"):** the art session's scene paintings in `art/theme-consistency/generated/ground/scene-backgrounds/` made into tile sets and shipped: desert, swamp (find its source or make it in RUN with the owner's method; T199 #517 waits for it), dirt, sand-raked, then any painting that beats a provisional set in the game. Tile 1 = the painting (desert and dirt: the shop left out), tiles 2-4 quilted, no resampling; RUN only where quilting cannot fix it. The lead ships each material as it lands (`prep-painted-tiles.mjs` RUN_SETS, then a surface mapping). **The fringe is HELD:** MID and FAR are made (`run-grass/fringe/{mid,far}/tiles-v1`), but RUN's safety filter refused every NEAR fringe edit (8 tries); a family needs all three levels and a borrowed NEAR would jump in colour. A fresh art agent (the first one's context ran long; it resumes from `E:/ClaudeTemp/ART-RUN/PROGRESS.md`) retries NEAR once with a new screenshot and wording, else marks it blocked. **Standing order (the owner, this evening): the art agent keeps making the art list** (`docs/GOLF-ART-LIST.md`, its Progress section marks what is done): the fringe, the rough, section 8's ground pictures, the range's top-down pictures (19, 20, 21, 27, 147), a one-view sprite pilot (36, 43, 45) then the B items, and the A items as **two views** (the owner: "two diffrent angles of each thing same lighting from top right always": front+right and left+front, never mirrored). Its item status: `E:/ClaudeTemp/ART-RUN/ART-LIST-STATUS.json`; the lead integrates and marks the list. Sprites need atlas room (GPU 95.8 / 96 MB): retire old Halloween sprites first. The game must show view 1 or 2 by facing (a small code change when the first two-view items land). **Sprites stay with Codex:** RUN's four-view turns failed the pilot (views not one rigid object, no margins; the magenta key itself was clean). Every RUN generation is deleted from the library once on disk (0 left at the last check). **The art agent stopped at 21:10 on RUN's DAILY image cap** ("[AI_POLICY_BUDGET_EXHAUSTED] Daily user credit cap reached for imageGen"; 19,875 credits left, 4,800 spent today): resume it after the reset with a fresh agent from `E:/ClaudeTemp/ART-RUN/PROGRESS.md` (its end lists the next steps: retakes of 20, 27, 147 with the v2 prompts, then the sprite pilot 36/43/45 on magenta, then the shack as two views). 134 Event matting is deferred (quilting breaks a panel grid). 19 the hitting mat is made (top-down, `run-top/golf-range-mats/golf-range-mats-top-v1.png`), not drawn yet; quilting costs none. To resume: `E:/ClaudeTemp/ART-RUN/PROGRESS.md`. |
+| T112 | #199 | `arena/T112-sharp` (PR #394) | `.claude/worktrees/t112` | — | **Approved, merge HELD for the owner:** a lock change makes the 5174 auto-updater run `npm ci` in theme-consistency, whose node_modules the live 5191 studio holds (sharp). Order: the owner stops 5191 → merge #394 → let npm ci finish → restart 5191 and 5174. All shipped bytes identical on 0.35.5; audit 0. |
+| P05 | #68 | PR #413 **open for the owner's approval** | — | — | The M5 balance plan, measured: arrival 47% at tier 1 from a fresh start (the start's 56-bay car park holds 168 fans), 100% with car parks; 10% at tier 2 fresh, 70-81% with car parks; an 18 of ~5,900 m fits the starting land on every seed (~$190k seeded); with the proposals a careful player reaches tier 3 in year 4. Knob recommended for "careless out-saves careful": sponsors x (1 + (rep-50)/50). |
+| T183 / T168 | #459, PR #486 | `lead/garage-eight-views-20261026`, `lead/terrain-ready-20261026` | `worktrees/*` | 5193 | **Codex (the art AI), not ours:** reviewed diagonal parking garages (189 commits ahead of its remote, uncommitted files: Codex's to commit); PR #486 commits accepted terrain sources (+357k lines, 445 files): review with the art session before merging. Its studio 5193 is Codex's. |
+
+**Two coding agents at a time (the owner, 2026-10-26: first "maybe just too many background tasks?" after the studio tab died with the
+PC at 1.5 GB free, then "start up two coding agents"):** keep two coding agents running, start the next queue ticket when one lands, no
+more (the owner allowed a third for T157 on 2026-10-26); each runs one heavy process at a time. Both stopped once at the usage limit (13:50) and were resumed: an agent that stops on a
+limit is resumed with a message, not restarted.
+
+**One studio (the owner, 2026-10-26: "when a studio is running it is the only studio and any changes made affect the actual game
+sprites"; "put the studio on the network for all pcs on network to edit").** The lot lab's branch is on main (#290): the only studio is
+port 5191 from `worktrees/theme-consistency`, the checkout of the owner's 5174 game, both on the LAN (http://192.168.0.2:5191 and
+http://192.168.0.2:5174; launch configs `studio` with `STUDIO_HOST=0.0.0.0`, `lead-game` with `--host 0.0.0.0`). Never start a second
+studio for the owner; an agent's check studio (5193) is stopped before it reports. The old lot lab servers (5241, 5242) and its
+worktree `.claude/worktrees/lot-presets` are dead: the owner closes the servers, then the worktree goes. The owner restored
+`variation:gen-house-l-shape-e0e3b328-plain:1` for its 9 lot presets (#294); `tests/lot-presets-json.test.ts` passes again.
+
+**2026-10-27 nightly** (main `81a66c0`, run by the lead with a haiku-runner at 02:30; **no scheduled nightly task exists**,
+`E:/ClaudeTemp/nightly/2026-10-27.md`): typecheck, **1906/1906 tests**, the build, sim, town, towns, fix, event and biz gates **all PASS**.
+Gap: no gate covers the range start (T098).
+
+**2026-10-26 manual regression** (main `d750592`, `E:/ClaudeTemp/nightly/2026-10-26-manual.md`): typecheck, 1697/1697 tests, the build,
+sim, town, towns and biz gates PASS; fix and event gates FAIL (#285). towns/event/biz had not run for days (no .webp loader; fixed by #286).
+
+Each agent pushes its branch and comments on its issue after every sub-step,
+ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D spectators) keep their own handover docs; see
+`docs/START-PROMPTS.md`.
+
+### Queue (in order)
+- **Restart 2026-10-27 14:50 (the owner: "we switched to another acc that now ran out of usage. please check status and start up development").**
+  The other account's lead merged #511-#530 (car lights, lawns, gas station, flyouts, Land for sale, main green). At its limit it left T202's
+  work uncommitted (saved as WIP c8bbbcd) and three ground PRs open (#514 T196, #518 T197, #522 T195 1-2: reviewed, typechecked together,
+  merged). The 12 last 3D people finished on 2026-10-26 and are committed on `art/people-ground-20261024` (0bd25f4): T203 #531.
+  Housekeeping: T174-T177, T179, T184 closed (merged earlier). The 5174 auto-updater ran 5 times over; the owner approved stopping 4
+  (one left, bash PID 31220). Still listening, not ours: a stray vite on 5189 (an agent's, gone since 07:50) and the dead lot lab's 5241.
+- **The concept look (the owner, 21:30: "this is the look and feel we need to get to"):** `docs/art/CONCEPT-LOOK.md` (#635) has the reference, the gaps and the code work in order; its art is GOLF-ART-LIST section 12 (items 149-175). **Waiting on the owner:** step 1, green ground (the map, the blocks and the yards go green; it reverses #625 and the map half of #621). Step 2, a golden-hour colour grade, is the next code ticket after the owner's queue.
+- **Next, in order, when an agent lands:** (T254 #736 and T261 #766 are running) **T260 #763** Border none by default except the fairway's first cut and the green's fringe, and the Border section never opens empty (the owner, 2026-10-29: Waste area's Border opened onto nothing; start it in the first free slot, after T254 since both touch paint-tool.ts) → **T237 #694** car parks: the range set back from the road for frontage parking, car parks that look like car parks, a 150 m walking rule shown while placing (the owner; T258 is merged, so it can start) → **T259 #759** farms (seasonal corn and ploughed fields, orchards in rows, farmhouses set back on a poplar-lined lane; art 185-189 in ChatGPT) → **T258 #755** draw the range's made mats and target greens, and a pipeline that swaps in the owner's ChatGPT range buildings (two views) as they land → **T253 #735** round and smooth any painted area (a tick box and a slider) and bunkers like the owner's reference (`docs/art/reference/bunkers-and-pond-reference.png`; after T252) → **T248 #718** water that moves (research first, two flowing textures, waves lapping at the shore) → **T251 #728** balls bounce and roll on the ground (the range, the course, NPCs and you; the owner) → **T249 #719** a grey stone water border with planting on any water (waits for the owner's ChatGPT art, item 180) → (done: **T239 #699** the range start as a guided build (the owner, 2026-10-28: the car park starts as dirt, no walkway beside the tee, the player builds the target greens, the path and the car park, and buys the practice area, all taught by `RANGE_GUIDE`; Opus high, two phases) and **T238 #697** course painting (these two can run side by side) (paint inside Edit hole, a round isometric brush, Long grass as a surface: the owner, 2026-10-28) → **T237 #694** the course car park (placement, look, how people use it: the owner) → **P28** (the owner, 2026-10-28: you, the town and its people; `docs/plans/P28.md`, art GOLF-ART-LIST section 13): T242 #702 set-the-scene cards → T243 #703 people's cards and portraits → T240 #704 your character → T241 #705 your skills → T244 #706 money matches → T245 #707 a healthier town → T246 #708 your tournament and the Mayor's Cup (the art first: the art agent on 200-204 and 211) → **T214 phase 1** memberships (plan P26 merged #695; the owner's questions Q1-Q5 taken as recommended, pre-approved, until the owner says otherwise) → the golf play tickets: **T212 #557** putt, chip, tee-up and coach clips → then **T112 #199** (merge #394 when the owner stops 5191) →
+  **T149 #312** (waits for the owner's FAR-anchor choice) → the lists below.
+  (Golf play P1-P4 is on main from #258; the owner asked for its tickets on 2026-10-27, 18:05. T215 #561 stays open for the owner's call on
+  water and roads by day.)
+- **P25 #348 lots generated on the fly** (the owner: "start over with the lot presets we need a workflow that gets us to generating perfect
+  lots on the fly"): hard rules + learned per-sector taste (T158 wizard, in flight) → T159 bootstrap from the existing presets + a 12-lot
+  gallery → T160 the generator in the game, seeded per lot, model as data → T161 pairs, densities by state, a 50-seed exam sheet. The
+  presets file stays (archive, one-off overrides). Same agent as T155/T158.
+- **Scene-background paintings (checked 2026-10-26 evening, main checkout, untracked):** `art/theme-consistency/generated/ground/scene-backgrounds/<material>/`
+  holds one building-free painting a level (`*-background-anchored-v1.raw.png`, ~1742x903) for fairway, putting-green, lake, sand-raked,
+  sand-ripples, golden-fescue and long-grass; desert and dirt only the version with the shop. `long-grass/*-uniform-background-v2` = the
+  owner's rough already in the game (#360, same sha256). Fairway and putting-green go in through T165; lake, sands and fescue keep the
+  art session's seam-repaired READY tiles unless the owner prefers the paintings.
+- **Texture art status (2026-10-26 15:30):** the art session (Codex; `art/theme-consistency/material-texture-batches/ACTIVE-WORK.json`)
+  has finished 2 of its 14 families (golden fescue, lake: in the game). sand-ripples has raw variants, sand-raked 2/12, desert/dirt
+  anchors only; fairway, putting-green, first-cut, long-grass and the rest have job files and no pictures yet. Each lands through
+  READY-MATERIALS → `node scripts/assets/prep-painted-tiles.mjs` → a surface in Studio › Painted.
+0b. **T149 #312 painted terrain follow-ups** (waits for the owner's FAR-anchor choice after T150): real game-vs-proof comparisons (T145's side-by-sides were invalid), the in-band zoom steps
+   (the owner's call), seams, DPR 2 softness, rivers.
+1. **The nightly.** The owner should allow the nightly session's commands so it runs unattended. fix:gate's new default (seed 1 day 60)
+   passes by 1.8 points only: if it flips, retune the scenario (#298's header has the scan table), do not touch traffic.
+2. **The owner's new grass paintings**, when they arrive. Import them with `scripts/assets/prep-painted-families.mjs` (the families list
+   in the script), then map them per surface in Studio › Painted.
+3. **P24 follow-ups:**
+   - the putt, chip and coaching clips;
+   - real art for the stand-ins in `docs/GOLF-SPRITES.md` (the range, practice and props kits).
+4. **The owner's call:** the top bar's chip words are icons only below 2200 px (T135). Bring the words back at 1920 if the owner asks.
+5. **Older lists:** T110's rest of the game (paint-edges rims, water glints, prop and tree shadows: T141 covers the props); P23 Phase 2
+   (one Streets tool, holes drawn like a road, season and hole cards); P22 T090-T098; P21 T101 and T103-T107; M2/M3 leftovers; T112
+   (the sharp bump). See the History sections below and `gh issue list --label arena --state open`.
+
+
+## History: preparation of the parking garage diagonal views parking garage diagonal views (2026-10-26)
+- Branch `lead/garage-eight-views-20261026`, isolated worktree `worktrees/garage-eight-views-20261026`, based on main `fffca10`.
+- Implemented: scoped `prep-garage-views.mjs` (also called by `prep-views.mjs`), append-only `garage-views-library`, shared Studio sizing/eight labelled thumbnails, explicit diagonal picker IDs and lot-lab NE-set entry; R turns within that diagonal set. Original base/N/E/S/W IDs and indices stay intact. Automatic selection for arbitrary road angles remains T154 Phase 2.
+- Checks before artwork: typecheck PASS, 8 focused importer/axis checks PASS (including execution of the generated append function on a fixture: existing base object/index unchanged, four records appended, atlas offset applied, no duplicate IDs), production build PASS (38.8 s). Default `npm test` failed allocating Node semi-space; serial execution of the test bundles then completed: 1847 total, 1839 pass, 7 fail, 1 skip. The missing owner-rough source was a sparse-checkout omission: adding that tracked path makes painted-tiles.test pass (16 pass, 1 skip). Six other failures are outside this garage change: RES side-yard, RangeSim.newDay, two curated-lot JSON checks, new-art swapped count and stationwagon shadow. Logs: `output/garage-full-tests-serial.log`, `output/garage-painted-recheck.log`. No full-suite pass is claimed.
+- Next action: await primary's reviewed v2 (v1 diagonal sheets rejected for duplicate corners/slopes/clipping), import only provenance `integrationStatus: ready` with all four native crops and matching storey count. Inspect actual game and Studio after packing; no art is integrated or on main from this branch yet.
+- Do not ship unreviewed PNGs. Existing axis garage 4/5/6-storey floor counts are disputed and retained as a known art issue; no silent relabelling in this code change. Rough v2 art remains the primary art session's priority.
 
 ## History: owner-requested integration (2026-10-23)
 - Branch: `lead/merge-outstanding-20261023`, isolated checkout `worktrees/outstanding-merge-20261023`, from main `72317a9`.

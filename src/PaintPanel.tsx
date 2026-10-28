@@ -10,6 +10,7 @@ import { areaBuildCost } from './game/golf/costs';
 import { LIBRARY } from './game/library';
 import { PLANT_KINDS, PLANT_R, PLANT_SIZE, PLANT_SPACING } from './game/plant';
 import { Thumb } from './ui/Thumb';
+import { exposureAtStops, exposureLabel, exposureOf, exposureStops, toneOfExposure } from './game/exposure';
 
 const MODES: { id: PaintMode; label: string }[] = [{ id: 'draw', label: 'Draw' }, { id: 'pick', label: 'Pick' }, { id: 'erase', label: 'Erase' }];
 const DIRT_SWATCHES: Record<string, string> = { rockyDirt, rockyDirtAlt };
@@ -31,9 +32,28 @@ export function plainName(name: string): string {
   s = s.toLowerCase();
   return s ? s[0]!.toUpperCase() + s.slice(1) : name;
 }
-const TONES: { id: 0 | 1 | 2; label: string }[] = [{ id: 0, label: 'None' }, { id: 1, label: 'Darker' }, { id: 2, label: 'Lighter' }];
-/** the style change for a tone chip: switching to Lighter turns a black tint white, to Darker a white tint black (other tints are kept) */
-const toneStyle =(tone: 0 | 1 | 2, tint: string) => ({ tone, tint: tone === 2 && tint === '#000000' ? '#ffffff' : tone === 1 && tint === '#ffffff' ? '#000000' : tint });
+/** T261 (#766; the owner, 2026-10-29: "it should also be a filter that increases and decreases exposure and not a flat shape on top that
+ *  changes transparency"): one Exposure slider for the fill (and one for the Border), in place of the None / Darker / Lighter chips, Strength
+ *  and Tint. The middle is none; left is darker, right lighter, by stops: one stop darker (the texture's RGB at half) to one stop lighter (twice);
+ *  its words say it plainly ("darker 30%", "lighter 20%", "none"). It saves as the old tone fields (exposure.ts toneOfExposure), so saves keep
+ *  their format; None (or a double-click on the slider) sets it back */
+function ExposureRow({ label, f, set, title }: { label: string; f: number; set: (f: number) => void; title: string }) {
+  const stops = Math.round(exposureStops(f) * 50) / 50, words = exposureLabel(f);
+  return (
+    <>
+      <div className="mt-2 flex items-center gap-2 text-[12px] text-slate-400" title={title}>
+        <span>{label}</span>
+        <span className="ml-auto text-xs text-slate-200" data-testid="exposure-label">{words}</span>
+        {words !== 'none' && <button className="chip" title={`${label}: none (the texture as it is)`} onClick={() => set(1)}>None</button>}
+      </div>
+      <div className="flex items-center gap-2" title={title}>
+        <span className="text-[11px] text-slate-500" aria-hidden>darker</span>
+        <input type="range" aria-label={label} min={-1} max={1} step={0.02} value={stops} onChange={e => set(exposureAtStops(+e.target.value))} onDoubleClick={() => set(1)} className="min-w-0 flex-1" data-exposure={label} />
+        <span className="text-[11px] text-slate-500" aria-hidden>lighter</span>
+      </div>
+    </>
+  );
+}
 
 /** the Paint tool's panel: plants, mode, and the style editor (docs/PAINT-TOOL.md) */
 export function PaintPanel({ game }: { game: Game }) {
@@ -204,23 +224,7 @@ export function StyleEditor({ game, gridOnly = false }: { game: Game; gridOnly?:
         <button className="chip disabled:opacity-40" disabled={pts.length < 4} onClick={() => p.setStyle({ angle: edgeAngle(pts) })}>Along first edge</button>
       </div>
       </>)}
-      <div className="mt-2 text-[12px] text-slate-400">Tone</div>
-      <div className="flex flex-wrap gap-1">
-        {TONES.map(t => <button key={t.id} className={`chip ${s.tone === t.id ? 'chip-on' : ''}`} onClick={() => p.setStyle(toneStyle(t.id, s.tint))}>{t.label}</button>)}
-      </div>
-      {s.tone > 0 && (
-        <>
-          <div className="mt-2 text-[12px] text-slate-400">Strength</div>
-          <div className="flex items-center gap-2">
-            <input type="range" min={0} max={100} step={5} value={Math.round(s.toneAmt * 100)} onChange={e => p.setStyle({ toneAmt: +e.target.value / 100 })} className="flex-1" />
-            <span className="w-10 text-right text-xs text-slate-200">{`${Math.round(s.toneAmt * 100)}%`}</span>
-          </div>
-          <div className="mt-1 flex items-center gap-2 text-xs text-slate-200">
-            Tint
-            <input type="color" value={s.tint} onChange={e => p.setStyle({ tint: e.target.value })} className="h-6 w-10 cursor-pointer bg-transparent" />
-          </div>
-        </>
-      )}
+      <ExposureRow label="Exposure" f={exposureOf(s.tone, s.toneAmt)} set={f => p.setStyle(toneOfExposure(f))} title="The texture itself made darker or lighter, keeping its detail and colour: the middle is none, the ends one stop darker or lighter (double-click: none)" />
       </Section>
       {/* the owner (2026-10-25): "should be a slider". One continuous Border, a hairline to huge: a course surface's collar band (its course look,
           with its Shadow right under it), or a painted area's border (the old None, Small, Medium and Large are points on it) with the area's
@@ -239,7 +243,8 @@ export function StyleEditor({ game, gridOnly = false }: { game: Game; gridOnly?:
           <span className="w-16 text-right text-xs text-slate-200">{`${Math.round((s.shadow ?? 0) * 100)}%`}</span>
         </div>
       </>)}
-      {(grid ? band : s.border > 0) && (
+      {/* T260: the Border texture only while a border is on (a course surface whose Border is none, or that has no band, lays none) */}
+      {(grid ? band && (p.courseBorder() ?? 0) > 0 : s.border > 0) && (
         <>
           <div className="mt-2 text-[12px] text-slate-400">Border texture</div>
           <div className="flex flex-wrap gap-1">
@@ -266,23 +271,7 @@ export function StyleEditor({ game, gridOnly = false }: { game: Game; gridOnly?:
             <button className="chip disabled:opacity-40" disabled={pts.length < 4} onClick={() => bOwn({ bangle: edgeAngle(pts) })}>Along first edge</button>
           </div>
           </>)}
-          <div className="mt-2 text-[12px] text-slate-400">Border tone</div>
-          <div className="flex flex-wrap gap-1">
-            {TONES.map(t => <button key={t.id} className={`chip ${s.btone === t.id ? 'chip-on' : ''}`} onClick={() => p.setStyle({ btone: t.id, btint: toneStyle(t.id, s.btint).tint })}>{t.label}</button>)}
-          </div>
-          {s.btone > 0 && (
-            <>
-              <div className="mt-2 text-[12px] text-slate-400">Border strength</div>
-              <div className="flex items-center gap-2">
-                <input type="range" min={0} max={100} step={5} value={Math.round(s.btoneAmt * 100)} onChange={e => p.setStyle({ btoneAmt: +e.target.value / 100 })} className="flex-1" />
-                <span className="w-10 text-right text-xs text-slate-200">{`${Math.round(s.btoneAmt * 100)}%`}</span>
-              </div>
-              <div className="mt-1 flex items-center gap-2 text-xs text-slate-200">
-                Border tint
-                <input type="color" value={s.btint} onChange={e => p.setStyle({ btint: e.target.value })} className="h-6 w-10 cursor-pointer bg-transparent" />
-              </div>
-            </>
-          )}
+          <ExposureRow label="Border exposure" f={exposureOf(s.btone, s.btoneAmt)} set={f => { const t = toneOfExposure(f); p.setStyle({ btone: t.tone, btoneAmt: t.toneAmt }); }} title="The border's texture itself made darker or lighter: the middle is none, the ends one stop darker or lighter (double-click: none)" />
         </>
       )}
       </Section>

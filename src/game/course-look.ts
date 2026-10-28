@@ -2,6 +2,7 @@ import { BRUSH_PRESETS, type BrushKind, type PaintArea } from './paint';
 import type { CourseTex } from './ground-protocol';
 import { surfacePreset } from './paint-presets';
 import { collarToneOf, tonedCollar, type CourseFinish } from './course-finish';
+import { exposed, exposureOf } from './exposure';
 
 /** The course look of a surface (the Course brush's style, PaintTool.brush[kind].style) as the course grid lays it (T128: every control of the
  *  style editor works on the course, the owner 2026-10-25: "there's still this Blend with function when painting the course that does nothing
@@ -9,11 +10,13 @@ import { collarToneOf, tonedCollar, type CourseFinish } from './course-finish';
  *  and tone. Pure: importable from node tests. */
 export type LookStyle = Omit<PaintArea, 'id' | 'pts' | 'hole' | 'kind'>;
 
-/** a surface's fill as its course texture: the texture, scale and angle, the tone when one is set, the blend when one is picked */
+/** a surface's fill as its course texture: the texture, scale and angle, its exposure when one is set (T261: from the saved tone, exposure.ts),
+ *  the blend when one is picked */
 export function courseTexOf(st: LookStyle): CourseTex {
+  const x = exposureOf(st.tone, st.toneAmt);
   return {
     tex: st.tex, sc: st.scale, a: st.angle,
-    ...(st.tone ? { t: st.tone, ta: st.toneAmt, tc: st.tint } : {}),
+    ...(exposed(x) ? { x } : {}),
     ...(st.mtex ? { m: { t: st.mtex, s: st.mshare ?? 0.5, f: st.msoft ?? 0.12, p: st.mpatch ?? 1 } } : {}),
   };
 }
@@ -21,15 +24,16 @@ export function courseTexOf(st: LookStyle): CourseTex {
 const ownBorder = (kind: BrushKind, st: LookStyle) => st.btex !== 'kerb' && st.btex !== BRUSH_PRESETS.find(b => b.kind === kind)?.style.btex;
 /** a surface's collar band (the fringe round a green, the first cut round a fairway or tee, a bunker's lip, a pond's bank) as its course
  *  texture: the brush's Border texture when the owner picked one (else the band's own, dflt), its Border scale and angle when they are set
- *  (else the band's own), and its Border tone */
+ *  (else the band's own), and its Border exposure (T261: from the saved Border tone; else the band's own) */
 export function courseBandOf(kind: BrushKind, st: LookStyle, dflt: CourseTex): CourseTex {
-  const follow = st.bscale === 1 && st.bangle === 0;
+  const follow = st.bscale === 1 && st.bangle === 0, x = st.btone ? exposureOf(st.btone, st.btoneAmt) : dflt.x;
   return {
     tex: ownBorder(kind, st) ? st.btex : dflt.tex, sc: follow ? dflt.sc : st.bscale, a: follow ? dflt.a : st.bangle,
-    ...(st.btone ? { t: st.btone, ta: st.btoneAmt, tc: st.btint } : dflt.t ? { t: dflt.t, ta: dflt.ta, tc: dflt.tc } : {}),
+    ...(exposed(x) ? { x } : {}),
   };
 }
-/** the style fields the course grid's look reads: a change to any of them draws the course again */
+/** the style fields the course grid's look reads: a change to any of them draws the course again (the tints ride along: T261 no longer draws
+ *  them, but a look that differs only in one is still another look) */
 export const LOOK_FIELDS = ['tex', 'scale', 'angle', 'tone', 'toneAmt', 'tint', 'mtex', 'mshare', 'msoft', 'mpatch', 'btex', 'bscale', 'bangle', 'btone', 'btoneAmt', 'btint'] as const;
 export const lookChanged = (a: Partial<LookStyle>, b: Partial<LookStyle>) => LOOK_FIELDS.some(k => a[k] !== b[k]);
 
@@ -62,8 +66,26 @@ export function surfaceBands(b: BrushLooks): { collar: Record<BandName, CourseTe
  *  (surfaceBands; with the course finish a bunker's lip in the fairway's first cut), with the finish's collar tone where the course takes it
  *  (every first cut, the fringe, a lip laid in the first cut: renderer drawCourses) */
 export interface PuckBand { name: BandName; tex: CourseTex; tone: { tc: string; ta: number } | null }
-export function puckBandOf(kind: string, b: BrushLooks, fin: CourseFinish): PuckBand | null {
+/** T260 (#763): border, the surface's Border in metres (PaintTool.courseBorder; 0: none, no band, so no ring); absent: the default, the
+ *  fairway's first cut and the green's fringe banded, a tee, a bunker and a pond bare */
+export function puckBandOf(kind: string, b: BrushLooks, fin: CourseFinish, border?: number | null): PuckBand | null {
   const name = SURFACE_BAND[kind as BrushKind]; if (!name) return null;
+  if (!(border === undefined || border === null ? kind === 'fairway' || kind === 'green' : border > 0)) return null;
   const { band, lipGrass } = surfaceBands(b), g = name === 'lip' && fin.on && lipGrass ? lipGrass : null, ct = collarToneOf(fin);
   return { name, tex: g ?? band[kind as BrushKind]!, tone: ct && (tonedCollar(name) || g) ? ct : null };
+}
+
+/** T256: what the course grid lays for one set of looks (the course default's, or one owner's: a hole, the property, a facility): each surface
+ *  id's fill (courseTexOf; the fescue, which has no brush, wears its preset, pre; T261: the waste area its brush's look, as every surface with
+ *  a brush does: it wore its preset since before it had a brush, so the style editor never reached it), the collars by name, each banded surface's own band, and with
+ *  the course finish a bunker's lip grass (surfaceBands). The engine's CourseLooks takes the default's as its base and an owner's where it differs */
+export interface CourseLookSet { surf: (CourseTex | undefined)[]; collar: Record<BandName, CourseTex>; band: (CourseTex | undefined)[]; lipGrass?: CourseTex }
+export function courseLookSet(b: BrushLooks, pre: (s: string, old: string) => CourseTex): CourseLookSet {
+  const st = (k: BrushKind) => (b[k] ?? BRUSH_PRESETS.find(p => p.kind === k)!).style;
+  // by surface id (ext/course-grid SURF): rough 1, fescue 2, water 3, fairway 4, tee 5, bunker 6, waste 7 (T261: its brush's look), green 8,
+  // long grass 9 (T238: its brush's look)
+  const surf = [undefined, courseTexOf(st('rough')), pre('fescue', 'golfFescue'), courseTexOf(st('water')), courseTexOf(st('fairway')), courseTexOf(st('tee')), courseTexOf(st('bunker')), courseTexOf(st('waste')), courseTexOf(st('green')), courseTexOf(st('longGrass'))];
+  const { collar, band: by, lipGrass } = surfaceBands(b), band: (CourseTex | undefined)[] = [];
+  band[4] = by.fairway; band[5] = by.tee; band[8] = by.green; band[6] = by.bunker; band[3] = by.water;
+  return { surf, collar, band, ...(lipGrass ? { lipGrass } : {}) };
 }

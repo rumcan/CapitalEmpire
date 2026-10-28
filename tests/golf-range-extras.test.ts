@@ -9,6 +9,7 @@ import {
   type CarSlot, type RangeBizSave, type RangeUpgradeId,
 } from '../src/game/golf/rangebiz';
 import { RangeHost, type RangeHostCtx } from '../src/game/golf/rangehost';
+import { RANGE_STAND_INS } from '../src/game/golf/range-look';
 import type { Rect } from '../src/game/golf/mode';
 
 const plots: Record<0 | 1 | 2 | 3, Rect> = { 0: [500, 600, 70, 150], 1: [900, 300, 150, 70], 2: [200, 200, 70, 150], 3: [1200, 1300, 150, 70] };
@@ -64,7 +65,8 @@ test('the scene: the deck, its upper bays, the academy, the kiosk and the picker
       for (const q of sc.pieces) assert.ok(inPlot(q.x, q.y), `facing ${f}: ${q.key} on the plot`);
       assert.equal(new Set(sc.pieces.map(q => q.key)).size, sc.pieces.length, 'unique keys');
       assert.equal(sc.bays.length, st.bays); assert.equal(sc.bays.filter(b => b.lift === DECK_H).length, TIER2_BAYS, 'twelve bays upstairs');
-      assert.equal(sc.patches.filter(q => q.surf === 'asphaltDark').length, st.lowerBays, 'pads only on the tee box');
+      assert.equal(rangeScene(p, f, s, { look: RANGE_STAND_INS }).patches.filter(q => q.surf === 'asphaltDark').length, st.lowerBays, 'pads only on the tee box');
+      assert.equal(sc.patches.filter(q => q.surf === 'mats').length, 1, 'T258: the mats\' picture only on the tee box');
       const decks = sc.pieces.filter(q => q.key.startsWith('deck'));
       assert.equal(decks.length, st.lowerBays === 12 ? 3 : 4, 'the deck over the lower roofs under the middle twelve slots');
       assert.ok(decks.every(q => q.lift === DECK_H && q.id === 'business:golf-driving-range'));

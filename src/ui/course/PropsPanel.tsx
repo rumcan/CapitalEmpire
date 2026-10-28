@@ -1,5 +1,5 @@
 import type { Game } from '../../game/engine';
-import { DECOR, DECOR_GROUPS, PROPS_APPEAL_RADIUS, PROPS_DECAY, appealText, placeOf, sellBack, shownIn, type DecorItem } from '../../game/golf/decor';
+import { DECOR, DECOR_GROUPS, PROPS_APPEAL_RADIUS, PROPS_DECAY, appealText, placeOf, sellBack, shownIn, sizeText, sizedPrice, type DecorItem } from '../../game/golf/decor';
 import { PROPS_APPEAL_CAP } from '../../game/golf/rangesave';
 import { LIBRARY } from '../../game/library';
 import { Thumb } from '../Thumb';
@@ -10,9 +10,11 @@ const money = (n: number) => '$' + n.toLocaleString();
 
 /** the Props panel (plan P24 Phase 3, T131): the course's decor in four groups (Plants, Water, Stone, Furniture), each a card with its picture,
  *  name, price and appeal. Picking one puts it in hand (its ghost follows the cursor, R turns it, a click places it, Esc puts it down); with
- *  nothing in hand a placed prop is selected with a click, dragged to move it, turned with R and sold for half its price */
+ *  nothing in hand a placed prop is selected with a click, dragged to move it, turned with R and sold for half its price. T257: the cards'
+ *  pictures are drawn sharp from the masters (Thumb), every boulder shape is its own card, the mixed brushes drop a different one at every
+ *  spot, R steps a natural thing through its pictures (never mirrored), and [ and ] size the prop in hand or the selected one (80% to 120%) */
 export function PropsPanel({ game }: { game: Game }) {
-  const t = game.decor, sel = t.selection(), range = game.golf?.start === 'range', appeal = range ? t.appeal() : 0;
+  const t = game.decor, sel = t.selection(), range = game.golf?.start === 'range', appeal = range ? t.appeal() : 0, selSize = sel ? t.sizeOf(sel.p, sel.d) : 1;
   // T187: the catalogue by place: Decoration's the course's props, Town decoration's the town's (its Buildings their own view); All shows every item
   const town = t.where === 'town', buildings = town && t.group === 'buildings';
   // T193: a group the toolbar's flyout opened (Props ▸ Plants) shows alone
@@ -41,10 +43,12 @@ export function PropsPanel({ game }: { game: Game }) {
       {sel && (
         <div className="mb-2 rounded-lg border border-[var(--gold-line)] bg-black/30 p-2" data-testid="props-selected">
           <div className="flex items-baseline justify-between gap-2"><span className="font-semibold">{sel.d.name}</span><span className="sub-line">{appealText(sel.d.appeal)} appeal</span></div>
-          <div className="sub-line">Drag it to move it{t.turns(sel.d) ? ', R turns it' : ''}.</div>
-          <div className="mt-1.5 flex gap-1.5">
-            {t.turns(sel.d) && <button className="chip" onClick={() => t.turn()} title="Turn it to its next view (R)">Turn</button>}
-            <button className="chip" onClick={() => t.sell()} title="Sell it for half its price (Delete)" data-testid="props-sell">Sell +{money(sellBack(sel.d))}</button>
+          <div className="sub-line">Drag it to move it{t.turns(sel.d) ? (t.turnMode(sel.d) === 'pictures' ? ', R shows the next picture' : ', R turns it') : ''}{t.scales(sel.d) ? `, [ and ] size it (${sizeText(selSize)})` : ''}.</div>
+          <div className="mt-1.5 flex flex-wrap gap-1.5">
+            {t.turns(sel.d) && <button className="chip" onClick={() => t.turn()} title={t.turnMode(sel.d) === 'pictures' ? 'Show its next picture (R)' : 'Turn it to its next view (R)'}>Turn</button>}
+            {t.scales(sel.d) && <button className="chip" onClick={() => t.resize(-1)} title="A size smaller, down to 80% ([): half the difference back" data-testid="props-smaller">Smaller</button>}
+            {t.scales(sel.d) && <button className="chip" onClick={() => t.resize(1)} title="A size bigger, up to 120% (]): it pays the difference" data-testid="props-bigger">Bigger</button>}
+            <button className="chip" onClick={() => t.sell()} title="Sell it for half its price (Delete)" data-testid="props-sell">Sell +{money(sellBack(sel.d, selSize))}</button>
           </div>
         </div>
       )}
@@ -69,18 +73,24 @@ function kitHint(d: DecorItem | undefined): string | null {
   if (d.pond === 'edge') return 'Click a pond to edge it with stones and lily pads; click a stone-edged pond to give it back its natural edge.';
   if (d.pond === 'make') return 'Click on open ground to dig it, with its stones and a jet in the middle.';
   if (d.water === 'in') return 'Click in a pond or a lake to place it; Esc puts it down.';
+  // T257
+  if (d.mix) return 'Click to drop one, or drag to lay a row: every spot gets its own; [ and ] size them; Esc puts it down.';
+  if (d.natural) return `Click to place it; ${d.variants && d.variants.length > 1 ? 'R shows the next picture; ' : ''}[ and ] size it (80% to 120%); Esc puts it down.`;
   if (d.variants) return 'Click to place it; R shows the next picture, Esc puts it down.';
   return null;
 }
 
 function Card({ game, d }: { game: Game; d: DecorItem }) {
-  const t = game.decor, on = t.hand === d.key, item = t.pictureOf(d, on ? t.view : 0), it = item !== undefined ? LIBRARY[item] : undefined, poor = d.price > game.money;
+  const t = game.decor, on = t.hand === d.key, item = t.pictureOf(d, on ? t.view : 0), it = item !== undefined ? LIBRARY[item] : undefined;
+  // T257: the price at the size in hand
+  const size = on ? t.size : 1, price = sizedPrice(d.price, size), poor = price > game.money, mode = t.turnMode(d);
+  const tip = mode === 'views' ? ' · four views (R turns it)' : mode === 'pictures' ? ' · R shows the next picture' : '';
   return (
-    <button className={`card gap-1 ${on ? 'card-on' : ''}`} data-card={`prop-${d.key}`} aria-pressed={on} onClick={() => t.pick(d.key)} title={`${d.desc}${t.turns(d) ? ' · four views (R turns it)' : ''}`}>
+    <button className={`card gap-1 ${on ? 'card-on' : ''}`} data-card={`prop-${d.key}`} aria-pressed={on} onClick={() => t.pick(d.key)} title={`${d.desc}${tip}${t.scales(d) ? ' · [ ] size it' : ''}`}>
       <div className="grid h-14 w-full place-items-center overflow-hidden rounded-lg bg-black/30">{it && <Thumb it={it} size={50} />}</div>
       <div className="w-full truncate font-semibold leading-tight">{d.name}</div>
       {d.standIn && <div className="w-full truncate rounded bg-amber-500/15 px-1 text-[12px] leading-tight text-amber-200" title="This picture stands in until the real art is drawn">Stand In for {d.standIn}</div>}
-      <div className="flex w-full items-baseline justify-between gap-1"><span className={poor ? 'text-rose-300' : 'text-amber-200'}>{poor ? `${statusIcon('fail')} ` : ''}{money(d.price)}{d.per ? <span className="sub-line"> {d.per}</span> : null}</span>{t.where === 'course' && <span className="sub-line">{appealText(d.appeal)}</span>}</div>
+      <div className="flex w-full items-baseline justify-between gap-1"><span className={poor ? 'text-rose-300' : 'text-amber-200'}>{poor ? `${statusIcon('fail')} ` : ''}{money(price)}{d.per ? <span className="sub-line"> {d.per}</span> : null}{on && Math.abs(size - 1) > 1e-9 ? <span className="sub-line"> {sizeText(size)}</span> : null}</span>{t.where === 'course' && <span className="sub-line">{appealText(d.appeal)}</span>}</div>
     </button>
   );
 }

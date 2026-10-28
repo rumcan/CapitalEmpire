@@ -4,7 +4,8 @@
 // lamp, fountain, decal, and fencex / fencey for the hedge's run pieces) keep them out of every pool that picks by kind (the lots' trees and bushes,
 // the hole presets, the farms, the plant brushes' trees), so no lot, hole or farm drawn before them changes; they join the places named for
 // them: the Props tool (golf/decor.ts), the plant brushes (plant.ts), the ponds (golf/ponds.ts) and the yards (lots/compose.ts kitYard).
-// Never mirrored (mirror.ts drawnAs): one picture each, the sun at the upper right as painted. Pure TS, no DOM.
+// One picture each, the sun at the upper right as painted: never mirrored (mirror.ts drawnAs; the owner, 2026-10-28).
+// Pure TS, no DOM.
 
 /** a kit id */
 export const isKit = (id: string): boolean => id.startsWith('kit:');

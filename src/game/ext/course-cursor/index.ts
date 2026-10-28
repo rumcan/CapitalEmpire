@@ -39,6 +39,7 @@ import { CAST, castShear } from '../../cast-shadow';
 import { DARK_RGB, edgeProfileOf, type EdgeProfile } from '../../paint-edges';
 import { BORDER_TEXES, borderW, roundCorners, type PaintArea } from '../../paint';
 import { puckBandOf, type BandName, type BrushLooks, type PuckBand } from '../../course-look';
+import { exposeDraw, exposureOf } from '../../exposure';
 import { DEFAULT_COURSE_FINISH, LIP, type CourseFinish } from '../../course-finish';
 import { SUN_TILE_DIR } from '../course-height';
 import { SURF_SURFACE, surfOfSurface } from '../course-grid/areas';
@@ -52,12 +53,16 @@ export { snapDab, squarePoly, squareStart, SQUARE_SIZES } from './snap';
 // ---- inputs ----
 
 /** what the cursor reads from the Paint tool each frame (PaintTool fits it) */
-export type CursorTool = Pick<PaintTool, 'mode' | 'brushKind' | 'brush' | 'rubOut' | 'rubHoleOnly' | 'cursor' | 'piece' | 'brushSquare' | 'strokeSpent' | 'strokeCells' | 'brushHole' | 'plantKind' | 'usedHoles' | 'runOn' | 'runPath' | 'runPts'>;
+export type CursorTool = Pick<PaintTool, 'mode' | 'brushKind' | 'brush' | 'rubOut' | 'rubHoleOnly' | 'cursor' | 'piece' | 'brushSquare' | 'strokeSpent' | 'strokeCells' | 'brushHole' | 'plantKind' | 'usedHoles' | 'runOn' | 'runPath' | 'runPts'> & Partial<Pick<PaintTool, 'brushLooks' | 'courseBorder'>>;
+/** T256: the looks the chip wears: the owner's in hand (the hole painted, the property; PaintTool.brushLooks), else the brushes' (the course
+ *  default) */
+const looksOf = (tool: CursorTool): BrushLooks => tool.brushLooks ?? (tool.brush as BrushLooks);
 /** the camera, filled in by the engine each frame (one object, reused): device px per world px (ze = zoom x dpr), the world px at the
  *  overlay's centre (camX, camY), the overlay's size in device px (cw, ch) and the dpr */
 export interface CursorView { ze: number; camX: number; camY: number; cw: number; ch: number; dpr: number }
-/** the look a chip takes from a brush style (the painted area's own fields) */
-export type PuckStyle = Pick<PaintArea, 'tex' | 'scale' | 'angle' | 'border' | 'btex' | 'tone' | 'toneAmt' | 'tint' | 'bscale' | 'bangle'>;
+/** the look a chip takes from a brush style (the painted area's own fields; T261: the tone and the border's tone drawn as exposure, the tint
+ *  unread) */
+export type PuckStyle = Pick<PaintArea, 'tex' | 'scale' | 'angle' | 'border' | 'btex' | 'tone' | 'toneAmt' | 'tint' | 'bscale' | 'bangle'> & Partial<Pick<PaintArea, 'btone' | 'btoneAmt'>>;
 /** a photo for a texture at a wanted px a tile: the picture and the tiles one repeat covers (null: not loaded, or no photo) */
 export interface CursorTexture { pick(tex: string, pxPerTile: number): { img: CanvasImageSource & { width: number }; period: number } | null; rev(): number }
 /** a 2D canvas the cursor can draw its sprites on */
@@ -580,9 +585,10 @@ function paintPuck(g: CanvasRenderingContext2D, st: PuckStyle, kind: string, era
 
   // ---- the top face: the brush's photo in tile space (its period, scale and angle), its tone, its border band inside the edge
   g.save(); iso(); g.beginPath(); g.arc(0, 0, R, 0, Math.PI * 2); g.clip();
-  g.fillStyle = erase ? RUBBER : fillOf(st.tex, st.scale, st.angle); g.fillRect(-R, -R, 2 * R, 2 * R);
+  const topFill = erase ? RUBBER : fillOf(st.tex, st.scale, st.angle);
+  g.fillStyle = topFill; g.fillRect(-R, -R, 2 * R, 2 * R);
   if (erase) paintSleeve(g, cx, cy, rx, ry, d);
-  else if (st.tone) { g.globalCompositeOperation = st.tone === 1 ? 'multiply' : 'screen'; g.globalAlpha = st.toneAmt; g.fillStyle = st.tint; g.fillRect(-R, -R, 2 * R, 2 * R); g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1; }
+  else if (st.tone) exposeDraw(g, exposureOf(st.tone, st.toneAmt), topFill, () => g.fillRect(-R, -R, 2 * R, 2 * R)); // T261: its exposure
   // T252: the surface's real border on the course grid (course-look puckBandOf: the green's fringe, the first cut round a fairway or a tee,
   // a bunker's grass lip, a pond's bank), in its texture and tone, inside the rim (on the course it lies outside the cells)
   if (pb && !erase) paintBand(g, pb, R, fillOf);
@@ -590,9 +596,10 @@ function paintPuck(g: CanvasRenderingContext2D, st: PuckStyle, kind: string, era
   // the surface reads
   const bw = !pb && !erase && withBand && st.border > 0 ? Math.min(borderW(st.border), 0.34 * R) : 0;
   if (bw > 0 && st.btex !== 'kerb') {
-    g.strokeStyle = fillOf(st.btex, st.bscale, st.bangle);
-    g.lineWidth = 2 * bw; g.stroke();
-    g.globalAlpha = 0.5; g.lineWidth = 2 * bw * 1.35; g.stroke(); g.globalAlpha = 1;
+    const bandFill = fillOf(st.btex, st.bscale, st.bangle), bx = st.btone ? exposureOf(st.btone, st.btoneAmt) : 1;
+    g.strokeStyle = bandFill;
+    g.lineWidth = 2 * bw; g.stroke(); exposeDraw(g, bx, bandFill, () => g.stroke());
+    g.globalAlpha = 0.5; g.lineWidth = 2 * bw * 1.35; g.stroke(); exposeDraw(g, bx, bandFill, () => g.stroke(), 0.5); g.globalAlpha = 1;
   }
   g.restore();
 
@@ -672,13 +679,15 @@ export const PUCK_BAND_W: Readonly<Record<BandName, number>> = { 'first-cut': 0.
 /** the bank's wet soil, from the water's edge into the bank: each stroke's width (a share of the bank's) and colour (renderer courseBank's) */
 const WET: readonly (readonly [number, string])[] = [[0.62, 'rgba(92,70,42,0.22)'], [0.42, 'rgba(78,58,36,0.3)'], [0.24, 'rgba(62,46,30,0.38)'], [0.1, 'rgba(44,34,24,0.5)']];
 /** paints a surface's band inside the top face (g in tile space round the face's centre, clipped to it; R its radius in tiles): the band's
- *  texture, its look's tone, the course finish's collar tone (a multiply that keeps the texture), and a pond bank's wet soil toward the water */
+ *  texture, its look's exposure (T261), the course finish's collar tone (a multiply that keeps the texture), and a pond bank's wet soil toward
+ *  the water */
 function paintBand(g: CanvasRenderingContext2D, pb: PuckBand, R: number, fillOf: (t: string, k: number, a: number) => CanvasPattern | string) {
   const W = PUCK_BAND_W[pb.name] * R, t = pb.tex;
   const ring = () => { g.beginPath(); g.arc(0, 0, R, 0, Math.PI * 2); };
   g.save(); g.lineWidth = 2 * W;
-  ring(); g.strokeStyle = fillOf(t.tex, t.sc, t.a); g.stroke();
-  if (t.t && t.tc) { g.globalCompositeOperation = t.t === 1 ? 'multiply' : 'screen'; g.globalAlpha = t.ta ?? 0.5; g.strokeStyle = t.tc; ring(); g.stroke(); }
+  const tex = fillOf(t.tex, t.sc, t.a);
+  ring(); g.strokeStyle = tex; g.stroke();
+  exposeDraw(g, t.x, tex, () => { ring(); g.stroke(); }); // T261: the band look's exposure
   if (pb.tone) { g.globalCompositeOperation = 'multiply'; g.globalAlpha = pb.tone.ta; g.strokeStyle = pb.tone.tc; ring(); g.stroke(); }
   g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1;
   if (pb.name === 'bank') {
@@ -972,9 +981,10 @@ export class CourseCursor {
     w.zone = zone; w.kind = kind; w.drag = drag; w.erase = erase; w.brush = brush; w.mode = mode; w.hole = hole; w.fresh = fresh; w.unit = unit; w.n = n; w.kept = kept; w.ref = ref; w.whyK = whyK; w.whyR = whyR; w.price = price; w.money = m; w.cells = cells; w.spent = spent; w.grid = grid; w.only = only;
     const s = this.state, name = nameOf(brush), back = lower(nameOf(backKind(brush)));
     // the hole a click joins: a cart path belongs to no hole; a hole with nothing yet is started by the stroke
-    const joins = surf > 0 ? (zone ? ` · ${zone}` : fresh ? ` · starts Hole ${hole}` : ` · Hole ${hole}`) : '', verb = mode === 'draw' ? 'Shaping' : 'Painting';
+    // T256: hole 0 is Range › Build's brush: the property's paint ("Painting Fairway · your property")
+    const prop = hole === 0, joins = surf > 0 ? (zone ? ` · ${zone}` : prop ? ' · your property' : fresh ? ` · starts Hole ${hole}` : ` · Hole ${hole}`) : '', verb = mode === 'draw' ? 'Shaping' : 'Painting';
     // a rub out on the course grid (T125) takes every course surface under it back to rough (grass for the rough brush), whatever the brush
-    const rub = erase && grid && surf > 0, rubBase = `Rub out${only ? ` · Hole ${hole} only` : ''}`;
+    const rub = erase && grid && surf > 0, rubBase = `Rub out${only || prop ? (prop ? ' · your property only' : ` · Hole ${hole} only`) : ''}`;
     const base = rub ? rubBase : `${verb} ${name}${joins}${unit >= 0 ? ` · ${unit$(unit)} a cell` : ''}`;
     s.label.length = 0; s.bad.length = 0;
     // the drag total: the cells the stroke has laid and what they cost
@@ -985,12 +995,14 @@ export class CourseCursor {
       case 'refused': hint = `${base} · ${cellsOf(ref)} refused: ${lower(whyR)}`; break;
       case 'nochange': hint = rub ? `${rubBase} · nothing to rub out here` : `${verb} ${name}${joins} · already ${lower(name)} here${this.golf ? ' · $0' : ''}`; break;
       case 'erase': hint = rub ? `${rubBase} · ${n >= 0 ? `${cellsOf(n)} ` : ''}back to ${back}${this.golf ? ' · no refund' : ''}`
-        : `Erasing ${lower(name)}${surf > 0 ? ` · Hole ${hole}` : ''}${n >= 0 ? ` · ${cellsOf(n)}` : ''}${surf > 0 ? ` back to ${back}` : ''}${this.golf ? ' · no refund' : ''}`; break;
+        : `Erasing ${lower(name)}${surf > 0 ? (prop ? ' · your property' : ` · Hole ${hole}`) : ''}${n >= 0 ? ` · ${cellsOf(n)}` : ''}${surf > 0 ? ` back to ${back}` : ''}${this.golf ? ' · no refund' : ''}`; break;
       case 'short': hint = `${verb} ${name}${joins} · ${money$(price)} · you have ${money$(m)}`; break;
     }
     // a refusal with its reason, or money short, by the disc
     if (kind === 'short') { s.label.push(`${name} · ${money$(price)} · you have ${money$(m)}`); s.bad.push(true); }
     else if (ref > 0) { s.label.push(n > 0 ? `${cellsOf(ref)}: ${lower(whyR)}` : whyR); s.bad.push(true); }
+    // T256: Range › Build says so by the disc at rest, so the property's brush is never taken for a hole's
+    else if (prop && surf > 0 && !s.label.length) { s.label.push(erase ? 'Erasing your property' : 'Painting your property'); s.bad.push(false); }
     this.setHint(hint);
   }
 
@@ -1014,7 +1026,7 @@ export class CourseCursor {
   /** the footprint, the grid and the chip for the brush with the pointer at tile (cx, cy): the dab sits on the half grid's nearest corner;
    *  the state (T118) follows from the footprint: refused and kept cells, a footprint that changes nothing, a price over the treasury */
   private drawBrush(ctx: CanvasRenderingContext2D, v: CursorView, tool: CursorTool, cx: number, cy: number, now: number, dt: number): boolean {
-    const set = tool.brush[tool.brushKind], r = set.r, st = set.style, erase = this.pressed ? this.pressErase : tool.rubOut;
+    const set = tool.brush[tool.brushKind], r = set.r, st = looksOf(tool)[tool.brushKind]?.style ?? set.style, erase = this.pressed ? this.pressErase : tool.rubOut; // T256: the owner's look
     const base = LOOKS[tool.brushKind] ?? LOOKS.fairway!, d = v.dpr, n = tool.brushSquare();
     // the dab's middle and size: the square brush's n x n cells (T109), or the round brush on the nearest cell corner (T108)
     const x = n ? (squareStart(cx, n) + n / 2) * CELL_T : snapDab(cx), y = n ? (squareStart(cy, n) + n / 2) * CELL_T : snapDab(cy), size = n ? (n * CELL_T) / 2 : r;
@@ -1046,7 +1058,7 @@ export class CourseCursor {
   }
   /** the style of the chip a rub out shows: the rough brush's own, or plain grass made from it (kept, so its sprite is reused) */
   private backStyle(tool: CursorTool, back: string): PuckStyle {
-    const rough = (tool.brush as Record<string, { style: PuckStyle } | undefined>).rough?.style ?? tool.brush[tool.brushKind].style;
+    const rough = (looksOf(tool) as Record<string, { style: PuckStyle } | undefined>).rough?.style ?? tool.brush[tool.brushKind].style;
     if (back !== 'grass') return rough;
     if (this.backFrom !== rough || !this.backSt) { this.backFrom = rough; this.backSt = { ...rough, tex: 'grass', border: 0, tone: 0 }; }
     return this.backSt;
@@ -1058,7 +1070,7 @@ export class CourseCursor {
   private drawRun(ctx: CanvasRenderingContext2D, v: CursorView, tool: CursorTool, cx: number, cy: number, now: number, dt: number): boolean {
     const n = tool.brushSquare(), path = tool.runPath(), k = path.length;
     if (k < 2) return this.drawBrush(ctx, v, tool, cx, cy, now, dt);
-    const st = tool.brush[tool.brushKind].style, erase = tool.rubOut, base = LOOKS[tool.brushKind] ?? LOOKS.fairway!, d = v.dpr, active = tool.runPts.length > 0;
+    const st = looksOf(tool)[tool.brushKind]?.style ?? tool.brush[tool.brushKind].style, erase = tool.rubOut, base = LOOKS[tool.brushKind] ?? LOOKS.fairway!, d = v.dpr, active = tool.runPts.length > 0;
     const ex = path[k - 2]!, ey = path[k - 1]!;
     this.zoneNow = this.env.zone?.(ex, ey) ?? '';
     this.drawGrid(ctx, v, ex, ey, (n * CELL_T) / 2);
@@ -1114,8 +1126,9 @@ export class CourseCursor {
       && w.whyK === whyK && w.whyR === whyR && w.price === price && w.money === m && w.len === len && w.nf === nf && w.grid === grid && w.only === only && w.zone === zone) return;
     Object.assign(w, { kind, active, erase, brush, hole, fresh, unit, n, kept, ref, whyK, whyR, price, money: m, len, nf, grid, only, zone });
     const s = this.state, name = nameOf(brush), back = lower(nameOf(backKind(brush)));
-    const joins = surf > 0 ? (zone ? ` · ${zone}` : fresh ? ` · starts Hole ${hole}` : ` · Hole ${hole}`) : '';
-    const rub = erase && grid && surf > 0, head = rub ? `Run · rub out${only ? ` · Hole ${hole} only` : ''}` : `Run ${name}${joins}`;
+    // T256: hole 0 is Range › Build's brush: the property's paint
+    const joins = surf > 0 ? (zone ? ` · ${zone}` : hole === 0 ? ' · your property' : fresh ? ` · starts Hole ${hole}` : ` · Hole ${hole}`) : '';
+    const rub = erase && grid && surf > 0, head = rub ? `Run · rub out${only ? (hole === 0 ? ' · your property only' : ` · Hole ${hole} only`) : ''}` : `Run ${name}${joins}`;
     const tail = active ? ' · click each bend · double-click, Enter or right-click finishes' : ' · click a start';
     const long = active ? ` · ${len} m` : '';
     let hint = `${head}${long}${!rub && unit >= 0 ? ` · ${unit$(unit)} a cell` : ''}`;
@@ -1158,7 +1171,7 @@ export class CourseCursor {
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.lineJoin = 'miter'; ctx.lineCap = 'butt';
     if (bad) this.refusedTint(ctx, pc.shape.loops, pc.ax * CELL_T, pc.ay * CELL_T, v, NaN, NaN);
     else this.footprint(ctx, pc.shape, pc.ax * CELL_T, pc.ay * CELL_T, v, pc.look, 'ready', false, false);
-    const set = (tool.brush as Record<string, { style: PuckStyle } | undefined>)[pc.kind];
+    const set = (looksOf(tool) as Record<string, { style: PuckStyle } | undefined>)[pc.kind];
     if (set) this.chip(ctx, v, cx, cy, pc.kind, set.style, false, false, d, now, dt);
     return true;
   }
@@ -1316,10 +1329,11 @@ export class CourseCursor {
 
   /** T252: the border the chip shows on the course grid for the surface in hand (course-look puckBandOf), worked out again only when a look it
    *  reads or the finish changes (a frame allocates none) */
-  private bm = { kind: '', st: null as unknown, fw: null as unknown, ro: null as unknown, fin: null as CourseFinish | null, pb: null as PuckBand | null };
+  private bm = { kind: '', st: null as unknown, fw: null as unknown, ro: null as unknown, fin: null as CourseFinish | null, bw: null as number | null | undefined, pb: null as PuckBand | null };
   private bandOf(tool: CursorTool): PuckBand | null {
-    const b = tool.brush as BrushLooks, st = b[tool.brushKind as keyof BrushLooks]?.style, fw = b.fairway?.style, ro = b.rough?.style, fin = this.env.finish?.() ?? DEFAULT_COURSE_FINISH, m = this.bm;
-    if (m.kind !== tool.brushKind || m.st !== st || m.fw !== fw || m.ro !== ro || m.fin !== fin) Object.assign(m, { kind: tool.brushKind, st, fw, ro, fin, pb: puckBandOf(tool.brushKind, b, fin) });
+    // T260: with its Border (none: no band ring on the chip)
+    const b = looksOf(tool), st = b[tool.brushKind as keyof BrushLooks]?.style, fw = b.fairway?.style, ro = b.rough?.style, fin = this.env.finish?.() ?? DEFAULT_COURSE_FINISH, bw = tool.courseBorder?.(tool.brushKind), m = this.bm;
+    if (m.kind !== tool.brushKind || m.st !== st || m.fw !== fw || m.ro !== ro || m.fin !== fin || m.bw !== bw) Object.assign(m, { kind: tool.brushKind, st, fw, ro, fin, bw, pb: puckBandOf(tool.brushKind, b, fin, bw) });
     return m.pb;
   }
   /** the chip sprite for this look (band: with its border band; pb: T252's real border on the course grid) at this dpr, from the cache,
@@ -1329,7 +1343,7 @@ export class CourseCursor {
     if (this.spr && k.kind === kind && k.st === st && k.erase === erase && k.band === band && k.d === d && k.rev === rev && k.pb === pb && k.looks === looks
       && k.tex === st.tex && k.scale === st.scale && k.angle === st.angle && k.border === st.border && k.btex === st.btex && k.tone === st.tone) return this.spr;
     Object.assign(k, { kind, st, erase, band, d, rev, pb, looks, tex: st.tex, scale: st.scale, angle: st.angle, border: st.border, btex: st.btex, tone: st.tone });
-    const key = `${kind}|${st.tex}|${st.scale}|${st.angle}|${st.border}|${st.btex}|${st.bscale}|${st.bangle}|${st.tone}|${st.toneAmt}|${st.tint}|${erase ? 1 : 0}|${band ? 1 : 0}|${d}|${rev}|${bandKey(pb)}|${this.looksN(looks)}`;
+    const key = `${kind}|${st.tex}|${st.scale}|${st.angle}|${st.border}|${st.btex}|${st.bscale}|${st.bangle}|${st.tone}|${st.toneAmt}|${st.btone ?? 0}|${st.btoneAmt ?? 0}|${erase ? 1 : 0}|${band ? 1 : 0}|${d}|${rev}|${bandKey(pb)}|${this.looksN(looks)}`;
     let sp = this.sprites.get(key);
     if (sp) { this.sprites.delete(key); this.sprites.set(key, sp); return (this.spr = sp); }
     const sr = (CHIP_CSS / 2) * d, sry = sr * (HH / HW), thick = thickOf(sry, d), pad = Math.ceil(3 * d + 2);
@@ -1389,7 +1403,7 @@ export class CourseCursor {
 }
 
 /** a band's part of a sprite's key ('' none) */
-const bandKey = (pb: PuckBand | null) => (pb ? `${pb.name}:${pb.tex.tex}:${pb.tex.sc}:${pb.tex.a}:${pb.tex.t ?? 0}:${pb.tex.ta ?? 0}:${pb.tex.tc ?? ''}:${pb.tone ? `${pb.tone.tc}${pb.tone.ta}` : ''}` : '');
+const bandKey = (pb: PuckBand | null) => (pb ? `${pb.name}:${pb.tex.tex}:${pb.tex.sc}:${pb.tex.a}:${pb.tex.x ?? 1}:${pb.tone ? `${pb.tone.tc}${pb.tone.ta}` : ''}` : '');
 
 /** T252: a surface's swatch puck (Shape by hand's and Edit hole's swatches): the brush cursor's chip, drawn the same way (paintPuck: the
  *  surface's texture through its look, its real border on the course), `css` px wide at dpr d, without the mark's badge (the swatch names it),

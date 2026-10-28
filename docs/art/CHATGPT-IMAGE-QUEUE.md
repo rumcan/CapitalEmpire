@@ -20,7 +20,180 @@ The approved look is batch 1 (made on RUN before the switch): `E:/ClaudeTemp/ART
 
 The rest of the list (items 224-327, the portraits 230-232) follows the same pattern: shared block S or Q in GOLF-ART-LIST section 13, plus the item's words. The lead adds them here batch by batch.
 
-## First: the grey stone water border (item 180; the owner, 2026-10-28)
+## First: the menu tiles (item 181; the owner, 2026-10-29: "some menu items stuff waiting for a cute mini isometric icon")
+One picture. Start a new chat and attach **`art/theme-consistency/generated/ui/golf-build-tool-tiles-sheet-v1.png`** (the twelve tiles in
+the game now) as the style to match; the two usual references are not needed. Ask for a **4:3 landscape** picture, about 1536 x 1152 or larger.
+
+> Make one picture: a sheet of twelve tiny isometric dioramas in a 4 x 3 grid, in exactly the style, scale and framing of the attached tile
+> sheet. Each scene sits on its own dark navy (#1E2A44) rounded square; the squares are the same size, evenly spaced, and do not touch, on
+> a flat charcoal (#1C1F26) background. Light from the upper right, soft shadows falling to the lower left, warm autumn colours, 1985.
+> No lettering, numbers or logos anywhere. Row by row, left to right:
+> Row 1: (1) a patch of pale waste sand with scattered pebbles, dry grass tufts and a little desert scrub; (2) a small timber snack hut
+> with a red-and-white striped awning and a bench; (3) a whole tiny golf hole: a tee at the near end, a fairway running away to a green
+> with a red flag; (4) a small white grandstand and a blank scoreboard beside a green with a flag.
+> Row 2: (5) a bare dirt plot inside a white dashed line with a blank For Sale post; (6) a few autumn shrubs, scarlet burning bush and
+> golden spirea; (7) two palm trees on a sandy grass patch; (8) a bench, a lamp post and a planter on a small paved square.
+> Row 3: (9) a patio table with a red umbrella and two chairs; (10) a patch of tall, wispy golden-green long grass, longer and looser
+> than rough; (11) a small chipping green with a flag, a bunker beside it and a few golf balls; (12) surveyor's stakes with orange tape
+> and a wheelbarrow of turf on a lawn edge.
+
+**Save as** `art/theme-consistency/generated/ui/golf-build-tool-tiles-sheet-v2.png`. **Check:** twelve tiles, 4 across and 3 down, none
+touching; no writing on the sign or scoreboard; the light from the upper right. Tell the lead: it cuts the sheet into the game's tiles
+(`scripts/assets/prep-ui-tool-tiles.mjs`) and puts each on its menu row.
+
+## Next: the driving range's stand-ins (the owner, 2026-10-29: "i see some bad ones at the driving range facilities")
+These replace the labelled stand-ins on the range. A items need **two views** of the same object: make view 1, then ask for view 2 **in the same chat** as an edit ("the same object turned 90 degrees to the left: now its left side and front show"), so it stays one object. Never mirror. Attach `art/theme-consistency/references/theme-authoritative.png` first, and the item's identity picture where one is named. Save to `art/theme-consistency/generated/buildings/` as `<slug>-view1-v1.png` and `<slug>-view2-v1.png` (B items: `<slug>-1view-v1.png`). A retake is `-v2`, `-v3`: the newest is used.
+
+**When you save a picture, tell the lead; the lead runs `node scripts/assets/prep-range-art.mjs`** (T258). For every item whose files are all in (an A item needs both views), it:
+- keys out the magenta;
+- sizes the picture to the art list's metres (`src/game/golf/range-art-items.json`);
+- packs it onto the golf page;
+- draws it in the game in place of its stand-in, view 1 or view 2 by the way the piece faces, without its "Stand In for" label;
+- drafts its vector shadow.
+
+Until a file lands nothing changes, and the run lists what it is still waiting for. The hitting mats (19) and the target greens (20, the bullseye 27) are already in the game (T258).
+
+### 1. Tin-and-tarp pro shop (`golf-clubhouse-shanty`, A)
+**View 1** (its front and right side show; the front faces the screen's lower left): save as `golf-clubhouse-shanty-view1-v1.png`
+```text
+Two separate views of ONE subject, each its own picture. On FLAT PURE MAGENTA (#FF00FF, one uniform colour edge to edge, no gradient, floor or shadow on it); the subject itself has NO magenta, pink or purple and a crisp outline. Fixed parallel 2:1 isometric camera (ground lines at +/-26.565 degrees, verticals vertical), detailed illustrated style of the first reference picture. Early autumn: warm sun fixed at the SCREEN UPPER RIGHT, only small soft contact shadows toward the lower left. The year is 1985. No people, no ground tile or lawn, no text unless asked; 15% clear space round the subject.
+
+View 1: the front and the right side.
+
+Subject: golf:clubhouse-shanty, the driving range's starter pro shop, a makeshift tin-and-tarp shack, about 12 x 8 m and 4 m high. Keep the identity reference's design: plank walls in faded blue and grey paint, a rusty corrugated-tin roof with a blue tarp patch tied over it, a stovepipe chimney, small four-pane windows, an open doorway, a serving hatch with a timber counter on the front, a bench by the wall, a blue crate of range balls by the door. Small-budget, cheerful and cared for, not derelict. A bare-bulb lamp lit over the hatch.
+```
+**View 2**, as an edit in the same chat: save as `golf-clubhouse-shanty-view2-v1.png`
+```text
+The same object exactly (same design, colours, size and light), turned so its LEFT side and FRONT show (the front now faces the screen's lower right). Not a mirror image: draw the left side as it really is. Same flat pure magenta background, same isometric camera, sun still at the screen upper right.
+```
+
+### 5. "Driving Range" road sign (`golf-range-sign`, A)
+**View 1** (its front and right side show; the front faces the screen's lower left): save as `golf-range-sign-view1-v1.png`
+```text
+Two separate views of ONE subject, each its own picture. On FLAT PURE MAGENTA (#FF00FF, one uniform colour edge to edge, no gradient, floor or shadow on it); the subject itself has NO magenta, pink or purple and a crisp outline. Fixed parallel 2:1 isometric camera (ground lines at +/-26.565 degrees, verticals vertical), detailed illustrated style of the first reference picture. Early autumn: warm sun fixed at the SCREEN UPPER RIGHT, only small soft contact shadows toward the lower left. The year is 1985. No people, no ground tile or lawn, no text unless asked; 15% clear space round the subject.
+
+View 1: the front and the right side.
+
+Subject: golf:range-sign, a weathered roadside sign for a small 1985 driving range, about 4 m wide and 3 m high: a white painted board with a dark green trim on two stout timber posts, a red golf-flag-on-a-green motif at its left, and the words DRIVING RANGE in bold dark green capitals. The lettering must read correctly, left to right, in the two views that show the face; the back of the board is plain painted planks.
+```
+**View 2**, as an edit in the same chat: save as `golf-range-sign-view2-v1.png`
+```text
+The same object exactly (same design, colours, size and light), turned so its LEFT side and FRONT show (the front now faces the screen's lower right). Not a mirror image: draw the left side as it really is. Same flat pure magenta background, same isometric camera, sun still at the screen upper right.
+```
+
+### 2. Double-deck hitting stand (`golf-range-deck`, A)
+**View 1** (its front and right side show; the front faces the screen's lower left): save as `golf-range-deck-view1-v1.png`
+```text
+Two separate views of ONE subject, each its own picture. On FLAT PURE MAGENTA (#FF00FF, one uniform colour edge to edge, no gradient, floor or shadow on it); the subject itself has NO magenta, pink or purple and a crisp outline. Fixed parallel 2:1 isometric camera (ground lines at +/-26.565 degrees, verticals vertical), detailed illustrated style of the first reference picture. Early autumn: warm sun fixed at the SCREEN UPPER RIGHT, only small soft contact shadows toward the lower left. The year is 1985. No people, no ground tile or lawn, no text unless asked; 15% clear space round the subject.
+
+View 1: the front and the right side.
+
+Subject: golf:range-deck, one section of a two-storey driving-range hitting stand, about 20 m long, 7 m deep and 7 m high, built in exactly the same style as the identity reference's covered bays: heavy timber posts on dressed-stone piers, timber knee braces with black iron brackets, a dark green standing-seam metal roof, warm lanterns under the eaves. Four open hitting bays on each storey, all open toward the front: green artificial-turf mats with a white rubber tee, dark green timber divider walls between the bays, a timber club rack in each bay. The upper deck is a timber floor on beams with a dark green steel safety rail along its open front. A steel stair with a handrail climbs to the upper deck at one end. Both short ends are clean and open enough to butt against an identical section beside it. Empty, no golfers.
+```
+**View 2**, as an edit in the same chat: save as `golf-range-deck-view2-v1.png`
+```text
+The same object exactly (same design, colours, size and light), turned so its LEFT side and FRONT show (the front now faces the screen's lower right). Not a mirror image: draw the left side as it really is. Same flat pure magenta background, same isometric camera, sun still at the screen upper right.
+```
+
+### 3. Coffee kiosk (`golf-range-coffee-kiosk`, A)
+**View 1** (its front and right side show; the front faces the screen's lower left): save as `golf-range-coffee-kiosk-view1-v1.png`
+```text
+Two separate views of ONE subject, each its own picture. On FLAT PURE MAGENTA (#FF00FF, one uniform colour edge to edge, no gradient, floor or shadow on it); the subject itself has NO magenta, pink or purple and a crisp outline. Fixed parallel 2:1 isometric camera (ground lines at +/-26.565 degrees, verticals vertical), detailed illustrated style of the first reference picture. Early autumn: warm sun fixed at the SCREEN UPPER RIGHT, only small soft contact shadows toward the lower left. The year is 1985. No people, no ground tile or lawn, no text unless asked; 15% clear space round the subject.
+
+View 1: the front and the right side.
+
+Subject: golf:range-coffee-kiosk, a small timber coffee kiosk at a 1985 driving range, about 3 x 2.5 m and 3 m high. Painted cream timber walls with dark green trim, a serving hatch with a fold-down counter on the front, a red-and-white striped canvas awning over the hatch, a chrome espresso machine and a stack of paper cups visible through the hatch, a blank dark green chalk menu board hung beside it (no writing), a warm light inside. A plain back wall with a small door and a gas bottle in a cage.
+```
+**View 2**, as an edit in the same chat: save as `golf-range-coffee-kiosk-view2-v1.png`
+```text
+The same object exactly (same design, colours, size and light), turned so its LEFT side and FRONT show (the front now faces the screen's lower right). Not a mirror image: draw the left side as it really is. Same flat pure magenta background, same isometric camera, sun still at the screen upper right.
+```
+
+### 11. Ball dispenser (`golf-range-ball-dispenser`, A)
+**View 1** (its front and right side show; the front faces the screen's lower left): save as `golf-range-ball-dispenser-view1-v1.png`
+```text
+Two separate views of ONE subject, each its own picture. On FLAT PURE MAGENTA (#FF00FF, one uniform colour edge to edge, no gradient, floor or shadow on it); the subject itself has NO magenta, pink or purple and a crisp outline. Fixed parallel 2:1 isometric camera (ground lines at +/-26.565 degrees, verticals vertical), detailed illustrated style of the first reference picture. Early autumn: warm sun fixed at the SCREEN UPPER RIGHT, only small soft contact shadows toward the lower left. The year is 1985. No people, no ground tile or lawn, no text unless asked; 15% clear space round the subject.
+
+View 1: the front and the right side.
+
+Subject: golf:range-ball-dispenser, a 1985 coin-operated range-ball dispenser, about 1.5 m wide, 1 m deep and 2 m high: a green painted steel cabinet with a chrome coin slot and a small blank instruction plate on its front, a chute at waist height with a wire bucket of white range balls under it, a few balls on the ground at its foot. A plain back with a service door and a padlock.
+```
+**View 2**, as an edit in the same chat: save as `golf-range-ball-dispenser-view2-v1.png`
+```text
+The same object exactly (same design, colours, size and light), turned so its LEFT side and FRONT show (the front now faces the screen's lower right). Not a mirror image: draw the left side as it really is. Same flat pure magenta background, same isometric camera, sun still at the screen upper right.
+```
+
+### 6. Yardage board (`golf-range-yardage-board`, A)
+**View 1** (its front and right side show; the front faces the screen's lower left): save as `golf-range-yardage-board-view1-v1.png`
+```text
+Two separate views of ONE subject, each its own picture. On FLAT PURE MAGENTA (#FF00FF, one uniform colour edge to edge, no gradient, floor or shadow on it); the subject itself has NO magenta, pink or purple and a crisp outline. Fixed parallel 2:1 isometric camera (ground lines at +/-26.565 degrees, verticals vertical), detailed illustrated style of the first reference picture. Early autumn: warm sun fixed at the SCREEN UPPER RIGHT, only small soft contact shadows toward the lower left. The year is 1985. No people, no ground tile or lawn, no text unless asked; 15% clear space round the subject.
+
+View 1: the front and the right side.
+
+Subject: golf:range-yardage-board, a driving-range yardage board, about 2 m wide and 2.5 m high: a white painted board with a green trim on two white posts, its face BLANK (the game writes a number on it), a small red flag finial on top. The back is plain painted planks.
+```
+**View 2**, as an edit in the same chat: save as `golf-range-yardage-board-view2-v1.png`
+```text
+The same object exactly (same design, colours, size and light), turned so its LEFT side and FRONT show (the front now faces the screen's lower right). Not a mirror image: draw the left side as it really is. Same flat pure magenta background, same isometric camera, sun still at the screen upper right.
+```
+
+### 7. Distance marker post (`golf-range-distance-post`, B)
+Save as `golf-range-distance-post-1view-v1.png`
+```text
+ONE subject, centred, one view, on FLAT PURE MAGENTA (#FF00FF, one uniform colour edge to edge); the subject has NO magenta, pink or purple and a crisp outline. Fixed parallel 2:1 isometric camera, verticals vertical, detailed illustrated style of the first reference picture. Sun at the SCREEN UPPER RIGHT, a tiny soft contact shadow toward the lower left. 1985. No people, no ground, no text; 15% clear space round it.
+
+Subject: golf:range-distance-post, a short driving-range distance marker, about 1.5 m high: a square timber post painted in red and white bands, a small blank white plate on top (no number), set in the ground.
+```
+
+### 10. Floodlight mast (`golf-range-floodlight`, A)
+**View 1** (its front and right side show; the front faces the screen's lower left): save as `golf-range-floodlight-view1-v1.png`
+```text
+Two separate views of ONE subject, each its own picture. On FLAT PURE MAGENTA (#FF00FF, one uniform colour edge to edge, no gradient, floor or shadow on it); the subject itself has NO magenta, pink or purple and a crisp outline. Fixed parallel 2:1 isometric camera (ground lines at +/-26.565 degrees, verticals vertical), detailed illustrated style of the first reference picture. Early autumn: warm sun fixed at the SCREEN UPPER RIGHT, only small soft contact shadows toward the lower left. The year is 1985. No people, no ground tile or lawn, no text unless asked; 15% clear space round the subject.
+
+View 1: the front and the right side.
+
+Subject: golf:range-floodlight, a tall galvanised-steel floodlight mast at a driving range, about 12 m high on a square concrete foot: a slim lattice or tube mast with a service ladder, at its top a bank of four rectangular floodlights on a crossbar, all angled down and forward toward the front. The lamps glow warm white, lit. Fit the whole mast, lamps included, inside each cell.
+```
+**View 2**, as an edit in the same chat: save as `golf-range-floodlight-view2-v1.png`
+```text
+The same object exactly (same design, colours, size and light), turned so its LEFT side and FRONT show (the front now faces the screen's lower right). Not a mirror image: draw the left side as it really is. Same flat pure magenta background, same isometric camera, sun still at the screen upper right.
+```
+
+## Farms (items 185-188; the owner, 2026-10-29)
+**Ground textures (185, 186) use the owner's method:** take a game screenshot of a farm field at about 30% zoom (and one at 10%). Upload it to ChatGPT with `theme-authoritative.png`, and ask it to repaint only the field, keeping the camera, the light and everything else. The lead slices the field out and makes the tiles. Save the repainted screenshots to `art/theme-consistency/generated/ground/farm/<slug>-<zoom>.png`.
+
+**185 corn, young**: save as `corn-young-30.png` (and `corn-young-10.png`)
+```text
+Repaint ONLY the brown field in this game screenshot as a young corn field in early summer: knee-high bright green corn plants in perfectly straight parallel rows over brown soil, the rows running from the upper left toward the lower right of the picture, gaps of soil between the rows. Keep everything else in the picture exactly as it is: the same camera, the same isometric angle, the same light from the upper right, the same scale and texture detail as the game's ground. Detailed illustrated style. No people, no machinery, no text.
+```
+**185 corn, ripe**: save as `corn-ripe-30.png` (and `-10`)
+```text
+Repaint ONLY the brown field in this game screenshot as a ripe autumn corn field: tall dry golden-tan corn in perfectly straight parallel rows, tassels on top, leaves rustling, the rows running from the upper left toward the lower right. Keep everything else exactly as it is: camera, angle, light from the upper right, scale. Detailed illustrated style. No people, no machinery, no text.
+```
+**185 corn, stubble**: save as `corn-stubble-30.png` (and `-10`)
+```text
+Repaint ONLY the brown field in this game screenshot as a harvested corn field: short cut corn stalks in straight rows over pale brown soil, some flattened straw between the rows. Keep everything else exactly as it is. Detailed illustrated style. No people, no machinery, no text.
+```
+**186 ploughed field**: save as `ploughed-30.png` (and `-10`)
+```text
+Repaint ONLY the brown field in this game screenshot as a freshly ploughed field: rich dark brown soil turned in neat parallel furrows running from the upper left toward the lower right, a few clods and small stones, damp in the furrow bottoms. Keep everything else exactly as it is: camera, angle, light from the upper right, scale. Detailed illustrated style. No text.
+```
+
+**Sprites (187, 188)** on flat pure magenta, one picture per variant. Attach `theme-authoritative.png`. Save to `art/theme-consistency/generated/trees/`.
+
+**187 orchard trees**: save as `orchard-apple-red-1view-v1.png`, `orchard-pear-1view-v1.png`, `orchard-apple-young-1view-v1.png`, `orchard-apple-bare-1view-v1.png`
+```text
+ONE fruit tree, centred, one view, on a SQUARE image with a FLAT PURE MAGENTA background (#FF00FF, one uniform colour edge to edge); the tree itself has NO magenta, pink or purple and a crisp outline. An orchard [apple tree in autumn with a round, low, wide pruned canopy, red apples among the leaves, a few fallen apples at its foot] about 4-5 m high, on a short trunk. Fixed parallel 2:1 isometric camera, verticals vertical, detailed illustrated style of the reference. Sun at the SCREEN UPPER RIGHT, a tiny soft contact shadow toward the lower left. No ground, no text; 15% clear space round it.
+```
+(For the others, swap the bracket for: "pear tree in autumn with green-gold leaves and pears"; "young apple tree, 2.5 m, thin trunk, a few apples"; "apple tree half bare, yellow leaves falling, a few apples left".)
+
+**188 windbreak poplars**: save as `poplar-gold-1view-v1.png`, `poplar-greengold-1view-v1.png`, `poplar-bare-1view-v1.png`
+```text
+ONE tall narrow Lombardy poplar tree, centred, one view, on a SQUARE image with a FLAT PURE MAGENTA background (#FF00FF); the tree has NO magenta, pink or purple and a crisp outline. A column-shaped poplar about 18 m high and only 3 m wide, [in full autumn gold], the kind farmers plant in a line along a lane to break the wind. Fixed parallel 2:1 isometric camera, verticals vertical, detailed illustrated style of the reference. Sun at the SCREEN UPPER RIGHT, a tiny contact shadow toward the lower left. No ground, no text; 10% clear space round it.
+```
+(For the others: "green turning gold"; "half bare, a few yellow leaves left".)
+
+## Next: the grey stone water border (item 180; the owner, 2026-10-28)
 Sprites on flat pure magenta, so the game can key them out. Attach `art/theme-consistency/references/theme-authoritative.png` and the concept picture. Save each picture to `art/theme-consistency/generated/landscaping/` under the name given.
 
 **180a, the run pieces**: save as `golf-stone-border-run-v1.png`

@@ -127,7 +127,7 @@ describe('T238: the brush shape and Edit hole\'s paint', () => {
     p.wizard = { step: 'shape', base: { hole: 1 }, hole: 1, plan: null, ghost: () => null, check: () => ({ ok: true, why: '' }), checks: () => [] };
     p.editingHole = 1;
     let h = render(g);
-    assert.match(h, /data-primary="wizard"[\s\S]*Edit hole 1/);
+    assert.match(h, /data-primary="wizard"[\s\S]*Edit Hole Layout 1/, 'T254: the panel reads Edit Hole Layout');
     assert.match(h, /data-section="edit-paint"[\s\S]*Paint hole 1/);
     assert.equal((h.match(/data-swatch=/g) ?? []).length, 8, 'the stage\'s surfaces, Long grass with them');
     assert.doesNotMatch(h, /swatch-on/, 'none in hand yet: the plan\'s handles alone');
@@ -144,11 +144,11 @@ describe('T238: the brush shape and Edit hole\'s paint', () => {
   it("T252: Edit hole carries My looks (the surface in hand's look, course-wide) and Ground height (Raise, Lower, Smooth, Flatten, size, strength)", () => {
     const g = fakeGame({ ...stage2, mode: 'plan' }), p = g.paint as unknown as Record<string, unknown>;
     p.wizard = { step: 'shape', base: { hole: 1 }, hole: 1, plan: null, ghost: () => null, check: () => ({ ok: true, why: '' }), checks: () => [] };
-    p.editingHole = 1; p.heightR = 6; p.heightLevel = 3;
+    p.editingHole = 1; p.heightR = 6; p.heightLevel = 3; p.lookOwner = 'h1'; // T256: Edit hole edits the open hole's looks
     let h = render(g);
     const sec = h.slice(h.indexOf('data-section="edit-paint"'));
     assert.match(sec, /data-testid="looks-entry"[\s\S]*My looks[\s\S]*data-looks[^>]*>Fairway: /, "the looks entry, in Edit hole's paint section");
-    assert.match(sec, /every fairway on the course wears it, on every hole/, 'a look is course-wide');
+    assert.match(sec, /Fairways on hole 1: only they wear this look/, "T256: a look is the hole's own");
     assert.match(sec, /<button[^>]*data-ground-height[^>]*aria-pressed="false"[^>]*>Ground height/);
     assert.doesNotMatch(sec, /data-testid="ground-height"/, 'its controls show once it is in hand');
     p.mode = 'height'; p.planOpen = true; p.heightMode = 'lower';

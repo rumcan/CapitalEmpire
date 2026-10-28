@@ -14,8 +14,9 @@ import type { RoughMix } from './rough-yards';
 import type { SurfacesFile } from './painted-surfaces';
 
 /** a painted area's look (the Paint tool, docs/PAINT-TOOL.md): texture scale s, angle a (degrees, tile space, about the map origin), border width b (tiles, 0 = none),
- *  border texture bt (a patch texture or 'kerb'), draw order z (the area's id); the optional tone filter over the fill: t 1 Multiply (darker) or 2 Lighten (screen),
- *  ta its strength (0..1), tc its tint ('#rrggbb'); absent when the area has no tone */
+ *  border texture bt (a patch texture or 'kerb'), draw order z (the area's id); the optional tone of the fill: t 1 darker or 2 lighter at strength ta (0..1), drawn
+ *  as an exposure (T261, exposure.ts exposureOf: the texture's RGB times 1 - ta, at least 0.5, or 1 + ta); tc, the old tint, rides along unread; absent when the area
+ *  has no tone (the border's bto, bta and btc the same) */
 export interface PatchPaint { s: number; a: number; b: number; bt: string; z: number; /** a second texture blended over the fill in soft patches: its texture, share, softness and patch size (PaintArea mtex ...) */ m?: { t: string; s: number; f: number; p: number }; t?: 1 | 2; ta?: number; tc?: string; /** the border's own scale, angle, tone, strength and tint (sent only when they differ from the default) */ bs?: number; ba?: number; bto?: 1 | 2; bta?: number; btc?: string;
   /** how its outline is drawn (paint-edges.ts): a feather and a sun-lit bevel by profile; absent = crisp, as before */ e?: EdgeProfile;
   /** its edge shade (T136, PaintArea shadow: 0 none .. 1 strong; paint-edges areaShadeImages): a cool multiply inside its edges turned from the
@@ -23,7 +24,10 @@ export interface PatchPaint { s: number; a: number; b: number; bt: string; z: nu
   /** mowing stripes laid last on its top (T132, the driving range's outfield; the T075 rule: stripes over the surface, never baked under it), from a
    *  preset's Stripes: bands w tiles wide alternating (light first) along the unit (ux, uy) from (ox, oy) in tiles; l / k how much lighter /
    *  darker, lc / dc the colours washed in, t the tint, f the soft edge (0 hard .. 1 a smooth wave) */
-  mw?: MowStripes }
+  mw?: MowStripes;
+  /** T258: where its texture's pattern starts (tiles: the corner of one period, turned by a about it; absent: the tile grid's origin). A range
+   *  picture (golf/range-pics.ts) is laid flat with it: one picture exactly over its mat or green */
+  o?: [number, number] }
 /** a painted area's mowing stripes (PatchPaint.mw) */
 export interface MowStripes { ux: number; uy: number; ox: number; oy: number; w: number; l: number; k: number; lc: string; dc: string; t: number; f: number;
   /** T227: the line of play's direction (tiles, unit), so the course finish can lay its bands along or across it (course-finish finishMow);
@@ -31,9 +35,10 @@ export interface MowStripes { ux: number; uy: number; ox: number; oy: number; w:
   lx?: number; ly?: number }
 
 /** a texture as a course layer lays it: the texture (a paint texture or preset), its scale and angle (degrees, tile space about the origin);
- *  and the rest of the course look (the brush's style, course-look.ts): its tone (t: 1 Multiply, 2 Screen of the tint tc at strength ta) and
- *  its blend with a second texture in soft patches (m: the texture, share s, softness f, patch size p; the painted areas' Blend with) */
-export interface CourseTex { tex: string; sc: number; a: number; t?: 1 | 2; ta?: number; tc?: string; m?: { t: string; s: number; f: number; p: number } }
+ *  and the rest of the course look (the brush's style, course-look.ts): its exposure (x: the texture's RGB times x, 0.5 to 2; absent 1, T261
+ *  exposure.ts, from the look's saved tone) and its blend with a second texture in soft patches (m: the texture, share s, softness f, patch
+ *  size p; the painted areas' Blend with) */
+export interface CourseTex { tex: string; sc: number; a: number; x?: number; m?: { t: string; s: number; f: number; p: number } }
 /** one surface of a course chunk (plan P21 sections 3.2 to 3.4, T078), all coordinates flat x0 y0 x1 y1 ... in tiles:
  *  (rings and polylines are Float32Arrays, so a patch posts and clones as plain memory)
  *  - `fill`: closed rings clipped to the chunk box grown by 0.1 tile (filled even-odd; neighbouring chunks overlap, so no seam shows);
@@ -51,11 +56,23 @@ export interface CourseLayer extends CourseTex { s: number; e: EdgeProfile; fill
   /** its edges sorted by the heights on their sides (ext/course-walls, T099): soft (feathered) and joint (a crisp mowing line against its own
    *  collar) runs; the rest of its edges are walls (CoursePatch.walls) or hidden under a later layer, drawn crisp. Absent: feather all edges */
   soft?: Float32Array[]; joint?: Float32Array[];
-  /** its collar band (w: the band's width in tiles, the course look's Border; its outward feather never reaches past it, so a hairline stays one) */
+  /** its collar band (w: the band's width in tiles, the course look's Border; its outward feather never reaches past it, so a hairline stays one).
+   *  T260: w 0, a Border of none: no rings, only the band's look (a tee's bank wears it; the renderer lays a bunker's grass lip and a pond's wet
+   *  soil and stones round the sand and the water with no band) */
   collar?: CourseTex & { n: 'first-cut' | 'fringe' | 'lip' | 'bank'; w?: number; fill: Float32Array[]; edges: Float32Array[]; soft?: Float32Array[];
     /** T227: a bunker's lip band's grass with the course finish on (course-finish.ts: the fairway's first cut, so the bunker sits in the collar
      *  as in the concept); absent: its own look (the player picked a Border texture for the bunker) */
-    g?: CourseTex }; stripes?: { hole: number; line: number[]; runs?: Float32Array; a?: number }[] }
+    g?: CourseTex }; stripes?: { hole: number; line: number[]; runs?: Float32Array; a?: number }[];
+  /** T256 (#743): the other looks its cells wear in this chunk (each hole, the property and each practice facility owns its looks: golf/looks.ts):
+   *  each its fill, its collar band and a bunker's lip grass, drawn over the layer's own look within its share of the chunk (runs: boxes x0 y0
+   *  x1 y1, tiles; ext/course-grid cellShares). Absent: the whole layer wears its own look */
+  alts?: { look: CourseTex; band?: CourseTex; g?: CourseTex; runs: Float32Array }[] }
+/** T256: every texture a course layer lays (its fill, its collar's, a lip's grass, its alternates' and their blends), for the bakes' preloads */
+export function layerTexes(l: CourseLayer): string[] {
+  const out: string[] = [];
+  for (const t of [l, l.collar, l.collar?.g, ...(l.alts ?? []).flatMap(a => [a.look, a.band, a.g])]) if (t) { out.push(t.tex); if (t.m) out.push(t.m.t); }
+  return out;
+}
 /** a course wall (ext/course-walls WallRun, T099): its top edge as x, y, drop triples (tiles, tiles, metres), the higher side on the left so the
  *  face looks along the right-hand normal toward the camera; lo: the layer code it hangs over (2 s a surface's fill, 2 s + 1 its collar, 0 the
  *  map grass), drawn just after that layer; m: its material (0 turf, 1 sand, 2 water) */
@@ -80,7 +97,7 @@ export interface CoursePatch { cx: number; cy: number; size: number; layers: Cou
   spill?: { p: Float32Array; o: number }[]; z: number }
 
 /** a ground patch: a polygon (lots: an oriented quad; painted areas: any simple polygon) in tile space, and its surface */
-export interface LotPatch { pts: number[] /* x0 y0 x1 y1 ... (tiles, in order) */; tex: 'paving' | 'pad' | 'concrete' | 'asphalt' | 'lotAsphalt' | 'dirt' | 'rockyDirt' | 'rockyDirtAlt' | 'gravel' | 'field' | 'slabs' | 'asphaltDark' | 'asphaltWorn' | 'roadgravel' | 'grass' | 'bunkerSand' | 'wasteSand' | 'golfLongGrass' | 'pineStraw' | 'barkMulch' | 'spectatorPath' | 'woodChips' | 'grassDry' | 'asphaltPatched' | 'chipSeal' | 'concreteStained' | 'concreteCracked' | 'concreteOld' | 'concreteWeathered' | 'waterDark' | 'waterDeep' | 'waterClear' | GrassTex | 'marks' | `preset:${string}`; lines?: number[] /* parking bay lines: x0 y0 x1 y1 ... (tiles) */;
+export interface LotPatch { pts: number[] /* x0 y0 x1 y1 ... (tiles, in order) */; tex: 'paving' | 'pad' | 'concrete' | 'asphalt' | 'lotAsphalt' | 'dirt' | 'rockyDirt' | 'rockyDirtAlt' | 'gravel' | 'field' | 'slabs' | 'asphaltDark' | 'asphaltWorn' | 'roadgravel' | 'grass' | 'bunkerSand' | 'wasteSand' | 'golfLongGrass' | 'pineStraw' | 'barkMulch' | 'spectatorPath' | 'woodChips' | 'grassDry' | 'asphaltPatched' | 'chipSeal' | 'concreteStained' | 'concreteCracked' | 'concreteOld' | 'concreteWeathered' | 'waterDark' | 'waterDeep' | 'waterClear' | GrassTex | 'marks' | `preset:${string}` | `pic:${string}`; lines?: number[] /* parking bay lines: x0 y0 x1 y1 ... (tiles) */;
   /** tex 'marks' (nothing filled; pts only bound it): flat decals (lot-decals.ts), five numbers each: index, x, y (tiles, the decal's centre), scale (negative: mirrored), alpha */
   marks?: number[]; paint?: PatchPaint; /** a lawn (lawns.ts): the texture (a preset) laid under the lots' own ground, turned by a (degrees), over share of the
    *  patch in soft patches (1: all of it; soft: the patches' edge, patch: their size, 1 = 24 tiles a period); z: blocks 0 under lots 1; st: a lot's
@@ -163,6 +180,9 @@ export type ToWorker =
   | { t: 'living'; on: boolean; debug: boolean }
   /** T204: the rugged edges (the wobble, rounded corners and the tall grass's spill) on or off (the dev switch, for comparing looks and bake times) */
   | { t: 'rugged'; on: boolean }
+  /** T247: the soft dirt edges (soft-edges.ts: where dirt or desert meets grass, a noisy band that widens at the far levels) on or off (the dev
+   *  switch, for comparing looks and bake times) */
+  | { t: 'softDirt'; on: boolean }
   /** T218: the fairways' mowing stripes on (the default) or off (the dev switch, for comparing looks and bake times) */
   | { t: 'stripes'; on: boolean }
   /** T220: the fallen leaves' density (the gear menu's Fallen leaves, leaf-fall.ts; 0 = none, the ground as before T220): every chunk is baked again */

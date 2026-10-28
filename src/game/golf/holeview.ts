@@ -3,17 +3,17 @@
 import { insidePoly, polyArea, polyBox, type PaintTex } from '../paint';
 import { surfaceOfTex } from './costs';
 import { deriveHoles, holeLine, type Pt } from './holes';
-import type { AimPoint, CourseArea, GolfSurface, Pin, TeeMark } from './types';
+import type { AimPoint, CourseArea, GolfSurface, Pin, TeeKind, TeeMark } from './types';
+import { DEFAULT_SET, FLAG_OFF, TEE_KINDS, teeOff } from './teesets';
 
 /** the holes a course has */
 export const HOLES = 18;
 /** a painted area as these helpers read it: its hole tag, texture and outline */
 export interface HoleArea { hole?: number; tex: PaintTex; pts: number[] }
 /** a marker: the pin or a tee marker */
-export type MarkerKind = 'pin' | 'back' | 'middle' | 'forward';
+export type MarkerKind = 'pin' | TeeKind;
 /** a change to the markers: place or move one (x, y), or remove it */
 export type MarkerOp = { op: 'set'; hole: number; kind: MarkerKind; x: number; y: number } | { op: 'remove'; hole: number; kind: MarkerKind };
-const TEE_KINDS: ('back' | 'middle' | 'forward')[] = ['back', 'middle', 'forward'];
 /** an area of the course further than this (tiles, 160 m) from every playing line is not tagged with a hole */
 const TAG_REACH = 80;
 
@@ -45,44 +45,50 @@ export function autoPin(greens: number[][], hint?: Pt): Pt {
   return interiorPoint(largest(greens)!);
 }
 
-/** the tee markers on a hole's largest tee box, along the line toward the green: back at the far end, middle in the middle, forward at the near end
- *  (each pulled toward the middle until it lies on the tee) */
-export function autoTees(tees: number[][], toward: Pt): Record<'back' | 'middle' | 'forward', Pt> {
+/** the tee markers on a hole's largest tee box, along the line toward the green: back at the far end, middle in the middle, senior between the middle
+ *  and the near end, forward at the near end (each pulled toward the middle until it lies on the tee) */
+export function autoTees(tees: number[][], toward: Pt): Record<TeeKind, Pt> {
   const P = largest(tees)!, c = interiorPoint(P);
   let dx = toward.x - c.x, dy = toward.y - c.y; const L = Math.hypot(dx, dy) || 1; dx /= L; dy /= L;
   if (!Number.isFinite(dx) || (dx === 0 && dy === 0)) { dx = 1; dy = 0; }
   let s0 = 0, s1 = 0;
   for (let i = 0; i < P.length; i += 2) { const s = (P[i]! - c.x) * dx + (P[i + 1]! - c.y) * dy; if (s < s0) s0 = s; if (s > s1) s1 = s; }
   const at = (s: number): Pt => { for (const k of [0.6, 0.4, 0.2]) { const p = { x: c.x + dx * s * k, y: c.y + dy * s * k }; if (insidePoly(P, p.x, p.y)) return p; } return c; };
-  return { back: at(s0), middle: c, forward: at(s1) };
+  return { back: at(s0), middle: c, senior: at(s1 / 2), forward: at(s1) };
 }
 
 /** the outlines of hole n's areas whose surface is s */
 const outlines = (areas: HoleArea[], n: number, s: GolfSurface) => areas.filter(a => a.hole === n && surfaceOfTex(a.tex) === s).map(a => a.pts);
 
 /** the marker changes that keep every hole's markers on its painted green and tee: a hole with a green gets a pin on it (at the hint when that
- *  is on the green; a pin already on the green stays), a hole with a tee gets the three tee markers on it (those already on it stay), aimed at the
- *  pin; a marker placed this way (auto) goes when its green or tee is gone; markers the player placed elsewhere stay */
+ *  is on the green; a pin already on the green stays), a hole with a tee and no tee marker gets the white set on it (T254: New hole lays a white
+ *  tee; "Add tee" lays the others), aimed at the pin; a tee set off every tee box goes back onto the nearest one; a marker placed this way (auto)
+ *  goes when its green or tee is gone; markers the player placed elsewhere stay. T254: a held marker (Edit Hole Layout put it there) is never
+ *  moved or removed: the hole card warns until the player paints its turf under it */
 export function markerPlan(areas: HoleArea[], pins: (Pin & { auto?: boolean })[], tees: (TeeMark & { auto?: boolean })[], hints: Map<number, Pt> = new Map()): MarkerOp[] {
   const ops: MarkerOp[] = [];
   for (let n = 1; n <= HOLES; n++) {
     const greens = outlines(areas, n, 'green'), teeBoxes = outlines(areas, n, 'tee'), pin = pins.find(p => p.hole === n);
     let pinAt: Pt | null = pin ? { x: pin.x, y: pin.y } : null;
-    if (greens.length) {
+    if (pin?.held) { /* T254: it stays where Edit Hole Layout put it */ }
+    else if (greens.length) {
       const hint = hints.get(n);
       const on = pin && greens.some(g => insidePoly(g, pin.x, pin.y)) && !(hint && greens.some(g => insidePoly(g, hint.x, hint.y)));
       if (!on) { pinAt = autoPin(greens, hint ?? pinAt ?? undefined); ops.push({ op: 'set', hole: n, kind: 'pin', ...pinAt }); }
     } else if (pin?.auto) { ops.push({ op: 'remove', hole: n, kind: 'pin' }); pinAt = null; }
     const toward = pinAt ?? (greens.length ? interiorPoint(largest(greens)!) : null);
+    const mine = TEE_KINDS.flatMap(k => tees.find(q => q.hole === n && q.kind === k) ?? []);
     if (teeBoxes.length) {
-      let spots: Record<'back' | 'middle' | 'forward', Pt> | null = null;
-      for (const k of TEE_KINDS) {
-        const t = tees.find(q => q.hole === n && q.kind === k);
-        if (t && teeBoxes.some(b => insidePoly(b, t.x, t.y))) continue;
-        spots ??= autoTees(teeBoxes, toward ?? { x: interiorPoint(largest(teeBoxes)!).x + 1, y: interiorPoint(largest(teeBoxes)!).y });
-        ops.push({ op: 'set', hole: n, kind: k, ...spots[k] });
+      const aim = (boxes: number[][]) => toward ?? { x: interiorPoint(largest(boxes)!).x + 1, y: interiorPoint(largest(boxes)!).y };
+      if (!mine.length) { ops.push({ op: 'set', hole: n, kind: DEFAULT_SET, ...autoTees(teeBoxes, aim(teeBoxes))[DEFAULT_SET] }); continue; }
+      for (const t of mine) {
+        if (t.held || teeBoxes.some(b => insidePoly(b, t.x, t.y))) continue;
+        // off every tee box: onto the nearest one, at its own place along it
+        let near = teeBoxes[0]!, nd = Infinity;
+        for (const b of teeBoxes) { const c = interiorPoint(b), d = Math.hypot(c.x - t.x, c.y - t.y); if (d < nd) { nd = d; near = b; } }
+        ops.push({ op: 'set', hole: n, kind: t.kind, ...autoTees([near], aim([near]))[t.kind] });
       }
-    } else for (const k of TEE_KINDS) if (tees.find(q => q.hole === n && q.kind === k)?.auto) ops.push({ op: 'remove', hole: n, kind: k });
+    } else for (const t of mine) if (t.auto && !t.held) ops.push({ op: 'remove', hole: n, kind: t.kind });
   }
   return ops;
 }
@@ -135,6 +141,18 @@ export interface HoleView { n: number; started: boolean; par: 3 | 4 | 5 | 0; len
 /** the warnings deriveHoles gives that the checklist already shows */
 const CHECKED = new Set(['No pin', 'No tee markers', 'The pin is not on a green', 'The back tee is not on a tee']);
 
+/** T254: the pin's check: on its green; a held flag (Edit Hole Layout) off the green says so and what to do */
+function pinCheck(areas: HoleArea[], n: number, pin: Pin | undefined): HoleCheck {
+  const ok = !!pin && outlines(areas, n, 'green').some(g => insidePoly(g, pin.x, pin.y));
+  return { label: !ok && pin?.held ? FLAG_OFF : 'Pin on the green', ok };
+}
+/** T254: the tee markers' check: one set at least, every set on a tee box; a held set (Edit Hole Layout) off the tee turf says so and what to do */
+function teeCheck(areas: HoleArea[], n: number, tee: TeeMark[]): HoleCheck {
+  const boxes = outlines(areas, n, 'tee'), on = (t: TeeMark) => boxes.some(b => insidePoly(b, t.x, t.y)), ok = tee.length > 0 && tee.every(on);
+  const off = ok ? undefined : TEE_KINDS.map(k => tee.find(t => t.kind === k)).find(t => t && t.held && !on(t));
+  return { label: off ? teeOff(off.kind) : 'Tee markers on the tee', ok };
+}
+
 /** holes 1..18 as the Course panel shows them; golf: the game's markers (null in a classic game: the automatic ones are worked out for the view) */
 export function holeViews(areas: HoleArea[], golf: { pins: Pin[]; tees: TeeMark[]; aims: AimPoint[] } | null): HoleView[] {
   const virtual = !golf, mk = golf ? { pins: golf.pins, tees: golf.tees } : applyPlan([], [], markerPlan(areas, [], []));
@@ -149,8 +167,8 @@ export function holeViews(areas: HoleArea[], golf: { pins: Pin[]; tees: TeeMark[
       { label: 'Green painted', ok: has('green') },
       { label: 'Tee painted', ok: has('tee') },
       { label: par === 3 ? 'Fairway (a par 3 needs none)' : 'Fairway painted', ok: par === 3 || has('fairway') },
-      { label: 'Pin on the green', ok: !!pin && outlines(areas, n, 'green').some(g => insidePoly(g, pin.x, pin.y)) },
-      { label: 'Tee markers on the tee', ok: tee.length === 3 && tee.every(t => outlines(areas, n, 'tee').some(b => insidePoly(b, t.x, t.y))) },
+      pinCheck(areas, n, pin),
+      teeCheck(areas, n, tee),
     ];
     const warnings = (h?.warnings ?? []).filter(w => !CHECKED.has(w));
     out.push({ n, started: started || !!h, par, lengthM: par ? h!.lengthM : 0, memberLengthM: par ? h!.memberLengthM : 0, checks, warnings, ok: checks.every(c => c.ok) && !warnings.length, virtual });

@@ -38,7 +38,7 @@ export const menuDepth = (rows: readonly MenuRow[]): number => 1 + Math.max(0, .
  *  deepest walk (depth columns at the narrowest) needs to fit before the screen's right edge, never past its left margin */
 export const upLeft = (left: number, screenW: number, depth: number): number => Math.round(Math.max(BOTTOM, Math.min(left, screenW - BOTTOM - depth * (COL_MIN + GAP))));
 /** the top bar's bottom (--hud-top, local px; App.tsx sets it in px, its fallback is 5.75rem) */
-function hudTop(): number {
+export function hudTop(): number {
   const v = typeof document === 'undefined' ? '' : getComputedStyle(document.documentElement).getPropertyValue('--hud-top').trim(), n = parseFloat(v);
   return Number.isFinite(n) ? (v.endsWith('rem') ? n * 16 : n) : 92;
 }
@@ -146,7 +146,7 @@ export function Flyouts({ rows, top, left, up = false, startPath = [], keyboard 
                 {...(grid && r.why ? { 'data-tip': `${r.label}: ${r.why}` } : r.note && !r.why ? { 'data-tip': r.note } : {})}
                 {...(grid && r.tile ? { 'data-tile': r.tile } : {})}
                 aria-haspopup={r.children ? 'menu' : undefined} aria-expanded={r.children ? opened : undefined} aria-disabled={r.why ? true : undefined}
-                className={`flyout-row ${grid ? 'flyout-tile' : ''} ${opened ? 'flyout-row-open' : ''} ${r.why ? 'flyout-row-locked' : ''}`}
+                className={`flyout-row ${grid ? 'flyout-tile' : ''} ${opened ? 'flyout-row-open' : ''} ${r.why ? 'flyout-row-locked' : ''}${r.gold ? ' flyout-row-gold' : ''}`}
                 onMouseEnter={() => (r.children && !r.why ? open(level, index, false) : shut(level))}
                 onClick={() => {
                   if (r.why) { onLocked(r); return; }

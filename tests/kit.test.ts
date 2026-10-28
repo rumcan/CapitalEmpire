@@ -12,6 +12,7 @@ import { PLANT_KINDS, plantPool } from '../src/game/plant';
 import { kindPools } from '../src/game/lots/item-kinds';
 import { BUSHES, TREES } from '../src/game/lots/compose-core';
 import { drawnAs } from '../src/game/mirror';
+import { EXTRA_VIEW_BASE } from '../src/game/extra-views';
 import { kindOf } from '../src/game/shadow-shape';
 import { RAIL } from '../src/ui/rail-items';
 import { menuOf, leavesOf } from '../src/ui/flyout-menu';
@@ -43,23 +44,35 @@ test('the atlas: the kit is in the library on the golf page, packed apart from t
     const p = on[a]!.tex, q = on[b]!.tex, ix = Math.min(p[3], q[3]) - Math.max(p[1], q[1]), iy = Math.min(p[4], q[4]) - Math.max(p[2], q[2]);
     assert.ok(ix <= 1e-6 || iy <= 1e-6, `${on[a]!.id} and ${on[b]!.id} overlap on the page`);
   }
-  // the kit is appended last: every kit item after every other item (no saved index moves)
-  const firstKit = LIBRARY.findIndex(it => isKit(it.id)), lastOther = LIBRARY.reduce((m, it, i) => (isKit(it.id) ? m : i), -1);
-  assert.ok(firstKit > lastOther, 'the kit comes after every other library item');
-  // the page count is that of main before T231 (74: 22 sprite and walker pages and 52 of the other packs); every page is still used
-  assert.equal(ATLAS_PAGES.length, 74, 'no atlas page added');
+  // the kit is appended in one run after every library item before it (no saved index moves). The appends made after it may follow it, and only
+  // they: #582's supplemental views (extra-views-library.ts, on their own pages) and T258's range art (range:*, on the golf page). (#776: this
+  // asked for the kit last, which #582 ended; the lead, 2026-10-28: no saved index may move, so the later appends stay after the kit)
+  const later = (it: (typeof LIBRARY)[number]) => EXTRA_VIEW_BASE.has(it.id) || it.id.startsWith('range:');
+  const kitAt = LIBRARY.flatMap((it, i) => (isKit(it.id) ? [i] : [])), firstKit = kitAt[0]!, lastKit = kitAt[kitAt.length - 1]!;
+  assert.equal(lastKit - firstKit + 1, kitAt.length, 'the kit is one run in the library');
+  assert.deepEqual(LIBRARY.slice(lastKit + 1).filter(it => !later(it)).map(it => it.id), [], 'only the later appends follow the kit');
+  assert.deepEqual(LIBRARY.slice(0, firstKit).filter(later).map(it => it.id), [], 'no later append comes before the kit (the kit\'s indices hold)');
+  // no page added for the kit: its page holds the golf art appended before it (the count was 74 before T231 and is still 74 up to the kit;
+  // #582's supplemental views brought their own pages after it)
+  const before = LIBRARY.slice(0, firstKit);
+  assert.ok(before.some(it => it.tex[0] === golf), 'the kit\'s page is the golf art\'s');
+  assert.equal(Math.max(...before.map(it => it.tex[0])) + 1, 74, 'no atlas page added up to the kit');
   for (const dpr of [1, 2]) {
     const plan = planAtlas({ pages: ATLAS_PAGES.length, size: 2048, levels: 5, bpp: 1, budget: atlasBudget(dpr), finest: dpr > 1 ? 0 : 1 });
     assert.ok(plan.bytes <= atlasBudget(dpr), `dpr ${dpr}: ${(plan.bytes / MB).toFixed(1)} MB`);
   }
 });
 
-test('the kit joins no pool that picks by kind: the lots\' learned pools, the composer\'s trees and bushes, the Trees brush; never mirrored', () => {
+test('the kit joins no pool that picks by kind: the lots\' learned pools, the composer\'s trees and bushes, the Trees brush; none of it ever mirrors', () => {
   const pools = kindPools();
   for (const [k, ids] of Object.entries(pools)) assert.ok(!ids.some(isKit), `the ${k} pool has kit art`);
   assert.ok(!TREES.some(isKit) && !BUSHES.some(isKit), 'the composer\'s trees and bushes');
   assert.ok(!plantPool(LIBRARY, 'trees').some(p => isKit(p.id)), 'the Trees brush stays autumn broadleaves and conifers');
-  for (const id of KIT_IDS) assert.deepEqual(drawnAs(BY.get(id)!.it, true), [id, false], `${id} is never mirrored`);
+  // the owner, 2026-10-28: "make sure we never mirror a bush or tree or plant. always sun from top right": no kit picture mirrors, its
+  // boulders, shrubs, mums and palms included (T257 had mirrored those)
+  const natural = new Set<string>([...KIT_SHRUBS, ...KIT_FLOWERS, ...KIT_BOULDERS.small, ...KIT_BOULDERS.medium, ...KIT_BOULDERS.large, ...KIT_PALM_IDS]);
+  assert.ok(natural.size > 20);
+  for (const id of KIT_IDS) for (const f of [true, false]) assert.deepEqual(drawnAs(BY.get(id)!.it, f), [id, false], `${id} is never mirrored`);
   // shadows by kind: lily pads and the jet none, a palm a tree's
   assert.equal(kindOf(BY.get(KIT_LILIES[0])!.it), 'none'); assert.equal(kindOf(BY.get(KIT_FOUNTAIN[0])!.it), 'none'); assert.equal(kindOf(BY.get(KIT_PALM_IDS[0]!)!.it), 'tree');
   // the lamp posts are lamps (lit at night: their glows and the lamps' ground light)
@@ -141,12 +154,12 @@ test('a hedge is a run: press, drag along the map and let go lays its pieces end
   t.down(60, 60); t.move(70, 60); assert.ok(t.esc()); t.up(); assert.equal(props.length, 7, 'Esc laid nothing');
 });
 
-test('R steps a variant item through its pictures (nothing turned or mirrored); the jet loops its four frames', () => {
+test('R steps a variant item through its pictures, never mirrored (the owner, 2026-10-28); the jet loops its four frames', () => {
   const { t } = tool(), d = DECOR_BY_KEY.get('kit-shrub')!;
   t.pick('kit-shrub');
   const seen = Array.from({ length: d.variants!.length + 1 }, (_, k) => { if (k) t.turn(); return LIBRARY[t.pictureOf(d, t.view)!]!.id; });
   assert.deepEqual(seen.slice(0, -1), [...KIT_SHRUBS]); assert.equal(seen.at(-1), KIT_SHRUBS[0], 'and round again');
-  assert.ok(t.turns(d));
+  assert.ok(t.turns(d)); assert.equal(t.turnMode(d), 'pictures'); assert.ok(!t.ghost?.flip);
   const frames = Array.from({ length: 8 }, (_, k) => fountainAt(k / 7));
   assert.ok(new Set(frames).size === 4 && frames.every(f => fountainFrame(f) >= 0));
   assert.equal(fountainFrame('kit:boulder-small-a'), -1);

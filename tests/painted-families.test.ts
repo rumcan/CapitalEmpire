@@ -146,8 +146,9 @@ test('every look control reaches the course: the fill\'s tone and blend, the ban
   assert.deepEqual(courseTexOf(green), { tex: green.tex, sc: 1, a: 0 });
   assert.deepEqual(courseBandOf('green', green, dflt), dflt);
   const st = clampStyle({ ...green, tone: 1, toneAmt: 0.4, tint: '#102030', mtex: 'preset:rough', mshare: 0.3, msoft: 0.2, mpatch: 2, btex: 'preset:first-cut', bscale: 2, bangle: 30, btone: 2, btoneAmt: 0.5, btint: '#ffffff' });
-  assert.deepEqual(courseTexOf(st), { tex: green.tex, sc: 1, a: 0, t: 1, ta: 0.4, tc: '#102030', m: { t: 'preset:rough', s: 0.3, f: 0.2, p: 2 } });
-  assert.deepEqual(courseBandOf('green', st, dflt), { tex: 'preset:first-cut', sc: 2, a: 30, t: 2, ta: 0.5, tc: '#ffffff' });
+  // T261: the tones as exposure (Darker 0.4: the texture at 60%; Lighter 0.5: at 150%), the tints not read
+  assert.deepEqual(courseTexOf(st), { tex: green.tex, sc: 1, a: 0, x: 0.6, m: { t: 'preset:rough', s: 0.3, f: 0.2, p: 2 } });
+  assert.deepEqual(courseBandOf('green', st, dflt), { tex: 'preset:first-cut', sc: 2, a: 30, x: 1.5 });
   // the kerb is not a course band: the band keeps its own texture
   assert.equal(courseBandOf('green', { ...st, btex: 'kerb' }, dflt).tex, 'preset:fringe');
   // a change to any of them draws the course again; the brush radius does not

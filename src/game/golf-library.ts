@@ -22,3 +22,10 @@ export function appendKit(library: LibItem[]) {
   if (golfPage < 0) throw new Error('appendKit before appendGolf');
   for (const item of KIT) if (!removed.has(item.id)) library.push({ ...item, tex: [golfPage, ...item.tex.slice(1)] as LibItem["tex"] });
 }
+/** T258: the range art (art/range-kit, prep-range-art.mjs: the owner's ChatGPT buildings and signs), on the golf page */
+const RANGE: LibItem[] = [];
+/** T258: the range art, after every other library (it shares the golf page: appendGolf must have run), so no saved index moves */
+export function appendRangeArt(library: LibItem[]) {
+  if (golfPage < 0) throw new Error('appendRangeArt before appendGolf');
+  for (const item of RANGE) if (!removed.has(item.id)) library.push({ ...item, tex: [golfPage, ...item.tex.slice(1)] as LibItem["tex"] });
+}

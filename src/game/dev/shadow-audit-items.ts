@@ -16,7 +16,7 @@ import { rangeScene } from '../golf/rangebiz';
 import { RANGE_UPGRADES, defaultRangeBiz, HOME_AT, type RangeBizSave } from '../golf/rangesave';
 
 /** the audit's categories, in the order of the sheets */
-export const AUDIT_CATS = ['trees', 'poles', 'props', 'golf', 'range', 'vehicles', 'walkers', 'buildings', 'fences'] as const;
+export const AUDIT_CATS = ['trees', 'poles', 'props', 'golf', 'range', 'vehicles', 'walkers', 'buildings', 'fences', 'kit'] as const;
 export type AuditCat = typeof AUDIT_CATS[number];
 /** one sprite to show: its library index, the scale and flip it is placed with, a footprint (tiles, x0 y0 x1 y1 about its anchor) in place of its
  *  boxes' (the range's roofs), and its family (the views of one thing share it, so they sit side by side) */
@@ -103,6 +103,8 @@ export function auditEntries(cat: AuditCat): AuditEntry[] {
   if (cat === 'walkers') out = walkers();
   else if (cat === 'golf') out = golf();
   else if (cat === 'range') out = range();
+  // T257: the concept kit (kit.ts) and T232's building-site kit, every picture at its size as placed
+  else if (cat === 'kit') { out = []; LIBRARY.forEach((it, i) => { if (/^kit:|^construction:(site-|timber-frame)/.test(it.id) && drawnAsItself(i)) out.push(entry(i, placeScale(it.id))); }); }
   else {
     out = [];
     LIBRARY.forEach((it, i) => {

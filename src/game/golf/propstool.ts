@@ -8,11 +8,16 @@
 // y axis and let go to lay its pieces end to end, priced a piece); the fountain jet, placeable only in water; and the pond actions: the Stone
 // pond edge (the pond under the cursor gets its boulders and lily pads, golf/ponds.ts, priced a piece (a boulder, a stone run piece or a plant of the rim); on a stone-edged pond it gives back the
 // natural edge for half) and the Fountain pond (a round pond dug where it is placed, with its stone edge and a jet, all one undo step).
+// T257 (the owner, 2026-10-29: "I should be able rotate props and scale them a little"): R turns the prop in hand or the selected one: four-view
+// art through its views; a one-view natural thing (a rock, a plant, a tree: DecorItem.natural) through its pictures, each then mirrored, so one
+// picture gives two looks; anything with a front or lettering never mirrors. [ and ] make it 80% to 120% of its size in 5% steps (the cursor
+// label says so; the price follows the size). The mixed brushes (Rocks, mixed and the plants') drop a different card at every spot of a click
+// or a drag (decor.ts mixPick: the same at the same spot), laid when the button comes up, as one undo step.
 import type { Prop } from '../types';
 import type { Pt } from '../network';
 import type { RangeScene } from './rangebiz';
 import { turned } from '../lots/preset-art';
-import { DECOR_BY_KEY, POND_R, decorAppeal, decorSpotWhy, inPoly, sellBack, standsIn, type Box, type DecorGroup, type DecorItem, type DecorSpot } from './decor';
+import { DECOR_BY_KEY, POND_R, SIZE_STEP, clampSize, decorAppeal, decorSpotWhy, familyKey, inPoly, mixPick, sellBack, sizeText, sizedPrice, standsIn, type Box, type DecorGroup, type DecorItem, type DecorSpot } from './decor';
 import { discCells, pondAt, pondHasStones, setPondEdge, shorePieces, type Pond, type PondPiece } from './ponds';
 import { KIT_FOUNTAIN } from '../kit';
 
@@ -28,7 +33,10 @@ export interface PropsHostCtx {
   propsIn(b: Box): Iterable<Prop>; props(): Iterable<Prop>; propName(p: Prop): string;
   /** the range's scene (null: not a range start) */
   scene(): RangeScene | null;
-  addProp(item: number, x: number, y: number, scale: number): Prop; removeProp(p: Prop): void;
+  /** places a prop (flip: never asked for since 2026-10-28; the engine never mirrors a natural thing, mirror.ts) */
+  addProp(item: number, x: number, y: number, scale: number, flip?: boolean): Prop; removeProp(p: Prop): void;
+  /** T257: whether a placed prop is mirrored as the player turned it (default: its flip) */
+  flipOf?(p: Prop): boolean;
   /** the placed prop under the cursor (css px), the tile under it */
   propAt(mx: number, my: number): Prop | null; tileAt(mx: number, my: number): Pt;
   /** the selection the engine outlines (the Select tool's), and the hover outline */
@@ -47,7 +55,9 @@ export interface PropsHostCtx {
 
 /** the ghost the engine draws: the picture (item, at x y and scale), its footprint, and the reason it cannot stand there ('' when it can);
  *  noPic: only the label (T231: taking a pond's stones away) */
-export interface DecorGhost { item: number; x: number; y: number; scale: number; box: Box; why: string; label: string; noPic?: true }
+export interface DecorGhost { item: number; x: number; y: number; scale: number; box: Box; why: string; label: string; noPic?: true;
+  /** T257: drawn mirrored (a natural item turned so); the card a mixed brush's pick takes, and its price at its size */
+  flip?: boolean; key?: string; price?: number }
 
 /** the cursor snaps to this lattice (tiles) */
 const SNAP = 0.25;
@@ -58,6 +68,10 @@ const SCAN_EVERY = 30;
 export class PropsTool {
   /** the item in hand (its key; null: none) and the view it is turned to (0..3; T231: a variant item's picture, 0..n-1) */
   hand: string | null = null; view = 0;
+  /** T257: the item in hand mirrored (a natural item's second look) and its size (SIZE_MIN..SIZE_MAX of its catalogue size) */
+  size = 1;
+  /** T257: a mixed brush's drag: the spots it lays when the button comes up */
+  private stroke: DecorGhost[] | null = null;
   /** T231: the extra pictures the ghost draws (a run's other pieces, a pond's stones), each with its footprint */
   ghosts: DecorGhost[] = [];
   /** T231: a run being dragged: where it started (tiles) */
@@ -69,7 +83,7 @@ export class PropsTool {
   focus: DecorGroup | null = null;
   /** opens the tool's view: its place and group (the item in hand goes down when the place changes) */
   setView(where: 'course' | 'town', group: DecorGroup | null = null): void {
-    if (where !== this.where) { this.hand = null; this.ghost = null; this.ghosts = []; this.drag = null; this.runFrom = null; }
+    if (where !== this.where) { this.hand = null; this.ghost = null; this.ghosts = []; this.drag = null; this.runFrom = null; this.stroke = null; }
     this.where = where; this.group = group; this.focus = null; this.ctx.emit();
   }
   /** the ghost at the cursor (the item in hand, or the prop being moved), null off the map */
@@ -86,20 +100,35 @@ export class PropsTool {
     if (d.variants?.length) return this.ctx.item(d.variants[((q % d.variants.length) + d.variants.length) % d.variants.length]!) ?? this.ctx.item(d.id);
     return this.ctx.item(turned(d.id, q).id) ?? this.ctx.item(d.id);
   }
-  /** whether the item has four distinct views (four-view art), or (T231) several pictures R steps through */
-  turns(d: DecorItem): boolean { return d.variants ? d.variants.length > 1 : !d.run && !d.pond && turned(d.id, 1).id !== d.id; }
-  /** how many views R steps through */
-  private views(d: DecorItem): number { return d.variants?.length ?? 4; }
+  /** how R turns an item (T257): through its four views (four-view art), through its pictures (T231's variants), or not at all (one picture;
+   *  a run, a pond, a mixed brush). Nothing is ever mirrored (the owner, 2026-10-28: "make sure we never mirror a bush or tree or plant. always sun from top right") */
+  turnMode(d: DecorItem): 'views' | 'pictures' | 'none' {
+    if (d.run || d.pond || d.mix) return 'none';
+    if (!d.variants && turned(d.id, 1).id !== d.id) return 'views';
+    return (d.variants?.length ?? 0) > 1 ? 'pictures' : 'none';
+  }
+  /** whether R turns the item at all */
+  turns(d: DecorItem): boolean { return this.turnMode(d) !== 'none'; }
+  /** how many views or pictures R steps through */
+  private views(d: DecorItem): number { return d.variants?.length ?? (this.turnMode(d) === 'views' ? 4 : 1); }
+  /** whether [ and ] size the item (everything placed one at a time: not a run or a pond) */
+  scales(d: DecorItem): boolean { return !d.run && !d.pond; }
+  /** a placed prop's size against its catalogue size (80%..120%) */
+  sizeOf(p: Prop, d: DecorItem): number { return clampSize(p.scale / Math.max(1e-6, this.ctx.scaleOf(p.item, d.scale))); }
+  /** the scale library item `item` of catalogue item d is placed at, at size s */
+  private scaleAt(d: DecorItem, item: number, s: number): number { return this.ctx.scaleOf(item, this.ctx.scaleOf(item, d.scale) * s); }
+  /** whether a placed prop is mirrored (as the player turned it) */
+  private flipOf(p: Prop): boolean { return this.ctx.flipOf ? this.ctx.flipOf(p) : p.flip; }
 
   // ---- the panel's actions
   /** picks (or, picked again, puts down) an item of the catalogue */
   pick(key: string | null): void {
-    this.hand = key && key !== this.hand && DECOR_BY_KEY.has(key) ? key : null; this.view = 0; this.ghost = null; this.ghosts = []; this.drag = null; this.runFrom = null;
+    this.hand = key && key !== this.hand && DECOR_BY_KEY.has(key) ? key : null; this.view = 0; this.size = 1; this.ghost = null; this.ghosts = []; this.drag = null; this.runFrom = null; this.stroke = null;
     if (this.hand) this.ctx.select(null);
     this.ctx.emit();
   }
   /** puts the item in hand down and ends a move (a tool change) */
-  cancel(): void { this.hand = null; this.ghost = null; this.ghosts = []; this.drag = null; this.runFrom = null; }
+  cancel(): void { this.hand = null; this.ghost = null; this.ghosts = []; this.drag = null; this.runFrom = null; this.stroke = null; }
   /** the placed prop selected in the tool (a prop of the catalogue), and its item */
   selection(): { p: Prop; d: DecorItem } | null { const p = this.ctx.selected(), d = p?.decor ? DECOR_BY_KEY.get(p.decor) : undefined; return p && d ? { p, d } : null; }
 
@@ -110,6 +139,8 @@ export class PropsTool {
     if (this.hand) {
       // T231: a run starts here and is laid when the button comes up (up)
       if (DECOR_BY_KEY.get(this.hand)?.run) { this.runFrom = { x: snapRun(t.x), y: snapRun(t.y) }; this.move(mx, my); this.ctx.emit(); return; }
+      // T257: a mixed brush's stroke starts here; each spot it passes is laid when the button comes up (up)
+      if (DECOR_BY_KEY.get(this.hand)?.mix) { this.stroke = []; this.move(mx, my); this.ctx.emit(); return; }
       this.move(mx, my); this.place(); return;
     }
     const p = this.ctx.propAt(mx, my);
@@ -122,7 +153,7 @@ export class PropsTool {
     const t = this.ctx.tileAt(mx, my);
     if (this.drag) {
       const d = this.drag; if (Math.abs(mx - d.sx) + Math.abs(my - d.sy) > 4) d.moved = true;
-      this.ghost = d.moved ? this.ghostOf(DECOR_BY_KEY.get(d.p.decor!)!, d.p.item, snap(t.x + d.ox), snap(t.y + d.oy), d.p.scale, d.p) : null;
+      this.ghost = d.moved ? this.ghostOf(DECOR_BY_KEY.get(d.p.decor!)!, d.p.item, snap(t.x + d.ox), snap(t.y + d.oy), d.p.scale, d.p, { flip: this.flipOf(d.p) }) : null;
       return;
     }
     if (this.hand) {
@@ -130,13 +161,15 @@ export class PropsTool {
       if (d.run) { this.runGhost(d, t); return; }
       if (d.pond === 'edge') { this.edgeGhost(d, t); return; }
       if (d.pond === 'make') { this.pondGhost(d, t); return; }
-      const item = this.pictureOf(d, this.view); this.ghost = item === undefined ? null : this.ghostOf(d, item, snap(t.x), snap(t.y), this.ctx.scaleOf(item, d.scale), null); return;
+      if (d.mix) { this.mixGhost(d, t); return; }
+      this.ghost = this.handGhost(d, snap(t.x), snap(t.y)); return;
     }
     this.ghost = null; this.ghosts = [];
     const p = this.ctx.propAt(mx, my); this.ctx.hover(p?.decor ? p : null);
   }
   up(): void {
     if (this.runFrom) { this.placeRun(); return; }
+    if (this.stroke) { this.placeStroke(); return; }
     const d = this.drag; this.drag = null; if (!d) return;
     const g = this.ghost; this.ghost = null;
     if (!d.moved || !g) { this.ctx.emit(); return; }
@@ -154,12 +187,15 @@ export class PropsTool {
       return false;
     }
     if (e.key === 'r' || e.key === 'R') { this.turn(); return true; }
+    // T257: [ and ] size the prop in hand (or the selected one) down and up, 80% to 120%
+    if (e.key === '[' || e.key === ']') { this.resize(e.key === ']' ? 1 : -1); return true; }
     if (e.key === 'Delete' || e.key === 'Backspace') { if (this.selection()) { this.sell(); return true; } }
     return false;
   }
   /** Esc: the item in hand goes down, else the selection; true when it did something */
   esc(): boolean {
     if (this.runFrom) { this.runFrom = null; this.ghosts = []; this.ctx.emit(); return true; } // T231: a run being dragged is dropped
+    if (this.stroke) { this.stroke = null; this.ghosts = []; this.ctx.emit(); return true; } // T257: and a mixed brush's stroke
     if (this.hand) { this.pick(null); return true; }
     if (this.selection()) { this.ctx.select(null); this.ctx.emit(); return true; }
     return false;
@@ -172,44 +208,69 @@ export class PropsTool {
     if (g.why) { this.ctx.toast(g.why, 'warn'); return; }
     if (d.pond === 'edge') { this.placeEdge(d, g); return; }
     if (d.pond === 'make') { this.placePond(d, g); return; }
-    this.ctx.step(`Place ${d.name.toLowerCase()}`, () => { const p = this.ctx.addProp(g.item, g.x, g.y, g.scale); p.decor = d.key; this.ctx.spend(d.price); return d.price; });
-    this.changed(); this.ctx.toast(`${d.name} placed (-$${d.price.toLocaleString()})`, 'good');
+    const key = g.key ?? familyKey(d, this.ctx.idOf({ item: g.item } as Prop)), price = g.price ?? d.price, name = DECOR_BY_KEY.get(key)?.name ?? d.name;
+    this.ctx.step(`Place ${name.toLowerCase()}`, () => { const p = this.ctx.addProp(g.item, g.x, g.y, g.scale, !!g.flip); p.decor = key; this.ctx.spend(price); return price; });
+    this.changed(); this.ctx.toast(`${name} placed (-$${price.toLocaleString()})`, 'good');
   }
-  /** turns the item in hand to its next view, or the selected prop where it stands (when its turned footprint fits) */
+  /** turns the item in hand to its next view or look, or the selected prop where it stands (when its turned footprint fits) */
   turn(): void {
     if (this.hand) {
-      const d = DECOR_BY_KEY.get(this.hand)!; this.view = (this.view + 1) % this.views(d);
+      const d = DECOR_BY_KEY.get(this.hand)!, mode = this.turnMode(d);
       if (d.run || d.pond) { this.ctx.toast(d.run ? `${d.name}: drag it along the map; it follows your drag` : `${d.name}: round, the same from every side`, 'info'); this.ctx.emit(); return; }
-      if (!this.turns(d)) this.ctx.toast(`${d.name}: one picture, the same from every side`, 'info');
-      if (this.ghost) { const item = this.pictureOf(d, this.view)!; this.ghost = this.ghostOf(d, item, this.ghost.x, this.ghost.y, this.ctx.scaleOf(item, d.scale), null); }
+      if (d.mix) { this.ctx.toast(`${d.name}: every spot picks its own`, 'info'); this.ctx.emit(); return; }
+      if (mode !== 'none') this.view = (this.view + 1) % this.views(d);
+      else this.ctx.toast(`${d.name}: one picture, never mirrored (the sun stays at the upper right)`, 'info');
+      if (this.ghost) this.ghost = this.handGhost(d, this.ghost.x, this.ghost.y);
       this.ctx.emit(); return;
     }
     const s = this.selection(); if (!s) return;
-    if (!this.turns(s.d)) { this.ctx.toast(`${s.d.name}: one picture, the same from every side`, 'info'); return; }
-    // T231: a variant item steps to its next picture where it stands
-    const vs = s.d.variants, cur = this.ctx.idOf(s.p), next = vs ? vs[(vs.indexOf(cur) + 1) % vs.length]! : turned(cur, 1).id;
+    const mode = this.turnMode(s.d);
+    if (mode === 'none') { this.ctx.toast(`${s.d.name}: one picture, never mirrored (the sun stays at the upper right)`, 'info'); return; }
+    // T231: a variant item steps to its next picture where it stands (never mirrored)
+    const vs = s.d.variants, cur = this.ctx.idOf(s.p), k = vs ? vs.indexOf(cur) : -1;
+    const next = mode === 'views' ? turned(cur, 1).id : vs ? (k < 0 ? cur : vs[(k + 1) % vs.length]!) : cur, flip = false;
     const item = this.ctx.item(next); if (item === undefined) return;
-    const g = this.ghostOf(s.d, item, s.p.x, s.p.y, s.p.scale, s.p); if (g.why) { this.ctx.toast(g.why, 'warn'); return; }
-    this.ctx.step(`Turn ${s.d.name.toLowerCase()}`, () => { const q = this.remake(s.p, item, s.p.x, s.p.y); this.ctx.select(q); return 0; });
+    const g = this.ghostOf(s.d, item, s.p.x, s.p.y, s.p.scale, s.p, { flip }); if (g.why) { this.ctx.toast(g.why, 'warn'); return; }
+    this.ctx.step(`Turn ${s.d.name.toLowerCase()}`, () => { const q = this.remake(s.p, item, s.p.x, s.p.y, { flip, key: familyKey(s.d, next) }); this.ctx.select(q); return 0; });
+    this.changed();
+  }
+  /** T257: [ (dir -1) and ] (+1): the item in hand a size step smaller or bigger (80%..120%), or the selected prop where it stands (it pays the
+   *  difference growing, and gets half the difference back shrinking, as a sale would) */
+  resize(dir: 1 | -1): void {
+    if (this.hand) {
+      const d = DECOR_BY_KEY.get(this.hand)!;
+      if (!this.scales(d)) { this.ctx.toast(`${d.name}: laid at its own size`, 'info'); return; }
+      this.size = clampSize(this.size + dir * SIZE_STEP);
+      if (this.ghost && !this.stroke) { const t = { x: this.ghost.x, y: this.ghost.y }; if (d.mix) this.mixGhost(d, t); else this.ghost = this.handGhost(d, t.x, t.y); }
+      this.ctx.emit(); return;
+    }
+    const s = this.selection(); if (!s || !this.scales(s.d)) return;
+    const was = this.sizeOf(s.p, s.d), size = clampSize(was + dir * SIZE_STEP); if (Math.abs(size - was) < 1e-9) { this.ctx.toast(`${s.d.name}: ${dir > 0 ? 'its biggest' : 'its smallest'} (${sizeText(size)})`, 'info'); return; }
+    const scale = this.scaleAt(s.d, s.p.item, size), g = this.ghostOf(s.d, s.p.item, s.p.x, s.p.y, scale, s.p, { flip: this.flipOf(s.p) });
+    if (g.why) { this.ctx.toast(g.why, 'warn'); return; }
+    const diff = sizedPrice(s.d.price, size) - sizedPrice(s.d.price, was), cost = diff > 0 ? diff : -Math.round(-diff / 2);
+    if (cost > this.ctx.money()) { this.ctx.toast(`Not enough money: it costs $${cost.toLocaleString()} more`, 'warn'); return; }
+    this.ctx.step(`Size ${s.d.name.toLowerCase()} ${sizeText(size)}`, () => { const q = this.remake(s.p, s.p.item, s.p.x, s.p.y, { scale }); this.ctx.select(q); this.ctx.spend(cost); return cost; });
     this.changed();
   }
   /** sells the selected prop: half its price back */
   sell(): void {
     const s = this.selection(); if (!s) return;
-    const back = sellBack(s.d);
+    const back = sellBack(s.d, this.sizeOf(s.p, s.d));
     this.ctx.step(`Sell ${s.d.name.toLowerCase()}`, () => { this.ctx.removeProp(s.p); this.ctx.spend(-back); return -back; });
     this.ctx.select(null); this.changed(); this.ctx.toast(`${s.d.name} sold (+$${back.toLocaleString()})`, 'good');
   }
-  /** a prop made again at a new spot or picture (a move or a turn: remove and add, so the undo journal sees it), keeping its kind and size */
-  private remake(p: Prop, item: number, x: number, y: number): Prop {
-    const key = p.decor!, frame = p.frame; this.ctx.removeProp(p);
-    const q = this.ctx.addProp(item, x, y, p.scale); q.decor = key; if (frame) q.frame = frame; return q; // T229: a frame tree keeps its hole
+  /** a prop made again at a new spot, picture, look or size (a move, a turn or a resize: remove and add, so the undo journal sees it), keeping
+   *  its kind, size and look unless told (o: its new mirror, scale and card) */
+  private remake(p: Prop, item: number, x: number, y: number, o: { flip?: boolean; scale?: number; key?: string } = {}): Prop {
+    const key = o.key ?? p.decor!, frame = p.frame, flip = o.flip ?? this.flipOf(p); this.ctx.removeProp(p);
+    const q = this.ctx.addProp(item, x, y, o.scale ?? p.scale, flip); q.decor = key; if (frame) q.frame = frame; return q; // T229: a frame tree keeps its hole
   }
   private changed(): void { this.tick = SCAN_EVERY; this.scan(true); this.ctx.save(); this.ctx.emit(); }
 
   // ---- the spot check
   /** the ghost of catalogue item d drawn as library item `item` at (x, y): its footprint and why it cannot stand there (ignore: the prop being moved) */
-  ghostOf(d: DecorItem, item: number, x: number, y: number, scale: number, ignore: Prop | null): DecorGhost {
+  ghostOf(d: DecorItem, item: number, x: number, y: number, scale: number, ignore: Prop | null, o: { flip?: boolean; price?: number; key?: string; size?: number } = {}): DecorGhost {
     const box = this.ctx.footprint(item, x, y, scale), sc = this.ctx.scene();
     const spot: DecorSpot = {
       ...this.ctx.spot,
@@ -222,8 +283,61 @@ export class PropsTool {
       overlaps: b => { for (const p of this.ctx.propsIn(b)) if (p !== ignore && b[0] < p.x1 - 0.05 && b[2] > p.x0 + 0.05 && b[1] < p.y1 - 0.05 && b[3] > p.y0 + 0.05) return this.ctx.propName(p); return ''; },
     };
     let why = decorSpotWhy(box, spot, standsIn(d, this.where), d.water === 'in');
-    if (!why && !ignore && d.price > this.ctx.money()) why = `Not enough money: it costs $${d.price.toLocaleString()}`;
-    return { item, x, y, scale, box, why, label: why || (ignore ? `Move ${d.name.toLowerCase()} here` : `${d.name} · $${d.price.toLocaleString()}`) };
+    const price = o.price ?? d.price, name = (o.key ? DECOR_BY_KEY.get(o.key)?.name : undefined) ?? d.name;
+    if (!why && !ignore && price > this.ctx.money()) why = `Not enough money: it costs $${price.toLocaleString()}`;
+    // T257: the size when not 100%, and a mirrored look, in the label
+    const size = o.size !== undefined && Math.abs(o.size - 1) > 1e-9 ? ` · ${sizeText(o.size)}` : '', look = o.flip ? ' · mirrored' : '';
+    return { item, x, y, scale, box, why, flip: !!o.flip, ...(o.key ? { key: o.key } : {}), price,
+      label: why || (ignore ? `Move ${d.name.toLowerCase()} here` : `${name}${size}${look} · $${price.toLocaleString()}`) };
+  }
+  /** T257: the ghost of the item in hand at (x, y): its picture at view, at its size and price */
+  private handGhost(d: DecorItem, x: number, y: number): DecorGhost | null {
+    const item = this.pictureOf(d, this.view); if (item === undefined) return null;
+    const id = this.ctx.idOf({ item } as Prop);
+    return this.ghostOf(d, item, x, y, this.scaleAt(d, item, this.size), null, { price: sizedPrice(d.price, this.size), size: this.size, key: familyKey(d, id) });
+  }
+
+  // ---- T257: the mixed brushes
+  /** what a mixed brush drops at a tile: its pick there (decor.ts mixPick) at the hand's size, as a ghost with its own card and price */
+  private pickGhost(d: DecorItem, x: number, y: number): DecorGhost | null {
+    const m = mixPick(d, x, y), pd = m ? DECOR_BY_KEY.get(m.key) : undefined, item = m ? this.ctx.item(m.id) : undefined;
+    if (!m || !pd || item === undefined) return null;
+    return this.ghostOf(pd, item, x, y, this.scaleAt(pd, item, this.size), null, { flip: m.flip, price: sizedPrice(pd.price, this.size), size: this.size, key: m.key });
+  }
+  /** the mixed brush at the cursor: its pick there; in a stroke, the spot joins the stroke when it stands clear of the stroke's other spots */
+  private mixGhost(d: DecorItem, t: Pt): void {
+    const g = this.pickGhost(d, snap(t.x), snap(t.y));
+    if (!this.stroke) { this.ghost = g; this.ghosts = []; return; }
+    // (a stroke's spots stand a little apart, so the stones read as a scatter, not a wall: the next spot is as far from the last as the last's
+    // reach, the brush's biggest pick's and a gap, whatever is picked there, so a small pick is no likelier than a big one; and clear of all)
+    const st = this.stroke, cost = st.reduce((a, q) => a + (q.price ?? 0), 0), gap = 0.3, last = st[st.length - 1];
+    const half = (q: DecorGhost) => Math.max(q.box[2] - q.box[0], q.box[3] - q.box[1]) / 2;
+    const far = (q: DecorGhost) => !last || Math.hypot(q.x - last.x, q.y - last.y) >= half(last) + this.mixReach(d) + gap;
+    if (g && !g.why && far(g) && cost + (g.price ?? 0) <= this.ctx.money() && !st.some(q => g.box[0] < q.box[2] + gap && g.box[2] > q.box[0] - gap && g.box[1] < q.box[3] + gap && g.box[3] > q.box[1] - gap)) st.push(g);
+    const n = st.length, total = st.reduce((a, q) => a + (q.price ?? 0), 0);
+    if (!n) { this.ghost = g; this.ghosts = []; return; }
+    this.ghosts = st.slice(0, -1);
+    this.ghost = { ...st[n - 1]!, label: `${d.name}: ${n} · $${total.toLocaleString()} (let go to place ${n > 1 ? 'them' : 'it'})` };
+  }
+  /** the half width (tiles) of a mixed brush's biggest pick's footprint at the hand's size */
+  private mixReach(d: DecorItem): number {
+    const k = `${d.key}@${this.size}`; let r = this.reach.get(k);
+    if (r === undefined) {
+      r = 0;
+      for (const m of d.mix ?? []) { const pd = DECOR_BY_KEY.get(m.key), item = this.ctx.item(m.id); if (!pd || item === undefined) continue; const b = this.ctx.footprint(item, 0, 0, this.scaleAt(pd, item, this.size)); r = Math.max(r, (b[2] - b[0]) / 2, (b[3] - b[1]) / 2); }
+      this.reach.set(k, r);
+    }
+    return r;
+  }
+  private reach = new Map<string, number>();
+  /** lays the mixed brush's stroke (one undo step), or says why nothing could be */
+  private placeStroke(): void {
+    const d = this.hand ? DECOR_BY_KEY.get(this.hand) : undefined, st = this.stroke ?? [], why = this.ghost?.why;
+    this.stroke = null; this.ghosts = [];
+    if (!d || !st.length) { if (why) this.ctx.toast(why, 'warn'); this.ctx.emit(); return; }
+    const cost = st.reduce((a, q) => a + (q.price ?? 0), 0);
+    this.ctx.step(`Place ${d.name.toLowerCase()}`, () => { for (const q of st) { const p = this.ctx.addProp(q.item, q.x, q.y, q.scale, !!q.flip); p.decor = q.key ?? d.key; } this.ctx.spend(cost); return cost; });
+    this.ghost = null; this.changed(); this.ctx.toast(`${d.name}: ${st.length} placed (-$${cost.toLocaleString()})`, 'good');
   }
 
   // ---- T231: runs (the hedge)

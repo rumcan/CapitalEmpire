@@ -37,7 +37,7 @@ test('validateMarkerPlacement accepts tee marker on tee and rejects tee marker o
   // Outside tee (on fairway)
   const onFairway = validateMarkerPlacement(areas, 'back', 50, 50);
   assert.equal(onFairway.ok, false);
-  assert.equal(onFairway.reason, 'A back tee marker must be placed on a tee');
+  assert.equal(onFairway.reason, 'A blue tee marker must be placed on a tee');
 });
 
 test('deriveHoles updates par and length when pin position is updated', () => {

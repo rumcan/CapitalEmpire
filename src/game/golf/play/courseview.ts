@@ -2,7 +2,8 @@
 // The engine gives the surface at a point (the course grid, else the painted areas); off the painted course the distance to the played lines decides
 // between rough and out of bounds. Pure TS, no DOM.
 import type { Hole, Pt } from '../holes';
-import type { GolfSurface } from '../types';
+import type { GolfSurface, TeeKind } from '../types';
+import { nearestSet } from '../teesets';
 import type { CourseView, Lie, PlayHole } from './types';
 
 /** the holes a round plays: 18, in order. A course with fewer is cycled (a 9-hole course is played twice), one with more gives its first 18 */
@@ -24,6 +25,14 @@ function lineDist(line: Pt[], x: number, y: number): number {
   return best;
 }
 
+/** T254: the hole as a golfer who plays from the `want` set plays it: that set's tee and line, else the nearest set's (golf/teesets.ts nearestSet);
+ *  the hole as it is with no want or one set */
+export function holeFrom(h: PlayHole, want: TeeKind | undefined): PlayHole {
+  if (!want || !h.sets?.length) return h;
+  const k = nearestSet(h.sets.map(s => s.kind), want), s = h.sets.find(q => q.kind === k);
+  return s && s.tee !== h.tee ? { ...h, tee: s.tee, line: s.line } : h;
+}
+
 /** the course a round is played on: the holes with a line of two points or more, in order, played out to 18 (see PLAYED; PlayHole.n is the hole's own
  *  number, so a 9-hole course shows its numbers twice). lieAt is the lie of the surface at the point (surfAt; a surface of null is no painted course),
  *  and off the course rough within OUT_TILES of a played line, else out of bounds. No holes: an empty course, every point out of bounds */
@@ -31,7 +40,8 @@ export function makeCourseView(holes: Hole[], surfAt: (x: number, y: number) => 
   const lines = holes.filter(h => h.line.length >= 2), N = lines.length, played: PlayHole[] = [];
   for (let i = 0; N > 0 && i < PLAYED; i++) {
     const h = lines[i % N]!, line = h.line;
-    played.push({ n: h.n, par: h.par, tee: line[0]!, pin: line[line.length - 1]!, line });
+    const sets = (h.sets ?? []).filter(s => s.line.length >= 2).map(s => ({ kind: s.kind, tee: s.line[0]!, line: s.line })); // T254
+    played.push({ n: h.n, par: h.par, tee: line[0]!, pin: line[line.length - 1]!, line, ...(sets.length > 1 ? { sets } : {}) });
   }
   const plines = lines.slice(0, PLAYED).map(h => h.line);
   return {

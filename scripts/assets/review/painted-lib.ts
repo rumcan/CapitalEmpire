@@ -6,5 +6,7 @@ export { SURFACES, LAWN_SLOTS, clampSurfaces, lookOfTex, newLook, surfaceKinds }
 export { DEFAULT_COURSE_FINISH, FINISH_RANGES } from '../../../src/game/course-finish';
 // T230: the water look's knobs (the file's water block: the Painted tab's Water look)
 export { DEFAULT_WATER_LOOK, WATER_RANGES } from '../../../src/game/water-look';
+// T258: the range's ground art (the file's range block: the Painted tab's Range art)
+export { DEFAULT_RANGE_LOOK, RANGE_LOOK_CHOICES } from '../../../src/game/golf/range-look';
 // the hand-painted tile sets (T145): their sets and tiles, their anchors and world sizes (T150), and the placement the game lays them by
 export { TILED_FAMILIES, TILE_BANDS, ANCHORS, TILES, tilePermutation, tileIndex, tileMetres } from '../../../src/game/painted-tiles';

@@ -1,5 +1,5 @@
 // T252 (#731; the owner, 2026-10-28: "change the icon the the puck with the actual texture with the border it has"): the Holes swatches' pucks.
-// Each is the brush cursor's chip drawn small (ext/course-cursor swatchPuck: the surface's own painted tile through its look's tint and tone,
+// Each is the brush cursor's chip drawn small (ext/course-cursor swatchPuck: the surface's own painted tile through its look's exposure (T261),
 // with the border the course lays round it: the green's fringe, the first cut round a fairway or a tee, a bunker's lip, a pond's bank; the
 // rough, the long grass and the waste area plain), made once into an image and kept by its look, so the swatch and the cursor show the same
 // puck. A look changed (My looks, or Studio › Painted saving the surfaces file) gives a new key and the puck is made again; a picture still
@@ -45,17 +45,18 @@ function waitFor(tex: CursorTexture) {
 }
 
 /** a look's part of a puck's key */
-const styleKey = (st: PuckStyle) => `${st.tex}|${st.scale}|${st.angle}|${st.border}|${st.btex}|${st.bscale}|${st.bangle}|${st.tone}|${st.toneAmt}|${st.tint}`;
-const bandKey = (pb: PuckBand | null) => (pb ? `${pb.name}|${pb.tex.tex}|${pb.tex.sc}|${pb.tex.a}|${pb.tex.t ?? 0}|${pb.tex.ta ?? 0}|${pb.tex.tc ?? ''}|${pb.tone ? `${pb.tone.tc}${pb.tone.ta}` : ''}` : '-');
+const styleKey = (st: PuckStyle) => `${st.tex}|${st.scale}|${st.angle}|${st.border}|${st.btex}|${st.bscale}|${st.bangle}|${st.tone}|${st.toneAmt}|${st.btone ?? 0}|${st.btoneAmt ?? 0}`;
+const bandKey = (pb: PuckBand | null) => (pb ? `${pb.name}|${pb.tex.tex}|${pb.tex.sc}|${pb.tex.a}|${pb.tex.x ?? 1}|${pb.tone ? `${pb.tone.tc}${pb.tone.ta}` : ''}` : '-');
 const domCanvas = (w: number, h: number): SpriteCanvas => Object.assign(document.createElement('canvas'), { width: w, height: h });
 
 /** re-renders the caller when a puck lands or a look changes (the Holes swatches call it) */
 export function useSwatchPucks(): number { return useSyncExternalStore(subscribe, snap, snap); }
 
-/** the surface's look and border as its puck shows them: its brush style (the look My looks sets) and the band the course lays round it */
-export function puckLookOf(kind: string, brush: BrushLooks): { st: PuckStyle; pb: PuckBand | null } | null {
+/** the surface's look and border as its puck shows them: its brush style (the look My looks sets) and the band the course lays round it
+ *  (border: its Border in metres, PaintTool.courseBorder; T260: 0 none, no band ring; absent: the defaults, puckBandOf) */
+export function puckLookOf(kind: string, brush: BrushLooks, border?: number | null): { st: PuckStyle; pb: PuckBand | null } | null {
   const st = brush[kind as BrushKind]?.style as PuckStyle | undefined; if (!st) return null;
-  return { st, pb: puckBandOf(kind, brush, finishOf(paintedSurfaces())) };
+  return { st, pb: puckBandOf(kind, brush, finishOf(paintedSurfaces()), border) };
 }
 
 /** brush kind `kind`'s swatch puck, as an image (url) and its css size; null under plain node or with no texture source (the swatch then
@@ -63,7 +64,7 @@ export function puckLookOf(kind: string, brush: BrushLooks): { st: PuckStyle; pb
 export function swatchPuckOf(game: Game, kind: BrushKind): { url: string; w: number; h: number } | null {
   const tex = (game as { cursorTexture?: CursorTexture }).cursorTexture;
   if (typeof document === 'undefined' || !tex) return null;
-  const look = puckLookOf(kind, game.paint.brush as BrushLooks); if (!look) return null;
+  const look = puckLookOf(kind, (game.paint.brushLooks ?? game.paint.brush) as BrushLooks, game.paint.courseBorder?.(kind)); if (!look) return null; // T256: the owner's looks (the hole painted, the property); T260: its Border
   watchFile();
   const d = Math.min(3, Math.max(1, Math.round((typeof devicePixelRatio === 'number' ? devicePixelRatio : 1) * 2) / 2));
   const key = `${kind}|${d}|${fileNo}|${styleKey(look.st)}|${bandKey(look.pb)}`;

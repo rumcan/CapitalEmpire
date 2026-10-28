@@ -11,7 +11,8 @@ export type BorderTex = PaintTex | 'kerb';
  *  old buttons, BORDER_W), anything between, up to BORDER_STEP_MAX (huge); borderW gives the width in tiles */
 export type BorderSize = number;
 /** a painted ground area: a closed polygon of tiles, filled with one texture, with an optional border band inside its edge, corners rounded by radius (tiles, 0 sharp),
- *  and a tone filter over the fill: tone 0 none, 1 Multiply (darker), 2 Lighten (screen); toneAmt its strength (0..1); tint its colour ('#rrggbb');
+ *  and the fill's exposure, saved as a tone: tone 0 none, 1 darker, 2 lighter; toneAmt its strength (0..1); T261: drawn as exposure (exposure.ts exposureOf: the
+ *  texture's RGB times 1 - toneAmt, at least 0.5, or 1 + toneAmt), and tint, the old tone's colour ('#rrggbb'), is kept in the save but no longer drawn;
  *  the border band has its own scale, angle, tone, strength and tint (bscale, bangle, btone, btoneAmt, btint), by default the fill's scale and angle with no tone;
  *  plantKind / plantedMonth: a golf area sown from seed (grows in) or laid as sod, and the month it was planted */
 export interface PaintArea { id: number; pts: number[]; tex: PaintTex; scale: number; angle: number; border: BorderSize; btex: BorderTex; radius: number; tone: 0 | 1 | 2; toneAmt: number; tint: string; bscale: number; bangle: number; btone: 0 | 1 | 2; btoneAmt: number; btint: string; hole?: number; kind?: BrushKind; plantKind?: 'seed' | 'sod'; plantedMonth?: number;
@@ -96,8 +97,9 @@ export const BORDER_TEXES: { id: BorderTex; name: string; col: string }[] = [{ i
 /** what the Paint tool offers: only the owner's presets (the textures above stay, so saved areas still draw); the border menu adds the kerb */
 export const MENU_TEXES = PAINT_TEXES.filter(t => t.id.startsWith('preset:'));
 export const BORDER_MENU: { id: BorderTex; name: string; col: string }[] = [{ id: 'kerb', name: 'Kerb', col: '#f0dfbe' }, ...MENU_TEXES];
-/** true for a texture laid in tile space (a photo of grass-art.ts PHOTO_TEX or an owner's preset), not a screen-space painting */
-export const isPaintPhoto = (t: string) => t.startsWith('preset:') || isPhotoTex(t);
+/** true for a texture laid in tile space (a photo of grass-art.ts PHOTO_TEX, an owner's preset, or T258's range pictures 'pic:<name>',
+ *  golf/range-pics.ts), not a screen-space painting */
+export const isPaintPhoto = (t: string) => t.startsWith('preset:') || t.startsWith('pic:') || isPhotoTex(t);
 /** the border width in tiles at the old whole steps (none, small, medium, large) */
 export const BORDER_W = [0, 0.25, 0.5, 1];
 /** the largest border step: a band 4 tiles (8 m) wide */
