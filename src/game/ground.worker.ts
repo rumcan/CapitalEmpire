@@ -108,6 +108,7 @@ const handle = async (m: ToWorker) => {
       case 'leaves': painter.leafDensity = m.density; break;
       case 'specCam': painter.specCam = m.on; break;
       case 'swamp': painter.swamp = m.on; break;
+      case 'riverSwamp': painter.riverSwamp = m.on; break;
       case 'grassShine': painter.grassShine = m.on; painter.shineWeights = m.weights; break;
       case 'slopeLight': painter.slopeLight = m.strength; break;
       case 'lotground': {

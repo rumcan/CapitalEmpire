@@ -7,7 +7,8 @@ import { PAINT_TEXES, isPaintPhoto, type PaintTex } from './paint';
 import { exposeClip, exposeDraw, exposed, exposureOf } from './exposure';
 import { POOL_ANCHOR, PPM, SLAB_CELL } from './ground-art';
 import { POOL_SHARES, SPEC_MASK_K } from './lamp-reflect';
-import { GLOSS, SWAMP, SwampField, glossTile, swampStreams } from './swamp';
+import { GLOSS, RIVER_BAND, RIVER_SWAMP, SWAMP, SwampField, glossTile, riverStreams, swampStreams } from './swamp';
+import { RIVER_CUT, drawRiverCut } from './river-cut';
 import { REFLECT, SITE, WaterField, fieldPad, fieldRes, glintImage, hexRgb, riverLook, waterImages, waterLookActive, waterLookOf, type WaterLook } from './water-look';
 import { LOT_DECALS } from './lot-decals';
 import { clampDecals, drawDecals, flatSquash, placeDecals } from './map-decals';
@@ -470,6 +471,11 @@ export class GroundPainter {
   swamp = true;
   /** T199: the streams' swamp band (swamp.ts SwampField), made with the terrain */
   private swampField = new SwampField([]);
+  /** T265 (#794): the river's swamp band (swamp.ts RIVER_BAND: past its bank, in stretches and bays, its width by the river's) on (the default)
+   *  or off (the dev switch window.__game.ground.setRiverSwamp(false): the river as before); swamp only while the surface 'swamp' is painted */
+  riverSwamp = true;
+  /** T265: the river's band (swamp.ts SwampField with RIVER_BAND), made with the terrain */
+  private riverField = new SwampField([], RIVER_BAND);
   /** T199: the swamp band of the bake in progress (its cover over the chunk's tile box, res samples a tile, from x0 y0), which the living ground
    *  leaves alone; null when the chunk lays none */
   private swampNow: { cv: Cnv; x0: number; y0: number; res: number } | null = null;
@@ -607,7 +613,41 @@ export class GroundPainter {
   /** T199: the streams are swamp: the switch on and the surface painted (the same for every chunk, so the living ground's banks agree) */
   private swampOn() { return this.swamp && !!this.tex.paintedOf('swamp'); }
   /** T199: a stream's swamp may reach into the tile box (the worker decodes the swamp's tiles only for such a chunk) */
-  swampIn(b: BBox) { return this.swamp && !this.swampField.empty && this.swampField.near(b[0], b[1], b[2], b[3]).length > 0; }
+  swampIn(b: BBox) { return (this.swamp && !this.swampField.empty && this.swampField.near(b[0], b[1], b[2], b[3]).length > 0) || (this.riverSwamp && !this.riverField.empty && this.riverField.near(b[0], b[1], b[2], b[3]).length > 0); }
+  /** T265: the river's band is drawn: its switch on and the surface painted */
+  private riverSwampOn() { return this.riverSwamp && !!this.tex.paintedOf('swamp'); }
+  /** T265: the swamp bands over tiles [x0, x0 + w) x [y0, y0 + h) at res samples a tile (swamp.ts SwampField alpha): the streams' (sc, T199) and
+   *  the river's (rv), the river's cut short of what is built there (cut: riverCut, on its own canvas first), merged into one canvas of alpha
+   *  (source-over: the soft union); null when neither lays any */
+  private swampBand(sc: ReturnType<SwampField['alpha']>, rv: ReturnType<SwampField['alpha']>, x0: number, y0: number, res: number, cut: ((g: C2D) => void) | null): { cv: Cnv; box: BBox } | null {
+    const a = sc ?? rv; if (!a) return null;
+    const sb = this.buffer('swampBand', a.W, a.H), g = ctx2d(sb);
+    if (rv) {
+      g.putImageData(new ImageData(rv.data as Uint8ClampedArray<ArrayBuffer>, rv.W, rv.H), 0, 0);
+      if (cut) { g.save(); g.setTransform(res, 0, 0, res, -x0 * res, -y0 * res); g.globalCompositeOperation = 'destination-out'; cut(g); g.restore(); }
+    }
+    if (sc && rv) { const s2 = this.buffer('swampBand2', sc.W, sc.H); ctx2d(s2).putImageData(new ImageData(sc.data as Uint8ClampedArray<ArrayBuffer>, sc.W, sc.H), 0, 0); g.drawImage(s2, 0, 0); }
+    else if (sc) g.putImageData(new ImageData(sc.data as Uint8ClampedArray<ArrayBuffer>, sc.W, sc.H), 0, 0);
+    const box: BBox = sc && rv ? [Math.min(sc.box[0], rv.box[0]), Math.min(sc.box[1], rv.box[1]), Math.max(sc.box[2], rv.box[2]), Math.max(sc.box[3], rv.box[3])] : a.box;
+    return { cv: sb, box };
+  }
+  /** T265: the river's band stops short of what is built near the chunk's tile box (drawn in tile space onto the band, destination-out): the
+   *  roads (their asphalt and walks) and bridges grown by RIVER_CUT.road tiles, the lots' ground, their yards, the painted areas and the course
+   *  (every surface, its rough too) grown by RIVER_CUT.lot; the outer half of each margin cut by half (a soft edge), the inner whole. What the
+   *  player bought keeps the swamp it had (the land is as it was); what they build or paint on it pushes the swamp back. null: nothing near */
+  private riverCut(net: FxView, box: BBox, lite: boolean): ((g: C2D) => void) | null {
+    const m = RIVER_CUT.road + 1, vis = (b: BBox) => b[2] >= box[0] - m && b[0] <= box[2] + m && b[3] >= box[1] - m && b[1] <= box[3] + m;
+    const feats = [...net.walkF, ...net.asphF].filter(f => vis(f.bbox)), brs = net.bridges.filter(b => vis(b.bbox));
+    const shapes: { path: Path2D; rule: CanvasFillRule }[] = [];
+    for (const p of this.lotsIn([box[0] - m, box[1] - m, box[2] + m, box[3] + m])) {
+      if (p.top || p.layby || p.tex === 'marks') continue;
+      if (p.course) { const q = new Path2D(); let any = false; for (const l of this.warpedCourse(p.course, lite).layers) for (const r of l.fill) { ringPath(q, r); any = true; } if (any) shapes.push({ path: q, rule: 'nonzero' }); continue; }
+      shapes.push({ path: polyPath(p.paint ? this.ruggedOf(p).q.pts : p.pts), rule: 'nonzero' });
+    }
+    if (!feats.length && !brs.length && !shapes.length) return null;
+    const bridges = brs.map(b => { const path = new Path2D(); b.pts.forEach((q, i) => (i ? path.lineTo(q.x, q.y) : path.moveTo(q.x, q.y))); return { path, hw: b.hw }; });
+    return g => drawRiverCut<Path2D>(g, { feats, bridges, shapes });
+  }
   private leafPic: Cnv | null = null; private leafChunks = new Map<string, Cnv>();
   /** T220: the fallen leaves' density (the gear menu's Fallen leaves, GroundCache.setLeafDensity; 0: none, the ground exactly as before T220) */
   leafDensity = LEAF_DENSITY_DEFAULT;
@@ -990,7 +1030,7 @@ export class GroundPainter {
   /** the screen textures laid on the ground (isoImage), per source picture */
   private isoPics = new WeakMap<Cnv, Cnv>();
   /** take a new terrain: classes, height samples and waterways */
-  setTerrain(cls: Uint8Array, height: Float32Array, waters: Waterway[]) { this.terrainVer++; this.terrain.set(cls); this.shade = shadeField(height); this.slope = slopeField(height); this.waters = waters.map(w => ({ w, box: waterBox(w.pts, 4) })); this.swampField = new SwampField(swampStreams(waters)); }
+  setTerrain(cls: Uint8Array, height: Float32Array, waters: Waterway[]) { this.terrainVer++; this.terrain.set(cls); this.shade = shadeField(height); this.slope = slopeField(height); this.waters = waters.map(w => ({ w, box: waterBox(w.pts, 4) })); this.swampField = new SwampField(swampStreams(waters)); this.riverField = new SwampField(riverStreams(waters), RIVER_BAND); }
   /** a sub-rect of the course height from the main thread (samples i0.., j0.., w by h, row-major): copied in (the chunks it lights re-bake) */
   setCourse(i0: number, j0: number, w: number, h: number, data: Float32Array) {
     for (let j = 0; j < h; j++) this.courseH.set(data.subarray(j * w, (j + 1) * w), (j0 + j) * CH_SIZE + i0);
@@ -1085,9 +1125,11 @@ export class GroundPainter {
     const vis = (b: BBox) => b[2] >= tx0 && b[0] <= tx1 && b[3] >= ty0 && b[1] <= ty1, near = this.waters.filter(w => vis(w.box));
     const shape = (kind: 'river' | 'creek', extra: number, col: string) => { const p = new Path2D(); let any = false; for (const w of near) if (w.w.kind === kind) any = waterShape(p, w.w.pts, extra, box) || any; if (any) { ctx.fillStyle = col; ctx.fill(p); } };
     // T199: the streams' swamp band (as the ground's, swamp.ts), in the swamp's look, under the river's banks
-    const sa = this.swampOn() ? this.swampField.alpha(tx0, ty0, tx1 - tx0, ty1 - ty0, 0.25) : null;
-    if (sa) {
-      const sb = this.buffer('swampBand', sa.W, sa.H); ctx2d(sb).putImageData(new ImageData(sa.data as Uint8ClampedArray<ArrayBuffer>, sa.W, sa.H), 0, 0);
+    // (T265: and the river's, uncut: what is built is drawn over it, and a planner tile is too coarse to show a margin)
+    const sa0 = this.swampOn() ? this.swampField.alpha(tx0, ty0, tx1 - tx0, ty1 - ty0, 0.25) : null, rva = this.riverSwampOn() ? this.riverField.alpha(tx0, ty0, tx1 - tx0, ty1 - ty0, 0.25) : null;
+    const sa = sa0 ?? rva, sbd = sa ? this.swampBand(sa0, rva, tx0, ty0, 0.25, null) : null;
+    if (sa && sbd) {
+      const sb = sbd.cv;
       const lb = this.buffer('layer', W, H), lg = ctx2d(lb); lg.setTransform(M); lg.imageSmoothingEnabled = true; lg.drawImage(sb, tx0, ty0, sa.W / 0.25, sa.H / 0.25);
       lg.globalCompositeOperation = 'source-in'; lg.fillStyle = this.planTiled(lg, 'swamp') ?? this.planColour('swamp'); lg.fillRect(tx0, ty0, tx1 - tx0, ty1 - ty0); lg.globalCompositeOperation = 'source-over';
       ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(lb, 0, 0); ctx.restore(); ctx.setTransform(M);
@@ -1409,17 +1451,22 @@ export class GroundPainter {
     // T199: the small streams as swamp (swamp.ts): the band in the swamp's painted look, under the river's bank (a river keeps its look; the
     //      band reaches past its waterway's box, so it is asked of the field, not of the creeks in view); with the glint on, its gloss onto the
     //      chunk's gloss mask. The old creek bed while the swamp is off or unpainted, or its tiles not decoded yet (provisional: baked again)
-    const sw = this.swampOn() ? this.swampField.alpha(tx0, ty0, bw, bh, cres) : null, swBuf = sw ? this.paintedBuf('swamp', sw.box) : null;
-    if (sw && swBuf) {
-      const sb = this.buffer('swampBand', sw.W, sw.H); ctx2d(sb).putImageData(new ImageData(sw.data as Uint8ClampedArray<ArrayBuffer>, sw.W, sw.H), 0, 0);
+    // T265: and the river's band (swamp.ts RIVER_BAND, asked of its field alike), cut short of the roads, bridges, lots, painted areas and the
+    //      course (riverCut), merged with the streams' into one band (swampBand): one layer, one gloss, one cover the living ground leaves alone
+    const sw = this.swampOn() ? this.swampField.alpha(tx0, ty0, bw, bh, cres) : null, rv = this.riverSwampOn() ? this.riverField.alpha(tx0, ty0, bw, bh, cres) : null;
+    const sband = sw || rv ? this.swampBand(sw, rv, tx0, ty0, cres, rv ? this.riverCut(net, box, lite) : null) : null, swBuf = sband ? this.paintedBuf('swamp', sband.box) : null;
+    const creekSwamp = !!(sw && swBuf);
+    if (sband && swBuf) {
+      const sb = sband.cv, sa = (sw ?? rv)!;
       this.swampNow = { cv: sb, x0: tx0, y0: ty0, res: cres };
-      layer('creek', g => { g.setTransform(M); g.imageSmoothingEnabled = true; g.drawImage(sb, tx0, ty0, sw.W / cres, sw.H / cres); }, g => { const p = g.createPattern(swBuf, 'no-repeat')!; p.setTransform(Minv); return p; });
+      layer('creek', g => { g.setTransform(M); g.imageSmoothingEnabled = true; g.drawImage(sb, tx0, ty0, sa.W / cres, sa.H / cres); }, g => { const p = g.createPattern(swBuf, 'no-repeat')!; p.setTransform(Minv); return p; });
       const tp = this.specCam ? this.tex.paintedOf('swamp')?.tiled : undefined;
-      if (tp) { const cut = new Path2D(); let any = false; for (const w of creeks) any = waterShape(cut, w.w.pts, SWAMP.lip, box, SWAMP.water) || any; this.glossMask = this.swampGloss(tp, sw.box, any ? cut : null); }
+      // (the gloss off the streams' water and lip, and off the river's water and the bank's inner tile: the river keeps T230's own glint)
+      if (tp) { const cut = new Path2D(); let any = false; for (const w of creeks) any = waterShape(cut, w.w.pts, SWAMP.lip, box, SWAMP.water) || any; if (rv) for (const w of rivers) any = waterShape(cut, w.w.pts, RIVER_SWAMP.inner[1], box) || any; this.glossMask = this.swampGloss(tp, sband.box, any ? cut : null); }
     }
     if (rivers.length) layer('bank', g => shore(g, rivers, 3, 0.8));
     // the creek bed (with the swamp: a thin muddy lip round the water), then the stream's narrow water
-    if (creeks.length) { layer('creek', g => (this.swampNow ? shore(g, creeks, SWAMP.lip, SWAMP.lipFeather, SWAMP.water) : shore(g, creeks, 0.5, 0.5))); layer('water', g => shore(g, creeks, 0, SWAMP.waterFeather, SWAMP.water), water); }
+    if (creeks.length) { layer('creek', g => (creekSwamp ? shore(g, creeks, SWAMP.lip, SWAMP.lipFeather, SWAMP.water) : shore(g, creeks, 0.5, 0.5))); layer('water', g => shore(g, creeks, 0, SWAMP.waterFeather, SWAMP.water), water); }
     const sres = lite ? 0.25 : 0.5, hs = shadeRGBA(this.shade, tx0, ty0, bw, bh, sres); overlay(ctx, hs, sres); ctx.setTransform(M);
     // (T186: its shade on the mask, not its light: only when it shades anything)
     if (this.shadeMask) { const d = hs.data.slice(); let any = false; for (let k = 3; k < d.length; k += 4) { if (d[k - 1]! >= 160) d[k] = 0; else if (d[k]! > 4) any = true; } if (any) this.onShadeMask(g => overlay(g, { data: d, W: hs.W, H: hs.H }, sres)); }
@@ -3565,11 +3612,12 @@ export class GroundPainter {
     }
     const roads: LeafRoad[] = [], cx = (box[0] + box[2]) / 2, cy = (box[1] + box[3]) / 2, rr = Math.max(box[2] - box[0], box[3] - box[1]) / 2 + 4;
     for (const s of this.net.segsNear({ x: cx, y: cy }, rr)) if (s.kind !== SK.TUNNEL) roads.push({ ax: s.a.x, ay: s.a.y, bx: s.b.x, by: s.b.y, h: s.cls.h, walk: s.cls.walk, keep: LEAF_ROAD_KEEP[s.cls.family] ?? 0.6 });
-    const swampy = this.swampOn(), key = `${box[0]},${box[1]},${box[2]},${box[3]}`, sig = `${leafSignature({ casters, roads }, this.leafDensity)}:${this.terrainVer}:${swampy ? 1 : 0}:${ids.join(',')}`, have = this.leafMemo.get(key);
+    const swampy = this.swampOn(), riverSwampy = this.riverSwampOn(), key = `${box[0]},${box[1]},${box[2]},${box[3]}`, sig = `${leafSignature({ casters, roads }, this.leafDensity)}:${this.terrainVer}:${swampy ? 1 : 0}${riverSwampy ? 1 : 0}:${ids.join(',')}`, have = this.leafMemo.get(key);
     if (have && have.sig === sig) { this.leafMemo.delete(key); this.leafMemo.set(key, have); return have.stamps; }
     const blocked = (x: number, y: number) => {
       if (x < 0 || y < 0 || x >= MAP || y >= MAP || this.terrain[Math.floor(y) * MAP + Math.floor(x)]! > TC.PATCH) return true;
       if (swampy && this.swampField.cover(x, y) > 0.5) return true; // (T199: the streams' swamp is water too)
+      if (riverSwampy && this.riverField.cover(x, y) > 0.5) return true; // (T265: and the river's)
       for (const c of courses) if (courseCovers(c, x, y)) return true;
       for (const q of off) if (x >= q.b[0] && x <= q.b[2] && y >= q.b[1] && y <= q.b[3] && inPoly(q.pts, x, y)) return true;
       return false;

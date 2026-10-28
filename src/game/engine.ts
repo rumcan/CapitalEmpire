@@ -96,6 +96,7 @@ import { CHUNK_CASTER_REACH, LIVING_PLANT_MARGIN, casterKind, casterOf, doorTowa
 import { LEAF_DENSITY_DEFAULT, clampLeafDensity } from './leaf-fall';
 import { ROUGH_YARDS_DEFAULT, clampRoughYards, roughShare, roughSig, roughYard } from './rough-yards';
 import { townTreeCell } from './towntrees';
+import { BELT, beltField, riverBeltCell, type BeltField } from './river-trees';
 import type { BendMode, LibItem, LineStyle, Prop, Tool } from './types';
 import { LK, LaneGraph, laneAt, laneOff } from './sim/lanes';
 import { LU, LV, type LotTuple } from './lots/town';
@@ -433,6 +434,9 @@ export class Game {
   private slope: Float32Array = new Float32Array(0); private clearing: Noise = makeNoise(0); private forest = new Map<number, Prop[]>(); private forestItem = new Map<string, number>();
   /** town trees: the same cells (key cj * 32 + ci) planted on the free ground in and around the towns, sprites only; the clump noise; the boxes of the lots and painted areas last seen (a change drops the cells around them) */
   private townClump: Noise = makeNoise(0); private townTrees = new Map<number, Prop[]>(); private lotBoxes = new Map<string, number[]>(); private paintBoxes = new Map<string, number[]>();
+  /** T265 (#794): the tree belts along the rivers and creeks (river-trees.ts), planted with each forest cell (plantCell: in its list, after its
+   *  forest trees; beltN, how many of them a cell holds); the belts' field of the terrain; the dev switch window.__game.setRiverTrees(false) */
+  private belt: BeltField | null = null; private beltN = new Map<number, number>(); private beltOn = true;
   /** tunnel mouths of the network: key of the last synced set, and the points themselves */
   private portalKey = ''; private portalPts: PortalRec[] = [];
   ground: GroundCache;
@@ -772,7 +776,7 @@ export class Game {
   private grassVisible = false;
   private grassPedX = new Float32Array(PED_MAX); private grassPedY = new Float32Array(PED_MAX); private grassPedOut = new Uint8Array(PED_MAX);
   private grassCarX = new Float32Array(0); private grassCarY = new Float32Array(0); private grassCarAlive = new Uint8Array(0);
-  perf = { fps: 0, frameMs: 0, cpuMs: 0, drawMs: 0, /** main-thread ms this frame: the course chunks' work, the lot ground's flush to the workers, and the last course send's lag after its first change */ courseMs: 0, lotFlushMs: 0, courseLagMs: 0, /** the last course chunk job: its worker ms and chunks; the last areas job: its worker ms and the main ms of taking its areas in */ courseJobMs: 0, courseJobChunks: 0, areasJobMs: 0, areasApplyMs: 0, instances: 0, draws: 0, chunksPending: 0, uploadKB: 0, frames: 0, tier: 'street' as 'street' | 'district' | 'planner', forest: 0, townTrees: 0, simActive: 0, simTickMs: 0, simMaxTickMs: 0, pop: 0, jobs: 0, built: 0, lotProps: 0, /** T080: the atlas's GPU MB (fixed by its plan) and the share of this frame's on-screen sprite px drawn coarser than the zoom needs (streaming in) */ atlasMB: 0, atlasSoft: 0, /** T151: the label pass's ms this frame (place and write) and its labels (collected, shown) */ labelMs: 0, labels: 0, labelsShown: 0 };
+  perf = { fps: 0, frameMs: 0, cpuMs: 0, drawMs: 0, /** main-thread ms this frame: the course chunks' work, the lot ground's flush to the workers, and the last course send's lag after its first change */ courseMs: 0, lotFlushMs: 0, courseLagMs: 0, /** the last course chunk job: its worker ms and chunks; the last areas job: its worker ms and the main ms of taking its areas in */ courseJobMs: 0, courseJobChunks: 0, areasJobMs: 0, areasApplyMs: 0, instances: 0, draws: 0, chunksPending: 0, uploadKB: 0, frames: 0, tier: 'street' as 'street' | 'district' | 'planner', forest: 0, townTrees: 0, /** T265: the belt trees planted, and the most ms a frame's planting took (plantForest) */ belt: 0, plantMs: 0, simActive: 0, simTickMs: 0, simMaxTickMs: 0, pop: 0, jobs: 0, built: 0, lotProps: 0, /** T080: the atlas's GPU MB (fixed by its plan) and the share of this frame's on-screen sprite px drawn coarser than the zoom needs (streaming in) */ atlasMB: 0, atlasSoft: 0, /** T151: the label pass's ms this frame (place and write) and its labels (collected, shown) */ labelMs: 0, labels: 0, labelsShown: 0 };
   private frameTimes: number[] = [];
   // input
   /** a drag in progress; build: a right-button press in the road tool (released without moving, it builds the route, as Enter) */
@@ -2147,6 +2151,7 @@ export class Game {
     this.forest.clear(); this.perf.forest = 0; this.slope = slopeField(this.terrain.height); this.clearing = makeNoise(this.terrain.seed ^ 0x5f0e);
     for (const ps of this.townTrees.values()) for (const p of ps) this.sprites.remove(p);
     this.townTrees.clear(); this.perf.townTrees = 0; this.townClump = makeNoise(this.terrain.seed ^ 0x7c1a); this.lotBoxes.clear(); this.paintBoxes.clear();
+    this.belt = beltField(this.terrain.seed, this.terrain.waters); this.beltN.clear(); this.perf.belt = 0;
     this.ground.dropCasters('f:'); this.ground.dropCasters('t:');
   }
   /** a new game by the start mode (?start=): a range start, else (or with ?start=town) the old start; true when a golf game was laid. False
@@ -2369,7 +2374,7 @@ export class Game {
    *  cells per frame (forest and town together). A town cell has key + N * N (N cells a side) */
   private plantForest(X0: number, Y0: number, X1: number, Y1: number, g = FOREST_VIEW_MARGIN) {
     const N = MAP / FOREST_CELL, NN = N * N, [ci0, cj0, ci1, cj1] = forestCellRange(X0, Y0, X1, Y1, g);
-    let todo: number[] | null = null;
+    let todo: number[] | null = null; this.perf.plantMs = 0;
     for (let cj = cj0; cj <= cj1; cj++) for (let ci = ci0; ci <= ci1; ci++) {
       const key = cj * N + ci;
       if (!this.forest.has(key)) { if (!todo) todo = []; todo.push(key); }
@@ -2382,17 +2387,33 @@ export class Game {
     const m = tileOf((X0 + X1) / 2, (Y0 + Y1) / 2), mx = clamp(Math.floor(m.x / FOREST_CELL), 0, N - 1), my = clamp(Math.floor(m.y / FOREST_CELL), 0, N - 1);
     const dd = (q: number) => { const k = q % NN; return ((k % N) - mx) ** 2 + (Math.floor(k / N) - my) ** 2; };
     todo.sort((p, q) => dd(p) - dd(q));
+    const t0 = performance.now();
     for (let k = 0; k < Math.min(2, todo.length); k++) {
       const q = todo[k]!, key = q % NN;
       if (q >= NN) this.plantTownCell(key, key % N, Math.floor(key / N)); else this.plantCell(key, key % N, Math.floor(key / N));
     }
+    this.perf.plantMs = performance.now() - t0; // (T265: the bench's hitch check)
   }
   /** plant one forest cell as sprites (not props: no selection, bulldozing or saving), without the trees on or beside anything built (T025b) */
   private plantCell(key: number, ci: number, cj: number) {
     const { free } = this.treeClearance(ci, cj);
     const out = this.treeSprites(forestCell(this.terrain.seed, this.terrain.cls, this.terrain.height, this.slope, this.clearing, ci, cj).filter(t => free(t.x, t.y, 1)));
-    this.forest.set(key, out); this.perf.forest += out.length; this.ground.casters([['f:' + key, this.casterRecs(out)]]);
+    // T265: the cell's belt along its rivers and creeks (river-trees.ts), cleared as the forest is (free, FOREST_CLEAR)
+    const belt = this.beltOn && this.belt ? this.treeSprites(riverBeltCell(this.terrain.seed, this.terrain.cls, this.slope, this.belt, ci, cj, free, FOREST_CLEAR)) : [];
+    if (belt.length) { out.push(...belt); this.beltN.set(key, belt.length); this.perf.belt += belt.length; }
+    this.forest.set(key, out); this.perf.forest += out.length - belt.length; this.ground.casters([['f:' + key, this.casterRecs(out)]]);
   }
+  /** T265: the belts (river-trees.ts) take the ground near the water: a town tree is not planted where the belt is thick (within BELT.full + 3
+   *  tiles of the bank, outside its open stretches), so their trunks never stand in each other */
+  private beltClaims(x: number, y: number): boolean {
+    const f = this.belt; if (!this.beltOn || !f) return false;
+    const q = f.water.nearest(f.water.near(x, y, x, y), x, y, { d: 0, kind: 0, nx: 0, ny: 0 });
+    return q.d - (q.kind === 0 ? BELT.river.bank : BELT.creek.bank) < BELT.full + 3;
+  }
+  /** T265 (#794): the tree belts along the rivers and creeks on (the default) or off (the dev switch window.__game.setRiverTrees(false): the
+   *  forest and the town trees as before): every planted cell is dropped and planted again as the camera reaches it */
+  setRiverTrees(on: boolean) { if (on === this.beltOn) return; this.beltOn = on; this.dropTownTrees(0, 0, MAP, MAP); }
+  get riverTrees() { return this.beltOn; }
   /** the sprites of planted trees (not props), skipping the ones in front of a tunnel mouth */
   private treeSprites(trees: ForestTree[]): Prop[] {
     const out: Prop[] = [];
@@ -2444,7 +2465,7 @@ export class Game {
   /** plant one town-tree cell as sprites: the predicates are built from the lots, roads, businesses, car parks, toll plazas, painted areas and portals near the cell */
   private plantTownCell(key: number, ci: number, cj: number) {
     const { lots, free } = this.treeClearance(ci, cj);
-    const near = (x: number, y: number) => { for (const l of lots) if (lotGap(l, x, y) <= 24) return true; return false; };
+    const near = (x: number, y: number) => { if (this.beltClaims(x, y)) return false; for (const l of lots) if (lotGap(l, x, y) <= 24) return true; return false; };
     const out = this.treeSprites(townTreeCell(this.terrain.seed, this.terrain.cls, this.townClump, ci, cj, free, near));
     this.townTrees.set(key, out); this.perf.townTrees += out.length; this.ground.casters([['t:' + key, this.casterRecs(out)]]);
   }
@@ -2461,7 +2482,7 @@ export class Game {
       const ci = k % N, cj = Math.floor(k / N);
       if (!boxNear([x0, y0, x1, y1], ci * FOREST_CELL, cj * FOREST_CELL, (ci + 1) * FOREST_CELL, (cj + 1) * FOREST_CELL, g)) continue;
       for (const p of ps) this.sprites.remove(p);
-      this.perf.forest -= ps.length; this.forest.delete(k);
+      const nb = this.beltN.get(k) ?? 0; this.perf.forest -= ps.length - nb; this.perf.belt -= nb; this.beltN.delete(k); this.forest.delete(k);
     }
   }
   /** a lot's rectangle changed (or went): the town trees around its old and new box are dropped (a change of level alone does not move the trees) */

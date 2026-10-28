@@ -197,6 +197,8 @@ export type ToWorker =
   | { t: 'specCam'; on: boolean }
   /** T199: the small streams drawn as swamp (on, the default) or as their old creek bed (the dev switch, for comparing looks and bake times) */
   | { t: 'swamp'; on: boolean }
+  /** T265: the river's swamp band (on, the default) or the river as before (the dev switch) */
+  | { t: 'riverSwamp'; on: boolean }
   /** T262: the grass shine on (the default: each bake makes its weight mask) or off (none, the ground as before), and its weights per surface
    *  group (grass-shine.ts); every chunk is baked again */
   | { t: 'grassShine'; on: boolean; weights: ShineWeights }
