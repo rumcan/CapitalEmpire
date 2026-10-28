@@ -4,7 +4,7 @@ import { galleryPeople, hash, queuePeople, walkerPeople, type CrowdPerson } from
 import { FACING_ROW, Pedestrians, sidewalks, type Door, type WalkerView } from './ext/pedestrians';
 import { GREENKEEPING } from './features';
 import { GRASS_ACTION_NAME, GrassManagement, grassSurface, type GrassAction, type GrassCellView, type GrassScope, type GrassSettings } from './ext/grass-management';
-import { drawGhostBlueprint, drawGhostHint, drawGhostPoly, drawGhostRing, drawRefusedMarks, ghostStatus, type GhostBlueprint, type GhostView } from './ext/ghost-preview';
+import { drawGhostBlueprint, drawGhostHint, drawGhostPoly, drawGhostRing, drawRefusedMarks, ghostStatus, rgbaOf, type GhostBlueprint, type GhostView } from './ext/ghost-preview';
 import { drawRefusedCross, strokeHatch } from './ext/refused-mark';
 import { busGhostLabel, costLabel, markerGhost, structureGhost, tollGhostLabel } from './ext/event-ghost';
 import { CourseCursor, type CursorView } from './ext/course-cursor';
@@ -27,7 +27,7 @@ import { clampGrassArt, grassZoomLevels, type GrassArt } from './painted-grass-l
 import { lotBatch, type CourseTex, type LotPatch } from './ground-protocol';
 import { BLOCK_MAX_AREA, enclosedBlocks } from './blocks';
 import { blockLawn, lotLawn } from './lawns';
-import { PaintTool } from './paint-tool';
+import { LAND_WHY, PaintTool } from './paint-tool';
 import { collarTexes, courseLookSet, type BrushLooks, type LookStyle } from './course-look';
 import { lookOfTex } from './painted-surfaces';
 import { FACILITY_OWNERS, LOOK_KINDS, holeOwner, ownerHole, seedOwner, type FacilityOwner } from './golf/looks';
@@ -154,7 +154,7 @@ import { isSecondTap, routeAct, type RouteInput, type Tap } from './route-input'
 import { buyAdjacentBlock, COURSE_LAND_MSG, blockOnRoad, blockOnWater, pointInLand, polyInParcels, type LandRoad, type ParcelLandClass } from './golf/parcels';
 import { BAND_LABEL, LandSale } from './golf/land-sale';
 import { buildCourseStatsPanel, type CourseStatsPanel } from './golf/coursestats';
-import { TILE_M, type CourseArea, type CourseLayout, type GolfSurface, type Pin, type TeeKind, type TeeMark } from './golf/types';
+import { TILE_M, type CourseArea, type CourseLayout, type GolfSurface, type Pin, type TeeBoxRec, type TeeKind, type TeeMark } from './golf/types';
 import { deriveHoles, surfaceAt, validateMarkerPlacement, type Hole } from './golf/holes';
 import { CHEER_TILES, DayFinish, LiveGroup, OWNER_ADDRESS, OWNER_ART, OWNER_SKILL, POWER, PUTT_POWER, PlayView, allowedClubs, cartPaths, type CartPaths, type PlayCart, boardRows, carryM, championLine, dayRound, makeCourseView, powerFor, resultsDue, shortName as golferShort, stateAt, standings, toParText, waitText, waveLine, type BoardRow, type Club, type CourseView, type OwnerTurn, type RoundPlan, type Sex } from './golf/play';
 import { holeViews, markerPlan, tagByHole, type HoleView, type MarkerKind } from './golf/holeview';
@@ -165,7 +165,8 @@ import { clampGrade, gradeFrame, loadGrade, saveGrade, type GradeSettings } from
 import { glossGain } from './swamp';
 import { contactLean } from './shadow-shape';
 import { MARKER_SCALE, OLD_TEE_IDS, PIN_RED_ID, PIN_YELLOW_ID, teePropId } from './golf/dressing';
-import { BOX_LEN_M, BOX_WID_M, TEE_KINDS, TEE_SET, addTeeSpot, layoutMarkers, markerWarnings, teeBox } from './golf/teesets';
+import { BOX_LEN_M, BOX_WID_M, TEE_KINDS, TEE_SET, addTeeSpot, layoutMarkers, markerWarnings } from './golf/teesets';
+import { TEE_SCALE_STEP, TEE_TURN_DEG, boxAngle, boxOutline, clampTeeScale, dropHoleBoxes, handOver, layDown, oldBox, planTee, recStands, snapTurn, swapTeeBoxes, takeUp, teeAim, teeBoxM, teeCells, teeKey, type TeeCourse, type TeeOld, type TeePlan, type TeeRoad } from './golf/teeplace';
 import { FALLBACK_STRUCTURE_SPRITE, STRUCTURE_SPRITE, STRUCTURE_SPRITE_OLD } from './golf/structure-art';
 import { checkStructurePlacement, findStructureIndexAt, structureRect, structuresNeeds, type PlacedEventStructure, type StructurePlacementCheck } from './golf/eventtool';
 import { STRUCTURE } from './golf/tents';
@@ -859,7 +860,7 @@ export class Game {
   /** opens hole n's card (its Holes panel badge, or its area clicked with Select) and makes it the current hole */
   openHoleCard(n: number) { if (!this.golf || !this.courseHoleViews()[n - 1]?.started) return; this.holeCardHole = n; this.paint.setHole(n); this.emit(); }
   /** closes the card (its ✕, Esc, a click on open ground) */
-  closeHoleCard() { if (this.holeCardHole === null) return; this.holeCardHole = null; this.markerDrag = false; this.selectedGolfMarker = null; this.emit(); }
+  closeHoleCard() { if (this.holeCardHole === null) return; this.holeCardHole = null; this.markerDrag = false; this.selectedGolfMarker = null; if (this.teePlace && this.tool === 'select') this.teePlace = null; this.emit(); }
   /** the hole of the course under tile t: the course grid's cell (a playing surface or rough of a hole), else a painted area's hole; 0: none */
   courseHoleAt(t: Pt | null): number {
     const g = this.courseGrid; if (!t || !this.golf) return 0;
@@ -913,6 +914,7 @@ export class Game {
         if (keep) { const q = this.addProp(p.item, p.x, p.y, p.flip, p.scale); if (p.decor) q.decor = p.decor; }
       }
       this.frameRev++;
+      dropHoleBoxes(this.golf?.teeBoxes, n); this.teeRev++; // T268: its tee boxes' records go with it (undo brings the cells back as older boxes)
     });
     if (ok) { this.closeHoleCard(); this.holeCache = null; this.cardCache = null; }
     return ok;
@@ -984,6 +986,7 @@ export class Game {
     // the markers' props are keyed by hole (the pin of hole 9 is yellow): drop both holes' and put them back under their new numbers
     for (const h of [a, b]) for (const k of ['pin', ...TEE_KINDS] as const) { const key = k === 'pin' ? 'pin:' + h : `tee:${h}:${k}`, pr = this.golfProps.get(key); if (pr) { this.removeProp(pr); this.golfProps.delete(key); } }
     g.pins = r.pins; g.tees = r.tees; g.aims = r.aims; g.plans = encodePlans(r.plans);
+    if (g.teeBoxes) g.teeBoxes = swapTeeBoxes(g.teeBoxes, a, b); this.teeRev++; // T268: the tee boxes' records follow their sets
     for (const p of this.props) if (p.frame === a) p.frame = b; else if (p.frame === b) p.frame = a; // T229: the frame trees follow their hole
     // T256: so do their looks
     const bk = g.looks; if (bk) { const la = bk[holeOwner(a)], lb = bk[holeOwner(b)]; if (lb) bk[holeOwner(a)] = lb; else delete bk[holeOwner(a)]; if (la) bk[holeOwner(b)] = la; else delete bk[holeOwner(b)]; this.paint.looksRev++; }
@@ -1009,6 +1012,9 @@ export class Game {
     const n = this.holeCardHole, g = this.golf, h = this.hover; if (n === null || !g || !h) return false;
     const pin = g.pins.find(p => p.hole === n && Math.hypot(h.x - p.x, h.y - p.y) <= 3);
     if (pin) { this.selectedGolfMarker = { hole: n, kind: 'pin', x: pin.x, y: pin.y }; this.markerDrag = true; this.emit(); return true; }
+    // T268: a press on one of its tee boxes picks the box up with its markers: it goes down where the drag is let go (one undo step)
+    const k = this.teeBoxAt(n, h.x, h.y);
+    if (k) { const o = this.teeOld(n, k); return this.placeTee(n, k, { drag: true, grab: o ? { x: o.x - h.x, y: o.y - h.y } : { x: 0, y: 0 } }); }
     const tee = g.tees.find(t => t.hole === n && Math.hypot(h.x - t.x, h.y - t.y) <= 2);
     if (tee) { this.selectedGolfMarker = { hole: n, kind: tee.kind, x: tee.x, y: tee.y }; this.markerDrag = true; this.emit(); return true; }
     return false;
@@ -1081,7 +1087,7 @@ export class Game {
   /** places or moves a pin or tee marker with its prop, marked auto (it goes when its green or tee is gone); held (T254, Edit Hole Layout): it
    *  stays where it is put, off its turf or not */
   private setGolfMarker(hole: number, kind: MarkerKind, x: number, y: number, held = false) {
-    const g = this.golf!; this.removeGolfMarker(hole, kind);
+    const g = this.golf!; this.removeGolfMarker(hole, kind); this.teeRev++; // T268
     const sprId = kind === 'pin' ? (hole === 9 ? PIN_YELLOW_ID : PIN_RED_ID) : teePropId(kind);
     const item = LIB_INDEX.get(sprId);
     if (item !== undefined) this.golfProps.set(kind === 'pin' ? 'pin:' + hole : `tee:${hole}:${kind}`, this.addProp(item, x, y, false, MARKER_SCALE[kind]));
@@ -1092,6 +1098,7 @@ export class Game {
   private removeGolfMarker(hole: number, kind: MarkerKind) {
     const g = this.golf!, key = kind === 'pin' ? 'pin:' + hole : `tee:${hole}:${kind}`, prop = this.golfProps.get(key);
     if (prop) { this.removeProp(prop); this.golfProps.delete(key); }
+    this.teeRev++; // T268
     const L: { hole: number; kind?: string }[] = kind === 'pin' ? g.pins : g.tees;
     for (let i = L.length - 1; i >= 0; i--) if (L[i]!.hole === hole && (kind === 'pin' || L[i]!.kind === kind)) L.splice(i, 1);
   }
@@ -1117,15 +1124,17 @@ export class Game {
   private placeTees(n: number, tees: readonly { kind: TeeKind; x: number; y: number }[]) {
     const g = this.golf; if (!g || !tees.length) return;
     for (const t of g.tees.filter(q => q.hole === n)) this.removeGolfMarker(n, t.kind);
+    dropHoleBoxes(g.teeBoxes, n); // T268: its boxes are the placed hole's own now
     for (const t of tees) this.setGolfMarker(n, t.kind, t.x, t.y);
     this.holeCache = null; this.cardCache = null; this.syncCourseGates(); this.scheduleSave();
   }
-  /** the pins and tee markers as text (an Edit Hole Layout step's undo and redo carry them) */
-  private markersKey(): string { const g = this.golf; return JSON.stringify(g ? [g.pins, g.tees] : [[], []]); }
+  /** the pins and tee markers as text (an Edit Hole Layout step's undo and redo carry them; T268: and the tee boxes' records, a Place step's) */
+  private markersKey(): string { const g = this.golf; return JSON.stringify(g ? [g.pins, g.tees, g.teeBoxes ?? {}] : [[], [], {}]); }
   /** the pins and tee markers back as markersKey had them, their props with them */
   private setMarkers(key: string) {
     const g = this.golf; if (!g) return;
-    let v: [Pin[], TeeMark[]]; try { v = JSON.parse(key); } catch { return; }
+    let v: [Pin[], TeeMark[], Record<string, TeeBoxRec>?]; try { v = JSON.parse(key); } catch { return; }
+    if (v[2] && Object.keys(v[2]).length) g.teeBoxes = v[2]; else if (v.length > 2) delete g.teeBoxes; // T268
     for (const p of [...g.pins]) this.removeGolfMarker(p.hole, 'pin');
     for (const t of [...g.tees]) this.removeGolfMarker(t.hole, t.kind);
     for (const p of v[0]) { this.setGolfMarker(p.hole, 'pin', p.x, p.y, !!p.held); const q = g.pins[g.pins.length - 1]!; if (p.auto === undefined) delete q.auto; else q.auto = p.auto; }
@@ -1133,41 +1142,200 @@ export class Game {
     this.holeCache = null; this.cardCache = null; this.syncCourseGates(); this.scheduleSave(); this.emit();
   }
   /** "Add tee" (the hole card): hole n's set `kind` laid as a new 14 x 8 m tee box behind or ahead along the line of play (golf/teesets.ts
-   *  addTeeSpot), painted as tee turf and priced like a tee (one undo step), its pair of markers on it. False with a toast when it cannot */
+   *  addTeeSpot), painted as tee turf and priced like a tee (one undo step), its pair of markers on it. False with a toast when it cannot.
+   *  T268: the quick Place: laid as Place lays a box (layTee: its record, its level pad), its refused cells left out as before */
   addTeeSet(n: number, kind: TeeKind): boolean {
     const g = this.golf; if (!g || !this.courseGrid) return false;
     const h = deriveHoles(this.courseAreaList(), g.tees, g.pins, g.aims ?? []).find(q => q.n === n);
     if (!h || h.line.length < 2) { this.toast(`Hole ${n} needs a flag and a tee before another tee set`, 'warn'); return false; }
     const at = addTeeSpot(kind, g.tees.filter(t => t.hole === n), h.line);
     if (!at) { this.toast(`Hole ${n} has the ${TEE_SET[kind].colour} tees already`, 'info'); return false; }
-    const r = this.paint.addTeeBox(n, teeBox(at.at, at.dir), `add the ${TEE_SET[kind].colour} tee to hole ${n}`);
-    if (!r) return false;
-    this.setGolfMarker(n, kind, Math.round(at.at.x * 100) / 100, Math.round(at.at.y * 100) / 100);
-    this.holeCache = null; this.cardCache = null; this.syncCourseGates(); this.scheduleSave(); this.emit();
-    this.toast(`Hole ${n}: the ${TEE_SET[kind].colour} tee laid${r.cost ? ` for $${r.cost.toLocaleString()}` : ''} (${TEE_SET[kind].who})`, 'good');
+    const p = this.teePlan(n, kind, at.at.x, at.at.y, Math.atan2(at.dir.y, at.dir.x), 1, false, false);
+    if (p.why) { this.toast(p.why === 'No room for a tee box there' ? 'No room for a tee box there: your land, the practice area or another hole is in the way' : `No room for a tee box there: ${p.why.toLowerCase()}`, 'warn'); return false; }
+    if (!this.layTee(n, kind, p, `add the ${TEE_SET[kind].colour} tee to hole ${n}`)) return false;
+    this.toast(`Hole ${n}: the ${TEE_SET[kind].colour} tee laid${p.cost ? ` for $${p.cost.toLocaleString()}` : ''} (${TEE_SET[kind].who})`, 'good');
     return true;
   }
   /** "Add tee"'s price: a 14 x 8 m tee box of tee turf at the brush's planting (Seed or Sod), the cells it lays (about; the real price counts the
    *  cells that change) */
   teeBoxPrice(): number { return Math.round(((BOX_LEN_M - BOX_WID_M) * BOX_WID_M + Math.PI * (BOX_WID_M / 2) ** 2) * unitBuildCost('tee', this.paint.plantKind)); }
+  // ---------- T268 (#809): each tee set placed, moved and removed by hand (golf/teeplace.ts) ----------
+  /** the tee set in hand (Place or Move on the hole card or in Edit Hole Layout, or its box dragged on the map with the card open): its hole and
+   *  set, its turn off the line of play (degrees: R, Shift+R) and size (TEE_SCALE_MIN..MAX: [ ]); moving: the set has a box already, which goes
+   *  from where it stands (its old ground back); drag: picked up by a press on its box, it goes down on the release; grab: the box's middle less
+   *  the press (tiles); from: the press */
+  teePlace: { hole: number; kind: TeeKind; turn: number; scale: number; moving: boolean; drag: boolean; grab: Pt; from: Pt | null } | null = null;
+  /** bumped whenever a tee marker or a box record changes: the ghost's and the old box's cache keys (the markers' text is never built a frame) */
+  private teeRev = 0;
+  private teeGhostMemo: { key: string; v: TeePlan } | null = null;
+  private teeOldMemo: { key: string; v: TeeOld | null } | null = null;
+  /** Place and Move (the card's and Edit Hole Layout's buttons; opts.drag: a press on the set's box with the card open): hole n's set `kind` in
+   *  hand as a ghost at the pointer, facing the line of play; a set the hole has already is moved, its size and turn kept. The next click (or the
+   *  drag's release) lays it; Esc or a right click puts it down. False with a toast when the hole has no flag to face */
+  placeTee(n: number, kind: TeeKind, opts: { drag?: boolean; grab?: Pt } = {}): boolean {
+    const g = this.golf; if (!g || !this.courseGrid) return false;
+    if (!g.pins.some(p => p.hole === n)) { this.toast(`Hole ${n} needs a flag before its tees are placed`, 'warn'); return false; }
+    const moving = g.tees.some(t => t.hole === n && t.kind === kind), old = moving ? this.teeOld(n, kind) : null;
+    const turn = old ? snapTurn(((old.a - boxAngle(old, teeAim(n, g.pins, g.aims ?? []), 0)) * 180) / Math.PI) : 0;
+    this.teePlace = { hole: n, kind, turn, scale: old?.s ?? 1, moving, drag: !!opts.drag, grab: opts.grab ?? { x: 0, y: 0 }, from: this.hover ? { x: this.hover.x, y: this.hover.y } : null };
+    this.teeGhostMemo = null; this.emit();
+    if (!opts.drag) this.toast(`${moving ? 'Move' : 'Place'} hole ${n}'s ${TEE_SET[kind].colour} tee: click the map to lay it · R turns it · [ ] size it · Esc puts it down`, 'info');
+    return true;
+  }
+  /** puts the tee set in hand down (nothing laid) */
+  cancelTeePlace() { if (!this.teePlace) return; this.teePlace = null; this.teeGhostMemo = null; this.emit(); }
+  /** R (back: Shift+R): the box in hand turns TEE_TURN_DEG */
+  turnTeePlace(back = false) { const tp = this.teePlace; if (!tp) return; tp.turn = snapTurn(tp.turn + (back ? -TEE_TURN_DEG : TEE_TURN_DEG)); this.emit(); }
+  /** ] and [: the box in hand a size step up or down, within the tee's limits (a toast at the limit) */
+  sizeTeePlace(up: boolean) {
+    const tp = this.teePlace; if (!tp) return;
+    const s = clampTeeScale(tp.scale + (up ? TEE_SCALE_STEP : -TEE_SCALE_STEP));
+    if (s === tp.scale) { const m = teeBoxM(s); this.toast(`A tee box goes no ${up ? 'bigger' : 'smaller'}: ${m.len} x ${m.wid} m`, 'info'); return; }
+    tp.scale = s; this.emit();
+  }
+  /** the box in hand at the pointer (teePlan), worked out again only when the pointer's cell, the turn or size, the course, the ground, the roads,
+   *  the money or the markers change: a frame draws it and no more */
+  teeGhost(): TeePlan | null {
+    const tp = this.teePlace, h = this.hover, g = this.golf, grid = this.courseGrid; if (!tp || !h || !g || !grid) return null;
+    const x = Math.round((h.x + tp.grab.x) * 2) / 2, y = Math.round((h.y + tp.grab.y) * 2) / 2;
+    const key = `${tp.hole}|${tp.kind}|${x}|${y}|${tp.turn}|${tp.scale}|${tp.moving}|${grid.rev}|${this.courseHeight?.rev ?? -1}|${this.net.version}|${this.paint.plantKind}|${Math.round(this.money)}|${this.teeRev}`;
+    if (this.teeGhostMemo?.key !== key) this.teeGhostMemo = { key, v: this.teePlan(tp.hole, tp.kind, x, y, boxAngle({ x, y }, teeAim(tp.hole, g.pins, g.aims ?? []), tp.turn), tp.scale, tp.moving, true) };
+    return this.teeGhostMemo.v;
+  }
+  /** the roads and cart paths within r of tile (x, y), for a tee box's refusal and its pad */
+  private teeRoads(x: number, y: number, r: number): TeeRoad[] {
+    return [...this.net.segsNear({ x, y }, r)].map(s => ({ ax: s.a.x, ay: s.a.y, bx: s.b.x, by: s.b.y, hw: s.cls.h + s.cls.walk, name: s.cls.name.toLowerCase() }));
+  }
+  /** whether tile (x, y) lies in the driving range's practice area (the paint host's practiceAt) */
+  private teePractice(x: number, y: number): boolean { return this.golf?.start === 'range' && !!this.range.scene && inPractice(this.range.scene.practice, x, y); }
+  /** the course a tee box is worked out on (golf/teeplace.ts TeeCourse): the grid and height field, the markers and the boxes' records, your land
+   *  (the range's plot is not the course's), the practice area, the roads and cart paths, and the prices (a tee cell at the brush's Seed or Sod) */
+  private teeCourse(): TeeCourse | null {
+    const g = this.golf, grid = this.courseGrid; if (!g || !grid) return null;
+    return {
+      grid, field: this.courseHeight, pins: g.pins, tees: g.tees, aims: g.aims ?? [], boxes: g.teeBoxes ?? {},
+      own: (x, y) => this.ownedAt(x, y) && !this.onRangePlot(x, y), landWhy: (x, y) => LAND_WHY[this.onRangePlot(x, y) ? 'range' : 'off'],
+      practice: (x, y) => this.teePractice(x, y), roadsNear: (x, y, r) => this.teeRoads(x, y, r), golf: this.golfMode, unit: unitBuildCost('tee', this.paint.plantKind),
+    };
+  }
+  /** hole n's set `kind` as a box at (x, y), heading a, size s (golf/teeplace.ts planTee: its cells, why not, its price, its length and par);
+   *  moving: the set's box as it stands goes back first. strict false: Add tee's (refused cells left out) */
+  private teePlan(n: number, kind: TeeKind, x: number, y: number, a: number, s: number, moving: boolean, strict: boolean): TeePlan {
+    return planTee(this.teeCourse()!, n, kind, x, y, a, s, moving ? this.teeOld(n, kind) : null, strict);
+  }
+  /** hole n's set `kind`'s box as it stands and what a move or a removal puts back (golf/teeplace.ts oldBox), kept until the course, the ground or
+   *  the markers change */
+  private teeOld(n: number, kind: TeeKind): TeeOld | null {
+    const c = this.teeCourse(); if (!c) return null;
+    const key = `${n}|${kind}|${c.grid.rev}|${c.field?.rev ?? -1}|${this.teeRev}`;
+    if (this.teeOldMemo?.key !== key) this.teeOldMemo = { key, v: oldBox(c, n, kind) };
+    return this.teeOldMemo.v;
+  }
+  /** lays plan p (teePlan) for hole n's set `kind` as one undo step (PaintTool.teeStep, golf/teeplace.ts layDown): the set's old box goes back (a
+   *  move: its cells and its pad's heights as they were), the box's cells become tee turf (Seed or Sod), its pad is levelled, the price is paid,
+   *  and the set's marker stands in the box's middle with the box's record (GolfSave.teeBoxes; a set left on the old box takes the old record).
+   *  False with a toast when p cannot go or the money is short */
+  private layTee(n: number, kind: TeeKind, p: TeePlan, label: string): boolean {
+    const g = this.golf, c = this.teeCourse(); if (!g || !c) return false;
+    if (p.why) { this.toast(p.why, 'warn'); return false; }
+    if (this.golfMode && p.cost > this.money) { this.toast(`Not enough money: the tee box costs $${p.cost.toLocaleString()} · you have $${Math.round(this.money).toLocaleString()}`, 'warn'); return false; }
+    const ok = this.paint.teeStep(label, e => {
+      const r = layDown(c, n, p, e);
+      handOver((g.teeBoxes ??= {}), n, kind, p.old, r.rec); this.teeRev++;
+      this.setGolfMarker(n, kind, Math.round(p.x * 100) / 100, Math.round(p.y * 100) / 100);
+    });
+    if (!ok) return false;
+    this.holeCache = null; this.cardCache = null; this.syncCourseGates(); this.scheduleSave(); this.emit();
+    return true;
+  }
+  /** a click with a tee set in hand (or its drag's release): the ghost's box is laid there (layTee) and the toast gives the set's length, par and
+   *  price; else the toast says why and the set stays in hand (a dragged box goes back where it was) */
+  private placeTeeAt(): boolean {
+    const tp = this.teePlace, gh = this.teeGhost(); if (!tp) return false;
+    if (!gh) { if (tp.drag) this.cancelTeePlace(); return false; }
+    const col = TEE_SET[tp.kind].colour, ok = this.layTee(tp.hole, tp.kind, gh, `${tp.moving ? 'move' : 'place'} hole ${tp.hole}'s ${col} tee`);
+    if (ok) this.toast(`Hole ${tp.hole}: the ${col} tee ${tp.moving ? 'moved' : 'placed'}, ${gh.m} m, par ${gh.par}${gh.cost ? ` · $${gh.cost.toLocaleString()}` : ''}${gh.m3 >= 1 ? ` (a level pad, ${Math.round(gh.m3)} m³)` : ''}`, 'good');
+    if (ok || tp.drag) { this.teePlace = null; this.teeGhostMemo = null; }
+    this.emit(); return ok;
+  }
+  /** the release of a box dragged with the card open: laid where it is let go; a press that did not move puts it down */
+  private teeDragDrop() {
+    const tp = this.teePlace, h = this.hover; if (!tp?.drag) return;
+    if (!h || !tp.from || Math.hypot(h.x - tp.from.x, h.y - tp.from.y) < 0.75) { this.cancelTeePlace(); return; }
+    this.placeTeeAt();
+  }
+  /** Remove (the card's ✕): hole n's set `kind` goes, its marker and its box with it, the old ground back (a box another set stands on stays); never
+   *  the hole's last set. One undo step, no refund */
+  removeTeeSet(n: number, kind: TeeKind): boolean {
+    const g = this.golf; if (!g || !this.courseGrid) return false;
+    const mine = g.tees.filter(t => t.hole === n), col = TEE_SET[kind].colour;
+    if (!mine.some(t => t.kind === kind)) return false;
+    if (mine.length <= 1) { this.toast(`Hole ${n} keeps its last tee: place another set before the ${col} goes`, 'warn'); return false; }
+    const old = this.teeOld(n, kind);
+    if (this.teePlace?.hole === n && this.teePlace.kind === kind) this.teePlace = null;
+    this.paint.teeStep(`remove hole ${n}'s ${col} tee`, e => {
+      takeUp(old, e);
+      if (g.teeBoxes) { handOver(g.teeBoxes, n, kind, old, null); if (!Object.keys(g.teeBoxes).length) delete g.teeBoxes; }
+      this.removeGolfMarker(n, kind);
+    });
+    this.holeCache = null; this.cardCache = null; this.syncCourseGates(); this.scheduleSave(); this.emit();
+    this.toast(`Hole ${n}: the ${col} tee removed${old?.shared.length ? ` (its box stays: the ${old.shared.map(k => TEE_SET[k].colour).join(' and ')} tee${old.shared.length > 1 ? 's stand' : ' stands'} on it)` : old?.back?.n ? ', the ground as it was' : ''}`);
+    return true;
+  }
+  /** Edit Hole Layout's tee rows: hole n's sets with their lengths and pars (back to front) and the sets Add tee can lay */
+  teeSetRows(n: number): { tees: { kind: TeeKind; m: number; par: 3 | 4 | 5 }[]; addable: TeeKind[] } {
+    const g = this.golf; if (!g) return { tees: [], addable: [] };
+    const tees = teeLengths(n, g.pins, g.tees, g.aims ?? []);
+    return { tees, addable: tees.length ? TEE_KINDS.filter(k => !tees.some(t => t.kind === k)) : [] };
+  }
+  /** the set of hole n whose tee box holds tile (x, y) (its recorded box, else the older box its marker stands on: the nearest marker's), or null */
+  private teeBoxAt(n: number, x: number, y: number): TeeKind | null {
+    const g = this.golf, grid = this.courseGrid; if (!g || !grid) return null;
+    const i = cellAt(grid, x, y); if (i < 0 || grid.surf[i] !== SURF.tee || grid.hole[i] !== n) return null;
+    const mine = TEE_KINDS.flatMap(k => g.tees.find(t => t.hole === n && t.kind === k) ?? []);
+    for (const t of mine) { const r = g.teeBoxes?.[teeKey(n, t.kind)]; if (r && recStands(grid, r, n) && inPoly(boxOutline(r.x, r.y, r.a, r.s), x, y)) return t.kind; }
+    const cells = new Set(teeCells(grid, n, i));
+    let best: TeeKind | null = null, bd = Infinity;
+    for (const t of mine) { if (!cells.has(cellAt(grid, t.x, t.y))) continue; const d = Math.hypot(t.x - x, t.y - y); if (d < bd) { bd = d; best = t.kind; } }
+    return best;
+  }
+  /** a tee set's pair of markers (a small ball each side of the line, in the set's colour), lit from the upper right; r: the ball's radius (px) */
+  private drawTeePair(ctx: CanvasRenderingContext2D, x: number, y: number, ux: number, uy: number, kind: TeeKind, r: number) {
+    const set = TEE_SET[kind], half = 1.6, d = this.dpr; // the pair stands 3.2 tiles (6.4 m) apart, across the line
+    for (const sgn of [-1, 1]) {
+      const p = this.screen(x - uy * half * sgn, y + ux * half * sgn);
+      if (p.x < -r || p.y < -r || p.x > this.cw + r || p.y > this.ch + r) continue;
+      ctx.beginPath(); ctx.ellipse(p.x - r * 0.35, p.y + r * 0.45, r * 1.05, r * 0.5, 0, 0, Math.PI * 2); ctx.fillStyle = 'rgba(20,30,40,0.28)'; ctx.fill();
+      ctx.beginPath(); ctx.arc(p.x, p.y - r * 0.6, r, 0, Math.PI * 2); ctx.fillStyle = set.fill; ctx.fill();
+      ctx.lineWidth = Math.max(1, 0.9 * d); ctx.strokeStyle = set.rim; ctx.stroke();
+      ctx.beginPath(); ctx.arc(p.x + r * 0.32, p.y - r * 0.95, r * 0.32, 0, Math.PI * 2); ctx.fillStyle = 'rgba(255,255,255,0.55)'; ctx.fill();
+    }
+  }
+  /** the tee set in hand at the pointer: its box in the set's colour (red and hatched where it cannot go, with the ✕), its pair of markers, and
+   *  the label by the pointer (the set's length and par from there and the price, or why not). Worked out once a cell (teeGhost): a frame only
+   *  draws a polygon, two balls and a label */
+  private drawTeeGhost(ctx: CanvasRenderingContext2D) {
+    const tp = this.teePlace; if (!tp) return;
+    const gh = this.teeGhost(); if (!gh) return;
+    const v = this.ghostView(ctx), set = TEE_SET[tp.kind], short = this.golfMode && gh.cost > this.money, bad = !!gh.why || short;
+    drawGhostPoly(v, gh.pts, bad ? 'invalid' : 'valid', { fillColor: bad ? undefined : rgbaOf(set.fill, 0.42), lineWidthPx: 2 });
+    if (!bad && this.cam.z >= 0.06) { const a = this.screen(0, 0), b = this.screen(1, 0), r = Math.max(2.2 * this.dpr, Math.hypot(b.x - a.x, b.y - a.y) * 0.22), aim = teeAim(tp.hole, this.golf!.pins, this.golf!.aims ?? []), u = boxAngle(gh, aim); this.drawTeePair(ctx, gh.x, gh.y, Math.cos(u), Math.sin(u), tp.kind, r); }
+    const gm = this.ghostMouse; if (!gm) return;
+    const size = teeBoxM(gh.s), label = gh.why ? gh.why : short ? `Not enough money: $${gh.cost.toLocaleString()}` : `${set.name} tee · ${gh.m} m, par ${gh.par} · ${size.len} x ${size.wid} m${gh.cost ? ` · $${gh.cost.toLocaleString()}` : ''}`;
+    drawGhostHint(v, gm.mx, gm.my, label, bad);
+  }
   /** each tee set's markers on the map (T254: a pair of small balls in the set's colour, drawn in code: the tee marker picture is still to come),
    *  across the line of play at each set's spot, lit from the upper right, their shadows to the lower left; from the street tier in */
   private drawTeeMarkers(ctx: CanvasRenderingContext2D) {
     const g = this.golf; if (!g || !g.tees.length || this.cam.z < 0.1) return;
     const d = this.dpr, a = this.screen(0, 0), b = this.screen(1, 0), tilePx = Math.hypot(b.x - a.x, b.y - a.y), r = Math.max(2.2 * d, tilePx * 0.22);
     ctx.setTransform(1, 0, 0, 1, 0, 0);
+    const tp = this.teePlace; // T268: a set being moved shows on its ghost alone
     for (const t of g.tees) {
+      if (tp?.moving && tp.hole === t.hole && tp.kind === t.kind) continue;
       const pin = g.pins.find(p => p.hole === t.hole), aim = (g.aims ?? []).filter(q => q.hole === t.hole).sort((p, q) => p.order - q.order)[0] ?? pin;
       let ux = 1, uy = 0; if (aim) { const L = Math.hypot(aim.x - t.x, aim.y - t.y); if (L > 1e-6) { ux = (aim.x - t.x) / L; uy = (aim.y - t.y) / L; } }
-      const set = TEE_SET[t.kind], half = 1.6; // the pair stands 3.2 tiles (6.4 m) apart, across the line
-      for (const sgn of [-1, 1]) {
-        const p = this.screen(t.x - uy * half * sgn, t.y + ux * half * sgn);
-        if (p.x < -r || p.y < -r || p.x > this.cw + r || p.y > this.ch + r) continue;
-        ctx.beginPath(); ctx.ellipse(p.x - r * 0.35, p.y + r * 0.45, r * 1.05, r * 0.5, 0, 0, Math.PI * 2); ctx.fillStyle = 'rgba(20,30,40,0.28)'; ctx.fill();
-        ctx.beginPath(); ctx.arc(p.x, p.y - r * 0.6, r, 0, Math.PI * 2); ctx.fillStyle = set.fill; ctx.fill();
-        ctx.lineWidth = Math.max(1, 0.9 * d); ctx.strokeStyle = set.rim; ctx.stroke();
-        ctx.beginPath(); ctx.arc(p.x + r * 0.32, p.y - r * 0.95, r * 0.32, 0, Math.PI * 2); ctx.fillStyle = 'rgba(255,255,255,0.55)'; ctx.fill();
-      }
+      this.drawTeePair(ctx, t.x, t.y, ux, uy, t.kind, r);
     }
   }
   /** a golf game's painted course by hole (golf/holeview.ts tagByHole): untagged course areas take the hole they belong to (a hole tag, no
@@ -3423,7 +3591,7 @@ export class Game {
     }
 
   // ---------- road routing ----------
-  setTool(t: Tool) { if (t !== 'course') this.paint.setProperty(false); /* T256: Range › Build ends with the course tool */ const wasGk = this.tool === 'greenkeeping'; if (t === 'business' && this.golfMode) return; /* golf mode: the game places the clubhouse, so no Business tool */ if (this.refuseLocked(t)) return; /* P23 4.10: a locked tool says what unlocks it */ const scope = t === 'path' ? 'course' : t === 'road' ? 'town' : this.roadScope; if (t === 'path') t = 'road'; /* T084: Paths & drives is the road tool on the course */ const cScope = t === 'buildings' ? 'buildings' : t === 'course' ? 'holes' : this.courseScope; if (t === 'buildings') t = 'course'; /* P23 P1-E: Buildings is the course tool's clubhouse scope */ if (this.tool !== t || scope !== this.roadScope || cScope !== this.courseScope) { this.paint.cancel(); this.cancelRoute(); this.selected = null; this.selectedPlace = null; this.selectedJunction = null; this.parkDrag = null; this.parking.drag = null; this.tollHover = null; this.bizHover = null; this.busPick = null; this.busHover = null; this.laneHover = null; this.decor.cancel(); this.practice.cancel(); } this.tool = t; if (pickTool(this, t)) this.tidySideModes(); /* P23 P1-A: a build tool closes the Grass panel, Land, Holes and Event */ if (t === 'road') this.setRoadScope(scope); if (t === 'course') this.courseScope = cScope; if (t !== 'course' || cScope === 'holes') { this.clubPlacing = false; this.halfwayPlacing = false; } else if (this.golf && !this.bizDefs.some(d => d.type === 'clubhouse')) this.clubPlacing = true; /* Buildings arms the clubhouse until it stands */ if (t === 'course') { this.paint.enterCourse(); this.ground.prewarm(brushTextures()); /* T168: what its brushes lay, made ahead */ } else if (t === 'paint') this.paint.enterPaint(); /* T175: Greenkeeping's panel is the Grass panel; leaving it puts its care down */ if (t === 'greenkeeping') this.grassPanel = true; else if (wasGk) { this.grassPanel = false; this.grassAction = null; } this.emit(); }
+  setTool(t: Tool) { if (t !== 'course') this.paint.setProperty(false); /* T256: Range › Build ends with the course tool */ const wasGk = this.tool === 'greenkeeping'; if (t === 'business' && this.golfMode) return; /* golf mode: the game places the clubhouse, so no Business tool */ if (this.refuseLocked(t)) return; /* P23 4.10: a locked tool says what unlocks it */ const scope = t === 'path' ? 'course' : t === 'road' ? 'town' : this.roadScope; if (t === 'path') t = 'road'; /* T084: Paths & drives is the road tool on the course */ const cScope = t === 'buildings' ? 'buildings' : t === 'course' ? 'holes' : this.courseScope; if (t === 'buildings') t = 'course'; /* P23 P1-E: Buildings is the course tool's clubhouse scope */ if (this.tool !== t || scope !== this.roadScope || cScope !== this.courseScope) { this.paint.cancel(); this.cancelRoute(); this.teePlace = null; /* T268 */ this.selected = null; this.selectedPlace = null; this.selectedJunction = null; this.parkDrag = null; this.parking.drag = null; this.tollHover = null; this.bizHover = null; this.busPick = null; this.busHover = null; this.laneHover = null; this.decor.cancel(); this.practice.cancel(); } this.tool = t; if (pickTool(this, t)) this.tidySideModes(); /* P23 P1-A: a build tool closes the Grass panel, Land, Holes and Event */ if (t === 'road') this.setRoadScope(scope); if (t === 'course') this.courseScope = cScope; if (t !== 'course' || cScope === 'holes') { this.clubPlacing = false; this.halfwayPlacing = false; } else if (this.golf && !this.bizDefs.some(d => d.type === 'clubhouse')) this.clubPlacing = true; /* Buildings arms the clubhouse until it stands */ if (t === 'course') { this.paint.enterCourse(); this.ground.prewarm(brushTextures()); /* T168: what its brushes lay, made ahead */ } else if (t === 'paint') this.paint.enterPaint(); /* T175: Greenkeeping's panel is the Grass panel; leaving it puts its care down */ if (t === 'greenkeeping') this.grassPanel = true; else if (wasGk) { this.grassPanel = false; this.grassAction = null; } this.emit(); }
   /** the snap radius in tiles: about 14 screen px (at least 2 tiles) */
   private snapRadius() { return Math.max(2, 14 / (HW * this.cam.z)); }
   /** the road tool's snap under the cursor, or null with no cursor */
@@ -4365,6 +4533,8 @@ export class Game {
   this.camEase = null; // a press takes the camera back from New hole's framing (P23 4.4)
   // the owner's open shot (P4b) takes a left click on the course as its aim, before any tool does (a drag still pans; the aim is set on release)
   if (this.shot && e.button === 0 && !this.keys.has(' ')) { this.overlay.setPointerCapture(e.pointerId); this.dragging = { kind: 'pan', sx: mx, sy: my, camX: this.cam.X, camY: this.cam.Y, moved: false, aim: this.tileAt(mx, my) }; return; }
+  // T268: a tee set in hand: a click lays it there, a right click puts it down (the middle button and Space still pan)
+  if (this.teePlace && !this.teePlace.drag && !this.keys.has(' ') && (e.button === 0 || e.button === 2)) { this.hover = this.tileAt(mx, my); if (e.button === 0) this.placeTeeAt(); else this.cancelTeePlace(); return; }
   // the side modes live in Select (P23 P1-A): the Grass panel, Land, Event and Holes never take a build tool's click
   const side = this.tool === 'select';
   if (this.tool === 'greenkeeping' && e.button === 0 && !this.keys.has(' ')) { this.grassTarget = this.tileAt(mx, my); if (this.grassAction) this.careGrass(this.grassAction); this.emit(); return; } // T175
@@ -4472,7 +4642,7 @@ export class Game {
     if (this.tool === 'bus') this.busUpdate(mx, my);
     if (this.clubPlacing && this.tool === 'course') this.clubUpdate(mx, my);
     else if (this.halfwayPlacing && this.tool === 'course') this.halfwayUpdate(mx, my);
-    else if (this.paintOn) this.paint.pointerMove(this.hover, mx, my, this.keys.has('Shift'));
+    else if (this.paintOn && !this.teePlace) this.paint.pointerMove(this.hover, mx, my, this.keys.has('Shift')); // (T268: a tee set in hand is the engine's)
     if (this.tool === 'park') {
       if (this.parking.mode === 'rows') { if (this.hover) { this.parking.snap15 = this.keys.has('Shift'); this.parking.move(this.hover, mx, my); } }
       else if (this.parking.mode === 'curb') this.parking.hover(this.hover ? this.net.pieceNear(this.hover)?.seg ?? null : null, this.hover ?? { x: 0, y: 0 }, mx, my);
@@ -4481,6 +4651,7 @@ export class Game {
   pointerUp() {
     const d = this.dragging; this.moneyAt(this.hover); // T147: a spend this release makes floats up here
     if (this.markerDrag) this.holeCardDrop(); // T174
+    if (this.teePlace?.drag) this.teeDragDrop(); // T268
     if (this.badgeDrag) { const b = this.badgeDrag, to = b.moved ? this.badgeAt(b.mx, b.my) : 0; this.badgeDrag = null; if (!b.moved) this.openHoleCard(b.n); else if (to && to !== b.n) this.renumberHole(b.n, to); this.emit(); }
     if (d?.kind === 'pan' && d.hole !== undefined && !d.moved) { if (d.hole) this.openHoleCard(d.hole); else this.closeHoleCard(); }
     if (d?.kind === 'park') this.parkRelease();
@@ -4578,6 +4749,17 @@ export class Game {
     if (e.key === 'Escape') { escapeLadder(this.escRungs(e, tag === 'TEXTAREA' || (tag === 'INPUT' && !/^(checkbox|radio|range|button|color)$/.test(el!.type)))); return; }
     if (typing) return;
     this.keys.add(e.key);
+    // T268: the tee set in hand: R turns it (Shift+R back), [ ] size it
+    if (this.teePlace && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      if (e.key === 'r' || e.key === 'R') { this.turnTeePlace(e.shiftKey); return; }
+      if (e.key === ']' || e.key === '[') { this.sizeTeePlace(e.key === ']'); return; }
+    }
+    // T268: with the hole card open in Select, Ctrl+Z and Ctrl+Y take back the course's steps (a tee placed, moved or removed from the card)
+    if (this.holeCardHole !== null && !this.paintOn && (e.ctrlKey || e.metaKey) && !e.altKey) {
+      const k = e.key.toLowerCase();
+      if (k === 'z' && !e.shiftKey) { e.preventDefault(); this.paint.undoTop(); return; }
+      if (k === 'y' || (k === 'z' && e.shiftKey)) { e.preventDefault(); this.paint.redoTop(); return; }
+    }
     if (this.clubPlacing && this.tool === 'course' && (e.key === 'r' || e.key === 'R')) {
       this.bizRot = !this.bizRot; const h = this.bizHover; if (h) this.clubUpdate(h.mx, h.my); this.emit();
       return;
@@ -4659,6 +4841,7 @@ export class Game {
    *  junction picked, the car watched, the bus stop picked, the route, the selection, the pin or tee picked, the Land or Holes switch);
    *  true when it did (else Esc puts the tool down for Select) */
   private escHand(e: KeyboardEvent): boolean {
+    if (this.teePlace) { this.cancelTeePlace(); return true; } // T268: the tee set in hand first
     if (this.tool === 'greenkeeping' && this.grassAction) { this.grassAction = null; this.emit(); return true; } // T175: the care in hand first
     if (this.holeCardHole !== null) { this.closeHoleCard(); return true; } // T174: the hole card first
     if (this.clubPlacing && this.tool === 'course') { this.placeClubhouse(false); return true; }
@@ -7523,6 +7706,7 @@ export class Game {
     this.drawTollPreview(ctx);
     this.drawBizPreview(ctx);
     this.drawEventGhosts(ctx);
+    this.drawTeeGhost(ctx); // T268
     this.drawDecorGhost(ctx);
     this.drawPracticeGhost(ctx);
     this.drawBusPreview(ctx);

@@ -363,7 +363,7 @@ export default function App() {
       <canvas
         ref={overlayRef}
         className="absolute inset-0 h-full w-full touch-none"
-        style={{ cursor: game?.tool === 'select' ? (game.hoverProp ? 'pointer' : 'grab') : game?.paintOn ? game.paint.cursorStyle : 'crosshair' }}
+        style={{ cursor: game?.teePlace ? (game.teePlace.drag ? 'grabbing' : 'copy') : game?.tool === 'select' ? (game.hoverProp ? 'pointer' : 'grab') : game?.paintOn ? game.paint.cursorStyle : 'crosshair' }}
         onPointerDown={e => game?.pointerDown(e.nativeEvent)}
         onPointerMove={e => game?.pointerMove(e.nativeEvent)}
         onPointerUp={() => game?.pointerUp()}

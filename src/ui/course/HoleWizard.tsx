@@ -10,6 +10,7 @@ import { SURFACE_BRUSHES, type BrushKind } from '../../game/paint';
 import { BrushShape, GrassEdgesEntry, GroundHeight, LooksEntry, SurfaceSwatches, surfaceKeysOf } from './BrushControls';
 import { CourseEdges } from './CourseEdges';
 import { GRID_KINDS } from '../../game/paint-tool';
+import { EditTees } from '../golf/TeeSets';
 
 const STEPS = ['Tee', 'Green', 'Shape'] as const;
 /** what each step asks for, under the steps */
@@ -75,6 +76,7 @@ export function HoleWizardPanel({ game, looks = false, onLooks }: { game: Game; 
         </div>
       )}
       {gh && <Stats game={game} />}
+      {w.base && w.step === 'shape' && <EditTees game={game} n={w.base.hole} /> /* T268: place, move and remove each tee set */}
       {w.base && w.step === 'shape' && <EditPaint game={game} looks={looks} onLooks={onLooks} />}
       {gh && !w.base && <Planting game={game} /> /* T254: Edit Hole Layout plants nothing */}
       {gh && w.step === 'shape' && !w.base && <Frame game={game} cost={gh.cost} />}
