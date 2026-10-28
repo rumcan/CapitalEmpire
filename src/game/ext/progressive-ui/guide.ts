@@ -27,8 +27,6 @@ export interface GuideFacts {
   clubhouse?: boolean;
   /** the tour has invited the player (T095; missing = no) */
   invited?: boolean;
-  /** real seconds since the tour's invitation came in this session (T095: the invitation's step holds INVITE_HOLD_S); missing = long ago */
-  invitedAgoS?: number;
   /** false for an old save without the guide's progress (T095: a save from before the range start's ramp): no guide at all; missing = true */
   progress?: boolean;
   /** T239, a range start's guided build: the range's lifetime golfers who bought a bucket, its upgrades owned, whether a walking path joins
@@ -233,10 +231,6 @@ export function rangeGuideSkip(g: RangeGuideSave, id: string): boolean {
 }
 /** Skip the guide: the whole card goes for good */
 export function rangeGuideOff(g: RangeGuideSave): void { g.off = true; }
-
-/** how long a range start's invitation step stays up after the invitation comes, real seconds (T095): the clubhouse step comes before the nine,
- *  so the invitation follows the ninth hole at once and the step would otherwise never be seen */
-export const INVITE_HOLD_S = 8;
 
 /** the steps for the facts' start: a range start's (RANGE_GUIDE), else the old start's (GUIDE) */
 export function guideTable(f: Pick<GuideFacts, 'start'>): readonly GuideStep[] { return f.start === 'range' ? RANGE_GUIDE : GUIDE; }
