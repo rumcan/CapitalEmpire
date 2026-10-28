@@ -75,6 +75,7 @@ test('choosePin: on the green, off its edges, flat, away from yesterday\'s, in t
       if (depth === 'back') assert.ok(p.y < 40 && p.y >= back, `back: north of the middle (${p.y})`);
       // heading north the golfer's left is west
       if (depth !== 'middle') assert.ok(side === 'left' ? p.x <= 40 : p.x >= 40, `${side}: x ${p.x}`);
+      assert.equal(pinReport(gr, p).depth, depth, 'the card reads the third the rota asked for');
     }
   }
   // the same day and hole give the same cup; another day another

@@ -112,7 +112,7 @@ export function mix01(a: number, b: number, c: number, d: number): number {
   return (h >>> 0) / 4294967296;
 }
 
-/** the day's cup on green gr: the candidates are its cells PIN_EDGE_T or more from the edge (on a green too small for that: its innermost tenth),
+/** the day's cup on green gr: the candidates are its cells PIN_EDGE_T or more from the edge (on a green too small for that: its innermost cells),
  *  at most PIN_SLOPE_MAX steep (slopeAt, m per m; none that flat: the flattest quarter of them) and PIN_MOVE_T or more from yesterday's cup (prev;
  *  when that leaves none, the rule goes). Of those in the rota's third and side (pinSlot; the third alone, then any, when that has none), the cup
  *  is the one with the lowest score: a random draw (seed, day, hole) plus a little for steepness and the edge. Null: no green */
@@ -131,9 +131,9 @@ export function choosePin(gr: GreenShape | null, depth: PinDepth, side: PinSide,
     else { const s = [...cand].sort((a, b) => slope[a]! - slope[b]!); cand = s.slice(0, Math.max(1, Math.ceil(s.length / 4))); }
   }
   if (prev) { const far = cand.filter(q => Math.hypot(gr.pts[2 * q]! - prev.x, gr.pts[2 * q + 1]! - prev.y) >= PIN_MOVE_T); if (far.length) cand = far; }
-  // the rota's third along the approach (of the candidates' own spread, so a lopsided green still has three) and its side
+  // the rota's third of the green's depth along the approach (as the card reads it, pinReport) and its side
   let dMin = Infinity, dMax = -Infinity; const fr = cand.map(q => frame(gr, gr.pts[2 * q]!, gr.pts[2 * q + 1]!));
-  for (const f of fr) { dMin = Math.min(dMin, f.d); dMax = Math.max(dMax, f.d); }
+  for (let q = 0; q < N; q++) { const d = frame(gr, gr.pts[2 * q]!, gr.pts[2 * q + 1]!).d; dMin = Math.min(dMin, d); dMax = Math.max(dMax, d); }
   const third = (d: number) => dMax - dMin < 1e-6 ? 1 : Math.min(2, Math.floor(3 * (d - dMin) / (dMax - dMin + 1e-9)));
   const want = DEPTHS.indexOf(depth), sgn = side === 'left' ? 1 : -1;
   const pick = (ok: (k: number) => boolean): number => {
