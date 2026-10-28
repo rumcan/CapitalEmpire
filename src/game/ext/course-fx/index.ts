@@ -35,6 +35,7 @@ export const SURF_GROW_MONTHS: Readonly<Record<number, number>> = {
   [SURF.bunker]: 0,
   [SURF.waste]: 0,
   [SURF.green]: 6,
+  [SURF.longGrass]: 2,
 };
 
 /**

@@ -8,7 +8,7 @@ import { clampMix, clampSide, type GrassMix, type GrassSide } from './base-grass
  *  (the pictures are found by paint-presets-saved.ts). */
 
 /** the golf surfaces a preset can stand for (golf/types.ts GolfSurface without 'other') */
-export const PRESET_SURFACES = ['green', 'fringe', 'tee', 'fairway', 'firstCut', 'rough', 'fescue', 'bunker', 'waste', 'water', 'path'] as const;
+export const PRESET_SURFACES = ['green', 'fringe', 'tee', 'fairway', 'firstCut', 'rough', 'longGrass', 'fescue', 'bunker', 'waste', 'water', 'path'] as const;
 export type PresetSurface = (typeof PRESET_SURFACES)[number];
 export interface PaintPreset {
   /** a slug of the name ([a-z0-9-]) */

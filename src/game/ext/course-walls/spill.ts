@@ -17,7 +17,7 @@ const PROBE = [0.07, 0.16, 0.3];
  *  T196's soft joint; a bunker's lip and a pond's bank keep their own edges) */
 export const SPILL_SURFACES: readonly number[] = [SURF.fairway];
 /** the layer codes counted as tall grass outside them: the map grass (0), the rough's and the fescue's fills */
-export const TALL_CODES: readonly number[] = [0, layerCode(SURF.rough, false), layerCode(SURF.fescue, false)];
+export const TALL_CODES: readonly number[] = [0, layerCode(SURF.rough, false), layerCode(SURF.longGrass, false), layerCode(SURF.fescue, false)];
 
 /** one spill run: its points (flat x y, tiles) in order with the tall side on each piece's (dy, -dx) side, and o, the code of the tall layer on
  *  top outside it (0: the map grass) */

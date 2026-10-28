@@ -187,7 +187,7 @@ test('5. The feather alphas sum to 1', () => {
 
 test('6. EDGE_STYLE table conforms to P21 Section 3.4 specifications and SURF indexing', () => {
   assert.ok(Array.isArray(EDGE_STYLE), 'EDGE_STYLE must be an array indexed by SURF id');
-  assert.equal(EDGE_STYLE.length, 9, 'EDGE_STYLE must have 9 SURF entries (0..8)');
+  assert.equal(EDGE_STYLE.length, 10, 'EDGE_STYLE must have 10 SURF entries (0..9: T238 added the long grass)');
 
   // green: raised, 0.3m feather, 0.8m light rim, 0.8m shade, 0.4m drop offset
   const greenStyle = EDGE_STYLE[SURF.green];

@@ -138,7 +138,7 @@ describe('the number keys (T202)', () => {
     assert.equal(rail.rows.find(r => r.keys === '6')!.what, 'Bulldoze', 'Bulldoze has no flyout: its number picks it');
     assert.equal(rail.rows.find(r => r.keys === '3')!.what, 'the Facilities menu', 'T206: Facilities in Decoration\'s place');
   });
-  it('2. a tool that uses them keeps them: Holes its surfaces (1-8), the town\'s Build its road classes (1-6); elsewhere they open the groups', () => {
+  it('2. a tool that uses them keeps them: Holes its surfaces (1-9), the town\'s Build its road classes (1-6); elsewhere they open the groups', () => {
     for (const n of [1, 2, 3, 4, 5, 6]) {
       for (const t of ['select', 'bulldoze', 'junction', 'lane', 'paint', 'props', 'path', 'buildings', 'greenkeeping', 'park', 'bus', 'toll'] as Tool[]) assert.deepEqual(numberKeyUse(t, n), { k: 'group', i: n - 1 }, `${t} ${n}`);
       assert.deepEqual(numberKeyUse('road', n), { k: 'class', i: n - 1 });
@@ -146,8 +146,9 @@ describe('the number keys (T202)', () => {
     }
     assert.deepEqual(numberKeyUse('course', 7), { k: 'surface', i: 6 }, 'the seventh surface (the Waste area)');
     assert.deepEqual(numberKeyUse('course', 8), { k: 'surface', i: 7 }, 'T222: the eighth surface (the cart path, after the Waste area)');
-    assert.equal(numberKeyUse('course', 9), null, 'no ninth');
-    assert.equal(BRUSH_PRESETS.length, 8, 'eight surfaces');
+    assert.deepEqual(numberKeyUse('course', 9), { k: 'surface', i: 8 }, 'T238: the ninth surface (Long grass, after the cart path)');
+    assert.equal(BRUSH_PRESETS[8]!.kind, 'longGrass');
+    assert.equal(BRUSH_PRESETS.length, 9, 'nine surfaces');
     assert.equal(numberKeyUse('select', 7), null, 'no seventh group');
     assert.equal(numberKeyUse('road', 7), null);
     assert.equal(numberKeyUse('select', 0), null);

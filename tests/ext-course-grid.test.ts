@@ -133,7 +133,7 @@ describe('ext/course-grid (T072)', () => {
   it('round-trips a random grid; 1 M cells of four blobs save under 64 kB; a bad save gives null', (t) => {
     const rnd = mulberry(6);
     const g = makeGrid(-3, 4.5, 37, 53);
-    for (let i = 0; i < g.surf.length; i++) { g.surf[i] = Math.floor(rnd() * 9); g.hole[i] = Math.floor(rnd() * 19); g.month[i] = Math.floor(rnd() * 65536); }
+    for (let i = 0; i < g.surf.length; i++) { g.surf[i] = Math.floor(rnd() * 10); g.hole[i] = Math.floor(rnd() * 19); g.month[i] = Math.floor(rnd() * 65536); }
     const back = decodeGrid(JSON.parse(JSON.stringify(encodeGrid(g))));
     assert.ok(back);
     assert.ok(sameGrid(back, g));
@@ -159,7 +159,7 @@ describe('ext/course-grid (T072)', () => {
     assert.equal(decodeGrid({ ...good, w: 1e9 }), null);
     assert.equal(decodeGrid({ ...good, x0: 0.3 }), null);
     const bad = makeGrid(0, 0, 2, 2);
-    bad.surf[0] = 9;
+    bad.surf[0] = 10; // T238: 9 is the long grass now; past it is not a surface
     assert.equal(decodeGrid(encodeGrid(bad)), null);
   });
 

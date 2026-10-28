@@ -2,7 +2,7 @@
 // playing surface cell, a planted forest or town tree with a course cell within its clearance), the collar ring a Build lays round its surfaces
 // (course-blobs' automatic collars: a band of cells over the cells they may cover), and the fade of the map's labels near the pointer. Pure TS,
 // no DOM; no new simulation.
-import { SURF } from '../course-grid';
+import { SURF, surfRank } from '../course-grid';
 import { BLOB_STYLE } from '../course-blobs';
 
 // ---- the trees a Build clears ----
@@ -25,7 +25,7 @@ export function plantedTreeCleared(surfAt: (x: number, y: number) => number, x: 
 }
 /** whether a placed tree (a prop, its foot's middle at (x, y)) goes: it stands on a playing surface cell (water, fairway, tee, bunker, waste,
  *  green: Engine.clearTreesOnGrid) */
-export function propTreeCleared(surfAt: (x: number, y: number) => number, x: number, y: number): boolean { return surfAt(x, y) >= SURF.water; }
+export function propTreeCleared(surfAt: (x: number, y: number) => number, x: number, y: number): boolean { return surfRank(surfAt(x, y)) >= surfRank(SURF.water); }
 
 /** a tree near a planned hole: a planted sprite (its trunk and clearance) or a placed prop (its foot's middle) */
 export interface NearTree { x: number; y: number; planted: boolean; r: number }

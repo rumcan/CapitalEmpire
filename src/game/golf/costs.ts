@@ -18,6 +18,7 @@ export const SURFACE_COST: Record<GolfSurface, SurfaceCost> = {
   fairway: { seed: 2, sod: 8, growIn: 3, upkeepYear: 0.6 },
   firstCut: { seed: 1.5, sod: 6, growIn: 2, upkeepYear: 0.4 },
   rough: { seed: 0.8, sod: 4, growIn: 2, upkeepYear: 0.15 },
+  longGrass: { seed: 0.8, sod: 4, growIn: 2, upkeepYear: 0.15 }, // T238: priced like the rough
   fescue: { seed: 0.5, sod: null, growIn: 3, upkeepYear: 0.05 },
   bunker: { seed: 4, sod: null, growIn: 0, upkeepYear: 0.5 },
   waste: { seed: 4, sod: null, growIn: 0, upkeepYear: 0.5 },

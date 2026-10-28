@@ -8,6 +8,7 @@ import type { CourseLayout, GolfSurface } from './types';
 export const SURFACE_TEX: Record<GolfSurface, { tex: PaintTex; radius: number }> = {
   green: { tex: 'golfGreen', radius: 0 }, fringe: { tex: 'golfFringe', radius: 0 }, tee: { tex: 'golfTee', radius: 1 },
   fairway: { tex: 'golfFairway', radius: 4 }, firstCut: { tex: 'golfFirstCut', radius: 2 }, rough: { tex: 'golfRough', radius: 0 },
+  longGrass: { tex: 'golfLongGrass', radius: 0 },
   fescue: { tex: 'golfFescue', radius: 2 }, bunker: { tex: 'bunkerSand', radius: 0 }, waste: { tex: 'wasteSand', radius: 1 },
   water: { tex: 'waterDark', radius: 0 }, path: { tex: 'spectatorPath', radius: 1 }, other: { tex: 'grass', radius: 0 },
 };

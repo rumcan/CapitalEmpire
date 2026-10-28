@@ -20,11 +20,11 @@ const emptyView = (n: number): HoleView => ({ n, started: false, par: 0, lengthM
 const ready = (n: number, par: 3 | 4 | 5, lengthM: number): HoleView => ({ n, started: true, par, lengthM, memberLengthM: lengthM, checks: [{ label: 'Green painted', ok: true }], warnings: [], ok: true, virtual: false });
 
 /** a stand-in golf game at the stage these facts give, with these holes (views by number) and grow-ins */
-function fakeGame(o: { facts?: Partial<PlayerProgressFacts>; holes?: HoleView[]; growing?: Record<number, number>; mode?: string; current?: number } = {}): Game {
+function fakeGame(o: { facts?: Partial<PlayerProgressFacts>; holes?: HoleView[]; growing?: Record<number, number>; mode?: string; current?: number; cells?: number } = {}): Game {
   const views = Array.from({ length: 18 }, (_, i) => o.holes?.find(h => h.n === i + 1) ?? emptyView(i + 1));
   const ui = computeProgressiveUiState(facts(o.facts));
   const paint = {
-    mode: o.mode ?? 'brush', brushHole: o.current ?? 1, brushKind: 'fairway', brushCells: 2, rubOut: false, plantKind: 'seed',
+    mode: o.mode ?? 'brush', planOpen: (o.mode ?? 'brush') === 'plan', brushHole: o.current ?? 1, brushKind: 'fairway', brushCells: o.cells ?? 2, rubOut: false, plantKind: 'seed',
     canUndo: true, canRedo: false, undoLabel: 'build hole 1', redoLabel: '', topUndo: 'build hole 1', topRedo: '', planNumbers: () => [{ n: 2, label: 'Hole 2' }],
     brush: { fairway: { r: 5, style: { tex: 'preset:fairway' } } }, heightMode: 'raise', pieceArch: 'tee-box',
     hasPlan: () => false, nextFreeHole: () => 2,
@@ -75,8 +75,9 @@ describe('the Holes panel after hole 1 (stage 2)', () => {
     assert.match(h, /Hole 1 · par 4 · 342 m · ready/);
     assert.match(h, /3 holes · par 12 · 972 m/);
     assert.match(h, /data-section="shape"/);
-    assert.equal((h.match(/data-swatch=/g) ?? []).length, 7, 'seven surfaces at stage 2 (T222: the Waste area with them; the cart path waits for stage 3)');
-    assert.match(h, /keys 1–7/);
+    assert.equal((h.match(/data-swatch=/g) ?? []).length, 8, 'eight surfaces at stage 2 (T222: the Waste area with them, T238 Long grass; the cart path waits for stage 3)');
+    assert.match(h, /data-swatch="longGrass"[^>]*title="Long grass \(key 9\)"/);
+    assert.match(h, /keys 1–9/);
     assert.match(h, /data-section="more"[\s\S]*aria-expanded="false"[\s\S]*More options[\s\S]*shapes · my looks · planting · more/);
     assert.doesNotMatch(h, /Saved holes|My looks<\/span>/, 'More options is collapsed');
   });
@@ -104,6 +105,41 @@ describe('the Holes panel after hole 1 (stage 2)', () => {
     assert.deepEqual(holeState(ready(1, 4, 300), ''), { kind: 'ready', icon: '✓', word: 'ready' });
     assert.deepEqual(holeState(ready(1, 4, 300), 'growing · ready Mar 1985'), { kind: 'growing', icon: '◔', word: 'growing · ready Mar 1985' });
     assert.equal(holeState({ ...ready(1, 4, 300), ok: false }, 'growing · ready Mar 1985').kind, 'attn');
+  });
+});
+
+// T238 (#697): the brush's shape (Square or Round, every surface brush) in Shape by hand, and Edit hole's own paint section
+describe('T238: the brush shape and Edit hole\'s paint', () => {
+  const stage2 = { facts: { playableHoles: 2, stageReached: 2 as const }, holes: [ready(1, 4, 342), ready(2, 3, 150)] };
+  it('Shape by hand: Square (its size pills) or Round (its size slider, in metres across); Round left More options', () => {
+    let h = render(fakeGame(stage2));
+    assert.match(h, /role="group" aria-label="Brush shape" data-shape="square"><button class="chip chip-on" aria-pressed="true"[^>]*>[\s\S]*?Square<\/button><button class="chip " aria-pressed="false"[^>]*>[\s\S]*?Round<\/button><\/div>/);
+    assert.match(h, /aria-label="Brush size"/); assert.doesNotMatch(h, /Round brush size/);
+    h = render(fakeGame({ ...stage2, cells: 0 }));
+    assert.match(h, /data-shape="round"><button class="chip " aria-pressed="false"[^>]*>[\s\S]*?Square<\/button><button class="chip chip-on" aria-pressed="true"/);
+    assert.match(h, /aria-label="Round brush size"[^>]*value="5"/, 'the fairway brush\'s radius, 5 tiles');
+    assert.match(h, />20 m</, 'shown as 20 m across');
+    assert.doesNotMatch(h, /aria-label="Brush size"/, 'the square\'s pills step aside');
+    assert.match(h, /data-section="more"[\s\S]*aria-expanded="false"/, 'More options stays shut with Round in hand');
+  });
+  it('Edit hole: the card paints the hole, its surfaces with their keys, the brush shape and Erase; with a surface in hand it is lit', () => {
+    const g = fakeGame({ ...stage2, mode: 'plan' }), p = g.paint as unknown as Record<string, unknown>;
+    p.wizard = { step: 'shape', base: { hole: 1 }, hole: 1, plan: null, ghost: () => null, check: () => ({ ok: true, why: '' }), checks: () => [] };
+    p.editingHole = 1;
+    let h = render(g);
+    assert.match(h, /data-primary="wizard"[\s\S]*Edit hole 1/);
+    assert.match(h, /data-section="edit-paint"[\s\S]*Paint hole 1/);
+    assert.equal((h.match(/data-swatch=/g) ?? []).length, 8, 'the stage\'s surfaces, Long grass with them');
+    assert.doesNotMatch(h, /swatch-on/, 'none in hand yet: the plan\'s handles alone');
+    assert.match(h, /aria-label="Brush shape"/); assert.match(h, />Erase</);
+    assert.match(h, /Pick a surface to paint into hole 1 \(keys 1–9\)/);
+    assert.match(h, /undoes a drag or a stroke/);
+    assert.doesNotMatch(h, /data-section="shape"/, 'Shape by hand stays hidden under the card');
+    p.mode = 'brush'; p.planOpen = true; p.brushKind = 'longGrass';
+    h = render(g);
+    assert.match(h, /data-swatch="longGrass" aria-pressed="true"[^>]*class="swatch swatch-on"/);
+    assert.match(h, />Handles only</);
+    assert.match(h, /Drag on the map to paint long grass into hole 1/);
   });
 });
 

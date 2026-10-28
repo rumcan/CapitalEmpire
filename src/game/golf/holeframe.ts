@@ -117,8 +117,8 @@ const lineLen = (l: readonly Pt[]) => { let L = 0; for (let i = 1; i < l.length;
  *  (cells), whether it is outside the corridor (reached from the window's edge), and the landing zones (tiles along the line) */
 interface Field { cx0: number; cy0: number; w: number; h: number; foot: Uint8Array; dist: Float32Array; outside: Uint8Array; landings: number[] }
 
-/** a playing surface: no frame tree stands on one (open land, rough and fescue may hold one) */
-const playing = (s: number) => s !== SURF.none && s !== SURF.rough && s !== SURF.fescue;
+/** a playing surface: no frame tree stands on one (open land, rough, long grass and fescue may hold one) */
+const playing = (s: number) => s !== SURF.none && s !== SURF.rough && s !== SURF.longGrass && s !== SURF.fescue;
 
 function field(site: FrameSite, R: FrameRules): Field | null {
   const { grid: g, line, hole: n } = site;

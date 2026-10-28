@@ -27,6 +27,8 @@ export const SURFACES: readonly SurfaceDef[] = [
   { key: 'tee', name: 'Tee', group: 'Golf', tex: ['golfTee'], kinds: ['grass'] },
   { key: 'sod', name: 'Sod (fresh turf)', group: 'Golf', tex: ['golfSod'], kinds: ['grass'] },
   { key: 'rough', name: 'Rough', group: 'Golf', tex: ['golfRough'], kinds: ['grass'] },
+  // T238: the course's Long grass (the brush), wearing the owner's rough paintings now the rough wears the town lawns' grass (#696)
+  { key: 'longGrass', name: 'Long grass', group: 'Golf', tex: ['golfLongGrass'], kinds: ['grass'] },
   { key: 'fescue', name: 'Fescue', group: 'Golf', tex: ['golfFescue'], kinds: ['grass'] },
   { key: 'bunker', name: 'Bunker sand', group: 'Golf', tex: ['bunkerSand'], kinds: ['sand'] },
   { key: 'waste', name: 'Waste area sand', group: 'Golf', tex: ['wasteSand'], kinds: ['sand'] },
@@ -57,7 +59,7 @@ export const SURFACES: readonly SurfaceDef[] = [
 ];
 const SURFACE_KEYS = new Set(SURFACES.map(s => s.key));
 /** the golf surface keys a preset's golf surface (paint-presets.ts PresetSurface) stands for */
-const PRESET_SURFACE: Readonly<Record<string, string>> = { green: 'green', fringe: 'fringe', tee: 'tee', fairway: 'fairway', firstCut: 'firstCut', rough: 'rough', fescue: 'fescue', bunker: 'bunker', waste: 'waste', water: 'water' };
+const PRESET_SURFACE: Readonly<Record<string, string>> = { green: 'green', fringe: 'fringe', tee: 'tee', fairway: 'fairway', firstCut: 'firstCut', rough: 'rough', longGrass: 'longGrass', fescue: 'fescue', bunker: 'bunker', waste: 'waste', water: 'water' };
 const TEX_SURFACE = new Map<string, string>(SURFACES.flatMap(s => s.tex.map(t => [t, s.key] as const)));
 /** a town lawn's look and how often it is picked (its weight among the lawns) */
 export interface LawnLook extends PaintedLook { weight: number }
