@@ -64,7 +64,7 @@ never commit there.)
 
 ### 3. In flight
 
-**T272 #816 - menu art v2:** PR #818, `lead/ui-tool-tiles-v2-20261028`, `worktrees/ui-tool-tiles-v2-20261028`. Twelve new assets and Course/Facilities aliases are implemented; native source1448x1086 and exact4x3 crops recorded in `art/ui-tool-tiles/sheet-v2.json`. All12 v1 runtime hashes unchanged; focused importer/menu checks21/21 PASS. Initial default typecheck PASS; resumed1536MB-capped attempt exhausted its heap (no code diagnostic). Next: fresh default typecheck and actual UI screenshot when shared memory permits, then parent review/merge. No generator/worker/task/quota or owner-file changes.
+**T272 #816 - menu art v2:** PR #818 ready for parent review, `lead/ui-tool-tiles-v2-20261028`, `worktrees/ui-tool-tiles-v2-20261028`. Twelve new assets and Course/Facilities aliases implemented; native source1448x1086 and exact4x3 crops in `art/ui-tool-tiles/sheet-v2.json`. All12 v1 hashes unchanged; fresh default typecheck PASS and focused checks21/21 PASS. Seven actual-game menu captures show all12 new icons loaded, with0pageerrors (`art/theme-consistency/reviews/T272-menu-tiles/`). Own5189 and Edge stopped. No generator/worker/task/quota or owner-file changes. Next: lead review/merge, then remove worktree.
 
 **Two agents running (a new lead took over at ~15:00 on 2026-10-28; the old lead's agents stopped at the usage limit ~14:00):**
 | Ticket | Issue | Branch / worktree | State and next step |
