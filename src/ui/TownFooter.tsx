@@ -15,6 +15,7 @@ import { Rail, type RailProps } from './Rail';
 import { hudTop } from './Flyouts';
 import { FOOT_BOTTOM, FOOT_EST, FOOT_MARGIN, PANEL_GAP, PANEL_VH, PANEL_W, footerPlace, panelPlace } from './footer-layout';
 import { currentUiScale } from './uiScale';
+import { Icon } from './Icon';
 
 /** the cards the footer keeps clear of: the bottom-right ones (the guide card, the leaderboard) and the tall right-hand ones that may reach
  *  down to its band (the range, clubhouse, hole and place cards); one counts only while it is on screen and reaches the footer's band */
@@ -32,13 +33,15 @@ export interface TownFooterProps extends Omit<RailProps, 'drawer' | 'compact' | 
   raised?: boolean;
   /** T255: the tool panel docked above it (a town tool in hand; null: none, or a club tool's in the left panel) */
   panel?: FootPanel | null;
+  /** the owner, 2026-10-29: "footer menu now never closes": the panel's close button puts the town tool down (back to Select) */
+  onClosePanel?: () => void;
 }
 
 /** T255: the footer panel's place: its left edge in the footer's box (null: not measured yet, centred), and whether it stands in the left
  *  tool panel's place (no room above the footer) at top (its top in the box) */
 interface PanelAt { x: number | null; side: boolean; top: number }
 
-export function TownFooter({ boxRef, navRef, flyouts, raised = false, panel = null, ...rail }: TownFooterProps) {
+export function TownFooter({ boxRef, navRef, flyouts, raised = false, panel = null, onClosePanel, ...rail }: TownFooterProps) {
   const [place, setPlace] = useState<{ x: number | null; compact: boolean }>({ x: null, compact: false });
   const [pan, setPan] = useState<PanelAt>({ x: null, side: false, top: 0 });
   const widths = useRef<{ full?: number; compact?: number }>({}), lifted = useRef<HTMLElement[]>([]), panelRef = useRef<HTMLDivElement | null>(null);
@@ -97,6 +100,7 @@ export function TownFooter({ boxRef, navRef, flyouts, raised = false, panel = nu
         <div ref={panelRef} className={`glass tool-panel tool-panel-foot pointer-events-auto w-[330px] overflow-y-auto overflow-x-hidden p-3 ${raised ? 'hidden' : ''}`}
           style={pan.x === null ? { left: '50%', marginLeft: -PANEL_W / 2 } : pan.side ? { left: pan.x, top: pan.top } : { left: pan.x }}
           data-tool={panel.tool} data-testid="tool-panel" data-dock="footer" data-place={pan.side ? 'side' : 'foot'}>
+          {onClosePanel && <button className="btn-icon tool-panel-close" aria-label="Close (back to Select)" data-tip="Close (Esc): back to Select" data-testid="tool-panel-close" onClick={onClosePanel}><Icon name="close" size={16} /></button>}
           {panel.body}
         </div>
       )}
