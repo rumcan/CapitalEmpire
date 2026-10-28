@@ -1,0 +1,178 @@
+// Pond edges (T231, #671; docs/art/CONCEPT-LOOK.md step 5, the owner's concept look, 2026-10-27: "water with stone edges ... in town, a round
+// pond with a fountain jet"). A pond is a body of still water: the course's water cells and the painted water areas, read on the course grid's
+// 1 m lattice (CELL tiles). Its edge style is Natural (today's look: nothing is added) or Stones: the pond-edge boulder pieces (kit.ts
+// KIT_POND_EDGE) laid round its shore by themselves, with corner clusters where the shore turns, and lily pads (KIT_LILIES) scattered on its
+// still water away from the edge. A pond is Stones when one of the saved marks (GolfSave.ponds) stands in it; the engine lays the pieces again
+// whenever the water changes, keeping the ones that did not move (pondKey). Nothing lands on land: every piece's footprint lies on the pond's own
+// water (a run piece in the cell row along the shore, a corner cluster in its corner cell, a lily cluster at least LILY_EDGE cells from the edge).
+// Deterministic: the pieces from the pond's cells alone, the lily pads from a world lattice (a change elsewhere in the pond moves none of them).
+// Pure TS, no DOM; units are tiles (2 m) unless named.
+import { mulberry } from '../iso';
+import { KIT_LILIES, KIT_POND_EDGE } from '../kit';
+
+/** the lattice: a cell is 0.5 tile (1 m), the course grid's */
+export const CELL = 0.5;
+/** the most cells a pond may have (6 ha): bigger water (the map's lakes) gets no edge */
+export const POND_MAX_CELLS = 60000;
+/** a water sampler: is cell (cx, cy) of the world lattice water (cell cx covers tiles [cx * CELL, (cx + 1) * CELL)) */
+export type Wet = (cx: number, cy: number) => boolean;
+
+/** a pond: its cells as a mask over its box (x0, y0 the first cell; w, h cells), and how many */
+export interface Pond { x0: number; y0: number; w: number; h: number; mask: Uint8Array; cells: number }
+/** a piece the edge lays: a library id, its footprint's centre (tiles) and its scale */
+export interface PondPiece { id: string; x: number; y: number; s: number }
+
+const cellOf = (v: number) => Math.floor(v / CELL);
+/** the pond at tile (x, y): its connected water cells (4-neighbours), or null when the cell is dry or the water has more than max cells */
+export function pondAt(x: number, y: number, wet: Wet, max = POND_MAX_CELLS): Pond | null {
+  const sx = cellOf(x), sy = cellOf(y);
+  if (!wet(sx, sy)) return null;
+  const K = 1 << 16, key = (cx: number, cy: number) => (cy + 32768) * K + (cx + 32768);
+  const seen = new Set<number>([key(sx, sy)]), stack = [sx, sy];
+  let x0 = sx, y0 = sy, x1 = sx, y1 = sy;
+  while (stack.length) {
+    const cy = stack.pop()!, cx = stack.pop()!;
+    x0 = Math.min(x0, cx); x1 = Math.max(x1, cx); y0 = Math.min(y0, cy); y1 = Math.max(y1, cy);
+    for (const [nx, ny] of [[cx + 1, cy], [cx - 1, cy], [cx, cy + 1], [cx, cy - 1]] as const) {
+      const k = key(nx, ny); if (seen.has(k) || !wet(nx, ny)) continue;
+      seen.add(k); if (seen.size > max) return null;
+      stack.push(nx, ny);
+    }
+  }
+  const w = x1 - x0 + 1, h = y1 - y0 + 1, mask = new Uint8Array(w * h);
+  for (const k of seen) { const cx = (k % K) - 32768, cy = Math.floor(k / K) - 32768; mask[(cy - y0) * w + (cx - x0)] = 1; }
+  return { x0, y0, w, h, mask, cells: seen.size };
+}
+/** is cell (cx, cy) (world lattice) part of the pond */
+export function inPond(p: Pond, cx: number, cy: number): boolean {
+  const i = cx - p.x0, j = cy - p.y0; return i >= 0 && j >= 0 && i < p.w && j < p.h && p.mask[j * p.w + i] === 1;
+}
+/** a pond's identity: its first cell in row order (two marks in one pond lay it once) */
+export function pondId(p: Pond): number { for (let k = 0; k < p.mask.length; k++) if (p.mask[k]) return (p.y0 + Math.floor(k / p.w)) * 65536 + p.x0 + (k % p.w); return -1; }
+
+/** the smallest pond that gets an edge (cells): a puddle gets none */
+export const POND_MIN_CELLS = 12;
+
+/** The stones round a pond's shore: a corner cluster at every corner of its outline (an outer one where the water's outline bulges, an inner one
+ *  where it turns in), and between them the run pieces along each straight stretch of shore (KIT_POND_EDGE.x along the map's x axis, .y along
+ *  its y axis), as many as the stretch takes at a scale of 0.5 to 1 (so each lies in the one row of water cells along the shore: its depth is at
+ *  most a cell). Every footprint lies on the pond's water. Empty for a pond under POND_MIN_CELLS. */
+export function shorePieces(p: Pond): PondPiece[] {
+  if (p.cells < POND_MIN_CELLS) return [];
+  const out: PondPiece[] = [], E = KIT_POND_EDGE, at = (cx: number, cy: number) => inPond(p, cx, cy);
+  const r3 = (v: number) => Math.round(v * 1000) / 1000;
+  // corners: each lattice vertex by the water of its four cells (nw, ne, sw, se)
+  const corner = new Set<number>(), outerCell = new Set<number>(), innerCell = new Set<number>(), vkey = (vx: number, vy: number) => vy * 65536 + vx;
+  const cornerScale = 0.6, cluster = (id: string, cx: number, cy: number) => out.push({ id, x: r3((cx + 0.5) * CELL), y: r3((cy + 0.5) * CELL), s: cornerScale });
+  for (let vy = p.y0; vy <= p.y0 + p.h; vy++) for (let vx = p.x0; vx <= p.x0 + p.w; vx++) {
+    const nw = at(vx - 1, vy - 1), ne = at(vx, vy - 1), sw = at(vx - 1, vy), se = at(vx, vy), n = +nw + +ne + +sw + +se;
+    if (n === 0 || n === 4) continue;
+    if (n === 2 && nw !== se) continue; // two cells side by side: a straight shore
+    corner.add(vkey(vx, vy));
+    if (n === 3) {
+      // inner (the shore turns in): the cluster in the water cell across the vertex from the dry one
+      const [cx, cy] = !nw ? [vx, vy] : !ne ? [vx - 1, vy] : !sw ? [vx, vy - 1] : [vx - 1, vy - 1];
+      if (!innerCell.has(vkey(cx, cy))) { innerCell.add(vkey(cx, cy)); cluster(E.inner, cx, cy); }
+      continue;
+    }
+    // outer (one water cell, or two across a pinch): a cluster in each water cell at the vertex, once a cell
+    for (const [ok, cx, cy] of [[nw, vx - 1, vy - 1], [ne, vx, vy - 1], [sw, vx - 1, vy], [se, vx, vy]] as const) {
+      if (!ok || outerCell.has(vkey(cx, cy))) continue;
+      outerCell.add(vkey(cx, cy)); cluster(E.outer, cx, cy);
+    }
+  }
+  // the straight stretches: shore edges of the cells (a water cell with a dry neighbour on that side), joined along their line; a stretch is
+  // cut at every corner vertex, and a cell taken by an outer corner's cluster is left out of it
+  const lay = (axis: 'x' | 'y', line: number, side: 1 | -1, a0: number, a1: number) => {
+    // a0..a1: the stretch's cells along the axis (inclusive); line: the cells' row (axis x) or column (axis y); side: where the dry land is
+    const n = a1 - a0 + 1, L = n * CELL; if (L < 1) return; // a stretch under a tile is the corners'
+    const k = Math.max(1, Math.ceil(L / E.len)), s = L / (k * E.len), step = L / k, depth = E.depth * s;
+    // across: the piece's footprint from the shore line into the water, depth deep (at most the cell row)
+    const shore = side > 0 ? (line + 1) * CELL : line * CELL, c = shore - side * depth / 2;
+    for (let i = 0; i < k; i++) {
+      const along = a0 * CELL + (i + 0.5) * step;
+      out.push(axis === 'x' ? { id: E.x, x: r3(along), y: r3(c), s: r3(s) } : { id: E.y, x: r3(c), y: r3(along), s: r3(s) });
+    }
+  };
+  for (const [axis, side] of [['x', -1], ['x', 1], ['y', -1], ['y', 1]] as const) {
+    // axis x: rows of cells whose north (side -1) or south (side 1) neighbour is dry; axis y: columns with a dry west / east neighbour
+    const lines = axis === 'x' ? p.h : p.w, span = axis === 'x' ? p.w : p.h;
+    for (let l = 0; l < lines; l++) {
+      let start = -1;
+      const flush = (end: number) => { if (start >= 0) { lay(axis, (axis === 'x' ? p.y0 : p.x0) + l, side, start, end); start = -1; } };
+      for (let a = 0; a < span; a++) {
+        const cx = axis === 'x' ? p.x0 + a : p.x0 + l, cy = axis === 'x' ? p.y0 + l : p.y0 + a;
+        const edge = at(cx, cy) && !(axis === 'x' ? at(cx, cy + side) : at(cx + side, cy)) && !outerCell.has(vkey(cx, cy));
+        // the vertex before this cell along the stretch: a corner there ends the stretch
+        const vBefore = axis === 'x' ? vkey(cx, side > 0 ? cy + 1 : cy) : vkey(side > 0 ? cx + 1 : cx, cy);
+        if (start >= 0 && corner.has(vBefore)) flush((axis === 'x' ? cx : cy) - 1);
+        if (edge) { if (start < 0) start = axis === 'x' ? cx : cy; }
+        else flush((axis === 'x' ? cx : cy) - 1);
+      }
+      flush((axis === 'x' ? p.x0 + p.w : p.y0 + p.h) - 1);
+    }
+  }
+  return out;
+}
+
+/** lily pads keep at least this many cells from the shore, LILY_GAP tiles apart (one to a lattice square of that side), FOUNTAIN_CLEAR tiles
+ *  from a fountain; LILY_SHARE of the squares deep enough hold one */
+export const LILY_EDGE = 3, LILY_GAP = 2.5, FOUNTAIN_CLEAR = 2, LILY_SHARE = 0.45;
+/** a 32-bit hash of a lattice square (the lily pads' world lattice: a pond's pads stay put when it changes elsewhere) */
+const hash2 = (a: number, b: number) => { let h = Math.imul(a | 0, 0x27d4eb2d) ^ Math.imul(b | 0, 0x165667b1) ^ 0x9e3779b9; h = Math.imul(h ^ (h >>> 15), 0x85ebca6b); h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35); return (h ^ (h >>> 16)) >>> 0; };
+/** The lily pads of a pond: on the world lattice of LILY_GAP-tile squares, a square whose seeded spot lies on water at least LILY_EDGE cells from
+ *  the shore (every cell within that many is water) and FOUNTAIN_CLEAR from every fountain gets a cluster (LILY_SHARE of them), its picture and
+ *  size (0.8 to 1.2) from the same seed. Deterministic. */
+export function lilyPads(p: Pond, fountains: readonly { x: number; y: number }[] = []): PondPiece[] {
+  if (p.cells < POND_MIN_CELLS) return [];
+  const out: PondPiece[] = [], gx0 = Math.floor(p.x0 * CELL / LILY_GAP), gy0 = Math.floor(p.y0 * CELL / LILY_GAP);
+  const gx1 = Math.floor((p.x0 + p.w) * CELL / LILY_GAP), gy1 = Math.floor((p.y0 + p.h) * CELL / LILY_GAP);
+  const deep = (cx: number, cy: number) => { for (let dy = -LILY_EDGE; dy <= LILY_EDGE; dy++) for (let dx = -LILY_EDGE; dx <= LILY_EDGE; dx++) if (!inPond(p, cx + dx, cy + dy)) return false; return true; };
+  for (let gy = gy0; gy <= gy1; gy++) for (let gx = gx0; gx <= gx1; gx++) {
+    const r = mulberry(hash2(gx, gy)), u = r(), v = r(), keep = r(), pick = r(), size = r();
+    if (keep >= LILY_SHARE) continue;
+    const x = (gx + 0.15 + 0.7 * u) * LILY_GAP, y = (gy + 0.15 + 0.7 * v) * LILY_GAP;
+    if (!deep(cellOf(x), cellOf(y))) continue;
+    if (fountains.some(f => (f.x - x) ** 2 + (f.y - y) ** 2 < FOUNTAIN_CLEAR ** 2)) continue;
+    out.push({ id: KIT_LILIES[Math.floor(pick * KIT_LILIES.length)]!, x: Math.round(x * 1000) / 1000, y: Math.round(y * 1000) / 1000, s: Math.round((0.8 + 0.4 * size) * 1000) / 1000 });
+  }
+  return out;
+}
+
+/** a piece's key (the engine keeps a laid piece whose key is unchanged: only what moved is laid again) */
+export const pieceKey = (q: PondPiece): string => `pond:${q.id}:${q.x},${q.y},${q.s}`;
+
+/** the marks as saved (GolfSave.ponds: flat x y pairs, tiles), every pair finite; anything else is dropped */
+export function normalizePondMarks(v: unknown): number[] {
+  if (!Array.isArray(v)) return [];
+  const out: number[] = [];
+  for (let k = 0; k + 1 < v.length; k += 2) { const x = v[k], y = v[k + 1]; if (typeof x === 'number' && typeof y === 'number' && Number.isFinite(x) && Number.isFinite(y)) out.push(Math.round(x * 100) / 100, Math.round(y * 100) / 100); }
+  return out;
+}
+/** the marks with the pond at (x, y) set to Stones (a mark added at the spot) or Natural (every mark in that pond taken out) */
+export function setPondEdge(marks: readonly number[], pond: Pond, stones: boolean, x: number, y: number): number[] {
+  const out: number[] = [];
+  for (let k = 0; k + 1 < marks.length; k += 2) if (!inPond(pond, cellOf(marks[k]!), cellOf(marks[k + 1]!))) out.push(marks[k]!, marks[k + 1]!);
+  if (stones) out.push(Math.round(x * 100) / 100, Math.round(y * 100) / 100);
+  return out;
+}
+/** whether the pond carries a mark (its edge is Stones) */
+export const pondHasStones = (marks: readonly number[], pond: Pond): boolean => {
+  for (let k = 0; k + 1 < marks.length; k += 2) if (inPond(pond, cellOf(marks[k]!), cellOf(marks[k + 1]!))) return true;
+  return false;
+};
+
+/** the cells of a round pond of radius r tiles about (x, y) (the Fountain pond: cell centres within r) */
+export function discCells(x: number, y: number, r: number): [number, number][] {
+  const out: [number, number][] = [];
+  for (let cy = cellOf(y - r); cy <= cellOf(y + r); cy++) for (let cx = cellOf(x - r); cx <= cellOf(x + r); cx++) {
+    const dx = (cx + 0.5) * CELL - x, dy = (cy + 0.5) * CELL - y; if (dx * dx + dy * dy <= r * r) out.push([cx, cy]);
+  }
+  return out;
+}
+/** a round outline of radius r tiles about (x, y), n corners (the town's Fountain pond: a painted water area) */
+export function discOutline(x: number, y: number, r: number, n = 24): number[] {
+  const out: number[] = [];
+  for (let i = 0; i < n; i++) { const a = (i / n) * Math.PI * 2; out.push(Math.round((x + Math.cos(a) * r) * 100) / 100, Math.round((y + Math.sin(a) * r) * 100) / 100); }
+  return out;
+}
