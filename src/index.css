@@ -57,6 +57,22 @@ button.stat-chip:hover { background: rgba(255, 255, 255, 0.06); }
 .stat-up { color: #6ee7b7; }
 .stat-down { color: #fca5a5; }
 
+/* T235 (#690, the concept's title): the club's name in the serif, cream, over "Year 3 • October • Sunny 16°C" in the muted ink with the weather
+   in gold (ui/ClubTitle.tsx). One line each: a name that does not fit is cut with an ellipsis and its full text is the tooltip. The compact title
+   (18 px name, 12 px line, "G&CC", "Oct") is no wider than the old title was where the bar is full (1900 to 2559 px); from 2560 px it is
+   drawn in full (TITLE_FULL_FROM) */
+.club-title { line-height: 1.15; white-space: nowrap; }
+.club-title-name { max-width: 21rem; overflow: hidden; text-overflow: ellipsis; font-size: 1.125rem; font-weight: 700; color: var(--ink); }
+.club-title-sub { margin-top: 2px; font-size: 12px; font-weight: 500; color: var(--muted); }
+.club-title-weather { color: var(--gold-hi); }
+.club-title .title-full { display: none; }
+@media (min-width: 2560px) {
+  .club-title-name { font-size: 1.25rem; }
+  .club-title-sub { font-size: 13px; }
+  .club-title .title-full { display: inline; }
+  .club-title .title-compact { display: none; }
+}
+
 .card { display: flex; flex-direction: column; align-items: flex-start; width: 100%; border-radius: 0.7rem; border: 1px solid var(--line); background: rgba(255, 255, 255, 0.02); padding: 0.4rem 0.55rem; text-align: left; }
 .card:hover { border-color: var(--gold-line); }
 .card-on { border-color: var(--gold); background: var(--gold-wash); box-shadow: 0 0 0 1px rgba(245, 181, 46, 0.25); }
