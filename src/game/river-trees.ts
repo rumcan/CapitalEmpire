@@ -35,11 +35,11 @@ import { RIVER_BAND, SwampField, riverStreams, swampStreams } from './swamp';
  *    tiles clear of anything built: no dead tree beside a lot or a road);
  *  - conifer: the conifers' share; slope: no tree on a slope steeper than this (the forest's soft limit) */
 export const BELT = {
-  S: 2.1, keep: 0.9,
+  S: 1.9, keep: 0.9,
   river: { min: 2, bank: 3 }, creek: { min: 0.5, bank: 0 },
   full: 5, reach: 20,
-  clump: [-0.25, 0.2], clumpWave: 9, clumpFloor: 0.15,
-  open: [-0.18, 0.05], openWave: 46,
+  clump: [-0.3, 0.12], clumpWave: 9, clumpFloor: 0.12,
+  open: [-0.24, 0], openWave: 46,
   front: { dot: 0.35, near: 7, keep: 0.4 },
   swamp: { keep: 0.3, snag: 0.12, snagClear: 6 },
   conifer: 0.15, slope: 1.15,
