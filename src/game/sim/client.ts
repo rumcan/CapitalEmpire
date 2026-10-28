@@ -182,8 +182,8 @@ export class SimClient {
   /** the town day (LEAD.md M1): in a golf game the town lives a day of townMinutes (real minutes at 1x; one sim second is one game minute)
    *  with its own commute, separate from the season; townTraffic scales its lot trips. A classic game keeps the classic day (DAY). */
   golfOn = false; townMinutes = 10; townTraffic = 1;
-  /** T266: the golf hours' rate of the day/night clock (town minutes a sim second; townclock.ts profileFor), null: the flat clock */
-  golfDayRate: number | null = null;
+  /** T266: the day/night clock's night, sim seconds (townclock.ts profileFor: the golf hours take the rest of the day), null: the flat clock */
+  golfNight: number | null = null;
   /** the town day's length in sim seconds, as last sent */
   dayLen = 1440;
   /** the town day's clock as the worker last sent it (with the frame stats; see townclock.ts) */
@@ -195,7 +195,7 @@ export class SimClient {
   /** the course's gates (LEAD.md M2.1): sent whenever the placed gate structures change */
   setGates(gates: { x: number; y: number; lanes: number }[]) { this.post({ t: 'gates', gates }); }
   setTownDay(minutes: number, traffic: number) { this.townMinutes = minutes; this.townTraffic = traffic; this.sendTownDay(); }
-  private sendTownDay() { this.dayLen = this.golfOn ? Math.max(24, Math.round(this.townMinutes * 60)) : 1440; this.post({ t: 'townDay', dayLen: this.dayLen, traffic: this.golfOn ? this.townTraffic : 1, free: this.golfOn, prof: this.golfOn && this.golfDayRate ? profileFor(1440 / this.dayLen, this.golfDayRate) : null }); }
+  private sendTownDay() { this.dayLen = this.golfOn ? Math.max(24, Math.round(this.townMinutes * 60)) : 1440; this.post({ t: 'townDay', dayLen: this.dayLen, traffic: this.golfOn ? this.townTraffic : 1, free: this.golfOn, prof: this.golfOn && this.golfNight ? profileFor(1440 / this.dayLen, this.golfNight) : null }); }
   /** the town day's clock from a save (after townState, and after the golf setup so dayLen is current; see townclock.ts): the worker runs it at the normal rate */
   setTownClock(clock: TownClock) { this.post({ t: 'townClock', clock }); }
   /** T209: the tournament day as the save keeps it (City.daySave, asked of the worker): null when no tournament day is under way, without a worker, or

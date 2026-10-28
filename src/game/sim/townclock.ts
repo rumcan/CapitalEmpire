@@ -16,10 +16,11 @@ export function townClockFor(dayLen: number): TownClock { return { t0: 0, m0: 0,
 
 /** T266: the golf hours of the day/night clock (game minutes of the day): 06:00 to 20:00, the first car in to the last group's car out */
 export const GOLF_HOURS_A = 360, GOLF_HOURS_B = 1200;
-/** T266: the profile that runs the golf hours [a, b) at `day` town minutes a sim second on a day of mean rate `rate` (null: the day is already that
- *  slow, so the flat clock). k stays below 0.95 of its limit, so the night keeps a twentieth of its flat length at least */
-export function profileFor(rate: number, day: number, a = GOLF_HOURS_A, b = GOLF_HOURS_B): DayProfile | null {
-  const D = b - a, k = Math.min(rate / day, 0.95 * 1440 / D);
+/** T266: the profile of a day of mean rate `rate` whose night (the minutes outside the golf hours [a, b)) lasts `night` sim seconds and whose golf
+ *  hours take the rest: on the 10-minute day (2.4) a 40 s night gives golf hours of 1.5 town minutes a second and a night of 15; a longer town day
+ *  keeps the night and gives the golf hours its extra time. Null (the flat clock) when the flat day's night is already that short */
+export function profileFor(rate: number, night: number, a = GOLF_HOURS_A, b = GOLF_HOURS_B): DayProfile | null {
+  const D = b - a, k = 1440 / D * (1 - night * rate / 1440);
   return k > 1 + 1e-9 && D > 0 && D < 1440 ? { a, b, k } : null;
 }
 /** the profile's night factor j (see DayProfile) */

@@ -146,7 +146,8 @@ export class DayView {
   private wayBack(tr: Trip, end: Pt): Pt[] { const b = tr.bays[0] ?? -1, w = b >= 0 ? this.ground.bays[b]!.walk : undefined; return [end, ...(w ? [...w].reverse() : []), this.carAt(tr, 0)]; }
 
   /** the playback at a minute of the town day and real seconds `now`, for the tile box (x0 y0 x1 y1): the people, cars and balls in or near it */
-  update(minute: number, now: number, x0: number, y0: number, x1: number, y1: number, simT = 0): void {
+  update(minute: number, now: number, x0: number, y0: number, x1: number, y1: number, simT = 0, rate = 1): void {
+    const R = rate > 0 ? rate : 1; // (T266: the walks' deadlines are game minutes; the pacers' sim seconds)
     const plan = this.plan, G = plan.groups, only = this.only, ground = this.ground, door = ground.door;
     const inBox = (x: number, y: number, pad = 4) => x >= x0 - pad && x <= x1 + pad && y >= y0 - pad && y <= y1 + pad;
     only.fill(0);
@@ -157,9 +158,9 @@ export class DayView {
     // (T266: a watchable day's car keeps to the car park's speed, from the entrance to its bay (ex, ey) and back)
     const CP = this.carPace;
     const car0 = (x: number, y: number, ang: number, type: number, alpha: number) => { const c = this.cars[nc] ?? (this.cars[nc] = { x: 0, y: 0, ang: 0, type: 0 }); c.x = x; c.y = y; c.ang = ang; c.type = type; c.alpha = alpha; nc++; };
-    const car = (x: number, y: number, ang: number, type: number, id = -1, ex = NaN, ey = NaN) => {
+    const car = (x: number, y: number, ang: number, type: number, id = -1, ex = NaN, ey = NaN, by = NaN) => {
       if (!CP || id < 0) { if (inBox(x, y)) car0(x, y, ang, type, 1); return; }
-      CP.step(id, x, y, ex, ey, false, now, simT);
+      CP.step(id, x, y, ex, ey, false, now, simT, (by - minute) / R);
       if (inBox(CP.x, CP.y)) car0(CP.x, CP.y, CP.walked ? Math.atan2(CP.hy, CP.hx) : ang, type, CP.alpha);
     };
     const arrive = (G.length && plan.pace) ? plan.pace.arrive : null;
@@ -172,9 +173,9 @@ export class DayView {
         const bay = ground.bays[b]!, e = ground.entrance ?? bay, bayAng = Math.atan2(bay.hy, bay.hx), dr = bay.drive ?? [];
         // (T237: in by the mouth and along the aisles, nose-in; out backing to the aisle and the same way back)
         const cid = g * CAR_IDS + Math.min(CAR_IDS - 1, c);
-        if (minute < tr.arrive) { const q = polyAt([e, ...dr, bay], (minute - (tr.arrive - DRIVE_MIN)) / DRIVE_MIN); car(q.x, q.y, Math.atan2(q.hy, q.hx), tr.types[c]!, cid, bay.x, bay.y); }
+        if (minute < tr.arrive) { const q = polyAt([e, ...dr, bay], (minute - (tr.arrive - DRIVE_MIN)) / DRIVE_MIN); car(q.x, q.y, Math.atan2(q.hy, q.hx), tr.types[c]!, cid, bay.x, bay.y, tr.arrive); }
         else if (minute < tr.leave) car(bay.x, bay.y, bayAng, tr.types[c]!, cid);
-        else { const q = polyAt([bay, ...[...dr].reverse(), e], (minute - tr.leave) / DRIVE_MIN), back = dr.length && Math.hypot(q.x - bay.x, q.y - bay.y) < Math.hypot(dr[dr.length - 1]!.x - bay.x, dr[dr.length - 1]!.y - bay.y) - 1e-6; car(q.x, q.y, back ? bayAng : Math.atan2(q.hy, q.hx), tr.types[c]!, cid, e.x, e.y); }
+        else { const q = polyAt([bay, ...[...dr].reverse(), e], (minute - tr.leave) / DRIVE_MIN), back = dr.length && Math.hypot(q.x - bay.x, q.y - bay.y) < Math.hypot(dr[dr.length - 1]!.x - bay.x, dr[dr.length - 1]!.y - bay.y) - 1e-6; car(q.x, q.y, back ? bayAng : Math.atan2(q.hy, q.hx), tr.types[c]!, cid); }
       }
       if (minute < tr.arrive) continue;
       // the group's hole now (T211's arrivals at the tees): its box decides whether its round is played back this frame
@@ -186,25 +187,25 @@ export class DayView {
       for (let s = 0; s < gr.players.length; s++) {
         const id = gr.players[s]!, L = this.legs[id]!, side = (s - (gr.players.length - 1) / 2) * SPREAD;
         if (minute >= L.first - ADDRESS_TIME && minute < L.done) { if (onScreen) only[id] = 1; continue; }
-        let px: number, py: number, hx = 0, hy = 0, walking = true, ex = NaN, ey = NaN;
+        let px: number, py: number, hx = 0, hy = 0, walking = true, ex = NaN, ey = NaN, by = NaN;
         if (minute < L.first) {
           // before the round: the car to the door, the desk, the door to his place behind the first tee, waiting there, stepping up to the tee
           const h0 = this.view.holes[0], tee = h0 ? holeFrom(h0, this.plan.golfers[id]?.tees).tee : L.spot, stepMin = Math.max(STEP_IN, walkMin(L.spot, tee));
           const t1 = tr.arrive + L.w1, t2 = tr.desk, t3 = t2 + L.w2, step = L.first - ADDRESS_TIME - stepMin;
-          if (minute < t1) { const q = polyAt(this.wayIn(tr), L.w1 > 0 ? (minute - tr.arrive) / L.w1 : 1); px = q.x; py = q.y; hx = q.hx; hy = q.hy; ex = door.x; ey = door.y; }
+          if (minute < t1) { const q = polyAt(this.wayIn(tr), L.w1 > 0 ? (minute - tr.arrive) / L.w1 : 1); px = q.x; py = q.y; hx = q.hx; hy = q.hy; ex = door.x; ey = door.y; by = t2; }
           else if (minute < t2) { px = door.x; py = door.y; walking = false; hx = L.spot.x - door.x; hy = L.spot.y - door.y; }
-          else if (minute < t3) { const u = L.w2 > 0 ? (minute - t2) / L.w2 : 1; px = door.x + (L.spot.x - door.x) * u; py = door.y + (L.spot.y - door.y) * u; hx = L.spot.x - door.x; hy = L.spot.y - door.y; ex = L.spot.x; ey = L.spot.y; }
+          else if (minute < t3) { const u = L.w2 > 0 ? (minute - t2) / L.w2 : 1; px = door.x + (L.spot.x - door.x) * u; py = door.y + (L.spot.y - door.y) * u; hx = L.spot.x - door.x; hy = L.spot.y - door.y; ex = L.spot.x; ey = L.spot.y; by = step; }
           else if (minute < step) { px = L.spot.x; py = L.spot.y; walking = false; hx = tee.x - L.spot.x; hy = tee.y - L.spot.y; }
-          else { const u = Math.min(1, (minute - step) / stepMin); px = L.spot.x + (tee.x - L.spot.x) * u; py = L.spot.y + (tee.y - L.spot.y) * u; hx = tee.x - L.spot.x; hy = tee.y - L.spot.y; ex = tee.x; ey = tee.y; }
+          else { const u = Math.min(1, (minute - step) / stepMin); px = L.spot.x + (tee.x - L.spot.x) * u; py = L.spot.y + (tee.y - L.spot.y) * u; hx = tee.x - L.spot.x; hy = tee.y - L.spot.y; ex = tee.x; ey = tee.y; by = L.first - ADDRESS_TIME; }
         } else {
           // after the round: from where he walked off the last green back to the car; in it once he is there
           const t = minute - L.done; if (t >= L.w3) continue;
-          const q = polyAt(this.wayBack(tr, L.end), L.w3 > 0 ? t / L.w3 : 1), c0 = this.carAt(tr, 0); px = q.x; py = q.y; hx = q.hx; hy = q.hy; ex = c0.x; ey = c0.y;
+          const q = polyAt(this.wayBack(tr, L.end), L.w3 > 0 ? t / L.w3 : 1), c0 = this.carAt(tr, 0); px = q.x; py = q.y; hx = q.hx; hy = q.hy; ex = c0.x; ey = c0.y; by = tr.leave;
         }
         // (T266: a watchable golfer walks there at a brisk walk at most, faded out and back at the walk's end when he is behind)
         let alpha = 1;
         const W = this.walkers;
-        if (W) { W.step(id, px, py, ex, ey, false, now, simT); px = W.x; py = W.y; alpha = W.alpha; walking = W.walked; if (walking) { hx = W.hx; hy = W.hy; } }
+        if (W) { W.step(id, px, py, ex, ey, false, now, simT, (by - minute) / R); px = W.x; py = W.y; alpha = W.alpha; walking = W.walked; if (walking) { hx = W.hx; hy = W.hy; } }
         // side by side across the way they walk
         const Lh = Math.hypot(hx, hy); if (Lh > 0 && walking) { px += -hy / Lh * side; py += hx / Lh * side; }
         if (!inBox(px, py)) continue;
@@ -215,7 +216,7 @@ export class DayView {
     // the rounds on screen: the golf play's playback of just those golfers
     // (T213: with their carts, those in the box only: a cart off the screen costs a look at its hole)
     const box = this.box; box[0] = x0; box[1] = y0; box[2] = x1; box[3] = y1; this.pv.box = box;
-    this.pv.update(minute, now, null, null, only, simT);
+    this.pv.update(minute, now, null, null, only, simT, R);
     for (const p of this.pv.people) person(p.x, p.y, p.golfer, p.row, p.frame, p.lift ?? 0, p.alpha ?? 1);
     this.people.length = np; this.cars.length = nc; this.balls = this.pv.balls; this.carts = this.pv.carts;
   }

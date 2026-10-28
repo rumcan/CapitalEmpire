@@ -1,27 +1,41 @@
-// T266 (#800): everyday golf's pace options. The day/night town clock (sim/townclock.ts DayProfile): the golf hours run at the asked rate, the night
-// faster, the day keeps its length, townMinute and simTimeAt stay inverses across the day's pieces, and retime and jumpTo keep the profile (null
-// drops it, the tournament day's). The watchable golfers' pacer (golf/play/pacer.ts): a brisk walk at most, still while held, and a fade to the
-// walk's end when the schedule runs ahead. npm test (bundled by esbuild, run by node --test; no DOM).
+// T266 (#800): golf's watchable pace. The day/night town clock (sim/townclock.ts DayProfile): the night keeps its 40 s and the golf hours take the
+// rest of the town day, the day keeps its length, townMinute and simTimeAt stay inverses across the day's pieces, and retime and jumpTo keep the
+// profile (null drops it, the tournament day's). The watchable golfers' pacer (golf/play/pacer.ts): a brisk walk at most, still while held, a walk
+// he can make in time never faded, and a short fade to the walk's end when he cannot. The pace's setting (golf/pace.ts). npm test (bundled by
+// esbuild, run by node --test; no DOM).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { jumpTo, localRate, profileFor, retime, simTimeAt, townMinute, townTimeOf, type TownClock } from '../src/game/sim/townclock';
-import { FADE_S, GAP, Pacer } from '../src/game/golf/play/pacer';
+import { FADE_IN_S, FADE_OUT_S, Pacer } from '../src/game/golf/play/pacer';
+import { NIGHT_S, capped, dayNight, paceOf, paceOfSetting, settingOf } from '../src/game/golf/pace';
 
 const day = (rate: number) => ({ t0: 0, m0: 0, rate }) as TownClock;
+const night = (c: TownClock) => simTimeAt(c, 1440 + 360) - simTimeAt(c, 1200);
 
-test('profileFor: a 10-minute day (2.4 a second) runs 06:00-20:00 at 1.5 and the night at 15, and still lasts 600 s', () => {
-  const p = profileFor(2.4, 1.5)!; assert.ok(p);
+test('profileFor: the 10-minute day runs 06:00-20:00 at 1.5 and a 40 s night at 15, and still lasts 600 s', () => {
+  const p = profileFor(2.4, NIGHT_S)!; assert.ok(p); assert.ok(Math.abs(p.k - 1.6) < 1e-9);
   const c: TownClock = { ...day(2.4), prof: p };
   assert.ok(Math.abs(simTimeAt(c, 1440) - 600) < 1e-6, 'the day keeps its length');
   assert.ok(Math.abs(simTimeAt(c, 1200) - simTimeAt(c, 360) - 840 / 1.5) < 1e-6, 'the golf hours last 840 / 1.5 s');
+  assert.ok(Math.abs(night(c) - 40) < 1e-6, 'the night lasts 40 s');
   assert.ok(Math.abs(localRate(c, simTimeAt(c, 600)) - 1.5) < 1e-9);
   assert.ok(Math.abs(localRate(c, simTimeAt(c, 100)) - 15) < 1e-6);
   assert.ok(Math.abs(localRate(c, simTimeAt(c, 1300)) - 15) < 1e-6);
-  assert.equal(profileFor(0.8, 1.5), null, 'a 30-minute day is already slower than 1.5: flat');
+});
+
+test('profileFor: a longer town day keeps the 40 s night and gives its time to the golf hours; a day too short for it stays flat', () => {
+  for (const min of [5, 10, 15, 30]) {
+    const L = min * 60, c: TownClock = { ...day(1440 / L), prof: profileFor(1440 / L, NIGHT_S) };
+    assert.ok(Math.abs(night(c) - 40) < 1e-6, `${min} min: a 40 s night`);
+    assert.ok(Math.abs(simTimeAt(c, 1440) - L) < 1e-6, `${min} min: the day keeps its length`);
+    assert.ok(Math.abs(localRate(c, simTimeAt(c, 600)) - 840 / (L - 40)) < 1e-9, `${min} min: the golf hours take the rest`);
+  }
+  assert.equal(profileFor(1440 / 96, NIGHT_S), null, 'a 96 s day: its flat night is already 40 s');
+  assert.equal(profileFor(1440 / 30, NIGHT_S), null, 'a 30 s day: flat');
 });
 
 test('townMinute and simTimeAt are inverses over three days of the profile clock, and the hour is continuous', () => {
-  const c: TownClock = { t0: 50, m0: 200, rate: 2.4, prof: profileFor(2.4, 1.5) };
+  const c: TownClock = { t0: 50, m0: 200, rate: 2.4, prof: profileFor(2.4, NIGHT_S) };
   let last = -Infinity;
   for (let t = 50; t < 50 + 1800; t += 0.7) {
     const m = townMinute(c, t); assert.ok(m > last, 'monotonic'); last = m;
@@ -31,12 +45,19 @@ test('townMinute and simTimeAt are inverses over three days of the profile clock
 });
 
 test('retime and jumpTo keep the profile; null drops it (the tournament day runs flat at 1 a second)', () => {
-  const p = profileFor(2.4, 1.5)!, c: TownClock = { ...day(2.4), prof: p };
+  const p = profileFor(2.4, NIGHT_S)!, c: TownClock = { ...day(2.4), prof: p };
   const r = retime(c, 100, 2.4); assert.deepEqual(r.prof, p); assert.ok(Math.abs(townMinute(r, 100) - townMinute(c, 100)) < 1e-9);
   const j = jumpTo(c, 100, 420, 2.4); assert.deepEqual(j.prof, p); assert.ok(Math.abs(townTimeOf(j, 100).dayMin - 420) < 1e-9);
   const tourney = jumpTo(c, 100, 300, 1, null); assert.equal(tourney.prof, undefined); assert.equal(localRate(tourney, 200), 1);
   // the flat clock is as before (no prof key at all)
   assert.deepEqual(retime(day(2.4), 10, 1), { t0: 10, m0: 24, rate: 1 });
+});
+
+test('the pace setting: watchable (mix) by default, fast is the old pace; the dev options parse', () => {
+  assert.equal(paceOfSetting(null), 'mix'); assert.equal(paceOfSetting('watchable'), 'mix'); assert.equal(paceOfSetting('fast'), 'main');
+  assert.equal(settingOf('mix'), 'watchable'); assert.equal(settingOf('main'), 'fast');
+  assert.ok(dayNight('mix') && capped('mix') && !dayNight('main') && !capped('main'));
+  assert.equal(paceOf('long'), 'long'); assert.equal(paceOf('nope'), null);
 });
 
 test('the pacer walks at its cap, holds still while held, and follows a slow schedule exactly', () => {
@@ -50,17 +71,29 @@ test('the pacer walks at its cap, holds still while held, and follows a slow sch
   P.step(0, 2, 0, 9, 0, false, 0.7, 1.1); assert.ok(Math.abs(P.x - (0.5 + 1.4 * 0.5)) < 1e-9);
 });
 
-test('the pacer fades out when the schedule runs GAP ahead, comes back at the walk end and waits there for it', () => {
+test('the pacer never fades a walk he can make at the cap by his deadline: he walks it, behind the schedule', () => {
   const P = new Pacer(1, 1.4);
   P.step(0, 0, 0, NaN, NaN, false, 0, 0);
-  // a sprint of 40 tiles a sim second toward (100, 0)
-  let t = 0;
-  for (; t < 0.2; t += 1 / 60) P.step(0, 40 * t, 0, 100, 0, false, t, t);
-  assert.ok(P.alpha < 1 && P.x < 1, 'walking, fading');
-  for (; t < 1 && P.x !== 100; t += 1 / 60) P.step(0, 40 * t, 0, 100, 0, false, t, t);
-  assert.equal(P.x, 100, 'back at the walk end'); assert.ok(P.alpha < 0.5, 'fading in'); assert.ok(t < 0.2 + FADE_S + 0.05, 'within a fade');
-  for (; t < 2.4; t += 1 / 60) P.step(0, Math.min(100, 40 * t), 0, 100, 0, false, t, t);
-  assert.equal(P.x, 100); assert.equal(P.alpha, 1, 'faded in, waiting'); assert.ok(GAP > 0);
+  // the schedule sprints 5 tiles in 0.1 s; he is needed there by sim second 6 (5 tiles at 1.4 take 3.6 s)
+  let t = 0, minA = 1;
+  for (; t < 6; t += 1 / 60) { const sx = Math.min(5, 50 * t); P.step(0, sx, 0, 5, 0, false, t, t, 6 - t); minA = Math.min(minA, P.alpha); }
+  assert.equal(minA, 1, 'never faded'); assert.ok(Math.abs(P.x - 5) < 1e-6, 'he got there');
+});
+
+test('the pacer fades out at once when the walk cannot be made in time, comes back at the walk end and waits there for the schedule', () => {
+  const P = new Pacer(1, 1.4);
+  P.step(0, 0, 0, NaN, NaN, false, 0, 0);
+  // a sprint of 40 tiles a sim second toward (100, 0), needed there by sim second 2.5 (100 tiles at 1.4 take 71 s)
+  let t = 1 / 60;
+  for (; t < 1 && P.x !== 100; t += 1 / 60) P.step(0, Math.min(100, 40 * t), 0, 100, 0, false, t, t, 2.5 - t);
+  assert.equal(P.x, 100, 'back at the walk end'); assert.ok(t < FADE_OUT_S + 0.05, 'right after a short fade out'); assert.ok(P.alpha < 0.5, 'fading in');
+  for (; t < 2.4; t += 1 / 60) P.step(0, Math.min(100, 40 * t), 0, 100, 0, false, t, t, 2.5 - t);
+  assert.equal(P.x, 100); assert.equal(P.alpha, 1, 'faded in within FADE_IN_S, waiting'); assert.ok(FADE_IN_S < 0.5);
   // the schedule arrives and walks on slowly: followed again
-  P.step(0, 100.5, 0, 101, 0, false, 2.5, 2.5); assert.ok(P.x > 100 && P.walked);
+  P.step(0, 100.5, 0, 101, 0, false, 2.5, 2.5, 5); assert.ok(P.x > 100 && P.walked);
+});
+
+test('a mover new on the screen on a walk it cannot make starts at the walk end, fading in (no blink where the schedule is)', () => {
+  const P = new Pacer(1, 4.5);
+  P.step(0, 0, 0, 60, 0, false, 10, 10, 0.8); assert.equal(P.x, 60); assert.equal(P.alpha, 0);
 });

@@ -411,10 +411,12 @@ function blank(id: number): GolferState {
 }
 
 /** the point of a walk at minute m, from wf to wt over [ws, we] (at wf before it starts, at wt once it is over), written into out */
-function walkAt(wf: Pt, wt: Pt, ws: number, we: number, m: number, out: GolferState): void {
+function walkAt(wf: Pt, wt: Pt, ws: number, we: number, m: number, out: GolferState, by = Infinity): void {
   const u = we > ws ? Math.min(1, Math.max(0, (m - ws) / (we - ws))) : 1;
-  out.x = wf.x + (wt.x - wf.x) * u; out.y = wf.y + (wt.y - wf.y) * u; out.dest = wt;
+  out.x = wf.x + (wt.x - wf.x) * u; out.y = wf.y + (wt.y - wf.y) * u; out.dest = wt; out.by = by;
 }
+/** T266: the minute a golfer must be at the end of the walk to row j's stroke: its address (a tee after the first: his step up to it before that) */
+const needBy = (j: { s: Shot }): number => j.s.t - ADDRESS_TIME - (j.s.stroke === 1 ? STEP_IN : 0);
 
 /** one golfer's state at a minute, written into out (see stateAt). A golfer whose group still plays (done not known yet) and who has no next shot
  *  stands where he is: waiting at his tee (walked there with his group once it has finished the hole before, T211), or holed out at his step-off */
@@ -422,7 +424,7 @@ function stateOf(plan: RoundPlan, c: Cache, id: number, m: number, out: GolferSt
   const view = c.view, holes = view.holes, N = holes.length, tr = c.tracks[id]!, rows = tr.rows;
   const home = N ? holeFrom(holes[0]!, tr.set).tee : { x: 0, y: 0 }, end = N ? holes[N - 1]!.pin : home, fl = out.flight;
   out.golfer = id; out.hole = 0; out.x = home.x; out.y = home.y; out.action = 'waiting'; out.ball = null; out.flight = null;
-  out.strokes = 0; out.toPar = 0; out.thru = 0; out.dest = null;
+  out.strokes = 0; out.toPar = 0; out.thru = 0; out.dest = null; out.by = Infinity;
   if (m < tr.tee) return out;
   let cur = -1;
   while (cur + 1 < rows.length && rows[cur + 1]!.s.t <= m) cur++;
@@ -438,7 +440,7 @@ function stateOf(plan: RoundPlan, c: Cache, id: number, m: number, out: GolferSt
     out.action = !post ? (s.club === 'putter' ? 'putt' : 'swing') : r.last ? 'holed' : 'walk';
     out.hole = r.hole; out.ball = s.to; out.flight = flightAt(fl, s.from, s.to, (m - s.t) / r.dur);
     if (into) { out.x = s.from.x + (s.to.x - s.from.x) * v; out.y = s.from.y + (s.to.y - s.from.y) * v; }
-    else if (!r.last) { if (j) walkAt(j.wf, j.wt, j.ws, j.we, m, out); else walkAt(s.from, s.to, s.t, s.t + walkMin(s.from, s.to), m, out); }
+    else if (!r.last) { if (j) walkAt(j.wf, j.wt, j.ws, j.we, m, out, needBy(j)); else walkAt(s.from, s.to, s.t, s.t + walkMin(s.from, s.to), m, out); }
     else { out.x = s.from.x; out.y = s.from.y; }
     return out;
   }
@@ -446,7 +448,7 @@ function stateOf(plan: RoundPlan, c: Cache, id: number, m: number, out: GolferSt
   const off = cur >= 0 ? rows[cur]!.off : null;
   if (off && m < off.t1) {
     const u = (m - off.t0) / (off.t1 - off.t0);
-    out.action = 'walk'; out.hole = rows[cur]!.hole; out.x = off.rest.x + (off.at.x - off.rest.x) * u; out.y = off.rest.y + (off.at.y - off.rest.y) * u; out.dest = off.at;
+    out.action = 'walk'; out.hole = rows[cur]!.hole; out.x = off.rest.x + (off.at.x - off.rest.x) * u; out.y = off.rest.y + (off.at.y - off.rest.y) * u; out.dest = off.at; out.by = j ? j.ws : Infinity;
     return out;
   }
   if (!j) {
@@ -468,25 +470,25 @@ function stateOf(plan: RoundPlan, c: Cache, id: number, m: number, out: GolferSt
   }
   out.hole = j.hole;
   if (m >= j.ws && m < j.we) { // walking: from the step-off to the tee, or from where he stood to his ball
-    walkAt(j.wf, j.wt, j.ws, j.we, m, out);
+    walkAt(j.wf, j.wt, j.ws, j.we, m, out, needBy(j));
     out.action = 'walk'; out.ball = j.s.from;
     return out;
   }
   if (m < j.ws && off) { // holed out and standing at his step-off, turned to the pin, until he walks to the next tee
-    out.hole = rows[cur]!.hole; out.action = 'holed'; out.x = off.at.x; out.y = off.at.y;
+    out.hole = rows[cur]!.hole; out.action = 'holed'; out.x = off.at.x; out.y = off.at.y; out.dest = off.at; out.by = j.ws;
     return out;
   }
   // before his walk to the ball he waits where he last stood (so the walk starts from there, no jump)
   // (on the first tee before his strike: waiting there)
   if (m < j.ws) { out.action = j.s.stroke === 1 ? 'waiting' : 'walk'; out.x = j.wf.x; out.y = j.wf.y; out.ball = j.s.from; return out; }
   // at his ball: the address in the last part before the strike; before it, on a tee, waiting for his turn or for the group ahead (T211)
-  out.x = j.s.from.x; out.y = j.s.from.y; out.ball = j.s.from;
+  out.x = j.s.from.x; out.y = j.s.from.y; out.ball = j.s.from; out.dest = j.s.from; out.by = j.s.t - ADDRESS_TIME; // (T266: here by his address)
   out.action = m >= j.s.t - ADDRESS_TIME ? (j.s.club === 'putter' ? 'putt' : 'address') : j.s.stroke === 1 ? 'waiting' : 'walk';
   // on a tee after the first he waits at his place behind it (the row's walk ends there), and steps up to the tee in the STEP_IN before his address
   if (j.s.stroke === 1 && j.hole > 0 && m < j.s.t - ADDRESS_TIME) {
     const a = j.s.t - ADDRESS_TIME - STEP_IN;
-    if (m < a) { out.x = j.wt.x; out.y = j.wt.y; }
-    else { walkAt(j.wt, j.s.from, a, a + STEP_IN, m, out); out.action = 'walk'; }
+    if (m < a) { out.x = j.wt.x; out.y = j.wt.y; out.dest = j.wt; out.by = a; }
+    else { walkAt(j.wt, j.s.from, a, a + STEP_IN, m, out, j.s.t - ADDRESS_TIME); out.action = 'walk'; }
   }
   return out;
 }

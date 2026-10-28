@@ -23,7 +23,15 @@ export function NightPanel({ game, bump }: { game: Game; bump: () => void }) {
     <div className="flex flex-col border-t border-white/10 pt-1">
       {game.golfMode && (<>
         {/* the town day (LEAD.md M1): the town's own day between and around the tournaments, with its morning and evening rush hours */}
-        <Row label="Town day" value={game.townDay.minutes} min={0.5} max={30} step={0.5} show={`${game.townDay.minutes} min`} set={v => { game.setTownDay({ minutes: v }); bump(); }} title="How long one town day lasts at 1x (real minutes): the commute out in the morning and home in the evening, and the night, follow it; the season's months keep their own pace" />
+        <Row label="Town day" value={game.townDay.minutes} min={0.5} max={30} step={0.5} show={`${game.townDay.minutes} min`} set={v => { game.setTownDay({ minutes: v }); bump(); }} title={game.paceSetting === 'watchable' ? "How long one town day lasts at 1x (real minutes). On the watchable golf pace the night (20:00-06:00) keeps about 40 seconds and the golf hours take the rest, so a longer day plays golf slower; the commute follows the clock; the season's months keep their own pace" : "How long one town day lasts at 1x (real minutes): the commute out in the morning and home in the evening, and the night, follow it; the season's months keep their own pace"} />
+        {/* T266: golf's pace (golf/pace.ts): watchable (the golf hours slower, a short night, golfers at a walk) or the old fast pace */}
+        <label className="flex items-center gap-2 px-2 py-1 text-xs" title="Watchable: the golf hours run slower and the night passes in about 40 seconds, and golfers walk at a brisk walk (carts at a cart's speed) with their swings at full length, fading briefly when they must catch up. Fast: the old pace, where a round plays in under two minutes">
+          <span className="w-24 shrink-0">Golf pace</span>
+          <select className="min-w-0 flex-1 rounded bg-black/40 px-1 py-0.5" value={game.paceSetting} onChange={e => { game.setPaceSetting(e.target.value as 'watchable' | 'fast'); bump(); }}>
+            <option value="watchable">Watchable</option>
+            <option value="fast">Fast (the old pace)</option>
+          </select>
+        </label>
         <Row label="Town traffic" value={game.townDay.traffic} min={0} max={4} step={0.05} show={`${Math.round(game.townDay.traffic * 100)}%`} set={v => { game.setTownDay({ traffic: v }); bump(); }} title="How many trips the town's residents make a day (100% = the game's rate)" />
       </>)}
       <label className="flex items-center gap-2 px-2 py-2 text-sm" title="TrickOrTreat's night: blue moonlight, and the colour back in pools round every lamp, porch, shop window and lit window">

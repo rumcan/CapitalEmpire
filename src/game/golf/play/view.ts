@@ -21,13 +21,16 @@ export interface PlayPerson { x: number; y: number; golfer: number; row: number;
 export interface PlayBall { x: number; y: number; h: number }
 /** T213: a pro's caddie to draw: his position (tiles), his sheet row and frame (the spectator clips' frames: the stand-in is a spectator), the pro he
  *  walks with, and where his bag stands (tiles) */
-export interface PlayCaddie { x: number; y: number; row: number; frame: number; golfer: number; bx: number; by: number }
+export interface PlayCaddie { x: number; y: number; row: number; frame: number; golfer: number; bx: number; by: number; /** T266: how visible (0..1; absent: 1) */ alpha?: number }
 /** T213: a celebration under way: where (tiles) and how long it has run (real seconds) */
 export interface PlayCheer { x: number; y: number; t: number }
 /** T213: the playback's extras: the cart paths (null: none) and where the carts go after the last green */
 export interface PlayOpts { paths?: CartPaths | null; home?: Pt;
-  /** T266: the watchable golfers (?golfPace=walk, mix): the golfers' and the carts' pacers (pacer.ts), so they keep to a walk and a cart's speed */
-  pace?: { walkers: Pacer; carts: Pacer } | null }
+  /** T266: the watchable golfers (golf/pace.ts): the golfers', the carts' and (the tournament's) the caddies' pacers (pacer.ts), so they keep to a
+   *  walk and a cart's speed */
+  pace?: PlayPace | null }
+/** T266: a playback's pacers */
+export interface PlayPace { walkers: Pacer; carts: Pacer; caddies?: Pacer }
 
 /** a swing's drive clip plays for this many real seconds, then holds its finish until the golfer moves on */
 const SWING_S = 2.2;
@@ -87,8 +90,11 @@ export class PlayView {
   private seen: Uint8Array;
   /** the shots per golfer as indexed, and how many the plan had then (a live group appends shots: the index follows) */
   private count = -1;
-  /** T266: the pacers of the watchable golfers (null: the schedule as it is) */
-  private pace: { walkers: Pacer; carts: Pacer } | null;
+  /** T266: the pacers of the watchable golfers (null: the schedule as it is), and the sim time and the clock's rate (town minutes a sim second) of
+   *  the update under way */
+  private pace: PlayPace | null; private simT = 0; private rate = 1;
+  /** T266: the watchable golfers on (their pacers) or off (null: the schedule as it is) */
+  setPace(p: PlayPace | null): void { this.pace = p; }
 
   constructor(plan: RoundPlan, view: CourseView, opts: PlayOpts = {}) {
     this.plan = plan; this.view = view; this.pace = opts.pace ?? null;
@@ -110,7 +116,8 @@ export class PlayView {
    *  is not played yet (P4b; see pendingAt): his walk to the ball and his address there, facing `aim` (his open shot's aim; else the suggested aim).
    *  T208: with `only` (per golfer id, 1: play him back), the others are skipped, their states not even worked out (everyday golf's groups off the
    *  screen); one coming back swings nothing for the shots he struck meanwhile */
-  update(minute: number, now: number, pending: OwnerTurn | null = null, aim: Pt | null = null, only: Uint8Array | null = null, simT = 0): void {
+  update(minute: number, now: number, pending: OwnerTurn | null = null, aim: Pt | null = null, only: Uint8Array | null = null, simT = 0, rate = 1): void {
+    this.simT = simT; this.rate = rate > 0 ? rate : 1;
     if (this.count !== this.plan.shots.length) this.index();
     const G = this.plan.golfers, states = only ? this.states : stateAt(this.plan, this.view, minute, this.states), drive = GOLFER_CLIPS.golf_drive;
     const pa = pending ? (aim ?? pending.suggested.aim) : null, carts = this.cartPlay;
@@ -164,7 +171,8 @@ export class PlayView {
       if (W && show) {
         const swinging = !!newest && dt < (putting ? PUTT_S : SWING_S), d = mode === WALK ? null : s.dest;
         if (newest && this.swingAt[id] === now && !W.near(id, newest.from.x, newest.from.y)) W.snap(id, newest.from.x, newest.from.y);
-        W.step(id, x, y, d ? d.x : NaN, d ? d.y : NaN, swinging, now, simT);
+        // (his walk's end, or where the schedule has him standing: he walks there, never faded, when he can make it by his deadline)
+        W.step(id, x, y, d ? d.x : mode === WALK ? NaN : x, d ? d.y : mode === WALK ? NaN : y, swinging, now, simT, d && s.by !== undefined ? (s.by - minute) / this.rate : NaN);
         x = W.x; y = W.y; alpha = W.alpha;
         if (!swinging) {
           if (W.walked) { frame = clipFrame(GOLFER_CLIPS.walk, now + id * STEP_S); if (W.hx * W.hx + W.hy * W.hy > AIM2) row = rowToward(W.hx, W.hy); }
@@ -225,13 +233,16 @@ export class PlayView {
     let cx = ox, cy = oy;
     if (!(dm >= 0 && dm <= SNAP_MIN) || (tx - cx) ** 2 + (ty - cy) ** 2 > SNAP_TILES * SNAP_TILES) { cx = tx; cy = ty; }
     else { const d = Math.hypot(tx - cx, ty - cy), step = CADDIE_PACE * dm; if (d <= step) { cx = tx; cy = ty; } else { cx += (tx - cx) / d * step; cy += (ty - cy) / d * step; } }
-    const vx = cx - ox, vy = cy - oy, walking = dm >= 0 && dm <= SNAP_MIN && vx * vx + vy * vy > STEP2;
+    let vx = cx - ox, vy = cy - oy, walking = dm >= 0 && dm <= SNAP_MIN && vx * vx + vy * vy > STEP2, alpha = 1;
+    // T266: a watchable caddie walks to his place at his cap at most, fading out and back at it when his pro has gone on too far
+    const C = this.pace?.caddies;
+    if (C) { C.step(id, tx, ty, NaN, NaN, false, now, this.simT); cx = C.x; cy = C.y; alpha = C.alpha; walking = C.walked; vx = C.hx; vy = C.hy; }
     this.cx[id] = cx; this.cy[id] = cy; this.cm[id] = m;
     let crow = this.crow[id]!;
     if (walking) crow = rowToward(vx, vy); else if ((fx - cx) ** 2 + (fy - cy) ** 2 > AIM2) crow = rowToward(fx - cx, fy - cy); else crow = row;
     this.crow[id] = crow;
     const c = this.caddies[n] ?? (this.caddies[n] = { x: 0, y: 0, row: 0, frame: 0, golfer: 0, bx: 0, by: 0 });
-    c.x = cx; c.y = cy; c.row = crow; c.golfer = id; c.frame = walking ? clipFrame(SPECTATOR_CLIPS.walk, now + id * STEP_S) : SPECTATOR_CLIPS.idle.start;
+    c.x = cx; c.y = cy; c.row = crow; c.golfer = id; c.alpha = alpha; c.frame = walking ? clipFrame(SPECTATOR_CLIPS.walk, now + id * STEP_S) : SPECTATOR_CLIPS.idle.start;
     // the bag stands at his side (the screen's right of him)
     c.bx = cx + 0.3; c.by = cy - 0.3;
     return n + 1;
