@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="1000" viewBox="0 0 1000 1000">
+<rect width="1000" height="1000" fill="#eef1f3"/>
+<g stroke="#243c52" stroke-width="3" stroke-linejoin="round">
+<path d="M250 600L550 750L800 625L500 475Z" fill="#cad5d6" stroke-dasharray="8 6"/>
+<path d="M250 600L550 750L550 530L250 380Z" fill="#b8d8c1"/>
+<path d="M550 750L800 625L800 405L550 530Z" fill="#ecd2a5"/>
+<path d="M250 380L550 530L675 387.5L375 237.5Z" fill="#94adcb"/>
+<path d="M550 530L800 405L675 387.5Z" fill="#ddc79d"/>
+<path d="M250 600L550 750L800 625" fill="none" stroke="#cc4235" stroke-width="7"/>
+<path d="M250 380L550 530M250 600L250 380M550 750L550 530M800 625L800 405" fill="none" stroke="#243c52"/>
+</g></svg>

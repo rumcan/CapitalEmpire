@@ -5,6 +5,8 @@ Update this file **before** each edit and after each sub-step. The section below
 
 ## START HERE (kept current by the lead; last updated 2026-10-29 02:40 SAST)
 
+**T273 #819, range geometry source review:** branch `lead/coffee-geometry-hold-20261028`, worktree `worktrees/coffee-geometry-hold-20261028`. Native hash-bound geometry holds/proofs cover the original two-view kiosk, targeted view1-v2 and new distance post; exact source/provenance and prior style approval retained. Native front-edge errors are3.15/9.44degrees (kiosk v1),3.67degrees (kiosk v2),5.31degrees (post), so none is ready for registration. Existing queue logic already honors nested negative review decisions; no code, runtime, scheduled-worker deployment/state/timer changes. Original v1 provenance/style bytes need narrow -text rules because previous Git newline normalization invalidated their native hash bindings. Next: validate source/proof hashes and open the scoped source-only PR for lead review.
+
 **Taking over as lead?** This section is the one start document. Paste this into a new Claude Code chat (desktop app, Code tab), on any
 account, with the folder `E:\Repos\CapitalEmpire\worktrees\lead-typecheck`:
 ```
