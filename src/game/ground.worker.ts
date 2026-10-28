@@ -142,6 +142,7 @@ const handle = async (m: ToWorker) => {
         break;
       }
       case 'tileStats': tileStats = m.on; tex.resetDrawn(); break;
+      case 'tileBudget': tex.tiles.budget = m.bytes; tex.tiles.trim(); break; // (T272: the chunk pictures grew or shrank)
       case 'memProbe': {
         post({ t: 'log', message: 'mem ' + JSON.stringify(memProbe()) });
         break;

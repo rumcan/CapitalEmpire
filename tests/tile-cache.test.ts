@@ -41,6 +41,10 @@ test('the tile cache budget: the ground\'s 192 MB less the chunk pictures\' budg
   // with the chunk budget at most 176 MB, the chunks and every worker's tiles stay inside the 192 MB
   for (const px of [16e6, 24e6, 32e6, 44e6]) for (const w of [1, 2, 3]) assert.ok(px * 4 + tileCacheBudget(px, w) * w <= GROUND_GPU_BYTES + w, `${px} px, ${w} workers`);
   assert.equal(tileCacheBudget(48e6, 1), TILE_CACHE_MIN, 'a boot whose chunks take it all keeps the least');
+  // followed as the chunk pictures come and go: what they hold leaves the rest, never less than their budget leaves
+  assert.equal(tileCacheBudget(32e6, 1, 10e6), 192 * MB - 40 * MB, 'chunks holding 40 MB leave the tiles 152');
+  assert.equal(tileCacheBudget(32e6, 1, 40e6), 64 * MB, 'a chunk landing past their budget takes nothing from the tiles');
+  for (const held of [0, 5e6, 20e6, 32e6]) assert.ok(held * 4 + tileCacheBudget(32e6, 1, held) <= GROUND_GPU_BYTES, `${held} px held`);
 });
 
 test('tilePx is the widest cell a level\'s tiles take in a chunk raster (the mip a bake draws must be that wide)', () => {

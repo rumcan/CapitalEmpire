@@ -7,8 +7,9 @@
  *  never drawn itself at dpr 1). On main the cache counted decoded sources (24, about 6 MB each) and dropped and decoded the course's tiles
  *  again and again (741 decodes in 54 bakes over the grown town at 30%); here a tile stays decoded, as its mips, while the bakes use it.
  *
- *  Eviction is by least recent use over single pictures, inside the budget (GAME-PLAN 2.3: the ground's 192 MB less the chunk pictures'
- *  budget, shared by the workers, each of which keeps its own cache: tileCacheBudget). A chain is cut only at its head or its tail, so it stays
+ *  Eviction is by least recent use over single pictures, inside the budget (GAME-PLAN 2.3: the ground's 192 MB less what the chunk pictures
+ *  hold, never less than their budget leaves, shared by the workers, each of which keeps its own cache: tileCacheBudget, sent by the ground
+ *  cache as the chunk pictures come and go). A chain is cut only at its head or its tail, so it stays
  *  each picture the halving of the one before, and a bake draws the very pixels main drew. A picture's use is a bake drawing it or a bake's
  *  preparation needing it; a source not drawn itself counts as never used, so it goes first. The pictures of the bakes about to run (pinned)
  *  are never dropped.
@@ -27,10 +28,12 @@ export const GROUND_GPU_BYTES = 192 * MB;
 export const TILE_CACHE_MIN = 16 * MB;
 /** a worker's tile cache before its init says otherwise (the game's: 192 MB less its 128 MB of chunk pictures, one worker) */
 export const TILE_CACHE_BYTES = 64 * MB;
-/** a worker's tile cache in bytes: what the chunk pictures' budget (groundPx pixels of RGBA8, ground-cache.ts budgetPx) leaves of
- *  GROUND_GPU_BYTES (at least TILE_CACHE_MIN), shared by the workers, each of which holds its own */
-export function tileCacheBudget(groundPx: number, workers: number): number {
-  return Math.floor(Math.max(TILE_CACHE_MIN, GROUND_GPU_BYTES - Math.max(0, groundPx) * 4) / Math.max(1, Math.round(workers)));
+/** a worker's tile cache in bytes: what groundPx pixels of chunk pictures (RGBA8) leave of GROUND_GPU_BYTES (at least TILE_CACHE_MIN), shared
+ *  by the workers, each of which holds its own; with heldPx (the pixels the chunk pictures hold now, ground-cache.ts residentPx), what they
+ *  leave, never less than groundPx's (their budget: a chunk picture landing past it before its eviction takes nothing from the tiles) */
+export function tileCacheBudget(groundPx: number, workers: number, heldPx = groundPx): number {
+  const px = Math.min(Math.max(0, groundPx), Math.max(0, heldPx));
+  return Math.floor(Math.max(TILE_CACHE_MIN, GROUND_GPU_BYTES - px * 4) / Math.max(1, Math.round(workers)));
 }
 /** the width of the mip halving makes of a picture w px wide (textures.ts downscale's rounding) */
 export const halfOf = (w: number) => Math.max(1, Math.round(w * 0.5));

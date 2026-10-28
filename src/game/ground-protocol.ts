@@ -221,6 +221,9 @@ export type ToWorker =
   | { t: 'memProbe' }
   /** T272, the bench: each baked chunk's reply carries the tile cache's counts (tc) */
   | { t: 'tileStats'; on: boolean }
+  /** T272: the bytes this worker's tile cache may hold now (tile-cache.ts tileCacheBudget: its share of what the chunk pictures leave of the
+   *  ground's 192 MB), sent as they change */
+  | { t: 'tileBudget'; bytes: number }
   | { t: 'paint'; id: number; kind: TileKind; i: number; j: number; L: number; artL?: number; /** the tile spec the tile set families are laid at (painted-tiles.ts tileSpec: the band and the DPR; T145, T150) */ ts?: number };
 
 export type FromWorker =
