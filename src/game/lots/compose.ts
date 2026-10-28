@@ -17,12 +17,13 @@ import { isBuilding } from '../mirror';
 import { LU, LV } from './town';
 import {
   BUSHES, BY, Build, CHAIN, DEAD_TREES, DRIVE_GAP, JUNK, MARK_ID, PARK_PIECES, PICKUPS, PRIVACY, SCHOOL_SIGNS, SIDE_YARD, TREES, clamp, isCarPark, mix,
-  names, patchTex, pick, share, specFit, withVariations,
-  type Box4, type Composition, type ComposeState, type LotGeom, type Pt, type PresetDrop,
+  names, patchTex, pick, specFit, withVariations,
+  type Composition, type ComposeState, type LotGeom, type Pt, type PresetDrop,
 } from './compose-core';
 import { approvedFor, bucketOf, fitPreset, parsePresets, pickPreset, presetsFor, stateOf, type Fitted, type LotPreset, type PresetDecal, type PresetMeta, type PresetProp, type PresetState, type PresetUse, type Road } from './presets';
 import { AXIS_PROPS, drawnView, footprintOf, ownerScaleOf, roadView, turned } from './preset-art';
 import { fixedArt } from './art-fix';
+import { share, type Box4 } from './compose-core'; // T232: the building sites' kit (putClear)
 import { frameOf, listToWorld, quarterOfRoad, roadOf, toWorld, type PresetFrame } from './preset-frame';
 import PRESET_JSON from './lot-presets.json';
 import { generateLayout, PER_LOT, type LaidItem } from './lot-gen';
