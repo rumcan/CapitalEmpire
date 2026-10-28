@@ -7,7 +7,7 @@
 import type { LotPatch } from './ground-protocol';
 import { coursePatch, courseGrowKey, patchBuffers, type CourseLooks } from './ext/course-grid/patch';
 import { gridAreas, type GridArea } from './ext/course-grid/areas';
-import { applyDiff, type Grid, type GridDiff } from './ext/course-grid';
+import { applyDiff, setLook, type Grid, type GridDiff } from './ext/course-grid';
 import CourseWorker from './course.worker?worker';
 
 /** a chunk job: chunks as cx cy pairs, the looks, the effective game month, the holes' centre lines and the cart paths and drives (flat
@@ -17,8 +17,8 @@ export interface CourseJob { chunks: number[]; looks: CourseLooks; now: number; 
 export interface CourseChunkOut { cx: number; cy: number; patch: LotPatch | null; grow: string }
 
 export type ToCourse =
-  | { t: 'grid'; g: { x0: number; y0: number; w: number; h: number; surf: Uint8Array; hole: Uint8Array; month: Uint16Array; carve?: Uint8Array } | null }
-  | { t: 'cells'; x0: number; y0: number; w: number; idx: Uint32Array; s: Uint8Array; h: Uint8Array; m: Uint16Array; c?: Uint8Array }
+  | { t: 'grid'; g: { x0: number; y0: number; w: number; h: number; surf: Uint8Array; hole: Uint8Array; month: Uint16Array; carve?: Uint8Array; look?: Uint8Array } | null }
+  | { t: 'cells'; x0: number; y0: number; w: number; idx: Uint32Array; s: Uint8Array; h: Uint8Array; m: Uint16Array; c?: Uint8Array; k?: Uint8Array }
   | ({ t: 'chunks'; id: number } & CourseJob)
   | { t: 'areas'; id: number; holes: number[] | null };
 export type FromCourse =
@@ -41,8 +41,9 @@ export function chunkBuffers(out: readonly CourseChunkOut[]): ArrayBuffer[] { re
 
 /** the worker side's grid update: a whole grid, or changed cells written as they now are */
 export function applyToCourse(g: Grid | null, m: ToCourse): Grid | null {
-  if (m.t === 'grid') return m.g ? { ...m.g, rev: 0 } : null;
-  if (m.t === 'cells' && g) applyDiff(g, { x0: m.x0, y0: m.y0, w: m.w, n: m.idx.length, idx: m.idx, s0: m.s, h0: m.h, m0: m.m, s1: m.s, h1: m.h, m1: m.m, ...(m.c ? { c0: m.c, c1: m.c } : {}) }, false);
+  // T271: the look layer (each cell's custom grass) comes with the grid and with its cells, so the worker's draw ids are the main thread's
+  if (m.t === 'grid') { if (!m.g) return null; const { look, ...rest } = m.g, out: Grid = { ...rest, rev: 0 }; setLook(out, look); return out; }
+  if (m.t === 'cells' && g) applyDiff(g, { x0: m.x0, y0: m.y0, w: m.w, n: m.idx.length, idx: m.idx, s0: m.s, h0: m.h, m0: m.m, s1: m.s, h1: m.h, m1: m.m, ...(m.c ? { c0: m.c, c1: m.c } : {}), ...(m.k ? { k0: m.k, k1: m.k } : {}) }, false);
   return g;
 }
 
@@ -90,22 +91,22 @@ export class CourseContour {
   /** the grid changed as a whole (made, grown, loaded, dropped): the worker takes a copy */
   setGrid(g: Grid | null) {
     this.grid = g;
-    this.w()?.postMessage({ t: 'grid', g: g ? { x0: g.x0, y0: g.y0, w: g.w, h: g.h, surf: g.surf.slice(), hole: g.hole.slice(), month: g.month.slice(), ...(g.carve ? { carve: g.carve.slice() } : {}) } : null } satisfies ToCourse);
+    this.w()?.postMessage({ t: 'grid', g: g ? { x0: g.x0, y0: g.y0, w: g.w, h: g.h, surf: g.surf.slice(), hole: g.hole.slice(), month: g.month.slice(), ...(g.carve ? { carve: g.carve.slice() } : {}), ...(g.look ? { look: g.look.slice() } : {}) } : null } satisfies ToCourse);
   }
   /** cells of grid g changed (a diff applied either way): the worker takes their values as they now are */
   cells(g: Grid, d: GridDiff) {
     const w = this.worker; if (!w || !d.n) return;
-    const n = d.n, idx = new Uint32Array(n), s = new Uint8Array(n), h = new Uint8Array(n), m = new Uint16Array(n), c = new Uint8Array(n), cv = g.carve;
+    const n = d.n, idx = new Uint32Array(n), s = new Uint8Array(n), h = new Uint8Array(n), m = new Uint16Array(n), c = new Uint8Array(n), cv = g.carve, lk = g.look, k = lk ? new Uint8Array(n) : null;
     const same = d.x0 === g.x0 && d.y0 === g.y0 && d.w === g.w, ox = Math.round((d.x0 - g.x0) / 0.5), oy = Math.round((d.y0 - g.y0) / 0.5);
     let k2 = 0;
-    for (let k = 0; k < n; k++) {
-      let i = d.idx[k]!;
+    for (let q = 0; q < n; q++) {
+      let i = d.idx[q]!;
       if (!same) { const cx = i % d.w, cy = (i - cx) / d.w, gx = ox + cx, gy = oy + cy; if (gx < 0 || gy < 0 || gx >= g.w || gy >= g.h) continue; i = gy * g.w + gx; }
-      idx[k2] = i; s[k2] = g.surf[i]!; h[k2] = g.hole[i]!; m[k2] = g.month[i]!; c[k2] = cv?.[i] ?? 0; k2++;
+      idx[k2] = i; s[k2] = g.surf[i]!; h[k2] = g.hole[i]!; m[k2] = g.month[i]!; c[k2] = cv?.[i] ?? 0; if (k) k[k2] = lk![i]!; k2++;
     }
-    // the carve flags go along (T125: the worker's blobs leave a rubbed-out gap open)
-    const msg = { t: 'cells' as const, x0: g.x0, y0: g.y0, w: g.w, idx: idx.slice(0, k2), s: s.slice(0, k2), h: h.slice(0, k2), m: m.slice(0, k2), c: c.slice(0, k2) } satisfies ToCourse;
-    w.postMessage(msg, [msg.idx.buffer, msg.s.buffer, msg.h.buffer, msg.m.buffer, msg.c.buffer]);
+    // the carve flags go along (T125: the worker's blobs leave a rubbed-out gap open), and the custom grass slots (T271) once the grid has any
+    const msg = { t: 'cells' as const, x0: g.x0, y0: g.y0, w: g.w, idx: idx.slice(0, k2), s: s.slice(0, k2), h: h.slice(0, k2), m: m.slice(0, k2), c: c.slice(0, k2), ...(k ? { k: k.slice(0, k2) } : {}) } satisfies ToCourse;
+    w.postMessage(msg, [msg.idx.buffer, msg.s.buffer, msg.h.buffer, msg.m.buffer, msg.c.buffer, ...(msg.k ? [msg.k.buffer] : [])]);
   }
   /** a chunk job; done gets its results (later, from the worker; at once without one) */
   chunks(job: CourseJob, done: (out: CourseChunkOut[], ms: number) => void) {

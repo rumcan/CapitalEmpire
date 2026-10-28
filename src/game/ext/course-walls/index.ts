@@ -18,7 +18,7 @@
  * each edge point; where a segment's two ends disagree it is sampled along and cut where the kind changes. Every value at a point depends
  * only on that point and the global grid, and a chunk cut point lies on its uncut segment, so the walls of two chunks meet exactly at their
  * border. Pure TypeScript, no DOM, deterministic. Units: tiles of 2 m for positions; metres for heights. */
-import { CELL_T, N_SURF, SURF, SURF_ORDER, surfAbove, type Grid } from '../course-grid';
+import { CELL_T, N_DRAW, N_SURF, SURF, SURF_ORDER, surfAbove, type Grid } from '../course-grid';
 import { BLOB_STYLE, ISO_T, coverField, type BlobStyle, type CellCover, type SurfaceOutline } from '../course-blobs';
 import { SUN_LIGHT, SUN_TILE_DIR } from '../course-height';
 
@@ -199,7 +199,7 @@ export interface ChunkWalls { walls: WallRun[]; rims: RimRun[]; runs: Map<number
 export interface Covers { s: (CellCover | null)[]; c: (CellCover | null)[] }
 /** the covers of a chunk's outlines (chunkOutlines with cover) */
 export function coversOf(outs: readonly SurfaceOutline[]): Covers {
-  const K: Covers = { s: new Array(N_SURF).fill(null), c: new Array(N_SURF).fill(null) };
+  const K: Covers = { s: new Array(N_DRAW).fill(null), c: new Array(N_DRAW).fill(null) };
   for (const o of outs) if (o.cover) { K.s[o.surf] = o.cover.s; K.c[o.surf] = o.cover.c; }
   return K;
 }
@@ -220,9 +220,13 @@ function inCover(cv: CellCover | null, u: number, v: number): boolean {
 /** the reader of one chunk's layers at points (global cell coordinates u, v: u = (x - grid.x0) / 0.5): which layer covers a point (inside
  *  the outline it is drawn with, read from the same droplet field), which is on top, and the height of the top */
 export class LayerStack {
-  private rank = new Int16Array(2 * N_SURF).fill(-1);
-  constructor(private K: Covers, private styles: readonly BlobStyle[] = BLOB_STYLE, private order: readonly number[] = DRAW_ORDER, private heights: readonly number[] = SURF_HEIGHT) {
+  private rank = new Int16Array(2 * N_DRAW).fill(-1);
+  /** the layer codes in draw order that have cells here (covers): a layer with none covers no point, so top and height skip it (T271: the
+   *  eight custom grass ids a course without them never lays cost nothing) */
+  private live: number[];
+  constructor(private K: Covers, private styles: readonly BlobStyle[] = BLOB_STYLE, order: readonly number[] = DRAW_ORDER, private heights: readonly number[] = SURF_HEIGHT) {
     order.forEach((c, r) => { this.rank[c] = r; });
+    this.live = order.filter(c => !!(c & 1 ? K.c : K.s)[c >> 1]);
   }
   /** the draw rank of a layer code (-1: the map grass, under everything) */
   rankOf(code: number): number { return code > 0 ? this.rank[code]! : -1; }
@@ -245,14 +249,16 @@ export class LayerStack {
   }
   /** the code of the layer on top at (u, v) (0: none, the map grass); solid: of the layers with a height of their own (no lip or bank) */
   top(u: number, v: number, solid = false): number {
-    for (let r = this.order.length - 1; r >= 0; r--) { const c = this.order[r]!; if ((!solid || !isOverlay(c, this.styles)) && this.covers(c, u, v)) return c; }
+    const o = this.live;
+    for (let r = o.length - 1; r >= 0; r--) { const c = o[r]!; if ((!solid || !isOverlay(c, this.styles)) && this.covers(c, u, v)) return c; }
     return 0;
   }
   /** the height (m) of the ground seen at (u, v): the top layer's (a lip or bank lies on what is under it, a fringe or first cut on its
    *  surface's platform) */
   height(u: number, v: number): number {
-    for (let r = this.order.length - 1; r >= 0; r--) {
-      const c = this.order[r]!;
+    const o = this.live;
+    for (let r = o.length - 1; r >= 0; r--) {
+      const c = o[r]!;
       if (!this.covers(c, u, v)) continue;
       if (c & 1 && !collarOnTop(this.styles[c >> 1]?.collar?.name ?? '')) continue; // laid on the ground below it: look under it
       return this.heights[c >> 1] ?? 0;

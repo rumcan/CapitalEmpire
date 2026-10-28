@@ -22,7 +22,7 @@ import { LIP, collarToneOf, finishMow, finishOf, finishStripeLook, greenStripeLo
 import { quadBox, type CourseLayer, type CoursePatch, type CourseRim, type CourseTex, type CourseWall, type LotPatch, type MowStripes, type PatchTex, type ShineMaskData } from './ground-protocol';
 import { SHINE_TEXEL, SHINE_TEXEL_PX, SHINE_WEIGHTS, maskColour, maskPad, shineMaskPixels, shineWeight, type ShineWeights } from './grass-shine';
 import { DRAW_ORDER, FaceForm, GREEN_FACE, STAIR_TREAD, SURF_HEIGHT, SUN_DIR, WALL_DROP, WALL_PX_PER_M, WALL_TEX, WallMat, defaultShadow, faceLight, faceScale, isOverlay, layerCode, shadowOwner, slopeLight, stairSteps, wallShade, type Stair, type WallShade } from './ext/course-walls';
-import { SURF } from './ext/course-grid';
+import { CUSTOM0, SURF } from './ext/course-grid';
 import { SPROUT_PERIOD, growDraws, seedColour, seedSprouts, sproutRes, type GrowDraw } from './ext/course-fx/seed';
 import { courseImages, courseRes, lineField } from './ext/course-grid/field';
 import { BUNKER_IN, BUNKER_OUT, GREEN_ROLL_REACH, bunkerImages, greenRollImages } from './bunker-look';
@@ -2529,7 +2529,8 @@ export class GroundPainter {
     /** the walls hanging over layer lo, clipped to it (a wall never pokes past the ground it stands on: a bunker's far wall stops at the sand's
      *  near edge, an island's wall at the water); over the map grass unclipped (every course layer is drawn after them) */
     // the course look's Shadow by surface (every chunk carries the same; by default none for a green, a hairline for the rest)
-    const shs = cs.find(c => c.sh)?.sh, shades = new Map<number, WallShade>();
+    // (T271: the longest: a chunk with a custom grass carries the grasses' Shadows after the nine)
+    const shs = cs.reduce<readonly number[] | undefined>((a, c) => (c.sh && c.sh.length > (a?.length ?? 0) ? c.sh : a), undefined), shades = new Map<number, WallShade>();
     const shadeOf = (s: number) => { let v = shades.get(s); if (!v) shades.set(s, v = wallShade(shs?.[s] ?? defaultShadow(s))); return v; };
     const banks = (ws: readonly CourseWall[]) => this.courseBanks(ctx, ws, L, M, Minv, X0, Y0, lite, shadeOf, grassOf, stairs, style);
     const walls = (lo: number) => {
@@ -2655,7 +2656,8 @@ export class GroundPainter {
           if (joints.length) { const up = ringsOfCode(code), down = ringsOfCode(code | 1); this.courseJointShade(ctx, joints, L, M, up, down); this.onShadeMask(m => this.courseJointShade(m, joints, L, M, up, down)); }
         }
         rims(code);                                                                                // 7
-        if (this.stripes && s === SURF.fairway) { const fl = finishStripeLook(fin, FAIRWAY_STRIPES); for (const { c, l } of ls) this.courseStripes(ctx, c, l, r, M, lite, fl ?? FAIRWAY_STRIPES, !!fl); } // 8 (T218; T227 the finish's bands)
+        // 8 (T218; T227 the finish's bands; T271: a custom grass with its stripes on, as the fairway's)
+        if (this.stripes && (s === SURF.fairway || (s >= CUSTOM0 && ls.some(q => q.l.stripes)))) { const fl = finishStripeLook(fin, FAIRWAY_STRIPES); for (const { c, l } of ls) if (s === SURF.fairway || l.stripes) this.courseStripes(ctx, c, l, r, M, lite, fl ?? FAIRWAY_STRIPES, !!fl); }
         if (this.stripes && s === SURF.green && green) for (const { c, l } of ls) this.courseStripes(ctx, c, l, r, M, lite, green, true); // 8 (T227: the greens' fine stripes)
         if (s === SURF.fairway && !lite && this.rugged) spill();                                                   // 9: the tall grass's spill (T204)
       }

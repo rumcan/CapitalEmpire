@@ -85,8 +85,9 @@ export function growDraws(c: CoursePatch): GrowDraw[] {
   const cells = [0, 0, 0, 0];
   for (let i = 0; i < grow.length; i++) { const a = grow[i]!; if (a) cells[Math.min(3, Math.max(0, 4 - Math.round(a / 63.75)))]!++; }
   for (const l of c.layers) {
-    const look = SEED_LOOKS[l.s];
-    if (!look || !((SURF_GROW_MONTHS[l.s] ?? 0) > 0) || !l.fill.length) continue;
+    // T271: a custom grass grows in as the surface it plays as (l.b)
+    const gs = l.b ?? l.s, look = SEED_LOOKS[gs];
+    if (!look || !((SURF_GROW_MONTHS[gs] ?? 0) > 0) || !l.fill.length) continue;
     for (let st = 0; st < 4; st++) if (cells[st]) out.push({ s: l.s, stage: st, alpha: Math.round(255 * (1 - st / 4)), cells: cells[st]!, look });
   }
   return out;
