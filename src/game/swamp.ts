@@ -78,14 +78,15 @@ const RAG_STEP = 0.5;
  *  ragStep: the rag's lattice step; reach(x, y, hw): the band's reach at (x, y) where the nearest channel's half width is hw; rag(x, y): its
  *  rim's rag; band(e, R, g): its cover; wide: the reach reads hw (the lattice keeps the nearest channel's half width) */
 export interface BandLook {
-  /** latStep, farStep: the soft distance's and the reach's lattice step at a street chunk and at a district chunk (tiles) */
-  out: number; soft: number; softReach: number; softOut: number; ragStep: number; latStep: number; farStep: number; wide: boolean;
+  /** latStep, farStep: the soft distance's and the reach's lattice step at a street chunk and at a district chunk (tiles); farRag: the rag's
+   *  at a district chunk; ragFrom: the reach at or under which the band ignores the rag (its noise not made there) */
+  out: number; soft: number; softReach: number; softOut: number; ragStep: number; latStep: number; farStep: number; farRag: number; ragFrom: number; wide: boolean;
   /** a wide band's bounds, for skipping whole lattice cells: none under lo (the water), none past the reach plus rim plus rag0 */
   lo: number; rim: number; rag0: number;
   reach(x: number, y: number, hw: number): number; rag(x: number, y: number): number; band(e: number, R: number, g: number): number;
 }
 /** the creeks' band (T199): SWAMP's numbers, as before */
-export const CREEK_BAND: BandLook = { out: SWAMP_OUT, soft: SWAMP.soft, softReach: SOFT_REACH, softOut: SOFT_OUT, ragStep: RAG_STEP, latStep: 1, farStep: 2, wide: false, lo: -Infinity, rim: SWAMP.feather, rag0: SWAMP.rag, reach: (x, y) => reachAt(x, y), rag: ragAt, band: bandOf };
+export const CREEK_BAND: BandLook = { out: SWAMP_OUT, soft: SWAMP.soft, softReach: SOFT_REACH, softOut: SOFT_OUT, ragStep: RAG_STEP, latStep: 1, farStep: 2, farRag: 2 * RAG_STEP, ragFrom: -Infinity, wide: false, lo: -Infinity, rim: SWAMP.feather, rag0: SWAMP.rag, reach: (x, y) => reachAt(x, y), rag: ragAt, band: bandOf };
 
 /** T265 (#794): the river's band (tiles):
  *  - bank: the river's bank (renderer.ts: 3 tiles past its water, feathered 0.8); the band rises under it, from inner[0] to inner[1] past the
@@ -97,12 +98,12 @@ export const CREEK_BAND: BandLook = { out: SWAMP_OUT, soft: SWAMP.soft, softReac
  *    bank and grass as before), over stretch[1] the whole width, between a fringe; the two banks lie far enough apart to differ;
  *  - bay, bayWave: bays: the width swings by +-bay tiles over a noise of bayWave;
  *  - rag, ragWave, feather, soft, ragStep: the rim's raggedness, its soft rim, the soft union's radius and the rag's lattice step (as SWAMP's;
- *    the rag a tile apart: the band is wider); latStep, farStep: the soft distance and the reach two tiles apart, eight on a district chunk
- *    (its bank a pixel or two: the band starts under it whatever the lattice) (a wide river's distance runs straight
+ *    the rag a tile apart, three on a district chunk: the band is wider); latStep, farStep: the soft distance and the reach two tiles apart,
+ *    eight on a district chunk (its bank a pixel or two: the band starts under it whatever the lattice) (a wide river's distance runs straight
  *    across a lattice cell: bilinear is as good, at a quarter of the work) */
 export const RIVER_SWAMP = {
   bank: 3, inner: [0.6, 1.6], k: 0.55, cap: 9, stretch: [-0.12, 0.2], stretchWave: 70, bay: 3, bayWave: 21,
-  rag: 2.4, ragWave: 6, feather: 0.4, soft: 1, ragStep: 1, latStep: 2, farStep: 8,
+  rag: 2.4, ragWave: 6, feather: 0.4, soft: 1, ragStep: 1, latStep: 2, farStep: 8, farRag: 3,
 } as const;
 /** the farthest the river's band reaches past the water's edge (tiles, on the soft distance) */
 export const RIVER_SWAMP_OUT = RIVER_SWAMP.bank + RIVER_SWAMP.cap + RIVER_SWAMP.bay + RIVER_SWAMP.rag + RIVER_SWAMP.feather;
@@ -127,7 +128,7 @@ export function riverBandOf(e: number, R: number, g: number): number {
 }
 /** the river's band's look: its soft union over as many as eight segments within reach (a wide river: its 8-tile segments all near) */
 export const RIVER_BAND: BandLook = {
-  out: RIVER_SWAMP_OUT, soft: RIVER_SWAMP.soft, softReach: 3 * RIVER_SWAMP.soft, softOut: RIVER_SWAMP_OUT + RIVER_SWAMP.soft * Math.log(8), ragStep: RIVER_SWAMP.ragStep, latStep: RIVER_SWAMP.latStep, farStep: RIVER_SWAMP.farStep, wide: true,
+  out: RIVER_SWAMP_OUT, soft: RIVER_SWAMP.soft, softReach: 3 * RIVER_SWAMP.soft, softOut: RIVER_SWAMP_OUT + RIVER_SWAMP.soft * Math.log(8), ragStep: RIVER_SWAMP.ragStep, latStep: RIVER_SWAMP.latStep, farStep: RIVER_SWAMP.farStep, farRag: RIVER_SWAMP.farRag, ragFrom: RIVER_SWAMP.bank, wide: true,
   lo: RIVER_SWAMP.inner[0], rim: RIVER_SWAMP.feather, rag0: RIVER_SWAMP.rag,
   reach: riverReachAt, rag: riverRagAt, band: riverBandOf,
 };
@@ -273,7 +274,7 @@ export class SwampField {
   clearMemo() { this.memo.clear(); }
   private memo = new Map<string, BandAlpha | null>();
   private bake(x0: number, y0: number, w: number, h: number, res: number): BandAlpha | null {
-    const L = this.look, OUT = L.out, k2 = res >= 2 ? 1 : 2, st = res >= 2 ? L.latStep : L.farStep, gs = L.ragStep * k2;
+    const L = this.look, OUT = L.out, st = res >= 2 ? L.latStep : L.farStep, gs = res >= 2 ? L.ragStep : L.farRag;
     const i0 = Math.floor(x0 / st), j0 = Math.floor(y0 / st), ni = Math.floor((x0 + w) / st) - i0 + 2, nj = Math.floor((y0 + h) / st) - j0 + 2;
     const list = this.near(i0 * st, j0 * st, (i0 + ni - 1) * st, (j0 + nj - 1) * st); if (!list.length) return null;
     const HW = L.wide ? new Float64Array(ni * nj) : null, E = this.lattice(list, i0, j0, ni, nj, st, HW); let any = false;
@@ -308,7 +309,9 @@ export class SwampField {
         if (!live[k]) continue;
         const tx = cT[u]!, e = bilerp(E[k]!, E[k + 1]!, E[k + ni]!, E[k + ni + 1]!, tx, ty); if (e >= OUT) continue;
         const gi = cG[u]!, gx = cGT[u]!;
-        const a = Math.round(L.band(e, bilerp(R[k]!, R[k + 1]!, R[k + ni]!, R[k + ni + 1]!, tx, ty), bilerp(g(gi, gj), g(gi + 1, gj), g(gi, gj + 1), g(gi + 1, gj + 1), gx, gy)) * 255);
+        // (T265: a reach the band ignores the rag at, ragFrom (the river's no wider than its bank), skips the rag's noise: the same cover)
+        const Rv = bilerp(R[k]!, R[k + 1]!, R[k + ni]!, R[k + ni + 1]!, tx, ty), gv = Rv <= L.ragFrom ? 0 : bilerp(g(gi, gj), g(gi + 1, gj), g(gi, gj + 1), g(gi + 1, gj + 1), gx, gy);
+        const a = Math.round(L.band(e, Rv, gv) * 255);
         if (a <= 0) continue;
         data[(v * W + u) * 4 + 3] = a;
         if (u < u0) u0 = u; if (u > u1) u1 = u; if (v < v0) v0 = v; if (v > v1) v1 = v;
