@@ -7,7 +7,7 @@ import { aboutMoney, planShape, type WizCheck } from '../../game/ext/hole-wizard
 import { SHAPE_RATE_M3, growInMonths } from '../../game/golf/costs';
 import { FRAME_TREE_PRICE } from '../../game/golf/holeframe';
 import { SURFACE_BRUSHES, type BrushKind } from '../../game/paint';
-import { BrushShape, GroundHeight, LooksEntry, SurfaceSwatches, surfaceKeysOf } from './BrushControls';
+import { BrushShape, GrassEdgesEntry, GroundHeight, LooksEntry, SurfaceSwatches, surfaceKeysOf } from './BrushControls';
 import { CourseEdges } from './CourseEdges';
 import { GRID_KINDS } from '../../game/paint-tool';
 
@@ -139,14 +139,16 @@ function FromMyHoles({ game }: { game: Game }) {
  *  dragging under it; picking a surface puts it down, and Ground height puts the surface brush down */
 function EditPaint({ game, looks, onLooks }: { game: Game; looks: boolean; onLooks?: (open: boolean) => void }) {
   const p = game.paint, n = p.editingHole, on = p.mode === 'brush' && p.planOpen, height = p.mode === 'height' && p.planOpen;
-  const name = SURFACE_BRUSHES.find(b => b.kind === p.brushKind)?.name ?? '', keys = surfaceKeysOf(game);
-  const pick = (k: BrushKind) => p.setEditBrush(on && p.brushKind === k ? null : k);
+  // T271: a custom grass in hand paints too (its swatch after the eight); the lit swatch again puts the brush down
+  const gr = on ? p.grass : null, name = gr?.name ?? SURFACE_BRUSHES.find(b => b.kind === p.brushKind)?.name ?? '', keys = surfaceKeysOf(game);
+  const pick = (k: BrushKind) => p.setEditBrush(on && p.brushKind === k && !p.grassInHand ? null : k, 0);
+  const pickGrass = (k: number) => (on && p.grassInHand === k ? p.setEditBrush(null) : p.setGrass(k));
   const help = on ? `Drag on the map to paint ${name.toLowerCase()} into hole ${n}; the tee, the green and the bends still drag. Esc puts the brush down.`
     : `Pick a surface to paint into hole ${n} (keys 1–${keys}); the tee, the green and the bends still drag.`;
   return (
     <section className="mt-2" aria-label="Paint this hole" data-section="edit-paint">
       <h4 className="sub-head">{`Paint hole ${n}`}</h4>
-      <SurfaceSwatches game={game} on={on ? p.brushKind : null} pick={pick} />
+      <SurfaceSwatches game={game} on={on ? p.brushKind : null} pick={pick} pickGrass={pickGrass} />
       <BrushShape game={game} brush={on} arm={() => p.setEditBrush(p.brushKind)} />
       <div className="mt-2 flex flex-wrap items-center gap-1.5">
         <button className={`chip ${on && p.rubOut ? 'chip-on' : ''}`} aria-pressed={on && p.rubOut} title="Erase takes the top surface under the brush (hold Alt for a moment while brushing); no refund" onClick={() => { const v = !(on && p.rubOut); if (!on) p.setEditBrush(p.brushKind); p.rubOut = v; game.emit(); }}>Erase</button>
@@ -159,7 +161,7 @@ function EditPaint({ game, looks, onLooks }: { game: Game; looks: boolean; onLoo
       {on && GRID_KINDS.includes(p.brushKind) && (
         <div className="mt-2" data-section="edit-edges">
           <h4 className="sub-head">Edges</h4>
-          <CourseEdges game={game} />
+          {gr ? <GrassEdgesEntry game={game} /> : <CourseEdges game={game} />}
         </div>
       )}
       <div className="mt-2">

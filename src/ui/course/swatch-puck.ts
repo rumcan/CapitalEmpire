@@ -12,6 +12,7 @@ import { swatchPuck, type CursorTexture, type PuckStyle, type SpriteCanvas } fro
 import { puckBandOf, type BrushLooks, type PuckBand } from '../../game/course-look';
 import { finishOf } from '../../game/course-finish';
 import { onPaintedSurfaces, paintedSurfaces } from '../../game/painted-surfaces-live';
+import { GRASS_KIND, grassPuck, type CustomGrass } from '../../game/golf/grasses';
 
 /** a swatch puck's top face across, css px */
 export const SWATCH_PUCK_CSS = 44;
@@ -19,7 +20,7 @@ export const SWATCH_PUCK_CSS = 44;
 interface Made { url: string; w: number; h: number; whole: boolean; rev: number }
 /** the pucks made, by key (kept small: one per surface and look) */
 const made = new Map<string, Made>();
-const MAX_MADE = 64;
+const MAX_MADE = 128; // (T271: the grass editor's family pucks, 33 grass families, ride here too)
 /** the store's version: a new one re-renders the swatches (a picture landed, a look changed) */
 let version = 0;
 const subs = new Set<() => void>();
@@ -62,15 +63,26 @@ export function puckLookOf(kind: string, brush: BrushLooks, border?: number | nu
 /** brush kind `kind`'s swatch puck, as an image (url) and its css size; null under plain node or with no texture source (the swatch then
  *  shows its marked disc) */
 export function swatchPuckOf(game: Game, kind: BrushKind): { url: string; w: number; h: number } | null {
-  const tex = (game as { cursorTexture?: CursorTexture }).cursorTexture;
-  if (typeof document === 'undefined' || !tex) return null;
+  if (typeof document === 'undefined') return null;
   const look = puckLookOf(kind, (game.paint.brushLooks ?? game.paint.brush) as BrushLooks, game.paint.courseBorder?.(kind)); if (!look) return null; // T256: the owner's looks (the hole painted, the property); T260: its Border
+  return puckImage(game, kind, look.st, look.pb);
+}
+/** T271: a custom grass's puck (its swatch, the editor's preview and its texture list: each painted family as the grass would wear it), as an
+ *  image; null under plain node or with no texture source. css: its top face across (css px) */
+export function grassPuckImage(game: Game, g: CustomGrass, css = SWATCH_PUCK_CSS): { url: string; w: number; h: number } | null {
+  if (typeof document === 'undefined') return null;
+  const { st, pb } = grassPuck(g, game.paint.firstCutTex?.() ?? null);
+  return puckImage(game, GRASS_KIND[g.plays], st, pb, css);
+}
+/** a puck for a look, from the cache (made when missing or when a picture it needed has landed since) */
+function puckImage(game: Game, kind: BrushKind, st: PuckStyle, pb: PuckBand | null, css = SWATCH_PUCK_CSS): { url: string; w: number; h: number } | null {
+  const tex = (game as { cursorTexture?: CursorTexture }).cursorTexture; if (!tex) return null;
   watchFile();
   const d = Math.min(3, Math.max(1, Math.round((typeof devicePixelRatio === 'number' ? devicePixelRatio : 1) * 2) / 2));
-  const key = `${kind}|${d}|${fileNo}|${styleKey(look.st)}|${bandKey(look.pb)}`;
+  const key = `${kind}|${d}|${css}|${fileNo}|${styleKey(st)}|${bandKey(pb)}`;
   const m = made.get(key);
   if (m && (m.whole || m.rev === tex.rev())) return m;
-  const { c, whole } = swatchPuck(domCanvas, kind, look.st, look.pb, SWATCH_PUCK_CSS, d, tex);
+  const { c, whole } = swatchPuck(domCanvas, kind, st, pb, css, d, tex);
   let url = ''; try { url = (c as HTMLCanvasElement).toDataURL('image/png'); } catch { return null; }
   const out: Made = { url, w: Math.round(c.width / d), h: Math.round(c.height / d), whole, rev: tex.rev() };
   made.delete(key); made.set(key, out); if (made.size > MAX_MADE) made.delete(made.keys().next().value!);

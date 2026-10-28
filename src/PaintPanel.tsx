@@ -37,7 +37,7 @@ export function plainName(name: string): string {
  *  and Tint. The middle is none; left is darker, right lighter, by stops: one stop darker (the texture's RGB at half) to one stop lighter (twice);
  *  its words say it plainly ("darker 30%", "lighter 20%", "none"). It saves as the old tone fields (exposure.ts toneOfExposure), so saves keep
  *  their format; None (or a double-click on the slider) sets it back */
-function ExposureRow({ label, f, set, title }: { label: string; f: number; set: (f: number) => void; title: string }) {
+export function ExposureRow({ label, f, set, title }: { label: string; f: number; set: (f: number) => void; title: string }) {
   const stops = Math.round(exposureStops(f) * 50) / 50, words = exposureLabel(f);
   return (
     <>

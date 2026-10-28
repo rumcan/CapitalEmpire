@@ -30,6 +30,7 @@ import { BuildingsPanel } from './ui/course/BuildingsPanel';
 import { PropsPanel } from './ui/course/PropsPanel';
 import { PracticePanel } from './ui/course/PracticePanel';
 import { MyLooksCard } from './ui/course/MyLooks';
+import { GrassCard } from './ui/course/GrassEditor';
 import { Rail } from './ui/Rail';
 import { RAIL, drawerEntries, drawerOf, entryKey, pickEntry, railEntries, railItemOf, toolDrawer, type RailItem, type RailTool } from './ui/rail-items';
 import { Flyouts } from './ui/Flyouts';
@@ -165,7 +166,8 @@ export default function App() {
   /** T188: the Season card (the season chip opens it: the year, the founding checklist or the tournament plan, the Course stats) */
   const [seasonOpen, setSeasonOpen] = useState(false);
   // Esc closes the topmost menu or card before it reaches the tool (P23 P1-A): the engine's Esc ladder asks which of these are open
-  useEffect(() => { if (game) game.uiCards = { open: () => ({ help, menu, looks: looksOpen, stats: !!courseStats || seasonOpen }), close: c => (c === 'help' ? setHelp(false) : c === 'menu' ? setMenu(false) : c === 'looks' ? setLooks(false) : (setCourseStats(null), setSeasonOpen(false))) }; });
+  // (T271: the grass editor's card is a looks card too: Esc closes it first)
+  useEffect(() => { if (game) game.uiCards = { open: () => ({ help, menu, looks: looksOpen || grassOpen, stats: !!courseStats || seasonOpen }), close: c => (c === 'help' ? setHelp(false) : c === 'menu' ? setMenu(false) : c === 'looks' ? (setLooks(false), game.paint.closeGrass()) : (setCourseStats(null), setSeasonOpen(false))) }; });
   /** the Developer toggle (see devStart): the gear menu's checkbox and F3 set it; remembered */
   const [dev, setDevState] = useState(devStart);
   const devRef = useRef(dev);
@@ -189,6 +191,10 @@ export default function App() {
   const [looks, setLooks] = useState(false);
   const looksOpen = looks && (game?.uiTool === 'course' || (game?.tool === 'practice' && !!game.practice.kind)); // T256: a facility's looks too
   useEffect(() => { if (!looksOpen && looks) setLooks(false); }, [looksOpen, looks]);
+  /** T271 (#812): the grass editor (Create your own, a grass's Edit): its card in My looks' place while the Holes tool is in hand */
+  const grassOpen = !!game?.paint.grassDraft && game.uiTool === 'course';
+  useEffect(() => { if (!grassOpen && game?.paint.grassDraft) game.paint.closeGrass(); }, [grassOpen, game]);
+  useEffect(() => { if (grassOpen && looks) setLooks(false); }, [grassOpen]); // eslint-disable-line react-hooks/exhaustive-deps
   /** the bankrupt overlay's 'Keep watching' (cleared once the city is no longer bankrupt) */
   const [watch, setWatch] = useState(false);
   /** the top bar wraps to two rows on narrow windows (how wide depends on its content): --hud-top follows its bottom, and the rail and the
@@ -296,7 +302,7 @@ export default function App() {
     switch (act?.k) {
       case 'road': game.pickType(act.id as Parameters<Game['pickType']>[0]); break;
       case 'junction': game.brush = act.id as typeof game.brush; break;
-      case 'surface': p.setBrush(act.id as Parameters<typeof p.setBrush>[0]); break;
+      case 'surface': p.setBrush(act.id as Parameters<typeof p.setBrush>[0], 0); break;
       case 'newHole': newHole(game); break;
       case 'club': if (!game.bizDefs.some(d => d.type === 'clubhouse')) game.placeClubhouse(true); break;
       case 'halfway': game.placeHalfway(true); break;
@@ -658,7 +664,7 @@ export default function App() {
               {toolBody}
             </div>
             )}
-            {looksOpen && <MyLooksCard game={game} onClose={() => setLooks(false)} />}
+            {grassOpen ? <GrassCard game={game} onClose={() => game.paint.closeGrass()} /> : looksOpen && <MyLooksCard game={game} onClose={() => setLooks(false)} />}
           </div>
             </>;
           })()}

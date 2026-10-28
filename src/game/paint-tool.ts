@@ -23,7 +23,7 @@ import { computeSnapPiecePlacement, type CoursePieceArchetype, type CoursePieceH
 import { PIECE_BUTTONS, piecePropsOf, pieceAreas, pieceCost, pieceWhy, snapTargets } from './ext/course-pieces';
 import { CourseHeightJournal, applyCourseHeightBrush, brushBox, estimateCourseBrushM3, unionBox, type CourseHeightBrushDab, type CourseHeightBrushMode, type CourseHeightField, type CourseHeightStep, type CourseTileBox } from './ext/course-height';
 import { CELL_T, MAX_GRASSES, SURF, applyDiff, cellAt, cellCentre, diffCost, fillPolygon, holeCellsDiff, lookCellsDiff, paintCells, paintDisc, paintStroke, surfAbove, type Grid, type GridDiff, type PaintOpts } from './ext/course-grid';
-import { GRASS_FAMILIES, GRASS_KIND, PLAY_SURF, clampGrass, freeSlot, golfSurfaceOf, grassPuck as grassPuckOf, newGrass, type CustomGrass } from './golf/grasses';
+import { GRASS_FAMILIES, GRASS_KIND, GRASS_NAME_MAX, PLAY_SURF, clampGrass, freeSlot, golfSurfaceOf, grassPuck as grassPuckOf, newGrass, type CustomGrass } from './golf/grasses';
 import type { CourseTex } from './ground-protocol';
 import type { PuckBand } from './course-look';
 import type { PuckStyle } from './ext/course-cursor';
@@ -797,7 +797,8 @@ export class PaintTool {
   editGrass(p: Partial<Omit<CustomGrass, 'k'>>) {
     const d = this.grassDraft; if (!d) return;
     const next = clampGrass({ ...d, ...p, k: d.k || 1 }); if (!next) return;
-    this.grassDraft = { ...next, k: d.k };
+    // the name as typed (a cleared box stays clear while the player types; the saved grass takes the clamped one)
+    this.grassDraft = { ...next, k: d.k, name: typeof p.name === 'string' ? p.name.slice(0, GRASS_NAME_MAX) : d.name };
     if (d.k) { this.host.setGrasses?.(this.grasses.map(g => (g.k === d.k ? next : g)), false); this.lookSoon(); }
     this.host.emit();
   }
@@ -831,6 +832,8 @@ export class PaintTool {
     const v = grassPuckOf(g, this.host.firstCutTex?.() ?? null); this.gpMemo = { g, rev: this.looksRev, v }; return v;
   }
   private gpMemo: { g: CustomGrass; rev: number; v: { st: PuckStyle; pb: PuckBand | null } } | null = null;
+  /** the course's first cut texture (a custom grass's Border band: its swatch and editor pucks) */
+  firstCutTex(): CourseTex | null { return this.host.firstCutTex?.() ?? null; }
   /** the custom grass a brush pick leaves in hand: the one asked for, else (none asked) the one in hand while the kind stays the same */
   private grassFor(kind: BrushKind, grass: number | undefined): number { return grass ?? (kind === this.brushKind ? this.grassInHand : 0); }
 

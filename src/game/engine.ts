@@ -881,7 +881,7 @@ export class Game {
   holeCardFix(f: HoleFix) {
     const n = this.holeCardHole; if (n === null) return;
     if (f.kind === 'edit') { this.editHole(n); return; }
-    if (f.kind === 'brush') { this.setTool('course'); if (this.tool !== 'course') return; this.paint.setHole(n); this.paint.setBrush(f.surface); this.emit(); return; }
+    if (f.kind === 'brush') { this.setTool('course'); if (this.tool !== 'course') return; this.paint.setHole(n); this.paint.setBrush(f.surface, 0); this.emit(); return; }
     if (!this.holesTool) this.toggleHolesTool();
     // T254: the tees' Fix picks up the hole's first set (blue, white, yellow, red: the one off its tee first)
     const g = this.golf, areas = this.courseAreaList(), mine = TEE_KINDS.flatMap(k => g?.tees.find(t => t.hole === n && t.kind === k) ?? []);
