@@ -38,7 +38,7 @@ const f = (over: Partial<PlayerProgressFacts> = {}): PlayerProgressFacts => ({ .
 /** every golf rail group and tool (the Business tool is the town's: golf games never list it) */
 const GOLF_GROUPS = ['select', 'course', 'roads', 'junction', 'transport', 'paint', 'bulldoze'];
 const GOLF_TOOLS = ['select', 'course', 'path', 'buildings', 'props', 'greenkeeping', 'practice', 'road', 'lane', 'downgrade', 'junction', 'bus', 'park', 'toll', 'paint', 'bulldoze'];
-const SHAPE_BY_HAND = ['fairway', 'green', 'tee', 'rough', 'bunker', 'water', 'waste']; // T222 added the Waste area
+const SHAPE_BY_HAND = ['fairway', 'green', 'tee', 'rough', 'bunker', 'water', 'waste', 'longGrass']; // T222 added the Waste area, T238 Long grass
 
 describe('the stage table (P23 4.2, T117): every "when" row', () => {
   const rows: [string, Partial<PlayerProgressFacts>, OnboardingStage][] = [
@@ -120,7 +120,7 @@ describe('the stage table (P23 4.2, T117): every "open" row', () => {
     assert.deepEqual(s.lockedGroups, []);
     assert.deepEqual(s.lockedTools, []);
     assert.ok(s.visibleGolfChips.includes('event') && s.visibleGolfChips.includes('land') && s.visibleGolfChips.includes('holes'));
-    assert.deepEqual(s.visibleCourseBrushes.length, 8);
+    assert.deepEqual(s.visibleCourseBrushes.length, 9); // T238: Long grass with them
     assert.equal(s.stageLabel, 'Stage 3: The town');
   });
 
@@ -142,7 +142,7 @@ describe('the stage table (P23 4.2, T117): every "open" row', () => {
     assert.deepEqual(s.lockedTools, []);
     assert.deepEqual(s.lockedCourseClasses, []);
     assert.equal(s.shapeByHand, true);
-    assert.equal(s.visibleCourseBrushes.length, 8);
+    assert.equal(s.visibleCourseBrushes.length, 9);
     assert.equal(s.visibleGolfChips.length, Object.keys(CHIP_STAGE).length);
     assert.deepEqual(s.visibleFineControls, ['snapToggle', 'pieceAngle', 'pieceScale', 'heightBrush', 'surfaceTone', 'customStyle']);
     assert.deepEqual(s.newGroups, []);
