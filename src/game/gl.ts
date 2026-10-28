@@ -17,6 +17,7 @@ import { SPEC_LIGHT_GLSL, SPEC_MASK_K } from './lamp-reflect';
 import { GLOSS, GLOSS_LIGHT_GLSL } from './swamp';
 import { GRADE_GLSL, blurGlsl, type GradeFrame } from './grade';
 import { CAR_PAINT_GLSL } from './car-paint';
+import { GRASS_SHINE_GLSL, LUM_HP_STD, MASK_SCALE, SHINE_SHADE } from './grass-shine';
 
 /** floats per sprite instance: rect x0 y0 x1 y1 (world px), uv u0 v0 u1 v1, layer, alpha, cullable, foot line (world px; < 0: casts no shadow),
  *  clip x0 y0 x1 y1 (world px), foot: the footprint's near corner x y and its left and right corners' x (world px; the cast shadows stand on it) */
@@ -46,13 +47,13 @@ export const FULL_UV: readonly number[] = [0, 0, 1, 1];
 const VS_QUAD = `#version 300 es
 uniform vec4 uRect; uniform vec4 uCam; // camX camY ze 0
 uniform vec2 uScreen; uniform vec4 uUV;
-out vec2 vUV;
+out vec2 vUV; out vec2 vW;
 void main() {
   vec2 c = vec2(gl_VertexID & 1, gl_VertexID >> 1);
   vec2 w = mix(uRect.xy, uRect.zw, c);
   vec2 s = (w - uCam.xy) * uCam.z + uScreen * 0.5;
   gl_Position = vec4(s.x / uScreen.x * 2.0 - 1.0, 1.0 - s.y / uScreen.y * 2.0, 0.0, 1.0);
-  vUV = mix(uUV.xy, uUV.zw, c);
+  vUV = mix(uUV.xy, uUV.zw, c); vW = w;
 }`;
 // T215: the street lamps' reflection pools as the camera specular (lamp-reflect.ts): a chunk with a reflection mask (uSpec.z > 0: its gain)
 // lights its own pixels as the bake's pools did (specLight: toward the 'lit' mosaics' response of the painting's pixel, rebuilt from the
@@ -63,13 +64,22 @@ void main() {
 // the cool sky (glossLight: by the gloss, the pixel's own water key and its texture, its distance from the pool's local mean the mask holds
 // premultiplied in rgb) times the same camera falloff (uGloss.x, uGloss.y). The mask is a GLOSS.maskK-th of the chunk's size. No mask (uGloss.z
 // 0): the chunk as before
+// T262: the grass catches the camera's shine (grass-shine.ts): a chunk with a weight mask (uShine.z > 0: its gain) lights its grass by the
+// slope of its own colour's luminance high-pass (two more taps), times the mask's weight (inset from the edges, 0..2 as 0..1), the same camera
+// falloff (uShine.x, uShine.y), and none where the last frame's shadow layer (uShadeLayer, its view in uLayerCam / uLayerScreen: each pixel's
+// world point taken to where it lay then) had a sprite's shadow or the ground's baked shade. No mask: the chunk as before
 const FS_QUAD = `#version 300 es
 precision highp float;
 uniform sampler2D uTex; uniform sampler2D uMask; uniform int uMode; uniform vec2 uScreen; uniform float uAlpha;
 uniform sampler2D uSpecTex; uniform vec4 uSpec; uniform sampler2D uGlossTex; uniform vec4 uGloss;
-in vec2 vUV; out vec4 o;
+uniform vec4 uRect; uniform vec4 uUV;
+uniform sampler2D uShineMask; uniform vec4 uShine; uniform vec4 uShineLook;
+uniform sampler2D uShadeLayer; uniform vec4 uLayerCam; uniform vec2 uLayerScreen;
+in vec2 vUV; in vec2 vW; out vec4 o;
 ${SPEC_LIGHT_GLSL}
 ${GLOSS_LIGHT_GLSL}
+${GRASS_SHINE_GLSL}
+float lumOf(vec3 c) { return dot(c, vec3(0.3, 0.59, 0.11)); }
 void main() {
   vec4 c = texture(uTex, vUV);
   if (uSpec.z > 0.0) {
@@ -84,6 +94,28 @@ void main() {
     if (g.a > 0.002) {
       float d = length(gl_FragCoord.xy - 0.5 * uScreen) / (0.5 * max(uScreen.x, uScreen.y));
       c.rgb = glossLight(c.rgb * 255.0, vec4(g.rgb / g.a * 255.0, g.a), (1.0 - smoothstep(uGloss.x, uGloss.y, d)) * uGloss.z) / 255.0;
+    }
+  }
+  if (uShine.z > 0.0) {
+    vec2 ts = vec2(textureSize(uTex, 0));
+    float wgt = texture(uShineMask, vUV).r * ${MASK_SCALE.toFixed(1)};
+    float d = length(gl_FragCoord.xy - 0.5 * uScreen) / (0.5 * max(uScreen.x, uScreen.y)), k = (1.0 - smoothstep(uShine.x, uShine.y, d)) * uShine.z;
+    // out of the shadows: the shadow layer as the last frame drew it (red a sprite's shadow, green the ground's baked shade), at where this
+    // pixel's world point lay on that frame's screen
+    if (wgt * k > 0.004 && uLayerCam.w > 0.5) {
+      vec2 q = (vW - uLayerCam.xy) * uLayerCam.z + 0.5 * uLayerScreen;
+      vec2 sb = texture(uShadeLayer, vec2(q.x / uLayerScreen.x, 1.0 - q.y / uLayerScreen.y)).rg;
+      wgt *= 1.0 - smoothstep(${SHINE_SHADE[0]}, ${SHINE_SHADE[1]}, max(sb.r, sb.g));
+    }
+    if (wgt * k > 0.004) {
+      // the height: the luminance less its local mean (blade tops high, the gaps low), and its slope per world px (tw: the world px a texel covers)
+      float tw = (uRect.z - uRect.x) / ((uUV.z - uUV.x) * ts.x);
+      // (two taps 1.5 texels right and down, each a bilinear mean of two texels: forward differences, half the taps of central ones)
+      vec2 t = 1.5 / ts;
+      float l0 = lumOf(c.rgb), le = lumOf(texture(uTex, vUV + vec2(t.x, 0.0)).rgb), ls = lumOf(texture(uTex, vUV + vec2(0.0, t.y)).rgb);
+      float z = (l0 - 0.5 * (le + ls)) / ${LUM_HP_STD};
+      vec2 sl = vec2(le - l0, ls - l0) / (1.5 * tw * ${(LUM_HP_STD * 2.5).toFixed(4)});
+      c.rgb = grassShine(c.rgb, z, sl, wgt, k);
     }
   }
   if (uMode == 1) c *= texture(uMask, vec2(gl_FragCoord.x / uScreen.x, 1.0 - gl_FragCoord.y / uScreen.y)).a;
@@ -346,7 +378,9 @@ export class GLRenderer {
     const gl = canvas.getContext('webgl2', { alpha: false, antialias: false, premultipliedAlpha: true, preserveDrawingBuffer: false, powerPreference: 'high-performance' });
     if (!gl) throw new Error('WebGL2 is not available');
     this.gl = gl;
-    this.quad = this.program(VS_QUAD, FS_QUAD, ['uRect', 'uCam', 'uScreen', 'uUV', 'uTex', 'uMask', 'uMode', 'uAlpha', 'uSpecTex', 'uSpec', 'uGlossTex', 'uGloss']);
+    this.quad = this.program(VS_QUAD, FS_QUAD, ['uRect', 'uCam', 'uScreen', 'uUV', 'uTex', 'uMask', 'uMode', 'uAlpha', 'uSpecTex', 'uSpec', 'uGlossTex', 'uGloss', 'uShineMask', 'uShine', 'uShineLook', 'uShadeLayer', 'uLayerCam', 'uLayerScreen']);
+    // (T262: the grass shine's samplers on their own units, once: 4 its weight mask, 5 the last frame's shadow layer)
+    gl.useProgram(this.quad.p); gl.uniform1i(this.quad.u.uShineMask!, 4); gl.uniform1i(this.quad.u.uShadeLayer!, 5);
     this.shadow = this.program(VS_SHADOW, FS_SHADOW, ['uCam', 'uScreen', 'uStrength', 'uShift', 'uMinPx']);
     this.point = this.program(VS_POINT, FS_POINT, ['uCam', 'uScreen', 'uSize', 'uSoft']);
     this.vec = this.program(VS_VEC, FS_VEC, ['uCam', 'uScreen', 'uShear', 'uMul', 'uFar', 'uVerts', 'uIdx', 'uMinPx']);
@@ -416,6 +450,22 @@ export class GLRenderer {
     return t;
   }
   deleteTexture(t: WebGLTexture) { this.gl.deleteTexture(t); }
+  /** T262: a texture from plain bytes (a chunk's grass shine weight mask): one channel (R8), bilinear, clamped */
+  byteTexture(data: Uint8Array, w: number, h: number) {
+    const gl = this.gl, t = gl.createTexture()!; gl.bindTexture(gl.TEXTURE_2D, t); gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.R8, w, h, 0, gl.RED, gl.UNSIGNED_BYTE, data);
+    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 4); this.texParams(gl.TEXTURE_2D, false);
+    return t;
+  }
+  /** T262: the grass shine this frame (engine.ts: grass-shine.ts shineGain and the knobs), or null (off): the falloff's inner and outer radius,
+   *  the gain, and the look (the highlight's exponent, bump, eye) */
+  shine: { inner: number; outer: number; gain: number; exponent: number; bump: number; eye: number } | null = null;
+  /** T262: a chunk picture's weight mask (GroundCache.shineOf), looked up by the picture itself */
+  shineOf: ((tex: WebGLTexture) => WebGLTexture | null) | null = null;
+  /** T262: the frame count (begin), and the frame and view the shadow layer was last drawn in (beginShadows): the ground of the next frame
+   *  takes its shine out of those shadows */
+  private frameNo = 0; private layerFrame = -1; private layerView: View | null = null;
+
   /** T215: the camera specular this frame (engine.ts: lamp-reflect.ts specGain and the knobs), or null (specCam off): the falloff's inner and
    *  outer radius and the gain a chunk drawn with a reflection mask lights its pools by */
   spec: { inner: number; outer: number; gain: number } | null = null;
@@ -431,7 +481,7 @@ export class GLRenderer {
   }
 
   begin(v: View, clear: [number, number, number]) {
-    const gl = this.gl; this.view = v; this.stats = { draws: 0, instances: 0, uploadFloats: 0 };
+    const gl = this.gl; this.view = v; this.stats = { draws: 0, instances: 0, uploadFloats: 0 }; this.frameNo++;
     // T226: graded, the scene draws into the scene target (endFrame lays it on the screen); else straight to the screen, as before
     this.frameGrade = this.grade; this.target = this.frameGrade ? this.sceneTarget(v.cw, v.ch) : null;
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.target);
@@ -514,6 +564,15 @@ export class GLRenderer {
     gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D, sp ? spec : this.emptyTex); gl.uniform1i(pr.u.uSpecTex, 2);
     gl.uniform4f(pr.u.uGloss, gs ? gs.inner : 0, gs ? gs.outer : 1, gs ? gs.gain : 0, 0);
     gl.activeTexture(gl.TEXTURE3); gl.bindTexture(gl.TEXTURE_2D, gs ? gloss : this.emptyTex); gl.uniform1i(pr.u.uGlossTex, 3);
+    // T262: the grass shine (its weight mask, unit 4; the last frame's shadow layer, unit 5). The units always hold a texture of their sampler's
+    // kind, the empty one while the shine is off: ANGLE checks every sampler's unit at the draw, read or not, and another pass may have left an
+    // integer texture there; the sampler units themselves are set once
+    const mask = this.shine && this.shine.gain > 0 && this.shineOf ? this.shineOf(tex) : null, sh = mask ? this.shine : null;
+    const lv = sh && this.layerTex && this.layerView && this.layerFrame === this.frameNo - 1 ? this.layerView : null;
+    gl.uniform4f(pr.u.uShine, sh ? sh.inner : 0, sh ? sh.outer : 1, sh ? sh.gain : 0, 0);
+    if (sh) { gl.uniform4f(pr.u.uShineLook, sh.exponent, sh.bump, sh.eye, 0); gl.uniform4f(pr.u.uLayerCam, lv ? lv.X : 0, lv ? lv.Y : 0, lv ? lv.ze : 1, lv ? 1 : 0); gl.uniform2f(pr.u.uLayerScreen, lv ? lv.cw : 1, lv ? lv.ch : 1); }
+    gl.activeTexture(gl.TEXTURE4); gl.bindTexture(gl.TEXTURE_2D, mask ?? this.emptyTex);
+    gl.activeTexture(gl.TEXTURE5); gl.bindTexture(gl.TEXTURE_2D, lv ? this.layerTex : this.emptyTex);
     gl.activeTexture(gl.TEXTURE0);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4); this.stats.draws++;
   }
@@ -563,7 +622,7 @@ export class GLRenderer {
     gl.blendEquation(gl.MAX); gl.blendFunc(gl.ONE, gl.ONE);
     // (the sprite shadows write red only; drawShadeMask green only)
     gl.colorMask(true, false, false, false);
-    this.layerOpen = true; this.layerUsed = false;
+    this.layerOpen = true; this.layerUsed = false; this.layerFrame = this.frameNo; this.layerView = { ...this.view };
   }
   /** T186: a ground chunk's baked shade mask (ground-cache.ts Tile.shade) over world rect x0 y0 x1 y1 (uv: the part of the mask it covers),
    *  into the open shadow layer's green: where the ground is already shaded, a sprite shadow darkens it only past that (endShadows) */

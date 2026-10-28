@@ -10,6 +10,9 @@ import type { BBox } from './network';
 import type { GrassCellView } from './ext/grass-management';
 import type { EdgeProfile } from './paint-edges';
 import type { GrassArt } from './painted-grass-lod';
+import type { ShineWeights } from './grass-shine';
+/** T262: a chunk's grass shine weight mask as plain bytes, one channel (renderer.ts takeShineMask) */
+export interface ShineMaskData { w: number; h: number; data: Uint8Array }
 import type { RoughMix } from './rough-yards';
 import type { SurfacesFile } from './painted-surfaces';
 
@@ -194,6 +197,9 @@ export type ToWorker =
   | { t: 'specCam'; on: boolean }
   /** T199: the small streams drawn as swamp (on, the default) or as their old creek bed (the dev switch, for comparing looks and bake times) */
   | { t: 'swamp'; on: boolean }
+  /** T262: the grass shine on (the default: each bake makes its weight mask) or off (none, the ground as before), and its weights per surface
+   *  group (grass-shine.ts); every chunk is baked again */
+  | { t: 'grassShine'; on: boolean; weights: ShineWeights }
   /** the course height light's strength (T126: the gear menu's Slope light, 0 = off): every chunk is baked again */
   | { t: 'slopeLight'; strength: number }
   /** the tile set bands to decode ahead (painted-tiles.ts bandsAhead: the camera is near their switch; T150), sent when they change */
@@ -217,6 +223,9 @@ export type FromWorker =
       spec?: ImageBitmap;
       /** T199: the swamp's gloss mask at a GLOSS.maskK-th of the chunk's size (renderer.ts takeGlossMask: premultiplied, alpha the pools' gloss,
        *  colour each pool's local mean times it); none with specCam off or no swamp on the chunk */
-      gloss?: ImageBitmap; ms: number }
+      gloss?: ImageBitmap;
+      /** T262: the grass shine's weight mask (grass-shine.ts: SHINE_TEXEL world px a texel, spanning the chunk, one channel); none with the shine off or
+       *  no grass on the chunk */
+      shine?: ShineMaskData; /** T262: the worker ms its weight mask took (in ms) */ shineMs?: number; ms: number }
   | { t: 'error'; message: string }
   | { t: 'log'; message: string };
