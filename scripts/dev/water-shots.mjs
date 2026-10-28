@@ -4,7 +4,7 @@
 // (the map's big water) at 8%, the glint off and on from the same view (by day and at dusk), a sheet beside the owner's concept picture, and
 // the bake times of the same water chunks with the look off and on (and the glint on) at 30% and 8%.
 //   node scripts/dev/water-shots.mjs --base http://127.0.0.1:5187/ --out E:/ClaudeTemp/T230 [--only river,pond,glint,sheet,bake]
-//     [--modes off,on | main] [--tag before] [--look '{"depth":1.2}'] [--reps 3]
+//     [--modes off,on | lake,on | main] [--tag before] [--seed 7 (the town start's map)] [--look '{"depth":1.2}'] [--reps 3]
 // Needs a dev server (vite) on --base. One headless Edge, closed when done; a fresh profile, so each start is a new game. On a build without
 // the look (main before T230) the switches do nothing: run it with --modes main.
 import { chromium } from 'playwright-core';
@@ -13,8 +13,8 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const args = process.argv.slice(2), opt = (k, d) => { const i = args.indexOf(`--${k}`); return i >= 0 ? args[i + 1] : d; };
-const base = opt('base', 'http://127.0.0.1:5187/'), out = opt('out', 'output/water'), tag = opt('tag', '') ? `-${opt('tag', '')}` : '';
-const only = new Set(opt('only', 'river,pond,glint,sheet,bake').split(',')), extra = JSON.parse(opt('look', '{}')), modes = opt('modes', 'off,on').split(','), reps = +opt('reps', '3');
+const base = opt('base', 'http://127.0.0.1:5187/'), out = opt('out', 'output/water'), tag = opt('tag', '') ? `-${opt('tag', '')}` : '', seed = opt('seed', '7');
+const only = new Set(opt('only', 'river,pond,glint,reflect,sheet,bake').split(',')), extra = JSON.parse(opt('look', '{}')), modes = opt('modes', 'off,on').split(','), reps = +opt('reps', '3');
 const W = 1280, H = 800;
 mkdirSync(out, { recursive: true });
 const browser = await chromium.launch({ channel: 'msedge', headless: true, args: ['--enable-gpu', '--ignore-gpu-blocklist', '--use-angle=d3d11'] });
@@ -43,10 +43,13 @@ const open = async url => {
   return { page, ctx };
 };
 const look = (page, x, y, z) => page.evaluate(([x, y, z]) => { const g = window.__game; g.camEase = null; g.lookAt(x, y, z); }, [x, y, z]);
-/** the water look off (today's water), on (the tuned look, with `extra`), or main (no switch: the build as it is) */
-const water = (page, mode) => page.evaluate(([mode, extra]) => {
+/** the water look off (the new water picture, no depth), on (the tuned look, with `extra`), lake (main's water: the lake picture on ponds and
+ *  rivers, the look off: the studio's way back to the old water), or main (no switch: the build as it is) */
+const water = (page, mode) => page.evaluate(async ([mode, extra]) => {
   const gr = window.__game.ground; if (mode === 'main' || !gr.setWaterLook) return false;
-  gr.setWaterLook(mode === 'off' ? { on: false } : { on: true, ...extra }); return true;
+  const fam = mode === 'lake' ? 'lake' : 'pond-concept-run';
+  gr.setSurfaceLook('water', { family: fam }); gr.setSurfaceLook('river', { family: fam });
+  gr.setWaterLook(mode === 'on' ? { on: true, ...extra } : { on: false }); return true;
 }, [mode, extra]);
 const glint = (page, on) => page.evaluate(on => { window.__game.specCam = on; }, on);
 const night = (page, v) => page.evaluate(v => { window.__night = v; }, v);
@@ -115,8 +118,8 @@ try {
     }
     await ctx.close();
   }
-  if (['pond', 'glint', 'sheet'].some(k => only.has(k))) {
-    const { page, ctx } = await open(`${base}?start=town`);
+  if (['pond', 'glint', 'reflect', 'sheet'].some(k => only.has(k))) {
+    const { page, ctx } = await open(`${base}?start=town&seed=${seed}`);
     const ps = await pondSpot(page); report.pond = ps; console.log('pond', JSON.stringify(ps));
     if (ps) {
       await look(page, ps.x, ps.y, 0.3);
@@ -126,6 +129,23 @@ try {
         for (const on of [false, true]) { await glint(page, on); await settle(page); for (const [light, v] of [['day', 0], ['dusk', 0.5]]) { await night(page, v); await page.waitForTimeout(300); (files[`pglint-${light}`] ??= []).push(await shot(page, `glint-pond-30pct-${light}-${on ? 'on' : 'off'}`)); } }
         await night(page, 0); await glint(page, false);
       }
+      // ---- the reflections: trees planted along the pond's far (up-screen) shore, as the concept frames its ponds (the town's pond stands
+      //      in open rough), the look off and on, and the glint on over them
+      if (only.has('reflect')) {
+        const planted = await page.evaluate(async () => {
+          const g = window.__game, grid = g.courseGrid, { LIBRARY } = await import('/src/game/library.ts'), CT = 0.5, WATER = 3;
+          const trees = LIBRARY.map((it, i) => ({ it, i })).filter(q => q.it.kind === 'tree');
+          const pick = n => trees[(n * 7919) % trees.length].i;
+          // the pond's up-screen shore: per diagonal (x - y, 2-tile bins) the water cell nearest the top of the screen (least x + y)
+          const top = new Map();
+          for (let j = 0; j < grid.h; j++) for (let i = 0; i < grid.w; i++) if (grid.surf[j * grid.w + i] === WATER) { const x = grid.x0 + (i + 0.5) * CT, y = grid.y0 + (j + 0.5) * CT, b = Math.round((x - y) / 2.2), q = top.get(b); if (!q || x + y < q.x + q.y) top.set(b, { x, y }); }
+          let n = 0; for (const [, q] of [...top].sort((a, b) => a[0] - b[0])) { g.addProp(pick(n++), q.x - 1.3, q.y - 1.3, false, 1); }
+          return { trees: trees.length, planted: n };
+        });
+        report.planted = planted; console.log('planted', JSON.stringify(planted));
+        for (const m of modes) { await water(page, m); await glint(page, false); await settle(page, 1500); (files.reflect30 ??= []).push(await shot(page, `reflect-pond-30pct-${m}`)); }
+        if (!modes.includes('main')) { await water(page, 'on'); await glint(page, true); await settle(page, 1500); await shot(page, 'reflect-pond-30pct-on-glint'); await glint(page, false); }
+      }
     }
     await ctx.close();
   }
@@ -133,7 +153,7 @@ try {
   if (only.has('sheet') && files.river30 && files.pond30) {
     const h = 380, gap = 8, lab = 26;
     const pond = await sharp('docs/art/concept/maple-falls-concept.webp').extract({ left: 520, top: 600, width: 420, height: 230 }).png().toBuffer();
-    const lake = await sharp('docs/art/concept/maple-falls-concept.webp').extract({ left: 1250, top: 60, width: 475, height: 260 }).png().toBuffer();
+    const lake = await sharp('docs/art/concept/maple-falls-concept.webp').extract({ left: 1440, top: 56, width: 285, height: 190 }).png().toBuffer();
     const row = async cells => {
       const bufs = await Promise.all(cells.map(([f]) => sharp(f).resize({ height: h }).png().toBuffer({ resolveWithObject: true })));
       const Wd = bufs.reduce((s, b) => s + b.info.width, 0) + gap * (bufs.length - 1);

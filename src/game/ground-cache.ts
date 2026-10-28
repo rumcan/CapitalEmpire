@@ -18,6 +18,8 @@ import { casterChange } from './living-ground';
 import { LEAF_DENSITY_DEFAULT, clampLeafDensity } from './leaf-fall';
 import { onPaintedSurfaces, paintedSurfaces, setPaintedSurfaces } from './painted-surfaces-live';
 import { finishOf, type CourseFinish } from './course-finish';
+import { REFLECT, clampWaterLook, waterLookOf, type WaterLook } from './water-look';
+import type { PaintedLook } from './painted-families';
 import { pictureCurrent } from './ground-layers';
 
 export interface Tile {
@@ -107,7 +109,18 @@ export class GroundCache {
   setLeafDensity(v: number) { const d = clampLeafDensity(v); if (d === this.leafDensity) return; this.leafDensity = d; this.broadcast({ t: 'leaves', density: d }); this.invalidateAll(); }
   /** the chunks lay something from the casters (the living ground, or the fallen leaves under the trees and along the fences and walls): a chunk
    *  waits for the casters round it, and a caster edit re-bakes the chunks under it */
-  get castersUsed() { return this.livingActive || this.leafDensity > 0; }
+  get castersUsed() { return this.livingActive || this.leafDensity > 0 || this.waterReflects; }
+  /** T230: the water reflects its shore's trees and buildings (water-look.ts: the look on, its reflect knob above 0) */
+  get waterReflects() { const w = this.waterLook; return w.on && w.reflect > 0; }
+  /** T230: the water look (water-look.ts: deeper and more teal toward the middle, a lighter edge, the shore's reflections) as the surfaces file
+   *  has it (Studio > Painted > Water look) */
+  get waterLook(): WaterLook { return waterLookOf(paintedSurfaces()); }
+  /** T230: sets some of the water look's knobs (the rest stay), as a studio save does: every chunk is baked again. The dev switch
+   *  window.__game.ground.setWaterLook({ on: false }) compares the water before T230 and the bake times */
+  setWaterLook(f: Partial<WaterLook>) { const cur = paintedSurfaces(); setPaintedSurfaces({ ...cur, water: clampWaterLook({ ...waterLookOf(cur), ...f }) }); }
+  /** T230: a surface's painted look from the console, as a studio save does (window.__game.ground.setSurfaceLook('water', { family: 'lake' })
+   *  with setWaterLook({ on: false }) brings back the water before T230) */
+  setSurfaceLook(key: string, look: Partial<PaintedLook>) { const cur = paintedSurfaces(), was = cur.surfaces[key]; setPaintedSurfaces({ ...cur, surfaces: { ...cur.surfaces, [key]: { ...(was ?? { family: '', version: null, scale: 1, tint: '#ffffff', tone: 0 }), ...look } } }); }
   /** Ground variety or its debug view changed: every worker switches and every chunk is baked again (each keeps its old picture until then) */
   /** T204: the rugged edges on or off (the dev switch: window.__game.ground.setRugged(false) compares the looks and the bake times) */
   rugged = true;
@@ -137,7 +150,7 @@ export class GroundCache {
   setSwamp(on: boolean) { if (on === this.swamp) return; this.swamp = on; this.broadcast({ t: 'swamp', on }); this.invalidateAll(); }
   /** T199: each chunk picture's swamp gloss mask (renderer.ts takeGlossMask), by picture, as its reflection mask (it goes and is deleted with it) */
   private glosses = new Map<WebGLTexture, WebGLTexture>();
-  /** the swamp gloss mask of a chunk picture, or null (specCam off, or no swamp on it) */
+  /** the gloss mask of a chunk picture (T199 the swamp's pools, T230 its ponds and rivers), or null (specCam off, or no swamp or water on it) */
   glossOf(tex: WebGLTexture | null): WebGLTexture | null { return (tex && this.glosses.get(tex)) ?? null; }
   /** delete a chunk picture and its reflection and gloss masks */
   private dropPicture(tex: WebGLTexture) {
@@ -160,7 +173,8 @@ export class GroundCache {
     for (const [k, r] of this.casterQueue) {
       const old = this.casterSent.get(k), box = casterChange(old, r ?? new Float32Array(0));
       if (r) { this.casterSent.set(k, r); if (box || !old) set.push([k, r]); } else if (old) { this.casterSent.delete(k); drop.push(k); }
-      if (box && this.castersUsed) this.invalidate(box, false, 0, 'gm');
+      // (T230: with the water's reflections, also the water below it down the screen, as far as a reflection reaches)
+      if (box && this.castersUsed) this.invalidate(this.waterReflects ? [box[0], box[1], box[2] + REFLECT.reach, box[3] + REFLECT.reach] : box, false, 0, 'gm');
     }
     this.casterQueue.clear();
     const dropPrefix = this.casterPrefixes.splice(0);
