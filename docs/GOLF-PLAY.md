@@ -140,9 +140,37 @@ waits come from a slow group, most often the owner's. `tests/golf-play-pace.test
   roster and round and books on from where it was. A save from before T208 starts with the day under way, booking only the check-ins to come.
 - Dev and bench: `?golfers=N` (a busy day of N visitors), `?seed=N` (the old start's map), `?everyday=0` (none drawn); `npm run bench -- --start
   town [--golfers N] [--seed N] [--everyday 0]`.
-- Left: carts (T213), memberships sold by the pros (T214), the clubhouse's visit cars (City's generic visits: they still book $22 x party as before,
+- Left: memberships sold by the pros (T214), the clubhouse's visit cars (City's generic visits: they still book $22 x party as before,
   on the season clock; T214 should make them the pro shop's and the bar's trade, or drop them), golfers walking the paths instead of straight lines.
 
-**Open (tickets since 2026-10-27: T212 #557 the
-putt and chip clips, T213 #558 caddies, carts and celebrations; and T214 #559 pros and memberships; T208 #553 everyday golf is above):** putts use the drive clip's
-address frames (no putt clip in Meshy's library); no caddies, carts or celebrations yet.
+**Caddies, carts and celebrations (T213 #558, 2026-10-28):** `src/game/golf/play/entourage.ts`, `carts.ts`, `celebrate.ts`, the playback's
+`view.ts`; `tests/golf-play-entourage.test.ts`.
+- **Who:** at tier 3 and up (`CADDIE_TIER`: the tour events; tier 1-2 pros are club pros) every pro has a caddie. At tier 1-2 (`CART_TIER`) the
+  amateurs ride carts, two to a cart within a group (`pairCarts`; an odd one rides alone). Everyday: the visitors ride; a members' group walks half the
+  time (`MEMBER_WALK`, drawn from its own stream of the day's seed, so the roster is otherwise unchanged). The owner always walks (his walk to his ball is
+  the live playback's) and has no caddie. Set by `dayRound` (`fieldEntourage`) and `dayRoster` (`dayEntourage`) on the golfers (`Golfer.cart`,
+  `Golfer.caddie`), so a reload rebuilds the same: nothing new is saved (T209, T208's save unchanged).
+- **Pace:** a rider's move between shots takes `CART_PACE` (0.75) of the walk (`round.ts moveMin`), and an all-cart group drives to the next tee as
+  fast. Every stroke's outcome is unchanged (each golfer's own random stream); only the minutes move, and T211's gates still decide the order: never two
+  groups on a green (tested on cart fields and a busy everyday day).
+- **The carts** (`CartPlay`, worked out from the round's shots: the round already timed its riders): a cart parks by the tee, beside the green (just
+  off it), and beside each ball on the hole (a ball within `GREEN_NEAR` 15 tiles of the pin plays from the green's stop; stops within `MERGE_TILES` 20
+  share a stop). A stop is on a cart path within `PATH_REACH` 25 tiles (the network's cart paths, not the walking path, and the course drives:
+  `engine.ts cartPathsNow`), else at the rough's edge. The drives follow the paths (the shortest way over their nodes; not a detour longer than
+  `DETOUR` 2.5 x the straight line + 60 tiles), else the rough's edge (a green, tee, bunker or water always driven around, a fairway kept beside, crossed
+  when the edge is far). The golfers walk from the cart to the ball and back, and ride between (not drawn: the hire cart's art has nobody in it); a cart
+  late from its last stop shortens its golfers' walk out. Everyday riders ride back to the clubhouse's door after the 18th and walk to their car. Lazy: a
+  hole's stops when the cart reaches it, a drive's route only when it is near the screen (`PlayView.box`), so a cart off the screen costs a look at its
+  hole.
+- **Caddies:** walk beside their pro, stand behind him off the line of a full shot, stand just off the green (past his ball, from the pin) while he putts,
+  and come to him once he has holed out; they follow at 1.6 x the walking pace. Stand-in art (GOLF-ART-LIST 176): the spectator `spec_m_polo_visor`,
+  labelled "Stand In for caddie", with the bag trolley beside him.
+- **Celebrations:** a hole-out at a birdie or better (`celebrations`): once the ball drops, the golfer holds a stand-in pose (the swing's high finish,
+  turned to the camera, a little hop) for `CELEBRATE_S` 1.6 real s at the cup, and the gallery spots within `CHEER_TILES` 40 play the spectators' cheer
+  clip (seated fans their seated clap). The fist pump and cap tip clips are GOLF-ART-LIST 177. Not replayed on a reload.
+- **Art gaps:** the hire cart has 2 facings (SW, SE), the nearest drawn (GOLF-ART-LIST 173 asks for 8); the caddie (176); the celebration clips (177).
+- **Cost:** a playback update with a 72-pro field and caddies 0.02 ms, a tier-2 field with carts 0.04 ms (the test's numbers); the bench (`--start town
+  --golfers 150 --seed 7`, a busy everyday day with carts) moved 1.58 to 1.76 ms CPU a frame at 30% and 2.14 to 2.18 ms at 15%.
+
+**Open (tickets since 2026-10-27: T212 #557 the putt and chip clips, and T214 #559 pros and memberships):** putts use the drive clip's address frames
+(no putt clip in Meshy's library); the caddie, the eight-facing cart and the celebration clips are art requests (GOLF-ART-LIST 176, 173, 177).

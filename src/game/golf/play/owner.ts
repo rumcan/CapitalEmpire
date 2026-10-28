@@ -4,6 +4,7 @@
 import { carryM } from './shot';
 import { makeField, teeTimes } from './field';
 import { playRound } from './round';
+import { fieldEntourage } from './entourage';
 import { LiveGroup, POWER } from './live';
 import type { OwnerInput, OwnerTurn } from './live';
 import type { Club, CourseView, Golfer, Lie, RoundPlan, Sex } from './types';
@@ -47,6 +48,8 @@ export interface DayOwnerPlay { id: number; li: number; tee: number; live: LiveG
 export function dayRound(view: CourseView, tier: number, seed: number, owner: DayOwner | null): { plan: RoundPlan; golfers: Golfer[]; own: DayOwnerPlay | null } {
   const field = makeField(tier, seed), id = field.length, golfers = owner ? [...field, ownerGolfer(id, owner.owner)] : field;
   const groups = teeTimes(golfers, seed), li = owner ? groups.findIndex(gr => gr.players.includes(id)) : -1;
+  // T213: the tour's pros have caddies, the small events' amateurs ride carts (their moves between shots a little quicker)
+  fieldEntourage(golfers, groups, tier);
   const plan = playRound(view, golfers, groups, seed, li >= 0 ? { live: li } : undefined);
   if (!owner || li < 0) return { plan, golfers, own: null };
   const { live, turn } = startOwner(plan, view, li, seed, owner.inputs, owner.caddie);
