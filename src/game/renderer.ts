@@ -4,6 +4,7 @@ import { MOSAIC_TILES, PLACEHOLDER, canvas, ctx2d, type C2D, type Cnv, type Text
 import { fbm, maskFrom, smooth } from './canvas2d';
 import { EAGER_PHOTO } from './grass-art';
 import { PAINT_TEXES, isPaintPhoto, type PaintTex } from './paint';
+import { exposeClip, exposeDraw, exposed, exposureOf } from './exposure';
 import { POOL_ANCHOR, PPM, SLAB_CELL } from './ground-art';
 import { POOL_SHARES, SPEC_MASK_K } from './lamp-reflect';
 import { GLOSS, SWAMP, SwampField, glossTile, swampStreams } from './swamp';
@@ -2103,21 +2104,28 @@ export class GroundPainter {
       for (const q of lines) for (let k = 0; k + 1 < q.length; k += 2) { const x = q[k]!, y = q[k + 1]!; if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
       return [Math.max(r[0]!, x0 - pad), Math.max(r[1]!, y0 - pad), Math.min(r[2]!, x1 + pad), Math.min(r[3]!, y1 + pad)];
     };
-    /** a course look's tone (Multiply or Screen of its tint at its strength) over what g draws next with `draw` (fill or stroke), at alpha k */
-    const toneOver = (g: C2D, t: CourseTex, k: number, draw: () => void) => {
-      if (!t.t || !(t.ta ?? 0)) return;
-      g.globalCompositeOperation = t.t === 1 ? 'multiply' : 'screen'; g.globalAlpha = (t.ta ?? 0) * k; g.fillStyle = g.strokeStyle = t.tc ?? '#000000'; draw();
+    /** T227: the course finish's collar tone (a multiply of its tint at its strength, a tone that keeps the texture: left as it was by T261)
+     *  over what g draws next with `draw` (fill or stroke), at alpha k */
+    type CollarTone = { tc: string; ta: number };
+    const collarOver = (g: C2D, c: CollarTone, k: number, draw: () => void) => {
+      if (!(c.ta > 0)) return;
+      g.globalCompositeOperation = 'multiply'; g.globalAlpha = c.ta * k; g.fillStyle = g.strokeStyle = c.tc; draw();
       g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1;
     };
-    /** rings filled even-odd in t: the fill, its blend with a second texture in soft patches (never periodic), then its tone (course-look.ts);
-     *  extra: a second tone over it (T227: the course finish's collar, a multiply that keeps the texture) */
-    const fill = (t: CourseTex, rings: readonly ArrayLike<number>[], extra?: CourseTex | null) => {
+    /** rings filled even-odd in t: the fill, its blend with a second texture in soft patches (never periodic), then its exposure (T261,
+     *  exposure.ts: the fill's own pixels darker or lighter, inside its rings); extra: the course finish's collar tone over it (T227) */
+    const fill = (t: CourseTex, rings: readonly ArrayLike<number>[], extra?: CollarTone | null) => {
       if (!rings.length) return;
       const clip = ringsOf(rings), need = boxOf(rings);
       if (need[2] <= need[0] || need[3] <= need[1]) return;
       ctx.save(); ctx.setTransform(M); ctx.clip(clip, 'evenodd'); ctx.fillStyle = style(ctx, t, need); ctx.fillRect(need[0], need[1], need[2] - need[0], need[3] - need[1]); ctx.restore();
       if (t.m && !lite) this.drawBlend(ctx, t.m, t.sc, new DOMMatrix().rotateSelf(0, 0, t.a).scaleSelf(t.sc, t.sc), clip, 'evenodd', need, L, X0, Y0, M, Minv);
-      for (const q of extra ? [t, extra] : [t]) if (q.t) { ctx.save(); ctx.setTransform(M); ctx.clip(clip, 'evenodd'); toneOver(ctx, q, 1, () => ctx.fillRect(need[0], need[1], need[2] - need[0], need[3] - need[1])); ctx.restore(); }
+      if (exposed(t.x) || extra) {
+        ctx.save(); ctx.setTransform(M); ctx.clip(clip, 'evenodd');
+        exposeClip(ctx, t.x, need[0], need[1], need[2], need[3]);
+        if (extra) collarOver(ctx, extra, 1, () => ctx.fillRect(need[0], need[1], need[2] - need[0], need[3] - need[1]));
+        ctx.restore();
+      }
     };
     /** polylines (a closed one repeats its first point) as one path */
     const linesOf = (lines: readonly ArrayLike<number>[]) => {
@@ -2132,12 +2140,13 @@ export class GroundPainter {
     };
     /** soft edge polylines stroked in t, FEATHER_STEPS strokes from 2f wide down, alpha 1 / (n - k): out to f tiles past the edge the coverage
      *  falls linearly (butt ends: a polyline cut at a chunk seam meets its neighbour's end square on) */
-    const feather = (t: CourseTex, lines: readonly ArrayLike<number>[], f: number, extra?: CourseTex | null) => {
+    const feather = (t: CourseTex, lines: readonly ArrayLike<number>[], f: number, extra?: CollarTone | null) => {
       if (!lines.length || f <= 0) return;
       const p = linesOf(lines), n = FEATHER_STEPS, need = boxOf(lines, f + 1);
       if (need[2] <= need[0] || need[3] <= need[1]) return;
       ctx.save(); ctx.setTransform(M); ctx.lineJoin = 'round'; ctx.lineCap = 'butt'; const st = style(ctx, t, need);
-      for (let k = 0; k < n; k++) { ctx.strokeStyle = st; ctx.globalAlpha = 1 / (n - k); ctx.lineWidth = 2 * f * (1 - k / n); ctx.stroke(p); toneOver(ctx, t, 1 / (n - k), () => ctx.stroke(p)); if (extra) toneOver(ctx, extra, 1 / (n - k), () => ctx.stroke(p)); }
+      // each step's stroke, then its exposure (T261: the same stroke darker, or its texture added again) and the collar tone, at its alpha
+      for (let k = 0; k < n; k++) { ctx.strokeStyle = st; ctx.globalAlpha = 1 / (n - k); ctx.lineWidth = 2 * f * (1 - k / n); ctx.stroke(p); exposeDraw(ctx, t.x, st, () => ctx.stroke(p), 1 / (n - k)); if (extra) collarOver(ctx, extra, 1 / (n - k), () => ctx.stroke(p)); }
       ctx.restore();
     };
     /** an edge image over the tiles from (x0, y0), stretched onto ctx through the chunk transform with the op */
@@ -2177,7 +2186,7 @@ export class GroundPainter {
         const need: BBox = [Math.max(r[0]!, e.box[0]), Math.max(r[1]!, e.box[1]), Math.min(r[2]!, e.box[2]), Math.min(r[3]!, e.box[3])];
         if (need[2] <= need[0] || need[3] <= need[1]) continue;
         const fill = t ? style(ctx, t, need) : under; if (!fill) continue;
-        this.layBlades(ctx, M, e.blades, e.near, e.far, fill, t ? draw => toneOver(ctx, t, 1, draw) : undefined);
+        this.layBlades(ctx, M, e.blades, e.near, e.far, fill, t && exposed(t.x) ? draw => exposeDraw(ctx, t.x, fill, draw) : undefined);
       }
     };
     const layers = (s: number) => { const out: { c: CoursePatch; l: CourseLayer }[] = []; for (const c of cs) for (const l of c.layers) if (l.s === s) out.push({ c, l }); return out; };
@@ -2268,10 +2277,10 @@ export class GroundPainter {
         // T227: the course finish's darker collar (every first cut, the greens' fringe): a multiply over its fill and its feathers alike
         // and a bunker's lip band in the fairway's first cut (its g: the bunker sits in the collar, as in the concept), toned as the collar
         const tex = (l: CourseLayer): CourseTex => (fin.on && l.collar!.g ? l.collar!.g : l.collar!);
-        const tone = (l: CourseLayer): CourseTex | null => (collarTone && l.collar && (tonedCollar(l.collar.n) || (fin.on && l.collar.g)) ? { tex: '', sc: 1, a: 0, t: 1, ta: collarTone.ta, tc: collarTone.tc } : null);
+        const tone = (l: CourseLayer): CollarTone | null => (collarTone && l.collar && (tonedCollar(l.collar.n) || (fin.on && l.collar.g)) ? collarTone : null);
         // T256: an alternate look's band (its lip grass with the finish), as tex; none: it keeps the layer's band
-        const atone = (l: CourseLayer, a: Alt): CourseTex | null => (collarTone && l.collar && (tonedCollar(l.collar.n) || (fin.on && a.g)) ? { tex: '', sc: 1, a: 0, t: 1, ta: collarTone.ta, tc: collarTone.tc } : null);
-        const band = (l: CourseLayer, draw: (t: CourseTex, tn: CourseTex | null) => void) => alts(l, a => { const t = fin.on && a.g ? a.g : a.band; if (t) draw(t, atone(l, a)); });
+        const atone = (l: CourseLayer, a: Alt): CollarTone | null => (collarTone && l.collar && (tonedCollar(l.collar.n) || (fin.on && a.g)) ? collarTone : null);
+        const band = (l: CourseLayer, draw: (t: CourseTex, tn: CollarTone | null) => void) => alts(l, a => { const t = fin.on && a.g ? a.g : a.band; if (t) draw(t, atone(l, a)); });
         if (!lite) for (const { l } of ls) if (l.collar) { const sf = l.collar.soft ?? l.collar.edges, w = Math.min(flatF, Math.max(l.collar.w ?? flatF, 0.6 * flatF)); feather(tex(l), sf, w, tone(l)); band(l, (t, tn) => feather(t, sf, w, tn)); }
         // T196: every edge of a raised band (a green's fringe, a tee's cut) softened a little, its walls' tops too: the band's texture fades
         // over the top of the face hanging from it (a pond's bank keeps its own wet edge)
@@ -3039,13 +3048,15 @@ export class GroundPainter {
     const r = [Math.max(pb[0], box[0]) - 1, Math.max(pb[1], box[1]) - 1, Math.min(pb[2], box[2]) + 1, Math.min(pb[3], box[3]) + 1];
     if (r[2] <= r[0] || r[3] <= r[1]) return;
     const asph = p.tex === 'asphalt' || p.tex === 'asphaltDark' || p.tex === 'asphaltWorn' || p.tex === 'lotAsphalt', paved = asph || p.tex === 'paving' || p.tex === 'pad' || p.tex === 'slabs';
-    /** paints texture t over the area: a fill of its rectangle (w = 0), or a stroke of its edge w tiles wide */
-    const lay = (t: string, w: number, Gx: DOMMatrix, sx: number) => {
+    /** paints texture t over the area: a fill of its rectangle (w = 0), or a stroke of its edge w tiles wide; add (T261: a lighter exposure
+     *  laying the band again, added to itself): the texture alone, without the slabs' sprites and grime or the dark asphalt's multiply */
+    const lay = (t: string, w: number, Gx: DOMMatrix, sx: number, add = false) => {
       const put = (style: string | CanvasPattern) => { if (w) { ctx.strokeStyle = style; ctx.lineWidth = w; ctx.stroke(path); } else { ctx.fillStyle = style; ctx.fillRect(r[0], r[1], r[2] - r[0], r[3] - r[1]); } };
       const tone = (col: string, op: GlobalCompositeOperation, alpha: number) => { ctx.globalCompositeOperation = op; ctx.globalAlpha = alpha; put(col); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; };
       if (t === 'kerb') { ctx.strokeStyle = this.tex.curb.joint; ctx.lineWidth = w; ctx.stroke(path); ctx.strokeStyle = this.tex.curb.top; ctx.lineWidth = Math.max(0.02, w - 0.08); ctx.stroke(path); return; }
       if (t === 'slabs') {
         put(this.tex.curb.top);
+        if (add) return;
         if (!lite) {
           if (w) {
             // one row of slab sprites along each edge, on the inside (the sign of the area says which normal points in)
@@ -3063,7 +3074,7 @@ export class GroundPainter {
       }
       if (t === 'asphaltDark') {
         put(this.groundPattern(ctx, this.tex.mosaicFor('base', L * sx), Gx));
-        if (t === 'asphaltDark') tone('rgb(10,12,24)', 'multiply', 0.28);
+        if (t === 'asphaltDark' && !add) tone('rgb(10,12,24)', 'multiply', 0.28);
         return;
       }
       if (t === 'lotAsphalt') { put(this.groundPattern(ctx, this.tex.mosaicFor('lot', L * sx), Gx)); return; }
@@ -3077,8 +3088,8 @@ export class GroundPainter {
     ctx.save(); ctx.setTransform(M); ctx.clip(path); ctx.lineJoin = 'round';
     lay(p.tex, 0, G, st.s);
     if (st.m && !lite) this.drawBlend(ctx, st.m, st.s, G, path, 'nonzero', r, L, X0, Y0, M, Minv);
-    // the tone filter: Multiply (darker) or Screen (lighter) of the tint over the fill, at its strength; the border is not toned
-    if (st.t) { ctx.globalCompositeOperation = st.t === 1 ? 'multiply' : 'screen'; ctx.globalAlpha = st.ta ?? 0; ctx.fillStyle = st.tc ?? '#000000'; ctx.fillRect(r[0], r[1], r[2] - r[0], r[3] - r[1]); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; }
+    // the fill's exposure (T261, exposure.ts: its own pixels, its blend included, darker or lighter inside the area; no tint is drawn)
+    if (st.t) exposeClip(ctx, exposureOf(st.t, st.ta), r[0], r[1], r[2], r[3]);
     // (plain, T247: the fill alone, laid on past the area's outline over its soft band: no managed grass or stripes, which follow the area's cells)
     if (!plain) this.drawManagedGrass(ctx, [p], box, L);
     // the mowing stripes last on the fill (T132: the range's outfield), at every zoom
@@ -3089,8 +3100,12 @@ export class GroundPainter {
       const ramp = soft > 0 && st.bt !== 'kerb' && st.bt !== 'slabs' ? bandRamp(st.b, soft) : [{ half: st.b, alpha: 1 }];
       for (const s of ramp) { ctx.globalAlpha = s.alpha; lay(st.bt, 2 * s.half, Gb, bsx); }
       ctx.globalAlpha = 1;
-      // the border's tone: the same path stroked over the band (Multiply or Screen of its tint at its strength), inside the clip
-      if (st.bto) { ctx.globalCompositeOperation = st.bto === 1 ? 'multiply' : 'screen'; ctx.strokeStyle = st.btc ?? '#000000'; for (const s of ramp) { ctx.globalAlpha = (st.bta ?? 0) / ramp.length; ctx.lineWidth = 2 * s.half; ctx.stroke(path); } ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; }
+      // the border's exposure (T261), inside the clip: darker, each band step's stroke again in the grey of f multiplied; lighter, the band
+      // laid again added to itself at (f - 1) times the step's alpha
+      const bx = st.bto ? exposureOf(st.bto, st.bta) : 1;
+      if (exposed(bx) && bx < 1) for (const s of ramp) { ctx.lineWidth = 2 * s.half; exposeDraw(ctx, bx, '', () => ctx.stroke(path), s.alpha); }
+      else if (exposed(bx)) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; for (const s of ramp) { ctx.globalAlpha = Math.min(1, (bx - 1) * s.alpha); lay(st.bt, 2 * s.half, Gb, bsx, true); } ctx.restore(); }
+      ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
     }
     else if (paved) { ctx.strokeStyle = asph ? 'rgba(12,10,8,0.5)' : 'rgba(0,0,0,0.3)'; ctx.lineWidth = asph ? 0.3 : 0.16; ctx.stroke(path); }
     ctx.restore();

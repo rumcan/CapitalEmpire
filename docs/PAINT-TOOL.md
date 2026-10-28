@@ -137,6 +137,12 @@ Design: [GOLF-PLAN.md](GOLF-PLAN.md) sections 4.1–4.5. What changes here:
 - **Tone filters (the owner, 2026-10-21):** per area, **Multiply** (darker) or **Lighten** (screen: lighter), a strength slider
   (0–100%) and an optional tint colour, applied after the texture in the area's bake (as the asphalt tones are today). Saved as
   optional tuple elements (mode, strength, tint).
+  **T261 (#766, the owner 2026-10-29): Exposure replaces them.** One Exposure slider (and one Border exposure) multiplies the texture's
+  own RGB by f, one stop darker (0.5) to one stop lighter (2), 0 in the middle unchanged: darker is a multiply of grey rgb(255f), lighter
+  the drawn pixels added to themselves ('lighter' at f - 1), inside the same clip; no tint colour is drawn (`src/game/exposure.ts`). The
+  save is unchanged: Darker at strength a reads as f = 1 - a (at least 0.5), Lighter as 1 + a, and the tint is kept but ignored. It is
+  drawn on the course fills, feathers, spill and bands, the painted areas' fill and border, the cursor's puck and band, the swatch pucks
+  and the My looks disc. The course finish's collar tone (course-finish.ts COLLAR_TINT) stays a multiply of its tint.
 - **Shadow (T136, #260):** a slider under Border width (0 to 100%; the StyleEditor and My looks) gives a painted area an edge shade, so it
   reads as slightly raised under the sun at the upper right: a cool multiply inside the edges whose outside faces 145° on screen, full at
   the edge and fading inward over 2 to 3.5 m (a slow world-space noise varies the depth), and a light a 0.2 m gap inside the edges turned
