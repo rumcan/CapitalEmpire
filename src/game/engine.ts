@@ -125,6 +125,7 @@ import { PRACTICE_LOT_NAME, inPractice, practiceArea } from './golf/practice';
 import { baysByDoor, servesOf, servingParks, type Serve, type Venue } from './golf/walkserve';
 import { drawServePreview } from './walkserve-overlay';
 import { hiddenBy, rangeKeepOutWhy, snapToRoad, type Building } from './golf/parkplace';
+import { parkLook, type ParkLook } from './event/parklook';
 import { dressCourse } from './golf/dressing';
 import { FIRST_TEE, MONTH_LEN, SEASON_LEN, SEASON_START, monthIndexLabel, monthsLeft, seasonLabel, seasonMonth, yearOf } from './golf/calendar';
 import { MonthMoney, golfersAMonth, type TopStats } from './golf/topstats';
@@ -5013,7 +5014,7 @@ export class Game {
   }
   /** the car parks' asphalt and bay lines, baked into the ground like a lot's car park (key park:{id}); a car park gone, or without a frontage, drops its patch */
   private parkGrounds() {
-    const keep = new Set<string>();
+    const keep = new Set<string>(), looks = new Map<number, ParkLook>();
     this.parkDefs.forEach((d, k) => {
       const pk = this.parkBuilt[k]; if (!pk) return;
       const key = `park:${d.id}`, lines: number[] = [];
@@ -5022,10 +5023,53 @@ export class Game {
         else for (const o of [-BAY_W / 2, BAY_W / 2]) lines.push(b.x + o, b.y - BAY_D / 2, b.x + o, b.y + BAY_D / 2);
       }
       // T239: an unpaved lot (the range start's car park before it is paved) is its ground alone: packed dirt or gravel, no painted bays
-      keep.add(key); this.setLotGround(key, [{ pts: [d.x, d.y, d.x + d.w, d.y, d.x + d.w, d.y + d.h, d.x, d.y + d.h], tex: d.ground ?? 'asphalt', ...(d.ground ? {} : { lines }) }]);
+      // T237: a paved one in golf has the concept's look (event/parklook.ts): its kerbs and planting islands over the asphalt, its footpath
+      const look = this.golf && !d.ground ? parkLook(pk, this.lookDoor(pk), this.clubWalls()) : null;
+      if (look) looks.set(d.id, look);
+      keep.add(key); this.setLotGround(key, [{ pts: [d.x, d.y, d.x + d.w, d.y, d.x + d.w, d.y + d.h, d.x, d.y + d.h], tex: d.ground ?? 'asphalt', ...(d.ground ? {} : { lines }) },
+        ...(look ? look.over.map((o): LotPatch => ({ pts: o.pts, tex: o.tex, park: true })) : []), ...(look?.path ? [{ pts: look.path.pts, tex: look.path.tex } as LotPatch] : [])]);
     });
     for (const key of this.parkGround) if (!keep.has(key)) this.setLotGround(key, null);
-    this.parkGround = keep;
+    this.parkGround = keep; this.parkLooks = looks; this.lookKey = this.venueKey();
+    this.syncLookProps();
+  }
+  /** T237: each paved car park's look (event/parklook.ts) by its id, as parkGrounds laid it last, and the venues' key it was laid for */
+  private parkLooks = new Map<number, ParkLook>(); private lookKey = '';
+  /** T237: the props of the car parks' looks (look:{id}:{k}: the islands' trees, lamps and shrubs), auto and never saved */
+  private lookProps = new Map<string, Prop>();
+  /** T237: the venues' key (their kinds and doors): a car park's look follows the venue it serves (its footpath, the bays' order) */
+  private venueKey(): string { return this.venues().map(v => `${v.id}${Math.round(v.door.x)},${Math.round(v.door.y)}`).join(';'); }
+  /** T237: the door a car park's footpath runs to: the nearest venue it serves (the range's: the walkway's end at its car parks, so the path
+   *  meets the range's own path past the shop); null when it serves none */
+  private lookDoor(pk: CarPark): Pt | null {
+    const s = servesOf(pk.bays, this.venues())[0]; if (!s) return null;
+    return s.venue.id === 'range' ? this.range.scene?.carEdge ?? s.venue.door : s.venue.door;
+  }
+  /** T237: the club's buildings' footprints (a footpath ends at the first one's face) */
+  private clubWalls(): [number, number, number, number][] {
+    const out: [number, number, number, number][] = [];
+    for (const b of this.bizDefs) if (b.type === 'clubhouse' || b.type === 'halfway') out.push([b.x, b.y, b.w, b.h]);
+    const g = this.golf, rd = g?.start === 'range' ? this.bizDefs.find(b => b.type === 'range') : undefined;
+    if (g && rd) out.push(rangeLayout(plotOfFront([rd.x, rd.y, rd.w, rd.h], g.dir), g.dir).hut.rect);
+    return out;
+  }
+  /** T237: the looks' props as parkGrounds laid them: a prop whose spot or picture moved is replaced, the gone ones removed (trees are never
+   *  mirrored: addProp turns only the trees lit from the left, tree-sun.ts); the lamps light at night (syncLamps) */
+  private syncLookProps() {
+    const want = new Map<string, { item: number; x: number; y: number; scale: number }>();
+    for (const [id, look] of this.parkLooks) look.props.forEach((q, k) => {
+      const item = LIB_INDEX.get(q.id); if (item === undefined) return;
+      const b = LIBRARY[item]!.boxes[0]; if (!b) return;
+      want.set(`look:${id}:${k}`, { item, x: q.x - b.dx * q.scale / 2, y: q.y - b.dy * q.scale / 2, scale: q.scale });
+    });
+    let lamps = false;
+    for (const [key, p] of this.lookProps) {
+      const w = want.get(key);
+      if (w && w.item === p.item && w.x === p.x && w.y === p.y && this.props.has(p)) continue;
+      lamps ||= LIBRARY[p.item]!.kind === 'lamp'; this.removeProp(p); this.lookProps.delete(key);
+    }
+    for (const [key, w] of want) if (!this.lookProps.has(key)) { this.lookProps.set(key, this.addProp(w.item, w.x, w.y, false, w.scale, key)); lamps ||= LIBRARY[w.item]!.kind === 'lamp'; }
+    if (lamps) this.syncLamps();
   }
   /** the ground patch keys of the car parks (park:{id}) baked now */
   private parkGround = new Set<string>();
@@ -5043,6 +5087,8 @@ export class Game {
   private syncParkCars(now: number) {
     if (now - this.parkSyncAt < 500) return;
     this.parkSyncAt = now;
+    // T237: the car parks' looks follow the venues they serve (a clubhouse placed, the range's scene laid on a load): laid again when those move
+    if (this.golf && this.parkDefs.length && this.venueKey() !== this.lookKey) this.parkGrounds();
     const views = new Map(this.traffic.parks.map(v => [v.id, v])), view = this.viewTileBox;
     const shared = (pk: CarPark | null) => !!pk && (!!this.rangePk?.pks.has(pk) || pk === this.dayPark);
     for (let k = 0; k < this.parkDefs.length; k++) { const pk = this.parkBuilt[k] ?? null; if (this.parkInView(pk, view)) this.parkCarsOf(this.parkDefs[k]!.id, pk, views, shared(pk)); }
@@ -5950,6 +5996,7 @@ export class Game {
     this.sprites.clear(); this.autoByKey.clear(); this.forest.clear(); this.perf.forest = 0; this.townTrees.clear(); this.perf.townTrees = 0; this.lotBoxes.clear(); this.paintBoxes.clear();
     this.ground.dropCasters('f:'); this.ground.dropCasters('t:');
     this.parkCars.clear(); this.parkDefs = []; this.parkBuilt = []; this.parkDrag = null; for (const k of this.parkGround) this.setLotGround(k, null); this.parkGround.clear();
+    for (const p of this.lookProps.values()) this.removeProp(p); this.lookProps.clear(); this.parkLooks.clear(); this.lookKey = ''; // (T237)
     this.parking.clear(); this.extraParks = []; this.extraCarIds.clear(); this.gateProps.clear();
     this.tollDefs = []; this.tollSegs.clear(); this.tollHover = null; for (const k of this.tollGround) this.setLotGround(k, null); this.tollGround.clear();
     this.busDefs = []; this.busPick = null; this.busHover = null; this.paint.clear(); this.dropCourseGrid();
