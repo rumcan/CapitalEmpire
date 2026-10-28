@@ -21,6 +21,7 @@ import { finishOf, type CourseFinish } from './course-finish';
 import { REFLECT, clampWaterLook, waterLookOf, type WaterLook } from './water-look';
 import type { PaintedLook } from './painted-families';
 import { pictureCurrent } from './ground-layers';
+import type { ShineMode } from './grass-shine';
 
 export interface Tile {
   kind: TileKind; i: number; j: number;
@@ -90,7 +91,7 @@ export class GroundCache {
   setGrassArt(art: GrassArt) { if (art === this.grassArt) return; this.grassArt = art; this.broadcast({ t: 'grassArt', art }); this.invalidateAll(); }
   /** a light boot's worker limits (boot.ts, T157), sent with init; null: the game's */
   limits: WorkerLimits | null = null;
-  init(t: { cls: Uint8Array; height: Float32Array; waters: Waterway[] }) { const art = { ...withPresets(withBaseGrass(GROUND_ART)), grassArt: this.grassArt }, limits = this.limits ?? undefined; this.workers.forEach((wk, i) => wk.postMessage({ t: 'init', art, terrain: t.cls, height: t.height, waters: t.waters, build: i === 0, peers: this.workers.length - 1, limits } satisfies ToWorker)); this.broadcast({ t: 'living', ...this.living }); this.broadcast({ t: 'slopeLight', strength: this.slopeLight }); this.broadcast({ t: 'leaves', density: this.leafDensity }); this.broadcast({ t: 'specCam', on: this.specCam }); this.broadcast({ t: 'swamp', on: this.swamp }); this.broadcast({ t: 'surfaces', file: paintedSurfaces() });
+  init(t: { cls: Uint8Array; height: Float32Array; waters: Waterway[] }) { const art = { ...withPresets(withBaseGrass(GROUND_ART)), grassArt: this.grassArt }, limits = this.limits ?? undefined; this.workers.forEach((wk, i) => wk.postMessage({ t: 'init', art, terrain: t.cls, height: t.height, waters: t.waters, build: i === 0, peers: this.workers.length - 1, limits } satisfies ToWorker)); this.broadcast({ t: 'living', ...this.living }); this.broadcast({ t: 'slopeLight', strength: this.slopeLight }); this.broadcast({ t: 'leaves', density: this.leafDensity }); this.broadcast({ t: 'specCam', on: this.specCam }); this.broadcast({ t: 'swamp', on: this.swamp }); this.broadcast({ t: 'grassShine', mode: this.grassShine }); this.broadcast({ t: 'surfaces', file: paintedSurfaces() });
     // the studio saved the painted surfaces (the dev server hot-swaps the file): every worker takes the new looks and every chunk is baked again
     this.unsurfaces?.(); this.unsurfaces = onPaintedSurfaces(file => { this.broadcast({ t: 'surfaces', file }); this.invalidateAll(); }); }
   private unsurfaces: (() => void) | null = null;
@@ -156,10 +157,20 @@ export class GroundCache {
   private glosses = new Map<WebGLTexture, WebGLTexture>();
   /** the gloss mask of a chunk picture (T199 the swamp's pools, T230 its ponds and rivers), or null (specCam off, or no swamp or water on it) */
   glossOf(tex: WebGLTexture | null): WebGLTexture | null { return (tex && this.glosses.get(tex)) ?? null; }
-  /** delete a chunk picture and its reflection and gloss masks */
+  /** T262 (#769, phase 1): the grass shine's source (grass-shine.ts ShineMode: 'a' / 'a4' a bump layer per chunk, 'c' the families' bump maps
+   *  in tile space, 'd' from the chunk's own colour; 'off', the default, the ground exactly as before); the dev switch window.__game.grassShine */
+  grassShine: ShineMode = 'off';
+  setGrassShine(mode: ShineMode) { if (mode === this.grassShine) return; this.grassShine = mode; this.broadcast({ t: 'grassShine', mode }); this.invalidateAll(); }
+  /** T262: each chunk picture's grass shine layers (its weight mask, and with 'a' / 'a4' its bump layer), by picture, as its reflection mask */
+  private shines = new Map<WebGLTexture, { mask: WebGLTexture; bump: WebGLTexture | null; bytes: number }>();
+  /** T262: the GPU bytes the shine layers of the pictures held take now (the bench's shineMB) */
+  shineBytes = 0;
+  shineOf(tex: WebGLTexture | null): { mask: WebGLTexture; bump: WebGLTexture | null } | null { return (tex && this.shines.get(tex)) ?? null; }
+  /** delete a chunk picture and its reflection, gloss and shine masks */
   private dropPicture(tex: WebGLTexture) {
     this.gl.deleteTexture(tex); const s = this.specs.get(tex); if (s) { this.gl.deleteTexture(s); this.specs.delete(tex); }
     const g = this.glosses.get(tex); if (g) { this.gl.deleteTexture(g); this.glosses.delete(tex); }
+    const sh = this.shines.get(tex); if (sh) { this.gl.deleteTexture(sh.mask); if (sh.bump) this.gl.deleteTexture(sh.bump); this.shineBytes -= sh.bytes; this.shines.delete(tex); }
   }
   setLiving(on: boolean, debug: boolean) { if (on === this.living.on && debug === this.living.debug) return; this.living = { on, debug }; this.broadcast({ t: 'living', on, debug }); this.invalidateAll(); }
   /** the caster records last sent, by key, and the edits waiting for the next pump (null: the key goes) */
@@ -300,6 +311,10 @@ export class GroundCache {
     t.tex = this.gl.textureFrom(m.bmp); t.texL = m.L; t.texArtL = artL; t.texTs = ts; t.texTiled = !!m.tiled; t.px = m.bmp.width * m.bmp.height; t.stale = edited; t.baked = u0; m.bmp.close();
     if (m.spec) { this.specs.set(t.tex, this.gl.specTexture(m.spec)); m.spec.close(); }
     if (m.gloss) { this.glosses.set(t.tex, this.gl.specTexture(m.gloss)); m.gloss.close(); } // (T199: premultiplied, as the reflection mask)
+    if (m.shine) { // (T262: plain bytes, one or two channels)
+      const sh = m.shine, mask = this.gl.byteTexture(sh.data, sh.w, sh.h, sh.ch), bump = sh.bump ? this.gl.byteTexture(sh.bump.data, sh.bump.w, sh.bump.h, 1) : null;
+      const bytes = sh.data.length + (sh.bump?.data.length ?? 0); this.shines.set(t.tex, { mask, bump, bytes }); this.shineBytes += bytes;
+    }
     // T197: a picture that fell back to the photo where a tile set was not decoded yet shows meanwhile and is asked for again after a short
     // hold (the tiles decode on the way), so a placeholder never stays
     if (m.prov && !edited) { this.provisional++; const k = (this.provTries.get(t) ?? 0) + 1; this.provTries.set(t, k); if (k <= PROVISIONAL_TRIES) { t.stale = true; t.hold = u0 + PROVISIONAL_RETRY_MS; } }

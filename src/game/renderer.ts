@@ -18,7 +18,9 @@ import { makeNoise } from './terrain/noise';
 import { WOODLAND_TEX, classAlpha, rockAlpha, shadeField, shadeRGBA, slopeField, waterBox, waterShape } from './terrain-paint';
 import { fairwayStripeLook, holeStripeLegs, legArea, type StripeLook } from './course-stripes';
 import { LIP, collarToneOf, finishMow, finishOf, finishStripeLook, greenStripeLook, lipRuns, tonedCollar, type CourseFinish } from './course-finish';
-import { quadBox, type CourseLayer, type CoursePatch, type CourseRim, type CourseTex, type CourseWall, type LotPatch, type MowStripes, type PatchTex } from './ground-protocol';
+import { quadBox, type CourseLayer, type CoursePatch, type CourseRim, type CourseTex, type CourseWall, type LotPatch, type MowStripes, type PatchTex, type ShineMaskData } from './ground-protocol';
+import { BUMP_FAMILIES, SHINE_MASK_K, bumpK, bumpSlot, maskColour, maskPad, shineMaskPixels, shineWeight, type ShineMode } from './grass-shine';
+import { paintedUrl } from './painted-grass-art';
 import { DRAW_ORDER, FaceForm, GREEN_FACE, STAIR_TREAD, SURF_HEIGHT, SUN_DIR, WALL_DROP, WALL_PX_PER_M, WALL_TEX, WallMat, defaultShadow, faceLight, faceScale, isOverlay, layerCode, shadowOwner, slopeLight, stairSteps, wallShade, type Stair, type WallShade } from './ext/course-walls';
 import { SURF } from './ext/course-grid';
 import { SPROUT_PERIOD, growDraws, seedColour, seedSprouts, sproutRes, type GrowDraw } from './ext/course-fx/seed';
@@ -35,7 +37,7 @@ import { faceShift, kerbFace, stepReach, upScreen } from './kerb-face';
 import { HEIGHT_LIGHT_STRENGTH, HL_MASK, LUMA_SIGMA_PER_L, heightLightGrid, heightLightPictures, heightLightRect, type HeightLightGrid } from './ext/course-height/light';
 import { PaintedGround, type LayLevel } from './painted-ground';
 import { coversMap } from './painted-families';
-import { bandOf, cellsIn, snappedCell, tileIndex, tileKey, tilePermutation, tileSize } from './painted-tiles';
+import { bandOf, cellsIn, snappedCell, tileIndex, tileKey, tilePermutation, tileSize, tiledFamily } from './painted-tiles';
 import { BLOCK_UNDER, WOODLAND, lawnTexFor } from './painted-surfaces';
 import { ROUGH_SOFT, ROUGH_TEX, roughBack, type RoughKind, type RoughMix } from './rough-yards';
 import { SOFT, easeWeights, softAreaWidth, softDirt, softMaskImage, softRGBA, softRes, softRingImages, softWidth, type SoftImage } from './soft-edges';
@@ -467,6 +469,94 @@ export class GroundPainter {
   private glossMask: OffscreenCanvas | null = null;
   /** the gloss mask of the bake just done (the worker transfers it), or null when it has none */
   takeGlossMask(): OffscreenCanvas | null { const m = this.glossMask; this.glossMask = null; return m; }
+  /** T262 (#769, phase 1): the grass shine's source (grass-shine.ts ShineMode; the dev switch window.__game.grassShine, GroundCache.setGrassShine):
+   *  'off' (the default) makes no mask, the ground exactly as before */
+  grassShine: ShineMode = 'off';
+  /** T262: the shine layers of the bake just done (grassShineMask: the weight mask, and with mode 'a' / 'a4' the bump layer), or null */
+  private shineNow: ShineMaskData | null = null;
+  takeShineMask(): ShineMaskData | null { const m = this.shineNow; this.shineNow = null; return m; }
+  /** T262: each bump tile's picture (scripts/assets/prep-grass-bump.mjs), by its file: loaded the first time a bake with mode 'a' asks (null
+   *  meanwhile: that bake is provisional, so it is asked for again) */
+  private bumpPics = new Map<string, ImageBitmap | null>();
+  private bumpPic(file: string): ImageBitmap | null {
+    const have = this.bumpPics.get(file); if (have !== undefined) return have;
+    this.bumpPics.set(file, null); const url = paintedUrl(file);
+    if (url) void fetch(url).then(r => r.blob()).then(b => createImageBitmap(b)).then(bmp => { this.bumpPics.set(file, bmp); }).catch(() => {});
+    return null;
+  }
+  /** T262: the grass shine's weight mask over the chunk just baked (grass-shine.ts): every surface's outline filled in its shine weight and
+   *  family slot (a surface that covers the grass in none), in the order the bake lays them (the town lawns, the lots' ground over them, the
+   *  course's layers in DRAW_ORDER with their collars and alternate looks, the painted areas, the car parks), at a SHINE_MASK_K-th of the
+   *  chunk's size with a margin, then inset from the edges (shineMaskPixels). With mode 'a' / 'a4' the bump layer too: each shiny surface's
+   *  family's bump tiles laid where tiledBuf lays its colour tiles (the same cells, permutation and snapped edges), clipped to its outline.
+   *  null when no shiny grass reaches the chunk. Small CPU canvases: their read back is cheap (never a chunk's) */
+  private grassShineMask(lite: boolean): ShineMaskData | null {
+    const c = this.chunkNow!, mode = this.grassShine, K = SHINE_MASK_K, texelWorld = K / c.L, pad = maskPad(texelWorld);
+    const w = Math.max(1, Math.ceil(c.W / K)), h = Math.max(1, Math.ceil(c.H / K)), W = w + 2 * pad, H = h + 2 * pad;
+    const grow = (pad * texelWorld) / HH + 1, b = c.box, big: BBox = [b[0] - grow, b[1] - grow, b[2] + grow, b[3] + grow];
+    const all = this.lotsIn(big).filter(p => !p.top && !p.layby);
+    const isPark = (p: LotPatch) => (!!p.lines?.length || !!p.park) && p.tex !== 'field' && p.tex !== 'dirt';
+    const lawns = all.filter(p => p.lawn).sort((p, q) => p.lawn!.z - q.lawn!.z), lots = all.filter(p => !p.paint && !p.course && !p.lawn && p.tex !== 'marks');
+    const paints = all.filter(p => p.paint || p.course).sort((p, q) => paintZ(p) - paintZ(q));
+    const cv = new OffscreenCanvas(W, H), m = cv.getContext('2d', { willReadFrequently: true })!;
+    m.setTransform(new DOMMatrix([1 / K, 0, 0, 1 / K, pad, pad]).multiply(c.M));
+    const BK = bumpK(mode), bump = BK ? new OffscreenCanvas(Math.max(1, Math.ceil(c.W / BK)), Math.max(1, Math.ceil(c.H / BK))) : null;
+    const bg = bump ? bump.getContext('2d', { willReadFrequently: true })! : null, SB = new DOMMatrix([1 / (BK || 1), 0, 0, 1 / (BK || 1), 0, 0]).multiply(c.M);
+    if (bg) { bg.fillStyle = '#808080'; bg.fillRect(0, 0, bump!.width, bump!.height); bg.setTransform(SB); }
+    const fams = new Map<string, CanvasPattern | null>();
+    /** a family's bump tiles over the bump layer's whole size, as a fill under SB (null: no bump map, or a tile not loaded yet) */
+    const famBump = (fam: string): CanvasPattern | null => {
+      if (fams.has(fam)) return fams.get(fam)!;
+      const tf = tiledFamily(fam), bf = BUMP_FAMILIES[bumpSlot(fam) - 1], ts = this.tex.tileTs, band = bandOf(ts), lv = tf?.levels[band], bl = bf?.levels[band];
+      let pat: CanvasPattern | null = null;
+      if (tf && lv && bl) {
+        const [tw, th] = tileSize(lv, ts), perm = tilePermutation(fam, band, lv.tiles.length), L = c.L, ox = -c.M.e, oy = -c.M.f;
+        const buf = new OffscreenCanvas(bump!.width, bump!.height), g = buf.getContext('2d')!; let ok = true;
+        g.setTransform(1 / BK, 0, 0, 1 / BK, 0, 0); g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'medium';
+        for (const q of cellsIn(ox / L, oy / L, (ox + c.W) / L, (oy + c.H) / L, tw, th)) {
+          const [a0, b0, a1, b1] = snappedCell(q.ix, q.iy, tw, th, L), pic = this.bumpPic(bl.tiles[tileIndex(perm, q.ix, q.iy)]!.file);
+          if (!pic) { ok = false; break; }
+          g.drawImage(pic, a0 - ox, b0 - oy, a1 - a0, b1 - b0);
+        }
+        if (ok) { pat = bg!.createPattern(buf, 'no-repeat'); pat?.setTransform(SB.inverse()); } else this.provisional = true;
+      }
+      fams.set(fam, pat); return pat;
+    };
+    let any = false;
+    /** rings (tiles, even-odd) of texture tex (null: ground that covers the grass), within clip (tiles) when given, at share of its weight */
+    const lay = (rings: readonly ArrayLike<number>[], tex: string | null, clip?: Path2D, share = 1) => {
+      if (!rings.length) return;
+      const path = new Path2D(); for (const q of rings) ringPath(path, q);
+      const fam = tex ? this.tex.familyOf(tex) : null, wgt = tex ? shineWeight(tex, fam) * share : 0, slot = wgt > 0 ? bumpSlot(fam) : 0;
+      if (wgt > 0) any = true;
+      const draw = (g: OffscreenCanvasRenderingContext2D, style: string | CanvasPattern) => {
+        if (clip) { g.save(); g.clip(clip); }
+        g.fillStyle = style; g.fill(path, 'evenodd');
+        if (clip) g.restore();
+      };
+      draw(m, wgt > 0 ? maskColour(wgt, mode === 'c' ? slot : 0) : '#000');
+      if (bg) draw(bg, (wgt > 0 && slot ? famBump(fam!) : null) ?? '#808080');
+    };
+    const runsPath = (q: Float32Array) => { const p = new Path2D(); for (let k = 0; k + 3 < q.length; k += 4) p.rect(q[k]!, q[k + 1]!, q[k + 2]! - q[k]!, q[k + 3]! - q[k + 1]!); return p; };
+    for (const p of lawns) lay([p.lawn!.z >= 1 ? this.ruggedOf(p).q.pts : p.pts], this.lawnTexOf(p), undefined, Math.min(1, p.lawn!.share));
+    for (const p of lots) if (!isPark(p)) lay([p.pts], null);
+    for (const p of paints) {
+      if (!p.course) { lay([this.ruggedOf(p).q.pts], p.tex); continue; }
+      const wc = this.warpedCourse(p.course, lite);
+      for (const code of DRAW_ORDER) for (const l of wc.layers) {
+        if (l.s !== code >> 1) continue;
+        if (!(code & 1)) { lay(l.fill, l.tex); for (const a of l.alts ?? []) lay(l.fill, a.look.tex, runsPath(a.runs)); }
+        else if (l.collar?.fill.length) { lay(l.collar.fill, l.collar.tex); for (const a of l.alts ?? []) if (a.band) lay(l.collar.fill, a.band.tex, runsPath(a.runs)); }
+      }
+    }
+    for (const p of lots) if (isPark(p)) lay([p.pts], null);
+    if (!any) return null;
+    const data = shineMaskPixels(m.getImageData(0, 0, W, H).data, W, H, texelWorld, mode === 'c' ? 2 : 1, pad);
+    if (!bump) return { w, h, ch: mode === 'c' ? 2 : 1, data };
+    const bd = bg!.getImageData(0, 0, bump.width, bump.height).data, bb = new Uint8Array(bump.width * bump.height);
+    for (let i = 0; i < bb.length; i++) bb[i] = bd[4 * i]!;
+    return { w, h, ch: 1, data, bump: { w: bump.width, h: bump.height, data: bb } };
+  }
   /** T199: each swamp tile's gloss (swamp.ts glossTile), by the tile's URL: made once per tile, the first time a bake lays it with the glint on
    *  (one read back of the tile, never of a chunk) */
   private glossTiles = new Map<string, Cnv>();
@@ -1673,6 +1763,8 @@ export class GroundPainter {
     const outside = new Path2D(); outside.rect(tx0 - 4, ty0 - 4, tx1 - tx0 + 8, ty1 - ty0 + 8); outside.rect(0, 0, MAP, MAP);
     ctx.fillStyle = pat('outside'); ctx.fill(outside, 'evenodd');
     ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.lineWidth = Math.max(0.08, minW); ctx.strokeRect(0, 0, MAP, MAP);
+    // ---- 12. T262: the grass shine's weight mask (and bump layer), with the shine on
+    this.shineNow = this.grassShine !== 'off' && !lite ? this.grassShineMask(lite) : null;
     return cv;
   }
 

@@ -161,7 +161,7 @@ function startTour(g: Game, info: Record<string, unknown>, stages: Stage[] = STA
     }
   };
   function finish() {
-    const out = { ...info, cars: info.scene ? g.perf.simActive : BENCH_CARS, dpr: g.dpr, screen: `${g.cw}x${g.ch}`, groundBakes: g.ground.baked, avgBakeMs: +(g.ground.bakeMs / Math.max(1, g.ground.baked)).toFixed(1), groundCacheMB: Math.round(g.ground.residentPx * 4 / 1048576), groundCachePeakMB: Math.round(g.ground.peakPx * 4 / 1048576), sim: { active: g.perf.simActive, tickMsAvg: +(simSum / Math.max(1, simN)).toFixed(2), tickMsMax: +simMax.toFixed(2) }, stages: results };
+    const out = { ...info, cars: info.scene ? g.perf.simActive : BENCH_CARS, dpr: g.dpr, screen: `${g.cw}x${g.ch}`, groundBakes: g.ground.baked, avgBakeMs: +(g.ground.bakeMs / Math.max(1, g.ground.baked)).toFixed(1), groundCacheMB: Math.round(g.ground.residentPx * 4 / 1048576), groundCachePeakMB: Math.round(g.ground.peakPx * 4 / 1048576), shineMB: +((g.ground.shineBytes + (g.ground.grassShine === 'c' ? g.gl.bumpArrBytes : 0)) / 1048576).toFixed(2), sim: { active: g.perf.simActive, tickMsAvg: +(simSum / Math.max(1, simN)).toFixed(2), tickMsMax: +simMax.toFixed(2) }, stages: results };
     (window as unknown as { __bench: unknown }).__bench = out;
     console.log('[bench] results', JSON.stringify(out, null, 1));
     g.toast('Benchmark finished: results in the console', 'good');

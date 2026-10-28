@@ -17,6 +17,7 @@ import { SPEC_LIGHT_GLSL, SPEC_MASK_K } from './lamp-reflect';
 import { GLOSS, GLOSS_LIGHT_GLSL } from './swamp';
 import { GRADE_GLSL, blurGlsl, type GradeFrame } from './grade';
 import { CAR_PAINT_GLSL } from './car-paint';
+import { BUMP_SPREAD, GRASS_SHINE_GLSL, LUM_HP_STD, SHINE_MASK_K } from './grass-shine';
 
 /** floats per sprite instance: rect x0 y0 x1 y1 (world px), uv u0 v0 u1 v1, layer, alpha, cullable, foot line (world px; < 0: casts no shadow),
  *  clip x0 y0 x1 y1 (world px), foot: the footprint's near corner x y and its left and right corners' x (world px; the cast shadows stand on it) */
@@ -46,13 +47,13 @@ export const FULL_UV: readonly number[] = [0, 0, 1, 1];
 const VS_QUAD = `#version 300 es
 uniform vec4 uRect; uniform vec4 uCam; // camX camY ze 0
 uniform vec2 uScreen; uniform vec4 uUV;
-out vec2 vUV;
+out vec2 vUV; out vec2 vW;
 void main() {
   vec2 c = vec2(gl_VertexID & 1, gl_VertexID >> 1);
   vec2 w = mix(uRect.xy, uRect.zw, c);
   vec2 s = (w - uCam.xy) * uCam.z + uScreen * 0.5;
   gl_Position = vec4(s.x / uScreen.x * 2.0 - 1.0, 1.0 - s.y / uScreen.y * 2.0, 0.0, 1.0);
-  vUV = mix(uUV.xy, uUV.zw, c);
+  vUV = mix(uUV.xy, uUV.zw, c); vW = w;
 }`;
 // T215: the street lamps' reflection pools as the camera specular (lamp-reflect.ts): a chunk with a reflection mask (uSpec.z > 0: its gain)
 // lights its own pixels as the bake's pools did (specLight: toward the 'lit' mosaics' response of the painting's pixel, rebuilt from the
@@ -63,13 +64,25 @@ void main() {
 // the cool sky (glossLight: by the gloss, the pixel's own water key and its texture, its distance from the pool's local mean the mask holds
 // premultiplied in rgb) times the same camera falloff (uGloss.x, uGloss.y). The mask is a GLOSS.maskK-th of the chunk's size. No mask (uGloss.z
 // 0): the chunk as before
+// T262: the grass catches the camera's shine (grass-shine.ts): a chunk with a shine mask (uShine.z > 0: its gain; uShine.w the source: 1 its
+// bump layer uShineBump, a uShineLook.w-th of its size; 3 the families' bump maps uBumpArr in tile space, the family's slot in the mask's
+// green, its tile size, first layer and permutation in uBumpFam / uBumpPerm; 4 its own colour's luminance) lights its grass by the slope of
+// that height times the mask's weight (inset from the edges) and the same camera falloff (uShine.x, uShine.y). No mask: the chunk as before
 const FS_QUAD = `#version 300 es
 precision highp float;
+precision highp sampler2DArray;
 uniform sampler2D uTex; uniform sampler2D uMask; uniform int uMode; uniform vec2 uScreen; uniform float uAlpha;
 uniform sampler2D uSpecTex; uniform vec4 uSpec; uniform sampler2D uGlossTex; uniform vec4 uGloss;
-in vec2 vUV; out vec4 o;
+uniform vec4 uRect; uniform vec4 uUV;
+uniform sampler2D uShineMask; uniform sampler2D uShineBump; uniform sampler2DArray uBumpArr; uniform vec4 uShine; uniform vec4 uShineLook;
+uniform vec4 uBumpFam[3]; uniform vec4 uBumpPerm[3];
+in vec2 vUV; in vec2 vW; out vec4 o;
 ${SPEC_LIGHT_GLSL}
 ${GLOSS_LIGHT_GLSL}
+${GRASS_SHINE_GLSL}
+float lumOf(vec3 c) { return dot(c, vec3(0.3, 0.59, 0.11)); }
+float bumpAt(vec2 uv) { return (texture(uShineBump, uv).r - 0.5) * ${(255 / BUMP_SPREAD).toFixed(4)}; }
+float arrAt(vec2 uv, float layer, vec2 dx, vec2 dy) { return (textureGrad(uBumpArr, vec3(uv, layer), dx, dy).r - 0.5) * ${(255 / BUMP_SPREAD).toFixed(4)}; }
 void main() {
   vec4 c = texture(uTex, vUV);
   if (uSpec.z > 0.0) {
@@ -84,6 +97,36 @@ void main() {
     if (g.a > 0.002) {
       float d = length(gl_FragCoord.xy - 0.5 * uScreen) / (0.5 * max(uScreen.x, uScreen.y));
       c.rgb = glossLight(c.rgb * 255.0, vec4(g.rgb / g.a * 255.0, g.a), (1.0 - smoothstep(uGloss.x, uGloss.y, d)) * uGloss.z) / 255.0;
+    }
+  }
+  if (uShine.z > 0.0) {
+    vec2 ts = vec2(textureSize(uTex, 0)), ms = vec2(textureSize(uShineMask, 0)), mUV = vUV * ts / (${SHINE_MASK_K.toFixed(1)} * ms);
+    float wgt = texture(uShineMask, mUV).r;
+    if (wgt > 0.004) {
+      float d = length(gl_FragCoord.xy - 0.5 * uScreen) / (0.5 * max(uScreen.x, uScreen.y)), k = (1.0 - smoothstep(uShine.x, uShine.y, d)) * uShine.z;
+      // the world px one chunk texel covers
+      float tw = (uRect.z - uRect.x) / ((uUV.z - uUV.x) * ts.x);
+      float z = 0.0; vec2 sl = vec2(0.0); int src = int(uShine.w + 0.5);
+      if (src == 4) {
+        vec2 t = 1.5 / ts;
+        float l0 = lumOf(c.rgb), lw = lumOf(texture(uTex, vUV - vec2(t.x, 0.0)).rgb), le = lumOf(texture(uTex, vUV + vec2(t.x, 0.0)).rgb);
+        float ln = lumOf(texture(uTex, vUV - vec2(0.0, t.y)).rgb), ls = lumOf(texture(uTex, vUV + vec2(0.0, t.y)).rgb);
+        z = (l0 - 0.25 * (lw + le + ln + ls)) / ${LUM_HP_STD}; sl = vec2(le - lw, ls - ln) / (3.0 * tw * ${(LUM_HP_STD * 2.5).toFixed(4)});
+      } else if (src == 1) {
+        vec2 bs = vec2(textureSize(uShineBump, 0)), bUV = vUV * ts / (uShineLook.w * bs), bt = 1.0 / bs;
+        z = bumpAt(bUV); sl = vec2(bumpAt(bUV + vec2(bt.x, 0.0)) - bumpAt(bUV - vec2(bt.x, 0.0)), bumpAt(bUV + vec2(0.0, bt.y)) - bumpAt(bUV - vec2(0.0, bt.y))) / (2.0 * tw * uShineLook.w);
+      } else if (src == 3) {
+        int slot = int(texelFetch(uShineMask, ivec2(min(mUV * ms, ms - 1.0)), 0).g * 255.0 + 0.5);
+        vec4 F = uBumpFam[clamp(slot, 1, 3) - 1], P = uBumpPerm[clamp(slot, 1, 3) - 1];
+        if (slot >= 1 && slot <= 3 && F.z >= 0.0) {
+          vec2 q = vW / F.xy, cell = floor(q), uv = q - cell, dx = dFdx(vW) / F.xy, dy = dFdy(vW) / F.xy;
+          int i = int(mod(cell.x + 2.0 * cell.y, 4.0));
+          float layer = F.z + (i == 0 ? P.x : i == 1 ? P.y : i == 2 ? P.z : P.w), sx = max(abs(dFdx(vW.x)), 0.5 * tw), sy = max(abs(dFdy(vW.y)), 0.5 * tw);
+          z = arrAt(uv, layer, dx, dy);
+          sl = vec2(arrAt(uv + vec2(sx / F.x, 0.0), layer, dx, dy) - arrAt(uv - vec2(sx / F.x, 0.0), layer, dx, dy), arrAt(uv + vec2(0.0, sy / F.y), layer, dx, dy) - arrAt(uv - vec2(0.0, sy / F.y), layer, dx, dy)) / (2.0 * vec2(sx, sy));
+        } else wgt = 0.0;
+      }
+      c.rgb = grassShine(c.rgb, z, sl, wgt, k);
     }
   }
   if (uMode == 1) c *= texture(uMask, vec2(gl_FragCoord.x / uScreen.x, 1.0 - gl_FragCoord.y / uScreen.y)).a;
@@ -346,7 +389,7 @@ export class GLRenderer {
     const gl = canvas.getContext('webgl2', { alpha: false, antialias: false, premultipliedAlpha: true, preserveDrawingBuffer: false, powerPreference: 'high-performance' });
     if (!gl) throw new Error('WebGL2 is not available');
     this.gl = gl;
-    this.quad = this.program(VS_QUAD, FS_QUAD, ['uRect', 'uCam', 'uScreen', 'uUV', 'uTex', 'uMask', 'uMode', 'uAlpha', 'uSpecTex', 'uSpec', 'uGlossTex', 'uGloss']);
+    this.quad = this.program(VS_QUAD, FS_QUAD, ['uRect', 'uCam', 'uScreen', 'uUV', 'uTex', 'uMask', 'uMode', 'uAlpha', 'uSpecTex', 'uSpec', 'uGlossTex', 'uGloss', 'uShineMask', 'uShineBump', 'uBumpArr', 'uShine', 'uShineLook', 'uBumpFam', 'uBumpPerm']);
     this.shadow = this.program(VS_SHADOW, FS_SHADOW, ['uCam', 'uScreen', 'uStrength', 'uShift', 'uMinPx']);
     this.point = this.program(VS_POINT, FS_POINT, ['uCam', 'uScreen', 'uSize', 'uSoft']);
     this.vec = this.program(VS_VEC, FS_VEC, ['uCam', 'uScreen', 'uShear', 'uMul', 'uFar', 'uVerts', 'uIdx', 'uMinPx']);
@@ -416,6 +459,33 @@ export class GLRenderer {
     return t;
   }
   deleteTexture(t: WebGLTexture) { this.gl.deleteTexture(t); }
+  /** T262: a texture from plain bytes (a chunk's grass shine mask or bump layer): one channel (R8) or two (RG8), bilinear, clamped */
+  byteTexture(data: Uint8Array, w: number, h: number, ch: 1 | 2) {
+    const gl = this.gl, t = gl.createTexture()!; gl.bindTexture(gl.TEXTURE_2D, t); gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+    gl.texImage2D(gl.TEXTURE_2D, 0, ch === 2 ? gl.RG8 : gl.R8, w, h, 0, ch === 2 ? gl.RG : gl.RED, gl.UNSIGNED_BYTE, data);
+    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 4); this.texParams(gl.TEXTURE_2D, false);
+    return t;
+  }
+  /** T262: the grass shine this frame (engine.ts: grass-shine.ts shineGain and the knobs), or null (off): the falloff's inner and outer radius,
+   *  the gain, the source (grass-shine.ts SHINE_CODE), the look (gloss, bump, eye) and the bump layer's size against its chunk's (source 1);
+   *  with source 3, each family slot's tile w h (world px) and first layer of uBumpArr (fam, 4 a slot) and its permutation (perm, 4 a slot) */
+  shine: { inner: number; outer: number; gain: number; src: number; gloss: number; bump: number; eye: number; bumpK: number; fam: Float32Array; perm: Float32Array } | null = null;
+  /** T262: a chunk picture's shine layers (GroundCache.shineOf), looked up by the picture itself */
+  shineOf: ((tex: WebGLTexture) => { mask: WebGLTexture; bump: WebGLTexture | null } | null) | null = null;
+  /** T262 (source 3): every bump map tile in one R8 array with its mips (bumpArray), or null until loaded; its GPU bytes */
+  bumpArr: WebGLTexture | null = null; bumpArrBytes = 0;
+  private emptyArr: WebGLTexture | null = null;
+  /** T262: the families' bump tiles (pictures w x h each, in layer order) into one R8 texture array with its mips */
+  bumpArray(pics: ImageBitmap[], w: number, h: number) {
+    const gl = this.gl, t = gl.createTexture()!, levels = Math.floor(Math.log2(Math.max(w, h))) + 1;
+    gl.bindTexture(gl.TEXTURE_2D_ARRAY, t); gl.texStorage3D(gl.TEXTURE_2D_ARRAY, levels, gl.R8, w, h, pics.length);
+    pics.forEach((p, i) => gl.texSubImage3D(gl.TEXTURE_2D_ARRAY, 0, 0, 0, i, w, h, 1, gl.RED, gl.UNSIGNED_BYTE, p));
+    gl.generateMipmap(gl.TEXTURE_2D_ARRAY);
+    gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR); gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    if (this.bumpArr) gl.deleteTexture(this.bumpArr);
+    this.bumpArr = t; this.bumpArrBytes = Math.round(w * h * pics.length * 4 / 3);
+  }
   /** T215: the camera specular this frame (engine.ts: lamp-reflect.ts specGain and the knobs), or null (specCam off): the falloff's inner and
    *  outer radius and the gain a chunk drawn with a reflection mask lights its pools by */
   spec: { inner: number; outer: number; gain: number } | null = null;
@@ -514,6 +584,14 @@ export class GLRenderer {
     gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D, sp ? spec : this.emptyTex); gl.uniform1i(pr.u.uSpecTex, 2);
     gl.uniform4f(pr.u.uGloss, gs ? gs.inner : 0, gs ? gs.outer : 1, gs ? gs.gain : 0, 0);
     gl.activeTexture(gl.TEXTURE3); gl.bindTexture(gl.TEXTURE_2D, gs ? gloss : this.emptyTex); gl.uniform1i(pr.u.uGlossTex, 3);
+    // T262: the grass shine (its mask, its bump layer or the families' bump maps), units 4 to 6
+    const so = this.shine && this.shine.gain > 0 && this.shineOf ? this.shineOf(tex) : null, sh = so && (this.shine!.src !== 1 || so.bump) && (this.shine!.src !== 3 || this.bumpArr) ? this.shine : null;
+    gl.uniform4f(pr.u.uShine, sh ? sh.inner : 0, sh ? sh.outer : 1, sh ? sh.gain : 0, sh ? sh.src : 0);
+    if (sh) { gl.uniform4f(pr.u.uShineLook, sh.gloss, sh.bump, sh.eye, sh.bumpK); gl.uniform4fv(pr.u.uBumpFam, sh.fam); gl.uniform4fv(pr.u.uBumpPerm, sh.perm); }
+    gl.activeTexture(gl.TEXTURE4); gl.bindTexture(gl.TEXTURE_2D, sh ? so!.mask : this.emptyTex); gl.uniform1i(pr.u.uShineMask, 4);
+    gl.activeTexture(gl.TEXTURE5); gl.bindTexture(gl.TEXTURE_2D, sh && so!.bump ? so!.bump : this.emptyTex); gl.uniform1i(pr.u.uShineBump, 5);
+    if (!this.emptyArr) { this.emptyArr = gl.createTexture()!; gl.bindTexture(gl.TEXTURE_2D_ARRAY, this.emptyArr); gl.texStorage3D(gl.TEXTURE_2D_ARRAY, 1, gl.R8, 1, 1, 1); }
+    gl.activeTexture(gl.TEXTURE6); gl.bindTexture(gl.TEXTURE_2D_ARRAY, sh && sh.src === 3 && this.bumpArr ? this.bumpArr : this.emptyArr); gl.uniform1i(pr.u.uBumpArr, 6); gl.activeTexture(gl.TEXTURE3);
     gl.activeTexture(gl.TEXTURE0);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4); this.stats.draws++;
   }

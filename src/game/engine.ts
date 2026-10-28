@@ -19,7 +19,7 @@ import { STRUCT_COST, STRUCT_MAX, groundClass, highwayRoute, longestRun, splitBy
 import { CULL_MIN_PX, FULL_UV, GLRenderer, POINT_STRIDE, SHADOW_STRIDE, SPRITE_STRIDE, VECTOR_STRIDE } from './gl';
 import { GroundCache } from './ground-cache';
 import { GAME_BOOT, clampCentre, flatTerrain, type BootOptions } from './boot';
-import { TILE_BANDS, TILES_REVISION, anchorAt, bandAt, bandRange, bandsAhead, cellOf, cellsIn, coverageOf, drawnScale, nearUntil, nextBand, tiledFamily, tileIndex, tilePermutation, tileScreenPx, tileSize, tileSpec } from './painted-tiles';
+import { TILE_BANDS, TILES_REVISION, anchorAt, bandAt, bandRange, bandsAhead, cellOf, cellsIn, coverageOf, drawnScale, nearUntil, nextBand, specBand, tiledFamily, tileIndex, tilePermutation, tileScreenPx, tileSize, tileSpec } from './painted-tiles';
 import { onPaintedSurfaces, paintedSurfaces } from './painted-surfaces-live';
 import { borderDefault, finishBorders, finishOf } from './course-finish';
 import { chunkLayers, pictureCurrent, prebakeTargets } from './ground-layers';
@@ -152,6 +152,8 @@ import { CHEER_TILES, DayFinish, LiveGroup, OWNER_ADDRESS, OWNER_ART, OWNER_SKIL
 import { holeViews, markerPlan, tagByHole, type HoleView, type MarkerKind } from './golf/holeview';
 import { CAST, castShear, clampCast, type CastShadow } from './cast-shadow';
 import { SPEC_LOOK, clampSpecLook, specGain, type SpecLook } from './lamp-reflect';
+import { BUMP_FAMILIES, SHINE_CODE, SHINE_LOOK, bumpK, clampShineLook, isShineMode, shineGain, type ShineLook, type ShineMode } from './grass-shine';
+import { paintedUrl } from './painted-grass-art';
 import { clampGrade, gradeFrame, loadGrade, saveGrade, type GradeSettings } from './grade';
 import { glossGain } from './swamp';
 import { contactLean } from './shadow-shape';
@@ -1992,6 +1994,8 @@ export class Game {
     try { localStorage.removeItem('capitalempire.grassArt'); } catch { /* the old gear menu's Grass setting: gone, the painted art always */ }
     this.grassArt = import.meta.env.DEV && new URLSearchParams(location.search).get('grass') === 'photo' ? 'photo' : 'painted';
     this.ground.grassArt = this.grassArt;
+    // T262: ?grassShine=a|a4|c|d (the dev server: the grass shine's source from the start, for the bench and the shots)
+    { const gs = new URLSearchParams(location.search).get('grassShine'); if (import.meta.env.DEV && isShineMode(gs) && gs !== 'off') { this.ground.grassShine = gs; if (gs === 'c') void this.loadBumpArray(); } }
     try { this.groundVariety = localStorage.getItem('capitalempire.groundVariety') !== '0'; } catch { /* the default, on */ }
     this.ground.living = { on: this.groundVariety, debug: false };
     try { const v = parseFloat(localStorage.getItem('capitalempire.slopeLight') ?? ''); if (Number.isFinite(v)) this.slopeLight = clampHeightLight(v); } catch { /* light.json's */ }
@@ -6897,6 +6901,36 @@ export class Game {
   set specCam(on: boolean) { this.ground.setSpecCam(!!on); this.emit(); }
   spec: SpecLook = { ...SPEC_LOOK };
   setSpec(p: Partial<SpecLook>) { this.spec = clampSpecLook({ ...this.spec, ...p }); this.emit(); }
+  /** T262 (#769, phase 1): the grass catches the camera's shine (grass-shine.ts), on T215's falloff: the dev switch window.__game.grassShine =
+   *  'a' | 'a4' | 'c' | 'd' (the height's source; every chunk is baked again) or 'off' (the default: the ground as before); the knobs
+   *  window.__game.setShine({ strength, gloss, bump, eye, night }). Not remembered: a prototype for the lead's verdict */
+  get grassShine(): ShineMode { return this.ground.grassShine; }
+  set grassShine(mode: ShineMode) { if (!isShineMode(mode)) return; this.ground.setGrassShine(mode); if (mode === 'c') void this.loadBumpArray(); this.emit(); }
+  shine: ShineLook = { ...SHINE_LOOK };
+  setShine(p: Partial<ShineLook>) { this.shine = clampShineLook({ ...this.shine, ...p }); this.emit(); }
+  /** T262 (source 'c'): the families' bump tiles, NEAR and MID, into one texture array: family slot k's band b at layers (2 k + b) x 4 */
+  private bumpLoading: Promise<void> | null = null;
+  private loadBumpArray(): Promise<void> {
+    return (this.bumpLoading ??= (async () => {
+      const files: string[] = [], size = BUMP_FAMILIES[0]?.levels.near?.size; if (!size) return;
+      for (const f of BUMP_FAMILIES) for (const b of ['near', 'mid'] as const) for (const t of f.levels[b]?.tiles ?? []) files.push(t.file);
+      const pics = await Promise.all(files.map(async f => createImageBitmap(await (await fetch(paintedUrl(f)!)).blob())));
+      this.gl.bumpArray(pics, size[0], size[1]); for (const p of pics) p.close();
+    })().catch(e => { console.warn('[grass shine] the bump maps did not load', e); this.bumpLoading = null; }));
+  }
+  /** T262: the shine's per-frame values for gl.ts (the family slots' tile sizes, first layers and permutations at tile spec ts) */
+  private shineFam = new Float32Array(12); private shinePerm = new Float32Array(12); private shineTs = -1;
+  private shineFrame(mode: ShineMode, ts: number): NonNullable<GLRenderer['shine']> {
+    if (ts !== this.shineTs) {
+      this.shineTs = ts; const b = specBand(ts), band = TILE_BANDS[b]!;
+      for (let k = 0; k < 3; k++) {
+        const f = BUMP_FAMILIES[k], lv = f ? tiledFamily(f.id)?.levels[band] : undefined;
+        if (!f || !lv || b > 1 || !f.levels[band]) { this.shineFam.set([1, 1, -1, 0], 4 * k); continue; }
+        const [w, h] = tileSize(lv, ts); this.shineFam.set([w, h, (2 * k + b) * 4, 0], 4 * k); this.shinePerm.set(tilePermutation(f.id, band, 4), 4 * k);
+      }
+    }
+    return { inner: this.spec.inner, outer: this.spec.outer, gain: shineGain(this.shine, this.nightAmount()), src: SHINE_CODE[mode], gloss: this.shine.gloss, bump: this.shine.bump, eye: this.shine.eye, bumpK: bumpK(mode), fam: this.shineFam, perm: this.shinePerm };
+  }
   /** the dev readout of the tile set families (T145, T150; App.tsx TilesPanel, shown with the Developer panel: ?debug, F3 or the gear menu): the camera's
    *  band, its anchor zoom (where it draws at its native pixels), how big it is drawn against native, and the zooms the band shows over; for each
    *  tile set family a surface wears, its set, the tiles in view, a tile's width on screen in device px and how many whole tiles the view shows;
@@ -6988,6 +7022,9 @@ export class Game {
       // the picture itself
       gl.gloss = this.ground.specCam ? { inner: this.spec.inner, outer: this.spec.outer, gain: glossGain(this.spec, this.nightAmount()) } : null;
       gl.glossOf ??= tex => this.ground.glossOf(tex);
+      // T262: the grass shine (its source, knobs and the families' tiles at this tile spec), on the same falloff; each picture's layers by the picture
+      gl.shine = this.ground.grassShine !== 'off' ? this.shineFrame(this.ground.grassShine, ts) : null;
+      gl.shineOf ??= tex => this.ground.shineOf(tex);
       const spec = (tex: WebGLTexture | null) => this.ground.specOf(tex);
       const shadeMasks: { tex: WebGLTexture; r: readonly [number, number, number, number] }[] = [];
       let baked = true;
