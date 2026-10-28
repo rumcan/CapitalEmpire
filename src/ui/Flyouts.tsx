@@ -7,6 +7,9 @@
 // T233 (#674, the concept's Golf Course panel): a column with an illustrated tool tile (MenuRow.tile, tool-tiles.ts) is laid out as a grid of
 // tiles, each picture above its name, as many across as its width holds (three at full width, two when the columns narrow); a row of it with no
 // tile shows its icon, mark or swatch on the same navy square. Captions span the grid; a locked tile is dimmed with its lock and its reason.
+// T250 (#721): the town footer's flyouts open upward (up): the first column stands on the footer, above its button, and each deeper level opens
+// to its side as on the rail, beside the row that opened it, all in the room between the top bar and the footer. The first column slides left
+// only when the menu's deepest walk would not fit to the right at the narrowest columns (upLeft). The rows, tiles, keys and locks are the same.
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Icon } from './Icon';
 import { LockMark, NewBadge } from './Rail';
@@ -29,38 +32,66 @@ export function columnWidths(cols: readonly (readonly MenuRow[])[], room: number
 }
 /** how long the pointer rests on a row before its submenu replaces an open one (ms: a diagonal move to the open one does not switch it) */
 const HOVER_MS = 140;
+/** T250: how many columns a menu's deepest walk shows (the root's and each level under it) */
+export const menuDepth = (rows: readonly MenuRow[]): number => 1 + Math.max(0, ...rows.map(r => (r.children ? menuDepth(r.children) : 0)));
+/** T250: the upward flyouts' left edge (local px from the screen's left): over the footer button (left), slid left only as far as the menu's
+ *  deepest walk (depth columns at the narrowest) needs to fit before the screen's right edge, never past its left margin */
+export const upLeft = (left: number, screenW: number, depth: number): number => Math.round(Math.max(BOTTOM, Math.min(left, screenW - BOTTOM - depth * (COL_MIN + GAP))));
+/** the top bar's bottom (--hud-top, local px; App.tsx sets it in px, its fallback is 5.75rem) */
+function hudTop(): number {
+  const v = typeof document === 'undefined' ? '' : getComputedStyle(document.documentElement).getPropertyValue('--hud-top').trim(), n = parseFloat(v);
+  return Number.isFinite(n) ? (v.endsWith('rem') ? n * 16 : n) : 92;
+}
+
+const NO_REFS: readonly React.RefObject<HTMLElement | null>[] = [];
 
 export interface FlyoutsProps {
   rows: MenuRow[];
-  /** the rail button's top (local px in the rail's box) and the left edge the first column starts at */
+  /** the rail button's top (local px in the rail's box) and the left edge the first column starts at (up: the footer button's left edge, local
+   *  px from the screen's left; top unused) */
   top: number; left: number;
+  /** T250: the town footer's flyouts: they open upward from the footer, their deeper levels to the side */
+  up?: boolean;
   /** the rows to open at first (the back arrow: the leaf's parents), and whether the keyboard leads (focus the first row) */
   startPath?: number[]; keyboard?: boolean;
   onLeaf: (r: MenuRow) => void; onLocked: (r: MenuRow) => void; onClose: () => void;
-  /** the rail's box: a click on it is the rail's own (it switches or closes the flyouts) */
-  railRef?: React.RefObject<HTMLElement | null>;
+  /** the drawers' boxes (T250: the course drawer and the town footer): a click on one is the rail's own (it switches or closes the flyouts) */
+  railRefs?: readonly React.RefObject<HTMLElement | null>[];
 }
 
-export function Flyouts({ rows, top, left, startPath = [], keyboard = false, onLeaf, onLocked, onClose, railRef }: FlyoutsProps) {
+export function Flyouts({ rows, top, left, up = false, startPath = [], keyboard = false, onLeaf, onLocked, onClose, railRefs = NO_REFS }: FlyoutsProps) {
   const [nav, setNav] = useState<NavState>(() => ({ path: startPath, focus: keyboard ? { level: startPath.length, index: Math.max(0, (columnsOf(rows, startPath)[startPath.length] ?? []).findIndex(r => !r.caption)) } : null }));
   const [tops, setTops] = useState<number[]>([]);
-  const [room, setRoom] = useState<{ h: number; w: number }>({ h: 600, w: 1200 });
+  const [room, setRoom] = useState<{ h: number; w: number; x: number }>({ h: 600, w: 1200, x: left });
   const box = useRef<HTMLDivElement | null>(null), timer = useRef(0);
   const cols = columnsOf(rows, nav.path);
   // (another group's flyouts are a new Flyouts: App.tsx keys it by the group, so the open rows start again there)
-  // the room on screen (local px: the UI layer is zoomed by the UI scale), measured from where the flyouts start
+  // the room on screen (local px: the UI layer is zoomed by the UI scale), measured from where the flyouts start; upward (T250), from the top
+  // bar's bottom down to the footer's top (the box's bottom), and from the first column's left edge to the screen's right edge
+  const depth = menuDepth(rows);
   useLayoutEffect(() => {
-    const measure = () => { const s = currentUiScale() || 1, r = box.current?.getBoundingClientRect(); const y0 = r ? r.top : 96, x0 = r ? r.left : 100; setRoom({ h: Math.max(160, (window.innerHeight - y0) / s - BOTTOM), w: Math.max(COL_MIN, (window.innerWidth - x0) / s - BOTTOM) }); };
+    const measure = () => {
+      const s = currentUiScale() || 1, r = box.current?.getBoundingClientRect();
+      let next: { h: number; w: number; x: number };
+      if (up) {
+        const sw = window.innerWidth / s, x = upLeft(left, sw, depth), bottom = r ? r.bottom / s : window.innerHeight / s - 80;
+        next = { h: Math.max(160, bottom - hudTop() - 8), w: Math.max(COL_MIN, sw - x - BOTTOM), x };
+      } else {
+        const y0 = r ? r.top : 96, x0 = r ? r.left : 100;
+        next = { h: Math.max(160, (window.innerHeight - y0) / s - BOTTOM), w: Math.max(COL_MIN, (window.innerWidth - x0) / s - BOTTOM), x: left };
+      }
+      setRoom(o => (o.h === next.h && o.w === next.w && o.x === next.x ? o : next));
+    };
     measure(); window.addEventListener('resize', measure); return () => window.removeEventListener('resize', measure);
-  }, []);
-  // each column's top: beside the row that opened it, slid up to stay on screen
+  }, [up, left, depth]);
+  // each column's top: beside the row that opened it, slid up to stay on screen (upward, the first column stands on the room's bottom)
   useLayoutEffect(() => {
     const el = box.current; if (!el) return;
     const out: number[] = [];
     cols.forEach((_, level) => {
       const col = el.querySelector<HTMLElement>(`[data-flyout-col="${level}"]`); if (!col) { out.push(0); return; }
       const h = col.offsetHeight;
-      let want = level === 0 ? top : (() => { const parent = el.querySelector<HTMLElement>(`[data-flyout-col="${level - 1}"]`), row = parent?.querySelector<HTMLElement>(`[data-row="${level - 1}:${nav.path[level - 1]}"]`); return (out[level - 1] ?? 0) + (row ? row.offsetTop - (parent?.scrollTop ?? 0) - 4 : 0); })();
+      let want = level === 0 ? (up ? room.h - h : top) : (() => { const parent = el.querySelector<HTMLElement>(`[data-flyout-col="${level - 1}"]`), row = parent?.querySelector<HTMLElement>(`[data-row="${level - 1}:${nav.path[level - 1]}"]`); return (out[level - 1] ?? 0) + (row ? row.offsetTop - (parent?.scrollTop ?? 0) - 4 : 0); })();
       want = Math.max(0, Math.min(want, room.h - h));
       out.push(Math.round(want));
     });
@@ -79,12 +110,12 @@ export function Flyouts({ rows, top, left, startPath = [], keyboard = false, onL
     };
     const onDown = (e: PointerEvent) => {
       const t = e.target as Node | null;
-      if (!t || box.current?.contains(t) || railRef?.current?.contains(t)) return;
+      if (!t || box.current?.contains(t) || railRefs.some(r => r.current?.contains(t))) return;
       e.stopPropagation(); e.preventDefault(); onClose();
     };
     window.addEventListener('keydown', onKey, true); window.addEventListener('pointerdown', onDown, true);
     return () => { window.removeEventListener('keydown', onKey, true); window.removeEventListener('pointerdown', onDown, true); };
-  }, [rows, nav, onLeaf, onLocked, onClose, railRef]);
+  }, [rows, nav, onLeaf, onLocked, onClose, railRefs]);
   // the focused row takes the browser's focus (the screen reader and the visible ring follow the keyboard)
   useEffect(() => { if (nav.focus) box.current?.querySelector<HTMLElement>(`[data-row="${nav.focus.level}:${nav.focus.index}"]`)?.focus(); }, [nav.focus]);
   useEffect(() => () => window.clearTimeout(timer.current), []);
@@ -101,7 +132,7 @@ export function Flyouts({ rows, top, left, startPath = [], keyboard = false, onL
     if (now) go(); else if (nav.path.length > level) timer.current = window.setTimeout(go, HOVER_MS);
   };
   return (
-    <div ref={box} className="flyouts" style={{ left }} data-testid="flyouts" role="presentation">
+    <div ref={box} className={`flyouts ${up ? 'flyouts-up' : ''}`} style={up ? { left: room.x, height: room.h } : { left }} data-testid="flyouts" data-up={up || undefined} role="presentation">
       {cols.map((col, level) => { const grid = isTileGrid(col); return (
         <div key={level} role="menu" aria-orientation="vertical" data-flyout-col={level} className={`flyout glass ${grid ? 'flyout-grid' : ''}`} style={{ top: tops[level] ?? (level ? 0 : top), width: widths[level], maxHeight: room.h }}>
           {col.map((r, index) => {

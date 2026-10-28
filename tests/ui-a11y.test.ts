@@ -2,8 +2,11 @@
 // UI scale (the offered scales, the clamp, the storage and its fallback when storage throws).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { tipAttrs, tipText } from '../src/ui/tip';
-import { railEntries, railTip } from '../src/ui/rail-items';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server.edge';
+import { tipAttrs, tipPlace, tipText } from '../src/ui/tip';
+import { drawerEntries, railEntries, railTip } from '../src/ui/rail-items';
+import { Rail } from '../src/ui/Rail';
 import { computeProgressiveUiState, type PlayerProgressFacts } from '../src/game/ext/progressive-ui';
 import { UI_SCALES, UI_SCALE_KEY, clampUiScale, loadUiScale, saveUiScale } from '../src/ui/uiScale';
 
@@ -43,4 +46,24 @@ test('the UI scale is kept per browser, and falls back to 100% when storage is m
   assert.equal(loadUiScale(broken), 1, 'a private window: 100%');
   assert.equal(saveUiScale(0.9, broken), 0.9, 'saving does not throw');
   assert.equal(loadUiScale(null), 1, 'no storage at all');
+});
+
+// T250 (#721): the rail split into the course drawer (left) and the town footer (bottom): both are named navigation landmarks, the footer's
+// compact buttons keep their names for the screen reader and the tooltip, and a footer control's tooltip stands above it (not off screen)
+test('the two drawers: named landmarks; the compact footer keeps each name; its tooltips stand above it', () => {
+  const es = railEntries(computeProgressiveUiState(facts()), true, 'course');
+  const draw = (drawer: 'side' | 'footer', compact = false) => renderToStaticMarkup(createElement(Rail, { entries: drawerEntries(es, drawer), drawer, compact, onPick: () => {}, onLocked: () => {} }));
+  assert.match(draw('side'), /^<nav [^>]*aria-label="Club tools"/); assert.match(draw('footer'), /^<nav [^>]*aria-label="Town tools"/);
+  const c = draw('footer', true);
+  for (const e of drawerEntries(es, 'footer')) {
+    const b = c.match(new RegExp(`<button data-rail="${e.item.id}"[^>]*>`))?.[0] ?? '';
+    assert.match(b, new RegExp(`aria-label="${e.item.label}${e.locked ? ': ' : ''}`), `${e.item.id}: named`);
+    assert.match(b, new RegExp(`data-tip="${e.item.label}"`), `${e.item.id}: its tooltip names it`);
+    if (e.locked) assert.match(b, /data-tip-why="[^"]+"/, 'locked: what unlocks it');
+  }
+  // the tooltip's side: beside a course drawer button, above a footer button, below anything else (window px)
+  const box = (left: number, top: number, w = 46, h = 42) => ({ left, right: left + w, top, bottom: top + h, width: w, height: h });
+  assert.equal(tipPlace(box(20, 300), 768).side, 'right');
+  assert.deepEqual(tipPlace(box(600, 714), 768), { x: 623, y: 706, side: 'above' });
+  assert.equal(tipPlace(box(600, 40), 768).side, 'below');
 });
