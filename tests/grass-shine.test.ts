@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  GRASS_SHINE_GLSL, MASK_SCALE, SHINE_GLOSS, SHINE_GROUPS, SHINE_INSET, SHINE_LOOK, SHINE_WEIGHTS, SHINE_ZOOM, SUN_SCREEN, clampShineLook, insetAt,
+  GRASS_SHINE_GLSL, MASK_SCALE, SHINE_AMOUNT, SHINE_KEY, SHINE_WHITE, SHINE_GLOSS, SHINE_GROUPS, SHINE_INSET, SHINE_LOOK, SHINE_WEIGHTS, SHINE_ZOOM, SUN_SCREEN, clampShineLook, insetAt,
   maskColour, maskPad, maskWeight, shineExponent, shineGain, shineGroup, shineMaskPixels, shineWeight,
 } from '../src/game/grass-shine';
 import SURFACES from '../src/game/painted-surfaces.json';
@@ -24,14 +24,15 @@ test('the sun lies at the upper right of the screen, opposite the 145 degree sha
   assert.ok(Math.abs((Math.asin(z) * 180) / Math.PI - 46) < 1.5);
 });
 
-test('the weights: greens and fairways most, then fringe, first cut and tee, then lawns, map grass and outfield, rough, long grass and fescue least but never none', () => {
+test('the weights: greens and fairways most, then fringe and first cut, then lawns, map grass and outfield, rough, long grass and fescue least but never none; tees very little', () => {
   const W = SHINE_WEIGHTS, tier = (ks: (keyof typeof W)[]) => ks.map(k => W[k]);
-  const top = tier(['green', 'fairway']), second = tier(['fringe', 'firstCut', 'tee']), third = tier(['lawn', 'map', 'outfield']), last = tier(['rough', 'longGrass', 'fescue']);
+  const top = tier(['green', 'fairway']), second = tier(['fringe', 'firstCut']), third = tier(['lawn', 'map', 'outfield']), last = tier(['rough', 'longGrass', 'fescue']);
   assert.ok(Math.min(...top) > Math.max(...second), 'greens and fairways over the collars and tees');
   assert.ok(Math.min(...second) > Math.max(...third), 'the collars and tees over the lawns, map grass and outfield');
   assert.ok(Math.min(...third) > Math.max(...last), 'the lawns over the rough, long grass and fescue');
   assert.ok(Math.min(...last) > 0, 'the rough, long grass and fescue still shine');
-  assert.equal(W.green, 1); assert.deepEqual(SHINE_GROUPS.map(g => g.key).sort(), Object.keys(W).sort());
+  assert.ok(W.tee <= 0.25, 'the tee paint, already the brightest and most contrasty turf, takes very little (the owner, 2026-10-28: the tees were horrible)');
+  assert.deepEqual(SHINE_GROUPS.map(g => g.key).sort(), Object.keys(W).sort());
 });
 
 test('every grass surface of painted-surfaces.json has a group; the textures the course, the lawns and the range lay find theirs', () => {
@@ -45,7 +46,7 @@ test('every grass surface of painted-surfaces.json has a group; the textures the
 });
 
 test('a weight: none for ground that is not grass (a town lawn wearing the desert), the town lawns\' for a grass of no known name', () => {
-  assert.equal(shineWeight('preset:golf-green', 'grass'), SHINE_WEIGHTS.green);
+  assert.equal(shineWeight('preset:golf-green', 'grass'), SHINE_WEIGHTS.green); assert.equal(shineWeight('golfTee', 'grass'), SHINE_WEIGHTS.tee);
   assert.equal(shineWeight('lawn:0', 'sand'), 0, 'the new town\'s block lawns wear the desert');
   assert.equal(shineWeight('preset:fairway', null), SHINE_WEIGHTS.fairway, 'a look with no painted family still shines by its name');
   assert.equal(shineWeight('some-new-grass', 'grass'), SHINE_WEIGHTS.lawn);
@@ -53,8 +54,8 @@ test('a weight: none for ground that is not grass (a town lawn wearing the deser
   assert.equal(shineWeight('preset:rough', 'grass', { ...SHINE_WEIGHTS, rough: 1.5 }), 1.5, 'the knobs\' weights');
 });
 
-test('the look: on by default, clamped, remembered as JSON; the gloss size sets the exponent', () => {
-  assert.equal(SHINE_LOOK.on, true);
+test('the look: on by default, clamped, remembered as JSON (under a key of its own version); the gloss size sets the exponent', () => {
+  assert.equal(SHINE_LOOK.on, true); assert.match(SHINE_KEY, /\.v2$/);
   assert.deepEqual(clampShineLook(null), SHINE_LOOK);
   assert.deepEqual(clampShineLook(JSON.parse(JSON.stringify(SHINE_LOOK))), SHINE_LOOK);
   const c = clampShineLook({ on: false, strength: 99, size: -1, bump: Number.NaN, weights: { green: 9, rough: -1 } as never });
@@ -104,4 +105,5 @@ test('the GLSL: one function, the sun and the tint as numbers, no flat wash (the
   assert.ok(GRASS_SHINE_GLSL.includes(String(+SUN_SCREEN[0].toFixed(5))));
   assert.match(GRASS_SHINE_GLSL, /mix\(c \* c,/, 'T110: its own colour squared');
   assert.ok(!/NaN|undefined/.test(GRASS_SHINE_GLSL));
+  assert.ok(SHINE_AMOUNT <= 0.35 && SHINE_WHITE >= 0.6, 'a gentle, mostly white sheen (PR 792 had 1.0 and 0.5: bright, grainy lime)');
 });
