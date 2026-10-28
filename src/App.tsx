@@ -597,7 +597,7 @@ export default function App() {
             {/* T193: a group opens its flyout (a click again, Esc or a click on the map closes it); Select and Bulldoze pick their tool */}
             <Rail {...rail} navRef={railRef} entries={drawerEntries(entries, 'side')} />
             {!up && flyouts}
-            <div className={`glass tool-panel w-[330px] max-h-[calc(var(--vh-ui,100vh)-var(--hud-top,5.75rem)-8.25rem)] overflow-y-auto overflow-x-hidden p-3 ${sideFly ? 'hidden' : ''}`} data-tool={game.uiTool} data-testid="tool-panel">
+            <div className={`glass tool-panel w-[330px] max-h-[calc(var(--vh-ui,100vh)-var(--hud-top,5.75rem)-8.25rem)] overflow-y-auto overflow-x-hidden p-3 ${sideFly || (game.tool === 'select' && !game.landMode && !game.selected) ? 'hidden' : ''}`} data-tool={game.uiTool} data-testid="tool-panel">
               {/* T193: the tool's place in its menus (its leaf's path) and a back arrow that reopens its flyout there; the group's tools are no
                   longer stacked here: they are in the flyouts */}
               {item && game.uiTool !== 'select' && menuFor(item).length > 0 && (
@@ -1490,7 +1490,7 @@ function BizCard({ game, b, free }: { game: Game; b: BusinessType; free: boolean
       })}
       {open && (b.family === 'tourism' || b.id === 'casino') && <TouristLine game={game} />}
       {!open && <p className="mt-1 text-amber-200">{unlockText(b, game.ownedBiz())}</p>}
-      {open && under && <button className="btn mt-2" onClick={() => game.selectBizType(b.id)}>{sel ? 'Selected' : 'Build'}</button>}
+      {open && under && <button className="btn-gold mt-2" onClick={() => game.selectBizType(b.id)}>{sel ? 'Selected' : 'Build'}</button>}
       {open && under && sel && <p className="mt-1 text-amber-200">Click open land to build it · R rotates</p>}
     </div>
   );
