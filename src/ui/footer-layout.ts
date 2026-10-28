@@ -65,19 +65,20 @@ export function footerPlace(o: FootRoom): FootPlace {
   return { x, compact: true, lift: o.blocks.flatMap(([l, r], i) => (r + FOOT_GAP > x && l - FOOT_GAP < x + o.compact ? [i] : [])) };
 }
 
-/** T255 (#739): the footer panel (a town tool's panel above the footer): the left tool panel's width (App.tsx w-[330px]) and its gap above the
- *  bar */
-export const PANEL_W = 330, PANEL_GAP = 8;
+/** T255 (#739): the footer panel (a town tool's panel above the footer): the left tool panel's width (App.tsx w-[330px]), its gap above the
+ *  bar, and its height at most, as a share of the screen's (index.css .tool-panel-foot: the map's middle stays in view; a longer panel scrolls) */
+export const PANEL_W = 330, PANEL_GAP = 8, PANEL_VH = 0.6;
 export interface PanelRoom extends Pick<FootRoom, 'w' | 'laneL' | 'blocks'> {
   /** the footer's middle (the panel stands centred on it where it can) */
   cx: number;
   /** the panel's width */
   width: number;
 }
-/** where the footer panel stands (its left edge): centred on the footer where that is clear, else moved aside to the free stretch of the
- *  bottom edge nearest the footer's middle that holds it, clear of the minimap and of every card beside it (blocks: the cards that reach its
- *  band, from the panel's top down). null: no stretch holds it (a crowded screen, say 125% UI on a 1366 px screen with the range card and the
- *  guide card beside it): it then stands in the left tool panel's place, beside the course drawer, where no bottom card is */
+/** where the footer panel stands (its left edge): centred on the footer where that is clear, else moved aside to the free stretch nearest the
+ *  footer's middle that holds it, clear of everything that reaches its band, from its top down to its bottom (blocks: the cards, the minimap's
+ *  map and town chip, the course drawer; laneL 0, as the minimap is a block like the others: a short panel may stand over the town chip, which
+ *  stays below it). null: no stretch holds it (a crowded screen: 125% UI on a 1366 px screen with the range card and the guide card beside it):
+ *  it then stands in the left tool panel's place, beside the course drawer, as a club tool's panel does on that screen */
 export function panelPlace(o: PanelRoom): number | null {
   return nearest(freeStretches(o), o.width, o.cx)?.x ?? null;
 }

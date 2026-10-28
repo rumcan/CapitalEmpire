@@ -132,11 +132,12 @@ button.stat-chip:hover { background: rgba(255, 255, 255, 0.06); }
 .rail-foot-compact .rail-heading.rail-heading-foot { padding: 0; writing-mode: vertical-rl; transform: rotate(180deg); font-size: 10px; letter-spacing: 0.1em; line-height: 1; }
 /* a bottom card the footer cannot stand clear of moves up above it (footer-layout.ts: the last resort, a crowded screen) */
 [data-foot-lift] { bottom: calc(var(--foot-top, 0px) + 0.5rem) !important; }
-/* T255 (#739): a town tool's panel docked above the town footer (TownFooter.tsx): the left tool panel's width and look, opening upward, as
-   tall as the room up to the top bar (then it scrolls, vertically only). With no room above the footer (footer-layout.ts panelPlace) it stands
-   in the left tool panel's place, as tall as that one. --foot-stack: the top of the bar and of this panel above it (the hint bar stands on it) */
+/* T255 (#739): a town tool's panel docked above the town footer (TownFooter.tsx): the left tool panel's width and look, opening upward, at
+   most 60% of the screen's height and never past the top bar (footer-layout.ts PANEL_VH; a longer panel scrolls, vertically only). With no room
+   above the footer (footer-layout.ts panelPlace) it stands in the left tool panel's place, as tall as that one. --foot-stack: the top of the
+   bar and of this panel above it (the hint bar and the shot panel stand on it) */
 :root { --foot-stack: 0px; }
-.tool-panel-foot { position: absolute; bottom: calc(100% + 8px); max-height: calc(var(--vh-ui, 100vh) - var(--hud-top, 5.75rem) - var(--foot-top, 0px) - 1rem); }
+.tool-panel-foot { position: absolute; bottom: calc(100% + 8px); max-height: min(calc(var(--vh-ui, 100vh) - var(--hud-top, 5.75rem) - var(--foot-top, 0px) - 1rem), calc(var(--vh-ui, 100vh) * 0.6)); }
 .tool-panel-foot[data-place="side"] { bottom: auto; max-height: calc(var(--vh-ui, 100vh) - var(--hud-top, 5.75rem) - 8.25rem); }
 .new-badge { display: inline-block; border-radius: 999px; background: linear-gradient(#ffd166, #f0a91e); padding: 0 0.3rem; font-size: 9px; font-weight: 800; letter-spacing: 0.04em; line-height: 14px; color: #1b1406; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4); }
 @media (max-height: 799px) {

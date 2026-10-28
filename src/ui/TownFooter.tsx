@@ -13,7 +13,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { Rail, type RailProps } from './Rail';
 import { hudTop } from './Flyouts';
-import { FOOT_BOTTOM, FOOT_EST, FOOT_MARGIN, PANEL_GAP, PANEL_W, footerPlace, panelPlace } from './footer-layout';
+import { FOOT_BOTTOM, FOOT_EST, FOOT_MARGIN, PANEL_GAP, PANEL_VH, PANEL_W, footerPlace, panelPlace } from './footer-layout';
 import { currentUiScale } from './uiScale';
 
 /** the cards the footer keeps clear of: the bottom-right ones (the guide card, the leaderboard) and the tall right-hand ones that may reach
@@ -50,7 +50,7 @@ export function TownFooter({ boxRef, navRef, flyouts, raised = false, panel = nu
     widths.current[place.compact ? 'compact' : 'full'] = nav.offsetWidth;
     const h = nav.offsetHeight, top = sh - FOOT_BOTTOM - h;
     document.documentElement.style.setProperty('--foot-top', `${FOOT_BOTTOM + h}px`);
-    const mm = document.querySelector('[data-testid="minimap"]')?.getBoundingClientRect(), laneL = mm && mm.width > 0 ? mm.right / s : 0;
+    const mmEl = document.querySelector('[data-testid="minimap"]'), mm = mmEl?.getBoundingClientRect(), laneL = mm && mm.width > 0 ? mm.right / s : 0;
     const all = Array.from(document.querySelectorAll<HTMLElement>(FOOT_CARDS));
     // a card blocks the bottom edge while it reaches the footer's band (or is lifted above it: it stays a bottom card, so nothing flickers)
     const cards = all.filter(el => { const r = el.getBoundingClientRect(); return r.width > 0 && (el.hasAttribute('data-foot-lift') || r.bottom / s > top - 4); });
@@ -63,16 +63,17 @@ export function TownFooter({ boxRef, navRef, flyouts, raised = false, panel = nu
     for (const el of new Set([...lifted.current, ...cards])) el.toggleAttribute('data-foot-lift', lift.includes(el));
     lifted.current = lift;
     if (p.x !== place.x || p.compact !== place.compact) setPlace({ x: p.x, compact: p.compact });
-    // T255: the panel above the footer: its band runs from its top down to the bar (its height as it would stand there: its content's, up to
-    // the room under the top bar, so the place it takes never changes the height it is placed by); every card reaching that band blocks it
+    // T255: the panel above the footer: its band runs from its top down to its bottom, 8 px above the bar (its height as it would stand there:
+    // its content's, up to the room under the top bar and PANEL_VH of the screen, so the place it takes never changes the height it is placed
+    // by); every card reaching that band blocks it, and so do the minimap's map and town chip and the course drawer
     let stack = FOOT_BOTTOM + h;
     const pe = panelRef.current;
     if (pe && pe.offsetWidth > 0) {
-      const hud = hudTop(), ph = Math.min(pe.scrollHeight, top - PANEL_GAP - hud - 8), pTop = top - PANEL_GAP - ph;
-      const blocks = all.filter(el => { const r = el.getBoundingClientRect(); return r.width > 0 && r.bottom / s > pTop - 4 && r.top / s < top; })
-        .map(el => { const r = el.getBoundingClientRect(); return [r.left / s, r.right / s] as const; });
+      const hud = hudTop(), pBot = top - PANEL_GAP, ph = Math.min(pe.scrollHeight, pBot - hud - 8, sh * PANEL_VH), pTop = pBot - ph;
+      const near = [...all, ...Array.from(mmEl?.children ?? []), ...Array.from(document.querySelectorAll('[data-testid="rail"]'))];
+      const blocks = near.map(el => el.getBoundingClientRect()).filter(r => r.width > 0 && r.bottom / s > pTop - 4 && r.top / s < pBot).map(r => [r.left / s, r.right / s] as const);
       const fw = p.compact ? (widths.current.compact ?? FOOT_EST.compact) : (widths.current.full ?? FOOT_EST.full);
-      const x = panelPlace({ w: sw, laneL, blocks, cx: p.x + fw / 2, width: pe.offsetWidth || PANEL_W });
+      const x = panelPlace({ w: sw, laneL: 0, blocks, cx: p.x + fw / 2, width: pe.offsetWidth || PANEL_W });
       let next: PanelAt;
       if (x !== null) { next = { x, side: false, top: 0 }; stack += PANEL_GAP + ph; } else {
         // no room above the footer: the left tool panel's place, beside the course drawer (gap-2), under the top bar
