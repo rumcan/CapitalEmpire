@@ -11,12 +11,12 @@
 // overlap (two lots of up to 21: 0 to 3 cells either way): 4 + 3 x (-3..3) = -5, -2, 1, 4, 7, 10, 13, never a multiple of 8 either. Pure: the
 // lot's place alone picks it, so a lot never changes on a reload, its neighbours need not be known, and it costs one floor and a mod a lot. The
 // composer then draws a preset that holds that shop, else the lot's own preset with its shop swapped for that one in the same spot
-// (lots/compose.ts shopPlan). (The three venues cannot keep that promise: their STEP is 1, so two tour lots 21 tiles apart can match.)
+// (lots/compose.ts shopPlan). The three venues cannot keep that promise (BY_EIGHT: two tour lots two or three cells apart can match).
 import type { LotGeom } from './compose-core';
 
 /** the lattice step along a street (tiles): two lots side by side of 7 tiles or more never share a cell */
 export const LATTICE = 7;
-/** the colours one cell moves (prime to the palette: 3 for the eight shops, 1 for a palette of three) */
+/** the colours one cell moves (prime to the palette: 3, else 1) */
 const stepOf = (n: number) => (n % 3 ? 3 : 1);
 
 /** the business a picture shows (the shops' and venues' four-view art: the NE view's id; the lettering on its sign) */
@@ -45,9 +45,14 @@ export function latticeOf(lot: LotGeom): { cell: number; side: 0 | 1; axis: 0 | 
 }
 /** a lot's colour among n (0..n-1): STEP colours a lattice cell, n/2 more for the lots facing the other way, one more on the other axis */
 export function colourOf(lot: LotGeom, n: number): number {
+  if (n === 3) return BY_EIGHT[colourOf(lot, 8)]!;
   const { cell, side, axis } = latticeOf(lot);
   return (((stepOf(n) * cell + Math.floor(n / 2) * side + axis) % n) + n) % n;
 }
+/** a palette of three (the venues) from the eight colours: no way of three keeps every neighbour apart, this one the commonest: colours 3, 4 and
+ *  5 apart always differ (the lots side by side one cell apart, 3; the lot straight across, 4; across three cells off, 5), 1, 2, 6 and 7 apart
+ *  (two or three cells side by side, one or two off across) may match */
+const BY_EIGHT = [2, 2, 1, 1, 1, 0, 0, 0] as const;
 /** the order a lot tries the palette in when its colour's picture fits none of its presets (a shop lot never needs it in the towns tried; a
  *  house lot's allocations and size leave it part of the houses): its colour, then on round the palette, so two lots of different colours
  *  only meet when none of the pictures between them fits */

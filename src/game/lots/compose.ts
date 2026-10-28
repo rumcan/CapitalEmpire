@@ -342,6 +342,10 @@ export function lotPreset(lot: LotGeom, st: ComposeState): { preset: LotPreset; 
 // ---------- T270 (#811): shop variety (lots/variety.ts: the business a shop lot shows is its place's colour on the street lattice)
 /** a lot's preset and, when its shop is swapped, the shop it shows instead (swap.scale: a preset multiplier) */
 interface ShopPlan { preset: LotPreset; swap?: { id: string; scale: number; spot: number } }
+/** the variety on (?oldshops, or setShopVariety(false), picks every lot's preset by its street slot alone and draws its shop as the preset has it,
+ *  as before T270) */
+let VARIETY = !(typeof location !== 'undefined' && /[?&]oldshops(&|=|$)/.test(location.search ?? ''));
+export function setShopVariety(on: boolean): void { VARIETY = on; }
 /** a shop swapped into another's spot may stand up to SWAP_SIDE past the spot's sides and SWAP_BACK past its back (tiles; its front stays on the
  *  spot's), drawn at its own size with the spot's jitter, down to SWAP_LEAST of it to fit, never past its picture's pixels (sizes.ts PIXEL_LIMIT),
  *  and filling at least SWAP_AREA of the spot (a small shop is not lost in a big one's place) */
@@ -392,9 +396,17 @@ export function swapScale(q: PresetProp, id: string, f: PresetFrame, R: SwapRule
  *  with no shop spot (a tour lot's gas station), draw the slot's pick as before */
 function shopPlan(list: readonly LotPreset[], lot: LotGeom, use: PresetUse, fallback?: () => readonly LotPreset[]): ShopPlan | null {
   const slot = streetSlot(lot), key = streetKey(lot), old = pickPreset(list, slot, key);
+  if (!VARIETY) return old ? { preset: old } : null;
   // (a house lot whose preset shows a house from the back shows another house's back)
   const front = paletteOf(use), pal = use === 'res' && front && old && spotOf(old, front) < 0 ? backPalette() : front;
   if (!old || !pal || !pal.length || spotOf(old, pal) < 0) return old ? { preset: old } : null;
+  // a tour lot keeps its slot's preset (three venues cannot keep its neighbours apart: variety.ts BY_EIGHT, and the slots already do, one
+  // preset from the next); only a spot whose picture stands for a venue (SPOT_OF) is given the venue of the lot's colour
+  if (use === 'tour') {
+    const at = spotOf(old, pal); if (pal.includes(old.props[at]!.id)) return { preset: old };
+    for (const c of tryOrder(colourOf(lot, pal.length), pal.length)) { const k = swapScale(old.props[at]!, pal[c]!, presetFrame(lot, old)); if (k) return { preset: old, swap: { id: pal[c]!, scale: k, spot: at } }; }
+    return { preset: old };
+  }
   // the shop presets of a list, the slot's pick first
   const shopsOf = (l: readonly LotPreset[], first?: LotPreset) => { const s = l.filter(p => spotOf(p, pal) >= 0), o = first ?? pickPreset(s, slot, key); return o ? [o, ...s.filter(p => p !== o)] : s; };
   // a house swapped in suits the lot's road and state (the house allocations, T155), as a stand-in house does
@@ -415,14 +427,17 @@ function shopPlan(list: readonly LotPreset[], lot: LotGeom, use: PresetUse, fall
   return { preset: old };
 }
 /** a fitted preset with its shop swapped as the plan says: the new shop on the spot's front edge (its street side) and centre along the street,
- *  inside the lot; unchanged without a swap or when the fit left the spot out */
+ *  inside the lot, marked as standing in for the preset's (standIn, as a T167 stand-in: the lot lab's badge); unchanged without a swap or when
+ *  the fit left the spot out */
 function swapShop(fit: Fitted, plan: ShopPlan, lot: LotGeom, f: PresetFrame): Fitted {
   if (!plan.swap) return fit;
   const k = fit.from.indexOf(plan.swap.spot); if (k < 0) return fit;
   const half = frameHalf(f), q = fit.props[k]!, h0 = half(q), n = { ...q, id: plan.swap.id, scale: plan.swap.scale }, h1 = half(n);
   const props = fit.props.slice();
   props[k] = { ...n, x: clamp(q.x, h1.ha, Math.max(h1.ha, lot.w - h1.ha)), y: clamp(q.y - h0.hb + h1.hb, h1.hb, Math.max(h1.hb, lot.d - h1.hb)) };
-  return { ...fit, props };
+  const standIn = fit.standIn ? fit.standIn.slice() : fit.props.map(() => undefined as string | undefined);
+  standIn[k] ??= q.id;
+  return { ...fit, props, standIn };
 }
 
 // ---------- T167: stand-ins for the pictures the owner removed
