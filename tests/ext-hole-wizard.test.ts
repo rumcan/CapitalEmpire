@@ -136,7 +136,7 @@ test('4. Build lays exactly the ghost (= planDiff), charges it, saves the plan, 
   assert.equal(decodePlans(st.plans).length, 1);
 });
 
-test('5. editing the green after touching up a bunker: the bunker stays; only changed cells change', () => {
+test('5. editing the green after touching up a bunker (T254: Edit Hole Layout): the bunker stays, and no cell changes at all', () => {
   const { g, st, tool, down, at } = game();
   tool.setPlan(); down(40, 120); down(230, 120); tool.buildPlan();
   const full = st.spent;
@@ -153,12 +153,14 @@ test('5. editing the green after touching up a bunker: the bunker stays; only ch
   // drag the green 16 m farther and 6 m up
   const gr = w.handles().find(h => h.k === 'green')!;
   tool.pointerDown(gr, gr.x * PX, gr.y * PX); tool.pointerMove({ x: gr.x + 8, y: gr.y - 3 }, (gr.x + 8) * PX, (gr.y - 3) * PX); tool.pointerUp(0.5);
-  const spent0 = st.spent;
+  const spent0 = st.spent, cells = [g.surf.join(','), g.hole.join(','), g.month.join(',')].join('|');
   assert.ok(tool.buildPlan());
   assert.deepEqual(at(145, 126), [SURF.bunker, 1], 'the bunker stays');
-  assert.equal(at(gr.x + 8, gr.y - 3)[0], SURF.green, 'the green moved');
-  assert.ok(st.spent - spent0 > 0 && st.spent - spent0 < 0.3 * full, `only the changed cells are charged: $${st.spent - spent0} of a $${full} hole`);
+  // T254 (the owner, 2026-10-28: "if you edit the layout it does not plant new grass"): the layout moves, the grass does not
+  assert.equal([g.surf.join(','), g.hole.join(','), g.month.join(',')].join('|'), cells, 'not one cell painted, cleared or regrown');
+  assert.equal(st.spent - spent0, 0, `nothing charged (a $${full} hole)`);
   assert.equal(decodePlans(st.plans).length, 1, 'still one plan');
+  assert.ok(Math.abs(decodePlans(st.plans)[0]!.green.x - (gr.x + 8)) < 1, 'the plan (the line of play) took the new green');
 });
 
 test('6. delete clears the planned cells (touch-ups stay), as one undo step', () => {

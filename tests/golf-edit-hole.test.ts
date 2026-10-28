@@ -49,7 +49,8 @@ function twoHoles() {
   assert.equal(o.tool.mode, 'brush'); assert.equal(o.tool.editingHole, 0, 'no editor open');
   return o;
 }
-const EDITING = (n: number) => `Editing hole ${n}: drag the tee, the green or the line; Build to save`;
+// T254: the button is Edit Hole Layout, and its Build moves the tee markers and the flag only
+const EDITING = (n: number) => `Edit Hole Layout, hole ${n}: drag the tee, the green or the line; Build moves the tee markers and the flag (no grass is laid)`;
 
 test('Edit hole opens the editor on that hole (plan mode, the wizard on its plan), frames the hole and says what to do', () => {
   const { st, tool, w } = twoHoles(), fits = st.fits.length;
@@ -112,14 +113,14 @@ const editButton = (h: string) => { const m = /<button([^>]*data-testid="hole-ed
 
 test("the card's Edit hole: enabled for a planned hole; \"Editing hole 1\" (disabled) while that hole's editor is open; disabled with its reason for a hole painted by hand", () => {
   let b = editButton(cardHtml(fakeGame({ open: 1 }).game));
-  assert.equal(b.text, 'Edit hole'); assert.doesNotMatch(b.attrs, / disabled=""/);
+  assert.equal(b.text, 'Edit Hole Layout'); assert.doesNotMatch(b.attrs, / disabled=""/);
   b = editButton(cardHtml(fakeGame({ open: 1, editing: 2 }).game));
-  assert.equal(b.text, 'Edit hole', 'another hole\'s editor open: this one can still be edited'); assert.doesNotMatch(b.attrs, / disabled=""/);
+  assert.equal(b.text, 'Edit Hole Layout', 'another hole\'s editor open: this one can still be edited'); assert.doesNotMatch(b.attrs, / disabled=""/);
   b = editButton(cardHtml(fakeGame({ open: 1, editing: 1 }).game));
   assert.equal(b.text, 'Editing hole 1'); assert.match(b.attrs, / disabled=""/); assert.match(b.attrs, /title="[^"]*editor is open/);
   const h = cardHtml(fakeGame({ open: 2, hand: [2] }).game);
   b = editButton(h);
-  assert.equal(b.text, 'Edit hole'); assert.match(b.attrs, / disabled=""/);
+  assert.equal(b.text, 'Edit Hole Layout'); assert.match(b.attrs, / disabled=""/);
   assert.match(h, /data-testid="hole-edit-why"[^>]*>Painted by hand: shape it with the brush/, 'the reason is on the card, not only in a tooltip');
 });
 
@@ -128,7 +129,7 @@ test('the badges read "Hole 1" with their status icon; the status line ends in �
   assert.match(h, /<button data-hole="1"[^>]*><span class="hole-icon" aria-hidden="true">✓<\/span>Hole 1<\/button>/);
   assert.match(h, /<button data-hole="2"[^>]*><span class="hole-icon" aria-hidden="true">✓<\/span>Hole 2<\/button>/);
   const status = /<div class="status-line[^"]*" data-status="true">([\s\S]*?)<\/div>/.exec(h)?.[1] ?? '';
-  assert.match(status, /^<span[^>]*>Hole 1 · par 4 · 342 m · ready<\/span><button[^>]*data-testid="status-edit"[^>]*>✎ Edit hole 1<\/button>$/, 'the status line ends in the button');
+  assert.match(status, /^<span[^>]*>Hole 1 · par 4 · 342 m · ready<\/span><button[^>]*data-testid="status-edit"[^>]*>✎ Edit Hole Layout<\/button>$/, 'the status line ends in the button');
   h = stripHtml(fakeGame({ cur: 1, editing: 1 }).game);
   assert.match(h, /<button[^>]*disabled=""[^>]*data-testid="status-edit"[^>]*>Editing hole 1<\/button>/);
   h = stripHtml(fakeGame({ cur: 2, hand: [2] }).game);

@@ -109,7 +109,8 @@ export function normalizeGolfSave(g: Partial<GolfSave> | null | undefined): Golf
     dir: g.dir ?? 0,
     // T254: an older save's tee markers become the tee sets (nothing moves); a save that has the sets keeps its well-formed markers
     tees: teeSets === 1 ? (g.tees ?? []).filter(t => t && isTeeKind(t.kind) && Number.isFinite(t.x) && Number.isFinite(t.y)) : migrateTees(g.tees ?? []),
-    teeSets: 1,
+    // (the engine's save writes teeSets: 1; migrateTees is idempotent, so an old save loaded twice before a save maps the same)
+    ...(teeSets === 1 ? { teeSets: 1 as const } : {}),
     pins: g.pins ?? [],
     aims: g.aims ?? [],
     clubhouse: g.clubhouse,
