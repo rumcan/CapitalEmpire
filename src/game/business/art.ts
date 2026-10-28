@@ -2,6 +2,7 @@ import { BUSINESS, type BusinessId } from './catalogue';
 import type { BizDef } from './state';
 import type { LibItem, Prop } from '../types';
 import { drawnAs } from '../mirror';
+import { drawnAsStandIn } from '../newart';
 import { OWNER_SCALE, STUDIO_SCALE } from '../lots/scales';
 
 /** The representative delivered sprite for each business's catalogue card. */
@@ -45,7 +46,11 @@ export function businessArt(def: BizDef, library: LibItem[], index: ReadonlyMap<
     const front = index.get(id.includes(':') ? id : 'business:' + id); if (front === undefined) return [];
     // a rotated parcel draws the four-view art turned (its partner view) and any other picture unflipped: never mirrored (mirror.ts)
     const [tid, tflip] = drawnAs(library[front]!, flip), item = index.get(tid) ?? front;
-    const it = library[item], sized = STUDIO_SCALE[library[front]!.id], scale = sized ?? (fraction ? 64 * (def.w + def.h) * fraction / it.w : OWNER_SCALE[it.id] ?? 1);
+    const it = library[item], sized = STUDIO_SCALE[library[front]!.id], b0 = it.boxes[0];
+    // the starter clubhouse, while the grand clubhouse stands in for its missing four views (newart.ts), fills the clubhouse's footprint (#593:
+    // 20 x 12 tiles) on any parcel, as the owner sized the grand clubhouse in the studio; drawn at the shack's own size it was a doll's house
+    const club = !sized && !fraction && def.type === 'clubhouse' && drawnAsStandIn(item) && b0 ? (canonical.w + canonical.h) / 2 / (b0.hx + b0.hy) : null;
+    const scale = sized ?? club ?? (fraction ? 64 * (def.w + def.h) * fraction / it.w : OWNER_SCALE[it.id] ?? 1);
     const x = def.x + (flip ? v : u) * def.w, y = def.y + (flip ? u : v) * def.h;
     const b = it.boxes[0], radius = fraction ? Math.min(def.w, def.h) * fraction * .35 : b ? Math.max(b.hx, b.hy) * scale : 2;
     return [{ uid: -1000000 - def.id * 100 - n, item, x, y, flip: tflip, scale, x0: x - radius, y0: y - radius, x1: x + radius, y1: y + radius, auto: 'business-art' }];
