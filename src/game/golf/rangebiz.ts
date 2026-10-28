@@ -115,6 +115,9 @@ export function lightScore(e: Pt): number { const ux = e.x + e.y, uy = e.y - e.x
 /** T258: rangeScene's options: the range's ground art as the studio has it (golf/range-look.ts), and the ChatGPT pictures that have landed by
  *  slug (default RANGE_ART) */
 export interface SceneOpts { look?: RangeLook; art?: Readonly<Record<string, readonly string[]>> }
+/** T258: the patch that is a target green's own green, one a green whatever the look: the stand-in's 'target', the picture's raised inner disc
+ *  (its picture's outer disc is its collar, feathered), or the bullseye */
+export const isTargetGreen = (p: ScenePatch): boolean => p.surf === 'target' || p.surf === 'bullseye' || (p.surf === 'targetGreen' && p.edge !== 'flat');
 /** a target green in the scene: centre, radius and distance from the tee line (m) */
 export interface SceneTarget { x: number; y: number; r: number; m: number }
 /** the scene of a range (rangeScene) */

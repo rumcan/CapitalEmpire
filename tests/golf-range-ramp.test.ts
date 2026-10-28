@@ -12,7 +12,8 @@ import { HoleWizard, suggestedGreen, type WizardHost } from '../src/game/ext/hol
 import { makeGrid } from '../src/game/ext/course-grid';
 import { planInfo } from '../src/game/ext/hole-plan';
 import { DECOR, DECOR_BY_KEY, PROPS_DECAY, decorAppeal, decorInfo, kindAppeal, nextAppeal, sellBack } from '../src/game/golf/decor';
-import { PROPS_APPEAL_CAP, RANGE_UPGRADES, RangeSim, defaultRangeBiz, normalizeRangeBiz, parkLabel, rangeMapLabel, rangeNewSeason, rangeScene, rangeUpkeep, withUpgrade, type CarSlot } from '../src/game/golf/rangebiz';
+import { PROPS_APPEAL_CAP, RANGE_UPGRADES, RangeSim, defaultRangeBiz, isTargetGreen, normalizeRangeBiz, parkLabel, rangeMapLabel, rangeNewSeason, rangeScene, rangeUpkeep, withUpgrade, type CarSlot } from '../src/game/golf/rangebiz';
+import { RANGE_STAND_INS } from '../src/game/golf/range-look';
 import { RangeHost, outfieldStripes, type RangeHostCtx } from '../src/game/golf/rangehost';
 import type { Rect } from '../src/game/golf/mode';
 
@@ -183,11 +184,15 @@ test('the range upgrades cost upkeep each month, booked as upkeep and shown on t
 test('the range stays a range: its own outfield preset with mowing stripes on top, target greens raised in a fringe and collar', () => {
   const sc = rangeScene([200, 200, 70, 150], 2, withUpgrade(withUpgrade(defaultRangeBiz(), 'teeturf'), 'grass')); // T223: once grassed
   const out = sc.patches.filter(p => p.surf === 'outfield'); assert.equal(out.length, 1); assert.equal(out[0]!.mow, true);
-  assert.equal(sc.patches.filter(p => p.surf === 'target').length, 0, 'T239: no target greens to start');
+  assert.equal(sc.patches.filter(isTargetGreen).length, 0, 'T239: no target greens to start');
   const sg = rangeScene([200, 200, 70, 150], 2, withUpgrade(defaultRangeBiz(), 'greens'));
-  const greens = sg.patches.filter(p => p.surf === 'target'); assert.equal(greens.length, 3, 'three target greens once built (T239)');
-  assert.ok(greens.every(p => p.edge === 'raised'));
-  assert.equal(sg.patches.filter(p => p.surf === 'fringe').length, 3, 'each in its fringe ring');
+  // T258: the target green's picture, each green in its own collar (the picture's outer disc), raised a little; the stand-in as before T258
+  const greens = sg.patches.filter(isTargetGreen); assert.equal(greens.length, 3, 'three target greens once built (T239)');
+  assert.ok(greens.every(p => p.surf === 'targetGreen' && p.edge === 'turf'));
+  assert.equal(sg.patches.filter(p => p.surf === 'targetGreen' && p.edge === 'flat').length, 3, 'each in its collar');
+  const ss = rangeScene([200, 200, 70, 150], 2, withUpgrade(defaultRangeBiz(), 'greens'), { look: RANGE_STAND_INS }), old = ss.patches.filter(p => p.surf === 'target');
+  assert.equal(old.length, 3); assert.ok(old.every(p => p.edge === 'raised'));
+  assert.equal(ss.patches.filter(p => p.surf === 'fringe').length, 3, 'the stand-in: each in its fringe ring');
   // the stripes follow the preset, across the line of play ('x') or down it ('y'), from the tee end of the outfield
   const across = outfieldStripes(sc, { on: true, dir: 'x', width: 6, light: 0.08, dark: 0.1, lightCol: '#c8e07c', darkCol: '#2e5a1c', tint: 0.2, soft: 0.25 })!;
   assert.deepEqual([across.ux, across.uy], [sc.aim.x, sc.aim.y]); assert.equal(across.w, 6); assert.deepEqual([across.ox, across.oy], [sc.mowFrom.x, sc.mowFrom.y]);

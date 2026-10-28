@@ -21,7 +21,16 @@ The approved look is batch 1 (made on RUN before the switch): `E:/ClaudeTemp/ART
 The rest of the list (items 224-327, the portraits 230-232) follows the same pattern: shared block S or Q in GOLF-ART-LIST section 13, plus the item's words. The lead adds them here batch by batch.
 
 ## First: the driving range's stand-ins (the owner, 2026-10-29: "i see some bad ones at the driving range facilities")
-These replace the labelled stand-ins on the range. A items need **two views** of the same object: make view 1, then ask for view 2 **in the same chat** as an edit ("the same object turned 90 degrees to the left: now its left side and front show"), so it stays one object. Never mirror. Attach `art/theme-consistency/references/theme-authoritative.png` first, and the item's identity picture where one is named. Save to `art/theme-consistency/generated/buildings/` as `<slug>-view1-v1.png` and `<slug>-view2-v1.png` (B items: `<slug>-1view-v1.png`).
+These replace the labelled stand-ins on the range. A items need **two views** of the same object: make view 1, then ask for view 2 **in the same chat** as an edit ("the same object turned 90 degrees to the left: now its left side and front show"), so it stays one object. Never mirror. Attach `art/theme-consistency/references/theme-authoritative.png` first, and the item's identity picture where one is named. Save to `art/theme-consistency/generated/buildings/` as `<slug>-view1-v1.png` and `<slug>-view2-v1.png` (B items: `<slug>-1view-v1.png`). A retake is `-v2`, `-v3`: the newest is used.
+
+**When you save a picture, tell the lead; the lead runs `node scripts/assets/prep-range-art.mjs`** (T258). For every item whose files are all in (an A item needs both views), it:
+- keys out the magenta;
+- sizes the picture to the art list's metres (`src/game/golf/range-art-items.json`);
+- packs it onto the golf page;
+- draws it in the game in place of its stand-in, view 1 or view 2 by the way the piece faces, without its "Stand In for" label;
+- drafts its vector shadow.
+
+Until a file lands nothing changes, and the run lists what it is still waiting for. The hitting mats (19) and the target greens (20, the bullseye 27) are already in the game (T258).
 
 ### 1. Tin-and-tarp pro shop (`golf-clubhouse-shanty`, A)
 **View 1** (its front and right side show; the front faces the screen's lower left): save as `golf-clubhouse-shanty-view1-v1.png`

@@ -552,7 +552,7 @@ http.createServer(async (req, res) => {
       const rm = readRemoved(), sc = readScales(), houses = library().filter(x => x.kind === 'house' && x.tex && !rm[x.id]).map(x => ({ id: x.id, name: x.name, quad: x.quad ?? [0, 0, x.w, x.h], ax: x.ax, ay: x.ay, scale: sc[x.id] ?? mapScale(x.id) }));
       return json({ file: readGround(), sources: groundSources(), houses, ranges: GL.RANGES, defaults: { side: GL.DEFAULT_SIDE, mix: GL.DEFAULT_MIX }, decals: readDecals() });
     }
-    if (req.method === 'GET' && P === '/api/painted') return json({ families: PL.FAMILIES, surfaces: PL.SURFACES, presets: readPresets().presets.map(p => ({ id: p.id, name: p.name, surface: p.surface, lawn: p.lawn })), file: readSurfaces(), ranges: PL.LOOK_RANGES, lawnSlots: PL.LAWN_SLOTS, finish: { defaults: PL.DEFAULT_COURSE_FINISH, ranges: PL.FINISH_RANGES }, water: { defaults: PL.DEFAULT_WATER_LOOK, ranges: PL.WATER_RANGES } });
+    if (req.method === 'GET' && P === '/api/painted') return json({ families: PL.FAMILIES, surfaces: PL.SURFACES, presets: readPresets().presets.map(p => ({ id: p.id, name: p.name, surface: p.surface, lawn: p.lawn })), file: readSurfaces(), ranges: PL.LOOK_RANGES, lawnSlots: PL.LAWN_SLOTS, finish: { defaults: PL.DEFAULT_COURSE_FINISH, ranges: PL.FINISH_RANGES }, water: { defaults: PL.DEFAULT_WATER_LOOK, ranges: PL.WATER_RANGES }, range: { defaults: PL.DEFAULT_RANGE_LOOK, choices: PL.RANGE_LOOK_CHOICES } });
     if (req.method === 'POST' && P === '/api/painted') {
       const { file } = await body(req);
       if (!file || typeof file !== 'object') { res.writeHead(400); return res.end('no surfaces'); }
