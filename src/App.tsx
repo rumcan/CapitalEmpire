@@ -74,6 +74,8 @@ import { UI_SCALES, applyUiScale, currentUiScale, saveUiScale } from './ui/uiSca
 import { HoleCard } from './ui/golf/HoleCard';
 import { affordKind, balanceKind, statusIcon, trendKind, withIcon } from './ui/status-icon';
 import stadiumArt from './assets/ui/art/stadium.webp';
+import { StatChips } from './ui/StatChips';
+import { statChips } from './ui/stat-chips';
 
 /** the top bar on one row (P23 4.11, T135): its golf chips (and the invitation's whole sentence) show their words only from 2200 px; narrower,
  *  the icon alone with its tooltip (a stage 3 range start needs about 2,170 px with every word, the 1920 px row has 1,896) */
@@ -290,6 +292,8 @@ export default function App() {
   };
   /** the golf HUD's view (null outside golf mode): the top bar's tier and month */
   const gv = game?.golfMode ? game.golfView() : null, fv = game?.golfMode ? game.foundingView() : null;
+  /** T233: the top bar's stat chips' figures (golf mode) */
+  const stats = gv ? game!.topStats() : null;
   /** a range start's founding season before the invitation (P22 2.8, T095): "Founding season · n of 9 holes"; and the title's place (the range's,
    *  then the town's once named) */
   const founding = fv && gv && !fv.invited && game!.traffic.round.runs === 0 && !gv.live ? `Founding season · ${Math.min(fv.check.holes, fv.check.holesNeeded)} of ${fv.check.holesNeeded} holes` : null;
@@ -310,7 +314,7 @@ export default function App() {
 
   /** the top bar's money figure (a button: it opens the budget) */
   const treasury = (g: Game) => <Stat icon="bank" label="Treasury" value={g.unlimited ? '∞' : withIcon(balanceKind(g.money), money(g.money))} tone={g.money < 0 ? 'text-red-300' : 'text-emerald-300'} sub={debtDays ? `bankrupt in ${DEBT_DAYS - debtDays} days` : undefined} subTone="text-red-300" onClick={() => { g.panel = g.panel === 'budget' ? null : 'budget'; g.emit(); }} />;
-  /** the population, jobs, day and daily income: inline in classic mode, in the Treasury drawer in golf mode (T035) */
+  /** the population, jobs, day and daily income: inline in classic mode, in the money chip's drawer in golf mode (T035, T233) */
   const moreStats = (g: Game) => (
     <>
       {/* T221: a range start's town grows with the club's earnings: the room they make (the full line in the tip) */}
@@ -358,7 +362,7 @@ export default function App() {
       {game && game.ready && !lab && (
         <>
           <div ref={topBar} className="pointer-events-none absolute left-0 right-0 top-0 z-30 flex flex-wrap items-start justify-between gap-2 p-3">
-            <div className="pointer-events-auto glass flex items-center gap-2 px-4 py-2 min-[1600px]:gap-3">
+            <div className="pointer-events-auto glass flex items-center gap-1.5 px-3 py-2 min-[1600px]:gap-3 min-[1600px]:px-4">
               <div className="flex items-center gap-2.5">
                 <Icon name="leaf" size={38} />
                 <div className={gv ? 'max-[1899px]:hidden' : 'max-[1599px]:hidden'}>{/* the golf bar's title from 1900 px (T135: one row) */}
@@ -369,12 +373,22 @@ export default function App() {
               <div className="h-9 w-px bg-white/10" />
               {gv ? (
                 <>
+                  {/* T233 (#674, the concept's top bar): the stat chips first: the money and its change a month (a click: the books; its drawer: the
+                      town's figures, the golf Treasury's since T035), the reputation, the golfers a month (a click: the Club card) and the course
+                      rating (a click: the Season card's Course stats) */}
+                  {stats && <StatChips chips={statChips(stats, debtDays ? DEBT_DAYS - debtDays : null)} drawer={moreStats(game)} on={{
+                    money: () => { game.panel = game.panel === 'budget' ? null : 'budget'; game.emit(); },
+                    golfers: game.hasClubhouse ? () => game.openClubCard() : undefined,
+                    rating: chip('courseStats') ? () => { setSeasonOpen(true); setCourseStats(null); } : undefined,
+                  }} />}
+                  <div className="h-9 w-px bg-white/10" />
+                  {/* T233: with the stat chips, the tier's name and the months left show from 2400 px (their tooltips say them narrower), and under 1600 px the bar's gaps are a little tighter */}
                   {/* P23 4.11 (T135): the top bar keeps one row at 1366, 1600 and 1920 px at every stage: the tier's name under 1600 px, the title
                       under 1900 px, the chips' words and the invitation's sentence under 2200 px go into their tooltips; the traffic views are in the
                       gear menu */}
                   {/* T095 (P22 2.8): before the tour's invitation the Tier's line says the founding season's holes (one row at 1366-1920 px, T135) */}
-                  <Stat icon="trophy" label="Tier" value={`T${gv.tier}`} sub={gv.tierName} subClass="max-[1599px]:hidden" title={founding ? `${founding}: the tour invites you with ${fv!.check.holesNeeded} holes, a car park and a clubhouse (Tier ${gv.tier}: ${gv.tierName})` : `Tier ${gv.tier}: ${gv.tierName}`} tone="text-amber-200" />
-                  <Stat icon="calendar" label="Month" guide="month" value={gv.month} sub={gv.live ? 'Tournament day' : `${Math.ceil(gv.monthsLeft)} ${Math.ceil(gv.monthsLeft) === 1 ? 'month' : 'months'} to ${fv && !fv.due ? 'season end' : 'the tournament'}`} />
+                  <Stat icon="trophy" label="Tier" value={`T${gv.tier}`} sub={gv.tierName} subClass="max-[2399px]:hidden" title={founding ? `${founding}: the tour invites you with ${fv!.check.holesNeeded} holes, a car park and a clubhouse (Tier ${gv.tier}: ${gv.tierName})` : `Tier ${gv.tier}: ${gv.tierName}`} tone="text-amber-200" />
+                  {(() => { const left = gv.live ? 'Tournament day' : `${Math.ceil(gv.monthsLeft)} ${Math.ceil(gv.monthsLeft) === 1 ? 'month' : 'months'} to ${fv && !fv.due ? 'season end' : 'the tournament'}`; return <Stat icon="calendar" label="Month" guide="month" value={gv.month} sub={left} subClass="max-[2399px]:hidden" title={`${gv.month}: ${left}`} />; })()}
                   {game.golf?.start === 'range' && <button className={`chip ${game.range.cardOpen ? 'chip-on' : ''}`} onClick={() => game.openRangeCard()} data-tip="The driving range: golfers, takings, bucket price and upgrades" aria-label="Range" data-testid="range-chip" data-guide="range-chip"><Icon name="income" size={16} /><span className={WIDE}>Range</span></button>}
                   {game.hasClubhouse && <button className={`chip ${game.clubCardOpen ? 'chip-on' : ''}`} onClick={() => game.openClubCard()} data-tip="The clubhouse: today's members, visitors, green fees and waits" aria-label="Clubhouse" data-testid="club-chip"><Icon name="house" size={16} /><span className={WIDE}>Club</span></button>}
                   {fv?.invited && game.traffic.round.runs === 0 && !gv.live && <span className="flex items-center gap-1 whitespace-nowrap rounded-md border border-amber-400/40 bg-amber-400/15 px-2 py-1 text-xs font-semibold text-amber-200" data-testid="invite-pill" data-guide="invite-pill" data-tip={`The tour's invitation: the Club Championship at the end of ${fv.due ? 'this' : 'next'} season (the first tournament is held at the end of the season it names)`}><Icon name="trophy" size={14} /><span className="min-[2200px]:hidden">Invited</span><span className={WIDE}>The Club Championship: end of {fv.due ? 'this' : 'next'} season</span></span>}
@@ -390,14 +404,8 @@ export default function App() {
               ) : game.eventMode
                 ? <Stat icon="trophy" label="Level" value={String(game.traffic.round.xp)} sub={`${game.traffic.round.cards.length} cards`} tone="text-amber-200" />
                 : <Stat icon="trophy" label="Career" {...careerStat(game)} tone="text-amber-200" />}
-              {gv ? (
-                <div className="group relative">
-                  {treasury(game)}
-                  <div className="absolute left-0 top-full z-30 hidden pt-1 group-hover:block">
-                    <div className="glass flex flex-col gap-2 p-2">{moreStats(game)}</div>
-                  </div>
-                </div>
-              ) : <>{treasury(game)}{moreStats(game)}</>}
+              {/* the classic town game's Treasury and figures (golf mode: the money chip and its drawer, T233) */}
+              {!gv && <>{treasury(game)}{moreStats(game)}</>}
               {dev && <span className="rounded-md border border-sky-400/50 bg-sky-400/15 px-1.5 py-0.5 text-[12px] font-bold text-sky-200" data-tip="Developer panels are on (F3 hides them)">DEV</span>}
               {dev && (game.growth !== 1 || game.unlimited || !game.stamped) && (
                 <div className="rounded-md border border-amber-400/40 bg-amber-400/15 px-2 py-1 text-xs font-semibold text-amber-200" data-tip="Dev sandbox options (URL: ?grow=N, ?money=0|1, ?stamp=0|1)">
