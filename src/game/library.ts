@@ -10,6 +10,7 @@ import { appendGolf, appendKit } from './golf-library';
 import { appendViews } from './views-library';
 import { appendTrees } from './trees-library';
 import { appendAxisViews } from './axis-library';
+import { appendExtraViews } from './extra-views-library';
 import p0m0 from '../assets/atlas/sprites-0-0.webp';
 import p0m1 from '../assets/atlas/sprites-0-1.webp';
 import p0m2 from '../assets/atlas/sprites-0-2.webp';
@@ -1079,4 +1080,5 @@ appendGolf(LIBRARY, ATLAS_PAGES);
 appendViews(LIBRARY, ATLAS_PAGES);
 appendTrees(LIBRARY, ATLAS_PAGES);
 appendAxisViews(LIBRARY, ATLAS_PAGES);
-appendKit(LIBRARY); // T231: the concept kit (on the golf page), last
+appendKit(LIBRARY); // T231: the concept kit (on the golf page), appended before supplemental views
+appendExtraViews(LIBRARY, ATLAS_PAGES);

@@ -1,0 +1,363 @@
+{
+  "schema": 1,
+  "id": "landscape:hydrangea-pale",
+  "slug": "hydrangea-pale",
+  "category": "landscaping",
+  "kind": "bush",
+  "viewSet": "diagonal-4",
+  "viewsOrder": [
+    "NE",
+    "SE",
+    "SW",
+    "NW"
+  ],
+  "requiresLibraryRegistration": true,
+  "generator": "built-in image_gen; canonical sheet is a lossless crop/order export of the saved generator sheet",
+  "generationProvenance": {
+    "file": "art/theme-consistency/generated/landscaping/hydrangea-pale-diagonal-4views-v1.provenance.json",
+    "sha256": "a75cfa3ff829b340e421e7367fdb46a8726b42a57f213c9fa18f3197aea7cc8a"
+  },
+  "references": [
+    "art/theme-consistency/references/rotation-guide-v1.png",
+    "art/theme-consistency/generated/landscaping/hydrangea-pale-screen-axis-4views-v1.png",
+    "art/theme-consistency/references/theme-authoritative.png"
+  ],
+  "prompt": "Use case: stylized-concept. FOUR genuinely elevated ISOMETRIC views of ONE landscape plant forMapleFalls town game. Image1 specifies four real quarterturn camera orientations ONLY, do not paint its boxes/labels/white markers. Image2 supplies species, scale, leafbrushwork and plantidentity ONLY; addmissing45degree-yawdiagonalviews, notitshead-onones. Image3 setsconsistenthandpaintedtownfamilytheme.\nONE palegreen hydrangeashrub, broad sagegreen leaves and handfulofroundedcream/palelimeflowerheads, threeasymmetricstems with onehigherflowerclusteratphysicalbackleft, 0.9mhigh 1.4mwide. No pink/neonflowers, pot,flowerbedborder,grassorgrounddisc.\nKeep exactspecies/palette/dimensions, recognisableasymmetricplantlobes, branches andleafgrouping throughout rigid90degreeobjectturns. Fixed2:1isometricorthographiccamera, lookdownonfoliagetops, verticalstemsupright, truechangedocclusion andsilhouettefromeachside. StartingNE FRONT+RIGHT, SE RIGHT+REAR, SW REAR+LEFT, NW LEFT+FRONT; aphysicalsidebranchmovesaroundplantanddisappearsbehindfoliageinrearviews. Do not copy/pasteor mirroranypicture or justshuffleleavesonunchangedfrontview.\nHand-paintedstylizedreadablefoliagemasses andboldshapes, confidentbrushstrokes, samewarmtownart. SunfixedSCREENUPPERRIGHTtowardLOWERLEFTinall4views; leafyhighlightsright, lowerleftcoollocalundersides. RealRGBAtransparentoutsideplant, no pot, planter,greyfloor, grassisland, shadowdisc, backdrop,checkerboard, text/labels/guidecolors.\nSquare2x2equalcellssheet NE/SE/SW/NWrowmajor, fourcompleteisolatedcutouts allsamephysicalscale withatleast15%cleartransparentpaddingEACHcellincludingcentregutter. Keepallleavesinsidecell. Oneplantpercellonly.",
+  "sourceSheet": {
+    "file": "art/theme-consistency/generated/landscaping/hydrangea-pale-diagonal-4views-v1.png",
+    "sha256": "46829de0a277db9666fe39a9de273ac18d88bf1afdd35aa70e84ff32244b6c7e",
+    "nativePixels": [
+      1254,
+      1254
+    ]
+  },
+  "canonicalDirectionToSourceDirection": {
+    "NE": "NE",
+    "SE": "NW",
+    "SW": "SW",
+    "NW": "SE"
+  },
+  "output": "art/theme-consistency/generated/landscaping/hydrangea-pale-4views-v1.png",
+  "lighting": "Fixed screen upper-right toward lower-left; art review pending",
+  "processing": "Exact native source-rectangle RGBA copied into transparent equal cells in canonical engine order. No resize, recolour, repaint, mirroring, warp, alpha thresholding or invented view.",
+  "diagonalExport": {
+    "schema": 1,
+    "id": "landscape:hydrangea-pale",
+    "viewSet": "diagonal-4",
+    "viewsOrder": [
+      "NE",
+      "SE",
+      "SW",
+      "NW"
+    ],
+    "sheet": "art/theme-consistency/generated/landscaping/hydrangea-pale-4views-v1.png",
+    "sheetSha256": "5578dcd0a7fac1cc69a6819dc1bdd4e79fd4f2eb57d1638c9bf5ae7750f739eb",
+    "nativeSheetPixels": [
+      1264,
+      1254
+    ],
+    "sourceSheet": {
+      "file": "art/theme-consistency/generated/landscaping/hydrangea-pale-diagonal-4views-v1.png",
+      "sha256": "46829de0a277db9666fe39a9de273ac18d88bf1afdd35aa70e84ff32244b6c7e",
+      "nativePixels": [
+        1254,
+        1254
+      ]
+    },
+    "canonicalDirectionToSourceDirection": {
+      "NE": "NE",
+      "SE": "NW",
+      "SW": "SW",
+      "NW": "SE"
+    },
+    "cycleCorrection": "Source camera-guide cycle is opposite runtime preset clockwise cycle. NE<-rawNE, SE<-rawNW, SW<-rawSW, NW<-rawSE; only labels/whole cutouts reordered, no pixels mirrored or transformed.",
+    "processing": "Exact native source-rectangle RGBA copied into transparent equal cells in canonical engine order. No resize, recolour, repaint, mirroring, warp, alpha thresholding or invented view.",
+    "fileContractStatus": "passed-with-alpha-residue-warnings",
+    "visualReviewStatus": "pending-primary-review",
+    "integrationStatus": "ready",
+    "issues": [],
+    "warnings": [
+      "NE: low alpha1..15 residue retained at canvas boundary",
+      "SE: low alpha1..15 residue retained at canvas boundary",
+      "SW: low alpha1..15 residue retained at canvas boundary"
+    ],
+    "views": {
+      "NE": {
+        "nativeFile": "art/theme-consistency/generated/landscaping/hydrangea-pale-4views-v1/NE.native.png",
+        "nativeSha256": "5913837bdfeefe21d7dea56f16e7c13db132ee7607176aede163f4f587154727",
+        "nativePixels": [
+          632,
+          627
+        ],
+        "pixelSha256": "a8138bdcbed6b21cd43bbe46f065593ec2c7800b4200b53419fbee9ca9c7d232",
+        "sourceView": "NE",
+        "sourceFile": "art/theme-consistency/generated/landscaping/hydrangea-pale-diagonal-4views-v1.png",
+        "sourceSha256": "46829de0a277db9666fe39a9de273ac18d88bf1afdd35aa70e84ff32244b6c7e",
+        "rawSheetRect": {
+          "left": 0,
+          "top": 0,
+          "width": 632,
+          "height": 627
+        },
+        "sourceOffset": [
+          0,
+          0
+        ],
+        "sourceRect": {
+          "left": 0,
+          "top": 0,
+          "width": 632,
+          "height": 627
+        },
+        "exactDecodedSourceRgba": true,
+        "alpha": {
+          "strong": {
+            "threshold": 16,
+            "count": 192199,
+            "edge": 0,
+            "bounds": {
+              "left": 62,
+              "top": 84,
+              "width": 569,
+              "height": 485
+            },
+            "corners": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "all": {
+            "threshold": 1,
+            "count": 205793,
+            "edge": 86,
+            "bounds": {
+              "left": 0,
+              "top": 9,
+              "width": 632,
+              "height": 618
+            },
+            "corners": [
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      },
+      "SE": {
+        "nativeFile": "art/theme-consistency/generated/landscaping/hydrangea-pale-4views-v1/SE.native.png",
+        "nativeSha256": "c52aa9163d3b37d2a059e18ee5f09afa84c064555052d71c9dd1fabe5d2aa4dc",
+        "nativePixels": [
+          632,
+          627
+        ],
+        "pixelSha256": "0c717bc880d7dfcd249ff4943b92b623522f65b8d71adfb01a3e7bcbc3f6c41a",
+        "sourceView": "NW",
+        "sourceFile": "art/theme-consistency/generated/landscaping/hydrangea-pale-diagonal-4views-v1.png",
+        "sourceSha256": "46829de0a277db9666fe39a9de273ac18d88bf1afdd35aa70e84ff32244b6c7e",
+        "rawSheetRect": {
+          "left": 628,
+          "top": 627,
+          "width": 626,
+          "height": 627
+        },
+        "sourceOffset": [
+          3,
+          0
+        ],
+        "sourceRect": {
+          "left": 632,
+          "top": 0,
+          "width": 632,
+          "height": 627
+        },
+        "exactDecodedSourceRgba": true,
+        "alpha": {
+          "strong": {
+            "threshold": 16,
+            "count": 180794,
+            "edge": 0,
+            "bounds": {
+              "left": 73,
+              "top": 51,
+              "width": 530,
+              "height": 486
+            },
+            "corners": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "all": {
+            "threshold": 1,
+            "count": 195017,
+            "edge": 38,
+            "bounds": {
+              "left": 3,
+              "top": 0,
+              "width": 612,
+              "height": 627
+            },
+            "corners": [
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      },
+      "SW": {
+        "nativeFile": "art/theme-consistency/generated/landscaping/hydrangea-pale-4views-v1/SW.native.png",
+        "nativeSha256": "93072a1541fda9de5cbb0ae0d9331f5fd582ee2137661599084080778e6456c9",
+        "nativePixels": [
+          632,
+          627
+        ],
+        "pixelSha256": "4ab84152f64053f05c524998a8e0236984afe3e37d96248cd883c615a1f828f5",
+        "sourceView": "SW",
+        "sourceFile": "art/theme-consistency/generated/landscaping/hydrangea-pale-diagonal-4views-v1.png",
+        "sourceSha256": "46829de0a277db9666fe39a9de273ac18d88bf1afdd35aa70e84ff32244b6c7e",
+        "rawSheetRect": {
+          "left": 0,
+          "top": 627,
+          "width": 628,
+          "height": 627
+        },
+        "sourceOffset": [
+          2,
+          0
+        ],
+        "sourceRect": {
+          "left": 0,
+          "top": 627,
+          "width": 632,
+          "height": 627
+        },
+        "exactDecodedSourceRgba": true,
+        "alpha": {
+          "strong": {
+            "threshold": 16,
+            "count": 198698,
+            "edge": 0,
+            "bounds": {
+              "left": 51,
+              "top": 31,
+              "width": 578,
+              "height": 505
+            },
+            "corners": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "all": {
+            "threshold": 1,
+            "count": 214193,
+            "edge": 8,
+            "bounds": {
+              "left": 2,
+              "top": 1,
+              "width": 628,
+              "height": 626
+            },
+            "corners": [
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      },
+      "NW": {
+        "nativeFile": "art/theme-consistency/generated/landscaping/hydrangea-pale-4views-v1/NW.native.png",
+        "nativeSha256": "05ee78ab051c595ecb55b7761bda5a3bede2cddcf9b6ce472257b1de4cf2dd31",
+        "nativePixels": [
+          632,
+          627
+        ],
+        "pixelSha256": "6b089cd7cb9d190ddce5e973f9e1617105710b8190989ba35be7616575434bea",
+        "sourceView": "SE",
+        "sourceFile": "art/theme-consistency/generated/landscaping/hydrangea-pale-diagonal-4views-v1.png",
+        "sourceSha256": "46829de0a277db9666fe39a9de273ac18d88bf1afdd35aa70e84ff32244b6c7e",
+        "rawSheetRect": {
+          "left": 632,
+          "top": 0,
+          "width": 622,
+          "height": 627
+        },
+        "sourceOffset": [
+          5,
+          0
+        ],
+        "sourceRect": {
+          "left": 632,
+          "top": 627,
+          "width": 632,
+          "height": 627
+        },
+        "exactDecodedSourceRgba": true,
+        "alpha": {
+          "strong": {
+            "threshold": 16,
+            "count": 171333,
+            "edge": 0,
+            "bounds": {
+              "left": 77,
+              "top": 78,
+              "width": 505,
+              "height": 502
+            },
+            "corners": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "all": {
+            "threshold": 1,
+            "count": 183927,
+            "edge": 0,
+            "bounds": {
+              "left": 5,
+              "top": 9,
+              "width": 598,
+              "height": 612
+            },
+            "corners": [
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      }
+    }
+  },
+  "integrationStatus": "ready",
+  "integrationReason": "Native export complete; actual four-turn camera/theme/light appearance approval still required",
+  "visualReviewStatus": "accepted-for-art-appearance",
+  "appearanceReview": {
+    "date": "2026-10-27",
+    "reviewer": "Primary art agent",
+    "scope": "ART only, not owner approval or proof of live integration",
+    "verdict": "accepted",
+    "findings": [
+      "Species/style match existing painted town family",
+      "Local screen upper-right light",
+      "Clear alpha without floor/background",
+      "Changed branch occlusion through four physical views; no exact duplicate paintings",
+      "Canonical native directions reorder generator SE/NW to match the engine clockwise convention"
+    ]
+  }
+}

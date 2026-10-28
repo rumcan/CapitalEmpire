@@ -34,6 +34,10 @@ import sharp from 'sharp';
 import { findGlows } from './find-glows.mjs';
 import { cropFourViews } from './four-view-cells.mjs';
 import { readScales } from './overrides.mjs';
+import { prepExtraViews } from './prep-extra-views.mjs';
+
+// Garages already use their base ID for the N picture; append their reviewed diagonal IDs separately, preserving existing saves.
+await prepExtraViews(process.argv.slice(2));
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const BUILDINGS = 'art/theme-consistency/generated/buildings', STORE = path.join(root, 'art/building-views');
@@ -56,6 +60,7 @@ if (GENS.length) {
     if (!m || seen.has(d)) continue;
     seen.add(d);
     const provenance = JSON.parse(fs.readFileSync(prov, 'utf8')), id = provenance.id;
+    if (/^ce:parking-garage-[2-6]storey$/.test(id)) continue;
     // a version the import review turned down (measures.json "rejected": { version: reason }) stays out, whatever the art model marked it
     if (measures.rejected?.[d]) { withhold(id, d, `rejected at import: ${measures.rejected[d]}`); console.log(`rejected ${id} (${d}): ${measures.rejected[d]}`); continue; }
     // a sheet the art model parked as awaiting review that the import review checked and approved (measures.json "accepted": { version: note }) counts as 'ready'

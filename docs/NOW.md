@@ -1,5 +1,12 @@
 # NOW: the live work log
 
+## Historical preparation: parking garage diagonal views (2026-10-26)
+- Branch `lead/garage-eight-views-20261026`, isolated worktree `worktrees/garage-eight-views-20261026`, based on main `fffca10`.
+- Implemented: scoped `prep-garage-views.mjs` (also called by `prep-views.mjs`), append-only `garage-views-library`, shared Studio sizing/eight labelled thumbnails, explicit diagonal picker IDs and lot-lab NE-set entry; R turns within that diagonal set. Original base/N/E/S/W IDs and indices stay intact. Automatic selection for arbitrary road angles remains T154 Phase 2.
+- Checks before artwork: typecheck PASS, 8 focused importer/axis checks PASS (including execution of the generated append function on a fixture: existing base object/index unchanged, four records appended, atlas offset applied, no duplicate IDs), production build PASS (38.8 s). Default `npm test` failed allocating Node semi-space; serial execution of the test bundles then completed: 1847 total, 1839 pass, 7 fail, 1 skip. The missing owner-rough source was a sparse-checkout omission: adding that tracked path makes painted-tiles.test pass (16 pass, 1 skip). Six other failures are outside this garage change: RES side-yard, RangeSim.newDay, two curated-lot JSON checks, new-art swapped count and stationwagon shadow. Logs: `output/garage-full-tests-serial.log`, `output/garage-painted-recheck.log`. No full-suite pass is claimed.
+- Next action: await primary's reviewed v2 (v1 diagonal sheets rejected for duplicate corners/slopes/clipping), import only provenance `integrationStatus: ready` with all four native crops and matching storey count. Inspect actual game and Studio after packing; no art is integrated or on main from this branch yet.
+- Do not ship unreviewed PNGs. Existing axis garage 4/5/6-storey floor counts are disputed and retained as a known art issue; no silent relabelling in this code change. Rough v2 art remains the primary art session's priority.
+
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
@@ -23,6 +30,10 @@ parallel, and push fixes as follow-up PRs (AGENT-BRIEF sections 1 and 5).
 
 **The owner tests on http://localhost:5174.** The owner pre-approves the lead's recommended decisions (state them in chat). The lead
 merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of every change.
+
+### Art integration T183 (#459)
+
+Branch `lead/garage-eight-views-20261026`, worktree `worktrees/garage-eight-views-20261026`: reviewed native diagonal views for all five parking-garage storey counts and four shrubs (36 pictures). Existing axis IDs and saved indices stay intact; new diagonal sets append once, share Studio sizes and use the actual road heading. Canonical SE/NW names are losslessly corrected from the generator labels. Source art, crop hashes and primary reviews accompany normal packed assets. PR #582: actual engine lot-lab proof on road headings 0/1/2/4/6 has correct authored directions, no mirrored props and zero page errors. Studio visibly loads eight labelled thumbnails for all nine subjects; evidence in `E:/ClaudeTemp/T183/`. Main `6d1e964` is merged; the concept kit stays before supplemental views, preserving existing indices. Shadow audit changes only the 36 new view records. Final typecheck/focused tests are next, followed by lead review/merge. Own check servers 5189/5193 are stopped; no main integration claim before the PR merges.
 
 ### In flight
 **Accepted terrain source delivery (#383, `lead/terrain-ready-20261026`):** the four accepted families' canonical selections, native PNGs,

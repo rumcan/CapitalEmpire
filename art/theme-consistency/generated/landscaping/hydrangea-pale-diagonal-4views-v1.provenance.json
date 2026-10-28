@@ -1,0 +1,45 @@
+{
+  "id": "landscape:hydrangea-pale",
+  "slug": "hydrangea-pale",
+  "details": "ONE palegreen hydrangeashrub, broad sagegreen leaves and handfulofroundedcream/palelimeflowerheads, threeasymmetricstems with onehigherflowerclusteratphysicalbackleft, 0.9mhigh 1.4mwide. No pink/neonflowers, pot,flowerbedborder,grassorgrounddisc.",
+  "kind": "bush",
+  "category": "landscaping",
+  "requiresLibraryRegistration": true,
+  "source": "art/theme-consistency/generated/landscaping/hydrangea-pale-screen-axis-4views-v1.png",
+  "output": "art/theme-consistency/generated/landscaping/hydrangea-pale-diagonal-4views-v1.png",
+  "provenance": "art/theme-consistency/generated/landscaping/hydrangea-pale-diagonal-4views-v1.provenance.json",
+  "references": [
+    "art/theme-consistency/references/rotation-guide-v1.png",
+    "art/theme-consistency/generated/landscaping/hydrangea-pale-screen-axis-4views-v1.png",
+    "art/theme-consistency/references/theme-authoritative.png"
+  ],
+  "prompt": "Use case: stylized-concept. FOUR genuinely elevated ISOMETRIC views of ONE landscape plant forMapleFalls town game. Image1 specifies four real quarterturn camera orientations ONLY, do not paint its boxes/labels/white markers. Image2 supplies species, scale, leafbrushwork and plantidentity ONLY; addmissing45degree-yawdiagonalviews, notitshead-onones. Image3 setsconsistenthandpaintedtownfamilytheme.\nONE palegreen hydrangeashrub, broad sagegreen leaves and handfulofroundedcream/palelimeflowerheads, threeasymmetricstems with onehigherflowerclusteratphysicalbackleft, 0.9mhigh 1.4mwide. No pink/neonflowers, pot,flowerbedborder,grassorgrounddisc.\nKeep exactspecies/palette/dimensions, recognisableasymmetricplantlobes, branches andleafgrouping throughout rigid90degreeobjectturns. Fixed2:1isometricorthographiccamera, lookdownonfoliagetops, verticalstemsupright, truechangedocclusion andsilhouettefromeachside. StartingNE FRONT+RIGHT, SE RIGHT+REAR, SW REAR+LEFT, NW LEFT+FRONT; aphysicalsidebranchmovesaroundplantanddisappearsbehindfoliageinrearviews. Do not copy/pasteor mirroranypicture or justshuffleleavesonunchangedfrontview.\nHand-paintedstylizedreadablefoliagemasses andboldshapes, confidentbrushstrokes, samewarmtownart. SunfixedSCREENUPPERRIGHTtowardLOWERLEFTinall4views; leafyhighlightsright, lowerleftcoollocalundersides. RealRGBAtransparentoutsideplant, no pot, planter,greyfloor, grassisland, shadowdisc, backdrop,checkerboard, text/labels/guidecolors.\nSquare2x2equalcellssheet NE/SE/SW/NWrowmajor, fourcompleteisolatedcutouts allsamephysicalscale withatleast15%cleartransparentpaddingEACHcellincludingcentregutter. Keepallleavesinsidecell. Oneplantpercellonly.",
+  "viewSet": "diagonal-4",
+  "viewsOrder": [
+    "NE",
+    "SE",
+    "SW",
+    "NW"
+  ],
+  "transparent": true,
+  "date": "2026-10-27",
+  "generator": "built-in image_gen",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-306b10ef-48ae-4825-826a-6835a82368c8.png",
+  "referenceHashes": [
+    {
+      "file": "art/theme-consistency/references/rotation-guide-v1.png",
+      "sha256": "8d60d56c563159d06a052d472856e067366834957936b942a749934883fd2e3c"
+    },
+    {
+      "file": "art/theme-consistency/generated/landscaping/hydrangea-pale-screen-axis-4views-v1.png",
+      "sha256": "9e49181bdf15c8481dddbcc79a20ec997056a191f06b517326618b54010edc70"
+    },
+    {
+      "file": "art/theme-consistency/references/theme-authoritative.png",
+      "sha256": "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2"
+    }
+  ],
+  "lighting": "screen upper-right toward lower-left; even macro exposure for ground",
+  "integrationStatus": "pending-visual-review",
+  "processing": "Native generator output copied byte-for-byte; no repaint, resample, mirror, recolour or transform."
+}

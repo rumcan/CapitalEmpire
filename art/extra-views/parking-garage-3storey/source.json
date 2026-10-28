@@ -1,0 +1,13 @@
+{
+ "id": "ce:parking-garage-3storey",
+ "version": "parking-garage-3storey-4views-v3",
+ "storeys": 3,
+ "sheetSha256": "f32a8c3999326450d2ab1f494456719ed9bf76a69b0dbbf540642645ddef111c",
+ "files": {
+  "NE": "181e2907f9ec56efca6bc0884cbf05dc8a862cc942a9aba6dc7974d830d45857",
+  "SE": "3e751c630af3e2c11b441ae91f17a415af654363a60c122e503bdc5aaa3d1832",
+  "SW": "40d288ba55626f2fda7894a57de1c0dfa6726b71347afe6fc69534161699f494",
+  "NW": "306507fe4ce9c8d1ac60fa82f1a74c0df7c26401d3540862b6797d897f64081d"
+ },
+ "integrationStatus": "ready"
+}

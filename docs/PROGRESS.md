@@ -2378,6 +2378,9 @@ A new Claude lead took over the board (docs/LEAD.md section 5). It reviews and m
   - painted edges with a feather and a sun-lit bevel;
   - the fairway tool rethink (plan P21, after research).
 
+## Parking garage diagonal integration preparation (2026-10-26, not on main)
+
+The owner's five garage families currently have only screen-axis N/E/S/W art. Branch `lead/garage-eight-views-20261026` adds a review-gated native-crop importer and appends explicit NE/SE/SW/NW pictures after the existing libraries, preserving all old sprite IDs and indices. Studio groups eight labelled pictures under one size; the dev picker/lot lab can place a diagonal set and turn it with R. Automatic road-heading selection remains T154 Phase 2. Typecheck, eight focused tests and the production build pass without accepted art. Default parallel tests exhausted machine memory; a serial rerun completed with 1839 pass, 7 fail, 1 skip. One failure was the sparse checkout missing the owner-supplied rough source (fixed; painted tests 16 pass, 1 skip); six failures outside garages remain (RES side-yard, RangeSim.newDay, two curated-lot JSON checks, new-art count, stationwagon shadow). The primary art session rejected the first diagonal sheets and is regenerating v2; none are shipped by this preparatory change. Existing axis 4/5/6-storey count discrepancies remain recorded rather than silently relabelled.
 ## T098: the grown-town fixture and the range bench scenes (2026-10-27, #168)
 
 - **The fixture.**

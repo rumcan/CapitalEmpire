@@ -1,0 +1,31 @@
+{
+  "id": "ce:parking-garage-2storey",
+  "slug": "parking-garage-2storey",
+  "storeys": 2,
+  "category": "buildings",
+  "view": "NE",
+  "stage": "geometry-locked-single-v3",
+  "references": [
+    "art/theme-consistency/references/garage-diagonal-guides-v2/2storey-NE.png",
+    "art/theme-consistency/references/theme-authoritative.png"
+  ],
+  "output": "art/theme-consistency/generated/buildings/parking-garage-2storey-diagonal-singles-v3/NE.raw.png",
+  "provenance": "art/theme-consistency/generated/buildings/parking-garage-2storey-diagonal-singles-v3/NE.provenance.json",
+  "prompt": "Use case: style-transfer on a PRECISE existing architectural drawing. Image1 is the EDIT TARGET, its entire building geometry is LOCKED. Image2 is STYLE reference ONLY.\nReplace the flat fills of Image1's exact 2-level garage with richly painted MapleFalls town-game materials from Image2. KEEP Image1's exact building outline, footprint, base corner positions, floor bands, bay counts, small stairhut POSITION and angle. Do not redesign, change yaw, lengthen the facade, compress the depth, tilt, stretch or reframe the building. Keep the guide's 4-longbay to2-shortbay footprint and exactly 2openparking rows vertically. Trace its existing two bottom-edge lines precisely, with slopes+0.5 and-0.5. Keep alluprightsvertical and allhorizontalfloorbands parallel to their matching bottomedge. Orthographic projection with noperspective. The building already has correct camera and geometry: add surface painting INSIDE IT.\nMaterials: redterracotta brick square columns, warm cream concrete floorbands/piercaps, darkgreen fine metal guardrails on the open upperparkingdecks, deep openbay recesses with warm modest amber ceilinglights, flatdarkcharcoal empty roof, smallbrickstairaccesshut withgreendoor at EXACT existingposition. Keep single green P sign at existingfrontentry. Render as polished hand-painted stylized town building matching Image2, broad readablepaintedplanes, restrained bricks/details, no photo texture. Fixed sun from screenUPPERRIGHT towardLOWERLEFT; tinycontactocclusiononly, no floor/groundshadow.\nDelete ONLY external caption/guide text, plain background and drawn outlines; preserve building geometry and allclearspace. Background genuinely TRANSPARENT. ONE building cutout only, fullyinside squareRGBA PNG. No roads, scene, trees, cars,people, groundplane, background haze, checkerboard, thickoutline oradditionalprops. Do not enlarge buildingtofillthecanvas: keep existing margin.",
+  "date": "2026-10-26",
+  "generator": "built-in image_gen",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-18d1131e-cf7a-468a-a4cd-09a77c454e72.png",
+  "referenceHashes": [
+    {
+      "file": "art/theme-consistency/references/garage-diagonal-guides-v2/2storey-NE.png",
+      "sha256": "770f1272e2b1b32a9d6322069b2b76641b45b436ca24e87de0b5126f1f0dd2ca"
+    },
+    {
+      "file": "art/theme-consistency/references/theme-authoritative.png",
+      "sha256": "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2"
+    }
+  ],
+  "lighting": "screen upper-right toward lower-left",
+  "integrationStatus": "pending-visual-review-and-native-crops",
+  "processing": "Native generator output copied byte-for-byte. No repaint, mirror, warp or resizing."
+}
