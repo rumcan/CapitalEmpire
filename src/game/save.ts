@@ -65,8 +65,9 @@ export interface SaveV5 {
    *  slipway as their in-arm degrees (optional 5th, written only when non-empty; missing = every corner has one), and a lights' [tier, ...split]
    *  (optional 6th: tier 0 fixed-time, 1 actuated, 2 adaptive; the green seconds per phase, none = 18 each; missing = actuated, 18 each) */
   nodes: [number, number, string, number?, number[]?, number[]?][];
-  /** library id, x, y, flip, scale, and 1 for a prop placed by a plant brush (optional); a Props tool prop (T131) has 0 there and its catalogue key after */
-  props: [string, number, number, number, number, (0 | 1)?, string?][];
+  /** library id, x, y, flip, scale, and 1 for a prop placed by a plant brush (optional); a Props tool prop (T131) has 0 there and its catalogue key after,
+   *  and a frame tree (T229) the hole it frames after that */
+  props: [string, number, number, number, number, (0 | 1)?, string?, number?][];
   /** the treasury and the game day, as before the books (kept so older readers still work; the books hold the truth) */
   money: number; day: number; /** tb: the tile set families' band (T150, painted-tiles.ts nextBand: 0 NEAR, 1 MID, 2 FAR), so a reload inside the hysteresis lays the same tiles; ts: T145's coverage step, read by nothing now */ cam?: { X: number; Y: number; z: number; tb?: number; ts?: number };
   /** the town's lots that are not EMPTY: key, use, level, decline, seed, since (v5; missing = none) */
