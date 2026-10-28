@@ -266,7 +266,7 @@ export function levelPad(read: (k: number) => number, pts: readonly number[], ke
   let cut = 0, fill = 0, bi0 = Infinity, bj0 = Infinity, bi1 = -Infinity, bj1 = -Infinity;
   for (const q of S) {
     const w = q.d <= PAD.hold ? 1 : 1 - smooth((q.d - PAD.hold) / PAD.blend), old = read(q.k), nh = Math.fround(clampCourseHeightM(old + w * (level - old)));
-    if (Math.abs(nh - old) < PAD.minDh) continue;
+    if (nh === old || (q.d > PAD.hold && Math.abs(nh - old) < PAD.minDh)) continue; // (under the box every sample takes the level, however near)
     ks.push(q.k); before.push(old); after.push(nh);
     if (nh > old) fill += (nh - old) * COURSE_CELL_M2; else cut += (old - nh) * COURSE_CELL_M2;
     const gi = q.k % CH_SIZE, gj = (q.k - gi) / CH_SIZE;
