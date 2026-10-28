@@ -7,7 +7,7 @@
   "firstCut": { "family": "first-cut-concept-run", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "tee": { "family": "tee-run", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "sod": { "family": "emerald-short", "version": "v1", "scale": 0.75, "tint": "#ffffff", "tone": 0 },
-  "rough": { "family": "rough-owner", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
+  "rough": { "family": "lawn-concept-run", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "fescue": { "family": "golden-fescue", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "bunker": { "family": "sand-raked-run", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "waste": { "family": "desert-run", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
@@ -45,7 +45,7 @@
   "range-green": { "family": "green-concept-run", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "range-outfield-desert": { "family": "desert-run", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "range-tee": { "family": "dirt-run", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
-  "range-tee-turf": { "family": "range-tee-divots-run", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
+  "range-tee-turf": { "family": "green-concept-run", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 },
   "range-home-yard": { "family": "desert-run", "version": null, "scale": 1, "tint": "#ffffff", "tone": 0 }
  }
 }

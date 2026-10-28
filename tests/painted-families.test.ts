@@ -92,8 +92,9 @@ test('every surface of the game wears a known painted family; the golf turf, the
   for (const l of f.lawns) assert.ok(tiled(l.family), `${l.family} is a tile set`);
   assert.ok(f.lawns.every(l => l.weight > 0), 'every lawn has a weight');
   assert.ok(!f.lawns.some(l => /^sage-/.test(l.family)), 'no pale sage');
-  // the owner's rough (T162, #350): the rough and the decrepit lots' lawns wear the owner's rough paintings, edges healed to tile
-  assert.equal(S.rough!.family, 'rough-owner'); assert.equal(S.lawnDeclined!.family, 'rough-owner');
+  // the owner's rough paintings (T162, #350) stay in the game as the long grass: the decrepit lots' lawns wear them; the course rough wears the
+  // town lawns' grass since 2026-10-28 (the owner: "the rough grass you have recently added to the town lawns to be the grass on the course rough")
+  assert.equal(S.lawnDeclined!.family, 'rough-owner'); assert.ok(tiled(S.rough!.family), `rough: ${S.rough!.family} is a tile set`);
   // the bunker, waste, water, rivers, the living ground and the course walls: any known family (checked by the loop above)
   // the old families stay in the manifest as options (the studio offers them)
   for (const id of ['emerald-short', 'sage-short', 'olive-short', 'straw-short']) assert.ok(resolveFamily({ family: id, version: null, scale: 1 }), `${id} is kept as the old option`);
