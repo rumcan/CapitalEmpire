@@ -42,7 +42,7 @@ const inHand = (): { title: string; tool: Tool; alt?: true; rows: [string, strin
   // T206: Facilities ▸ Practice (golf/practicetool.ts key) and Facilities ▸ Plants (the Paint tool's plant brush: paint-tool.ts key)
   { title: 'Practice in hand', tool: 'practice', rows: [['[ / ]', 'a smaller / bigger facility (never under what opens it)'], ['R', 'turn it'], ['Tab / Shift+Tab', 'the putting green\'s next / previous outline'], ['Click', 'build it (its price shows first)']] },
   { title: 'Plants in hand', tool: 'paint', alt: true, rows: [['Drag', 'plant trees, bushes or flowers'], ['Alt + drag', 'remove what the plant brush planted'], ['[ / ]', 'a smaller / bigger brush']] },
-  { title: 'Props in hand', tool: 'props', rows: [['R', 'turn it'], ['Delete', 'sell the picked prop']] },
+  { title: 'Props in hand', tool: 'props', rows: [['R', 'turn it (a rock or a plant: mirrored, then its next picture)'], ['[ / ]', 'smaller / bigger, 80% to 120% (the picked prop too)'], ['Delete', 'sell the picked prop']] },
   { title: 'Roads and paths in hand', tool: 'road', rows: [
     [`1 – ${KEY_CLASSES.length}`, `the road class: ${KEY_CLASSES.map(c => (CLASS[c]?.name ?? c).toLowerCase()).join(', ')}`],
     ['Tab / Shift+Tab', 'the next / previous kind of this class (one-way, trees, a median)'], ['Q', 'bends of 90° or 45°'], ['E', 'Replace: the roads in the way are bulldozed'],
