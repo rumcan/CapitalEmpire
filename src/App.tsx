@@ -193,7 +193,8 @@ export default function App() {
   useEffect(() => { if (!looksOpen && looks) setLooks(false); }, [looksOpen, looks]);
   /** T271 (#812): the grass editor (Create your own, a grass's Edit): its card in My looks' place while the Holes tool is in hand */
   const grassOpen = !!game?.paint.grassDraft && game.uiTool === 'course';
-  useEffect(() => { if (!grassOpen && game?.paint.grassDraft) game.paint.closeGrass(); }, [grassOpen, game]);
+  // another tool put in hand closes it (read live: a grass opened just after one closed is never shut by the older render)
+  useEffect(() => { if (game && game.uiTool !== 'course' && game.paint.grassDraft) game.paint.closeGrass(); }, [game?.uiTool]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (grassOpen && looks) setLooks(false); }, [grassOpen]); // eslint-disable-line react-hooks/exhaustive-deps
   /** the bankrupt overlay's 'Keep watching' (cleared once the city is no longer bankrupt) */
   const [watch, setWatch] = useState(false);

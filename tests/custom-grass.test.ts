@@ -14,6 +14,11 @@ import { clampSurfaces, lookOfTex } from '../src/game/painted-surfaces';
 import { shineGroup } from '../src/game/grass-shine';
 import { PaintTool, type PaintHost } from '../src/game/paint-tool';
 import type { LotPatch } from '../src/game/ground-protocol';
+import type { Game } from '../src/game/engine';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server.edge';
+import { SurfaceSwatches } from '../src/ui/course/BrushControls';
+import { GrassCard } from '../src/ui/course/GrassEditor';
 
 const LOOKS: CourseLooks = {
   surf: [undefined, { tex: 'golfRough', sc: 1, a: 0 }, { tex: 'golfFescue', sc: 1, a: 0 }, { tex: 'waterDark', sc: 1, a: 0 }, { tex: 'golfFairway', sc: 1, a: 0 }, { tex: 'golfTee', sc: 1, a: 0 }, { tex: 'bunkerSand', sc: 1, a: 0 }, { tex: 'wasteSand', sc: 1, a: 0 }, { tex: 'golfGreen', sc: 1, a: 0 }, { tex: 'golfLongGrass', sc: 1, a: 0 }],
@@ -186,4 +191,31 @@ test('the Paint tool: Create your own makes a grass (one undo step), its brush l
   p.undoTop(); assert.equal(list.length, 1, 'undo brings the grass back'); assert.deepEqual([...looksUsed(g)], [1], 'and its cells');
   // picking a surface's own swatch puts the grass down; the same surface taken up again keeps it
   p.setGrass(1); p.setBrush(p.brushKind); assert.equal(p.grassInHand, 1); p.setBrush(p.brushKind, 0); assert.equal(p.grassInHand, 0);
+  // the keys: 9 opens Create your own, Shift with a number picks the grass in that place
+  p.closeGrass(); p.setBrush('fairway', 0);
+  const key = (code: string, shiftKey = false) => p.key({ key: shiftKey ? '!' : code.slice(5), code, shiftKey, altKey: false, ctrlKey: false, metaKey: false, preventDefault() {} } as unknown as KeyboardEvent);
+  assert.ok(key('Digit9')); assert.ok(p.grassDraft && p.grassDraft.k === 0, '9: Create your own');
+  p.closeGrass(); assert.ok(key('Digit1', true)); assert.equal(p.grassInHand, 1, 'Shift+1: the first grass');
+  assert.ok(key('Digit2')); assert.equal(p.grassInHand, 0, '2: the green, the grass put down'); assert.equal(p.brushKind, 'green');
+});
+
+test('Shape by hand and Edit hole show the grasses as swatches with their keys, and 9 Create your own; the editor card shows every control', () => {
+  let list: CustomGrass[] = [{ ...newGrass(1, FAM), name: 'Links' }];
+  const g = course();
+  const host: PaintHost = { setLotGround() {}, emit() {}, save() {}, toast() {}, affine() {}, placeProps: () => 0, plant: () => 0, unplant: () => 0, plantPool: () => [], golfMode: () => true, money: () => 1e9, spend() {},
+    grid: () => g, gridChanged() {}, grasses: () => list, setGrasses: l => { list = normalizeGrasses(l); }, grassFamily: () => FAM, firstCutTex: () => LOOKS.collar['first-cut'] };
+  const p = new PaintTool(host); p.enterCourse(); p.setGrass(1);
+  const game = { paint: p, golfMode: true, courseGrid: g, toolUi: () => null, emit() {} } as unknown as Game;
+  const html = renderToStaticMarkup(createElement(SurfaceSwatches, { game, on: p.brushKind, pick: () => {} }));
+  assert.match(html, /data-swatch="grass-1"[^>]*aria-pressed="true"/, 'the grass in hand lights its own swatch');
+  assert.match(html, /data-swatch="fairway"[^>]*aria-pressed="false"/, 'not its carrier surface\'s');
+  assert.match(html, /⇧1/); assert.match(html, /data-swatch="grass-new"/); assert.match(html, /Create your own/);
+  assert.match(html, /data-testid="grass-edit"/); assert.match(html, /data-testid="grass-delete"/);
+  p.openGrass(1);
+  const card = renderToStaticMarkup(createElement(GrassCard, { game, onClose: () => {} }));
+  for (const w of ['Plays as', 'Fairway', 'First cut', 'Rough', 'Long grass', 'Fescue', 'Texture', 'Scale', 'Exposure', 'Mowing stripes', 'Border', 'Round off', 'Smoothness', 'Shadow', 'Delete']) assert.ok(card.includes(w), `the editor has ${w}`);
+  assert.equal((card.match(/data-family=/g) ?? []).length, GRASS_FAMILIES.length, 'every painted grass family');
+  // a classic game (no course grid) shows none of it
+  const classic = renderToStaticMarkup(createElement(SurfaceSwatches, { game: { ...game, golfMode: false } as unknown as Game, on: null, pick: () => {} }));
+  assert.ok(!classic.includes('grass-new'));
 });
