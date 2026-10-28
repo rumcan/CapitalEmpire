@@ -97,8 +97,8 @@ try {
         if (v) { const c = { x: v.o[0] + v.u[0] * v.w / 2 + v.n[0] * v.d / 2, y: v.o[1] + v.u[1] * v.w / 2 + v.n[1] * v.d / 2 }; g.buyOut(c); cleared = c; break; }
       }
       // no house on the land for sale (the town's blocks are ringed by public roads): a cleared plot recorded as buyOut records one, a 12 x 16
-      // tile lot in the first block's far corner
-      if (!cleared && bought.length) { const [x, y, w, h] = bought[0].rect; (g.golf.cleared ??= []).push([x + w - 14, y + h - 18, 1, 0, 0, 1, 12, 16]); g.surveySig = ''; cleared = { x: x + w - 8, y: y + h - 10, recorded: true }; }
+      // tile lot on open ground in the middle bought block (a plot something stands on is dropped by syncSurvey)
+      if (!cleared && bought.length) { const [x, y] = bought[Math.floor(bought.length / 2)].rect; (g.golf.cleared ??= []).push([x + 6, y + 6, 1, 0, 0, 1, 12, 16]); g.surveySig = ''; cleared = { x: x + 12, y: y + 14, recorded: true }; }
       g.traffic.unlimited = false;
       return { bought, cleared, parcels: g.golf.parcels.length, cleared_n: g.golf.cleared?.length ?? 0 };
     });
@@ -107,7 +107,7 @@ try {
       await page.evaluate(() => window.__game.setSpeed(1)); await page.waitForTimeout(2500); await page.evaluate(() => window.__game.setSpeed(0));
       const xs = land.bought.flatMap(b => [b.rect[0], b.rect[0] + b.rect[2]]), ys = land.bought.flatMap(b => [b.rect[1], b.rect[1] + b.rect[3]]);
       await look(page, (Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2, 0.15); await settle(page, 2500); files.land = await shot(page, 'bought-land-15');
-      if (land.cleared) { await look(page, land.cleared.x, land.cleared.y, 0.3); await settle(page); files.cleared = await shot(page, 'cleared-plot-30'); }
+      if (land.cleared) { await look(page, land.cleared.x, land.cleared.y, 0.3); await settle(page); files.cleared = await shot(page, 'cleared-plot-30'); console.log(`  cleared plots kept: ${await page.evaluate(() => window.__game.golf.cleared?.length ?? 0)}${land.cleared.recorded ? ' (recorded directly)' : ''}`); }
     }
   }
   await ctx.close();
