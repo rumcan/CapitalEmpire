@@ -1,7 +1,7 @@
 // Golf mode (G1; docs/GOLF-PLAN.md sections 2-3 and 11): what a golf game saves and what the HUD reads. A save with a `golf` field is a golf
 // game; a save without one is a legacy (classic) game and loads as before. Pure TS, no DOM.
 import type { Pt } from '../network';
-import type { AimPoint, Pin, TeeKind, TeeMark } from './types';
+import type { AimPoint, Pin, TeeBoxRec, TeeKind, TeeMark } from './types';
 import type { PlacedEventStructure } from './eventtool';
 import type { CourseHeightSaveChunk } from '../ext/course-height';
 import type { GolfProgress } from '../ext/progressive-ui';
@@ -13,6 +13,7 @@ import { normalizeBook, type LookBook } from './looks';
 import { normalizeGrasses, type CustomGrass } from './grasses';
 import { normalizeMyHoles, type MyHole } from './myholes';
 import { isTeeKind, migrateTees } from './teesets';
+import { normalizeTeeBoxes } from './teeplace';
 import { normalizeDayPins, type DayPinsSave } from './daypins';
 
 /** a rectangle in tiles: top-left x, y and the size w, h */
@@ -51,6 +52,9 @@ export interface GolfSave {
  teeSets?: 1;
  /** T256: the player's saved holes ("My holes", golf/myholes.ts), kept with the game (and in the browser, across games) */
  myHoles?: MyHole[];
+ /** T268 (#809): the tee boxes Place and Add tee laid, by set (`hole:kind`, golf/teeplace.ts): each box's spot and the ground it covered, put back
+  *  when the set is moved or removed. Missing: none (an older box's ground goes back to the grass round it) */
+ teeBoxes?: Record<string, TeeBoxRec>;
  /** the hole plans, one save tuple per hole (plan P21 3.7: hole, tee, green, green shape and m², turn, bends, width handles, fairway start,
   *  seed; ext/hole-plan's HolePlanTuple once it lands); kept as they are, undo carries them */
  plans?: unknown[];
@@ -103,7 +107,7 @@ export function normalizeGolfSave(g: Partial<GolfSave> | null | undefined): Golf
   if (!g || !g.town || !g.course || !g.clubhouse) return null;
   const parcel: Rect = g.parcel ?? g.parcels?.[0] ?? g.course;
   // the range start's fields (plan P22 2.6) are taken out and put back only when well formed, so an old start's save normalizes as before
-  const { start, exits, townBoost, invited, founding, play, range, everyday, ponds, practiceLot, looks, myHoles, teeSets, grasses, dayPins, ...rest } = g;
+  const { start, exits, townBoost, invited, founding, play, range, everyday, ponds, practiceLot, looks, myHoles, teeSets, grasses, teeBoxes, dayPins, ...rest } = g;
   const out: GolfSave = {
     ...rest,
     v: 1,
@@ -136,6 +140,7 @@ export function normalizeGolfSave(g: Partial<GolfSave> | null | undefined): Golf
   const mh = normalizeMyHoles(myHoles); if (mh.length) out.myHoles = mh;
   // T271: the custom grasses, well formed only (none kept: the field stays out)
   const gr = normalizeGrasses(grasses); if (gr.length) out.grasses = gr;
+  const tb = normalizeTeeBoxes(teeBoxes); if (tb) out.teeBoxes = tb; // T268
   // T269: the day's pins, well formed only (none: the placed pins are today's)
   const dp = normalizeDayPins(dayPins); if (dp) out.dayPins = dp;
   return out;

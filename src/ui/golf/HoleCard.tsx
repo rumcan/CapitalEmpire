@@ -7,10 +7,10 @@
 import { useState } from 'react';
 import type { Game } from '../../game/engine';
 import { deleteNote, type HoleCardCheck, type HoleCardView } from '../../game/golf/holecard';
-import { TEE_SET } from '../../game/golf/teesets';
 import { monthIndexLabel } from '../../game/golf/calendar';
 import { SurfaceMark } from '../course/SurfaceMark';
 import { Icon } from '../Icon';
+import { TeeSetRows } from './TeeSets';
 
 /** the surfaces' names as the Holes panel says them */
 const NAME: Record<string, string> = { green: 'Green', tee: 'Tee', fairway: 'Fairway', rough: 'Rough', bunker: 'Bunker', water: 'Water', fescue: 'Fescue', waste: 'Waste area', longGrass: 'Long grass' };
@@ -56,16 +56,8 @@ export function HoleCard({ game, right = 'right-3' }: { game: Game; right?: stri
       {c.tees.length > 0 && (
         <div className="wiz-stats" data-testid="hole-tees">
           <div className="text-[12px] text-[var(--muted)]">From each tee</div>
-          <dl className="wiz-split">
-            {c.tees.map(t => <div key={t.kind} data-tee={t.kind}><dt><TeeDot kind={t.kind} />{TEE_SET[t.kind].name} tee · par {t.par}</dt><dd>{t.m} m</dd></div>)}
-          </dl>
-          {/* T254: "Add tee: Blue / Yellow / Red": a tee box behind or ahead along the line, priced like a tee */}
-          {c.addable.length > 0 && game.addTeeSet && (
-            <div className="mt-1.5 flex flex-wrap items-center gap-1.5" data-testid="hole-add-tee">
-              <span className="text-[12px] text-[var(--muted)]">Add tee:</span>
-              {c.addable.map(k => <button key={k} className="chip" onClick={() => game.addTeeSet(c.n, k)} title={`Lay the ${TEE_SET[k].colour} tee box (${TEE_SET[k].who}) ${k === 'back' ? 'behind' : 'ahead'} along the line, priced like a tee${game.teeBoxPrice ? `: about $${game.teeBoxPrice().toLocaleString('en-US')}` : ''}`} data-add-tee={k}><TeeDot kind={k} />{TEE_SET[k].name}</button>)}
-            </div>
-          )}
+          {/* T268: each set's row: Move and ✕ for a set it has, Place and Add (T254's quick box along the line) for one it has not */}
+          <TeeSetRows game={game} n={c.n} tees={c.tees} addable={c.addable} />
         </div>
       )}
 
@@ -94,7 +86,7 @@ export function HoleCard({ game, right = 'right-3' }: { game: Game; right?: stri
 
       <FrameRow game={game} n={c.n} />
 
-      <p className="sub-line mt-2">Drag the pin or a tee marker on the map to move it: no re-plan, no charge. It stays on its green or tee. Edit Hole Layout moves them all with the line, and lays no grass.</p>
+      <p className="sub-line mt-2">Drag the pin on the map to move it on its green: no re-plan, no charge. Drag a tee box to move that tee: one undo step, priced like a tee, the old ground back. Edit Hole Layout moves them all with the line, and lays no grass.</p>
 
       {!asking ? (
         <>
@@ -158,10 +150,6 @@ function FrameRow({ game, n }: { game: Game; n: number }) {
 }
 
 /** T254: a tee set's colour, a small ball beside its name (the colour is never alone: the name is beside it) */
-function TeeDot({ kind }: { kind: keyof typeof TEE_SET }) {
-  const s = TEE_SET[kind];
-  return <span aria-hidden className="mr-1 inline-block h-2.5 w-2.5 rounded-full align-[-1px]" style={{ background: s.fill, boxShadow: `inset 0 0 0 1px ${s.rim}` }} />;
-}
 
 /** one check: its mark (✓ ok, ✗ a check that fails, ! a warning) beside its colour, its words, and its Fix */
 function CheckRow({ game, k }: { game: Game; k: HoleCardCheck }) {
