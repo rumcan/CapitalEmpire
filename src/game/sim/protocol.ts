@@ -18,7 +18,7 @@ import type { BusRouteDef } from '../event/bus';
 import type { BizDef, BizStats, BizView } from '../business/state';
 import type { DisasterNote, DisasterView } from '../city';
 import type { DisasterKind } from '../ext/disasters';
-import type { TownClock } from './townclock';
+import type { DayProfile, TownClock } from './townclock';
 import type { DaySave } from '../event/daysave';
 
 /** what the worker measured, sent with every frame (walkers and stops: while a surge or its eval is on: the walking fan groups, 6 floats each (x, y in tiles, fans, stage, tx, ty),
@@ -38,7 +38,7 @@ export type ToSim = { t: 'net'; ops: NetOp[] } | { t: 'terrain'; cls: Uint8Array
   | { t: 'buses'; defs: BusRouteDef[] } | { t: 'buyLot'; key: string } | { t: 'incidents'; on: boolean }
   | { t: 'disastersOn'; on: boolean } | { t: 'repairDisaster'; id: number; key: string } | { t: 'forceDisaster'; kind: DisasterKind } | { t: 'golf'; on: boolean; tier: number; rep: number; /** the course, then the player's parcels */ land?: [number, number, number, number][]; /** a range start's (GolfSave.start, exits, invited) */ start?: 'range'; exits?: { x: number; y: number }[]; invited?: { at: number }; /** T090: a range start's holes built and its town's success (GolfSave.townBoost) */ holes?: number; townBoost?: number }
   /** the town day (LEAD.md M1): its length in sim seconds (Sim.dayLen) and the lot trips' density (Sim.townTraffic) */
-  | { t: 'townDay'; dayLen: number; traffic: number; free: boolean }
+  | { t: 'townDay'; dayLen: number; traffic: number; free: boolean; /** T266: the day/night profile of the town clock (null: flat) */ prof?: DayProfile | null }
   /** the town day's clock (T048), set on load (after townState): the worker retimes it to the normal rate */
   | { t: 'townClock'; clock: TownClock }
   /** the course's gates (LEAD.md M2.1): each gate's point (tiles) and its lanes (golf: the placed gate structures) */

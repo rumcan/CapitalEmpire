@@ -1,0 +1,109 @@
+{
+  "schema": 1,
+  "id": "golf:range-coffee-kiosk",
+  "decision": "held-for-art-geometry",
+  "status": "held",
+  "geometry": "held",
+  "integration": "blocked-held-geometry",
+  "reviewer": "Delegated native structural base-frame QA; primary review pending",
+  "reviewedAtUtc": "2026-10-28T20:02:59.511Z",
+  "ownerApprovalClaim": false,
+  "files": [
+    {
+      "file": "art/theme-consistency/generated/buildings/golf-range-coffee-kiosk-view1-v2.png",
+      "sha256": "70f2800e1a60b74f6f966ab97fcdc409592e24bd3817fbee6d3e5af2044ce329"
+    }
+  ],
+  "sourceProvenance": {
+    "file": "art/theme-consistency/generated/buildings/golf-range-coffee-kiosk-view1-v2.provenance.json",
+    "sha256": "b86952e06513448ca8cb4aad6f4e233a334aa4d433666f93d0ddf1c362265c9a"
+  },
+  "proofs": [
+    {
+      "file": "art/theme-consistency/generated/buildings/golf-range-coffee-kiosk-view1-v2/review/native-base-frame-measurements.json",
+      "sha256": "8f3d835b5e98ddf79d700a190600204fd1f0d397bced8e6802e9cea2dca07ea5"
+    },
+    {
+      "file": "art/theme-consistency/generated/buildings/golf-range-coffee-kiosk-view1-v2/review/native-base-frame-measurements.png",
+      "sha256": "5395336905e613b710afbabe56bdfd3282483c9db0951e652d2ebfc0ac8bacfe"
+    }
+  ],
+  "reasons": [
+    "The straight front green base-frame lower edge has slope +0.422279 instead of +0.5:3.6717degree error, exceeding the primary3degree tolerance.",
+    "Right-side base has slope -0.510857,0.4955degree error; rotating/skewing the entire image would spoil this closer axis. Retain this take as held and correct projection through generation, not pixel transforms."
+  ],
+  "measurements": [
+    {
+      "view": "front-right",
+      "edges": [
+        {
+          "edge": "front base",
+          "slope": 0.422279039041396,
+          "angleErrorDegrees": 3.671736747246065,
+          "rmsResidualPx": 0.5321248903588647,
+          "samples": 451,
+          "fitEndpoints": [
+            [
+              240,
+              914.6014069030473
+            ],
+            [
+              690,
+              1104.6269744716756
+            ]
+          ],
+          "thresholdAngleRange": [
+            {
+              "alpha": 32,
+              "error": 3.6795355640810072
+            },
+            {
+              "alpha": 128,
+              "error": 3.671736747246065
+            },
+            {
+              "alpha": 230,
+              "error": 3.656408896639988
+            }
+          ]
+        },
+        {
+          "edge": "right-side base",
+          "slope": -0.5108573901350424,
+          "angleErrorDegrees": 0.495501755738573,
+          "rmsResidualPx": 0.29932437068706563,
+          "samples": 256,
+          "fitEndpoints": [
+            [
+              820,
+              1095.2554109922178
+            ],
+            [
+              1075,
+              964.986776507782
+            ]
+          ],
+          "thresholdAngleRange": [
+            {
+              "alpha": 32,
+              "error": 0.5356899063913119
+            },
+            {
+              "alpha": 128,
+              "error": 0.495501755738573
+            },
+            {
+              "alpha": 230,
+              "error": 0.5616165826637314
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "correction": {
+    "required": true,
+    "instruction": "Preserve original native PNG and provenance; generate distinct corrected version aligning BOTH structural base axes to +/-0.5, retaining native alpha, theme and upper-right lighting. No rotations, mirrors, shears or resampling."
+  },
+  "limitations": "Manually selected real structural lower frame edges with native alpha boundary OLS fits at32/128/230. Not physical scale calibration."
+}

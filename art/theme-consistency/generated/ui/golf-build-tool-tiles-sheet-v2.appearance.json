@@ -1,0 +1,46 @@
+{
+  "schema": 1,
+  "date": "2026-10-28",
+  "id": "golf:build-tool-tiles",
+  "catalogueItem": 181,
+  "subjobKey": "181-golf-build-tool-tiles-sheet",
+  "decision": "accepted-for-art-appearance",
+  "reviewer": "primary-art-review",
+  "files": [
+    {
+      "file": "art/theme-consistency/generated/ui/golf-build-tool-tiles-sheet-v2.png",
+      "sha256": "b8fe637c1ff3b6bfa301ea6597732ae4030b0bb54c1b9149423367325947527b"
+    }
+  ],
+  "nativePixels": [
+    1448,
+    1086
+  ],
+  "grid": {
+    "columns": 4,
+    "rows": 3
+  },
+  "subjects": [
+    "waste-sand",
+    "snack-hut",
+    "golf-hole",
+    "grandstand-scoreboard",
+    "land-plot",
+    "autumn-shrubs",
+    "palms",
+    "street-furniture",
+    "patio-table",
+    "long-grass",
+    "chipping-green",
+    "surveyor-turf"
+  ],
+  "checks": {
+    "grid": "12 distinct complete navy rounded cards, four across and three down, clear charcoal gutters",
+    "order": "All12 requested newsubjects in correct row-major order",
+    "theme": "Matches existing v1 menu-card style",
+    "lighting": "Fixed upper-right warm light and lower-left soft shadows",
+    "text": "No lettering or numbers; signs and scoreboard blank",
+    "background": "Opaque UI sheet intentionally retains charcoal/navy backgrounds, per this specific brief"
+  },
+  "integration": "pending separately named UI assets and actual menu-row mapping; preserve all v1 icons"
+}

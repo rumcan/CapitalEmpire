@@ -524,7 +524,7 @@ export class City {
     this.town.skipTo(at);
     this.freeze(at);
     // the tournament day (T048): the town clock jumps to 05:00 and runs at 1 game minute per sim s until endTourneyDay
-    this.sim.town = jumpTo(this.sim.town, this.sim.t, TOURNEY_START, 1); this.tourneyDay = true; this.dayT0 = this.sim.t;
+    this.sim.town = jumpTo(this.sim.town, this.sim.t, TOURNEY_START, 1, null); this.tourneyDay = true; this.dayT0 = this.sim.t;
     this.round.startNow(); this.beginSurge();
     return true;
   }
@@ -558,7 +558,7 @@ export class City {
     return true;
   }
   /** the tournament day's end (T048): the town clock returns to the normal rate (the day length as last set: see the townDay message); a no-op otherwise */
-  private endTourneyDay(): void { if (!this.tourneyDay) return; this.sim.town = retime(this.sim.town, this.sim.t, GAME_DAY / this.sim.dayLen); this.tourneyDay = false; this.dayT0 = -1; }
+  private endTourneyDay(): void { if (!this.tourneyDay) return; this.sim.town = retime(this.sim.town, this.sim.t, GAME_DAY / this.sim.dayLen, this.sim.prof); this.tourneyDay = false; this.dayT0 = -1; }
   /** the tournament day is over (T048): the round is free again, or the town reads 22:00, or the leaving is done (every parked car out: leave.gone of
    *  leave.cars) and it reads EXIT_END (19:30) */
   private dayOver(): boolean {

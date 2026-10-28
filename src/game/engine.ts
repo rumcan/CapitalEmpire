@@ -73,10 +73,12 @@ import { readSave, writeSave, withTourney, clearSave, backupTownSlot, SAVE_VERSI
 import { CAR_COLOURS, carHeading, facings } from './traffic';
 import { bayCar, bayFoot, isWagon } from './vehicles';
 import { DayBook, clubCardView, dayCourse, dayPace, dayPlan, feeScale, normalizeDaySave, seasonPaceRep, type ClubCardView, type DayInputs, type DayRoster } from './golf/everyday';
-import { DayView, type ClubGround } from './golf/everydayview';
+import { DAY_CAR_CAP, DayView, type ClubGround } from './golf/everydayview';
 import { carOwnerScale } from './ext/car-art';
 import { SimClient, type LotView } from './sim/client';
-import { townClockFor, townTimeOf } from './sim/townclock';
+import { localRate, townClockFor, townTimeOf } from './sim/townclock';
+import { CADDIE_CAP, CART_CAP, LONG_DAY_MIN, NIGHT_S, PACE_KEY, WALK_CAP, capped, dayNight, paceOf, paceOfSetting, settingOf, type GolfPace, type PaceSetting } from './golf/pace';
+import { Pacer } from './golf/play/pacer';
 import { zoneOf } from './sim/routing';
 import { lastRush, nextRush, windowOf, type Window } from './beforeafter';
 import { placeStadium, siteAt, siteWhy, type Site } from './event/site';
@@ -249,7 +251,7 @@ function crowdDrawable(out: Drawable[], k: number, p: CrowdPerson) {
   d.item = p.group ? GOLFER_BASE + (p.person * WALK_DIRS.length + p.row) * GOLFER_FRAMES + p.frame : SPECTATOR_BASE + (p.person * WALK_DIRS.length + p.row) * SPECTATOR_FRAMES + p.frame;
   d.x = p.x; d.y = p.y; d.x0 = p.x - 0.12; d.y0 = p.y - 0.12; d.x1 = p.x + 0.12; d.y1 = p.y + 0.12;
   // (T213: a slot may have held a caddie's bag or a hopping golfer last frame)
-  d.lift = undefined; d.scale = 1; d.flip = false; d.moving = false;
+  d.lift = undefined; d.scale = 1; d.flip = false; d.moving = false; d.alpha = undefined;
 }
 /** T213: the caddie's stand-in (no caddie is packed yet: GOLF-ART-LIST item 176; the made `staff_caddie_m` waits in art/spectators), a spectator in a
  *  polo and visor, as an index into SPECTATOR_PEOPLE; and its label */
@@ -580,6 +582,7 @@ export class Game {
     month: () => this.golfMonthIndex(), payUpkeep: n => this.spendAt(this.rangeSpot(), 'upkeep', n),
     demand: () => ({ tier: this.golf?.tier ?? 1, exits: this.golf?.exits?.length ?? 2, residents: this.traffic.pop, propsAppeal: this.decor.appeal(), practiceAppeal: this.golf?.range ? practiceAppeal(this.golf.range) : 0 }),
     dayLen: () => this.traffic.dayLen, simT: () => this.traffic.simTime(performance.now()),
+    pace: () => { const T = this.traffic; return this.golfMode && T.town.prof ? localRate(T.town, T.simTime(performance.now())) * T.dayLen / 1440 : 1; }, // (T266)
     clock: () => { const c = this.clock(); return { hour: c.hour + c.minute / 60, day: c.day }; },
     save: () => this.scheduleSave(), toast: (t, k) => this.toast(t, k), emit: () => this.emit(),
     // the range's tee box in the course grid (T130): tee cells of no hole, laid past the brush rules (the plot is the range's), so T127's banks raise it
@@ -758,6 +761,26 @@ export class Game {
   private monthMoney = new MonthMoney(); private ratingAt = -Infinity; private ratingOf: { quality: number | null; holes: number } = { quality: null, holes: 0 };
   /** T208: the bench's busy day (?golfers=N: this many visitors in place of dailyGolfers; dev and bench only) */
   private dayBusy: number | undefined; private devSeed = 0; private dayOff = false;
+  /** T266: golf's pace (golf/pace.ts): watchable (mix) by default, or the old fast pace (main), as the gear menu's Golf pace has it (remembered);
+   *  the dev server's ?golfPace plays any of the prototype's options for the session */
+  golfPace: GolfPace = 'mix';
+  /** T266: the gear menu's Golf pace */
+  get paceSetting(): PaceSetting { return settingOf(this.golfPace); }
+  setPaceSetting(v: PaceSetting) {
+    this.golfPace = v === 'fast' ? 'main' : 'mix';
+    try { localStorage.setItem(PACE_KEY, v); } catch { /* storage may be unavailable */ }
+    this.applyPace(); this.emit();
+  }
+  /** T266: the pace to the town clock (the day/night profile goes with the town day), the everyday playback (built again next frame) and the
+   *  tournament's (its pacers) */
+  private applyPace() {
+    this.traffic.golfNight = dayNight(this.golfPace) ? NIGHT_S : null;
+    this.traffic.setTownDay(this.townDay.minutes, this.townDay.traffic);
+    this.dayPlay = null;
+    this.play?.pv.setPace(this.playPace());
+  }
+  /** T266: the tournament play's pacers (the pros, their caddies and carts keep to a walk), or none on the fast pace */
+  private playPace() { return capped(this.golfPace) ? { walkers: new Pacer(64, WALK_CAP), carts: new Pacer(32, CART_CAP), caddies: new Pacer(64, CADDIE_CAP) } : null; }
   /** the game hour of the tournament day the play last saved at (T209: the day saves itself each game hour, so a reload resumes near where it was); -1 none */
   private playSavedHr = -1;
   /** T209: a resumed tournament day waits, the sim paused at the save's moment, until its play is built again (the owner's shot may open at once): the
@@ -2018,6 +2041,12 @@ export class Game {
     try { const v = parseFloat(localStorage.getItem('capitalempire.roughYards') ?? ''); if (Number.isFinite(v)) this.roughYards = clampRoughYards(v); } catch { /* the default */ }
     try { const n = localStorage.getItem('capitalempire.night'); if (n) this.night = clampNight(JSON.parse(n)); } catch { /* the defaults */ }
     try { const d = JSON.parse(localStorage.getItem('capitalempire.townday') ?? 'null'); if (d && typeof d === 'object') this.townDay = { minutes: Math.min(30, Math.max(0.5, +d.minutes || 10)), traffic: Math.min(4, Math.max(0, Number.isFinite(+d.traffic) ? +d.traffic : 1)) }; } catch { /* the defaults */ }
+    // T266 (#800): golf's pace, the gear menu's (remembered; watchable by default), or the dev server's ?golfPace=main|daynight|walk|long|mix for
+    // the session (golf/pace.ts; long plays a longer town day, not remembered)
+    try { this.golfPace = paceOfSetting(localStorage.getItem(PACE_KEY)); } catch { /* the default */ }
+    { const q = import.meta.env.DEV ? paceOf(new URLSearchParams(location.search).get('golfPace')) : null; if (q) this.golfPace = q; }
+    if (this.golfPace === 'long') this.townDay = { ...this.townDay, minutes: LONG_DAY_MIN };
+    this.traffic.golfNight = dayNight(this.golfPace) ? NIGHT_S : null;
     this.traffic.setTownDay(this.townDay.minutes, this.townDay.traffic);
     try { const c = localStorage.getItem('capitalempire.cast'); if (c) this.cast = clampCast(JSON.parse(c)); } catch { /* cast-shadow.json */ }
     this.showGrid = loadMapGrid(storageOf(), import.meta.env.DEV, location.search);
@@ -2171,7 +2200,7 @@ export class Game {
    *  No town streets, lots, stamp, course or clubhouse: the town grows from its seed across the road. False, with nothing laid, when no seed fits */
   private newRangeGame(): boolean {
     for (let k = 0; k < 8; k++) {
-      const seed = newSeed();
+      const seed = k === 0 && this.devSeed ? this.devSeed : newSeed(); // (T266: ?seed=N on the dev server, the same range start before and after)
       this.genTerrain(seed);
       const s = planRangeStart(this.terrain, seed);
       if (!s) continue;
@@ -6437,15 +6466,15 @@ export class Game {
       const p = P[j]!;
       if (p.x < X0 || p.x > X1 || p.y < Y0 || p.y > Y1) continue;
       t.x = p.x; t.y = p.y; t.person = pl.art[p.golfer]!; t.row = p.row; t.frame = p.frame;
-      crowdDrawable(out, m, t); if (p.lift) out[m]!.lift = p.lift; m++;
+      crowdDrawable(out, m, t); if (p.lift) out[m]!.lift = p.lift; if (p.alpha !== undefined && p.alpha < 1) out[m]!.alpha = p.alpha; m++; // (T266: fading)
     }
     // T213: the caddies (the stand-in spectator, labelled) with their bags, and the carts
     const c = this.crowdGolfers[2] ?? (this.crowdGolfers[2] = { x: 0, y: 0, group: 0, person: 0, row: 0, frame: 0 });
     for (const k of pl.pv.caddies) {
       if (k.x < X0 || k.x > X1 || k.y < Y0 || k.y > Y1) continue;
       c.group = 0; c.x = k.x; c.y = k.y; c.person = CADDIE_ART; c.row = k.row; c.frame = k.frame;
-      crowdDrawable(out, m, c); this.caddieLabels.push({ p: out[m]!, text: CADDIE_LABEL }); m++;
-      if (BAG_ART >= 0) this.propDrawable(out, m++, BAG_ART, k.bx, k.by, 0.25);
+      crowdDrawable(out, m, c); if (k.alpha !== undefined && k.alpha < 1) out[m]!.alpha = k.alpha; this.caddieLabels.push({ p: out[m]!, text: CADDIE_LABEL }); m++;
+      if (BAG_ART >= 0) { const b = this.propDrawable(out, m++, BAG_ART, k.bx, k.by, 0.25); if (k.alpha !== undefined && k.alpha < 1) b.alpha = k.alpha; } // (T266: fading with him)
     }
     this.cartDrawables(pl.pv.carts, this.golfCartOut, X0, Y0, X1, Y1);
     return m;
@@ -6456,7 +6485,7 @@ export class Game {
   /** T213: a library picture as a mover at (x, y) (tiles) at its art scale (or `or`), in out[k] (made on first use, then reused) */
   private propDrawable(out: Drawable[], k: number, item: number, x: number, y: number, r: number): Drawable {
     const d = out[k] ?? (out[k] = { item: 0, x: 0, y: 0, flip: false, scale: 1, x0: 0, y0: 0, x1: 0, y1: 0, moving: false });
-    d.item = item; d.x = x; d.y = y; d.flip = false; d.scale = artScale(item, 0.3); d.moving = false; d.lift = undefined;
+    d.item = item; d.x = x; d.y = y; d.flip = false; d.scale = artScale(item, 0.3); d.moving = false; d.lift = undefined; d.alpha = undefined;
     d.x0 = x - r; d.y0 = y - r; d.x1 = x + r; d.y1 = y + r;
     return d;
   }
@@ -6468,7 +6497,7 @@ export class Game {
     for (const c of carts) {
       if (c.x < X0 || c.x > X1 || c.y < Y0 || c.y > Y1) continue;
       const item = CART_ART[c.hx - c.hy < 0 ? 0 : 1]!; if (item < 0) continue;
-      to.push(this.propDrawable(pool, n++, item, c.x, c.y, 0.6));
+      const d = this.propDrawable(pool, n++, item, c.x, c.y, 0.6); if (c.alpha !== undefined) d.alpha = c.alpha; to.push(d); // (T266: a watchable cart fading)
     }
   }
   /** the golf round on the tournament day (docs/GOLF-PLAY.md P2), each frame in golf mode. It is built once per tournament, while its round is live
@@ -6485,7 +6514,7 @@ export class Game {
     const hr = Math.floor(minute / 60); if (hr !== this.playSavedHr) { if (this.playSavedHr >= 0) this.scheduleSave(); this.playSavedHr = hr; }
     // the owner's pending turn (P4b): his walk to the ball and his address there, facing the open shot's aim when one is open
     const own = this.play.own, shotAim = this.shot && own && this.shot.turn === own.turn ? this.shot.input.aim : null;
-    this.play.pv.update(minute, now / 1000, own?.turn ?? null, shotAim);
+    { const T = this.traffic, st = T.simTime(now); this.play.pv.update(minute, now / 1000, own?.turn ?? null, shotAim, null, st, localRate(T.town, st)); } // (T266: its pacers)
     this.ownerFrame(minute); this.holdDay(now, true);
     // the crowd follows the play (docs/GOLF-PLAY.md decision 6): the featured holes are worked out at most every FEATURED_EVERY_MS and sent when they change
     if (now - this.featuredAt >= FEATURED_EVERY_MS) { this.featuredAt = now; this.sendFeatured(this.featuredHoles(this.play, minute)); }
@@ -6527,7 +6556,7 @@ export class Game {
     if (!course || !course.view.holes.length) { this.dayPlay = null; return; }
     if (!this.dayPlay || this.dayPlay.day !== s.day || this.dayPlay.key !== course.key) {
       const roster = this.dayBook.rosterOf()!, plan = dayPlan(course.view, roster);
-      this.dayPlay = { view: new DayView(plan, roster, course.view, this.clubGround(g), this.cartPathsNow()), day: s.day, key: course.key };
+      this.dayPlay = { view: new DayView(plan, roster, course.view, this.clubGround(g), this.cartPathsNow(), capped(this.golfPace) ? { walk: WALK_CAP, cart: CART_CAP, car: DAY_CAR_CAP } : null), day: s.day, key: course.key };
       this.dayArt = roster.golfers.map(p => GOLFER_ART[p.sex][p.look % GOLFER_ART[p.sex].length]!);
     }
   }
@@ -6576,15 +6605,15 @@ export class Game {
    *  to dayCarOut. Returns the next mover index */
   private dayMovers(out: Drawable[], m: number, X0: number, Y0: number, X1: number, Y1: number, now: number): number {
     const d = this.dayPlay; this.dayCarOut.length = 0; if (!d || this.dayOff) return m; // (?everyday=0: the bench's same scene with none drawn)
-    const v = d.view; v.update(this.dayMinute, now, X0, Y0, X1, Y1);
+    const T = this.traffic, st = T.simTime(performance.now()), v = d.view; v.update(this.dayMinute, now, X0, Y0, X1, Y1, st, localRate(T.town, st)); // (T266: the watchable golfers walk in sim seconds)
     const t = this.crowdGolfers[1] ?? (this.crowdGolfers[1] = { x: 0, y: 0, group: 1, person: 0, row: 0, frame: 0 });
-    for (const p of v.people) { t.x = p.x; t.y = p.y; t.person = this.dayArt[p.golfer] ?? 0; t.row = p.row; t.frame = p.frame; crowdDrawable(out, m, t); if (p.lift) out[m]!.lift = p.lift; m++; }
+    for (const p of v.people) { t.x = p.x; t.y = p.y; t.person = this.dayArt[p.golfer] ?? 0; t.row = p.row; t.frame = p.frame; crowdDrawable(out, m, t); if (p.lift) out[m]!.lift = p.lift; if (p.alpha !== undefined && p.alpha < 1) out[m]!.alpha = p.alpha; m++; }
     this.cartDrawables(v.carts, this.dayCarOut, X0, Y0, X1, Y1); // T213: the carts
     const F = facings();
     for (let k = 0; k < v.cars.length; k++) {
       const c = v.cars[k]!, f = F[c.type % 5]![carHeading(c.ang)]!, z = CAR_SCALE * f.size;
       const dr = this.dayCarDraw[k] ?? (this.dayCarDraw[k] = { item: 0, x: 0, y: 0, flip: false, scale: CAR_SCALE, x0: 0, y0: 0, x1: 0, y1: 0, moving: true });
-      dr.item = f.item; dr.flip = f.flip; dr.scale = z; dr.moving = true; dr.paint = TYPE_PAINTS[c.type % TYPE_PAINTS.length]; // (T228: a paint per car type)
+      dr.item = f.item; dr.flip = f.flip; dr.scale = z; dr.moving = true; dr.alpha = c.alpha; dr.paint = TYPE_PAINTS[c.type % TYPE_PAINTS.length]; // (T228: a paint per car type)
       dr.x = c.x - f.ox * z; dr.y = c.y - f.oy * z; dr.x0 = c.x - f.hx * z; dr.x1 = c.x + f.hx * z; dr.y0 = c.y - f.hy * z; dr.y1 = c.y + f.hy * z;
       this.dayCarOut.push(dr);
     }
@@ -6603,7 +6632,7 @@ export class Game {
   /** T208: the everyday golfers out at the club now (checked in, not yet back at their car; the bench logs it) */
   dayOutNow(): number { return this.dayPlay ? this.dayPlay.view.outNow(this.dayMinute) : 0; }
   /** T208: the busiest spot of the everyday golfers now (the golfer with the most others within 50 tiles) (the bench's camera; null: none) */
-  dayFocus(): Pt | null { const v = this.dayPlay?.view; if (!v) return null; v.update(this.dayMinute, performance.now() / 1000, -1e6, -1e6, 1e6, 1e6); let best: Pt | null = null, bn = -1; for (const p of v.people) { let n = 0; for (const q of v.people) if (Math.abs(q.x - p.x) + Math.abs(q.y - p.y) < 50) n++; if (n > bn) { bn = n; best = { x: p.x, y: p.y }; } } return best; }
+  dayFocus(): Pt | null { const v = this.dayPlay?.view; if (!v) return null; { const T = this.traffic, st = T.simTime(performance.now()); v.update(this.dayMinute, performance.now() / 1000, -1e6, -1e6, 1e6, 1e6, st, localRate(T.town, st)); } let best: Pt | null = null, bn = -1; for (const p of v.people) { let n = 0; for (const q of v.people) if (Math.abs(q.x - p.x) + Math.abs(q.y - p.y) < 50) n++; if (n > bn) { bn = n; best = { x: p.x, y: p.y }; } } return best; }
   /** the eval's results screen is open (T210, resultsDue): in the eval, outside golf at once; on the tournament day once the last group is in (or at once
    *  with no play to wait for, or when the player asked for the results early); not while the play is not built yet (the first frame after a load) */
   resultsOpen(): boolean {
@@ -6682,7 +6711,7 @@ export class Game {
     // the field, the tee times, the round and the owner's live group (dayRound: the same pure build a reload makes, T209)
     const seed = Math.floor(hash(this.seed, key) * 4294967296), { plan, golfers, own } = dayRound(view, g.tier, seed, owner);
     const art = golfers.map(p => p.owner ? ownerArt(p.sex) : GOLFER_ART[p.sex][p.look % GOLFER_ART[p.sex].length]!);
-    const pl: GolfPlay = { plan, view, pv: new PlayView(plan, view, { paths: this.cartPathsNow(), home: g.clubhouse }), key, art, finish: new DayFinish(), own: null, waves: -1 };
+    const pl: GolfPlay = { plan, view, pv: new PlayView(plan, view, { paths: this.cartPathsNow(), home: g.clubhouse, pace: this.playPace() }), key, art, finish: new DayFinish(), own: null, waves: -1 };
     if (owner && own) pl.own = { id: own.id, sex: owner.owner, skill: OWNER_SKILL, tee: own.tee, live: own.live, turn: own.turn, caddie: owner.caddie, ...(owner.tees ? { tees: owner.tees } : {}) };
     return pl;
   }

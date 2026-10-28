@@ -151,7 +151,7 @@ interface Cart { ids: number[]; tee: number; holes: (Visit[] | undefined)[]; lea
  *  WALK, walking between the cart and his ball (the point and heading in its `walk`); RIDE, in the cart (not drawn) */
 export const STATE = 0, WALK = 1, RIDE = 2;
 /** a cart to draw: its point (tiles), its heading (tile direction) and its golfers */
-export interface PlayCart { x: number; y: number; hx: number; hy: number; cart: number }
+export interface PlayCart { x: number; y: number; hx: number; hy: number; cart: number; /** T266: how visible (0..1; absent: 1), a watchable golfers' cart fading (pacer.ts) */ alpha?: number }
 
 /** the carts of a round plan on a course, played back: the golfers' stops, walks and rides, and the carts' points (see the file's head) */
 export class CartPlay {

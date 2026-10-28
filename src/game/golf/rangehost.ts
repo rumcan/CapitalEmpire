@@ -52,6 +52,9 @@ export interface RangeHostCtx {
   month?(): number; payUpkeep?(n: number): void;
   /** the demand's inputs, the town day's length (sim s), the sim's time (s) and the town clock */
   demand(): DemandCtx; dayLen(): number; simT(): number; clock(): RangeClock;
+  /** T266: how fast the range's time runs against the sim's now (1: the same; absent: 1). On the day/night town clock it is the clock's rate now over
+   *  the day's mean (golf/pace.ts): the range lives on the flat day's time, so it sells as many buckets a town hour, and a real hour, as on it */
+  pace?(): number;
   save(): void; toast(text: string, kind: 'good' | 'info' | 'warn'): void; emit(): void;
   /** the course grid (null: none yet), and the tee box laid into it as tee cells of no hole (world polygon; T130): false while there is no grid */
   grid(): Grid | null; layTee(pts: number[]): boolean;
@@ -189,7 +192,8 @@ export class RangeHost {
     if (!b.tee && this.ctx.layTee(this.scene.teeBox)) { b.tee = true; this.ctx.save(); }
     this.scanPractice(b);
     this.upkeep(b);
-    const t = this.ctx.simT(), dt = this.lastT < 0 ? 0 : t - this.lastT; this.lastT = t;
+    // (T266: the range's own time: the sim's, on the day/night clock run at its rate now over the day's mean; see pace)
+    const t = this.ctx.simT(), dt = (this.lastT < 0 ? 0 : t - this.lastT) * (this.ctx.pace?.() ?? 1); this.lastT = t;
     if (dt <= 0) return;
     // a long frame (a slow tab, 20x) is stepped in pieces of half a second, so the golfers walk on; only a skip (two minutes and more of sim
     // time at once: Skip to season end) is booked by the expected sales and clears them

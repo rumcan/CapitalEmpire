@@ -1,0 +1,98 @@
+{
+  "schema": 1,
+  "id": "golf:range-coffee-kiosk",
+  "source": {
+    "file": "art/theme-consistency/generated/buildings/golf-range-coffee-kiosk-2views-v1.png",
+    "sha256": "5241862da793f431fefae6851c6ba0fd4f947694bc0894b367c658b1f34b6e38",
+    "dimensions": [
+      1774,
+      887
+    ]
+  },
+  "sourceProvenance": {
+    "file": "art/theme-consistency/generated/buildings/golf-range-coffee-kiosk-2views-v1.provenance.json",
+    "sha256": "c0797dc1bbb0fce46e28852f86df010378e262ff8b072849a733e7b648516c8d"
+  },
+  "readOnlySource": true,
+  "trueAlpha": true,
+  "alpha": {
+    "fullyClear": 827113,
+    "fullyClearFraction": 0.5256390376336637,
+    "outerBoundaryVisibleAbove8": 0,
+    "lowAlpha1to8": 24900
+  },
+  "separator": {
+    "clearColumnRunAbove8": [
+      836,
+      940
+    ],
+    "splitX": 888,
+    "reason": "Measured actual clear gutter; complete painted roof/awning/counter/base remain in their own native rectangles."
+  },
+  "views": [
+    {
+      "name": "front-right",
+      "file": "art/theme-consistency/generated/buildings/golf-range-coffee-kiosk-2views-v1/front-right.native.png",
+      "sha256": "90f11da2d3dd9e2fc1b9ddc8d58a3d041bf7d208d381b95d2c0f13b21119e4db",
+      "sourceRect": {
+        "left": 0,
+        "top": 0,
+        "width": 888,
+        "height": 887
+      },
+      "boundsAbove8": {
+        "left": 117,
+        "top": 78,
+        "width": 719,
+        "height": 714
+      },
+      "visibleAbove8": 362237,
+      "fullyClear": 413751,
+      "outerBoundaryVisibleAbove8": 0,
+      "minimumClearMarginAbove8": 52,
+      "decodedPixelIdentity": "exact source rectangle; no pixel changes",
+      "proof": {
+        "file": "art/theme-consistency/generated/buildings/golf-range-coffee-kiosk-2views-v1/review/front-right-on-grey.png",
+        "sha256": "289503016e4f5c6c0dbdea1326a43c7389da8087fce65a8d6ae42f81372067d2"
+      }
+    },
+    {
+      "name": "left-front",
+      "file": "art/theme-consistency/generated/buildings/golf-range-coffee-kiosk-2views-v1/left-front.native.png",
+      "sha256": "7101d5a5ca29f77245b82e7826ec1ed8db952835bf71addbf82e74034752a350",
+      "sourceRect": {
+        "left": 888,
+        "top": 0,
+        "width": 886,
+        "height": 887
+      },
+      "boundsAbove8": {
+        "left": 53,
+        "top": 89,
+        "width": 703,
+        "height": 701
+      },
+      "visibleAbove8": 359288,
+      "fullyClear": 413362,
+      "outerBoundaryVisibleAbove8": 0,
+      "minimumClearMarginAbove8": 53,
+      "decodedPixelIdentity": "exact source rectangle; no pixel changes",
+      "proof": {
+        "file": "art/theme-consistency/generated/buildings/golf-range-coffee-kiosk-2views-v1/review/left-front-on-grey.png",
+        "sha256": "f4d9bac735cf94330a8b3cb823b78c9a94a3ea7a0c3835f63d76af0bc5e5597e"
+      }
+    }
+  ],
+  "sourceAppearanceDecision": {
+    "file": "art/theme-consistency/generated/buildings/golf-range-coffee-kiosk-2views-v1.appearance.json",
+    "sha256": "937ab877649dea318f982e8a1dd7cbe153bf8cb11e17731008d7d4c88ad37160"
+  },
+  "review": {
+    "appearance": "Primary approved full source two turns/style/alpha. Exact source-rectangle crops mechanically verified; new crop proofs awaiting primary view/binding.",
+    "geometry": "pending-measurement",
+    "physicalCalibration": "pending",
+    "integration": "pending",
+    "ownerApprovalClaim": false,
+    "noReadyOrRuntimeClaim": true
+  }
+}

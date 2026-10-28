@@ -1,0 +1,100 @@
+{
+  "schema": 1,
+  "id": "golf:range-distance-post",
+  "decision": "held-for-art-geometry",
+  "status": "held",
+  "geometry": "held",
+  "integration": "blocked-held-geometry",
+  "ownerApprovalClaim": false,
+  "reviewer": "Delegated native structural base QA; primary review pending",
+  "reviewedAtUtc": "2026-10-28T20:05:14.303Z",
+  "files": [
+    {
+      "file": "art/theme-consistency/generated/buildings/golf-range-distance-post-1view-v1.png",
+      "sha256": "7fc809963c7a79f181fa59dbf80512d84eac814e9201d4686133498d3472b931"
+    }
+  ],
+  "sourceProvenance": {
+    "file": "art/theme-consistency/generated/buildings/golf-range-distance-post-1view-v1.provenance.json",
+    "sha256": "38a812dd4420a6cae272b80ec7221d6d41dcb33f57ca4ba844bcb01bf43ee6ce"
+  },
+  "proofs": [
+    {
+      "file": "art/theme-consistency/generated/buildings/golf-range-distance-post-1view-v1/review/native-base-frame-measurements.json",
+      "sha256": "8376ebec537604007903fd3fe660a0070bfaf9ddcf94d37cdd926dd87aa481e7"
+    },
+    {
+      "file": "art/theme-consistency/generated/buildings/golf-range-distance-post-1view-v1/review/native-base-frame-measurements.png",
+      "sha256": "64a0bdb3d550a491c3f627d2ea70aeca83b15af3b3eda35e717b0b9c7af84203"
+    }
+  ],
+  "reasons": [
+    "The actual straight front lower timber edge is slope+0.388934,5.3123degrees from the game+0.5axis; this exceeds the primary3degree tolerance.",
+    "Right-side lower timber edge is-0.549868,2.2399degrees from-.5. Do not rotate or skew the whole sprite to correct only one axis."
+  ],
+  "styleAlpha": {
+    "style": "warm painted timber, red/white bands and blank plate visually pass delegated review; primary acceptance pending",
+    "lighting": "visually screen-upper-right",
+    "nativeAlpha": true,
+    "dimensions": [
+      1254,
+      1254
+    ],
+    "fullyClearFraction": 0.7781993951094933,
+    "outerBoundaryVisibleAbove8": 0,
+    "boundsAbove8": {
+      "left": 474,
+      "top": 60,
+      "width": 311,
+      "height": 1146
+    },
+    "minimumClearMarginAbove8": 48,
+    "silhouette": "complete; no outer-edge clipping; requested15percent margins not achieved"
+  },
+  "measurements": [
+    {
+      "view": "front-right",
+      "edges": [
+        {
+          "edge": "front base",
+          "slope": 0.3889341875364008,
+          "angleErrorDegrees": 5.312291236594074,
+          "rmsResidualPx": 0.4331878687658298,
+          "samples": 101,
+          "fitEndpoints": [
+            [
+              515,
+              1154.3948747815957
+            ],
+            [
+              615,
+              1193.2882935352359
+            ]
+          ]
+        },
+        {
+          "edge": "right-side base",
+          "slope": -0.549867794817557,
+          "angleErrorDegrees": 2.239926656605963,
+          "rmsResidualPx": 0.3889617927146507,
+          "samples": 61,
+          "fitEndpoints": [
+            [
+              690,
+              1187.0861977789532
+            ],
+            [
+              750,
+              1154.0941300898996
+            ]
+          ]
+        }
+      ]
+    }
+  ],
+  "correction": {
+    "required": true,
+    "instruction": "Preserve source/provenance. New version must retain painted red/white timber, upper-right light, blank marker plate and complete native alpha while aligning both structural base axes to+/-0.5. No pixel transforms."
+  },
+  "limitations": "Manual selection of actual lower timber silhouette segments excluding rounded corners, native alpha32/128/230 fits. Not physical calibration."
+}

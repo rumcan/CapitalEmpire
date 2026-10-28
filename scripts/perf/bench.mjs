@@ -4,6 +4,7 @@
 // --start town (T208): the old start's course on an ordinary day at 11:00, 30% and 15%; --golfers N: a busy day of N visitors; --seed N: the map; --everyday 0: no everyday golf (the same scene before) (a dev server)
 // --frame 1 (T229, a dev server): every hole framed with trees at the start (golf/holeframe.ts), the bench's after
 // --river 1 (T265, a dev server, with --fixture range20): the camera follows the river through the town at 30%, 15% and 8%, then each zoom's chunks are baked again (the bakes' median; on the branch with the river's swamp on and off)
+// --golfPace main|daynight|walk|long|mix (T266, a dev server): everyday golf's pace option for the run (golf/pace.ts)
 // --grassShine on|off (T262, a dev server): the grass shine for the run (grass-shine.ts; on by default, as the player left it otherwise; off: the ground as before)
 // --ground (T166, a dev server): the game's ground-worker levers for the run (boot.ts GROUND_LEVERS, e.g. lazy,w1; old: none)
 // --serve starts `vite preview` on dist/ itself (run `npm run build` first); otherwise it needs a running dev or
@@ -37,7 +38,7 @@ const logs = [];
 page.on('console', m => { const t = m.text(); if (/\[bench\]|error|Error/.test(t)) { logs.push(t); console.log('[page]', t.slice(0, 300)); } });
 page.on('pageerror', e => console.log('[pageerror]', e.message));
 page.on('crash', () => console.log('[crash] the page crashed'));
-await page.goto(`${base}?bench=${size}${scene}${args.includes("--course") ? "&course=1" : ""}${opt("courseSend", "") ? "&courseSend=" + opt("courseSend", "") : ""}${opt("courseHold", "") ? "&courseHold=" + opt("courseHold", "") : ""}${opt("ground", "") ? "&ground=" + opt("ground", "") : ""}${["golfers", "seed", "everyday", "frame", "grassShine", "river", "bakeab", "tourOnly", "belts", "riverSwamp"].map(k => opt(k, "") ? `&${k}=${opt(k, "")}` : "").join("")}`); // --course: the old nine laid as a course grid under the tour (T077)
+await page.goto(`${base}?bench=${size}${scene}${args.includes("--course") ? "&course=1" : ""}${opt("courseSend", "") ? "&courseSend=" + opt("courseSend", "") : ""}${opt("courseHold", "") ? "&courseHold=" + opt("courseHold", "") : ""}${opt("ground", "") ? "&ground=" + opt("ground", "") : ""}${["golfers", "seed", "everyday", "frame", "grassShine", "river", "bakeab", "tourOnly", "belts", "riverSwamp", "golfPace"].map(k => opt(k, "") ? `&${k}=${opt(k, "")}` : "").join("")}`); // --course: the old nine laid as a course grid under the tour (T077)
 gpu = await page.evaluate(() => { const gl = document.createElement('canvas').getContext('webgl2'); const d = gl?.getExtension('WEBGL_debug_renderer_info'); return d ? gl.getParameter(d.UNMASKED_RENDERER_WEBGL) : 'unknown'; });
 }
 console.log('GPU:', gpu);
