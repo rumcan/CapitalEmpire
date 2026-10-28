@@ -15,8 +15,8 @@ const plots: Record<0 | 1 | 2 | 3, Rect> = { 0: [500, 600, 70, 150], 1: [900, 30
 const FACINGS = [0, 1, 2, 3] as const;
 const start = { tier: 1, exits: 2, residents: 0 }, busy = { tier: 5, exits: 2, residents: 20000 };
 const buy = (ids: RangeUpgradeId[], s = defaultRangeBiz()): RangeBizSave => ids.reduce((q, id) => withUpgrade(q, id), s);
-const BASE: RangeUpgradeId[] = ['bays8', 'bays12', 'targets', 'covered', 'dispenser', 'proshop'];
-const EVERY: RangeUpgradeId[] = [...BASE, 'bays24', 'lights', 'kiosk', 'picker', 'tier2', 'academy', 'parking', 'teeturf', 'grass'];
+const BASE: RangeUpgradeId[] = ['bays8', 'bays12', 'greens', 'targets', 'covered', 'dispenser', 'proshop'];
+const EVERY: RangeUpgradeId[] = [...BASE, 'bays24', 'lights', 'kiosk', 'picker', 'tier2', 'academy', 'gravel', 'pave', 'parking', 'teeturf', 'grass'];
 
 test('the extras are range card upgrades: their costs, upkeep and what each needs first', () => {
   const by = new Map(RANGE_UPGRADES.map(u => [u.id, u]));
@@ -50,7 +50,7 @@ test('the save: the extras round-trip, an old save migrates with zero counts, a 
   const back = normalizeRangeBiz(JSON.parse(JSON.stringify(s)));
   assert.deepEqual(back.owned, s.owned); assert.deepEqual(back.extras, s.extras);
   const old = normalizeRangeBiz({ v: 1, owned: ['bays8', 'tier2', 'academy'], price: 6, season: { takings: 5 }, practice: {} });
-  assert.deepEqual(old.owned, ['teeturf', 'grass', 'bays8'], 'the second tier (no 12 bays or cover) and the academy (no pro shop) are dropped; the grass of a save from before T223 is kept');
+  assert.deepEqual(old.owned, ['teeturf', 'grass', 'greens', 'gravel', 'pave', 'bays8'], 'the second tier (no 12 bays or cover) and the academy (no pro shop) are dropped; the grass of a save from before T223 is kept');
   assert.deepEqual(old.extras, defaultRangeBiz().extras, 'a save from before T133 has no coffees or lessons');
   rangeNewSeason(s); assert.equal(s.extras.kiosk.season.golfers, 0); assert.equal(s.extras.academy.total.takings, 1200);
 });

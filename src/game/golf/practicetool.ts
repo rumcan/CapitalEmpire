@@ -20,6 +20,8 @@ export interface PracticeHostCtx {
   area(): { box: readonly [number, number, number, number]; label: Pt; pts: number[] } | null; grid(): Grid | null;
   /** whether tile (x, y) is the player's land; whether a facility is open now (practice.ts's scan) */
   owned(x: number, y: number): boolean; open(kind: PracticeId): boolean;
+  /** T239: the practice area is still land for sale (missing: never) */
+  forSale?(): boolean;
   tileAt(mx: number, my: number): Pt; money(): number; month(): number;
   /** one step of the course tools' undo: run lays its cells (the diffs it returns) and what it spent ($; a refund below 0) */
   gridStep(label: string, run: (g: Grid) => { diffs: GridDiff[]; spent: number } | null): void; undo(): void; redo(): void;
@@ -106,7 +108,7 @@ export class PracticeTool {
     const k = this.kind, t = this.at, g = this.ctx.grid(), a = this.ctx.area();
     if (!k || !t || !g) { this.ghost = null; return; }
     const plan = practicePlan({ kind: k, x: t.x, y: t.y, m2: this.size[k], turn: this.turn, shape: this.shape, seed: this.seed }), cells = planCells(g, plan);
-    const r = a ? planWhy(g, plan, cells, { box: a.box, owned: (x, y) => this.ctx.owned(x, y), open: this.ctx.open(k) }) : { why: PRACTICE_WHY.none, kind: 'outside' as RefusalKind };
+    const r = a ? planWhy(g, plan, cells, { box: a.box, owned: (x, y) => this.ctx.owned(x, y), open: this.ctx.open(k), forSale: !!this.ctx.forSale?.() }) : { why: PRACTICE_WHY.none, kind: 'outside' as RefusalKind };
     const cost = planCost(g, cells), m2 = cells.green.length;
     const label = r.why || `${FACILITY_NAME[k]} · ${m2} m² · $${cost.toLocaleString()}${cost > this.ctx.money() ? ' (not enough money)' : ''}`;
     this.ghost = { plan, cells, cost, why: r.why, refusal: r.kind, label, m2 };

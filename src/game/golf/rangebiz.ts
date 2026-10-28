@@ -23,6 +23,13 @@ const U_MID = 35.5, BAY_W = 2.5, SLOTS = 24, STAND_V = 21, PATH_V = 16.2, TEE: [
 const SHOP = { u: 34, v: 8.5 }, COUNTER = { u: 34, v: 13.4 }, QUEUE_V = 14.5, CAR_EDGE_U = 48.4, YARD: [number, number, number, number] = [4, 22, 3, 13];
 /** the target greens: distances from the tee line (tiles: 50..240 m), across the range (u) and radii (tiles) */
 const TARGET_D = [25, 50, 75, 100, 120], TARGET_U = [28, 44, 32, 40, 36], TARGET_R = [3, 4, 4, 5, 4];
+/** T239: the golfers' aim with no target green built: the distance markers' line down the middle (tiles from the tee line: 50, 100, 150 m) */
+const AIM_D = [25, 50, 75];
+/** T239: the range car park's lot in the plot frame (u0 u1 v0 v1: site.carpark, rangestart.ts), the paved lot's lamps (at its corners, inset;
+ *  beside the car park building, the lot left beside it), and
+ *  the range front a walkway is read in (the shop, the lot and the tee box, grown by a few tiles) */
+const LOT: [number, number, number, number] = [49, 69, 2, 18], LAMP_IN = 0.6;
+const FRONT_UV: [number, number, number, number] = [-2, 72, -2, 30];
 /** the far fence (v), the side fences (u) */
 const FAR_V = 149.4, SIDE_U: [number, number] = [0.6, 69.4];
 /** the land's grass the outfield leaves round the tee box (tiles): room for the raised tee's face at the Height slider's top (T127, T130) */
@@ -99,8 +106,9 @@ export interface RangeScene {
   picker: { home: Pt; ang: number; lanes: Pt[] } | null;
   /** the player's home now (T133): 0 the caravan, 1 the cottage, 2 the house */
   home: HomeStage;
-  /** the way the golfers hit (unit, world) and the target greens */
-  aim: Pt; targets: SceneTarget[];
+  /** the way the golfers hit (unit, world) and the target greens; aims (T239): what the golfers aim at, the greens, or with none built the
+   *  distance markers' line down the middle (50, 100 and 150 m) */
+  aim: Pt; targets: SceneTarget[]; aims: SceneTarget[];
   /** the shop's first counter, the queue's step (world, one golfer apart), the line's head (the line steps back from it), the path at the shop,
    *  the path at the car park; counters (T146): every counter open, serving in parallel (the first is counter) */
   counter: Pt; queueStep: Pt; queueAt: Pt; shopJoin: Pt; carEdge: Pt; counters: Pt[];
@@ -117,6 +125,13 @@ export interface RangeScene {
   numbers: { x: number; y: number; text: string; low?: boolean }[]; label: Pt;
   /** the world box of the plot (x0 y0 x1 y1) */
   box: [number, number, number, number];
+  /** T239: the range front's world box (x0 y0 x1 y1: the shop, the car park and the tee box, a little grown), where the player's paths are read */
+  front: [number, number, number, number];
+  /** T239: the walking path the player laid joining the car park, the shop and the tee (walkwayOf; null: none, the walkers cross the dirt).
+   *  The host sets it as the paths change */
+  walk: Walkway | null;
+  /** T239: the anchors a walkway joins (world): the car park lot's corners, the shop's counter, the tee box's back edge (its two ends) */
+  anchors: { lot: Pt[]; shop: Pt; tee: [Pt, Pt] };
   /** where the outfield's mowing stripes start (world: the tee end of the outfield, its middle) */
   mowFrom: Pt;
 }
@@ -167,8 +182,11 @@ export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave): 
 
   // ---- the paths: the back of the mats from the car park's edge, and spurs to the shop's counter and the yard's gate
   const L = (u0: number, v0: number, u1: number, v1: number) => ({ a: P(u0, v0), b: P(u1, v1) });
-  // (laid once: the yard's gate stays at YARD's south side whatever the home grows to)
+  // (laid once: the yard's gate stays at YARD's south side whatever the home grows to). T239: a guided start lays none (the player lays its
+  // walking path); an old save's first load lays them (rangehost sync)
   const paths = [L(TEE[0] + 1, PATH_V, CAR_EDGE_U, PATH_V), L(COUNTER.u, PATH_V, COUNTER.u, COUNTER.v - 0.2), L(13, PATH_V, 13, YARD[3] + 0.4)];
+  // ---- T239: the paved car park's lamps (with its asphalt and painted bays: the engine's park ground); a dirt or gravel lot has none
+  if (st.lot === 'paved') { const r = st.parking ? LOT_BESIDE : LOT; [[r[0], r[2]], [r[1], r[2]], [r[0], r[3]], [r[1], r[3]]].forEach(([u, v], i) => put(`lot-lamp${i}`, 'world:streetlamp', u! + (u === r[0] ? LAMP_IN : -LAMP_IN), v! + (v === r[2] ? LAMP_IN : -LAMP_IN), 0, { scale: 1 })); }
 
   // ---- the shop (the tin-and-tarp shack, or the pro shop facing the golfers), the caravan and its fenced back yard
   if (st.proShop) put('shop', 'business:golf-pro-shop', SHOP.u, SHOP.v, toRange);
@@ -194,7 +212,7 @@ export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave): 
   }
   for (let i = 0; i < st.targets; i++) {
     put(`flag${i}`, 'business:golf-pin-red', TARGET_U[i]!, STAND_V + TARGET_D[i]!, 0, { scale: 0.32 });
-    if (st.targets > 2) {
+    if (st.targets > 3) { // the boards come with the 'targets' upgrade (T239: the first three greens have flags only)
       put(`board${i}`, 'poi:fishing-board', TARGET_U[i]! + TARGET_R[i]! + 2.4, STAND_V + TARGET_D[i]! - 1, toRoad, { scale: 1.6, ...(i === 0 ? { label: 'Stand In for Range yardage board' } : {}) });
       const p = P(TARGET_U[i]! + TARGET_R[i]! + 2.4, STAND_V + TARGET_D[i]! - 1); numbers.push({ x: p.x, y: p.y, text: `${TARGET_D[i]! * 2} m`, low: true });
     }
@@ -263,16 +281,94 @@ export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave): 
     const n = Math.floor(TIER2_BAYS / decks.length) + (i < TIER2_BAYS % decks.length ? 1 : 0), step = DECK_SPAN / n;
     for (let j = 0; j < n; j++) { const u = uc + (j - (n - 1) / 2) * step; bays.push({ stand: P(u, STAND_V), back: P(u, PATH_V), lift: DECK_H }); }
   });
-  const o = P(0, 0), du = P(1, 0), dv = P(0, 1), c0 = P(0, 0), c1 = P(RANGE_PLOT[0], RANGE_PLOT[1]);
+  const o = P(0, 0), du = P(1, 0), dv = P(0, 1), c0 = P(0, 0), c1 = P(RANGE_PLOT[0], RANGE_PLOT[1]), f0 = P(FRONT_UV[0], FRONT_UV[2]), f1 = P(FRONT_UV[1], FRONT_UV[3]);
+  // the golfers' aim with no target green built (T239): the distance markers' line down the middle
+  const aims = targets.length ? targets : AIM_D.map(d => { const c = P(U_MID, STAND_V + d); return { x: c.x, y: c.y, r: 4, m: d * 2 }; });
   const q0 = P(COUNTER.u, COUNTER.v), q1 = P(COUNTER.u + 0.8, COUNTER.v);
   return {
-    facing, pieces, patches, teeBox: quad(TEE[0], TEE[1], TEE[2], TEE[3]), practice: practiceArea(plot, facing), paths, bays, academy, kiosk, picker, home, aim: { x: dv.x - o.x, y: dv.y - o.y }, targets,
+    facing, pieces, patches, teeBox: quad(TEE[0], TEE[1], TEE[2], TEE[3]), practice: practiceArea(plot, facing), paths, bays, academy, kiosk, picker, home, aim: { x: dv.x - o.x, y: dv.y - o.y }, targets, aims,
     counter: q0, queueStep: { x: q1.x - q0.x, y: q1.y - q0.y }, queueAt: P(COUNTER.u + 0.8, QUEUE_V), shopJoin: P(COUNTER.u, PATH_V), carEdge: P(CAR_EDGE_U, PATH_V),
     // the counters side by side along the shop's front about its middle, the nearest to the line's head first (it calls the next golfer first)
     counters: Array.from({ length: st.counters }, (_, i) => COUNTER.u + (i - (st.counters - 1) / 2) * COUNTER_STEP).sort((a, b) => Math.abs(a - COUNTER.u - 0.8) - Math.abs(b - COUNTER.u - 0.8)).map(u => P(u, COUNTER.v)), garage, lotWalk: garage ? [P(LOT_CORNER.u, LOT_CORNER.v)] : [],
     J: P(RANGE_PLOT[0] + 2, -NEAR), driveEnd: P(RANGE_PLOT[0] + 2, 16), roadDir: { x: du.x - o.x, y: du.y - o.y }, rangeSide: { x: dv.x - o.x, y: dv.y - o.y },
     numbers, label: P(35, 60), box: [Math.min(c0.x, c1.x), Math.min(c0.y, c1.y), Math.max(c0.x, c1.x), Math.max(c0.y, c1.y)],
     mowFrom: P(U_MID, TEE[3] + TEE_GAP + 0.6),
+    front: [Math.min(f0.x, f1.x), Math.min(f0.y, f1.y), Math.max(f0.x, f1.x), Math.max(f0.y, f1.y)], walk: null,
+    anchors: { lot: [P(LOT[0], LOT[2]), P(LOT[1], LOT[2]), P(LOT[1], LOT[3]), P(LOT[0], LOT[3])], shop: P(COUNTER.u, COUNTER.v), tee: [P(TEE[0], TEE[2]), P(TEE[1], TEE[2])] },
+  };
+}
+
+// ---------------------------------------------------------------- T239: the walking path the player lays
+
+/** the walking path the walkers use (world points): car, the path's point nearest the car park; shop, nearest the shop's counter; carShop, the
+ *  way along the path from car to shop; for each bay of the scene (its index), shopBay the way from shop to the path's point nearest that bay's
+ *  back and bayCar from there to car */
+export interface Walkway { car: Pt; shop: Pt; carShop: Pt[]; shopBay: Pt[][]; bayCar: Pt[][] }
+/** how near the path must come to the car park lot, the shop's counter and the tee box's back edge to join them (tiles: 6 m), and to a bay's
+ *  back for the walkers to leave it there (else they leave it where it comes nearest the tee) */
+export const WALK_REACH = 3, BAY_REACH = 3;
+/** the path legs' points sampled this far apart (tiles) when the nearest point to an anchor is looked for */
+const WALK_STEP = 0.25;
+const ptSeg = (p: Pt, a: Pt, b: Pt): { d: number; t: number } => {
+  const dx = b.x - a.x, dy = b.y - a.y, L2 = dx * dx + dy * dy, t = L2 ? Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / L2)) : 0;
+  return { d: Math.hypot(p.x - a.x - dx * t, p.y - a.y - dy * t), t };
+};
+const inPoly = (q: Pt[], x: number, y: number): boolean => {
+  let k = false;
+  for (let i = 0, j = q.length - 1; i < q.length; j = i++) { const a = q[i]!, b = q[j]!; if ((a.y > y) !== (b.y > y) && x < (b.x - a.x) * (y - a.y) / (b.y - a.y) + a.x) k = !k; }
+  return k;
+};
+/** the walkway the player's path legs (world, the cart paths near the range front: any of the Cart paths & roads tool's paths) make, or null
+ *  when no connected run of them comes within WALK_REACH of the car park lot, the shop's counter and the tee box's back edge all three.
+ *  Deterministic: the legs are joined where they share an end point; each anchor takes the path's nearest point (sampled every WALK_STEP),
+ *  and the ways are the shortest along the path between them */
+export function walkwayOf(sc: Pick<RangeScene, 'anchors' | 'bays'>, legs: readonly { a: Pt; b: Pt }[]): Walkway | null {
+  if (!legs.length) return null;
+  const { lot, shop, tee } = sc.anchors;
+  const toLot = (p: Pt) => (inPoly(lot, p.x, p.y) ? 0 : Math.min(...lot.map((a, i) => ptSeg(p, a, lot[(i + 1) % 4]!).d)));
+  type Hit = { leg: number; t: number; d: number };
+  const near = (dist: (p: Pt) => number, reach: number): Hit | null => {
+    let best: Hit | null = null;
+    legs.forEach((l, k) => {
+      const n = Math.max(1, Math.ceil(Math.hypot(l.b.x - l.a.x, l.b.y - l.a.y) / WALK_STEP));
+      for (let i = 0; i <= n; i++) { const t = i / n, d = dist({ x: l.a.x + (l.b.x - l.a.x) * t, y: l.a.y + (l.b.y - l.a.y) * t }); if (d <= reach && (!best || d < best.d - 1e-9)) best = { leg: k, t, d }; }
+    });
+    return best;
+  };
+  const cA = near(toLot, WALK_REACH), sA = near(p => Math.hypot(p.x - shop.x, p.y - shop.y), WALK_REACH), tA = near(p => ptSeg(p, tee[0], tee[1]).d, WALK_REACH);
+  if (!cA || !sA || !tA) return null;
+  const bA = sc.bays.map(b => near(p => Math.hypot(p.x - b.back.x, p.y - b.back.y), BAY_REACH));
+  // the graph: the legs' end points (joined where they meet) and the anchors' points, each leg split at the points on it
+  const pts: Pt[] = [], ids = new Map<string, number>(), adj: { to: number; w: number }[][] = [];
+  const node = (p: Pt, key?: string): number => {
+    const k = key ?? `${Math.round(p.x * 100)},${Math.round(p.y * 100)}`; let i = ids.get(k);
+    if (i === undefined) { i = pts.length; ids.set(k, i); pts.push({ x: p.x, y: p.y }); adj.push([]); }
+    return i;
+  };
+  const on: { t: number; id: number }[][] = legs.map(() => []);
+  const at = (a: Hit, key: string): number => { const l = legs[a.leg]!, id = node({ x: l.a.x + (l.b.x - l.a.x) * a.t, y: l.a.y + (l.b.y - l.a.y) * a.t }, key); on[a.leg]!.push({ t: a.t, id }); return id; };
+  const car = at(cA, 'car'), sh = at(sA, 'shop'), bayIds = bA.map((a, i) => (a ? at(a, `bay${i}`) : -1)), teeId = at(tA, 'tee');
+  legs.forEach((l, k) => {
+    const chain = [{ t: 0, id: node(l.a) }, ...on[k]!.sort((x, y) => x.t - y.t), { t: 1, id: node(l.b) }];
+    for (let i = 1; i < chain.length; i++) { const a = chain[i - 1]!.id, b = chain[i]!.id; if (a === b) continue; const w = Math.hypot(pts[a]!.x - pts[b]!.x, pts[a]!.y - pts[b]!.y); adj[a]!.push({ to: b, w }); adj[b]!.push({ to: a, w }); }
+  });
+  const dijkstra = (src: number): { d: Float64Array; prev: Int32Array } => {
+    const d = new Float64Array(pts.length).fill(Infinity), prev = new Int32Array(pts.length).fill(-1), done = new Uint8Array(pts.length); d[src] = 0;
+    for (;;) {
+      let u = -1; for (let i = 0; i < pts.length; i++) if (!done[i] && d[i]! < Infinity && (u < 0 || d[i]! < d[u]!)) u = i;
+      if (u < 0) break; done[u] = 1;
+      for (const e of adj[u]!) if (d[u]! + e.w < d[e.to]!) { d[e.to] = d[u]! + e.w; prev[e.to] = u; }
+    }
+    return { d, prev };
+  };
+  const fromCar = dijkstra(car), fromShop = dijkstra(sh);
+  if (!Number.isFinite(fromCar.d[sh]!) || !Number.isFinite(fromCar.d[teeId]!)) return null;
+  // the way from the search's source to node i (the points in walking order)
+  const way = (r: { prev: Int32Array }, i: number): Pt[] => { const out: Pt[] = []; for (let k = i; k >= 0; k = r.prev[k]!) out.push(pts[k]!); return out.reverse(); };
+  const bayEnd = bayIds.map(id => (id >= 0 && Number.isFinite(fromCar.d[id]!) ? id : teeId));
+  return {
+    car: pts[car]!, shop: pts[sh]!, carShop: way(fromCar, sh),
+    shopBay: bayEnd.map(id => way(fromShop, id)), bayCar: bayEnd.map(id => way(fromCar, id).reverse()),
   };
 }
 
@@ -643,7 +739,9 @@ export class RangeSim {
       // the academy (T133): a golfer who wanted a lesson and got a lesson bay pays for it with the bucket
       const b = sc.bays[v.bay]!; if (v.lesson && b.academy) { v.taught = true; extra('academy', 1, at); }
       if (b.lift) v.up = { x: b.stand.x, y: b.stand.y, h: b.lift };
-      this.walk(v, S.WalkBay, [{ x: v.x, y: v.y }, sc.shopJoin, b.back, b.stand]);
+      // T239: along the player's walking path when one joins the shop and the tee, else across the dirt
+      const w = sc.walk;
+      this.walk(v, S.WalkBay, [{ x: v.x, y: v.y }, ...(w ? w.shopBay[v.bay] ?? [w.shop] : [sc.shopJoin]), b.back, b.stand]);
     }
     // the coffee kiosk (T133): its line's head is served, pays and goes on to the practice area or its car
     if (this.kServing < 0 && this.kq.length) {
@@ -871,7 +969,10 @@ export class RangeSim {
     if (v.fac && (v.stage === S.WalkPractice || v.stage === S.Practice)) return [p, sc.practice.entry, sc.practice.behind, side];
     // from the coffee kiosk's line (T133): out to the path in front of it
     if (sc.kiosk && (v.stage === S.WalkKiosk || v.stage === S.KioskQueue)) return [p, sc.kiosk.join, sc.carEdge, ...back, side];
-    return [p, ...(v.stage === S.Hit || v.stage === S.WalkBay ? [sc.bays[v.bay]!.back] : [sc.shopJoin]), sc.carEdge, ...back, side];
+    const atBay = v.stage === S.Hit || v.stage === S.WalkBay, w = sc.walk;
+    // T239: back along the player's walking path when there is one (from the bay's path point, or from the shop), else across the dirt
+    if (w) return [p, ...(atBay ? [sc.bays[v.bay]!.back, ...(w.bayCar[v.bay] ?? [w.car])] : [...w.carShop].reverse()), ...back, side];
+    return [p, ...(atBay ? [sc.bays[v.bay]!.back] : [sc.shopJoin]), sc.carEdge, ...back, side];
   }
   /** where a car's golfer gets out and in (T146: the car park building's door, else beside its car) */
   private carSide(sl: CarSlot): Pt { return sl.door ?? { x: sl.x + sl.hy * 1.2, y: sl.y - sl.hx * 1.2 }; }
@@ -925,7 +1026,7 @@ export class RangeSim {
   private move(v: Visit, dt: number, dayLen: number, sc: RangeScene): void {
     v.t += dt;
     switch (v.stage) {
-      case S.CarIn: if (along(v.r!, v.t, this.tmp)) { v.x = this.tmp.x; v.y = this.tmp.y; const sl = this.slots[v.slot]!; v.ang = Math.atan2(sl.hy, sl.hx); this.walk(v, S.WalkShop, [this.carSide(sl), ...[...this.fromEdge(sl)].reverse(), sc.carEdge]); } else { v.x = this.tmp.x; v.y = this.tmp.y; v.ang = this.tmp.ang; } break;
+      case S.CarIn: if (along(v.r!, v.t, this.tmp)) { v.x = this.tmp.x; v.y = this.tmp.y; const sl = this.slots[v.slot]!; v.ang = Math.atan2(sl.hy, sl.hx); this.walk(v, S.WalkShop, [this.carSide(sl), ...[...this.fromEdge(sl)].reverse(), ...(sc.walk ? sc.walk.carShop : [sc.carEdge])]); } else { v.x = this.tmp.x; v.y = this.tmp.y; v.ang = this.tmp.ang; } break;
       case S.WalkShop: {
         const done = along(v.r!, v.t, this.tmp); v.x = this.tmp.x; v.y = this.tmp.y; v.ang = this.tmp.ang;
         // at the path's end by the car park the golfer sees the line (T146: and joins it there, walking up to its place, so a line that moved up
@@ -1003,7 +1104,7 @@ export class RangeSim {
   }
   /** a ball from v's bay toward one of the targets (a golfer's aim: nearer greens more often), scattered across and along the line */
   private launch(v: Visit, sc: RangeScene): void {
-    const b = sc.bays[v.bay]!.stand, tg = sc.targets, i = Math.min(tg.length - 1, Math.floor(Math.pow(this.rnd(), 1.4) * tg.length)), t = tg[i]!;
+    const b = sc.bays[v.bay]!.stand, tg = sc.aims, i = Math.min(tg.length - 1, Math.floor(Math.pow(this.rnd(), 1.4) * tg.length)), t = tg[i]!;
     const dx = t.x - b.x, dy = t.y - b.y, L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L, len = L * (0.82 + 0.3 * this.rnd()), side = (this.rnd() - 0.5) * L * 0.22;
     const x1 = b.x + ux * len - uy * side, y1 = b.y + uy * len + ux * side, lift = sc.bays[v.bay]!.lift;
     // off the upper deck (T133) the ball starts at the deck's height

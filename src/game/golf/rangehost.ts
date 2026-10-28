@@ -13,13 +13,13 @@ import { hash3, paintOf } from '../car-paint';
 import { PRESETS, presetTex, surfacePreset, type Stripes } from '../paint-presets';
 import { SURFACE_TEX } from './paintcourse';
 import type { GolfSurface } from './types';
-import { RangeSim, garageSlots, rangeScene, rangeStats, upgradeWhy, withPrice, withUpgrade, RANGE_UPGRADES, type CarSlot, type DemandCtx, type RangeBizSave, type RangeClock, type RangeScene, type RangeUpgradeId, type ScenePatch, type ScenePiece } from './rangebiz';
+import { RangeSim, garageSlots, rangeScene, rangeStats, upgradeWhy, walkwayOf, withPrice, withUpgrade, RANGE_UPGRADES, type CarSlot, type DemandCtx, type RangeBizSave, type RangeClock, type RangeScene, type RangeUpgradeId, type ScenePatch, type ScenePiece } from './rangebiz';
 import { CELL_T, type Grid, type GridDiff } from '../ext/course-grid';
 import { inPractice, practiceWords, scanPractice, type PracticeScan, type PracticeState } from './practice';
 import { PRACTICE_APPEAL, PRACTICE_FEE, PRACTICE_IDS, practiceAppeal, rangeScale, rangeUpkeep, type PracticeId } from './rangesave';
 import { PRI } from '../label-place';
 import { LABEL_OUTLINE, type WorldLabels } from '../world-labels';
-import { COFFEE, EXTRA_IDS, GARAGE_CARS, HOME_AT, HOME_NAME, KIOSK_SHARE, LESSON, LESSON_SHARE, homeStage, needsOf, type HomeStage } from './rangesave';
+import { COFFEE, EXTRA_IDS, GARAGE_CARS, HOME_AT, HOME_NAME, KIOSK_SHARE, LESSON, LESSON_SHARE, homeStage, lotGround, needsOf, type HomeStage, type LotGround } from './rangesave';
 
 /** what the host needs of the engine */
 export interface RangeHostCtx {
@@ -30,6 +30,11 @@ export interface RangeHostCtx {
   /** the range's car park (the lot on the plot) laid on rect (world) instead (T146: it keeps its near half beside the car park building); missing:
    *  the lot stays as it is */
   fitPark?(rect: Rect): void;
+  /** T239: the range car park's ground as its upgrades have it (packed dirt, gravel, paved: the lot's bays, ground and gate props follow) */
+  parkGround?(g: LotGround): void;
+  /** T239: the cart paths (every Cart paths & roads path) with a leg in the world box (x0 y0 x1 y1), and the network's version (bumped by
+   *  every road or path edit): the walkway the walkers use is read again when it changes */
+  pathLegs?(box: readonly [number, number, number, number]): { a: Pt; b: Pt }[]; netVersion?(): number;
   /** places a scene piece as an auto prop (turned to its view, at its size, the key its auto) and removes one */
   addPiece(p: ScenePiece, key: string): Prop | null; removeProp(p: Prop): void;
   /** the ground patches of a key (null drops them), the cart paths to lay (cement slab, committed), the trees to clear off a box */
@@ -103,11 +108,14 @@ export class RangeHost {
 
   /** the scene laid again when the range's state, its plot or its car park changed (cheap to call every frame: a key compares them) */
   sync(force = false): void {
-    const b = this.ctx.biz(), pl = this.ctx.plot(), cp = this.ctx.carPark();
+    const b0 = this.ctx.biz();
+    // T239: the car park's ground follows its upgrades (dirt, gravel, paved), before its bays are read
+    if (b0 && this.ctx.plot()) this.ctx.parkGround?.(lotGround(b0));
+    const b = b0, pl = this.ctx.plot(), cp = this.ctx.carPark();
     // the home's stage (T133) re-lays the yard as the lifetime takings grow
     const home = b ? homeStage(b) : 0;
     const key = b && pl ? `${pl.rect.join(',')}:${pl.facing}:${b.owned.join(',')}:${cp ? cp.bays.length : -1}:${home}` : '';
-    if (!force && key === this.key) return;
+    if (!force && key === this.key) { this.syncWalk(); return; }
     this.key = key;
     if (!b || !pl) { this.drop(); return; }
     // the player moved house (T133): toasted once, never on a load
@@ -124,16 +132,30 @@ export class RangeHost {
     const mw = outfieldStripes(sc, rangePreset('outfield')?.stripes);
     this.ctx.setGround('range:ground', sc.patches.map((p, i) => ({ pts: p.pts, tex: patchTex(p.surf), paint: { s: 1, a: 0, b: 0, bt: 'kerb', z: -1e6 + i, ...(p.edge ? { e: p.edge } : {}), ...(p.mow && mw ? { mw } : {}) } })));
     if (!this.scene) { this.ctx.clearTrees(sc.box); this.ctx.clearTrees(sc.practice.box); }
-    if (!b.paths) { this.ctx.layPaths(sc.paths); b.paths = true; this.ctx.save(); }
+    // the old start's cement walkway, laid once (an old save's first load); T239: a guided start's walkway is the player's to lay
+    if (b.paths === false) { this.ctx.layPaths(sc.paths); b.paths = true; this.ctx.save(); }
     // the car park building (T146): the lot keeps its near half beside it, the cart path is laid on round it once (an old save's first load too),
     // and its places follow the lot's bays (the lot's first: the nearest)
     if (sc.garage) {
       this.ctx.fitPark?.(sc.garage.lot);
       if (!b.garage) { this.ctx.layPaths([sc.garage.path]); b.garage = true; this.ctx.save(); }
     }
-    this.scene = sc;
+    this.scene = sc; this.walkVer = -1; this.walkKey = ''; this.syncWalk();
     this.sim.setScene(sc, [...(cp?.bays ?? []), ...(cp && sc.garage ? garageSlots(sc.garage, GARAGE_CARS) : [])], cp?.entrance ?? null);
   }
+  /** T239: the network's version and the paths' signature the walkway was read for */
+  private walkVer = -1; private walkKey = '';
+  /** T239: the walkway the walkers use (rangebiz walkwayOf), read again when the paths near the range front change: the scene the sim holds
+   *  takes it at once (golfers already walking keep their way) */
+  private syncWalk(): void {
+    const sc = this.scene; if (!sc || !this.ctx.pathLegs) return;
+    const v = this.ctx.netVersion?.() ?? 0; if (v === this.walkVer) return; this.walkVer = v;
+    const legs = this.ctx.pathLegs(sc.front), k = legs.map(l => `${l.a.x},${l.a.y},${l.b.x},${l.b.y}`).sort().join(';');
+    if (k === this.walkKey) return; this.walkKey = k;
+    sc.walk = walkwayOf(sc, legs);
+  }
+  /** T239: whether the range's walkers have a walking path joining the car park, the shop and the tee */
+  hasWalkway(): boolean { return !!this.scene?.walk; }
   /** everything off the map (a new game, a load, not a range start) */
   drop(): void {
     for (const p of this.props.values()) this.ctx.removeProp(p);

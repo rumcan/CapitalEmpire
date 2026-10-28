@@ -95,7 +95,7 @@ import { townTreeCell } from './towntrees';
 import type { BendMode, LibItem, LineStyle, Prop, Tool } from './types';
 import { LK, LaneGraph, laneAt, laneOff } from './sim/lanes';
 import { LU, LV, type LotTuple } from './lots/town';
-import { surveyBlocks, surveyPatch } from './lots/survey';
+import { rectPlot, surveyBlocks, surveyPatch } from './lots/survey';
 /** T232: a bought block's survey line runs this far inside its edges (tiles), clear of a neighbour's line */
 const LAND_SURVEY_INSET = 0.6;
 import { acrossLines, compose, composeWhole, farmPreset, fenceOnly, isCarPark, lotModelVersion, lotPresets, pickedPreset, setLotModel, type ComposeState, type FenceLines, type LotGeom, type Placed } from './lots/compose';
@@ -117,7 +117,7 @@ import { HEIGHT_LIGHT_STRENGTH, clampHeightLight } from './ext/course-height/lig
 import { planGolfGame } from './golf/start';
 import { RANGE_CAM_ZOOM, planRangeStart } from './golf/rangestart';
 import { CLUB_REACH, clubhouseSpotWhy, plotOfFront, rangeLayout } from './golf/range';
-import { inPractice, practiceArea } from './golf/practice';
+import { PRACTICE_LOT_NAME, inPractice, practiceArea } from './golf/practice';
 import { dressCourse } from './golf/dressing';
 import { FIRST_TEE, MONTH_LEN, SEASON_LEN, SEASON_START, monthIndexLabel, monthsLeft, seasonLabel, seasonMonth, yearOf } from './golf/calendar';
 import { MonthMoney, golfersAMonth, type TopStats } from './golf/topstats';
@@ -542,6 +542,14 @@ export class Game {
       const d = this.parkDefs.find(q => this.onRangePlot(q.x + q.w / 2, q.y + q.h / 2)); if (!d || (d.x === r[0] && d.y === r[1] && d.w === r[2] && d.h === r[3])) return;
       d.x = r[0]; d.y = r[1]; d.w = r[2]; d.h = r[3]; this.syncParks(); this.scheduleSave();
     },
+    // T239: the range car park's ground follows its upgrades: packed dirt and gravel are unpaved lots (loose bays, no lines, no barriers)
+    parkGround: g => {
+      const d = this.parkDefs.find(q => this.onRangePlot(q.x + q.w / 2, q.y + q.h / 2)), want = g === 'paved' ? undefined : g; if (!d || d.ground === want) return;
+      if (want) d.ground = want; else delete d.ground;
+      this.syncParks();
+    },
+    pathLegs: b => { const out: { a: Pt; b: Pt }[] = []; for (const s of this.net.segsNear({ x: (b[0] + b[2]) / 2, y: (b[1] + b[3]) / 2 }, Math.hypot(b[2] - b[0], b[3] - b[1]) / 2)) if (s.cls.family === 'cart') out.push({ a: { x: s.a.x, y: s.a.y }, b: { x: s.b.x, y: s.b.y } }); return out; },
+    netVersion: () => this.net.version,
     addPiece: (p, key) => {
       const t = turned(p.id, p.q), item = LIB_INDEX.get(t.id); if (item === undefined) return null;
       // the studio's size wins; never past the pixels its atlas holds (sizes.ts), so the footprint and shadow match what is drawn
@@ -614,7 +622,7 @@ export class Game {
   /** Facilities ▸ Practice (T206, #540: golf/practicetool.ts): the practice facilities' own building tools; the bulldozer takes a built one */
   readonly practice: PracticeTool = new PracticeTool({
     area: () => (this.golf?.start === 'range' ? this.range.scene?.practice ?? null : null), grid: () => this.courseGrid,
-    owned: (x, y) => this.ownedAt(x, y) && !this.onRangePlot(x, y), open: k => this.range.practice?.[k].state === 'open',
+    owned: (x, y) => this.ownedAt(x, y) && !this.onRangePlot(x, y), open: k => this.range.practice?.[k].state === 'open', forSale: () => this.practiceForSale(),
     tileAt: (mx, my) => this.tileAt(mx, my), money: () => this.money, month: () => (this.golf ? this.golfMonthIndex() : 0),
     gridStep: (label, run) => this.paint.gridEdit(label, run), undo: () => this.paint.undo(), redo: () => this.paint.redo(),
     lookAt: (x, y, z) => this.lookAt(x, y, z),
@@ -953,7 +961,12 @@ export class Game {
   /** the grid's save, kept until the grid changes */
   private gridSaveCache: { g: CourseGrid; rev: number; s: GridSave } | null = null;
   /** whether tile (x, y) lies on the golf game's own land (the course and its parcels) */
-  ownedAt(x: number, y: number): boolean { for (const [rx, ry, rw, rh] of this.golfLand()) if (x >= rx && x < rx + rw && y >= ry && y < ry + rh) return true; return false; }
+  ownedAt(x: number, y: number): boolean {
+    const q = this.golf?.practiceLot; if (q && x >= q[0] && x < q[0] + q[2] && y >= q[1] && y < q[1] + q[3]) return false; // T239: for sale until bought
+    for (const [rx, ry, rw, rh] of this.golfLand()) if (x >= rx && x < rx + rw && y >= ry && y < ry + rh) return true; return false;
+  }
+  /** T239: whether a guided range start's practice area is still land for sale */
+  practiceForSale(): boolean { return !!this.golf?.practiceLot; }
   /** the grid box the golf land needs, grown to hold extra (a tile box: the painted areas a migration lays in), as x0, y0 (tiles) and w, h
    *  (cells): the bounds plus COURSE_GRID_PAD, on the map */
   private courseGridBox(extra?: readonly number[] | null): [number, number, number, number] | null { return landGridBox(this.golfLand(), COURSE_GRID_PAD, MAP, extra); }
@@ -1870,11 +1883,13 @@ export class Game {
       this.edit.addLegs(site.drive, classOf('drive-gravel'), 0, undefined, true);
       const [fx, fy, fw, fh] = site.rangeFront, [px, py, pw, ph] = site.carpark;
       this.setBizDefs([{ id: 1, type: 'range', x: fx, y: fy, w: fw, h: fh }]);
-      this.parkDefs = [{ id: 1, x: px, y: py, w: pw, h: ph }];
+      this.parkDefs = [{ id: 1, x: px, y: py, w: pw, h: ph, ground: 'dirt' }]; // T239: the car park starts as packed dirt
       // the ramp from the range to the first hole starts at the range card (P24 Phase 4a, T132)
       this.golf = s.save; this.golf.progress = { ...emptyProgress(), ramp: 0 };
-      // the range business (P24, T129): the starting range, and its cement cart paths laid with the road (the rest of its scene follows the frame)
-      this.golf.range = defaultRangeBiz(); this.edit.addLegs(rangeScene(site.rangePlot, site.dir, this.golf.range).paths, classOf('cart-slab'), 0, undefined, true); this.golf.range.paths = true;
+      // the range business (P24, T129): the starting range (T239: the guided build: no walkway laid, the player lays its path; the practice area
+      // beside the car park is land for sale until bought)
+      this.golf.range = defaultRangeBiz();
+      const pb = practiceArea(site.rangePlot, site.dir).box; this.golf.practiceLot = [Math.round(pb[0]), Math.round(pb[1]), Math.round(pb[2] - pb[0]), Math.round(pb[3] - pb[1])];
       const [hx, hy, hw, hh] = rangeLayout(site.rangePlot, site.dir).hut.rect, cx = hx + hw / 2, cy = hy + hh / 2;
       this.cam.X = worldX(cx, cy); this.cam.Y = worldY(cx, cy); this.cam.z = RANGE_CAM_ZOOM;
       this.setTool(this.toolLock('course') ? 'select' : 'course'); // the range card first: Holes opens with the first upgrade (T132)
@@ -2525,7 +2540,7 @@ export class Game {
    *  done with (dropped from the save); a bought block shows its line again if all on it goes */
   private syncSurvey() {
     const g = this.golf;
-    const sig = g ? `${(g.parcels ?? []).length}|${(g.cleared ?? []).length}|${this.courseGrid?.rev ?? 0}|${this.paintRev}|${this.net.version}|${this.props.size}|${(g.structures ?? []).length}` : '';
+    const sig = g ? `${(g.parcels ?? []).length}|${g.practiceLot ? 'p' : ''}|${(g.cleared ?? []).length}|${this.courseGrid?.rev ?? 0}|${this.paintRev}|${this.net.version}|${this.props.size}|${(g.structures ?? []).length}` : '';
     if (sig === this.surveySig) return;
     this.surveySig = sig;
     const want = new Map<string, LotPatch[]>();
@@ -2533,6 +2548,8 @@ export class Game {
       // (adjacent empty blocks pegged out as one plot: surveyBlocks leaves out the sides they share)
       const empty = (g.parcels ?? []).slice(1).filter(r => !this.builtOn([r[0], r[1], r[0] + r[2], r[1] + r[3]]));
       for (const s of surveyBlocks(empty, LAND_SURVEY_INSET)) if (s) want.set(`survey:${s.lines!.join(',')}`, [s]);
+      // T239: the practice area for sale is pegged out too (Land for sale shows its price)
+      if (g.practiceLot) { const s = surveyPatch(rectPlot(g.practiceLot), LAND_SURVEY_INSET); if (s) want.set(`survey:practice:${g.practiceLot.join(',')}`, [s]); }
       if (g.cleared?.length) {
         g.cleared = g.cleared.filter(c => !this.builtOn(lotBoxOf([c[0]!, c[1]!], [c[2]!, c[3]!], [c[4]!, c[5]!], c[6]!, c[7]!)));
         for (const c of g.cleared) {
@@ -4635,7 +4652,8 @@ export class Game {
     const want = new Map<string, { item: number; x: number; y: number; flip: boolean }>();
     const add = (p: CarPark | null) => {
       if (!p) return;
-      gateSpots(p).forEach((g, k) => {
+      // T239: an unpaved lot has its P sign only (no barriers)
+      gateSpots(p).filter(g => !p.ground || g.item === 'ce:parking-sign').forEach((g, k) => {
         const item = LIBRARY.findIndex(it => it.id === g.item), b = item >= 0 ? LIBRARY[item]!.boxes[0] : undefined;
         if (!b) return;
         // the box's centre sits at the spot (a flipped prop's box turns: dx and dy swap, see footprint)
@@ -4662,7 +4680,8 @@ export class Game {
         if (b.dir % 2 === 0) for (const o of [-BAY_W / 2, BAY_W / 2]) lines.push(b.x - BAY_D / 2, b.y + o, b.x + BAY_D / 2, b.y + o);
         else for (const o of [-BAY_W / 2, BAY_W / 2]) lines.push(b.x + o, b.y - BAY_D / 2, b.x + o, b.y + BAY_D / 2);
       }
-      keep.add(key); this.setLotGround(key, [{ pts: [d.x, d.y, d.x + d.w, d.y, d.x + d.w, d.y + d.h, d.x, d.y + d.h], tex: 'asphalt', lines }]);
+      // T239: an unpaved lot (the range start's car park before it is paved) is its ground alone: packed dirt or gravel, no painted bays
+      keep.add(key); this.setLotGround(key, [{ pts: [d.x, d.y, d.x + d.w, d.y, d.x + d.w, d.y + d.h, d.x, d.y + d.h], tex: d.ground ?? 'asphalt', ...(d.ground ? {} : { lines }) }]);
     });
     for (const key of this.parkGround) if (!keep.has(key)) this.setLotGround(key, null);
     this.parkGround = keep;
@@ -4779,7 +4798,7 @@ export class Game {
       ctx.strokeStyle = on ? '#fff7d6' : band.edge; ctx.lineWidth = (on ? 3 : 1.5) * dpr; ctx.stroke();
       const c = this.screen(r[0] + r[2] / 2, r[1] + r[3] / 2);
       // a count's rank: the band and the price stay readable over the trees' names (T151)
-      this.labels.text(o, on ? PRI.hint : PRI.count, `${BAND_LABEL[o.band ?? 'fair']} · $${o.price.toLocaleString()}`, c.x, c.y, font, 12 * dpr, band.ink, LABEL_OUTLINE, 3 * dpr);
+      this.labels.text(o, on ? PRI.hint : PRI.count, `${o.name ? `${o.name} · ` : ''}${BAND_LABEL[o.band ?? 'fair']} · $${o.price.toLocaleString()}`, c.x, c.y, font, 12 * dpr, band.ink, LABEL_OUTLINE, 3 * dpr);
     }
     // the reason a block under the pointer cannot be bought, by the pointer
     if (hov?.why && this.hover) { const c = this.screen(this.hover.x, this.hover.y); this.labels.text(LABEL_KEY.landHover, PRI.hint, hov.why, c.x, c.y - 22 * dpr, font, 12 * dpr, '#fecaca', LABEL_OUTLINE, 3 * dpr); }
@@ -5106,6 +5125,7 @@ export class Game {
     parcels: () => (this.golf ? this.golf.parcels ?? [this.golf.parcel] : []), map: MAP,
     classOf: r => this.blockLandClass(r), onRoad: r => this.blockOnPublicRoad(r), pop: () => this.traffic.pop,
     version: () => { let n = 0; for (const l of this.traffic.lots.values()) if (l.level >= 1) n++; return `${this.net.version}|${n}`; },
+    special: () => { const q = this.golf?.practiceLot; return q ? [{ rect: q, name: PRACTICE_LOT_NAME }] : []; }, // T239
   });
   toggleLandMode() { this.toggleSideMode('landMode'); }
   /** T200: opens Land for sale (Course › Land for sale, the top bar's Land chip, a refusal's button), centred on tile point at when given */
@@ -5122,7 +5142,7 @@ export class Game {
   buyLandCard(): boolean {
     const r = this.land.buy(this.money);
     if (!r.ok) { this.toast(r.why, 'warn'); this.emit(); return false; }
-    const ok = this.buyLandBlock(r.rect, r.price);
+    const ok = this.land.card?.name ? this.buyPracticeLot(r.price) : this.buyLandBlock(r.rect, r.price);
     if (ok) this.land.cancel();
     this.emit();
     return ok;
@@ -5215,6 +5235,17 @@ export class Game {
   this.land.hover = null;
   this.emit();
   return true;
+  }
+  /** T239: buys a guided range start's practice area at price: it becomes the player's (pegged out by its survey line until built on) and
+   *  Facilities › Practice builds on it */
+  buyPracticeLot(price: number): boolean {
+    const g = this.golf, q = g?.practiceLot; if (!g || !q) return false;
+    if (price > this.money) { this.toast(`Not enough money: the practice area costs $${price.toLocaleString()}`, 'warn'); return false; }
+    delete g.practiceLot; g.parcels = [...(g.parcels ?? [g.parcel]), [...q] as [number, number, number, number]];
+    this.traffic.spend('construction', price); this.surveySig = '';
+    this.scheduleSave(); this.toast(`Bought the practice area: $${price.toLocaleString()}. Facilities › Practice builds on it`, 'good');
+    this.land.hover = null; this.emit();
+    return true;
   }
   /** the golf HUD's view (null outside golf mode) */
   lastGolfMonth = -1;

@@ -6,6 +6,7 @@ import { MAP } from '../iso';
 import { TC } from '../terrain/types';
 import { SK, type Pt, type RoadNetwork, type Seg } from '../network';
 import type { Site } from './site';
+import { looseBays, type LooseGround } from '../golf/rangelot';
 import { AISLE, BAY_D, BAY_W, ENTRANCE_EVERY, FRONT_GAP, LOT_TILE_COST, MAX_ENTRANCES, MIN_PARK } from './config';
 
 /** a car park as the player places it: a rect (top-left corner x, y, sides w, h in tiles; integer corners for an axis rect) */
@@ -15,6 +16,9 @@ export interface CarParkDef {
   a?: number;
   /** the bays' angle to the aisle (absent: 90) */
   bay?: 90 | 60 | 45;
+  /** T239: an unpaved lot (the range start's car park before it is paved): packed dirt or gravel, its cars in loose rows (golf/rangelot.ts
+   *  looseBays: fewer bays, unmarked, a little askew); absent: paved */
+  ground?: LooseGround;
 }
 /** a bay: its centre (world tiles), its facing (0 +x, 1 +y, 2 -x, 3 -y: the nearest of the four to its heading), its heading (hx, hy) and the row
  *  direction (tx, ty) along the frontage (both unit vectors, world) */
@@ -163,8 +167,9 @@ export function bayGrid(d: CarParkDef, side: 0 | 1 | 2 | 3, entrances: Pt[]): Ba
 export function buildPark(net: RoadNetwork, d: CarParkDef): CarPark | null {
   const f = frontage(net, d);
   if (!f) return null;
-  const bays = bayGrid(d, f.side, f.entrances);
-  if (bays.length < 10) return null;
+  const grid = bayGrid(d, f.side, f.entrances);
+  if (grid.length < 10) return null;
+  const bays = d.ground ? looseBays(grid, d.ground) : grid;
   const F = parkFrame(d), pv = vecW(F, -OUT[f.side]!.x, -OUT[f.side]!.y);
   return { ...d, side: f.side, seg: f.seg, entrances: f.entrances, bays, pv };
 }

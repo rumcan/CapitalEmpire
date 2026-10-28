@@ -158,7 +158,7 @@ test('the save: the facilities and the tee box in golf.range, an old save loads 
   assert.equal(d.tee, undefined);
   // a Phase 1 save (no practice, no tee): none built, the tee box still to lay
   const old = normalizeRangeBiz({ v: 1, owned: ['bays8'], price: 7, season: {}, total: {}, paths: true });
-  assert.deepEqual(old.practice, d.practice); assert.equal(old.tee, undefined); assert.deepEqual(old.owned, ['teeturf', 'grass', 'bays8'], 'a save from before T223 keeps its grass');
+  assert.deepEqual(old.practice, d.practice); assert.equal(old.tee, undefined); assert.deepEqual(old.owned, ['teeturf', 'grass', 'greens', 'gravel', 'pave', 'bays8'], 'a save from before T223 keeps its grass, from before T239 its greens and paved lot');
   // a round trip
   const s = defaultRangeBiz(); s.tee = true; s.practice.putting = { open: true, season: { golfers: 4, takings: 320 }, total: { golfers: 9, takings: 720 } };
   const back = normalizeRangeBiz(JSON.parse(JSON.stringify(s)));

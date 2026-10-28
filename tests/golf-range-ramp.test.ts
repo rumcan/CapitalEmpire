@@ -183,9 +183,11 @@ test('the range upgrades cost upkeep each month, booked as upkeep and shown on t
 test('the range stays a range: its own outfield preset with mowing stripes on top, target greens raised in a fringe and collar', () => {
   const sc = rangeScene([200, 200, 70, 150], 2, withUpgrade(withUpgrade(defaultRangeBiz(), 'teeturf'), 'grass')); // T223: once grassed
   const out = sc.patches.filter(p => p.surf === 'outfield'); assert.equal(out.length, 1); assert.equal(out[0]!.mow, true);
-  const greens = sc.patches.filter(p => p.surf === 'target'); assert.equal(greens.length, 2, 'two target greens to start');
+  assert.equal(sc.patches.filter(p => p.surf === 'target').length, 0, 'T239: no target greens to start');
+  const sg = rangeScene([200, 200, 70, 150], 2, withUpgrade(defaultRangeBiz(), 'greens'));
+  const greens = sg.patches.filter(p => p.surf === 'target'); assert.equal(greens.length, 3, 'three target greens once built (T239)');
   assert.ok(greens.every(p => p.edge === 'raised'));
-  assert.equal(sc.patches.filter(p => p.surf === 'fringe').length, 2, 'each in its fringe ring');
+  assert.equal(sg.patches.filter(p => p.surf === 'fringe').length, 3, 'each in its fringe ring');
   // the stripes follow the preset, across the line of play ('x') or down it ('y'), from the tee end of the outfield
   const across = outfieldStripes(sc, { on: true, dir: 'x', width: 6, light: 0.08, dark: 0.1, lightCol: '#c8e07c', darkCol: '#2e5a1c', tint: 0.2, soft: 0.25 })!;
   assert.deepEqual([across.ux, across.uy], [sc.aim.x, sc.aim.y]); assert.equal(across.w, 6); assert.deepEqual([across.ox, across.oy], [sc.mowFrom.x, sc.mowFrom.y]);

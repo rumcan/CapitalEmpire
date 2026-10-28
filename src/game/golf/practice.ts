@@ -11,6 +11,8 @@ import type { PracticeId } from './rangesave';
 /** the practice area in the plot's frame (u along the road, v away from it; the plot is u 0..70, the drive at u 72): u 75..111, v 2..36, the
  *  land across the drive from the car park (72 x 68 m) */
 export const PRACTICE_UV: readonly [number, number, number, number] = [75, 111, 2, 36];
+/** T239: the practice area's name as Land for sale offers it (a guided range start's practice area is land to buy) */
+export const PRACTICE_LOT_NAME = 'The practice area';
 /** where the golfers walk in: behind the car park (frame u 70.5, v 19.5) and the area's edge beside it (u 76, v 19.5) */
 const BEHIND_PARK = { u: 70.5, v: 19.5 }, ENTRY = { u: 76.5, v: 19.5 };
 /** a putting green opens at this much green plus fringe (m²), a chipping green at this much with at least BUNKER_MIN m² of bunker within
