@@ -74,7 +74,7 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
   Housekeeping: T174-T177, T179, T184 closed (merged earlier). The 5174 auto-updater ran 5 times over; the owner approved stopping 4
   (one left, bash PID 31220). Still listening, not ours: a stray vite on 5189 (an agent's, gone since 07:50) and the dead lot lab's 5241.
 - **The concept look (the owner, 21:30: "this is the look and feel we need to get to"):** `docs/art/CONCEPT-LOOK.md` (#635) has the reference, the gaps and the code work in order; its art is GOLF-ART-LIST section 12 (items 149-175). **Waiting on the owner:** step 1, green ground (the map, the blocks and the yards go green; it reverses #625 and the map half of #621). Step 2, a golden-hour colour grade, is the next code ticket after the owner's queue.
-- **Next, in order, when an agent lands:** (T229 #668 and T230 #669 are running) the golf play tickets: **T212 #557** putt, chip, tee-up and coach clips → **T214 #559** club pros and memberships (plan first) → then **T112 #199** (merge #394 when the owner stops 5191) →
+- **Next, in order, when an agent lands:** (T229 #668 and T230 #669 are running) **T231 #671** the concept's kit in the game (pond boulder edges, fountain, lily pads, hedges, shrubs: the art is made) → the golf play tickets: **T212 #557** putt, chip, tee-up and coach clips → **T214 #559** club pros and memberships (plan first) → then **T112 #199** (merge #394 when the owner stops 5191) →
   **T149 #312** (waits for the owner's FAR-anchor choice) → the lists below.
   (Golf play P1-P4 is on main from #258; the owner asked for its tickets on 2026-10-27, 18:05. T215 #561 stays open for the owner's call on
   water and roads by day.)
