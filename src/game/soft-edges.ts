@@ -17,7 +17,8 @@ const TILE_PX = Math.hypot(HW, HH);
 
 /** the band's numbers:
  *  - px: its width in cache px (the world width is px / (TILE_PX L) tiles: wider in tiles at the far levels), held to [min, max] tiles;
- *  - imgPx: about how many cache px an image px covers (the bilinear stretch smooths between), at most resMax image px a tile;
+ *  - imgPx: about how many cache px an image px covers (the bilinear stretch smooths between), at most resMax image px a tile; imgPxFar at
+ *    the far levels (cache level farL and below: the district chunks, whose images span four chunks' width), eased between from 1.5 farL;
  *  - waves: the threshold noise's wavelengths as shares of the band width (a clump and its tufts), weights and seeds; each wave at least
  *    waveMin image px (finer would alias);
  *  - sd: the summed waves' spread about 0.5 (value noise bunches near its middle): the noise is evened out by it (a logistic stand-in for
@@ -28,23 +29,30 @@ const TILE_PX = Math.hypot(HW, HH);
  *    meets whole dirt and whole grass at the band's edges;
  *  - edge: half the threshold's soft step in noise units (a tuft's own edge: a px or so, never a fade);
  *  - probe: how far outside an area's outline (tiles, at least, and as a share of the band) the ground is read for what it meets;
+ *  - areaK: an area's band is at most this share of the square root of its area (a small dirt patch keeps a body: a band as wide as the
+ *    patch would leave only specks);
  *  - ease: the stretch of an outline (tiles, at least, and as a share of the band) over which the band eases to a hard edge where the area
  *    meets something it must not blend into (a later area, paving, water, a road) */
 export const SOFT = {
   px: 64, min: 0.9, max: 10,
-  imgPx: 1.75, resMax: 10,
+  imgPx: 1.75, imgPxFar: 3, farL: 0.1, resMax: 10,
   waves: [[0.4, 0.3, 401], [0.16, 0.35, 409], [0.07, 0.35, 419]] as readonly (readonly [number, number, number])[], waveMin: 2.2,
   sd: 0.125, flat: 1.7, edge: 0.07,
-  probe: 0.4, probeK: 0.35, ease: 1.5, easeK: 1,
+  probe: 0.4, probeK: 0.35, areaK: 0.4, ease: 1.5, easeK: 1,
 } as const;
 
 /** the band's width (tiles) at cache level L: SOFT.px cache px, held to [SOFT.min, SOFT.max] (wider in tiles as L falls) */
 export function softWidth(L: number): number {
   return Math.min(SOFT.max, Math.max(SOFT.min, SOFT.px / (TILE_PX * Math.max(L, 1e-3))));
 }
+/** an area's band width (tiles) at cache level L: softWidth, at most SOFT.areaK of the square root of its area (tiles²), at least SOFT.min */
+export function softAreaWidth(L: number, area: number): number {
+  return Math.min(softWidth(L), Math.max(SOFT.min, SOFT.areaK * Math.sqrt(Math.max(0, area))));
+}
 /** the band images' resolution at cache level L, image px per tile: about one image px per SOFT.imgPx cache px, at most SOFT.resMax */
 export function softRes(L: number): number {
-  return Math.min(SOFT.resMax, Math.max(0.5, (TILE_PX * Math.max(L, 1e-3)) / SOFT.imgPx));
+  const k = Math.min(1, Math.max(0, (1.5 * SOFT.farL - L) / (0.5 * SOFT.farL))), px = SOFT.imgPx + (SOFT.imgPxFar - SOFT.imgPx) * k;
+  return Math.min(SOFT.resMax, Math.max(0.5, (TILE_PX * Math.max(L, 1e-3)) / px));
 }
 
 /** the threshold noise at tile (x, y) for a band w tiles wide and images at r px a tile: 0..1, about evenly spread and symmetric about 0.5

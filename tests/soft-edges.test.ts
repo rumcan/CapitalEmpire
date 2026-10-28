@@ -2,7 +2,7 @@
 // DOM, no canvas.
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { SOFT, easeWeights, softCover, softDirt, softMaskImage, softNoise, softRes, softRingImages, softWidth, type SoftImage } from '../src/game/soft-edges';
+import { SOFT, easeWeights, softAreaWidth, softCover, softDirt, softMaskImage, softNoise, softRes, softRingImages, softWidth, type SoftImage } from '../src/game/soft-edges';
 
 /** an axis-aligned rectangle x0 y0 .. x1 y1 */
 const rect = (x0: number, y0: number, x1: number, y1: number) => [x0, y0, x1, y0, x1, y1, x0, y1];
@@ -23,6 +23,10 @@ describe('soft-edges: the band widens at the far levels', () => {
   it('keeps its images about SOFT.imgPx cache px a px, at most SOFT.resMax a tile', () => {
     for (const L of LEVELS) { const r = softRes(L); assert.ok(r > 0 && r <= SOFT.resMax); }
     assert.ok(softRes(0.05) < softRes(0.15));
+  });
+  it('holds a small area\'s band to a share of its size, a big one\'s as wide as the level gives', () => {
+    for (const L of LEVELS) { assert.equal(softAreaWidth(L, 1e6), softWidth(L)); assert.ok(softAreaWidth(L, 100) <= SOFT.areaK * 10 + 1e-9 || softAreaWidth(L, 100) === SOFT.min); }
+    assert.ok(softAreaWidth(0.05, 80) < softWidth(0.05)); assert.ok(softAreaWidth(0.05, 80) >= SOFT.min);
   });
 });
 
