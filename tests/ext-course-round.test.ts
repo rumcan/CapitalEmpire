@@ -113,6 +113,10 @@ test('old looks are not rounded: no round field, no Round off; the outlines are 
   const book = normalizeBook({ h1: { bunker: { ...old } } })!;
   // a hole's bunker look saved without Round off takes the bunker's default since 2026-10-29 (normalizeBook fills it from the preset)
   assert.equal(book.h1!.bunker!.round, true);
+  // unticked, it stays off: the look keeps round: false, so the default does not tick it again on a load
+  const off = normalizeBook({ h1: { bunker: clampStyle({ ...old, round: false }) } })!;
+  assert.equal(off.h1!.bunker!.round, false);
+  assert.equal(roundOfStyle(off.h1!.bunker!), undefined);
   const set = courseLookSet({ bunker: { style: clampStyle({ ...old }) } }, (_s, o) => ({ tex: o, sc: 1, a: 0 }));
   assert.equal(set.round, undefined, 'a look set with no Round off carries no round');
   assert.equal(roundOfLooks(g, { round: set.round }), null);
@@ -128,7 +132,7 @@ test('Round off is saved with the look: ticked and its Smoothness kept, unticked
   assert.equal(on.round, true); assert.equal(on.smooth, 0.73);
   assert.equal(roundOfStyle(on), 0.73);
   const off = clampStyle({ ...on, round: false });
-  assert.equal(off.round, undefined); assert.equal(off.smooth, 0.73, 'the slider is kept');
+  assert.equal(off.round, false, 'unticked is kept (the bunker's default would tick it again)'); assert.equal(off.smooth, 0.73, 'the slider is kept');
   assert.equal(roundOfStyle(off), undefined);
   assert.ok(lookChanged(on, off) && lookChanged(on, { ...on, smooth: 0.2 }), 'a change to either redraws the course');
   const saved = normalizeBook(JSON.parse(JSON.stringify({ h3: { bunker: on } })))!;

@@ -308,8 +308,9 @@ export function clampStyle<T extends Omit<PaintArea, 'id' | 'pts'>>(st: T): T {
       ? { mtex, mshare: Math.min(1, Math.max(0, fin(mshare ?? 0.5, 0.5))), msoft: Math.min(0.5, Math.max(0.01, fin(msoft ?? 0.12, 0.12))), mpatch: Math.min(4, Math.max(0.25, fin(mpatch ?? 1, 1))) }
       : {}),
     ...(sh > 0 ? { shadow: sh } : {}),
-    // T253: Round off only when ticked, its Smoothness only when set (both left out otherwise, so an old look stays as it was)
-    ...(round === true ? { round: true } : {}),
+    // T253: Round off when ticked, its Smoothness only when set (both left out otherwise, so an old look takes its kind's default); an unticked
+    // box is kept as false, so a bunker (rounded by default since 2026-10-29) the player unticked stays square across a reload
+    ...(round === true ? { round: true } : round === false ? { round: false } : {}),
     ...(typeof smooth === 'number' && Number.isFinite(smooth) ? { smooth: Math.round(Math.min(1, Math.max(0, smooth)) * 100) / 100 } : {}),
   };
 }
