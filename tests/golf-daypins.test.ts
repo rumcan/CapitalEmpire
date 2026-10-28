@@ -7,6 +7,7 @@ import { CELL_T, SURF, cellAt, makeGrid, type Grid } from '../src/game/ext/cours
 import { PIN_EDGE_T, PIN_MOVE_T, PIN_SLOPE_MAX, choosePin, greenAt, normalizeDayPins, pinIn, pinLine, pinReport, pinSlot, rollDayPins, withDayPins, type DayPin, type GreenShape } from '../src/game/golf/daypins';
 import { normalizeGolfSave, type GolfSave } from '../src/game/golf/mode';
 import type { CourseView, PlayHole } from '../src/game/golf/play';
+import { dayCourse } from '../src/game/golf/everyday';
 
 /** a grid with hole n's green as an ellipse round (cx, cy) of radii (rx, ry) tiles, rough round it, and a fairway strip coming in from the south */
 function greenGrid(n = 1, cx = 40, cy = 40, rx = 9, ry = 7): Grid {
@@ -133,6 +134,8 @@ test('withDayPins plays the day\'s cup: the pin and every line\'s end move, the 
   assert.equal(o.par, 4); assert.deepEqual(o.tee, { x: 0, y: 0 });
   assert.deepEqual(o.sets!.map(s => s.line[s.line.length - 1]), [{ x: 3, y: 96 }, { x: 3, y: 96 }]);
   assert.deepEqual(out.holes[2]!.pin, { x: 3, y: 96 }, 'a 9-hole course\'s second nine too');
+  assert.equal(out.holes[2], out.holes[0], 'a hole listed twice stays one object (its repeats share their line)');
+  assert.equal(dayCourse(out).holes.length, 2, 'so the everyday round still plays each hole once');
   assert.equal(out.holes[1], h2, 'a hole with no day cup is as placed');
   assert.deepEqual(h.pin, { x: 0, y: 100 }, 'the course view given is not changed');
   assert.equal(withDayPins(view, () => null), view, 'no day cups: the same view');

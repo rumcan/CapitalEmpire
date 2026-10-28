@@ -176,14 +176,18 @@ export function pinLine(r: PinReport): string {
 }
 
 /** the course a round plays with the day's cups: each hole's pin, and the end of its line and of its tee sets' lines, at pinOf(n) (null: as placed).
- *  The par and the tees stay; the lie is the course's */
+ *  The par and the tees stay; the lie is the course's. A hole the view lists twice (a 9-hole course played out to 18) stays one object, so its
+ *  repeats still share their line (everyday.ts dayCourse finds the second nine by it) */
 export function withDayPins(view: CourseView, pinOf: (n: number) => Pt | null): CourseView {
   let changed = false;
+  const made = new Map<PlayHole, PlayHole>();
   const holes = view.holes.map((h): PlayHole => {
-    const p = pinOf(h.n); if (!p || (Math.abs(p.x - h.pin.x) < 1e-9 && Math.abs(p.y - h.pin.y) < 1e-9)) return h;
+    const had = made.get(h); if (had) return had;
+    const p = pinOf(h.n); if (!p || (Math.abs(p.x - h.pin.x) < 1e-9 && Math.abs(p.y - h.pin.y) < 1e-9)) { made.set(h, h); return h; }
     changed = true;
     const pin = { x: p.x, y: p.y }, end = (l: Pt[]) => [...l.slice(0, -1), pin];
-    return { ...h, pin, line: end(h.line), ...(h.sets ? { sets: h.sets.map(s => ({ ...s, line: end(s.line) })) } : {}) };
+    const o: PlayHole = { ...h, pin, line: end(h.line), ...(h.sets ? { sets: h.sets.map(s => ({ ...s, line: end(s.line) })) } : {}) };
+    made.set(h, o); return o;
   });
   return changed ? { holes, lieAt: view.lieAt } : view;
 }
