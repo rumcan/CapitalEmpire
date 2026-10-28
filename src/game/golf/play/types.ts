@@ -11,8 +11,9 @@ export interface PlayHole { n: number; par: 3 | 4 | 5; tee: Pt; pin: Pt; line: P
 export interface CourseView { holes: PlayHole[]; lieAt(x: number, y: number): Lie }
 /** a golfer's sex: the field's looks come from the golfer art of the matching sex */
 export type Sex = 'm' | 'w';
-/** a golfer: a unique id (0..size-1), name, sex, whether a pro, skill (0..1), look (0..4, the art variant), and the owner's golfer */
-export interface Golfer { id: number; name: string; sex: Sex; pro: boolean; skill: number; look: number; owner?: boolean }
+/** a golfer: a unique id (0..size-1), name, sex, whether a pro, skill (0..1), look (0..4, the art variant), and the owner's golfer. T213 (entourage.ts):
+ *  the cart he rides (an index shared by the two golfers of a cart; absent: he walks) and whether a caddie walks with him */
+export interface Golfer { id: number; name: string; sex: Sex; pro: boolean; skill: number; look: number; owner?: boolean; cart?: number; caddie?: boolean }
 /** a tee time: the game minute and the golfer ids in the group */
 export interface Group { tee: number; players: number[] }
 /** a club, or the putter */

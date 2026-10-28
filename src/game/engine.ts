@@ -128,7 +128,7 @@ import { BAND_LABEL, LandSale } from './golf/land-sale';
 import { buildCourseStatsPanel, type CourseStatsPanel } from './golf/coursestats';
 import { TILE_M, type CourseArea, type CourseLayout, type GolfSurface } from './golf/types';
 import { deriveHoles, surfaceAt, validateMarkerPlacement, type Hole } from './golf/holes';
-import { DayFinish, LiveGroup, OWNER_ADDRESS, OWNER_ART, OWNER_SKILL, POWER, PUTT_POWER, PlayView, allowedClubs, boardRows, carryM, championLine, dayRound, makeCourseView, powerFor, resultsDue, shortName as golferShort, stateAt, standings, toParText, waitText, waveLine, type BoardRow, type Club, type CourseView, type OwnerTurn, type RoundPlan, type Sex } from './golf/play';
+import { CHEER_TILES, DayFinish, LiveGroup, OWNER_ADDRESS, OWNER_ART, OWNER_SKILL, POWER, PUTT_POWER, PlayView, allowedClubs, cartPaths, type CartPaths, type PlayCart, boardRows, carryM, championLine, dayRound, makeCourseView, powerFor, resultsDue, shortName as golferShort, stateAt, standings, toParText, waitText, waveLine, type BoardRow, type Club, type CourseView, type OwnerTurn, type RoundPlan, type Sex } from './golf/play';
 import { holeViews, markerPlan, tagByHole, type HoleView, type MarkerKind } from './golf/holeview';
 import { CAST, castShear, clampCast, type CastShadow } from './cast-shadow';
 import { SPEC_LOOK, clampSpecLook, specGain, type SpecLook } from './lamp-reflect';
@@ -220,7 +220,17 @@ function crowdDrawable(out: Drawable[], k: number, p: CrowdPerson) {
   const d = out[k] ?? (out[k] = { item: 0, x: 0, y: 0, flip: false, scale: 1, x0: 0, y0: 0, x1: 0, y1: 0, moving: false });
   d.item = p.group ? GOLFER_BASE + (p.person * WALK_DIRS.length + p.row) * GOLFER_FRAMES + p.frame : SPECTATOR_BASE + (p.person * WALK_DIRS.length + p.row) * SPECTATOR_FRAMES + p.frame;
   d.x = p.x; d.y = p.y; d.x0 = p.x - 0.12; d.y0 = p.y - 0.12; d.x1 = p.x + 0.12; d.y1 = p.y + 0.12;
+  // (T213: a slot may have held a caddie's bag or a hopping golfer last frame)
+  d.lift = undefined; d.scale = 1; d.flip = false; d.moving = false;
 }
+/** T213: the caddie's stand-in (no caddie is packed yet: GOLF-ART-LIST item 176; the made `staff_caddie_m` waits in art/spectators), a spectator in a
+ *  polo and visor, as an index into SPECTATOR_PEOPLE; and its label */
+const CADDIE_ART = Math.max(0, SPECTATOR_PEOPLE.findIndex(p => p.id === 'spectator:spec_m_polo_visor')), CADDIE_LABEL = 'Stand In for caddie';
+/** T213: the hire cart's two facings (GOLF-ART-LIST item 173 asks for eight: the nearest of the two is drawn), the caddie's bag (the bag trolley), and
+ *  their scales (the studio's size, else the owner's table's) */
+const libIndexOf = (id: string): number => LIBRARY.findIndex(it => it.id === id);
+const CART_ART = [libIndexOf('business:golf-cart-sw'), libIndexOf('business:golf-cart-se')], BAG_ART = libIndexOf('business:golf-bag-trolley');
+const artScale = (item: number, or: number): number => { const id = LIBRARY[item]?.id ?? ''; return STUDIO_SCALE[id] ?? OWNER_SCALE[id] ?? or; };
 /** the golfer art (indices into GOLFER_PEOPLE) of a tag: the men's ids carry _m, the women's _w; with none of its own, a sex gets all the art */
 const golferArt = (tag: string): number[] => { const a = GOLFER_PEOPLE.flatMap((p, i) => p.id.includes(tag) ? [i] : []); return a.length ? a : GOLFER_PEOPLE.map((_, i) => i); };
 const GOLFER_ART: Record<'m' | 'w', number[]> = { m: golferArt('_m'), w: golferArt('_w') };
@@ -5515,12 +5525,15 @@ export class Game {
    *  reach of its people. Reused Drawables and scratch people: no allocation per frame once the crowd is warm */
   private crowdMovers(x0: number, y0: number, x1: number, y1: number, now: number): Drawable[] {
     const G = this.traffic.gallery, W = this.traffic.walkers, S = this.traffic.stops, out = this.crowdDraw, P = this.crowdPeople;
-    const X0 = x0 - 4, Y0 = y0 - 4, X1 = x1 + 4, Y1 = y1 + 4, nS = SPECTATOR_PEOPLE.length;
+    const X0 = x0 - 4, Y0 = y0 - 4, X1 = x1 + 4, Y1 = y1 + 4, nS = SPECTATOR_PEOPLE.length, ch = this.play?.pv.cheers.length ? this.play.pv.cheers : null;
     let m = 0;
     for (let i = 0; i + 7 < G.length; i += 8) {
       const x = G[i]!, y = G[i + 1]!;
       if (x < X0 || x > X1 || y < Y0 || y > Y1) continue;
-      const spot = i / 8, k = galleryPeople(G, i, spot, now, nS, P);
+      // (T213: the fans cheer a birdie or better holed near them, the playback's celebrations)
+      let cheer = -1;
+      if (ch) for (const c of ch) if ((c.x - x) ** 2 + (c.y - y) ** 2 < CHEER_TILES * CHEER_TILES) cheer = Math.max(cheer, c.t);
+      const spot = i / 8, k = galleryPeople(G, i, spot, now, nS, P, cheer);
       for (let j = 0; j < k; j++) crowdDrawable(out, m++, P[j]!);
     }
     for (let i = 0; i + 5 < W.length; i += 6) {
@@ -5548,15 +5561,48 @@ export class Game {
    *  (group 1: person = the art's index for his sex and look; the row and frame come from the view), culled to the box. Reuses one scratch person;
    *  returns the next mover index */
   private playMovers(out: Drawable[], m: number, X0: number, Y0: number, X1: number, Y1: number): number {
+    this.golfCartOut.length = 0; this.caddieLabels.length = 0;
     const pl = this.play; if (!pl) return m;
     const P = pl.pv.people, t = this.crowdGolfers[0] ?? (this.crowdGolfers[0] = { x: 0, y: 0, group: 1, person: 0, row: 0, frame: 0 });
+    // (T213: the playback's carts are worked out for this box from the next frame on)
+    const box = pl.pv.box ?? (pl.pv.box = [0, 0, 0, 0]); box[0] = X0; box[1] = Y0; box[2] = X1; box[3] = Y1;
     for (let j = 0; j < P.length; j++) {
       const p = P[j]!;
       if (p.x < X0 || p.x > X1 || p.y < Y0 || p.y > Y1) continue;
       t.x = p.x; t.y = p.y; t.person = pl.art[p.golfer]!; t.row = p.row; t.frame = p.frame;
-      crowdDrawable(out, m++, t);
+      crowdDrawable(out, m, t); if (p.lift) out[m]!.lift = p.lift; m++;
     }
+    // T213: the caddies (the stand-in spectator, labelled) with their bags, and the carts
+    const c = this.crowdGolfers[2] ?? (this.crowdGolfers[2] = { x: 0, y: 0, group: 0, person: 0, row: 0, frame: 0 });
+    for (const k of pl.pv.caddies) {
+      if (k.x < X0 || k.x > X1 || k.y < Y0 || k.y > Y1) continue;
+      c.group = 0; c.x = k.x; c.y = k.y; c.person = CADDIE_ART; c.row = k.row; c.frame = k.frame;
+      crowdDrawable(out, m, c); this.caddieLabels.push({ p: out[m]!, text: CADDIE_LABEL }); m++;
+      if (BAG_ART >= 0) this.propDrawable(out, m++, BAG_ART, k.bx, k.by, 0.25);
+    }
+    this.cartDrawables(pl.pv.carts, this.golfCartOut, X0, Y0, X1, Y1);
     return m;
+  }
+  /** T213: the tournament's carts as movers (reused Drawables), and the caddies' stand-in labels (drawStandIns) */
+  private golfCartOut: Drawable[] = []; private golfCartDraw: Drawable[] = []; private dayCartDraw: Drawable[] = [];
+  private caddieLabels: { p: Drawable; text: string }[] = [];
+  /** T213: a library picture as a mover at (x, y) (tiles) at its art scale (or `or`), in out[k] (made on first use, then reused) */
+  private propDrawable(out: Drawable[], k: number, item: number, x: number, y: number, r: number): Drawable {
+    const d = out[k] ?? (out[k] = { item: 0, x: 0, y: 0, flip: false, scale: 1, x0: 0, y0: 0, x1: 0, y1: 0, moving: false });
+    d.item = item; d.x = x; d.y = y; d.flip = false; d.scale = artScale(item, 0.3); d.moving = false; d.lift = undefined;
+    d.x0 = x - r; d.y0 = y - r; d.x1 = x + r; d.y1 = y + r;
+    return d;
+  }
+  /** T213: the carts (play/carts.ts PlayCart) in the box into `to` as movers: the hire cart's nearest facing to its heading (its art has two: the front
+   *  to the screen's lower left or lower right; a cart heading up the screen shows the one on its side, GOLF-ART-LIST item 173) */
+  private cartDrawables(carts: readonly PlayCart[], to: Drawable[], X0: number, Y0: number, X1: number, Y1: number) {
+    const pool = to === this.golfCartOut ? this.golfCartDraw : this.dayCartDraw;
+    let n = 0;
+    for (const c of carts) {
+      if (c.x < X0 || c.x > X1 || c.y < Y0 || c.y > Y1) continue;
+      const item = CART_ART[c.hx - c.hy < 0 ? 0 : 1]!; if (item < 0) continue;
+      to.push(this.propDrawable(pool, n++, item, c.x, c.y, 0.6));
+    }
   }
   /** the golf round on the tournament day (docs/GOLF-PLAY.md P2), each frame in golf mode. It is built once per tournament, while its round is live
    *  (the surge, and the eval after kick-off, so a reload in the eval finds it too), keyed by the round's count (runs: the same after a reload, new for
@@ -5614,7 +5660,7 @@ export class Game {
     if (!course || !course.view.holes.length) { this.dayPlay = null; return; }
     if (!this.dayPlay || this.dayPlay.day !== s.day || this.dayPlay.key !== course.key) {
       const roster = this.dayBook.rosterOf()!, plan = dayPlan(course.view, roster);
-      this.dayPlay = { view: new DayView(plan, roster, course.view, this.clubGround(g)), day: s.day, key: course.key };
+      this.dayPlay = { view: new DayView(plan, roster, course.view, this.clubGround(g), this.cartPathsNow()), day: s.day, key: course.key };
       this.dayArt = roster.golfers.map(p => GOLFER_ART[p.sex][p.look % GOLFER_ART[p.sex].length]!);
     }
   }
@@ -5647,13 +5693,24 @@ export class Game {
     if (!pk) return { door, bays: [], entrance: null };
     return { door, bays: pk.bays.map(b => ({ x: b.x, y: b.y, hx: b.hx, hy: b.hy })), entrance: pk.entrances[0] ?? null };
   }
+  /** T213: the course's cart paths for the carts (golf/play/carts.ts): the network's cart paths (not the narrow walking paths) and course drives, as
+   *  straight centre lines; null with none */
+  private cartPathsNow(): CartPaths | null {
+    const lines: { a: Pt; b: Pt }[] = [];
+    for (const s of this.net.segs) {
+      const c = s.cls;
+      if ((c.family === 'cart' && c.base !== 'cart-walk') || c.family === 'course') lines.push({ a: { x: s.a.x, y: s.a.y }, b: { x: s.b.x, y: s.b.y } });
+    }
+    return lines.length ? cartPaths(lines) : null;
+  }
   /** T208: the everyday golfers in the tile box as movers, from mover m on (as playMovers), after the day's playback is updated for the box; the cars go
    *  to dayCarOut. Returns the next mover index */
   private dayMovers(out: Drawable[], m: number, X0: number, Y0: number, X1: number, Y1: number, now: number): number {
     const d = this.dayPlay; this.dayCarOut.length = 0; if (!d || this.dayOff) return m; // (?everyday=0: the bench's same scene with none drawn)
     const v = d.view; v.update(this.dayMinute, now, X0, Y0, X1, Y1);
     const t = this.crowdGolfers[1] ?? (this.crowdGolfers[1] = { x: 0, y: 0, group: 1, person: 0, row: 0, frame: 0 });
-    for (const p of v.people) { t.x = p.x; t.y = p.y; t.person = this.dayArt[p.golfer] ?? 0; t.row = p.row; t.frame = p.frame; crowdDrawable(out, m++, t); }
+    for (const p of v.people) { t.x = p.x; t.y = p.y; t.person = this.dayArt[p.golfer] ?? 0; t.row = p.row; t.frame = p.frame; crowdDrawable(out, m, t); if (p.lift) out[m]!.lift = p.lift; m++; }
+    this.cartDrawables(v.carts, this.dayCarOut, X0, Y0, X1, Y1); // T213: the carts
     const F = facings();
     for (let k = 0; k < v.cars.length; k++) {
       const c = v.cars[k]!, f = F[c.type % 5]![carHeading(c.ang)]!, z = CAR_SCALE * f.size;
@@ -5756,7 +5813,7 @@ export class Game {
     // the field, the tee times, the round and the owner's live group (dayRound: the same pure build a reload makes, T209)
     const seed = Math.floor(hash(this.seed, key) * 4294967296), { plan, golfers, own } = dayRound(view, g.tier, seed, owner);
     const art = golfers.map(p => p.owner ? ownerArt(p.sex) : GOLFER_ART[p.sex][p.look % GOLFER_ART[p.sex].length]!);
-    const pl: GolfPlay = { plan, view, pv: new PlayView(plan, view), key, art, finish: new DayFinish(), own: null, waves: -1 };
+    const pl: GolfPlay = { plan, view, pv: new PlayView(plan, view, { paths: this.cartPathsNow(), home: g.clubhouse }), key, art, finish: new DayFinish(), own: null, waves: -1 };
     if (owner && own) pl.own = { id: own.id, sex: owner.owner, skill: OWNER_SKILL, tee: own.tee, live: own.live, turn: own.turn, caddie: owner.caddie };
     return pl;
   }
@@ -6133,7 +6190,7 @@ export class Game {
       // (T192: with their brake lights from the closest zooms down to 8%, drawn in the sprite pass right after each car)
       const cars: Drawable[] = this.traffic ? this.traffic.visible(bx0, by0, bx1, by1, cam.z >= 0.08) : [];
       // at the street tier the townspeople and the crowd (the galleries' fans, the queues, the walking parties) are the movers, merged in by depth
-      const movers = tier === 'street' ? cars.concat(this.peds.n ? this.pedMovers(bx0, by0, bx1, by1) : [], this.crowdMovers(bx0, by0, bx1, by1, now / 1000), this.range.movers_(bx0, by0, bx1, by1), this.dayCarOut) : cars;
+      const movers = tier === 'street' ? cars.concat(this.peds.n ? this.pedMovers(bx0, by0, bx1, by1) : [], this.crowdMovers(bx0, by0, bx1, by1, now / 1000), this.range.movers_(bx0, by0, bx1, by1), this.dayCarOut, this.golfCartOut) : cars;
       // with the living ground the trees plant over every chunk on screen and as far out as a chunk's caster reach (a chunk bakes once its trees
       // are known: casterReady; a cell one tile short of that left an edge chunk unbaked for ever, T134)
       if (this.ground.castersUsed) { const CW2 = this.groundTier === 'm' ? MID_W : CHUNK_W, CH2 = this.groundTier === 'm' ? MID_H : CHUNK_H; this.plantForest(Math.floor(X0 / CW2) * CW2, Math.floor(Y0 / CH2) * CH2, (Math.floor(X1 / CW2) + 1) * CW2, (Math.floor(Y1 / CH2) + 1) * CH2, LIVING_PLANT_MARGIN); }
@@ -6629,10 +6686,11 @@ export class Game {
     for (const l of this.range.labels) this.standInPill(l, l.p, ze, l.text);
     for (const l of this.decor.labels) this.standInPill(l, l.p, ze, l.text);
     for (const l of this.placeStandIns) this.standInPill(l, l.p, ze, l.text);
+    for (const l of this.caddieLabels) this.standInPill(l.p, l.p, ze, l.text); // T213: the caddies' stand-in
   }
   /** one stand-in's label pill (drawStandIns), if p is drawn as a stand-in and its label is on screen: a world label (key: the prop, or the
    *  scene's label) */
-  private standInPill(key: unknown, p: Prop, ze: number, text?: string) {
+  private standInPill(key: unknown, p: Drawable, ze: number, text?: string) {
     const label = text ?? standInLabel(p.item); if (label === null) return;
     const w11 = this.labels.width('600 11px system-ui, sans-serif', label);
     const r = spriteRect(p, this.siRect), s = this.siPx / 11, w = w11 * s + 12 * s, h = 17 * s;

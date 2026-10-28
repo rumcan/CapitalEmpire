@@ -7,6 +7,7 @@ import { SEASON_LEN } from './calendar';
 import { dailyGolfers, GREEN_FEE_PER_ROUND, greenFeeIncome, monthlyMembershipIncome, OFF_SEASON_PLAY_DAYS } from './yearend';
 import { AM_SKILL, GOLFER_NAMES } from './play/field';
 import { playRound } from './play/round';
+import { dayEntourage } from './play/entourage';
 import { rng } from './play/shot';
 import type { CourseView, Golfer, Group, RoundPlan, Sex } from './play/types';
 
@@ -119,6 +120,8 @@ export function dayRoster(seed: number, day: number, inp: DayInputs): DayRoster 
     fees += fee;
   });
   const order = info.map((_, i) => i).sort((a, b) => info[a]!.checkIn - info[b]!.checkIn || a - b);
+  // T213: the visitors ride carts, two to a cart; the members' groups walk half the time
+  dayEntourage(golfers, groups, info.map(g => g.member), s);
   return { day, seed: s, golfers, groups, info, order, members, visitors, turned, fees };
 }
 

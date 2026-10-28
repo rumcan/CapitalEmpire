@@ -3,6 +3,7 @@
 // The stepping (HoleRun, GroupRun) is shared by playRound and the owner's live group (live.ts), so both keep one time model.
 import { TILE_M } from '../types';
 import { carryM, chooseShot, hitShot, putt, rng } from './shot';
+import { CART_PACE } from './entourage';
 import type { Club, CourseView, Golfer, Group, GolferState, Lie, Pace, PlayHole, Pt, RoundPlan, Shot, Standing, Wait } from './types';
 
 /** the walking pace (metres per game minute) */
@@ -42,6 +43,8 @@ export const STEP_IN = 0.1;
 
 /** the walk in game minutes between two points */
 export const walkMin = (a: Pt, b: Pt): number => Math.hypot(b.x - a.x, b.y - a.y) * TILE_M / WALK_M;
+/** T213: a golfer's move between two points, game minutes: the walk, or CART_PACE of it when he rides a cart (entourage.ts) */
+export const moveMin = (a: Pt, b: Pt, cart: boolean): number => walkMin(a, b) * (cart ? CART_PACE : 1);
 
 /** the routine of a stroke: the minutes before the group's next strike (a putt, a pro's full shot, a club golfer's full shot) */
 export const routineOf = (club: Club, pro: boolean): number => club === 'putter' ? PUTT_ROUTINE : pro ? PRO_ROUTINE : FULL_ROUTINE;
@@ -61,8 +64,9 @@ export function offOf(rest: Pt, pin: Pt, toward: Pt, slot: number, t0: number): 
 /** a golfer's ball during a hole: where it lies and where he stands, its lie, his strokes, whether he is holed out or picked up (holed), whether his
  *  last stroke went in (cup), when its flight ends (end), the minute he is ready to strike again (ready: his walk from his stand to his ball starts
  *  when he strikes), whether his shots come from the owner's input (owner, live.ts), his own random stream for this hole, and the model's next stroke
- *  once worked out (pend, T211: its outcome does not depend on the minute, so whether it must wait for the green can follow from where it ends) */
-export interface Player { id: number; pro: boolean; skill: number; owner: boolean; ball: Pt; stand: Pt; lie: Lie; strokes: number; holed: boolean; cup: boolean; end: number; ready: number; r: () => number; pend: Pending | null }
+ *  once worked out (pend, T211: its outcome does not depend on the minute, so whether it must wait for the green can follow from where it ends); T213:
+ *  whether he rides a cart (his moves take CART_PACE of the walk) */
+export interface Player { id: number; pro: boolean; skill: number; owner: boolean; cart: boolean; ball: Pt; stand: Pt; lie: Lie; strokes: number; holed: boolean; cup: boolean; end: number; ready: number; r: () => number; pend: Pending | null }
 
 /** the model's next stroke for a golfer, worked out before its minute: the club, where the ball ends and its lie, the penalty, whether it goes in, its
  *  flight, and whether it plays to the green (T211: aimed at the pin, or ending on the green), so it waits until the group ahead is off the green */
@@ -84,7 +88,7 @@ export class HoleRun {
   constructor(c: PlayCtx, gr: Group, h: number, start: number, g: GroupRun, ahead: GroupRun | null) {
     this.c = c; this.h = h; this.now = start; this.g = g; this.ahead = ahead;
     const tee = c.view.holes[h]!.tee;
-    this.ps = gr.players.map(id => { const q = c.who.get(id)!; return { id, pro: q.pro, skill: q.skill, owner: !!q.owner, ball: { ...tee }, stand: { ...tee }, lie: 'tee' as Lie, strokes: 0, holed: false, cup: false, end: start, ready: start, r: rng(c.seed, id, h), pend: null }; });
+    this.ps = gr.players.map(id => { const q = c.who.get(id)!; return { id, pro: q.pro, skill: q.skill, owner: !!q.owner, cart: q.cart !== undefined && !q.owner, ball: { ...tee }, stand: { ...tee }, lie: 'tee' as Lie, strokes: 0, holed: false, cup: false, end: start, ready: start, r: rng(c.seed, id, h), pend: null }; });
   }
   /** the golfer to strike next: the one farthest from the pin among those not holed (the group's order on a tie); null when the hole is over */
   next(): Player | null {
@@ -119,7 +123,7 @@ export class HoleRun {
     p.strokes += 1 + penalty;
     if (holed || p.strokes >= PICK_UP) { p.holed = true; p.strokes = Math.min(p.strokes, PICK_UP); }
     p.ball = to; p.stand = from; p.lie = lie; p.cup = holed; p.end = this.now = t + dur; p.pend = null;
-    p.ready = t + walkMin(from, to); this.last = t; this.routine = routineOf(club, p.pro);
+    p.ready = t + moveMin(from, to, p.cart); this.last = t; this.routine = routineOf(club, p.pro);
     // the landing area: clear once every ball is holed or beyond LANDING_M from the tee (all holed: once they have walked off the green too)
     const cl = this.g.clear;
     if (cl[this.h] === Infinity) {
@@ -187,7 +191,8 @@ export class GroupRun {
     const run = this.hole!, holes = this.c.view.holes, h = this.h, N = holes.length, pin = holes[h]!.pin;
     this.first[h] = run.first; this.out[h] = run.now + GREEN_CLEAR;
     if (this.clear[h] === Infinity) this.clear[h] = this.out[h]!;
-    if (h + 1 < N) { this.ready = run.now + walkMin(pin, holes[h + 1]!.tee); this.arrive[h + 1] = this.ready; }
+    // (T213: a group all in carts drives to the next tee, CART_PACE of the walk)
+    if (h + 1 < N) { this.ready = run.now + moveMin(pin, holes[h + 1]!.tee, run.ps.every(b => b.cart)); this.arrive[h + 1] = this.ready; }
     if (h === N - 1) for (const b of run.ps) this.c.done[b.id] = offOf(b.cup ? b.ball : b.stand, pin, b.stand, this.gr.players.indexOf(b.id), b.end).t1;
     this.hole = null; this.h++;
   }
@@ -362,9 +367,11 @@ function build(plan: RoundPlan, view: CourseView): Cache {
   const holes = view.holes, size = plan.strokes.length, slot: number[] = [], tracks: Track[] = [];
   plan.groups.forEach((gr, g) => { gr.players.forEach((id, k) => { slot[id] = k; tracks[id] = { tee: gr.tee, g, slot: k, rows: [] }; }); });
   for (let id = 0; id < size; id++) if (!tracks[id]) tracks[id] = { tee: 0, g: -1, slot: 0, rows: [] };
+  // (T213: a cart's golfer moves between shots at CART_PACE of the walk, as the round timed him)
+  const rides = new Uint8Array(size); for (const g of plan.golfers) if (g.cart !== undefined && !g.owner) rides[g.id] = 1;
   for (const s of plan.shots) {
     const tr = tracks[s.golfer]!, pr = tr.rows[tr.rows.length - 1];
-    const first = s.stroke === 1, wf = first ? s.from : pr!.s.from, ws = first ? s.t : pr!.s.t, we = first ? s.t : ws + walkMin(wf, s.from);
+    const first = s.stroke === 1, wf = first ? s.from : pr!.s.from, ws = first ? s.t : pr!.s.t, we = first ? s.t : ws + moveMin(wf, s.from, rides[s.golfer] === 1);
     tr.rows.push({ s, hole: s.hole, last: false, dur: s.club === 'putter' ? PUTT_FLIGHT : FLIGHT_TIME, ws, we, wf, wt: s.from, off: null });
   }
   // the last shot of each hole (the golfer is holed out or picked up) carries his step-off; the next hole's first walk starts there, never before he has reached it
