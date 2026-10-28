@@ -23,15 +23,18 @@ const TILE_PX = Math.hypot(HW, HH);
  *  - sd: the summed waves' spread about 0.5 (value noise bunches near its middle): the noise is evened out by it (a logistic stand-in for
  *    the normal curve), so the threshold's crossings spread across the whole band and the dirt thins out evenly from its inner to its
  *    outer edge;
+ *  - flat: how the threshold runs across the band: |u|^flat of the way out from its middle (u -1 at the inner edge, 1 at the outer), so the
+ *    mixed middle is wide (most of the band is tufts of both, not mostly one with a few of the other; 1 would be a straight run) and it still
+ *    meets whole dirt and whole grass at the band's edges;
  *  - edge: half the threshold's soft step in noise units (a tuft's own edge: a px or so, never a fade);
  *  - probe: how far outside an area's outline (tiles, at least, and as a share of the band) the ground is read for what it meets;
  *  - ease: the stretch of an outline (tiles, at least, and as a share of the band) over which the band eases to a hard edge where the area
  *    meets something it must not blend into (a later area, paving, water, a road) */
 export const SOFT = {
-  px: 48, min: 0.9, max: 10,
+  px: 64, min: 0.9, max: 10,
   imgPx: 1.75, resMax: 10,
   waves: [[0.4, 0.3, 401], [0.16, 0.35, 409], [0.07, 0.35, 419]] as readonly (readonly [number, number, number])[], waveMin: 2.2,
-  sd: 0.125, edge: 0.07,
+  sd: 0.125, flat: 1.7, edge: 0.07,
   probe: 0.4, probeK: 0.35, ease: 1.5, easeK: 1,
 } as const;
 
@@ -63,8 +66,8 @@ export function softCover(d: number, w: number, n: number): number {
   const h = w / 2;
   if (d >= h) return 1;
   if (d <= -h) return 0;
-  // the threshold from -edge (inner edge: every noise value passes) to 1 + edge (outer edge: none does)
-  const e = SOFT.edge, t = -e + (0.5 - d / w) * (1 + 2 * e);
+  // the threshold from -edge (inner edge: every noise value passes) to 1 + edge (outer edge: none does), flat about the middle
+  const u = (-2 * d) / w, ts = 0.5 + 0.5 * Math.sign(u) * Math.abs(u) ** SOFT.flat, e = SOFT.edge, t = -e + ts * (1 + 2 * e);
   return smooth01((n - (t - e)) / (2 * e));
 }
 

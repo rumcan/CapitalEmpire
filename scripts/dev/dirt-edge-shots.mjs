@@ -38,7 +38,7 @@ const open = async url => {
   await page.goto(url);
   await page.waitForFunction(() => window.__game?.ready, null, { timeout: 240000 });
   await page.addStyleTag({ content: '* { visibility: hidden !important } canvas { visibility: visible !important }' });
-  await page.evaluate(() => { const g = window.__game; g.prebake = () => {}; g.setSpeed(0); g.setShowGrid?.(false); window.__night = 0; g.nightAmount = () => window.__night; });
+  await page.evaluate(noLiving => { const g = window.__game; g.prebake = () => {}; g.setSpeed(0); g.setShowGrid?.(false); window.__night = 0; g.nightAmount = () => window.__night; if (noLiving) g.ground.setLiving(false, false); }, args.includes('--noliving'));
   return { page, ctx };
 };
 const look = (page, x, y, z) => page.evaluate(([x, y, z]) => { const g = window.__game; g.camEase = null; g.lookAt(x, y, z); }, [x, y, z]);
@@ -71,7 +71,22 @@ const spots = page => page.evaluate(async () => {
   const tee = sc ? sc.patches.filter(p => p.surf === 'teeDirt' || p.surf === 'teeTurf').map(p => ({ surf: p.surf, mid: mid(p.pts), first: [p.pts[0], p.pts[1]] })) : [];
   const cp = g.range?.ctx.carPark?.() ?? null;
   const park = cp ? { entrance: cp.entrance, bays: cp.bays.length, mid: cp.bays.length ? [cp.bays.reduce((s, b) => s + b.x, 0) / cp.bays.length, cp.bays.reduce((s, b) => s + b.y, 0) / cp.bays.length] : null } : null;
-  return { centre, patch: best, surfs: sc ? [...new Set(sc.patches.map(p => p.surf))] : [], desert, tee, park };
+  // a town lot's lawn of desert (the town lawns wear desert-run) meeting the open fescue: the desert lawn with the least other ground round it
+  let block = null;
+  try {
+    const ps = await import('/src/game/painted-surfaces.ts'), live = await import('/src/game/painted-surfaces-live.ts'), file = live.paintedSurfaces(), all = [];
+    for (const list of g.ground.lotPatches.values()) for (const p of list) all.push(p);
+    const boxOf = q => { let a = 1e9, b = 1e9, c = -1e9, d = -1e9; for (let i = 0; i < q.length; i += 2) { a = Math.min(a, q[i]); c = Math.max(c, q[i]); b = Math.min(b, q[i + 1]); d = Math.max(d, q[i + 1]); } return [a, b, c, d]; };
+    const boxes = all.map(p => boxOf(p.pts));
+    for (let k = 0; k < all.length; k++) {
+      const p = all[k]; if (!p.lawn || p.lawn.z < 1 || !(p.lawn.share >= 1)) continue;
+      const t = ps.lawnTexFor(p.lawn, p.pts, file), look = t ? ps.lookOfTex(t, file) : null; if (look?.family !== 'desert-run') continue;
+      const [a, b, c, d] = boxes[k]; let n = 0;
+      for (let q = 0; q < all.length; q++) { if (q === k) continue; const o = boxes[q]; if (o[2] >= a - 6 && o[0] <= c + 6 && o[3] >= b - 6 && o[1] <= d + 6) n++; }
+      if (!block || n < block.n) block = { x: (a + c) / 2, y: b, n, box: [a, b, c, d] };
+    }
+  } catch (e) { block = { error: String(e) }; }
+  return { centre, patch: best, surfs: sc ? [...new Set(sc.patches.map(p => p.surf))] : [], desert, tee, park, block: block && !block.error ? block : null, blockErr: block?.error };
 });
 const report = { modes, zooms };
 try {
@@ -85,29 +100,31 @@ try {
     if (only.has('desert') && sp.desert.length) views.push(['desert', sp.desert[0].side[0], sp.desert[0].side[1]]);
     if (only.has('tee') && sp.tee.length) views.push(['tee', sp.tee[0].mid[0], sp.tee[0].mid[1]]);
     if (only.has('park') && sp.park?.mid) views.push(['park', sp.park.mid[0], sp.park.mid[1]]);
+    if (only.has('block') && sp.block) views.push(['block', sp.block.x, sp.block.y]);
     for (const [name, x, y] of views) for (const z of zooms) {
       await look(page, x, y, z);
       for (const m of modes) { await soft(page, m); await settle(page); await shot(page, `${start}-${name}-${Math.round(z * 100)}pct-${m}`); }
     }
-    // ---- the bake times: each run re-bakes the view (invalidateAll) over the patch: the worker ms of those bakes, --reps times each mode,
-    //      alternating
-    if (start === 'range20' && only.has('bake') && sp.patch) {
-      report.bake = {}; const pooled = {};
+    // ---- the bake times: each run re-bakes the view (invalidateAll) over the patch (range20) or the desert's edge (fresh): the worker ms of
+    //      those bakes, --reps times each mode, alternating
+    const bv = start === 'range20' ? sp.patch && [sp.patch.x, sp.patch.y] : sp.desert.length && sp.desert[0].side;
+    if (only.has('bake') && bv) {
+      const bake = (report[`${start}Bake`] = {}), pooled = {};
       for (const z of [0.3, 0.08]) {
-        await look(page, sp.patch.x, sp.patch.y, z); await settle(page);
+        await look(page, bv[0], bv[1], z); await settle(page);
         for (let rep = 0; rep < reps; rep++) for (const m of modes) {
           await soft(page, m); await settle(page);
           const n0 = await page.evaluate(() => { const g = window.__game; g.ground.invalidateAll(); return g.ground.baked; });
           await settle(page);
           const ms = await page.evaluate(n0 => { const g = window.__game, l = []; for (let k = n0; k < g.ground.baked; k++) l.push(g.ground.bakeLog[k % 4096]); return l; }, n0);
           const s = [...ms].sort((a, b) => a - b), q = f => s.length ? s[Math.min(s.length - 1, Math.floor(f * s.length))] : 0;
-          (report.bake[`${Math.round(z * 100)}pct-${m}`] ??= []).push({ bakes: s.length, median: +q(0.5).toFixed(1), p95: +q(0.95).toFixed(1), mean: +(s.reduce((a, b) => a + b, 0) / (s.length || 1)).toFixed(1) });
+          (bake[`${Math.round(z * 100)}pct-${m}`] ??= []).push({ bakes: s.length, median: +q(0.5).toFixed(1), p95: +q(0.95).toFixed(1), mean: +(s.reduce((a, b) => a + b, 0) / (s.length || 1)).toFixed(1) });
           (pooled[`${Math.round(z * 100)}pct-${m}`] ??= []).push(...ms);
         }
       }
-      report.pooled = Object.fromEntries(Object.entries(pooled).map(([k, l]) => { const s = [...l].sort((a, b) => a - b), q = f => s[Math.min(s.length - 1, Math.floor(f * s.length))]; return [k, { bakes: s.length, median: +q(0.5).toFixed(1), p25: +q(0.25).toFixed(1), p75: +q(0.75).toFixed(1), p95: +q(0.95).toFixed(1), mean: +(s.reduce((a, b) => a + b, 0) / s.length).toFixed(2) }]; }));
-      console.log('bake', JSON.stringify(report.bake));
-      console.log('pooled', JSON.stringify(report.pooled));
+      report[`${start}Pooled`] = Object.fromEntries(Object.entries(pooled).map(([k, l]) => { const s = [...l].sort((a, b) => a - b), q = f => s[Math.min(s.length - 1, Math.floor(f * s.length))]; return [k, { bakes: s.length, median: +q(0.5).toFixed(1), p25: +q(0.25).toFixed(1), p75: +q(0.75).toFixed(1), p95: +q(0.95).toFixed(1), mean: +(s.reduce((a, b) => a + b, 0) / s.length).toFixed(2) }]; }));
+      console.log(start, 'bake', JSON.stringify(bake));
+      console.log(start, 'pooled', JSON.stringify(report[`${start}Pooled`]));
     }
     await ctx.close();
   }
