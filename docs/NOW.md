@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-28 23:40 SAST)
+## START HERE (kept current by the lead; last updated 2026-10-28 23:55 SAST)
 
 **Taking over as lead?** This section is the one start document. Paste this into a new Claude Code chat (desktop app, Code tab), on any
 account, with the folder `E:\Repos\CapitalEmpire\worktrees\lead-typecheck`:
@@ -66,7 +66,7 @@ never commit there.)
 **Two agents running (a new lead took over at ~15:00 on 2026-10-28; the old lead's agents stopped at the usage limit ~14:00):**
 | Ticket | Issue | Branch / worktree | State and next step |
 | --- | --- | --- | --- |
-| T262 | #769 | phase 1 + most of phase 2 **merged** (#792 at c393d0b, the owner asked); the rest on `arena/T262-grass-shine-p2` (its worktree `.claude/worktrees/agent-a0e42bfca4d14578c`; port 5186), a new PR "Closes #769" | The shine is **on by default** on main. Left: every family weighted, no sheen under sprite shadows if cheap, the Studio knobs, the main-vs-branch perf table against the owner's limits (+0.3 ms a frame, +1 ms a bake, +3 MB). **The owner: "the grass on these tees are horrible"** (hole 1's tee, bright grainy lime): the agent shoots the tee with the shine on and off and fixes it if the shine causes it; else it reports the cause (`tee-run` #590, T260's tee rim light, T263's light). |
+| T262 | #769 | phase 1 + most of phase 2 **merged** (#792 at c393d0b, the owner asked); the rest on `arena/T262-grass-shine-p2` (its worktree `.claude/worktrees/agent-a0e42bfca4d14578c`; port 5186), a new PR "Closes #769" | The shine is **on by default** on main. Left: every family weighted, no sheen under sprite shadows if cheap, the Studio knobs, the main-vs-branch perf table against the owner's limits (+0.3 ms a frame, +1 ms a bake, +3 MB). **The owner: "the grass on these tees are horrible"** (hole 1's tee, bright grainy lime): the owner then chose "like the fairway with no lines": #802 (the tee wears `fairway-concept-run`); the agent keeps the tee's shine no stronger than the fairway's. |
 | T263 | #771 (reopened) | **merged** as built (#797 at 769c79b, the owner asked); part 2 on `arena/T263-hole-ground-p2` (its worktree `.claude/worktrees/agent-a7511adc517f4f94a`; port 5187), a new PR "Closes #771" | Part 2: the shaping reads at the default Slope light (a stronger course-height light on gentle slopes; steep brush banks no harsher) and is built at `SHAPE_RATE_M3` = \$5/m³ (about \$11-12k a par 4; main charges the brush's \$15 until it lands). |
 
 **Held, waiting on the owner (not agents):**
@@ -109,7 +109,8 @@ deliveries come as PRs to review. The 3D people session's handover is `docs/HAND
 3. **Farms** (185-189): for T259. 4. **The grey stone border** (180): for T249. 5. **Scenes batch 2**: for P28 T242.
 
 ### 6. Latest merges (2026-10-28)
-#799 the starter clubhouse at the clubhouse footprint (the owner: "monterous"; the grand stand-in was drawn 4x its size: business art's 1 x 1
+#802 the course tees wear the fairway's grass, no lines (the owner: "not defined enough. it should be like the fairway with no lines";
+`tee-run` stays a Studio option) · #799 the starter clubhouse at the clubhouse footprint (the owner: "monterous"; the grand stand-in was drawn 4x its size: business art's 1 x 1
 placeholder box; `newart.ts` `footprintSpan`; the owner: "good now") · #797 T263 and #792 T262 merged as they stood (the owner asked) ·
 #785 #789 #790 T253 Round off + Smoothness for every course surface (More options › Edges, Edit hole's new Edges block, the style editor;
 saved in the look; the lie follows the rounded shape, nothing rounded plays as before), bunkers with a bowl, a rolled grass lip, a red-brown
