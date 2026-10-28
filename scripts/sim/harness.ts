@@ -17,6 +17,8 @@ import { RangeSim, defaultRangeBiz, practiceAppeal, rangeScene, type CarSlot, ty
 import { buildPark } from '../../src/game/event/carpark';
 import { GOLFER_PEOPLE } from '../../src/game/library';
 import { townTimeOf } from '../../src/game/sim/townclock';
+import { simulateCampaign } from '../../src/game/golf/campaign';
+import { SEASON_LEN } from '../../src/game/golf/calendar';
 
 // the network builds Path2D outlines for the painters; in Node a stub that ignores them is enough
 (globalThis as unknown as { Path2D: unknown }).Path2D ??= class { moveTo() {} lineTo() {} arc() {} arcTo() {} closePath() {} rect() {} };
@@ -251,8 +253,8 @@ export function setupRange(seed: number): RangeHarness {
   const cls = (x: number, y: number) => classAt(t, x, y);
   editor.addLegs(road.legs, CLASS.road, 0, road.kinds, true);
   editor.addLegs(site.drive, classOf('drive-gravel'), 0, undefined, true);
+  // T239: the guided start: no walkway laid (the walkers cross the dirt), the car park packed dirt (engine.ts newRangeGame)
   const save = defaultRangeBiz(), scene = rangeScene(site.rangePlot, site.dir, save);
-  editor.addLegs(scene.paths, classOf('cart-slab'), 0, undefined, true); save.paths = true;
   // the city's entry: the map exit nearest the town's seed (engine.ts sendTerrain); the golf state and land (sendGolf)
   const c = site.centre, entry = road.exits.reduce((a, b) => (Math.hypot(b.x - c.x, b.y - c.y) < Math.hypot(a.x - c.x, a.y - c.y) ? b : a));
   city.terrain(t.cls, entry, seed, [c], t.height, true);
@@ -260,7 +262,7 @@ export function setupRange(seed: number): RangeHarness {
   city.setGolf({ tier: golf.tier, rep: golf.rep, land: [golf.course, golf.parcel], start: 'range', exits: golf.exits });
   // the golf town day (the sim worker's 'townDay' and the engine's rangeMorning)
   const s = city.sim; s.dayLen = RANGE_DAY; s.townTraffic = 1; s.townFree = true; s.town = { t0: s.t, m0: RANGE_MORNING, rate: 1440 / RANGE_DAY };
-  const [fx, fy, fw, fh] = site.rangeFront, [px, py, pw, ph] = site.carpark, park = { id: 1, x: px, y: py, w: pw, h: ph };
+  const [fx, fy, fw, fh] = site.rangeFront, [px, py, pw, ph] = site.carpark, park = { id: 1, x: px, y: py, w: pw, h: ph, ground: 'dirt' as const };
   city.setBusinesses([{ id: 1, type: 'range', x: fx, y: fy, w: fw, h: fh }]);
   city.setParks([park]);
   // the range's golfers on its plot, parking in the car park's bays (engine.ts rangeCarPark: its built bays and first entrance)
@@ -274,4 +276,23 @@ export function setupRange(seed: number): RangeHarness {
 export function rangeClock(h: RangeHarness): RangeClock { const tt = townTimeOf(h.city.sim.town, h.city.sim.t); return { hour: tt.hour + tt.minute / 60, day: tt.day }; }
 export function rangeDemand(h: RangeHarness): DemandCtx {
   return { tier: h.range.start.save.tier, exits: h.range.start.save.exits.length, residents: h.city.town.pop, propsAppeal: 0, practiceAppeal: practiceAppeal(h.range.save) };
+}
+
+/** T221 (#610): the club's money made a season in the range runs (range-gate, range-fixture), as the town's room grows with it (City.townRoom).
+ *  The range's own takings, RANGE_SEASON (P22 2.2.1's year-1 target, about 150 cars a season), plus the year's club and tournament income of
+ *  the campaign simulator (golf/campaign.ts simulateCampaign, its 'careful' or 'careless' player: green fees, memberships, tickets, tents,
+ *  sponsors; P05's balance plan, PR #413, tunes those). Year k is season k; after the simulator's years the last one repeats */
+export type Earner = 'careful' | 'careless';
+export const RANGE_SEASON = 18000;
+const incomes: Partial<Record<Earner, number[]>> = {};
+export function seasonIncome(k: number, who: Earner): number {
+  const y = (incomes[who] ??= simulateCampaign({ years: 20, strategy: who }).history.map(r => r.totalIncome));
+  return RANGE_SEASON + (y[Math.min(y.length, Math.max(1, k)) - 1] ?? 0);
+}
+/** books the season's income in 24 equal parts, one at each game hour's end of sim second s (from 1), as business takings (Budget.bizIncome:
+ *  the treasury and the money made) */
+export function bookEarnings(h: Harness, s: number, who: Earner): void {
+  if (s % HOUR !== 0) return;
+  const k = Math.ceil(s / SEASON_LEN);
+  (h.city as unknown as { budget: { bizIncome(n: number): void } }).budget.bizIncome(seasonIncome(k, who) / (SEASON_LEN / HOUR));
 }

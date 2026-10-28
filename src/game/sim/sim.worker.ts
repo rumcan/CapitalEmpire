@@ -32,7 +32,8 @@ function postTown(ev: TownEvent[], force: boolean) {
   if (!force && !ev.length && city.sim.t - townPosted < TOWN_EVERY) return;
   townPosted = city.sim.t;
   const town = city.town;
-  post({ t: 'town', events: ev.slice(), pop: town.pop, jobs: town.jobs, built: town.built, access: town.access });
+  const room = city.townRoom();
+  post({ t: 'town', events: ev.slice(), pop: town.pop, jobs: town.jobs, built: town.built, access: town.access, ...(room !== null ? { room } : {}) });
 }
 
 /** the books: the save, the career's save, the game day now, and the ledger of the day that just closed (null unless a day did) */
@@ -168,7 +169,11 @@ scope.onmessage = (e: MessageEvent<ToSim>) => {
       case 'skip': skipUntil = m.until; forcePost = true; break;
       case 'option': city.option(m.id); break;
       case 'townState': postTown(city.restore(m.lots, m.simT, m.budget, m.money, m.career, m.shift), true); city.loadRound(m.round); city.restoreBiz(m.biz); postBudget(null); postBiz(); break;
+      // T209: the tournament day as the save keeps it (asked for by the engine's save), and a saved one resuming (after townState and townClock)
+      case 'daySave': post({ t: 'daySave', id: m.id, day: city.daySave() }); break;
+      case 'resumeDay': if (city.resumeDay(m.round, m.day)) { postBudget(null); forcePost = true; } break;
       case 'parks': city.setParks(m.defs); forcePost = true; break;
+      case 'places': { const ev = city.setPlaces(m.rects); if (ev.length) postTown(ev, true); break; }
       case 'businesses': city.setBusinesses(m.defs); post({ t: 'site', site: city.site }); postBiz(); break;
       case 'golf': { const ev = city.setGolf(m.on ? { tier: m.tier, rep: m.rep, land: m.land, start: m.start, exits: m.exits, invited: m.invited, holes: m.holes, townBoost: m.townBoost } : null); if (ev.length) postTown(ev, true); break; }
       case 'parkTest': city.parkTest(m.id, m.n); forcePost = true; break;

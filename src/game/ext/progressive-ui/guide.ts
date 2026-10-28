@@ -27,17 +27,19 @@ export interface GuideFacts {
   clubhouse?: boolean;
   /** the tour has invited the player (T095; missing = no) */
   invited?: boolean;
-  /** real seconds since the tour's invitation came in this session (T095: the invitation's step holds INVITE_HOLD_S); missing = long ago */
-  invitedAgoS?: number;
   /** false for an old save without the guide's progress (T095: a save from before the range start's ramp): no guide at all; missing = true */
   progress?: boolean;
+  /** T239, a range start's guided build: the range's lifetime golfers who bought a bucket, its upgrades owned, whether a walking path joins
+   *  the car park, the shack and the tee, whether the practice area is still for sale, and the putting green's state (missing: none of it) */
+  golfers?: number; owned?: readonly string[]; walkway?: boolean; practiceForSale?: boolean; putting?: string;
 }
 
-/** what a step points at: a UI element by its data-guide id, and/or a map spot the engine resolves */
-export interface GuideTarget { ui?: string; map?: 'newHoleSpot' | 'nearestRoad' }
+/** what a step points at: a UI element by its data-guide id, and/or a map spot the engine resolves (T239: 'walkway', rings at the car park's
+ *  edge, the shack and the tee a walking path joins) */
+export interface GuideTarget { ui?: string; map?: 'newHoleSpot' | 'nearestRoad' | 'walkway' }
 
-/** one step of the guide */
-export interface GuideStep { id: string; n: number; title: string; body: string; done: 'next' | 'auto'; target: GuideTarget }
+/** one step of the guide; reward (T239, a range start's steps): the dollars its tick pays */
+export interface GuideStep { id: string; n: number; title: string; body: string; done: 'next' | 'auto'; target: GuideTarget; reward?: number }
 
 /** an engine event that moves the guide on at once (T188): a hole built, the clubhouse placed, a car park built */
 export type GuideEvent = 'hole' | 'clubhouse' | 'carpark';
@@ -75,7 +77,7 @@ export const GUIDE: readonly GuideStep[] = Object.freeze([
     title: 'Connect your hole',
     body: 'Lay a cart path or build a road to link your hole to the road network.',
     done: 'auto',
-    target: { ui: 'rail-decor', map: 'nearestRoad' },
+    target: { ui: 'rail-course', map: 'nearestRoad' }, // T206: Course › Cart paths & roads
   },
   {
     id: 'guide-park',
@@ -111,82 +113,141 @@ export const GUIDE: readonly GuideStep[] = Object.freeze([
   },
 ]);
 
-/** a range start's steps (plan P22 2.8, T095): the welcome, hole 1, the clubhouse, the nine, the tour's invitation, the tournament, the results */
+/** a range start's steps (T239, the owner 2026-10-28: "the starting tutorial on how to build to upgrade and build some of the first driving range
+ *  features"): the guided build. Sell the first buckets, place the target greens, lay the walking path, gravel and pave the car park, turf the tee
+ *  box, buy the practice area and build its putting green, then the first hole. Every step ticks itself when its build is done (in any order),
+ *  pays its reward, and can be skipped; the guide's card lists them all (RangeGuideCard) */
 export const RANGE_GUIDE: readonly GuideStep[] = Object.freeze([
   {
-    id: 'guide-range-welcome',
+    id: 'guide-range-buckets',
     n: 1,
-    title: 'Welcome to your driving range',
-    body: 'Drivers on the county road stop to hit a bucket. Grow the range, build a course behind it, and a town will grow around you.',
-    done: 'next',
+    title: 'Sell your first buckets',
+    body: 'Drivers on the county road stop to hit a bucket at your shack. Open the range card to watch the takings and set the bucket price.',
+    done: 'auto',
     target: { ui: 'range-chip' },
+    reward: 500,
+  },
+  {
+    id: 'guide-range-greens',
+    n: 2,
+    title: 'Place the target greens',
+    body: 'On the range card, build Target greens: three greens with flags to aim at, and more golfers stop.',
+    done: 'auto',
+    target: { ui: 'range-buy-greens' },
+    reward: 1000,
+  },
+  {
+    id: 'guide-range-path',
+    n: 3,
+    title: 'Lay a walking path',
+    body: 'Course › Cart paths & roads › Walking path: from the car park to the shack and along behind the mats. Your golfers walk it instead of the dirt.',
+    done: 'auto',
+    target: { ui: 'rail-course', map: 'walkway' },
+    reward: 1000,
+  },
+  {
+    id: 'guide-range-carpark',
+    n: 4,
+    title: 'Gravel, then pave, the car park',
+    body: 'On the range card: Gravel the car park (more cars, tidier rows), then Pave the car park (painted bays and lamps).',
+    done: 'auto',
+    target: { ui: 'range-buy-gravel' },
+    reward: 1000,
+  },
+  {
+    id: 'guide-range-turf',
+    n: 5,
+    title: 'Turf the tee box',
+    body: 'On the range card, Turf the tee box: grass under the mats, golfers pay a dollar more.',
+    done: 'auto',
+    target: { ui: 'range-buy-teeturf' },
+    reward: 1000,
+  },
+  {
+    id: 'guide-range-practice',
+    n: 6,
+    title: 'Buy the practice area, build a putting green',
+    body: 'Course › Land for sale: buy the practice area beside the car park. Then Facilities › Practice › Putting green on it.',
+    done: 'auto',
+    target: { ui: 'land-buy' },
+    reward: 1000,
   },
   {
     id: 'guide-range-hole',
-    n: 2,
-    title: 'Lay hole 1',
-    body: 'Open Holes and press New hole: click a tee, then a green, and Build. The ring marks a good tee near the range.',
-    done: 'auto',
-    target: { ui: 'new-hole', map: 'newHoleSpot' },
-  },
-  {
-    id: 'guide-range-clubhouse',
-    n: 3,
-    title: 'Place the clubhouse',
-    body: 'Open Buildings and place the clubhouse by the road or the drive: the tour will not come without one.',
-    done: 'auto',
-    target: { ui: 'clubhouse-card' },
-  },
-  {
-    id: 'guide-range-nine',
-    n: 4,
-    title: 'Finish the nine',
-    body: 'Build holes until the course has nine. The town grows faster with every hole you open.',
-    done: 'auto',
-    target: { ui: 'new-hole', map: 'newHoleSpot' },
-  },
-  {
-    id: 'guide-range-invite',
-    n: 5,
-    title: "The tour's invitation",
-    body: "Nine holes, a car park and a clubhouse bring the tour's invitation to the Club Championship. Your range's car park already counts.",
-    done: 'auto',
-    target: { ui: 'season-chip' },
-  },
-  {
-    id: 'guide-range-tournament',
-    n: 6,
-    title: 'Play the tournament',
-    body: 'The first tournament closes the season the invitation names. Skip to it and watch the crowd arrive.',
-    done: 'auto',
-    target: { ui: 'chip-skip' },
-  },
-  {
-    id: 'guide-range-results',
     n: 7,
-    title: 'Review your results',
-    body: 'Check the verdict and the takings, then plan the next season.',
-    done: 'next',
-    target: { ui: 'results' },
+    title: 'Build the first hole',
+    body: 'Your land has room for a first nine; Land for sale buys more as the course grows. Open Holes, press New hole, click a tee, then a green, and Build.',
+    done: 'auto',
+    target: { ui: 'new-hole', map: 'newHoleSpot' },
+    reward: 2500,
   },
 ]);
+/** the golfers a range start's first step waits for (T239: the range's lifetime golfers who bought a bucket) */
+export const FIRST_BUCKETS = 3;
 
-/** how long a range start's invitation step stays up after the invitation comes, real seconds (T095): the clubhouse step comes before the nine,
- *  so the invitation follows the ninth hole at once and the step would otherwise never be seen */
-export const INVITE_HOLD_S = 8;
+/** a range start's guide in the save (T239, GolfProgress.guide): the steps ticked (done: their reward paid) and skipped, and whether the whole
+ *  guide was skipped. A save without it (made before T239) has no guide card */
+export interface RangeGuideSave { done: string[]; skipped: string[]; off: boolean }
+/** a new range game's guide: nothing done */
+export function newRangeGuide(): RangeGuideSave { return { done: [], skipped: [], off: false }; }
+/** a loaded guide made well formed (null: none, an old save's) */
+export function normalizeRangeGuide(x: unknown): RangeGuideSave | null {
+  if (!x || typeof x !== 'object') return null;
+  const o = x as Partial<RangeGuideSave>, ids = new Set(RANGE_GUIDE.map(s => s.id));
+  const list = (v: unknown) => (Array.isArray(v) ? [...new Set(v.filter((s): s is string => typeof s === 'string' && ids.has(s)))] : []);
+  const done = list(o.done);
+  return { done, skipped: list(o.skipped).filter(id => !done.includes(id)), off: o.off === true };
+}
+/** a step line's state: ticked (done), skipped, or still to do */
+export type GuideLineState = 'done' | 'skipped' | 'todo';
+/** the guide card's line for a step: the step, its state, and whether it is the current one (the first still to do) */
+export interface GuideLine { step: GuideStep; state: GuideLineState; current: boolean }
+/** the guide card's lines (null: no guide: an old save's, skipped, or every step done or skipped) */
+export function rangeGuideLines(g: RangeGuideSave | null | undefined): GuideLine[] | null {
+  if (!g || g.off) return null;
+  let cur = false;
+  const lines = RANGE_GUIDE.map(step => {
+    const state: GuideLineState = g.done.includes(step.id) ? 'done' : g.skipped.includes(step.id) ? 'skipped' : 'todo';
+    const current = state === 'todo' && !cur; if (current) cur = true;
+    return { step, state, current };
+  });
+  return cur ? lines : null;
+}
+/** the step the guide is on (1..7: the first still to do), or undefined when there is no guide running (an old save's, skipped, or finished) */
+export function rangeGuideCurrent(g: RangeGuideSave | null | undefined): number | undefined {
+  return rangeGuideLines(g)?.find(l => l.current)?.step.n;
+}
+/** the steps whose build is done now and not yet ticked (or skipped), ticked in the save; the caller pays their rewards */
+export function rangeGuideTick(g: RangeGuideSave, f: GuideFacts): GuideStep[] {
+  if (g.off) return [];
+  const out = RANGE_GUIDE.filter(s => !g.done.includes(s.id) && !g.skipped.includes(s.id) && rangeStepMet(s.n, f));
+  for (const s of out) g.done.push(s.id);
+  return out;
+}
+/** Skip on a step's line (a ticked one stays ticked); false when there is no such step to skip */
+export function rangeGuideSkip(g: RangeGuideSave, id: string): boolean {
+  if (!RANGE_GUIDE.some(s => s.id === id) || g.done.includes(id) || g.skipped.includes(id)) return false;
+  g.skipped.push(id); return true;
+}
+/** Skip the guide: the whole card goes for good */
+export function rangeGuideOff(g: RangeGuideSave): void { g.off = true; }
 
 /** the steps for the facts' start: a range start's (RANGE_GUIDE), else the old start's (GUIDE) */
 export function guideTable(f: Pick<GuideFacts, 'start'>): readonly GuideStep[] { return f.start === 'range' ? RANGE_GUIDE : GUIDE; }
 
-/** whether a range start's step n is met (T095): 2 hole 1 built, 3 the clubhouse placed, 4 nine holes, 5 invited (INVITE_HOLD_S ago), 6 a
- *  tournament run */
+/** whether a range start's step n is met (T239): 1 FIRST_BUCKETS golfers served, 2 the target greens built, 3 a walking path joining the car
+ *  park, the shack and the tee, 4 the car park paved (after its gravel), 5 the tee box turfed, 6 the practice area bought and its putting green
+ *  open, 7 a hole built */
 function rangeStepMet(n: number, f: GuideFacts): boolean {
+  const own = (id: string) => !!f.owned?.includes(id);
   switch (n) {
-    case 2: return (f.holes ?? 0) >= 1;
-    case 3: return !!f.clubhouse;
-    case 4: return (f.holes ?? 0) >= 9;
-    case 5: return !!f.invited && (f.invitedAgoS ?? Infinity) >= INVITE_HOLD_S;
-    case 6: return f.runs >= 1;
+    case 1: return (f.golfers ?? 0) >= FIRST_BUCKETS;
+    case 2: return own('greens');
+    case 3: return !!f.walkway;
+    case 4: return own('pave');
+    case 5: return own('teeturf');
+    case 6: return !f.practiceForSale && f.putting === 'open';
+    case 7: return (f.holes ?? 0) >= 1;
     default: return false;
   }
 }

@@ -132,8 +132,13 @@ test('round: deterministic for a seed, every golfer finishes 18 holes, shots sor
   assert.equal(JSON.stringify(a), JSON.stringify(b), 'same seed, same round');
   for (const g of f) { assert.equal(a.strokes[g.id].length, 18); assert.ok(a.strokes[g.id].every(k => k >= 1), 'a stroke on every hole'); assert.ok(a.done[g.id] > 0, 'finished'); }
   for (let i = 1; i < a.shots.length; i++) assert.ok(a.shots[i].t >= a.shots[i - 1].t, 'shots sorted by t');
+  // T211: on each hole the groups tee off one after another, each after the one ahead has teed off and its balls have flown (in the order they play
+  // the hole, which a wave-through can change)
   const firstOn = (gi: number, h: number) => Math.min(...a.shots.filter(s => s.hole === h && s.stroke === 1 && gs[gi].players.includes(s.golfer)).map(s => s.t));
-  for (let h = 0; h < 18; h++) for (let gi = 1; gi < gs.length; gi++) assert.ok(firstOn(gi, h) >= firstOn(gi - 1, h) + 3 - 1e-9, `group ${gi} on hole ${h}`);
+  for (let h = 0; h < 18; h++) {
+    const t = gs.map((_, gi) => firstOn(gi, h)).sort((x, y) => x - y);
+    for (let k = 1; k < t.length; k++) assert.ok(t[k] >= t[k - 1] + 1, `hole ${h}: the ${k}th group to tee off ${(t[k] - t[k - 1]).toFixed(2)} min after the one before`);
+  }
 });
 
 test('round: the synthetic course over 10 seeds: tier-5 pros between par-2 and par+3, tier-1 amateurs (no pros) between par+10 and par+24', () => {

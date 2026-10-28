@@ -149,7 +149,7 @@ export interface Ledger {
   money: number;
 }
 /** the budget as saved: the sim s of day 1's midnight (base), the treasury, loans, days in the red, bankruptcy and the ledgers; feeKeys: the lots whose connection fee is paid (the City's; optional, missing = none) */
-export interface BudgetSave { base: number; money: number; loans: number; debtDays: number; bankrupt: boolean; history: Ledger[]; feeKeys?: string[] }
+export interface BudgetSave { base: number; money: number; loans: number; debtDays: number; bankrupt: boolean; history: Ledger[]; feeKeys?: string[]; /** T221: the money made (Budget.earned; absent in older saves) */ earned?: number }
 
 /** The city's budget. Spending and grants move the treasury when they happen and show in the next day's ledger; endDay books the rest. */
 export class Budget {
@@ -169,6 +169,15 @@ export class Budget {
   history: Ledger[] = [];
   /** dev sandbox: spending is booked in the ledger but the treasury does not move, and endDay keeps it and the debt at their values (not saved) */
   unlimited = false;
+  /** T221 (#610): the money the club has made, $: the running total of its own income (business takings: the range, green fees, memberships,
+   *  tickets, sponsors, tents; tolls, parking, a positive payout). Not the treasury: spending never lowers it, and the dev sandbox's unlimited
+   *  money never raises it. The town's own payments (property tax, land sales, connection fees) and the milestone grants are left out, as the
+   *  town grows with it (City: earnedTarget) and must not feed itself */
+  earned = 0;
+  /** T221: true for a save from before the money made was kept (BudgetSave.earned absent): the City seeds earned from its town once (not saved) */
+  earnedUnknown = false;
+  /** adds a club income of n $ to the money made (costs, n <= 0, are not income) */
+  private made(n: number) { if (n > 0 && Number.isFinite(n)) this.earned += n; }
 
   /** the game day (1 from base on) of sim time t, s; a microsecond is forgiven, as the clock adds DT = 0.1 s and drifts a hair
    *  (1440 calls of DT land on 1439.9999999998), so the midnight is booked on the step that reaches it */
@@ -186,17 +195,17 @@ export class Budget {
   /** pays n $ of milestone grant into the treasury now: shows as income in the next ledger */
   grant(n: number) { this.money += n; this.today.grants += n; }
   /** books n $ of toll takings into the treasury now: shows as toll income in the next ledger (as grant does, unlimited included) */
-  toll(n: number) { this.money += n; this.today.toll = (this.today.toll ?? 0) + n; }
+  toll(n: number) { this.money += n; this.today.toll = (this.today.toll ?? 0) + n; this.made(n); }
   /** books n $ of parking fees into the treasury now: shows as parking income in the next ledger (as toll does, unlimited included) */
-  parking(n: number) { this.money += n; this.today.parking = (this.today.parking ?? 0) + n; }
+  parking(n: number) { this.money += n; this.today.parking = (this.today.parking ?? 0) + n; this.made(n); }
   /** books n $ of land sales into the treasury now: shows as sales income in the next ledger (as toll does, unlimited included) */
   sale(n: number) { this.money += n; this.today.sales = (this.today.sales ?? 0) + n; }
   /** books n $ of connection fees into the treasury now: shows as fees income in the next ledger (as sales does, unlimited included) */
   fee(n: number) { this.money += n; this.today.fees = (this.today.fees ?? 0) + n; }
   /** books n $ of business takings (the visit businesses' sales) into the treasury now: shows in the next ledger's business line (as toll does, unlimited included) */
-  bizIncome(n: number) { this.money += n; this.today.biz = (this.today.biz ?? 0) + n; }
+  bizIncome(n: number) { this.money += n; this.today.biz = (this.today.biz ?? 0) + n; this.made(n); }
   /** books n $ of a round's payout (negative: a cost) into the treasury now: shows in the next ledger as payout, booked in net (as toll does) */
-  payout(n: number) { this.money += n; this.today.payout = (this.today.payout ?? 0) + n; }
+  payout(n: number) { this.money += n; this.today.payout = (this.today.payout ?? 0) + n; this.made(n); }
   /** the loan units a city of pop residents can hold: one more per 2000 residents, at most 6 */
   maxLoans(pop: number): number { return Math.min(6, 1 + Math.floor(pop / 2000)); }
   /** takes one loan unit (LOAN into the treasury) if the city of pop residents can hold another; false if not */
@@ -230,12 +239,13 @@ export class Budget {
     return L;
   }
   /** the save: the treasury, loans, days in the red, bankruptcy and a copy of the ledgers */
-  toJSON(): BudgetSave { return { base: this.base, money: this.money, loans: this.loans, debtDays: this.debtDays, bankrupt: this.bankrupt, history: this.history.slice() }; }
+  toJSON(): BudgetSave { return { base: this.base, money: this.money, loans: this.loans, debtDays: this.debtDays, bankrupt: this.bankrupt, history: this.history.slice(), earned: Math.round(this.earned) }; }
   /** a budget from a save (base 0 if the save has none; ledgers from before grants read as no grant); from(undefined, money) is a fresh budget with that treasury (old saves; START_MONEY if none given) */
   static from(s?: BudgetSave, money?: number): Budget {
     const b = new Budget();
     if (!s) { b.money = money ?? START_MONEY; return b; }
     b.base = s.base ?? 0; b.money = s.money; b.loans = s.loans; b.debtDays = s.debtDays; b.bankrupt = s.bankrupt; b.history = s.history.slice(-30).map(l => ({ ...l, grants: l.grants ?? 0 }));
+    if (typeof s.earned === 'number' && Number.isFinite(s.earned)) b.earned = Math.max(0, s.earned); else b.earnedUnknown = true;
     return b;
   }
 }

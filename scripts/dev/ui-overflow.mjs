@@ -1,7 +1,9 @@
 // T193 (#502; the owner: "horizontal menu sliders" are not cool): no rail, flyout or tool panel overflows sideways or off the screen. Opens the
 // game (every tool shown: Settings > Show every tool now) at 1366 x 768 and 1600 x 900, at 100% and 125% UI scale; opens every rail group's
 // flyout and every submenu in it; picks every leaf and looks at the tool panel it opens (and the Junctions panel with a junction selected, where
-// the roundabout's note once sat over a horizontal scrollbar), and Help › Keys (T202: F1, the Keys sheet scrolled through). A box fails when it is wider than it shows (its content scrolls or is cut
+// the roundabout's note once sat over a horizontal scrollbar), Help › Keys (T202: F1, the Keys sheet scrolled through), and Course › Holes with a
+// hole built (T205: the plain panel with the badges and the status line's ✎ Edit hole, the hole card, and the editor's shape step, top and
+// end), the floating Grass panel and (a range start) the range card, top and end (T206: both once ran past the bottom at 125%). A box fails when it is wider than it shows (its content scrolls or is cut
 // sideways), when any element in it scrolls sideways, or when it passes the screen's edge. Nothing is saved: every POST is answered here.
 //   npm run ui:overflow -- --url http://localhost:5173 [--channel msedge|chrome] [--quick]
 import { chromium } from 'playwright-core';
@@ -15,7 +17,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 const check = () => {
   const out = [], W = innerWidth, H = innerHeight, se = document.scrollingElement;
   if (se && (se.scrollTop || se.scrollLeft)) out.push(['the page', `scrolled (${se.scrollLeft}, ${se.scrollTop})`]);
-  const boxes = [...document.querySelectorAll('[data-testid="rail"], [data-flyout-col], [data-testid="tool-panel"], [data-testid="help"]')].filter(e => e.offsetParent !== null);
+  const boxes = [...document.querySelectorAll('[data-testid="rail"], [data-flyout-col], [data-testid="tool-panel"], [data-testid="help"], [data-testid="hole-card"], [data-testid="range-card"], [data-testid="grass-panel"]')].filter(e => e.offsetParent !== null);
   for (const b of boxes) {
     const name = b.getAttribute('data-testid') ?? `flyout ${b.getAttribute('data-flyout-col')}`, r = b.getBoundingClientRect();
     if (b.scrollWidth > b.clientWidth + 1) out.push([name, `content ${b.scrollWidth}px wide in ${b.clientWidth}px`]);
@@ -110,9 +112,67 @@ try {
       await p.evaluate(() => { const c = document.querySelector('[data-testid="help"]'); c.scrollTop = c.scrollHeight; }); await sleep(150);
       await look('Help › Keys, scrolled to its end');
     }
+    // Course › Holes with a hole built (T205): New hole's wizard lays one (a stand-in projection, 8 px a tile, so no press lands on a built
+    // hole's line); the plain panel, the hole card from its badge, then the card's Edit hole: the editor's shape step, at its top and its end
+    await p.keyboard.press('Escape'); await p.keyboard.press('Escape'); await sleep(150);
+    const built = await p.evaluate(() => {
+      const g = window.__game, [x, y, w, h] = g.golf?.parcels?.[0] ?? g.golf?.parcel ?? g.golf?.course ?? [0, 0, 0, 0], P = 8, ts = (a, b) => ({ x: a * P, y: b * P });
+      g.closeHoleCard?.(); g.setTool('course'); if (g.tool !== 'course') return 'the Course tool did not open';
+      const L = Math.min(110, Math.floor(h / 2) - 40); let why = 'no land';
+      for (let k = 0; k * 64 + 30 < w && L > 30; k++) for (const r of [0, 1]) {
+        const tx = x + 22 + 64 * k, ty = y + 18 + r * Math.floor(h / 2);
+        if (!g.paint.setPlan()) return 'New hole did not open';
+        const wz = g.paint.wizard; wz.suggestM = 0;
+        wz.press({ x: tx, y: ty }, tx * P, ty * P, ts); wz.press({ x: tx, y: ty + L }, tx * P, (ty + L) * P, ts);
+        const c = wz.check(), n = wz.hole; if (c.ok && g.paint.buildPlan()) { g.paint.setHole(n); g.paint.setBrush(g.paint.brushKind); g.emit(); return n; }
+        why = c.why; g.paint.cancelPlan();
+      }
+      g.paint.setBrush(g.paint.brushKind); g.emit(); return why;
+    });
+    if (typeof built !== 'number') fails.push(`${tag} · Course › Holes: no hole could be built (${built})`);
+    else {
+      const top = () => p.evaluate(() => { const t = document.querySelector('[data-testid="tool-panel"]'); if (t) t.scrollTop = 0; });
+      const end = () => p.evaluate(() => { const t = document.querySelector('[data-testid="tool-panel"]'); if (t) t.scrollTop = t.scrollHeight; });
+      await sleep(400); await top(); await look('Course › Holes, a hole built');
+      if (!(await p.$('[data-testid="status-edit"]'))) fails.push(`${tag} · Course › Holes: the status line has no ✎ Edit hole`);
+      await p.click(`[data-hole="${built}"]`); await sleep(350);
+      if (!(await p.$('[data-testid="hole-card"]'))) fails.push(`${tag} · Course › Holes: badge ${built} did not open the hole card`);
+      else {
+        await look('the hole card');
+        await p.click('[data-testid="hole-edit"]'); await sleep(450);
+        const st = await p.evaluate(() => ({ mode: window.__game.paint.mode, editing: window.__game.paint.editingHole }));
+        if (st.mode !== 'plan' || st.editing !== built) fails.push(`${tag} · Course › Holes: the card's Edit hole did not open the editor (${JSON.stringify(st)})`);
+        await look("Course › Holes, the editor's shape step"); await end(); await sleep(150); await look("Course › Holes, the editor's shape step, scrolled to its end");
+      }
+      await p.evaluate(() => { const g = window.__game; g.closeHoleCard?.(); g.paint.setBrush(g.paint.brushKind); g.emit(); });
+    }
+    // the floating Grass panel (Select with the Grass panel on; T206: its height follows the UI scale)
+    await p.evaluate(() => { const g = window.__game; g.closeHoleCard?.(); g.setTool('select'); g.grassPanel = true; g.emit(); }); await sleep(350);
+    if (await p.$('[data-testid="grass-panel"]')) { await look('the Grass panel'); await p.evaluate(() => { const c = document.querySelector('[data-testid="grass-panel"]'); c.scrollTop = c.scrollHeight; }); await sleep(150); await look('the Grass panel, scrolled to its end'); }
+    await p.evaluate(() => { const g = window.__game; g.grassPanel = false; g.emit(); });
     await ctx.close();
+    // the range card (T206): a range start, the card at its top and its end
+    {
+      const rc = await browser.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: 1 });
+      await rc.addInitScript(s => { try { localStorage.clear(); localStorage.setItem('capitalempire.uiScale', String(s)); } catch { /* none */ } }, S);
+      const q = await rc.newPage();
+      await q.route('**/*', r => { const x = r.request(); return x.method() !== 'GET' && x.method() !== 'HEAD' ? r.fulfill({ status: 200, contentType: 'application/json', body: '{"ok":true}' }) : r.continue(); });
+      await q.goto(`${URL}/?start=range&unlock=0`, { waitUntil: 'domcontentloaded', timeout: 180000 });
+      await q.waitForFunction(() => window.__game?.ready, null, { timeout: 300000 });
+      await sleep(2000);
+      await q.evaluate(() => { const g = window.__game; g.setSpeed(0); document.querySelectorAll('button[aria-label="Close"]').forEach(x => x.click()); g.openRangeCard(true); g.emit(); });
+      await sleep(500);
+      const lookQ = async what => { looked++; for (const [box, why] of await q.evaluate(check)) fails.push(`${tag} · ${what} · ${box}: ${why}`); };
+      if (!(await q.$('[data-testid="range-card"]'))) fails.push(`${tag} · the range card did not open on a range start`);
+      else {
+        await lookQ('the range card');
+        await q.evaluate(() => { const c = document.querySelector('[data-testid="range-card"]'); c.scrollTop = c.scrollHeight; }); await sleep(150);
+        await lookQ('the range card, scrolled to its end');
+      }
+      await rc.close();
+    }
     console.log(`${tag}: looked ${looked} times so far, ${fails.length} failures so far`);
   }
 } finally { await browser.close(); }
 if (fails.length) { console.log(`FAIL: ${fails.length}`); for (const f of fails.slice(0, 60)) console.log('  ' + f); process.exit(1); }
-console.log(`OK: no rail, flyout, tool panel or Help › Keys overflows (${looked} looks, ${SIZES.length} sizes x ${SCALES.length} UI scales)`);
+console.log(`OK: no rail, flyout, tool panel, Help › Keys, Course › Holes, hole card, Grass panel or range card overflows (${looked} looks, ${SIZES.length} sizes x ${SCALES.length} UI scales)`);

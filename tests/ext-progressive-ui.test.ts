@@ -37,8 +37,8 @@ const f = (over: Partial<PlayerProgressFacts> = {}): PlayerProgressFacts => ({ .
 
 /** every golf rail group and tool (the Business tool is the town's: golf games never list it) */
 const GOLF_GROUPS = ['select', 'course', 'roads', 'junction', 'transport', 'paint', 'bulldoze'];
-const GOLF_TOOLS = ['select', 'course', 'path', 'buildings', 'props', 'greenkeeping', 'road', 'lane', 'downgrade', 'junction', 'bus', 'park', 'toll', 'paint', 'bulldoze'];
-const SHAPE_BY_HAND = ['fairway', 'green', 'tee', 'rough', 'bunker', 'water'];
+const GOLF_TOOLS = ['select', 'course', 'path', 'buildings', 'props', 'greenkeeping', 'practice', 'road', 'lane', 'downgrade', 'junction', 'bus', 'park', 'toll', 'paint', 'bulldoze'];
+const SHAPE_BY_HAND = ['fairway', 'green', 'tee', 'rough', 'bunker', 'water', 'waste']; // T222 added the Waste area
 
 describe('the stage table (P23 4.2, T117): every "when" row', () => {
   const rows: [string, Partial<PlayerProgressFacts>, OnboardingStage][] = [
@@ -80,10 +80,10 @@ describe('the stage table (P23 4.2, T117): every "when" row', () => {
 });
 
 describe('the stage table (P23 4.2, T117): every "open" row', () => {
-  it('stage 1: Select, Holes (New hole only), Paths (walking, dirt, gravel drive), Buildings, Bulldoze; the rest locked in place', () => {
+  it('stage 1: Select, Holes (New hole only), Paths (walking, dirt, gravel drive), Buildings, Practice, Bulldoze; the rest locked in place', () => {
     const s = computeProgressiveUiState(f());
     assert.deepEqual(s.visibleGroups, ['select', 'course', 'bulldoze']);
-    assert.deepEqual(s.visibleTools, ['select', 'course', 'path', 'buildings', 'props', 'bulldoze']);
+    assert.deepEqual(s.visibleTools, ['select', 'course', 'path', 'buildings', 'props', 'practice', 'bulldoze']);
     assert.deepEqual(s.visibleCourseBrushes, []);
     assert.equal(s.shapeByHand, false);
     assert.deepEqual(s.lockedCourseClasses.map(c => c.id), ['cart-slab']);
@@ -99,7 +99,7 @@ describe('the stage table (P23 4.2, T117): every "open" row', () => {
     assert.equal(s.stageLabel, 'Stage 1: Your first hole');
   });
 
-  it('stage 2: Shape by hand (six surfaces), Paint, the cement slab path and the rest of the options open; the town tools stay locked', () => {
+  it('stage 2: Shape by hand (its surfaces, the Waste area with them), Paint, the cement slab path and the rest of the options open; the town tools stay locked', () => {
     const s = computeProgressiveUiState(f({ playableHoles: 1 }));
     assert.deepEqual(s.visibleGroups, ['select', 'course', 'paint', 'bulldoze']);
     assert.ok(s.visibleTools.includes('paint'));
@@ -120,7 +120,7 @@ describe('the stage table (P23 4.2, T117): every "open" row', () => {
     assert.deepEqual(s.lockedGroups, []);
     assert.deepEqual(s.lockedTools, []);
     assert.ok(s.visibleGolfChips.includes('event') && s.visibleGolfChips.includes('land') && s.visibleGolfChips.includes('holes'));
-    assert.deepEqual(s.visibleCourseBrushes.length, 7);
+    assert.deepEqual(s.visibleCourseBrushes.length, 8);
     assert.equal(s.stageLabel, 'Stage 3: The town');
   });
 
@@ -142,7 +142,7 @@ describe('the stage table (P23 4.2, T117): every "open" row', () => {
     assert.deepEqual(s.lockedTools, []);
     assert.deepEqual(s.lockedCourseClasses, []);
     assert.equal(s.shapeByHand, true);
-    assert.equal(s.visibleCourseBrushes.length, 7);
+    assert.equal(s.visibleCourseBrushes.length, 8);
     assert.equal(s.visibleGolfChips.length, Object.keys(CHIP_STAGE).length);
     assert.deepEqual(s.visibleFineControls, ['snapToggle', 'pieceAngle', 'pieceScale', 'heightBrush', 'surfaceTone', 'customStyle']);
     assert.deepEqual(s.newGroups, []);

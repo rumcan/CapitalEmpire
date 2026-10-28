@@ -60,6 +60,26 @@ gains `fx, fy, ax, ay`.
 `npm run typecheck`, the full `npm test` (the repack moves the digests `tests/compose.test.ts` pins: update them), `npm run bench` before and
 after (GAME-PLAN 2.3: the atlas grows by the new walker pages), and the game itself: a tournament day at 30% and 12% zoom, screenshots.
 
+## Who is in the game (2026-10-27, T203 #531)
+The pack is the wiring: the town's walkers pick a person by index over `WALKER_PEOPLE` (engine.ts `Pedestrians(seed,
+WALKER_PEOPLE.length, ...)`) and the crowd by a seeded hash over `SPECTATOR_PEOPLE`, so a new person folder with its sheets, repacked,
+walks the town or joins the crowd with no code change. The tables are sorted by id, so a repack moves the indices (nothing saves them).
+- **Townspeople (15, `art/people3d`):** `base_kid`, `base_man`, `base_woman`, `town_m_business`, `town_m_elder`, `town_m_mechanic`,
+  `town_w_nurse`, `town_w_shopper`, and from T203 `town_w_waitress`, `town_w_student`, `town_m_jogger`, `town_m_postman`, `town_k_boy`,
+  `town_k_girl`, `town_w_elder`.
+- **Spectators (15, `art/spectators/spec_*`, every one with clap, cheer, sit and sit_clap):** `spec_m_bucket_hat`, `spec_m_dad`,
+  `spec_m_plaid`, `spec_m_polo_visor`, `spec_m_sun_hat`, `spec_m_young_cap`, `spec_w_older_cardigan`, `spec_w_sunhat_dress`,
+  `spec_w_visor_pastel`, `spec_w_windbreaker`, `spec_w_young_shorts`, and from T203 `spec_teen_boy`, `spec_teen_girl`, `spec_k_boy_cap`,
+  `spec_k_girl_pigtails` (the kids sit at 0.32-0.34 m).
+- **Golfers (10, `art/golfers/golf_*`):** unchanged.
+- **Not packed: staff.** `staff_marshal_m`, `staff_marshal_w`, `staff_volunteer_w`, `staff_caddie_m`, `staff_security_m` and (from the last
+  batch) `staff_vendor_m` have their sheets in `art/spectators/`, but the packer takes only `spec_*` there and the game has no staff yet.
+  Their own ticket: a `staff_*` group in prep-sprites.mjs (like `crowd('golfers', ...)`) and somewhere to stand them (the gates, the tents, the
+  marshals along the ropes).
+- **The atlas after T203:** 22 pages in library.ts (the sprite pages 0-16 kept byte for byte, the walker pages 17-21), 74 with the other
+  packs; the residency plan holds GAME-PLAN 2.3 by construction (dpr 2: 95.8 of 96 MB, dpr 1: 31.9 of 32 MB; one page more costs about 3
+  streamed slots of each tier).
+
 ## Status (2026-10-25)
 Done on `lead/people-in-game`: the pack (19 atlas pages, the walker pages 15-18; main's sprite pages 0-14 kept byte for byte), the data
 (8-float galleries, 6-float walkers), `crowdview.ts` with `tests/crowdview.test.ts`, and the engine (crowdMovers at the street tier; the old

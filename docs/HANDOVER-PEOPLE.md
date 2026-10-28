@@ -1,5 +1,50 @@
 # Handover: the 3D people (townspeople, spectators, tournament staff)
 
+## 0. START HERE (refreshed 2026-10-26 05:40 UTC)
+**Start prompt for a fresh chat (paste as is):**
+> You are continuing the CapitalEmpire 3D people work: spectators, golfers and townspeople made with RUN.world and Meshy, rendered to
+> sprite sheets and packed into the game. Read `CLAUDE.md`, `docs/AGENT-BRIEF.md` (on main), then `docs/HANDOVER-PEOPLE.md` section 0
+> on branch `art/people-ground-20261024` (worktree `E:\Repos\CapitalEmpire\worktrees\people-ground`; if the worktree is gone,
+> `git -c checkout.workers=1 worktree add worktrees/people-ground art/people-ground-20261024`). First check the batch: the last
+> lines of `output/people-cast.log` in that worktree and whether `make-cast-loop.sh` still runs. When every person in
+> `art/people-cast.json` has its `sheet.json` (spectators also `clap/cheer/sit/sit_clap.json`), look at the new previews, commit them,
+> and bring them into the game as section 7 says (a branch from `origin/main`, merge this branch, `prep-sprites.mjs`, keep main's
+> sprite pages 0-14, typecheck and the touched tests, a PR). Ask the owner before pushing to main or merging.
+
+**What and why.** The owner: *"see if you can create some more. some golfers would be nice"*, *"we need golfers who are swinging golf
+clubs"*, then *"use Meshy credits for the spectators' crowd clips (clapping, cheering, sitting, seated clap)"*, *"can you add the new
+models and rigs to the game?"* and *"build playing golf into the game"*.
+
+**Done and on main:**
+- **PR #238:** 31 people in the game (10 golfers with the golf_drive swing and a drawn club, 13 spectators with clap, cheer, sit and
+  seated clap, staff, townspeople), all drawn as 3D sprites. Plan: `docs/PEOPLE-IN-GAME.md`.
+- **PR #258:** golf play (the field, the round, the crowd following the play, the owner playing in the tournament). Plan, status and
+  open items: `docs/GOLF-PLAY.md` "Status".
+
+**Done (T203, #531, 2026-10-27):** the batch finished on 2026-10-26 06:33 UTC (12 made) and the 12 were checked and brought into the
+game: the 7 townspeople walk the town and the 4 spectators (teens and kids, with all four crowd clips) join the crowd; `staff_vendor_m` is
+kept in `art/spectators/` but not packed (no staff in the game yet). Who is in, and the atlas numbers: `docs/PEOPLE-IN-GAME.md` "Who is in
+the game". The batch loop is over.
+
+**Tools and services.**
+- **RUN CLI:** `rundot` at `%LOCALAPPDATA%\Programs\Rundot`, signed in as the owner. TrickOrTreat's game id `AFjPSjQH9kbcCl57sgO3`,
+  read only. Credits: `RUNDOT_BETA_FEATURES=1 rundot credits --period today --group-by model`.
+- **Meshy API:** the key is in `~/.meshy/api-key` (never commit it); 18 Meshy credits left. `meshy-base-clip.mjs` rigs a base person
+  and adds library actions (section 1c).
+- **Servers:** no dev server of this work is running.
+- **Scripts:** in `scripts/assets/people3d/`: `make-cast.mjs`, `make-pictures.mjs`, `meshy-base-clip.mjs`, `plain-glb.mjs`,
+  `strip-glb-images.mjs`, `cut-plate.mjs`, `rig-local-person.mjs`, `render-person-3d.mjs`.
+
+**Left to do, in order.**
+1. ~~Finish the batch and bring the 12 people into the game~~ (done, T203).
+2. Staff (marshals, volunteers, caddies, security, the vendor) are packed nowhere yet; the crowd code draws only `spec_*`.
+3. The grandstand's real seat rows (`docs/PEOPLE-IN-GAME.md` "Status").
+4. A putt clip: Meshy's library has none, so putts reuse the swing's address frames.
+5. The golf-play open items in `docs/GOLF-PLAY.md`.
+
+**Check it worked:** the batch log ends with "batch over"; every new person's `preview.png` shows them whole in all 8 facings with no
+ground plate; the render log says about 1.65 to 1.71 units tall.
+
 Written 2026-10-24 by Claude (the lead) for the next AI. **Read this first, then `docs/SPECTATOR-ART.md`** (the full brief: the cast, the
 clips, the wayward-ball scene, the quality bar, the traps). This file is the state of play and what to do next.
 
@@ -182,3 +227,12 @@ spending RUN credits and make one person before a batch. Ask before downloading 
 Commit messages end with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`; git here needs
 `GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=safe.directory GIT_CONFIG_VALUE_0=*`. Other sessions work in this repo too: add only your own files
 (`git status` shows theirs), never revert theirs. The code side (the game, M2.5 next) is LEAD.md and NOW.md, not this file.
+
+## 7. In the game (2026-10-25 18:30 UTC): PR #238 merged into main
+The spectators, golfers and new townspeople are in the game (main `6ea3b0a`; the plan and contract: `docs/PEOPLE-IN-GAME.md` on main).
+This branch's art up to `1a096f9` is in main with it. The batch loop here (`make-cast-loop.sh`) still makes the last 12 people (picture-first)
+after RUN's daily cap. **To bring them into the game:** a new branch from `origin/main`, merge this branch, run
+`node scripts/assets/prep-sprites.mjs` (it packs townspeople, spectators with all four crowd clips, and golfers with the swing), and if the
+fresh pack moves main's sprite pages 0-14 (it moved 7 sprites by under a pixel on 2026-10-25: their sources differ slightly from what main's
+pages were packed from), keep main's `src/assets/atlas/sprites-0..14-*.webp` and `LIBRARY` lines and take only the walker pages and exports;
+then typecheck, the touched tests (crowdview, galleries, golf-gallerydraw, gates, ext-pedestrians, bus, compose, newart), PR, merge.

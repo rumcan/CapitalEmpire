@@ -16,6 +16,55 @@ Each item gives its **angle code** (below), its size, its game id and a prompt. 
 **Status marks:** **(stand-in)** the game draws a labelled stand-in today, so this picture goes straight in. **(new)** nothing places it yet:
 the art can be made now, and a small ticket places it in the game. **(in the game)** already drawn: listed only so the set is complete.
 
+## Progress (kept current by the lead; the owner, 2026-10-27: "mark off the list things already done")
+
+**Marks:** ✅ in the game · 🎨 made, going in · ⏳ being made now · nothing: still to make. An item gets ✅ the day it is in the game, with the PR.
+
+**The owner's standing rules:** finished art goes straight into the game without asking ("put stuff in the game, dont ask"); the old look
+stays a Studio option. Ground textures follow [art/GROUND-TEXTURE-METHOD.md](art/GROUND-TEXTURE-METHOD.md).
+
+**Who makes what** (the owner, 2026-10-28: "use the run.world credits for 3d work. we wont top up, we will use the chat gpt image generator for iamges"):
+- **ChatGPT's image generator** (the owner runs it) makes every 2D picture from now on: scenes, portraits, ground layers, sprites on magenta. The next prompts, ready to paste, with file names: [art/CHATGPT-IMAGE-QUEUE.md](art/CHATGPT-IMAGE-QUEUE.md).
+- **RUN.world** is for 3D only: the people pipeline (models from A-pose pictures, clips). No more RUN images.
+
+Before that switch:
+- **RUN.world** (the art agent, the owner's RUN account): ground textures by the owner's method (RUN paints tile 1 into a game screenshot,
+  tiles 2-4 quilted); top-down pictures (C); one-view sprites (B) on magenta; people's A-pose pictures (P).
+- **Codex** (the art session): four-view sheets (A, A8). RUN's four turns did not hold one object in the pilot. The one-view-per-call
+  route (each view matched to the last) is being tried.
+
+### Ground textures (course surfaces)
+| Surface | Status |
+| --- | --- |
+| First cut | ✅ `first-cut-run` (#586); also every lawn (#591) |
+| Tee | ✅ `tee-run` (#590) |
+| Fringe | held: the RUN set came out too flat at NEAR (the owner's no-flat-wash rule); the textured fringe in the game stays |
+| Desert (Waste area sand) | ✅ `desert-run` (#612), from the art session's painting, the store removed |
+| Swamp | ✅ `swamp-run` (#614), RUN-painted; on the map with T199 #517 |
+| Dirt (Dirt surface, farm fields) | ✅ `dirt-run` (#616, #617), from the art session's painting, the store removed |
+| Raked sand (bunkers) | ✅ `sand-raked-run` (#620) |
+| Putting green (greens, range targets) | ✅ `putting-green-run` (#621) |
+| Rough | 🎨 `rough-run` (#621) offered; the owner's own rough stays on the course |
+| The map's fescue blending | ✅ blends with dirt (#621, the owner) |
+| Fairway | Codex (18 of 24 jobs done) |
+| Golden fescue, lake, putting green v2 | ✅ (the art session, earlier) |
+| Pond bank (river banks, creek beds) | ✅ `pond-bank-run` (#630) |
+| Grow-in soil | ✅ `grow-in-run` (#630) |
+| Bark mulch (flower beds) | ✅ `flower-bed-soil-run` (#630), the Paint tool's Bark mulch |
+| Field parking | 🎨 `field-parking-run` (#630) in Studio › Painted; no grass car park wears it yet |
+| Range tee, divots | 🎨 `range-tee-divots-run` (#630) in Studio › Painted; goes on the range tee with T223 #622 |
+| Brown fescue (town blocks) | 🎨 `fescue-brown-run` made; on hold until the leaves (T220) land, the owner's call |
+| Greenkeeping conditions (section 10) | after the course surfaces |
+
+### The concept look (section 12)
+The owner's target picture, 2026-10-27: items 149-175, and 178-179 the eight-facing pickup and sedan (T236 #693: the driving cars' colours). ✅ 153 lawn on every yard (#663); 🎨 153 meadow and 152 rough in the Studio; ✅ 149-151 the fairway, first cut and green on the course and the range (#666). 🎨 154 pond water (T230 #679); ✅ 158-160 the pond kit, 162-164 the shrubs, flowers and hedge, and 36, 43, 45 in the game (T231 #671); 169-171 the building-site kit (T232 #673; 168 the excavator blocked in RUN); ✅ 174 the build-tool tiles in the game (T233 #674). Ground textures 149-153 come first: the concept's greens. The plan is in [art/CONCEPT-LOOK.md](art/CONCEPT-LOOK.md).
+
+### Set the scene, portraits and you (section 13, P28)
+The owner's 2026-10-28 asks: items 200-235 and 240-327 (about 115 places, most with a run-down and an upgraded picture), still to make, except batch 1 (200-204, 211; 17 pictures in `art/theme-consistency/generated/scenes/`). Batch 2 (the P1 places 205-222) after RUN's cap resets; the rest needs a credit top-up.
+
+### List items done
+Ground (section 8 and the range ground): ✅ 131 Pond bank, ✅ 132 Grow-in, ✅ 135 Flower bed soil (#630); 🎨 133 Field parking, 🎨 21 range tee divots (#630, in the Studio, no ground wears them yet); 130 Pond water skipped (the lake is in). 134 Event matting deferred (quilting would break its panel grid). 🎨 19 the hitting mat (top-down, made, not drawn yet); 20, 27, 147 retakes next. The range and practice sprites still draw labelled stand-ins.
+
 ## The angles
 
 Every picture uses the same camera: **2:1 isometric**.
@@ -25,8 +74,8 @@ Every picture uses the same camera: **2:1 isometric**.
 
 | Code | What it is | Pictures | Use it for |
 | --- | --- | --- | --- |
-| **A** | Four views | one 2x2 sheet: NE, SE, SW, NW, four real quarter turns of the same object | anything with a front and a back that the game turns to face a road, a hole or a path: buildings, kiosks, signs, benches, shelters |
-| **A8** | Eight views | A's four plus N, E, S, W | a building that may also stand on a 45-degree town road (most course buildings sit on the grid and need only A) |
+| **A** | **Two views** (the owner, 2026-10-27: "just get two diffrent angles of each thing same lighting from top right always") | one 1x2 sheet: view 1 front+right (the old NE cell: the front faces the screen's lower left), view 2 left+front (the old NW cell: the front faces the lower right); the same object, never mirrored, the sun at the upper right in both | anything with a front that the game turns to face a road, a hole or a path: buildings, kiosks, signs, benches, shelters. The game shows view 1 or view 2 by which way the object faces; its back is not drawn |
+| **A8** | (dropped) | the owner's two views (A) replace the four and eight-view sheets | - |
 | **B** | One view, several variants | one picture each, 2-4 variants | things that look the same from every side: trees, palms, rocks, bins, posts, round lamps, flags. Variants (other shapes, sizes, leans) stop a row of them looking copied. |
 | **C** | Top-down ground picture | one square picture seen from straight above | mats, target greens, decals, ground textures |
 | **D** | Eight facings | eight separate pictures: E, NE, N, NW, W, SW, S, SE (where its front points) | vehicles: carts, mowers, trucks |
@@ -58,7 +107,7 @@ Sizes are real-world metres (1 game unit = 1 m, a map tile is 2 m); the pixels a
 
 ## The shared blocks
 
-**A. Four views** (for A8, ask for eight cells, NE, SE, SW, NW, N, E, S, W, in a 3x3 grid with the centre left empty).
+**A. Two views** (the owner, 2026-10-27). Below, read "a strict 2x2 grid of four separate cells in row-major order NE, SE, SW, NW: four genuine 90-degree turns" as "two separate views side by side: view 1 front+right, view 2 left+front, two genuine turns"; everything else holds.
 > ONE subject. Reference 1 is the only visual-theme authority: match its detailed illustrated miniature style, materials and light. A later reference, when given, is this subject's identity: keep its design. The last reference, when it is the camera-rotation guide, is a geometry diagram only: never copy its colours, boxes, labels or marker. Return one SQUARE image on a FLAT PURE MAGENTA background (#FF00FF, RGB 255,0,255: one uniform colour edge to edge, no gradient, floor, texture, vignette or shadow on it), to be keyed out to transparency afterwards; the subject itself contains NO magenta, pink or purple and has a crisp outline: a strict 2x2 grid of four separate cells in row-major order NE, SE, SW, NW: four genuine 90-degree turns of the SAME physical object, with the face pairs front+right, right+back, back+left, left+front. Reconstruct the real back and sides; never mirror a front and never repeat a view. Fixed parallel 2:1 isometric camera, ground axes +/-26.565 degrees, verticals vertical. Early autumn dusk: low warm sunlight fixed at SCREEN UPPER RIGHT in every cell, right-facing planes warmer, left-facing planes cooler, only tiny soft contact shadows toward SCREEN LOWER LEFT; practical lamps already warmly lit, still enough daylight to read every material. The year is 1985: no modern screens, LEDs, QR codes or present-day plastic signage. No people, no Halloween decoration, no ground tile, lawn, street, backdrop, haze, checkerboard, caption or frame, no neighbouring objects. Leave at least 15% clear transparent space round each view, including the centre gutters; shrink all four views uniformly so nothing is cropped. No lettering unless this prompt asks for it; lettering that is asked for reads correctly in every view.
 
 **B. One view.**
@@ -157,13 +206,13 @@ tees use the same marker.
 
 ### Range ground
 
-**19. Hitting mat** (`golf:range-mats`) · **C** · 4.2 x 6 m a bay · P1 **(stand-in)**. The left and right edges must join seamlessly.
+🎨 **19. Hitting mat** (made: `run-top/golf-range-mats/golf-range-mats-top-v1.png`, not drawn yet) (`golf:range-mats`) · **C** · 4.2 x 6 m a bay · P1 **(stand-in)**. The left and right edges must join seamlessly.
 > Subject: golf:range-mats, ONE driving-range hitting mat seen from straight above, about 4.2 m wide and 6 m deep: a concrete pad with a slightly worn green artificial-turf mat on it, a white rubber tee near the front edge, two or three white range balls beside it, a scuffed, flattened strike zone behind the tee. The left and right edges of the picture continue the concrete and must tile seamlessly when two copies are placed side by side.
 
-**20. Target green** (`golf:range-target-green`) · **C** · 12-20 m across · P1 **(stand-in)**.
+🎨 **20. Target green** (top-down retake made: `run-top/golf-range-target-green/`) (`golf:range-target-green`) · **C** · 12-20 m across · P1 **(stand-in)**.
 > Subject: golf:range-target-green, one round driving-range target green seen from straight above, filling the square: a smooth fine-cut inner green, a lighter mown collar ring round it, a faint darker ring at its outer edge where it meets the coarser outfield grass (the outfield shows only in the corners), a cup at the exact centre (no flag), a few white range balls lying scattered on it. No mowing stripes.
 
-**21. Divot-scarred range tee turf** (texture) · **C** · a 16 m square · P1 **(stand-in)**.
+**21. Divot-scarred range tee turf** (`range-tee-divots-run`, #630: **rejected by the owner**, 2026-10-28: the divots read as litter, "please find diffrent grass"; the turfed tee wears `green-concept-run`; the family stays a Studio option) (texture) · **C** · a 16 m square · P1 **(stand-in)**.
 > Subject: a seamless ground texture of a busy driving range's tee turf seen from straight above, covering a 16 x 16 m area: short green fairway grass scarred with many small divots (oval patches of bare brown soil and torn turf, some filled with green-tinted sand), a few loose white golf tees and broken tee pieces. It must tile seamlessly on all four edges with no visible repeat: no single distinctive divot or patch that the eye picks out when it repeats.
 
 ### Range extras (new)
@@ -187,7 +236,7 @@ The owner, 2026-10-27: "how about better more fun range targets". Big, bright th
 read from far away. Each stands on the outfield grass; a ball that lands in or on one would count as a hit. They are new: the game
 needs a ticket to offer them (a range upgrade, "Fun targets").
 
-**27. Bullseye target green** · **C** · 16-24 m across · P1. A target green painted as a giant archery target.
+🎨 **27. Bullseye target green** (top-down retake made: `run-top/golf-range-bullseye-target/`) · **C** · 16-24 m across · P1. A target green painted as a giant archery target.
 > Subject: a giant round driving-range target seen from straight above, filling the square: concentric rings mown and painted into the turf, white, red, white, red, with a bright yellow bullseye green at the centre holding a cup, the rings slightly irregular as if hand-painted on grass, a few white balls lying in the rings.
 
 **28. Island target green** · **A** · 20 x 16 m, 1 high · P1. A small green on an island in a pond.
@@ -223,7 +272,7 @@ as their decoration.
 
 ### Rock features
 
-**36. Boulders** · **B** · 0.8-2.5 m · P1. Make three sizes, three variants each.
+✅ **36. Boulders** (9 made; in the game, T231 #671: Decoration › Stone, Small boulder, Boulder, Large boulder, R the shape) · **B** · 0.8-2.5 m · P1. Make three sizes, three variants each.
 > Subject: one weathered sandstone boulder sitting in the grass, rounded, with lichen patches and a little moss on its shaded side. Make nine pictures: small (0.8 m), medium (1.5 m) and large (2.5 m), three different shapes each.
 
 **37. Rock cluster with ornamental grass** · **B** · 3 x 2 m · P1. Three variants.
@@ -246,7 +295,7 @@ as their decoration.
 
 ### Palm trees
 
-**43. Palm trees** · **B** · 3-10 m high · P1. Three species, three variants each (height and lean), cold-hardy palms that suit a 1985
+✅ **43. Palm trees** (9 made; in the game, T231 #671: Facilities › Plants › Palms, and Decoration › Plants) · **B** · 3-10 m high · P1. Three species, three variants each (height and lean), cold-hardy palms that suit a 1985
 resort-style club. Evergreen: no autumn colours.
 > Subject: one palm tree with no ground under it. Make nine pictures: (a) a windmill palm (Trachycarpus), hairy brown trunk, fan leaves, 4, 5 and 6 m high; (b) a Canary Island date palm, thick diamond-patterned trunk, a big round crown of arching fronds, 6, 8 and 10 m high; (c) a dwarf fan palm clump (Chamaerops), several short trunks, 2, 3 and 3.5 m high. Each slightly different lean.
 
@@ -255,7 +304,7 @@ resort-style club. Evergreen: no autumn colours.
 
 ### Lights
 
-**45. Practice green lamp post** · **B** · 3.5 m high · P1. Two variants.
+✅ **45. Practice green lamp post** (single and twin; in the game, T231 #671: Decoration › Furniture, lit at night) · **B** · 3.5 m high · P1. Two variants.
 > Subject: a traditional golf club lamp post about 3.5 m high: a dark green cast-iron post with a fluted base and a glass lantern on top, glowing warm; variant two with a twin lantern arm.
 
 **46. Path bollard light** · **B** · 0.9 m high · P1.
@@ -482,11 +531,11 @@ short: the shared block carries the rules. In the game already: `golf:grandstand
 | # | Picture | Prompt | P |
 | --- | --- | --- | --- |
 | 130 | Pond water | still dark green-blue water with soft ripples and a faint reflection of the sky, no edges | P1 |
-| 131 | Pond bank | wet brown mud with reeds and small stones, fading to grass | P1 |
-| 132 | Grow-in | bare brown soil with tiny green seedlings in faint rows | P1 |
-| 133 | Field parking | mown grass with tyre ruts and worn patches | P1 |
+| 131 | ✅ Pond bank | wet brown mud with reeds and small stones, fading to grass | P1 |
+| 132 | ✅ Grow-in | bare brown soil with tiny green seedlings in faint rows | P1 |
+| 133 | 🎨 Field parking | mown grass with tyre ruts and worn patches | P1 |
 | 134 | Event matting | interlocking grey plastic walkway panels laid on grass | P2 |
-| 135 | Flower bed soil | dark bark mulch over soil, a few fallen petals | P1 |
+| 135 | ✅ Flower bed soil | dark bark mulch over soil, a few fallen petals | P1 |
 
 ---
 
@@ -512,6 +561,19 @@ clips; the game renders the eight facings (`docs/HANDOVER-PEOPLE.md`). 31 people
 
 **141. Shop assistant and bag boy** · P2. Clips: walk, idle, carry a bag.
 > Subject: (a) a young pro shop assistant in a club polo shirt and slacks; (b) a teenage bag boy in a white shirt, green shorts and a cap.
+
+**176. Tour caddie** · P1 (T213 #558: the game draws a stand-in). Clips: walk carrying the bag on the shoulder, idle standing with the bag, set the bag
+down, hold the flag. The tour's pros (tiers 3-5) each walk with a caddie who stands off the green while they putt. `staff_caddie_m` was made on
+2026-10-24 (`art/spectators/staff_caddie_m`, walk and idle, no bag) but is packed nowhere; the game draws `spec_m_polo_visor` labelled "Stand In for
+caddie", with the bag trolley (`business:golf-bag-trolley`) beside him. Wanted: that caddie (or a woman too) with a tour bag on his shoulder in every
+frame, packed with the spectators so the game can draw him (`CADDIE_ART` in `engine.ts`).
+> Subject: a 1985 tour caddie, a fit man in his 30s: a plain white caddie bib over a navy polo shirt, khaki shorts, a plain white cap, white sneakers, a
+> large leather tour golf bag full of clubs on a strap over his right shoulder. No logos, no lettering, no number on the bib.
+
+**177. Golfer celebration clips** · P1 (T213 #558: the game plays a stand-in pose). For every golfer of the cast (`golf_pro_*`, `golf_am_*`): a fist
+pump (one arm, about 1 s) and a cap tip (about 1 s), as one-shot sheets like `golf_drive`. Meshy's library has `Victory_Cheer` (59) and `Seated_Fist_Pump`
+(304, seated); no standing fist pump or cap tip, so a hand-keyed clip or Mixamo (`docs/HANDOVER-PEOPLE.md` 1c). Until then a golfer who holes a birdie or
+better holds the swing's high finish, turned to the camera, with a little hop (`celebrate.ts`, `view.ts` POSE_T).
 
 ---
 
@@ -593,3 +655,324 @@ Each sheet holds four independent overlays laid over any grass; transparent ever
 | `maintenance` | aeration core holes, a topdressing sand film, sprinkler wet circles, a hole plug |
 | `leaves-litter` | scattered autumn leaves (maple red, oak brown, gold) |
 | `surface-transitions` | soft ragged grass-to-soil edges |
+
+---
+
+## 11. Iconic places (T219, #594)
+The owner, 2026-10-27: "custom build some iconic places for the map that we reuse each time like the drive in and a highschool etc". The library
+already has the drive-in's marquee (`world:drivein_marquee`), the schools (`world:school`, `world:primary_school`), the school bus, the diner,
+the water towers, a silo, a windmill and a fountain. These pieces are missing:
+
+**142. Drive-in movie screen** · **A** · 20 x 3 m, 12 high · P1.
+> Subject: a 1985 drive-in theatre's big outdoor movie screen, about 20 m wide and 12 m high: a plain white screen face (blank, a faint glow from the projector at night) on a tall timber frame braced at the back with diagonal timbers and a service ladder, a small projection booth's light visible below it. Front and back are both real: the back shows the bracing.
+
+**143. Drive-in speaker post** · **B** · 0.3 m, 1.2 high · P1. Two variants.
+> Subject: a drive-in theatre's speaker post: a short grey steel post with two small chrome window speakers hanging from it on curly cables, one a little crooked.
+
+**144. Drive-in ticket booth** · **A** · 2.5 x 2 m, 3 high · P1.
+> Subject: a small 1950s-style drive-in ticket booth: white walls, a red-and-yellow striped canopy, a sliding window with a counter on the driver's side, a little neon star on the roof (lit, no words).
+
+**145. Football goalposts** · **A** · 6 x 1 m, 9 high · P1.
+> Subject: an American football goalpost: a single yellow gooseneck post on padding with the crossbar and two tall uprights.
+
+**146. Bleachers** · **A** · 20 x 6 m, 4 high · P1. Two lengths (10 and 20 m).
+> Subject: aluminium school bleachers: five rows of grey benches on a steel frame with a handrail at the back, a stair at one end, empty.
+
+🎨 **147. Running track and field** (top-down made: `run-top/iconic-running-track-field/`) · **C** · 100 x 60 m · P1. Top-down.
+> Subject: seen from straight above, a high school football field: striped mown grass with white yard lines (no numbers), end zones, inside a red-brown running track with white lane lines curving round both ends.
+
+**In the game now (T219):** both places are built (`src/game/lots/iconic-places.json`), with labelled stand-ins for the speaker posts (143: `world:speaker_post`), the car park
+attendant kiosk (`ce:parking-kiosk`) for the ticket booth (144), `world:goalposts` (145), `world:bleachers` (146), and `town:utility_pole` for a flag pole (new: **148. Flag pole**
+· **B** · 0.3 m, 9 high · P2: a white school flag pole on a small concrete base with the flag hanging limp, its rope against the pole). The track
+(147) is painted ground for now (`dirt` round a `preset:fairway` field with white yard lines). **The screen (142) is no longer a stand-in** (T219b): the drive-in uses the library's own
+drive-in screen (`variation:ref-building-drive-in-screen-b0bccc2a-plain:1`, four views), drawn through `src/game/lots/art-fix.ts`, which gives it the
+footprint that fits its pictures (5.5 x 1.2 tiles; the library keeps the old sprite's 1 x 8, across them), its true ground point, and the view whose face
+looks at the cars at each facing (its SE and NW sheets are the other way round from the game's order). Item 142 stays open only for the town's own
+name: the picture's face is painted "Maple Falls Drive-In" (accepted for now: a new drive-in screen that reads blank or "DRIVE-IN" would replace it).
+
+## 12. The concept look (the owner's target, 2026-10-27)
+
+The owner: "this is the look and feel we need to get to". The reference is `docs/art/concept/maple-falls-concept.webp`; what it needs from
+the code and why is in [art/CONCEPT-LOOK.md](art/CONCEPT-LOOK.md). **Attach the concept as the second reference on every item here**,
+after `theme-authoritative.png`, as a style and colour reference only: never copy its layout, buildings or UI.
+
+### Ground textures (the owner's method, not block C)
+Make these by [art/GROUND-TEXTURE-METHOD.md](art/GROUND-TEXTURE-METHOD.md): RUN repaints the layer into a game screenshot, then the tile is
+sliced and tiles 2-4 are quilted. Add the concept as RUN's style reference, and ask for its colours: "repaint the [area] as [the item],
+in the colours, light and painted style of the second picture". The game draws mowing bands, leaves and edges itself: paint plain turf.
+
+✅ **149. Concept fairway grass** (`fairway-concept-run` v2 on the fairway and the range outfield, #666) · ground · P1. Lush, saturated mid-green, closely mown, a very fine even grain, warm golden-hour light; NO
+mowing stripes painted in. For the fairway and the range outfield. Codex has a fairway job: keep whichever set matches the concept.
+
+✅ **150. Concept first cut** (`first-cut-concept-run` v2 on the first cut and the collar round greens, #666) · ground · P1. The collar: a little darker and a touch longer than 149, the same green family.
+
+✅ **151. Concept green** (`green-concept-run` v3 on the greens and the range targets, #666; its MID is provisional: RUN refused the MID edits) · ground · P1. The smoothest, finest and brightest turf; for the greens and the range's target greens.
+
+🎨 **152. Concept rough** (`rough-concept-run`, in Studio › Painted; the owner's rough stays on the course) · ground · P1. A deeper green, longer grass in soft clumps, a few fallen autumn leaves. Green, not gold.
+
+✅ **153. Lawn and meadow** (lawn: `lawn-concept-run` v2 on every yard, #663; meadow: `meadow-concept-run` v2 in Studio › Painted, for the map when the owner says) · ground · P1. Two sets. Lawn: soft ordinary green garden grass with small clover patches, for the yards and the
+town blocks. Meadow: the same green, a little longer and uneven, a few tiny wildflowers, for the map's open ground.
+
+🎨 **154. Deep pond water** (`pond-concept-run` tiles-v3, shipped with T230 #669) · ground · P1. Dark teal-green still water, darker toward the middle, soft ripples, a faint reflection of a warm
+sky. It replaces item 130.
+
+**155. Lake water with a soft swell** · ground · P2. Deep blue-teal open water, a gentle wave pattern, small warm glints.
+
+**156. Plaza paving** · ground · P1. Warm sandstone and red-brick pavers in a herringbone, for the clubhouse plaza and a town square.
+
+**157. Building-site dirt** · ground · P2. Graded bare earth with tyre and track marks and a few stones. Try `dirt-run` first.
+
+### Water features
+✅ **158. Pond-edge boulders** (`landscaping/golf-pond-edge-boulders-pieces-v1.png`; in the game, T231 #671: Stone pond edge; laid at 8 x 2 m a piece, the stones at the boulders' scale; T234 #683: not a ring wall, then boulder-led as in the concept: the rim is large and medium boulders (36) every 1.5-3 m, half on the bank and half in the water, with plume grass, shrubs (162) and mums (163) on the bank in the gaps; these run pieces are only short fills (1.2-2.2 m) in breaks of a straight shore, at most a third of it, and the corner clusters (inner, outer) are no longer laid; nothing stands more than 0.5 tile out onto land but the planting; ponds.ts) · **R** · 1 x 4 m a piece · P1.
+> Subject: a pond's rim of rounded grey granite boulders of mixed sizes, set tight along the edge, moss and a few small autumn flowers between them, the stones dark and wet at the waterline. The water side of the piece faces the screen's lower edge. Make an inner corner and an outer corner as the extra items.
+
+✅ **159. Fountain jet** (`props/golf-fountain-jet-4frames-v1.png`; in the game, T231 #671: Fountain jet and Fountain pond, animated) · **B** · 1.5 m across, 4 m high · P1. Four frames of a loop.
+> Subject: a single tall fountain jet of water rising from a still pond's surface, a crown of spray at its top, a ring of ripples and foam at its foot, the water white-blue catching warm light. Only the water: no basin, no pond. Four frames of the same jet in one row, the spray shapes moving, so they loop.
+
+✅ **160. Lily pads** (`landscaping/golf-lily-pads-top-v1.png`; in the game, T231 #671: on stone-edged ponds; T234 #683: the art is autumn olive and orange, so prep-kit.mjs moves its hue toward green (greenPads; GREEN_PADS = false keeps it as painted; switch it off if the art agent repaints it green) and a cluster is laid 3.4-4.8 m across so it reads at 30% zoom) · **C** decal sheet on magenta, four variants · P1.
+> Subject: seen from straight above, a cluster of round green lily pads of mixed sizes floating flat, a few with a notch, two white water-lily flowers with yellow centres. Four different clusters in a 2x2 grid on flat pure magenta.
+
+**161. Lake-shore rocks** · **R** · 2 x 4 m a piece · P2.
+> Subject: a rocky lake shore of large weathered granite boulders and flat slabs, lichen on top, dark and wet at the bottom, a little pale sand between them.
+
+### Planting
+✅ **162. Autumn shrubs** (all 6; in the game, T231 #671: Plants › Bushes, Decoration › Plants, the yards) · **B** · 1-1.5 m · P1. Six variants: burning bush in scarlet, golden spirea, a clipped green boxwood ball, a
+red-twig dogwood with orange leaves, a blue-green juniper, an ornamental grass with pale cream plumes. No pink or purple (the magenta key).
+> Subject: one garden shrub (the variant named above), full and round, in autumn colour, standing on its own.
+
+✅ **163. Autumn flower clumps** (all 6; in the game, T231 #671: Plants › Flowers, Decoration › Plants, the yards) · **B** · 0.6 m · P1. Six variants: chrysanthemums in red, yellow, orange, white and bronze, and a clump
+of black-eyed Susans. No pink or purple.
+> Subject: one dense mounded clump of garden chrysanthemums (the colour named above) in full bloom, the flowers small and many, dark green leaves showing at the bottom.
+
+✅ **164. Clipped hedge** (`landscaping/golf-clipped-hedge-pieces-v1.png`; in the game, T231 #671: Decoration › Plants › Hedge row, a run, and the yards) · **R** · 0.7 m deep, 0.9 m high · P1.
+> Subject: a neatly clipped dark-green boxwood hedge with a flat top and straight sides, a few autumn leaves caught on top.
+
+**165. Low fieldstone garden wall** · **R** · 0.5 m deep, 0.7 m high · P2.
+> Subject: a low dry-stone garden wall of rounded grey and brown fieldstones with a flat capstone row, moss in the joints.
+
+**166. Tree-line conifers** · **B** · four variants · P2. Only if the library's conifers run short for framing holes. Tall narrow spruces
+and white pines, 12-18 m high.
+
+### The club
+**167. The country club clubhouse** · **A** · 36 x 22 m, 14 m high · P1. The club's top tier, the concept's clubhouse. Identity: the
+concept, the large brick building behind the patio with the red umbrellas.
+> Subject: a grand New England country club clubhouse: red brick with white trim, many steep gables and dormers, a dark grey slate roof, three brick chimneys, a white columned portico at the entrance, a long covered veranda along the front, tall windows warmly lit from inside, flower boxes. No patio furniture and no lettering.
+
+### Building sites
+**168. Excavator** **BLOCKED in RUN** (the two views did not hold one rigid machine; T232 draws the library's digger, `construction:digger`, 6 x 3 m, unmirrored) · **A** · 3 x 9 m, 3.5 m high · P1.
+> Subject: a yellow tracked excavator parked with its arm folded and the bucket resting on the ground, a dark cab, dried mud on the tracks. The 1985 look, no lettering.
+
+🎨 **169. Timber frame going up** (`buildings/golf-timber-frame-2views-v1.png`, provisional; in the game, T232 #673: `construction:timber-frame-1` and `-2`, 10.4 m square, a house site's frame. The two views are one frame turned half round, not a quarter: view 1 where the street lies toward the camera, view 2 where away. View 2 lacks the ladder) · **A** · 12 x 9 m, 3 m high · P1.
+> Subject: a house under construction: pale new timber wall studs and plates standing on a grey concrete slab, window and door openings framed, no roof yet, a ladder leaning on one wall, a few stacked studs on the slab.
+
+🎨 **170. Lumber stacks** (a, b, c; in the game, T232: `construction:site-lumber-a`, `-b`, `-c`) · **B** · 3 variants · P1.
+> Subject: a stack of new pale timber planks on two bearers, strapped, a few loose planks on top.
+
+🎨 **171. Dirt and gravel heaps** (earth, gravel, sand; in the game, T232: `construction:site-heap-earth`, `-gravel`, `-sand`, 3 m across) · **B** · 3 variants · P1.
+> Subject: one heap of loose brown earth (or grey gravel, or pale sand), about 3 m across, a shovel stuck in its side.
+
+**172. Survey stakes** · **B** · 2 variants · P2. The game draws the white dashed boundary itself.
+> Subject: a wooden survey stake with orange flagging tape tied at the top, driven into bare earth.
+
+### On the course
+**173. Hire golf cart** · **D** · 1.2 x 2.4 m, 1.8 m high · P1. The fleet cart (item 56 is the pro's own). **Art gap (T213 #558):** the carts in the
+field (the small events' amateurs, the everyday visitors) are drawn with `business:golf-cart-sw` and `-se`, the only two facings there are (the front to
+the screen's lower left or lower right); a cart driving up the screen shows the nearer of the two. The eight facings fix that (`CART_ART` in `engine.ts`).
+> Subject: a white 1985 two-seater golf cart with a cream canopy on four posts, a bag rack at the back holding two golf bags, small headlights. No people and no lettering.
+
+### Vehicles (T236, #693: colour in the streets and car parks)
+T228 recoloured the two wood-panel wagons in the shader; the audit (T236) found no paint clean on either (patchy hoods, orange rims, painted
+chrome), so painting is off and the cars keep their art's colours. The car parks now mix in the library's old cars (the yellow pickup, the
+world cars, the compacts), but those have only one to six facings, so they only park in bays they have a view for; **every car that drives
+is still one of the two wagons**, burgundy or navy (the traffic, the range's and the club's golfers' cars). Eight-facing vehicles in new
+colours fix that: the game adds each to the drivers (`vehicles.ts` `VEHICLES`, all eight views) and to the bays. **Each colour is its own
+set of eight pictures**: never recoloured in code. Size them as the wagons (`art/cars/burgundy-wagon/`: a 4.5 m car about 200 px wide in
+its SE view); attach that SE picture as the scale and camera reference after the style references.
+**RUN's multi-view turns have failed before** (the excavator, item 168: the views did not hold one rigid machine; the four-view pilot): make
+each facing its own generation, matched to the first, and reject a set where the length, wheelbase, colour or trim changes between facings,
+or where a facing is a mirrored copy of another (the sun must stay at the upper right in all eight).
+
+**178. 1985 pickup truck, three colours** · **D** · 5 x 1.9 m, 1.8 m high · P1. Three sets: white, bright red, forest green (the library's
+pickup is mustard yellow and the wagons burgundy and navy: not those).
+> Subject: a 1985 full-size American pickup truck, a squared-off regular cab and a long open bed (empty), chrome front bumper and grille, round headlights, steel wheels with small hubcaps, painted solid [colour]. Clean and well kept, no rust, no lettering, no number plate text.
+
+**179. 1985 sedan, three colours** · **D** · 4.8 x 1.8 m, 1.4 m high · P1. Three sets: white, silver-grey metallic, black (the street's
+commonest colours, which the car parks still lack).
+> Subject: a 1985 American four-door family sedan, a long boxy body with a formal roofline, chrome bumpers and window trim, a full-width grille, rectangular headlights, whitewall tyres, painted solid [colour]. No wood panels, no vinyl roof, no lettering, no number plate text.
+
+**180. Grey stone water border, with planting** · **R** kit · P1. The owner, 2026-10-28: "we need more rocks. grey stone rocks with plants and foilage that tiles well for the border sprite that surounds water as a border you can turn on and off." Replaces the tan boulders (36, 158) on water edges; the concept's rims are grey and rose-grey granite with ferns, grasses and small shrubs between. Made in ChatGPT (RUN is 3D only): the prompts are in [art/CHATGPT-IMAGE-QUEUE.md](art/CHATGPT-IMAGE-QUEUE.md) "Grey stone water border".
+- **180a run pieces**: one 4 m piece along the map's x axis and the same along the y axis (block R), rocks of mixed sizes half in the water, planting tucked between; both ends cut so pieces join end to end.
+- **180b corners**: an inner corner and an outer corner piece (each axis pair).
+- **180c single boulders**: six grey granite boulders, 0.6-2 m, three with a fern or grass tuft at the foot.
+- **180d planting tufts**: six tufts for the gaps: ferns, a sedge, cattails, a low juniper, golden grass, a small red-leaf shrub (no pink or purple: the magenta key).
+Lit from the upper right, never mirrored, on flat pure magenta.
+
+### UI pictures
+✅ **174. Build-tool tiles** (`ui/golf-build-tool-tiles-sheet-v1.png`; in the game, T233 #674: cut by `scripts/assets/prep-ui-tool-tiles.mjs` into `src/assets/ui/tiles/`, shown on the Course and Facilities flyouts' tools by `ui/tool-tiles.ts`; the tools still without one are requested in GOLF-SPRITES.md "Build-tool tiles") · one sheet of 12 · P1. The build flyouts' tools as small illustrated scenes, as in the concept's Golf Course panel.
+> Subject: twelve tiny isometric dioramas in a 4x3 grid, each on its own dark navy rounded square, the light from the upper right: a tee box, a fairway, a green with a flag, a bunker, a pond, rough grass, a clump of autumn trees, a group of boulders, a curving cart path, a small clubhouse, the range bays, a flower bed. The same scale and style in every tile; no lettering.
+
+**175. Top-bar icons** · one sheet of 6 on magenta · P2.
+> Subject: six small flat painted icons in a row, gold and cream with a dark outline: a bundle of banknotes, a smiling face, two golfers, a maple leaf, a sun, a cloud. No lettering.
+
+## 13. Set the scene, portraits and you (P28, the owner 2026-10-28)
+
+The owner: "I want lots of "Set the scene" artwork that shows you scene images of what is currently in focus ... a nostalgic 1980s
+america close up of the building or inside the building or outside ... both a starting poor run down "set the scene" image and a later
+upgraded nice looking one. even the towns people get healthier and better looking as your driving range and course does better."
+The design is in [plans/P28.md](plans/P28.md). Items are numbered from 200 to stay clear of other sections.
+
+### The shared blocks for this section
+**S. A set-the-scene picture** (one wide painted image, RUN's strength: no turns).
+> One painted illustration, 16:9, of the place described below, as a warm, nostalgic 1985 small-town America scene, in the detailed illustrated style of reference 1 (and the colours of the concept picture, reference 2). A cinematic eye-level or slightly raised view, the kind a film would open on. Late-afternoon autumn light, warm sun from the upper right, long soft shadows. Period details only: 1985 cars, signs, clothes, technology (no phones, no LEDs, no modern logos). A few people going about their day where it fits, never posing. No text other than the signs the place would really have (the place's name may appear on its sign), no UI, no frame, no caption.
+For each item: make the **run-down** version (hard times: faded paint, weeds, dust, makeshift repairs, few people) and the **upgraded**
+version (good times: fresh paint, tidy planting, busy, proud). Same viewpoint and composition in both, so the card can swap them.
+
+**Q. A portrait.**
+> One painted head-and-shoulders portrait, 1:1, of the person described below, in the detailed illustrated style of reference 1: a 1985 small-town American, period hair and clothes, looking at the viewer with a natural expression, soft warm light from the upper right, a plain warm painted background. No text, no frame, no props unless named.
+For each archetype: a **hard times** version (tired, worn or dated clothes, a little unkempt) and a **good times** version (healthy,
+well dressed, confident). Same person, same pose, same framing.
+
+### The range and the club (S, run-down and upgraded)
+🎨 **200. The range from the road** (made: `scenes/`, run-down and upgraded): a desert driving range off a county road: a tin-and-tarp shack, four mats on dirt, a dirt car park, a hand-painted sign. Upgraded: a striped green outfield with target greens, covered bays, a paved car park, the clubhouse beyond. P1.
+🎨 **201. The hitting bays, close** (made: `scenes/`, run-down and upgraded): run-down: worn mats on packed dirt, a split bucket of balls, a bent divider, a dusty tee line. Upgraded: covered bays with lights, fresh mats on turf, a ball dispenser, golfers mid-swing. P1.
+🎨 **202. Inside your home** (caravan and farmhouse pairs; the cottage's upgraded picture still to make): three stages: the caravan (cramped 1985 trailer: a fold-down table with a ledger and coffee, a small TV, a golf bag by the door), the cottage, the farmhouse (a warm kitchen, trophies on a shelf). P1.
+🎨 **203. The pro shop** (made: `scenes/`, run-down and upgraded): run-down: inside the tin shack, a counter of plywood, a few used clubs, a cash box. Upgraded: the pro shop with racks of clubs, a glass counter, shirts on hangers. P1.
+🎨 **204. The practice green** (made: `scenes/`, run-down and upgraded): run-down: a patchy green with one flag on dirt. Upgraded: a manicured putting green with flags, golfers putting. P1.
+**205. The car park**: run-down: a dirt lot with a few dusty cars. Upgraded: paved bays, lamps, tree islands, a full lot. P2.
+**206. The clubhouse, outside**: one per tier, from the starter clubhouse to the grand country club (167). P1.
+**207. The clubhouse, inside**: the bar and lounge, one per tier (a few stools and a TV, then wood panelling and leather). P1.
+**208. The halfway house**: a small snack hut by the 9th, then a smart pavilion. P2.
+**209. A hole on your course**: run-down: a scrubby young fairway, thin grass. Upgraded: the concept's look (striped fairway, bunkers, autumn woods, a pond). P1.
+**210. Tournament day**: a few folding chairs and a chalkboard; then grandstands, flags and a crowd. P2.
+
+### The town (S, outside and inside where named; run-down and upgraded)
+🎨 **211. The video store** (outside and inside): outside: a strip-mall video rental store with posters in the window and a lit sign (run-down: faded posters, a flickering sign; upgraded: neon, new-release cut-outs, a queue). Inside: rows of VHS boxes, a new-releases wall, a clerk at the counter, a drop box. P1.
+**212. The diner**: outside: a chrome diner. Inside: booths, a counter with stools, pie under glass, a waitress with coffee. P1.
+**213. The gas station**: pumps, a little shop, a mechanic in the bay. P1.
+**214. The motel**: a roadside motel with a vacancy sign, cars at the doors. P2.
+**215. The sports bar**: outside, and inside with the golf on the TV. P2.
+**216. The fish-and-tackle shop**: outside, and inside with rods and lures. P2.
+**217. The drive-in at night**: cars facing the screen, the projector beam. P1.
+**218. The high school**: Friday night football under the lights. P2.
+**219. Main Street**: the downtown street of shops. P1.
+**220. A family house and yard**: run-down: peeling paint, a dry yard, an old car. Upgraded: fresh paint, a green lawn with leaves, kids' bikes, a hedge. P1.
+**221. A farm**: a farmhouse, a barn and fields. P2.
+**222. Town hall and the mayor's office**: for the Mayor's Cup. P1.
+**223. The hotel, the casino, the stadium**: one each, late-game, upgraded only. P3.
+**224. The junk yard**: run-down only. P3.
+
+### More places (S): the owner, 2026-10-28: "these were just examples. you better add a shit ton more"
+Everything a player can look at gets a picture. Each has a run-down and an upgraded version unless marked *(one)*. Inside views are marked *(in)*.
+Pairs of outside and inside are two items' worth of work.
+
+**The range and the practice areas**
+**240. The tee line at dawn**: the first golfer of the day hitting the first bucket, mist on the outfield. P1.
+**241. The ball picker** driving the outfield, balls rattling into the cage. P1.
+**242. The bucket counter** *(in)*: the window, the price board, a kid paying in coins. P1.
+**243. The range at night**: under floodlights, moths in the beams. P2.
+**244. The target greens close**: flags, balls lying round the pin. P2.
+**245. The chipping green and its bunker**: a golfer splashing out of the sand. P1.
+**246. A lesson**: the teaching pro and a student at the teaching hut. P1.
+**247. The pro's office** *(in)*: a desk, a calendar, a club on the wall (P26). P1.
+**248. The membership desk** *(in)*: the secretary, the forms, a framed course map. P2.
+
+**The course and the club**
+**249. The cart barn** *(in)*: rows of carts charging. P2.
+**250. The maintenance barn at dawn**: greenkeepers heading out on mowers. P1.
+**251. The 1st tee**: the starter, a foursome waiting, the course stretching away. P1.
+**252. The 18th green**: the last putt, a few watchers (then a big crowd). P1.
+**253. The locker room** *(in)*. P2.
+**254. The clubhouse grill** *(in)*: lunch after the round. P2.
+**255. The clubhouse patio**: red umbrellas, drinks, the 18th beyond (the concept). P1.
+**256. The trophy cabinet and members' honours board** *(in)*. P2.
+**257. The halfway house window**: hot dogs and a cold drink. P2.
+**258. The clubhouse fountain pond and plaza** (the concept). P1.
+**259. A course pond**: boulders, lily pads, autumn reflections (the concept). P1.
+**260. The cart path** through the autumn woods. P1.
+**261. A footbridge** over the creek. P2.
+**262. The swamp** on a misty morning. P2.
+**263. The fescue and the waste area** in late light. P2.
+**264. The leaderboard** on tournament day: chalk to a big board. P1.
+**265. The TV tower and the broadcast truck** *(one, upgraded)*. P3.
+**266. The hospitality chalet and the beer garden** *(one, upgraded)*. P3.
+**267. The grandstands, full** *(one, upgraded)*. P2.
+**268. The trophy presentation** on the 18th green: the mayor, the winner, the cheque. P1.
+**269. The car park on tournament day**: overflowing onto the grass. P2.
+**270. The ticket gates and the shuttle stop**. P3.
+
+**Main Street and the town's businesses** (outside and *(in)*)
+**271. Main Street at night**: neon, a cruising car. P1.
+**272. The barber shop** *(in)*: the pole, the chair, the radio. P1.
+**273. The hardware store** *(in)*. P1.
+**274. The grocery store** *(in)*: checkout, a paper bag, a cereal aisle. P1.
+**275. The pharmacy and soda fountain** *(in)*. P2.
+**276. The bank** *(in)*: the loan officer's desk, where you ask for a loan. P1.
+**277. The post office**. P3.
+**278. The arcade** *(in)*: 1985 cabinets, kids, tokens. P1.
+**279. The bowling alley** *(in)*. P2.
+**280. The record store** *(in)*: vinyl and cassettes. P2.
+**281. The movie theatre**: a single screen, the marquee. P1.
+**282. The pizza place** *(in)*. P2.
+**283. The burger drive-in**: carhops, a tray on the window. P2.
+**284. The laundromat** *(in)*. P3.
+**285. The car dealership**: bunting, a new model on the lot. P2.
+**286. The auto repair garage** *(in)*: a car on the lift. P2.
+**287. The church**: Sunday morning. P2.
+**288. The fire station**: the engine out front. P2.
+**289. The sheriff's office** *(in)*. P2.
+**290. The library** *(in)*. P3.
+**291. The elementary school**: recess. P3.
+**292. The high school hallway** *(in)*: lockers, letter jackets. P2.
+**293. The doctor's clinic** *(in)*. P3.
+
+**Homes and neighbourhoods**
+**294. The town park**: a gazebo, a duck pond, a band on Sunday. P1.
+**295. The playground**. P3.
+**296. Little League**: the baseball diamond, parents in the stands. P2.
+**297. The community pool** in late summer. P3.
+**298. The trailer park**. P2.
+**299. A suburban street at dusk**: kids on bikes, sprinklers. P1.
+**300. A family kitchen** *(in)*: wall phone, avocado appliances. P1.
+**301. A living room** *(in)*: the TV, a VCR, a game on. P1.
+**302. A teenager's bedroom** *(in)*: posters, a cassette deck. P2.
+**303. A backyard barbecue**: neighbours, a grill, lawn chairs. P1.
+**304. A garage workbench** *(in)*: tools, a golf bag in the corner. P3.
+
+**Work and the countryside**
+**305. The barn** *(in)*: hay, a tractor. P2.
+**306. The grain elevator and co-op**. P2.
+**307. The factory**: shift change at the gate. P2.
+**308. The railway crossing and depot**. P2.
+**309. The bus depot**. P3.
+**310. The taxi office** *(in)*. P3.
+**311. The water tower** with the town's name. P2.
+**312. The river and the old bridge**. P1.
+**313. The fishing pier** at the lake. P2.
+**314. The boat launch**. P3.
+**315. The campground**. P3.
+**316. The valley overlook**: the whole town and your course below (gets greener as you grow). P1.
+**317. The county fair** *(one)*: rides, prize pigs, a golf putting booth. P2.
+
+**Seasons, weather and events** *(one each)*
+**318. Halloween on Main Street**. P2.
+**319. Christmas on Main Street**: snow, lights. P2.
+**320. The Fourth of July parade**. P2.
+**321. Spring planting** on the course. P3.
+**322. A rainy day** at the range: one stubborn golfer under an umbrella. P2.
+**323. Snow on the course**: the winter shutdown. P2.
+
+**Later in the game (upgraded only)**
+**324. The motel room** *(in)*. P3.
+**325. The hotel lobby** *(in)*. P3.
+**326. The casino floor** *(in)*. P3.
+**327. The stadium** on game night. P3.
+
+### People (Q, hard times and good times)
+**230. Townspeople portraits, 48 archetypes**: three ages (20-30, 30-50, 50-70) x two sexes x eight jobs: farmer, mechanic, teacher, shop clerk, diner waitress or cook, office worker, nurse, retiree; plus 8 more: a high school kid, a video store clerk, a gas attendant, a construction worker, a banker, the sheriff, the mayor, a club golfer. Each in hard times and good times. P1.
+**231. Club people portraits**: the head pro, a teaching pro, the membership secretary, a greenkeeper, a caddie, the starter, a bartender, a tour pro (P26 and T213's people). Each in hard times and good times. P1.
+**232. Your portraits**: 12 looks (men and women, ages 25-60), matching the player's 3D looks (233). P1.
+
+### You in 3D (P, the 3D pipeline: `docs/HANDOVER-PEOPLE.md`)
+**233. The player's 12 looks**: A-pose pictures for the 3D pipeline (block P), 1985 golf-casual clothes, one per look in 232. P1.
+**234. The player's clips**: idle, idle with a club twirl, watching, talking (a hand gesture), walking, the drive, the putt and the chip (T212's clips), a fist pump and a cap tip (177). Meshy's library or RUN's animate. P1.
+**235. The townspeople's good-times clothes**: a second, smarter clothing set for the townspeople models already in the game (block P), so the 3D town looks healthier as the club does well (T245). P2.

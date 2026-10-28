@@ -9,16 +9,17 @@ import type { Pt } from '../network';
 import type { Rect } from './mode';
 import { GOLFER_BASE, GOLFER_FRAMES, GOLFER_PEOPLE, WALK_DIRS } from '../library';
 import { carHeading, facings } from '../traffic';
+import { hash3, paintOf } from '../car-paint';
 import { PRESETS, presetTex, surfacePreset, type Stripes } from '../paint-presets';
 import { SURFACE_TEX } from './paintcourse';
 import type { GolfSurface } from './types';
-import { RangeSim, garageSlots, rangeScene, rangeStats, upgradeWhy, withPrice, withUpgrade, RANGE_UPGRADES, type CarSlot, type DemandCtx, type RangeBizSave, type RangeClock, type RangeScene, type RangeUpgradeId, type ScenePatch, type ScenePiece } from './rangebiz';
+import { RangeSim, garageSlots, rangeScene, rangeStats, upgradeWhy, walkwayOf, withPrice, withUpgrade, RANGE_UPGRADES, type CarSlot, type DemandCtx, type RangeBizSave, type RangeClock, type RangeScene, type RangeUpgradeId, type ScenePatch, type ScenePiece } from './rangebiz';
 import { CELL_T, type Grid, type GridDiff } from '../ext/course-grid';
 import { inPractice, practiceWords, scanPractice, type PracticeScan, type PracticeState } from './practice';
 import { PRACTICE_APPEAL, PRACTICE_FEE, PRACTICE_IDS, practiceAppeal, rangeScale, rangeUpkeep, type PracticeId } from './rangesave';
 import { PRI } from '../label-place';
 import { LABEL_OUTLINE, type WorldLabels } from '../world-labels';
-import { COFFEE, EXTRA_IDS, GARAGE_CARS, HOME_AT, HOME_NAME, KIOSK_SHARE, LESSON, LESSON_SHARE, homeStage, needsOf, type HomeStage } from './rangesave';
+import { COFFEE, EXTRA_IDS, GARAGE_CARS, HOME_AT, HOME_NAME, KIOSK_SHARE, LESSON, LESSON_SHARE, homeStage, lotGround, needsOf, type HomeStage, type LotGround } from './rangesave';
 
 /** what the host needs of the engine */
 export interface RangeHostCtx {
@@ -29,6 +30,11 @@ export interface RangeHostCtx {
   /** the range's car park (the lot on the plot) laid on rect (world) instead (T146: it keeps its near half beside the car park building); missing:
    *  the lot stays as it is */
   fitPark?(rect: Rect): void;
+  /** T239: the range car park's ground as its upgrades have it (packed dirt, gravel, paved: the lot's bays, ground and gate props follow) */
+  parkGround?(g: LotGround): void;
+  /** T239: the cart paths (every Cart paths & roads path) with a leg in the world box (x0 y0 x1 y1), and the network's version (bumped by
+   *  every road or path edit): the walkway the walkers use is read again when it changes */
+  pathLegs?(box: readonly [number, number, number, number]): { a: Pt; b: Pt }[]; netVersion?(): number;
   /** places a scene piece as an auto prop (turned to its view, at its size, the key its auto) and removes one */
   addPiece(p: ScenePiece, key: string): Prop | null; removeProp(p: Prop): void;
   /** the ground patches of a key (null drops them), the cart paths to lay (cement slab, committed), the trees to clear off a box */
@@ -50,19 +56,28 @@ export interface RangeHostCtx {
 function patchTex(s: ScenePatch['surf']): LotPatch['tex'] {
   if (s === 'concrete') return 'pad'; // the Paint tool's concrete
   if (s === 'dirt' || s === 'grassDry' || s === 'asphaltDark' || s === 'gravel') return s;
-  // the range's own presets (T132: the owner tunes them in the studio), else the course's fairway and green as before
-  if (s === 'outfield' || s === 'target') { const own = rangePreset(s); return own ? presetTex(own.id) : patchTex(s === 'outfield' ? 'fairway' : 'green'); }
+  // the range's own presets (T132, T223: the owner tunes them in the studio), else the nearest game texture
+  if (s in RANGE_PRESET) { const own = rangePreset(s as RangePresetKey); return own ? presetTex(own.id) : PRESET_FALLBACK[s as RangePresetKey](); }
   return (surfacePreset(s) ?? SURFACE_TEX[s as GolfSurface].tex) as LotPatch['tex'];
 }
-/** the range's own texture presets (paint-presets.json, T132): the outfield (its mowing stripes) and the target greens */
-export const RANGE_PRESET: Readonly<Record<'outfield' | 'target', string>> = { outfield: 'range-outfield', target: 'range-green' };
-const rangePreset = (s: 'outfield' | 'target') => PRESETS.find(p => p.id === RANGE_PRESET[s]) ?? null;
+type RangePresetKey = 'outfield' | 'target' | 'desert' | 'teeDirt' | 'teeTurf' | 'yard';
+/** the range's own texture presets (paint-presets.json, T132): the outfield (its mowing stripes) and the target greens; T223: the desert start's
+ *  outfield (the Waste area sand's desert, no stripes), the range's tee box as packed dirt and as its divot-scarred turf (its own, so the
+ *  course's tees never change with it), and the caravan's and the cottage's desert yard (painted-surfaces.json presets give each its look) */
+export const RANGE_PRESET: Readonly<Record<RangePresetKey, string>> = { outfield: 'range-outfield', target: 'range-green', desert: 'range-outfield-desert', teeDirt: 'range-tee', teeTurf: 'range-tee-turf', yard: 'range-home-yard' };
+/** the texture a range patch takes when its preset is missing (the course's fairway, green and tee, the waste sand and the dirt) */
+const PRESET_FALLBACK: Readonly<Record<RangePresetKey, () => LotPatch['tex']>> = {
+  outfield: () => patchTex('fairway'), target: () => patchTex('green'), teeTurf: () => patchTex('tee'),
+  desert: () => 'wasteSand' as LotPatch['tex'], yard: () => 'wasteSand' as LotPatch['tex'], teeDirt: () => 'dirt',
+};
+const rangePreset = (s: RangePresetKey) => PRESETS.find(p => p.id === RANGE_PRESET[s]) ?? null;
 /** the outfield's mowing stripes (PatchPaint.mw) from its preset's Stripes, laid in the range's frame: 'x' bands across the line of play
  *  (alternating down the range), 'y' bands down it (alternating across); null when the preset has them off */
 export function outfieldStripes(sc: Pick<RangeScene, 'aim' | 'roadDir' | 'mowFrom'>, s: Stripes | null | undefined): MowStripes | null {
   if (!s?.on) return null;
-  const u = s.dir === 'y' ? sc.roadDir : sc.aim, n = Math.hypot(u.x, u.y) || 1;
-  return { ux: u.x / n, uy: u.y / n, ox: sc.mowFrom.x, oy: sc.mowFrom.y, w: s.width, l: s.light, k: s.dark, lc: s.lightCol, dc: s.darkCol, t: s.tint, f: s.soft };
+  const u = s.dir === 'y' ? sc.roadDir : sc.aim, n = Math.hypot(u.x, u.y) || 1, na = Math.hypot(sc.aim.x, sc.aim.y) || 1;
+  // T227: the line of play rides along, so the course finish lays the outfield's bands as the fairways' (course-finish finishMow)
+  return { ux: u.x / n, uy: u.y / n, ox: sc.mowFrom.x, oy: sc.mowFrom.y, w: s.width, l: s.light, k: s.dark, lc: s.lightCol, dc: s.darkCol, t: s.tint, f: s.soft, lx: sc.aim.x / na, ly: sc.aim.y / na };
 }
 /** the takings are booked this often (sim s), not on every sale; a frame this long (sim s) is a skip */
 const BOOK_EVERY = 2, SKIP_DT = 120;
@@ -93,11 +108,14 @@ export class RangeHost {
 
   /** the scene laid again when the range's state, its plot or its car park changed (cheap to call every frame: a key compares them) */
   sync(force = false): void {
-    const b = this.ctx.biz(), pl = this.ctx.plot(), cp = this.ctx.carPark();
+    const b0 = this.ctx.biz();
+    // T239: the car park's ground follows its upgrades (dirt, gravel, paved), before its bays are read
+    if (b0 && this.ctx.plot()) this.ctx.parkGround?.(lotGround(b0));
+    const b = b0, pl = this.ctx.plot(), cp = this.ctx.carPark();
     // the home's stage (T133) re-lays the yard as the lifetime takings grow
     const home = b ? homeStage(b) : 0;
     const key = b && pl ? `${pl.rect.join(',')}:${pl.facing}:${b.owned.join(',')}:${cp ? cp.bays.length : -1}:${home}` : '';
-    if (!force && key === this.key) return;
+    if (!force && key === this.key) { this.syncWalk(); return; }
     this.key = key;
     if (!b || !pl) { this.drop(); return; }
     // the player moved house (T133): toasted once, never on a load
@@ -114,16 +132,30 @@ export class RangeHost {
     const mw = outfieldStripes(sc, rangePreset('outfield')?.stripes);
     this.ctx.setGround('range:ground', sc.patches.map((p, i) => ({ pts: p.pts, tex: patchTex(p.surf), paint: { s: 1, a: 0, b: 0, bt: 'kerb', z: -1e6 + i, ...(p.edge ? { e: p.edge } : {}), ...(p.mow && mw ? { mw } : {}) } })));
     if (!this.scene) { this.ctx.clearTrees(sc.box); this.ctx.clearTrees(sc.practice.box); }
-    if (!b.paths) { this.ctx.layPaths(sc.paths); b.paths = true; this.ctx.save(); }
+    // the old start's cement walkway, laid once (an old save's first load); T239: a guided start's walkway is the player's to lay
+    if (b.paths === false) { this.ctx.layPaths(sc.paths); b.paths = true; this.ctx.save(); }
     // the car park building (T146): the lot keeps its near half beside it, the cart path is laid on round it once (an old save's first load too),
     // and its places follow the lot's bays (the lot's first: the nearest)
     if (sc.garage) {
       this.ctx.fitPark?.(sc.garage.lot);
       if (!b.garage) { this.ctx.layPaths([sc.garage.path]); b.garage = true; this.ctx.save(); }
     }
-    this.scene = sc;
+    this.scene = sc; this.walkVer = -1; this.walkKey = ''; this.syncWalk();
     this.sim.setScene(sc, [...(cp?.bays ?? []), ...(cp && sc.garage ? garageSlots(sc.garage, GARAGE_CARS) : [])], cp?.entrance ?? null);
   }
+  /** T239: the network's version and the paths' signature the walkway was read for */
+  private walkVer = -1; private walkKey = '';
+  /** T239: the walkway the walkers use (rangebiz walkwayOf), read again when the paths near the range front change: the scene the sim holds
+   *  takes it at once (golfers already walking keep their way) */
+  private syncWalk(): void {
+    const sc = this.scene; if (!sc || !this.ctx.pathLegs) return;
+    const v = this.ctx.netVersion?.() ?? 0; if (v === this.walkVer) return; this.walkVer = v;
+    const legs = this.ctx.pathLegs(sc.front), k = legs.map(l => `${l.a.x},${l.a.y},${l.b.x},${l.b.y}`).sort().join(';');
+    if (k === this.walkKey) return; this.walkKey = k;
+    sc.walk = walkwayOf(sc, legs);
+  }
+  /** T239: whether the range's walkers have a walking path joining the car park, the shop and the tee */
+  hasWalkway(): boolean { return !!this.scene?.walk; }
   /** everything off the map (a new game, a load, not a range start) */
   drop(): void {
     for (const p of this.props.values()) this.ctx.removeProp(p);
@@ -181,7 +213,7 @@ export class RangeHost {
     for (let k = 0; k < d.nCars; k++) {
       const c = d.cars[k]!; if (c.x < x0 || c.x > x1 || c.y < y0 || c.y > y1) continue;
       const f = F[c.type % 5]![carHeading(c.ang)]!, m = this.carMover(k), z = CAR_SCALE * f.size;
-      m.item = f.item; m.flip = f.flip; m.scale = z; m.moving = true;
+      m.item = f.item; m.flip = f.flip; m.scale = z; m.moving = true; m.paint = c.id >= 0 ? paintOf(hash3(c.id, 0x5a)) : 0; // (T228: its golfer's own paint)
       m.x = c.x - f.ox * z; m.y = c.y - f.oy * z; m.x0 = c.x - f.hx * z; m.x1 = c.x + f.hx * z; m.y0 = c.y - f.hy * z; m.y1 = c.y + f.hy * z;
       out.push(m);
     }
@@ -287,11 +319,12 @@ export class RangeHost {
     const p = this.practice, b = this.ctx.biz()!;
     return { putting: p?.putting.state ?? (b.practice.putting.open ? 'open' : 'none'), chipping: p?.chipping.state ?? (b.practice.chipping.open ? 'open' : 'none') };
   }
-  /** where the practice area is (its middle) and the brush that builds the next facility there (the hint's Show me) */
-  practiceTarget(): { x: number; y: number; brush: 'green' | 'bunker' } | null {
+  /** where the practice area is (its middle) and the facility to build next there (the hint's Show me, the card's Show area: T206, the
+   *  practice tool armed with it): the putting green until it is open, then the chipping green */
+  practiceTarget(): { x: number; y: number; kind: PracticeId } | null {
     const sc = this.scene; if (!sc) return null;
-    const f = this.practiceFacts(), c = this.practice?.chipping;
-    return { ...sc.practice.label, brush: f && f.putting === 'open' && c && c.state === 'nobunker' ? 'bunker' : 'green' };
+    const f = this.practiceFacts();
+    return { ...sc.practice.label, kind: f && f.putting === 'open' ? 'chipping' : 'putting' };
   }
 
   /** the practice area (T130): until something is built there a faint dashed outline with its "Practice area" label (brighter while the hint
@@ -299,6 +332,8 @@ export class RangeHost {
   hint = false;
   /** the practice area is not open yet (a range start's ramp, T132: it opens with the first range upgrade): its label says so */
   practiceLocked = false;
+  /** T239: the practice area's price while it is land for sale (null: the player's) */
+  practiceSale: number | null = null;
   private drawPractice(c: CanvasRenderingContext2D, screen: (x: number, y: number) => { x: number; y: number }, zoom: number, dpr: number, on: (p: { x: number; y: number }, m?: number) => boolean, labels: WorldLabels): void {
     const sc = this.scene!, pa = sc.practice, p = this.practice;
     if (zoom >= 0.03 && !(p ? p.built : this.ctx.biz()?.practice.putting.open)) {
@@ -312,7 +347,7 @@ export class RangeHost {
         // the area's name and (at the street tier) its hint under it: one world label (T151) whose box holds both lines
         const px = Math.round(dpr * 13), lw = 3 * dpr, l = labels.text(pa, PRI.area, 'Practice area', q.x, q.y, `700 ${px}px system-ui, sans-serif`, px, '#ecfccb', 'rgba(10,30,10,0.85)', lw);
         if (zoom >= 0.12) {
-          const sf = `600 ${Math.round(px * 0.8)}px system-ui, sans-serif`, t = this.practiceLocked ? 'Opens with your first range upgrade' : 'Paint a putting green here';
+          const sf = `600 ${Math.round(px * 0.8)}px system-ui, sans-serif`, t = this.practiceSale !== null ? `For sale: $${this.practiceSale.toLocaleString()} (Course ▸ Land for sale)` : this.practiceLocked ? 'Opens with your first range upgrade' : 'Build a putting green here (Facilities ▸ Practice)';
           // the box from the name's top to the hint's foot, its centre moved down to the middle
           const top = q.y - px / 2 - lw / 2, foot = q.y + px * 1.3 + px * 0.4 + lw / 2, mid = (top + foot) / 2;
           l.sub = t; l.subFont = sf; l.subFill = '#d9f99d'; l.w = Math.max(l.w, labels.width(sf, t) + lw); l.h = foot - top;

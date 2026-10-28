@@ -17,11 +17,13 @@ import { isBuilding } from '../mirror';
 import { LU, LV } from './town';
 import {
   BUSHES, BY, Build, CHAIN, DEAD_TREES, DRIVE_GAP, JUNK, MARK_ID, PARK_PIECES, PICKUPS, PRIVACY, SCHOOL_SIGNS, SIDE_YARD, TREES, clamp, isCarPark, mix,
-  names, pick, specFit, withVariations,
+  boxOf, names, patchTex, pick, specFit, withVariations,
   type Composition, type ComposeState, type LotGeom, type Pt, type PresetDrop,
 } from './compose-core';
 import { approvedFor, bucketOf, fitPreset, parsePresets, pickPreset, presetsFor, stateOf, type Fitted, type LotPreset, type PresetDecal, type PresetMeta, type PresetProp, type PresetState, type PresetUse, type Road } from './presets';
 import { AXIS_PROPS, drawnView, footprintOf, ownerScaleOf, roadView, turned } from './preset-art';
+import { fixedArt } from './art-fix';
+import { share, type Box4 } from './compose-core'; // T232: the building sites' kit (putClear)
 import { frameOf, listToWorld, quarterOfRoad, roadOf, toWorld, type PresetFrame } from './preset-frame';
 import PRESET_JSON from './lot-presets.json';
 import { generateLayout, PER_LOT, type LaidItem } from './lot-gen';
@@ -39,6 +41,8 @@ import { LIBRARY } from '../library';
 import { drawnAsStandIn } from '../newart';
 import { GAS_SHOP, GAS_SHOP_FALLBACK, WHEEL_STOP, gasPlan, isCanopy, isOpenStructure, matchBays } from './gas-station';
 import { LATEST, LOT_MODELS } from './lot-models';
+import { lotPickup, parkedAs } from '../vehicles';
+import { KIT_FLOWERS, KIT_HEDGE, KIT_SHRUBS } from '../kit';
 export { isCarPark, type Composition, type ComposeState, type LotGeom, type Placed, type PresetDrop } from './compose-core';
 
 /** the fence grid of a house lot, drawn as its own layer (procedural: the presets hold no fences): wooden privacy panels on the
@@ -130,26 +134,92 @@ const SITE_KIT = {
   storage: names(['construction:pallet-stack', 'construction:mesh-rolls']).concat(withVariations(['expansion:pallet-stack'])),
   rubble: withVariations(['expansion:concrete-rubble']), spool: withVariations(['expansion:cable-spool']), forklift: withVariations(['expansion:forklift']),
 };
-/** a dirt construction site: a digger, varied supplies, rubble, a cable spool and a pickup; no building */
-function site(B: Build) {
-  B.allMarks = true;
-  const { W, D, r, flip } = B;
-  B.pave('yard', 0.3, 0.3, W - 0.3, D - 0.3, 'dirt');
-  // The digger's source faces +X, so mirror it for streets along the other axis (+Y).
-  // Give the machine priority over the smaller props; done() applies the usual lot and collision checks.
-  B.put('construction:digger', W / 2 - 0.6, D / 2 + 1, { flip: !flip });
+/** T232 (#673, the concept's building sites): the site kit (prep-site-kit.mjs, on the construction page): lumber stacks (170), heaps of earth,
+ *  gravel and sand (171), and the timber frame going up (169) in its two views, view 1 where the lot's street lies toward the camera (+X or
+ *  +Y), view 2 (the frame turned half round) where it lies away; the excavator (168) is the library's digger. None is ever mirrored */
+export const SITE_LUMBER = names(['construction:site-lumber-a', 'construction:site-lumber-b', 'construction:site-lumber-c']);
+export const SITE_HEAPS = names(['construction:site-heap-earth', 'construction:site-heap-gravel', 'construction:site-heap-sand']);
+export const TIMBER_FRAME = ['construction:timber-frame-1', 'construction:timber-frame-2'] as const;
+export const DIGGER = 'construction:digger';
+/** the kit's ids (the tests: a lot shows them only while it builds) */
+export const SITE_PIECES: ReadonlySet<string> = new Set([...SITE_LUMBER, ...SITE_HEAPS, ...TIMBER_FRAME, DIGGER]);
+/** a site's bare dirt reaches this close to its lot's lines (tiles: the survey line runs SURVEY_INSET in, on the dirt); a house frame stands this
+ *  far back from the front line (a front yard's depth) */
+const SITE_DIRT = 0.1, FRAME_SETBACK = 1.6;
+/** the frame's view for a lot: view 1 when its street lies toward the camera (+X or +Y), else view 2 */
+export const frameView = (B: Pick<Build, 'F'>): string => TIMBER_FRAME[B.F.x > 0.5 || B.F.y > 0.5 ? 0 : 1];
+
+/** a site piece keeps this far inside its lot's lines (tiles: within the survey line), and may share this much of its footprint with another */
+const SITE_IN = 0.35, SITE_SHARE = 0.05;
+/** T232: a piece at the first of the spots (lot frame a, b: its footprint's centre) where its footprint lies within the survey line and clear of
+ *  the uprights laid so far (so the kit never piles up, and a spot taken passes to the next), and out of the frame's screen shadow when given
+ *  (the frame's footprint centre and its half width across the screen, x - y tiles: a piece whose ground point is above the frame's on screen and
+ *  within its width stands behind its walls and is lost); nothing when none is free. Its size is drawn once */
+function putClear(B: Build, id: string, spots: readonly (readonly [number, number])[], shade?: { x: number; y: number; t: number }): boolean {
+  const g = B.spec(id); if (!g) return false;
+  const h = g.h, hw = (h[2] - h[0]) / 2, hd = (h[3] - h[1]) / 2;
+  for (const [a, b] of spots) {
+    const c = B.P(a, b), fp: Box4 = [c.x - hw, c.y - hd, c.x + hw, c.y + hd];
+    if (shade) { const dx = c.x - shade.x, dy = c.y - shade.y; if (dx + dy < -0.3 && Math.abs(dx - dy) < shade.t + 0.6 * (hw + hd)) continue; }
+    const inside = [[fp[0], fp[1]], [fp[2], fp[1]], [fp[2], fp[3]], [fp[0], fp[3]]].every(([x, y]) => {
+      const dx = x! - B.o.x, dy = y! - B.o.y, la = dx * B.u.x + dy * B.u.y, lb = dx * B.n.x + dy * B.n.y;
+      return la >= SITE_IN - 1e-9 && la <= B.W - SITE_IN + 1e-9 && lb >= SITE_IN - 1e-9 && lb <= B.D - SITE_IN + 1e-9;
+    });
+    if (!inside || B.items.some(it => !it.fence && share(it.fp, fp) > SITE_SHARE)) continue;
+    return !!B.atW(g, c);
+  }
+  return false;
+}
+/** a building site (a lot while it builds, LV.BUILDING): bare dirt (the Dirt surface, dirt-run) to the white dashed survey line round the plot; a
+ *  house's timber frame where the house will stand (a lot on the map axes that holds it), lumber stacks beside it, heaps and the digger behind;
+ *  the other uses' sites the digger in the middle, heaps, lumber and the old supplies, rubble, a cable spool and a pickup. Every piece as
+ *  painted (nothing mirrored); done() keeps the first of two that overlap, so the frame, then the digger, win */
+function site(B: Build, home: boolean, angled: boolean) {
+  B.allMarks = true; B.surveyed = true;
+  const { W, D, r } = B;
+  B.pave('yard', SITE_DIRT, SITE_DIRT, W - SITE_DIRT, D - SITE_DIRT, 'dirt');
+  const heap = () => pick(r, SITE_HEAPS), lumber = () => pick(r, SITE_LUMBER);
+  /** the spots in a seeded turn (the same lot lays the same; neighbours differ) */
+  const turn = <T,>(l: T[]): T[] => { const k = Math.floor(r() * l.length); return [...l.slice(k), ...l.slice(0, k)]; };
+  if (home) {
+    // the frame where the house will stand: across the middle (a little to one side), set back as a house is
+    const id = frameView(B), [fw, fd] = B.fit(id, false);
+    const fits = !angled && fw + 1 <= W && FRAME_SETBACK + fd + 0.5 <= D;
+    const fa = fits ? W / 2 + (r() - 0.5) * Math.max(0, W - fw - 1.6) * 0.5 : W / 2, fb = FRAME_SETBACK + fd / 2;
+    const fr = fits ? B.put(id, fa, fb) : null;
+    // the free ground round it: the strips beside it (to a0, from a1) and behind it (from back); nothing in its screen shadow
+    const a0 = fits ? fa - fw / 2 : W / 2, a1 = fits ? fa + fw / 2 : W / 2, back = fits ? fb + fd / 2 : D * 0.35, L = a0 / 2, R = (a1 + W) / 2;
+    const shade = fr ? { x: (fr.fp[0] + fr.fp[2]) / 2, y: (fr.fp[1] + fr.fp[3]) / 2, t: (fr.fp[2] - fr.fp[0] + fr.fp[3] - fr.fp[1]) / 2 } : undefined;
+    // the digger (it dug the footings): behind the frame, else beside it
+    const [dw, dd] = B.fit(DIGGER, false);
+    putClear(B, DIGGER, [[W / 2 + (r() - 0.5) * Math.max(0, W - dw - 1.2), D - dd / 2 - 0.5], [dw / 2 + 0.5, D - dd / 2 - 0.5], [W - dw / 2 - 0.5, D - dd / 2 - 0.5],
+      ...turn<[number, number]>([[L, back - dd / 2], [R, back - dd / 2], [L, D / 2], [R, D / 2], [L, fb], [R, fb], [L, dd / 2 + 0.5], [R, dd / 2 + 0.5]])], shade);
+    // the heaps it left: the back corners, else beside the frame; lumber for the walls beside it, else in front or behind
+    const heaps: [number, number][] = turn([[1.2, D - 1.1], [W - 1.2, D - 1.1], [L, D - 1.1], [R, D - 1.1], [L, back - 0.6], [R, back - 0.6], [W / 2, D - 1.1], [L, 1.2], [R, 1.2]]);
+    putClear(B, heap(), heaps, shade); putClear(B, heap(), heaps, shade);
+    const stacks: [number, number][] = turn([[L, fb], [R, fb], [L, FRAME_SETBACK], [R, FRAME_SETBACK], [L, back], [R, back], [W / 2, D - 1.2], [W / 2, 0.9]]);
+    putClear(B, lumber(), stacks, shade); putClear(B, lumber(), stacks, shade);
+    if (r() < 0.6) putClear(B, lumber(), stacks, shade);
+    putClear(B, pick(r, SITE_KIT.masonry), stacks, shade);
+    B.vehicle(PICKUPS, a0 > W - a1 ? L : R, 0.5);
+    B.mark('mud', W / 2, Math.min(D - 1, back + 0.8), 1.2); B.mark('expansion:mud-footprints', W / 2, FRAME_SETBACK - 0.6); B.mark('expansion:mud-arc', W * 0.7, D - 2.2); B.marksIn('gravel', 1, 1, W - 1, D - 1, 2);
+    return;
+  }
+  // the digger in the middle (as painted: it faces +X), then the heaps and lumber, the supplies, rubble, a spool and a pickup
+  B.put(DIGGER, W / 2 - 0.6, D / 2 + 1);
+  const spots: [number, number][] = turn([[W - 1.6, D * 0.3], [1.5, D - 2], [W - 1.5, D - 2.2], [1.4, D * 0.4], [W / 2, D - 1.2], [W - 1.4, 1.4]]);
+  putClear(B, heap(), spots); putClear(B, lumber(), spots);
   B.put(pick(r, SITE_KIT.masonry), 1.2, 1.6);
   B.put(pick(r, SITE_KIT.masonry), 2.5, 1.2);
   B.put(pick(r, SITE_KIT.rubble), W - 1.6, 2.2);
-  B.put(pick(r, SITE_KIT.aggregate), W - 1.5, D * 0.3);
-  B.put(pick(r, SITE_KIT.spool), W - 1.4, D - 2.2);
-  if (r() < 0.4) B.put(pick(r, SITE_KIT.forklift), W / 2 + 1.5, D / 2, { flip });
+  putClear(B, heap(), spots);
+  if (r() < 0.4) B.put(pick(r, SITE_KIT.forklift), W / 2 + 1.5, D / 2);
   B.put(pick(r, SITE_KIT.rubble), W / 2 - 2.6, D / 2 - 0.4);
   B.vehicle(PICKUPS, W / 2, 0.8);
   B.mark('mud', W / 2, 2.4, 1.2); B.mark('expansion:mud-footprints', W / 2, D / 2); B.mark('expansion:mud-arc', W * 0.7, D - 2.2); B.marksIn('gravel', 1, 1, W - 1, D - 1, 2);
-  B.put(pick(r, SITE_KIT.long), 1.6, D - 1.8, { flip });
+  B.put(pick(r, SITE_KIT.long), 1.6, D - 4);
   B.put(pick(r, SITE_KIT.storage), W - 2.2, D - 1.4);
-  if (r() < 0.5) B.put(pick(r, JUNK), W / 2, D - 1.5, { flip });
+  if (r() < 0.5) B.put(pick(r, JUNK), W / 2, D - 1.5);
 }
 
 /** a vacant lot: a few weeds and a tree */
@@ -348,20 +418,26 @@ function fromPreset(B: Build, lot: LotGeom, st: ComposeState, p: { preset: LotPr
   const range = (pts: readonly number[]): [number, number] => { let a = Infinity, b = -Infinity; for (let i = 0; i < pts.length; i += 2) { a = Math.min(a, pts[i]!); b = Math.max(b, pts[i]!); } return [a, b]; };
   let drive: [number, number] | null = null, main: [number, number] | null = null, big = 0, ups = 0;
   for (const a of fit.patches) {
-    B.patches.push({ kind: a.kind, tex: a.tex as LotPatch['tex'], quad: listToWorld(f, a.pts), ...(a.lines ? { lines: listToWorld(f, a.lines) } : {}) });
+    B.patches.push({ kind: a.kind, tex: patchTex(a.kind, a.tex as LotPatch['tex']), quad: listToWorld(f, a.pts), ...(a.lines ? { lines: listToWorld(f, a.lines) } : {}) });
     if (a.kind === 'drive' && !drive) drive = range(a.pts);
   }
   if (B.drops) { const kept = new Set(fit.from); preset.props.forEach((q, i) => { if (!kept.has(i)) B.drops!.push({ preset: preset.id, prop: i, id: q.id, why: 'outside the lot at this size (the fit)' }); }); }
   fit.props.forEach((q, k) => {
     // T154 Phase 2: on a road at 45 degrees a building with a screen-axis set faces its street (preset-art.ts drawnView), else its view is turned
-    const t = drawnView(q.id, f, q.view), it = BY.get(t.id);
+    // T219: an iconic place draws a fixed picture (art-fix.ts) as its facing turns it, on its true footprint; a car's scale is its owner size (ownerScaleOf), the engine draws it at CAR_SCALE times that
+    // T236: a farm's or a junk yard's yellow pickup is the rusty one on about half of them (vehicles.ts lotPickup)
+    const qid = preset.use === 'farm' || st.use === LU.IND ? lotPickup(q.id, st.seed, k) : q.id;
+    const s = q.scale * ownerScaleOf(qid), fx = B.artFix ? fixedArt(qid, f.q + q.view, s) : null;
+    const t = fx ? { id: fx.id, flip: false, diag: false } : drawnView(qid, f, q.view), it = BY.get(t.id);
     if (!it) return;
-    const car = it.cat === 'Vehicles';
+    // (a car as the preset has it: the rusty pickup in a yellow one's place is thinned as it would have been)
+    const car = qid === q.id ? it.cat === 'Vehicles' : BY.get(q.id)?.cat === 'Vehicles';
     if (car && (B.noCars || (st.decline === 1 && B.r() >= CAR_KEEP_D1))) { B.drops?.push({ preset: preset.id, prop: fit.from[k]!, id: t.id, why: B.noCars ? 'no cars on a derelict lot' : 'cars thinned on a shabby lot' }); return; }
-    // a car's scale is its owner size (ownerScaleOf), the engine draws it at CAR_SCALE times that
-    const s = q.scale * ownerScaleOf(q.id);
+    // T236: a parked wagon takes the car park mix's vehicle for its spot (vehicles.ts parkedAs: at the wagon's size, standing where it stood, on the
+    // wagon's body footprint: Placed.foot, which the engine draws it on)
+    const c = toWorld(f, q.x, q.y), pa = fx ? null : parkedAs(t.id, s, footprintOf(t.id, s, t.flip), c.x, c.y);
     // a whole preset's prop in front of the lot is a street item (the verge: done() keeps it there, as it keeps a procedural one)
-    const item = B.atW({ id: t.id, s, flip: t.flip, h: footprintOf(t.id, s, t.flip) }, toWorld(f, q.x, q.y), { plant: it.kind === 'tree' || it.kind === 'bush', ...(fit.from[k]! >= 0 ? { from: { preset: preset.id, prop: fit.from[k]! } } : { paved: true }), street: preset.whole === true && q.y < 0, ...(fit.standIn?.[k] ? { standIn: fit.standIn[k] } : {}), ...(t.diag ? { diag: true } : {}) });
+    const item = B.atW({ id: pa ? pa.id : t.id, s, flip: t.flip, h: fx ? fx.h : pa!.h }, c, { ...(fx || (pa && pa.id !== t.id) ? { foot: true } : {}), plant: it.kind === 'tree' || it.kind === 'bush', ...(fit.from[k]! >= 0 ? { from: { preset: preset.id, prop: fit.from[k]! } } : { paved: true }), street: preset.whole === true && q.y < 0, ...(fit.standIn?.[k] ? { standIn: fit.standIn[k] } : {}), ...(t.diag ? { diag: true } : {}) });
     if (item && !item.fence && !item.wheel) ups++;
     if (isBuilding(it)) { const fp = footprintOf(t.diag ? t.id : q.id, s, false), hw = t.diag ? (fp[2] - fp[0]) / (2 * Math.SQRT2) : (q.view % 2 ? fp[3] - fp[1] : fp[2] - fp[0]) / 2; if (hw > big) { big = hw; main = [q.x - hw, q.x + hw]; } }
   });
@@ -471,8 +547,8 @@ function generatedItems(B: Build, lot: LotGeom, st: ComposeState, p: { preset: L
   for (const it of layoutOf(lot, p, state, hi, group)) {
     if (it.kind === 'decal') { decalMarks(B, f, [{ id: it.id, x: it.x, y: it.y, scale: 1, alpha: 1 }]); continue; }
     if (it.kind === 'car' && (B.noCars || (st.decline === 1 && B.r() >= CAR_KEEP_D1))) continue;
-    const t = turned(it.id, f.q), s = ownerScaleOf(it.id);
-    B.atW({ id: t.id, s, flip: t.flip, h: footprintOf(t.id, s, t.flip) }, toWorld(f, it.x, it.y), { plant: it.kind === 'tree' || it.kind === 'bush' || it.kind === 'flowerbed', ...(it.kind === 'car' ? { paved: true } : {}) });
+    const t = turned(it.id, f.q), s = ownerScaleOf(it.id), c = toWorld(f, it.x, it.y), pa = parkedAs(t.id, s, footprintOf(t.id, s, t.flip), c.x, c.y); // (T236: a parked wagon takes the mix's vehicle)
+    B.atW({ id: pa.id, s, flip: t.flip, h: pa.h }, c, { ...(pa.id !== t.id ? { foot: true } : {}), plant: it.kind === 'tree' || it.kind === 'bush' || it.kind === 'flowerbed', ...(it.kind === 'car' ? { paved: true } : {}) });
   }
 }
 /** the items the generator lays on a house lot's base (generatedItems; preset frame, tiles): seeded by the lot, with the shipped model and its taste
@@ -648,6 +724,17 @@ function chainRing(B: Build) {
   B.run(CHAIN, 0.4, D - 0.4, W - 0.4, D - 0.4);
 }
 
+/** T219 (P27): an iconic place's whole preset (lots/iconic.ts) on its own footprint, drawn as a whole preset draws (its props kept as authored,
+ *  each turned to the footprint's facing, never mirrored; its patches; its decals as the ground marks; nothing procedural). Deterministic */
+export function composeWhole(lot: LotGeom, preset: LotPreset, seed: number): Composition {
+  const B = new Build(lot, mulberry(mix(seed, 219)));
+  B.keepAll = true; B.loose = true; B.artFix = true;
+  const frame = frameOf(lot), fit = fitPreset(preset, lot.w, lot.d);
+  fromPreset(B, lot, { use: LU.GOV, level: LV.BUILT, decline: 0, seed }, { preset, fit, frame });
+  decalMarks(B, frame, fit.decals);
+  return B.done();
+}
+
 /** The composition of a lot in a given state: deterministic from the lot, its use, level, decline and seed (and the presets). */
 export function compose(lot: LotGeom, st: ComposeState, drops?: PresetDrop[]): Composition {
   const B = new Build(lot, mulberry(mix(st.seed, st.use, st.level, st.decline)));
@@ -663,8 +750,9 @@ export function compose(lot: LotGeom, st: ComposeState, drops?: PresetDrop[]): C
   const edge = () => { boundaryFence(B, lot); B.clearDrives(); };
   const p = use ? lp : null;
   if (st.use === LU.NONE || st.level === LV.EMPTY) { vacant(B); edge(); }
+  // (T232: a lot under construction is a site, an angled one too: its dirt and survey line follow the lot)
+  else if (st.level === LV.BUILDING) { site(B, st.use === LU.RES, angled); edge(); }
   else if (angled && !p) { green(B); edge(); }
-  else if (st.level === LV.BUILDING) { site(B); edge(); }
   else if (!p || !use) { vacant(B); edge(); }
   else if (GENERATED && use === 'res' && frozenHouse(p.preset)) {
     // T160: the base of the frozen preset (its house, drive and walk), its street items and boundary fence; the yard from the generator
@@ -696,5 +784,53 @@ export function compose(lot: LotGeom, st: ComposeState, drops?: PresetDrop[]): C
     B.scatter(JUNK, 0.5, B.D * 0.5, B.W - 0.5, B.D - 0.5, st.decline >= 3 ? 2 : 1);
   }
   if (st.decline >= 3) B.scatter(BUSHES, 0.5, 0.5, B.W - 0.5, B.D - 0.5, 4, { plant: true });
+  // T231: a house lot's front yard dressed with the concept kit, by draws of its own after every other (nothing drawn before moves)
+  if (KIT_YARDS.on && use === 'res' && p && frozenHouse(p.preset)) kitYard(B, st);
   return B.done();
+}
+
+// ---------- T231: the concept kit in the yards (docs/art/CONCEPT-LOOK.md step 8, "houses close together with hedges, fences, flower beds and drives")
+/** the yards' kit on (tests turn it off to show that it moves nothing else) */
+export const KIT_YARDS = { on: true };
+/** how often a yard gets each part (a seeded draw a lot): the clipped hedge along the front, the shrubs along the house's front, the mums before them */
+export const KIT_YARD_RULES = { hedge: 0.55, shrubs: 0.8, mums: 0.6, hedgeIn: 0.45, shrubGap: 1.6, decline1: 0.5 } as const;
+/** A built house lot's front yard (its own preset not the owner's: curated, approved and whole lots stay exact) gets the concept kit by draws of
+ *  its own (mulberry from the lot's seed and 231; the lot's own stream B.r is never touched, and the items go after every other, so done() keeps
+ *  every earlier item as it was: a kit item that overlaps one, stands on the drive or the walk, or comes past the plant cap is the one left out):
+ *  a clipped hedge along the front, KIT_YARD_RULES.hedgeIn inside the lot line (its pieces across the drive and the walk drop out, leaving the
+ *  gaps); autumn shrubs along the house's front, a cell apart; mums in front of them. A declining lot (decline 1) keeps about half; decline 2
+ *  and 3 none. Never mirrored. */
+function kitYard(B: Build, st: ComposeState) {
+  if (st.level < LV.BUILT || st.decline >= 2) return;
+  const r = mulberry(mix(st.seed, 231, st.level, st.decline)), R = KIT_YARD_RULES, keep = () => st.decline < 1 || r() < R.decline1;
+  // the house: the biggest building of the lot, in the lot's frame (a along the front, b in from it)
+  let house: { a0: number; a1: number; b0: number } | null = null, area = 0;
+  for (const it of B.items) {
+    const lib = BY.get(it.id); if (!lib || !lib.big || !isBuilding(lib)) continue;
+    const ar = (it.fp[2] - it.fp[0]) * (it.fp[3] - it.fp[1]); if (ar <= area) continue;
+    const ab = [[it.fp[0], it.fp[1]], [it.fp[2], it.fp[1]], [it.fp[2], it.fp[3]], [it.fp[0], it.fp[3]]].map(([x, y]) => { const dx = x! - B.o.x, dy = y! - B.o.y; return [dx * B.u.x + dy * B.u.y, dx * B.n.x + dy * B.n.y] as const; });
+    area = ar; house = { a0: Math.min(...ab.map(q => q[0])), a1: Math.max(...ab.map(q => q[0])), b0: Math.min(...ab.map(q => q[1])) };
+  }
+  const free = (id: string, s: number, c: Pt) => {
+    const h = boxOf(id, s, false), fp = [c.x + h[0], c.y + h[1], c.x + h[2], c.y + h[3]] as const;
+    return !B.items.some(it => !it.street && fp[0] < it.fp[2] - 0.02 && fp[2] > it.fp[0] + 0.02 && fp[1] < it.fp[3] - 0.02 && fp[3] > it.fp[1] + 0.02);
+  };
+  const put = (id: string, s: number, a: number, b: number) => {
+    const c = B.P(a, b);
+    if (free(id, s, c)) B.atW({ id, s, flip: false, h: boxOf(id, s, false) }, c, { plant: true });
+  };
+  // the hedge along the front, pieces 2 tiles long along the lot's u axis
+  const hedge = r() < R.hedge, alongX = Math.abs(B.u.x) >= Math.abs(B.u.y), hid = alongX ? KIT_HEDGE.x : KIT_HEDGE.y, len = KIT_HEDGE.len;
+  if (hedge && BY.has(hid)) {
+    const n = Math.floor((B.W - 1) / len), a0 = (B.W - n * len) / 2;
+    for (let i = 0; i < n; i++) if (keep()) put(hid, 1, a0 + (i + 0.5) * len, R.hedgeIn);
+  }
+  if (!house || house.b0 < 2) return;
+  // shrubs along the house's front, then mums before them
+  const shrubs = r() < R.shrubs, mums = r() < R.mums, bS = house.b0 - 0.6, bM = house.b0 - 1.35;
+  for (let a = house.a0 + 0.6; a <= house.a1 - 0.6; a += R.shrubGap) {
+    const id = KIT_SHRUBS[Math.floor(r() * KIT_SHRUBS.length)]!, s = 0.85 + 0.2 * r(), m = KIT_FLOWERS[Math.floor(r() * KIT_FLOWERS.length)]!, sm = 0.9 + 0.2 * r();
+    if (shrubs && keep()) put(id, s, a, bS);
+    if (mums && bM > 1 && keep()) { put(m, sm, a - 0.3, bM); put(m, sm, a + 0.35, bM + 0.1); }
+  }
 }

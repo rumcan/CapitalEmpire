@@ -13,6 +13,9 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get("shadows") =
 // the vector shadows' draft run (T142, dev only: ?shadows=draft; scripts/dev/draft-shadows.mjs)
 else if (import.meta.env.DEV && new URLSearchParams(location.search).get("shadows") === "draft")
   void import("./game/dev/shadow-draft-page").then(m => m.startShadowDraft(document.getElementById("root")!));
+// the car paint audit sheet (T236, dev only: ?carpaint=audit; scripts/dev/car-paint-audit.mjs)
+else if (import.meta.env.DEV && new URLSearchParams(location.search).get("carpaint") === "audit")
+  void import("./game/dev/car-paint-audit").then(m => m.startCarPaintAudit(document.getElementById("root")!));
 else
   createRoot(document.getElementById("root")!).render(
     <StrictMode>

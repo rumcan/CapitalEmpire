@@ -1,5 +1,7 @@
 import { clampLook, DEFAULT_LOOK, familyById, type PaintedKind, type PaintedLook } from './painted-families';
 import type { PresetState } from './lots/presets';
+import { clampCourseFinish, type CourseFinish } from './course-finish';
+import { clampWaterLook, type WaterLook } from './water-look';
 
 /** Which hand-painted family each surface of the game wears (#147, T128): the golf surfaces, the town's lawns (several looks, one picked per lot
  *  and per road block so streets are not uniform), the map's ground, the living ground's lush and patchy grass, the course walls' cut faces,
@@ -12,7 +14,7 @@ import type { PresetState } from './lots/presets';
 export const WOODLAND = 'woodland';
 /** T194: what a town block's grass lies over where its soft patches leave the block (the rough's texture: the rough's painted look, the owner's
  *  rough paintings), never the map's fescue */
-export const BLOCK_UNDER = 'golfRough';
+export const BLOCK_UNDER = 'wasteSand'; // the owner, 2026-10-27: "change the block grass to desert": blocks lie over the Waste area sand (the desert) now, was the rough
 export type SurfaceGroup = 'Golf' | 'Map' | 'Town' | 'Living ground' | 'Course walls';
 /** a surface the studio lists by its plain name: the textures it stands for (a photo texture id, or a preset's golf surface), its group and the
  *  families that fit it (the picker shows those first) */
@@ -37,12 +39,15 @@ export const SURFACES: readonly SurfaceDef[] = [
   { key: 'dirt', name: 'Dirt and bare soil', group: 'Map', tex: ['dirt', 'rockyDirt', 'rockyDirtAlt'], kinds: ['cut', 'sand'] },
   { key: 'bank', name: 'River banks and creek beds', group: 'Map', tex: ['bank', 'creek'], kinds: ['cut', 'sand'] },
   { key: 'river', name: 'River and creek water', group: 'Map', tex: ['water'], kinds: ['water'] },
+  // T199: the small streams' banks widen into swamp (swamp.ts); unpainted, a stream keeps its old creek bed
+  { key: 'swamp', name: 'Swamp (round the small streams)', group: 'Map', tex: ['swamp'], kinds: ['water', 'grass'] },
   { key: 'field', name: 'Farm fields', group: 'Map', tex: ['field'], kinds: ['cut', 'grass'] },
   { key: 'woodland', name: 'Woodland floor (under the trees; the forests on the planner map)', group: 'Map', tex: [WOODLAND], kinds: ['grass', 'cut'] },
   { key: 'outside', name: 'Outside the map', group: 'Map', tex: ['outside'], kinds: ['grass'] },
   { key: 'lawn', name: 'Lawn (the Paint tool\'s lawn textures)', group: 'Town', tex: ['lawnLush', 'lawnClover'], kinds: ['grass'] },
   { key: 'lawnBuilt', name: 'Lot lawn: built lots (T155: the fairway)', group: 'Town', tex: ['lawnBuilt'], kinds: ['grass'] },
   { key: 'lawnUpgraded', name: 'Lot lawn: upgraded lots (T155: the putting green)', group: 'Town', tex: ['lawnUpgraded'], kinds: ['grass'] },
+  { key: 'mulch', name: 'Bark mulch (flower beds: the Paint tool\'s Bark mulch)', group: 'Town', tex: ['barkMulch'], kinds: ['cut'] },
   { key: 'lawnDeclined', name: 'Lot lawn: decrepit (declined) lots (T155: the rough)', group: 'Town', tex: ['lawnDeclined'], kinds: ['grass'] },
   { key: 'lush', name: 'Lush grass (along fences, walls and water)', group: 'Living ground', tex: ['grass-lush'], kinds: ['grass'] },
   { key: 'patchy', name: 'Patchy grass (under trees, at doors)', group: 'Living ground', tex: ['grass-patchy'], kinds: ['grass'] },
@@ -56,8 +61,10 @@ const PRESET_SURFACE: Readonly<Record<string, string>> = { green: 'green', fring
 const TEX_SURFACE = new Map<string, string>(SURFACES.flatMap(s => s.tex.map(t => [t, s.key] as const)));
 /** a town lawn's look and how often it is picked (its weight among the lawns) */
 export interface LawnLook extends PaintedLook { weight: number }
-/** the file: the surfaces' looks by key, the town lawns, and the presets with a look of their own (by preset id) */
-export interface SurfacesFile { v: 1; surfaces: Record<string, PaintedLook>; lawns: LawnLook[]; presets: Record<string, PaintedLook> }
+/** the file: the surfaces' looks by key, the town lawns, and the presets with a look of their own (by preset id); T227: the course finish's
+ *  knobs (course-finish.ts: the fairway bands, the green stripes, the collar, the bunker lips; absent: the tuned look); T230: the water look's
+ *  (water-look.ts: the depth toward the middle, the light edge, the shore's reflections; absent: the tuned look, `on: false` the water as before) */
+export interface SurfacesFile { v: 1; surfaces: Record<string, PaintedLook>; lawns: LawnLook[]; presets: Record<string, PaintedLook>; course?: CourseFinish; water?: WaterLook }
 export const LAWN_SLOTS = 8;
 /** a lawn's texture id (the town's lawns, when the painted art is on: one per lot and per road block, picked by lawnSlot) */
 export const lawnTex = (i: number) => `lawn:${i}`;
@@ -74,7 +81,7 @@ export function clampSurfaces(f: unknown): SurfacesFile {
     const l = clampLook(v), w = (v as { weight?: unknown })?.weight;
     if (l) lawns.push({ ...l, weight: Math.round(Math.min(10, Math.max(0, typeof w === 'number' && Number.isFinite(w) ? w : 1)) * 100) / 100 });
   }
-  return { v: 1, surfaces, lawns, presets };
+  return { v: 1, surfaces, lawns, presets, ...(o.course && typeof o.course === 'object' ? { course: clampCourseFinish(o.course) } : {}), ...(o.water && typeof o.water === 'object' ? { water: clampWaterLook(o.water) } : {}) };
 }
 /** what the game knows of a preset: its id, the golf surface it stands for, and the old painted set it named (T082) */
 export interface PresetRef { id: string; surface?: string | null; painted?: string | null }

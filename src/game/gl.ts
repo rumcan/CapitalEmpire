@@ -13,6 +13,10 @@ import { CONTACT_LEAN } from './shadow-shape';
 import { CONTACT_AO, VERTEX_FLOATS, type VectorMesh } from './shadow-vector';
 import { SHADOW_AMBIENT } from './cast-shadow';
 import { BRAKE_LIGHT } from './sim/car-lamps';
+import { SPEC_LIGHT_GLSL, SPEC_MASK_K } from './lamp-reflect';
+import { GLOSS, GLOSS_LIGHT_GLSL } from './swamp';
+import { GRADE_GLSL, blurGlsl, type GradeFrame } from './grade';
+import { CAR_PAINT_GLSL } from './car-paint';
 
 /** floats per sprite instance: rect x0 y0 x1 y1 (world px), uv u0 v0 u1 v1, layer, alpha, cullable, foot line (world px; < 0: casts no shadow),
  *  clip x0 y0 x1 y1 (world px), foot: the footprint's near corner x y and its left and right corners' x (world px; the cast shadows stand on it) */
@@ -36,6 +40,8 @@ const MESH_W = 2048;
 export const POINT_STRIDE = 6;
 
 export interface View { X: number; Y: number; ze: number; cw: number; ch: number }
+/** a chunk's whole picture (drawChunk's uv) */
+export const FULL_UV: readonly number[] = [0, 0, 1, 1];
 
 const VS_QUAD = `#version 300 es
 uniform vec4 uRect; uniform vec4 uCam; // camX camY ze 0
@@ -48,12 +54,38 @@ void main() {
   gl_Position = vec4(s.x / uScreen.x * 2.0 - 1.0, 1.0 - s.y / uScreen.y * 2.0, 0.0, 1.0);
   vUV = mix(uUV.xy, uUV.zw, c);
 }`;
+// T215: the street lamps' reflection pools as the camera specular (lamp-reflect.ts): a chunk with a reflection mask (uSpec.z > 0: its gain)
+// lights its own pixels as the bake's pools did (specLight: toward the 'lit' mosaics' response of the painting's pixel, rebuilt from the
+// road's local mean the mask holds premultiplied in rgb) at the mask's intensity (alpha) times the camera falloff, 1 within uSpec.x of the centre
+// and 0 past uSpec.y (the distance in device px over half the longer side: round on any screen). The mask is a SPEC_MASK_K-th of the
+// chunk's size (its uv scaled to the px it covers). No mask (uSpec.z 0): the chunk as before
+// T199: the swamp's pools catch the camera's sky glint (swamp.ts): a chunk with a gloss mask (uGloss.z > 0: its gain) lights its pools toward
+// the cool sky (glossLight: by the gloss, the pixel's own water key and its texture, its distance from the pool's local mean the mask holds
+// premultiplied in rgb) times the same camera falloff (uGloss.x, uGloss.y). The mask is a GLOSS.maskK-th of the chunk's size. No mask (uGloss.z
+// 0): the chunk as before
 const FS_QUAD = `#version 300 es
 precision highp float;
 uniform sampler2D uTex; uniform sampler2D uMask; uniform int uMode; uniform vec2 uScreen; uniform float uAlpha;
+uniform sampler2D uSpecTex; uniform vec4 uSpec; uniform sampler2D uGlossTex; uniform vec4 uGloss;
 in vec2 vUV; out vec4 o;
+${SPEC_LIGHT_GLSL}
+${GLOSS_LIGHT_GLSL}
 void main() {
   vec4 c = texture(uTex, vUV);
+  if (uSpec.z > 0.0) {
+    vec4 m = texture(uSpecTex, vUV * vec2(textureSize(uTex, 0)) / (${SPEC_MASK_K.toFixed(1)} * vec2(textureSize(uSpecTex, 0))));
+    if (m.a > 0.002) {
+      float d = length(gl_FragCoord.xy - 0.5 * uScreen) / (0.5 * max(uScreen.x, uScreen.y));
+      c.rgb = specLight(c.rgb * 255.0, vec4(m.rgb / m.a * 255.0, m.a), (1.0 - smoothstep(uSpec.x, uSpec.y, d)) * uSpec.z) / 255.0;
+    }
+  }
+  if (uGloss.z > 0.0) {
+    vec4 g = texture(uGlossTex, vUV * vec2(textureSize(uTex, 0)) / (${GLOSS.maskK.toFixed(1)} * vec2(textureSize(uGlossTex, 0))));
+    if (g.a > 0.002) {
+      float d = length(gl_FragCoord.xy - 0.5 * uScreen) / (0.5 * max(uScreen.x, uScreen.y));
+      c.rgb = glossLight(c.rgb * 255.0, vec4(g.rgb / g.a * 255.0, g.a), (1.0 - smoothstep(uGloss.x, uGloss.y, d)) * uGloss.z) / 255.0;
+    }
+  }
   if (uMode == 1) c *= texture(uMask, vec2(gl_FragCoord.x / uScreen.x, 1.0 - gl_FragCoord.y / uScreen.y)).a;
   o = c * uAlpha;
 }`;
@@ -66,15 +98,18 @@ void main() {
   vec2 w = mix(aRect.xy, aRect.zw, c);
   vec2 s = (w - uCam.xy) * uCam.z + uScreen * 0.5;
   bool cull = aMisc.z > 0.5 && (aRect.w - aRect.y) * uCam.z < uMinPx;
-  vTint = aMisc.y > 1.5 ? 1.0 : 0.0; // T176: 2 + alpha marks a tinted sprite
+  // T176: 2 + alpha marks a tinted sprite (vTint 1); T228: 2 + 2 code + alpha a painted car (vTint code + 1, car-paint.ts)
+  float code = aMisc.y > 1.5 ? floor((aMisc.y - 2.0) * 0.5) : -1.0;
+  vTint = code + 1.0;
   gl_Position = cull ? vec4(2.0, 2.0, 2.0, 1.0) : vec4(s.x / uScreen.x * 2.0 - 1.0, 1.0 - s.y / uScreen.y * 2.0, 0.0, 1.0);
-  vUV = vec3(mix(aUV.xy, aUV.zw, c), aMisc.x); vAlpha = aMisc.y > 1.5 ? aMisc.y - 2.0 : aMisc.y; vW = w; vClip = aClip;
+  vUV = vec3(mix(aUV.xy, aUV.zw, c), aMisc.x); vAlpha = aMisc.y > 1.5 ? aMisc.y - 2.0 - 2.0 * code : aMisc.y; vW = w; vClip = aClip;
 }`;
 // the atlas lookup (atlas-gl.ts glsl: atlasTex, from the finest resident mip of the sprite's cell) is sampled before any discard: its level of
 // detail comes from derivatives, which need the whole 2 x 2 quad
 const FS_SPRITE = (atlas: string) => `#version 300 es
 precision highp float; precision highp int;
 ${atlas}
+${CAR_PAINT_GLSL}
 in vec3 vUV; in float vAlpha; in vec2 vW; flat in vec4 vClip; flat in float vTint; out vec4 o;
 void main() {
   // T192: a lamp's glow (sim/car-lamps.ts, layer GLOW_LAYER: no atlas page): a soft disc of the brake lights' red, added (alpha 0), drawn in
@@ -90,7 +125,9 @@ void main() {
   if (c.a < 0.004) discard;
   // T176: a tinted sprite (a tree a Build would clear): its own light and shade in one warm rust red (its luminance times the tint), so it
   // reads as marked even among autumn reds, and the art's own darks stay dark (the owner's light rule)
-  if (vTint > 0.5) { float l = dot(c.rgb, vec3(0.299, 0.587, 0.114)); c.rgb = min(vec3(l) * vec3(1.8, 0.66, 0.44), vec3(c.a)); }
+  if (vTint > 0.5 && vTint < 1.5) { float l = dot(c.rgb, vec3(0.299, 0.587, 0.114)); c.rgb = min(vec3(l) * vec3(1.8, 0.66, 0.44), vec3(c.a)); }
+  // T228: a painted car (car-paint.ts): its body's pixels take its paint at their own light and shade (premultiplied: by its coverage)
+  else if (vTint > 1.5) c.rgb = carPaint(c.rgb / c.a, vTint - 1.0) * c.a;
   o = c * vAlpha;
 }`;
 // cast shadows (cast-shadow.ts): each sprite's silhouette laid on the ground away from the sun. Every column of the picture stands on its own
@@ -117,7 +154,8 @@ void main() {
   // T216: the sprite's own cull (VS_SPRITE): a sprite hidden at the district zoom casts no shadow either
   bool cull = aMisc.z > 0.5 && (aRect.w - aRect.y) * uCam.z < uMinPx;
   gl_Position = cull || aMisc.w < 0.0 ? vec4(2.0, 2.0, 2.0, 1.0) : vec4(s.x / uScreen.x * 2.0 - 1.0, 1.0 - s.y / uScreen.y * 2.0, 0.0, 1.0);
-  vUV = vec3(mix(aUV.xy, aUV.zw, c), aMisc.x); vAlpha = aMisc.y > 1.5 ? aMisc.y - 2.0 : aMisc.y; vW = vec2(x, y); vClip = aClip; // T176: a tint's 2 + alpha
+  // (T176: a tint's 2 + alpha; T228: a painted car's 2 + 2 code + alpha)
+  vUV = vec3(mix(aUV.xy, aUV.zw, c), aMisc.x); vAlpha = aMisc.y > 1.5 ? aMisc.y - 2.0 - 2.0 * floor((aMisc.y - 2.0) * 0.5) : aMisc.y; vW = vec2(x, y); vClip = aClip;
 }`;
 const FS_CAST = (atlas: string) => `#version 300 es
 precision highp float; precision highp int;
@@ -231,6 +269,30 @@ void main() {
   float l = dot(texture(uTex, vUV).rgb, vec3(0.299, 0.587, 0.114));
   o = vec4(0.0, clamp((1.0 - l) / ${(1 - (0.299 * SHADOW_AMBIENT[0] + 0.587 * SHADOW_AMBIENT[1] + 0.114 * SHADOW_AMBIENT[2])).toFixed(5)}, 0.0, 1.0), 0.0, 0.0);
 }`;
+// T226 (grade.ts): the colour grade, one full-screen pass from the scene's texture to the screen: the edge blur mixed in toward the top and
+// bottom (uGrade.z: on), the tone curve at strength uGrade.x, the vignette at uGrade.y. The scene's own pixel is fetched exactly (texelFetch),
+// the blur (half the screen's size) bilinear
+const FS_GRADE = `#version 300 es
+precision highp float;
+uniform sampler2D uScene; uniform sampler2D uBlur; uniform vec4 uGrade; uniform vec2 uScreen; out vec4 o;
+${GRADE_GLSL}
+void main() {
+  vec2 uv = gl_FragCoord.xy / uScreen;
+  vec3 c = texelFetch(uScene, ivec2(gl_FragCoord.xy), 0).rgb;
+  if (uGrade.z > 0.5) { float m = gradeEdgeMask(uv.y); if (m > 0.0) c = mix(c, texture(uBlur, uv).rgb, m); }
+  if (uGrade.x > 0.0) c = gradeCurve(c, uGrade.x) * gradeVignette(uv, uGrade.y);
+  o = vec4(c, 1.0);
+}`;
+// T226: the edge blur's separable Gaussian (grade.ts blurTaps), into a target of half the screen's size; uStep one of its px along the pass's
+// axis, in uv (the first pass reads the full-size scene bilinear, so it also halves it)
+const FS_BLUR = `#version 300 es
+precision highp float;
+uniform sampler2D uSrc; uniform vec2 uStep; uniform vec2 uSize; out vec4 o;
+void main() {
+  vec2 uv = gl_FragCoord.xy / uSize;
+${blurGlsl()}
+  o = vec4(c, 1.0);
+}`;
 const VS_POINT = `#version 300 es
 layout(location=0) in vec2 aPos; layout(location=1) in vec4 aCol;
 uniform vec4 uCam; uniform vec2 uScreen; uniform float uSize;
@@ -267,6 +329,16 @@ export class GLRenderer {
   atlas: AtlasGL | null = null; atlasReady = false;
   private dyn: WebGLBuffer; private dynCap = 0;
   private maskTex: WebGLTexture; private emptyTex: WebGLTexture;
+  /** T226: the colour grade this frame (engine.ts: grade.ts gradeFrame), read by begin: null, the scene draws straight to the screen as it
+   *  always did (bit for bit, no offscreen target); else into the scene target, which endFrame lays on the screen through the grade */
+  grade: GradeFrame | null = null;
+  private gradeProg: Prog; private blurProg: Prog;
+  /** T226: the framebuffer this frame's scene draws into (begin): the scene target while graded, else null (the screen) */
+  private target: WebGLFramebuffer | null = null; private frameGrade: GradeFrame | null = null;
+  /** T226: the scene target (RGBA8, the screen's size) and the edge blur's two half-size targets; made on first use, resized with the
+   *  screen, released when the grade or the blur is switched off (releaseGrade) */
+  private sceneTex: WebGLTexture | null = null; private sceneFbo: WebGLFramebuffer | null = null; private sceneW = 0; private sceneH = 0;
+  private blurTex: WebGLTexture[] = []; private blurFbo: WebGLFramebuffer[] = []; private blurW = 0; private blurH = 0;
   view: View = { X: 0, Y: 0, ze: 1, cw: 1, ch: 1 };
   stats = { draws: 0, instances: 0, uploadFloats: 0 };
 
@@ -274,12 +346,14 @@ export class GLRenderer {
     const gl = canvas.getContext('webgl2', { alpha: false, antialias: false, premultipliedAlpha: true, preserveDrawingBuffer: false, powerPreference: 'high-performance' });
     if (!gl) throw new Error('WebGL2 is not available');
     this.gl = gl;
-    this.quad = this.program(VS_QUAD, FS_QUAD, ['uRect', 'uCam', 'uScreen', 'uUV', 'uTex', 'uMask', 'uMode', 'uAlpha']);
+    this.quad = this.program(VS_QUAD, FS_QUAD, ['uRect', 'uCam', 'uScreen', 'uUV', 'uTex', 'uMask', 'uMode', 'uAlpha', 'uSpecTex', 'uSpec', 'uGlossTex', 'uGloss']);
     this.shadow = this.program(VS_SHADOW, FS_SHADOW, ['uCam', 'uScreen', 'uStrength', 'uShift', 'uMinPx']);
     this.point = this.program(VS_POINT, FS_POINT, ['uCam', 'uScreen', 'uSize', 'uSoft']);
     this.vec = this.program(VS_VEC, FS_VEC, ['uCam', 'uScreen', 'uShear', 'uMul', 'uFar', 'uVerts', 'uIdx', 'uMinPx']);
     this.layerProg = this.program(VS_FULL, FS_LAYER, ['uLayer', 'uAmbient']);
     this.shadeProg = this.program(VS_QUAD, FS_SHADEMASK, ['uRect', 'uCam', 'uScreen', 'uUV', 'uTex']);
+    this.gradeProg = this.program(VS_FULL, FS_GRADE, ['uScene', 'uBlur', 'uGrade', 'uScreen']);
+    this.blurProg = this.program(VS_FULL, FS_BLUR, ['uSrc', 'uStep', 'uSize']);
     this.dyn = gl.createBuffer()!;
     this.maskTex = gl.createTexture()!; this.emptyTex = gl.createTexture()!;
     for (const t of [this.maskTex, this.emptyTex]) { gl.bindTexture(gl.TEXTURE_2D, t); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 255])); this.texParams(gl.TEXTURE_2D, false); }
@@ -321,7 +395,8 @@ export class GLRenderer {
     this.cast = this.program(VS_CAST, FS_CAST(lib), ['uCam', 'uScreen', 'uCast', 'uMinPx', ...samplers]);
     this.atlas = a; this.atlasReady = true;
   }
-  /** bind the atlas textures for a sprite program (units 2 on: 0 and 1 are the chunks' texture and mask) */
+  /** bind the atlas textures for a sprite program (units 2 on: 0 and 1 are the chunks' texture and mask; the chunk program's reflection mask, T215,
+   *  is on 2 too, rebound with every chunk, as the atlas is with every sprite draw) */
   private bindAtlas(pr: Prog) {
     const a = this.atlas!, units = a.bind(2); a.samplerNames().forEach((n, i) => this.gl.uniform1i(pr.u[n]!, units[i]!));
   }
@@ -331,7 +406,24 @@ export class GLRenderer {
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, bmp); this.texParams(gl.TEXTURE_2D, false);
     return t;
   }
+  /** T215: a texture from a baked chunk's reflection mask (renderer.ts takeSpecMask), kept premultiplied: its bilinear lookup then weighs the
+   *  road's mean by the asphalt's coverage, and FS_QUAD divides it out */
+  specTexture(bmp: ImageBitmap) {
+    const gl = this.gl, t = gl.createTexture()!; gl.bindTexture(gl.TEXTURE_2D, t);
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, bmp); this.texParams(gl.TEXTURE_2D, false);
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+    return t;
+  }
   deleteTexture(t: WebGLTexture) { this.gl.deleteTexture(t); }
+  /** T215: the camera specular this frame (engine.ts: lamp-reflect.ts specGain and the knobs), or null (specCam off): the falloff's inner and
+   *  outer radius and the gain a chunk drawn with a reflection mask lights its pools by */
+  spec: { inner: number; outer: number; gain: number } | null = null;
+  /** T199: the swamp's camera glint this frame (engine.ts: swamp.ts glossGain and T215's knobs), or null (specCam off): the falloff's inner and
+   *  outer radius and the gain a chunk drawn with a gloss mask lights its pools by */
+  gloss: { inner: number; outer: number; gain: number } | null = null;
+  /** T199: a chunk picture's swamp gloss mask (GroundCache.glossOf), looked up by the picture itself, so it goes wherever its picture is drawn */
+  glossOf: ((tex: WebGLTexture) => WebGLTexture | null) | null = null;
   /** the build-reveal mask (alpha), in screen space */
   setMask(src: OffscreenCanvas | HTMLCanvasElement | null) {
     if (!src) return; const gl = this.gl; gl.bindTexture(gl.TEXTURE_2D, this.maskTex);
@@ -340,8 +432,69 @@ export class GLRenderer {
 
   begin(v: View, clear: [number, number, number]) {
     const gl = this.gl; this.view = v; this.stats = { draws: 0, instances: 0, uploadFloats: 0 };
+    // T226: graded, the scene draws into the scene target (endFrame lays it on the screen); else straight to the screen, as before
+    this.frameGrade = this.grade; this.target = this.frameGrade ? this.sceneTarget(v.cw, v.ch) : null;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.target);
     gl.viewport(0, 0, v.cw, v.ch); gl.disable(gl.SCISSOR_TEST);
     gl.clearColor(clear[0], clear[1], clear[2], 1); gl.clear(gl.COLOR_BUFFER_BIT);
+  }
+  /** a colour target: an RGBA8 texture (bilinear, clamped) and its framebuffer */
+  private colourTarget(tex: WebGLTexture | null, fbo: WebGLFramebuffer | null, w: number, h: number): [WebGLTexture, WebGLFramebuffer] {
+    const gl = this.gl; if (tex) gl.deleteTexture(tex);
+    const t = gl.createTexture()!; gl.bindTexture(gl.TEXTURE_2D, t);
+    gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RGBA8, Math.max(1, w), Math.max(1, h)); this.texParams(gl.TEXTURE_2D, false);
+    const f = fbo ?? gl.createFramebuffer()!;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, f); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, t, 0);
+    return [t, f];
+  }
+  /** T226: the scene target at the screen's size (made, or made again after a resize) */
+  private sceneTarget(w: number, h: number) {
+    if (!this.sceneFbo || this.sceneW !== w || this.sceneH !== h) { [this.sceneTex, this.sceneFbo] = this.colourTarget(this.sceneTex, this.sceneFbo, w, h); this.sceneW = w; this.sceneH = h; }
+    return this.sceneFbo;
+  }
+  /** T226: GPU memory the grade holds now (bytes): the scene target, and the edge blur's targets while it is on */
+  get gradeBytes() { return this.sceneW * this.sceneH * 4 + this.blurTex.length * this.blurW * this.blurH * 4; }
+  /** T226: release the grade's targets (the grade switched off), or only the edge blur's (blurOnly: the blur switched off) */
+  releaseGrade(blurOnly = false) {
+    const gl = this.gl;
+    for (const t of this.blurTex) gl.deleteTexture(t); for (const f of this.blurFbo) gl.deleteFramebuffer(f);
+    this.blurTex = []; this.blurFbo = []; this.blurW = this.blurH = 0;
+    if (blurOnly) return;
+    if (this.sceneTex) gl.deleteTexture(this.sceneTex); if (this.sceneFbo) gl.deleteFramebuffer(this.sceneFbo);
+    this.sceneTex = null; this.sceneFbo = null; this.sceneW = this.sceneH = 0;
+  }
+  /** T226: the end of the frame's scene. Graded (begin drew the scene into the scene target): the edge blur's two passes when it is on, then the
+   *  grade pass lays the scene on the screen; the screen is bound again either way. Not graded: nothing (the scene is on the screen already) */
+  endFrame() {
+    const g = this.frameGrade, gl = this.gl; this.frameGrade = null;
+    if (!g || !this.target || !this.sceneTex) { this.target = null; return; }
+    const { cw, ch } = this.view;
+    gl.disable(gl.SCISSOR_TEST); gl.disable(gl.BLEND); gl.colorMask(true, true, true, true);
+    if (g.edgeBlur) {
+      const bw = Math.max(1, cw >> 1), bh = Math.max(1, ch >> 1);
+      if (this.blurW !== bw || this.blurH !== bh || this.blurTex.length < 2) {
+        for (let i = 0; i < 2; i++) { const [t, f] = this.colourTarget(this.blurTex[i] ?? null, this.blurFbo[i] ?? null, bw, bh); this.blurTex[i] = t; this.blurFbo[i] = f; }
+        this.blurW = bw; this.blurH = bh;
+      }
+      const pr = this.blurProg; gl.useProgram(pr.p); gl.viewport(0, 0, bw, bh); gl.uniform2f(pr.u.uSize, bw, bh); gl.uniform1i(pr.u.uSrc, 0);
+      gl.activeTexture(gl.TEXTURE0);
+      // across, from the scene (halving it), then down
+      gl.bindFramebuffer(gl.FRAMEBUFFER, this.blurFbo[0]!); gl.bindTexture(gl.TEXTURE_2D, this.sceneTex); gl.uniform2f(pr.u.uStep, 1 / bw, 0);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, this.blurFbo[1]!); gl.bindTexture(gl.TEXTURE_2D, this.blurTex[0]!); gl.uniform2f(pr.u.uStep, 0, 1 / bh);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+      this.stats.draws += 2;
+    }
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null); gl.viewport(0, 0, cw, ch);
+    const pr = this.gradeProg; gl.useProgram(pr.p);
+    gl.uniform4f(pr.u.uGrade, g.strength, g.strength, g.edgeBlur && this.blurTex[1] ? 1 : 0, 0); gl.uniform2f(pr.u.uScreen, cw, ch);
+    gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, this.blurTex[1] ?? this.emptyTex); gl.uniform1i(pr.u.uBlur, 1);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, this.sceneTex); gl.uniform1i(pr.u.uScene, 0);
+    gl.drawArrays(gl.TRIANGLES, 0, 3); this.stats.draws++;
+    // (the scene and blur textures unbound: next frame's scene draws into the scene target, which no sampler may hold then)
+    gl.bindTexture(gl.TEXTURE_2D, null); gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, null); gl.activeTexture(gl.TEXTURE0);
+    gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+    this.target = null;
   }
   private camUniforms(pr: Prog) { const v = this.view, gl = this.gl; gl.uniform4f(pr.u.uCam, v.X, v.Y, v.ze, 0); gl.uniform2f(pr.u.uScreen, v.cw, v.ch); }
   /** world rect -> device px, rounded so neighbouring rects share exact edges */
@@ -349,12 +502,18 @@ export class GLRenderer {
     const v = this.view, sx = (X: number) => Math.round((X - v.X) * v.ze + v.cw / 2), sy = (Y: number) => Math.round((Y - v.Y) * v.ze + v.ch / 2);
     return [sx(X0), sy(Y0), sx(X1), sy(Y1)];
   }
-  /** a baked chunk; masked = draw through the reveal mask */
-  drawChunk(tex: WebGLTexture, X0: number, Y0: number, X1: number, Y1: number, masked = false, alpha = 1, uv: readonly number[] = [0, 0, 1, 1]) {
-    const gl = this.gl, pr = this.quad; gl.useProgram(pr.p); this.camUniforms(pr);
+  /** a baked chunk; masked = draw through the reveal mask; spec = its picture's reflection mask (T215, GroundCache.specOf), lit by this.spec;
+   *  and its swamp gloss mask (T199, glossOf), lit by this.gloss */
+  drawChunk(tex: WebGLTexture, X0: number, Y0: number, X1: number, Y1: number, masked = false, alpha = 1, uv: readonly number[] = FULL_UV, spec: WebGLTexture | null = null) {
+    const gl = this.gl, pr = this.quad, sp = spec && this.spec && this.spec.gain > 0 ? this.spec : null; gl.useProgram(pr.p); this.camUniforms(pr);
+    const gloss = this.gloss && this.gloss.gain > 0 && this.glossOf ? this.glossOf(tex) : null, gs = gloss ? this.gloss : null;
     gl.uniform4f(pr.u.uRect, X0, Y0, X1, Y1); gl.uniform4f(pr.u.uUV, uv[0], uv[1], uv[2], uv[3]); gl.uniform1i(pr.u.uMode, masked ? 1 : 0); gl.uniform1f(pr.u.uAlpha, alpha);
+    gl.uniform4f(pr.u.uSpec, sp ? sp.inner : 0, sp ? sp.outer : 1, sp ? sp.gain : 0, 0);
     gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, tex); gl.uniform1i(pr.u.uTex, 0);
     gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, masked ? this.maskTex : this.emptyTex); gl.uniform1i(pr.u.uMask, 1);
+    gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D, sp ? spec : this.emptyTex); gl.uniform1i(pr.u.uSpecTex, 2);
+    gl.uniform4f(pr.u.uGloss, gs ? gs.inner : 0, gs ? gs.outer : 1, gs ? gs.gain : 0, 0);
+    gl.activeTexture(gl.TEXTURE3); gl.bindTexture(gl.TEXTURE_2D, gs ? gloss : this.emptyTex); gl.uniform1i(pr.u.uGlossTex, 3);
     gl.activeTexture(gl.TEXTURE0);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4); this.stats.draws++;
   }
@@ -421,7 +580,8 @@ export class GLRenderer {
   endShadows() {
     if (!this.layerOpen) return;
     const gl = this.gl, pr = this.layerProg;
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null); gl.blendEquation(gl.FUNC_ADD); gl.colorMask(true, true, true, true);
+    // (back to the frame's target: the screen, or the scene target while graded, T226)
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.target); gl.blendEquation(gl.FUNC_ADD); gl.colorMask(true, true, true, true);
     this.layerOpen = false;
     if (this.layerUsed) {
       gl.useProgram(pr.p); gl.uniform3f(pr.u.uAmbient, SHADOW_AMBIENT[0], SHADOW_AMBIENT[1], SHADOW_AMBIENT[2]);

@@ -117,6 +117,20 @@ No more prepainted streets for the town." The full design is [plans/P22.md](plan
   on the player's land, off the range plot and the course, beside a drive or road (its front snaps to a course drive within 6 tiles,
   P19). It becomes the venue (the crowd's doors and the tournament's site) and its green fees start. An old save's game-placed clubhouse
   stays, and a second one is refused.
+- **The guided build (T239, the owner 2026-10-28):** a new range starts bare and the player builds it. The car park is packed dirt (loose,
+  unmarked rows: 55% of the paved lot's cars), then the range upgrades **Gravel the car park** ($3,000: 80%) and **Pave the car park**
+  ($8,000: asphalt, painted bays, lamps). No cement walkway: the walkers cross the dirt until the player lays a path (Cart paths & roads)
+  joining the car park, the shop and the tee (within 6 m of each), then they walk it. No target greens: the golfers aim down the distance
+  markers until **Target greens** ($2,500: three with flags); the old 'targets' upgrade adds two more and the boards. The practice area is
+  land for sale (Land for sale names it, T232's survey line pegs it out) until bought; Facilities › Practice refuses it until then. Old saves
+  own their greens, paved lot, walkway and practice area (rangesave.ts LEGACY_UPGRADES).
+- **The guide's card (T239 Phase B):** a new range game's guide is a card in the corner (ui/golf/RangeGuideCard.tsx; guide.ts RANGE_GUIDE,
+  saved as golf.progress.guide): 1 sell your first buckets, 2 place the target greens, 3 lay a walking path, 4 gravel then pave the car park,
+  5 turf the tee box, 6 buy the practice area and build a putting green, 7 build the first hole. A step ticks when its build is done (in any
+  order) and pays $1,000 ($500 the first, $2,500 the hole: $8,000 in all, booked against construction); Show me opens its card or tool, moves
+  the camera and pulses its control (the walking path step rings the car park, the shack and the tee); Skip leaves a step unpaid; Skip guide
+  ends it. While it runs it replaces the ramp's hints, and the tools open along it: the paths at step 3, Land for sale, Holes and
+  Facilities › Practice at step 6, New hole and Buildings at step 7 (or earlier by the ramp). A range save from before T239 has no card.
 - **Still to come** (P22's tickets): the grown-town growth rules (T090, T091), the exits feeding the range (T092), through traffic
   (T093), the off-map tournament crowd (T094), the first-minute guide (T095) and the range's look (T096).
 - **Old saves keep their towns.** A save without `golf.start` is the old start: one seeded town (one asphalt main avenue with gravel
@@ -165,6 +179,14 @@ owner's three photos (fairway, new sod, rough) are already in the game at full r
   corridor guideline); the next tee is within a walk of the previous green (warn over 150 m).
 - **Course stats panel:** holes, par, length (championship and member tees), rating (difficulty), quality, grow-in state, the
   monthly upkeep, and each tier's requirements as a checklist.
+- **Trees frame the holes (T229 #668, the concept look's step 6):** New hole's **Frame with trees** (on by default, a toggle in its Trees
+  section) and the hole card's Trees row plant clumps of 3 to 9 conifers and autumn broadleaves just past the edge of the hole's corridor
+  (`golf/holeframe.ts`; the engine's T229 block). Never within 28 m of a line of play, a tee or a pin, on a playing surface, a path, a road or
+  water; 10 m clear of the cart lanes (green to the next tee, the clubhouse to the first tee and the last green home: T213's carts drive them
+  where there is no path); 12 m further back beside a landing zone (a plan's widest width handle, else the drive's spot). Deterministic from
+  the hole's seed. $60 a tree (`FRAME_TREE_PRICE`), shown on the Build button and the card before you press; a frame tree is the Props
+  catalogue's hidden "Course tree" (a plant's appeal near the range, half back when bulldozed) and remembers its hole, so framing again only
+  fills the gaps and takes away frame trees an edit left in play.
 
 ### 4.3 Course quality and rating
 - **Quality** (0–100): conditioning (grown-in share weighted by surface; maintenance spending), design (par mix close to

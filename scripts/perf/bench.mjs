@@ -1,6 +1,8 @@
 // Runs the in-game benchmark (?bench) in a headless browser on the real GPU and prints the results.
 //   node scripts/perf/bench.mjs [url] [--size 1] [--dpr 1] [--shots] [--channel msedge|chrome] [--serve] [--course] [--courseSend ms] [--ground levers]
-//     [--start range | --fixture range20]
+//     [--start range | --fixture range20 | --start town] [--grade off|on|blur] [--golfers N] [--seed N] [--everyday 0] [--frame 1]
+// --start town (T208): the old start's course on an ordinary day at 11:00, 30% and 15%; --golfers N: a busy day of N visitors; --seed N: the map; --everyday 0: no everyday golf (the same scene before) (a dev server)
+// --frame 1 (T229, a dev server): every hole framed with trees at the start (golf/holeframe.ts), the bench's after
 // --ground (T166, a dev server): the game's ground-worker levers for the run (boot.ts GROUND_LEVERS, e.g. lazy,w1; old: none)
 // --serve starts `vite preview` on dist/ itself (run `npm run build` first); otherwise it needs a running dev or
 // preview server at the url. Screenshots (--shots stalls frames, so only for looking) and JSON go to output/bench/.
@@ -27,11 +29,13 @@ for (let attempt = 0; attempt < 3 && gpu === 'unknown'; attempt++) {
 if (browser) { console.log('[bench] no WebGL, relaunching the browser'); await browser.close(); }
 browser = await chromium.launch({ channel: opt('channel', 'msedge'), headless: true, args: ['--enable-gpu', '--ignore-gpu-blocklist', '--use-angle=d3d11', '--enable-unsafe-swiftshader=false', '--disable-background-timer-throttling', '--disable-renderer-backgrounding'] });
 page = await browser.newPage({ viewport: { width: 1600, height: 900 }, deviceScaleFactor: dpr });
+// --grade off|on|blur (T226): the colour grade for the run (grade.ts; a fresh profile otherwise has the default, on)
+if (opt('grade', '')) { const g = { off: { on: false }, on: { on: true }, blur: { on: true, edgeBlur: true } }[opt('grade', '')]; if (!g) throw new Error('--grade off|on|blur'); await page.addInitScript(v => { try { localStorage.setItem('capitalempire.grade', v); } catch { /* none */ } }, JSON.stringify(g)); }
 const logs = [];
 page.on('console', m => { const t = m.text(); if (/\[bench\]|error|Error/.test(t)) { logs.push(t); console.log('[page]', t.slice(0, 300)); } });
 page.on('pageerror', e => console.log('[pageerror]', e.message));
 page.on('crash', () => console.log('[crash] the page crashed'));
-await page.goto(`${base}?bench=${size}${scene}${args.includes("--course") ? "&course=1" : ""}${opt("courseSend", "") ? "&courseSend=" + opt("courseSend", "") : ""}${opt("courseHold", "") ? "&courseHold=" + opt("courseHold", "") : ""}${opt("ground", "") ? "&ground=" + opt("ground", "") : ""}`); // --course: the old nine laid as a course grid under the tour (T077)
+await page.goto(`${base}?bench=${size}${scene}${args.includes("--course") ? "&course=1" : ""}${opt("courseSend", "") ? "&courseSend=" + opt("courseSend", "") : ""}${opt("courseHold", "") ? "&courseHold=" + opt("courseHold", "") : ""}${opt("ground", "") ? "&ground=" + opt("ground", "") : ""}${["golfers", "seed", "everyday", "frame"].map(k => opt(k, "") ? `&${k}=${opt(k, "")}` : "").join("")}`); // --course: the old nine laid as a course grid under the tour (T077)
 gpu = await page.evaluate(() => { const gl = document.createElement('canvas').getContext('webgl2'); const d = gl?.getExtension('WEBGL_debug_renderer_info'); return d ? gl.getParameter(d.UNMASKED_RENDERER_WEBGL) : 'unknown'; });
 }
 console.log('GPU:', gpu);

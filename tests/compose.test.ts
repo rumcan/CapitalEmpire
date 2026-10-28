@@ -14,6 +14,7 @@ import { mulberry } from '../src/game/iso';
 import { CAR_SCALE } from '../src/game/ext/car-art';
 import { isBuilding } from '../src/game/mirror';
 import { footprintOf, turned } from '../src/game/lots/preset-art';
+import { vehicleHeading } from '../src/game/vehicles';
 import { toWorld } from '../src/game/lots/preset-frame';
 import { parsePresets, type PresetProp } from '../src/game/lots/presets';
 import PRESET_FIXTURE from './fixtures/lot-presets.json';
@@ -128,7 +129,10 @@ test('every built lot draws its preset: each preset prop is the picked preset\'s
       assert.equal(q.from!.preset, p.preset.id, `${lot.key}: a prop of another preset`);
       // a stand-in for a removed picture (T167) is the fitted prop's own (its id replaced), else the preset's
       const src: PresetProp = q.standIn ? p.fit.props[p.fit.from.indexOf(q.from!.prop)]! : p.preset.props[q.from!.prop]!, t = turned(src.id, p.frame.q + src.view);
-      assert.equal(q.id, t.id, `${lot.key}: ${src.id} view ${src.view} on a lot turned ${p.frame.q} drawn as ${q.id}`);
+      // (T236: a parked wagon may be drawn as another vehicle of the mix with a picture at its heading, vehicles.ts parkedAs; a farm's or junk
+      // yard's yellow pickup as the rusty one, lotPickup)
+      const mixed = /^cars:/.test(t.id) && vehicleHeading(q.id) >= 0 && vehicleHeading(q.id) === vehicleHeading(t.id), rusty = t.id === 'static:pickup_n' && q.id === 'expansion:scrap-pickup-rear';
+      if (!mixed && !rusty) assert.equal(q.id, t.id, `${lot.key}: ${src.id} view ${src.view} on a lot turned ${p.frame.q} drawn as ${q.id}`);
       assert.equal(q.flip, t.flip);
       if (isBuilding(byId.get(q.id)!)) assert.equal(q.flip, false, `${lot.key}: building ${q.id} mirrored`);
       if (q.id !== src.id) turnedViews++;
@@ -193,7 +197,8 @@ test('residential fence boundaries meet exactly in every orientation, with one o
       assert.ok(lo >= L - 1e-6 && lo - L < 0.05, `panel footprint ${JSON.stringify(f)} must start at its line ${L.toFixed(3)} on the higher side`);
     }
   };
-  const fences = (lot: Lot, decline = 0) => compose(lot, { ...state, decline }).props.filter(p => isFence(p.id));
+  // (T231: the kit's clipped hedge along a house's front is a hedge row, not a boundary: the boundaries are the panels)
+  const fences = (lot: Lot, decline = 0) => compose(lot, { ...state, decline }).props.filter(p => isFence(p.id) && !p.id.startsWith('kit:'));
   const centre = (lot: Lot, p: Placed) => { const f = fpOf(p); return toLot(lot, (f[0] + f[2]) / 2, (f[1] + f[3]) / 2); };
   const covers = (lot: Lot, panels: Placed[], axis: 'a' | 'b', from: number, to: number) => {
     const spans = panels.map(p => { const q = fpCorners(lot, fpOf(p)).map(c => c[axis]); return [Math.min(...q), Math.max(...q)]; }).sort((a, b) => a[0] - b[0]);

@@ -1,0 +1,52 @@
+{
+  "id": "golf:build-tool-tiles",
+  "category": "ui",
+  "take": 1,
+  "generatedAt": "2026-10-28T01:18:51.283Z",
+  "generator": "RUN.world rundot generate image (pilot in place of Codex built-in image_gen; owner-authorised 2026-10-27)",
+  "runModel": "gemini-3.1-flash-image-preview",
+  "runCliVersion": "7.18.0",
+  "runGameId": "AFjPSjQH9kbcCl57sgO3",
+  "runAccount": "rumcan@gmail.com",
+  "generationId": "e0de146d-cbea-4ee6-abeb-1727fe77859f",
+  "credits": {
+    "used": 120,
+    "remaining": 11595
+  },
+  "removedFromRunLibrary": true,
+  "aspectRatioFlag": "4:3",
+  "nativeDimensions": [
+    1200,
+    896
+  ],
+  "pngColorType": 2,
+  "stagingRaw": "E:/ClaudeTemp/ART-RUN/staging/golf-build-tool-tiles-run-take1.raw.png",
+  "rawSha256": "6c02339c56474af6ae64e953972244a6bc4d9d716c30b8d080d3893a9e5d2b6f",
+  "prompt": "A sheet of twelve small game interface pictures in a strict grid of 4 columns and 3 rows, on one WIDE image with a plain flat dark charcoal background (#1C1F26) between and around them. Each picture is a tiny isometric diorama sitting on its own dark navy rounded square tile (#1E2A44), all twelve tiles the same size, evenly spaced, each diorama centred on its tile and filling about two thirds of it. Reference 1 is the only visual-theme authority: match its detailed illustrated miniature style. Reference 2 is the game's target look (an autumn golf club): take its rich colours and warm light; copy nothing else from it. Fixed parallel 2:1 isometric camera in every tile, the same scale and style in every tile, the light from the upper right with tiny soft shadows toward the lower left. The twelve dioramas, row by row, left to right: (1) a raised tee box with two tee markers; (2) a piece of striped fairway; (3) a putting green with a red flag on a pin; (4) a sand bunker with a grass lip; (5) a small pond with reeds; (6) a patch of long rough grass; (7) a clump of autumn trees in red, orange and gold; (8) a group of grey boulders; (9) a curving pale cart path across grass; (10) a small red-brick clubhouse with a slate roof; (11) the covered range bays, a short row of roofed hitting stalls; (12) a flower bed with red and yellow flowers. No lettering, numbers, icons, borders or frames other than the rounded tiles.\n",
+  "promptFile": "prompts/s12/golf-build-tool-tiles.prompt.txt",
+  "references": [
+    {
+      "order": 1,
+      "file": "art/theme-consistency/references/theme-authoritative.png",
+      "role": "authoritative-theme",
+      "sha256": "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2"
+    },
+    {
+      "order": 2,
+      "file": "E:/ClaudeTemp/ART-RUN/refs/maple-falls-concept.webp",
+      "role": "concept-look-style-and-colour-only",
+      "sha256": "5b1ff1441dfed75025be99f138bdcecccdbbb93e78535f6c72386f6c21897026"
+    }
+  ],
+  "views": "one (block B)",
+  "camera": "fixed parallel 2:1 isometric",
+  "lighting": "sun SCREEN UPPER RIGHT, contact shadows SCREEN LOWER LEFT, early dusk",
+  "background": "opaque: dark charcoal sheet, each diorama on its own dark navy rounded tile (as the item asks); not keyed",
+  "scale": "Native generated pixels are source art, not registered CSS/game size",
+  "integrationStatus": "art-only-not-integrated",
+  "reviewStatus": "accepted-by-art-agent-pending-owner",
+  "savedAs": "art/theme-consistency/generated/ui/golf-build-tool-tiles-sheet-v1.png",
+  "grid": "4 columns x 3 rows, 1200x896 native (4:3); tile order row by row: tee box, fairway (striped), green with flag, bunker, pond, rough, autumn trees, boulders, cart path, clubhouse, range bays, flower bed",
+  "reviewedAt": "2026-10-28T01:19:37.306Z",
+  "reviewNote": "all twelve dioramas present in the asked order, same scale and style, light from the upper right, shadows lower left, no lettering; the fairway tile shows mowing stripes (wanted here: it is the tool picture)"
+}

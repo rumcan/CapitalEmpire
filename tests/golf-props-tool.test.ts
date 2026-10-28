@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { APPEAL, DECOR, DECOR_BY_KEY, DECOR_GROUPS, PROPS_APPEAL_RADIUS, appealText, decorAppeal, decorKeyOf, decorSpotWhy, inPoly, propTuple, sellBack, tupleMarks, type Box, type DecorSpot } from '../src/game/golf/decor';
 import { PropsTool, rangeAnchors, type PropsHostCtx } from '../src/game/golf/propstool';
-import { PROPS_APPEAL_CAP, dayDemand, defaultRangeBiz, rangeScene, rangeStats, skippedVisits, type RangeScene } from '../src/game/golf/rangebiz';
+import { PROPS_APPEAL_CAP, dayDemand, defaultRangeBiz, rangeScene, rangeStats, skippedVisits, withUpgrade, type RangeScene } from '../src/game/golf/rangebiz';
 import { LIBRARY } from '../src/game/library';
 import { turned } from '../src/game/lots/preset-art';
 import { RAIL } from '../src/ui/rail-items';
@@ -40,7 +40,7 @@ test('the catalogue: four groups of real library pictures (and the T187 town bui
 
 test("the rail (T182): Props sits in both decorations (the course's and the town's) of golf games, on Z", () => {
   const holds = RAIL.filter(r => r.tools.some(t => t.id === 'props'));
-  assert.deepEqual(holds.map(r => r.id), ['decor', 'towndecor']);
+  assert.deepEqual(holds.map(r => r.id), ['facilities', 'towndecor']);
   for (const r of holds) { const t = r.tools.find(x => x.id === 'props')!; assert.equal(t.only, 'golf'); assert.equal(t.key, 'Z'); }
   assert.equal(holds[0]!.section, 'course'); assert.equal(holds[1]!.section, 'town');
   assert.ok(!RAIL.some(q => q.tools.some(t => t.key === 'Z' && t.id !== 'props')), "Z is no other tool's key");
@@ -170,7 +170,7 @@ test('move and sell: a drag moves a placed prop (one step), a refused spot keeps
 });
 
 test('appeal on the map: the props near a range\'s front count, the labels name each stand-in kind once', () => {
-  const sc = rangeScene([200, 200, 70, 150], 2, defaultRangeBiz()), h = host(sc), t = new PropsTool(h.ctx), shop = sc.pieces.find(p => p.key === 'shop')!;
+  const sc = rangeScene([200, 200, 70, 150], 2, withUpgrade(defaultRangeBiz(), 'greens')), h = host(sc), t = new PropsTool(h.ctx), shop = sc.pieces.find(p => p.key === 'shop')!; // T239: greens built
   assert.equal(t.appeal(), 0);
   t.pick('fountain'); t.down(shop.x + 8, shop.y); t.pick('statue'); t.down(shop.x - 6, shop.y); t.down(shop.x - 8, shop.y);
   t.pick('pot-terracotta'); t.down(shop.x + 300, shop.y + 300);

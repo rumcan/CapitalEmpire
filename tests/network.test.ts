@@ -300,7 +300,8 @@ test('catalogue paint and trees: a turn lane paints its centre markings, one-way
     e.addLegs([leg(0, 0, 60, 0)], CLASS[id]!, 0); e.commit(); e.net.rebuild(true);
     return (e.net as unknown as { routeFeatures(r: Route): Fx }).routeFeatures([...e.net.routes][0]!);
   };
-  const lines = (f: Fx, color: string) => f.lines.filter(l => l.color === color).map(l => l.offset).sort((a, b) => a - b);
+  // (the lane and centre lines: T228's white edge lines inside the kerbs are tested in streets.test.ts)
+  const lines = (f: Fx, color: string) => f.lines.filter(l => l.color === color && !l.edge).map(l => l.offset).sort((a, b) => a - b);
   const yellow = '#d6b23b', white = 'rgba(238,238,230,0.92)';
   const trees = (f: Fx) => f.autoProps.filter(a => a.kind === 'tree').length;
   assert.deepEqual(lines(fx('arterial.tl'), yellow), [-0.875, -0.7, 0.7, 0.875]);

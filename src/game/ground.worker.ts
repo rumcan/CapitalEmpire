@@ -15,6 +15,7 @@ import { VARIANT_IDS } from './living-ground';
 import { WALL_TEX } from './ext/course-walls';
 import { softCanvases } from './canvas2d';
 import { BLOCK_UNDER, WOODLAND, lawnTexFor } from './painted-surfaces';
+import { roughTexes } from './rough-yards';
 import type { LotPatch } from './ground-protocol';
 
 const scope = self as unknown as DedicatedWorkerGlobalScope;
@@ -101,6 +102,11 @@ const handle = async (m: ToWorker) => {
         break;
       }
       case 'living': painter.living = { on: m.on, debug: m.debug }; break;
+      case 'rugged': painter.rugged = m.on; break;
+      case 'stripes': painter.stripes = m.on; break;
+      case 'leaves': painter.leafDensity = m.density; break;
+      case 'specCam': painter.specCam = m.on; break;
+      case 'swamp': painter.swamp = m.on; break;
       case 'slopeLight': painter.slopeLight = m.strength; break;
       case 'lotground': {
         // the lazy photo textures the edit's paint areas use (fill and border, course surfaces and collars, wall art): built first, so the
@@ -141,6 +147,8 @@ const handle = async (m: ToWorker) => {
           const k = m.kind === 'm' ? MID_K : 1, w = CHUNK_W * k, h = CHUNK_H * k;
           const box = GroundPainter.tileBox(m.i * w, m.j * h, (m.i + 1) * w, (m.j + 1) * h);
           const need = new Set<string>(['grass', 'meadow', 'outside', WOODLAND_TEX, WOODLAND, 'dirt', 'bank', 'creek', 'water', 'growSoil']), near = new Set<string>();
+          // T199: the small streams' swamp, where one reaches into the chunk
+          if (painter.swampIn(box)) need.add('swamp');
           // the living ground's painted variant sets (T111), when their art is in the game
           if (painter.living.on && !painter.living.debug) for (const v of VARIANT_IDS) if (tex.isPainted(v)) need.add(v);
           for (const p of painter.lotsIn(box)) {
@@ -153,6 +161,8 @@ const handle = async (m: ToWorker) => {
             if (p.lawn && tex.paintedOn) { const t = lawnTexFor(p.lawn, p.pts, tex.surfaces); if (t) need.add(t); }
             // T194: a block's grass in soft patches lies over the rough
             if (p.lawn && p.lawn.share < 1) need.add(BLOCK_UNDER);
+            // T222: a rough yard's fescue, dirt and desert patches
+            if (p.lawn?.rough) for (const t of roughTexes(p.lawn.rough)) need.add(t);
           }
           if (painter.grassStrength > 0 && !painter.grassHeat) {
             for (let y = Math.max(0, Math.floor(box[1] / 4)); y < Math.min(MAP / 4, Math.ceil(box[3] / 4)); y++) for (let x = Math.max(0, Math.floor(box[0] / 4)); x < Math.min(MAP / 4, Math.ceil(box[2] / 4)); x++) {
@@ -164,6 +174,7 @@ const handle = async (m: ToWorker) => {
           await tex.preparePainted(PLAN_LEVELS[PLAN_LEVELS.length - 1], ['grass', 'meadow', 'outside']); await tex.preparePlanner(['grass', 'meadow', WOODLAND_TEX, WOODLAND]);
           // the tile set families the planner piece's course surfaces wear (their tiles at the camera's band: FAR at the furthest zoom)
           const box = GroundPainter.tileBox(m.i * PLAN_W, m.j * PLAN_H, (m.i + 1) * PLAN_W, (m.j + 1) * PLAN_H, 2), course = new Set<string>(['grass', 'meadow', 'outside', WOODLAND_TEX, WOODLAND]);
+          if (painter.swampIn(box)) course.add('swamp'); // (T199: the streams' swamp)
           for (const p of painter.lotsIn(box)) if (p.course) for (const l of p.course.layers) for (const t of [l, ...(l.collar ? [l.collar] : [])]) course.add(t.tex);
           await tex.prepareTiles(course);
         }
@@ -196,11 +207,15 @@ const handle = async (m: ToWorker) => {
         tex.deferMakes = deferring; tex.deferNeed = !probing(m); tex.missing.clear();
         try { cv = m.kind === 'p' ? painter.paintPlan(m.i, m.j, m.L) : painter.paint(m.i, m.j, m.L, m.kind === 'm'); }
         finally { tex.deferMakes = false; tex.deferNeed = true; }
-        if (probing(m)) { tex.missing.clear(); cv.width = cv.height = 0; painter.takeShadeMask(); kick(); break; }
-        if (tex.missing.size) { const keys = [...tex.missing]; tex.missing.clear(); painter.takeShadeMask(); putAside(m, Promise.all(keys.map(k => tex.whenMade(k)))); break; }
+        if (probing(m)) { tex.missing.clear(); cv.width = cv.height = 0; painter.takeShadeMask(); painter.takeSpecMask(); painter.takeGlossMask(); kick(); break; }
+        if (tex.missing.size) { const keys = [...tex.missing]; tex.missing.clear(); painter.takeShadeMask(); painter.takeSpecMask(); painter.takeGlossMask(); putAside(m, Promise.all(keys.map(k => tex.whenMade(k)))); break; }
         lastBake = performance.now(); if (deferring && m.kind !== 'p') aheadOf(m);
         const bmp = cv.transferToImageBitmap(), sm = m.kind === 'p' ? null : painter.takeShadeMask(), shade = sm ? sm.transferToImageBitmap() : undefined;
-        post({ t: 'tile', id: m.id, kind: m.kind, i: m.i, j: m.j, L: m.L, artL: m.artL ?? m.L, ts: m.ts, tiled: painter.tilesUsed, prov: painter.provisional, bmp, shade, ms: performance.now() - t0 }, shade ? [bmp, shade] : [bmp]);
+        // (T215: the reflection mask, when specCam is on and the chunk has a lamp pool on its asphalt)
+        const rm = m.kind === 'p' ? null : painter.takeSpecMask(), spec = rm ? rm.transferToImageBitmap() : undefined;
+        // (T199: the swamp's gloss mask, when specCam is on and the chunk lays the swamp)
+        const gm = m.kind === 'p' ? null : painter.takeGlossMask(), gloss = gm ? gm.transferToImageBitmap() : undefined;
+        post({ t: 'tile', id: m.id, kind: m.kind, i: m.i, j: m.j, L: m.L, artL: m.artL ?? m.L, ts: m.ts, tiled: painter.tilesUsed, prov: painter.provisional, bmp, shade, spec, gloss, ms: performance.now() - t0 }, [bmp, ...(shade ? [shade] : []), ...(spec ? [spec] : []), ...(gloss ? [gloss] : [])]);
         break;
       }
     }
@@ -301,6 +316,7 @@ function memProbe(): Record<string, number> {
   add('tex.fixed', ['slabs', 'leaves', 'pool1', 'pool2', 'decals', 'soil', 'lotDecals', 'nature'].map(k => T[k]));
   for (const k of ['grassImages', 'toned', 'planPics', 'wallPics', 'composed', 'scratch', 'leafChunks', 'livingMade']) add('painter.' + k, P[k]);
   add('painter.leafPic', [P.leafPic]);
+  add('painter.leafAtlases', [...(P.leafAtlases as Map<number, { cv: OffscreenCanvas }>).values()].map(a => a.cv));
   return out;
 }
 /** the photo textures (lazy, not built yet) a lot patch lays: a lawn's photo, a painted area's fill, border and mix, a course chunk's surfaces
@@ -308,7 +324,7 @@ function memProbe(): Record<string, number> {
 function patchPhotos(p: LotPatch): string[] {
   // has: ensure's own test; a painted texture (its family's pictures, decoded before the bake) needs no photo (T168: never built)
   const out: string[] = [], add = (t: string | undefined) => { if (t && isPaintPhoto(t) && !eager.has(t) && !tex.isPainted(t) && !tex.has(t)) out.push(t); };
-  if (p.lawn) add(p.tex); else if (p.paint) { add(p.tex); if (p.paint.b > 0) add(p.paint.bt); if (p.paint.m) add(p.paint.m.t); }
+  if (p.lawn) { add(p.tex); if (p.lawn.rough) for (const t of roughTexes(p.lawn.rough)) add(t); } else if (p.paint) { add(p.tex); if (p.paint.b > 0) add(p.paint.bt); if (p.paint.m) add(p.paint.m.t); }
   if (p.course) { for (const l of p.course.layers) { add(l.tex); if (l.collar) add(l.collar.tex); } if (p.course.walls?.length) for (const t of WALL_TEX) add(t); }
   return out;
 }

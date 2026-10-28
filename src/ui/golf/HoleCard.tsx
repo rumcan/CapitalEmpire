@@ -1,6 +1,7 @@
 // The hole card (plan P23-UX 6.2 P2-4, T174): a selected hole's facts as the game has them (D7.3: par, lengths from each tee, grow-in, its
 // surfaces' areas, its checks and warnings), each check with the Fix that arms the tool that mends it; the pin and tee markers dragged on the map
-// while it is open (no re-plan, no charge); Edit hole (New hole's editor); Delete with a confirm that states the refund; the number, which
+// while it is open (no re-plan, no charge); Edit hole (New hole's editor on it, framed, with a toast; "Editing hole n" while that editor is open,
+// T205); Delete with a confirm that states the refund; the number, which
 // trades places with another hole's (D4.12, as dragging the Holes panel's badges). Opened by a hole's badge in the Holes panel or a click on the
 // hole with Select; Esc or ✕ closes it. In New hole's card style; colour never alone (P23 D8.1: ✓ ◔ ! ✗ beside the colours, 13 px body).
 import { useState } from 'react';
@@ -21,15 +22,18 @@ function useHoleCard(game: Game): HoleCardView | null { return game.holeCardView
 /** a two-step action: ask, then do (the card's Delete) */
 function useConfirm(): [boolean, () => void, () => void] { const [on, set] = useState(false); return [on, () => set(true), () => set(false)]; }
 
-/** the card, beside the map's right edge (left of an open side panel, as the range card) */
+/** the card, beside the map's right edge (left of an open side panel, as the range card); its height in the UI scale's own units (--vh-ui:
+ *  78vh ran past the screen's bottom at 125%, T205's overflow check) */
 export function HoleCard({ game, right = 'right-3' }: { game: Game; right?: string }) {
   const c = useHoleCard(game), [asking, ask, unask] = useConfirm();
   if (!c) return null;
   const bad = c.checks.filter(k => !k.ok), state = bad.length ? { icon: '!', word: 'needs attention', tone: 'text-amber-300' } : c.ready !== null ? { icon: '◔', word: `growing · ready ${monthIndexLabel(c.ready)}`, tone: 'text-sky-300' } : { icon: '✓', word: 'ready', tone: 'text-emerald-300' };
   const length = c.tees[0]?.m ?? 0, del = deleteNote(c);
   const others = game.courseHoleViews().filter(v => v.n !== c.n);
+  /** this hole's editor is open in the Holes panel ("Edit hole n"): Edit hole has nothing more to open (T205) */
+  const editing = game.paint.editingHole === c.n;
   return (
-    <section className={`pointer-events-auto absolute ${right} top-[var(--hud-top,6rem)] z-20 max-h-[78vh] w-[340px] overflow-y-auto rounded-xl border border-[var(--gold-line)] bg-slate-950/90 p-3 text-[13px] text-slate-200 shadow-2xl backdrop-blur`} data-testid="hole-card" aria-label={`Hole ${c.n}`}>
+    <section className={`pointer-events-auto absolute ${right} top-[var(--hud-top,6rem)] z-20 max-h-[calc(var(--vh-ui,100vh)-var(--hud-top,6rem)-4.5rem)] w-[340px] overflow-y-auto overflow-x-hidden rounded-xl border border-[var(--gold-line)] bg-slate-950/90 p-3 text-[13px] text-slate-200 shadow-2xl backdrop-blur`} data-testid="hole-card" aria-label={`Hole ${c.n}`}>
       <div className="flex items-start justify-between gap-2 border-b border-white/10 pb-2">
         <div>
           <div className="flex items-center gap-2">
@@ -80,13 +84,19 @@ export function HoleCard({ game, right = 'right-3' }: { game: Game; right?: stri
         </ul>
       </div>
 
+      <FrameRow game={game} n={c.n} />
+
       <p className="sub-line mt-2">Drag the pin or a tee marker on the map to move it: no re-plan, no charge. It stays on its green or tee.</p>
 
       {!asking ? (
-        <div className="mt-2 flex flex-wrap gap-1.5">
-          <button className="chip" disabled={!c.planned} onClick={() => game.editHole(c.n)} title={c.planned ? "New hole's editor: drag the line, the tee and the green" : 'Painted by hand: shape it with the brush'} data-testid="hole-edit"><Icon name="pin" size={14} />Edit hole</button>
-          <button className="chip" disabled={!c.planned} onClick={ask} title={c.planned ? 'Clears what New hole laid for it, after a confirm' : 'Painted by hand: erase it with the brush'} data-testid="hole-delete"><Icon name="bulldozer" size={14} />Delete</button>
-        </div>
+        <>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {/* T205: Edit hole always shows what it did: the editor opens on this hole, framed, with a toast; while it is open it says so */}
+            <button className={`chip ${editing ? 'chip-editing' : 'disabled:opacity-40'}`} disabled={!c.planned || editing} onClick={() => game.editHole(c.n)} title={editing ? `Hole ${c.n}'s editor is open in the Holes panel: drag the tee, the green or the line, then Build` : c.planned ? "New hole's editor: drag the tee, the green or the line; Build to save" : 'Painted by hand: shape it with the brush'} data-testid="hole-edit"><Icon name="pin" size={14} />{editing ? `Editing hole ${c.n}` : 'Edit hole'}</button>
+            <button className="chip disabled:opacity-40" disabled={!c.planned} onClick={ask} title={c.planned ? 'Clears what New hole laid for it, after a confirm' : 'Painted by hand: erase it with the brush'} data-testid="hole-delete"><Icon name="bulldozer" size={14} />Delete</button>
+          </div>
+          {!c.planned && <p className="sub-line mt-1" data-testid="hole-edit-why">Painted by hand: shape it with the brush. Edit hole and Delete are for holes New hole planned.</p>}
+        </>
       ) : (
         <div className="mt-2 rounded-lg border border-rose-400/40 bg-rose-500/10 p-2" role="alertdialog" aria-label={`Delete hole ${c.n}?`} data-testid="hole-delete-confirm">
           <div className="font-semibold text-rose-200">Delete hole {c.n}?</div>
@@ -98,6 +108,24 @@ export function HoleCard({ game, right = 'right-3' }: { game: Game; right?: stri
         </div>
       )}
     </section>
+  );
+}
+
+/** T229 (#668): Frame with trees: clumps of conifers and autumn trees along the hole's rough's outer edge (golf/holeframe.ts), priced per tree, the
+ *  price on the button before you press it (one undo step). Framing again plants only where there is room, and takes away frame trees an edit
+ *  of the hole left in play (half their price back, as the bulldozer) */
+function FrameRow({ game, n }: { game: Game; n: number }) {
+  const f = game.holeFrameView?.(n); if (!f) return null; // (a stub game in the tests has none)
+  const can = f.trees > 0 || f.stale > 0, usd = (v: number) => `$${Math.round(v).toLocaleString('en-US')}`;
+  const label = f.trees ? `Frame with trees · ${f.trees} trees · ${usd(f.price)}` : f.stale ? `Take ${f.stale} out of play · +${usd(f.refund)}` : f.has ? 'Framed' : 'No room for a frame';
+  const note = [f.has ? `${f.has} frame tree${f.has === 1 ? '' : 's'} now.` : "Clumps of spruce, pine, maple and birch along the rough's edge, with gaps; never in the line of play, on a path or on water.",
+    f.stale ? `${f.stale} stand in play since the hole changed: framing again takes them away (half back).` : '', f.has && !f.trees && !f.stale ? 'No room for more clumps: bulldoze one to open a view.' : ''].filter(Boolean).join(' ');
+  return (
+    <div className="mt-2" data-testid="hole-frame">
+      <div className="mb-1 text-[12px] text-[var(--muted)]">Trees</div>
+      <button className={`chip ${can ? 'chip-on' : ''} disabled:opacity-40`} disabled={!can} onClick={() => game.frameHoleTrees(n)} title={can ? 'Plants the clumps (Ctrl+Z takes them and the money back)' : 'Nothing to plant'} data-testid="hole-frame-go"><Icon name="trees" size={14} />{label}</button>
+      <p className="sub-line mt-1">{note}</p>
+    </div>
   );
 }
 

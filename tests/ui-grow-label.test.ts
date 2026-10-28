@@ -18,13 +18,13 @@ const emptyView = (n: number): HoleView => ({ n, started: false, par: 0, lengthM
 function fakeGame(growing: Record<number, number>, current = 2): Game {
   const holes = [ready(1, 4, 342), ready(2, 3, 150)];
   const views = Array.from({ length: 18 }, (_, i) => holes.find(h => h.n === i + 1) ?? emptyView(i + 1));
-  return { golfMode: true, paint: { brushHole: current, brushKind: 'fairway', nextFreeHole: () => 3 }, courseHoleViews: () => views, holeGrowLabel: (n: number) => growReadyLabel(growing[n]) } as unknown as Game;
+  return { golfMode: true, paint: { brushHole: current, brushKind: 'fairway', nextFreeHole: () => 3, hasPlan: () => true, editingHole: 0 }, courseHoleViews: () => views, holeGrowLabel: (n: number) => growReadyLabel(growing[n]) } as unknown as Game;
 }
 /** the badge's tooltip for hole n, and the status line */
 function places(g: Game, n: number): { badge: string; status: string } {
   const h = renderToStaticMarkup(createElement(HoleStrip, { game: g }));
   const badge = new RegExp(`<button data-hole="${n}"[^>]*title="([^"]*)"`).exec(h)?.[1] ?? '';
-  const status = /<div class="status-line[^"]*" data-status="true">([^<]*)<\/div>/.exec(h)?.[1] ?? '';
+  const status = /<div class="status-line[^"]*" data-status="true"><span[^>]*>([^<]*)<\/span>/.exec(h)?.[1] ?? ''; // its words (T205: then ✎ Edit hole n)
   return { badge, status };
 }
 /** the course cursor's pill for a brush on hole 2 (CourseCursor.hint's words) */
@@ -45,7 +45,7 @@ describe('the grow-in words (P23 4.6)', () => {
     assert.equal(at.badge, `Hole 2 · par 3 · 150 m · ${label}${BADGE_ACTIONS}`, 'the badge');
     assert.equal(at.status, `Hole 2 · par 3 · 150 m · ${label}`, 'the status line');
     assert.equal(hintWithGrow(CURSOR, 2, label), `Painting Fairway · Hole 2 · ${label} · $2 a cell`, 'the hint pill, after the hole\'s name');
-    assert.match(renderToStaticMarkup(createElement(HoleStrip, { game: g })), /<button data-hole="2"[^>]*class="hole-badge hole-growing[^"]*"[^>]*><span class="hole-icon" aria-hidden="true">◔<\/span>2/, 'the ◔ badge');
+    assert.match(renderToStaticMarkup(createElement(HoleStrip, { game: g })), /<button data-hole="2"[^>]*class="hole-badge hole-growing[^"]*"[^>]*><span class="hole-icon" aria-hidden="true">◔<\/span>Hole 2</, 'the ◔ badge');
   });
 
   it('once the hole has grown in, none of them says growing', () => {

@@ -4,6 +4,10 @@
 // Items without a master yet are skipped. Footprints hx / hy are half extents in metres; world coordinates use 2 m tiles. Native
 // projection is 64 x 32 px per tile, so a sprite's native width is 64 * (hx + hy) and its height follows the picture's aspect.
 // Writes src/assets/golf/golf-<mip>.webp and src/game/golf-library.ts (appendGolf, after the construction art).
+// T231: the concept's kit (art/concept-kit, made by prep-kit.mjs: boulders, palms, shrubs, flower clumps, lamp posts, the pond-edge stones, the
+// hedge, the fountain jet's frames, lily pads) shares this page (the golf art filled about 12% of it, so no page is added and the GPU's
+// atlas plan stays as it was): packed after the golf art (which keeps its place), each at 0.6 x its display size (times its studio size when
+// bigger), and listed in golf-library.ts as KIT, appended by appendKit after every other library (no saved index moves).
 //   node scripts/assets/prep-golf.mjs
 import fs from 'node:fs';
 import path from 'node:path';
@@ -67,9 +71,19 @@ for (const p of pieces) {
   p.width = Math.round(p.w * k); p.height = Math.round(p.h * k);
   await sharp(p.png).toFile(path.join(review, `${p.id.slice('golf:'.length)}.png`));
 }
+// T231: the kit's masters, tallest first after the golf art, at 0.6 x their display size (their studio size when bigger)
+const KIT_DIR = path.join(root, 'art/concept-kit'), kitItems = fs.existsSync(path.join(KIT_DIR, 'items.json')) ? JSON.parse(fs.readFileSync(path.join(KIT_DIR, 'items.json'), 'utf8')).items : [];
+const kit = [];
+for (const it of kitItems) {
+  const file = path.join(KIT_DIR, `${it.id.slice('kit:'.length)}.webp`); if (!fs.existsSync(file)) { console.log(`${it.id}: no master`); continue; }
+  const k = 0.6 * Math.max(1, SCALE_OVERRIDES[it.id] ?? 1), meta = await sharp(file).metadata();
+  kit.push({ it, file, width: Math.max(1, Math.min(meta.width, Math.round(it.w * k))), height: Math.max(1, Math.min(meta.height, Math.round(it.h * k))) });
+}
+kit.sort((a, b) => b.height - a.height);
+const all = [...pieces, ...kit];
 function fits(page) {
   let x = GUT, y = GUT, rowH = 0;
-  for (const p of pieces) {
+  for (const p of all) {
     if (p.width + 2 * GUT > page || p.height + 2 * GUT > page) return false;
     if (x + p.width + GUT > page) { x = GUT; y += rowH + GUT; rowH = 0; }
     if (y + p.height + GUT > page) return false;
@@ -91,6 +105,17 @@ for (const p of pieces) {
     tex: [0, x / PAGE, y / PAGE, (x + width) / PAGE, (y + height) / PAGE], quad: [0, 0, w, h] });
   x += width + GUT; rowH = Math.max(rowH, height);
 }
+// T231: the kit after the golf art, in the same shelves
+const kitOut = [];
+for (const p of kit) {
+  const { it, width, height } = p;
+  if (x + width + GUT > PAGE) { x = GUT; y += rowH + GUT; rowH = 0; }
+  if (width + 2 * GUT > PAGE || y + height + GUT > PAGE) throw new Error(`Atlas overflow packing ${it.id}`);
+  composite.push({ input: await sharp(p.file).resize(width, height, { kernel: 'lanczos3', fit: 'fill' }).sharpen({ sigma: 0.5 }).png().toBuffer(), left: x, top: y });
+  const { src, run, ...lib } = it;
+  kitOut.push({ ...lib, tex: [0, x / PAGE, y / PAGE, (x + width) / PAGE, (y + height) / PAGE], quad: [0, 0, it.w, it.h] });
+  x += width + GUT; rowH = Math.max(rowH, height);
+}
 const full = await sharp({ create: { width: PAGE, height: PAGE, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } }).composite(composite).png().toBuffer();
 for (let mip = 0; mip < 5; mip++) await sharp(full).resize(PAGE >> mip, PAGE >> mip).webp({ quality: 92, alphaQuality: 100 }).toFile(path.join(out, `golf-${mip}.webp`));
 // Ignored review artifacts: full-resolution individual cutouts and an enlarged atlas showing the final packed pixels.
@@ -110,9 +135,18 @@ fs.writeFileSync(path.join(root, 'src/game/golf-library.ts'), [
   ...Array.from({ length: 5 }, (_, i) => `import m${i} from '../assets/golf/golf-${i}.webp';`),
   `const ITEMS: LibItem[] = ${JSON.stringify(items)};`,
   '/** Append after the construction art, preserving every existing saved item index. */',
+  '/** T231: the concept kit (art/concept-kit, prep-kit.mjs), on the golf page: appended last (appendKit), so no saved index moves */',
+  `const KIT: LibItem[] = ${JSON.stringify(kitOut)};`,
+  "/** the golf page's index in the atlas (set by appendGolf) */",
+  'let golfPage = -1;',
   'export function appendGolf(library: LibItem[], pages: string[][]) {',
-  '  const page = pages.length; pages.push([m0, m1, m2, m3, m4]);',
+  '  const page = golfPage = pages.length; pages.push([m0, m1, m2, m3, m4]);',
   '  for (const item of ITEMS) if (!removed.has(item.id)) library.push({ ...item, tex: [page, ...item.tex.slice(1)] as LibItem["tex"] });',
+  '}',
+  '/** T231: the concept kit, after every other library (it shares the golf page: appendGolf must have run) */',
+  'export function appendKit(library: LibItem[]) {',
+  "  if (golfPage < 0) throw new Error('appendKit before appendGolf');",
+  '  for (const item of KIT) if (!removed.has(item.id)) library.push({ ...item, tex: [golfPage, ...item.tex.slice(1)] as LibItem["tex"] });',
   '}', ''
 ].join('\n'));
-console.log(`Prepared ${items.length} golf sprites on one ${PAGE} x ${PAGE} supplemental page (rows to y ${y + rowH}); cutouts and contact sheet: ${review}.`);
+console.log(`Prepared ${items.length} golf sprites and ${kitOut.length} kit sprites on one ${PAGE} x ${PAGE} supplemental page (rows to y ${y + rowH}); cutouts and contact sheet: ${review}.`);

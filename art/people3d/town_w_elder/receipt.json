@@ -1,0 +1,10 @@
+{
+  "image": "art/people3d/pics/town_w_elder.png",
+  "look": "Retired woman in her 70s from a 1985 small American town, set grey hair, a lilac coat, a grey skirt, sensible black shoes",
+  "modelUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/threedgen/AFjPSjQH9kbcCl57sgO3/f71da003-c76f-432b-ac1d-87c1752207b3/model.compressed.glb",
+  "rigFrom": "base_woman (local rig transfer, rig-local-person.mjs)",
+  "clipsFrom": {
+    "walk": "base_woman",
+    "idle": "base_woman"
+  }
+}
