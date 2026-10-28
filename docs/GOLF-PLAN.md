@@ -124,6 +124,13 @@ No more prepainted streets for the town." The full design is [plans/P22.md](plan
   markers until **Target greens** ($2,500: three with flags); the old 'targets' upgrade adds two more and the boards. The practice area is
   land for sale (Land for sale names it, T232's survey line pegs it out) until bought; Facilities › Practice refuses it until then. Old saves
   own their greens, paved lot, walkway and practice area (rangesave.ts LEGACY_UPGRADES).
+- **The guide's card (T239 Phase B):** a new range game's guide is a card in the corner (ui/golf/RangeGuideCard.tsx; guide.ts RANGE_GUIDE,
+  saved as golf.progress.guide): 1 sell your first buckets, 2 place the target greens, 3 lay a walking path, 4 gravel then pave the car park,
+  5 turf the tee box, 6 buy the practice area and build a putting green, 7 build the first hole. A step ticks when its build is done (in any
+  order) and pays $1,000 ($500 the first, $2,500 the hole: $8,000 in all, booked against construction); Show me opens its card or tool, moves
+  the camera and pulses its control (the walking path step rings the car park, the shack and the tee); Skip leaves a step unpaid; Skip guide
+  ends it. While it runs it replaces the ramp's hints, and the tools open along it: the paths at step 3, Land for sale, Holes and
+  Facilities › Practice at step 6, New hole and Buildings at step 7 (or earlier by the ramp). A range save from before T239 has no card.
 - **Still to come** (P22's tickets): the grown-town growth rules (T090, T091), the exits feeding the range (T092), through traffic
   (T093), the off-map tournament crowd (T094), the first-minute guide (T095) and the range's look (T096).
 - **Old saves keep their towns.** A save without `golf.start` is the old start: one seeded town (one asphalt main avenue with gravel
