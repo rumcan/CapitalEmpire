@@ -4,7 +4,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { CELL_T, SURF, makeGrid, type Grid } from '../src/game/ext/course-grid';
-import { bandAt, cutPieces, fairwayStripeLook, holeStripeLegs, legArea, type StripeLook } from '../src/game/course-stripes';
+import { bandAt, cutPieces, fairwayStripeLook, holeStripeLegs, legArea } from '../src/game/course-stripes';
 import { finishStripeLook, DEFAULT_COURSE_FINISH } from '../src/game/course-finish';
 import { bandPasses, crewCells, crewGround, greenPasses, parkSpot, roughPasses, sandsOf, segmentPasses, type CrewGround } from '../src/game/golf/crewground';
 import { CREW_OUT, CUP_LEAD, GK_HOME, MO_HOME, crewDay, crewFlips, crewFor, firstFree, fullyCut, holeWindows, legAt, normalizeCrewSave, rotaJobs, runs, type CrewHole, type CrewInputs } from '../src/game/golf/crew';
