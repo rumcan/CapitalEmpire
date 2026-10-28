@@ -150,13 +150,13 @@ test('T265 the belts: deterministic cell by cell, thick near the bank and thinni
   assert.ok(near > mid * 1.4 && mid > far, `thick near the bank, thinning out: ${near.toFixed(1)}, ${mid.toFixed(1)}, ${far.toFixed(1)} a tile`);
   assert.equal(river.filter(t => Math.abs(t.y - 300) - 15 - BELT.river.bank >= BELT.reach).length, 0, 'none past 40 m');
   assert.equal(beltProfile(0), 1); assert.equal(beltProfile(BELT.reach), 0);
-  // gaps: 16-tile stretches of bank with no tree within 6 tiles of it, on both banks, and thickets with many
+  // gaps: 16-tile stretches of bank with no more than a tree or two within 6 tiles of it, on both banks, and thickets with many
   let bare = 0, thick = 0, n = 0;
   for (let x = 40; x < 560; x += 16) for (const s of [-1, 1]) {
     const k = river.filter(t => t.x >= x && t.x < x + 16 && s * (t.y - 300) > 0 && Math.abs(t.y - 300) - 15 < BELT.river.bank + 6).length;
-    n++; if (k === 0) bare++; if (k >= 8) thick++;
+    n++; if (k <= 2) bare++; if (k >= 8) thick++;
   }
-  assert.ok(bare / n >= 0.1 && bare / n < 0.6, `${bare} of ${n} stretches bare (the water shows)`);
+  assert.ok(bare / n >= 0.15 && bare / n < 0.6, `${bare} of ${n} stretches (nearly) bare: the water shows`);
   assert.ok(thick / n >= 0.15, `${thick} of ${n} stretches a thicket`);
   // the camera's side (further down the screen: larger x + y) keeps fewer trees close to the bank than the far side
   const side = (s: number) => river.filter(t => s * (t.y - 300) > 0 && Math.abs(t.y - 300) - 15 - BELT.river.bank < 4).length;
