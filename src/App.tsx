@@ -41,7 +41,7 @@ import { DECOR_GROUPS } from './game/golf/decor';
 import { PLANT_KINDS } from './game/plant';
 import { newHole } from './ui/course/HoleStrip';
 import { SurfaceMark } from './ui/course/SurfaceMark';
-import { BRUSH_PRESETS, MENU_TEXES } from './game/paint';
+import { MENU_TEXES, SURFACE_BRUSHES } from './game/paint';
 import { STRUCTURES } from './game/golf/tents';
 import { findGolfCard, type GolfCardDef } from './game/golf/golfcards';
 import { getTournamentWeather } from './game/golf/weather';
@@ -100,7 +100,7 @@ function menuCtx(game: Game): MenuCtx {
     golf: game.golfMode, ui,
     roads: cls(ROAD_TYPES), paths: cls(COURSE_TYPES),
     junctions: JUNCTION_KINDS.map(t => { const lk = game.junctionOpen(t) ? null : unlockOf('junction', t); return { id: t, name: SEG_NAME[t], why: game.junctionOpen(t) ? null : game.eventMode ? `${SEG_NAME[t]} needs the Roundabout card` : lk ? `Unlocks at ${lk.pop.toLocaleString()} residents` : 'Not open yet' }; }),
-    surfaces: BRUSH_PRESETS.filter(b => !ui || (ui.visibleCourseBrushes as string[]).includes(b.kind)).map(b => ({ id: b.kind, name: b.name })),
+    surfaces: SURFACE_BRUSHES.filter(b => !ui || (ui.visibleCourseBrushes as string[]).includes(b.kind)).map(b => ({ id: b.kind, name: b.name })), // T252: no cart path brush
     cares: (Object.keys(GRASS_COST) as string[]).map(k => ({ id: k, name: k[0]!.toUpperCase() + k.slice(1) })),
     propGroups: DECOR_GROUPS.filter(g => g.id !== 'buildings').map(g => ({ id: g.id, name: g.name })),
     materials: MENU_TEXES.map(t => ({ id: t.id, name: t.name, col: t.col })),
@@ -322,8 +322,8 @@ export default function App() {
   const courseHint = game?.courseHint() ?? '';
   /** T200: where the brush was last refused for "not your land" (a few seconds: the pointer may leave the map for the pill's button) */
   const landAt = game?.golfMode ? game.landRefusalAt() : null;
-  /** the surface keys in force: 1 to the last surface the progressive unlocks show (BRUSH_PRESETS' order, as PaintTool.key reads them) */
-  const surfaceKeys = Math.max(1, ...BRUSH_PRESETS.map((b, i) => (!ui || (ui.visibleCourseBrushes as string[]).includes(b.kind) ? i + 1 : 0)));
+  /** the surface keys in force: 1 to the last surface the progressive unlocks show (SURFACE_BRUSHES' order, as PaintTool.key reads them) */
+  const surfaceKeys = Math.max(1, ...SURFACE_BRUSHES.map((b, i) => (!ui || (ui.visibleCourseBrushes as string[]).includes(b.kind) ? i + 1 : 0)));
   /** the open item's tools that the progressive unlocks show (the segmented row of Roads and Transport) */
 
   /** the top bar's money figure (a button: it opens the budget) */
@@ -1855,7 +1855,7 @@ function hintFor(g: Game) {
       const h = g.laneHover, up = g.tool === 'lane', head = up ? 'UPGRADE' : 'DOWNGRADE', rev = ' · Right-click a one-way road to reverse it';
       if (!h || !h.segs.length) return `${head} — hover a straight road: its run lights up; click to take it one size ${up ? 'up (you pay the difference)' : 'down (the difference is refunded)'}` + rev;
       return (h.why || `${head} — click to make this ${h.segs.length > 1 ? 'run' : 'road'} ${h.to!.name.toLowerCase()} ${h.cost < 0 ? `(refund ${money(-h.cost)})` : `for ${money(h.cost + h.comp)}${h.comp ? ` (${money(h.comp)} compensation for the buildings its ring clears)` : ''}`}`) + rev; }
-    case 'course': { const q = g.paint, ch = g.courseHint(); return q.mode === 'brush' ? `${ch ? `${ch} ·` : `COURSE (hole ${q.brushHole}, ${q.brushKind}):`} drag to paint · Alt-drag erases · [ ] size · 1–9 surfaces · Ctrl+Z undo` : q.mode === 'draw' ? `COURSE (hole ${q.brushHole}, ${q.brushKind} shape): click corners, double-click or Enter closes · Esc back to the brush · Ctrl+Z undo` : q.mode === 'hole' ? `COURSE: click to place ${q.holeSlot ? 'preset ' + q.holeSlot : 'a generated hole'} · R turns · Esc back to the brush` : q.mode === 'plant' ? `COURSE (plants: ${q.plantBrush}): drag to plant · Alt-drag removes what these brushes planted · [ ] size` : 'COURSE: pick a surface (1–7) to paint'; }
+    case 'course': { const q = g.paint, ch = g.courseHint(); return q.mode === 'brush' ? `${ch ? `${ch} ·` : `COURSE (hole ${q.brushHole}, ${q.brushKind}):`} drag to paint · Alt-drag erases · [ ] size · 1–${SURFACE_BRUSHES.length} surfaces · Ctrl+Z undo` : q.mode === 'draw' ? `COURSE (hole ${q.brushHole}, ${q.brushKind} shape): click corners, double-click or Enter closes · Esc back to the brush · Ctrl+Z undo` : q.mode === 'hole' ? `COURSE: click to place ${q.holeSlot ? 'preset ' + q.holeSlot : 'a generated hole'} · R turns · Esc back to the brush` : q.mode === 'plant' ? `COURSE (plants: ${q.plantBrush}): drag to plant · Alt-drag removes what these brushes planted · [ ] size` : 'COURSE: pick a surface (1–7) to paint'; }
     case 'bulldoze': return 'Click objects or roads to remove them (roads refund their value)';
     case 'paint': return g.paint.mode === 'draw' ? (g.paint.pts.length ? `PAINT: ${g.paint.pts.length / 2} corner(s) — click the first corner, double-click or Enter to close · Backspace undoes · Esc cancels` : 'PAINT: click the corners of a shape, or press and drag to paint an outline freehand · Tab: Draw, Pick, Erase') : g.paint.mode === 'pick' ? 'PAINT: click an area to pick it and change its look · Page Up / Down moves it over / under (Shift: to the front / back) · Delete removes it · Esc: back to Draw · Tab: the next mode' : g.paint.mode === 'hole' ? 'GOLF HOLE: click to place (tee at the click) · R turns · Esc back to Draw' : g.paint.mode === 'brush' ? `BRUSH (${g.paint.brushKind}, hole ${g.paint.brushHole}): drag to paint · Alt-drag erases · [ ] size · Esc back to Draw` : g.paint.mode === 'plant' ? `PLANT (${g.paint.plantBrush}): drag to plant · Alt-drag removes what these brushes planted · [ ] size · Esc back to Draw` : 'PAINT: click an area to erase it';
     case 'select': return g.hoverRoad ? `${g.hoverRoad} · Drag to pan · scroll to zoom · WASD / arrows move the camera · R roads · J junctions · X bulldoze` : 'Drag to pan · scroll to zoom · WASD / arrows move the camera · R roads · J junctions · X bulldoze';

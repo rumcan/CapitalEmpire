@@ -14,9 +14,9 @@ const URLS: Record<string, string> = (() => { try { return import.meta.glob('../
 /** a tile's picture (undefined under plain node: the row draws its icon instead) */
 export const tileUrl = (t: ToolTile): string | undefined => URLS[`../assets/ui/tiles/${t}.webp`];
 
-/** Course ▸ Holes ▸ Shape by hand: the surfaces' tiles (BRUSH_PRESETS' kinds). The Waste area has none yet (its pebbles mark; requested in
- *  docs/GOLF-SPRITES.md); T238's Long grass wears the rough's tile (the long rough it was) */
-export const SURFACE_TILE: Readonly<Partial<Record<string, ToolTile>>> = { fairway: 'fairway', green: 'green', tee: 'tee', rough: 'rough', bunker: 'bunker', water: 'pond', path: 'cart-path', longGrass: 'rough' };
+/** Course ▸ Holes ▸ Shape by hand: the surfaces' tiles (SURFACE_BRUSHES' kinds; T252: no cart path brush). The Waste area has none yet (its
+ *  pebbles mark; requested in docs/GOLF-SPRITES.md); T238's Long grass wears the rough's tile (the long rough it was) */
+export const SURFACE_TILE: Readonly<Partial<Record<string, ToolTile>>> = { fairway: 'fairway', green: 'green', tee: 'tee', rough: 'rough', bunker: 'bunker', water: 'pond', longGrass: 'rough' };
 /** Facilities ▸ Plants: the plant brush's kinds (plant.ts PLANT_KINDS; Bushes and Palms keep their swatch) */
 export const PLANT_TILE: Readonly<Partial<Record<string, ToolTile>>> = { trees: 'trees', flowers: 'flower-bed' };
 /** Facilities ▸ Practice: the practice area's facilities (the putting green, the chipping green and its bunker) */
