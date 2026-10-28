@@ -63,6 +63,9 @@ never commit there.)
 - The owner wants screenshots of every visible change. Commits end with the `Co-Authored-By:` line, PR bodies with the Claude Code line.
 
 ### 3. In flight
+
+**T272 #816 — menu art v2:** `lead/ui-tool-tiles-v2-20261028`, `worktrees/ui-tool-tiles-v2-20261028`. Next: explicit v1/v2 sheet name mapping in `prep-ui-tool-tiles.mjs`; add twelve distinct v2 assets and real Course/Facilities menu aliases, preserving v1 output bytes. Source is primary-approved item181, native1448x1086. No generator/worker/task/quota changes. Validate actual4x3 cuts, old asset hashes, focused menu mapping checks and typecheck, then parent-reviewed PR.
+
 **Two agents running (a new lead took over at ~15:00 on 2026-10-28; the old lead's agents stopped at the usage limit ~14:00):**
 | Ticket | Issue | Branch / worktree | State and next step |
 | --- | --- | --- | --- |

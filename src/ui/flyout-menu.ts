@@ -9,7 +9,7 @@ import type { ProgressiveUiState } from '../game/ext/progressive-ui';
 import type { IconName } from './Icon';
 import { entryKey, extraLock, toolLock, toolNew, toolsIn, type RailItem, type RailTool } from './rail-items';
 import { GREENKEEPING } from '../game/features';
-import { PLANT_TILE, PRACTICE_TILE, PROP_GROUP_TILE, ROW_TILE, SURFACE_TILE, type ToolTile } from './tool-tiles';
+import { EXTRA_TILE, PLANT_TILE, PRACTICE_TILE, PROP_GROUP_TILE, ROW_TILE, SURFACE_TILE, type ToolTile } from './tool-tiles';
 
 /** what a leaf does besides picking its tool (App.tsx runs it) */
 export type LeafAct =
@@ -100,13 +100,13 @@ export function menuOf(item: RailItem, c: MenuCtx): MenuRow[] {
         tiled(group('shape', 'Shape by hand', 'terrain', c.surfaces.map(s => tiled({ ...leaf(h, s.name, { k: 'surface', id: s.id })!, mark: s.id }, SURFACE_TILE[s.id]))), ROW_TILE.shape),
       ] : [], h), ROW_TILE.holes));
       const b = byId('buildings');
-      if (b) rows.push(tiled(group('buildings', 'Buildings', 'house', [tiled(leaf(b, 'Clubhouse', { k: 'club' }, 'house'), ROW_TILE.club), leaf(b, 'Halfway house', { k: 'halfway' }, 'house')], b), ROW_TILE.buildings));
+      if (b) rows.push(tiled(group('buildings', 'Buildings', 'house', [tiled(leaf(b, 'Clubhouse', { k: 'club' }, 'house'), ROW_TILE.club), tiled(leaf(b, 'Halfway house', { k: 'halfway' }, 'house'), ROW_TILE.halfway)], b), ROW_TILE.buildings));
       // T206: the roads on your property (the course's cart paths and drives), directly below Buildings; town roads stay in Traffic
       const p = byId('path');
       if (p) { const r = group('paths', p.label, 'sidewalk', classes(p, c.paths), p); if (r) rows.push({ ...r, note: 'Roads and cart paths on your property', tile: ROW_TILE.paths }); }
       const g = GREENKEEPING ? byId('greenkeeping') : undefined; // hidden for now (features.ts)
       if (g) rows.push(group('greenkeeping', 'Greenkeeping', 'trees', [leaf(g, 'Grass care', undefined, 'trees'), ...c.cares.map(x => leaf(g, x.name, { k: 'care', id: x.id }))], g));
-      if (c.golf) for (const x of item.extras ?? []) rows.push({ key: `extra:${x.id}`, label: x.label, icon: x.icon, leaf: { item: item.id, entry: { id: 'select', label: x.label, key: '', icon: x.icon }, act: x.id === 'land' ? { k: 'land' } : { k: 'event' } }, why: extraLock(c.ui, x) });
+      if (c.golf) for (const x of item.extras ?? []) rows.push({ key: `extra:${x.id}`, label: x.label, icon: x.icon, tile: EXTRA_TILE[x.id], leaf: { item: item.id, entry: { id: 'select', label: x.label, key: '', icon: x.icon }, act: x.id === 'land' ? { k: 'land' } : { k: 'event' } }, why: extraLock(c.ui, x) });
       break;
     }
     case 'facilities': {
@@ -120,7 +120,7 @@ export function menuOf(item: RailItem, c: MenuCtx): MenuRow[] {
       const pr = byId('props');
       if (pr) rows.push(tiled(group('decoration', 'Decoration', 'leaf', [group('props', 'Props', 'leaf', [leaf(pr, 'All props', { k: 'props', group: null }), ...c.propGroups.map(g => tiled(leaf(pr, g.name, { k: 'props', group: g.id }), PROP_GROUP_TILE[g.id]))], pr)], pr), ROW_TILE.decoration));
       // T256: the same Build as the Range's: paint your property
-      if (c.golf) { const b = leaf(BUILD_TOOL, 'Build on your property', { k: 'build' }, 'terrain'); if (b) rows.push({ ...b, gold: true }); }
+      if (c.golf) { const b = leaf(BUILD_TOOL, 'Build on your property', { k: 'build' }, 'terrain'); if (b) rows.push({ ...b, gold: true, tile: ROW_TILE.build }); }
       break;
     }
     case 'towndecor': {
