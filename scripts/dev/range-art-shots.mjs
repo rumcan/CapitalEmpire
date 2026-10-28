@@ -7,7 +7,9 @@
 //   bullseye  the 200 m green after More target greens (the bullseye), 30%
 //   range15   the whole front of the range with every upgrade above, 15%
 //   range8    the whole range, 8%
-//   node scripts/dev/range-art-shots.mjs --base http://127.0.0.1:5186/ --out E:/ClaudeTemp/T258 --tag before [--only mats,greens,...]
+//   node scripts/dev/range-art-shots.mjs --base http://127.0.0.1:5186/ --out E:/ClaudeTemp/T258 --tag before [--only mats,greens,...] [--pair]
+// --pair (after T258): each view twice in the same game, first with the stand-ins (the Studio option, tagged 'standin') and then with the
+// pictures (tagged as --tag): the same range, the same facing (a new start's site and facing differ from run to run).
 // Needs a dev server (vite) on --base. One headless Edge, closed when done; a fresh profile, so each start is a new game.
 import { chromium } from 'playwright-core';
 import sharp from 'sharp';
@@ -25,7 +27,14 @@ const settle = async (page, ms = 900) => {
   await page.waitForFunction(() => { const g = window.__game; window.__calm = g.ground.busy === 0 ? window.__calm + 1 : 0; return window.__calm > 20; }, null, { timeout: 60000, polling: 50 }).catch(() => console.log('  (settle timed out)'));
   await page.waitForTimeout(400);
 };
+const pair = args.includes('--pair');
+/** the range's ground art as the studio's option has it (null: the studio's own, the pictures) */
+const standIns = (page, on) => page.evaluate(on => { const g = window.__game; g.range.lookOverride = on ? { mats: 'stand-in', greens: 'stand-in', bullseye: -1 } : null; g.range.sync(true); }, on);
 const shot = async (page, name, zoom) => {
+  if (pair) { await standIns(page, true); await settle(page); await shot1(page, name, zoom, 'standin'); await standIns(page, false); await settle(page); }
+  return shot1(page, name, zoom, tag);
+};
+const shot1 = async (page, name, zoom, tag) => {
   const file = join(out, `${tag}-${name}.jpg`), png = await page.screenshot({ type: 'png' });
   await sharp(png).jpeg({ quality: 90, mozjpeg: true }).toFile(file);
   console.log(file);
