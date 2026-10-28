@@ -10,6 +10,7 @@ import type { OwnerInput } from './play/live';
 import { normalizeRangeBiz, type RangeBizSave } from './rangesave';
 import { normalizeDaySave, type DaySave } from './everyday';
 import { normalizeBook, type LookBook } from './looks';
+import { normalizeGrasses, type CustomGrass } from './grasses';
 import { normalizeMyHoles, type MyHole } from './myholes';
 import { isTeeKind, migrateTees } from './teesets';
 import { normalizeTeeBoxes } from './teeplace';
@@ -43,6 +44,8 @@ export interface GolfSave {
  /** T256 (#743): the looks book (golf/looks.ts): each hole's, the property's and each practice facility's looks by owner key. Missing in older
   *  saves: every hole and the property take the course default (today's course-wide looks) as their own on load, so nothing changes */
  looks?: LookBook;
+ /** T271 (#812): the course's own grasses (golf/grasses.ts), by slot; the course grid's look layer names them per cell. Missing: none */
+ grasses?: CustomGrass[];
  /** T254 (#736): 1 once the tee markers are the four tee sets (blue, white, yellow, red). Missing: an older save, whose back, middle and forward
   *  stand as the blue, white and red and whose holes with a single tee marker become the white set on load (golf/teesets.ts migrateTees) */
  teeSets?: 1;
@@ -101,7 +104,7 @@ export function normalizeGolfSave(g: Partial<GolfSave> | null | undefined): Golf
   if (!g || !g.town || !g.course || !g.clubhouse) return null;
   const parcel: Rect = g.parcel ?? g.parcels?.[0] ?? g.course;
   // the range start's fields (plan P22 2.6) are taken out and put back only when well formed, so an old start's save normalizes as before
-  const { start, exits, townBoost, invited, founding, play, range, everyday, ponds, practiceLot, looks, myHoles, teeSets, teeBoxes, ...rest } = g;
+  const { start, exits, townBoost, invited, founding, play, range, everyday, ponds, practiceLot, looks, myHoles, teeSets, grasses, teeBoxes, ...rest } = g;
   const out: GolfSave = {
     ...rest,
     v: 1,
@@ -132,6 +135,8 @@ export function normalizeGolfSave(g: Partial<GolfSave> | null | undefined): Golf
   // T256: the looks book and My holes, well formed only (a save without the book keeps none: the engine gives every owner today's looks)
   const lk = normalizeBook(looks); if (lk) out.looks = lk;
   const mh = normalizeMyHoles(myHoles); if (mh.length) out.myHoles = mh;
+  // T271: the custom grasses, well formed only (none kept: the field stays out)
+  const gr = normalizeGrasses(grasses); if (gr.length) out.grasses = gr;
   const tb = normalizeTeeBoxes(teeBoxes); if (tb) out.teeBoxes = tb; // T268
   return out;
 }

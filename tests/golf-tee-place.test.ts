@@ -195,3 +195,19 @@ test('the records: packed and unpacked as they were; a save keeps the well-forme
   assert.equal(old.teeBoxes, undefined); assert.deepEqual(old.tees, [{ hole: 1, kind: 'middle', x: 3, y: 4 }]);
   const kept = normalizeGolfSave({ ...old, teeBoxes: { '1:middle': rec } })!; assert.deepEqual(kept.teeBoxes, { '1:middle': rec });
 });
+
+test('T271\'s own grass under a tee box: the box\'s cells are tee with look 0; moved or removed, the custom grass comes back (an older box takes the grass round it)', () => {
+  const o = oneHole(), at = { x: o.plan.tee.x + 30, y: 120 };
+  paintDisc(o.g, at.x, at.y, 8, SURF.fairway, 1, 0, { look: 3 });
+  const i = cellAt(o.g, at.x, at.y); assert.equal(o.g.look?.[i], 3, 'custom grass 3 laid');
+  assert.ok(o.place(1, 'senior', at.x, at.y).ok);
+  assert.equal(o.g.surf[i], SURF.tee); assert.equal(o.g.look![i], 0, 'the tee wears its own surface');
+  assert.equal(o.g.draw![i], SURF.tee, 'drawn as tee');
+  const rec = o.st.boxes[teeKey(1, 'senior')]!; assert.ok(unpackUnder(rec.u).some(c => c.k === 3), 'the record keeps the custom grass');
+  o.remove(1, 'senior');
+  assert.equal(o.g.surf[i], SURF.fairway); assert.equal(o.g.look![i], 3, 'the custom grass is back');
+  // an older box on custom grass: the grass round it, custom slot and all
+  paintDisc(o.g, at.x, at.y, 3, SURF.tee, 1, 0);
+  o.st.tees = [...o.st.tees, { hole: 1, kind: 'forward', x: at.x, y: at.y }];
+  const old = oldBox(o.course(), 1, 'forward')!; assert.ok(old.back && old.back.n > 0 && Array.from(old.back.k1!).every(v => v === 3) && Array.from(old.back.s1).every(v => v === SURF.fairway));
+});

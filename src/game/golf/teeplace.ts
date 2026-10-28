@@ -148,47 +148,54 @@ const unb64 = (s: unknown): Uint8Array => {
   if (typeof s !== 'string' || !s) return new Uint8Array(0);
   try { const t = atob(s), u = new Uint8Array(t.length); for (let i = 0; i < t.length; i++) u[i] = t.charCodeAt(i); return u; } catch { return new Uint8Array(0); }
 };
-/** a cell a box changed, as it was: its middle (tiles), surface, hole and month */
-export interface UnderCell { x: number; y: number; s: number; h: number; m: number }
+/** a cell a box changed, as it was: its middle (tiles), surface, hole, month and custom grass slot (T271: 0 its surface's own look) */
+export interface UnderCell { x: number; y: number; s: number; h: number; m: number; k: number }
+/** the bytes a cell takes in a record */
+const UNDER_B = 7;
 /** the cells diff d changed, as they were (d's before values), packed: the cells' own lattice spots (so a grid that grows later finds them), base64
- *  of a base cell (int32 x, y) and 6 bytes a cell (dx, dy, surface, hole, month u16) */
+ *  of a base cell (int32 x, y) and 7 bytes a cell (dx, dy, surface, hole, month u16, custom grass slot) */
 export function packUnder(d: GridDiff): string {
   if (!d.n) return '';
   const ox = Math.round(d.x0 / CELL_T), oy = Math.round(d.y0 / CELL_T), ax: number[] = [], ay: number[] = [];
   let bx = Infinity, by = Infinity;
   for (let k = 0; k < d.n; k++) { const cx = d.idx[k]! % d.w, cy = (d.idx[k]! - cx) / d.w; ax.push(ox + cx); ay.push(oy + cy); bx = Math.min(bx, ox + cx); by = Math.min(by, oy + cy); }
   const keep: number[] = []; for (let k = 0; k < d.n; k++) if (ax[k]! - bx < 256 && ay[k]! - by < 256) keep.push(k);
-  const buf = new ArrayBuffer(8 + keep.length * 6), v = new DataView(buf);
+  const buf = new ArrayBuffer(8 + keep.length * UNDER_B), v = new DataView(buf);
   v.setInt32(0, bx, true); v.setInt32(4, by, true);
-  keep.forEach((k, j) => { const o = 8 + j * 6; v.setUint8(o, ax[k]! - bx); v.setUint8(o + 1, ay[k]! - by); v.setUint8(o + 2, d.s0[k]!); v.setUint8(o + 3, d.h0[k]!); v.setUint16(o + 4, d.m0[k]!, true); });
+  keep.forEach((k, j) => {
+    const o = 8 + j * UNDER_B, lk = d.k0?.[k] ?? 0;
+    v.setUint8(o, ax[k]! - bx); v.setUint8(o + 1, ay[k]! - by); v.setUint8(o + 2, d.s0[k]!); v.setUint8(o + 3, d.h0[k]!); v.setUint16(o + 4, d.m0[k]!, true); v.setUint8(o + 6, lk === 255 ? 0 : lk);
+  });
   return b64(new Uint8Array(buf));
 }
 /** the cells packUnder kept (none for a bad record) */
 export function unpackUnder(s: unknown): UnderCell[] {
-  const u = unb64(s); if (u.length < 8 || (u.length - 8) % 6) return [];
+  const u = unb64(s); if (u.length < 8 || (u.length - 8) % UNDER_B) return [];
   const v = new DataView(u.buffer, u.byteOffset, u.byteLength), bx = v.getInt32(0, true), by = v.getInt32(4, true), out: UnderCell[] = [];
-  for (let o = 8; o + 6 <= u.length; o += 6) out.push({ x: (bx + v.getUint8(o) + 0.5) * CELL_T, y: (by + v.getUint8(o + 1) + 0.5) * CELL_T, s: v.getUint8(o + 2), h: v.getUint8(o + 3), m: v.getUint16(o + 4, true) });
+  for (let o = 8; o + UNDER_B <= u.length; o += UNDER_B) out.push({ x: (bx + v.getUint8(o) + 0.5) * CELL_T, y: (by + v.getUint8(o + 1) + 0.5) * CELL_T, s: v.getUint8(o + 2), h: v.getUint8(o + 3), m: v.getUint16(o + 4, true), k: v.getUint8(o + 6) });
   return out;
 }
-/** a diff on g from the cells now to the values given (cells as they now are left out); g is not changed */
-function toDiff(g: Grid, idx: readonly number[], s1: readonly number[], h1: readonly number[], m1: readonly number[]): GridDiff {
-  const I: number[] = [], S0: number[] = [], H0: number[] = [], M0: number[] = [], S1: number[] = [], H1: number[] = [], M1: number[] = [];
+/** a diff on g from the cells now to the values given (surface, hole, month and custom grass slot; cells as they now are left out); g is not
+ *  changed */
+function toDiff(g: Grid, idx: readonly number[], s1: readonly number[], h1: readonly number[], m1: readonly number[], k1: readonly number[]): GridDiff {
+  const I: number[] = [], S0: number[] = [], H0: number[] = [], M0: number[] = [], K0: number[] = [], S1: number[] = [], H1: number[] = [], M1: number[] = [], K1: number[] = [];
   idx.forEach((i, k) => {
-    if (g.surf[i] === s1[k] && g.hole[i] === h1[k] && g.month[i] === m1[k]) return;
-    I.push(i); S0.push(g.surf[i]!); H0.push(g.hole[i]!); M0.push(g.month[i]!); S1.push(s1[k]!); H1.push(h1[k]!); M1.push(m1[k]!);
+    const lk = g.look?.[i] ?? 0, nk = s1[k] === SURF.none ? 0 : k1[k]!;
+    if (g.surf[i] === s1[k] && g.hole[i] === h1[k] && g.month[i] === m1[k] && lk === nk) return;
+    I.push(i); S0.push(g.surf[i]!); H0.push(g.hole[i]!); M0.push(g.month[i]!); K0.push(lk); S1.push(s1[k]!); H1.push(h1[k]!); M1.push(m1[k]!); K1.push(nk);
   });
-  return { x0: g.x0, y0: g.y0, w: g.w, n: I.length, idx: Uint32Array.from(I), s0: Uint8Array.from(S0), h0: Uint8Array.from(H0), m0: Uint16Array.from(M0), s1: Uint8Array.from(S1), h1: Uint8Array.from(H1), m1: Uint16Array.from(M1) };
+  return { x0: g.x0, y0: g.y0, w: g.w, n: I.length, idx: Uint32Array.from(I), s0: Uint8Array.from(S0), h0: Uint8Array.from(H0), m0: Uint16Array.from(M0), s1: Uint8Array.from(S1), h1: Uint8Array.from(H1), m1: Uint16Array.from(M1), k0: Uint8Array.from(K0), k1: Uint8Array.from(K1) };
 }
 /** the diff that puts a recorded box's old ground back (hole: its hole now, which a renumber may have changed from rec.n): each recorded cell that
- *  is still the hole's tee, and not kept (keep: another set's box stands there), goes back to its surface, hole and month as they were. g is not
- *  changed */
+ *  is still the hole's tee, and not kept (keep: another set's box stands there), goes back to its surface, hole, month and custom grass (T271) as
+ *  they were. g is not changed */
 export function backDiff(g: Grid, rec: TeeBoxRec, hole: number, keep?: (i: number) => boolean): GridDiff {
-  const idx: number[] = [], s: number[] = [], h: number[] = [], m: number[] = [];
+  const idx: number[] = [], s: number[] = [], h: number[] = [], m: number[] = [], k: number[] = [];
   for (const c of unpackUnder(rec.u)) {
     const i = cellAt(g, c.x, c.y); if (i < 0 || g.surf[i] !== SURF.tee || g.hole[i] !== hole || keep?.(i)) continue;
-    idx.push(i); s.push(c.s); h.push(c.h === rec.n ? hole : c.h); m.push(c.m);
+    idx.push(i); s.push(c.s); h.push(c.h === rec.n ? hole : c.h); m.push(c.m); k.push(c.k);
   }
-  return toDiff(g, idx, s, h, m);
+  return toDiff(g, idx, s, h, m, k);
 }
 /** whether a record still stands: the cell at its middle is the hole's tee */
 export function recStands(g: Grid, rec: TeeBoxRec, hole: number): boolean { const i = cellAt(g, rec.x, rec.y); return i >= 0 && g.surf[i] === SURF.tee && g.hole[i] === hole; }
@@ -208,27 +215,27 @@ export function teeCells(g: Grid, hole: number, i0: number, cap = 8000): number[
   }
   return out;
 }
-/** the ground an older box goes back to: the commonest surface round it (the cells two out, this hole's or no hole's, not a tee) with a month
- *  of such a cell; the hole's rough, grown in, when there is none */
-export function groundRound(g: Grid, cells: readonly number[], hole: number): { s: number; h: number; m: number } {
-  const mine = new Set(cells), count = new Map<string, { n: number; s: number; h: number; m: number }>();
+/** the ground an older box goes back to: the commonest ground round it (the cells two out, this hole's or no hole's, not a tee: a surface and its
+ *  custom grass, T271) with a month of such a cell; the hole's rough, grown in, when there is none */
+export function groundRound(g: Grid, cells: readonly number[], hole: number): { s: number; h: number; m: number; k: number } {
+  const mine = new Set(cells), count = new Map<string, { n: number; s: number; h: number; m: number; k: number }>();
   for (const i of cells) {
     const cx = i % g.w, cy = (i - cx) / g.w;
     for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) {
       const x = cx + dx, y = cy + dy; if (x < 0 || y < 0 || x >= g.w || y >= g.h) continue;
       const j = y * g.w + x; if (mine.has(j)) continue;
-      const s = g.surf[j]!, h = g.hole[j]!; if (s === SURF.tee || (h && h !== hole)) continue;
-      const key = `${s}:${h}`, c = count.get(key); if (c) c.n++; else count.set(key, { n: 1, s, h, m: g.month[j]! });
+      const s = g.surf[j]!, h = g.hole[j]!, lk = g.look?.[j] ?? 0; if (s === SURF.tee || (h && h !== hole)) continue;
+      const key = `${s}:${h}:${lk}`, c = count.get(key); if (c) c.n++; else count.set(key, { n: 1, s, h, m: g.month[j]!, k: lk });
     }
   }
-  let best: { n: number; s: number; h: number; m: number } | null = null;
+  let best: { n: number; s: number; h: number; m: number; k: number } | null = null;
   for (const c of count.values()) if (!best || c.n > best.n) best = c;
-  return best ? { s: best.s, h: best.s === SURF.none ? 0 : best.h, m: best.m } : { s: SURF.rough, h: hole, m: 0 };
+  return best ? { s: best.s, h: best.s === SURF.none ? 0 : best.h, m: best.m, k: best.k } : { s: SURF.rough, h: hole, m: 0, k: 0 };
 }
 /** the diff that sets cells to v (those kept, and those as they are, left out); g is not changed */
-export function fillDiff(g: Grid, cells: readonly number[], v: { s: number; h: number; m: number }, keep?: (i: number) => boolean): GridDiff {
+export function fillDiff(g: Grid, cells: readonly number[], v: { s: number; h: number; m: number; k?: number }, keep?: (i: number) => boolean): GridDiff {
   const idx = cells.filter(i => !keep?.(i));
-  return toDiff(g, idx, idx.map(() => v.s), idx.map(() => v.h), idx.map(() => v.m));
+  return toDiff(g, idx, idx.map(() => v.s), idx.map(() => v.h), idx.map(() => v.m), idx.map(() => v.k ?? 0));
 }
 /** an older box's middle (tiles) and the size of the same area (within the limits) */
 export function cellsFit(g: Grid, cells: readonly number[]): { x: number; y: number; s: number } {

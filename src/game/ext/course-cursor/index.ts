@@ -53,7 +53,7 @@ export { snapDab, squarePoly, squareStart, SQUARE_SIZES } from './snap';
 // ---- inputs ----
 
 /** what the cursor reads from the Paint tool each frame (PaintTool fits it) */
-export type CursorTool = Pick<PaintTool, 'mode' | 'brushKind' | 'brush' | 'rubOut' | 'rubHoleOnly' | 'cursor' | 'piece' | 'brushSquare' | 'strokeSpent' | 'strokeCells' | 'brushHole' | 'plantKind' | 'usedHoles' | 'runOn' | 'runPath' | 'runPts'> & Partial<Pick<PaintTool, 'brushLooks' | 'courseBorder'>>;
+export type CursorTool = Pick<PaintTool, 'mode' | 'brushKind' | 'brush' | 'rubOut' | 'rubHoleOnly' | 'cursor' | 'piece' | 'brushSquare' | 'strokeSpent' | 'strokeCells' | 'brushHole' | 'plantKind' | 'usedHoles' | 'runOn' | 'runPath' | 'runPts'> & Partial<Pick<PaintTool, 'brushLooks' | 'courseBorder' | 'grassPuck'>>;
 /** T256: the looks the chip wears: the owner's in hand (the hole painted, the property; PaintTool.brushLooks), else the brushes' (the course
  *  default) */
 const looksOf = (tool: CursorTool): BrushLooks => tool.brushLooks ?? (tool.brush as BrushLooks);
@@ -1026,7 +1026,7 @@ export class CourseCursor {
   /** the footprint, the grid and the chip for the brush with the pointer at tile (cx, cy): the dab sits on the half grid's nearest corner;
    *  the state (T118) follows from the footprint: refused and kept cells, a footprint that changes nothing, a price over the treasury */
   private drawBrush(ctx: CanvasRenderingContext2D, v: CursorView, tool: CursorTool, cx: number, cy: number, now: number, dt: number): boolean {
-    const set = tool.brush[tool.brushKind], r = set.r, st = looksOf(tool)[tool.brushKind]?.style ?? set.style, erase = this.pressed ? this.pressErase : tool.rubOut; // T256: the owner's look
+    const set = tool.brush[tool.brushKind], r = set.r, st = tool.grassPuck?.()?.st ?? looksOf(tool)[tool.brushKind]?.style ?? set.style, erase = this.pressed ? this.pressErase : tool.rubOut; // T256: the owner's look (T271: a custom grass's)
     const base = LOOKS[tool.brushKind] ?? LOOKS.fairway!, d = v.dpr, n = tool.brushSquare();
     // the dab's middle and size: the square brush's n x n cells (T109), or the round brush on the nearest cell corner (T108)
     const x = n ? (squareStart(cx, n) + n / 2) * CELL_T : snapDab(cx), y = n ? (squareStart(cy, n) + n / 2) * CELL_T : snapDab(cy), size = n ? (n * CELL_T) / 2 : r;
@@ -1070,7 +1070,7 @@ export class CourseCursor {
   private drawRun(ctx: CanvasRenderingContext2D, v: CursorView, tool: CursorTool, cx: number, cy: number, now: number, dt: number): boolean {
     const n = tool.brushSquare(), path = tool.runPath(), k = path.length;
     if (k < 2) return this.drawBrush(ctx, v, tool, cx, cy, now, dt);
-    const st = looksOf(tool)[tool.brushKind]?.style ?? tool.brush[tool.brushKind].style, erase = tool.rubOut, base = LOOKS[tool.brushKind] ?? LOOKS.fairway!, d = v.dpr, active = tool.runPts.length > 0;
+    const st = tool.grassPuck?.()?.st ?? looksOf(tool)[tool.brushKind]?.style ?? tool.brush[tool.brushKind].style, erase = tool.rubOut, base = LOOKS[tool.brushKind] ?? LOOKS.fairway!, d = v.dpr, active = tool.runPts.length > 0;
     const ex = path[k - 2]!, ey = path[k - 1]!;
     this.zoneNow = this.env.zone?.(ex, ey) ?? '';
     this.drawGrid(ctx, v, ex, ey, (n * CELL_T) / 2);
@@ -1331,6 +1331,8 @@ export class CourseCursor {
    *  reads or the finish changes (a frame allocates none) */
   private bm = { kind: '', st: null as unknown, fw: null as unknown, ro: null as unknown, fin: null as CourseFinish | null, bw: null as number | null | undefined, pb: null as PuckBand | null };
   private bandOf(tool: CursorTool): PuckBand | null {
+    // T271: a custom grass in hand wears its own band (its first cut at its Border)
+    const gp = tool.grassPuck?.(); if (gp) return gp.pb;
     // T260: with its Border (none: no band ring on the chip)
     const b = looksOf(tool), st = b[tool.brushKind as keyof BrushLooks]?.style, fw = b.fairway?.style, ro = b.rough?.style, fin = this.env.finish?.() ?? DEFAULT_COURSE_FINISH, bw = tool.courseBorder?.(tool.brushKind), m = this.bm;
     if (m.kind !== tool.brushKind || m.st !== st || m.fw !== fw || m.ro !== ro || m.fin !== fin || m.bw !== bw) Object.assign(m, { kind: tool.brushKind, st, fw, ro, fin, bw, pb: puckBandOf(tool.brushKind, b, fin, bw) });

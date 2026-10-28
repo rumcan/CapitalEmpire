@@ -196,7 +196,8 @@ test('Long grass is a brush (T252: key 8, the cart path brush gone, at stage 2),
   assert.equal(SURFACE_BRUSHES[k]!.name, 'Long grass'); assert.ok(GRID_KINDS.includes('longGrass')); assert.equal(BRUSH_STAGE.longGrass, BRUSH_STAGE.rough);
   assert.equal(surfaceOfTex(SURFACE_BRUSHES[k]!.style.tex), 'longGrass'); assert.equal(SURF_SURFACE[SURF.longGrass], 'longGrass');
   assert.equal(SURF.longGrass, 9, 'the next free id: ids 0-8 keep their meaning');
-  assert.deepEqual(SURF_ORDER, [SURF.none, SURF.rough, SURF.longGrass, SURF.fescue, SURF.water, SURF.fairway, SURF.tee, SURF.bunker, SURF.waste, SURF.green]);
+  // (T271: the custom grasses' draw ids, 10..17, after the fescue)
+  assert.deepEqual(SURF_ORDER, [SURF.none, SURF.rough, SURF.longGrass, SURF.fescue, 10, 11, 12, 13, 14, 15, 16, 17, SURF.water, SURF.fairway, SURF.tee, SURF.bunker, SURF.waste, SURF.green]);
   assert.ok(surfAbove(SURF.longGrass, SURF.rough) && surfAbove(SURF.fescue, SURF.longGrass) && surfAbove(SURF.fairway, SURF.longGrass));
   const rank = (s: number) => DRAW_ORDER.indexOf(layerCode(s, false));
   assert.ok(rank(SURF.rough) < rank(SURF.longGrass) && rank(SURF.longGrass) < rank(SURF.fescue), 'drawn between the rough and the fescue');

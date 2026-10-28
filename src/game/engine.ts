@@ -28,7 +28,8 @@ import { lotBatch, type CourseTex, type LotPatch } from './ground-protocol';
 import { BLOCK_MAX_AREA, enclosedBlocks } from './blocks';
 import { blockLawn, lotLawn } from './lawns';
 import { LAND_WHY, PaintTool } from './paint-tool';
-import { courseLookSet, type LookStyle } from './course-look';
+import { collarTexes, courseLookSet, type BrushLooks, type LookStyle } from './course-look';
+import { lookOfTex } from './painted-surfaces';
 import { FACILITY_OWNERS, LOOK_KINDS, holeOwner, ownerHole, seedOwner, type FacilityOwner } from './golf/looks';
 import { facilityAt } from './golf/practicebuild';
 import { escapeLadder, numberKeyUse, pickTool, switchSideMode, type EscCard, type EscLadder, type SideMode } from './tool-modes';
@@ -48,7 +49,8 @@ import { welcomeReady } from './golf/firstview';
 const HINT_ANCHOR: Readonly<Record<string, string>> = { 'hint-range-open': 'range-chip', 'hint-range-upgrade': 'range-chip', 'hint-range-props': 'rail-facilities', 'hint-range-first-hole': 'new-hole' };
 import { RANGE_LABEL_Z, defaultRangeBiz, parkLabel, rangeKeepOut, practiceAppeal, rangeMapLabel, rangeNewSeason, rangeStats, rangeStructures, type RangeCounts, type RangeUpgradeId } from './golf/rangebiz';
 import { areaAt, brushTextures, toTuple, type BrushKind, type PaintTuple, type PaintTex } from './paint';
-import { CELL_T, SURF, cellAt, cellCentre, diffBox, encodeGrid, fillPolygon, fitGrid, landGridBox, makeGrid, paintDisc, paintStroke, type Grid as CourseGrid, type GridDiff, type GridSave } from './ext/course-grid';
+import { CELL_T, SURF, applyDiff, cellAt, cellCentre, diffBox, encodeGrid, fillPolygon, fitGrid, grassSlot, landGridBox, lookCellsDiff, looksUsed, makeGrid, paintDisc, paintStroke, setLook, type Grid as CourseGrid, type GridDiff, type GridSave } from './ext/course-grid';
+import { PLAY_SURF, golfSurfaceOf, grassLooks, normalizeGrasses, type CustomGrass, type GrassPlay } from './golf/grasses';
 import { STAIR_REACH } from './ext/course-walls';
 import { SURFACE_TEX_ID, SURF_SURFACE, areaRank, growingHoles, ringArea, type GridArea } from './ext/course-grid/areas';
 import { aimsFromPlans, decodePlans, encodePlans, frameView, planSeed, type FreeRect, type WizardGhost } from './ext/hole-wizard';
@@ -60,7 +62,7 @@ import { captureHole, joinHoles, loadBrowserHoles, sameHole, saveBrowserHoles, t
 import { isCourseArea, loadCourseGrid, migrateAreas } from './ext/course-grid/migrate';
 import { COURSE_PATCH_REACH, courseChunksIn, courseEditReach, courseGrowKey, courseKey, courseStyles, drawnSurfaces, growStatic, roundReach, widestCollar, type CourseLooks, type CourseOwners } from './ext/course-grid/patch';
 import { CourseContour, type CourseChunkOut } from './course-contour';
-import { surfacePreset } from './paint-presets';
+import { PRESETS, surfacePreset } from './paint-presets';
 import { plantPoints, plantPool, type PlantBrushKind } from './plant';
 import { ParkingTool } from './parking-tool';
 import { gateSpots } from './parking-props';
@@ -832,6 +834,8 @@ export class Game {
     // Build (the range's plot too), and an owner's look changed: its cells alone are drawn again
     lookBook: () => (this.golf ? (this.golf.looks ??= {}) : null), facility: () => (this.tool === 'practice' ? this.practice.kind : null),
     landAt: (x, y) => this.ownedAt(x, y), lookChanged: o => this.ownerLookChanged(o),
+    // T271 (#812): the course's own grasses (the game save's), a new grass's family, and the first cut a grass's Border is laid in
+    grasses: () => this.grasses(), setGrasses: (l, redraw) => this.setGrasses(l, redraw), grassFamily: (): string | null => this.fairwayFamily(), firstCutTex: (): CourseTex => collarTexes(this.paint.brush as BrushLooks)['first-cut'],
     frameTreePrice: () => DECOR_BY_KEY.get(FRAME_TREE_KEY)?.price ?? 0, placeFrame: (n, trees) => this.placeSavedFrame(n, trees),
     // T254 (#736): Edit Hole Layout moves the markers (one undo step with them), and its warnings read where they would stand
     layoutBuilt: (n, base, plan) => this.layoutBuilt(n, base, plan), placeTees: (n, tees) => this.placeTees(n, tees), markersKey: () => this.markersKey(), setMarkers: k => this.setMarkers(k),
@@ -878,7 +882,7 @@ export class Game {
   holeCardFix(f: HoleFix) {
     const n = this.holeCardHole; if (n === null) return;
     if (f.kind === 'edit') { this.editHole(n); return; }
-    if (f.kind === 'brush') { this.setTool('course'); if (this.tool !== 'course') return; this.paint.setHole(n); this.paint.setBrush(f.surface); this.emit(); return; }
+    if (f.kind === 'brush') { this.setTool('course'); if (this.tool !== 'course') return; this.paint.setHole(n); this.paint.setBrush(f.surface, 0); this.emit(); return; }
     if (!this.holesTool) this.toggleHolesTool();
     // T254: the tees' Fix picks up the hole's first set (blue, white, yellow, red: the one off its tee first)
     const g = this.golf, areas = this.courseAreaList(), mine = TEE_KINDS.flatMap(k => g?.tees.find(t => t.hole === n && t.kind === k) ?? []);
@@ -1111,9 +1115,11 @@ export class Game {
   }
   /** the course surface at tile (x, y): the course grid's where it is painted, else the painted areas' (null: none) */
   private surfaceHere(x: number, y: number): GolfSurface | null {
-    const grid = this.courseGrid, i = grid ? cellAt(grid, x, y) : -1;
-    return (i >= 0 ? SURF_SURFACE[grid!.surf[i]!] : null) ?? surfaceAt(this.courseAreaList(), x, y);
+    const grid = this.courseGrid, i = grid ? cellAt(grid, x, y) : -1, k = i >= 0 && grid!.draw ? grassSlot(grid!.draw[i]!) : 0, p = k ? this.grassAt(k)?.plays : undefined;
+    return (i >= 0 ? (p ? golfSurfaceOf(p) : SURF_SURFACE[grid!.surf[i]!]) : null) ?? surfaceAt(this.courseAreaList(), x, y); // (T271: a custom grass plays as its grass)
   }
+  /** T271: each custom grass's play by slot */
+  private grassPlays(): Map<number, GrassPlay> { return new Map(this.grasses().map(g => [g.k, g.plays])); }
   /** a saved hole placed as hole n (My holes, T256): its tee sets' markers where it had them (T254); the white alone when it saved none */
   private placeTees(n: number, tees: readonly { kind: TeeKind; x: number; y: number }[]) {
     const g = this.golf; if (!g || !tees.length) return;
@@ -1419,6 +1425,7 @@ export class Game {
       const gone = new Set(migrateAreas(g, this.paint.areas));
       if (gone.size) { this.paint.takeAreas(a => gone.has(a)); this.paintRev++; this.scheduleSave(); }
     } else this.fitCourseGrid();
+    this.dropOrphanLooks(); // T271
     this.gaDirty = null; this.gaRev++;
     this.seedLooks(); // T256: every owner wears today's looks as its own (an old save changes nothing)
     this.resendCourse();
@@ -1435,7 +1442,40 @@ export class Game {
     // T256: the course default's looks are the base; each hole, the property and each facility wear their own (courseOwners)
     // T253: each surface's Round off rides along (the course default's; an owner's in its own looks)
     const { surf, collar, band, lipGrass, round } = courseLookSet(this.paint.brush, pre), own = this.courseOwners(pre);
-    return { surf, collar, band, border: this.courseBorders(), shadow: this.paint.courseShadows(), height: this.paint.surfaceHeights(), ...(lipGrass ? { lipGrass } : {}), ...(own ? { own } : {}), ...(round ? { round } : {}) };
+    const looks: CourseLooks = { surf, collar, band, border: this.courseBorders(), shadow: this.paint.courseShadows(), height: this.paint.surfaceHeights(), ...(lipGrass ? { lipGrass } : {}), ...(own ? { own } : {}), ...(round ? { round } : {}) };
+    return this.withGrasses(looks);
+  }
+  /** T271 (#812): the course's own grasses (golf/grasses.ts) into the looks, at their draw ids: each one's fill, its band (the course's first
+   *  cut), Border, Shadow and Round off, the surface it plays as and its stripes; the looks as they were with none */
+  private withGrasses(looks: CourseLooks): CourseLooks {
+    const list = this.golf?.grasses; if (!list?.length) return looks;
+    const gl = grassLooks(list, looks.collar['first-cut'], this.grassArt === 'photo');
+    const put = <T,>(a: readonly (T | undefined)[] | undefined, b: readonly (T | undefined)[]): (T | undefined)[] => { const o = a ? a.slice() : []; b.forEach((v, s) => { if (v !== undefined) o[s] = v; }); return o; };
+    return { ...looks, surf: put(looks.surf, gl.surf), band: put(looks.band, gl.band), border: put(looks.border, gl.border), shadow: put(looks.shadow, gl.shadow), round: put(looks.round, gl.round), base: gl.base, ...(gl.stripes ? { stripes: gl.stripes } : {}) };
+  }
+  /** T271: the course's own grasses (the game save's; [] outside a golf game) */
+  grasses(): readonly CustomGrass[] { return this.golf?.grasses ?? []; }
+  /** T271: the custom grass in slot k, or null */
+  grassAt(k: number): CustomGrass | null { return this.golf?.grasses?.find(g => g.k === k) ?? null; }
+  /** T271: the grasses as a whole changed (made, edited, deleted, or an undo of one): saved, and the course drawn again in them */
+  private setGrasses(list: readonly CustomGrass[], redraw = true) {
+    const g = this.golf; if (!g) return;
+    const next = normalizeGrasses(list);
+    if (next.length) g.grasses = next; else delete g.grasses;
+    this.paint.looksRev++; this.scheduleSave(); if (redraw) this.resendCourse(); this.emit();
+  }
+  /** T271: the painted family the fairway wears now (a new grass starts in it), null when it is laid as its photo */
+  private fairwayFamily(): string | null {
+    const st = this.paint.lookOf(this.paint.lookOwner, 'fairway');
+    return lookOfTex(st.tex, paintedSurfaces(), PRESETS)?.family ?? null;
+  }
+  /** T271: a custom grass slot a cell names with no grass in the save (a save edited by hand) goes back to its surface's own look: the cells
+   *  keep what they play as. A grid with no custom cell is not touched */
+  private dropOrphanLooks() {
+    const g = this.courseGrid; if (!g?.look) return;
+    const have = new Set(this.grasses().map(q => q.k));
+    for (const k of looksUsed(g)) if (!have.has(k)) applyDiff(g, lookCellsDiff(g, k), false);
+    if (!looksUsed(g).size) setLook(g, null);
   }
   /** T256 (#743): the looks each owner wears on the course grid (golf/looks.ts): the property's (the cells of no hole), each hole's and each
    *  practice facility's (the cells of no hole in its footprint, zones); owners that look alike share one entry; undefined when every owner
@@ -1583,7 +1623,7 @@ export class Game {
   sendCourseChunks(box: readonly number[], stale = false, at = performance.now()) {
     const g = this.contourGrid(); if (!g) return;
     // a wide Border reaches further, and so does Round off's wider kernel (T253)
-    const reach = courseEditReach(widestCollar(courseStyles(this.courseBorders()))) + roundReach(this.courseLooks()), R = reach + COURSE_PATCH_REACH;
+    const lk = this.courseLooks(), reach = courseEditReach(widestCollar(courseStyles(lk.border, lk.base))) + roundReach(lk), R = reach + COURSE_PATCH_REACH; // (T271: a custom grass's Border too)
     this.queueChunks(courseChunksIn(g, box, reach), stale ? [box[0]! - R, box[1]! - R, box[2]! + R, box[3]! + R] : null, at);
   }
   /** chunks for the contour worker: a job now, or (one in flight) merged into the next */
@@ -1957,7 +1997,8 @@ export class Game {
       this.grassWait.delete(key);
       const keep: string[] = [];
       for (const p of patches ?? []) for (const l of p.course?.layers ?? []) {
-        const surface = grassSurface(SURFACE_TEX_ID[SURF_SURFACE[l.s] ?? 'other']); if (!surface) continue;
+        const k = grassSlot(l.s), p = k ? this.grassAt(k)?.plays : undefined; // T271: a custom grass is cared for as the grass it plays as
+        const surface = grassSurface(SURFACE_TEX_ID[p ? golfSurfaceOf(p) : SURF_SURFACE[l.s] ?? 'other']); if (!surface) continue;
         l.fill.forEach((r, k) => { if (ringArea(r) <= 0) return; const id = `${key}/${l.s}/${k}`, step = Math.ceil(r.length / 2000), pts: number[] = []; for (let j = 0; j + 1 < r.length; j += 2 * step) pts.push(r[j]!, r[j + 1]!); keep.push(id); this.grass.register(id, pts, surface, 'maintained'); });
       }
       for (const id of this.grassZones.get(key) ?? []) if (!keep.includes(id)) this.grass.remove(id);
@@ -6907,8 +6948,14 @@ export class Game {
     // the drawn shape cut a corner off: the areas are read without that surface's own (their outlines are the cells'), its collars kept
     const drawn = grid ? drawnSurfaces(grid, this.courseLooks()) : null, but = new Map<number, CourseAreaRec[]>();
     const areasBut = (c: number) => { let v = but.get(c); if (!v) { v = areas.filter(a => { const q = a as Partial<GridArea>; return q.s !== c || !!q.collar; }); but.set(c, v); } return v; };
+    // T271: a custom grass plays as its grass (the cells hold that surface; the first cut's hold rough, so the lie reads the grass's own play)
+    const plays = this.grassPlays();
     const surfAt = (x: number, y: number): GolfSurface | null => {
-      const i = grid ? cellAt(grid, x, y) : -1, c = i >= 0 ? grid!.surf[i]! : 0, d = drawn && i >= 0 ? drawn.at(x, y) : c, s = i >= 0 ? SURF_SURFACE[d] : null;
+      const i = grid ? cellAt(grid, x, y) : -1, c = i >= 0 ? grid!.surf[i]! : 0;
+      // the surface drawn on top (the rounded outlines' where they are near, else the cell's): a draw id, so a custom grass is its own
+      const d0 = drawn && i >= 0 ? drawn.at(x, y) : i >= 0 && grid!.draw ? grid!.draw[i]! : c;
+      const k = grassSlot(d0), p = k ? plays.get(k) : undefined, d = k ? (p ? PLAY_SURF[p] : c) : d0;
+      const s = i >= 0 ? (p ? golfSurfaceOf(p) : SURF_SURFACE[d]) : null;
       return s ?? surfaceAt(d !== c && c ? areasBut(c) : areas, x, y);
     };
     return makeCourseView(deriveHoles(areas, g.tees, g.pins, g.aims), surfAt);

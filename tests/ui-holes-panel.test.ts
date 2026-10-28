@@ -28,6 +28,11 @@ function fakeGame(o: { facts?: Partial<PlayerProgressFacts>; holes?: HoleView[];
     canUndo: true, canRedo: false, undoLabel: 'build hole 1', redoLabel: '', topUndo: 'build hole 1', topRedo: '', planNumbers: () => [{ n: 2, label: 'Hole 2' }],
     brush: { fairway: { r: 5, style: { tex: 'preset:fairway' } } }, heightMode: 'raise', pieceArch: 'tee-box',
     hasPlan: () => false, nextFreeHole: () => 2,
+    // T263: New hole's Shape the ground (its earthworks' m³ and price)
+    shapeGround: true, groundCost: () => ({ m3: 1800, cost: 9000 }),
+    // T253/T260: Edit hole's Edges block (CourseEdges): a fairway's Border, Shadow, Round off and no height
+    courseBorder: () => 1, courseShadow: () => 0.15, roundOff: () => ({ on: false, smooth: 0.5 }), surfaceHeight: () => null,
+    setCourseBorder: () => {}, setCourseShadow: () => {}, setRoundOff: () => {}, setSurfaceHeight: () => {},
     wizard: { step: 'tee', base: null, hole: 2, plan: null },
   };
   return {

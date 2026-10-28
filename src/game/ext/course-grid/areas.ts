@@ -83,7 +83,7 @@ export function gridAreas(g: Grid, holes?: Iterable<number>): GridArea[] {
     cnt[k]++; const m = g.month[i]; if (m) { seeded[k]++; msum[k] += m; }
   }
   const out: GridArea[] = [];
-  for (const s of SURF_ORDER) if (s) for (let h = 0; h < 256; h++) {
+  for (const s of SURF_ORDER) if (s && s < N_SURF) for (let h = 0; h < 256; h++) { // (T271: a custom grass's cells hold the surface it plays as)
     const k = s * 256 + h; if (!cnt[k]) continue;
     const st = BLOB_STYLE[s] ?? { close: 0, relax: 0 }, col = st.collar;
     const plant = (SURF_GROW_MONTHS[s] ?? 0) > 0 && seeded[k] * 2 >= cnt[k] ? { plantKind: 'seed' as const, plantedMonth: Math.round(msum[k] / seeded[k]) - MONTH_BASE } : {};

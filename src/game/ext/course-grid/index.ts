@@ -9,12 +9,25 @@ export const CELL_T = 0.5;
 export const SURF = { none: 0, rough: 1, fescue: 2, water: 3, fairway: 4, tee: 5, bunker: 6, waste: 7, green: 8, longGrass: 9 } as const;
 /** the number of surface ids (0..9) */
 export const N_SURF = Object.keys(SURF).length;
-/** the surface ids in draw order, low to high (a later one draws over an earlier one): the long grass between the rough and the fescue */
-export const SURF_ORDER: readonly number[] = [SURF.none, SURF.rough, SURF.longGrass, SURF.fescue, SURF.water, SURF.fairway, SURF.tee, SURF.bunker, SURF.waste, SURF.green];
+/** T271 (#812; the owner, 2026-10-29: "I would like to be able to create my own grass preset"): the course's own grasses. A cell painted with
+ *  one keeps its playing surface in surf (the grass plays as it) and its slot k (1..MAX_GRASSES) in the look layer (Grid.look); the drawn
+ *  course sees it as draw id CUSTOM0 + k - 1 (grassId), a surface of its own for the outlines, never saved and never played */
+export const MAX_GRASSES = 8;
+/** the first custom grass's draw id (slot 1): the ids after the saved surfaces */
+export const CUSTOM0 = N_SURF;
+/** the number of draw ids: the saved surfaces and the custom grasses (CUSTOM0 .. N_DRAW - 1) */
+export const N_DRAW = N_SURF + MAX_GRASSES;
+/** the draw id of custom grass slot k (1..MAX_GRASSES) */
+export const grassId = (k: number) => CUSTOM0 + k - 1;
+/** the custom grass slot of draw id s (1..MAX_GRASSES), 0 for a saved surface */
+export const grassSlot = (s: number) => (s >= CUSTOM0 && s < N_DRAW ? s - CUSTOM0 + 1 : 0);
+/** the surface ids in draw order, low to high (a later one draws over an earlier one): the long grass between the rough and the fescue;
+ *  T271: the custom grasses (draw ids) after the fescue, over the wild grass and under the water, fairway, tee, bunker, waste and green */
+export const SURF_ORDER: readonly number[] = [SURF.none, SURF.rough, SURF.longGrass, SURF.fescue, ...Array.from({ length: MAX_GRASSES }, (_, k) => CUSTOM0 + k), SURF.water, SURF.fairway, SURF.tee, SURF.bunker, SURF.waste, SURF.green];
 /** each surface id's place in the draw order (SURF_ORDER's index; an id past the table ranks above everything) */
 export const SURF_RANK: readonly number[] = (() => { const r: number[] = []; SURF_ORDER.forEach((s, k) => { r[s] = k; }); return r; })();
 /** the draw rank of surface id s */
-export const surfRank = (s: number) => SURF_RANK[s] ?? N_SURF;
+export const surfRank = (s: number) => SURF_RANK[s] ?? N_DRAW;
 /** whether surface a draws above surface b (the brushes' 'below' rule, the closings' claims) */
 export const surfAbove = (a: number, b: number) => surfRank(a) > surfRank(b);
 
@@ -25,16 +38,26 @@ const MAX_CELLS = 4096 * 4096;
 export interface Pt { x: number; y: number }
 
 /** the course grid: origin (x0, y0) in tiles, on the cell lattice; size (w, h) in cells; per cell, row-major (i = cy * w + cx), the surface (SURF id), the hole number (0 to 18 as P21; a none cell holds 0) and the planted month; rev counts changes. carve (T125): 1 on a cell the player rubbed out (Rub out laid the base there: rough, or the land's grass), so course-blobs' closing, fillets and collars never claim it and the gap shows as cut; painting the cell again clears it (see isCarved; absent: no cell is carved) */
-export interface Grid { x0: number; y0: number; w: number; h: number; surf: Uint8Array; hole: Uint8Array; month: Uint16Array; rev: number; carve?: Uint8Array }
+export interface Grid { x0: number; y0: number; w: number; h: number; surf: Uint8Array; hole: Uint8Array; month: Uint16Array; rev: number; carve?: Uint8Array;
+  /** T271: per cell the custom grass it wears (0: its surface's own look; k: slot k), made with the first custom cell (absent: none) */
+  look?: Uint8Array;
+  /** T271: per cell its draw id (drawId of surf and look), kept with look: what the course's outlines read (drawView) */
+  draw?: Uint8Array }
 
 /** the cells one call changed: indices (row-major, i = cy * w + cx) into the geometry (x0, y0, w) the diff was made on, and each cell's surface, hole and month before (s0, h0, m0) and after (s1, h1, m1), and its carve flag before and after (c0, c1; T125: 255, or no arrays, leaves the flag as it is); every array is n long */
-export interface GridDiff { x0: number; y0: number; w: number; n: number; idx: Uint32Array; s0: Uint8Array; h0: Uint8Array; m0: Uint16Array; s1: Uint8Array; h1: Uint8Array; m1: Uint16Array; c0?: Uint8Array; c1?: Uint8Array }
+export interface GridDiff { x0: number; y0: number; w: number; n: number; idx: Uint32Array; s0: Uint8Array; h0: Uint8Array; m0: Uint16Array; s1: Uint8Array; h1: Uint8Array; m1: Uint16Array; c0?: Uint8Array; c1?: Uint8Array;
+  /** T271: each cell's custom grass slot before and after (255, or no arrays: as it is) */
+  k0?: Uint8Array; k1?: Uint8Array }
 
 /** brush options: over 'below' changes only cells whose surface is lower than the brush's, or equal (which changes the hole and month), and 'any' (the default) changes every cell; allow(i) refuses cell i when it returns false (refused cells are left out of the diff); rub turns the brush into rub out (see paintDisc); carve (T125: the Paint tool's Rub out) marks the cells it lays as carved, where any other brush clears the mark */
-export interface PaintOpts { over?: 'below' | 'any'; allow?: (i: number) => boolean; rub?: boolean; carve?: boolean }
+export interface PaintOpts { over?: 'below' | 'any'; allow?: (i: number) => boolean; rub?: boolean; carve?: boolean;
+  /** T271: the custom grass slot the cells it lays wear (absent or 0: the surface's own look; every brush lays its own, so painting clears one) */
+  look?: number }
 
 /** the save of a grid (plan 3.7): v 1, origin (tiles), size (cells), and the surface (s), hole (hl) and month (m) layers as base64 of (run, value) unsigned LEB128 varint pairs; c, the carve layer the same way (T125; left out when no cell is carved) */
-export interface GridSave { v: 1; x0: number; y0: number; w: number; h: number; s: string; hl: string; m: string; c?: string }
+export interface GridSave { v: 1; x0: number; y0: number; w: number; h: number; s: string; hl: string; m: string; c?: string;
+  /** T271: the look layer (each cell's custom grass slot) the same way, left out when no cell wears one (every older save) */
+  k?: string }
 
 /** a new grid of none cells with holes 0 and months 0; the origin (x0, y0) is in tiles and is snapped to the cell lattice (multiples of CELL_T), the size (w, h) is in whole cells */
 export function makeGrid(x0: number, y0: number, w: number, h: number): Grid {
@@ -45,6 +68,32 @@ export function makeGrid(x0: number, y0: number, w: number, h: number): Grid {
 /** whether cell i is carved (T125): the player rubbed it out and it still holds the base (rough or the land's grass), so the blobs' closing,
  *  fillets and collars leave it alone */
 export function isCarved(g: Grid, i: number): boolean { return !!g.carve?.[i] && g.surf[i]! <= SURF.rough; }
+
+/** T271: the surfaces a custom grass plays as (its cells' surf): the rough (the first cut's too), the long grass, the fescue and the fairway */
+export const isGrassBase = (s: number) => s === SURF.rough || s === SURF.longGrass || s === SURF.fescue || s === SURF.fairway;
+/** T271: a cell's draw id: its custom grass's (grassId) when it wears one on a grass it can play as, else its surface */
+export const drawId = (surf: number, look: number) => (look && look <= MAX_GRASSES && isGrassBase(surf) ? grassId(look) : surf);
+/** T271: the look layer, made (with the draw layer) when the grid has none */
+function lookLayer(g: Grid): Uint8Array { if (!g.look) { g.look = new Uint8Array(g.w * g.h); g.draw = g.surf.slice(); } return g.look; }
+/** T271: gives grid g the look layer `look` (kept as given: the save's, the worker's copy) and its draw layer; none (or all 0) drops both */
+export function setLook(g: Grid, look: Uint8Array | null | undefined): void {
+  if (!look || look.length !== g.w * g.h || !look.some(v => v)) { delete g.look; delete g.draw; return; }
+  g.look = look; const d = g.draw = new Uint8Array(look.length);
+  for (let i = 0; i < d.length; i++) d[i] = drawId(g.surf[i]!, look[i]!);
+}
+/** T271: the grid as the course is drawn: its cells' draw ids as surf (each custom grass a surface of its own), the other layers shared; g
+ *  itself when no cell wears a custom grass. For the outlines, walls, stripes and looks only (growth, play and the stairs read g) */
+export function drawView(g: Grid): Grid { return g.draw ? { ...g, surf: g.draw } : g; }
+/** T271: the custom grass slots the grid's cells wear */
+export function looksUsed(g: Grid): Set<number> { const out = new Set<number>(); if (g.look) for (const v of g.look) if (v) out.add(v); return out; }
+/** T271: the diff that gives every cell wearing custom grass k its surface's own look back (the surface it plays as stays), without changing
+ *  g (deleting a custom grass; undo puts the slot back) */
+export function lookCellsDiff(g: Grid, k: number): GridDiff {
+  const idx: number[] = [], lk = g.look;
+  if (lk && k > 0) for (let i = 0; i < lk.length; i++) if (lk[i] === k) idx.push(i);
+  const n = idx.length, I = Uint32Array.from(idx), s = Uint8Array.from(idx, i => g.surf[i]!), h = Uint8Array.from(idx, i => g.hole[i]!), m = Uint16Array.from(idx, i => g.month[i]!);
+  return { x0: g.x0, y0: g.y0, w: g.w, n, idx: I, s0: s, h0: h, m0: m, s1: s.slice(), h1: h.slice(), m1: m.slice(), k0: new Uint8Array(n).fill(k), k1: new Uint8Array(n) };
+}
 
 /** the index of the cell that holds tile (x, y), or -1 when it lies outside the grid (tiles in, cell index out) */
 export function cellAt(g: Grid, x: number, y: number): number {
@@ -125,7 +174,7 @@ export function paintCells(g: Grid, idx: ArrayLike<number>, n: number, s: number
 
 /** applies a diff to g: undo true restores each cell's before values, false sets its after values (redo). A diff made on another geometry (the grid grew) lands on the cells at the same tiles; cells g does not cover are skipped. Bumps rev. */
 export function applyDiff(g: Grid, d: GridDiff, undo: boolean): void {
-  const cs = undo ? d.c0 : d.c1;
+  const cs = undo ? d.c0 : d.c1, ks = undo ? d.k0 : d.k1;
   for (let k = 0; k < d.n; k++) {
     const i = locate(g, d, k);
     if (i < 0) continue;
@@ -133,6 +182,10 @@ export function applyDiff(g: Grid, d: GridDiff, undo: boolean): void {
     else { g.surf[i] = d.s1[k]; g.hole[i] = d.h1[k]; g.month[i] = d.m1[k]; }
     const c = cs?.[k];
     if (c !== undefined && c !== 255 && (c || g.carve)) (g.carve ??= new Uint8Array(g.w * g.h))[i] = c;
+    // T271: the custom grass slot (a diff without one leaves it as it is), the cell's draw id kept with it
+    const v = ks?.[k];
+    if (v !== undefined && v !== 255 && (v || g.look)) lookLayer(g)[i] = v;
+    if (g.draw) g.draw[i] = drawId(g.surf[i]!, g.look![i]!);
   }
   if (d.n) g.rev++;
 }
@@ -144,7 +197,9 @@ export function holeCellsDiff(g: Grid, n: number, keep: boolean): GridDiff {
   const idx: number[] = [];
   if (n > 0) for (let i = 0; i < g.hole.length; i++) if (g.hole[i] === n && g.surf[i] !== SURF.none) idx.push(i);
   const k = idx.length, I = Uint32Array.from(idx), s0 = Uint8Array.from(idx, i => g.surf[i]!), m0 = Uint16Array.from(idx, i => g.month[i]!), c0 = Uint8Array.from(idx, i => g.carve?.[i] ?? 0);
-  return { x0: g.x0, y0: g.y0, w: g.w, n: k, idx: I, s0, h0: new Uint8Array(k).fill(n), m0, s1: keep ? s0.slice() : new Uint8Array(k), h1: new Uint8Array(k), m1: keep ? m0.slice() : new Uint16Array(k), c0, c1: keep ? c0.slice() : new Uint8Array(k) };
+  // T271: a kept cell keeps its custom grass; a cleared one goes back to the land's own grass, with none
+  const lk = g.look ? { k0: Uint8Array.from(idx, i => g.look![i]!), k1: keep ? Uint8Array.from(idx, i => g.look![i]!) : new Uint8Array(k) } : {};
+  return { x0: g.x0, y0: g.y0, w: g.w, n: k, idx: I, s0, h0: new Uint8Array(k).fill(n), m0, s1: keep ? s0.slice() : new Uint8Array(k), h1: new Uint8Array(k), m1: keep ? m0.slice() : new Uint16Array(k), c0, c1: keep ? c0.slice() : new Uint8Array(k), ...lk };
 }
 
 /** merges two diffs made in order (a, then b) into one: per cell the earlier before value and the later after value win; cells that end where they began are dropped. The result's indices are on the bounding box of its cells. */
@@ -183,6 +238,7 @@ export function growGrid(g: Grid, x0: number, y0: number, w: number, h: number):
     const s = cy * g.w, d = (cy + dy) * ng.w + dx;
     ng.surf.set(g.surf.subarray(s, s + g.w), d); ng.hole.set(g.hole.subarray(s, s + g.w), d); ng.month.set(g.month.subarray(s, s + g.w), d);
     if (g.carve) ng.carve!.set(g.carve.subarray(s, s + g.w), d);
+    if (g.look) { lookLayer(ng).set(g.look.subarray(s, s + g.w), d); ng.draw!.set(g.draw!.subarray(s, s + g.w), d); }
   }
   ng.rev = g.rev + 1;
   return ng;
@@ -209,7 +265,7 @@ export function fitGrid(g: Grid, b: readonly [number, number, number, number]): 
 
 /** the save of a grid (see GridSave): a few tens of kB for a full course, since most cells repeat their neighbour */
 export function encodeGrid(g: Grid): GridSave {
-  return { v: 1, x0: g.x0, y0: g.y0, w: g.w, h: g.h, s: rle(g.surf), hl: rle(g.hole), m: rle(g.month), ...(g.carve?.some(v => v) ? { c: rle(g.carve) } : {}) };
+  return { v: 1, x0: g.x0, y0: g.y0, w: g.w, h: g.h, s: rle(g.surf), hl: rle(g.hole), m: rle(g.month), ...(g.carve?.some(v => v) ? { c: rle(g.carve) } : {}), ...(g.look?.some(v => v) ? { k: rle(g.look) } : {}) };
 }
 
 /** the grid from a save, or null when the save is not one: wrong version or types, a size of 1 to 16.7 M cells, an origin off the cell lattice, a layer that does not fill the grid exactly, or a value out of range. Never throws. */
@@ -224,20 +280,23 @@ export function decodeGrid(save: unknown): Grid | null {
   if (!unrle(r.s, surf, N_SURF - 1) || !unrle(r.hl, hole, 255) || !unrle(r.m, month, 65535)) return null;
   const carve = new Uint8Array(n);
   if (r.c !== undefined && !unrle(r.c, carve, 1)) return null;
-  return { x0, y0, w, h, surf, hole, month, rev: 0, carve };
+  const g: Grid = { x0, y0, w, h, surf, hole, month, rev: 0, carve };
+  // T271: the look layer (absent in every older save: no custom grass)
+  if (r.k !== undefined) { const look = new Uint8Array(n); if (!unrle(r.k, look, MAX_GRASSES)) return null; setLook(g, look); }
+  return g;
 }
 
 /* ---- internals ---- */
 
 /** a diff under construction: room for cap cells, the most one call can change (each cell is visited once) */
-interface Acc { x0: number; y0: number; w: number; n: number; idx: Uint32Array; s0: Uint8Array; h0: Uint8Array; m0: Uint16Array; s1: Uint8Array; h1: Uint8Array; m1: Uint16Array; c0: Uint8Array; c1: Uint8Array }
+interface Acc { x0: number; y0: number; w: number; n: number; idx: Uint32Array; s0: Uint8Array; h0: Uint8Array; m0: Uint16Array; s1: Uint8Array; h1: Uint8Array; m1: Uint16Array; c0: Uint8Array; c1: Uint8Array; k0: Uint8Array; k1: Uint8Array }
 
 /** snaps a tile coordinate to the cell lattice */
 const snap = (v: number) => Math.round(v / CELL_T) * CELL_T;
 
 /** an empty accumulator for a geometry of w cells per row with origin (x0, y0), room for cap cells */
 function newAcc(x0: number, y0: number, w: number, cap: number): Acc {
-  return { x0, y0, w, n: 0, idx: new Uint32Array(cap), s0: new Uint8Array(cap), h0: new Uint8Array(cap), m0: new Uint16Array(cap), s1: new Uint8Array(cap), h1: new Uint8Array(cap), m1: new Uint16Array(cap), c0: new Uint8Array(cap), c1: new Uint8Array(cap) };
+  return { x0, y0, w, n: 0, idx: new Uint32Array(cap), s0: new Uint8Array(cap), h0: new Uint8Array(cap), m0: new Uint16Array(cap), s1: new Uint8Array(cap), h1: new Uint8Array(cap), m1: new Uint16Array(cap), c0: new Uint8Array(cap), c1: new Uint8Array(cap), k0: new Uint8Array(cap), k1: new Uint8Array(cap) };
 }
 
 /** the cell range [lo, hi] that the tile span [a, b] touches on one axis (origin o, n cells), with one cell of margin, clamped to the grid */
@@ -245,15 +304,19 @@ function span(a: number, b: number, o: number, n: number): [number, number] {
   return [Math.max(0, Math.floor((a - o) / CELL_T) - 1), Math.min(n - 1, Math.floor((b - o) / CELL_T) + 1)];
 }
 
-/** sets cell i to (s, h, m) with carve flag c (255: as it is) and records it when it changes; a none cell holds hole 0 and month 0 */
-function put(g: Grid, a: Acc, i: number, s: number, h: number, m: number, c = 255): void {
+/** sets cell i to (s, h, m) with carve flag c and custom grass slot lk (T271; 255 either: as it is) and records it when it changes; a none
+ *  cell holds hole 0, month 0 and no custom grass */
+function put(g: Grid, a: Acc, i: number, s: number, h: number, m: number, c = 255, lk = 255): void {
   const nh = s === SURF.none ? 0 : h, nm = s === SURF.none ? 0 : m;
   const s0 = g.surf[i], h0 = g.hole[i], m0 = g.month[i], cv0 = g.carve?.[i] ?? 0, cv = c === 255 ? cv0 : c;
-  if (s0 === s && h0 === nh && m0 === nm && cv0 === cv) return;
+  const k0 = g.look?.[i] ?? 0, nk = s === SURF.none ? 0 : lk === 255 ? k0 : lk;
+  if (s0 === s && h0 === nh && m0 === nm && cv0 === cv && k0 === nk) return;
   const k = a.n++;
-  a.idx[k] = i; a.s0[k] = s0; a.h0[k] = h0; a.m0[k] = m0; a.s1[k] = s; a.h1[k] = nh; a.m1[k] = nm; a.c0[k] = cv0; a.c1[k] = cv;
+  a.idx[k] = i; a.s0[k] = s0; a.h0[k] = h0; a.m0[k] = m0; a.s1[k] = s; a.h1[k] = nh; a.m1[k] = nm; a.c0[k] = cv0; a.c1[k] = cv; a.k0[k] = k0; a.k1[k] = nk;
   g.surf[i] = s; g.hole[i] = nh; g.month[i] = nm;
   if (cv !== cv0) (g.carve ??= new Uint8Array(g.w * g.h))[i] = cv;
+  if (nk !== k0) lookLayer(g)[i] = nk;
+  if (g.draw) g.draw[i] = drawId(s, g.look![i]!);
 }
 
 /** whether a surface id is turf (grass of some kind: the map grass, rough, long grass, fescue, fairway, tee, green), not sand or water */
@@ -275,18 +338,19 @@ function brush(g: Grid, a: Acc, i: number, s: number, hole: number, month: numbe
   if (o.allow && !o.allow(i)) return;
   const cur = g.surf[i];
   if (o.rub) {
-    if (cur === SURF.rough) put(g, a, i, SURF.none, 0, 0);
-    else if (cur > SURF.rough) put(g, a, i, SURF.rough, g.hole[i], g.month[i]);
+    // T271: a rubbed-out cell takes the rough's own look (a custom grass goes with the surface it was laid on)
+    if (cur === SURF.rough) put(g, a, i, SURF.none, 0, 0, 255, 0);
+    else if (cur > SURF.rough) put(g, a, i, SURF.rough, g.hole[i], g.month[i], 255, 0);
     return;
   }
   if (o.over === 'below' && surfAbove(cur, s)) return;
-  put(g, a, i, s, hole, laidMonth(s, cur, g.month[i], month), o.carve ? 1 : 0);
+  put(g, a, i, s, hole, laidMonth(s, cur, g.month[i], month), o.carve ? 1 : 0, isGrassBase(s) ? o.look ?? 0 : 0);
 }
 
 /** a diff from an accumulator: arrays cut to exactly n */
 function close(a: Acc): GridDiff {
   const n = a.n;
-  return { x0: a.x0, y0: a.y0, w: a.w, n, idx: a.idx.slice(0, n), s0: a.s0.slice(0, n), h0: a.h0.slice(0, n), m0: a.m0.slice(0, n), s1: a.s1.slice(0, n), h1: a.h1.slice(0, n), m1: a.m1.slice(0, n), c0: a.c0.slice(0, n), c1: a.c1.slice(0, n) };
+  return { x0: a.x0, y0: a.y0, w: a.w, n, idx: a.idx.slice(0, n), s0: a.s0.slice(0, n), h0: a.h0.slice(0, n), m0: a.m0.slice(0, n), s1: a.s1.slice(0, n), h1: a.h1.slice(0, n), m1: a.m1.slice(0, n), c0: a.c0.slice(0, n), c1: a.c1.slice(0, n), k0: a.k0.slice(0, n), k1: a.k1.slice(0, n) };
 }
 
 /** closes a brush's accumulator into a diff and bumps the grid's rev when something changed */
@@ -322,17 +386,18 @@ function mergeAll(list: GridDiff[]): GridDiff {
       const i = d.idx[k], key = (lr + Math.floor(i / d.w) - r0) * w + (lc + (i % d.w) - c0);
       let j = slot.get(key);
       // the carve flag (T125): a diff without one leaves it as it is (255), so the first known value before and the last one after win
-      const cb = d.c0?.[k] ?? 255, ca = d.c1?.[k] ?? 255;
-      if (j === undefined) { j = a.n++; slot.set(key, j); a.idx[j] = key; a.s0[j] = d.s0[k]; a.h0[j] = d.h0[k]; a.m0[j] = d.m0[k]; a.c0[j] = cb; a.c1[j] = 255; }
-      else if (a.c0[j] === 255) a.c0[j] = cb;
-      a.s1[j] = d.s1[k]; a.h1[j] = d.h1[k]; a.m1[j] = d.m1[k]; if (ca !== 255) a.c1[j] = ca;
+      // T271: the custom grass slot the same way
+      const cb = d.c0?.[k] ?? 255, ca = d.c1?.[k] ?? 255, kb = d.k0?.[k] ?? 255, ka = d.k1?.[k] ?? 255;
+      if (j === undefined) { j = a.n++; slot.set(key, j); a.idx[j] = key; a.s0[j] = d.s0[k]; a.h0[j] = d.h0[k]; a.m0[j] = d.m0[k]; a.c0[j] = cb; a.c1[j] = 255; a.k0[j] = kb; a.k1[j] = 255; }
+      else { if (a.c0[j] === 255) a.c0[j] = cb; if (a.k0[j] === 255) a.k0[j] = kb; }
+      a.s1[j] = d.s1[k]; a.h1[j] = d.h1[k]; a.m1[j] = d.m1[k]; if (ca !== 255) a.c1[j] = ca; if (ka !== 255) a.k1[j] = ka;
     }
   }
   let m = 0;
   for (let j = 0; j < a.n; j++) {
-    if (a.s0[j] === a.s1[j] && a.h0[j] === a.h1[j] && a.m0[j] === a.m1[j] && (a.c1[j] === 255 || a.c0[j] === a.c1[j])) continue;
+    if (a.s0[j] === a.s1[j] && a.h0[j] === a.h1[j] && a.m0[j] === a.m1[j] && (a.c1[j] === 255 || a.c0[j] === a.c1[j]) && (a.k1[j] === 255 || a.k0[j] === a.k1[j])) continue;
     a.idx[m] = a.idx[j]; a.s0[m] = a.s0[j]; a.h0[m] = a.h0[j]; a.m0[m] = a.m0[j];
-    a.s1[m] = a.s1[j]; a.h1[m] = a.h1[j]; a.m1[m] = a.m1[j]; a.c0[m] = a.c0[j]; a.c1[m] = a.c1[j]; m++;
+    a.s1[m] = a.s1[j]; a.h1[m] = a.h1[j]; a.m1[m] = a.m1[j]; a.c0[m] = a.c0[j]; a.c1[m] = a.c1[j]; a.k0[m] = a.k0[j]; a.k1[m] = a.k1[j]; m++;
   }
   a.n = m;
   return close(a);
