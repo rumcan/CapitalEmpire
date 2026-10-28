@@ -163,9 +163,10 @@ try {
       for (const b of bufs) { comp.push({ input: b.data, left: x, top: lab }); x += b.info.width + gap; }
       return { buf: await sharp({ create: { width: Wd, height: h + lab, channels: 3, background: '#111' } }).composite(comp).png().toBuffer(), w: Wd, h: h + lab };
     };
-    const last = l => l[l.length - 1], first = l => l[0], a = modes[0], b = last(modes);
+    const LABEL = { lake: 'before (the old water)', off: 'new picture, look off', on: 'after', main: 'main' }, last = l => l[l.length - 1], first = l => l[0], a = LABEL[modes[0]] ?? modes[0], b = LABEL[last(modes)] ?? last(modes);
     const rows = [
       await row([[first(files.pond30), `course pond 30%, ${a}`], [last(files.pond30), `course pond 30%, ${b}`], [pond, 'the concept\'s pond']]),
+      ...(files.reflect30 ? [await row([[first(files.reflect30), `trees on its far shore, ${a}`], [last(files.reflect30), `trees on its far shore, ${b}`], [pond, 'the concept\'s pond']])] : []),
       await row([[first(files.river30), `river in town 30%, ${a}`], [last(files.river30), `river in town 30%, ${b}`], [lake, 'the concept\'s lake']]),
       ...(files.river15 ? [await row([[first(files.river15), `river 15%, ${a}`], [last(files.river15), `river 15%, ${b}`], [lake, 'the concept\'s lake']])] : []),
       ...(files.river8 ? [await row([[first(files.river8), `river 8%, ${a}`], [last(files.river8), `river 8%, ${b}`], [lake, 'the concept\'s lake']])] : []),

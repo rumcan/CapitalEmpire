@@ -74,9 +74,10 @@ test('T230 depth: darker and more teal toward the middle, a curve over the textu
   let prev = Infinity;
   for (const d of [1.5, 2, 3, 4, 5, 6, 7, 8]) { const v = lum(waterPixel(POND, d, 0, l)); assert.ok(v <= prev + 1e-9, `d ${d}`); prev = v; }
   const mid = waterPixel(POND, l.reach, 0, l), edge = waterPixel(POND, 0.6, 0, l);
-  assert.ok(lum(mid) < lum(POND) * 0.88, 'the middle reads deep'); assert.ok(lum(edge) > lum(POND) + 6, 'the edge reads lighter');
+  assert.ok(lum(mid) < lum(POND) * 0.93, 'the middle reads deep'); assert.ok(lum(edge) > lum(POND) + 6, 'the edge reads lighter');
   // more teal: the red goes most, the blue least
   assert.ok(mid[0]! / POND[0]! < mid[1]! / POND[1]! && mid[1]! / POND[1]! < mid[2]! / POND[2]!);
+  assert.ok(mid[2]! > mid[1]! + 8 && POND[2]! <= POND[1]!, 'the teal-green picture reads teal-blue in the middle, as the concept\'s');
   // a curve, not a wash: a ripple keeps most of its lift over the water around it at every depth (a flat wash toward a colour would flatten it)
   for (const d of [0.6, 2, 7]) { const a = waterPixel(ripple, d, 0, l), b = waterPixel(POND, d, 0, l); assert.ok(lum(a) - lum(b) > 8 * 0.62, `d ${d}: ${lum(a) - lum(b)}`); }
   // the depth curve: 0 on the shore, rising smoothly, 1 from the reach on; the edge: nothing on the shore line, gone by its fade
@@ -119,7 +120,7 @@ test('T230 the glint: on the water only, inset from the shore, its colour the sh
   // its colour: the water's mean as the bake shades it there
   for (const [x, y] of [[115, 115], [101.5, 115], [110, 101.2]] as const) {
     const k = at(f, x, y), m = waterPixel(POND, f.d[k]!, 0, l, f.shallows()[k]!);
-    for (let i = 0; i < 3; i++) assert.equal(g[4 * k + i], Math.round(m[i]!));
+    for (let i = 0; i < 3; i++) assert.ok(Math.abs(g[4 * k + i]! - m[i]!) <= 1, `${x},${y}: ${g[4 * k + i]} vs ${m[i]}`); // (made at a 32nd of a tile's steps)
   }
   // the shaded pond is still water to the GPU's key (swamp.ts swampKey), at its edge, its middle and at a reflection's soft rim: the glint
   // lights it (in a reflection's core the glint is dimmed anyway: glintAt)

@@ -58,8 +58,10 @@ export function waterLookOf(file: { water?: unknown } | null | undefined): Water
 export const waterLookActive = (l: WaterLook) => l.on && (l.depth > 0 || l.edge > 0 || l.reflect > 0);
 
 // ---------- the colours and curves ----------
-/** the deep water's multiply at depth 1 (0..1 a channel): darker, and more teal-blue than the shallows (the red goes most) */
-export const DEEP = [0.72, 0.87, 0.98] as const;
+/** the deep water at depth 1: a multiply (0..1 a channel: darker, the red going most), then a faint screen of a deep blue (0..255, DEEP_LIFT:
+ *  the blue lifted a little, so the middle reads deeper and more teal-blue, the concept's, not just darker; a screen keeps the ripples) */
+export const DEEP = [0.66, 0.8, 0.95] as const;
+export const DEEP_LIFT = [0, 6, 24] as const;
 /** the light edge: a screen toward a warm pale bed colour (0..255) at most EDGE.a, rising over the first EDGE.rise tiles in from the shore
  *  line (none on the line: no bleed onto the bank) and fading out between EDGE.fade[0] and EDGE.fade[1]; the shallows' width varies along
  *  the shore (vary: the distance's scale, from a world-space noise of `wave` tiles, so chunks agree and no shore draws an even band) */
@@ -95,13 +97,19 @@ export function shadeFactor(t: number, r: number, l: Pick<WaterLook, 'depth' | '
   return DEEP.map((c, i) => Math.max(0, 1 - kd * (1 - c)) * (1 - kr * (1 - REFLECT_COL[i]!)));
 }
 const screen = (v: number, s: number) => 255 - ((255 - v) * (255 - s)) / 255;
+/** the last screen's share a channel (0..1): the deep's blue lift at depth curve t and the reflection's tint at reflection r, one after the
+ *  other (two screens of alpha a1 colour S1 and a2 S2 are one of a S = 1 - (1 - a1 S1)(1 - a2 S2), so the bake lays them as one image) */
+export function liftShare(t: number, r: number, l: Pick<WaterLook, 'depth' | 'reflect'>, tint: readonly number[], i: number): number {
+  const ad = clamp(t * l.depth, 0, 1), at = clamp(r * REFLECT_TINT * l.reflect, 0, 1);
+  return 1 - (1 - (ad * DEEP_LIFT[i]!) / 255) * (1 - (at * tint[i]!) / 255);
+}
 /** the CPU twin of the bake (the canvas's 'screen', 'multiply' and 'screen' again, as renderer.ts waterOver lays them): pixel c (0..255) d tiles
  *  in from the shore, at reflection r of tint `tint` (REFLECT_TINTS), where the shallows' width scale is s (shallowAt), under look l. Off
  *  (l.on false): c itself */
 export function waterPixel(c: readonly number[], d: number, r: number, l: WaterLook, s = 1, tint: readonly number[] = REFLECT_TINTS[0]!): number[] {
   if (!waterLookActive(l)) return [...c];
-  const a = edgeAt(d / s, l.edge), f = shadeFactor(depthAt(d, l.reach), r, l), at = clamp(r * REFLECT_TINT * l.reflect, 0, 1);
-  return c.map((v, i) => { const lifted = v + (screen(v, BED[i]!) - v) * a, shaded = lifted * f[i]!; return shaded + (screen(shaded, tint[i]!) - shaded) * at; });
+  const a = edgeAt(d / s, l.edge), t = depthAt(d, l.reach), f = shadeFactor(t, r, l);
+  return c.map((v, i) => { const lifted = v + (screen(v, BED[i]!) - v) * a, shaded = lifted * f[i]!; return shaded + (255 - shaded) * liftShare(t, r, l, tint, i); });
 }
 
 // ---------- the glint ----------
@@ -121,8 +129,10 @@ export const REFLECT = { broad: 2.6, needle: 3.4, conifer: 0.75, crownW: 0.95, c
 const TILE_ACROSS = 64 * Math.SQRT2; // 90.5
 
 // ---------- the field ----------
-/** the field's resolution (samples a tile): a district chunk 1 (a tile is a few px there), a full chunk 4 at the close levels, 2 below */
-export const fieldRes = (L: number, lite: boolean) => (lite ? 1 : L >= 0.25 ? 4 : 2);
+/** the field's resolution (samples a tile): a district chunk 1 (a tile is a few px there), a full chunk 2 (a sample 19 px at 30%: the depth,
+ *  the edge and the glint are smooth, laid bilinear), 4 at the hi-DPI levels (L 0.45 and 0.6, where a tile is 58..77 px). Measured in node on
+ *  a 30% river chunk: res 2 makes the field, its images and the glint in about 1.1 ms, res 4 in 5.7 */
+export const fieldRes = (L: number, lite: boolean) => (lite ? 1 : L >= 0.45 ? 4 : 2);
 /** how far (tiles) the field reaches past the chunk's box: the reach plus a tile (the distance past it is capped alike everywhere) */
 export const fieldPad = (l: Pick<WaterLook, 'reach'>) => Math.ceil(l.reach) + 1;
 /** the sites a sample of water belongs to (bits): a river, the course's water, a painted water area */
@@ -146,9 +156,10 @@ export class WaterField {
     const { W, H, res, x0, y0, site, d } = this, out = new Float32Array(W * H).fill(1), far = EDGE.fade[1] * EDGE.vary[1], LW = Math.ceil(W / res) + 2;
     const lat = new Float32Array(LW * (Math.ceil(H / res) + 2)).fill(NaN);
     const L = (i: number, j: number) => { const k = j * LW + i; let v = lat[k]!; if (v !== v) v = lat[k] = shallowAt(x0 + i, y0 + j); return v; };
-    for (let v = 0; v < H; v++) {
+    const [iu0, iv0, iu1, iv1] = this.inner;
+    for (let v = iv0; v <= iv1 && v < H; v++) {
       const fy = (v + 0.5) / res, j = Math.floor(fy), ty = fy - j;
-      for (let u = 0; u < W; u++) {
+      for (let u = iu0; u <= iu1 && u < W; u++) {
         const k = v * W + u; if (!site[k] || d[k]! >= far) continue;
         const fx = (u + 0.5) / res, i = Math.floor(fx), tx = fx - i, a = L(i, j) + (L(i + 1, j) - L(i, j)) * tx, b = L(i, j + 1) + (L(i + 1, j + 1) - L(i, j + 1)) * tx;
         out[k] = a + (b - a) * ty;
@@ -156,12 +167,16 @@ export class WaterField {
     }
     return (this.shallow = out);
   }
-  constructor(readonly x0: number, readonly y0: number, w: number, h: number, readonly res: number) {
+  /** the samples the images are made over (u0, v0, u1, v1, inclusive): the chunk's own box and a sample round it (the padding only feeds the
+   *  distance; nothing is drawn there) */
+  readonly inner: [number, number, number, number];
+  constructor(readonly x0: number, readonly y0: number, w: number, h: number, readonly res: number, pad = 0) {
     this.W = Math.max(1, Math.ceil(w * res)); this.H = Math.max(1, Math.ceil(h * res));
     this.site = new Uint8Array(this.W * this.H); this.d = new Float32Array(this.W * this.H);
+    const p = Math.max(0, pad * res - 1); this.inner = [Math.min(p, this.W - 1), Math.min(p, this.H - 1), Math.max(0, this.W - 1 - p), Math.max(0, this.H - 1 - p)];
   }
   /** a field over tile box b (whole tiles) grown by pad */
-  static over(b: readonly number[], pad: number, res: number) { return new WaterField(Math.floor(b[0]!) - pad, Math.floor(b[1]!) - pad, Math.ceil(b[2]!) - Math.floor(b[0]!) + 2 * pad, Math.ceil(b[3]!) - Math.floor(b[1]!) + 2 * pad, res); }
+  static over(b: readonly number[], pad: number, res: number) { return new WaterField(Math.floor(b[0]!) - pad, Math.floor(b[1]!) - pad, Math.ceil(b[2]!) - Math.floor(b[0]!) + 2 * pad, Math.ceil(b[3]!) - Math.floor(b[1]!) + 2 * pad, res, pad); }
   /** the field's tile box */
   get box(): [number, number, number, number] { return [this.x0, this.y0, this.x0 + this.W / this.res, this.y0 + this.H / this.res]; }
   /** any water at all (of the sites in mask) */
@@ -240,10 +255,12 @@ export class WaterField {
     const S = new Int32Array((W + 1) * (H + 1));
     for (let v = 0; v < H; v++) { let row = 0; for (let u = 0; u < W; u++) { row += site[v * W + u] ? 1 : 0; S[(v + 1) * (W + 1) + u + 1] = S[v * (W + 1) + u + 1]! + row; } }
     const has = (u0: number, v0: number, u1: number, v1: number) => S[(v1 + 1) * (W + 1) + u1 + 1]! - S[v0 * (W + 1) + u1 + 1]! - S[(v1 + 1) * (W + 1) + u0]! + S[v0 * (W + 1) + u0]! > 0;
+    const [iu0, iv0, iu1, iv1] = this.inner;
     /** the water samples in tile box (xa, ya, xb, yb) through f (its value at the sample's tile point) */
     const each = (xa: number, ya: number, xb: number, yb: number, f: (px: number, py: number) => number) => {
-      const u0 = Math.max(0, Math.floor((xa - x0) * res - 0.5)), u1 = Math.min(W - 1, Math.ceil((xb - x0) * res - 0.5));
-      const v0 = Math.max(0, Math.floor((ya - y0) * res - 0.5)), v1 = Math.min(H - 1, Math.ceil((yb - y0) * res - 0.5));
+      // (only over the chunk's own samples: nothing is drawn over the padding)
+      const u0 = Math.max(iu0, Math.floor((xa - x0) * res - 0.5)), u1 = Math.min(iu1, Math.ceil((xb - x0) * res - 0.5));
+      const v0 = Math.max(iv0, Math.floor((ya - y0) * res - 0.5)), v1 = Math.min(iv1, Math.ceil((yb - y0) * res - 0.5));
       if (u1 < u0 || v1 < v0 || !has(u0, v0, u1, v1)) return;
       for (let v = v0; v <= v1; v++) {
         const py = y0 + (v + 0.5) / res;
@@ -290,24 +307,32 @@ export class WaterField {
 
 /** the bake's images over the field (RGBA, W x H, sample (u, v) at the field's lattice), for the samples of the sites in mask: the light edge
  *  (lay with 'screen': colour BED, alpha its strength), the shade (lay with 'multiply': colour and alpha such that dest x (1 - a + a c) is
- *  the depth's and the reflection's factor) and the reflections' own colours (lay with 'screen' last: REFLECT_TINTS); null where nothing is
+ *  the depth's and the reflection's factor) and the deep's blue lift with the reflections' own colours (lay with 'screen' last: liftShare); null where nothing is
  *  drawn. Samples off the mask are transparent */
 export function waterImages(f: WaterField, mask: number, l: WaterLook): { edge: Uint8ClampedArray | null; shade: Uint8ClampedArray | null; tint: Uint8ClampedArray | null } {
   if (!waterLookActive(l)) return { edge: null, shade: null, tint: null };
   const N = f.W * f.H, edge = l.edge > 0 ? new Uint8ClampedArray(N * 4) : null, shade = l.depth > 0 || l.reflect > 0 ? new Uint8ClampedArray(N * 4) : null;
-  const tint = l.reflect > 0 && f.refl && f.reflTint ? new Uint8ClampedArray(N * 4) : null, s = edge ? f.shallows() : null;
+  const tint = l.depth > 0 || (l.reflect > 0 && f.refl && f.reflTint) ? new Uint8ClampedArray(N * 4) : null, s = edge ? f.shallows() : null;
+  const { site, d: dist, refl, reflTint, W } = f, [u0, v0, u1, v1] = f.inner, kdMax = 2, ka = REFLECT_A * l.reflect, kt = REFLECT_TINT * l.reflect;
   let anyE = false, anyS = false, anyT = false;
-  for (let k = 0; k < N; k++) {
-    if (!(f.site[k]! & mask)) continue;
-    const d = f.d[k]!, r = f.refl ? f.refl[k]! : 0, q = 4 * k;
+  for (let v = v0; v <= v1; v++) for (let u = u0; u <= u1; u++) {
+    const k = v * W + u; if (!(site[k]! & mask)) continue;
+    const d = dist[k]!, r = refl ? refl[k]! : 0, q = 4 * k;
     if (edge) { const a = Math.round(edgeAt(d / s![k]!, l.edge) * 255); if (a > 0) { edge[q] = BED[0]; edge[q + 1] = BED[1]; edge[q + 2] = BED[2]; edge[q + 3] = a; anyE = true; } }
+    const t = depthAt(d, l.reach);
     if (shade) {
-      const F = shadeFactor(depthAt(d, l.reach), r, l), a = 1 - Math.min(F[0]!, F[1]!, F[2]!);
-      if (a > 0.5 / 255) { const A = Math.round(a * 255) / 255; for (let i = 0; i < 3; i++) shade[q + i] = Math.round((1 - (1 - F[i]!) / A) * 255); shade[q + 3] = Math.round(A * 255); anyS = true; }
+      // shadeFactor, inline (no arrays: a chunk has tens of thousands of samples)
+      const kd = clamp(t * l.depth, 0, kdMax), kr = clamp(r * ka, 0, 1);
+      const F0 = Math.max(0, 1 - kd * (1 - DEEP[0])) * (1 - kr * (1 - REFLECT_COL[0])), F1 = Math.max(0, 1 - kd * (1 - DEEP[1])) * (1 - kr * (1 - REFLECT_COL[1])), F2 = Math.max(0, 1 - kd * (1 - DEEP[2])) * (1 - kr * (1 - REFLECT_COL[2]));
+      const a = 1 - Math.min(F0, F1, F2);
+      if (a > 0.5 / 255) { const A = Math.round(a * 255) / 255; shade[q] = Math.round((1 - (1 - F0) / A) * 255); shade[q + 1] = Math.round((1 - (1 - F1) / A) * 255); shade[q + 2] = Math.round((1 - (1 - F2) / A) * 255); shade[q + 3] = Math.round(A * 255); anyS = true; }
     }
-    if (tint && r > 0) {
-      const a = Math.round(clamp(r * REFLECT_TINT * l.reflect, 0, 1) * 255);
-      if (a > 0) { const c = REFLECT_TINTS[f.reflTint![k]!] ?? REFLECT_TINTS[0]!; tint[q] = c[0]!; tint[q + 1] = c[1]!; tint[q + 2] = c[2]!; tint[q + 3] = a; anyT = true; }
+    if (tint && (t > 0 || r > 0)) {
+      // the deep's blue lift and the reflection's tint as one screen (liftShare): alpha the largest share, colour the shares over it
+      const c = r > 0 && reflTint ? REFLECT_TINTS[reflTint[k]!] ?? REFLECT_TINTS[0]! : REFLECT_TINTS[0]!, ad = clamp(t * l.depth, 0, 1), at = clamp(r * kt, 0, 1);
+      const P0 = 1 - (1 - (ad * DEEP_LIFT[0]) / 255) * (1 - (at * c[0]!) / 255), P1 = 1 - (1 - (ad * DEEP_LIFT[1]) / 255) * (1 - (at * c[1]!) / 255), P2 = 1 - (1 - (ad * DEEP_LIFT[2]) / 255) * (1 - (at * c[2]!) / 255);
+      const a = Math.max(P0, P1, P2);
+      if (a > 0.5 / 255) { const A = Math.round(a * 255) / 255; tint[q] = Math.round((P0 / A) * 255); tint[q + 1] = Math.round((P1 / A) * 255); tint[q + 2] = Math.round((P2 / A) * 255); tint[q + 3] = Math.round(A * 255); anyT = true; }
     }
   }
   return { edge: anyE ? edge : null, shade: anyS ? shade : null, tint: anyT ? tint : null };
@@ -316,12 +341,20 @@ export function waterImages(f: WaterField, mask: number, l: WaterLook): { edge: 
  *  shades it: `mean` (the water's picture's mean, 0..255) through waterPixel), or null when it has none */
 export function glintImage(f: WaterField, mask: number, l: WaterLook, mean: readonly number[]): Uint8ClampedArray | null {
   const N = f.W * f.H, out = new Uint8ClampedArray(N * 4); let any = false;
-  const look = waterLookActive(l) ? l : null, s = look && look.edge > 0 ? f.shallows() : null;
-  for (let k = 0; k < N; k++) {
-    if (!(f.site[k]! & mask)) continue;
+  const look = waterLookActive(l) ? l : null, s = look && look.edge > 0 ? f.shallows() : null, [u0, v0, u1, v1] = f.inner, W = f.W;
+  // the mean through the look at a depth step (the depth curve and the edge are smooth: a 32nd of a tile apart reads the same to 8 bits),
+  // cached by (depth step, shallows step, reflection step, tint); a plain loop otherwise
+  const memo = new Map<number, number[]>();
+  for (let v = v0; v <= v1; v++) for (let u = u0; u <= u1; u++) {
+    const k = v * W + u; if (!(f.site[k]! & mask)) continue;
     const d = f.d[k]!, r = look && f.refl ? f.refl[k]! : 0, a = Math.round(glintAt(d, r * (look ? look.reflect : 0)) * 255); if (a <= 0) continue;
-    const m = look ? waterPixel(mean, d, r, look, s ? s[k]! : 1, f.reflTint ? REFLECT_TINTS[f.reflTint[k]!] : undefined) : mean, q = 4 * k;
-    out[q] = Math.round(m[0]!); out[q + 1] = Math.round(m[1]!); out[q + 2] = Math.round(m[2]!); out[q + 3] = a; any = true;
+    let m = mean;
+    if (look) {
+      const ti = f.reflTint && r > 0 ? f.reflTint[k]! : 0, sh = s ? s[k]! : 1, key = ((Math.round(d * 32) * 64 + Math.round(sh * 32)) * 64 + Math.round(r * 32)) * 8 + ti;
+      let c = memo.get(key); if (!c) memo.set(key, c = waterPixel(mean, Math.round(d * 32) / 32, Math.round(r * 32) / 32, look, Math.round(sh * 32) / 32, REFLECT_TINTS[ti]));
+      m = c;
+    }
+    const q = 4 * k; out[q] = Math.round(m[0]!); out[q + 1] = Math.round(m[1]!); out[q + 2] = Math.round(m[2]!); out[q + 3] = a; any = true;
   }
   return any ? out : null;
 }

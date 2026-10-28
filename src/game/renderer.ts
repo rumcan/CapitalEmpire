@@ -466,7 +466,7 @@ export class GroundPainter {
     return (this.waterNow = { f, look });
   }
   /** T230: the water look over one water site just drawn on g (its samples of the chunk's water field), clipped to its shape (clip, tile
-   *  space): the light edge (a screen toward the bed's colour), then the depth and the shore's reflections (a multiply), then the reflections'
+   *  space): the light edge (a screen toward the bed's colour), then the depth and the shore's reflections (a multiply), then the deep's blue lift and the reflections'
    *  own colours (a faint screen), all curves over the water's own pixels (water-look.ts waterImages, waterPixel its twin); and with the glint
    *  on (specCam), the site's gloss onto the chunk's gloss mask beside the
    *  swamp's (water-look.ts glintImage: inset from the shore, its colour the shaded water's mean, `tex` the water's texture). The look off
