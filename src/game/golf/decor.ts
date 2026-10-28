@@ -6,6 +6,7 @@
 import type { Pt } from '../network';
 import { PROPS_APPEAL_CAP } from './rangesave';
 import { LIBRARY } from '../library';
+import { FRAME_TREE_KEY, FRAME_TREE_PRICE } from './holeframe';
 
 /** the panel's groups, in order (T187: Buildings, the few the player adds to the town: Town decoration's) */
 export type DecorGroup = 'plants' | 'water' | 'stone' | 'furniture' | 'buildings';
@@ -16,7 +17,7 @@ export const DECOR_GROUPS: readonly { id: DecorGroup; name: string }[] = [
 /** a catalogue item: its key (saved with the prop), plain name, group, library picture (the NE view of four-view art), price ($), appeal (a
  *  fraction), its size (absent: the studio's or the library's own) and, for a stand-in picture, the real thing it stands in for (the card and the
  *  map's pill say "Stand In for <standIn>": the art is requested in docs/GOLF-SPRITES.md "Props kit") */
-export interface DecorItem { key: string; name: string; group: DecorGroup; kind: DecorKind; id: string; price: number; appeal: number; scale?: number; standIn?: string; desc: string }
+export interface DecorItem { key: string; name: string; group: DecorGroup; kind: DecorKind; id: string; price: number; appeal: number; scale?: number; standIn?: string; desc: string; /** T229: not in the panel's catalogue (a frame tree: Frame with trees plants it; its picture is any frame tree) */ hidden?: true }
 
 /** the kinds the diminishing returns count by (T132): each further prop of a kind near the range counts PROPS_DECAY of the one before, so a
  *  row of one cheap plant cannot dress the whole front: plants (all nine), water (fountains, wells), statues, stonework (pillars, arches),
@@ -48,6 +49,9 @@ export const DECOR: readonly DecorItem[] = [
   { key: 'bush-sage', name: 'Sage bush', group: 'plants', kind: 'plant', id: 'landscape:bush-sage-round', price: 70, appeal: APPEAL.plant, desc: 'A round soft sage-green bush' },
   { key: 'hydrangea-pale', name: 'Pale hydrangea', group: 'plants', kind: 'plant', id: 'landscape:hydrangea-pale', price: 80, appeal: APPEAL.plant, desc: 'A hydrangea in pale blooms' },
   { key: 'tree-maple', name: 'Ornamental maple', group: 'plants', kind: 'plant', id: 'ref:tree-maple-crimson', price: 300, appeal: APPEAL.plant, desc: 'A crimson maple for shade and colour' },
+  // T229: a tree of a hole's frame (the hole card's and New hole's Frame with trees, golf/holeframe.ts): a plant as the others (its appeal near the
+  //       range, half its price back when bulldozed); not in the panel (hidden): its picture is whichever conifer or autumn tree the frame dealt
+  { key: FRAME_TREE_KEY, name: 'Course tree', group: 'plants', kind: 'plant', id: 'gen:tree-maple-scarlet:ne', price: FRAME_TREE_PRICE, appeal: APPEAL.plant, hidden: true, desc: "A tree of a hole's frame: conifers and autumn broadleaves along the rough's edge" },
   // ---- water
   { key: 'fountain', name: 'Plaza fountain', group: 'water', kind: 'water', id: 'ref:landmark-fountain-v2', price: 12000, appeal: APPEAL.fountain, desc: 'A tiered stone fountain: the centrepiece of the front' },
   { key: 'well', name: 'Wishing well', group: 'water', kind: 'water', id: 'expansion:wooden-well', price: 1200, appeal: APPEAL.well, desc: 'A covered garden well: golfers toss a coin for luck' },
@@ -221,17 +225,19 @@ export function inPoly(pts: readonly number[], x: number, y: number): boolean {
 // ---------------------------------------------------------------- the save
 
 /** a placed prop as the save keeps it: library id, x, y, flip, scale; then 1 for a plant brush's prop, or 0 and the catalogue key for a Props
- *  tool prop (T131). An old save's tuples (five or six long) read the same */
-export type PropTuple = [string, number, number, number, number, (0 | 1)?, string?];
-export function propTuple(id: string, p: { x: number; y: number; flip: boolean; scale: number; plant?: 1; decor?: string }): PropTuple {
+ *  tool prop (T131), and for a frame tree the hole it frames (T229). An old save's tuples (five to seven long) read the same */
+export type PropTuple = [string, number, number, number, number, (0 | 1)?, string?, number?];
+export function propTuple(id: string, p: { x: number; y: number; flip: boolean; scale: number; plant?: 1; decor?: string; frame?: number }): PropTuple {
   const t: PropTuple = [id, +p.x.toFixed(3), +p.y.toFixed(3), p.flip ? 1 : 0, p.scale];
-  if (p.decor) t.push(0, p.decor); else if (p.plant) t.push(1);
+  if (p.decor) { t.push(0, p.decor); if (p.frame) t.push(p.frame); } else if (p.plant) t.push(1);
   return t;
 }
-/** what a saved tuple adds to its prop: the plant mark and the catalogue key (an unknown key is dropped: the prop loads as a plain prop) */
-export function tupleMarks(t: readonly unknown[]): { plant?: 1; decor?: string } {
-  const out: { plant?: 1; decor?: string } = {};
+/** what a saved tuple adds to its prop: the plant mark, the catalogue key (an unknown key is dropped: the prop loads as a plain prop) and a frame
+ *  tree's hole (a whole number 1..99, with its catalogue key) */
+export function tupleMarks(t: readonly unknown[]): { plant?: 1; decor?: string; frame?: number } {
+  const out: { plant?: 1; decor?: string; frame?: number } = {};
   if (t[5] === 1) out.plant = 1;
   const k = decorKeyOf(t[6]); if (k) out.decor = k;
+  const h = t[7]; if (k && typeof h === 'number' && Number.isInteger(h) && h >= 1 && h <= 99) out.frame = h;
   return out;
 }

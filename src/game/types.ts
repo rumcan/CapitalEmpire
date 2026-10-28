@@ -52,6 +52,8 @@ export interface Prop {
   plant?: 1;
   /** placed by the Props tool (T131): its catalogue key (golf/decor.ts); saved as the tuple's 7th element (the 6th is then 0) */
   decor?: string;
+  /** T229: a frame tree (golf/holeframe.ts, Frame with trees): the hole it frames; saved as the tuple's 8th element, after its catalogue key */
+  frame?: number;
   /** drawn this high above its spot (world px; T133: the range's upper deck, an auto prop, never saved): sprites.ts Drawable.lift */
   lift?: number;
 }
