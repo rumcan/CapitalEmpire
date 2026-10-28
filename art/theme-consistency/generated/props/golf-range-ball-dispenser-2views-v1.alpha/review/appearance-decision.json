@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "id": "golf:range-ball-dispenser",
+  "date": "2026-10-28",
+  "reviewer": "Primary art agent /root",
+  "decision": "accepted-for-style-alpha-and-distinct-views",
+  "scope": "Primary inspected actual keyed sheet composited over grey: clean background removal, theme and distinct front+right/left+front views pass; no visible pink halo.",
+  "ownerApprovalClaim": false,
+  "artifacts": [
+    {
+      "file": "art/theme-consistency/generated/props/golf-range-ball-dispenser-2views-v1.alpha.png",
+      "sha256": "e9b350d55423f8204daff1a1055687fe0d801c95b40c1d2df749d945edcd6651"
+    },
+    {
+      "file": "art/theme-consistency/generated/props/golf-range-ball-dispenser-2views-v1.alpha/front-right.native.png",
+      "sha256": "1eb0b11ae82124752779df7095f565882dacac4d283e26d6b0f1681664a476b4"
+    },
+    {
+      "file": "art/theme-consistency/generated/props/golf-range-ball-dispenser-2views-v1.alpha/left-front.native.png",
+      "sha256": "f9960ffdf4975a022dcd2749921d3b27ce3d46d1b5a600ad7f2ef82dc0022033"
+    }
+  ],
+  "pending": [
+    "Footing road-angle geometry review",
+    "Calibrate actual cabinet vertical edge or sign post using known height; whole silhouette bbox differs legitimately with projection",
+    "Game/Studio registration and integration"
+  ]
+}
