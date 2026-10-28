@@ -20,6 +20,29 @@ The approved look is batch 1 (made on RUN before the switch): `E:/ClaudeTemp/ART
 
 The rest of the list (items 224-327, the portraits 230-232) follows the same pattern: shared block S or Q in GOLF-ART-LIST section 13, plus the item's words. The lead adds them here batch by batch.
 
+## First: the grey stone water border (item 180; the owner, 2026-10-28)
+Sprites on flat pure magenta, so the game can key them out. Attach `art/theme-consistency/references/theme-authoritative.png` and the concept picture. Save each picture to `art/theme-consistency/generated/landscaping/` under the name given.
+
+**180a, the run pieces**: save as `golf-stone-border-run-v1.png`
+```text
+ONE run piece of a pond's border, drawn twice on one SQUARE image on a FLAT PURE MAGENTA background (#FF00FF, RGB 255,0,255: one uniform colour edge to edge, no gradient, floor, texture, vignette or shadow on it); the subject itself contains NO magenta, pink or purple and has a crisp outline. The piece: a 4 m length of a natural pond edge made of rounded GREY GRANITE boulders of mixed sizes (some 0.4 m, some over 1 m, some flecked with rose-grey), set tight but irregular, half sunk at the water line, with green ferns, a sedge and tufts of golden grass tucked between the stones and a little moss on top. On the LEFT, the piece lying along the map's x axis (its line running from the upper left toward the lower right of the screen); on the RIGHT, the same piece lying along the map's y axis (running from the lower left toward the upper right). Both ends of each piece are cut clean so identical pieces join end to end without a gap or a visible repeat. Fixed parallel 2:1 isometric camera, verticals vertical, detailed illustrated style of reference 1. Early autumn: sun fixed at SCREEN UPPER RIGHT, tiny contact shadows toward SCREEN LOWER LEFT. No water drawn, no ground tile, no people, no text; 15% clear space round each piece.
+```
+
+**180b, the corners**: save as `golf-stone-border-corners-v1.png`
+```text
+The same grey granite pond border as the attached run piece (match its stones, sizes, planting and light exactly), as FOUR corner pieces on one SQUARE image on FLAT PURE MAGENTA (#FF00FF; no magenta, pink or purple in the subject): top row, an inner corner and an outer corner where an x-axis run meets a y-axis run (the corner turning toward the viewer); bottom row, the same two corners turning away from the viewer. Each corner about 2 x 2 m, its two arms cut clean to join the run pieces. Same isometric camera and upper-right sun. No water, no ground, no text; 15% clear space round each.
+```
+
+**180c, single boulders**: save as `golf-stone-boulders-grey-v1.png`
+```text
+SIX separate grey granite boulders on one SQUARE image on FLAT PURE MAGENTA (#FF00FF; no magenta, pink or purple in the subject), in a 3 x 2 grid with clear space between: sizes from 0.6 m to 2 m, rounded and weathered, some flecked rose-grey, three of them with a small fern or grass tuft at the foot. Same isometric camera, illustrated style of reference 1, sun at SCREEN UPPER RIGHT, tiny contact shadows toward the lower left. No ground, no water, no text.
+```
+
+**180d, planting tufts**: save as `golf-water-edge-plants-v1.png`
+```text
+SIX separate water-edge plants on one SQUARE image on FLAT PURE MAGENTA (#FF00FF; no magenta, pink or purple in the subject), in a 3 x 2 grid with clear space between: a green fern clump, a sedge tussock, a clump of cattails, a low blue-green juniper, a tuft of golden autumn grass, a small shrub with red autumn leaves. Each about 0.5-1 m. Same isometric camera, illustrated style, sun at SCREEN UPPER RIGHT, tiny contact shadows toward the lower left. No ground, no water, no text.
+```
+
 ## Batch 2: the P1 places
 
 ### 202 Inside your home: the cottage (upgraded only: the run-down picture is made) (`home-cottage`)
