@@ -40,7 +40,7 @@ export interface RailItem {
 export const RAIL: readonly RailItem[] = [
   { id: 'select', label: 'Select', icon: 'compass', key: 'V', section: null, group: 'select', tools: [{ id: 'select', label: 'Select / Pan', key: 'V', icon: 'compass' }] },
   // COURSE
-  { id: 'range', label: 'Driving range', icon: 'pin', key: '', section: 'course', group: 'course', tools: [{ id: 'select', label: 'Range card', key: '', icon: 'pin' }], only: 'golf', action: 'range' },
+  { id: 'range', label: 'Range', icon: 'pin', key: '', section: 'course', group: 'course', tools: [{ id: 'select', label: 'Range card', key: '', icon: 'pin' }], only: 'golf', action: 'range' },
   { id: 'course', label: 'Course', icon: 'trophy', key: 'C', section: 'course', group: 'course', tools: [
     { id: 'course', label: 'Holes', key: 'C', icon: 'trophy' },
     { id: 'buildings', label: 'Buildings', key: '', icon: 'house', only: 'golf' },
