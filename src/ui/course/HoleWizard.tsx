@@ -26,7 +26,7 @@ export function HoleWizardPanel({ game }: { game: Game }) {
   const c = w.step === 'shape' ? w.check() : null;
   const checks = w.step === 'shape' ? w.checks() : [];
   // T229: Frame with trees on: the Build's price is the hole's and its frame's
-  const fr = w.step === 'shape' && p.frameTrees ? game.wizardFrame() : null, total = (gh?.cost ?? 0) + Math.max(0, fr?.price ?? 0);
+  const fr = w.step === 'shape' && p.frameTrees ? game.wizardFrame?.() : null, total = (gh?.cost ?? 0) + Math.max(0, fr?.price ?? 0);
   const step = w.step === 'tee' ? 0 : w.step === 'green' ? 1 : 2;
   const cur = p.brushHole, canEdit = w.step === 'tee' && p.hasPlan(cur);
   const nums = w.base ? [] : p.planNumbers();
@@ -132,7 +132,7 @@ function Planting({ game }: { game: Game }) {
 /** T229 (#668): Frame with trees, on by default: Build plants clumps of conifers and autumn trees along the rough's outer edge too (golf/holeframe.ts),
  *  priced per tree; the count and price are worked out once the ghost holds still. Off: the hole card frames it later */
 function Frame({ game, cost }: { game: Game; cost: number }) {
-  const p = game.paint, on = p.frameTrees, f = on ? game.wizardFrame() : null, short = !!f && f.price > 0 && game.money < cost + f.price;
+  const p = game.paint, on = p.frameTrees, f = on ? game.wizardFrame?.() : null, short = !!f && f.price > 0 && game.money < cost + f.price;
   return (
     <section className="mt-2" aria-label="Trees" data-testid="wiz-frame">
       <h4 className="sub-head">Trees</h4>

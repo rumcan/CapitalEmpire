@@ -115,7 +115,7 @@ export function HoleCard({ game, right = 'right-3' }: { game: Game; right?: stri
  *  price on the button before you press it (one undo step). Framing again plants only where there is room, and takes away frame trees an edit
  *  of the hole left in play (half their price back, as the bulldozer) */
 function FrameRow({ game, n }: { game: Game; n: number }) {
-  const f = game.holeFrameView(n); if (!f) return null;
+  const f = game.holeFrameView?.(n); if (!f) return null; // (a stub game in the tests has none)
   const can = f.trees > 0 || f.stale > 0, usd = (v: number) => `$${Math.round(v).toLocaleString('en-US')}`;
   const label = f.trees ? `Frame with trees · ${f.trees} trees · ${usd(f.price)}` : f.stale ? `Take ${f.stale} out of play · +${usd(f.refund)}` : f.has ? 'Framed' : 'No room for a frame';
   const note = [f.has ? `${f.has} frame tree${f.has === 1 ? '' : 's'} now.` : "Clumps of spruce, pine, maple and birch along the rough's edge, with gaps; never in the line of play, on a path or on water.",
