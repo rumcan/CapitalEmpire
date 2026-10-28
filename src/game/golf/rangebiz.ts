@@ -558,7 +558,10 @@ const PICK_HOURS = 7;
  *  the car drives in there and is not drawn while parked), its golfer walking out of its door */
 export interface CarSlot { x: number; y: number; hx: number; hy: number; inside?: boolean; door?: Pt;
   /** T237: its car park's entrance (absent: the range's, setScene's) and its car park's id (the car park's P · parked/bays label) */
-  e?: Pt; pid?: number }
+  e?: Pt; pid?: number;
+  /** T237: the drive from its car park's mouth along the aisles to the aisle point in front of it (carpark.ts bayDrive: the car parks nose-in
+   *  from there), and its golfer's walk from the car park's footpath along the aisles to that point (bayWalk); absent or empty: straight */
+  drive?: Pt[]; walk?: Pt[] }
 /** the car park building's places as car slots (T146): GARAGE_CARS at its ramp, heading in, its walkers at its door */
 export function garageSlots(g: NonNullable<RangeScene['garage']>, n: number): CarSlot[] {
   return Array.from({ length: n }, () => ({ x: g.ramp.x, y: g.ramp.y, hx: g.into.x, hy: g.into.y, inside: true, door: g.door }));
@@ -1048,22 +1051,27 @@ export class RangeSim {
   /** the car's way out: from its bay back through the entrance, down the drive and off along the road either way */
   private outRoute(v: Visit): Route {
     const sc = this.scene!, sl = this.slots[v.slot]!, e = sl.e ?? this.entrance!, side = this.rnd() < 0.5 ? -1 : 1, d = sc.roadDir, n = sc.rangeSide, lane = side > 0 ? 0.9 : -0.9;
-    const back = { x: sl.x - sl.hx * 2.6, y: sl.y - sl.hy * 2.6 };
+    // backing out of its bay to the aisle, then (T237) back along the aisles to the mouth the way it came
+    const way = sl.drive?.length ? [...sl.drive].reverse() : [{ x: sl.x - sl.hx * 2.6, y: sl.y - sl.hy * 2.6 }], vs = way.map((_, i) => (i === 0 ? PARK_V * 0.6 : PARK_V));
     // T237: a car park whose entrance is on the county road (a lot along the road's frontage) is left straight onto the road there
     const at = this.offDrive(e) ? e : sc.J, away = { x: at.x + d.x * side * 46 + n.x * lane, y: at.y + d.y * side * 46 + n.y * lane };
-    if (this.offDrive(e)) return route([{ x: sl.x, y: sl.y }, back, e, { x: e.x + n.x * lane, y: e.y + n.y * lane }, away], [PARK_V * 0.6, PARK_V, PARK_V, ROAD_V]);
+    if (this.offDrive(e)) return route([{ x: sl.x, y: sl.y }, ...way, e, { x: e.x + n.x * lane, y: e.y + n.y * lane }, away], [...vs, PARK_V, PARK_V, ROAD_V]);
     const onDrive = project(e, sc.J, sc.driveEnd), out = { x: sc.J.x + n.x * lane, y: sc.J.y + n.y * lane };
-    return route([{ x: sl.x, y: sl.y }, back, e, onDrive, out, away], [PARK_V * 0.6, PARK_V, DRIVE_V, DRIVE_V, ROAD_V]);
+    return route([{ x: sl.x, y: sl.y }, ...way, e, onDrive, out, away], [...vs, PARK_V, DRIVE_V, DRIVE_V, ROAD_V]);
   }
   /** T237: whether a car park's entrance is off the range's drive (on the county road: a frontage lot), so its cars turn in and out there */
   private offDrive(e: Pt): boolean { const sc = this.scene!, q = project(e, sc.J, sc.driveEnd); return Math.hypot(e.x - q.x, e.y - q.y) > 3; }
   /** the car's way in to its bay: from `from` on the county road (its lane `lane` off the line), the turn at the drive (J), along the drive to
    *  its car park's entrance, short of its bay and in (T237: a car park with its entrance on the road is turned into there, off the road) */
   private inRoute(sl: CarSlot, from: Pt, lane: number): Route {
-    const sc = this.scene!, e = sl.e ?? this.entrance!, n = sc.rangeSide, back = { x: sl.x - sl.hx * 2.2, y: sl.y - sl.hy * 2.2 }, bay = { x: sl.x, y: sl.y };
-    if (this.offDrive(e)) return route([from, { x: e.x + n.x * lane, y: e.y + n.y * lane }, e, back, bay], [ROAD_V, PARK_V, PARK_V, PARK_V * 0.6]);
+    const sc = this.scene!, e = sl.e ?? this.entrance!, n = sc.rangeSide, bay = { x: sl.x, y: sl.y };
+    // (T237: in by its car park's mouth and along the aisles to the aisle point in front of its bay, then nose-in; else short of its bay)
+    const way = sl.drive?.length ? sl.drive : [{ x: sl.x - sl.hx * 2.2, y: sl.y - sl.hy * 2.2 }], vs = way.map(() => PARK_V);
+    if (this.offDrive(e)) return route([from, { x: e.x + n.x * lane, y: e.y + n.y * lane }, e, ...way, bay], [ROAD_V, PARK_V, ...vs, PARK_V * 0.6]);
     const turn = { x: sc.J.x + n.x * lane, y: sc.J.y + n.y * lane }, onDrive = project(e, sc.J, sc.driveEnd);
-    return route([from, turn, onDrive, e, back, bay], [ROAD_V, DRIVE_V, DRIVE_V, PARK_V, PARK_V * 0.6]);
+    // (the old range's lot on the drive keeps its six-point way, which drawnRoute lays in the drive's lanes)
+    if (!sl.drive?.length) return route([from, turn, onDrive, e, way[0]!, bay], [ROAD_V, DRIVE_V, DRIVE_V, PARK_V, PARK_V * 0.6]);
+    return route([from, turn, onDrive, e, ...way, bay], [ROAD_V, DRIVE_V, DRIVE_V, ...vs, PARK_V * 0.6]);
   }
   /** T237: the range's cars standing in car park pid now (its P · parked/bays label: the range's share of a car park serving it) */
   parkedIn(pid: number): number {
@@ -1086,7 +1094,12 @@ export class RangeSim {
   /** where a car's golfer gets out and in (T146: the car park building's door, else beside its car) */
   private carSide(sl: CarSlot): Pt { return sl.door ?? { x: sl.x + sl.hy * 1.2, y: sl.y - sl.hx * 1.2 }; }
   /** the way from the path's end at the car park (carEdge) to a car (T146: the lot's walkers round the car park building; none from its door) */
-  private fromEdge(sl: CarSlot): Pt[] { return sl.door ? [] : this.scene!.lotWalk; }
+  private fromEdge(sl: CarSlot): Pt[] {
+    if (sl.door) return [];
+    // T237: from the path's end to its car park's footpath (round the car park building when a set-back range has one), then along the aisles
+    const sc = this.scene!;
+    return sl.walk?.length ? [...(sc.garage && sc.lotWalk.length > 1 ? sc.lotWalk : []), ...sl.walk] : sc.lotWalk;
+  }
   /** after its bucket (T130): a share of the golfers walk over to an open practice facility with a free spot (the putting green first, then the
    *  chipping green); true when this one does */
   private toPractice(v: Visit, sc: RangeScene): boolean {

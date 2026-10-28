@@ -4,7 +4,7 @@
 // tree or a lamp post and a shrub, alternating along the edge; and a paved footpath from its edge nearest a venue's door to that door. All of it
 // from the built park alone, so it is the same every time (no random: a hash of the park's id picks the trees). Pure TS, no DOM.
 import type { Pt } from '../network';
-import { toLocal, toWorld, type CarPark } from './carpark';
+import { lotExits, lotPlan, toLocal, toWorld, type CarPark } from './carpark';
 import { AISLE, BAY_D, BAY_W } from './config';
 
 /** the kerb's width (tiles: 0.3 = 60 cm, the island kerbs the same) and the entrance's opening in it (tiles along the edge: a two-way mouth) */
@@ -72,9 +72,12 @@ export function parkLook(pk: CarPark, door: Pt | null, walls: readonly (readonly
   // the islands: the clear ends of each group of rows (bayGrid: bays from 1 tile in, BAY_W apart at 90 degrees; its pitch for angled bays)
   const pitch = pk.bay && pk.bay !== 90 ? BAY_W / Math.sin(pk.bay * Math.PI / 180) : BAY_W, n = Math.max(0, Math.floor((L - 2) / pitch));
   const depth = pk.bay && pk.bay !== 90 ? BAY_D * Math.sin(pk.bay * Math.PI / 180) + BAY_W * Math.cos(pk.bay * Math.PI / 180) : BAY_D;
-  const ends: [number, number][] = [[KERB_W, 1], [1 + n * pitch, L - KERB_W]];
+  // (T237's golf layout, lotPlan: an island at both ends of each row, the far one short of the cross aisle; the first version: of each group)
+  const plan = pk.cross ? lotPlan(pk, side, pk.entrances) : null;
+  const ends: [number, number][] = plan ? [[KERB_W, 1], [1 + plan.n * plan.pitch, plan.L - AISLE]] : [[KERB_W, 1], [1 + n * pitch, L - KERB_W]];
+  const groups: [number, number][] = plan ? plan.rows.map(r => [Math.max(KERB_W, r.q0), r.q1]) : rowGroups(D, depth);
   let k = 0;
-  for (const [g0, g1] of rowGroups(D, depth)) for (const [e0, e1] of ends) {
+  for (const [g0, g1] of groups) for (const [e0, e1] of ends) {
     if (e1 - e0 < 0.6) continue;
     const t0 = e0 + ISLAND_IN, t1 = e1 - ISLAND_IN, q0 = g0 + ISLAND_IN, q1 = Math.min(g1, D - KERB_W) - ISLAND_IN;
     over.push({ pts: rect(t0, t1, q0, q1), tex: 'slabs' }, { pts: rect(t0 + KERB_W * 0.6, t1 - KERB_W * 0.6, q0 + KERB_W * 0.6, q1 - KERB_W * 0.6), tex: 'grass' });
@@ -101,6 +104,14 @@ function entry(a: Pt, b: Pt, r: readonly [number, number, number, number]): numb
   }
   return t0;
 }
+/** where car park pk's footpath to door starts: the golf layout's way on foot nearest the door (carpark.ts lotExits: an aisle's end, the cross
+ *  aisle's, a mouth), else the point of its edge nearest the door */
+export function footStart(pk: CarPark, door: Pt): Pt {
+  let best: Pt | null = null, bd = Infinity;
+  for (const p of lotExits(pk)) { const d = Math.hypot(p.x - door.x, p.y - door.y); if (d < bd) { bd = d; best = p; } }
+  if (best) return best;
+  const q = toLocal(pk, door); return toWorld(pk, { x: Math.min(pk.w, Math.max(0, q.x)), y: Math.min(pk.h, Math.max(0, q.y)) });
+}
 /** a strip PATH_W wide from a to b (world tiles) */
 function strip(a: Pt, b: Pt, ext = 0): LookPatch {
   const len = Math.hypot(b.x - a.x, b.y - a.y) || 1, ux = (b.x - a.x) / len, uy = (b.y - a.y) / len, nx = -uy * PATH_W / 2, ny = ux * PATH_W / 2;
@@ -111,7 +122,7 @@ function strip(a: Pt, b: Pt, ext = 0): LookPatch {
  *  building in the way: walls, footprints x, y, w, h) round it in one corner along the world axes, or else straight to half a tile short of
  *  the building's face; none when the door is inside the park or more than PATH_MAX tiles off */
 export function footpath(pk: CarPark, door: Pt, walls: readonly (readonly [number, number, number, number])[] = []): LookPatch[] | null {
-  const q = toLocal(pk, door), cx = Math.min(pk.w, Math.max(0, q.x)), cy = Math.min(pk.h, Math.max(0, q.y)), a = toWorld(pk, { x: cx, y: cy });
+  const a = footStart(pk, door);
   const len = Math.hypot(door.x - a.x, door.y - a.y);
   if (len < 1 || len > PATH_MAX) return null;
   const clear = (p: Pt, r: Pt) => walls.every(w => entry(p, r, w) > 1);
