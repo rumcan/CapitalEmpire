@@ -20,6 +20,8 @@ import { layerTexes, type LotPatch } from './ground-protocol';
 
 const scope = self as unknown as DedicatedWorkerGlobalScope;
 const terrain = new Uint8Array(MAP * MAP), net = new RoadNetwork(), tex = new Textures();
+/** T265: the last paints asked of this worker (the bench's bakeAB paints them again) */
+const recentPaints: Extract<ToWorker, { t: 'paint' }>[] = [];
 const painter = new GroundPainter(terrain, net, tex);
 tex.onMade = (what, work, wall) => post({ t: 'log', message: `made ${what} in ${work.toFixed(0)} ms (over ${wall.toFixed(0)} ms)` });
 // URL discovery is cheap; image bytes are decoded only when a changed cell needs that generated asset.
@@ -108,6 +110,21 @@ const handle = async (m: ToWorker) => {
       case 'leaves': painter.leafDensity = m.density; break;
       case 'specCam': painter.specCam = m.on; break;
       case 'swamp': painter.swamp = m.on; break;
+      case 'riverSwamp': painter.riverSwamp = m.on; break;
+      case 'bakeAB': {
+        // T265, the bench: the last bakes of this kind painted again, the river's swamp on and off by turns (the order turned each round, so
+        // neither always goes first), only the paint timed; the pictures thrown away, the switch as it was
+        const keep = painter.riverSwamp, keepTs = tex.tileTs, on: number[] = [], off: number[] = [], list = recentPaints.filter(p => p.kind === m.kind);
+        for (let r = 0; r < m.reps; r++) for (const p of list) for (const flag of r % 2 ? [false, true] : [true, false]) {
+          painter.riverSwamp = flag; if (p.ts !== undefined) tex.tileTs = p.ts; if (m.cold) painter.clearSwampMemos(); // (cold: the bands made again, a first bake's)
+          const t0 = performance.now(), cv = painter.paint(p.i, p.j, p.L, p.kind === 'm'), ms = performance.now() - t0;
+          cv.width = cv.height = 0; painter.takeShadeMask(); painter.takeSpecMask(); painter.takeGlossMask(); painter.takeShineMask();
+          (flag ? on : off).push(ms);
+        }
+        painter.riverSwamp = keep; tex.tileTs = keepTs; tex.missing.clear();
+        post({ t: 'bakeAB', on, off });
+        break;
+      }
       case 'grassShine': painter.grassShine = m.on; painter.shineWeights = m.weights; break;
       case 'slopeLight': painter.slopeLight = m.strength; break;
       case 'lotground': {
@@ -139,6 +156,7 @@ const handle = async (m: ToWorker) => {
         break;
       }
       case 'paint': {
+        recentPaints.push(m); if (recentPaints.length > 16) recentPaints.shift(); // (T265: the bench's bakeAB)
         await hasTextures;
         // the tile spec the tile set families are laid at (T145, T150, painted-tiles.ts tileSpec: the camera's band and the screen's DPR), with this bake
         if (m.ts !== undefined) tex.tileTs = m.ts;
