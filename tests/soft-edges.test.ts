@@ -102,6 +102,7 @@ describe('soft-edges: an area\'s band (softRingImages)', () => {
   it('a side weighted 0 keeps its hard outline (no band laid there), easing in along the outline', () => {
     const wts = new Float32Array([0, 0, 1, 1]); // the side from (10,10) to (40,10) weighted 0 at both ends; (40,30)-(10,30) 1
     const out = softRingImages(ring, wts, box, 4, 4)!;
+    assert.equal(out.full, false); assert.equal(softRingImages(ring, null, box, 4, 4)!.full, true);
     for (let v = 0; v < out.p.H; v++) for (let u = 0; u < out.p.W; u++) {
       const [x, y] = centre(out.p, u, v); if (x < 12 || x > 38) continue;
       if (Math.abs(y - 10) < 1.5) assert.equal(out.p.a[v * out.p.W + u], 0, `p at ${x},${y}`);

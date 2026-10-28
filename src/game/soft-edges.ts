@@ -159,9 +159,10 @@ export function easeWeights(pts: ArrayLike<number>, wt: ArrayLike<number>, ease:
 /** the soft band of a closed outline (pts, tiles, either winding; the area inside is the dirt) over the tile box `box` at r px a tile on the
  *  world grid: `a` the dirt's share (255 deep inside, 0 outside, the band between, each side's band eased to the hard outline as its weight
  *  wts eases to 0) and `p` where the band is laid (255 within it where the weight is up; 0 elsewhere: there the area keeps the hard outline it
- *  is drawn with); null when no band reaches the box. Sides on a multiple of seamCell tiles (the next cell's area carries the surface on) take no
+ *  is drawn with); full: the weight is whole all along the outline near the box (then `a` alone is the area's share everywhere: p need not
+ *  be laid); null when no band reaches the box. Sides on a multiple of seamCell tiles (the next cell's area carries the surface on) take no
  *  band. Cost: one scanline pass for inside, then only the px within the band of each side */
-export function softRingImages(pts: ArrayLike<number>, wts: ArrayLike<number> | null, box: readonly [number, number, number, number], w: number, r: number, seamCell = 0): { a: SoftImage; p: SoftImage } | null {
+export function softRingImages(pts: ArrayLike<number>, wts: ArrayLike<number> | null, box: readonly [number, number, number, number], w: number, r: number, seamCell = 0): { a: SoftImage; p: SoftImage; full: boolean } | null {
   const n = pts.length >> 1; if (n < 3 || !(w > 0)) return null;
   const h = w / 2, m = 1.5 / r, reach = h + m;
   // the outline's box grown by the band, within box, on the world grid
@@ -211,11 +212,12 @@ export function softRingImages(pts: ArrayLike<number>, wts: ArrayLike<number> | 
   }
   if (!any) return null;
   const a = new Uint8ClampedArray(N), p = new Uint8ClampedArray(N);
-  let laid = false;
+  let laid = false, full = true;
   for (let v = 0; v < H; v++) {
     const ty = Y0 + (v + 0.5) / r;
     for (let u = 0; u < W; u++) {
       const k = v * W + u, inK = inside[k]!, dist = d[k]!, wt = wk[k]!;
+      if (dist < reach && wt < 1) full = false;
       if (dist >= reach || !(wt > 0)) { a[k] = inK ? 255 : 0; continue; }
       const we = w * wt, sd = inK ? dist : -dist;
       a[k] = Math.round(255 * (Math.abs(sd) >= we / 2 ? (inK ? 1 : 0) : softCover(sd, we, softNoise(X0 + (u + 0.5) / r, ty, w, r))));
@@ -224,7 +226,7 @@ export function softRingImages(pts: ArrayLike<number>, wts: ArrayLike<number> | 
     }
   }
   if (!laid) return null;
-  return { a: { a, W, H, x0: X0, y0: Y0, r }, p: { a: p, W, H, x0: X0, y0: Y0, r } };
+  return { a: { a, W, H, x0: X0, y0: Y0, r }, p: { a: p, W, H, x0: X0, y0: Y0, r }, full };
 }
 
 /** the dirt and desert the soft edge applies to: the painted dirt and desert families, or (no painted look: the photo textures) the dirt,
