@@ -10,7 +10,7 @@ import { isBuilding } from '../src/game/mirror';
 import { PIXEL_LIMIT } from '../src/game/sizes';
 import { backPalette, compose, housePalette, lotPresets, pickedPreset, type Composition, type LotGeom, type Placed } from '../src/game/lots/compose';
 import { footprintOf } from '../src/game/lots/preset-art';
-import { BUSINESS, NAMED, SHOP_PALETTE, VENUE_PALETTE, colourOf } from '../src/game/lots/variety';
+import { BUSINESS, NAMED, SHOP_PALETTE, VENUE_PALETTE, colourOf, layoutOf } from '../src/game/lots/variety';
 import { LU, LV } from '../src/game/lots/town';
 import { City } from '../src/game/city';
 import { CLASS, RoadNetwork, classOf, type ClassId, type Leg, type Pt } from '../src/game/network';
@@ -32,21 +32,26 @@ const along = (a: number, w: number, ny: 1 | -1, ux: 1 | -1, y = 100): LotGeom =
 const alongY = (a: number, w: number, nx: 1 | -1, uy: 1 | -1, x = 100): LotGeom => ({ o: { x, y: uy > 0 ? a : a + w }, u: { x: 0, y: uy }, n: { x: nx, y: 0 }, w, d: 14 });
 
 test('the street lattice: two lots side by side (7-25 tiles) never share a colour, nor the lot across (up to 21 tiles, overlapping)', () => {
-  const r = mulberry(270811), n = SHOP_PALETTE.length;
+  assert.deepEqual(layoutOf(SHOP_PALETTE.length), { step: 3, across: 4 });
+  // the eight shops, the houses, and palettes the art requests would make (docs/GOLF-SPRITES.md, T270)
+  for (const n of [SHOP_PALETTE.length, housePalette().length, 9, 10, 12, 14]) lattice(n);
+});
+function lattice(n: number) {
+  const r = mulberry(270811 + n);
   for (let i = 0; i < 20000; i++) {
     const make = r() < 0.5 ? along : alongY, a = (r() - 0.5) * 4000, w1 = 7 + r() * 18, w2 = 7 + r() * 18, f = r() < 0.5 ? 1 : -1;
     const s = (r() < 0.5 ? 1 : -1) as 1 | -1, t = (r() < 0.5 ? 1 : -1) as 1 | -1;
     const L = make(a, w1, f as 1 | -1, s), R = make(a + w1, w2, f as 1 | -1, t);
-    assert.notEqual(colourOf(L, n), colourOf(R, n), `side by side: ${a.toFixed(2)} +${w1.toFixed(2)} +${w2.toFixed(2)}`);
+    assert.notEqual(colourOf(L, n), colourOf(R, n), `${n} colours, side by side: ${a.toFixed(2)} +${w1.toFixed(2)} +${w2.toFixed(2)}`);
     // across: the other facing, its frontage overlapping (both up to 21 tiles)
     const v1 = 7 + r() * 14, v2 = 7 + r() * 14, b = a + (r() * 2 - 1) * (v1 + v2) / 2 * 0.999 + (v1 - v2) / 2;
     const P = make(a, v1, f as 1 | -1, s), Q = make(b, v2, -f as 1 | -1, t, 112);
     if (Math.min(a + v1, b + v2) - Math.max(a, b) <= 0) continue;
-    assert.notEqual(colourOf(P, n), colourOf(Q, n), `across: ${a.toFixed(2)} +${v1.toFixed(2)} / ${b.toFixed(2)} +${v2.toFixed(2)}`);
+    assert.notEqual(colourOf(P, n), colourOf(Q, n), `${n} colours, across: ${a.toFixed(2)} +${v1.toFixed(2)} / ${b.toFixed(2)} +${v2.toFixed(2)}`);
   }
   // the frontage, not the way the lot's frame runs, places it
   assert.equal(colourOf(along(40, 14, 1, 1), n), colourOf(along(40, 14, 1, -1), n));
-});
+}
 
 /** a town headless: the golf start's (one town beside its course, as ?start=town) or the classic seed towns, stamped to TOWN_POP each */
 function town(seed: number, golf: boolean): City | null {
