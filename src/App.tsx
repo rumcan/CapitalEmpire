@@ -935,8 +935,8 @@ function RoundPanel({ game }: { game: Game }) {
         )}
         <div className="mt-3 flex gap-2">
           <button className="btn flex-1 py-2 text-sm" onClick={() => game.goToSite()}><Icon name="calendar" size={18} />View Event</button>
-          {r.stage === 'free' && !golf && <button className="btn-gold flex-1 py-2 text-sm" onClick={() => game.startRound()}><Icon name="start" size={18} />Start Event</button>}
-          {r.stage === 'build' && <button className="btn-gold flex-1 py-2 text-sm" onClick={() => game.startNow()}><Icon name="start" size={18} />Start now</button>}
+          {r.stage === 'free' && !golf && <button className="btn-gold flex-1 py-2 text-sm" onClick={() => game.startRound()}><Icon name="play" size={18} />Start Event</button>}
+          {r.stage === 'build' && <button className="btn-gold flex-1 py-2 text-sm" onClick={() => game.startNow()}><Icon name="play" size={18} />Start now</button>}
         </div>
       </div>
     </div>
