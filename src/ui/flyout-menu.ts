@@ -9,6 +9,7 @@ import type { ProgressiveUiState } from '../game/ext/progressive-ui';
 import type { IconName } from './Icon';
 import { entryKey, extraLock, toolLock, toolNew, toolsIn, type RailItem, type RailTool } from './rail-items';
 import { GREENKEEPING } from '../game/features';
+import { PLANT_TILE, PRACTICE_TILE, PROP_GROUP_TILE, ROW_TILE, SURFACE_TILE, type ToolTile } from './tool-tiles';
 
 /** what a leaf does besides picking its tool (App.tsx runs it) */
 export type LeafAct =
@@ -21,6 +22,8 @@ export interface Leaf { item: string; entry: RailTool; act?: LeafAct }
 /** a flyout row: a caption (no action), a row with children (opens the next flyout), or a leaf. why: locked (dimmed, the reason shown) */
 export interface MenuRow {
   key: string; label: string; icon?: IconName; swatch?: string; /** a course surface's mark (SurfaceMark) */ mark?: string; caption?: boolean; children?: MenuRow[]; leaf?: Leaf; why?: string | null; isNew?: boolean; note?: string;
+  /** T233: its illustrated tile (art 174, tool-tiles.ts), drawn above its name; a column with a tiled row is laid out as a grid of tiles */
+  tile?: ToolTile;
 }
 /** the game's lists the menus are built from (App.tsx from the engine; the tests from fixtures) */
 export interface MenuCtx {
@@ -54,6 +57,8 @@ export function menuOf(item: RailItem, c: MenuCtx): MenuRow[] {
     const own = t ? toolLock(c.ui, t.id) : null, all = kids.filter(k => !k.caption), why = own ?? (all.length && all.every(k => k.why) ? all.find(k => k.why)!.why! : null);
     return { key, label, icon, children: kids, why, isNew: !!t && toolNew(c.ui, t.id) };
   };
+  /** T233: a row with its tile (none: as it was) */
+  const tiled = (r: MenuRow | null, tile: ToolTile | undefined): MenuRow | null => (r && tile ? { ...r, tile } : r);
   /** class rows under family captions (the Build and Paths flyouts): a locked class carries its lock */
   const classes = (t: RailTool | undefined, list: MenuCtx['roads']) => {
     if (!t) return [];
@@ -80,16 +85,18 @@ export function menuOf(item: RailItem, c: MenuCtx): MenuRow[] {
     }
     case 'course': {
       const h = byId('course');
-      rows.push(group('holes', 'Holes', 'trophy', h ? [
-        { ...leaf(h, 'New hole', { k: 'newHole' }, 'trophy')!, why: toolLock(c.ui, h.id) ?? c.newHoleWhy },
+      // T233: the Course flyout's tools as the concept's illustrated tiles (tool-tiles.ts): Holes, New hole, Shape by hand and its surfaces,
+      // Buildings and the Clubhouse, Cart paths & roads (its classes stay a list under their families)
+      rows.push(tiled(group('holes', 'Holes', 'trophy', h ? [
+        tiled({ ...leaf(h, 'New hole', { k: 'newHole' }, 'trophy')!, why: toolLock(c.ui, h.id) ?? c.newHoleWhy }, ROW_TILE.newHole),
         leaf(h, 'Your holes', { k: 'holes' }, 'pin'),
-        group('shape', 'Shape by hand', 'terrain', c.surfaces.map(s => ({ ...leaf(h, s.name, { k: 'surface', id: s.id })!, mark: s.id }))),
-      ] : [], h));
+        tiled(group('shape', 'Shape by hand', 'terrain', c.surfaces.map(s => tiled({ ...leaf(h, s.name, { k: 'surface', id: s.id })!, mark: s.id }, SURFACE_TILE[s.id]))), ROW_TILE.shape),
+      ] : [], h), ROW_TILE.holes));
       const b = byId('buildings');
-      if (b) rows.push(group('buildings', 'Buildings', 'house', [leaf(b, 'Clubhouse', { k: 'club' }, 'house'), leaf(b, 'Halfway house', { k: 'halfway' }, 'house')], b));
+      if (b) rows.push(tiled(group('buildings', 'Buildings', 'house', [tiled(leaf(b, 'Clubhouse', { k: 'club' }, 'house'), ROW_TILE.club), leaf(b, 'Halfway house', { k: 'halfway' }, 'house')], b), ROW_TILE.buildings));
       // T206: the roads on your property (the course's cart paths and drives), directly below Buildings; town roads stay in Traffic
       const p = byId('path');
-      if (p) { const r = group('paths', p.label, 'sidewalk', classes(p, c.paths), p); if (r) rows.push({ ...r, note: 'Roads and cart paths on your property' }); }
+      if (p) { const r = group('paths', p.label, 'sidewalk', classes(p, c.paths), p); if (r) rows.push({ ...r, note: 'Roads and cart paths on your property', tile: ROW_TILE.paths }); }
       const g = GREENKEEPING ? byId('greenkeeping') : undefined; // hidden for now (features.ts)
       if (g) rows.push(group('greenkeeping', 'Greenkeeping', 'trees', [leaf(g, 'Grass care', undefined, 'trees'), ...c.cares.map(x => leaf(g, x.name, { k: 'care', id: x.id }))], g));
       if (c.golf) for (const x of item.extras ?? []) rows.push({ key: `extra:${x.id}`, label: x.label, icon: x.icon, leaf: { item: item.id, entry: { id: 'select', label: x.label, key: '', icon: x.icon }, act: x.id === 'land' ? { k: 'land' } : { k: 'event' } }, why: extraLock(c.ui, x) });
@@ -97,12 +104,14 @@ export function menuOf(item: RailItem, c: MenuCtx): MenuRow[] {
     }
     case 'facilities': {
       // T206: Practice ▸ the facilities (each its own building tool), Plants ▸ the plant brush's kinds, Decoration ▸ Props ▸ by group
+      // T233: the tiles (tool-tiles.ts): Practice (the range bays) and its putting and chipping greens, Plants (the trees) with its Trees and
+      // Flowers, Decoration (the boulders) and its Props' Stone, Water and Plants
       const pt = byId('practice');
-      if (pt) rows.push(group('practice', 'Practice', 'pin', (c.practice ?? []).map(f => ({ ...leaf(pt, f.name, { k: 'practice', id: f.id }, 'pin')!, why: toolLock(c.ui, pt.id) ?? f.why })), pt));
+      if (pt) rows.push(tiled(group('practice', 'Practice', 'pin', (c.practice ?? []).map(f => tiled({ ...leaf(pt, f.name, { k: 'practice', id: f.id }, 'pin')!, why: toolLock(c.ui, pt.id) ?? f.why }, PRACTICE_TILE[f.id])), pt), ROW_TILE.practice));
       const pa = byId('paint');
-      if (pa) rows.push(group('plants', 'Plants', 'trees', c.plants.map(m => ({ ...leaf(pa, m.name, { k: 'plant', id: m.id })!, ...(m.col ? { swatch: m.col } : {}) })), pa));
+      if (pa) rows.push(tiled(group('plants', 'Plants', 'trees', c.plants.map(m => tiled({ ...leaf(pa, m.name, { k: 'plant', id: m.id })!, ...(m.col ? { swatch: m.col } : {}) }, PLANT_TILE[m.id])), pa), ROW_TILE.plants));
       const pr = byId('props');
-      if (pr) rows.push(group('decoration', 'Decoration', 'leaf', [group('props', 'Props', 'leaf', [leaf(pr, 'All props', { k: 'props', group: null }), ...c.propGroups.map(g => leaf(pr, g.name, { k: 'props', group: g.id }))], pr)], pr));
+      if (pr) rows.push(tiled(group('decoration', 'Decoration', 'leaf', [group('props', 'Props', 'leaf', [leaf(pr, 'All props', { k: 'props', group: null }), ...c.propGroups.map(g => tiled(leaf(pr, g.name, { k: 'props', group: g.id }), PROP_GROUP_TILE[g.id]))], pr)], pr), ROW_TILE.decoration));
       break;
     }
     case 'towndecor': {

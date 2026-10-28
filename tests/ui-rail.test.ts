@@ -163,3 +163,16 @@ describe('NEW per group; old saves (T117 seen ids, T182)', () => {
     assert.ok(railEntries(uiOf(played(1), 1), true, 'select').filter(e => e.locked).every(e => !e.isNew));
   });
 });
+
+describe('the rail keeps its icons; the tiles are the flyouts\' (T233)', () => {
+  it('the rail draws one icon per group and no tool tile (the illustrated tiles show in the Course and Facilities flyouts, ui-flyouts)', () => {
+    const es = railEntries(null, true, 'select', { range: true }), h = html(es);
+    assert.doesNotMatch(h, /flyout-pic|data-tile|assets\/ui\/tiles/);
+    assert.equal((h.match(/<img /g) ?? []).length, es.length, 'one icon a group');
+    // the rail's groups and their tools are as they were: the tiles add no tool and move none
+    assert.deepEqual(RAIL.map(r => [r.id, r.tools.map(t => t.id).join(' ')]), [
+      ['select', 'select'], ['range', 'select'], ['course', `course buildings path${GREENKEEPING ? ' greenkeeping' : ''}`], ['facilities', 'practice paint props'],
+      ['traffic', 'road lane downgrade junction bus park toll'], ['towndecor', 'paint props props business'], ['bulldoze', 'bulldoze'],
+    ]);
+  });
+});

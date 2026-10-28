@@ -118,7 +118,8 @@ import { RANGE_CAM_ZOOM, planRangeStart } from './golf/rangestart';
 import { CLUB_REACH, clubhouseSpotWhy, plotOfFront, rangeLayout } from './golf/range';
 import { inPractice, practiceArea } from './golf/practice';
 import { dressCourse } from './golf/dressing';
-import { FIRST_TEE, SEASON_START, monthIndexLabel, monthsLeft, seasonLabel, seasonMonth, yearOf } from './golf/calendar';
+import { FIRST_TEE, MONTH_LEN, SEASON_LEN, SEASON_START, monthIndexLabel, monthsLeft, seasonLabel, seasonMonth, yearOf } from './golf/calendar';
+import { MonthMoney, golfersAMonth, type TopStats } from './golf/topstats';
 import { afterRoute, driveOffer, driveStart, type DriveStopgap } from './golf/drivestopgap';
 import { growReadyLabel, hintWithGrow } from './golf/growlabel';
 import { computeTournamentCloseBook, computeYearEnd, type YearEndResult } from './golf/yearend';
@@ -178,6 +179,8 @@ const SIGNAL_TOAST = ['', 'actuated traffic lights (loop detectors)', 'adaptive 
 
 /** a game day and a game hour, sim s (one sim second is one game minute) */
 const GAME_DAY = 1440, GAME_HOUR = 60;
+/** T233: how often the top bar's course rating works the course's quality out again (ms: Course stats derives the holes) */
+const RATING_MS = 2000;
 /** a range start's founding season as its season card shows it (plan P22 2.5.3): the season's year, the season's business takings ($: the range,
  *  and the clubhouse once placed), the residents, the invitation checklist at the season's end, and whether the tour had invited the player (too
  *  late for this season) */
@@ -667,6 +670,9 @@ export class Game {
    *  none on the course now), the played course (rebuilt when the holes change: its key), and the clubhouse card's open state */
   private dayBook: DayBook | null = null; private dayPlay: { view: DayView; day: number; key: string } | null = null;
   private dayCourse: { view: CourseView; key: string; at: number } | null = null; clubCardOpen = false;
+  /** T233: the top bar's money chip: the treasury as the golf months go by (its change a month); the course rating's quality, worked out at most
+   *  every RATING_MS (Course stats derives the holes) */
+  private monthMoney = new MonthMoney(); private ratingAt = -Infinity; private ratingOf: { quality: number | null; holes: number } = { quality: null, holes: 0 };
   /** T208: the bench's busy day (?golfers=N: this many visitors in place of dailyGolfers; dev and bench only) */
   private dayBusy: number | undefined; private devSeed = 0; private dayOff = false;
   /** the game hour of the tournament day the play last saved at (T209: the day saves itself each game hour, so a reload resumes near where it was); -1 none */
@@ -5212,6 +5218,24 @@ export class Game {
     const r = this.traffic.round, c = this.traffic.clockTime(performance.now()) - (r.stage !== 'free' ? 1 : 0);
     return this.seasonsDone() * 12 + ((seasonMonth(c) - SEASON_START + 12) % 12);
   }
+  /** T233: the golf month with how far into it the clock is (golfMonthIndex plus a fraction: 12.5 is the middle of the second season's September) */
+  private golfMonthAt(now: number): number {
+    const r = this.traffic.round, c = this.traffic.clockTime(now) - (r.stage !== 'free' ? 1 : 0), d = ((c % SEASON_LEN) + SEASON_LEN) % SEASON_LEN;
+    return this.seasonsDone() * 12 + Math.min(12 - 1e-9, d / MONTH_LEN);
+  }
+  /** T233 (#674, the concept's top bar): the stat chips' figures (null outside golf mode): the treasury and its change a month over the last
+   *  months (golf/topstats.ts MonthMoney, noted each frame), the reputation, T208's everyday golfers a month (today's tee sheet: the Club card's) and the
+   *  course's quality for its rating (Course stats', every RATING_MS at most; null with no holes) */
+  topStats(now = performance.now()): TopStats | null {
+    const g = this.golf; if (!g) return null;
+    if (now - this.ratingAt > RATING_MS) { this.ratingAt = now; const s = this.courseStatsView(); this.ratingOf = { quality: s && s.totals.holes > 0 ? s.qualityScore : null, holes: s?.totals.holes ?? 0 }; }
+    // the money's change a month: averaged over about a town day of months (a 10-minute town day: five), as it comes in with the day's tee times
+    const money = this.money, ch = this.monthMoney.change(money, Math.ceil(this.traffic.dayLen / MONTH_LEN)), r = this.hasClubhouse ? this.dayBook?.rosterOf() : null;
+    return {
+      money, monthChange: Number.isFinite(money) ? ch.value : null, monthSpan: ch.span, month: ch.month,
+      rep: g.rep, golfers: r ? golfersAMonth(r.members + r.visitors) : 0, quality: this.ratingOf.quality, holes: this.ratingOf.holes,
+    };
+  }
   /** counts a player action toward the tool unlocks (golf mode only; saved) */
   private bump(k: 'pieces' | 'roads' | 'parks' | 'structures') { const p = this.golf?.progress; if (!p) return; p[k]++; this.scheduleSave(); this.emit(); }
   /** the player's progress facts (T032; T117: the unlocks read the course: its holes with a par, the seasons played and the tour's invitation),
@@ -6452,6 +6476,7 @@ export class Game {
     const tier = z < PLANNER_Z ? 'planner' : z < DISTRICT_Z ? 'district' : 'street'; this.perf.tier = tier;
     // the golf round moves on before the movers (the golfers) and the overlay (the balls) read it
     this.updatePlay(now); this.updateEveryday(now);
+    if (this.golf) this.monthMoney.note(this.golfMonthAt(now), this.money); // T233: the money chip's change a month
     // T226: the colour grade this frame (grade.ts: none when off, easing off after dusk; the scene then draws straight to the screen)
     gl.grade = this.boot.kind === 'game' ? gradeFrame(this.grade, this.nightAmount()) : null;
     gl.begin({ X: cam.X, Y: cam.Y, ze, cw: this.cw, ch: this.ch }, [0.106, 0.157, 0.086]);
