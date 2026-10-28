@@ -7,6 +7,8 @@ import type { LibItem } from '../types';
 import { drawnAsStandIn } from '../newart';
 import { LOT_DECALS } from '../lot-decals';
 import { AXIS_HEADING, AXIS_SETS } from '../axis-library';
+import { EXTRA_VIEW_SETS } from '../extra-views-library';
+import { EXTRA_VIEW_BASE } from '../extra-views';
 import { footprintOf, ownerScaleOf } from './preset-art';
 import type { ItemKind } from './learn';
 
@@ -23,9 +25,11 @@ export function spriteGroup(it: Pick<LibItem, 'id' | 'kind' | 'cat' | 'big'>): '
 /** the screen-axis sets' first pictures (T154: the N view, the front facing screen down; R turns it through E, S, W): the lab offers a set once,
  *  by it, the extra headings of the shops, houses and props among them (view:<id>:n) */
 const AXIS_FIRST: ReadonlySet<string> = new Set(Object.values(AXIS_SETS).map(v => v[0]));
+/** Supplemental diagonal sets are offered once too: their explicit NE picture; R turns within the four diagonal pictures. */
+const EXTRA_FIRST: ReadonlySet<string> = new Set(Object.values(EXTRA_VIEW_SETS).map(v => v[0]));
 /** whether a library sprite may be placed on a lot in the lab: not a turned view (but a screen-axis set's first) or an east copy, not a walker or
  *  one of the people, not an old building drawn as a stand-in */
-export const placeable = (it: LibItem, i: number) => (!it.id.startsWith('view:') || AXIS_FIRST.has(it.id)) && !it.id.startsWith('east:') && it.kind !== 'walker' && !SKIP_CAT.has(it.cat) && !drawnAsStandIn(i);
+export const placeable = (it: LibItem, i: number) => (!it.id.startsWith('view:') || AXIS_FIRST.has(it.id) || EXTRA_FIRST.has(it.id)) && !it.id.startsWith('east:') && it.kind !== 'walker' && !SKIP_CAT.has(it.cat) && !drawnAsStandIn(i);
 /** a fence, a hedge or a wall piece (it follows the lot's edge) */
 export const isFence = (id: string) => { const it = LIBRARY[INDEX.get(id) ?? -1]; return /fence|hedge|wall|railing/i.test(id) || (!!it && (it.kind.startsWith('fence') || it.cat === 'Fences')); };
 /** a tree */
@@ -38,7 +42,8 @@ const MAX_AREA: Readonly<Record<ItemKind, number>> = { tree: 9, bush: 4, flowerb
 export function itemKind(it: LibItem, i: number, area = ownArea(it.id)): ItemKind | null {
   // the town's lots leave the screen-axis art (its pictures, view:... and the sets' first) to the Props tool and the lab (T154): the generator,
   // which lays the town's lots on the map axes (T160), never offers it
-  if (!placeable(it, i) || it.id.startsWith('view:') || AXIS_HEADING[it.id] !== undefined || isFence(it.id)) return null;
+  const diagonalPlant = EXTRA_VIEW_BASE.has(it.id) && spriteGroup(it) === 'plants';
+  if (!placeable(it, i) || (it.id.startsWith('view:') && !diagonalPlant) || AXIS_HEADING[it.id] !== undefined || isFence(it.id)) return null;
   // T231: the concept kit joins no learned pool (so no lot drawn before it changes): the yards take it by their own draws (compose.ts kitYard)
   if (it.id.startsWith('kit:')) return null;
   const g = spriteGroup(it), t = `${it.id} ${it.name}`.toLowerCase();

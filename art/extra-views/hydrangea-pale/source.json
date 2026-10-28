@@ -1,0 +1,12 @@
+{
+ "id": "landscape:hydrangea-pale",
+ "version": "hydrangea-pale-4views-v1",
+ "sheetSha256": "5578dcd0a7fac1cc69a6819dc1bdd4e79fd4f2eb57d1638c9bf5ae7750f739eb",
+ "files": {
+  "NE": "5913837bdfeefe21d7dea56f16e7c13db132ee7607176aede163f4f587154727",
+  "SE": "c52aa9163d3b37d2a059e18ee5f09afa84c064555052d71c9dd1fabe5d2aa4dc",
+  "SW": "93072a1541fda9de5cbb0ae0d9331f5fd582ee2137661599084080778e6456c9",
+  "NW": "05ee78ab051c595ecb55b7761bda5a3bede2cddcf9b6ce472257b1de4cf2dd31"
+ },
+ "integrationStatus": "ready"
+}

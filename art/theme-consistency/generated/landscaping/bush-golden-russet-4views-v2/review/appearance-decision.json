@@ -1,0 +1,39 @@
+{
+  "schema": 1,
+  "id": "landscape:bush-golden-russet",
+  "date": "2026-10-27",
+  "decision": "accepted-for-art-appearance",
+  "reviewer": "primary",
+  "acceptanceScope": "Saved-art species/theme, distinct four camera views, upper-right lighting, transparency and uncut native silhouettes. No live integration or owner signoff claimed.",
+  "reviewAuthority": "Primary explicitly approved golden-russetv2 species/truealpha/all4unclipped after layout correction.",
+  "canonicalDirectionToSourceDirection": {
+    "NE": "NE",
+    "SE": "NW",
+    "SW": "SW",
+    "NW": "SE"
+  },
+  "files": [
+    {
+      "file": "art/theme-consistency/generated/landscaping/bush-golden-russet-4views-v2.png",
+      "sha256": "6dd2ba17160afb191f91586bc31203fc054525a4f5b9f25554adcf111a225f82"
+    },
+    {
+      "file": "art/theme-consistency/generated/landscaping/bush-golden-russet-4views-v2/NE.native.png",
+      "sha256": "31aadd7b80ee2ff46058f628d77cf728ba2062e43903adafaade1eb6baae0711"
+    },
+    {
+      "file": "art/theme-consistency/generated/landscaping/bush-golden-russet-4views-v2/SE.native.png",
+      "sha256": "cfdda337b3b2a7aacb91e42799581c61650b42fcaba4c7ae2990a450ca75b62c"
+    },
+    {
+      "file": "art/theme-consistency/generated/landscaping/bush-golden-russet-4views-v2/SW.native.png",
+      "sha256": "9685b57d76b94b5389a0324be03d159b8d68a6ee8b9ce5236e3033cf197bac06"
+    },
+    {
+      "file": "art/theme-consistency/generated/landscaping/bush-golden-russet-4views-v2/NW.native.png",
+      "sha256": "e57cac4448e4ddf60090973cfd073b9a40c8ed69e94e2d3b12c0250d116222b9"
+    }
+  ],
+  "runtimeIntegrated": false,
+  "ownerApproved": false
+}
