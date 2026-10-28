@@ -116,7 +116,7 @@ const handle = async (m: ToWorker) => {
         // neither always goes first), only the paint timed; the pictures thrown away, the switch as it was
         const keep = painter.riverSwamp, keepTs = tex.tileTs, on: number[] = [], off: number[] = [], list = recentPaints.filter(p => p.kind === m.kind);
         for (let r = 0; r < m.reps; r++) for (const p of list) for (const flag of r % 2 ? [false, true] : [true, false]) {
-          painter.riverSwamp = flag; if (p.ts !== undefined) tex.tileTs = p.ts;
+          painter.riverSwamp = flag; if (p.ts !== undefined) tex.tileTs = p.ts; if (m.cold) painter.clearSwampMemos(); // (cold: the bands made again, a first bake's)
           const t0 = performance.now(), cv = painter.paint(p.i, p.j, p.L, p.kind === 'm'), ms = performance.now() - t0;
           cv.width = cv.height = 0; painter.takeShadeMask(); painter.takeSpecMask(); painter.takeGlossMask(); painter.takeShineMask();
           (flag ? on : off).push(ms);

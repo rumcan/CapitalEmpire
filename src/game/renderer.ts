@@ -628,6 +628,8 @@ export class GroundPainter {
   private swampOn() { return this.swamp && !!this.tex.paintedOf('swamp'); }
   /** T199: a stream's swamp may reach into the tile box (the worker decodes the swamp's tiles only for such a chunk) */
   swampIn(b: BBox) { return (this.swamp && !this.swampField.empty && this.swampField.near(b[0], b[1], b[2], b[3]).length > 0) || (this.riverSwamp && !this.riverField.empty && this.riverField.near(b[0], b[1], b[2], b[3]).length > 0); }
+  /** T265, the bench's cold bake check (bakeAB): the bands' kept alphas dropped, so the next paint makes its own */
+  clearSwampMemos() { this.swampField.clearMemo(); this.riverField.clearMemo(); }
   /** T265: the river's band is drawn: its switch on and the surface painted */
   private riverSwampOn() { return this.riverSwamp && !!this.tex.paintedOf('swamp'); }
   /** T265: the swamp bands over tiles [x0, x0 + w) x [y0, y0 + h) at res samples a tile (swamp.ts SwampField alpha): the streams' (sc, T199) and

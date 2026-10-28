@@ -261,7 +261,7 @@ function bakeStats(g: Game, b0: number): Record<string, number> {
  *  and the bakes' median taken over the three; with the river's swamp switch (GroundCache.setRiverSwamp, the branch) on and off by turns,
  *  else (main) as it is */
 function bakeStage(g: Game, c: { X: number; Y: number }, zooms: number[], done: (r: Record<string, unknown>[]) => void) {
-  const gc = g.ground as unknown as { setRiverSwamp?: (on: boolean) => void; invalidateAll(): void; bakeAB?: (kind: 'g' | 'm', reps: number) => Promise<{ on: number[]; off: number[] }> }, out: Record<string, unknown>[] = [];
+  const gc = g.ground as unknown as { setRiverSwamp?: (on: boolean) => void; invalidateAll(): void; bakeAB?: (kind: 'g' | 'm', reps: number, cold?: boolean) => Promise<{ on: number[]; off: number[] }> }, out: Record<string, unknown>[] = [];
   // (the branch: each worker paints its last bakes again with the river's swamp on and off by turns, only the paint timed: bakeABStage)
   if (gc.bakeAB) { bakeABStage(g, c, zooms, gc.bakeAB.bind(gc), done); return; }
   const runs: { z: number; swamp: boolean | null }[] = [], REPS = 3;
@@ -319,7 +319,7 @@ function frameStage(g: Game, follow: (s: number) => { X: number; Y: number }, do
 /** T265: the swamp's bake check on the branch: at each zoom, over the river (the camera still at c) 3.5 s for the view's chunks to be baked,
  *  (the view baked again), then every worker paints its last bakes of that tier again three times, the river's swamp on and off by turns (GroundCache bakeAB: one
  *  worker, one chunk, back to back, so the PC's other load falls alike on both); the paints' median, p95 and mean, on and off */
-function bakeABStage(g: Game, c: { X: number; Y: number }, zooms: number[], ab: (kind: 'g' | 'm', reps: number) => Promise<{ on: number[]; off: number[] }>, done: (r: Record<string, unknown>[]) => void) {
+function bakeABStage(g: Game, c: { X: number; Y: number }, zooms: number[], ab: (kind: 'g' | 'm', reps: number, cold?: boolean) => Promise<{ on: number[]; off: number[] }>, done: (r: Record<string, unknown>[]) => void) {
   const out: Record<string, unknown>[] = [];
   const stats = (a: number[]) => { const s = [...a].sort((p, q) => p - q), q = (p: number) => s[Math.min(s.length - 1, Math.floor(p * s.length))] ?? 0; return { paints: s.length, medianMs: +q(0.5).toFixed(2), p95Ms: +q(0.95).toFixed(2), avgMs: +(s.reduce((p, v) => p + v, 0) / Math.max(1, s.length)).toFixed(2) }; };
   let k = 0, t = 0;
@@ -330,11 +330,13 @@ function bakeABStage(g: Game, c: { X: number; Y: number }, zooms: number[], ab: 
       t += dt; if (!fresh && t > 0.5) { fresh = true; g.ground.invalidateAll(); } // (the view baked again at this zoom: the workers' last bakes are its chunks)
       if (asked || t < 4.5) return;
       asked = true; const kind = g.perf.tier === 'district' ? 'm' : 'g';
-      void ab(kind, 3).then(r => {
+      // (warm: the bands' alphas kept from the chunk's last bake, as an edit's or another level's bake finds them; cold: made again, a first bake's)
+      const one = (cold: boolean) => ab(kind, 3, cold).then(r => {
         // (and the paired difference: each chunk's paint with the swamp less the same chunk's without, back to back; its median)
-        const on = stats(r.on), off = stats(r.off), d = r.on.map((v, i) => v - r.off[i]!).sort((p, q) => p - q), dm = d.length ? d[d.length >> 1]! : 0;
-        out.push({ stage: `bake ${Math.round(z * 100)}% (${kind}) river swamp on`, ...on }, { stage: `bake ${Math.round(z * 100)}% (${kind}) river swamp off`, ...off, medianDeltaMs: +(on.medianMs - off.medianMs).toFixed(2), pairedMedianDeltaMs: +dm.toFixed(2) }); k++; next();
+        const on = stats(r.on), off = stats(r.off), d = r.on.map((v, i) => v - r.off[i]!).sort((p, q) => p - q), dm = d.length ? d[d.length >> 1]! : 0, tag = `bake ${Math.round(z * 100)}% (${kind}${cold ? ', cold' : ''})`;
+        out.push({ stage: `${tag} river swamp on`, ...on }, { stage: `${tag} river swamp off`, ...off, medianDeltaMs: +(on.medianMs - off.medianMs).toFixed(2), pairedMedianDeltaMs: +dm.toFixed(2) });
       });
+      void one(true).then(() => one(false)).then(() => { k++; next(); });
     };
   };
   next();

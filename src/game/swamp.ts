@@ -135,6 +135,10 @@ const bilerp = (a: number, b: number, c: number, d: number, tx: number, ty: numb
 /** a lattice point's key in a cache */
 const latKey = (i: number, j: number) => (i + 8192) * 32768 + j + 8192;
 const CACHE_MAX = 1 << 18;
+/** T265: the band alphas a field keeps (SwampField alpha: the last chunks', 40-60 KB each) */
+const ALPHA_MEMO = 48;
+/** a band's cover over a tile box (SwampField alpha) */
+export interface BandAlpha { data: Uint8ClampedArray; W: number; H: number; box: [number, number, number, number] }
 const NONE: readonly number[] = [];
 
 /** segment records: ax ay bx by (tiles), the half widths at a and b, then the box (grown by the widest half width, SOFT_OUT and the soft
@@ -256,8 +260,19 @@ export class SwampField {
    *  (x0 + (u + 0.5) / res, y0 + (v + 0.5) / res), as terrain-paint.ts classAlpha), with the tile box it covers; null when none. The soft
    *  distance and the reach on the tile lattice over the box, the rag on the half-tile lattice only where the band can reach; a district chunk
    *  (res under 2: a tile is a few px) on lattices twice as coarse */
-  alpha(x0: number, y0: number, w: number, h: number, res: number): { data: Uint8ClampedArray; W: number; H: number; box: [number, number, number, number] } | null {
+  alpha(x0: number, y0: number, w: number, h: number, res: number): BandAlpha | null {
     if (this.empty) return null;
+    // (T265: a pure function of the box: kept for the chunk's next bake, an edit's or another level's; the caller never writes into it)
+    const key = `${x0},${y0},${w},${h},${res}`;
+    if (this.memo.has(key)) { const v = this.memo.get(key)!; this.memo.delete(key); this.memo.set(key, v); return v; }
+    const v = this.bake(x0, y0, w, h, res); this.memo.set(key, v);
+    if (this.memo.size > ALPHA_MEMO) this.memo.delete(this.memo.keys().next().value!);
+    return v;
+  }
+  /** T265: the alphas kept (alpha), dropped: the bench's cold bake check */
+  clearMemo() { this.memo.clear(); }
+  private memo = new Map<string, BandAlpha | null>();
+  private bake(x0: number, y0: number, w: number, h: number, res: number): BandAlpha | null {
     const L = this.look, OUT = L.out, k2 = res >= 2 ? 1 : 2, st = res >= 2 ? L.latStep : L.farStep, gs = L.ragStep * k2;
     const i0 = Math.floor(x0 / st), j0 = Math.floor(y0 / st), ni = Math.floor((x0 + w) / st) - i0 + 2, nj = Math.floor((y0 + h) / st) - j0 + 2;
     const list = this.near(i0 * st, j0 * st, (i0 + ni - 1) * st, (j0 + nj - 1) * st); if (!list.length) return null;

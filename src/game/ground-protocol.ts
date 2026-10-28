@@ -201,7 +201,7 @@ export type ToWorker =
   | { t: 'riverSwamp'; on: boolean }
   /** T265, the bench (bench.ts bakeAB): the worker's last few bakes of this kind painted again reps times, the river's swamp on and off by
    *  turns, each paint timed (the worker answers with bakeAB) */
-  | { t: 'bakeAB'; kind: 'g' | 'm'; reps: number }
+  | { t: 'bakeAB'; kind: 'g' | 'm'; reps: number; cold?: boolean }
   /** T262: the grass shine on (the default: each bake makes its weight mask) or off (none, the ground as before), and its weights per surface
    *  group (grass-shine.ts); every chunk is baked again */
   | { t: 'grassShine'; on: boolean; weights: ShineWeights }
