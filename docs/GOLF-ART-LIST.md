@@ -53,7 +53,7 @@ stays a Studio option. Ground textures follow [art/GROUND-TEXTURE-METHOD.md](art
 | Greenkeeping conditions (section 10) | after the course surfaces |
 
 ### The concept look (section 12)
-The owner's target picture, 2026-10-27: items 149-175. ✅ 153 lawn on every yard (#663); 🎨 153 meadow and 152 rough in the Studio; ⏳ 149-151 being made. Ground textures 149-153 come first: the concept's greens. The plan is in [art/CONCEPT-LOOK.md](art/CONCEPT-LOOK.md).
+The owner's target picture, 2026-10-27: items 149-175. ✅ 153 lawn on every yard (#663); 🎨 153 meadow and 152 rough in the Studio; ✅ 149-151 the fairway, first cut and green on the course and the range (#666). Ground textures 149-153 come first: the concept's greens. The plan is in [art/CONCEPT-LOOK.md](art/CONCEPT-LOOK.md).
 
 ### List items done
 Ground (section 8 and the range ground): ✅ 131 Pond bank, ✅ 132 Grow-in, ✅ 135 Flower bed soil (#630); 🎨 133 Field parking, 🎨 21 range tee divots (#630, in the Studio, no ground wears them yet); 130 Pond water skipped (the lake is in). 134 Event matting deferred (quilting would break its panel grid). 🎨 19 the hitting mat (top-down, made, not drawn yet); 20, 27, 147 retakes next. The range and practice sprites still draw labelled stand-ins.
@@ -681,12 +681,12 @@ Make these by [art/GROUND-TEXTURE-METHOD.md](art/GROUND-TEXTURE-METHOD.md): RUN 
 sliced and tiles 2-4 are quilted. Add the concept as RUN's style reference, and ask for its colours: "repaint the [area] as [the item],
 in the colours, light and painted style of the second picture". The game draws mowing bands, leaves and edges itself: paint plain turf.
 
-**149. Concept fairway grass** · ground · P1. Lush, saturated mid-green, closely mown, a very fine even grain, warm golden-hour light; NO
+✅ **149. Concept fairway grass** (`fairway-concept-run` v2 on the fairway and the range outfield, #666) · ground · P1. Lush, saturated mid-green, closely mown, a very fine even grain, warm golden-hour light; NO
 mowing stripes painted in. For the fairway and the range outfield. Codex has a fairway job: keep whichever set matches the concept.
 
-**150. Concept first cut** · ground · P1. The collar: a little darker and a touch longer than 149, the same green family.
+✅ **150. Concept first cut** (`first-cut-concept-run` v2 on the first cut and the collar round greens, #666) · ground · P1. The collar: a little darker and a touch longer than 149, the same green family.
 
-**151. Concept green** · ground · P1. The smoothest, finest and brightest turf; for the greens and the range's target greens.
+✅ **151. Concept green** (`green-concept-run` v3 on the greens and the range targets, #666; its MID is provisional: RUN refused the MID edits) · ground · P1. The smoothest, finest and brightest turf; for the greens and the range's target greens.
 
 🎨 **152. Concept rough** (`rough-concept-run`, in Studio › Painted; the owner's rough stays on the course) · ground · P1. A deeper green, longer grass in soft clumps, a few fallen autumn leaves. Green, not gold.
 
