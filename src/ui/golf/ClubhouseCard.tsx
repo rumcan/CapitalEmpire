@@ -4,6 +4,7 @@
 // top bar's Club chip.
 import type { ClubCardView } from '../../game/golf/everyday';
 import { Icon } from '../Icon';
+import { WALK_SERVE_M, lotsLine } from '../../game/golf/walkserve';
 
 const money = (n: number) => '$' + Math.round(n).toLocaleString();
 /** a game minute of the day as 07:40 */
@@ -33,6 +34,8 @@ export function ClubhouseCard({ view, onClose, right = 'right-3' }: { view: Club
         <Tile label="Next tee" value={t.next !== null ? clock(t.next) : '—'} sub={t.next !== null ? 'tee time' : 'all out'} />
         <Tile label="Waits" value={t.waiting > 0 ? `${t.waiting} now` : 'none now'} sub={`${mins(t.waitAvg)} a group`} tone={t.waitAvg >= 15 ? 'text-rose-300' : t.waitAvg >= 5 ? 'text-amber-200' : 'text-white'} testid="club-waits" title={`Groups waiting on the group ahead now; the waits so far today, per group teed off (the longest: ${mins(t.worst)})`} />
       </div>
+      {/* T237: the car parks within walking distance of the door (golf/walkserve.ts) */}
+      {view.lots && <div className={`rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-xs ${view.lots.length ? 'text-slate-300' : 'font-semibold text-rose-300'}`} data-testid="club-lots" title={`A car park serves the clubhouse when its nearest bay is within ${WALK_SERVE_M} m of walking (about 2 minutes) of the door; car parks further away add no bays`}>{lotsLine(view.lots)}</div>}
       <div className="text-[12px] uppercase text-slate-400">This season</div>
       <div className="rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-xs" data-testid="club-season">
         <div className="flex items-center justify-between"><span className="text-slate-300">Rounds: <span className="font-semibold text-white">{s.members.toLocaleString()}</span> members · <span className="font-semibold text-white">{s.visitors.toLocaleString()}</span> visitors</span><span className="text-slate-400">{s.days} {s.days === 1 ? 'day' : 'days'}</span></div>
