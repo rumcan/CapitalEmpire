@@ -18,6 +18,8 @@ export interface SeedLook { cols: readonly string[]; cover: number; len: number;
 export const SEED_LOOKS: Readonly<Record<number, SeedLook>> = {
   [SURF.rough]: { cols: ['#4e6a2c', '#5a7834', '#43602a'], cover: 0.24, len: 0.7, wid: 0.18, rows: 0 },
   [SURF.fescue]: { cols: ['#b9a75e', '#c8b870', '#a8964f'], cover: 0.24, len: 0.8, wid: 0.15, rows: 0 },
+  // T238: the long grass comes up as the rough does, its tufts longer and a shade darker
+  [SURF.longGrass]: { cols: ['#4a6428', '#566f30', '#3f5a26'], cover: 0.24, len: 0.85, wid: 0.18, rows: 0 },
   [SURF.fairway]: { cols: ['#6c9f3a', '#7aae44', '#5f9034'], cover: 1.15, len: 0.36, wid: 0.09, rows: 0.2 },
   [SURF.tee]: { cols: ['#a3c24c', '#b2cf5a', '#93b343'], cover: 1.2, len: 0.22, wid: 0.1, rows: 0 },
   [SURF.green]: { cols: ['#3f9b4b', '#4cab57', '#348b40', '#2a7535'], cover: 1.4, len: 0.18, wid: 0.09, rows: 0 },

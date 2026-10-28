@@ -18,21 +18,19 @@
  * each edge point; where a segment's two ends disagree it is sampled along and cut where the kind changes. Every value at a point depends
  * only on that point and the global grid, and a chunk cut point lies on its uncut segment, so the walls of two chunks meet exactly at their
  * border. Pure TypeScript, no DOM, deterministic. Units: tiles of 2 m for positions; metres for heights. */
-import { CELL_T, SURF, type Grid } from '../course-grid';
+import { CELL_T, N_SURF, SURF, SURF_ORDER, surfAbove, type Grid } from '../course-grid';
 import { BLOB_STYLE, ISO_T, coverField, type BlobStyle, type CellCover, type SurfaceOutline } from '../course-blobs';
 import { SUN_LIGHT, SUN_TILE_DIR } from '../course-height';
 
 const { water: WATER, fairway: FAIRWAY, tee: TEE, bunker: BUNKER, green: GREEN } = SURF;
-/** the number of surface ids (0..8) */
-const N_SURF = Object.keys(SURF).length;
 
 /** each surface id's height in metres above the map grass (the owner's terraces, tuned by eye at 30% and 15% zoom): water -0.8, bunker sand
  *  -0.6, rough and fescue 0, fairway +0.05, tee +0.6 (T127, the owner 2026-10-25: "make the tee higher like as high as bunkers are deep"),
- *  waste 0, green +0.25. A tee's and a green's can be set with the Height slider (HEIGHT_RANGE, surfHeights) */
-export const SURF_HEIGHT: readonly number[] = [0, 0, 0, -0.8, 0.05, 0.6, -0.6, 0, 0.25];
+ *  waste 0, green +0.25, long grass 0 (T238). A tee's and a green's can be set with the Height slider (HEIGHT_RANGE, surfHeights) */
+export const SURF_HEIGHT: readonly number[] = [0, 0, 0, -0.8, 0.05, 0.6, -0.6, 0, 0.25, 0];
 /** the Height slider's range per surface id, metres (T127): a tee from a low grass bank to a tall rock face, a green from a hint to a high
  *  bank; null: the surface's height is fixed */
-export const HEIGHT_RANGE: readonly (readonly [number, number] | null)[] = [null, null, null, null, null, [0.15, 1.6], null, null, [0.05, 0.8]];
+export const HEIGHT_RANGE: readonly (readonly [number, number] | null)[] = [null, null, null, null, null, [0.15, 1.6], null, null, [0.05, 0.8], null];
 /** SURF_HEIGHT with the Height slider's settings (metres by surface id; clamped to HEIGHT_RANGE; a missing or bad entry, or a surface with a
  *  fixed height, keeps the default) */
 export function surfHeights(over?: readonly (number | undefined)[]): readonly number[] {
@@ -91,24 +89,27 @@ export const collarOnTop = (name: string) => name === 'fringe' || name === 'firs
 export const isOverlay = (code: number, styles: readonly BlobStyle[] = BLOB_STYLE) => (code & 1) === 1 && !collarOnTop(styles[code >> 1]?.collar?.name ?? '');
 
 /** the surface after whose fill the collar of surface s is drawn: s itself (the collar goes just before it) unless the collar lies over a
- *  higher surface (the bunker's grass lip over a green), then the highest one it lies over */
+ *  higher surface (the bunker's grass lip over a green), then the highest one it lies over (course-grid's draw order, SURF_ORDER) */
 export function collarAfter(s: number, styles: readonly BlobStyle[] = BLOB_STYLE): number {
   let m = s;
-  for (const t of styles[s]?.collar?.over ?? []) if (t > m && t < N_SURF) m = t;
+  for (const t of styles[s]?.collar?.over ?? []) if (t < N_SURF && surfAbove(t, m)) m = t;
   return m;
 }
-/** the renderer's draw order of the layer codes (drawCourses): for each surface 1..8, its collar (unless laid after a higher surface), the
- *  surface's fill, then the collars laid over it */
+/** the renderer's draw order of the layer codes (drawCourses): for each surface in course-grid's draw order (SURF_ORDER), its collar
+ *  (unless laid after a higher surface), the surface's fill, then the collars laid over it */
 export function drawOrder(styles: readonly BlobStyle[] = BLOB_STYLE): number[] {
-  const out: number[] = [];
-  for (let s = 1; s < N_SURF; s++) {
+  const out: number[] = [], seen: number[] = [];
+  for (const s of SURF_ORDER) {
+    if (!s) continue;
     if (styles[s]?.collar && collarAfter(s, styles) === s) out.push(layerCode(s, true));
     out.push(layerCode(s, false));
-    for (let t = 1; t < s; t++) if (styles[t]?.collar && collarAfter(t, styles) === s) out.push(layerCode(t, true));
+    for (const t of seen) if (styles[t]?.collar && collarAfter(t, styles) === s) out.push(layerCode(t, true));
+    seen.push(s);
   }
   return out;
 }
-/** the default draw order (BLOB_STYLE): rough, fescue, bank, water, first cut, fairway, first cut, tee, bunker, waste, fringe, green, lip */
+/** the default draw order (BLOB_STYLE): rough, long grass, fescue, bank, water, first cut, fairway, first cut, tee, bunker, waste, fringe,
+ *  green, lip */
 export const DRAW_ORDER: readonly number[] = drawOrder();
 
 /** a wall's material, from the ground it drops to: turf (a raised green's or tee's grassy bank), sand (a bunker's cut face), water (a pond's
@@ -577,8 +578,8 @@ export const STAIR_RISE = 0.2, STAIR_TREAD = 0.32;
 export const stairSteps = (dh: number) => Math.max(2, Math.round(dh / STAIR_RISE));
 /** the most cells a tee box has (a bigger patch of tee gets no stairs; it also bounds the flood fill) */
 const STAIR_MAX_CELLS = 6000;
-/** the ground a tee's stairs may come down onto: flat (map grass, rough, fescue, fairway, waste), never a bunker, a pond or a green */
-const FLAT_FOOT = new Set<number>([0, SURF.rough, SURF.fescue, FAIRWAY, SURF.waste]);
+/** the ground a tee's stairs may come down onto: flat (map grass, rough, long grass, fescue, fairway, waste), never a bunker, a pond or a green */
+const FLAT_FOOT = new Set<number>([0, SURF.rough, SURF.longGrass, SURF.fescue, FAIRWAY, SURF.waste]);
 
 /** the stairs of every tee box with a cell in box (tiles x0, y0, x1, y1; its whole connected patch of tee cells counts, even past the box,
  *  so every chunk a tee touches gives the same stairs). paths: the cart paths and drives as flat segments ax, ay, bx, by (tiles). A tee

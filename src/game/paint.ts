@@ -4,7 +4,7 @@ import { isPhotoTex, type GrassTex } from './grass-art';
 import { PRESETS, presetTex, surfacePreset } from './paint-presets';
 
 /** the fill textures a painted area can take (the ground textures the roads and sidewalks already use, and the photo textures of grass-art.ts PHOTO_TEX) */
-export type PaintTex = 'paving' | 'slabs' | 'pad' | 'asphalt' | 'asphaltDark' | 'asphaltWorn' | 'lotAsphalt' | 'roadgravel' | 'gravel' | 'dirt' | 'rockyDirt' | 'rockyDirtAlt' | 'field' | 'grass' | 'bunkerSand' | 'wasteSand' | 'pineStraw' | 'barkMulch' | 'spectatorPath' | 'woodChips' | 'grassDry' | 'asphaltPatched' | 'chipSeal' | 'concreteStained' | 'concreteCracked' | 'concreteOld' | 'concreteWeathered' | 'waterDark' | 'waterDeep' | 'waterClear' | GrassTex | `preset:${string}`;
+export type PaintTex = 'paving' | 'slabs' | 'pad' | 'asphalt' | 'asphaltDark' | 'asphaltWorn' | 'lotAsphalt' | 'roadgravel' | 'gravel' | 'dirt' | 'rockyDirt' | 'rockyDirtAlt' | 'field' | 'grass' | 'bunkerSand' | 'wasteSand' | 'golfLongGrass' | 'pineStraw' | 'barkMulch' | 'spectatorPath' | 'woodChips' | 'grassDry' | 'asphaltPatched' | 'chipSeal' | 'concreteStained' | 'concreteCracked' | 'concreteOld' | 'concreteWeathered' | 'waterDark' | 'waterDeep' | 'waterClear' | GrassTex | `preset:${string}`;
 /** a border's texture: any fill texture, or the kerb */
 export type BorderTex = PaintTex | 'kerb';
 /** the border width as a step on a continuous scale (the owner, 2026-10-25: "should be a slider"): 0 none, 1 small, 2 medium, 3 large (the
@@ -27,7 +27,7 @@ export interface PaintArea { id: number; pts: number[]; tex: PaintTex; scale: nu
 /** an area's draw order on the ground (higher draws over lower): the player's order, else its brush layer's band and then its id (the order made) */
 export const drawZ = (a: { order?: number; kind?: BrushKind; id: number }) => a.order ?? (a.kind ? BRUSH_LAYER[a.kind] * 1e6 : 0) + a.id;
 /** the golf brush's kinds: the areas a stroke paints (BRUSH_PRESETS) */
-export type BrushKind = 'rough' | 'water' | 'fairway' | 'tee' | 'bunker' | 'green' | 'path' | 'waste';
+export type BrushKind = 'rough' | 'water' | 'fairway' | 'tee' | 'bunker' | 'green' | 'path' | 'waste' | 'longGrass';
 /** the save tuple: [tex, scale, angle, border, btex, pts, radius, tone, toneAmt, tint, hole, kind, plantKind, plantedMonth, bscale, bangle, btone, btoneAmt, btint];
  *  elements 6 to 9 are optional on load (older saves have no radius, and none has no tone: they load sharp and untoned); 10 and 11 (the hole and the brush kind) are
  *  written when anything after them is (as 0 and '' when absent, no tag on load); 12 and 13 (seed or sod, the month) when the area has a plantKind or a border style
@@ -37,7 +37,7 @@ export type BrushKind = 'rough' | 'water' | 'fairway' | 'tee' | 'bunker' | 'gree
  *  before it is written too); toTuple writes ten, twelve, fourteen, nineteen, twenty-three, twenty-four or twenty-five */
 export type PaintTuple = [string, number, number, number, string, number[], number?, number?, number?, string?, number?, string?, string?, number?, number?, number?, number?, number?, string?, string?, number?, number?, number?, (number | null)?, number?];
 /** the draw order layer of each brush kind (a patch's z is layer * 1e6 + id, so a later kind paints over an earlier one) */
-export const BRUSH_LAYER: Record<BrushKind, number> = { rough: 1, water: 2, fairway: 3, tee: 4, bunker: 5, green: 6, path: 7, waste: 5 };
+export const BRUSH_LAYER: Record<BrushKind, number> = { rough: 1, water: 2, fairway: 3, tee: 4, bunker: 5, green: 6, path: 7, waste: 5, longGrass: 1.5 };
 const BRUSH_KIND_IDS = new Set<string>(Object.keys(BRUSH_LAYER));
 /** a tile box [x0, y0, x1, y1] */
 export type PaintBox = [number, number, number, number];
@@ -78,6 +78,7 @@ export const PAINT_TEXES: { id: PaintTex; name: string; col: string }[] = [
   { id: 'golfFescue', name: 'Fescue', col: '#6a6235' },
   { id: 'bunkerSand', name: 'Bunker sand', col: '#ddcfbe' },
   { id: 'wasteSand', name: 'Waste sand', col: '#b5976f' },
+  { id: 'golfLongGrass', name: 'Long grass', col: '#4c5a22' },
   { id: 'pineStraw', name: 'Pine straw', col: '#9a5a34' },
   { id: 'barkMulch', name: 'Bark mulch', col: '#513d33' },
   { id: 'spectatorPath', name: 'Spectator path', col: '#90865f' },
@@ -316,7 +317,7 @@ const S = (surface: string, old: PaintTex): PaintTex => surfacePreset(surface) ?
  *  lays as the brushes' dark water) */
 const COURSE_SURFACE_OF: Record<string, [string, PaintTex]> = {
   golfFairway: ['fairway', 'golfFairway'], golfFirstCut: ['firstCut', 'golfFirstCut'], golfFringe: ['fringe', 'golfFringe'], golfGreen: ['green', 'golfGreen'],
-  golfTee: ['tee', 'golfTee'], golfRough: ['rough', 'golfRough'], bunkerSand: ['bunker', 'bunkerSand'], waterDark: ['water', 'waterDark'], waterClear: ['water', 'waterDark'],
+  golfTee: ['tee', 'golfTee'], golfRough: ['rough', 'golfRough'], golfLongGrass: ['longGrass', 'golfLongGrass'], bunkerSand: ['bunker', 'bunkerSand'], waterDark: ['water', 'waterDark'], waterClear: ['water', 'waterDark'],
 };
 /** a course texture as the brushes lay it: the owner's preset for its golf surface, else the brushes' photo, so a placed piece and a brush stroke
  *  of the same surface always match (the owner, 2026-10-24: the pieces laid a blocky old fairway photo the brushes never use) */
@@ -333,6 +334,11 @@ export const BRUSH_PRESETS: { kind: BrushKind; name: string; r: number; style: O
   // priced like a bunker (golf/costs.ts) and played as sand (golf/play)
   { kind: 'waste', name: 'Waste area', r: 3, style: clampStyle({ ...DEFAULT_STYLE, tex: S('waste', 'wasteSand'), border: 0 }) },
   { kind: 'path', name: 'Cart path', r: 1, style: clampStyle({ ...DEFAULT_STYLE, tex: S('path', 'asphalt'), border: 0 }) },
+  // T238 (the owner, 2026-10-28: "the current course rough being a long grass option the player can add"): Long grass, the course grid's
+  // long grass surface, wearing the owner's rough paintings (Painted › Long grass: rough-owner) now the rough wears the town lawns' grass
+  // (#696). Key 9, the next free key after the cart path; drawn between the rough and the fescue, priced like the rough (golf/costs.ts) and
+  // played as heavy rough, the deep grass lie (golf/play)
+  { kind: 'longGrass', name: 'Long grass', r: 6, style: clampStyle({ ...DEFAULT_STYLE, tex: S('longGrass', 'golfLongGrass'), border: 0 }) },
 ];
 
 /** the textures the Course tool's brushes lay (fills and borders): the ground workers make them ahead when the tool opens (T168) */

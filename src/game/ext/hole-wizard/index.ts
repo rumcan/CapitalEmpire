@@ -304,7 +304,7 @@ export class HoleWizard {
   start(hole: number): void {
     this.step = 'tee'; this.hole = hole; this.plan = null; this.base = null; this.tee = null;
     this.hover = null; this.drag = null; this.lineHole = 0; this.turnOff = 0;
-    this.past = []; this.future = []; this.pending = null;
+    this.past = []; this.future = []; this.dropped = 0; this.pending = null;
   }
   /** a new game or a load (the owner's test, 2026-10-25: the last game's "New hole 10" and its plan stayed on screen): everything the
    *  wizard held goes (the plan, the built plan being edited, the ripple, the pointer, the cached ghost, handles and geometries) and it
@@ -387,7 +387,9 @@ export class HoleWizard {
   private snap(label: string): WizSnap {
     return { step: this.step, tee: this.tee && { ...this.tee }, plan: this.plan && clonePlan(this.plan), turnOff: this.turnOff, label };
   }
-  private push(s: WizSnap): void { this.past.push(s); if (this.past.length > HISTORY_MAX) this.past.shift(); this.future = []; }
+  private push(s: WizSnap): void { this.past.push(s); if (this.past.length > HISTORY_MAX) { this.past.shift(); this.dropped++; } this.future = []; }
+  /** the steps the history cap let go (depth keeps counting past it) */
+  private dropped = 0;
   private restore(s: WizSnap): void {
     this.step = s.step; this.tee = s.tee && { ...s.tee }; this.plan = s.plan && { ...clonePlan(s.plan), hole: this.hole }; this.turnOff = s.turnOff;
     this.hover = null; this.drag = null; this.pending = null;
@@ -410,6 +412,8 @@ export class HoleWizard {
   get redoLabel(): string { return this.future[this.future.length - 1]?.label ?? ''; }
   /** whether the wizard has something on screen (a tee, a plan, or a built plan open): Ctrl+Z then stays in the wizard */
   get busy(): boolean { return this.step !== 'tee' || !!this.base; }
+  /** how many of its own steps undo can take back (T238: Edit hole's paint strokes are ordered against them) */
+  get depth(): number { return this.past.length + this.dropped; }
 
   /**
    * Esc (P23 4.4): one stage back. A drag in hand is dropped (the plan as it was before it); shaping goes back to the green step with the tee

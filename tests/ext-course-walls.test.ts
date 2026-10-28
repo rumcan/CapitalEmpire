@@ -43,7 +43,8 @@ function facing(w: WallRun): number {
 const length = (ws: readonly WallRun[]) => ws.reduce((s, w) => { const q = pts(w); for (let i = 0; i + 1 < q.length; i++) s += Math.hypot(q[i + 1]!.x - q[i]!.x, q[i + 1]!.y - q[i]!.y); return s; }, 0);
 
 test('1. the draw order and the heights', () => {
-  assert.deepEqual(DRAW_ORDER, [code(ROUGH, false), code(FESCUE, false), code(WATER, true), code(WATER, false), code(FAIRWAY, true), code(FAIRWAY, false), code(TEE, true), code(TEE, false), code(BUNKER, false), code(SURF.waste, false), code(GREEN, true), code(GREEN, false), code(BUNKER, true)]);
+  // T238: the long grass (id 9) draws between the rough and the fescue
+  assert.deepEqual(DRAW_ORDER, [code(ROUGH, false), code(SURF.longGrass, false), code(FESCUE, false), code(WATER, true), code(WATER, false), code(FAIRWAY, true), code(FAIRWAY, false), code(TEE, true), code(TEE, false), code(BUNKER, false), code(SURF.waste, false), code(GREEN, true), code(GREEN, false), code(BUNKER, true)]);
   assert.equal(collarAfter(BUNKER), GREEN, "the bunker's lip is laid after the green");
   assert.ok(SURF_HEIGHT[WATER]! < SURF_HEIGHT[BUNKER]! && SURF_HEIGHT[BUNKER]! < 0 && SURF_HEIGHT[ROUGH] === 0 && SURF_HEIGHT[FAIRWAY]! > 0 && SURF_HEIGHT[FAIRWAY]! < SURF_HEIGHT[GREEN]! && SURF_HEIGHT[GREEN]! < SURF_HEIGHT[TEE]!, 'water < bunker < rough < fairway < green < tee');
   assert.ok(faceLight(-0.17, -0.99) > 0.95 && faceLight(0.17, 0.99) < 0.05, 'a face toward the upper right is lit, one toward the lower left in shade');

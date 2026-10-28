@@ -118,6 +118,20 @@ button.stat-chip:hover { background: rgba(255, 255, 255, 0.06); }
 .rail-lock { position: absolute; right: 0.3rem; top: 0.2rem; color: var(--muted); }
 .rail-new { position: absolute; right: 0.1rem; top: 0.1rem; }
 .rail-heading { padding-top: 0.2rem; text-align: center; font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+/* T250 (#721): Bulldoze set off from the Course groups above it in the course drawer */
+.rail-sep { height: 1px; margin: 0.1rem 0.45rem; background: var(--line); }
+/* T250 (#721): the town footer (TownFooter.tsx): a slim bar along the bottom, its groups as the rail's buttons with the icon beside the name;
+   compact (icons only, the names in the tooltip) where the full bar would cover a bottom card; its heading, TOWN, at its left (compact: on
+   its side). One height in both forms, so the controls above it (--foot-top) never jump */
+:root { --foot-top: 0px; }
+.rail-foot { display: flex; align-items: center; gap: 0.25rem; width: max-content; padding: 0.25rem 0.3rem; }
+.rail-tab.rail-tab-foot { flex-direction: row; gap: 0.45rem; width: auto; height: 42px; padding: 0 0.8rem 0 0.55rem; font-size: 13px; white-space: nowrap; }
+.rail-tab.rail-tab-foot img { width: 24px; height: 24px; }
+.rail-foot-compact .rail-tab.rail-tab-foot { width: 46px; padding: 0; justify-content: center; }
+.rail-heading.rail-heading-foot { padding: 0 0.3rem 0 0.4rem; }
+.rail-foot-compact .rail-heading.rail-heading-foot { padding: 0; writing-mode: vertical-rl; transform: rotate(180deg); font-size: 10px; letter-spacing: 0.1em; line-height: 1; }
+/* a bottom card the footer cannot stand clear of moves up above it (footer-layout.ts: the last resort, a crowded screen) */
+[data-foot-lift] { bottom: calc(var(--foot-top, 0px) + 0.5rem) !important; }
 .new-badge { display: inline-block; border-radius: 999px; background: linear-gradient(#ffd166, #f0a91e); padding: 0 0.3rem; font-size: 9px; font-weight: 800; letter-spacing: 0.04em; line-height: 14px; color: #1b1406; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4); }
 @media (max-height: 799px) {
   .rail-tab { height: clamp(42px, calc((100vh - var(--hud-top, 5.75rem) - 222px) / 9), 52px); gap: 0.1rem; }
@@ -211,6 +225,8 @@ button.stat-chip:hover { background: rgba(255, 255, 255, 0.06); }
 /* T193 (#502): the toolbar's cascading flyouts (Flyouts.tsx): columns to the right of the rail, each a menu of rows; text wraps and a long list
    scrolls vertically only (the owner: no horizontal sliders) */
 .flyouts { position: absolute; top: 0; display: flex; align-items: flex-start; gap: 6px; z-index: 30; pointer-events: none; }
+/* T250: the town footer's flyouts open upward: the box stands on the footer, as tall as the room up to the top bar (Flyouts.tsx sets it) */
+.flyouts-up { top: auto; bottom: calc(100% + 8px); }
 .flyout { position: relative; pointer-events: auto; display: flex; flex-direction: column; gap: 2px; padding: 6px; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; }
 .flyout-row { display: flex; align-items: center; gap: 0.55rem; width: 100%; min-width: 0; text-align: left; border-radius: 0.6rem; border: 1px solid transparent; padding: 0.42rem 0.5rem; font-size: 13px; line-height: 1.25; color: var(--ink); white-space: normal; overflow-wrap: anywhere; }
 .flyout-row:hover, .flyout-row:focus-visible { background: rgba(255, 255, 255, 0.07); outline: none; }

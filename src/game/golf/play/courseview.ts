@@ -9,8 +9,9 @@ import type { CourseView, Lie, PlayHole } from './types';
 const PLAYED = 18;
 /** a point with no surface is out of bounds when it is farther than this from every played line (tiles: 40 tiles, 80 m) */
 const OUT_TILES = 40;
-/** the lie each golf surface plays as: the fringe and the first cut play as fairway, the waste area as sand; paths and other paint as rough */
-const LIE: Record<GolfSurface, Lie> = { green: 'green', fringe: 'fairway', tee: 'tee', fairway: 'fairway', firstCut: 'fairway', rough: 'rough', fescue: 'fescue', bunker: 'bunker', waste: 'bunker', water: 'water', path: 'rough', other: 'rough' };
+/** the lie each golf surface plays as: the fringe and the first cut play as fairway, the waste area as sand, the long grass as heavy rough (T238: the
+ *  deep grass lie, worse than the rough); paths and other paint as rough */
+const LIE: Record<GolfSurface, Lie> = { green: 'green', fringe: 'fairway', tee: 'tee', fairway: 'fairway', firstCut: 'fairway', rough: 'rough', longGrass: 'fescue', fescue: 'fescue', bunker: 'bunker', waste: 'bunker', water: 'water', path: 'rough', other: 'rough' };
 
 /** the distance (tiles) from (x, y) to the nearest point of the polyline line (infinite for a line with no segment) */
 function lineDist(line: Pt[], x: number, y: number): number {

@@ -1,0 +1,346 @@
+{
+  "schema": 1,
+  "material": "putting-green",
+  "zoom": "far",
+  "status": "exported-file-contract-only-visual-review-required",
+  "source": {
+    "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v1/master.native-crop.png",
+    "sha256": "96a179b15d6ab381625ef85f601787ad351c2d897d6490afbb3f8f39da61b51e",
+    "pixelSha256": "d01d3a3f983353c982f97da4af78ab1180e2a01dc94424ffcafdea83e18eef6e",
+    "dimensions": [
+      1742,
+      902
+    ]
+  },
+  "crop": {
+    "left": 0,
+    "top": 0,
+    "width": 1742,
+    "height": 902,
+    "removedRightPixels": 0,
+    "removedBottomPixels": 0
+  },
+  "rollPixels": [
+    871,
+    451
+  ],
+  "dimensions": [
+    1742,
+    902
+  ],
+  "collarPixels": 64,
+  "patchSpanPixels": 256,
+  "repairInputs": {
+    "northSouth": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v1/full-north-south-repair-input.png",
+    "westEast": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v1/full-west-east-repair-input.png"
+  },
+  "repairOutputCrops": {
+    "northSouth": {
+      "left": 743,
+      "top": 387,
+      "width": 256,
+      "height": 128
+    },
+    "westEast": {
+      "left": 807,
+      "top": 323,
+      "width": 128,
+      "height": 256
+    }
+  },
+  "smallPatchDiagnosticsOnly": true,
+  "generationRule": "Always edit the FULL scene-sized repair input to preserve apparent grass scale. Small patches are diagnostics/extraction only, never imagegen edit targets.",
+  "processing": "Minimum-error cut paths select either common-master or unique-variant native pixels at unchanged coordinates. Outer collar stays exact. No paint, recolour, blend, noise, mirror or rotation.",
+  "compositeMethod": "minimum-error-cut",
+  "repairContext": "full-frame-bands",
+  "repairs": {
+    "northSouth": {
+      "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v1/full-north-south-repair-v1.raw.png",
+      "sha256": "41dd68f5dd6ee18ca2fa532c2328e32221c1f8a447a37feaf345fb6c12c25917",
+      "pixelSha256": "a02e18d3083a0b976bfb3e4be6e230e26b39eb191dff39c1355a9e53948b7a41",
+      "dimensions": [
+        1742,
+        903
+      ],
+      "explicitCrop": {
+        "left": 743,
+        "top": 387,
+        "width": 256,
+        "height": 128
+      },
+      "fullFrameCrop": {
+        "left": 0,
+        "top": 0,
+        "width": 1742,
+        "height": 902
+      },
+      "processing": "Exact native crop from full-frame AI repair",
+      "fullBandCrop": {
+        "left": 743,
+        "top": 0,
+        "width": 256,
+        "height": 902
+      }
+    },
+    "westEast": {
+      "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v1/full-west-east-repair-v1.raw.png",
+      "sha256": "523c72f0cc6ee4107f5260129fe8e73e7cc47f30c47dd1fd13a4dfd733753b71",
+      "pixelSha256": "51a26c522acdc298ef98eeae5be4055ac7a536c86234e16693ab28e7eb20b038",
+      "dimensions": [
+        1743,
+        902
+      ],
+      "explicitCrop": {
+        "left": 807,
+        "top": 323,
+        "width": 128,
+        "height": 256
+      },
+      "fullFrameCrop": {
+        "left": 0,
+        "top": 0,
+        "width": 1742,
+        "height": 902
+      },
+      "processing": "Exact native crop from full-frame AI repair",
+      "fullBandCrop": {
+        "left": 0,
+        "top": 323,
+        "width": 1742,
+        "height": 256
+      }
+    }
+  },
+  "commonMaster": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v1/common-collar-master.png",
+  "commonMasterPixelSha256": "b6ce2502b5be4355ef9c22d53c878a33d423a73210fea327c403f53987d47b1b",
+  "commonCutPaths": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v1/common-collar-cut-paths.json",
+  "variants": [
+    {
+      "id": "tile-01",
+      "source": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v1/tile-01-v1.raw.png",
+        "sha256": "8dad1ad2faa1b826d50ef86f8e35948132e0d8f9d184e4d64b7a5b80751e7f8b",
+        "pixelSha256": "39f7a6e3dc2b91cbad421ffb654d0b8e97738c0867cdb52df047afc6c6299129",
+        "dimensions": [
+          1742,
+          903
+        ]
+      },
+      "explicitCrop": {
+        "left": 0,
+        "top": 0,
+        "width": 1742,
+        "height": 902
+      },
+      "interiorPixelSha256": "e48f26cef745c7588a662fd5af542361e9c610d4d005398f2b429f6741cbc92d",
+      "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v1/tile-01.png",
+      "pixelSha256": "687715da2562f2e050a238b839d5ad8150c1891fff4483c72bbbeeb6ff670a19",
+      "collarPixelSha256": "1715156267b2e495147454538c8ac4fdbbcfb40c71156fdf88f770714a342ad8",
+      "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v1/tile-01.cut-paths.json",
+      "variantSelectedPixels": 911342
+    },
+    {
+      "id": "tile-02",
+      "source": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v1/tile-02-v1.raw.png",
+        "sha256": "92dde15ea9024d8550bcab27bf9720c5417651c0fce6e967dec7b9db80d3fe4a",
+        "pixelSha256": "4bb8076cdca3bbdb50226f1d4d2fc5dc6eb131cad6c5275cd7b2607180b2c5d5",
+        "dimensions": [
+          1742,
+          903
+        ]
+      },
+      "explicitCrop": {
+        "left": 0,
+        "top": 0,
+        "width": 1742,
+        "height": 902
+      },
+      "interiorPixelSha256": "06a15252569f5d430aefdce65a8e5396f95a288c9a593d9ba16632c358843243",
+      "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v1/tile-02.png",
+      "pixelSha256": "c085c03a7be44151a5665bcf48c928ff349ddcdb8d44d045fd8628d28fa50bf2",
+      "collarPixelSha256": "1715156267b2e495147454538c8ac4fdbbcfb40c71156fdf88f770714a342ad8",
+      "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v1/tile-02.cut-paths.json",
+      "variantSelectedPixels": 1027779
+    },
+    {
+      "id": "tile-03",
+      "source": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v1/tile-03-v1.raw.png",
+        "sha256": "80877f5c6ac7ab22a4e7e6a31a0e7072f24ea99258c670ac26f197703138dd4f",
+        "pixelSha256": "4b7a5cfc526eb01e5f3806ffd3b24d14be6720573c721c5654fdec4613eeb842",
+        "dimensions": [
+          1742,
+          903
+        ]
+      },
+      "explicitCrop": {
+        "left": 0,
+        "top": 0,
+        "width": 1742,
+        "height": 902
+      },
+      "interiorPixelSha256": "3bc6538c230330d8d7eca95fc0e3e3918b644bc00757d8204596f777357f63c0",
+      "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v1/tile-03.png",
+      "pixelSha256": "4775517e2d6960c5fbe441213fc93180a96d942a14dd11c1c712316450c84169",
+      "collarPixelSha256": "1715156267b2e495147454538c8ac4fdbbcfb40c71156fdf88f770714a342ad8",
+      "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v1/tile-03.cut-paths.json",
+      "variantSelectedPixels": 993888
+    },
+    {
+      "id": "tile-04",
+      "source": {
+        "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v1/tile-04-v1.raw.png",
+        "sha256": "3b498fba74c4a8ea631be7953baf6026e06e6fe11b0e866c333ffcb65ec5dcd7",
+        "pixelSha256": "d2c7f72bff65a39e2d05d5d579059e563a47025991fd54a64acef2a7c99fccfc",
+        "dimensions": [
+          1742,
+          903
+        ]
+      },
+      "explicitCrop": {
+        "left": 0,
+        "top": 0,
+        "width": 1742,
+        "height": 902
+      },
+      "interiorPixelSha256": "47b5c00c1b7ee1a31f2e5979dd1dee84cbb4b38258e7244804be9cfbbe3adb3e",
+      "file": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v1/tile-04.png",
+      "pixelSha256": "046def3422d4b36755a550be5def3e32e2386362a1440a8126aa923c619918f9",
+      "collarPixelSha256": "1715156267b2e495147454538c8ac4fdbbcfb40c71156fdf88f770714a342ad8",
+      "cutPaths": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v1/tile-04.cut-paths.json",
+      "variantSelectedPixels": 1014634
+    }
+  ],
+  "tileCount": 4,
+  "authoredLevel": "far",
+  "lighting": "UPPER RIGHT toward LOWER LEFT",
+  "orientation": {
+    "allowRotate": false,
+    "allowMirror": false
+  },
+  "displayContract": {
+    "targetVisibleTiles": [
+      2,
+      4
+    ],
+    "minimumVisibleTiles": 2,
+    "maximumVisibleTiles": 4,
+    "switchBeforeExceeding": 4,
+    "nextDetailSetRequired": true,
+    "independentlyAuthoredDetailSets": true,
+    "primaryVariantCount": 4,
+    "variationBankCount": 4,
+    "geography": "No fixed world extent is implied by these camera-scale source plates."
+  },
+  "reviewFiles": [
+    "review-order-a.png",
+    "review-order-b.png",
+    "review-four-tiles.png"
+  ],
+  "pairChecks": [
+    {
+      "a": "tile-01",
+      "b": "tile-01",
+      "rightToLeftRgbMae": 1.952,
+      "bottomToTopRgbMae": 2.889
+    },
+    {
+      "a": "tile-01",
+      "b": "tile-02",
+      "rightToLeftRgbMae": 1.952,
+      "bottomToTopRgbMae": 2.889
+    },
+    {
+      "a": "tile-01",
+      "b": "tile-03",
+      "rightToLeftRgbMae": 1.952,
+      "bottomToTopRgbMae": 2.889
+    },
+    {
+      "a": "tile-01",
+      "b": "tile-04",
+      "rightToLeftRgbMae": 1.952,
+      "bottomToTopRgbMae": 2.889
+    },
+    {
+      "a": "tile-02",
+      "b": "tile-01",
+      "rightToLeftRgbMae": 1.952,
+      "bottomToTopRgbMae": 2.889
+    },
+    {
+      "a": "tile-02",
+      "b": "tile-02",
+      "rightToLeftRgbMae": 1.952,
+      "bottomToTopRgbMae": 2.889
+    },
+    {
+      "a": "tile-02",
+      "b": "tile-03",
+      "rightToLeftRgbMae": 1.952,
+      "bottomToTopRgbMae": 2.889
+    },
+    {
+      "a": "tile-02",
+      "b": "tile-04",
+      "rightToLeftRgbMae": 1.952,
+      "bottomToTopRgbMae": 2.889
+    },
+    {
+      "a": "tile-03",
+      "b": "tile-01",
+      "rightToLeftRgbMae": 1.952,
+      "bottomToTopRgbMae": 2.889
+    },
+    {
+      "a": "tile-03",
+      "b": "tile-02",
+      "rightToLeftRgbMae": 1.952,
+      "bottomToTopRgbMae": 2.889
+    },
+    {
+      "a": "tile-03",
+      "b": "tile-03",
+      "rightToLeftRgbMae": 1.952,
+      "bottomToTopRgbMae": 2.889
+    },
+    {
+      "a": "tile-03",
+      "b": "tile-04",
+      "rightToLeftRgbMae": 1.952,
+      "bottomToTopRgbMae": 2.889
+    },
+    {
+      "a": "tile-04",
+      "b": "tile-01",
+      "rightToLeftRgbMae": 1.952,
+      "bottomToTopRgbMae": 2.889
+    },
+    {
+      "a": "tile-04",
+      "b": "tile-02",
+      "rightToLeftRgbMae": 1.952,
+      "bottomToTopRgbMae": 2.889
+    },
+    {
+      "a": "tile-04",
+      "b": "tile-03",
+      "rightToLeftRgbMae": 1.952,
+      "bottomToTopRgbMae": 2.889
+    },
+    {
+      "a": "tile-04",
+      "b": "tile-04",
+      "rightToLeftRgbMae": 1.952,
+      "bottomToTopRgbMae": 2.889
+    }
+  ],
+  "commonCollarPixelSha256": "1715156267b2e495147454538c8ac4fdbbcfb40c71156fdf88f770714a342ad8",
+  "cutOverlapPixels": 128,
+  "warnings": [
+    "Shared outer pixels guarantee the same joins for every ordering, not artistic seam acceptance.",
+    "Inspect collar/interior boundaries, all edge-repair endpoints and shuffled tile views.",
+    "No live game integration or reconstructed orthographic projection is claimed."
+  ]
+}

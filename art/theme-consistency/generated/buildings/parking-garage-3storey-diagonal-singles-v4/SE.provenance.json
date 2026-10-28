@@ -1,0 +1,38 @@
+{
+  "id": "ce:parking-garage-3storey",
+  "slug": "parking-garage-3storey",
+  "storeys": 3,
+  "category": "buildings",
+  "view": "SE",
+  "stage": "hut-correction-v4",
+  "transparent": true,
+  "references": [
+    "art/theme-consistency/generated/buildings/parking-garage-3storey-diagonal-singles-v3/SE.raw.png",
+    "art/theme-consistency/references/garage-diagonal-guides-v2/3storey-SE.png"
+  ],
+  "output": "art/theme-consistency/generated/buildings/parking-garage-3storey-diagonal-singles-v4/SE.raw.png",
+  "provenance": "art/theme-consistency/generated/buildings/parking-garage-3storey-diagonal-singles-v4/SE.provenance.json",
+  "prompt": "Precise local edit of Image1 ONLY: move the single small brick rooftop stair-access hut from its WRONG current position halfway along the screen-right roofedge to the NEAREST FRONT CORNER OF THE ROOF, directly above the central vertical building corner where the two visible facade planes meet. Image2 is POSITION guidance only: its smallroofhut is exactly at this closestcentre roofcorner. Remove the old hut plus its old shadow and continue the darkflat roof there. Keep hut dimensions/design, creamcap, green door andwarmamber lamp, the samethreecoveredparkingfloors, all4longbays/2shortbays, every other part of Image1 unchanged. CRITICAL keep the current excellent+0.5/-0.5footprint slopes and orthographiccamera, samecanvas, framing,buildingsize andclearspace. Do notrotate, zoom, tilt, redesign or add anotherhut. Realtransparentbackground preserved. One cutoutofsamebuilding only, no ground orplatform, no guidecolorsorlabels. Paintedtheme andfixedupperrightsun preserved.",
+  "date": "2026-10-27",
+  "generator": "built-in image_gen",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-74b276f7-d98a-4de5-8a50-2ff6cf2d5174.png",
+  "referenceHashes": [
+    {
+      "file": "art/theme-consistency/generated/buildings/parking-garage-3storey-diagonal-singles-v3/SE.raw.png",
+      "sha256": "71a0966a55b09e4f8ab7c1f0c05dfd266a0bec6e41a99036e452e34fafa6c2dc"
+    },
+    {
+      "file": "art/theme-consistency/references/garage-diagonal-guides-v2/3storey-SE.png",
+      "sha256": "3da33c7a0782579c7b176617f3d2b6d4d7c2520feca7e8d7206342ac8e297f3f"
+    }
+  ],
+  "lighting": "screen upper-right toward lower-left; even macro exposure for ground",
+  "integrationStatus": "accepted-source-for-canonical-assembly",
+  "processing": "Native generator output copied byte-for-byte; no repaint, resample, mirror, recolour or transform.",
+  "appearanceReview": {
+    "date": "2026-10-27",
+    "reviewer": "Primary art agent",
+    "verdict": "accepted",
+    "scope": "Corrected source only: nearest-corner roof hut, three floor rows, road-aligned body retained. Canonical NW uses this generator-declared SE view."
+  }
+}

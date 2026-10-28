@@ -12,7 +12,7 @@ import { SurfaceMark } from '../course/SurfaceMark';
 import { Icon } from '../Icon';
 
 /** the surfaces' names as the Holes panel says them */
-const NAME: Record<string, string> = { green: 'Green', tee: 'Tee', fairway: 'Fairway', rough: 'Rough', bunker: 'Bunker', water: 'Water', fescue: 'Fescue', waste: 'Waste area' };
+const NAME: Record<string, string> = { green: 'Green', tee: 'Tee', fairway: 'Fairway', rough: 'Rough', bunker: 'Bunker', water: 'Water', fescue: 'Fescue', waste: 'Waste area', longGrass: 'Long grass' };
 /** the tee markers' names */
 const TEE: Record<string, string> = { back: 'Back', middle: 'Middle', forward: 'Forward' };
 const m2 = (n: number) => `${n.toLocaleString('en-US')} m²`;

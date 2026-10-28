@@ -1,0 +1,54 @@
+{
+  "schema": 1,
+  "material": "fringe",
+  "zoom": "mid",
+  "status": "AI-border-repairs-required",
+  "source": {
+    "file": "art/theme-consistency/generated/ground/eight-tiles/fringe/mid-v1/master.native-crop.png",
+    "sha256": "0fb8a1c11d1491935f079b8632c66b83ed93b1fa12ff5921cc22c26d1458a3fe",
+    "pixelSha256": "2a61807d5e6e5c6df6a465fb55f12aec2c923a6aec80a0163c731ebe96766966",
+    "dimensions": [
+      1742,
+      902
+    ]
+  },
+  "crop": {
+    "left": 0,
+    "top": 0,
+    "width": 1742,
+    "height": 902,
+    "removedRightPixels": 0,
+    "removedBottomPixels": 0
+  },
+  "rollPixels": [
+    871,
+    451
+  ],
+  "dimensions": [
+    1742,
+    902
+  ],
+  "collarPixels": 64,
+  "patchSpanPixels": 256,
+  "repairInputs": {
+    "northSouth": "art/theme-consistency/generated/ground/eight-tiles/fringe/mid-v1/full-north-south-repair-input.png",
+    "westEast": "art/theme-consistency/generated/ground/eight-tiles/fringe/mid-v1/full-west-east-repair-input.png"
+  },
+  "repairOutputCrops": {
+    "northSouth": {
+      "left": 743,
+      "top": 387,
+      "width": 256,
+      "height": 128
+    },
+    "westEast": {
+      "left": 807,
+      "top": 323,
+      "width": 128,
+      "height": 256
+    }
+  },
+  "smallPatchDiagnosticsOnly": true,
+  "generationRule": "Always edit the FULL scene-sized repair input to preserve apparent grass scale. Small patches are diagnostics/extraction only, never imagegen edit targets.",
+  "processing": "Exact crop, quadrant translation and patch layout. No resampling, paint, blending, mirror or rotation."
+}

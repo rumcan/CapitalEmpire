@@ -1,0 +1,55 @@
+{
+  "schema": 1,
+  "material": "putting-green",
+  "zoom": "far",
+  "revision": "v1",
+  "decision": "held-for-appearance",
+  "reviewer": "/root/rough_export_resume",
+  "scope": "Saved-art inspection only, no runtime or owner approval",
+  "files": [
+    {
+      "file": "tile-01.png",
+      "sha256": "7650eeff392e1a2f70d4225e206a808792d0a47316cb6ff4bee8363f3ea854c7"
+    },
+    {
+      "file": "tile-02.png",
+      "sha256": "e2e4e4cc834fdd87e2132b6d2a5bcd7bd003ed4f3cd281324616a05f52dae34e"
+    },
+    {
+      "file": "tile-03.png",
+      "sha256": "122574694ca12035f3a97f020e8e57eb008ddef487ad9827bc819a8788357440"
+    },
+    {
+      "file": "tile-04.png",
+      "sha256": "b90953d0d05eefbd902579f45ae132f7544fb7633b9a1debd1725edd9f99c9d8"
+    },
+    {
+      "file": "review/four-tiles-shuffled-screen.png",
+      "sha256": "15a6e15a93031ecf0b36bb18bc154ce8d68cfb07599e12af06f4bc866fcfd0ce"
+    },
+    {
+      "file": "review/final-cross-native.png",
+      "sha256": "132330b62edc7b40f50b2eca03c958092a82c9285c2ef0be86e175810241ac3f"
+    },
+    {
+      "file": "review/final-tile03-left-native.png",
+      "sha256": "0d0e4926a530f614273478dd89c83ee7551a208dcc4405c11922fb6ceceabe6c"
+    },
+    {
+      "file": "review/final-tile04-top-native.png",
+      "sha256": "1f2a2adba82d4557d0ac0f7bdc2b5b99470d9f5786ee42575de3c0904db01819"
+    }
+  ],
+  "inspected": [
+    "screen-sized shuffled four-tile arrangement",
+    "native central cross",
+    "native tile03 left and tile04 top collar/interior"
+  ],
+  "findings": [
+    "Fine hairlike interior grain meets coarser smoother repair/collar grain with visibly traceable jigsaw boundary.",
+    "Shared border identity does not remove interior mismatch."
+  ],
+  "visualAccepted": false,
+  "liveGameIntegrated": false,
+  "illuminationReport": "output/putting-green-export/final-illumination-report.json"
+}

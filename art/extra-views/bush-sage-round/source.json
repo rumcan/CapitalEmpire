@@ -1,0 +1,12 @@
+{
+ "id": "landscape:bush-sage-round",
+ "version": "bush-sage-round-4views-v1",
+ "sheetSha256": "dd9ee4c65dd8c0beb1c491ef8b32e251c4f329063c1e5cd7e080539cbbaac4f5",
+ "files": {
+  "NE": "22b1e18bcb873723b4cecbcf624e05b6b59f5cfdecba4acbdbb6b26935133c57",
+  "SE": "4275dc4e8afc964b09e039c6aba57e9fe58040d40b44bb34de34f1e9a5da9fd5",
+  "SW": "41ee52bc2e98b760e2fc4db90374c46e5ba9351613c3102804e1a18c7f209f20",
+  "NW": "fba6893506b113f24519ff7c9729448a9c65c404bf9d6d1e29d793f85a6a05be"
+ },
+ "integrationStatus": "ready"
+}

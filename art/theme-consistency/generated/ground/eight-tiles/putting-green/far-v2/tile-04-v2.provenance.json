@@ -1,0 +1,22 @@
+{
+  "id": "material-texture:putting-green:far:matched-variant-4-v2",
+  "material": "putting-green",
+  "zoom": "far",
+  "stage": "matched-variant-v2",
+  "source": "art/theme-consistency/generated/ground/scene-backgrounds/putting-green/far-uniform-background-v2.raw.png",
+  "output": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v2/tile-04-v2.raw.png",
+  "provenance": "art/theme-consistency/generated/ground/eight-tiles/putting-green/far-v2/tile-04-v2.provenance.json",
+  "prompt": "Edit this FULL farwidefield into independent natural arrangement number4 of the SAME veryshort smooth freshpale-mediumgreen puttingturf.\nPreserve EXACT camera, apparent grassfeature size, brushscale/softness, meanexposure, greenpalette anddensity throughout. Rearrange ONLY subtle tinyshortturf flecks organically through middle60percent, no largecontrastgroups, broadwindrows/stripes,mounds ornewfeature. Keep the entire outer200pixelperimeter nearly identical inmeanexposure, colour andfinebrushappearance; do notframeit oroutlineit. Anychangedclumpis replacedbyequallybrightshortturf. ALLcorners,edgesandcentremusthaveuniformmeanbrightness/greenbalance. No sunnyupperrightregion/darklowerleftregion,spotlight,vignette,cloudshadow orpanel. Upperrightlight ONLY localtinystrokehighlightsandshortlowerleftundersides, diffuseambientfillallover.\nNo zoom, crop, reprojection,isometricresquash,magnifiedgrassblades,bushes,hairs,photographicgrain,sandpapernoise,hardlandmarks,trees,building,road,UI,text orobjects. Keep samefullwide nativePNG dimensions. This is a farindependentlyauthored image, not anotherheight enlarged.\nFINAL productionconstraint: it is alargeinterchangeablegroundpainting, so maintainquietcompatibleedges andmatchingmeanexposure, no smalltilingpatterns, nopatchboundary.",
+  "date": "2026-10-27",
+  "generator": "built-in image_gen",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-0646b491-fbd3-455e-9a6a-1985dd359377.png",
+  "referenceHashes": [
+    {
+      "file": "art/theme-consistency/generated/ground/scene-backgrounds/putting-green/far-uniform-background-v2.raw.png",
+      "sha256": "f692b1d9a934474e30d4603c1b55ac068f3c80b22c22d5d4ef9cce83a09c6a82"
+    }
+  ],
+  "lighting": "screen upper-right toward lower-left; even macro exposure for ground",
+  "integrationStatus": "pending-visual-review",
+  "processing": "Native generator output copied byte-for-byte; no repaint, resample, mirror, recolour or transform."
+}

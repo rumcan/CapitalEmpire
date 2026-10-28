@@ -1,0 +1,55 @@
+{
+  "schema": 1,
+  "material": "putting-green",
+  "zoom": "mid",
+  "revision": "v1",
+  "decision": "held-for-appearance",
+  "reviewer": "/root/rough_export_resume",
+  "scope": "Saved-art inspection only, no runtime or owner approval",
+  "files": [
+    {
+      "file": "tile-01.png",
+      "sha256": "ecdc166ecf263ebe6f47697c70016784ece250661cda89ead6a950ef0aa9705c"
+    },
+    {
+      "file": "tile-02.png",
+      "sha256": "e3441e3f973a24f1869b0e61d166ecf57a5e55bc5ff022a4838d03f73e67a69d"
+    },
+    {
+      "file": "tile-03.png",
+      "sha256": "bf1bf0403773cd0f9737be3a9bdaa25077ca8a849a86f57838459924a9c23b3e"
+    },
+    {
+      "file": "tile-04.png",
+      "sha256": "1a62580c245ded3226e10c86b390f66604e99ade5dcb3dba024d836e0e956caf"
+    },
+    {
+      "file": "review/four-tiles-shuffled-screen.png",
+      "sha256": "63fc1b8131ac20fcc8919b2c36efefef4ed1247c707d919c7a97372c7ebfd8b3"
+    },
+    {
+      "file": "review/final-cross-native.png",
+      "sha256": "8f7bbcb2da504adf02c928a041a4d7d1fef7d626626b2662c898f01c00db300c"
+    },
+    {
+      "file": "review/final-tile03-left-native.png",
+      "sha256": "95a0653997284c9312d154a6d81b84d5e6db42f3a16515ab4757b23e4af29d44"
+    },
+    {
+      "file": "review/final-tile04-top-native.png",
+      "sha256": "7a80211d16bdb9604f3046540b9409131074ce7511dc9f7ad8ea7f20157fdc4a"
+    }
+  ],
+  "inspected": [
+    "screen-sized shuffled four-tile arrangement",
+    "native central cross",
+    "native tile03 left and tile04 top collar/interior"
+  ],
+  "findings": [
+    "Irregular cut paths visibly join different brightness and brush detail, creating conspicuous jigsaw patches.",
+    "Residual macro gradient smaller than raw but not sufficient for visual pass."
+  ],
+  "visualAccepted": false,
+  "liveGameIntegrated": false,
+  "illuminationReport": "output/putting-green-export/final-illumination-report.json"
+}

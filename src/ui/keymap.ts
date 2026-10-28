@@ -1,5 +1,6 @@
 // Help › Keys (T202, #529; plan P23-UX 6.2 P2-8 the keymap): T182 took the key letters off the rail and T193 put the tools in flyout menus, so
-// the keys were only in each tooltip; the Keys sheet lists them all in one place, laid out as the menus are: at the top the rail (the number
+// the keys were only in each tooltip; the Keys sheet lists them all in one place, laid out as the menus are: at the top the rail (T250: its two
+// drawers, the course drawer and the town footer, each a card; the number
 // keys open its groups, Select, Bulldoze) and the keys that work anywhere (Esc, Undo / Redo, Delete, this sheet), then Course and Town with each group's tools (from the rail's own table, rail-items.ts RAIL: one source for the rail,
 // the flyouts and this sheet; a tool listed once) and a tool's keys while it is in hand, then the camera, the speed and the views. A locked tool or group is dimmed with its lock's reason. In the lot lab the sheet is the
 // lab's keys under their own heading (lot-lab-ui.ts KEYS: the lab's own table). Pure TypeScript, no DOM: KeysSheet.tsx draws it.
@@ -7,7 +8,7 @@ import type { Tool } from '../game/types';
 import type { ProgressiveUiState } from '../game/ext/progressive-ui';
 import { BRUSH_PRESETS } from '../game/paint';
 import { CLASS, KEY_CLASSES } from '../game/network';
-import { RAIL, railEntries, toolLock, toolsIn, type RailItem } from './rail-items';
+import { RAIL, drawerOf, railEntries, toolLock, toolsIn, type RailItem } from './rail-items';
 
 /** a row: its keys (as shown: 'R', 'Ctrl+Z', '1 – 6'), what they do, the tool they pick (a tool key), and why it is locked (null: open) */
 export interface KeyRow { keys: string; what: string; tool?: Tool; why?: string | null }
@@ -22,7 +23,9 @@ export const KEY_PARTS: readonly { part: KeyPart; heading: string }[] = [
   { part: 'top', heading: '' }, { part: 'course', heading: 'Course' }, { part: 'town', heading: 'Town' }, { part: 'general', heading: 'Camera, speed and views' }, { part: 'lab', heading: 'Lot lab' },
 ];
 
-/** the groups the number keys open (1 the first): the rail's groups a game shows after Select, in the rail's order (railEntries) */
+/** the groups the number keys open (1 the first): the rail's groups a game shows after Select, in the rail's order (railEntries): the Course
+ *  groups, the Town groups, Bulldoze. T250 split the rail into the course drawer and the town footer and kept the numbers as they were (the
+ *  course drawer's 1-3 and Bulldoze's 6, the footer's 4 and 5 with a driving range) */
 export function numberedGroups(golf: boolean, range: boolean): RailItem[] {
   return railEntries(null, golf, 'select', { range }).map(e => e.item).filter(r => r.id !== 'select').slice(0, 6);
 }
@@ -69,12 +72,13 @@ export function keySheet(o: { golf: boolean; ui: ProgressiveUiState | null; rang
   const out: KeySection[] = [], seen = new Set<Tool>(), ui = o.golf ? o.ui : null, game = o.golf ? 'golf' : 'classic';
   const locks = new Map(railEntries(ui, o.golf, 'select', { range: o.range }).map(e => [e.item.id, e.locked]));
   const toolRow = (t: { id: Tool; key: string; label: string }, label = t.label): KeyRow => ({ keys: t.key, what: label, tool: t.id, why: toolLock(ui, t.id) });
-  // the rail: Select, the numbered groups, Bulldoze
-  const sel = RAIL.find(r => r.id === 'select')!.tools[0]!, groups = numberedGroups(o.golf, o.range), rail: KeyRow[] = [toolRow(sel, 'Select')];
+  // T250: the two drawers, as laid out: the course drawer (Select, its numbered groups top to bottom, Bulldoze's key) and the town footer (its
+  // numbered groups left to right); a group's number is numberedGroups'
+  const sel = RAIL.find(r => r.id === 'select')!.tools[0]!, groups = numberedGroups(o.golf, o.range), side: KeyRow[] = [toolRow(sel, 'Select')], foot: KeyRow[] = [];
   seen.add(sel.id);
-  groups.forEach((r, i) => rail.push({ keys: String(i + 1), what: menuless(r) ? r.label : `the ${r.label} menu`, why: locks.get(r.id) ?? null }));
-  for (const r of RAIL) if (r.section === null && r.id !== 'select' && (!r.only || r.only === game)) for (const t of toolsIn(r, o.golf)) if (t.key && !seen.has(t.id)) { seen.add(t.id); rail.push(toolRow(t)); }
-  out.push({ id: 'rail', title: 'The rail', part: 'top', rows: rail });
+  for (const r of groups) (drawerOf(r) === 'footer' ? foot : side).push({ keys: String(groups.indexOf(r) + 1), what: menuless(r) ? r.label : `the ${r.label} menu`, why: locks.get(r.id) ?? null });
+  for (const r of RAIL) if (r.section === null && r.id !== 'select' && (!r.only || r.only === game)) for (const t of toolsIn(r, o.golf)) if (t.key && !seen.has(t.id)) { seen.add(t.id); side.push(toolRow(t)); }
+  out.push({ id: 'drawer', title: 'The course drawer (left)', part: 'top', rows: side }, { id: 'footer', title: 'The town footer (bottom)', part: 'top', rows: foot });
   // Course and Town: each group's tools with a key, then the keys of their tools in hand
   const shown = new Set<Tool>(), held = new Set<string>();
   for (const part of ['course', 'town'] as const) {
@@ -100,7 +104,7 @@ export function keySheet(o: { golf: boolean; ui: ProgressiveUiState | null; rang
   }
   for (const s of general()) {
     const sec: KeySection = { id: s.id, title: s.title, part: s.id === 'anywhere' ? 'top' : 'general', rows: s.rows.map(([k, w]) => ({ keys: k, what: w })) };
-    if (sec.part === 'top') out.splice(1, 0, sec); else out.push(sec);
+    if (sec.part === 'top') out.splice(2, 0, sec); else out.push(sec); // after the two drawers' cards
   }
   return out;
 }

@@ -152,12 +152,12 @@ function wavyPng(w: number, h: number, seed: number): Buffer {
 }
 interface Wrap { lr: number; tb: number; h: number; v: number }
 
-test('a green fallback follows the ready canonical set rather than a newer complete experiment, and the actual review must accept it', t => {
+test('an accepted green alias preserves pinned legacy/owner art; fallback pins and held legacy sources stay hash-locked', t => {
   const root = path.resolve('output', `tests-t168-art-${process.pid}`), out = path.join(root, 'out'), F = `${EIGHT}/putting-green`, DIR = 'art/owner-supplied/putting-green-20261026';
   fs.rmSync(root, { recursive: true, force: true });
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   const write = (rel: string, bytes: Buffer | string) => { const p = path.join(root, rel); fs.mkdirSync(path.dirname(p), { recursive: true }); fs.writeFileSync(p, bytes); };
-  const run = () => spawnSync(process.execPath, ['scripts/assets/prep-painted-tiles.mjs', '--art', root, '--out', out], { encoding: 'utf8' });
+  const run = (...args: string[]) => spawnSync(process.execPath, ['scripts/assets/prep-painted-tiles.mjs', '--art', root, '--out', out, ...args], { encoding: 'utf8' });
   const sets: Record<string, any> = {}, levels: Record<string, any> = {}, ownerLevels: Record<string, any> = {};
   for (const b of ['near', 'mid', 'far']) {
     const folder = `${F}/${b}-v2`, decision = `${folder}/review/appearance-decision.json`, review = Buffer.from(JSON.stringify({ decision: 'accepted-for-art-appearance' }));
@@ -167,20 +167,44 @@ test('a green fallback follows the ready canonical set rather than a newer compl
     levels[b] = { folder, nativePixels: [24, 16], primaryTileIds: primaryTiles.map(x => x.id), visualDecision: decision };
     // A complete and numerically newer experiment must never override the handoff, including the owner's MID fallback.
     for (let i = 1; i <= 4; i++) write(`${F}/${b}-v99/tile-0${i}.png`, png(24, 16, 9, true));
+    for (let i = 1; i <= 4; i++) write(`${F}/${b}-v1/tile-0${i}-v1.raw.png`, png(240, 200, 4, true));
     const bytes = png(240, 200, 3, true); write(`${DIR}/${b}.png`, bytes);
     ownerLevels[b] = { file: `${b}.png`, sha256: sha256(bytes), size: [240, 200] };
   }
   const writeAuthority = () => {
     const buf = Buffer.from(JSON.stringify({ id: 'painted:putting-green', sets })); write(`${F}/canonicalselection.json`, buf);
-    write(`${EIGHT}/READY-MATERIALS.json`, JSON.stringify({ ready: [{ id: 'painted:putting-green', material: 'putting-green', canonicalSelection: { file: `${F}/canonicalselection.json`, sha256: sha256(buf) }, levels }] }));
+    write(`${EIGHT}/READY-MATERIALS.json`, JSON.stringify({ ready: [{ id: 'painted:putting-green', material: 'putting-green', runtimeId: 'putting-green-finished', runtimeName: 'Putting green (fine turf)', canonicalSelection: { file: `${F}/canonicalselection.json`, sha256: sha256(buf) }, levels }] }));
   };
   writeAuthority();
   write(`${DIR}/source.json`, JSON.stringify({ id: 'paint:putting-green-fixture', family: { id: 'putting-green-paint', name: 'Putting green' }, levels: ownerLevels }));
   let r = run(); assert.equal(r.status, 0, r.stderr + r.stdout);
   const file = path.join(out, 'src/game/painted-tiles.json'), before = fs.readFileSync(file, 'utf8'), manifest = JSON.parse(before);
-  const fallback = manifest.families.find((f: Fam) => f.id === 'putting-green-paint').levels.mid;
+  const alias = manifest.families.find((f: Fam) => f.id === 'putting-green-finished');
+  assert.ok(alias && !alias.provisional); assert.equal(alias.name, 'Putting green (fine turf)');
+  const legacy = manifest.families.find((f: Fam) => f.id === 'putting-green');
+  assert.equal(legacy.levels.mid.folder, `${F}/mid-v1`); assert.equal(legacy.levels.far.folder, `${F}/far-v1`);
+  assert.equal(manifest.families.find((f: Fam) => f.id === 'putting-green-paint').levels.mid.folder, `${F}/mid-v1`);
+  const current = manifest.families.find((f: Fam) => f.id === 'putting-green-v2');
+  assert.equal(current.levels.near.tiles[0].sha256, ownerLevels.near.sha256, 'the owner NEAR painting remains selected');
+  const fallback = current.levels.mid;
   assert.equal(fallback.folder, `${F}/mid-v2`);
-  assert.deepEqual(fallback.tiles.map((x: Tile) => x.source), sets.mid.primaryTiles.map((x: Tile) => (x as Tile & { file: string }).file));
+  assert.deepEqual(fallback.tiles.map((x: Tile) => x.source), sets.mid.primaryTiles.map((x: Tile) => x.file));
+  assert.equal(fallback.decision.file, sets.mid.visualDecision.file);
+  // A later hold may retain an explicitly pinned old option, but only its exact previously shipped raw sources. Newly completed files
+  // in that same held folder must not silently replace them.
+  write(`${F}/mid-v1/review/appearance-review-v1.json`, JSON.stringify({ decision: 'held-for-appearance', visualAccepted: false }));
+  for (let i = 1; i <= 4; i++) write(`${F}/mid-v1/tile-0${i}.png`, png(240, 200, 8, true));
+  r = run(); assert.equal(r.status, 0, r.stderr + r.stdout); assert.match(r.stderr, /retaining pinned mid-v1 only at its exact currently shipped hashes/);
+  assert.equal(fs.readFileSync(file, 'utf8'), before, 'a pin keeps the same raw source set, not the new rejected finished files');
+  write(`${F}/mid-v1/tile-01-v1.raw.png`, png(240, 200, 6, true));
+  r = run(); assert.notEqual(r.status, 0); assert.equal(fs.readFileSync(file, 'utf8'), before, 'changing a pinned rejected source stops before asset writes');
+  const oldPicture = path.join(out, 'src/assets/ground/painted', legacy.levels.mid.tiles[0].file), oldBytes = fs.readFileSync(oldPicture);
+  const neighbor = 'out/src/assets/ground/painted/tiles/unrelated-option/keep.webp'; write(neighbor, oldBytes);
+  r = run('--only', 'putting-green-finished'); assert.equal(r.status, 0, r.stderr + r.stdout);
+  assert.equal(fs.readFileSync(file, 'utf8'), before, 'a scoped accepted import preserves all unselected family records and curated anchors');
+  assert.deepEqual(fs.readFileSync(oldPicture), oldBytes, 'the unselected legacy picture remains byte-identical');
+  assert.deepEqual(fs.readFileSync(path.join(root, neighbor)), oldBytes, 'scoped pruning cannot delete another option');
+  write(`${F}/mid-v1/tile-01-v1.raw.png`, png(240, 200, 4, true));
   const held = Buffer.from(JSON.stringify({ decision: 'held-for-appearance', visualAccepted: false }));
   write(sets.mid.visualDecision.file, held); sets.mid.visualDecision.sha256 = sha256(held); writeAuthority();
   r = run(); assert.notEqual(r.status, 0); assert.match(r.stderr, /does not accept the artwork/);

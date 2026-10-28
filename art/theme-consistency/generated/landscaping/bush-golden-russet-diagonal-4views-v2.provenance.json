@@ -1,0 +1,41 @@
+{
+  "id": "landscape:bush-golden-russet",
+  "slug": "bush-golden-russet",
+  "details": "ONE irregular autumn deciduousshrub, broadpaintedgoldenochre/orange/russet leaves, threeunequalfoliagelobes and smallvisiblebranchgap, 1mhigh 1.6mwide. Silhouette clearlydifferentfromroundboxwood. Realplantstructure notcolourfilteredball. No pot,planter,fallenleafcarpet,soilplatformorflowers.",
+  "kind": "bush",
+  "category": "landscaping",
+  "requiresLibraryRegistration": true,
+  "source": "art/theme-consistency/generated/landscaping/bush-golden-russet-screen-axis-4views-v1.png",
+  "output": "art/theme-consistency/generated/landscaping/bush-golden-russet-diagonal-4views-v2.png",
+  "provenance": "art/theme-consistency/generated/landscaping/bush-golden-russet-diagonal-4views-v2.provenance.json",
+  "references": [
+    "art/theme-consistency/generated/landscaping/bush-golden-russet-diagonal-4views-v1.png",
+    "art/theme-consistency/references/theme-authoritative.png"
+  ],
+  "prompt": "Layout correction ofImage1 only. Preserve theseFOURsamewarmrusset/goldenpaintedbush quarterturns andalltheirbranches/foliageidentity, but placeeachspritefullyinsideitsownEQUAL2x2cell with20percentcleartransparentpadding oneverycellside. Shrinkallfouruniformlyasneededandcentreeachinitsequalcell. No foliagecrossesthecentreverticalorhorizontalgutter, no leavesfromonespriteintrudeanothercell. Keepfourdistinctturns, elevationandupperrightsunfixed, samepalette/paintedthemeasimage2. TrueRGBAtransparentbackground, nofloor, scenery,shadowdisc,checkerboard,UI,textorlabels. Onecompletebushpercellonly. Do notcropanyfoliage. SquarePNG.",
+  "viewSet": "diagonal-4",
+  "viewsOrder": [
+    "NE",
+    "SE",
+    "SW",
+    "NW"
+  ],
+  "transparent": true,
+  "date": "2026-10-27",
+  "stage": "padding-correction-v2",
+  "generator": "built-in image_gen",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-93844362-a8df-47f8-aafe-c6210ce7235d.png",
+  "referenceHashes": [
+    {
+      "file": "art/theme-consistency/generated/landscaping/bush-golden-russet-diagonal-4views-v1.png",
+      "sha256": "ea63530d161181b7e8b2c1fe9f5aaa833dabadc5057b32ca5f538db9e9f27e76"
+    },
+    {
+      "file": "art/theme-consistency/references/theme-authoritative.png",
+      "sha256": "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2"
+    }
+  ],
+  "lighting": "screen upper-right toward lower-left; even macro exposure for ground",
+  "integrationStatus": "pending-visual-review",
+  "processing": "Native generator output copied byte-for-byte; no repaint, resample, mirror, recolour or transform."
+}

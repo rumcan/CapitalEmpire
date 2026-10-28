@@ -3,8 +3,20 @@
 /** tiles per cell: 0.5 tile, so a cell is 1 m square */
 export const CELL_T = 0.5;
 
-/** surface ids, in draw order from low to high (a higher id draws over a lower one); none is map grass */
-export const SURF = { none: 0, rough: 1, fescue: 2, water: 3, fairway: 4, tee: 5, bunker: 6, waste: 7, green: 8 } as const;
+/** surface ids; none is map grass. Ids 0..8 run in draw order from low to high; T238's long grass (the owner, 2026-10-28: "the current course
+ *  rough being a long grass option the player can add") took the next free id, 9, so every old save loads unchanged, and draws between the
+ *  rough and the fescue: the draw order is SURF_ORDER (SURF_RANK, surfAbove), never the ids themselves */
+export const SURF = { none: 0, rough: 1, fescue: 2, water: 3, fairway: 4, tee: 5, bunker: 6, waste: 7, green: 8, longGrass: 9 } as const;
+/** the number of surface ids (0..9) */
+export const N_SURF = Object.keys(SURF).length;
+/** the surface ids in draw order, low to high (a later one draws over an earlier one): the long grass between the rough and the fescue */
+export const SURF_ORDER: readonly number[] = [SURF.none, SURF.rough, SURF.longGrass, SURF.fescue, SURF.water, SURF.fairway, SURF.tee, SURF.bunker, SURF.waste, SURF.green];
+/** each surface id's place in the draw order (SURF_ORDER's index; an id past the table ranks above everything) */
+export const SURF_RANK: readonly number[] = (() => { const r: number[] = []; SURF_ORDER.forEach((s, k) => { r[s] = k; }); return r; })();
+/** the draw rank of surface id s */
+export const surfRank = (s: number) => SURF_RANK[s] ?? N_SURF;
+/** whether surface a draws above surface b (the brushes' 'below' rule, the closings' claims) */
+export const surfAbove = (a: number, b: number) => surfRank(a) > surfRank(b);
 
 /** the most cells a save may hold: the whole 4 km map at 1 m (cells) */
 const MAX_CELLS = 4096 * 4096;
@@ -199,7 +211,7 @@ export function decodeGrid(save: unknown): Grid | null {
   if (!Number.isInteger(w) || !Number.isInteger(h) || w < 1 || h < 1 || w * h > MAX_CELLS) return null;
   if (!Number.isFinite(x0) || !Number.isFinite(y0) || snap(x0) !== x0 || snap(y0) !== y0) return null;
   const n = w * h, surf = new Uint8Array(n), hole = new Uint8Array(n), month = new Uint16Array(n);
-  if (!unrle(r.s, surf, SURF.green) || !unrle(r.hl, hole, 255) || !unrle(r.m, month, 65535)) return null;
+  if (!unrle(r.s, surf, N_SURF - 1) || !unrle(r.hl, hole, 255) || !unrle(r.m, month, 65535)) return null;
   const carve = new Uint8Array(n);
   if (r.c !== undefined && !unrle(r.c, carve, 1)) return null;
   return { x0, y0, w, h, surf, hole, month, rev: 0, carve };
@@ -234,14 +246,16 @@ function put(g: Grid, a: Acc, i: number, s: number, h: number, m: number, c = 25
   if (cv !== cv0) (g.carve ??= new Uint8Array(g.w * g.h))[i] = cv;
 }
 
-/** whether a surface id is turf (grass of some kind: the map grass, rough, fescue, fairway, tee, green), not sand or water */
-export const isTurf = (s: number) => s === SURF.none || s === SURF.rough || s === SURF.fescue || s === SURF.fairway || s === SURF.tee || s === SURF.green;
+/** whether a surface id is turf (grass of some kind: the map grass, rough, long grass, fescue, fairway, tee, green), not sand or water */
+export const isTurf = (s: number) => s === SURF.none || s === SURF.rough || s === SURF.longGrass || s === SURF.fescue || s === SURF.fairway || s === SURF.tee || s === SURF.green;
+/** the long grasses that come up on their own: rough, long grass (T238) and fescue */
+const wildGrass = (s: number) => s === SURF.rough || s === SURF.longGrass || s === SURF.fescue;
 /** the month value a cell of surface `cur` (holding month `curMonth`) takes when surface s is laid on it with the planting month `month`
- *  (the owner's test, 2026-10-25: a built hole's rough came up as a brown dirt oval): rough and fescue laid over the map grass are already
- *  grass, so they are established at once (0); over another grass they keep that grass's state (growing or not); over sand, water or waste
- *  they are seeded as anything else. Every other surface takes `month` */
+ *  (the owner's test, 2026-10-25: a built hole's rough came up as a brown dirt oval): rough, long grass and fescue laid over the map grass are
+ *  already grass, so they are established at once (0); over another grass they keep that grass's state (growing or not); over sand, water or
+ *  waste they are seeded as anything else. Every other surface takes `month` */
 export function laidMonth(s: number, cur: number, curMonth: number, month: number): number {
-  if (s !== SURF.rough && s !== SURF.fescue) return month;
+  if (!wildGrass(s)) return month;
   if (cur === SURF.none) return 0;
   return isTurf(cur) ? curMonth : month;
 }
@@ -255,7 +269,7 @@ function brush(g: Grid, a: Acc, i: number, s: number, hole: number, month: numbe
     else if (cur > SURF.rough) put(g, a, i, SURF.rough, g.hole[i], g.month[i]);
     return;
   }
-  if (o.over === 'below' && cur > s) return;
+  if (o.over === 'below' && surfAbove(cur, s)) return;
   put(g, a, i, s, hole, laidMonth(s, cur, g.month[i], month), o.carve ? 1 : 0);
 }
 

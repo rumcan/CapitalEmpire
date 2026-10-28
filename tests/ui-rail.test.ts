@@ -1,14 +1,17 @@
 // Headless tests for the rail (plan P23 4.2, P1-E, T120; regrouped by T182, #454; T206 #540: Facilities in Decoration's place, Cart paths & roads
 // in Course below Buildings): Select · COURSE: Driving range, Course, Facilities · TOWN:
 // Traffic, Town decoration · Bulldoze; every tool reachable from its group (Props from both decorations); the ramp's locks per group and per
-// tool inside a group; NEW per group; no key letters on the rail (the tooltip names them); old saves' seen ids. npm test (bundled by esbuild,
-// run by node --test; the buttons render with react-dom/server).
+// tool inside a group; NEW per group; no key letters on the rail (the tooltip names them); old saves' seen ids. T250 (#721): the rail split
+// into the course drawer on the left and the town footer along the bottom, and where the footer stands. npm test (bundled by esbuild, run by
+// node --test; the buttons render with react-dom/server).
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { createElement, isValidElement, type ReactElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server.edge';
 import { advanceProgress, computeProgressiveUiState, emptyProgress, progressFacts, STAGE_WHY, type CourseProgress, type GolfProgress } from '../src/game/ext/progressive-ui';
-import { RAIL, extraLock, pickTool, railEntries, railItemOf, railItemsOf, railTip, toolLock, toolNew, toolSections, toolsIn, type RailEntry } from '../src/ui/rail-items';
+import { readFileSync } from 'node:fs';
+import { RAIL, drawerEntries, drawerOf, extraLock, pickTool, railEntries, railItemOf, railItemsOf, railTip, toolLock, toolNew, toolSections, toolsIn, type RailEntry } from '../src/ui/rail-items';
+import { FOOT_GAP, FOOT_MARGIN, footerPlace, freeStretches, type FootPlace } from '../src/ui/footer-layout';
 import { Rail } from '../src/ui/Rail';
 import type { Tool } from '../src/game/types';
 import { GREENKEEPING } from '../src/game/features';
@@ -174,5 +177,97 @@ describe('the rail keeps its icons; the tiles are the flyouts\' (T233)', () => {
       ['select', 'select'], ['range', 'select'], ['course', `course buildings path${GREENKEEPING ? ' greenkeeping' : ''}`], ['facilities', 'practice paint props'],
       ['traffic', 'road lane downgrade junction bus park toll'], ['towndecor', 'paint props props business'], ['bulldoze', 'bulldoze'],
     ]);
+  });
+});
+
+// T250 (#721, the owner 2026-10-28: "lets have course on the left drawer and have a new footer drawer for town"): the rail split in two: the
+// course drawer on the left (Select · COURSE · Bulldoze) and the town footer along the bottom (TOWN: Traffic, Town decoration); the groups, their
+// tools, locks, NEW badges and anchors are the same in both
+describe('the two drawers: the course drawer on the left, the town footer along the bottom (T250)', () => {
+  const side = (es: RailEntry[]) => ids(drawerEntries(es, 'side')), foot = (es: RailEntry[]) => ids(drawerEntries(es, 'footer'));
+  const draw = (es: RailEntry[], drawer: 'side' | 'footer', compact = false) => renderToStaticMarkup(createElement(Rail, { entries: drawerEntries(es, drawer), drawer, compact, onPick: () => {}, onLocked: () => {} }));
+  it('golf: Select · Course: Driving range, Course, Facilities · Bulldoze on the left; Town: Traffic, Town decoration in the footer; the classic game alike', () => {
+    const es = railEntries(null, true, 'select', { range: true });
+    assert.deepEqual(side(es), ['select', 'range', 'course', 'facilities', 'bulldoze']);
+    assert.deepEqual(foot(es), ['traffic', 'towndecor']);
+    assert.deepEqual(side(railEntries(null, true, 'select')), ['select', 'course', 'facilities', 'bulldoze'], 'no range: the Course group first under Course');
+    const town = railEntries(null, false, 'road');
+    assert.deepEqual(side(town), ['select', 'course', 'bulldoze'], 'the classic town game: its Course group on the left');
+    assert.deepEqual(foot(town), ['traffic', 'towndecor'], 'the classic town game shows the footer with its town tools');
+    assert.equal(drawerEntries(town, 'footer').find(e => e.on)?.item.id, 'traffic', 'the road in hand lights Traffic in the footer');
+    // every group in exactly one drawer, by its section; the drawers together are the rail
+    for (const r of RAIL) assert.equal(drawerOf(r), r.section === 'town' ? 'footer' : 'side', r.id);
+    for (const g of [es, town]) assert.deepEqual([...side(g), ...foot(g)].sort(), ids(g).sort());
+    // each drawer's first item under a heading carries it
+    assert.deepEqual(drawerEntries(es, 'side').filter(e => e.heading).map(e => [e.item.id, e.heading]), [['range', 'course']]);
+    assert.deepEqual(drawerEntries(es, 'footer').filter(e => e.heading).map(e => [e.item.id, e.heading]), [['traffic', 'town']]);
+  });
+  it('drawn: the course drawer (its heading, Bulldoze set off by a rule) and the footer (its heading, icon and name side by side; compact: the icons alone)', () => {
+    const es = railEntries(null, true, 'select', { range: true }), s = draw(es, 'side'), f = draw(es, 'footer'), c = draw(es, 'footer', true);
+    assert.match(s, /^<nav class="glass rail-nav[^"]*" aria-label="Club tools" data-testid="rail" data-drawer="side">/);
+    assert.match(s, />Course<\/div>/); assert.doesNotMatch(s, /data-rail="(traffic|towndecor)"/);
+    assert.match(s, /data-rail="facilities"[\s\S]*?<div class="rail-sep" aria-hidden="true"><\/div><button data-rail="bulldoze"/, 'a rule between Facilities and Bulldoze');
+    assert.match(f, /^<nav class="glass rail-foot " aria-label="Town tools" data-testid="rail-footer" data-drawer="footer" data-compact="false">/);
+    assert.match(f, /<div class="rail-heading rail-heading-foot">Town<\/div>/);
+    assert.doesNotMatch(f, /data-rail="(select|range|course|facilities|bulldoze)"/);
+    for (const [id, label] of [['traffic', 'Traffic'], ['towndecor', 'Town decoration']] as const) {
+      assert.match(button(f, id), new RegExp(`class="rail-tab rail-tab-foot [^"]*"[^>]*>[\\s\\S]*?<img [^>]*width="24"[\\s\\S]*?<span>${label}</span>`), `${id}: its icon beside its name`);
+      // the guide's Show me finds the town tools in the footer (data-guide="rail-<id>"; GuidePulse's 'tool-park' falls back to 'rail-traffic')
+      assert.match(button(f, id), new RegExp(`data-guide="rail-${id}"`));
+      // compact: no name drawn, the name kept for the screen reader and the tooltip
+      const b = button(c, id);
+      assert.doesNotMatch(b, /<span>/); assert.match(b, new RegExp(`aria-label="${label}"`)); assert.match(b, new RegExp(`data-tip="${label}"`));
+    }
+    assert.match(c, /class="glass rail-foot rail-foot-compact"[^>]*data-compact="true"/);
+    // never scrolls sideways; one height in both forms (the controls above it stand on --foot-top)
+    const css = readFileSync('src/index.css', 'utf8');
+    assert.match(css, /\.rail-tab\.rail-tab-foot \{[^}]*height: 42px;/);
+    assert.match(css, /\.rail-foot-compact \.rail-tab\.rail-tab-foot \{ width: 46px;/);
+    assert.doesNotMatch(css.match(/\.rail-foot \{[^}]*\}/)?.[0] ?? '', /overflow-x: (auto|scroll)/);
+    assert.match(readFileSync('src/App.tsx', 'utf8'), /bottom-\[calc\(var\(--foot-top,0px\)\+0\.5rem\)\][^"]*z-20 flex flex-col items-center/, 'the hint bar stands above the footer');
+  });
+  it('locks and NEW in the footer as on the rail: stage 1 Traffic locked in place with its why; stage 2 Town decoration says NEW', () => {
+    const f1 = draw(railEntries(uiOf(played(0), 0), true, 'course'), 'footer'), traffic = button(f1, 'traffic');
+    assert.match(traffic, /rail-tab-locked/); assert.match(traffic, /aria-disabled="true"/); assert.match(traffic, /class="rail-lock"/);
+    assert.match(traffic, new RegExp(`data-tip-why="${WHY3.replace(/'/g, '&#x27;')}"`));
+    const s2 = railEntries(uiOf(played(1), 1), true, 'course');
+    assert.match(button(draw(s2, 'footer'), 'towndecor'), /class="new-badge rail-new">NEW</);
+    assert.match(button(draw(s2, 'footer', true), 'towndecor'), /class="new-badge rail-new">NEW</, 'compact keeps the badge');
+  });
+});
+
+// T250: where the footer stands (footer-layout.ts): it moves aside: the free stretch of the bottom edge nearest the middle, full where it fits,
+// else compact; only on a crowded screen do the cards in its way move up
+describe('the town footer moves aside of the minimap and the bottom cards (T250)', () => {
+  const FULL = 300, COMPACT = 116, MINI = 400;
+  const at = (w: number, blocks: [number, number][] = []) => footerPlace({ w, laneL: MINI, blocks, full: FULL, compact: COMPACT });
+  const clear = (p: FootPlace, w: number, blocks: [number, number][]) => {
+    const width = p.compact ? COMPACT : FULL;
+    assert.ok(p.x >= MINI + FOOT_GAP, `clear of the minimap (${p.x})`); assert.ok(p.x + width <= w - FOOT_MARGIN, 'on screen');
+    for (const [l, r] of blocks) assert.ok(p.x + width <= l || p.x >= r, `clear of the card at ${l}-${r} (${p.x}-${p.x + width})`);
+  };
+  it('1366, 1920 and 2560 px with no bottom card: full, centred', () => {
+    for (const w of [1366, 1920, 2560]) { const p = at(w); assert.deepEqual(p, { x: Math.round(w / 2 - FULL / 2), compact: false, lift: [] }, `${w}`); clear(p, w, []); }
+  });
+  it('beside the guide card and the leaderboard at their places (right-3, beside the range card, beside a panel): never over them', () => {
+    for (const w of [1366, 1920, 2560]) for (const right of [12, 312, 368]) for (const width of [330, 288]) {
+      const blocks: [number, number][] = [[w - right - width, w - right]], p = at(w, blocks);
+      clear(p, w, blocks);
+      if (w >= 1920) assert.equal(p.compact, false, `${w}: full (${right}, ${width})`);
+    }
+    // 1366 with the range card open: the guide card beside it (right-23rem) leaves 256 px by the minimap: the compact bar there beats the full
+    // bar far off to the right
+    const busy: [number, number][] = [[1366 - 368 - 330, 1366 - 368]], p = at(1366, busy);
+    assert.equal(p.compact, true); clear(p, 1366, busy); assert.ok(Math.abs(p.x + COMPACT / 2 - 683) < 120, 'near the middle');
+    assert.deepEqual(freeStretches({ w: 1366, laneL: MINI, blocks: busy }), [[410, 658], [1008, 1354]]);
+  });
+  it('the last resort: no room on the bottom edge even for the compact bar: compact near the middle, the cards in its way move up', () => {
+    const w = 1093; // 125% UI on a 1366 px screen
+    const p = at(w, [[90, w - 12]]);
+    assert.equal(p.compact, true); assert.deepEqual(p.lift, [0]);
+    assert.ok(p.x >= MINI + FOOT_GAP && p.x + COMPACT <= w - FOOT_MARGIN, 'clear of the minimap, on screen');
+    // a panel, the range card and the guide card beside them (right-41rem), the leaderboard at the right: a stretch between holds the compact bar
+    const blocks: [number, number][] = [[w - 656 - 330, w - 656], [w - 12 - 288, w - 12]], q = at(w, blocks);
+    assert.equal(q.lift.length, 0, 'no card moves'); clear(q, w, blocks);
   });
 });

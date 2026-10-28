@@ -1,0 +1,19 @@
+{
+  "id": "material-texture:putting-green:near:repair-west-east-seam",
+  "material": "putting-green",
+  "zoom": "near",
+  "stage": "repair-west-east-seam",
+  "source": "art/theme-consistency/generated/ground/eight-tiles/putting-green/near-v1/full-west-east-repair-box-guide.png",
+  "output": "art/theme-consistency/generated/ground/eight-tiles/putting-green/near-v1/full-west-east-repair-v1.raw.png",
+  "provenance": "art/theme-consistency/generated/ground/eight-tiles/putting-green/near-v1/full-west-east-repair-v1.provenance.json",
+  "prompt": "Edit this FULL-frame image. Remove ONLY the bright magenta BOX and reconstruct a natural matching patch of the adjacent very short smooth fine pale-to-medium green golf putting turf, tiny soft painterly turf variation, even tight finish, clearly finer and shorter than the surrounding fairway, restrained slightly warm highlights.. Keep the rest of the image, its near camera, apparent feature sizes, source palette, mean exposure and painted brushwork unchanged. Light remains UPPER RIGHT toward LOWER LEFT. Do not copy the old straight join beneath the box: continue natural irregular material throughout the entire marked area without a stripe offset, box edge or rectangular boundary. No zoom, crop input, macro view, new texture swatch, grid, frame, objects or lettering. Return the full same-size PNG with no magenta left.\nCRITICAL: overall illumination across entire full frame must be EVEN, same mean exposure and green palette at every edge/corner/centre; no image-wide sunny upperright, dark lowerleft, vignette or cloudshadow. Upperright light only describes tiny local grass strokes. Do not add any macrogradient, darkborder, brightstripe or square tonalpatch. Reconstruct the marked seam area with exact scale of adjacent shortturf, no magnifiedblades.",
+  "date": "2026-10-26",
+  "generator": "image_gen",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-7f00851e-47b3-442c-a18d-49afcbc7b019.png",
+  "sourceSha256": "41b9c0a93ee75643de3046bf916670485884bef2d4a97902e9380c44e431e48e",
+  "processing": "Native generator output copied byte-for-byte; direct scene removal. No code repaint, recolour, warp or resample.",
+  "camera": "Same near source screenshot camera and apparent surface detail scale requested; no declared top-down/world coverage.",
+  "lighting": "UPPER RIGHT → LOWER LEFT",
+  "integrationStatus": "art-only-not-integrated",
+  "reviewStatus": "pending reference appearance, object-removal and lighting review"
+}

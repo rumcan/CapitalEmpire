@@ -11,7 +11,7 @@ import { renderToStaticMarkup } from 'react-dom/server.edge';
 import { advanceProgress, computeProgressiveUiState, emptyProgress, progressFacts, type CourseProgress, type GolfProgress } from '../src/game/ext/progressive-ui';
 import { RAIL, entryKey, toolLock, toolsIn } from '../src/ui/rail-items';
 import { columnsOf, indicesOf, leavesOf, menuOf, navKey, type MenuCtx, type MenuRow, type NavState } from '../src/ui/flyout-menu';
-import { Flyouts, columnWidths, isTileGrid } from '../src/ui/Flyouts';
+import { Flyouts, columnWidths, isTileGrid, menuDepth, upLeft } from '../src/ui/Flyouts';
 import { TOOL_TILES, type ToolTile } from '../src/ui/tool-tiles';
 import { GREENKEEPING } from '../src/game/features';
 
@@ -177,16 +177,55 @@ describe('the flyouts as drawn (T193)', () => {
   });
 });
 
+// T250 (#721): the town footer's flyouts open upward: the first column stands on the footer over its button, the deeper levels open to the side
+// (the owner's flyout rule: never one long stacked column, never a sideways scrollbar); the rows, locks, keys and tiles are the same
+describe('the town footer\'s flyouts open upward, their deeper levels to the side (T250)', () => {
+  const draw = (rows: MenuRow[], startPath: number[], up: boolean) => renderToStaticMarkup(createElement(Flyouts, { rows, top: 0, left: 640, up, startPath, onLeaf: () => {}, onLocked: () => {}, onClose: () => {} }));
+  it('Traffic ▸ Roads ▸ Build ▸ the classes upward: the same columns and rows as on the rail, side by side', () => {
+    const rows = menuOf(RAIL.find(r => r.id === 'traffic')!, ALL), path = indicesOf(rows, ['roads', 'build']);
+    const up = draw(rows, path, true), side = draw(rows, path, false);
+    assert.match(up, /^<div class="flyouts flyouts-up" style="left:640px;height:600px" data-testid="flyouts" data-up="true" role="presentation">/);
+    assert.match(side, /^<div class="flyouts " style="left:640px" data-testid="flyouts" role="presentation">/);
+    assert.equal((up.match(/role="menu"/g) ?? []).length, 3, 'Traffic, Roads and Build: three columns side by side');
+    assert.equal(up.replace(/^<div[^>]*>/, ''), side.replace(/^<div[^>]*>/, ''), 'the same columns and rows');
+    const css = readFileSync('src/index.css', 'utf8');
+    assert.match(css, /\.flyouts-up \{ top: auto; bottom: calc\(100% \+ 8px\); \}/, 'the box stands on the footer');
+    assert.match(css, /\.flyouts \{[^}]*display: flex; align-items: flex-start;/, 'the levels side by side, not stacked');
+  });
+  it('the menus\' depth and where the first column stands: over its button, slid left only when the deepest walk would pass the right edge', () => {
+    assert.equal(menuDepth(menuOf(RAIL.find(r => r.id === 'traffic')!, ALL)), 3, 'Traffic ▸ Roads ▸ Build');
+    assert.equal(menuDepth(menuOf(RAIL.find(r => r.id === 'towndecor')!, ALL)), 3, 'Town decoration ▸ Paint ▸ Areas');
+    assert.equal(menuDepth([{ key: 'a', label: 'A' }]), 1);
+    // 1366, 1920, 2560: the footer's Traffic button (the footer centred, full) keeps its place
+    for (const w of [1366, 1920, 2560]) { const left = Math.round(w / 2 - 150) + 50; assert.equal(upLeft(left, w, 3), left, `${w}`); }
+    // 125% on 1366 (1093 px), a button far right: slid left so three narrowest columns fit; never past the left margin
+    assert.equal(upLeft(700, 1093, 3), 1093 - 12 - 3 * (184 + 6));
+    assert.equal(upLeft(700, 400, 3), 12);
+    assert.equal(upLeft(5, 1920, 3), 12);
+  });
+  it('the tile grids work upward too (T233): a level with a tile is a grid of tiles', () => {
+    const rows = menuOf(RAIL.find(r => r.id === 'course')!, ALL), up = draw(rows, indicesOf(rows, ['holes', 'shape']), true);
+    assert.equal((up.match(/class="flyout glass flyout-grid"/g) ?? []).length, 3, 'Course, Holes and Shape by hand: three grids');
+    assert.match(up, /data-tile="clubhouse"[^>]*class="flyout-row flyout-tile/);
+  });
+  it('the keyboard walks them as on the rail (Right opens the side level, Left goes back, Esc closes)', () => {
+    const rows = menuOf(RAIL.find(r => r.id === 'towndecor')!, ALL), s0: NavState = { path: [], focus: { level: 0, index: 0 } };
+    const r1 = navKey(rows, s0, 'ArrowRight'); assert.deepEqual(r1.state, { path: [0], focus: { level: 1, index: 0 } }, 'Paint ▸ its side level');
+    assert.deepEqual(navKey(rows, r1.state, 'ArrowLeft').state, { path: [], focus: { level: 0, index: 0 } });
+    assert.equal(navKey(rows, r1.state, 'Escape').close, true);
+  });
+});
+
 // T233 (#674, the owner 2026-10-27 showing the concept: "this is the look and feel we need to get to"): the Course flyout's and the Facilities
 // tools as the concept's illustrated tiles (art 174), a grid of tiles per level; a tool with no tile keeps its icon
 describe('the tool tiles (T233)', () => {
   const tiles = (rows: readonly MenuRow[]) => rows.filter(r => !r.caption).map(r => `${r.label}${r.tile ? `=${r.tile}` : ''}`);
-  const C = ctx(true, null, { surfaces: [{ id: 'fairway', name: 'Fairway' }, { id: 'green', name: 'Green' }, { id: 'tee', name: 'Tee' }, { id: 'rough', name: 'Rough' }, { id: 'bunker', name: 'Bunker' }, { id: 'water', name: 'Water' }, { id: 'waste', name: 'Waste area' }, { id: 'path', name: 'Cart path' }], propGroups: [{ id: 'plants', name: 'Plants' }, { id: 'water', name: 'Water' }, { id: 'stone', name: 'Stone' }, { id: 'furniture', name: 'Furniture' }] });
+  const C = ctx(true, null, { surfaces: [{ id: 'fairway', name: 'Fairway' }, { id: 'green', name: 'Green' }, { id: 'tee', name: 'Tee' }, { id: 'rough', name: 'Rough' }, { id: 'bunker', name: 'Bunker' }, { id: 'water', name: 'Water' }, { id: 'waste', name: 'Waste area' }, { id: 'path', name: 'Cart path' }, { id: 'longGrass', name: 'Long grass' }], propGroups: [{ id: 'plants', name: 'Plants' }, { id: 'water', name: 'Water' }, { id: 'stone', name: 'Stone' }, { id: 'furniture', name: 'Furniture' }] });
   const courseRows = menuOf(RAIL.find(r => r.id === 'course')!, C), fac = menuOf(RAIL.find(r => r.id === 'facilities')!, C);
   it('Course: Holes, Buildings, Cart paths & roads; New hole and Shape by hand; the surfaces (the Waste area keeps its mark); the Clubhouse', () => {
     assert.deepEqual(tiles(courseRows), ['Holes=green', 'Buildings=clubhouse', 'Cart paths & roads=cart-path', 'Tournament', 'Land for sale']);
     assert.deepEqual(tiles(find(courseRows, 'Holes').children!), ['New hole=tee', 'Your holes', 'Shape by hand=fairway']);
-    assert.deepEqual(tiles(find(courseRows, 'Holes', 'Shape by hand').children!), ['Fairway=fairway', 'Green=green', 'Tee=tee', 'Rough=rough', 'Bunker=bunker', 'Water=pond', 'Waste area', 'Cart path=cart-path']);
+    assert.deepEqual(tiles(find(courseRows, 'Holes', 'Shape by hand').children!), ['Fairway=fairway', 'Green=green', 'Tee=tee', 'Rough=rough', 'Bunker=bunker', 'Water=pond', 'Waste area', 'Cart path=cart-path', 'Long grass=rough']); // T238: Long grass wears the rough's tile
     assert.equal(find(courseRows, 'Holes', 'Shape by hand', 'Waste area').mark, 'waste', 'no tile: its pebbles mark');
     assert.deepEqual(tiles(find(courseRows, 'Buildings').children!), ['Clubhouse=clubhouse', 'Halfway house']);
     assert.deepEqual(tiles(find(courseRows, 'Cart paths & roads').children!), ['Walking path', 'Gravel drive'], 'the classes stay a list under their families');
