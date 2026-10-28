@@ -1,7 +1,8 @@
 // The town footer (T250, #721; the owner 2026-10-28: "lets have course on the left drawer and have a new footer drawer for town"): a slim bar
 // along the bottom of the screen with the TOWN groups (Traffic, Town decoration) as the rail's buttons, their flyouts opening upward from it.
 // Where it stands and in which form is footer-layout.ts footerPlace (the footer moves aside: the free stretch of the bottom edge nearest the
-// middle, full or compact; only on a crowded screen do the cards in its way move up); this measures the screen, the minimap and the bottom
+// right corner, the owner 2026-10-29: "move center footer menu to the right corner"; full or compact; only on a crowded screen do the cards in
+// its way move up); this measures the screen, the minimap and the bottom
 // cards each render and applies it. It sets --foot-top (its top's height above the screen's bottom, local px) for the controls that stand
 // above it (the hint bar, the shot panel) and marks a card it lifts with data-foot-lift (index.css).
 // T255 (#739, the owner 2026-10-29: "these windows need to move to the center footer where town moved to"): a town tool's panel (App.tsx's
@@ -9,11 +10,12 @@
 // width and look, opening upward (as tall as the room up to the top bar, then it scrolls, vertically only). It moves aside like the footer
 // (footer-layout.ts panelPlace): never over the minimap or a card beside it; with no stretch to hold it, it stands in the left tool panel's
 // place. It hides while the footer's flyouts are open (they open where it stands), as the left panel does for the drawer's. --foot-stack is
-// the top of what stands on the bottom edge's middle (the bar, and the panel above it): the hint bar and the shot panel stand on it.
+// the top of what stands on the bottom edge's middle (the bar, and the panel above it, where they reach into it: MID_HALF): the hint bar and
+// the shot panel stand on it.
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { Rail, type RailProps } from './Rail';
 import { hudTop } from './Flyouts';
-import { FOOT_BOTTOM, FOOT_EST, FOOT_MARGIN, PANEL_GAP, PANEL_VH, PANEL_W, footerPlace, panelPlace } from './footer-layout';
+import { FOOT_BOTTOM, FOOT_EST, FOOT_MARGIN, MID_HALF, PANEL_GAP, PANEL_VH, PANEL_W, footerPlace, panelPlace } from './footer-layout';
 import { currentUiScale } from './uiScale';
 import { Icon } from './Icon';
 
@@ -69,16 +71,17 @@ export function TownFooter({ boxRef, navRef, flyouts, raised = false, panel = nu
     // T255: the panel above the footer: its band runs from its top down to its bottom, 8 px above the bar (its height as it would stand there:
     // its content's, up to the room under the top bar and PANEL_VH of the screen, so the place it takes never changes the height it is placed
     // by); every card reaching that band blocks it, and so do the minimap's map and town chip and the course drawer
-    let stack = FOOT_BOTTOM + h;
+    // what reaches into the bottom edge's middle lifts the hint bar and the shot panel (the footer in the corner: nothing, as a rule)
+    const fw0 = p.compact ? (widths.current.compact ?? FOOT_EST.compact) : (widths.current.full ?? FOOT_EST.full), mid = (l: number, r: number) => r > sw / 2 - MID_HALF && l < sw / 2 + MID_HALF;
+    let stack = mid(p.x, p.x + fw0) ? FOOT_BOTTOM + h : 0;
     const pe = panelRef.current;
     if (pe && pe.offsetWidth > 0) {
       const hud = hudTop(), pBot = top - PANEL_GAP, ph = Math.min(pe.scrollHeight, pBot - hud - 8, sh * PANEL_VH), pTop = pBot - ph;
       const near = [...all, ...Array.from(mmEl?.children ?? []), ...Array.from(document.querySelectorAll('[data-testid="rail"]'))];
       const blocks = near.map(el => el.getBoundingClientRect()).filter(r => r.width > 0 && r.bottom / s > pTop - 4 && r.top / s < pBot).map(r => [r.left / s, r.right / s] as const);
-      const fw = p.compact ? (widths.current.compact ?? FOOT_EST.compact) : (widths.current.full ?? FOOT_EST.full);
-      const x = panelPlace({ w: sw, laneL: 0, blocks, cx: p.x + fw / 2, width: pe.offsetWidth || PANEL_W });
+      const x = panelPlace({ w: sw, laneL: 0, blocks, cx: p.x + fw0 / 2, width: pe.offsetWidth || PANEL_W });
       let next: PanelAt;
-      if (x !== null) { next = { x, side: false, top: 0 }; stack += PANEL_GAP + ph; } else {
+      if (x !== null) { next = { x, side: false, top: 0 }; if (mid(x, x + (pe.offsetWidth || PANEL_W))) stack = FOOT_BOTTOM + h + PANEL_GAP + ph; } else {
         // no room above the footer: the left tool panel's place, beside the course drawer (gap-2), under the top bar
         const rr = document.querySelector('[data-testid="rail"]')?.getBoundingClientRect(), box = boxRef.current?.getBoundingClientRect();
         next = { x: Math.round(rr && rr.width > 0 ? rr.right / s + 8 : FOOT_MARGIN), side: true, top: Math.round(hud - (box ? box.top / s : top)) };
@@ -91,14 +94,14 @@ export function TownFooter({ boxRef, navRef, flyouts, raised = false, panel = nu
   useEffect(() => () => { for (const v of ['--foot-top', '--foot-stack']) document.documentElement.style.setProperty(v, '0px'); for (const el of lifted.current) el.removeAttribute('data-foot-lift'); }, []);
   return (
     <div ref={boxRef} className={`town-foot pointer-events-none absolute inset-x-0 bottom-3 ${raised ? 'z-40' : 'z-20'} flex`} data-testid="town-footer">
-      <div className="pointer-events-auto" style={place.x === null ? { marginInline: 'auto' } : { marginLeft: place.x }}>
+      <div className="pointer-events-auto" style={place.x === null ? { marginLeft: 'auto', marginRight: FOOT_MARGIN } : { marginLeft: place.x }}>
         <Rail {...rail} drawer="footer" compact={place.compact} navRef={navRef} />
       </div>
       {flyouts}
       {/* T255: the town tool's panel, docked above the footer (the left panel's width and look); hidden while the footer's flyouts are open */}
       {panel && (
         <div ref={panelRef} className={`glass tool-panel tool-panel-foot pointer-events-auto w-[330px] overflow-y-auto overflow-x-hidden p-3 ${raised ? 'hidden' : ''}`}
-          style={pan.x === null ? { left: '50%', marginLeft: -PANEL_W / 2 } : pan.side ? { left: pan.x, top: pan.top } : { left: pan.x }}
+          style={pan.x === null ? { right: FOOT_MARGIN } : pan.side ? { left: pan.x, top: pan.top } : { left: pan.x }}
           data-tool={panel.tool} data-testid="tool-panel" data-dock="footer" data-place={pan.side ? 'side' : 'foot'}>
           {onClosePanel && <button className="btn-icon tool-panel-close" aria-label="Close (back to Select)" data-tip="Close (Esc): back to Select" data-testid="tool-panel-close" onClick={onClosePanel}><Icon name="close" size={16} /></button>}
           {panel.body}
