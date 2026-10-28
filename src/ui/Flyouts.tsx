@@ -4,15 +4,29 @@
 // Every column fits the screen at any size and UI scale (T179's 90-125%): its height is the room under the HUD's top (a longer list scrolls
 // vertically, never sideways), its top slides up to stay on screen, and the columns narrow when four of them would pass the right edge. Text
 // wraps: no column ever scrolls sideways (the owner: "horizontal menu sliders" are not cool).
+// T233 (#674, the concept's Golf Course panel): a column with an illustrated tool tile (MenuRow.tile, tool-tiles.ts) is laid out as a grid of
+// tiles, each picture above its name, as many across as its width holds (three at full width, two when the columns narrow); a row of it with no
+// tile shows its icon, mark or swatch on the same navy square. Captions span the grid; a locked tile is dimmed with its lock and its reason.
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Icon } from './Icon';
 import { LockMark, NewBadge } from './Rail';
 import { columnsOf, navKey, type MenuRow, type NavState } from './flyout-menu';
 import { currentUiScale } from './uiScale';
 import { SurfaceMark } from './course/SurfaceMark';
+import { tileUrl } from './tool-tiles';
 
-/** a column's width (local px, at 100%), the narrowest it may get, the gap between columns, and the room kept under the screen's bottom */
-const COL_W = 232, COL_MIN = 184, GAP = 6, BOTTOM = 12;
+/** a column's width (local px, at 100%), a tile grid's (T233: three tiles across), the narrowest either may get (a grid: two across), the gap
+ *  between columns, and the room kept under the screen's bottom */
+const COL_W = 232, TILE_COL_W = 280, COL_MIN = 184, GAP = 6, BOTTOM = 12;
+/** whether a column is a grid of tiles (T233: any of its rows has one) */
+export const isTileGrid = (col: readonly MenuRow[]): boolean => col.some(r => !!r.tile);
+/** the columns' widths (local px) in the room there is: each its own (a list's or a grid's), all narrowed alike when they would pass the right
+ *  edge, never under COL_MIN */
+export function columnWidths(cols: readonly (readonly MenuRow[])[], room: number): number[] {
+  const want = cols.map(c => (isTileGrid(c) ? TILE_COL_W : COL_W)), sum = want.reduce((a, b) => a + b, 0), fit = room - GAP * cols.length;
+  const k = sum > fit ? Math.max(0, fit) / sum : 1;
+  return want.map(w => Math.max(COL_MIN, Math.floor(w * k)));
+}
 /** how long the pointer rests on a row before its submenu replaces an open one (ms: a diagonal move to the open one does not switch it) */
 const HOVER_MS = 140;
 
@@ -75,7 +89,7 @@ export function Flyouts({ rows, top, left, startPath = [], keyboard = false, onL
   useEffect(() => { if (nav.focus) box.current?.querySelector<HTMLElement>(`[data-row="${nav.focus.level}:${nav.focus.index}"]`)?.focus(); }, [nav.focus]);
   useEffect(() => () => window.clearTimeout(timer.current), []);
 
-  const width = Math.max(COL_MIN, Math.min(COL_W, Math.floor((room.w - GAP * cols.length) / Math.max(1, cols.length))));
+  const widths = columnWidths(cols, room.w);
   const open = (level: number, index: number, now: boolean) => {
     window.clearTimeout(timer.current);
     const go = () => setNav(s => ({ path: [...s.path.slice(0, level), index], focus: s.focus ? { level, index } : null }));
@@ -88,16 +102,20 @@ export function Flyouts({ rows, top, left, startPath = [], keyboard = false, onL
   };
   return (
     <div ref={box} className="flyouts" style={{ left }} data-testid="flyouts" role="presentation">
-      {cols.map((col, level) => (
-        <div key={level} role="menu" aria-orientation="vertical" data-flyout-col={level} className="flyout glass" style={{ top: tops[level] ?? (level ? 0 : top), width, maxHeight: room.h }}>
+      {cols.map((col, level) => { const grid = isTileGrid(col); return (
+        <div key={level} role="menu" aria-orientation="vertical" data-flyout-col={level} className={`flyout glass ${grid ? 'flyout-grid' : ''}`} style={{ top: tops[level] ?? (level ? 0 : top), width: widths[level], maxHeight: room.h }}>
           {col.map((r, index) => {
             if (r.caption) return <div key={r.key} className="flyout-caption" role="presentation">{r.label}</div>;
             const opened = nav.path[level] === index && !!r.children, focused = nav.focus?.level === level && nav.focus.index === index;
+            // T233: a tile: the picture (or the row's icon on the navy square), its lock, NEW and more marks on it, the name and the reason under it
+            const pic = r.tile ? tileUrl(r.tile) : undefined, mark = r.mark ? <SurfaceMark kind={r.mark} size={grid ? 40 : 22} /> : r.swatch ? <span className="flyout-swatch" style={{ background: r.swatch }} /> : r.icon ? <Icon name={r.icon} size={grid ? 36 : 20} /> : null;
             return (
               <button key={r.key} type="button" role="menuitem" data-row={`${level}:${index}`} data-key={r.key} tabIndex={focused ? 0 : -1}
                 data-guide={r.leaf ? `tool-${r.leaf.entry.view?.group ?? r.leaf.entry.id}` : undefined}
+                {...(grid && r.why ? { 'data-tip': `${r.label}: ${r.why}` } : r.note && !r.why ? { 'data-tip': r.note } : {})}
+                {...(grid && r.tile ? { 'data-tile': r.tile } : {})}
                 aria-haspopup={r.children ? 'menu' : undefined} aria-expanded={r.children ? opened : undefined} aria-disabled={r.why ? true : undefined}
-                className={`flyout-row ${opened ? 'flyout-row-open' : ''} ${r.why ? 'flyout-row-locked' : ''}`}
+                className={`flyout-row ${grid ? 'flyout-tile' : ''} ${opened ? 'flyout-row-open' : ''} ${r.why ? 'flyout-row-locked' : ''}`}
                 onMouseEnter={() => (r.children && !r.why ? open(level, index, false) : shut(level))}
                 onClick={() => {
                   if (r.why) { onLocked(r); return; }
@@ -105,17 +123,28 @@ export function Flyouts({ rows, top, left, startPath = [], keyboard = false, onL
                   if (r.children) { open(level, index, true); return; }
                   onLeaf(r);
                 }}>
-                <span className="flyout-mark">{r.why ? <LockMark size={13} /> : r.mark ? <SurfaceMark kind={r.mark} size={22} /> : r.swatch ? <span className="flyout-swatch" style={{ background: r.swatch }} /> : r.icon ? <Icon name={r.icon} size={20} /> : null}</span>
-                <span className="flyout-text">
-                  <span className="flyout-label">{r.label}{r.isNew && !r.why && <NewBadge className="ml-1.5" />}</span>
+                {grid ? <>
+                  <span className={`flyout-pic ${pic ? '' : 'flyout-pic-icon'}`}>
+                    {pic ? <img src={pic} alt="" draggable={false} /> : mark}
+                    {r.why && <span className="flyout-pic-lock"><LockMark size={13} /></span>}
+                    {r.isNew && !r.why && <NewBadge className="flyout-pic-new" />}
+                    {r.children && <span className="flyout-pic-more" aria-hidden>▸</span>}
+                  </span>
+                  <span className="flyout-label">{r.label}</span>
                   {r.why && <span className="flyout-why">{r.why}</span>}
-                </span>
-                {r.children && <span className="flyout-more" aria-hidden>▸</span>}
+                </> : <>
+                  <span className="flyout-mark">{r.why ? <LockMark size={13} /> : mark}</span>
+                  <span className="flyout-text">
+                    <span className="flyout-label">{r.label}{r.isNew && !r.why && <NewBadge className="ml-1.5" />}</span>
+                    {r.why && <span className="flyout-why">{r.why}</span>}
+                  </span>
+                  {r.children && <span className="flyout-more" aria-hidden>▸</span>}
+                </>}
               </button>
             );
           })}
         </div>
-      ))}
+      ); })}
     </div>
   );
 }

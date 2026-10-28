@@ -1,7 +1,11 @@
 // The rail (plan P23 4.2, P1-E; regrouped by T182, #454, the owner 2026-10-27: "First under Course should be grouped seperate, Driving range and
 // its upgrades ... then course where all the golf course shit is like building club house and halfway house and holes and the tournament stuff.
 // then there should be a decoration place ... Then in the main menu you have Town, under town you will have Traffic and Town Decoration"):
-//   Select · COURSE: Driving range, Course, Decoration · TOWN: Traffic, Town decoration · Bulldoze.
+//   Select · COURSE: Driving range, Course, Facilities · TOWN: Traffic, Town decoration · Bulldoze.
+// T206 (#540, the owner 2026-10-27: "the practice areas have their own building tools under facilities when you should also move Decoration under
+// facilities from the main menu"; "cart paths and roads should be next to buildings in the menu, just below it"; "these are roads for on you
+// property"): Facilities takes Decoration's place (Practice, Plants, Decoration's Props); the Paths tool moves into Course as Cart paths & roads,
+// directly below Buildings. Town roads stay in Traffic.
 // Each group is one rail item; its panel shows its tools in a row at the top (in sections where a group has several kinds: Traffic's Roads,
 // Junctions and Transport). The tools move in whole; nothing is removed. Props sits in both decorations (the same tool, the group the player
 // opened it from is the one lit). The same places from minute zero: a group whose every tool is locked stays in place, dimmed, with what unlocks
@@ -13,10 +17,11 @@ import type { Tool } from '../game/types';
 import { CHIP_STAGE, NEW_BADGE_IDS, STAGE_WHY, type GolfChipId, type ProgressiveUiState, type RailGroupId } from '../game/ext/progressive-ui';
 import type { IconName } from './Icon';
 import type { TipParts } from './tip';
+import { GREENKEEPING } from '../game/features';
 
 /** a tool in a rail item: its button in the row at the top of the item's panel; sub: the section it sits in (Traffic's Roads, Junctions,
  *  Transport); only: the game it shows in */
-export interface RailTool { id: Tool; label: string; key: string; icon: IconName; sub?: string; only?: 'golf' | 'classic'; /** T187: the Props tool's view this entry opens (its place and group) */ view?: PropsView }
+export interface RailTool { id: Tool; label: string; key: string; icon: IconName; sub?: string; only?: 'golf' | 'classic'; /** T187: the Props tool's view this entry opens (its place and group) */ view?: PropsView; /** T206: a second home of a tool (Facilities' Plants, the Paint tool's plant brush): the item lit only when opened from there */ alt?: true }
 /** the Props tool's view (T187): where it places (Decoration the course, Town decoration the town) and the group it opens on */
 export interface PropsView { where: 'course' | 'town'; group?: 'buildings' }
 /** an entry's key in its item (the Props tool sits twice in Town decoration: its props and its buildings) */
@@ -39,12 +44,16 @@ export const RAIL: readonly RailItem[] = [
   { id: 'course', label: 'Course', icon: 'trophy', key: 'C', section: 'course', group: 'course', tools: [
     { id: 'course', label: 'Holes', key: 'C', icon: 'trophy' },
     { id: 'buildings', label: 'Buildings', key: '', icon: 'house', only: 'golf' },
+    // T206: the roads on the player's own property (the course's cart paths and drives: the road tool on the course, T084), below Buildings
+    { id: 'path', label: 'Cart paths & roads', key: '', icon: 'sidewalk' },
     // Greenkeeping (plan P23-UX P2-5, T175): the Grass panel as a tool, its care armed like a brush; it opens with the first grown hole
-    { id: 'greenkeeping', label: 'Greenkeeping', key: '', icon: 'trees', only: 'golf' },
+    ...(GREENKEEPING ? [{ id: 'greenkeeping' as const, label: 'Greenkeeping', key: '', icon: 'trees' as const, only: 'golf' as const }] : []), // hidden for now (features.ts)
   ], extras: [{ id: 'event', label: 'Tournament', icon: 'calendar' }, { id: 'land', label: 'Land for sale', icon: 'terrain' }] },
-  { id: 'decor', label: 'Decoration', icon: 'leaf', key: 'Z', section: 'course', group: 'course', tools: [
-    { id: 'path', label: 'Paths', key: '', icon: 'sidewalk' },
-    { id: 'props', label: 'Props', key: 'Z', icon: 'leaf', only: 'golf', view: { where: 'course' } },
+  // T206: the practice facilities' own building tools, the plant brush (Town decoration's, on the course side too) and Decoration's Props
+  { id: 'facilities', label: 'Facilities', icon: 'leaf', key: 'Z', section: 'course', group: 'course', only: 'golf', tools: [
+    { id: 'practice', label: 'Practice', key: '', icon: 'pin', only: 'golf', sub: 'Practice' },
+    { id: 'paint', label: 'Plants', key: '', icon: 'trees', only: 'golf', sub: 'Plants', alt: true },
+    { id: 'props', label: 'Props', key: 'Z', icon: 'leaf', only: 'golf', view: { where: 'course' }, sub: 'Decoration' },
   ] },
   // TOWN
   { id: 'traffic', label: 'Traffic', icon: 'road', key: 'R', section: 'town', group: 'roads', tools: [
@@ -67,11 +76,12 @@ export const RAIL: readonly RailItem[] = [
   { id: 'bulldoze', label: 'Bulldoze', icon: 'bulldozer', key: 'X', section: null, group: 'bulldoze', tools: [{ id: 'bulldoze', label: 'Bulldoze', key: 'X', icon: 'bulldozer' }] },
 ];
 
-/** the rail items a tool sits in (Props: both decorations) */
+/** the rail items a tool sits in (Props: Facilities and Town decoration; Paint: Town decoration, and Facilities' Plants) */
 export const railItemsOf = (t: Tool): RailItem[] => RAIL.filter(r => !r.action && r.tools.some(x => x.id === t));
-/** the rail item a tool sits in (the menus' tool: Engine.uiTool): the one the player opened it from when that holds it (active), else its first */
+/** the rail item a tool sits in (the menus' tool: Engine.uiTool): the one the player opened it from when that holds it (active), else its first
+ *  that is not a second home (alt), else its first */
 export const railItemOf = (t: Tool, active?: string | null): RailItem | undefined => {
-  const all = railItemsOf(t); return all.find(r => r.id === active) ?? all[0];
+  const all = railItemsOf(t); return all.find(r => r.id === active) ?? all.find(r => !r.tools.find(x => x.id === t)!.alt) ?? all[0];
 };
 /** an item's tools in a game (golf or the classic town game) */
 export const toolsIn = (r: RailItem, golf: boolean): RailTool[] => r.tools.filter(t => !t.only || t.only === (golf ? 'golf' : 'classic'));

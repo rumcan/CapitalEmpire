@@ -26,7 +26,7 @@ export const lookName = (tex: string) => plainName(PAINT_TEXES.find(t => t.id ==
 
 /** the Holes panel (plan P23 4.3, P1-E; was the Course panel): the header with ↶ ↷, New hole on top as the gold primary (the wizard's card
  *  in its place while New hole is open), then, once a hole exists (stage 2), your holes as badges with the current hole's status, Shape by
- *  hand with the six marked surfaces, and one collapsed More options drawer in sections. At stage 1 it is New hole and its line only.
+ *  hand with the marked surfaces (eight since T222's Waste area), and one collapsed More options drawer in sections. At stage 1 it is New hole and its line only.
  *  looks / onLooks: Holes > More options > My looks (the style editor's card beside the panel: App's state, so Esc closes it first) */
 export function CoursePanel({ game, looks = false, onLooks }: { game: Game; looks?: boolean; onLooks?: (open: boolean) => void }) {
   const p = game.paint, ui = game.toolUi();
@@ -72,7 +72,7 @@ function SizeGlyph({ k }: { k: number }) {
   );
 }
 
-/** Shape by hand (P23 4.3, 4.5): the six surfaces as marked swatches (keys 1–6), the brush sizes ([ ]), Brush and Erase */
+/** Shape by hand (P23 4.3, 4.5): the surfaces as marked swatches (keys 1–8), the brush sizes ([ ]), Brush and Erase */
 function ShapeByHand({ game }: { game: Game }) {
   const p = game.paint, ui = game.toolUi(), brushOk = (k: string) => !ui || (ui.visibleCourseBrushes as string[]).includes(k);
   const keys = Math.max(1, ...BRUSH_PRESETS.map((b, i) => (brushOk(b.kind) ? i + 1 : 0)));

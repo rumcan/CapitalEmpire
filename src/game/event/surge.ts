@@ -15,6 +15,7 @@ import { BUS_WALK, DEPART_END, PARTY, SURGE_S } from './config';
 import type { FanCounts } from './crowd';
 import { mulberry } from '../iso';
 import { departMinute, simAt, wantedArrivals } from '../golf/daytimeline';
+import type { DepSave, SurgeSave } from './daysave';
 
 /** a home the crowd leaves from: its lot, its town, its residents (the weight), and the component of its frontage road (see City) */
 export interface SurgeHome { lot: Lot; town: number; pop: number; comp: number }
@@ -188,6 +189,28 @@ export class Surge {
     if (kind === 0) this.parked[k] = (this.parked[k] ?? 0) + 1;
     else if (kind === 1) this.turned[k] = (this.turned[k] ?? 0) + 1;
     else this.lost[k] = (this.lost[k] ?? 0) + 1;
+  }
+
+  /** the surge as the save keeps it (T209, see daysave.ts): the counts per town, and the departures not yet spawned (the pending ones, then the rest
+   *  of the schedule) with each home lot's key and its car park's id (parkId of its index; a bus party's -1 gives parkId(-1)) */
+  save(parkId: (k: number) => number): SurgeSave {
+    const dep = (d: Dep): DepSave => [Math.round(d.t * 1000) / 1000, d.town, d.lot.key, d.park >= 0 ? parkId(d.park) : 0, d.e, d.bus];
+    return { sent: this.sent.slice(), departed: this.departed.slice(), parked: this.parked.slice(), turned: this.turned.slice(), lost: this.lost.slice(),
+      stranded: this.stranded.slice(), bus: this.bus.slice(), deps: [...this.pend.map(dep), ...this.sched.slice(this.next).map(dep)] };
+  }
+  /** a surge from a save (T209): its counts, and its departures on the car parks now (parks, as City.surgeParks gives them; parkIdx: the index of a
+   *  car park id, -1 when it is gone). A departure whose home lot is gone (lotOf: undefined), or whose car park is gone, is stranded; the others come
+   *  due at their times as planned (the ones due before the save at the first step) */
+  static load(s: SurgeSave, parks: SurgePark[], lotOf: (key: string) => Lot | undefined, parkIdx: (id: number) => number): Surge {
+    const g = new Surge(), K = s.sent.length, fit = (a: number[]) => Array.from({ length: K }, (_, k) => a[k] ?? 0);
+    g.parks = parks; g.rr = parks.map(() => 0);
+    g.sent = fit(s.sent); g.departed = fit(s.departed); g.parked = fit(s.parked); g.turned = fit(s.turned); g.lost = fit(s.lost); g.stranded = fit(s.stranded); g.bus = fit(s.bus);
+    for (const [t, town, key, pid, e, bus] of s.deps) {
+      const lot = lotOf(key), park = bus >= 0 && pid === 0 ? -1 : parkIdx(pid);
+      if (!lot || (bus < 0 && park < 0) || town < 0 || town >= K) { if (town >= 0 && town < K) g.stranded[town]!++; continue; }
+      g.sched.push({ t, town, lot, park, e, bus });
+    }
+    return g;
   }
 
   /** the departure times (sim s), in order: for the tests */

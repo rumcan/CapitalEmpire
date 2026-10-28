@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { GOLFER_CLIPS } from '../src/game/library';
 import { TILE_M } from '../src/game/golf/types';
 import { golferRow } from '../src/game/crowdview';
-import { LiveGroup, OWNER_ADDRESS, PlayView, playRound, stateAt, walkMin } from '../src/game/golf/play';
+import { LiveGroup, OWNER_ADDRESS, PUTT_FLIGHT, PlayView, offOf, playRound, stateAt, walkMin } from '../src/game/golf/play';
 import type { CourseView, Golfer, Group, Lie, OwnerTurn, PlayHole, RoundPlan, Shot } from '../src/game/golf/play';
 
 /** the pars of the three holes: a par 3 of 160 m, a par 4 of 380 m, a par 5 of 500 m */
@@ -177,8 +177,10 @@ test('pending: the owner\'s stroke on hole 2 (not played yet) is drawn at its ba
   assert.equal(turn.holeIdx, 1, 'his tee shot on hole 2 is pending');
   assert.equal(turn.stroke, 1);
   const A = turn.t - OWNER_ADDRESS, owner = (s: { golfer: number }) => s.golfer === 0;
-  // the old playback: before the owner plays, he stands where he finished hole 1 (the step-off, far from hole 2's tee)
-  const old = stateAt(plan, view, A).find(owner)!;
+  // where he finished hole 1: his step-off (the view's stand for him, standOf), far from hole 2's tee (T211: stateAt walks a waiting group to its next
+  // tee, but the owner's pending turn is drawn by the view from his step-off)
+  const ls = plan.shots.filter(owner).pop()!;
+  const old = offOf(ls.holed ? ls.to : ls.from, view.holes[0]!.pin, view.holes[1]!.tee, 0, ls.t + PUTT_FLIGHT).at;
   const oldDist = Math.hypot(old.x - turn.ball.x, old.y - turn.ball.y);
   assert.ok(oldDist > 20, `the step-off on hole 1 is ${oldDist.toFixed(1)} tiles from the ball`);
   // at the address: he is at the turn's ball, in address, turned to the aim, and the ball is there at rest

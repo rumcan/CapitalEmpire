@@ -36,6 +36,7 @@ import { buildPark, parkBox, type CarPark, type CarParkDef, type ParkView } from
 import { lotPark, rowLots, rowQuad, type BayRowDef } from './event/rows';
 import { resolveCurb, type Curb, type CurbDef } from './event/curb';
 import { Surge, matchSink, type SurgeHome, type SurgePark, type SurgeStop, type SurgeTimeline } from './event/surge';
+import { normalizeDaySave, type DaySave, type Leave } from './event/daysave';
 import { Taxis, type Order, type Rank, type TaxiEcon } from './ext/taxi';
 import { golfTicketPrice } from './golf/yearend';
 import { ON_TIME_GRACE_MIN } from './golf/tournamentday';
@@ -44,7 +45,7 @@ import { hasExpressGates } from './golf/golfcards';
 import { pickSpot, type GallerySpot } from './golf/galleries';
 import { RELOCATE_EVERY, relocate, spotDraw } from './golf/gallerydraw';
 import { dayShare, spectatorDemand, tierInfo, tournamentDue } from './golf/tour';
-import { roundTownGrowthRate, townGrowthTargets } from './golf/towngrowth';
+import { earnedFor, earnedTarget, roundTownGrowthRate, townGrowthTargets } from './golf/towngrowth';
 import { applyParkingFeeDemand } from './golf/parkingfee';
 
 /** the vehicle slots of the sim, and the ring of step times (calls) kept for the frame stats */
@@ -297,7 +298,7 @@ export class City {
    *  counts and the last car's time */
   private parkedCars: { town: number; park: number; bay: number }[] = []; private surgeHomes: SurgeHome[][] = []; private leaveRnd = seededRnd(0x1ea7e);
   /** times: the tournament day's release times (T050; sim s, sorted, the k-th for order[k]); null: the even spread from at */
-  leave: { at: number; order: number[]; next: number; pending: { k: number; at: number }[]; cars: number; gone: number; last: number; waits: number[]; times: number[] | null } | null = null;
+  leave: Leave | null = null;
   /** the tournament day is running (T048): the town clock runs at 1 minute per sim s from 05:00 */
   tourneyDay = false;
   /** the tournament day's start: sim s at 05:00 (T050; -1 while no tournament day runs) */
@@ -324,6 +325,7 @@ export class City {
     const s = this.site;
     if (s && x > s.x - 6 && x < s.x + s.w + 6 && y > s.y - 6 && y < s.y + s.h + 6) return true;
     if (this.golf) for (const [gx, gy, gw, gh] of this.golfLand) if (x > gx - 6 && x < gx + gw + 6 && y > gy - 6 && y < gy + gh + 6) return true;
+    for (const [px, py, pw, ph] of this.placeLand) if (x > px - 2 && x < px + pw + 2 && y > py - 2 && y < py + ph + 2) return true;
     for (const b of this.businesses) if (b.type !== 'stadium' && x > b.x - 2 && x < b.x + b.w + 2 && y > b.y - 2 && y < b.y + b.h + 2) return true;
     for (const p of this.parkDefs) { const b = parkBox(p); if (x > b.x - 4 && x < b.x + b.w + 4 && y > b.y - 4 && y < b.y + b.h + 4) return true; }
     for (const r of this.rowDefs) { const b = rowBox(r); if (x > b.x - 2 && x < b.x + b.w + 2 && y > b.y - 2 && y < b.y + b.h + 2) return true; }
@@ -367,10 +369,21 @@ export class City {
   /** a lot on land the event uses: its box overlaps the stadium site or a car park (padded by a tile), or another business (padded by 2 tiles), or
    *  the golf land (the course and the player's parcels), so the town never builds there */
   private reserved(l: Lot): boolean {
-    if (!this.site && !this.parkDefs.length && !this.rowDefs.length && !this.businesses.length && !this.golfLand.length) return false;
+    if (!this.site && !this.parkDefs.length && !this.rowDefs.length && !this.businesses.length && !this.golfLand.length && !this.placeLand.length) return false;
     const [x0, y0, x1, y1] = lotBox(l);
     const hit = (r: { x: number; y: number; w: number; h: number }) => x1 > r.x - 1 && x0 < r.x + r.w + 1 && y1 > r.y - 1 && y0 < r.y + r.h + 1;
-    return (!!this.site && hit(this.site)) || this.parkDefs.some(p => hit(parkBox(p))) || this.rowDefs.some(r => hit(rowBox(r))) || this.businesses.some(b => b.type !== 'stadium' && hit({ x: b.x - 1, y: b.y - 1, w: b.w + 2, h: b.h + 2 })) || this.onGolfLand(l);
+    return (!!this.site && hit(this.site)) || this.parkDefs.some(p => hit(parkBox(p))) || this.rowDefs.some(r => hit(rowBox(r))) || this.businesses.some(b => b.type !== 'stadium' && hit({ x: b.x - 1, y: b.y - 1, w: b.w + 2, h: b.h + 2 })) || this.onGolfLand(l) || this.onLand(l, this.placeLand);
+  }
+  /** T219 (P27): the iconic places' land (the engine's, lots/iconic.ts: tiles, [x, y, w, h]): no lot builds there and the town's roads keep off */
+  private placeLand: [number, number, number, number][] = [];
+  /** the iconic places' land, the full list each time: a town lot on it (a building site or a house, which the engine's free check leaves out
+   *  but a lot may have started since) goes as the course's lots go; its 'clear' events are returned */
+  setPlaces(rects: [number, number, number, number][]): TownEvent[] {
+    this.placeLand = rects.map(r => [r[0], r[1], r[2], r[3]]);
+    const out: TownEvent[] = [];
+    for (const key of [...this.town.states.keys()]) { const l = this.lots.lots.get(key); if (l && this.onLand(l, this.placeLand)) { const e = this.town.clear(key); if (e) out.push(e); } }
+    if (out.length) this.syncHour = -1;
+    return out;
   }
   /** the golf land: the course first, then the parcels the player owns (tiles, [x, y, w, h]; empty in a classic game); the game hour the
    *  course was last cleared of town lots */
@@ -592,6 +605,15 @@ export class City {
   setGrowth(k: number): void { this.growSpeed = k; this.town.speed = k; }
   setUnlimited(on: boolean): void { this.unlimited = on; this.budget.unlimited = on; }
 
+  /** T221 (#610): the residents a range start's grown town has room for with the money the club has made (golf/towngrowth.ts earnedTarget of
+   *  Budget.earned, the tournaments' success a bonus on it); null for any other game, whose towns grow as before. An old save's books, from
+   *  before the money made was kept, start from the earnings the town's size stands for (earnedFor), so a loaded town never stalls */
+  townRoom(): number | null {
+    const g = this.town.grown, b = this.budget;
+    if (!g || this.golf?.start !== 'range') return null;
+    if (b.earnedUnknown) { b.earned = Math.max(b.earned, earnedFor(this.town.pop + this.town.pending, g.success)); b.earnedUnknown = false; }
+    return earnedTarget(b.earned, g.success);
+  }
   /** spends n $ on kind (see Budget.spend); a negative construction n gives it back */
   spend(kind: 'construction' | 'compensation' | 'business' | 'upkeep', n: number): void { this.budget.spend(kind, n); }
   /** takes a loan unit (true: borrow, if the town can hold one) or repays one (false); false if the books refuse */
@@ -773,6 +795,7 @@ export class City {
     if (this.crowd) { this.crowd.now = this.sim.t; this.crowd.step(WALK_V * n * DT / MPT); this.admitGates(n * DT); this.relocateFans(); this.stepLeaving(); this.syncWait(); }
     if (rs === 'surge' && this.round.sim(n * DT)) this.kickOff();
     if (this.tourneyDay && this.dayOver()) this.endTourneyDay();
+    if (this.town.grown) this.town.grown.cap = this.townRoom() ?? Infinity;
     const events = this.town.tick(this.sim.clock, this.ctx);
     const ch = Math.floor(this.sim.clock / GAME_HOUR); if (this.golfLand.length && ch !== this.courseHour) { this.courseHour = ch; this.clearCourse(events); }
     const towns = this.centres.length > 0;
@@ -1097,15 +1120,20 @@ export class City {
     }
     return out;
   }
-  /** the surge is planned at its start (sim s): each town's homes (its built RES lots with residents, by population), the car parks (surgeParks)
-   *  and the crowd, from the surge's own stream (SURGE_SEED, never the sim's or the town's) */
-  private planSurge(): Surge {
+  /** each town's homes for the surge (its built RES lots with residents, by population, with their frontage's component), the round's towns */
+  private surgeHomesNow(): SurgeHome[][] {
     const K = this.round.crowd.length, homes: SurgeHome[][] = [];
     for (let k = 0; k < K; k++) homes.push([]);
     for (const b of builtLots(this.town, this.lots)) {
       const k = this.town.townOf(b.lot.key);
       if (b.use === LU.RES && b.pop > 0 && k >= 0 && k < K) homes[k]!.push({ lot: b.lot, town: k, pop: b.pop, comp: this.compOf(b.lot.seg) });
     }
+    return homes;
+  }
+  /** the surge is planned at its start (sim s): each town's homes (its built RES lots with residents, by population), the car parks (surgeParks)
+   *  and the crowd, from the surge's own stream (SURGE_SEED, never the sim's or the town's) */
+  private planSurge(): Surge {
+    const homes = this.surgeHomesNow();
     // the town bus stops: a route with a town (its lot stop beside the town's car park) and a resolved stop
     const stops: SurgeStop[] = [];
     this.busDefs.forEach((d, r) => { const p = this.busPts[r]?.lot; if (d.town !== undefined && p) stops.push({ route: r, town: d.town, x: p.x, y: p.y }); });
@@ -1429,6 +1457,60 @@ export class City {
   }
   /** the round from a save (see Round.from): any surge under way is dropped with its party cars */
   loadRound(s?: RoundSave): void { const g = !!this.golf; this.round = Round.from(s); this.round.golf = g; this.grown = null; this.surge = null; this.sim.dropParty(); this.crowd = null; this.sim.dropBuses(); this.applyCards(); }
+  /** the tournament day as the save keeps it (T209, event/daysave.ts): the clocks, the surge's counts and the departures still to come, the crowd, the
+   *  car parks' counts and parked cars, the party cars on the road or at an entrance (their town and car park), and going home. Null unless golf is on
+   *  and its round is in its surge or its eval on the tournament day, so every other save is as before */
+  daySave(): DaySave | null {
+    const st = this.round.stage, sim = this.sim;
+    if (!this.golf || !this.tourneyDay || this.dayT0 < 0 || (st !== 'surge' && st !== 'eval')) return null;
+    const id = (k: number) => this.parks[k]?.id ?? 0, cars: number[] = [], parks: number[] = [], road: number[] = [];
+    for (const c of this.parkedCars) cars.push(c.town, id(c.park), c.bay);
+    this.parks.forEach((p, k) => { const s = sim.parks[k]; parks.push(p.id, s?.parked ?? 0, s?.turned ?? 0); });
+    for (let i = 0; i < sim.cap; i++) if (sim.alive[i] && sim.party[i]! >= 0) road.push(sim.party[i]!, id(sim.sinks[sim.sink[i]!]?.park ?? -1));
+    for (const K of sim.sinks) for (const town of K.q) if (town >= 0) road.push(town, id(K.park));
+    return {
+      t: sim.t, shift: sim.shift, frozen: sim.frozen, town: { t0: sim.town.t0, m0: sim.town.m0, rate: sim.town.rate }, t0: this.dayT0, left: this.round.surgeLeft,
+      featured: [...this.featured], surge: this.surge ? this.surge.save(id) : null, crowd: this.crowd ? this.crowd.save(slot => sim.bus[slot] ?? -1) : null, cars, parks, road,
+      relocatedAt: Number.isFinite(this.relocatedAt) ? this.relocatedAt : null, busRiders: this.busRiders, gateAcc: this.gateAcc.slice(),
+      leave: this.leave ? { ...this.leave, order: this.leave.order.slice(), pending: this.leave.pending.map(p => ({ ...p })), waits: this.leave.waits.slice(), times: this.leave.times?.slice() ?? null } : null,
+    };
+  }
+  /** the tournament day from a save (T209; the worker's resumeDay message, after townState and townClock), on the network, car parks, gates and spots of
+   *  the load: the round in its surge or eval again (Round.from live, with the surge's sim s left), the clocks as they stood (the sim time, the frozen game
+   *  clock, the town clock at a game minute per sim second, the day's start), the surge with its counts and the departures still to come, a new crowd with
+   *  the saved walkers, queues, fans, gates and galleries (the buses start again at their lot stops; the fans that were on a bus are at the front of its
+   *  queue), the car parks' counts and parked cars, the party cars that were on the road queued at their car park's entrance (the road's traffic is not
+   *  saved), and going home. False, and nothing changes, unless golf is on, the saved round was in its surge or eval and the day is well formed: the
+   *  round then stays as loadRound left it (a surge as free, before T209) */
+  resumeDay(s: RoundSave | undefined, raw: unknown): boolean {
+    const d = normalizeDaySave(raw), sim = this.sim;
+    if (!d || !s || !this.golf || (s.stage !== 'surge' && s.stage !== 'eval')) return false;
+    this.round = Round.from(s, true); this.round.golf = true; if (this.round.stage === 'surge') this.round.surgeLeft = Math.max(0, d.left);
+    this.grown = null; sim.dropParty(); sim.dropBuses(); this.applyCards();
+    sim.t = d.t; sim.shift = d.shift; sim.frozen = d.frozen; sim.town = { t0: d.town.t0, m0: d.town.m0, rate: d.town.rate };
+    this.tourneyDay = true; this.dayT0 = d.t0; this.visitDay = -1; this.featured = new Set(d.featured);
+    // the car parks by id (the load built them again from the same lists; one that is gone is -1)
+    const idx = (id: number) => (id === 0 ? -1 : this.parks.findIndex(p => p.id === id));
+    this.surgeHomes = this.surgeHomesNow();
+    this.surge = d.surge ? Surge.load(d.surge, this.surgeParks(), key => this.lots.lots.get(key), idx) : null;
+    if (d.crowd) { this.startBuses(); this.crowd!.load(d.crowd); } else this.crowd = null;
+    this.relocatedAt = d.relocatedAt ?? -Infinity; this.busRiders = d.busRiders; this.gateAcc = this.gates.map((_, i) => d.gateAcc[i] ?? 0);
+    for (let i = 0; i + 2 < d.parks.length; i += 3) { const st = sim.parks[idx(d.parks[i]!)]; if (st) { st.parked = Math.min(st.bays, d.parks[i + 1]!); st.turned = d.parks[i + 2]!; } }
+    // the parked cars keep their places in the list (going home's order is indices into it); one whose car park is gone goes home at once
+    this.parkedCars = [];
+    for (let i = 0; i + 2 < d.cars.length; i += 3) this.parkedCars.push({ town: d.cars[i]!, park: idx(d.cars[i + 1]!), bay: d.cars[i + 2]! });
+    // the cars that were on the road join their car park's entrance queues (round-robin over its entrances); with no entrance left they are lost
+    const rr = new Map<number, number>();
+    for (let i = 0; i + 1 < d.road.length; i += 2) {
+      const town = d.road[i]!, k = idx(d.road[i + 1]!), ks = sim.sinks.filter(q => q.park === k);
+      if (!ks.length || k < 0) { this.surge?.event(town, 2); continue; }
+      const j = rr.get(k) ?? 0, K = ks[j % ks.length]!; rr.set(k, j + 1);
+      K.q.push(town); K.qz.push(0);
+    }
+    this.leave = d.leave ? { ...d.leave, order: d.leave.order.slice(), pending: d.leave.pending.map(p => ({ k: p.k, at: p.at })), waits: d.leave.waits.slice(), times: d.leave.times?.slice() ?? null } : null;
+    this.syncWait();
+    return true;
+  }
   /** the round as the UI and the frame see it: with the surge's counts by town while the surge runs or its result is in (null otherwise) */
   roundView(): RoundView {
     const v = this.round.view();

@@ -14,6 +14,7 @@ import type { TownClock } from './sim/townclock';
 import type { Seg } from './network';
 import type { GolfSave } from './golf/mode';
 import type { GrassSave } from './ext/grass-management';
+import type { DaySave } from './event/daysave';
 
 const DB = 'capital-empire', STORE = 'saves', SLOT = 'town', V2_KEY = 'maple-falls-town-v2';
 export const SAVE_VERSION = 5;
@@ -64,8 +65,9 @@ export interface SaveV5 {
    *  slipway as their in-arm degrees (optional 5th, written only when non-empty; missing = every corner has one), and a lights' [tier, ...split]
    *  (optional 6th: tier 0 fixed-time, 1 actuated, 2 adaptive; the green seconds per phase, none = 18 each; missing = actuated, 18 each) */
   nodes: [number, number, string, number?, number[]?, number[]?][];
-  /** library id, x, y, flip, scale, and 1 for a prop placed by a plant brush (optional); a Props tool prop (T131) has 0 there and its catalogue key after */
-  props: [string, number, number, number, number, (0 | 1)?, string?][];
+  /** library id, x, y, flip, scale, and 1 for a prop placed by a plant brush (optional); a Props tool prop (T131) has 0 there and its catalogue key after,
+   *  and a frame tree (T229) the hole it frames after that */
+  props: [string, number, number, number, number, (0 | 1)?, string?, number?][];
   /** the treasury and the game day, as before the books (kept so older readers still work; the books hold the truth) */
   money: number; day: number; /** tb: the tile set families' band (T150, painted-tiles.ts nextBand: 0 NEAR, 1 MID, 2 FAR), so a reload inside the hysteresis lays the same tiles; ts: T145's coverage step, read by nothing now */ cam?: { X: number; Y: number; z: number; tb?: number; ts?: number };
   /** the town's lots that are not EMPTY: key, use, level, decline, seed, since (v5; missing = none) */
@@ -84,6 +86,9 @@ export interface SaveV5 {
   round?: RoundSave;
   /** the car parks as [x, y, w, h] tiles, ids 1..n in this order (optional, no version bump; missing = none) */
   parks?: [number, number, number, number][];
+  /** T219 (P27): the iconic places on the map as [id, x, y, q] (lots/iconic.ts PlaceTuple: the front corner, tiles, and the street's quarter turn;
+   *  optional, no version bump; missing = none placed yet: the town places them again as it reaches their size) */
+  places?: [string, number, number, number][];
   /** the toll gates as [ax, ay, bx, by, booths] (the plaza's ends, inbound a → b; ids 1..n in this order; optional, no version bump; missing = none) */
   tolls?: [number, number, number, number, number][];
   /** the shuttle bus routes as [park, sx, sy, dx, dy, buses, seats, town] (the lot stop and the doors stop, tiles; town: the town's index, -1 for a route
@@ -111,6 +116,10 @@ export interface SaveV5 {
   speed?: number;
   /** the golf game's state (golf/mode.ts; optional, no version bump; missing = a legacy classic game, which loads as before) */
   golf?: GolfSave;
+  /** the tournament day under way (T209, event/daysave.ts: the clocks, the surge, the crowd, the car parks, going home): written only while a golf round
+   *  is in its surge or eval on the tournament day, so the round resumes where it was (City.resumeDay). Optional, no version bump; missing = as before
+   *  (a surge restores as free) */
+  tourney?: DaySave;
   /** the build that wrote this save (T044; optional, informational only, never used to refuse a save) */
   build?: { app: string; sha: string };
 }
@@ -125,6 +134,9 @@ const V2_IDS = ['world:house_1', 'world:house_3', 'world:house_4', 'gen:house-du
   'world:fence_picket_x', 'world:fence_picket_y', 'world:fence_iron_x', 'world:fence_iron_y', 'gen:fence-privacy-wood',
   'gen:trash-cans-row', 'gen:kids-bikes', 'expansion:trampoline', 'expansion:doghouse', 'expansion:basketball-hoop', 'expansion:washing-line'];
 
+/** the save with the tournament day under way (T209, SaveV5.tourney) added last; with none, the very same object, so every other save is byte for byte
+ *  as before */
+export function withTourney(d: SaveV5, tourney: DaySave | null): SaveV5 { return tourney ? { ...d, tourney } : d; }
 export async function writeSave(d: SaveV5) { const buf = await gzip(JSON.stringify({ ...d, build: BUILD })); await store.put(SLOT, buf); return buf.byteLength; }
 /** the save migrations, one step per version: step `from` turns a save of that version into the next one's shape; upgradeSave runs them in order */
 export const MIGRATIONS: { from: number; up(d: any): any }[] = [

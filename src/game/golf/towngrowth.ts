@@ -1,5 +1,5 @@
 // Golf town growth after each tournament (GOLF-PLAN section 8.4): pure calculation of resident growth rate and target populations from satisfaction, attendance share, tier, and reputation. Pure TS, no DOM.
-import { PARTY } from '../event/config';
+import { GROWN_EARN_K, GROWN_EARN_P, GROWN_EARN_P0, PARTY } from '../event/config';
 import type { RoundResult } from '../event/round';
 import { daySatisfaction } from './tour';
 
@@ -115,6 +115,26 @@ export function roundSatisfactionForGrowth(last: RoundResult): number {
   });
   const scale = last.rate >= 0.5 ? 1 : Math.max(0, last.rate / 0.5);
   return Math.round(raw * scale);
+}
+
+/** T221 (#610): the residents a range start's town has room for with the money the club has made ($, its running income: Budget.earned) and
+ *  the tournaments' success (City.grownSuccess of the last round's townGrowthRate, 1 before the first): (GROWN_EARN_P0 + GROWN_EARN_K x
+ *  (earned / 1000) ^ GROWN_EARN_P) x max(1, success). The success is a bonus on the target: a good tournament adds room, a poor one takes none
+ *  away (it slows the pace instead, Town.step). Non-decreasing in earned, so a town that stops earning stops growing and never shrinks for it */
+export function earnedTarget(earned: number, success = 1): number {
+  const e = Math.max(0, Number.isFinite(earned) ? earned : 0) / 1000;
+  return Math.round((GROWN_EARN_P0 + GROWN_EARN_K * Math.pow(e, GROWN_EARN_P)) * Math.max(1, success));
+}
+/** the money made ($) that gives room for pop residents at success (earnedTarget's inverse; 0 at or below its floor): an old save's town,
+ *  made before the money made was kept, starts from the earnings its size stands for */
+export function earnedFor(pop: number, success = 1): number {
+  const r = (pop / Math.max(1, success) - GROWN_EARN_P0) / GROWN_EARN_K;
+  return r <= 0 ? 0 : 1000 * Math.pow(r, 1 / GROWN_EARN_P);
+}
+
+/** T221: the town's readout (the Population stat's tip, the season card): "Grows with your club: N residents now, room for M with your earnings" */
+export function roomLine(pop: number, room: number): string {
+  return `Grows with your club: ${Math.round(pop).toLocaleString('en-US')} residents now, room for ${Math.round(Math.max(pop, room)).toLocaleString('en-US')} with your earnings`;
 }
 
 /** compute golf town growth rate from a finished RoundResult, tier, and reputation */

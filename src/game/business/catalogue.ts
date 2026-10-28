@@ -77,9 +77,9 @@ export const BUSINESSES: BusinessType[] = [
     hours: [15, 24], rate: 8, tau: 10, max: 2, townMin: 0, water: false, unlock: { parent: 'fishing', level: 2 }, spinOffs: [],
     blurb: 'Cheap rooms for anglers and fans; tourists come in from the highway.' },
 ];
-/** the golf course's clubhouse (golf mode): the game places it, so it is not in BUSINESSES (the Business tool and the unlocks never see it); its green
+/** the golf course's clubhouse (golf mode; 20 x 12 tiles, 40 x 24 m: the owner, 2026-10-27, "clubhouse is masssiive!!", was 40 x 24 tiles): the game places it, so it is not in BUSINESSES (the Business tool and the unlocks never see it); its green
  *  fees are the course's, and the tournament's crowd heads for its door (City.setBusinesses) */
-const CLUBHOUSE: BusinessType = { id: 'clubhouse', name: 'Clubhouse', family: 'leisure', kind: 'visit', footprint: { w: 40, h: 24 }, buildCost: 0, upkeepPerDay: 300, pricePerVisitor: 22, party: 4,
+const CLUBHOUSE: BusinessType = { id: 'clubhouse', name: 'Clubhouse', family: 'leisure', kind: 'visit', footprint: { w: 20, h: 12 }, buildCost: 0, upkeepPerDay: 300, pricePerVisitor: 22, party: 4,
   hours: [7, 19], rate: 25, tau: 6, max: 1, townMin: 150, water: false, unlock: { parent: null }, spinOffs: [],
   blurb: 'The course\'s front door: golfers park here, pay their green fees and walk out to the first tee.' };
 /** the driving range (plan P22 2.2.1, range starts): the game places it with the county road, so it is not in BUSINESSES either. Its visitors

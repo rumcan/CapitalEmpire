@@ -27,6 +27,8 @@ const TARGET_D = [25, 50, 75, 100, 120], TARGET_U = [28, 44, 32, 40, 36], TARGET
 const FAR_V = 149.4, SIDE_U: [number, number] = [0.6, 69.4];
 /** the land's grass the outfield leaves round the tee box (tiles): room for the raised tee's face at the Height slider's top (T127, T130) */
 const TEE_GAP = 2.6;
+/** how far a desert start's dirt tee box reaches past the tee cells (tiles, T223): over the course's first-cut collar round them (1 m) */
+const TEE_DIRT_PAD = 0.55;
 /** the second tier (T133): the upper deck is the covered-bay building again, drawn DECK_H world px up the screen over the lower roofs (its own
  *  mats then stand on the lower roofs' line: a double-deck stand), its first slot (the middle twelve of the 24) */
 export const DECK_H = 190;
@@ -67,10 +69,12 @@ const GARAGE_SCALE = 0.6;
 export interface ScenePiece { key: string; id: string; x: number; y: number; q: number; scale?: number; fit?: number; label?: string; /** drawn this high above its spot (world px, T133: the upper deck) */ lift?: number;
   /** its footprint (world x0 y0 x1 y1, T133) in place of its picture's boxes: a covered-bay roof's or the deck's, behind its golfers */ foot?: [number, number, number, number] }
 /** a ground patch of the scene: a world polygon (x y pairs) and its surface: a golf surface (laid with the course's own presets), the range's own
- *  presets (T132: 'outfield', the mown outfield with its stripes, and 'target', a target green: rangehost.ts patchTex) or a ground texture; edge:
+ *  presets (T132: 'outfield', the mown outfield with its stripes, and 'target', a target green; T223: 'desert', the desert start's outfield,
+ *  'teeDirt' and 'teeTurf', the range's tee box before and after it is turfed, and 'yard', the caravan's and the cottage's desert yard:
+ *  rangehost.ts patchTex) or a ground texture; edge:
  *  its outline's profile (paint-edges.ts: a target green is raised, its collars feathered; absent: crisp); mow: its mowing stripes are laid on
  *  top (the outfield) */
-export interface ScenePatch { pts: number[]; surf: 'fairway' | 'firstCut' | 'tee' | 'fringe' | 'green' | 'rough' | 'dirt' | 'grassDry' | 'asphaltDark' | 'gravel' | 'concrete' | 'outfield' | 'target'; edge?: 'raised' | 'flat'; mow?: true }
+export interface ScenePatch { pts: number[]; surf: 'fairway' | 'firstCut' | 'tee' | 'fringe' | 'green' | 'rough' | 'dirt' | 'grassDry' | 'asphaltDark' | 'gravel' | 'concrete' | 'outfield' | 'target' | 'desert' | 'teeDirt' | 'teeTurf' | 'yard'; edge?: 'raised' | 'flat'; mow?: true }
 /** a target green in the scene: centre, radius and distance from the tee line (m) */
 export interface SceneTarget { x: number; y: number; r: number; m: number }
 /** the scene of a range (rangeScene) */
@@ -137,8 +141,14 @@ export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave): 
   // painted areas draw over the course, so the outfield keeps TEE_GAP tiles off it, where the raised tee's bank or rock face hangs down onto the
   // land's grass), the pads and mats of the open bays on their concrete deck (over the tee box), the target greens, the shop's packed dirt and
   // the caravan's dry lawn
-  // the outfield is the range's own preset with its mowing stripes laid on top (T132: they read at every zoom, across the line of play)
-  patches.push({ pts: quad(0.3, 69.7, TEE[3] + TEE_GAP, 149.7), surf: 'firstCut' }, { pts: quad(2, 68, TEE[3] + TEE_GAP + 0.6, 148), surf: 'outfield', mow: true });
+  // the outfield is the range's own preset with its mowing stripes laid on top (T132: they read at every zoom, across the line of play); a desert
+  // start's (T223) is the desert, edge to edge, until the player grasses it
+  if (st.grass) patches.push({ pts: quad(0.3, 69.7, TEE[3] + TEE_GAP, 149.7), surf: 'firstCut' }, { pts: quad(2, 68, TEE[3] + TEE_GAP + 0.6, 148), surf: 'outfield', mow: true });
+  else patches.push({ pts: quad(0.3, 69.7, TEE[3] + TEE_GAP, 149.7), surf: 'desert' });
+  // the tee box wears the range's own tee (T223): packed dirt at a desert start, its divot-scarred turf once turfed (the course's tees keep theirs).
+  // The dirt reaches over the tee cells' first-cut collar (TEE_DIRT_PAD), so no green ring frames a desert tee; the turf keeps its collar
+  const pad = st.teeTurf ? 0 : TEE_DIRT_PAD;
+  patches.push({ pts: quad(TEE[0] - pad, TEE[1] + pad, TEE[2] - pad, TEE[3] + pad), surf: st.teeTurf ? 'teeTurf' : 'teeDirt' });
   const open = openSlots(st.lowerBays); // the tee box's mats (T133: the upper deck's bays are added below)
   patches.push({ pts: quad(slotU(open[0]!) - 1.5, slotU(open[open.length - 1]!) + 1.5, STAND_V - 2, STAND_V + 2.2), surf: 'concrete' });
   for (const k of open) { const u = slotU(k); patches.push({ pts: quad(u - 1.05, u + 1.05, STAND_V - 1.4, STAND_V + 1.6), surf: 'asphaltDark' }, { pts: quad(u - 0.65, u + 0.65, STAND_V - 0.2, STAND_V + 1.2), surf: 'green' }); }
@@ -150,8 +160,8 @@ export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave): 
     targets.push({ x: c.x, y: c.y, r, m: TARGET_D[i]! * 2 });
   }
   const home = homeStage(s), Y = YARDS[home]!;
-  // the caravan's yard is dry lawn; the cottage's and the house's a mown lawn (T133)
-  patches.push({ pts: quad(28, 41, 3, 15.4), surf: 'dirt' }, { pts: quad(Y[0], Y[1], Y[2], Y[3]), surf: home ? 'firstCut' : 'grassDry' });
+  // the caravan's and the cottage's yard is the desert (T223: the range's 'yard' preset); the house's a mown lawn (T133)
+  patches.push({ pts: quad(28, 41, 3, 15.4), surf: 'dirt' }, { pts: quad(Y[0], Y[1], Y[2], Y[3]), surf: home === 2 ? 'firstCut' : 'yard' });
   if (st.kiosk) patches.push({ pts: quad(PATIO[0], PATIO[1], PATIO[2], PATIO[3]), surf: 'concrete' });
   if (st.parking) patches.push({ pts: quad(GARAGE[0], GARAGE[1], GARAGE[2], GARAGE[3]), surf: 'concrete' });
 
@@ -473,8 +483,8 @@ export type RangePerson = CrowdPerson & { lift: number };
 export interface RangeDraw {
   /** the golfers on foot (walking, queued, hitting) as crowd people (group 1), the academy's pro among them (T133) */
   people: RangePerson[]; nPeople: number;
-  /** the cars (driving or parked): point, heading (radians, world) and type */
-  cars: { x: number; y: number; ang: number; type: number }[]; nCars: number;
+  /** the cars (driving or parked): point, heading (radians, world), type and its golfer's visit (T228: its paint; -1 the ball picker) */
+  cars: { x: number; y: number; ang: number; type: number; id: number }[]; nCars: number;
   /** the ball picker cart (T133; null: none): where it is, and whether it is out on its lanes (it is also the last of the cars) */
   picker: { x: number; y: number; out: boolean } | null;
 }
@@ -1011,11 +1021,11 @@ export class RangeSim {
       // yet; a car waiting to pull out stands parked, its first leg backing out of the bay, and in the car park building is not drawn)
       const rc = v.rc;
       if (rc) {
-        if (rc.c > 0 || (rc.out && !rc.inside)) { const c = C[nc] ?? (C[nc] = { x: 0, y: 0, ang: 0, type: 0 }); nc++; c.x = rc.x; c.y = rc.y; c.ang = rc.c > 0 ? rc.ang : rc.ang + Math.PI; c.type = v.car; }
+        if (rc.c > 0 || (rc.out && !rc.inside)) { const c = C[nc] ?? (C[nc] = { x: 0, y: 0, ang: 0, type: 0, id: -1 }); nc++; c.x = rc.x; c.y = rc.y; c.ang = rc.c > 0 ? rc.ang : rc.ang + Math.PI; c.type = v.car; c.id = v.id; }
       } else if (v.stage >= S.WalkShop && v.stage <= S.WalkCar) {
         // parked (in the car park building, T146: inside it, not drawn)
         const sl = this.slots[v.slot];
-        if (sl && !sl.inside) { const c = C[nc] ?? (C[nc] = { x: 0, y: 0, ang: 0, type: 0 }); nc++; c.x = sl.x; c.y = sl.y; c.ang = Math.atan2(sl.hy, sl.hx); c.type = v.car; }
+        if (sl && !sl.inside) { const c = C[nc] ?? (C[nc] = { x: 0, y: 0, ang: 0, type: 0, id: -1 }); nc++; c.x = sl.x; c.y = sl.y; c.ang = Math.atan2(sl.hy, sl.hx); c.type = v.car; c.id = v.id; }
       }
       if (v.stage < S.WalkShop || v.stage > S.WalkCar) continue;
       const p = P[np] ?? (P[np] = { x: 0, y: 0, group: 1, person: 0, row: 0, frame: 0, lift: 0 }); np++;
@@ -1056,7 +1066,7 @@ export class RangeSim {
     }
     // the ball picker cart (T133): parked by the outfield by day, out on its lanes after closing (the last of the cars)
     if (sc?.picker) {
-      const out = this.pickT >= 0, c = C[nc] ?? (C[nc] = { x: 0, y: 0, ang: 0, type: 0 }); nc++;
+      const out = this.pickT >= 0, c = C[nc] ?? (C[nc] = { x: 0, y: 0, ang: 0, type: 0, id: -1 }); nc++; c.id = -1;
       if (out) { c.x = this.pickAt.x; c.y = this.pickAt.y; c.ang = this.pickAt.ang; } else { c.x = sc.picker.home.x; c.y = sc.picker.home.y; c.ang = sc.picker.ang; }
       c.type = PICKER_CAR; d.picker = { x: c.x, y: c.y, out };
     }

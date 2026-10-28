@@ -12,6 +12,7 @@ import { castsShadow, contactShadow, placeholderBoxes, type ContactShadow, type 
 import { lookOf } from './newart';
 import { vectorMesh, type VectorRange } from './shadow-vector';
 import { GLOW_LAYER, LAMP_FLOATS } from './sim/car-lamps';
+import { packAlpha, paintCode } from './car-paint';
 
 /** anything drawn like a prop: library item, anchor (tiles), flip, scale, footprint (tiles) */
 export interface Drawable { item: number; x: number; y: number; flip: boolean; scale: number; x0: number; y0: number; x1: number; y1: number; /** a moving car (SimClient.visible): already drawn at CAR_SCALE */ moving?: boolean;
@@ -20,6 +21,8 @@ export interface Drawable { item: number; x: number; y: number; flip: boolean; s
   lift?: number;
   /** drawn tinted (T176: a tree New hole's Build would clear): a warm red multiplied in, so the art's own darks stay dark */
   tint?: boolean;
+  /** a car's paint (T228, car-paint.ts: 1.. a palette colour its body takes; 0 or absent: the art's own) */
+  paint?: number;
   /** its lamps (T192: a car's lit brake lights, sim/car-lamps.ts; LAMP_FLOATS each: world X, Y, radius, brightness): glow instances packed
    *  right after its picture in its tile's painter's order, so whatever is drawn nearer covers them like the car itself */
   lamps?: number[] }
@@ -98,7 +101,9 @@ function packSprite(d0: Drawable, out: Float32Array, o: number, i: number, j: nu
   // w: the foot line (world px) the cast shadow hinges on; a baked lot casts none (its picture carries its own, baked), nor a sprite whose
   // override says so (shadow-overrides.json: a flat one); a hidden one draws nothing
   // (a picture with a vector shadow casts its drawn shape instead: packVector)
-  out[o + 8] = t[0]; out[o + 9] = l.hidden ? 0 : d0.tint ? 2 + alpha : alpha; /* T176: 2 + alpha marks a tinted sprite (gl.ts) */ out[o + 10] = it.big ? 0 : 1; out[o + 11] = it.kind === 'lot' || l.hidden || d0.lift || !casts(l.item) || (VECTOR.on && vecOf(l.item)) ? -1 : worldY(l.x ?? d0.x, l.y ?? d0.y);
+  // (T176: 2 + alpha marks a tinted sprite; T228: 2 + 2 code + alpha a painted car, car-paint.ts paintCode; gl.ts decodes both)
+  const pc = d0.paint ? paintCode(l.item, d0.paint) : 0;
+  out[o + 8] = t[0]; out[o + 9] = l.hidden ? 0 : packAlpha(alpha, !!d0.tint, pc); out[o + 10] = it.big ? 0 : 1; out[o + 11] = it.kind === 'lot' || l.hidden || d0.lift || !casts(l.item) || (VECTOR.on && vecOf(l.item)) ? -1 : worldY(l.x ?? d0.x, l.y ?? d0.y);
   clip(out, o + 12, i, j);
   // the footprint's front edges, for the cast shadows (gl.ts VS_CAST): the near corner (x1, y1) and the left (x0, y1) and right (x1, y0)
   // corners; business art's placeholder footprint (a 2 x 2 m box under a whole building) gives way to its picture's base (T141)
@@ -129,7 +134,7 @@ export function contactOf(d: Drawable, rect: ArrayLike<number> = spriteRect(d)):
 /** a drawable's vector shadow instance (gl.ts VECTOR_STRIDE) into `out` at `o`: false when it has none (off, no entry, hidden). A lifted one
  *  (T133: the range's upper deck) casts from its ground spot, every point of it its lift higher, and has no contact shape (what holds it up
  *  has its own), so a double deck casts a two-storey shadow */
-export function packVector(d: Drawable, out: Float32Array, o: number, i: number, j: number, rect: ArrayLike<number>): boolean {
+export function packVector(d: Drawable, out: Float32Array, o: number, i: number, j: number, rect: ArrayLike<number>, h = rect[3]! - rect[1]!): boolean {
   if (!VECTOR.on) return false;
   const a = spriteAnchor(d); if (!a) return false;
   const v = vecOf(a.item); if (!v || !v.count) return false;
@@ -139,16 +144,20 @@ export function packVector(d: Drawable, out: Float32Array, o: number, i: number,
   out[o + 4] = a.flip ? v.mfirst : v.first; out[o + 5] = a.flip ? v.mcount : v.count; out[o + 6] = a.flip ? v.fmfirst : v.ffirst; out[o + 7] = a.flip ? v.fmcount : v.fcount;
   clip(out, o + 8, i, j);
   out[o + 12] = rect[0]!; out[o + 13] = rect[1]!; out[o + 14] = rect[2]!; out[o + 15] = rect[3]!;
+  // T216: the sprite's own cull (gl.ts CULL_MIN_PX): h its picture's height (default the rect's; a mover passes its own, as its lamps may have grown the rect), and its flag
+  out[o + 16] = h; out[o + 17] = LIBRARY[a.item]!.big ? 0 : 1; out[o + 18] = 0; out[o + 19] = 0;
   return true;
 }
 /** the sprite's contact shadow (shadow-shape.ts contactShadow): the drawn picture's (the look's) shape from the footprint (2 m tiles, so the
  *  half extents in metres are the tile spans) and the picture's rect `rect` (world px, spriteRect), a parked car's shrunk like its picture;
- *  none (a lifted or hidden sprite, a lot, an override's contact: false) packs as a zero-size shape */
-function packShadow(d: Drawable, out: Float32Array, o: number, i: number, j: number, rect: ArrayLike<number>) {
+ *  none (a lifted or hidden sprite, a lot, an override's contact: false) packs as a zero-size shape. T216: its sprite's cull rides along (h: its picture's
+ *  height, default the rect's; and whether it is cullable), so the shadow is hidden with the sprite at the district zoom */
+export function packShadow(d: Drawable, out: Float32Array, o: number, i: number, j: number, rect: ArrayLike<number>, h = rect[3]! - rect[1]!) {
   const sh = contactOf(d, rect);
   out[o] = sh ? worldX(sh.x, sh.y) : 0; out[o + 1] = sh ? worldY(sh.x, sh.y) : 0; out[o + 2] = sh?.hx ?? 0; out[o + 3] = sh?.hy ?? 0;
   out[o + 4] = sh?.core ?? 0; out[o + 5] = sh?.feather ?? 0; out[o + 6] = sh?.round ? 1 : 0; out[o + 7] = sh?.lean ?? 0;
   clip(out, o + 8, i, j);
+  out[o + 12] = h; out[o + 13] = LIBRARY[lookOf(d).item]!.big ? 0 : 1; out[o + 14] = 0; out[o + 15] = 0;
 }
 /** topological painter's order over the props of one tile (their pictures overlap) */
 function topoOrder(props: Prop[], rects: Float32Array) {
@@ -253,12 +262,13 @@ export class SpriteTiles {
    *  merged in. Returns both streams and their lengths. */
   frame(visible: { i: number; j: number }[], movers: Drawable[]) {
     // movers by tile
-    const byTile = new Map<number, { d: Drawable; r: number[] }[]>();
+    const byTile = new Map<number, { d: Drawable; r: number[]; h: number }[]>();
     while (this.rbuf.length < movers.length) this.rbuf.push([0, 0, 0, 0]);
     for (let m = 0; m < movers.length; m++) {
-      const d = movers[m], r = spriteRect(d, this.rbuf[m]); lampBox(d, r);
+      // (h: the picture's own height, read before lampBox grows r for the lamps: the sprite's cull, T216)
+      const d = movers[m], r = spriteRect(d, this.rbuf[m]), h = r[3]! - r[1]!; lampBox(d, r);
       for (let j = Math.floor(r[1] / CHUNK_H); j <= Math.floor(r[3] / CHUNK_H); j++) for (let i = Math.floor(r[0] / CHUNK_W); i <= Math.floor(r[2] / CHUNK_W); i++) {
-        const k = tkey(i, j); let l = byTile.get(k); if (!l) byTile.set(k, (l = [])); l.push({ d, r });
+        const k = tkey(i, j); let l = byTile.get(k); if (!l) byTile.set(k, (l = [])); l.push({ d, r, h });
       }
     }
     let at = 0, sat = 0; const draws: TileDraw[] = [];
@@ -277,10 +287,10 @@ export class SpriteTiles {
       const s = this.stream, ss = this.shadowStream, d: TileDraw = { i, j, shadows: 0, sprites: 0 };
       if (t) { ss.set(t.shadows, sat); sat += t.shadows.length; d.shadows += t.shadows.length / SHADOW_STRIDE; }
       // (a mover with a vector shadow packs no T141 shape: packVector below)
-      if (mv) for (const m of mv) { if (VECTOR.on && vecOf(lookOf(m.d).item)) continue; packShadow(m.d, ss, sat, i, j, m.r); sat += SHADOW_STRIDE; d.shadows++; }
+      if (mv) for (const m of mv) { if (VECTOR.on && vecOf(lookOf(m.d).item)) continue; packShadow(m.d, ss, sat, i, j, m.r, m.h); sat += SHADOW_STRIDE; d.shadows++; }
       if (t) t.vsets.forEach((a, k) => { if (a.length) { vput(k, a, a.length); vmax[k] = Math.max(vmax[k]!, t.vmax[k]!); vfar[k] = Math.max(vfar[k]!, t.vfar[k]!); } });
       if (mv) for (const m of mv) {
-        if (!packVector(m.d, vone, 0, i, j, m.r)) continue;
+        if (!packVector(m.d, vone, 0, i, j, m.r, m.h)) continue;
         const c = vone[5]!, set = setOf(c); vput(set, vone, VECTOR_STRIDE); vmax[set] = Math.max(vmax[set]!, c); vfar[set] = Math.max(vfar[set]!, vone[7]!);
       }
       if (!mv) { if (t) { s.set(t.packed, at); at += t.packed.length; d.sprites = nProps; } }

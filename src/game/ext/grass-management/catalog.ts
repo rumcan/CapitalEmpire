@@ -13,7 +13,7 @@ export const GROUND_MATERIALS: readonly GroundMaterial[] = [...GRASS_SURFACES.fl
 export const GRASS_DECALS = ['mowing-stripes', 'mowing-patterns', 'crowd-light', 'crowd-heavy', 'divots-fresh', 'divots-repair', 'cart-tracks', 'mud-footprints', 'dry-patches', 'maintenance', 'leaves-litter', 'surface-transitions'] as const;
 /** Texture presets with no golf surface that are still managed turf, by preset id (T096): the driving range's own outfield (its mown stripes) is
  *  the driving-range family, its target greens are greens (golf/rangehost.ts RANGE_PRESET: 'range-outfield', 'range-green') */
-export const PRESET_FAMILY: Readonly<Record<string, GrassSurface>> = { 'range-outfield': 'driving-range', 'range-green': 'golf-green' };
+export const PRESET_FAMILY: Readonly<Record<string, GrassSurface>> = { 'range-outfield': 'driving-range', 'range-green': 'golf-green', 'range-tee-turf': 'golf-tee' }; // T223: the range's turfed tee box (its desert and dirt are no grass)
 /** Existing paint texture to managed family; non-grass surfaces are excluded. */
 export function grassSurface(tex: string, lawn = false, presetSurface?: string | null): GrassSurface | null {
   if (lawn) return 'residential-lawn';

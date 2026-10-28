@@ -35,6 +35,8 @@ export interface Prop {
   uid: number;
   /** drawn tinted (T176: a tree New hole's Build would clear; sprites.ts Drawable.tint) */
   tint?: boolean;
+  /** a car's paint (T228, car-paint.ts; sprites.ts Drawable.paint): set by addProp for a car from where it stands */
+  paint?: number;
   /** index into LIBRARY */
   item: number;
   x: number;
@@ -52,6 +54,8 @@ export interface Prop {
   plant?: 1;
   /** placed by the Props tool (T131): its catalogue key (golf/decor.ts); saved as the tuple's 7th element (the 6th is then 0) */
   decor?: string;
+  /** T229: a frame tree (golf/holeframe.ts, Frame with trees): the hole it frames; saved as the tuple's 8th element, after its catalogue key */
+  frame?: number;
   /** drawn this high above its spot (world px; T133: the range's upper deck, an auto prop, never saved): sprites.ts Drawable.lift */
   lift?: number;
 }
@@ -59,7 +63,7 @@ export interface Prop {
 /** path: the rail's Paths (T084), the road tool on the course's cart paths and drives (setTool turns it into 'road' with roadScope 'course');
  *  buildings: the rail's Buildings (plan P23 P1-E), the course tool in its buildings scope, which places the clubhouse (setTool turns it into
  *  'course' with courseScope 'buildings'); props: the rail's Props (T131, golf/propstool.ts), the course's decor */
-export type Tool = 'select' | 'road' | 'junction' | 'bulldoze' | 'park' | 'toll' | 'bus' | 'lane' | 'downgrade' | 'business' | 'paint' | 'course' | 'path' | 'buildings' | 'props' | 'greenkeeping';
+export type Tool = 'select' | 'road' | 'junction' | 'bulldoze' | 'park' | 'toll' | 'bus' | 'lane' | 'downgrade' | 'business' | 'paint' | 'course' | 'path' | 'buildings' | 'props' | 'greenkeeping' | 'practice';
 export type LineStyle = 0 | 1 | 2; // 0 dashed single, 1 double solid, 2 none
 export type BendMode = 90 | 45;
 

@@ -47,7 +47,13 @@ function webpSize(buf: Buffer): [number, number] {
 // T170 (#395): long grass is through the art session's handoff (its canonical selection in READY-MATERIALS): accepted, no longer provisional
 const ACCEPTED = ['painted:golden-fescue', 'painted:lake', 'painted:sand-ripples', 'painted:long-grass', 'painted:putting-green', 'painted:fringe'];
 // T191 (#497): the fringe, new, provisional (the art session's finished v1 sets, measured and shipped as made)
-const PROVISIONAL = ['fairway', 'putting-green'];
+// T225 (#631): the RUN families (the art session's RUN sets, shipped as made, no handoff yet: #590, #612, #620, #625, #630) are provisional too,
+// listed in the manifest's order (painted-tiles.json); the owner picks which one each surface wears (Studio › Painted)
+const PROVISIONAL = ['fairway', 'putting-green',
+  'first-cut-run', 'tee-run', 'desert-run', 'swamp-run', 'dirt-run', 'sand-raked-run',
+  'putting-green-run', 'rough-run', 'pond-bank-run', 'grow-in-run', 'field-parking-run',
+  'flower-bed-soil-run', 'range-tee-divots-run', 'lawn-concept-run', 'meadow-concept-run', 'rough-concept-run', 'fairway-concept-run', 'first-cut-concept-run', 'green-concept-run', 'pond-concept-run'];
+
 /** the owner's own paintings (T162) and the art session's fairway and putting-green paintings (T165): provisional too, one tile a level, from
  *  art/owner-supplied (committed in this repo); a level may instead be a provisional family's raw tiles healed with one shared strip (T165) */
 // T191: the putting green with the v2 MID and FAR sets (NEAR the owner's painting), an owner family like putting-green-paint
@@ -94,12 +100,16 @@ test('the manifest ships only the ready families\' primary tiles and the provisi
         assert.deepEqual(lv.tiles.map(t => t.id), ['tile-01']); assert.equal(lv.decision.file, null); assert.equal(lv.folder, dir);
         assert.equal(lv.tiles[0]!.source, `${dir}/${b}.png`); assert.equal(lv.revision, `${b}-${path.posix.basename(dir)}`); assert.ok(lv.heal, `${f.id} ${b}: its heal recorded`);
       } else if (f.provisional) {
-        // the newest complete set of four in the level's own folder, as the art session left it (raw generator outputs), hash-recorded
+        // the newest complete set of four in the level's own folder, as the art session left it (raw generator outputs), hash-recorded.
+        // T225 (#631): the RUN sets live in the art's run-grass folder (run-grass/<family>/<level>/<revision>), the others in eight-tiles
         assert.deepEqual(lv.tiles.map(t => t.id), FOUR); assert.equal(lv.decision.file, null, 'no visual decision yet');
-        assert.match(lv.revision, new RegExp(`^${b}-v\\d+$`)); assert.equal(lv.folder, `art/theme-consistency/generated/ground/eight-tiles/${material}/${lv.revision}`);
+        assert.match(lv.revision, new RegExp(`^${b}-(tiles-)?v\\d+[a-z]?$`));
+        const set = f.id.endsWith('-run') ? `run-grass/${f.id.replace(/-run$/, '')}/${b}/${lv.revision.slice(b.length + 1)}` : `eight-tiles/${material}/${lv.revision}`;
+        assert.equal(lv.folder, `art/theme-consistency/generated/ground/${set}`);
         assert.ok((lv.status ?? '').length > 10, `${f.id} ${b}: the art session's status for the set is recorded`);
         for (const t of lv.tiles) assert.match(t.source!, new RegExp(`^${lv.folder}/${t.id}(-v\\d+\\.raw)?\\.png$`), `${f.id} ${b} ${t.id}: its source PNG, from the set's own folder`);
-        assert.ok(Math.abs(lv.native[0] - 1742) <= 8 && Math.abs(lv.native[1] - 902) <= 8, `${f.id} ${b}: ${lv.native.join('x')}, the files' own size (about 1742x902)`);
+        // a landscape set, at least 1024 px wide (the files' own size: 1742x902 or 1376x768 so far; each shipped file is checked at native size below)
+        assert.ok(lv.native[0] >= 1024 && lv.native[0] > lv.native[1] * 1.7 && lv.native[0] < lv.native[1] * 2, `${f.id} ${b}: ${lv.native.join('x')}, a landscape set`);
       } else {
         assert.deepEqual(lv.tiles.map(t => t.id), ids[f.id as keyof typeof ids][b], `${f.id} ${b}: the primary tile ids, in order (never the extras)`);
         assert.equal(lv.revision, sets[f.id as keyof typeof sets][b]);
@@ -364,7 +374,7 @@ test('whole tiles butt edge to edge at every chunk border and cache level: snapp
   }
 });
 
-test('the tile sets join the families, laid as authored; fescue, water, the map grass and rivers wear them; T153: fairway, greens and waste too; T162: the rough and decrepit lawns the owner\'s rough; town lawns, tees and every legacy family are unchanged', () => {
+test('the tile sets join the families, laid as authored; the map grass, rivers, the golf turf and tee and the town lawns resolve to tile sets through their textures; every legacy family stays as an option (T225: no pin on the owner\'s picks)', () => {
   for (const id of ['golden-fescue', 'lake', 'sand-ripples-tiles', 'fairway', 'putting-green', 'long-grass', 'rough-owner', 'fairway-paint', 'putting-green-paint']) {
     const f = familyById(id)!; assert.ok(f.tiled);
     assert.deepEqual(clampLook({ family: id, version: 'v9', scale: 2, tint: '#ff0000', tone: 0.4 }), { family: id, version: null, scale: 1, tint: '#ffffff', tone: 0 }, 'no scale, tint or tone over the art');
@@ -379,7 +389,9 @@ test('the tile sets join the families, laid as authored; fescue, water, the map 
   assert.equal(FAMILIES.filter(f => f.tiled).length, TILED_FAMILIES.length);
   const S = clampSurfaces(surfacesFile);
   assert.equal(lookOfTex('golfFescue', S)!.family, 'golden-fescue'); assert.equal(lookOfTex('preset:fescue', S, PRESETS)!.family, 'golden-fescue');
-  for (const t of ['waterDark', 'waterDeep', 'waterClear']) assert.equal(lookOfTex(t, S)!.family, 'lake', t);
+  // T230 (#669): the ponds wear the concept's deep pond water (GOLF-ART-LIST 154); the rivers keep the brighter lake (the lead, 2026-10-28:
+  // the concept's lake is a bright turquoise; water-look.ts shades both)
+  for (const t of ['waterDark', 'waterDeep', 'waterClear']) assert.equal(lookOfTex(t, S)!.family, 'pond-concept-run', t);
   // the map's open grass draws golden fescue and rivers draw lake (the owner, 2026-10-26: "all the map water and grass needs to be replaced
   // aswell"; main 003153a); the course turf keeps its families
   assert.equal(lookOfTex('water', S)!.family, 'lake', 'rivers and creeks draw the lake');
@@ -392,11 +404,14 @@ test('the tile sets join the families, laid as authored; fescue, water, the map 
   }
   for (const id of ['fairway', 'putting-green']) assert.ok(tiledFamily(id), `${id} stays in the manifest (the old option)`);
   for (const p of ['fairway', 'green', 'fringe', 'rough', 'waste'] as const) { const l = lookOfTex(`preset:${p}`, S, PRESETS); if (l) assert.ok(knownFamily(l.family), `the ${p} preset`); }
-  // Tees and first cut follow the owner's committed choices too (the first cut currently wears fringe); adding an option cannot reset them.
-  for (const [t, key] of [['golfTee', 'tee'], ['golfFirstCut', 'firstCut']] as const) { const l = lookOfTex(t, S); if (l) { assert.equal(l.family, S.surfaces[key]!.family, `${t} keeps its chosen family`); assert.ok(familyById(l.family)); } }
+  // the tee and the first cut: each texture resolves through lookOfTex to its surface's family, a tile set laid as authored (which one each wears is the owner's)
+  for (const [t, key] of [['golfTee', 'tee'], ['golfFirstCut', 'firstCut']] as const) {
+    assert.equal(lookOfTex(t, S)!.family, S.surfaces[key]!.family, t); assert.ok(familyById(S.surfaces[key]!.family)?.tiled, `${key} wears a tile set`);
+  }
+
   for (const l of S.lawns) assert.ok(familyById(l.family)!.tiled, 'T189: every town lawn wears a tile set (the new paintings), laid as authored');
   assert.deepEqual(S.surfaces.fescue, { family: 'golden-fescue', version: null, scale: 1, tint: '#ffffff', tone: 0 });
-  assert.deepEqual(S.surfaces.water, { family: 'lake', version: null, scale: 1, tint: '#ffffff', tone: 0 });
+  assert.deepEqual(S.surfaces.water, { family: 'pond-concept-run', version: null, scale: 1, tint: '#ffffff', tone: 0 }); // (T230: the concept's water)
 });
 
 test('separate gameplay layers: water and fescue keep their places in the course\'s layer order (fairway over rough, green over its ground)', () => {

@@ -17,7 +17,7 @@ export function PropsPanel({ game }: { game: Game }) {
   const town = t.where === 'town', buildings = town && t.group === 'buildings';
   // T193: a group the toolbar's flyout opened (Props ▸ Plants) shows alone
   const groups = DECOR_GROUPS.filter(g => (buildings ? g.id === 'buildings' : t.all || g.id !== 'buildings') && (buildings || !t.focus || g.id === t.focus));
-  const items = (g: string) => DECOR.filter(d => d.group === g && (buildings || shownIn(d, t.where, t.all)));
+  const items = (g: string) => DECOR.filter(d => d.group === g && !d.hidden && (buildings || shownIn(d, t.where, t.all))); // T229: a frame tree is not sold here
   return (
     <div className="tp" data-panel="props" data-place={buildings ? 'town-buildings' : t.where}>
       {buildings
@@ -56,9 +56,21 @@ export function PropsPanel({ game }: { game: Game }) {
           </div>
         </div>
       ); })}
-      <p className="mt-1 leading-snug">{t.hand ? (placeOf(DECOR.find(d => d.key === t.hand) ?? { group: 'plants', id: '' }) === 'town' || (town && placeOf(DECOR.find(d => d.key === t.hand) ?? { group: 'plants', id: '' }) === 'both') ? 'Click in the town (off your land, off its lots) to place it; R turns it, Esc puts it down.' : 'Click on your land to place it; R turns it, Esc puts it down.') : 'Pick a prop to place it, or click one on the map to move, turn or sell it.'}</p>
+      <p className="mt-1 leading-snug">{t.hand ? (kitHint(DECOR.find(d => d.key === t.hand)) ?? (placeOf(DECOR.find(d => d.key === t.hand) ?? { group: 'plants', id: '' }) === 'town' || (town && placeOf(DECOR.find(d => d.key === t.hand) ?? { group: 'plants', id: '' }) === 'both') ? 'Click in the town (off your land, off its lots) to place it; R turns it, Esc puts it down.' : 'Click on your land to place it; R turns it, Esc puts it down.')) : 'Pick a prop to place it, or click one on the map to move, turn or sell it.'}</p>
     </div>
   );
+}
+
+/** T231: the hint under the catalogue for the kit's own ways of placing (a run, a pond's edge, a fountain pond, a jet, a variant item); null:
+ *  the usual one */
+function kitHint(d: DecorItem | undefined): string | null {
+  if (!d) return null;
+  if (d.run) return 'Press and drag along the map to lay it, piece by piece; Esc drops the drag.';
+  if (d.pond === 'edge') return 'Click a pond to edge it with stones and lily pads; click a stone-edged pond to give it back its natural edge.';
+  if (d.pond === 'make') return 'Click on open ground to dig it, with its stones and a jet in the middle.';
+  if (d.water === 'in') return 'Click in a pond or a lake to place it; Esc puts it down.';
+  if (d.variants) return 'Click to place it; R shows the next picture, Esc puts it down.';
+  return null;
 }
 
 function Card({ game, d }: { game: Game; d: DecorItem }) {
@@ -68,7 +80,7 @@ function Card({ game, d }: { game: Game; d: DecorItem }) {
       <div className="grid h-14 w-full place-items-center overflow-hidden rounded-lg bg-black/30">{it && <Thumb it={it} size={50} />}</div>
       <div className="w-full truncate font-semibold leading-tight">{d.name}</div>
       {d.standIn && <div className="w-full truncate rounded bg-amber-500/15 px-1 text-[12px] leading-tight text-amber-200" title="This picture stands in until the real art is drawn">Stand In for {d.standIn}</div>}
-      <div className="flex w-full items-baseline justify-between gap-1"><span className={poor ? 'text-rose-300' : 'text-amber-200'}>{poor ? `${statusIcon('fail')} ` : ''}{money(d.price)}</span>{t.where === 'course' && <span className="sub-line">{appealText(d.appeal)}</span>}</div>
+      <div className="flex w-full items-baseline justify-between gap-1"><span className={poor ? 'text-rose-300' : 'text-amber-200'}>{poor ? `${statusIcon('fail')} ` : ''}{money(d.price)}{d.per ? <span className="sub-line"> {d.per}</span> : null}</span>{t.where === 'course' && <span className="sub-line">{appealText(d.appeal)}</span>}</div>
     </button>
   );
 }

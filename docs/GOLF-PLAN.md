@@ -165,6 +165,14 @@ owner's three photos (fairway, new sod, rough) are already in the game at full r
   corridor guideline); the next tee is within a walk of the previous green (warn over 150 m).
 - **Course stats panel:** holes, par, length (championship and member tees), rating (difficulty), quality, grow-in state, the
   monthly upkeep, and each tier's requirements as a checklist.
+- **Trees frame the holes (T229 #668, the concept look's step 6):** New hole's **Frame with trees** (on by default, a toggle in its Trees
+  section) and the hole card's Trees row plant clumps of 3 to 9 conifers and autumn broadleaves just past the edge of the hole's corridor
+  (`golf/holeframe.ts`; the engine's T229 block). Never within 28 m of a line of play, a tee or a pin, on a playing surface, a path, a road or
+  water; 10 m clear of the cart lanes (green to the next tee, the clubhouse to the first tee and the last green home: T213's carts drive them
+  where there is no path); 12 m further back beside a landing zone (a plan's widest width handle, else the drive's spot). Deterministic from
+  the hole's seed. $60 a tree (`FRAME_TREE_PRICE`), shown on the Build button and the card before you press; a frame tree is the Props
+  catalogue's hidden "Course tree" (a plant's appeal near the range, half back when bulldozed) and remembers its hole, so framing again only
+  fills the gaps and takes away frame trees an edit left in play.
 
 ### 4.3 Course quality and rating
 - **Quality** (0–100): conditioning (grown-in share weighted by surface; maintenance spending), design (par mix close to

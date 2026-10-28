@@ -17,7 +17,7 @@ edit a game scene; the words "texture", "tile", "tileable" and "seamless" never 
    - It is a game scene, nothing more.
 3. **Slice it out.** Crop the region where the layer now is. Ask the generator to remove everything except that ground (buildings,
    roads, props, edges, other surfaces), at the same scale and light.
-4. **The big image of four.** From the clean ground, the generator paints one large continuous field of it, the size of four tiles as
+4. **The big image of four.** *(2026-10-27, learned with RUN.world: RUN paints a different lawn in every new screenshot and copies whatever it can see when asked to continue, so it cannot make tiles 2-4 itself. What works: tile 1 from steps 1-3, then tiles 2-4 by **image quilting** of tile 1's own painted grass, Efros-Freeman patches of about 192 px with minimum-error cuts, tone-matched; the shared border a plain quilt too. Script: `E:/ClaudeTemp/ART-RUN/scripts/quilt.mjs`.)* From the clean ground, the generator paints one large continuous field of it, the size of four tiles as
    a 2x2.
    - Cut the four tiles from it.
    - Check them shuffled (2x2 and 4x4).
@@ -28,6 +28,20 @@ edit a game scene; the words "texture", "tile", "tileable" and "seamless" never 
    - the tiles laid back into the screenshot's area.
    The owner picks. Then the set goes through READY-MATERIALS → `node scripts/assets/prep-painted-tiles.mjs` → a surface in Studio ›
    Painted, and it replaces every use of the old picture ("new art used everywhere").
+
+## Shipping a RUN set (the lead's recipe, from #586 to #637)
+1. Add the family to `scripts/assets/prep-painted-tiles.mjs`: `KIND`, `NAME`, `PROVISIONAL`, `MEASURED` and `RUN_SETS` (its `run-grass/<dir>`
+   and set name).
+2. In a worktree on main, run `node scripts/assets/prep-painted-tiles.mjs --art E:/Repos/CapitalEmpire --owner-art <the worktree>`.
+   Without `--owner-art`, the owner's own paintings drop out.
+3. Ship only the families you mean to. The art checkout's READY-MATERIALS may have moved on for other families, unreviewed (fringe and
+   putting green on 2026-10-27). Rebuild `src/game/painted-tiles.json` as main's manifest plus only the new families, inserted before
+   `rough-owner`, and `git checkout` every other changed file under `src/assets`.
+4. **The manifest `revision` is sha256 over every family's full key, joined by `:`, cut to 12 characters**, exactly as the prep script
+   writes it. Never chain the old revision with the new family's. `tests/painted-tiles.test.ts` (the manifest test) checks it and its
+   failure message prints the right value. The revision is the tile cache key, so a new one re-bakes the chunks once.
+5. Map the surface in `src/game/painted-surfaces.json`. The four painted test files must pass: `painted-families`, `painted-tiles`,
+   `painted-tiles-prep` and `painted-grass-lod`.
 
 ## Keep for every generation
 - **Provenance:** the prompt, the references and their hashes, the model, the generation id, the credits.

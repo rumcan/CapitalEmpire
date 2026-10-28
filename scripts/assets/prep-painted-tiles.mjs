@@ -48,7 +48,7 @@
 // T217: READY may give an accepted family a distinct runtimeId/runtimeName, keeping its original canonical source ID and an older pinned
 // option. --only <accepted-runtime-ids> updates just those families, preserving every other packed picture, record and curated setting.
 //
-//   node scripts/assets/prep-painted-tiles.mjs [--art <checkout root holding art/>] [--out <root to write src/... under>] [--only id,id] [--check]
+//   node scripts/assets/prep-painted-tiles.mjs [--art <checkout root holding art/>] [--owner-art <root holding art/owner-supplied>] [--out <root to write src/... under>] [--only id,id] [--check]
 // --check verifies the hashes and sizes and compares the manifest it would write with the one on disk, writing nothing.
 // The art is read from this checkout's art/ folder, else from the main checkout's (a .claude/worktrees/<name> worktree), never written.
 // --out (the tests' fixtures) writes the tiles and the manifest under another root instead of this checkout.
@@ -73,15 +73,57 @@ const LEVELS = ['near', 'mid', 'far'];
  *  WebP would be several times bigger again for no visible gain. */
 const QUALITY = 90;
 /** the kind of family each material is (painted-families.ts PaintedKind: the studio lists a surface's fitting kinds first) */
-const KIND = { 'golden-fescue': 'grass', lake: 'water', 'pale-green-bushes': 'grass', 'pine-straw': 'cut', 'sand-ripples': 'sand', 'sand-raked': 'sand', desert: 'sand', dirt: 'cut', 'sand-long-grass': 'sand', 'long-grass': 'grass', swamp: 'water', fairway: 'grass', 'putting-green': 'grass', 'first-cut': 'grass' };
-const NAME = { 'golden-fescue': 'Golden fescue', lake: 'Lake water', 'sand-ripples': 'Sand ripples', fairway: 'Fairway', 'putting-green': 'Putting green', 'long-grass': 'Long grass', fringe: 'Fringe' };
+const KIND = { 'pond-concept-run': 'water', 'green-concept-run': 'grass', 'first-cut-concept-run': 'grass', 'fairway-concept-run': 'grass', 'rough-concept-run': 'grass', 'meadow-concept-run': 'grass', 'lawn-concept-run': 'grass', 'range-tee-divots-run': 'grass', 'pond-bank-run': 'cut', 'grow-in-run': 'cut', 'field-parking-run': 'grass', 'flower-bed-soil-run': 'cut', 'first-cut-run': 'grass', 'tee-run': 'grass', 'desert-run': 'sand', 'swamp-run': 'water', 'dirt-run': 'cut', 'sand-raked-run': 'sand', 'putting-green-run': 'grass', 'rough-run': 'grass', 'golden-fescue': 'grass', lake: 'water', 'pale-green-bushes': 'grass', 'pine-straw': 'cut', 'sand-ripples': 'sand', 'sand-raked': 'sand', desert: 'sand', dirt: 'cut', 'sand-long-grass': 'sand', 'long-grass': 'grass', swamp: 'water', fairway: 'grass', 'putting-green': 'grass', 'first-cut': 'grass' };
+const NAME = { 'pond-concept-run': 'Deep pond water, concept (RUN, quilted)', 'green-concept-run': 'Putting green, concept (RUN, quilted)', 'first-cut-concept-run': 'First cut, concept (RUN, quilted)', 'fairway-concept-run': 'Fairway, concept (RUN, quilted)', 'rough-concept-run': 'Rough, concept (RUN, quilted)', 'meadow-concept-run': 'Meadow, concept (RUN, quilted)', 'lawn-concept-run': 'Lawn, concept (RUN, quilted)', 'range-tee-divots-run': 'Range tee, divots (RUN, quilted)', 'pond-bank-run': 'Pond bank (RUN, quilted)', 'grow-in-run': 'Grow-in soil (RUN, quilted)', 'field-parking-run': 'Field parking (RUN, quilted)', 'flower-bed-soil-run': 'Flower bed soil (RUN, quilted)', 'first-cut-run': 'First cut (RUN, quilted)', 'tee-run': 'Tee (RUN, quilted)', 'desert-run': 'Desert (painted, quilted)', 'swamp-run': 'Swamp (RUN, quilted)', 'dirt-run': 'Dirt (painted, quilted)', 'sand-raked-run': 'Raked sand (painted, quilted)', 'putting-green-run': 'Putting green (painted, quilted)', 'rough-run': 'Rough (RUN, quilted)', 'golden-fescue': 'Golden fescue', lake: 'Lake water', 'sand-ripples': 'Sand ripples', fairway: 'Fairway', 'putting-green': 'Putting green', 'long-grass': 'Long grass', fringe: 'Fringe' };
 /** the families that ship provisionally until their handoff (T153, the lead's decision on #327): the course's fairway, green and rough; T191:
  *  the fringe */
-const PROVISIONAL = ['fairway', 'putting-green', 'long-grass', 'fringe'];
+const PROVISIONAL = ['fairway', 'putting-green', 'long-grass', 'fringe', 'first-cut-run', 'tee-run', 'desert-run', 'swamp-run', 'dirt-run', 'sand-raked-run', 'putting-green-run', 'rough-run', 'pond-bank-run', 'grow-in-run', 'field-parking-run', 'flower-bed-soil-run', 'range-tee-divots-run', 'lawn-concept-run', 'meadow-concept-run', 'rough-concept-run', 'fairway-concept-run', 'first-cut-concept-run', 'green-concept-run', 'pond-concept-run'];
+/** the RUN.world families (2026-10-27, the owner's ground texture method, docs/art/GROUND-TEXTURE-METHOD.md): tile 1 a level painted by RUN into
+ *  a game screenshot and cleaned, tiles 2-4 quilted from it (the agent's E:/ClaudeTemp/ART-RUN/FIRST-CUT-README.md); the approved finished set a
+ *  level is `<dir>/<level>/<set>/tile-0x.png` with its export-report.json, under the art checkout (--art) as the art session's sets are. Shipped
+ *  provisionally and MEASURED, as made when they tile cleanly. The owner approved first cut for the game on 2026-10-27 ("yes merge") */
+const RUN_SETS = { 'first-cut-run': { dir: 'art/theme-consistency/generated/ground/run-grass/first-cut', set: 'tiles-v3b' }, 'tee-run': { dir: 'art/theme-consistency/generated/ground/run-grass/tee', set: 'tiles-v1b' },
+  // the art session's desert scene painting, its shop quilted away, tiles 2-4 quilted from it (no RUN call; the owner: "remove that store")
+  'desert-run': { dir: 'art/theme-consistency/generated/ground/run-grass/desert', set: 'tiles-v2' },
+  // swamp: no clean painting existed, so tile 1 a level is RUN's swamp painted into the game's meadow (the owner's method), tiles 2-4 quilted
+  'swamp-run': { dir: 'art/theme-consistency/generated/ground/run-grass/swamp', set: 'tiles-v1' },
+  // the art session's dirt scene painting, its store quilted away like the desert's, tiles 2-4 quilted (no RUN call)
+  'dirt-run': { dir: 'art/theme-consistency/generated/ground/run-grass/dirt', set: 'tiles-v2' },
+  // the art session's building-free raked-sand painting, tiles 2-4 quilted with large patches that follow the rake grooves (no RUN call)
+  'sand-raked-run': { dir: 'art/theme-consistency/generated/ground/run-grass/sand-raked', set: 'tiles-v2' },
+  // the art session's building-free putting-green paintings (MID/FAR the uniform v2), tiles 2-4 quilted (no RUN call)
+  'putting-green-run': { dir: 'art/theme-consistency/generated/ground/run-grass/putting-green', set: 'tiles-v1' },
+  // the rough: tile 1 a level RUN-painted into the game's meadow (the owner's method), tiles 2-4 quilted; offered, the owner's rough-owner stays on the course
+  'rough-run': { dir: 'art/theme-consistency/generated/ground/run-grass/rough', set: 'tiles-v1' },
+  // the pond bank (GOLF-ART-LIST 131): wet mud, puddles, reeds and stones, tile 1 a level RUN-painted into the game's meadow, tiles 2-4 quilted
+  'pond-bank-run': { dir: 'art/theme-consistency/generated/ground/run-grass/pond-bank', set: 'tiles-v1' },
+  // grow-in (132): raked soil with tiny seedlings, no rows; the same method
+  'grow-in-run': { dir: 'art/theme-consistency/generated/ground/run-grass/grow-in', set: 'tiles-v1' },
+  // field parking (133): mown grass with tyre ruts and worn patches; the same method (no surface wears it yet)
+  'field-parking-run': { dir: 'art/theme-consistency/generated/ground/run-grass/field-parking', set: 'tiles-v1' },
+  // flower bed soil (135): dark bark mulch, a few petals; the same method (MID v2 without its big petals; NEAR and FAR v2 = v1)
+  'flower-bed-soil-run': { dir: 'art/theme-consistency/generated/ground/run-grass/flower-bed-soil', set: 'tiles-v2' },
+  // the range tee's divot-scarred turf (21): RUN added the wear to the tee-run's own tee frames, tiles 2-4 quilted (for the range tee: T223)
+  'range-tee-divots-run': { dir: 'art/theme-consistency/generated/ground/run-grass/range-tee-divots', set: 'tiles-v1' },
+  // the concept's lawn (GOLF-ART-LIST 153): RUN with the owner's concept picture as the style reference, tiles 2-4 quilted; v2 warmed halfway to the concept's town grass
+  'lawn-concept-run': { dir: 'art/theme-consistency/generated/ground/run-grass/lawn-concept', set: 'tiles-v2' },
+  // the concept's meadow (153): the map's open ground in the concept's green, a touch more golden than the lawn; v2 warmed
+  'meadow-concept-run': { dir: 'art/theme-consistency/generated/ground/run-grass/meadow-concept', set: 'tiles-v2' },
+  // the concept's rough (152): deep green soft clumps, a few fallen leaves; offered beside the owner's rough (rough-owner stays on the course, T162)
+  'rough-concept-run': { dir: 'art/theme-consistency/generated/ground/run-grass/rough-concept', set: 'tiles-v1' },
+  // the concept's fairway (149): plain fine mown turf, no stripes (the game draws its bands), in the concept's yellow-green
+  'fairway-concept-run': { dir: 'art/theme-consistency/generated/ground/run-grass/fairway-concept', set: 'tiles-v2' },
+  // the concept's first cut (150): the collar, a step darker than its fairway
+  'first-cut-concept-run': { dir: 'art/theme-consistency/generated/ground/run-grass/first-cut-concept', set: 'tiles-v2' },
+  // the concept's putting green (151): velvet turf; MID provisional (RUN refused the MID edits: repainted from the fairway's MID frame)
+  'green-concept-run': { dir: 'art/theme-consistency/generated/ground/run-grass/green-concept', set: 'tiles-v3' },
+  // the concept's deep pond water (154): dark teal-green still water with soft ripples and a faint warm sheen, the same everywhere (the game adds
+  // its depth toward the middle, the shore's reflections and the camera glint: T230, water-look.ts)
+  'pond-concept-run': { dir: 'art/theme-consistency/generated/ground/run-grass/pond-concept', set: 'tiles-v3' } };
 /** T191: a provisional family pinned to the sets it shipped (its newest folder moved on: the new set ships in a family of its own) */
 const PIN = { 'putting-green': { mid: 'mid-v1', far: 'far-v1' } };
 /** T191: provisional families whose finished sets are measured across any two tiles (shipped as made within HEAL_LIMIT, else one shared strip) */
-const MEASURED = new Set(['fringe']);
+const MEASURED = new Set(['fringe', 'first-cut-run', 'tee-run', 'desert-run', 'swamp-run', 'dirt-run', 'sand-raked-run', 'putting-green-run', 'rough-run', 'pond-bank-run', 'grow-in-run', 'field-parking-run', 'flower-bed-soil-run', 'range-tee-divots-run', 'lawn-concept-run', 'meadow-concept-run', 'rough-concept-run', 'fairway-concept-run', 'first-cut-concept-run', 'green-concept-run', 'pond-concept-run']);
 /** the owner's own paintings (T162, #350): their folders, each with its source.json; the heal's band (px of each edge) and its limit (a healed
  *  wrap at most this many times the painting's own neighbour difference inside) */
 /** T165 (#365): also the art session's fairway and putting-green paintings. Per folder: `bridge` 'match' heals with the bridge where the
@@ -212,6 +254,9 @@ function provisionalSet(material, level, only = null) {
     const revision = set.revision ?? path.basename(set.folder);
     if (!only || revision === only) return { folder: set.folder, revision, files: set.primaryTiles.map(t => t.file), stage: 'finished tiles', decision: { file: set.visualDecision.file, sha256: set.visualDecision.sha256 } };
   }
+  // the RUN.world families (the owner's ground texture method, docs/art/GROUND-TEXTURE-METHOD.md): one approved finished set a level
+  const run = RUN_SETS[material];
+  if (run) { const folder = `${run.dir}/${level}/${run.set}`, files = TILE_IDS.map(id => `${folder}/${id}.png`); return files.every(f => fs.existsSync(rel(f))) ? { folder, revision: `${level}-${run.set}`, files, stage: 'finished tiles' } : null; }
   const dir = `${EIGHT}/${material}`;
   if (!fs.existsSync(rel(dir))) return null;
   let retainedLegacy = null;
@@ -301,7 +346,9 @@ for (const material of PROVISIONAL) {
 
 /* ---- the owner's own paintings (T162, #350): one painting a level, hash-checked, its edges healed here once to tile with itself ---- */
 /** where the owner's art is read: this checkout (it is committed here), or --art (the tests' fixtures) */
-const OWNER_ART = path.resolve(arg('--art') ?? ROOT);
+// (--owner-art: the owner's committed art from another checkout than --art: run from a worktree on main with --art at the art session's
+// checkout, the owner's paintings are this worktree's own; without it a checkout on an older branch drops the owner's families)
+const OWNER_ART = path.resolve(arg('--owner-art') ?? arg('--art') ?? ROOT);
 const orel = p => path.join(OWNER_ART, p);
 /** the interior (inside the outer HEAL_BAND px of each edge) of a healed picture is its source's exactly */
 const sameInterior = (a, b, w, ht, ch, what) => { for (let y = HEAL_BAND; y < ht - HEAL_BAND; y++) for (let i = (y * w + HEAL_BAND) * ch, e = (y * w + w - HEAL_BAND) * ch; i < e; i++) if (a[i] !== b[i]) fail(`${what}: the heal changed the interior at (${Math.floor(i / ch) % w}, ${y})`); };

@@ -1,0 +1,10 @@
+{
+  "image": "art/people3d/pics/town_w_waitress.png",
+  "look": "Diner waitress in her 20s from a 1985 small American town, a pink short-sleeved uniform dress, a white apron, white sneakers, hair in a ponytail. No name tag, no lettering",
+  "modelUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/threedgen/AFjPSjQH9kbcCl57sgO3/7ca19af5-8e90-499b-b856-934e7073306c/model.compressed.glb",
+  "rigFrom": "base_woman (local rig transfer, rig-local-person.mjs)",
+  "clipsFrom": {
+    "walk": "base_woman",
+    "idle": "base_woman"
+  }
+}

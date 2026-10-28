@@ -7,9 +7,10 @@
 // --player (T178, T184, T195): a player puts mini-roundabouts on the town's jammed crossings (the Junction tool) and upgrades bottleneck roads at each season's end
 // (harness playerUpgrade, as range:gate --player does: 60 fixes and 20 upgrades a season at most), so
 // the fixture is a healthy grown town; the committed fixture is made with it. Without it, the town left alone jams and declines.
+// T221: the club's income is booked each game hour as range-gate books a careful club's (harness bookEarnings), so the town has room to grow.
 import fs from 'node:fs';
 import { gzipSync } from 'node:zlib';
-import { playerUpgrade, setupRange, stepSecond } from './harness';
+import { bookEarnings, playerUpgrade, setupRange, stepSecond } from './harness';
 import { SEASON_LEN } from '../../src/game/golf/calendar';
 import { GAME_DAY } from '../../src/game/budget';
 import { LV, type LotTuple } from '../../src/game/lots/town';
@@ -31,7 +32,7 @@ const t0 = performance.now(), h = setupRange(seed), R = h.range, golf = R.start.
 const setSeason = (k: number) => h.city.setGolf({ tier: golf.tier, rep: golf.rep, land, start: 'range', exits: golf.exits, holes: holesIn(k), townBoost: successIn(k) });
 setSeason(1);
 for (let s = 1; s <= seasons * SEASON_LEN; s++) {
-  stepSecond(h, s);
+  stepSecond(h, s); bookEarnings(h, s, 'careful'); // T221: a careful club's money made, as range-gate books it (the town's room grows with it)
   if (s % SEASON_LEN === 0 && s < seasons * SEASON_LEN) setSeason(s / SEASON_LEN + 1);
   if (player && s % SEASON_LEN === 0 && s < seasons * SEASON_LEN) { const r = playerUpgrade(h, 60, 20, 0, 'mini'); roads.segs += r.segs + r.minis + r.rings; roads.cost += r.cost; }
 }

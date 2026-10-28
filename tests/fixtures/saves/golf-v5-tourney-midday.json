@@ -1,0 +1,199 @@
+{
+  "version": 5,
+  "map": 2048,
+  "seed": 42,
+  "segs": [
+    [
+      100,
+      100,
+      140,
+      100,
+      "street",
+      0,
+      0,
+      1
+    ]
+  ],
+  "nodes": [
+    [
+      100,
+      100,
+      "plain"
+    ],
+    [
+      140,
+      100,
+      "signal",
+      0,
+      [],
+      [
+        1,
+        18,
+        18
+      ]
+    ]
+  ],
+  "props": [
+    [
+      "world:tree_oak_0",
+      110,
+      110,
+      0,
+      1
+    ]
+  ],
+  "money": 750000,
+  "day": 3,
+  "cam": {
+    "X": 0,
+    "Y": 1024,
+    "z": 0.2
+  },
+  "golf": {
+    "v": 1,
+    "tier": 2,
+    "rep": 14,
+    "town": {
+      "x": 640,
+      "y": 640
+    },
+    "course": [
+      720,
+      560,
+      300,
+      450
+    ],
+    "parcel": [
+      700,
+      540,
+      380,
+      510
+    ],
+    "dir": 1,
+    "tees": [
+      {
+        "hole": 1,
+        "x": 740,
+        "y": 580,
+        "kind": "back"
+      },
+      {
+        "hole": 1,
+        "x": 744,
+        "y": 584,
+        "kind": "forward"
+      }
+    ],
+    "pins": [
+      {
+        "hole": 1,
+        "x": 860,
+        "y": 620
+      }
+    ],
+    "aims": [],
+    "clubhouse": {
+      "x": 715,
+      "y": 555
+    },
+    "structures": [
+      {
+        "id": 1,
+        "typeId": "gate",
+        "x": 710,
+        "y": 550,
+        "mode": "buy"
+      }
+    ],
+    "cards": [],
+    "play": {
+      "key": 2,
+      "owner": "m",
+      "inputs": [
+        {
+          "holeIdx": 0,
+          "stroke": 1,
+          "club": "driver",
+          "aim": {
+            "x": 800,
+            "y": 600
+          },
+          "power": 1
+        },
+        {
+          "holeIdx": 0,
+          "stroke": 2,
+          "club": "pw",
+          "aim": {
+            "x": 858,
+            "y": 619
+          },
+          "power": 0.85
+        }
+      ],
+      "caddie": null
+    }
+  },
+  "lots": [],
+  "simT": 1970.4,
+  "shift": 909.6,
+  "townClock": {
+    "t0": 1700.4,
+    "m0": 3180,
+    "rate": 1
+  },
+  "round": {
+    "stage": "surge",
+    "level": 1,
+    "runs": 2,
+    "year": 1987,
+    "buildLeft": 0,
+    "surgeLeft": 330,
+    "crowd": [
+      40
+    ],
+    "upkeep": 12.5,
+    "toll": 0,
+    "parking": 0,
+    "last": null,
+    "surge": {
+      "sent": [
+        40
+      ],
+      "parked": [
+        12
+      ],
+      "onRoad": [
+        6
+      ],
+      "turned": [
+        0
+      ],
+      "lost": [
+        0
+      ],
+      "stranded": [
+        0
+      ],
+      "fans": [
+        24
+      ],
+      "atStop": [
+        0
+      ],
+      "onBus": [
+        0
+      ],
+      "byBus": [
+        0
+      ]
+    },
+    "xp": 1,
+    "cards": [],
+    "draft": null
+  },
+  "build": {
+    "app": "0.0.0",
+    "sha": "1a663ae"
+  }
+}

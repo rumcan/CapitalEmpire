@@ -35,6 +35,43 @@
 .chip { display: inline-flex; align-items: center; gap: 0.3rem; border-radius: 0.55rem; border: 1px solid var(--line); background: rgba(255, 255, 255, 0.03); padding: 0.3rem 0.6rem; font-size: 0.75rem; color: #d9d3c4; }
 .chip:hover { border-color: var(--gold-line); }
 .chip-on { background: linear-gradient(#ffc94a, #f0a91e); color: #1b1406; border-color: transparent; font-weight: 600; }
+/* T233 (#674, the concept's top bar): the stat chips (StatChips.tsx), one box of segments: the icon, the figure, and under it the money's change
+   (from 1600 px) or the chip's words (from 2200 px: T135). Narrower than 1600 px the money is short ($842k) and its change is in the tooltip;
+   the icon sits on a small tile from 1900 px, as the Stat's. The top bar keeps one row at 1366, 1600 and 1920 px */
+.stat-chips { display: flex; align-items: stretch; border-radius: 0.75rem; border: 1px solid var(--line); background: var(--panel-2); }
+.stat-chips > * + * { border-left: 1px solid var(--line); }
+.stat-chip { display: flex; align-items: center; gap: 0.3rem; min-height: 2.75rem; border-radius: 0.7rem; padding: 0.2rem 0.45rem 0.2rem 0.4rem; text-align: left; white-space: nowrap; color: var(--ink); }
+button.stat-chip:hover { background: rgba(255, 255, 255, 0.06); }
+.stat-chip-icon { display: grid; place-items: center; border-radius: 0.55rem; }
+.stat-chip-icon > img { width: 17px; height: 17px; }
+@media (min-width: 1600px) { .stat-chip { gap: 0.4rem; padding: 0.2rem 0.6rem 0.2rem 0.45rem; } .stat-chip-icon > img { width: 20px; height: 20px; } }
+@media (min-width: 1900px) {
+  .stat-chip { gap: 0.5rem; padding: 0.25rem 0.75rem 0.25rem 0.4rem; }
+  .stat-chip-icon { width: 2rem; height: 2rem; background: rgba(255, 255, 255, 0.05); }
+  .stat-chip-icon > img { width: 22px; height: 22px; }
+}
+.stat-chip-text { display: flex; flex-direction: column; justify-content: center; line-height: 1.15; }
+.stat-chip-value { font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.stat-chip-unit { margin-left: 1px; font-size: 12px; font-weight: 600; color: var(--muted); }
+.stat-chip-sub, .stat-chip-label { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.stat-up { color: #6ee7b7; }
+.stat-down { color: #fca5a5; }
+
+/* T235 (#690, the concept's title): the club's name in the serif, cream, over "Year 3 • October • Sunny 16°C" in the muted ink with the weather
+   in gold (ui/ClubTitle.tsx). One line each: a name that does not fit is cut with an ellipsis and its full text is the tooltip. The compact title
+   (18 px name, 12 px line, "G&CC", "Oct") is no wider than the old title was where the bar is full (1900 to 2559 px); from 2560 px it is
+   drawn in full (TITLE_FULL_FROM) */
+.club-title { line-height: 1.15; white-space: nowrap; }
+.club-title-name { max-width: 21rem; overflow: hidden; text-overflow: ellipsis; font-size: 1.125rem; font-weight: 700; color: var(--ink); }
+.club-title-sub { margin-top: 2px; font-size: 12px; font-weight: 500; color: var(--muted); }
+.club-title-weather { color: var(--gold-hi); }
+.club-title .title-full { display: none; }
+@media (min-width: 2560px) {
+  .club-title-name { font-size: 1.25rem; }
+  .club-title-sub { font-size: 13px; }
+  .club-title .title-full { display: inline; }
+  .club-title .title-compact { display: none; }
+}
 
 .card { display: flex; flex-direction: column; align-items: flex-start; width: 100%; border-radius: 0.7rem; border: 1px solid var(--line); background: rgba(255, 255, 255, 0.02); padding: 0.4rem 0.55rem; text-align: left; }
 .card:hover { border-color: var(--gold-line); }
@@ -74,7 +111,7 @@
 /* the rail: key letters, the Course and Town headings, locked tools dimmed in place with a lock, NEW badges; 52 px items under 800 px tall */
 /* the items share the height under the top bar (which may wrap) and above the minimap: 60 px at most, 52 px at most under 800 px tall */
 .rail-tab { position: relative; height: clamp(42px, calc((100vh - var(--hud-top, 5.75rem) - 222px) / 9), 58px); font-size: 12px; }
-.rail-nav { max-height: calc(var(--vh-ui, 100vh) - var(--hud-top, 5.75rem) - 9rem); overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; }
+.rail-nav { max-height: calc(var(--vh-ui, 100vh) - var(--hud-top, 5.75rem) - 9rem); overflow-y: auto; overflow-x: hidden; } /* its scrollbar: the global one (T205) */
 .rail-tab-locked { opacity: 0.42; }
 .rail-tab-locked:hover { background: rgba(255, 255, 255, 0.03); }
 .rail-key { position: absolute; left: 0.3rem; top: 0.15rem; font-size: 12px; font-weight: 700; line-height: 1; color: var(--muted); }
@@ -104,7 +141,11 @@
 .round-btn:disabled { opacity: 0.35; }
 .sec-head { display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.35rem; }
 .sec-note { font-size: 12px; color: var(--muted); }
-.status-line { font-size: 13px; color: var(--ink); }
+/* the Holes panel's status line (T205): its words wrap, then ✎ Edit hole n, on the next line when the words fill this one */
+.status-line { display: flex; flex-wrap: wrap; align-items: center; column-gap: 0.5rem; row-gap: 0.3rem; font-size: 13px; color: var(--ink); }
+.status-line > button { flex: none; white-space: nowrap; }
+/* Edit hole while that hole's editor is open ("Editing hole n", T205): a state, in gold, not a dead button */
+.chip-editing:disabled { cursor: default; border-color: var(--gold-line); background: var(--gold-wash); color: var(--gold-hi); }
 .wizard-card { border-radius: 0.9rem; border: 1px solid var(--gold-line); background: var(--gold-wash); padding: 0.6rem 0.7rem; }
 /* New hole's card (T119, P23 4.4): the title and number, the steps, Build on top, the stats and split, planting, the check table, the keys */
 .wiz-title { font-family: Georgia, "Palatino Linotype", Palatino, serif; font-size: 17px; font-weight: 700; color: var(--gold-hi); }
@@ -149,7 +190,7 @@
 .swatch-on { border-color: var(--gold); background: var(--gold-wash); color: var(--gold-hi); font-weight: 700; }
 .swatch-on .swatch-disc { box-shadow: 0 0 0 2px var(--gold); }
 .swatch-on .swatch-key { color: var(--gold-hi); }
-.hole-badge { display: inline-flex; min-width: 2.75rem; height: 2rem; align-items: center; justify-content: center; gap: 0.3rem; border-radius: 999px; border: 1px solid var(--line); background: rgba(255, 255, 255, 0.04); padding: 0 0.65rem; font-size: 13px; font-weight: 700; color: var(--ink); }
+.hole-badge { display: inline-flex; min-width: 2.75rem; height: 2rem; white-space: nowrap; align-items: center; justify-content: center; gap: 0.3rem; border-radius: 999px; border: 1px solid var(--line); background: rgba(255, 255, 255, 0.04); padding: 0 0.65rem; font-size: 13px; font-weight: 700; color: var(--ink); }
 .hole-badge:hover { border-color: var(--gold-line); }
 .hole-badge-on { border-color: var(--gold); box-shadow: inset 0 0 0 1px var(--gold); background: var(--gold-wash); }
 .hole-icon { font-size: 15px; line-height: 1; }
@@ -183,10 +224,42 @@
 .flyout-why { margin-top: 1px; font-size: 11.5px; line-height: 1.3; color: var(--muted); }
 .flyout-more { flex: 0 0 auto; opacity: 0.7; font-size: 12px; }
 .flyout-caption { padding: 0.5rem 0.5rem 0.15rem; font-size: 10.5px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold); }
+/* T233 (#674, the concept's Golf Course panel): a level with illustrated tool tiles is a grid of tiles, each picture above its name, as many
+   across as the column holds (never wider than it: the grid's cells shrink, it never scrolls sideways); a caption spans it */
+.flyout-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); align-content: start; gap: 6px; }
+.flyout-grid .flyout-caption { grid-column: 1 / -1; }
+.flyout-tile { flex-direction: column; align-items: stretch; justify-content: flex-start; gap: 0.3rem; padding: 0.3rem 0.3rem 0.4rem; text-align: center; border-color: var(--line); background: rgba(255, 255, 255, 0.025); }
+.flyout-tile:hover, .flyout-tile:focus-visible { border-color: var(--gold-line); }
+.flyout-tile.flyout-row-open { border-color: var(--gold); box-shadow: inset 0 0 10px rgba(245, 181, 46, 0.2); }
+.flyout-pic { position: relative; display: grid; place-items: center; width: 100%; aspect-ratio: 1; border-radius: 0.5rem; background: #1e2a44; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06); }
+.flyout-pic img { width: 100%; height: 100%; border-radius: 0.5rem; object-fit: cover; }
+.flyout-pic-icon > img { width: 36px; height: 36px; }
+.flyout-pic .flyout-swatch { width: 30px; height: 30px; border-radius: 8px; }
+.flyout-pic-lock { position: absolute; left: 4px; top: 4px; display: grid; place-items: center; width: 20px; height: 20px; border-radius: 999px; background: rgba(2, 6, 23, 0.85); color: var(--ink); }
+.flyout-pic-new { position: absolute; right: 3px; top: 3px; }
+.flyout-pic-more { position: absolute; right: 4px; bottom: 4px; display: grid; place-items: center; width: 18px; height: 18px; border-radius: 999px; background: rgba(2, 6, 23, 0.8); font-size: 10px; color: var(--gold-hi); }
+.flyout-tile .flyout-label { justify-content: center; font-size: 12px; line-height: 1.2; overflow-wrap: break-word; }
+.flyout-tile .flyout-why { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; font-size: 10.5px; line-height: 1.25; }
 /* the small tool panel's head: a back arrow to the tool's flyout and where the tool sits in the menus */
 .tool-crumb { display: flex; align-items: center; gap: 0.4rem; margin: -0.25rem 0 0.6rem; font-size: 12px; color: var(--muted); }
 .tool-crumb-text { min-width: 0; overflow-wrap: anywhere; }
 .tool-back { flex: 0 0 auto; }
+/* T205 (#538, the owner: "the ugly scroll bars"): one thin, themed scrollbar everywhere: a translucent light thumb on a transparent track, gold
+   under the pointer, no arrow buttons. Chrome and Edge (121+) drop the ::-webkit-scrollbar rules on any box that sets scrollbar-width or
+   scrollbar-color, so the standard pair is only for browsers without the webkit ones (Firefox), and no box sets them itself. */
+::-webkit-scrollbar { width: 8px; height: 8px; background: transparent; }
+::-webkit-scrollbar-track, ::-webkit-scrollbar-corner { background: transparent; }
+::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
+::-webkit-scrollbar-thumb { min-height: 28px; border: 2px solid transparent; border-radius: 999px; background: rgba(239, 233, 218, 0.26) padding-box; }
+::-webkit-scrollbar-thumb:hover { background: rgba(245, 181, 46, 0.85) padding-box; }
+::-webkit-scrollbar-thumb:active { background: var(--gold) padding-box; }
+@supports not selector(::-webkit-scrollbar) {
+  * { scrollbar-width: thin; scrollbar-color: rgba(239, 233, 218, 0.3) transparent; }
+}
+/* no sideways scrollbar anywhere (the owner's standing rule; T193, T205): a box that scrolls up and down never scrolls sideways, and its long
+   lines wrap instead */
+.overflow-y-auto:not(.overflow-x-auto) { overflow-x: hidden; overflow-wrap: break-word; }
+
 /* no horizontal sliders in a tool panel (T193): its rows wrap, its long words break */
 .tool-panel { overflow-wrap: anywhere; }
 .tool-panel .flex:not(.flex-col):not(.flex-nowrap) { flex-wrap: wrap; }

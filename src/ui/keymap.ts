@@ -31,11 +31,14 @@ const menuless = (r: RailItem): boolean => !r.action && r.tools.length === 1;
 
 /** a tool's keys while it is in hand (the engine's and the tools' own handlers: engine.ts keyDown, paint-tool.ts key, propstool.ts key,
  *  parking-tool.ts key); the number keys' rows come from the lists they pick from */
-const inHand = (): { title: string; tool: Tool; rows: [string, string][] }[] => [
+const inHand = (): { title: string; tool: Tool; alt?: true; rows: [string, string][] }[] => [
   { title: 'Holes in hand', tool: 'course', rows: [
     [`1 – ${BRUSH_PRESETS.length}`, `the surface: ${BRUSH_PRESETS.map(b => b.name.toLowerCase()).join(', ')}`], ['[ / ]', 'a smaller / bigger brush or green'],
     ['R', 'turn the stamp, the hole or the green'], ['Enter', 'finish the shape or the run'], ['Backspace', 'take back the last corner'],
     ['PageUp / PageDown', 'the picked area up / down a layer']] },
+  // T206: Facilities ▸ Practice (golf/practicetool.ts key) and Facilities ▸ Plants (the Paint tool's plant brush: paint-tool.ts key)
+  { title: 'Practice in hand', tool: 'practice', rows: [['[ / ]', 'a smaller / bigger facility (never under what opens it)'], ['R', 'turn it'], ['Tab / Shift+Tab', 'the putting green\'s next / previous outline'], ['Click', 'build it (its price shows first)']] },
+  { title: 'Plants in hand', tool: 'paint', alt: true, rows: [['Drag', 'plant trees, bushes or flowers'], ['Alt + drag', 'remove what the plant brush planted'], ['[ / ]', 'a smaller / bigger brush']] },
   { title: 'Props in hand', tool: 'props', rows: [['R', 'turn it'], ['Delete', 'sell the picked prop']] },
   { title: 'Roads and paths in hand', tool: 'road', rows: [
     [`1 – ${KEY_CLASSES.length}`, `the road class: ${KEY_CLASSES.map(c => (CLASS[c]?.name ?? c).toLowerCase()).join(', ')}`],
@@ -73,7 +76,7 @@ export function keySheet(o: { golf: boolean; ui: ProgressiveUiState | null; rang
   for (const r of RAIL) if (r.section === null && r.id !== 'select' && (!r.only || r.only === game)) for (const t of toolsIn(r, o.golf)) if (t.key && !seen.has(t.id)) { seen.add(t.id); rail.push(toolRow(t)); }
   out.push({ id: 'rail', title: 'The rail', part: 'top', rows: rail });
   // Course and Town: each group's tools with a key, then the keys of their tools in hand
-  const shown = new Set<Tool>(), held = new Set<Tool>();
+  const shown = new Set<Tool>(), held = new Set<string>();
   for (const part of ['course', 'town'] as const) {
     for (const r of RAIL) {
       if (r.section !== part || (r.only && r.only !== game) || (r.action === 'range' && !o.range)) continue;
@@ -86,11 +89,13 @@ export function keySheet(o: { golf: boolean; ui: ProgressiveUiState | null; rang
       if (rows.length) out.push({ id: r.id, title: r.label, part, rows });
     }
     for (const s of inHand()) {
-      const r = RAIL.find(x => x.section === part && (!x.only || x.only === game) && toolsIn(x, o.golf).some(t => t.id === s.tool));
-      // a tool in two groups (Props: both decorations) has its keys in hand once, under the first
-      if (!r || !shown.has(s.tool) || held.has(s.tool)) continue;
-      held.add(s.tool);
-      out.push({ id: `in:${s.tool}`, title: s.title, part, rows: s.rows.map(([k, w]) => ({ keys: k, what: w })), why: toolLock(ui, s.tool) });
+      // a tool's second home (alt: Facilities' Plants, the Paint tool's plant brush) has its own keys in hand there
+      const r = RAIL.find(x => x.section === part && (!x.only || x.only === game) && toolsIn(x, o.golf).some(t => t.id === s.tool && !!t.alt === !!s.alt));
+      // a tool in two groups (Props: Facilities and Town decoration) has its keys in hand once, under the first
+      const hk = `${s.tool}${s.alt ? ':alt' : ''}`;
+      if (!r || !shown.has(s.tool) || held.has(hk)) continue;
+      held.add(hk);
+      out.push({ id: `in:${hk}`, title: s.title, part, rows: s.rows.map(([k, w]) => ({ keys: k, what: w })), why: toolLock(ui, s.tool) });
     }
   }
   for (const s of general()) {

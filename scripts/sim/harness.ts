@@ -17,6 +17,8 @@ import { RangeSim, defaultRangeBiz, practiceAppeal, rangeScene, type CarSlot, ty
 import { buildPark } from '../../src/game/event/carpark';
 import { GOLFER_PEOPLE } from '../../src/game/library';
 import { townTimeOf } from '../../src/game/sim/townclock';
+import { simulateCampaign } from '../../src/game/golf/campaign';
+import { SEASON_LEN } from '../../src/game/golf/calendar';
 
 // the network builds Path2D outlines for the painters; in Node a stub that ignores them is enough
 (globalThis as unknown as { Path2D: unknown }).Path2D ??= class { moveTo() {} lineTo() {} arc() {} arcTo() {} closePath() {} rect() {} };
@@ -274,4 +276,23 @@ export function setupRange(seed: number): RangeHarness {
 export function rangeClock(h: RangeHarness): RangeClock { const tt = townTimeOf(h.city.sim.town, h.city.sim.t); return { hour: tt.hour + tt.minute / 60, day: tt.day }; }
 export function rangeDemand(h: RangeHarness): DemandCtx {
   return { tier: h.range.start.save.tier, exits: h.range.start.save.exits.length, residents: h.city.town.pop, propsAppeal: 0, practiceAppeal: practiceAppeal(h.range.save) };
+}
+
+/** T221 (#610): the club's money made a season in the range runs (range-gate, range-fixture), as the town's room grows with it (City.townRoom).
+ *  The range's own takings, RANGE_SEASON (P22 2.2.1's year-1 target, about 150 cars a season), plus the year's club and tournament income of
+ *  the campaign simulator (golf/campaign.ts simulateCampaign, its 'careful' or 'careless' player: green fees, memberships, tickets, tents,
+ *  sponsors; P05's balance plan, PR #413, tunes those). Year k is season k; after the simulator's years the last one repeats */
+export type Earner = 'careful' | 'careless';
+export const RANGE_SEASON = 18000;
+const incomes: Partial<Record<Earner, number[]>> = {};
+export function seasonIncome(k: number, who: Earner): number {
+  const y = (incomes[who] ??= simulateCampaign({ years: 20, strategy: who }).history.map(r => r.totalIncome));
+  return RANGE_SEASON + (y[Math.min(y.length, Math.max(1, k)) - 1] ?? 0);
+}
+/** books the season's income in 24 equal parts, one at each game hour's end of sim second s (from 1), as business takings (Budget.bizIncome:
+ *  the treasury and the money made) */
+export function bookEarnings(h: Harness, s: number, who: Earner): void {
+  if (s % HOUR !== 0) return;
+  const k = Math.ceil(s / SEASON_LEN);
+  (h.city as unknown as { budget: { bizIncome(n: number): void } }).budget.bizIncome(seasonIncome(k, who) / (SEASON_LEN / HOUR));
 }

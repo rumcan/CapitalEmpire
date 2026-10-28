@@ -7,7 +7,9 @@ export type RangeUpgradeId = 'bays8' | 'bays12' | 'bays24' | 'targets' | 'covere
   /** the World of Golf extras (plan P24 Phase 4b, T133): the second tier of bays, the academy, the coffee kiosk, the ball picker cart */
   | 'tier2' | 'academy' | 'kiosk' | 'picker'
   /** the car park building (T146, P24 D49): a multi-storey car park beside the range's car park */
-  | 'parking';
+  | 'parking'
+  /** T223: the desert start's ground upgrades: the dirt tee box turfed, then the desert outfield grassed (mown and striped) */
+  | 'teeturf' | 'grass';
 /** a span's counts: the golfers who bought a bucket, the buckets (the customers they stand for), the lost (turned away or left the queue), the takings ($)
  *  and the upgrades' upkeep paid ($, T132) */
 export interface RangeCounts { golfers: number; buckets: number; lost: number; takings: number; upkeep: number }
@@ -27,7 +29,10 @@ export interface RangeBizSave { v: 1; owned: RangeUpgradeId[]; price: number; se
   extras: Record<ExtraId, ExtraSave>;
   /** T146: the game has laid the car park building's cart path (from the path's end at the car park round the building); an old save's first
    *  load with the building lays it */
-  garage?: boolean }
+  garage?: boolean;
+  /** T223: the range began in the desert (a dirt tee box and a desert outfield the player turfs and grasses: the 'teeturf' and 'grass'
+   *  upgrades). A save without it was made before T223, when every range had its grass: its load gets both upgrades (normalizeRangeBiz) */
+  desert?: boolean }
 /** the extras that keep their own counts (T133): the coffee kiosk (coffees sold) and the academy (lessons given) */
 export type ExtraId = 'kiosk' | 'academy';
 export const EXTRA_IDS: readonly ExtraId[] = ['kiosk', 'academy'];
@@ -55,6 +60,9 @@ export const GARAGE_CARS = 180;
  *  first, what it does (one line) */
 export interface RangeUpgrade { id: RangeUpgradeId; name: string; cost: number; upkeep: number; needs?: RangeUpgradeId | readonly RangeUpgradeId[]; effect: string }
 export const RANGE_UPGRADES: readonly RangeUpgrade[] = [
+  // T223: the desert start's ground: the dirt tee box turfed, then the desert outfield grassed
+  { id: 'teeturf', name: 'Turf the tee box', cost: 4000, upkeep: 30, effect: 'Grass turf under the mats instead of dust: +5% visitors, golfers pay $1 more' },
+  { id: 'grass', name: 'Grass the outfield', cost: 12000, upkeep: 90, needs: 'teeturf', effect: 'The desert outfield sown and mown in stripes: a green range to aim at, +15% visitors' },
   { id: 'bays8', name: '8 hitting bays', cost: 8000, upkeep: 60, effect: 'Four more mats on the tee box: twice the golfers at once' },
   { id: 'bays12', name: '12 hitting bays', cost: 14000, upkeep: 90, needs: 'bays8', effect: 'Four more mats: a longer queue fits before cars drive on' },
   { id: 'bays24', name: '24 hitting bays', cost: 40000, upkeep: 300, needs: 'bays12', effect: 'The whole tee box in mats' },
@@ -83,8 +91,11 @@ export function rangeUpkeep(s: Pick<RangeBizSave, 'owned'>): number { let n = 0;
 const zero = (): RangeCounts => ({ golfers: 0, buckets: 0, lost: 0, takings: 0, upkeep: 0 });
 const noExtras = (): Record<ExtraId, ExtraSave> => ({ kiosk: { season: { golfers: 0, takings: 0 }, total: { golfers: 0, takings: 0 } }, academy: { season: { golfers: 0, takings: 0 }, total: { golfers: 0, takings: 0 } } });
 const noPractice = (): Record<PracticeId, PracticeFacSave> => ({ putting: { open: false, season: { golfers: 0, takings: 0 }, total: { golfers: 0, takings: 0 } }, chipping: { open: false, season: { golfers: 0, takings: 0 }, total: { golfers: 0, takings: 0 } } });
-/** the range a new game starts with: 4 bays, $6 a bucket, nothing bought, no counts, no practice facilities, no extras' counts */
-export function defaultRangeBiz(): RangeBizSave { return { v: 1, owned: [], price: PRICE_START, season: zero(), total: zero(), practice: noPractice(), extras: noExtras() }; }
+/** the range a new game starts with: 4 bays, $6 a bucket, nothing bought, no counts, no practice facilities, no extras' counts, in the desert
+ *  (T223: a dirt tee box and a desert outfield) */
+export function defaultRangeBiz(): RangeBizSave { return { v: 1, owned: [], price: PRICE_START, season: zero(), total: zero(), practice: noPractice(), extras: noExtras(), desert: true }; }
+/** the ground upgrades a range made before T223 owns on its load (its grass tee box and outfield), in buying order */
+export const GRASS_UPGRADES: readonly RangeUpgradeId[] = ['teeturf', 'grass'];
 const pos = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) && v > 0 ? v : 0);
 const counts = (c: unknown): RangeCounts => {
   const o = (c && typeof c === 'object' ? c : {}) as Partial<RangeCounts>;
@@ -111,13 +122,14 @@ export function rangeNewSeason(s: RangeBizSave): void {
   for (const id of EXTRA_IDS) s.extras[id].season = { golfers: 0, takings: 0 };
 }
 /** a loaded golf.range made well formed (the migration: a range-start save without one gets the starting range); unknown upgrades are dropped,
- *  an upgrade whose prerequisite is missing is dropped, the price is clamped to the band */
+ *  an upgrade whose prerequisite is missing is dropped, the price is clamped to the band. T223: a range saved before the desert start (no
+ *  `desert` flag, or no range at all) keeps its grass: it owns the ground upgrades (GRASS_UPGRADES) */
 export function normalizeRangeBiz(x: unknown): RangeBizSave {
-  if (!x || typeof x !== 'object') return defaultRangeBiz();
-  const o = x as Partial<RangeBizSave>, owned: RangeUpgradeId[] = [];
+  if (!x || typeof x !== 'object') return { ...defaultRangeBiz(), owned: [...GRASS_UPGRADES] };
+  const o = x as Partial<RangeBizSave>, owned: RangeUpgradeId[] = o.desert === true ? [] : [...GRASS_UPGRADES];
   for (const id of Array.isArray(o.owned) ? o.owned : []) { const u = BY_ID.get(id as RangeUpgradeId); if (u && !owned.includes(u.id) && needsOf(u).every(n => owned.includes(n))) owned.push(u.id); }
   const p = typeof o.price === 'number' && Number.isFinite(o.price) ? Math.round(o.price) : PRICE_START;
-  const out: RangeBizSave = { v: 1, owned, price: Math.min(PRICE_MAX, Math.max(PRICE_MIN, p)), season: counts(o.season), total: counts(o.total), practice: normalizePractice(o.practice), extras: normalizeExtras(o.extras) };
+  const out: RangeBizSave = { v: 1, owned, price: Math.min(PRICE_MAX, Math.max(PRICE_MIN, p)), season: counts(o.season), total: counts(o.total), practice: normalizePractice(o.practice), extras: normalizeExtras(o.extras), desert: true };
   if (o.paths === true) out.paths = true;
   if (o.tee === true) out.tee = true;
   if (o.garage === true && owned.includes('parking')) out.garage = true;
@@ -139,6 +151,8 @@ export interface RangeStats {
   /** T146: the pro shop's counters, serving golfers in parallel (one per BAYS_A_COUNTER bays: the second tier adds one), and the car park
    *  building */
   counters: number; parking: boolean;
+  /** T223: the tee box is turfed (else the desert start's dirt), and the outfield grassed, mown and striped (else the desert) */
+  teeTurf: boolean; grass: boolean;
 }
 export function rangeStats(s: RangeBizSave, x: RangeExtras = {}): RangeStats {
   const has = (id: RangeUpgradeId) => s.owned.includes(id);
@@ -149,16 +163,19 @@ export function rangeStats(s: RangeBizSave, x: RangeExtras = {}): RangeStats {
   const propsAppeal = Math.min(PROPS_APPEAL_CAP, Math.max(0, Number.isFinite(x.propsAppeal) ? x.propsAppeal! : 0));
   // the practice facilities' term (T130, practiceAppeal): more golfers come, the price stays
   const practice = Math.max(0, Number.isFinite(x.practiceAppeal) ? x.practiceAppeal! : 0);
-  const own = (has('targets') ? 0.25 : 0) + (covered ? 0.15 : 0) + (dispenser ? 0.05 : 0) + (proShop ? 0.15 : 0)
+  const teeTurf = has('teeturf'), grass = has('grass');
+  const own = (has('targets') ? 0.25 : 0) + (covered ? 0.15 : 0) + (dispenser ? 0.05 : 0) + (proShop ? 0.15 : 0) + (teeTurf ? GROUND_APPEAL.teeturf : 0) + (grass ? GROUND_APPEAL.grass : 0)
     + (tier2 ? EXTRA_APPEAL.tier2 : 0) + (academy ? EXTRA_APPEAL.academy : 0) + (kiosk ? EXTRA_APPEAL.kiosk : 0) + (picker ? EXTRA_APPEAL.picker : 0);
   const appeal = (1 + own) * (1 + propsAppeal) * (1 + practice);
   return {
     bays, targets: has('targets') ? 5 : 2, covered, lights, dispenser, proShop, appeal, propsAppeal,
-    ref: (PRICE_START + (covered ? 2 : 0) + (proShop ? 1 : 0)) * (1 + propsAppeal), extra: proShop ? 2 : 0, serve: dispenser ? 0.8 : proShop ? 2 : 3,
+    ref: (PRICE_START + (covered ? 2 : 0) + (proShop ? 1 : 0) + (teeTurf ? 1 : 0)) * (1 + propsAppeal), extra: proShop ? 2 : 0, serve: dispenser ? 0.8 : proShop ? 2 : 3,
     open: OPEN_HOUR, close: lights ? CLOSE_LIT : CLOSE_HOUR, qMax: 4 + Math.floor(bays / 4), tier2, academy, kiosk, picker, lowerBays,
-    counters: Math.max(1, Math.ceil(bays / BAYS_A_COUNTER)), parking: has('parking'),
+    counters: Math.max(1, Math.ceil(bays / BAYS_A_COUNTER)), parking: has('parking'), teeTurf, grass,
   };
 }
+/** the ground upgrades' appeal (T223): the turfed tee box and the grassed outfield, added to the upgrades' own appeal term */
+export const GROUND_APPEAL: Readonly<Record<'teeturf' | 'grass', number>> = { teeturf: 0.05, grass: 0.15 };
 /** the second tier's bays upstairs (T133), over the middle twelve of the tee box's slots */
 export const TIER2_BAYS = 12;
 /** the extras' appeal (T133): added to the upgrades' own appeal term */

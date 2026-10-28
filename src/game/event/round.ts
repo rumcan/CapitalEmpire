@@ -120,13 +120,16 @@ export class Round {
     return { stage: this.stage, level: this.level, runs: this.runs, year: START_YEAR + this.runs, buildLeft: this.buildLeft, surgeLeft: this.surgeLeft, crowd: this.crowd, upkeep: this.upkeep, toll: this.toll, parking: this.parking, last: this.last, surge: null, xp: this.xp, cards: this.cards, draft: this.draft };
   }
   /** a round from a save: a build or surge saved mid-way restores as free (its crowd and upkeep dropped), keeping the level, the runs, the cards, the xp
-   *  and the last result; an eval or a free round keeps its crowd, upkeep and draft too; no save: a fresh round (old saves: xp 1, no cards, no draft) */
-  static from(s?: RoundSave): Round {
+   *  and the last result; an eval or a free round keeps its crowd, upkeep and draft too; no save: a fresh round (old saves: xp 1, no cards, no draft).
+   *  live (T209: the tournament day resumes, see City.resumeDay): a surge comes back as a surge, with its sim s left to kick-off, its crowd, upkeep, tolls
+   *  and parking (a build still restores as free) */
+  static from(s?: RoundSave, live = false): Round {
     const r = new Round();
     if (!s) return r;
     r.level = s.level; r.runs = s.runs; r.last = s.last ? full(s.last) : null; r.xp = s.xp ?? 1; r.cards = s.cards ?? [];
-    if (s.stage === 'build' || s.stage === 'surge') return r;
+    if (s.stage === 'build' || (s.stage === 'surge' && !live)) return r;
     r.stage = s.stage; r.crowd = s.crowd; r.upkeep = s.upkeep; r.toll = s.toll ?? 0; r.parking = s.parking ?? 0; r.draft = s.draft ?? null;
+    if (s.stage === 'surge') r.surgeLeft = Math.max(0, s.surgeLeft);
     return r;
   }
 }

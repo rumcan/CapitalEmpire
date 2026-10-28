@@ -19,6 +19,7 @@ import type { BizDef, BizStats, BizView } from '../business/state';
 import type { DisasterNote, DisasterView } from '../city';
 import type { DisasterKind } from '../ext/disasters';
 import type { TownClock } from './townclock';
+import type { DaySave } from '../event/daysave';
 
 /** what the worker measured, sent with every frame (walkers and stops: while a surge or its eval is on: the walking fan groups, 6 floats each (x, y in tiles, fans, stage, tx, ty),
  *  and the lot stops, 4 floats each (x, y in tiles, the fans waiting, the route index)); skipping: a fast-forward is running (simT is then the last frame's, not extrapolated);
@@ -33,7 +34,7 @@ export interface LotRec { key: string; o: [number, number]; u: [number, number];
 export type ToSim = { t: 'net'; ops: NetOp[] } | { t: 'terrain'; cls: Uint8Array; entry: [number, number]; seed: number; towns: number[]; height?: Float32Array; golf?: boolean } | { t: 'target'; n: number } | { t: 'speed'; k: number } | { t: 'option'; id: string } | { t: 'townState'; lots: LotTuple[]; simT: number; budget?: BudgetSave; money: number; career?: CareerSave; shift?: number; round?: RoundSave; biz?: BizStats[] } | { t: 'skip'; until: number }
   | { t: 'spend'; kind: 'construction' | 'compensation' | 'business' | 'upkeep'; n: number } | { t: 'loan'; take: boolean } | { t: 'budget'; save: BudgetSave | null; career?: CareerSave | null } | { t: 'report' } | { t: 'stamp'; pop: number }
   | { t: 'sandbox'; grow: number; money: boolean } | { t: 'inspect'; slot: number } | { t: 'watch'; x: number; y: number } | { t: 'round'; op: 'start' | 'now' | 'close' } | { t: 'round'; op: 'pick'; card: CardId }
-  | { t: 'parks'; defs: CarParkDef[] } | { t: 'parkTest'; id: number; n: number } | { t: 'tolls'; defs: TollDef[] } | { t: 'parking'; rows: BayRowDef[]; curbs: CurbDef[]; fee: number } | { t: 'heat'; on: boolean } | { t: 'businesses'; defs: BizDef[] }
+  | { t: 'parks'; defs: CarParkDef[] } | { t: 'places'; rects: [number, number, number, number][] } | { t: 'parkTest'; id: number; n: number } | { t: 'tolls'; defs: TollDef[] } | { t: 'parking'; rows: BayRowDef[]; curbs: CurbDef[]; fee: number } | { t: 'heat'; on: boolean } | { t: 'businesses'; defs: BizDef[] }
   | { t: 'buses'; defs: BusRouteDef[] } | { t: 'buyLot'; key: string } | { t: 'incidents'; on: boolean }
   | { t: 'disastersOn'; on: boolean } | { t: 'repairDisaster'; id: number; key: string } | { t: 'forceDisaster'; kind: DisasterKind } | { t: 'golf'; on: boolean; tier: number; rep: number; /** the course, then the player's parcels */ land?: [number, number, number, number][]; /** a range start's (GolfSave.start, exits, invited) */ start?: 'range'; exits?: { x: number; y: number }[]; invited?: { at: number }; /** T090: a range start's holes built and its town's success (GolfSave.townBoost) */ holes?: number; townBoost?: number }
   /** the town day (LEAD.md M1): its length in sim seconds (Sim.dayLen) and the lot trips' density (Sim.townTraffic) */
@@ -45,7 +46,11 @@ export type ToSim = { t: 'net'; ops: NetOp[] } | { t: 'terrain'; cls: Uint8Array
   /** the galleries (LEAD.md M2.2): the spots the admitted fans stand at (golf/galleries.ts) */
   | { t: 'spots'; spots: GallerySpot[] }
   /** the golf play's featured holes (docs/GOLF-PLAY.md decision 6): the spots on these holes draw more; [] none (see City.setFeatured) */
-  | { t: 'featured'; holes: number[] };
+  | { t: 'featured'; holes: number[] }
+  /** T209: a request for the tournament day as the save keeps it (City.daySave; the answer is a daySave message with the same id) */
+  | { t: 'daySave'; id: number }
+  /** T209: the tournament day from a save resumes (City.resumeDay), after townState and townClock: the saved round and the day */
+  | { t: 'resumeDay'; round?: RoundSave; day: DaySave };
 /** (golf: the golf mode on, with the tournament's tier and its reputation (the season ends with it: see City.setGolf), or off; parking: the bay rows and on-street runs as the player drew them (the full lists) and the fee per parked car ($); disastersOn: the natural disasters on or off (off by default; off lifts their closures); repairDisaster: the player pays the repair of the quake closure key of disaster id) */
 /** (buses: the shuttle routes as the player drew them (the full list, each time: the worker resolves their stops); heat: the congestion heat map on or off (off by default: nothing is posted then); report: a request for the bottleneck report now; the worker also sends one each game hour; inspect: the car in slot is inspected, a car message with every frame, -1 stops;
  *  watch: the junction within 4 tiles of (x, y) is watched for the routes through it, x < 0 stops; businesses: the player's businesses (the full list: see City.setBusinesses); biz (in townState): the businesses' saved stats) */
@@ -53,10 +58,12 @@ export type ToSim = { t: 'net'; ops: NetOp[] } | { t: 'terrain'; cls: Uint8Array
  *  the books (after a day closes, or after a budget message: the save, the career's save, the game day now, and the ledger of the day that just closed, if any);
  *  the milestones a step newly reached (in order; their grants are paid) and whether the city won, when a game hour's start brought either */
 /** worker to main thread: the disasters, when they changed (active: the one under way; notes: the transitions and repairs since the last such message) */
-export type FromSim = /** T090: a range start's town success after a tournament (the engine keeps it in GolfSave.townBoost) */ { t: 'townBoost'; v: number } | { t: 'frame'; cap: number; buf: Float32Array; stats: SimStats; sig: Float32Array; inc: Float32Array; walkers?: Float32Array; stops?: Float32Array; /** the galleries' standing crowds: 8 floats a spot (x, y, fans, kind index, fx, fy, ax, ay) */ gallery?: Float32Array; /** T147: the money moved at a place since the last frame (City.takeCash: x, y, $ signed, lost) */ money?: Float32Array } | { t: 'disasters'; active: DisasterView[]; notes: DisasterNote[] } |{ t: 'lots'; added: LotRec[]; removed: string[] } | { t: 'town'; events: TownEvent[]; pop: number; jobs: number; built: number; access: Float32Array } | { t: 'grow'; legs: number[] } | { t: 'log'; message: string } | { t: 'error'; message: string }
+export type FromSim = /** T090: a range start's town success after a tournament (the engine keeps it in GolfSave.townBoost) */ { t: 'townBoost'; v: number } | { t: 'frame'; cap: number; buf: Float32Array; stats: SimStats; sig: Float32Array; inc: Float32Array; walkers?: Float32Array; stops?: Float32Array; /** the galleries' standing crowds: 8 floats a spot (x, y, fans, kind index, fx, fy, ax, ay) */ gallery?: Float32Array; /** T147: the money moved at a place since the last frame (City.takeCash: x, y, $ signed, lost) */ money?: Float32Array } | { t: 'disasters'; active: DisasterView[]; notes: DisasterNote[] } |{ t: 'lots'; added: LotRec[]; removed: string[] } | { t: 'town'; events: TownEvent[]; pop: number; jobs: number; built: number; access: Float32Array; /** T221: a range start's room, the residents its earnings allow (City.townRoom; absent in other games) */ room?: number } | { t: 'grow'; legs: number[] } | { t: 'log'; message: string } | { t: 'error'; message: string }
   | { t: 'budget'; save: BudgetSave; career: CareerSave; day: number; ledger: Ledger | null } | { t: 'milestone'; newly: Milestone[]; won: boolean } | { t: 'report'; report: Report; hours: HourStat[] }
   | { t: 'car'; info: CarInfo | null } | { t: 'watch'; node: [number, number] | null; n: number; lines: Float32Array } | { t: 'site'; site: Site | null }
   | { t: 'biz'; list: BizView[] }
+  /** T209: the answer to a daySave request (the same id): the tournament day as the save keeps it, null when none is under way */
+  | { t: 'daySave'; id: number; day: DaySave | null }
   | { t: 'heatGeom'; version: number; geom: Float32Array } | { t: 'heat'; version: number; ratio: Float32Array; dens: Float32Array; hist: Float32Array; pdem: Float32Array };
 /** (heatGeom: the heat map's geometry for heatVersion version, 6 floats per dseg id (see Sim.heatGeometry), posted when the version changed while on;
  *  heat: each dseg's speed ratio and density (copies) for that version, every 500 ms while on, and its congestion over time (hist: heatHist, the delay per lane-km

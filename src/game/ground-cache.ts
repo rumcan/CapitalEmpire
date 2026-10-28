@@ -15,7 +15,11 @@ import type { Waterway } from './terrain/types';
 import GroundWorker from './ground.worker?worker';
 import type { GrassCellView } from './ext/grass-management';
 import { casterChange } from './living-ground';
-import { onPaintedSurfaces, paintedSurfaces } from './painted-surfaces-live';
+import { LEAF_DENSITY_DEFAULT, clampLeafDensity } from './leaf-fall';
+import { onPaintedSurfaces, paintedSurfaces, setPaintedSurfaces } from './painted-surfaces-live';
+import { finishOf, type CourseFinish } from './course-finish';
+import { REFLECT, clampWaterLook, waterLookOf, type WaterLook } from './water-look';
+import type { PaintedLook } from './painted-families';
 import { pictureCurrent } from './ground-layers';
 
 export interface Tile {
@@ -86,7 +90,7 @@ export class GroundCache {
   setGrassArt(art: GrassArt) { if (art === this.grassArt) return; this.grassArt = art; this.broadcast({ t: 'grassArt', art }); this.invalidateAll(); }
   /** a light boot's worker limits (boot.ts, T157), sent with init; null: the game's */
   limits: WorkerLimits | null = null;
-  init(t: { cls: Uint8Array; height: Float32Array; waters: Waterway[] }) { const art = { ...withPresets(withBaseGrass(GROUND_ART)), grassArt: this.grassArt }, limits = this.limits ?? undefined; this.workers.forEach((wk, i) => wk.postMessage({ t: 'init', art, terrain: t.cls, height: t.height, waters: t.waters, build: i === 0, peers: this.workers.length - 1, limits } satisfies ToWorker)); this.broadcast({ t: 'living', ...this.living }); this.broadcast({ t: 'slopeLight', strength: this.slopeLight }); this.broadcast({ t: 'surfaces', file: paintedSurfaces() });
+  init(t: { cls: Uint8Array; height: Float32Array; waters: Waterway[] }) { const art = { ...withPresets(withBaseGrass(GROUND_ART)), grassArt: this.grassArt }, limits = this.limits ?? undefined; this.workers.forEach((wk, i) => wk.postMessage({ t: 'init', art, terrain: t.cls, height: t.height, waters: t.waters, build: i === 0, peers: this.workers.length - 1, limits } satisfies ToWorker)); this.broadcast({ t: 'living', ...this.living }); this.broadcast({ t: 'slopeLight', strength: this.slopeLight }); this.broadcast({ t: 'leaves', density: this.leafDensity }); this.broadcast({ t: 'specCam', on: this.specCam }); this.broadcast({ t: 'swamp', on: this.swamp }); this.broadcast({ t: 'surfaces', file: paintedSurfaces() });
     // the studio saved the painted surfaces (the dev server hot-swaps the file): every worker takes the new looks and every chunk is baked again
     this.unsurfaces?.(); this.unsurfaces = onPaintedSurfaces(file => { this.broadcast({ t: 'surfaces', file }); this.invalidateAll(); }); }
   private unsurfaces: (() => void) | null = null;
@@ -98,7 +102,61 @@ export class GroundCache {
   living = { on: true, debug: false };
   /** the living ground is baked at all (its variety, or the debug view of its maps) */
   get livingActive() { return this.living.on || this.living.debug; }
+  /** T220: the fallen leaves' density (the gear menu's Fallen leaves, leaf-fall.ts; 0 = none, the ground exactly as before T220) */
+  leafDensity = LEAF_DENSITY_DEFAULT;
+  /** the Fallen leaves changed: every worker switches and every chunk is baked again (each keeps its old picture until then); also the dev switch
+   *  window.__game.ground.setLeafDensity(0) that compares the looks and the bake times */
+  setLeafDensity(v: number) { const d = clampLeafDensity(v); if (d === this.leafDensity) return; this.leafDensity = d; this.broadcast({ t: 'leaves', density: d }); this.invalidateAll(); }
+  /** the chunks lay something from the casters (the living ground, or the fallen leaves under the trees and along the fences and walls): a chunk
+   *  waits for the casters round it, and a caster edit re-bakes the chunks under it */
+  get castersUsed() { return this.livingActive || this.leafDensity > 0 || this.waterReflects; }
+  /** T230: the water reflects its shore's trees and buildings (water-look.ts: the look on, its reflect knob above 0) */
+  get waterReflects() { const w = this.waterLook; return w.on && w.reflect > 0; }
+  /** T230: the water look (water-look.ts: deeper and more teal toward the middle, a lighter edge, the shore's reflections) as the surfaces file
+   *  has it (Studio > Painted > Water look) */
+  get waterLook(): WaterLook { return waterLookOf(paintedSurfaces()); }
+  /** T230: sets some of the water look's knobs (the rest stay), as a studio save does: every chunk is baked again. The dev switch
+   *  window.__game.ground.setWaterLook({ on: false }) compares the water before T230 and the bake times */
+  setWaterLook(f: Partial<WaterLook>) { const cur = paintedSurfaces(); setPaintedSurfaces({ ...cur, water: clampWaterLook({ ...waterLookOf(cur), ...f }) }); }
+  /** T230: a surface's painted look from the console, as a studio save does (window.__game.ground.setSurfaceLook('water', { family: 'lake' })
+   *  with setWaterLook({ on: false }) brings back the water before T230) */
+  setSurfaceLook(key: string, look: Partial<PaintedLook>) { const cur = paintedSurfaces(), was = cur.surfaces[key]; setPaintedSurfaces({ ...cur, surfaces: { ...cur.surfaces, [key]: { ...(was ?? { family: '', version: null, scale: 1, tint: '#ffffff', tone: 0 }), ...look } } }); }
   /** Ground variety or its debug view changed: every worker switches and every chunk is baked again (each keeps its old picture until then) */
+  /** T204: the rugged edges on or off (the dev switch: window.__game.ground.setRugged(false) compares the looks and the bake times) */
+  rugged = true;
+  setRugged(on: boolean) { if (on === this.rugged) return; this.rugged = on; this.broadcast({ t: 'rugged', on }); this.invalidateAll(); }
+  /** T218: the fairways' mowing stripes on or off (the dev switch: window.__game.ground.setStripes(false) compares the looks and the bake times) */
+  stripes = true;
+  setStripes(on: boolean) { if (on === this.stripes) return; this.stripes = on; this.broadcast({ t: 'stripes', on }); this.invalidateAll(); }
+  /** T227: the course finish (course-finish.ts: the fairway and outfield bands, the green stripes, the darker collar, the bunker lips) as the
+   *  surfaces file has it (Studio > Painted > Course finish) */
+  get courseFinish(): CourseFinish { return finishOf(paintedSurfaces()); }
+  /** T227: sets some of the course finish's knobs (the rest stay), as a studio save does: every chunk is baked again, and the engine lays the
+   *  collars again when their width changed. The dev switch window.__game.ground.setCourseFinish({ on: false }) compares the look before T227
+   *  and the bake times */
+  setCourseFinish(f: Partial<CourseFinish>) { const cur = paintedSurfaces(); setPaintedSurfaces({ ...cur, course: { ...finishOf(cur), ...f } }); }
+  /** T215: the street lamps' reflection pools as the camera specular (on: each chunk's pools go onto its reflection mask, lit on the GPU by the
+   *  camera falloff, gl.ts FS_QUAD) or baked into the road picture as before (off, the default); the dev switch window.__game.specCam */
+  specCam = false;
+  setSpecCam(on: boolean) { if (on === this.specCam) return; this.specCam = on; this.broadcast({ t: 'specCam', on }); this.invalidateAll(); }
+  /** T215: each chunk picture's reflection mask (renderer.ts takeSpecMask), by picture: it goes wherever its picture is drawn (a zoom
+   *  crossfade's old picture, the build reveal's, the other tier's fallback) and is deleted with it (dropPicture) */
+  private specs = new Map<WebGLTexture, WebGLTexture>();
+  /** the reflection mask of a chunk picture, or null (specCam off, or no lamp pool on its asphalt) */
+  specOf(tex: WebGLTexture | null): WebGLTexture | null { return (tex && this.specs.get(tex)) ?? null; }
+  /** T199: the small streams drawn as swamp (on, the default) or as their old creek bed (the dev switch window.__game.ground.setSwamp(false)
+   *  compares the looks and the bake times); every chunk is baked again */
+  swamp = true;
+  setSwamp(on: boolean) { if (on === this.swamp) return; this.swamp = on; this.broadcast({ t: 'swamp', on }); this.invalidateAll(); }
+  /** T199: each chunk picture's swamp gloss mask (renderer.ts takeGlossMask), by picture, as its reflection mask (it goes and is deleted with it) */
+  private glosses = new Map<WebGLTexture, WebGLTexture>();
+  /** the gloss mask of a chunk picture (T199 the swamp's pools, T230 its ponds and rivers), or null (specCam off, or no swamp or water on it) */
+  glossOf(tex: WebGLTexture | null): WebGLTexture | null { return (tex && this.glosses.get(tex)) ?? null; }
+  /** delete a chunk picture and its reflection and gloss masks */
+  private dropPicture(tex: WebGLTexture) {
+    this.gl.deleteTexture(tex); const s = this.specs.get(tex); if (s) { this.gl.deleteTexture(s); this.specs.delete(tex); }
+    const g = this.glosses.get(tex); if (g) { this.gl.deleteTexture(g); this.glosses.delete(tex); }
+  }
   setLiving(on: boolean, debug: boolean) { if (on === this.living.on && debug === this.living.debug) return; this.living = { on, debug }; this.broadcast({ t: 'living', on, debug }); this.invalidateAll(); }
   /** the caster records last sent, by key, and the edits waiting for the next pump (null: the key goes) */
   private casterSent = new Map<string, Float32Array>(); private casterQueue = new Map<string, Float32Array | null>(); private casterPrefixes: string[] = [];
@@ -115,7 +173,8 @@ export class GroundCache {
     for (const [k, r] of this.casterQueue) {
       const old = this.casterSent.get(k), box = casterChange(old, r ?? new Float32Array(0));
       if (r) { this.casterSent.set(k, r); if (box || !old) set.push([k, r]); } else if (old) { this.casterSent.delete(k); drop.push(k); }
-      if (box && this.livingActive) this.invalidate(box, false, 0, 'gm');
+      // (T230: with the water's reflections, also the water below it down the screen, as far as a reflection reaches)
+      if (box && this.castersUsed) this.invalidate(this.waterReflects ? [box[0], box[1], box[2] + REFLECT.reach, box[3] + REFLECT.reach] : box, false, 0, 'gm');
     }
     this.casterQueue.clear();
     const dropPrefix = this.casterPrefixes.splice(0);
@@ -180,7 +239,7 @@ export class GroundCache {
       const [W, H] = SIZE[t.kind];
       if ((t.i + 1) * W < X0 || t.i * W > X1 || (t.j + 1) * H < Y0 || t.j * H > Y1) continue;
       t.gen++; t.stale = true; t.hold = hold ? Math.max(t.hold, t.baked + hold) : 0;
-      if (keepPrev && t.tex && t.kind !== 'p') { if (t.prev && t.prev !== t.tex) this.gl.deleteTexture(t.prev); t.prev = t.tex; t.prevUntil = Math.max(t.prevUntil, until); }
+      if (keepPrev && t.tex && t.kind !== 'p') { if (t.prev && t.prev !== t.tex) this.dropPicture(t.prev); t.prev = t.tex; t.prevUntil = Math.max(t.prevUntil, until); }
     }
   }
   invalidateAll() { for (const t of this.tiles.values()) { t.gen++; t.stale = true; t.hold = 0; } }
@@ -217,30 +276,32 @@ export class GroundCache {
     if (m.t === 'log') { console.log(`[ground worker ${w}]`, m.message); return; }
     if (m.t === 'texpack') { m.snaps.forEach((snap, k) => this.workers[k + 1]?.postMessage({ t: 'textures', snap } satisfies ToWorker, snap.bitmaps)); return; }
     const r = this.reqs.get(m.id); this.reqs.delete(m.id); this.inflight[w]--;
-    if (!r) { m.bmp.close(); m.shade?.close(); return; }
+    if (!r) { m.bmp.close(); m.shade?.close(); m.spec?.close(); m.gloss?.close(); return; }
     const t = r.t; t.pendingL = 0; t.pendingArtL = 0; t.pendingTs = -1;
     this.bakeLog[this.baked % BAKE_LOG] = m.ms; this.waitLog[this.baked % BAKE_LOG] = performance.now() - r.at; if (!this.firstTileAt) this.firstTileAt = performance.now();
     this.bakeMs += m.ms; this.baked++;
     // edited while baking: it will be asked for again, and keeps the picture it has meanwhile; one with none shows this one (stale, so it is
     // still asked for again: the ground before the edit for a bake, rather than nothing; T134, the startup's edits did this to the planner pieces)
     const edited = r.gen !== t.gen;
-    if (edited && t.tex) { m.bmp.close(); m.shade?.close(); return; }
+    if (edited && t.tex) { m.bmp.close(); m.shade?.close(); m.spec?.close(); m.gloss?.close(); return; }
     const u0 = performance.now();
     // a new tile spec (T145, T150: a band switch or a DPR change) keeps the old picture until the whole view has the new one too (engine.ts: then a cut, never a crossfade between sets)
     const ts = m.ts ?? 0, stepChanged = (t.texTiled || !!m.tiled) && t.texTs !== ts;
     const old = t.tex, oldL = t.texL, oldPx = t.px, artL = m.artL ?? m.L, fade = old && (oldL !== m.L || t.texArtL !== artL || stepChanged) && !t.stale && t.kind !== 'p' && !t.prev;
-    if (t.fadeFrom && t.fadeFrom !== old && t.fadeFrom !== t.prev) this.gl.deleteTexture(t.fadeFrom);
+    if (t.fadeFrom && t.fadeFrom !== old && t.fadeFrom !== t.prev) this.dropPicture(t.fadeFrom);
     t.fadeFrom = null; t.fadePx = 0;
     // (T186: the shade mask goes with the new picture: the fading old picture shows over the new mask meanwhile, a few frames)
     if (t.shade) this.gl.deleteTexture(t.shade);
     t.shade = m.shade ? this.gl.textureFrom(m.shade) : null; m.shade?.close();
     t.tex = this.gl.textureFrom(m.bmp); t.texL = m.L; t.texArtL = artL; t.texTs = ts; t.texTiled = !!m.tiled; t.px = m.bmp.width * m.bmp.height; t.stale = edited; t.baked = u0; m.bmp.close();
+    if (m.spec) { this.specs.set(t.tex, this.gl.specTexture(m.spec)); m.spec.close(); }
+    if (m.gloss) { this.glosses.set(t.tex, this.gl.specTexture(m.gloss)); m.gloss.close(); } // (T199: premultiplied, as the reflection mask)
     // T197: a picture that fell back to the photo where a tile set was not decoded yet shows meanwhile and is asked for again after a short
     // hold (the tiles decode on the way), so a placeholder never stays
     if (m.prov && !edited) { this.provisional++; const k = (this.provTries.get(t) ?? 0) + 1; this.provTries.set(t, k); if (k <= PROVISIONAL_TRIES) { t.stale = true; t.hold = u0 + PROVISIONAL_RETRY_MS; } }
     else this.provTries.delete(t);
     if (fade) { t.fadeFrom = old; t.fadeStart = Infinity; t.fadePx = oldPx; }
-    else if (old && old !== t.prev) this.gl.deleteTexture(old);
+    else if (old && old !== t.prev) this.dropPicture(old);
     const u1 = performance.now(); this.upCount++; this.upMs += u1 - u0;
     if (u1 - this.upT > 1000) { this.uploadsThisSecond = this.upCount; this.uploadMsPerSecond = this.upMs; this.upCount = 0; this.upMs = 0; this.upT = u1; }
   }
@@ -251,22 +312,22 @@ export class GroundCache {
     this.residentPx = px + held; this.peakPx = Math.max(this.peakPx, this.residentPx);
     if (px <= this.budgetPx) return;
     const old = [...this.tiles.values()].filter(t => t.tex && t.used !== now).sort((a, b) => a.used - b.used);
-    for (const t of old) { if (px <= this.budgetPx * 0.8) break; px -= t.px + t.fadePx; this.gl.deleteTexture(t.tex!); t.tex = null; if (t.shade) { this.gl.deleteTexture(t.shade); t.shade = null; } if (t.prev) { this.gl.deleteTexture(t.prev); t.prev = null; } if (t.fadeFrom) { this.gl.deleteTexture(t.fadeFrom); t.fadeFrom = null; t.fadePx = 0; } }
+    for (const t of old) { if (px <= this.budgetPx * 0.8) break; px -= t.px + t.fadePx; this.dropPicture(t.tex!); t.tex = null; if (t.shade) { this.gl.deleteTexture(t.shade); t.shade = null; } if (t.prev) { this.dropPicture(t.prev); t.prev = null; } if (t.fadeFrom) { this.dropPicture(t.fadeFrom); t.fadeFrom = null; t.fadePx = 0; } }
   }
   /** release reveal pictures whose animation is over */
   settle(now: number) { for (const t of this.tiles.values()) {
-    if (t.prev && now > t.prevUntil && !t.stale) { if (t.prev !== t.tex) this.gl.deleteTexture(t.prev); t.prev = null; }
-    if (t.fadeFrom && (now >= t.fadeStart + 180 || !Number.isFinite(t.fadeStart) && now - t.used > 2000)) { if (t.fadeFrom !== t.tex && t.fadeFrom !== t.prev) this.gl.deleteTexture(t.fadeFrom); t.fadeFrom = null; t.fadePx = 0; }
+    if (t.prev && now > t.prevUntil && !t.stale) { if (t.prev !== t.tex) this.dropPicture(t.prev); t.prev = null; }
+    if (t.fadeFrom && (now >= t.fadeStart + 180 || !Number.isFinite(t.fadeStart) && now - t.used > 2000)) { if (t.fadeFrom !== t.tex && t.fadeFrom !== t.prev) this.dropPicture(t.fadeFrom); t.fadeFrom = null; t.fadePx = 0; }
   } }
   static planOf(i: number, j: number) { return { i: Math.floor(i / PLAN_K), j: Math.floor(j / PLAN_K) }; }
   /** Reuse the other ground tier's already baked pictures during a zoom transition; never request extra bakes. */
   zoomFallback(kind: 'g' | 'm', box: readonly [number, number, number, number], now: number) {
-    const other = kind === 'g' ? 'm' : 'g', [w, h] = SIZE[other], result: { tex: WebGLTexture; rect: [number, number, number, number]; uv: [number, number, number, number] }[] = [];
+    const other = kind === 'g' ? 'm' : 'g', [w, h] = SIZE[other], result: { tex: WebGLTexture; spec: WebGLTexture | null; rect: [number, number, number, number]; uv: [number, number, number, number] }[] = [];
     for (let j = Math.floor(box[1] / h); j < Math.ceil(box[3] / h); j++) for (let i = Math.floor(box[0] / w); i < Math.ceil(box[2] / w); i++) {
       const tile = this.tiles.get(key(other, i, j)); if (!tile?.tex) continue;
       const x0 = Math.max(box[0], i * w), y0 = Math.max(box[1], j * h), x1 = Math.min(box[2], (i + 1) * w), y1 = Math.min(box[3], (j + 1) * h);
       tile.used = now;
-      result.push({ tex: tile.tex, rect: [x0, y0, x1, y1], uv: [(x0 - i * w) / w, (y0 - j * h) / h, (x1 - i * w) / w, (y1 - j * h) / h] });
+      result.push({ tex: tile.tex, spec: this.specOf(tile.tex), rect: [x0, y0, x1, y1], uv: [(x0 - i * w) / w, (y0 - j * h) / h, (x1 - i * w) / w, (y1 - j * h) / h] });
     }
     return result;
   }

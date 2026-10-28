@@ -126,3 +126,18 @@ test('queuePeople: min(count, 24) idle people in a grid centred on the point, ea
   }
   assert.ok(Math.abs(mx / n - 10) < 0.2 && Math.abs(my / n - 10) < 0.2, `centred on (10, 10): ${mx / n}, ${my / n}`);
 });
+
+test('the roster (T203): the teens and the kids are spectators with every clip; the kids sit lower; staff are not packed; a big crowd shows everyone', () => {
+  const ids = SPECTATOR_PEOPLE.map(p => p.id.replace(/^spectator:/, '')), at = (id: string) => SPECTATOR_PEOPLE[ids.indexOf(id)]!;
+  for (const id of ['spec_teen_boy', 'spec_teen_girl', 'spec_k_boy_cap', 'spec_k_girl_pigtails']) assert.ok(ids.includes(id), `${id} is not a spectator`);
+  assert.ok(ids.every(id => id.startsWith('spec_')), `only spec_* are spectators: ${ids.join(' ')}`);
+  for (const p of SPECTATOR_PEOPLE) assert.ok(p.seat > 0.25 && p.seat < p.m / 2, `${p.id}: seat ${p.seat} m for ${p.m} m tall`);
+  for (const kid of ['spec_k_boy_cap', 'spec_k_girl_pigtails']) {
+    assert.ok(at(kid).m < 1.45 && at(kid).h < at('spec_teen_boy').h, `${kid} is a child's height`);
+    assert.ok(at(kid).seat < at('spec_teen_boy').seat, `${kid} sits lower than a teen`);
+  }
+  // twenty full greens: every person shows up somewhere (the seeded pick spreads over the whole table)
+  const out: CrowdPerson[] = [], seen = new Set<number>();
+  for (let spot = 0; spot < 20; spot++) { const n = galleryPeople(spotBuf(0, 60), 0, spot, 10, PEOPLE, out); for (let s = 0; s < n; s++) seen.add(out[s]!.person); }
+  assert.equal(seen.size, PEOPLE, `people shown: ${seen.size} of ${PEOPLE}`);
+});

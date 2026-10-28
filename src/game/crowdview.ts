@@ -49,6 +49,9 @@ function unit(dx: number, dy: number): void {
   if (L > 1e-6) { U[0] = dx / L; U[1] = dy / L; } else { U[0] = 0.7071; U[1] = 0.7071; }
 }
 
+/** T213: a gallery's cheer starts over this many real seconds across its fans (not all at once) */
+const CHEER_SPREAD = 0.4;
+
 /** the person object at slot s of out (made on first use, then reused) */
 function slot(out: CrowdPerson[], s: number): CrowdPerson { return out[s] ?? (out[s] = { x: 0, y: 0, group: 0, person: 0, row: 0, frame: 0 }); }
 
@@ -69,8 +72,9 @@ function seatFrame(spot: number, s: number, lt: number): number {
 /** the spectators of a gallery spot at float offset o of the 8-float gallery buffer (x, y, fans, kind, fx, fy, ax, ay; kind 2 a grandstand):
  *  min(fans, 60) standing fans (a grandstand: min(fans, 90) seated) in rows across the line to the focus (fx, fy), each row 0.6 tiles back from the
  *  one before, 0.55 tiles apart across it, jitter 0.12; each faces the focus (a grandstand's seats face fx, fy, each row a step higher). Seeded by
- *  the spot index and the slot. Writes into out from 0 (reusing its objects); returns the count (0 with no people) */
-export function galleryPeople(G: ArrayLike<number>, o: number, spot: number, now: number, people: number, out: CrowdPerson[]): number {
+ *  the spot index and the slot. Writes into out from 0 (reusing its objects); returns the count (0 with no people). T213: `cheer` (>= 0: the real
+ *  seconds since a golfer near it holed a birdie or better) has the fans cheer (the cheer clip, each a moment apart; seated fans clap) */
+export function galleryPeople(G: ArrayLike<number>, o: number, spot: number, now: number, people: number, out: CrowdPerson[], cheer = -1): number {
   const x = G[o]!, y = G[o + 1]!, stand = G[o + 3] === 2, fx = G[o + 4]!, fy = G[o + 5]!;
   const n = Math.min(Math.round(G[o + 2]!), stand ? 90 : 60);
   if (people <= 0 || n <= 0) return 0;
@@ -84,6 +88,7 @@ export function galleryPeople(G: ArrayLike<number>, o: number, spot: number, now
     p.x = px; p.y = py; p.group = 0; p.person = Math.floor(hash(spot, s * 3 + 2) * people);
     p.row = stand ? seatRow : rowToward(fx - px, fy - py);
     p.frame = stand ? seatFrame(spot, s, lt) : standFrame(spot, s, lt);
+    if (cheer >= 0) { const ct = cheer - hash(spot, s + 300) * CHEER_SPREAD; if (ct >= 0) p.frame = stand ? at(SPECTATOR_CLIPS.sit_clap, ct) : at(SPECTATOR_CLIPS.cheer, ct); }
   }
   return n;
 }

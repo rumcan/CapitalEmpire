@@ -5,6 +5,7 @@ import type { GallerySpot } from '../golf/galleries';
 import type { NetOp } from '../ground-protocol';
 import { CAR_SCALE, type Drawable } from '../sprites';
 import { carHeading, facings } from '../traffic';
+import { hash3, paintOf } from '../car-paint';
 import { zoneOf } from './routing';
 import { sigKey } from './signals';
 import { STILL, brakeLamps } from './car-lamps';
@@ -29,9 +30,12 @@ import type { BayRowDef } from '../event/rows';
 import type { CurbDef } from '../event/curb';
 import type { BusRouteDef } from '../event/bus';
 import type { BizDef, BizStats, BizView } from '../business/state';
+import type { DaySave } from '../event/daysave';
 
 /** frames arrive this often, ms: a car is drawn between the last two frames over that time */
 const FRAME_MS = 100;
+/** how long the engine's save waits for the worker's tournament day (T209, daySave), ms */
+const DAY_WAIT_MS = 1500;
 /** a car that moved this far (tiles) between two frames was respawned or re-planned: drawn at its new place, not lerped */
 const JUMP = 3;
 /** the round before any frame: free, level 1, no runs */
@@ -53,6 +57,8 @@ export class SimClient {
   lots = new Map<string, LotView>();
   /** the town's residents, jobs and built lots (from the last town message) and the growth option id */
   pop = 0; jobs = 0; built = 0; option = 'balanced';
+  /** T221: a range start's room, the residents its earnings allow (City.townRoom; null in other games) */
+  room: number | null = null;
   /** the access per zone (256, 1 = free flow) from the last town message, and the zones with a built lot (1) */
   access: Float32Array = new Float32Array(256).fill(1); builtZone = new Uint8Array(256);
   /** called with the events of each town message (after the lots are updated) */
@@ -165,6 +171,8 @@ export class SimClient {
   startRound() { this.post({ t: 'round', op: 'start' }); }
   /** the car parks (the full list, each time): the worker builds their bays and entrances on the network it has */
   setParks(defs: CarParkDef[]) { this.post({ t: 'parks', defs }); }
+  /** T219: the iconic places' land (tiles, [x, y, w, h], the full list each time): the town never builds there (City.setPlaces) */
+  setPlaces(rects: [number, number, number, number][]) { this.post({ t: 'places', rects }); }
   /** the player's businesses (the full list, each time): the worker's stadium site follows (see City.setBusinesses) */
   setBusinesses(defs: BizDef[]) { this.post({ t: 'businesses', defs }); }
   /** golf mode on (with the tournament's tier and its reputation: the season ends with it) or off (see City.setGolf) */
@@ -188,6 +196,19 @@ export class SimClient {
   private sendTownDay() { this.dayLen = this.golfOn ? Math.max(24, Math.round(this.townMinutes * 60)) : 1440; this.post({ t: 'townDay', dayLen: this.dayLen, traffic: this.golfOn ? this.townTraffic : 1, free: this.golfOn }); }
   /** the town day's clock from a save (after townState, and after the golf setup so dayLen is current; see townclock.ts): the worker runs it at the normal rate */
   setTownClock(clock: TownClock) { this.post({ t: 'townClock', clock }); }
+  /** T209: the tournament day as the save keeps it (City.daySave, asked of the worker): null when no tournament day is under way, without a worker, or
+   *  with no answer within DAY_WAIT_MS (the save is then written without it, as before) */
+  daySave(): Promise<DaySave | null> {
+    if (!this.worker) return Promise.resolve(null);
+    const id = ++this.dayAsk;
+    return new Promise(res => {
+      const done = (d: DaySave | null) => { clearTimeout(timer); this.dayWait.delete(id); res(d); }, timer = setTimeout(() => done(null), DAY_WAIT_MS);
+      this.dayWait.set(id, done); this.post({ t: 'daySave', id });
+    });
+  }
+  private dayAsk = 0; private dayWait = new Map<number, (d: DaySave | null) => void>();
+  /** T209: a saved tournament day resumes (after townState and setTownClock; City.resumeDay): the saved round and the day */
+  resumeDay(round: RoundSave | undefined, day: DaySave) { this.post({ t: 'resumeDay', round, day }); }
   /** dev test hook: n cars sent to car park id's entrances (round-robin), for the browser check */
   parkTest(id: number, n: number) { this.post({ t: 'parkTest', id, n }); }
   /** the toll gates as the player placed them (the full list): the worker builds their booths (see City.setTolls) */
@@ -256,6 +277,7 @@ export class SimClient {
     if (m.t === 'watch') { if (this.watching) this.watch = { node: m.node, n: m.n, lines: m.lines }; return; }
     if (m.t === 'site') { this.site = m.site; return; }
     if (m.t === 'biz') { this.biz = m.list; this.onBiz?.(); return; }
+    if (m.t === 'daySave') { this.dayWait.get(m.id)?.(m.day); return; }
     if (m.t === 'heatGeom') { this.heatGeom = m.geom; this.heatGeomVersion = m.version; return; }
     if (m.t === 'heat') { this.heatRatio = m.ratio; this.heatDens = m.dens; this.heatHist = m.hist; this.parkDemand = m.pdem; this.heatAt = performance.now(); return; }
     if (m.t === 'disasters') { this.disasters = m.active; this.onDisasters?.(m.notes); return; }
@@ -267,7 +289,7 @@ export class SimClient {
     if (m.t === 'townBoost') { this.onTownBoost?.(m.v); return; }
     if (m.t === 'town') {
       for (const e of m.events) { const v = this.lots.get(e.key); if (v) { v.use = e.use; v.level = e.level; v.decline = e.decline; v.seed = e.seed; v.since = e.since; } }
-      this.pop = m.pop; this.jobs = m.jobs; this.built = m.built; this.access = m.access;
+      this.pop = m.pop; this.jobs = m.jobs; this.built = m.built; this.access = m.access; this.room = m.room ?? null;
       this.builtZone.fill(0);
       for (const v of this.lots.values()) if (v.level >= LV.BUILT && v.use) this.builtZone[zoneOf(v.o[0] + v.u[0] * v.w / 2 + v.n[0] * v.d / 2, v.o[1] + v.u[1] * v.w / 2 + v.n[1] * v.d / 2)] = 1;
       this.onTown?.(m.events); return;
@@ -340,7 +362,8 @@ export class SimClient {
       let d = this.pool[k]; if (!d) this.pool.push((d = { item: 0, x: 0, y: 0, flip: false, scale: CAR_SCALE, x0: 0, y0: 0, x1: 0, y1: 0, moving: true }));
       // drawn at its size (CAR_SCALE times the car's owner size) about the car's centre: the anchor and footprint offsets scale with it
       const z = CAR_SCALE * f.size;
-      d.item = f.item; d.flip = f.flip; d.scale = z; d.x = x - f.ox * z; d.y = y - f.oy * z; d.x0 = x - f.hx * z; d.x1 = x + f.hx * z; d.y0 = y - f.hy * z; d.y1 = y + f.hy * z;
+      // (T228: its paint from its slot: the same car keeps its colour all its trip; a bus is no car model, so it has none)
+      d.item = f.item; d.flip = f.flip; d.scale = z; d.paint = paintOf(hash3(i, 0x51)); d.x = x - f.ox * z; d.y = y - f.oy * z; d.x0 = x - f.hx * z; d.x1 = x + f.hx * z; d.y0 = y - f.hy * z; d.y1 = y + f.hy * z;
       // its brake lights at its rear as drawn (its size: the lamps sit on the car's picture)
       const lit = lamps && (this.brake[i] === 1 || this.still[i] === 1);
       if (lit) { const L = (d.lamps ??= []), n = brakeLamps(x, y, this.ang[i]!, z, HALF[this.kind[i]! % HALF.length]! * z, true, L); L.length = n; if (!n) d.lamps = undefined; }

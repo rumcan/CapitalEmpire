@@ -193,7 +193,8 @@ test('residential fence boundaries meet exactly in every orientation, with one o
       assert.ok(lo >= L - 1e-6 && lo - L < 0.05, `panel footprint ${JSON.stringify(f)} must start at its line ${L.toFixed(3)} on the higher side`);
     }
   };
-  const fences = (lot: Lot, decline = 0) => compose(lot, { ...state, decline }).props.filter(p => isFence(p.id));
+  // (T231: the kit's clipped hedge along a house's front is a hedge row, not a boundary: the boundaries are the panels)
+  const fences = (lot: Lot, decline = 0) => compose(lot, { ...state, decline }).props.filter(p => isFence(p.id) && !p.id.startsWith('kit:'));
   const centre = (lot: Lot, p: Placed) => { const f = fpOf(p); return toLot(lot, (f[0] + f[2]) / 2, (f[1] + f[3]) / 2); };
   const covers = (lot: Lot, panels: Placed[], axis: 'a' | 'b', from: number, to: number) => {
     const spans = panels.map(p => { const q = fpCorners(lot, fpOf(p)).map(c => c[axis]); return [Math.min(...q), Math.max(...q)]; }).sort((a, b) => a[0] - b[0]);

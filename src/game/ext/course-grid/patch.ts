@@ -8,7 +8,8 @@ import type { CourseLayer, CourseTex, LotPatch } from '../../ground-protocol';
 import type { EdgeProfile } from '../../paint-edges';
 import { MONTH_BASE } from './areas';
 import { growMask } from '../course-fx';
-import { chunkWalls, coversOf, defaultShadow, layerCode, surfHeights, teeStairs } from '../course-walls';
+import { DRAW_ORDER, LayerStack, chunkWalls, coversOf, defaultShadow, layerCode, surfHeights, teeStairs } from '../course-walls';
+import { SPILL_SURFACES, TALL_CODES, spillRuns } from '../course-walls/spill';
 
 /** a course chunk's side, tiles (128 cells) */
 export const COURSE_CHUNK = 64;
@@ -36,7 +37,10 @@ export const SURF_EDGE: readonly EdgeProfile[] = ['flat', 'flat', 'flat', 'water
 export interface CourseLooks { surf: readonly (CourseTex | undefined)[]; collar: Readonly<Record<'first-cut' | 'fringe' | 'lip' | 'bank', CourseTex>>;
   border?: readonly (number | undefined)[]; shadow?: readonly (number | undefined)[]; height?: readonly (number | undefined)[];
   /** each surface's own collar look by surface id (the course look's Border texture, scale, angle and tone; a missing one: collar by name) */
-  band?: readonly (CourseTex | undefined)[] }
+  band?: readonly (CourseTex | undefined)[];
+  /** T227: the grass a bunker's lip band wears with the course finish on (the fairway's first cut), when the bunker's Border texture is its
+   *  default; absent: its own look */
+  lipGrass?: CourseTex }
 /** a course texture's fields alone (a look may carry more) */
 const texOf = (t: CourseTex): CourseTex => ({ tex: t.tex, sc: t.sc, a: t.a, ...(t.t ? { t: t.t, ta: t.ta ?? 0, tc: t.tc ?? '#000000' } : {}), ...(t.m ? { m: { ...t.m } } : {}) });
 
@@ -129,8 +133,8 @@ export function capPoints(fill: number[][], edges: number[][]): [number[][], num
 const f32 = (a: readonly number[][]): Float32Array[] => a.map(q => Float32Array.from(q));
 
 /** the lot-ground patch of course chunk (cx, cy), or null when no surface reaches it: pts is the chunk box grown by COURSE_PATCH_REACH,
- *  the layers come from chunkOutlines in draw order, each in its look (a surface with no look is left out), the fairway carries the
- *  centre lines (lines: per hole, flat tiles) of the holes whose fairway cells lie in or near the chunk, and the growth mask rides along
+ *  the layers come from chunkOutlines in draw order, each in its look (a surface with no look is left out), the fairway carries its mowing
+ *  stripes' holes (stripeAreas, T218: the playing lines, lines: per hole, flat tiles, and each hole's share of the chunk), and the growth mask rides along
  *  when something grows (now: the effective game month); the stairs of the tees within reach (T127) face the nearest of `paths` (the cart
  *  paths and drives, flat segments ax, ay, bx, by in tiles) */
 export function coursePatch(g: Grid, cx: number, cy: number, looks: CourseLooks, now: number, lines?: ReadonlyMap<number, readonly number[]>, paths?: ArrayLike<number> | null): LotPatch | null {
@@ -138,16 +142,19 @@ export function coursePatch(g: Grid, cx: number, cy: number, looks: CourseLooks,
   // the edges exactly as they will be drawn (capped), for the walls (T099): each layer's edges sorted into soft, joint and wall runs
   const capped = outs.map(o => ({ o, se: capPoints(o.fill, o.edges), ce: o.collar ? capPoints(o.collar.fill, o.collar.edges) : null }));
   const cw = chunkWalls(g, capped.flatMap(({ o, se, ce }) => [{ code: layerCode(o.surf, false), edges: se[1] }, ...(ce ? [{ code: layerCode(o.surf, true), edges: ce[1] }] : [])]), coversOf(outs), styles, heights);
+  // T204: where tall grass (the rough, the fescue, the map grass) meets the fairway or its first cut, read as the walls read their sides
+  const stack = new LayerStack(coversOf(outs), styles, DRAW_ORDER, heights), spill: { p: Float32Array; o: number }[] = [];
+  for (const { o, se, ce } of capped) if (SPILL_SURFACES.includes(o.surf)) {
+    for (const r of spillRuns(g, stack, layerCode(o.surf, false), se[1], TALL_CODES, styles)) spill.push({ p: Float32Array.from(r.p), o: r.o });
+    if (ce) for (const r of spillRuns(g, stack, layerCode(o.surf, true), ce[1], TALL_CODES, styles)) spill.push({ p: Float32Array.from(r.p), o: r.o });
+  }
   for (const { o, se: [fill, edges], ce } of capped) {
     const look = looks.surf[o.surf]!, r = cw.runs.get(layerCode(o.surf, false));
     const L: CourseLayer = { s: o.surf, ...texOf(look), e: SURF_EDGE[o.surf] ?? 'flat', fill: f32(fill), edges: f32(edges), soft: f32(r?.soft ?? []), joint: f32(r?.joint ?? []) };
     const col = styles[o.surf]?.collar;
-    if (ce && col) { const cl = looks.band?.[o.surf] ?? looks.collar[col.name], [cf, cE] = ce; L.collar = { n: col.name, ...texOf(cl), w: col.width * CELL_T, fill: f32(cf), edges: f32(cE), soft: f32(cw.runs.get(layerCode(o.surf, true))?.soft ?? []) }; }
-    if (o.surf === 4 && lines?.size && o.fill.length) {
-      const holes = holesIn(g, cx, cy, o.surf), st: { hole: number; line: number[] }[] = [];
-      for (const h of holes) { const l = lines.get(h); if (l && l.length >= 4) st.push({ hole: h, line: l.slice() }); }
-      if (st.length) L.stripes = st;
-    }
+    if (ce && col) { const cl = looks.band?.[o.surf] ?? looks.collar[col.name], [cf, cE] = ce; L.collar = { n: col.name, ...texOf(cl), w: col.width * CELL_T, fill: f32(cf), edges: f32(cE), soft: f32(cw.runs.get(layerCode(o.surf, true))?.soft ?? []), ...(col.name === 'lip' && looks.lipGrass ? { g: texOf(looks.lipGrass) } : {}) }; }
+    // the mowing stripes' holes: the fairway's (T218) and the green's (T227: the course finish's fine stripes, along its hole's line of play)
+    if ((o.surf === SURF.fairway || o.surf === SURF.green) && o.fill.length) { const st = stripeAreas(g, cx, cy, lines, o.surf); if (st) L.stripes = st; }
     if (L.fill.length || L.collar) layers.push(L);
   }
   if (!layers.length) return null;
@@ -158,26 +165,69 @@ export function coursePatch(g: Grid, cx: number, cy: number, looks: CourseLooks,
   const stairs = cw.walls.some(w => w.f && w.hs === SURF.tee) ? teeStairs(g, [x0, y0, x1, y1], paths, heights) : [];
   const st = stairs.length ? { st: stairs.flatMap(q => [q.x, q.y, q.nx, q.ny, q.half]) } : {};
   const sh = looks.shadow?.length ? { sh: Array.from({ length: 9 }, (_, s) => { const v = looks.shadow![s]; return v !== undefined && Number.isFinite(v) ? Math.min(1, Math.max(0, v)) : defaultShadow(s); }) } : {};
-  return { pts: [x0, y0, x1, y0, x1, y1, x0, y1], tex: 'grass', course: { cx, cy, size: S, layers, ...(walls.length ? { walls } : {}), ...(rims.length ? { rims } : {}), ...(grow ? { grow } : {}), ...sh, ...st, z: 0 } };
+  return { pts: [x0, y0, x1, y0, x1, y1, x0, y1], tex: 'grass', course: { cx, cy, size: S, layers, ...(walls.length ? { walls } : {}), ...(rims.length ? { rims } : {}), ...(grow ? { grow } : {}), ...sh, ...st, ...(spill.length ? { spill } : {}), z: 0 } };
 }
 
 /** the buffers of a patch's typed arrays (a postMessage transfer list) */
 export function patchBuffers(p: LotPatch): ArrayBuffer[] {
   const out: ArrayBuffer[] = [], c = p.course; if (!c) return out;
-  for (const l of c.layers) for (const a of [...l.fill, ...l.edges, ...(l.soft ?? []), ...(l.joint ?? []), ...(l.collar ? [...l.collar.fill, ...l.collar.edges, ...(l.collar.soft ?? [])] : [])]) out.push(a.buffer as ArrayBuffer);
-  for (const w of [...(c.walls ?? []), ...(c.rims ?? [])]) out.push(w.p.buffer as ArrayBuffer);
+  for (const l of c.layers) for (const a of [...l.fill, ...l.edges, ...(l.soft ?? []), ...(l.joint ?? []), ...(l.collar ? [...l.collar.fill, ...l.collar.edges, ...(l.collar.soft ?? [])] : []), ...(l.stripes?.flatMap(q => (q.runs ? [q.runs] : [])) ?? [])]) out.push(a.buffer as ArrayBuffer);
+  for (const w of [...(c.walls ?? []), ...(c.rims ?? []), ...(c.spill ?? [])]) out.push(w.p.buffer as ArrayBuffer);
   if (c.grow) out.push(c.grow.buffer as ArrayBuffer);
   return out;
 }
 
-/** the hole numbers (1..255) of surface s's cells in chunk (cx, cy) and 4 cells round it, ascending */
-function holesIn(g: Grid, cx: number, cy: number, s: number): number[] {
-  const { i0, j0, n } = chunkCells(g, cx, cy), seen = new Uint8Array(256);
-  for (let j = Math.max(0, j0 - 4); j < Math.min(g.h, j0 + n + 4); j++) {
-    const row = j * g.w;
-    for (let i = Math.max(0, i0 - 4); i < Math.min(g.w, i0 + n + 4); i++) if (g.surf[row + i] === s) seen[g.hole[row + i]!] = 1;
+/** T218: how far round a chunk its stripe shares are worked out (cells): a cell's nearest fairway cell is found within this (the walk is cut
+ *  here), and the shares are sent this far past the chunk box (its outline moves up to RUGGED.limit, 0.8 tile, with the wobble) */
+const STRIPE_WALK = 10, STRIPE_EDGE = 3;
+/** a fairway stripe entry (CourseLayer.stripes): its hole (0: none), its playing line and its share of the chunk */
+export type StripeArea = NonNullable<CourseLayer['stripes']>[number];
+/** T218: the fairway's mowing stripes of chunk (cx, cy): one entry per hole whose fairway reaches the chunk, ascending, with its playing line
+ *  (lines: per hole, flat tiles); hole 0 gathers the cells of no hole and of a hole with no line yet (they take the default direction). When
+ *  there are two or more, each has its share of the chunk as boxes (runs, x0 y0 x1 y1 in tiles, rows of cells merged down): the cells whose
+ *  nearest fairway cell is its (a walk out from the fairway cells in rings, a tie to the lower hole). Every chunk walks the same cells round
+ *  its seams the same way, so where an outline can lie (a few cells from its fairway) the shares agree across chunks. null: no fairway cell
+ *  within reach. surf: the surface whose cells are walked (T227: the green's, for its fine stripes; the fairway's by default) */
+export function stripeAreas(g: Grid, cx: number, cy: number, lines?: ReadonlyMap<number, readonly number[]>, surf: number = SURF.fairway): StripeArea[] | null {
+  const { i0, j0, n } = chunkCells(g, cx, cy), M = STRIPE_WALK, W = n + 2 * M, lab = new Int16Array(W * W).fill(-1), dist = new Uint16Array(W * W).fill(0xffff);
+  const lineOf = (h: number) => { const l = h > 0 ? lines?.get(h) : undefined; return l && l.length >= 4 ? l : null; };
+  let cur: number[] = [];
+  for (let y = 0; y < W; y++) {
+    const j = j0 - M + y; if (j < 0 || j >= g.h) continue;
+    for (let x = 0; x < W; x++) {
+      const i = i0 - M + x; if (i < 0 || i >= g.w) continue;
+      const c = j * g.w + i; if (g.surf[c] !== surf) continue;
+      const h = g.hole[c]!, k = y * W + x; lab[k] = lineOf(h) ? h : 0; dist[k] = 0; cur.push(k);
+    }
   }
-  const out: number[] = [];
-  for (let h = 1; h < 256; h++) if (seen[h]) out.push(h);
-  return out;
+  if (!cur.length) return null;
+  // out from the fairway cells ring by ring (4 neighbours): a cell takes the lowest hole among the cells of the last ring beside it
+  for (let d = 1; cur.length; d++) {
+    const next: number[] = [];
+    const step = (q: number, v: number) => { if (dist[q] === 0xffff) { dist[q] = d; lab[q] = v; next.push(q); } else if (dist[q] === d && v < lab[q]!) lab[q] = v; };
+    for (const k of cur) {
+      const v = lab[k]!, x = k % W;
+      if (x > 0) step(k - 1, v); if (x + 1 < W) step(k + 1, v); if (k >= W) step(k - W, v); if (k + W < W * W) step(k + W, v);
+    }
+    cur = next;
+  }
+  // the holes over the chunk box and its edge, and their shares as boxes
+  const E = STRIPE_EDGE, R = n + 2 * E, o = M - E, seen = new Set<number>();
+  for (let y = 0; y < R; y++) for (let x = 0; x < R; x++) seen.add(lab[(y + o) * W + x + o]!);
+  const holes = [...seen].sort((a, b) => a - b), entry = (h: number): StripeArea => ({ hole: h, line: h ? lineOf(h)!.slice() : [] });
+  if (holes.length === 1) return [entry(holes[0]!)];
+  const boxes = new Map<number, number[][]>(holes.map(h => [h, []]));
+  let open = new Map<number, number[]>();
+  const tx = (x: number) => g.x0 + (i0 - E + x) * CELL_T, ty = (y: number) => g.y0 + (j0 - E + y) * CELL_T;
+  for (let y = 0; y < R; y++) {
+    const row = (y + o) * W + o, now = new Map<number, number[]>();
+    for (let a = 0; a < R;) {
+      const v = lab[row + a]!; let b = a + 1; while (b < R && lab[row + b] === v) b++;
+      const key = (v * 256 + a) * 256 + b, was = open.get(key);
+      if (was) { was[3] = ty(y + 1); now.set(key, was); } else { const r = [tx(a), ty(y), tx(b), ty(y + 1)]; boxes.get(v)!.push(r); now.set(key, r); }
+      a = b;
+    }
+    open = now;
+  }
+  return holes.map(h => ({ ...entry(h), runs: Float32Array.from(boxes.get(h)!.flat()) }));
 }

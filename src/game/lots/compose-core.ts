@@ -17,12 +17,13 @@ import { hasLettering, EAST_FACING } from './lettering';
 import { drawnAs } from '../mirror';
 import { AXIS_HEADING } from '../axis-library';
 import { LOT_DECALS } from '../lot-decals';
+import { surveyPatch } from './survey';
 import { parkedCar } from '../traffic';
 import { CAR_SCALE, carFootprint, carHeading, carOwnerScale } from '../ext/car-art';
 
 /** a placed prop; street is set (true) only for an item on the sidewalk in front of the lot (a lay-by's bays take none: see engine placeLot);
  *  from: the preset it was drawn from and its prop index there (compose.ts; the dev editor maps an edit back to the preset by it) */
-export interface Placed { id: string; x: number; y: number; flip: boolean; scale: number; street?: true; from?: { preset: string; prop: number }; /** T167: drawn in place of this removed picture */ standIn?: string }
+export interface Placed { id: string; x: number; y: number; flip: boolean; scale: number; street?: true; from?: { preset: string; prop: number }; /** T167: drawn in place of this removed picture */ standIn?: string; /** T219: the footprint it stands on (world tiles) when its picture's own is not the library's (art-fix.ts): the engine draws it on that */ foot?: Box4 }
 export interface Composition { props: Placed[]; ground: LotPatch[] }
 /** a preset prop a lot leaves out: the preset and the prop's index there, its sprite id as drawn, and why (past the lot line, overlaps <id>
  *  NN%, the fit, the decline) */
@@ -34,12 +35,18 @@ export type Pt = { x: number; y: number };
 export type Box4 = [number, number, number, number];
 /** a placed candidate: the anchor (ground point) and its footprint in world tiles; from: a preset prop's source (see Placed), which done()
  *  keeps off the patch check and the plant cap (the owner placed it) */
-export interface Item { id: string; x: number; y: number; flip: boolean; s: number; fp: Box4; car: boolean; wheel: boolean; fence: boolean; boundary: boolean; street: boolean; plant: boolean; /** stands on the paving (a drive's pay boom) */ paved?: boolean; from?: { preset: string; prop: number }; standIn?: string; /** T154 Phase 2: a building facing a road at 45 degrees: its footprint the square inside its world box (fp), turned 45 degrees */ diag?: boolean }
+export interface Item { id: string; x: number; y: number; flip: boolean; s: number; fp: Box4; car: boolean; wheel: boolean; fence: boolean; boundary: boolean; street: boolean; plant: boolean; /** stands on the paving (a drive's pay boom) */ paved?: boolean; from?: { preset: string; prop: number }; standIn?: string; /** T219: its footprint is a fixed picture's (art-fix.ts), kept in the composition (Placed.foot) */ foot?: true; /** T154 Phase 2: a building facing a road at 45 degrees: its footprint the square inside its world box (fp), turned 45 degrees */ diag?: boolean }
 /** a sprite at a size and orientation: its footprint relative to the anchor */
 export interface Spec { id: string; s: number; flip: boolean; h: Box4 }
-export interface Opt { flip?: boolean; mul?: number; street?: boolean; plant?: boolean; boundary?: boolean; paved?: boolean; from?: { preset: string; prop: number }; standIn?: string; diag?: boolean }
+export interface Opt { flip?: boolean; mul?: number; street?: boolean; plant?: boolean; boundary?: boolean; paved?: boolean; from?: { preset: string; prop: number }; standIn?: string; diag?: boolean; foot?: boolean }
 export interface Patch { kind: 'drive' | 'walk' | 'lot' | 'yard' | 'bed'; tex: LotPatch['tex']; quad: number[]; lines?: number[] }
 export interface Pair { x: string; y: string }
+/** T222 (the owner, 2026-10-27: "dirt on farms and backyard veg gardens"): a vegetable bed lays the Dirt surface's ground (painted-surfaces.json
+ *  `dirt`, dirt-run) under its rows */
+export const BED_TEX: LotPatch['tex'] = 'dirt';
+/** a ground patch's surface as the lot lays it: a bed (the procedural ones and the lot presets', which the studio saved as 'field') wears the
+ *  Dirt surface; every other patch keeps its own */
+export const patchTex = (kind: Patch['kind'], tex: LotPatch['tex']): LotPatch['tex'] => (kind === 'bed' && tex === 'field' ? BED_TEX : tex);
 
 /** the flat ground decals by group (lot-decals.ts): index lists */
 export const MARKS: Record<string, number[]> = {};
@@ -153,6 +160,8 @@ export class Build {
   drops: PresetDrop[] | null = null;
   /** a building site keeps all its ground decals (mud, footprints, gravel); every other lot keeps only its leaves (the owner, 2026-10-22) */
   allMarks = false;
+  /** T232: a building site is pegged out: done() adds the white dashed survey line round the lot (lots/survey.ts) */
+  surveyed = false;
   readonly r: () => number;
 
   constructor(lot: LotGeom, r: () => number) {
@@ -199,7 +208,7 @@ export class Build {
     const it = BY.get(g.id)!, car = it.cat === 'Vehicles', cc = car ? this.fitCar(g, c) : c;
     if (!cc) return null;
     const h = g.h, x = cc.x - (h[0] + h[2]) / 2, y = cc.y - (h[1] + h[3]) / 2;
-    const item: Item = { id: g.id, x, y, flip: g.flip, s: g.s, fp: [x + h[0], y + h[1], x + h[2], y + h[3]], car, wheel: g.id === WHEEL, fence: it.kind === 'fencex' || it.kind === 'fencey' || g.id === 'world:hedge', boundary: !!o.boundary, street: !!o.street, plant: !!o.plant, ...(o.paved ? { paved: true } : {}), ...(o.from ? { from: o.from } : {}), ...(o.standIn ? { standIn: o.standIn } : {}), ...(o.diag ? { diag: true } : {}) };
+    const item: Item = { id: g.id, x, y, flip: g.flip, s: g.s, fp: [x + h[0], y + h[1], x + h[2], y + h[3]], car, wheel: g.id === WHEEL, fence: it.kind === 'fencex' || it.kind === 'fencey' || g.id === 'world:hedge', boundary: !!o.boundary, street: !!o.street, plant: !!o.plant, ...(o.paved ? { paved: true } : {}), ...(o.from ? { from: o.from } : {}), ...(o.standIn ? { standIn: o.standIn } : {}), ...(o.diag ? { diag: true } : {}), ...(o.foot ? { foot: true as const } : {}) };
     this.items.push(item); return item;
   }
   /** a spec with its footprint centre at a lot-frame point (a along u, b along n) */
@@ -249,13 +258,14 @@ export class Build {
     this.run(k, e, e, e, D - e, undefined, drop); this.run(k, W - e, e, W - e, D - e, undefined, drop);
     this.run(k, 0, D - e, W, D - e, undefined, drop);
   }
-  /** a vegetable bed (lot-frame rectangle; keep it clear of the house, it bars uprights): a field patch with furrows every half tile along u */
+  /** a vegetable bed (lot-frame rectangle; keep it clear of the house, it bars uprights): a patch of the Dirt surface (T222: dirt-run, as the
+   *  farms and the range's dirt wear it; it was the Farm fields' ground) with furrows every half tile along u */
   bed(a0: number, b0: number, a1: number, b1: number) {
     const A0 = clamp(a0, 0, this.W), A1 = clamp(a1, 0, this.W), B0 = clamp(b0, 0, this.D), B1 = clamp(b1, 0, this.D);
     if (A1 - A0 < 1 || B1 - B0 < 1) return;
     const lines: number[] = [];
     for (let b = B0 + 0.25; b < B1 - 0.1; b += 0.5) { const p = this.P(A0 + 0.15, b), q = this.P(A1 - 0.15, b); lines.push(p.x, p.y, q.x, q.y); }
-    this.patches.push({ kind: 'bed', tex: 'field', quad: this.quad(A0, B0, A1, B1), lines });
+    this.patches.push({ kind: 'bed', tex: BED_TEX, quad: this.quad(A0, B0, A1, B1), lines });
   }
   /** a flat decal from a group (or one id) centred at a lot-frame point, at 0.8-1.2x, mirrored at random, 70-100% opaque */
   mark(group: string, a: number, b: number, size = 1) {
@@ -359,13 +369,17 @@ export class Build {
   /** the composition: candidates in order, the first that fits wins; plants stop at the cap */
   /** a lot the owner laid out (a whole or farm preset): every prop is drawn where it stands, overlapping another or not (only the lot line holds) */
   keepAll = false;
+  /** T219: an iconic place (compose.ts composeWhole): no lot line either (its land is its own; a picture whose footprint pokes past it stays) */
+  loose = false;
+  /** T219: an iconic place draws the pictures art-fix.ts fixes (the right view for its facing, the true footprint and ground point) */
+  artFix = false;
   done(): Composition {
     const props: Placed[] = [], acc: Item[] = []; let ups = 0;
     // a preset prop left out is told to the drops sink, with why (the dev editor shows them: nothing in a preset goes unseen)
     const drop = (it: Item, why: string) => { if (it.from && this.drops) this.drops.push({ ...it.from, id: it.id, why }); };
     for (const it of this.items) {
       // Shared boundary panels remain on their surveyed line even when a driveway reaches the lot edge.
-      if (!this.inside(it)) { drop(it, 'past the lot line'); continue; }
+      if (!this.loose && !this.inside(it)) { drop(it, 'past the lot line'); continue; }
       if (!it.boundary && !it.paved && !it.from && this.onPatch(it)) continue;
       // two cars never share ground (a car is kept only if it shares none with an earlier car)
       const car = it.car && !this.keepAll ? acc.find(a => a.car && share(a.fp, it.fp) > 0) : undefined;
@@ -376,9 +390,12 @@ export class Build {
         if (over) { drop(it, `overlaps ${over.id} ${Math.round(100 * share(over.fp, it.fp))}%`); continue; }
         ups++;
       }
-      acc.push(it); const p: Placed = { id: it.id, x: it.x, y: it.y, flip: it.flip, scale: it.s }; if (it.street) p.street = true; if (it.from) p.from = it.from; if (it.standIn) p.standIn = it.standIn; props.push(p);
+      acc.push(it); const p: Placed = { id: it.id, x: it.x, y: it.y, flip: it.flip, scale: it.s }; if (it.street) p.street = true; if (it.from) p.from = it.from; if (it.standIn) p.standIn = it.standIn; if (it.foot) p.foot = it.fp; props.push(p);
     }
-    const ground: LotPatch[] = this.patches.map(p => (p.lines ? { pts: p.quad, tex: p.tex, lines: p.lines } : { pts: p.quad, tex: p.tex }));
+    // (T228: a driveway says so: the engine cuts the road's edge lines at its mouth, street-marks.ts driveCuts)
+    const ground: LotPatch[] = this.patches.map(p => ({ ...(p.lines ? { pts: p.quad, tex: p.tex, lines: p.lines } : { pts: p.quad, tex: p.tex }), ...(p.kind === 'drive' ? { drive: true as const } : {}) }));
+    // (T232: a building site's survey line, over its ground)
+    if (this.surveyed) { const s = surveyPatch({ o: this.o, u: this.u, n: this.n, w: this.W, d: this.D }); if (s) ground.push(s); }
     // the decals last, bounded by the lot grown 2 tiles (a decal is up to 4 m across)
     if (this.marks.length) ground.push({ pts: this.quad(-2, -2, this.W + 2, this.D + 2), tex: 'marks', marks: this.marks });
     return { props, ground };
