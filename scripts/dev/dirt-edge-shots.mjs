@@ -2,7 +2,7 @@
 // and dirt car park) with the soft dirt edge off (the look before T247) and on, from the same views at 30%, 15%, 8% and 4%; and the bake times
 // of the same chunks with the edge off and on at 30% and 8% (as T227's course-look-shots.mjs: alternating runs, every bake pooled).
 //   node scripts/dev/dirt-edge-shots.mjs --base http://127.0.0.1:5186/ --out E:/ClaudeTemp/T247 [--only patch,desert,park,tee,fresh,bake]
-//     [--modes off,on] [--zooms 0.3,0.15,0.08,0.04] [--reps 3] [--tag v2]
+//     [--modes off,on] [--zooms 0.3,0.15,0.08,0.04] [--reps 3] [--tag v2] [--patch x,y (the open-fescue patch's tile)] [--seed 7 (the fresh start's map)]
 // Needs a dev server (vite) on --base. One headless Edge, closed when done. On a build without the switch (main before T247) both modes show
 // the same look: run it with --modes main.
 import { chromium } from 'playwright-core';
@@ -34,7 +34,7 @@ const open = async url => {
   const ctx = await browser.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: 1 });
   const page = await ctx.newPage();
   page.on('pageerror', e => console.log('[pageerror]', e.message));
-  page.on('console', m => { if (m.type() === 'error') console.log('[console]', m.text().slice(0, 300)); });
+  page.on('console', m => { if (m.type() === 'error' || m.text().startsWith('[soft]')) console.log('[console]', m.text().slice(0, 600)); });
   await page.goto(url);
   await page.waitForFunction(() => window.__game?.ready, null, { timeout: 240000 });
   await page.addStyleTag({ content: '* { visibility: hidden !important } canvas { visibility: visible !important }' });
@@ -65,7 +65,9 @@ const spots = page => page.evaluate(async () => {
     const d = Math.hypot(x - centre[0], y - centre[1]);
     if (!best || n > best.n || (n === best.n && d < best.d)) best = { x, y, n, d };
   }
-  const desert = sc ? sc.patches.filter(p => p.surf === 'desert' || p.surf === 'yard').map(p => ({ surf: p.surf, mid: mid(p.pts), first: [p.pts[0], p.pts[1]] })) : [];
+  // (the desert's view: the middle of its longest side, where it meets the fescue)
+  const longMid = pts => { let b = null; for (let i = 0; i < pts.length; i += 2) { const j = (i + 2) % pts.length, l = Math.hypot(pts[j] - pts[i], pts[j + 1] - pts[i + 1]); if (!b || l > b.l) b = { l, x: (pts[i] + pts[j]) / 2, y: (pts[i + 1] + pts[j + 1]) / 2 }; } return [b.x, b.y]; };
+  const desert = sc ? sc.patches.filter(p => p.surf === 'desert' || p.surf === 'yard').map(p => ({ surf: p.surf, mid: mid(p.pts), first: [p.pts[0], p.pts[1]], side: longMid(p.pts) })) : [];
   const tee = sc ? sc.patches.filter(p => p.surf === 'teeDirt' || p.surf === 'teeTurf').map(p => ({ surf: p.surf, mid: mid(p.pts), first: [p.pts[0], p.pts[1]] })) : [];
   const cp = g.range?.ctx.carPark?.() ?? null;
   const park = cp ? { entrance: cp.entrance, bays: cp.bays.length, mid: cp.bays.length ? [cp.bays.reduce((s, b) => s + b.x, 0) / cp.bays.length, cp.bays.reduce((s, b) => s + b.y, 0) / cp.bays.length] : null } : null;
@@ -73,14 +75,14 @@ const spots = page => page.evaluate(async () => {
 });
 const report = { modes, zooms };
 try {
-  for (const [start, url] of [['range20', `${base}?fixture=range20`], ['fresh', `${base}?start=range`]]) {
+  for (const [start, url] of [['range20', `${base}?fixture=range20`], ['fresh', `${base}?start=range&seed=${opt('seed', '7')}`]]) {
     if ((start === 'fresh' && !only.has('fresh')) || (start === 'range20' && only.has('freshOnly'))) continue;
     const { page, ctx } = await open(url);
     const sp = await spots(page); report[start] = sp; console.log(start, JSON.stringify(sp));
     const views = [];
     if (patchAt) sp.patch = { x: patchAt[0], y: patchAt[1], given: true };
     if (only.has('patch') && sp.patch) views.push(['patch', sp.patch.x, sp.patch.y]);
-    if (only.has('desert') && sp.desert.length) views.push(['desert', sp.desert[0].first[0], sp.desert[0].first[1]]);
+    if (only.has('desert') && sp.desert.length) views.push(['desert', sp.desert[0].side[0], sp.desert[0].side[1]]);
     if (only.has('tee') && sp.tee.length) views.push(['tee', sp.tee[0].mid[0], sp.tee[0].mid[1]]);
     if (only.has('park') && sp.park?.mid) views.push(['park', sp.park.mid[0], sp.park.mid[1]]);
     for (const [name, x, y] of views) for (const z of zooms) {

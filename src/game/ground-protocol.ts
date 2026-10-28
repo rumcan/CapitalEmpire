@@ -163,6 +163,9 @@ export type ToWorker =
   | { t: 'living'; on: boolean; debug: boolean }
   /** T204: the rugged edges (the wobble, rounded corners and the tall grass's spill) on or off (the dev switch, for comparing looks and bake times) */
   | { t: 'rugged'; on: boolean }
+  /** T247: the soft dirt edges (soft-edges.ts: where dirt or desert meets grass, a noisy band that widens at the far levels) on or off (the dev
+   *  switch, for comparing looks and bake times) */
+  | { t: 'softDirt'; on: boolean }
   /** T218: the fairways' mowing stripes on (the default) or off (the dev switch, for comparing looks and bake times) */
   | { t: 'stripes'; on: boolean }
   /** T220: the fallen leaves' density (the gear menu's Fallen leaves, leaf-fall.ts; 0 = none, the ground as before T220): every chunk is baked again */
