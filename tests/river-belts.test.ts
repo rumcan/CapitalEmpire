@@ -6,7 +6,7 @@ import { resolve } from 'node:path';
 import { MAP } from '../src/game/iso';
 import { TC } from '../src/game/terrain';
 import { CONIFER_IDS, FOREST_CELL, TREE_POOL_IDS, type ForestTree } from '../src/game/forest';
-import { CREEK_BAND, RIVER_BAND, RIVER_SWAMP, RIVER_SWAMP_OUT, SWAMP, SWAMP_OUT, SwampField, riverStreams, riverStretchAt, swampStreams } from '../src/game/swamp';
+import { CREEK_BAND, RIVER_BAND, RIVER_SWAMP, RIVER_SWAMP_OUT, SWAMP, SWAMP_OUT, SwampField, riverReachAt, riverStreams, riverStretchAt, swampStreams } from '../src/game/swamp';
 import { RIVER_CUT, drawRiverCut, type CutCtx } from '../src/game/river-cut';
 import { BELT, BELT_SNAG_DEAL, beltField, beltProfile, beltSwamp, riverBeltCell } from '../src/game/river-trees';
 import type { Waterway } from '../src/game/terrain/types';
@@ -45,9 +45,17 @@ test('T265 the river\'s band is wider on a wider river, and capped', () => {
   const narrow = new SwampField([river(300, 20)], RIVER_BAND), wide = new SwampField([river(300, 40)], RIVER_BAND), wider = new SwampField([river(300, 80)], RIVER_BAND);
   const reach = (f: SwampField, hw: number) => { let s = 0, n = 0; for (let x = 100; x < 1100; x += 3) { let rim = 0; for (let d = hw + 1; d < hw + RIVER_SWAMP_OUT + 3; d += 0.25) if (f.cover(x, 300 - d) > 0.5) rim = d - hw; if (rim > RIVER_SWAMP.bank) { s += rim; n++; } } return n ? s / n : 0; };
   const a = reach(narrow, 10), b = reach(wide, 20), c = reach(wider, 40);
-  assert.ok(b > a + 1, `an 80 m river's swamp reaches further than a 40 m one's: ${b.toFixed(1)} vs ${a.toFixed(1)} tiles`);
-  assert.ok(Math.abs(c - b) < 0.6, `capped: ${c.toFixed(1)} vs ${b.toFixed(1)}`);
-  assert.ok(b > SWAMP.reach + 3, 'wider than a creek\'s');
+  assert.ok(b > a + 0.5, `an 80 m river's swamp reaches further than a 40 m one's: ${b.toFixed(1)} vs ${a.toFixed(1)} tiles`);
+  assert.ok(b > SWAMP.reach + 3 && c > SWAMP.reach + 3, 'wider than a creek\'s');
+  // the reach itself, point by point: it grows with the half width, then is capped (the rims above sit at other points, other noise)
+  let grew = 0, n = 0;
+  for (let x = 100; x < 1100; x += 7) for (const y of [270, 330]) {
+    if (riverStretchAt(x, y) < 0.5) continue; n++;
+    if (riverReachAt(x, y, 14) > riverReachAt(x, y, 10)) grew++;
+    assert.equal(riverReachAt(x, y, 40), riverReachAt(x, y, 20), 'capped');
+    assert.ok(riverReachAt(x, y, 40) <= RIVER_SWAMP.bank + RIVER_SWAMP.cap + RIVER_SWAMP.bay + 1e-9);
+  }
+  assert.ok(n > 20 && grew === n, `wider with the river: ${grew} of ${n}`);
 });
 
 test('T265 the river\'s band: every chunk lays the same cover, the point query agrees, and the creeks\' band is as before', () => {

@@ -92,7 +92,7 @@ export const CREEK_BAND: BandLook = { out: SWAMP_OUT, soft: SWAMP.soft, softReac
  *  - bank: the river's bank (renderer.ts: 3 tiles past its water, feathered 0.8); the band rises under it, from inner[0] to inner[1] past the
  *    water's edge on the soft distance (about a tile more on the plain one), so it never lies on the water and no grass shows between the bank
  *    and the swamp;
- *  - k, cap: the band's width past the bank, k x the river's half width, at most cap (a river of 40-80 m: 5.5-9 tiles, 11-18 m; a creek's 3.2
+ *  - k, cap: the band's width past the bank, k x the river's half width, at most cap (a river of 40-80 m: 4.5-7 tiles, 9-14 m; a creek's 3.2
  *    past its channel): wider than a creek's, capped;
  *  - stretch, stretchWave: the swamp comes in stretches: a slow world noise (about stretchWave tiles a swing) under stretch[0] none (the river's
  *    bank and grass as before), over stretch[1] the whole width, between a fringe; the two banks lie far enough apart to differ;
@@ -102,7 +102,7 @@ export const CREEK_BAND: BandLook = { out: SWAMP_OUT, soft: SWAMP.soft, softReac
  *    eight on a district chunk (its bank a pixel or two: the band starts under it whatever the lattice) (a wide river's distance runs straight
  *    across a lattice cell: bilinear is as good, at a quarter of the work) */
 export const RIVER_SWAMP = {
-  bank: 3, inner: [0.6, 1.6], k: 0.55, cap: 9, stretch: [-0.12, 0.2], stretchWave: 70, bay: 3, bayWave: 21,
+  bank: 3, inner: [0.6, 1.6], k: 0.45, cap: 7, stretch: [-0.05, 0.25], stretchWave: 70, bay: 2.5, bayWave: 21,
   rag: 2.4, ragWave: 6, feather: 0.4, soft: 1, ragStep: 1, latStep: 2, farStep: 8, farRag: 3,
 } as const;
 /** the farthest the river's band reaches past the water's edge (tiles, on the soft distance) */
