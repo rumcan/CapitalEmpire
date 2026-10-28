@@ -53,7 +53,7 @@ stays a Studio option. Ground textures follow [art/GROUND-TEXTURE-METHOD.md](art
 | Greenkeeping conditions (section 10) | after the course surfaces |
 
 ### The concept look (section 12)
-The owner's target picture, 2026-10-27: items 149-175, still to make. Ground textures 149-153 come first: the concept's greens. The plan is in [art/CONCEPT-LOOK.md](art/CONCEPT-LOOK.md).
+The owner's target picture, 2026-10-27: items 149-175. ✅ 153 lawn on every yard (#663); 🎨 153 meadow and 152 rough in the Studio; ⏳ 149-151 being made. Ground textures 149-153 come first: the concept's greens. The plan is in [art/CONCEPT-LOOK.md](art/CONCEPT-LOOK.md).
 
 ### List items done
 Ground (section 8 and the range ground): ✅ 131 Pond bank, ✅ 132 Grow-in, ✅ 135 Flower bed soil (#630); 🎨 133 Field parking, 🎨 21 range tee divots (#630, in the Studio, no ground wears them yet); 130 Pond water skipped (the lake is in). 134 Event matting deferred (quilting would break its panel grid). 🎨 19 the hitting mat (top-down, made, not drawn yet); 20, 27, 147 retakes next. The range and practice sprites still draw labelled stand-ins.
@@ -688,9 +688,9 @@ mowing stripes painted in. For the fairway and the range outfield. Codex has a f
 
 **151. Concept green** · ground · P1. The smoothest, finest and brightest turf; for the greens and the range's target greens.
 
-**152. Concept rough** · ground · P1. A deeper green, longer grass in soft clumps, a few fallen autumn leaves. Green, not gold.
+🎨 **152. Concept rough** (`rough-concept-run`, in Studio › Painted; the owner's rough stays on the course) · ground · P1. A deeper green, longer grass in soft clumps, a few fallen autumn leaves. Green, not gold.
 
-**153. Lawn and meadow** · ground · P1. Two sets. Lawn: soft ordinary green garden grass with small clover patches, for the yards and the
+✅ **153. Lawn and meadow** (lawn: `lawn-concept-run` v2 on every yard, #663; meadow: `meadow-concept-run` v2 in Studio › Painted, for the map when the owner says) · ground · P1. Two sets. Lawn: soft ordinary green garden grass with small clover patches, for the yards and the
 town blocks. Meadow: the same green, a little longer and uneven, a few tiny wildflowers, for the map's open ground.
 
 **154. Deep pond water** · ground · P1. Dark teal-green still water, darker toward the middle, soft ripples, a faint reflection of a warm
