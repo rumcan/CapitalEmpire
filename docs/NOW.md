@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-28 19:35 SAST)
+## START HERE (kept current by the lead; last updated 2026-10-28 21:00 SAST)
 
 **Taking over as lead?** This section is the one start document. Paste this into a new Claude Code chat (desktop app, Code tab), on any
 account, with the folder `E:\Repos\CapitalEmpire\worktrees\lead-typecheck`:
@@ -58,13 +58,15 @@ never commit there.)
 - **UI:** side-opening flyouts, never a sideways scrollbar. The club's tools are in the left drawer; the town's in the footer, which stands
   in the bottom right corner (#770).
 - **The town's traffic jams are the player's job** (they upgrade roads); never auto-fix congestion.
+- **Performance is a gate** (the owner, 2026-10-28: "dont screw performance"): a ticket that adds things to draw or bake benches main
+  vs branch and gets a stated ms ceiling in its brief; thin it until it fits, or stop and report; never merge over GAME-PLAN 2.3's budgets.
 - The owner wants screenshots of every visible change. Commits end with the `Co-Authored-By:` line, PR bodies with the Claude Code line.
 
 ### 3. In flight
 **Two agents running (a new lead took over at ~15:00 on 2026-10-28; the old lead's agents stopped at the usage limit ~14:00):**
 | Ticket | Issue | Branch / worktree | State and next step |
 | --- | --- | --- | --- |
-| T262 | #769 | `arena/T262-grass-shine` (a fresh worktree; port 5186) | **Started ~17:30.** Phase 1 only: the grass bump map on the fairway, the green and one town lawn, the four options (a-d) benched, a verdict with stills and a pan strip. Phase 2 (every grass, the Studio knobs) only after the lead's yes. |
+| T262 | #769 | `arena/T262-grass-shine` (its worktree `.claude/worktrees/agent-a0e42bfca4d14578c`; port 5186); PR #792 **held** | **Phase 1 done ~20:30: verdict yes, source d** (the bump derived in the shader from the chunk's own colour: as good as per-family bump maps at half the cost, follows the stripes). **Phase 2 running** on the same branch: drop c/a/a4 and the bump maps, every grass family weighted, no sheen under sprite shadows if cheap, Studio knobs beside SpecLook, default on (off stays an option). Merge #792 when phase 2 reports (it becomes Closes #769). |
 | T263 | #771 | `arena/T263-hole-ground` (a fresh worktree; port 5187) | **Started ~19:30.** New hole's Build shapes the hole's ground (fairway rolls, mounds and swales, a tilted green; the tee level), priced in the pill, in the same undo step, behind a "Shape the ground" tick box (default on); saved holes carry it; Edit Hole Layout never reshapes. |
 
 **Held, waiting on the owner (not agents):**
@@ -80,6 +82,10 @@ deliveries come as PRs to review. The 3D people session's handover is `docs/HAND
 **T258 #749 continuous-art follow-up** (`lead/continuous-art-plans-20261029`): generic live-source AI plans and one exact subjob per batch, explicit versioned corrections, held review metadata and lossless native/live-only reuse. Current live priority181 is respected; 180a-v3 remains explicitly queued, v1/v2 held and b/c/d pending. Reviewed source art/proofs are in this branch; runtime registration remains separate. Quota retry2026-10-28T15:32:44.457Z is unchanged. Typecheck/focused fixtures pass; final fresh-main checks and PR/deployment next.
 
 ### 4. Queue (in order; start the next when an agent lands)
+0. **T265 #794** (the owner, 2026-10-28: "can we have the swamp texture around the wider river too please and somemore trees bunching
+   along rivers and creeks on mass"): the river's swamp band (swamp.ts `swampStreams` is creeks only today), dense tree belts along every river
+   and creek. **A hard performance gate** (the owner: "dont screw performance"; the limits are on #794: main vs branch at 30/15/8%, belts
+   at most +0.5 ms a frame, the swamp at most +1 ms a bake, thin or stop). **First: start it when T262 or T263 lands.**
 1. **T259 #759** farms: seasonal corn and ploughed fields, orchards in rows, farmhouses set back on a poplar-lined lane (art 185-189 from
    ChatGPT; stand-ins until then).
 2. **T248 #718** water that moves: research first, two flowing textures, waves lapping at the shore.
