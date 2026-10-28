@@ -6,7 +6,7 @@ import { appendCars } from './cars-library';
 import { appendEast } from './east-library';
 import { appendBusinesses } from './business-library';
 import { appendConstruction } from './construction-library';
-import { appendGolf } from './golf-library';
+import { appendGolf, appendKit } from './golf-library';
 import { appendViews } from './views-library';
 import { appendTrees } from './trees-library';
 import { appendAxisViews } from './axis-library';
@@ -1079,3 +1079,4 @@ appendGolf(LIBRARY, ATLAS_PAGES);
 appendViews(LIBRARY, ATLAS_PAGES);
 appendTrees(LIBRARY, ATLAS_PAGES);
 appendAxisViews(LIBRARY, ATLAS_PAGES);
+appendKit(LIBRARY); // T231: the concept kit (on the golf page), last
