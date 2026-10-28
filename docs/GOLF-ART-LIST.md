@@ -56,7 +56,7 @@ stays a Studio option. Ground textures follow [art/GROUND-TEXTURE-METHOD.md](art
 The owner's target picture, 2026-10-27: items 149-175. ✅ 153 lawn on every yard (#663); 🎨 153 meadow and 152 rough in the Studio; ✅ 149-151 the fairway, first cut and green on the course and the range (#666). 🎨 154 pond water (T230 #679); ✅ 158-160 the pond kit, 162-164 the shrubs, flowers and hedge, and 36, 43, 45 in the game (T231 #671); 169-171 the building-site kit (T232 #673; 168 the excavator blocked in RUN); ✅ 174 the build-tool tiles in the game (T233 #674). Ground textures 149-153 come first: the concept's greens. The plan is in [art/CONCEPT-LOOK.md](art/CONCEPT-LOOK.md).
 
 ### Set the scene, portraits and you (section 13, P28)
-The owner's 2026-10-28 asks: items 200-235 and 240-327 (about 115 places, most with a run-down and an upgraded picture), still to make. The art agent starts with the range's run-down and upgraded pairs (200-204) and the video store (211).
+The owner's 2026-10-28 asks: items 200-235 and 240-327 (about 115 places, most with a run-down and an upgraded picture), still to make, except batch 1 (200-204, 211; 17 pictures in `art/theme-consistency/generated/scenes/`). Batch 2 (the P1 places 205-222) after RUN's cap resets; the rest needs a credit top-up.
 
 ### List items done
 Ground (section 8 and the range ground): ✅ 131 Pond bank, ✅ 132 Grow-in, ✅ 135 Flower bed soil (#630); 🎨 133 Field parking, 🎨 21 range tee divots (#630, in the Studio, no ground wears them yet); 130 Pond water skipped (the lake is in). 134 Event matting deferred (quilting would break its panel grid). 🎨 19 the hitting mat (top-down, made, not drawn yet); 20, 27, 147 retakes next. The range and practice sprites still draw labelled stand-ins.
@@ -802,11 +802,11 @@ For each archetype: a **hard times** version (tired, worn or dated clothes, a li
 well dressed, confident). Same person, same pose, same framing.
 
 ### The range and the club (S, run-down and upgraded)
-**200. The range from the road**: a desert driving range off a county road: a tin-and-tarp shack, four mats on dirt, a dirt car park, a hand-painted sign. Upgraded: a striped green outfield with target greens, covered bays, a paved car park, the clubhouse beyond. P1.
-**201. The hitting bays, close**: run-down: worn mats on packed dirt, a split bucket of balls, a bent divider, a dusty tee line. Upgraded: covered bays with lights, fresh mats on turf, a ball dispenser, golfers mid-swing. P1.
-**202. Inside your home**: three stages: the caravan (cramped 1985 trailer: a fold-down table with a ledger and coffee, a small TV, a golf bag by the door), the cottage, the farmhouse (a warm kitchen, trophies on a shelf). P1.
-**203. The pro shop**: run-down: inside the tin shack, a counter of plywood, a few used clubs, a cash box. Upgraded: the pro shop with racks of clubs, a glass counter, shirts on hangers. P1.
-**204. The practice green**: run-down: a patchy green with one flag on dirt. Upgraded: a manicured putting green with flags, golfers putting. P1.
+🎨 **200. The range from the road** (made: `scenes/`, run-down and upgraded): a desert driving range off a county road: a tin-and-tarp shack, four mats on dirt, a dirt car park, a hand-painted sign. Upgraded: a striped green outfield with target greens, covered bays, a paved car park, the clubhouse beyond. P1.
+🎨 **201. The hitting bays, close** (made: `scenes/`, run-down and upgraded): run-down: worn mats on packed dirt, a split bucket of balls, a bent divider, a dusty tee line. Upgraded: covered bays with lights, fresh mats on turf, a ball dispenser, golfers mid-swing. P1.
+🎨 **202. Inside your home** (caravan and farmhouse pairs; the cottage's upgraded picture still to make): three stages: the caravan (cramped 1985 trailer: a fold-down table with a ledger and coffee, a small TV, a golf bag by the door), the cottage, the farmhouse (a warm kitchen, trophies on a shelf). P1.
+🎨 **203. The pro shop** (made: `scenes/`, run-down and upgraded): run-down: inside the tin shack, a counter of plywood, a few used clubs, a cash box. Upgraded: the pro shop with racks of clubs, a glass counter, shirts on hangers. P1.
+🎨 **204. The practice green** (made: `scenes/`, run-down and upgraded): run-down: a patchy green with one flag on dirt. Upgraded: a manicured putting green with flags, golfers putting. P1.
 **205. The car park**: run-down: a dirt lot with a few dusty cars. Upgraded: paved bays, lamps, tree islands, a full lot. P2.
 **206. The clubhouse, outside**: one per tier, from the starter clubhouse to the grand country club (167). P1.
 **207. The clubhouse, inside**: the bar and lounge, one per tier (a few stools and a TV, then wood panelling and leather). P1.
@@ -815,7 +815,7 @@ well dressed, confident). Same person, same pose, same framing.
 **210. Tournament day**: a few folding chairs and a chalkboard; then grandstands, flags and a crowd. P2.
 
 ### The town (S, outside and inside where named; run-down and upgraded)
-**211. The video store**: outside: a strip-mall video rental store with posters in the window and a lit sign (run-down: faded posters, a flickering sign; upgraded: neon, new-release cut-outs, a queue). Inside: rows of VHS boxes, a new-releases wall, a clerk at the counter, a drop box. P1.
+🎨 **211. The video store** (outside and inside): outside: a strip-mall video rental store with posters in the window and a lit sign (run-down: faded posters, a flickering sign; upgraded: neon, new-release cut-outs, a queue). Inside: rows of VHS boxes, a new-releases wall, a clerk at the counter, a drop box. P1.
 **212. The diner**: outside: a chrome diner. Inside: booths, a counter with stools, pie under glass, a waitress with coffee. P1.
 **213. The gas station**: pumps, a little shop, a mechanic in the bay. P1.
 **214. The motel**: a roadside motel with a vacancy sign, cars at the doors. P2.
