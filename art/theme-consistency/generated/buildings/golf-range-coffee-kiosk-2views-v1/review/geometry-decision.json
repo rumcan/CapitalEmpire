@@ -1,0 +1,164 @@
+{
+  "schema": 1,
+  "id": "golf:range-coffee-kiosk",
+  "decision": "held-for-art-geometry",
+  "status": "held",
+  "geometry": "held",
+  "integration": "blocked-held-geometry",
+  "reviewer": "Delegated local geometry QA under primary explicit >3-degree hold instruction",
+  "reviewedAtUtc": "2026-10-28T18:46:28.428Z",
+  "ownerApprovalClaim": false,
+  "files": [
+    {
+      "file": "art/theme-consistency/generated/buildings/golf-range-coffee-kiosk-2views-v1.png",
+      "sha256": "5241862da793f431fefae6851c6ba0fd4f947694bc0894b367c658b1f34b6e38"
+    },
+    {
+      "file": "art/theme-consistency/generated/buildings/golf-range-coffee-kiosk-2views-v1/front-right.native.png",
+      "sha256": "90f11da2d3dd9e2fc1b9ddc8d58a3d041bf7d208d381b95d2c0f13b21119e4db"
+    },
+    {
+      "file": "art/theme-consistency/generated/buildings/golf-range-coffee-kiosk-2views-v1/left-front.native.png",
+      "sha256": "7101d5a5ca29f77245b82e7826ec1ed8db952835bf71addbf82e74034752a350"
+    }
+  ],
+  "reasons": [
+    "The real straight front green base-frame edge differs from the game +0.5 axis by3.146degrees in front-right, and from -0.5 by9.437degrees in left-front. Both exceed the requested3degree limit.",
+    "The two side-frame edges are within1.58degrees; a whole-image rotation/skew would damage their already closer alignment. Correct structural projection in a new version instead."
+  ],
+  "styleAlpha": {
+    "status": "previous approval retained unchanged",
+    "file": "art/theme-consistency/generated/buildings/golf-range-coffee-kiosk-2views-v1.appearance.json",
+    "sha256": "937ab877649dea318f982e8a1dd7cbe153bf8cb11e17731008d7d4c88ad37160"
+  },
+  "measurements": [
+    {
+      "view": "front-right",
+      "front": {
+        "slope": 0.43312938653818783,
+        "fitEndpoints": [
+          [
+            180,
+            637.7662796199905
+          ],
+          [
+            510,
+            780.6989771775926
+          ]
+        ],
+        "measuredNativeEndpointPixels": [
+          [
+            180,
+            638
+          ],
+          [
+            510,
+            781
+          ]
+        ],
+        "angleErrorDegrees": 3.1461970437337534,
+        "rmsResidualPx": 0.36059573008027723,
+        "medianAbsoluteResidualPx": 0.2584157007045178,
+        "samples": 331
+      },
+      "side": {
+        "slope": -0.5217823998961779,
+        "fitEndpoints": [
+          [
+            590,
+            772.1661859881829
+          ],
+          [
+            775,
+            675.63644200739
+          ]
+        ],
+        "measuredNativeEndpointPixels": [
+          [
+            590,
+            774
+          ],
+          [
+            775,
+            676
+          ]
+        ],
+        "angleErrorDegrees": 0.9897090639128763,
+        "rmsResidualPx": 0.39801652114033415,
+        "samples": 186
+      }
+    },
+    {
+      "view": "left-front",
+      "front": {
+        "slope": -0.308170993274408,
+        "fitEndpoints": [
+          [
+            355,
+            776.0114985163204
+          ],
+          [
+            690,
+            672.7742157693938
+          ]
+        ],
+        "measuredNativeEndpointPixels": [
+          [
+            355,
+            777
+          ],
+          [
+            690,
+            673
+          ]
+        ],
+        "angleErrorDegrees": 9.437270952455034,
+        "rmsResidualPx": 0.4374379951237642,
+        "medianAbsoluteResidualPx": 0.30289538952126804,
+        "samples": 336
+      },
+      "side": {
+        "slope": 0.5348756328417346,
+        "fitEndpoints": [
+          [
+            110,
+            670.8347457627119
+          ],
+          [
+            285,
+            764.4379815100154
+          ]
+        ],
+        "measuredNativeEndpointPixels": [
+          [
+            110,
+            671
+          ],
+          [
+            285,
+            765
+          ]
+        ],
+        "angleErrorDegrees": 1.5761897296416052,
+        "rmsResidualPx": 0.31222939176872155,
+        "samples": 176
+      }
+    }
+  ],
+  "proofs": [
+    {
+      "file": "art/theme-consistency/generated/buildings/golf-range-coffee-kiosk-2views-v1/review/native-base-frame-measurements.png",
+      "sha256": "3acc78c873a26498a6c956cd0be0c4be7c18e4b11d303a86483ab33d33e31326"
+    },
+    {
+      "file": "art/theme-consistency/generated/buildings/golf-range-coffee-kiosk-2views-v1/review/native-base-frame-measurements.json",
+      "sha256": "112db47b533f45744750dc99bd553a5881906a80035e15b5d2b2583296ee67ee"
+    }
+  ],
+  "limitations": "Manual segment selection, followed by actual local opaque base-frame edge fitting. Native alpha32/128/230 produce consistent angles; painted-edge/antialias uncertainty remains. No roofs/counters/whole bounding boxes used. Not a physical scale calibration.",
+  "correction": {
+    "required": true,
+    "instruction": "Keep both original sources and style/alpha approval. Future corrected version must retain theme, upper-right light and two genuine views while aligning BOTH front and side structural base-frame axes to +/-0.5. Do not rotate, mirror, skew or resample source art to simulate correction. No generation performed by this QA."
+  },
+  "sourcePreservation": "Original wholePNG, both native crops, original generation provenance, existing native-export and existing style/alpha decision unchanged."
+}

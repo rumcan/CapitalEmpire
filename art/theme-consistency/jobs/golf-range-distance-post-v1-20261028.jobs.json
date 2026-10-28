@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "jobs": [
+    {
+      "schema": 1,
+      "id": "golf:range-distance-post",
+      "catalogueItem": 7,
+      "category": "buildings",
+      "subjobKey": "golf-range-distance-post-1view",
+      "transparent": true,
+      "output": "art/theme-consistency/generated/buildings/golf-range-distance-post-1view-v1.png",
+      "provenance": "art/theme-consistency/generated/buildings/golf-range-distance-post-1view-v1.provenance.json",
+      "references": [
+        "art/theme-consistency/references/theme-authoritative.png",
+        "art/theme-consistency/references/golf-country-club-owner-20261028.png"
+      ],
+      "prompt": "Use case: stylized-concept. Create exactly ONE isolated sprite for the same warm hand-painted illustrated golf-town game as reference1, with reference2 as supporting style only. Subject golf:range-distance-post: a short1985 driving-range distance marker, real height1.5m, a stout square timber post painted in clean alternating RED and WHITE horizontal bands, a small BLANK white rectangular marker plate near its top (no digits or lettering). Top end of the post visible in fixed parallel2:1 dimetric camera: horizontal ground-plane axes +/-26.565degrees, vertical edges vertical. One view shows front and right faces. Timber paint has readable subtle wear and broad confident brushwork, realistic proportions with stylized readable edges. Sun fixed at SCREEN UPPER RIGHT, right/top faces gently warm-lit, screen-left face shaded. Fit entire post and plate centred with15percent clear margins. TRUE TRANSPARENT PNG background, preserve alpha. No floor, ground, grass tuft, rocks, scenery, podium, detached shadow, people, border, interface, text or watermark. Just one complete markerpost, not a sheet. Square image."
+    }
+  ]
+}

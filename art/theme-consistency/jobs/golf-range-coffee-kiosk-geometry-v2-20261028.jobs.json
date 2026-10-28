@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "date": "2026-10-28",
+  "status": "interactive-generation-reserved",
+  "jobs": [
+    {
+      "schema": 1,
+      "id": "golf:range-coffee-kiosk",
+      "category": "buildings",
+      "stage": "geometry-correction-v2-view1",
+      "subjobKey": "golf-range-coffee-kiosk-view1",
+      "transparent": true,
+      "background": "native-alpha",
+      "references": [
+        "art/theme-consistency/references/theme-authoritative.png",
+        "art/theme-consistency/references/golf-country-club-owner-20261028.png",
+        "art/theme-consistency/references/coffee-kiosk-front-right-geometry-v2.png"
+      ],
+      "output": "art/theme-consistency/generated/buildings/golf-range-coffee-kiosk-view1-v2.png",
+      "provenance": "art/theme-consistency/generated/buildings/golf-range-coffee-kiosk-view1-v2.provenance.json",
+      "replaces": {
+        "file": "art/theme-consistency/generated/buildings/golf-range-coffee-kiosk-2views-v1.png",
+        "sha256": "5241862da793f431fefae6851c6ba0fd4f947694bc0894b367c658b1f34b6e38",
+        "reason": "front structural base edges fail fixed road projection; original retained"
+      },
+      "prompt": "Use case: stylized-concept. One isolated hand-painted game building sprite, square PNG with genuinely transparent background. Reference1 is the authoritative illustrated game artwork; reference2 is supplementary painted golf-town style only. Reference3 is an EXACT GEOMETRY/PROJECTION guide only: keep its building footprint, wall directions, verticals and roof geometry, replace its flat colours and outlines with finished illustrated architecture. No guide background, coloured guide lines or labels in final.\nSubject golf:range-coffee-kiosk. A small 1985 timber coffee kiosk, 3m front width x2.5m depth x3m total roof height; cream horizontal timber boards, dark forest-green corner trim and straight green base frame, dark slate gabled shingle roof. Its serving FRONT is the broad face at screen LEFT in the guide. A serving hatch and fold-down oak counter across that front, a red-and-white striped canvas awning, chrome espresso machine and stacked white paper cups inside hatch, a BLANK dark green chalk menu board to the front's physical LEFT of hatch, warm gentle interior lamp. The visible right side is plain cream boards. Back has a small service door and gas bottle cage, unseen in this front-right view.\nCamera is parallel 2:1 dimetric game projection, EXACTLY as third reference: base FRONT runs down-right with rise:run 1:2 (+0.5 pixel slope), base RIGHT side runs up-right (-0.5 pixel slope), verticals strictly vertical. Long front edge, wall siding, counter fascia and eaves parallel to +0.5 axis; all right-side ground-parallel edges -0.5. Roof ridge +0.5. No perspective convergence; no rounded or bowed foundation. Retain guide's generous clear margins and complete roof/base.\nFinish detailed, richly painted stylized architecture in the style of the first reference: readable warm ochre cream timber, deep green trim, cool dark slate, broad painted shading and restrained fine details. One sun fixed at SCREEN UPPER RIGHT, shaded screen lower-left, even exposure. True alpha in all space around building, no floor, lawn, dirt, podium, scene, surrounding objects, people, text, watermark or cast-shadow backdrop. The base frame belongs to the building, never a ground tile. Output just ONE front-and-right view, not a sheet."
+    }
+  ]
+}
