@@ -52,8 +52,11 @@ export const WALL_SHADOW = 0.9;
 export const SHADOW_HAIRLINE = 0.15;
 /** the Shadow by default: the hairline */
 export const DEFAULT_SHADOW = SHADOW_HAIRLINE;
-/** each surface's Shadow by default: a green none at all (the owner, 2026-10-25: "no shadows under greens please"), every other the hairline */
-export const defaultShadow = (s: number) => (s === GREEN ? 0 : SHADOW_HAIRLINE);
+/** a bunker's Shadow by default (the owner, 2026-10-29: "the default for edges on bunker should be round ticked and smoothness 100% and shadow 30%") */
+export const BUNKER_SHADOW = 0.3;
+/** each surface's Shadow by default: a green none at all (the owner, 2026-10-25: "no shadows under greens please"), a bunker BUNKER_SHADOW,
+ *  every other the hairline */
+export const defaultShadow = (s: number) => (s === GREEN ? 0 : s === BUNKER ? BUNKER_SHADOW : SHADOW_HAIRLINE);
 /** how the walls' shadows are drawn at Shadow s (0 none, SHADOW_HAIRLINE a hairline, 1 strong; T110: every part multiplied in the cool shade
  *  colour, so the ground keeps its texture): the cast shadow's length per metre of drop (tiles) and alpha, and the contact shade along the
  *  foot as a soft wide stroke and a tight dark line (widths in tiles, with their least widths in screen px, and alphas). From none to the
