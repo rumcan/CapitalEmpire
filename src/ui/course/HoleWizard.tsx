@@ -5,6 +5,7 @@ import { affordKind, statusIcon } from '../status-icon';
 import { SURF_SURFACE } from '../../game/ext/course-grid/areas';
 import { aboutMoney, planShape, type WizCheck } from '../../game/ext/hole-wizard';
 import { growInMonths } from '../../game/golf/costs';
+import { FRAME_TREE_PRICE } from '../../game/golf/holeframe';
 
 const STEPS = ['Tee', 'Green', 'Shape'] as const;
 /** what each step asks for, under the steps */
@@ -24,6 +25,8 @@ export function HoleWizardPanel({ game }: { game: Game }) {
   const gh = w.step !== 'tee' && w.plan ? w.ghost() : null;
   const c = w.step === 'shape' ? w.check() : null;
   const checks = w.step === 'shape' ? w.checks() : [];
+  // T229: Frame with trees on: the Build's price is the hole's and its frame's
+  const fr = w.step === 'shape' && p.frameTrees ? game.wizardFrame() : null, total = (gh?.cost ?? 0) + Math.max(0, fr?.price ?? 0);
   const step = w.step === 'tee' ? 0 : w.step === 'green' ? 1 : 2;
   const cur = p.brushHole, canEdit = w.step === 'tee' && p.hasPlan(cur);
   const nums = w.base ? [] : p.planNumbers();
@@ -52,7 +55,7 @@ export function HoleWizardPanel({ game }: { game: Game }) {
       {w.step === 'shape' && (
         <div className="mt-2 flex items-center gap-1.5">
           <button className="pill-gold wiz-build" disabled={!c?.ok} title={c?.ok ? 'Build the hole (Enter, or the gold pill by the green)' : c?.why} onClick={() => p.buildPlan()}>
-            <span className="min-w-0 flex-1">{c?.ok && gh ? `Build · ${money(gh.cost)}` : 'Build'}</span><kbd>Enter</kbd>
+            <span className="min-w-0 flex-1">{c?.ok && gh ? `Build · ${money(total)}` : 'Build'}</span><kbd>Enter</kbd>
           </button>
           <button className="chip" title="Drop this plan (Esc steps back one stage)" onClick={() => p.cancelPlan()}>Cancel</button>
         </div>
@@ -66,6 +69,7 @@ export function HoleWizardPanel({ game }: { game: Game }) {
       )}
       {gh && <Stats game={game} />}
       {gh && <Planting game={game} />}
+      {gh && w.step === 'shape' && <Frame game={game} cost={gh.cost} />}
       {checks.length > 0 && <Checks game={game} rows={checks} />}
       {w.step === 'shape' && (
         <p className="wiz-keys">Drag the line to bend it · amber handles widen · <kbd>R</kbd> turns the green · <kbd>[</kbd> <kbd>]</kbd> size it · <kbd>Ctrl</kbd>+<kbd>Z</kbd> undoes a drag · <kbd>Esc</kbd> steps back</p>
@@ -121,6 +125,23 @@ function Planting({ game }: { game: Game }) {
           : `Seed: playable in ${grow}. Sod is ready now but costs ${ratio} times as much: nine holes like this would cost about ${aboutMoney(9 * k.sod)}.`}
       </p>
       <p className="wiz-money">{`Nine holes like this: about ${aboutMoney(9 * cost)} · you have `}<b className={have >= cost ? 'text-emerald-300' : 'text-red-300'}>{`${aboutMoney(have)} ${statusIcon(affordKind(cost, have))}`}</b></p>
+    </section>
+  );
+}
+
+/** T229 (#668): Frame with trees, on by default: Build plants clumps of conifers and autumn trees along the rough's outer edge too (golf/holeframe.ts),
+ *  priced per tree; the count and price are worked out once the ghost holds still. Off: the hole card frames it later */
+function Frame({ game, cost }: { game: Game; cost: number }) {
+  const p = game.paint, on = p.frameTrees, f = on ? game.wizardFrame() : null, short = !!f && f.price > 0 && game.money < cost + f.price;
+  return (
+    <section className="mt-2" aria-label="Trees" data-testid="wiz-frame">
+      <h4 className="sub-head">Trees</h4>
+      <div className="flex items-center justify-between gap-2">
+        <button className={`chip ${on ? 'chip-on' : ''}`} aria-pressed={on} data-testid="wiz-frame-toggle" title="Clumps of spruce, pine, maple and birch along the rough's outer edge, with gaps: never in the line of play, on a path or on water" onClick={() => p.setFrameTrees(!on)}>{on ? '✓ Frame with trees' : 'Frame with trees'}</button>
+        <span className="tabular-nums text-[13px] font-semibold" data-testid="wiz-frame-price">{!on ? 'Off' : f ? (f.trees ? `${f.trees} trees · ${money(f.price)}` : 'No room for a frame here') : 'Working it out…'}</span>
+      </div>
+      <p className="sub-line mt-1">{on ? `Clumps along the rough's edge, ${money(FRAME_TREE_PRICE)} a tree, clear of the line of play, the landing zones, paths, water and the cart lanes. Bulldoze one to open a view.` : 'Build plants no trees: frame the hole later from its card.'}</p>
+      {short && <p className="mt-1 text-[12px] text-amber-300"><span aria-hidden>! </span>Not enough money for all of it: Build plants the clumps the rest pays for.</p>}
     </section>
   );
 }

@@ -34,8 +34,9 @@ export const FRAME_RULES = {
 } as const;
 export type FrameRules = typeof FRAME_RULES;
 
-/** what a frame tree costs ($): the Props tool's tree is $300; the frame's young trees come in bulk at half that */
-export const FRAME_TREE_PRICE = 150;
+/** what a frame tree costs ($): the plant brush is free and the Props tool's ornamental maple $300; the frame's young nursery trees come by the
+ *  hundred at a third of that, so a 340 m hole's frame (about 65 trees) costs about a third of its seeded surfaces */
+export const FRAME_TREE_PRICE = 100;
 /** the Props tool's catalogue key a frame tree carries (golf/decor.ts: its name, its price, its appeal, half back when bulldozed) */
 export const FRAME_TREE_KEY = 'tree-frame';
 /** the price of n frame trees ($) */

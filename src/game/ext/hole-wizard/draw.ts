@@ -182,12 +182,12 @@ function drawHandles(v: WizardView, hs: readonly PlanHandle[], hot: PlanHandle |
 }
 
 /** the gold Build pill below the green (P21 3.3: click it or press Enter): its box in css px, or null when not drawn */
-function drawPill(v: WizardView, w: HoleWizard, gh: WizardGhost, mouse: { mx: number; my: number } | null = null): { x: number; y: number; w: number; h: number } | null {
+function drawPill(v: WizardView, w: HoleWizard, gh: WizardGhost, mouse: { mx: number; my: number } | null = null, extra = 0): { x: number; y: number; w: number; h: number } | null {
   const pl = w.plan; if (!pl) return null;
   const ctx = v.ctx, d = v.dpr, c = w.check(), g = v.screen(pl.green.x, pl.green.y);
   // a block says itself on the pill, in red (P23 4.4: "The green is off your land"); an edit with no change says so, greyed
   const same = c.id === 'same', bad = !c.ok && !same;
-  const text = c.ok ? `Build · $${gh.cost.toLocaleString()}` : same ? NO_CHANGES : (c.why.split(':')[0] ?? 'Build');
+  const text = c.ok ? `Build · $${(gh.cost + extra).toLocaleString()}` : same ? NO_CHANGES : (c.why.split(':')[0] ?? 'Build');
   ctx.font = `bold ${Math.round(12 * d)}px ui-sans-serif, system-ui, sans-serif`;
   const tw = ctx.measureText(text).width, bw = tw + 22 * d, bh = 24 * d, x0 = Math.round(g.x - bw / 2), y0 = Math.round(g.y + 22 * d);
   // T176: near the pointer (not on the pill itself: it is a button) the pill fades, so it never hides the spot being placed
@@ -234,9 +234,9 @@ function drawRipple(v: WizardView, w: HoleWizard, now: number, reduced: boolean)
 /**
  * draws the wizard: the ripple of the last build, then by step: the tee step's hovered plan line (or a tee ring at the pointer); the
  * green step's tee and live ghost; the shape step's ghost, line, handles and pill; and the label beside the pointer. Returns the pill's
- * box (css px) for the click, or null.
+ * box (css px) for the click, or null. extra: what Build adds to the ghost's price ($; T229: the hole's frame of trees)
  */
-export function drawWizard(v: WizardView, w: HoleWizard, mouse: { mx: number; my: number } | null, now: number, reduced: boolean): { x: number; y: number; w: number; h: number } | null {
+export function drawWizard(v: WizardView, w: HoleWizard, mouse: { mx: number; my: number } | null, now: number, reduced: boolean, extra = 0): { x: number; y: number; w: number; h: number } | null {
   drawRipple(v, w, now, reduced);
   let pill: { x: number; y: number; w: number; h: number } | null = null;
   if (w.step !== 'shape') drawOthers(v, w);
@@ -261,7 +261,7 @@ export function drawWizard(v: WizardView, w: HoleWizard, mouse: { mx: number; my
       // a tee or a green Build waits on is ringed in red where it stands (P23 4.4)
       const c = w.check(), pl = w.plan;
       if (pl && c.at) { const ctx = v.ctx, d = v.dpr, p = v.screen(pl[c.at].x, pl[c.at].y); ctx.beginPath(); ctx.arc(p.x, p.y, 15 * d, 0, Math.PI * 2); ctx.lineWidth = 3 * d; ctx.strokeStyle = '#ef4444'; ctx.stroke(); }
-      if (gh) pill = drawPill(v, w, gh, mouse);
+      if (gh) pill = drawPill(v, w, gh, mouse, extra);
     }
   }
   if (mouse) { const l = w.label(); v.hint(mouse.mx, mouse.my, l.text, l.bad); }

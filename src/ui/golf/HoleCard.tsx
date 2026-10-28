@@ -84,6 +84,8 @@ export function HoleCard({ game, right = 'right-3' }: { game: Game; right?: stri
         </ul>
       </div>
 
+      <FrameRow game={game} n={c.n} />
+
       <p className="sub-line mt-2">Drag the pin or a tee marker on the map to move it: no re-plan, no charge. It stays on its green or tee.</p>
 
       {!asking ? (
@@ -106,6 +108,24 @@ export function HoleCard({ game, right = 'right-3' }: { game: Game; right?: stri
         </div>
       )}
     </section>
+  );
+}
+
+/** T229 (#668): Frame with trees: clumps of conifers and autumn trees along the hole's rough's outer edge (golf/holeframe.ts), priced per tree, the
+ *  price on the button before you press it (one undo step). Framing again plants only where there is room, and takes away frame trees an edit
+ *  of the hole left in play (half their price back, as the bulldozer) */
+function FrameRow({ game, n }: { game: Game; n: number }) {
+  const f = game.holeFrameView(n); if (!f) return null;
+  const can = f.trees > 0 || f.stale > 0, usd = (v: number) => `$${Math.round(v).toLocaleString('en-US')}`;
+  const label = f.trees ? `Frame with trees · ${f.trees} trees · ${usd(f.price)}` : f.stale ? `Take ${f.stale} out of play · +${usd(f.refund)}` : f.has ? 'Framed' : 'No room for a frame';
+  const note = [f.has ? `${f.has} frame tree${f.has === 1 ? '' : 's'} now.` : "Clumps of spruce, pine, maple and birch along the rough's edge, with gaps; never in the line of play, on a path or on water.",
+    f.stale ? `${f.stale} stand in play since the hole changed: framing again takes them away (half back).` : '', f.has && !f.trees && !f.stale ? 'No room for more clumps: bulldoze one to open a view.' : ''].filter(Boolean).join(' ');
+  return (
+    <div className="mt-2" data-testid="hole-frame">
+      <div className="mb-1 text-[12px] text-[var(--muted)]">Trees</div>
+      <button className={`chip ${can ? 'chip-on' : ''} disabled:opacity-40`} disabled={!can} onClick={() => game.frameHoleTrees(n)} title={can ? 'Plants the clumps (Ctrl+Z takes them and the money back)' : 'Nothing to plant'} data-testid="hole-frame-go"><Icon name="trees" size={14} />{label}</button>
+      <p className="sub-line mt-1">{note}</p>
+    </div>
   );
 }
 
