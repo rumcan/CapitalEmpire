@@ -389,7 +389,8 @@ export class Build {
       }
       acc.push(it); const p: Placed = { id: it.id, x: it.x, y: it.y, flip: it.flip, scale: it.s }; if (it.street) p.street = true; if (it.from) p.from = it.from; if (it.standIn) p.standIn = it.standIn; if (it.foot) p.foot = it.fp; props.push(p);
     }
-    const ground: LotPatch[] = this.patches.map(p => (p.lines ? { pts: p.quad, tex: p.tex, lines: p.lines } : { pts: p.quad, tex: p.tex }));
+    // (T228: a driveway says so: the engine cuts the road's edge lines at its mouth, street-marks.ts driveCuts)
+    const ground: LotPatch[] = this.patches.map(p => ({ ...(p.lines ? { pts: p.quad, tex: p.tex, lines: p.lines } : { pts: p.quad, tex: p.tex }), ...(p.kind === 'drive' ? { drive: true as const } : {}) }));
     // the decals last, bounded by the lot grown 2 tiles (a decal is up to 4 m across)
     if (this.marks.length) ground.push({ pts: this.quad(-2, -2, this.W + 2, this.D + 2), tex: 'marks', marks: this.marks });
     return { props, ground };

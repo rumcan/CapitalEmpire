@@ -9,6 +9,7 @@ import type { Pt } from '../network';
 import type { Rect } from './mode';
 import { GOLFER_BASE, GOLFER_FRAMES, GOLFER_PEOPLE, WALK_DIRS } from '../library';
 import { carHeading, facings } from '../traffic';
+import { hash3, paintOf } from '../car-paint';
 import { PRESETS, presetTex, surfacePreset, type Stripes } from '../paint-presets';
 import { SURFACE_TEX } from './paintcourse';
 import type { GolfSurface } from './types';
@@ -190,7 +191,7 @@ export class RangeHost {
     for (let k = 0; k < d.nCars; k++) {
       const c = d.cars[k]!; if (c.x < x0 || c.x > x1 || c.y < y0 || c.y > y1) continue;
       const f = F[c.type % 5]![carHeading(c.ang)]!, m = this.carMover(k), z = CAR_SCALE * f.size;
-      m.item = f.item; m.flip = f.flip; m.scale = z; m.moving = true;
+      m.item = f.item; m.flip = f.flip; m.scale = z; m.moving = true; m.paint = c.id >= 0 ? paintOf(hash3(c.id, 0x5a)) : 0; // (T228: its golfer's own paint)
       m.x = c.x - f.ox * z; m.y = c.y - f.oy * z; m.x0 = c.x - f.hx * z; m.x1 = c.x + f.hx * z; m.y0 = c.y - f.hy * z; m.y1 = c.y + f.hy * z;
       out.push(m);
     }

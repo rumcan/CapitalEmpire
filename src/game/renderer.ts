@@ -1292,7 +1292,15 @@ export class GroundPainter {
       const lines = net.lines.filter(l => vis(l.bbox)), zebra = net.zebra.filter(z => vis(z.bbox)), bars = net.bars.filter(b => vis(b.bbox));
       if (lines.length || zebra.length || bars.length || tops.length) {
         const lb = this.buffer('lines', W, H), lg = ctx2d(lb); lg.setTransform(M); lg.lineJoin = 'round';
-        for (const l of lines) drawLine(lg, l, minW);
+        // T228: the white edge lines first, broken where a cut lies (a lot's driveway, a bus stop: LotPatch.cut; the on-street bays' strip),
+        // then every other marking over them
+        const edges = lines.filter(l => l.edge);
+        if (edges.length) {
+          for (const l of edges) drawLine(lg, l, minW);
+          const cuts = [...this.lotsIn(box).filter(p => p.cut), ...tops];
+          if (cuts.length) { lg.globalCompositeOperation = 'destination-out'; lg.fillStyle = '#000'; for (const p of cuts) lg.fill(polyPath(p.pts)); lg.globalCompositeOperation = 'source-over'; }
+        }
+        for (const l of lines) if (!l.edge) drawLine(lg, l, minW);
         // on-street parking marks (lot ground patches drawn on top): the edge line and the bay ticks
         if (tops.length) { lg.strokeStyle = WHITE; lg.lineCap = 'butt'; lg.lineWidth = Math.max(0.08, minW); lg.beginPath(); for (const p of tops) for (let k = 0; k + 3 < p.lines!.length; k += 4) { lg.moveTo(p.lines![k], p.lines![k + 1]); lg.lineTo(p.lines![k + 2], p.lines![k + 3]); } lg.stroke(); }
         lg.fillStyle = WHITE; for (const z of zebra) lg.fill(z.path); for (const b of bars) lg.fill(b.path);

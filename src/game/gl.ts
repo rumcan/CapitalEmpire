@@ -16,6 +16,7 @@ import { BRAKE_LIGHT } from './sim/car-lamps';
 import { SPEC_LIGHT_GLSL, SPEC_MASK_K } from './lamp-reflect';
 import { GLOSS, GLOSS_LIGHT_GLSL } from './swamp';
 import { GRADE_GLSL, blurGlsl, type GradeFrame } from './grade';
+import { CAR_PAINT_GLSL } from './car-paint';
 
 /** floats per sprite instance: rect x0 y0 x1 y1 (world px), uv u0 v0 u1 v1, layer, alpha, cullable, foot line (world px; < 0: casts no shadow),
  *  clip x0 y0 x1 y1 (world px), foot: the footprint's near corner x y and its left and right corners' x (world px; the cast shadows stand on it) */
@@ -97,15 +98,18 @@ void main() {
   vec2 w = mix(aRect.xy, aRect.zw, c);
   vec2 s = (w - uCam.xy) * uCam.z + uScreen * 0.5;
   bool cull = aMisc.z > 0.5 && (aRect.w - aRect.y) * uCam.z < uMinPx;
-  vTint = aMisc.y > 1.5 ? 1.0 : 0.0; // T176: 2 + alpha marks a tinted sprite
+  // T176: 2 + alpha marks a tinted sprite (vTint 1); T228: 2 + 2 code + alpha a painted car (vTint code + 1, car-paint.ts)
+  float code = aMisc.y > 1.5 ? floor((aMisc.y - 2.0) * 0.5) : -1.0;
+  vTint = code + 1.0;
   gl_Position = cull ? vec4(2.0, 2.0, 2.0, 1.0) : vec4(s.x / uScreen.x * 2.0 - 1.0, 1.0 - s.y / uScreen.y * 2.0, 0.0, 1.0);
-  vUV = vec3(mix(aUV.xy, aUV.zw, c), aMisc.x); vAlpha = aMisc.y > 1.5 ? aMisc.y - 2.0 : aMisc.y; vW = w; vClip = aClip;
+  vUV = vec3(mix(aUV.xy, aUV.zw, c), aMisc.x); vAlpha = aMisc.y > 1.5 ? aMisc.y - 2.0 - 2.0 * code : aMisc.y; vW = w; vClip = aClip;
 }`;
 // the atlas lookup (atlas-gl.ts glsl: atlasTex, from the finest resident mip of the sprite's cell) is sampled before any discard: its level of
 // detail comes from derivatives, which need the whole 2 x 2 quad
 const FS_SPRITE = (atlas: string) => `#version 300 es
 precision highp float; precision highp int;
 ${atlas}
+${CAR_PAINT_GLSL}
 in vec3 vUV; in float vAlpha; in vec2 vW; flat in vec4 vClip; flat in float vTint; out vec4 o;
 void main() {
   // T192: a lamp's glow (sim/car-lamps.ts, layer GLOW_LAYER: no atlas page): a soft disc of the brake lights' red, added (alpha 0), drawn in
@@ -121,7 +125,9 @@ void main() {
   if (c.a < 0.004) discard;
   // T176: a tinted sprite (a tree a Build would clear): its own light and shade in one warm rust red (its luminance times the tint), so it
   // reads as marked even among autumn reds, and the art's own darks stay dark (the owner's light rule)
-  if (vTint > 0.5) { float l = dot(c.rgb, vec3(0.299, 0.587, 0.114)); c.rgb = min(vec3(l) * vec3(1.8, 0.66, 0.44), vec3(c.a)); }
+  if (vTint > 0.5 && vTint < 1.5) { float l = dot(c.rgb, vec3(0.299, 0.587, 0.114)); c.rgb = min(vec3(l) * vec3(1.8, 0.66, 0.44), vec3(c.a)); }
+  // T228: a painted car (car-paint.ts): its body's pixels take its paint at their own light and shade (premultiplied: by its coverage)
+  else if (vTint > 1.5) c.rgb = carPaint(c.rgb / c.a, vTint - 1.0) * c.a;
   o = c * vAlpha;
 }`;
 // cast shadows (cast-shadow.ts): each sprite's silhouette laid on the ground away from the sun. Every column of the picture stands on its own
@@ -148,7 +154,8 @@ void main() {
   // T216: the sprite's own cull (VS_SPRITE): a sprite hidden at the district zoom casts no shadow either
   bool cull = aMisc.z > 0.5 && (aRect.w - aRect.y) * uCam.z < uMinPx;
   gl_Position = cull || aMisc.w < 0.0 ? vec4(2.0, 2.0, 2.0, 1.0) : vec4(s.x / uScreen.x * 2.0 - 1.0, 1.0 - s.y / uScreen.y * 2.0, 0.0, 1.0);
-  vUV = vec3(mix(aUV.xy, aUV.zw, c), aMisc.x); vAlpha = aMisc.y > 1.5 ? aMisc.y - 2.0 : aMisc.y; vW = vec2(x, y); vClip = aClip; // T176: a tint's 2 + alpha
+  // (T176: a tint's 2 + alpha; T228: a painted car's 2 + 2 code + alpha)
+  vUV = vec3(mix(aUV.xy, aUV.zw, c), aMisc.x); vAlpha = aMisc.y > 1.5 ? aMisc.y - 2.0 - 2.0 * floor((aMisc.y - 2.0) * 0.5) : aMisc.y; vW = vec2(x, y); vClip = aClip;
 }`;
 const FS_CAST = (atlas: string) => `#version 300 es
 precision highp float; precision highp int;

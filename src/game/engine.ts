@@ -116,6 +116,9 @@ import { afterRoute, driveOffer, driveStart, type DriveStopgap } from './golf/dr
 import { growReadyLabel, hintWithGrow } from './golf/growlabel';
 import { computeTournamentCloseBook, computeYearEnd, type YearEndResult } from './golf/yearend';
 import { countParkedCars } from './golf/parkingfee';
+import { driveCuts, stopCut } from './street-marks';
+import { TYPE_PAINTS, bodyOf, paintAt } from './car-paint';
+import { baysBox, boxesMeet, workerBay, workerShown, type TileBox } from './parked-cars';
 import { parkRideNeeds } from './golf/parkride';
 import { applyCourseConsultantQuality, effectiveGrowInClockMonth, findGolfCard, isGolfCardId, parkRideNeedsWithCards } from './golf/golfcards';
 import type { CourseFacts } from './golf/tour';
@@ -1840,6 +1843,7 @@ export class Game {
     const p: Prop = { uid: this.nextUid++, item, x, y, flip, scale, ...f };
     if (auto) p.auto = auto;
     if (o?.lift) p.lift = o.lift; // drawn above its spot (T133: the range's upper deck)
+    if (bodyOf(item) >= 0) p.paint = paintAt(x, y); // a car's paint from where it stands (T228, car-paint.ts: a bay or a lot's spot keeps its colour)
     this.props.add(p); this.propGrid.add(p, [p.x0, p.y0, p.x1, p.y1]); this.sprites.add(p); this.casterTouched(p);
     if (this.propLog) this.propLog.added.push(p);
     if (LIBRARY[item].kind === 'lamp') this.lampProps.add(p);
@@ -2308,7 +2312,9 @@ export class Game {
     // T222: a new or poor town's house lots wear rough yards in patches (rough-yards.ts: from the lot's own seed and the town's size; upgraded lots stay mown)
     const state = stateOf(st.level, st.decline), home = st.use === LU.RES, rough = built ? roughYard(st.seed, home, state, this.traffic.pop, this.roughYards) : null;
     if (built) this.yardRough.set(key, { seed: st.seed, home, state, sig: roughSig(rough) });
-    const lawn = built ? lotLawn(key, g, undefined, state, rough) : null; this.setLotGround(key, lawn ? [lawn, ...c.ground] : c.ground);
+    // (T228: and the cuts its driveways make in the road's white edge lines)
+    const lawn = built ? lotLawn(key, g, undefined, state, rough) : null, cuts = driveCuts(g, c.ground);
+    this.setLotGround(key, lawn || cuts.length ? [...(lawn ? [lawn] : []), ...c.ground, ...cuts] : c.ground);
   }
   // ---------- T219 (P27): the iconic places (lots/iconic.ts)
   /** the iconic places' footprints (world tiles) */
@@ -2498,6 +2504,7 @@ export class Game {
     if (this.net.lastDirty) { const hb = this.flattenRoadsIn(this.net.lastDirty); if (hb) this.courseHeightChanged(hb); this.courseRoadsChanged(this.net.lastDirty); }
     this.syncAutoProps(this.net.autoAdded, this.net.autoRemoved); this.syncPortals(); this.farmsUpdate(); this.scheduleBlockLawns();
     this.syncLamps(); if (this.parkDefs.length) this.syncParks(); this.parking.sync(); if (this.tollDefs.length) this.syncTolls(); if (this.busDefs.length) this.traffic.setBusRoutes(this.busDefs);
+    if (this.busDefs.length || this.stopCuts.size) this.syncStopCuts();
     this.scheduleSave(); this.emit();
   }
   /** flattens the course height under every road near box (its asphalt and verge, feathered over 2 tiles); returns the changed box */
@@ -2516,7 +2523,7 @@ export class Game {
     this.ground.netOps(ops); this.traffic.netOps(netToOps(this.net)); this.syncPortals();
     this.syncAutoProps(this.net.autoProps, []);
     this.syncLamps(); this.sendBlocks(false); this.syncBlockLawns();
-    this.ground.invalidateAll(); this.ground.courseHeight(this.courseHeight.data, [0, 0, MAP, MAP]); this.syncParks(); this.parking.sync(); this.traffic.setBusinesses(this.bizDefs); this.syncTolls(true); this.traffic.setBusRoutes(this.busDefs);
+    this.ground.invalidateAll(); this.ground.courseHeight(this.courseHeight.data, [0, 0, MAP, MAP]); this.syncParks(); this.parking.sync(); this.traffic.setBusinesses(this.bizDefs); this.syncTolls(true); this.traffic.setBusRoutes(this.busDefs); this.syncStopCuts();
     this.farmsUpdate(true);
     this.syncPlaces();
     // the worker's golf state (a new game or a load of one; a classic game turns it off)
@@ -4342,28 +4349,44 @@ export class Game {
   private dropParkCars(id: number) {
     for (let i = 0; ; i++) { const key = `park:${id}:${i}`, p = this.parkCars.get(key); if (!p) break; this.removeProp(p); this.parkCars.delete(key); }
   }
-  /** the parked cars: the first `parked` bays of each car park (nearest its entrances first) get a car, an auto prop park:{id}:{i} (never saved), facing its
-   *  bay and centred on it; only the difference is added or removed, at most twice a second */
+  /** the parked cars: the worker's `parked` cars of each car park stand in a fixed order of its bays (parked-cars.ts workerBay: nearest its entrances
+   *  first, or from the far end in the range's and the club's car parks, whose golfers' cars draw themselves near the entrance), each an auto prop
+   *  park:{id}:{i} (never saved) facing its bay and centred on it, in its own paint (car-paint.ts: from its bay); only the difference is added or
+   *  removed, at most twice a second, and only for the car parks on screen (T228: one off screen is not looked at; its props, culled with their
+   *  sprite tiles, cost nothing to draw, and it catches up when it comes into view) */
   private syncParkCars(now: number) {
     if (now - this.parkSyncAt < 500) return;
     this.parkSyncAt = now;
-    const views = this.traffic.parks;
-    for (let k = 0; k < this.parkDefs.length; k++) this.parkCarsOf(this.parkDefs[k]!.id, this.parkBuilt[k] ?? null, views);
+    const views = new Map(this.traffic.parks.map(v => [v.id, v])), view = this.viewTileBox;
+    const shared = (pk: CarPark | null) => !!pk && (pk === this.rangePk?.pk || pk === this.dayPark);
+    for (let k = 0; k < this.parkDefs.length; k++) { const pk = this.parkBuilt[k] ?? null; if (this.parkInView(pk, view)) this.parkCarsOf(this.parkDefs[k]!.id, pk, views, shared(pk)); }
     // the bay rows' lots and on-street runs park the same way; the ones gone lose their cars
     const ids = new Set<number>();
-    for (const p of this.extraParks) { ids.add(p.id); this.parkCarsOf(p.id, p, views); }
+    for (const p of this.extraParks) { ids.add(p.id); if (this.parkInView(p, view)) this.parkCarsOf(p.id, p, views, false); }
     for (const id of this.extraCarIds) if (!ids.has(id)) this.dropParkCars(id);
     this.extraCarIds = ids;
   }
-  /** car park id's parked cars (pk: its built park, null if none): the first `parked` bays get a car, as syncParkCars says */
-  private parkCarsOf(id: number, pk: CarPark | null, views: ParkView[]) {
-    const v = views.find(q => q.id === id);
-    const want = pk && v ? Math.min(v.parked, pk.bays.length) : 0;
+  /** T228: the tile box on screen (with a margin), as the last frame drew it; null before the first */
+  private viewTileBox: TileBox | null = null;
+  /** T228: each built car park's bay box (parked-cars.ts baysBox), cached per park object */
+  private parkBoxes = new WeakMap<CarPark, TileBox | null>();
+  /** T228: whether a built car park is on screen (no view yet: yes; no park: yes, so a car park that lost its frontage drops its cars at once) */
+  private parkInView(pk: CarPark | null, view: TileBox | null): boolean {
+    if (!pk || !view) return true;
+    let b = this.parkBoxes.get(pk); if (b === undefined) { b = baysBox(pk.bays); this.parkBoxes.set(pk, b); }
+    return !b || boxesMeet(b, view);
+  }
+  /** car park id's parked cars (pk: its built park, null if none): the worker's cars in their bays (parked-cars.ts workerBay), as syncParkCars says;
+   *  a car whose bay moved (the car park laid again) goes to its new one */
+  private parkCarsOf(id: number, pk: CarPark | null, views: Map<number, ParkView>, shared: boolean) {
+    const v = views.get(id), n = pk ? pk.bays.length : 0;
+    const want = pk && v ? workerShown(v.parked, n) : 0;
     for (let i = 0; i < want; i++) {
       const key = `park:${id}:${i}`, have = this.parkCars.get(key);
-      if (have && this.props.has(have)) continue;
-      const bay = pk!.bays[i]!, facing = parkedCar(i, bay.dir);
-      this.parkCars.set(key, this.addProp(facing.item, bay.x - facing.ox, bay.y - facing.oy, facing.flip, facing.size, key));
+      const bay = pk!.bays[workerBay(i, n, shared)]!, facing = parkedCar(i, bay.dir), x = bay.x - facing.ox, y = bay.y - facing.oy;
+      if (have && this.props.has(have) && have.x === x && have.y === y) continue;
+      if (have && this.props.has(have)) this.removeProp(have);
+      this.parkCars.set(key, this.addProp(facing.item, x, y, facing.flip, facing.size, key));
     }
     for (let i = want; ; i++) { const key = `park:${id}:${i}`, p = this.parkCars.get(key); if (!p) break; this.removeProp(p); this.parkCars.delete(key); }
   }
@@ -4383,6 +4406,7 @@ export class Game {
     const dpr = this.dpr;
     for (let k = 0; k < this.parkDefs.length; k++) {
       const d = this.parkDefs[k]!, pk = this.parkBuilt[k] ?? null;
+      if (!this.parkInView(pk, this.viewTileBox)) continue; // (T228: a car park off screen: nothing to draw)
       // the asphalt and the bays are baked into the ground (parkGrounds); the overlay only marks a car park that lost its frontage
       if (!pk) { this.setIso(ctx); ctx.beginPath(); ctx.rect(d.x, d.y, d.w, d.h); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = 'rgba(230,80,80,0.6)'; ctx.fill(); }
       if (pk) for (const e of pk.entrances) {
@@ -4616,7 +4640,7 @@ export class Game {
     const id = Math.max(0, ...this.busDefs.map(d => d.id)) + 1;
     this.busDefs.push({ id, park: pk.park, sx: pk.x, sy: pk.y, dx: h.x, dy: h.y, buses: this.busFleet, seats: this.busSeats, ...(pk.town !== undefined ? { town: pk.town } : {}) });
     if (cost) this.traffic.spend('construction', cost);
-    this.traffic.setBusRoutes(this.busDefs);
+    this.traffic.setBusRoutes(this.busDefs); this.syncStopCuts();
     this.busPick = null; this.puff((pk.x + h.x) / 2, (pk.y + h.y) / 2, 8);
     this.toast(`Bus route #${id}: ${this.busFleet} buses of ${this.busSeats} seats${cost ? ` ($${cost.toLocaleString()})` : ' (the starting kit)'}`, 'good');
     this.busUpdate(h.mx, h.my); this.scheduleSave(); this.emit();
@@ -4624,7 +4648,20 @@ export class Game {
   /** the index of the bus route with a stop within 3 tiles of tile t, or -1 */
   private busIndexAt(t: Pt): number { return this.busDefs.findIndex(d => Math.hypot(d.sx - t.x, d.sy - t.y) <= 3 || Math.hypot(d.dx - t.x, d.dy - t.y) <= 3); }
   /** removes bus route k (no refund) and sends the list to the city worker (which plans the buses again) */
-  private removeBus(k: number) { this.busDefs.splice(k, 1); this.traffic.setBusRoutes(this.busDefs); }
+  private removeBus(k: number) { this.busDefs.splice(k, 1); this.traffic.setBusRoutes(this.busDefs); this.syncStopCuts(); }
+  /** T228: the bus stops' cuts in the roads' white edge lines (street-marks.ts stopCut), one lot ground patch per stop (key stop:{route}:{0|1}),
+   *  laid again when the routes or the roads change; the ones gone are dropped */
+  private syncStopCuts() {
+    const keep = new Set<string>();
+    for (const d of this.busDefs) ([[d.sx, d.sy], [d.dx, d.dy]] as const).forEach(([x, y], k) => {
+      const c = stopCut({ x, y }, this.net.segsNear({ x, y }, 12)); if (!c) return;
+      const key = `stop:${d.id}:${k}`, j = JSON.stringify(c.pts); keep.add(key);
+      if (this.stopCuts.get(key) !== j) { this.stopCuts.set(key, j); this.setLotGround(key, [c]); }
+    });
+    for (const key of [...this.stopCuts.keys()]) if (!keep.has(key)) { this.stopCuts.delete(key); this.setLotGround(key, null); }
+  }
+  /** T228: the bus stops' edge-line cuts laid now, by key (their quads, as JSON) */
+  private stopCuts = new Map<string, string>();
   /** moves the camera to the midpoint of bus route id's stops, keeping the zoom */
   goToBus(id: number) { const d = this.busDefs.find(q => q.id === id); if (!d) return; const x = (d.sx + d.dx) / 2, y = (d.sy + d.dy) / 2; this.cam.X = worldX(x, y); this.cam.Y = worldY(x, y); this.clampCam(); this.emit(); }
   /** the bus routes over the baked ground: a bus-stop marker at each stop, and at the street and district zooms a thin dashed line between a route's two stops
@@ -5182,6 +5219,7 @@ export class Game {
     this.parking.clear(); this.extraParks = []; this.extraCarIds.clear(); this.gateProps.clear();
     this.tollDefs = []; this.tollSegs.clear(); this.tollHover = null; for (const k of this.tollGround) this.setLotGround(k, null); this.tollGround.clear();
     this.busDefs = []; this.busPick = null; this.busHover = null; this.paint.clear(); this.dropCourseGrid();
+    for (const k of this.stopCuts.keys()) this.setLotGround(k, null); this.stopCuts.clear();
     this.golf = null; this.townPts = []; this.golfProps.clear(); this.golfStructureProps.clear(); this.range.drop(); this.range.cardOpen = false;
     this.landMode = false; this.land.hover = null; this.land.cancel(); this.holesTool = false; this.selectedGolfMarker = null;
     this.eventTool = false; this.eventStructurePending = null; this.lastGolfMonth = -1;
@@ -5715,7 +5753,7 @@ export class Game {
     for (let k = 0; k < v.cars.length; k++) {
       const c = v.cars[k]!, f = F[c.type % 5]![carHeading(c.ang)]!, z = CAR_SCALE * f.size;
       const dr = this.dayCarDraw[k] ?? (this.dayCarDraw[k] = { item: 0, x: 0, y: 0, flip: false, scale: CAR_SCALE, x0: 0, y0: 0, x1: 0, y1: 0, moving: true });
-      dr.item = f.item; dr.flip = f.flip; dr.scale = z; dr.moving = true;
+      dr.item = f.item; dr.flip = f.flip; dr.scale = z; dr.moving = true; dr.paint = TYPE_PAINTS[c.type % TYPE_PAINTS.length]; // (T228: a paint per car type)
       dr.x = c.x - f.ox * z; dr.y = c.y - f.oy * z; dr.x0 = c.x - f.hx * z; dr.x1 = c.x + f.hx * z; dr.y0 = c.y - f.hy * z; dr.y1 = c.y + f.hy * z;
       this.dayCarOut.push(dr);
     }
@@ -6187,6 +6225,7 @@ export class Game {
       const c = [tileOf(X0, Y0), tileOf(X1, Y0), tileOf(X0, Y1), tileOf(X1, Y1)], pad = 6;
       // cars in tunnels are not drawn (the sim client skips them)
       const bx0 = Math.min(...c.map(p => p.x)) - pad, by0 = Math.min(...c.map(p => p.y)) - pad, bx1 = Math.max(...c.map(p => p.x)) + pad, by1 = Math.max(...c.map(p => p.y)) + pad;
+      this.viewTileBox = [bx0, by0, bx1, by1]; // (T228: the car parks' parked cars are looked at only on screen, syncParkCars)
       // (T192: with their brake lights from the closest zooms down to 8%, drawn in the sprite pass right after each car)
       const cars: Drawable[] = this.traffic ? this.traffic.visible(bx0, by0, bx1, by1, cam.z >= 0.08) : [];
       // at the street tier the townspeople and the crowd (the galleries' fans, the queues, the walking parties) are the movers, merged in by depth
