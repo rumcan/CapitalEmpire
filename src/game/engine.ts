@@ -1169,8 +1169,9 @@ export class Game {
     this.resendCourse();
     this.syncCourseMarkers(undefined, true);
   }
-  /** the textures the grid's surfaces wear: the Course brushes' looks (texture, scale, angle, tone and Blend with: course-look.ts), the course
-   *  presets for fescue and waste and the collars, each surface's own collar band (its Border texture, scale, angle and tone) */
+  /** the textures the grid's surfaces wear: the Course brushes' looks (texture, scale, angle, exposure and Blend with: course-look.ts; T261 the
+   *  waste area's too), the course presets for fescue and the collars, each surface's own collar band (its Border texture, scale, angle and
+   *  exposure) */
   private courseLooks(): CourseLooks {
     const pre = (s: string, old: string) => ({ tex: surfacePreset(s) ?? old, sc: 1, a: 0 });
     // the bank is laid in the rough's grass (the renderer paints its wet soil and stones, T099); the Border, Shadow and Height sliders ride along.
