@@ -1490,7 +1490,7 @@ function BizCard({ game, b, free }: { game: Game; b: BusinessType; free: boolean
       })}
       {open && (b.family === 'tourism' || b.id === 'casino') && <TouristLine game={game} />}
       {!open && <p className="mt-1 text-amber-200">{unlockText(b, game.ownedBiz())}</p>}
-      {open && under && <button className="btn mt-2" onClick={() => game.selectBizType(b.id)}>{sel ? 'Selected' : 'Build'}</button>}
+      {open && under && <button className="btn-gold mt-2" onClick={() => game.selectBizType(b.id)}>{sel ? 'Selected' : 'Build'}</button>}
       {open && under && sel && <p className="mt-1 text-amber-200">Click open land to build it · R rotates</p>}
     </div>
   );
