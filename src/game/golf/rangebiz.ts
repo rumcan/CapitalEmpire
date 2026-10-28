@@ -15,6 +15,10 @@ import { clipFrame, golferRow, hash, rowToward, type CrowdPerson } from '../crow
 import { mulberry } from '../iso';
 import { practiceArea, type PracticeArea, type PracticeScan } from './practice';
 import { PRACTICE_FEE, PRACTICE_IDS, PRACTICE_SHARE, type PracticeId } from './rangesave';
+import { DEFAULT_RANGE_LOOK, type RangeLook } from './range-look';
+import { PIC_TILES } from './range-pics';
+import RANGE_PICS_FILE from '../../assets/ground/range-pics.json';
+import RANGE_ART_FILE from './range-art.json';
 
 // ---------------------------------------------------------------- the scene
 
@@ -70,6 +74,19 @@ export const GARAGE_LEVEL_CARS = 36, GARAGE_LEVELS = 5;
 /** its size: a screen-axis picture's footprint is a rectangle along the screen, so a turned one (its front 26 m, its depth 19 m at scale 1) fits
  *  the footprint's 9-tile side at about 0.6: (13 + 9.5) x 0.6 / sqrt 2 tiles each way */
 const GARAGE_SCALE = 0.6;
+/** T258: the range's ground pictures (golf/range-pics.ts; their measures in range-pics.json, prep-range-art.mjs) */
+const PICS = RANGE_PICS_FILE.pics;
+/** T258: the hitting mats' picture (GOLF-ART-LIST item 19): one bay a picture, BAY_W wide (the bays' pitch: the picture's left and right edges
+ *  join, so the open bays make one strip of mats; the art list's 4.2 m is a little under the game's 5 m bays), as deep as its proportions make
+ *  that (6.7 m), its middle MATS_V (where the stand-in's turf square was) */
+const MATS_D = BAY_W * PICS.mats.h / PICS.mats.w, MATS_V = STAND_V + 0.5;
+/** T258: the target green's picture (item 20): its fine-cut green's edge and its collar's outer edge (fractions of its half width), so a green
+ *  of radius r tiles is a picture r / GREEN_IN half wide; the bullseye's (item 27) outer ring, laid as wide as a green with its collar */
+const GREEN_IN = PICS.green.green, GREEN_OUT = PICS.green.out, BULL_OUT = PICS.bullseye.out;
+/** T258: a green's picture is laid upright as painted (its x axis to the screen's right, its light at the upper right, whatever the facing) */
+const PIC_UPRIGHT: Pt = { x: Math.SQRT1_2, y: -Math.SQRT1_2 };
+/** T258: the owner's ChatGPT pictures that have landed (prep-range-art.mjs): each slug's library ids, view 1 then view 2 (one for a one-view item) */
+export const RANGE_ART: Readonly<Record<string, readonly string[]>> = (RANGE_ART_FILE as { views: Record<string, string[]> }).views;
 
 /** a prop of the scene: its key (stable while it stays), library id, world point, quarter turns from the picture's base view (preset-art turned),
  *  scale (absent: the library's own size) or fit (the footprint's W + D in tiles the picture spans: business art), and its stand-in label */
@@ -80,8 +97,24 @@ export interface ScenePiece { key: string; id: string; x: number; y: number; q: 
  *  'teeDirt' and 'teeTurf', the range's tee box before and after it is turfed, and 'yard', the caravan's and the cottage's desert yard:
  *  rangehost.ts patchTex) or a ground texture; edge:
  *  its outline's profile (paint-edges.ts: a target green is raised, its collars feathered; absent: crisp); mow: its mowing stripes are laid on
- *  top (the outfield) */
-export interface ScenePatch { pts: number[]; surf: 'fairway' | 'firstCut' | 'tee' | 'fringe' | 'green' | 'rough' | 'dirt' | 'grassDry' | 'asphaltDark' | 'gravel' | 'concrete' | 'outfield' | 'target' | 'desert' | 'teeDirt' | 'teeTurf' | 'yard'; edge?: 'raised' | 'flat'; mow?: true }
+ *  top (the outfield); T258: 'mats', 'targetGreen' and 'bullseye', the range's pictures (GOLF-ART-LIST 19, 20, 27: golf/range-pics.ts) laid
+ *  flat by their lay */
+export interface ScenePatch { pts: number[]; surf: 'fairway' | 'firstCut' | 'tee' | 'fringe' | 'green' | 'rough' | 'dirt' | 'grassDry' | 'asphaltDark' | 'gravel' | 'concrete' | 'outfield' | 'target' | 'desert' | 'teeDirt' | 'teeTurf' | 'yard' | 'mats' | 'targetGreen' | 'bullseye'; edge?: 'raised' | 'turf' | 'flat'; mow?: true;
+  /** T258: a picture's lay (its surf one of the pictures) */ lay?: PicLay }
+/** T258: how a range picture lies on the ground: the corner of one picture (world tiles), its turn (degrees: its x axis along (cos a, sin a),
+ *  its y axis a quarter turn on, so it is never mirrored) and its scale (its width in tiles over golf/range-pics.ts PIC_TILES) */
+export interface PicLay { x: number; y: number; a: number; s: number }
+/** T258: a picture w by h tiles laid with its x axis along the unit e, centred on c */
+export function picLay(c: Pt, e: Pt, w: number, h: number): PicLay {
+  const n = { x: -e.y, y: e.x };
+  return { x: c.x - e.x * w / 2 - n.x * h / 2, y: c.y - e.y * w / 2 - n.y * h / 2, a: Math.atan2(e.y, e.x) * 180 / Math.PI, s: w / PIC_TILES };
+}
+/** T258: how far toward the screen's upper right a picture's painted light falls when its x axis lies along e: its upper right corner's
+ *  direction (e less its y axis) on screen, dotted with the screen's upper right */
+export function lightScore(e: Pt): number { const ux = e.x + e.y, uy = e.y - e.x; return (ux - uy) - (ux + uy) / 2; }
+/** T258: rangeScene's options: the range's ground art as the studio has it (golf/range-look.ts), and the ChatGPT pictures that have landed by
+ *  slug (default RANGE_ART) */
+export interface SceneOpts { look?: RangeLook; art?: Readonly<Record<string, readonly string[]>> }
 /** a target green in the scene: centre, radius and distance from the tee line (m) */
 export interface SceneTarget { x: number; y: number; r: number; m: number }
 /** the scene of a range (rangeScene) */
@@ -145,8 +178,13 @@ const slotU = (k: number) => U_MID + (k - (SLOTS - 1) / 2) * BAY_W;
 export const openSlots = (n: number): number[] => Array.from({ length: n }, (_, i) => SLOTS / 2 - n / 2 + i);
 
 /** the range's scene on its plot for a facing and the save (plan 2.1): deterministic; everything turns with the facing, nothing is mirrored */
-export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave): RangeScene {
+export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave, opts: SceneOpts = {}): RangeScene {
   const st = rangeStats(s), P = (u: number, v: number) => plotPoint(plot, facing, u, v), toRoad = roadView(facing), toRange = (toRoad + 2) % 4;
+  const look = opts.look ?? DEFAULT_RANGE_LOOK, views = opts.art ?? RANGE_ART;
+  /** T258: a piece's ChatGPT picture once it has landed (null: its stand-in still stands): view 1 (the front and right side) for a piece whose
+   *  front faces +y or -x (the view index q 0 or 1: roadView), view 2 (the left side and front) for +x or -y; its back is never drawn, and the
+   *  picture is placed as it is (q 0: never turned or mirrored) */
+  const art = (slug: string, q: number): string | null => { const v = views[slug]; return v?.length ? v[v.length === 1 || q === 0 || q === 1 ? 0 : 1]! : null; };
   const quad = (u0: number, u1: number, v0: number, v1: number): number[] => { const a = P(u0, v0), b = P(u1, v0), c = P(u1, v1), d = P(u0, v1); return [a.x, a.y, b.x, b.y, c.x, c.y, d.x, d.y]; };
   const disc = (u: number, v: number, r: number, n = 28): number[] => { const out: number[] = []; for (let k = 0; k < n; k++) { const a = k / n * Math.PI * 2, p = P(u + Math.cos(a) * r, v + Math.sin(a) * r); out.push(p.x, p.y); } return out; };
   const pieces: ScenePiece[] = [], patches: ScenePatch[] = [];
@@ -166,12 +204,27 @@ export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave): 
   patches.push({ pts: quad(TEE[0] - pad, TEE[1] + pad, TEE[2] - pad, TEE[3] + pad), surf: st.teeTurf ? 'teeTurf' : 'teeDirt' });
   const open = openSlots(st.lowerBays); // the tee box's mats (T133: the upper deck's bays are added below)
   patches.push({ pts: quad(slotU(open[0]!) - 1.5, slotU(open[open.length - 1]!) + 1.5, STAND_V - 2, STAND_V + 2.2), surf: 'concrete' });
-  for (const k of open) { const u = slotU(k); patches.push({ pts: quad(u - 1.05, u + 1.05, STAND_V - 1.4, STAND_V + 1.6), surf: 'asphaltDark' }, { pts: quad(u - 0.65, u + 0.65, STAND_V - 0.2, STAND_V + 1.2), surf: 'green' }); }
+  if (look.mats === 'picture' && open.length) {
+    // T258: the mats' picture (item 19), one a bay along the open bays (one strip: its period is the bays' pitch), its top toward the targets
+    // or turned half round, whichever keeps its painted light nearer the screen's upper right (a quarter turn would lay it across the bay)
+    const o = P(0, 0), dv = P(0, 1), e1 = { x: -(dv.y - o.y), y: dv.x - o.x }, e = lightScore(e1) >= lightScore({ x: -e1.x, y: -e1.y }) ? e1 : { x: -e1.x, y: -e1.y };
+    patches.push({ pts: quad(slotU(open[0]!) - BAY_W / 2, slotU(open[open.length - 1]!) + BAY_W / 2, MATS_V - MATS_D / 2, MATS_V + MATS_D / 2), surf: 'mats', lay: picLay(P(slotU(open[0]!), MATS_V), e, BAY_W, MATS_D) });
+  } else for (const k of open) { const u = slotU(k); patches.push({ pts: quad(u - 1.05, u + 1.05, STAND_V - 1.4, STAND_V + 1.6), surf: 'asphaltDark' }, { pts: quad(u - 0.65, u + 0.65, STAND_V - 0.2, STAND_V + 1.2), surf: 'green' }); }
   const targets: SceneTarget[] = [];
   for (let i = 0; i < st.targets; i++) {
     const u = TARGET_U[i]!, v = STAND_V + TARGET_D[i]!, r = TARGET_R[i]!, c = P(u, v);
-    // a target green reads as a green (T132): a first-cut collar and a fringe ring round the range's own green preset, raised with its sun-lit edge
-    patches.push({ pts: disc(u, v, r + 1.8, 32), surf: 'firstCut', edge: 'flat' }, { pts: disc(u, v, r + 0.8, 32), surf: 'fringe' }, { pts: disc(u, v, r, 32), surf: 'target', edge: 'raised' });
+    if (look.greens === 'picture') {
+      // T258: the target green's picture (item 20) laid upright at its size: its fine-cut green r tiles across, its lighter collar round it, the
+      // whole picture's circle feathered into the outfield (the feather in its own outfield grass, past the collar); the green raised a little
+      // with a sun-lit edge (T132's look, softer: the 'turf' bevel, so its shadow leaves the collar) by the same picture again inside r. The
+      // bullseye (item 27, look.bullseye) is painted flat into the turf, as wide as a green with its collar, feathered at its outer ring
+      const bull = i === look.bullseye, h = bull ? r * GREEN_OUT / GREEN_IN / BULL_OUT : r / GREEN_IN, lay = picLay(c, PIC_UPRIGHT, 2 * h, 2 * h);
+      if (bull) patches.push({ pts: disc(u, v, BULL_OUT * h, 40), surf: 'bullseye', edge: 'flat', lay });
+      else patches.push({ pts: disc(u, v, h, 40), surf: 'targetGreen', edge: 'flat', lay }, { pts: disc(u, v, r, 40), surf: 'targetGreen', edge: 'turf', lay });
+    } else {
+      // a target green reads as a green (T132): a first-cut collar and a fringe ring round the range's own green preset, raised with its sun-lit edge
+      patches.push({ pts: disc(u, v, r + 1.8, 32), surf: 'firstCut', edge: 'flat' }, { pts: disc(u, v, r + 0.8, 32), surf: 'fringe' }, { pts: disc(u, v, r, 32), surf: 'target', edge: 'raised' });
+    }
     targets.push({ x: c.x, y: c.y, r, m: TARGET_D[i]! * 2 });
   }
   const home = homeStage(s), Y = YARDS[home]!;
@@ -191,8 +244,8 @@ export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave): 
   // ---- the shop (the tin-and-tarp shack, or the pro shop facing the golfers), the caravan and its fenced back yard
   if (st.proShop) put('shop', 'business:golf-pro-shop', SHOP.u, SHOP.v, toRange);
   // the tin-and-tarp shack (golf:clubhouse-shanty) has no four views yet, and a building without them is drawn as the grand clubhouse (newart.ts):
-  // the rusty lean-to shed stands in for it, turned to face the golfers
-  else put('shop', 'expansion:lean-to-shed', SHOP.u, SHOP.v, toRange, { label: 'Stand In for the tin-and-tarp pro shop' });
+  // the rusty lean-to shed stands in for it, turned to face the golfers (T258: until the owner's two views land)
+  else { const a = art('golf-clubhouse-shanty', toRange); if (a) put('shop', a, SHOP.u, SHOP.v); else put('shop', 'expansion:lean-to-shed', SHOP.u, SHOP.v, toRange, { label: 'Stand In for the tin-and-tarp pro shop' }); }
   homeYard(put, home, toRoad);
   fenceRun(pieces, P, 'yard-n', Y[0], Y[2], Y[1], Y[2], 'picket');
   fenceRun(pieces, P, 'yard-w', Y[0], Y[2], Y[0], Y[3], 'picket');
@@ -202,18 +255,21 @@ export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave): 
   fenceRun(pieces, P, 'side-a', SIDE_U[0], 17, SIDE_U[0], FAR_V, 'chain'); fenceRun(pieces, P, 'side-b', SIDE_U[1], 19, SIDE_U[1], FAR_V, 'chain');
   fenceRun(pieces, P, 'far', SIDE_U[0], FAR_V, SIDE_U[1], FAR_V, 'chain');
   // ---- the sign at the drive, the bench and bins at the tee, a bag trolley by the shop
-  put('sign', 'golf:leaderboard', 64.5, 1.4, toRoad, { fit: 4.5, label: 'Stand In for Driving Range sign' });
+  // (T258: each drawn as the owner's ChatGPT picture once it lands, its label gone)
+  { const a = art('golf-range-sign', toRoad); if (a) put('sign', a, 64.5, 1.4); else put('sign', 'golf:leaderboard', 64.5, 1.4, toRoad, { fit: 4.5, label: 'Stand In for Driving Range sign' }); }
   put('bench', 'world:bench', 43, 15); put('bins-tee', 'gen:trash-cans-row', 25.5, 15); put('trolley', 'business:golf-bag-trolley', 29.4, 13.6);
   // ---- the distance markers down both sides every 50 m, flags on the greens, the yardage boards (upgrade)
-  const numbers: RangeScene['numbers'] = [];
+  const numbers: RangeScene['numbers'] = [], post = art('golf-range-distance-post', 0), board = art('golf-range-yardage-board', toRoad);
   for (let k = 1; k <= 5; k++) for (const [j, u] of [2.2, 67.8].entries()) {
-    put(`mark${k}-${j}`, 'ce:parking-sign', u, STAND_V + 25 * k, 0, k === 1 && j === 0 ? { label: 'Stand In for Range distance marker' } : {});
+    if (post) put(`mark${k}-${j}`, post, u, STAND_V + 25 * k);
+    else put(`mark${k}-${j}`, 'ce:parking-sign', u, STAND_V + 25 * k, 0, k === 1 && j === 0 ? { label: 'Stand In for Range distance marker' } : {});
     const p = P(u, STAND_V + 25 * k); numbers.push({ x: p.x, y: p.y, text: `${50 * k} m` });
   }
   for (let i = 0; i < st.targets; i++) {
     put(`flag${i}`, 'business:golf-pin-red', TARGET_U[i]!, STAND_V + TARGET_D[i]!, 0, { scale: 0.32 });
     if (st.targets > 3) { // the boards come with the 'targets' upgrade (T239: the first three greens have flags only)
-      put(`board${i}`, 'poi:fishing-board', TARGET_U[i]! + TARGET_R[i]! + 2.4, STAND_V + TARGET_D[i]! - 1, toRoad, { scale: 1.6, ...(i === 0 ? { label: 'Stand In for Range yardage board' } : {}) });
+      if (board) put(`board${i}`, board, TARGET_U[i]! + TARGET_R[i]! + 2.4, STAND_V + TARGET_D[i]! - 1);
+      else put(`board${i}`, 'poi:fishing-board', TARGET_U[i]! + TARGET_R[i]! + 2.4, STAND_V + TARGET_D[i]! - 1, toRoad, { scale: 1.6, ...(i === 0 ? { label: 'Stand In for Range yardage board' } : {}) });
       const p = P(TARGET_U[i]! + TARGET_R[i]! + 2.4, STAND_V + TARGET_D[i]! - 1); numbers.push({ x: p.x, y: p.y, text: `${TARGET_D[i]! * 2} m`, low: true });
     }
   }
@@ -221,20 +277,28 @@ export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave): 
   // (T133: each with the footprint of its four bays behind the golfers' spots, so the golfers in its bays and on the path behind it draw in the
   // right order from every side; the art's own boxes are a 1 x 1 placeholder)
   const roofFoot = (u0: number, u1: number): [number, number, number, number] => { const a = P(u0 - 1.2, ROOF_V[0]), b = P(u1 + 1.2, ROOF_V[1]); return [Math.min(a.x, b.x), Math.min(a.y, b.y), Math.max(a.x, b.x), Math.max(a.y, b.y)]; };
-  if (st.covered) for (let g = 0; g < open.length; g += 4) { const k0 = open[g]!, k1 = open[Math.min(open.length, g + 4) - 1]!; put(`roof${g}`, 'business:golf-driving-range', (slotU(k0) + slotU(k1)) / 2, STAND_V - 1.2, toRange, { fit: 10.5, foot: roofFoot(slotU(k0), slotU(k1)) }); }
-  if (st.lights) {
-    const spots: [number, number][] = [[1.6, 26], [68.4, 26], [1.6, 60], [68.4, 60], [1.6, 100], [68.4, 100], [1.6, 140], [68.4, 140]];
-    spots.forEach(([u, v], i) => put(`light${i}`, 'world:streetlamp', u, v, 0, { scale: 1, ...(i === 0 ? { label: 'Stand In for Range floodlight' } : {}) }));
+  // (T258: where the second tier stands, the double-deck stand's picture once it lands: one section of both storeys over the four bays, on
+  // the ground in place of the covered bays' roof, and no lifted copy; its upper golfers keep DECK_H until the picture's deck height is read)
+  const deckArt = st.tier2 ? art('golf-range-deck', toRange) : null, inDeck = (k0: number, k1: number) => !(k1 < DECK_SLOT0 || k0 >= DECK_SLOT0 + TIER2_BAYS);
+  if (st.covered) for (let g = 0; g < open.length; g += 4) {
+    const k0 = open[g]!, k1 = open[Math.min(open.length, g + 4) - 1]!, foot = roofFoot(slotU(k0), slotU(k1));
+    if (deckArt && inDeck(k0, k1)) put(`roof${g}`, deckArt, (slotU(k0) + slotU(k1)) / 2, STAND_V - 1.2, 0, { foot });
+    else put(`roof${g}`, 'business:golf-driving-range', (slotU(k0) + slotU(k1)) / 2, STAND_V - 1.2, toRange, { fit: 10.5, foot });
   }
-  if (st.dispenser) put('dispenser', 'expansion:utility-cabinet', 39.6, 12.6, 0, { label: 'Stand In for Ball dispenser' });
+  if (st.lights) {
+    const spots: [number, number][] = [[1.6, 26], [68.4, 26], [1.6, 60], [68.4, 60], [1.6, 100], [68.4, 100], [1.6, 140], [68.4, 140]], a = art('golf-range-floodlight', toRange);
+    spots.forEach(([u, v], i) => { if (a) put(`light${i}`, a, u, v); else put(`light${i}`, 'world:streetlamp', u, v, 0, { scale: 1, ...(i === 0 ? { label: 'Stand In for Range floodlight' } : {}) }); });
+  }
+  if (st.dispenser) { const a = art('golf-range-ball-dispenser', toRange); if (a) put('dispenser', a, 39.6, 12.6); else put('dispenser', 'expansion:utility-cabinet', 39.6, 12.6, 0, { label: 'Stand In for Ball dispenser' }); }
   // ---- the World of Golf extras (T133)
   // the second tier: the covered-bay building again over each lower roof under the middle twelve slots, drawn DECK_H up (its stand-in: a double
   // deck of the same roofs), a hair nearer the camera than the roof under it so it is drawn after it
   const decks: number[] = [];
   if (st.tier2) for (let g = 0; g < open.length; g += 4) {
     const k0 = open[g]!, k1 = open[Math.min(open.length, g + 4) - 1]!;
-    if (k1 < DECK_SLOT0 || k0 >= DECK_SLOT0 + TIER2_BAYS) continue;
+    if (!inDeck(k0, k1)) continue;
     const p = P((slotU(k0) + slotU(k1)) / 2, STAND_V - 1.2); decks.push((slotU(k0) + slotU(k1)) / 2);
+    if (deckArt) continue; // (T258: the deck's own picture stands in the roof's place)
     const f = roofFoot(slotU(k0), slotU(k1));
     pieces.push({ key: `deck${g}`, id: 'business:golf-driving-range', x: p.x + 0.05, y: p.y + 0.05, q: toRange, fit: 10.5, lift: DECK_H, foot: [f[0] + 0.05, f[1] + 0.05, f[2] + 0.05, f[3] + 0.05], ...(pieces.some(q => q.key.startsWith('deck')) ? {} : { label: 'Stand In for the double-deck hitting stand' }) });
   }
@@ -247,7 +311,8 @@ export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave): 
   // the coffee kiosk by the shop on its patio, two patio tables, its line stepping back toward the path
   let kiosk: RangeScene['kiosk'] = null;
   if (st.kiosk) {
-    put('kiosk', 'business:fishing-rental-kiosk', KIOSK.u, KIOSK.v, toRange, { fit: 5, label: 'Stand In for Coffee kiosk' });
+    const ka = art('golf-range-coffee-kiosk', toRange);
+    if (ka) put('kiosk', ka, KIOSK.u, KIOSK.v); else put('kiosk', 'business:fishing-rental-kiosk', KIOSK.u, KIOSK.v, toRange, { fit: 5, label: 'Stand In for Coffee kiosk' });
     put('kiosk-table1', 'business:golf-patio-table', 42.4, 5.6, 0, { fit: 2.6 }); put('kiosk-table2', 'business:golf-patio-table', 47, 6.2, 0, { fit: 2.6 });
     const a = P(KIOSK_AT.u, KIOSK_AT.v), b = P(KIOSK_AT.u, KIOSK_AT.v + KIOSK_STEP);
     kiosk = { counter: a, queueStep: { x: b.x - a.x, y: b.y - a.y }, join: P(KIOSK_AT.u, PATH_V) };
