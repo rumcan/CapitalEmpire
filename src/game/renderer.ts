@@ -1301,9 +1301,9 @@ export class GroundPainter {
     if (ok) for (let j = j0; j < j1; j++) for (let i = i0; i < i1; i++) e.cells[j * cw + i] = 1;
     return ok;
   }
-  private paintedBuf(t: string, need?: BBox, scale = 1, exact = false): Cnv | null {
+  private paintedBuf(t: string, need?: BBox, scale = 1): Cnv | null {
     const c = this.chunkNow!, p = this.tex.paintedOf(t, scale); if (!p) return null;
-    if (p.tiled) return this.tiledBuf(p.tiled, need, exact);
+    if (p.tiled) return this.tiledBuf(p.tiled, need);
     const want = this.cellsOf(need), cw = Math.ceil(c.W / PAINT_CELL), chh = Math.ceil(c.H / PAINT_CELL);
     // the composition depends only on where the chunk is, its level, the look and the art level, never on its roads or lots: an edited chunk (a
     // road, a lot, every send of a course stroke) is baked again over the one it composed before
@@ -1337,7 +1337,7 @@ export class GroundPainter {
    *  one world size (T150: native / (anchor x DPR), from the tile spec), laid edge to edge on the world-anchored grid, axis-aligned in the chunk's own (screen) axes, each the tile its cell's
    *  permutation names; edges snapped to whole px (every chunk at this level agrees: no gap, no overlap). As authored: no scale, tint, tone,
    *  drift, mask or blend. null when a tile is not decoded */
-  private tiledBuf(tp: TiledPick, need?: BBox, exact = false): Cnv | null {
+  private tiledBuf(tp: TiledPick, need?: BBox): Cnv | null {
     const c = this.chunkNow!, ts = this.tex.tileTs, want = this.cellsOf(need), cw = Math.ceil(c.W / PAINT_CELL), chh = Math.ceil(c.H / PAINT_CELL);
     const ck = `${c.key}:tiles:${tp.fam.id}@${tileKey(ts)}`;
     let base = this.composed.get(ck);
@@ -1345,20 +1345,40 @@ export class GroundPainter {
     else { base = { buf: canvas(c.W, c.H), cells: new Uint8Array(cw * chh), bytes: c.W * c.H * 4 }; this.composed.set(ck, base); this.composedBytes += base.bytes; }
     this.bakeKeys.add(ck); this.tilesUsed = true;
     for (const [k, v] of this.composed) { if (this.composedBytes <= COMPOSED_BYTES) break; if (this.bakeKeys.has(k)) continue; this.composed.delete(k); this.composedBytes -= v.bytes; }
-    const band = bandOf(ts), lv = tp.fam.levels[band], urls = tp.urls[band], [w, h] = tileSize(lv, ts), perm = tilePermutation(tp.fam.id, band, urls.length);
+    return this.fillCells(base, want, (g, rect) => this.tilesInto(g, tp, rect, false)) ? base.buf : (this.provisional = true, null);
+  }
+  /** a tile set family's tiles over the device-px rectangle rect of the chunk being baked, onto g (the chunk's own px; tiledBuf's composition,
+   *  T265's swamp layer): its band's tiles on the world-anchored grid, edges snapped to whole px. exact (T265): each tile pre-scaled to the
+   *  size it lands at (exactTile), so a cell is a plain copy. false when a tile is not decoded */
+  private tilesInto(g: C2D, tp: TiledPick, rect: readonly number[], exact: boolean): boolean {
+    const c = this.chunkNow!, ts = this.tex.tileTs, band = bandOf(ts), lv = tp.fam.levels[band], urls = tp.urls[band], [w, h] = tileSize(lv, ts), perm = tilePermutation(tp.fam.id, band, urls.length);
     // the chunk's origin in its raster px (a whole number at every cache level) and its raster scale (px per world px)
     const L = c.L, ox = -c.M.e, oy = -c.M.f;
-    return this.fillCells(base, want, (g, rect) => {
-      const X0 = (rect[0] + ox) / L, Y0 = (rect[1] + oy) / L, X1 = (rect[0] + rect[2] + ox) / L, Y1 = (rect[1] + rect[3] + oy) / L;
-      // the mip drawn is at most twice the size it lands at (Textures.tileImage), so plain bilinear filtering keeps it sharp and cheap
-      g.setTransform(1, 0, 0, 1, 0, 0); g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'medium';
-      for (const q of cellsIn(X0, Y0, X1, Y1, w, h)) {
-        const [a, b, a2, b2] = snappedCell(q.ix, q.iy, w, h, L), url = urls[tileIndex(perm, q.ix, q.iy)]!, img = this.tex.tileImage(url, a2 - a);
-        if (!img) return false;
-        g.drawImage(exact ? this.exactTile(url, img, a2 - a, b2 - b) : img, a - ox, b - oy, a2 - a, b2 - b); // (T265 exact: a plain copy)
-      }
-      return true;
-    }) ? base.buf : (this.provisional = true, null);
+    const X0 = (rect[0]! + ox) / L, Y0 = (rect[1]! + oy) / L, X1 = (rect[0]! + rect[2]! + ox) / L, Y1 = (rect[1]! + rect[3]! + oy) / L;
+    // the mip drawn is at most twice the size it lands at (Textures.tileImage), so plain bilinear filtering keeps it sharp and cheap
+    g.setTransform(1, 0, 0, 1, 0, 0); g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'medium';
+    for (const q of cellsIn(X0, Y0, X1, Y1, w, h)) {
+      const [a, b, a2, b2] = snappedCell(q.ix, q.iy, w, h, L), url = urls[tileIndex(perm, q.ix, q.iy)]!, img = this.tex.tileImage(url, a2 - a);
+      if (!img) return false;
+      g.drawImage(exact ? this.exactTile(url, img, a2 - a, b2 - b) : img, a - ox, b - oy, a2 - a, b2 - b);
+    }
+    return true;
+  }
+  /** T265: the swamp's tile set laid through the band (sband.cv: its cover over the tiles from x0 y0, res a tile) onto the chunk being baked:
+   *  the tiles drawn straight into a scratch layer over the band's cells (exact: a copy each), cut to the band (destination-in), then laid
+   *  over those px of the chunk (as layer() laid the composed swamp through the band before; no composed buffer kept). false when a tile is
+   *  not decoded (provisional: baked again) */
+  private swampLayer(ctx: C2D, tp: TiledPick, sband: { cv: Cnv; box: BBox }, x0: number, y0: number, res: number): boolean {
+    const c = this.chunkNow!, [i0, j0, i1, j1] = this.cellsOf(sband.box), rx = i0 * PAINT_CELL, ry = j0 * PAINT_CELL, rw = Math.min(c.W, i1 * PAINT_CELL) - rx, rh = Math.min(c.H, j1 * PAINT_CELL) - ry;
+    if (rw <= 0 || rh <= 0) return true;
+    const b = this.bufferKeep('swampLayer', c.W, c.H), g = ctx2d(b);
+    g.save(); g.clearRect(rx, ry, rw, rh); g.beginPath(); g.rect(rx, ry, rw, rh); g.clip();
+    const ok = this.tilesInto(g, tp, [rx, ry, rw, rh], true);
+    if (ok) { g.setTransform(c.M); g.globalCompositeOperation = 'destination-in'; g.imageSmoothingEnabled = true; g.drawImage(sband.cv, x0, y0, sband.cv.width / res, sband.cv.height / res); }
+    g.restore();
+    if (!ok) { this.provisional = true; return false; }
+    ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; ctx.drawImage(b, rx, ry, rw, rh, rx, ry, rw, rh); ctx.restore();
+    return true;
   }
   /** T199: the swamp's gloss over the chunk being baked (swamp.ts): each tile's gloss (glossTileOf) laid where tiledBuf lays its picture, over
    *  the band's box, at a GLOSS.maskK-th of the chunk's size; then cut to the band (its cover, swampNow) and off the stream's water and lip (cut,
@@ -1465,12 +1485,16 @@ export class GroundPainter {
     // T265: and the river's band (swamp.ts RIVER_BAND, asked of its field alike), cut short of the roads, bridges, lots, painted areas and the
     //      course (riverCut), merged with the streams' into one band (swampBand): one layer, one gloss, one cover the living ground leaves alone
     const sw = this.swampOn() ? this.swampField.alpha(tx0, ty0, bw, bh, cres) : null, rv = this.riverSwampOn() ? this.riverField.alpha(tx0, ty0, bw, bh, cres) : null;
-    const sband = sw || rv ? this.swampBand(sw, rv, tx0, ty0, cres, rv ? this.riverCut(net, box, lite) : null) : null, swBuf = sband ? this.paintedBuf('swamp', sband.box, 1, true) : null;
-    const creekSwamp = !!(sw && swBuf);
-    if (sband && swBuf) {
+    const sband = sw || rv ? this.swampBand(sw, rv, tx0, ty0, cres, rv ? this.riverCut(net, box, lite) : null) : null;
+    // (T265: the swamp's tile set straight through the band, swampLayer: no composed buffer a chunk, whose room in the cache is the grass's; a
+    //  painted look composed and laid as before)
+    const swTiles = sband ? this.tex.paintedOf('swamp')?.tiled : undefined, swBuf = sband && !swTiles ? this.paintedBuf('swamp', sband.box) : null;
+    const swLaid = !!sband && (swTiles ? this.swampLayer(ctx, swTiles, sband, tx0, ty0, cres) : !!swBuf);
+    const creekSwamp = !!(sw && swLaid);
+    if (sband && swLaid) {
       const sb = sband.cv, sa = (sw ?? rv)!;
       this.swampNow = { cv: sb, x0: tx0, y0: ty0, res: cres };
-      layer('creek', g => { g.setTransform(M); g.imageSmoothingEnabled = true; g.drawImage(sb, tx0, ty0, sa.W / cres, sa.H / cres); }, g => { const p = g.createPattern(swBuf, 'no-repeat')!; p.setTransform(Minv); return p; });
+      if (swBuf) layer('creek', g => { g.setTransform(M); g.imageSmoothingEnabled = true; g.drawImage(sb, tx0, ty0, sa.W / cres, sa.H / cres); }, g => { const p = g.createPattern(swBuf, 'no-repeat')!; p.setTransform(Minv); return p; });
       const tp = this.specCam ? this.tex.paintedOf('swamp')?.tiled : undefined;
       // (the gloss off the streams' water and lip, and off the river's water and the bank's inner tile: the river keeps T230's own glint)
       if (tp) { const cut = new Path2D(); let any = false; for (const w of creeks) any = waterShape(cut, w.w.pts, SWAMP.lip, box, SWAMP.water) || any; if (rv) for (const w of rivers) any = waterShape(cut, w.w.pts, RIVER_SWAMP.inner[1], box) || any; this.glossMask = this.swampGloss(tp, sband.box, any ? cut : null); }
