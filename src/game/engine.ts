@@ -613,7 +613,10 @@ export class Game {
     digPond: (x, y, r, where) => this.digPond(x, y, r, where),
     propsIn: b => this.propGrid.query(b), props: () => this.props, propName: p => (p.decor ? DECOR_BY_KEY.get(p.decor)?.name : p.auto === 'range:shop' ? 'the shop' : undefined) ?? LIBRARY[p.item]!.name,
     scene: () => this.range.scene,
-    addProp: (item, x, y, k) => this.addProp(item, x, y, false, k), removeProp: p => { this.removeProp(p); if (LIBRARY[p.item]!.kind === 'lamp') this.syncLamps(); },
+    // T257: a natural prop the player mirrored (R) keeps that look; a tree's mirror is on top of its sun's (tree-sun.ts: drawn mirrored when its
+    // art is lit from the left), so flipOf reads back the player's
+    addProp: (item, x, y, k, flip = false) => this.addProp(item, x, y, this.treeLit(item) !== flip, k, undefined, { own: true }), removeProp: p => { this.removeProp(p); if (LIBRARY[p.item]!.kind === 'lamp') this.syncLamps(); },
+    flipOf: p => p.flip !== this.treeLit(p.item),
     propAt: (mx, my) => this.propAt(mx, my), tileAt: (mx, my) => this.tileAt(mx, my),
     selected: () => this.selected, select: p => { this.selected = p; }, hover: p => { this.hoverProp = p; },
     money: () => this.money, spend: n => this.traffic.spend('construction', n),
@@ -637,7 +640,9 @@ export class Game {
     if (this.tool === 'practice') this.practice.arm(kind, show);
   }
   /** what a placed prop sells for (the bulldozer, Delete): half a Props tool item's price (T131), else half its library price, nothing for a plant */
-  private sellValue(p: Prop): number { const d = p.decor ? DECOR_BY_KEY.get(p.decor) : undefined; return d ? sellBack(d) : p.plant ? 0 : Math.round(LIBRARY[p.item]!.cost * 0.5); }
+  private sellValue(p: Prop): number { const d = p.decor ? DECOR_BY_KEY.get(p.decor) : undefined; return d ? sellBack(d, this.decor.sizeOf(p, d)) : p.plant ? 0 : Math.round(LIBRARY[p.item]!.cost * 0.5); }
+  /** T257: whether a library item is a tree drawn mirrored for its sun (tree-sun.ts: its art lit from the left) */
+  private treeLit(item: number): boolean { const it = LIBRARY[item]!; return it.kind === 'tree' && TREE_MIRROR.has(it.id); }
   /** the before / after snapshot (the bottlenecks panel): the game hour it was taken at, the window before (null: no traffic on record yet), and the next rush, [start, end] in absolute game hours */
   snapshot: { at: number; before: Window | null; after: [number, number] } | null = null;
   /** a ring pulsed for 4 s where the camera jumped (see jumpTo): the tile and the time (performance.now, ms) */
@@ -1495,7 +1500,7 @@ export class Game {
   private swapProps(j: PropLog, back: boolean): PropLog {
     const kill = back ? j.added : j.removed, revive = back ? j.removed : j.added;
     for (const p of kill) this.removeProp(p);
-    const out = revive.map(p => { const q = this.addProp(p.item, p.x, p.y, p.flip, p.scale); if (p.plant) q.plant = p.plant; if (p.decor) q.decor = p.decor; if (p.frame) q.frame = p.frame; return q; });
+    const out = revive.map(p => { const q = this.addProp(p.item, p.x, p.y, p.flip, p.scale, undefined, p.decor ? { own: true } : undefined); if (p.plant) q.plant = p.plant; if (p.decor) q.decor = p.decor; if (p.frame) q.frame = p.frame; return q; });
     if (j.added.some(p => p.frame) || j.removed.some(p => p.frame)) this.frameRev++; // T229
     this.scheduleSave();
     return back ? { added: kill, removed: out } : { added: out, removed: kill };
@@ -2051,12 +2056,14 @@ export class Game {
     if (n) this.scheduleSave(); return n;
   }
   /** o (T133, the range's scene): lift, drawn this high above its spot (world px); foot, its footprint (world tiles x0 y0 x1 y1) in place of its
-   *  library boxes' (business art's boxes are 1 x 1 placeholders, too small for the painter's order of what stands round it) */
-  addProp(item: number, x: number, y: number, flip: boolean, scale: number, auto?: string, o?: { lift?: number; foot?: readonly [number, number, number, number] }): Prop {
+   *  library boxes' (business art's boxes are 1 x 1 placeholders, too small for the painter's order of what stands round it); own (T257): a
+   *  Props tool prop, its flip as the player turned it (a tree keeps it rather than its sun's) */
+  addProp(item: number, x: number, y: number, flip: boolean, scale: number, auto?: string, o?: { lift?: number; foot?: readonly [number, number, number, number]; own?: boolean }): Prop {
     // no building is ever mirrored (mirror.ts): a flip draws the four-view art turned (its partner view), any other building unflipped
     const [id, f0] = drawnAs(LIBRARY[item]!, flip); if (id !== LIBRARY[item]!.id) item = LIB_INDEX.get(id) ?? item; flip = f0;
     // no tree is mirrored at random: the sun comes from the right, so a tree is drawn mirrored only when its art is lit from the left (tree-sun.ts)
-    if (LIBRARY[item]!.kind === 'tree') flip = TREE_MIRROR.has(LIBRARY[item]!.id);
+    // (T257: but a Props tool tree as the player turned it)
+    if (LIBRARY[item]!.kind === 'tree' && !o?.own) flip = TREE_MIRROR.has(LIBRARY[item]!.id);
     const f = o?.foot ? { x0: o.foot[0], y0: o.foot[1], x1: o.foot[2], y1: o.foot[3] } : this.footprint(LIBRARY[item], x, y, flip, scale);
     const p: Prop = { uid: this.nextUid++, item, x, y, flip, scale, ...f };
     if (auto) p.auto = auto;
@@ -5614,7 +5621,8 @@ export class Game {
       this.net.rebuild(true);
       for (const entry of d.nodes) applyNodeEntry(this.edit, entry);
       const index = new Map(LIBRARY.map((it, i) => [it.id, i]));
-      for (const t of d.props) { const [id, x, y, flip, scale] = t, i = index.get(id); if (i !== undefined) Object.assign(this.addProp(i, x, y, !!flip, scale), tupleMarks(t)); }
+      // (T257: a Props tool prop keeps its saved flip, a tree's too: as the player turned it)
+      for (const t of d.props) { const [id, x, y, flip, scale] = t, i = index.get(id), m = tupleMarks(t); if (i !== undefined) Object.assign(this.addProp(i, x, y, !!flip, scale, undefined, m.decor ? { own: true } : undefined), m); }
       if (d.parks) this.parkDefs = d.parks.map(([x, y, w, h], k) => ({ id: k + 1, x, y, w, h }));
       this.places = placesFromTuples(d.places);
       if (d.tolls) this.tollDefs = d.tolls.map(([ax, ay, bx, by, booths], k) => ({ id: k + 1, ax, ay, bx, by, booths }));
@@ -7203,12 +7211,14 @@ export class Game {
     if (!g.noPic) all.push(g);
     for (const q of all) {
       this.drawBizRect(ctx, q.box[0], q.box[1], q.box[2] - q.box[0], q.box[3] - q.box[1], q.why ? 'rgba(230,80,80,0.4)' : 'rgba(60,200,90,0.4)');
-      const d = this.decorDraw; d.item = q.item; d.x = q.x; d.y = q.y; d.scale = q.scale;
+      const d = this.decorDraw; d.item = q.item; d.x = q.x; d.y = q.y; d.scale = q.scale; d.flip = !!q.flip;
       const l = lookOf(d), it = LIBRARY[l.item]!, [page, u0, v0, u1, v1] = it.tex, image = this.pageImage0(page);
       if (image && !l.hidden) {
-        const ze = this.cam.z * this.dpr, r = spriteRect(d), x = (r[0] - this.cam.X) * ze + this.cw / 2, y = (r[1] - this.cam.Y) * ze + this.ch / 2;
+        const ze = this.cam.z * this.dpr, r = spriteRect(d), x = (r[0] - this.cam.X) * ze + this.cw / 2, y = (r[1] - this.cam.Y) * ze + this.ch / 2, w = (r[2] - r[0]) * ze;
         ctx.save(); ctx.globalAlpha = q.why ? 0.4 : 0.75;
-        ctx.drawImage(image, u0 * image.naturalWidth, v0 * image.naturalHeight, (u1 - u0) * image.naturalWidth, (v1 - v0) * image.naturalHeight, x, y, (r[2] - r[0]) * ze, (r[3] - r[1]) * ze);
+        // (T257: a mirrored look drawn mirrored about its rect)
+        if (l.flip) { ctx.translate(x + w, y); ctx.scale(-1, 1); ctx.translate(-x, -y); }
+        ctx.drawImage(image, u0 * image.naturalWidth, v0 * image.naturalHeight, (u1 - u0) * image.naturalWidth, (v1 - v0) * image.naturalHeight, x, y, w, (r[3] - r[1]) * ze);
         ctx.restore();
       }
       if (q.why) this.refusedRect(ctx, q.box[0], q.box[1], q.box[2] - q.box[0], q.box[3] - q.box[1]);

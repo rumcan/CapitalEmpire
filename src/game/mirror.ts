@@ -8,6 +8,7 @@ import type { LibItem } from './types';
 import { BUILDING_IDS, VIEW_ART, unmirror } from './views-library';
 import { AXIS_TURN } from './axis-library';
 import { extraUnmirror } from './extra-views';
+import { kitMirrors } from './kit';
 
 /** the kinds drawn from building art: houses, shops, lot buildings, baked lots, business pictures, golf and event structures */
 const KINDS = new Set(['house', 'building', 'venue', 'lot', 'business', 'gazebo', 'arcade']);
@@ -19,8 +20,11 @@ export function drawnAs(it: LibItem, flip: boolean): [string, boolean] {
   const garage = extraUnmirror(it.id, flip); if (garage !== null) return [garage, false];
   const a = AXIS_TURN[it.id]; if (a !== undefined) return [flip ? a : it.id, false];
   if (it.id.startsWith('east:') && !VIEW_ART.has(it.id)) return [it.id.slice(5), false];
-  // T231: the concept kit is one picture each, lit from the upper right as painted: never mirrored (a plant brush's random flip included)
-  if (it.id.startsWith('kit:')) return [it.id, false];
+  // T231: the concept kit is one picture each, lit from the upper right as painted: never mirrored. T257 (the lead's call, #747): its natural
+  // one-view things (the boulders, shrubs, mums and palms: kit.ts KIT_MIRRORS) have no front to keep right, so a flip mirrors them (one picture,
+  // two looks: the Props tool's R, the mixed brushes, a plant brush's random flip); the lamps, the hedge's pieces, the pond edge's run
+  // pieces and corners, the jet and the lily pads never
+  if (it.id.startsWith('kit:')) return [it.id, flip && kitMirrors(it.id)];
   const [id, f] = unmirror(it.id, flip);
   return [id, f && !isBuilding(it)];
 }
