@@ -41,6 +41,10 @@ export interface RoundPlan { golfers: Golfer[]; groups: Group[]; shots: Shot[]; 
 /** what a golfer is doing at a minute: waiting for his tee time, walking, addressing or swinging a full shot, putting, holed, or done */
 export type Action = 'waiting' | 'walk' | 'address' | 'swing' | 'putt' | 'holed' | 'done';
 /** a golfer at a minute: the hole he is on, his position, what he does, where his ball is, the ball in flight, and his score so far */
-export interface GolferState { golfer: number; hole: number; x: number; y: number; action: Action; ball: Pt | null; flight: { from: Pt; to: Pt; u: number } | null; strokes: number; toPar: number; thru: number }
+export interface GolferState { golfer: number; hole: number; x: number; y: number; action: Action; ball: Pt | null; flight: { from: Pt; to: Pt; u: number } | null; strokes: number; toPar: number; thru: number;
+  /** T266: where the walk he is on ends (his ball, his place by the next tee, his step-off); null or absent: not on a walk */
+  dest?: Pt | null;
+  /** T266: the game minute he must be at dest by (his next address; Infinity: not known) */
+  by?: number }
 /** one row of the leaderboard: the shared position, to par, holes completed and strokes */
 export interface Standing { golfer: number; pos: number; toPar: number; thru: number; strokes: number }
