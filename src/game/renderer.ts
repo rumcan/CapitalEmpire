@@ -7,7 +7,7 @@ import { PAINT_TEXES, isPaintPhoto, type PaintTex } from './paint';
 import { POOL_ANCHOR, PPM, SLAB_CELL } from './ground-art';
 import { POOL_SHARES, SPEC_MASK_K } from './lamp-reflect';
 import { GLOSS, SWAMP, SwampField, glossTile, swampStreams } from './swamp';
-import { REFLECT, SITE, WaterField, fieldPad, fieldRes, glintImage, hexRgb, waterImages, waterLookActive, waterLookOf, type WaterLook } from './water-look';
+import { REFLECT, SITE, WaterField, fieldPad, fieldRes, glintImage, hexRgb, riverLook, waterImages, waterLookActive, waterLookOf, type WaterLook } from './water-look';
 import { LOT_DECALS } from './lot-decals';
 import { clampDecals, drawDecals, flatSquash, placeDecals } from './map-decals';
 import { layOnGround } from './base-grass';
@@ -473,7 +473,8 @@ export class GroundPainter {
    *  and the glint off: nothing at all */
   private waterOver(g: C2D, site: number, clip: () => Path2D, tex: string, lite: boolean) {
     const w = this.waterField(lite); if (!w) return;
-    const { f, look } = w, c = this.chunkNow!, im = waterImages(f, site, look);
+    // (a river's water: the rivers' own depth strength, water-look.ts riverLook)
+    const { f } = w, look = site === SITE.river ? riverLook(w.look) : w.look, c = this.chunkNow!, im = waterImages(f, site, look);
     const lay = (to: C2D, data: Uint8ClampedArray) => { const s = this.buffer('waterTone', f.W, f.H); ctx2d(s).putImageData(new ImageData(data as Uint8ClampedArray<ArrayBuffer>, f.W, f.H), 0, 0); to.drawImage(s, f.x0, f.y0, f.W / f.res, f.H / f.res); };
     if (im.edge || im.shade || im.tint) {
       g.save(); g.setTransform(c.M); g.clip(clip()); g.imageSmoothingEnabled = true; g.globalAlpha = 1;

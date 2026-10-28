@@ -98,7 +98,7 @@ function waterEditor() {
   };
   const pct = v => `${Math.round(v * 100)}%`;
   side.append(el('label', { className: 'hint', style: 'display:flex;align-items:center;margin:4px 0' }, cb, 'On (off: the water as before T230)'),
-    slider('Depth', 'depth', 0.01, pct), slider('Full depth at', 'reach', 0.5, v => `${(+v).toFixed(1)} tiles (${(v * 2).toFixed(0)} m) from the shore`),
+    slider('Depth (ponds)', 'depth', 0.01, pct), slider('Depth (rivers)', 'riverDepth', 0.01, pct), slider('Full depth at', 'reach', 0.5, v => `${(+v).toFixed(1)} tiles (${(v * 2).toFixed(0)} m) from the shore`),
     slider('Light edge', 'edge', 0.01, pct), slider('Reflections', 'reflect', 0.01, pct),
     el('div', { className: 'bar', style: 'margin-top:8px' }, btn('Reset to the tuned look', () => { delete F.water; draw(); msg(''); })));
 }

@@ -10,7 +10,7 @@ import file from '../src/game/painted-surfaces.json';
 import tiles from '../src/game/painted-tiles.json';
 import { CASTER_STRIDE, CK } from '../src/game/living-ground';
 import { GLOSS, glossPixel, swampKey } from '../src/game/swamp';
-import { BED, DEFAULT_WATER_LOOK, EDGE, GLINT, REFLECT, REFLECT_TINTS, SITE, WATER_OFF, WaterField, clampWaterLook, depthAt, edgeAt, fieldPad, glintAt, glintImage, hexRgb, waterImages, waterLookOf, waterPixel } from '../src/game/water-look';
+import { BED, DEFAULT_WATER_LOOK, EDGE, GLINT, REFLECT, REFLECT_TINTS, SITE, WATER_OFF, WaterField, clampWaterLook, depthAt, edgeAt, fieldPad, glintAt, glintImage, hexRgb, riverLook, waterImages, waterLookOf, waterPixel } from '../src/game/water-look';
 
 const lum = (c: readonly number[]) => 0.299 * c[0]! + 0.587 * c[1]! + 0.114 * c[2]!;
 /** the pond's picture's mean (pond-concept-run) */
@@ -39,7 +39,7 @@ test('T230 the switch: the file\'s water block, clamped; absent the tuned look; 
   assert.equal(f.water?.on, false); assert.equal(f.water?.depth, 0.5);
   assert.equal(clampSurfaces({ ...file, water: undefined }).water, undefined, 'no block, none: the tuned look');
   const s = clampSurfaces(file);
-  assert.equal(lookOfTex('waterDark', s)?.family, 'pond-concept-run'); assert.equal(lookOfTex('water', s)?.family, 'pond-concept-run');
+  assert.equal(lookOfTex('waterDark', s)?.family, 'pond-concept-run'); assert.equal(lookOfTex('water', s)?.family, 'lake', 'the rivers keep the brighter lake (the lead, 2026-10-28)');
   const fams = (tiles as { families: { id: string; kind: string; mean: string }[] }).families;
   assert.equal(fams.find(v => v.id === 'pond-concept-run')?.kind, 'water'); assert.ok(fams.find(v => v.id === 'lake'), 'lake stays a choice');
   assert.deepEqual(hexRgb(fams.find(v => v.id === 'pond-concept-run')!.mean), POND);
@@ -66,6 +66,19 @@ test('T230 the shore distance: an exact distance in from the shore, capped, and 
   // a waterway: a straight river 20 wide; its middle 10 in (capped), its edge near 0
   const r = WaterField.over([0, 0, 60, 60], 8, 2); r.waterway([{ x: 0, y: 30, w: 20 }, { x: 60, y: 30, w: 20 }], SITE.river); r.shore(12);
   assert.ok(Math.abs(r.d[at(r, 30.1, 30.1)]! - 10) < 0.4); assert.ok(r.d[at(r, 30.1, 20.3)]! < 0.5); assert.equal(r.d[at(r, 30.1, 18)], 0);
+});
+
+test('T230 rivers on the lake: the middle a deeper teal (its hue kept, never pushed blue), the edge a bright turquoise, their own depth knob', () => {
+  const LAKE = hexRgb((tiles as { families: { id: string; mean: string }[] }).families.find(v => v.id === 'lake')!.mean), l = riverLook(DEFAULT_WATER_LOOK);
+  assert.equal(l.depth, DEFAULT_WATER_LOOK.riverDepth); assert.ok(DEFAULT_WATER_LOOK.riverDepth < DEFAULT_WATER_LOOK.depth, 'a little less deep than the ponds');
+  const mid = waterPixel(LAKE, 7, 0, l), edge = waterPixel(LAKE, 0.8, 0, l), gb = (c: readonly number[]) => c[1]! / c[2]!;
+  assert.ok(lum(mid) < lum(LAKE) * 0.95, 'deeper in the middle'); assert.ok(Math.abs(gb(mid) - gb(LAKE)) < 0.05, `teal kept: ${mid} vs ${LAKE}`);
+  assert.ok(lum(edge) > lum(LAKE) + 10 && edge[1]! - LAKE[1]! > edge[2]! - LAKE[2]!, `a bright turquoise edge: ${edge}`);
+  // the ponds' palette would push the lake royal blue: the rivers' does not
+  assert.ok(gb(waterPixel(LAKE, 7, 0, { ...DEFAULT_WATER_LOOK, depth: l.depth })) < gb(mid) - 0.05);
+  // the knob rides in the file, clamped; off: the river as before
+  assert.equal(clampWaterLook({ riverDepth: 5 }).riverDepth, 2); assert.deepEqual(waterPixel(LAKE, 7, 0, riverLook(WATER_OFF)), LAKE);
+  const r = readFileSync(resolve('src/game/renderer.ts'), 'utf8'); assert.match(r, /look = site === SITE\.river \? riverLook\(w\.look\) : w\.look/);
 });
 
 test('T230 depth: darker and more teal toward the middle, a curve over the texture (its ripples keep their contrast), lighter at the edge', () => {

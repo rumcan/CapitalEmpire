@@ -30,24 +30,31 @@ export interface WaterLook {
   on: boolean;
   /** the deep multiply's strength (0: none .. 1 the tuned look .. 2 strong) and how far from the shore it reaches its whole depth (tiles) */
   depth: number; reach: number;
+  /** the rivers' own depth strength (the lead, 2026-10-28: the rivers wear the brighter lake picture, the concept's turquoise lake, and go a
+   *  little less deep than the ponds); it stands in for `depth` on a river's water (renderer.ts waterOver, riverLook) */
+  riverDepth: number;
   /** the light edge's strength (0: none .. 1 the tuned look .. 2) */
   edge: number;
   /** the shore's reflections' strength (0: none .. 1 the tuned look .. 2) */
   reflect: number;
+  /** (not in the file: the palette riverLook sets for a river's water; absent: the ponds', POND_PAL) */
+  pal?: WaterPalette;
 }
 /** the tuned look (against the concept's course pond and lake, at 30%, 15% and 8%) */
-export const DEFAULT_WATER_LOOK: Readonly<WaterLook> = { on: true, depth: 1, reach: 7, edge: 1, reflect: 1 };
+export const DEFAULT_WATER_LOOK: Readonly<WaterLook> = { on: true, depth: 1, reach: 7, riverDepth: 0.6, edge: 1, reflect: 1 };
 /** the look off: the water exactly as before T230 */
 export const WATER_OFF: Readonly<WaterLook> = { ...DEFAULT_WATER_LOOK, on: false };
 /** the knobs' ranges */
-export const WATER_RANGES = { depth: [0, 2], reach: [2, 12], edge: [0, 2], reflect: [0, 2] } as const;
+export const WATER_RANGES = { depth: [0, 2], reach: [2, 12], riverDepth: [0, 2], edge: [0, 2], reflect: [0, 2] } as const;
 type Ranged = keyof typeof WATER_RANGES;
 /** a look with every knob held to its range (missing or bad: the tuned look's) */
 export function clampWaterLook(f: unknown): WaterLook {
   const o = (f && typeof f === 'object' ? f : {}) as Partial<Record<keyof WaterLook, unknown>>, D = DEFAULT_WATER_LOOK;
   const num = (k: Ranged) => { const v = o[k], [lo, hi] = WATER_RANGES[k]; return Math.round(Math.min(hi, Math.max(lo, typeof v === 'number' && Number.isFinite(v) ? v : D[k])) * 1000) / 1000; };
-  return { on: typeof o.on === 'boolean' ? o.on : D.on, depth: num('depth'), reach: num('reach'), edge: num('edge'), reflect: num('reflect') };
+  return { on: typeof o.on === 'boolean' ? o.on : D.on, depth: num('depth'), reach: num('reach'), riverDepth: num('riverDepth'), edge: num('edge'), reflect: num('reflect') };
 }
+/** the look a river's water is shaded with: the rivers' own depth strength in place of the ponds', and the rivers' palette */
+export const riverLook = (l: WaterLook): WaterLook => ({ ...l, depth: l.riverDepth, pal: RIVER_PAL });
 const memo = new WeakMap<object, WaterLook>();
 /** the look a surfaces file carries (painted-surfaces.ts SurfacesFile.water), clamped and kept per file (the file is never changed) */
 export function waterLookOf(file: { water?: unknown } | null | undefined): WaterLook {
@@ -67,6 +74,15 @@ export const DEEP_LIFT = [0, 6, 24] as const;
  *  the shore (vary: the distance's scale, from a world-space noise of `wave` tiles, so chunks agree and no shore draws an even band) */
 export const BED = [150, 146, 104] as const;
 export const EDGE = { a: 0.24, rise: 0.7, fade: [0.8, 3.6], vary: [0.55, 1.5], wave: 9 } as const;
+/** a water picture's palette: the deep's multiply and blue lift, the light edge's screen colour */
+export interface WaterPalette { deep: readonly number[]; lift: readonly number[]; bed: readonly number[] }
+/** the ponds' (the concept's deep pond water, teal-green: the deep pushes it teal-blue, the edge shows a warm hint of the bed) */
+export const POND_PAL: WaterPalette = { deep: DEEP, lift: DEEP_LIFT, bed: BED };
+/** the rivers' (the brighter lake picture, already the concept lake's turquoise: the deep keeps its teal, darkening the blue as much as the
+ *  green and the red most, with no blue lift; the edge goes bright turquoise, as the concept lake's shallows) */
+export const RIVER_PAL: WaterPalette = { deep: [0.8, 0.84, 0.81], lift: [0, 0, 0], bed: [70, 170, 150] };
+/** the palette a look shades with (riverLook sets the rivers'; else the ponds') */
+const palOf = (l: { pal?: WaterPalette }) => l.pal ?? POND_PAL;
 const NOISE = makeNoise(0x7a7e);
 /** the shallows' width scale at tile (x, y) (EDGE.vary): the light edge reads d / s tiles in */
 export const shallowAt = (x: number, y: number) => EDGE.vary[0] + (EDGE.vary[1] - EDGE.vary[0]) * (0.5 + 0.5 * clamp(1.7 * fbm(NOISE, x / EDGE.wave + 3.7, y / EDGE.wave - 1.3, 2), -1, 1));
@@ -92,24 +108,24 @@ export const REFLECT_TINT = 0.24;
  *  birch, mixed), 5 a conifer */
 export const REFLECT_TINTS: readonly (readonly number[])[] = [[96, 84, 74], [196, 58, 36], [166, 92, 44], [214, 162, 58], [206, 108, 42], [44, 84, 62]];
 /** the multiply factor (0..1 a channel) of a point at depth curve t (depthAt) and reflection r (0..1) under look l */
-export function shadeFactor(t: number, r: number, l: Pick<WaterLook, 'depth' | 'reflect'>): number[] {
+export function shadeFactor(t: number, r: number, l: Pick<WaterLook, 'depth' | 'reflect' | 'pal'>): number[] {
   const kd = clamp(t * l.depth, 0, 2), kr = clamp(r * REFLECT_A * l.reflect, 0, 1);
-  return DEEP.map((c, i) => Math.max(0, 1 - kd * (1 - c)) * (1 - kr * (1 - REFLECT_COL[i]!)));
+  return palOf(l).deep.map((c, i) => Math.max(0, 1 - kd * (1 - c)) * (1 - kr * (1 - REFLECT_COL[i]!)));
 }
 const screen = (v: number, s: number) => 255 - ((255 - v) * (255 - s)) / 255;
 /** the last screen's share a channel (0..1): the deep's blue lift at depth curve t and the reflection's tint at reflection r, one after the
  *  other (two screens of alpha a1 colour S1 and a2 S2 are one of a S = 1 - (1 - a1 S1)(1 - a2 S2), so the bake lays them as one image) */
-export function liftShare(t: number, r: number, l: Pick<WaterLook, 'depth' | 'reflect'>, tint: readonly number[], i: number): number {
+export function liftShare(t: number, r: number, l: Pick<WaterLook, 'depth' | 'reflect' | 'pal'>, tint: readonly number[], i: number): number {
   const ad = clamp(t * l.depth, 0, 1), at = clamp(r * REFLECT_TINT * l.reflect, 0, 1);
-  return 1 - (1 - (ad * DEEP_LIFT[i]!) / 255) * (1 - (at * tint[i]!) / 255);
+  return 1 - (1 - (ad * palOf(l).lift[i]!) / 255) * (1 - (at * tint[i]!) / 255);
 }
 /** the CPU twin of the bake (the canvas's 'screen', 'multiply' and 'screen' again, as renderer.ts waterOver lays them): pixel c (0..255) d tiles
  *  in from the shore, at reflection r of tint `tint` (REFLECT_TINTS), where the shallows' width scale is s (shallowAt), under look l. Off
  *  (l.on false): c itself */
 export function waterPixel(c: readonly number[], d: number, r: number, l: WaterLook, s = 1, tint: readonly number[] = REFLECT_TINTS[0]!): number[] {
   if (!waterLookActive(l)) return [...c];
-  const a = edgeAt(d / s, l.edge), t = depthAt(d, l.reach), f = shadeFactor(t, r, l);
-  return c.map((v, i) => { const lifted = v + (screen(v, BED[i]!) - v) * a, shaded = lifted * f[i]!; return shaded + (255 - shaded) * liftShare(t, r, l, tint, i); });
+  const a = edgeAt(d / s, l.edge), t = depthAt(d, l.reach), f = shadeFactor(t, r, l), bed = palOf(l).bed;
+  return c.map((v, i) => { const lifted = v + (screen(v, bed[i]!) - v) * a, shaded = lifted * f[i]!; return shaded + (255 - shaded) * liftShare(t, r, l, tint, i); });
 }
 
 // ---------- the glint ----------
@@ -313,24 +329,24 @@ export function waterImages(f: WaterField, mask: number, l: WaterLook): { edge: 
   if (!waterLookActive(l)) return { edge: null, shade: null, tint: null };
   const N = f.W * f.H, edge = l.edge > 0 ? new Uint8ClampedArray(N * 4) : null, shade = l.depth > 0 || l.reflect > 0 ? new Uint8ClampedArray(N * 4) : null;
   const tint = l.depth > 0 || (l.reflect > 0 && f.refl && f.reflTint) ? new Uint8ClampedArray(N * 4) : null, s = edge ? f.shallows() : null;
-  const { site, d: dist, refl, reflTint, W } = f, [u0, v0, u1, v1] = f.inner, kdMax = 2, ka = REFLECT_A * l.reflect, kt = REFLECT_TINT * l.reflect;
+  const { site, d: dist, refl, reflTint, W } = f, P = palOf(l), [u0, v0, u1, v1] = f.inner, kdMax = 2, ka = REFLECT_A * l.reflect, kt = REFLECT_TINT * l.reflect;
   let anyE = false, anyS = false, anyT = false;
   for (let v = v0; v <= v1; v++) for (let u = u0; u <= u1; u++) {
     const k = v * W + u; if (!(site[k]! & mask)) continue;
     const d = dist[k]!, r = refl ? refl[k]! : 0, q = 4 * k;
-    if (edge) { const a = Math.round(edgeAt(d / s![k]!, l.edge) * 255); if (a > 0) { edge[q] = BED[0]; edge[q + 1] = BED[1]; edge[q + 2] = BED[2]; edge[q + 3] = a; anyE = true; } }
+    if (edge) { const a = Math.round(edgeAt(d / s![k]!, l.edge) * 255); if (a > 0) { edge[q] = P.bed[0]!; edge[q + 1] = P.bed[1]!; edge[q + 2] = P.bed[2]!; edge[q + 3] = a; anyE = true; } }
     const t = depthAt(d, l.reach);
     if (shade) {
       // shadeFactor, inline (no arrays: a chunk has tens of thousands of samples)
       const kd = clamp(t * l.depth, 0, kdMax), kr = clamp(r * ka, 0, 1);
-      const F0 = Math.max(0, 1 - kd * (1 - DEEP[0])) * (1 - kr * (1 - REFLECT_COL[0])), F1 = Math.max(0, 1 - kd * (1 - DEEP[1])) * (1 - kr * (1 - REFLECT_COL[1])), F2 = Math.max(0, 1 - kd * (1 - DEEP[2])) * (1 - kr * (1 - REFLECT_COL[2]));
+      const F0 = Math.max(0, 1 - kd * (1 - P.deep[0]!)) * (1 - kr * (1 - REFLECT_COL[0])), F1 = Math.max(0, 1 - kd * (1 - P.deep[1]!)) * (1 - kr * (1 - REFLECT_COL[1])), F2 = Math.max(0, 1 - kd * (1 - P.deep[2]!)) * (1 - kr * (1 - REFLECT_COL[2]));
       const a = 1 - Math.min(F0, F1, F2);
       if (a > 0.5 / 255) { const A = Math.round(a * 255) / 255; shade[q] = Math.round((1 - (1 - F0) / A) * 255); shade[q + 1] = Math.round((1 - (1 - F1) / A) * 255); shade[q + 2] = Math.round((1 - (1 - F2) / A) * 255); shade[q + 3] = Math.round(A * 255); anyS = true; }
     }
     if (tint && (t > 0 || r > 0)) {
       // the deep's blue lift and the reflection's tint as one screen (liftShare): alpha the largest share, colour the shares over it
       const c = r > 0 && reflTint ? REFLECT_TINTS[reflTint[k]!] ?? REFLECT_TINTS[0]! : REFLECT_TINTS[0]!, ad = clamp(t * l.depth, 0, 1), at = clamp(r * kt, 0, 1);
-      const P0 = 1 - (1 - (ad * DEEP_LIFT[0]) / 255) * (1 - (at * c[0]!) / 255), P1 = 1 - (1 - (ad * DEEP_LIFT[1]) / 255) * (1 - (at * c[1]!) / 255), P2 = 1 - (1 - (ad * DEEP_LIFT[2]) / 255) * (1 - (at * c[2]!) / 255);
+      const P0 = 1 - (1 - (ad * P.lift[0]!) / 255) * (1 - (at * c[0]!) / 255), P1 = 1 - (1 - (ad * P.lift[1]!) / 255) * (1 - (at * c[1]!) / 255), P2 = 1 - (1 - (ad * P.lift[2]!) / 255) * (1 - (at * c[2]!) / 255);
       const a = Math.max(P0, P1, P2);
       if (a > 0.5 / 255) { const A = Math.round(a * 255) / 255; tint[q] = Math.round((P0 / A) * 255); tint[q + 1] = Math.round((P1 / A) * 255); tint[q + 2] = Math.round((P2 / A) * 255); tint[q + 3] = Math.round(A * 255); anyT = true; }
     }

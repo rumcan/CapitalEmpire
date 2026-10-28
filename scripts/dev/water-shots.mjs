@@ -47,8 +47,8 @@ const look = (page, x, y, z) => page.evaluate(([x, y, z]) => { const g = window.
  *  rivers, the look off: the studio's way back to the old water), or main (no switch: the build as it is) */
 const water = (page, mode) => page.evaluate(async ([mode, extra]) => {
   const gr = window.__game.ground; if (mode === 'main' || !gr.setWaterLook) return false;
-  const fam = mode === 'lake' ? 'lake' : 'pond-concept-run';
-  gr.setSurfaceLook('water', { family: fam }); gr.setSurfaceLook('river', { family: fam });
+  // (the ponds wear the concept's deep water, the rivers the brighter lake, the lead's call 2026-10-28; lake: the old water on both)
+  gr.setSurfaceLook('water', { family: mode === 'lake' ? 'lake' : 'pond-concept-run' }); gr.setSurfaceLook('river', { family: 'lake' });
   gr.setWaterLook(mode === 'on' ? { on: true, ...extra } : { on: false }); return true;
 }, [mode, extra]);
 const glint = (page, on) => page.evaluate(on => { window.__game.specCam = on; }, on);
