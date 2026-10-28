@@ -2,7 +2,8 @@
 // DOM, no canvas.
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { SOFT, easeWeights, softAreaWidth, softCover, softDirt, softMaskImage, softNoise, softRes, softRingImages, softWidth, type SoftImage } from '../src/game/soft-edges';
+import { SOFT, easeWeights, simplifyRing, softAreaWidth, softCover, softDirt, softMaskImage, softNoise, softRes, softRingImages, softWidth, type SoftImage } from '../src/game/soft-edges';
+import { ruggedRing } from '../src/game/rugged-edges';
 
 /** an axis-aligned rectangle x0 y0 .. x1 y1 */
 const rect = (x0: number, y0: number, x1: number, y1: number) => [x0, y0, x1, y0, x1, y1, x0, y1];
@@ -112,6 +113,20 @@ describe('soft-edges: an area\'s band (softRingImages)', () => {
     assert.equal(e[0], 0); assert.equal(e[1], 1); assert.deepEqual([...easeWeights(ring, [1, 1, 1, 1], 1.5)], [1, 1, 1, 1]);
   });
   it('no band reaches a box it does not touch', () => { assert.equal(softRingImages(ring, null, [100, 100, 120, 120], 4, 4), null); });
+  it('merges a rugged outline\'s short sides within the tolerance, keeping every 0 weight', () => {
+    const rr = ruggedRing([10, -40, 80, -40, 80, 83, 10, 83], 0) as number[], n = rr.length >> 1, wts = new Array(n).fill(1);
+    wts[17] = 0; wts[400] = 0;
+    const s = simplifyRing(rr, wts, 0.1);
+    assert.ok(s.pts.length < rr.length / 2, `${s.pts.length / 2} of ${n} points`);
+    assert.equal(s.wts!.filter(v => v === 0).length >= 1, true);
+    // every original point within the tolerance of the merged outline
+    const m = s.pts.length >> 1;
+    for (let i = 0; i < n; i++) {
+      const x = rr[2 * i]!, y = rr[2 * i + 1]!; let best = Infinity;
+      for (let k = 0; k < m; k++) { const ax = s.pts[2 * k]!, ay = s.pts[2 * k + 1]!, bx = s.pts[2 * ((k + 1) % m)]!, by = s.pts[2 * ((k + 1) % m) + 1]!, dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy, t = l2 > 0 ? Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / l2)) : 0; best = Math.min(best, Math.hypot(ax + dx * t - x, ay + dy * t - y)); }
+      assert.ok(best <= 0.1 + 1e-9, `point ${i} is ${best} off`);
+    }
+  });
 });
 
 describe('soft-edges: the living ground\'s region (softMaskImage)', () => {

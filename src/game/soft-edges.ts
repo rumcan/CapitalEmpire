@@ -35,7 +35,7 @@ const TILE_PX = Math.hypot(HW, HH);
  *    meets something it must not blend into (a later area, paving, water, a road) */
 export const SOFT = {
   px: 64, min: 0.9, max: 10,
-  imgPx: 1.75, imgPxFar: 3, farL: 0.1, resMax: 10,
+  imgPx: 1.75, imgPxFar: 3, farL: 0.1, resMax: 7,
   waves: [[0.4, 0.3, 401], [0.16, 0.35, 409], [0.07, 0.35, 419]] as readonly (readonly [number, number, number])[], waveMin: 2.2,
   sd: 0.125, flat: 1.7, edge: 0.07,
   probe: 0.4, probeK: 0.35, areaK: 0.4, ease: 1.5, easeK: 1,
@@ -162,8 +162,12 @@ export function easeWeights(pts: ArrayLike<number>, wt: ArrayLike<number>, ease:
  *  is drawn with); full: the weight is whole all along the outline near the box (then `a` alone is the area's share everywhere: p need not
  *  be laid); null when no band reaches the box. Sides on a multiple of seamCell tiles (the next cell's area carries the surface on) take no
  *  band. Cost: one scanline pass for inside, then only the px within the band of each side */
-export function softRingImages(pts: ArrayLike<number>, wts: ArrayLike<number> | null, box: readonly [number, number, number, number], w: number, r: number, seamCell = 0): { a: SoftImage; p: SoftImage; full: boolean } | null {
-  const n = pts.length >> 1; if (n < 3 || !(w > 0)) return null;
+export function softRingImages(pts0: ArrayLike<number>, wts0: ArrayLike<number> | null, box: readonly [number, number, number, number], w: number, r: number, seamCell = 0): { a: SoftImage; p: SoftImage; full: boolean } | null {
+  if ((pts0.length >> 1) < 3 || !(w > 0)) return null;
+  // the outline with its runs of short sides merged where they keep within a fraction of an image px of it (a rugged outline's 0.35-tile
+  // sides are under a px at the far levels: each side costs a pass over its band)
+  const sim = simplifyRing(pts0, wts0, Math.max(0.03, 0.25 / r), seamCell), pts = sim.pts, wts = sim.wts;
+  const n = pts.length >> 1; if (n < 3) return null;
   const h = w / 2, m = 1.5 / r, reach = h + m;
   // the outline's box grown by the band, within box, on the world grid
   let px0 = Infinity, py0 = Infinity, px1 = -Infinity, py1 = -Infinity;
@@ -227,6 +231,30 @@ export function softRingImages(pts: ArrayLike<number>, wts: ArrayLike<number> | 
   }
   if (!laid) return null;
   return { a: { a, W, H, x0: X0, y0: Y0, r }, p: { a: p, W, H, x0: X0, y0: Y0, r }, full };
+}
+
+/** a closed outline with runs of sides merged while every point between stays within tol (tiles) of the merged side; each kept point's weight
+ *  the least of the run it ends (so a 0 is never lost); sides on a cell seam (seamCell) are kept as they are */
+export function simplifyRing(pts: ArrayLike<number>, wts: ArrayLike<number> | null, tol: number, seamCell = 0): { pts: number[]; wts: number[] | null } {
+  const n = pts.length >> 1, out: number[] = [], ow: number[] | null = wts ? [] : null;
+  if (n < 4) { for (let i = 0; i < pts.length; i++) out.push(pts[i]!); if (ow) for (let i = 0; i < n; i++) ow.push(wts![i]!); return { pts: out, wts: ow }; }
+  let i = 0;
+  while (i < n) {
+    out.push(pts[2 * i]!, pts[2 * i + 1]!);
+    let wMin = wts ? wts[i]! : 1, j = i + 1;
+    // extend the side from i to j while the points between keep within tol of it (at most to the ring's start)
+    for (; j < n; j++) {
+      const k = j + 1; if (k > n) break;
+      const ax = pts[2 * i]!, ay = pts[2 * i + 1]!, bx = pts[2 * (k % n)]!, by = pts[2 * (k % n) + 1]!, dx = bx - ax, dy = by - ay, l = Math.hypot(dx, dy);
+      if (isCellSeam(pts[2 * (j - 1)]!, pts[2 * (j - 1) + 1]!, pts[2 * j]!, pts[2 * j + 1]!, seamCell) || isCellSeam(pts[2 * j]!, pts[2 * j + 1]!, bx, by, seamCell)) break;
+      let ok = l > 1e-9;
+      for (let q = i + 1; q < k && ok; q++) ok = Math.abs((pts[2 * q]! - ax) * dy - (pts[2 * q + 1]! - ay) * dx) / l <= tol;
+      if (!ok) break;
+    }
+    if (ow) { for (let q = i + 1; q < j; q++) wMin = Math.min(wMin, wts![q]!); ow.push(wMin); }
+    i = j;
+  }
+  return { pts: out, wts: ow };
 }
 
 /** the dirt and desert the soft edge applies to: the painted dirt and desert families, or (no painted look: the photo textures) the dirt,
