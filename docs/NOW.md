@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-28 20:45 SAST)
+## START HERE (kept current by the lead; last updated 2026-10-28 21:00 SAST)
 
 **Taking over as lead?** This section is the one start document. Paste this into a new Claude Code chat (desktop app, Code tab), on any
 account, with the folder `E:\Repos\CapitalEmpire\worktrees\lead-typecheck`:
@@ -80,6 +80,9 @@ deliveries come as PRs to review. The 3D people session's handover is `docs/HAND
 **T258 #749 continuous-art follow-up** (`lead/continuous-art-plans-20261029`): generic live-source AI plans and one exact subjob per batch, explicit versioned corrections, held review metadata and lossless native/live-only reuse. Current live priority181 is respected; 180a-v3 remains explicitly queued, v1/v2 held and b/c/d pending. Reviewed source art/proofs are in this branch; runtime registration remains separate. Quota retry2026-10-28T15:32:44.457Z is unchanged. Typecheck/focused fixtures pass; final fresh-main checks and PR/deployment next.
 
 ### 4. Queue (in order; start the next when an agent lands)
+0. **T265 #794** (the owner, 2026-10-28: "can we have the swamp texture around the wider river too please and somemore trees bunching
+   along rivers and creeks on mass"): the river's swamp band (swamp.ts `swampStreams` is creeks only today), dense tree belts along every river
+   and creek, benched. **First: start it when T262 or T263 lands.**
 1. **T259 #759** farms: seasonal corn and ploughed fields, orchards in rows, farmhouses set back on a poplar-lined lane (art 185-189 from
    ChatGPT; stand-ins until then).
 2. **T248 #718** water that moves: research first, two flowing textures, waves lapping at the shore.
