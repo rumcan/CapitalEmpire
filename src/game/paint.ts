@@ -308,8 +308,9 @@ export function clampStyle<T extends Omit<PaintArea, 'id' | 'pts'>>(st: T): T {
       ? { mtex, mshare: Math.min(1, Math.max(0, fin(mshare ?? 0.5, 0.5))), msoft: Math.min(0.5, Math.max(0.01, fin(msoft ?? 0.12, 0.12))), mpatch: Math.min(4, Math.max(0.25, fin(mpatch ?? 1, 1))) }
       : {}),
     ...(sh > 0 ? { shadow: sh } : {}),
-    // T253: Round off only when ticked, its Smoothness only when set (both left out otherwise, so an old look stays as it was)
-    ...(round === true ? { round: true } : {}),
+    // T253: Round off when ticked, its Smoothness only when set (both left out otherwise, so an old look takes its kind's default); an unticked
+    // box is kept as false, so a bunker (rounded by default since 2026-10-29) the player unticked stays square across a reload
+    ...(round === true ? { round: true } : round === false ? { round: false } : {}),
     ...(typeof smooth === 'number' && Number.isFinite(smooth) ? { smooth: Math.round(Math.min(1, Math.max(0, smooth)) * 100) / 100 } : {}),
   };
 }
@@ -340,7 +341,10 @@ export const BRUSH_PRESETS: { kind: BrushKind; name: string; r: number; style: O
   { kind: 'green', name: 'Green', r: 4, style: clampStyle({ ...DEFAULT_STYLE, tex: S('green', 'golfGreen'), border: 2, btex: S('fringe', 'golfFringe') }) },
   { kind: 'tee', name: 'Tee', r: 2, style: clampStyle({ ...DEFAULT_STYLE, tex: S('tee', 'golfTee'), border: 1, btex: S('firstCut', 'golfFirstCut') }) },
   { kind: 'rough', name: 'Rough', r: 8, style: clampStyle({ ...DEFAULT_STYLE, tex: S('rough', 'golfRough'), border: 0 }) },
-  { kind: 'bunker', name: 'Bunker', r: 2, style: clampStyle({ ...DEFAULT_STYLE, tex: S('bunker', 'bunkerSand'), border: 2, btex: S('rough', 'golfRough') }) },
+  // a bunker is rounded off at full Smoothness by default (the owner, 2026-10-29: "the default for edges on bunker should be round ticked and
+  // smoothness 100%"); a look saved without Round off (an old save's hole, the course default in storage) takes it too, as its missing fields
+  // come from this preset (golf/looks.ts normalizeBook, paint-tool loadBrush)
+  { kind: 'bunker', name: 'Bunker', r: 2, style: clampStyle({ ...DEFAULT_STYLE, tex: S('bunker', 'bunkerSand'), border: 2, btex: S('rough', 'golfRough'), round: true, smooth: 1 }) },
   { kind: 'water', name: 'Water', r: 4, style: clampStyle({ ...DEFAULT_STYLE, tex: S('water', 'waterDark'), border: 2, btex: 'dirt' }) },
   // T222 (the owner, 2026-10-27: "add desert as a waste bunker in the course"): the Waste area, the course grid's waste surface (the desert, Painted ›
   // Waste area sand). Key 7 (T252: the cart path brush is gone, SURFACE_BRUSHES), so the keys 1-6 stay as they were and the stage 2 keys run 1-7 with no gap;

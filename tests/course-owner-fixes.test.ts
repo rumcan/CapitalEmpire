@@ -10,7 +10,7 @@ import { BLOB_STYLE, chunkOutlines, collarWeight } from '../src/game/ext/course-
 import { BORDER_MAX_M, BORDER_MIN_M, coursePatch, courseStyles, courseEditReach, COURSE_EDIT_REACH, widestCollar, type CourseLooks } from '../src/game/ext/course-grid/patch';
 import { growMask, seededStage } from '../src/game/ext/course-fx';
 import { SEED_LOOKS, growDraws, seedShare } from '../src/game/ext/course-fx/seed';
-import { DEFAULT_SHADOW, GREEN_FACE, SHADOW_HAIRLINE, WALL_SHADOW, defaultShadow, faceScale, shadowOwner, wallShade } from '../src/game/ext/course-walls';
+import { DEFAULT_SHADOW, FACE_SHADE_MAX, GREEN_FACE, SHADOW_HAIRLINE, WALL_SHADOW, defaultShadow, faceScale, shadowOwner, wallShade } from '../src/game/ext/course-walls';
 import { aimsFromPlans, decodePlans } from '../src/game/ext/hole-wizard';
 import { PaintTool, type PaintHost } from '../src/game/paint-tool';
 import { monthIndexLabel } from '../src/game/golf/calendar';
@@ -246,7 +246,12 @@ test('5. the walls\' shadow is a hairline by default: a thin soft contact line, 
 
 test('5b. no shadows under greens (the owner, 2026-10-25): a green\'s Shadow is none by default, its bank slim; a bunker\'s cut face takes the bunker\'s', () => {
   assert.equal(defaultShadow(SURF.green), 0);
-  for (const s of [SURF.fairway, SURF.tee, SURF.bunker, SURF.water]) assert.equal(defaultShadow(s), SHADOW_HAIRLINE);
+  for (const s of [SURF.fairway, SURF.tee, SURF.water]) assert.equal(defaultShadow(s), SHADOW_HAIRLINE);
+  // a bunker's is 30% (the owner, 2026-10-29)
+  assert.equal(defaultShadow(SURF.bunker), 0.3);
+  // T267: a bunker's cut face lies in its own shade by its Shadow: none at 0, full at the default 0.3, a second pass past it, capped
+  assert.equal(wallShade(0).face, 0); assert.equal(wallShade(0.3).face, 1); assert.ok(wallShade(0.15).face > 0.4 && wallShade(0.15).face < 0.6);
+  assert.equal(wallShade(1).face, FACE_SHADE_MAX);
   const { tool } = game();
   assert.equal(tool.courseShadow('green'), 0, 'the green\'s Shadow slider starts at none');
   const w = wallShade(defaultShadow(SURF.green));
