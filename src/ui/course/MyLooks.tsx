@@ -1,4 +1,6 @@
+import { useEffect, useState } from 'react';
 import type { Game } from '../../game/engine';
+import { lookWhat } from '../../game/golf/looks';
 import { BRUSH_PRESETS } from '../../game/paint';
 import { PHOTO_TEX } from '../../game/grass-art';
 import { SURFACE_TINT } from '../../game/ext/course-cursor';
@@ -45,20 +47,41 @@ export function MyLooksCard({ game, onClose }: { game: Game; onClose: () => void
   const p = game.paint, kind = p.brushKind, name = BRUSH_PRESETS.find(b => b.kind === kind)?.name ?? kind, s = p.style;
   /** a golf course's 1 m grid wears a look's texture, size and angle only (its collars are automatic) */
   const grid = game.golfMode && !!game.courseGrid;
+  // T256 (#743): a look belongs to its owner: the hole in hand, the property (Range › Build), a facility (Facilities ▸ Practice), or the
+  // course default new holes start from; the card says which it edits
+  const owner = p.lookOwner, what = lookWhat(kind, owner), facility = !!game.practice?.kind && game.tool === 'practice';
+  const [done, setDone] = useState('');
+  // the card shows the look of whoever it edits now (the owner changed under it: another hole, the property, a facility)
+  useEffect(() => { if (grid && p.pickLook) p.pickLook(facility && !(FACILITY_KINDS as readonly string[]).includes(kind) ? 'green' : kind); setDone(''); }, [grid, owner]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <section className="glass tp w-[330px] max-h-[calc(var(--vh-ui,100vh)-var(--hud-top,5.75rem)-8.25rem)] overflow-y-auto p-3" data-card="looks" aria-label={`My looks: ${name}`}>
       <div className="mb-2 flex items-center justify-between gap-2">
         <h2 className="font-display text-xl font-bold">{`My looks · ${name}`}</h2>
         <button className="round-btn" aria-label="Close My looks" title="Close (Esc)" onClick={onClose}>×</button>
       </div>
+      {grid && <div className="looks-what mb-2" data-testid="looks-what"><span className="label-caps">Editing</span> <b>{what}</b></div>}
+      {grid && facility && (
+        <div className="mb-2 flex flex-wrap gap-1.5" role="group" aria-label="Surface">
+          {FACILITY_KINDS.map(k => <button key={k} className={`chip ${kind === k ? 'chip-on' : ''}`} onClick={() => p.pickLook(k)}><SurfaceMark kind={k} size={16} />{BRUSH_PRESETS.find(b => b.kind === k)?.name}</button>)}
+        </div>
+      )}
       <div className="flex items-center gap-3">
         <LookDisc kind={kind} tex={s.tex} scale={s.scale} angle={s.angle} tone={s.tone} toneAmt={s.toneAmt} tint={s.tint} />
         <div className="min-w-0">
           <div className="flex items-center gap-1.5 font-semibold"><SurfaceMark kind={kind} size={20} />{lookName(s.tex)}</div>
-          <div className="sub-line mt-0.5 leading-snug">{`${grid ? `Every ${name.toLowerCase()} on your course` : `Every ${name.toLowerCase()} you paint`} wears it; the disc at the pointer shows it. Pick another surface for its look.`}</div>
+          <div className="sub-line mt-0.5 leading-snug">{grid ? (owner === 'default' ? `New holes start with this ${name.toLowerCase()} look; the holes you have keep their own.` : `Only ${what.toLowerCase()} wear it; the other holes, your property and the facilities keep their own. The disc at the pointer shows it.`) : `Every ${name.toLowerCase()} you paint wears it; the disc at the pointer shows it. Pick another surface for its look.`}</div>
         </div>
       </div>
+      {grid && (
+        <div className="mt-2 flex flex-wrap items-center gap-1.5" data-testid="looks-scope">
+          <button className={`chip ${owner === 'default' ? 'chip-on' : ''}`} aria-pressed={owner === 'default'} title="Edit the look every new hole starts from (your holes keep their own)" onClick={() => { p.setLookDefault(owner !== 'default'); setDone(''); }}>Course default (new holes)</button>
+          <button className="chip" title={`Give every hole (and the course default) this ${name.toLowerCase()} look, as a course-wide change; your property and the facilities keep theirs`} onClick={() => { const n = p.applyLookToAll(kind); setDone(n.length ? `${name} look on holes ${n.join(', ')} and the course default` : `${name} look on the course default`); }} data-testid="looks-all">Apply to all holes</button>
+          {done && <span className="sub-line" role="status">{done}</span>}
+        </div>
+      )}
       <StyleEditor game={game} gridOnly={grid} />
     </section>
   );
 }
+/** T256: the surfaces a practice facility lays (Facilities ▸ Practice: its green, the chipping bunker, the chip mat's tee) */
+const FACILITY_KINDS = ['green', 'bunker', 'tee'] as const;

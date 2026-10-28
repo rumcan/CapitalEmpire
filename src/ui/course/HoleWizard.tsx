@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Game } from '../../game/engine';
 import { SURF } from '../../game/ext/course-grid';
 import { affordKind, statusIcon } from '../status-icon';
@@ -64,6 +64,7 @@ export function HoleWizardPanel({ game, looks = false, onLooks }: { game: Game; 
         </div>
       )}
       {w.step !== 'shape' && <p className="sub-line mt-1.5">{w.suggestM > 0 && step === 1 ? `Point the way: the green sits ${w.suggestM} m out, a par-3 to start with. Esc moves the tee again.` : ASK[step]}</p>}
+      {w.step === 'tee' && !w.base && <FromMyHoles game={game} />}
       {w.suggestM > 0 && w.step !== 'shape' && (
         <div className="mt-1.5 flex items-center justify-between gap-2 text-[12px]" data-testid="wiz-par3">
           <span className="text-emerald-300">Suggested: a {w.suggestM} m par-3 for your first hole</span>
@@ -79,10 +80,49 @@ export function HoleWizardPanel({ game, looks = false, onLooks }: { game: Game; 
         <p className="wiz-keys">Drag the line to bend it · amber handles widen · <kbd>R</kbd> turns the green · <kbd>[</kbd> <kbd>]</kbd> size it · <kbd>Ctrl</kbd>+<kbd>Z</kbd> undoes a drag{w.base ? ' or a stroke' : ''} · <kbd>Esc</kbd> steps back</p>
       )}
       <div className="mt-1.5 flex flex-wrap gap-1">
-        {w.base && w.step === 'shape' && <button className="chip" title="Clears the hole's planned cells (your touch-ups stay); undo brings it back" onClick={() => p.deletePlan()}>Delete hole</button>}
+        {w.base && w.step === 'shape' && <DeleteChoice game={game} n={w.base.hole} />}
         {canEdit && <button className="chip" onClick={() => game.editHole(cur)}>{`Edit hole ${cur}`}</button>}
         <button className="chip" title="Back to the brush" onClick={() => p.setBrush(p.brushKind)}>Done</button>
       </div>
+    </div>
+  );
+}
+
+/** T256 (#743): Edit hole's Delete hole, a choice: the hole and all its paint (touch-ups included) back to the land with its frame trees, or
+ *  its grass kept as your property's paint; one undo step either way */
+function DeleteChoice({ game, n }: { game: Game; n: number }) {
+  const [ask, setAsk] = useState(false);
+  if (!ask) return <button className="chip" title="Delete the hole: with its grass, or keeping its grass as your property's paint (undo brings it back)" onClick={() => setAsk(true)} data-testid="wiz-delete">Delete hole</button>;
+  return (
+    <div className="mt-1 flex w-full flex-wrap gap-1.5 rounded-lg border border-rose-400/40 bg-rose-500/10 p-2" role="alertdialog" aria-label={`Delete hole ${n}?`} data-testid="wiz-delete-choice">
+      <button className="chip border-rose-400/60 text-rose-100" onClick={() => { setAsk(false); game.deleteHole(n, false); }}>Delete hole and its grass</button>
+      <button className="chip border-amber-300/60 text-amber-100" onClick={() => { setAsk(false); game.deleteHole(n, true); }}>Delete hole, keep the grass</button>
+      <button className="chip" onClick={() => setAsk(false)}>Keep it</button>
+    </div>
+  );
+}
+
+/** T256 (#743): New hole's "From My holes": the player's saved holes (this game's and the browser's), each placed as a ghost (R turns it), a
+ *  click builds it as this hole, priced as New hole */
+function FromMyHoles({ game }: { game: Game }) {
+  const list = game.myHoles?.() ?? [], [open, setOpen] = useState(false);
+  if (!list.length) return null;
+  return (
+    <div className="mt-2" data-testid="from-my-holes">
+      <button className="chip" aria-expanded={open} onClick={() => setOpen(!open)}>{`From My holes (${list.length})`} <span aria-hidden>{open ? '▾' : '▸'}</span></button>
+      {open && (
+        <ul className="mt-1.5 flex flex-col gap-1">
+          {list.map((h, i) => (
+            <li key={`${h.name}-${i}`} className="flex items-center justify-between gap-2">
+              <span className="min-w-0 truncate" title={h.name}>{h.name}<span className="sub-line">{`${h.par ? ` · par ${h.par}` : ''}${h.m ? ` · ${h.m} m` : ''}`}</span></span>
+              <span className="flex shrink-0 gap-1">
+                <button className="chip chip-on" onClick={() => game.paint.setMyHole(h)} title="Place it on the map: R turns it, a click builds it">Place</button>
+                <button className="chip" onClick={() => game.forgetMyHole(h)} title="Take it out of My holes" aria-label={`Forget ${h.name}`}>×</button>
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

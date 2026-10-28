@@ -16,7 +16,10 @@ export type LeafAct =
   | { k: 'road'; id: string } | { k: 'junction'; id: string } | { k: 'surface'; id: string } | { k: 'newHole' } | { k: 'holes' }
   | { k: 'club' } | { k: 'halfway' } | { k: 'care'; id: string } | { k: 'event' } | { k: 'props'; group: string | null }
   | { k: 'paint'; tex: string } | { k: 'plant'; id: string } | { k: 'paintMode'; id: string } | { k: 'range'; section: string | null } | { k: 'land' }
-  | { k: 'practice'; id: string };
+  | { k: 'practice'; id: string } | { k: 'build' };
+/** T256 (#743): Build, the holes' painting tools on your property (Range › Build, Facilities › Build on your property): the course tool's
+ *  entry with the property's brush */
+const BUILD_TOOL: RailTool = { id: 'course', label: 'Build', key: '', icon: 'terrain' };
 /** a leaf: the rail item it opens from, its tool entry (the Props tool's view with it), what else it does */
 export interface Leaf { item: string; entry: RailTool; act?: LeafAct }
 /** a flyout row: a caption (no action), a row with children (opens the next flyout), or a leaf. why: locked (dimmed, the reason shown) */
@@ -24,6 +27,8 @@ export interface MenuRow {
   key: string; label: string; icon?: IconName; swatch?: string; /** a course surface's mark (SurfaceMark) */ mark?: string; caption?: boolean; children?: MenuRow[]; leaf?: Leaf; why?: string | null; isNew?: boolean; note?: string;
   /** T233: its illustrated tile (art 174, tool-tiles.ts), drawn above its name; a column with a tiled row is laid out as a grid of tiles */
   tile?: ToolTile;
+  /** T256: drawn as a gold button (the Range's Build) */
+  gold?: boolean;
 }
 /** the game's lists the menus are built from (App.tsx from the engine; the tests from fixtures) */
 export interface MenuCtx {
@@ -72,6 +77,8 @@ export function menuOf(item: RailItem, c: MenuCtx): MenuRow[] {
   const rows: (MenuRow | null)[] = [];
   if (item.action === 'range') {
     for (const s of c.range) rows.push(leaf(item.tools[0], s.name, { k: 'range', section: s.id === 'card' ? null : s.id }, 'pin'));
+    // T256: Build, gold, last: the holes' painting tools on the range, the practice area and the rest of your land
+    if (c.golf && c.range.length) { const b = leaf(BUILD_TOOL, 'Build', { k: 'build' }, 'terrain'); if (b) rows.push({ ...b, gold: true, note: 'Paint your property, apart from the holes' }); }
     return rows.filter((r): r is MenuRow => !!r);
   }
   switch (item.id) {
@@ -112,6 +119,8 @@ export function menuOf(item: RailItem, c: MenuCtx): MenuRow[] {
       if (pa) rows.push(tiled(group('plants', 'Plants', 'trees', c.plants.map(m => tiled({ ...leaf(pa, m.name, { k: 'plant', id: m.id })!, ...(m.col ? { swatch: m.col } : {}) }, PLANT_TILE[m.id])), pa), ROW_TILE.plants));
       const pr = byId('props');
       if (pr) rows.push(tiled(group('decoration', 'Decoration', 'leaf', [group('props', 'Props', 'leaf', [leaf(pr, 'All props', { k: 'props', group: null }), ...c.propGroups.map(g => tiled(leaf(pr, g.name, { k: 'props', group: g.id }), PROP_GROUP_TILE[g.id]))], pr)], pr), ROW_TILE.decoration));
+      // T256: the same Build as the Range's: paint your property
+      if (c.golf) { const b = leaf(BUILD_TOOL, 'Build on your property', { k: 'build' }, 'terrain'); if (b) rows.push({ ...b, gold: true }); }
       break;
     }
     case 'towndecor': {

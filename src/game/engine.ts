@@ -1659,7 +1659,7 @@ export class Game {
   }
   /** whether the Paint tool or Holes may lay what is in hand: Holes at stage 1 is New hole only (P23 4.2, 4.3), so outside New hole its brush,
    *  hidden with Shape by hand, lays nothing and draws no footprint or disc */
-  get brushOpen(): boolean { if (this.tool !== 'course' || this.paint.planOpen) return true; const ui = this.toolUi(); return !ui || ui.shapeByHand; }
+  get brushOpen(): boolean { if (this.tool !== 'course' || this.paint.planOpen || this.paint.property || this.paint.mode === 'myhole') return true; /* T256: Range › Build and From My holes are open from the start */ const ui = this.toolUi(); return !ui || ui.shapeByHand; }
   /** the cursor hint's change last told to the UI, and when (the pill follows within 100 ms, never more than ten times a second) */
   private hintSeen = 0; private hintEmitAt = 0;
   /** the map grid and the course half grid (T100), drawn between the ground and the sprites */
