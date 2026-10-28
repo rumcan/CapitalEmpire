@@ -76,6 +76,10 @@ import { CAR_COLOURS, carHeading, facings } from './traffic';
 import { bayCar, bayFoot, isWagon } from './vehicles';
 import { DayBook, clubCardView, dayCourse, dayPace, dayPlan, feeScale, normalizeDaySave, seasonPaceRep, type ClubCardView, type DayInputs, type DayRoster } from './golf/everyday';
 import { choosePin, greenAt, pinIn, pinLine, pinReport, pinSlot, rollDayPins, withDayPins, type DayPin, type GreenShape } from './golf/daypins';
+import { crewCells, crewGround, type CrewGround } from './golf/crewground';
+import { crewDay, crewFor, holeWindows, rotaJobs, type CrewDay, type Veh as CrewVeh } from './golf/crew';
+import { CrewView, cupSetAt } from './golf/crewview';
+import { fairwayStripeLook } from './course-stripes';
 import { DAY_CAR_CAP, DayView, type ClubGround } from './golf/everydayview';
 import { carOwnerScale } from './ext/car-art';
 import { SimClient, type LotView } from './sim/client';
@@ -6685,6 +6689,7 @@ export class Game {
     }
     m = this.playMovers(out, m, X0, Y0, X1, Y1);
     m = this.dayMovers(out, m, X0, Y0, X1, Y1, now); // T208: everyday golf
+    m = this.crewMovers(out, m, X0, Y0, X1, Y1, now); // T269: the grounds crew
     out.length = m;
     return out;
   }
@@ -6773,7 +6778,7 @@ export class Game {
    *  day or the course's holes change; none on a tournament day, without a clubhouse or without holes. The movers and the balls read it */
   private updateEveryday(now: number) {
     const g = this.golf, tr = this.traffic;
-    if (!g || !this.bizDefs.some(d => d.type === 'clubhouse')) { this.dayPlay = null; return; }
+    if (!g || !this.bizDefs.some(d => d.type === 'clubhouse')) { this.dayPlay = null; this.dropCrew(); return; }
     if (!this.dayBook || this.dayBookFor !== g) { this.dayBook = new DayBook(this.seed, normalizeDaySave(g.everyday)); this.dayBookFor = g; this.dayPlay = null; }
     const at = townTimeOf(tr.town, tr.simTime(now)), free = tr.round.stage === 'free';
     this.dayMinute = at.dayMin;
@@ -6786,14 +6791,96 @@ export class Game {
     // the card follows the day (the golfers out, the waits): once a second while it is open
     if (this.clubCardOpen && (b.members + b.visitors > 0 || now - this.clubEmitAt > 1000)) { this.clubEmitAt = now; this.emit(); }
     const s = this.dayBook.save;
-    if (!free || !s || s.closed || s.day !== at.day) { this.dayPlay = null; return; }
+    if (!free || !s || s.closed || s.day !== at.day) { this.dayPlay = null; this.dropCrew(); return; }
     const course = this.dayCourseOf(now);
-    if (!course || !course.view.holes.length) { this.dayPlay = null; return; }
+    if (!course || !course.view.holes.length) { this.dayPlay = null; this.dropCrew(); return; }
     if (!this.dayPlay || this.dayPlay.day !== s.day || this.dayPlay.key !== course.key) {
       const roster = this.dayBook.rosterOf()!, plan = dayPlan(course.view, roster);
       this.dayPlay = { view: new DayView(plan, roster, course.view, this.clubGround(g), this.cartPathsNow(), capped(this.golfPace) ? { walk: WALK_CAP, cart: CART_CAP, car: DAY_CAR_CAP } : null), day: s.day, key: course.key };
       this.dayArt = roster.golfers.map(p => GOLFER_ART[p.sex][p.look % GOLFER_ART[p.sex].length]!);
+      this.buildCrew(g, plan, course.view, s.day); // T269: the grounds crew works round the day's groups
     }
+    this.crewFlags(); // T269: a flag moves when the greenkeeper sets it
+  }
+  // ---------- T269 (#810) part 2: the grounds crew (golf/crew.ts, crewground.ts, crewview.ts) ----------
+  /** the day's crew: its day (the schedule), its playback, the town day it was made for, and the next cup event's minute (the flags) */
+  private crew: { day: CrewDay; view: CrewView; town: number; nextCup: number } | null = null;
+  /** the crew's ground per hole, kept with its key (the grid's rev and the holes' lines) */
+  private crewGrounds: { key: string; m: Map<number, CrewGround> } | null = null;
+  /** the crew's vehicles as movers (reused Drawables), and the pool they come from */
+  private crewOut: Drawable[] = []; private crewThingDraw: Drawable[] = [];
+  /** T269: the crew's size (part 3: the staff the player hired); for now the crew a course of its holes needs */
+  private crewSize(holes: number): { gk: number; mo: number } { return crewFor(holes); }
+  /** each hole's crew ground (golf/crewground.ts), read from the grid once per course (its rev and the holes' lines) */
+  private crewGroundsNow(): Map<number, CrewGround> {
+    const grid = this.courseGrid, g = this.golf; if (!grid || !g) return new Map();
+    const lines = this.holeLines(), key = `${grid.rev}|${JSON.stringify([...lines])}`;
+    if (this.crewGrounds?.key === key) return this.crewGrounds.m;
+    const cells = crewCells(grid), look = fairwayStripeLook(), m = new Map<number, CrewGround>();
+    for (const p of g.pins) {
+      const next = g.tees.find(t => t.hole === p.hole + 1 && t.kind === 'back') ?? g.tees.find(t => t.hole === p.hole + 1) ?? null;
+      m.set(p.hole, crewGround(grid, p.hole, cells.get(p.hole), lines.get(p.hole), look, this.greenOf(p.hole), next));
+    }
+    this.crewGrounds = { key, m }; return m;
+  }
+  /** the crew's day for town day `day` round the day's play (plan: its groups' times on each hole), on the day's course (each hole once) */
+  private buildCrew(g: GolfSave, plan: RoundPlan, view: CourseView, day: number) {
+    const holes = view.holes, N = holes.length, grounds = this.crewGroundsNow(), dp = g.dayPins;
+    const size = this.crewSize(new Set(holes.map(h => h.n)).size);
+    const done = plan.groups.map(gr => Math.max(...gr.players.map(id => plan.done[id] ?? 0)));
+    const { windows, firstOn } = holeWindows(plan.pace?.arrive ?? [], done, N);
+    const T = this.traffic, prof = T.town.prof, spm = (prof ? prof.k : 1) / Math.max(1e-6, T.town.rate); // (sim s a game minute in the golf hours)
+    const crew = holes.map(h => {
+      const ground: CrewGround = grounds.get(h.n) ?? { n: h.n, passes: [], rough: [], sands: [], greenPasses: [], park: null };
+      const now = this.todayPin(h.n) ?? h.pin, old = (dp ? pinIn(dp.prev, h.n) : null) ?? now;
+      return { ground, oldCup: { x: old.x, y: old.y }, newCup: { x: now.x, y: now.y }, moved: Math.hypot(now.x - old.x, now.y - old.y) > 0.5 };
+    });
+    const jobs = rotaJobs(day, holes.map(h => h.n)), yard = this.dayPark?.entrances[0] ?? g.clubhouse;
+    const pace = capped(this.golfPace);
+    const cd = crewDay({ holes: crew, yard: { x: yard.x, y: yard.y }, gk: size.gk, mo: size.mo, ...jobs, windows, firstOn, pace: pace ? { walk: WALK_CAP * spm, cart: CART_CAP * spm } : null });
+    this.crew = { day: cd, view: new CrewView(cd, pace ? { walk: WALK_CAP, cart: CART_CAP } : null), town: day, nextCup: -Infinity };
+  }
+  /** no crew today (a tournament day, no clubhouse or no holes): the flags stand on today's cups */
+  private dropCrew() { if (this.crew) { this.crew = null; this.syncFlags(); } }
+  /** the flags follow the greenkeepers: when the minute passes a cup event the flags are synced (and once after the crew is made) */
+  private crewFlags() {
+    const c = this.crew; if (!c) return;
+    if (this.dayMinute >= c.nextCup) {
+      c.nextCup = c.day.cups.find(e => e.t > this.dayMinute)?.t ?? Infinity;
+      this.syncFlags();
+    }
+  }
+  /** the crew's stand-ins (until the art: GOLF-SPRITES.md "Grounds crew"): the greenkeeper a spectator in a bucket hat, the mower operator one in a cap */
+  private static readonly CREW_ART: Record<'gk' | 'mo', number> = {
+    gk: Math.max(0, SPECTATOR_PEOPLE.findIndex(p => p.id === 'spectator:spec_m_bucket_hat')), mo: Math.max(0, SPECTATOR_PEOPLE.findIndex(p => p.id === 'spectator:spec_m_young_cap')),
+  };
+  /** the crew's vehicles' stand-ins (the hire cart's two facings, the golf mower, the push mower, the ride-on), their footprints' half sides and labels */
+  private static readonly CREW_VEH: Record<Exclude<CrewVeh, 'none'>, { items: number[]; label: string; r: number }> = {
+    cart: { items: [libIndexOf('business:golf-cart-sw'), libIndexOf('business:golf-cart-se')], label: 'Stand In for utility cart', r: 0.6 },
+    reel: { items: [libIndexOf('business:golf-mower')], label: 'Stand In for ride-on reel mower', r: 0.7 },
+    push: { items: [libIndexOf('gen:lawnmower')], label: 'Stand In for walk-behind mower', r: 0.3 },
+    rotary: { items: [libIndexOf('expansion:rideon-mower')], label: 'Stand In for rotary mower', r: 0.6 },
+  };
+  /** T269: the grounds crew in the tile box, from mover m on (as dayMovers): each worker as his stand-in person (labelled), his vehicles to crewOut.
+   *  Returns the next mover index */
+  private crewMovers(out: Drawable[], m: number, X0: number, Y0: number, X1: number, Y1: number, now: number): number {
+    this.crewOut.length = 0; const c = this.crew; if (!c || this.dayOff) return m;
+    const T = this.traffic, st = T.simTime(performance.now()), v = c.view; v.update(this.dayMinute, now, X0, Y0, X1, Y1, st, localRate(T.town, st));
+    const t = this.crowdGolfers[3] ?? (this.crowdGolfers[3] = { x: 0, y: 0, group: 0, person: 0, row: 0, frame: 0 });
+    for (const p of v.people) {
+      if (p.x < X0 || p.x > X1 || p.y < Y0 || p.y > Y1) continue;
+      t.group = 0; t.x = p.x; t.y = p.y; t.person = Game.CREW_ART[p.role]; t.row = p.row; t.frame = p.frame;
+      crowdDrawable(out, m, t); if (p.lift) out[m]!.lift = p.lift; if (p.alpha < 1) out[m]!.alpha = p.alpha;
+      this.caddieLabels.push({ p: out[m]!, text: p.role === 'gk' ? 'Stand In for greenkeeper' : 'Stand In for mower operator' }); m++;
+    }
+    let n = 0;
+    for (const th of v.things) {
+      if (th.veh === 'none' || th.x < X0 || th.x > X1 || th.y < Y0 || th.y > Y1) continue;
+      const a = Game.CREW_VEH[th.veh], item = a.items.length > 1 ? a.items[th.hx - th.hy < 0 ? 0 : 1]! : a.items[0]!; if (item < 0) continue;
+      const d = this.propDrawable(this.crewThingDraw, n++, item, th.x, th.y, a.r); if (th.alpha < 1) d.alpha = th.alpha;
+      this.crewOut.push(d); this.caddieLabels.push({ p: d, text: a.label });
+    }
+    return m;
   }
   /** T208: the town day's minute everyday golf is played back at (set each frame) and each everyday golfer's art (indices into GOLFER_PEOPLE) */
   private dayMinute = 0; private dayArt: number[] = []; private dayBookFor: GolfSave | null = null; private clubEmitAt = 0; private dayPark: CarPark | null = null;
@@ -6876,8 +6963,11 @@ export class Game {
     if (moved) { this.pinRev++; this.dayCourse = null; this.scheduleSave(); }
     this.pinsCheckKey = key();
   }
-  /** where hole n's flag stands now: today's cup */
-  private shownPin(n: number): Pt | null { return this.todayPin(n); }
+  /** where hole n's flag stands now: today's cup, once the greenkeeper has set it (T269 part 2: until his cup event, yesterday's) */
+  private shownPin(n: number): Pt | null {
+    const t = cupSetAt(this.crew?.day ?? null, n), prev = this.golf?.dayPins ? pinIn(this.golf.dayPins.prev, n) : null;
+    return t !== null && this.dayMinute < t && prev ? prev : this.todayPin(n);
+  }
   /** the flags (the pins' props, golfProps) to the cups shown now: moved in place (propChanged; a flag casts nothing, so no ground re-bakes) */
   private syncFlags() {
     const g = this.golf; this.flagRev = this.pinRev; if (!g) return;
@@ -7435,7 +7525,7 @@ export class Game {
       // (T192: with their brake lights from the closest zooms down to 8%, drawn in the sprite pass right after each car)
       const cars: Drawable[] = this.traffic ? this.traffic.visible(bx0, by0, bx1, by1, cam.z >= 0.08) : [];
       // at the street tier the townspeople and the crowd (the galleries' fans, the queues, the walking parties) are the movers, merged in by depth
-      const movers = tier === 'street' ? cars.concat(this.peds.n ? this.pedMovers(bx0, by0, bx1, by1) : [], this.crowdMovers(bx0, by0, bx1, by1, now / 1000), this.range.movers_(bx0, by0, bx1, by1), this.dayCarOut, this.golfCartOut) : cars;
+      const movers = tier === 'street' ? cars.concat(this.peds.n ? this.pedMovers(bx0, by0, bx1, by1) : [], this.crowdMovers(bx0, by0, bx1, by1, now / 1000), this.range.movers_(bx0, by0, bx1, by1), this.dayCarOut, this.golfCartOut, this.crewOut) : cars;
       // with the living ground the trees plant over every chunk on screen and as far out as a chunk's caster reach (a chunk bakes once its trees
       // are known: casterReady; a cell one tile short of that left an edge chunk unbaked for ever, T134)
       if (this.ground.castersUsed) { const CW2 = this.groundTier === 'm' ? MID_W : CHUNK_W, CH2 = this.groundTier === 'm' ? MID_H : CHUNK_H; this.plantForest(Math.floor(X0 / CW2) * CW2, Math.floor(Y0 / CH2) * CH2, (Math.floor(X1 / CW2) + 1) * CW2, (Math.floor(Y1 / CH2) + 1) * CH2, LIVING_PLANT_MARGIN); }
