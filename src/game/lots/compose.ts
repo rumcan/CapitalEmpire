@@ -32,16 +32,20 @@ import { groupsFrom, type GroupData } from './group-data';
 import { FENCE_BAND, ITEM_KINDS, groupOf, modelFrom, type Box, type HouseClass, type ItemKind, type Model, type SectorLot, type UseGroup } from './learn';
 import { pairTable, stateDensity, stateKinds, tasteFrom, type Partner } from './taste';
 import { placesFrom, type PlaceLot, type Places } from './places';
-import { CLASS_NAMES, frameHalf, houseFamilies, sizeClassOf } from './house-class';
+import { CLASS_NAMES, REAR, baseOf, frameHalf, houseFamilies, sizeClassOf } from './house-class';
 import { allows, parseAllocations } from './house-alloc';
 import ALLOC_JSON from './house-allocations.json';
 import REMOVED from '../../../scripts/assets/removed.json';
 import { OWNER_SCALE } from './scales';
 import { LIBRARY } from '../library';
-import { drawnAsStandIn } from '../newart';
+import { drawnAsStandIn, standInFamily } from '../newart';
 import { GAS_SHOP, GAS_SHOP_FALLBACK, WHEEL_STOP, gasPlan, isCanopy, isOpenStructure, matchBays } from './gas-station';
 import { LATEST, LOT_MODELS } from './lot-models';
 import { lotPickup, parkedAs } from '../vehicles';
+import { PIXEL_LIMIT } from '../sizes';
+import { SHOP_PALETTE, SPOT_OF, VENUE_PALETTE, colourOf, tryOrder } from './variety';
+import { FRONTAL } from './frontal';
+import { onStudioScales } from './scales-live';
 import { KIT_FLOWERS, KIT_HEDGE, KIT_SHRUBS } from '../kit';
 export { isCarPark, type Composition, type ComposeState, type LotGeom, type Placed, type PresetDrop } from './compose-core';
 
@@ -306,27 +310,119 @@ export function isAngled(lot: LotGeom): boolean { return Math.max(Math.abs(lot.u
  *  built or upgraded lot, an approved lab preset for the lot's road (approvedFor: a diagonal road takes only its own, an angled lot on an axis road
  *  none); else, on a lot the map axes fit, the frozen preset of its use, state and size bucket, picked by its street slot (pickPreset); null when no
  *  preset fits (a lot not built or upgraded, or of no use, has none unless forced) */
-export function pickedPreset(lot: LotGeom, st: ComposeState): LotPreset | null {
-  if (st.preset !== undefined) { const forced = PRESETS.find(p => p.id === st.preset); if (forced) return forced; }
+export function pickedPreset(lot: LotGeom, st: ComposeState): LotPreset | null { return planOf(lot, st)?.preset ?? null; }
+/** pickedPreset's answer and, for a shop or venue lot (T270), the shop it shows when its preset holds another: swap.id at swap.scale (a preset
+ *  multiplier) in the preset's shop spot (spotOf) */
+function planOf(lot: LotGeom, st: ComposeState): ShopPlan | null {
+  if (st.preset !== undefined) { const forced = PRESETS.find(p => p.id === st.preset); if (forced) return { preset: forced }; }
   const use = presetUse(st), state = stateOf(st.level, st.decline);
   if (!use || !state) return null;
   const road = roadOf(lot.n), angled = isAngled(lot), ok = angled && road % 2 === 0 ? [] : approvedOf(use, state, lot.w, lot.d, road);
-  if (ok.length) return pickPreset(ok, streetSlot(lot), streetKey(lot)) ?? null;
-  if (angled) return null;
   // the frozen preset of the lot's slot, among those whose house fits the lot's band at today's sizes (houseFits: a list where every one fits,
   // nearly all, picks as before; neighbours still differ); none fits: among all, the house centred in its band
-  const list = presetsOf(use, state, lot.w, lot.d), fits = list.filter(q => houseFits(q, lot));
-  return pickPreset(fits.length ? fits : list, streetSlot(lot), streetKey(lot)) ?? null;
+  const frozen = () => { const list = presetsOf(use, state, lot.w, lot.d), fits = list.filter(q => houseFits(q, lot)); return fits.length ? fits : list; };
+  // (T270: a shop lot whose approved presets cannot show the shop its place calls for draws a frozen one that can, on a lot the map axes fit)
+  if (ok.length) return shopPlan(ok, lot, use, angled || use === 'res' ? undefined : frozen);
+  if (angled) return null;
+  return shopPlan(frozen(), lot, use);
 }
-/** the preset a built lot draws (pickedPreset), fitted to the lot, and the lot's preset frame: frameOf, except that a lab preset of a diagonal road
- *  is turned by its quarter (quarterOfRoad); null as pickedPreset */
+/** the frame a preset is drawn in on a lot: frameOf, a lab preset of a diagonal road turned by its quarter (quarterOfRoad) */
+const presetFrame = (lot: LotGeom, preset: LotPreset): PresetFrame => { const f = frameOf(lot); return preset.road !== undefined && preset.road % 2 ? { ...f, q: quarterOfRoad(preset.road) } : f; };
+/** the preset a built lot draws (pickedPreset), fitted to the lot, and the lot's preset frame (presetFrame); a shop lot's shop swapped for the one
+ *  its place shows (T270, shopPlan); null as pickedPreset */
 export function lotPreset(lot: LotGeom, st: ComposeState): { preset: LotPreset; fit: Fitted; frame: PresetFrame } | null {
-  const preset = pickedPreset(lot, st);
-  if (!preset) return null;
-  const frame0 = frameOf(lot), frame = preset.road !== undefined && preset.road % 2 ? { ...frame0, q: quarterOfRoad(preset.road) } : frame0;
+  const plan = planOf(lot, st);
+  if (!plan) return null;
+  const { preset } = plan, frame = presetFrame(lot, preset);
   // T167: a picture the owner removed is never drawn: a stand-in takes its place (or it is left out), before the house finds its yards
-  const fit = standIns(fitPreset(preset, lot.w, lot.d), preset, lot, frame);
+  const fit = swapShop(standIns(fitPreset(preset, lot.w, lot.d), preset, lot, frame), plan, lot, frame);
   return { preset, fit: frozenHouse(preset) ? houseYards(fit, frame) : fit, frame };
+}
+
+// ---------- T270 (#811): shop variety (lots/variety.ts: the business a shop lot shows is its place's colour on the street lattice)
+/** a lot's preset and, when its shop is swapped, the shop it shows instead (swap.scale: a preset multiplier) */
+interface ShopPlan { preset: LotPreset; swap?: { id: string; scale: number; spot: number } }
+/** a shop swapped into another's spot may stand up to SWAP_SIDE past the spot's sides and SWAP_BACK past its back (tiles; its front stays on the
+ *  spot's), drawn at its own size with the spot's jitter, down to SWAP_LEAST of it to fit, never past its picture's pixels (sizes.ts PIXEL_LIMIT),
+ *  and filling at least SWAP_AREA of the spot (a small shop is not lost in a big one's place) */
+export const SWAP_RULES = { side: 0.5, back: 0.6, least: 0.8, area: 0.55 } as const;
+/** a house swapped into another's place keeps closer to it (its drive and walk run beside and up to it) */
+export const HOUSE_SWAP_RULES = { side: 0.3, back: 0.6, least: 0.85, area: 0.6 } as const;
+type SwapRules = { readonly side: number; readonly back: number; readonly least: number; readonly area: number };
+const LIB_AT = new Map(LIBRARY.map((it, i) => [it.id, i] as const));
+/** the houses a house lot shows (the 'dwelling' family's front sets, house-class.ts houseFamilies: no straight-on art, frontal.ts, and none the
+ *  owner removed), by id: made once */
+let HOUSES: string[] | null = null, BACKS: string[] | null = null;
+export const housePalette = (): readonly string[] => (HOUSES ??= (houseFamilies().get('dwelling')?.ids ?? []).filter(id => !FRONTAL.has(id) && !removedOf(id)).sort());
+/** the houses seen from the back (house-class.ts REAR: the north views, the house backs, the rear sets) a lot lab preset shows on the lots whose
+ *  street lies behind the house as the camera sees it: a lot whose preset holds one shows another of them (same rules), by id */
+export const backPalette = (): readonly string[] => (BACKS ??= LIBRARY.filter((it, i) => REAR.test(it.id) && !it.id.startsWith('view:') && !it.id.startsWith('east:') && isBuilding(it) && !drawnAsStandIn(i)
+  && standInFamily(it) === 'dwelling' && baseOf(it.id) === it.id && !FRONTAL.has(it.id) && !removedOf(it.id)).map(it => it.id).sort());
+/** the palette a lot of a use shows (com: the shop fronts, tour: the venues, res: the houses), or null for a use without one */
+const paletteOf = (use: PresetUse): readonly string[] | null => (use === 'com' ? SHOP_PALETTE : use === 'tour' ? VENUE_PALETTE : use === 'res' ? housePalette() : null);
+const rulesOf = (use: PresetUse): SwapRules => (use === 'res' ? HOUSE_SWAP_RULES : SWAP_RULES);
+/** a preset's shop spot: the index of its biggest prop whose picture is on the palette (or stands for one: SPOT_OF), -1 for none (a gas station,
+ *  a car park); cached by preset (a reloaded preset is a new object) */
+const SPOTS = new WeakMap<readonly string[], WeakMap<LotPreset, number>>();
+function spotOf(p: LotPreset, palette: readonly string[]): number {
+  let m = SPOTS.get(palette); if (!m) SPOTS.set(palette, m = new WeakMap());
+  let k = m.get(p); if (k !== undefined) return k;
+  k = -1; let area = 0;
+  p.props.forEach((q, i) => { if (!palette.includes(SPOT_OF[q.id] ?? q.id)) return; const fp = footprintOf(q.id, q.scale * ownerScaleOf(q.id), false), a = (fp[2] - fp[0]) * (fp[3] - fp[1]); if (a > area) { area = a; k = i; } });
+  m.set(p, k); return k;
+}
+/** the scale (a preset multiplier) shop id stands at in spot q of a lot drawn in frame f (SWAP_RULES; a house HOUSE_SWAP_RULES), or 0 when it
+ *  does not fit there; cached by the spot, the shop and the frame's turn and road (the footprints are the same on every lot of those) */
+const SWAP_K = new Map<string, number>();
+// (a size saved in the studio or the lab moves the footprints: measured again)
+onStudioScales(() => SWAP_K.clear());
+export function swapScale(q: PresetProp, id: string, f: PresetFrame, R: SwapRules = SWAP_RULES): number {
+  const key = `${q.id}|${q.scale}|${q.view}|${id}|${f.q}|${roadOf(f.n)}|${R.side}`;
+  let k = SWAP_K.get(key); if (k !== undefined) return k;
+  if (SWAP_K.size > 1 << 16) SWAP_K.clear();
+  const half = frameHalf(f), h0 = half(q), h1 = half({ ...q, id, scale: 1 }), view = drawnView(id, f, q.view).id, lim = PIXEL_LIMIT[LIB_AT.get(view) ?? -1] ?? 0;
+  k = Math.min(q.scale, lim / ownerScaleOf(id), (h0.ha + R.side) / h1.ha, (2 * h0.hb + R.back) / (2 * h1.hb));
+  k = k >= R.least && h1.ha * h1.hb * k * k >= R.area * h0.ha * h0.hb ? k : 0;
+  SWAP_K.set(key, k); return k;
+}
+/** the preset a lot draws from its list and the shop it shows: the lot's colour (colourOf) picks the business (tryOrder: the next nearest when
+ *  none of its presets can show it); a preset that holds it is drawn as it is (the slot's own pick, pickPreset, when it is one of them), else the
+ *  preset whose spot takes it at the largest scale (the slot's pick on a tie) with the shop swapped in; else, before the next colour, the same in
+ *  the fallback list (the frozen presets of a lot whose approved ones cannot show it). A use without a palette, and a lot whose slot picks a preset
+ *  with no shop spot (a tour lot's gas station), draw the slot's pick as before */
+function shopPlan(list: readonly LotPreset[], lot: LotGeom, use: PresetUse, fallback?: () => readonly LotPreset[]): ShopPlan | null {
+  const slot = streetSlot(lot), key = streetKey(lot), old = pickPreset(list, slot, key);
+  // (a house lot whose preset shows a house from the back shows another house's back)
+  const front = paletteOf(use), pal = use === 'res' && front && old && spotOf(old, front) < 0 ? backPalette() : front;
+  if (!old || !pal || !pal.length || spotOf(old, pal) < 0) return old ? { preset: old } : null;
+  // the shop presets of a list, the slot's pick first
+  const shopsOf = (l: readonly LotPreset[], first?: LotPreset) => { const s = l.filter(p => spotOf(p, pal) >= 0), o = first ?? pickPreset(s, slot, key); return o ? [o, ...s.filter(p => p !== o)] : s; };
+  // a house swapped in suits the lot's road and state (the house allocations, T155), as a stand-in house does
+  const R = rulesOf(use), road = roadOf(lot.n), suits = (id: string) => use !== 'res' || allows(ALLOC, id, road, old.state);
+  const lists = [shopsOf(list, old)];
+  for (const c of tryOrder(colourOf(lot, pal.length), pal.length)) {
+    const id = pal[c]!;
+    for (let li = 0; li < 2; li++) {
+      if (li === 1 && lists.length < 2) { if (!fallback) break; lists.push(shopsOf(fallback())); }
+      const shops = lists[li]!, own = shops.filter(p => p.props[spotOf(p, pal)]!.id === id);
+      if (own.length) return { preset: own[0] === shops[0] ? own[0]! : pickPreset(own, slot, key)! };
+      if (!suits(id)) continue;
+      let best: LotPreset | null = null, bk = 0;
+      for (const p of shops) { const k = swapScale(p.props[spotOf(p, pal)]!, id, presetFrame(lot, p), R); if (k > bk + 1e-9) { best = p; bk = k; } }
+      if (best) return { preset: best, swap: { id, scale: bk, spot: spotOf(best, pal) } };
+    }
+  }
+  return { preset: old };
+}
+/** a fitted preset with its shop swapped as the plan says: the new shop on the spot's front edge (its street side) and centre along the street,
+ *  inside the lot; unchanged without a swap or when the fit left the spot out */
+function swapShop(fit: Fitted, plan: ShopPlan, lot: LotGeom, f: PresetFrame): Fitted {
+  if (!plan.swap) return fit;
+  const k = fit.from.indexOf(plan.swap.spot); if (k < 0) return fit;
+  const half = frameHalf(f), q = fit.props[k]!, h0 = half(q), n = { ...q, id: plan.swap.id, scale: plan.swap.scale }, h1 = half(n);
+  const props = fit.props.slice();
+  props[k] = { ...n, x: clamp(q.x, h1.ha, Math.max(h1.ha, lot.w - h1.ha)), y: clamp(q.y - h0.hb + h1.hb, h1.hb, Math.max(h1.hb, lot.d - h1.hb)) };
+  return { ...fit, props };
 }
 
 // ---------- T167: stand-ins for the pictures the owner removed
