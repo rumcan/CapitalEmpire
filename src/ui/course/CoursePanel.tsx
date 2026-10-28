@@ -80,7 +80,7 @@ function ShapeByHand({ game }: { game: Game }) {
           <button className={`chip ${brush && !run ? 'chip-on' : ''}`} aria-pressed={brush && !run} title={`Paint ${name} for hole ${p.brushHole}: click a cell, drag a run`} onClick={() => p.setBrushRun(false)}>Brush</button>
           {game.golfMode && <button className={`chip ${run ? 'chip-on' : ''}`} aria-pressed={run} title={`Run: lay a strip of ${name} as wide as the size, like a road: click a start, click each bend, then double-click, Enter or right-click. Shift keeps a leg straight`} onClick={() => p.setBrushRun(true)}>Run</button>}
         </div>
-        <button className={`chip ${brush && p.rubOut ? 'chip-on' : ''}`} aria-pressed={brush && p.rubOut} title={`Erase takes the top surface under the ${run ? 'run' : 'brush'} (hold Alt for a moment while brushing); no refund`} onClick={() => { p.rubOut = !(brush && p.rubOut); if (!brush) p.setBrush(p.brushKind); else game.emit(); }}>Erase</button>
+        <button className={`chip ${brush && p.rubOut ? 'chip-on' : ''}`} aria-pressed={brush && p.rubOut} title={`Erase takes the top surface under the ${run ? 'run' : 'brush'} (hold Alt for a moment while brushing); no refund`} onClick={() => { const v = !(brush && p.rubOut); if (!brush) p.setBrush(p.brushKind); p.rubOut = v; game.emit(); }}>Erase</button>
       </div>
       {!game.golfMode && brush && <div className="sub-line mt-1.5">{`Click paints ${name} for hole ${p.brushHole}; drag paints a run. Alt-drag or Erase rubs out. [ ] size.`}</div>}
     </section>

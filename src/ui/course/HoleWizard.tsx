@@ -100,7 +100,7 @@ function EditPaint({ game }: { game: Game }) {
       <SurfaceSwatches game={game} on={on ? p.brushKind : null} pick={pick} />
       <BrushShape game={game} brush={on} arm={() => p.setEditBrush(p.brushKind)} />
       <div className="mt-2 flex flex-wrap items-center gap-1.5">
-        <button className={`chip ${on && p.rubOut ? 'chip-on' : ''}`} aria-pressed={on && p.rubOut} title="Erase takes the top surface under the brush (hold Alt for a moment while brushing); no refund" onClick={() => { p.rubOut = !(on && p.rubOut); if (!on) p.setEditBrush(p.brushKind); else game.emit(); }}>Erase</button>
+        <button className={`chip ${on && p.rubOut ? 'chip-on' : ''}`} aria-pressed={on && p.rubOut} title="Erase takes the top surface under the brush (hold Alt for a moment while brushing); no refund" onClick={() => { const v = !(on && p.rubOut); if (!on) p.setEditBrush(p.brushKind); p.rubOut = v; game.emit(); }}>Erase</button>
         {on && <button className="chip" title="Put the brush down: the plan's handles alone (Esc)" onClick={() => p.setEditBrush(null)}>Handles only</button>}
       </div>
       <p className="sub-line mt-1">{on ? `Drag on the map to paint ${name.toLowerCase()} into hole ${n}; the tee, the green and the bends still drag. Esc puts the brush down.` : `Pick a surface to paint into hole ${n} (keys 1–9); the tee, the green and the bends still drag.`}</p>

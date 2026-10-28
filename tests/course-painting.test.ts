@@ -266,3 +266,11 @@ test('Painted › Long grass wears the owner\'s rough paintings (rough-owner), e
   assert.equal(lookOfTex('golfLongGrass', S)!.family, 'rough-owner', 'its texture wears it');
   assert.equal(lookOfTex('golfRough', S)!.family, S.surfaces.rough!.family, 'the rough as it was (#696)');
 });
+
+test('picking a surface paints it: Erase left on from before is put down (the owner: Bunker in hand drew rough)', () => {
+  const o = golf(), { tool } = o;
+  assert.ok(tool.editHole(1)); assert.ok(tool.setEditBrush('longGrass'));
+  tool.rubOut = true; // Erase on
+  assert.ok(tool.setEditBrush('bunker')); assert.equal(tool.rubOut, false, 'Edit hole: a surface picked ends Erase');
+  tool.rubOut = true; tool.setBrush('green'); assert.equal(tool.rubOut, false, 'Shape by hand: the same');
+});
