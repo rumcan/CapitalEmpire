@@ -53,6 +53,8 @@ const COMPOSED_BYTES = 64 << 20;
 const PAINT_CELL = 128;
 /** T199: the swamp tiles' glosses a worker keeps (two bands' worth, a quarter of a MB each) */
 const GLOSS_TILES = 8;
+/** T265: the swamp's tiles a worker keeps pre-scaled to the size they land at (tiledBuf exact: the river's wide band lays many; a few MB) */
+const EXACT_TILES = 24;
 /** a painted composition of a chunk: its picture, the cells composed so far, its size in bytes */
 /** a chunk's living ground as made (drawLiving): its influence grid and its masks */
 type LivingMade = { grid: InfluenceGrid; masks: LivingMasks | null };
@@ -563,6 +565,15 @@ export class GroundPainter {
   /** T199: each swamp tile's gloss (swamp.ts glossTile), by the tile's URL: made once per tile, the first time a bake lays it with the glint on
    *  (one read back of the tile, never of a chunk) */
   private glossTiles = new Map<string, Cnv>();
+  /** T265: the swamp's tiles at the px size they land at (by URL and size), drawn once as tiledBuf drew them (the same mip, smoothing and
+   *  size) so each cell is a plain copy, not a scaled draw: the river's band lays the swamp over much of a chunk */
+  private exactTiles = new Map<string, Cnv>();
+  private exactTile(url: string, img: Cnv | ImageBitmap, w: number, h: number): Cnv {
+    const k = `${url}@${w}x${h}`, have = this.exactTiles.get(k); if (have) { this.exactTiles.delete(k); this.exactTiles.set(k, have); return have; }
+    const c = canvas(w, h), g = ctx2d(c); g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'medium'; g.drawImage(img, 0, 0, w, h);
+    this.exactTiles.set(k, c); trimLru(this.exactTiles, new Set([k]), EXACT_TILES);
+    return c;
+  }
   /** T230: the water field of the bake in progress (water-look.ts WaterField: where the chunk's rivers, course ponds and painted water lie,
    *  each sample's distance from its shore and the shore's reflections), made the first time a water site asks (waterOver), with its look;
    *  undefined until then, null when the look is off and the glint too, or the chunk has no water */
@@ -1290,9 +1301,9 @@ export class GroundPainter {
     if (ok) for (let j = j0; j < j1; j++) for (let i = i0; i < i1; i++) e.cells[j * cw + i] = 1;
     return ok;
   }
-  private paintedBuf(t: string, need?: BBox, scale = 1): Cnv | null {
+  private paintedBuf(t: string, need?: BBox, scale = 1, exact = false): Cnv | null {
     const c = this.chunkNow!, p = this.tex.paintedOf(t, scale); if (!p) return null;
-    if (p.tiled) return this.tiledBuf(p.tiled, need);
+    if (p.tiled) return this.tiledBuf(p.tiled, need, exact);
     const want = this.cellsOf(need), cw = Math.ceil(c.W / PAINT_CELL), chh = Math.ceil(c.H / PAINT_CELL);
     // the composition depends only on where the chunk is, its level, the look and the art level, never on its roads or lots: an edited chunk (a
     // road, a lot, every send of a course stroke) is baked again over the one it composed before
@@ -1326,7 +1337,7 @@ export class GroundPainter {
    *  one world size (T150: native / (anchor x DPR), from the tile spec), laid edge to edge on the world-anchored grid, axis-aligned in the chunk's own (screen) axes, each the tile its cell's
    *  permutation names; edges snapped to whole px (every chunk at this level agrees: no gap, no overlap). As authored: no scale, tint, tone,
    *  drift, mask or blend. null when a tile is not decoded */
-  private tiledBuf(tp: TiledPick, need?: BBox): Cnv | null {
+  private tiledBuf(tp: TiledPick, need?: BBox, exact = false): Cnv | null {
     const c = this.chunkNow!, ts = this.tex.tileTs, want = this.cellsOf(need), cw = Math.ceil(c.W / PAINT_CELL), chh = Math.ceil(c.H / PAINT_CELL);
     const ck = `${c.key}:tiles:${tp.fam.id}@${tileKey(ts)}`;
     let base = this.composed.get(ck);
@@ -1342,9 +1353,9 @@ export class GroundPainter {
       // the mip drawn is at most twice the size it lands at (Textures.tileImage), so plain bilinear filtering keeps it sharp and cheap
       g.setTransform(1, 0, 0, 1, 0, 0); g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'medium';
       for (const q of cellsIn(X0, Y0, X1, Y1, w, h)) {
-        const [a, b, a2, b2] = snappedCell(q.ix, q.iy, w, h, L), img = this.tex.tileImage(urls[tileIndex(perm, q.ix, q.iy)]!, a2 - a);
+        const [a, b, a2, b2] = snappedCell(q.ix, q.iy, w, h, L), url = urls[tileIndex(perm, q.ix, q.iy)]!, img = this.tex.tileImage(url, a2 - a);
         if (!img) return false;
-        g.drawImage(img, a - ox, b - oy, a2 - a, b2 - b);
+        g.drawImage(exact ? this.exactTile(url, img, a2 - a, b2 - b) : img, a - ox, b - oy, a2 - a, b2 - b); // (T265 exact: a plain copy)
       }
       return true;
     }) ? base.buf : (this.provisional = true, null);
@@ -1454,7 +1465,7 @@ export class GroundPainter {
     // T265: and the river's band (swamp.ts RIVER_BAND, asked of its field alike), cut short of the roads, bridges, lots, painted areas and the
     //      course (riverCut), merged with the streams' into one band (swampBand): one layer, one gloss, one cover the living ground leaves alone
     const sw = this.swampOn() ? this.swampField.alpha(tx0, ty0, bw, bh, cres) : null, rv = this.riverSwampOn() ? this.riverField.alpha(tx0, ty0, bw, bh, cres) : null;
-    const sband = sw || rv ? this.swampBand(sw, rv, tx0, ty0, cres, rv ? this.riverCut(net, box, lite) : null) : null, swBuf = sband ? this.paintedBuf('swamp', sband.box) : null;
+    const sband = sw || rv ? this.swampBand(sw, rv, tx0, ty0, cres, rv ? this.riverCut(net, box, lite) : null) : null, swBuf = sband ? this.paintedBuf('swamp', sband.box, 1, true) : null;
     const creekSwamp = !!(sw && swBuf);
     if (sband && swBuf) {
       const sb = sband.cv, sa = (sw ?? rv)!;
