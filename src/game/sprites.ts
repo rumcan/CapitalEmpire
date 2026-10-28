@@ -12,7 +12,7 @@ import { castsShadow, contactShadow, placeholderBoxes, type ContactShadow, type 
 import { lookOf } from './newart';
 import { vectorMesh, type VectorRange } from './shadow-vector';
 import { GLOW_LAYER, LAMP_FLOATS } from './sim/car-lamps';
-import { paintCode } from './car-paint';
+import { packAlpha, paintCode } from './car-paint';
 
 /** anything drawn like a prop: library item, anchor (tiles), flip, scale, footprint (tiles) */
 export interface Drawable { item: number; x: number; y: number; flip: boolean; scale: number; x0: number; y0: number; x1: number; y1: number; /** a moving car (SimClient.visible): already drawn at CAR_SCALE */ moving?: boolean;
@@ -103,7 +103,7 @@ function packSprite(d0: Drawable, out: Float32Array, o: number, i: number, j: nu
   // (a picture with a vector shadow casts its drawn shape instead: packVector)
   // (T176: 2 + alpha marks a tinted sprite; T228: 2 + 2 code + alpha a painted car, car-paint.ts paintCode; gl.ts decodes both)
   const pc = d0.paint ? paintCode(l.item, d0.paint) : 0;
-  out[o + 8] = t[0]; out[o + 9] = l.hidden ? 0 : d0.tint ? 2 + alpha : pc ? 2 + 2 * pc + alpha : alpha; out[o + 10] = it.big ? 0 : 1; out[o + 11] = it.kind === 'lot' || l.hidden || d0.lift || !casts(l.item) || (VECTOR.on && vecOf(l.item)) ? -1 : worldY(l.x ?? d0.x, l.y ?? d0.y);
+  out[o + 8] = t[0]; out[o + 9] = l.hidden ? 0 : packAlpha(alpha, !!d0.tint, pc); out[o + 10] = it.big ? 0 : 1; out[o + 11] = it.kind === 'lot' || l.hidden || d0.lift || !casts(l.item) || (VECTOR.on && vecOf(l.item)) ? -1 : worldY(l.x ?? d0.x, l.y ?? d0.y);
   clip(out, o + 12, i, j);
   // the footprint's front edges, for the cast shadows (gl.ts VS_CAST): the near corner (x1, y1) and the left (x0, y1) and right (x1, y0)
   // corners; business art's placeholder footprint (a 2 x 2 m box under a whole building) gives way to its picture's base (T141)

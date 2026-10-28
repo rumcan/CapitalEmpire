@@ -89,7 +89,7 @@ try {
   }
   // ---- the club's car park on a busy everyday day (T208: 60 visitors, 11:00)
   if (only.has('club') || only.has('sheet')) {
-    const { page, ctx } = await open(`${base}?start=town&golfers=60`);
+    const { page, ctx } = await open(`${base}?start=town&golfers=60&seed=${opt('seed', '7')}`); // (a fixed map: before and after the same)
     await clockTo(page, 11 * 60, 15);
     const club = await page.evaluate(() => {
       const g = window.__game, pk = g.dayPark, k = g.parkBuilt.indexOf(pk), d = k >= 0 ? g.parkDefs[k] : null;
@@ -97,12 +97,7 @@ try {
     });
     report.club = club; console.log('club', JSON.stringify(club));
     // the start's club car park stands behind the clubhouse (up the screen): the clubhouse's big pictures are lifted off for these shots
-    report.lifted = await page.evaluate(async () => {
-      const g = window.__game, { LIBRARY } = await import('/src/game/library.ts'), door = g.golf.clubhouse; let n = 0;
-      g.setSpeed(0);
-      for (const p of [...g.props]) { const it = LIBRARY[p.item]; if (it.big && it.kind !== 'car' && Math.hypot((p.x0 + p.x1) / 2 - door.x, (p.y0 + p.y1) / 2 - door.y) < 25) { g.removeProp(p); n++; } }
-      return n;
-    });
+    report.lifted = await page.evaluate(() => { const g = window.__game; g.setSpeed(0); for (const p of g.businessProps) g.sprites.remove(p); return g.businessProps.length; });
     if (club) for (const z of [0.3, 0.15]) { await look(page, club.x, club.y, z); await settle(page); (files[`club${Math.round(z * 100)}`] = await shot(page, `club-carpark-${Math.round(z * 100)}pct`)); }
     await ctx.close();
   }

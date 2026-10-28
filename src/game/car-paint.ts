@@ -56,6 +56,14 @@ export function paintCode(item: number, paint: number | undefined): number {
   if (!paint || !CAR_PAINT.on) return 0;
   const b = bodyOf(item); return b < 0 ? 0 : paint + 16 * b;
 }
+/** the alpha float of a sprite instance (sprites.ts packs it, gl.ts VS_SPRITE and VS_CAST read it back): the alpha alone, 2 + alpha for T176's
+ *  tint, 2 + 2 code + alpha for a painted car (code from paintCode) */
+export const packAlpha = (alpha: number, tint: boolean, code: number): number => (tint ? 2 + alpha : code ? 2 + 2 * code + alpha : alpha);
+/** what the shaders read back from packAlpha's float (as VS_SPRITE does): vTint (0 none, 1 T176's tint, 2.. a paint: its code + 1) and the alpha */
+export function unpackAlpha(v: number): { tint: number; alpha: number } {
+  if (!(v > 1.5)) return { tint: 0, alpha: v };
+  const code = Math.floor((v - 2) * 0.5); return { tint: code + 1, alpha: v - 2 - 2 * code };
+}
 /** the shader's paint function (GLSL): rgb un-premultiplied, code as paintCode; the body's pixels (hue within the band round the body's own,
  *  saturated, not black) take the paint times their luminance over the body's mean */
 export const CAR_PAINT_GLSL = `
