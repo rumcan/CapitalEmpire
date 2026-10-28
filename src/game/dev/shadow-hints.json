@@ -8,5 +8,13 @@
   "variation:expansion-farm-tractor-1df19163:2": {"box": 0.6, "n": "seen end on: the rest of the picture is its length"},
   "variation:expansion-farm-tractor-1df19163:3": {"box": 0.6, "n": "seen end on: the rest of the picture is its length"},
   "variation:expansion-scrap-pickup-rear-7e2d1193:2": {"box": 0.5, "n": "seen end on: as tall as it is wide, the rest is its length"},
-  "variation:expansion-scrap-pickup-rear-7e2d1193:3": {"box": 0.5, "n": "seen end on: as tall as it is wide, the rest is its length"}
+  "variation:expansion-scrap-pickup-rear-7e2d1193:3": {"box": 0.5, "n": "seen end on: as tall as it is wide, the rest is its length"},
+  "kit:fountain-jet-0": {"none": true, "n": "T257: the jet is water: no shadow (as T231 had it)"},
+  "kit:fountain-jet-1": {"none": true, "n": "T257: the jet is water: no shadow (as T231 had it)"},
+  "kit:fountain-jet-2": {"none": true, "n": "T257: the jet is water: no shadow (as T231 had it)"},
+  "kit:fountain-jet-3": {"none": true, "n": "T257: the jet is water: no shadow (as T231 had it)"},
+  "kit:lily-pads-a": {"none": true, "n": "T257: lily pads lie flat on the water: no shadow"},
+  "kit:lily-pads-b": {"none": true, "n": "T257: lily pads lie flat on the water: no shadow"},
+  "kit:lily-pads-c": {"none": true, "n": "T257: lily pads lie flat on the water: no shadow"},
+  "kit:lily-pads-d": {"none": true, "n": "T257: lily pads lie flat on the water: no shadow"}
 }

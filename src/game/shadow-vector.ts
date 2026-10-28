@@ -38,6 +38,9 @@ export const VECTOR_SHADOWS: Readonly<Record<string, VectorShadow>> = SHAPES as 
 /** library ids that keep T141's shadows on purpose (vector-shadow test: every other drawn picture has an entry), by prefix or exact id */
 export const VECTOR_FALLBACK: readonly { id: string; why: string }[] = [
   { id: 'walker', why: 'the walkers, the crowd and the golfers: thousands of animated frames; their silhouette cast moves with their legs' },
+  // T257: T232's open stud frames: the silhouette cast draws their studs and the gaps between them; a drafted shape fills the gaps solid
+  { id: 'construction:timber-frame-1', why: 'an open stud frame: its silhouette cast shows the studs and the gaps between them' },
+  { id: 'construction:timber-frame-2', why: 'an open stud frame: its silhouette cast shows the studs and the gaps between them' },
 ];
 
 /** a built mesh: vertices (VERTEX_FLOATS each) and triangle indices, and each picture's range in the indices */
