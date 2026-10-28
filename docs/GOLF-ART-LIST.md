@@ -819,6 +819,8 @@ Lit from the upper right, never mirrored, on flat pure magenta.
 ✅ **174. Build-tool tiles** (`ui/golf-build-tool-tiles-sheet-v1.png`; in the game, T233 #674: cut by `scripts/assets/prep-ui-tool-tiles.mjs` into `src/assets/ui/tiles/`, shown on the Course and Facilities flyouts' tools by `ui/tool-tiles.ts`; the tools still without one are requested in GOLF-SPRITES.md "Build-tool tiles") · one sheet of 12 · P1. The build flyouts' tools as small illustrated scenes, as in the concept's Golf Course panel.
 > Subject: twelve tiny isometric dioramas in a 4x3 grid, each on its own dark navy rounded square, the light from the upper right: a tee box, a fairway, a green with a flag, a bunker, a pond, rough grass, a clump of autumn trees, a group of boulders, a curving cart path, a small clubhouse, the range bays, a flower bed. The same scale and style in every tile; no lettering.
 
+**181. Build-tool tiles, sheet 2** (the owner, 2026-10-29: "some menu items stuff waiting for a cute mini isometric icon") · one sheet of 12 in 174's style · P1. The flyout rows that still show an icon on 174's navy square: Waste area, Halfway house, Your holes, Tournament, Land for sale, Bushes, Palms, All props, Furniture, Long grass (it wears the rough's tile), the chipping green (it wears the bunker's) and Build on your property. The prompt is in `docs/art/CHATGPT-IMAGE-QUEUE.md` (first in the queue); the file `ui/golf-build-tool-tiles-sheet-v2.png`; the list and file names in GOLF-SPRITES.md "Build-tool tiles".
+
 **175. Top-bar icons** · one sheet of 6 on magenta · P2.
 > Subject: six small flat painted icons in a row, gold and cream with a dark outline: a bundle of banknotes, a smiling face, two golfers, a maple leaf, a sun, a cloud. No lettering.
 
