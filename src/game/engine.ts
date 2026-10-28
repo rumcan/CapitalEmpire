@@ -1186,7 +1186,7 @@ export class Game {
   /** each frame: with New hole's ghost up, the trees its Build would clear are worked out again when the ghost changes (at most every 150 ms,
    *  the checks' throttle) and tinted; without one, the tint goes */
   private ghostTreesCheck() {
-    const c = this.ghostTrees, gh = this.tool === 'course' && this.paint.mode === 'plan' ? this.paint.wizard.ghost() : null, now = performance.now();
+    const c = this.ghostTrees, gh = this.tool === 'course' && this.paint.planOpen ? this.paint.wizard.ghost() : null, now = performance.now();
     if (gh === c.ghost || (gh && c.ghost && now - c.at < 150)) return;
     const next = gh ? this.treesUnder(gh) : [];
     const keep = new Set(next);
@@ -1381,7 +1381,7 @@ export class Game {
   }
   /** each frame: New hole's frame is worked out again once its ghost has held still for FRAME_SETTLE_MS (the toggle on) */
   private ghostFrameCheck(now: number) {
-    const c = this.ghostFrame, on = this.paint.frameTrees && this.tool === 'course' && this.paint.mode === 'plan';
+    const c = this.ghostFrame, on = this.paint.frameTrees && this.tool === 'course' && this.paint.planOpen;
     const gh = on ? this.paint.wizard.ghost() : null;
     if (gh !== c.ghost) { c.ghost = gh; c.since = now; c.done = !gh; if (!gh && c.v) { c.v = null; this.emit(); } return; }
     if (c.done || now - c.since < FRAME_SETTLE_MS) return;
@@ -1512,7 +1512,7 @@ export class Game {
   }
   /** whether the Paint tool or Holes may lay what is in hand: Holes at stage 1 is New hole only (P23 4.2, 4.3), so outside New hole its brush,
    *  hidden with Shape by hand, lays nothing and draws no footprint or disc */
-  get brushOpen(): boolean { if (this.tool !== 'course' || this.paint.mode === 'plan') return true; const ui = this.toolUi(); return !ui || ui.shapeByHand; }
+  get brushOpen(): boolean { if (this.tool !== 'course' || this.paint.planOpen) return true; const ui = this.toolUi(); return !ui || ui.shapeByHand; }
   /** the cursor hint's change last told to the UI, and when (the pill follows within 100 ms, never more than ten times a second) */
   private hintSeen = 0; private hintEmitAt = 0;
   /** the map grid and the course half grid (T100), drawn between the ground and the sprites */
@@ -5278,7 +5278,7 @@ export class Game {
     this.range.practiceLocked = !!f && rampLock(f, 'course') !== null; // until the first upgrade the practice area says what opens it
     this.playableHoles = f?.playableHoles ?? 0;
     // the tee ring (P22 2.8): a range start's New hole in hand before its first hole
-    this.teeRingOn = this.golf?.start === 'range' && this.uiTool === 'course' && this.paint.mode === 'plan' && this.playableHoles < 1;
+    this.teeRingOn = this.golf?.start === 'range' && this.uiTool === 'course' && this.paint.planOpen && this.playableHoles < 1;
     // a tool that is not open (a save loads with the road tool in hand; Show every tool now unticked) is put down for Holes (P23 P1-E), or for
     // Select while Holes waits for a range start's first upgrade (T132)
     if (this.toolLock(this.uiTool)) this.setTool(this.toolLock('course') ? 'select' : 'course');

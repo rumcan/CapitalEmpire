@@ -32,7 +32,7 @@ function click(g: ReturnType<typeof makeGrid>, tool: PaintTool): number[] {
 test('Shape by hand lists the Waste area: key 7 (keys 1-6 keep their surfaces; the cart path moves to 8), a grid brush, open from stage 2 with the bunker', () => {
   const last = BRUSH_PRESETS[6]!;
   assert.equal(last.kind, 'waste'); assert.equal(last.name, 'Waste area');
-  assert.deepEqual(BRUSH_PRESETS.map(b => b.kind), ['fairway', 'green', 'tee', 'rough', 'bunker', 'water', 'waste', 'path', 'longGrass'], 'keys 1-6 as before, the Waste area 7, the cart path (stage 3) 8, T238's Long grass 9');
+  assert.deepEqual(BRUSH_PRESETS.map(b => b.kind), ['fairway', 'green', 'tee', 'rough', 'bunker', 'water', 'waste', 'path', 'longGrass'], 'keys 1-6 as before, the Waste area 7, the cart path (stage 3) 8, T238: Long grass 9');
   assert.ok(GRID_KINDS.includes('waste'), 'it paints the course grid');
   assert.equal(BRUSH_STAGE.waste, BRUSH_STAGE.bunker);
   assert.equal(surfaceOfTex(last.style.tex), 'waste', 'its texture is the waste surface\'s (the owner\'s preset for it, else the waste sand)');
