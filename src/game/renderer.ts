@@ -2147,6 +2147,16 @@ export class GroundPainter {
       g.save(); g.setTransform(M); g.globalCompositeOperation = op; g.imageSmoothingEnabled = true; g.drawImage(s, x0, y0, img.W / res, img.H / res); g.restore();
     };
     const flatF = featherTiles(EDGE_LOOKS.flat!, L), wallF = 0.5 * jointFeather(L);
+    /** T256 (#743): what `draw` laid in the layer's own look, again in each of its alternate looks (another hole's, the property's, a
+     *  facility's), clipped to that look's share of the chunk */
+    type Alt = NonNullable<CourseLayer['alts']>[number];
+    const alts = (l: CourseLayer, draw: (a: Alt) => void) => {
+      if (!l.alts) return;
+      for (const a of l.alts) {
+        const p = new Path2D(), q = a.runs; for (let k = 0; k + 3 < q.length; k += 4) p.rect(q[k]!, q[k + 1]!, q[k + 2]! - q[k]!, q[k + 3]! - q[k + 1]!);
+        ctx.save(); ctx.setTransform(M); ctx.clip(p); draw(a); ctx.restore();
+      }
+    };
     /** T204: the tall grass's spill over the fairway and its first cut (CoursePatch.spill, as drawn): for each tall layer outside, its blades
      *  (rugged-edges spillBlades, made once a patch and blade scale) cut from that layer's own picture and tone (the rough's, the fescue's), or
      *  from the ground under the course where the map's grass meets the turf */
@@ -2259,11 +2269,14 @@ export class GroundPainter {
         // and a bunker's lip band in the fairway's first cut (its g: the bunker sits in the collar, as in the concept), toned as the collar
         const tex = (l: CourseLayer): CourseTex => (fin.on && l.collar!.g ? l.collar!.g : l.collar!);
         const tone = (l: CourseLayer): CourseTex | null => (collarTone && l.collar && (tonedCollar(l.collar.n) || (fin.on && l.collar.g)) ? { tex: '', sc: 1, a: 0, t: 1, ta: collarTone.ta, tc: collarTone.tc } : null);
-        if (!lite) for (const { l } of ls) if (l.collar) feather(tex(l), l.collar.soft ?? l.collar.edges, Math.min(flatF, Math.max(l.collar.w ?? flatF, 0.6 * flatF)), tone(l));
+        // T256: an alternate look's band (its lip grass with the finish), as tex; none: it keeps the layer's band
+        const atone = (l: CourseLayer, a: Alt): CourseTex | null => (collarTone && l.collar && (tonedCollar(l.collar.n) || (fin.on && a.g)) ? { tex: '', sc: 1, a: 0, t: 1, ta: collarTone.ta, tc: collarTone.tc } : null);
+        const band = (l: CourseLayer, draw: (t: CourseTex, tn: CourseTex | null) => void) => alts(l, a => { const t = fin.on && a.g ? a.g : a.band; if (t) draw(t, atone(l, a)); });
+        if (!lite) for (const { l } of ls) if (l.collar) { const sf = l.collar.soft ?? l.collar.edges, w = Math.min(flatF, Math.max(l.collar.w ?? flatF, 0.6 * flatF)); feather(tex(l), sf, w, tone(l)); band(l, (t, tn) => feather(t, sf, w, tn)); }
         // T196: every edge of a raised band (a green's fringe, a tee's cut) softened a little, its walls' tops too: the band's texture fades
         // over the top of the face hanging from it (a pond's bank keeps its own wet edge)
-        if (!lite && code !== layerCode(SURF.water, true)) for (const { l } of ls) if (l.collar) feather(tex(l), l.collar.edges, wallF, tone(l));
-        for (const { l } of ls) if (l.collar) fill(tex(l), l.collar.fill, tone(l));
+        if (!lite && code !== layerCode(SURF.water, true)) for (const { l } of ls) if (l.collar) { const e = l.collar.edges; feather(tex(l), e, wallF, tone(l)); band(l, (t, tn) => feather(t, e, wallF, tn)); }
+        for (const { l } of ls) if (l.collar) { const cf = l.collar.fill; fill(tex(l), cf, tone(l)); band(l, (t, tn) => fill(t, cf, tn)); }
         // T227: the bunker's raised grass lip round the sand (its lip band): lit on its far side, a light shade on its near side
         if (lip > 0 && !lite && code === layerCode(SURF.bunker, true)) this.bunkerGrassLip(ctx, ls.map(q => q.l), L, M, lip);
         // a pond's bank: wet soil fading out from the water's edge into the grass, and a few stones
@@ -2289,10 +2302,11 @@ export class GroundPainter {
           }
         }
         for (const q of ims) { put(q.im.shadow, q.x0, q.y0, 'multiply'); this.onShadeMask(m => put(q.im.shadow, q.x0, q.y0, 'multiply', m)); } // 1
-        if (!lite) for (const { l } of ls) feather(l, l.soft ?? l.edges, f);                     // 2
-        if (!lite) for (const { l } of ls) if (l.joint?.length) feather(l, l.joint, jointFeather(L)); // 2b: the cross-fade over its own collar (T196)
-        if (!lite && !prof?.sunken && s !== SURF.water) for (const { l } of ls) feather(l, l.edges, wallF); // 2c: its walls' tops softened (T196)
-        for (const { l } of ls) fill(l, l.fill);                                                   // 3
+        // T256: each in the layer's own look, then in its alternate looks over their shares
+        if (!lite) for (const { l } of ls) { const e = l.soft ?? l.edges; feather(l, e, f); alts(l, a => feather(a.look, e, f)); } // 2
+        if (!lite) for (const { l } of ls) if (l.joint?.length) { const j = l.joint, jf = jointFeather(L); feather(l, j, jf); alts(l, a => feather(a.look, j, jf)); } // 2b: the cross-fade over its own collar (T196)
+        if (!lite && !prof?.sunken && s !== SURF.water) for (const { l } of ls) { feather(l, l.edges, wallF); alts(l, a => feather(a.look, l.edges, wallF)); } // 2c: its walls' tops softened (T196)
+        for (const { l } of ls) { fill(l, l.fill); alts(l, a => fill(a.look, l.fill)); }         // 3
         if (COURSE_DIRT) for (const { c, l } of ls) if (c.grow) this.courseDirt(ctx, c, l, L, X0, Y0, M, Minv, r); // 4: every tier, the grow-in is the ground's state (P23 D5.1)
         for (const q of ims) {                                                                     // 5
           // the light as a shine textured by the sand under it (T110: on its mid-tones and highlights only), starting a small gap inside the

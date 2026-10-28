@@ -88,11 +88,12 @@ export function holeCard(v: HoleView, o: { pins: readonly Pin[]; tees: readonly 
   return { n: v.n, par: v.par, tees: teeLengths(v.n, o.pins, o.tees, o.aims), ready: o.ready, areas: o.areas, checks, planned: o.planned };
 }
 
-/** what Delete's confirm states for hole n (T174: existing rules only): New hole's cells for it go back to the land (cells you touched since
- *  stay, as PaintTool.deletePlan), its markers go with its green and tee, and nothing is refunded (course work is not refunded, as Erase) */
+/** what Delete's confirm states for hole n (T174; T256: the hole owns its paint): its choice, all its cells (touch-ups included) back to the
+ *  land with its frame trees, or kept as the property's paint; its plan, looks and markers go either way, and nothing is refunded (course
+ *  work is not refunded, as Erase) */
 export function deleteNote(c: Pick<HoleCardView, 'n' | 'areas'>): { refund: number; m2: number; text: string } {
   const m2 = c.areas.reduce((s, a) => s + a.m2, 0);
-  return { refund: 0, m2, text: `Up to ${m2.toLocaleString('en-US')} m² of hole ${c.n} go back to the land: the cells New hole laid (cells you have touched since stay). Its pin and tee markers go. No refund: course work is not refunded.` };
+  return { refund: 0, m2, text: `All ${m2.toLocaleString('en-US')} m² of hole ${c.n}, touch-ups included: "Delete hole and its grass" takes it back to the land with its frame trees; "Keep the grass" leaves it as your property's paint. Its plan, its looks and its pin and tee markers go. No refund: course work is not refunded.` };
 }
 
 /** renumbering (D4.12): hole a and hole b trade numbers wherever a number lives. Returns the new values; the grid's hole layer is changed in

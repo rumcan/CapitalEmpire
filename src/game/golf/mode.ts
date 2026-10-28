@@ -9,6 +9,8 @@ import type { GridSave } from '../ext/course-grid';
 import type { OwnerInput } from './play/live';
 import { normalizeRangeBiz, type RangeBizSave } from './rangesave';
 import { normalizeDaySave, type DaySave } from './everyday';
+import { normalizeBook, type LookBook } from './looks';
+import { normalizeMyHoles, type MyHole } from './myholes';
 
 /** a rectangle in tiles: top-left x, y and the size w, h */
 export type Rect = [number, number, number, number];
@@ -36,6 +38,11 @@ export interface GolfSave {
  /** the course grid (plan P21 3.7, T078: ext/course-grid encodeGrid); missing in older saves, whose golf-surface paint areas then move into
   *  a new grid on load. The engine keeps the live grid; this field is only written by a save */
  grid?: GridSave;
+ /** T256 (#743): the looks book (golf/looks.ts): each hole's, the property's and each practice facility's looks by owner key. Missing in older
+  *  saves: every hole and the property take the course default (today's course-wide looks) as their own on load, so nothing changes */
+ looks?: LookBook;
+ /** T256: the player's saved holes ("My holes", golf/myholes.ts), kept with the game (and in the browser, across games) */
+ myHoles?: MyHole[];
  /** the hole plans, one save tuple per hole (plan P21 3.7: hole, tee, green, green shape and m², turn, bends, width handles, fairway start,
   *  seed; ext/hole-plan's HolePlanTuple once it lands); kept as they are, undo carries them */
  plans?: unknown[];
@@ -86,7 +93,7 @@ export function normalizeGolfSave(g: Partial<GolfSave> | null | undefined): Golf
   if (!g || !g.town || !g.course || !g.clubhouse) return null;
   const parcel: Rect = g.parcel ?? g.parcels?.[0] ?? g.course;
   // the range start's fields (plan P22 2.6) are taken out and put back only when well formed, so an old start's save normalizes as before
-  const { start, exits, townBoost, invited, founding, play, range, everyday, ponds, practiceLot, ...rest } = g;
+  const { start, exits, townBoost, invited, founding, play, range, everyday, ponds, practiceLot, looks, myHoles, ...rest } = g;
   const out: GolfSave = {
     ...rest,
     v: 1,
@@ -111,5 +118,8 @@ export function normalizeGolfSave(g: Partial<GolfSave> | null | undefined): Golf
   const ed = normalizeDaySave(everyday); if (ed) out.everyday = ed;
   // T231: the pond marks, finite pairs only (golf/ponds.ts normalizePondMarks: none kept means the field stays out)
   if (Array.isArray(ponds)) { const m: number[] = []; for (let k = 0; k + 1 < ponds.length; k += 2) { const x = ponds[k], y = ponds[k + 1]; if (Number.isFinite(x) && Number.isFinite(y)) m.push(x!, y!); } if (m.length) out.ponds = m; }
+  // T256: the looks book and My holes, well formed only (a save without the book keeps none: the engine gives every owner today's looks)
+  const lk = normalizeBook(looks); if (lk) out.looks = lk;
+  const mh = normalizeMyHoles(myHoles); if (mh.length) out.myHoles = mh;
   return out;
 }

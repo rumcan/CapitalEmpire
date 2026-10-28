@@ -40,7 +40,15 @@ export interface CourseLooks { surf: readonly (CourseTex | undefined)[]; collar:
   band?: readonly (CourseTex | undefined)[];
   /** T227: the grass a bunker's lip band wears with the course finish on (the fairway's first cut), when the bunker's Border texture is its
    *  default; absent: its own look */
-  lipGrass?: CourseTex }
+  lipGrass?: CourseTex;
+  /** T256: the looks by owner (absent: every cell wears the looks above) */
+  own?: CourseOwners }
+/** T256 (#743): the looks each hole, the property and each practice facility wear (golf/looks.ts): looks[k], owner k's fills, collars, bands
+ *  and lip grass (course-look.ts CourseLookSet); hole[h], the owner the cells of hole h wear (-1 or missing: the base looks of CourseLooks);
+ *  zones, the facilities' boxes as five numbers each (k, x0, y0, x1, y1, tiles): a cell of no hole inside one wears owner k */
+export interface CourseOwners {
+  looks: readonly { surf: readonly (CourseTex | undefined)[]; collar: Readonly<Record<'first-cut' | 'fringe' | 'lip' | 'bank', CourseTex>>; band: readonly (CourseTex | undefined)[]; lipGrass?: CourseTex }[];
+  hole: readonly number[]; zones?: readonly number[] }
 /** a course texture's fields alone (a look may carry more) */
 const texOf = (t: CourseTex): CourseTex => ({ tex: t.tex, sc: t.sc, a: t.a, ...(t.t ? { t: t.t, ta: t.ta ?? 0, tc: t.tc ?? '#000000' } : {}), ...(t.m ? { m: { ...t.m } } : {}) });
 
@@ -148,11 +156,16 @@ export function coursePatch(g: Grid, cx: number, cy: number, looks: CourseLooks,
     for (const r of spillRuns(g, stack, layerCode(o.surf, false), se[1], TALL_CODES, styles)) spill.push({ p: Float32Array.from(r.p), o: r.o });
     if (ce) for (const r of spillRuns(g, stack, layerCode(o.surf, true), ce[1], TALL_CODES, styles)) spill.push({ p: Float32Array.from(r.p), o: r.o });
   }
+  // T256: the looks by owner: a surface whose cells here all wear one owner's look takes it; cells of several looks keep the most common as
+  // the layer's own and the others as alternates over their share of the chunk (OwnerPick)
+  const pickOf = looks.own ? ownerPicker(g, cx, cy, looks) : null;
   for (const { o, se: [fill, edges], ce } of capped) {
-    const look = looks.surf[o.surf]!, r = cw.runs.get(layerCode(o.surf, false));
+    const col = styles[o.surf]?.collar, pick = pickOf?.(o.surf, col?.name) ?? null;
+    const look = pick ? pick.base.surf : looks.surf[o.surf]!, r = cw.runs.get(layerCode(o.surf, false));
     const L: CourseLayer = { s: o.surf, ...texOf(look), e: SURF_EDGE[o.surf] ?? 'flat', fill: f32(fill), edges: f32(edges), soft: f32(r?.soft ?? []), joint: f32(r?.joint ?? []) };
-    const col = styles[o.surf]?.collar;
-    if (ce && col) { const cl = looks.band?.[o.surf] ?? looks.collar[col.name], [cf, cE] = ce; L.collar = { n: col.name, ...texOf(cl), w: col.width * CELL_T, fill: f32(cf), edges: f32(cE), soft: f32(cw.runs.get(layerCode(o.surf, true))?.soft ?? []), ...(col.name === 'lip' && looks.lipGrass ? { g: texOf(looks.lipGrass) } : {}) }; }
+    const lip = pick ? pick.base.lip : col?.name === 'lip' ? looks.lipGrass : undefined;
+    if (ce && col) { const cl = pick?.base.band ?? looks.band?.[o.surf] ?? looks.collar[col.name], [cf, cE] = ce; L.collar = { n: col.name, ...texOf(cl), w: col.width * CELL_T, fill: f32(cf), edges: f32(cE), soft: f32(cw.runs.get(layerCode(o.surf, true))?.soft ?? []), ...(col.name === 'lip' && lip ? { g: texOf(lip) } : {}) }; }
+    if (pick?.alts.length) L.alts = pick.alts.map(a => ({ look: texOf(a.look.surf), ...(a.look.band ? { band: texOf(a.look.band) } : {}), ...(a.look.lip ? { g: texOf(a.look.lip) } : {}), runs: a.runs }));
     // the mowing stripes' holes: the fairway's (T218) and the green's (T227: the course finish's fine stripes, along its hole's line of play)
     if ((o.surf === SURF.fairway || o.surf === SURF.green) && o.fill.length) { const st = stripeAreas(g, cx, cy, lines, o.surf); if (st) L.stripes = st; }
     if (L.fill.length || L.collar) layers.push(L);
@@ -171,7 +184,7 @@ export function coursePatch(g: Grid, cx: number, cy: number, looks: CourseLooks,
 /** the buffers of a patch's typed arrays (a postMessage transfer list) */
 export function patchBuffers(p: LotPatch): ArrayBuffer[] {
   const out: ArrayBuffer[] = [], c = p.course; if (!c) return out;
-  for (const l of c.layers) for (const a of [...l.fill, ...l.edges, ...(l.soft ?? []), ...(l.joint ?? []), ...(l.collar ? [...l.collar.fill, ...l.collar.edges, ...(l.collar.soft ?? [])] : []), ...(l.stripes?.flatMap(q => (q.runs ? [q.runs] : [])) ?? [])]) out.push(a.buffer as ArrayBuffer);
+  for (const l of c.layers) for (const a of [...l.fill, ...l.edges, ...(l.soft ?? []), ...(l.joint ?? []), ...(l.collar ? [...l.collar.fill, ...l.collar.edges, ...(l.collar.soft ?? [])] : []), ...(l.stripes?.flatMap(q => (q.runs ? [q.runs] : [])) ?? []), ...(l.alts?.map(q => q.runs) ?? [])]) out.push(a.buffer as ArrayBuffer);
   for (const w of [...(c.walls ?? []), ...(c.rims ?? []), ...(c.spill ?? [])]) out.push(w.p.buffer as ArrayBuffer);
   if (c.grow) out.push(c.grow.buffer as ArrayBuffer);
   return out;
@@ -189,18 +202,30 @@ export type StripeArea = NonNullable<CourseLayer['stripes']>[number];
  *  its seams the same way, so where an outline can lie (a few cells from its fairway) the shares agree across chunks. null: no fairway cell
  *  within reach. surf: the surface whose cells are walked (T227: the green's, for its fine stripes; the fairway's by default) */
 export function stripeAreas(g: Grid, cx: number, cy: number, lines?: ReadonlyMap<number, readonly number[]>, surf: number = SURF.fairway): StripeArea[] | null {
-  const { i0, j0, n } = chunkCells(g, cx, cy), M = STRIPE_WALK, W = n + 2 * M, lab = new Int16Array(W * W).fill(-1), dist = new Uint16Array(W * W).fill(0xffff);
   const lineOf = (h: number) => { const l = h > 0 ? lines?.get(h) : undefined; return l && l.length >= 4 ? l : null; };
+  const sh = cellShares(g, cx, cy, surf, c => { const h = g.hole[c]!; return lineOf(h) ? h : 0; }); if (!sh) return null;
+  const entry = (h: number): StripeArea => ({ hole: h, line: h ? lineOf(h)!.slice() : [] });
+  return sh.runs ? sh.labels.map((h, k) => ({ ...entry(h), runs: sh.runs![k]! })) : [entry(sh.labels[0]!)];
+}
+/** T256 (generalising T218's walk): the shares of chunk (cx, cy) among the labels of the cells of surface `surf` (label(c), a cell index of g,
+ *  0 to 32767): every cell round the chunk takes the label of its nearest cell of that surface (a walk out in rings, a tie to the lower
+ *  label), and each label seen over the chunk box and its edge gets its share as boxes (runs, x0 y0 x1 y1 in tiles, rows of cells merged
+ *  down). Every chunk walks the same cells round its seams the same way, so the shares agree across chunks. labels ascending; runs only when
+ *  there are two or more; null: no cell of the surface within reach */
+export function cellShares(g: Grid, cx: number, cy: number, surf: number, label: (c: number) => number): { labels: number[]; runs?: Float32Array[] } | null {
+  const { i0, j0, n } = chunkCells(g, cx, cy), M = STRIPE_WALK, W = n + 2 * M, lab = new Int16Array(W * W).fill(-1), dist = new Uint16Array(W * W).fill(0xffff);
   let cur: number[] = [];
   for (let y = 0; y < W; y++) {
     const j = j0 - M + y; if (j < 0 || j >= g.h) continue;
     for (let x = 0; x < W; x++) {
       const i = i0 - M + x; if (i < 0 || i >= g.w) continue;
       const c = j * g.w + i; if (g.surf[c] !== surf) continue;
-      const h = g.hole[c]!, k = y * W + x; lab[k] = lineOf(h) ? h : 0; dist[k] = 0; cur.push(k);
+      const k = y * W + x; lab[k] = label(c); dist[k] = 0; cur.push(k);
     }
   }
   if (!cur.length) return null;
+  // one label in reach: it is the whole chunk's (the walk would find nothing else)
+  const first = lab[cur[0]!]!; if (cur.every(k => lab[k] === first)) return { labels: [first] };
   // out from the fairway cells ring by ring (4 neighbours): a cell takes the lowest hole among the cells of the last ring beside it
   for (let d = 1; cur.length; d++) {
     const next: number[] = [];
@@ -211,11 +236,11 @@ export function stripeAreas(g: Grid, cx: number, cy: number, lines?: ReadonlyMap
     }
     cur = next;
   }
-  // the holes over the chunk box and its edge, and their shares as boxes
+  // the labels over the chunk box and its edge, and their shares as boxes
   const E = STRIPE_EDGE, R = n + 2 * E, o = M - E, seen = new Set<number>();
   for (let y = 0; y < R; y++) for (let x = 0; x < R; x++) seen.add(lab[(y + o) * W + x + o]!);
-  const holes = [...seen].sort((a, b) => a - b), entry = (h: number): StripeArea => ({ hole: h, line: h ? lineOf(h)!.slice() : [] });
-  if (holes.length === 1) return [entry(holes[0]!)];
+  const holes = [...seen].sort((a, b) => a - b);
+  if (holes.length === 1) return { labels: holes };
   const boxes = new Map<number, number[][]>(holes.map(h => [h, []]));
   let open = new Map<number, number[]>();
   const tx = (x: number) => g.x0 + (i0 - E + x) * CELL_T, ty = (y: number) => g.y0 + (j0 - E + y) * CELL_T;
@@ -229,5 +254,49 @@ export function stripeAreas(g: Grid, cx: number, cy: number, lines?: ReadonlyMap
     }
     open = now;
   }
-  return holes.map(h => ({ ...entry(h), runs: Float32Array.from(boxes.get(h)!.flat()) }));
+  return { labels: holes, runs: holes.map(h => Float32Array.from(boxes.get(h)!.flat())) };
+}
+
+/** T256: one look a surface wears in a chunk: its fill, its band (absent: a surface with no collar) and a bunker's lip grass with the finish */
+interface PickLook { surf: CourseTex; band?: CourseTex; lip?: CourseTex }
+/** T256: the looks a surface wears in a chunk: base, the layer's own (the most cells), and the others over their shares (runs) */
+export interface OwnerPick { base: PickLook; alts: { look: PickLook; runs: Float32Array }[] }
+/** T256: the owner looks of chunk (cx, cy): for a surface id (and its collar's name), the looks its cells wear (null: the base looks of
+ *  CourseLooks, as before T256). A cell of hole h wears owner own.hole[h]; a cell of no hole inside a facility's zone wears that facility's.
+ *  Owners whose looks for the surface match are one look, so a course where every owner wears the same looks lays exactly as before */
+function ownerPicker(g: Grid, cx: number, cy: number, looks: CourseLooks): (s: number, collar?: string) => OwnerPick | null {
+  const own = looks.own!, zones = own.zones ?? [];
+  /** owner k's look for surface s (k < 0: the base looks) */
+  const lookOf = (k: number, s: number, collar?: string): PickLook | null => {
+    const o = k >= 0 ? own.looks[k] : null, surf = (o ?? looks).surf[s]; if (!surf) return null;
+    const name = collar as keyof CourseLooks['collar'] | undefined;
+    const band = name ? (o ? o.band[s] ?? o.collar[name] : looks.band?.[s] ?? looks.collar[name]) : undefined, lip = name === 'lip' ? (o ? o.lipGrass : looks.lipGrass) : undefined;
+    return { surf, ...(band ? { band } : {}), ...(lip ? { lip } : {}) };
+  };
+  /** the owner of cell c */
+  const ownerOf = (c: number): number => {
+    const h = g.hole[c]!;
+    if (h === 0 && zones.length) {
+      const ci = c % g.w, x = g.x0 + (ci + 0.5) * CELL_T, y = g.y0 + ((c - ci) / g.w + 0.5) * CELL_T;
+      for (let z = 0; z + 4 < zones.length; z += 5) if (x >= zones[z + 1]! && x < zones[z + 3]! && y >= zones[z + 2]! && y < zones[z + 4]!) return zones[z]!;
+    }
+    return own.hole[h] ?? -1;
+  };
+  return (s, collar) => {
+    // the looks by key (owners that look the same share one label: the base's first, so it keeps 0)
+    const keys = new Map<string, number>(), list: PickLook[] = [], byOwner = new Map<number, number>();
+    const labelOf = (k: number): number => {
+      let v = byOwner.get(k); if (v !== undefined) return v;
+      const lk = lookOf(k, s, collar) ?? lookOf(-1, s, collar)!, key = JSON.stringify(lk);
+      v = keys.get(key); if (v === undefined) { v = list.length; keys.set(key, v); list.push(lk); }
+      byOwner.set(k, v); return v;
+    };
+    labelOf(-1);
+    const sh = cellShares(g, cx, cy, s, c => labelOf(ownerOf(c))); if (!sh) return null;
+    if (!sh.runs) return sh.labels[0] === 0 ? null : { base: list[sh.labels[0]!]!, alts: [] };
+    // the layer's own look: the label with the most share (its boxes' area), the rest as alternates
+    const area = sh.runs.map(r => { let a = 0; for (let q = 0; q + 3 < r.length; q += 4) a += (r[q + 2]! - r[q]!) * (r[q + 3]! - r[q + 1]!); return a; });
+    let top = 0; for (let q = 1; q < area.length; q++) if (area[q]! > area[top]!) top = q;
+    return { base: list[sh.labels[top]!]!, alts: sh.labels.flatMap((v, q) => (q === top ? [] : [{ look: list[v]!, runs: sh.runs![q]! }])) };
+  };
 }
