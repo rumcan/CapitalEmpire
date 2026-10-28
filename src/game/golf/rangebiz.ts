@@ -9,7 +9,7 @@ import { RANGE_PLOT, plotPoint } from './range';
 import { arrivalRate, hourWeight, practiceUsers, rangeScale, rangeStats, saleValue, skippedVisits, type DemandCtx, type RangeBizSave, type RangeStats, type SkipLive } from './rangesave';
 import { KIOSK_QMAX, KIOSK_SERVE, KIOSK_SHARE, LESSON_SHARE, TIER2_BAYS, extraValue, homeStage, type ExtraId, type HomeStage } from './rangesave';
 export * from './rangesave';
-import { NEAR } from './rangestart';
+import { NEAR, RANGE_LOT } from './rangestart';
 import { GOLFER_CLIPS } from '../library';
 import { clipFrame, golferRow, hash, rowToward, type CrowdPerson } from '../crowdview';
 import { mulberry } from '../iso';
@@ -33,6 +33,8 @@ const AIM_D = [25, 50, 75];
  *  beside the car park building, the lot left beside it), and
  *  the range front a walkway is read in (the shop, the lot and the tee box, grown by a few tiles) */
 const LOT: [number, number, number, number] = [49, 69, 2, 18], LAMP_IN = 0.6;
+/** T237: past the set-back lot's back edge, where its walkers step off it (tiles, v) */
+const LOT_STEP = 0.6;
 const FRONT_UV: [number, number, number, number] = [-2, 72, -2, 30];
 /** the far fence (v), the side fences (u) */
 const FAR_V = 149.4, SIDE_U: [number, number] = [0.6, 69.4];
@@ -182,15 +184,22 @@ export const openSlots = (n: number): number[] => Array.from({ length: n }, (_, 
 
 /** T237: where no car park may go on a range plot (world rects): the tee box and the outfield behind it (the whole plot from the tee box's front
  *  edge back), and the shop with the home's yard (golf/parkplace.ts rangeKeepOutWhy) */
-export function rangeKeepOut(plot: Rect, facing: 0 | 1 | 2 | 3): Rect[] {
+export function rangeKeepOut(plot: Rect, facing: 0 | 1 | 2 | 3, setback = 0): Rect[] {
   const R = (u0: number, u1: number, v0: number, v1: number): Rect => { const a = plotPoint(plot, facing, u0, v0), b = plotPoint(plot, facing, u1, v1); return [Math.min(a.x, b.x), Math.min(a.y, b.y), Math.abs(b.x - a.x), Math.abs(b.y - a.y)]; };
+  // (a set-back range's car parks go in the frontage strip in front of it: the whole plot is the range's, its front kept for the car park building)
+  if (setback > 0) return [R(0, RANGE_PLOT[0], 0, RANGE_PLOT[1])];
   return [R(0, RANGE_PLOT[0], TEE[2], RANGE_PLOT[1]), R(YARDS[2]![0] - 1, PATIO[1], 0, PATH_V)];
 }
+/** T237: the range's own car park in the plot frame (u0 u1 v0 v1) for a set-back (tiles): on the plot's front beside the drive (LOT, no set-back),
+ *  or in the frontage strip in front of it, on the road's verge (rangestart.ts: the parcel's road edge is v = -setback) */
+export function rangeLot(setback = 0): [number, number, number, number] { return setback > 0 ? [LOT[0], LOT[1], -setback, -setback + RANGE_LOT[1]] : LOT; }
 /** T237: the shop's counter (world tiles) on a plot for a facing: the range's door for the walking rule (golf/walkserve.ts), as the scene's counter */
 export function rangeCounter(plot: Rect, facing: 0 | 1 | 2 | 3): Pt { return plotPoint(plot, facing, COUNTER.u, COUNTER.v); }
 /** the range's scene on its plot for a facing and the save (plan 2.1): deterministic; everything turns with the facing, nothing is mirrored */
 export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave, opts: SceneOpts = {}): RangeScene {
   const st = rangeStats(s), P = (u: number, v: number) => plotPoint(plot, facing, u, v), toRoad = roadView(facing), toRange = (toRoad + 2) % 4;
+  // T237: the plot's set-back from the road (a new game's: its car park in the frontage strip; an old save's 0: on the plot's front)
+  const sb = s.setback ?? 0, lot = rangeLot(sb);
   const look = opts.look ?? DEFAULT_RANGE_LOOK, views = opts.art ?? RANGE_ART;
   /** T258: a piece's ChatGPT picture once it has landed (null: its stand-in still stands): view 1 (the front and right side) for a piece whose
    *  front faces +y or -x (the view index q 0 or 1: roadView), view 2 (the left side and front) for +x or -y; its back is never drawn, and the
@@ -250,7 +259,7 @@ export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave, o
   // walking path); an old save's first load lays them (rangehost sync)
   const paths = [L(TEE[0] + 1, PATH_V, CAR_EDGE_U, PATH_V), L(COUNTER.u, PATH_V, COUNTER.u, COUNTER.v - 0.2), L(13, PATH_V, 13, YARD[3] + 0.4)];
   // ---- T239: the paved car park's lamps (with its asphalt and painted bays: the engine's park ground); a dirt or gravel lot has none
-  if (st.lot === 'paved') { const r = st.parking ? LOT_BESIDE : LOT; [[r[0], r[2]], [r[1], r[2]], [r[0], r[3]], [r[1], r[3]]].forEach(([u, v], i) => put(`lot-lamp${i}`, 'world:streetlamp', u! + (u === r[0] ? LAMP_IN : -LAMP_IN), v! + (v === r[2] ? LAMP_IN : -LAMP_IN), 0, { scale: 1 })); }
+  if (st.lot === 'paved') { const r = st.parking && !sb ? LOT_BESIDE : lot; [[r[0], r[2]], [r[1], r[2]], [r[0], r[3]], [r[1], r[3]]].forEach(([u, v], i) => put(`lot-lamp${i}`, 'world:streetlamp', u! + (u === r[0] ? LAMP_IN : -LAMP_IN), v! + (v === r[2] ? LAMP_IN : -LAMP_IN), 0, { scale: 1 })); }
 
   // ---- the shop (the tin-and-tarp shack, or the pro shop facing the golfers), the caravan and its fenced back yard
   if (st.proShop) put('shop', 'business:golf-pro-shop', SHOP.u, SHOP.v, toRange);
@@ -267,7 +276,9 @@ export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave, o
   fenceRun(pieces, P, 'far', SIDE_U[0], FAR_V, SIDE_U[1], FAR_V, 'chain');
   // ---- the sign at the drive, the bench and bins at the tee, a bag trolley by the shop
   // (T258: each drawn as the owner's ChatGPT picture once it lands, its label gone)
-  { const a = art('golf-range-sign', toRoad); if (a) put('sign', a, 64.5, 1.4); else put('sign', 'golf:leaderboard', 64.5, 1.4, toRoad, { fit: 4.5, label: 'Stand In for Driving Range sign' }); }
+  // (T237: a set-back range's sign stands by the road at the drive's mouth, across the drive from its car park in the frontage strip)
+  const SU = sb ? 75.5 : 64.5, SV = sb ? 1.4 - sb : 1.4;
+  { const a = art('golf-range-sign', toRoad); if (a) put('sign', a, SU, SV); else put('sign', 'golf:leaderboard', SU, SV, toRoad, { fit: 4.5, label: 'Stand In for Driving Range sign' }); }
   put('bench', 'world:bench', 43, 15); put('bins-tee', 'gen:trash-cans-row', 25.5, 15); put('trolley', 'business:golf-bag-trolley', 29.4, 13.6);
   // ---- the distance markers down both sides every 50 m, flags on the greens, the yardage boards (upgrade)
   const numbers: RangeScene['numbers'] = [], post = art('golf-range-distance-post', 0), board = art('golf-range-yardage-board', toRoad);
@@ -346,7 +357,8 @@ export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave, o
     const r0 = P(GARAGE_RAMP.u, GARAGE_RAMP.v), r1 = P(GARAGE_RAMP.u - 1, GARAGE_RAMP.v), l0 = P(LOT_BESIDE[0], LOT_BESIDE[2]), l1 = P(LOT_BESIDE[1], LOT_BESIDE[3]);
     garage = {
       box, ramp: r0, into: { x: r1.x - r0.x, y: r1.y - r0.y }, door: P(GARAGE_DOOR.u, GARAGE_DOOR.v),
-      lot: [Math.min(l0.x, l1.x), Math.min(l0.y, l1.y), Math.abs(l1.x - l0.x), Math.abs(l1.y - l0.y)],
+      // (T237: a set-back range's lot stands in the frontage strip, clear of the building: it keeps its whole rect)
+      lot: sb ? (() => { const a = P(lot[0], lot[2]), b = P(lot[1], lot[3]); return [Math.min(a.x, b.x), Math.min(a.y, b.y), Math.abs(b.x - a.x), Math.abs(b.y - a.y)] as [number, number, number, number]; })() : [Math.min(l0.x, l1.x), Math.min(l0.y, l1.y), Math.abs(l1.x - l0.x), Math.abs(l1.y - l0.y)],
       path: { a: P(CAR_EDGE_U, PATH_V), b: P(LOT_BESIDE[0], PATH_V) }, label: P((GARAGE[0] + GARAGE[1]) / 2, (GARAGE[2] + GARAGE[3]) / 2),
     };
   }
@@ -357,7 +369,7 @@ export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave, o
     const n = Math.floor(TIER2_BAYS / decks.length) + (i < TIER2_BAYS % decks.length ? 1 : 0), step = DECK_SPAN / n;
     for (let j = 0; j < n; j++) { const u = uc + (j - (n - 1) / 2) * step; bays.push({ stand: P(u, STAND_V), back: P(u, PATH_V), lift: DECK_H }); }
   });
-  const o = P(0, 0), du = P(1, 0), dv = P(0, 1), c0 = P(0, 0), c1 = P(RANGE_PLOT[0], RANGE_PLOT[1]), f0 = P(FRONT_UV[0], FRONT_UV[2]), f1 = P(FRONT_UV[1], FRONT_UV[3]);
+  const o = P(0, 0), du = P(1, 0), dv = P(0, 1), c0 = P(0, 0), c1 = P(RANGE_PLOT[0], RANGE_PLOT[1]), f0 = P(FRONT_UV[0], FRONT_UV[2] - sb), f1 = P(FRONT_UV[1], FRONT_UV[3]);
   // the golfers' aim with no target green built (T239): the distance markers' line down the middle
   const aims = targets.length ? targets : AIM_D.map(d => { const c = P(U_MID, STAND_V + d); return { x: c.x, y: c.y, r: 4, m: d * 2 }; });
   const q0 = P(COUNTER.u, COUNTER.v), q1 = P(COUNTER.u + 0.8, COUNTER.v);
@@ -365,12 +377,14 @@ export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave, o
     facing, pieces, patches, teeBox: quad(TEE[0], TEE[1], TEE[2], TEE[3]), practice: practiceArea(plot, facing), paths, bays, academy, kiosk, picker, home, aim: { x: dv.x - o.x, y: dv.y - o.y }, targets, aims,
     counter: q0, queueStep: { x: q1.x - q0.x, y: q1.y - q0.y }, queueAt: P(COUNTER.u + 0.8, QUEUE_V), shopJoin: P(COUNTER.u, PATH_V), carEdge: P(CAR_EDGE_U, PATH_V),
     // the counters side by side along the shop's front about its middle, the nearest to the line's head first (it calls the next golfer first)
-    counters: Array.from({ length: st.counters }, (_, i) => COUNTER.u + (i - (st.counters - 1) / 2) * COUNTER_STEP).sort((a, b) => Math.abs(a - COUNTER.u - 0.8) - Math.abs(b - COUNTER.u - 0.8)).map(u => P(u, COUNTER.v)), garage, lotWalk: garage ? [P(LOT_CORNER.u, LOT_CORNER.v)] : [],
-    J: P(RANGE_PLOT[0] + 2, -NEAR), driveEnd: P(RANGE_PLOT[0] + 2, 16), roadDir: { x: du.x - o.x, y: du.y - o.y }, rangeSide: { x: dv.x - o.x, y: dv.y - o.y },
+    counters: Array.from({ length: st.counters }, (_, i) => COUNTER.u + (i - (st.counters - 1) / 2) * COUNTER_STEP).sort((a, b) => Math.abs(a - COUNTER.u - 0.8) - Math.abs(b - COUNTER.u - 0.8)).map(u => P(u, COUNTER.v)), garage,
+    // (T237: from the path's end off the set-back lot's back edge, round the car park building's far side when it stands)
+    lotWalk: sb ? (garage ? [P(LOT_CORNER.u, LOT_CORNER.v), P(LOT_CORNER.u, lot[3] + LOT_STEP)] : [P(CAR_EDGE_U, lot[3] + LOT_STEP)]) : garage ? [P(LOT_CORNER.u, LOT_CORNER.v)] : [],
+    J: P(RANGE_PLOT[0] + 2, -NEAR - sb), driveEnd: P(RANGE_PLOT[0] + 2, 16), roadDir: { x: du.x - o.x, y: du.y - o.y }, rangeSide: { x: dv.x - o.x, y: dv.y - o.y },
     numbers, label: P(35, 60), box: [Math.min(c0.x, c1.x), Math.min(c0.y, c1.y), Math.max(c0.x, c1.x), Math.max(c0.y, c1.y)],
     mowFrom: P(U_MID, TEE[3] + TEE_GAP + 0.6),
     front: [Math.min(f0.x, f1.x), Math.min(f0.y, f1.y), Math.max(f0.x, f1.x), Math.max(f0.y, f1.y)], walk: null,
-    anchors: { lot: [P(LOT[0], LOT[2]), P(LOT[1], LOT[2]), P(LOT[1], LOT[3]), P(LOT[0], LOT[3])], shop: P(COUNTER.u, COUNTER.v), tee: [P(TEE[0], TEE[2]), P(TEE[1], TEE[2])] },
+    anchors: { lot: [P(lot[0], lot[2]), P(lot[1], lot[2]), P(lot[1], lot[3]), P(lot[0], lot[3])], shop: P(COUNTER.u, COUNTER.v), tee: [P(TEE[0], TEE[2]), P(TEE[1], TEE[2])] },
   };
 }
 

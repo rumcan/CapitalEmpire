@@ -10,6 +10,7 @@ import { generateOldNine } from '../src/game/golf/coursegen';
 import { CLUB_MAX, CLUB_MIN, canonicalSite, golfTownClasses, orientLayout, placeCourse, townAxis } from '../src/game/golf/place';
 import type { Rect } from '../src/game/golf/mode';
 import type { Pt } from '../src/game/network';
+import { HIDDEN_MAX, hiddenShare } from '../src/game/golf/parkplace';
 
 /** the town's centre, tiles: the town grid's top-left tile is (880, 880) */
 const CENTRE: Pt = { x: 1024, y: 1024 };
@@ -42,7 +43,7 @@ test('all ground: a plan with the venue 150 to 350 tiles out, a one-leg drive fr
   assert.ok(p);
   const c = mid(p.venue), d = Math.hypot(c.x - CENTRE.x, c.y - CENTRE.y);
   assert.ok(d >= CLUB_MIN && d <= CLUB_MAX, `venue ${d.toFixed(1)} tiles from the centre`);
-  assert.equal(p.drive.length, 1);
+  assert.ok(p.drive.length === 1 || p.drive.length === 2, 'the drive, and a spur to a car park beside the venue (T237)');
   const { a, b } = p.drive[0];
   assert.ok(a.x === b.x || a.y === b.y, 'the drive is axis aligned');
   assert.ok(ends.some(e => e.x === a.x && e.y === a.y), 'the drive starts at a grid edge point');
@@ -106,4 +107,26 @@ test('golfTownClasses: the 8 legs of the main axis are avenues, every other leg 
     assert.equal(out.length, legs.length);
     legs.forEach((l, i) => assert.equal(out[i], onAxis(l) ? 'avenue' : 'gravel', `dir ${dir}: leg ${i}`));
   }
+});
+
+test('T237: the club car park is never behind the clubhouse in screen space; beside it on a spur off the drive where the drive side is', () => {
+  // each side of the town by water on the other three: the course lies that way (dir 0 north .. 3 west)
+  const only: ((x: number, y: number) => boolean)[] = [(_x, y) => y > 860, x => x < 1180, (_x, y) => y < 1180, x => x > 860];
+  const dirs = new Set<number>();
+  for (const pred of only) {
+    const cls = water((x, y) => pred(x, y) && !(x >= 860 && x < 1190 && y >= 860 && y < 1190)), p = placeCourse(cls, CENTRE, endsOf(cls, CENTRE), 1);
+    if (!p) continue;
+    dirs.add(p.dir);
+    const c = p.carpark, v = p.venue;
+    const share = hiddenShare({ x: c[0], y: c[1], w: c[2], h: c[3] }, { rect: v, name: 'the clubhouse', reach: 24 });
+    assert.ok(share <= HIDDEN_MAX, `dir ${p.dir}: ${Math.round(share * 100)}% of the car park behind the clubhouse`);
+    assert.ok(!overlap(c, v) && !overlap(c, p.course), `dir ${p.dir}: apart`);
+    // its entrance road: one of the drive's legs runs along a side of it, 3 tiles off
+    const along = p.drive.some(({ a, b }) => {
+      if (a.x === b.x) return [c[0] - 3, c[0] + c[2] + 3].some(x => Math.abs(x - a.x) < 1e-9) && Math.min(a.y, b.y) <= c[1] + c[3] && Math.max(a.y, b.y) >= c[1];
+      return [c[1] - 3, c[1] + c[3] + 3].some(y => Math.abs(y - a.y) < 1e-9) && Math.min(a.x, b.x) <= c[0] + c[2] && Math.max(a.x, b.x) >= c[0];
+    });
+    assert.ok(along, `dir ${p.dir}: the car park's side is on a drive`);
+  }
+  assert.ok(dirs.size >= 3, `the sides tried: ${[...dirs].join(',')}`);
 });

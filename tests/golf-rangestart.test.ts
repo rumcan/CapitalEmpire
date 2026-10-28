@@ -10,8 +10,9 @@ import { TC, generateTerrain, type Edge, type Terrain } from '../src/game/terrai
 import { normalizeGolfSave } from '../src/game/golf/mode';
 import { GOLF_REP_START } from '../src/game/golf/start';
 import type { Rect } from '../src/game/golf/mode';
-import { NEAR, SEED_ACROSS, STRAIGHT, TOWN_WINDOW, bridgeRuns, placeRangeSite, planRangeStart, regionalRoute, type RangeStart } from '../src/game/golf/rangestart';
-import { plotOfFront, rangeLayout } from '../src/game/golf/range';
+import { NEAR, SETBACK, SEED_ACROSS, STRAIGHT, TOWN_WINDOW, bridgeRuns, placeRangeSite, planRangeStart, regionalRoute, type RangeStart } from '../src/game/golf/rangestart';
+import { plotOfFront, plotPoint, rangeLayout } from '../src/game/golf/range';
+import { rangeLot } from '../src/game/golf/rangebiz';
 
 const VERGE = CLASS.road!.h + CLASS.road!.walk;
 const terrains = new Map<number, Terrain>();
@@ -118,7 +119,7 @@ test('within 600 tiles of J the road is one axis-aligned run through J, and J is
   }
 });
 
-test('the parcel lies on one side 2-6 tiles off the verge and is 98% playable; the range front and car park are buildable, inside it', () => {
+test('the parcel lies on one side 2-6 tiles off the verge and is 98% playable; the range front and car park are buildable, inside it; T237: the plot set back, the car park in the frontage strip', () => {
   for (const s of SEEDS) {
     const p = plan(s); if (!p) continue;
     const t = terrain(s), { parcel, rangeFront, rangePlot, carpark } = p.site;
@@ -127,7 +128,14 @@ test('the parcel lies on one side 2-6 tiles off the verge and is 98% playable; t
     assert.ok(countIn(t, parcel, playable) >= 0.98 * parcel[2] * parcel[3], `seed ${s}: the parcel is playable`);
     for (const r of [rangeFront, carpark]) assert.equal(countIn(t, r, buildable), r[2] * r[3], `seed ${s}: buildable`);
     for (const r of [rangePlot, rangeFront, carpark]) assert.ok(within(r, parcel), `seed ${s}: inside the parcel`);
-    assert.ok(within(rangeFront, rangePlot) && within(carpark, rangeFront), `seed ${s}: the front holds the car park`);
+    // T237 (#694): the plot stands SETBACK behind the parcel's road edge; the car park is in the frontage strip that leaves, on the road
+    assert.ok(within(rangeFront, rangePlot), `seed ${s}: the plot holds the front`);
+    assert.equal(p.site.setback, SETBACK);
+    assert.equal(spanAcross(p, rangePlot)[0] - a, SETBACK, `seed ${s}: the plot ${SETBACK} tiles behind the parcel's road edge`);
+    assert.ok(within(carpark, p.site.strip) && within(p.site.strip, parcel), `seed ${s}: the car park in the frontage strip`);
+    assert.equal(spanAcross(p, carpark)[0], a, `seed ${s}: the car park on the parcel's road edge`);
+    assert.ok(spanAcross(p, carpark)[1] < spanAcross(p, rangePlot)[0], `seed ${s}: the car park short of the plot (and of its tee box)`);
+    assert.equal(Math.min(p.site.strip[2], p.site.strip[3]), SETBACK);
     assert.deepEqual([Math.min(rangePlot[2], rangePlot[3]), Math.max(rangePlot[2], rangePlot[3])], [70, 150]);
     assert.equal(Math.min(rangeFront[2], rangeFront[3]), 24);
   }
@@ -145,15 +153,17 @@ test('the town window across the road is 75% buildable and the seed is 40 tiles 
   }
 });
 
-test('the drive is one leg from J, at most 20 tiles past the verge, its end beside the car park', () => {
+test('the drive is one leg from J, at most 20 tiles past the verge and the set-back, its end on the range front', () => {
   for (const s of SEEDS) {
     const p = plan(s); if (!p) continue;
     const { drive, J, carpark } = p.site;
     assert.equal(drive.length, 1); assert.deepEqual(drive[0]!.a, J);
     const L = Math.hypot(drive[0]!.b.x - J.x, drive[0]!.b.y - J.y);
-    assert.ok(L - VERGE > 0 && L - VERGE <= 20, `seed ${s}: ${L - VERGE} tiles past the verge`);
-    const e = drive[0]!.b, gx = Math.max(carpark[0] - e.x, 0, e.x - carpark[0] - carpark[2]), gy = Math.max(carpark[1] - e.y, 0, e.y - carpark[1] - carpark[3]);
-    assert.ok(Math.hypot(gx, gy) <= 4, `seed ${s}: the drive's end is beside the car park`);
+    assert.ok(L - VERGE > 0 && L - VERGE <= 20 + SETBACK, `seed ${s}: ${L - VERGE} tiles past the verge`);
+    // (T237: the car park is on the road in the frontage strip, beside the drive's start; the drive runs on to the range's front)
+    const e = drive[0]!.b, [f0, f1] = spanAcross(p, p.site.rangeFront), g = (q: Pt) => Math.hypot(Math.max(carpark[0] - q.x, 0, q.x - carpark[0] - carpark[2]), Math.max(carpark[1] - q.y, 0, q.y - carpark[1] - carpark[3]));
+    assert.ok(across(p, e) > f0 && across(p, e) < f1, `seed ${s}: the drive's end is on the range front`);
+    assert.ok(g({ x: (J.x + e.x) / 2, y: (J.y + e.y) / 2 }) <= 4 || g(J) <= 12, `seed ${s}: the car park beside the drive`);
     assert.ok(across(p, e) > 0, `seed ${s}: the drive runs to the course side`);
   }
 });
@@ -180,7 +190,9 @@ test("the site agrees with the range's layout (T086): its car park is the layout
   for (const s of SEEDS) {
     const p = plan(s); if (!p) continue;
     const l = rangeLayout(p.site.rangePlot, p.site.dir);
-    assert.deepEqual(l.carpark, p.site.carpark, `seed ${s}: one car park`);
+    // T237: the car park is the scene's set-back lot (rangebiz.ts rangeLot) in the frontage strip
+    const [u0, u1, v0, v1] = rangeLot(p.site.setback), A = plotPoint(p.site.rangePlot, p.site.dir, u0, v0), B = plotPoint(p.site.rangePlot, p.site.dir, u1, v1);
+    assert.deepEqual([Math.min(A.x, B.x), Math.min(A.y, B.y), Math.abs(B.x - A.x), Math.abs(B.y - A.y)], p.site.carpark, `seed ${s}: one car park`);
     assert.deepEqual(plotOfFront(p.site.rangeFront, p.site.dir), p.site.rangePlot, `seed ${s}: the plot from the front`);
     // the hut faces the road: its door is nearer the road than its centre
     const c = { x: l.hut.rect[0] + l.hut.rect[2] / 2, y: l.hut.rect[1] + l.hut.rect[3] / 2 };

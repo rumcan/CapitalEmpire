@@ -42,7 +42,12 @@ export interface RangeBizSave { v: 1; owned: RangeUpgradeId[]; price: number; se
    *  tee, no target greens, the practice area for sale; the player builds them). A save without it was made before T239: its load owns the
    *  builds it had (LEGACY_UPGRADES) and is marked guided (as `desert`, so a second load keeps it as it is); a walkway the game never laid is
    *  then paths: false, which the host lays on its first load */
-  guided?: boolean }
+  guided?: boolean;
+  /** T237: the range's plot stands this far behind the parcel's road edge (tiles: rangestart.ts SETBACK), its car park in the frontage strip that
+   *  leaves along the road; absent (a save from before T237): 0, the plot on the road edge and its car park on the plot's front */
+  setback?: number;
+  /** T237: the range's own car park's rect (x, y, w, h: the one its upgrades gravel and pave); absent: the car park on the range's plot */
+  lot?: [number, number, number, number] }
 /** the extras that keep their own counts (T133): the coffee kiosk (coffees sold) and the academy (lessons given) */
 export type ExtraId = 'kiosk' | 'academy';
 export const EXTRA_IDS: readonly ExtraId[] = ['kiosk', 'academy'];
@@ -151,6 +156,9 @@ export function normalizeRangeBiz(x: unknown): RangeBizSave {
   if (o.paths === true) out.paths = true; else if (o.paths === false || o.guided !== true) out.paths = false;
   if (o.tee === true) out.tee = true;
   if (o.garage === true && owned.includes('parking')) out.garage = true;
+  // T237: the set-back and the range's own lot (a save from before T237 has neither: its plot on the road, its lot on the plot)
+  if (typeof o.setback === 'number' && Number.isFinite(o.setback) && o.setback > 0) out.setback = Math.round(o.setback);
+  if (Array.isArray(o.lot) && o.lot.length === 4 && o.lot.every(v => typeof v === 'number' && Number.isFinite(v)) && o.lot[2] > 0 && o.lot[3] > 0) out.lot = [o.lot[0], o.lot[1], o.lot[2], o.lot[3]];
   return out;
 }
 

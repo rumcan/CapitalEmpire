@@ -59,6 +59,15 @@ try {
     await look(page, x, y, 0.3); await settle(page); await shot(page, 'grow-1-dirt-30pct');
     await own(page, ['gravel']); await settle(page); await shot(page, 'grow-2-gravel-30pct');
     await own(page, ['pave']); await settle(page); await shot(page, 'grow-3-paved-30pct');
+    // a second lot laid along the road in the frontage strip beside the first (the Car park tool's drag, built: dev money)
+    await page.evaluate(() => { const g = window.__game; g.traffic.budget.money = Math.max(g.traffic.budget.money, 1e6); g.setTool('park'); g.emit(); });
+    const d = pk(), rd = sp.roadDir, off = -(d.w * Math.abs(rd.x) + d.h * Math.abs(rd.y)) - 2, x0 = d.x + rd.x * off, y0 = d.y + rd.y * off;
+    const a = await page.evaluate(([x, y]) => window.__game.screen(x, y), [x0, y0]), b = await page.evaluate(([x, y]) => window.__game.screen(x, y), [x0 + d.w, y0 + d.h]);
+    await page.mouse.move(a.x, a.y); await page.mouse.down(); await page.mouse.move(b.x, b.y, { steps: 6 }); await page.waitForTimeout(300);
+    await shot(page, 'grow-4-second-lot-preview-30pct');
+    await page.mouse.up(); await page.evaluate(() => { const g = window.__game; g.setTool('select'); g.emit(); });
+    await look(page, x0 + rd.x * 10, y0 + rd.y * 10, 0.15); await settle(page); await shot(page, 'grow-5-two-lots-15pct');
+    sp = await spots(page); console.log('parks', JSON.stringify(sp.parks));
   }
   if (only.has('dusk') && pk()) {
     await own(page, ['gravel', 'pave']);

@@ -67,3 +67,29 @@ test('no car park on the range\'s tee box or outfield; the front beside the driv
     assert.equal(rangeKeepOutWhy(at(50, 69, 2, 17), keep), '', `facing ${f}: the front by the drive`);
   }
 });
+
+test('a set-back range (T237): its junction on the road SETBACK further out, its lot in the frontage strip, its lamps on the lot; an old save as before', async () => {
+  const { rangeScene, rangeLot, defaultRangeBiz, normalizeRangeBiz, withUpgrade } = await import('../src/game/golf/rangebiz');
+  const { NEAR, SETBACK } = await import('../src/game/golf/rangestart');
+  const plot: [number, number, number, number] = [1000, 1000, RANGE_PLOT[0], RANGE_PLOT[1]], f = 2, P = (u: number, v: number) => plotPoint(plot, f, u, v);
+  const paved = (b: ReturnType<typeof defaultRangeBiz>) => withUpgrade(withUpgrade(b, 'gravel'), 'pave');
+  const neu = rangeScene(plot, f, paved({ ...defaultRangeBiz(), setback: SETBACK })), old = rangeScene(plot, f, paved(defaultRangeBiz()));
+  assert.deepEqual(neu.J, P(72, -NEAR - SETBACK));
+  assert.deepEqual(old.J, P(72, -NEAR));
+  const [u0, , v0, v1] = rangeLot(SETBACK);
+  assert.ok(v1 < 0 && v0 === -SETBACK, 'the lot in the strip, short of the plot');
+  assert.deepEqual(neu.anchors.lot[0], P(u0, v0));
+  const lamps = neu.pieces.filter(p => p.key.startsWith('lot-lamp'));
+  assert.equal(lamps.length, 4);
+  for (const l of lamps) assert.ok(l.y < 1000, 'the lamps stand on the strip lot (in front of the plot)');
+  // the walkers step off the lot's back edge to the path
+  assert.ok(neu.lotWalk.length >= 1 && neu.lotWalk[neu.lotWalk.length - 1]!.y < 1000);
+  // the save keeps the set-back and the lot; an old save has neither
+  const n = normalizeRangeBiz(JSON.parse(JSON.stringify({ ...defaultRangeBiz(), setback: SETBACK, lot: [1, 2, 20, 16] })));
+  assert.equal(n.setback, SETBACK); assert.deepEqual(n.lot, [1, 2, 20, 16]);
+  const o = normalizeRangeBiz(JSON.parse(JSON.stringify(defaultRangeBiz())));
+  assert.equal(o.setback, undefined); assert.equal(o.lot, undefined);
+  // with a set-back no car park goes on the plot at all: its lots grow in the strip
+  assert.ok(rangeKeepOutWhy({ x: 1050, y: 1005, w: 16, h: 10 }, rangeKeepOut(plot, f, SETBACK)));
+  assert.equal(rangeKeepOutWhy({ x: 1000, y: 1000 - SETBACK, w: 20, h: 16 }, rangeKeepOut(plot, f, SETBACK)), '');
+});
