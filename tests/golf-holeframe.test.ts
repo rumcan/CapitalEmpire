@@ -48,7 +48,7 @@ test('a frame: clumps along the rough\'s edge, never in the line of play, on a p
   const { g, h1, h2 } = course(), s1 = site(g, 1, h1, [h2]), s2 = site(g, 2, h2, [h1]);
   for (const [s, line, other] of [[s1, h1, h2], [s2, h2, h1]] as const) {
     const { trees } = frameHole(s);
-    assert.ok(trees.length >= 30 && trees.length <= 200, `hole ${s.hole}: ${trees.length} trees`);
+    assert.ok(trees.length >= 60 && trees.length <= 450, `hole ${s.hole}: ${trees.length} trees`);
     for (const t of trees) {
       for (const l of [line, other]) assert.ok(project(l, t.x, t.y).d >= FRAME_RULES.lineClear, `hole ${s.hole}: (${t.x}, ${t.y}) in a line of play`);
       const i = cellAt(g, t.x, t.y), surf = g.surf[i]!;
@@ -87,7 +87,7 @@ test('clumps of 3 to 9 trees with gaps between them, a mix of conifers and autum
   const { g, h1, h2 } = course();
   for (const s of [site(g, 1, h1, [h2]), site(g, 2, h2, [h1])]) {
     const { trees } = frameHole(s), groups = clumpsOf(trees, FRAME_RULES.gap);
-    assert.ok(groups.length >= 6, `hole ${s.hole}: ${groups.length} clumps`);
+    assert.ok(groups.length >= 12, `hole ${s.hole}: ${groups.length} clumps`);
     for (const gr of groups) {
       assert.ok(gr.length >= FRAME_RULES.min && gr.length <= FRAME_RULES.max, `a clump of ${gr.length}`);
       assert.equal(new Set(gr.map(i => trees[i]!.clump)).size, 1, 'a group is one clump');
@@ -100,11 +100,11 @@ test('clumps of 3 to 9 trees with gaps between them, a mix of conifers and autum
     }
     const conifers = trees.filter(t => FRAME_CONIFER_IDS.has(t.id)).length;
     assert.ok(conifers > 0 && conifers < trees.length, `hole ${s.hole}: ${conifers} conifers of ${trees.length}`);
-    assert.ok(trees.every(t => FRAME_TREE_IDS.includes(t.id) && t.scale > 0.3 && t.scale < 4));
+    assert.ok(trees.every(t => FRAME_TREE_IDS.includes(t.id) && t.scale > 0.3 && t.scale < 5));
   }
   // every frame tree is a live library tree, none bare
   const lib = new Map(LIBRARY.map(i => [i.id, i]));
-  for (const id of FRAME_TREE_IDS) { assert.equal(lib.get(id)?.kind, 'tree', id); assert.ok(!/dead|near-bare/.test(id), id); }
+  for (const id of FRAME_TREE_IDS) { assert.equal(lib.get(id)?.kind, 'tree', id); assert.ok(!/dead|near-bare|patchy/.test(id), id); }
 });
 
 test('deterministic from the hole\'s seed', () => {

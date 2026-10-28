@@ -19,31 +19,35 @@ export interface Pt { x: number; y: number }
 export const FRAME_RULES = {
   /** a hole's corridor: its cells within this of its line of play (a planned hole's rough reaches at most 17.5) */
   corridor: 20,
-  /** the band: the trunks stand this far past the corridor's last cell, and no farther than bandOut */
-  bandIn: 1.25, bandOut: 6,
+  /** the band: the trunks stand this far past the corridor's last cell, and no farther than bandOut (deep enough for two or three rows: the
+   *  woods the concept lines its fairways with, T229 tuning) */
+  bandIn: 1.25, bandOut: 9,
   /** beside a landing zone the band steps back this much further; a landing zone runs landingHalfM metres either side of its spot */
   landingPush: 6, landingHalfM: 40,
   /** the least distance from any hole's line of play, from a tee or a pin, and from a cart lane's centre */
   lineClear: 14, endClear: 14, laneClear: 5,
   /** two trees at least treeMin apart; a clump's next tree within link of one of its trees; two clumps' trees at least gap apart */
-  treeMin: 2.6, link: 4.2, gap: 8,
+  treeMin: 2.6, link: 4.2, gap: 6,
   /** clump seeds at least this far apart, and this share of them left out (the wider gaps: the views) */
-  clumpSpacing: 16, skip: 0.15,
+  clumpSpacing: 11, skip: 0.06,
+  /** a tree at the band's back stands up to this much bigger than one at its front (the woods behind the first row) */
+  backGrow: 0.2,
   /** the trees in a clump */
   min: 3, max: 9,
 } as const;
 export type FrameRules = typeof FRAME_RULES;
 
 /** what a frame tree costs ($): the plant brush is free and the Props tool's ornamental maple $300; the frame's young nursery trees come by the
- *  hundred at a third of that: a 340 m par 4's frame (about 90 trees) costs about half its seeded surfaces, an eighth of them sodded */
-export const FRAME_TREE_PRICE = 100;
+ *  hundred at a fifth of that: a 340 m par 4's woods (about 150 trees) cost about half its seeded surfaces, an eighth of them sodded */
+export const FRAME_TREE_PRICE = 60;
 /** the Props tool's catalogue key a frame tree carries (golf/decor.ts: its name, its price, its appeal, half back when bulldozed) */
 export const FRAME_TREE_KEY = 'tree-frame';
 /** the price of n frame trees ($) */
 export const framePrice = (n: number, unit = FRAME_TREE_PRICE): number => Math.max(0, n) * unit;
 
-/** the frame's trees: the live conifers and the autumn broadleaves, in leaf (a near-bare tree reads as winter or sickly, not the concept's October) */
-const inLeaf = (sp: readonly TreeSpecies[]): TreeSpecies[] => sp.filter(s => !s.dead).map(s => ({ ...s, ids: s.ids.filter(id => !/near-bare/.test(id)) })).filter(s => s.ids.length);
+/** the frame's trees: the live conifers and the autumn broadleaves, in leaf (a patchy or near-bare tree reads as winter or sickly in a wood, not
+ *  the concept's October) */
+const inLeaf = (sp: readonly TreeSpecies[]): TreeSpecies[] => sp.filter(s => !s.dead).map(s => ({ ...s, ids: s.ids.filter(id => !/near-bare|patchy/.test(id)) })).filter(s => s.ids.length);
 export const FRAME_CONIFER_DEAL = treeDeal(inLeaf(FOREST_CONIFERS)), FRAME_BROAD_DEAL = treeDeal(inLeaf(FOREST_BROADLEAF));
 /** every library id a frame can plant (the tests hold it to the library's trees) */
 export const FRAME_TREE_IDS: readonly string[] = [...FRAME_CONIFER_DEAL.ids, ...FRAME_BROAD_DEAL.ids];
@@ -226,29 +230,36 @@ export function frameHole(site: FrameSite, keep: readonly Pt[] = [], rules: Fram
   const farFrom = (x: number, y: number, pts: readonly Pt[], r2: number) => pts.every(p => (p.x - x) ** 2 + (p.y - y) ** 2 >= r2);
   let clumps = 0;
   seeds.forEach((s, c) => {
-    const target = R.min + Math.floor(rnd() ** 1.15 * (R.max - R.min + 1)), tries = target * 14;
+    const target = R.min + Math.floor(rnd() ** 1.1 * (R.max - R.min + 1)), tries = target * 16;
     if (leave[c]) return;
-    if (!farFrom(s.x, s.y, trees, g2) || !farFrom(s.x, s.y, kept, g2)) return;
+    if (!farFrom(s.x, s.y, trees, g2)) return;
     const mine: Pt[] = [s];
     for (let a = 0; a < tries && mine.length < Math.min(target, R.max); a++) {
       const b = mine[Math.floor(rnd() * mine.length)]!, ang = rnd() * Math.PI * 2, r = R.treeMin + rnd() * (R.link - R.treeMin);
       const x = Math.round((b.x + Math.cos(ang) * r) * 100) / 100, y = Math.round((b.y + Math.sin(ang) * r) * 100) / 100; // the points as the trees keep them
-      if (!farFrom(x, y, mine, m2) || !farFrom(x, y, trees, g2) || !farFrom(x, y, kept, g2) || !ok(x, y)) continue;
+      if (!farFrom(x, y, mine, m2) || !farFrom(x, y, trees, g2) || !ok(x, y)) continue;
       mine.push({ x, y });
     }
     if (mine.length < R.min) return;
     for (const p of mine) trees.push({ x: p.x, y: p.y, clump: clumps });
     clumps++;
   });
-  // the trees: each clump its own mix of conifers and autumn broadleaves (a stand of spruce, a maple grove), sized as the town's trees
+  // the trees: each clump its own mix of conifers and autumn broadleaves (a stand of spruce, a maple grove), sized as the town's trees and
+  // bigger towards the band's back (backGrow), so the first row reads against the woods behind it
+  const depth = (x: number, y: number) => { const k = Math.floor((x - g.x0) / CELL_T) - f.cx0, j = Math.floor((y - g.y0) / CELL_T) - f.cy0; return k < 0 || j < 0 || k >= f.w || j >= f.h ? 0 : f.dist[j * f.w + k]! * CELL_T; };
+  const back = (x: number, y: number) => Math.max(0, Math.min(1, (depth(x, y) - R.bandIn) / Math.max(1, R.bandOut - R.bandIn)));
   const pick = mulberry(Math.imul(site.seed | 0, 0x27d4eb2f) ^ (site.hole * 0x165667b1) ^ 0x3c6ef372);
   const share = Array.from({ length: clumps }, () => 0.2 + 0.6 * pick());
   const out: FrameTree[] = trees.map(t => {
     const id = pick() < share[t.clump]! ? dealTree(FRAME_CONIFER_DEAL, pick()) : dealTree(FRAME_BROAD_DEAL, pick());
-    const scale = Math.round(ownerSize(id) * (0.9 + 0.25 * pick()) * 100) / 100;
+    const scale = Math.round(ownerSize(id) * (0.9 + 0.25 * pick()) * (1 + R.backGrow * back(t.x, t.y)) * 100) / 100;
     return { x: Math.round(t.x * 100) / 100, y: Math.round(t.y * 100) / 100, id, scale, clump: t.clump };
   });
-  return { trees: out, stale };
+  // the frame as a fresh one would be (the kept trees play no part in it, so it is the same frame every time), less every clump that comes
+  // within gap of a kept tree: an unchanged hole adds nothing, a bulldozed clump comes back, an edited hole fills only its new stretches
+  if (!kept.length) return { trees: out, stale };
+  const near = new Set<number>(); for (const t of out) if (!near.has(t.clump) && !farFrom(t.x, t.y, kept, g2)) near.add(t.clump);
+  return { trees: out.filter(t => !near.has(t.clump)), stale };
 }
 
 /** the clumps of a set of trees as single-linkage groups: two trees within `link` share a group (the tests check that a frame's clumps are its
