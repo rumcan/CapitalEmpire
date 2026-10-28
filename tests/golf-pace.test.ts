@@ -8,6 +8,7 @@ import assert from 'node:assert/strict';
 import { jumpTo, localRate, profileFor, retime, simTimeAt, townMinute, townTimeOf, type TownClock } from '../src/game/sim/townclock';
 import { FADE_IN_S, FADE_OUT_S, Pacer } from '../src/game/golf/play/pacer';
 import { NIGHT_S, capped, dayNight, paceOf, paceOfSetting, settingOf } from '../src/game/golf/pace';
+import { RangeSim, defaultRangeBiz, rangeScene } from '../src/game/golf/rangebiz';
 
 const day = (rate: number) => ({ t0: 0, m0: 0, rate }) as TownClock;
 const night = (c: TownClock) => simTimeAt(c, 1440 + 360) - simTimeAt(c, 1200);
@@ -96,4 +97,24 @@ test('the pacer fades out at once when the walk cannot be made in time, comes ba
 test('a mover new on the screen on a walk it cannot make starts at the walk end, fading in (no blink where the schedule is)', () => {
   const P = new Pacer(1, 4.5);
   P.step(0, 0, 0, 60, 0, false, 10, 10, 0.8); assert.equal(P.x, 60); assert.equal(P.alpha, 0);
+});
+
+// the range on the day/night clock: rangehost.ts runs its time at the clock's rate over the day's mean (Game's range pace), so over whole town days it
+// sells what it sells on the flat day (the prototype ran its hours on the local rate and its golfers' walks in sim seconds: it sold 13% more)
+test('the range sells as much over whole town days on the day/night clock as on the flat day (6 seeds x 2 days)', () => {
+  const plot: [number, number, number, number] = [200, 200, 70, 150], L = 600, frame = 0.1, c = { tier: 2, exits: 2, residents: 3000 };
+  const days = (seed: number, prof: boolean) => {
+    const s = defaultRangeBiz(), sc = rangeScene(plot, 2, s), r = new RangeSim(seed, 10);
+    r.setScene(sc, Array.from({ length: 12 }, (_, i) => ({ x: plot[0] + 52 + (i % 6) * 2.6, y: plot[1] + 6 + Math.floor(i / 6) * 6, hx: 0, hy: 1 })), { x: plot[0] + 69, y: plot[1] + 10 });
+    const clock: TownClock = { t0: 0, m0: 0, rate: 1440 / L, ...(prof ? { prof: profileFor(1440 / L, NIGHT_S)! } : {}) };
+    let booked = 0;
+    for (let t = 0; t < 2 * L; t += frame) {
+      const at = townTimeOf(clock, t), dt = frame * (prof ? localRate(clock, t) * L / 1440 : 1);
+      for (let left = dt; left > 1e-9; left -= 0.5) booked += r.step(Math.min(0.5, left), { hour: at.hour + at.minute / 60, day: at.day }, s, c, L);
+    }
+    return booked;
+  };
+  let flat = 0, dn = 0;
+  for (let seed = 1; seed <= 6; seed++) { flat += days(seed, false); dn += days(seed, true); }
+  assert.ok(flat > 0 && Math.abs(dn / flat - 1) < 0.04, `the day/night clock's range books ${dn} against the flat day's ${flat}`);
 });
