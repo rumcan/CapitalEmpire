@@ -25,7 +25,9 @@ export interface Drawable { item: number; x: number; y: number; flip: boolean; s
   paint?: number;
   /** its lamps (T192: a car's lit brake lights, sim/car-lamps.ts; LAMP_FLOATS each: world X, Y, radius, brightness): glow instances packed
    *  right after its picture in its tile's painter's order, so whatever is drawn nearer covers them like the car itself */
-  lamps?: number[] }
+  lamps?: number[];
+  /** T266: how visible a mover is (0..1; absent: 1), a watchable golfer fading out or in (golf/play/pacer.ts); under a half it casts no shadow */
+  alpha?: number }
 /** every car is drawn this much smaller than its art, parked (props of kind car, about the middle of their footprint) and moving (SimClient.visible,
  *  about the car's centre): the owner, 2026-10-19, "20% smaller", the parked cars too */
 export { CAR_SCALE };
@@ -103,7 +105,7 @@ function packSprite(d0: Drawable, out: Float32Array, o: number, i: number, j: nu
   // (a picture with a vector shadow casts its drawn shape instead: packVector)
   // (T176: 2 + alpha marks a tinted sprite; T228: 2 + 2 code + alpha a painted car, car-paint.ts paintCode; gl.ts decodes both)
   const pc = d0.paint ? paintCode(l.item, d0.paint) : 0;
-  out[o + 8] = t[0]; out[o + 9] = l.hidden ? 0 : packAlpha(alpha, !!d0.tint, pc); out[o + 10] = it.big ? 0 : 1; out[o + 11] = it.kind === 'lot' || l.hidden || d0.lift || !casts(l.item) || (VECTOR.on && vecOf(l.item)) ? -1 : worldY(l.x ?? d0.x, l.y ?? d0.y);
+  out[o + 8] = t[0]; out[o + 9] = l.hidden ? 0 : packAlpha(alpha, !!d0.tint, pc); out[o + 10] = it.big ? 0 : 1; out[o + 11] = it.kind === 'lot' || l.hidden || d0.lift || alpha < 0.5 || !casts(l.item) || (VECTOR.on && vecOf(l.item)) ? -1 : worldY(l.x ?? d0.x, l.y ?? d0.y);
   clip(out, o + 12, i, j);
   // the footprint's front edges, for the cast shadows (gl.ts VS_CAST): the near corner (x1, y1) and the left (x0, y1) and right (x1, y0)
   // corners; business art's placeholder footprint (a 2 x 2 m box under a whole building) gives way to its picture's base (T141)
@@ -287,10 +289,10 @@ export class SpriteTiles {
       const s = this.stream, ss = this.shadowStream, d: TileDraw = { i, j, shadows: 0, sprites: 0 };
       if (t) { ss.set(t.shadows, sat); sat += t.shadows.length; d.shadows += t.shadows.length / SHADOW_STRIDE; }
       // (a mover with a vector shadow packs no T141 shape: packVector below)
-      if (mv) for (const m of mv) { if (VECTOR.on && vecOf(lookOf(m.d).item)) continue; packShadow(m.d, ss, sat, i, j, m.r, m.h); sat += SHADOW_STRIDE; d.shadows++; }
+      if (mv) for (const m of mv) { if ((VECTOR.on && vecOf(lookOf(m.d).item)) || (m.d.alpha ?? 1) < 0.5) continue; packShadow(m.d, ss, sat, i, j, m.r, m.h); sat += SHADOW_STRIDE; d.shadows++; }
       if (t) t.vsets.forEach((a, k) => { if (a.length) { vput(k, a, a.length); vmax[k] = Math.max(vmax[k]!, t.vmax[k]!); vfar[k] = Math.max(vfar[k]!, t.vfar[k]!); } });
       if (mv) for (const m of mv) {
-        if (!packVector(m.d, vone, 0, i, j, m.r, m.h)) continue;
+        if ((m.d.alpha ?? 1) < 0.5 || !packVector(m.d, vone, 0, i, j, m.r, m.h)) continue;
         const c = vone[5]!, set = setOf(c); vput(set, vone, VECTOR_STRIDE); vmax[set] = Math.max(vmax[set]!, c); vfar[set] = Math.max(vfar[set]!, vone[7]!);
       }
       if (!mv) { if (t) { s.set(t.packed, at); at += t.packed.length; d.sprites = nProps; } }
@@ -307,7 +309,7 @@ export class SpriteTiles {
         let pi = 0;
         for (const sl of slot) {
           if (t && sl.pos > pi) { s.set(t.packed.subarray(pi * SPRITE_STRIDE, sl.pos * SPRITE_STRIDE), at); at += (sl.pos - pi) * SPRITE_STRIDE; pi = sl.pos; }
-          packSprite(sl.m, s, at, i, j); at += SPRITE_STRIDE;
+          packSprite(sl.m, s, at, i, j, sl.m.alpha ?? 1); at += SPRITE_STRIDE;
           // (T192: its lamps right after it, so what is nearer covers them as it covers the car)
           const L = sl.m.lamps; if (L) for (let k = 0; k + LAMP_FLOATS - 1 < L.length; k += LAMP_FLOATS) { packLamp(L, k, s, at, i, j); at += SPRITE_STRIDE; }
         }

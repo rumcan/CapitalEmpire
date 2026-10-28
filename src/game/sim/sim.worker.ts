@@ -159,12 +159,13 @@ scope.onmessage = (e: MessageEvent<ToSim>) => {
       case 'featured': city.setFeatured(m.holes); break;
       case 'townDay': {
         // a new length moves the town clock's rate at once (no jump), unless the tournament day runs: the day's end applies it (City.endTourneyDay)
-        const s = city.sim, L = Math.max(24, m.dayLen);
-        if (L !== s.dayLen && !city.tourneyDay) s.town = retime(s.town, s.t, 1440 / L);
-        s.dayLen = L; s.townTraffic = Math.max(0, m.traffic); s.townFree = m.free; forcePost = true; break;
+        const s = city.sim, L = Math.max(24, m.dayLen), prof = m.prof ?? null, pk = JSON.stringify(prof);
+        // (T266: a new day/night profile likewise)
+        if ((L !== s.dayLen || pk !== JSON.stringify(s.prof)) && !city.tourneyDay) s.town = retime(s.town, s.t, 1440 / L, prof);
+        s.prof = prof; s.dayLen = L; s.townTraffic = Math.max(0, m.traffic); s.townFree = m.free; forcePost = true; break;
       }
       // the saved clock (after townState, so sim.t is the saved time): it runs at the normal rate again, the tournament day never carries over
-      case 'townClock': city.sim.town = retime(m.clock, city.sim.t, 1440 / city.sim.dayLen); city.tourneyDay = false; forcePost = true; break;
+      case 'townClock': city.sim.town = retime(m.clock, city.sim.t, 1440 / city.sim.dayLen, city.sim.prof); city.tourneyDay = false; forcePost = true; break;
       case 'speed': speed = m.k; break;
       case 'skip': skipUntil = m.until; forcePost = true; break;
       case 'option': city.option(m.id); break;

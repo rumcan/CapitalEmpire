@@ -413,7 +413,7 @@ function blank(id: number): GolferState {
 /** the point of a walk at minute m, from wf to wt over [ws, we] (at wf before it starts, at wt once it is over), written into out */
 function walkAt(wf: Pt, wt: Pt, ws: number, we: number, m: number, out: GolferState): void {
   const u = we > ws ? Math.min(1, Math.max(0, (m - ws) / (we - ws))) : 1;
-  out.x = wf.x + (wt.x - wf.x) * u; out.y = wf.y + (wt.y - wf.y) * u;
+  out.x = wf.x + (wt.x - wf.x) * u; out.y = wf.y + (wt.y - wf.y) * u; out.dest = wt;
 }
 
 /** one golfer's state at a minute, written into out (see stateAt). A golfer whose group still plays (done not known yet) and who has no next shot
@@ -422,7 +422,7 @@ function stateOf(plan: RoundPlan, c: Cache, id: number, m: number, out: GolferSt
   const view = c.view, holes = view.holes, N = holes.length, tr = c.tracks[id]!, rows = tr.rows;
   const home = N ? holeFrom(holes[0]!, tr.set).tee : { x: 0, y: 0 }, end = N ? holes[N - 1]!.pin : home, fl = out.flight;
   out.golfer = id; out.hole = 0; out.x = home.x; out.y = home.y; out.action = 'waiting'; out.ball = null; out.flight = null;
-  out.strokes = 0; out.toPar = 0; out.thru = 0;
+  out.strokes = 0; out.toPar = 0; out.thru = 0; out.dest = null;
   if (m < tr.tee) return out;
   let cur = -1;
   while (cur + 1 < rows.length && rows[cur + 1]!.s.t <= m) cur++;
@@ -446,7 +446,7 @@ function stateOf(plan: RoundPlan, c: Cache, id: number, m: number, out: GolferSt
   const off = cur >= 0 ? rows[cur]!.off : null;
   if (off && m < off.t1) {
     const u = (m - off.t0) / (off.t1 - off.t0);
-    out.action = 'walk'; out.hole = rows[cur]!.hole; out.x = off.rest.x + (off.at.x - off.rest.x) * u; out.y = off.rest.y + (off.at.y - off.rest.y) * u;
+    out.action = 'walk'; out.hole = rows[cur]!.hole; out.x = off.rest.x + (off.at.x - off.rest.x) * u; out.y = off.rest.y + (off.at.y - off.rest.y) * u; out.dest = off.at;
     return out;
   }
   if (!j) {

@@ -772,10 +772,12 @@ export class RangeSim {
 
   /** dt sim seconds on (dt of two minutes or more: a skip, booked by skippedVisits and the golfers cleared; the host steps a long frame in pieces).
    *  Returns the takings booked ($) */
-  step(dt: number, clock: RangeClock, s: RangeBizSave, c: DemandCtx, dayLen: number): number {
+  step(dt: number, clock: RangeClock, s: RangeBizSave, c: DemandCtx, dayLen: number, moneyLen = dayLen): number {
+    // (T266: dayLen is the day the clock's rate now gives, the range's hours and its golfers' times; moneyLen the town day's own, its prices, so a
+    // day/night clock's slow golf hours bring the golfers an hour as before and their money a day as before)
     const sc = this.scene; if (!sc || dt <= 0) return 0;
     if (clock.day !== this.day) { this.day = clock.day; this.today.golfers = 0; this.today.lost = 0; this.today.coffees = 0; this.today.lessons = 0; this.today.noPark = 0; this.practiceToday.putting = 0; this.practiceToday.chipping = 0; }
-    const st = rangeStats(s, c), value = saleValue(s, dayLen, st), scale = rangeScale(dayLen); this.qMax = st.qMax; this.dayLen = dayLen;
+    const st = rangeStats(s, c), value = saleValue(s, moneyLen, st), scale = rangeScale(moneyLen); this.qMax = st.qMax; this.dayLen = dayLen;
     // the range's money, all of it here (T146): each sale, fee, coffee, lesson and lost golfer is counted in the save and told to onMoney with
     // where it happened (T147's floating money); booked is what step returns
     let booked = 0;
@@ -789,7 +791,7 @@ export class RangeSim {
     };
     // the extras' takings (T133): a coffee or a lesson, booked with the buckets as business takings and counted on the extra
     const extra = (id: ExtraId, n: number, at: Pt | null) => {
-      const m = extraValue(id, n, dayLen), e = s.extras?.[id]; if (!e || n <= 0) return;
+      const m = extraValue(id, n, moneyLen), e = s.extras?.[id]; if (!e || n <= 0) return;
       e.season.golfers += n; e.total.golfers += n; e.season.takings += m; e.total.takings += m; s.season.takings += m; s.total.takings += m; booked += m;
       if (id === 'kiosk') this.today.coffees += n; else this.today.lessons += n;
       tell(id === 'kiosk' ? 'coffee' : 'lesson', n, m, at);

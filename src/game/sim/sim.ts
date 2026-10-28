@@ -7,7 +7,7 @@ import { CTL, LK, type Lane, type LaneGraph, type Movement, type SignalPlan, lan
 import { MIN_GREEN, SIG, demandElsewhere, fixedToRed, phaseState, stepSignals } from './signals';
 import { Router } from './routing';
 import { DAY, LotTrips, Trips, demandAt, type Built } from './trips';
-import { townClockFor, townMinute, type TownClock } from './townclock';
+import { townClockFor, townMinute, type DayProfile, type TownClock } from './townclock';
 import { LU } from '../lots/town';
 import type { Node } from '../network';
 import { ALIGHT_S, BOARD_S, BUS_LEN, ENTRY_Q, ENTRY_S, MAX_DWELL, MIN_DWELL, PD_CELL, SERVICE_S } from '../event/config';
@@ -130,6 +130,8 @@ export class Sim {
   get townTime(): number { return this.townFree ? this.t : this.clock; }
   /** the town day's clock (T048); townFree games read it from t, the classic game keeps its clock-based day */
   town: TownClock = townClockFor(DAY);
+  /** T266: the town day's day/night profile (the townDay message; null: the flat clock), on the clock but on the tournament day */
+  prof: DayProfile | null = null;
   rnd: () => number;
   /** per slot driver parameters (ext/drivers): desired speed factor, headway, acceleration, braking, jam gap, MOBIL politeness and threshold;
    *  drawn from their own seeded stream at spawn (spawnAt, buses) */
@@ -541,7 +543,7 @@ export class Sim {
   unfreeze() { this.frozen = false; }
   /** a new game (City.terrain): the game clock starts again at 0 (the season's first instant: shift = -t, on the DT grid as t is; not
    *  frozen) and the town day at day 1, 00:00 from t at the day's length. t (the physics) runs on, so nothing that reads it jumps */
-  restartClock() { this.shift = -this.t; this.frozen = false; this.town = { t0: this.t, m0: 0, rate: 1440 / this.dayLen }; }
+  restartClock() { this.shift = -this.t; this.frozen = false; this.town = { t0: this.t, m0: 0, rate: 1440 / this.dayLen, ...(this.prof ? { prof: this.prof } : {}) }; }
 
   /** advances the simulation by one DT: accelerations, lane changes, moves, lane transfers, towing, then refills to the target */
   step() {

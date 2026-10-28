@@ -10,10 +10,13 @@ import { CartPlay, RIDE, STATE, WALK, type CartPaths, type PlayCart } from './ca
 import { CELEBRATE_S, celebrated } from './celebrate';
 import type { OwnerTurn } from './live';
 import type { CourseView, GolferState, Pt, RoundPlan, Shot } from './types';
+import type { Pacer } from './pacer';
 
 /** a golfer to draw: his position (tiles), his id, his sheet row and his frame (absolute, in the row: the golfer clips' frames), and (T213) how high he
  *  hops (world px, a celebration's) */
-export interface PlayPerson { x: number; y: number; golfer: number; row: number; frame: number; lift?: number }
+export interface PlayPerson { x: number; y: number; golfer: number; row: number; frame: number; lift?: number;
+  /** T266: how visible he is (0..1; absent: 1): a watchable golfer fading out or in as he catches up his schedule (pacer.ts) */
+  alpha?: number }
 /** a ball to draw: its ground position (tiles) and its height above the ground (metres: the flight's arc) */
 export interface PlayBall { x: number; y: number; h: number }
 /** T213: a pro's caddie to draw: his position (tiles), his sheet row and frame (the spectator clips' frames: the stand-in is a spectator), the pro he
@@ -22,7 +25,9 @@ export interface PlayCaddie { x: number; y: number; row: number; frame: number; 
 /** T213: a celebration under way: where (tiles) and how long it has run (real seconds) */
 export interface PlayCheer { x: number; y: number; t: number }
 /** T213: the playback's extras: the cart paths (null: none) and where the carts go after the last green */
-export interface PlayOpts { paths?: CartPaths | null; home?: Pt }
+export interface PlayOpts { paths?: CartPaths | null; home?: Pt;
+  /** T266: the watchable golfers (?golfPace=walk, mix): the golfers' and the carts' pacers (pacer.ts), so they keep to a walk and a cart's speed */
+  pace?: { walkers: Pacer; carts: Pacer } | null }
 
 /** a swing's drive clip plays for this many real seconds, then holds its finish until the golfer moves on */
 const SWING_S = 2.2;
@@ -82,9 +87,11 @@ export class PlayView {
   private seen: Uint8Array;
   /** the shots per golfer as indexed, and how many the plan had then (a live group appends shots: the index follows) */
   private count = -1;
+  /** T266: the pacers of the watchable golfers (null: the schedule as it is) */
+  private pace: { walkers: Pacer; carts: Pacer } | null;
 
   constructor(plan: RoundPlan, view: CourseView, opts: PlayOpts = {}) {
-    this.plan = plan; this.view = view;
+    this.plan = plan; this.view = view; this.pace = opts.pace ?? null;
     const size = Math.max(0, ...plan.golfers.map(g => g.id)) + 1;
     this.k = new Int32Array(size); this.swingAt = new Float64Array(size).fill(-Infinity); this.tee = new Float64Array(size);
     this.lx = new Float64Array(size); this.ly = new Float64Array(size); this.rows = new Uint8Array(size); this.seen = new Uint8Array(size);
@@ -103,7 +110,7 @@ export class PlayView {
    *  is not played yet (P4b; see pendingAt): his walk to the ball and his address there, facing `aim` (his open shot's aim; else the suggested aim).
    *  T208: with `only` (per golfer id, 1: play him back), the others are skipped, their states not even worked out (everyday golf's groups off the
    *  screen); one coming back swings nothing for the shots he struck meanwhile */
-  update(minute: number, now: number, pending: OwnerTurn | null = null, aim: Pt | null = null, only: Uint8Array | null = null): void {
+  update(minute: number, now: number, pending: OwnerTurn | null = null, aim: Pt | null = null, only: Uint8Array | null = null, simT = 0): void {
     if (this.count !== this.plan.shots.length) this.index();
     const G = this.plan.golfers, states = only ? this.states : stateAt(this.plan, this.view, minute, this.states), drive = GOLFER_CLIPS.golf_drive;
     const pa = pending ? (aim ?? pending.suggested.aim) : null, carts = this.cartPlay;
@@ -150,6 +157,20 @@ export class PlayView {
         const w = carts!.walk; x = w.x; y = w.y; frame = clipFrame(GOLFER_CLIPS.walk, now + id * STEP_S);
         if (w.hx * w.hx + w.hy * w.hy > AIM2) row = rowToward(w.hx, w.hy);
       }
+      // T266: the watchable golfers: shown where his pacer has him (a brisk walk after the schedule at most, still through his swing's natural
+      // length, faded out and back at the walk's end when the schedule has run ahead); a shot struck away from where he is shown cuts to it
+      let alpha = 1;
+      const W = this.pace?.walkers;
+      if (W && show) {
+        const swinging = !!newest && dt < (putting ? PUTT_S : SWING_S), d = mode === WALK ? null : s.dest;
+        if (newest && this.swingAt[id] === now && !W.near(id, newest.from.x, newest.from.y)) W.snap(id, newest.from.x, newest.from.y);
+        W.step(id, x, y, d ? d.x : NaN, d ? d.y : NaN, swinging, now, simT);
+        x = W.x; y = W.y; alpha = W.alpha;
+        if (!swinging) {
+          if (W.walked) { frame = clipFrame(GOLFER_CLIPS.walk, now + id * STEP_S); if (W.hx * W.hx + W.hy * W.hy > AIM2) row = rowToward(W.hx, W.hy); }
+          else if (s.action === 'walk' || mode === WALK) { frame = GOLFER_CLIPS.idle.start; const pin = this.view.holes[s.hole]?.pin; if (pin && (pin.x - x) ** 2 + (pin.y - y) ** 2 > AIM2) row = rowToward(pin.x - x, pin.y - y); }
+        }
+      }
       // T213: a birdie or better: once the ball drops, the celebration (at the cup, turned to the camera, hopping) and the gallery's cheer there
       if (newest && this.celebrate.has(newest)) {
         const c = dt - (newest.club === 'putter' ? Math.max(PUTT_S, PUTT_FLIGHT_S) : Math.max(SWING_S, flightS(newest)));
@@ -162,7 +183,7 @@ export class PlayView {
       this.rows[id] = row;
       if (show) {
         const p = this.people[np] ?? (this.people[np] = { x: 0, y: 0, golfer: 0, row: 0, frame: 0 });
-        p.x = x; p.y = y; p.golfer = id; p.row = row; p.frame = frame; p.lift = lift; np++;
+        p.x = x; p.y = y; p.golfer = id; p.row = row; p.frame = frame; p.lift = lift; p.alpha = alpha; np++;
         // T213: his caddie: beside him, behind him off the line of a full shot, or off the green while he putts
         if (this.caddie[id]) nc = this.caddieAt(nc, id, s, x, y, row, moved ? dx : 0, moved ? dy : 0, tg ?? null, k < list.length ? list[k]! : null, minute, now);
       } else this.cm[id] = NaN;
@@ -178,6 +199,9 @@ export class PlayView {
     this.people.length = np; this.balls.length = nb; this.caddies.length = nc; this.cheers.length = nh; this.started = true;
     // T213: the carts (only those of the golfers played back, and only those on screen)
     if (carts) carts.update(minute, this.carts, only, this.box); else this.carts.length = 0;
+    // (T266: the watchable golfers' carts keep to a cart's speed, fading out and back where the schedule parks them)
+    const CP = this.pace?.carts;
+    if (CP) for (const c of this.carts) { CP.step(c.cart, c.x, c.y, NaN, NaN, false, now, simT); c.x = CP.x; c.y = CP.y; c.alpha = CP.alpha; if (CP.walked) { c.hx = CP.hx; c.hy = CP.hy; } }
   }
 
   /** T213: golfer id's caddie at minute m, into caddies[n] (returns n + 1). His place: off the green while his pro putts (on the green: his next stroke a
